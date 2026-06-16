@@ -4,14 +4,15 @@
  */
 
 import React from 'react';
-import { Shield, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { Shield, Eye, EyeOff, Sparkles, Cloud, CloudOff, Loader2 } from 'lucide-react';
 
 interface HeaderProps {
   privacyMode: boolean;
   setPrivacyMode: (val: boolean) => void;
+  saveStatus?: 'idle' | 'saving' | 'saved' | 'error';
 }
 
-export default function Header({ privacyMode, setPrivacyMode }: HeaderProps) {
+export default function Header({ privacyMode, setPrivacyMode, saveStatus = 'idle' }: HeaderProps) {
   return (
     <header
       className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-neutral-200/60 shadow-sm"
@@ -47,6 +48,30 @@ export default function Header({ privacyMode, setPrivacyMode }: HeaderProps) {
 
         {/* Right controls */}
         <div className="flex items-center gap-2">
+          {/* Save status indicator */}
+          {saveStatus && saveStatus !== 'idle' && (
+            <div className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-semibold ${
+              saveStatus === 'saving'
+                ? 'bg-blue-50 border-blue-200 text-blue-700'
+                : saveStatus === 'saved'
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                : 'bg-red-50 border-red-200 text-red-700'
+            }`}>
+              {saveStatus === 'saving' ? (
+                <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+              ) : saveStatus === 'saved' ? (
+                <Cloud className="h-3 w-3" aria-hidden="true" />
+              ) : (
+                <CloudOff className="h-3 w-3" aria-hidden="true" />
+              )}
+              <span>
+                {saveStatus === 'saving' ? 'Guardando...'
+                  : saveStatus === 'saved' ? 'Guardado'
+                  : 'Error al guardar'}
+              </span>
+            </div>
+          )}
+
           {/* Status badge */}
           <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-neutral-50 border border-neutral-200/60 text-[10px] font-semibold text-neutral-500">
             <span className="h-1.5 w-1.5 rounded-full bg-success-500" aria-hidden="true" />

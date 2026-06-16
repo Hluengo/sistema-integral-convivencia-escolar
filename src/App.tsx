@@ -12,13 +12,17 @@ import DashboardStats from './components/DashboardStats';
 import CausaCard from './components/CausaCard';
 import InteractiveTimeline from './components/InteractiveTimeline';
 import AiAdvisor from './components/AiAdvisor';
-import { Search, Plus, RotateCcw, Scale, ShieldAlert, Sparkles, AlertCircle, FileText, BookOpen, Columns, ChevronLeft, ChevronRight, Loader2, Users } from 'lucide-react';
-import { supabase, type Course, type Student } from './lib/supabase';
+import { Search, Plus, RotateCcw, Scale, ShieldAlert, Sparkles, AlertCircle, FileText, BookOpen, Columns, ChevronLeft, ChevronRight, Loader2, Users, Database, Cloud } from 'lucide-react';
+import { supabase, type Course, type Student, fetchCausas, createCausa, updateCausa, saveBitacora, saveChecklist, seedInitialData } from './lib/supabase';
 
 export default function App() {
-  const [causas, setCausas] = useState<Causa[]>(INITIAL_CAUSAS);
-  const [selectedCausaId, setSelectedCausaId] = useState<string>(INITIAL_CAUSAS[0]?.id || '');
+  const [causas, setCausas] = useState<Causa[]>([]);
+  const [selectedCausaId, setSelectedCausaId] = useState<string>('');
   const [selectedFaseFilter, setSelectedFaseFilter] = useState<FaseProcedimental | 'Todas'>('Todas');
+  const [isLoadingCausas, setIsLoadingCausas] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   
   // Supabase state
   const [courses, setCourses] = useState<Course[]>([]);
@@ -26,6 +30,7 @@ export default function App() {
   const [isLoadingCourses, setIsLoadingCourses] = useState(true);
   const [isLoadingStudents, setIsLoadingStudents] = useState(false);
   const coursesLoadedRef = useRef(false);
+  const dataInitializedRef = useRef(false);
 
   // Header configuration states
   const [currentRole, setRole] = useState<UserRole>('convivencia_escolar');
@@ -71,6 +76,88 @@ export default function App() {
     }
     loadCourses();
   }, []);
+
+  // Load causas from Supabase on mount, seed if empty
+  useEffect(() => {
+    if (dataInitializedRef.current) return;
+    dataInitializedRef.current = true;
+
+    async function loadCausas() {
+      setIsLoadingCausas(true);
+      try {
+        // Try to fetch existing causas from Supabase
+        const existing = await fetchCausas();
+        
+        if (existing.length > 0) {
+          // Data exists in Supabase, use it
+          setCausas(existing);
+          setSelectedCausaId(existing[0]?.id || '');
+        } else {
+          // No data in Supabase yet, seed with initial mock data
+          console.log('No data in Supabase, seeding initial data...');
+          await seedInitialData(INITIAL_CAUSAS);
+          
+          // Reload from Supabase
+          const seeded = await fetchCausas();
+          setCausas(seeded);
+          setSelectedCausaId(seeded[0]?.id || '');
+        }
+      } catch (error) {
+        console.error('Error loading causas from Supabase:', error);
+        // Fallback to local data
+        setCausas(INITIAL_CAUSAS);
+        setSelectedCausaId(INITIAL_CAUSAS[0]?.id || '');
+      } finally {
+        setIsLoadingCausas(false);
+      }
+    }
+
+    loadCausas();
+  }, []);
+
+  // Auto-save causes to Supabase with debounce whenever they change
+  useEffect(() => {
+    if (causas.length === 0 || isLoadingCausas) return;
+    
+    // Clear previous timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Debounce saves to avoid too many requests
+    saveTimeoutRef.current = setTimeout(async () => {
+      setSaveStatus('saving');
+      
+      // Find if there's a new causa (not yet in DB) by trying to save each
+      for (const causa of causas) {
+        const success = await updateCausa(causa);
+        if (!success) {
+          // Might not exist yet, try creating
+          const created = await createCausa(causa);
+          if (!created) {
+            console.error(`Failed to save causa ${causa.id}`);
+            setSaveStatus('error');
+            return;
+          }
+        }
+        
+        // Save related data
+        await saveBitacora(causa.id, causa.bitacora);
+        await saveChecklist(causa.id, causa.checklistDebidoProceso);
+      }
+      
+      setSaveStatus('saved');
+      setTimeout(() => {
+        setSaveStatus(prev => prev === 'saved' ? 'idle' : prev);
+      }, 2000);
+    }, 2000); // 2 second debounce
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [causas, isLoadingCausas]);
 
   // When course changes, load its students
   useEffect(() => {
@@ -222,6 +309,7 @@ export default function App() {
       <Header
         privacyMode={privacyMode}
         setPrivacyMode={setPrivacyMode}
+        saveStatus={saveStatus}
       />
 
       <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
