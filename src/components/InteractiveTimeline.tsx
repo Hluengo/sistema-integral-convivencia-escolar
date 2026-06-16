@@ -9,7 +9,7 @@ import { MAPPED_STATES, FASES_LIST, getFaseForEstado } from '../data';
 import { REGLAMENTO_CONDUCTAS, ConductaReglamentada } from '../reglamentoData';
 import { 
   FileText, CheckSquare, ListTodo, ClipboardList, Sparkles, 
-  Plus, Calendar, Clock, AlertTriangle, ShieldCheck, Download, 
+  Plus, Calendar, Clock, AlertTriangle, Shield, ShieldCheck, Download, 
   Copy, FileSignature, CheckCircle2, RefreshCw, Send, HelpCircle, 
   ArrowRight, Search, BookOpen, Check, Info,
   ChevronDown, ChevronUp, File, Upload, Trash, BookMarked, ToggleLeft, ToggleRight,
@@ -617,220 +617,188 @@ export default function InteractiveTimeline({
               </div>
             </div>
 
-            {/* RICE Classification */}
-            <div className="bg-gradient-to-br from-brand-50/20 via-white to-neutral-50 border border-brand-200/60 p-4 rounded-xl shadow-xs text-left space-y-3.5">
-              <div className="flex items-center justify-between border-b border-brand-100 pb-2">
+            {/* Clasificación actual + RICE opcional */}
+            <div className="bg-white border border-neutral-200 p-3.5 rounded-xl text-left space-y-2">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-2">
-                  <BookMarked className="h-4 w-4 text-brand-600" aria-hidden="true" />
-                  <div>
-                    <h3 className="font-sans font-bold text-xs uppercase tracking-tight text-neutral-900">
-                      Clasificación Reglamentaria
-                    </h3>
-                    <p className="text-[9px] text-neutral-500 font-sans">
-                      RICE 2026 • Colegio Carmela Romero
-                    </p>
-                  </div>
+                  <BookMarked className="h-4 w-4 text-brand-600 shrink-0" aria-hidden="true" />
+                  <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">
+                    Clasificación:
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                    causa.tipoInfraccion === 'Gravísima' ? 'bg-red-100 text-red-800' :
+                    causa.tipoInfraccion === 'Muy Grave' ? 'bg-purple-100 text-purple-800' :
+                    causa.tipoInfraccion === 'Grave' ? 'bg-amber-100 text-amber-800' :
+                    'bg-blue-100 text-blue-800'
+                  }`}>{causa.tipoInfraccion}</span>
+                  {causa.comprometeAulaSegura && (
+                    <span className="text-[9px] font-bold text-danger-600 bg-danger-50 border border-danger-200 px-1.5 py-0.5 rounded flex items-center gap-1">
+                      <Shield className="h-2.5 w-2.5" aria-hidden="true" />
+                      AULA SEGURA
+                    </span>
+                  )}
                 </div>
               </div>
+              <p className="text-[9px] text-neutral-400 italic">
+                Clasificación definida al abrir la causa. 
+                {causa.conductaRiceId ? ' Vinculada al RICE 2026.' : ''}
+              </p>
+              
+              {/* RICE dropdown expandible */}
+              <details className="group mt-0.5">
+                <summary className="text-[10px] font-semibold text-brand-600 cursor-pointer hover:text-brand-700 list-none flex items-center gap-1 select-none">
+                  <BookOpen className="h-3 w-3" aria-hidden="true" />
+                  <span>Vincular conducta del RICE (opcional)</span>
+                  <ChevronDown className="h-3 w-3 ml-auto group-open:rotate-180 transition-transform" aria-hidden="true" />
+                </summary>
+                <div className="mt-2 space-y-2">
+                  <select
+                    id="conducta-select"
+                    value={causa.conductaRiceId || ""}
+                    disabled={currentRole === 'docente'}
+                    onChange={(e) => {
+                      const nextId = e.target.value;
+                      const selectedConducta = REGLAMENTO_CONDUCTAS.find(c => c.id === nextId);
+                      const nowStr = new Date('2026-05-27T14:50:29Z').toISOString().split('T')[0];
+                      
+                      onUpdateCausa({
+                        ...causa,
+                        conductaRiceId: nextId || undefined,
+                        medidasEjecutadas: [],
+                        tipoInfraccion: selectedConducta ? selectedConducta.gravedad : causa.tipoInfraccion,
+                        comprometeAulaSegura: selectedConducta ? selectedConducta.gravedad === 'Gravísima' : causa.comprometeAulaSegura,
+                        fechaUltimaActualizacion: nowStr
+                      });
+                    }}
+                    className="w-full text-xs border border-brand-200 rounded-lg p-2 bg-white font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 cursor-pointer"
+                    aria-label="Seleccionar conducta del reglamento"
+                  >
+                    <option value="" className="text-neutral-400 font-normal">-- Sin vincular --</option>
+                    <optgroup label="Faltas Leves (Art. 24)" className="text-emerald-700 font-bold bg-white">
+                      {REGLAMENTO_CONDUCTAS.filter(c => c.gravedad === 'Leve').map(c => (
+                        <option key={c.id} value={c.id} className="font-medium text-neutral-800">
+                          ({c.articulo} N° {c.numero}) {c.conducta.slice(0, 60)}...
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Faltas Graves (Art. 25)" className="text-amber-700 font-bold bg-white">
+                      {REGLAMENTO_CONDUCTAS.filter(c => c.gravedad === 'Grave').map(c => (
+                        <option key={c.id} value={c.id} className="font-medium text-neutral-800">
+                          ({c.articulo} N° {c.numero}) {c.conducta.slice(0, 60)}...
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Faltas Muy Graves (Art. 26)" className="text-purple-700 font-bold bg-white">
+                      {REGLAMENTO_CONDUCTAS.filter(c => c.gravedad === 'Muy Grave').map(c => (
+                        <option key={c.id} value={c.id} className="font-medium text-neutral-800">
+                          ({c.articulo} N° {c.numero}) {c.conducta.slice(0, 60)}...
+                        </option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Faltas Gravísimas / Aula Segura (Art. 27)" className="text-danger-700 font-bold bg-white">
+                      {REGLAMENTO_CONDUCTAS.filter(c => c.gravedad === 'Gravísima').map(c => (
+                        <option key={c.id} value={c.id} className="font-medium text-neutral-800">
+                          ({c.articulo} N° {c.numero}) {c.conducta.slice(0, 60)}...
+                        </option>
+                      ))}
+                    </optgroup>
+                  </select>
 
-              {/* Selector de Conducta RICE */}
-              <div className="space-y-1.5">
-                <label htmlFor="conducta-select" className="block text-[9px] font-semibold text-neutral-400 uppercase tracking-wider">
-                  Artículo y conducta tipificada:
-                </label>
-                <select
-                  id="conducta-select"
-                  value={causa.conductaRiceId || ""}
-                  disabled={currentRole === 'docente'}
-                  onChange={(e) => {
-                    const nextId = e.target.value;
-                    const selectedConducta = REGLAMENTO_CONDUCTAS.find(c => c.id === nextId);
-                    const nowStr = new Date('2026-05-27T14:50:29Z').toISOString().split('T')[0];
-                    
-                    onUpdateCausa({
-                      ...causa,
-                      conductaRiceId: nextId || undefined,
-                      medidasEjecutadas: [],
-                      tipoInfraccion: selectedConducta ? selectedConducta.gravedad : causa.tipoInfraccion,
-                      comprometeAulaSegura: selectedConducta ? selectedConducta.gravedad === 'Gravísima' : causa.comprometeAulaSegura,
-                      fechaUltimaActualizacion: nowStr
-                    });
-                  }}
-                  className="w-full text-xs border border-brand-200 rounded-lg p-2.5 bg-white font-medium text-neutral-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 cursor-pointer"
-                  aria-label="Seleccionar conducta del reglamento"
-                >
-                  <option value="" className="text-neutral-400 font-normal">-- Sin vincular --</option>
-                  
-                  <optgroup label="Faltas Leves (Art. 24)" className="text-emerald-700 font-bold bg-white">
-                    {REGLAMENTO_CONDUCTAS.filter(c => c.gravedad === 'Leve').map(c => (
-                      <option key={c.id} value={c.id} className="font-medium text-neutral-800">
-                        ({c.articulo} N° {c.numero}) {c.conducta.slice(0, 60)}...
-                      </option>
-                    ))}
-                  </optgroup>
+                  {/* Medidas Formativas y Disciplinarias si hay conducta vinculada */}
+                  {causa.conductaRiceId && (() => {
+                    const conducta = REGLAMENTO_CONDUCTAS.find(c => c.id === causa.conductaRiceId);
+                    if (!conducta) return null;
 
-                  <optgroup label="Faltas Graves (Art. 25)" className="text-amber-700 font-bold bg-white">
-                    {REGLAMENTO_CONDUCTAS.filter(c => c.gravedad === 'Grave').map(c => (
-                      <option key={c.id} value={c.id} className="font-medium text-neutral-800">
-                        ({c.articulo} N° {c.numero}) {c.conducta.slice(0, 60)}...
-                      </option>
-                    ))}
-                  </optgroup>
+                    const toggleMeasure = (type: 'formativa' | 'disciplinaria', measureName: string) => {
+                      if (currentRole === 'docente') return;
+                      const key = `${type}:${measureName}`;
+                      const currentEjecutadas = causa.medidasEjecutadas || [];
+                      const isChecked = currentEjecutadas.includes(key);
+                      const nowStr = new Date('2026-05-27T14:50:29Z').toISOString().split('T')[0];
+                      
+                      let nextEjecutadas = [];
+                      let nextBitacora = [...causa.bitacora];
+                      const logId = `b_medida_${causa.id}_${type}_${encodeURIComponent(measureName)}`;
 
-                  <optgroup label="Faltas Muy Graves (Art. 26)" className="text-purple-700 font-bold bg-white">
-                    {REGLAMENTO_CONDUCTAS.filter(c => c.gravedad === 'Muy Grave').map(c => (
-                      <option key={c.id} value={c.id} className="font-medium text-neutral-800">
-                        ({c.articulo} N° {c.numero}) {c.conducta.slice(0, 60)}...
-                      </option>
-                    ))}
-                  </optgroup>
+                      if (isChecked) {
+                        nextEjecutadas = currentEjecutadas.filter(k => k !== key);
+                        nextBitacora = nextBitacora.filter(entry => entry.id !== logId);
+                      } else {
+                        nextEjecutadas = [...currentEjecutadas, key];
+                        const newEntry: BitacoraEntry = {
+                          id: logId,
+                          fecha: new Date('2026-05-27T14:50:29Z').toISOString().replace('.000Z', 'Z'),
+                          tipo: 'Resolución' as const,
+                          titulo: `Ejecución: Medida ${type === 'formativa' ? 'Formativa' : 'Disciplinaria'}`,
+                          descripcion: `Se verifica y registra formalmente la ejecución de la medida sancionada por el RICE (${conducta.articulo}): "${measureName}".`,
+                          participantes: [conducta.responsable, privacyMode ? causa.nnaProtectedName : causa.estudianteNombre]
+                        };
+                        nextBitacora = [newEntry, ...nextBitacora];
+                      }
 
-                  <optgroup label="Faltas Gravísimas / Aula Segura (Art. 27)" className="text-danger-700 font-bold bg-white">
-                    {REGLAMENTO_CONDUCTAS.filter(c => c.gravedad === 'Gravísima').map(c => (
-                      <option key={c.id} value={c.id} className="font-medium text-neutral-800">
-                        ({c.articulo} N° {c.numero}) {c.conducta.slice(0, 60)}...
-                      </option>
-                    ))}
-                  </optgroup>
-                </select>
-              </div>
-
-              {/* Reactive columns for Formativas & Disciplinarias */}
-              {causa.conductaRiceId ? (() => {
-                const conducta = REGLAMENTO_CONDUCTAS.find(c => c.id === causa.conductaRiceId);
-                if (!conducta) return null;
-
-                const toggleMeasure = (type: 'formativa' | 'disciplinaria', measureName: string) => {
-                  if (currentRole === 'docente') return;
-                  const key = `${type}:${measureName}`;
-                  const currentEjecutadas = causa.medidasEjecutadas || [];
-                  const isChecked = currentEjecutadas.includes(key);
-                  const nowStr = new Date('2026-05-27T14:50:29Z').toISOString().split('T')[0];
-                  
-                  let nextEjecutadas = [];
-                  let nextBitacora = [...causa.bitacora];
-                  const logId = `b_medida_${causa.id}_${type}_${encodeURIComponent(measureName)}`;
-
-                  if (isChecked) {
-                    nextEjecutadas = currentEjecutadas.filter(k => k !== key);
-                    nextBitacora = nextBitacora.filter(entry => entry.id !== logId);
-                  } else {
-                    nextEjecutadas = [...currentEjecutadas, key];
-                    
-                    const isFormative = type === 'formativa';
-                    const newEntry: BitacoraEntry = {
-                      id: logId,
-                      fecha: new Date('2026-05-27T14:50:29Z').toISOString().replace('.000Z', 'Z'),
-                      tipo: isFormative ? 'Mediación' : 'Resolución',
-                      titulo: `Ejecución: Medida ${isFormative ? 'Formativa' : 'Disciplinaria'}`,
-                      descripcion: `Se verifica y registra formalmente la ejecución de la medida sancionada por el RICE (${conducta.articulo}): "${measureName}".`,
-                      participantes: [conducta.responsable, privacyMode ? causa.nnaProtectedName : causa.estudianteNombre]
+                      onUpdateCausa({
+                        ...causa,
+                        medidasEjecutadas: nextEjecutadas,
+                        bitacora: nextBitacora,
+                        fechaUltimaActualizacion: nowStr
+                      });
                     };
-                    nextBitacora = [newEntry, ...nextBitacora];
-                  }
 
-                  onUpdateCausa({
-                    ...causa,
-                    medidasEjecutadas: nextEjecutadas,
-                    bitacora: nextBitacora,
-                    fechaUltimaActualizacion: nowStr
-                  });
-                };
-
-                return (
-                  <div className="space-y-4 pt-1 text-xs">
-                    <div className="bg-neutral-50 border border-neutral-200 p-2.5 rounded-lg text-[11px] leading-relaxed">
-                      <span className="font-semibold text-brand-700 block text-[9px] uppercase font-mono tracking-wider">
-                        Disposiciones del establecimiento
-                      </span>
-                      <p className="mt-0.5 text-neutral-700">
-                        <strong>Relato normativo:</strong> "{conducta.conducta}"
-                      </p>
-                      <div className="mt-1 flex justify-between gap-2 flex-wrap text-[10px] text-neutral-500">
-                        <span>Autoridad: <strong className="text-neutral-700">{conducta.responsable}</strong></span>
-                        <span>Gravedad: <strong className="text-brand-600 font-semibold">{conducta.gravedad}</strong></span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {/* Medidas Formativas */}
-                      <div className="space-y-2">
-                        <span className="block text-[9px] font-semibold text-neutral-400 uppercase tracking-widest">
-                          Medidas Formativas (Apoyos):
-                        </span>
-                        <div className="flex flex-col gap-1.5">
-                          {conducta.medidasFormativas.map((m, idx) => {
-                            const isChecked = (causa.medidasEjecutadas || []).includes(`formativa:${m}`);
-                            return (
-                              <button
-                                key={`f-${idx}`}
-                                type="button"
-                                disabled={currentRole === 'docente'}
-                                onClick={() => toggleMeasure('formativa', m)}
-                                className={`p-2 rounded-lg text-left font-sans text-[11px] leading-normal border flex items-start gap-2 select-none transition-all ${
-                                  isChecked
-                                    ? 'bg-success-50 text-success-800 border-success-200 font-medium shadow-xs'
-                                    : 'bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50'
-                                }`}
-                              >
-                                <span className="mt-0.5 shrink-0">
-                                  {isChecked ? (
-                                    <span className="h-3.5 w-3.5 rounded bg-success-600 text-white flex items-center justify-center text-[8px] font-bold">✓</span>
-                                  ) : (
-                                    <span className="h-3.5 w-3.5 rounded border border-neutral-300 bg-white block" />
-                                  )}
-                                </span>
-                                <span>{m}</span>
-                              </button>
-                            );
-                          })}
+                    return (
+                      <div className="space-y-2.5 mt-2 border-t border-neutral-100 pt-2">
+                        <div className="bg-neutral-50 border border-neutral-200 p-2 rounded-lg text-[10px] leading-relaxed">
+                          <span className="font-semibold text-brand-700 block text-[8px] uppercase tracking-wider">
+                            RICE {conducta.articulo} N° {conducta.numero}
+                          </span>
+                          <p className="mt-0.5 text-neutral-600 truncate">{conducta.conducta}</p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          <div className="space-y-1.5">
+                            <span className="block text-[8px] font-semibold text-neutral-400 uppercase tracking-widest">Formativas:</span>
+                            {conducta.medidasFormativas.map((m, idx) => {
+                              const isChecked = (causa.medidasEjecutadas || []).includes(`formativa:${m}`);
+                              return (
+                                <button key={`f-${idx}`} type="button" disabled={currentRole === 'docente'}
+                                  onClick={() => toggleMeasure('formativa', m)}
+                                  className={`w-full p-1.5 rounded-lg text-left text-[10px] leading-normal border flex items-start gap-1.5 select-none transition-all ${
+                                    isChecked ? 'bg-success-50 text-success-800 border-success-200' : 'bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50'
+                                  }`}>
+                                  <span className="mt-0.5 shrink-0">
+                                    {isChecked ? <span className="h-3 w-3 rounded bg-success-600 text-white flex items-center justify-center text-[7px] font-bold">✓</span>
+                                    : <span className="h-3 w-3 rounded border border-neutral-300 bg-white block" />}
+                                  </span>
+                                  <span>{m}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <div className="space-y-1.5">
+                            <span className="block text-[8px] font-semibold text-neutral-400 uppercase tracking-widest">Disciplinarias:</span>
+                            {conducta.medidasDisciplinarias.map((m, idx) => {
+                              const isChecked = (causa.medidasEjecutadas || []).includes(`disciplinaria:${m}`);
+                              return (
+                                <button key={`d-${idx}`} type="button" disabled={currentRole === 'docente'}
+                                  onClick={() => toggleMeasure('disciplinaria', m)}
+                                  className={`w-full p-1.5 rounded-lg text-left text-[10px] leading-normal border flex items-start gap-1.5 select-none transition-all ${
+                                    isChecked ? 'bg-danger-50 text-danger-800 border-danger-200' : 'bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50'
+                                  }`}>
+                                  <span className="mt-0.5 shrink-0">
+                                    {isChecked ? <span className="h-3 w-3 rounded bg-danger-600 text-white flex items-center justify-center text-[7px] font-bold">✓</span>
+                                    : <span className="h-3 w-3 rounded border border-neutral-300 bg-white block" />}
+                                  </span>
+                                  <span>{m}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
-
-                      {/* Medidas Disciplinarias */}
-                      <div className="space-y-2">
-                        <span className="block text-[9px] font-semibold text-neutral-400 uppercase tracking-widest">
-                          Medidas Disciplinarias (Sanciones):
-                        </span>
-                        <div className="flex flex-col gap-1.5">
-                          {conducta.medidasDisciplinarias.map((m, idx) => {
-                            const isChecked = (causa.medidasEjecutadas || []).includes(`disciplinaria:${m}`);
-                            return (
-                              <button
-                                key={`d-${idx}`}
-                                type="button"
-                                disabled={currentRole === 'docente'}
-                                onClick={() => toggleMeasure('disciplinaria', m)}
-                                className={`p-2 rounded-lg text-left font-sans text-[11px] leading-normal border flex items-start gap-2 select-none transition-all ${
-                                  isChecked
-                                    ? 'bg-danger-50 text-danger-800 border-danger-200 font-medium shadow-xs'
-                                    : 'bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50'
-                                }`}
-                              >
-                                <span className="mt-0.5 shrink-0">
-                                  {isChecked ? (
-                                    <span className="h-3.5 w-3.5 rounded bg-danger-600 text-white flex items-center justify-center text-[8px] font-bold">✓</span>
-                                  ) : (
-                                    <span className="h-3.5 w-3.5 rounded border border-neutral-300 bg-white block" />
-                                  )}
-                                </span>
-                                <span>{m}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })() : (
-                <div className="bg-neutral-50 border border-dashed border-neutral-200 p-4 rounded-lg text-center">
-                  <BookOpen className="h-6 w-6 text-neutral-400 mx-auto mb-1.5" aria-hidden="true" />
-                  <p className="text-[11px] text-neutral-500 leading-normal font-medium">
-                    Seleccione una conducta tipificada para cargar las medidas formativas y disciplinarias correspondientes.
-                  </p>
+                    );
+                  })()}
                 </div>
-              )}
+              </details>
             </div>
 
             {/* Due Process Checklist */}
