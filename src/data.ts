@@ -60,7 +60,7 @@ export const getFaseForEstado = (estado: EstadoCausa) => {
   return MAPPED_STATES[estado]?.fase || 'Recepción';
 };
 
-const getBaseChecklist = (): ChecklistItem[] => [
+export const getBaseChecklist = (): ChecklistItem[] => [
   // 1. Recepción y Apertura (chk_rec_1, chk_rec_2, chk_rec_3)
   {
     id: 'chk_rec_1',

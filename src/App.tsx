@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Causa, EstadoCausa, UserRole, FaseProcedimental, ChecklistItem } from './types';
-import { INITIAL_CAUSAS, getFaseForEstado } from './data';
+import { INITIAL_CAUSAS, getFaseForEstado, getBaseChecklist } from './data';
 import { REGLAMENTO_CONDUCTAS } from './reglamentoData';
 import Header from './components/Header';
 import DashboardStats from './components/DashboardStats';
@@ -239,14 +239,7 @@ export default function App() {
     const padding = nextCounter < 10 ? `00${nextCounter}` : nextCounter < 100 ? `0${nextCounter}` : `${nextCounter}`;
     const nextId = `DC-2026-${padding}`;
 
-    const checklist: ChecklistItem[] = [
-      { id: 'resg_1', label: 'Separación Física de Espacios', descripcion: 'Distribución de puestos diferentes en el aula o alternancia preventiva de recreos/talleres.', completado: false, requeridoPor: 'Circular 482' },
-      { id: 'resg_2', label: 'Restricción de Contacto e Interacción', descripcion: 'Prohibición explícita de acercamiento verbal, físico o digital (redes sociales) en el colegio.', completado: false, requeridoPor: 'Circular 482' },
-      { id: 'resg_3', label: 'Asignación de Tutor Docente Coordinador', descripcion: 'Profesional referente para contención socioemocional diaria y enlace seguro con el estudiante.', completado: false, requeridoPor: 'Reglamento Interno' },
-      { id: 'resg_4', label: 'Derivación de Urgencia a Dupla Psicosocial', descripcion: 'Sesión inmediata de contención psicológica escolar para evaluar daño o necesidad de derivación externa.', completado: false, requeridoPor: 'Ley 21809' },
-      { id: 'resg_5', label: 'Horarios de Entrada y Salida Diferenciados', descripcion: 'Flexibilización horaria provisional para evitar cruces en portales de acceso al establecimiento.', completado: false, requeridoPor: 'Reglamento Interno' },
-      { id: 'resg_6', label: 'Plan de Continuidad o Adecuación Pedagógica', descripcion: 'Resguardo académico, reprogramación de evaluaciones e inicio de tutorías de apoyo curricular.', completado: false, requeridoPor: 'Circular 482' },
-    ];
+    const checklist = getBaseChecklist();
 
     const newObj: Causa = {
       id: nextId,
