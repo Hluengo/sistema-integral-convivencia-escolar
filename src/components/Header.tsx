@@ -10,13 +10,13 @@ interface HeaderProps {
   privacyMode: boolean;
   setPrivacyMode: (val: boolean) => void;
   saveStatus?: 'idle' | 'saving' | 'saved' | 'error';
+  currentView?: string;
 }
 
-export default function Header({ privacyMode, setPrivacyMode, saveStatus = 'idle' }: HeaderProps) {
+export default function Header({ privacyMode, setPrivacyMode, saveStatus = 'idle', currentView }: HeaderProps) {
   return (
     <header
       className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-neutral-200/60 shadow-sm"
-      role="banner"
       aria-label="Encabezado principal"
     >
       {/* Subtle gradient accent line */}
@@ -80,6 +80,7 @@ export default function Header({ privacyMode, setPrivacyMode, saveStatus = 'idle
 
           {/* Privacy toggle - premium pill */}
           <button
+            type="button"
             onClick={() => setPrivacyMode(!privacyMode)}
             className={`relative inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[11px] font-semibold transition-all duration-200 cursor-pointer select-none ${
               privacyMode

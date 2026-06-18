@@ -81,41 +81,442 @@ Utiliza un tono sumamente profesional, corporativo, técnico e institucional (el
 // Endpoint 2: Draft official documents based on Circular 482 / Ley 21809
 app.post('/api/draft-document', async (req, res) => {
   try {
-    const { docType, id, studentName, course, fatherName, managerName, infractionType, observations, isAulaSegura } = req.body;
+    const { docType, id, studentName, course, fatherName, managerName, infractionType, observations, isAulaSegura, bitacora, checklist, medidasEjecutadas, conductaRiceId, runEstudiante, nnaProtectedName, fechaApertura, estadoActual, fechaUltimaActualizacion } = req.body;
     const ai = getGeminiClient();
 
-    let docDesc = '';
+    // Build comprehensive case data section for AI analysis
+    const caseDataSection = `
+==================== EXPEDIENTE COMPLETO DEL CASO ====================
+
+DATOS GENERALES:
+- Código de Causa: ${id}
+- Estudiante: ${studentName} (RUN: ${runEstudiante || 'No registrado'})
+- Curso: ${course}
+- Apoderado: ${fatherName}
+- Fecha de Apertura: ${fechaApertura || 'No registrada'}
+- Estado Actual: ${estadoActual || 'No registrado'}
+- Última Actualización: ${fechaUltimaActualizacion || 'No registrada'}
+- Infracción: ${infractionType}
+- Encargado: ${managerName}
+- Aula Segura: ${isAulaSegura ? 'SÍ - Ley 21.128' : 'No'}
+- Conducta RICE vinculada: ${conductaRiceId || 'Ninguna'}
+- Observaciones del caso: "${observations || 'Sin observaciones'}"
+
+MEDIDAS EJECUTADAS:
+${medidasEjecutadas && medidasEjecutadas.length > 0 ? medidasEjecutadas.map((m: string) => `- ${m}`).join('\n') : 'No se han registrado medidas ejecutadas.'}
+
+BITÁCORA COMPLETA DEL EXPEDIENTE:
+${bitacora && bitacora.length > 0 ? bitacora.map((b: any) => `
+--- Registro: ${b.titulo} ---
+  Fecha: ${b.fecha}
+  Tipo: ${b.tipo}
+  Descripción: ${b.descripcion}
+  Participantes: ${(b.participantes || []).join(', ')}
+  Documento adjunto: ${b.documentoAdjunto || 'Ninguno'}`).join('\n') : 'No hay registros en la bitácora.'}
+
+CHECKLIST DEL DEBIDO PROCESO:
+${checklist && checklist.length > 0 ? checklist.map((c: any) => `
+- [${c.completado ? 'X' : ' '}] ${c.label}
+  Estado: ${c.completado ? 'COMPLETADO' : 'PENDIENTE'}
+  Descripción: ${c.descripcion || ''}
+  Requerido por: ${c.requeridoPor || ''}
+  ${c.completado ? `Registrado por: ${c.registradoPor || ''} | Fecha: ${c.fechaCompletado || ''}` : ''}
+  ${c.observaciones ? `Observaciones: ${c.observaciones}` : ''}
+  ${c.documentoNombre ? `Documento adjunto: ${c.documentoNombre}` : ''}`).join('\n') : 'No hay checklist disponible.'}
+
+==================================================================`;
+
+    // Append full case data to any prompt
+    const caseDataAppendix = `\n\n${caseDataSection}\n\nIMPORTANTE: Utiliza TODOS los antecedentes del expediente proporcionados arriba (bitácora, checklist, medidas ejecutadas) para fundamentar el documento. Revisa la bitácora para identificar fechas, entrevistas, evidencias y participantes reales. Revisa el checklist para verificar el estado del debido proceso. Incorpora estos datos en las secciones correspondientes del documento.\n`;
+
+    let systemPrompt = '';
+
+    // ============================================
+    // PROMPT 1: NOTIFICACIÓN DE INICIO DE INDAGACIÓN
+    // ============================================
     if (docType === 'notificacion_apertura') {
-      docDesc = 'Carta formal de notificación al apoderado sobre la apertura del procedimiento disciplinario de investigación por hechos calificados como graves/muy graves/gravísimos.';
-    } else if (docType === 'citacion_entrevista') {
-      docDesc = 'Carta formal de citación individual al apoderado y al estudiante para la "Audiencia de Descargos" (Derecho a ser oído), indispensable para resguardar la legalidad procesal.';
-    } else if (docType === 'notificacion_resolucion') {
-      docDesc = 'Oficio de Notificación de Resolución de sanción formativa/disciplinaria con determinación del plan de acompañamiento integral y la mención expresa de su derecho a presentar Recurso de Reconsideración ante la Dirección dentro del plazo de 5 días hábiles.';
-    } else {
-      docDesc = 'Documento formal de convivencia de conformidad con la normativa general de la Superintendencia de Educación.';
+      systemPrompt = `Actúa como un profesional experto en convivencia escolar, normativa educacional chilena, procedimientos disciplinarios, debido proceso y redacción institucional.
+
+Redacta una "NOTIFICACIÓN DE INICIO DE INDAGACIÓN DE CONVIVENCIA ESCOLAR", manteniendo un formato formal, objetivo, descriptivo y jurídicamente prudente.
+
+La notificación debe respetar los principios de:
+- Presunción de inocencia.
+- Debido proceso.
+- Derecho a defensa.
+- Interés superior del estudiante.
+- Confidencialidad de la información.
+- Protección de datos personales.
+- Ausencia de sesgos o juicios anticipados.
+- Lenguaje descriptivo basado únicamente en antecedentes conocidos a la fecha.
+
+Nunca afirmes que los hechos ocurrieron como una certeza. Utiliza expresiones como:
+- "presunta participación"
+- "eventual responsabilidad"
+- "antecedentes que ameritan indagación"
+- "hechos que se encuentran en proceso de esclarecimiento"
+- "según los antecedentes recabados hasta esta etapa"
+- "de corroborarse los hechos"
+
+La redacción debe ser institucional, clara y profesional, apta para ser revisada por la Superintendencia de Educación.
+
+Utiliza la siguiente estructura:
+
+COLEGIO [NOMBRE DEL ESTABLECIMIENTO]
+[UNIDAD O COORDINACIÓN RESPONSABLE]
+NOTIFICACIÓN DE INICIO DE INDAGACIÓN DE CONVIVENCIA ESCOLAR
+
+FECHA: [fecha]
+
+NOMBRE DEL ESTUDIANTE: ${studentName}
+
+CURSO: ${course}
+
+REF.: ${observations ? observations.substring(0, 100) : 'Hechos en proceso de indagación'}
+
+En conformidad con el procedimiento de convivencia escolar establecido en el Reglamento Interno y Manual de Convivencia Escolar vigente, se informa al estudiante y a su apoderado la existencia de una indagación formal respecto de antecedentes que podrían constituir una eventual infracción a la normativa interna del establecimiento.
+
+La presente actuación tiene por finalidad recopilar antecedentes, esclarecer los hechos denunciados y determinar, de manera objetiva e imparcial, si existe participación o responsabilidad en los mismos.
+
+Los antecedentes recopilados hasta esta etapa son los siguientes:
+
+1. Hallazgo o Antecedentes Iniciales
+Describir objetivamente:
+- fecha
+- lugar
+- situación observada o denunciada
+- forma en que se tomó conocimiento
+Evitar conclusiones o atribuciones de responsabilidad.
+
+2. Antecedentes Recabados y Medios de Verificación
+Describir:
+- testimonios recibidos
+- observaciones de funcionarios
+- registros documentales
+- evidencia material o digital
+- otros antecedentes relevantes
+Indicar que dichos antecedentes serán sometidos a análisis durante el proceso investigativo.
+
+3. Circunstancias Atenuantes y/o Agravantes en Evaluación
+Señalar que durante la indagación se considerarán aspectos tales como:
+- trayectoria conductual del estudiante
+- antecedentes previos registrados
+- colaboración durante el procedimiento
+- reconocimiento espontáneo de hechos
+- disposición a reparar eventuales afectaciones
+- cualquier otra circunstancia relevante contemplada en el Reglamento Interno.
+
+4. Calificación Preliminar de la Conducta
+Indicar exclusivamente una clasificación preliminar.
+De corroborarse los antecedentes descritos, la conducta podría ser calificada preliminarmente como una Falta ${infractionType}, conforme a lo establecido en el Reglamento Interno y de Convivencia Escolar.
+
+Aclarar expresamente que:
+Esta calificación tiene carácter provisional y podrá modificarse conforme avancen las etapas de investigación y análisis de los antecedentes.
+
+5. Medidas Formativas y/o Disciplinarias Eventualmente Aplicables
+Indicar únicamente medidas que podrían evaluarse.
+Sin perjuicio de lo que determine la investigación, y considerando la naturaleza de los hechos indagados, podrían evaluarse las siguientes medidas:
+
+Formativas:
+[medida 1]
+[medida 2]
+[medida 3]
+
+Disciplinarias:
+[medida 1]
+[medida 2]
+[medida 3]
+
+Aclarar que ninguna medida ha sido determinada aún.
+
+6. Garantías del Debido Proceso
+Incorporar el siguiente contenido adaptado al caso:
+- Derecho a ser oído.
+- Derecho a presentar descargos.
+- Derecho a aportar antecedentes.
+- Derecho a ser acompañado por su apoderado.
+- Derecho a solicitar revisión de antecedentes según normativa interna.
+- Derecho a recurrir conforme a los procedimientos establecidos.
+Indicar que el estudiante y su apoderado serán citados a entrevista o audiencia correspondiente.
+
+Resguardo de la Confidencialidad
+Incluir el siguiente párrafo:
+"Durante todo el procedimiento se resguardará estrictamente la confidencialidad de la información recopilada, la identidad de las personas involucradas y los antecedentes que formen parte de la investigación, velando por la protección de los derechos de todos los estudiantes y miembros de la comunidad educativa."
+
+${isAulaSegura ? 'NOTA: El presente caso se enmarca en la Ley N° 21.128 (Aula Segura), por lo que los plazos del procedimiento se sujetarán a lo dispuesto en dicha normativa.' : ''}
+
+NOMBRE Y CARGO DE QUIEN NOTIFICA: ${managerName}
+
+ACUSO RECIBO DEL APODERADO Y/O ESTUDIANTE:
+Nombre del Apoderado: ${fatherName}
+Firma: _________________________
+Fecha: _________________________`;
     }
 
-    const systemPrompt = `Eres un Abogado y Senior Redactor Legal de Instituciones Educacionales en Chile. Tu tarea es redactar el borrador oficial de un documento de convivencia escolar para el siguiente caso, respetando la Circular de la Supereduc N° 482 y la Ley N° 21809 sobre medidas disciplinarias, medidas de resguardo inmediatas y debido proceso de niños, niñas y adolescentes (NNA).
+    // ============================================
+    // PROMPT 2: CITACIÓN A ENTREVISTA DE DESCARGOS
+    // ============================================
+    else if (docType === 'citacion_entrevista') {
+      systemPrompt = `Actúa como un profesional experto en convivencia escolar, normativa educacional chilena y redacción institucional.
 
-DATOS PARTICULARES:
-- Tipo de Documento Solicitado: ${docDesc}
+Redacta una "CITACIÓN A ENTREVISTA DE DESCARGOS" formal, objetiva y jurídicamente sólida.
+
+DATOS DEL CASO:
+- Estudiante: ${studentName} (Curso: ${course})
+- Apoderado: ${fatherName}
+- Infracción investigada: ${infractionType}
+- Encargado del procedimiento: ${managerName}
+- Hechos: ${observations}
+- Aula Segura: ${isAulaSegura ? 'Sí' : 'No'}
+
+Estructura del documento:
+
+1. MEMBRETE Y ENCABEZADO INSTITUCIONAL
+2. CITACIÓN FORMAL indicando fecha, hora y lugar de la audiencia de descargos
+3. ANTECEDENTES del procedimiento en curso
+4. OBJETO DE LA AUDIENCIA: recibir descargos y ejercer el derecho a ser oído
+5. DERECHOS DEL ESTUDIANTE durante la audiencia
+6. ADVERTENCIA sobre consecuencias de inasistencia injustificada
+7. FIRMA DEL ENCARGADO Y RECIBO DEL APODERADO
+
+Utiliza lenguaje formal y respetuoso. Asegura que el documento cumple con los estándares de la Circular N° 482.`;
+    }
+
+    // ============================================
+    // PROMPT 3: INFORME DE CIERRE DE INDAGACIÓN
+    // ============================================
+    else if (docType === 'informe_cierre_indagacion') {
+      systemPrompt = `Actúa como un especialista en convivencia escolar, gestión educativa, normativa educacional chilena, Ley General de Educación, Ley N° 21.430, Ley N° 21.128 (Aula Segura), Ley N° 21.809, Circulares de la Superintendencia de Educación y Reglamento Interno de Convivencia Escolar (RICE).
+
+Debes elaborar un INFORME DE CIERRE DE INDAGACIÓN DISCIPLINARIA con un nivel técnico-profesional equivalente a un documento institucional destinado a ser revisado por Rectoría, Dirección, Equipo de Convivencia Escolar o eventualmente por la Superintendencia de Educación.
+
+La finalidad del informe es cerrar la etapa investigativa, establecer hechos acreditados, analizar los descargos, verificar el debido proceso y proponer medidas disciplinarias, formativas y reparatorias.
+
+ANTECEDENTES DEL CASO:
+- Estudiante: ${studentName} (Curso: ${course})
+- Apoderado: ${fatherName}
 - Código de causa: ${id}
-- Nombre de la Alumna/Estudiante afectado o implicado: ${studentName} (Curso: ${course})
-- Nombre del Apoderado a quien se dirige: ${fatherName}
-- Encargado del Procedimiento / Firmante: ${managerName}
-- Calificación Provisional de Infracción: ${infractionType}
-- Hechos de contexto: "${observations}"
-- Sujeto a Aula Segura (10 días): ${isAulaSegura ? 'SÍ' : 'NO'}
+- Tipo de infracción: ${infractionType}
+- Encargado: ${managerName}
+- Contexto: ${observations}
+- Aula Segura: ${isAulaSegura ? 'Sí' : 'No'}
 
-REGLAS DE REDACCIÓN:
-1. Utiliza lenguaje chileno formal para la administración de establecimientos escolares (por ejemplo, "pupilo", "apoderado", "Reglamento Interno", "Rectoría", "Dirección", "medida de resguardo", "medida formativa", "Superintendencia de Educación", "proporcionalidad", "aula segura").
-2. Estructura el documento de manera impecable: Membrete o Identificación, Fecha, Destinatario, Cuerpo formal debidamente fundado en artículos de la Circular 482, Ley 21809 o RIE, Espacio para la firma formal de recepción del apoderado, Firma del Director/Encargado.
-3. Si el documento es de Notificación de Resolución Final, explicita claramente la existencia de un plazo reglamentario de 5 (cinco) días hábiles para interponer un Recurso de Reconsideración ante la Dirección del establecimiento. Esto es vital para que la Supereduc no anule el procedimiento.
-4. Responde ÚNICAMENTE con el borrador final formal listo para imprimir y rellenar en formato Markdown. No incluyas explicaciones previas, solo el acta/carta impecable.`;
+ESTRUCTURA OBLIGATORIA DEL INFORME:
+
+1. RESUMEN EJECUTIVO
+Incluir:
+- Declaración de cierre de la indagación
+- Síntesis de hechos acreditados
+- Estado de la investigación
+- Principales hallazgos
+- Calificación preliminar de la conducta
+- Propuesta general de medidas
+- Estado del debido proceso
+
+2. RELACIÓN TÉCNICA DE LOS HECHOS
+Reconstruir cronológicamente:
+- Inicio de la denuncia.
+- Detección del hecho.
+- Actuaciones realizadas.
+- Evidencias obtenidas.
+- Entrevistas efectuadas.
+- Hallazgos relevantes.
+Incluir una tabla: | Fecha | Actuación | Descripción | Responsable |
+
+3. ANÁLISIS DE LOS DESCARGOS
+Analizar cada argumento presentado por estudiante y apoderado.
+Determinar para cada punto: Acreditado / Parcialmente acreditado / No acreditado.
+Fundamentar cada conclusión mediante evidencia objetiva.
+Evitar descalificaciones personales.
+Analizar únicamente hechos y antecedentes verificables.
+
+4. DETERMINACIÓN DE HECHOS ACREDITADOS
+Distinguir claramente:
+- Hechos acreditados
+- Hechos parcialmente acreditados
+- Hechos no acreditados
+Explicar evidencias que los respaldan, nivel de certeza alcanzado y relación con la normativa institucional.
+
+5. ANÁLISIS DE LA TRAYECTORIA CONDUCTUAL
+Incorporar historial de convivencia, frecuencia de anotaciones, tipología de conductas, evolución conductual, medidas previas implementadas y resultados de dichas intervenciones.
+Concluir si existe: reiteración, persistencia, escalada conductual o ausencia de antecedentes.
+
+6. IDENTIFICACIÓN DE AGRAVANTES Y ATENUANTES
+Para cada una, fundamentar con evidencia.
+
+7. AUDITORÍA DEL DEBIDO PROCESO
+Verificar expresamente cada etapa: recepción de denuncia, investigación, acopio de antecedentes, notificación formal, descargos, entrevistas, derecho a defensa, confidencialidad, presunción de inocencia, cierre de investigación.
+Tabla: | Etapa | Estado | Evidencia |
+
+8. CALIFICACIÓN JURÍDICA Y REGLAMENTARIA
+Determinar artículos del RICE aplicables, tipificación de la conducta, nivel de gravedad, derechos eventualmente afectados, deberes eventualmente vulnerados.
+Relacionar con Reglamento Interno, Ley General de Educación, Ley 21.430, Ley 21.809 y normativa vigente aplicable.
+
+9. IMPACTO EN LA CONVIVENCIA ESCOLAR
+Analizar impacto en estudiantes, docentes, asistentes, institucional y en el clima escolar.
+
+10. PROPUESTA DE MEDIDAS DISCIPLINARIAS
+Analizar procedencia de: amonestación, suspensión, condicionalidad, cancelación de matrícula, expulsión, restricciones de participación institucional y otras medidas del RICE.
+Para cada medida indicar: Procede / No procede. Justificar técnicamente.
+
+11. PROPUESTA DE MEDIDAS FORMATIVAS
+Diseñar medidas orientadas a: reflexión, aprendizaje, reparación, desarrollo socioemocional, responsabilidad personal.
+Incluir tabla: | Medida | Objetivo | Responsable | Plazo |
+
+12. PROPUESTA DE MEDIDAS REPARATORIAS
+Diseñar medidas orientadas a: reparación del daño, restablecimiento de relaciones, responsabilidad frente a la comunidad.
+Incluir tabla: | Medida | Objetivo | Responsable | Plazo |
+
+13. RESPONSABILIDADES Y COMPROMISOS DEL APODERADO
+Matriz: | Área | Compromiso | Fundamento |
+Considerar: seguimiento, asistencia, comunicación, supervisión, corresponsabilidad educativa.
+
+14. CONCLUSIONES DEL CIERRE DE INDAGACIÓN
+Concluir: hechos acreditados, nivel de responsabilidad establecido, principales elementos de análisis, cumplimiento del debido proceso, justificación de las medidas propuestas.
+Indicar expresamente que la decisión definitiva corresponde a la autoridad resolutiva establecida en el RICE.
+
+15. RESUMEN FINAL DE MEDIDAS PROPUESTAS
+Tabla consolidada: | Dimensión | Medida | Fundamento |
+Clasificar: disciplinarias, formativas, reparatorias, corresponsabilidad familiar.
+
+CRITERIOS OBLIGATORIOS DE REDACCIÓN:
+- Objetividad, imparcialidad, razonabilidad, proporcionalidad.
+- Enfoque formativo.
+- Perspectiva de protección de derechos.
+- Interés superior del niño, niña y adolescente.
+- Lenguaje técnico institucional.
+- Coherencia jurídica y pedagógica.
+- Compatibilidad con eventuales revisiones de la Superintendencia de Educación.
+
+EXPRESIONES PROHIBIDAS: "alumno problemático", "conducta antisocial", "estudiante conflictivo", "conducta refractaria", "mala persona", "manipulador", "conducta maliciosa", "irrecuperable", "lista negra", "perfil negativo".
+Toda conclusión debe referirse exclusivamente a conductas observadas y acreditadas.
+
+TEST FINAL DE SOLIDEZ TÉCNICA (verificar internamente):
+- ¿Todos los hechos están respaldados por evidencia?
+- ¿Se distinguieron claramente hechos y opiniones?
+- ¿Se analizaron descargos y antecedentes favorables?
+- ¿Las medidas propuestas son proporcionales?
+- ¿El lenguaje utilizado es objetivo y respetuoso?
+- ¿El informe resistiría una revisión de la Superintendencia de Educación?
+- ¿El informe demuestra cumplimiento efectivo del debido proceso?
+- ¿Las conclusiones derivan razonablemente de los antecedentes acreditados?`;
+    }
+
+    // ============================================
+    // PROMPT 4: INFORME CONCLUYENTE Y RESOLUCIÓN FINAL
+    // ============================================
+    else if (docType === 'informe_concluyente') {
+      systemPrompt = `Actúa como un equipo interdisciplinario compuesto por:
+- Abogado especialista en Derecho Educacional Chileno.
+- Experto en Convivencia Escolar.
+- Investigador de procedimientos disciplinarios escolares.
+- Auditor de debido proceso conforme a la Circular N°482 de la Superintendencia de Educación.
+- Especialista en protección de derechos de niños, niñas y adolescentes.
+- Redactor técnico institucional de alto nivel.
+
+Tu tarea consiste en elaborar un INFORME CONCLUYENTE DISCIPLINARIO Y FORMATIVO INTEGRAL a partir de todos los antecedentes del caso.
+
+OBJETIVO: Generar un informe técnico de estándar profesional, jurídicamente sólido, objetivo, imparcial y defendible ante: Superintendencia de Educación, Tribunal de Familia, Corte de Apelaciones, Sostenedor, Rectoría y Dirección del establecimiento.
+
+El informe debe evitar afirmaciones especulativas, prejuicios o juicios de valor subjetivos. Toda conclusión debe estar sustentada en evidencia explícita contenida en los antecedentes.
+
+DATOS DEL CASO:
+- Código de causa: ${id}
+- Estudiante: ${studentName} (Curso: ${course})
+- Apoderado: ${fatherName}
+- Infracción: ${infractionType}
+- Encargado del procedimiento: ${managerName}
+- Antecedentes y contexto: ${observations}
+- Aplica Aula Segura: ${isAulaSegura ? 'Sí (Ley 21.128)' : 'No'}
+
+PRINCIPIOS OBLIGATORIOS DE REDACCIÓN:
+- Lenguaje técnico, tono objetivo, estilo descriptivo.
+- Enfoque garantista, perspectiva formativa.
+- Prudencia jurídica, rigurosidad probatoria, imparcialidad institucional.
+- No utilizar: lenguaje emocional, suposiciones, afirmaciones no acreditadas, calificativos peyorativos, interpretaciones psicológicas sin respaldo técnico.
+- Cuando existan versiones contradictorias: identificarlas, compararlas, evaluar su consistencia, explicar cuáles se encuentran corroboradas por evidencia y cuáles carecen de respaldo suficiente.
+
+ESTRUCTURA OBLIGATORIA DEL INFORME:
+
+1. RESUMEN EJECUTIVO (máximo 1 página)
+- Identificación general del caso.
+- Hechos investigados.
+- Principales antecedentes analizados.
+- Conclusiones generales.
+- Medidas propuestas.
+
+2. DESCRIPCIÓN FÁCTICA Y RECONSTRUCCIÓN DEL INCIDENTE
+- Reconstruir cronológicamente: qué ocurrió, cuándo, dónde, quiénes participaron, cómo ocurrieron los hechos.
+- Integrar: declaraciones, testimonios, informes técnicos, evidencias documentales, descargos.
+- Distinguir claramente: hechos acreditados, hechos parcialmente acreditados, hechos no acreditados.
+
+3. ANÁLISIS DE CONSISTENCIA PROBATORIA
+Evaluación técnica de: testimonios, declaraciones, descargos, informes técnicos, evidencia documental.
+Para cada antecedente: | Evidencia | Lo que acredita | Nivel de confiabilidad | Observaciones |
+Clasificar: Alta consistencia / Consistencia media / Baja consistencia.
+Explicar contradicciones relevantes.
+
+4. ANÁLISIS DE DESCARGOS Y DERECHO A DEFENSA
+Examinar exhaustivamente argumentos del estudiante y del apoderado.
+Determinar: aspectos acogidos, parcialmente acogidos, rechazados. Justificar técnicamente cada decisión.
+
+5. ANÁLISIS DE TRAYECTORIA FORMATIVA Y CONDUCTUAL
+Analizar anotaciones positivas y negativas, medidas previas, historial disciplinario, evolución conductual.
+Matriz técnica: | Fecha | Tipo de registro | Descripción | Descargos | Análisis técnico | Impacto pedagógico |
+Determinar si el hecho constituye: hecho aislado, conducta reiterada, escalada conductual o patrón persistente.
+
+6. AUDITORÍA DE DEBIDO PROCESO
+Verificar cumplimiento de: Reglamento Interno, Circular N°482, Ley General de Educación, Ley de Inclusión, Ley 21.430.
+Tabla cronológica: | Etapa | Fecha | Actuación | Evidencia | Cumplimiento |
+Revisar: denuncia, apertura, investigación, notificación, bilateralidad, descargos, resolución.
+Detectar eventuales riesgos jurídicos.
+
+7. ANÁLISIS DE NO DISCRIMINACIÓN Y PROPORCIONALIDAD
+Evaluar si existen elementos que pudieran configurar discriminación arbitraria, sesgos, trato desigual o vulneración de derechos.
+Examinar: edad, curso, necesidades educativas especiales, condición socioeconómica, antecedentes académicos.
+
+8. TIPIFICACIÓN NORMATIVA
+Identificar artículos específicos del Reglamento Interno, protocolos aplicables, normativa institucional.
+Determinar: conductas acreditadas, tipo de falta, circunstancias agravantes, atenuantes y eximentes.
+Explicar el razonamiento jurídico completo.
+
+9. TEST DE SOLIDEZ JURÍDICA
+Análisis preventivo frente a apelaciones, reclamos ante Superintendencia, recursos judiciales.
+Identificar: riesgos jurídicos, fortalezas del procedimiento, aspectos susceptibles de impugnación, recomendaciones de mejora.
+Evaluar especialmente: proporcionalidad, razonabilidad, ne bis in idem, debido proceso, interés superior del niño.
+
+10. RESOLUCIÓN FUNDADA
+Analizar individualmente cada medida propuesta. Para cada una: HA LUGAR o NO HA LUGAR.
+Fundamentar con: hechos acreditados, reglamento, proporcionalidad, finalidad pedagógica, resguardo del derecho a la educación.
+
+11. MATRIZ CONSOLIDADA DE MEDIDAS
+| Tipo de Medida | Descripción | Estado | Fundamentación | Resguardo de Derechos |
+Incluir: disciplinarias, formativas, reparatorias, de apoyo, de seguimiento.
+
+12. PLAN DE INTERVENCIÓN Y SEGUIMIENTO
+Acciones específicas para: estudiante, apoderado, equipo de convivencia, profesor jefe, coordinación de ciclo.
+Indicar: objetivo, responsable, plazo, evidencia de cumplimiento.
+
+13. RESPONSABILIDAD FAMILIAR Y ALIANZA HOGAR-ESCUELA
+Matriz de corresponsabilidad familiar: | Área | Compromiso | Responsable | Evidencia | Seguimiento |
+
+14. CONCLUSIÓN FINAL
+Conclusión institucional robusta que: sintetice los hallazgos, explique la lógica de la resolución, demuestre proporcionalidad, acredite debido proceso, resguarde derechos, justifique las medidas adoptadas.
+La conclusión debe ser apta para sostener una eventual revisión de la Superintendencia de Educación.
+
+EXIGENCIA FINAL:
+Antes de emitir cualquier conclusión:
+- Identificar evidencia que respalde cada afirmación.
+- Diferenciar hechos acreditados de inferencias.
+- Aplicar criterio de imparcialidad, proporcionalidad, interés superior del niño, debido proceso y razonabilidad jurídica.
+
+El resultado final debe parecer elaborado por un abogado especialista en derecho educacional, un investigador disciplinario y un coordinador de convivencia escolar trabajando conjuntamente.
+
+${isAulaSegura ? 'NOTA: Dado que el caso está sujeto a Ley Aula Segura (Ley 21.128), el informe debe considerar los plazos fatales de 10 días hábiles y las disposiciones especiales de dicha ley.' : ''}`;
+    }
 
     const response = await ai.models.generateContent({
       model: 'gemini-3.5-flash',
-      contents: systemPrompt,
+      contents: systemPrompt + caseDataAppendix,
     });
 
     res.json({ success: true, document: response.text });

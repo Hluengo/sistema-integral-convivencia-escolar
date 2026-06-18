@@ -16,6 +16,9 @@ import {
   ChevronLeft, ChevronRight, Minimize2
 } from 'lucide-react';
 
+const CURRENT_DATE_STR = new Date('2026-05-27T14:50:29Z').toISOString().split('T')[0];
+const FULL_ISO_DATE = new Date('2026-05-27T14:50:29Z').toISOString().replace('.000Z', 'Z');
+
 interface InteractiveTimelineProps {
   causa: Causa;
   onUpdateCausa: (updated: Causa) => void;
@@ -27,6 +30,21 @@ interface InteractiveTimelineProps {
   setIsTimelineCollapsed?: (collapsed: boolean) => void;
 }
 
+function BoldText({ text }: { text: string }) {
+  const parts = text.split('**');
+  return (
+    <>
+      {parts.map((part, i) =>
+        i % 2 === 1 ? (
+          <strong key={`b-${part.slice(0, 24)}`} className="font-bold text-neutral-950">{part}</strong>
+        ) : (
+          <React.Fragment key={`t-${part.slice(0, 24)}`}>{part}</React.Fragment>
+        )
+      )}
+    </>
+  );
+}
+
 // Simple custom Markdown-like formatter to render Gemini reports beautifully in Tailwind
 function CustomMarkdownRenderer({ text }: { text: string }) {
   if (!text) return <p className="text-neutral-400 italic text-xs">No se ha generado contenido aún.</p>;
@@ -36,24 +54,25 @@ function CustomMarkdownRenderer({ text }: { text: string }) {
     <div className="space-y-2 text-xs text-neutral-700 leading-relaxed font-sans">
       {lines.map((line, idx) => {
         const trimmed = line.trim();
+        const lineKey = `${idx}-${trimmed.slice(0, 48)}`;
         
         // Headers
         if (trimmed.startsWith('### ')) {
-          return <h4 key={idx} className="text-sm font-bold text-neutral-900 mt-4 mb-2 border-b border-neutral-100 pb-1">{trimmed.replace('### ', '')}</h4>;
+          return <h4 key={lineKey} className="text-sm font-bold text-neutral-900 mt-4 mb-2 border-b border-neutral-100 pb-1">{trimmed.replace('### ', '')}</h4>;
         }
         if (trimmed.trim().startsWith('## ')) {
-          return <h3 key={idx} className="text-base font-bold text-neutral-900 mt-5 mb-2 flex items-center gap-2 text-emerald-700">{trimmed.replace('## ', '')}</h3>;
+          return <h3 key={lineKey} className="text-base font-bold text-neutral-900 mt-5 mb-2 flex items-center gap-2 text-emerald-700">{trimmed.replace('## ', '')}</h3>;
         }
         if (trimmed.startsWith('# ')) {
-          return <h2 key={idx} className="text-lg font-bold text-neutral-950 mt-6 mb-3 border-l-4 border-neutral-900 pl-2">{trimmed.replace('# ', '')}</h2>;
+          return <h2 key={lineKey} className="text-lg font-bold text-neutral-950 mt-6 mb-3 border-l-4 border-neutral-900 pl-2">{trimmed.replace('# ', '')}</h2>;
         }
 
         // Bullet points
         if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
           return (
-            <div key={idx} className="flex items-start gap-2 ml-4 my-1">
+            <div key={lineKey} className="flex items-start gap-2 ml-4 my-1">
               <span className="text-brand-600 mt-1 select-none">•</span>
-              <span>{renderBold(trimmed.substring(2))}</span>
+              <span><BoldText text={trimmed.substring(2)} /></span>
             </div>
           );
         }
@@ -62,9 +81,9 @@ function CustomMarkdownRenderer({ text }: { text: string }) {
         const numMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
         if (numMatch) {
           return (
-            <div key={idx} className="flex items-start gap-2 ml-4 my-1">
+            <div key={lineKey} className="flex items-start gap-2 ml-4 my-1">
               <span className="font-mono text-brand-700 font-bold">{numMatch[1]}.</span>
-              <span>{renderBold(numMatch[2])}</span>
+              <span><BoldText text={numMatch[2]} /></span>
             </div>
           );
         }
@@ -72,31 +91,21 @@ function CustomMarkdownRenderer({ text }: { text: string }) {
         // Blockquotes / Alerts
         if (trimmed.startsWith('> ')) {
           return (
-            <div key={idx} className="bg-amber-50 border-l-4 border-amber-500 p-2.5 my-2 rounded-r-md text-amber-900 flex items-start gap-2">
+            <div key={lineKey} className="bg-amber-50 border-l-4 border-amber-500 p-2.5 my-2 rounded-r-md text-amber-900 flex items-start gap-2">
               <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-              <p className="italic">{renderBold(trimmed.substring(2))}</p>
+              <p className="italic"><BoldText text={trimmed.substring(2)} /></p>
             </div>
           );
         }
 
         if (trimmed === '') {
-          return <div key={idx} className="h-2" />;
+          return <div key={lineKey} className="h-2" />;
         }
 
-        return <p key={idx}>{renderBold(trimmed)}</p>;
+        return <p key={lineKey}><BoldText text={trimmed} /></p>;
       })}
     </div>
   );
-}
-
-function renderBold(text: string) {
-  const parts = text.split('**');
-  return parts.map((part, i) => {
-    if (i % 2 === 1) {
-      return <strong key={i} className="font-bold text-neutral-950">{part}</strong>;
-    }
-    return part;
-  });
 }
 
 export default function InteractiveTimeline({ 
@@ -117,7 +126,7 @@ export default function InteractiveTimeline({
   const [isAuditing, setIsAuditing] = useState<boolean>(false);
   
   // Document drafting states
-  const [selectedDocType, setSelectedDocType] = useState<'notificacion_apertura' | 'citacion_entrevista' | 'notificacion_resolucion'>('notificacion_apertura');
+  const [selectedDocType, setSelectedDocType] = useState<'notificacion_apertura' | 'citacion_entrevista' | 'informe_cierre_indagacion' | 'informe_concluyente'>('notificacion_apertura');
   const [fatherName, setFatherName] = useState<string>('');
   const [draftedDocument, setDraftedDocument] = useState<string>('');
   const [isDrafting, setIsDrafting] = useState<boolean>(false);
@@ -143,16 +152,23 @@ export default function InteractiveTimeline({
   const [regObservations, setRegObservations] = useState<string>('');
   const [regFileName, setRegFileName] = useState<string>('');
 
+  // Doctor React: Memorizar filtros pesados para evitar cálculos innecesarios en cada re-render
+  const riceCategories = React.useMemo(() => ({
+    leves: REGLAMENTO_CONDUCTAS.filter(c => c.gravedad === 'Leve'),
+    graves: REGLAMENTO_CONDUCTAS.filter(c => c.gravedad === 'Grave'),
+    muyGraves: REGLAMENTO_CONDUCTAS.filter(c => c.gravedad === 'Muy Grave'),
+    gravisimas: REGLAMENTO_CONDUCTAS.filter(c => c.gravedad === 'Gravísima'),
+  }), []);
+
   const currentFase = getFaseForEstado(causa.estadoActual);
 
   // Trigger state change
   const handleStateChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newState = e.target.value as EstadoCausa;
-    const nowStr = new Date('2026-05-27T14:50:29Z').toISOString().split('T')[0];
     onUpdateCausa({
       ...causa,
       estadoActual: newState,
-      fechaUltimaActualizacion: nowStr
+      fechaUltimaActualizacion: CURRENT_DATE_STR
     });
   };
 
@@ -174,7 +190,6 @@ export default function InteractiveTimeline({
   // Save the custom registration details for a step
   const handleSaveRegistration = (itemId: string) => {
     if (currentRole === 'docente') return;
-    const nowStr = new Date('2026-05-27T14:50:29Z').toISOString().split('T')[0];
     
     // Auto-create an entry in the Bitacora when they register a step!
     const targetItem = causa.checklistDebidoProceso.find(it => it.id === itemId);
@@ -182,7 +197,7 @@ export default function InteractiveTimeline({
 
     const newLog: BitacoraEntry = {
       id: `b_step_${Date.now()}`,
-      fecha: new Date('2026-05-27T14:50:29Z').toISOString().replace('.000Z', 'Z'),
+      fecha: FULL_ISO_DATE,
       tipo: 'Notificación',
       titulo: `Registro de Hito: ${itemLabel}`,
       descripcion: `Se ha registrado formalmente la finalización de la etapa/acción "${itemLabel}". Responsable: ${regName || 'Esteban Valenzuela'}. Observaciones: ${regObservations}`,
@@ -194,7 +209,7 @@ export default function InteractiveTimeline({
         return {
           ...item,
           completado: true,
-          fechaCompletado: item.fechaCompletado || nowStr,
+          fechaCompletado: item.fechaCompletado || CURRENT_DATE_STR,
           registradoPor: regName || 'Esteban Valenzuela',
           observaciones: regObservations,
           documentoNombre: regFileName || undefined,
@@ -208,7 +223,7 @@ export default function InteractiveTimeline({
       ...causa,
       checklistDebidoProceso: updatedChecklist,
       bitacora: [newLog, ...causa.bitacora],
-      fechaUltimaActualizacion: nowStr
+      fechaUltimaActualizacion: CURRENT_DATE_STR
     });
 
     // Reset states
@@ -221,7 +236,6 @@ export default function InteractiveTimeline({
   // Anular/resetear un registro del debido proceso
   const handleResetRegistration = (itemId: string) => {
     if (currentRole === 'docente') return;
-    const nowStr = new Date('2026-05-27T14:50:29Z').toISOString().split('T')[0];
 
     const targetItem = causa.checklistDebidoProceso.find(it => it.id === itemId);
     const itemLabel = targetItem ? targetItem.label : 'Paso de Debido Proceso';
@@ -229,7 +243,7 @@ export default function InteractiveTimeline({
     // Log the invalidation in the Bitacora
     const newLog: BitacoraEntry = {
       id: `b_step_reset_${Date.now()}`,
-      fecha: new Date('2026-05-27T14:50:29Z').toISOString().replace('.000Z', 'Z'),
+      fecha: FULL_ISO_DATE,
       tipo: 'Otro',
       titulo: `Invalidador Hito: ${itemLabel}`,
       descripcion: `Se ha anulado e invalidado formalmente el registro del hito "${itemLabel}". Se requiere volver a registrar este hito para la validez legal y resguardo normativo.`,
@@ -255,7 +269,7 @@ export default function InteractiveTimeline({
       ...causa,
       checklistDebidoProceso: updatedChecklist,
       bitacora: [newLog, ...causa.bitacora],
-      fechaUltimaActualizacion: nowStr
+      fechaUltimaActualizacion: CURRENT_DATE_STR
     });
   };
 
@@ -322,7 +336,7 @@ export default function InteractiveTimeline({
     }
   };
 
-  // Call API to draft legal documents
+  // Call API to draft legal documents - sends FULL case data
   const handleDraftDocument = async () => {
     setIsDrafting(true);
     setDraftedDocument('');
@@ -339,7 +353,17 @@ export default function InteractiveTimeline({
           managerName: causa.responsable,
           infractionType: causa.tipoInfraccion,
           observations: causa.observaciones,
-          isAulaSegura: causa.comprometeAulaSegura
+          isAulaSegura: causa.comprometeAulaSegura,
+          // === FULL CASE DATA FOR AI REVIEW ===
+          bitacora: causa.bitacora,
+          checklist: causa.checklistDebidoProceso,
+          medidasEjecutadas: causa.medidasEjecutadas,
+          conductaRiceId: causa.conductaRiceId,
+          runEstudiante: causa.runEstudiante,
+          nnaProtectedName: causa.nnaProtectedName,
+          fechaApertura: causa.fechaApertura,
+          estadoActual: causa.estadoActual,
+          fechaUltimaActualizacion: causa.fechaUltimaActualizacion
         })
       });
       const data = await response.json();
@@ -408,6 +432,7 @@ export default function InteractiveTimeline({
               {/* Layout controls */}
               {setIsSidebarCollapsed && (
                 <button
+                  type="button"
                   onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                   className={`text-[10px] font-semibold px-2 py-1 rounded-lg border flex items-center gap-1 transition-all cursor-pointer select-none ${
                     isSidebarCollapsed
@@ -427,6 +452,7 @@ export default function InteractiveTimeline({
 
               {setIsTimelineCollapsed && (
                 <button
+                  type="button"
                   onClick={() => setIsTimelineCollapsed(true)}
                   className="text-[10px] font-semibold px-2 py-1 rounded-lg border bg-white border-neutral-200 text-neutral-600 hover:bg-neutral-50 flex items-center gap-1 transition-all cursor-pointer select-none"
                   title="Cerrar detalle del expediente"
@@ -515,7 +541,7 @@ export default function InteractiveTimeline({
             <span>RIESGOS PROCEDIMENTALES:</span>
           </div>
           <ul className="list-disc pl-5 space-y-0.5 text-[11px]">
-            {breaches.map((b, i) => <li key={i} className="font-medium">{b}</li>)}
+            {breaches.map((b) => <li key={b} className="font-medium">{b}</li>)}
           </ul>
         </div>
       )}
@@ -523,6 +549,7 @@ export default function InteractiveTimeline({
       {/* Primary interactive tabs */}
       <div className="flex border-b border-neutral-200/60 bg-neutral-50/50 p-1.5 gap-1.5" role="tablist" aria-label="Secciones del expediente">
         <button
+          type="button"
           onClick={() => setActiveTab('proceso')}
           role="tab"
           aria-selected={activeTab === 'proceso'}
@@ -538,6 +565,7 @@ export default function InteractiveTimeline({
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab('bitacora')}
           role="tab"
           aria-selected={activeTab === 'bitacora'}
@@ -552,6 +580,7 @@ export default function InteractiveTimeline({
         </button>
 
         <button
+          type="button"
           onClick={() => setActiveTab('asistente_ia')}
           role="tab"
           aria-selected={activeTab === 'asistente_ia'}
@@ -760,10 +789,10 @@ export default function InteractiveTimeline({
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                           <div className="space-y-1.5">
                             <span className="block text-[8px] font-semibold text-neutral-400 uppercase tracking-widest">Formativas:</span>
-                            {conducta.medidasFormativas.map((m, idx) => {
+                            {conducta.medidasFormativas.map((m) => {
                               const isChecked = (causa.medidasEjecutadas || []).includes(`formativa:${m}`);
                               return (
-                                <button key={`f-${idx}`} type="button" disabled={currentRole === 'docente'}
+                                <button key={`formativa-${m}`} type="button" disabled={currentRole === 'docente'}
                                   onClick={() => toggleMeasure('formativa', m)}
                                   className={`w-full p-1.5 rounded-lg text-left text-[10px] leading-normal border flex items-start gap-1.5 select-none transition-all ${
                                     isChecked ? 'bg-success-50 text-success-800 border-success-200' : 'bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50'
@@ -779,10 +808,10 @@ export default function InteractiveTimeline({
                           </div>
                           <div className="space-y-1.5">
                             <span className="block text-[8px] font-semibold text-neutral-400 uppercase tracking-widest">Disciplinarias:</span>
-                            {conducta.medidasDisciplinarias.map((m, idx) => {
+                            {conducta.medidasDisciplinarias.map((m) => {
                               const isChecked = (causa.medidasEjecutadas || []).includes(`disciplinaria:${m}`);
                               return (
-                                <button key={`d-${idx}`} type="button" disabled={currentRole === 'docente'}
+                                <button key={`disciplinaria-${m}`} type="button" disabled={currentRole === 'docente'}
                                   onClick={() => toggleMeasure('disciplinaria', m)}
                                   className={`w-full p-1.5 rounded-lg text-left text-[10px] leading-normal border flex items-start gap-1.5 select-none transition-all ${
                                     isChecked ? 'bg-danger-50 text-danger-800 border-danger-200' : 'bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50'
@@ -917,9 +946,13 @@ export default function InteractiveTimeline({
                                           <File className="h-3 w-3 text-info-500 shrink-0" aria-hidden="true" />
                                           <span className="truncate">{item.documentoNombre}</span>
                                         </span>
-                                        <a href="#" onClick={(e) => e.preventDefault()} className="text-[9px] text-info-600 font-semibold flex items-center gap-0.5 hover:underline shrink-0 pl-2">
+                                        <button
+                                          type="button"
+                                          className="text-[9px] text-info-600 font-semibold flex items-center gap-0.5 hover:underline shrink-0 pl-2"
+                                          aria-label={`Ver documento ${item.documentoNombre}`}
+                                        >
                                           <Download className="h-3 w-3" aria-hidden="true" /> Ver
-                                        </a>
+                                        </button>
                                       </div>
                                     )}
 
@@ -961,10 +994,11 @@ export default function InteractiveTimeline({
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                           <div>
-                                            <label className="block text-[9px] font-semibold text-neutral-400 uppercase">
+                                            <label htmlFor={`reg-name-${item.id}`} className="block text-[9px] font-semibold text-neutral-400 uppercase">
                                               Responsable:
                                             </label>
                                             <input
+                                              id={`reg-name-${item.id}`}
                                               type="text"
                                               className="w-full mt-1 border border-neutral-300 rounded-lg p-1.5 text-xs bg-white font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
                                               value={regName}
@@ -974,19 +1008,20 @@ export default function InteractiveTimeline({
                                           </div>
 
                                           <div>
-                                            <label className="block text-[9px] font-semibold text-neutral-400 uppercase">
+                                            <span id={`reg-file-label-${item.id}`} className="block text-[9px] font-semibold text-neutral-400 uppercase">
                                               Documento de respaldo:
-                                            </label>
+                                            </span>
                                             <div className="relative mt-1 flex items-center justify-center border-2 border-dashed border-neutral-300 rounded-lg py-1.5 px-2 bg-neutral-50/50 hover:bg-neutral-50 transition-all">
-                                              <label className="flex items-center gap-1.5 text-[11px] text-neutral-500 font-medium cursor-pointer">
+                                              <label htmlFor={`reg-file-${item.id}`} className="flex items-center gap-1.5 text-[11px] text-neutral-500 font-medium cursor-pointer">
                                                 <Upload className="h-3.5 w-3.5 text-neutral-400" aria-hidden="true" />
                                                 {regFileName || 'Seleccionar archivo...'}
                                                 <input
+                                                  id={`reg-file-${item.id}`}
                                                   type="file"
                                                   onChange={handleFileChange}
                                                   className="sr-only"
                                                   accept=".pdf,.doc,.docx,.jpg,.png"
-                                                  aria-label="Subir documento"
+                                                  aria-labelledby={`reg-file-label-${item.id}`}
                                                 />
                                               </label>
                                             </div>
@@ -994,10 +1029,11 @@ export default function InteractiveTimeline({
                                         </div>
 
                                         <div>
-                                          <label className="block text-[9px] font-semibold text-neutral-400 uppercase">
+                                          <label htmlFor={`reg-obs-${item.id}`} className="block text-[9px] font-semibold text-neutral-400 uppercase">
                                             Observaciones:
                                           </label>
                                           <textarea
+                                            id={`reg-obs-${item.id}`}
                                             rows={2}
                                             className="w-full mt-1 border border-neutral-300 rounded-lg p-1.5 text-xs bg-white font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
                                             value={regObservations}
@@ -1068,8 +1104,9 @@ export default function InteractiveTimeline({
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[9px] font-semibold text-neutral-400 uppercase mb-1">Tipo</label>
+                    <label htmlFor="log-type" className="block text-[9px] font-semibold text-neutral-400 uppercase mb-1">Tipo</label>
                     <select
+                      id="log-type"
                       value={logType}
                       onChange={(e) => setLogType(e.target.value as any)}
                       className="w-full text-xs border border-neutral-300 rounded-lg p-2 bg-white font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
@@ -1083,8 +1120,9 @@ export default function InteractiveTimeline({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[9px] font-semibold text-neutral-400 uppercase mb-1">Participantes</label>
+                    <label htmlFor="log-participantes" className="block text-[9px] font-semibold text-neutral-400 uppercase mb-1">Participantes</label>
                     <input
+                      id="log-participantes"
                       type="text"
                       value={logParticipantes}
                       onChange={(e) => setLogParticipantes(e.target.value)}
@@ -1094,8 +1132,9 @@ export default function InteractiveTimeline({
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[9px] font-semibold text-neutral-400 uppercase mb-1">Título</label>
+                  <label htmlFor="log-title" className="block text-[9px] font-semibold text-neutral-400 uppercase mb-1">Título</label>
                   <input
+                    id="log-title"
                     type="text"
                     required
                     value={logTitle}
@@ -1105,8 +1144,9 @@ export default function InteractiveTimeline({
                   />
                 </div>
                 <div>
-                  <label className="block text-[9px] font-semibold text-neutral-400 uppercase mb-1">Descripción</label>
+                  <label htmlFor="log-desc" className="block text-[9px] font-semibold text-neutral-400 uppercase mb-1">Descripción</label>
                   <textarea
+                    id="log-desc"
                     required
                     rows={2}
                     value={logDesc}
@@ -1185,6 +1225,7 @@ export default function InteractiveTimeline({
             {/* Sub-tabs */}
             <div className="flex gap-1.5 bg-neutral-50 p-1 rounded-lg border border-neutral-200" role="tablist" aria-label="Herramientas de IA">
               <button
+                type="button"
                 onClick={() => setAiSubTab('auditoria')}
                 role="tab"
                 aria-selected={aiSubTab === 'auditoria'}
@@ -1197,6 +1238,7 @@ export default function InteractiveTimeline({
                 Auditoría legal
               </button>
               <button
+                type="button"
                 onClick={() => setAiSubTab('borradores')}
                 role="tab"
                 aria-selected={aiSubTab === 'borradores'}
@@ -1267,7 +1309,8 @@ export default function InteractiveTimeline({
                   >
                     <option value="notificacion_apertura">Notificación de apertura de investigación</option>
                     <option value="citacion_entrevista">Citación a entrevista de descargos</option>
-                    <option value="notificacion_resolucion">Notificación de resolución final</option>
+                    <option value="informe_cierre_indagacion">Informe de cierre de indagación</option>
+                    <option value="informe_concluyente">Informe concluyente y resolución final</option>
                   </select>
                 </div>
 

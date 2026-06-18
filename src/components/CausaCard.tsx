@@ -5,8 +5,8 @@
 
 import React from 'react';
 import { Causa, EstadoCausa } from '../types';
-import { getFaseForEstado, MAPPED_STATES } from '../data';
-import { Shield, Clock, User, UserCheck, AlertTriangle, ChevronRight, FileCheck, CalendarDays, Gavel } from 'lucide-react';
+import { getFaseForEstado } from '../data';
+import { Shield, Clock, User, UserCheck, AlertTriangle, ChevronRight, FileCheck } from 'lucide-react';
 
 interface CausaCardProps {
   causa: Causa;
@@ -16,40 +16,43 @@ interface CausaCardProps {
   key?: any;
 }
 
+const SEVERITY_BAR_COLORS: Record<string, string> = {
+  'Leve': 'bg-blue-500',
+  'Grave': 'bg-amber-500',
+  'Muy Grave': 'bg-purple-500',
+  'Gravísima': 'bg-red-500',
+};
+
+const FASE_BADGE_STYLES: Record<string, string> = {
+  'Recepción': 'bg-blue-50 text-blue-700 border-blue-200',
+  'Investigación': 'bg-amber-50 text-amber-700 border-amber-200',
+  'Resolución': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  'Impugnación': 'bg-purple-50 text-purple-700 border-purple-200',
+  'Seguimiento': 'bg-neutral-100 text-neutral-700 border-neutral-200',
+};
+
+const SEVERITY_BADGE_STYLES: Record<string, string> = {
+  'Leve': 'bg-blue-100 text-blue-800',
+  'Grave': 'bg-amber-100 text-amber-800',
+  'Muy Grave': 'bg-purple-100 text-purple-800',
+  'Gravísima': 'bg-red-100 text-red-800',
+};
+
 function LeftSeverityBar({ tipo }: { tipo: Causa['tipoInfraccion'] }) {
-  const colors: Record<string, string> = {
-    'Leve': 'bg-blue-500',
-    'Grave': 'bg-amber-500',
-    'Muy Grave': 'bg-purple-500',
-    'Gravísima': 'bg-red-500',
-  };
-  return <div className={`absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full ${colors[tipo] || 'bg-neutral-300'}`} />;
+  return <div className={`absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full ${SEVERITY_BAR_COLORS[tipo] || 'bg-neutral-300'}`} />;
 }
 
 function FaseBadge({ fase }: { fase: string }) {
-  const styles: Record<string, string> = {
-    'Recepción': 'bg-blue-50 text-blue-700 border-blue-200',
-    'Investigación': 'bg-amber-50 text-amber-700 border-amber-200',
-    'Resolución': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    'Impugnación': 'bg-purple-50 text-purple-700 border-purple-200',
-    'Seguimiento': 'bg-neutral-100 text-neutral-700 border-neutral-200',
-  };
   return (
-    <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-md border ${styles[fase] || styles['Recepción']}`}>
+    <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-md border ${FASE_BADGE_STYLES[fase] || FASE_BADGE_STYLES['Recepción']}`}>
       {fase}
     </span>
   );
 }
 
 function SeverityBadge({ tipo }: { tipo: Causa['tipoInfraccion'] }) {
-  const styles: Record<string, string> = {
-    'Leve': 'bg-blue-100 text-blue-800',
-    'Grave': 'bg-amber-100 text-amber-800',
-    'Muy Grave': 'bg-purple-100 text-purple-800',
-    'Gravísima': 'bg-red-100 text-red-800',
-  };
   return (
-    <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${styles[tipo] || 'bg-neutral-100 text-neutral-600'}`}>
+    <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${SEVERITY_BADGE_STYLES[tipo] || 'bg-neutral-100 text-neutral-600'}`}>
       {tipo}
     </span>
   );
@@ -124,14 +127,12 @@ export default function CausaCard({ causa, privacyMode, onSelect, isSelected }: 
   const progress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   return (
-    <div
+    <button
+      type="button"
       onClick={() => onSelect(causa)}
       id={`causa_card_${causa.id}`}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(causa); } }}
       aria-label={`Expediente ${causa.id}: ${privacyMode ? causa.nnaProtectedName : causa.estudianteNombre}, ${causa.estudianteCurso}`}
-      className={`relative bg-white rounded-xl border transition-all duration-200 cursor-pointer select-none text-left overflow-hidden ${
+      className={`relative w-full bg-white rounded-xl border transition-all duration-200 cursor-pointer select-none text-left overflow-hidden ${
         isSelected
           ? 'border-brand-500 shadow-sm ring-1 ring-brand-500/20'
           : 'border-neutral-200/80 hover:border-neutral-300/80 hover:shadow-sm'
@@ -198,7 +199,7 @@ export default function CausaCard({ causa, privacyMode, onSelect, isSelected }: 
               {completedCount}/{totalCount} ({progress}%)
             </span>
           </div>
-          <div className="w-full bg-neutral-100 h-1.5 rounded-full overflow-hidden" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label={`${progress}% completado`}>
+          <div className="w-full bg-neutral-100 h-1.5 rounded-full overflow-hidden" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label={`${progress}% completado`}>
             <div 
               className="bg-success-500 h-full rounded-full transition-all duration-500" 
               style={{ width: `${progress}%` }}
@@ -212,6 +213,6 @@ export default function CausaCard({ causa, privacyMode, onSelect, isSelected }: 
           </div>
         </div>
       </div>
-    </div>
+    </button>
   );
 }

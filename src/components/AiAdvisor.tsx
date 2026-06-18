@@ -75,7 +75,7 @@ export default function AiAdvisor() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'model',
-      content: "Hola. Soy su **Asesor Legal Especializado en Convivencia Escolar y Debido Proceso Chileno**.\n\nEstoy programado según las directrices y jurisprudencia de la **Superintendencia de Educación (Circular N° 482 y Ley N° 21809 y Ley Aula Segura)**.\n\nPuedo ayudarle a absolver consultas sobre:\n- Tramitación de procedimientos disciplinarios y plazos fatales (Circular 482 / Ley 21809).\n- Confección de actas e informes concluyentes de término.\n- Resguardo del derecho a ser oído (entrevistas de descargos).\n- Aplicación de medidas de resguardo formativas de resguardo inmediato de acuerdo a la gradualidad de la normativa chilena.\n\n¿En qué consulta procedimental o legal le puedo orientar hoy?"
+      content: "Hola. Soy su **Asesor Legal Especializado en Convivencia Escolar y Debido Proceso Chileno**..."
     }
   ]);
   const [inputMessage, setInputMessage] = useState<string>('');
@@ -131,7 +131,7 @@ export default function AiAdvisor() {
   };
 
   return (
-    <div className="flex flex-col h-[580px] bg-white rounded-xl border border-neutral-200/80 shadow-sm overflow-hidden transition-all animate-slide-up">
+    <div className="flex flex-col min-h-[420px] bg-white rounded-xl border border-neutral-200/80 shadow-sm overflow-hidden transition-all animate-slide-up">
       {/* Advisor header */}
       <div className="bg-white px-4 sm:px-5 py-3.5 flex items-center justify-between border-b border-neutral-200/60">
         <div className="flex items-center gap-3 text-left">
@@ -154,8 +154,9 @@ export default function AiAdvisor() {
       <div className="flex-1 overflow-y-auto p-4 bg-neutral-50 space-y-3">
         {messages.map((m, idx) => {
           const isModel = m.role === 'model';
+          const messageKey = `${m.role}-${idx}-${m.content.substring(0, 10)}`;
           return (
-            <div key={idx} className={`flex ${isModel ? 'justify-start' : 'justify-end'} text-left animate-fade-in`}>
+            <div key={messageKey} className={`flex ${isModel ? 'justify-start' : 'justify-end'} text-left animate-fade-in`}>
               <div className={`max-w-[88%] flex gap-2.5 items-start ${isModel ? 'flex-row' : 'flex-row-reverse'}`}>
                 {/* Avatars */}
                 <div className={`p-1.5 rounded-lg shrink-0 ${isModel ? 'bg-neutral-900 text-white' : 'bg-brand-600 text-white'}`}>

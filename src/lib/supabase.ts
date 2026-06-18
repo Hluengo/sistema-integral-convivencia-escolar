@@ -497,3 +497,41 @@ export async function seedInitialData(causas: Causa[]): Promise<boolean> {
 
   return true;
 }
+
+/**
+ * Clear all data from the database (causas, bitacora_entries, checklist_items)
+ */
+export async function clearAllData(): Promise<boolean> {
+  console.log('Clearing all data from database...');
+  
+  const { error: deleteBitacora } = await supabase
+    .from('bitacora_entries')
+    .delete()
+    .neq('id', '00000000-0000-0000-0000-000000000000'); // delete all
+
+  if (deleteBitacora) {
+    console.error('Error clearing bitacora_entries:', deleteBitacora);
+  }
+
+  const { error: deleteChecklist } = await supabase
+    .from('checklist_items')
+    .delete()
+    .neq('id', '00000000-0000-0000-0000-000000000000'); // delete all
+
+  if (deleteChecklist) {
+    console.error('Error clearing checklist_items:', deleteChecklist);
+  }
+
+  const { error: deleteCausas } = await supabase
+    .from('causas')
+    .delete()
+    .neq('id', ''); // delete all
+
+  if (deleteCausas) {
+    console.error('Error clearing causas:', deleteCausas);
+    return false;
+  }
+
+  console.log('All data cleared successfully.');
+  return true;
+}
