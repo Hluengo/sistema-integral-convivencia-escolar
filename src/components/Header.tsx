@@ -90,6 +90,18 @@ export default function Header({
 
         {/* Right: Actions */}
         <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Mobile save indicator — small colored dot */}
+          {saveStatus !== 'idle' && (
+            <span
+              className={`md:hidden h-2 w-2 rounded-full shrink-0 ${
+                saveStatus === 'saving' ? 'bg-brand-500 animate-pulse' :
+                saveStatus === 'saved' ? 'bg-leve-500' :
+                'bg-gravisima-500'
+              }`}
+              aria-label={saveStatus === 'saving' ? 'Guardando' : saveStatus === 'saved' ? 'Guardado' : 'Error al guardar'}
+            />
+          )}
+          {/* Desktop save indicator */}
           {saveStatus !== 'idle' && (
             <div className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-semibold ${
               saveStatus === 'saving'

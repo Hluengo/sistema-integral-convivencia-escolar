@@ -17,7 +17,7 @@ import AiAdvisor from './components/AiAdvisor';
 import ClosedCases from './components/ClosedCases';
 import PageHeader from './components/PageHeader';
 import StudentsPanel from './components/StudentsPanel';
-import { Search, Plus, RotateCcw, Scale, Sparkles, AlertCircle, FileText, BookOpen, ChevronRight, Loader2, Users } from 'lucide-react';
+import { Search, Plus, RotateCcw, Scale, Sparkles, AlertCircle, FileText, BookOpen, ChevronRight, ChevronLeft, Loader2, Users } from 'lucide-react';
 import { supabase, type Course, type Student, fetchCausas, createCausa, updateCausa, saveBitacora, saveChecklist } from './lib/supabase';
 
 function generateInitials(fullName: string): string {
@@ -54,6 +54,9 @@ export default function App() {
   // Sidebar state - NEW SidebarView type
   const [currentView, setCurrentView] = useState<SidebarView>('dashboard');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+
+  // Mobile: track whether to show the detail panel or the list
+  const [mobileShowDetail, setMobileShowDetail] = useState<boolean>(false);
 
   // Collapsible view layouts for workspace
   const isTimelineCollapsed = useRef(false);
@@ -329,6 +332,7 @@ export default function App() {
   const handleSelectCausaFromDashboard = (causaId: string) => {
     setSelectedCausaId(causaId);
     setCurrentView('causas');
+    setMobileShowDetail(true);
     setIsTimelineCollapsed(false);
   };
 
@@ -413,9 +417,40 @@ export default function App() {
                 </div>
               </div>
 
+            {/* Mobile tab switcher — list vs detail (only visible below lg) */}
+            {selectedCausa && selectedCausa.estadoActual !== EstadoCausa.CAUSA_CERRADA && (
+              <div className="flex lg:hidden gap-2 bg-neutral-100 p-1 rounded-xl" role="tablist" aria-label="Vista móvil">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={!mobileShowDetail}
+                  onClick={() => setMobileShowDetail(false)}
+                  className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+                    !mobileShowDetail ? 'bg-white shadow-sm text-neutral-800' : 'text-neutral-500 hover:text-neutral-700'
+                  }`}
+                >
+                  Lista
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={mobileShowDetail}
+                  onClick={() => setMobileShowDetail(true)}
+                  className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+                    mobileShowDetail ? 'bg-brand-600 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-700'
+                  }`}
+                >
+                  Detalle
+                </button>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               
-              <div className={`lg:col-span-5 space-y-4 transition-all duration-300`}>
+              {/* Left column: list — hidden on mobile when detail is shown */}
+              <div className={`lg:col-span-5 space-y-4 transition-all duration-300 ${
+                mobileShowDetail && selectedCausa && selectedCausa.estadoActual !== EstadoCausa.CAUSA_CERRADA ? 'hidden lg:block' : 'block'
+              }`}>
                 
                 <div className="relative card p-5 space-y-4">
                   <div className="absolute top-0 left-4 right-4 h-[3px] rounded-full bg-brand-600" aria-hidden="true" />
@@ -493,6 +528,7 @@ export default function App() {
                         onSelect={(cause) => {
                           setSelectedCausaId(cause.id);
                           setIsTimelineCollapsed(false);
+                          setMobileShowDetail(true);
                         }}
                         isSelected={c.id === selectedCausaId}
                       />
@@ -507,7 +543,22 @@ export default function App() {
               </div>
 
               {/* Right Column: Interactive details Timeline */}
-              <div className="lg:col-span-7 h-full transition-all duration-300">
+              {/* On mobile: full width when mobileShowDetail is true */}
+              <div className={`lg:col-span-7 h-full transition-all duration-300 ${
+                mobileShowDetail && selectedCausa && selectedCausa.estadoActual !== EstadoCausa.CAUSA_CERRADA ? 'block' : 'hidden lg:block'
+              }`}>
+                {/* Mobile back button */}
+                {selectedCausa && selectedCausa.estadoActual !== EstadoCausa.CAUSA_CERRADA && (
+                  <button
+                    type="button"
+                    onClick={() => setMobileShowDetail(false)}
+                    className="lg:hidden mb-3 flex items-center gap-2 text-xs font-semibold text-brand-700 hover:text-brand-800 transition-colors"
+                    aria-label="Volver a la lista"
+                  >
+                    <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                    Volver a la lista
+                  </button>
+                )}
                 {selectedCausa && selectedCausa.estadoActual !== EstadoCausa.CAUSA_CERRADA ? (
                   <InteractiveTimeline
                     causa={selectedCausa}

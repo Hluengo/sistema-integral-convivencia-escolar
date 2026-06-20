@@ -78,7 +78,7 @@ export default function ClosedCases({
         
         <div className="flex items-center gap-2">
           {/* Stats mini-card */}
-          <div className="bg-white border border-neutral-200 rounded-lg px-3 py-1.5 flex items-center gap-3 text-[10px]">
+          <div className="hidden sm:flex bg-white border border-neutral-200 rounded-lg px-3 py-1.5 items-center gap-3 text-[10px]">
             <div className="flex items-center gap-1.5 text-neutral-500">
               <BarChart3 className="h-3 w-3" />
               <span className="font-semibold text-neutral-700">{closedCausas.length}</span>
@@ -112,7 +112,7 @@ export default function ClosedCases({
       </div>
 
       {/* Search */}
-      <div className="relative max-w-md">
+      <div className="relative w-full sm:max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400" aria-hidden="true" />
         <input
           type="text"

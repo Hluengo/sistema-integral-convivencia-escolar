@@ -483,7 +483,7 @@ export default function InteractiveTimeline({
           </div>
 
           {/* Quick status modifier for authorized roles */}
-          <div className="flex flex-col text-left shrink-0">
+          <div className="flex flex-col text-left w-full md:w-auto shrink-0">
             <label htmlFor="estado-select" className="text-[10px] font-semibold text-blue-200/70 mb-1.5 uppercase tracking-[0.06em]">
               Estado del expediente
             </label>
@@ -604,25 +604,26 @@ export default function InteractiveTimeline({
         {activeTab === 'proceso' && (
           <div className="space-y-4">
             {/* 5-phase visual ribbon */}
-            <div className="grid grid-cols-5 gap-1.5 text-center bg-neutral-50 p-2 rounded-lg border border-neutral-200" role="list" aria-label="Indicador de fases">
+            <div className="grid grid-cols-5 gap-1 text-center bg-neutral-50 p-2 rounded-lg border border-neutral-200" role="list" aria-label="Indicador de fases">
               {FASES_LIST.map((f, i) => {
                 const isActive = currentFase === f.name;
-                const abbreviations: Record<string, string> = {
-                  'Recepción': 'Recepción',
-                  'Investigación': 'Investigación',
-                  'Resolución': 'Resolución',
-                  'Impugnación': 'Impugnación',
-                  'Seguimiento': 'Seguimiento'
+                const short: Record<string, string> = {
+                  'Recepción': 'Recep.',
+                  'Investigación': 'Invest.',
+                  'Resolución': 'Resoluc.',
+                  'Impugnación': 'Impugn.',
+                  'Seguimiento': 'Seguim.'
                 };
                 return (
                   <div key={f.name} className="flex flex-col items-center" role="listitem">
                     <span className={`text-[8px] font-semibold ${isActive ? 'text-neutral-900' : 'text-neutral-400'}`}>
-                      Fase {i + 1}
+                      {i + 1}
                     </span>
-                    <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded transition-all whitespace-nowrap ${
+                    <span className={`text-[8px] sm:text-[9px] font-semibold px-1 sm:px-1.5 py-0.5 rounded transition-all ${
                       isActive ? 'bg-neutral-900 text-white shadow-sm' : 'text-neutral-500'
                     }`}>
-                      {abbreviations[f.name] || f.name}
+                      <span className="sm:hidden">{short[f.name] || f.name}</span>
+                      <span className="hidden sm:inline">{f.name}</span>
                     </span>
                   </div>
                 );
