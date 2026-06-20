@@ -58,7 +58,7 @@ function SidebarContent({
             <h1 className="text-[17px] font-bold text-white leading-tight tracking-tight">
               SigueAula
             </h1>
-            <p className="text-[9px] font-semibold text-blue-200/70 uppercase tracking-[0.12em] leading-tight mt-0.5">
+            <p className="text-[9px] font-semibold text-neutral-400 uppercase tracking-[0.12em] leading-tight mt-0.5">
               Convivencia Escolar
             </p>
           </div>
@@ -89,7 +89,7 @@ function SidebarContent({
 
       {(!isCollapsed || mobile) && (
         <div className="px-5 pt-5 pb-2">
-          <span className="text-[9px] font-bold text-blue-200/40 uppercase tracking-[0.15em]">
+          <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-[0.15em]">
             Navegación
           </span>
         </div>
@@ -116,12 +116,12 @@ function SidebarContent({
                 ${isCollapsed && !mobile ? 'justify-center px-0 py-3' : 'px-3.5 py-2.5'}
                 ${isActive
                   ? 'bg-white/15 text-white font-semibold shadow-sm ring-1 ring-white/20'
-                  : 'text-blue-100/60 hover:bg-white/8 hover:text-white/90'
+                  : 'text-neutral-400 hover:bg-white/8 hover:text-white/90'
                 }`}
               aria-current={isActive ? 'page' : undefined}
               title={isCollapsed && !mobile ? item.label : undefined}
             >
-              <span className={`shrink-0 transition-colors ${isActive ? 'text-white' : 'text-blue-200/50'}`}>
+              <span className={`shrink-0 transition-colors ${isActive ? 'text-white' : 'text-neutral-400'}`}>
                 <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
               </span>
               {(!isCollapsed || mobile) && (
@@ -168,7 +168,7 @@ export default function Sidebar({
       <button
         type="button"
         onClick={() => setMobileOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2.5 bg-brand-700 text-white rounded-xl shadow-lg hover:bg-brand-800 transition-colors"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2.5 bg-neutral-800 text-white rounded-xl shadow-lg hover:bg-neutral-900 transition-colors"
         aria-label="Abrir menú"
       >
         <Menu className="h-5 w-5" />
@@ -183,7 +183,7 @@ export default function Sidebar({
         />
       )}
 
-      <div className={`lg:hidden fixed inset-y-0 left-0 z-50 w-[260px] bg-gradient-to-b from-brand-700 to-brand-950 transition-transform duration-300 ${
+      <div className={`lg:hidden fixed inset-y-0 left-0 z-50 w-[260px] bg-gradient-to-b from-neutral-800 to-neutral-950 transition-transform duration-300 ${
         mobileOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <button
@@ -198,7 +198,7 @@ export default function Sidebar({
       </div>
 
       <aside
-        className={`hidden lg:flex flex-col bg-gradient-to-b from-brand-700 to-brand-950 transition-all duration-300 relative shrink-0 shadow-xl ${
+        className={`hidden lg:flex flex-col bg-gradient-to-b from-neutral-800 to-neutral-950 transition-all duration-300 relative shrink-0 shadow-xl ${
           isCollapsed ? 'w-[68px]' : 'w-[240px]'
         }`}
         aria-label="Barra de navegación principal"
