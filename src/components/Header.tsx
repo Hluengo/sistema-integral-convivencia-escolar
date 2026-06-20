@@ -51,9 +51,7 @@ export default function Header({
         <div className="flex items-center gap-4 flex-1 min-w-0 pl-10 lg:pl-0">
           {/* Mobile brand */}
           <div className="flex lg:hidden items-center gap-2 shrink-0">
-            <div className="h-9 w-9 rounded-lg bg-white border border-neutral-200 flex items-center justify-center shadow-sm overflow-hidden p-1">
-              <img src="/veritas2.png" alt="Escudo Veritas" className="h-full w-auto" />
-            </div>
+            <img src="/veritas2.png" alt="Escudo Veritas" className="h-9 w-auto" />
           </div>
 
           {/* Page title - visible on tablet+ */}
