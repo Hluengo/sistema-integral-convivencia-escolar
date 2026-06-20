@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import type { SeverityLevel } from '../lib/severityUtils';
 
-type SeverityLevel = 'Leve' | 'Grave' | 'Muy Grave' | 'Gravísima';
+export type { SeverityLevel } from '../lib/severityUtils';
 
 interface SeverityBadgeProps {
   level: SeverityLevel;
@@ -14,9 +14,9 @@ interface SeverityBadgeProps {
 }
 
 const SEVERITY_CONFIG: Record<SeverityLevel, { bg: string; text: string; dot: string; label: string }> = {
-  'Leve': { bg: 'bg-leve-50', text: 'text-leve-700', dot: 'bg-leve-500', label: 'Leve' },
-  'Grave': { bg: 'bg-grave-50', text: 'text-grave-700', dot: 'bg-grave-500', label: 'Grave' },
-  'Muy Grave': { bg: 'bg-muygrave-50', text: 'text-muygrave-700', dot: 'bg-muygrave-500', label: 'Muy Grave' },
+  'Leve':      { bg: 'bg-leve-50',      text: 'text-leve-700',      dot: 'bg-leve-500',      label: 'Leve' },
+  'Grave':     { bg: 'bg-grave-50',     text: 'text-grave-700',     dot: 'bg-grave-500',     label: 'Grave' },
+  'Muy Grave': { bg: 'bg-muygrave-50',  text: 'text-muygrave-700',  dot: 'bg-muygrave-500',  label: 'Muy Grave' },
   'Gravísima': { bg: 'bg-gravisima-50', text: 'text-gravisima-700', dot: 'bg-gravisima-500', label: 'Gravísima' },
 };
 
@@ -49,15 +49,4 @@ export default function SeverityBadge({ level, size = 'md', showDot = true }: Se
       {config.label}
     </span>
   );
-}
-
-// Also export a helper to get severity config for use in other components
-export function getSeverityColor(level: SeverityLevel): { bg: string; text: string; border: string; dot: string } {
-  const map: Record<SeverityLevel, { bg: string; text: string; border: string; dot: string }> = {
-    'Leve': { bg: 'bg-leve-50', text: 'text-leve-700', border: 'border-leve-200', dot: 'bg-leve-500' },
-    'Grave': { bg: 'bg-grave-50', text: 'text-grave-700', border: 'border-grave-200', dot: 'bg-grave-500' },
-    'Muy Grave': { bg: 'bg-muygrave-50', text: 'text-muygrave-700', border: 'border-muygrave-200', dot: 'bg-muygrave-500' },
-    'Gravísima': { bg: 'bg-gravisima-50', text: 'text-gravisima-700', border: 'border-gravisima-200', dot: 'bg-gravisima-500' },
-  };
-  return map[level];
 }

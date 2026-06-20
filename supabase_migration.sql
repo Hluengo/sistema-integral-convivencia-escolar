@@ -74,23 +74,32 @@ CREATE TRIGGER trigger_causas_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
--- 6. RLS (Row Level Security) - Permitir acceso anónimo para desarrollo
+-- 6. RLS (Row Level Security) - Acceso restringido a usuarios autenticados
 ALTER TABLE causas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bitacora_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE checklist_items ENABLE ROW LEVEL SECURITY;
 
--- Políticas: permitir todas las operaciones con la anon key (entorno de desarrollo)
+-- Políticas: sólo usuarios autenticados pueden operar (bloquea acceso con anon key sin sesión)
+-- Si tu app usa autenticación de Supabase, estas políticas son las mínimas seguras.
+-- Para producción, considera afinar con auth.uid() por institución/establecimiento.
+
 DROP POLICY IF EXISTS "Allow all on causas" ON causas;
-CREATE POLICY "Allow all on causas" ON causas
-  FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Authenticated users only on causas" ON causas
+  FOR ALL
+  USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');
 
 DROP POLICY IF EXISTS "Allow all on bitacora_entries" ON bitacora_entries;
-CREATE POLICY "Allow all on bitacora_entries" ON bitacora_entries
-  FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Authenticated users only on bitacora_entries" ON bitacora_entries
+  FOR ALL
+  USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');
 
 DROP POLICY IF EXISTS "Allow all on checklist_items" ON checklist_items;
-CREATE POLICY "Allow all on checklist_items" ON checklist_items
-  FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Authenticated users only on checklist_items" ON checklist_items
+  FOR ALL
+  USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');
 
 -- 7. BUCKET DE STORAGE para documentos adjuntos
 -- Ejecutar esto en la sección Storage de Supabase, o mediante SQL:

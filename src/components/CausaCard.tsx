@@ -8,7 +8,7 @@ import { Causa, EstadoCausa } from '../types';
 import { getFaseForEstado } from '../data';
 import { Shield, Clock, User, UserCheck, AlertTriangle, ChevronRight, FileCheck } from 'lucide-react';
 import SeverityBadge from './SeverityBadge';
-import { getSeverityColor } from './SeverityBadge';
+import { getSeverityColor } from '../lib/severityUtils';
 
 interface CausaCardProps {
   causa: Causa;
