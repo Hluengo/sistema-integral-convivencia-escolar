@@ -81,10 +81,15 @@ export default function AiAdvisor() {
   const [inputMessage, setInputMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom of conversation
+  // Auto-scroll to bottom only when new messages are added (not on initial mount)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messages.length <= 1) return; // skip initial greeting mount
+    scrollContainerRef.current?.scrollTo({
+      top: scrollContainerRef.current.scrollHeight,
+      behavior: 'smooth'
+    });
   }, [messages]);
 
   const handleSendMessage = async (textToSend: string) => {
@@ -151,7 +156,7 @@ export default function AiAdvisor() {
       </div>
 
       {/* Discussion Pane */}
-      <div className="flex-1 overflow-y-auto p-4 bg-neutral-50 space-y-3">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 bg-neutral-50 space-y-3">
         {messages.map((m, idx) => {
           const isModel = m.role === 'model';
           const messageKey = `${m.role}-${idx}-${m.content.substring(0, 10)}`;
