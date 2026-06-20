@@ -51,8 +51,8 @@ export default function Header({
         <div className="flex items-center gap-4 flex-1 min-w-0 pl-10 lg:pl-0">
           {/* Mobile brand */}
           <div className="flex lg:hidden items-center gap-2 shrink-0">
-            <div className="h-8 w-8 rounded-lg bg-brand-700 flex items-center justify-center shadow-sm overflow-hidden p-1">
-              <img src="/veritas.png" alt="Escudo Veritas" className="h-full w-auto brightness-0 invert" />
+            <div className="h-9 w-9 rounded-lg bg-white flex items-center justify-center shadow-sm overflow-hidden p-1">
+              <img src="/veritas.png" alt="Escudo Veritas" className="h-full w-auto" />
             </div>
           </div>
 
