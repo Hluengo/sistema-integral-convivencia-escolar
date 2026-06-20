@@ -3,14 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
-  Scale, Sparkles, Shield, FileText, CheckCircle2, 
-  ChevronLeft, ChevronRight, Clock, AlertTriangle, 
-  BarChart3, Archive
+  LayoutDashboard, Scale, Users, FileBarChart,
+  ChevronLeft, ChevronRight, AlertTriangle, Shield, Menu, X
 } from 'lucide-react';
 
-export type SidebarView = 'dashboard' | 'casos_activos' | 'casos_cerrados' | 'advisor';
+export type SidebarView = 'dashboard' | 'causas' | 'alumnos' | 'informes';
 
 interface SidebarProps {
   currentView: SidebarView;
@@ -22,115 +21,117 @@ interface SidebarProps {
   aulaSeguraCount: number;
 }
 
-export default function Sidebar({ 
-  currentView, 
-  onViewChange, 
-  isCollapsed, 
-  onToggleCollapse,
+interface SidebarContentProps {
+  currentView: SidebarView;
+  onViewChange: (view: SidebarView) => void;
+  isCollapsed: boolean;
+  aulaSeguraCount: number;
+  activeCount: number;
+  mobile?: boolean;
+  onNavigate?: () => void;
+}
+
+const NAV_ITEMS: { id: SidebarView; label: string; Icon: React.ElementType; badgeKey?: 'activeCount' }[] = [
+  { id: 'dashboard', label: 'Dashboard', Icon: LayoutDashboard },
+  { id: 'causas', label: 'Causas', Icon: Scale, badgeKey: 'activeCount' },
+  { id: 'alumnos', label: 'Alumnos', Icon: Users },
+  { id: 'informes', label: 'Informes', Icon: FileBarChart },
+];
+
+function SidebarContent({
+  currentView,
+  onViewChange,
+  isCollapsed,
+  aulaSeguraCount,
   activeCount,
-  closedCount,
-  aulaSeguraCount
-}: SidebarProps) {
-  const navItems: { id: SidebarView; label: string; icon: React.ReactNode; badge?: number; badgeColor?: string }[] = [
-    { 
-      id: 'dashboard', 
-      label: 'Dashboard', 
-      icon: <BarChart3 className="h-4 w-4" aria-hidden="true" /> 
-    },
-    { 
-      id: 'casos_activos', 
-      label: 'Casos Activos', 
-      icon: <Scale className="h-4 w-4" aria-hidden="true" />,
-      badge: activeCount,
-      badgeColor: 'bg-brand-600'
-    },
-    { 
-      id: 'casos_cerrados', 
-      label: 'Casos Cerrados', 
-      icon: <Archive className="h-4 w-4" aria-hidden="true" />,
-      badge: closedCount,
-      badgeColor: 'bg-neutral-500'
-    },
-    { 
-      id: 'advisor', 
-      label: 'Consultor IA', 
-      icon: <Sparkles className="h-4 w-4" aria-hidden="true" /> 
-    },
-  ];
-
+  mobile = false,
+  onNavigate,
+}: SidebarContentProps) {
   return (
-    <aside
-      className={`bg-white border-r border-neutral-200/80 shadow-sm flex flex-col transition-all duration-300 relative ${
-        isCollapsed ? 'w-[52px]' : 'w-[220px]'
-      } shrink-0`}
-      aria-label="Barra de navegación principal"
-    >
-      {/* Toggle button */}
-      <button
-        onClick={onToggleCollapse}
-        className="absolute -right-3 top-6 z-10 bg-white border border-neutral-200 rounded-full p-1 shadow-sm hover:bg-neutral-50 transition-all cursor-pointer"
-        aria-label={isCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
-        title={isCollapsed ? 'Expandir menú' : 'Colapsar menú'}
-      >
-        {isCollapsed ? (
-          <ChevronRight className="h-3.5 w-3.5 text-neutral-500" />
-        ) : (
-          <ChevronLeft className="h-3.5 w-3.5 text-neutral-500" />
-        )}
-      </button>
-
-      {/* Logo area */}
-      <div className={`border-b border-neutral-100 px-3 py-4 ${isCollapsed ? 'text-center' : ''}`}>
-        <div className="flex items-center gap-2.5">
-          <div className="bg-gradient-to-br from-brand-600 to-brand-800 text-white p-1.5 rounded-lg flex items-center justify-center shadow-sm shrink-0">
-            <Shield className="h-4 w-4 text-brand-100" />
-          </div>
-          {!isCollapsed && (
-            <div className="min-w-0">
-              <h1 className="text-[11px] font-bold text-neutral-900 leading-tight tracking-tight truncate">
-                Debido Proceso
-              </h1>
-              <p className="text-[7px] font-semibold text-neutral-400 uppercase leading-tight truncate">
-                Convivencia Escolar
-              </p>
-            </div>
-          )}
+    <div className="flex flex-col h-full">
+      <div className={`flex items-center border-b border-white/10 ${isCollapsed && !mobile ? 'justify-center px-3 py-5' : 'gap-3 px-5 py-5'}`}>
+        <div className="bg-white/15 backdrop-blur-sm p-2.5 rounded-xl flex items-center justify-center shrink-0 ring-1 ring-white/20 shadow-lg">
+          <Shield className="h-5 w-5 text-white" aria-hidden="true" />
         </div>
+        {(!isCollapsed || mobile) && (
+          <div className="min-w-0">
+            <h1 className="text-[17px] font-bold text-white leading-tight tracking-tight">
+              SigueAula
+            </h1>
+            <p className="text-[9px] font-semibold text-blue-200/70 uppercase tracking-[0.12em] leading-tight mt-0.5">
+              Convivencia Escolar
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Aula Segura alert badge */}
-      {aulaSeguraCount > 0 && !isCollapsed && (
-        <div className="mx-2 mt-2 px-2.5 py-1.5 bg-danger-50 border border-danger-200 rounded-lg flex items-center gap-2">
-          <AlertTriangle className="h-3 w-3 text-danger-600 shrink-0" />
-          <span className="text-[9px] font-semibold text-danger-700">
-            {aulaSeguraCount} con Aula Segura
+      {aulaSeguraCount > 0 && (!isCollapsed || mobile) && (
+        <div className="mx-3 mt-4 px-3.5 py-3 bg-red-500/20 border border-red-400/30 rounded-xl flex items-center gap-2.5">
+          <div className="p-1.5 rounded-lg bg-red-500/20 shrink-0">
+            <AlertTriangle className="h-3.5 w-3.5 text-red-300" aria-hidden="true" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold text-red-200 leading-tight">
+              {aulaSeguraCount} alerta{aulaSeguraCount !== 1 ? 's' : ''} crítica{aulaSeguraCount !== 1 ? 's' : ''}
+            </p>
+            <p className="text-[9px] text-red-300/70 font-medium leading-tight mt-0.5">
+              Ley Aula Segura · Acción urgente
+            </p>
+          </div>
+        </div>
+      )}
+
+      {aulaSeguraCount > 0 && isCollapsed && !mobile && (
+        <div className="flex justify-center mt-4">
+          <div className="h-2 w-2 rounded-full bg-red-400 ring-2 ring-red-400/30 animate-pulse" aria-hidden="true" />
+        </div>
+      )}
+
+      {(!isCollapsed || mobile) && (
+        <div className="px-5 pt-5 pb-2">
+          <span className="text-[9px] font-bold text-blue-200/40 uppercase tracking-[0.15em]">
+            Navegación
           </span>
         </div>
       )}
 
-      {/* Navigation items */}
-      <nav className="flex-1 py-3 px-1.5 space-y-1" role="navigation" aria-label="Secciones principales">
-        {navItems.map((item) => {
+      <nav
+        className={`flex-1 ${isCollapsed && !mobile ? 'py-4 px-2' : 'px-3'} space-y-0.5`}
+        aria-label="Secciones principales"
+      >
+        {NAV_ITEMS.map((item) => {
           const isActive = currentView === item.id;
+          const badge = item.badgeKey === 'activeCount' ? activeCount : undefined;
+          const Icon = item.Icon;
+
           return (
             <button
+              type="button"
               key={item.id}
-              onClick={() => onViewChange(item.id)}
-              className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[11px] font-semibold transition-all cursor-pointer select-none ${
-                isActive
-                  ? 'bg-brand-600 text-white shadow-sm'
-                  : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-800'
-              }`}
+              onClick={() => {
+                onViewChange(item.id);
+                onNavigate?.();
+              }}
+              className={`w-full flex items-center gap-3 rounded-xl text-[13px] font-medium transition-all duration-200 cursor-pointer select-none
+                ${isCollapsed && !mobile ? 'justify-center px-0 py-3' : 'px-3.5 py-2.5'}
+                ${isActive
+                  ? 'bg-white/15 text-white font-semibold shadow-sm ring-1 ring-white/20'
+                  : 'text-blue-100/60 hover:bg-white/8 hover:text-white/90'
+                }`}
               aria-current={isActive ? 'page' : undefined}
-              title={isCollapsed ? item.label : undefined}
+              title={isCollapsed && !mobile ? item.label : undefined}
             >
-              <span className="shrink-0">{item.icon}</span>
-              {!isCollapsed && (
+              <span className={`shrink-0 transition-colors ${isActive ? 'text-white' : 'text-blue-200/50'}`}>
+                <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+              </span>
+              {(!isCollapsed || mobile) && (
                 <>
                   <span className="flex-1 text-left truncate">{item.label}</span>
-                  {item.badge !== undefined && item.badge > 0 && (
-                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-full text-white ${item.badgeColor || 'bg-brand-600'}`}>
-                      {item.badge}
+                  {badge !== undefined && badge > 0 && (
+                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full tabular-nums ${
+                      isActive ? 'bg-white/25 text-white' : 'bg-orange-500 text-white'
+                    }`}>
+                      {badge}
                     </span>
                   )}
                 </>
@@ -139,16 +140,83 @@ export default function Sidebar({
           );
         })}
       </nav>
+    </div>
+  );
+}
 
-      {/* Bottom status */}
-      {!isCollapsed && (
-        <div className="border-t border-neutral-100 p-3">
-          <div className="flex items-center gap-2 text-[9px] text-neutral-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-success-500 shrink-0" />
-            <span>Sistema activo</span>
-          </div>
-        </div>
+export default function Sidebar({ 
+  currentView, 
+  onViewChange, 
+  isCollapsed, 
+  onToggleCollapse,
+  activeCount,
+  closedCount: _closedCount,
+  aulaSeguraCount
+}: SidebarProps) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const contentProps: SidebarContentProps = {
+    currentView,
+    onViewChange,
+    isCollapsed,
+    aulaSeguraCount,
+    activeCount,
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setMobileOpen(true)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2.5 bg-brand-700 text-white rounded-xl shadow-lg hover:bg-brand-800 transition-colors"
+        aria-label="Abrir menú"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
+
+      {mobileOpen && (
+        <button
+          type="button"
+          className="lg:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm cursor-default"
+          onClick={() => setMobileOpen(false)}
+          aria-label="Cerrar menú"
+        />
       )}
-    </aside>
+
+      <div className={`lg:hidden fixed inset-y-0 left-0 z-50 w-[260px] bg-gradient-to-b from-brand-700 to-brand-950 transition-transform duration-300 ${
+        mobileOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <button
+          type="button"
+          onClick={() => setMobileOpen(false)}
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-all"
+          aria-label="Cerrar menú"
+        >
+          <X className="h-4 w-4" />
+        </button>
+        <SidebarContent {...contentProps} mobile onNavigate={() => setMobileOpen(false)} />
+      </div>
+
+      <aside
+        className={`hidden lg:flex flex-col bg-gradient-to-b from-brand-700 to-brand-950 transition-all duration-300 relative shrink-0 shadow-xl ${
+          isCollapsed ? 'w-[68px]' : 'w-[240px]'
+        }`}
+        aria-label="Barra de navegación principal"
+      >
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          className="absolute -right-3 top-[72px] z-10 bg-white border border-neutral-200 rounded-full p-1.5 shadow-md hover:bg-neutral-50 hover:shadow-lg transition-all cursor-pointer"
+          aria-label={isCollapsed ? 'Expandir menú lateral' : 'Colapsar menú lateral'}
+        >
+          {isCollapsed ? (
+            <ChevronRight className="h-3 w-3 text-neutral-600" />
+          ) : (
+            <ChevronLeft className="h-3 w-3 text-neutral-600" />
+          )}
+        </button>
+        <SidebarContent {...contentProps} />
+      </aside>
+    </>
   );
 }

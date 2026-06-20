@@ -7,53 +7,33 @@ import React from 'react';
 import { Causa, EstadoCausa } from '../types';
 import { getFaseForEstado } from '../data';
 import { Shield, Clock, User, UserCheck, AlertTriangle, ChevronRight, FileCheck } from 'lucide-react';
+import SeverityBadge from './SeverityBadge';
+import { getSeverityColor } from './SeverityBadge';
 
 interface CausaCardProps {
   causa: Causa;
   privacyMode: boolean;
   onSelect: (causa: Causa) => void;
   isSelected: boolean;
-  key?: any;
 }
 
-const SEVERITY_BAR_COLORS: Record<string, string> = {
-  'Leve': 'bg-blue-500',
-  'Grave': 'bg-amber-500',
-  'Muy Grave': 'bg-purple-500',
-  'Gravísima': 'bg-red-500',
-};
-
 const FASE_BADGE_STYLES: Record<string, string> = {
-  'Recepción': 'bg-blue-50 text-blue-700 border-blue-200',
-  'Investigación': 'bg-amber-50 text-amber-700 border-amber-200',
-  'Resolución': 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  'Impugnación': 'bg-purple-50 text-purple-700 border-purple-200',
+  'Recepción': 'bg-brand-50 text-brand-700 border-brand-200',
+  'Investigación': 'bg-grave-50 text-grave-700 border-grave-200',
+  'Resolución': 'bg-leve-50 text-leve-700 border-leve-200',
+  'Impugnación': 'bg-muygrave-50 text-muygrave-700 border-muygrave-200',
   'Seguimiento': 'bg-neutral-100 text-neutral-700 border-neutral-200',
 };
 
-const SEVERITY_BADGE_STYLES: Record<string, string> = {
-  'Leve': 'bg-blue-100 text-blue-800',
-  'Grave': 'bg-amber-100 text-amber-800',
-  'Muy Grave': 'bg-purple-100 text-purple-800',
-  'Gravísima': 'bg-red-100 text-red-800',
-};
-
 function LeftSeverityBar({ tipo }: { tipo: Causa['tipoInfraccion'] }) {
-  return <div className={`absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full ${SEVERITY_BAR_COLORS[tipo] || 'bg-neutral-300'}`} />;
+  const colors = getSeverityColor(tipo);
+  return <div className={`absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full ${colors.dot}`} />;
 }
 
 function FaseBadge({ fase }: { fase: string }) {
   return (
     <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-md border ${FASE_BADGE_STYLES[fase] || FASE_BADGE_STYLES['Recepción']}`}>
       {fase}
-    </span>
-  );
-}
-
-function SeverityBadge({ tipo }: { tipo: Causa['tipoInfraccion'] }) {
-  return (
-    <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${SEVERITY_BADGE_STYLES[tipo] || 'bg-neutral-100 text-neutral-600'}`}>
-      {tipo}
     </span>
   );
 }
@@ -77,14 +57,14 @@ function PlazoBar({ causa }: { causa: Causa }) {
     if (remaining <= 0) {
       plazoText = 'Plazo Aula Segura excedido';
       isAlert = true;
-      colorClasses = 'bg-danger-50 text-danger-700 border-danger-200';
+      colorClasses = 'bg-gravisima-50 text-gravisima-700 border-gravisima-200';
     } else if (remaining <= 2) {
       plazoText = `Vence en ${remaining}d (Aula Segura)`;
       isAlert = true;
-      colorClasses = 'bg-amber-50 text-amber-700 border-amber-200';
+      colorClasses = 'bg-grave-50 text-grave-700 border-grave-200';
     } else {
       plazoText = `${remaining}d restantes (Aula Segura)`;
-      colorClasses = 'bg-purple-50 text-purple-700 border-purple-200';
+      colorClasses = 'bg-muygrave-50 text-muygrave-700 border-muygrave-200';
     }
   } else if (
     causa.estadoActual === EstadoCausa.RESOLUCION_FINAL_NOTIFICADA || 
@@ -92,17 +72,17 @@ function PlazoBar({ causa }: { causa: Causa }) {
   ) {
     plazoText = 'Plazo apelación: 2d restantes';
     isAlert = true;
-    colorClasses = 'bg-amber-50 text-amber-700 border-amber-200';
+    colorClasses = 'bg-grave-50 text-grave-700 border-grave-200';
   } else {
     const remaining = 60 - diffDays;
     if (remaining <= 0) {
       plazoText = 'Procedimiento excedido';
       isAlert = true;
-      colorClasses = 'bg-danger-50 text-danger-700 border-danger-200';
+      colorClasses = 'bg-gravisima-50 text-gravisima-700 border-gravisima-200';
     } else if (remaining <= 10) {
       plazoText = `Vence en ${remaining}d`;
       isAlert = true;
-      colorClasses = 'bg-amber-50 text-amber-700 border-amber-200';
+      colorClasses = 'bg-grave-50 text-grave-700 border-grave-200';
     } else {
       plazoText = `${remaining}d para cierre`;
       colorClasses = 'bg-neutral-50 text-neutral-600 border-neutral-200';
@@ -115,7 +95,7 @@ function PlazoBar({ causa }: { causa: Causa }) {
         <Clock className="h-3 w-3" aria-hidden="true" />
         {plazoText}
       </span>
-      {isAlert && <AlertTriangle className="h-3 w-3 text-danger-500" aria-hidden="true" />}
+      {isAlert && <AlertTriangle className="h-3 w-3 text-gravisima-500" aria-hidden="true" />}
     </div>
   );
 }
@@ -132,36 +112,34 @@ export default function CausaCard({ causa, privacyMode, onSelect, isSelected }: 
       onClick={() => onSelect(causa)}
       id={`causa_card_${causa.id}`}
       aria-label={`Expediente ${causa.id}: ${privacyMode ? causa.nnaProtectedName : causa.estudianteNombre}, ${causa.estudianteCurso}`}
-      className={`relative w-full bg-white rounded-xl border transition-all duration-200 cursor-pointer select-none text-left overflow-hidden ${
+      className={`relative w-full card overflow-hidden text-left ${
         isSelected
-          ? 'border-brand-500 shadow-sm ring-1 ring-brand-500/20'
-          : 'border-neutral-200/80 hover:border-neutral-300/80 hover:shadow-sm'
+          ? 'border-brand-500 ring-2 ring-brand-500/20 shadow-md'
+          : ''
       }`}
     >
       <LeftSeverityBar tipo={causa.tipoInfraccion} />
       
       <div className="p-4 sm:p-5 space-y-3">
-        {/* Top row: ID + badges */}
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="text-[10px] font-mono font-semibold text-neutral-500 bg-neutral-50 px-2 py-0.5 rounded border border-neutral-200/60">
               {causa.id}
             </span>
             <FaseBadge fase={fase} />
-            <SeverityBadge tipo={causa.tipoInfraccion} />
+            <SeverityBadge level={causa.tipoInfraccion} size="sm" />
           </div>
           {causa.comprometeAulaSegura && (
-            <span className="text-[9px] font-bold text-danger-600 bg-danger-50 px-1.5 py-0.5 rounded flex items-center gap-1 border border-danger-200 shrink-0">
+            <span className="text-[9px] font-bold text-gravisima-600 bg-gravisima-50 px-1.5 py-0.5 rounded flex items-center gap-1 border border-gravisima-200 shrink-0">
               <Shield className="h-2.5 w-2.5" aria-hidden="true" />
               AULA SEGURA
             </span>
           )}
         </div>
 
-        {/* Name and course */}
         <div>
           <div className="flex items-baseline gap-2 flex-wrap">
-            <h3 className="text-sm font-display font-bold text-neutral-900 tracking-tight">
+            <h3 className="text-sm font-bold text-neutral-900 tracking-tight">
               {privacyMode ? causa.nnaProtectedName : causa.estudianteNombre}
             </h3>
             <span className="text-[10px] font-medium text-neutral-400 bg-neutral-50 px-1.5 py-0.5 rounded border border-neutral-200/60 shrink-0">
@@ -180,28 +158,32 @@ export default function CausaCard({ causa, privacyMode, onSelect, isSelected }: 
           </div>
         </div>
 
-        {/* Context snippet */}
         <p className="text-[11px] text-neutral-500 leading-relaxed line-clamp-1 border-l-2 border-neutral-200 pl-2.5 italic">
           {causa.observaciones}
         </p>
 
-        {/* Deadline */}
         <PlazoBar causa={causa} />
 
-        {/* Progress section */}
         <div className="pt-2 border-t border-neutral-100">
           <div className="flex items-center justify-between text-[11px] text-neutral-500 mb-2">
             <span className="flex items-center gap-1.5 font-medium">
-              <FileCheck className="h-3.5 w-3.5 text-success-600" aria-hidden="true" />
+              <FileCheck className="h-3.5 w-3.5 text-leve-600" aria-hidden="true" />
               Debido proceso
             </span>
             <span className="font-mono font-semibold text-neutral-700">
               {completedCount}/{totalCount} ({progress}%)
             </span>
           </div>
-          <div className="w-full bg-neutral-100 h-1.5 rounded-full overflow-hidden" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label={`${progress}% completado`}>
+          <div
+            className="w-full bg-neutral-100 h-1.5 rounded-full overflow-hidden"
+            role="progressbar"
+            aria-valuenow={progress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`${progress}% completado`}
+          >
             <div 
-              className="bg-success-500 h-full rounded-full transition-all duration-500" 
+              className="bg-leve-500 h-full rounded-full transition-all duration-500" 
               style={{ width: `${progress}%` }}
             />
           </div>

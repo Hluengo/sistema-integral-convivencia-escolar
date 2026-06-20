@@ -3,93 +3,127 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
-import { Shield, Eye, EyeOff, Sparkles, Cloud, CloudOff, Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, Bell, Shield, Eye, EyeOff, Cloud, CloudOff, Loader2 } from 'lucide-react';
+import type { SidebarView } from './Sidebar';
+
+const VIEW_TITLES: Record<SidebarView, { title: string; subtitle: string }> = {
+  dashboard: { title: 'Dashboard', subtitle: 'Panel de control ejecutivo' },
+  causas: { title: 'Causas', subtitle: 'Expedientes y procedimientos activos' },
+  alumnos: { title: 'Alumnos', subtitle: 'Gestión de estudiantes' },
+  informes: { title: 'Informes', subtitle: 'Asistente y reportes' },
+};
+
+const NOTIFICATIONS = [
+  { id: 1, title: 'Alerta Aula Segura', description: 'Causa DC-2026-001 requiere resolución en 24h', time: 'Hace 2 horas', urgent: true },
+  { id: 2, title: 'Nueva causa creada', description: 'Causa DC-2026-004 asignada a Inspector', time: 'Hace 5 horas', urgent: false },
+  { id: 3, title: 'Plazo próximo a vencer', description: 'Investigación de causa DC-2026-002 vence mañana', time: 'Hace 8 horas', urgent: true },
+];
 
 interface HeaderProps {
   privacyMode: boolean;
   setPrivacyMode: (val: boolean) => void;
   saveStatus?: 'idle' | 'saving' | 'saved' | 'error';
-  currentView?: string;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+  currentView?: SidebarView;
 }
 
-export default function Header({ privacyMode, setPrivacyMode, saveStatus = 'idle', currentView }: HeaderProps) {
-  return (
-    <header
-      className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-neutral-200/60 shadow-sm"
-      aria-label="Encabezado principal"
-    >
-      {/* Subtle gradient accent line */}
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-brand-400 via-brand-500 to-purple-500" />
+export default function Header({
+  privacyMode, 
+  setPrivacyMode, 
+  saveStatus = 'idle', 
+  searchQuery = '',
+  onSearchChange,
+  currentView = 'dashboard',
+}: HeaderProps) {
+  const [showSearch, setShowSearch] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
 
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
-        {/* Brand section */}
-        <div className="flex items-center gap-3 shrink-0">
-          <div
-            className="bg-gradient-to-br from-brand-600 to-brand-800 text-white p-2 rounded-lg flex items-center justify-center shadow-md shadow-brand-600/10 border border-brand-500/20"
-            aria-hidden="true"
+  const viewMeta = VIEW_TITLES[currentView];
+
+  return (
+    <header className="sticky top-0 z-30 glass" aria-label="Encabezado principal">
+      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-brand-700 via-brand-600 to-secondary-500" />
+
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+        {/* Left: Brand (mobile) + Page title + Search */}
+        <div className="flex items-center gap-4 flex-1 min-w-0 pl-10 lg:pl-0">
+          {/* Mobile brand */}
+          <div className="flex lg:hidden items-center gap-2 shrink-0">
+            <div className="h-8 w-8 rounded-lg bg-brand-700 flex items-center justify-center shadow-sm">
+              <Shield className="h-4 w-4 text-white" aria-hidden="true" />
+            </div>
+          </div>
+
+          {/* Page title - visible on tablet+ */}
+          <div className="hidden sm:block shrink-0 min-w-0">
+            <h1 className="text-sm font-bold text-neutral-900 leading-tight truncate">{viewMeta.title}</h1>
+            <p className="text-[10px] text-neutral-400 font-medium truncate">{viewMeta.subtitle}</p>
+          </div>
+
+          <div className="hidden sm:block w-px h-8 bg-neutral-200 shrink-0" aria-hidden="true" />
+
+          {/* Desktop search */}
+          <div className="hidden md:flex relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" aria-hidden="true" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => onSearchChange?.(e.target.value)}
+              placeholder="Buscar causas, estudiantes, cursos..."
+              className="w-full bg-neutral-100 text-neutral-800 pl-10 pr-4 py-2 text-sm font-medium rounded-xl border border-neutral-200/60 hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 focus:bg-white transition-all placeholder:text-neutral-400"
+              aria-label="Búsqueda global"
+            />
+          </div>
+
+          {/* Mobile search toggle */}
+          <button
+            type="button"
+            onClick={() => setShowSearch(!showSearch)}
+            className="md:hidden ml-auto p-2 rounded-xl hover:bg-neutral-100 text-neutral-500 transition-all cursor-pointer"
+            aria-label="Buscar"
           >
-            <Shield className="h-4 w-4 text-brand-100" />
-          </div>
-          <div className="hidden sm:block">
-            <h1 className="text-sm font-display font-bold text-neutral-900 leading-tight tracking-tight">
-              Debido Proceso
-            </h1>
-            <p className="text-[9px] font-semibold text-neutral-400 tracking-wide uppercase leading-tight mt-0.5">
-              Gestión de Convivencia Escolar
-            </p>
-          </div>
-          <div className="sm:hidden">
-            <h1 className="text-sm font-display font-bold text-neutral-900 leading-tight">
-              Debido Proceso
-            </h1>
-          </div>
+            <Search className="h-5 w-5" />
+          </button>
         </div>
 
-        {/* Right controls */}
-        <div className="flex items-center gap-2">
-          {/* Save status indicator */}
-          {saveStatus && saveStatus !== 'idle' && (
-            <div className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-semibold ${
+        {/* Right: Actions */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {saveStatus !== 'idle' && (
+            <div className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-semibold ${
               saveStatus === 'saving'
-                ? 'bg-blue-50 border-blue-200 text-blue-700'
+                ? 'bg-brand-50 border-brand-200 text-brand-700'
                 : saveStatus === 'saved'
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                : 'bg-red-50 border-red-200 text-red-700'
+                ? 'bg-leve-50 border-leve-200 text-leve-700'
+                : 'bg-gravisima-50 border-gravisima-200 text-gravisima-700'
             }`}>
               {saveStatus === 'saving' ? (
-                <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
               ) : saveStatus === 'saved' ? (
-                <Cloud className="h-3 w-3" aria-hidden="true" />
+                <Cloud className="h-3.5 w-3.5" aria-hidden="true" />
               ) : (
-                <CloudOff className="h-3 w-3" aria-hidden="true" />
+                <CloudOff className="h-3.5 w-3.5" aria-hidden="true" />
               )}
               <span>
                 {saveStatus === 'saving' ? 'Guardando...'
                   : saveStatus === 'saved' ? 'Guardado'
-                  : 'Error al guardar'}
+                  : 'Error'}
               </span>
             </div>
           )}
 
-          {/* Status badge */}
-          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-neutral-50 border border-neutral-200/60 text-[10px] font-semibold text-neutral-500">
-            <span className="h-1.5 w-1.5 rounded-full bg-success-500" aria-hidden="true" />
-            <span>Sistema activo</span>
-          </div>
-
-          {/* Privacy toggle - premium pill */}
           <button
             type="button"
             onClick={() => setPrivacyMode(!privacyMode)}
-            className={`relative inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[11px] font-semibold transition-all duration-200 cursor-pointer select-none ${
+            className={`relative inline-flex items-center gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl border text-[12px] font-semibold transition-all duration-200 cursor-pointer select-none ${
               privacyMode
-                ? 'bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100'
-                : 'bg-neutral-50 border-neutral-200 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-800'
+                ? 'bg-grave-50 border-grave-200 text-grave-700 hover:bg-grave-100'
+                : 'bg-neutral-100 border-neutral-200/60 text-neutral-600 hover:bg-neutral-200'
             }`}
-            aria-label={privacyMode ? 'Modo privacidad activado. Click para desactivar.' : 'Modo privacidad desactivado. Click para activar.'}
+            aria-label={privacyMode ? 'Desactivar modo privacidad' : 'Activar modo privacidad'}
             aria-pressed={privacyMode}
-            title={privacyMode ? 'Los nombres de NNA están protegidos' : 'Los nombres de NNA son visibles'}
+            title={privacyMode ? 'Nombres protegidos' : 'Nombres visibles'}
           >
             {privacyMode ? (
               <EyeOff className="h-3.5 w-3.5" aria-hidden="true" />
@@ -97,11 +131,79 @@ export default function Header({ privacyMode, setPrivacyMode, saveStatus = 'idle
               <Eye className="h-3.5 w-3.5" aria-hidden="true" />
             )}
             <span className="hidden sm:inline">
-              {privacyMode ? 'Privacidad NNA' : 'Nombres reales'}
+              {privacyMode ? 'Privacidad' : 'Nombres'}
             </span>
           </button>
+
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="relative p-2.5 rounded-xl hover:bg-neutral-100 text-neutral-500 transition-all cursor-pointer"
+              aria-label="Notificaciones"
+              aria-haspopup="true"
+              aria-expanded={showNotifications}
+            >
+              <Bell className="h-4 w-4" aria-hidden="true" />
+              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-gravisima-500 ring-2 ring-white" />
+            </button>
+
+            {showNotifications && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} aria-hidden="true" />
+                <div className="absolute right-0 top-full mt-2 w-[min(360px,calc(100vw-2rem))] bg-white rounded-2xl border border-neutral-200 shadow-xl z-50 animate-scale-in overflow-hidden">
+                  <div className="p-4 border-b border-neutral-100">
+                    <h3 className="text-sm font-bold text-neutral-900">Notificaciones</h3>
+                    <p className="text-[11px] text-neutral-400 mt-0.5">
+                      {NOTIFICATIONS.filter(n => n.urgent).length} requieren atención
+                    </p>
+                  </div>
+                  <div className="max-h-[320px] overflow-y-auto">
+                    {NOTIFICATIONS.map((n) => (
+                      <button
+                        key={n.id}
+                        type="button"
+                        className="w-full flex items-start gap-3 p-4 hover:bg-neutral-50 transition-all text-left border-b border-neutral-100 last:border-b-0"
+                      >
+                        <div className={`p-1.5 rounded-lg shrink-0 ${n.urgent ? 'bg-gravisima-50' : 'bg-brand-50'}`}>
+                          <Bell className={`h-3.5 w-3.5 ${n.urgent ? 'text-gravisima-600' : 'text-brand-600'}`} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[12px] font-semibold text-neutral-900">{n.title}</p>
+                          <p className="text-[11px] text-neutral-500 mt-0.5">{n.description}</p>
+                          <span className="text-[10px] text-neutral-400 mt-1 block">{n.time}</span>
+                        </div>
+                        {n.urgent && <span className="h-1.5 w-1.5 rounded-full bg-gravisima-500 shrink-0 mt-1" />}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="p-3 border-t border-neutral-100 text-center">
+                    <button type="button" className="text-[11px] font-semibold text-brand-600 hover:text-brand-700 transition-colors">
+                      Ver todas las notificaciones
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
+
+      {showSearch && (
+        <div className="md:hidden px-4 pb-3 animate-slide-up">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => onSearchChange?.(e.target.value)}
+              placeholder="Buscar..."
+              className="w-full bg-neutral-100 text-neutral-800 pl-10 pr-4 py-2.5 text-sm rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400"
+              aria-label="Búsqueda"
+            />
+          </div>
+        </div>
+      )}
     </header>
   );
 }

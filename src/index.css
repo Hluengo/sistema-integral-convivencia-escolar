@@ -1,63 +1,102 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
   /* Typography */
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: "Plus Jakarta Sans", sans-serif;
+  --font-display: "Inter", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
-  /* Primary brand palette - higher saturation, deeper range */
-  --color-brand-50: #eef2ff;
-  --color-brand-100: #e0e7ff;
-  --color-brand-200: #c7d2fe;
-  --color-brand-300: #a5b4fc;
-  --color-brand-400: #818cf8;
-  --color-brand-500: #6366f1;
-  --color-brand-600: #4f46e5;
-  --color-brand-700: #4338ca;
-  --color-brand-800: #3730a3;
-  --color-brand-900: #1e1b4b;
-  --color-brand-950: #0f0a2e;
+  /* ===== PRIMARY: Blue Confidence (#1E3A8A / #1D4ED8) ===== */
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-200: #bfdbfe;
+  --color-brand-300: #93c5fd;
+  --color-brand-400: #60a5fa;
+  --color-brand-500: #3b82f6;
+  --color-brand-600: #1d4ed8;
+  --color-brand-700: #1e3a8a;
+  --color-brand-800: #1e3a8a;
+  --color-brand-900: #172554;
+  --color-brand-950: #0f172a;
 
-  /* Neutral scale - warmer, more defined */
-  --color-neutral-50: #fafafa;
-  --color-neutral-100: #f5f5f5;
-  --color-neutral-150: #ebedf0;
-  --color-neutral-200: #e2e4e9;
-  --color-neutral-250: #d0d3d9;
-  --color-neutral-300: #b6b9c2;
-  --color-neutral-400: #8b8fa3;
-  --color-neutral-500: #6b7084;
-  --color-neutral-600: #525668;
-  --color-neutral-700: #3b3f50;
-  --color-neutral-750: #2d3142;
-  --color-neutral-800: #1f2336;
-  --color-neutral-850: #151929;
-  --color-neutral-900: #0c0f1d;
-  --color-neutral-950: #040612;
+  /* ===== SECONDARY: Orange Energy (#F97316) ===== */
+  --color-secondary-50: #fff7ed;
+  --color-secondary-100: #ffedd5;
+  --color-secondary-200: #fed7aa;
+  --color-secondary-300: #fdba74;
+  --color-secondary-400: #fb923c;
+  --color-secondary-500: #f97316;
+  --color-secondary-600: #ea580c;
+  --color-secondary-700: #c2410c;
+  --color-secondary-800: #9a3412;
 
-  /* Semantic colors - more vibrant */
+  /* Neutral scale - modern, clean */
+  --color-neutral-50: #f8fafc;
+  --color-neutral-100: #f1f5f9;
+  --color-neutral-150: #e2e8f0;
+  --color-neutral-200: #cbd5e1;
+  --color-neutral-300: #b0bccd;
+  --color-neutral-400: #94a3b8;
+  --color-neutral-500: #64748b;
+  --color-neutral-600: #475569;
+  --color-neutral-700: #334155;
+  --color-neutral-750: #1e293b;
+  --color-neutral-800: #1e293b;
+  --color-neutral-900: #0f172a;
+  --color-neutral-950: #020617;
+
+  /* ===== SEMANTIC ===== */
+  /* Leve - Green */
+  --color-leve-50: #f0fdf4;
+  --color-leve-100: #dcfce7;
+  --color-leve-200: #bbf7d0;
+  --color-leve-500: #22c55e;
+  --color-leve-600: #16a34a;
+  --color-leve-700: #15803d;
+
+  /* Grave - Amber */
+  --color-grave-50: #fffbeb;
+  --color-grave-100: #fef3c7;
+  --color-grave-200: #fde68a;
+  --color-grave-500: #f59e0b;
+  --color-grave-600: #d97706;
+  --color-grave-700: #b45309;
+
+  /* Muy Grave - Orange */
+  --color-muygrave-50: #fff7ed;
+  --color-muygrave-100: #ffedd5;
+  --color-muygrave-200: #fed7aa;
+  --color-muygrave-500: #f97316;
+  --color-muygrave-600: #ea580c;
+  --color-muygrave-700: #c2410c;
+
+  /* Gravísima - Red */
+  --color-gravisima-50: #fef2f2;
+  --color-gravisima-100: #fee2e2;
+  --color-gravisima-200: #fecaca;
+  --color-gravisima-500: #ef4444;
+  --color-gravisima-600: #dc2626;
+  --color-gravisima-700: #b91c1c;
+
+  /* Legacy semantic aliases */
   --color-success-50: #f0fdf4;
-  --color-success-100: #d1fae5;
-  --color-success-200: #a7f3d0;
-  --color-success-500: #10b981;
-  --color-success-600: #059669;
-  --color-success-700: #047857;
+  --color-success-100: #dcfce7;
+  --color-success-200: #bbf7d0;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
 
   --color-warning-50: #fffbeb;
   --color-warning-100: #fef3c7;
   --color-warning-200: #fde68a;
   --color-warning-500: #f59e0b;
   --color-warning-600: #d97706;
-  --color-warning-700: #b45309;
 
   --color-danger-50: #fef2f2;
   --color-danger-100: #fee2e2;
   --color-danger-200: #fecaca;
   --color-danger-500: #ef4444;
   --color-danger-600: #dc2626;
-  --color-danger-700: #b91c1c;
 
   --color-info-50: #eff6ff;
   --color-info-100: #dbeafe;
@@ -65,25 +104,24 @@
   --color-info-500: #3b82f6;
   --color-info-600: #2563eb;
 
-  --color-purple-50: #f5f3ff;
-  --color-purple-100: #ede9fe;
-  --color-purple-500: #8b5cf6;
-  --color-purple-600: #7c3aed;
-
-  /* Enhanced shadow scale */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.02);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.03), 0 1px 1px rgba(0, 0, 0, 0.01);
-  --shadow-md: 0 4px 6px -2px rgba(0, 0, 0, 0.04), 0 2px 3px -1px rgba(0, 0, 0, 0.02);
-  --shadow-lg: 0 10px 15px -4px rgba(0, 0, 0, 0.05), 0 4px 5px -2px rgba(0, 0, 0, 0.02);
-  --shadow-xl: 0 20px 25px -6px rgba(0, 0, 0, 0.05), 0 8px 10px -4px rgba(0, 0, 0, 0.02);
+  /* Shadow scale */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.02);
+  --shadow-md: 0 4px 6px -2px rgba(0, 0, 0, 0.05), 0 2px 3px -1px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 10px 15px -4px rgba(0, 0, 0, 0.06), 0 4px 5px -2px rgba(0, 0, 0, 0.03);
+  --shadow-xl: 0 20px 25px -6px rgba(0, 0, 0, 0.06), 0 8px 10px -4px rgba(0, 0, 0, 0.03);
   --shadow-2xl: 0 25px 48px -8px rgba(0, 0, 0, 0.08);
+
+  /* Custom shadows for cards */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-card-hover: 0 10px 25px -6px rgba(0, 0, 0, 0.08), 0 4px 8px -4px rgba(0, 0, 0, 0.04);
 
   /* Animation easings */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out-expo: cubic-bezier(0.87, 0, 0.13, 1);
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
 
-  /* Border radius scale */
+  /* Border radius */
   --radius-xs: 6px;
   --radius-sm: 8px;
   --radius-md: 10px;
@@ -93,24 +131,24 @@
   --radius-3xl: 24px;
 }
 
-/* Base styles */
+/* ===== BASE STYLES ===== */
 body {
   background-color: var(--color-neutral-50);
   color: var(--color-neutral-800);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  line-height: 1.5;
+  line-height: 1.6;
   letter-spacing: 0.01em;
 }
 
 /* Premium text selection */
 ::selection {
-  background-color: rgba(99, 102, 241, 0.14);
+  background-color: rgba(29, 78, 216, 0.14);
   color: var(--color-brand-900);
 }
 
-/* Focus ring - accessible */
+/* Focus ring - WCAG AA accessible */
 *:focus-visible {
   outline: 2px solid var(--color-brand-500);
   outline-offset: 2px;
@@ -126,7 +164,7 @@ a {
   transition: all 0.2s var(--ease-out-expo);
 }
 
-/* Custom scrollbar - premium */
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 4px;
   height: 4px;
@@ -142,54 +180,45 @@ a {
   background: var(--color-neutral-300);
 }
 
-/* Card hover lift */
-.hover-lift {
-  transition: transform 0.25s var(--ease-out-expo), box-shadow 0.25s var(--ease-out-expo);
+/* Card base with hover lift */
+.card {
+  background: white;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-neutral-200);
+  box-shadow: var(--shadow-card);
+  transition: transform 0.25s var(--ease-out-expo), box-shadow 0.25s var(--ease-out-expo), border-color 0.25s var(--ease-out-expo);
 }
-.hover-lift:hover {
+.card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--color-neutral-300);
 }
 
 /* Glassmorphism */
 .glass {
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(226, 232, 240, 0.5);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.03), 0 1px 4px rgba(0, 0, 0, 0.01);
+  border-bottom: 1px solid rgba(203, 213, 225, 0.5);
 }
 
 /* Gradient text */
 .text-gradient {
-  background: linear-gradient(135deg, var(--color-brand-600), var(--color-purple-500));
+  background: linear-gradient(135deg, var(--color-brand-600), var(--color-brand-400));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Skeleton shimmer */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-.skeleton {
-  background: linear-gradient(90deg, var(--color-neutral-100) 25%, var(--color-neutral-150) 50%, var(--color-neutral-100) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-  border-radius: var(--radius-xs);
-}
-
-/* Slide up animation */
+/* Animations */
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 .animate-slide-up {
   animation: slideUp 0.35s var(--ease-out-expo) both;
 }
 
-/* Fade in */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -198,13 +227,32 @@ a {
   animation: fadeIn 0.25s var(--ease-out-expo) both;
 }
 
-/* Scale in */
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.97); }
+  from { opacity: 0; transform: scale(0.96); }
   to { opacity: 1; transform: scale(1); }
 }
 .animate-scale-in {
   animation: scaleIn 0.25s var(--ease-out-expo) both;
+}
+
+/* Stagger animation for children */
+.stagger-children > * {
+  animation: slideUp 0.4s var(--ease-out-expo) both;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0.02s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.06s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.10s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.14s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.18s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.22s; }
+
+/* Pulse dot for live indicator */
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.pulse-dot {
+  animation: pulseDot 2s ease-in-out infinite;
 }
 
 /* Safe area */

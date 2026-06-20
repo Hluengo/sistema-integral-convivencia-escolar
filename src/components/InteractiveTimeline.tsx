@@ -416,17 +416,18 @@ export default function InteractiveTimeline({
   const breaches = checkDueProcessBreaches();
 
   return (
-    <div className="bg-white rounded-xl border border-neutral-200/80 shadow-sm overflow-hidden flex flex-col h-full animate-slide-up">
+    <div className="card overflow-hidden flex flex-col h-full animate-slide-up shadow-md">
       {/* Title Header area */}
-      <div className="bg-neutral-50/80 border-b border-neutral-200/60 p-4 sm:p-5 text-left">
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-          <div className="space-y-1.5 min-w-0">
+      <div className="relative overflow-hidden bg-gradient-to-br from-brand-700 via-brand-600 to-brand-800 p-5 sm:p-6 text-white">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-60" aria-hidden="true" />
+        <div className="relative flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+          <div className="space-y-2 min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[10px] font-mono bg-neutral-900 text-white font-semibold px-2.5 py-0.5 rounded shrink-0">
+              <span className="text-[10px] font-mono bg-white/20 backdrop-blur-sm text-white font-semibold px-2.5 py-0.5 rounded-lg shrink-0 ring-1 ring-white/20">
                 {causa.id}
               </span>
-              <span className="text-[10px] font-medium text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded flex items-center gap-1">
-                <Calendar className="h-3 w-3 text-neutral-400" aria-hidden="true" /> Apertura: {causa.fechaApertura}
+              <span className="text-[10px] font-medium text-blue-100/80 bg-white/10 px-2 py-0.5 rounded-lg flex items-center gap-1 ring-1 ring-white/10">
+                <Calendar className="h-3 w-3" aria-hidden="true" /> Apertura: {causa.fechaApertura}
               </span>
 
               {/* Layout controls */}
@@ -463,35 +464,35 @@ export default function InteractiveTimeline({
                 </button>
               )}
             </div>
-            <h2 className="text-base sm:text-lg font-display font-bold text-neutral-900 tracking-tight pt-1">
+            <h2 className="text-lg sm:text-xl font-display font-bold text-white tracking-tight">
               {privacyMode ? causa.nnaProtectedName : causa.estudianteNombre} 
-              <span className="ml-2 text-xs font-medium text-neutral-400 bg-neutral-100 px-2 py-0.5 rounded align-middle">
+              <span className="ml-2 text-xs font-medium text-blue-100/70 bg-white/10 px-2 py-0.5 rounded-lg align-middle ring-1 ring-white/10">
                 {causa.estudianteCurso}
               </span>
             </h2>
-            <div className="flex flex-wrap items-center gap-2 text-[11px] text-neutral-500 font-medium">
+            <div className="flex flex-wrap items-center gap-2 text-[11px] text-blue-100/80 font-medium">
               <span>Gravedad: <strong className={`font-semibold ${
-                causa.tipoInfraccion === 'Gravísima' ? 'text-danger-600' :
-                causa.tipoInfraccion === 'Muy Grave' ? 'text-purple-600' :
-                causa.tipoInfraccion === 'Grave' ? 'text-amber-600' :
-                'text-blue-600'
+                causa.tipoInfraccion === 'Gravísima' ? 'text-red-200' :
+                causa.tipoInfraccion === 'Muy Grave' ? 'text-purple-200' :
+                causa.tipoInfraccion === 'Grave' ? 'text-amber-200' :
+                'text-blue-200'
               }`}>{causa.tipoInfraccion}</strong></span>
-              <span className="text-neutral-300" aria-hidden="true">•</span>
-              <span>Responsable: <strong className="text-neutral-700 font-semibold">{causa.responsable.split(' (')[0]}</strong></span>
+              <span className="text-white/30" aria-hidden="true">•</span>
+              <span>Responsable: <strong className="text-white font-semibold">{causa.responsable.split(' (')[0]}</strong></span>
             </div>
           </div>
 
           {/* Quick status modifier for authorized roles */}
           <div className="flex flex-col text-left shrink-0">
-            <label htmlFor="estado-select" className="text-[9px] font-semibold text-neutral-400 mb-1 uppercase tracking-wider">
-              Estado del expediente:
+            <label htmlFor="estado-select" className="text-[10px] font-semibold text-blue-200/70 mb-1.5 uppercase tracking-[0.06em]">
+              Estado del expediente
             </label>
             <select
               id="estado-select"
               value={causa.estadoActual}
               onChange={handleStateChange}
               disabled={currentRole === 'docente'}
-              className="text-xs bg-white text-neutral-800 font-medium border border-neutral-200 hover:border-neutral-300 rounded-lg py-1.5 pl-3 pr-8 shadow-xs cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
+              className="text-xs bg-white/95 text-neutral-800 font-medium border border-white/20 rounded-xl py-2 pl-3 pr-8 shadow-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/40"
               aria-label="Cambiar estado del expediente"
             >
               <optgroup label="1. Recepción y Apertura">
@@ -547,16 +548,16 @@ export default function InteractiveTimeline({
       )}
 
       {/* Primary interactive tabs */}
-      <div className="flex border-b border-neutral-200/60 bg-neutral-50/50 p-1.5 gap-1.5" role="tablist" aria-label="Secciones del expediente">
+      <div className="flex border-b border-neutral-200/60 bg-neutral-50/80 p-2 gap-2" role="tablist" aria-label="Secciones del expediente">
         <button
           type="button"
           onClick={() => setActiveTab('proceso')}
           role="tab"
           aria-selected={activeTab === 'proceso'}
-          className={`flex-1 py-2.5 px-3 text-[11px] font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+          className={`flex-1 py-2.5 px-3 text-[12px] font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
             activeTab === 'proceso'
-              ? 'bg-white text-brand-700 shadow-sm border border-neutral-200/80'
-              : 'text-neutral-500 hover:text-neutral-800 hover:bg-white/60'
+              ? 'bg-brand-600 text-white shadow-sm shadow-brand-600/20'
+              : 'text-neutral-600 hover:text-neutral-800 hover:bg-white border border-transparent hover:border-neutral-200/80'
           }`}
         >
           <ClipboardList className="h-4 w-4 text-brand-500" aria-hidden="true" />
@@ -569,10 +570,10 @@ export default function InteractiveTimeline({
           onClick={() => setActiveTab('bitacora')}
           role="tab"
           aria-selected={activeTab === 'bitacora'}
-          className={`flex-1 py-2.5 px-3 text-[11px] font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+          className={`flex-1 py-2.5 px-3 text-[12px] font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
             activeTab === 'bitacora'
-              ? 'bg-white text-brand-700 shadow-sm border border-neutral-200/80'
-              : 'text-neutral-500 hover:text-neutral-800 hover:bg-white/60'
+              ? 'bg-brand-600 text-white shadow-sm shadow-brand-600/20'
+              : 'text-neutral-600 hover:text-neutral-800 hover:bg-white border border-transparent hover:border-neutral-200/80'
           }`}
         >
           <ListTodo className="h-4 w-4 text-brand-500" aria-hidden="true" />
@@ -584,10 +585,10 @@ export default function InteractiveTimeline({
           onClick={() => setActiveTab('asistente_ia')}
           role="tab"
           aria-selected={activeTab === 'asistente_ia'}
-          className={`flex-1 py-2.5 px-3 text-[11px] font-semibold rounded-lg transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+          className={`flex-1 py-2.5 px-3 text-[12px] font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
             activeTab === 'asistente_ia'
-              ? 'bg-brand-600 text-white shadow-sm'
-              : 'text-brand-600 hover:text-brand-800 hover:bg-brand-50/70'
+              ? 'bg-secondary-500 text-white shadow-sm shadow-secondary-500/20'
+              : 'text-secondary-600 hover:text-secondary-800 hover:bg-secondary-50 border border-transparent hover:border-secondary-200/80'
           }`}
         >
           <Sparkles className="h-4 w-4" aria-hidden="true" />

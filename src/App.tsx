@@ -15,8 +15,10 @@ import CausaCard from './components/CausaCard';
 import InteractiveTimeline from './components/InteractiveTimeline';
 import AiAdvisor from './components/AiAdvisor';
 import ClosedCases from './components/ClosedCases';
-import { Search, Plus, RotateCcw, Scale, Sparkles, AlertCircle, FileText, BookOpen, ChevronRight, Loader2, Users, Cloud, Archive } from 'lucide-react';
-import { supabase, type Course, type Student, fetchCausas, createCausa, updateCausa, saveBitacora, saveChecklist, clearAllData } from './lib/supabase';
+import PageHeader from './components/PageHeader';
+import StudentsPanel from './components/StudentsPanel';
+import { Search, Plus, RotateCcw, Scale, Sparkles, AlertCircle, FileText, BookOpen, ChevronRight, Loader2, Users } from 'lucide-react';
+import { supabase, type Course, type Student, fetchCausas, createCausa, updateCausa, saveBitacora, saveChecklist } from './lib/supabase';
 
 function generateInitials(fullName: string): string {
   if (!fullName) return "N. N.";
@@ -49,11 +51,11 @@ export default function App() {
   const [currentRole, setRole] = useState<UserRole>('convivencia_escolar');
   const [privacyMode, setPrivacyMode] = useState<boolean>(false);
 
-  // Sidebar state
+  // Sidebar state - NEW SidebarView type
   const [currentView, setCurrentView] = useState<SidebarView>('dashboard');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
 
-  // Collapsible view layouts for workspace (ref: only set in handlers, never read in render)
+  // Collapsible view layouts for workspace
   const isTimelineCollapsed = useRef(false);
   const setIsTimelineCollapsed = (val: boolean) => { isTimelineCollapsed.current = val; };
 
@@ -75,6 +77,18 @@ export default function App() {
   const activeCausas = causas.filter(c => c.estadoActual !== EstadoCausa.CAUSA_CERRADA);
   const closedCausas = causas.filter(c => c.estadoActual === EstadoCausa.CAUSA_CERRADA);
   const aulaSeguraCausas = causas.filter(c => c.comprometeAulaSegura && c.estadoActual !== EstadoCausa.CAUSA_CERRADA);
+
+  // Map new sidebar views to legacy actions
+  const handleViewChange = (view: SidebarView) => {
+    setCurrentView(view);
+    if (view === 'causas') {
+      if (selectedCausaId) {
+        setIsTimelineCollapsed(false);
+      }
+    } else {
+      setIsTimelineCollapsed(false);
+    }
+  };
 
   // Load courses from Supabase on mount
   useEffect(() => {
@@ -104,16 +118,13 @@ export default function App() {
     async function loadCausas() {
       isLoadingCausasRef.current = true;
       try {
-        // Clear any existing data from Supabase (from previous runs)
-        await clearAllData();
-        
-        // Start from scratch
-        console.log('Starting from scratch (cleared existing data)');
-        setCausas([]);
-        setSelectedCausaId('');
+        const loaded = await fetchCausas();
+        setCausas(loaded);
+        if (loaded.length > 0) {
+          setSelectedCausaId(loaded[0].id);
+        }
       } catch (error) {
         console.error('Error loading causas from Supabase:', error);
-        // Start from scratch
         setCausas([]);
         setSelectedCausaId('');
       } finally {
@@ -274,7 +285,7 @@ export default function App() {
     setCausas(updated);
     setSelectedCausaId(nextId);
     setShowCreateForm(false);
-    setCurrentView('casos_activos');
+    setCurrentView('causas');
 
     // Reset fields
     setNewEstNombre('');
@@ -302,7 +313,7 @@ export default function App() {
     };
     handleUpdateCausa(updated);
     setSelectedCausaId(causa.id);
-    setCurrentView('casos_activos');
+    setCurrentView('causas');
     setIsTimelineCollapsed(false);
   };
 
@@ -314,17 +325,25 @@ export default function App() {
     }
   };
 
+  // Navigate from dashboard to a specific causa
+  const handleSelectCausaFromDashboard = (causaId: string) => {
+    setSelectedCausaId(causaId);
+    setCurrentView('causas');
+    setIsTimelineCollapsed(false);
+  };
+
+  // Toggle create form from dashboard
+  const handleOpenCreateForm = () => {
+    setShowCreateForm(true);
+    setCurrentView('causas');
+  };
+
   return (
-    <div className="min-h-screen bg-neutral-50 flex font-sans text-neutral-800 antialiased">
+    <div className="min-h-screen bg-neutral-100 flex font-sans text-neutral-800 antialiased">
       {/* Sidebar */}
       <Sidebar
         currentView={currentView}
-        onViewChange={(view) => {
-          setCurrentView(view);
-          if (view !== 'casos_activos') {
-            setIsTimelineCollapsed(false);
-          }
-        }}
+        onViewChange={handleViewChange}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         activeCount={activeCausas.length}
@@ -338,156 +357,108 @@ export default function App() {
           privacyMode={privacyMode}
           setPrivacyMode={setPrivacyMode}
           saveStatus={saveStatus}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
           currentView={currentView}
         />
 
         <main className="flex-1 flex flex-col w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           
-          {/* VIEW 1: DASHBOARD */}
+          {/* VIEW 1: DASHBOARD - Fully redesigned */}
           {currentView === 'dashboard' && (
-            <div className="flex-1 space-y-6">
-              <DashboardStats
-                causas={causas}
-                onFaseSelect={(fase) => {
-                  setSelectedFaseFilter(fase);
-                  setCurrentView('casos_activos');
-                }}
-                selectedFase={'Todas'}
-              />
-
-              {/* Quick actions */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <button
-                  type="button"
-                  onClick={() => setCurrentView('casos_activos')}
-                  className="bg-white p-4 rounded-xl border border-neutral-200/80 hover:border-brand-300 hover:shadow-sm transition-all text-left cursor-pointer group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-brand-50 rounded-lg text-brand-600 group-hover:bg-brand-100 transition-colors">
-                      <Scale className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-neutral-400 font-semibold uppercase tracking-wider">Casos Activos</p>
-                      <p className="text-lg font-bold text-neutral-900">{activeCausas.length}</p>
-                    </div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setCurrentView('casos_cerrados')}
-                  className="bg-white p-4 rounded-xl border border-neutral-200/80 hover:border-neutral-400 hover:shadow-sm transition-all text-left cursor-pointer group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-neutral-100 rounded-lg text-neutral-600 group-hover:bg-neutral-200 transition-colors">
-                      <Archive className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-neutral-400 font-semibold uppercase tracking-wider">Casos Cerrados</p>
-                      <p className="text-lg font-bold text-neutral-900">{closedCausas.length}</p>
-                    </div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setCurrentView('advisor')}
-                  className="bg-white p-4 rounded-xl border border-neutral-200/80 hover:border-brand-300 hover:shadow-sm transition-all text-left cursor-pointer group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-brand-50 rounded-lg text-brand-600 group-hover:bg-brand-100 transition-colors">
-                      <Sparkles className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-neutral-400 font-semibold uppercase tracking-wider">Consultor IA</p>
-                      <p className="text-sm font-bold text-neutral-900">Generar informes</p>
-                    </div>
-                  </div>
-                </button>
-              </div>
-
-              {/* Recent active cases quick preview */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">Casos activos recientes</h3>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentView('casos_activos')}
-                    className="text-[10px] font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1 cursor-pointer"
-                  >
-                    Ver todos <ChevronRight className="h-3 w-3" />
-                  </button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {activeCausas.slice(0, 4).map((c) => (
-                    <CausaCard
-                      key={c.id}
-                      causa={c}
-                      privacyMode={privacyMode}
-                      onSelect={(cause) => {
-                        setSelectedCausaId(cause.id);
-                        setCurrentView('casos_activos');
-                        setIsTimelineCollapsed(false);
-                      }}
-                      isSelected={false}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
+            <DashboardStats
+              causas={causas}
+              onFaseSelect={(fase) => {
+                setSelectedFaseFilter(fase);
+                setCurrentView('causas');
+              }}
+              selectedFase={selectedFaseFilter}
+              onSelectCausa={handleSelectCausaFromDashboard}
+              onCreateCausa={handleOpenCreateForm}
+            />
           )}
 
-          {/* VIEW 2: ACTIVE CASES (workspace) */}
-          {currentView === 'casos_activos' && (
+          {/* VIEW 2: CAUSAS (Active Cases workspace) */}
+          {currentView === 'causas' && (
+            <div className="space-y-6 animate-fade-in">
+              {/* Hero header — aligned with dashboard */}
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-700 via-brand-600 to-brand-800 p-6 sm:p-8 text-white shadow-lg">
+                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-60" aria-hidden="true" />
+                <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <p className="text-blue-200/80 text-xs font-semibold uppercase tracking-wider mb-1">
+                      Expedientes · Debido Proceso
+                    </p>
+                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Causas Activas</h2>
+                    <p className="text-blue-100/80 text-sm mt-2">
+                      {filteredCausas.length} expediente{filteredCausas.length !== 1 ? 's' : ''} activo{filteredCausas.length !== 1 ? 's' : ''}
+                      {aulaSeguraCausas.length > 0 && (
+                        <span className="ml-2 inline-flex items-center gap-1 bg-red-500/30 px-2 py-0.5 rounded-lg text-red-100 text-xs font-semibold">
+                          {aulaSeguraCausas.length} Aula Segura
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  {currentRole !== 'docente' && (
+                    <button
+                      type="button"
+                      onClick={() => setShowCreateForm(!showCreateForm)}
+                      className="inline-flex items-center justify-center gap-2 bg-secondary-500 text-white font-semibold px-5 py-3 rounded-xl hover:bg-secondary-600 active:scale-[0.97] transition-all shadow-md shadow-secondary-500/30 shrink-0"
+                      aria-label="Crear nueva causa"
+                    >
+                      <Plus className="h-4 w-4" aria-hidden="true" />
+                      Nueva Causa
+                    </button>
+                  )}
+                </div>
+              </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               
-              {/* Sidebar with directory listing */}
               <div className={`lg:col-span-5 space-y-4 transition-all duration-300`}>
                 
-                {/* Directory Filter & Search Header */}
-                <div className="bg-white p-4 sm:p-5 rounded-xl border border-neutral-200/80 shadow-xs space-y-3.5">
+                <div className="relative card p-5 space-y-4">
+                  <div className="absolute top-0 left-4 right-4 h-[3px] rounded-full bg-brand-600" aria-hidden="true" />
                   <div className="flex items-center justify-between flex-wrap gap-2">
-                    <h3 className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider flex items-center gap-2">
-                      <BookOpen className="h-3.5 w-3.5 text-neutral-400" aria-hidden="true" />
-                      <span>Expedientes Activos ({filteredCausas.length})</span>
-                    </h3>
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-lg bg-brand-50">
+                        <BookOpen className="h-4 w-4 text-brand-600" aria-hidden="true" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-neutral-900">Expedientes Activos</h3>
+                        <p className="text-[11px] text-neutral-400 font-medium">{filteredCausas.length} resultados</p>
+                      </div>
+                    </div>
                     
                     <div className="flex items-center gap-1.5">
                       <button
                         type="button"
                         onClick={handleRestoreDatabase}
-                        className="text-[9px] text-neutral-500 hover:text-neutral-700 flex items-center gap-1 px-2 py-1 rounded-lg border border-neutral-200 hover:bg-neutral-50 font-medium transition-all cursor-pointer"
+                        className="text-[10px] text-neutral-500 hover:text-neutral-700 flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-neutral-200 hover:bg-neutral-50 font-medium transition-all cursor-pointer"
                         title="Restaurar base de datos"
                         aria-label="Restaurar datos iniciales"
                       >
                         <RotateCcw className="h-3 w-3" aria-hidden="true" />
                         <span className="hidden sm:inline">Restaurar</span>
                       </button>
-
-                      {currentRole !== 'docente' && (
-                        <button
-                          type="button"
-                          onClick={() => setShowCreateForm(!showCreateForm)}
-                          className="text-[9px] bg-neutral-900 border border-neutral-950 text-white font-semibold py-1 px-2 rounded-lg flex items-center justify-center hover:bg-neutral-800 shadow-xs transition-all cursor-pointer"
-                        >
-                          <Plus className="h-3.5 w-3.5 mr-0.5" aria-hidden="true" />
-                          <span className="hidden sm:inline">Nueva Causa</span>
-                        </button>
-                      )}
                     </div>
                   </div>
 
                   {/* Fase filter pills */}
-                  <div className="flex gap-1.5 flex-wrap">
+                  <div className="flex gap-2 flex-wrap" role="tablist" aria-label="Filtro por fase">
                     {(['Todas', 'Recepción', 'Investigación', 'Resolución', 'Impugnación', 'Seguimiento'] as const).map((fase) => (
                       <button
                         type="button"
                         key={fase}
                         onClick={() => setSelectedFaseFilter(fase)}
-                        className={`text-[9px] font-semibold px-2 py-1 rounded-lg border transition-all cursor-pointer ${
+                        role="tab"
+                        aria-selected={selectedFaseFilter === fase}
+                        className={`px-3 py-2 text-[11px] font-semibold rounded-xl border transition-all duration-200 cursor-pointer ${
                           selectedFaseFilter === fase
-                            ? 'bg-neutral-900 text-white border-neutral-900'
-                            : 'bg-white text-neutral-500 border-neutral-200 hover:bg-neutral-50'
+                            ? fase === 'Todas'
+                              ? 'bg-neutral-900 text-white border-neutral-900 shadow-sm'
+                              : 'bg-brand-600 text-white border-brand-600 shadow-sm shadow-brand-600/20'
+                            : 'bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50 hover:text-neutral-800 hover:border-neutral-300'
                         }`}
                       >
                         {fase}
@@ -497,13 +468,13 @@ export default function App() {
 
                   {/* Search box */}
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400" aria-hidden="true" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" aria-hidden="true" />
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Buscar estudiante, curso o código..."
-                      className="w-full bg-neutral-50 text-neutral-800 pl-9 pr-4 py-2 text-xs font-medium rounded-lg border border-neutral-200/80 hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:bg-white transition-all"
+                      className="w-full bg-neutral-50 text-neutral-800 pl-10 pr-4 py-2.5 text-sm font-medium rounded-xl border border-neutral-200/80 hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:bg-white transition-all"
                       aria-label="Buscar expedientes"
                     />
                   </div>
@@ -511,25 +482,32 @@ export default function App() {
 
                 {/* New Causa Creator */}
                 {showCreateForm && (
-                  <div className="bg-white p-4 sm:p-5 rounded-xl border border-neutral-200 shadow-lg animate-scale-in space-y-4">
-                    <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
-                      <h4 className="font-sans font-semibold text-sm text-neutral-900 flex items-center gap-2">
-                        <Scale className="h-4 w-4 text-brand-600" aria-hidden="true" /> Nuevo Expediente
-                      </h4>
+                  <div className="relative card p-5 animate-scale-in space-y-4 shadow-lg">
+                    <div className="absolute top-0 left-4 right-4 h-[3px] rounded-full bg-secondary-500" aria-hidden="true" />
+                    <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-2 rounded-lg bg-brand-50">
+                          <Scale className="h-4 w-4 text-brand-600" aria-hidden="true" />
+                        </div>
+                        <div>
+                          <h4 className="font-sans font-bold text-sm text-neutral-900">Nuevo Expediente</h4>
+                          <p className="text-[11px] text-neutral-400 font-medium">Registro de causa de convivencia</p>
+                        </div>
+                      </div>
                       <button
                         type="button"
                         onClick={() => setShowCreateForm(false)}
-                        className="text-[10px] bg-neutral-50 hover:bg-neutral-100 px-2 py-1 rounded-lg text-neutral-500 hover:text-neutral-700 font-medium transition-all cursor-pointer"
+                        className="text-[11px] bg-neutral-50 hover:bg-neutral-100 px-3 py-1.5 rounded-xl text-neutral-500 hover:text-neutral-700 font-medium transition-all cursor-pointer"
                       >
                         ✕ Cerrar
                       </button>
                     </div>
 
-                    <form onSubmit={handleCreateCausa} className="space-y-3.5 text-left text-xs text-neutral-800">
+                    <form onSubmit={handleCreateCausa} className="space-y-4 text-left text-sm text-neutral-800">
                       {/* Course selector - loaded from Supabase */}
                       <div>
-                        <label htmlFor="create-course" className="block text-[9px] font-semibold text-neutral-400 uppercase tracking-wide">
-                          Curso del estudiante:
+                        <label htmlFor="create-course" className="block text-[11px] font-semibold text-neutral-400 uppercase tracking-[0.06em]">
+                          Curso del estudiante
                         </label>
                         <select
                           id="create-course"
@@ -539,7 +517,7 @@ export default function App() {
                             setNewEstNombre('');
                             setNewEstRut(''); 
                           }}
-                          className="w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-50 font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                          className="w-full mt-1.5 border border-neutral-200 rounded-xl p-3 bg-neutral-50 font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:bg-white transition-all"
                           required
                         >
                           <option value="">-- Seleccionar curso --</option>
@@ -575,8 +553,8 @@ export default function App() {
 
                       {/* Student selector - filtered by course */}
                       <div>
-                        <label htmlFor="create-student" className="block text-[9px] font-semibold text-neutral-400 uppercase tracking-wide">
-                          Estudiante:
+                        <label htmlFor="create-student" className="block text-[11px] font-semibold text-neutral-400 uppercase tracking-[0.06em]">
+                          Estudiante
                         </label>
                         {selectedCourseId ? (
                           <>
@@ -590,7 +568,7 @@ export default function App() {
                                 id="create-student"
                                 value={students.find(s => s.full_name === newEstNombre)?.id || ''}
                                 onChange={(e) => handleStudentSelect(e.target.value)}
-                                className="w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-50 font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                                className="w-full mt-1.5 border border-neutral-200 rounded-xl p-3 bg-neutral-50 font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:bg-white transition-all"
                               >
                                 <option value="">-- Seleccionar estudiante --</option>
                                 {students.map(s => (
@@ -735,7 +713,7 @@ export default function App() {
                       </div>
 
                       {newInfTipo === 'Gravísima' && newAulaSegura && (
-                        <div className="bg-danger-50 p-3 rounded-lg border border-danger-200 text-[11px] text-danger-800 leading-normal font-sans font-medium">
+                        <div className="bg-gravisima-50 p-3 rounded-lg border border-gravisima-200 text-[11px] text-gravisima-800 leading-normal font-sans font-medium">
                           ⚠️ <strong>Ley Aula Segura activa:</strong> Recuerde citar formalmente a la Superintendencia en un lapso de 24 horas y resolver en no más de 10 días hábiles de suspensión preventiva.
                         </div>
                       )}
@@ -750,9 +728,9 @@ export default function App() {
                         </button>
                         <button
                           type="submit"
-                          className="bg-brand-600 text-white font-semibold px-4 py-1.5 rounded-lg hover:bg-brand-700 flex items-center gap-1 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
+                          className="bg-brand-600 text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-brand-700 flex items-center gap-2 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer shadow-sm shadow-brand-600/20"
                         >
-                          <FileText className="h-4 w-4" aria-hidden="true" /> Registrar
+                          <FileText className="h-4 w-4" aria-hidden="true" /> Registrar Expediente
                         </button>
                       </div>
                     </form>
@@ -775,7 +753,7 @@ export default function App() {
                       />
                     ))
                   ) : (
-                    <div className="bg-white p-8 text-center rounded-xl border border-neutral-200">
+                    <div className="card p-8 text-center">
                       <Search className="h-8 w-8 text-neutral-300 mx-auto mb-2" aria-hidden="true" />
                       <p className="text-xs text-neutral-500 font-medium">Ningún expediente coincide con la búsqueda o filtro.</p>
                     </div>
@@ -797,17 +775,21 @@ export default function App() {
                     setIsTimelineCollapsed={undefined}
                   />
                 ) : (
-                  <div className="bg-white border border-neutral-200 rounded-xl p-16 text-center text-neutral-400">
-                    <Search className="h-10 w-10 mx-auto text-neutral-200 mb-2" aria-hidden="true" />
-                    <p className="text-sm font-medium">Seleccione un expediente activo para ver sus detalles</p>
+                  <div className="card p-16 text-center text-neutral-400">
+                    <div className="p-4 rounded-2xl bg-neutral-50 inline-block mb-4">
+                      <Scale className="h-10 w-10 text-neutral-200" aria-hidden="true" />
+                    </div>
+                    <p className="text-sm font-semibold text-neutral-600">Seleccione un expediente activo</p>
+                    <p className="text-xs text-neutral-400 mt-1">Elija una causa de la lista para ver su timeline y gestionar el debido proceso</p>
                   </div>
                 )}
               </div>
             </div>
+            </div>
           )}
 
           {/* VIEW 3: CLOSED CASES */}
-          {currentView === 'casos_cerrados' && (
+          {currentView === 'causas' && selectedCausaId === '' && filteredCausas.length === 0 && (
             <div className="flex-1">
               <ClosedCases
                 causas={causas}
@@ -815,7 +797,7 @@ export default function App() {
                 onReopenCausa={handleReopenCausa}
                 onSelectCausa={(causa) => {
                   setSelectedCausaId(causa.id);
-                  setCurrentView('casos_activos');
+                  setCurrentView('causas');
                   setIsTimelineCollapsed(false);
                 }}
               />
@@ -823,10 +805,14 @@ export default function App() {
           )}
 
           {/* VIEW 4: AI ADVISOR */}
-          {currentView === 'advisor' && (
-            <div className="flex-1 max-w-3xl mx-auto space-y-4">
-              <div className="bg-info-50/50 border border-info-100 p-3.5 sm:p-4 rounded-xl flex items-start gap-3 text-left">
-                <Sparkles className="h-5 w-5 text-info-600 mt-0.5 shrink-0" aria-hidden="true" />
+          {currentView === 'informes' && (
+            <div className="flex-1 max-w-3xl mx-auto space-y-4 animate-fade-in">
+              <PageHeader
+                title="Asistente Judicial"
+                description="Redacta informes y fiscaliza plazos con apoyo de IA, configurada con las Circulares de la Superintendencia de Educación."
+              />
+              <div className="bg-brand-50/50 border border-brand-100 p-3.5 sm:p-4 rounded-xl flex items-start gap-3 text-left">
+                <Sparkles className="h-5 w-5 text-brand-600 mt-0.5 shrink-0" aria-hidden="true" />
                 <div>
                   <h4 className="text-[11px] font-semibold text-neutral-900 uppercase tracking-wide">Asistente Judicial e Investigativo</h4>
                   <p className="text-[10px] text-neutral-600 leading-relaxed mt-0.5">
@@ -838,16 +824,21 @@ export default function App() {
             </div>
           )}
 
+          {/* VIEW 5: ALUMNOS */}
+          {currentView === 'alumnos' && (
+            <StudentsPanel privacyMode={privacyMode} />
+          )}
+
         </main>
 
         {/* Footer */}
-        <footer className="bg-white border-t border-neutral-200/60 py-5 sm:py-6 mt-8 text-center text-[10px] text-neutral-400 space-y-1">
-          <div className="flex items-center justify-center gap-2 text-neutral-500 font-medium font-sans flex-wrap px-4">
-            <span>SigueAula · Convivencia Escolar</span>
-            <span className="hidden sm:inline" aria-hidden="true">•</span>
+        <footer className="bg-white border-t border-neutral-200/60 py-5 sm:py-6 mt-auto text-center text-[10px] text-neutral-400 space-y-1.5">
+          <div className="flex items-center justify-center gap-2 text-neutral-500 font-medium flex-wrap px-4">
+            <span className="font-semibold text-brand-700">SigueAula</span>
+            <span aria-hidden="true">·</span>
+            <span>Convivencia Escolar</span>
+            <span className="hidden sm:inline" aria-hidden="true">·</span>
             <span className="hidden sm:inline">Fiscalización & Debido Proceso 2026</span>
-            <span className="hidden sm:inline" aria-hidden="true">•</span>
-            <span>Ministerio de Educación & Supereduc de Chile</span>
           </div>
           <p className="font-mono text-[9px] text-neutral-400 max-w-lg mx-auto leading-relaxed px-4">
             Circular N° 482 · Ley 21809 · Resguardo de NNA en todo el territorio nacional

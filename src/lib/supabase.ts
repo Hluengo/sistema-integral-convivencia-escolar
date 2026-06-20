@@ -40,6 +40,11 @@ export interface Student {
   created_at: string;
 }
 
+export interface StudentWithCourse extends Student {
+  course_name: string;
+  course_level: Course['level'] | null;
+}
+
 // ====================================================
 // EXISTING: Courses & Students (unchanged)
 // ====================================================
@@ -79,6 +84,34 @@ export async function fetchStudentsByCourse(courseId: string): Promise<Student[]
   }
 
   return data || [];
+}
+
+/**
+ * Fetch all students with their course name (join)
+ */
+export async function fetchStudentsWithCourses(): Promise<StudentWithCourse[]> {
+  const { data, error } = await supabase
+    .from('students')
+    .select('*, courses(name, level)')
+    .order('full_name', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching students with courses:', error);
+    return [];
+  }
+
+  return (data || []).map((row: Record<string, unknown>) => {
+    const courses = row.courses as { name: string; level: Course['level'] } | null;
+    return {
+      id: row.id as string,
+      full_name: row.full_name as string,
+      course_id: row.course_id as string,
+      rut: row.rut as string,
+      created_at: row.created_at as string,
+      course_name: courses?.name ?? 'Sin curso',
+      course_level: courses?.level ?? null,
+    };
+  });
 }
 
 /**
