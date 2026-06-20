@@ -6,7 +6,6 @@
 import React, { useState } from 'react';
 import { Search, Bell, Eye, EyeOff, Cloud, CloudOff, Loader2 } from 'lucide-react';
 import type { SidebarView } from './Sidebar';
-import LogoVeritas from './LogoVeritas';
 
 const VIEW_TITLES: Record<SidebarView, { title: string; subtitle: string }> = {
   dashboard: { title: 'Dashboard', subtitle: 'Panel de control ejecutivo' },
@@ -52,8 +51,8 @@ export default function Header({
         <div className="flex items-center gap-4 flex-1 min-w-0 pl-10 lg:pl-0">
           {/* Mobile brand */}
           <div className="flex lg:hidden items-center gap-2 shrink-0">
-            <div className="h-8 w-8 rounded-lg bg-brand-700 flex items-center justify-center shadow-sm overflow-hidden">
-              <LogoVeritas size={28} variant="light" />
+            <div className="h-8 w-8 rounded-lg bg-brand-700 flex items-center justify-center shadow-sm overflow-hidden p-1">
+              <img src="/veritas.png" alt="Escudo Veritas" className="h-full w-auto brightness-0 invert" />
             </div>
           </div>
 
