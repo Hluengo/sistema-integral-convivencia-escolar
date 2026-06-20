@@ -12,8 +12,6 @@ import {
 } from 'lucide-react';
 import MetricCard from './MetricCard';
 import SeverityBadge from './SeverityBadge';
-import BarChart, { generateLast30Days } from './BarChart';
-import ActivityFeed from './ActivityFeed';
 
 interface DashboardStatsProps {
   causas: Causa[];
@@ -87,7 +85,6 @@ export default function DashboardStats({ causas, onFaseSelect, selectedFase, onS
     c.estadoActual === 'Causa Cerrada' || c.estadoActual === 'Resolución Ejecutoriada'
   ).length;
 
-  const chartData = generateLast30Days(causas);
   const todayLabel = new Date().toLocaleDateString('es-CL', {
     weekday: 'long',
     day: 'numeric',
@@ -184,38 +181,6 @@ export default function DashboardStats({ causas, onFaseSelect, selectedFase, onS
           <SeverityCard tipo="Grave" count={stats.porGravedad['Grave']} total={stats.total} />
           <SeverityCard tipo="Muy Grave" count={stats.porGravedad['Muy Grave']} total={stats.total} />
           <SeverityCard tipo="Gravísima" count={stats.porGravedad['Gravísima']} total={stats.total} />
-        </div>
-      </div>
-
-      {/* Chart + Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-7 gap-4">
-        <div className="lg:col-span-4 card p-5">
-          <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-lg bg-brand-50">
-                <BarChart3 className="h-4 w-4 text-brand-600" aria-hidden="true" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-neutral-900">Evolución de Causas</h3>
-                <p className="text-[11px] text-neutral-400 font-medium">Últimos 30 días</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 text-[10px] text-neutral-500">
-              <div className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-sm bg-brand-600" aria-hidden="true" />
-                <span>Actividad</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-sm bg-secondary-500" aria-hidden="true" />
-                <span>Pico máximo</span>
-              </div>
-            </div>
-          </div>
-          <BarChart data={chartData} height={180} />
-        </div>
-
-        <div className="lg:col-span-3">
-          <ActivityFeed causas={causas} onSelectCausa={onSelectCausa} />
         </div>
       </div>
 
