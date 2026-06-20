@@ -52,7 +52,7 @@ export default function Header({
           {/* Mobile brand */}
           <div className="flex lg:hidden items-center gap-2 shrink-0">
             <div className="h-9 w-9 rounded-lg bg-white border border-neutral-200 flex items-center justify-center shadow-sm overflow-hidden p-1">
-              <img src="/veritas.png" alt="Escudo Veritas" className="h-full w-auto" />
+              <img src="/veritas2.png" alt="Escudo Veritas" className="h-full w-auto" />
             </div>
           </div>
 

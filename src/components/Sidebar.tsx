@@ -51,7 +51,7 @@ function SidebarContent({
     <div className="flex flex-col h-full">
       <div className={`flex items-center border-b border-white/10 ${isCollapsed && !mobile ? 'justify-center px-3 py-5' : 'gap-3 px-5 py-5'}`}>
         <div className="bg-white rounded-xl p-1 flex items-center justify-center shrink-0 shadow-lg">
-          <img src="/veritas.png" alt="Escudo Veritas" className="h-9 w-auto" />
+          <img src="/veritas2.png" alt="Escudo Veritas" className="h-9 w-auto" />
         </div>
         {(!isCollapsed || mobile) && (
           <div className="min-w-0">
