@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useReducer, useMemo } from 'react';
 import { Users, Search, GraduationCap, Loader2, AlertCircle, BookOpen } from 'lucide-react';
 import { fetchCourses, fetchStudentsWithCourses, type Course, type StudentWithCourse } from '../lib/supabase';
 
@@ -11,29 +11,67 @@ interface StudentsPanelProps {
   privacyMode: boolean;
 }
 
+// ── useReducer state & actions ────────────────────────────────────────────────
+
+interface StudentsPanelState {
+  courses: Course[];
+  students: StudentWithCourse[];
+  isLoading: boolean;
+  error: string | null;
+  searchQuery: string;
+  selectedCourseId: string;
+}
+
+type StudentsPanelAction =
+  | { type: 'LOAD_START' }
+  | { type: 'LOAD_SUCCESS'; courses: Course[]; students: StudentWithCourse[] }
+  | { type: 'LOAD_ERROR'; error: string }
+  | { type: 'SET_SEARCH'; query: string }
+  | { type: 'SET_COURSE'; courseId: string };
+
+const initialState: StudentsPanelState = {
+  courses: [],
+  students: [],
+  isLoading: true,
+  error: null,
+  searchQuery: '',
+  selectedCourseId: 'all',
+};
+
+function reducer(state: StudentsPanelState, action: StudentsPanelAction): StudentsPanelState {
+  switch (action.type) {
+    case 'LOAD_START':
+      return { ...state, isLoading: true, error: null };
+    case 'LOAD_SUCCESS':
+      return { ...state, isLoading: false, courses: action.courses, students: action.students };
+    case 'LOAD_ERROR':
+      return { ...state, isLoading: false, error: action.error };
+    case 'SET_SEARCH':
+      return { ...state, searchQuery: action.query };
+    case 'SET_COURSE':
+      return { ...state, selectedCourseId: action.courseId };
+    default:
+      return state;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [students, setStudents] = useState<StudentWithCourse[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCourseId, setSelectedCourseId] = useState<string>('all');
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const { courses, students, isLoading, error, searchQuery, selectedCourseId } = state;
 
   useEffect(() => {
     async function load() {
-      setIsLoading(true);
-      setError(null);
+      dispatch({ type: 'LOAD_START' });
       try {
         const [coursesData, studentsData] = await Promise.all([
           fetchCourses(),
           fetchStudentsWithCourses(),
         ]);
-        setCourses(coursesData);
-        setStudents(studentsData);
+        dispatch({ type: 'LOAD_SUCCESS', courses: coursesData, students: studentsData });
       } catch {
-        setError('No se pudieron cargar los estudiantes. Verifique la conexión con Supabase.');
-      } finally {
-        setIsLoading(false);
+        dispatch({ type: 'LOAD_ERROR', error: 'No se pudieron cargar los estudiantes. Verifique la conexión con Supabase.' });
       }
     }
     load();
@@ -115,7 +153,7 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => dispatch({ type: 'SET_SEARCH', query: e.target.value })}
               placeholder="Buscar por nombre, RUN o curso..."
               className="w-full bg-neutral-50 text-neutral-800 pl-10 pr-4 py-2.5 text-sm font-medium rounded-xl border border-neutral-200/80 hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:bg-white transition-all"
               aria-label="Buscar estudiantes"
@@ -123,7 +161,7 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
           </div>
           <select
             value={selectedCourseId}
-            onChange={(e) => setSelectedCourseId(e.target.value)}
+            onChange={(e) => dispatch({ type: 'SET_COURSE', courseId: e.target.value })}
             className="sm:w-56 bg-neutral-50 text-neutral-800 px-4 py-2.5 text-sm font-medium rounded-xl border border-neutral-200/80 hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all"
             aria-label="Filtrar por curso"
           >
