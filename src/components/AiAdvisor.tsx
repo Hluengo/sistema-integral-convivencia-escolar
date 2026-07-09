@@ -4,8 +4,9 @@
  */
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, RefreshCw, Bot, User, BookOpen, Sparkles, Gavel } from 'lucide-react';
+import { Send, RefreshCw, Bot, User, BookOpen, Sparkles, Gavel, Loader2 } from 'lucide-react';
 import { BoldText } from '../lib/markdownUtils';
+import { useTextImprovement } from '../hooks/useTextImprovement';
 
 interface Message {
   role: 'user' | 'model';
@@ -76,6 +77,7 @@ export default function AiAdvisor() {
   ]);
   const [inputMessage, setInputMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { improveText: improveChatText, isImproving: isImprovingChat } = useTextImprovement();
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -89,6 +91,11 @@ export default function AiAdvisor() {
       behavior: 'smooth'
     });
   }, [messages]);
+
+  const handleImproveChat = async () => {
+    const improved = await improveChatText(inputMessage);
+    if (improved) setInputMessage(improved);
+  };
 
   const handleSendMessage = async (textToSend: string) => {
     if (!textToSend.trim() || isLoading) return;
@@ -234,17 +241,28 @@ export default function AiAdvisor() {
       {/* Input */}
       <div className="border-t border-neutral-200 bg-white p-3 sm:p-4">
         <form onSubmit={handleSubmit} className="flex gap-2">
-<input
-  type="text"
-  required
-  spellCheck={true}
-  disabled={isLoading}
-  value={inputMessage}
-  onChange={(e) => setInputMessage(e.target.value)}
-  placeholder="Escriba su consulta legal..."
-  className="flex-1 border border-neutral-200 hover:border-neutral-300 rounded-lg px-3.5 py-2.5 text-xs font-medium text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400 bg-white transition-all"
-  aria-label="Mensaje para el asesor legal"
-/>
+            <div className="flex-1 flex items-center gap-1.5 border border-neutral-200 hover:border-neutral-300 rounded-lg px-3.5 bg-white transition-all has-focus:ring-2 has-focus:ring-brand-500/30 has-focus:border-brand-400">
+              <input
+                type="text"
+                required
+                spellCheck={true}
+                disabled={isLoading}
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                placeholder="Escriba su consulta legal..."
+                className="flex-1 py-2.5 text-xs font-medium text-neutral-800 placeholder-neutral-400 bg-transparent focus:outline-none"
+                aria-label="Mensaje para el asesor legal"
+              />
+              <button
+                type="button"
+                onClick={handleImproveChat}
+                disabled={isImprovingChat || !inputMessage.trim() || isLoading}
+                title="Mejorar redacción con IA"
+                className="p-1.5 text-neutral-400 hover:text-brand-600 hover:bg-brand-50 rounded-md transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
+              >
+                {isImprovingChat ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+              </button>
+            </div>
           <button
             type="submit"
             disabled={isLoading || !inputMessage.trim()}

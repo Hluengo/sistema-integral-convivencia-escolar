@@ -612,6 +612,34 @@ ${isAulaSegura ? 'NOTA: Dado que el caso está sujeto a Ley Aula Segura (Ley 21.
   }
 });
 
+// Endpoint 4: Improve text (spelling, grammar, coherence)
+app.post('/api/improve-text', async (req, res) => {
+  try {
+    const { text } = req.body as { text?: string };
+    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+      res.status(400).json({ error: 'Campo requerido: text' });
+      return;
+    }
+    if (text.length > 5000) {
+      res.status(400).json({ error: 'El texto no puede exceder 5000 caracteres.' });
+      return;
+    }
+
+    const ai = getGeminiClient();
+    const improvePrompt = `Eres un asistente de redacción especializado en redacción institucional educativa chilena. Tu única función es mejorar la ortografía, gramática, coherencia y redacción del texto que el usuario te entrega. Usa siempre un tono neutro, objetivo y sin juicios de valor. No agregues explicaciones, comentarios ni evaluaciones. No respondas preguntas ni interpretes el contenido. Devuelve ÚNICAMENTE el texto corregido, sin ningún formato adicional ni prefacio. Texto a corregir:\n\n${text}`;
+
+    const response = await ai.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: [{ role: 'user', parts: [{ text: improvePrompt }] }],
+    });
+
+    res.json({ success: true, improved: response.text });
+  } catch (error: any) {
+    console.error('Error al mejorar texto:', error);
+    res.status(500).json({ error: error.message || 'Error interno del servidor al mejorar texto.' });
+  }
+});
+
 // Endpoint 3: Virtual compliance consultant
 app.post('/api/advisor-chat', async (req, res) => {
   try {

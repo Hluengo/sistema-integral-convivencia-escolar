@@ -8,6 +8,7 @@ import { Scale, AlertCircle, FileText, Loader2, Users } from 'lucide-react';
 import type { Course, Student } from '../lib/supabase';
 import type { Causa } from '../types';
 import RiceConductSelect from './NewCausaForm/RiceConductSelect';
+import ImproveTextarea from './ImproveTextarea';
 
 interface NewCausaFormProps {
   newEstNombre: string;
@@ -213,19 +214,15 @@ export default function NewCausaForm({
           </div>
         </div>
 
-        <div>
-          <label htmlFor="create-obs" className="block text-[9px] font-semibold text-neutral-400 uppercase tracking-wide">Relato de los Hechos:</label>
-<textarea
-  id="create-obs"
-  rows={3}
-  required
-  spellCheck={true}
-  placeholder="Relate minuciosamente los hechos ocurridos..."
-  value={newObs}
-  onChange={(e) => setNewObs(e.target.value)}
-            className="w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 leading-relaxed font-sans text-xs transition-all"
-          />
-        </div>
+<ImproveTextarea
+          id="create-obs"
+          label="Relato de los Hechos:"
+          placeholder="Relate minuciosamente los hechos ocurridos..."
+          value={newObs}
+          onChange={setNewObs}
+          required
+          className="w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 leading-relaxed font-sans text-xs transition-all"
+        />
 
         <div>
           <label htmlFor="create-responsable" className="block text-[9px] font-semibold text-neutral-400 uppercase tracking-wide">Fiscalizador a cargo:</label>

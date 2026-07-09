@@ -7,6 +7,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Scale, AlertCircle, FileText, Trash2 } from 'lucide-react';
 import { Causa, EstadoCausa, TipoInfraccion } from '../types';
 import { nowDateOnly } from '../lib/dateUtils';
+import ImproveTextarea from './ImproveTextarea';
 const INFRACCIONES: TipoInfraccion[] = ['Leve', 'Grave', 'Muy Grave', 'Gravísima'];
 
 interface EditCausaModalProps {
@@ -178,14 +179,15 @@ export default function EditCausaModal({ causa, onClose, onSave, onDelete }: Edi
 
             <div>
               <label htmlFor="edit-obs" className={labelClass}>Relato de los Hechos / Observaciones</label>
-<textarea
-  id="edit-obs"
-  rows={3}
-  spellCheck={true}
-  value={observaciones}
-  onChange={(e) => setObservaciones(e.target.value)}
-  className={`${fieldClass} resize-none leading-relaxed font-sans`}
-/>
+<ImproveTextarea
+              id="edit-obs"
+              label="Observaciones / Relato:"
+              placeholder="Detalle del caso..."
+              value={observaciones}
+              onChange={setObservaciones}
+              rows={3}
+              className={`${fieldClass} resize-none leading-relaxed font-sans`}
+            />
             </div>
 
             {tipoInfraccion === 'Gravísima' && (

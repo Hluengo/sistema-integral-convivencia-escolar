@@ -6,6 +6,8 @@
 import React from 'react';
 import { Causa, BitacoraEntry, UserRole } from '../../types';
 import { FileText, Plus, Send, Calendar } from 'lucide-react';
+import ImproveInput from '../ImproveInput';
+import ImproveTextarea from '../ImproveTextarea';
 
 interface BitacoraTabProps {
   causa: Causa;
@@ -94,30 +96,27 @@ export default function BitacoraTab({
             </div>
           </div>
           <div>
-            <label htmlFor="log-title" className="block text-[9px] font-semibold text-neutral-400 uppercase mb-1">Título</label>
-<input
-  id="log-title"
-  type="text"
-  required
-  spellCheck={true}
-  value={logTitle}
-  onChange={(e) => setLogTitle(e.target.value)}
-  placeholder="Describa el evento brevemente"
-  className="w-full text-xs border border-neutral-300 rounded-lg p-2 bg-white font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-/>
+            <ImproveInput
+            id="log-title"
+            label="Título"
+            placeholder="Describa el evento brevemente"
+            value={logTitle}
+            onChange={setLogTitle}
+            required
+            className="w-full text-xs border border-neutral-300 rounded-lg p-2 bg-white font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+          />
           </div>
           <div>
-            <label htmlFor="log-desc" className="block text-[9px] font-semibold text-neutral-400 uppercase mb-1">Descripción</label>
-<textarea
-  id="log-desc"
-  required
-  rows={2}
-  spellCheck={true}
-  value={logDesc}
-  onChange={(e) => setLogDesc(e.target.value)}
-  placeholder="Relato detallado del hecho procesal..."
-  className="w-full text-xs border border-neutral-300 rounded-lg p-2 bg-white font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-/>
+            <ImproveTextarea
+            id="log-desc"
+            label="Descripción"
+            placeholder="Relato detallado del hecho procesal..."
+            value={logDesc}
+            onChange={setLogDesc}
+            required
+            rows={2}
+            className="w-full text-xs border border-neutral-300 rounded-lg p-2 bg-white font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+          />
           </div>
           <div className="flex justify-end gap-2">
             <button

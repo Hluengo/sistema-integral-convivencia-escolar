@@ -6,6 +6,7 @@
 import React from 'react';
 import { ChecklistItem } from '../../types';
 import { Upload, Check } from 'lucide-react';
+import ImproveTextarea from '../ImproveTextarea';
 
 interface RegistrationFormProps {
   item: ChecklistItem;
@@ -80,19 +81,15 @@ export default function RegistrationForm({
       </div>
 
       <div>
-        <label htmlFor={`reg-obs-${item.id}`} className="block text-[9px] font-semibold text-neutral-400 uppercase">
-          Observaciones:
-        </label>
-<textarea
-  id={`reg-obs-${item.id}`}
-  rows={2}
-  spellCheck={true}
-  className="w-full mt-1 border border-neutral-300 rounded-lg p-1.5 text-xs bg-white font-medium text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400 transition-all"
-  value={regObservations}
-  onChange={(e) => setRegObservations(e.target.value)}
-  placeholder="Detalle de la actuación procesal..."
-  aria-label="Observaciones del registro"
-/>
+        <ImproveTextarea
+          id={`reg-obs-${item.id}`}
+          label="Observaciones:"
+          placeholder="Detalle de la actuación procesal..."
+          value={regObservations}
+          onChange={(v) => setRegObservations(v)}
+          rows={2}
+          className="w-full mt-1 border border-neutral-300 rounded-lg p-1.5 text-xs bg-white font-medium text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400 transition-all"
+        />
       </div>
 
       <div className="flex justify-end gap-2 pt-1">
