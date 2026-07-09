@@ -1,0 +1,89 @@
+const express = require('express');
+const path = require('path');
+
+const app = express();
+app.use(express.json({ limit: '1mb' }));
+
+const GEMINI_MODEL = 'gemini-2.0-flash';
+
+function getApiKey() {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) throw new Error('GEMINI_API_KEY no configurada');
+  return key;
+}
+
+async function callGemini(contents, systemInstruction) {
+  const apiKey = getApiKey();
+  const body = { contents };
+  if (systemInstruction) {
+    body.systemInstruction = { parts: [{ text: systemInstruction }] };
+  }
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Gemini API error: ${response.status} ${errText}`);
+  }
+  const data = await response.json();
+  return data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+}
+
+app.post('/api/improve-text', async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text || typeof text !== 'string' || text.trim().length === 0) {
+      return res.status(400).json({ error: 'Campo requerido: text' });
+    }
+    if (text.length > 5000) {
+      return res.status(400).json({ error: 'El texto no puede exceder 5000 caracteres.' });
+    }
+    const prompt = `Eres un asistente de redacción especializado en redacción institucional educativa chilena. Tu única función es mejorar la ortografía, gramática, coherencia y redacción del texto que el usuario te entrega. Usa siempre un tono neutro, objetivo y sin juicios de valor. No agregues explicaciones, comentarios ni evaluaciones. No respondas preguntas ni interpretes el contenido. Devuelve ÚNICAMENTE el texto corregido, sin ningún formato adicional ni prefacio. Texto a corregir:\n\n${text}`;
+    const improved = await callGemini([{ role: 'user', parts: [{ text: prompt }] }]);
+    res.json({ success: true, improved });
+  } catch (error) {
+    console.error('Error al mejorar texto:', error);
+    res.status(500).json({ error: error.message || 'Error interno del servidor al mejorar texto.' });
+  }
+});
+
+app.post('/api/advisor-chat', async (req, res) => {
+  try {
+    const { message, history } = req.body;
+    if (!message || typeof message !== 'string' || !message.trim()) {
+      return res.status(400).json({ error: 'Campo requerido: message' });
+    }
+    const systemInstruction = `Actúas como un Abogado Senior y Experto Legal de la Superintendencia de Educación de Chile, experto en fiscalizaciones aplicadas a establecimientos escolares chilenos. Tu dominio de especialidad abarca:
+- Circular N° 482 de la Superintendencia de Educación y la Ley N° 21809, que norman reglamentos internos de convivencia escolar (RIE), debida proporcionalidad, medidas de resguardo inmediatas de NNA, gradualidad y plan de acompañamiento.
+- Ley Aula Segura (Ley N° 21.128 que regula los casos de expulsión, suspensión provisoria inmediata y plazos fatales).
+- Reglamento Interno de Convivencia Escolar (RICE / RIE) y las formalidades indispensables de proporcionalidad, gradualidad y acompañamiento formativo.
+
+Tus respuestas deben estar redactadas en español formal de Chile, alineadas con el rigor burocrático y legal que evitará cargos, multas pecuniarias o recursos judiciales contra el colegio. Cita artículos cuando corresponda y explica paso a paso cómo resguardar el "Debido Proceso Escolar" y la integridad mediante medidas de resguardo. Proporciona respuestas muy estructuradas, didácticas y extremadamente precisas.`;
+    const contents = [];
+    if (history && Array.isArray(history)) {
+      history.forEach((h) => {
+        contents.push({
+          role: h.role === 'user' ? 'user' : 'model',
+          parts: [{ text: h.content }],
+        });
+      });
+    }
+    contents.push({ role: 'user', parts: [{ text: message }] });
+    const reply = await callGemini(contents, systemInstruction);
+    res.json({ success: true, reply });
+  } catch (error) {
+    console.error('Error en el Chat de Consultoría:', error);
+    res.status(500).json({ error: error.message || 'Error al procesar su consulta legal.' });
+  }
+});
+
+// Serve static files in production
+const distPath = path.join(__dirname, '..', 'dist');
+app.use(express.static(distPath));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'));
+});
+
+module.exports = app;
