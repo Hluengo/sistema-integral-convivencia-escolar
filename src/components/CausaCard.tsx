@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { memo } from 'react';
 import { Causa, EstadoCausa } from '../types';
-import { getFaseForEstado, FASES_LIST, PHASE_PREFIXES } from '../data';
+import { getFaseForEstado, FASES_LIST, PHASE_PREFIXES, getPhaseProgress } from '../data';
 import { Shield, Clock, User, UserCheck, AlertTriangle, ChevronRight, FileCheck, Check } from 'lucide-react';
 import SeverityBadge from './SeverityBadge';
 import { getSeverityColor } from '../lib/severityUtils';
@@ -25,15 +25,6 @@ const FASE_BADGE_STYLES: Record<string, string> = {
   'Impugnación': 'bg-muygrave-50 text-muygrave-700 border-muygrave-200',
   'Seguimiento': 'bg-neutral-100 text-neutral-700 border-neutral-200',
 };
-
-function getPhaseProgress(checklist: Causa['checklistDebidoProceso'], phaseName: string) {
-  const prefix = PHASE_PREFIXES[phaseName];
-  if (!prefix) return { total: 0, completed: 0 };
-  const items = checklist.filter(item => item.id.startsWith(prefix));
-  const total = items.length;
-  const completed = items.filter(item => item.completado).length;
-  return { total, completed };
-}
 
 function LeftSeverityBar({ tipo }: { tipo: Causa['tipoInfraccion'] }) {
   const colors = getSeverityColor(tipo);
@@ -105,7 +96,7 @@ function PlazoBar({ causa }: { causa: Causa }) {
   );
 }
 
-export default function CausaCard({ causa, privacyMode, onSelect, isSelected }: CausaCardProps) {
+export default memo(function CausaCard({ causa, privacyMode, onSelect, isSelected }: CausaCardProps) {
   const fase = getFaseForEstado(causa.estadoActual);
   const completedCount = causa.checklistDebidoProceso.filter(c => c.completado).length;
   const totalCount = causa.checklistDebidoProceso.length;
@@ -226,4 +217,4 @@ export default function CausaCard({ causa, privacyMode, onSelect, isSelected }: 
       </div>
     </button>
   );
-}
+});

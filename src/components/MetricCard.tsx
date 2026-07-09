@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { memo } from 'react';
 
 interface MetricCardProps {
   label: string;
@@ -18,7 +18,7 @@ interface MetricCardProps {
   isAlert?: boolean;
 }
 
-export default function MetricCard({
+export default memo(function MetricCard({
   label,
   value,
   sublabel,
@@ -99,4 +99,4 @@ export default function MetricCard({
       </div>
     </Comp>
   );
-}
+});

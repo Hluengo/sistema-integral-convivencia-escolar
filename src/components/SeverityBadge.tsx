@@ -1,8 +1,5 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
+import React, { memo } from 'react';
+import { getSeverityColor } from '../lib/severityUtils';
 import type { SeverityLevel } from '../lib/severityUtils';
 
 export type { SeverityLevel } from '../lib/severityUtils';
@@ -12,13 +9,6 @@ interface SeverityBadgeProps {
   size?: 'sm' | 'md' | 'lg';
   showDot?: boolean;
 }
-
-const SEVERITY_CONFIG: Record<SeverityLevel, { bg: string; text: string; dot: string; label: string }> = {
-  'Leve':      { bg: 'bg-leve-50',      text: 'text-leve-700',      dot: 'bg-leve-500',      label: 'Leve' },
-  'Grave':     { bg: 'bg-grave-50',     text: 'text-grave-700',     dot: 'bg-grave-500',     label: 'Grave' },
-  'Muy Grave': { bg: 'bg-muygrave-50',  text: 'text-muygrave-700',  dot: 'bg-muygrave-500',  label: 'Muy Grave' },
-  'Gravísima': { bg: 'bg-gravisima-50', text: 'text-gravisima-700', dot: 'bg-gravisima-500', label: 'Gravísima' },
-};
 
 const SIZE_CLASSES = {
   sm: 'text-[9px] px-1.5 py-0.5 gap-1',
@@ -32,21 +22,21 @@ const DOT_SIZE = {
   lg: 'h-2 w-2',
 };
 
-export default function SeverityBadge({ level, size = 'md', showDot = true }: SeverityBadgeProps) {
-  const config = SEVERITY_CONFIG[level];
+export default memo(function SeverityBadge({ level, size = 'md', showDot = true }: SeverityBadgeProps) {
+  const colors = getSeverityColor(level);
   const sizeClass = SIZE_CLASSES[size];
   const dotSize = DOT_SIZE[size];
 
   return (
     <span
-      className={`inline-flex items-center font-bold rounded-full uppercase tracking-wider ${config.bg} ${config.text} ${sizeClass}`}
+      className={`inline-flex items-center font-bold rounded-full uppercase tracking-wider ${colors.bg} ${colors.text} ${sizeClass}`}
       role="status"
-      aria-label={`Gravedad: ${config.label}`}
+      aria-label={`Gravedad: ${level}`}
     >
       {showDot && (
-        <span className={`${dotSize} rounded-full ${config.dot} shrink-0`} aria-hidden="true" />
+        <span className={`${dotSize} rounded-full ${colors.dot} shrink-0`} aria-hidden="true" />
       )}
-      {config.label}
+      {level}
     </span>
   );
-}
+});

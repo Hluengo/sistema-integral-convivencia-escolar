@@ -13,6 +13,7 @@ import TimelineTabPanels from './InteractiveTimeline/TimelineTabPanels';
 import EditCausaModal from './EditCausaModal';
 import { useTimelineController } from '../hooks/useTimelineController';
 import { useAppContext } from '../context/AppContext';
+import { BoldText } from '../lib/markdownUtils';
 
 interface InteractiveTimelineProps {
   causa: Causa;
@@ -24,21 +25,6 @@ interface InteractiveTimelineProps {
   setIsSidebarCollapsed?: (collapsed: boolean) => void;
   isTimelineCollapsed?: boolean;
   setIsTimelineCollapsed?: (collapsed: boolean) => void;
-}
-
-function BoldText({ text }: { text: string }) {
-  const parts = text.split('**');
-  return (
-    <>
-      {parts.map((part, i) =>
-        i % 2 === 1 ? (
-          <strong key={`b-${part.slice(0, 24)}-${i}`} className="font-bold text-neutral-950">{part}</strong>
-        ) : (
-          <React.Fragment key={`t-${part.slice(0, 24)}-${i}`}>{part}</React.Fragment>
-        )
-      )}
-    </>
-  );
 }
 
 // Simple custom Markdown-like formatter to render Gemini reports beautifully in Tailwind

@@ -23,8 +23,8 @@ function ViewFallback() {
 interface CausasViewProps {
   causas: Causa[];
   selectedCausaId: string;
-  selectedCausa: Causa | null;
-  selectedFaseFilter: string;
+  selectedCausa: Causa | undefined;
+  selectedFaseFilter: FaseProcedimental | 'Todas';
   setSelectedFaseFilter: (fase: string) => void;
   setSelectedCausaId: (id: string) => void;
   currentRole: UserRole;

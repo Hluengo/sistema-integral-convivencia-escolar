@@ -5,6 +5,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, RefreshCw, Bot, User, BookOpen, Sparkles, Gavel } from 'lucide-react';
+import { BoldText } from '../lib/markdownUtils';
 
 interface Message {
   role: 'user' | 'model';
@@ -19,13 +20,7 @@ const SUGGESTED_PROMPTS = [
 ];
 
 function renderBoldText(text: string) {
-  const parts = text.split('**');
-  return parts.map((part, i) => {
-    if (i % 2 === 1) {
-      return <strong key={part} className="font-bold text-neutral-950">{part}</strong>;
-    }
-    return part;
-  });
+  return <BoldText text={text} />;
 }
 
 function MessageContent({ text }: { text: string }) {
@@ -136,8 +131,9 @@ export default function AiAdvisor() {
       } else {
         setMessages(prev => [...prev, { role: 'model', content: `**Error de Consultoría:** ${data.error}` }]);
       }
-    } catch (e: any) {
-      setMessages(prev => [...prev, { role: 'model', content: `**Error al comunicar con el asistente:** ${e?.message || 'No se pudo contactar al servidor.'}` }]);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : String(e);
+      setMessages(prev => [...prev, { role: 'model', content: `**Error al comunicar con el asistente:** ${message}` }]);
     } finally {
       setIsLoading(false);
     }

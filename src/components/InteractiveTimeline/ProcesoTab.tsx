@@ -8,7 +8,7 @@ import { Causa, ChecklistItem, UserRole } from '../../types';
 import { MAPPED_STATES, FASES_LIST } from '../../data';
 import { ShieldCheck, Check } from 'lucide-react';
 import ProcessChecklist from './ProcessChecklist';
-import { PHASE_PREFIXES, PHASE_SHORT } from '../../data';
+import { PHASE_PREFIXES, PHASE_SHORT, getPhaseProgress } from '../../data';
 
 interface ProcesoTabProps {
   causa: Causa;
@@ -36,15 +36,6 @@ interface ProcesoTabProps {
   handleAttachDocument: (itemId: string, file: File | null) => Promise<void>;
   handleRemoveDocument: (itemId: string, fileName?: string) => Promise<void>;
   documents: { name: string; url: string }[];
-}
-
-function getPhaseProgress(causa: Causa, phaseName: string) {
-  const prefix = PHASE_PREFIXES[phaseName];
-  if (!prefix) return { total: 0, completed: 0 };
-  const items = causa.checklistDebidoProceso.filter(item => item.id.startsWith(prefix));
-  const total = items.length;
-  const completed = items.filter(item => item.completado).length;
-  return { total, completed };
 }
 
 export default function ProcesoTab({
@@ -80,7 +71,7 @@ export default function ProcesoTab({
       <ul className="grid grid-cols-5 gap-4 text-center bg-neutral-50 p-2 rounded-lg border border-neutral-200 list-none m-0" aria-label="Indicador de fases">
         {FASES_LIST.map((f, i) => {
           const isActive = currentFase === f.name;
-          const { total, completed } = getPhaseProgress(causa, f.name);
+          const { total, completed } = getPhaseProgress(causa.checklistDebidoProceso, f.name);
           const isComplete = total > 0 && completed === total;
           const progress = total > 0 ? completed / total : 0;
 

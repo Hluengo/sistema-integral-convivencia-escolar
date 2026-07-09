@@ -317,3 +317,12 @@ export const PHASE_SHORT: Record<string, string> = {
   'Impugnación': 'Impugn.',
   'Seguimiento': 'Seguim.'
 };
+
+export function getPhaseProgress(checklist: Causa['checklistDebidoProceso'], phaseName: string) {
+  const prefix = PHASE_PREFIXES[phaseName];
+  if (!prefix) return { total: 0, completed: 0 };
+  const items = checklist.filter(item => item.id.startsWith(prefix));
+  const total = items.length;
+  const completed = items.filter(item => item.completado).length;
+  return { total, completed };
+}
