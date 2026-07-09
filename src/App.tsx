@@ -191,6 +191,7 @@ export default function App() {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           currentView={currentView}
+          causas={causas}
         />
 
         <MainContent
