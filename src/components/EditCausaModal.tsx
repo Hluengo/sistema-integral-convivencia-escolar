@@ -6,8 +6,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Scale, AlertCircle, FileText, Trash2 } from 'lucide-react';
 import { Causa, EstadoCausa, TipoInfraccion } from '../types';
-
-const CURRENT_DATE_STR = '2026-05-27';
+import { nowDateOnly } from '../lib/dateUtils';
 const INFRACCIONES: TipoInfraccion[] = ['Leve', 'Grave', 'Muy Grave', 'Gravísima'];
 
 interface EditCausaModalProps {
@@ -62,7 +61,7 @@ export default function EditCausaModal({ causa, onClose, onSave, onDelete }: Edi
       responsable,
       estadoActual,
       observaciones,
-      fechaUltimaActualizacion: CURRENT_DATE_STR
+      fechaUltimaActualizacion: nowDateOnly()
     });
   };
 

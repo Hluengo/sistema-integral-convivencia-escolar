@@ -23,6 +23,7 @@ export function useCausasPersistence({
   const saveGenerationRef = useRef(0);
   const dataInitializedRef = useRef(false);
   const isMountedRef = useRef(true);
+  const prevCausasRef = useRef<string>('');
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -59,6 +60,10 @@ export function useCausasPersistence({
 
   useEffect(() => {
     if (causas.length === 0 || isLoadingCausasRef.current) return;
+
+    const serialized = JSON.stringify(causas);
+    if (serialized === prevCausasRef.current) return;
+    prevCausasRef.current = serialized;
 
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);

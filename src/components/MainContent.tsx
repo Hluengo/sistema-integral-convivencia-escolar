@@ -7,6 +7,7 @@ import React, { Suspense, lazy } from 'react';
 import { Causa, UserRole, FaseProcedimental } from '../types';
 import type { SidebarView } from './Sidebar';
 import type { Course, Student } from '../lib/supabase';
+import type { FormAction } from '../hooks/useNewCausaForm';
 import CausasView from './MainContent/CausasView';
 
 const DashboardStats = lazy(() => import('./DashboardStats'));
@@ -38,7 +39,7 @@ interface MainContentProps {
   aulaSeguraCausas: Causa[];
   filteredCausas: Causa[];
   showCreateForm: boolean;
-  dispatchForm: React.Dispatch<any>;
+  dispatchForm: React.Dispatch<FormAction>;
   handleUpdateCausa: (updated: Causa) => void;
   handleDeleteCausa: (id: string) => void;
   handleReopenCausa: (causa: Causa) => void;

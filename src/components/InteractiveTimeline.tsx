@@ -12,13 +12,14 @@ import TimelineTabs from './InteractiveTimeline/TimelineTabs';
 import TimelineTabPanels from './InteractiveTimeline/TimelineTabPanels';
 import EditCausaModal from './EditCausaModal';
 import { useTimelineController } from '../hooks/useTimelineController';
+import { useAppContext } from '../context/AppContext';
 
 interface InteractiveTimelineProps {
   causa: Causa;
-  onUpdateCausa: (updated: Causa) => void;
-  onDeleteCausa: (id: string) => void;
-  currentRole: UserRole;
-  privacyMode: boolean;
+  onUpdateCausa?: (updated: Causa) => void;
+  onDeleteCausa?: (id: string) => void;
+  currentRole?: UserRole;
+  privacyMode?: boolean;
   isSidebarCollapsed?: boolean;
   setIsSidebarCollapsed?: (collapsed: boolean) => void;
   isTimelineCollapsed?: boolean;
@@ -105,15 +106,20 @@ function CustomMarkdownRenderer({ text }: { text: string }) {
 
 export default function InteractiveTimeline({ 
   causa, 
-  onUpdateCausa, 
-  onDeleteCausa,
-  currentRole, 
-  privacyMode,
+  onUpdateCausa: propOnUpdate, 
+  onDeleteCausa: propOnDelete,
+  currentRole: propRole, 
+  privacyMode: propPrivacy,
   isSidebarCollapsed = false,
   setIsSidebarCollapsed,
   isTimelineCollapsed = false,
   setIsTimelineCollapsed
 }: InteractiveTimelineProps) {
+  const ctx = useAppContext();
+  const onUpdateCausa = propOnUpdate ?? ctx.handleUpdateCausa;
+  const onDeleteCausa = propOnDelete ?? ctx.handleDeleteCausa;
+  const currentRole = propRole ?? ctx.currentRole;
+  const privacyMode = propPrivacy ?? ctx.privacyMode;
   const [activeTab, setActiveTab] = useState<'proceso' | 'bitacora' | 'asistente_ia'>('proceso');
   const [showEdit, setShowEdit] = useState(false);
   

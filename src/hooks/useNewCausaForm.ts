@@ -17,7 +17,7 @@ export interface FormState {
   newResponsable: string;
 }
 
-type FormAction =
+export type FormAction =
   | { type: 'OPEN' }
   | { type: 'CLOSE' }
   | { type: 'SET_COURSE'; courseId: string }

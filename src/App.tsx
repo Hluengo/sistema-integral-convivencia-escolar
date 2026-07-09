@@ -10,6 +10,7 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import type { SidebarView } from './components/Sidebar';
 import MainContent from './components/MainContent';
+import { AppProvider } from './context/AppContext';
 import { createCausa, deleteCausa } from './lib/supabase';
 import { useNewCausaForm } from './hooks/useNewCausaForm';
 import { useCourses, useStudents } from './hooks/useData';
@@ -173,6 +174,18 @@ export default function App() {
   };
 
   return (
+    <AppProvider value={{
+      causas,
+      selectedCausaId,
+      setSelectedCausaId,
+      currentRole,
+      privacyMode,
+      setPrivacyMode,
+      handleUpdateCausa,
+      handleDeleteCausa,
+      handleSelectCausaFromDashboard,
+      handleOpenCreateForm,
+    }}>
     <div className="min-h-screen bg-neutral-100 flex font-sans text-neutral-800 antialiased">
       <Sidebar
         currentView={currentView}
@@ -282,5 +295,6 @@ export default function App() {
         </Suspense>
       )}
     </div>
+    </AppProvider>
   );
 }

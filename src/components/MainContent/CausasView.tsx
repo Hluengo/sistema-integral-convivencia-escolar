@@ -6,6 +6,7 @@
 import React, { Suspense, lazy } from 'react';
 import { BookOpen, Scale } from 'lucide-react';
 import { Causa, EstadoCausa, UserRole, FaseProcedimental } from '../../types';
+import type { FormAction } from '../../hooks/useNewCausaForm';
 
 const CausaCard = lazy(() => import('../CausaCard'));
 const InteractiveTimeline = lazy(() => import('../InteractiveTimeline'));
@@ -33,7 +34,7 @@ interface CausasViewProps {
   filteredCausas: Causa[];
   aulaSeguraCausas: Causa[];
   showCreateForm: boolean;
-  dispatchForm: React.Dispatch<any>;
+  dispatchForm: React.Dispatch<FormAction>;
   handleUpdateCausa: (updated: Causa) => void;
   handleDeleteCausa: (id: string) => void;
   handleReopenCausa: (causa: Causa) => void;
@@ -199,10 +200,6 @@ export default function CausasView({
               <InteractiveTimeline
                 key={selectedCausa.id}
                 causa={selectedCausa}
-                onUpdateCausa={handleUpdateCausa}
-                onDeleteCausa={handleDeleteCausa}
-                currentRole={currentRole}
-                privacyMode={privacyMode}
                 isSidebarCollapsed={false}
                 setIsSidebarCollapsed={undefined}
                 isTimelineCollapsed={false}
