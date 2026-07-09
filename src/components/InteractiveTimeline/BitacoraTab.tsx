@@ -82,39 +82,42 @@ export default function BitacoraTab({
             </div>
             <div>
               <label htmlFor="log-participantes" className="block text-[9px] font-semibold text-neutral-400 uppercase mb-1">Participantes</label>
-              <input
-                id="log-participantes"
-                type="text"
-                value={logParticipantes}
-                onChange={(e) => setLogParticipantes(e.target.value)}
-                placeholder="Separados por comas"
-                className="w-full text-xs border border-neutral-300 rounded-lg p-2 bg-white font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
-              />
+<input
+  id="log-participantes"
+  type="text"
+  spellCheck={false}
+  value={logParticipantes}
+  onChange={(e) => setLogParticipantes(e.target.value)}
+  placeholder="Separados por comas"
+  className="w-full text-xs border border-neutral-300 rounded-lg p-2 bg-white font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+/>
             </div>
           </div>
           <div>
             <label htmlFor="log-title" className="block text-[9px] font-semibold text-neutral-400 uppercase mb-1">Título</label>
-            <input
-              id="log-title"
-              type="text"
-              required
-              value={logTitle}
-              onChange={(e) => setLogTitle(e.target.value)}
-              placeholder="Describa el evento brevemente"
-              className="w-full text-xs border border-neutral-300 rounded-lg p-2 bg-white font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
-            />
+<input
+  id="log-title"
+  type="text"
+  required
+  spellCheck={true}
+  value={logTitle}
+  onChange={(e) => setLogTitle(e.target.value)}
+  placeholder="Describa el evento brevemente"
+  className="w-full text-xs border border-neutral-300 rounded-lg p-2 bg-white font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+/>
           </div>
           <div>
             <label htmlFor="log-desc" className="block text-[9px] font-semibold text-neutral-400 uppercase mb-1">Descripción</label>
-            <textarea
-              id="log-desc"
-              required
-              rows={2}
-              value={logDesc}
-              onChange={(e) => setLogDesc(e.target.value)}
-              placeholder="Relato detallado del hecho procesal..."
-              className="w-full text-xs border border-neutral-300 rounded-lg p-2 bg-white font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
-            />
+<textarea
+  id="log-desc"
+  required
+  rows={2}
+  spellCheck={true}
+  value={logDesc}
+  onChange={(e) => setLogDesc(e.target.value)}
+  placeholder="Relato detallado del hecho procesal..."
+  className="w-full text-xs border border-neutral-300 rounded-lg p-2 bg-white font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+/>
           </div>
           <div className="flex justify-end gap-2">
             <button

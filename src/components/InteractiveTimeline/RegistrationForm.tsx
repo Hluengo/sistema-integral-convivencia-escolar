@@ -47,14 +47,15 @@ export default function RegistrationForm({
           <label htmlFor={`reg-name-${item.id}`} className="block text-[9px] font-semibold text-neutral-400 uppercase">
             Responsable:
           </label>
-          <input
-            id={`reg-name-${item.id}`}
-            type="text"
-            className="w-full mt-1 border border-neutral-300 rounded-lg p-1.5 text-xs bg-white font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
-            value={regName}
-            onChange={(e) => setRegName(e.target.value)}
-            aria-label="Nombre del responsable"
-          />
+<input
+  id={`reg-name-${item.id}`}
+  type="text"
+  spellCheck={false}
+  className="w-full mt-1 border border-neutral-300 rounded-lg p-1.5 text-xs bg-white font-medium text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400 transition-all"
+  value={regName}
+  onChange={(e) => setRegName(e.target.value)}
+  aria-label="Nombre del responsable"
+/>
         </div>
 
         <div>
@@ -82,15 +83,16 @@ export default function RegistrationForm({
         <label htmlFor={`reg-obs-${item.id}`} className="block text-[9px] font-semibold text-neutral-400 uppercase">
           Observaciones:
         </label>
-        <textarea
-          id={`reg-obs-${item.id}`}
-          rows={2}
-          className="w-full mt-1 border border-neutral-300 rounded-lg p-1.5 text-xs bg-white font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
-          value={regObservations}
-          onChange={(e) => setRegObservations(e.target.value)}
-          placeholder="Detalle de la actuación procesal..."
-          aria-label="Observaciones del registro"
-        />
+<textarea
+  id={`reg-obs-${item.id}`}
+  rows={2}
+  spellCheck={true}
+  className="w-full mt-1 border border-neutral-300 rounded-lg p-1.5 text-xs bg-white font-medium text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400 transition-all"
+  value={regObservations}
+  onChange={(e) => setRegObservations(e.target.value)}
+  placeholder="Detalle de la actuación procesal..."
+  aria-label="Observaciones del registro"
+/>
       </div>
 
       <div className="flex justify-end gap-2 pt-1">

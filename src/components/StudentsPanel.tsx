@@ -154,14 +154,15 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" aria-hidden="true" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => dispatch({ type: 'SET_SEARCH', query: e.target.value })}
-              placeholder="Buscar por nombre, RUN o curso..."
-              className="w-full bg-neutral-50 text-neutral-800 pl-10 pr-4 py-2.5 text-sm font-medium rounded-xl border border-neutral-200/80 hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:bg-white transition-all"
-              aria-label="Buscar estudiantes"
-            />
+<input
+  type="text"
+  spellCheck={false}
+  value={searchQuery}
+  onChange={(e) => dispatch({ type: 'SET_SEARCH', query: e.target.value })}
+  placeholder="Buscar por nombre, RUN o curso..."
+  className="w-full bg-neutral-50 text-neutral-800 pl-10 pr-4 py-2.5 text-sm font-medium rounded-xl border border-neutral-200/60 hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 focus:bg-white transition-all placeholder:text-neutral-400"
+  aria-label="Buscar estudiantes"
+/>
           </div>
           <select
             value={selectedCourseId}

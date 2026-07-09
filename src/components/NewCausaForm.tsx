@@ -167,6 +167,7 @@ export default function NewCausaForm({
             id="create-rut"
             type="text"
             required
+            spellCheck={false}
             value={newEstRut}
             onChange={(e) => setNewEstRut(e.target.value)}
             readOnly={!!selectedCourseId && students.length > 0}
@@ -214,13 +215,14 @@ export default function NewCausaForm({
 
         <div>
           <label htmlFor="create-obs" className="block text-[9px] font-semibold text-neutral-400 uppercase tracking-wide">Relato de los Hechos:</label>
-          <textarea
-            id="create-obs"
-            rows={3}
-            required
-            placeholder="Relate minuciosamente los hechos ocurridos..."
-            value={newObs}
-            onChange={(e) => setNewObs(e.target.value)}
+<textarea
+  id="create-obs"
+  rows={3}
+  required
+  spellCheck={true}
+  placeholder="Relate minuciosamente los hechos ocurridos..."
+  value={newObs}
+  onChange={(e) => setNewObs(e.target.value)}
             className="w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 leading-relaxed font-sans text-xs transition-all"
           />
         </div>
@@ -231,6 +233,7 @@ export default function NewCausaForm({
             id="create-responsable"
             type="text"
             required
+            spellCheck={false}
             value={newResponsable}
             onChange={(e) => setNewResponsable(e.target.value)}
             className="w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-100 font-bold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"

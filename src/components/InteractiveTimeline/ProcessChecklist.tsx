@@ -115,7 +115,13 @@ export default function ProcessChecklist({
                     </span>
                   )}
                 </div>
-                {isExpanded ? <ChevronUp className="h-4 w-4 text-neutral-400 shrink-0" aria-hidden="true" /> : <ChevronDown className="h-4 w-4 text-neutral-400 shrink-0" aria-hidden="true" />}
+                <span className={`flex items-center justify-center h-6 w-6 rounded-full border transition-all shrink-0 ${
+                  isExpanded
+                    ? 'bg-brand-600 text-white border-brand-600'
+                    : 'bg-white text-neutral-400 border-neutral-300 hover:border-brand-400 hover:text-brand-600'
+                }`}>
+                  {isExpanded ? <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" /> : <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />}
+                </span>
               </button>
 
               {/* Section Content */}

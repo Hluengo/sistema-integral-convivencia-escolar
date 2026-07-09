@@ -131,16 +131,17 @@ export default function Header({
           {/* Desktop search */}
           <div className="hidden md:flex relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" aria-hidden="true" />
-            <input
-              id="global-search"
-              name="global-search"
-              type="text"
-              value={searchQuery}
-              onChange={(e) => onSearchChange?.(e.target.value)}
-              placeholder="Buscar causas, estudiantes, cursos..."
-              className="w-full bg-neutral-100 text-neutral-800 pl-10 pr-4 py-2 text-sm font-medium rounded-xl border border-neutral-200/60 hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 focus:bg-white transition-all placeholder:text-neutral-400"
-              aria-label="Búsqueda global"
-            />
+<input
+  id="global-search"
+  name="global-search"
+  type="text"
+  spellCheck={false}
+  value={searchQuery}
+  onChange={(e) => onSearchChange?.(e.target.value)}
+  placeholder="Buscar causas, estudiantes, cursos..."
+  className="w-full bg-neutral-100 text-neutral-800 pl-10 pr-4 py-2 text-sm font-medium rounded-xl border border-neutral-200/60 hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 focus:bg-white transition-all placeholder:text-neutral-400"
+  aria-label="Búsqueda global"
+/>
           </div>
 
           {/* Mobile search toggle */}
@@ -271,16 +272,17 @@ export default function Header({
         <div className="md:hidden px-4 pb-3 animate-slide-up">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-            <input
-              id="mobile-search"
-              name="mobile-search"
-              type="text"
-              value={searchQuery}
-              onChange={(e) => onSearchChange?.(e.target.value)}
-              placeholder="Buscar..."
-              className="w-full bg-neutral-100 text-neutral-800 pl-10 pr-4 py-2.5 text-sm rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400"
-              aria-label="Búsqueda"
-            />
+<input
+  id="mobile-search"
+  name="mobile-search"
+  type="text"
+  spellCheck={false}
+  value={searchQuery}
+  onChange={(e) => onSearchChange?.(e.target.value)}
+  placeholder="Buscar..."
+  className="w-full bg-neutral-100 text-neutral-800 pl-10 pr-4 py-2.5 text-sm rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400"
+  aria-label="Búsqueda"
+/>
           </div>
         </div>
       )}

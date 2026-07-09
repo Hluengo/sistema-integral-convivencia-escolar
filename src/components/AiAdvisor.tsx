@@ -234,16 +234,17 @@ export default function AiAdvisor() {
       {/* Input */}
       <div className="border-t border-neutral-200 bg-white p-3 sm:p-4">
         <form onSubmit={handleSubmit} className="flex gap-2">
-          <input
-            type="text"
-            required
-            disabled={isLoading}
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            placeholder="Escriba su consulta legal..."
-            className="flex-1 border border-neutral-200 hover:border-neutral-300 rounded-lg px-3.5 py-2.5 text-xs bg-neutral-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all"
-            aria-label="Mensaje para el asesor legal"
-          />
+<input
+  type="text"
+  required
+  spellCheck={true}
+  disabled={isLoading}
+  value={inputMessage}
+  onChange={(e) => setInputMessage(e.target.value)}
+  placeholder="Escriba su consulta legal..."
+  className="flex-1 border border-neutral-200 hover:border-neutral-300 rounded-lg px-3.5 py-2.5 text-xs font-medium text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400 bg-white transition-all"
+  aria-label="Mensaje para el asesor legal"
+/>
           <button
             type="submit"
             disabled={isLoading || !inputMessage.trim()}

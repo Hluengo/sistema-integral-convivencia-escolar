@@ -114,14 +114,15 @@ export default function ClosedCases({
       {/* Search */}
       <div className="relative w-full sm:max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400" aria-hidden="true" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Buscar en casos cerrados..."
-          className="w-full bg-white text-neutral-800 pl-9 pr-4 py-2 text-xs font-medium rounded-lg border border-neutral-200/80 hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:bg-white transition-all"
-          aria-label="Buscar casos cerrados"
-        />
+<input
+  type="text"
+  spellCheck={false}
+  value={searchQuery}
+  onChange={(e) => setSearchQuery(e.target.value)}
+  placeholder="Buscar en casos cerrados..."
+  className="w-full bg-white text-neutral-800 pl-9 pr-4 py-2 text-xs font-medium placeholder-neutral-400 focus:outline-none"
+  aria-label="Buscar casos cerrados"
+/>
       </div>
 
       {/* List of closed cases */}

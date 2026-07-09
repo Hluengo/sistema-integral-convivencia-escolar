@@ -68,14 +68,15 @@ export default function DraftPanel({
         <label htmlFor="father-name" className="block text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">
           Nombre del apoderado/tutor
         </label>
-        <input
-          id="father-name"
-          type="text"
-          value={fatherName}
-          onChange={(e) => setFatherName(e.target.value)}
-          placeholder="Ej. Juan Pérez González"
-          className="w-full mt-1 text-xs border border-neutral-300 rounded-lg p-2.5 bg-white font-medium focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500"
-        />
+<input
+  id="father-name"
+  type="text"
+  spellCheck={false}
+  value={fatherName}
+  onChange={(e) => setFatherName(e.target.value)}
+  placeholder="Ej. Juan Pérez González"
+  className="w-full mt-1 text-xs border border-neutral-300 rounded-lg p-2.5 bg-white font-medium text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition-all"
+/>
       </div>
 
       <button

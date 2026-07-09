@@ -106,6 +106,7 @@ export default function EditCausaModal({ causa, onClose, onSave, onDelete }: Edi
                   id="edit-nombre"
                   type="text"
                   required
+                  spellCheck={false}
                   value={estudianteNombre}
                   onChange={(e) => setEstudianteNombre(e.target.value)}
                   className={fieldClass}
@@ -116,6 +117,7 @@ export default function EditCausaModal({ causa, onClose, onSave, onDelete }: Edi
                 <input
                   id="edit-curso"
                   type="text"
+                  spellCheck={false}
                   value={estudianteCurso}
                   onChange={(e) => setEstudianteCurso(e.target.value)}
                   className={fieldClass}
@@ -126,6 +128,7 @@ export default function EditCausaModal({ causa, onClose, onSave, onDelete }: Edi
                 <input
                   id="edit-rut"
                   type="text"
+                  spellCheck={false}
                   value={runEstudiante}
                   onChange={(e) => setRunEstudiante(e.target.value)}
                   className={fieldClass}
@@ -152,6 +155,7 @@ export default function EditCausaModal({ causa, onClose, onSave, onDelete }: Edi
                   id="edit-responsable"
                   type="text"
                   required
+                  spellCheck={false}
                   value={responsable}
                   onChange={(e) => setResponsable(e.target.value)}
                   className={fieldClass}
@@ -174,13 +178,14 @@ export default function EditCausaModal({ causa, onClose, onSave, onDelete }: Edi
 
             <div>
               <label htmlFor="edit-obs" className={labelClass}>Relato de los Hechos / Observaciones</label>
-              <textarea
-                id="edit-obs"
-                rows={3}
-                value={observaciones}
-                onChange={(e) => setObservaciones(e.target.value)}
-                className={`${fieldClass} resize-none leading-relaxed font-sans`}
-              />
+<textarea
+  id="edit-obs"
+  rows={3}
+  spellCheck={true}
+  value={observaciones}
+  onChange={(e) => setObservaciones(e.target.value)}
+  className={`${fieldClass} resize-none leading-relaxed font-sans`}
+/>
             </div>
 
             {tipoInfraccion === 'Gravísima' && (
