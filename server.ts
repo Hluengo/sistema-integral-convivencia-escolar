@@ -6,7 +6,6 @@
 import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
-import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -31,27 +30,33 @@ const requireStr = (obj: Record<string, unknown>, key: string, max = 200): strin
 const optStr = (obj: Record<string, unknown>, key: string, max = MAX_STR): string => sanitize(obj[key]).slice(0, max);
 const optArr = (obj: Record<string, unknown>, key: string): unknown[] => Array.isArray(obj[key]) ? obj[key]! : [];
 
-// Valid Gemini model identifier (gemini-3.5-flash does not exist and returns 404)
-const GEMINI_MODEL = 'gemini-2.0-flash';
+// DeepSeek API helper
+const DEEPSEEK_MODEL = 'deepseek-chat';
 
-// Lazy-loaded Gemini Client for active request processing
-let aiClient: GoogleGenAI | null = null;
-function getGeminiClient(): GoogleGenAI {
-  if (!aiClient) {
-    const key = process.env.GEMINI_API_KEY;
-    if (!key) {
-      throw new Error('La variable de entorno GEMINI_API_KEY es requerida para utilizar el Asistente IA.');
-    }
-    aiClient = new GoogleGenAI({
-      apiKey: key,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        }
-      }
-    });
+async function callDeepSeek(messages: { role: string; content: string }[], systemInstruction?: string): Promise<string> {
+  const apiKey = process.env.DEEPSEEK_API_KEY;
+  if (!apiKey) {
+    throw new Error('La variable de entorno DEEPSEEK_API_KEY es requerida.');
   }
-  return aiClient;
+  const body: Record<string, unknown> = { model: DEEPSEEK_MODEL, messages: [] };
+  if (systemInstruction) {
+    (body.messages as { role: string; content: string }[]).push({ role: 'system', content: systemInstruction });
+  }
+  (body.messages as { role: string; content: string }[]).push(...messages);
+  const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`DeepSeek API error: ${response.status} ${errText}`);
+  }
+  const data = await response.json();
+  return data?.choices?.[0]?.message?.content || '';
 }
 
 // ----------------------------------------------------
@@ -68,8 +73,6 @@ app.post('/api/audit-due-process', async (req, res) => {
     const isAulaSegura = Boolean(body.isAulaSegura);
     const checkedItems = optArr(body, 'checkedItems');
     const observations = optStr(body, 'observations', 5000);
-
-    const ai = getGeminiClient();
 
     const systemPrompt = `Eres un Abogado Experto Legal en Educación Chilena y Fiscalizador de la Superintendencia de Educación, especializado en la Circular N° 482 y Ley N° 21809 de la Superintendencia de Educación (reglamentación de convivencia escolar, debido proceso y medidas de resguardo de NNA) y en la Ley de Aula Segura (Ley 21.128). 
 Tu misión es auditar un caso de convivencia escolar de un colegio chileno para asegurar su indemnidad jurídica frente a un posible reclamo o recurso ante la Supereduc o tribunales. Exige siempre el cumplimiento del Debido Proceso (etapas: Recepción → Comunicación/Notificación → Investigación → Resolución Fundada → Reconsideración/Apelación) y la adopción prioritaria de Medidas de Resguardo Inmediatas para salvaguardar la integridad de los menores involucrados.
@@ -91,15 +94,9 @@ Escribe un análisis de auditoría en formato de informe técnico formal en Mark
 
 Utiliza un tono sumamente profesional, corporativo, técnico e institucional (el "vibe" SaaS legal de alto nivel chileno).`;
 
-    const response = await ai.models.generateContent({
-      model: GEMINI_MODEL,
-      contents: [{
-        role: 'user',
-        parts: [{ text: systemPrompt }]
-      }],
-    });
+    const responseText = await callDeepSeek([{ role: 'user', content: systemPrompt }]);
 
-    res.json({ success: true, report: response.text });
+    res.json({ success: true, report: responseText });
   } catch (error: any) {
     console.error('Error al auditar debido proceso:', error);
     const status = error.message?.startsWith('Campo requerido') ? 400 : 500;
@@ -164,8 +161,6 @@ app.post('/api/draft-document', async (req, res) => {
         };
       })
       .slice(0, 100);
-
-    const ai = getGeminiClient();
 
     // Build comprehensive case data section for AI analysis
     const caseDataSection = `
@@ -597,15 +592,9 @@ El resultado final debe parecer elaborado por un abogado especialista en derecho
 ${isAulaSegura ? 'NOTA: Dado que el caso está sujeto a Ley Aula Segura (Ley 21.128), el informe debe considerar los plazos fatales de 10 días hábiles y las disposiciones especiales de dicha ley.' : ''}`;
     }
 
-    const response = await ai.models.generateContent({
-      model: GEMINI_MODEL,
-      contents: [{
-        role: 'user',
-        parts: [{ text: systemPrompt + caseDataAppendix }]
-      }],
-    });
+    const responseText = await callDeepSeek([{ role: 'user', content: systemPrompt + caseDataAppendix }]);
 
-    res.json({ success: true, document: response.text });
+    res.json({ success: true, document: responseText });
   } catch (error: any) {
     console.error('Error al generar borrador de documento:', error);
     res.status(500).json({ error: error.message || 'Error interno del servidor al redactar documento.' });
@@ -625,15 +614,10 @@ app.post('/api/improve-text', async (req, res) => {
       return;
     }
 
-    const ai = getGeminiClient();
-    const improvePrompt = `Eres un asistente de redacción especializado en redacción institucional educativa chilena. Tu única función es mejorar la ortografía, gramática, coherencia y redacción del texto que el usuario te entrega. Usa siempre un tono neutro, objetivo y sin juicios de valor. No agregues explicaciones, comentarios ni evaluaciones. No respondas preguntas ni interpretes el contenido. Devuelve ÚNICAMENTE el texto corregido, sin ningún formato adicional ni prefacio. Texto a corregir:\n\n${text}`;
+    const systemMsg = 'Eres un asistente de redacción especializado en redacción institucional educativa chilena. Tu única función es mejorar la ortografía, gramática, coherencia y redacción del texto que el usuario te entrega. Usa siempre un tono neutro, objetivo y sin juicios de valor. No agregues explicaciones, comentarios ni evaluaciones. No respondas preguntas ni interpretes el contenido. Devuelve ÚNICAMENTE el texto corregido, sin ningún formato adicional ni prefacio.';
+    const responseText = await callDeepSeek([{ role: 'user', content: `Texto a corregir:\n\n${text}` }], systemMsg);
 
-    const response = await ai.models.generateContent({
-      model: GEMINI_MODEL,
-      contents: [{ role: 'user', parts: [{ text: improvePrompt }] }],
-    });
-
-    res.json({ success: true, improved: response.text });
+    res.json({ success: true, improved: responseText });
   } catch (error: any) {
     console.error('Error al mejorar texto:', error);
     res.status(500).json({ error: error.message || 'Error interno del servidor al mejorar texto.' });
@@ -644,7 +628,6 @@ app.post('/api/improve-text', async (req, res) => {
 app.post('/api/advisor-chat', async (req, res) => {
   try {
     const { message, history } = req.body;
-    const ai = getGeminiClient();
 
     const systemInstruction = `Actúas como un Abogado Senior y Experto Legal de la Superintendencia de Educación de Chile, experto en fiscalizaciones aplicadas a establecimientos escolares chilenos. Tu dominio de especialidad abarca:
 - Circular N° 482 de la Superintendencia de Educación y la Ley N° 21809, que norman reglamentos internos de convivencia escolar (RIE), debida proporcionalidad, medidas de resguardo inmediatas de NNA, gradualidad y plan de acompañamiento.
@@ -653,31 +636,20 @@ app.post('/api/advisor-chat', async (req, res) => {
 
 Tus respuestas deben estar redactadas en español formal de Chile, alineadas con el rigor burocrático y legal que evitará cargos, multas pecuniarias o recursos judiciales contra el colegio. Cita artículos cuando corresponda y explica paso a paso cómo resguardar el "Debido Proceso Escolar" y la integridad mediante medidas de resguardo. Proporciona respuestas muy estructuradas, didácticas y extremadamente precisas.`;
 
-    // Map history to standard contents format if necessary
-    // Because simple generation is stateless in this setup, let's construct a beautiful conversation-guided single prompt or manage it elegantly
-    const contents: any[] = [];
+    const messages: { role: string; content: string }[] = [];
     if (history && Array.isArray(history)) {
       history.forEach((h: any) => {
-        contents.push({
-          role: h.role === 'user' ? 'user' : 'model',
-          parts: [{ text: h.content }]
+        messages.push({
+          role: h.role === 'user' ? 'user' : 'assistant',
+          content: h.content,
         });
       });
     }
-    contents.push({
-      role: 'user',
-      parts: [{ text: message }]
-    });
+    messages.push({ role: 'user', content: message });
 
-    const response = await ai.models.generateContent({
-      model: GEMINI_MODEL,
-      contents,
-      config: {
-        systemInstruction,
-      }
-    });
+    const responseText = await callDeepSeek(messages, systemInstruction);
 
-    res.json({ success: true, reply: response.text });
+    res.json({ success: true, reply: responseText });
   } catch (error: any) {
     console.error('Error en el Chat de Consultoría:', error);
     res.status(500).json({ error: error.message || 'Error al procesar su consulta legal.' });

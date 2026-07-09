@@ -4,31 +4,35 @@ const path = require('path');
 const app = express();
 app.use(express.json({ limit: '1mb' }));
 
-const GEMINI_MODEL = 'gemini-2.0-flash';
+const DEEPSEEK_MODEL = 'deepseek-chat';
 
 function getApiKey() {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) throw new Error('GEMINI_API_KEY no configurada');
+  const key = process.env.DEEPSEEK_API_KEY;
+  if (!key) throw new Error('DEEPSEEK_API_KEY no configurada');
   return key;
 }
 
-async function callGemini(contents, systemInstruction) {
+async function callDeepSeek(messages, systemInstruction) {
   const apiKey = getApiKey();
-  const body = { contents };
+  const body = { model: DEEPSEEK_MODEL, messages: [] };
   if (systemInstruction) {
-    body.systemInstruction = { parts: [{ text: systemInstruction }] };
+    body.messages.push({ role: 'system', content: systemInstruction });
   }
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`, {
+  body.messages.push(...messages);
+  const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
     body: JSON.stringify(body),
   });
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(`Gemini API error: ${response.status} ${errText}`);
+    throw new Error(`DeepSeek API error: ${response.status} ${errText}`);
   }
   const data = await response.json();
-  return data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  return data?.choices?.[0]?.message?.content || '';
 }
 
 app.post('/api/improve-text', async (req, res) => {
@@ -40,8 +44,11 @@ app.post('/api/improve-text', async (req, res) => {
     if (text.length > 5000) {
       return res.status(400).json({ error: 'El texto no puede exceder 5000 caracteres.' });
     }
-    const prompt = `Eres un asistente de redacción especializado en redacción institucional educativa chilena. Tu única función es mejorar la ortografía, gramática, coherencia y redacción del texto que el usuario te entrega. Usa siempre un tono neutro, objetivo y sin juicios de valor. No agregues explicaciones, comentarios ni evaluaciones. No respondas preguntas ni interpretes el contenido. Devuelve ÚNICAMENTE el texto corregido, sin ningún formato adicional ni prefacio. Texto a corregir:\n\n${text}`;
-    const improved = await callGemini([{ role: 'user', parts: [{ text: prompt }] }]);
+    const systemMsg = 'Eres un asistente de redacción especializado en redacción institucional educativa chilena. Tu única función es mejorar la ortografía, gramática, coherencia y redacción del texto que el usuario te entrega. Usa siempre un tono neutro, objetivo y sin juicios de valor. No agregues explicaciones, comentarios ni evaluaciones. No respondas preguntas ni interpretes el contenido. Devuelve ÚNICAMENTE el texto corregido, sin ningún formato adicional ni prefacio.';
+    const improved = await callDeepSeek(
+      [{ role: 'user', content: `Texto a corregir:\n\n${text}` }],
+      systemMsg
+    );
     res.json({ success: true, improved });
   } catch (error) {
     console.error('Error al mejorar texto:', error);
@@ -61,17 +68,17 @@ app.post('/api/advisor-chat', async (req, res) => {
 - Reglamento Interno de Convivencia Escolar (RICE / RIE) y las formalidades indispensables de proporcionalidad, gradualidad y acompañamiento formativo.
 
 Tus respuestas deben estar redactadas en español formal de Chile, alineadas con el rigor burocrático y legal que evitará cargos, multas pecuniarias o recursos judiciales contra el colegio. Cita artículos cuando corresponda y explica paso a paso cómo resguardar el "Debido Proceso Escolar" y la integridad mediante medidas de resguardo. Proporciona respuestas muy estructuradas, didácticas y extremadamente precisas.`;
-    const contents = [];
+    const messages = [];
     if (history && Array.isArray(history)) {
       history.forEach((h) => {
-        contents.push({
-          role: h.role === 'user' ? 'user' : 'model',
-          parts: [{ text: h.content }],
+        messages.push({
+          role: h.role === 'user' ? 'user' : 'assistant',
+          content: h.content,
         });
       });
     }
-    contents.push({ role: 'user', parts: [{ text: message }] });
-    const reply = await callGemini(contents, systemInstruction);
+    messages.push({ role: 'user', content: message });
+    const reply = await callDeepSeek(messages, systemInstruction);
     res.json({ success: true, reply });
   } catch (error) {
     console.error('Error en el Chat de Consultoría:', error);
