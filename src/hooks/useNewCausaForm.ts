@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useReducer, useRef } from 'react';
+import { useReducer } from 'react';
 import { Causa } from '../types';
 
 export interface FormState {

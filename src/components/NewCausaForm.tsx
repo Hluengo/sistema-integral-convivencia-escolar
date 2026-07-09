@@ -169,8 +169,8 @@ export default function NewCausaForm({
             required
             value={newEstRut}
             onChange={(e) => setNewEstRut(e.target.value)}
-            readOnly={!!selectedCourseId}
-            placeholder="Se auto-completa al seleccionar estudiante"
+            readOnly={!!selectedCourseId && students.length > 0}
+            placeholder={selectedCourseId && students.length === 0 ? "Ingrese RUN manualmente (sin estudiantes en el curso)" : "Se auto-completa al seleccionar estudiante"}
             className="w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-100 font-medium text-neutral-600 focus:outline-none text-xs transition-all cursor-not-allowed"
           />
         </div>
@@ -179,6 +179,7 @@ export default function NewCausaForm({
           setNewInfTipo={setNewInfTipo}
           setNewAulaSegura={setNewAulaSegura}
           setNewObs={setNewObs}
+          currentObs={newObs}
         />
 
         <div className="grid grid-cols-2 gap-3 pb-2 border-b border-neutral-100">

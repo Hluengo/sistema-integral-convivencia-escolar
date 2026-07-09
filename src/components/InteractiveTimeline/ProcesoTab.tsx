@@ -6,7 +6,7 @@
 import React from 'react';
 import { Causa, ChecklistItem, UserRole } from '../../types';
 import { MAPPED_STATES, FASES_LIST } from '../../data';
-import { ShieldCheck, Shield, Check } from 'lucide-react';
+import { ShieldCheck, Check } from 'lucide-react';
 import ProcessChecklist from './ProcessChecklist';
 import { PHASE_PREFIXES, PHASE_SHORT } from '../../data';
 

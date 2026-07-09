@@ -77,16 +77,17 @@ export function useCausasPersistence({
 
       try {
         const results = await Promise.all(causas.map(async (causa) => {
+          const originalId = causa.id;
           const success = await updateCausa(causa);
-          let effectiveId = causa.id;
+          let effectiveId = originalId;
           if (!success) {
             const createdId = await createCausa(causa);
             if (!createdId) {
-              console.error(`Failed to save causa ${causa.id}`);
+              console.error(`Failed to save causa ${originalId}`);
               return false;
             }
             effectiveId = createdId;
-            setCausas(prev => prev.map(c => c.id === causa.id ? { ...c, id: createdId } : c));
+            setCausas(prev => prev.map(c => c.id === originalId ? { ...c, id: createdId } : c));
           }
           await Promise.all([
             saveBitacora(effectiveId, causa.bitacora),

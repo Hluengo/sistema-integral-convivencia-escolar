@@ -34,6 +34,7 @@ export default function EditCausaModal({ causa, onClose, onSave, onDelete }: Edi
   const [responsable, setResponsable] = useState(causa.responsable);
   const [estadoActual, setEstadoActual] = useState<EstadoCausa>(causa.estadoActual);
   const [observaciones, setObservaciones] = useState(causa.observaciones);
+  const [aulaSegura, setAulaSegura] = useState(causa.comprometeAulaSegura);
 
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -57,7 +58,7 @@ export default function EditCausaModal({ causa, onClose, onSave, onDelete }: Edi
       estudianteCurso,
       runEstudiante,
       tipoInfraccion,
-      comprometeAulaSegura: isGravisima ? true : causa.comprometeAulaSegura,
+      comprometeAulaSegura: aulaSegura,
       responsable,
       estadoActual,
       observaciones,

@@ -7,7 +7,7 @@ import React from 'react';
 import { FolderOpen } from 'lucide-react';
 
 interface AttachedDocumentsProps {
-  documents: { name: string; url: string }[];
+  documents: { name: string; url: string; itemId?: string }[];
   documentError: string | null;
   onRemoveDocument: (itemId: string, fileName?: string) => Promise<void>;
 }
@@ -44,8 +44,7 @@ export default function AttachedDocuments({
               </a>
               <button
                 type="button"
-                onClick={() => onRemoveDocument('', doc.name)}
-                      title="No se puede determinar el ítem de checklist asociado; solo se eliminará del storage"
+                onClick={() => onRemoveDocument(doc.itemId ?? '', doc.name)}
                 className="text-[10px] text-danger-600 font-semibold hover:underline"
               >
                 Eliminar

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Suspense, lazy, useState, useRef } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import { Causa, EstadoCausa, UserRole, FaseProcedimental } from './types';
 import { getFaseForEstado } from './data';
 import Header from './components/Header';
@@ -197,6 +197,7 @@ export default function App() {
           currentView={currentView}
           causas={causas}
           selectedCausaId={selectedCausaId}
+          setSelectedCausaId={setSelectedCausaId}
           selectedCausa={selectedCausa}
           selectedFaseFilter={selectedFaseFilter}
           setSelectedFaseFilter={setSelectedFaseFilter}

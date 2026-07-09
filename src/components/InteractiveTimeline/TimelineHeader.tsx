@@ -137,7 +137,7 @@ export default function TimelineHeader({
             <span>RIESGOS PROCEDIMENTALES:</span>
           </div>
           <ul className="list-disc pl-5 space-y-0.5 text-[11px]">
-            {breaches.map((b) => <li key={b} className="font-medium">{b}</li>)}
+            {breaches.map((b, i) => <li key={`breach-${i}`} className="font-medium">{b}</li>)}
           </ul>
         </div>
       )}

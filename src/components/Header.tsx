@@ -157,7 +157,7 @@ export default function Header({
               aria-expanded={showNotifications}
             >
               <Bell className="h-4 w-4" aria-hidden="true" />
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-gravisima-500 ring-2 ring-white" />
+              {NOTIFICATIONS.some(n => n.urgent) && <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-gravisima-500 ring-2 ring-white" />}
             </button>
 
             {showNotifications && (

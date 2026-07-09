@@ -25,6 +25,7 @@ interface MainContentProps {
   currentView: SidebarView;
   causas: Causa[];
   selectedCausaId: string;
+  setSelectedCausaId: (id: string) => void;
   selectedCausa: Causa | undefined;
   selectedFaseFilter: FaseProcedimental | 'Todas';
   setSelectedFaseFilter: (f: FaseProcedimental | 'Todas') => void;
@@ -69,6 +70,7 @@ export default function MainContent({
   currentView,
   causas,
   selectedCausaId,
+  setSelectedCausaId,
   selectedCausa,
   selectedFaseFilter,
   setSelectedFaseFilter,
@@ -130,6 +132,7 @@ export default function MainContent({
         <CausasView
           causas={causas}
           selectedCausaId={selectedCausaId}
+          setSelectedCausaId={setSelectedCausaId}
           selectedCausa={selectedCausa}
           selectedFaseFilter={selectedFaseFilter}
           setSelectedFaseFilter={setSelectedFaseFilter}

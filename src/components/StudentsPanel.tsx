@@ -214,8 +214,8 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
         </div>
       ) : (
         <div className="space-y-4 stagger-children">
-          {groupedByCourse.map(({ course, students: courseStudents }) => (
-            <div key={course?.id ?? `unknown-${Math.random()}`} className="card overflow-hidden">
+          {groupedByCourse.map(({ course, students: courseStudents }, gi) => (
+            <div key={course?.id ?? `unknown-${gi}`} className="card overflow-hidden">
               <div className="relative px-5 py-4 border-b border-neutral-100 bg-neutral-50/50">
                 <div
                   className="absolute top-0 left-4 right-4 h-[3px] rounded-full bg-brand-600"

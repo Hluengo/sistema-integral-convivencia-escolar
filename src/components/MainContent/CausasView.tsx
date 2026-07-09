@@ -22,9 +22,10 @@ function ViewFallback() {
 interface CausasViewProps {
   causas: Causa[];
   selectedCausaId: string;
-  selectedCausa: Causa | undefined;
-  selectedFaseFilter: FaseProcedimental | 'Todas';
-  setSelectedFaseFilter: (f: FaseProcedimental | 'Todas') => void;
+  selectedCausa: Causa | null;
+  selectedFaseFilter: string;
+  setSelectedFaseFilter: (fase: string) => void;
+  setSelectedCausaId: (id: string) => void;
   currentRole: UserRole;
   privacyMode: boolean;
   mobileShowDetail: boolean;
@@ -59,6 +60,7 @@ export default function CausasView({
   handleReopenCausa,
   handleSelectCausaFromDashboard,
   handleOpenCreateForm,
+  setSelectedCausaId,
 }: CausasViewProps) {
   return (
     <div className="space-y-6 animate-fade-in">
@@ -143,7 +145,10 @@ export default function CausasView({
                   <button
                     key={fase}
                     type="button"
-                    onClick={() => setSelectedFaseFilter(fase)}
+                    onClick={() => {
+                      setSelectedFaseFilter(fase);
+                      setSelectedCausaId('');
+                    }}
                     role="tab"
                     aria-selected={selectedFaseFilter === fase}
                     className={`px-3 py-2 text-[11px] font-semibold rounded-xl border transition-all duration-200 cursor-pointer ${
