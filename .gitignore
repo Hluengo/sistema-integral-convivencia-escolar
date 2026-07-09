@@ -5,4 +5,13 @@ coverage/
 .DS_Store
 *.log
 .env*
-!.env.example
+.kilo/
+.kiro/
+.agents/
+.claude/
+.cursor/
+.windsurf/
+.github/
+.vscode/
+metadata.json
+react-doctor-report.json
