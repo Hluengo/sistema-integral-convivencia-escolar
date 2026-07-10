@@ -36,10 +36,8 @@ export default function LoginPage({ onClose }: LoginPageProps) {
       setError(authError.message === 'Invalid login credentials'
         ? 'Credenciales incorrectas. Verifique su email y contraseña.'
         : authError.message);
-      setIsLoading(false);
-      return;
     }
-    // Auth listener in App.tsx handles the state update
+    setIsLoading(false);
   };
 
   return (
