@@ -36,7 +36,7 @@ function CustomMarkdownRenderer({ text }: { text: string }) {
     <div className="space-y-2 text-xs text-neutral-700 leading-relaxed font-sans">
       {lines.map((line, index) => {
         const trimmed = line.trim();
-        const lineKey = `${trimmed.substring(0, 48).replace(/[^a-zA-Z0-9]/g, '') || 'empty'}-${index}`;
+        const lineKey = `line-${trimmed.length}-${trimmed.charCodeAt(0) || 0}`;
 
         // Headers
         if (trimmed.startsWith('### ')) {
@@ -230,7 +230,8 @@ export default function InteractiveTimeline({
         regFileName={regFileName}
         setRegFileName={setRegFileName}
         regFile={regFile}
-        isUploadingDocument={isUploadingDocument}
+        tabConfig={{ isUploadingDocument, showLogForm, isAuditing, isDrafting, copyFeedback }}
+        setShowLogForm={setShowLogForm}
         documentError={documentError}
         documents={documents}
         handleStartRegister={handleStartRegister}
@@ -239,8 +240,6 @@ export default function InteractiveTimeline({
         handleResetRegistration={handleResetRegistration}
         handleAttachDocument={handleAttachDocument}
         handleRemoveDocument={handleRemoveDocument}
-        showLogForm={showLogForm}
-        setShowLogForm={setShowLogForm}
         logType={logType}
         setLogType={setLogType}
         logTitle={logTitle}
@@ -253,14 +252,11 @@ export default function InteractiveTimeline({
         aiSubTab={aiSubTab}
         setAiSubTab={setAiSubTab}
         auditReport={auditReport}
-        isAuditing={isAuditing}
         selectedDocType={selectedDocType}
         setSelectedDocType={setSelectedDocType}
         fatherName={fatherName}
         setFatherName={setFatherName}
         draftedDocument={draftedDocument}
-        isDrafting={isDrafting}
-        copyFeedback={copyFeedback}
         handleRunAudit={handleRunAudit}
         handleDraftDocument={handleDraftDocument}
         handleCopyToClipboard={handleCopyToClipboard}

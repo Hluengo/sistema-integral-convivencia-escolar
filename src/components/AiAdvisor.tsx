@@ -30,7 +30,7 @@ function MessageContent({ text }: { text: string }) {
     <div className="space-y-1.5 text-xs leading-relaxed font-sans text-left">
       {lines.map((line, idx) => {
         const trimmed = line.trim();
-        const lineKey = `${trimmed.substring(0, 48).replace(/[^a-zA-Z0-9]/g, '') || 'empty'}-${idx}`;
+        const lineKey = `line-${trimmed.length}-${trimmed.charCodeAt(0) || 0}`;
 
         if (trimmed.startsWith('### ')) {
           return <h4 key={lineKey} className="font-bold text-neutral-900 border-b border-neutral-150 pb-0.5 mt-2">{trimmed.substring(4)}</h4>;
@@ -175,7 +175,7 @@ export default function AiAdvisor() {
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 bg-neutral-50 space-y-3">
         {messages.map((m, idx) => {
           const isModel = m.role === 'model';
-          const messageKey = `${m.role}-${m.content.substring(0, 32)}-${idx}`;
+          const messageKey = `msg-${m.role}-${m.content.length}-${m.content.charCodeAt(0) || 0}`;
           return (
             <div key={messageKey} className={`flex ${isModel ? 'justify-start' : 'justify-end'} text-left animate-fade-in`}>
               <div className={`max-w-[88%] flex gap-2.5 items-start ${isModel ? 'flex-row' : 'flex-row-reverse'}`}>

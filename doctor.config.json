@@ -1,0 +1,11 @@
+{
+  "$schema": "https://react.doctor/schema/config.json",
+  "rules": {
+    "deslop/unused-file": "off",
+    "react-doctor/no-pass-live-state-to-parent": "off",
+    "react-doctor/artifact-baas-authority-surface": "off"
+  },
+  "ignore": [
+    "api/index.js"
+  ]
+}

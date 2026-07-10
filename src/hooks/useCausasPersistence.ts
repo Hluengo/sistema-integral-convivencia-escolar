@@ -56,6 +56,7 @@ export function useCausasPersistence({
     }
 
     loadCausas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setCausas, setSelectedCausaId]);
 
   useEffect(() => {
@@ -130,5 +131,6 @@ export function useCausasPersistence({
         saveIdleTimeoutRef.current = undefined;
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [causas]);
 }

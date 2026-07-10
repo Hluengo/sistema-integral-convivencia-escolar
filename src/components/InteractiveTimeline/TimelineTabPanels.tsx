@@ -9,6 +9,14 @@ import ProcesoTab from './ProcesoTab';
 import BitacoraTab from './BitacoraTab';
 import AsistenteIATab from './AsistenteIATab';
 
+interface TabConfig {
+  isUploadingDocument: boolean;
+  showLogForm: boolean;
+  isAuditing: boolean;
+  isDrafting: boolean;
+  copyFeedback: boolean;
+}
+
 interface TimelineTabPanelsProps {
   activeTab: 'proceso' | 'bitacora' | 'asistente_ia';
   causa: Causa;
@@ -27,7 +35,8 @@ interface TimelineTabPanelsProps {
   regFileName: string;
   setRegFileName: React.Dispatch<React.SetStateAction<string>>;
   regFile: File | null;
-  isUploadingDocument: boolean;
+  tabConfig: TabConfig;
+  setShowLogForm: React.Dispatch<React.SetStateAction<boolean>>;
   documentError: string | null;
   documents: { name: string; url: string }[];
   handleStartRegister: (item: ChecklistItem) => void;
@@ -36,8 +45,6 @@ interface TimelineTabPanelsProps {
   handleResetRegistration: (itemId: string) => void;
   handleAttachDocument: (itemId: string, file: File | null) => Promise<void>;
   handleRemoveDocument: (itemId: string, fileName?: string) => Promise<void>;
-  showLogForm: boolean;
-  setShowLogForm: React.Dispatch<React.SetStateAction<boolean>>;
   logType: BitacoraEntry['tipo'];
   setLogType: React.Dispatch<React.SetStateAction<BitacoraEntry['tipo']>>;
   logTitle: string;
@@ -50,14 +57,11 @@ interface TimelineTabPanelsProps {
   aiSubTab: 'auditoria' | 'borradores';
   setAiSubTab: React.Dispatch<React.SetStateAction<'auditoria' | 'borradores'>>;
   auditReport: string;
-  isAuditing: boolean;
   selectedDocType: 'notificacion_apertura' | 'citacion_entrevista' | 'informe_cierre_indagacion' | 'informe_concluyente';
   setSelectedDocType: React.Dispatch<React.SetStateAction<'notificacion_apertura' | 'citacion_entrevista' | 'informe_cierre_indagacion' | 'informe_concluyente'>>;
   fatherName: string;
   setFatherName: React.Dispatch<React.SetStateAction<string>>;
   draftedDocument: string;
-  isDrafting: boolean;
-  copyFeedback: boolean;
   handleRunAudit: () => Promise<void>;
   handleDraftDocument: () => Promise<void>;
   handleCopyToClipboard: () => void;
@@ -65,7 +69,7 @@ interface TimelineTabPanelsProps {
 }
 
 export default function TimelineTabPanels(props: TimelineTabPanelsProps) {
-  const { activeTab, causa } = props;
+  const { activeTab, causa, tabConfig } = props;
   return (
     <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
       {/* TAB 1: PROCESO */}
@@ -91,7 +95,7 @@ export default function TimelineTabPanels(props: TimelineTabPanelsProps) {
           handleSaveRegistration={props.handleSaveRegistration}
           handleResetRegistration={props.handleResetRegistration}
           regFile={props.regFile}
-          isUploadingDocument={props.isUploadingDocument}
+          isUploadingDocument={tabConfig.isUploadingDocument}
           documentError={props.documentError}
           handleAttachDocument={props.handleAttachDocument}
           handleRemoveDocument={props.handleRemoveDocument}
@@ -104,7 +108,7 @@ export default function TimelineTabPanels(props: TimelineTabPanelsProps) {
         <BitacoraTab
           causa={causa}
           currentRole={props.currentRole}
-          showLogForm={props.showLogForm}
+          showLogForm={tabConfig.showLogForm}
           setShowLogForm={props.setShowLogForm}
           logType={props.logType}
           setLogType={props.setLogType}
@@ -124,14 +128,14 @@ export default function TimelineTabPanels(props: TimelineTabPanelsProps) {
           aiSubTab={props.aiSubTab}
           setAiSubTab={props.setAiSubTab}
           auditReport={props.auditReport}
-          isAuditing={props.isAuditing}
+          isAuditing={tabConfig.isAuditing}
           selectedDocType={props.selectedDocType}
           setSelectedDocType={props.setSelectedDocType}
           fatherName={props.fatherName}
           setFatherName={props.setFatherName}
           draftedDocument={props.draftedDocument}
-          isDrafting={props.isDrafting}
-          copyFeedback={props.copyFeedback}
+          isDrafting={tabConfig.isDrafting}
+          copyFeedback={tabConfig.copyFeedback}
           handleRunAudit={props.handleRunAudit}
           handleDraftDocument={props.handleDraftDocument}
           handleCopyToClipboard={props.handleCopyToClipboard}

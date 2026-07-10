@@ -6,9 +6,9 @@ export function BoldText({ text, strongClass = 'font-bold text-neutral-950' }: {
     <>
       {parts.map((part, i) =>
         i % 2 === 1 ? (
-          <strong key={`b-${part.slice(0, 24)}-${i}`} className={strongClass}>{part}</strong>
+          <strong key={`b-${part}`} className={strongClass}>{part}</strong>
         ) : (
-          <React.Fragment key={`t-${part.slice(0, 24)}-${i}`}>{part}</React.Fragment>
+          <React.Fragment key={`t-${part}`}>{part}</React.Fragment>
         )
       )}
     </>
