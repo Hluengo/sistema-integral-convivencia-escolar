@@ -1,6 +1,10 @@
-const express = require('express');
-const path = require('path');
-const https = require('https');
+import express from 'express';
+import path from 'path';
+import https from 'https';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
@@ -110,4 +114,4 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(distPath, 'index.html'));
 });
 
-module.exports = app;
+export default app;
