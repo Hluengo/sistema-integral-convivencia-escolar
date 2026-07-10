@@ -30,20 +30,20 @@ const requireStr = (obj: Record<string, unknown>, key: string, max = 200): strin
 const optStr = (obj: Record<string, unknown>, key: string, max = MAX_STR): string => sanitize(obj[key]).slice(0, max);
 const optArr = (obj: Record<string, unknown>, key: string): unknown[] => Array.isArray(obj[key]) ? obj[key]! : [];
 
-// DeepSeek API helper
-const DEEPSEEK_MODEL = 'deepseek-chat';
+// Groq API helper
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
-async function callDeepSeek(messages: { role: string; content: string }[], systemInstruction?: string): Promise<string> {
-  const apiKey = process.env.DEEPSEEK_API_KEY;
+async function callGroq(messages: { role: string; content: string }[], systemInstruction?: string): Promise<string> {
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    throw new Error('La variable de entorno DEEPSEEK_API_KEY es requerida.');
+    throw new Error('La variable de entorno GROQ_API_KEY es requerida.');
   }
-  const body: Record<string, unknown> = { model: DEEPSEEK_MODEL, messages: [] };
+  const body: Record<string, unknown> = { model: GROQ_MODEL, messages: [] };
   if (systemInstruction) {
     (body.messages as { role: string; content: string }[]).push({ role: 'system', content: systemInstruction });
   }
   (body.messages as { role: string; content: string }[]).push(...messages);
-  const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -53,7 +53,7 @@ async function callDeepSeek(messages: { role: string; content: string }[], syste
   });
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(`DeepSeek API error: ${response.status} ${errText}`);
+    throw new Error(`Groq API error: ${response.status} ${errText}`);
   }
   const data = await response.json();
   return data?.choices?.[0]?.message?.content || '';
@@ -94,7 +94,7 @@ Escribe un análisis de auditoría en formato de informe técnico formal en Mark
 
 Utiliza un tono sumamente profesional, corporativo, técnico e institucional (el "vibe" SaaS legal de alto nivel chileno).`;
 
-    const responseText = await callDeepSeek([{ role: 'user', content: systemPrompt }]);
+    const responseText = await callGroq([{ role: 'user', content: systemPrompt }]);
 
     res.json({ success: true, report: responseText });
   } catch (error: any) {
@@ -592,7 +592,7 @@ El resultado final debe parecer elaborado por un abogado especialista en derecho
 ${isAulaSegura ? 'NOTA: Dado que el caso está sujeto a Ley Aula Segura (Ley 21.128), el informe debe considerar los plazos fatales de 10 días hábiles y las disposiciones especiales de dicha ley.' : ''}`;
     }
 
-    const responseText = await callDeepSeek([{ role: 'user', content: systemPrompt + caseDataAppendix }]);
+    const responseText = await callGroq([{ role: 'user', content: systemPrompt + caseDataAppendix }]);
 
     res.json({ success: true, document: responseText });
   } catch (error: any) {
@@ -615,7 +615,7 @@ app.post('/api/improve-text', async (req, res) => {
     }
 
     const systemMsg = 'Eres un asistente de redacción especializado en redacción institucional educativa chilena. Tu única función es mejorar la ortografía, gramática, coherencia y redacción del texto que el usuario te entrega. Usa siempre un tono neutro, objetivo y sin juicios de valor. No agregues explicaciones, comentarios ni evaluaciones. No respondas preguntas ni interpretes el contenido. Devuelve ÚNICAMENTE el texto corregido, sin ningún formato adicional ni prefacio.';
-    const responseText = await callDeepSeek([{ role: 'user', content: `Texto a corregir:\n\n${text}` }], systemMsg);
+    const responseText = await callGroq([{ role: 'user', content: `Texto a corregir:\n\n${text}` }], systemMsg);
 
     res.json({ success: true, improved: responseText });
   } catch (error: any) {
@@ -647,7 +647,7 @@ Tus respuestas deben estar redactadas en español formal de Chile, alineadas con
     }
     messages.push({ role: 'user', content: message });
 
-    const responseText = await callDeepSeek(messages, systemInstruction);
+    const responseText = await callGroq(messages, systemInstruction);
 
     res.json({ success: true, reply: responseText });
   } catch (error: any) {

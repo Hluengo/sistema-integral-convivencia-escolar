@@ -4,22 +4,22 @@ const path = require('path');
 const app = express();
 app.use(express.json({ limit: '1mb' }));
 
-const DEEPSEEK_MODEL = 'deepseek-chat';
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
 function getApiKey() {
-  const key = process.env.DEEPSEEK_API_KEY;
-  if (!key) throw new Error('DEEPSEEK_API_KEY no configurada');
+  const key = process.env.GROQ_API_KEY;
+  if (!key) throw new Error('GROQ_API_KEY no configurada');
   return key;
 }
 
-async function callDeepSeek(messages, systemInstruction) {
+async function callGroq(messages, systemInstruction) {
   const apiKey = getApiKey();
-  const body = { model: DEEPSEEK_MODEL, messages: [] };
+  const body = { model: GROQ_MODEL, messages: [] };
   if (systemInstruction) {
     body.messages.push({ role: 'system', content: systemInstruction });
   }
   body.messages.push(...messages);
-  const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -29,7 +29,7 @@ async function callDeepSeek(messages, systemInstruction) {
   });
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(`DeepSeek API error: ${response.status} ${errText}`);
+    throw new Error(`Groq API error: ${response.status} ${errText}`);
   }
   const data = await response.json();
   return data?.choices?.[0]?.message?.content || '';
@@ -45,7 +45,7 @@ app.post('/api/improve-text', async (req, res) => {
       return res.status(400).json({ error: 'El texto no puede exceder 5000 caracteres.' });
     }
     const systemMsg = 'Eres un asistente de redacción especializado en redacción institucional educativa chilena. Tu única función es mejorar la ortografía, gramática, coherencia y redacción del texto que el usuario te entrega. Usa siempre un tono neutro, objetivo y sin juicios de valor. No agregues explicaciones, comentarios ni evaluaciones. No respondas preguntas ni interpretes el contenido. Devuelve ÚNICAMENTE el texto corregido, sin ningún formato adicional ni prefacio.';
-    const improved = await callDeepSeek(
+    const improved = await callGroq(
       [{ role: 'user', content: `Texto a corregir:\n\n${text}` }],
       systemMsg
     );
@@ -78,7 +78,7 @@ Tus respuestas deben estar redactadas en español formal de Chile, alineadas con
       });
     }
     messages.push({ role: 'user', content: message });
-    const reply = await callDeepSeek(messages, systemInstruction);
+    const reply = await callGroq(messages, systemInstruction);
     res.json({ success: true, reply });
   } catch (error) {
     console.error('Error en el Chat de Consultoría:', error);
