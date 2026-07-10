@@ -9,6 +9,7 @@ interface UseCausasPersistenceArgs {
   setCausas: Dispatch<SetStateAction<Causa[]>>;
   setSelectedCausaId: (id: string) => void;
   setSaveStatus: Dispatch<SetStateAction<SaveStatus>>;
+  isAuthenticated: boolean;
 }
 
 export function useCausasPersistence({
@@ -16,6 +17,7 @@ export function useCausasPersistence({
   setCausas,
   setSelectedCausaId,
   setSaveStatus,
+  isAuthenticated,
 }: UseCausasPersistenceArgs) {
   const [loadError, setLoadError] = useState<string | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -85,7 +87,7 @@ export function useCausasPersistence({
 
     prevCausasMapRef.current = currentMap;
 
-    if (changedIds.length === 0) return;
+    if (changedIds.length === 0 || !isAuthenticated) return;
 
     changedIds.forEach(id => pendingSaveRef.current.add(id));
 

@@ -1,8 +1,11 @@
 import React, { createContext, useContext } from 'react';
+import type { User } from '@supabase/supabase-js';
 import type { Causa, UserRole } from '../types';
 import type { SidebarView } from '../components/Sidebar';
 
 export interface AppContextValue {
+  user: User | null;
+  isAuthenticated: boolean;
   causas: Causa[];
   selectedCausaId: string;
   setSelectedCausaId: (id: string) => void;

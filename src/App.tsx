@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Suspense, lazy, useState, useRef, useMemo, useCallback } from 'react';
+import { Suspense, lazy, useState, useRef, useMemo, useCallback, useEffect } from 'react';
+import type { User } from '@supabase/supabase-js';
 import { Causa, EstadoCausa, UserRole, FaseProcedimental } from './types';
 import { getFaseForEstado } from './data';
 import type { SidebarView } from './components/Sidebar';
 import { AppProvider } from './context/AppContext';
-import { createCausa, deleteCausa } from './lib/supabase';
+import { createCausa, deleteCausa, onAuthStateChange, signOut } from './lib/supabase';
 import { useNewCausaForm } from './hooks/useNewCausaForm';
 import { useCourses, useStudents } from './hooks/useData';
 import { createDraftCausa } from './lib/causaFactory';
@@ -22,8 +23,12 @@ const Sidebar = lazy(() => import('./components/Sidebar'));
 const MainContent = lazy(() => import('./components/MainContent'));
 const CommandPalette = lazy(() => import('./components/CommandPalette'));
 const NewCausaModal = lazy(() => import('./components/NewCausaModal'));
+const LoginPage = lazy(() => import('./components/LoginPage'));
 
 export default function App() {
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [causas, setCausas] = useState<Causa[]>([]);
   const [selectedCausaId, setSelectedCausaId] = useState<string>('');
   const [selectedFaseFilter, setSelectedFaseFilter] = useState<FaseProcedimental | 'Todas'>('Todas');
@@ -54,6 +59,14 @@ export default function App() {
 
   const isTimelineCollapsedRef = useRef(false);
 
+  useEffect(() => {
+    const { data: { subscription } } = onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   const activeCausas = useMemo(
@@ -76,6 +89,7 @@ export default function App() {
     setCausas,
     setSelectedCausaId,
     setSaveStatus,
+    isAuthenticated: !!user,
   });
 
   const handleViewChange = useCallback((view: SidebarView) => {
@@ -147,11 +161,21 @@ export default function App() {
     }
   }, [newEstNombre, newEstRut, newEstCurso, newInfTipo, newAulaSegura, newObs, newResponsable, dispatchForm]);
 
+  const requireAuth = useCallback(() => {
+    if (!user) {
+      setShowLoginModal(true);
+      return false;
+    }
+    return true;
+  }, [user, setShowLoginModal]);
+
   const handleUpdateCausa = useCallback((updated: Causa) => {
+    if (!requireAuth()) return;
     setCausas(prev => prev.map(c => c.id === updated.id ? updated : c));
-  }, []);
+  }, [requireAuth]);
 
   const handleDeleteCausa = useCallback(async (id: string) => {
+    if (!requireAuth()) return;
     const ok = await deleteCausa(id);
     if (!ok) {
       console.error(`Failed to delete causa ${id}`);
@@ -164,7 +188,7 @@ export default function App() {
       }
       return next;
     });
-  }, [selectedCausaId]);
+  }, [selectedCausaId, requireAuth]);
 
   const handleReopenCausa = useCallback((causa: Causa) => {
     const updated: Causa = {
@@ -186,11 +210,14 @@ export default function App() {
   }, []);
 
   const handleOpenCreateForm = useCallback(() => {
+    if (!requireAuth()) return;
     dispatchForm({ type: 'OPEN' });
     setCurrentView('causas');
-  }, [dispatchForm]);
+  }, [dispatchForm, requireAuth]);
 
   const contextValue = useMemo(() => ({
+    user,
+    isAuthenticated: !!user,
     causas,
     selectedCausaId,
     setSelectedCausaId,
@@ -210,7 +237,7 @@ export default function App() {
     closedCausas,
     aulaSeguraCausas,
   }), [
-    causas, selectedCausaId, currentRole, privacyMode, currentView,
+    user, causas, selectedCausaId, currentRole, privacyMode, currentView,
     mobileShowDetail, saveStatus, activeCausas, closedCausas, aulaSeguraCausas,
     handleUpdateCausa, handleDeleteCausa, handleSelectCausaFromDashboard, handleOpenCreateForm,
   ]);
@@ -225,6 +252,17 @@ export default function App() {
     onCourseChange: (courseId: string) => dispatchForm({ type: 'SET_COURSE', courseId }),
     onClose: () => dispatchForm({ type: 'CLOSE' }),
   }), [dispatchForm]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-neutral-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-brand-600 border-r-transparent" />
+          <p className="text-xs text-neutral-500 mt-3">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <ToastProvider>
@@ -261,6 +299,8 @@ export default function App() {
             onSearchChange={setSearchQuery}
             currentView={currentView}
             causas={causas}
+            user={user}
+            onLogout={() => signOut()}
           />
         </Suspense>
 
@@ -351,6 +391,12 @@ export default function App() {
             onCourseChange={formSetters.onCourseChange}
             onStudentSelect={handleStudentSelect}
           />
+        </Suspense>
+      )}
+
+      {showLoginModal && (
+        <Suspense fallback={null}>
+          <LoginPage onClose={() => setShowLoginModal(false)} />
         </Suspense>
       )}
     </div>

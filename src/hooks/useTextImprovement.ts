@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { supabase } from '../lib/supabase';
 
 export function useTextImprovement() {
   const [isImproving, setIsImproving] = useState(false);
@@ -9,13 +10,21 @@ export function useTextImprovement() {
     setIsImproving(true);
     setError(null);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
       const response = await fetch('/api/improve-text', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ text }),
       });
       if (!response.ok) {
         const err = await response.json().catch(() => ({ error: 'Error de redacción' }));
+        if (response.status === 401) {
+          throw new Error('Debe iniciar sesión para usar esta función.');
+        }
         throw new Error(err.error || 'Error al mejorar el texto');
       }
       const data = await response.json();

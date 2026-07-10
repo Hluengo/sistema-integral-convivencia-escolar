@@ -4,7 +4,8 @@
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Bell, Eye, EyeOff, Cloud, CloudOff, Loader2, Command } from 'lucide-react';
+import { Search, Bell, Eye, EyeOff, Cloud, CloudOff, Loader2, Command, LogOut, LogIn } from 'lucide-react';
+import type { User } from '@supabase/supabase-js';
 import type { SidebarView } from './Sidebar';
 import type { Causa } from '../types';
 import { EstadoCausa } from '../types';
@@ -25,6 +26,8 @@ interface HeaderProps {
   onSearchChange?: (query: string) => void;
   currentView?: SidebarView;
   causas: Causa[];
+  user: User | null;
+  onLogout?: () => void;
 }
 
 export default function Header({
@@ -35,6 +38,8 @@ export default function Header({
   onSearchChange,
   currentView = 'dashboard',
   causas,
+  user,
+  onLogout,
 }: HeaderProps) {
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -282,6 +287,20 @@ export default function Header({
               </>
             )}
           </div>
+
+          {user ? (
+            <button
+              type="button"
+              onClick={onLogout}
+              className="p-2.5 rounded-xl hover:bg-neutral-100 text-neutral-500 transition-all cursor-pointer"
+              aria-label="Cerrar sesión"
+              title="Cerrar sesión"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          ) : (
+            <span className="text-[10px] text-neutral-400 font-medium hidden sm:inline">Solo lectura</span>
+          )}
         </div>
       </div>
 

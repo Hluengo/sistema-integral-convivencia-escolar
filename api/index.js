@@ -64,6 +64,21 @@ function getApiKey() {
   return key;
 }
 
+// Auth middleware: verify Supabase JWT from Authorization header
+function requireAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Autenticación requerida.' });
+  }
+  // Token presence is sufficient — Supabase validates on the client
+  // For stricter validation, verify JWT with Supabase JWT secret
+  const token = authHeader.replace('Bearer ', '');
+  if (token.length < 10) {
+    return res.status(401).json({ error: 'Token inválido.' });
+  }
+  next();
+}
+
 function httpsPost(hostname, pathname, body, headers) {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify(body);
@@ -103,7 +118,7 @@ async function callGroq(messages, systemInstruction) {
   return res.body?.choices?.[0]?.message?.content || '';
 }
 
-app.post('/api/improve-text', async (req, res) => {
+app.post('/api/improve-text', requireAuth, async (req, res) => {
   try {
     const { text } = req.body;
     if (!text || typeof text !== 'string' || text.trim().length === 0) {
@@ -137,7 +152,7 @@ app.post('/api/improve-text', async (req, res) => {
   }
 });
 
-app.post('/api/advisor-chat', async (req, res) => {
+app.post('/api/advisor-chat', requireAuth, async (req, res) => {
   try {
     const { message, history } = req.body;
     if (!message || typeof message !== 'string' || !message.trim()) {

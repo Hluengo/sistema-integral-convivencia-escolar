@@ -7,6 +7,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, RefreshCw, Bot, User, BookOpen, Sparkles, Gavel, Loader2 } from 'lucide-react';
 import { BoldText } from '../lib/markdownUtils';
 import { useTextImprovement } from '../hooks/useTextImprovement';
+import { supabase } from '../lib/supabase';
 
 interface Message {
   role: 'user' | 'model';
@@ -108,11 +109,15 @@ export default function AiAdvisor() {
     setIsLoading(true);
 
     try {
-      // Use ref to get latest messages for history (avoids stale closure)
       const currentMessages = messagesRef.current;
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
       const response = await fetch('/api/advisor-chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           message: userMsg,
           history: currentMessages.slice(1, -1).map(m => ({
@@ -123,6 +128,10 @@ export default function AiAdvisor() {
       });
 
       const contentType = response.headers.get('content-type') || '';
+      if (response.status === 401) {
+        setMessages(prev => [...prev, { role: 'model', content: '**Sesión requerida:** Debe iniciar sesión para usar el asistente de IA. Haga clic en "Iniciar sesión" en el encabezado.' }]);
+        return;
+      }
       if (!response.ok || !contentType.includes('application/json')) {
         const body = await response.text().catch(() => '');
         const hint = body.includes('page') || contentType.includes('text/html')
