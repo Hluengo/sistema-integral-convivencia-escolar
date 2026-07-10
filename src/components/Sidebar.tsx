@@ -6,8 +6,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   LayoutDashboard, Scale, Users, FileBarChart,
-  ChevronLeft, ChevronRight, AlertTriangle, Menu, X
+  ChevronLeft, ChevronRight, AlertTriangle, Menu, X,
+  LogIn, LogOut, User
 } from 'lucide-react';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 export type SidebarView = 'dashboard' | 'causas' | 'alumnos' | 'informes';
 
@@ -18,6 +20,9 @@ interface SidebarProps {
   onToggleCollapse: () => void;
   activeCount: number;
   aulaSeguraCount: number;
+  user: SupabaseUser | null;
+  onLogin?: () => void;
+  onLogout?: () => void;
 }
 
 interface SidebarContentProps {
@@ -28,6 +33,9 @@ interface SidebarContentProps {
   activeCount: number;
   mobile?: boolean;
   onNavigate?: () => void;
+  user: SupabaseUser | null;
+  onLogin?: () => void;
+  onLogout?: () => void;
 }
 
 const NAV_ITEMS: { id: SidebarView; label: string; Icon: React.ElementType; badgeKey?: 'activeCount' }[] = [
@@ -45,6 +53,9 @@ function SidebarContent({
   activeCount,
   mobile = false,
   onNavigate,
+  user,
+  onLogin,
+  onLogout,
 }: SidebarContentProps) {
   return (
     <div className="flex flex-col h-full">
@@ -98,7 +109,7 @@ function SidebarContent({
         className={`flex-1 ${isCollapsed && !mobile ? 'py-4 px-2' : 'px-3'} space-y-0.5`}
         aria-label="Secciones principales"
       >
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS.filter(item => user || item.id === 'dashboard').map((item) => {
           const isActive = currentView === item.id;
           const badge = item.badgeKey === 'activeCount' ? activeCount : undefined;
           const Icon = item.Icon;
@@ -139,6 +150,56 @@ function SidebarContent({
           );
         })}
       </nav>
+
+      <div className={`border-t border-white/10 ${isCollapsed && !mobile ? 'px-2 py-3' : 'px-3 py-3'}`}>
+        {user ? (
+          <div className={`${isCollapsed && !mobile ? '' : 'flex items-center gap-2.5 px-2'}`}>
+            {!isCollapsed || mobile ? (
+              <>
+                <div className="w-7 h-7 rounded-full bg-brand-500/20 flex items-center justify-center shrink-0">
+                  <User className="h-3.5 w-3.5 text-brand-300" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-semibold text-white truncate">{user.email}</p>
+                  <p className="text-[9px] text-neutral-500">Conectado</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={onLogout}
+                  className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+                  aria-label="Cerrar sesión"
+                  title="Cerrar sesión"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={onLogout}
+                className="w-full flex justify-center py-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+                aria-label="Cerrar sesión"
+                title="Cerrar sesión"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={onLogin}
+            className={`w-full flex items-center gap-2.5 rounded-xl text-[12px] font-semibold transition-all cursor-pointer select-none ${
+              isCollapsed && !mobile
+                ? 'justify-center px-0 py-2.5 bg-white/10 text-white hover:bg-white/15'
+                : 'px-3.5 py-2.5 bg-white/10 text-white hover:bg-white/15 ring-1 ring-white/10'
+            }`}
+          >
+            <LogIn className="h-4 w-4 shrink-0" />
+            {(!isCollapsed || mobile) && <span>Iniciar sesión</span>}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -149,7 +210,10 @@ export default function Sidebar({
   isCollapsed, 
   onToggleCollapse,
   activeCount,
-  aulaSeguraCount
+  aulaSeguraCount,
+  user,
+  onLogin,
+  onLogout,
 }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const mobileSidebarRef = useRef<HTMLDivElement>(null);
@@ -174,6 +238,9 @@ export default function Sidebar({
     isCollapsed,
     aulaSeguraCount,
     activeCount,
+    user,
+    onLogin,
+    onLogout,
   };
 
   return (

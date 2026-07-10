@@ -93,6 +93,10 @@ export default function App() {
   });
 
   const handleViewChange = useCallback((view: SidebarView) => {
+    if (view !== 'dashboard' && !user) {
+      setShowLoginModal(true);
+      return;
+    }
     setCurrentView(view);
     if (view === 'causas') {
       if (selectedCausaId) {
@@ -101,7 +105,7 @@ export default function App() {
     } else {
       isTimelineCollapsedRef.current = false;
     }
-  }, [selectedCausaId]);
+  }, [selectedCausaId, user]);
 
   const handleStudentSelect = useCallback((studentId: string) => {
     if (!studentId) {
@@ -203,11 +207,15 @@ export default function App() {
   }, []);
 
   const handleSelectCausaFromDashboard = useCallback((causaId: string) => {
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
     setSelectedCausaId(causaId);
     setCurrentView('causas');
     setMobileShowDetail(true);
     isTimelineCollapsedRef.current = false;
-  }, []);
+  }, [user]);
 
   const handleOpenCreateForm = useCallback(() => {
     if (!requireAuth()) return;
@@ -286,6 +294,9 @@ export default function App() {
           onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           activeCount={activeCausas.length}
           aulaSeguraCount={aulaSeguraCausas.length}
+          user={user}
+          onLogin={() => setShowLoginModal(true)}
+          onLogout={() => signOut()}
         />
       </Suspense>
 
@@ -299,9 +310,6 @@ export default function App() {
             onSearchChange={setSearchQuery}
             currentView={currentView}
             causas={causas}
-            user={user}
-            onLogout={() => signOut()}
-            onLogin={() => setShowLoginModal(true)}
           />
         </Suspense>
 
