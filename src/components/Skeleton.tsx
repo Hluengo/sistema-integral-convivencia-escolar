@@ -9,7 +9,7 @@ function Skeleton({ className = '', count = 1 }: SkeletonProps) {
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className={`skeleton ${className}`} />
+        <div key={i} className={`skeleton ${className}`} aria-hidden="true" />
       ))}
     </>
   );
@@ -17,7 +17,7 @@ function Skeleton({ className = '', count = 1 }: SkeletonProps) {
 
 export function CausaCardSkeleton() {
   return (
-    <div className="card p-5 space-y-3 animate-pulse">
+    <div role="status" aria-label="Cargando expediente" className="card p-5 space-y-3 animate-pulse">
       <div className="flex items-center gap-2">
         <Skeleton className="h-5 w-16 rounded-md" />
         <Skeleton className="h-5 w-20 rounded-md" />
@@ -34,26 +34,28 @@ export function CausaCardSkeleton() {
         ))}
       </div>
       <Skeleton className="h-8 w-full rounded-lg" />
+      <span className="sr-only">Cargando...</span>
     </div>
   );
 }
 
 export function DashboardMetricSkeleton() {
   return (
-    <div className="card p-5 space-y-3 animate-pulse">
+    <div role="status" aria-label="Cargando métricas" className="card p-5 space-y-3 animate-pulse">
       <div className="flex items-center justify-between">
         <Skeleton className="h-8 w-16 rounded-md" />
         <Skeleton className="h-8 w-8 rounded-lg" />
       </div>
       <Skeleton className="h-3 w-24" />
       <Skeleton className="h-1.5 w-full rounded-full" />
+      <span className="sr-only">Cargando...</span>
     </div>
   );
 }
 
 function ChatMessageSkeleton() {
   return (
-    <div className="flex justify-start">
+    <div role="status" aria-label="Cargando mensaje" className="flex justify-start">
       <div className="max-w-[70%] flex gap-2.5 items-start">
         <Skeleton className="h-8 w-8 rounded-lg shrink-0" />
         <div className="space-y-2 flex-1">
@@ -62,13 +64,14 @@ function ChatMessageSkeleton() {
           <Skeleton className="h-4 w-3/4" />
         </div>
       </div>
+      <span className="sr-only">Cargando...</span>
     </div>
   );
 }
 
 function TimelineTabSkeleton() {
   return (
-    <div className="space-y-4 p-4 animate-pulse">
+    <div role="status" aria-label="Cargando timeline" className="space-y-4 p-4 animate-pulse">
       <div className="flex gap-2">
         <Skeleton className="h-8 w-20 rounded-lg" />
         <Skeleton className="h-8 w-20 rounded-lg" />
@@ -86,6 +89,7 @@ function TimelineTabSkeleton() {
           </div>
         ))}
       </div>
+      <span className="sr-only">Cargando...</span>
     </div>
   );
 }

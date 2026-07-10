@@ -52,6 +52,7 @@ export default function BitacoraTab({
             type="button"
             onClick={() => setShowLogForm(!showLogForm)}
             className="text-[11px] bg-brand-600 text-white font-medium px-3 py-1.5 rounded-lg hover:bg-brand-700 transition-all flex items-center gap-1 cursor-pointer"
+            aria-expanded={showLogForm}
           >
             <Plus className="h-3.5 w-3.5" aria-hidden="true" />
             <span className="hidden sm:inline">Nuevo registro</span>
@@ -61,7 +62,7 @@ export default function BitacoraTab({
 
       {/* New Log Form */}
       {showLogForm && (
-        <form onSubmit={handleAddNewLog} className="bg-white border border-brand-200 rounded-lg p-4 space-y-3 text-left animate-slide-up">
+        <form onSubmit={handleAddNewLog} aria-label="Nuevo registro en bitácora" className="bg-white border border-brand-200 rounded-lg p-4 space-y-3 text-left animate-slide-up">
           <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
             <h4 className="text-[11px] font-semibold text-neutral-800">Nuevo registro en bitácora</h4>
           </div>

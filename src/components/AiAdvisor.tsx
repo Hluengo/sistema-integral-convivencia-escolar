@@ -152,7 +152,7 @@ export default function AiAdvisor() {
   };
 
   return (
-    <div className="flex flex-col min-h-[420px] bg-white rounded-xl border border-neutral-200/80 shadow-sm overflow-hidden transition-all animate-slide-up">
+    <div className="flex flex-col min-h-[420px] bg-white rounded-xl border border-neutral-200/80 shadow-sm overflow-hidden transition-all animate-slide-up" aria-label="Asesor legal de convivencia">
       {/* Advisor header */}
       <div className="bg-white px-4 sm:px-5 py-3.5 flex items-center justify-between border-b border-neutral-200/60">
         <div className="flex items-center gap-3 text-left">
@@ -172,7 +172,7 @@ export default function AiAdvisor() {
       </div>
 
       {/* Discussion Pane */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 bg-neutral-50 space-y-3">
+      <div ref={scrollContainerRef} role="log" aria-label="Historial de conversación" aria-live="polite" className="flex-1 overflow-y-auto p-4 bg-neutral-50 space-y-3">
         {messages.map((m, idx) => {
           const isModel = m.role === 'model';
           const messageKey = `msg-${m.role}-${m.content.length}-${m.content.charCodeAt(0) || 0}`;
@@ -201,7 +201,7 @@ export default function AiAdvisor() {
 
         {/* Loading bubble */}
         {isLoading && (
-          <div className="flex justify-start text-left">
+          <div role="status" aria-live="polite" aria-label="El asesor está respondiendo" className="flex justify-start text-left">
             <div className="max-w-[70%] flex gap-2.5 items-center">
               <div className="p-1.5 rounded-lg bg-neutral-900 text-white shrink-0">
                 <Bot className="h-3.5 w-3.5" aria-hidden="true" />
@@ -273,7 +273,7 @@ export default function AiAdvisor() {
             <Send className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
         </form>
-        <div className="text-[8px] text-neutral-400 text-left mt-2 font-mono">
+        <div className="text-[10px] text-neutral-400 text-left mt-2 font-mono">
           Las respuestas son referenciales. Consulte siempre el RIE de su sostenedor y la normativa vigente.
         </div>
       </div>

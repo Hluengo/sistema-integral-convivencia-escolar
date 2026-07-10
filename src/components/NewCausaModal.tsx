@@ -68,8 +68,18 @@ export default function NewCausaModal({
     const dialog = dialogRef.current;
     if (!dialog) return;
     dialog.showModal();
-    return () => dialog.close();
-  }, []);
+
+    const handleCancel = (e: Event) => {
+      e.preventDefault();
+      onClose();
+    };
+    dialog.addEventListener('cancel', handleCancel);
+
+    return () => {
+      dialog.removeEventListener('cancel', handleCancel);
+      dialog.close();
+    };
+  }, [onClose]);
 
   return (
     <dialog

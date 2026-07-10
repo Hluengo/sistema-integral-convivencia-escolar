@@ -44,8 +44,18 @@ export default function EditCausaModal({ causa, onClose, onSave, onDelete }: Edi
     const dialog = dialogRef.current;
     if (!dialog) return;
     dialog.showModal();
-    return () => dialog.close();
-  }, []);
+
+    const handleCancel = (e: Event) => {
+      e.preventDefault();
+      onClose();
+    };
+    dialog.addEventListener('cancel', handleCancel);
+
+    return () => {
+      dialog.removeEventListener('cancel', handleCancel);
+      dialog.close();
+    };
+  }, [onClose]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

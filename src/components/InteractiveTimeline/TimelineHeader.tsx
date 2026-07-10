@@ -61,6 +61,7 @@ export default function TimelineHeader({
                   }`}
                   title={isSidebarCollapsed ? "Mostrar lista de causas" : "Ocultar lista de causas"}
                   aria-label={isSidebarCollapsed ? "Mostrar panel de lista de causas" : "Ocultar panel de lista de causas"}
+                  aria-pressed={!isSidebarCollapsed}
                 >
                   {isSidebarCollapsed ? (
                     <><ChevronRight className="h-3 w-3" aria-hidden="true" /><span className="hidden sm:inline">Lista</span></>
@@ -131,12 +132,12 @@ export default function TimelineHeader({
 
       {/* Due Process Breach Alerts pane */}
       {breaches.length > 0 && (
-        <div className="bg-danger-50 border-b border-danger-200 px-4 sm:px-5 py-2.5 text-[11px] text-danger-800">
+        <div role="alert" className="bg-danger-50 border-b border-danger-200 px-4 sm:px-5 py-2.5 text-[11px] text-danger-800">
           <div className="flex items-center gap-1.5 font-semibold mb-1">
             <AlertTriangle className="h-4 w-4 text-danger-600" aria-hidden="true" />
             <span>RIESGOS PROCEDIMENTALES:</span>
           </div>
-          <ul className="list-disc pl-5 space-y-0.5 text-[11px]">
+          <ul aria-label="Riesgos procedimentales detectados" className="list-disc pl-5 space-y-0.5 text-[11px]">
             {breaches.map((b) => <li key={`breach-${b.length}-${b.charCodeAt(0) || 0}`} className="font-medium">{b}</li>)}
           </ul>
         </div>

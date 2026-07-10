@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Search, Bell, Eye, EyeOff, Cloud, CloudOff, Loader2, Command } from 'lucide-react';
 import type { SidebarView } from './Sidebar';
 import type { Causa } from '../types';
@@ -38,6 +38,18 @@ export default function Header({
 }: HeaderProps) {
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+
+  useEffect(() => {
+    if (!showNotifications) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowNotifications(false);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showNotifications]);
 
   const NOTIFICATIONS = useMemo(() => {
     const n: { id: number; title: string; description: string; time: string; urgent: boolean; causaId?: string }[] = [];
@@ -227,7 +239,9 @@ export default function Header({
               aria-expanded={showNotifications}
             >
               <Bell className="h-4 w-4" aria-hidden="true" />
-              {NOTIFICATIONS.some(n => n.urgent) && <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-gravisima-500 ring-2 ring-white" />}
+              {NOTIFICATIONS.some(n => n.urgent) && (
+                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-gravisima-500 ring-2 ring-white" aria-hidden="true" />
+              )}
             </button>
 
             {showNotifications && (

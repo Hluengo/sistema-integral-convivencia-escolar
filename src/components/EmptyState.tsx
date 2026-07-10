@@ -10,8 +10,8 @@ interface EmptyStateProps {
 
 export default function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-6 text-center animate-fade-in">
-      <div className="p-4 rounded-2xl bg-neutral-100 text-neutral-400 mb-4">
+    <div role="status" className="flex flex-col items-center justify-center py-16 px-6 text-center animate-fade-in">
+      <div className="p-4 rounded-2xl bg-neutral-100 text-neutral-400 mb-4" aria-hidden="true">
         {icon || <FileSearch className="h-8 w-8" />}
       </div>
       <h3 className="text-sm font-semibold text-neutral-700 mb-1">{title}</h3>
@@ -35,7 +35,7 @@ export function EmptyCausas({ onCreateCausa }: { onCreateCausa?: () => void }) {
           onClick={onCreateCausa}
           className="text-xs font-semibold text-brand-600 hover:text-brand-700 transition-colors"
         >
-          + Crear primer expediente
+          Crear primer expediente
         </button>
       ) : undefined}
     />

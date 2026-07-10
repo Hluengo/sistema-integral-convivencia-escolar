@@ -123,7 +123,13 @@ export default function MainContent({
   isLoadingStudents,
 }: MainContentProps) {
   return (
-    <main className="flex-1 flex flex-col w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <main id="main-content" tabIndex={-1} className="flex-1 flex flex-col w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 outline-none">
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {currentView === 'dashboard' && 'Vista: Panel de control'}
+        {currentView === 'causas' && 'Vista: Expedientes'}
+        {currentView === 'informes' && 'Vista: Informes y asesor legal'}
+        {currentView === 'alumnos' && 'Vista: Alumnos'}
+      </div>
       {/* VIEW 1: DASHBOARD - Fully redesigned */}
       {currentView === 'dashboard' && (
         <ErrorBoundary>

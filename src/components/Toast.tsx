@@ -16,10 +16,10 @@ interface ToastContextValue {
 const ToastContext = createContext<ToastContextValue | null>(null);
 
 const TOAST_ICONS: Record<ToastType, React.ReactNode> = {
-  success: <CheckCircle className="h-4 w-4 text-leve-600" />,
-  error: <XCircle className="h-4 w-4 text-gravisima-600" />,
-  warning: <AlertTriangle className="h-4 w-4 text-grave-600" />,
-  info: <Info className="h-4 w-4 text-brand-500" />,
+  success: <CheckCircle className="h-4 w-4 text-leve-600" aria-hidden="true" />,
+  error: <XCircle className="h-4 w-4 text-gravisima-600" aria-hidden="true" />,
+  warning: <AlertTriangle className="h-4 w-4 text-grave-600" aria-hidden="true" />,
+  info: <Info className="h-4 w-4 text-brand-500" aria-hidden="true" />,
 };
 
 const TOAST_STYLES: Record<ToastType, string> = {
@@ -63,10 +63,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={contextValue}>
       {children}
-      <div className="fixed top-20 right-4 z-[100] flex flex-col gap-2 pointer-events-none" role="status" aria-live="polite">
+      <div className="fixed top-20 right-4 z-[100] flex flex-col gap-2 pointer-events-none" aria-atomic="true">
         {toasts.map(toast => (
           <div
             key={toast.id}
+            role={toast.type === 'error' ? 'alert' : 'status'}
+            aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
             className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg max-w-sm animate-toast-in ${TOAST_STYLES[toast.type]}`}
           >
             {TOAST_ICONS[toast.type]}
@@ -77,7 +79,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               className="text-neutral-400 hover:text-neutral-600 transition-colors shrink-0"
               aria-label="Cerrar notificación"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
           </div>
         ))}

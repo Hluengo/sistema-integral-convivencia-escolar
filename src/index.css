@@ -335,6 +335,45 @@ a {
   }
 }
 
+/* High contrast mode */
+@media (prefers-contrast: more) {
+  .card {
+    border-width: 2px;
+    border-color: #000;
+  }
+  button, a, [role="button"] {
+    border-width: 1px;
+  }
+  .skeleton {
+    background: #ccc !important;
+  }
+}
+
+/* Windows High Contrast Mode */
+@media (forced-colors: active) {
+  .card {
+    border: 1px solid ButtonText;
+  }
+  button, a, [role="button"] {
+    border: 1px solid ButtonText;
+    forced-color-adjust: none;
+  }
+  .bg-brand-600, .bg-brand-700, .bg-brand-800 {
+    background: Highlight !important;
+    color: HighlightText !important;
+  }
+  .text-brand-600, .text-brand-700 {
+    color: Highlight !important;
+  }
+  .ring-2 {
+    ring-color: ButtonText !important;
+  }
+  .skeleton {
+    background: ButtonFace !important;
+    border: 1px solid ButtonText;
+  }
+}
+
 /* Dialog element reset & backdrop */
 dialog {
   padding: 0;

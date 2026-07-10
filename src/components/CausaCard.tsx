@@ -86,8 +86,8 @@ export default memo(function CausaCard({ causa, privacyMode, onSelect, isSelecte
             const isCurrent = getFaseForEstado(causa.estadoActual) === f.name;
 
             return (
-              <div key={f.name} className="relative w-6 h-6" title={`${f.name}: ${completed}/${total}`}>
-                <svg className="w-6 h-6 -rotate-90" viewBox="0 0 36 36">
+              <div key={f.name} className="relative w-6 h-6">
+                <svg role="img" aria-label={`${f.name}: ${completed} de ${total} completados`} className="w-6 h-6 -rotate-90" viewBox="0 0 36 36">
                   <circle
                     className="text-neutral-200"
                     strokeWidth="4"
@@ -111,7 +111,7 @@ export default memo(function CausaCard({ causa, privacyMode, onSelect, isSelecte
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
                   {isComplete ? (
-                    <Check className="h-3 w-3 text-success-600" />
+                    <Check className="h-3 w-3 text-success-600" aria-hidden="true" />
                   ) : (
                     <span className={`text-[8px] font-bold ${isCurrent ? 'text-neutral-900' : 'text-neutral-500'}`}>
                       {i + 1}

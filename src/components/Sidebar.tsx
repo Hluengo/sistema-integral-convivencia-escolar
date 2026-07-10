@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   LayoutDashboard, Scale, Users, FileBarChart,
   ChevronLeft, ChevronRight, AlertTriangle, Menu, X
@@ -152,6 +152,21 @@ export default function Sidebar({
   aulaSeguraCount
 }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const mobileSidebarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setMobileOpen(false);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    const firstFocusable = mobileSidebarRef.current?.querySelector<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    firstFocusable?.focus();
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [mobileOpen]);
 
   const contentProps: SidebarContentProps = {
     currentView,
@@ -181,7 +196,7 @@ export default function Sidebar({
         />
       )}
 
-      <div className={`lg:hidden fixed inset-y-0 left-0 z-50 w-[260px] bg-gradient-to-b from-neutral-800 to-neutral-950 transition-transform duration-300 ${
+      <div ref={mobileSidebarRef} className={`lg:hidden fixed inset-y-0 left-0 z-50 w-[260px] bg-gradient-to-b from-neutral-800 to-neutral-950 transition-transform duration-300 ${
         mobileOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <button
