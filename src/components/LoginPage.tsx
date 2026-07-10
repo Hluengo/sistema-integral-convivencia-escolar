@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Scale, Loader2, AlertCircle, X } from 'lucide-react';
 import { signInWithEmail } from '../lib/supabase';
 import { useAppContext } from '../context/AppContext';
@@ -13,6 +13,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { setShowLoginModal } = useAppContext();
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -20,6 +21,26 @@ export default function LoginPage({ onClose }: LoginPageProps) {
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
+
+  useEffect(() => {
+    dialogRef.current?.showModal();
+    return () => dialogRef.current?.close();
+  }, []);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    const handleClick = (e: MouseEvent) => {
+      const rect = dialog.getBoundingClientRect();
+      const isInDialog = e.clientX >= rect.left && e.clientX <= rect.right &&
+                         e.clientY >= rect.top && e.clientY <= rect.bottom;
+      if (!isInDialog && onClose) {
+        onClose();
+      }
+    };
+    dialog.addEventListener('click', handleClick);
+    return () => dialog.removeEventListener('click', handleClick);
   }, [onClose]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -47,14 +68,12 @@ export default function LoginPage({ onClose }: LoginPageProps) {
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in"
-      onClick={(e) => { if (e.target === e.currentTarget && onClose) onClose(); }}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Iniciar sesión"
+    <dialog
+      ref={dialogRef}
+      className="bg-white rounded-2xl border border-neutral-200 shadow-xl max-w-sm w-full mx-auto"
+      onClose={(e) => { if (e.target === e.currentTarget && onClose) onClose(); }}
     >
-      <div className="w-full max-w-sm">
+      <div className="p-5 space-y-3">
         <div className="text-center mb-6 relative">
           {onClose && (
             <button
@@ -73,7 +92,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
           <p className="text-[11px] text-neutral-500 mt-0.5">Acceso para gestionar causas</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-neutral-200 shadow-xl p-5 space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label htmlFor="login-email" className="block text-[11px] font-semibold text-neutral-500 uppercase mb-1">
               Email
@@ -129,6 +148,6 @@ export default function LoginPage({ onClose }: LoginPageProps) {
           </button>
         </form>
       </div>
-    </div>
+    </dialog>
   );
 }
