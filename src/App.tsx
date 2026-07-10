@@ -63,6 +63,10 @@ export default function App() {
     const { data: { subscription } } = onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       setAuthLoading(false);
+      // Cerrar el modal de login automáticamente al autenticarse
+      if (session?.user) {
+        setShowLoginModal(false);
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -244,10 +248,12 @@ export default function App() {
     activeCausas,
     closedCausas,
     aulaSeguraCausas,
+    setShowLoginModal,
   }), [
     user, causas, selectedCausaId, currentRole, privacyMode, currentView,
     mobileShowDetail, saveStatus, activeCausas, closedCausas, aulaSeguraCausas,
     handleUpdateCausa, handleDeleteCausa, handleSelectCausaFromDashboard, handleOpenCreateForm,
+    setShowLoginModal,
   ]);
 
   const formSetters = useMemo(() => ({

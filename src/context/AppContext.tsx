@@ -24,6 +24,7 @@ export interface AppContextValue {
   activeCausas: Causa[];
   closedCausas: Causa[];
   aulaSeguraCausas: Causa[];
+  setShowLoginModal: (v: boolean) => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);

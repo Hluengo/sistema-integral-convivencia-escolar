@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Scale, Loader2, AlertCircle, X } from 'lucide-react';
 import { signInWithEmail } from '../lib/supabase';
+import { useAppContext } from '../context/AppContext';
 
 interface LoginPageProps {
   onClose?: () => void;
@@ -11,6 +12,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { setShowLoginModal } = useAppContext();
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -36,7 +38,11 @@ export default function LoginPage({ onClose }: LoginPageProps) {
       setError(authError.message === 'Invalid login credentials'
         ? 'Credenciales incorrectas. Verifique su email y contraseña.'
         : authError.message);
+      setIsLoading(false);
+      return;
     }
+    // Cerrar modal inmediatamente al éxito, no esperar al listener
+    setShowLoginModal(false);
     setIsLoading(false);
   };
 
