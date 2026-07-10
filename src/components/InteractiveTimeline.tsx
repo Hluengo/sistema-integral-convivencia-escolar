@@ -12,6 +12,7 @@ import TimelineTabs from './InteractiveTimeline/TimelineTabs';
 import TimelineTabPanels from './InteractiveTimeline/TimelineTabPanels';
 import EditCausaModal from './EditCausaModal';
 import { useTimelineController } from '../hooks/useTimelineController';
+import { TimelineProvider } from '../context/TimelineContext';
 import { useAppContext } from '../context/AppContext';
 import { BoldText } from '../lib/markdownUtils';
 
@@ -27,18 +28,16 @@ interface InteractiveTimelineProps {
   setIsTimelineCollapsed?: (collapsed: boolean) => void;
 }
 
-// Simple custom Markdown-like formatter to render Gemini reports beautifully in Tailwind
 function CustomMarkdownRenderer({ text }: { text: string }) {
   if (!text) return <p className="text-neutral-400 italic text-xs">No se ha generado contenido aún.</p>;
 
   const lines = text.split('\n');
   return (
     <div className="space-y-2 text-xs text-neutral-700 leading-relaxed font-sans">
-      {lines.map((line, index) => {
+      {lines.map((line) => {
         const trimmed = line.trim();
         const lineKey = `line-${trimmed.length}-${trimmed.charCodeAt(0) || 0}`;
 
-        // Headers
         if (trimmed.startsWith('### ')) {
           return <h4 key={lineKey} className="text-sm font-bold text-neutral-900 mt-4 mb-2 border-b border-neutral-100 pb-1">{trimmed.replace('### ', '')}</h4>;
         }
@@ -49,7 +48,6 @@ function CustomMarkdownRenderer({ text }: { text: string }) {
           return <h2 key={lineKey} className="text-lg font-bold text-neutral-950 mt-6 mb-3 border-l-4 border-neutral-900 pl-2">{trimmed.replace('# ', '')}</h2>;
         }
 
-        // Bullet points
         if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
           return (
             <div key={lineKey} className="flex items-start gap-2 ml-4 my-1">
@@ -59,7 +57,6 @@ function CustomMarkdownRenderer({ text }: { text: string }) {
           );
         }
 
-        // Numbered list
         const numMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
         if (numMatch) {
           return (
@@ -70,7 +67,6 @@ function CustomMarkdownRenderer({ text }: { text: string }) {
           );
         }
 
-        // Blockquotes / Alerts
         if (trimmed.startsWith('> ')) {
           return (
             <div key={lineKey} className="bg-amber-50 border-l-4 border-amber-500 p-2.5 my-2 rounded-r-md text-amber-900 flex items-start gap-2">
@@ -109,60 +105,25 @@ export default function InteractiveTimeline({
   const [activeTab, setActiveTab] = useState<'proceso' | 'bitacora' | 'asistente_ia'>('proceso');
   const [showEdit, setShowEdit] = useState(false);
   
-  const {
-    aiSubTab, setAiSubTab,
-    auditReport, isAuditing,
-    selectedDocType, setSelectedDocType,
-    fatherName, setFatherName,
-    draftedDocument, isDrafting, copyFeedback,
-    showLogForm, setShowLogForm,
-    logType, setLogType,
-    logTitle, setLogTitle,
-    logDesc, setLogDesc,
-    logParticipantes, setLogParticipantes,
-    expandedStages, setExpandedStages,
-    registeringItemId, setRegisteringItemId,
-    regName, setRegName,
-    regObservations, setRegObservations,
-    regFileName, setRegFileName,
-    handleStartRegister,
-    handleFileChange,
-    handleSaveRegistration,
-    handleResetRegistration,
-    handleAddNewLog,
-    handleRunAudit,
-    handleDraftDocument,
-    handleCopyToClipboard,
-    regFile,
-    isUploadingDocument,
-    documentError,
-    handleAttachDocument,
-    handleRemoveDocument,
-    documents
-  } = useTimelineController({ causa, onUpdateCausa, currentRole, privacyMode });
+  const timelineValue = useTimelineController({ causa, onUpdateCausa, currentRole, privacyMode });
 
   const currentFase = getFaseForEstado(causa.estadoActual);
 
-  // Warnings / Compliance Alerts calculations
   const checkDueProcessBreaches = () => {
     const breaches = [];
     const hasResguardo = causa.checklistDebidoProceso.find(c => c.id === 'chk_inv_2')?.completado;
     const hasAcompanamiento = causa.checklistDebidoProceso.find(c => c.id === 'chk_seg_1')?.completado;
 
-    // Warning: Severe infraction without physical safeguarding measures
-    // Only show if the case is in Investigación phase or beyond (not in Recepción)
     const casePhase = getFaseForEstado(causa.estadoActual);
     const isInInvestigacionOrBeyond = casePhase === 'Investigación' || casePhase === 'Resolución' || casePhase === 'Apelación' || casePhase === 'Seguimiento';
     if ((causa.tipoInfraccion === 'Grave' || causa.tipoInfraccion === 'Muy Grave' || causa.tipoInfraccion === 'Gravísima') && !hasResguardo && isInInvestigacionOrBeyond) {
       breaches.push(`Alerta de Resguardo: El expediente se clasifica como Falta ${causa.tipoInfraccion} pero no se ha decretado el 'Decreto de Apoyos y Medidas de Resguardo' (chk_inv_2) para proteger la integridad del menor según la Circular 482.`);
     }
 
-    // Warning: High severity and no accompaniment
     if ((causa.tipoInfraccion === 'Muy Grave' || causa.tipoInfraccion === 'Gravísima') && !hasAcompanamiento && causa.estadoActual === EstadoCausa.PROCESO_SEGUIMIENTO) {
       breaches.push("Alerta Socioemocional: En estado de Seguimiento para faltas de alta complejidad, se requiere establecer el 'Plan de Acompañamiento' (chk_seg_1) y compromisos formatorios.");
     }
 
-    // Warning: Aula Segura and Mediador contradiction
     if (causa.comprometeAulaSegura && causa.estadoActual === EstadoCausa.MEDIACION_EN_DESARROLLO) {
       breaches.push("Contradicción Procedimental: El caso compromete Aula Segura (Ley 21.128), lo cual es legalmente incompatible con derivaciones o procesos de mediación activa.");
     }
@@ -173,96 +134,54 @@ export default function InteractiveTimeline({
   const breaches = checkDueProcessBreaches();
 
   return (
-    <div className="card overflow-hidden flex flex-col h-full animate-slide-up animate-flash shadow-md">
-        <TimelineHeader
-          causa={causa}
-          currentRole={currentRole}
-          privacyMode={privacyMode}
-          onEditClick={() => setShowEdit(true)}
-          onDeleteClick={() => {
-            if (window.confirm(`¿Eliminar el expediente ${causa.id} de forma permanente? Esta acción no se puede deshacer.`)) {
-              onDeleteCausa(causa.id);
-            }
-          }}
-          isSidebarCollapsed={isSidebarCollapsed}
-          setIsSidebarCollapsed={setIsSidebarCollapsed}
-          isTimelineCollapsed={isTimelineCollapsed}
-          setIsTimelineCollapsed={setIsTimelineCollapsed}
-          breaches={breaches}
+    <TimelineProvider value={timelineValue}>
+      <div className="card overflow-hidden flex flex-col h-full animate-slide-up animate-flash shadow-md">
+          <TimelineHeader
+            causa={causa}
+            currentRole={currentRole}
+            privacyMode={privacyMode}
+            onEditClick={() => setShowEdit(true)}
+            onDeleteClick={() => {
+              if (window.confirm(`¿Eliminar el expediente ${causa.id} de forma permanente? Esta acción no se puede deshacer.`)) {
+                onDeleteCausa(causa.id);
+              }
+            }}
+            isSidebarCollapsed={isSidebarCollapsed}
+            setIsSidebarCollapsed={setIsSidebarCollapsed}
+            isTimelineCollapsed={isTimelineCollapsed}
+            setIsTimelineCollapsed={setIsTimelineCollapsed}
+            breaches={breaches}
+          />
+
+          {showEdit && (
+            <EditCausaModal
+              causa={causa}
+              onClose={() => setShowEdit(false)}
+              onSave={(updated) => {
+                onUpdateCausa(updated);
+                setShowEdit(false);
+              }}
+              onDelete={(id) => {
+                onDeleteCausa(id);
+                setShowEdit(false);
+              }}
+            />
+          )}
+
+        <TimelineTabs
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          bitacoraCount={causa.bitacora.length}
         />
 
-        {showEdit && (
-          <EditCausaModal
-            causa={causa}
-            onClose={() => setShowEdit(false)}
-            onSave={(updated) => {
-              onUpdateCausa(updated);
-              setShowEdit(false);
-            }}
-            onDelete={(id) => {
-              onDeleteCausa(id);
-              setShowEdit(false);
-            }}
-          />
-        )}
-
-      <TimelineTabs
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        bitacoraCount={causa.bitacora.length}
-      />
-
-      <TimelineTabPanels
-        activeTab={activeTab}
-        causa={causa}
-        currentRole={currentRole}
-        privacyMode={privacyMode}
-        currentFase={currentFase}
-        CustomMarkdownRenderer={CustomMarkdownRenderer}
-        expandedStages={expandedStages}
-        setExpandedStages={setExpandedStages}
-        registeringItemId={registeringItemId}
-        setRegisteringItemId={setRegisteringItemId}
-        regName={regName}
-        setRegName={setRegName}
-        regObservations={regObservations}
-        setRegObservations={setRegObservations}
-        regFileName={regFileName}
-        setRegFileName={setRegFileName}
-        regFile={regFile}
-        tabConfig={{ isUploadingDocument, showLogForm, isAuditing, isDrafting, copyFeedback }}
-        setShowLogForm={setShowLogForm}
-        documentError={documentError}
-        documents={documents}
-        handleStartRegister={handleStartRegister}
-        handleFileChange={handleFileChange}
-        handleSaveRegistration={handleSaveRegistration}
-        handleResetRegistration={handleResetRegistration}
-        handleAttachDocument={handleAttachDocument}
-        handleRemoveDocument={handleRemoveDocument}
-        logType={logType}
-        setLogType={setLogType}
-        logTitle={logTitle}
-        setLogTitle={setLogTitle}
-        logDesc={logDesc}
-        setLogDesc={setLogDesc}
-        logParticipantes={logParticipantes}
-        setLogParticipantes={setLogParticipantes}
-        handleAddNewLog={handleAddNewLog}
-        aiSubTab={aiSubTab}
-        setAiSubTab={setAiSubTab}
-        auditReport={auditReport}
-        selectedDocType={selectedDocType}
-        setSelectedDocType={setSelectedDocType}
-        fatherName={fatherName}
-        setFatherName={setFatherName}
-        draftedDocument={draftedDocument}
-        handleRunAudit={handleRunAudit}
-        handleDraftDocument={handleDraftDocument}
-        handleCopyToClipboard={handleCopyToClipboard}
-        onUpdateCausa={onUpdateCausa}
-      />
-
-    </div>
+        <TimelineTabPanels
+          activeTab={activeTab}
+          causa={causa}
+          currentFase={currentFase}
+          CustomMarkdownRenderer={CustomMarkdownRenderer}
+          onUpdateCausa={onUpdateCausa}
+        />
+      </div>
+    </TimelineProvider>
   );
 }

@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useRef } from 'react';
+import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 import { Causa } from '../types';
 import { createCausa, fetchCausas, saveBitacora, saveChecklist, updateCausa } from '../lib/supabase';
 
@@ -17,6 +17,7 @@ export function useCausasPersistence({
   setSelectedCausaId,
   setSaveStatus,
 }: UseCausasPersistenceArgs) {
+  const [loadError, setLoadError] = useState<string | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const saveIdleTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const isLoadingCausasRef = useRef(true);
@@ -32,32 +33,36 @@ export function useCausasPersistence({
     };
   }, []);
 
+  const loadCausas = useCallback(async (retryCount = 0) => {
+    isLoadingCausasRef.current = true;
+    setLoadError(null);
+    try {
+      const loaded = await fetchCausas();
+      if (!isMountedRef.current) return;
+      setCausas(loaded);
+      if (loaded.length > 0) {
+        setSelectedCausaId(loaded[0].id);
+      }
+    } catch (error) {
+      console.error('Error loading causas:', error);
+      if (!isMountedRef.current) return;
+      if (retryCount < 2) {
+        setTimeout(() => loadCausas(retryCount + 1), 1000 * (retryCount + 1));
+      } else {
+        setLoadError('Error al cargar los expedientes. Verifique su conexión.');
+        setCausas([]);
+        setSelectedCausaId('');
+      }
+    } finally {
+      isLoadingCausasRef.current = false;
+    }
+  }, [setCausas, setSelectedCausaId]);
+
   useEffect(() => {
     if (dataInitializedRef.current) return;
     dataInitializedRef.current = true;
-
-    async function loadCausas() {
-      isLoadingCausasRef.current = true;
-      try {
-        const loaded = await fetchCausas();
-        if (!isMountedRef.current) return;
-        setCausas(loaded);
-        if (loaded.length > 0) {
-          setSelectedCausaId(loaded[0].id);
-        }
-      } catch (error) {
-        console.error('Error loading causas:', error);
-        if (!isMountedRef.current) return;
-        setCausas([]);
-        setSelectedCausaId('');
-      } finally {
-        isLoadingCausasRef.current = false;
-      }
-    }
-
     loadCausas();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [setCausas, setSelectedCausaId]);
+  }, [loadCausas]);
 
   useEffect(() => {
     if (causas.length === 0 || isLoadingCausasRef.current) return;
@@ -133,4 +138,6 @@ export function useCausasPersistence({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [causas]);
+
+  return { loadError, retryLoad: () => loadCausas() };
 }
