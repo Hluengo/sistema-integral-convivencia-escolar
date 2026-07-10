@@ -75,7 +75,7 @@ function SidebarContent({
         )}
       </div>
 
-      {!user && (
+      {!user ? (
         <div className={`px-3 ${isCollapsed && !mobile ? 'pt-3' : 'pt-4'}`}>
           <button
             type="button"
@@ -89,6 +89,31 @@ function SidebarContent({
             <LogIn className="h-4 w-4 shrink-0" />
             {(!isCollapsed || mobile) && <span>Iniciar sesión</span>}
           </button>
+        </div>
+      ) : (
+        <div className={`px-3 ${isCollapsed && !mobile ? 'pt-3' : 'pt-4'}`}>
+          <div className={`flex items-center gap-2.5 rounded-xl transition-all ${
+            isCollapsed && !mobile ? 'justify-center px-2 py-2' : 'px-3 py-2.5 bg-white/10 hover:bg-white/15'
+          }`}>
+            <div className="w-7 h-7 rounded-full bg-brand-500/20 flex items-center justify-center shrink-0">
+              <User className="h-3.5 w-3.5 text-brand-300" />
+            </div>
+            {(!isCollapsed || mobile) && (
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-semibold text-white truncate">{user.email}</p>
+                <p className="text-[9px] text-neutral-500">Conectado</p>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={onLogout}
+              className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer shrink-0"
+              aria-label="Cerrar sesión"
+              title="Cerrar sesión"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       )}
 
@@ -167,43 +192,6 @@ function SidebarContent({
           );
         })}
       </nav>
-
-      {user && (
-        <div className={`border-t border-white/10 ${isCollapsed && !mobile ? 'px-2 py-3' : 'px-3 py-3'}`}>
-          <div className={`${isCollapsed && !mobile ? '' : 'flex items-center gap-2.5 px-2'}`}>
-            {!isCollapsed || mobile ? (
-              <>
-                <div className="w-7 h-7 rounded-full bg-brand-500/20 flex items-center justify-center shrink-0">
-                  <User className="h-3.5 w-3.5 text-brand-300" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-semibold text-white truncate">{user.email}</p>
-                  <p className="text-[9px] text-neutral-500">Conectado</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={onLogout}
-                  className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
-                  aria-label="Cerrar sesión"
-                  title="Cerrar sesión"
-                >
-                  <LogOut className="h-3.5 w-3.5" />
-                </button>
-              </>
-            ) : (
-              <button
-                type="button"
-                onClick={onLogout}
-                className="w-full flex justify-center py-2 rounded-lg text-neutral-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
-                aria-label="Cerrar sesión"
-                title="Cerrar sesión"
-              >
-                <LogOut className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
