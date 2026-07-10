@@ -5,9 +5,9 @@
 
 export enum EstadoCausa {
   // Phase 1: Recepción y Apertura
-  DENUNCIA_RECEPCIONADA = "Denuncia Recepcionada",
-  ANTECEDENTES_REVISION_INICIAL = "Antecedentes en Revisión Inicial",
-  INICIO_INDAGACION_NOTIFICADO = "Inicio de Indagación Notificado",
+  DENUNCIA_RECEPCIONADA = "Recepción de Denuncia",
+  ANTECEDENTES_REVISION_INICIAL = "Revisión Inicial de Antecedentes",
+  INICIO_INDAGACION_NOTIFICADO = "Notificación de Inicio de Indagación",
 
   // Phase 2: Investigación
   EN_PROCESO_INDAGACION = "En Proceso de Indagación",
@@ -18,14 +18,14 @@ export enum EstadoCausa {
   MEDIACION_FRACASADA_RETORNO = "Mediación Fracasada – Retorno a Indagación",
 
   // Phase 3: Análisis y Resolución
-  INFORME_CONCLUYENTE_ELABORACION = "Informe Concluyente en Elaboración",
-  INFORME_CONCLUYENTE_EMITIDO = "Informe Concluyente Emitido",
+  INFORME_CONCLUYENTE_ELABORACION = "Informe Cierre de Indagación en Elaboración",
+  INFORME_CONCLUYENTE_EMITIDO = "Informe Cierre de Indagación Emitido",
   ENTREVISTA_DISCIPLINARIA_PENDIENTE = "Entrevista Disciplinaria Pendiente",
   ENTREVISTA_DISCIPLINARIA_REALIZADA = "Entrevista Disciplinaria Realizada",
-  RESOLUCION_ELABORACION = "Resolución en Elaboración",
-  RESOLUCION_FINAL_NOTIFICADA = "Resolución Final Notificada",
+  RESOLUCION_ELABORACION = "Informe Concluyente en Elaboración",
+  RESOLUCION_FINAL_NOTIFICADA = "Informe Concluyente Emitido",
 
-  // Phase 4: Impugnación
+  // Phase 4: Apelación
   EN_PLAZO_APELACION = "En Plazo de Apelación",
   APELACION_RECEPCIONADA = "Apelación Recepcionada",
   APELACION_REVISION_RECTORIA = "Apelación en Revisión por Rectoría",
@@ -39,7 +39,7 @@ export enum EstadoCausa {
   CAUSA_CERRADA = "Causa Cerrada",
 }
 
-export type FaseProcedimental = 'Recepción' | 'Investigación' | 'Resolución' | 'Impugnación' | 'Seguimiento';
+export type FaseProcedimental = 'Recepción' | 'Investigación' | 'Resolución' | 'Apelación' | 'Seguimiento';
 
 export interface BitacoraEntry {
   id: string;

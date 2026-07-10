@@ -213,7 +213,7 @@ export default function DashboardStats({ causas, onFaseSelect, selectedFase, onS
             Todas <span className="font-mono ml-1 opacity-70">{stats.total}</span>
           </button>
 
-          {(['Recepción', 'Investigación', 'Resolución', 'Impugnación', 'Seguimiento'] as const).map((fase, i) => {
+          {(['Recepción', 'Investigación', 'Resolución', 'Apelación', 'Seguimiento'] as const).map((fase, i) => {
             const count = stats.porFase[fase] || 0;
             const isSelected = selectedFase === fase;
             return (

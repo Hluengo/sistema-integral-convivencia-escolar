@@ -8,7 +8,7 @@ const FASE_BADGE_STYLES: Record<string, string> = {
   'Recepción': 'bg-brand-50 text-brand-700 border-brand-200',
   'Investigación': 'bg-grave-50 text-grave-700 border-grave-200',
   'Resolución': 'bg-leve-50 text-leve-700 border-leve-200',
-  'Impugnación': 'bg-muygrave-50 text-muygrave-700 border-muygrave-200',
+  'Apelación': 'bg-muygrave-50 text-muygrave-700 border-muygrave-200',
   'Seguimiento': 'bg-neutral-100 text-neutral-700 border-neutral-200',
 };
 

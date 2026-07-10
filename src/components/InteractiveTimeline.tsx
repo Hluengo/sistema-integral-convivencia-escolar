@@ -152,7 +152,7 @@ export default function InteractiveTimeline({
     // Warning: Severe infraction without physical safeguarding measures
     // Only show if the case is in Investigación phase or beyond (not in Recepción)
     const casePhase = getFaseForEstado(causa.estadoActual);
-    const isInInvestigacionOrBeyond = casePhase === 'Investigación' || casePhase === 'Resolución' || casePhase === 'Impugnación' || casePhase === 'Seguimiento';
+    const isInInvestigacionOrBeyond = casePhase === 'Investigación' || casePhase === 'Resolución' || casePhase === 'Apelación' || casePhase === 'Seguimiento';
     if ((causa.tipoInfraccion === 'Grave' || causa.tipoInfraccion === 'Muy Grave' || causa.tipoInfraccion === 'Gravísima') && !hasResguardo && isInInvestigacionOrBeyond) {
       breaches.push(`Alerta de Resguardo: El expediente se clasifica como Falta ${causa.tipoInfraccion} pero no se ha decretado el 'Decreto de Apoyos y Medidas de Resguardo' (chk_inv_2) para proteger la integridad del menor según la Circular 482.`);
     }

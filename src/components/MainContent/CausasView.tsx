@@ -142,7 +142,7 @@ export default function CausasView({
 
               {/* Fase filter pills */}
               <div className="mt-4 flex flex-wrap gap-2" role="tablist" aria-label="Filtro por fase">
-                {(['Todas', 'Recepción', 'Investigación', 'Resolución', 'Impugnación', 'Seguimiento'] as const).map((fase) => (
+                {(['Todas', 'Recepción', 'Investigación', 'Resolución', 'Apelación', 'Seguimiento'] as const).map((fase) => (
                   <button
                     key={fase}
                     type="button"

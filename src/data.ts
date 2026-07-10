@@ -17,10 +17,10 @@ const relativeDateTime = (daysAgo: number, timeStr: string): string => {
   return `${dStr}T${timeStr}:00Z`;
 };
 
-export const MAPPED_STATES: Record<EstadoCausa, { fase: 'Recepción' | 'Investigación' | 'Resolución' | 'Impugnación' | 'Seguimiento'; desc: string }> = {
+export const MAPPED_STATES: Record<EstadoCausa, { fase: 'Recepción' | 'Investigación' | 'Resolución' | 'Apelación' | 'Seguimiento'; desc: string }> = {
   [EstadoCausa.DENUNCIA_RECEPCIONADA]: { fase: 'Recepción', desc: 'Se recibe formalmente el reporte, denuncia o antecedente inicial.' },
   [EstadoCausa.ANTECEDENTES_REVISION_INICIAL]: { fase: 'Recepción', desc: 'Se realiza acopio preliminar de información y verificación básica de los hechos.' },
-  [EstadoCausa.INICIO_INDAGACION_NOTIFICADO]: { fase: 'Recepción', desc: 'Se informa formalmente al apoderado sobre la apertura del procedimiento disciplinario dentro de plazo reglamentario.' },
+  [EstadoCausa.INICIO_INDAGACION_NOTIFICADO]: { fase: 'Recepción', desc: 'Se informa formalmente al estudiante y al apoderado sobre la apertura del procedimiento disciplinario dentro de plazo reglamentario.' },
 
   [EstadoCausa.EN_PROCESO_INDAGACION]: { fase: 'Investigación', desc: 'Investigación activa mediante entrevistas, revisión documental y recopilación de evidencias.' },
   [EstadoCausa.RECOPILACION_EVIDENCIAS_CURSO]: { fase: 'Investigación', desc: 'Estado intermedio para investigaciones complejas o extensas.' },
@@ -29,18 +29,18 @@ export const MAPPED_STATES: Record<EstadoCausa, { fase: 'Recepción' | 'Investig
   [EstadoCausa.MEDIACION_CERRADA_ACUERDO]: { fase: 'Investigación', desc: 'Se logra acuerdo restaurativo y se suspende o cierra el proceso disciplinario.' },
   [EstadoCausa.MEDIACION_FRACASADA_RETORNO]: { fase: 'Investigación', desc: 'No existe acuerdo o no se cumplen condiciones para mediación.' },
 
-  [EstadoCausa.INFORME_CONCLUYENTE_ELABORACION]: { fase: 'Resolución', desc: 'El Encargado de Convivencia sistematiza antecedentes y redacta conclusiones.' },
-  [EstadoCausa.INFORME_CONCLUYENTE_EMITIDO]: { fase: 'Resolución', desc: 'El informe técnico fue entregado a Dirección/Rectoría para resolución.' },
+  [EstadoCausa.INFORME_CONCLUYENTE_ELABORACION]: { fase: 'Resolución', desc: 'El Encargado de la indagación sistematiza antecedentes y redacta conclusiones.' },
+  [EstadoCausa.INFORME_CONCLUYENTE_EMITIDO]: { fase: 'Resolución', desc: 'El informe técnico fue entregado a Equipo de Convivencia Escolar para Revisión.' },
   [EstadoCausa.ENTREVISTA_DISCIPLINARIA_PENDIENTE]: { fase: 'Resolución', desc: 'Citación realizada a estudiante y apoderado para presentación de hallazgos.' },
   [EstadoCausa.ENTREVISTA_DISCIPLINARIA_REALIZADA]: { fase: 'Resolución', desc: 'Se efectuó audiencia disciplinaria y ejercicio del derecho a ser oído.' },
-  [EstadoCausa.RESOLUCION_ELABORACION]: { fase: 'Resolución', desc: 'Rectoría o Dirección se encuentra determinando medida disciplinaria.' },
-  [EstadoCausa.RESOLUCION_FINAL_NOTIFICADA]: { fase: 'Resolución', desc: 'Se entrega formalmente resolución disciplinaria al apoderado.' },
+  [EstadoCausa.RESOLUCION_ELABORACION]: { fase: 'Resolución', desc: 'Equipo de Convivencia Escolar se encuentra determinando medida Formativa y disciplinaria.' },
+  [EstadoCausa.RESOLUCION_FINAL_NOTIFICADA]: { fase: 'Resolución', desc: 'Se entrega formalmente resolución Formativa y disciplinaria al apoderado.' },
 
-  [EstadoCausa.EN_PLAZO_APELACION]: { fase: 'Impugnación', desc: 'Se encuentra vigente el periodo reglamentario para presentar recurso de reconsideración.' },
-  [EstadoCausa.APELACION_RECEPCIONADA]: { fase: 'Impugnación', desc: 'Se recibe formalmente recurso de reconsideración o apelación.' },
-  [EstadoCausa.APELACION_REVISION_RECTORIA]: { fase: 'Impugnación', desc: 'Autoridad competente analiza antecedentes y emite resolución definitiva.' },
-  [EstadoCausa.APELACION_RESUELTA]: { fase: 'Impugnación', desc: 'Se confirma, modifica o revoca la medida inicialmente aplicada.' },
-  [EstadoCausa.RESOLUCION_EJECUTORIADA]: { fase: 'Impugnación', desc: 'Finaliza completamente el debido proceso administrativo interno.' },
+  [EstadoCausa.EN_PLAZO_APELACION]: { fase: 'Apelación', desc: 'Se encuentra vigente el periodo reglamentario para presentar recurso de reconsideración.' },
+  [EstadoCausa.APELACION_RECEPCIONADA]: { fase: 'Apelación', desc: 'Se recibe formalmente recurso de reconsideración o apelación.' },
+  [EstadoCausa.APELACION_REVISION_RECTORIA]: { fase: 'Apelación', desc: 'Autoridad competente analiza antecedentes y emite resolución definitiva.' },
+  [EstadoCausa.APELACION_RESUELTA]: { fase: 'Apelación', desc: 'Se confirma, modifica o revoca la medida inicialmente aplicada.' },
+  [EstadoCausa.RESOLUCION_EJECUTORIADA]: { fase: 'Apelación', desc: 'Finaliza completamente el debido proceso administrativo interno.' },
 
   [EstadoCausa.MEDIDA_EJECUCION]: { fase: 'Seguimiento', desc: 'Se encuentra vigente la aplicación de medidas formativas o disciplinarias.' },
   [EstadoCausa.PROCESO_SEGUIMIENTO]: { fase: 'Seguimiento', desc: 'Se monitorea cumplimiento, conducta y evolución del estudiante.' },
@@ -48,11 +48,11 @@ export const MAPPED_STATES: Record<EstadoCausa, { fase: 'Recepción' | 'Investig
   [EstadoCausa.CAUSA_CERRADA]: { fase: 'Seguimiento', desc: 'Procedimiento completamente finalizado y archivado.' },
 };
 
-export const FASES_LIST: { name: 'Recepción' | 'Investigación' | 'Resolución' | 'Impugnación' | 'Seguimiento'; color: string; bg: string; border: string }[] = [
+export const FASES_LIST: { name: 'Recepción' | 'Investigación' | 'Resolución' | 'Apelación' | 'Seguimiento'; color: string; bg: string; border: string }[] = [
   { name: 'Recepción', color: 'text-blue-700', bg: 'bg-blue-50', border: 'border-blue-200' },
   { name: 'Investigación', color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' },
   { name: 'Resolución', color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-200' },
-  { name: 'Impugnación', color: 'text-indigo-700', bg: 'bg-indigo-50', border: 'border-indigo-200' },
+  { name: 'Apelación', color: 'text-indigo-700', bg: 'bg-indigo-50', border: 'border-indigo-200' },
   { name: 'Seguimiento', color: 'text-slate-700', bg: 'bg-slate-50', border: 'border-slate-200' }
 ];
 
@@ -64,22 +64,22 @@ export const getBaseChecklist = (): ChecklistItem[] => [
   // 1. Recepción y Apertura (chk_rec_1, chk_rec_2, chk_rec_3)
   {
     id: 'chk_rec_1',
-    label: 'Denuncia Recepcionada',
+    label: 'Recepción de Denuncia',
     descripcion: 'Se recibe formalmente el reporte, denuncia o antecedente inicial.',
     completado: false,
     requeridoPor: 'Circular 482'
   },
   {
     id: 'chk_rec_2',
-    label: 'Antecedentes en Revisión Inicial',
+    label: 'Revisión Inicial de Antecedentes',
     descripcion: 'Se realiza acopio preliminar de información y verificación básica de los hechos.',
     completado: false,
     requeridoPor: 'Reglamento Interno'
   },
   {
     id: 'chk_rec_3',
-    label: 'Inicio de Indagación Notificado',
-    descripcion: 'Se informa formalmente al apoderado sobre la apertura del procedimiento disciplinario dentro de plazo reglamentario.',
+    label: 'Notificación de Inicio de Indagación',
+    descripcion: 'Se informa formalmente al estudiante y al apoderado sobre la apertura del procedimiento disciplinario dentro de plazo reglamentario.',
     completado: false,
     requeridoPor: 'Circular 482'
   },
@@ -131,15 +131,15 @@ export const getBaseChecklist = (): ChecklistItem[] => [
   // 3. Estado de Análisis y Resolución (chk_res_1 a chk_res_6)
   {
     id: 'chk_res_1',
-    label: 'Informe Concluyente en Elaboración',
-    descripcion: 'El Encargado de Convivencia sistematiza antecedentes y redacta conclusiones.',
+    label: 'Informe Cierre de Indagación en Elaboración',
+    descripcion: 'El Encargado de la indagación sistematiza antecedentes y redacta conclusiones.',
     completado: false,
     requeridoPor: 'Circular 482'
   },
   {
     id: 'chk_res_2',
-    label: 'Informe Concluyente Emitido',
-    descripcion: 'El informe técnico fue entregado a Dirección/Rectoría para resolución.',
+    label: 'Informe Cierre de Indagación Emitido',
+    descripcion: 'El informe técnico fue entregado a Equipo de Convivencia Escolar para Revisión.',
     completado: false,
     requeridoPor: 'Circular 482'
   },
@@ -159,20 +159,20 @@ export const getBaseChecklist = (): ChecklistItem[] => [
   },
   {
     id: 'chk_res_5',
-    label: 'Resolución en Elaboración',
-    descripcion: 'Rectoría o Dirección se encuentra determinando medida disciplinaria.',
+    label: 'Informe Concluyente en Elaboración',
+    descripcion: 'Equipo de Convivencia Escolar se encuentra determinando medida Formativa y disciplinaria.',
     completado: false,
     requeridoPor: 'Ambas'
   },
   {
     id: 'chk_res_6',
-    label: 'Resolución Final Notificada',
-    descripcion: 'Se entrega formalmente resolución disciplinaria al apoderado.',
+    label: 'Informe Concluyente Emitido',
+    descripcion: 'Se entrega formalmente resolución Formativa y disciplinaria al apoderado.',
     completado: false,
     requeridoPor: 'Ambas'
   },
 
-  // 4. Estado de Impugnación (chk_imp_1 a chk_imp_5)
+  // 4. Estado de Apelación (chk_imp_1 a chk_imp_5)
   {
     id: 'chk_imp_1',
     label: 'En Plazo de Apelación',
@@ -267,7 +267,7 @@ export const getStats = (causas: Causa[]): Statistics => {
       'Recepción': 0,
       'Investigación': 0,
       'Resolución': 0,
-      'Impugnación': 0,
+      'Apelación': 0,
       'Seguimiento': 0
     },
     porGravedad: {
@@ -304,7 +304,7 @@ export const PHASE_PREFIXES: Record<string, string> = {
   'Recepción': 'chk_rec',
   'Investigación': 'chk_inv',
   'Resolución': 'chk_res',
-  'Impugnación': 'chk_imp',
+  'Apelación': 'chk_imp',
   'Seguimiento': 'chk_seg',
 };
 
@@ -312,7 +312,7 @@ export const PHASE_SHORT: Record<string, string> = {
   'Recepción': 'Recep.',
   'Investigación': 'Invest.',
   'Resolución': 'Resoluc.',
-  'Impugnación': 'Impugn.',
+  'Apelación': 'Apel.',
   'Seguimiento': 'Seguim.'
 };
 
