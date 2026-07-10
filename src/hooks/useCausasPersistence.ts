@@ -130,5 +130,5 @@ export function useCausasPersistence({
         saveIdleTimeoutRef.current = undefined;
       }
     };
-  }, [causas, setSaveStatus]);
+  }, [causas]);
 }

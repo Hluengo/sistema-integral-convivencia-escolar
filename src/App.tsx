@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Suspense, lazy, useState } from 'react';
+import { Suspense, lazy, useState, useRef } from 'react';
 import { Causa, EstadoCausa, UserRole, FaseProcedimental } from './types';
 import { getFaseForEstado } from './data';
 import Header from './components/Header';
@@ -49,7 +49,7 @@ export default function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [mobileShowDetail, setMobileShowDetail] = useState<boolean>(false);
 
-  const [isTimelineCollapsed, setIsTimelineCollapsed] = useState(false);
+  const isTimelineCollapsedRef = useRef(false);
 
   const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -68,10 +68,10 @@ export default function App() {
     setCurrentView(view);
     if (view === 'causas') {
       if (selectedCausaId) {
-        setIsTimelineCollapsed(false);
+        isTimelineCollapsedRef.current = false;
       }
     } else {
-      setIsTimelineCollapsed(false);
+      isTimelineCollapsedRef.current = false;
     }
   };
 
@@ -158,14 +158,14 @@ export default function App() {
     setCausas(prev => prev.map(c => c.id === updated.id ? updated : c));
     setSelectedCausaId(causa.id);
     setCurrentView('causas');
-    setIsTimelineCollapsed(false);
+    isTimelineCollapsedRef.current = false;
   };
 
   const handleSelectCausaFromDashboard = (causaId: string) => {
     setSelectedCausaId(causaId);
     setCurrentView('causas');
     setMobileShowDetail(true);
-    setIsTimelineCollapsed(false);
+    isTimelineCollapsedRef.current = false;
   };
 
   const handleOpenCreateForm = () => {

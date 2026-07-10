@@ -260,8 +260,6 @@ const buildChecklistForCausa = (
   });
 };
 
-export const INITIAL_CAUSAS: Causa[] = [];
-
 export const getStats = (causas: Causa[]): Statistics => {
   const stats: Statistics = {
     total: causas.length,

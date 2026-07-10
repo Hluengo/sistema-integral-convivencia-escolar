@@ -258,6 +258,7 @@ export default function AiAdvisor() {
                 onClick={handleImproveChat}
                 disabled={isImprovingChat || !inputMessage.trim() || isLoading}
                 title="Mejorar redacción con IA"
+                aria-label="Mejorar redacción con IA"
                 className="p-1.5 text-neutral-400 hover:text-brand-600 hover:bg-brand-50 rounded-md transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
               >
                 {isImprovingChat ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
