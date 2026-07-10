@@ -257,6 +257,60 @@ a {
   animation: pulseDot 2s ease-in-out infinite;
 }
 
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--color-neutral-100) 25%, var(--color-neutral-200) 50%, var(--color-neutral-100) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+/* Toast slide-in */
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(100%) scale(0.95); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(0) scale(1); }
+  to { opacity: 0; transform: translateX(100%) scale(0.95); }
+}
+.animate-toast-in {
+  animation: toastIn 0.35s var(--ease-out-expo) both;
+}
+.animate-toast-out {
+  animation: toastOut 0.25s var(--ease-in-out-expo) both;
+}
+
+/* Checklist success pulse */
+@keyframes checkPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+.animate-check-pulse {
+  animation: checkPulse 0.4s var(--ease-out-expo);
+}
+
+/* Command palette backdrop */
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes paletteIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-overlay-in {
+  animation: overlayIn 0.2s ease-out both;
+}
+.animate-palette-in {
+  animation: paletteIn 0.25s var(--ease-out-expo) both;
+}
+
 /* Flash highlight when a causa is opened/switched */
 @keyframes flashHighlight {
   0% { box-shadow: 0 0 0 0 rgba(71, 85, 105, 0.55), 0 0 0 0 rgba(71, 85, 105, 0.35); }

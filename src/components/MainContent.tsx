@@ -9,17 +9,28 @@ import type { SidebarView } from './Sidebar';
 import type { Course, Student } from '../lib/supabase';
 import type { FormAction } from '../hooks/useNewCausaForm';
 import CausasView from './MainContent/CausasView';
+import ErrorBoundary from './ErrorBoundary';
+import { DashboardMetricSkeleton, CausaCardSkeleton } from './Skeleton';
 
 const DashboardStats = lazy(() => import('./DashboardStats'));
 const StudentsPanel = lazy(() => import('./StudentsPanel'));
 const AdvisorView = lazy(() => import('./MainContent/AdvisorView'));
 
-function ViewFallback() {
+function DashboardFallback() {
   return (
-    <div className="card p-8 text-sm text-neutral-500">
-      Cargando vista...
+    <div className="p-6 space-y-6 animate-fade-in">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => <DashboardMetricSkeleton key={i} />)}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => <CausaCardSkeleton key={i} />)}
+      </div>
     </div>
   );
+}
+
+function ViewFallback() {
+  return <DashboardFallback />;
 }
 
 interface MainContentProps {
@@ -115,17 +126,19 @@ export default function MainContent({
     <main className="flex-1 flex flex-col w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       {/* VIEW 1: DASHBOARD - Fully redesigned */}
       {currentView === 'dashboard' && (
-        <Suspense fallback={<ViewFallback />}>
-          <DashboardStats
-            causas={causas}
-            onFaseSelect={(fase) => {
-              setSelectedFaseFilter(fase);
-            }}
-            selectedFase={selectedFaseFilter}
-            onSelectCausa={handleSelectCausaFromDashboard}
-            onCreateCausa={handleOpenCreateForm}
-          />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<ViewFallback />}>
+            <DashboardStats
+              causas={causas}
+              onFaseSelect={(fase) => {
+                setSelectedFaseFilter(fase);
+              }}
+              selectedFase={selectedFaseFilter}
+              onSelectCausa={handleSelectCausaFromDashboard}
+              onCreateCausa={handleOpenCreateForm}
+            />
+          </Suspense>
+        </ErrorBoundary>
       )}
 
       {/* VIEW 2: CAUSAS (Active Cases workspace) */}
@@ -155,16 +168,20 @@ export default function MainContent({
 
       {/* VIEW 4: AI ADVISOR */}
       {currentView === 'informes' && (
-        <Suspense fallback={<ViewFallback />}>
-          <AdvisorView />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<ViewFallback />}>
+            <AdvisorView />
+          </Suspense>
+        </ErrorBoundary>
       )}
 
       {/* VIEW 5: ALUMNOS */}
       {currentView === 'alumnos' && (
-        <Suspense fallback={<ViewFallback />}>
-          <StudentsPanel privacyMode={privacyMode} />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<ViewFallback />}>
+            <StudentsPanel privacyMode={privacyMode} />
+          </Suspense>
+        </ErrorBoundary>
       )}
     </main>
   );

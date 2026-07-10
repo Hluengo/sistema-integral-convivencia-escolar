@@ -17,6 +17,9 @@ import { useCourses, useStudents } from './hooks/useData';
 import { createDraftCausa } from './lib/causaFactory';
 import { nowDateOnly } from './lib/dateUtils';
 import { SaveStatus, useCausasPersistence } from './hooks/useCausasPersistence';
+import { ToastProvider } from './components/Toast';
+import CommandPalette from './components/CommandPalette';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const NewCausaModal = lazy(() => import('./components/NewCausaModal'));
 
@@ -174,6 +177,7 @@ export default function App() {
   };
 
   return (
+    <ToastProvider>
     <AppProvider value={{
       causas,
       selectedCausaId,
@@ -187,6 +191,11 @@ export default function App() {
       handleOpenCreateForm,
     }}>
     <div className="min-h-screen bg-neutral-100 flex font-sans text-neutral-800 antialiased">
+      <CommandPalette
+        causas={causas}
+        onNavigate={handleViewChange}
+        onSelectCausa={setSelectedCausaId}
+      />
       <Sidebar
         currentView={currentView}
         onViewChange={handleViewChange}
@@ -296,5 +305,6 @@ export default function App() {
       )}
     </div>
     </AppProvider>
+    </ToastProvider>
   );
 }

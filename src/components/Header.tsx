@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { Search, Bell, Eye, EyeOff, Cloud, CloudOff, Loader2 } from 'lucide-react';
+import { Search, Bell, Eye, EyeOff, Cloud, CloudOff, Loader2, Command } from 'lucide-react';
 import type { SidebarView } from './Sidebar';
 import type { Causa } from '../types';
 import { EstadoCausa } from '../types';
@@ -139,9 +139,18 @@ export default function Header({
   value={searchQuery}
   onChange={(e) => onSearchChange?.(e.target.value)}
   placeholder="Buscar causas, estudiantes, cursos..."
-  className="w-full bg-neutral-100 text-neutral-800 pl-10 pr-4 py-2 text-sm font-medium rounded-xl border border-neutral-200/60 hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 focus:bg-white transition-all placeholder:text-neutral-400"
+  className="w-full bg-neutral-100 text-neutral-800 pl-10 pr-16 py-2 text-sm font-medium rounded-xl border border-neutral-200/60 hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 focus:bg-white transition-all placeholder:text-neutral-400"
   aria-label="Búsqueda global"
 />
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
+              className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-mono text-neutral-400 bg-neutral-50 rounded border border-neutral-200 hover:bg-neutral-100 hover:text-neutral-500 transition-colors cursor-pointer"
+              aria-label="Abrir paleta de comandos (Ctrl+K)"
+            >
+              <Command className="h-2.5 w-2.5" />
+              K
+            </button>
           </div>
 
           {/* Mobile search toggle */}
