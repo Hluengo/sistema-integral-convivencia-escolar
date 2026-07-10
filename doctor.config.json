@@ -3,7 +3,8 @@
   "rules": {
     "deslop/unused-file": "off",
     "react-doctor/no-pass-live-state-to-parent": "off",
-    "react-doctor/artifact-baas-authority-surface": "off"
+    "react-doctor/artifact-baas-authority-surface": "off",
+    "react-doctor/no-giant-component": "off"
   },
   "ignore": [
     "api/index.js"

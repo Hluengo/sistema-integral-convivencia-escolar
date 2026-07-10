@@ -17,12 +17,6 @@ const VIEW_TITLES: Record<SidebarView, { title: string; subtitle: string }> = {
   informes: { title: 'Informes', subtitle: 'Asistente y reportes' },
 };
 
-const NOTIFICATIONS = [
-  { id: 1, title: 'Alerta Aula Segura', description: 'Causa DC-2026-001 requiere resolución en 24h', time: 'Hace 2 horas', urgent: true },
-  { id: 2, title: 'Nueva causa creada', description: 'Causa DC-2026-004 asignada a Inspector', time: 'Hace 5 horas', urgent: false },
-  { id: 3, title: 'Plazo próximo a vencer', description: 'Investigación de causa DC-2026-002 vence mañana', time: 'Hace 8 horas', urgent: true },
-];
-
 interface HeaderProps {
   privacyMode: boolean;
   setPrivacyMode: (val: boolean) => void;

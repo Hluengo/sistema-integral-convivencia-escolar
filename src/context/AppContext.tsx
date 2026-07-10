@@ -1,5 +1,6 @@
 import React, { createContext, useContext } from 'react';
 import type { Causa, UserRole } from '../types';
+import type { SidebarView } from '../components/Sidebar';
 
 export interface AppContextValue {
   causas: Causa[];
@@ -8,10 +9,18 @@ export interface AppContextValue {
   currentRole: UserRole;
   privacyMode: boolean;
   setPrivacyMode: (v: boolean) => void;
+  currentView: SidebarView;
+  setCurrentView: (v: SidebarView) => void;
   handleUpdateCausa: (updated: Causa) => void;
   handleDeleteCausa: (id: string) => void;
   handleSelectCausaFromDashboard: (causaId: string) => void;
   handleOpenCreateForm: () => void;
+  mobileShowDetail: boolean;
+  setMobileShowDetail: (v: boolean) => void;
+  saveStatus: 'idle' | 'saving' | 'saved' | 'error';
+  activeCausas: Causa[];
+  closedCausas: Causa[];
+  aulaSeguraCausas: Causa[];
 }
 
 const AppContext = createContext<AppContextValue | null>(null);

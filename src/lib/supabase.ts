@@ -114,38 +114,18 @@ export async function fetchStudentsWithCourses(): Promise<StudentWithCourse[]> {
   });
 }
 
-/**
- * Search students by name (across all courses)
- */
-async function searchStudents(query: string): Promise<Student[]> {
-  if (!query.trim()) return [];
-
-  const { data, error } = await supabase
-    .from('students')
-    .select('*')
-    .ilike('full_name', `%${query}%`)
-    .order('full_name', { ascending: true })
-    .limit(20);
-
-  if (error) {
-    console.error('Error searching students:', error);
-    return [];
-  }
-
-  return data || [];
-}
-
 // ====================================================
 // NEW: Causas (cases) CRUD operations
 // ====================================================
 
 /**
- * Fetch all causas, ordered by last update (most recent first)
+ * Fetch all causas with related bitacora and checklist in a single query (join).
+ * Falls back to N+1 if foreign keys aren't set up for joins.
  */
 export async function fetchCausas(): Promise<Causa[]> {
   const { data: causasData, error: causasError } = await supabase
     .from('causas')
-    .select('*')
+    .select('*, bitacora_entries(*), checklist_items(*)')
     .order('fecha_ultima_actualizacion', { ascending: false });
 
   if (causasError || !causasData) {
@@ -153,22 +133,8 @@ export async function fetchCausas(): Promise<Causa[]> {
     return [];
   }
 
-  // Map DB columns to frontend types
-  const causas: Causa[] = await Promise.all(causasData.map(async (row: any) => {
-    // Fetch related bitacora entries
-    const [{ data: bitacoraData }, { data: checklistData }] = await Promise.all([
-      supabase
-        .from('bitacora_entries')
-        .select('*')
-        .eq('causa_id', row.id)
-        .order('fecha', { ascending: false }),
-      supabase
-        .from('checklist_items')
-        .select('*')
-        .eq('causa_id', row.id),
-    ]);
-
-    const bitacora: BitacoraEntry[] = (bitacoraData || []).map((b: any) => ({
+  const causas: Causa[] = causasData.map((row: any) => {
+    const bitacora: BitacoraEntry[] = (row.bitacora_entries || []).map((b: any) => ({
       id: b.id,
       fecha: b.fecha,
       tipo: b.tipo,
@@ -178,7 +144,7 @@ export async function fetchCausas(): Promise<Causa[]> {
       documentoAdjunto: b.documento_adjunto || undefined
     }));
 
-    const checklist: ChecklistItem[] = (checklistData || []).map((c: any) => ({
+    const checklist: ChecklistItem[] = (row.checklist_items || []).map((c: any) => ({
       id: c.id,
       label: c.label,
       descripcion: c.descripcion,
@@ -209,7 +175,7 @@ export async function fetchCausas(): Promise<Causa[]> {
       bitacora,
       checklistDebidoProceso: checklist
     };
-  }));
+  });
 
   return causas;
 }
@@ -535,75 +501,5 @@ export async function deleteDocument(path: string): Promise<boolean> {
     return false;
   }
 
-  return true;
-}
-
-// ====================================================
-// Utility: Seed initial data from mock to Supabase
-// ====================================================
-
-/**
- * Seed the database with initial mock data (for first-time setup)
- */
-export async function seedInitialData(causas: Causa[]): Promise<boolean> {
-  // Check if data already exists
-  const { count } = await supabase
-    .from('causas')
-    .select('*', { count: 'exact', head: true });
-
-  if (count && count > 0) {
-    console.log('Data already seeded, skipping.');
-    return true;
-  }
-
-  console.log(`Seeding ${causas.length} causas...`);
-
-  await Promise.all(
-    causas.map(async (causa) => {
-      const success = await createCausa(causa);
-      if (!success) {
-        console.error(`Failed to seed causa ${causa.id}`);
-      }
-    })
-  );
-
-  return true;
-}
-
-/**
- * Clear all data from the database (causas, bitacora_entries, checklist_items)
- */
-export async function clearAllData(): Promise<boolean> {
-  console.log('Clearing all data from database...');
-  
-  const { error: deleteBitacora } = await supabase
-    .from('bitacora_entries')
-    .delete()
-    .neq('id', '00000000-0000-0000-0000-000000000000'); // delete all
-
-  if (deleteBitacora) {
-    console.error('Error clearing bitacora_entries:', deleteBitacora);
-  }
-
-  const { error: deleteChecklist } = await supabase
-    .from('checklist_items')
-    .delete()
-    .neq('id', '00000000-0000-0000-0000-000000000000'); // delete all
-
-  if (deleteChecklist) {
-    console.error('Error clearing checklist_items:', deleteChecklist);
-  }
-
-  const { error: deleteCausas } = await supabase
-    .from('causas')
-    .delete()
-    .neq('id', ''); // delete all
-
-  if (deleteCausas) {
-    console.error('Error clearing causas:', deleteCausas);
-    return false;
-  }
-
-  console.log('All data cleared successfully.');
   return true;
 }

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Suspense, lazy, useState, useRef } from 'react';
+import { Suspense, lazy, useState, useRef, useMemo, useCallback } from 'react';
 import { Causa, EstadoCausa, UserRole, FaseProcedimental } from './types';
 import { getFaseForEstado } from './data';
 import Header from './components/Header';
@@ -56,9 +56,20 @@ export default function App() {
 
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const activeCausas = causas.filter(c => c.estadoActual !== EstadoCausa.CAUSA_CERRADA);
-  const closedCausas = causas.filter(c => c.estadoActual === EstadoCausa.CAUSA_CERRADA);
-  const aulaSeguraCausas = causas.filter(c => c.comprometeAulaSegura && c.estadoActual !== EstadoCausa.CAUSA_CERRADA);
+  const activeCausas = useMemo(
+    () => causas.filter(c => c.estadoActual !== EstadoCausa.CAUSA_CERRADA),
+    [causas]
+  );
+
+  const closedCausas = useMemo(
+    () => causas.filter(c => c.estadoActual === EstadoCausa.CAUSA_CERRADA),
+    [causas]
+  );
+
+  const aulaSeguraCausas = useMemo(
+    () => causas.filter(c => c.comprometeAulaSegura && c.estadoActual !== EstadoCausa.CAUSA_CERRADA),
+    [causas]
+  );
 
   useCausasPersistence({
     causas,
@@ -67,7 +78,7 @@ export default function App() {
     setSaveStatus,
   });
 
-  const handleViewChange = (view: SidebarView) => {
+  const handleViewChange = useCallback((view: SidebarView) => {
     setCurrentView(view);
     if (view === 'causas') {
       if (selectedCausaId) {
@@ -76,9 +87,9 @@ export default function App() {
     } else {
       isTimelineCollapsedRef.current = false;
     }
-  };
+  }, [selectedCausaId]);
 
-  const handleStudentSelect = (studentId: string) => {
+  const handleStudentSelect = useCallback((studentId: string) => {
     if (!studentId) {
       dispatchForm({ type: 'SET_STUDENT', nombre: '', rut: '' });
       return;
@@ -87,11 +98,14 @@ export default function App() {
     if (student) {
       dispatchForm({ type: 'SET_STUDENT', nombre: student.full_name, rut: student.rut });
     }
-  };
+  }, [students, dispatchForm]);
 
-  const selectedCausa = causas.find(c => c.id === selectedCausaId);
+  const selectedCausa = useMemo(
+    () => causas.find(c => c.id === selectedCausaId),
+    [causas, selectedCausaId]
+  );
 
-  const filteredCausas = activeCausas.filter(c => {
+  const filteredCausas = useMemo(() => activeCausas.filter(c => {
     if (selectedFaseFilter !== 'Todas') {
       const fase = getFaseForEstado(c.estadoActual);
       if (fase !== selectedFaseFilter) return false;
@@ -106,9 +120,9 @@ export default function App() {
     }
 
     return true;
-  });
+  }), [activeCausas, selectedFaseFilter, searchQuery]);
 
-  const handleCreateCausa = async (e: React.FormEvent) => {
+  const handleCreateCausa = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEstNombre || !newEstRut) return;
 
@@ -131,13 +145,13 @@ export default function App() {
       dispatchForm({ type: 'RESET' });
       setCurrentView('causas');
     }
-  };
+  }, [newEstNombre, newEstRut, newEstCurso, newInfTipo, newAulaSegura, newObs, newResponsable, dispatchForm]);
 
-  const handleUpdateCausa = (updated: Causa) => {
+  const handleUpdateCausa = useCallback((updated: Causa) => {
     setCausas(prev => prev.map(c => c.id === updated.id ? updated : c));
-  };
+  }, []);
 
-  const handleDeleteCausa = async (id: string) => {
+  const handleDeleteCausa = useCallback(async (id: string) => {
     const ok = await deleteCausa(id);
     if (!ok) {
       console.error(`Failed to delete causa ${id}`);
@@ -150,9 +164,9 @@ export default function App() {
       }
       return next;
     });
-  };
+  }, [selectedCausaId]);
 
-  const handleReopenCausa = (causa: Causa) => {
+  const handleReopenCausa = useCallback((causa: Causa) => {
     const updated: Causa = {
       ...causa,
       estadoActual: EstadoCausa.PROCESO_SEGUIMIENTO,
@@ -162,34 +176,59 @@ export default function App() {
     setSelectedCausaId(causa.id);
     setCurrentView('causas');
     isTimelineCollapsedRef.current = false;
-  };
+  }, []);
 
-  const handleSelectCausaFromDashboard = (causaId: string) => {
+  const handleSelectCausaFromDashboard = useCallback((causaId: string) => {
     setSelectedCausaId(causaId);
     setCurrentView('causas');
     setMobileShowDetail(true);
     isTimelineCollapsedRef.current = false;
-  };
+  }, []);
 
-  const handleOpenCreateForm = () => {
+  const handleOpenCreateForm = useCallback(() => {
     dispatchForm({ type: 'OPEN' });
     setCurrentView('causas');
-  };
+  }, [dispatchForm]);
+
+  const contextValue = useMemo(() => ({
+    causas,
+    selectedCausaId,
+    setSelectedCausaId,
+    currentRole,
+    privacyMode,
+    setPrivacyMode,
+    currentView,
+    setCurrentView,
+    handleUpdateCausa,
+    handleDeleteCausa,
+    handleSelectCausaFromDashboard,
+    handleOpenCreateForm,
+    mobileShowDetail,
+    setMobileShowDetail,
+    saveStatus,
+    activeCausas,
+    closedCausas,
+    aulaSeguraCausas,
+  }), [
+    causas, selectedCausaId, currentRole, privacyMode, currentView,
+    mobileShowDetail, saveStatus, activeCausas, closedCausas, aulaSeguraCausas,
+    handleUpdateCausa, handleDeleteCausa, handleSelectCausaFromDashboard, handleOpenCreateForm,
+  ]);
+
+  const formSetters = useMemo(() => ({
+    setNewEstNombre: (v: string) => dispatchForm({ type: 'SET_FIELD', field: 'newEstNombre', value: v }),
+    setNewEstRut: (v: string) => dispatchForm({ type: 'SET_FIELD', field: 'newEstRut', value: v }),
+    setNewInfTipo: (v: Causa['tipoInfraccion']) => dispatchForm({ type: 'SET_FIELD', field: 'newInfTipo', value: v }),
+    setNewAulaSegura: (v: boolean) => dispatchForm({ type: 'SET_FIELD', field: 'newAulaSegura', value: v }),
+    setNewObs: (v: string) => dispatchForm({ type: 'SET_FIELD', field: 'newObs', value: v }),
+    setNewResponsable: (v: string) => dispatchForm({ type: 'SET_FIELD', field: 'newResponsable', value: v }),
+    onCourseChange: (courseId: string) => dispatchForm({ type: 'SET_COURSE', courseId }),
+    onClose: () => dispatchForm({ type: 'CLOSE' }),
+  }), [dispatchForm]);
 
   return (
     <ToastProvider>
-    <AppProvider value={{
-      causas,
-      selectedCausaId,
-      setSelectedCausaId,
-      currentRole,
-      privacyMode,
-      setPrivacyMode,
-      handleUpdateCausa,
-      handleDeleteCausa,
-      handleSelectCausaFromDashboard,
-      handleOpenCreateForm,
-    }}>
+    <AppProvider value={contextValue}>
     <div className="min-h-screen bg-neutral-100 flex font-sans text-neutral-800 antialiased">
       <CommandPalette
         causas={causas}
@@ -242,18 +281,18 @@ export default function App() {
           handleCreateCausa={handleCreateCausa}
           handleStudentSelect={handleStudentSelect}
           newEstNombre={newEstNombre}
-          setNewEstNombre={(v) => dispatchForm({ type: 'SET_FIELD', field: 'newEstNombre', value: v })}
+          setNewEstNombre={formSetters.setNewEstNombre}
           newEstRut={newEstRut}
-          setNewEstRut={(v) => dispatchForm({ type: 'SET_FIELD', field: 'newEstRut', value: v })}
+          setNewEstRut={formSetters.setNewEstRut}
           newEstCurso={newEstCurso}
           newInfTipo={newInfTipo}
-          setNewInfTipo={(v) => dispatchForm({ type: 'SET_FIELD', field: 'newInfTipo', value: v })}
+          setNewInfTipo={formSetters.setNewInfTipo}
           newAulaSegura={newAulaSegura}
-          setNewAulaSegura={(v) => dispatchForm({ type: 'SET_FIELD', field: 'newAulaSegura', value: v })}
+          setNewAulaSegura={formSetters.setNewAulaSegura}
           newObs={newObs}
-          setNewObs={(v) => dispatchForm({ type: 'SET_FIELD', field: 'newObs', value: v })}
+          setNewObs={formSetters.setNewObs}
           newResponsable={newResponsable}
-          setNewResponsable={(v) => dispatchForm({ type: 'SET_FIELD', field: 'newResponsable', value: v })}
+          setNewResponsable={formSetters.setNewResponsable}
           selectedCourseId={selectedCourseId}
           courses={courses}
           students={students}
@@ -279,26 +318,26 @@ export default function App() {
         <Suspense fallback={null}>
           <NewCausaModal
             newEstNombre={newEstNombre}
-            setNewEstNombre={(v) => dispatchForm({ type: 'SET_FIELD', field: 'newEstNombre', value: v })}
+            setNewEstNombre={formSetters.setNewEstNombre}
             newEstRut={newEstRut}
-            setNewEstRut={(v) => dispatchForm({ type: 'SET_FIELD', field: 'newEstRut', value: v })}
+            setNewEstRut={formSetters.setNewEstRut}
             newEstCurso={newEstCurso}
             newInfTipo={newInfTipo}
-            setNewInfTipo={(v) => dispatchForm({ type: 'SET_FIELD', field: 'newInfTipo', value: v })}
+            setNewInfTipo={formSetters.setNewInfTipo}
             newAulaSegura={newAulaSegura}
-            setNewAulaSegura={(v) => dispatchForm({ type: 'SET_FIELD', field: 'newAulaSegura', value: v })}
+            setNewAulaSegura={formSetters.setNewAulaSegura}
             newObs={newObs}
-            setNewObs={(v) => dispatchForm({ type: 'SET_FIELD', field: 'newObs', value: v })}
+            setNewObs={formSetters.setNewObs}
             newResponsable={newResponsable}
-            setNewResponsable={(v) => dispatchForm({ type: 'SET_FIELD', field: 'newResponsable', value: v })}
+            setNewResponsable={formSetters.setNewResponsable}
             selectedCourseId={selectedCourseId}
             courses={courses}
             students={students}
             isLoadingCourses={isLoadingCourses}
             isLoadingStudents={isLoadingStudents}
-            onClose={() => dispatchForm({ type: 'CLOSE' })}
+            onClose={formSetters.onClose}
             onSubmit={handleCreateCausa}
-            onCourseChange={(courseId) => dispatchForm({ type: 'SET_COURSE', courseId })}
+            onCourseChange={formSetters.onCourseChange}
             onStudentSelect={handleStudentSelect}
           />
         </Suspense>
