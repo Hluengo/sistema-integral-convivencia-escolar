@@ -326,6 +326,19 @@ a {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* Login dialog styles */
+dialog {
+  margin: auto;
+  padding: 0;
+  border: none;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

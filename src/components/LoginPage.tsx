@@ -72,7 +72,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
   return (
     <dialog
       ref={dialogRef}
-      className="bg-white rounded-2xl border border-neutral-200 shadow-xl max-w-sm w-full mx-auto"
+      className="bg-white rounded-2xl border border-neutral-200 shadow-xl max-w-sm w-full"
       aria-label="Iniciar sesión"
       onClose={(e) => { if (e.target === e.currentTarget && onClose) onClose(); }}
     >
