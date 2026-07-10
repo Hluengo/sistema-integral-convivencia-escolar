@@ -136,7 +136,7 @@ export default function InteractiveTimeline({
 
   return (
     <TimelineProvider value={timelineValue}>
-      <div className="card overflow-hidden flex flex-col h-full animate-slide-up animate-flash shadow-md">
+      <div className="card overflow-hidden flex flex-col h-full animate-flash shadow-md">
           <TimelineHeader
             causa={causa}
             currentRole={currentRole}

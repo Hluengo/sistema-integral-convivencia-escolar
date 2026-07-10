@@ -173,39 +173,39 @@ export default function Header({
         {/* Right: Actions */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Mobile save indicator — small colored dot */}
-          {saveStatus !== 'idle' && (
-            <span
-              className={`md:hidden h-2 w-2 rounded-full shrink-0 ${
-                saveStatus === 'saving' ? 'bg-brand-500 animate-pulse' :
-                saveStatus === 'saved' ? 'bg-leve-500' :
-                'bg-gravisima-500'
-              }`}
-              aria-label={saveStatus === 'saving' ? 'Guardando' : saveStatus === 'saved' ? 'Guardado' : 'Error al guardar'}
-            />
-          )}
+          <span
+            className={`md:hidden h-2 w-2 rounded-full shrink-0 transition-opacity duration-200 ${
+              saveStatus === 'idle' ? 'opacity-0' : 'opacity-100'
+            } ${
+              saveStatus === 'saving' ? 'bg-brand-500 animate-pulse' :
+              saveStatus === 'saved' ? 'bg-leve-500' :
+              'bg-gravisima-500'
+            }`}
+            aria-label={saveStatus === 'saving' ? 'Guardando' : saveStatus === 'saved' ? 'Guardado' : 'Error al guardar'}
+          />
           {/* Desktop save indicator */}
-          {saveStatus !== 'idle' && (
-            <div className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-semibold ${
-              saveStatus === 'saving'
-                ? 'bg-brand-50 border-brand-200 text-brand-700'
-                : saveStatus === 'saved'
-                ? 'bg-leve-50 border-leve-200 text-leve-700'
-                : 'bg-gravisima-50 border-gravisima-200 text-gravisima-700'
-            }`}>
-              {saveStatus === 'saving' ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-              ) : saveStatus === 'saved' ? (
-                <Cloud className="h-3.5 w-3.5" aria-hidden="true" />
-              ) : (
-                <CloudOff className="h-3.5 w-3.5" aria-hidden="true" />
-              )}
-              <span>
-                {saveStatus === 'saving' ? 'Guardando...'
-                  : saveStatus === 'saved' ? 'Guardado'
-                  : 'Error'}
-              </span>
-            </div>
-          )}
+          <div className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-semibold transition-opacity duration-200 ${
+            saveStatus === 'idle' ? 'opacity-0 pointer-events-none' : 'opacity-100'
+          } ${
+            saveStatus === 'saving'
+              ? 'bg-brand-50 border-brand-200 text-brand-700'
+              : saveStatus === 'saved'
+              ? 'bg-leve-50 border-leve-200 text-leve-700'
+              : 'bg-gravisima-50 border-gravisima-200 text-gravisima-700'
+          }`}>
+            {saveStatus === 'saving' ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+            ) : saveStatus === 'saved' ? (
+              <Cloud className="h-3.5 w-3.5" aria-hidden="true" />
+            ) : (
+              <CloudOff className="h-3.5 w-3.5" aria-hidden="true" />
+            )}
+            <span>
+              {saveStatus === 'saving' ? 'Guardando...'
+                : saveStatus === 'saved' ? 'Guardado'
+                : 'Error'}
+            </span>
+          </div>
 
           <button
             type="button"

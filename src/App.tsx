@@ -295,7 +295,7 @@ export default function App() {
           onSelectCausa={setSelectedCausaId}
         />
       </Suspense>
-      <Suspense fallback={<div className="w-16 bg-white border-r border-neutral-200/60 h-screen" />}>
+      <Suspense fallback={<div className="hidden lg:flex flex-col bg-gradient-to-b from-neutral-800 to-neutral-950 w-[68px] h-screen shadow-xl" />}>
         <Sidebar
           currentView={currentView}
           onViewChange={handleViewChange}
