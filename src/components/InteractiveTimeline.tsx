@@ -3,18 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import { Causa, EstadoCausa, UserRole } from '../types';
 import { getFaseForEstado } from '../data';
 import { AlertTriangle } from 'lucide-react';
 import TimelineHeader from './InteractiveTimeline/TimelineHeader';
 import TimelineTabs from './InteractiveTimeline/TimelineTabs';
 import TimelineTabPanels from './InteractiveTimeline/TimelineTabPanels';
-import EditCausaModal from './EditCausaModal';
 import { useTimelineController } from '../hooks/useTimelineController';
 import { TimelineProvider } from '../context/TimelineContext';
 import { useAppContext } from '../context/AppContext';
 import { BoldText } from '../lib/markdownUtils';
+
+const EditCausaModal = lazy(() => import('./EditCausaModal'));
 
 interface InteractiveTimelineProps {
   causa: Causa;
@@ -154,18 +155,20 @@ export default function InteractiveTimeline({
           />
 
           {showEdit && (
-            <EditCausaModal
-              causa={causa}
-              onClose={() => setShowEdit(false)}
-              onSave={(updated) => {
-                onUpdateCausa(updated);
-                setShowEdit(false);
-              }}
-              onDelete={(id) => {
-                onDeleteCausa(id);
-                setShowEdit(false);
-              }}
-            />
+            <Suspense fallback={null}>
+              <EditCausaModal
+                causa={causa}
+                onClose={() => setShowEdit(false)}
+                onSave={(updated) => {
+                  onUpdateCausa(updated);
+                  setShowEdit(false);
+                }}
+                onDelete={(id) => {
+                  onDeleteCausa(id);
+                  setShowEdit(false);
+                }}
+              />
+            </Suspense>
           )}
 
         <TimelineTabs

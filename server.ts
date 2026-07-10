@@ -5,6 +5,8 @@
 
 import express from 'express';
 import path from 'path';
+import crypto from 'crypto';
+import compression from 'compression';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
 
@@ -14,6 +16,7 @@ dotenv.config({ path: '.env.local' });
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
 
+app.use(compression());
 app.use(express.json());
 
 // Input validation & sanitization helpers
@@ -29,6 +32,52 @@ const requireStr = (obj: Record<string, unknown>, key: string, max = 200): strin
 };
 const optStr = (obj: Record<string, unknown>, key: string, max = MAX_STR): string => sanitize(obj[key]).slice(0, max);
 const optArr = (obj: Record<string, unknown>, key: string): unknown[] => Array.isArray(obj[key]) ? obj[key]! : [];
+
+// In-memory cache with TTL
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const cache = new Map<string, { value: string; expiresAt: number }>();
+
+function getCacheKey(endpoint: string, body: unknown): string {
+  const hash = crypto.createHash('sha256');
+  hash.update(endpoint);
+  hash.update(JSON.stringify(body));
+  return hash.digest('hex');
+}
+
+function getFromCache(key: string): string | null {
+  const entry = cache.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) {
+    cache.delete(key);
+    return null;
+  }
+  return entry.value;
+}
+
+function setCache(key: string, value: string): void {
+  if (cache.size > 100) {
+    const oldestKey = cache.keys().next().value;
+    if (oldestKey) cache.delete(oldestKey);
+  }
+  cache.set(key, { value, expiresAt: Date.now() + CACHE_TTL });
+}
+
+// Rate limiting
+const RATE_LIMIT = 10;
+const RATE_WINDOW = 60 * 1000;
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+  if (!record || now > record.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
+    return true;
+  }
+  if (record.count >= RATE_LIMIT) return false;
+  record.count++;
+  return true;
+}
 
 // Groq API helper
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
@@ -614,8 +663,22 @@ app.post('/api/improve-text', async (req, res) => {
       return;
     }
 
+    const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+    if (!checkRateLimit(ip)) {
+      res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
+      return;
+    }
+
+    const cacheKey = getCacheKey('improve-text', { text });
+    const cached = getFromCache(cacheKey);
+    if (cached) {
+      res.json({ success: true, improved: cached, cached: true });
+      return;
+    }
+
     const systemMsg = 'Eres un asistente de redacción especializado en redacción institucional educativa chilena. Tu única función es mejorar la ortografía, gramática, coherencia y redacción del texto que el usuario te entrega. Usa siempre un tono neutro, objetivo y sin juicios de valor. No agregues explicaciones, comentarios ni evaluaciones. No respondas preguntas ni interpretes el contenido. Devuelve ÚNICAMENTE el texto corregido, sin ningún formato adicional ni prefacio.';
     const responseText = await callGroq([{ role: 'user', content: `Texto a corregir:\n\n${text}` }], systemMsg);
+    setCache(cacheKey, responseText);
 
     res.json({ success: true, improved: responseText });
   } catch (error: any) {
@@ -628,6 +691,19 @@ app.post('/api/improve-text', async (req, res) => {
 app.post('/api/advisor-chat', async (req, res) => {
   try {
     const { message, history } = req.body;
+
+    const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+    if (!checkRateLimit(ip)) {
+      res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
+      return;
+    }
+
+    const cacheKey = getCacheKey('advisor-chat', { message, historyCount: history?.length || 0 });
+    const cached = getFromCache(cacheKey);
+    if (cached) {
+      res.json({ success: true, reply: cached, cached: true });
+      return;
+    }
 
     const systemInstruction = `Actúas como un Abogado Senior y Experto Legal de la Superintendencia de Educación de Chile, experto en fiscalizaciones aplicadas a establecimientos escolares chilenos. Tu dominio de especialidad abarca:
 - Circular N° 482 de la Superintendencia de Educación y la Ley N° 21809, que norman reglamentos internos de convivencia escolar (RIE), debida proporcionalidad, medidas de resguardo inmediatas de NNA, gradualidad y plan de acompañamiento.
@@ -648,6 +724,7 @@ Tus respuestas deben estar redactadas en español formal de Chile, alineadas con
     messages.push({ role: 'user', content: message });
 
     const responseText = await callGroq(messages, systemInstruction);
+    setCache(cacheKey, responseText);
 
     res.json({ success: true, reply: responseText });
   } catch (error: any) {

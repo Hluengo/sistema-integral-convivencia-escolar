@@ -6,10 +6,7 @@
 import { Suspense, lazy, useState, useRef, useMemo, useCallback } from 'react';
 import { Causa, EstadoCausa, UserRole, FaseProcedimental } from './types';
 import { getFaseForEstado } from './data';
-import Header from './components/Header';
-import Sidebar from './components/Sidebar';
 import type { SidebarView } from './components/Sidebar';
-import MainContent from './components/MainContent';
 import { AppProvider } from './context/AppContext';
 import { createCausa, deleteCausa } from './lib/supabase';
 import { useNewCausaForm } from './hooks/useNewCausaForm';
@@ -18,9 +15,12 @@ import { createDraftCausa } from './lib/causaFactory';
 import { nowDateOnly } from './lib/dateUtils';
 import { SaveStatus, useCausasPersistence } from './hooks/useCausasPersistence';
 import { ToastProvider } from './components/Toast';
-import CommandPalette from './components/CommandPalette';
 import ErrorBoundary from './components/ErrorBoundary';
 
+const Header = lazy(() => import('./components/Header'));
+const Sidebar = lazy(() => import('./components/Sidebar'));
+const MainContent = lazy(() => import('./components/MainContent'));
+const CommandPalette = lazy(() => import('./components/CommandPalette'));
 const NewCausaModal = lazy(() => import('./components/NewCausaModal'));
 
 export default function App() {
@@ -230,32 +230,39 @@ export default function App() {
     <ToastProvider>
     <AppProvider value={contextValue}>
     <div className="min-h-screen bg-neutral-100 flex font-sans text-neutral-800 antialiased">
-      <CommandPalette
-        causas={causas}
-        onNavigate={handleViewChange}
-        onSelectCausa={setSelectedCausaId}
-      />
-      <Sidebar
-        currentView={currentView}
-        onViewChange={handleViewChange}
-        isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        activeCount={activeCausas.length}
-        aulaSeguraCount={aulaSeguraCausas.length}
-      />
+      <Suspense fallback={null}>
+        <CommandPalette
+          causas={causas}
+          onNavigate={handleViewChange}
+          onSelectCausa={setSelectedCausaId}
+        />
+      </Suspense>
+      <Suspense fallback={<div className="w-16 bg-white border-r border-neutral-200/60 h-screen" />}>
+        <Sidebar
+          currentView={currentView}
+          onViewChange={handleViewChange}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          activeCount={activeCausas.length}
+          aulaSeguraCount={aulaSeguraCausas.length}
+        />
+      </Suspense>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <Header
-          privacyMode={privacyMode}
-          setPrivacyMode={setPrivacyMode}
-          saveStatus={saveStatus}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          currentView={currentView}
-          causas={causas}
-        />
+        <Suspense fallback={<div className="h-16 bg-white border-b border-neutral-200/60" />}>
+          <Header
+            privacyMode={privacyMode}
+            setPrivacyMode={setPrivacyMode}
+            saveStatus={saveStatus}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            currentView={currentView}
+            causas={causas}
+          />
+        </Suspense>
 
-        <MainContent
+        <Suspense fallback={<div className="flex-1 p-6"><div className="h-8 bg-neutral-200 rounded animate-pulse w-48 mb-4" /><div className="h-64 bg-neutral-200 rounded animate-pulse" /></div>}>
+          <MainContent
           currentView={currentView}
           causas={causas}
           selectedCausaId={selectedCausaId}
@@ -298,7 +305,8 @@ export default function App() {
           students={students}
           isLoadingCourses={isLoadingCourses}
           isLoadingStudents={isLoadingStudents}
-        />
+          />
+        </Suspense>
 
         <footer className="bg-white border-t border-neutral-200/60 py-5 sm:py-6 mt-auto text-center text-[10px] text-neutral-400 space-y-1.5">
           <div className="flex items-center justify-center gap-2 text-neutral-500 font-medium flex-wrap px-4">

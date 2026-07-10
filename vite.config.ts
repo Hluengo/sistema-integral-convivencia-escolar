@@ -11,8 +11,24 @@ export default defineConfig(() => {
         '@': path.resolve(__dirname, '.'),
       },
     },
+    build: {
+      target: 'es2020',
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'react-vendor': ['react', 'react-dom'],
+            'supabase': ['@supabase/supabase-js'],
+            'icons': ['lucide-react'],
+          },
+        },
+      },
+    },
+    optimizeDeps: {
+      include: ['@supabase/supabase-js'],
+    },
     server: {
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
       hmr: process.env.DISABLE_HMR !== 'true' ? { port: 3002, host: 'localhost' } : false,
-    },  };
+    },
+  };
 });

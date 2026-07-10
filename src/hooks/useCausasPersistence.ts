@@ -24,7 +24,8 @@ export function useCausasPersistence({
   const saveGenerationRef = useRef(0);
   const dataInitializedRef = useRef(false);
   const isMountedRef = useRef(true);
-  const prevCausasRef = useRef<string>('');
+  const prevCausasMapRef = useRef<Map<string, string>>(new Map());
+  const pendingSaveRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -40,6 +41,9 @@ export function useCausasPersistence({
       const loaded = await fetchCausas();
       if (!isMountedRef.current) return;
       setCausas(loaded);
+      const newMap = new Map<string, string>();
+      loaded.forEach(c => newMap.set(c.id, JSON.stringify(c)));
+      prevCausasMapRef.current = newMap;
       if (loaded.length > 0) {
         setSelectedCausaId(loaded[0].id);
       }
@@ -67,9 +71,23 @@ export function useCausasPersistence({
   useEffect(() => {
     if (causas.length === 0 || isLoadingCausasRef.current) return;
 
-    const serialized = JSON.stringify(causas);
-    if (serialized === prevCausasRef.current) return;
-    prevCausasRef.current = serialized;
+    const changedIds: string[] = [];
+    const currentMap = new Map<string, string>();
+
+    for (const causa of causas) {
+      const serialized = JSON.stringify(causa);
+      currentMap.set(causa.id, serialized);
+      const prev = prevCausasMapRef.current.get(causa.id);
+      if (prev !== serialized) {
+        changedIds.push(causa.id);
+      }
+    }
+
+    prevCausasMapRef.current = currentMap;
+
+    if (changedIds.length === 0) return;
+
+    changedIds.forEach(id => pendingSaveRef.current.add(id));
 
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -84,10 +102,18 @@ export function useCausasPersistence({
 
     saveTimeoutRef.current = setTimeout(async () => {
       if (generation !== saveGenerationRef.current) return;
+
+      const idsToSave = new Set(pendingSaveRef.current);
+      pendingSaveRef.current.clear();
+
+      if (idsToSave.size === 0) return;
+
       setSaveStatus('saving');
 
       try {
-        const results = await Promise.all(causas.map(async (causa) => {
+        const causasToSave = causas.filter(c => idsToSave.has(c.id));
+
+        const results = await Promise.all(causasToSave.map(async (causa) => {
           const originalId = causa.id;
           const success = await updateCausa(causa);
           let effectiveId = originalId;
