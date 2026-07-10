@@ -72,7 +72,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
   return (
     <dialog
       ref={dialogRef}
-      className="bg-brand-900 rounded-2xl border border-brand-700 shadow-xl max-w-sm w-full mx-auto"
+      className="bg-neutral-950 rounded-2xl border border-neutral-800 shadow-xl max-w-sm w-full mx-auto"
       aria-label="Iniciar sesión"
       style={{ maxWidth: '360px', width: '90vw' }}
       onClose={(e) => { if (e.target === e.currentTarget && onClose) onClose(); }}
