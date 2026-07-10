@@ -301,6 +301,7 @@ export default function App() {
             causas={causas}
             user={user}
             onLogout={() => signOut()}
+            onLogin={() => setShowLoginModal(true)}
           />
         </Suspense>
 

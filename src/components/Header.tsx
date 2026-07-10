@@ -28,6 +28,7 @@ interface HeaderProps {
   causas: Causa[];
   user: User | null;
   onLogout?: () => void;
+  onLogin?: () => void;
 }
 
 export default function Header({
@@ -40,6 +41,7 @@ export default function Header({
   causas,
   user,
   onLogout,
+  onLogin,
 }: HeaderProps) {
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -299,7 +301,14 @@ export default function Header({
               <LogOut className="h-4 w-4" />
             </button>
           ) : (
-            <span className="text-[10px] text-neutral-400 font-medium hidden sm:inline">Solo lectura</span>
+            <button
+              type="button"
+              onClick={onLogin}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-900 text-white text-[11px] font-semibold hover:bg-neutral-800 transition-all cursor-pointer"
+            >
+              <LogIn className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Iniciar sesión</span>
+            </button>
           )}
         </div>
       </div>
