@@ -148,8 +148,11 @@ export default function App() {
     e.preventDefault();
     if (!newEstNombre || !newEstRut) return;
 
+    const nextCounter = causas.length > 0
+      ? Math.max(...causas.map(c => parseInt(c.id.split('-')[2], 10) || 0)) + 1
+      : 1;
     const newObj = createDraftCausa({
-      counter: Math.floor(Math.random() * 900) + 100,
+      counter: nextCounter,
       estudianteNombre: newEstNombre,
       estudianteCurso: newEstCurso,
       runEstudiante: newEstRut,

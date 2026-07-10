@@ -1,0 +1,100 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "anthropic/claude-sonnet-4-6",
+  "small_model": "anthropic/claude-haiku-4-5",
+  "instructions": ["AGENTS.md", "README.md"],
+
+  "mcp": {
+    "memory": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
+      "enabled": true
+    },
+    "sequential-thinking": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "enabled": true
+    }
+  },
+
+  "lsp": {
+    "typescript": {
+      "command": ["node_modules/.bin/typescript-language-server", "--stdio"],
+      "extensions": [".ts", ".tsx"],
+      "initialization": {
+        "diagnostics": true,
+        "completions": true,
+        "documentFormatting": false,
+        "references": true,
+        "definition": true,
+        "implementation": true,
+        "referencesCodeLens": true,
+        "declarationsCodeLens": true
+      }
+    },
+    "tailwindcss": {
+      "command": ["node_modules/.bin/tailwindcss-language-server", "--stdio"],
+      "extensions": [".tsx", ".css"],
+      "initialization": {
+        "diagnostics": true,
+        "completions": true,
+        "documentFormatting": true,
+        "hover": true
+      }
+    },
+    "css": {
+      "command": ["node_modules/.bin/vscode-css-language-server", "--stdio"],
+      "extensions": [".css"],
+      "initialization": {
+        "diagnostics": true,
+        "completions": true,
+        "documentFormatting": true,
+        "hover": true
+      }
+    }
+  },
+
+  "plugin": [
+    "ecc-universal"
+  ],
+
+  "agent": {
+    "deploy": {
+      "description": "Despliega el proyecto en Vercel",
+      "mode": "subagent",
+      "permission": { "bash": "allow" },
+      "prompt": "Eres un agente de deploy. Ejecuta npm run build y luego verifica que dist/ y api/ estén listos para Vercel."
+    },
+    "db": {
+      "description": "Consultas y migraciones de Supabase",
+      "mode": "subagent",
+      "permission": { "bash": "ask" },
+      "prompt": "Eres un agente de base de datos. Ayudas con consultas Supabase, migraciones y seed."
+    },
+    "reviewer": {
+      "description": "Revisión de código: detecta bugs, code smell, vulnerabilidades y mejora la calidad",
+      "mode": "subagent",
+      "permission": { "bash": "deny", "edit": "deny" },
+      "prompt": "Eres un revisor de código experto. Analiza el código buscando: bugs potenciales, code smell, vulnerabilidades de seguridad, problemas de rendimiento, y violaciones de convenciones. Responde en español chileno. Proporciona líneas específicas y sugerencias concretas."
+    },
+    "test": {
+      "description": "Genera y ejecuta unit tests y E2E tests",
+      "mode": "subagent",
+      "permission": { "bash": "allow" },
+      "prompt": "Eres un agente de testing. Genera unit tests con node:test y node:assert/strict, y tests E2E con Playwright. Ejecuta los tests y reporta resultados. Sigue las convenciones del proyecto (AGENTS.md)."
+    },
+    "legal": {
+      "description": "Análisis de causas legales y documentos jurídicos chilenos",
+      "mode": "subagent",
+      "permission": { "bash": "deny", "edit": "deny" },
+      "prompt": "Eres un asistente legal especializado en derecho procesal chileno. Analiza causas, genera resúmenes de expedientes, identifica plazos procesales, y revisa documentos legales. Todo el contenido en español chileno."
+    }
+  },
+
+  "formatter": {
+    "prettier": {
+      "command": ["node_modules/.bin/prettier", "--stdin-filepath", "$FILENAME"],
+      "extensions": [".ts", ".tsx", ".json", ".css"]
+    }
+  }
+}

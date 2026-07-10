@@ -5,9 +5,9 @@
 
 import { Causa, EstadoCausa, ChecklistItem, Statistics } from './types';
 
-// Helper to calculate relative dates from current time (2026-05-27)
+// Helper to calculate relative dates from current time
 const relativeDate = (daysAgo: number): string => {
-  const date = new Date('2026-05-27T14:50:29Z');
+  const date = new Date();
   date.setDate(date.getDate() - daysAgo);
   return date.toISOString().split('T')[0];
  };
