@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const https = require('https');
 
 const app = express();
 app.use(express.json({ limit: '1mb' }));
@@ -12,6 +13,29 @@ function getApiKey() {
   return key;
 }
 
+function httpsPost(hostname, pathname, body, headers) {
+  return new Promise((resolve, reject) => {
+    const data = JSON.stringify(body);
+    const opts = {
+      hostname,
+      path: pathname,
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...headers },
+    };
+    const req = https.request(opts, (res) => {
+      let chunks = '';
+      res.on('data', (chunk) => chunks += chunk);
+      res.on('end', () => {
+        try { resolve({ status: res.statusCode, body: JSON.parse(chunks) }); }
+        catch { reject(new Error(`HTTP ${res.statusCode}: ${chunks}`)); }
+      });
+    });
+    req.on('error', reject);
+    req.write(data);
+    req.end();
+  });
+}
+
 async function callGroq(messages, systemInstruction) {
   const apiKey = getApiKey();
   const body = { model: GROQ_MODEL, messages: [] };
@@ -19,20 +43,13 @@ async function callGroq(messages, systemInstruction) {
     body.messages.push({ role: 'system', content: systemInstruction });
   }
   body.messages.push(...messages);
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(body),
+  const res = await httpsPost('api.groq.com', '/openai/v1/chat/completions', body, {
+    'Authorization': `Bearer ${apiKey}`,
   });
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Groq API error: ${response.status} ${errText}`);
+  if (res.status !== 200) {
+    throw new Error(`Groq API error: ${res.status} ${JSON.stringify(res.body)}`);
   }
-  const data = await response.json();
-  return data?.choices?.[0]?.message?.content || '';
+  return res.body?.choices?.[0]?.message?.content || '';
 }
 
 app.post('/api/improve-text', async (req, res) => {
