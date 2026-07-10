@@ -6,7 +6,8 @@
 import React from 'react';
 import { Causa, ChecklistItem, UserRole } from '../../types';
 import {
-  CheckSquare, ChevronUp, ChevronDown, File, Download, Trash, Plus
+  CheckSquare, ChevronUp, ChevronDown, File, Download, Trash, Plus,
+  Circle, CircleDot, Navigation, HelpCircle
 } from 'lucide-react';
 import { PROCESS_SECTIONS } from './processSections';
 import RegistrationForm from './RegistrationForm';
@@ -76,6 +77,78 @@ export default function ProcessChecklist({
         </div>
       </div>
 
+      {/* Stage Navigator - Quick jump between 5 phases */}
+      <nav className="overflow-x-auto pb-2 px-1 mb-1" aria-label="Navegación de fases del debido proceso">
+        <div className="flex gap-1.5 min-w-max" role="tablist">
+          {PROCESS_SECTIONS.map((section, index) => {
+            const items = causa.checklistDebidoProceso.filter(c => c.id.startsWith(section.prefix));
+            const completed = items.filter(c => c.completado).length;
+            const total = items.length;
+            const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+            const isCurrentPhase = currentFase === section.phaseName;
+            const isExpanded = expandedStages[section.id];
+
+            return (
+              <button
+                key={section.id}
+                type="button"
+                role="tab"
+                aria-selected={isExpanded}
+                aria-label={`${section.title} - ${pct}% completado${isCurrentPhase ? ' (fase actual)' : ''}`}
+                onClick={() => {
+                  setExpandedStages(prev => ({ ...prev, [section.id]: !prev[section.id] }));
+                  // Scroll to section
+                  const el = document.getElementById(`stage-${section.id}`);
+                  el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+                className={`flex-shrink-0 flex flex-col items-center gap-1 px-3 py-2.5 rounded-xl border transition-all duration-200 cursor-pointer select-none ${
+                  isCurrentPhase
+                    ? 'bg-brand-500/10 border-brand-300/50 ring-2 ring-brand-500/20'
+                    : isExpanded
+                      ? 'bg-success-500/10 border-success-300/50'
+                      : 'bg-neutral-50 border-neutral-200 hover:bg-neutral-100 hover:border-neutral-300'
+                }`}
+              >
+                {/* Stage number / progress circle */}
+                <div className="relative w-8 h-8 flex items-center justify-center">
+                  <svg className="w-8 h-8 transform -rotate-90" viewBox="0 0 28 28">
+                    <circle
+                      cx="14" cy="14" r="11"
+                      fill="none"
+                      stroke={isCurrentPhase ? '#ea580c' : isExpanded ? '#22c55e' : pct === 100 ? '#22c55e' : '#d1d5db'}
+                      strokeWidth="2.5"
+                      strokeDasharray={2 * Math.PI * 11}
+                      strokeDashoffset={2 * Math.PI * 11 * (1 - pct / 100)}
+                      strokeLinecap="round"
+                      className="transition-all duration-300"
+                    />
+                    {pct === 100 && !isExpanded && !isCurrentPhase && (
+                      <path d="M8 14l3 3 6-6" fill="none" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                    )}
+                    {isCurrentPhase && (
+                      <circle cx="14" cy="14" r="5" fill="#ea580c" />
+                    )}
+                  </svg>
+                  <span className={`absolute text-[8px] font-bold ${isCurrentPhase ? 'text-white' : pct === 100 ? 'text-success-600' : 'text-neutral-400'}`}>
+                    {index + 1}
+                  </span>
+                </div>
+                {/* Stage title */}
+                <span className={`text-[9px] font-medium leading-tight text-center truncate w-24 ${
+                  isCurrentPhase ? 'text-brand-600' : isExpanded ? 'text-success-700' : 'text-neutral-600'
+                }`}>
+                  {section.title.split('. ')[1] || section.title}
+                </span>
+                {/* Completion % */}
+                <span className={`text-[8px] font-mono tabular-nums ${isCurrentPhase ? 'text-brand-600' : isExpanded ? 'text-success-600' : 'text-neutral-400'}`}>
+                  {pct}%
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+
       {/* Accordion of 5 stages */}
       <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
         {PROCESS_SECTIONS.map((section) => {
@@ -85,7 +158,7 @@ export default function ProcessChecklist({
           const isActive = currentFase === section.phaseName;
 
           return (
-            <div key={section.id} className={`border rounded-lg overflow-hidden bg-white transition-all ${isActive ? 'ring-1 border-brand-300 ring-brand-300/30 bg-brand-50/5' : 'border-neutral-200'}`}>
+            <div key={section.id} id={`stage-${section.id}`} className={`border rounded-lg overflow-hidden bg-white transition-all ${isActive ? 'ring-1 border-brand-300 ring-brand-300/30 bg-brand-50/5' : 'border-neutral-200'}`}>
               {/* Section Header */}
               <button
                 type="button"
