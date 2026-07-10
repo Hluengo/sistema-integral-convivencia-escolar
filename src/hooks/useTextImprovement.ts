@@ -7,10 +7,10 @@ export function useTextImprovement() {
 
   const improveText = useCallback(async (text: string): Promise<string | null> => {
     if (!text.trim()) return null;
-    setIsImproving(true);
-    setError(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      setIsImproving(true);
+      setError(null);
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (session?.access_token) {
         headers['Authorization'] = `Bearer ${session.access_token}`;
@@ -21,10 +21,10 @@ export function useTextImprovement() {
         body: JSON.stringify({ text }),
       });
       if (!response.ok) {
-        const err = await response.json().catch(() => ({ error: 'Error de redacción' }));
         if (response.status === 401) {
           throw new Error('Debe iniciar sesión para usar esta función.');
         }
+        const err = await response.json().catch(() => ({ error: 'Error de redacción' }));
         throw new Error(err.error || 'Error al mejorar el texto');
       }
       const data = await response.json();

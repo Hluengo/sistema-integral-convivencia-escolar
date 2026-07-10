@@ -24,8 +24,10 @@ export default function LoginPage({ onClose }: LoginPageProps) {
   }, [onClose]);
 
   useEffect(() => {
-    dialogRef.current?.showModal();
-    return () => dialogRef.current?.close();
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    dialog.showModal();
+    return () => dialog.close();
   }, []);
 
   useEffect(() => {
@@ -71,6 +73,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
     <dialog
       ref={dialogRef}
       className="bg-white rounded-2xl border border-neutral-200 shadow-xl max-w-sm w-full mx-auto"
+      aria-label="Iniciar sesión"
       onClose={(e) => { if (e.target === e.currentTarget && onClose) onClose(); }}
     >
       <div className="p-5 space-y-3">
