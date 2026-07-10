@@ -75,6 +75,23 @@ function SidebarContent({
         )}
       </div>
 
+      {!user && (
+        <div className={`px-3 ${isCollapsed && !mobile ? 'pt-3' : 'pt-4'}`}>
+          <button
+            type="button"
+            onClick={onLogin}
+            className={`w-full flex items-center gap-2.5 rounded-xl text-[12px] font-semibold transition-all cursor-pointer select-none ${
+              isCollapsed && !mobile
+                ? 'justify-center px-0 py-2.5 bg-brand-500 text-white hover:bg-brand-600'
+                : 'px-3.5 py-2.5 bg-brand-500 text-white hover:bg-brand-600 shadow-lg shadow-brand-500/20'
+            }`}
+          >
+            <LogIn className="h-4 w-4 shrink-0" />
+            {(!isCollapsed || mobile) && <span>Iniciar sesión</span>}
+          </button>
+        </div>
+      )}
+
       {aulaSeguraCount > 0 && (!isCollapsed || mobile) && (
         <div className="mx-3 mt-4 px-3.5 py-3 bg-red-500/20 border border-red-400/30 rounded-xl flex items-center gap-2.5">
           <div className="p-1.5 rounded-lg bg-red-500/20 shrink-0">
@@ -151,8 +168,8 @@ function SidebarContent({
         })}
       </nav>
 
-      <div className={`border-t border-white/10 ${isCollapsed && !mobile ? 'px-2 py-3' : 'px-3 py-3'}`}>
-        {user ? (
+      {user && (
+        <div className={`border-t border-white/10 ${isCollapsed && !mobile ? 'px-2 py-3' : 'px-3 py-3'}`}>
           <div className={`${isCollapsed && !mobile ? '' : 'flex items-center gap-2.5 px-2'}`}>
             {!isCollapsed || mobile ? (
               <>
@@ -185,21 +202,8 @@ function SidebarContent({
               </button>
             )}
           </div>
-        ) : (
-          <button
-            type="button"
-            onClick={onLogin}
-            className={`w-full flex items-center gap-2.5 rounded-xl text-[12px] font-semibold transition-all cursor-pointer select-none ${
-              isCollapsed && !mobile
-                ? 'justify-center px-0 py-2.5 bg-white/10 text-white hover:bg-white/15'
-                : 'px-3.5 py-2.5 bg-white/10 text-white hover:bg-white/15 ring-1 ring-white/10'
-            }`}
-          >
-            <LogIn className="h-4 w-4 shrink-0" />
-            {(!isCollapsed || mobile) && <span>Iniciar sesión</span>}
-          </button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
