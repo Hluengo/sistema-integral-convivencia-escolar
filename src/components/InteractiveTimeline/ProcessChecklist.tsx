@@ -168,19 +168,21 @@ export default function ProcessChecklist({
                                 "{item.observaciones}"
                               </p>
                             )}
-                            {item.documentoNombre && (
+                            {item.documentoNombre && item.documentoUrl && (
                               <div className="flex items-center justify-between text-[11px] bg-neutral-50 rounded px-2 py-1 border border-neutral-200">
                                 <span className="flex items-center gap-1 text-neutral-600 truncate">
                                   <File className="h-3 w-3 text-info-500 shrink-0" aria-hidden="true" />
                                   <span className="truncate">{item.documentoNombre}</span>
                                 </span>
-                                <button
-                                  type="button"
+                                <a
+                                  href={item.documentoUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
                                   className="text-[9px] text-info-600 font-semibold flex items-center gap-0.5 hover:underline shrink-0 pl-2"
                                   aria-label={`Ver documento ${item.documentoNombre}`}
                                 >
                                   <Download className="h-3 w-3" aria-hidden="true" /> Ver
-                                </button>
+                                </a>
                               </div>
                             )}
 

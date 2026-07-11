@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { Causa, BitacoraEntry, UserRole } from '../../types';
-import { FileText, Plus, Send, Calendar } from 'lucide-react';
+import { FileText, Plus, Send, Calendar, File, Download } from 'lucide-react';
 import ImproveInput from '../ImproveInput';
 import ImproveTextarea from '../ImproveTextarea';
 
@@ -168,6 +168,21 @@ export default function BitacoraTab({
                       <span>•</span>
                       <span>{entry.participantes.join(', ')}</span>
                     </div>
+                    {entry.documentoAdjunto && (
+                      <div className="mt-2 flex items-center gap-1.5 text-[10px] bg-info-50 border border-info-200 rounded px-2 py-1">
+                        <File className="h-3 w-3 text-info-500 shrink-0" aria-hidden="true" />
+                        <span className="text-info-700 font-medium truncate">Documento adjunto</span>
+                        <a
+                          href={entry.documentoAdjunto}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="ml-auto text-info-600 font-semibold flex items-center gap-0.5 hover:underline shrink-0"
+                          aria-label="Ver documento adjunto"
+                        >
+                          <Download className="h-3 w-3" aria-hidden="true" /> Ver
+                        </a>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
