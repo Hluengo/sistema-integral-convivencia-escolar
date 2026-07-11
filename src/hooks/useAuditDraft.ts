@@ -5,6 +5,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Causa } from '../types';
+import { supabase } from '../lib/supabase';
 
 interface UseAuditDraftArgs {
   causa: Causa;
@@ -24,6 +25,17 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
   const isMountedRef = useRef(true);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
+  const getAuthHeaders = async (): Promise<Record<string, string>> => {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+    } catch { /* silent */ }
+    return headers;
+  };
+
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
@@ -36,9 +48,10 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
     setIsAuditing(true);
     setAuditReport('');
     try {
+      const headers = await getAuthHeaders();
       const response = await fetch('/api/audit-due-process', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           id: causa.id,
           studentName: causa.estudianteNombre,
@@ -65,9 +78,10 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
     setIsDrafting(true);
     setDraftedDocument('');
     try {
+      const headers = await getAuthHeaders();
       const response = await fetch('/api/draft-document', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           docType: selectedDocType,
           id: causa.id,
