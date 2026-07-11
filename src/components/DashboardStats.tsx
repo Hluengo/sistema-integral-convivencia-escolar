@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Causa, TipoInfraccion, FaseProcedimental, EstadoCausa } from '../types';
 import { getStats, getFaseForEstado } from '../data';
 import { 
@@ -71,15 +71,19 @@ function SeverityCard({ tipo, count, total }: { tipo: TipoInfraccion; count: num
 export default function DashboardStats({ causas, onFaseSelect, selectedFase, onSelectCausa, onCreateCausa }: DashboardStatsProps) {
   const stats = getStats(causas);
 
-  const totalActivas = causas.filter(c => 
-    c.estadoActual !== EstadoCausa.CAUSA_CERRADA && c.estadoActual !== EstadoCausa.RESOLUCION_EJECUTORIADA
-  ).length;
-  
-  const enInvestigacion = causas.filter(c => getFaseForEstado(c.estadoActual) === 'Investigación').length;
-  
-  const resueltas = causas.filter(c => 
-    c.estadoActual === EstadoCausa.CAUSA_CERRADA || c.estadoActual === EstadoCausa.RESOLUCION_EJECUTORIADA
-  ).length;
+  const { totalActivas, enInvestigacion, resueltas } = useMemo(() => {
+    const active = causas.filter(c => 
+      c.estadoActual !== EstadoCausa.CAUSA_CERRADA && c.estadoActual !== EstadoCausa.RESOLUCION_EJECUTORIADA
+    ).length;
+    
+    const investigating = causas.filter(c => getFaseForEstado(c.estadoActual) === 'Investigación').length;
+    
+    const resolved = causas.filter(c => 
+      c.estadoActual === EstadoCausa.CAUSA_CERRADA || c.estadoActual === EstadoCausa.RESOLUCION_EJECUTORIADA
+    ).length;
+
+    return { totalActivas: active, enInvestigacion: investigating, resueltas: resolved };
+  }, [causas]);
 
   const todayLabel = new Date().toLocaleDateString('es-CL', {
     weekday: 'long',

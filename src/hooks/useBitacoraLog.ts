@@ -23,7 +23,7 @@ export function useBitacoraLog({ causa, onUpdateCausa }: UseBitacoraLogArgs) {
       : ['No especificados'];
 
     const newEntry: BitacoraEntry = {
-      id: `b_custom_${Date.now()}`,
+      id: `b_custom_${crypto.randomUUID()}`,
       fecha: nowIso(),
       tipo: logType,
       titulo: logTitle,

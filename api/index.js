@@ -96,7 +96,36 @@ function sanitizeForAI(text) {
 }
 
 // Auth middleware: verify Supabase JWT from Authorization header
-function requireAuth(req, res, next) {
+async function verifyJwtSignature(token, secret) {
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+
+  const header = JSON.parse(Buffer.from(parts[0], 'base64url').toString());
+  const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+  const signature = Buffer.from(parts[2], 'base64url');
+
+  // Import the secret as a CryptoKey for HMAC-SHA256
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['verify']
+  );
+
+  // Verify signature
+  const data = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
+  const valid = await crypto.subtle.verify('HMAC', key, signature, data);
+
+  if (!valid) return null;
+
+  // Check expiration
+  if (payload.exp && payload.exp * 1000 < Date.now()) return null;
+
+  return payload;
+}
+
+async function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Autenticación requerida.' });
@@ -105,20 +134,23 @@ function requireAuth(req, res, next) {
   if (token.length < 10) {
     return res.status(401).json({ error: 'Token inválido.' });
   }
-  // Verify JWT structure (header.payload.signature)
-  const parts = token.split('.');
-  if (parts.length !== 3) {
-    return res.status(401).json({ error: 'Token JWT malformado.' });
+
+  const JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
+  if (!JWT_SECRET) {
+    console.error('SUPABASE_JWT_SECRET no configurada');
+    return res.status(500).json({ error: 'Error de configuración del servidor.' });
   }
+
   try {
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
-    if (payload.exp && payload.exp * 1000 < Date.now()) {
-      return res.status(401).json({ error: 'Token expirado.' });
+    const payload = await verifyJwtSignature(token, JWT_SECRET);
+    if (!payload) {
+      return res.status(401).json({ error: 'Token JWT inválido o expirado.' });
     }
+    req.user = payload;
+    next();
   } catch {
     return res.status(401).json({ error: 'Token JWT inválido.' });
   }
-  next();
 }
 
 function httpsPost(hostname, pathname, body, headers) {
@@ -191,7 +223,7 @@ app.post('/api/improve-text', requireAuth, async (req, res) => {
     res.json({ success: true, improved });
   } catch (error) {
     console.error('Error al mejorar texto:', error);
-    res.status(500).json({ error: error.message || 'Error interno del servidor al mejorar texto.' });
+    res.status(500).json({ error: 'Error interno del servidor al mejorar texto.' });
   }
 });
 
@@ -214,7 +246,8 @@ app.post('/api/advisor-chat', requireAuth, async (req, res) => {
 
 Tus respuestas deben estar redactadas en español formal de Chile, alineadas con el rigor burocrático y legal que evitará cargos, multas pecuniarias o recursos judiciales contra el colegio. Cita artículos cuando corresponda y explica paso a paso cómo resguardar el "Debido Proceso Escolar" y la integridad mediante medidas de resguardo. Proporciona respuestas muy estructuradas, didácticas y extremadamente precisas.`;
 
-    const cacheKey = getCacheKey('advisor-chat', { message, historyCount: history?.length || 0 });
+    const userId = req.user?.sub || 'anonymous';
+    const cacheKey = getCacheKey('advisor-chat', { userId, message, historyCount: history?.length || 0 });
     const cached = getFromCache(cacheKey);
     if (cached) {
       return res.json({ success: true, reply: cached, cached: true });
@@ -235,7 +268,7 @@ Tus respuestas deben estar redactadas en español formal de Chile, alineadas con
     res.json({ success: true, reply });
   } catch (error) {
     console.error('Error en el Chat de Consultoría:', error);
-    res.status(500).json({ error: error.message || 'Error al procesar su consulta legal.' });
+    res.status(500).json({ error: 'Error al procesar su consulta legal.' });
   }
 });
 
@@ -281,7 +314,7 @@ Utiliza un tono sumamente profesional, corporativo, técnico e institucional (el
   } catch (error) {
     console.error('Error al auditar debido proceso:', error);
     const status = error.message?.startsWith('Campo requerido') ? 400 : 500;
-    res.status(status).json({ error: error.message || 'Error interno del servidor en auditoría.' });
+    res.status(status).json({ error: 'Error interno del servidor en auditoría.' });
   }
 });
 
@@ -421,7 +454,7 @@ Incluir: resumen ejecutivo, reconstrucción fáctica, análisis probatorio, desc
   } catch (error) {
     console.error('Error al generar borrador de documento:', error);
     const status = error.message?.startsWith('Campo requerido') ? 400 : 500;
-    res.status(status).json({ error: error.message || 'Error interno del servidor al redactar documento.' });
+    res.status(status).json({ error: 'Error interno del servidor al redactar documento.' });
   }
 });
 

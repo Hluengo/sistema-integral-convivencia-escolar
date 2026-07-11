@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useCallback } from 'react';
 import { BookOpen, Scale } from 'lucide-react';
 import EmptyState from '../EmptyState';
 import { Causa, EstadoCausa, UserRole, FaseProcedimental } from '../../types';
@@ -64,6 +64,10 @@ export default function CausasView({
   handleOpenCreateForm,
   setSelectedCausaId,
 }: CausasViewProps) {
+  const handleSelectCausa = useCallback((cause: Causa) => {
+    handleSelectCausaFromDashboard(cause.id);
+  }, [handleSelectCausaFromDashboard]);
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Hero header */}
@@ -176,9 +180,7 @@ export default function CausasView({
                     key={c.id}
                     causa={c}
                     privacyMode={privacyMode}
-                    onSelect={(cause) => {
-                      handleSelectCausaFromDashboard(cause.id);
-                    }}
+                    onSelect={handleSelectCausa}
                     isSelected={c.id === selectedCausaId}
                   />
                 ))}

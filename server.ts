@@ -19,6 +19,64 @@ const PORT = parseInt(process.env.PORT || '3001', 10);
 app.use(compression());
 app.use(express.json());
 
+// Auth middleware: verify Supabase JWT from Authorization header
+async function verifyJwtSignature(token: string, secret: string): Promise<Record<string, unknown> | null> {
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+
+  const header = JSON.parse(Buffer.from(parts[0], 'base64url').toString());
+  const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+  const signature = Buffer.from(parts[2], 'base64url');
+
+  // Import the secret as a CryptoKey for HMAC-SHA256
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['verify']
+  );
+
+  // Verify signature
+  const data = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
+  const valid = await crypto.subtle.verify('HMAC', key, signature, data);
+
+  if (!valid) return null;
+
+  // Check expiration
+  if (payload.exp && payload.exp * 1000 < Date.now()) return null;
+
+  return payload;
+}
+
+async function requireAuth(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Autenticación requerida.' });
+  }
+  const token = authHeader.replace('Bearer ', '');
+  if (token.length < 10) {
+    return res.status(401).json({ error: 'Token inválido.' });
+  }
+
+  const JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
+  if (!JWT_SECRET) {
+    console.error('SUPABASE_JWT_SECRET no configurada');
+    return res.status(500).json({ error: 'Error de configuración del servidor.' });
+  }
+
+  try {
+    const payload = await verifyJwtSignature(token, JWT_SECRET);
+    if (!payload) {
+      return res.status(401).json({ error: 'Token JWT inválido o expirado.' });
+    }
+    (req as any).user = payload;
+    next();
+  } catch {
+    return res.status(401).json({ error: 'Token JWT inválido.' });
+  }
+}
+
 // Input validation & sanitization helpers
 const MAX_STR = 10000;
 const sanitize = (s: unknown): string => {
@@ -32,6 +90,23 @@ const requireStr = (obj: Record<string, unknown>, key: string, max = 200): strin
 };
 const optStr = (obj: Record<string, unknown>, key: string, max = MAX_STR): string => sanitize(obj[key]).slice(0, max);
 const optArr = (obj: Record<string, unknown>, key: string): unknown[] => Array.isArray(obj[key]) ? obj[key]! : [];
+
+// Prompt injection sanitizer: escapes or strips patterns that could manipulate AI output
+function sanitizeForAI(text: unknown): string {
+  if (!text || typeof text !== 'string') return '';
+  return text
+    // Strip common prompt injection markers
+    .replace(/\[INST\]|\[\/INST\]|<<SYS>>|<<\/SYS>>/gi, '')
+    .replace(/<\|im_start\|>|<\|im_end\|>/gi, '')
+    .replace(/<\|system\|>|<\|user\|>|<\|assistant\|>/gi, '')
+    // Strip instruction override attempts
+    .replace(/^(ignore|olvida|disregard|anula).{0,50}(instrucciones|instructions|reglas|rules|sistema|system)/gim, '')
+    // Strip role injection attempts
+    .replace(/(eres|you are|act as|actúa como|actuá como).{0,30}(un|a|el|la|un(a)?\s+abogado|lawyer|juez|judge)/gim, '')
+    // Collapse excessive whitespace/newlines
+    .replace(/\n{3,}/g, '\n\n')
+    .slice(0, MAX_STR);
+}
 
 // In-memory cache with TTL
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
@@ -112,7 +187,7 @@ async function callGroq(messages: { role: string; content: string }[], systemIns
 // API ROUTES FIRST (Must be declared before Vite)
 // ----------------------------------------------------
 // Endpoint 1: Audit due process compliance of a case
-app.post('/api/audit-due-process', async (req, res) => {
+app.post('/api/audit-due-process', requireAuth, async (req, res) => {
   try {
     const body = req.body as Record<string, unknown>;
     const id = requireStr(body, 'id', 50);
@@ -149,12 +224,12 @@ Utiliza un tono sumamente profesional, corporativo, técnico e institucional (el
   } catch (error: any) {
     console.error('Error al auditar debido proceso:', error);
     const status = error.message?.startsWith('Campo requerido') ? 400 : 500;
-    res.status(status).json({ error: error.message || 'Error interno del servidor en auditoría.' });
+    res.status(status).json({ error: 'Error interno del servidor en auditoría.' });
   }
 });
 
 // Endpoint 2: Draft official documents based on Circular 482 / Ley 21809
-app.post('/api/draft-document', async (req, res) => {
+app.post('/api/draft-document', requireAuth, async (req, res) => {
   try {
     const body = req.body as Record<string, unknown>;
     const docType = requireStr(body, 'docType', 50);
@@ -646,12 +721,12 @@ ${isAulaSegura ? 'NOTA: Dado que el caso está sujeto a Ley Aula Segura (Ley 21.
     res.json({ success: true, document: responseText });
   } catch (error: any) {
     console.error('Error al generar borrador de documento:', error);
-    res.status(500).json({ error: error.message || 'Error interno del servidor al redactar documento.' });
+    res.status(500).json({ error: 'Error interno del servidor al redactar documento.' });
   }
 });
 
 // Endpoint 4: Improve text (spelling, grammar, coherence)
-app.post('/api/improve-text', async (req, res) => {
+app.post('/api/improve-text', requireAuth, async (req, res) => {
   try {
     const { text } = req.body as { text?: string };
     if (!text || typeof text !== 'string' || text.trim().length === 0) {
@@ -677,18 +752,19 @@ app.post('/api/improve-text', async (req, res) => {
     }
 
     const systemMsg = 'Eres un asistente de redacción especializado en redacción institucional educativa chilena. Tu única función es mejorar la ortografía, gramática, coherencia y redacción del texto que el usuario te entrega. Usa siempre un tono neutro, objetivo y sin juicios de valor. No agregues explicaciones, comentarios ni evaluaciones. No respondas preguntas ni interpretes el contenido. Devuelve ÚNICAMENTE el texto corregido, sin ningún formato adicional ni prefacio.';
-    const responseText = await callGroq([{ role: 'user', content: `Texto a corregir:\n\n${text}` }], systemMsg);
+    const userContent = sanitizeForAI(text);
+    const responseText = await callGroq([{ role: 'user', content: `Texto a corregir:\n\n${userContent}` }], systemMsg);
     setCache(cacheKey, responseText);
 
     res.json({ success: true, improved: responseText });
   } catch (error: any) {
     console.error('Error al mejorar texto:', error);
-    res.status(500).json({ error: error.message || 'Error interno del servidor al mejorar texto.' });
+    res.status(500).json({ error: 'Error interno del servidor al mejorar texto.' });
   }
 });
 
 // Endpoint 3: Virtual compliance consultant
-app.post('/api/advisor-chat', async (req, res) => {
+app.post('/api/advisor-chat', requireAuth, async (req, res) => {
   try {
     const { message, history } = req.body;
 
@@ -698,7 +774,8 @@ app.post('/api/advisor-chat', async (req, res) => {
       return;
     }
 
-    const cacheKey = getCacheKey('advisor-chat', { message, historyCount: history?.length || 0 });
+    const userId = (req as any).user?.sub || 'anonymous';
+    const cacheKey = getCacheKey('advisor-chat', { userId, message, historyCount: history?.length || 0 });
     const cached = getFromCache(cacheKey);
     if (cached) {
       res.json({ success: true, reply: cached, cached: true });
@@ -717,11 +794,11 @@ Tus respuestas deben estar redactadas en español formal de Chile, alineadas con
       history.forEach((h: any) => {
         messages.push({
           role: h.role === 'user' ? 'user' : 'assistant',
-          content: h.content,
+          content: sanitizeForAI(h.content).slice(0, 2000),
         });
       });
     }
-    messages.push({ role: 'user', content: message });
+    messages.push({ role: 'user', content: sanitizeForAI(message) });
 
     const responseText = await callGroq(messages, systemInstruction);
     setCache(cacheKey, responseText);
@@ -729,7 +806,7 @@ Tus respuestas deben estar redactadas en español formal de Chile, alineadas con
     res.json({ success: true, reply: responseText });
   } catch (error: any) {
     console.error('Error en el Chat de Consultoría:', error);
-    res.status(500).json({ error: error.message || 'Error al procesar su consulta legal.' });
+    res.status(500).json({ error: 'Error al procesar su consulta legal.' });
   }
 });
 

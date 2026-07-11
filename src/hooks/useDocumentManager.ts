@@ -56,7 +56,7 @@ export function useDocumentManager({
       });
 
       const newLog: BitacoraEntry = {
-        id: `b_doc_${Date.now()}`,
+        id: `b_doc_${crypto.randomUUID()}`,
         fecha: nowIso(),
         tipo: 'Evidencia',
         titulo: `Documento adjunto: ${file.name}`,
@@ -93,7 +93,7 @@ export function useDocumentManager({
     });
 
     const newLog: BitacoraEntry = {
-      id: `b_doc_del_${Date.now()}`,
+      id: `b_doc_del_${crypto.randomUUID()}`,
       fecha: nowIso(),
       tipo: 'Otro',
       titulo: 'Documento eliminado',

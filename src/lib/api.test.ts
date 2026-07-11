@@ -1,12 +1,46 @@
 import assert from 'node:assert/strict';
 import { describe, it, before, after } from 'node:test';
 import http from 'node:http';
+import crypto from 'node:crypto';
+
+// Set up test JWT secret before importing the app
+process.env.SUPABASE_JWT_SECRET = 'test-secret-key-for-unit-tests';
+
+/**
+ * Create a valid JWT token for testing using HMAC-SHA256
+ */
+async function createTestJwt(payload: Record<string, unknown>, secret: string): Promise<string> {
+  const header = { alg: 'HS256', typ: 'JWT' };
+  const headerB64 = Buffer.from(JSON.stringify(header)).toString('base64url');
+  const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const data = `${headerB64}.${payloadB64}`;
+
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+
+  const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data));
+  const sigB64 = Buffer.from(signature).toString('base64url');
+
+  return `${data}.${sigB64}`;
+}
 
 describe('API endpoints', () => {
   let server: http.Server;
   let baseUrl: string;
+  let VALID_TOKEN: string;
 
   before(async () => {
+    // Create a valid token for the test session
+    VALID_TOKEN = await createTestJwt(
+      { sub: 'test-user-id', exp: Math.floor(Date.now() / 1000) + 3600 },
+      'test-secret-key-for-unit-tests'
+    );
+
     const mod = await import('../../api/index.js');
     const app = mod.default;
     await new Promise<void>((resolve) => {
@@ -44,8 +78,6 @@ describe('API endpoints', () => {
       req.end();
     });
   }
-
-  const VALID_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjk5OTk5OTk5OTl9.signature';
 
   describe('POST /api/improve-text', () => {
     it('returns 401 without auth', async () => {
@@ -130,8 +162,12 @@ describe('API endpoints', () => {
 
   describe('Auth middleware', () => {
     it('rejects expired JWT tokens', async () => {
+      const expiredToken = await createTestJwt(
+        { sub: 'test-user-id', exp: 1 }, // Expired in 1970
+        'test-secret-key-for-unit-tests'
+      );
       const res = await post('/api/improve-text', { text: 'test' }, {
-        Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjF9.invalid'
+        Authorization: `Bearer ${expiredToken}`
       });
       assert.equal(res.status, 401);
     });
@@ -139,6 +175,13 @@ describe('API endpoints', () => {
     it('rejects malformed JWT tokens', async () => {
       const res = await post('/api/improve-text', { text: 'test' }, {
         Authorization: 'Bearer not-a-jwt-token'
+      });
+      assert.equal(res.status, 401);
+    });
+
+    it('rejects JWT with invalid signature', async () => {
+      const res = await post('/api/improve-text', { text: 'test' }, {
+        Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjk5OTk5OTk5OTl9.wrong-signature'
       });
       assert.equal(res.status, 401);
     });

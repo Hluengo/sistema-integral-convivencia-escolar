@@ -66,6 +66,49 @@ export interface StudentWithCourse extends Student {
   course_level: Course['level'] | null;
 }
 
+/** Supabase row types for fetchCausas */
+interface SupabaseBitacoraRow {
+  id: string;
+  fecha: string;
+  tipo: string;
+  titulo: string;
+  descripcion: string;
+  participantes: string[];
+  documento_adjunto: string | null;
+}
+
+interface SupabaseChecklistRow {
+  id: string;
+  label: string;
+  descripcion: string;
+  completado: boolean;
+  fecha_completado: string | null;
+  requerido_por: string;
+  registrado_por: string | null;
+  observaciones: string | null;
+  documento_nombre: string | null;
+  documento_url: string | null;
+}
+
+interface SupabaseCausaRow {
+  id: string;
+  estudiante_nombre: string;
+  estudiante_curso: string;
+  nna_protected_name: string;
+  run_estudiante: string;
+  fecha_apertura: string;
+  estado_actual: string;
+  tipo_infraccion: string;
+  responsable: string;
+  compromete_aula_segura: boolean;
+  fecha_ultima_actualizacion: string;
+  observaciones: string;
+  conducta_rice_id: string | null;
+  medidas_ejecutadas: string[];
+  bitacora_entries: SupabaseBitacoraRow[];
+  checklist_items: SupabaseChecklistRow[];
+}
+
 // ====================================================
 // EXISTING: Courses & Students (unchanged)
 // ====================================================
@@ -154,24 +197,24 @@ export async function fetchCausas(): Promise<Causa[]> {
     return [];
   }
 
-  const causas: Causa[] = causasData.map((row: any) => {
-    const bitacora: BitacoraEntry[] = (row.bitacora_entries || []).map((b: any) => ({
+  const causas: Causa[] = causasData.map((row: SupabaseCausaRow) => {
+    const bitacora: BitacoraEntry[] = (row.bitacora_entries || []).map((b: SupabaseBitacoraRow) => ({
       id: b.id,
       fecha: b.fecha,
-      tipo: b.tipo,
+      tipo: b.tipo as BitacoraEntry['tipo'],
       titulo: b.titulo,
       descripcion: b.descripcion,
       participantes: b.participantes || [],
       documentoAdjunto: b.documento_adjunto || undefined
     }));
 
-    const checklist: ChecklistItem[] = (row.checklist_items || []).map((c: any) => ({
+    const checklist: ChecklistItem[] = (row.checklist_items || []).map((c: SupabaseChecklistRow) => ({
       id: c.id,
       label: c.label,
       descripcion: c.descripcion,
       completado: c.completado,
       fechaCompletado: c.fecha_completado || undefined,
-      requeridoPor: c.requerido_por,
+      requeridoPor: c.requerido_por as ChecklistItem['requeridoPor'],
       registradoPor: c.registrado_por || undefined,
       observaciones: c.observaciones || undefined,
       documentoNombre: c.documento_nombre || undefined,
@@ -185,8 +228,8 @@ export async function fetchCausas(): Promise<Causa[]> {
       nnaProtectedName: row.nna_protected_name,
       runEstudiante: row.run_estudiante,
       fechaApertura: row.fecha_apertura,
-      estadoActual: row.estado_actual,
-      tipoInfraccion: row.tipo_infraccion,
+      estadoActual: row.estado_actual as Causa['estadoActual'],
+      tipoInfraccion: row.tipo_infraccion as Causa['tipoInfraccion'],
       responsable: row.responsable,
       comprometeAulaSegura: row.compromete_aula_segura,
       fechaUltimaActualizacion: row.fecha_ultima_actualizacion,
@@ -221,9 +264,10 @@ async function resolveUniqueCausaId(preferred: string): Promise<string> {
     .from('causas')
     .select('id');
 
+  const year = new Date().getFullYear();
   let max = 0;
   for (const row of all || []) {
-    const match = /^DC-2026-(\d+)$/.exec(row.id);
+    const match = new RegExp(`^DC-${year}-(\\d+)$`).exec(row.id);
     if (match) {
       const n = parseInt(match[1], 10);
       if (n > max) max = n;
@@ -232,7 +276,7 @@ async function resolveUniqueCausaId(preferred: string): Promise<string> {
 
   const next = max + 1;
   const padding = next < 10 ? `00${next}` : next < 100 ? `0${next}` : `${next}`;
-  return `DC-2026-${padding}`;
+  return `DC-${year}-${padding}`;
 }
 
 /**
@@ -455,7 +499,7 @@ const STORAGE_BUCKET = 'documentos_convivencia';
 
 /**
  * Upload a document file to Supabase Storage
- * Returns the public URL or null on failure
+ * Returns a signed URL or null on failure
  */
 export async function uploadDocument(
   causaId: string,
@@ -476,12 +520,17 @@ export async function uploadDocument(
     return null;
   }
 
-  // Get public URL
-  const { data: publicUrlData } = supabase.storage
+  // Get signed URL (expires in 1 hour)
+  const { data: signedUrlData, error: signedUrlError } = await supabase.storage
     .from(STORAGE_BUCKET)
-    .getPublicUrl(filePath);
+    .createSignedUrl(filePath, 3600);
 
-  return publicUrlData?.publicUrl || null;
+  if (signedUrlError) {
+    console.error('Error creating signed URL:', signedUrlError);
+    return null;
+  }
+
+  return signedUrlData?.signedUrl || null;
 }
 
 /**
@@ -497,16 +546,23 @@ export async function listDocuments(causaId: string): Promise<{ name: string; ur
     return [];
   }
 
-  return data.map(item => {
-    const { data: publicUrlData } = supabase.storage
+  const results: { name: string; url: string }[] = [];
+  
+  for (const item of data) {
+    const filePath = `${causaId}/${item.name}`;
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
       .from(STORAGE_BUCKET)
-      .getPublicUrl(`${causaId}/${item.name}`);
+      .createSignedUrl(filePath, 3600);
     
-    return {
-      name: item.name,
-      url: publicUrlData?.publicUrl || ''
-    };
-  });
+    if (!signedUrlError && signedUrlData?.signedUrl) {
+      results.push({
+        name: item.name,
+        url: signedUrlData.signedUrl
+      });
+    }
+  }
+
+  return results;
 }
 
 /**

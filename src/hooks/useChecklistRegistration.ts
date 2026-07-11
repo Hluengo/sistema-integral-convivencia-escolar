@@ -55,7 +55,7 @@ export function useChecklistRegistration({
     const itemLabel = targetItem ? targetItem.label : 'Paso de Debido Proceso';
 
     const newLog: BitacoraEntry = {
-      id: `b_step_${Date.now()}`,
+      id: `b_step_${crypto.randomUUID()}`,
       fecha: nowIso(),
       tipo: 'Notificación',
       titulo: `Registro de Hito: ${itemLabel}`,
@@ -108,7 +108,7 @@ export function useChecklistRegistration({
     const itemLabel = targetItem ? targetItem.label : 'Paso de Debido Proceso';
 
     const newLog: BitacoraEntry = {
-      id: `b_step_reset_${Date.now()}`,
+      id: `b_step_reset_${crypto.randomUUID()}`,
       fecha: nowIso(),
       tipo: 'Otro',
       titulo: `Invalidador Hito: ${itemLabel}`,

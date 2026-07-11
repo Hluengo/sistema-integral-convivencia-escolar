@@ -99,23 +99,23 @@ ALTER TABLE causas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bitacora_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE checklist_items ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Allow anon and authenticated on causas" ON causas;
-CREATE POLICY "Allow anon and authenticated on causas" ON causas
+DROP POLICY IF EXISTS "Allow authenticated on causas" ON causas;
+CREATE POLICY "Allow authenticated on causas" ON causas
   FOR ALL
-  USING (auth.role() IN ('anon', 'authenticated'))
-  WITH CHECK (auth.role() IN ('anon', 'authenticated'));
+  USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');
 
-DROP POLICY IF EXISTS "Allow anon and authenticated on bitacora_entries" ON bitacora_entries;
-CREATE POLICY "Allow anon and authenticated on bitacora_entries" ON bitacora_entries
+DROP POLICY IF EXISTS "Allow authenticated on bitacora_entries" ON bitacora_entries;
+CREATE POLICY "Allow authenticated on bitacora_entries" ON bitacora_entries
   FOR ALL
-  USING (auth.role() IN ('anon', 'authenticated'))
-  WITH CHECK (auth.role() IN ('anon', 'authenticated'));
+  USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');
 
-DROP POLICY IF EXISTS "Allow anon and authenticated on checklist_items" ON checklist_items;
-CREATE POLICY "Allow anon and authenticated on checklist_items" ON checklist_items
+DROP POLICY IF EXISTS "Allow authenticated on checklist_items" ON checklist_items;
+CREATE POLICY "Allow authenticated on checklist_items" ON checklist_items
   FOR ALL
-  USING (auth.role() IN ('anon', 'authenticated'))
-  WITH CHECK (auth.role() IN ('anon', 'authenticated'));
+  USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');
 
 -- ============================================================
 -- 5. STORAGE
