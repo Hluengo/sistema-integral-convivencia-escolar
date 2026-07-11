@@ -206,6 +206,50 @@ function httpsPost(hostname, pathname, body, headers) {
   });
 }
 
+function httpsGet(hostname, pathname, headers) {
+  return new Promise((resolve, reject) => {
+    const opts = {
+      hostname,
+      path: pathname,
+      method: 'GET',
+      headers: headers || {},
+    };
+    const req = https.request(opts, (res) => {
+      let chunks = '';
+      res.on('data', (chunk) => chunks += chunk);
+      res.on('end', () => {
+        try { resolve(JSON.parse(chunks)); }
+        catch { reject(new Error(`HTTP ${res.statusCode}: ${chunks}`)); }
+      });
+    });
+    req.on('error', reject);
+    req.end();
+  });
+}
+
+function httpsPatch(hostname, pathname, body, headers) {
+  return new Promise((resolve, reject) => {
+    const data = JSON.stringify(body);
+    const opts = {
+      hostname,
+      path: pathname,
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...headers },
+    };
+    const req = https.request(opts, (res) => {
+      let chunks = '';
+      res.on('data', (chunk) => chunks += chunk);
+      res.on('end', () => {
+        try { resolve({ status: res.statusCode, body: JSON.parse(chunks) }); }
+        catch { reject(new Error(`HTTP ${res.statusCode}: ${chunks}`)); }
+      });
+    });
+    req.on('error', reject);
+    req.write(data);
+    req.end();
+  });
+}
+
 async function callGroq(messages, systemInstruction) {
   const apiKey = getApiKey();
   const body = { model: GROQ_MODEL, messages: [] };
@@ -460,7 +504,21 @@ ${safeChecklist.length > 0 ? safeChecklist.map((c) => `
 
     let systemPrompt = '';
 
-    if (docType === 'notificacion_apertura') {
+    // Try loading prompt from DB
+    let dbPrompt = null;
+    try {
+      const templates = await httpsGet('jjzwwhnofiepvliugowr.supabase.co', `/rest/v1/document_templates?doc_type=eq.${docType}&select=system_prompt&limit=1`, {
+        apikey: process.env.VITE_SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY}`,
+      });
+      if (Array.isArray(templates) && templates.length > 0 && templates[0].system_prompt) {
+        dbPrompt = templates[0].system_prompt;
+      }
+    } catch { /* fallback to hardcoded */ }
+
+    if (dbPrompt) {
+      systemPrompt = dbPrompt;
+    } else if (docType === 'notificacion_apertura') {
       systemPrompt = `Actúa como un profesional experto en convivencia escolar, normativa educacional chilena, procedimientos disciplinarios, debido proceso y redacción institucional.
 Redacta una "NOTIFICACIÓN DE INICIO DE INDAGACIÓN DE CONVIVENCIA ESCOLAR", manteniendo un formato formal, objetivo, descriptivo y jurídicamente prudente.
 La notificación debe respetar los principios de: presunción de inocencia, debido proceso, derecho a defensa, interés superior del estudiante, confidencialidad, protección de datos personales, ausencia de sesgos.
@@ -529,6 +587,42 @@ app.get('/api/auth-debug', async (req, res) => {
   }
 
   res.json(info);
+});
+
+// Document templates: GET all, PUT single
+app.get('/api/document-templates', async (req, res) => {
+  try {
+    const data = await httpsGet('jjzwwhnofiepvliugowr.supabase.co', '/rest/v1/document_templates?select=*&order=doc_type', {
+      apikey: process.env.VITE_SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY}`,
+    });
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener plantillas.' });
+  }
+});
+
+app.put('/api/document-templates', requireAuth, async (req, res) => {
+  const { id, system_prompt } = req.body;
+  if (!id || !system_prompt) {
+    return res.status(400).json({ error: 'Campos requeridos: id, system_prompt' });
+  }
+
+  try {
+    const sanitized = sanitize(system_prompt).slice(0, 20000);
+    const result = await httpsPatch('jjzwwhnofiepvliugowr.supabase.co', `/rest/v1/document_templates?id=eq.${id}`, {
+      system_prompt: sanitized,
+      updated_at: new Date().toISOString(),
+    }, {
+      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      Prefer: 'return=minimal',
+    });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error updating template:', error);
+    res.status(500).json({ error: 'Error al actualizar plantilla.' });
+  }
 });
 
 // Serve static files in production

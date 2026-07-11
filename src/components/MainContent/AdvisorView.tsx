@@ -1,8 +1,12 @@
-import { Sparkles } from 'lucide-react';
+import { Sparkles, FileText, MessageSquare } from 'lucide-react';
+import { useState } from 'react';
 import AiAdvisor from '../AiAdvisor';
+import TemplateEditor from '../TemplateEditor';
 import PageHeader from '../PageHeader';
 
 export default function AdvisorView() {
+  const [tab, setTab] = useState<'chat' | 'templates'>('chat');
+
   return (
     <div className="flex-1 max-w-3xl mx-auto space-y-4 animate-fade-in">
       <PageHeader
@@ -18,7 +22,35 @@ export default function AdvisorView() {
           </p>
         </div>
       </div>
-      <AiAdvisor />
+
+      {/* Tabs */}
+      <div className="flex border-b border-neutral-200/60">
+        <button
+          onClick={() => setTab('chat')}
+          className={`flex items-center gap-1.5 px-4 py-2.5 text-[10px] font-semibold transition-colors border-b-2 -mb-px ${
+            tab === 'chat'
+              ? 'border-brand-600 text-brand-700'
+              : 'border-transparent text-neutral-500 hover:text-neutral-700'
+          }`}
+        >
+          <MessageSquare className="h-3.5 w-3.5" />
+          Consulta Legal
+        </button>
+        <button
+          onClick={() => setTab('templates')}
+          className={`flex items-center gap-1.5 px-4 py-2.5 text-[10px] font-semibold transition-colors border-b-2 -mb-px ${
+            tab === 'templates'
+              ? 'border-brand-600 text-brand-700'
+              : 'border-transparent text-neutral-500 hover:text-neutral-700'
+          }`}
+        >
+          <FileText className="h-3.5 w-3.5" />
+          Plantillas
+        </button>
+      </div>
+
+      {/* Content */}
+      {tab === 'chat' ? <AiAdvisor /> : <TemplateEditor onBack={() => setTab('chat')} />}
     </div>
   );
 }

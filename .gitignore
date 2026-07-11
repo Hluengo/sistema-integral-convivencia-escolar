@@ -15,3 +15,5 @@ coverage/
 .vscode/
 metadata.json
 react-doctor-report.json
+.vercel
+supabase/.temp

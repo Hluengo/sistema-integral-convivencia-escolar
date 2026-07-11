@@ -364,10 +364,28 @@ ${safeChecklist.length > 0 ? safeChecklist.map((c: any) => `
 
     let systemPrompt = '';
 
+    // Try loading prompt from DB
+    let dbPrompt: string | null = null;
+    try {
+      const tplRes = await fetch(`https://jjzwwhnofiepvliugowr.supabase.co/rest/v1/document_templates?doc_type=eq.${docType}&select=system_prompt&limit=1`, {
+        headers: {
+          apikey: process.env.VITE_SUPABASE_ANON_KEY || '',
+          Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+      });
+      const tplData = await tplRes.json();
+      if (Array.isArray(tplData) && tplData.length > 0 && tplData[0].system_prompt) {
+        dbPrompt = tplData[0].system_prompt;
+      }
+    } catch { /* fallback to hardcoded */ }
+
+    if (dbPrompt) {
+      systemPrompt = dbPrompt;
+    }
     // ============================================
     // PROMPT 1: NOTIFICACIÓN DE INICIO DE INDAGACIÓN
     // ============================================
-    if (docType === 'notificacion_apertura') {
+    else if (docType === 'notificacion_apertura') {
       systemPrompt = `Actúa como un profesional experto en convivencia escolar, normativa educacional chilena, procedimientos disciplinarios, debido proceso y redacción institucional.
 
 Redacta una "NOTIFICACIÓN DE INICIO DE INDAGACIÓN DE CONVIVENCIA ESCOLAR", manteniendo un formato formal, objetivo, descriptivo y jurídicamente prudente.
@@ -838,6 +856,47 @@ Tus respuestas deben estar redactadas en español formal de Chile, alineadas con
   } catch (error: any) {
     console.error('Error en el Chat de Consultoría:', error);
     res.status(500).json({ error: 'Error al procesar su consulta legal.' });
+  }
+});
+
+// Document templates: GET all, PUT single
+app.get('/api/document-templates', async (req, res) => {
+  try {
+    const result = await fetch('https://jjzwwhnofiepvliugowr.supabase.co/rest/v1/document_templates?select=*&order=doc_type', {
+      headers: {
+        apikey: process.env.VITE_SUPABASE_ANON_KEY || '',
+        Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY}`,
+      },
+    });
+    const data = await result.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener plantillas.' });
+  }
+});
+
+app.put('/api/document-templates', requireAuth, async (req, res) => {
+  const { id, system_prompt } = req.body;
+  if (!id || !system_prompt) {
+    return res.status(400).json({ error: 'Campos requeridos: id, system_prompt' });
+  }
+
+  try {
+    const sanitized = sanitize(system_prompt).slice(0, 20000);
+    await fetch(`https://jjzwwhnofiepvliugowr.supabase.co/rest/v1/document_templates?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: {
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        Prefer: 'return=minimal',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ system_prompt: sanitized, updated_at: new Date().toISOString() }),
+    });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error updating template:', error);
+    res.status(500).json({ error: 'Error al actualizar plantilla.' });
   }
 });
 
