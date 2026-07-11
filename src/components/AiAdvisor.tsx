@@ -111,10 +111,14 @@ export default function AiAdvisor() {
     try {
       const currentMessages = messagesRef.current;
       const { data: { session } } = await supabase.auth.getSession();
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
+      if (!session?.access_token) {
+        setMessages(prev => [...prev, { role: 'model', content: '**Sesión requerida:** Su sesión ha expirado o no está autenticado. Por favor, cierre sesión e inicie sesión nuevamente para actualizar sus credenciales.' }]);
+        return;
       }
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      };
       const response = await fetch('/api/advisor-chat', {
         method: 'POST',
         headers,
@@ -129,7 +133,7 @@ export default function AiAdvisor() {
 
       const contentType = response.headers.get('content-type') || '';
       if (response.status === 401) {
-        setMessages(prev => [...prev, { role: 'model', content: '**Sesión requerida:** Debe iniciar sesión para usar el asistente de IA. Haga clic en "Iniciar sesión" en el encabezado.' }]);
+        setMessages(prev => [...prev, { role: 'model', content: '**Sesión inválida:** Su token de sesión no es válido. Por favor, cierre sesión e inicie sesión nuevamente.' }]);
         return;
       }
       if (!response.ok || !contentType.includes('application/json')) {

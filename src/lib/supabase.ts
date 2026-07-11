@@ -548,21 +548,21 @@ export async function listDocuments(causaId: string): Promise<{ name: string; ur
 
   const results: { name: string; url: string }[] = [];
   
-  for (const item of data) {
-    const filePath = `${causaId}/${item.name}`;
-    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-      .from(STORAGE_BUCKET)
-      .createSignedUrl(filePath, 3600);
-    
-    if (!signedUrlError && signedUrlData?.signedUrl) {
-      results.push({
-        name: item.name,
-        url: signedUrlData.signedUrl
-      });
-    }
-  }
+  const signedUrls = await Promise.all(
+    data.map(async (item) => {
+      const filePath = `${causaId}/${item.name}`;
+      const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .createSignedUrl(filePath, 3600);
+      
+      if (!signedUrlError && signedUrlData?.signedUrl) {
+        return { name: item.name, url: signedUrlData.signedUrl };
+      }
+      return null;
+    })
+  );
 
-  return results;
+  return signedUrls.filter((r): r is { name: string; url: string } => r !== null);
 }
 
 /**

@@ -234,6 +234,10 @@ export default function App() {
     setCurrentView('causas');
   }, [dispatchForm, requireAuth]);
 
+  // Use ref for keyboard handler to avoid stale closures
+  const handleOpenCreateFormRef = useRef(handleOpenCreateForm);
+  handleOpenCreateFormRef.current = handleOpenCreateForm;
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName;
@@ -242,7 +246,7 @@ export default function App() {
 
       if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
-        handleOpenCreateForm();
+        handleOpenCreateFormRef.current();
       } else if (e.key === '?') {
         e.preventDefault();
         setShowShortcuts(prev => !prev);
@@ -258,7 +262,7 @@ export default function App() {
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [handleOpenCreateForm, showCreateForm, showLoginModal, showShortcuts, dispatchForm]);
+  }, [showCreateForm, showLoginModal, showShortcuts, dispatchForm]);
 
   const contextValue = useMemo(() => ({
     user,
@@ -445,7 +449,12 @@ export default function App() {
 
       {showShortcuts && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowShortcuts(false)} />
+          <button 
+            type="button"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm" 
+            aria-label="Cerrar atajos de teclado"
+            onClick={() => setShowShortcuts(false)} 
+          />
           <div className="relative bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 animate-scale-in">
             <h3 className="text-base font-semibold text-neutral-900 mb-4">Atajos de teclado</h3>
             <ul className="text-sm text-neutral-600 space-y-2">
@@ -454,7 +463,7 @@ export default function App() {
               <li className="flex justify-between"><span>Cerrar modal</span><kbd className="px-1.5 py-0.5 bg-neutral-100 rounded text-xs font-mono">Esc</kbd></li>
               <li className="flex justify-between"><span>Paleta de comandos</span><kbd className="px-1.5 py-0.5 bg-neutral-100 rounded text-xs font-mono">Ctrl+K</kbd></li>
             </ul>
-            <button onClick={() => setShowShortcuts(false)} className="mt-6 w-full px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-xl hover:bg-brand-700 transition-colors cursor-pointer">Cerrar</button>
+            <button type="button" onClick={() => setShowShortcuts(false)} className="mt-6 w-full px-4 py-2 text-sm font-medium text-white bg-brand-600 rounded-xl hover:bg-brand-700 transition-colors cursor-pointer">Cerrar</button>
           </div>
         </div>
       )}

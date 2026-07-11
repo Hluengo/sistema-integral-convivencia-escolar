@@ -4,7 +4,8 @@ import http from 'node:http';
 import crypto from 'node:crypto';
 
 // Set up test JWT secret before importing the app
-process.env.SUPABASE_JWT_SECRET = 'test-secret-key-for-unit-tests';
+// Use base64-encoded secret to match Supabase format
+process.env.SUPABASE_JWT_SECRET = Buffer.from('test-secret-key-for-unit-tests').toString('base64');
 
 /**
  * Create a valid JWT token for testing using HMAC-SHA256
@@ -15,9 +16,11 @@ async function createTestJwt(payload: Record<string, unknown>, secret: string): 
   const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
   const data = `${headerB64}.${payloadB64}`;
 
+  // Decode base64 secret to match server behavior (Supabase JWT secrets are base64-encoded)
+  const secretBytes = Buffer.from(secret, 'base64');
   const key = await crypto.subtle.importKey(
     'raw',
-    new TextEncoder().encode(secret),
+    secretBytes,
     { name: 'HMAC', hash: 'SHA-256' },
     false,
     ['sign']
@@ -35,10 +38,13 @@ describe('API endpoints', () => {
   let VALID_TOKEN: string;
 
   before(async () => {
+    // The base64-encoded secret used for JWT verification
+    const b64Secret = process.env.SUPABASE_JWT_SECRET!;
+    
     // Create a valid token for the test session
     VALID_TOKEN = await createTestJwt(
       { sub: 'test-user-id', exp: Math.floor(Date.now() / 1000) + 3600 },
-      'test-secret-key-for-unit-tests'
+      b64Secret
     );
 
     const mod = await import('../../api/index.js');

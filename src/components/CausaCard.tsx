@@ -78,7 +78,7 @@ export default memo(function CausaCard({ causa, privacyMode, onSelect, isSelecte
           {causa.observaciones}
         </p>
 
-        <div className="flex items-center gap-0" role="list" aria-label="Progreso de fases">
+        <ul className="flex items-center gap-0" aria-label="Progreso de fases">
           {FASES_LIST.map((f, i) => {
             const { total, completed } = getPhaseProgress(causa.checklistDebidoProceso, f.name);
             const isComplete = total > 0 && completed === total;
@@ -87,7 +87,7 @@ export default memo(function CausaCard({ causa, privacyMode, onSelect, isSelecte
 
             return (
               <React.Fragment key={f.name}>
-                <div className="flex flex-col items-center" role="listitem">
+                <li className="flex flex-col items-center">
                   <div
                     className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${
                       isComplete
@@ -107,7 +107,7 @@ export default memo(function CausaCard({ causa, privacyMode, onSelect, isSelecte
                   <span className="hidden sm:block text-[10px] text-neutral-400 mt-1 whitespace-nowrap">
                     {f.name}
                   </span>
-                </div>
+                </li>
                 {!isLast && (
                   <div
                     className={`h-0.5 flex-1 ${isComplete ? 'bg-brand-400' : 'bg-neutral-200'}`}
@@ -117,7 +117,7 @@ export default memo(function CausaCard({ causa, privacyMode, onSelect, isSelecte
               </React.Fragment>
             );
           })}
-        </div>
+        </ul>
 
         <PlazoBar causa={causa} />
 

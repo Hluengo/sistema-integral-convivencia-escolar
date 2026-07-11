@@ -100,20 +100,20 @@ async function verifyJwtSignature(token, secret) {
   const parts = token.split('.');
   if (parts.length !== 3) return null;
 
-  const header = JSON.parse(Buffer.from(parts[0], 'base64url').toString());
   const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
   const signature = Buffer.from(parts[2], 'base64url');
 
-  // Import the secret as a CryptoKey for HMAC-SHA256
+  // Decode base64 secret to raw bytes (Supabase JWT secrets are base64-encoded)
+  const secretBytes = Buffer.from(secret, 'base64');
+
   const key = await crypto.subtle.importKey(
     'raw',
-    new TextEncoder().encode(secret),
+    secretBytes,
     { name: 'HMAC', hash: 'SHA-256' },
     false,
     ['verify']
   );
 
-  // Verify signature
   const data = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
   const valid = await crypto.subtle.verify('HMAC', key, signature, data);
 
