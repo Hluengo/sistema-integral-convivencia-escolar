@@ -3,6 +3,7 @@ import path from 'path';
 import https from 'https';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
+import * as jose from 'jose';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -97,32 +98,35 @@ function sanitizeForAI(text) {
 
 // Auth middleware: verify Supabase JWT from Authorization header
 async function verifyJwtSignature(token, secret) {
-  const parts = token.split('.');
-  if (parts.length !== 3) return null;
-
-  const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
-  const signature = Buffer.from(parts[2], 'base64url');
-
-  // Decode base64 secret to raw bytes (Supabase JWT secrets are base64-encoded)
-  const secretBytes = Buffer.from(secret, 'base64');
-
-  const key = await crypto.subtle.importKey(
-    'raw',
-    secretBytes,
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['verify']
-  );
-
-  const data = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
-  const valid = await crypto.subtle.verify('HMAC', key, signature, data);
-
-  if (!valid) return null;
-
-  // Check expiration
-  if (payload.exp && payload.exp * 1000 < Date.now()) return null;
-
-  return payload;
+  try {
+    // Use jose library which supports ES256 (Supabase's new JWT signing algorithm)
+    const secretBytes = new TextEncoder().encode(secret);
+    const { payload } = await jose.jwtVerify(token, secretBytes, {
+      algorithms: ['HS256', 'ES256']
+    });
+    
+    // Check expiration
+    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
+    
+    return payload;
+  } catch (e) {
+    // Try legacy HMAC verification as fallback
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+      const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+      const signature = Buffer.from(parts[2], 'base64url');
+      const secretBytes = Buffer.from(secret, 'base64');
+      const key = await crypto.subtle.importKey('raw', secretBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
+      const data = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
+      const valid = await crypto.subtle.verify('HMAC', key, signature, data);
+      if (!valid) return null;
+      if (payload.exp && payload.exp * 1000 < Date.now()) return null;
+      return payload;
+    } catch {
+      return null;
+    }
+  }
 }
 
 async function requireAuth(req, res, next) {
