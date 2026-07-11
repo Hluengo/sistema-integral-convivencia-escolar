@@ -6,10 +6,10 @@
 import express from 'express';
 import path from 'path';
 import crypto from 'crypto';
+import https from 'https';
 import compression from 'compression';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
-import * as jose from 'jose';
 
 dotenv.config();
 dotenv.config({ path: '.env.local' });
@@ -20,37 +20,64 @@ const PORT = parseInt(process.env.PORT || '3001', 10);
 app.use(compression());
 app.use(express.json());
 
-// Auth middleware: verify Supabase JWT from Authorization header
-async function verifyJwtSignature(token: string, secret: string): Promise<Record<string, unknown> | null> {
-  try {
-    // Use jose library which supports ES256 (Supabase's new JWT signing algorithm)
-    const secretBytes = new TextEncoder().encode(secret);
-    const { payload } = await jose.jwtVerify(token, secretBytes, {
-      algorithms: ['HS256', 'ES256']
-    });
-    
-    // Check expiration
-    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
-    
-    return payload as Record<string, unknown>;
-  } catch (e) {
-    // Try legacy HMAC verification as fallback
+// Auth middleware: verify Supabase JWT
+// Strategy: try HMAC first (tests + legacy), then Supabase API (ES256)
+async function verifyJwtViaHmac(token: string, secret: string): Promise<Record<string, unknown> | null> {
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+  const signature = Buffer.from(parts[2], 'base64url');
+
+  for (const secretBytes of [new TextEncoder().encode(secret), Buffer.from(secret, 'base64')]) {
     try {
-      const parts = token.split('.');
-      if (parts.length !== 3) return null;
-      const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
-      const signature = Buffer.from(parts[2], 'base64url');
-      const secretBytes = Buffer.from(secret, 'base64');
       const key = await crypto.subtle.importKey('raw', secretBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
       const data = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
       const valid = await crypto.subtle.verify('HMAC', key, signature, data);
-      if (!valid) return null;
-      if (payload.exp && payload.exp * 1000 < Date.now()) return null;
-      return payload;
-    } catch {
-      return null;
-    }
+      if (valid) {
+        if (payload.exp && payload.exp * 1000 < Date.now()) return null;
+        return payload;
+      }
+    } catch { /* try next */ }
   }
+  return null;
+}
+
+function verifyViaSupabaseApi(token: string): Promise<Record<string, unknown> | null> {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const anonKey = process.env.VITE_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !anonKey) return Promise.resolve(null);
+
+  const hostname = new URL(supabaseUrl).hostname;
+  return new Promise((resolve) => {
+    const req = https.request({
+      hostname,
+      path: '/auth/v1/user',
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}`, apikey: anonKey },
+    }, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        if (res.statusCode !== 200) return resolve(null);
+        try {
+          const user = JSON.parse(data);
+          resolve({ sub: user.id, email: user.email, role: user.role });
+        } catch { resolve(null); }
+      });
+    });
+    req.on('error', () => resolve(null));
+    req.setTimeout(5000, () => { req.destroy(); resolve(null); });
+    req.end();
+  });
+}
+
+async function verifyJwtSignature(token: string, secret: string): Promise<Record<string, unknown> | null> {
+  // 1) Fast path: HMAC (works in tests and with legacy secret)
+  const hmacResult = await verifyJwtViaHmac(token, secret);
+  if (hmacResult) return hmacResult;
+
+  // 2) Slow path: ask Supabase (works with ES256 tokens)
+  return verifyViaSupabaseApi(token);
 }
 
 async function requireAuth(req: express.Request, res: express.Response, next: express.NextFunction) {

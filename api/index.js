@@ -95,15 +95,14 @@ function sanitizeForAI(text) {
     .slice(0, MAX_STR);
 }
 
-// Auth middleware: verify Supabase JWT from Authorization header
-async function verifyJwtSignature(token, secret) {
+// Auth middleware: verify Supabase JWT
+// Strategy: try HMAC first (tests + legacy), then Supabase API (ES256)
+async function verifyJwtViaHmac(token, secret) {
   const parts = token.split('.');
   if (parts.length !== 3) return null;
-
   const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
   const signature = Buffer.from(parts[2], 'base64url');
 
-  // Try raw secret first, then base64-decoded
   for (const secretBytes of [new TextEncoder().encode(secret), Buffer.from(secret, 'base64')]) {
     try {
       const key = await crypto.subtle.importKey('raw', secretBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
@@ -116,6 +115,44 @@ async function verifyJwtSignature(token, secret) {
     } catch { /* try next */ }
   }
   return null;
+}
+
+function verifyViaSupabaseApi(token) {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const anonKey = process.env.VITE_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !anonKey) return Promise.resolve(null);
+
+  const hostname = new URL(supabaseUrl).hostname;
+  return new Promise((resolve) => {
+    const req = https.request({
+      hostname,
+      path: '/auth/v1/user',
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}`, apikey: anonKey },
+    }, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        if (res.statusCode !== 200) return resolve(null);
+        try {
+          const user = JSON.parse(data);
+          resolve({ sub: user.id, email: user.email, role: user.role });
+        } catch { resolve(null); }
+      });
+    });
+    req.on('error', () => resolve(null));
+    req.setTimeout(5000, () => { req.destroy(); resolve(null); });
+    req.end();
+  });
+}
+
+async function verifyJwtSignature(token, secret) {
+  // 1) Fast path: HMAC (works in tests and with legacy secret)
+  const hmacResult = await verifyJwtViaHmac(token, secret);
+  if (hmacResult) return hmacResult;
+
+  // 2) Slow path: ask Supabase (works with ES256 tokens)
+  return verifyViaSupabaseApi(token);
 }
 
 async function requireAuth(req, res, next) {
