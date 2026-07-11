@@ -237,6 +237,50 @@ export const getBaseChecklist = (): ChecklistItem[] => [
     descripcion: 'Procedimiento completamente finalizado y archivado.',
     completado: false,
     requeridoPor: 'Reglamento Interno'
+  },
+
+  // 6. Cumplimiento Legal Obligatorio (Ley 21809)
+  {
+    id: 'chk_legal_1',
+    label: 'Canal Confidencial Activado',
+    descripcion: 'Se ha activado el canal seguro y confidencial para la denuncia con reserva de identidad del denunciante (Ley 21809, Art. 16E.e).',
+    completado: false,
+    requeridoPor: 'Ley 21809'
+  },
+  {
+    id: 'chk_legal_2',
+    label: 'Plazo de Investigación Controlado',
+    descripcion: 'Se ha registrado el inicio de investigación y se controla el plazo máximo de 60 días hábiles (Ley 21809, Art. 16E.g).',
+    completado: false,
+    requeridoPor: 'Ley 21809'
+  },
+  {
+    id: 'chk_legal_3',
+    label: 'Medidas de Protección de Víctima',
+    descripcion: 'Se han determinado medidas de protección para la persona afectada desde el conocimiento de los hechos (Ley 21809, Art. 16E.j).',
+    completado: false,
+    requeridoPor: 'Ley 21809'
+  },
+  {
+    id: 'chk_legal_4',
+    label: 'Suspensión Dentro de Plazo Legal',
+    descripcion: 'La suspensión no excede los 15 días hábiles y se ha implementado monitoreo pedagógico obligatorio (Ley 21809, Art. 16E.j).',
+    completado: false,
+    requeridoPor: 'Ley 21809'
+  },
+  {
+    id: 'chk_legal_5',
+    label: 'Verificación NEE/Discapacidad',
+    descripcion: 'Se ha verificado que el estudiante no tiene NEE o discapacidad que pudiera fundamentar sanciones discriminatorias (Ley 21809, Art. 16E).',
+    completado: false,
+    requeridoPor: 'Ley 21809'
+  },
+  {
+    id: 'chk_legal_6',
+    label: 'Notificación a Superintendencia',
+    descripcion: 'Se ha notificado a la Superintendencia de Educación dentro de los 5 días hábiles en caso de expulsión (Ley 21809, Art. 16E).',
+    completado: false,
+    requeridoPor: 'Ley 21809'
   }
 ];
 

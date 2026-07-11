@@ -83,6 +83,39 @@ export interface Causa {
   checklistDebidoProceso: ChecklistItem[];
   conductaRiceId?: string;
   medidasEjecutadas?: string[];
+  
+  // === CAMPOS LEGALES OBLIGATORIOS (Ley 21809, Art. 16E) ===
+  
+  // Canal seguro y confidencial de denuncias
+  esDenunciaConfidencial?: boolean;
+  denunciantAnonimo?: boolean;
+  identidadReservada?: boolean;
+  
+  // Control de plazos legales
+  fechaInicioInvestigacion?: string;
+  plazoInvestigacionDias?: number; // Máximo 60 días (2 meses)
+  fechaLimiteInvestigacion?: string;
+  
+  // Suspensión (máximo 15 días hábiles)
+  fechaInicioSuspension?: string;
+  duracionSuspensionDias?: number;
+  fechaFinSuspension?: string;
+  monitoreoPedagogico?: boolean;
+  
+  // Notificación a Superintendencia (5 días hábiles para expulsión)
+  requiereNotificacionSuperintendencia?: boolean;
+  fechaNotificacionSuperintendencia?: string;
+  plazoNotificacionDias?: number; // Máximo 5 días hábiles
+  fechaLimiteNotificacion?: string;
+  
+  // Protección de víctimas (Ley 21809, Art. 16E, letra j)
+  medidasProteccionVictima?: string[];
+  medidasProteccionDenunciado?: string[];
+  
+  // Registro de NEE/Discapacidad (para evitar sanciones discriminatorias)
+  estudianteTieneNEE?: boolean;
+  tipoNEE?: string;
+  sancionesNEEDesactivadas?: boolean;
 }
 
 export interface Statistics {

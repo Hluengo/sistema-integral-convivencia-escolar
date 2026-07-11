@@ -4,7 +4,7 @@
  */
 
 import React, { useRef, useEffect, useState } from 'react';
-import { Scale, AlertCircle, FileText, Trash2 } from 'lucide-react';
+import { Scale, AlertCircle, FileText, Trash2, Shield, Clock, Users } from 'lucide-react';
 import { Causa, EstadoCausa, TipoInfraccion } from '../types';
 import { nowDateOnly } from '../lib/dateUtils';
 import ImproveTextarea from './ImproveTextarea';
@@ -35,6 +35,18 @@ export default function EditCausaModal({ causa, onClose, onSave, onDelete }: Edi
   const [estadoActual, setEstadoActual] = useState<EstadoCausa>(causa.estadoActual);
   const [observaciones, setObservaciones] = useState(causa.observaciones);
   const [aulaSegura, setAulaSegura] = useState(causa.comprometeAulaSegura);
+  
+  // Legal compliance fields
+  const [esDenunciaConfidencial, setEsDenunciaConfidencial] = useState(causa.esDenunciaConfidencial || false);
+  const [identidadReservada, setIdentidadReservada] = useState(causa.identidadReservada || false);
+  const [fechaInicioInvestigacion, setFechaInicioInvestigacion] = useState(causa.fechaInicioInvestigacion || '');
+  const [fechaInicioSuspension, setFechaInicioSuspension] = useState(causa.fechaInicioSuspension || '');
+  const [duracionSuspensionDias, setDuracionSuspensionDias] = useState(causa.duracionSuspensionDias || 0);
+  const [monitoreoPedagogico, setMonitoreoPedagogico] = useState(causa.monitoreoPedagogico || false);
+  const [requiereNotificacionSuperintendencia, setRequiereNotificacionSuperintendencia] = useState(causa.requiereNotificacionSuperintendencia || false);
+  const [fechaNotificacionSuperintendencia, setFechaNotificacionSuperintendencia] = useState(causa.fechaNotificacionSuperintendencia || '');
+  const [estudianteTieneNEE, setEstudianteTieneNEE] = useState(causa.estudianteTieneNEE || false);
+  const [tipoNEE, setTipoNEE] = useState(causa.tipoNEE || '');
 
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -72,7 +84,18 @@ export default function EditCausaModal({ causa, onClose, onSave, onDelete }: Edi
       responsable,
       estadoActual,
       observaciones,
-      fechaUltimaActualizacion: nowDateOnly()
+      fechaUltimaActualizacion: nowDateOnly(),
+      // Legal compliance fields
+      esDenunciaConfidencial,
+      identidadReservada,
+      fechaInicioInvestigacion: fechaInicioInvestigacion || undefined,
+      fechaInicioSuspension: fechaInicioSuspension || undefined,
+      duracionSuspensionDias: duracionSuspensionDias || undefined,
+      monitoreoPedagogico,
+      requiereNotificacionSuperintendencia,
+      fechaNotificacionSuperintendencia: fechaNotificacionSuperintendencia || undefined,
+      estudianteTieneNEE,
+      tipoNEE: tipoNEE || undefined
     });
   };
 
@@ -198,6 +221,176 @@ export default function EditCausaModal({ causa, onClose, onSave, onDelete }: Edi
               rows={3}
               className={`${fieldClass} resize-none leading-relaxed font-sans`}
             />
+            </div>
+
+            {/* === SECCIÓN: CUMPLIMIENTO LEGAL (Ley 21809) === */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-200 space-y-3">
+              <div className="flex items-center gap-2 mb-3">
+                <Shield className="h-4 w-4 text-blue-600" />
+                <span className="text-xs font-bold text-blue-800 uppercase tracking-wide">
+                  Cumplimiento Legal Obligatorio (Ley 21809)
+                </span>
+              </div>
+
+              {/* Canal Confidencial */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="edit-confidencial"
+                    checked={esDenunciaConfidencial}
+                    onChange={(e) => setEsDenunciaConfidencial(e.target.checked)}
+                    className="h-4 w-4 text-blue-600 rounded border-blue-300 focus:ring-blue-500"
+                  />
+                  <label htmlFor="edit-confidencial" className="text-xs text-blue-700 font-medium">
+                    Canal Confidencial (Art. 16E.e)
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="edit-reserva"
+                    checked={identidadReservada}
+                    onChange={(e) => setIdentidadReservada(e.target.checked)}
+                    disabled={!esDenunciaConfidencial}
+                    className="h-4 w-4 text-blue-600 rounded border-blue-300 focus:ring-blue-500 disabled:opacity-50"
+                  />
+                  <label htmlFor="edit-reserva" className="text-xs text-blue-700 font-medium">
+                    Identidad Reservada
+                  </label>
+                </div>
+              </div>
+
+              {/* Fechas de Investigación */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="edit-fecha-investigacion" className={labelClass}>
+                    Inicio Investigación (máx. 60 días)
+                  </label>
+                  <input
+                    id="edit-fecha-investigacion"
+                    type="date"
+                    value={fechaInicioInvestigacion}
+                    onChange={(e) => setFechaInicioInvestigacion(e.target.value)}
+                    className={fieldClass}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="edit-fecha-suspension" className={labelClass}>
+                    Inicio Suspensión (máx. 15 días)
+                  </label>
+                  <input
+                    id="edit-fecha-suspension"
+                    type="date"
+                    value={fechaInicioSuspension}
+                    onChange={(e) => setFechaInicioSuspension(e.target.value)}
+                    className={fieldClass}
+                  />
+                </div>
+              </div>
+
+              {/* Suspensión y Monitoreo */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="edit-dias-suspension" className={labelClass}>
+                    Días de Suspensión
+                  </label>
+                  <input
+                    id="edit-dias-suspension"
+                    type="number"
+                    min="0"
+                    max="15"
+                    value={duracionSuspensionDias}
+                    onChange={(e) => setDuracionSuspensionDias(parseInt(e.target.value) || 0)}
+                    className={fieldClass}
+                  />
+                  {duracionSuspensionDias > 15 && (
+                    <p className="text-[10px] text-red-600 mt-1 font-medium">
+                      ⚠️ Excede máximo legal (15 días)
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 pt-4">
+                  <input
+                    type="checkbox"
+                    id="edit-monitoreo"
+                    checked={monitoreoPedagogico}
+                    onChange={(e) => setMonitoreoPedagogico(e.target.checked)}
+                    className="h-4 w-4 text-blue-600 rounded border-blue-300 focus:ring-blue-500"
+                  />
+                  <label htmlFor="edit-monitoreo" className="text-xs text-blue-700 font-medium">
+                    Monitoreo Pedagógico (Art. 16E.j)
+                  </label>
+                </div>
+              </div>
+
+              {/* Superintendencia */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="edit-superintendencia"
+                    checked={requiereNotificacionSuperintendencia}
+                    onChange={(e) => setRequiereNotificacionSuperintendencia(e.target.checked)}
+                    className="h-4 w-4 text-blue-600 rounded border-blue-300 focus:ring-blue-500"
+                  />
+                  <label htmlFor="edit-superintendencia" className="text-xs text-blue-700 font-medium">
+                    Notificar Superintendencia (5 días)
+                  </label>
+                </div>
+                {requiereNotificacionSuperintendencia && (
+                  <div>
+                    <label htmlFor="edit-fecha-notificacion" className={labelClass}>
+                      Fecha Notificación
+                    </label>
+                    <input
+                      id="edit-fecha-notificacion"
+                      type="date"
+                      value={fechaNotificacionSuperintendencia}
+                      onChange={(e) => setFechaNotificacionSuperintendencia(e.target.value)}
+                      className={fieldClass}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* NEE/Discapacidad */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="edit-nee"
+                    checked={estudianteTieneNEE}
+                    onChange={(e) => setEstudianteTieneNEE(e.target.checked)}
+                    className="h-4 w-4 text-blue-600 rounded border-blue-300 focus:ring-blue-500"
+                  />
+                  <label htmlFor="edit-nee" className="text-xs text-blue-700 font-medium">
+                    Estudiante con NEE/DisCAPACIDAD
+                  </label>
+                </div>
+                {estudianteTieneNEE && (
+                  <div>
+                    <label htmlFor="edit-tipo-nee" className={labelClass}>
+                      Tipo NEE
+                    </label>
+                    <input
+                      id="edit-tipo-nee"
+                      type="text"
+                      value={tipoNEE}
+                      onChange={(e) => setTipoNEE(e.target.value)}
+                      placeholder="Ej: Autismo, TDAH, etc."
+                      className={fieldClass}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Advertencia NEE */}
+              {estudianteTieneNEE && (
+                <div className="bg-amber-50 p-2 rounded-lg border border-amber-200 text-[10px] text-amber-800 font-medium">
+                  ⚠️ <strong>Prohibición Legal:</strong> No se pueden aplicar sanciones que se funden en la discapacidad o NEE (Ley 21809, Art. 16E).
+                </div>
+              )}
             </div>
 
             {tipoInfraccion === 'Gravísima' && (

@@ -6,7 +6,17 @@
 import React, { Suspense, lazy, useState, useMemo } from 'react';
 import { Causa, EstadoCausa, UserRole } from '../types';
 import { getFaseForEstado } from '../data';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Clock, Shield, FileText } from 'lucide-react';
+import { 
+  verificarPlazoInvestigacion, 
+  verificarPlazoSuspension, 
+  verificarPlazoNotificacionSuperintendencia,
+  verificarConformidadLegal,
+  generarResumenConformidad,
+  MAX_PLAZO_INVESTIGACION_DIAS,
+  MAX_PLAZO_SUSPENSION_DIAS,
+  MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS
+} from '../lib/legalCompliance';
 import TimelineHeader from './InteractiveTimeline/TimelineHeader';
 import TimelineTabs from './InteractiveTimeline/TimelineTabs';
 import TimelineTabPanels from './InteractiveTimeline/TimelineTabPanels';
@@ -129,6 +139,42 @@ export default function InteractiveTimeline({
 
     if (causa.comprometeAulaSegura && causa.estadoActual === EstadoCausa.MEDIACION_EN_DESARROLLO) {
       result.push("Contradicción Procedimental: El caso compromete Aula Segura (Ley 21.128), lo cual es legalmente incompatible con derivaciones o procesos de mediación activa.");
+    }
+
+    // === VERIFICACIONES LEGALES OBLIGATORIAS (Ley 21809) ===
+    
+    // Verificar plazo de investigación
+    const plazoInvestigacion = verificarPlazoInvestigacion(causa);
+    if (plazoInvestigacion.estado === 'vencido') {
+      result.push(`INCUMPLIMIENTO LEGAL: ${plazoInvestigacion.mensaje}. Máximo permitido: ${MAX_PLAZO_INVESTIGACION_DIAS} días hábiles (Ley 21809, Art. 16E, letra g).`);
+    } else if (plazoInvestigacion.estado === 'alerta') {
+      result.push(`ALERTA LEGAL: ${plazoInvestigacion.mensaje}`);
+    }
+
+    // Verificar plazo de suspensión
+    const plazoSuspension = verificarPlazoSuspension(causa);
+    if (plazoSuspension.estado === 'vencido') {
+      result.push(`INCUMPLIMIENTO LEGAL: ${plazoSuspension.mensaje}. Máximo permitido: ${MAX_PLAZO_SUSPENSION_DIAS} días hábiles (Ley 21809, Art. 16E, letra j).`);
+    } else if (plazoSuspension.estado === 'alerta') {
+      result.push(`ALERTA LEGAL: ${plazoSuspension.mensaje}`);
+    }
+
+    // Verificar notificación a Superintendencia
+    const plazoNotificacion = verificarPlazoNotificacionSuperintendencia(causa);
+    if (plazoNotificacion.estado === 'vencido') {
+      result.push(`INCUMPLIMIENTO LEGAL: ${plazoNotificacion.mensaje}. Plazo: ${MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS} días hábiles (Ley 21809, Art. 16E).`);
+    } else if (plazoNotificacion.estado === 'alerta') {
+      result.push(`ALERTA LEGAL: ${plazoNotificacion.mensaje}`);
+    }
+
+    // Verificar canal confidencial incompleto
+    if (causa.esDenunciaConfidencial && !causa.identidadReservada) {
+      result.push("ALERTA LEGAL: La denuncia está marcada como confidencial pero no se ha reservado la identidad del denunciante (Ley 21809, Art. 16E, letra e).");
+    }
+
+    // Verificar monitoreo pedagógico en suspensión
+    if (causa.fechaInicioSuspension && !causa.monitoreoPedagogico) {
+      result.push("ALERTA LEGAL: La suspensión requiere monitoreo pedagógico obligatorio (Ley 21809, Art. 16E, letra j).");
     }
 
     return result;
