@@ -63,9 +63,12 @@ export default function App() {
     const { data: { subscription } } = onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       setAuthLoading(false);
-      // Cerrar el modal de login automáticamente al autenticarse
       if (session?.user) {
         setShowLoginModal(false);
+      } else {
+        setCurrentView('dashboard');
+        setSelectedCausaId('');
+        setSelectedFaseFilter('Todas');
       }
     });
     return () => subscription.unsubscribe();
