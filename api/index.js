@@ -267,8 +267,13 @@ Tus respuestas deben estar redactadas en español formal de Chile, alineadas con
     setCache(cacheKey, reply);
     res.json({ success: true, reply });
   } catch (error) {
-    console.error('Error en el Chat de Consultoría:', error);
-    res.status(500).json({ error: 'Error al procesar su consulta legal.' });
+    console.error('Error en el Chat de Consultoría:', error.message || error);
+    const detail = error.message?.includes('GROQ_API_KEY') 
+      ? 'API key de Groq no configurada en variables de entorno de Vercel.'
+      : error.message?.includes('Groq API error')
+        ? `Error de Groq: ${error.message}`
+        : 'Error interno del servidor.';
+    res.status(500).json({ error: detail });
   }
 });
 
