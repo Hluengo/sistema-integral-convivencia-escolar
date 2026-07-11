@@ -15,7 +15,7 @@ interface TimelineTabsProps {
 
 export default function TimelineTabs({ activeTab, setActiveTab, bitacoraCount }: TimelineTabsProps) {
   return (
-    <div className="flex border-b border-neutral-200/60 bg-neutral-50/80 p-2 gap-2" role="tablist" aria-label="Secciones del expediente">
+    <div className="flex border-b border-neutral-200/60 bg-neutral-50/80 p-2.5 gap-2.5" role="tablist" aria-label="Secciones del expediente">
       <button
         type="button"
         onClick={() => setActiveTab('proceso')}

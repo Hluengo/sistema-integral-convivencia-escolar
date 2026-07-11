@@ -27,7 +27,7 @@ export default function ImproveTextarea({
     <div>
       {label && (
         <div className="flex items-center justify-between">
-          <label htmlFor={id} className="block text-[9px] font-semibold text-neutral-400 uppercase tracking-wide">{label}</label>
+          <label htmlFor={id} className="block text-xs font-semibold text-neutral-500 uppercase tracking-wide">{label}</label>
           <button
             type="button"
             onClick={handleImprove}
@@ -52,7 +52,7 @@ export default function ImproveTextarea({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={className || "w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 leading-relaxed font-sans text-xs transition-all"}
+        className={className || "w-full mt-1.5 border border-neutral-200 rounded-xl p-3 bg-neutral-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 leading-relaxed font-sans text-xs transition-all duration-200"}
       />
     </div>
   );

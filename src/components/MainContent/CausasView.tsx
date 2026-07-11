@@ -5,6 +5,7 @@
 
 import React, { Suspense, lazy } from 'react';
 import { BookOpen, Scale } from 'lucide-react';
+import EmptyState from '../EmptyState';
 import { Causa, EstadoCausa, UserRole, FaseProcedimental } from '../../types';
 import type { FormAction } from '../../hooks/useNewCausaForm';
 
@@ -136,7 +137,7 @@ export default function CausasView({
                 </div>
                 <div className="flex items-baseline gap-2">
                   <h3 className="text-sm font-bold text-neutral-900">Expedientes</h3>
-                  <span className="text-[11px] text-neutral-400 font-medium">{filteredCausas.length} resultados</span>
+                  <span className="text-xs text-neutral-400 font-medium">{filteredCausas.length} resultados</span>
                 </div>
               </div>
 
@@ -152,7 +153,7 @@ export default function CausasView({
                     }}
                     role="tab"
                     aria-selected={selectedFaseFilter === fase}
-                    className={`px-3 py-2 text-[11px] font-semibold rounded-xl border transition-all duration-200 cursor-pointer ${
+                    className={`px-3 py-2 text-xs font-semibold rounded-xl border transition-all duration-200 cursor-pointer ${
                       selectedFaseFilter === fase
                         ? fase === 'Todas'
                           ? 'bg-neutral-900 text-white border-neutral-900 shadow-sm'
@@ -183,9 +184,13 @@ export default function CausasView({
                 ))}
               </Suspense>
             ) : (
-              <div className="card p-8 text-center">
-                <Scale className="h-8 w-8 text-neutral-300 mx-auto mb-2" aria-hidden="true" />
-                <p className="text-xs text-neutral-500 font-medium">Ningún expediente coincide con la búsqueda o filtro.</p>
+              <div className="card p-8">
+                <EmptyState
+                  icon={Scale}
+                  title="Ningún expediente coincide"
+                  description="Intente con otros filtros o cree un nuevo expediente."
+                  action={causas.length === 0 ? { label: 'Crear primera causa', onClick: handleOpenCreateForm } : undefined}
+                />
               </div>
             )}
           </div>
@@ -207,12 +212,12 @@ export default function CausasView({
               />
             </Suspense>
           ) : (
-            <div className="card p-16 text-center text-neutral-400">
-              <div className="p-4 rounded-2xl bg-neutral-50 inline-block mb-4">
-                <Scale className="h-10 w-10 text-neutral-200" aria-hidden="true" />
-              </div>
-              <p className="text-sm font-semibold text-neutral-600">Seleccione un expediente activo</p>
-              <p className="text-xs text-neutral-400 mt-1">Elija una causa de la lista para ver su timeline y gestionar el debido proceso</p>
+            <div className="card p-8">
+              <EmptyState
+                icon={BookOpen}
+                title="Seleccione un expediente activo"
+                description="Elija una causa de la lista para ver su timeline y gestionar el debido proceso"
+              />
             </div>
           )}
         </div>

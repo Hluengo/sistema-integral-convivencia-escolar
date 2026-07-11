@@ -72,18 +72,19 @@ export default function LoginPage({ onClose }: LoginPageProps) {
   return (
     <dialog
       ref={dialogRef}
-      className="bg-neutral-950 rounded-2xl border border-neutral-800 shadow-xl max-w-sm w-full mx-auto"
+      className="bg-white rounded-2xl border border-neutral-200 shadow-xl max-w-sm w-full mx-auto overflow-hidden"
       aria-label="Iniciar sesión"
       style={{ maxWidth: '360px', width: '90vw' }}
       onClose={(e) => { if (e.target === e.currentTarget && onClose) onClose(); }}
     >
+      <div className="h-1.5 w-full bg-gradient-to-r from-brand-500 to-brand-700" />
       <div className="p-5 space-y-3">
         <div className="text-center mb-6 relative">
           {onClose && (
             <button
               type="button"
               onClick={onClose}
-              className="absolute -top-2 -right-2 p-1.5 rounded-full hover:bg-brand-800 text-neutral-400 hover:text-white transition-colors"
+              className="absolute -top-2 -right-2 p-1.5 rounded-full hover:bg-neutral-100 text-neutral-400 hover:text-neutral-600 transition-colors"
               aria-label="Cerrar"
             >
               <X className="h-4 w-4" />
@@ -92,13 +93,13 @@ export default function LoginPage({ onClose }: LoginPageProps) {
           <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-gradient-to-br from-brand-600 to-brand-800 text-white shadow-lg mb-3">
             <Scale className="h-6 w-6" />
           </div>
-          <h1 className="text-lg font-bold text-white">Iniciar sesión</h1>
-          <p className="text-[11px] text-neutral-400 mt-0.5">Acceso para gestionar causas</p>
+          <h1 className="text-lg font-bold text-neutral-900">Iniciar sesión</h1>
+          <p className="text-[11px] text-neutral-500 mt-0.5">Acceso para gestionar causas</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
-            <label htmlFor="login-email" className="block text-[11px] font-semibold text-neutral-400 uppercase mb-1">
+            <label htmlFor="login-email" className="block text-[11px] font-semibold text-neutral-500 uppercase tracking-wide mb-1">
               Email
             </label>
             <input
@@ -109,12 +110,12 @@ export default function LoginPage({ onClose }: LoginPageProps) {
               placeholder="usuario@colegio.cl"
               autoComplete="email"
               required
-              className="w-full text-sm border border-brand-600 rounded-lg px-3 py-2 bg-brand-800 text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all"
+              className="w-full text-sm bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2 text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 transition-all"
             />
           </div>
 
           <div>
-            <label htmlFor="login-password" className="block text-[11px] font-semibold text-neutral-400 uppercase mb-1">
+            <label htmlFor="login-password" className="block text-[11px] font-semibold text-neutral-500 uppercase tracking-wide mb-1">
               Contraseña
             </label>
             <input
@@ -125,12 +126,12 @@ export default function LoginPage({ onClose }: LoginPageProps) {
               placeholder="••••••••"
               autoComplete="current-password"
               required
-              className="w-full text-sm border border-brand-600 rounded-lg px-3 py-2 bg-brand-800 text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all"
+              className="w-full text-sm bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2 text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 transition-all"
             />
           </div>
 
           {error && (
-            <div role="alert" className="flex items-start gap-2 p-2.5 rounded-lg bg-gravisima-900/30 border border-gravisima-700 text-gravisima-300 text-xs">
+            <div role="alert" className="flex items-start gap-2 p-2.5 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs">
               <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>

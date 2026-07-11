@@ -1,63 +1,29 @@
 import React from 'react';
-import { FileSearch, FolderOpen, Users, MessageSquare } from 'lucide-react';
+import { LucideIcon } from 'lucide-react';
 
 interface EmptyStateProps {
-  icon?: React.ReactNode;
+  icon: LucideIcon;
   title: string;
-  description?: string;
-  action?: React.ReactNode;
+  description: string;
+  action?: { label: string; onClick: () => void };
 }
 
-export default function EmptyState({ icon, title, description, action }: EmptyStateProps) {
+export default function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
   return (
-    <div role="status" className="flex flex-col items-center justify-center py-16 px-6 text-center animate-fade-in">
-      <div className="p-4 rounded-2xl bg-neutral-100 text-neutral-400 mb-4" aria-hidden="true">
-        {icon || <FileSearch className="h-8 w-8" />}
+    <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+      <div className="w-16 h-16 rounded-2xl bg-neutral-100 flex items-center justify-center mb-5">
+        <Icon className="w-8 h-8 text-neutral-400" />
       </div>
-      <h3 className="text-sm font-semibold text-neutral-700 mb-1">{title}</h3>
-      {description && (
-        <p className="text-xs text-neutral-500 max-w-xs leading-relaxed">{description}</p>
-      )}
-      {action && <div className="mt-4">{action}</div>}
-    </div>
-  );
-}
-
-export function EmptyCausas({ onCreateCausa }: { onCreateCausa?: () => void }) {
-  return (
-    <EmptyState
-      icon={<FolderOpen className="h-8 w-8" />}
-      title="No hay expedientes"
-      description="Comience creando un nuevo expediente para gestionar el debido proceso."
-      action={onCreateCausa ? (
+      <h3 className="text-base font-semibold text-neutral-700 mb-1.5">{title}</h3>
+      <p className="text-sm text-neutral-500 max-w-sm mb-6">{description}</p>
+      {action && (
         <button
-          type="button"
-          onClick={onCreateCausa}
-          className="text-xs font-semibold text-brand-600 hover:text-brand-700 transition-colors"
+          onClick={action.onClick}
+          className="px-5 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-xl hover:bg-brand-700 transition-all duration-200"
         >
-          Crear primer expediente
+          {action.label}
         </button>
-      ) : undefined}
-    />
-  );
-}
-
-export function EmptyBitacora() {
-  return (
-    <EmptyState
-      icon={<MessageSquare className="h-8 w-8" />}
-      title="Sin entradas en bitácora"
-      description="Registre observaciones, decisiones y seguimiento del expediente."
-    />
-  );
-}
-
-export function EmptyStudents() {
-  return (
-    <EmptyState
-      icon={<Users className="h-8 w-8" />}
-      title="Sin estudiantes registrados"
-      description="No se encontraron estudiantes para mostrar."
-    />
+      )}
+    </div>
   );
 }

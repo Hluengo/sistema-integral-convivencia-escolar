@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, Bell, Eye, EyeOff, Cloud, CloudOff, Loader2, Command } from 'lucide-react';
+import { Search, Bell, Eye, EyeOff, Cloud, CloudOff, Loader2, Command, User } from 'lucide-react';
 import type { SidebarView } from './Sidebar';
 import type { Causa } from '../types';
 import { EstadoCausa } from '../types';
@@ -25,6 +25,7 @@ interface HeaderProps {
   onSearchChange?: (query: string) => void;
   currentView?: SidebarView;
   causas: Causa[];
+  user?: { email?: string } | null;
 }
 
 export default function Header({
@@ -35,6 +36,7 @@ export default function Header({
   onSearchChange,
   currentView = 'dashboard',
   causas,
+  user = null,
 }: HeaderProps) {
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -129,7 +131,7 @@ export default function Header({
           {/* Page title - visible on tablet+ */}
           <div className="hidden sm:block shrink-0 min-w-0">
             <h1 className="text-sm font-bold text-neutral-900 leading-tight truncate">{viewMeta.title}</h1>
-            <p className="text-[10px] text-neutral-400 font-medium truncate">{viewMeta.subtitle}</p>
+            <p className="text-xs text-neutral-400 font-medium truncate">{viewMeta.subtitle}</p>
           </div>
 
           <div className="hidden sm:block w-px h-8 bg-neutral-200 shrink-0" aria-hidden="true" />
@@ -151,7 +153,7 @@ export default function Header({
             <button
               type="button"
               onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
-              className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-mono text-neutral-400 bg-neutral-50 rounded border border-neutral-200 hover:bg-neutral-100 hover:text-neutral-500 transition-colors cursor-pointer"
+              className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 px-1.5 py-0.5 text-xs font-mono text-neutral-400 bg-neutral-50 rounded border border-neutral-200 hover:bg-neutral-100 hover:text-neutral-500 transition-colors cursor-pointer"
               aria-label="Abrir paleta de comandos (Ctrl+K)"
             >
               <Command className="h-2.5 w-2.5" />
@@ -172,6 +174,23 @@ export default function Header({
 
         {/* Right: Actions */}
         <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* User avatar */}
+          {user?.email ? (
+            <div
+              className="relative group w-8 h-8 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center text-xs font-semibold cursor-default shrink-0"
+              title={user.email}
+            >
+              {user.email.charAt(0).toUpperCase()}
+              <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-neutral-900 text-white text-[10px] font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                {user.email}
+              </div>
+            </div>
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-neutral-200 text-neutral-500 flex items-center justify-center shrink-0">
+              <User className="h-4 w-4" />
+            </div>
+          )}
+
           {/* Mobile save indicator — small colored dot */}
           <span
             className={`md:hidden h-2 w-2 rounded-full shrink-0 transition-opacity duration-200 ${
@@ -184,7 +203,7 @@ export default function Header({
             aria-label={saveStatus === 'saving' ? 'Guardando' : saveStatus === 'saved' ? 'Guardado' : 'Error al guardar'}
           />
           {/* Desktop save indicator */}
-          <div className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-semibold transition-opacity duration-200 ${
+          <div className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-opacity duration-200 ${
             saveStatus === 'idle' ? 'opacity-0 pointer-events-none' : 'opacity-100'
           } ${
             saveStatus === 'saving'
@@ -250,7 +269,7 @@ export default function Header({
                 <div className="absolute right-0 top-full mt-2 w-[min(360px,calc(100vw-2rem))] bg-white rounded-2xl border border-neutral-200 shadow-xl z-50 animate-scale-in overflow-hidden">
                   <div className="p-4 border-b border-neutral-100">
                     <h3 className="text-sm font-bold text-neutral-900">Notificaciones</h3>
-                    <p className="text-[11px] text-neutral-400 mt-0.5">
+                    <p className="text-xs text-neutral-400 mt-0.5">
                       {NOTIFICATIONS.filter(n => n.urgent).length} requieren atención
                     </p>
                   </div>
@@ -266,15 +285,15 @@ export default function Header({
                         </div>
                         <div className="min-w-0">
                           <p className="text-[12px] font-semibold text-neutral-900">{n.title}</p>
-                          <p className="text-[11px] text-neutral-500 mt-0.5">{n.description}</p>
-                          <span className="text-[10px] text-neutral-400 mt-1 block">{n.time}</span>
+                          <p className="text-xs text-neutral-500 mt-0.5">{n.description}</p>
+                          <span className="text-xs text-neutral-400 mt-1 block">{n.time}</span>
                         </div>
                         {n.urgent && <span className="h-1.5 w-1.5 rounded-full bg-gravisima-500 shrink-0 mt-1" />}
                       </button>
                     ))}
                   </div>
                   <div className="p-3 border-t border-neutral-100 text-center">
-                    <button type="button" className="text-[11px] font-semibold text-brand-600 hover:text-brand-700 transition-colors">
+                    <button type="button" className="text-xs font-semibold text-brand-600 hover:text-brand-700 transition-colors">
                       Ver todas las notificaciones
                     </button>
                   </div>

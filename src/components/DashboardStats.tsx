@@ -33,12 +33,12 @@ function SeverityCard({ tipo, count, total }: { tipo: TipoInfraccion; count: num
   const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
 
   return (
-    <div className="relative card p-4 overflow-hidden group">
+    <div className="relative card p-5 overflow-hidden group">
       <div className={`absolute top-0 left-3 right-3 h-[3px] rounded-full ${cfg.dot}`} />
       
       <div className="flex items-center justify-between mb-3">
         <SeverityBadge level={tipo} size="sm" />
-        <span className={`text-[10px] font-bold tabular-nums ${
+        <span className={`text-xs font-bold tabular-nums ${
           tipo === 'Leve' ? 'text-leve-600' :
           tipo === 'Grave' ? 'text-grave-600' :
           tipo === 'Muy Grave' ? 'text-muygrave-600' :
@@ -52,7 +52,7 @@ function SeverityCard({ tipo, count, total }: { tipo: TipoInfraccion; count: num
         <span className="text-3xl font-bold text-neutral-900 tabular-nums">
           {count < 10 ? `0${count}` : count}
         </span>
-        <span className="text-[11px] text-neutral-400 font-medium">
+        <span className="text-xs text-neutral-400 font-medium">
           de {total}
         </span>
       </div>
@@ -99,7 +99,7 @@ export default function DashboardStats({ causas, onFaseSelect, selectedFase, onS
                Gestión Debido Proceso · Convivencia Escolar
             </p>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Panel de Control</h2>
-            <p className="text-blue-100/80 text-sm mt-2 flex items-center gap-2">
+            <p className="text-white/80 text-sm mt-2 flex items-center gap-2">
               <CalendarDays className="h-4 w-4 shrink-0" aria-hidden="true" />
               <span className="capitalize">{todayLabel}</span>
             </p>
@@ -107,7 +107,7 @@ export default function DashboardStats({ causas, onFaseSelect, selectedFase, onS
           <button
             type="button"
             onClick={onCreateCausa}
-            className="inline-flex items-center justify-center gap-2 bg-secondary-500 text-white font-semibold px-5 py-3 rounded-xl hover:bg-secondary-600 active:scale-[0.97] transition-all shadow-md shadow-secondary-500/30 shrink-0"
+            className="inline-flex items-center justify-center gap-2 bg-white text-brand-700 font-semibold px-5 py-3 rounded-xl hover:bg-white/90 active:scale-[0.97] transition-all shadow-md shrink-0"
             aria-label="Crear nueva causa"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
@@ -168,7 +168,7 @@ export default function DashboardStats({ causas, onFaseSelect, selectedFase, onS
           <div className="p-1.5 rounded-lg bg-neutral-100">
             <BarChart3 className="h-3.5 w-3.5 text-neutral-500" aria-hidden="true" />
           </div>
-          <h3 className="text-[11px] font-semibold text-neutral-500 uppercase tracking-[0.06em]">
+          <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-[0.06em]">
             Distribución por Gravedad
           </h3>
         </div>
@@ -188,7 +188,7 @@ export default function DashboardStats({ causas, onFaseSelect, selectedFase, onS
           </div>
           <div>
             <h3 className="text-sm font-bold text-neutral-900">Fases Procedimentales</h3>
-            <p className="text-[11px] text-neutral-400 font-medium">
+            <p className="text-xs text-neutral-400 font-medium">
               Filtra las causas por etapa del proceso
             </p>
           </div>

@@ -54,7 +54,7 @@ export default function TimelineHeader({
                 <button
                   type="button"
                   onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                  className={`text-[10px] font-semibold px-2 py-1 rounded-lg border flex items-center gap-1 transition-all cursor-pointer select-none ${
+                  className={`text-xs font-semibold px-2 py-1 rounded-lg border flex items-center gap-1 transition-all cursor-pointer select-none ${
                     isSidebarCollapsed
                       ? 'bg-brand-600 text-white border-brand-700 hover:bg-brand-700'
                       : 'bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50'
@@ -75,7 +75,7 @@ export default function TimelineHeader({
                 <button
                   type="button"
                   onClick={() => setIsTimelineCollapsed(true)}
-                  className="text-[10px] font-semibold px-2 py-1 rounded-lg border bg-white border-neutral-200 text-neutral-600 hover:bg-neutral-50 flex items-center gap-1 transition-all cursor-pointer select-none"
+                    className="text-xs font-semibold px-2 py-1 rounded-lg border bg-white border-neutral-200 text-neutral-600 hover:bg-neutral-50 flex items-center gap-1 transition-all cursor-pointer select-none"
                   title="Cerrar detalle del expediente"
                   aria-label="Cerrar vista detallada"
                 >
@@ -89,7 +89,7 @@ export default function TimelineHeader({
                   <button
                     type="button"
                     onClick={onEditClick}
-                    className="text-[10px] font-semibold px-2 py-1 rounded-lg border bg-white border-neutral-200 text-neutral-600 hover:bg-neutral-50 flex items-center gap-1 transition-all cursor-pointer select-none"
+                  className="text-xs font-semibold px-2 py-1 rounded-lg border bg-white border-neutral-200 text-neutral-600 hover:bg-neutral-50 flex items-center gap-1 transition-all cursor-pointer select-none"
                     title="Editar expediente"
                     aria-label="Editar expediente"
                   >
@@ -99,7 +99,7 @@ export default function TimelineHeader({
                   <button
                     type="button"
                     onClick={onDeleteClick}
-                    className="text-[10px] font-semibold px-2 py-1 rounded-lg border bg-white border-red-200 text-red-600 hover:bg-red-50 flex items-center gap-1 transition-all cursor-pointer select-none"
+                    className="text-xs font-semibold px-2 py-1 rounded-lg border bg-white border-red-200 text-red-600 hover:bg-red-50 flex items-center gap-1 transition-all cursor-pointer select-none"
                     title="Eliminar expediente"
                     aria-label="Eliminar expediente"
                   >
@@ -115,7 +115,7 @@ export default function TimelineHeader({
                 {causa.estudianteCurso}
               </span>
             </h2>
-            <div className="flex flex-wrap items-center gap-2 text-[11px] text-blue-100/80 font-medium">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-blue-100/80 font-medium">
               <span>Gravedad: <strong className={`font-semibold ${
                 causa.tipoInfraccion === 'Gravísima' ? 'text-red-200' :
                 causa.tipoInfraccion === 'Muy Grave' ? 'text-purple-200' :
@@ -132,12 +132,12 @@ export default function TimelineHeader({
 
       {/* Due Process Breach Alerts pane */}
       {breaches.length > 0 && (
-        <div role="alert" className="bg-danger-50 border-b border-danger-200 px-4 sm:px-5 py-2.5 text-[11px] text-danger-800">
+        <div role="alert" className="bg-danger-50 border-b border-danger-200 px-4 sm:px-5 py-2.5 text-xs text-danger-800">
           <div className="flex items-center gap-1.5 font-semibold mb-1">
             <AlertTriangle className="h-4 w-4 text-danger-600" aria-hidden="true" />
             <span>RIESGOS PROCEDIMENTALES:</span>
           </div>
-          <ul aria-label="Riesgos procedimentales detectados" className="list-disc pl-5 space-y-0.5 text-[11px]">
+          <ul aria-label="Riesgos procedimentales detectados" className="list-disc pl-5 space-y-0.5 text-xs">
             {breaches.map((b) => <li key={`breach-${b.length}-${b.charCodeAt(0) || 0}`} className="font-medium">{b}</li>)}
           </ul>
         </div>

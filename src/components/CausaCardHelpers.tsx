@@ -19,7 +19,7 @@ export function LeftSeverityBar({ tipo }: { tipo: Causa['tipoInfraccion'] }) {
 
 export function FaseBadge({ fase }: { fase: string }) {
   return (
-    <span className={`text-[9px] font-semibold px-2 py-0.5 rounded-md border ${FASE_BADGE_STYLES[fase] || FASE_BADGE_STYLES['Recepción']}`}>
+    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border ${FASE_BADGE_STYLES[fase] || FASE_BADGE_STYLES['Recepción']}`}>
       {fase}
     </span>
   );
@@ -72,7 +72,7 @@ export function PlazoBar({ causa }: { causa: Causa }) {
   }
 
   return (
-    <div className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border text-[10px] font-medium ${colorClasses}`}>
+    <div className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border text-xs font-medium ${colorClasses}`}>
       <span className="flex items-center gap-1.5">
         <Clock className="h-3 w-3" aria-hidden="true" />
         {plazoText}

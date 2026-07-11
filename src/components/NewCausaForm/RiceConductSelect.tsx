@@ -37,14 +37,14 @@ export default function RiceConductSelect({
 
   return (
     <div>
-      <label htmlFor="create-rice" className="block text-[9px] font-semibold text-brand-700 uppercase tracking-wide flex items-center gap-1.5">
+      <label htmlFor="create-rice" className="block text-xs font-semibold text-neutral-500 uppercase tracking-wide flex items-center gap-1.5">
         <BookOpen className="h-3 w-3 text-brand-600" aria-hidden="true" />
         Autocompletar desde Reglamento (RICE):
       </label>
       <select
         id="create-rice"
         onChange={(event) => applyConducta(event.target.value)}
-        className="w-full mt-1.5 border border-brand-200 rounded-lg p-2.5 bg-brand-50/20 text-[11px] font-medium text-brand-900 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+        className="w-full mt-1.5 border border-brand-200 rounded-xl p-3 bg-brand-50/20 text-[11px] font-medium text-brand-900 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition-all duration-200"
         defaultValue=""
       >
         <option value="" className="text-neutral-500">-- Seleccionar conducta --</option>

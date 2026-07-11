@@ -70,13 +70,13 @@ export default function NewCausaForm({
           </div>
           <div>
             <h4 className="font-sans font-bold text-sm text-neutral-900">Nuevo Expediente</h4>
-            <p className="text-[11px] text-neutral-400 font-medium">Registro de causa de convivencia</p>
+            <p className="text-xs text-neutral-400 font-medium">Registro de causa de convivencia</p>
           </div>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="text-[11px] bg-neutral-50 hover:bg-neutral-100 px-3 py-1.5 rounded-xl text-neutral-500 hover:text-neutral-700 font-medium transition-all cursor-pointer"
+          className="text-xs bg-neutral-50 hover:bg-neutral-100 px-3 py-1.5 rounded-xl text-neutral-500 hover:text-neutral-700 font-medium transition-all cursor-pointer"
         >
           ✕ Cerrar
         </button>
@@ -85,14 +85,14 @@ export default function NewCausaForm({
       <form onSubmit={onSubmit} className="space-y-4 text-left text-sm text-neutral-800">
         {/* Course selector */}
         <div>
-          <label htmlFor="create-course" className="block text-[11px] font-semibold text-neutral-400 uppercase tracking-[0.06em]">
+          <label htmlFor="create-course" className="block text-xs font-semibold text-neutral-500 uppercase tracking-wide">
             Curso del estudiante
           </label>
           <select
             id="create-course"
             value={selectedCourseId}
             onChange={(e) => onCourseChange(e.target.value)}
-            className="w-full mt-1.5 border border-neutral-200 rounded-xl p-3 bg-neutral-50 font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:bg-white transition-all"
+                  className="w-full mt-1.5 border border-neutral-200 rounded-xl p-3 bg-neutral-50 font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:bg-white transition-all duration-200"
             required
           >
             <option value="">-- Seleccionar curso --</option>
@@ -126,20 +126,20 @@ export default function NewCausaForm({
         <div>
           {selectedCourseId ? (
             <>
-              <label htmlFor="create-student" className="block text-[11px] font-semibold text-neutral-400 uppercase tracking-[0.06em]">
+              <label htmlFor="create-student" className="block text-xs font-semibold text-neutral-500 uppercase tracking-wide">
                 Estudiante
               </label>
               {isLoadingStudents ? (
                 <div className="flex items-center gap-2 mt-1.5 p-2.5 bg-neutral-50 rounded-lg border border-neutral-200">
                   <Loader2 className="h-3.5 w-3.5 animate-spin text-brand-600" aria-hidden="true" />
-                  <span className="text-[11px] text-neutral-500">Cargando estudiantes...</span>
+                  <span className="text-xs text-neutral-500">Cargando estudiantes...</span>
                 </div>
               ) : students.length > 0 ? (
                 <select
                   id="create-student"
                   value={students.find(s => s.full_name === newEstNombre)?.id || ''}
                   onChange={(e) => onStudentSelect(e.target.value)}
-                  className="w-full mt-1.5 border border-neutral-200 rounded-xl p-3 bg-neutral-50 font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:bg-white transition-all"
+            className="w-full mt-1.5 border border-neutral-200 rounded-xl p-3 bg-neutral-50 font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:bg-white transition-all duration-200"
                 >
                   <option value="">-- Seleccionar estudiante --</option>
                   {students.map(s => (
@@ -149,21 +149,21 @@ export default function NewCausaForm({
               ) : (
                 <div className="flex items-center gap-2 mt-1.5 p-2.5 bg-amber-50 rounded-lg border border-amber-200">
                   <AlertCircle className="h-3.5 w-3.5 text-amber-600 shrink-0" aria-hidden="true" />
-                  <span className="text-[11px] text-amber-800">No hay estudiantes en este curso</span>
+                  <span className="text-xs text-amber-800">No hay estudiantes en este curso</span>
                 </div>
               )}
             </>
           ) : (
             <div className="flex items-center gap-2 mt-1.5 p-2.5 bg-neutral-50 rounded-lg border border-neutral-200">
               <Users className="h-3.5 w-3.5 text-neutral-400 shrink-0" aria-hidden="true" />
-              <span className="text-[11px] text-neutral-500">Seleccione un curso primero</span>
+              <span className="text-xs text-neutral-500">Seleccione un curso primero</span>
             </div>
           )}
         </div>
 
         {/* RUT */}
         <div>
-          <label htmlFor="create-rut" className="block text-[9px] font-semibold text-neutral-400 uppercase tracking-wide">RUN / RUT:</label>
+          <label htmlFor="create-rut" className="block text-xs font-semibold text-neutral-500 uppercase tracking-wide">RUN / RUT:</label>
           <input
             id="create-rut"
             type="text"
@@ -173,7 +173,7 @@ export default function NewCausaForm({
             onChange={(e) => setNewEstRut(e.target.value)}
             readOnly={!!selectedCourseId && students.length > 0}
             placeholder={selectedCourseId && students.length === 0 ? "Ingrese RUN manualmente (sin estudiantes en el curso)" : "Se auto-completa al seleccionar estudiante"}
-            className="w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-100 font-medium text-neutral-600 focus:outline-none text-xs transition-all cursor-not-allowed"
+            className="w-full mt-1.5 border border-neutral-200 rounded-xl p-3 bg-neutral-100 font-medium text-neutral-600 focus:outline-none text-xs transition-all duration-200 cursor-not-allowed"
           />
         </div>
 
@@ -186,12 +186,12 @@ export default function NewCausaForm({
 
         <div className="grid grid-cols-2 gap-3 pb-2 border-b border-neutral-100">
           <div>
-            <label htmlFor="create-gravedad" className="block text-[9px] font-semibold text-neutral-400 uppercase tracking-wide">Gravedad:</label>
+            <label htmlFor="create-gravedad" className="block text-xs font-semibold text-neutral-500 uppercase tracking-wide">Gravedad:</label>
             <select
               id="create-gravedad"
               value={newInfTipo}
               onChange={(e) => setNewInfTipo(e.target.value as Causa['tipoInfraccion'])}
-              className="w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-50 font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+              className="w-full mt-1.5 border border-neutral-200 rounded-xl p-3 bg-neutral-50 font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition-all duration-200"
             >
               <option value="Leve">Falta Leve</option>
               <option value="Grave">Falta Grave</option>
@@ -209,7 +209,7 @@ export default function NewCausaForm({
                 onChange={(e) => setNewAulaSegura(e.target.checked)}
                 className="rounded text-brand-600 focus:ring-brand-500 h-4 w-4 border-neutral-300"
               />
-              <span className="text-[10px]">Afecta Aula Segura</span>
+              <span className="text-xs">Afecta Aula Segura</span>
             </label>
           </div>
         </div>
@@ -221,11 +221,11 @@ export default function NewCausaForm({
           value={newObs}
           onChange={setNewObs}
           required
-          className="w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 leading-relaxed font-sans text-xs transition-all"
+          className="w-full mt-1.5 border border-neutral-200 rounded-xl p-3 bg-neutral-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 leading-relaxed font-sans text-xs transition-all duration-200"
         />
 
         <div>
-          <label htmlFor="create-responsable" className="block text-[9px] font-semibold text-neutral-400 uppercase tracking-wide">Fiscalizador a cargo:</label>
+          <label htmlFor="create-responsable" className="block text-xs font-semibold text-neutral-500 uppercase tracking-wide">Fiscalizador a cargo:</label>
           <input
             id="create-responsable"
             type="text"
@@ -233,12 +233,12 @@ export default function NewCausaForm({
             spellCheck={false}
             value={newResponsable}
             onChange={(e) => setNewResponsable(e.target.value)}
-            className="w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-100 font-bold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+            className="w-full mt-1.5 border border-neutral-200 rounded-xl p-3 bg-neutral-100 font-bold text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition-all duration-200"
           />
         </div>
 
         {newInfTipo === 'Gravísima' && newAulaSegura && (
-          <div className="bg-gravisima-50 p-3 rounded-lg border border-gravisima-200 text-[11px] text-gravisima-800 leading-normal font-sans font-medium">
+          <div className="bg-gravisima-50 p-3 rounded-lg border border-gravisima-200 text-xs text-gravisima-800 leading-normal font-sans font-medium">
             ⚠️ <strong>Ley Aula Segura activa:</strong> Recuerde citar formalmente a la Superintendencia en un lapso de 24 horas y resolver en no más de 10 días hábiles de suspensión preventiva.
           </div>
         )}

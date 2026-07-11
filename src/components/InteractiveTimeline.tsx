@@ -14,6 +14,7 @@ import { useTimelineController } from '../hooks/useTimelineController';
 import { TimelineProvider } from '../context/TimelineContext';
 import { useAppContext } from '../context/AppContext';
 import { BoldText } from '../lib/markdownUtils';
+import ConfirmDialog from './ConfirmDialog';
 
 const EditCausaModal = lazy(() => import('./EditCausaModal'));
 
@@ -105,6 +106,7 @@ export default function InteractiveTimeline({
   const privacyMode = propPrivacy ?? ctx.privacyMode;
   const [activeTab, setActiveTab] = useState<'proceso' | 'bitacora' | 'asistente_ia'>('proceso');
   const [showEdit, setShowEdit] = useState(false);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   
   const timelineValue = useTimelineController({ causa, onUpdateCausa, currentRole, privacyMode });
 
@@ -142,16 +144,23 @@ export default function InteractiveTimeline({
             currentRole={currentRole}
             privacyMode={privacyMode}
             onEditClick={() => setShowEdit(true)}
-            onDeleteClick={() => {
-              if (window.confirm(`¿Eliminar el expediente ${causa.id} de forma permanente? Esta acción no se puede deshacer.`)) {
-                onDeleteCausa(causa.id);
-              }
-            }}
+            onDeleteClick={() => setShowConfirmDelete(true)}
             isSidebarCollapsed={isSidebarCollapsed}
             setIsSidebarCollapsed={setIsSidebarCollapsed}
             isTimelineCollapsed={isTimelineCollapsed}
             setIsTimelineCollapsed={setIsTimelineCollapsed}
             breaches={breaches}
+          />
+
+          <ConfirmDialog
+            open={showConfirmDelete}
+            title="Eliminar expediente"
+            description={`¿Eliminar el expediente ${causa.id} de forma permanente? Esta acción no se puede deshacer.`}
+            onConfirm={() => {
+              onDeleteCausa(causa.id);
+              setShowConfirmDelete(false);
+            }}
+            onCancel={() => setShowConfirmDelete(false)}
           />
 
           {showEdit && (
