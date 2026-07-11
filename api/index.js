@@ -3,7 +3,6 @@ import path from 'path';
 import https from 'https';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
-import * as jose from 'jose';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -98,35 +97,25 @@ function sanitizeForAI(text) {
 
 // Auth middleware: verify Supabase JWT from Authorization header
 async function verifyJwtSignature(token, secret) {
-  try {
-    // Use jose library which supports ES256 (Supabase's new JWT signing algorithm)
-    const secretBytes = new TextEncoder().encode(secret);
-    const { payload } = await jose.jwtVerify(token, secretBytes, {
-      algorithms: ['HS256', 'ES256']
-    });
-    
-    // Check expiration
-    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
-    
-    return payload;
-  } catch (e) {
-    // Try legacy HMAC verification as fallback
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+
+  const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+  const signature = Buffer.from(parts[2], 'base64url');
+
+  // Try raw secret first, then base64-decoded
+  for (const secretBytes of [new TextEncoder().encode(secret), Buffer.from(secret, 'base64')]) {
     try {
-      const parts = token.split('.');
-      if (parts.length !== 3) return null;
-      const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
-      const signature = Buffer.from(parts[2], 'base64url');
-      const secretBytes = Buffer.from(secret, 'base64');
       const key = await crypto.subtle.importKey('raw', secretBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
       const data = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
       const valid = await crypto.subtle.verify('HMAC', key, signature, data);
-      if (!valid) return null;
-      if (payload.exp && payload.exp * 1000 < Date.now()) return null;
-      return payload;
-    } catch {
-      return null;
-    }
+      if (valid) {
+        if (payload.exp && payload.exp * 1000 < Date.now()) return null;
+        return payload;
+      }
+    } catch { /* try next */ }
   }
+  return null;
 }
 
 async function requireAuth(req, res, next) {
@@ -465,6 +454,44 @@ Incluir: resumen ejecutivo, reconstrucción fáctica, análisis probatorio, desc
     const status = error.message?.startsWith('Campo requerido') ? 400 : 500;
     res.status(status).json({ error: 'Error interno del servidor al redactar documento.' });
   }
+});
+
+// Debug endpoint: verify auth setup (remove in production)
+app.get('/api/auth-debug', async (req, res) => {
+  const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+  const JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
+  
+  const info = {
+    hasToken: token.length > 10,
+    hasSecret: !!JWT_SECRET,
+    secretLength: JWT_SECRET ? JWT_SECRET.length : 0,
+    tokenParts: token.split('.').length,
+  };
+
+  if (info.hasToken && info.hasSecret) {
+    const payload = await verifyJwtSignature(token, JWT_SECRET);
+    info.verified = !!payload;
+    info.userId = payload?.sub;
+    info.email = payload?.email;
+    
+    // Also try the alternative secret formats
+    const parts = token.split('.');
+    const sig = Buffer.from(parts[2], 'base64url');
+    const rawKey = new TextEncoder().encode(JWT_SECRET);
+    const b64Key = Buffer.from(JWT_SECRET, 'base64');
+    
+    try {
+      const k1 = await crypto.subtle.importKey('raw', rawKey, { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
+      info.rawSecretWorks = await crypto.subtle.verify('HMAC', k1, sig, new TextEncoder().encode(`${parts[0]}.${parts[1]}`));
+    } catch { info.rawSecretWorks = false; }
+    
+    try {
+      const k2 = await crypto.subtle.importKey('raw', b64Key, { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
+      info.b64SecretWorks = await crypto.subtle.verify('HMAC', k2, sig, new TextEncoder().encode(`${parts[0]}.${parts[1]}`));
+    } catch { info.b64SecretWorks = false; }
+  }
+
+  res.json(info);
 });
 
 // Serve static files in production
