@@ -334,11 +334,19 @@ a {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Login dialog styles */
+/* Dialog styles */
 dialog {
   margin: auto;
   padding: 0;
   border: none;
+}
+dialog[aria-label="Iniciar sesión"] {
+  max-width: 100vw;
+  width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+}
+dialog:not([aria-label="Iniciar sesión"]) {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   max-width: 360px;
   width: 90vw;
