@@ -168,8 +168,13 @@ export default function LoginPage({ onClose }: LoginPageProps) {
             </div>
 
             <div className="flex items-center justify-between text-xs pt-0.5">
-              <label className="flex items-center gap-2 text-neutral-500 cursor-pointer select-none">
-                <input type="checkbox" className="w-4 h-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500/20" />
+              <label htmlFor="remember-me" className="flex items-center gap-2 text-neutral-500 cursor-pointer select-none">
+                <input 
+                  id="remember-me" 
+                  name="remember-me" 
+                  type="checkbox" 
+                  className="w-4 h-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500/20" 
+                />
                 Recordarme
               </label>
               <button type="button" className="text-brand-600 hover:text-brand-700 font-medium transition-colors">
