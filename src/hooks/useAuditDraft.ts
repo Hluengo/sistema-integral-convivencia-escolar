@@ -11,6 +11,19 @@ interface UseAuditDraftArgs {
   causa: Causa;
 }
 
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`;
+    }
+  } catch (err) {
+    console.warn('No se pudo obtener sesión para auth headers:', err);
+  }
+  return headers;
+}
+
 export function useAuditDraft({ causa }: UseAuditDraftArgs) {
   const [aiSubTab, setAiSubTab] = useState<'auditoria' | 'borradores'>('auditoria');
   const [auditReport, setAuditReport] = useState<string>('');
@@ -24,17 +37,6 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
 
   const isMountedRef = useRef(true);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-
-  const getAuthHeaders = async (): Promise<Record<string, string>> => {
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
-      }
-    } catch { /* silent */ }
-    return headers;
-  };
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -124,8 +126,8 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
       copyTimeoutRef.current = setTimeout(() => {
         setCopyFeedback(false);
       }, 2000);
-    } catch {
-      // fallback silencioso si no hay permiso
+    } catch (err) {
+      console.warn('Clipboard no disponible (permiso denegado):', err);
     }
   };
 

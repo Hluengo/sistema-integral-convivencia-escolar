@@ -26,8 +26,11 @@ export default function LoginPage({ onClose }: LoginPageProps) {
     const dialog = dialogRef.current;
     if (!dialog) return;
     dialog.showModal();
-    setTimeout(() => emailRef.current?.focus(), 100);
-    return () => dialog.close();
+    const timerId = setTimeout(() => emailRef.current?.focus(), 100);
+    return () => {
+      clearTimeout(timerId);
+      dialog.close();
+    };
   }, []);
 
   useEffect(() => {

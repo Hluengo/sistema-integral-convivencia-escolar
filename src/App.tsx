@@ -174,7 +174,7 @@ export default function App() {
       dispatchForm({ type: 'RESET' });
       setCurrentView('causas');
     }
-  }, [newEstNombre, newEstRut, newEstCurso, newInfTipo, newAulaSegura, newObs, newResponsable, dispatchForm]);
+  }, [causas, newEstNombre, newEstRut, newEstCurso, newInfTipo, newAulaSegura, newObs, newResponsable, dispatchForm, setSelectedCausaId, setCurrentView]);
 
   const requireAuth = useCallback(() => {
     if (!user) {
@@ -196,14 +196,12 @@ export default function App() {
       console.error(`Failed to delete causa ${id}`);
       return;
     }
-    setCausas(prev => {
-      const next = prev.filter(c => c.id !== id);
-      if (selectedCausaId === id) {
-        setSelectedCausaId(next[0]?.id || '');
-      }
-      return next;
-    });
-  }, [selectedCausaId, requireAuth]);
+    const nextCausas = causas.filter(c => c.id !== id);
+    setCausas(nextCausas);
+    if (selectedCausaId === id) {
+      setSelectedCausaId(nextCausas[0]?.id || '');
+    }
+  }, [causas, selectedCausaId, requireAuth]);
 
   const handleReopenCausa = useCallback((causa: Causa) => {
     const updated: Causa = {
@@ -236,7 +234,9 @@ export default function App() {
 
   // Use ref for keyboard handler to avoid stale closures
   const handleOpenCreateFormRef = useRef(handleOpenCreateForm);
-  handleOpenCreateFormRef.current = handleOpenCreateForm;
+  useEffect(() => {
+    handleOpenCreateFormRef.current = handleOpenCreateForm;
+  }, [handleOpenCreateForm]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

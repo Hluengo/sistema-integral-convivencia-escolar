@@ -110,6 +110,7 @@ export default function TemplateEditor({ onBack }: { onBack: () => void }) {
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-neutral-200/60 bg-white">
         <button
+          type="button"
           onClick={onBack}
           className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-500 hover:text-neutral-700 transition-colors"
           aria-label="Volver al asesor"
@@ -128,6 +129,7 @@ export default function TemplateEditor({ onBack }: { onBack: () => void }) {
         <div className="w-48 border-r border-neutral-200/60 bg-neutral-50 overflow-y-auto shrink-0">
           {templates.map(tpl => (
             <button
+              type="button"
               key={tpl.id}
               onClick={() => handleSelect(tpl)}
               className={`w-full text-left px-3 py-2.5 text-[10px] font-medium border-b border-neutral-100 transition-colors ${
@@ -161,6 +163,7 @@ export default function TemplateEditor({ onBack }: { onBack: () => void }) {
                     </span>
                   )}
                   <button
+                    type="button"
                     onClick={handleSave}
                     disabled={saving !== null}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-600 hover:bg-brand-700 disabled:bg-neutral-300 text-white text-[10px] font-semibold rounded-lg transition-colors"
@@ -179,6 +182,7 @@ export default function TemplateEditor({ onBack }: { onBack: () => void }) {
                 onChange={(e) => setEditPrompt(e.target.value)}
                 className="flex-1 w-full p-4 text-[11px] leading-relaxed font-mono text-neutral-800 bg-white resize-none focus:outline-none focus:ring-2 focus:ring-brand-200"
                 spellCheck={false}
+                aria-label="Contenido del prompt"
               />
             </>
           ) : (

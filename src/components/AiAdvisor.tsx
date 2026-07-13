@@ -80,7 +80,9 @@ export default function AiAdvisor() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { improveText: improveChatText, isImproving: isImprovingChat } = useTextImprovement();
   const messagesRef = useRef(messages);
-  messagesRef.current = messages;
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 

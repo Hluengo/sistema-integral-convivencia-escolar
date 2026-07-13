@@ -164,7 +164,7 @@ export function useCausasPersistence({
         saveIdleTimeoutRef.current = undefined;
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Autosave solo debe re-ejecutarse cuando cambian los datos, no las referencias de funciones.
   }, [causas]);
 
   return { loadError, retryLoad: () => loadCausas() };

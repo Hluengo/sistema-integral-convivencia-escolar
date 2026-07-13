@@ -26,6 +26,7 @@ export default function AdvisorView() {
       {/* Tabs */}
       <div className="flex border-b border-neutral-200/60">
         <button
+          type="button"
           onClick={() => setTab('chat')}
           className={`flex items-center gap-1.5 px-4 py-2.5 text-[10px] font-semibold transition-colors border-b-2 -mb-px ${
             tab === 'chat'
@@ -37,6 +38,7 @@ export default function AdvisorView() {
           Consulta Legal
         </button>
         <button
+          type="button"
           onClick={() => setTab('templates')}
           className={`flex items-center gap-1.5 px-4 py-2.5 text-[10px] font-semibold transition-colors border-b-2 -mb-px ${
             tab === 'templates'
