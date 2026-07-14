@@ -1,0 +1,6 @@
+{
+  "name": "Sistema de Gestión de Medidas Disciplinarias",
+  "description": "Plataforma interna para la gestión y extracción inteligente de anotaciones en hojas de vida mediante PDF bajo las Circulares 781 y 782, Colegio Carmela Romero de Espinosa.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
