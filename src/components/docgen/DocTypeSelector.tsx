@@ -45,10 +45,10 @@ export default function DocTypeSelector({
 }: DocTypeSelectorProps) {
   return (
     <div>
-      <label htmlFor="doc-type-group" className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
+      <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
         1. Selección de Documento Institucional
       </label>
-      <div id="doc-type-group" className="grid grid-cols-1 gap-2">
+      <div className="grid grid-cols-1 gap-2">
         {DOC_OPTIONS.map(opt => {
           const isLocked = currentStep !== undefined && currentStep < opt.requiredStep;
           const isSelected = docType === opt.type;

@@ -12,13 +12,6 @@ import { maskName, maskRut, getSemaphoricStyleCompact } from '../lib/utils';
 import { getDisciplinaryStatusLabel } from './StudentTable';
 import DocumentGenerator from './DocumentGenerator';
 
-const DISCIPLINARY_MEASURES = [
-  { value: 'sin_medida', label: 'Sin Medida Disciplinaria', description: 'Sin medidas activas registradas', color: 'slate' },
-  { value: 'amonestacion', label: 'Carta de Amonestación', description: '1ra acumulación (5-9 anotaciones)', color: 'amber' },
-  { value: 'compromiso', label: 'Carta de Compromiso Conductual', description: '2da acumulación (10-14 anotaciones)', color: 'orange' },
-  { value: 'derivacion', label: 'Derivación a Convivencia Escolar', description: '3ra acumulación (15+ anotaciones)', color: 'rose' },
-];
-
 interface StudentDetailModalProps {
   student: Student;
   annotations: Annotation[];
@@ -62,11 +55,18 @@ export default function StudentDetailModal({
   const [compromisoStatus, setCompromisoStatus] = useState<string>('Emitida');
   const [customCommitments, setCustomCommitments] = useState<string[]>([]);
   const [newCustomCommitment, setNewCustomCommitment] = useState('');
-  const authorizedDuplicateRef = useRef(false);
-  const emittedCompromisosRef = useRef<any[]>([]);
+  const [authorizedDuplicate, setAuthorizedDuplicate] = useState(false);
+  const [emittedCompromisos, setEmittedCompromisos] = useState<any[]>([]);
   const [activeCase, setActiveCase] = useState<any>(null);
 
   // Disciplinary measure state
+  const DISCIPLINARY_MEASURES = [
+    { value: 'sin_medida', label: 'Sin Medida Disciplinaria', description: 'Sin medidas activas registradas', color: 'slate' },
+    { value: 'amonestacion', label: 'Carta de Amonestación', description: '1ra acumulación (5-9 anotaciones)', color: 'amber' },
+    { value: 'compromiso', label: 'Carta de Compromiso Conductual', description: '2da acumulación (10-14 anotaciones)', color: 'orange' },
+    { value: 'derivacion', label: 'Derivación a Convivencia Escolar', description: '3ra acumulación (15+ anotaciones)', color: 'rose' },
+  ];
+
   const getCurrentMeasure = (): string => {
     if (student.annotations_count >= 15) return 'derivacion';
     if (student.annotations_count >= 10) return 'compromiso';
@@ -138,14 +138,14 @@ export default function StudentDetailModal({
       try {
         const config = getSavedConfig();
         const cartas = await fetchCartas(config, student.id);
-        emittedCompromisosRef.current = cartas;
+        setEmittedCompromisos(cartas);
       } catch (e) {
         console.warn('Error loading cartas from Supabase:', e);
         // Fallback to localStorage
         const local = localStorage.getItem('convivencia_local_compromisos');
         if (local) {
           try {
-            emittedCompromisosRef.current = JSON.parse(local);
+            setEmittedCompromisos(JSON.parse(local));
           } catch (e2) {
             console.warn('Error loading emitted compromisos from localStorage:', e2);
           }
@@ -322,14 +322,12 @@ export default function StudentDetailModal({
                 privacyMode ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-slate-100 text-slate-500'
               }`}
               title="Alternar máscara de privacidad para NNA"
-              aria-label="Alternar privacidad"
             >
               {privacyMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
             <button
               onClick={onClose}
               className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition-all"
-              aria-label="Cerrar"
             >
               <X className="w-5 h-5" />
             </button>
@@ -513,7 +511,7 @@ export default function StudentDetailModal({
                     </h4>
                     <div className="relative pl-4 border-l-2 border-slate-200 space-y-3">
                       {transitions.slice().reverse().map((t, idx) => (
-                        <div key={t.date || idx} className="relative">
+                        <div key={idx} className="relative">
                           <div className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-indigo-600 border-2 border-white shadow-2xs" />
                           <div className="space-y-0.5">
                             <span className="text-[10px] font-black text-slate-400">
@@ -623,13 +621,10 @@ export default function StudentDetailModal({
                   </div>
                 ) : (
                   <div
-                    role="button"
-                    tabIndex={0}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
                     onClick={triggerFileSelect}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') triggerFileSelect(); }}
                     className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all flex flex-col items-center justify-center space-y-3 ${
                       isDragging 
                         ? 'border-indigo-600 bg-indigo-50/40' 

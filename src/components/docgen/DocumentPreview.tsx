@@ -146,7 +146,7 @@ function CompromisoConductualPreview({
             </span>
             <ol className="list-decimal pl-4 space-y-1 text-slate-700 text-[11px]">
               {customCommitments.map((comm, i) => (
-                <li key={comm || i} className="leading-relaxed">
+                <li key={i} className="leading-relaxed">
                   {comm}
                 </li>
               ))}
@@ -308,7 +308,7 @@ function AmonestacionPreview({
             </span>
             <ol className="list-decimal pl-4 space-y-1 text-slate-700 text-[11px]">
               {customCommitments.map((comm, i) => (
-                <li key={comm || i} className="leading-relaxed">
+                <li key={i} className="leading-relaxed">
                   {comm}
                 </li>
               ))}
