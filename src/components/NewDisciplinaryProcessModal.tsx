@@ -477,6 +477,7 @@ export default function NewDisciplinaryProcessModal({
           <button 
             onClick={onClose}
             className="relative p-2 rounded-xl text-white/40 hover:text-white hover:bg-white/10 transition-all duration-200"
+            aria-label="Cerrar"
           >
             <X className="w-4 h-4" />
           </button>
@@ -774,7 +775,7 @@ export default function NewDisciplinaryProcessModal({
               {/* Annotations list */}
               <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1 custom-scrollbar">
                 {detectedAnnotations.map((ann, idx) => (
-                  <div key={idx} className="bg-white border border-slate-100 rounded-2xl p-4 hover:border-slate-200 hover:shadow-sm transition-all duration-200 flex items-start gap-3.5">
+                  <div key={ann.date + (ann.text || '').slice(0, 20) || idx} className="bg-white border border-slate-100 rounded-2xl p-4 hover:border-slate-200 hover:shadow-sm transition-all duration-200 flex items-start gap-3.5">
                     <span className="w-7 h-7 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl flex items-center justify-center text-[11px] font-bold shrink-0">
                       {idx + 1}
                     </span>

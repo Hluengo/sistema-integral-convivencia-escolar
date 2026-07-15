@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  Users, FileText, Shield, AlertTriangle
+  FileText, Shield, AlertTriangle
 } from 'lucide-react';
 import { Student, Annotation } from '../types';
 
@@ -11,9 +11,6 @@ interface DashboardStatsProps {
 
 export default function DashboardStats({ students, annotations }: DashboardStatsProps) {
   
-  // Total stats
-  const totalStudents = students.length;
-  
   // Disciplinary stages counts based on RICE Art.24.BIS
   // 5-9 negativas = Carta de Amonestación (1ra acumulación)
   const amonestacionCount = students.filter(s => s.annotations_count >= 5 && s.annotations_count < 10).length;
@@ -23,13 +20,6 @@ export default function DashboardStats({ students, annotations }: DashboardStats
   const derivacionCount = students.filter(s => s.annotations_count >= 15).length;
 
   const statsList = [
-    {
-      title: 'Estudiantes Totales',
-      value: totalStudents,
-      description: 'NNA Matriculados Activos',
-      icon: Users,
-      color: 'bg-indigo-50 border-indigo-200 text-indigo-600'
-    },
     {
       title: 'Carta de Amonestación',
       value: amonestacionCount,
@@ -54,7 +44,7 @@ export default function DashboardStats({ students, annotations }: DashboardStats
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {statsList.map((stat, i) => {
         const IconComponent = stat.icon;
         

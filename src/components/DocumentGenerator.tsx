@@ -76,7 +76,7 @@ export default function DocumentGenerator({ student, annotations, privacyMode, c
 
   // Load emitted letters from localStorage
   useEffect(() => {
-    const local = localStorage.getItem('convivencia_local_compromisos');
+    const local = localStorage.getItem('convivencia_local_compromisos:v1');
     if (local) {
       try {
         setEmittedList(JSON.parse(local));
@@ -89,14 +89,14 @@ export default function DocumentGenerator({ student, annotations, privacyMode, c
   // Update selection of negative annotations initially
   useEffect(() => {
     setSelectedAnnotationsForDoc(negativeAnns.map(a => a.id));
-  }, [annotations]);
+  }, [annotations, negativeAnns]);
 
   // Sync default docType if annotations count changes
   useEffect(() => {
     if (negativeAnns.length >= 10) {
       setDocType('compromiso_conductual');
     }
-  }, [negativeAnns.length]);
+  }, [negativeAnns.length, setDocType]);
 
   // Use shared helpers
   const handleMaskName = (name: string) => maskName(name, privacyMode);
@@ -590,7 +590,7 @@ export default function DocumentGenerator({ student, annotations, privacyMode, c
 
     const updated = [newDoc, ...emittedList];
     setEmittedList(updated);
-    localStorage.setItem('convivencia_local_compromisos', JSON.stringify(updated));
+    localStorage.setItem('convivencia_local_compromisos:v1', JSON.stringify(updated));
     alert('✅ ÉXITO: El documento ha sido registrado de manera digital y archivado exitosamente.');
   };
 
