@@ -22,7 +22,7 @@ interface AnotacionesStudentDetailModalProps {
   onClose: () => void;
   onAddAnnotations: (studentId: string, annotations: any[]) => void;
   onClearAnnotations: (studentId: string) => void;
-  onTogglePrivacy: () => void;
+  onTogglePrivacy?: () => void;
   teachers?: Record<string, string>;
 }
 

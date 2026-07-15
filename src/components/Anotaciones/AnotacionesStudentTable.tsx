@@ -8,30 +8,30 @@ import { maskName, maskRut, getSemaphoricStyle } from '../../lib/anotacionesUtil
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 export const TEACHERS_BY_COURSE: Record<string, string> = {
-  '1° Básico A': 'Sra. María González',
-  '1° Básico B': 'Sr. Carlos Muñoz',
-  '2° Básico A': 'Sra. Patricia Soto',
-  '2° Básico B': 'Sr. Roberto Vargas',
-  '3° Básico A': 'Sra. Claudia Rivas',
-  '3° Básico B': 'Sr. Andrés Herrera',
-  '4° Básico A': 'Sra. Carolina Díaz',
-  '4° Básico B': 'Sr. Felipe Silva',
-  '5° Básico A': 'Sra. Verónica Castro',
-  '5° Básico B': 'Sr. Luis Morales',
-  '6° Básico A': 'Sra. Daniela Paredes',
-  '6° Básico B': 'Sr. Javier Campos',
-  '7° Básico A': 'Sra. Andrea León',
-  '7° Básico B': 'Sr. Pablo Ramírez',
-  '8° Básico A': 'Sra. Marcela Torres',
-  '8° Básico B': 'Sr. Cristián Palma',
-  '1° Medio A': 'Sra. Karen Soto',
-  '1° Medio B': 'Sr. Marcelo Farías',
-  '2° Medio A': 'Sra. Tamara Muñoz',
-  '2° Medio B': 'Sr. Rodrigo Sepúlveda',
-  '3° Medio A': 'Sra. Paulina Contreras',
-  '3° Medio B': 'Sr. Jorge Araya',
-  '4° Medio A': 'Sra. Carmen Espinoza',
-  '4° Medio B': 'Sr. Héctor Riquelme',
+  '1° Básico A': 'CONSTANZA ESPINOZA MIRANDA',
+  '1° Básico B': 'NATALIA ALBORNOZ RODRÍGUEZ',
+  '2° Básico A': 'CAMILA GODOY VENEGAS',
+  '2° Básico B': 'BELÉN FUENTES SALAZAR',
+  '3° Básico A': 'ESPERANZA MORAGA SAINT JOUR',
+  '3° Básico B': 'MARÍA OLIVIA GARCÉS',
+  '4° Básico A': 'JAVIERA JOFRÉ SAN MARTÍN',
+  '4° Básico B': 'CAROLINA RUÍZ RISOPATRÓN',
+  '5° Básico A': 'PAMELA JARA GONZÁLEZ',
+  '5° Básico B': 'VIVIANA SAAVEDRA BARRERA',
+  '6° Básico A': 'SILVANA PINCHEIRA RODRÍGUEZ',
+  '6° Básico B': 'ROSARIO SALINAS CAMPOS',
+  '7° Básico A': 'MARCELO MUÑOZ PINO',
+  '7° Básico B': 'MARÍA ISABEL MATUS RETAMAL',
+  '8° Básico A': 'VANNIA RETAMAL SALGADO',
+  '8° Básico B': 'PATRICIO ZAMBRANO ASENCIO',
+  '1° Medio A': 'ESTER CONTRERAS ESPINOZA',
+  '1° Medio B': 'MARITZA CARRASCO PALMA',
+  '2° Medio A': 'PERCY ROCHA LUNA',
+  '2° Medio B': 'JEREMY PÉREZ MUÑOZ',
+  '3° Medio A': 'ANGELO FREIRE CONTRERAS',
+  '3° Medio B': 'CAROLINA AGÜERO CÁRDENAS',
+  '4° Medio A': 'VICENTE BURGOS ESTRADA',
+  '4° Medio B': 'KEYLA RODRÍGUEZ SANHUEZA',
 };
 
 export const getDisciplinaryStatusLabel = (count: number): { text: string; bg: string } => {
@@ -142,7 +142,7 @@ export default function AnotacionesStudentTable({
     <div className="space-y-4">
       {/* Search and Refresh */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-md">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"

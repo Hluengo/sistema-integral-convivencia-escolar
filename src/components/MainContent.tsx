@@ -196,7 +196,7 @@ export default function MainContent({
       {currentView === 'anotaciones' && (
         <ErrorBoundary>
           <Suspense fallback={<ViewFallback />}>
-            <AnotacionesView />
+            <AnotacionesView privacyMode={privacyMode} />
           </Suspense>
         </ErrorBoundary>
       )}
