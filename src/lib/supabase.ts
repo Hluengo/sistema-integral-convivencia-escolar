@@ -650,53 +650,48 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<any[]> {
     return [];
   }
 
-  const results = await Promise.all(
-    students.map(async (s: any) => {
-      const [negResult, posResult] = await Promise.all([
-        supabase.from('inspectorate_records')
-          .select('id, type, date_time, severity', { count: 'exact' })
-          .eq('student_id', s.id)
-          .eq('type', 'Negativa'),
-        supabase.from('inspectorate_records')
-          .select('id', { count: 'exact' })
-          .eq('student_id', s.id)
-          .eq('type', 'Positiva'),
-      ]);
-      const { data: negAnnotations } = negResult;
-      const { data: posAnnotations } = posResult;
+  const { data: allAnnotations } = await supabase
+    .from('inspectorate_records')
+    .select('student_id, type, date_time, severity');
 
-      const negativeCount = (negAnnotations || []).length;
-      const positiveCount = (posAnnotations || []).length;
-      const lastAnnotation = (negAnnotations || []).sort((a: any, b: any) =>
-        new Date(b.date_time).getTime() - new Date(a.date_time).getTime()
-      )[0];
+  const annByStudent: Record<string, any[]> = {};
+  for (const ann of allAnnotations || []) {
+    if (!annByStudent[ann.student_id]) annByStudent[ann.student_id] = [];
+    annByStudent[ann.student_id].push(ann);
+  }
 
-      let disciplinary_status: string;
-      if (negativeCount < 5) disciplinary_status = 'Verde';
-      else if (negativeCount < 10) disciplinary_status = 'Amarillo';
-      else if (negativeCount < 15) disciplinary_status = 'Naranja';
-      else disciplinary_status = 'Rojo';
+  return students.map((s: any) => {
+    const studentAnns = annByStudent[s.id] || [];
+    const negs = studentAnns.filter(a => a.type === 'Negativa');
+    const pos = studentAnns.filter(a => a.type === 'Positiva');
+    const negativeCount = negs.length;
+    const positiveCount = pos.length;
+    const sorted = [...negs].sort((a: any, b: any) =>
+      new Date(b.date_time).getTime() - new Date(a.date_time).getTime()
+    );
 
-      const courses = s.courses as { name: string; level: string } | null;
-      return {
-        id: s.id,
-        full_name: s.full_name,
-        course_id: s.course_id,
-        teacher_id: s.teacher_id || '',
-        status: s.status || 'Activo',
-        annotations_count: negativeCount,
-        positive_annotations_count: positiveCount,
-        last_annotation_date: lastAnnotation?.date_time || null,
-        disciplinary_status,
-        rut: s.rut || '',
-        course_name: courses?.name ?? 'Sin curso',
-      };
-    })
-  );
+    let ds: string;
+    if (negativeCount < 5) ds = 'Verde';
+    else if (negativeCount < 10) ds = 'Amarillo';
+    else if (negativeCount < 15) ds = 'Naranja';
+    else ds = 'Rojo';
 
-  return results;
+    const courses = s.courses as { name: string; level: string } | null;
+    return {
+      id: s.id,
+      full_name: s.full_name,
+      course_id: s.course_id,
+      teacher_id: s.teacher_id || '',
+      status: s.status || 'Activo',
+      annotations_count: negativeCount,
+      positive_annotations_count: positiveCount,
+      last_annotation_date: sorted[0]?.date_time || null,
+      disciplinary_status: ds,
+      rut: s.rut || '',
+      course_name: courses?.name ?? 'Sin curso',
+    };
+  });
 }
-
 // ====================================================
 // Cartas Disciplinarias
 // ====================================================
@@ -792,3 +787,4 @@ export async function saveEtapa(etapa: {
   }
   return true;
 }
+

@@ -162,13 +162,6 @@ export default function DashboardStats({ causas, onFaseSelect, selectedFase }: D
         />
       </div>
 
-      {/* Anotaciones KPIs */}
-      <AnotacionesDashboardStats
-        amonestacionCount={anotacionesKpis.amonestacionCount}
-        compromisoCount={anotacionesKpis.compromisoCount}
-        derivacionCount={anotacionesKpis.derivacionCount}
-      />
-
       {/* Severity distribution */}
       <div>
         <div className="flex items-center gap-2 mb-3">
@@ -179,6 +172,12 @@ export default function DashboardStats({ causas, onFaseSelect, selectedFase }: D
             Distribución por Gravedad
           </h3>
         </div>
+      {/* Anotaciones KPIs */}
+      <AnotacionesDashboardStats
+        amonestacionCount={anotacionesKpis.amonestacionCount}
+        compromisoCount={anotacionesKpis.compromisoCount}
+        derivacionCount={anotacionesKpis.derivacionCount}
+      />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <SeverityCard tipo="Leve" count={stats.porGravedad['Leve']} total={stats.total} />
           <SeverityCard tipo="Grave" count={stats.porGravedad['Grave']} total={stats.total} />
