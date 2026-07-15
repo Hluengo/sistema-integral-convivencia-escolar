@@ -61,6 +61,8 @@ export default function DocumentForm({
     (isDocLockedByProgress && !bypassProgressLock) ||
     (docType === 'compromiso_conductual' && !hasTenOrMore && !authorizedBypass);
 
+  const selectedAnnotationsSet = new Set(selectedAnnotationsForDoc);
+
   return (
     <div
       className={`bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-4 transition-opacity ${
@@ -75,8 +77,9 @@ export default function DocumentForm({
       {docType !== 'derivacion' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="text-[10px] font-bold text-slate-600 block mb-1">Nombre Apoderado</label>
+            <label htmlFor="apoderado-name" className="text-[10px] font-bold text-slate-600 block mb-1">Nombre Apoderado</label>
             <input
+              id="apoderado-name"
               type="text"
               value={apoderadoName}
               onChange={(e) => onApoderadoNameChange(e.target.value)}
@@ -92,10 +95,11 @@ export default function DocumentForm({
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-[10px] font-bold text-slate-600 block mb-1">
+              <label htmlFor="coordinator-name" className="text-[10px] font-bold text-slate-600 block mb-1">
                 Coordinador Ciclo Responsable
               </label>
               <input
+                id="coordinator-name"
                 type="text"
                 value={coordinatorName}
                 onChange={(e) => onCoordinatorNameChange(e.target.value)}
@@ -104,8 +108,9 @@ export default function DocumentForm({
               />
             </div>
             <div>
-              <label className="text-[10px] font-bold text-slate-600 block mb-1">Usuario que Emite / Cargo</label>
+              <label htmlFor="emitted-by" className="text-[10px] font-bold text-slate-600 block mb-1">Usuario que Emite / Cargo</label>
               <input
+                id="emitted-by"
                 type="text"
                 value={emittedBy}
                 onChange={(e) => onEmittedByChange(e.target.value)}
@@ -116,10 +121,11 @@ export default function DocumentForm({
           </div>
 
           <div>
-            <label className="text-[10px] font-bold text-slate-600 block mb-1">
+            <label htmlFor="compromiso-status" className="text-[10px] font-bold text-slate-600 block mb-1">
               Estado Administrativo del Documento
             </label>
             <select
+              id="compromiso-status"
               value={compromisoStatus}
               onChange={(e) => onCompromisoStatusChange(e.target.value)}
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs bg-white focus:ring-1 focus:ring-indigo-500 focus:outline-hidden"
@@ -136,9 +142,10 @@ export default function DocumentForm({
 
           {/* Custom commitments */}
           <div className="space-y-2 pt-2 border-t border-slate-100">
-            <label className="text-[10px] font-bold text-slate-600 block">Agregar Compromiso Personalizado</label>
+            <label htmlFor="custom-commitment" className="text-[10px] font-bold text-slate-600 block">Agregar Compromiso Personalizado</label>
             <div className="flex gap-1.5">
               <input
+                id="custom-commitment"
                 type="text"
                 value={newCustomCommitment}
                 onChange={(e) => onNewCustomCommitmentChange(e.target.value)}
@@ -148,6 +155,7 @@ export default function DocumentForm({
               <button
                 type="button"
                 onClick={onAddCustomCommitment}
+                aria-label="Agregar compromiso"
                 className="px-3 bg-slate-900 hover:bg-black text-white font-bold rounded-lg text-xs flex items-center justify-center"
               >
                 <Plus className="w-4 h-4" />
@@ -157,13 +165,14 @@ export default function DocumentForm({
               <div className="bg-slate-50 border border-slate-200 p-2 rounded-lg max-h-32 overflow-y-auto space-y-1">
                 {customCommitments.map((comm, idx) => (
                   <div
-                    key={idx}
+                    key={comm || idx}
                     className="flex items-start justify-between gap-2 p-1.5 bg-white border rounded text-[11px] text-slate-700"
                   >
                     <span className="flex-1 leading-normal">{comm}</span>
                     <button
                       type="button"
                       onClick={() => onRemoveCustomCommitment(idx)}
+                      aria-label={`Eliminar compromiso: ${comm}`}
                       className="text-red-500 hover:text-red-700 shrink-0 p-0.5"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -178,12 +187,13 @@ export default function DocumentForm({
 
       {/* Observations */}
       <div>
-        <label className="text-[10px] font-bold text-slate-600 block mb-1">
+        <label htmlFor="doc-observations" className="text-[10px] font-bold text-slate-600 block mb-1">
           {docType === 'compromiso_conductual'
             ? 'Observaciones / Medidas Adicionales'
             : 'Observaciones y Acuerdos Remediales'}
         </label>
         <textarea
+          id="doc-observations"
           value={docObservations}
           onChange={(e) => onDocObservationsChange(e.target.value)}
           placeholder="Indique las observaciones adicionales relevantes o medidas pedagógicas inmediatas adoptadas..."
@@ -194,11 +204,11 @@ export default function DocumentForm({
 
       {/* Annotation selection */}
       <div className="space-y-2 pt-2 border-t border-slate-100">
-        <label className="text-[10px] font-bold text-slate-600 block">Seleccionar Anotaciones a Citar</label>
+        <label htmlFor="annotation-selection" className="text-[10px] font-bold text-slate-600 block">Seleccionar Anotaciones a Citar</label>
         {negativeAnns.length > 0 ? (
-          <div className="border border-slate-200 rounded-lg max-h-40 overflow-y-auto bg-slate-50 p-2 space-y-1.5">
+          <div id="annotation-selection" className="border border-slate-200 rounded-lg max-h-40 overflow-y-auto bg-slate-50 p-2 space-y-1.5">
             {negativeAnns.map(ann => {
-              const isSelected = selectedAnnotationsForDoc.includes(ann.id);
+              const isSelected = selectedAnnotationsSet.has(ann.id);
               return (
                 <button
                   key={ann.id}

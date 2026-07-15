@@ -108,10 +108,8 @@ export default function StudentTable({
     if (!matchesSearch) return false;
 
     switch (activeFilter) {
-      case 'all':
-        return true;
-      case 'sin_registro':
-        return student.annotations_count < 5;
+      case 'con_registro':
+        return student.annotations_count >= 5;
       case 'amonestacion':
         return student.annotations_count >= 5 && student.annotations_count < 10;
       case 'compromiso':
@@ -119,15 +117,15 @@ export default function StudentTable({
       case 'derivacion':
         return student.annotations_count >= 15;
       default:
-        return true;
+        return student.annotations_count >= 5;
     }
   });
 
   const quickFiltersList = [
+    { id: 'con_registro', label: 'Con Registro', color: 'indigo' },
     { id: 'amonestacion', label: 'Carta de Amonestación', color: 'amber' },
     { id: 'compromiso', label: 'Carta de Compromiso', color: 'orange' },
     { id: 'derivacion', label: 'Derivado a CE', color: 'rose' },
-    { id: 'sin_registro', label: 'Sin Registro' },
   ];
 
   return (
@@ -278,10 +276,6 @@ export default function StudentTable({
           Mostrando <span className="font-semibold text-slate-700">{filteredStudents.length}</span> de <span className="font-semibold text-slate-700">{students.length}</span> estudiantes registrados.
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-slate-300" />
-            <span>Sin Registro (0-4)</span>
-          </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
             <span>Amonestación (5-9)</span>

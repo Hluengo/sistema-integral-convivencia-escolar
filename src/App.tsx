@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { 
-  Users, 
   BookOpen,
   Eye,
   EyeOff,
   Sparkles,
-  Database
+  AlertTriangle
 } from 'lucide-react';
 
 // Types and data
@@ -56,7 +55,7 @@ export default function App() {
   );
 
   // Table filters states
-  const [activeFilter, setActiveFilter] = useState<string>('amonestacion');
+  const [activeFilter, setActiveFilter] = useState<string>('con_registro');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Pre-populate mock cases in localStorage for tracking
@@ -344,11 +343,22 @@ export default function App() {
         {/* Core application content dashboard view */}
         <div className="space-y-6">
           
-          {/* Metric counters */}
-          <DashboardStats
-            students={students}
-            annotations={annotations}
-          />
+          {/* Distribution by gravity */}
+          <section>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="p-1.5 bg-indigo-100 rounded-lg">
+                <AlertTriangle className="w-4 h-4 text-indigo-600" />
+              </div>
+              <div>
+                <h2 className="text-sm font-extrabold text-slate-800 tracking-tight">Distribución por Gravedad</h2>
+                <p className="text-[11px] text-slate-500 font-medium">Etapa del proceso disciplinario según acumulación de anotaciones</p>
+              </div>
+            </div>
+            <DashboardStats
+              students={students}
+              annotations={annotations}
+            />
+          </section>
 
 
 
