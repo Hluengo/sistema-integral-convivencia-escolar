@@ -33,6 +33,8 @@ CREATE TABLE IF NOT EXISTS inspectorate_records (
   student_id UUID REFERENCES students(id) ON DELETE CASCADE,
   date_time TIMESTAMPTZ NOT NULL,
   observation TEXT NOT NULL,
+  type TEXT CHECK (type IN ('Positiva', 'Negativa')),
+  severity TEXT CHECK (severity IN ('Leve', 'Grave', 'Muy Grave', 'Gravísima')),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -99,6 +101,8 @@ CREATE TABLE IF NOT EXISTS etapas_disciplinarias (
 CREATE INDEX IF NOT EXISTS idx_students_course_id ON students(course_id);
 CREATE INDEX IF NOT EXISTS idx_inspectorate_student_id ON inspectorate_records(student_id);
 CREATE INDEX IF NOT EXISTS idx_inspectorate_date ON inspectorate_records(date_time);
+CREATE INDEX IF NOT EXISTS idx_inspectorate_type ON inspectorate_records(type);
+CREATE INDEX IF NOT EXISTS idx_inspectorate_severity ON inspectorate_records(severity);
 CREATE INDEX IF NOT EXISTS idx_causas_estado ON causas(estado_actual);
 CREATE INDEX IF NOT EXISTS idx_cartas_student_id ON cartas_disciplinarias(student_id);
 CREATE INDEX IF NOT EXISTS idx_cartas_emission_date ON cartas_disciplinarias(emission_date);
