@@ -15,6 +15,7 @@ const VIEW_TITLES: Record<SidebarView, { title: string; subtitle: string }> = {
   causas: { title: 'Causas', subtitle: 'Expedientes y procedimientos activos' },
   alumnos: { title: 'Alumnos', subtitle: 'Gestión de estudiantes' },
   informes: { title: 'Informes', subtitle: 'Asistente y reportes' },
+  anotaciones: { title: 'Gestión de Anotaciones', subtitle: 'Documentos y hojas de vida' },
 };
 
 interface HeaderProps {
@@ -325,3 +326,4 @@ export default function Header({
     </header>
   );
 }
+

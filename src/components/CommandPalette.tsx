@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Search, FileText, LayoutDashboard, Users, MessageSquare } from 'lucide-react';
+import { Search, FileText, LayoutDashboard, Users, MessageSquare, ClipboardList } from 'lucide-react';
 import { Causa } from '../types';
 import type { SidebarView } from './Sidebar';
 

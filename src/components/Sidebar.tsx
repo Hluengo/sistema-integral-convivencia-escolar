@@ -5,13 +5,13 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { 
-  LayoutDashboard, Scale, Users, FileBarChart,
+  LayoutDashboard, Scale, Users, FileBarChart, ClipboardList,
   ChevronLeft, ChevronRight, AlertTriangle, Menu, X,
   LogIn, LogOut, User
 } from 'lucide-react';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 
-export type SidebarView = 'dashboard' | 'causas' | 'alumnos' | 'informes';
+export type SidebarView = 'dashboard' | 'causas' | 'alumnos' | 'informes' | 'anotaciones';
 
 interface SidebarProps {
   currentView: SidebarView;
@@ -43,6 +43,7 @@ const NAV_ITEMS: { id: SidebarView; label: string; Icon: React.ElementType; badg
   { id: 'causas', label: 'Causas', Icon: Scale, badgeKey: 'activeCount' },
   { id: 'alumnos', label: 'Alumnos', Icon: Users },
   { id: 'informes', label: 'Informes', Icon: FileBarChart },
+  { id: 'anotaciones', label: 'Anotaciones', Icon: ClipboardList },
 ];
 
 function SidebarContent({
@@ -292,3 +293,4 @@ export default function Sidebar({
     </>
   );
 }
+

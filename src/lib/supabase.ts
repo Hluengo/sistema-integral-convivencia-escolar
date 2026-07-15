@@ -580,3 +580,214 @@ export async function deleteDocument(path: string): Promise<boolean> {
 
   return true;
 }
+
+// ====================================================
+// Gestión de Anotaciones (inspectorate_records)
+// ====================================================
+
+export interface InspectorateRecord {
+  id: string;
+  student_id: string;
+  date_time: string;
+  observation: string;
+  severity: 'Leve' | 'Grave' | 'Muy Grave' | 'Gravísima';
+  type: 'Positiva' | 'Negativa';
+  registered_by: string;
+  created_at: string;
+}
+
+export async function fetchAnnotations(studentId?: string): Promise<InspectorateRecord[]> {
+  let query = supabase
+    .from('inspectorate_records')
+    .select('*')
+    .order('date_time', { ascending: false });
+
+  if (studentId) {
+    query = query.eq('student_id', studentId);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching annotations:', error);
+    return [];
+  }
+  return (data || []) as InspectorateRecord[];
+}
+
+export async function saveAnnotation(annotation: {
+  student_id: string;
+  observation: string;
+  severity: string;
+  type: string;
+  registered_by: string;
+}): Promise<boolean> {
+  const { error } = await supabase
+    .from('inspectorate_records')
+    .insert({
+      student_id: annotation.student_id,
+      observation: annotation.observation,
+      severity: annotation.severity,
+      type: annotation.type,
+      registered_by: annotation.registered_by,
+    });
+
+  if (error) {
+    console.error('Error saving annotation:', error);
+    return false;
+  }
+  return true;
+}
+
+export async function fetchStudentsWithAnnotationCounts(): Promise<any[]> {
+  const { data: students, error: studentsError } = await supabase
+    .from('students')
+    .select('*, courses(name, level)')
+    .order('full_name', { ascending: true });
+
+  if (studentsError || !students) {
+    console.error('Error fetching students:', studentsError);
+    return [];
+  }
+
+  const results = await Promise.all(
+    students.map(async (s: any) => {
+      const { data: negAnnotations } = await supabase
+        .from('inspectorate_records')
+        .select('id, type, date_time, severity', { count: 'exact' })
+        .eq('student_id', s.id)
+        .eq('type', 'Negativa');
+
+      const { data: posAnnotations } = await supabase
+        .from('inspectorate_records')
+        .select('id', { count: 'exact' })
+        .eq('student_id', s.id)
+        .eq('type', 'Positiva');
+
+      const negativeCount = (negAnnotations || []).length;
+      const positiveCount = (posAnnotations || []).length;
+      const lastAnnotation = (negAnnotations || []).sort((a: any, b: any) =>
+        new Date(b.date_time).getTime() - new Date(a.date_time).getTime()
+      )[0];
+
+      let disciplinary_status: string;
+      if (negativeCount < 5) disciplinary_status = 'Verde';
+      else if (negativeCount < 10) disciplinary_status = 'Amarillo';
+      else if (negativeCount < 15) disciplinary_status = 'Naranja';
+      else disciplinary_status = 'Rojo';
+
+      const courses = s.courses as { name: string; level: string } | null;
+      return {
+        id: s.id,
+        full_name: s.full_name,
+        course_id: s.course_id,
+        teacher_id: s.teacher_id || '',
+        status: s.status || 'Activo',
+        annotations_count: negativeCount,
+        positive_annotations_count: positiveCount,
+        last_annotation_date: lastAnnotation?.date_time || null,
+        disciplinary_status,
+        rut: s.rut || '',
+        course_name: courses?.name ?? 'Sin curso',
+      };
+    })
+  );
+
+  return results;
+}
+
+// ====================================================
+// Cartas Disciplinarias
+// ====================================================
+
+export async function fetchCartas(studentId: string): Promise<any[]> {
+  const { data, error } = await supabase
+    .from('cartas_disciplinarias')
+    .select('*')
+    .eq('student_id', studentId)
+    .order('emission_date', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching cartas:', error);
+    return [];
+  }
+  return data || [];
+}
+
+export async function saveCarta(carta: {
+  student_id: string;
+  letter_type: string;
+  emitted_by: string;
+  supervisor_name?: string;
+  apoderado_name: string;
+  annotations_count: number;
+  student_name: string;
+  course: string;
+  regulation_basis: string;
+  observations?: string;
+}): Promise<string | false> {
+  const id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const { error } = await supabase
+    .from('cartas_disciplinarias')
+    .insert({
+      id,
+      student_id: carta.student_id,
+      letter_type: carta.letter_type,
+      emitted_by: carta.emitted_by,
+      supervisor_name: carta.supervisor_name || null,
+      apoderado_name: carta.apoderado_name,
+      annotations_count: carta.annotations_count,
+      student_name: carta.student_name,
+      course: carta.course,
+      regulation_basis: carta.regulation_basis,
+      observations: carta.observations || null,
+    });
+
+  if (error) {
+    console.error('Error saving carta:', error);
+    return false;
+  }
+  return id;
+}
+
+// ====================================================
+// Etapas Disciplinarias
+// ====================================================
+
+export async function fetchEtapas(studentId: string): Promise<any[]> {
+  const { data, error } = await supabase
+    .from('etapas_disciplinarias')
+    .select('*')
+    .eq('student_id', studentId)
+    .order('step_number', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching etapas:', error);
+    return [];
+  }
+  return data || [];
+}
+
+export async function saveEtapa(etapa: {
+  student_id: string;
+  step_number: number;
+  stage_name: string;
+  responsible: string;
+  comment?: string;
+}): Promise<boolean> {
+  const { error } = await supabase
+    .from('etapas_disciplinarias')
+    .insert({
+      student_id: etapa.student_id,
+      step_number: etapa.step_number,
+      stage_name: etapa.stage_name,
+      responsible: etapa.responsible,
+      comment: etapa.comment || null,
+    });
+
+  if (error) {
+    console.error('Error saving etapa:', error);
+    return false;
+  }
+  return true;
+}

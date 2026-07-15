@@ -15,6 +15,7 @@ import { DashboardMetricSkeleton, CausaCardSkeleton } from './Skeleton';
 const DashboardStats = lazy(() => import('./DashboardStats'));
 const StudentsPanel = lazy(() => import('./StudentsPanel'));
 const AdvisorView = lazy(() => import('./MainContent/AdvisorView'));
+const AnotacionesView = lazy(() => import('./Anotaciones/AnotacionesView'));
 
 function DashboardFallback() {
   return (
@@ -129,6 +130,7 @@ export default function MainContent({
         {currentView === 'causas' && 'Vista: Expedientes'}
         {currentView === 'informes' && 'Vista: Informes y asesor legal'}
         {currentView === 'alumnos' && 'Vista: Alumnos'}
+        {currentView === 'anotaciones' && 'Vista: Gesti\u00f3n de Anotaciones'}
       </div>
       {/* VIEW 1: DASHBOARD - Fully redesigned */}
       {currentView === 'dashboard' && (
@@ -192,3 +194,4 @@ export default function MainContent({
     </main>
   );
 }
+
