@@ -68,10 +68,6 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
     loadData();
   }, [loadData]);
 
-  const handleRefresh = useCallback(() => {
-    loadData();
-  }, [loadData]);
-
   useEffect(() => {
     if (!selectedStudent) { setAnnotations([]); return; }
     let cancelled = false;
@@ -223,7 +219,6 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
         setActiveFilter={setActiveFilter}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
-        onRefresh={handleRefresh}
         isLoading={isLoading}
       />
 

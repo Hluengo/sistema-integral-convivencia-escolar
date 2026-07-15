@@ -2,7 +2,7 @@
  * @license SPDX-License-Identifier: Apache-2.0
  */
 
-import { Search, RefreshCw } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { maskName, maskRut, getSemaphoricStyle, TEACHERS_BY_COURSE } from '../../lib/anotacionesUtils';
 
 /** @license SPDX-License-Identifier: Apache-2.0 */
@@ -33,7 +33,6 @@ interface AnotacionesStudentTableProps {
   setActiveFilter: (filter: string) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  onRefresh: () => void;
   isLoading: boolean;
 }
 
@@ -105,14 +104,13 @@ export default function AnotacionesStudentTable({
   setActiveFilter,
   searchQuery,
   setSearchQuery,
-  onRefresh,
   isLoading,
 }: AnotacionesStudentTableProps) {
   const filteredStudents = filterStudents(students, activeFilter, searchQuery);
 
   return (
     <div className="space-y-4">
-      {/* Search and Refresh */}
+      {/* Search */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
@@ -124,15 +122,6 @@ export default function AnotacionesStudentTable({
             className="w-full rounded-lg border border-neutral-300 bg-white py-2 pl-10 pr-4 text-sm text-neutral-900 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
-        <button
-          type="button"
-          onClick={onRefresh}
-          disabled={isLoading}
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          <RefreshCw className={`size-4 ${isLoading ? 'animate-spin' : ''}`} />
-          Actualizar
-        </button>
       </div>
 
       {/* Filter Tabs */}
@@ -190,7 +179,7 @@ export default function AnotacionesStudentTable({
                 <tr>
                   <td colSpan={8} className="px-4 py-12 text-center text-sm text-neutral-500">
                     <div className="flex items-center justify-center gap-2">
-                      <RefreshCw className="size-4 animate-spin text-blue-500" />
+                      <div className="size-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                       Cargando estudiantes...
                     </div>
                   </td>
