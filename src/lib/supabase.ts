@@ -652,17 +652,18 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<any[]> {
 
   const results = await Promise.all(
     students.map(async (s: any) => {
-      const { data: negAnnotations } = await supabase
-        .from('inspectorate_records')
-        .select('id, type, date_time, severity', { count: 'exact' })
-        .eq('student_id', s.id)
-        .eq('type', 'Negativa');
-
-      const { data: posAnnotations } = await supabase
-        .from('inspectorate_records')
-        .select('id', { count: 'exact' })
-        .eq('student_id', s.id)
-        .eq('type', 'Positiva');
+      const [negResult, posResult] = await Promise.all([
+        supabase.from('inspectorate_records')
+          .select('id, type, date_time, severity', { count: 'exact' })
+          .eq('student_id', s.id)
+          .eq('type', 'Negativa'),
+        supabase.from('inspectorate_records')
+          .select('id', { count: 'exact' })
+          .eq('student_id', s.id)
+          .eq('type', 'Positiva'),
+      ]);
+      const { data: negAnnotations } = negResult;
+      const { data: posAnnotations } = posResult;
 
       const negativeCount = (negAnnotations || []).length;
       const positiveCount = (posAnnotations || []).length;

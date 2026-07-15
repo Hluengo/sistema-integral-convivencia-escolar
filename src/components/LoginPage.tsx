@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Scale, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { signInWithEmail } from '../lib/supabase';
-import { useAppContext } from '../context/AppContext';
+import { useAppContext } from '../context/useAppContext';
 
 interface LoginPageProps {
   onClose?: () => void;

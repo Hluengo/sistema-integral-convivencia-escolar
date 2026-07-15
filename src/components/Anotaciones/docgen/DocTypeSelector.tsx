@@ -42,10 +42,10 @@ export default function DocTypeSelector({
   };
 
   return (
-    <div className="space-y-3">
-      <label className="block text-sm font-medium text-gray-700">
+    <div role="group" aria-label="Tipo de Documento" className="space-y-3">
+      <div className="block text-sm font-medium text-gray-700">
         Tipo de Documento
-      </label>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {DOC_TYPES.map(({ id, label, icon: Icon, description }) => {
           const enabled = isEnabled(id);

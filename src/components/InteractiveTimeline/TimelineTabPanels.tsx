@@ -8,7 +8,7 @@ import { Causa } from '../../types';
 import ProcesoTab from './ProcesoTab';
 import BitacoraTab from './BitacoraTab';
 import AsistenteIATab from './AsistenteIATab';
-import { useTimelineContext } from '../../context/TimelineContext';
+import { useTimelineContext } from '../../context/useTimelineContext';
 
 interface TimelineTabPanelsProps {
   activeTab: 'proceso' | 'bitacora' | 'asistente_ia';

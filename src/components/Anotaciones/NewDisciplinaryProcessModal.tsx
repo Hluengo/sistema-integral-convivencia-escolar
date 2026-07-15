@@ -1,4 +1,4 @@
-﻿/** @license SPDX-License-Identifier: Apache-2.0 */
+/** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useState, useCallback, useRef, useMemo } from 'react';
 import {
@@ -132,7 +132,7 @@ export default function NewDisciplinaryProcessModal({
         <div className="sticky top-0 bg-white z-10 border-b border-slate-100 p-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-bold text-slate-800">Nuevo Proceso Disciplinario</h2>
-            <button onClick={onClose} className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+            <button type="button" aria-label="Cerrar" onClick={onClose} className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -206,20 +206,20 @@ export default function NewDisciplinaryProcessModal({
               <p className="text-sm text-slate-600 font-medium flex items-center gap-2">
                 <Upload className="w-4 h-4 text-indigo-600" /> Subir Hoja de Vida (PDF)
               </p>
-              <div
+              <button type="button"
                 onDragOver={e => { e.preventDefault(); setDrag(true); }}
                 onDragLeave={() => setDrag(false)} onDrop={onDrop}
                 onClick={() => fileRef.current?.click()}
-                className={'border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ' + (drag ? 'border-indigo-500 bg-indigo-50' : 'border-slate-300 hover:border-slate-400')}>
+                className={'border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all w-full ' + (drag ? 'border-indigo-500 bg-indigo-50' : 'border-slate-300 hover:border-slate-400')}>
                 <input ref={fileRef} type="file" accept=".pdf" onChange={onPick} className="hidden" />
                 <div className="flex flex-col items-center gap-2">
                   <Upload className="w-8 h-8 text-slate-400" />
                   <p className="text-sm text-slate-500">Arrastra un PDF o haz clic para seleccionar</p>
                   {file && <p className="text-xs font-medium text-indigo-600">{file.name}</p>}
                 </div>
-              </div>
+              </button>
               {file && (
-                <button onClick={handleAnalyze} disabled={isAnalyzing}
+                <button type="button" onClick={handleAnalyze} disabled={isAnalyzing}
                   className="w-full py-2.5 rounded-xl bg-indigo-600 text-white font-medium text-sm hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2">
                   {isAnalyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
                   {isAnalyzing ? 'Analizando...' : 'Subir y Analizar'}
@@ -243,7 +243,7 @@ export default function NewDisciplinaryProcessModal({
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-slate-700">Se detectaron {detected.length} anotaciones:</p>
                   {detected.map((a: any, i: number) => (
-                    <div key={i} className="flex items-start gap-2 p-2.5 rounded-lg bg-slate-50 border border-slate-100">
+                    <div key={a.id || a.date + a.text || i} className="flex items-start gap-2 p-2.5 rounded-lg bg-slate-50 border border-slate-100">
                       <div className={'mt-0.5 w-2 h-2 rounded-full shrink-0 ' + (a.severity === 'Leve' ? 'bg-emerald-500' : a.severity === 'Grave' ? 'bg-yellow-500' : a.severity === 'Muy Grave' ? 'bg-orange-500' : 'bg-rose-500')} />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-slate-400">{a.date || 'Sin fecha'}</p>
@@ -300,7 +300,7 @@ export default function NewDisciplinaryProcessModal({
               </div>
               <h3 className="text-lg font-bold text-slate-800">Proceso Registrado</h3>
               <p className="text-sm text-slate-500">El caso ha sido registrado exitosamente.</p>
-              <button onClick={onClose} className="mt-4 px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700">
+              <button type="button" onClick={onClose} className="mt-4 px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700">
                 Cerrar
               </button>
             </div>
@@ -309,11 +309,11 @@ export default function NewDisciplinaryProcessModal({
 
         {step < 7 && (
           <div className="border-t border-slate-100 p-4 flex justify-between">
-            <button onClick={() => setStep(s => Math.max(1, s - 1))} disabled={step === 1}
+            <button type="button" onClick={() => setStep(s => Math.max(1, s - 1))} disabled={step === 1}
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-30">
               <ArrowLeft className="w-4 h-4" /> Anterior
             </button>
-            <button onClick={() => step === 6 ? handleRegister() : setStep(s => s + 1)} disabled={!canNext()}
+            <button type="button" onClick={() => step === 6 ? handleRegister() : setStep(s => s + 1)} disabled={!canNext()}
               className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-40">
               {step === 6 ? 'Registrar' : 'Siguiente'} <ArrowRight className="w-4 h-4" />
             </button>

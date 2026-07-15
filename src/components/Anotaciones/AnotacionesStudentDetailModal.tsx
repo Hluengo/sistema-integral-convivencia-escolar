@@ -10,12 +10,25 @@ import { maskName, maskRut, getSemaphoricStyle, getCurrentDateStr } from '../../
 import { supabase, fetchCartas, saveCarta, fetchEtapas, saveEtapa } from '../../lib/supabase';
 import AnotacionesDocumentGenerator from './AnotacionesDocumentGenerator';
 
+const EMPTY_TEACHERS: Record<string, string> = {};
+
+function formatDate(dateStr?: string): string {
+  if (!dateStr) return '-';
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('es-CL', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+  } catch { return dateStr; }
+}
+
 interface AnotacionesStudentDetailModalProps {
   student: {
-    id: string; full_name: string; course_id: string; teacher_id: string;
-    annotations_count: number; positive_annotations_count: number;
-    last_annotation_date?: string; disciplinary_status: string;
-    rut?: string; course_name?: string;
+    id: string;
+    full_name: string; course_id: string; teacher_id: string;
+    annotations_count?: number; positive_annotations_count?: number;
+    last_annotation_date?: string; disciplinary_status?: string; rut?: string; course_name?: string;
   };
   annotations: Annotation[];
   privacyMode: boolean;
@@ -65,7 +78,7 @@ export default function AnotacionesStudentDetailModal({
   onAddAnnotations,
   onClearAnnotations,
   onTogglePrivacy,
-  teachers = {},
+  teachers = EMPTY_TEACHERS,
 }: AnotacionesStudentDetailModalProps) {
   // Tab state
   const [activeTab, setActiveTab] = useState<ActiveTab>('resumen');
@@ -85,9 +98,9 @@ export default function AnotacionesStudentDetailModal({
   const [currentMeasure, setCurrentMeasure] = useState<string>('');
   const [transitions, setTransitions] = useState<any[]>([]);
   const [activeCase, setActiveCase] = useState<any | null>(null);
-  const [cartas, setCartas] = useState<any[]>([]);
+  const cartasRef = useRef<any[]>([]);
   const [etapas, setEtapas] = useState<any[]>([]);
-  const [isLoadingData, setIsLoadingData] = useState(true);
+  const isLoadingDataRef = useRef(true);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
@@ -95,14 +108,15 @@ export default function AnotacionesStudentDetailModal({
   // Derived data
   const negativeCount = annotations.filter((a) => a.type === 'Negativa').length;
   const semaphoric = getSemaphoricStyle(negativeCount);
-  const statusInfo = STATUS_STYLE[student.disciplinary_status] || STATUS_STYLE.Verde;
+  const statusKey: string = student.disciplinary_status || 'Verde';
+  const statusInfo = STATUS_STYLE[statusKey] || STATUS_STYLE.Verde;
   const dateStr = getCurrentDateStr();
   // Load data on mount
   useEffect(() => {
     let cancelled = false;
 
     async function loadData() {
-      setIsLoadingData(true);
+      isLoadingDataRef.current = true;
       try {
         const [cartasData, etapasData] = await Promise.all([
           fetchCartas(student.id),
@@ -110,7 +124,7 @@ export default function AnotacionesStudentDetailModal({
         ]);
 
         if (!cancelled) {
-          setCartas(cartasData);
+          cartasRef.current = cartasData;
           setEtapas(etapasData);
         }
 
@@ -142,7 +156,7 @@ export default function AnotacionesStudentDetailModal({
       } catch (err) {
         console.error('Error loading disciplinary data:', err);
       } finally {
-        if (!cancelled) setIsLoadingData(false);
+        if (!cancelled) isLoadingDataRef.current = false;
       }
     }
 
@@ -165,30 +179,7 @@ export default function AnotacionesStudentDetailModal({
     e.preventDefault(); e.stopPropagation();
   }, []);
 
-  const handleDrop = useCallback(async (e: React.DragEvent) => {
-    e.preventDefault(); e.stopPropagation(); setIsDragging(false);
-    const files = e.dataTransfer.files;
-    if (files.length === 0) return;
-    const file = files[0];
-    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-      setErrorMessage('Solo se aceptan archivos PDF. Arrastra un archivo PDF valido.');
-      return;
-    }
-    await processPdfFile(file);
-  }, []);
-
-  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    const file = files[0];
-    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-      setErrorMessage('Solo se aceptan archivos PDF. Selecciona un archivo PDF valido.');
-      return;
-    }
-    await processPdfFile(file);
-    e.target.value = '';
-  }, []);
-  const processPdfFile = async (file: File) => {
+  const processPdfFile = useCallback(async (file: File) => {
     setIsParsing(true);
     setParsingStatus('Leyendo archivo PDF...');
     setErrorMessage(null);
@@ -233,7 +224,30 @@ export default function AnotacionesStudentDetailModal({
     } finally {
       setIsParsing(false);
     }
-  };
+  }, [student.id]);
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault(); e.stopPropagation(); setIsDragging(false);
+    const files = e.dataTransfer.files;
+    if (files.length === 0) return;
+    const file = files[0];
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      setErrorMessage('Solo se aceptan archivos PDF. Arrastra un archivo PDF valido.');
+      return;
+    }
+    await processPdfFile(file);
+  }, [processPdfFile]);
+
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    const file = files[0];
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      setErrorMessage('Solo se aceptan archivos PDF. Selecciona un archivo PDF valido.');
+      return;
+    }
+    await processPdfFile(file);
+    e.target.value = '';
+  }, [processPdfFile]);
   const handleRegisterParsedAnnotations = async () => {
     if (parsedAnnotations.length === 0) return;
     try {
@@ -272,7 +286,7 @@ export default function AnotacionesStudentDetailModal({
         fetchCartas(student.id),
         fetchEtapas(student.id),
       ]);
-      setCartas(cartasData);
+      cartasRef.current = cartasData;
       setEtapas(etapasData);
     } catch (err: any) {
       console.error('Error registering parsed annotations:', err);
@@ -286,17 +300,6 @@ export default function AnotacionesStudentDetailModal({
     const matchesSeverity = annotationSeverityFilter === 'todas' || ann.severity === annotationSeverityFilter;
     return matchesType && matchesSeverity;
   });
-
-  const formatDate = (dateStr?: string): string => {
-    if (!dateStr) return '-';
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('es-CL', {
-        day: '2-digit', month: '2-digit', year: 'numeric',
-        hour: '2-digit', minute: '2-digit',
-      });
-    } catch { return dateStr; }
-  };
 
   // Render: Resumen tab
   const renderResumenTab = () => (
@@ -434,6 +437,9 @@ export default function AnotacionesStudentDetailModal({
       {/* Drop zone */}
       <div
         ref={dropZoneRef}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInputRef.current?.click(); } }}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
@@ -496,7 +502,7 @@ export default function AnotacionesStudentDetailModal({
           <div className="flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
             <span>{errorMessage}</span>
-            <button type="button" onClick={() => setErrorMessage(null)} className="ml-auto flex-shrink-0 text-red-400 hover:text-red-600">
+            <button type="button" aria-label="Cerrar mensaje" onClick={() => setErrorMessage(null)} className="ml-auto flex-shrink-0 text-red-400 hover:text-red-600">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -515,7 +521,7 @@ export default function AnotacionesStudentDetailModal({
               const severity = ann.severity || 'Leve';
               const badge = SEVERITY_BADGE[severity] || SEVERITY_BADGE.Leve;
               return (
-                <div key={index} className="flex items-start gap-3 bg-slate-50 rounded-xl p-3 border border-slate-100">
+                <div key={ann.text || ann.observation || index} className="flex items-start gap-3 bg-slate-50 rounded-xl p-3 border border-slate-100">
                   <span className={"flex-shrink-0 w-2 h-2 mt-1.5 rounded-full " + badge.dot} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
@@ -550,9 +556,9 @@ export default function AnotacionesStudentDetailModal({
     <div className="space-y-5">
       {/* Filters */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="flex-1">
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Tipo</label>
+        <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+          <fieldset className="flex-1 border-0 p-0 m-0">
+            <legend className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Tipo</legend>
             <div className="flex flex-wrap gap-1.5">
               {(['todas', 'Positiva', 'Negativa'] as AnnotationTypeFilter[]).map((filter) => (
                 <button key={filter} type="button" onClick={() => setAnnotationTypeFilter(filter)}
@@ -561,9 +567,9 @@ export default function AnotacionesStudentDetailModal({
                 </button>
               ))}
             </div>
-          </div>
-          <div className="flex-1">
-            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Gravedad</label>
+          </fieldset>
+          <fieldset className="flex-1 border-0 p-0 m-0">
+            <legend className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Gravedad</legend>
             <div className="flex flex-wrap gap-1.5">
               {(['todas', 'Leve', 'Grave', 'Muy Grave', 'Gravísima'] as AnnotationSeverityFilter[]).map((filter) => (
                 <button key={filter} type="button" onClick={() => setAnnotationSeverityFilter(filter)}
@@ -572,7 +578,7 @@ export default function AnotacionesStudentDetailModal({
                 </button>
               ))}
             </div>
-          </div>
+          </fieldset>
         </div>
         <p className="text-xs text-slate-400 mt-3">
           Mostrando <span className="font-medium text-slate-600">{filteredAnnotations.length}</span> de <span className="font-medium text-slate-600">{annotations.length}</span> anotaciones
@@ -676,12 +682,12 @@ export default function AnotacionesStudentDetailModal({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button type="button" onClick={onTogglePrivacy}
+              <button type="button" aria-label={privacyMode ? 'Desactivar privacidad' : 'Activar privacidad'} onClick={onTogglePrivacy}
                 className="p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
                 title={privacyMode ? 'Desactivar privacidad' : 'Activar privacidad'}>
                 {privacyMode ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
-              <button type="button" onClick={onClose}
+              <button type="button" aria-label="Cerrar" onClick={onClose}
                 className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
                 <X className="w-5 h-5" />
               </button>

@@ -3,38 +3,11 @@
  */
 
 import { Search, RefreshCw } from 'lucide-react';
-import { maskName, maskRut, getSemaphoricStyle } from '../../lib/anotacionesUtils';
+import { maskName, maskRut, getSemaphoricStyle, TEACHERS_BY_COURSE } from '../../lib/anotacionesUtils';
 
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-export const TEACHERS_BY_COURSE: Record<string, string> = {
-  '1° Básico A': 'CONSTANZA ESPINOZA MIRANDA',
-  '1° Básico B': 'NATALIA ALBORNOZ RODRÍGUEZ',
-  '2° Básico A': 'CAMILA GODOY VENEGAS',
-  '2° Básico B': 'BELÉN FUENTES SALAZAR',
-  '3° Básico A': 'ESPERANZA MORAGA SAINT JOUR',
-  '3° Básico B': 'MARÍA OLIVIA GARCÉS',
-  '4° Básico A': 'JAVIERA JOFRÉ SAN MARTÍN',
-  '4° Básico B': 'CAROLINA RUÍZ RISOPATRÓN',
-  '5° Básico A': 'PAMELA JARA GONZÁLEZ',
-  '5° Básico B': 'VIVIANA SAAVEDRA BARRERA',
-  '6° Básico A': 'SILVANA PINCHEIRA RODRÍGUEZ',
-  '6° Básico B': 'ROSARIO SALINAS CAMPOS',
-  '7° Básico A': 'MARCELO MUÑOZ PINO',
-  '7° Básico B': 'MARÍA ISABEL MATUS RETAMAL',
-  '8° Básico A': 'VANNIA RETAMAL SALGADO',
-  '8° Básico B': 'PATRICIO ZAMBRANO ASENCIO',
-  '1° Medio A': 'ESTER CONTRERAS ESPINOZA',
-  '1° Medio B': 'MARITZA CARRASCO PALMA',
-  '2° Medio A': 'PERCY ROCHA LUNA',
-  '2° Medio B': 'JEREMY PÉREZ MUÑOZ',
-  '3° Medio A': 'ANGELO FREIRE CONTRERAS',
-  '3° Medio B': 'CAROLINA AGÜERO CÁRDENAS',
-  '4° Medio A': 'VICENTE BURGOS ESTRADA',
-  '4° Medio B': 'KEYLA RODRÍGUEZ SANHUEZA',
-};
-
-export const getDisciplinaryStatusLabel = (count: number): { text: string; bg: string } => {
+const getDisciplinaryStatusLabel = (count: number): { text: string; bg: string } => {
   if (count < 5) return { text: 'Verde - Buen Comportamiento', bg: 'bg-emerald-100 text-emerald-800' };
   if (count < 10) return { text: 'Amarillo - Advertencia', bg: 'bg-yellow-100 text-yellow-800' };
   if (count < 15) return { text: 'Naranja - Compromiso', bg: 'bg-orange-100 text-orange-800' };
@@ -111,6 +84,20 @@ function filterStudents(
   return filtered;
 }
 
+function formatDate(dateStr?: string): string {
+  if (!dateStr) return '—';
+  try {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('es-CL', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
 export default function AnotacionesStudentTable({
   students,
   privacyMode,
@@ -123,20 +110,6 @@ export default function AnotacionesStudentTable({
   isLoading,
 }: AnotacionesStudentTableProps) {
   const filteredStudents = filterStudents(students, activeFilter, searchQuery);
-
-  const formatDate = (dateStr?: string): string => {
-    if (!dateStr) return '—';
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('es-CL', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      });
-    } catch {
-      return dateStr;
-    }
-  };
 
   return (
     <div className="space-y-4">
@@ -239,6 +212,8 @@ export default function AnotacionesStudentTable({
                     <tr
                       key={student.id}
                       onClick={() => onSelectStudent(student)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectStudent(student); } }}
+                      tabIndex={0}
                       className={`cursor-pointer transition-colors ${style.rowBg}`}
                     >
                       <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">

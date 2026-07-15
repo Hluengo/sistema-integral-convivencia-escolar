@@ -171,8 +171,10 @@ export async function buildPdf(params: {
   logoBytes?: Uint8Array;
 }): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.create();
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const [font, boldFont] = await Promise.all([
+    pdfDoc.embedFont(StandardFonts.Helvetica),
+    pdfDoc.embedFont(StandardFonts.HelveticaBold),
+  ]);
   const pageWidth = PageSizes.A4[0];
   const pageHeight = PageSizes.A4[1];
   const maxWidth = pageWidth - 2 * MARGIN;

@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Printer,
   FileDown,
@@ -60,7 +60,7 @@ export default function AnotacionesDocumentGenerator({
 
   // ── Custom commitments ───────────────────────────────────────
   const [customCommitments, setCustomCommitments] = useState<string[]>([]);
-  const [newCustomCommitment, setNewCustomCommitment] = useState('');
+  const newCustomCommitmentRef = useRef('');
 
   // ── Authorization flags ──────────────────────────────────────
   const [authorizedBypass, setAuthorizedBypass] = useState(false);
@@ -75,7 +75,7 @@ export default function AnotacionesDocumentGenerator({
   // Select all negative annotations by default
   useEffect(() => {
     setSelectedAnnotationsForDoc(negativeAnnotations.map((a) => a.id));
-  }, [annotations]);
+  }, [negativeAnnotations]);
 
   // Sync doc type when annotations count crosses threshold
   useEffect(() => {
@@ -84,12 +84,12 @@ export default function AnotacionesDocumentGenerator({
     } else if (negativeCount < 10 && docType === 'compromiso_conductual') {
       setDocType('amonestacion');
     }
-  }, [negativeCount]);
+  }, [negativeCount, docType]);
 
   // Load emitted list from localStorage
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('convivencia_anotaciones_emitted');
+      const stored = localStorage.getItem('convivencia_anotaciones_emitted:v1');
       if (stored) {
         setEmittedList(JSON.parse(stored));
       }
@@ -108,10 +108,10 @@ export default function AnotacionesDocumentGenerator({
   };
 
   const handleAddCustomCommitment = () => {
-    const trimmed = newCustomCommitment.trim();
+    const trimmed = newCustomCommitmentRef.current.trim();
     if (!trimmed) return;
     setCustomCommitments((prev) => [...prev, trimmed]);
-    setNewCustomCommitment('');
+    newCustomCommitmentRef.current = '';
   };
 
   const handleRemoveCustomCommitment = (index: number) => {
@@ -154,7 +154,7 @@ export default function AnotacionesDocumentGenerator({
         };
         const updated = [newEntry, ...emittedList];
         setEmittedList(updated);
-        localStorage.setItem('convivencia_anotaciones_emitted', JSON.stringify(updated));
+        localStorage.setItem('convivencia_anotaciones_emitted:v1', JSON.stringify(updated));
         alert(
           '\u2705 Documento registrado exitosamente en cartas_disciplinarias.',
         );
@@ -298,8 +298,9 @@ export default function AnotacionesDocumentGenerator({
   };
 
   // ── Selected annotations for preview ─────────────────────────
+  const selectedIdsSet = useMemo(() => new Set(selectedAnnotationsForDoc), [selectedAnnotationsForDoc]);
   const selectedAnnsObjects = annotations.filter((a) =>
-    selectedAnnotationsForDoc.includes(a.id),
+    selectedIdsSet.has(a.id),
   );
 
   // ── Render ───────────────────────────────────────────────────

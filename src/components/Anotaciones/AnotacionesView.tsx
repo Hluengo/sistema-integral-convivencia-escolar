@@ -9,7 +9,7 @@ import AnotacionesStudentTable from './AnotacionesStudentTable';
 import AnotacionesStudentDetailModal from './AnotacionesStudentDetailModal';
 import NewDisciplinaryProcessModal from './NewDisciplinaryProcessModal';
 
-export const TEACHERS_BY_COURSE: Record<string, string> = {
+const TEACHERS_BY_COURSE: Record<string, string> = {
   '1° Básico A': 'CONSTANZA ESPINOZA MIRANDA',
   '1° Básico B': 'NATALIA ALBORNOZ RODRÍGUEZ',
   '2° Básico A': 'CAMILA GODOY VENEGAS',
@@ -95,15 +95,15 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
   const handleAddAnnotations = useCallback(
     async (studentId: string, newAnnotations: Annotation[]) => {
       try {
-        for (const ann of newAnnotations) {
-          await saveAnnotation({
+        await Promise.all(newAnnotations.map(ann =>
+          saveAnnotation({
             student_id: studentId,
             observation: ann.text || "",
             severity: ann.severity || "Leve",
             type: ann.type || "Negativa",
             registered_by: ann.registered_by || "Inspector\u00EDa",
-          });
-        }
+          })
+        ));
         await loadData();
         if (selectedStudent && selectedStudent.id === studentId) {
           const fresh = students.find((s: any) => s.id === studentId);
@@ -141,15 +141,15 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
   const handleRegisterCase = useCallback(
     async (studentId: string, newAnnotations: any[], fileData?: any) => {
       try {
-        for (const ann of newAnnotations) {
-          await saveAnnotation({
+        await Promise.all(newAnnotations.map(ann =>
+          saveAnnotation({
             student_id: studentId,
             observation: ann.text || "",
             severity: ann.severity || "Leve",
             type: ann.type || "Negativa",
             registered_by: ann.registered_by || "Inspector\u00EDa",
-          });
-        }
+          })
+        ));
         await loadData();
       } catch (error: any) {
         console.error('Error registrando caso:', error);
@@ -225,7 +225,7 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
             derivacionCount={derivacionCount}
           />
         </div>
-        <button
+        <button type="button"
           onClick={() => setIsNewProcessModalOpen(true)}
           className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm shrink-0"
         >

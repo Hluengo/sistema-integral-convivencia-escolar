@@ -4,6 +4,13 @@ import { Printer, FileDown, FileText } from 'lucide-react';
 import type { Annotation } from '../../../types';
 import { LOGO_BASE64 } from '../../../lib/logoBase64';
 
+const DEFAULT_COMMITMENTS = [
+  'Asistir a todas las clases según horario establecido.',
+  'Mantener una conducta respetuosa y acorde a las normas del establecimiento.',
+  'Cumplir con las tareas y trabajos académicos asignados.',
+  'Participar en las actividades formativas y de orientación programadas por Convivencia Escolar.',
+];
+
 // ── Types ───────────────────────────────────────────────────────
 
 interface DocumentPreviewProps {
@@ -364,13 +371,6 @@ function CompromisoContent({
   customCommitments: string[];
   selectedAnnsObjects: Annotation[];
 }) {
-  const defaultCommitments = [
-    'Asistir a todas las clases según horario establecido.',
-    'Mantener una conducta respetuosa y acorde a las normas del establecimiento.',
-    'Cumplir con las tareas y trabajos académicos asignados.',
-    'Participar en las actividades formativas y de orientación programadas por Convivencia Escolar.',
-  ];
-
   return (
     <div className="space-y-1">
       <Section number={1} title="Antecedentes">
@@ -404,10 +404,10 @@ function CompromisoContent({
         <ol className="list-decimal list-inside text-xs text-slate-700 space-y-1 ml-2">
           {customCommitments.length > 0
             ? customCommitments.map((c, i) => (
-                <li key={i}>{c}</li>
+                <li key={c || i}>{c}</li>
               ))
-            : defaultCommitments.map((c, i) => (
-                <li key={i}>{c}</li>
+            : DEFAULT_COMMITMENTS.map((c, i) => (
+                <li key={c || i}>{c}</li>
               ))}
         </ol>
       </Section>

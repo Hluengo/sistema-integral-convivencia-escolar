@@ -22,7 +22,7 @@ import TimelineTabs from './InteractiveTimeline/TimelineTabs';
 import TimelineTabPanels from './InteractiveTimeline/TimelineTabPanels';
 import { useTimelineController } from '../hooks/useTimelineController';
 import { TimelineProvider } from '../context/TimelineContext';
-import { useAppContext } from '../context/AppContext';
+import { useAppContext } from '../context/useAppContext';
 import { BoldText } from '../lib/markdownUtils';
 import ConfirmDialog from './ConfirmDialog';
 
