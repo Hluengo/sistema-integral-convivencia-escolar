@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Shield, Plus } from 'lucide-react';
 import { Annotation } from '../../types';
 import { supabase, fetchAnnotations, fetchStudentsWithAnnotationCounts, saveAnnotation } from '../../lib/supabase';
-import AnotacionesDashboardStats from './AnotacionesDashboardStats';
 import AnotacionesStudentTable from './AnotacionesStudentTable';
 import AnotacionesStudentDetailModal from './AnotacionesStudentDetailModal';
 import NewDisciplinaryProcessModal from './NewDisciplinaryProcessModal';
@@ -50,19 +49,22 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [dbError, setDbError] = useState<string | null>(null);
 
-  const totalStudents = students.length;
-  const amonestacionCount = students.filter((s: any) => {
-    const c = s.annotations_count ?? s.negative_annotations_count ?? 0;
-    return c >= 5 && c < 10;
-  }).length;
-  const compromisoCount = students.filter((s: any) => {
-    const c = s.annotations_count ?? s.negative_annotations_count ?? 0;
-    return c >= 10 && c < 15;
-  }).length;
-  const derivacionCount = students.filter((s: any) => {
-    const c = s.annotations_count ?? s.negative_annotations_count ?? 0;
-    return c >= 15;
-  }).length;
+  const { totalStudents, amonestacionCount, compromisoCount, derivacionCount } = useMemo(() => {
+    const total = students.length;
+    const amonestacion = students.filter((s: any) => {
+      const c = s.annotations_count ?? s.negative_annotations_count ?? 0;
+      return c >= 5 && c < 10;
+    }).length;
+    const compromiso = students.filter((s: any) => {
+      const c = s.annotations_count ?? s.negative_annotations_count ?? 0;
+      return c >= 10 && c < 15;
+    }).length;
+    const derivacion = students.filter((s: any) => {
+      const c = s.annotations_count ?? s.negative_annotations_count ?? 0;
+      return c >= 15;
+    }).length;
+    return { totalStudents: total, amonestacionCount: amonestacion, compromisoCount: compromiso, derivacionCount: derivacion };
+  }, [students]);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -170,8 +172,6 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
           return count >= 10 && count < 15;
         case 'derivacion':
           return count >= 15;
-        case 'sin_registro':
-          return count === 0;
         default:
           return true;
       }
@@ -215,16 +215,8 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
         </div>
       )}
 
-      {/* Dashboard Stats + New Process Button */}
-      <div className="flex items-start justify-between gap-4 mb-6">
-        <div className="flex-1 min-w-0">
-          <AnotacionesDashboardStats
-            totalStudents={totalStudents}
-            amonestacionCount={amonestacionCount}
-            compromisoCount={compromisoCount}
-            derivacionCount={derivacionCount}
-          />
-        </div>
+      {/* New Process Button */}
+      <div className="flex justify-end mb-6">
         <button type="button"
           onClick={() => setIsNewProcessModalOpen(true)}
           className="flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm shrink-0"

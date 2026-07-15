@@ -3,22 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { Causa, TipoInfraccion, FaseProcedimental, EstadoCausa } from '../types';
 import { getStats, getFaseForEstado } from '../data';
 import { 
   Activity, FileSearch, ShieldAlert, CheckCircle,
-  BarChart3, Plus, CalendarDays
+  BarChart3
 } from 'lucide-react';
 import MetricCard from './MetricCard';
 import SeverityBadge from './SeverityBadge';
+import AnotacionesDashboardStats from './Anotaciones/AnotacionesDashboardStats';
+import { fetchStudentsWithAnnotationCounts } from '../lib/supabase';
 
 interface DashboardStatsProps {
   causas: Causa[];
   onFaseSelect: (fase: FaseProcedimental | 'Todas') => void;
   selectedFase: FaseProcedimental | 'Todas';
-  onSelectCausa: (causaId: string) => void;
-  onCreateCausa: () => void;
 }
 
 const SEVERITY_CONFIG: Record<TipoInfraccion, { label: string; dot: string }> = {
@@ -68,7 +68,7 @@ function SeverityCard({ tipo, count, total }: { tipo: TipoInfraccion; count: num
   );
 }
 
-export default function DashboardStats({ causas, onFaseSelect, selectedFase, onSelectCausa, onCreateCausa }: DashboardStatsProps) {
+export default function DashboardStats({ causas, onFaseSelect, selectedFase }: DashboardStatsProps) {
   const stats = getStats(causas);
 
   const { totalActivas, enInvestigacion, resueltas } = useMemo(() => {
@@ -85,40 +85,37 @@ export default function DashboardStats({ causas, onFaseSelect, selectedFase, onS
     return { totalActivas: active, enInvestigacion: investigating, resueltas: resolved };
   }, [causas]);
 
-  const todayLabel = new Date().toLocaleDateString('es-CL', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
+  const [anotacionesKpis, setAnotacionesKpis] = useState({ totalStudents: 0, amonestacionCount: 0, compromisoCount: 0, derivacionCount: 0 });
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const students = await fetchStudentsWithAnnotationCounts();
+        if (cancelled || !students) return;
+        const total = students.length;
+        const amonestacion = students.filter((s: any) => {
+          const c = s.annotations_count ?? s.negative_annotations_count ?? 0;
+          return c >= 5 && c < 10;
+        }).length;
+        const compromiso = students.filter((s: any) => {
+          const c = s.annotations_count ?? s.negative_annotations_count ?? 0;
+          return c >= 10 && c < 15;
+        }).length;
+        const derivacion = students.filter((s: any) => {
+          const c = s.annotations_count ?? s.negative_annotations_count ?? 0;
+          return c >= 15;
+        }).length;
+        if (!cancelled) setAnotacionesKpis({ totalStudents: total, amonestacionCount: amonestacion, compromisoCount: compromiso, derivacionCount: derivacion });
+      } catch (e) {
+        console.error('Error fetching anotaciones KPIs:', e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <section aria-label="Panel de control" className="space-y-6 animate-fade-in">
-      {/* Hero header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-700 via-brand-600 to-brand-800 p-6 sm:p-8 text-white shadow-lg">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-60" aria-hidden="true" />
-        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <p className="text-blue-200/80 text-xs font-semibold uppercase tracking-wider mb-1">
-               Gestión Debido Proceso · Convivencia Escolar
-            </p>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Panel de Control</h2>
-            <p className="text-white/80 text-sm mt-2 flex items-center gap-2">
-              <CalendarDays className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span className="capitalize">{todayLabel}</span>
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onCreateCausa}
-            className="inline-flex items-center justify-center gap-2 bg-white text-brand-700 font-semibold px-5 py-3 rounded-xl hover:bg-white/90 active:scale-[0.97] transition-all shadow-md shrink-0"
-            aria-label="Crear nueva causa"
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            Crear Nueva Causa
-          </button>
-        </div>
-      </div>
 
       {/* Key metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger-children">
@@ -166,6 +163,14 @@ export default function DashboardStats({ causas, onFaseSelect, selectedFase, onS
         />
       </div>
 
+      {/* Anotaciones KPIs */}
+      <AnotacionesDashboardStats
+        totalStudents={anotacionesKpis.totalStudents}
+        amonestacionCount={anotacionesKpis.amonestacionCount}
+        compromisoCount={anotacionesKpis.compromisoCount}
+        derivacionCount={anotacionesKpis.derivacionCount}
+      />
+
       {/* Severity distribution */}
       <div>
         <div className="flex items-center gap-2 mb-3">
@@ -184,62 +189,6 @@ export default function DashboardStats({ causas, onFaseSelect, selectedFase, onS
         </div>
       </div>
 
-      {/* Phase pipeline */}
-      <div className="card p-5">
-        <div className="flex items-center gap-2.5 mb-4">
-          <div className="p-2 rounded-lg bg-brand-50">
-            <Activity className="h-4 w-4 text-brand-600" aria-hidden="true" />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-neutral-900">Fases Procedimentales</h3>
-            <p className="text-xs text-neutral-400 font-medium">
-              Filtra las causas por etapa del proceso
-            </p>
-          </div>
-        </div>
-
-        <div 
-          className="flex flex-wrap gap-2"
-          role="tablist"
-          aria-label="Filtro por fase procedimental"
-        >
-          <button
-            type="button"
-            onClick={() => onFaseSelect('Todas')}
-            role="tab"
-            aria-selected={selectedFase === 'Todas'}
-            className={`px-4 py-2.5 text-[12px] font-semibold rounded-xl border transition-all duration-200 cursor-pointer ${
-              selectedFase === 'Todas'
-                ? 'bg-neutral-900 text-white border-neutral-900 shadow-sm'
-                : 'bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50 hover:text-neutral-800 hover:border-neutral-300'
-            }`}
-          >
-            Todas <span className="font-mono ml-1 opacity-70">{stats.total}</span>
-          </button>
-
-          {(['Recepción', 'Investigación', 'Resolución', 'Apelación', 'Seguimiento'] as const).map((fase, i) => {
-            const count = stats.porFase[fase] || 0;
-            const isSelected = selectedFase === fase;
-            return (
-              <button
-                type="button"
-                key={fase}
-                onClick={() => onFaseSelect(fase)}
-                role="tab"
-                aria-selected={isSelected}
-                className={`px-4 py-2.5 text-[12px] font-semibold rounded-xl border transition-all duration-200 cursor-pointer ${
-                  isSelected
-                    ? 'bg-brand-600 text-white border-brand-600 shadow-sm shadow-brand-600/20'
-                    : 'bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50 hover:text-neutral-800 hover:border-neutral-300'
-                }`}
-              >
-                <span className={isSelected ? 'opacity-70' : 'text-neutral-400'}>{i + 1}.</span> {fase}{' '}
-                <span className="font-mono ml-0.5 opacity-70">{count}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
     </section>
   );
 }

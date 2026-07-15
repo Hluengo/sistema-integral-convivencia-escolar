@@ -42,7 +42,6 @@ const FILTER_TABS = [
   { key: 'amonestacion', label: 'Amonestación' },
   { key: 'compromiso', label: 'Compromiso' },
   { key: 'derivacion', label: 'Derivación' },
-  { key: 'sin_registro', label: 'Sin Registro' },
 ];
 
 function getAnnotationRange(filter: string): [number, number] | null {
@@ -50,7 +49,6 @@ function getAnnotationRange(filter: string): [number, number] | null {
     case 'amonestacion': return [5, 9];
     case 'compromiso': return [10, 14];
     case 'derivacion': return [15, Infinity];
-    case 'sin_registro': return [0, 0];
     default: return null;
   }
 }

@@ -142,8 +142,6 @@ export default function MainContent({
                 setSelectedFaseFilter(fase);
               }}
               selectedFase={selectedFaseFilter}
-              onSelectCausa={handleSelectCausaFromDashboard}
-              onCreateCausa={handleOpenCreateForm}
             />
           </Suspense>
         </ErrorBoundary>

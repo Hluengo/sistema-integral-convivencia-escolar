@@ -40,8 +40,7 @@ interface AnotacionesStudentDetailModalProps {
 }
 
 type ActiveTab = 'resumen' | 'subir_pdf' | 'historial' | 'documentos';
-type AnnotationTypeFilter = 'todas' | 'Positiva' | 'Negativa';
-type AnnotationSeverityFilter = 'todas' | 'Leve' | 'Grave' | 'Muy Grave' | 'Gravísima';
+
 
 const SEVERITY_BADGE: Record<string, { bg: string; text: string; dot: string }> = {
   Leve: { bg: 'bg-yellow-50', text: 'text-yellow-800', dot: 'bg-yellow-500' },
@@ -83,9 +82,7 @@ export default function AnotacionesStudentDetailModal({
   // Tab state
   const [activeTab, setActiveTab] = useState<ActiveTab>('resumen');
 
-  // Filter state
-  const [annotationTypeFilter, setAnnotationTypeFilter] = useState<AnnotationTypeFilter>('todas');
-  const [annotationSeverityFilter, setAnnotationSeverityFilter] = useState<AnnotationSeverityFilter>('todas');
+
 
   // PDF upload state
   const [isDragging, setIsDragging] = useState(false);
@@ -294,13 +291,6 @@ export default function AnotacionesStudentDetailModal({
       setParsingStatus('Error al registrar');
     }
   };
-  // Filter helpers
-  const filteredAnnotations = annotations.filter((ann) => {
-    const matchesType = annotationTypeFilter === 'todas' || ann.type === annotationTypeFilter;
-    const matchesSeverity = annotationSeverityFilter === 'todas' || ann.severity === annotationSeverityFilter;
-    return matchesType && matchesSeverity;
-  });
-
   // Render: Resumen tab
   const renderResumenTab = () => (
     <div className="space-y-5">
@@ -517,11 +507,11 @@ export default function AnotacionesStudentDetailModal({
             Anotaciones Detectadas ({parsedAnnotations.length})
           </h3>
           <div className="space-y-3 max-h-80 overflow-y-auto">
-            {parsedAnnotations.map((ann: any, index: number) => {
+            {annotations.map((ann: any, index: number) => {
               const severity = ann.severity || 'Leve';
               const badge = SEVERITY_BADGE[severity] || SEVERITY_BADGE.Leve;
               return (
-                <div key={ann.text || ann.observation || index} className="flex items-start gap-3 bg-slate-50 rounded-xl p-3 border border-slate-100">
+                <div key={ann.id || ann.text || ann.observation || index} className="flex items-start gap-3 bg-slate-50 rounded-xl p-3 border border-slate-100">
                   <span className={"flex-shrink-0 w-2 h-2 mt-1.5 rounded-full " + badge.dot} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
@@ -554,49 +544,17 @@ export default function AnotacionesStudentDetailModal({
   // Render: Historial tab
   const renderHistorialTab = () => (
     <div className="space-y-5">
-      {/* Filters */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-          <fieldset className="flex-1 border-0 p-0 m-0">
-            <legend className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Tipo</legend>
-            <div className="flex flex-wrap gap-1.5">
-              {(['todas', 'Positiva', 'Negativa'] as AnnotationTypeFilter[]).map((filter) => (
-                <button key={filter} type="button" onClick={() => setAnnotationTypeFilter(filter)}
-                  className={"px-3 py-1.5 text-xs font-medium rounded-lg transition-colors " + (annotationTypeFilter === filter ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-slate-600 border border-slate-300 hover:bg-slate-50')}>
-                  {filter === 'todas' ? 'Todas' : filter}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-          <fieldset className="flex-1 border-0 p-0 m-0">
-            <legend className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Gravedad</legend>
-            <div className="flex flex-wrap gap-1.5">
-              {(['todas', 'Leve', 'Grave', 'Muy Grave', 'Gravísima'] as AnnotationSeverityFilter[]).map((filter) => (
-                <button key={filter} type="button" onClick={() => setAnnotationSeverityFilter(filter)}
-                  className={"px-3 py-1.5 text-xs font-medium rounded-lg transition-colors " + (annotationSeverityFilter === filter ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-slate-600 border border-slate-300 hover:bg-slate-50')}>
-                  {filter}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-        </div>
-        <p className="text-xs text-slate-400 mt-3">
-          Mostrando <span className="font-medium text-slate-600">{filteredAnnotations.length}</span> de <span className="font-medium text-slate-600">{annotations.length}</span> anotaciones
-        </p>
-      </div>
       {/* Annotations list */}
-      {filteredAnnotations.length === 0 ? (
+      {annotations.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200/80 p-8 shadow-xs text-center">
           <ScrollText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
           <p className="text-sm text-slate-500">
-            {annotations.length === 0
-              ? 'Este estudiante no tiene anotaciones registradas.'
-              : 'No se encontraron anotaciones con los filtros seleccionados.'}
+            Este estudiante no tiene anotaciones registradas.
           </p>
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredAnnotations.map((ann) => {
+          {annotations.map((ann) => {
             const badge = SEVERITY_BADGE[ann.severity] || SEVERITY_BADGE.Leve;
             return (
               <div key={ann.id} className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs hover:shadow-sm transition-shadow">
