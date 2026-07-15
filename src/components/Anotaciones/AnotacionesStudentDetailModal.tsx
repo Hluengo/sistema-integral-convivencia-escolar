@@ -295,9 +295,9 @@ export default function AnotacionesStudentDetailModal({
   const renderResumenTab = () => (
     <div className="space-y-5">
       {/* Current disciplinary measure */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
+      <div className="bg-white rounded-2xl border border-neutral-200/80 p-5 shadow-xs">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+          <h3 className="text-sm font-bold text-neutral-900 flex items-center gap-2">
             <Shield className="w-4 h-4 text-indigo-600" />
             Medida Disciplinaria Actual
           </h3>
@@ -307,36 +307,36 @@ export default function AnotacionesStudentDetailModal({
           </span>
         </div>
         {currentMeasure ? (
-          <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-            <p className="text-sm text-slate-700 font-medium">{currentMeasure}</p>
-            <p className="text-xs text-slate-400 mt-1">Ultima actualizacion: {dateStr}</p>
+          <div className="bg-neutral-50 rounded-xl p-4 border border-neutral-100">
+            <p className="text-sm text-neutral-700 font-medium">{currentMeasure}</p>
+            <p className="text-xs text-neutral-400 mt-1">Ultima actualizacion: {dateStr}</p>
           </div>
         ) : (
-          <p className="text-sm text-slate-400 italic">No hay una medida disciplinaria activa registrada.</p>
+          <p className="text-sm text-neutral-400 italic">No hay una medida disciplinaria activa registrada.</p>
         )}
       </div>
 
       {/* Status and counts summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Estado General</p>
+        <div className="bg-white rounded-2xl border border-neutral-200/80 p-4 shadow-xs">
+          <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">Estado General</p>
           <div className={"inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold " + statusInfo.bg + " " + statusInfo.text}>
             <span className={"inline-block w-2 h-2 rounded-full " + semaphoric.dot} />
             {statusInfo.label}
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Anotaciones Negativas</p>
+        <div className="bg-white rounded-2xl border border-neutral-200/80 p-4 shadow-xs">
+          <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">Anotaciones Negativas</p>
           <div className="flex items-baseline gap-2">
             <span className={"text-2xl font-extrabold " + semaphoric.text}>{negativeCount}</span>
-            <span className="text-xs text-slate-400">registros</span>
+            <span className="text-xs text-neutral-400">registros</span>
           </div>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Anotaciones Positivas</p>
+        <div className="bg-white rounded-2xl border border-neutral-200/80 p-4 shadow-xs">
+          <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-1">Anotaciones Positivas</p>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-extrabold text-emerald-600">{student.positive_annotations_count ?? 0}</span>
-            <span className="text-xs text-slate-400">registros</span>
+            <span className="text-xs text-neutral-400">registros</span>
           </div>
         </div>
       </div>
@@ -345,36 +345,36 @@ export default function AnotacionesStudentDetailModal({
         <div className="bg-white rounded-2xl border border-amber-200/80 p-5 shadow-xs">
           <div className="flex items-center gap-2 mb-3">
             <AlertTriangle className="w-4 h-4 text-amber-600" />
-            <h3 className="text-sm font-bold text-slate-900">Caso Activo</h3>
+            <h3 className="text-sm font-bold text-neutral-900">Caso Activo</h3>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <div><span className="text-slate-500">ID del caso:</span> <span className="font-medium text-slate-800">{activeCase.id}</span></div>
-            <div><span className="text-slate-500">Estado:</span> <span className="font-medium text-slate-800">{activeCase.estado_actual}</span></div>
-            <div><span className="text-slate-500">Tipo de infraccion:</span> <span className="font-medium text-slate-800">{activeCase.tipo_infraccion}</span></div>
-            <div><span className="text-slate-500">Ultima actualizacion:</span> <span className="font-medium text-slate-800">{formatDate(activeCase.fecha_ultima_actualizacion)}</span></div>
+            <div><span className="text-neutral-500">ID del caso:</span> <span className="font-medium text-neutral-800">{activeCase.id}</span></div>
+            <div><span className="text-neutral-500">Estado:</span> <span className="font-medium text-neutral-800">{activeCase.estado_actual}</span></div>
+            <div><span className="text-neutral-500">Tipo de infraccion:</span> <span className="font-medium text-neutral-800">{activeCase.tipo_infraccion}</span></div>
+            <div><span className="text-neutral-500">Ultima actualizacion:</span> <span className="font-medium text-neutral-800">{formatDate(activeCase.fecha_ultima_actualizacion)}</span></div>
           </div>
         </div>
       )}
 
       {/* Transitions */}
       {transitions.length > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
-          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 mb-4">
+        <div className="bg-white rounded-2xl border border-neutral-200/80 p-5 shadow-xs">
+          <h3 className="text-sm font-bold text-neutral-900 flex items-center gap-2 mb-4">
             <History className="w-4 h-4 text-indigo-600" />
             Historial de Transiciones
           </h3>
           <div className="space-y-3">
             {transitions.map((t, i) => (
-              <div key={t.id || i} className="flex items-start gap-3 pb-3 border-b border-slate-100 last:border-b-0 last:pb-0">
+              <div key={t.id || i} className="flex items-start gap-3 pb-3 border-b border-neutral-100 last:border-b-0 last:pb-0">
                 <div className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-indigo-400" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-800">
+                  <p className="text-sm font-medium text-neutral-800">
                     {(t.from || 'Inicio') + ' -> ' + (t.to || t.stage_name || '(sin destino)')}
                   </p>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-neutral-400">
                     {(t.date ? formatDate(t.date) : t.transition_date ? formatDate(t.transition_date) : 'Fecha no disponible') + (t.responsible ? ' - ' + t.responsible : '')}
                   </p>
-                  {t.comment && <p className="text-xs text-slate-500 mt-1 italic">{t.comment}</p>}
+                  {t.comment && <p className="text-xs text-neutral-500 mt-1 italic">{t.comment}</p>}
                 </div>
               </div>
             ))}
@@ -383,27 +383,27 @@ export default function AnotacionesStudentDetailModal({
       )}
       {/* Etapas disciplinarias */}
       {etapas.length > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
-          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 mb-4">
+        <div className="bg-white rounded-2xl border border-neutral-200/80 p-5 shadow-xs">
+          <h3 className="text-sm font-bold text-neutral-900 flex items-center gap-2 mb-4">
             <CheckCircle2 className="w-4 h-4 text-indigo-600" />
             Etapas del Proceso Disciplinario
           </h3>
           <div className="space-y-2">
             {etapas.map((etapa) => (
-              <div key={etapa.id} className="flex items-center justify-between bg-slate-50 rounded-xl px-4 py-3 border border-slate-100">
+              <div key={etapa.id} className="flex items-center justify-between bg-neutral-50 rounded-xl px-4 py-3 border border-neutral-100">
                 <div className="flex items-center gap-3">
                   <span className="flex-shrink-0 w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold">
                     {etapa.step_number}
                   </span>
                   <div>
-                    <p className="text-sm font-medium text-slate-800">{etapa.stage_name}</p>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-sm font-medium text-neutral-800">{etapa.stage_name}</p>
+                    <p className="text-xs text-neutral-400">
                       {formatDate(etapa.transition_date)}{etapa.responsible ? ' - ' + etapa.responsible : ''}
                     </p>
                   </div>
                 </div>
                 {etapa.comment && (
-                  <p className="text-xs text-slate-500 max-w-[200px] text-right truncate" title={etapa.comment}>{etapa.comment}</p>
+                  <p className="text-xs text-neutral-500 max-w-[200px] text-right truncate" title={etapa.comment}>{etapa.comment}</p>
                 )}
               </div>
             ))}
@@ -413,10 +413,10 @@ export default function AnotacionesStudentDetailModal({
 
       {/* No data state */}
       {!currentMeasure && transitions.length === 0 && etapas.length === 0 && !activeCase && (
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-8 shadow-xs text-center">
-          <Shield className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <p className="text-sm text-slate-500">No hay informacion adicional disponible del proceso disciplinario.</p>
-          <p className="text-xs text-slate-400 mt-1">Los datos apareceran a medida que se registren medidas y transiciones.</p>
+        <div className="bg-white rounded-2xl border border-neutral-200/80 p-8 shadow-xs text-center">
+          <Shield className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
+          <p className="text-sm text-neutral-500">No hay informacion adicional disponible del proceso disciplinario.</p>
+          <p className="text-xs text-neutral-400 mt-1">Los datos apareceran a medida que se registren medidas y transiciones.</p>
         </div>
       )}
     </div>
@@ -437,7 +437,7 @@ export default function AnotacionesStudentDetailModal({
         onClick={() => fileInputRef.current?.click()}
         className={
           'relative border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-200 ' +
-          (isDragging ? 'border-indigo-400 bg-indigo-50/50 shadow-lg' : 'border-slate-300 bg-white hover:border-indigo-300 hover:bg-indigo-50/20') +
+          (isDragging ? 'border-indigo-400 bg-indigo-50/50 shadow-lg' : 'border-neutral-300 bg-white hover:border-indigo-300 hover:bg-indigo-50/20') +
           (isParsing ? ' pointer-events-none opacity-60' : '')
         }
       >
@@ -452,12 +452,12 @@ export default function AnotacionesStudentDetailModal({
             </>
           ) : (
             <>
-              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
-                <Upload className="w-6 h-6 text-slate-400" />
+              <div className="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center">
+                <Upload className="w-6 h-6 text-neutral-400" />
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-700">Arrastra un PDF de Hoja de Vida o haz clic para seleccionar</p>
-                <p className="text-xs text-slate-400 mt-1">Solo archivos PDF - Maximo 10 MB</p>
+                <p className="text-sm font-medium text-neutral-700">Arrastra un PDF de Hoja de Vida o haz clic para seleccionar</p>
+                <p className="text-xs text-neutral-400 mt-1">Solo archivos PDF - Maximo 10 MB</p>
               </div>
             </>
           )}
@@ -472,7 +472,7 @@ export default function AnotacionesStudentDetailModal({
             ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
             : parsingStatus.includes('Error')
             ? 'bg-amber-50 border-amber-200 text-amber-800'
-            : 'bg-slate-50 border-slate-200 text-slate-700')
+            : 'bg-neutral-50 border-neutral-200 text-neutral-700')
         }>
           <div className="flex items-center gap-2">
             {parsingStatus.includes('exitosamente') || parsingStatus.includes('detectaron') ? (
@@ -480,7 +480,7 @@ export default function AnotacionesStudentDetailModal({
             ) : parsingStatus.includes('Error') ? (
               <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
             ) : (
-              <FileText className="w-4 h-4 text-slate-500 flex-shrink-0" />
+              <FileText className="w-4 h-4 text-neutral-500 flex-shrink-0" />
             )}
             <span>{parsingStatus}</span>
           </div>
@@ -501,8 +501,8 @@ export default function AnotacionesStudentDetailModal({
 
       {/* Detected annotations preview */}
       {parsedAnnotations.length > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
-          <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+        <div className="bg-white rounded-2xl border border-neutral-200/80 p-5 shadow-xs">
+          <h3 className="text-sm font-bold text-neutral-900 mb-3 flex items-center gap-2">
             <FileText className="w-4 h-4 text-indigo-600" />
             Anotaciones Detectadas ({parsedAnnotations.length})
           </h3>
@@ -511,17 +511,17 @@ export default function AnotacionesStudentDetailModal({
               const severity = ann.severity || 'Leve';
               const badge = SEVERITY_BADGE[severity] || SEVERITY_BADGE.Leve;
               return (
-                <div key={ann.id || ann.text || ann.observation || index} className="flex items-start gap-3 bg-slate-50 rounded-xl p-3 border border-slate-100">
+                <div key={ann.id || ann.text || ann.observation || index} className="flex items-start gap-3 bg-neutral-50 rounded-xl p-3 border border-neutral-100">
                   <span className={"flex-shrink-0 w-2 h-2 mt-1.5 rounded-full " + badge.dot} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className={"inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider " + badge.bg + " " + badge.text}>
                         {severity}
                       </span>
-                      <span className="text-[10px] font-medium text-slate-400 uppercase">{ann.type || 'Negativa'}</span>
+                      <span className="text-[10px] font-medium text-neutral-400 uppercase">{ann.type || 'Negativa'}</span>
                     </div>
-                    <p className="text-sm text-slate-700">{ann.text || ann.observation || 'Sin descripcion'}</p>
-                    {ann.date && <p className="text-xs text-slate-400 mt-1">{formatDate(ann.date)}</p>}
+                    <p className="text-sm text-neutral-700">{ann.text || ann.observation || 'Sin descripcion'}</p>
+                    {ann.date && <p className="text-xs text-neutral-400 mt-1">{formatDate(ann.date)}</p>}
                   </div>
                 </div>
               );
@@ -546,9 +546,9 @@ export default function AnotacionesStudentDetailModal({
     <div className="space-y-5">
       {/* Annotations list */}
       {annotations.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-8 shadow-xs text-center">
-          <ScrollText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-          <p className="text-sm text-slate-500">
+        <div className="bg-white rounded-2xl border border-neutral-200/80 p-8 shadow-xs text-center">
+          <ScrollText className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
+          <p className="text-sm text-neutral-500">
             Este estudiante no tiene anotaciones registradas.
           </p>
         </div>
@@ -557,7 +557,7 @@ export default function AnotacionesStudentDetailModal({
           {annotations.map((ann) => {
             const badge = SEVERITY_BADGE[ann.severity] || SEVERITY_BADGE.Leve;
             return (
-              <div key={ann.id} className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs hover:shadow-sm transition-shadow">
+              <div key={ann.id} className="bg-white rounded-2xl border border-neutral-200/80 p-4 shadow-xs hover:shadow-sm transition-shadow">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -568,14 +568,14 @@ export default function AnotacionesStudentDetailModal({
                       <span className={"text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full " + (ann.type === 'Positiva' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700')}>
                         {ann.type}
                       </span>
-                      <span className="text-xs text-slate-400">{formatDate(ann.date)}</span>
+                      <span className="text-xs text-neutral-400">{formatDate(ann.date)}</span>
                     </div>
-                    <p className="text-sm text-slate-700 leading-relaxed">{ann.text}</p>
+                    <p className="text-sm text-neutral-700 leading-relaxed">{ann.text}</p>
                   </div>
                 </div>
                 {ann.registered_by && (
-                  <div className="mt-2 pt-2 border-t border-slate-100">
-                    <p className="text-xs text-slate-400">Registrado por: <span className="font-medium text-slate-600">{ann.registered_by}</span></p>
+                  <div className="mt-2 pt-2 border-t border-neutral-100">
+                    <p className="text-xs text-neutral-400">Registrado por: <span className="font-medium text-neutral-600">{ann.registered_by}</span></p>
                   </div>
                 )}
               </div>
@@ -587,7 +587,7 @@ export default function AnotacionesStudentDetailModal({
   );
   // Render: Documentos tab
   const renderDocumentosTab = () => (
-    <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
+    <div className="bg-white rounded-2xl border border-neutral-200/80 p-5 shadow-xs">
       <AnotacionesDocumentGenerator
         student={student}
         annotations={annotations}
@@ -614,9 +614,9 @@ export default function AnotacionesStudentDetailModal({
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
 
       {/* Modal */}
-      <div className="relative z-10 w-full max-w-5xl mx-4 bg-slate-50 rounded-3xl shadow-2xl border border-slate-200/60 overflow-hidden">
+      <div className="relative z-10 w-full max-w-5xl mx-4 bg-neutral-50 rounded-3xl shadow-2xl border border-neutral-200/60 overflow-hidden">
         {/* Header */}
-        <div className="bg-white border-b border-slate-200 px-6 py-5">
+        <div className="bg-white border-b border-neutral-200 px-6 py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4 min-w-0">
               <div className="flex-shrink-0 w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
@@ -625,13 +625,13 @@ export default function AnotacionesStudentDetailModal({
                 </span>
               </div>
               <div className="min-w-0">
-                <h2 className="text-lg font-bold text-slate-900 truncate">
+                <h2 className="text-lg font-bold text-neutral-900 truncate">
                   {maskName(student.full_name, privacyMode)}
                 </h2>
-                <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500 flex-wrap">
+                <div className="flex items-center gap-3 mt-0.5 text-xs text-neutral-500 flex-wrap">
                   <span>{student.course_name || student.course_id || 'Sin curso'}</span>
-                  {student.rut && (<><span className="text-slate-300">|</span><span>{maskRut(student.rut, privacyMode)}</span></>)}
-                  <span className="text-slate-300">|</span>
+                  {student.rut && (<><span className="text-neutral-300">|</span><span>{maskRut(student.rut, privacyMode)}</span></>)}
+                  <span className="text-neutral-300">|</span>
                   <span className={"inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold " + statusInfo.bg + " " + statusInfo.text}>
                     <span className={"inline-block w-1.5 h-1.5 rounded-full " + semaphoric.dot} />
                     {student.disciplinary_status}
@@ -641,25 +641,25 @@ export default function AnotacionesStudentDetailModal({
             </div>
             <div className="flex items-center gap-2">
               <button type="button" aria-label={privacyMode ? 'Desactivar privacidad' : 'Activar privacidad'} onClick={onTogglePrivacy}
-                className="p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                className="p-2 rounded-lg text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
                 title={privacyMode ? 'Desactivar privacidad' : 'Activar privacidad'}>
                 {privacyMode ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
               <button type="button" aria-label="Cerrar" onClick={onClose}
-                className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+                className="p-2 rounded-lg text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
           </div>
         </div>
         {/* Tab bar */}
-        <div className="bg-white border-b border-slate-200 px-6">
+        <div className="bg-white border-b border-neutral-200 px-6">
           <div className="flex gap-1 -mb-px overflow-x-auto">
             {(Object.keys(TAB_ICONS) as ActiveTab[]).map((tab) => (
               <button key={tab} type="button" onClick={() => setActiveTab(tab)}
                 className={
                   'flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ' +
-                  (activeTab === tab ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300')
+                  (activeTab === tab ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300')
                 }>
                 {TAB_ICONS[tab]}
                 {TAB_LABELS[tab]}
@@ -676,3 +676,4 @@ export default function AnotacionesStudentDetailModal({
     </div>
   );
 }
+

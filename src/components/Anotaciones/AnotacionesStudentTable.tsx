@@ -38,7 +38,6 @@ interface AnotacionesStudentTableProps {
 }
 
 const FILTER_TABS = [
-  { key: 'todas', label: 'Todas' },
   { key: 'amonestacion', label: 'Amonestación' },
   { key: 'compromiso', label: 'Compromiso' },
   { key: 'derivacion', label: 'Derivación' },
@@ -114,13 +113,13 @@ export default function AnotacionesStudentTable({
       {/* Search and Refresh */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
           <input
             type="text"
             placeholder="Buscar estudiante, RUT o curso..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm text-gray-900 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-neutral-300 bg-white py-2 pl-10 pr-4 text-sm text-neutral-900 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
         <button
@@ -144,7 +143,7 @@ export default function AnotacionesStudentTable({
             className={`rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors ${
               activeFilter === tab.key
                 ? 'bg-blue-600 text-white shadow-sm'
-                : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
+                : 'bg-white text-neutral-600 border border-neutral-300 hover:bg-neutral-50'
             }`}
           >
             {tab.label}
@@ -153,41 +152,41 @@ export default function AnotacionesStudentTable({
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-neutral-200">
+            <thead className="bg-neutral-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
                   Estudiante
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
                   RUT
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
                   Curso
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
                   Profesor/a Jefe
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-neutral-500">
                   Positivas
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-neutral-500">
                   Negativas
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
                   Último Registro
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-500">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
                   Estado
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-neutral-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-sm text-gray-500">
+                  <td colSpan={8} className="px-4 py-12 text-center text-sm text-neutral-500">
                     <div className="flex items-center justify-center gap-2">
                       <RefreshCw className="size-4 animate-spin text-blue-500" />
                       Cargando estudiantes...
@@ -196,7 +195,7 @@ export default function AnotacionesStudentTable({
                 </tr>
               ) : filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-sm text-gray-500">
+                  <td colSpan={8} className="px-4 py-12 text-center text-sm text-neutral-500">
                     No se encontraron estudiantes con los filtros seleccionados.
                   </td>
                 </tr>
@@ -214,29 +213,29 @@ export default function AnotacionesStudentTable({
                       tabIndex={0}
                       className={`cursor-pointer transition-colors ${style.rowBg}`}
                     >
-                      <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-gray-900">
+                      <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-neutral-900">
                         {maskName(student.full_name, privacyMode)}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-600">
                         {maskRut(student.rut, privacyMode)}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-600">
                         {student.course_name || '—'}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-600">
                         {TEACHERS_BY_COURSE[student.course_name ?? ''] || '—'}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-center text-sm text-gray-600">
+                      <td className="whitespace-nowrap px-4 py-3 text-center text-sm text-neutral-600">
                         <span className="inline-flex items-center justify-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
                           {student.positive_annotations_count ?? 0}
                         </span>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-center text-sm text-gray-600">
+                      <td className="whitespace-nowrap px-4 py-3 text-center text-sm text-neutral-600">
                         <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${style.badge}`}>
                           {negativeCount}
                         </span>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-600">
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-600">
                         {formatDate(student.last_annotation_date)}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm">
@@ -256,29 +255,29 @@ export default function AnotacionesStudentTable({
 
       {/* Footer: Pagination info and color legend */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-neutral-500">
           Mostrando{' '}
-          <span className="font-medium text-gray-700">{filteredStudents.length}</span>
+          <span className="font-medium text-neutral-700">{filteredStudents.length}</span>
           {' '}de{' '}
-          <span className="font-medium text-gray-700">{students.length}</span>
+          <span className="font-medium text-neutral-700">{students.length}</span>
           {' '}estudiantes
         </p>
 
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-xs font-medium text-gray-500">Leyenda:</span>
-          <span className="inline-flex items-center gap-1 text-xs text-gray-600">
+          <span className="text-xs font-medium text-neutral-500">Leyenda:</span>
+          <span className="inline-flex items-center gap-1 text-xs text-neutral-600">
             <span className="inline-block size-2.5 rounded-full bg-emerald-500" />
             Verde (&lt;5)
           </span>
-          <span className="inline-flex items-center gap-1 text-xs text-gray-600">
+          <span className="inline-flex items-center gap-1 text-xs text-neutral-600">
             <span className="inline-block size-2.5 rounded-full bg-yellow-500" />
             Amarillo (5–9)
           </span>
-          <span className="inline-flex items-center gap-1 text-xs text-gray-600">
+          <span className="inline-flex items-center gap-1 text-xs text-neutral-600">
             <span className="inline-block size-2.5 rounded-full bg-orange-500" />
             Naranja (10–14)
           </span>
-          <span className="inline-flex items-center gap-1 text-xs text-gray-600">
+          <span className="inline-flex items-center gap-1 text-xs text-neutral-600">
             <span className="inline-block size-2.5 rounded-full bg-rose-500" />
             Rojo (15+)
           </span>
@@ -287,3 +286,4 @@ export default function AnotacionesStudentTable({
     </div>
   );
 }
+

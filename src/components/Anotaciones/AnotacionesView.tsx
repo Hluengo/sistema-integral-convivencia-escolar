@@ -45,26 +45,9 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
   const [isNewProcessModalOpen, setIsNewProcessModalOpen] = useState<boolean>(false);
-  const [activeFilter, setActiveFilter] = useState<string>('todas');
+  const [activeFilter, setActiveFilter] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [dbError, setDbError] = useState<string | null>(null);
-
-  const { totalStudents, amonestacionCount, compromisoCount, derivacionCount } = useMemo(() => {
-    const total = students.length;
-    const amonestacion = students.filter((s: any) => {
-      const c = s.annotations_count ?? s.negative_annotations_count ?? 0;
-      return c >= 5 && c < 10;
-    }).length;
-    const compromiso = students.filter((s: any) => {
-      const c = s.annotations_count ?? s.negative_annotations_count ?? 0;
-      return c >= 10 && c < 15;
-    }).length;
-    const derivacion = students.filter((s: any) => {
-      const c = s.annotations_count ?? s.negative_annotations_count ?? 0;
-      return c >= 15;
-    }).length;
-    return { totalStudents: total, amonestacionCount: amonestacion, compromisoCount: compromiso, derivacionCount: derivacion };
-  }, [students]);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -164,6 +147,7 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
     return students.filter((student: any) => {
       const count = student.annotations_count ?? student.negative_annotations_count ?? 0;
       switch (activeFilter) {
+        case '':
         case 'todas':
           return true;
         case 'amonestacion':
@@ -180,13 +164,13 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm font-semibold text-slate-600">
+          <p className="text-sm font-semibold text-neutral-600">
             Cargando datos del sistema...
           </p>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-neutral-400">
             Conectando con la base de datos
           </p>
         </div>
@@ -195,20 +179,20 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans flex flex-col antialiased text-slate-800">
+    <div className="min-h-screen bg-neutral-50 font-sans flex flex-col antialiased text-neutral-800">
 
       {/* DB Error Alert */}
       {dbError && (
-        <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 mb-6 flex items-start gap-3 shadow-sm">
-          <Shield className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
-          <div className="text-xs text-rose-800 space-y-1">
+        <div className="bg-red-50 border border-rose-200 rounded-xl p-4 mb-6 flex items-start gap-3 shadow-sm">
+          <Shield className="w-5 h-5 text-gravisima-500 shrink-0 mt-0.5" />
+          <div className="text-xs text-gravisima-800 space-y-1">
             <p className="font-bold">Protección de Datos de NNA</p>
             <p className="leading-relaxed">
               No se pudo conectar con la base de datos. Los datos mostrados
               corresponden a información local. Los nombres y RUT de los
               estudiantes se encuentran protegidos por normativa de privacidad.
             </p>
-            <p className="text-[10px] text-rose-600 font-mono mt-1">
+            <p className="text-[10px] text-gravisima-600 font-mono mt-1">
               Error: {dbError}
             </p>
           </div>

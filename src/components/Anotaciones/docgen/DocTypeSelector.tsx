@@ -43,7 +43,7 @@ export default function DocTypeSelector({
 
   return (
     <div role="group" aria-label="Tipo de Documento" className="space-y-3">
-      <div className="block text-sm font-medium text-gray-700">
+      <div className="block text-sm font-medium text-neutral-700">
         Tipo de Documento
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -60,23 +60,23 @@ export default function DocTypeSelector({
               className={`
                 relative flex flex-col items-center gap-2 p-4 rounded-lg border-2 text-left transition-all
                 ${isActive
-                  ? 'border-blue-500 ring-2 ring-blue-200 bg-blue-50'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
+                  ? 'border-brand-500 ring-2 ring-blue-200 bg-blue-50'
+                  : 'border-neutral-200 bg-white hover:border-neutral-300'
                 }
                 ${!enabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
               `}
             >
               {!enabled && (
-                <div className="absolute top-2 right-2 text-gray-400">
+                <div className="absolute top-2 right-2 text-neutral-400">
                   <Lock className="w-4 h-4" />
                 </div>
               )}
-              <Icon className={`w-8 h-8 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
+              <Icon className={`w-8 h-8 ${isActive ? 'text-blue-600' : 'text-neutral-500'}`} />
               <div className="text-center">
-                <span className={`block text-sm font-semibold ${isActive ? 'text-blue-700' : 'text-gray-800'}`}>
+                <span className={`block text-sm font-semibold ${isActive ? 'text-blue-700' : 'text-neutral-800'}`}>
                   {label}
                 </span>
-                <span className="block text-xs text-gray-500 mt-1 leading-tight">
+                <span className="block text-xs text-neutral-500 mt-1 leading-tight">
                   {description}
                 </span>
               </div>
@@ -92,3 +92,4 @@ export default function DocTypeSelector({
     </div>
   );
 }
+

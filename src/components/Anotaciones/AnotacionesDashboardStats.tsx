@@ -1,4 +1,5 @@
 import { Users, FileText, FileWarning, AlertTriangle } from 'lucide-react';
+import MetricCard from '../MetricCard';
 
 interface AnotacionesDashboardStatsProps {
   totalStudents: number;
@@ -13,52 +14,53 @@ export default function AnotacionesDashboardStats({
   compromisoCount,
   derivacionCount,
 }: AnotacionesDashboardStatsProps) {
-  const stats = [
-    {
-      label: 'Estudiantes Totales',
-      value: totalStudents,
-      icon: Users,
-      accent: 'bg-blue-500',
-    },
-    {
-      label: 'Carta de Amonestación',
-      value: amonestacionCount,
-      icon: FileText,
-      accent: 'bg-yellow-500',
-    },
-    {
-      label: 'Carta de Compromiso',
-      value: compromisoCount,
-      icon: FileWarning,
-      accent: 'bg-orange-500',
-    },
-    {
-      label: 'Derivación a Convivencia Escolar',
-      value: derivacionCount,
-      icon: AlertTriangle,
-      accent: 'bg-red-500',
-    },
-  ];
-
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {stats.map((stat) => {
-        const Icon = stat.icon;
-        return (
-          <div
-            key={stat.label}
-            className="flex items-center gap-4 rounded-lg bg-white p-4 shadow-sm"
-          >
-            <div className={`flex size-12 items-center justify-center rounded-full ${stat.accent} bg-opacity-10`}>
-              <Icon className={`size-6 ${stat.accent.replace('bg-', 'text-')}`} />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">{stat.label}</p>
-              <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-            </div>
-          </div>
-        );
-      })}
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <div className="p-1.5 rounded-lg bg-neutral-100">
+          <Users className="h-3.5 w-3.5 text-neutral-500" aria-hidden="true" />
+        </div>
+        <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-[0.06em]">
+          Anotaciones
+        </h3>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard
+          label="Estudiantes Totales"
+          value={totalStudents}
+          icon={Users}
+          iconBg="bg-blue-50"
+          iconColor="text-blue-600"
+          accentColor="#3b82f6"
+        />
+        <MetricCard
+          label="Carta de Amonestación"
+          value={amonestacionCount}
+          sublabel="5-9 anotaciones negativas"
+          icon={FileText}
+          iconBg="bg-yellow-50"
+          iconColor="text-yellow-600"
+          accentColor="#eab308"
+        />
+        <MetricCard
+          label="Carta de Compromiso"
+          value={compromisoCount}
+          sublabel="10-14 anotaciones negativas"
+          icon={FileWarning}
+          iconBg="bg-orange-50"
+          iconColor="text-orange-600"
+          accentColor="#f97316"
+        />
+        <MetricCard
+          label="Derivación a Convivencia"
+          value={derivacionCount}
+          sublabel="15+ anotaciones negativas"
+          icon={AlertTriangle}
+          iconBg="bg-red-50"
+          iconColor="text-red-600"
+          accentColor="#ef4444"
+        />
+      </div>
     </div>
   );
 }

@@ -307,13 +307,13 @@ export default function AnotacionesDocumentGenerator({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white p-5 rounded-2xl border border-neutral-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+          <h3 className="text-sm font-bold text-neutral-900 flex items-center gap-2">
             <FileText className="w-5 h-5 text-indigo-600" />
             Generaci\u00f3n de Documentos Disciplinarios
           </h3>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-neutral-500 mt-1">
             Emisi\u00f3n de cartas de amonestaci\u00f3n, compromiso conductual y derivaci\u00f3n.
           </p>
         </div>
@@ -334,7 +334,7 @@ export default function AnotacionesDocumentGenerator({
         {/* Left column */}
         <div className="lg:col-span-5 space-y-6">
           {/* Document type selector */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-4">
+          <div className="bg-white rounded-2xl border border-neutral-200 p-5 shadow-xs space-y-4">
             <DocTypeSelector
               docType={docType}
               onDocTypeChange={(type: string) =>
@@ -407,15 +407,15 @@ export default function AnotacionesDocumentGenerator({
           />
 
           {/* Action buttons */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+          <div className="bg-white rounded-2xl border border-neutral-200 p-4 shadow-xs">
+            <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">
               Acciones del Documento
             </p>
             <div className="flex flex-wrap gap-3">
               <button
                 type="button"
                 onClick={handlePrintDoc}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-700 text-white text-sm font-medium rounded-xl hover:bg-slate-800 transition-colors shadow-xs"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-neutral-700 text-white text-sm font-medium rounded-xl hover:bg-neutral-800 transition-colors shadow-xs"
               >
                 <Printer className="w-4 h-4" />
                 Imprimir
@@ -441,20 +441,20 @@ export default function AnotacionesDocumentGenerator({
 
           {/* Recently emitted */}
           {emittedList.length > 0 && (
-            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs">
-              <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+            <div className="bg-white rounded-2xl border border-neutral-200 p-4 shadow-xs">
+              <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">
                 \u00daltimos documentos emitidos
               </h4>
               <ul className="space-y-2">
                 {emittedList.slice(0, 5).map((entry, i) => (
                   <li
                     key={entry.id || i}
-                    className="flex items-center justify-between text-xs text-slate-700 bg-slate-50 rounded-lg px-3 py-2"
+                    className="flex items-center justify-between text-xs text-neutral-700 bg-neutral-50 rounded-lg px-3 py-2"
                   >
                     <span className="font-medium truncate">
                       {entry.studentName || entry.student_name}
                     </span>
-                    <span className="text-slate-400 shrink-0 ml-2">
+                    <span className="text-neutral-400 shrink-0 ml-2">
                       {entry.emissionDate || entry.emission_date}
                     </span>
                   </li>
@@ -467,4 +467,5 @@ export default function AnotacionesDocumentGenerator({
     </div>
   );
 }
+
 
