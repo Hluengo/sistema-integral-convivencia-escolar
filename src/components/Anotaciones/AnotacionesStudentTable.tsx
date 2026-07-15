@@ -38,6 +38,7 @@ interface AnotacionesStudentTableProps {
 }
 
 const FILTER_TABS = [
+  { key: 'con_registro', label: 'Con Registro' },
   { key: 'amonestacion', label: 'Amonestación' },
   { key: 'compromiso', label: 'Compromiso' },
   { key: 'derivacion', label: 'Derivación' },
@@ -283,7 +284,4 @@ export default function AnotacionesStudentTable({
     </div>
   );
 }
-
-
-
 

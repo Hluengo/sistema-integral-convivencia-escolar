@@ -57,13 +57,13 @@ function SeverityCard({ tipo, count, total }: { tipo: TipoInfraccion; count: num
         </span>
       </div>
 
-<div className="mt-3 h-1.5 bg-neutral-100 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full rounded-full transition-all duration-500 ${cfg.dot}`}
-                              style={{ width: `${percentage}%` }}
-                              aria-label={`${cfg.label}: ${percentage}%`}
-                            />
-                          </div>
+      <div className="mt-3 h-1.5 bg-neutral-100 rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${cfg.dot}`}
+          style={{ width: `${percentage}%` }}
+          aria-label={`${cfg.label}: ${percentage}%`}
+        />
+      </div>
     </div>
   );
 }
@@ -172,12 +172,6 @@ export default function DashboardStats({ causas, onFaseSelect, selectedFase }: D
             Distribución por Gravedad
           </h3>
         </div>
-      {/* Anotaciones KPIs */}
-      <AnotacionesDashboardStats
-        amonestacionCount={anotacionesKpis.amonestacionCount}
-        compromisoCount={anotacionesKpis.compromisoCount}
-        derivacionCount={anotacionesKpis.derivacionCount}
-      />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <SeverityCard tipo="Leve" count={stats.porGravedad['Leve']} total={stats.total} />
           <SeverityCard tipo="Grave" count={stats.porGravedad['Grave']} total={stats.total} />
@@ -186,11 +180,14 @@ export default function DashboardStats({ causas, onFaseSelect, selectedFase }: D
         </div>
       </div>
 
+      {/* Anotaciones */}
+      <AnotacionesDashboardStats
+        amonestacionCount={anotacionesKpis.amonestacionCount}
+        compromisoCount={anotacionesKpis.compromisoCount}
+        derivacionCount={anotacionesKpis.derivacionCount}
+      />
+
     </section>
   );
 }
-
-
-
-
 

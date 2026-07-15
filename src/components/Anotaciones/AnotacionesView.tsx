@@ -53,17 +53,12 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
     setIsLoading(true);
     setDbError(null);
     try {
-      const [fetchedStudents, fetchedAnnotations] = await Promise.all([
-        fetchStudentsWithAnnotationCounts(),
-        fetchAnnotations(),
-      ]);
+      const fetchedStudents = await fetchStudentsWithAnnotationCounts();
       setStudents(fetchedStudents ?? []);
-      setAnnotations((fetchedAnnotations ?? []) as unknown as Annotation[]);
     } catch (error: any) {
       console.error('Error cargando datos desde Supabase:', error);
       setDbError(error?.message ?? 'Error de conexión con la base de datos');
       setStudents([]);
-      setAnnotations([]);
     } finally {
       setIsLoading(false);
     }
@@ -76,6 +71,16 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
   const handleRefresh = useCallback(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    if (!selectedStudent) { setAnnotations([]); return; }
+    let cancelled = false;
+    (async () => {
+      const anns = await fetchAnnotations(selectedStudent.id);
+      if (!cancelled) setAnnotations((anns ?? []) as unknown as Annotation[]);
+    })();
+    return () => { cancelled = true; };
+  }, [selectedStudent?.id]);
 
   const handleAddAnnotations = useCallback(
     async (studentId: string, newAnnotations: Annotation[]) => {
