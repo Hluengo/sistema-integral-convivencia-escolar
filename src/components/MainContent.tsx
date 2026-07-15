@@ -191,6 +191,15 @@ export default function MainContent({
           </Suspense>
         </ErrorBoundary>
       )}
+
+      {/* VIEW 6: ANOTACIONES */}
+      {currentView === 'anotaciones' && (
+        <ErrorBoundary>
+          <Suspense fallback={<ViewFallback />}>
+            <AnotacionesView />
+          </Suspense>
+        </ErrorBoundary>
+      )}
     </main>
   );
 }
