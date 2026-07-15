@@ -45,6 +45,7 @@ const FILTER_TABS = [
 
 function getAnnotationRange(filter: string): [number, number] | null {
   switch (filter) {
+    case 'con_registro': return [5, Infinity];
     case 'amonestacion': return [5, 9];
     case 'compromiso': return [10, 14];
     case 'derivacion': return [15, Infinity];
@@ -266,10 +267,6 @@ export default function AnotacionesStudentTable({
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-xs font-medium text-neutral-500">Leyenda:</span>
           <span className="inline-flex items-center gap-1 text-xs text-neutral-600">
-            <span className="inline-block size-2.5 rounded-full bg-emerald-500" />
-            Verde (&lt;5)
-          </span>
-          <span className="inline-flex items-center gap-1 text-xs text-neutral-600">
             <span className="inline-block size-2.5 rounded-full bg-yellow-500" />
             Amarillo (5–9)
           </span>
@@ -286,4 +283,7 @@ export default function AnotacionesStudentTable({
     </div>
   );
 }
+
+
+
 

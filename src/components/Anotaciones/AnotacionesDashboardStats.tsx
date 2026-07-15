@@ -1,15 +1,13 @@
-import { Users, FileText, FileWarning, AlertTriangle } from 'lucide-react';
+import { BarChart3, FileText, FileWarning, AlertTriangle } from 'lucide-react';
 import MetricCard from '../MetricCard';
 
 interface AnotacionesDashboardStatsProps {
-  totalStudents: number;
   amonestacionCount: number;
   compromisoCount: number;
   derivacionCount: number;
 }
 
 export default function AnotacionesDashboardStats({
-  totalStudents,
   amonestacionCount,
   compromisoCount,
   derivacionCount,
@@ -18,21 +16,14 @@ export default function AnotacionesDashboardStats({
     <div className="space-y-2">
       <div className="flex items-center gap-2">
         <div className="p-1.5 rounded-lg bg-neutral-100">
-          <Users className="h-3.5 w-3.5 text-neutral-500" aria-hidden="true" />
+          <BarChart3 className="h-3.5 w-3.5 text-neutral-500" aria-hidden="true" />
         </div>
         <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-[0.06em]">
           Anotaciones
         </h3>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          label="Estudiantes Totales"
-          value={totalStudents}
-          icon={Users}
-          iconBg="bg-blue-50"
-          iconColor="text-blue-600"
-          accentColor="#3b82f6"
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        
         <MetricCard
           label="Carta de Amonestación"
           value={amonestacionCount}
@@ -64,3 +55,7 @@ export default function AnotacionesDashboardStats({
     </div>
   );
 }
+
+
+
+

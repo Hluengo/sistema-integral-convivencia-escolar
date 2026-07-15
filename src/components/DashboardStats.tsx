@@ -85,7 +85,7 @@ export default function DashboardStats({ causas, onFaseSelect, selectedFase }: D
     return { totalActivas: active, enInvestigacion: investigating, resueltas: resolved };
   }, [causas]);
 
-  const [anotacionesKpis, setAnotacionesKpis] = useState({ totalStudents: 0, amonestacionCount: 0, compromisoCount: 0, derivacionCount: 0 });
+  const [anotacionesKpis, setAnotacionesKpis] = useState({ amonestacionCount: 0, compromisoCount: 0, derivacionCount: 0 });
 
   useEffect(() => {
     let cancelled = false;
@@ -93,7 +93,6 @@ export default function DashboardStats({ causas, onFaseSelect, selectedFase }: D
       try {
         const students = await fetchStudentsWithAnnotationCounts();
         if (cancelled || !students) return;
-        const total = students.length;
         const amonestacion = students.filter((s: any) => {
           const c = s.annotations_count ?? s.negative_annotations_count ?? 0;
           return c >= 5 && c < 10;
@@ -106,7 +105,7 @@ export default function DashboardStats({ causas, onFaseSelect, selectedFase }: D
           const c = s.annotations_count ?? s.negative_annotations_count ?? 0;
           return c >= 15;
         }).length;
-        if (!cancelled) setAnotacionesKpis({ totalStudents: total, amonestacionCount: amonestacion, compromisoCount: compromiso, derivacionCount: derivacion });
+        if (!cancelled) setAnotacionesKpis({ amonestacionCount: amonestacion, compromisoCount: compromiso, derivacionCount: derivacion });
       } catch (e) {
         console.error('Error fetching anotaciones KPIs:', e);
       }
@@ -165,7 +164,6 @@ export default function DashboardStats({ causas, onFaseSelect, selectedFase }: D
 
       {/* Anotaciones KPIs */}
       <AnotacionesDashboardStats
-        totalStudents={anotacionesKpis.totalStudents}
         amonestacionCount={anotacionesKpis.amonestacionCount}
         compromisoCount={anotacionesKpis.compromisoCount}
         derivacionCount={anotacionesKpis.derivacionCount}
@@ -192,5 +190,8 @@ export default function DashboardStats({ causas, onFaseSelect, selectedFase }: D
     </section>
   );
 }
+
+
+
 
 

@@ -45,7 +45,7 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
   const [isNewProcessModalOpen, setIsNewProcessModalOpen] = useState<boolean>(false);
-  const [activeFilter, setActiveFilter] = useState<string>('');
+  const [activeFilter, setActiveFilter] = useState<string>('con_registro');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [dbError, setDbError] = useState<string | null>(null);
 
@@ -147,9 +147,8 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
     return students.filter((student: any) => {
       const count = student.annotations_count ?? student.negative_annotations_count ?? 0;
       switch (activeFilter) {
-        case '':
-        case 'todas':
-          return true;
+        case 'con_registro':
+          return count >= 5;
         case 'amonestacion':
           return count >= 5 && count < 10;
         case 'compromiso':
@@ -157,7 +156,7 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
         case 'derivacion':
           return count >= 15;
         default:
-          return true;
+          return count >= 5;
       }
     });
   }, [students, activeFilter]);
@@ -252,3 +251,4 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
     </div>
   );
 }
+
