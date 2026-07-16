@@ -5,7 +5,7 @@
 
 import type React from 'react';
 import { Scale, AlertCircle, FileText, Loader2, Users } from 'lucide-react';
-import type { Course, Student } from '../lib/supabase';
+import type { Course, Student } from '../services/courses.service';
 import type { Causa } from '../types';
 import RiceConductSelect from './NewCausaForm/RiceConductSelect';
 import ImproveTextarea from './ImproveTextarea';

@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Shield, Plus } from 'lucide-react';
-import type { Annotation } from '../../types';
-import { supabase, fetchAnnotations, fetchStudentsWithAnnotationCounts, saveAnnotation } from '../../lib/supabase';
+import type { Annotation, AnotacionStudent } from '../../types';
+import { supabase } from '../../lib/supabase';
+import { fetchAnnotations, fetchStudentsWithAnnotationCounts, saveAnnotation } from '../../services/annotations.service';
 import AnotacionesStudentTable from './AnotacionesStudentTable';
 import { AnnotationsSkeleton } from '../Skeleton';
 
@@ -15,10 +16,10 @@ interface AnotacionesViewProps {
 }
 
 export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
-  const [students, setStudents] = useState<any[]>([]);
+  const [students, setStudents] = useState<AnotacionStudent[]>([]);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<AnotacionStudent | null>(null);
   const [isNewProcessModalOpen, setIsNewProcessModalOpen] = useState<boolean>(false);
   const [activeFilter, setActiveFilter] = useState<string>('con_registro');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -30,9 +31,9 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
     try {
       const fetchedStudents = await fetchStudentsWithAnnotationCounts();
       setStudents(fetchedStudents ?? []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error cargando datos desde Supabase:', error);
-      setDbError(error?.message ?? 'Error de conexión con la base de datos');
+      setDbError(error instanceof Error ? error.message : 'Error de conexión con la base de datos');
       setStudents([]);
     } finally {
       setIsLoading(false);
@@ -67,12 +68,12 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
         ));
         await loadData();
         if (selectedStudent && selectedStudent.id === studentId) {
-          const fresh = students.find((s: any) => s.id === studentId);
+          const fresh = students.find((s) => s.id === studentId);
           if (fresh) { setSelectedStudent(fresh); }
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Error guardando anotaciones:', error);
-        setDbError(error?.message ?? 'Error al guardar anotaciones');
+        setDbError(error instanceof Error ? error.message : 'Error al guardar anotaciones');
       }
     },
     [loadData, selectedStudent, students],
@@ -88,31 +89,32 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
         if (error) { throw error; }
         await loadData();
         if (selectedStudent && selectedStudent.id === studentId) {
-          const fresh = students.find((s: any) => s.id === studentId);
+          const fresh = students.find((s) => s.id === studentId);
           if (fresh) { setSelectedStudent(fresh); }
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Error limpiando anotaciones:', error);
-        setDbError(error?.message ?? 'Error al limpiar anotaciones');
+        setDbError(error instanceof Error ? error.message : 'Error al limpiar anotaciones');
       }
     },
     [loadData, selectedStudent, students],
   );
 
   const handleRegisterCase = useCallback(
-    async (studentId: string, newAnnotations: any[], _fileData?: any) => {
+    async (studentId: string, newAnnotations: unknown[], _fileData?: { name: string }) => {
       try {
-        await Promise.all(newAnnotations.map(ann =>
-          saveAnnotation({
+        await Promise.all(newAnnotations.map((ann) => {
+          const a = ann as Annotation;
+          return saveAnnotation({
             student_id: studentId,
-            observation: ann.text || "",
-            severity: ann.severity || "Leve",
-            type: ann.type || "Negativa",
-            registered_by: ann.registered_by || "Inspector\u00EDa",
-          })
-        ));
+            observation: a.text || "",
+            severity: a.severity || "Leve",
+            type: a.type || "Negativa",
+            registered_by: a.registered_by || "Inspector\u00EDa",
+          });
+        }));
         await loadData();
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Error registrando caso:', error);
       }
     },
@@ -188,8 +190,8 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
           annotations={annotations.filter((a) => a.student_id === selectedStudent.id)}
           privacyMode={privacyMode}
           onClose={() => setSelectedStudent(null)}
-          onAddAnnotations={(sid: string, anns: any[]) =>
-            handleAddAnnotations(sid || selectedStudent.id, anns)
+          onAddAnnotations={(sid: string, anns: unknown[]) =>
+            handleAddAnnotations(sid || selectedStudent.id, anns as Annotation[])
           }
           onClearAnnotations={() =>
             handleClearAnnotations(selectedStudent.id)

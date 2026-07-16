@@ -7,7 +7,9 @@ import { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { X, Eye, EyeOff } from 'lucide-react';
 import type { Annotation } from '../../types';
 import { maskName, maskRut, getSemaphoricStyle, getCurrentDateStr } from '../../lib/anotacionesUtils';
-import { supabase, fetchCartas, fetchEtapas } from '../../lib/supabase';
+import { supabase } from '../../lib/supabase';
+import { fetchCartas } from '../../services/cartas.service';
+import { fetchEtapas } from '../../services/etapas.service';
 import AnotacionesDocumentGenerator from './AnotacionesDocumentGenerator';
 import {
   STATUS_STYLE,

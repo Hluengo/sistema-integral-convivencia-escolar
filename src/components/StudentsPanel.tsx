@@ -5,7 +5,7 @@
 
 import { useEffect, useReducer, useMemo } from 'react';
 import { Users, Search, GraduationCap, Loader2, AlertCircle, BookOpen } from 'lucide-react';
-import { fetchCourses, fetchStudentsWithCourses, type Course, type StudentWithCourse } from '../lib/supabase';
+import { fetchCourses, fetchStudentsWithCourses, type Course, type StudentWithCourse } from '../services/courses.service';
 import { TableSkeleton } from './Skeleton';
 
 interface StudentsPanelProps {

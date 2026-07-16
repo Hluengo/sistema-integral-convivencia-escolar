@@ -4,7 +4,7 @@
  */
 
 import type React from 'react';
-import type { Course, Student } from '../lib/supabase';
+import type { Course, Student } from '../services/courses.service';
 import type { Causa } from '../types';
 import NewCausaForm from './NewCausaForm';
 import { Dialog, DialogContent } from './ui/Dialog';

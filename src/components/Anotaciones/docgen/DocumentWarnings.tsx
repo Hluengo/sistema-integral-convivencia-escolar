@@ -14,7 +14,7 @@ interface DocumentWarningsProps {
   onBypassProgressLock: () => void;
   authorizedBypass: boolean;
   onAuthorizedBypass: () => void;
-  existingLetter: any | null;
+  existingLetter: { emission_date: string } | null;
   authorizedDuplicate: boolean;
   onAuthorizedDuplicate: () => void;
 }

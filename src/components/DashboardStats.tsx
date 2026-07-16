@@ -12,7 +12,7 @@ import SeverityBadge from './SeverityBadge';
 import AnotacionesDashboardStats from './Anotaciones/AnotacionesDashboardStats';
 import { countByStage } from '../domain/disciplinaryStatus';
 import EmptyState from './EmptyState';
-import { fetchAnnotationStageCounts } from '../lib/supabase';
+import { fetchAnnotationStageCounts } from '../services/annotations.service';
 
 interface DashboardStatsProps {
   causas: Causa[];

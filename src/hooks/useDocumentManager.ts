@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Causa, BitacoraEntry, UserRole } from '../types';
 import { nowDateOnly, nowIso } from '../lib/dateUtils';
-import { uploadDocument, listDocuments, deleteDocument } from '../lib/supabase';
+import { uploadDocument, listDocuments, deleteDocument } from '../services/storage.service';
 
 interface UseDocumentManagerArgs {
   causa: Causa;
@@ -72,8 +72,8 @@ export function useDocumentManager({
       });
 
       await refreshDocuments();
-    } catch (error: any) {
-      setDocumentError(error?.message || 'Error al adjuntar el documento.');
+    } catch (error: unknown) {
+      setDocumentError(error instanceof Error ? error.message : 'Error al adjuntar el documento.');
     } finally {
       setIsUploadingDocument(false);
     }

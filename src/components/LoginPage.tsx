@@ -6,7 +6,7 @@
 import type React from 'react';
 import { useState, useRef } from 'react';
 import { Scale, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import { signInWithEmail } from '../lib/supabase';
+import { signInWithEmail } from '../services/auth.service';
 import { useAppContext } from '../context/useAppContext';
 import { Dialog, DialogContent } from './ui/Dialog';
 

@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { PDFDocument, rgb, StandardFonts, PageSizes } from 'pdf-lib';
+import { PDFDocument, rgb, StandardFonts, PageSizes, type PDFFont } from 'pdf-lib';
 
 const MARGIN = 50;
 const FONT_SIZE = 10;
@@ -8,7 +8,7 @@ const TITLE_SIZE = 14;
 const HEADER_SIZE = 12;
 const _LINE_HEIGHT = 14;
 
-function wrapText(text: string, font: any, fontSize: number, maxWidth: number): string[] {
+function wrapText(text: string, font: PDFFont, fontSize: number, maxWidth: number): string[] {
   const words = text.split(' ');
   const lines: string[] = [];
   let line = '';

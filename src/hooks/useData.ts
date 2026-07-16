@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { type Course, type Student, fetchCourses as fetchCoursesApi, fetchStudentsByCourse } from '../lib/supabase';
+import { type Course, type Student, fetchCourses as fetchCoursesApi, fetchStudentsByCourse } from '../services/courses.service';
 
 export function useCourses() {
   const [courses, setCourses] = useState<Course[]>([]);

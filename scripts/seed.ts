@@ -11,7 +11,8 @@
  */
 
 import dotenv from 'dotenv';
-import { supabase, createCausa } from '../src/lib/supabase';
+import { supabase } from '../src/lib/supabase';
+import { createCausa } from '../src/services/cases.service';
 import { createDraftCausa } from '../src/lib/causaFactory';
 import type { Causa } from '../src/types';
 

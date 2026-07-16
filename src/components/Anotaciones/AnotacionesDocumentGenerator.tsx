@@ -23,6 +23,19 @@ interface AnotacionesDocumentGeneratorProps {
   teachers: Record<string, string>;
 }
 
+interface EmittedEntry {
+  id: string;
+  studentId: string;
+  studentName: string;
+  course: string;
+  docType: string;
+  emissionDate: string;
+  status: string;
+  apoderadoName: string;
+  student_name?: string;
+  emission_date?: string;
+}
+
 export default function AnotacionesDocumentGenerator({
   student,
   annotations,
@@ -57,7 +70,7 @@ export default function AnotacionesDocumentGenerator({
   const [bypassProgressLock, setBypassProgressLock] = useState(false);
 
   // ── Registry state ───────────────────────────────────────────
-  const [emittedList, setEmittedList] = useState<any[]>([]);
+  const [emittedList, setEmittedList] = useState<EmittedEntry[]>([]);
   const [isRegistering, setIsRegistering] = useState(false);
 
   // ── Effects ──────────────────────────────────────────────────
@@ -133,7 +146,7 @@ export default function AnotacionesDocumentGenerator({
       });
 
       if (!error) {
-        const newEntry = {
+        const newEntry: EmittedEntry = {
           id: crypto.randomUUID(),
           studentId: student.id,
           studentName: student.full_name,
@@ -168,7 +181,7 @@ export default function AnotacionesDocumentGenerator({
     };
 
     try {
-      const { buildDocx } = await import('../../lib/docxBuilder');
+      const { buildDocx } = await import('../../lib/docx');
       const blob = await buildDocx({
         docType: docType as 'amonestacion' | 'compromiso_conductual' | 'derivacion',
         studentName: student.full_name,

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Plus, X, CheckSquare, Square, FileText } from 'lucide-react';
+import type { Annotation } from '../../../types';
 
 interface DocumentFormProps {
   docType: string;
@@ -21,7 +22,7 @@ interface DocumentFormProps {
   onAddCommitment: (commitment: string) => void;
   onRemoveCommitment: (index: number) => void;
   negativeCount: number;
-  annotations: any[];
+  annotations: Annotation[];
   onRegisterCommitment: () => void;
   isRegistering: boolean;
 }
@@ -57,7 +58,7 @@ export default function DocumentForm({
 }: DocumentFormProps) {
   const [newCommitment, setNewCommitment] = useState('');
 
-  const negativeAnnotations = annotations.filter((a: any) => (a.type || '').toLowerCase() === 'negativa');
+  const negativeAnnotations = annotations.filter((a) => (a.type || '').toLowerCase() === 'negativa');
 
   const selectedAnnotationsSet = new Set(selectedAnnotationsForDoc);
 
@@ -194,7 +195,7 @@ export default function DocumentForm({
           </p>
         ) : (
           <div className="max-h-60 space-y-1.5 overflow-y-auto rounded-lg border border-neutral-200 p-2">
-            {negativeAnnotations.map((a: any) => {
+            {negativeAnnotations.map((a) => {
               const isSelected = selectedAnnotationsSet.has(a.id);
               return (
                 <button
@@ -214,11 +215,11 @@ export default function DocumentForm({
                   )}
                   <div className="min-w-0 flex-1">
                     <span className="block truncate font-medium text-neutral-800 text-sm">
-                      {a.text || a.observation || 'Sin descripción'}
+                      {(a as Annotation).text || ''}
                     </span>
                     <span className="mt-0.5 block text-neutral-500 text-xs">
-                      {a.date ? new Date(a.date).toLocaleDateString('es-CL') : a.date_time ? new Date(a.date_time).toLocaleDateString('es-CL') : ''} &middot;{' '}
-                      {a.severity || 'Sin asignatura'}
+                      {(a as Annotation).date ? new Date((a as Annotation).date).toLocaleDateString('es-CL') : ''} &middot;{' '}
+                      {(a as Annotation).severity || 'Sin asignatura'}
                     </span>
                   </div>
                 </button>

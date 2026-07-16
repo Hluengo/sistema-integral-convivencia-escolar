@@ -13,7 +13,7 @@ import {
   saveBitacora,
   saveChecklist,
   updateCausa,
-} from '../lib/supabase';
+} from '../services/cases.service';
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 

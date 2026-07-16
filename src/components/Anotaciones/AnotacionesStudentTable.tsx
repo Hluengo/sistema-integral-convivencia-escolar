@@ -8,6 +8,19 @@ import { maskName, maskRut, getSemaphoricStyle, TEACHERS_BY_COURSE } from '../..
 
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
+interface StudentRowData {
+  id: string;
+  full_name: string;
+  course_id: string;
+  teacher_id: string;
+  annotations_count: number;
+  positive_annotations_count: number;
+  last_annotation_date?: string;
+  disciplinary_status: string;
+  rut?: string;
+  course_name?: string;
+}
+
 const getDisciplinaryStatusLabel = (count: number): { text: string; bg: string } => {
   if (count < 5) { return { text: 'Verde - Buen Comportamiento', bg: 'bg-emerald-100 text-emerald-800' }; }
   if (count < 10) { return { text: 'Amarillo - Advertencia', bg: 'bg-yellow-100 text-yellow-800' }; }
@@ -16,20 +29,9 @@ const getDisciplinaryStatusLabel = (count: number): { text: string; bg: string }
 };
 
 interface AnotacionesStudentTableProps {
-  students: Array<{
-    id: string;
-    full_name: string;
-    course_id: string;
-    teacher_id: string;
-    annotations_count: number;
-    positive_annotations_count: number;
-    last_annotation_date?: string;
-    disciplinary_status: string;
-    rut?: string;
-    course_name?: string;
-  }>;
+  students: StudentRowData[];
   privacyMode: boolean;
-  onSelectStudent: (student: any) => void;
+  onSelectStudent: (student: StudentRowData) => void;
   activeFilter: string;
   setActiveFilter: (filter: string) => void;
   searchQuery: string;
@@ -102,7 +104,7 @@ const StudentRow = memo(function StudentRow({
 }: {
   student: AnotacionesStudentTableProps['students'][number];
   privacyMode: boolean;
-  onSelectStudent: (s: any) => void;
+  onSelectStudent: (s: StudentRowData) => void;
 }) {
   const style = getSemaphoricStyle(student.annotations_count || 0);
   const status = getDisciplinaryStatusLabel(student.annotations_count || 0);

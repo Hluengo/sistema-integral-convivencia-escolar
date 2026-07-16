@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Causa, ChecklistItem, BitacoraEntry, UserRole } from '../types';
 import { nowDateOnly, nowIso } from '../lib/dateUtils';
-import { uploadDocument } from '../lib/supabase';
+import { uploadDocument } from '../services/storage.service';
 
 interface UseChecklistRegistrationArgs {
   causa: Causa;
