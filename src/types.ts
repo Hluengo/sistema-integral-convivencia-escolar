@@ -146,6 +146,7 @@ export interface AnotacionStudent {
   last_annotation_date?: string;
   disciplinary_status: DisciplinaryStatus;
   rut?: string;
+  course_name?: string;
 }
 
 export interface Annotation {

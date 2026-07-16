@@ -4,7 +4,10 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import type { Causa, BitacoraEntry, ChecklistItem } from '../types';
+import type { Annotation, AnotacionStudent, CartaDisciplinaria, Causa, BitacoraEntry, ChecklistItem, EtapaDisciplinaria } from '../types';
+import { mapInspectorateToAnnotation, mapCauseRowToCarta, mapStageRowToEtapa } from './mappers';
+import { calculateDisciplinaryStatus } from '../domain/disciplinaryStatus';
+import type { InspectorateRecord } from './mappers';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -23,6 +26,29 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
   },
 });
+
+// Re-exported helpers for supabaseClient.ts compatibility
+export function getEnvUrl(): string {
+  return supabaseUrl || '';
+}
+
+export function getEnvAnonKey(): string {
+  return supabaseAnonKey || '';
+}
+
+export function isLocalDemoAllowed(): boolean {
+  return (import.meta as any).env?.VITE_ALLOW_LOCAL_DEMO === 'true';
+}
+
+const browserSupabaseKey = Symbol();
+let browserClient: typeof supabase | null = null;
+
+export function getBrowserSupabase(): typeof supabase | null {
+  if (!supabaseUrl || !supabaseAnonKey) return null;
+  if (browserClient) return browserClient;
+  browserClient = supabase;
+  return browserClient;
+}
 
 // Auth helpers
 export async function signInWithEmail(email: string, password: string) {
@@ -587,18 +613,7 @@ export async function deleteDocument(path: string): Promise<boolean> {
 // Gestión de Anotaciones (inspectorate_records)
 // ====================================================
 
-export interface InspectorateRecord {
-  id: string;
-  student_id: string;
-  date_time: string;
-  observation: string;
-  severity: 'Leve' | 'Grave' | 'Muy Grave' | 'Gravísima';
-  type: 'Positiva' | 'Negativa';
-  registered_by: string;
-  created_at: string;
-}
-
-export async function fetchAnnotations(studentId?: string): Promise<InspectorateRecord[]> {
+export async function fetchAnnotations(studentId?: string): Promise<Annotation[]> {
   let query = supabase
     .from('inspectorate_records')
     .select('*')
@@ -614,7 +629,7 @@ export async function fetchAnnotations(studentId?: string): Promise<Inspectorate
     console.error('Error fetching annotations:', error);
     return [];
   }
-  return (data || []) as InspectorateRecord[];
+  return (data || []).map(mapInspectorateToAnnotation);
 }
 
 export async function saveAnnotation(annotation: {
@@ -639,7 +654,7 @@ export async function saveAnnotation(annotation: {
   return true;
 }
 
-export async function fetchStudentsWithAnnotationCounts(): Promise<any[]> {
+export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStudent[]> {
   const { data: students, error: studentsError } = await supabase
     .from('students')
     .select('*, courses(name, level)')
@@ -672,17 +687,6 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<any[]> {
       (a: any, b: any) => new Date(b.date_time).getTime() - new Date(a.date_time).getTime()
     );
 
-    let ds: string;
-    if (negativeCount < 5) {
-      ds = 'Verde';
-    } else if (negativeCount < 10) {
-      ds = 'Amarillo';
-    } else if (negativeCount < 15) {
-      ds = 'Naranja';
-    } else {
-      ds = 'Rojo';
-    }
-
     const courses = s.courses as { name: string; level: string } | null;
     return {
       id: s.id,
@@ -693,7 +697,7 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<any[]> {
       annotations_count: negativeCount,
       positive_annotations_count: positiveCount,
       last_annotation_date: sorted[0]?.date_time || null,
-      disciplinary_status: ds,
+      disciplinary_status: calculateDisciplinaryStatus(negativeCount),
       rut: s.rut || '',
       course_name: courses?.name ?? 'Sin curso',
     };
@@ -703,7 +707,7 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<any[]> {
 // Cartas Disciplinarias
 // ====================================================
 
-export async function fetchCartas(studentId: string): Promise<any[]> {
+export async function fetchCartas(studentId: string): Promise<CartaDisciplinaria[]> {
   const { data, error } = await supabase
     .from('cartas_disciplinarias')
     .select('*')
@@ -714,7 +718,7 @@ export async function fetchCartas(studentId: string): Promise<any[]> {
     console.error('Error fetching cartas:', error);
     return [];
   }
-  return data || [];
+  return (data || []).map(mapCauseRowToCarta);
 }
 
 export async function saveCarta(carta: {
@@ -757,7 +761,7 @@ export async function saveCarta(carta: {
 // Etapas Disciplinarias
 // ====================================================
 
-export async function fetchEtapas(studentId: string): Promise<any[]> {
+export async function fetchEtapas(studentId: string): Promise<EtapaDisciplinaria[]> {
   const { data, error } = await supabase
     .from('etapas_disciplinarias')
     .select('*')
@@ -768,7 +772,7 @@ export async function fetchEtapas(studentId: string): Promise<any[]> {
     console.error('Error fetching etapas:', error);
     return [];
   }
-  return data || [];
+  return (data || []).map(mapStageRowToEtapa);
 }
 
 export async function saveEtapa(etapa: {

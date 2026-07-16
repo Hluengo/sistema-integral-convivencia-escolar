@@ -12,11 +12,13 @@ describe('mapInspectorateToAnnotation', () => {
   const row = {
     id: 'abc',
     student_id: 'stu-1',
-    text: 'Conducta inapropiada en clase',
-    date: '2026-03-15',
+    date_time: '2026-03-15T10:00:00Z',
+    observation: 'Conducta inapropiada en clase',
+    severity: 'Grave',
+    type: 'Negativa',
+    registered_by: 'user-1',
     created_at: '2026-03-15T12:00:00Z',
     created_by: 'user-1',
-    annotation_type: 'Negativa',
   };
 
   it('maps required fields', () => {
@@ -24,7 +26,7 @@ describe('mapInspectorateToAnnotation', () => {
     assert.equal(result.id, 'abc');
     assert.equal(result.student_id, 'stu-1');
     assert.equal(result.text, 'Conducta inapropiada en clase');
-    assert.equal(result.date, '2026-03-15');
+    assert.equal(result.date, '2026-03-15T10:00:00Z');
   });
 
   it('maps type correctly', () => {
@@ -32,8 +34,8 @@ describe('mapInspectorateToAnnotation', () => {
     assert.equal(result.type, 'Negativa');
   });
 
-  it('defaults null/unknown type to Negativa', () => {
-    const result = mapInspectorateToAnnotation({ ...row, annotation_type: null });
+  it('defaults unknown type to Negativa', () => {
+    const result = mapInspectorateToAnnotation({ ...row, type: 'unknown' });
     assert.equal(result.type, 'Negativa');
   });
 });

@@ -46,7 +46,7 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
     let cancelled = false;
     (async () => {
       const anns = await fetchAnnotations(selectedStudent.id);
-      if (!cancelled) { setAnnotations((anns ?? []) as unknown as Annotation[]); }
+      if (!cancelled) {       setAnnotations(anns ?? []); }
     })();
     return () => { cancelled = true; };
   }, [selectedStudent?.id, selectedStudent]);

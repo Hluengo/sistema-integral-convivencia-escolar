@@ -9,22 +9,26 @@ import type {
 export interface InspectorateRecord {
   id: string;
   student_id: string;
-  text: string;
-  date: string;
+  date_time: string;
+  observation: string;
+  severity: string;
+  type: string;
+  registered_by: string;
   created_at: string;
   created_by: string | null;
-  annotation_type: string | null;
 }
 
 export function mapInspectorateToAnnotation(row: InspectorateRecord): Annotation {
   return {
     id: row.id,
     student_id: row.student_id,
-    text: row.text,
-    date: row.date,
-    severity: 'Grave',
-    registered_by: row.created_by ?? '',
-    type: (row.annotation_type === 'Positiva' ? 'Positiva' : 'Negativa') as 'Positiva' | 'Negativa',
+    text: row.observation,
+    date: row.date_time,
+    severity: row.severity as Annotation['severity'],
+    registered_by: row.registered_by,
+    type: (
+      row.type === 'Positiva' ? 'Positiva' : 'Negativa'
+    ) as Annotation['type'],
   };
 }
 
@@ -44,14 +48,14 @@ export interface CauseRow {
 }
 
 export function mapCauseRowToCarta(row: CauseRow): CartaDisciplinaria {
-  const validStatus = (s: string): 'Vigente' | 'Cumplida' | 'Incumplida' | 'Anulada' => {
+  const validStatus = (s: string): CartaDisciplinaria['status'] => {
     if (s === 'Cumplida' || s === 'Incumplida' || s === 'Anulada') return s;
     return 'Vigente';
   };
   return {
     id: row.id,
     student_id: row.student_id,
-    letter_type: row.letter_type as 'Amonestación Escrita' | 'Carta de Compromiso Conductual',
+    letter_type: row.letter_type as CartaDisciplinaria['letter_type'],
     emission_date: row.emission_date,
     status: validStatus(row.status),
     emitted_by: row.emitted_by,
