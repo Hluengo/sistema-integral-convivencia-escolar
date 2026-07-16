@@ -14,7 +14,7 @@ import {
   verificarPlazoSuspension,
   verificarPlazoNotificacionSuperintendencia,
   type NivelConformidad
-} from '../services/legalCompliance.service';
+} from '../lib/legalCompliance';
 import { 
   AlertTriangle, 
   CheckCircle, 
