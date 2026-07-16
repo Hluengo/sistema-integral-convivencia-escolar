@@ -1,14 +1,20 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Printer, FileDown, FileText, AlertTriangle } from 'lucide-react';
-import type { Annotation } from '../../types';
-import { getCurrentDateStr, getSemaphoricStyle } from '../../lib/anotacionesUtils';
-import { supabase } from '../../lib/supabase';
+import type { Annotation } from '@/src/types';
+import { getCurrentDateStr, getSemaphoricStyle } from '@/src/lib/anotacionesUtils';
 import DocTypeSelector from './docgen/DocTypeSelector';
 import DocumentForm from './docgen/DocumentForm';
 import DocumentPreview from './docgen/DocumentPreview';
 import DocumentWarnings from './docgen/DocumentWarnings';
+import {
+  useDocumentState,
+  useSelectedAnnotations,
+  useDocumentExport,
+  useDocumentRegistry,
+  useRegisterCommitment,
+} from './docgen/hooks';
 
 interface AnotacionesDocumentGeneratorProps {
   student: {
@@ -23,229 +29,114 @@ interface AnotacionesDocumentGeneratorProps {
   teachers: Record<string, string>;
 }
 
-interface EmittedEntry {
-  id: string;
-  studentId: string;
-  studentName: string;
-  course: string;
-  docType: string;
-  emissionDate: string;
-  status: string;
-  apoderadoName: string;
-  student_name?: string;
-  emission_date?: string;
-}
-
 export default function AnotacionesDocumentGenerator({
   student,
   annotations,
   privacyMode: _privacyMode,
   teachers,
 }: AnotacionesDocumentGeneratorProps) {
-  // ── Derived data ─────────────────────────────────────────────
+  // Derived data
   const negativeAnnotations = annotations.filter((a) => a.type === 'Negativa');
   const negativeCount = negativeAnnotations.length;
   const semaphoric = getSemaphoricStyle(negativeCount);
+  const dateStr = getCurrentDateStr();
 
-  // ── Document type ────────────────────────────────────────────
-  const [docType, setDocType] = useState<'amonestacion' | 'compromiso_conductual' | 'derivacion'>(
-    negativeCount >= 10 ? 'compromiso_conductual' : 'amonestacion'
-  );
+  // Hooks
+  const documentState = useDocumentState();
+  const selectedAnnotations = useSelectedAnnotations(annotations);
+  const documentExport = useDocumentExport();
+  const documentRegistry = useDocumentRegistry();
+  const registerCommitment = useRegisterCommitment();
 
-  // ── Form fields ──────────────────────────────────────────────
-  const [apoderadoName, setApoderadoName] = useState('');
-  const [coordinatorName, setCoordinatorName] = useState('');
-  const [emittedBy, setEmittedBy] = useState('');
-  const [docObservations, setDocObservations] = useState('');
-  const [selectedAnnotationsForDoc, setSelectedAnnotationsForDoc] = useState<string[]>([]);
-  const [compromisoStatus, setCompromisoStatus] = useState('Vigente');
-
-  // ── Custom commitments ───────────────────────────────────────
-  const [customCommitments, setCustomCommitments] = useState<string[]>([]);
-  const newCustomCommitmentRef = useRef('');
-
-  // ── Authorization flags ──────────────────────────────────────
-  const [authorizedBypass, setAuthorizedBypass] = useState(false);
-  const [authorizedDuplicate, setAuthorizedDuplicate] = useState(false);
-  const [bypassProgressLock, setBypassProgressLock] = useState(false);
-
-  // ── Registry state ───────────────────────────────────────────
-  const [emittedList, setEmittedList] = useState<EmittedEntry[]>([]);
-  const [isRegistering, setIsRegistering] = useState(false);
-
-  // ── Effects ──────────────────────────────────────────────────
-  // Select all negative annotations by default
-  useEffect(() => {
-    setSelectedAnnotationsForDoc(negativeAnnotations.map((a) => a.id));
-  }, [negativeAnnotations]);
-
-  // Sync doc type when annotations count crosses threshold
-  useEffect(() => {
+  // Sync docType when annotations cross threshold
+  const { docType, setDocType } = documentState;
+  useMemo(() => {
     if (negativeCount >= 10 && docType !== 'compromiso_conductual') {
       setDocType('compromiso_conductual');
     } else if (negativeCount < 10 && docType === 'compromiso_conductual') {
       setDocType('amonestacion');
     }
-  }, [negativeCount, docType]);
+  }, [negativeCount, docType, setDocType]);
 
-  // Load emitted list from localStorage
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('convivencia_anotaciones_emitted:v1');
-      if (stored) {
-        setEmittedList(JSON.parse(stored));
-      }
-    } catch {
-      // Silently ignore corrupt localStorage data
-    }
-  }, []);
+  // Select all negative annotations by default
+  useMemo(() => {
+    selectedAnnotations.selectAllNegative();
+  }, [negativeAnnotations, selectedAnnotations.selectAllNegative]);
 
-  // ── Helpers ──────────────────────────────────────────────────
-  const dateStr = getCurrentDateStr();
+  // Handle registration
+  const handleRegisterCommitment = useMemo(
+    () => registerCommitment.handleRegisterCommitment,
+    [registerCommitment.handleRegisterCommitment]
+  );
 
-  const handleToggleAnnotation = (id: string) => {
-    setSelectedAnnotationsForDoc((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+  const handleRegisterCommitmentWrapper = () => {
+    handleRegisterCommitment({
+      student,
+      docType,
+      negativeCount,
+      apoderadoName: documentState.apoderadoName,
+      coordinatorName: documentState.coordinatorName,
+      emittedBy: documentState.emittedBy,
+      docObservations: documentState.docObservations,
+      compromisoStatus: documentState.compromisoStatus,
+      teachers,
+      onSuccess: (entry) => documentRegistry.addEntry(entry),
+      setIsRegistering: documentState.setIsRegistering,
+    });
   };
 
-  const handleAddCustomCommitment = () => {
-    const trimmed = newCustomCommitmentRef.current.trim();
-    if (!trimmed) {
-      return;
-    }
-    setCustomCommitments((prev) => [...prev, trimmed]);
-    newCustomCommitmentRef.current = '';
-  };
+  // Selected annotations for preview
+  const selectedIdsSet = useMemo(
+    () => new Set(documentState.selectedAnnotationsForDoc || selectedAnnotations.selectedIds),
+    [documentState.selectedAnnotationsForDoc, selectedAnnotations.selectedIds]
+  );
+  const selectedAnnsObjects = annotations.filter((a) => selectedIdsSet.has(a.id));
 
-  const handleRemoveCustomCommitment = (index: number) => {
-    setCustomCommitments((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  // ── Register commitment in DB ────────────────────────────────
-  const handleRegisterCommitment = async () => {
-    setIsRegistering(true);
-    try {
-      const { error } = await supabase.from('cartas_disciplinarias').insert({
-        student_id: student.id,
-        letter_type:
-          docType === 'amonestacion'
-            ? 'Amonestaci\u00f3n Escrita'
-            : 'Carta de Compromiso Conductual',
-        emission_date: new Date().toISOString().split('T')[0],
-        status: compromisoStatus,
-        emitted_by: emittedBy || 'Inspector\u00eda',
-        supervisor_name: coordinatorName || null,
-        apoderado_name: apoderadoName,
-        annotations_count: negativeCount,
-        student_name: student.full_name,
-        course: student.course_id,
-        regulation_basis:
-          'RICE 2026 - Fundaci\u00f3n Educacional Colegio Carmela Romero de Espinosa',
-        observations: docObservations || null,
-      });
-
-      if (!error) {
-        const newEntry: EmittedEntry = {
-          id: crypto.randomUUID(),
-          studentId: student.id,
-          studentName: student.full_name,
-          course: student.course_id,
-          docType,
-          emissionDate: new Date().toISOString().split('T')[0],
-          status: compromisoStatus,
-          apoderadoName,
-        };
-        const updated = [newEntry, ...emittedList];
-        setEmittedList(updated);
-        localStorage.setItem('convivencia_anotaciones_emitted:v1', JSON.stringify(updated));
-        alert('\u2705 Documento registrado exitosamente en cartas_disciplinarias.');
-      } else {
-        console.error('Error al registrar carta:', error);
-        alert(`\u26a0\ufe0f Error al registrar el documento: ${error.message}`);
-      }
-    } catch (err) {
-      console.error('Error en handleRegisterCommitment:', err);
-      alert('\u26a0\ufe0f Ocurri\u00f3 un error inesperado. Intente nuevamente.');
-    } finally {
-      setIsRegistering(false);
-    }
-  };
-
-  // ── Document export handlers ─────────────────────────────────
-  const handleExportWord = async () => {
+  // Preview content for export/print
+  const previewContent = useMemo(() => {
     const titleMap: Record<string, string> = {
-      amonestacion: 'Carta_de_Amonestacion',
-      compromiso_conductual: 'Carta_de_Compromiso_Conductual',
-      derivacion: 'Ficha_de_Derivacion',
+      amonestacion: 'Carta de Amonestaci\u00f3n',
+      compromiso_conductual: 'Carta de Compromiso Conductual',
+      derivacion: 'Ficha de Derivaci\u00f3n',
     };
 
-    try {
-      const { buildDocx } = await import('../../lib/docx');
-      const blob = await buildDocx({
-        docType: docType as 'amonestacion' | 'compromiso_conductual' | 'derivacion',
-        studentName: student.full_name,
-        course: student.course_id,
-        studentRut: student.rut || 'N/A',
-        teacher: teachers[student.course_id] || student.teacher_id || 'Sin Profesor',
-        coordinatorName,
-        apoderadoName,
-        negativeCount,
-        observations: docObservations || '',
-        customCommitments,
-        dateStr: new Date().toLocaleDateString('es-CL'),
-      });
+    return {
+      title: titleMap[docType] || 'Documento Disciplinario',
+      content: `
+        Estudiante: ${student.full_name}
+        Curso: ${student.course_id}
+        RUN: ${student.rut || 'N/A'}
+        Apoderado: ${documentState.apoderadoName || '________________'}
+        Coordinador: ${documentState.coordinatorName || '________________'}
+        Emitido por: ${documentState.emittedBy || 'Inspector\u00eda'}
+        Fecha: ${dateStr}
+        Anotaciones negativas: ${negativeCount}
+        
+        Observaciones:
+        ${documentState.docObservations || 'Sin observaciones adicionales.'}
+        
+        Compromisos personalizados:
+        ${documentState.customCommitments.length > 0
+          ? documentState.customCommitments.map((c, i) => `${i + 1}. ${c}`).join('\n')
+          : 'Ninguno'}
+      `,
+      metadata: {
+        'Tipo de documento': docType === 'amonestacion' ? 'Amonestación' : docType === 'compromiso_conductual' ? 'Compromiso Conductual' : 'Derivación',
+        'Estado': documentState.compromisoStatus,
+        'Reiteración': negativeCount >= 10 ? 'Sí (≥10 anotaciones negativas)' : 'No',
+      },
+    };
+  }, [docType, student, dateStr, negativeCount, documentState]);
 
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${titleMap[docType]}_${student.full_name.replace(/\s+/g, '_')}.docx`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Error al exportar Word:', err);
-      alert('Error al generar el documento Word.');
-    }
-  };
-
+  // Export handlers
   const handleExportPDF = async () => {
-    const titleMap: Record<string, string> = {
-      amonestacion: 'Carta_de_Amonestacion',
-      compromiso_conductual: 'Carta_de_Compromiso_Conductual',
-      derivacion: 'Ficha_de_Derivacion',
-    };
+    const blob = await documentExport.generatePDF(previewContent);
+    documentExport.downloadBlob(blob, `Carta_de_${docType}_${student.full_name.replace(/\s+/g, '_')}.pdf`);
+  };
 
-    try {
-      const { buildPdf } = await import('../../services/pdfBuilder.service');
-      const pdfBytes = await buildPdf({
-        docType: docType as 'amonestacion' | 'compromiso_conductual' | 'derivacion',
-        studentName: student.full_name,
-        course: student.course_id,
-        studentRut: student.rut || 'N/A',
-        teacher: teachers[student.course_id] || student.teacher_id || 'Sin Profesor',
-        coordinatorName,
-        apoderadoName,
-        negativeCount,
-        observations: docObservations || '',
-        customCommitments,
-        dateStr: new Date().toLocaleDateString('es-CL'),
-      });
-
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${titleMap[docType]}_${student.full_name.replace(/\s+/g, '_')}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Error al exportar PDF:', err);
-      alert('Error al generar el documento PDF.');
-    }
+  const handleExportWord = async () => {
+    const blob = await documentExport.generateWord(previewContent);
+    documentExport.downloadBlob(blob, `Carta_de_${docType}_${student.full_name.replace(/\s+/g, '_')}.docx`);
   };
 
   const handlePrintDoc = () => {
@@ -255,54 +146,25 @@ export default function AnotacionesDocumentGenerator({
       derivacion: 'Ficha de Derivaci\u00f3n',
     };
 
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      alert('Por favor habilite las ventanas emergentes en su navegador para imprimir.');
-      return;
-    }
+    const htmlContent = `
+      <div style="max-width: 210mm; margin: 0 auto; font-family: Arial, sans-serif;">
+        <h2 style="text-align: center;">${previewContent.title}</h2>
+        <p><strong>Estudiante:</strong> ${student.full_name}</p>
+        <p><strong>Curso:</strong> ${student.course_id}</p>
+        <p><strong>RUN:</strong> ${student.rut || 'N/A'}</p>
+        <p><strong>Apoderado:</strong> ${documentState.apoderadoName || '________________'}</p>
+        <hr />
+        <p><strong>Fecha:</strong> ${getCurrentDateStr()}</p>
+        <p><strong>Anotaciones consideradas:</strong> ${negativeCount}</p>
+        <hr />
+        <p>${documentState.docObservations || 'Sin observaciones adicionales.'}</p>
+      </div>
+    `;
 
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>${titleMap[docType]} - ${student.full_name}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 2rem; color: #1e293b; }
-            @media print { body { padding: 0; } }
-          </style>
-        </head>
-        <body>
-          <div style="max-width: 210mm; margin: 0 auto;">
-            <h2 style="text-align: center;">${titleMap[docType]}</h2>
-            <p><strong>Estudiante:</strong> ${student.full_name}</p>
-            <p><strong>Curso:</strong> ${student.course_id}</p>
-            <p><strong>Fecha:</strong> ${dateStr}</p>
-            <p><strong>Apoderado:</strong> ${apoderadoName || '________________'}</p>
-            <hr />
-            <p><strong>Anotaciones consideradas:</strong> ${negativeCount}</p>
-            <hr />
-            <p>${docObservations || 'Sin observaciones adicionales.'}</p>
-          </div>
-          <script>
-            window.onload = function () {
-              window.print();
-              setTimeout(function () { window.close(); }, 500);
-            };
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+    documentExport.printDocument(htmlContent);
   };
 
-  // ── Selected annotations for preview ─────────────────────────
-  const selectedIdsSet = useMemo(
-    () => new Set(selectedAnnotationsForDoc),
-    [selectedAnnotationsForDoc]
-  );
-  const selectedAnnsObjects = annotations.filter((a) => selectedIdsSet.has(a.id));
-
-  // ── Render ───────────────────────────────────────────────────
+  // Render
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -336,9 +198,7 @@ export default function AnotacionesDocumentGenerator({
           <div className="space-y-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs">
             <DocTypeSelector
               docType={docType}
-              onDocTypeChange={(type: string) =>
-                setDocType(type as 'amonestacion' | 'compromiso_conductual' | 'derivacion')
-              }
+              onDocTypeChange={setDocType}
               hasTenOrMore={negativeCount >= 10}
               negativeCount={negativeCount}
             />
@@ -347,39 +207,39 @@ export default function AnotacionesDocumentGenerator({
               docType={docType}
               negativeCount={negativeCount}
               hasTenOrMore={negativeCount >= 10}
-              authorizedBypass={authorizedBypass}
-              onAuthorizedBypass={() => setAuthorizedBypass((v) => !v)}
-              authorizedDuplicate={authorizedDuplicate}
-              onAuthorizedDuplicate={() => setAuthorizedDuplicate((v) => !v)}
+              authorizedBypass={documentState.authorizedBypass}
+              onAuthorizedBypass={() => documentState.setAuthorizedBypass((v) => !v)}
+              authorizedDuplicate={documentState.authorizedDuplicate}
+              onAuthorizedDuplicate={() => documentState.setAuthorizedDuplicate((v) => !v)}
               isDocLockedByProgress={false}
               existingLetter={null}
-              bypassProgressLock={bypassProgressLock}
-              onBypassProgressLock={() => setBypassProgressLock((v) => !v)}
+              bypassProgressLock={documentState.bypassProgressLock}
+              onBypassProgressLock={() => documentState.setBypassProgressLock((v) => !v)}
             />
           </div>
 
           {/* Document form */}
           <DocumentForm
             docType={docType}
-            apoderadoName={apoderadoName}
-            onApoderadoNameChange={setApoderadoName}
-            coordinatorName={coordinatorName}
-            onCoordinatorNameChange={setCoordinatorName}
-            emittedBy={emittedBy}
-            onEmittedByChange={setEmittedBy}
-            docObservations={docObservations}
-            onObservationsChange={setDocObservations}
-            selectedAnnotationsForDoc={selectedAnnotationsForDoc}
-            onToggleAnnotation={handleToggleAnnotation}
-            compromisoStatus={compromisoStatus}
-            onCompromisoStatusChange={setCompromisoStatus}
-            customCommitments={customCommitments}
-            onAddCommitment={handleAddCustomCommitment}
-            onRemoveCommitment={handleRemoveCustomCommitment}
+            apoderadoName={documentState.apoderadoName}
+            onApoderadoNameChange={documentState.setApoderadoName}
+            coordinatorName={documentState.coordinatorName}
+            onCoordinatorNameChange={documentState.setCoordinatorName}
+            emittedBy={documentState.emittedBy}
+            onEmittedByChange={documentState.setEmittedBy}
+            docObservations={documentState.docObservations}
+            onObservationsChange={documentState.setDocObservations}
+            selectedAnnotationsForDoc={Array.from(selectedAnnotations.selectedIds)}
+            onToggleAnnotation={selectedAnnotations.toggleAnnotation}
+            compromisoStatus={documentState.compromisoStatus}
+            onCompromisoStatusChange={documentState.setCompromisoStatus}
+            customCommitments={documentState.customCommitments}
+            onAddCommitment={documentState.handleAddCustomCommitment}
+            onRemoveCommitment={documentState.handleRemoveCustomCommitment}
             negativeCount={negativeCount}
             annotations={annotations}
-            onRegisterCommitment={handleRegisterCommitment}
-            isRegistering={isRegistering}
+            onRegisterCommitment={handleRegisterCommitmentWrapper}
+            isRegistering={documentState.isRegistering}
           />
         </div>
 
@@ -392,12 +252,12 @@ export default function AnotacionesDocumentGenerator({
             currentCourse={student.course_id}
             currentRut={student.rut || ''}
             currentTeacher={teachers[student.course_id] || student.teacher_id || 'Sin Profesor'}
-            coordinatorName={coordinatorName}
-            apoderadoName={apoderadoName}
-            dateStr={dateStr}
+            coordinatorName={documentState.coordinatorName}
+            apoderadoName={documentState.apoderadoName}
+            dateStr={getCurrentDateStr()}
             negativeCount={negativeCount}
-            docObservations={docObservations}
-            customCommitments={customCommitments}
+            docObservations={documentState.docObservations}
+            customCommitments={documentState.customCommitments}
             selectedAnnsObjects={selectedAnnsObjects}
             hasTenOrMore={negativeCount >= 10}
             onPrint={handlePrintDoc}
@@ -439,13 +299,13 @@ export default function AnotacionesDocumentGenerator({
           </div>
 
           {/* Recently emitted */}
-          {emittedList.length > 0 && (
+          {documentRegistry.emittedList.length > 0 && (
             <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-xs">
               <h4 className="mb-3 font-semibold text-neutral-500 text-xs uppercase tracking-wider">
                 \u00daltimos documentos emitidos
               </h4>
               <ul className="space-y-2">
-                {emittedList.slice(0, 5).map((entry, i) => (
+                {documentRegistry.emittedList.slice(0, 5).map((entry, i) => (
                   <li
                     key={entry.id || i}
                     className="flex items-center justify-between rounded-lg bg-neutral-50 px-3 py-2 text-neutral-700 text-xs"

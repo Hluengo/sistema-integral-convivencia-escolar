@@ -52,6 +52,7 @@
     "docx": "^9.7.1",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
+    "file-saver": "^2.0.5",
     "lucide-react": "^0.546.0",
     "pdf-lib": "^1.17.1",
     "posthog-js": "^1.403.0",
