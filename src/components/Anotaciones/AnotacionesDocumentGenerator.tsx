@@ -218,7 +218,7 @@ export default function AnotacionesDocumentGenerator({
     };
 
     try {
-      const { buildPdf } = await import('../../lib/pdfBuilder');
+      const { buildPdf } = await import('../../services/pdfBuilder.service');
       const pdfBytes = await buildPdf({
         docType: docType as 'amonestacion' | 'compromiso_conductual' | 'derivacion',
         studentName: student.full_name,

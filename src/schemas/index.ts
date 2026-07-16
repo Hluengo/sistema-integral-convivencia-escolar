@@ -1,6 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { z } from 'zod';
+import { EstadoCausa } from '../types';
 
 export const CourseSchema = z.object({
   id: z.string(),
@@ -46,42 +47,11 @@ export const ChecklistItemSchema = z.object({
   documentoUrl: z.string().optional(),
 });
 
-export const EstadoCausaEnum = z.enum([
-  'Recepción de Denuncia',
-  'Revisión Inicial de Antecedentes',
-  'Notificación de Inicio de Indagación',
-  'En Proceso de Indagación',
-  'Recopilación de Evidencias en Curso',
-  'Derivado a Mediación',
-  'Mediación en Desarrollo',
-  'Mediación Cerrada con Acuerdo',
-  'Mediación Fracasada – Retorno a Indagación',
-  'Informe Cierre de Indagación en Elaboración',
-  'Informe Cierre de Indagación Emitido',
-  'Entrevista Disciplinaria Pendiente',
-  'Entrevista Disciplinaria Realizada',
-  'Informe Concluyente en Elaboración',
-  'Informe Concluyente Emitido',
-  'En Plazo de Apelación',
-  'Apelación Recepcionada',
-  'Apelación en Revisión por Rectoría',
-  'Apelación Resuelta',
-  'Resolución Ejecutoriada',
-  'Medida en Ejecución',
-  'En Proceso de Seguimiento',
-  'Seguimiento Finalizado',
-  'Causa Cerrada',
-]);
+export const EstadoCausaEnum = z.nativeEnum(EstadoCausa);
 
 export const TipoInfraccionEnum = z.enum(['Leve', 'Grave', 'Muy Grave', 'Gravísima']);
 
-export const FaseProcedimentalSchema = z.enum([
-  'Recepción',
-  'Investigación',
-  'Resolución',
-  'Apelación',
-  'Seguimiento',
-]);
+export const FaseProcedimentalSchema = z.enum(['Recepción', 'Investigación', 'Resolución', 'Apelación', 'Seguimiento']);
 
 export const CausaSchema = z.object({
   id: z.string(),

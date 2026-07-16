@@ -5,7 +5,7 @@ import { create } from 'zustand';
 import type { Causa, FaseProcedimental } from '../types';
 import { EstadoCausa } from '../types';
 import { getFaseForEstado } from '../data';
-import { createCausa, deleteCausa } from '../services/cases.service';
+import { createCausa, deleteCausa } from '../services/cases/causas.service';
 import { createDraftCausa } from '../lib/causaFactory';
 import { nowDateOnly } from '../lib/dateUtils';
 
