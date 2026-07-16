@@ -341,9 +341,9 @@ export default function AnotacionesStudentDetailModal({
   };
   // Render: Resumen tab
   const renderResumenTab = () => (
-    <div className="space-y-5">
+    <div className="stagger-children space-y-5">
       {/* Current disciplinary measure */}
-      <div className="rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-xs">
+      <div className="animate-slide-up rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md" style={{ animationDelay: '0ms' }}>
         <div className="mb-4 flex items-center justify-between">
           <h3 className="flex items-center gap-2 font-bold text-neutral-900 text-sm">
             <Shield className="h-4 w-4 text-brand-600" />
@@ -372,9 +372,10 @@ export default function AnotacionesStudentDetailModal({
       </div>
 
       {/* Status and counts summary */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-neutral-200/80 bg-white p-4 shadow-xs">
-          <p className="mb-1 font-semibold text-neutral-500 text-xs uppercase tracking-wider">
+      <div className="animate-slide-up grid grid-cols-1 gap-4 sm:grid-cols-3" style={{ animationDelay: '60ms' }}>
+        <div className="rounded-2xl border border-neutral-200/80 bg-white p-4 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+          <p className="mb-1 flex items-center gap-1.5 font-semibold text-neutral-500 text-xs uppercase tracking-wider">
+            <Shield className="h-3 w-3" />
             Estado General
           </p>
           <div
@@ -389,7 +390,7 @@ export default function AnotacionesStudentDetailModal({
             {statusInfo.label}
           </div>
         </div>
-        <div className="rounded-2xl border border-neutral-200/80 bg-white p-4 shadow-xs">
+        <div className="rounded-2xl border border-neutral-200/80 bg-white p-4 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
           <p className="mb-1 font-semibold text-neutral-500 text-xs uppercase tracking-wider">
             Anotaciones Negativas
           </p>
@@ -398,7 +399,7 @@ export default function AnotacionesStudentDetailModal({
             <span className="text-neutral-400 text-xs">registros</span>
           </div>
         </div>
-        <div className="rounded-2xl border border-neutral-200/80 bg-white p-4 shadow-xs">
+        <div className="rounded-2xl border border-neutral-200/80 bg-white p-4 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
           <p className="mb-1 font-semibold text-neutral-500 text-xs uppercase tracking-wider">
             Anotaciones Positivas
           </p>
@@ -412,7 +413,7 @@ export default function AnotacionesStudentDetailModal({
       </div>
       {/* Active case tracking */}
       {activeCase && (
-        <div className="rounded-2xl border border-amber-200/80 bg-white p-5 shadow-xs">
+        <div className="animate-slide-up rounded-2xl border border-amber-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md" style={{ animationDelay: '120ms' }}>
           <div className="mb-3 flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-amber-600" />
             <h3 className="font-bold text-neutral-900 text-sm">Caso Activo</h3>
@@ -439,6 +440,7 @@ export default function AnotacionesStudentDetailModal({
           </div>
         </div>
       )}
+
 
       {/* Transitions */}
       {transitions.length > 0 && (
@@ -779,19 +781,19 @@ export default function AnotacionesStudentDetailModal({
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto pt-4 pb-8">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+        className="fixed inset-0 animate-overlay-in bg-black/40 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Modal */}
-      <div className="relative z-10 mx-4 w-full max-w-5xl overflow-hidden rounded-3xl border border-neutral-200/60 bg-neutral-50 shadow-2xl">
+      <div className="relative z-10 mx-4 w-full max-w-5xl animate-scale-in origin-bottom-right overflow-hidden rounded-3xl border border-neutral-200/60 bg-neutral-50 shadow-2xl">
         {/* Header */}
-        <div className="border-neutral-200 border-b bg-white px-6 py-5">
+        <div className="border-neutral-200 border-b bg-gradient-to-br from-brand-50/40 to-white px-6 py-5">
           <div className="flex items-center justify-between">
             <div className="flex min-w-0 items-center gap-4">
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-brand-100">
-                <span className="font-extrabold text-brand-700 text-sm">
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-brand-100 shadow-sm ring-2 ring-brand-200/50">
+                <span className="font-extrabold text-brand-700 text-sm tracking-wide">
                   {student.full_name
                     .split(' ')
                     .map((n) => n.charAt(0))
@@ -841,7 +843,7 @@ export default function AnotacionesStudentDetailModal({
                 type="button"
                 aria-label="Cerrar"
                 onClick={onClose}
-                className="rounded-lg p-2 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600"
+                className="rounded-lg p-2 text-neutral-400 transition-all duration-200 hover:rotate-90 hover:bg-neutral-100 hover:text-neutral-600"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -849,18 +851,18 @@ export default function AnotacionesStudentDetailModal({
           </div>
         </div>
         {/* Tab bar */}
-        <div className="border-neutral-200 border-b bg-white px-6">
-          <div className="-mb-px flex gap-1 overflow-x-auto">
+        <div className="bg-white px-6 pb-2">
+          <div className="flex gap-1 overflow-x-auto rounded-xl bg-neutral-100/60 p-1">
             {(Object.keys(TAB_ICONS) as ActiveTab[]).map((tab) => (
               <button
                 key={tab}
                 type="button"
                 onClick={() => setActiveTab(tab)}
                 className={
-                  'flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-3 font-medium text-sm transition-colors' +
+                  'flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 font-medium text-sm transition-all duration-200' +
                   (activeTab === tab
-                    ? 'border-brand-600 text-brand-700'
-                    : 'border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700')
+                    ? 'bg-white text-brand-700 shadow-sm'
+                    : 'text-neutral-500 hover:bg-white/50 hover:text-neutral-700')
                 }
               >
                 {TAB_ICONS[tab]}
