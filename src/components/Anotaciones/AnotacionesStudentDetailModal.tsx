@@ -346,7 +346,7 @@ export default function AnotacionesStudentDetailModal({
       <div className="rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-xs">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="flex items-center gap-2 font-bold text-neutral-900 text-sm">
-            <Shield className="h-4 w-4 text-indigo-600" />
+            <Shield className="h-4 w-4 text-brand-600" />
             Medida Disciplinaria Actual
           </h3>
           <span
@@ -444,7 +444,7 @@ export default function AnotacionesStudentDetailModal({
       {transitions.length > 0 && (
         <div className="rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-xs">
           <h3 className="mb-4 flex items-center gap-2 font-bold text-neutral-900 text-sm">
-            <History className="h-4 w-4 text-indigo-600" />
+            <History className="h-4 w-4 text-brand-600" />
             Historial de Transiciones
           </h3>
           <div className="space-y-3">
@@ -453,7 +453,7 @@ export default function AnotacionesStudentDetailModal({
                 key={t.id || i}
                 className="flex items-start gap-3 border-neutral-100 border-b pb-3 last:border-b-0 last:pb-0"
               >
-                <div className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-indigo-400" />
+                <div className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-brand-400" />
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-neutral-800 text-sm">
                     {`${t.from || 'Inicio'} -> ${t.to || t.stage_name || '(sin destino)'}`}
@@ -476,7 +476,7 @@ export default function AnotacionesStudentDetailModal({
       {etapas.length > 0 && (
         <div className="rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-xs">
           <h3 className="mb-4 flex items-center gap-2 font-bold text-neutral-900 text-sm">
-            <CheckCircle2 className="h-4 w-4 text-indigo-600" />
+            <CheckCircle2 className="h-4 w-4 text-brand-600" />
             Etapas del Proceso Disciplinario
           </h3>
           <div className="space-y-2">
@@ -486,7 +486,7 @@ export default function AnotacionesStudentDetailModal({
                 className="flex items-center justify-between rounded-xl border border-neutral-100 bg-neutral-50 px-4 py-3"
               >
                 <div className="flex items-center gap-3">
-                  <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100 font-bold text-indigo-700 text-xs">
+                  <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-brand-100 font-bold text-brand-700 text-xs">
                     {etapa.step_number}
                   </span>
                   <div>
@@ -529,44 +529,44 @@ export default function AnotacionesStudentDetailModal({
   const renderSubirPdfTab = () => (
     <div className="space-y-5">
       {/* Drop zone */}
-      <button
-        ref={dropZoneRef}
-        type="button"
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            fileInputRef.current?.click();
+        <button
+          ref={dropZoneRef}
+          type="button"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+          onClick={() => fileInputRef.current?.click()}
+          className={
+            'relative cursor-pointer rounded-2xl border-2 border-dashed p-10 text-center transition-all duration-200' +
+            (isDragging
+              ? 'border-brand-400 bg-brand-50/50 shadow-lg'
+              : 'border-neutral-300 bg-white hover:border-brand-300 hover:bg-brand-50/20') +
+            (isParsing ? 'pointer-events-none opacity-60' : '')
           }
-        }}
-        onDragEnter={handleDragEnter}
-        onDragLeave={handleDragLeave}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-        className={
-          'relative cursor-pointer rounded-2xl border-2 border-dashed p-10 text-center transition-all duration-200' +
-          (isDragging
-            ? 'border-indigo-400 bg-indigo-50/50 shadow-lg'
-            : 'border-neutral-300 bg-white hover:border-indigo-300 hover:bg-indigo-50/20') +
-          (isParsing ? 'pointer-events-none opacity-60' : '')
-        }
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".pdf,application/pdf"
-          onChange={handleFileSelect}
-          className="hidden"
-        />
-        <div className="flex flex-col items-center gap-3">
-          {isParsing ? (
-            <>
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
-              </div>
-              <p className="font-medium text-indigo-600 text-sm">{parsingStatus}</p>
-            </>
-          ) : (
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,application/pdf"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          <div className="flex flex-col items-center gap-3">
+            {isParsing ? (
+              <>
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-100">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
+                </div>
+                <p className="font-medium text-brand-600 text-sm">{parsingStatus}</p>
+              </>
+            ) : (
             <>
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100">
                 <Upload className="h-6 w-6 text-neutral-400" />
@@ -628,7 +628,7 @@ export default function AnotacionesStudentDetailModal({
       {parsedAnnotations.length > 0 && (
         <div className="rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-xs">
           <h3 className="mb-3 flex items-center gap-2 font-bold text-neutral-900 text-sm">
-            <FileText className="h-4 w-4 text-indigo-600" />
+            <FileText className="h-4 w-4 text-brand-600" />
             Anotaciones Detectadas ({parsedAnnotations.length})
           </h3>
           <div className="max-h-80 space-y-3 overflow-y-auto">
@@ -673,7 +673,7 @@ export default function AnotacionesStudentDetailModal({
             type="button"
             onClick={handleRegisterParsedAnnotations}
             disabled={isParsing || parsedAnnotations.length === 0}
-            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 font-medium text-sm text-white shadow-xs transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 font-medium text-sm text-white shadow-xs transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Plus className="h-4 w-4" />
             Registrar {parsedAnnotations.length} Anotacione
@@ -790,8 +790,8 @@ export default function AnotacionesStudentDetailModal({
         <div className="border-neutral-200 border-b bg-white px-6 py-5">
           <div className="flex items-center justify-between">
             <div className="flex min-w-0 items-center gap-4">
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100">
-                <span className="font-extrabold text-indigo-700 text-sm">
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-brand-100">
+                <span className="font-extrabold text-brand-700 text-sm">
                   {student.full_name
                     .split(' ')
                     .map((n) => n.charAt(0))
@@ -832,7 +832,7 @@ export default function AnotacionesStudentDetailModal({
                 type="button"
                 aria-label={privacyMode ? 'Desactivar privacidad' : 'Activar privacidad'}
                 onClick={onTogglePrivacy}
-                className="rounded-lg p-2 text-neutral-400 transition-colors hover:bg-indigo-50 hover:text-indigo-600"
+                className="rounded-lg p-2 text-neutral-400 transition-colors hover:bg-brand-50 hover:text-brand-600"
                 title={privacyMode ? 'Desactivar privacidad' : 'Activar privacidad'}
               >
                 {privacyMode ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -859,7 +859,7 @@ export default function AnotacionesStudentDetailModal({
                 className={
                   'flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-3 font-medium text-sm transition-colors' +
                   (activeTab === tab
-                    ? 'border-indigo-600 text-indigo-700'
+                    ? 'border-brand-600 text-brand-700'
                     : 'border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700')
                 }
               >

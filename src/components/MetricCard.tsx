@@ -5,6 +5,7 @@
 
 import type React from 'react';
 import { memo } from 'react';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 
 interface MetricCardProps {
   label: string;
@@ -79,20 +80,11 @@ export default memo(function MetricCard({
               trend.positive ? 'bg-leve-50 text-leve-700' : 'bg-gravisima-50 text-gravisima-700'
             }`}
           >
-            <svg
-              className={`h-3 w-3 ${trend.positive ? '' : 'rotate-180'}`}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              role="img"
-              aria-label={trend.positive ? 'Tendencia positiva' : 'Tendencia negativa'}
-            >
-              <title>{trend.positive ? 'Tendencia positiva' : 'Tendencia negativa'}</title>
-              <polyline points="18 15 12 9 6 15" />
-            </svg>
+            {trend.positive ? (
+              <TrendingUp className="h-3 w-3" aria-hidden="true" />
+            ) : (
+              <TrendingDown className="h-3 w-3" aria-hidden="true" />
+            )}
             {trend.value}
           </span>
         )}

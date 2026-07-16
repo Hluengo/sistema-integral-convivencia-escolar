@@ -1,5 +1,6 @@
 
 import type { LucideIcon } from 'lucide-react';
+import Button from './ui/Button';
 
 interface EmptyStateProps {
   icon: LucideIcon;
@@ -17,13 +18,9 @@ export default function EmptyState({ icon: Icon, title, description, action }: E
       <h3 className="mb-1.5 font-semibold text-base text-neutral-700">{title}</h3>
       <p className="mb-6 max-w-sm text-neutral-500 text-sm">{description}</p>
       {action && (
-        <button
-          type="button"
-          onClick={action.onClick}
-          className="rounded-xl bg-brand-600 px-5 py-2.5 font-semibold text-sm text-white transition-all duration-200 hover:bg-brand-700"
-        >
+        <Button variant="primary" onClick={action.onClick}>
           {action.label}
-        </button>
+        </Button>
       )}
     </div>
   );

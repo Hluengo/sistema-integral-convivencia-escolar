@@ -119,22 +119,22 @@ export default function AnotacionesStudentTable({
             placeholder="Buscar estudiante, RUT o curso..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-neutral-300 bg-white py-2 pr-4 pl-10 text-neutral-900 text-sm placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-xl border border-neutral-200/60 bg-neutral-100 py-2 pr-4 pl-10 font-medium text-neutral-800 text-sm transition-all placeholder:text-neutral-400 hover:border-neutral-300 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
           />
         </div>
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex flex-wrap gap-1.5">
+      <div className="inline-flex gap-1 rounded-xl bg-neutral-100 p-1">
         {FILTER_TABS.map((tab) => (
           <button
             key={tab.key}
             type="button"
             onClick={() => setActiveFilter(tab.key)}
-            className={`rounded-lg px-3.5 py-1.5 font-medium text-sm transition-colors ${
+            className={`rounded-lg px-3.5 py-1.5 font-semibold text-sm transition-all duration-150 ${
               activeFilter === tab.key
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'border border-neutral-300 bg-white text-neutral-600 hover:bg-neutral-50'
+                ? 'bg-white text-neutral-900 shadow-sm'
+                : 'text-neutral-500 hover:text-neutral-700'
             }`}
           >
             {tab.label}
@@ -143,33 +143,33 @@ export default function AnotacionesStudentTable({
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-neutral-200/60 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-neutral-200">
-            <thead className="bg-neutral-50">
+          <table className="min-w-full">
+            <thead className="border-b border-neutral-200/60 bg-neutral-50">
               <tr>
-                <th className="px-4 py-3 text-left font-semibold text-neutral-500 text-xs uppercase tracking-wider">
+                <th className="px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider">
                   Estudiante
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-neutral-500 text-xs uppercase tracking-wider">
+                <th className="px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider">
                   RUT
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-neutral-500 text-xs uppercase tracking-wider">
+                <th className="px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider">
                   Curso
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-neutral-500 text-xs uppercase tracking-wider">
+                <th className="px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider">
                   Profesor/a Jefe
                 </th>
-                <th className="px-4 py-3 text-center font-semibold text-neutral-500 text-xs uppercase tracking-wider">
+                <th className="px-4 py-3 text-center font-semibold text-neutral-600 text-xs uppercase tracking-wider">
                   Positivas
                 </th>
-                <th className="px-4 py-3 text-center font-semibold text-neutral-500 text-xs uppercase tracking-wider">
+                <th className="px-4 py-3 text-center font-semibold text-neutral-600 text-xs uppercase tracking-wider">
                   Negativas
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-neutral-500 text-xs uppercase tracking-wider">
+                <th className="px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider">
                   Último Registro
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-neutral-500 text-xs uppercase tracking-wider">
+                <th className="px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider">
                   Estado
                 </th>
               </tr>
@@ -179,7 +179,7 @@ export default function AnotacionesStudentTable({
                 <tr>
                   <td colSpan={8} className="px-4 py-12 text-center text-neutral-500 text-sm">
                     <div className="flex items-center justify-center gap-2">
-                      <div className="size-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+                      <div className="size-4 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
                       Cargando estudiantes...
                     </div>
                   </td>

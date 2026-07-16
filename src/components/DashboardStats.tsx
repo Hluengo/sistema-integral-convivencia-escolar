@@ -71,7 +71,7 @@ function SeverityCard({
           max={100}
           aria-label={`${cfg.label}: ${percentage}%`}
           className="h-full w-full appearance-none rounded-full [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-current"
-          style={{ color: tipo === 'Leve' ? '#22c55e' : tipo === 'Grave' ? '#f59e0b' : tipo === 'Muy Grave' ? '#f97316' : '#ef4444', width: `${percentage}%` }}
+          style={{ color: tipo === 'Leve' ? '#22c55e' : tipo === 'Grave' ? '#f59e0b' : tipo === 'Muy Grave' ? '#f97316' : '#ef4444' }}
         />
       </div>
     </div>
