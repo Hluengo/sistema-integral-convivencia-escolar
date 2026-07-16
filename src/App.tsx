@@ -7,7 +7,8 @@ import { useCausasStore, selectSelectedCausa, selectFilteredCausas } from './sto
 import { useUIStore } from './stores/uiStore';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useNewCausaForm } from './hooks/useNewCausaForm';
-import { useCourses, useStudents } from './hooks/useData';
+import { useCoursesQuery } from './hooks/useCoursesQuery';
+import { useStudentsQuery } from './hooks/useStudentsQuery';
 import { type SaveStatus, useCausasPersistence } from './hooks/useCausasPersistence';
 import { ToastProvider } from './components/Toast';
 import { MainContentSkeleton } from './components/Skeleton';
@@ -43,8 +44,8 @@ export default function App() {
   const { formState, dispatchForm } = useNewCausaForm();
   const { showCreateForm, newEstNombre, selectedCourseId, newEstRut, newInfTipo, newAulaSegura, newObs, newResponsable } = formState;
 
-  const { courses, isLoading: isLoadingCourses } = useCourses();
-  const { students, isLoading: isLoadingStudents } = useStudents(selectedCourseId);
+  const { data: courses = [], isLoading: isLoadingCourses } = useCoursesQuery();
+  const { data: students = [], isLoading: isLoadingStudents } = useStudentsQuery(selectedCourseId);
   const newEstCurso = courses.find((c) => c.id === selectedCourseId)?.name ?? '';
 
   useCausasPersistence({ causas, setCausas: causasStore.setCausas, setSelectedCausaId, setSaveStatus, isAuthenticated });
