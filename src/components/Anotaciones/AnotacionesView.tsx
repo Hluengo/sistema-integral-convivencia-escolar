@@ -1,13 +1,14 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Shield, Plus } from 'lucide-react';
 import type { Annotation } from '../../types';
 import { supabase, fetchAnnotations, fetchStudentsWithAnnotationCounts, saveAnnotation } from '../../lib/supabase';
 import AnotacionesStudentTable from './AnotacionesStudentTable';
-import AnotacionesStudentDetailModal from './AnotacionesStudentDetailModal';
 import { AnnotationsSkeleton } from '../Skeleton';
-import NewDisciplinaryProcessModal from './NewDisciplinaryProcessModal';
+
+const AnotacionesStudentDetailModal = lazy(() => import('./AnotacionesStudentDetailModal'));
+const NewDisciplinaryProcessModal = lazy(() => import('./NewDisciplinaryProcessModal'));
 
 interface AnotacionesViewProps {
   privacyMode: boolean;

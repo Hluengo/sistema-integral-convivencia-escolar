@@ -18,7 +18,7 @@ const app = express();
 const PORT = Number.parseInt(process.env.PORT || '3001', 10);
 
 app.use(compression());
-app.use(express.json());
+app.use(express.json({ limit: '512kb' }));
 
 // Auth middleware: verify Supabase JWT
 // Strategy: try HMAC first (tests + legacy), then Supabase API (ES256)
@@ -295,6 +295,12 @@ app.post('/api/audit-due-process', requireAuth, async (req, res) => {
     const checkedItems = optArr(body, 'checkedItems');
     const observations = optStr(body, 'observations', 5000);
 
+    const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+    if (!checkRateLimit(ip)) {
+      res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
+      return;
+    }
+
     const systemPrompt = `Eres un Abogado Experto Legal en Educación Chilena y Fiscalizador de la Superintendencia de Educación, especializado en la Circular N° 482 y Ley N° 21809 de la Superintendencia de Educación (reglamentación de convivencia escolar, debido proceso y medidas de resguardo de NNA) y en la Ley de Aula Segura (Ley 21.128). 
 Tu misión es auditar un caso de convivencia escolar de un colegio chileno para asegurar su indemnidad jurídica frente a un posible reclamo o recurso ante la Supereduc o tribunales. Exige siempre el cumplimiento del Debido Proceso (etapas: Recepción → Comunicación/Notificación → Investigación → Resolución Fundada → Reconsideración/Apelación) y la adopción prioritaria de Medidas de Resguardo Inmediatas para salvaguardar la integridad de los menores involucrados.
 
@@ -305,7 +311,7 @@ Analiza rigurosamente los siguientes detalles:
 - Checklists de Medidas de Resguardo Inmediatas Adoptadas (Circular 482 / Ley 21809):
 ${JSON.stringify(checkedItems, null, 2)}
 - Observaciones:
-"${observations}"
+"${sanitizeForAI(observations)}"
 
 Escribe un análisis de auditoría en formato de informe técnico formal en Markdown que incluya:
 1. **Índice o Semáforo Jurídico de Cumplimiento**: Porcentaje estimado de validez procesal actual (e.g. 70% / Riesgo Medio).
@@ -348,6 +354,12 @@ app.post('/api/draft-document', requireAuth, async (req, res) => {
     const bitacora = optArr(body, 'bitacora');
     const checklist = optArr(body, 'checklist');
 
+    const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+    if (!checkRateLimit(ip)) {
+      res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
+      return;
+    }
+
     // Sanitizar arrays con helpers compartidos
     const safeMedidasEjecutadas = medidasEjecutadas
       .map((m: unknown) => sanitize(m).slice(0, 500))
@@ -389,7 +401,7 @@ app.post('/api/draft-document', requireAuth, async (req, res) => {
 
 DATOS GENERALES:
 - Código de Causa: ${id}
-- Estudiante: ${studentName} (RUN: ${runEstudiante || 'No registrado'})
+- Estudiante: ${sanitizeForAI(studentName)} (RUN: ${runEstudiante || 'No registrado'})
 - Curso: ${course}
 - Apoderado: ${fatherName}
 - Fecha de Apertura: ${fechaApertura || 'No registrada'}
@@ -399,7 +411,7 @@ DATOS GENERALES:
 - Encargado: ${managerName}
 - Aula Segura: ${isAulaSegura ? 'SÍ - Ley 21.128' : 'No'}
 - Conducta RICE vinculada: ${conductaRiceId || 'Ninguna'}
-- Observaciones del caso: "${observations || 'Sin observaciones'}"
+- Observaciones del caso: "${sanitizeForAI(observations) || 'Sin observaciones'}"
 
 MEDIDAS EJECUTADAS:
 ${safeMedidasEjecutadas.length > 0 ? safeMedidasEjecutadas.map((m: string) => `- ${m}`).join('\n') : 'No se han registrado medidas ejecutadas.'}
@@ -442,7 +454,7 @@ ${
 ==================================================================`;
 
     // Append full case data to any prompt
-    const caseDataAppendix = `\n\n${caseDataSection}\n\nIMPORTANTE: Utiliza TODOS los antecedentes del expediente proporcionados arriba (bitácora, checklist, medidas ejecutadas) para fundamentar el documento. Revisa la bitácora para identificar fechas, entrevistas, evidencias y participantes reales. Revisa el checklist para verificar el estado del debido proceso. Incorpora estos datos en las secciones correspondientes del documento.\n`;
+    const caseDataAppendix = `\n\n${caseDataSection}\n\nIMPORTANTE: Utiliza TODOS los antecedentes del expediente proporcionados arriba (bitácora, checklist, medidas ejecutadas) para fundamentar el documento.`;
 
     let systemPrompt = '';
 
