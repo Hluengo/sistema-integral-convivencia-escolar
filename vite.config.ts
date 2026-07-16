@@ -13,6 +13,7 @@ export default defineConfig(() => {
     },
     build: {
       target: 'es2020',
+      chunkSizeWarningLimit: 600,
       rollupOptions: {
         output: {
           manualChunks(id) {
@@ -26,15 +27,15 @@ export default defineConfig(() => {
               if (id.includes('TemplateEditor') || id.includes('ClosedCases')) return 'docs';
               return 'index';
             }
-            // Vendor chunks (node_modules)
-            if (id.includes('react') || id.includes('react-dom')) return 'react-vendor';
-            if (id.includes('@supabase')) return 'supabase';
-            if (id.includes('lucide-react')) return 'icons';
+            // Split large vendor deps
             if (id.includes('pdf-lib')) return 'pdf';
             if (id.includes('docx')) return 'docx';
+            if (id.includes('@supabase')) return 'supabase';
+            if (id.includes('lucide-react')) return 'icons';
             if (id.includes('@radix-ui')) return 'radix-ui';
             if (id.includes('@tanstack')) return 'tanstack-query';
             if (id.includes('zustand')) return 'zustand';
+            if (id.includes('react') || id.includes('react-dom')) return 'react-vendor';
             return 'vendor';
           },
         },
