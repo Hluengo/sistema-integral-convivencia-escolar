@@ -16,6 +16,7 @@ import { createDraftCausa } from './lib/causaFactory';
 import { nowDateOnly } from './lib/dateUtils';
 import { type SaveStatus, useCausasPersistence } from './hooks/useCausasPersistence';
 import { ToastProvider } from './components/Toast';
+import { MainContentSkeleton } from './components/Skeleton';
 
 const Header = lazy(() => import('./components/Header'));
 const Sidebar = lazy(() => import('./components/Sidebar'));
@@ -443,13 +444,8 @@ export default function App() {
               />
             </Suspense>
 
-            <Suspense
-              fallback={
-                <div className="flex-1 p-6">
-                  <div className="mb-4 h-8 w-48 animate-pulse rounded bg-neutral-200" />
-                  <div className="h-64 animate-pulse rounded bg-neutral-200" />
-                </div>
-              }
+          <Suspense
+              fallback={<MainContentSkeleton />}
             >
               <MainContent
                 currentView={currentView}

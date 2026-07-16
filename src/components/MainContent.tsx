@@ -10,7 +10,7 @@ import type { SidebarView } from './Sidebar';
 import type { FormAction } from '../hooks/useNewCausaForm';
 import CausasView from './MainContent/CausasView';
 import ErrorBoundary from './ErrorBoundary';
-import { DashboardMetricSkeleton, CausaCardSkeleton } from './Skeleton';
+import { DashboardMetricSkeleton, CausaCardSkeleton, AnnotationsSkeleton, TableSkeleton, ChatMessageSkeleton } from './Skeleton';
 
 const DashboardStats = lazy(() => import('./DashboardStats'));
 const StudentsPanel = lazy(() => import('./StudentsPanel'));
@@ -34,8 +34,22 @@ function DashboardFallback() {
   );
 }
 
-function ViewFallback() {
-  return <DashboardFallback />;
+function AnotacionesFallback() {
+  return <AnnotationsSkeleton />;
+}
+
+function StudentsFallback() {
+  return <TableSkeleton rows={8} />;
+}
+
+function AdvisorFallback() {
+  return (
+    <div className="space-y-4 p-6">
+      <ChatMessageSkeleton />
+      <ChatMessageSkeleton />
+      <ChatMessageSkeleton />
+    </div>
+  );
 }
 
 interface MainContentProps {
@@ -98,7 +112,7 @@ export default function MainContent({
       {/* VIEW 1: DASHBOARD - Fully redesigned */}
       {currentView === 'dashboard' && (
         <ErrorBoundary>
-          <Suspense fallback={<ViewFallback />}>
+          <Suspense fallback={<DashboardFallback />}>
             <DashboardStats
               causas={causas}
               onFaseSelect={handleFaseSelect}
@@ -132,7 +146,7 @@ export default function MainContent({
       {/* VIEW 4: AI ADVISOR */}
       {currentView === 'informes' && (
         <ErrorBoundary>
-          <Suspense fallback={<ViewFallback />}>
+          <Suspense fallback={<AdvisorFallback />}>
             <AdvisorView />
           </Suspense>
         </ErrorBoundary>
@@ -141,7 +155,7 @@ export default function MainContent({
       {/* VIEW 5: ALUMNOS */}
       {currentView === 'alumnos' && (
         <ErrorBoundary>
-          <Suspense fallback={<ViewFallback />}>
+          <Suspense fallback={<StudentsFallback />}>
             <StudentsPanel privacyMode={privacyMode} />
           </Suspense>
         </ErrorBoundary>
@@ -150,7 +164,7 @@ export default function MainContent({
       {/* VIEW 6: ANOTACIONES */}
       {currentView === 'anotaciones' && (
         <ErrorBoundary>
-          <Suspense fallback={<ViewFallback />}>
+          <Suspense fallback={<AnotacionesFallback />}>
             <AnotacionesView privacyMode={privacyMode} />
           </Suspense>
         </ErrorBoundary>

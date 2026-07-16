@@ -6,6 +6,7 @@
 import { useEffect, useReducer, useMemo } from 'react';
 import { Users, Search, GraduationCap, Loader2, AlertCircle, BookOpen } from 'lucide-react';
 import { fetchCourses, fetchStudentsWithCourses, type Course, type StudentWithCourse } from '../lib/supabase';
+import { TableSkeleton } from './Skeleton';
 
 interface StudentsPanelProps {
   privacyMode: boolean;
@@ -191,10 +192,7 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
 
       {/* Content */}
       {isLoading ? (
-        <div className="card flex flex-col items-center gap-3 p-12 text-neutral-500">
-          <Loader2 className="h-8 w-8 animate-spin text-brand-600" aria-hidden="true" />
-          <p className="font-medium text-sm">Cargando estudiantes desde Supabase...</p>
-        </div>
+        <TableSkeleton rows={8} />
       ) : error ? (
         <div className="card flex items-start gap-3 border-gravisima-200 bg-gravisima-50 p-8">
           <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-gravisima-600" aria-hidden="true" />

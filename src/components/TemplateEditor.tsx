@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Save, Loader2, CheckCircle, AlertCircle, FileText, ArrowLeft } from 'lucide-react';
+import { TextBlockSkeleton } from './Skeleton';
 
 interface Template {
   id: string;
@@ -98,9 +99,9 @@ export default function TemplateEditor({ onBack }: { onBack: () => void }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="flex flex-col items-center justify-center gap-4 py-12">
         <Loader2 className="h-5 w-5 animate-spin text-brand-600" />
-        <span className="ml-2 text-neutral-500 text-xs">Cargando plantillas...</span>
+        <TextBlockSkeleton lines={2} />
       </div>
     );
   }

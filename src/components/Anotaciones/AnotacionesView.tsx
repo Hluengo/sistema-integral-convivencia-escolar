@@ -6,6 +6,7 @@ import type { Annotation } from '../../types';
 import { supabase, fetchAnnotations, fetchStudentsWithAnnotationCounts, saveAnnotation } from '../../lib/supabase';
 import AnotacionesStudentTable from './AnotacionesStudentTable';
 import AnotacionesStudentDetailModal from './AnotacionesStudentDetailModal';
+import { AnnotationsSkeleton } from '../Skeleton';
 import NewDisciplinaryProcessModal from './NewDisciplinaryProcessModal';
 
 interface AnotacionesViewProps {
@@ -118,19 +119,7 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
   );
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
-          <p className="font-semibold text-neutral-600 text-sm">
-            Cargando datos del sistema...
-          </p>
-          <p className="text-neutral-400 text-xs">
-            Conectando con la base de datos
-          </p>
-        </div>
-      </div>
-    );
+    return <AnnotationsSkeleton />;
   }
 
   return (

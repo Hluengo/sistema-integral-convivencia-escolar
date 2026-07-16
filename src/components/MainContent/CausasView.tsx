@@ -7,6 +7,7 @@ import type React from 'react';
 import { Suspense, lazy, useCallback } from 'react';
 import { BookOpen, Scale } from 'lucide-react';
 import EmptyState from '../EmptyState';
+import { CausaCardSkeleton } from '../Skeleton';
 import { type Causa, EstadoCausa, type FaseProcedimental } from '../../types';
 import type { FormAction } from '../../hooks/useNewCausaForm';
 
@@ -15,7 +16,13 @@ const InteractiveTimeline = lazy(() => import('../InteractiveTimeline'));
 const ClosedCases = lazy(() => import('../ClosedCases'));
 
 function ViewFallback() {
-  return <div className="card p-8 text-neutral-500 text-sm">Cargando vista...</div>;
+  return (
+    <div className="animate-pulse space-y-3 p-2">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <CausaCardSkeleton key={'sk-' + i} />
+      ))}
+    </div>
+  );
 }
 
 interface CausasViewProps {
