@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Shield, Plus, } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Shield, Plus } from 'lucide-react';
 import type { Annotation } from '../../types';
 import { supabase, fetchAnnotations, fetchStudentsWithAnnotationCounts, saveAnnotation } from '../../lib/supabase';
 import AnotacionesStudentTable from './AnotacionesStudentTable';
@@ -117,24 +117,6 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
     [loadData],
   );
 
-  const filteredStudents = useMemo(() => {
-    return students.filter((student: any) => {
-      const count = student.annotations_count ?? student.negative_annotations_count ?? 0;
-      switch (activeFilter) {
-        case 'con_registro':
-          return count >= 5;
-        case 'amonestacion':
-          return count >= 5 && count < 10;
-        case 'compromiso':
-          return count >= 10 && count < 15;
-        case 'derivacion':
-          return count >= 15;
-        default:
-          return count >= 5;
-      }
-    });
-  }, [students, activeFilter]);
-
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-neutral-50">
@@ -199,7 +181,7 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
 
       {/* Student Table - full width */}
       <AnotacionesStudentTable
-        students={filteredStudents}
+        students={students}
         privacyMode={privacyMode}
         onSelectStudent={setSelectedStudent}
         activeFilter={activeFilter}

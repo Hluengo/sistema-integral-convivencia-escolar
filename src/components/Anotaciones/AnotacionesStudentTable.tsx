@@ -2,6 +2,7 @@
  * @license SPDX-License-Identifier: Apache-2.0
  */
 
+import { memo } from 'react';
 import { Search } from 'lucide-react';
 import { maskName, maskRut, getSemaphoricStyle, TEACHERS_BY_COURSE } from '../../lib/anotacionesUtils';
 
@@ -96,7 +97,60 @@ function formatDate(dateStr?: string): string {
   }
 }
 
-export default function AnotacionesStudentTable({
+const StudentRow = memo(function StudentRow({
+  student, privacyMode, onSelectStudent
+}: {
+  student: AnotacionesStudentTableProps['students'][number];
+  privacyMode: boolean;
+  onSelectStudent: (s: any) => void;
+}) {
+  const style = getSemaphoricStyle(student.annotations_count || 0);
+  const status = getDisciplinaryStatusLabel(student.annotations_count || 0);
+  const negativeCount = student.annotations_count || 0;
+  return (
+    <tr
+      key={student.id}
+      onClick={() => onSelectStudent(student)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectStudent(student); } }}
+      tabIndex={0}
+      className={`cursor-pointer transition-colors ${style.rowBg}`}
+    >
+      <td className="whitespace-nowrap px-4 py-3 font-medium text-neutral-900 text-sm">
+        {maskName(student.full_name, privacyMode)}
+      </td>
+      <td className="whitespace-nowrap px-4 py-3 text-neutral-600 text-sm">
+        {maskRut(student.rut, privacyMode)}
+      </td>
+      <td className="whitespace-nowrap px-4 py-3 text-neutral-600 text-sm">
+        {student.course_name || '—'}
+      </td>
+      <td className="whitespace-nowrap px-4 py-3 text-neutral-600 text-sm">
+        {TEACHERS_BY_COURSE[student.course_name ?? ''] || '—'}
+      </td>
+      <td className="whitespace-nowrap px-4 py-3 text-center text-neutral-600 text-sm">
+        <span className="inline-flex items-center justify-center rounded-full bg-emerald-50 px-2.5 py-0.5 font-semibold text-emerald-700 text-xs">
+          {student.positive_annotations_count ?? 0}
+        </span>
+      </td>
+      <td className="whitespace-nowrap px-4 py-3 text-center text-neutral-600 text-sm">
+        <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 font-semibold text-xs ${style.badge}`}>
+          {negativeCount}
+        </span>
+      </td>
+      <td className="whitespace-nowrap px-4 py-3 text-neutral-600 text-sm">
+        {formatDate(student.last_annotation_date)}
+      </td>
+      <td className="whitespace-nowrap px-4 py-3 text-sm">
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-medium text-xs ${status.bg}`}>
+          <span className={`inline-block size-2 rounded-full ${style.dot}`} />
+          {status.text}
+        </span>
+      </td>
+    </tr>
+  );
+});
+
+export default memo(function AnotacionesStudentTable({
   students,
   privacyMode,
   onSelectStudent,
@@ -272,5 +326,5 @@ export default function AnotacionesStudentTable({
       </div>
     </div>
   );
-}
+});
 

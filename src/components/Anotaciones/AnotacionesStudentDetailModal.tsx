@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, memo } from 'react';
 import {
   X,
   Upload,
@@ -114,6 +114,7 @@ export default function AnotacionesStudentDetailModal({
   const [parsedAnnotations, setParsedAnnotations] = useState<any[]>([]);
 
   // Disciplinary journey state
+  const [isDataLoading, setIsDataLoading] = useState(true);
   const [currentMeasure, setCurrentMeasure] = useState<string>('');
   const [transitions, setTransitions] = useState<any[]>([]);
   const [activeCase, setActiveCase] = useState<any | null>(null);
@@ -130,21 +131,32 @@ export default function AnotacionesStudentDetailModal({
   const statusKey: string = student.disciplinary_status || 'Verde';
   const statusInfo = STATUS_STYLE[statusKey] || STATUS_STYLE.Verde;
   const dateStr = getCurrentDateStr();
-  // Load data on mount
+  // Load all data in parallel on mount
   useEffect(() => {
     let cancelled = false;
 
     async function loadData() {
       isLoadingDataRef.current = true;
+      setIsDataLoading(true);
       try {
-        const [cartasData, etapasData] = await Promise.all([
+        const [cartasData, etapasData, causasResult] = await Promise.all([
           fetchCartas(student.id),
           fetchEtapas(student.id),
+          supabase
+            .from('causas')
+            .select('id,estado_actual,tipo_infraccion,fecha_ultima_actualizacion')
+            .eq('estudiante_nombre', student.full_name)
+            .order('fecha_ultima_actualizacion', { ascending: false })
+            .limit(1),
         ]);
 
-        if (!cancelled) {
-          cartasRef.current = cartasData;
-          setEtapas(etapasData);
+        if (cancelled) return;
+
+        cartasRef.current = cartasData;
+        setEtapas(etapasData);
+
+        if (causasResult.data && causasResult.data.length > 0) {
+          setActiveCase(causasResult.data[0]);
         }
 
         const measureKey = `disciplinary_measure_${student.id}`;
@@ -152,40 +164,22 @@ export default function AnotacionesStudentDetailModal({
         const storedMeasure = localStorage.getItem(measureKey);
         const storedTransitions = localStorage.getItem(transitionsKey);
 
-        if (!cancelled) {
-          if (storedMeasure) { setCurrentMeasure(storedMeasure); }
-          if (storedTransitions) {
-            try {
-              setTransitions(JSON.parse(storedTransitions));
-            } catch {
-              /* ignore corrupt data */
-            }
-          }
-        }
-
-        if (!cancelled) {
-          const { data: causasData } = await supabase
-            .from('causas')
-            .select('*')
-            .eq('estudiante_nombre', student.full_name)
-            .order('fecha_ultima_actualizacion', { ascending: false })
-            .limit(1);
-
-          if (causasData && causasData.length > 0) {
-            setActiveCase(causasData[0]);
-          }
+        if (storedMeasure) setCurrentMeasure(storedMeasure);
+        if (storedTransitions) {
+          try { setTransitions(JSON.parse(storedTransitions)); } catch { /* ignore */ }
         }
       } catch (err) {
         console.error('Error loading disciplinary data:', err);
       } finally {
-        if (!cancelled) { isLoadingDataRef.current = false; }
+        if (!cancelled) {
+          isLoadingDataRef.current = false;
+          setIsDataLoading(false);
+        }
       }
     }
 
     loadData();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [student.id, student.full_name]);
   // PDF drag-and-drop handlers
   const handleDragEnter = useCallback((e: React.DragEvent) => {
@@ -761,8 +755,26 @@ export default function AnotacionesStudentDetailModal({
     </div>
   );
 
+  const Skeleton = memo(function Skeleton({ className = '' }: { className?: string }) {
+    return <div className={`animate-pulse rounded-xl bg-neutral-200 ${className}`} />;
+  });
+
   // Render tab content
   const renderTabContent = () => {
+    if (isDataLoading) {
+      return (
+        <div className="space-y-4 p-2">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-24 w-full" />
+          <div className="grid grid-cols-3 gap-4">
+            <Skeleton className="h-20" />
+            <Skeleton className="h-20" />
+            <Skeleton className="h-20" />
+          </div>
+          <Skeleton className="h-32 w-full" />
+        </div>
+      );
+    }
     switch (activeTab) {
       case 'resumen':
         return renderResumenTab();

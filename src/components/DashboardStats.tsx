@@ -10,8 +10,9 @@ import { Activity, FileSearch, ShieldAlert, CheckCircle, BarChart3, AlertCircle,
 import MetricCard from './MetricCard';
 import SeverityBadge from './SeverityBadge';
 import AnotacionesDashboardStats from './Anotaciones/AnotacionesDashboardStats';
+import { countByStage } from '../domain/disciplinaryStatus';
 import EmptyState from './EmptyState';
-import { fetchStudentsWithAnnotationCounts } from '../lib/supabase';
+import { fetchAnnotationStageCounts } from '../lib/supabase';
 
 interface DashboardStatsProps {
   causas: Causa[];
@@ -116,28 +117,9 @@ export default function DashboardStats({
     setKpiError(false);
     (async () => {
       try {
-        const students = await fetchStudentsWithAnnotationCounts();
-        if (cancelled || !students) {
-          return;
-        }
-        const amonestacion = students.filter((s: { annotations_count?: number; negative_annotations_count?: number }) => {
-          const c = s.annotations_count ?? s.negative_annotations_count ?? 0;
-          return c >= 5 && c < 10;
-        }).length;
-        const compromiso = students.filter((s: { annotations_count?: number; negative_annotations_count?: number }) => {
-          const c = s.annotations_count ?? s.negative_annotations_count ?? 0;
-          return c >= 10 && c < 15;
-        }).length;
-        const derivacion = students.filter((s: { annotations_count?: number; negative_annotations_count?: number }) => {
-          const c = s.annotations_count ?? s.negative_annotations_count ?? 0;
-          return c >= 15;
-        }).length;
+        const counts = await fetchAnnotationStageCounts();
         if (!cancelled) {
-          setAnotacionesKpis({
-            amonestacionCount: amonestacion,
-            compromisoCount: compromiso,
-            derivacionCount: derivacion,
-          });
+          setAnotacionesKpis(counts);
         }
       } catch (e) {
         if (!cancelled) {

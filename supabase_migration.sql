@@ -124,3 +124,106 @@ CREATE POLICY "Allow authenticated on checklist_items" ON checklist_items
 -- - Bucket: documentos_convivencia
 -- - Política pública de lectura/escritura para desarrollo
 -- ============================================================
+
+-- ============================================================
+-- 6. ÍNDICES ADICIONALES (Performance Anotaciones)
+-- ============================================================
+CREATE INDEX IF NOT EXISTS idx_inspectorate_records_student_id ON inspectorate_records(student_id);
+CREATE INDEX IF NOT EXISTS idx_inspectorate_records_type ON inspectorate_records(type);
+CREATE INDEX IF NOT EXISTS idx_inspectorate_records_student_type ON inspectorate_records(student_id, type);
+CREATE INDEX IF NOT EXISTS idx_inspectorate_records_datetime ON inspectorate_records(date_time DESC);
+CREATE INDEX IF NOT EXISTS idx_cartas_disciplinarias_student ON cartas_disciplinarias(student_id);
+CREATE INDEX IF NOT EXISTS idx_etapas_disciplinarias_student ON etapas_disciplinarias(student_id);
+
+-- ============================================================
+-- 7. RPC: Resumen de estudiantes con conteos agregados
+-- ============================================================
+-- Reemplaza la agregación en frontend (N+1) por una sola query
+-- que devuelve estudiantes con conteos pre-calculados en DB.
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION get_student_annotation_summary()
+RETURNS TABLE (
+  id TEXT,
+  full_name TEXT,
+  course_id TEXT,
+  rut TEXT,
+  course_name TEXT,
+  annotations_count BIGINT,
+  positive_count BIGINT,
+  last_annotation_date TIMESTAMPTZ,
+  disciplinary_status TEXT
+) LANGUAGE plpgsql STABLE SECURITY DEFINER AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    s.id,
+    s.full_name,
+    s.course_id,
+    s.rut,
+    c.name AS course_name,
+    COALESCE(neg.count, 0) AS annotations_count,
+    COALESCE(pos.count, 0) AS positive_count,
+    neg.last_date AS last_annotation_date,
+    CASE
+      WHEN COALESCE(neg.count, 0) >= 15 THEN 'Rojo'
+      WHEN COALESCE(neg.count, 0) >= 10 THEN 'Naranja'
+      WHEN COALESCE(neg.count, 0) >= 5  THEN 'Amarillo'
+      ELSE 'Verde'
+    END AS disciplinary_status
+  FROM students s
+  LEFT JOIN courses c ON c.id = s.course_id
+  LEFT JOIN LATERAL (
+    SELECT COUNT(*) AS count, MAX(ir.date_time) AS last_date
+    FROM inspectorate_records ir
+    WHERE ir.student_id = s.id AND ir.type = 'Negativa'
+  ) neg ON true
+  LEFT JOIN LATERAL (
+    SELECT COUNT(*) AS count
+    FROM inspectorate_records ir
+    WHERE ir.student_id = s.id AND ir.type = 'Positiva'
+  ) pos ON true
+  ORDER BY s.full_name;
+END;
+$$;
+
+-- ============================================================
+-- 8. RPC: Conteos por etapa (para dashboard KPIs)
+-- ============================================================
+-- Versión ligera que solo devuelve 3 números, no todos los
+-- estudiantes. Ideal para el dashboard.
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION get_annotation_stage_counts()
+RETURNS TABLE (stage TEXT, count BIGINT)
+LANGUAGE plpgsql STABLE SECURITY DEFINER AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 'amonestacion'::TEXT, COUNT(*)::BIGINT
+  FROM (
+    SELECT s.id
+    FROM students s
+    LEFT JOIN inspectorate_records ir ON ir.student_id = s.id AND ir.type = 'Negativa'
+    GROUP BY s.id
+    HAVING COUNT(ir.id) >= 5 AND COUNT(ir.id) < 10
+  ) am
+  UNION ALL
+  SELECT 'compromiso'::TEXT, COUNT(*)::BIGINT
+  FROM (
+    SELECT s.id
+    FROM students s
+    LEFT JOIN inspectorate_records ir ON ir.student_id = s.id AND ir.type = 'Negativa'
+    GROUP BY s.id
+    HAVING COUNT(ir.id) >= 10 AND COUNT(ir.id) < 15
+  ) co
+  UNION ALL
+  SELECT 'derivacion'::TEXT, COUNT(*)::BIGINT
+  FROM (
+    SELECT s.id
+    FROM students s
+    LEFT JOIN inspectorate_records ir ON ir.student_id = s.id AND ir.type = 'Negativa'
+    GROUP BY s.id
+    HAVING COUNT(ir.id) >= 15
+  ) de;
+END;
+$$;
