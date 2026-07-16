@@ -15,7 +15,9 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx --test \"src/**/*.test.ts\"",
     "test:e2e": "tsx --test \"e2e/**/*.test.ts\"",
-    "doctor": "npx react-doctor@latest"
+    "doctor": "npx react-doctor@latest",
+    "build:web": "vite build",
+    "ci": "npm run typecheck && npm run test && npm run build:web"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
