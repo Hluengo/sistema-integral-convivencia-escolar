@@ -15,10 +15,27 @@ export default defineConfig(() => {
       target: 'es2020',
       rollupOptions: {
         output: {
-          manualChunks: {
-            'react-vendor': ['react', 'react-dom'],
-            'supabase': ['@supabase/supabase-js'],
-            'icons': ['lucide-react'],
+          manualChunks(id) {
+            // Feature chunks first (app code)
+            if (!id.includes('node_modules')) {
+              if (id.includes('Anotaciones')) return 'anotaciones';
+              if (id.includes('NewDisciplinaryProcessModal')) return 'new-process';
+              if (id.includes('AiAdvisor') || id.includes('AdvisorMessage')) return 'ai-advisor';
+              if (id.includes('InteractiveTimeline')) return 'timeline';
+              if (id.includes('CausaCard') || id.includes('EditCausaModal') || id.includes('NewCausaModal')) return 'causas';
+              if (id.includes('TemplateEditor') || id.includes('ClosedCases')) return 'docs';
+              return 'index';
+            }
+            // Vendor chunks (node_modules)
+            if (id.includes('react') || id.includes('react-dom')) return 'react-vendor';
+            if (id.includes('@supabase')) return 'supabase';
+            if (id.includes('lucide-react')) return 'icons';
+            if (id.includes('pdf-lib')) return 'pdf';
+            if (id.includes('docx')) return 'docx';
+            if (id.includes('@radix-ui')) return 'radix-ui';
+            if (id.includes('@tanstack')) return 'tanstack-query';
+            if (id.includes('zustand')) return 'zustand';
+            return 'vendor';
           },
         },
       },
