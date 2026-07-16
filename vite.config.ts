@@ -13,29 +13,51 @@ export default defineConfig(() => {
     },
     build: {
       target: 'es2020',
-      chunkSizeWarningLimit: 600,
+      // Keep all React-related and generic node_modules in one vendor chunk.
+      // Splitting React/scheduler into a separate chunk creates circular
+      // dependencies that break at runtime ("Cannot set properties of undefined").
+      chunkSizeWarningLimit: 700,
       rollupOptions: {
         output: {
           manualChunks(id) {
             // Feature chunks first (app code)
             if (!id.includes('node_modules')) {
-              if (id.includes('Anotaciones')) return 'anotaciones';
-              if (id.includes('NewDisciplinaryProcessModal')) return 'new-process';
-              if (id.includes('AiAdvisor') || id.includes('AdvisorMessage')) return 'ai-advisor';
-              if (id.includes('InteractiveTimeline')) return 'timeline';
-              if (id.includes('CausaCard') || id.includes('EditCausaModal') || id.includes('NewCausaModal')) return 'causas';
-              if (id.includes('TemplateEditor') || id.includes('ClosedCases')) return 'docs';
+              if (id.includes('Anotaciones')) {
+                return 'anotaciones';
+              }
+              if (id.includes('NewDisciplinaryProcessModal')) {
+                return 'new-process';
+              }
+              if (id.includes('AiAdvisor') || id.includes('AdvisorMessage')) {
+                return 'ai-advisor';
+              }
+              if (id.includes('InteractiveTimeline')) {
+                return 'timeline';
+              }
+              if (
+                id.includes('CausaCard') ||
+                id.includes('EditCausaModal') ||
+                id.includes('NewCausaModal')
+              ) {
+                return 'causas';
+              }
+              if (id.includes('TemplateEditor') || id.includes('ClosedCases')) {
+                return 'docs';
+              }
               return 'index';
             }
-            // Split large vendor deps
-            if (id.includes('pdf-lib')) return 'pdf';
-            if (id.includes('docx')) return 'docx';
-            if (id.includes('@supabase')) return 'supabase';
-            if (id.includes('lucide-react')) return 'icons';
-            if (id.includes('@radix-ui')) return 'radix-ui';
-            if (id.includes('@tanstack')) return 'tanstack-query';
-            if (id.includes('zustand')) return 'zustand';
-            if (id.includes('react') || id.includes('react-dom')) return 'react-vendor';
+            // Only split out the biggest vendor deps to keep chunks reasonable.
+            // Everything else (React, scheduler, radix, tanstack, zustand, etc.)
+            // stays together in vendor to avoid cross-chunk circular deps.
+            if (id.includes('pdf-lib')) {
+              return 'pdf';
+            }
+            if (id.includes('docx')) {
+              return 'docx';
+            }
+            if (id.includes('@supabase')) {
+              return 'supabase';
+            }
             return 'vendor';
           },
         },
