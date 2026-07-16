@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '../lib/supabase';
+import type { Session } from '@supabase/supabase-js';
 
 export async function signInWithEmail(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -23,6 +24,6 @@ export async function getUser() {
   return { user, error };
 }
 
-export function onAuthStateChange(callback: (event: string, session: unknown) => void) {
+export function onAuthStateChange(callback: (event: string, session: Session | null) => void) {
   return supabase.auth.onAuthStateChange(callback);
 }

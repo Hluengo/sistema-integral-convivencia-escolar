@@ -5,6 +5,7 @@
 import { memo } from 'react';
 import { Search } from 'lucide-react';
 import { maskName, maskRut, getSemaphoricStyle, TEACHERS_BY_COURSE } from '../../lib/anotacionesUtils';
+import type { DisciplinaryStatus } from '../../types';
 
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
@@ -13,10 +14,11 @@ interface StudentRowData {
   full_name: string;
   course_id: string;
   teacher_id: string;
+  status: string;
   annotations_count: number;
   positive_annotations_count: number;
   last_annotation_date?: string;
-  disciplinary_status: string;
+  disciplinary_status: DisciplinaryStatus;
   rut?: string;
   course_name?: string;
 }

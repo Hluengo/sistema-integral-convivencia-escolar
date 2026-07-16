@@ -175,7 +175,7 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
       <AnotacionesStudentTable
         students={students}
         privacyMode={privacyMode}
-        onSelectStudent={setSelectedStudent}
+        onSelectStudent={(s) => setSelectedStudent(s)}
         activeFilter={activeFilter}
         setActiveFilter={setActiveFilter}
         searchQuery={searchQuery}
