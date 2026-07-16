@@ -1,4 +1,4 @@
-import { SaveStatus, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
+import { FileCheck, Loader2, AlertCircle } from 'lucide-react';
 
 interface SaveStatusProps {
   status: 'idle' | 'saving' | 'saved' | 'error';
@@ -7,7 +7,7 @@ interface SaveStatusProps {
 const ICONS = {
   idle: null,
   saving: Loader2,
-  saved: CheckCircle2,
+  saved: FileCheck,
   error: AlertCircle,
 };
 

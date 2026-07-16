@@ -86,11 +86,7 @@ export default function AnotacionesDocumentGenerator({
   };
 
   // Selected annotations for preview
-  const selectedIdsSet = useMemo(
-    () => new Set(documentState.selectedAnnotationsForDoc || selectedAnnotations.selectedIds),
-    [documentState.selectedAnnotationsForDoc, selectedAnnotations.selectedIds]
-  );
-  const selectedAnnsObjects = annotations.filter((a) => selectedIdsSet.has(a.id));
+  const selectedAnnsObjects = selectedAnnotations.selectedAnnsObjects;
 
   // Preview content for export/print
   const previewContent = useMemo(() => {
@@ -198,7 +194,7 @@ export default function AnotacionesDocumentGenerator({
           <div className="space-y-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs">
             <DocTypeSelector
               docType={docType}
-              onDocTypeChange={setDocType}
+              onDocTypeChange={(type: string) => setDocType(type as 'amonestacion' | 'compromiso_conductual' | 'derivacion')}
               hasTenOrMore={negativeCount >= 10}
               negativeCount={negativeCount}
             />

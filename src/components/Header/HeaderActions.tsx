@@ -28,7 +28,7 @@ export default function HeaderActions({
   return (
     <div className="flex items-center gap-3 shrink-0 lg:gap-4">
       <div className="relative hidden max-w-md flex-1 md:flex">
-        <SearchBar value={searchQuery} onChange={onSearchChange} />
+        <SearchBar value={searchQuery || ''} onChange={onSearchChange || (() => {})} />
       </div>
 
       <NotificationsDropdown

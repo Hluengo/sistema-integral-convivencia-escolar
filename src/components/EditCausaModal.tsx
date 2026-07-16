@@ -4,37 +4,14 @@
  */
 
 import { useState } from 'react';
+import { type Causa } from '@/src/types';
 import { Dialog, DialogContent } from './ui/Dialog';
 import EditCausaModalForm from './EditCausaModal/EditCausaModalForm';
 
-const INFRACCIONES: string[] = ['Leve', 'Grave', 'Muy Grave', 'Gravísima'];
-
 interface EditCausaModalProps {
-  causa: {
-    id: string;
-    estudianteNombre: string;
-    nnaProtectedName: string;
-    estudianteCurso: string;
-    runEstudiante: string;
-    tipoInfraccion: string;
-    comprometeAulaSegura: boolean;
-    responsable: string;
-    estadoActual: string;
-    observaciones: string;
-    fechaUltimaActualizacion: string;
-    esDenunciaConfidencial: boolean;
-    identidadReservada: boolean;
-    fechaInicioInvestigacion?: string;
-    fechaInicioSuspension?: string;
-    duracionSuspensionDias?: number;
-    monitoreoPedagogico: boolean;
-    requiereNotificacionSuperintendencia: boolean;
-    fechaNotificacionSuperintendencia?: string;
-    estudianteTieneNEE: boolean;
-    tipoNEE?: string;
-  };
+  causa: Causa;
   onClose: () => void;
-  onSave: (updated: any) => void;
+  onSave: (updated: Causa) => void;
   onDelete: (id: string) => void;
 }
 
@@ -46,7 +23,7 @@ export default function EditCausaModal({ causa, onClose, onSave, onDelete }: Edi
     onClose();
   };
 
-  const handleSave = (updated: any) => {
+  const handleSave = (updated: Causa) => {
     onSave(updated);
     handleClose();
   };
