@@ -2,6 +2,12 @@ import React from 'react';
 import { Search, Filter, AlertCircle, ChevronRight, Award, AlertTriangle, Shield, Plus, FileText } from 'lucide-react';
 import { Student } from '../types';
 import { maskName, maskRut, getSemaphoricStyle } from '../lib/utils';
+import {
+  getDisciplinaryStatusLabel,
+  getDisciplinaryStatusStyle,
+} from '../domain/disciplinaryStatus';
+
+export { getDisciplinaryStatusLabel, getDisciplinaryStatusStyle };
 
 export const TEACHERS_BY_COURSE: Record<string, string> = {
   '1° Básico A': 'Constanza Espinoza Miranda',
@@ -41,20 +47,6 @@ interface StudentTableProps {
   onRefresh: () => void;
   isLoading: boolean;
   onOpenNewProcess?: () => void;
-}
-
-export function getDisciplinaryStatusLabel(count: number): string {
-  if (count >= 15) return 'Derivado a CE';
-  if (count >= 10) return 'Carta de Compromiso';
-  if (count >= 5) return 'Carta de Amonestación';
-  return 'Sin Registro';
-}
-
-export function getDisciplinaryStatusStyle(count: number): string {
-  if (count >= 15) return 'bg-rose-50 border-rose-200 text-rose-700';
-  if (count >= 10) return 'bg-orange-50 border-orange-200 text-orange-700';
-  if (count >= 5) return 'bg-amber-50 border-amber-200 text-amber-700';
-  return 'bg-slate-50 border-slate-200 text-slate-500';
 }
 
 export default function StudentTable({

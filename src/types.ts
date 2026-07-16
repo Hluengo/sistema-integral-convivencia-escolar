@@ -1,14 +1,26 @@
+/** @license SPDX-License-Identifier: Apache-2.0 */
+
 export type DisciplinaryStatus = 'Verde' | 'Amarillo' | 'Naranja' | 'Rojo';
+
+export type AppRole = 'admin' | 'direccion' | 'convivencia' | 'inspectoria' | 'profesor_jefe';
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  full_name?: string;
+  role: AppRole;
+  course_ids?: string[];
+}
 
 export interface Student {
   id: string;
   full_name: string;
-  course_id: string; // e.g., '1° Medio A', '8° Básico'
-  teacher_id: string; // Profesor Jefe
-  status: string; // e.g., 'Activo'
+  course_id: string;
+  teacher_id: string;
+  status: string;
   tenant_id?: string;
-  annotations_count: number; // Total negative count for semaphoric status
-  positive_annotations_count: number; // Total positive annotations
+  annotations_count: number;
+  positive_annotations_count: number;
   last_annotation_date?: string;
   disciplinary_status: DisciplinaryStatus;
   rut?: string;
@@ -39,20 +51,20 @@ export interface SupabaseConfig {
 }
 
 export interface DisciplinaryCase {
-  id: string; // ID único del caso/expediente
-  student_id: string; // ID del estudiante en Supabase
+  id: string;
+  student_id: string;
   student_name: string;
   student_rut?: string;
   student_course: string;
   student_teacher?: string;
   annotations_count: number;
-  date_joined: string; // Fecha de ingreso en formato YYYY-MM-DD
-  initial_measure: string; // Medida disciplinaria inicial
-  regulation_basis: string; // Fundamento reglamentario
-  created_by: string; // Usuario que creó el caso
-  created_at: string; // Fecha y hora completa (ISO o legible)
-  source_file_name: string; // Archivo de Hoja de Vida analizado
-  ai_analysis_summary: string; // Resumen del análisis de IA
+  date_joined: string;
+  initial_measure: string;
+  regulation_basis: string;
+  created_by: string;
+  created_at: string;
+  source_file_name: string;
+  ai_analysis_summary: string;
   detected_annotations: {
     text: string;
     date: string;
@@ -89,4 +101,3 @@ export interface EtapaDisciplinaria {
   comment?: string;
   created_at: string;
 }
-

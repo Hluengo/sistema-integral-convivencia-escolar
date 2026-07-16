@@ -3,21 +3,16 @@ import {
   FileText, Shield, AlertTriangle
 } from 'lucide-react';
 import { Student, Annotation } from '../types';
+import { countByStage } from '../domain/disciplinaryStatus';
 
 interface DashboardStatsProps {
   students: Student[];
   annotations: Annotation[];
 }
 
-export default function DashboardStats({ students, annotations }: DashboardStatsProps) {
-  
-  // Disciplinary stages counts based on RICE Art.24.BIS
-  // 5-9 negativas = Carta de Amonestación (1ra acumulación)
-  const amonestacionCount = students.filter(s => s.annotations_count >= 5 && s.annotations_count < 10).length;
-  // 10-14 negativas = Carta de Compromiso Conductual (2da acumulación)
-  const compromisoCount = students.filter(s => s.annotations_count >= 10 && s.annotations_count < 15).length;
-  // 15+ negativas = Derivación a Convivencia Escolar (3ra acumulación)
-  const derivacionCount = students.filter(s => s.annotations_count >= 15).length;
+export default function DashboardStats({ students, annotations: _annotations }: DashboardStatsProps) {
+  const { amonestacion: amonestacionCount, compromiso: compromisoCount, derivacion: derivacionCount } =
+    countByStage(students);
 
   const statsList = [
     {

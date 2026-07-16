@@ -4,8 +4,10 @@ import {
   AlertTriangle, ArrowRight, ArrowLeft, UploadCloud, Loader2, 
   Sparkles, AlertCircle, CheckCircle, Info, FileSpreadsheet
 } from 'lucide-react';
-import { Student, Annotation, DisciplinaryCase } from '../types';
+import { Student } from '../types';
 import { getSavedConfig, fetchCourses, getSupabaseClient } from '../lib/supabase';
+import { classifyByNegativeCount } from '../domain/riceMeasures';
+import AnnotationReviewTable, { type ReviewAnnotation } from './ai/AnnotationReviewTable';
 
 interface NewDisciplinaryProcessModalProps {
   students: Student[];
@@ -47,7 +49,7 @@ export default function NewDisciplinaryProcessModal({
 
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
-  const [detectedAnnotations, setDetectedAnnotations] = useState<any[]>([]);
+  const [detectedAnnotations, setDetectedAnnotations] = useState<ReviewAnnotation[]>([]);
   const [negativeAnnotationsCount, setNegativeAnnotationsCount] = useState<number>(0);
   const [classification, setClassification] = useState<{
     measure: string;
@@ -79,7 +81,9 @@ export default function NewDisciplinaryProcessModal({
           const local = localStorage.getItem('convivencia_local_students');
           const studs = local ? JSON.parse(local) : students;
           setAllSupabaseStudents(studs);
-          const uniqueCourses = Array.from(new Set(studs.map((s: any) => s.course_id))).sort();
+          const uniqueCourses = Array.from(
+            new Set((studs as Student[]).map((s) => String(s.course_id)))
+          ).sort() as string[];
           setCourses(uniqueCourses);
           setIsLoadingStudents(false);
           return;
@@ -94,7 +98,9 @@ export default function NewDisciplinaryProcessModal({
           const local = localStorage.getItem('convivencia_local_students');
           const studs = local ? JSON.parse(local) : students;
           setAllSupabaseStudents(studs);
-          const uniqueCourses = Array.from(new Set(studs.map((s: any) => s.course_id))).sort();
+          const uniqueCourses = Array.from(
+            new Set((studs as Student[]).map((s) => String(s.course_id)))
+          ).sort() as string[];
           setCourses(uniqueCourses);
           setStudentsError("Usando copia de respaldo local debido a un error de conexión.");
         } else {
@@ -120,14 +126,16 @@ export default function NewDisciplinaryProcessModal({
           });
           setAllSupabaseStudents(mapped);
           
-          const uniqueCourses = Array.from(new Set(mapped.map(s => s.course_id))).sort();
+          const uniqueCourses = Array.from(new Set(mapped.map(s => s.course_id))).sort() as string[];
           setCourses(uniqueCourses);
         }
       } catch (err: any) {
         const local = localStorage.getItem('convivencia_local_students');
         const studs = local ? JSON.parse(local) : students;
         setAllSupabaseStudents(studs);
-        const uniqueCourses = Array.from(new Set(studs.map((s: any) => s.course_id))).sort();
+        const uniqueCourses = Array.from(
+          new Set((studs as Student[]).map((s) => String(s.course_id)))
+        ).sort() as string[];
         setCourses(uniqueCourses);
         setStudentsError("Usando copia de respaldo local debido a un error de conexión.");
       } finally {
@@ -323,64 +331,38 @@ export default function NewDisciplinaryProcessModal({
   };
 
   const processAnnotationsResult = (allAnns: any[]) => {
-    const negatives = allAnns.filter(ann => ann.type === 'Negativa');
-    negatives.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-    
-    setDetectedAnnotations(negatives);
+    const normalized: ReviewAnnotation[] = allAnns.map((ann) => ({
+      text: ann.text || ann.description || 'Anotación',
+      date: (ann.date || new Date().toISOString().split('T')[0]).slice(0, 10),
+      severity: ann.severity || 'Leve',
+      registered_by: ann.registered_by || 'Inspectoría',
+      type: ann.type === 'Positiva' ? 'Positiva' : 'Negativa',
+    }));
+    normalized.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    setDetectedAnnotations(normalized);
+    applyClassification(normalized);
+  };
+
+  const applyClassification = (allAnns: ReviewAnnotation[]) => {
+    const negatives = allAnns.filter((ann) => ann.type === 'Negativa');
     const count = negatives.length;
     setNegativeAnnotationsCount(count);
-
-    let measure = '';
-    let description = '';
-    let basis = '';
-    let canRegister = false;
-    let color = 'text-slate-600';
-    let bgColor = 'bg-slate-50';
-    let borderColor = 'border-slate-200';
-
-    if (count <= 4) {
-      measure = 'Medidas Formativas de Aula';
-      description = 'El estudiante posee un nivel de conducta dentro del margen ordinario (0-4 anotaciones). Corresponden medidas formativas y diálogos individuales preventivos dirigidos por el docente de asignatura o inspectoría.';
-      basis = 'Artículo 24 del Reglamento Interno de Convivencia Escolar (RICE) - Medidas formativas para faltas leves.';
-      canRegister = false;
-      color = 'text-emerald-700';
-      bgColor = 'bg-emerald-50/60';
-      borderColor = 'border-emerald-200';
-    } else if (count <= 9) {
-      measure = 'Carta de Amonestación (1ra Acumulación)';
-      description = 'Primera acumulación de 5 a 9 anotaciones leves. Corresponde emitir una Carta de Amonestación Formal firmada por el apoderado y sostener entrevista reflexiva presencial con el Profesor Jefe.';
-      basis = 'Artículo 24. BIS del Reglamento Interno de Convivencia Escolar (RICE) - Primera acumulación de faltas leves.';
-      canRegister = true;
-      color = 'text-amber-700';
-      bgColor = 'bg-amber-50/60';
-      borderColor = 'border-amber-200';
-    } else if (count <= 14) {
-      measure = 'Carta de Compromiso Conductual (2da Acumulación)';
-      description = 'Segunda acumulación de 10 a 14 anotaciones leves. Corresponde citación inmediata del apoderado por Inspectoría para firmar un Compromiso de Convivencia Escolar con seguimiento quincenal.';
-      basis = 'Artículo 24. BIS del Reglamento Interno de Convivencia Escolar (RICE) - Segunda acumulación de faltas leves.';
-      canRegister = true;
-      color = 'text-orange-700';
-      bgColor = 'bg-orange-50/60';
-      borderColor = 'border-orange-200';
-    } else {
-      measure = 'Derivación a Convivencia Escolar (3ra Acumulación)';
-      description = 'Tercera acumulación de 15 o más anotaciones leves. La conducta escala legalmente a Falta Grave. Corresponde derivación urgente al Equipo de Convivencia y Coordinación de Ciclo para plan de intervención.';
-      basis = 'Artículo 24. BIS y Artículo 25 del Reglamento Interno de Convivencia Escolar (RICE) - Tercera acumulación de faltas leves.';
-      canRegister = true;
-      color = 'text-rose-700';
-      bgColor = 'bg-rose-50/60';
-      borderColor = 'border-rose-200';
-    }
-
+    const c = classifyByNegativeCount(count);
     setClassification({
-      measure,
-      description,
-      basis,
-      canRegister,
-      color,
-      bgColor,
-      borderColor
+      measure: c.measure,
+      description: c.description,
+      basis: c.basis,
+      canRegister: c.canRegister,
+      color: c.color,
+      bgColor: c.bgColor,
+      borderColor: c.borderColor,
     });
+  };
+
+  const handleReviewChange = (next: ReviewAnnotation[]) => {
+    setDetectedAnnotations(next);
+    applyClassification(next);
   };
 
   const simulateAnalysisFallback = () => {
@@ -753,7 +735,7 @@ export default function NewDisciplinaryProcessModal({
                   <h3 className="text-base font-display font-bold text-slate-800 tracking-tight">Resultado del Análisis IA</h3>
                 </div>
                 <p className="text-[13px] text-slate-500 mt-1.5 leading-relaxed">
-                  Anotaciones negativas detectadas del documento. Solo se contabilizan faltas para el cálculo disciplinario.
+                  Revise y edite el resultado de la IA. Solo las anotaciones negativas cuentan para el semáforo disciplinario.
                 </p>
               </div>
 
@@ -764,7 +746,7 @@ export default function NewDisciplinaryProcessModal({
                     Total de Faltas
                   </span>
                   <h4 className="text-3xl font-display font-black mt-1 tracking-tight">{negativeAnnotationsCount}</h4>
-                  <p className="text-[12px] text-indigo-200 font-medium mt-0.5">anotaciones negativas identificadas</p>
+                  <p className="text-[12px] text-indigo-200 font-medium mt-0.5">anotaciones negativas (post-revisión)</p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl px-5 py-3 text-center">
                   <span className="text-4xl font-display font-black block tracking-tight">{negativeAnnotationsCount}</span>
@@ -772,28 +754,11 @@ export default function NewDisciplinaryProcessModal({
                 </div>
               </div>
 
-              {/* Annotations list */}
-              <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1 custom-scrollbar">
-                {detectedAnnotations.map((ann, idx) => (
-                  <div key={ann.date + (ann.text || '').slice(0, 20) || idx} className="bg-white border border-slate-100 rounded-2xl p-4 hover:border-slate-200 hover:shadow-sm transition-all duration-200 flex items-start gap-3.5">
-                    <span className="w-7 h-7 bg-rose-50 text-rose-600 border border-rose-100 rounded-xl flex items-center justify-center text-[11px] font-bold shrink-0">
-                      {idx + 1}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-[11px] text-slate-400 font-mono">
-                          {ann.date} • {ann.registered_by}
-                        </span>
-                        <span className="px-2 py-0.5 bg-rose-50 text-rose-600 rounded-md text-[9px] font-bold border border-rose-100">
-                          {ann.severity}
-                        </span>
-                      </div>
-                      <p className="text-[12px] text-slate-600 leading-relaxed mt-2 italic">
-                        "{ann.text}"
-                      </p>
-                    </div>
-                  </div>
-                ))}
+              <div className="max-h-80 overflow-y-auto pr-1 custom-scrollbar">
+                <AnnotationReviewTable
+                  annotations={detectedAnnotations}
+                  onChange={handleReviewChange}
+                />
               </div>
             </div>
           )}

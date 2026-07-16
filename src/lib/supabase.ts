@@ -1,24 +1,21 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { Student, Annotation, SupabaseConfig, DisciplinaryStatus, CartaDisciplinaria, EtapaDisciplinaria } from '../types';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { Student, Annotation, SupabaseConfig, CartaDisciplinaria, EtapaDisciplinaria } from '../types';
 import { MOCK_STUDENTS, MOCK_ANNOTATIONS } from '../data/mockData';
+import { calculateDisciplinaryStatus } from '../domain/disciplinaryStatus';
+import { mapCartaRow, mapCausaRow, mapEtapaRow, mapInspectorateRow } from './mappers';
+import { getBrowserSupabase, getEnvAnonKey, getEnvUrl } from './supabaseClient';
 
 const STUDENTS_KEY = 'convivencia_local_students';
 const ANNOTATIONS_KEY = 'convivencia_local_annotations';
 const CONFIG_KEY = 'convivencia_supabase_config';
-
-// Singleton client cache to avoid multiple GoTrueClient instances
-let cachedClient: SupabaseClient | null = null;
-let cachedConfigKey = '';
-
-const getEnvUrl = () => ((import.meta as any).env?.VITE_SUPABASE_URL as string) || '';
-const getEnvAnonKey = () => ((import.meta as any).env?.VITE_SUPABASE_ANON_KEY as string) || ((import.meta as any).env?.VITE_SUPABASE_PUBLISHABLE_KEY as string) || '';
 
 const DEFAULT_CONFIG: SupabaseConfig = {
   url: getEnvUrl(),
   anonKey: getEnvAnonKey(),
   useLocalStorageFallback: !(getEnvUrl() && getEnvAnonKey()),
   studentsTable: 'students',
-  annotationsTable: 'annotations',
+  /** Fuente de verdad: inspectorate_records (no usar tabla legacy annotations). */
+  annotationsTable: 'inspectorate_records',
   idCol: 'id',
   fullNameCol: 'full_name',
   courseCol: 'course_id',
@@ -26,6 +23,8 @@ const DEFAULT_CONFIG: SupabaseConfig = {
   statusCol: 'status',
   tenantCol: 'tenant_id'
 };
+
+export { calculateDisciplinaryStatus };
 
 export function getSavedConfig(): SupabaseConfig {
   const local = localStorage.getItem(CONFIG_KEY);
@@ -50,7 +49,8 @@ export function getSavedConfig(): SupabaseConfig {
       ...parsed,
       url: resolvedUrl,
       anonKey: resolvedAnonKey,
-      useLocalStorageFallback: fallback
+      useLocalStorageFallback: fallback,
+      annotationsTable: 'inspectorate_records',
     };
   } catch {
     return DEFAULT_CONFIG;
@@ -61,31 +61,9 @@ export function saveConfig(config: SupabaseConfig) {
   localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
 }
 
-export function getSupabaseClient(config: SupabaseConfig): SupabaseClient | null {
-  if (!config.url || !config.anonKey) return null;
-  
-  // Return cached client if config hasn't changed
-  const configKey = `${config.url}:${config.anonKey}`;
-  if (cachedClient && cachedConfigKey === configKey) {
-    return cachedClient;
-  }
-  
-  try {
-    cachedClient = createClient(config.url, config.anonKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false
-      }
-    });
-    cachedConfigKey = configKey;
-    return cachedClient;
-  } catch (e) {
-    console.warn('Failed to initialize Supabase client:', e);
-    cachedClient = null;
-    cachedConfigKey = '';
-    return null;
-  }
+/** Cliente con sesión Auth persistida (RLS usa JWT del usuario). */
+export function getSupabaseClient(_config?: SupabaseConfig): SupabaseClient | null {
+  return getBrowserSupabase();
 }
 
 // Local Storage data managers (for fallback)
@@ -113,14 +91,6 @@ export function getLocalAnnotations(): Annotation[] {
 
 export function saveLocalAnnotations(annotations: Annotation[]) {
   localStorage.setItem(ANNOTATIONS_KEY, JSON.stringify(annotations));
-}
-
-// Semaphoric color calculations
-export function calculateDisciplinaryStatus(count: number): DisciplinaryStatus {
-  if (count < 5) return 'Verde';
-  if (count < 10) return 'Amarillo';
-  if (count < 15) return 'Naranja';
-  return 'Rojo';
 }
 
 // Main repository functions with dynamic column mapping
@@ -162,39 +132,16 @@ export async function fetchAllStudents(config: SupabaseConfig): Promise<Student[
 
     if (studentsError) throw studentsError;
 
-    // Fetch inspectorate_records (real table name for annotations in this DB)
+    // Fuente de verdad: inspectorate_records
     const { data: rawAnnotations, error: annError } = await client
-      .from(config.annotationsTable)
+      .from('inspectorate_records')
       .select('*');
 
-    // If annotations table doesn't exist, try inspectorate_records as fallback
     let annotations: Annotation[] = [];
     if (annError) {
-      console.warn(`[Supabase] ${config.annotationsTable} not available, trying inspectorate_records`);
-      const { data: rawIR, error: irError } = await client
-        .from('inspectorate_records')
-        .select('*');
-      if (!irError && rawIR) {
-        annotations = rawIR.map(row => ({
-          id: String(row.id),
-          student_id: String(row.student_id),
-          text: String(row.observation || ''),
-          date: String(row.date_time || row.created_at || '').split('T')[0],
-          severity: 'Leve' as const,
-          registered_by: 'Inspectoría',
-          type: 'Negativa' as const
-        }));
-      }
+      console.warn(`[Supabase] inspectorate_records not available: ${annError.message}`);
     } else {
-      annotations = (rawAnnotations || []).map(row => ({
-        id: String(row.id),
-        student_id: String(row.student_id),
-        text: String(row.text || row.annotation_text || row.observation || ''),
-        date: String(row.date || row.created_at || '').split('T')[0],
-        severity: (row.severity || 'Leve') as 'Leve' | 'Grave' | 'Muy Grave' | 'Gravísima',
-        registered_by: String(row.registered_by || row.author || 'Inspectoría'),
-        type: (row.type || 'Negativa') as 'Positiva' | 'Negativa'
-      }));
+      annotations = (rawAnnotations || []).map((row) => mapInspectorateRow(row as Record<string, unknown>));
     }
 
     // Map rows dynamically - handle UUID course_id by resolving from join
@@ -252,47 +199,16 @@ export async function fetchAnnotations(config: SupabaseConfig, studentId?: strin
   }
 
   try {
-    let query = client.from(config.annotationsTable).select('*');
+    let query = client.from('inspectorate_records').select('*');
     if (studentId) {
       query = query.eq('student_id', studentId);
     }
     const { data, error } = await query;
+    if (error) throw error;
 
-    if (error) {
-      // If annotations table doesn't exist, try inspectorate_records
-      console.warn(`[Supabase] ${config.annotationsTable} not available, trying inspectorate_records`);
-      let irQuery = client.from('inspectorate_records').select('*');
-      if (studentId) {
-        irQuery = irQuery.eq('student_id', studentId);
-      }
-      const { data: irData, error: irError } = await irQuery;
-      if (irError) throw irError;
-
-      const mapped: Annotation[] = (irData || []).map(row => ({
-        id: String(row.id),
-        student_id: String(row.student_id),
-        text: String(row.observation || ''),
-        date: String(row.date_time || row.created_at || '').split('T')[0],
-        severity: 'Leve' as const,
-        registered_by: 'Inspectoría',
-        type: 'Negativa' as const
-      }));
-
-      if (!studentId) {
-        saveLocalAnnotations(mapped);
-      }
-      return mapped;
-    }
-
-    const mapped: Annotation[] = (data || []).map(row => ({
-      id: String(row.id),
-      student_id: String(row.student_id),
-      text: String(row.text || row.annotation_text || row.observation || ''),
-      date: String(row.date || row.created_at || '').split('T')[0],
-      severity: (row.severity || 'Leve') as 'Leve' | 'Grave' | 'Muy Grave' | 'Gravísima',
-      registered_by: String(row.registered_by || row.author || 'Inspectoría'),
-      type: (row.type || 'Negativa') as 'Positiva' | 'Negativa'
-    }));
+    const mapped: Annotation[] = (data || []).map((row) =>
+      mapInspectorateRow(row as Record<string, unknown>)
+    );
 
     if (!studentId) {
       saveLocalAnnotations(mapped);
@@ -332,17 +248,15 @@ export async function saveAnnotation(config: SupabaseConfig, annotation: Annotat
   }
 
   try {
-    // Save annotation
     const { error: annError } = await client
-      .from(config.annotationsTable)
+      .from('inspectorate_records')
       .insert({
-        id: annotation.id,
         student_id: annotation.student_id,
-        text: annotation.text,
-        date: annotation.date,
+        observation: annotation.text,
+        date_time: annotation.date ? new Date(annotation.date).toISOString() : new Date().toISOString(),
         severity: annotation.severity,
         registered_by: annotation.registered_by,
-        type: annotation.type
+        type: annotation.type,
       });
 
     if (annError) throw annError;
@@ -484,22 +398,7 @@ export async function fetchDisciplinaryCases(config: SupabaseConfig): Promise<an
       return getLocalCases();
     }
 
-    // Map causas rows to app format
-    const mapped = (data || []).map(row => ({
-      id: row.id,
-      student_id: row.student_id || '',
-      student_name: row.estudiante_nombre || row.student_name || '',
-      student_rut: row.run_estudiante || row.student_rut || '',
-      student_course: row.estudiante_curso || row.student_course || '',
-      annotations_count_detected: row.annotations_count_detected || row.annotations_count || 0,
-      date_joined: row.fecha_apertura || row.date_joined || '',
-      initial_measure: row.initial_measure || row.estado_actual || '',
-      regulation_basis: row.regulation_basis || row.tipo_infraccion || '',
-      created_by: row.created_by || row.responsable || '',
-      created_at: row.created_at || '',
-      source_file_name: row.file_name || row.source_file_name || '',
-      ai_analysis_summary: row.analysis_summary || row.ai_analysis_summary || row.observaciones || ''
-    }));
+    const mapped = (data || []).map((row) => mapCausaRow(row as Record<string, unknown>));
 
     // Cache to localStorage for offline resilience
     localStorage.setItem(CASES_KEY, JSON.stringify(mapped));
@@ -539,14 +438,20 @@ export async function saveDisciplinaryCase(config: SupabaseConfig, caseData: any
     // Try saving to 'causas' table (real table)
     const causasRow = {
       id: caseData.id,
-      estudiante_nombre: caseData.student_name || caseData.estudiante_nombre,
-      run_estudiante: caseData.student_rut || caseData.run_estudiante,
-      estudiante_curso: caseData.student_course || caseData.estudiante_curso,
+      student_id: caseData.student_id || null,
+      estudiante_nombre: caseData.student_name || caseData.estudiante_nombre || 'Sin nombre',
+      nna_protected_name: caseData.student_name || caseData.estudiante_nombre || 'NNA',
+      run_estudiante: caseData.student_rut || caseData.run_estudiante || '',
+      estudiante_curso: caseData.student_course || caseData.estudiante_curso || '',
       fecha_apertura: caseData.date_joined || caseData.fecha_apertura || new Date().toISOString().split('T')[0],
       estado_actual: caseData.initial_measure || caseData.estado_actual || 'Activo',
       tipo_infraccion: caseData.regulation_basis || caseData.tipo_infraccion || 'Leve',
       responsable: caseData.created_by || caseData.responsable || '',
-      observaciones: caseData.ai_analysis_summary || caseData.observaciones || ''
+      created_by: caseData.created_by || '',
+      annotations_count: caseData.annotations_count_detected || caseData.annotations_count || 0,
+      observaciones: caseData.ai_analysis_summary || caseData.observaciones || '',
+      fecha_ultima_actualizacion: new Date().toISOString().split('T')[0],
+      compromete_aula_segura: false,
     };
 
     const { error } = await client
@@ -589,22 +494,9 @@ export async function fetchCartas(config: SupabaseConfig, studentId?: string): P
     const { data, error } = await query;
     if (error) throw error;
 
-    const mapped: CartaDisciplinaria[] = (data || []).map(row => ({
-      id: String(row.id),
-      student_id: String(row.student_id),
-      letter_type: String(row.letter_type) as CartaDisciplinaria['letter_type'],
-      emission_date: String(row.emission_date),
-      status: String(row.status || 'Vigente') as CartaDisciplinaria['status'],
-      emitted_by: String(row.emitted_by),
-      supervisor_name: row.supervisor_name ? String(row.supervisor_name) : undefined,
-      apoderado_name: String(row.apoderado_name),
-      annotations_count: Number(row.annotations_count),
-      student_name: String(row.student_name),
-      course: String(row.course),
-      regulation_basis: String(row.regulation_basis),
-      observations: row.observations ? String(row.observations) : undefined,
-      created_at: String(row.created_at)
-    }));
+    const mapped: CartaDisciplinaria[] = (data || []).map((row) =>
+      mapCartaRow(row as Record<string, unknown>)
+    );
 
     if (!studentId) {
       localStorage.setItem(CARTAS_KEY, JSON.stringify(mapped));
@@ -693,16 +585,9 @@ export async function fetchEtapas(config: SupabaseConfig, studentId: string): Pr
 
     if (error) throw error;
 
-    const mapped: EtapaDisciplinaria[] = (data || []).map(row => ({
-      id: String(row.id),
-      student_id: String(row.student_id),
-      step_number: Number(row.step_number),
-      stage_name: String(row.stage_name),
-      responsible: String(row.responsible),
-      transition_date: String(row.transition_date),
-      comment: row.comment ? String(row.comment) : undefined,
-      created_at: String(row.created_at)
-    }));
+    const mapped: EtapaDisciplinaria[] = (data || []).map((row) =>
+      mapEtapaRow(row as Record<string, unknown>)
+    );
 
     return mapped;
   } catch (error: any) {
