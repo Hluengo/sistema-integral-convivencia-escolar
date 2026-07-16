@@ -3,13 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useRef, useCallback, memo } from 'react';
+import { useState, useRef, memo } from 'react';
 import { X, Eye, EyeOff } from 'lucide-react';
-import type { Annotation } from '../../types';
-import { maskName, maskRut, getSemaphoricStyle, getCurrentDateStr } from '../../lib/anotacionesUtils';
-import { supabase } from '../../lib/supabase';
-import { fetchCartas } from '../../services/cartas.service';
-import { fetchEtapas } from '../../services/etapas.service';
+import type { Annotation } from '@/src/types';
+import { maskName, maskRut, getSemaphoricStyle, getCurrentDateStr } from '@/src/lib/anotacionesUtils';
 import AnotacionesDocumentGenerator from './AnotacionesDocumentGenerator';
 import {
   STATUS_STYLE,
@@ -22,8 +19,13 @@ import {
 import StudentSummaryTab from './AnotacionesStudentDetailModal/StudentSummaryTab';
 import UploadPdfTab from './AnotacionesStudentDetailModal/UploadPdfTab';
 import HistoryTab from './AnotacionesStudentDetailModal/HistoryTab';
+import { useDisciplinaryData, usePdfProcessing } from './AnotacionesStudentDetailModal/hooks';
 
 const EMPTY_TEACHERS: Record<string, string> = {};
+
+const Skeleton = memo(function Skeleton({ className = '' }: { className?: string }) {
+  return <div className={`animate-pulse rounded-xl bg-neutral-200 ${className}`} />;
+});
 
 interface AnotacionesStudentDetailModalProps {
   student: StudentInfo;
@@ -36,10 +38,6 @@ interface AnotacionesStudentDetailModalProps {
   teachers?: Record<string, string>;
 }
 
-const Skeleton = memo(function Skeleton({ className = '' }: { className?: string }) {
-  return <div className={`animate-pulse rounded-xl bg-neutral-200 ${className}`} />;
-});
-
 export default function AnotacionesStudentDetailModal({
   student,
   annotations,
@@ -51,195 +49,48 @@ export default function AnotacionesStudentDetailModal({
   teachers = EMPTY_TEACHERS,
 }: AnotacionesStudentDetailModalProps) {
   const [activeTab, setActiveTab] = useState<ActiveTab>('resumen');
-
-  const [isDragging, setIsDragging] = useState(false);
-  const [isParsing, setIsParsing] = useState(false);
-  const [parsingStatus, setParsingStatus] = useState('');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [parsedAnnotations, setParsedAnnotations] = useState<unknown[]>([]);
-
-  const [isDataLoading, setIsDataLoading] = useState(true);
-  const [currentMeasure, setCurrentMeasure] = useState('');
-  const [transitions, setTransitions] = useState<DisciplinayRecord[]>([]);
-  const [activeCase, setActiveCase] = useState<DisciplinayRecord | null>(null);
   const cartasRef = useRef<unknown[]>([]);
-  const [etapas, setEtapas] = useState<DisciplinayRecord[]>([]);
+
+  const {
+    isDataLoading,
+    activeCase,
+    etapas,
+    currentMeasure,
+    transitions,
+    setCurrentMeasure,
+    setTransitions,
+  } = useDisciplinaryData(student.id, student.full_name);
+
+  const {
+    isDragging,
+    setIsDragging,
+    isParsing,
+    parsingStatus,
+    errorMessage,
+    parsedAnnotations,
+    processPdfFile,
+    handleDrop,
+    handleFileSelect,
+    handleRegisterParsed,
+    setErrorMessage,
+    setParsingStatus,
+    setIsParsing,
+    setParsedAnnotations,
+  } = usePdfProcessing(
+    student.id,
+    student,
+    onAddAnnotations,
+    cartasRef,
+    (v) => { /* setEtapas is handled by hook */ },
+    async (id) => { const { fetchCartas } = await import('@/src/services/cartas.service'); return fetchCartas(id); },
+    async (id) => { const { fetchEtapas } = await import('@/src/services/etapas.service'); return fetchEtapas(id); }
+  );
 
   const negativeCount = annotations.filter((a) => a.type === 'Negativa').length;
   const semaphoric = getSemaphoricStyle(negativeCount);
   const statusKey = student.disciplinary_status || 'Verde';
   const statusInfo = STATUS_STYLE[statusKey] || STATUS_STYLE.Verde;
   const dateStr = getCurrentDateStr();
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadData() {
-      setIsDataLoading(true);
-      try {
-        const [cartasData, etapasData, causasResult] = await Promise.all([
-          fetchCartas(student.id),
-          fetchEtapas(student.id),
-          supabase
-            .from('causas')
-            .select('id,estado_actual,tipo_infraccion,fecha_ultima_actualizacion')
-            .eq('estudiante_nombre', student.full_name)
-            .order('fecha_ultima_actualizacion', { ascending: false })
-            .limit(1),
-        ]);
-
-        if (cancelled) return;
-
-        cartasRef.current = cartasData;
-        setEtapas(etapasData);
-
-        if (causasResult.data && causasResult.data.length > 0) {
-          setActiveCase(causasResult.data[0] as DisciplinayRecord);
-        }
-
-        const measureKey = `disciplinary_measure_${student.id}`;
-        const transitionsKey = `disciplinary_transitions_${student.id}`;
-        const storedMeasure = localStorage.getItem(measureKey);
-        const storedTransitions = localStorage.getItem(transitionsKey);
-
-        if (storedMeasure) setCurrentMeasure(storedMeasure);
-        if (storedTransitions) {
-          try { setTransitions(JSON.parse(storedTransitions)); } catch { /* ignore */ }
-        }
-      } catch (err) {
-        console.error('Error loading disciplinary data:', err);
-      } finally {
-        if (!cancelled) {
-          setIsDataLoading(false);
-        }
-      }
-    }
-
-    loadData();
-    return () => { cancelled = true; };
-  }, [student.id, student.full_name]);
-
-  const processPdfFile = useCallback(
-    async (file: File) => {
-      setIsParsing(true);
-      setParsingStatus('Leyendo archivo PDF...');
-      setErrorMessage(null);
-      setParsedAnnotations([]);
-
-      try {
-        const buffer = await file.arrayBuffer();
-        const bytes = new Uint8Array(buffer);
-        let binary = '';
-        bytes.forEach((b) => { binary += String.fromCharCode(b); });
-        const base64Data = btoa(binary);
-
-        setParsingStatus('Enviando a procesamiento...');
-
-        const response = await fetch('/api/parse-annotations', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fileName: file.name, fileData: base64Data, studentId: student.id }),
-        });
-
-        if (!response.ok) {
-          const errData = await response.json().catch(() => ({}));
-          throw new Error(errData.error || `Error del servidor (${response.status})`);
-        }
-
-        const result = await response.json();
-
-        if (result.annotations && result.annotations.length > 0) {
-          setParsedAnnotations(result.annotations);
-          setParsingStatus(`Se detectaron ${result.annotations.length} anotaciones. Revisa los datos antes de registrar.`);
-        } else {
-          setParsingStatus('No se detectaron anotaciones en el PDF. Revisa que el archivo contenga datos de hoja de vida.');
-        }
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : 'Error al procesar el archivo PDF.';
-        console.error('Error parsing PDF:', err);
-        setErrorMessage(msg);
-        setParsingStatus('Error al procesar el archivo');
-      } finally {
-        setIsParsing(false);
-      }
-    },
-    [student.id]
-  );
-
-  const handleDrop = useCallback(
-    async (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setIsDragging(false);
-      const files = e.dataTransfer.files;
-      if (files.length === 0) return;
-      const file = files[0];
-      if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-        setErrorMessage('Solo se aceptan archivos PDF.');
-        return;
-      }
-      await processPdfFile(file);
-    },
-    [processPdfFile]
-  );
-
-  const handleFileSelect = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files;
-      if (!files || files.length === 0) return;
-      const file = files[0];
-      if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-        setErrorMessage('Solo se aceptan archivos PDF.');
-        return;
-      }
-      await processPdfFile(file);
-      e.target.value = '';
-    },
-    [processPdfFile]
-  );
-
-  const handleRegisterParsed = useCallback(async () => {
-    if (parsedAnnotations.length === 0) return;
-    try {
-      setParsingStatus('Registrando anotaciones en la base de datos...');
-      const annotationsToSave = parsedAnnotations.map((ann: unknown) => {
-        const a = ann as Record<string, string | undefined>;
-        return {
-          student_id: student.id,
-          observation: a.text || a.observation || '',
-          severity: a.severity || 'Leve',
-          type: a.type || 'Negativa',
-          registered_by: a.registered_by || 'Inspectoria',
-        };
-      });
-
-      for (const ann of annotationsToSave) {
-        const { error } = await supabase.from('inspectorate_records').insert(ann);
-        if (error) {
-          console.error('Error saving parsed annotation:', error);
-          setErrorMessage(`Error al guardar anotacion: ${error.message}`);
-          setParsingStatus('Algunas anotaciones no se pudieron registrar.');
-          return;
-        }
-      }
-
-      onAddAnnotations(student.id, annotationsToSave);
-      setParsingStatus(`${annotationsToSave.length} anotaciones registradas exitosamente.`);
-      setParsedAnnotations([]);
-
-      const [cartasData, etapasData] = await Promise.all([
-        fetchCartas(student.id),
-        fetchEtapas(student.id),
-      ]);
-      cartasRef.current = cartasData;
-      setEtapas(etapasData);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Error al registrar las anotaciones.';
-      console.error('Error registering parsed annotations:', err);
-      setErrorMessage(msg);
-      setParsingStatus('Error al registrar');
-    }
-  }, [parsedAnnotations, student.id, onAddAnnotations]);
 
   const renderTabContent = () => {
     if (isDataLoading) {
