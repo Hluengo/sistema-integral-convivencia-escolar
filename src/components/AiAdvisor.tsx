@@ -142,7 +142,6 @@ export default function AiAdvisor() {
     setIsLoading(true);
 
     try {
-      const currentMessages = messagesRef.current;
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -161,15 +160,16 @@ export default function AiAdvisor() {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${session.access_token}`,
       };
+      const historyForApi = messagesRef.current
+        .slice(1)
+        .concat([{ role: 'user', content: userMsg }])
+        .map((m) => ({ role: m.role, content: m.content }));
       const response = await fetch('/api/advisor-chat', {
         method: 'POST',
         headers,
         body: JSON.stringify({
           message: userMsg,
-          history: currentMessages.slice(1, -1).map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
+          history: historyForApi,
         }),
       });
 

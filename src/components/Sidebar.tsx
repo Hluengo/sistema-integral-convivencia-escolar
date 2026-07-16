@@ -276,7 +276,7 @@ export default function Sidebar({
       <button
         type="button"
         onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-50 rounded-xl bg-neutral-800 p-2.5 text-white shadow-lg transition-colors hover:bg-neutral-900 lg:hidden"
+        className="fixed top-4 left-4 z-50 rounded-xl bg-neutral-900 p-2.5 text-white shadow-lg shadow-neutral-900/20 transition-all hover:bg-neutral-800 active:scale-95 lg:hidden"
         aria-label="Abrir menú"
       >
         <Menu className="h-5 w-5" />
@@ -285,7 +285,7 @@ export default function Sidebar({
       {mobileOpen && (
         <button
           type="button"
-          className="fixed inset-0 z-40 cursor-default bg-black/50 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 cursor-default bg-black/60 backdrop-blur-sm lg:hidden"
           onClick={() => setMobileOpen(false)}
           aria-label="Cerrar menú"
         />
@@ -293,14 +293,14 @@ export default function Sidebar({
 
       <div
         ref={mobileSidebarRef}
-        className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-gradient-to-b from-neutral-800 to-neutral-950 transition-transform duration-300 lg:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 w-[280px] bg-gradient-to-b from-neutral-900 to-neutral-950 shadow-2xl shadow-neutral-950/50 transition-transform duration-300 ease-out-expo lg:hidden ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <button
           type="button"
           onClick={() => setMobileOpen(false)}
-          className="absolute top-4 right-4 rounded-lg p-1.5 text-white/60 transition-all hover:bg-white/10 hover:text-white"
+          className="absolute top-4 right-4 rounded-lg p-1.5 text-white/40 transition-all hover:bg-white/10 hover:text-white"
           aria-label="Cerrar menú"
         >
           <X className="h-4 w-4" />
@@ -309,7 +309,7 @@ export default function Sidebar({
       </div>
 
       <aside
-        className={`relative hidden shrink-0 flex-col bg-gradient-to-b from-neutral-800 to-neutral-950 shadow-xl transition-all duration-300 lg:flex ${
+        className={`relative hidden shrink-0 flex-col bg-gradient-to-b from-neutral-900 to-neutral-950 shadow-2xl shadow-neutral-950/30 transition-all duration-300 ease-out-expo lg:flex ${
           isCollapsed ? 'w-[68px]' : 'w-[240px]'
         }`}
         aria-label="Barra de navegación principal"
@@ -317,7 +317,7 @@ export default function Sidebar({
         <button
           type="button"
           onClick={onToggleCollapse}
-          className="absolute top-[72px] -right-3 z-10 cursor-pointer rounded-full border border-neutral-200 bg-white p-1.5 shadow-md transition-all hover:bg-neutral-50 hover:shadow-lg"
+          className="absolute top-[72px] -right-3 z-10 cursor-pointer rounded-full border border-neutral-200/80 bg-white p-1.5 shadow-md transition-all hover:bg-neutral-50 hover:shadow-lg active:scale-90"
           aria-label={isCollapsed ? 'Expandir menú lateral' : 'Colapsar menú lateral'}
         >
           {isCollapsed ? (

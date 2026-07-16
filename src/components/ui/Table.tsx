@@ -53,6 +53,9 @@ export default function Table<T>({
                   col.sortable ? 'cursor-pointer select-none hover:text-neutral-900' : ''
                 } ${col.className ?? ''}`}
                 onClick={() => col.sortable && onSort?.(col.key)}
+                onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && col.sortable) { e.preventDefault(); onSort?.(col.key); } }}
+                tabIndex={col.sortable ? 0 : undefined}
+                role={col.sortable ? 'button' : undefined}
               >
                 <div className="inline-flex items-center gap-1">
                   {col.label}
@@ -79,6 +82,9 @@ export default function Table<T>({
             <tr
               key={keyExtractor(item)}
               onClick={() => onRowClick?.(item)}
+              onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && onRowClick) { e.preventDefault(); onRowClick(item); } }}
+              tabIndex={onRowClick ? 0 : undefined}
+              role={onRowClick ? 'button' : undefined}
               className={`transition-colors ${
                 onRowClick ? 'cursor-pointer hover:bg-neutral-50' : ''
               }`}

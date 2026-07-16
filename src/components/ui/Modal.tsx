@@ -24,6 +24,11 @@ export default function Modal({
   className = '',
 }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
 
   useEffect(() => {
     if (!open) {
@@ -31,13 +36,13 @@ export default function Modal({
     }
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
+        onCloseRef.current();
       }
     };
     document.addEventListener('keydown', handleKeyDown);
     dialogRef.current?.focus();
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) {
     return null;

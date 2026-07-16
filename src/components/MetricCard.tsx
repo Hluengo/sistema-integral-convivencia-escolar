@@ -71,7 +71,7 @@ export default memo(function MetricCard({
             isAlert ? 'text-gravisima-600' : 'text-neutral-900'
           }`}
         >
-          {typeof value === 'number' && value < 10 ? `0${value}` : value}
+          {typeof value === 'number' && value > 0 && value < 10 ? `0${value}` : value}
         </span>
         {trend && (
           <span

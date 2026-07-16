@@ -6,16 +6,16 @@
 import { useMemo, useEffect, useState } from 'react';
 import { type Causa, type TipoInfraccion, type FaseProcedimental, EstadoCausa } from '../types';
 import { getStats, getFaseForEstado } from '../data';
-import { Activity, FileSearch, ShieldAlert, CheckCircle, BarChart3 } from 'lucide-react';
+import { Activity, FileSearch, ShieldAlert, CheckCircle, BarChart3, AlertCircle, Inbox } from 'lucide-react';
 import MetricCard from './MetricCard';
 import SeverityBadge from './SeverityBadge';
 import AnotacionesDashboardStats from './Anotaciones/AnotacionesDashboardStats';
+import EmptyState from './EmptyState';
 import { fetchStudentsWithAnnotationCounts } from '../lib/supabase';
 
 interface DashboardStatsProps {
   causas: Causa[];
   onFaseSelect: (fase: FaseProcedimental | 'Todas') => void;
-  selectedFase: FaseProcedimental | 'Todas';
 }
 
 const SEVERITY_CONFIG: Record<TipoInfraccion, { label: string; dot: string }> = {
@@ -66,14 +66,12 @@ function SeverityCard({
       </div>
 
       <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-neutral-100">
-        <div
-          role="progressbar"
-          aria-valuenow={percentage}
-          aria-valuemin={0}
-          aria-valuemax={100}
+        <progress
+          value={percentage}
+          max={100}
           aria-label={`${cfg.label}: ${percentage}%`}
-          className={`h-full rounded-full transition-all duration-500 ${cfg.dot}`}
-          style={{ width: `${percentage}%` }}
+          className="h-full w-full appearance-none rounded-full [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-current"
+          style={{ color: tipo === 'Leve' ? '#22c55e' : tipo === 'Grave' ? '#f59e0b' : tipo === 'Muy Grave' ? '#f97316' : '#ef4444', width: `${percentage}%` }}
         />
       </div>
     </div>
@@ -83,7 +81,6 @@ function SeverityCard({
 export default function DashboardStats({
   causas,
   onFaseSelect,
-  selectedFase: _selectedFase,
 }: DashboardStatsProps) {
   const stats = getStats(causas);
 
@@ -112,24 +109,26 @@ export default function DashboardStats({
     compromisoCount: 0,
     derivacionCount: 0,
   });
+  const [kpiError, setKpiError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
+    setKpiError(false);
     (async () => {
       try {
         const students = await fetchStudentsWithAnnotationCounts();
         if (cancelled || !students) {
           return;
         }
-        const amonestacion = students.filter((s: any) => {
+        const amonestacion = students.filter((s: { annotations_count?: number; negative_annotations_count?: number }) => {
           const c = s.annotations_count ?? s.negative_annotations_count ?? 0;
           return c >= 5 && c < 10;
         }).length;
-        const compromiso = students.filter((s: any) => {
+        const compromiso = students.filter((s: { annotations_count?: number; negative_annotations_count?: number }) => {
           const c = s.annotations_count ?? s.negative_annotations_count ?? 0;
           return c >= 10 && c < 15;
         }).length;
-        const derivacion = students.filter((s: any) => {
+        const derivacion = students.filter((s: { annotations_count?: number; negative_annotations_count?: number }) => {
           const c = s.annotations_count ?? s.negative_annotations_count ?? 0;
           return c >= 15;
         }).length;
@@ -141,13 +140,26 @@ export default function DashboardStats({
           });
         }
       } catch (e) {
-        console.error('Error fetching anotaciones KPIs:', e);
+        if (!cancelled) {
+          console.error('Error fetching anotaciones KPIs:', e);
+          setKpiError(true);
+        }
       }
     })();
     return () => {
       cancelled = true;
     };
   }, []);
+
+  if (causas.length === 0) {
+    return (
+      <EmptyState
+        icon={Inbox}
+        title="No hay causas registradas"
+        description="Aún no se han registrado expedientes disciplinarios. Las métricas del dashboard aparecerán cuando existan causas activas."
+      />
+    );
+  }
 
   return (
     <section aria-label="Panel de control" className="animate-fade-in space-y-6">
@@ -222,11 +234,21 @@ export default function DashboardStats({
       </div>
 
       {/* Anotaciones */}
-      <AnotacionesDashboardStats
-        amonestacionCount={anotacionesKpis.amonestacionCount}
-        compromisoCount={anotacionesKpis.compromisoCount}
-        derivacionCount={anotacionesKpis.derivacionCount}
-      />
+      {kpiError ? (
+        <div className="flex items-center gap-3 rounded-xl border border-gravisima-200 bg-gravisima-50 p-4">
+          <AlertCircle className="h-5 w-5 shrink-0 text-gravisima-600" />
+          <div>
+            <p className="font-semibold text-gravisima-700 text-sm">Error al cargar KPIs de anotaciones</p>
+            <p className="text-gravisima-600 text-xs">No se pudieron obtener las métricas de anotaciones de estudiantes. Verifica la conexión con la base de datos.</p>
+          </div>
+        </div>
+      ) : (
+        <AnotacionesDashboardStats
+          amonestacionCount={anotacionesKpis.amonestacionCount}
+          compromisoCount={anotacionesKpis.compromisoCount}
+          derivacionCount={anotacionesKpis.derivacionCount}
+        />
+      )}
     </section>
   );
 }

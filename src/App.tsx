@@ -51,7 +51,7 @@ export default function App() {
   const { students, isLoading: isLoadingStudents } = useStudents(formState.selectedCourseId);
   const newEstCurso = courses.find((c) => c.id === selectedCourseId)?.name ?? '';
 
-  const [currentRole, _setRole] = useState<UserRole>('convivencia_escolar');
+  const [currentRole] = useState<UserRole>('convivencia_escolar');
   const [privacyMode, setPrivacyMode] = useState<boolean>(false);
 
   const [currentView, setCurrentView] = useState<SidebarView>('dashboard');
@@ -439,6 +439,7 @@ export default function App() {
                 currentView={currentView}
                 causas={causas}
                 user={user}
+                onNotificationClick={handleSelectCausaFromDashboard}
               />
             </Suspense>
 

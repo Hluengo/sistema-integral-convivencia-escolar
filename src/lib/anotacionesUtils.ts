@@ -31,11 +31,6 @@ export interface SemaphoricStyle {
   rowBg: string;
 }
 
-export interface SemaphoricStyleCompact {
-  text: string;
-  label: string;
-}
-
 export const getSemaphoricStyle = (count: number): SemaphoricStyle => {
   if (count < 5) {
     return {
@@ -65,13 +60,6 @@ export const getSemaphoricStyle = (count: number): SemaphoricStyle => {
       text: 'text-rose-700 font-extrabold',
       rowBg: 'hover:bg-rose-50/20 bg-rose-50/5'
     };
-};
-
-export const getSemaphoricStyleCompact = (count: number): SemaphoricStyleCompact => {
-  if (count < 5) { return { text: 'text-emerald-700 bg-emerald-50 border-emerald-200', label: 'Verde (Buen comportamiento)' }; }
-  if (count < 10) { return { text: 'text-yellow-700 bg-yellow-50 border-yellow-200', label: 'Amarillo (Advertencia)' }; }
-  if (count < 15) { return { text: 'text-orange-700 bg-orange-50 border-orange-200', label: 'Naranja (Compromiso)' }; }
-  return { text: 'text-rose-700 bg-rose-50 border-rose-200', label: 'Rojo (Alerta Crítica)' };
 };
 
 export const TEACHERS_BY_COURSE: Record<string, string> = {

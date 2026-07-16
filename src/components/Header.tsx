@@ -27,6 +27,7 @@ interface HeaderProps {
   currentView?: SidebarView;
   causas: Causa[];
   user?: { email?: string } | null;
+  onNotificationClick?: (causaId: string) => void;
 }
 
 export default function Header({
@@ -38,6 +39,7 @@ export default function Header({
   currentView = 'dashboard',
   causas,
   user = null,
+  onNotificationClick,
 }: HeaderProps) {
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -319,10 +321,20 @@ export default function Header({
                     </p>
                   </div>
                   <div className="max-h-[320px] overflow-y-auto">
-                    {NOTIFICATIONS.map((n) => (
+                    {NOTIFICATIONS.length === 0 ? (
+                      <div className="flex flex-col items-center px-6 py-10 text-center">
+                        <Bell className="mb-2 h-6 w-6 text-neutral-300" />
+                        <p className="font-medium text-neutral-500 text-sm">Sin notificaciones</p>
+                        <p className="text-neutral-400 text-xs">No hay alertas ni plazos próximos a vencer</p>
+                      </div>
+                    ) : NOTIFICATIONS.map((n) => (
                       <button
                         key={n.id}
                         type="button"
+                        onClick={() => {
+                          setShowNotifications(false);
+                          onNotificationClick?.(n.causaId!);
+                        }}
                         className="flex w-full items-start gap-3 border-neutral-100 border-b p-4 text-left transition-all last:border-b-0 hover:bg-neutral-50"
                       >
                         <div

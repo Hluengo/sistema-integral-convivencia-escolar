@@ -632,7 +632,7 @@ export default function AnotacionesStudentDetailModal({
             Anotaciones Detectadas ({parsedAnnotations.length})
           </h3>
           <div className="max-h-80 space-y-3 overflow-y-auto">
-            {annotations.map((ann: any, index: number) => {
+            {parsedAnnotations.map((ann: any, index: number) => {
               const severity = ann.severity || 'Leve';
               const badge = SEVERITY_BADGE[severity] || SEVERITY_BADGE.Leve;
               return (

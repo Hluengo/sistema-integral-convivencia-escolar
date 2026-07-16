@@ -516,7 +516,7 @@ export async function uploadDocument(
 ): Promise<string | null> {
   const filePath = `${causaId}/${prefix}/${Date.now()}_${file.name}`;
 
-  const { data: _data, error } = await supabase.storage
+  const { error } = await supabase.storage
     .from(STORAGE_BUCKET)
     .upload(filePath, file, {
       cacheControl: '3600',
@@ -551,8 +551,6 @@ export async function listDocuments(causaId: string): Promise<{ name: string; ur
     console.error('Error listing documents:', error);
     return [];
   }
-
-  const _results: { name: string; url: string }[] = [];
 
   const signedUrls = await Promise.all(
     data.map(async (item) => {

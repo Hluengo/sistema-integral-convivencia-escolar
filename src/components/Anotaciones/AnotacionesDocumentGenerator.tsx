@@ -5,8 +5,6 @@ import { Printer, FileDown, FileText, AlertTriangle } from 'lucide-react';
 import type { Annotation } from '../../types';
 import { getCurrentDateStr, getSemaphoricStyle } from '../../lib/anotacionesUtils';
 import { supabase } from '../../lib/supabase';
-import { buildDocx } from '../../lib/docxBuilder';
-import { buildPdf } from '../../lib/pdfBuilder';
 import DocTypeSelector from './docgen/DocTypeSelector';
 import DocumentForm from './docgen/DocumentForm';
 import DocumentPreview from './docgen/DocumentPreview';
@@ -170,6 +168,7 @@ export default function AnotacionesDocumentGenerator({
     };
 
     try {
+      const { buildDocx } = await import('../../lib/docxBuilder');
       const blob = await buildDocx({
         docType: docType as 'amonestacion' | 'compromiso_conductual' | 'derivacion',
         studentName: student.full_name,
@@ -206,6 +205,7 @@ export default function AnotacionesDocumentGenerator({
     };
 
     try {
+      const { buildPdf } = await import('../../lib/pdfBuilder');
       const pdfBytes = await buildPdf({
         docType: docType as 'amonestacion' | 'compromiso_conductual' | 'derivacion',
         studentName: student.full_name,

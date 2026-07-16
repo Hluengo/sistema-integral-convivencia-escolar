@@ -8,33 +8,6 @@ import AnotacionesStudentTable from './AnotacionesStudentTable';
 import AnotacionesStudentDetailModal from './AnotacionesStudentDetailModal';
 import NewDisciplinaryProcessModal from './NewDisciplinaryProcessModal';
 
-const _TEACHERS_BY_COURSE: Record<string, string> = {
-  '1° Básico A': 'CONSTANZA ESPINOZA MIRANDA',
-  '1° Básico B': 'NATALIA ALBORNOZ RODRÍGUEZ',
-  '2° Básico A': 'CAMILA GODOY VENEGAS',
-  '2° Básico B': 'BELÉN FUENTES SALAZAR',
-  '3° Básico A': 'ESPERANZA MORAGA SAINT JOUR',
-  '3° Básico B': 'MARÍA OLIVIA GARCÉS',
-  '4° Básico A': 'JAVIERA JOFRÉ SAN MARTÍN',
-  '4° Básico B': 'CAROLINA RUÍZ RISOPATRÓN',
-  '5° Básico A': 'PAMELA JARA GONZÁLEZ',
-  '5° Básico B': 'VIVIANA SAAVEDRA BARRERA',
-  '6° Básico A': 'SILVANA PINCHEIRA RODRÍGUEZ',
-  '6° Básico B': 'ROSARIO SALINAS CAMPOS',
-  '7° Básico A': 'MARCELO MUÑOZ PINO',
-  '7° Básico B': 'MARÍA ISABEL MATUS RETAMAL',
-  '8° Básico A': 'VANNIA RETAMAL SALGADO',
-  '8° Básico B': 'PATRICIO ZAMBRANO ASENCIO',
-  '1° Medio A': 'ESTER CONTRERAS ESPINOZA',
-  '1° Medio B': 'MARITZA CARRASCO PALMA',
-  '2° Medio A': 'PERCY ROCHA LUNA',
-  '2° Medio B': 'JEREMY PÉREZ MUÑOZ',
-  '3° Medio A': 'ANGELO FREIRE CONTRERAS',
-  '3° Medio B': 'CAROLINA AGÜERO CÁRDENAS',
-  '4° Medio A': 'VICENTE BURGOS ESTRADA',
-  '4° Medio B': 'KEYLA RODRÍGUEZ SANHUEZA',
-};
-
 interface AnotacionesViewProps {
   privacyMode: boolean;
 }

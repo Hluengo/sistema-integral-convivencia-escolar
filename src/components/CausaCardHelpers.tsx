@@ -52,9 +52,16 @@ export function PlazoBar({ causa }: { causa: Causa }) {
     causa.estadoActual === EstadoCausa.RESOLUCION_FINAL_NOTIFICADA || 
     causa.estadoActual === EstadoCausa.EN_PLAZO_APELACION
   ) {
-    plazoText = 'Plazo apelación: 2d restantes';
-    isAlert = true;
-    colorClasses = 'bg-grave-50 text-grave-700 border-grave-200';
+    const remaining = remainingProcedureDays(causa.fechaUltimaActualizacion, 5);
+    if (remaining <= 0) {
+      plazoText = 'Plazo apelación excedido';
+      isAlert = true;
+      colorClasses = 'bg-gravisima-50 text-gravisima-700 border-gravisima-200';
+    } else {
+      plazoText = `Apelación: ${remaining}d restantes`;
+      isAlert = true;
+      colorClasses = 'bg-grave-50 text-grave-700 border-grave-200';
+    }
   } else {
     const remaining = remainingProcedureDays(causa.fechaApertura, 60);
     if (remaining <= 0) {

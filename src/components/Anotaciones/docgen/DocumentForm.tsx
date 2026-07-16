@@ -57,7 +57,7 @@ export default function DocumentForm({
 }: DocumentFormProps) {
   const [newCommitment, setNewCommitment] = useState('');
 
-  const negativeAnnotations = annotations.filter((a: any) => a.tipo === 'negativa' || a.valor < 0);
+  const negativeAnnotations = annotations.filter((a: any) => (a.type || '').toLowerCase() === 'negativa');
 
   const selectedAnnotationsSet = new Set(selectedAnnotationsForDoc);
 
@@ -214,11 +214,11 @@ export default function DocumentForm({
                   )}
                   <div className="min-w-0 flex-1">
                     <span className="block truncate font-medium text-neutral-800 text-sm">
-                      {a.descripcion || a.motivo || 'Sin descripción'}
+                      {a.text || a.observation || 'Sin descripción'}
                     </span>
                     <span className="mt-0.5 block text-neutral-500 text-xs">
-                      {a.fecha ? new Date(a.fecha).toLocaleDateString('es-CL') : ''} &middot;{' '}
-                      {a.asignatura || a.materia || 'Sin asignatura'}
+                      {a.date ? new Date(a.date).toLocaleDateString('es-CL') : a.date_time ? new Date(a.date_time).toLocaleDateString('es-CL') : ''} &middot;{' '}
+                      {a.severity || 'Sin asignatura'}
                     </span>
                   </div>
                 </button>

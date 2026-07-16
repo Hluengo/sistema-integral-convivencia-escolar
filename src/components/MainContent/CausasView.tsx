@@ -269,7 +269,7 @@ export default function CausasView({
             privacyMode={privacyMode}
             onReopenCausa={handleReopenCausa}
             onSelectCausa={(causa) => {
-              handleSelectCausaFromDashboard?.(causa.id);
+              handleSelectCausaFromDashboard(causa.id);
             }}
           />
         </div>

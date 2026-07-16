@@ -19,9 +19,6 @@ export const MAX_PLAZO_SUSPENSION_DIAS = 15;
 /** Plazo para notificar a Superintendencia en casos de expulsión (5 días hábiles) */
 export const MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS = 5;
 
-/** Plazo Aula Segura: 10 días hábiles para resolución */
-export const MAX_PLAZO_AULA_SEGURA_DIAS = 10;
-
 /** Alertar cuando queden N días para vencer el plazo */
 export const DIAS_ALERTA_PLAZO_CRITICO = 3;
 

@@ -4,7 +4,7 @@
  */
 
 import type React from 'react';
-import { Suspense, lazy } from 'react';
+import { useCallback, Suspense, lazy } from 'react';
 import type { Causa, FaseProcedimental } from '../types';
 import type { SidebarView } from './Sidebar';
 import type { FormAction } from '../hooks/useNewCausaForm';
@@ -77,6 +77,11 @@ export default function MainContent({
   handleSelectCausaFromDashboard,
   handleOpenCreateForm,
 }: MainContentProps) {
+  const handleFaseSelect = useCallback(
+    (fase: FaseProcedimental | 'Todas') => setSelectedFaseFilter(fase),
+    [setSelectedFaseFilter]
+  );
+
   return (
     <main
       id="main-content"
@@ -96,10 +101,7 @@ export default function MainContent({
           <Suspense fallback={<ViewFallback />}>
             <DashboardStats
               causas={causas}
-              onFaseSelect={(fase) => {
-                setSelectedFaseFilter(fase);
-              }}
-              selectedFase={selectedFaseFilter}
+              onFaseSelect={handleFaseSelect}
             />
           </Suspense>
         </ErrorBoundary>
