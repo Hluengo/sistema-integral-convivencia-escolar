@@ -26,8 +26,8 @@ export function useCourses() {
         setCourses(data);
         setIsLoading(false);
       }
-    } catch (err) {
-      if (!isMountedRef.current) return;
+    } catch (_err) {
+      if (!isMountedRef.current) { return; }
       if (retryCount < 2) {
         setTimeout(() => load(retryCount + 1), 1000 * (retryCount + 1));
       } else {
@@ -69,8 +69,8 @@ export function useStudents(courseId: string) {
         setStudents(data);
         setIsLoading(false);
       }
-    } catch (err) {
-      if (!isMountedRef.current) return;
+    } catch (_err) {
+      if (!isMountedRef.current) { return; }
       if (retryCount < 2) {
         setTimeout(() => load(retryCount + 1), 1000 * (retryCount + 1));
       } else {

@@ -13,7 +13,7 @@
 import dotenv from 'dotenv';
 import { supabase, createCausa } from '../src/lib/supabase';
 import { createDraftCausa } from '../src/lib/causaFactory';
-import { Causa, EstadoCausa } from '../src/types';
+import type { Causa } from '../src/types';
 
 dotenv.config({ path: '.env.local' });
 
@@ -38,10 +38,7 @@ async function clearAllData(): Promise<boolean> {
     console.error('Error clearing checklist_items:', deleteChecklist);
   }
 
-  const { error: deleteCausas } = await supabase
-    .from('causas')
-    .delete()
-    .neq('id', '');
+  const { error: deleteCausas } = await supabase.from('causas').delete().neq('id', '');
 
   if (deleteCausas) {
     console.error('Error clearing causas:', deleteCausas);
@@ -53,9 +50,7 @@ async function clearAllData(): Promise<boolean> {
 }
 
 async function seedInitialData(causas: Causa[]): Promise<boolean> {
-  const { count } = await supabase
-    .from('causas')
-    .select('*', { count: 'exact', head: true });
+  const { count } = await supabase.from('causas').select('*', { count: 'exact', head: true });
 
   if (count && count > 0) {
     console.log('Data already seeded, skipping.');
@@ -119,7 +114,9 @@ async function main() {
     console.log('Seed finalizado correctamente.');
     if (demoOnly) {
       console.log('Datos de demostración insertados:');
-      causasToSeed.forEach((c) => console.log(`  - ${c.id} | ${c.estudianteNombre} | ${c.estadoActual}`));
+      for (const c of causasToSeed) {
+        console.log(`  - ${c.id} | ${c.estudianteNombre} | ${c.estadoActual}`);
+      }
     }
   } else {
     console.error('Seed falló. Verifique la conexión con Supabase.');

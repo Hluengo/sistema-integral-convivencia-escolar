@@ -1,16 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import {
-  Printer,
-  FileDown,
-  FileText,
-  AlertTriangle,
-  CheckCircle2,
-  X,
-  Plus,
-  Trash2,
-} from 'lucide-react';
+import { Printer, FileDown, FileText, AlertTriangle } from 'lucide-react';
 import type { Annotation } from '../../types';
 import { getCurrentDateStr, getSemaphoricStyle } from '../../lib/anotacionesUtils';
 import { supabase } from '../../lib/supabase';
@@ -37,7 +28,7 @@ interface AnotacionesDocumentGeneratorProps {
 export default function AnotacionesDocumentGenerator({
   student,
   annotations,
-  privacyMode,
+  privacyMode: _privacyMode,
   teachers,
 }: AnotacionesDocumentGeneratorProps) {
   // ── Derived data ─────────────────────────────────────────────
@@ -47,7 +38,7 @@ export default function AnotacionesDocumentGenerator({
 
   // ── Document type ────────────────────────────────────────────
   const [docType, setDocType] = useState<'amonestacion' | 'compromiso_conductual' | 'derivacion'>(
-    negativeCount >= 10 ? 'compromiso_conductual' : 'amonestacion',
+    negativeCount >= 10 ? 'compromiso_conductual' : 'amonestacion'
   );
 
   // ── Form fields ──────────────────────────────────────────────
@@ -103,13 +94,15 @@ export default function AnotacionesDocumentGenerator({
 
   const handleToggleAnnotation = (id: string) => {
     setSelectedAnnotationsForDoc((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   };
 
   const handleAddCustomCommitment = () => {
     const trimmed = newCustomCommitmentRef.current.trim();
-    if (!trimmed) return;
+    if (!trimmed) {
+      return;
+    }
     setCustomCommitments((prev) => [...prev, trimmed]);
     newCustomCommitmentRef.current = '';
   };
@@ -155,20 +148,14 @@ export default function AnotacionesDocumentGenerator({
         const updated = [newEntry, ...emittedList];
         setEmittedList(updated);
         localStorage.setItem('convivencia_anotaciones_emitted:v1', JSON.stringify(updated));
-        alert(
-          '\u2705 Documento registrado exitosamente en cartas_disciplinarias.',
-        );
+        alert('\u2705 Documento registrado exitosamente en cartas_disciplinarias.');
       } else {
         console.error('Error al registrar carta:', error);
-        alert(
-          '\u26a0\ufe0f Error al registrar el documento: ' + error.message,
-        );
+        alert(`\u26a0\ufe0f Error al registrar el documento: ${error.message}`);
       }
     } catch (err) {
       console.error('Error en handleRegisterCommitment:', err);
-      alert(
-        '\u26a0\ufe0f Ocurri\u00f3 un error inesperado. Intente nuevamente.',
-      );
+      alert('\u26a0\ufe0f Ocurri\u00f3 un error inesperado. Intente nuevamente.');
     } finally {
       setIsRegistering(false);
     }
@@ -257,9 +244,7 @@ export default function AnotacionesDocumentGenerator({
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      alert(
-        'Por favor habilite las ventanas emergentes en su navegador para imprimir.',
-      );
+      alert('Por favor habilite las ventanas emergentes en su navegador para imprimir.');
       return;
     }
 
@@ -298,29 +283,30 @@ export default function AnotacionesDocumentGenerator({
   };
 
   // ── Selected annotations for preview ─────────────────────────
-  const selectedIdsSet = useMemo(() => new Set(selectedAnnotationsForDoc), [selectedAnnotationsForDoc]);
-  const selectedAnnsObjects = annotations.filter((a) =>
-    selectedIdsSet.has(a.id),
+  const selectedIdsSet = useMemo(
+    () => new Set(selectedAnnotationsForDoc),
+    [selectedAnnotationsForDoc]
   );
+  const selectedAnnsObjects = annotations.filter((a) => selectedIdsSet.has(a.id));
 
   // ── Render ───────────────────────────────────────────────────
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white p-5 rounded-2xl border border-neutral-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col justify-between gap-4 rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-xs sm:flex-row sm:items-center">
         <div>
-          <h3 className="text-sm font-bold text-neutral-900 flex items-center gap-2">
-            <FileText className="w-5 h-5 text-indigo-600" />
+          <h3 className="flex items-center gap-2 font-bold text-neutral-900 text-sm">
+            <FileText className="h-5 w-5 text-indigo-600" />
             Generaci\u00f3n de Documentos Disciplinarios
           </h3>
-          <p className="text-xs text-neutral-500 mt-1">
+          <p className="mt-1 text-neutral-500 text-xs">
             Emisi\u00f3n de cartas de amonestaci\u00f3n, compromiso conductual y derivaci\u00f3n.
           </p>
         </div>
         <div
-          className={`px-4 py-2 rounded-xl border flex items-center gap-2 text-xs font-semibold shrink-0 ${semaphoric.badge}`}
+          className={`flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2 font-semibold text-xs ${semaphoric.badge}`}
         >
-          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <AlertTriangle className="h-4 w-4 shrink-0" />
           <span>
             {negativeCount >= 10
               ? `Reiteraci\u00f3n de faltas (${negativeCount} negativas)`
@@ -330,11 +316,11 @@ export default function AnotacionesDocumentGenerator({
       </div>
 
       {/* Main grid: Left form / Right preview */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
         {/* Left column */}
-        <div className="lg:col-span-5 space-y-6">
+        <div className="space-y-6 lg:col-span-5">
           {/* Document type selector */}
-          <div className="bg-white rounded-2xl border border-neutral-200 p-5 shadow-xs space-y-4">
+          <div className="space-y-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs">
             <DocTypeSelector
               docType={docType}
               onDocTypeChange={(type: string) =>
@@ -349,13 +335,13 @@ export default function AnotacionesDocumentGenerator({
               negativeCount={negativeCount}
               hasTenOrMore={negativeCount >= 10}
               authorizedBypass={authorizedBypass}
-              onAuthorizedBypass={() => setAuthorizedBypass(v => !v)}
+              onAuthorizedBypass={() => setAuthorizedBypass((v) => !v)}
               authorizedDuplicate={authorizedDuplicate}
-              onAuthorizedDuplicate={() => setAuthorizedDuplicate(v => !v)}
+              onAuthorizedDuplicate={() => setAuthorizedDuplicate((v) => !v)}
               isDocLockedByProgress={false}
               existingLetter={null}
               bypassProgressLock={bypassProgressLock}
-              onBypassProgressLock={() => setBypassProgressLock(v => !v)}
+              onBypassProgressLock={() => setBypassProgressLock((v) => !v)}
             />
           </div>
 
@@ -385,7 +371,7 @@ export default function AnotacionesDocumentGenerator({
         </div>
 
         {/* Right column */}
-        <div className="lg:col-span-7 space-y-4">
+        <div className="space-y-4 lg:col-span-7">
           {/* Document preview */}
           <DocumentPreview
             docType={docType}
@@ -407,33 +393,33 @@ export default function AnotacionesDocumentGenerator({
           />
 
           {/* Action buttons */}
-          <div className="bg-white rounded-2xl border border-neutral-200 p-4 shadow-xs">
-            <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">
+          <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-xs">
+            <p className="mb-3 font-semibold text-neutral-500 text-xs uppercase tracking-wider">
               Acciones del Documento
             </p>
             <div className="flex flex-wrap gap-3">
               <button
                 type="button"
                 onClick={handlePrintDoc}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-neutral-700 text-white text-sm font-medium rounded-xl hover:bg-neutral-800 transition-colors shadow-xs"
+                className="inline-flex items-center gap-2 rounded-xl bg-neutral-700 px-4 py-2.5 font-medium text-sm text-white shadow-xs transition-colors hover:bg-neutral-800"
               >
-                <Printer className="w-4 h-4" />
+                <Printer className="h-4 w-4" />
                 Imprimir
               </button>
               <button
                 type="button"
                 onClick={handleExportPDF}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700 transition-colors shadow-xs"
+                className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 font-medium text-sm text-white shadow-xs transition-colors hover:bg-red-700"
               >
-                <FileDown className="w-4 h-4" />
+                <FileDown className="h-4 w-4" />
                 Descargar PDF
               </button>
               <button
                 type="button"
                 onClick={handleExportWord}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition-colors shadow-xs"
+                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 font-medium text-sm text-white shadow-xs transition-colors hover:bg-blue-700"
               >
-                <FileDown className="w-4 h-4" />
+                <FileDown className="h-4 w-4" />
                 Descargar Word
               </button>
             </div>
@@ -441,20 +427,20 @@ export default function AnotacionesDocumentGenerator({
 
           {/* Recently emitted */}
           {emittedList.length > 0 && (
-            <div className="bg-white rounded-2xl border border-neutral-200 p-4 shadow-xs">
-              <h4 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-3">
+            <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-xs">
+              <h4 className="mb-3 font-semibold text-neutral-500 text-xs uppercase tracking-wider">
                 \u00daltimos documentos emitidos
               </h4>
               <ul className="space-y-2">
                 {emittedList.slice(0, 5).map((entry, i) => (
                   <li
                     key={entry.id || i}
-                    className="flex items-center justify-between text-xs text-neutral-700 bg-neutral-50 rounded-lg px-3 py-2"
+                    className="flex items-center justify-between rounded-lg bg-neutral-50 px-3 py-2 text-neutral-700 text-xs"
                   >
-                    <span className="font-medium truncate">
+                    <span className="truncate font-medium">
                       {entry.studentName || entry.student_name}
                     </span>
-                    <span className="text-neutral-400 shrink-0 ml-2">
+                    <span className="ml-2 shrink-0 text-neutral-400">
                       {entry.emissionDate || entry.emission_date}
                     </span>
                   </li>
@@ -467,5 +453,3 @@ export default function AnotacionesDocumentGenerator({
     </div>
   );
 }
-
-

@@ -1,6 +1,19 @@
-import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
-import { Causa } from '../types';
-import { createCausa, fetchCausas, saveBitacora, saveChecklist, updateCausa } from '../lib/supabase';
+import {
+  type Dispatch,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import type { Causa } from '../types';
+import {
+  createCausa,
+  fetchCausas,
+  saveBitacora,
+  saveChecklist,
+  updateCausa,
+} from '../lib/supabase';
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
@@ -36,42 +49,55 @@ export function useCausasPersistence({
     };
   }, []);
 
-  const loadCausas = useCallback(async (retryCount = 0) => {
-    isLoadingCausasRef.current = true;
-    setLoadError(null);
-    try {
-      const loaded = await fetchCausas();
-      if (!isMountedRef.current) return;
-      setCausas(loaded);
-      const newMap = new Map<string, string>();
-      loaded.forEach(c => newMap.set(c.id, JSON.stringify(c)));
-      prevCausasMapRef.current = newMap;
-      if (loaded.length > 0) {
-        setSelectedCausaId(loaded[0].id);
+  const loadCausas = useCallback(
+    async (retryCount = 0) => {
+      isLoadingCausasRef.current = true;
+      setLoadError(null);
+      try {
+        const loaded = await fetchCausas();
+        if (!isMountedRef.current) {
+          return;
+        }
+        setCausas(loaded);
+        const newMap = new Map<string, string>();
+        for (const c of loaded) {
+          newMap.set(c.id, JSON.stringify(c));
+        }
+        prevCausasMapRef.current = newMap;
+        if (loaded.length > 0) {
+          setSelectedCausaId(loaded[0].id);
+        }
+      } catch (error) {
+        console.error('Error loading causas:', error);
+        if (!isMountedRef.current) {
+          return;
+        }
+        if (retryCount < 2) {
+          setTimeout(() => loadCausas(retryCount + 1), 1000 * (retryCount + 1));
+        } else {
+          setLoadError('Error al cargar los expedientes. Verifique su conexión.');
+          setCausas([]);
+          setSelectedCausaId('');
+        }
+      } finally {
+        isLoadingCausasRef.current = false;
       }
-    } catch (error) {
-      console.error('Error loading causas:', error);
-      if (!isMountedRef.current) return;
-      if (retryCount < 2) {
-        setTimeout(() => loadCausas(retryCount + 1), 1000 * (retryCount + 1));
-      } else {
-        setLoadError('Error al cargar los expedientes. Verifique su conexión.');
-        setCausas([]);
-        setSelectedCausaId('');
-      }
-    } finally {
-      isLoadingCausasRef.current = false;
-    }
-  }, [setCausas, setSelectedCausaId]);
+    },
+    [setCausas, setSelectedCausaId]
+  );
 
   useEffect(() => {
-    if (dataInitializedRef.current) return;
+    if (dataInitializedRef.current) {
+      return;
+    }
     dataInitializedRef.current = true;
     loadCausas();
   }, [loadCausas]);
 
   useEffect(() => {
-    if (causas.length === 0 || isLoadingCausasRef.current) return;
+    if (causas.length === 0 || isLoadingCausasRef.current) {
+      return;
+    }
 
     const changedIds: string[] = [];
     const currentMap = new Map<string, string>();
@@ -87,9 +113,13 @@ export function useCausasPersistence({
 
     prevCausasMapRef.current = currentMap;
 
-    if (changedIds.length === 0 || !isAuthenticated) return;
+    if (changedIds.length === 0 || !isAuthenticated) {
+      return;
+    }
 
-    changedIds.forEach(id => pendingSaveRef.current.add(id));
+    for (const id of changedIds) {
+      pendingSaveRef.current.add(id);
+    }
 
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -103,52 +133,66 @@ export function useCausasPersistence({
     const generation = ++saveGenerationRef.current;
 
     saveTimeoutRef.current = setTimeout(async () => {
-      if (generation !== saveGenerationRef.current) return;
+      if (generation !== saveGenerationRef.current) {
+        return;
+      }
 
       const idsToSave = new Set(pendingSaveRef.current);
       pendingSaveRef.current.clear();
 
-      if (idsToSave.size === 0) return;
+      if (idsToSave.size === 0) {
+        return;
+      }
 
       setSaveStatus('saving');
 
       try {
-        const causasToSave = causas.filter(c => idsToSave.has(c.id));
+        const causasToSave = causas.filter((c) => idsToSave.has(c.id));
 
-        const results = await Promise.all(causasToSave.map(async (causa) => {
-          const originalId = causa.id;
-          const success = await updateCausa(causa);
-          let effectiveId = originalId;
-          if (!success) {
-            const createdId = await createCausa(causa);
-            if (!createdId) {
-              console.error(`Failed to save causa ${originalId}`);
-              return false;
+        const results = await Promise.all(
+          causasToSave.map(async (causa) => {
+            const originalId = causa.id;
+            const success = await updateCausa(causa);
+            let effectiveId = originalId;
+            if (!success) {
+              const createdId = await createCausa(causa);
+              if (!createdId) {
+                console.error(`Failed to save causa ${originalId}`);
+                return false;
+              }
+              effectiveId = createdId;
+              setCausas((prev) =>
+                prev.map((c) => (c.id === originalId ? { ...c, id: createdId } : c))
+              );
             }
-            effectiveId = createdId;
-            setCausas(prev => prev.map(c => c.id === originalId ? { ...c, id: createdId } : c));
-          }
-          await Promise.all([
-            saveBitacora(effectiveId, causa.bitacora),
-            saveChecklist(effectiveId, causa.checklistDebidoProceso),
-          ]);
-          return true;
-        }));
+            await Promise.all([
+              saveBitacora(effectiveId, causa.bitacora),
+              saveChecklist(effectiveId, causa.checklistDebidoProceso),
+            ]);
+            return true;
+          })
+        );
 
-        if (!isMountedRef.current) return;
+        if (!isMountedRef.current) {
+          return;
+        }
 
-        if (results.some(result => !result)) {
+        if (results.some((result) => !result)) {
           setSaveStatus('error');
           return;
         }
 
         setSaveStatus('saved');
         saveIdleTimeoutRef.current = setTimeout(() => {
-          if (!isMountedRef.current) return;
+          if (!isMountedRef.current) {
+            return;
+          }
           setSaveStatus((prev) => (prev === 'saved' ? 'idle' : prev));
         }, 2000);
       } catch (error) {
-        if (!isMountedRef.current) return;
+        if (!isMountedRef.current) {
+          return;
+        }
         console.error('Autosave failed:', error);
         setSaveStatus('error');
       }
@@ -165,7 +209,7 @@ export function useCausasPersistence({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Autosave solo debe re-ejecutarse cuando cambian los datos, no las referencias de funciones.
-  }, [causas]);
+  }, [causas, setSaveStatus, setCausas, isAuthenticated]);
 
   return { loadError, retryLoad: () => loadCausas() };
 }

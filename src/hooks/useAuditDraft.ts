@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Causa } from '../types';
+import { useState, useRef, useEffect } from 'react';
+import type { Causa } from '../types';
 import { supabase } from '../lib/supabase';
 
 interface UseAuditDraftArgs {
@@ -16,7 +16,7 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.access_token) {
-      headers['Authorization'] = `Bearer ${session.access_token}`;
+      headers.Authorization = `Bearer ${session.access_token}`;
     }
   } catch (err) {
     console.warn('No se pudo obtener sesión para auth headers:', err);
@@ -42,7 +42,7 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
-      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+      if (copyTimeoutRef.current) { clearTimeout(copyTimeoutRef.current); }
     };
   }, []);
 
@@ -65,14 +65,14 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
         }),
       });
       const data = await response.json();
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current) { return; }
       setAuditReport(data.success ? data.report : `**Error de Auditoría:** ${data.error}`);
     } catch (error: unknown) {
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current) { return; }
       const msg = error instanceof Error ? error.message : 'Error desconocido';
       setAuditReport(`**Error al comunicar con el servidor:** ${msg}`);
     } finally {
-      if (isMountedRef.current) setIsAuditing(false);
+      if (isMountedRef.current) { setIsAuditing(false); }
     }
   };
 
@@ -106,23 +106,23 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
         }),
       });
       const data = await response.json();
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current) { return; }
       setDraftedDocument(data.success ? data.document : `**Error de Redacción:** ${data.error}`);
     } catch (error: unknown) {
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current) { return; }
       const msg = error instanceof Error ? error.message : 'Error desconocido';
       setDraftedDocument(`**Error de conexión:** ${msg}`);
     } finally {
-      if (isMountedRef.current) setIsDrafting(false);
+      if (isMountedRef.current) { setIsDrafting(false); }
     }
   };
 
   const handleCopyToClipboard = async () => {
-    if (!navigator.clipboard) return;
+    if (!navigator.clipboard) { return; }
     try {
       await navigator.clipboard.writeText(draftedDocument);
       setCopyFeedback(true);
-      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+      if (copyTimeoutRef.current) { clearTimeout(copyTimeoutRef.current); }
       copyTimeoutRef.current = setTimeout(() => {
         setCopyFeedback(false);
       }, 2000);

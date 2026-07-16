@@ -57,15 +57,13 @@ export default function DocumentForm({
 }: DocumentFormProps) {
   const [newCommitment, setNewCommitment] = useState('');
 
-  const negativeAnnotations = annotations.filter(
-    (a: any) => a.tipo === 'negativa' || a.valor < 0
-  );
+  const negativeAnnotations = annotations.filter((a: any) => a.tipo === 'negativa' || a.valor < 0);
 
   const selectedAnnotationsSet = new Set(selectedAnnotationsForDoc);
 
   const handleAddCommitment = () => {
     const trimmed = newCommitment.trim();
-    if (trimmed.length === 0) return;
+    if (trimmed.length === 0) { return; }
     onAddCommitment(trimmed);
     setNewCommitment('');
   };
@@ -82,7 +80,10 @@ export default function DocumentForm({
       {/* Apoderado — visible para todos excepto derivación */}
       {docType !== 'derivacion' && (
         <div>
-          <label htmlFor="apoderado-name" className="block text-sm font-medium text-neutral-700 mb-1">
+          <label
+            htmlFor="apoderado-name"
+            className="mb-1 block font-medium text-neutral-700 text-sm"
+          >
             Nombre del Apoderado
           </label>
           <input
@@ -91,16 +92,19 @@ export default function DocumentForm({
             value={apoderadoName}
             onChange={(e) => onApoderadoNameChange(e.target.value)}
             placeholder="Ingrese el nombre del apoderado"
-            className="w-full px-3 py-2 border border-neutral-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-brand-500 text-sm"
+            className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
           />
         </div>
       )}
 
       {/* Coordinador / Emitido por — solo para compromiso_conductual */}
       {docType === 'compromiso_conductual' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="coordinator-name" className="block text-sm font-medium text-neutral-700 mb-1">
+            <label
+              htmlFor="coordinator-name"
+              className="mb-1 block font-medium text-neutral-700 text-sm"
+            >
               Nombre del Coordinador
             </label>
             <input
@@ -109,11 +113,11 @@ export default function DocumentForm({
               value={coordinatorName}
               onChange={(e) => onCoordinatorNameChange(e.target.value)}
               placeholder="Coordinador de ciclo / convivencia"
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-brand-500 text-sm"
+              className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label htmlFor="emitted-by" className="block text-sm font-medium text-neutral-700 mb-1">
+            <label htmlFor="emitted-by" className="mb-1 block font-medium text-neutral-700 text-sm">
               Emitido por
             </label>
             <input
@@ -122,7 +126,7 @@ export default function DocumentForm({
               value={emittedBy}
               onChange={(e) => onEmittedByChange(e.target.value)}
               placeholder="Nombre de quien emite"
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-brand-500 text-sm"
+              className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
@@ -131,14 +135,17 @@ export default function DocumentForm({
       {/* Estado del compromiso — solo para compromiso_conductual */}
       {docType === 'compromiso_conductual' && (
         <div>
-          <label htmlFor="compromiso-status" className="block text-sm font-medium text-neutral-700 mb-1">
+          <label
+            htmlFor="compromiso-status"
+            className="mb-1 block font-medium text-neutral-700 text-sm"
+          >
             Estado del Compromiso
           </label>
           <select
             id="compromiso-status"
             value={compromisoStatus}
             onChange={(e) => onCompromisoStatusChange(e.target.value)}
-            className="w-full px-3 py-2 border border-neutral-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-brand-500 text-sm bg-white"
+            className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
           >
             {COMPROMISO_STATUS_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -151,7 +158,10 @@ export default function DocumentForm({
 
       {/* Observaciones / Fundamentación */}
       <div>
-        <label htmlFor="doc-observations" className="block text-sm font-medium text-neutral-700 mb-1">
+        <label
+          htmlFor="doc-observations"
+          className="mb-1 block font-medium text-neutral-700 text-sm"
+        >
           {docType === 'derivacion' ? 'Fundamentación de la Derivación' : 'Observaciones'}
         </label>
         <textarea
@@ -164,28 +174,26 @@ export default function DocumentForm({
               : 'Observaciones adicionales para el documento...'
           }
           rows={4}
-          className="w-full px-3 py-2 border border-neutral-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-brand-500 text-sm resize-y"
+          className="w-full resize-y rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
         />
       </div>
 
       {/* Anotaciones negativas seleccionables */}
-      <div role="group" aria-label={"Anotaciones Negativas (" + negativeCount + ")"}>
-        <div className="flex items-center justify-between mb-2">
-          <span className="block text-sm font-medium text-neutral-700">
-            Anotaciones Negativas ({negativeCount})
+      <fieldset>
+        <legend className="block font-medium text-neutral-700 text-sm">
+          Anotaciones Negativas ({negativeCount})
+        </legend>
+        {selectedAnnotationsForDoc.length > 0 && (
+          <span className="mb-2 block font-medium text-brand-600 text-xs">
+            {selectedAnnotationsForDoc.length} seleccionada(s)
           </span>
-          {selectedAnnotationsForDoc.length > 0 && (
-            <span className="text-xs text-brand-600 font-medium">
-              {selectedAnnotationsForDoc.length} seleccionada(s)
-            </span>
-          )}
-        </div>
+        )}
         {negativeAnnotations.length === 0 ? (
-          <p className="text-sm text-neutral-500 italic">
+          <p className="text-neutral-500 text-sm italic">
             No hay anotaciones negativas para seleccionar.
           </p>
         ) : (
-          <div className="max-h-60 overflow-y-auto space-y-1.5 border border-neutral-200 rounded-lg p-2">
+          <div className="max-h-60 space-y-1.5 overflow-y-auto rounded-lg border border-neutral-200 p-2">
             {negativeAnnotations.map((a: any) => {
               const isSelected = selectedAnnotationsSet.has(a.id);
               return (
@@ -193,26 +201,24 @@ export default function DocumentForm({
                   key={a.id}
                   type="button"
                   onClick={() => onToggleAnnotation(a.id)}
-                  className={`w-full flex items-start gap-2.5 p-2.5 rounded-md text-left transition-colors ${
+                  className={`flex w-full items-start gap-2.5 rounded-md p-2.5 text-left transition-colors ${
                     isSelected
-                      ? 'bg-brand-50 border border-brand-200'
-                      : 'bg-white border border-neutral-100 hover:bg-neutral-50'
+                      ? 'border border-brand-200 bg-brand-50'
+                      : 'border border-neutral-100 bg-white hover:bg-neutral-50'
                   }`}
                 >
                   {isSelected ? (
-                    <CheckSquare className="w-4 h-4 mt-0.5 text-brand-600 flex-shrink-0" />
+                    <CheckSquare className="mt-0.5 h-4 w-4 flex-shrink-0 text-brand-600" />
                   ) : (
-                    <Square className="w-4 h-4 mt-0.5 text-neutral-400 flex-shrink-0" />
+                    <Square className="mt-0.5 h-4 w-4 flex-shrink-0 text-neutral-400" />
                   )}
                   <div className="min-w-0 flex-1">
-                    <span className="block text-sm font-medium text-neutral-800 truncate">
+                    <span className="block truncate font-medium text-neutral-800 text-sm">
                       {a.descripcion || a.motivo || 'Sin descripción'}
                     </span>
-                    <span className="block text-xs text-neutral-500 mt-0.5">
-                      {a.fecha
-                        ? new Date(a.fecha).toLocaleDateString('es-CL')
-                        : ''}{' '}
-                      &middot; {a.asignatura || a.materia || 'Sin asignatura'}
+                    <span className="mt-0.5 block text-neutral-500 text-xs">
+                      {a.fecha ? new Date(a.fecha).toLocaleDateString('es-CL') : ''} &middot;{' '}
+                      {a.asignatura || a.materia || 'Sin asignatura'}
                     </span>
                   </div>
                 </button>
@@ -220,15 +226,18 @@ export default function DocumentForm({
             })}
           </div>
         )}
-      </div>
+      </fieldset>
 
       {/* Compromisos personalizados — solo para compromiso_conductual */}
       {docType === 'compromiso_conductual' && (
         <div>
-          <label htmlFor="custom-commitment" className="block text-sm font-medium text-neutral-700 mb-1">
+          <label
+            htmlFor="custom-commitment"
+            className="mb-1 block font-medium text-neutral-700 text-sm"
+          >
             Compromisos Personalizados
           </label>
-          <div className="flex gap-2 mb-2">
+          <div className="mb-2 flex gap-2">
             <input
               id="custom-commitment"
               type="text"
@@ -236,16 +245,16 @@ export default function DocumentForm({
               onChange={(e) => setNewCommitment(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Escriba un compromiso y presione Enter o el botón +"
-              className="flex-1 px-3 py-2 border border-neutral-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-brand-500 text-sm"
+              className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
             />
             <button
               type="button"
               aria-label="Agregar compromiso"
               onClick={handleAddCommitment}
               disabled={newCommitment.trim().length === 0}
-              className="px-3 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="rounded-lg bg-brand-600 px-3 py-2 text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="h-4 w-4" />
             </button>
           </div>
           {customCommitments.length > 0 ? (
@@ -253,22 +262,22 @@ export default function DocumentForm({
               {customCommitments.map((c, i) => (
                 <li
                   key={c || i}
-                  className="flex items-start gap-2 bg-neutral-50 rounded-lg px-3 py-2 text-sm text-neutral-700"
+                  className="flex items-start gap-2 rounded-lg bg-neutral-50 px-3 py-2 text-neutral-700 text-sm"
                 >
                   <span className="flex-1">{c}</span>
                   <button
                     type="button"
-                    aria-label={"Eliminar compromiso: " + c}
+                    aria-label={`Eliminar compromiso: ${c}`}
                     onClick={() => onRemoveCommitment(i)}
-                    className="text-red-500 hover:text-red-700 transition-colors flex-shrink-0 mt-0.5"
+                    className="mt-0.5 flex-shrink-0 text-red-500 transition-colors hover:text-red-700"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="h-4 w-4" />
                   </button>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-neutral-500 italic">
+            <p className="text-neutral-500 text-sm italic">
               No se han agregado compromisos personalizados.
             </p>
           )}
@@ -277,14 +286,14 @@ export default function DocumentForm({
 
       {/* Botón de registro — solo para compromiso_conductual */}
       {docType === 'compromiso_conductual' && (
-        <div className="pt-4 border-t border-neutral-200">
+        <div className="border-neutral-200 border-t pt-4">
           <button
             type="button"
             onClick={onRegisterCommitment}
             disabled={isRegistering}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 font-medium text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <FileText className="w-5 h-5" />
+            <FileText className="h-5 w-5" />
             {isRegistering ? 'Registrando...' : 'Registrar y Emitir Carta'}
           </button>
         </div>
@@ -292,6 +301,3 @@ export default function DocumentForm({
     </div>
   );
 }
-
-
-

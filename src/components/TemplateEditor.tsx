@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Save, Loader2, CheckCircle, AlertCircle, FileText, ArrowLeft } from 'lucide-react';
 
 interface Template {
@@ -60,7 +60,7 @@ export default function TemplateEditor({ onBack }: { onBack: () => void }) {
   };
 
   const handleSave = async () => {
-    if (!selectedId) return;
+    if (!selectedId) { return; }
     setSaving(selectedId);
     setSaveSuccess(null);
     setSaveError(null);
@@ -100,41 +100,41 @@ export default function TemplateEditor({ onBack }: { onBack: () => void }) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-5 w-5 animate-spin text-brand-600" />
-        <span className="ml-2 text-xs text-neutral-500">Cargando plantillas...</span>
+        <span className="ml-2 text-neutral-500 text-xs">Cargando plantillas...</span>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-neutral-200/60 bg-white">
+      <div className="flex items-center gap-3 border-neutral-200/60 border-b bg-white px-4 py-3">
         <button
           type="button"
           onClick={onBack}
-          className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-500 hover:text-neutral-700 transition-colors"
+          className="rounded-lg p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700"
           aria-label="Volver al asesor"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
         <div className="flex items-center gap-2">
           <FileText className="h-4 w-4 text-brand-600" />
-          <h3 className="text-xs font-semibold text-neutral-900">Plantillas de Documentos</h3>
+          <h3 className="font-semibold text-neutral-900 text-xs">Plantillas de Documentos</h3>
         </div>
-        <span className="text-[9px] text-neutral-400 ml-auto">Edite los prompts usados por la IA</span>
+        <span className="ml-auto text-[9px] text-neutral-400">Edite los prompts usados por la IA</span>
       </div>
 
-      <div className="flex flex-1 min-h-0">
+      <div className="flex min-h-0 flex-1">
         {/* Sidebar - template list */}
-        <div className="w-48 border-r border-neutral-200/60 bg-neutral-50 overflow-y-auto shrink-0">
+        <div className="w-48 shrink-0 overflow-y-auto border-neutral-200/60 border-r bg-neutral-50">
           {templates.map(tpl => (
             <button
               type="button"
               key={tpl.id}
               onClick={() => handleSelect(tpl)}
-              className={`w-full text-left px-3 py-2.5 text-[10px] font-medium border-b border-neutral-100 transition-colors ${
+              className={`w-full border-neutral-100 border-b px-3 py-2.5 text-left font-medium text-[10px] transition-colors ${
                 selectedId === tpl.id
-                  ? 'bg-brand-50 text-brand-700 border-l-2 border-l-brand-600'
+                  ? 'border-l-2 border-l-brand-600 bg-brand-50 text-brand-700'
                   : 'text-neutral-600 hover:bg-neutral-100'
               }`}
             >
@@ -144,21 +144,21 @@ export default function TemplateEditor({ onBack }: { onBack: () => void }) {
         </div>
 
         {/* Editor */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex min-w-0 flex-1 flex-col">
           {selectedId ? (
             <>
-              <div className="px-4 py-2 border-b border-neutral-100 bg-white flex items-center justify-between">
-                <span className="text-[10px] font-medium text-neutral-500">
+              <div className="flex items-center justify-between border-neutral-100 border-b bg-white px-4 py-2">
+                <span className="font-medium text-[10px] text-neutral-500">
                   {templates.find(t => t.id === selectedId)?.label || selectedId}
                 </span>
                 <div className="flex items-center gap-2">
                   {saveSuccess === selectedId && (
-                    <span className="flex items-center gap-1 text-[9px] text-green-600 font-medium animate-fade-in">
+                    <span className="flex animate-fade-in items-center gap-1 font-medium text-[9px] text-green-600">
                       <CheckCircle className="h-3 w-3" /> Guardado
                     </span>
                   )}
                   {saveError && (
-                    <span className="flex items-center gap-1 text-[9px] text-red-600 font-medium">
+                    <span className="flex items-center gap-1 font-medium text-[9px] text-red-600">
                       <AlertCircle className="h-3 w-3" /> {saveError}
                     </span>
                   )}
@@ -166,7 +166,7 @@ export default function TemplateEditor({ onBack }: { onBack: () => void }) {
                     type="button"
                     onClick={handleSave}
                     disabled={saving !== null}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-600 hover:bg-brand-700 disabled:bg-neutral-300 text-white text-[10px] font-semibold rounded-lg transition-colors"
+                    className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 font-semibold text-[10px] text-white transition-colors hover:bg-brand-700 disabled:bg-neutral-300"
                   >
                     {saving === selectedId ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
@@ -180,13 +180,13 @@ export default function TemplateEditor({ onBack }: { onBack: () => void }) {
               <textarea
                 value={editPrompt}
                 onChange={(e) => setEditPrompt(e.target.value)}
-                className="flex-1 w-full p-4 text-[11px] leading-relaxed font-mono text-neutral-800 bg-white resize-none focus:outline-none focus:ring-2 focus:ring-brand-200"
+                className="w-full flex-1 resize-none bg-white p-4 font-mono text-[11px] text-neutral-800 leading-relaxed focus:outline-none focus:ring-2 focus:ring-brand-200"
                 spellCheck={false}
                 aria-label="Contenido del prompt"
               />
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-xs text-neutral-400">
+            <div className="flex flex-1 items-center justify-center text-neutral-400 text-xs">
               Seleccione una plantilla para editar
             </div>
           )}

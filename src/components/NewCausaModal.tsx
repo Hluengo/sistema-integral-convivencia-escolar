@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useRef, useEffect } from 'react';
+import type React from 'react';
+import { useRef, useEffect } from 'react';
 import type { Course, Student } from '../lib/supabase';
 import type { Causa } from '../types';
 import NewCausaForm from './NewCausaForm';
@@ -66,7 +67,7 @@ export default function NewCausaModal({
 
   useEffect(() => {
     const dialog = dialogRef.current;
-    if (!dialog) return;
+    if (!dialog) { return; }
     dialog.showModal();
 
     const handleCancel = (e: Event) => {
@@ -86,10 +87,10 @@ export default function NewCausaModal({
       ref={dialogRef}
       aria-label="Nuevo expediente"
       aria-modal="true"
-      className="p-0 m-auto border-none bg-transparent text-inherit no-backdrop z-50"
+      className="no-backdrop z-50 m-auto border-none bg-transparent p-0 text-inherit"
     >
-      <div className="relative w-full max-w-[40rem] max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl animate-scale-in m-auto">
-        <div className="absolute top-0 left-4 right-4 h-[3px] rounded-full bg-secondary-500" aria-hidden="true" />
+      <div className="relative m-auto max-h-[90vh] w-full max-w-[40rem] animate-scale-in overflow-y-auto rounded-2xl bg-white shadow-2xl">
+        <div className="absolute top-0 right-4 left-4 h-[3px] rounded-full bg-secondary-500" aria-hidden="true" />
         <NewCausaForm
           newEstNombre={newEstNombre}
           setNewEstNombre={setNewEstNombre}

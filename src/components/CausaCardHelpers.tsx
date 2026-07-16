@@ -1,5 +1,5 @@
-import React from 'react';
-import { Causa, EstadoCausa } from '../types';
+
+import { type Causa, EstadoCausa } from '../types';
 import { Clock, AlertTriangle } from 'lucide-react';
 import { getSeverityColor } from '../lib/severityUtils';
 import { remainingProcedureDays } from '../lib/dateUtils';
@@ -14,12 +14,12 @@ const FASE_BADGE_STYLES: Record<string, string> = {
 
 export function LeftSeverityBar({ tipo }: { tipo: Causa['tipoInfraccion'] }) {
   const colors = getSeverityColor(tipo);
-  return <div className={`absolute left-0 top-3 bottom-3 w-[3px] rounded-r-full ${colors.dot}`} />;
+  return <div className={`absolute top-3 bottom-3 left-0 w-[3px] rounded-r-full ${colors.dot}`} />;
 }
 
 export function FaseBadge({ fase }: { fase: string }) {
   return (
-    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border ${FASE_BADGE_STYLES[fase] || FASE_BADGE_STYLES['Recepción']}`}>
+    <span className={`rounded-md border px-2 py-0.5 font-semibold text-[10px] ${FASE_BADGE_STYLES[fase] || FASE_BADGE_STYLES.Recepción}`}>
       {fase}
     </span>
   );
@@ -72,7 +72,7 @@ export function PlazoBar({ causa }: { causa: Causa }) {
   }
 
   return (
-    <div className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border text-xs font-medium ${colorClasses}`}>
+    <div className={`flex items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 font-medium text-xs ${colorClasses}`}>
       <span className="flex items-center gap-1.5">
         <Clock className="h-3 w-3" aria-hidden="true" />
         {plazoText}

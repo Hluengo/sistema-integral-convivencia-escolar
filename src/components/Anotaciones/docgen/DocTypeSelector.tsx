@@ -37,16 +37,14 @@ export default function DocTypeSelector({
   negativeCount,
 }: DocTypeSelectorProps) {
   const isEnabled = (id: string) => {
-    if (id === 'compromiso_conductual') return hasTenOrMore;
+    if (id === 'compromiso_conductual') { return hasTenOrMore; }
     return true;
   };
 
   return (
-    <div role="group" aria-label="Tipo de Documento" className="space-y-3">
-      <div className="block text-sm font-medium text-neutral-700">
-        Tipo de Documento
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <fieldset className="space-y-3">
+      <legend className="block font-medium text-neutral-700 text-sm">Tipo de Documento</legend>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {DOC_TYPES.map(({ id, label, icon: Icon, description }) => {
           const enabled = isEnabled(id);
           const isActive = docType === id;
@@ -57,31 +55,32 @@ export default function DocTypeSelector({
               type="button"
               onClick={() => enabled && onDocTypeChange(id)}
               disabled={!enabled}
-              className={`
-                relative flex flex-col items-center gap-2 p-4 rounded-lg border-2 text-left transition-all
-                ${isActive
-                  ? 'border-brand-500 ring-2 ring-blue-200 bg-blue-50'
-                  : 'border-neutral-200 bg-white hover:border-neutral-300'
+              className={`relative flex flex-col items-center gap-2 rounded-lg border-2 p-4 text-left transition-all ${
+                  isActive
+                    ? 'border-brand-500 bg-blue-50 ring-2 ring-blue-200'
+                    : 'border-neutral-200 bg-white hover:border-neutral-300'
                 }
-                ${!enabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                ${!enabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
               `}
             >
               {!enabled && (
                 <div className="absolute top-2 right-2 text-neutral-400">
-                  <Lock className="w-4 h-4" />
+                  <Lock className="h-4 w-4" />
                 </div>
               )}
-              <Icon className={`w-8 h-8 ${isActive ? 'text-blue-600' : 'text-neutral-500'}`} />
+              <Icon className={`h-8 w-8 ${isActive ? 'text-blue-600' : 'text-neutral-500'}`} />
               <div className="text-center">
-                <span className={`block text-sm font-semibold ${isActive ? 'text-blue-700' : 'text-neutral-800'}`}>
+                <span
+                  className={`block font-semibold text-sm ${isActive ? 'text-blue-700' : 'text-neutral-800'}`}
+                >
                   {label}
                 </span>
-                <span className="block text-xs text-neutral-500 mt-1 leading-tight">
+                <span className="mt-1 block text-neutral-500 text-xs leading-tight">
                   {description}
                 </span>
               </div>
               {!enabled && id === 'compromiso_conductual' && (
-                <span className="text-xs text-amber-600 font-medium">
+                <span className="font-medium text-amber-600 text-xs">
                   Faltan {10 - negativeCount} anotaciones
                 </span>
               )}
@@ -89,7 +88,6 @@ export default function DocTypeSelector({
           );
         })}
       </div>
-    </div>
+    </fieldset>
   );
 }
-

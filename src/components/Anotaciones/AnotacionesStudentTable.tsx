@@ -8,9 +8,9 @@ import { maskName, maskRut, getSemaphoricStyle, TEACHERS_BY_COURSE } from '../..
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 const getDisciplinaryStatusLabel = (count: number): { text: string; bg: string } => {
-  if (count < 5) return { text: 'Verde - Buen Comportamiento', bg: 'bg-emerald-100 text-emerald-800' };
-  if (count < 10) return { text: 'Amarillo - Advertencia', bg: 'bg-yellow-100 text-yellow-800' };
-  if (count < 15) return { text: 'Naranja - Compromiso', bg: 'bg-orange-100 text-orange-800' };
+  if (count < 5) { return { text: 'Verde - Buen Comportamiento', bg: 'bg-emerald-100 text-emerald-800' }; }
+  if (count < 10) { return { text: 'Amarillo - Advertencia', bg: 'bg-yellow-100 text-yellow-800' }; }
+  if (count < 15) { return { text: 'Naranja - Compromiso', bg: 'bg-orange-100 text-orange-800' }; }
   return { text: 'Rojo - Alerta Crítica', bg: 'bg-rose-100 text-rose-800' };
 };
 
@@ -45,10 +45,10 @@ const FILTER_TABS = [
 
 function getAnnotationRange(filter: string): [number, number] | null {
   switch (filter) {
-    case 'con_registro': return [5, Infinity];
+    case 'con_registro': return [5, Number.POSITIVE_INFINITY];
     case 'amonestacion': return [5, 9];
     case 'compromiso': return [10, 14];
-    case 'derivacion': return [15, Infinity];
+    case 'derivacion': return [15, Number.POSITIVE_INFINITY];
     default: return null;
   }
 }
@@ -74,8 +74,8 @@ function filterStudents(
     filtered = filtered.filter(
       (s) =>
         s.full_name.toLowerCase().includes(q) ||
-        (s.rut && s.rut.toLowerCase().includes(q)) ||
-        (s.course_name && s.course_name.toLowerCase().includes(q))
+        (s.rut?.toLowerCase().includes(q)) ||
+        (s.course_name?.toLowerCase().includes(q))
     );
   }
 
@@ -83,7 +83,7 @@ function filterStudents(
 }
 
 function formatDate(dateStr?: string): string {
-  if (!dateStr) return '—';
+  if (!dateStr) { return '—'; }
   try {
     const date = new Date(dateStr);
     return date.toLocaleDateString('es-CL', {
@@ -113,13 +113,13 @@ export default function AnotacionesStudentTable({
       {/* Search */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-neutral-400" />
+          <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400" />
           <input
             type="text"
             placeholder="Buscar estudiante, RUT o curso..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-neutral-300 bg-white py-2 pl-10 pr-4 text-sm text-neutral-900 placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-neutral-300 bg-white py-2 pr-4 pl-10 text-neutral-900 text-sm placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
         </div>
       </div>
@@ -131,10 +131,10 @@ export default function AnotacionesStudentTable({
             key={tab.key}
             type="button"
             onClick={() => setActiveFilter(tab.key)}
-            className={`rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-lg px-3.5 py-1.5 font-medium text-sm transition-colors ${
               activeFilter === tab.key
                 ? 'bg-blue-600 text-white shadow-sm'
-                : 'bg-white text-neutral-600 border border-neutral-300 hover:bg-neutral-50'
+                : 'border border-neutral-300 bg-white text-neutral-600 hover:bg-neutral-50'
             }`}
           >
             {tab.label}
@@ -148,28 +148,28 @@ export default function AnotacionesStudentTable({
           <table className="min-w-full divide-y divide-neutral-200">
             <thead className="bg-neutral-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                <th className="px-4 py-3 text-left font-semibold text-neutral-500 text-xs uppercase tracking-wider">
                   Estudiante
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                <th className="px-4 py-3 text-left font-semibold text-neutral-500 text-xs uppercase tracking-wider">
                   RUT
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                <th className="px-4 py-3 text-left font-semibold text-neutral-500 text-xs uppercase tracking-wider">
                   Curso
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                <th className="px-4 py-3 text-left font-semibold text-neutral-500 text-xs uppercase tracking-wider">
                   Profesor/a Jefe
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                <th className="px-4 py-3 text-center font-semibold text-neutral-500 text-xs uppercase tracking-wider">
                   Positivas
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                <th className="px-4 py-3 text-center font-semibold text-neutral-500 text-xs uppercase tracking-wider">
                   Negativas
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                <th className="px-4 py-3 text-left font-semibold text-neutral-500 text-xs uppercase tracking-wider">
                   Último Registro
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-neutral-500">
+                <th className="px-4 py-3 text-left font-semibold text-neutral-500 text-xs uppercase tracking-wider">
                   Estado
                 </th>
               </tr>
@@ -177,16 +177,16 @@ export default function AnotacionesStudentTable({
             <tbody className="divide-y divide-neutral-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-sm text-neutral-500">
+                  <td colSpan={8} className="px-4 py-12 text-center text-neutral-500 text-sm">
                     <div className="flex items-center justify-center gap-2">
-                      <div className="size-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                      <div className="size-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
                       Cargando estudiantes...
                     </div>
                   </td>
                 </tr>
               ) : filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-sm text-neutral-500">
+                  <td colSpan={8} className="px-4 py-12 text-center text-neutral-500 text-sm">
                     No se encontraron estudiantes con los filtros seleccionados.
                   </td>
                 </tr>
@@ -204,33 +204,33 @@ export default function AnotacionesStudentTable({
                       tabIndex={0}
                       className={`cursor-pointer transition-colors ${style.rowBg}`}
                     >
-                      <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-neutral-900">
+                      <td className="whitespace-nowrap px-4 py-3 font-medium text-neutral-900 text-sm">
                         {maskName(student.full_name, privacyMode)}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-600">
+                      <td className="whitespace-nowrap px-4 py-3 text-neutral-600 text-sm">
                         {maskRut(student.rut, privacyMode)}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-600">
+                      <td className="whitespace-nowrap px-4 py-3 text-neutral-600 text-sm">
                         {student.course_name || '—'}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-600">
+                      <td className="whitespace-nowrap px-4 py-3 text-neutral-600 text-sm">
                         {TEACHERS_BY_COURSE[student.course_name ?? ''] || '—'}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-center text-sm text-neutral-600">
-                        <span className="inline-flex items-center justify-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+                      <td className="whitespace-nowrap px-4 py-3 text-center text-neutral-600 text-sm">
+                        <span className="inline-flex items-center justify-center rounded-full bg-emerald-50 px-2.5 py-0.5 font-semibold text-emerald-700 text-xs">
                           {student.positive_annotations_count ?? 0}
                         </span>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-center text-sm text-neutral-600">
-                        <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${style.badge}`}>
+                      <td className="whitespace-nowrap px-4 py-3 text-center text-neutral-600 text-sm">
+                        <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 font-semibold text-xs ${style.badge}`}>
                           {negativeCount}
                         </span>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-neutral-600">
+                      <td className="whitespace-nowrap px-4 py-3 text-neutral-600 text-sm">
                         {formatDate(student.last_annotation_date)}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm">
-                        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${status.bg}`}>
+                        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-medium text-xs ${status.bg}`}>
                           <span className={`inline-block size-2 rounded-full ${style.dot}`} />
                           {status.text}
                         </span>
@@ -246,7 +246,7 @@ export default function AnotacionesStudentTable({
 
       {/* Footer: Pagination info and color legend */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-neutral-500">
+        <p className="text-neutral-500 text-sm">
           Mostrando{' '}
           <span className="font-medium text-neutral-700">{filteredStudents.length}</span>
           {' '}de{' '}
@@ -255,16 +255,16 @@ export default function AnotacionesStudentTable({
         </p>
 
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-xs font-medium text-neutral-500">Leyenda:</span>
-          <span className="inline-flex items-center gap-1 text-xs text-neutral-600">
+          <span className="font-medium text-neutral-500 text-xs">Leyenda:</span>
+          <span className="inline-flex items-center gap-1 text-neutral-600 text-xs">
             <span className="inline-block size-2.5 rounded-full bg-yellow-500" />
             Amarillo (5–9)
           </span>
-          <span className="inline-flex items-center gap-1 text-xs text-neutral-600">
+          <span className="inline-flex items-center gap-1 text-neutral-600 text-xs">
             <span className="inline-block size-2.5 rounded-full bg-orange-500" />
             Naranja (10–14)
           </span>
-          <span className="inline-flex items-center gap-1 text-xs text-neutral-600">
+          <span className="inline-flex items-center gap-1 text-neutral-600 text-xs">
             <span className="inline-block size-2.5 rounded-full bg-rose-500" />
             Rojo (15+)
           </span>

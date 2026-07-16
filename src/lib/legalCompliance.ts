@@ -4,7 +4,7 @@
  * Utilidades de Cumplimiento Legal - Circular 482 / Ley 21809
  */
 
-import { Causa, EstadoCausa, TipoInfraccion } from '../types';
+import { type Causa, EstadoCausa, } from '../types';
 
 // ============================================================
 // CONSTANTES LEGALES
@@ -430,8 +430,8 @@ export function generarResumenConformidad(causa: Causa): {
   const conformes = Math.max(0, 6 - alertas - incumplimientos); // 6 puntos de conformidad base
   
   let nivelGeneral: NivelConformidad = 'conforme';
-  if (incumplimientos > 0) nivelGeneral = 'incumplimiento';
-  else if (alertas > 0) nivelGeneral = 'alerta';
+  if (incumplimientos > 0) { nivelGeneral = 'incumplimiento'; }
+  else if (alertas > 0) { nivelGeneral = 'alerta'; }
 
   return {
     nivelGeneral,

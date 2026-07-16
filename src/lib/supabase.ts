@@ -12,7 +12,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(
     'Faltan las variables de entorno VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY. ' +
-    'Créalas en el archivo .env.local'
+      'Créalas en el archivo .env.local'
   );
 }
 
@@ -36,7 +36,10 @@ export async function signOut() {
 }
 
 export async function getUser() {
-  const { data: { user }, error } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
   return { user, error };
 }
 
@@ -134,7 +137,9 @@ export async function fetchCourses(): Promise<Course[]> {
  * Fetch students for a specific course, ordered by full_name
  */
 export async function fetchStudentsByCourse(courseId: string): Promise<Student[]> {
-  if (!courseId) return [];
+  if (!courseId) {
+    return [];
+  }
 
   const { data, error } = await supabase
     .from('students')
@@ -198,28 +203,32 @@ export async function fetchCausas(): Promise<Causa[]> {
   }
 
   const causas: Causa[] = causasData.map((row: SupabaseCausaRow) => {
-    const bitacora: BitacoraEntry[] = (row.bitacora_entries || []).map((b: SupabaseBitacoraRow) => ({
-      id: b.id,
-      fecha: b.fecha,
-      tipo: b.tipo as BitacoraEntry['tipo'],
-      titulo: b.titulo,
-      descripcion: b.descripcion,
-      participantes: b.participantes || [],
-      documentoAdjunto: b.documento_adjunto || undefined
-    }));
+    const bitacora: BitacoraEntry[] = (row.bitacora_entries || []).map(
+      (b: SupabaseBitacoraRow) => ({
+        id: b.id,
+        fecha: b.fecha,
+        tipo: b.tipo as BitacoraEntry['tipo'],
+        titulo: b.titulo,
+        descripcion: b.descripcion,
+        participantes: b.participantes || [],
+        documentoAdjunto: b.documento_adjunto || undefined,
+      })
+    );
 
-    const checklist: ChecklistItem[] = (row.checklist_items || []).map((c: SupabaseChecklistRow) => ({
-      id: c.id,
-      label: c.label,
-      descripcion: c.descripcion,
-      completado: c.completado,
-      fechaCompletado: c.fecha_completado || undefined,
-      requeridoPor: c.requerido_por as ChecklistItem['requeridoPor'],
-      registradoPor: c.registrado_por || undefined,
-      observaciones: c.observaciones || undefined,
-      documentoNombre: c.documento_nombre || undefined,
-      documentoUrl: c.documento_url || undefined
-    }));
+    const checklist: ChecklistItem[] = (row.checklist_items || []).map(
+      (c: SupabaseChecklistRow) => ({
+        id: c.id,
+        label: c.label,
+        descripcion: c.descripcion,
+        completado: c.completado,
+        fechaCompletado: c.fecha_completado || undefined,
+        requeridoPor: c.requerido_por as ChecklistItem['requeridoPor'],
+        registradoPor: c.registrado_por || undefined,
+        observaciones: c.observaciones || undefined,
+        documentoNombre: c.documento_nombre || undefined,
+        documentoUrl: c.documento_url || undefined,
+      })
+    );
 
     return {
       id: row.id,
@@ -237,7 +246,7 @@ export async function fetchCausas(): Promise<Causa[]> {
       conductaRiceId: row.conducta_rice_id || undefined,
       medidasEjecutadas: row.medidas_ejecutadas || [],
       bitacora,
-      checklistDebidoProceso: checklist
+      checklistDebidoProceso: checklist,
     };
   });
 
@@ -260,17 +269,17 @@ async function resolveUniqueCausaId(preferred: string): Promise<string> {
     return preferred;
   }
 
-  const { data: all } = await supabase
-    .from('causas')
-    .select('id');
+  const { data: all } = await supabase.from('causas').select('id');
 
   const year = new Date().getFullYear();
   let max = 0;
   for (const row of all || []) {
     const match = new RegExp(`^DC-${year}-(\\d+)$`).exec(row.id);
     if (match) {
-      const n = parseInt(match[1], 10);
-      if (n > max) max = n;
+      const n = Number.parseInt(match[1], 10);
+      if (n > max) {
+        max = n;
+      }
     }
   }
 
@@ -287,24 +296,22 @@ export async function createCausa(causa: Causa): Promise<string | false> {
   const causaId = await resolveUniqueCausaId(causa.id);
 
   // 1. Insert the causa
-  const { error: causaError } = await supabase
-    .from('causas')
-    .insert({
-      id: causaId,
-      estudiante_nombre: causa.estudianteNombre,
-      estudiante_curso: causa.estudianteCurso,
-      nna_protected_name: causa.nnaProtectedName,
-      run_estudiante: causa.runEstudiante,
-      fecha_apertura: causa.fechaApertura,
-      estado_actual: causa.estadoActual,
-      tipo_infraccion: causa.tipoInfraccion,
-      responsable: causa.responsable,
-      compromete_aula_segura: causa.comprometeAulaSegura,
-      fecha_ultima_actualizacion: causa.fechaUltimaActualizacion,
-      observaciones: causa.observaciones,
-      conducta_rice_id: causa.conductaRiceId || null,
-      medidas_ejecutadas: causa.medidasEjecutadas || []
-    });
+  const { error: causaError } = await supabase.from('causas').insert({
+    id: causaId,
+    estudiante_nombre: causa.estudianteNombre,
+    estudiante_curso: causa.estudianteCurso,
+    nna_protected_name: causa.nnaProtectedName,
+    run_estudiante: causa.runEstudiante,
+    fecha_apertura: causa.fechaApertura,
+    estado_actual: causa.estadoActual,
+    tipo_infraccion: causa.tipoInfraccion,
+    responsable: causa.responsable,
+    compromete_aula_segura: causa.comprometeAulaSegura,
+    fecha_ultima_actualizacion: causa.fechaUltimaActualizacion,
+    observaciones: causa.observaciones,
+    conducta_rice_id: causa.conductaRiceId || null,
+    medidas_ejecutadas: causa.medidasEjecutadas || [],
+  });
 
   if (causaError) {
     console.error('Error creating causa:', causaError);
@@ -313,9 +320,8 @@ export async function createCausa(causa: Causa): Promise<string | false> {
 
   // 2. Insert initial bitacora entry if exists
   if (causa.bitacora && causa.bitacora.length > 0) {
-    const { error: bitacoraError } = await supabase
-      .from('bitacora_entries')
-      .insert(causa.bitacora.map(b => ({
+    const { error: bitacoraError } = await supabase.from('bitacora_entries').insert(
+      causa.bitacora.map((b) => ({
         id: b.id,
         causa_id: causaId,
         fecha: b.fecha,
@@ -323,8 +329,9 @@ export async function createCausa(causa: Causa): Promise<string | false> {
         titulo: b.titulo,
         descripcion: b.descripcion,
         participantes: b.participantes || [],
-        documento_adjunto: b.documentoAdjunto || null
-      })));
+        documento_adjunto: b.documentoAdjunto || null,
+      }))
+    );
 
     if (bitacoraError) {
       console.error('Error creating bitacora entries:', bitacoraError);
@@ -333,9 +340,8 @@ export async function createCausa(causa: Causa): Promise<string | false> {
 
   // 3. Insert checklist items
   if (causa.checklistDebidoProceso && causa.checklistDebidoProceso.length > 0) {
-    const { error: checklistError } = await supabase
-      .from('checklist_items')
-      .insert(causa.checklistDebidoProceso.map(c => ({
+    const { error: checklistError } = await supabase.from('checklist_items').insert(
+      causa.checklistDebidoProceso.map((c) => ({
         id: c.id,
         causa_id: causaId,
         label: c.label,
@@ -346,8 +352,9 @@ export async function createCausa(causa: Causa): Promise<string | false> {
         registrado_por: c.registradoPor || null,
         observaciones: c.observaciones || null,
         documento_nombre: c.documentoNombre || null,
-        documento_url: c.documentoUrl || null
-      })));
+        documento_url: c.documentoUrl || null,
+      }))
+    );
 
     if (checklistError) {
       console.error('Error creating checklist items:', checklistError);
@@ -376,7 +383,7 @@ export async function updateCausa(causa: Causa): Promise<boolean> {
       fecha_ultima_actualizacion: causa.fechaUltimaActualizacion,
       observaciones: causa.observaciones,
       conducta_rice_id: causa.conductaRiceId || null,
-      medidas_ejecutadas: causa.medidasEjecutadas || []
+      medidas_ejecutadas: causa.medidasEjecutadas || [],
     })
     .eq('id', causa.id);
 
@@ -403,12 +410,13 @@ export async function saveBitacora(causaId: string, entries: BitacoraEntry[]): P
     return false;
   }
 
-  if (entries.length === 0) return true;
+  if (entries.length === 0) {
+    return true;
+  }
 
   // Insert new entries
-  const { error: insertError } = await supabase
-    .from('bitacora_entries')
-    .insert(entries.map(b => ({
+  const { error: insertError } = await supabase.from('bitacora_entries').insert(
+    entries.map((b) => ({
       id: b.id,
       causa_id: causaId,
       fecha: b.fecha,
@@ -416,8 +424,9 @@ export async function saveBitacora(causaId: string, entries: BitacoraEntry[]): P
       titulo: b.titulo,
       descripcion: b.descripcion,
       participantes: b.participantes || [],
-      documento_adjunto: b.documentoAdjunto || null
-    })));
+      documento_adjunto: b.documentoAdjunto || null,
+    }))
+  );
 
   if (insertError) {
     console.error('Error inserting bitacora entries:', insertError?.message || insertError);
@@ -442,12 +451,13 @@ export async function saveChecklist(causaId: string, items: ChecklistItem[]): Pr
     return false;
   }
 
-  if (items.length === 0) return true;
+  if (items.length === 0) {
+    return true;
+  }
 
   // Insert new items
-  const { error: insertError } = await supabase
-    .from('checklist_items')
-    .insert(items.map(c => ({
+  const { error: insertError } = await supabase.from('checklist_items').insert(
+    items.map((c) => ({
       id: c.id,
       causa_id: causaId,
       label: c.label,
@@ -458,8 +468,9 @@ export async function saveChecklist(causaId: string, items: ChecklistItem[]): Pr
       registrado_por: c.registradoPor || null,
       observaciones: c.observaciones || null,
       documento_nombre: c.documentoNombre || null,
-      documento_url: c.documentoUrl || null
-    })));
+      documento_url: c.documentoUrl || null,
+    }))
+  );
 
   if (insertError) {
     console.error('Error inserting checklist items:', insertError?.message || insertError);
@@ -478,10 +489,7 @@ export async function deleteCausa(causaId: string): Promise<boolean> {
   await supabase.from('checklist_items').delete().eq('causa_id', causaId);
 
   // Delete the causa
-  const { error } = await supabase
-    .from('causas')
-    .delete()
-    .eq('id', causaId);
+  const { error } = await supabase.from('causas').delete().eq('id', causaId);
 
   if (error) {
     console.error('Error deleting causa:', error);
@@ -508,11 +516,11 @@ export async function uploadDocument(
 ): Promise<string | null> {
   const filePath = `${causaId}/${prefix}/${Date.now()}_${file.name}`;
 
-  const { data, error } = await supabase.storage
+  const { data: _data, error } = await supabase.storage
     .from(STORAGE_BUCKET)
     .upload(filePath, file, {
       cacheControl: '3600',
-      upsert: false
+      upsert: false,
     });
 
   if (error) {
@@ -537,24 +545,22 @@ export async function uploadDocument(
  * List all documents for a causa
  */
 export async function listDocuments(causaId: string): Promise<{ name: string; url: string }[]> {
-  const { data, error } = await supabase.storage
-    .from(STORAGE_BUCKET)
-    .list(`${causaId}/`);
+  const { data, error } = await supabase.storage.from(STORAGE_BUCKET).list(`${causaId}/`);
 
   if (error || !data) {
     console.error('Error listing documents:', error);
     return [];
   }
 
-  const results: { name: string; url: string }[] = [];
-  
+  const _results: { name: string; url: string }[] = [];
+
   const signedUrls = await Promise.all(
     data.map(async (item) => {
       const filePath = `${causaId}/${item.name}`;
       const { data: signedUrlData, error: signedUrlError } = await supabase.storage
         .from(STORAGE_BUCKET)
         .createSignedUrl(filePath, 3600);
-      
+
       if (!signedUrlError && signedUrlData?.signedUrl) {
         return { name: item.name, url: signedUrlData.signedUrl };
       }
@@ -569,9 +575,7 @@ export async function listDocuments(causaId: string): Promise<{ name: string; ur
  * Delete a document from storage
  */
 export async function deleteDocument(path: string): Promise<boolean> {
-  const { error } = await supabase.storage
-    .from(STORAGE_BUCKET)
-    .remove([path]);
+  const { error } = await supabase.storage.from(STORAGE_BUCKET).remove([path]);
 
   if (error) {
     console.error('Error deleting document:', error);
@@ -622,15 +626,13 @@ export async function saveAnnotation(annotation: {
   type: string;
   registered_by: string;
 }): Promise<boolean> {
-  const { error } = await supabase
-    .from('inspectorate_records')
-    .insert({
-      student_id: annotation.student_id,
-      observation: annotation.observation,
-      severity: annotation.severity,
-      type: annotation.type,
-      registered_by: annotation.registered_by,
-    });
+  const { error } = await supabase.from('inspectorate_records').insert({
+    student_id: annotation.student_id,
+    observation: annotation.observation,
+    severity: annotation.severity,
+    type: annotation.type,
+    registered_by: annotation.registered_by,
+  });
 
   if (error) {
     console.error('Error saving annotation:', error);
@@ -656,25 +658,32 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<any[]> {
 
   const annByStudent: Record<string, any[]> = {};
   for (const ann of allAnnotations || []) {
-    if (!annByStudent[ann.student_id]) annByStudent[ann.student_id] = [];
+    if (!annByStudent[ann.student_id]) {
+      annByStudent[ann.student_id] = [];
+    }
     annByStudent[ann.student_id].push(ann);
   }
 
   return students.map((s: any) => {
     const studentAnns = annByStudent[s.id] || [];
-    const negs = studentAnns.filter(a => a.type === 'Negativa');
-    const pos = studentAnns.filter(a => a.type === 'Positiva');
+    const negs = studentAnns.filter((a) => a.type === 'Negativa');
+    const pos = studentAnns.filter((a) => a.type === 'Positiva');
     const negativeCount = negs.length;
     const positiveCount = pos.length;
-    const sorted = [...negs].sort((a: any, b: any) =>
-      new Date(b.date_time).getTime() - new Date(a.date_time).getTime()
+    const sorted = [...negs].sort(
+      (a: any, b: any) => new Date(b.date_time).getTime() - new Date(a.date_time).getTime()
     );
 
     let ds: string;
-    if (negativeCount < 5) ds = 'Verde';
-    else if (negativeCount < 10) ds = 'Amarillo';
-    else if (negativeCount < 15) ds = 'Naranja';
-    else ds = 'Rojo';
+    if (negativeCount < 5) {
+      ds = 'Verde';
+    } else if (negativeCount < 10) {
+      ds = 'Amarillo';
+    } else if (negativeCount < 15) {
+      ds = 'Naranja';
+    } else {
+      ds = 'Rojo';
+    }
 
     const courses = s.courses as { name: string; level: string } | null;
     return {
@@ -722,22 +731,22 @@ export async function saveCarta(carta: {
   regulation_basis: string;
   observations?: string;
 }): Promise<string | false> {
-  const id = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  const { error } = await supabase
-    .from('cartas_disciplinarias')
-    .insert({
-      id,
-      student_id: carta.student_id,
-      letter_type: carta.letter_type,
-      emitted_by: carta.emitted_by,
-      supervisor_name: carta.supervisor_name || null,
-      apoderado_name: carta.apoderado_name,
-      annotations_count: carta.annotations_count,
-      student_name: carta.student_name,
-      course: carta.course,
-      regulation_basis: carta.regulation_basis,
-      observations: carta.observations || null,
-    });
+  const id = crypto.randomUUID
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const { error } = await supabase.from('cartas_disciplinarias').insert({
+    id,
+    student_id: carta.student_id,
+    letter_type: carta.letter_type,
+    emitted_by: carta.emitted_by,
+    supervisor_name: carta.supervisor_name || null,
+    apoderado_name: carta.apoderado_name,
+    annotations_count: carta.annotations_count,
+    student_name: carta.student_name,
+    course: carta.course,
+    regulation_basis: carta.regulation_basis,
+    observations: carta.observations || null,
+  });
 
   if (error) {
     console.error('Error saving carta:', error);
@@ -771,15 +780,13 @@ export async function saveEtapa(etapa: {
   responsible: string;
   comment?: string;
 }): Promise<boolean> {
-  const { error } = await supabase
-    .from('etapas_disciplinarias')
-    .insert({
-      student_id: etapa.student_id,
-      step_number: etapa.step_number,
-      stage_name: etapa.stage_name,
-      responsible: etapa.responsible,
-      comment: etapa.comment || null,
-    });
+  const { error } = await supabase.from('etapas_disciplinarias').insert({
+    student_id: etapa.student_id,
+    step_number: etapa.step_number,
+    stage_name: etapa.stage_name,
+    responsible: etapa.responsible,
+    comment: etapa.comment || null,
+  });
 
   if (error) {
     console.error('Error saving etapa:', error);
@@ -787,4 +794,3 @@ export async function saveEtapa(etapa: {
   }
   return true;
 }
-

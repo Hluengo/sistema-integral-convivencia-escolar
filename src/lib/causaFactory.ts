@@ -1,9 +1,9 @@
 import { getBaseChecklist } from '../data';
-import { Causa, EstadoCausa } from '../types';
+import { type Causa, EstadoCausa } from '../types';
 import { nowDateOnly, nowIso } from './dateUtils';
 
 export function generateInitials(fullName: string): string {
-  if (!fullName) return 'N. N.';
+  if (!fullName) { return 'N. N.'; }
   return fullName
     .split(' ')
     .filter(word => word.length >= 2)

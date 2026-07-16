@@ -6,14 +6,14 @@ const MARGIN = 50;
 const FONT_SIZE = 10;
 const TITLE_SIZE = 14;
 const HEADER_SIZE = 12;
-const LINE_HEIGHT = 14;
+const _LINE_HEIGHT = 14;
 
 function wrapText(text: string, font: any, fontSize: number, maxWidth: number): string[] {
   const words = text.split(' ');
   const lines: string[] = [];
   let line = '';
   for (const word of words) {
-    const test = line ? line + ' ' + word : word;
+    const test = line ? `${line} ${word}` : word;
     if (font.widthOfTextAtSize(test, fontSize) > maxWidth) {
       if (line) { lines.push(line); line = word; }
       else { lines.push(test); line = ''; }
@@ -21,7 +21,7 @@ function wrapText(text: string, font: any, fontSize: number, maxWidth: number): 
       line = test;
     }
   }
-  if (line) lines.push(line);
+  if (line) { lines.push(line); }
   return lines;
 }
 
@@ -37,13 +37,13 @@ function buildSections(
     {
       title: 'I. ANTECEDENTES',
       body: [
-        'Estudiante: ' + params.studentName,
-        'RUT: ' + params.studentRut,
-        'Curso: ' + params.course,
-        'Profesor(a) Jefe: ' + params.teacher,
-        'Apoderado(a): ' + params.apoderadoName,
-        'Fecha: ' + params.dateStr,
-        'Cantidad de anotaciones negativas: ' + params.negativeCount,
+        `Estudiante: ${params.studentName}`,
+        `RUT: ${params.studentRut}`,
+        `Curso: ${params.course}`,
+        `Profesor(a) Jefe: ${params.teacher}`,
+        `Apoderado(a): ${params.apoderadoName}`,
+        `Fecha: ${params.dateStr}`,
+        `Cantidad de anotaciones negativas: ${params.negativeCount}`,
       ],
     },
   ];
@@ -53,7 +53,7 @@ function buildSections(
       {
         title: 'II. HECHOS',
         body: [
-          'El estudiante ha acumulado ' + params.negativeCount + ' anotaciones negativas en el presente periodo, lo que constituye un incumplimiento reiterado de las normas de convivencia escolar establecidas en el Reglamento Interno del establecimiento.',
+          `El estudiante ha acumulado ${params.negativeCount} anotaciones negativas en el presente periodo, lo que constituye un incumplimiento reiterado de las normas de convivencia escolar establecidas en el Reglamento Interno del establecimiento.`,
         ],
       },
       {
@@ -91,7 +91,7 @@ function buildSections(
       {
         title: 'II. HECHOS',
         body: [
-          'En virtud de las reiteradas situaciones de indisciplina registradas (' + params.negativeCount + ' anotaciones negativas), y con el objetivo de fortalecer el proceso formativo del estudiante, se procede a formalizar el presente compromiso conductual.',
+          `En virtud de las reiteradas situaciones de indisciplina registradas (${params.negativeCount} anotaciones negativas), y con el objetivo de fortalecer el proceso formativo del estudiante, se procede a formalizar el presente compromiso conductual.`,
         ],
       },
       {
@@ -126,7 +126,7 @@ function buildSections(
       {
         title: 'II. MOTIVO DE DERIVACION',
         body: [
-          'El estudiante presenta ' + params.negativeCount + ' anotaciones negativas, lo que amerita una intervencion especializada por parte del Equipo de Convivencia Escolar, de acuerdo a lo establecido en el Reglamento Interno y la normativa vigente.',
+          `El estudiante presenta ${params.negativeCount} anotaciones negativas, lo que amerita una intervencion especializada por parte del Equipo de Convivencia Escolar, de acuerdo a lo establecido en el Reglamento Interno y la normativa vigente.`,
         ],
       },
       {
@@ -147,7 +147,7 @@ function buildSections(
           '3. Derivacion a dupla psicosocial si corresponde.',
           '4. Plan de acompanamiento personalizado.',
           '5. Seguimiento quincenal del caso.',
-          params.observations ? 'Observaciones adicionales: ' + params.observations : '',
+          params.observations ? `Observaciones adicionales: ${params.observations}` : '',
         ].filter(Boolean),
       },
       {
@@ -191,7 +191,7 @@ export async function buildPdf(params: {
     const f = bold ? boldFont : font;
     const lines = wrapText(text, f, size, maxWidth - indent);
     for (const line of lines) {
-      if (y < MARGIN + 20) addPage();
+      if (y < MARGIN + 20) { addPage(); }
       page.drawText(line, { x: MARGIN + indent, y, size, font: f, color: rgb(0, 0, 0) });
       y -= size * 1.4;
     }
@@ -214,9 +214,9 @@ export async function buildPdf(params: {
 
   // Title
   const titles: Record<string, string> = {
-    amonestacion: 'CARTA DE AMONESTACION ESCRITA - ANO ' + new Date().getFullYear(),
-    compromiso_conductual: 'CARTA DE COMPROMISO CONDUCTUAL - ANO ' + new Date().getFullYear(),
-    derivacion: 'DERIVACION EQUIPO DE CONVIVENCIA ESCOLAR - ANO ' + new Date().getFullYear(),
+    amonestacion: `CARTA DE AMONESTACION ESCRITA - ANO ${new Date().getFullYear()}`,
+    compromiso_conductual: `CARTA DE COMPROMISO CONDUCTUAL - ANO ${new Date().getFullYear()}`,
+    derivacion: `DERIVACION EQUIPO DE CONVIVENCIA ESCOLAR - ANO ${new Date().getFullYear()}`,
   };
   drawText(titles[params.docType] || 'DOCUMENTO DISCIPLINARIO', TITLE_SIZE, true);
   y -= 8;
@@ -224,7 +224,7 @@ export async function buildPdf(params: {
   // Sections
   const sections = buildSections(params.docType, params);
   for (const section of sections) {
-    if (y < MARGIN + 60) addPage();
+    if (y < MARGIN + 60) { addPage(); }
     drawText(section.title, HEADER_SIZE, true);
     y -= 4;
     for (const line of section.body) {
@@ -235,13 +235,13 @@ export async function buildPdf(params: {
 
   // Signatures
   y -= 10;
-  if (y < MARGIN + 60) addPage();
+  if (y < MARGIN + 60) { addPage(); }
   page.drawLine({ start: { x: MARGIN, y: y }, end: { x: pageWidth - MARGIN, y: y }, thickness: 1, color: rgb(0, 0, 0) });
   y -= 20;
 
   drawText('____________________________', FONT_SIZE, false);
   drawText('Coordinador(a) de Convivencia Escolar', FONT_SIZE);
-  if (params.coordinatorName) drawText(params.coordinatorName, FONT_SIZE);
+  if (params.coordinatorName) { drawText(params.coordinatorName, FONT_SIZE); }
   y -= 20;
 
   drawText('____________________________', FONT_SIZE, false);

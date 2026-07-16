@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
-import { Causa } from '../../types';
+import type React from 'react';
+import type { Causa } from '../../types';
 import ProcesoTab from './ProcesoTab';
 import BitacoraTab from './BitacoraTab';
 import AsistenteIATab from './AsistenteIATab';
@@ -15,19 +15,22 @@ interface TimelineTabPanelsProps {
   causa: Causa;
   currentFase: string;
   CustomMarkdownRenderer: ({ text }: { text: string }) => React.ReactElement;
-  onUpdateCausa: (updated: Causa) => void;
 }
 
-export default function TimelineTabPanels({ activeTab, causa, currentFase, CustomMarkdownRenderer, onUpdateCausa }: TimelineTabPanelsProps) {
+export default function TimelineTabPanels({
+  activeTab,
+  causa,
+  currentFase,
+  CustomMarkdownRenderer,
+}: TimelineTabPanelsProps) {
   const ctx = useTimelineContext();
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+    <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-5">
       {activeTab === 'proceso' && (
         <ProcesoTab
           causa={causa}
           currentRole={ctx.currentRole}
-          privacyMode={ctx.privacyMode}
           currentFase={currentFase}
           expandedStages={ctx.expandedStages}
           setExpandedStages={ctx.setExpandedStages}
@@ -39,7 +42,6 @@ export default function TimelineTabPanels({ activeTab, causa, currentFase, Custo
           setRegObservations={ctx.setRegObservations}
           regFileName={ctx.regFileName}
           setRegFileName={ctx.setRegFileName}
-          onUpdateCausa={onUpdateCausa}
           handleStartRegister={ctx.handleStartRegister}
           handleFileChange={ctx.handleFileChange}
           handleSaveRegistration={ctx.handleSaveRegistration}

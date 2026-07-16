@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
 import { FolderOpen } from 'lucide-react';
 
 interface AttachedDocumentsProps {
@@ -18,8 +17,8 @@ export default function AttachedDocuments({
   onRemoveDocument,
 }: AttachedDocumentsProps) {
   return (
-    <div className="card p-4 space-y-2">
-      <h4 className="text-[11px] font-semibold text-neutral-900 flex items-center gap-1.5">
+    <div className="card space-y-2 p-4">
+      <h4 className="flex items-center gap-1.5 font-semibold text-[11px] text-neutral-900">
         <FolderOpen className="h-4 w-4 text-brand-600" aria-hidden="true" />
         Documentos adjuntos del expediente
       </h4>
@@ -27,25 +26,25 @@ export default function AttachedDocuments({
         {documents.map((doc) => (
           <div
             key={doc.name}
-            className="flex items-center justify-between gap-2 bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2"
+            className="flex items-center justify-between gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2"
           >
             <div className="min-w-0">
-              <p className="text-[11px] font-medium text-neutral-800 truncate">{doc.name}</p>
-              <p className="text-[9px] text-neutral-500 truncate">{doc.url}</p>
+              <p className="truncate font-medium text-[11px] text-neutral-800">{doc.name}</p>
+              <p className="truncate text-[9px] text-neutral-500">{doc.url}</p>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex shrink-0 items-center gap-2">
               <a
                 href={doc.url}
                 target="_blank"
                 rel="noreferrer"
-                className="text-[10px] text-brand-700 font-semibold hover:underline"
+                className="font-semibold text-[10px] text-brand-700 hover:underline"
               >
                 Abrir
               </a>
               <button
                 type="button"
                 onClick={() => onRemoveDocument(doc.itemId ?? '', doc.name)}
-                className="text-[10px] text-danger-600 font-semibold hover:underline"
+                className="font-semibold text-[10px] text-danger-600 hover:underline"
               >
                 Eliminar
               </button>

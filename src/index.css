@@ -1,6 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap");
 @import "tailwindcss";
 
 @theme {
@@ -45,7 +45,6 @@
   --color-neutral-500: #64748b;
   --color-neutral-600: #475569;
   --color-neutral-700: #334155;
-  --color-neutral-750: #1e293b;
   --color-neutral-800: #1e293b;
   --color-neutral-900: #0f172a;
   --color-neutral-950: #020617;
@@ -126,13 +125,13 @@
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
 
   /* Border radius */
-  --radius-xs: 6px;
-  --radius-sm: 8px;
-  --radius-md: 10px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-2xl: 20px;
-  --radius-3xl: 24px;
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-3xl: 20px;
 }
 
 /* ===== BASE STYLES ===== */
@@ -160,16 +159,17 @@ body {
 }
 
 /* Smooth transitions */
-button, 
-input, 
-select, 
+button,
+input,
+select,
 textarea,
 a {
-  transition: color 0.2s var(--ease-out-expo), 
-              background-color 0.2s var(--ease-out-expo), 
-              border-color 0.2s var(--ease-out-expo), 
-              box-shadow 0.2s var(--ease-out-expo), 
-              opacity 0.2s var(--ease-out-expo);
+  transition:
+    color 0.2s var(--ease-out-expo),
+    background-color 0.2s var(--ease-out-expo),
+    border-color 0.2s var(--ease-out-expo),
+    box-shadow 0.2s var(--ease-out-expo),
+    opacity 0.2s var(--ease-out-expo);
 }
 
 /* Custom scrollbar */
@@ -194,7 +194,10 @@ a {
   border-radius: var(--radius-xl);
   border: 1px solid var(--color-neutral-200);
   box-shadow: var(--shadow-card);
-  transition: transform 0.25s var(--ease-out-expo), box-shadow 0.25s var(--ease-out-expo), border-color 0.25s var(--ease-out-expo);
+  transition:
+    transform 0.25s var(--ease-out-expo),
+    box-shadow 0.25s var(--ease-out-expo),
+    border-color 0.25s var(--ease-out-expo);
 }
 .card:hover {
   transform: translateY(-2px);
@@ -220,8 +223,14 @@ a {
 
 /* Animations */
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .animate-slide-up {
   animation: slideUp 0.35s var(--ease-out-expo) forwards;
@@ -229,8 +238,12 @@ a {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 .animate-fade-in {
   animation: fadeIn 0.25s var(--ease-out-expo) forwards;
@@ -238,8 +251,14 @@ a {
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.96); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 .animate-scale-in {
   animation: scaleIn 0.25s var(--ease-out-expo) forwards;
@@ -251,29 +270,55 @@ a {
   animation: slideUp 0.4s var(--ease-out-expo) forwards;
   opacity: 0;
 }
-.stagger-children > *:nth-child(1) { animation-delay: 0.02s; }
-.stagger-children > *:nth-child(2) { animation-delay: 0.06s; }
-.stagger-children > *:nth-child(3) { animation-delay: 0.10s; }
-.stagger-children > *:nth-child(4) { animation-delay: 0.14s; }
-.stagger-children > *:nth-child(5) { animation-delay: 0.18s; }
-.stagger-children > *:nth-child(6) { animation-delay: 0.22s; }
+.stagger-children > *:nth-child(1) {
+  animation-delay: 0.02s;
+}
+.stagger-children > *:nth-child(2) {
+  animation-delay: 0.06s;
+}
+.stagger-children > *:nth-child(3) {
+  animation-delay: 0.1s;
+}
+.stagger-children > *:nth-child(4) {
+  animation-delay: 0.14s;
+}
+.stagger-children > *:nth-child(5) {
+  animation-delay: 0.18s;
+}
+.stagger-children > *:nth-child(6) {
+  animation-delay: 0.22s;
+}
 
 /* Pulse dot for live indicator */
 @keyframes pulseDot {
-   0%, 100% { opacity: 1; }
-   50% { opacity: 0.4; }
- }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
 .pulse-dot {
   animation: pulseDot 2s ease-in-out infinite;
 }
 
 /* Skeleton shimmer */
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 .skeleton {
-  background: linear-gradient(90deg, var(--color-neutral-100) 25%, var(--color-neutral-200) 50%, var(--color-neutral-100) 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-neutral-100) 25%,
+    var(--color-neutral-200) 50%,
+    var(--color-neutral-100) 75%
+  );
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
   border-radius: var(--radius-md);
@@ -281,12 +326,24 @@ a {
 
 /* Toast slide-in */
 @keyframes toastIn {
-  from { opacity: 0; transform: translateX(100%) scale(0.95); }
-  to { opacity: 1; transform: translateX(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateX(100%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
 }
 @keyframes toastOut {
-  from { opacity: 1; transform: translateX(0) scale(1); }
-  to { opacity: 0; transform: translateX(100%) scale(0.95); }
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%) scale(0.95);
+  }
 }
 .animate-toast-in {
   animation: toastIn 0.35s var(--ease-out-expo) both;
@@ -297,9 +354,15 @@ a {
 
 /* Checklist success pulse */
 @keyframes checkPulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.25); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 .animate-check-pulse {
   animation: checkPulse 0.4s var(--ease-out-expo);
@@ -307,12 +370,22 @@ a {
 
 /* Command palette backdrop */
 @keyframes overlayIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 @keyframes paletteIn {
-  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 .animate-overlay-in {
   animation: overlayIn 0.2s ease-out both;
@@ -323,9 +396,21 @@ a {
 
 /* Flash highlight when a causa is opened/switched */
 @keyframes flashHighlight {
-  0% { box-shadow: 0 0 0 0 rgba(71, 85, 105, 0.55), 0 0 0 0 rgba(71, 85, 105, 0.35); }
-  70% { box-shadow: 0 0 0 10px rgba(71, 85, 105, 0), 0 0 0 14px rgba(71, 85, 105, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(71, 85, 105, 0), 0 0 0 0 rgba(71, 85, 105, 0); }
+  0% {
+    box-shadow:
+      0 0 0 0 rgba(71, 85, 105, 0.55),
+      0 0 0 0 rgba(71, 85, 105, 0.35);
+  }
+  70% {
+    box-shadow:
+      0 0 0 10px rgba(71, 85, 105, 0),
+      0 0 0 14px rgba(71, 85, 105, 0);
+  }
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(71, 85, 105, 0),
+      0 0 0 0 rgba(71, 85, 105, 0);
+  }
 }
 .animate-flash {
   animation: flashHighlight 0.9s ease-out both;
@@ -336,25 +421,14 @@ a {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Dialog styles */
-dialog {
-  margin: auto;
-  padding: 0;
-  border: none;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-}
-dialog::backdrop {
-  background-color: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
-  animation: fadeIn 0.2s ease-out;
-}
-
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+    transition-duration: 0.01ms;
   }
 }
 
@@ -364,11 +438,13 @@ dialog::backdrop {
     border-width: 2px;
     border-color: #000;
   }
-  button, a, [role="button"] {
+  button,
+  a,
+  [role="button"] {
     border-width: 1px;
   }
   .skeleton {
-    background: #ccc !important;
+    background: #ccc;
   }
 }
 
@@ -377,40 +453,48 @@ dialog::backdrop {
   .card {
     border: 1px solid ButtonText;
   }
-  button, a, [role="button"] {
+  button,
+  a,
+  [role="button"] {
     border: 1px solid ButtonText;
     forced-color-adjust: none;
   }
-  .bg-brand-600, .bg-brand-700, .bg-brand-800 {
-    background: Highlight !important;
-    color: HighlightText !important;
+  .bg-brand-600,
+  .bg-brand-700,
+  .bg-brand-800 {
+    background: Highlight;
+    color: HighlightText;
   }
-  .text-brand-600, .text-brand-700 {
-    color: Highlight !important;
+  .text-brand-600,
+  .text-brand-700 {
+    color: Highlight;
   }
   .ring-2 {
-    ring-color: ButtonText !important;
+    outline: 2px solid ButtonText;
+    outline-offset: 2px;
   }
   .skeleton {
-    background: ButtonFace !important;
+    background: ButtonFace;
     border: 1px solid ButtonText;
   }
 }
 
 /* Dialog element reset & backdrop */
 dialog {
+  margin: auto;
   padding: 0;
   border: none;
   background: transparent;
   color: inherit;
   max-width: none;
   max-height: none;
-  margin: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 dialog::backdrop {
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
 }
 
 dialog.no-backdrop::backdrop {

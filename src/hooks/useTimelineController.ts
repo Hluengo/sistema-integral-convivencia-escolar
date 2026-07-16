@@ -4,7 +4,7 @@
  */
 
 import { useMemo } from 'react';
-import { Causa, UserRole } from '../types';
+import type { Causa, UserRole } from '../types';
 import { useAuditDraft } from './useAuditDraft';
 import { useChecklistRegistration } from './useChecklistRegistration';
 import { useDocumentManager } from './useDocumentManager';

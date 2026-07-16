@@ -3,13 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { Causa, EstadoCausa } from '../types';
-import { getFaseForEstado } from '../data';
+import { useState } from 'react';
+import { type Causa, EstadoCausa } from '../types';
 import { 
-  Search, Archive, Clock, Shield, User, UserCheck, 
-  ChevronRight, RotateCcw, CalendarDays, CheckCircle2,
-  FileText, AlertTriangle, BarChart3, Filter
+  Search, Archive, Clock, UserCheck, RotateCcw, CalendarDays, CheckCircle2,
+  FileText, BarChart3, 
 } from 'lucide-react';
 
 interface ClosedCasesProps {
@@ -33,7 +31,7 @@ export default function ClosedCases({
 
   // Apply search and sort
   const filteredCausas = closedCausas.filter(c => {
-    if (!searchQuery.trim()) return true;
+    if (!searchQuery.trim()) { return true; }
     const query = searchQuery.toLowerCase();
     return (
       c.estudianteNombre.toLowerCase().includes(query) ||
@@ -51,11 +49,11 @@ export default function ClosedCases({
   if (closedCausas.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <div className="bg-neutral-100 p-4 rounded-full mb-4">
+        <div className="mb-4 rounded-full bg-neutral-100 p-4">
           <Archive className="h-10 w-10 text-neutral-400" />
         </div>
-        <h3 className="text-sm font-semibold text-neutral-700 mb-1">No hay casos cerrados</h3>
-        <p className="text-xs text-neutral-500 max-w-sm">
+        <h3 className="mb-1 font-semibold text-neutral-700 text-sm">No hay casos cerrados</h3>
+        <p className="max-w-sm text-neutral-500 text-xs">
           Los expedientes que finalicen su proceso aparecerán aquí para su consulta y auditoría.
         </p>
       </div>
@@ -65,25 +63,25 @@ export default function ClosedCases({
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div>
-          <h2 className="text-base font-bold text-neutral-900 flex items-center gap-2">
+          <h2 className="flex items-center gap-2 font-bold text-base text-neutral-900">
             <Archive className="h-5 w-5 text-neutral-500" aria-hidden="true" />
             Casos Cerrados
           </h2>
-          <p className="text-[11px] text-neutral-500 mt-0.5">
+          <p className="mt-0.5 text-[11px] text-neutral-500">
             {closedCausas.length} expediente{closedCausas.length !== 1 ? 's' : ''} finalizado{closedCausas.length !== 1 ? 's' : ''}
           </p>
         </div>
         
         <div className="flex items-center gap-2">
           {/* Stats mini-card */}
-          <div className="hidden sm:flex bg-white border border-neutral-200 rounded-lg px-3 py-1.5 items-center gap-3 text-[10px]">
+          <div className="hidden items-center gap-3 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-[10px] sm:flex">
             <div className="flex items-center gap-1.5 text-neutral-500">
               <BarChart3 className="h-3 w-3" />
               <span className="font-semibold text-neutral-700">{closedCausas.length}</span>
             </div>
-            <div className="w-px h-4 bg-neutral-200" />
+            <div className="h-4 w-px bg-neutral-200" />
             <div className="flex items-center gap-1.5 text-neutral-500">
               <Clock className="h-3 w-3" />
               <span className="font-semibold text-neutral-700">
@@ -102,7 +100,7 @@ export default function ClosedCases({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as 'fecha' | 'nombre')}
-            className="text-[10px] border border-neutral-200 rounded-lg p-1.5 bg-white font-medium text-neutral-600 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+            className="rounded-lg border border-neutral-200 bg-white p-1.5 font-medium text-[10px] text-neutral-600 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
             aria-label="Ordenar por"
           >
             <option value="fecha">Más recientes</option>
@@ -113,14 +111,14 @@ export default function ClosedCases({
 
       {/* Search */}
       <div className="relative w-full sm:max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400" aria-hidden="true" />
+        <Search className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" aria-hidden="true" />
 <input
   type="text"
   spellCheck={false}
   value={searchQuery}
   onChange={(e) => setSearchQuery(e.target.value)}
   placeholder="Buscar en casos cerrados..."
-  className="w-full bg-white text-neutral-800 pl-9 pr-4 py-2 text-xs font-medium placeholder-neutral-400 focus:outline-none"
+  className="w-full bg-white py-2 pr-4 pl-9 font-medium text-neutral-800 text-xs placeholder-neutral-400 focus:outline-none"
   aria-label="Buscar casos cerrados"
 />
       </div>
@@ -139,21 +137,21 @@ export default function ClosedCases({
             return (
               <div
                 key={causa.id}
-                className="bg-white border border-neutral-200/80 rounded-xl hover:border-neutral-300 hover:shadow-sm transition-all"
+                className="rounded-xl border border-neutral-200/80 bg-white transition-all hover:border-neutral-300 hover:shadow-sm"
               >
                 <div className="p-4 sm:p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0 flex-1">
                       {/* Header row */}
-                      <div className="flex items-center gap-2 flex-wrap mb-2">
-                        <span className="text-[10px] font-mono font-semibold text-neutral-500 bg-neutral-50 px-2 py-0.5 rounded border border-neutral-200/60">
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        <span className="rounded border border-neutral-200/60 bg-neutral-50 px-2 py-0.5 font-mono font-semibold text-[10px] text-neutral-500">
                           {causa.id}
                         </span>
-                        <span className="text-[8px] font-semibold px-1.5 py-0.5 rounded-full bg-success-100 text-success-700 border border-success-200 flex items-center gap-1">
+                        <span className="flex items-center gap-1 rounded-full border border-success-200 bg-success-100 px-1.5 py-0.5 font-semibold text-[8px] text-success-700">
                           <CheckCircle2 className="h-2.5 w-2.5" aria-hidden="true" />
                           Cerrado
                         </span>
-                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${
+                        <span className={`rounded px-1.5 py-0.5 font-bold text-[8px] ${
                           causa.tipoInfraccion === 'Gravísima' ? 'bg-red-100 text-red-800' :
                           causa.tipoInfraccion === 'Muy Grave' ? 'bg-purple-100 text-purple-800' :
                           causa.tipoInfraccion === 'Grave' ? 'bg-amber-100 text-amber-800' :
@@ -164,15 +162,15 @@ export default function ClosedCases({
                       </div>
 
                       {/* Student info */}
-                      <h3 className="text-sm font-bold text-neutral-900">
+                      <h3 className="font-bold text-neutral-900 text-sm">
                         {privacyMode ? causa.nnaProtectedName : causa.estudianteNombre}
-                        <span className="ml-2 text-[10px] font-medium text-neutral-400 bg-neutral-50 px-1.5 py-0.5 rounded border border-neutral-200/60 align-middle">
+                        <span className="ml-2 rounded border border-neutral-200/60 bg-neutral-50 px-1.5 py-0.5 align-middle font-medium text-[10px] text-neutral-400">
                           {causa.estudianteCurso}
                         </span>
                       </h3>
 
                       {/* Details */}
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[10px] text-neutral-500">
+                      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-neutral-500">
                         <span className="flex items-center gap-1">
                           <CalendarDays className="h-3 w-3 text-neutral-400" />
                           Abierto: {causa.fechaApertura}
@@ -193,14 +191,14 @@ export default function ClosedCases({
 
                       {/* Progress bar */}
                       <div className="mt-3 flex items-center gap-3">
-                        <div className="flex-1 max-w-xs">
-                          <div className="flex items-center justify-between text-[9px] text-neutral-400 mb-1">
+                        <div className="max-w-xs flex-1">
+                          <div className="mb-1 flex items-center justify-between text-[9px] text-neutral-400">
                             <span>Debido proceso</span>
                             <span className="font-semibold text-neutral-600">{completedCount}/{totalCount}</span>
                           </div>
-<div className="w-full bg-neutral-100 h-1.5 rounded-full overflow-hidden">
+<div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-100">
                             <div 
-                              className="bg-success-500 h-full rounded-full" 
+                              className="h-full rounded-full bg-success-500" 
                               style={{ width: `${totalCount > 0 ? (completedCount / totalCount) * 100 : 0}%` }}
                             />
                           </div>
@@ -208,17 +206,17 @@ export default function ClosedCases({
                       </div>
 
                       {/* Context */}
-                      <p className="mt-2 text-[10px] text-neutral-500 leading-relaxed line-clamp-1 border-l-2 border-neutral-200 pl-2 italic">
+                      <p className="mt-2 line-clamp-1 border-neutral-200 border-l-2 pl-2 text-[10px] text-neutral-500 italic leading-relaxed">
                         {causa.observaciones}
                       </p>
                     </div>
 
                     {/* Action buttons */}
-                    <div className="flex flex-col gap-2 shrink-0">
+                    <div className="flex shrink-0 flex-col gap-2">
                       <button
                         type="button"
                         onClick={() => onSelectCausa(causa)}
-                        className="text-[10px] font-semibold bg-brand-600 text-white px-3 py-1.5 rounded-lg hover:bg-brand-700 transition-all flex items-center gap-1.5 cursor-pointer"
+                        className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 font-semibold text-[10px] text-white transition-all hover:bg-brand-700"
                         title="Ver detalle del caso"
                       >
                         <FileText className="h-3 w-3" aria-hidden="true" />
@@ -227,7 +225,7 @@ export default function ClosedCases({
                       <button
                         type="button"
                         onClick={() => onReopenCausa(causa)}
-                        className="text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1.5 rounded-lg hover:bg-amber-100 transition-all flex items-center gap-1.5 cursor-pointer"
+                        className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 font-semibold text-[10px] text-amber-700 transition-all hover:bg-amber-100"
                         title="Reabrir caso"
                       >
                         <RotateCcw className="h-3 w-3" aria-hidden="true" />
@@ -240,9 +238,9 @@ export default function ClosedCases({
             );
           })
         ) : (
-          <div className="bg-white p-8 text-center rounded-xl border border-neutral-200">
-            <Search className="h-8 w-8 text-neutral-300 mx-auto mb-2" />
-            <p className="text-xs text-neutral-500 font-medium">No se encontraron casos cerrados con ese criterio.</p>
+          <div className="rounded-xl border border-neutral-200 bg-white p-8 text-center">
+            <Search className="mx-auto mb-2 h-8 w-8 text-neutral-300" />
+            <p className="font-medium text-neutral-500 text-xs">No se encontraron casos cerrados con ese criterio.</p>
           </div>
         )}
       </div>

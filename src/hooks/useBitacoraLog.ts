@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Causa, BitacoraEntry } from '../types';
+import type { Causa, BitacoraEntry } from '../types';
 import { nowDateOnly, nowIso } from '../lib/dateUtils';
 
 interface UseBitacoraLogArgs {
@@ -16,7 +16,7 @@ export function useBitacoraLog({ causa, onUpdateCausa }: UseBitacoraLogArgs) {
 
   const handleAddNewLog = (event: React.FormEvent) => {
     event.preventDefault();
-    if (!logTitle || !logDesc) return;
+    if (!logTitle || !logDesc) { return; }
 
     const participants = logParticipantes
       ? logParticipantes.split(',').map(value => value.trim())

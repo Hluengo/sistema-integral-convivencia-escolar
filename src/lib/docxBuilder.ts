@@ -9,10 +9,7 @@ import {
   TableRow,
   TableCell,
   WidthType,
-  AlignmentType,
   BorderStyle,
-  HeadingLevel,
-  PageBreak,
   Header,
   Footer,
   PageNumber,
@@ -277,7 +274,7 @@ function buildAmonestacionContent(p: BuildDocxParams): (Paragraph | Table)[] {
   const blocks = getAnnotationBlocks(p.annotations);
 
   parts.push(sectionTitle('I.  ANTECEDENTES'));
-  parts.push(bodyPara('Estimado/a Sr./Sra. ' + p.apoderadoName + ':'));
+  parts.push(bodyPara(`Estimado/a Sr./Sra. ${p.apoderadoName}:`));
   parts.push(emptyLine());
   parts.push(
     dataTable([
@@ -312,7 +309,7 @@ function buildAmonestacionContent(p: BuildDocxParams): (Paragraph | Table)[] {
     for (const a of blocks) {
       parts.push(
         bodyPara(
-          '\u2022  [' + a.date + '] (' + a.severity + ') ' + a.text,
+          `\u2022  [${a.date}] (${a.severity}) ${a.text}`,
           { size: FONT_SIZE_SMALL },
         ),
       );
@@ -322,7 +319,7 @@ function buildAmonestacionContent(p: BuildDocxParams): (Paragraph | Table)[] {
 
   parts.push(
     bodyPara(
-      'Cantidad de observaciones negativas registradas a la fecha: ' + p.negativeCount + '.',
+      `Cantidad de observaciones negativas registradas a la fecha: ${p.negativeCount}.`,
       { bold: true },
     ),
   );
@@ -391,7 +388,7 @@ function buildAmonestacionContent(p: BuildDocxParams): (Paragraph | Table)[] {
   const commitments = p.customCommitments ?? defaultCommitments;
 
   for (const c of commitments) {
-    parts.push(bodyPara('\u2022  ' + c, { size: FONT_SIZE_SMALL }));
+    parts.push(bodyPara(`\u2022  ${c}`, { size: FONT_SIZE_SMALL }));
   }
   parts.push(emptyLine());
 
@@ -404,7 +401,7 @@ function buildCompromisoContent(p: BuildDocxParams): (Paragraph | Table)[] {
   const parts: (Paragraph | Table)[] = [];
 
   parts.push(sectionTitle('I.  ANTECEDENTES'));
-  parts.push(bodyPara('Estimado/a Sr./Sra. ' + p.apoderadoName + ':'));
+  parts.push(bodyPara(`Estimado/a Sr./Sra. ${p.apoderadoName}:`));
   parts.push(emptyLine());
   parts.push(
     dataTable([
@@ -436,7 +433,7 @@ function buildCompromisoContent(p: BuildDocxParams): (Paragraph | Table)[] {
     parts.push(bodyPara('Antecedentes previos:', { bold: true }));
     for (const a of blocks) {
       parts.push(
-        bodyPara('\u2022  [' + a.date + '] (' + a.severity + ') ' + a.text, {
+        bodyPara(`\u2022  [${a.date}] (${a.severity}) ${a.text}`, {
           size: FONT_SIZE_SMALL,
         }),
       );
@@ -459,7 +456,7 @@ function buildCompromisoContent(p: BuildDocxParams): (Paragraph | Table)[] {
   ];
   const studentComms = p.customCommitments ?? studentDefaults;
   for (const c of studentComms) {
-    parts.push(bodyPara('\u2022  ' + c, { size: FONT_SIZE_SMALL }));
+    parts.push(bodyPara(`\u2022  ${c}`, { size: FONT_SIZE_SMALL }));
   }
   parts.push(emptyLine());
 
@@ -478,7 +475,7 @@ function buildCompromisoContent(p: BuildDocxParams): (Paragraph | Table)[] {
     'Apoyar el cumplimiento de los compromisos asumidos por el/la estudiante.',
   ];
   for (const c of apoderadoDefaults) {
-    parts.push(bodyPara('\u2022  ' + c, { size: FONT_SIZE_SMALL }));
+    parts.push(bodyPara(`\u2022  ${c}`, { size: FONT_SIZE_SMALL }));
   }
   parts.push(emptyLine());
 
@@ -555,7 +552,7 @@ function buildDerivacionContent(p: BuildDocxParams): (Paragraph | Table)[] {
     'Aplicaci\u00F3n de medidas pedag\u00F3gicas y formativas seg\u00FAn corresponda.',
   ];
   for (const i of intervDefaults) {
-    parts.push(bodyPara('\u2022  ' + i, { size: FONT_SIZE_SMALL }));
+    parts.push(bodyPara(`\u2022  ${i}`, { size: FONT_SIZE_SMALL }));
   }
 
   if (p.annotations && p.annotations.length > 0) {
@@ -563,7 +560,7 @@ function buildDerivacionContent(p: BuildDocxParams): (Paragraph | Table)[] {
     parts.push(bodyPara('Detalle de intervenciones previas:', { bold: true }));
     for (const a of p.annotations) {
       parts.push(
-        bodyPara('\u2022  [' + a.date + '] ' + a.text, { size: FONT_SIZE_SMALL }),
+        bodyPara(`\u2022  [${a.date}] ${a.text}`, { size: FONT_SIZE_SMALL }),
       );
     }
   }
@@ -586,7 +583,7 @@ function buildDerivacionContent(p: BuildDocxParams): (Paragraph | Table)[] {
       'estudiante se encuentra inscrito.',
   ];
   for (const s of sugeridas) {
-    parts.push(bodyPara('\u2022  ' + s, { size: FONT_SIZE_SMALL }));
+    parts.push(bodyPara(`\u2022  ${s}`, { size: FONT_SIZE_SMALL }));
   }
   parts.push(emptyLine());
 
@@ -794,7 +791,7 @@ function buildSignatureArea(params: BuildDocxParams): (Paragraph | Table)[] {
 function getAnnotationBlocks(
   annotations?: Array<{ text: string; date: string; severity: string }>,
 ): Array<{ text: string; date: string; severity: string }> {
-  if (!annotations || annotations.length === 0) return [];
+  if (!annotations || annotations.length === 0) { return []; }
   return annotations.slice().sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
   );
@@ -830,7 +827,7 @@ export async function buildDocx(params: BuildDocxParams): Promise<Blob> {
           color: '666666',
         }),
         new TextRun({
-          text: titles[params.docType] + ' N\u00B0 ' + params.dateStr.replace(/\//g, ''),
+          text: `${titles[params.docType]} N\u00B0 ${params.dateStr.replace(/\//g, '')}`,
           font: FONT,
           size: FONT_SIZE_SMALL,
           color: '666666',
@@ -914,7 +911,7 @@ export async function buildDocx(params: BuildDocxParams): Promise<Blob> {
               new Paragraph({
                 children: [
                   new TextRun({
-                    text: SCHOOL_NAME + ' | ' + DEPT_NAME,
+                    text: `${SCHOOL_NAME} | ${DEPT_NAME}`,
                     font: FONT,
                     size: FONT_SIZE_TINY,
                     color: '999999',
@@ -956,7 +953,7 @@ export async function buildDocx(params: BuildDocxParams): Promise<Blob> {
                     color: '999999',
                   }),
                   new TextRun({
-                    text: '  |  ' + params.dateStr,
+                    text: `  |  ${params.dateStr}`,
                     font: FONT,
                     size: FONT_SIZE_TINY,
                     color: '999999',

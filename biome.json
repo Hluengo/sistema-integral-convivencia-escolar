@@ -1,0 +1,153 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.4/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "ignoreUnknown": false,
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/node_modules",
+      "!**/build",
+      "!**/*.log",
+      "!**/*.lock",
+      "!**/.env*",
+      "!**/*.min.js",
+      "!**/*.min.css",
+      "!**/*.map",
+      "!**/*.md",
+      "!**/*.mdx",
+      "!**/LICENSE*",
+      "!**/CHANGELOG*"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "lineEnding": "lf",
+    "formatWithErrors": false,
+    "attributePosition": "auto",
+    "bracketSpacing": true,
+    "expand": "auto",
+    "useEditorconfig": true
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "style": {
+        "useConst": "error",
+        "useEnumInitializers": "error",
+        "useSingleVarDeclarator": "error",
+        "noNamespace": "error",
+        "noUnusedTemplateLiteral": "error",
+        "useNumberNamespace": "error",
+        "noUselessElse": "error",
+        "useShorthandFunctionType": "error",
+        "useDefaultParameterLast": "error",
+        "useAsConstAssertion": "error",
+        "useBlockStatements": "error"
+      },
+      "suspicious": {
+        "noArrayIndexKey": "warn",
+        "noExplicitAny": "warn",
+        "noUnsafeDeclarationMerging": "error",
+        "noDuplicateCase": "error",
+        "noDuplicateObjectKeys": "error",
+        "noDuplicateClassMembers": "error",
+        "noEmptyInterface": "warn",
+        "noFallthroughSwitchClause": "error",
+        "noAsyncPromiseExecutor": "warn",
+        "noMisleadingCharacterClass": "error",
+        "noGlobalIsNan": "error",
+        "noDoubleEquals": "error",
+        "noExtraNonNullAssertion": "warn"
+      },
+      "correctness": {
+        "noUnusedVariables": "error",
+        "noUnusedImports": "error",
+        "noUnusedLabels": "error",
+        "noUnusedPrivateClassMembers": "error",
+        "useExhaustiveDependencies": "warn",
+        "useHookAtTopLevel": "error",
+        "noUnusedFunctionParameters": "error",
+        "useIsNan": "error",
+        "useValidForDirection": "error"
+      },
+      "performance": {
+        "noDelete": "warn",
+        "noBarrelFile": "warn",
+        "noAccumulatingSpread": "warn"
+      },
+      "nursery": {
+        "useSortedClasses": "warn"
+      },
+      "complexity": {
+        "noForEach": "warn",
+        "noUselessTernary": "warn",
+        "noUselessCatch": "warn",
+        "useFlatMap": "warn",
+        "useLiteralKeys": "warn",
+        "noStaticOnlyClass": "warn",
+        "useOptionalChain": "warn"
+      },
+      "a11y": {
+        "noNoninteractiveElementInteractions": "error",
+        "noNoninteractiveElementToInteractiveRole": "error",
+        "useAltText": "error",
+        "useValidAnchor": "warn",
+        "useAnchorContent": "warn",
+        "useButtonType": "warn",
+        "useKeyWithClickEvents": "error",
+        "useKeyWithMouseEvents": "warn",
+        "noStaticElementInteractions": "error",
+        "useSemanticElements": "warn",
+        "useValidAriaProps": "error"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "jsxQuoteStyle": "double",
+      "quoteProperties": "asNeeded",
+      "trailingCommas": "es5",
+      "semicolons": "always",
+      "arrowParentheses": "always",
+      "bracketSameLine": false,
+      "quoteStyle": "single"
+    },
+    "linter": {
+      "enabled": true
+    }
+  },
+  "json": {
+    "formatter": {
+      "enabled": true,
+      "trailingCommas": "none"
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    },
+    "formatter": {
+      "enabled": true
+    },
+    "linter": {
+      "enabled": true
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  }
+}

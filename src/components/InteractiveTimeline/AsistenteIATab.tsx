@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import type React from 'react';
 import AuditPanel from './AuditPanel';
 import DraftPanel from './DraftPanel';
 
@@ -50,13 +50,13 @@ export default function AsistenteIATab({
   return (
     <div className="space-y-4">
       {/* Sub-tabs */}
-      <div className="flex gap-1.5 bg-neutral-50 p-1 rounded-lg border border-neutral-200" role="tablist" aria-label="Herramientas de IA">
+      <div className="flex gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50 p-1" role="tablist" aria-label="Herramientas de IA">
         <button
           type="button"
           onClick={() => setAiSubTab('auditoria')}
           role="tab"
           aria-selected={aiSubTab === 'auditoria'}
-          className={`flex-1 py-2 px-3 text-[11px] font-semibold rounded-md transition-all cursor-pointer ${
+          className={`flex-1 cursor-pointer rounded-md px-3 py-2 font-semibold text-[11px] transition-all ${
             aiSubTab === 'auditoria'
               ? 'bg-white text-neutral-900 shadow-xs'
               : 'text-neutral-500 hover:text-neutral-700'
@@ -69,7 +69,7 @@ export default function AsistenteIATab({
           onClick={() => setAiSubTab('borradores')}
           role="tab"
           aria-selected={aiSubTab === 'borradores'}
-          className={`flex-1 py-2 px-3 text-[11px] font-semibold rounded-md transition-all cursor-pointer ${
+          className={`flex-1 cursor-pointer rounded-md px-3 py-2 font-semibold text-[11px] transition-all ${
             aiSubTab === 'borradores'
               ? 'bg-white text-neutral-900 shadow-xs'
               : 'text-neutral-500 hover:text-neutral-700'

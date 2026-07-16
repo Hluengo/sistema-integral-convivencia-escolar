@@ -6,14 +6,14 @@ export function useTextImprovement() {
   const [error, setError] = useState<string | null>(null);
 
   const improveText = useCallback(async (text: string): Promise<string | null> => {
-    if (!text.trim()) return null;
+    if (!text.trim()) { return null; }
     try {
       const { data: { session } } = await supabase.auth.getSession();
       setIsImproving(true);
       setError(null);
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (session?.access_token) {
-        headers['Authorization'] = `Bearer ${session.access_token}`;
+        headers.Authorization = `Bearer ${session.access_token}`;
       }
       const response = await fetch('/api/improve-text', {
         method: 'POST',

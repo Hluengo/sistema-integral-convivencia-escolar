@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
-import { ChecklistItem } from '../../types';
+import type React from 'react';
+import type { ChecklistItem } from '../../types';
 import { Upload, Check } from 'lucide-react';
 import ImproveTextarea from '../ImproveTextarea';
 
@@ -36,23 +36,23 @@ export default function RegistrationForm({
   isUploadingDocument,
 }: RegistrationFormProps) {
   return (
-    <div className="bg-white rounded border border-info-200 p-3 space-y-3 mt-2 text-left">
-      <div className="flex items-center justify-between border-b border-neutral-100 pb-1.5">
-        <span className="text-[10px] font-semibold text-info-700 uppercase tracking-wide">
+    <div className="mt-2 space-y-3 rounded border border-info-200 bg-white p-3 text-left">
+      <div className="flex items-center justify-between border-neutral-100 border-b pb-1.5">
+        <span className="font-semibold text-[10px] text-info-700 uppercase tracking-wide">
           Registro oficial
         </span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div>
-          <label htmlFor={`reg-name-${item.id}`} className="block text-[9px] font-semibold text-neutral-400 uppercase">
+          <label htmlFor={`reg-name-${item.id}`} className="block font-semibold text-[9px] text-neutral-400 uppercase">
             Responsable:
           </label>
 <input
   id={`reg-name-${item.id}`}
   type="text"
   spellCheck={false}
-  className="w-full mt-1 border border-neutral-300 rounded-lg p-1.5 text-xs bg-white font-medium text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400 transition-all"
+  className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-medium text-neutral-800 text-xs placeholder-neutral-400 transition-all focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
   value={regName}
   onChange={(e) => setRegName(e.target.value)}
   aria-label="Nombre del responsable"
@@ -60,11 +60,11 @@ export default function RegistrationForm({
         </div>
 
         <div>
-          <span id={`reg-file-label-${item.id}`} className="block text-[9px] font-semibold text-neutral-400 uppercase">
+          <span id={`reg-file-label-${item.id}`} className="block font-semibold text-[9px] text-neutral-400 uppercase">
             Documento de respaldo:
           </span>
-          <div className="relative mt-1 flex items-center justify-center border-2 border-dashed border-neutral-300 rounded-lg py-1.5 px-2 bg-neutral-50/50 hover:bg-neutral-50 transition-all">
-            <label htmlFor={`reg-file-${item.id}`} className="flex items-center gap-1.5 text-[11px] text-neutral-500 font-medium cursor-pointer">
+          <div className="relative mt-1 flex items-center justify-center rounded-lg border-2 border-neutral-300 border-dashed bg-neutral-50/50 px-2 py-1.5 transition-all hover:bg-neutral-50">
+            <label htmlFor={`reg-file-${item.id}`} className="flex cursor-pointer items-center gap-1.5 font-medium text-[11px] text-neutral-500">
               <Upload className="h-3.5 w-3.5 text-neutral-400" aria-hidden="true" />
               {regFileName || 'Seleccionar archivo...'}
               <input
@@ -88,7 +88,7 @@ export default function RegistrationForm({
           value={regObservations}
           onChange={(v) => setRegObservations(v)}
           rows={2}
-          className="w-full mt-1 border border-neutral-300 rounded-lg p-1.5 text-xs bg-white font-medium text-neutral-800 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-400 transition-all"
+          className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-medium text-neutral-800 text-xs placeholder-neutral-400 transition-all focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
         />
       </div>
 
@@ -96,7 +96,7 @@ export default function RegistrationForm({
         <button
           type="button"
           onClick={onCancel}
-          className="text-[11px] text-neutral-500 font-medium px-3 py-1.5 rounded-lg hover:bg-neutral-50 transition-all"
+          className="rounded-lg px-3 py-1.5 font-medium text-[11px] text-neutral-500 transition-all hover:bg-neutral-50"
         >
           Cancelar
         </button>
@@ -104,7 +104,7 @@ export default function RegistrationForm({
           type="button"
           onClick={onSubmit}
           disabled={isUploadingDocument}
-          className="text-[11px] bg-brand-600 text-white font-medium px-4 py-1.5 rounded-lg hover:bg-brand-700 transition-all flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-1 rounded-lg bg-brand-600 px-4 py-1.5 font-medium text-[11px] text-white transition-all hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isUploadingDocument ? (
             <>Subiendo...</>

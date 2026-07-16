@@ -4,22 +4,21 @@
  * Panel de Cumplimiento Legal - Circular 482 / Ley 21809
  */
 
-import React, { useMemo } from 'react';
-import { Causa } from '../types';
+import type React from 'react';
+import { useMemo } from 'react';
+import type { Causa } from '../types';
 import { 
   verificarConformidadLegal, 
   generarResumenConformidad,
   verificarPlazoInvestigacion,
   verificarPlazoSuspension,
   verificarPlazoNotificacionSuperintendencia,
-  NivelConformidad
+  type NivelConformidad
 } from '../lib/legalCompliance';
 import { 
   AlertTriangle, 
   CheckCircle, 
-  Clock, 
   Shield, 
-  FileText,
   AlertCircle,
   Info
 } from 'lucide-react';
@@ -62,18 +61,18 @@ function PlazoCard({
   const config = nivelConfig[resultado.estado === 'vencido' ? 'incumplimiento' : resultado.estado === 'alerta' ? 'alerta' : 'conforme'];
 
   return (
-    <div className={`p-3 rounded-lg border ${config.border} ${config.bg}`}>
-      <div className="flex items-center justify-between mb-2">
+    <div className={`rounded-lg border p-3 ${config.border} ${config.bg}`}>
+      <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {config.icon}
-          <span className={`text-sm font-medium ${config.color}`}>{titulo}</span>
+          <span className={`font-medium text-sm ${config.color}`}>{titulo}</span>
         </div>
-        <span className="text-xs text-neutral-500">{norma}</span>
+        <span className="text-neutral-500 text-xs">{norma}</span>
       </div>
       <p className={`text-xs ${config.color} font-medium`}>{resultado.mensaje}</p>
       {resultado.diasRestantes !== null && resultado.diasRestantes > 0 && (
         <div className="mt-2 flex items-center gap-2">
-          <div className="flex-1 bg-neutral-200 rounded-full h-2">
+          <div className="h-2 flex-1 rounded-full bg-neutral-200">
             <div 
               className={`h-2 rounded-full ${
                 resultado.diasRestantes <= 3 ? 'bg-red-500' : 
@@ -82,7 +81,7 @@ function PlazoCard({
               style={{ width: `${Math.min(100, (resultado.diasRestantes / 60) * 100)}%` }}
             />
           </div>
-          <span className="text-xs text-neutral-600 font-mono">
+          <span className="font-mono text-neutral-600 text-xs">
             {resultado.diasRestantes}d
           </span>
         </div>
@@ -103,18 +102,18 @@ export default function LegalComplianceChecker({ causa, compact = false }: Legal
 
   if (compact) {
     return (
-      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${nivelConfigResumen.border} ${nivelConfigResumen.bg}`}>
+      <div className={`flex items-center gap-2 rounded-lg border px-3 py-2 ${nivelConfigResumen.border} ${nivelConfigResumen.bg}`}>
         {nivelConfigResumen.icon}
-        <span className={`text-xs font-medium ${nivelConfigResumen.color}`}>
+        <span className={`font-medium text-xs ${nivelConfigResumen.color}`}>
           Cumplimiento: {resumen.porcentajeCumplimiento}%
         </span>
         {resumen.incumplimientos > 0 && (
-          <span className="text-xs text-red-600 font-medium">
+          <span className="font-medium text-red-600 text-xs">
             • {resumen.incumplimientos} incumplimiento{resumen.incumplimientos > 1 ? 's' : ''}
           </span>
         )}
         {resumen.alertas > 0 && (
-          <span className="text-xs text-amber-600 font-medium">
+          <span className="font-medium text-amber-600 text-xs">
             • {resumen.alertas} alerta{resumen.alertas > 1 ? 's' : ''}
           </span>
         )}
@@ -125,40 +124,40 @@ export default function LegalComplianceChecker({ causa, compact = false }: Legal
   return (
     <div className="space-y-4">
       {/* Resumen General */}
-      <div className={`p-4 rounded-xl border ${nivelConfigResumen.border} ${nivelConfigResumen.bg}`}>
-        <div className="flex items-center justify-between mb-3">
+      <div className={`rounded-xl border p-4 ${nivelConfigResumen.border} ${nivelConfigResumen.bg}`}>
+        <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Shield className={`h-5 w-5 ${nivelConfigResumen.color}`} />
-            <h3 className={`text-sm font-bold ${nivelConfigResumen.color}`}>
+            <h3 className={`font-bold text-sm ${nivelConfigResumen.color}`}>
               Estado de Cumplimiento Legal
             </h3>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`text-2xl font-bold ${nivelConfigResumen.color}`}>
+            <span className={`font-bold text-2xl ${nivelConfigResumen.color}`}>
               {resumen.porcentajeCumplimiento}%
             </span>
           </div>
         </div>
         
         <div className="grid grid-cols-3 gap-3 text-center">
-          <div className="bg-white/50 rounded-lg p-2">
-            <div className="text-lg font-bold text-emerald-600">{resumen.conformes}</div>
-            <div className="text-xs text-emerald-700">Conformes</div>
+          <div className="rounded-lg bg-white/50 p-2">
+            <div className="font-bold text-emerald-600 text-lg">{resumen.conformes}</div>
+            <div className="text-emerald-700 text-xs">Conformes</div>
           </div>
-          <div className="bg-white/50 rounded-lg p-2">
-            <div className="text-lg font-bold text-amber-600">{resumen.alertas}</div>
-            <div className="text-xs text-amber-700">Alertas</div>
+          <div className="rounded-lg bg-white/50 p-2">
+            <div className="font-bold text-amber-600 text-lg">{resumen.alertas}</div>
+            <div className="text-amber-700 text-xs">Alertas</div>
           </div>
-          <div className="bg-white/50 rounded-lg p-2">
-            <div className="text-lg font-bold text-red-600">{resumen.incumplimientos}</div>
-            <div className="text-xs text-red-700">Incumplimientos</div>
+          <div className="rounded-lg bg-white/50 p-2">
+            <div className="font-bold text-lg text-red-600">{resumen.incumplimientos}</div>
+            <div className="text-red-700 text-xs">Incumplimientos</div>
           </div>
         </div>
       </div>
 
       {/* Plazos Críticos */}
       <div className="space-y-2">
-        <h4 className="text-xs font-bold text-neutral-500 uppercase tracking-wide">Plazos Legales</h4>
+        <h4 className="font-bold text-neutral-500 text-xs uppercase tracking-wide">Plazos Legales</h4>
         
         <PlazoCard 
           titulo="Investigación"
@@ -186,7 +185,7 @@ export default function LegalComplianceChecker({ causa, compact = false }: Legal
       {/* Items de Conformidad */}
       {items.length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-xs font-bold text-neutral-500 uppercase tracking-wide">
+          <h4 className="font-bold text-neutral-500 text-xs uppercase tracking-wide">
             Observaciones de Cumplimiento
           </h4>
           <div className="space-y-2">
@@ -195,22 +194,22 @@ export default function LegalComplianceChecker({ causa, compact = false }: Legal
               return (
                 <div 
                   key={item.id}
-                  className={`p-3 rounded-lg border ${config.border} ${config.bg}`}
+                  className={`rounded-lg border p-3 ${config.border} ${config.bg}`}
                 >
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="mb-1 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {config.icon}
-                      <span className={`text-xs font-bold ${config.color}`}>
+                      <span className={`font-bold text-xs ${config.color}`}>
                         {item.titulo}
                       </span>
                     </div>
-                    <span className="text-[10px] text-neutral-400 font-mono">
+                    <span className="font-mono text-[10px] text-neutral-400">
                       {item.norma}
                     </span>
                   </div>
                   <p className={`text-xs ${config.color} mb-1`}>{item.descripcion}</p>
                   {item.accionRequerida && (
-                    <p className="text-xs text-neutral-600 italic">
+                    <p className="text-neutral-600 text-xs italic">
                       Acción: {item.accionRequerida}
                     </p>
                   )}
@@ -222,12 +221,12 @@ export default function LegalComplianceChecker({ causa, compact = false }: Legal
       )}
 
       {/* Información Legal */}
-      <div className="bg-neutral-50 rounded-lg p-3 border border-neutral-200">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+        <div className="mb-2 flex items-center gap-2">
           <Info className="h-4 w-4 text-neutral-500" />
-          <span className="text-xs font-medium text-neutral-700">Referencia Legal</span>
+          <span className="font-medium text-neutral-700 text-xs">Referencia Legal</span>
         </div>
-        <div className="text-xs text-neutral-600 space-y-1">
+        <div className="space-y-1 text-neutral-600 text-xs">
           <p>• Circular N°482: Reglamentos Internos (2018)</p>
           <p>• Ley N°21809: Convivencia y Bienestar (2026)</p>
           <p>• Ley N°21128: Aula Segura</p>

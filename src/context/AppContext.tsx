@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import React from 'react';
+import type React from 'react';
 import type { User } from '@supabase/supabase-js';
 import type { Causa, UserRole } from '../types';
 import type { SidebarView } from '../components/Sidebar';

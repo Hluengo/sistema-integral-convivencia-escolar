@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import type React from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Scale, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { signInWithEmail } from '../lib/supabase';
 import { useAppContext } from '../context/useAppContext';
@@ -24,7 +25,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
 
   useEffect(() => {
     const dialog = dialogRef.current;
-    if (!dialog) return;
+    if (!dialog) { return; }
     dialog.showModal();
     const timerId = setTimeout(() => emailRef.current?.focus(), 100);
     return () => {
@@ -35,7 +36,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && onClose) onClose();
+      if (e.key === 'Escape' && onClose) { onClose(); }
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
@@ -43,12 +44,15 @@ export default function LoginPage({ onClose }: LoginPageProps) {
 
   useEffect(() => {
     const dialog = dialogRef.current;
-    if (!dialog) return;
+    if (!dialog) { return; }
     const handleClick = (e: MouseEvent) => {
       const rect = dialog.getBoundingClientRect();
-      const isInDialog = e.clientX >= rect.left && e.clientX <= rect.right &&
-                         e.clientY >= rect.top && e.clientY <= rect.bottom;
-      if (!isInDialog && onClose) onClose();
+      const isInDialog =
+        e.clientX >= rect.left &&
+        e.clientX <= rect.right &&
+        e.clientY >= rect.top &&
+        e.clientY <= rect.bottom;
+      if (!isInDialog && onClose) { onClose(); }
     };
     dialog.addEventListener('click', handleClick);
     return () => dialog.removeEventListener('click', handleClick);
@@ -67,9 +71,11 @@ export default function LoginPage({ onClose }: LoginPageProps) {
     const { error: authError } = await signInWithEmail(email, password);
 
     if (authError) {
-      setError(authError.message === 'Invalid login credentials'
-        ? 'Credenciales incorrectas. Verifique su email y contraseña.'
-        : authError.message);
+      setError(
+        authError.message === 'Invalid login credentials'
+          ? 'Credenciales incorrectas. Verifique su email y contraseña.'
+          : authError.message
+      );
       setIsLoading(false);
       return;
     }
@@ -80,15 +86,17 @@ export default function LoginPage({ onClose }: LoginPageProps) {
   return (
     <dialog
       ref={dialogRef}
-      className="bg-transparent p-0 m-auto rounded-2xl overflow-visible"
+      className="m-auto overflow-visible rounded-2xl bg-transparent p-0"
       aria-label="Iniciar sesión"
       style={{ maxWidth: '420px', width: '92vw' }}
-      onClose={(e) => { if (e.target === e.currentTarget && onClose) onClose(); }}
+      onClose={(e) => {
+        if (e.target === e.currentTarget && onClose) { onClose(); }
+      }}
     >
       {/* Backdrop blur */}
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm -z-10" />
+      <div className="fixed inset-0 -z-10 bg-black/40 backdrop-blur-sm" />
 
-      <div className="bg-white rounded-2xl shadow-2xl border border-neutral-100 overflow-hidden">
+      <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-2xl">
         {/* Header accent */}
         <div className="h-1 w-full bg-gradient-to-r from-brand-500 via-brand-600 to-brand-700" />
 
@@ -98,28 +106,38 @@ export default function LoginPage({ onClose }: LoginPageProps) {
             <button
               type="button"
               onClick={onClose}
-              className="absolute top-4 right-4 p-2 rounded-xl hover:bg-neutral-100 text-neutral-400 hover:text-neutral-600 transition-colors"
+              className="absolute top-4 right-4 rounded-xl p-2 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600"
               aria-label="Cerrar"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <title>Cerrar diálogo</title>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           )}
 
           {/* Logo + title */}
-          <div className="text-center mb-7">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-lg shadow-brand-500/25 mb-4">
-              <Scale className="w-7 h-7 text-white" />
+          <div className="mb-7 text-center">
+            <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-brand-500/25 shadow-lg">
+              <Scale className="h-7 w-7 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-neutral-900">Iniciar sesión</h1>
-            <p className="text-sm text-neutral-500 mt-1">Acceda para gestionar expedientes</p>
+            <h1 className="font-bold text-neutral-900 text-xl">Iniciar sesión</h1>
+            <p className="mt-1 text-neutral-500 text-sm">Acceda para gestionar expedientes</p>
           </div>
 
           {/* Error */}
           {error && (
-            <div role="alert" className="flex items-start gap-3 p-3.5 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm mb-5">
-              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+            <div
+              role="alert"
+              className="mb-5 flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 p-3.5 text-red-600 text-sm"
+            >
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>
           )}
@@ -127,7 +145,10 @@ export default function LoginPage({ onClose }: LoginPageProps) {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="login-email" className="block text-xs font-semibold text-neutral-600 mb-1.5">
+              <label
+                htmlFor="login-email"
+                className="mb-1.5 block font-semibold text-neutral-600 text-xs"
+              >
                 Correo electrónico
               </label>
               <input
@@ -139,12 +160,15 @@ export default function LoginPage({ onClose }: LoginPageProps) {
                 placeholder="usuario@colegio.cl"
                 autoComplete="email"
                 required
-                className="w-full text-sm bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/15 transition-all duration-200"
+                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-neutral-900 text-sm placeholder-neutral-400 transition-all duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/15"
               />
             </div>
 
             <div>
-              <label htmlFor="login-password" className="block text-xs font-semibold text-neutral-600 mb-1.5">
+              <label
+                htmlFor="login-password"
+                className="mb-1.5 block font-semibold text-neutral-600 text-xs"
+              >
                 Contraseña
               </label>
               <div className="relative">
@@ -156,31 +180,37 @@ export default function LoginPage({ onClose }: LoginPageProps) {
                   placeholder="••••••••"
                   autoComplete="current-password"
                   required
-                  className="w-full text-sm bg-neutral-50 border border-neutral-200 rounded-xl px-4 py-3 pr-11 text-neutral-900 placeholder-neutral-400 focus:outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/15 transition-all duration-200"
+                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 pr-11 text-neutral-900 text-sm placeholder-neutral-400 transition-all duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/15"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition-colors"
+                  className="absolute top-1/2 right-3 -translate-y-1/2 rounded-lg p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600"
                   tabIndex={-1}
                   aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-xs pt-0.5">
-              <label htmlFor="remember-me" className="flex items-center gap-2 text-neutral-500 cursor-pointer select-none">
-                <input 
-                  id="remember-me" 
-                  name="remember-me" 
-                  type="checkbox" 
-                  className="w-4 h-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500/20" 
+            <div className="flex items-center justify-between pt-0.5 text-xs">
+              <label
+                htmlFor="remember-me"
+                className="flex cursor-pointer select-none items-center gap-2 text-neutral-500"
+              >
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500/20"
                 />
                 Recordarme
               </label>
-              <button type="button" className="text-brand-600 hover:text-brand-700 font-medium transition-colors">
+              <button
+                type="button"
+                className="font-medium text-brand-600 transition-colors hover:text-brand-700"
+              >
                 ¿Olvidó su contraseña?
               </button>
             </div>
@@ -188,7 +218,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-brand-600 hover:bg-brand-700 disabled:bg-brand-400 text-white font-semibold text-sm py-3 px-4 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed shadow-sm hover:shadow-md mt-2"
+              className="mt-2 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3 font-semibold text-sm text-white shadow-sm transition-all duration-200 hover:bg-brand-700 hover:shadow-md disabled:cursor-not-allowed disabled:bg-brand-400"
             >
               {isLoading ? (
                 <>
@@ -203,8 +233,8 @@ export default function LoginPage({ onClose }: LoginPageProps) {
         </div>
 
         {/* Footer */}
-        <div className="px-8 py-4 bg-neutral-50 border-t border-neutral-100">
-          <p className="text-center text-xs text-neutral-400">
+        <div className="border-neutral-100 border-t bg-neutral-50 px-8 py-4">
+          <p className="text-center text-neutral-400 text-xs">
             Debido Proceso · Sistema de convivencia escolar
           </p>
         </div>

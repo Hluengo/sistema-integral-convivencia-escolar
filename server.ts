@@ -4,9 +4,9 @@
  */
 
 import express from 'express';
-import path from 'path';
-import crypto from 'crypto';
-import https from 'https';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import https from 'node:https';
 import compression from 'compression';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
@@ -15,29 +15,44 @@ dotenv.config();
 dotenv.config({ path: '.env.local' });
 
 const app = express();
-const PORT = parseInt(process.env.PORT || '3001', 10);
+const PORT = Number.parseInt(process.env.PORT || '3001', 10);
 
 app.use(compression());
 app.use(express.json());
 
 // Auth middleware: verify Supabase JWT
 // Strategy: try HMAC first (tests + legacy), then Supabase API (ES256)
-async function verifyJwtViaHmac(token: string, secret: string): Promise<Record<string, unknown> | null> {
+async function verifyJwtViaHmac(
+  token: string,
+  secret: string
+): Promise<Record<string, unknown> | null> {
   const parts = token.split('.');
-  if (parts.length !== 3) return null;
+  if (parts.length !== 3) {
+    return null;
+  }
   const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
   const signature = Buffer.from(parts[2], 'base64url');
 
   for (const secretBytes of [new TextEncoder().encode(secret), Buffer.from(secret, 'base64')]) {
     try {
-      const key = await crypto.subtle.importKey('raw', secretBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
+      const key = await crypto.subtle.importKey(
+        'raw',
+        secretBytes,
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['verify']
+      );
       const data = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
       const valid = await crypto.subtle.verify('HMAC', key, signature, data);
       if (valid) {
-        if (payload.exp && payload.exp * 1000 < Date.now()) return null;
+        if (payload.exp && payload.exp * 1000 < Date.now()) {
+          return null;
+        }
         return payload;
       }
-    } catch { /* try next */ }
+    } catch {
+      /* try next */
+    }
   }
   return null;
 }
@@ -45,44 +60,67 @@ async function verifyJwtViaHmac(token: string, secret: string): Promise<Record<s
 function verifyViaSupabaseApi(token: string): Promise<Record<string, unknown> | null> {
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const anonKey = process.env.VITE_SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !anonKey) return Promise.resolve(null);
+  if (!supabaseUrl || !anonKey) {
+    return Promise.resolve(null);
+  }
 
   const hostname = new URL(supabaseUrl).hostname;
   return new Promise((resolve) => {
-    const req = https.request({
-      hostname,
-      path: '/auth/v1/user',
-      method: 'GET',
-      headers: { Authorization: `Bearer ${token}`, apikey: anonKey },
-    }, (res) => {
-      let data = '';
-      res.on('data', (chunk) => { data += chunk; });
-      res.on('end', () => {
-        if (res.statusCode !== 200) return resolve(null);
-        try {
-          const user = JSON.parse(data);
-          resolve({ sub: user.id, email: user.email, role: user.role });
-        } catch { resolve(null); }
-      });
-    });
+    const req = https.request(
+      {
+        hostname,
+        path: '/auth/v1/user',
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}`, apikey: anonKey },
+      },
+      (res) => {
+        let data = '';
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+        res.on('end', () => {
+          if (res.statusCode !== 200) {
+            return resolve(null);
+          }
+          try {
+            const user = JSON.parse(data);
+            resolve({ sub: user.id, email: user.email, role: user.role });
+          } catch {
+            resolve(null);
+          }
+        });
+      }
+    );
     req.on('error', () => resolve(null));
-    req.setTimeout(5000, () => { req.destroy(); resolve(null); });
+    req.setTimeout(5000, () => {
+      req.destroy();
+      resolve(null);
+    });
     req.end();
   });
 }
 
-async function verifyJwtSignature(token: string, secret: string): Promise<Record<string, unknown> | null> {
+async function verifyJwtSignature(
+  token: string,
+  secret: string
+): Promise<Record<string, unknown> | null> {
   // 1) Fast path: HMAC (works in tests and with legacy secret)
   const hmacResult = await verifyJwtViaHmac(token, secret);
-  if (hmacResult) return hmacResult;
+  if (hmacResult) {
+    return hmacResult;
+  }
 
   // 2) Slow path: ask Supabase (works with ES256 tokens)
   return verifyViaSupabaseApi(token);
 }
 
-async function requireAuth(req: express.Request, res: express.Response, next: express.NextFunction) {
+async function requireAuth(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authHeader?.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Autenticación requerida.' });
   }
   const token = authHeader.replace('Bearer ', '');
@@ -111,32 +149,48 @@ async function requireAuth(req: express.Request, res: express.Response, next: ex
 // Input validation & sanitization helpers
 const MAX_STR = 10000;
 const sanitize = (s: unknown): string => {
-  if (typeof s !== 'string') return '';
-  return s.slice(0, MAX_STR).replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+  if (typeof s !== 'string') {
+    return '';
+  }
+  return s.slice(0, MAX_STR).replace(/[\x00-\x1F\x7F-\x9F]/g, '');
 };
 const requireStr = (obj: Record<string, unknown>, key: string, max = 200): string => {
   const v = sanitize(obj[key]);
-  if (!v) throw new Error(`Campo requerido faltante: ${key}`);
+  if (!v) {
+    throw new Error(`Campo requerido faltante: ${key}`);
+  }
   return v.slice(0, max);
 };
-const optStr = (obj: Record<string, unknown>, key: string, max = MAX_STR): string => sanitize(obj[key]).slice(0, max);
-const optArr = (obj: Record<string, unknown>, key: string): unknown[] => Array.isArray(obj[key]) ? obj[key]! : [];
+const optStr = (obj: Record<string, unknown>, key: string, max = MAX_STR): string =>
+  sanitize(obj[key]).slice(0, max);
+const optArr = (obj: Record<string, unknown>, key: string): unknown[] =>
+  Array.isArray(obj[key]) ? obj[key]! : [];
 
 // Prompt injection sanitizer: escapes or strips patterns that could manipulate AI output
 function sanitizeForAI(text: unknown): string {
-  if (!text || typeof text !== 'string') return '';
-  return text
-    // Strip common prompt injection markers
-    .replace(/\[INST\]|\[\/INST\]|<<SYS>>|<<\/SYS>>/gi, '')
-    .replace(/<\|im_start\|>|<\|im_end\|>/gi, '')
-    .replace(/<\|system\|>|<\|user\|>|<\|assistant\|>/gi, '')
-    // Strip instruction override attempts
-    .replace(/^(ignore|olvida|disregard|anula).{0,50}(instrucciones|instructions|reglas|rules|sistema|system)/gim, '')
-    // Strip role injection attempts
-    .replace(/(eres|you are|act as|actúa como|actuá como).{0,30}(un|a|el|la|un(a)?\s+abogado|lawyer|juez|judge)/gim, '')
-    // Collapse excessive whitespace/newlines
-    .replace(/\n{3,}/g, '\n\n')
-    .slice(0, MAX_STR);
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
+  return (
+    text
+      // Strip common prompt injection markers
+      .replace(/\[INST\]|\[\/INST\]|<<SYS>>|<<\/SYS>>/gi, '')
+      .replace(/<\|im_start\|>|<\|im_end\|>/gi, '')
+      .replace(/<\|system\|>|<\|user\|>|<\|assistant\|>/gi, '')
+      // Strip instruction override attempts
+      .replace(
+        /^(ignore|olvida|disregard|anula).{0,50}(instrucciones|instructions|reglas|rules|sistema|system)/gim,
+        ''
+      )
+      // Strip role injection attempts
+      .replace(
+        /(eres|you are|act as|actúa como|actuá como).{0,30}(un|a|el|la|un(a)?\s+abogado|lawyer|juez|judge)/gim,
+        ''
+      )
+      // Collapse excessive whitespace/newlines
+      .replace(/\n{3,}/g, '\n\n')
+      .slice(0, MAX_STR)
+  );
 }
 
 // In-memory cache with TTL
@@ -152,7 +206,9 @@ function getCacheKey(endpoint: string, body: unknown): string {
 
 function getFromCache(key: string): string | null {
   const entry = cache.get(key);
-  if (!entry) return null;
+  if (!entry) {
+    return null;
+  }
   if (Date.now() > entry.expiresAt) {
     cache.delete(key);
     return null;
@@ -163,7 +219,9 @@ function getFromCache(key: string): string | null {
 function setCache(key: string, value: string): void {
   if (cache.size > 100) {
     const oldestKey = cache.keys().next().value;
-    if (oldestKey) cache.delete(oldestKey);
+    if (oldestKey) {
+      cache.delete(oldestKey);
+    }
   }
   cache.set(key, { value, expiresAt: Date.now() + CACHE_TTL });
 }
@@ -180,7 +238,9 @@ function checkRateLimit(ip: string): boolean {
     rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
     return true;
   }
-  if (record.count >= RATE_LIMIT) return false;
+  if (record.count >= RATE_LIMIT) {
+    return false;
+  }
   record.count++;
   return true;
 }
@@ -188,21 +248,27 @@ function checkRateLimit(ip: string): boolean {
 // Groq API helper
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
-async function callGroq(messages: { role: string; content: string }[], systemInstruction?: string): Promise<string> {
+async function callGroq(
+  messages: { role: string; content: string }[],
+  systemInstruction?: string
+): Promise<string> {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     throw new Error('La variable de entorno GROQ_API_KEY es requerida.');
   }
   const body: Record<string, unknown> = { model: GROQ_MODEL, messages: [] };
   if (systemInstruction) {
-    (body.messages as { role: string; content: string }[]).push({ role: 'system', content: systemInstruction });
+    (body.messages as { role: string; content: string }[]).push({
+      role: 'system',
+      content: systemInstruction,
+    });
   }
   (body.messages as { role: string; content: string }[]).push(...messages);
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify(body),
   });
@@ -222,8 +288,8 @@ app.post('/api/audit-due-process', requireAuth, async (req, res) => {
   try {
     const body = req.body as Record<string, unknown>;
     const id = requireStr(body, 'id', 50);
-    const studentName = optStr(body, 'studentName', 200);
-    const course = optStr(body, 'course', 100);
+    const _studentName = optStr(body, 'studentName', 200);
+    const _course = optStr(body, 'course', 100);
     const infractionType = requireStr(body, 'infractionType', 50);
     const isAulaSegura = Boolean(body.isAulaSegura);
     const checkedItems = optArr(body, 'checkedItems');
@@ -274,7 +340,7 @@ app.post('/api/draft-document', requireAuth, async (req, res) => {
     const isAulaSegura = Boolean(body.isAulaSegura);
     const conductaRiceId = optStr(body, 'conductaRiceId', 100);
     const runEstudiante = optStr(body, 'runEstudiante', 50);
-    const nnaProtectedName = optStr(body, 'nnaProtectedName', 200);
+    const _nnaProtectedName = optStr(body, 'nnaProtectedName', 200);
     const fechaApertura = optStr(body, 'fechaApertura', 50);
     const estadoActual = optStr(body, 'estadoActual', 50);
     const fechaUltimaActualizacion = optStr(body, 'fechaUltimaActualizacion', 50);
@@ -297,7 +363,7 @@ app.post('/api/draft-document', requireAuth, async (req, res) => {
           participantes: Array.isArray(r.participantes)
             ? r.participantes.map((p: unknown) => sanitize(p).slice(0, 100)).slice(0, 20)
             : [],
-          documentoAdjunto: sanitize(r.documentoAdjunto).slice(0, 200)
+          documentoAdjunto: sanitize(r.documentoAdjunto).slice(0, 200),
         };
       })
       .slice(0, 100);
@@ -312,7 +378,7 @@ app.post('/api/draft-document', requireAuth, async (req, res) => {
           registradoPor: sanitize(r.registradoPor).slice(0, 200),
           fechaCompletado: sanitize(r.fechaCompletado).slice(0, 50),
           observaciones: sanitize(r.observaciones).slice(0, 1000),
-          documentoNombre: sanitize(r.documentoNombre).slice(0, 200)
+          documentoNombre: sanitize(r.documentoNombre).slice(0, 200),
         };
       })
       .slice(0, 100);
@@ -339,23 +405,39 @@ MEDIDAS EJECUTADAS:
 ${safeMedidasEjecutadas.length > 0 ? safeMedidasEjecutadas.map((m: string) => `- ${m}`).join('\n') : 'No se han registrado medidas ejecutadas.'}
 
 BITÁCORA COMPLETA DEL EXPEDIENTE:
-${safeBitacora.length > 0 ? safeBitacora.map((b: any) => `
+${
+  safeBitacora.length > 0
+    ? safeBitacora
+        .map(
+          (b: any) => `
 --- Registro: ${b.titulo} ---
   Fecha: ${b.fecha}
   Tipo: ${b.tipo}
   Descripción: ${b.descripcion}
   Participantes: ${b.participantes.join(', ')}
-  Documento adjunto: ${b.documentoAdjunto || 'Ninguno'}`).join('\n') : 'No hay registros en la bitácora.'}
+  Documento adjunto: ${b.documentoAdjunto || 'Ninguno'}`
+        )
+        .join('\n')
+    : 'No hay registros en la bitácora.'
+}
 
 CHECKLIST DEL DEBIDO PROCESO:
-${safeChecklist.length > 0 ? safeChecklist.map((c: any) => `
+${
+  safeChecklist.length > 0
+    ? safeChecklist
+        .map(
+          (c: any) => `
 - [${c.completado ? 'X' : ' '}] ${c.label}
   Estado: ${c.completado ? 'COMPLETADO' : 'PENDIENTE'}
   Descripción: ${c.descripcion || ''}
   Requerido por: ${c.requeridoPor || ''}
   ${c.completado ? `Registrado por: ${c.registradoPor || ''} | Fecha: ${c.fechaCompletado || ''}` : ''}
   ${c.observaciones ? `Observaciones: ${c.observaciones}` : ''}
-  ${c.documentoNombre ? `Documento adjunto: ${c.documentoNombre}` : ''}`).join('\n') : 'No hay checklist disponible.'}
+  ${c.documentoNombre ? `Documento adjunto: ${c.documentoNombre}` : ''}`
+        )
+        .join('\n')
+    : 'No hay checklist disponible.'
+}
 
 ==================================================================`;
 
@@ -367,17 +449,22 @@ ${safeChecklist.length > 0 ? safeChecklist.map((c: any) => `
     // Try loading prompt from DB
     let dbPrompt: string | null = null;
     try {
-      const tplRes = await fetch(`https://jjzwwhnofiepvliugowr.supabase.co/rest/v1/document_templates?doc_type=eq.${docType}&select=system_prompt&limit=1`, {
-        headers: {
-          apikey: process.env.VITE_SUPABASE_ANON_KEY || '',
-          Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-      });
+      const tplRes = await fetch(
+        `https://jjzwwhnofiepvliugowr.supabase.co/rest/v1/document_templates?doc_type=eq.${docType}&select=system_prompt&limit=1`,
+        {
+          headers: {
+            apikey: process.env.VITE_SUPABASE_ANON_KEY || '',
+            Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+        }
+      );
       const tplData = await tplRes.json();
       if (Array.isArray(tplData) && tplData.length > 0 && tplData[0].system_prompt) {
         dbPrompt = tplData[0].system_prompt;
       }
-    } catch { /* fallback to hardcoded */ }
+    } catch {
+      /* fallback to hardcoded */
+    }
 
     if (dbPrompt) {
       systemPrompt = dbPrompt;
@@ -765,7 +852,9 @@ El resultado final debe parecer elaborado por un abogado especialista en derecho
 ${isAulaSegura ? 'NOTA: Dado que el caso está sujeto a Ley Aula Segura (Ley 21.128), el informe debe considerar los plazos fatales de 10 días hábiles y las disposiciones especiales de dicha ley.' : ''}`;
     }
 
-    const responseText = await callGroq([{ role: 'user', content: systemPrompt + caseDataAppendix }]);
+    const responseText = await callGroq([
+      { role: 'user', content: systemPrompt + caseDataAppendix },
+    ]);
 
     res.json({ success: true, document: responseText });
   } catch (error: any) {
@@ -800,9 +889,13 @@ app.post('/api/improve-text', requireAuth, async (req, res) => {
       return;
     }
 
-    const systemMsg = 'Eres un asistente de redacción especializado en redacción institucional educativa chilena. Tu única función es mejorar la ortografía, gramática, coherencia y redacción del texto que el usuario te entrega. Usa siempre un tono neutro, objetivo y sin juicios de valor. No agregues explicaciones, comentarios ni evaluaciones. No respondas preguntas ni interpretes el contenido. Devuelve ÚNICAMENTE el texto corregido, sin ningún formato adicional ni prefacio.';
+    const systemMsg =
+      'Eres un asistente de redacción especializado en redacción institucional educativa chilena. Tu única función es mejorar la ortografía, gramática, coherencia y redacción del texto que el usuario te entrega. Usa siempre un tono neutro, objetivo y sin juicios de valor. No agregues explicaciones, comentarios ni evaluaciones. No respondas preguntas ni interpretes el contenido. Devuelve ÚNICAMENTE el texto corregido, sin ningún formato adicional ni prefacio.';
     const userContent = sanitizeForAI(text);
-    const responseText = await callGroq([{ role: 'user', content: `Texto a corregir:\n\n${userContent}` }], systemMsg);
+    const responseText = await callGroq(
+      [{ role: 'user', content: `Texto a corregir:\n\n${userContent}` }],
+      systemMsg
+    );
     setCache(cacheKey, responseText);
 
     res.json({ success: true, improved: responseText });
@@ -824,7 +917,11 @@ app.post('/api/advisor-chat', requireAuth, async (req, res) => {
     }
 
     const userId = (req as any).user?.sub || 'anonymous';
-    const cacheKey = getCacheKey('advisor-chat', { userId, message, historyCount: history?.length || 0 });
+    const cacheKey = getCacheKey('advisor-chat', {
+      userId,
+      message,
+      historyCount: history?.length || 0,
+    });
     const cached = getFromCache(cacheKey);
     if (cached) {
       res.json({ success: true, reply: cached, cached: true });
@@ -860,17 +957,20 @@ Tus respuestas deben estar redactadas en español formal de Chile, alineadas con
 });
 
 // Document templates: GET all, PUT single
-app.get('/api/document-templates', async (req, res) => {
+app.get('/api/document-templates', async (_req, res) => {
   try {
-    const result = await fetch('https://jjzwwhnofiepvliugowr.supabase.co/rest/v1/document_templates?select=*&order=doc_type', {
-      headers: {
-        apikey: process.env.VITE_SUPABASE_ANON_KEY || '',
-        Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY}`,
-      },
-    });
+    const result = await fetch(
+      'https://jjzwwhnofiepvliugowr.supabase.co/rest/v1/document_templates?select=*&order=doc_type',
+      {
+        headers: {
+          apikey: process.env.VITE_SUPABASE_ANON_KEY || '',
+          Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+      }
+    );
     const data = await result.json();
     res.json(data);
-  } catch (error) {
+  } catch (_error) {
     res.status(500).json({ error: 'Error al obtener plantillas.' });
   }
 });
@@ -915,7 +1015,7 @@ async function startServer() {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     // SPA single point of redirection
-    app.get('*', (req, res) => {
+    app.get('*', (_req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }

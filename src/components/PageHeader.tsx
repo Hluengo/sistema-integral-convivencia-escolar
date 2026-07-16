@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import type React from 'react';
 
 interface PageHeaderProps {
   title: string;
@@ -13,11 +13,11 @@ interface PageHeaderProps {
 
 export default function PageHeader({ title, description, action }: PageHeaderProps) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 tracking-tight">{title}</h2>
+        <h2 className="font-bold text-neutral-900 text-xl tracking-tight sm:text-2xl">{title}</h2>
         {description && (
-          <p className="text-sm text-neutral-500 mt-1 max-w-2xl">{description}</p>
+          <p className="mt-1 max-w-2xl text-neutral-500 text-sm">{description}</p>
         )}
       </div>
       {action && <div className="shrink-0">{action}</div>}

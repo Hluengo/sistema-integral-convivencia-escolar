@@ -1,8 +1,8 @@
 import express from 'express';
-import path from 'path';
-import https from 'https';
-import crypto from 'crypto';
-import { fileURLToPath } from 'url';
+import path from 'node:path';
+import https from 'node:https';
+import crypto from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,7 +25,9 @@ function getCacheKey(endpoint, body) {
 
 function getFromCache(key) {
   const entry = cache.get(key);
-  if (!entry) return null;
+  if (!entry) {
+    return null;
+  }
   if (Date.now() > entry.expiresAt) {
     cache.delete(key);
     return null;
@@ -53,66 +55,96 @@ function checkRateLimit(ip) {
     rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
     return true;
   }
-  if (record.count >= RATE_LIMIT) return false;
+  if (record.count >= RATE_LIMIT) {
+    return false;
+  }
   record.count++;
   return true;
 }
 
 function getApiKey() {
   const key = process.env.GROQ_API_KEY;
-  if (!key) throw new Error('GROQ_API_KEY no configurada');
+  if (!key) {
+    throw new Error('GROQ_API_KEY no configurada');
+  }
   return key;
 }
 
 // Input validation & sanitization helpers
 const MAX_STR = 10000;
 const sanitize = (s) => {
-  if (typeof s !== 'string') return '';
-  return s.slice(0, MAX_STR).replace(/[\u0000-\u001F\u007F-\u009F]/g, '');
+  if (typeof s !== 'string') {
+    return '';
+  }
+  return s.slice(0, MAX_STR).replace(/[\x00-\x1F\x7F-\x9F]/g, '');
 };
 const requireStr = (obj, key, max = 200) => {
   const v = sanitize(obj[key]);
-  if (!v) throw new Error(`Campo requerido faltante: ${key}`);
+  if (!v) {
+    throw new Error(`Campo requerido faltante: ${key}`);
+  }
   return v.slice(0, max);
 };
 const optStr = (obj, key, max = MAX_STR) => sanitize(obj[key]).slice(0, max);
-const optArr = (obj, key) => Array.isArray(obj[key]) ? obj[key] : [];
+const optArr = (obj, key) => (Array.isArray(obj[key]) ? obj[key] : []);
 
 // Prompt injection sanitizer: escapes or strips patterns that could manipulate AI output
 function sanitizeForAI(text) {
-  if (!text || typeof text !== 'string') return '';
-  return text
-    // Strip common prompt injection markers
-    .replace(/\[INST\]|\[\/INST\]|<<SYS>>|<<\/SYS>>/gi, '')
-    .replace(/<\|im_start\|>|<\|im_end\|>/gi, '')
-    .replace(/<\|system\|>|<\|user\|>|<\|assistant\|>/gi, '')
-    // Strip instruction override attempts
-    .replace(/^(ignore|olvida|disregard|anula).{0,50}(instrucciones|instructions|reglas|rules|sistema|system)/gim, '')
-    // Strip role injection attempts
-    .replace(/(eres|you are|act as|actúa como|actuá como).{0,30}(un|a|el|la|un(a)?\s+abogado|lawyer|juez|judge)/gim, '')
-    // Collapse excessive whitespace/newlines
-    .replace(/\n{3,}/g, '\n\n')
-    .slice(0, MAX_STR);
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
+  return (
+    text
+      // Strip common prompt injection markers
+      .replace(/\[INST\]|\[\/INST\]|<<SYS>>|<<\/SYS>>/gi, '')
+      .replace(/<\|im_start\|>|<\|im_end\|>/gi, '')
+      .replace(/<\|system\|>|<\|user\|>|<\|assistant\|>/gi, '')
+      // Strip instruction override attempts
+      .replace(
+        /^(ignore|olvida|disregard|anula).{0,50}(instrucciones|instructions|reglas|rules|sistema|system)/gim,
+        ''
+      )
+      // Strip role injection attempts
+      .replace(
+        /(eres|you are|act as|actúa como|actuá como).{0,30}(un|a|el|la|un(a)?\s+abogado|lawyer|juez|judge)/gim,
+        ''
+      )
+      // Collapse excessive whitespace/newlines
+      .replace(/\n{3,}/g, '\n\n')
+      .slice(0, MAX_STR)
+  );
 }
 
 // Auth middleware: verify Supabase JWT
 // Strategy: try HMAC first (tests + legacy), then Supabase API (ES256)
 async function verifyJwtViaHmac(token, secret) {
   const parts = token.split('.');
-  if (parts.length !== 3) return null;
+  if (parts.length !== 3) {
+    return null;
+  }
   const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
   const signature = Buffer.from(parts[2], 'base64url');
 
   for (const secretBytes of [new TextEncoder().encode(secret), Buffer.from(secret, 'base64')]) {
     try {
-      const key = await crypto.subtle.importKey('raw', secretBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
+      const key = await crypto.subtle.importKey(
+        'raw',
+        secretBytes,
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['verify']
+      );
       const data = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
       const valid = await crypto.subtle.verify('HMAC', key, signature, data);
       if (valid) {
-        if (payload.exp && payload.exp * 1000 < Date.now()) return null;
+        if (payload.exp && payload.exp * 1000 < Date.now()) {
+          return null;
+        }
         return payload;
       }
-    } catch { /* try next */ }
+    } catch {
+      /* try next */
+    }
   }
   return null;
 }
@@ -120,28 +152,42 @@ async function verifyJwtViaHmac(token, secret) {
 function verifyViaSupabaseApi(token) {
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const anonKey = process.env.VITE_SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !anonKey) return Promise.resolve(null);
+  if (!supabaseUrl || !anonKey) {
+    return Promise.resolve(null);
+  }
 
   const hostname = new URL(supabaseUrl).hostname;
   return new Promise((resolve) => {
-    const req = https.request({
-      hostname,
-      path: '/auth/v1/user',
-      method: 'GET',
-      headers: { Authorization: `Bearer ${token}`, apikey: anonKey },
-    }, (res) => {
-      let data = '';
-      res.on('data', (chunk) => { data += chunk; });
-      res.on('end', () => {
-        if (res.statusCode !== 200) return resolve(null);
-        try {
-          const user = JSON.parse(data);
-          resolve({ sub: user.id, email: user.email, role: user.role });
-        } catch { resolve(null); }
-      });
-    });
+    const req = https.request(
+      {
+        hostname,
+        path: '/auth/v1/user',
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}`, apikey: anonKey },
+      },
+      (res) => {
+        let data = '';
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+        res.on('end', () => {
+          if (res.statusCode !== 200) {
+            return resolve(null);
+          }
+          try {
+            const user = JSON.parse(data);
+            resolve({ sub: user.id, email: user.email, role: user.role });
+          } catch {
+            resolve(null);
+          }
+        });
+      }
+    );
     req.on('error', () => resolve(null));
-    req.setTimeout(5000, () => { req.destroy(); resolve(null); });
+    req.setTimeout(5000, () => {
+      req.destroy();
+      resolve(null);
+    });
     req.end();
   });
 }
@@ -149,7 +195,9 @@ function verifyViaSupabaseApi(token) {
 async function verifyJwtSignature(token, secret) {
   // 1) Fast path: HMAC (works in tests and with legacy secret)
   const hmacResult = await verifyJwtViaHmac(token, secret);
-  if (hmacResult) return hmacResult;
+  if (hmacResult) {
+    return hmacResult;
+  }
 
   // 2) Slow path: ask Supabase (works with ES256 tokens)
   return verifyViaSupabaseApi(token);
@@ -157,7 +205,7 @@ async function verifyJwtSignature(token, secret) {
 
 async function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authHeader?.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Autenticación requerida.' });
   }
   const token = authHeader.replace('Bearer ', '');
@@ -194,10 +242,13 @@ function httpsPost(hostname, pathname, body, headers) {
     };
     const req = https.request(opts, (res) => {
       let chunks = '';
-      res.on('data', (chunk) => chunks += chunk);
+      res.on('data', (chunk) => (chunks += chunk));
       res.on('end', () => {
-        try { resolve({ status: res.statusCode, body: JSON.parse(chunks) }); }
-        catch { reject(new Error(`HTTP ${res.statusCode}: ${chunks}`)); }
+        try {
+          resolve({ status: res.statusCode, body: JSON.parse(chunks) });
+        } catch {
+          reject(new Error(`HTTP ${res.statusCode}: ${chunks}`));
+        }
       });
     });
     req.on('error', reject);
@@ -216,10 +267,13 @@ function httpsGet(hostname, pathname, headers) {
     };
     const req = https.request(opts, (res) => {
       let chunks = '';
-      res.on('data', (chunk) => chunks += chunk);
+      res.on('data', (chunk) => (chunks += chunk));
       res.on('end', () => {
-        try { resolve(JSON.parse(chunks)); }
-        catch { reject(new Error(`HTTP ${res.statusCode}: ${chunks}`)); }
+        try {
+          resolve(JSON.parse(chunks));
+        } catch {
+          reject(new Error(`HTTP ${res.statusCode}: ${chunks}`));
+        }
       });
     });
     req.on('error', reject);
@@ -238,10 +292,13 @@ function httpsPatch(hostname, pathname, body, headers) {
     };
     const req = https.request(opts, (res) => {
       let chunks = '';
-      res.on('data', (chunk) => chunks += chunk);
+      res.on('data', (chunk) => (chunks += chunk));
       res.on('end', () => {
-        try { resolve({ status: res.statusCode, body: JSON.parse(chunks) }); }
-        catch { reject(new Error(`HTTP ${res.statusCode}: ${chunks}`)); }
+        try {
+          resolve({ status: res.statusCode, body: JSON.parse(chunks) });
+        } catch {
+          reject(new Error(`HTTP ${res.statusCode}: ${chunks}`));
+        }
       });
     });
     req.on('error', reject);
@@ -258,7 +315,7 @@ async function callGroq(messages, systemInstruction) {
   }
   body.messages.push(...messages);
   const res = await httpsPost('api.groq.com', '/openai/v1/chat/completions', body, {
-    'Authorization': `Bearer ${apiKey}`,
+    Authorization: `Bearer ${apiKey}`,
   });
   if (res.status !== 200) {
     throw new Error(`Groq API error: ${res.status} ${JSON.stringify(res.body)}`);
@@ -278,7 +335,9 @@ app.post('/api/improve-text', requireAuth, async (req, res) => {
 
     const ip = req.ip || req.connection?.remoteAddress || 'unknown';
     if (!checkRateLimit(ip)) {
-      return res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
+      return res
+        .status(429)
+        .json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
     }
 
     const cacheKey = getCacheKey('improve-text', { text });
@@ -287,7 +346,8 @@ app.post('/api/improve-text', requireAuth, async (req, res) => {
       return res.json({ success: true, improved: cached, cached: true });
     }
 
-    const systemMsg = 'Eres un asistente de redacción especializado en redacción institucional educativa chilena. Tu única función es mejorar la ortografía, gramática, coherencia y redacción del texto que el usuario te entrega. Usa siempre un tono neutro, objetivo y sin juicios de valor. No agregues explicaciones, comentarios ni evaluaciones. No respondas preguntas ni interpretes el contenido. Devuelve ÚNICAMENTE el texto corregido, sin ningún formato adicional ni prefacio.';
+    const systemMsg =
+      'Eres un asistente de redacción especializado en redacción institucional educativa chilena. Tu única función es mejorar la ortografía, gramática, coherencia y redacción del texto que el usuario te entrega. Usa siempre un tono neutro, objetivo y sin juicios de valor. No agregues explicaciones, comentarios ni evaluaciones. No respondas preguntas ni interpretes el contenido. Devuelve ÚNICAMENTE el texto corregido, sin ningún formato adicional ni prefacio.';
     const userContent = sanitizeForAI(text);
     const improved = await callGroq(
       [{ role: 'user', content: `Texto a corregir:\n\n${userContent}` }],
@@ -310,7 +370,9 @@ app.post('/api/advisor-chat', requireAuth, async (req, res) => {
 
     const ip = req.ip || req.connection?.remoteAddress || 'unknown';
     if (!checkRateLimit(ip)) {
-      return res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
+      return res
+        .status(429)
+        .json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
     }
 
     const systemInstruction = `Actúas como un Abogado Senior y Experto Legal de la Superintendencia de Educación de Chile, experto en fiscalizaciones aplicadas a establecimientos escolares chilenos. Tu dominio de especialidad abarca:
@@ -321,7 +383,11 @@ app.post('/api/advisor-chat', requireAuth, async (req, res) => {
 Tus respuestas deben estar redactadas en español formal de Chile, alineadas con el rigor burocrático y legal que evitará cargos, multas pecuniarias o recursos judiciales contra el colegio. Cita artículos cuando corresponda y explica paso a paso cómo resguardar el "Debido Proceso Escolar" y la integridad mediante medidas de resguardo. Proporciona respuestas muy estructuradas, didácticas y extremadamente precisas.`;
 
     const userId = req.user?.sub || 'anonymous';
-    const cacheKey = getCacheKey('advisor-chat', { userId, message, historyCount: history?.length || 0 });
+    const cacheKey = getCacheKey('advisor-chat', {
+      userId,
+      message,
+      historyCount: history?.length || 0,
+    });
     const cached = getFromCache(cacheKey);
     if (cached) {
       return res.json({ success: true, reply: cached, cached: true });
@@ -342,7 +408,7 @@ Tus respuestas deben estar redactadas en español formal de Chile, alineadas con
     res.json({ success: true, reply });
   } catch (error) {
     console.error('Error en el Chat de Consultoría:', error.message || error);
-    const detail = error.message?.includes('GROQ_API_KEY') 
+    const detail = error.message?.includes('GROQ_API_KEY')
       ? 'API key de Groq no configurada en variables de entorno de Vercel.'
       : error.message?.includes('Groq API error')
         ? `Error de Groq: ${error.message}`
@@ -356,8 +422,8 @@ app.post('/api/audit-due-process', requireAuth, async (req, res) => {
   try {
     const body = req.body;
     const id = requireStr(body, 'id', 50);
-    const studentName = optStr(body, 'studentName', 200);
-    const course = optStr(body, 'course', 100);
+    const _studentName = optStr(body, 'studentName', 200);
+    const _course = optStr(body, 'course', 100);
     const infractionType = requireStr(body, 'infractionType', 50);
     const isAulaSegura = Boolean(body.isAulaSegura);
     const checkedItems = optArr(body, 'checkedItems');
@@ -365,7 +431,9 @@ app.post('/api/audit-due-process', requireAuth, async (req, res) => {
 
     const ip = req.ip || req.connection?.remoteAddress || 'unknown';
     if (!checkRateLimit(ip)) {
-      return res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
+      return res
+        .status(429)
+        .json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
     }
 
     const systemPrompt = `Eres un Abogado Experto Legal en Educación Chilena y Fiscalizador de la Superintendencia de Educación, especializado en la Circular N° 482 y Ley N° 21809 de la Superintendencia de Educación (reglamentación de convivencia escolar, debido proceso y medidas de resguardo de NNA) y en la Ley de Aula Segura (Ley 21.128). 
@@ -412,7 +480,7 @@ app.post('/api/draft-document', requireAuth, async (req, res) => {
     const isAulaSegura = Boolean(body.isAulaSegura);
     const conductaRiceId = optStr(body, 'conductaRiceId', 100);
     const runEstudiante = optStr(body, 'runEstudiante', 50);
-    const nnaProtectedName = optStr(body, 'nnaProtectedName', 200);
+    const _nnaProtectedName = optStr(body, 'nnaProtectedName', 200);
     const fechaApertura = optStr(body, 'fechaApertura', 50);
     const estadoActual = optStr(body, 'estadoActual', 50);
     const fechaUltimaActualizacion = optStr(body, 'fechaUltimaActualizacion', 50);
@@ -422,7 +490,9 @@ app.post('/api/draft-document', requireAuth, async (req, res) => {
 
     const ip = req.ip || req.connection?.remoteAddress || 'unknown';
     if (!checkRateLimit(ip)) {
-      return res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
+      return res
+        .status(429)
+        .json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
     }
 
     const safeMedidasEjecutadas = medidasEjecutadas
@@ -439,7 +509,7 @@ app.post('/api/draft-document', requireAuth, async (req, res) => {
           participantes: Array.isArray(r.participantes)
             ? r.participantes.map((p) => sanitize(p).slice(0, 100)).slice(0, 20)
             : [],
-          documentoAdjunto: sanitize(r.documentoAdjunto).slice(0, 200)
+          documentoAdjunto: sanitize(r.documentoAdjunto).slice(0, 200),
         };
       })
       .slice(0, 100);
@@ -454,7 +524,7 @@ app.post('/api/draft-document', requireAuth, async (req, res) => {
           registradoPor: sanitize(r.registradoPor).slice(0, 200),
           fechaCompletado: sanitize(r.fechaCompletado).slice(0, 50),
           observaciones: sanitize(r.observaciones).slice(0, 1000),
-          documentoNombre: sanitize(r.documentoNombre).slice(0, 200)
+          documentoNombre: sanitize(r.documentoNombre).slice(0, 200),
         };
       })
       .slice(0, 100);
@@ -480,23 +550,39 @@ MEDIDAS EJECUTADAS:
 ${safeMedidasEjecutadas.length > 0 ? safeMedidasEjecutadas.map((m) => `- ${m}`).join('\n') : 'No se han registrado medidas ejecutadas.'}
 
 BITÁCORA COMPLETA DEL EXPEDIENTE:
-${safeBitacora.length > 0 ? safeBitacora.map((b) => `
+${
+  safeBitacora.length > 0
+    ? safeBitacora
+        .map(
+          (b) => `
 --- Registro: ${b.titulo} ---
   Fecha: ${b.fecha}
   Tipo: ${b.tipo}
   Descripción: ${b.descripcion}
   Participantes: ${b.participantes.join(', ')}
-  Documento adjunto: ${b.documentoAdjunto || 'Ninguno'}`).join('\n') : 'No hay registros en la bitácora.'}
+  Documento adjunto: ${b.documentoAdjunto || 'Ninguno'}`
+        )
+        .join('\n')
+    : 'No hay registros en la bitácora.'
+}
 
 CHECKLIST DEL DEBIDO PROCESO:
-${safeChecklist.length > 0 ? safeChecklist.map((c) => `
+${
+  safeChecklist.length > 0
+    ? safeChecklist
+        .map(
+          (c) => `
 - [${c.completado ? 'X' : ' '}] ${c.label}
   Estado: ${c.completado ? 'COMPLETADO' : 'PENDIENTE'}
   Descripción: ${c.descripcion || ''}
   Requerido por: ${c.requeridoPor || ''}
   ${c.completado ? `Registrado por: ${c.registradoPor || ''} | Fecha: ${c.fechaCompletado || ''}` : ''}
   ${c.observaciones ? `Observaciones: ${c.observaciones}` : ''}
-  ${c.documentoNombre ? `Documento adjunto: ${c.documentoNombre}` : ''}`).join('\n') : 'No hay checklist disponible.'}
+  ${c.documentoNombre ? `Documento adjunto: ${c.documentoNombre}` : ''}`
+        )
+        .join('\n')
+    : 'No hay checklist disponible.'
+}
 
 =====================================================================`;
 
@@ -507,14 +593,20 @@ ${safeChecklist.length > 0 ? safeChecklist.map((c) => `
     // Try loading prompt from DB
     let dbPrompt = null;
     try {
-      const templates = await httpsGet('jjzwwhnofiepvliugowr.supabase.co', `/rest/v1/document_templates?doc_type=eq.${docType}&select=system_prompt&limit=1`, {
-        apikey: process.env.VITE_SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY}`,
-      });
+      const templates = await httpsGet(
+        'jjzwwhnofiepvliugowr.supabase.co',
+        `/rest/v1/document_templates?doc_type=eq.${docType}&select=system_prompt&limit=1`,
+        {
+          apikey: process.env.VITE_SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY}`,
+        }
+      );
       if (Array.isArray(templates) && templates.length > 0 && templates[0].system_prompt) {
         dbPrompt = templates[0].system_prompt;
       }
-    } catch { /* fallback to hardcoded */ }
+    } catch {
+      /* fallback to hardcoded */
+    }
 
     if (dbPrompt) {
       systemPrompt = dbPrompt;
@@ -539,10 +631,15 @@ Elabora un INFORME CONCLUYENTE DISCIPLINARIO Y FORMATIVO INTEGRAL.
 DATOS: Código: ${id}, Estudiante: ${sanitizeForAI(studentName)} (Curso: ${course}), Apoderado: ${sanitizeForAI(fatherName)}, Infracción: ${sanitizeForAI(infractionType)}, Encargado: ${sanitizeForAI(managerName)}, Contexto: ${sanitizeForAI(observations)}, Aula Segura: ${isAulaSegura ? 'Sí (Ley 21.128)' : 'No'}.
 Incluir: resumen ejecutivo, reconstrucción fáctica, análisis probatorio, descargos, trayectoria conductual, auditoría debido proceso, tipificación normativa, resolución fundada, matriz de medidas, plan de seguimiento, conclusiones.`;
     } else {
-      return res.status(400).json({ error: 'docType no válido. Use: notificacion_apertura, citacion_entrevista, informe_cierre_indagacion, informe_concluyente' });
+      return res.status(400).json({
+        error:
+          'docType no válido. Use: notificacion_apertura, citacion_entrevista, informe_cierre_indagacion, informe_concluyente',
+      });
     }
 
-    const responseText = await callGroq([{ role: 'user', content: systemPrompt + caseDataAppendix }]);
+    const responseText = await callGroq([
+      { role: 'user', content: systemPrompt + caseDataAppendix },
+    ]);
     res.json({ success: true, document: responseText });
   } catch (error) {
     console.error('Error al generar borrador de documento:', error);
@@ -555,7 +652,7 @@ Incluir: resumen ejecutivo, reconstrucción fáctica, análisis probatorio, desc
 app.get('/api/auth-debug', async (req, res) => {
   const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
   const JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
-  
+
   const info = {
     hasToken: token.length > 10,
     hasSecret: !!JWT_SECRET,
@@ -568,36 +665,66 @@ app.get('/api/auth-debug', async (req, res) => {
     info.verified = !!payload;
     info.userId = payload?.sub;
     info.email = payload?.email;
-    
+
     // Also try the alternative secret formats
     const parts = token.split('.');
     const sig = Buffer.from(parts[2], 'base64url');
     const rawKey = new TextEncoder().encode(JWT_SECRET);
     const b64Key = Buffer.from(JWT_SECRET, 'base64');
-    
+
     try {
-      const k1 = await crypto.subtle.importKey('raw', rawKey, { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
-      info.rawSecretWorks = await crypto.subtle.verify('HMAC', k1, sig, new TextEncoder().encode(`${parts[0]}.${parts[1]}`));
-    } catch { info.rawSecretWorks = false; }
-    
+      const k1 = await crypto.subtle.importKey(
+        'raw',
+        rawKey,
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['verify']
+      );
+      info.rawSecretWorks = await crypto.subtle.verify(
+        'HMAC',
+        k1,
+        sig,
+        new TextEncoder().encode(`${parts[0]}.${parts[1]}`)
+      );
+    } catch {
+      info.rawSecretWorks = false;
+    }
+
     try {
-      const k2 = await crypto.subtle.importKey('raw', b64Key, { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
-      info.b64SecretWorks = await crypto.subtle.verify('HMAC', k2, sig, new TextEncoder().encode(`${parts[0]}.${parts[1]}`));
-    } catch { info.b64SecretWorks = false; }
+      const k2 = await crypto.subtle.importKey(
+        'raw',
+        b64Key,
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['verify']
+      );
+      info.b64SecretWorks = await crypto.subtle.verify(
+        'HMAC',
+        k2,
+        sig,
+        new TextEncoder().encode(`${parts[0]}.${parts[1]}`)
+      );
+    } catch {
+      info.b64SecretWorks = false;
+    }
   }
 
   res.json(info);
 });
 
 // Document templates: GET all, PUT single
-app.get('/api/document-templates', async (req, res) => {
+app.get('/api/document-templates', async (_req, res) => {
   try {
-    const data = await httpsGet('jjzwwhnofiepvliugowr.supabase.co', '/rest/v1/document_templates?select=*&order=doc_type', {
-      apikey: process.env.VITE_SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY}`,
-    });
+    const data = await httpsGet(
+      'jjzwwhnofiepvliugowr.supabase.co',
+      '/rest/v1/document_templates?select=*&order=doc_type',
+      {
+        apikey: process.env.VITE_SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY}`,
+      }
+    );
     res.json(data);
-  } catch (error) {
+  } catch (_error) {
     res.status(500).json({ error: 'Error al obtener plantillas.' });
   }
 });
@@ -610,14 +737,19 @@ app.put('/api/document-templates', requireAuth, async (req, res) => {
 
   try {
     const sanitized = sanitize(system_prompt).slice(0, 20000);
-    const result = await httpsPatch('jjzwwhnofiepvliugowr.supabase.co', `/rest/v1/document_templates?id=eq.${id}`, {
-      system_prompt: sanitized,
-      updated_at: new Date().toISOString(),
-    }, {
-      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-      Prefer: 'return=minimal',
-    });
+    const _result = await httpsPatch(
+      'jjzwwhnofiepvliugowr.supabase.co',
+      `/rest/v1/document_templates?id=eq.${id}`,
+      {
+        system_prompt: sanitized,
+        updated_at: new Date().toISOString(),
+      },
+      {
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        Prefer: 'return=minimal',
+      }
+    );
     res.json({ success: true });
   } catch (error) {
     console.error('Error updating template:', error);
@@ -625,18 +757,19 @@ app.put('/api/document-templates', requireAuth, async (req, res) => {
   }
 });
 
-
 // Endpoint: Parse PDF annotations using Groq
 app.post('/api/parse-annotations', requireAuth, async (req, res) => {
   try {
-    const { base64Data, mimeType, fileName } = req.body;
+    const { base64Data, mimeType, fileName: _fileName } = req.body;
     if (!base64Data) {
       return res.status(400).json({ error: 'Faltan los datos del archivo en formato base64.' });
     }
 
     const ip = req.ip || req.connection?.remoteAddress || 'unknown';
     if (!checkRateLimit(ip)) {
-      return res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
+      return res
+        .status(429)
+        .json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
     }
 
     // Convert base64 to text for Groq to analyze
@@ -661,11 +794,14 @@ Para cada anotacion identificada, estructura la informacion como un arreglo JSON
 Devuelve estrictamente un arreglo JSON que contenga las anotaciones del estudiante ordenadas cronologicamente.`;
 
     const messages = [
-      { role: 'user', content: `Analiza la siguiente hoja de vida de estudiante y extrae todas las anotaciones en formato JSON:\n\nImagen del documento: ${imageUrl.substring(0, 500)}...` }
+      {
+        role: 'user',
+        content: `Analiza la siguiente hoja de vida de estudiante y extrae todas las anotaciones en formato JSON:\n\nImagen del documento: ${imageUrl.substring(0, 500)}...`,
+      },
     ];
 
     const responseText = await callGroq(messages, systemInstruction);
-    
+
     // Try to extract JSON from the response
     let annotations = [];
     try {
@@ -677,7 +813,7 @@ Devuelve estrictamente un arreglo JSON que contenga las anotaciones del estudian
     } catch (parseError) {
       console.error('Error parsing Groq response as JSON:', parseError);
     }
-    
+
     res.json({ success: true, annotations });
   } catch (error) {
     console.error('Error al analizar documento:', error);
@@ -687,7 +823,7 @@ Devuelve estrictamente un arreglo JSON que contenga las anotaciones del estudian
 // Serve static files in production
 const distPath = path.join(__dirname, '..', 'dist');
 app.use(express.static(distPath));
-app.get('*', (req, res) => {
+app.get('*', (_req, res) => {
   res.sendFile(path.join(distPath, 'index.html'));
 });
 

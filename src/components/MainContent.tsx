@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { Suspense, lazy } from 'react';
-import { Causa, UserRole, FaseProcedimental } from '../types';
+import type React from 'react';
+import { Suspense, lazy } from 'react';
+import type { Causa, FaseProcedimental } from '../types';
 import type { SidebarView } from './Sidebar';
-import type { Course, Student } from '../lib/supabase';
 import type { FormAction } from '../hooks/useNewCausaForm';
 import CausasView from './MainContent/CausasView';
 import ErrorBoundary from './ErrorBoundary';
@@ -19,12 +19,16 @@ const AnotacionesView = lazy(() => import('./Anotaciones/AnotacionesView'));
 
 function DashboardFallback() {
   return (
-    <div className="p-6 space-y-6 animate-fade-in">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {Array.from({ length: 4 }).map((_, i) => <DashboardMetricSkeleton key={i} />)}
+    <div className="animate-fade-in space-y-6 p-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <DashboardMetricSkeleton key={'metric-' + i} />
+        ))}
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {Array.from({ length: 4 }).map((_, i) => <CausaCardSkeleton key={i} />)}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <CausaCardSkeleton key={'card-' + i} />
+        ))}
       </div>
     </div>
   );
@@ -42,41 +46,16 @@ interface MainContentProps {
   selectedCausa: Causa | undefined;
   selectedFaseFilter: FaseProcedimental | 'Todas';
   setSelectedFaseFilter: (f: FaseProcedimental | 'Todas') => void;
-  currentRole: UserRole;
   privacyMode: boolean;
   mobileShowDetail: boolean;
   setMobileShowDetail: (v: boolean) => void;
-  activeCausas: Causa[];
-  closedCausas: Causa[];
   aulaSeguraCausas: Causa[];
   filteredCausas: Causa[];
   showCreateForm: boolean;
   dispatchForm: React.Dispatch<FormAction>;
-  handleUpdateCausa: (updated: Causa) => void;
-  handleDeleteCausa: (id: string) => void;
   handleReopenCausa: (causa: Causa) => void;
   handleSelectCausaFromDashboard: (causaId: string) => void;
   handleOpenCreateForm: () => void;
-  handleCreateCausa: (e: React.FormEvent) => void;
-  handleStudentSelect: (studentId: string) => void;
-  newEstNombre: string;
-  setNewEstNombre: (v: string) => void;
-  newEstRut: string;
-  setNewEstRut: (v: string) => void;
-  newEstCurso: string;
-  newInfTipo: Causa['tipoInfraccion'];
-  setNewInfTipo: (v: Causa['tipoInfraccion']) => void;
-  newAulaSegura: boolean;
-  setNewAulaSegura: (v: boolean) => void;
-  newObs: string;
-  setNewObs: (v: string) => void;
-  newResponsable: string;
-  setNewResponsable: (v: string) => void;
-  selectedCourseId: string;
-  courses: Course[];
-  students: Student[];
-  isLoadingCourses: boolean;
-  isLoadingStudents: boolean;
 }
 
 export default function MainContent({
@@ -87,44 +66,23 @@ export default function MainContent({
   selectedCausa,
   selectedFaseFilter,
   setSelectedFaseFilter,
-  currentRole,
   privacyMode,
   mobileShowDetail,
   setMobileShowDetail,
-  activeCausas,
-  closedCausas,
   aulaSeguraCausas,
   filteredCausas,
   showCreateForm,
   dispatchForm,
-  handleUpdateCausa,
-  handleDeleteCausa,
   handleReopenCausa,
   handleSelectCausaFromDashboard,
   handleOpenCreateForm,
-  handleCreateCausa,
-  handleStudentSelect,
-  newEstNombre,
-  setNewEstNombre,
-  newEstRut,
-  setNewEstRut,
-  newEstCurso,
-  newInfTipo,
-  setNewInfTipo,
-  newAulaSegura,
-  setNewAulaSegura,
-  newObs,
-  setNewObs,
-  newResponsable,
-  setNewResponsable,
-  selectedCourseId,
-  courses,
-  students,
-  isLoadingCourses,
-  isLoadingStudents,
 }: MainContentProps) {
   return (
-    <main id="main-content" tabIndex={-1} className="flex-1 flex flex-col w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 outline-none">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col px-4 py-6 outline-none sm:px-6 sm:py-8 lg:px-8"
+    >
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {currentView === 'dashboard' && 'Vista: Panel de control'}
         {currentView === 'causas' && 'Vista: Expedientes'}
@@ -156,7 +114,6 @@ export default function MainContent({
           selectedCausa={selectedCausa}
           selectedFaseFilter={selectedFaseFilter}
           setSelectedFaseFilter={setSelectedFaseFilter}
-          currentRole={currentRole}
           privacyMode={privacyMode}
           mobileShowDetail={mobileShowDetail}
           setMobileShowDetail={setMobileShowDetail}
@@ -164,8 +121,6 @@ export default function MainContent({
           aulaSeguraCausas={aulaSeguraCausas}
           showCreateForm={showCreateForm}
           dispatchForm={dispatchForm}
-          handleUpdateCausa={handleUpdateCausa}
-          handleDeleteCausa={handleDeleteCausa}
           handleReopenCausa={handleReopenCausa}
           handleSelectCausaFromDashboard={handleSelectCausaFromDashboard}
           handleOpenCreateForm={handleOpenCreateForm}
@@ -201,4 +156,3 @@ export default function MainContent({
     </main>
   );
 }
-

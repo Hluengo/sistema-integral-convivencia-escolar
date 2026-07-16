@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Causa, ChecklistItem, BitacoraEntry, UserRole } from '../types';
+import type { Causa, ChecklistItem, BitacoraEntry, UserRole } from '../types';
 import { nowDateOnly, nowIso } from '../lib/dateUtils';
 import { uploadDocument } from '../lib/supabase';
 
@@ -31,7 +31,7 @@ export function useChecklistRegistration({
 
   const getResponsableName = () => {
     const r = causa.responsable;
-    if (!r) return 'Esteban Valenzuela';
+    if (!r) { return 'Esteban Valenzuela'; }
     return r.split(' (')[0] || 'Esteban Valenzuela';
   };
 
@@ -49,7 +49,7 @@ export function useChecklistRegistration({
   };
 
   const handleSaveRegistration = async (itemId: string) => {
-    if (currentRole === 'docente') return;
+    if (currentRole === 'docente') { return; }
 
     const targetItem = causa.checklistDebidoProceso.find(item => item.id === itemId);
     const itemLabel = targetItem ? targetItem.label : 'Paso de Debido Proceso';
@@ -63,8 +63,8 @@ export function useChecklistRegistration({
       participantes: [regName || 'Esteban Valenzuela', privacyMode ? causa.nnaProtectedName : causa.estudianteNombre],
     };
 
-    let documentoUrl: string | undefined = undefined;
-    let documentoNombre: string | undefined = undefined;
+    let documentoUrl: string | undefined ;
+    let documentoNombre: string | undefined ;
 
     if (regFile) {
       const publicUrl = await uploadDocument(causa.id, regFile);
@@ -76,7 +76,7 @@ export function useChecklistRegistration({
     }
 
     const updatedChecklist = causa.checklistDebidoProceso.map(item => {
-      if (item.id !== itemId) return item;
+      if (item.id !== itemId) { return item; }
       return {
         ...item,
         completado: true,
@@ -103,7 +103,7 @@ export function useChecklistRegistration({
   };
 
   const handleResetRegistration = (itemId: string) => {
-    if (currentRole === 'docente') return;
+    if (currentRole === 'docente') { return; }
 
     const targetItem = causa.checklistDebidoProceso.find(item => item.id === itemId);
     const itemLabel = targetItem ? targetItem.label : 'Paso de Debido Proceso';
@@ -118,7 +118,7 @@ export function useChecklistRegistration({
     };
 
     const updatedChecklist = causa.checklistDebidoProceso.map(item => {
-      if (item.id !== itemId) return item;
+      if (item.id !== itemId) { return item; }
       return {
         ...item,
         completado: false,

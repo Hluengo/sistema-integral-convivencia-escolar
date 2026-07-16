@@ -8,7 +8,11 @@
     "build": "vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit",
+    "lint": "biome lint --write .",
+    "format": "biome format --write .",
+    "lint:check": "biome lint .",
+    "format:check": "biome format .",
+    "typecheck": "tsc --noEmit",
     "test": "tsx --test \"src/**/*.test.ts\"",
     "test:e2e": "tsx --test \"e2e/**/*.test.ts\"",
     "doctor": "npx react-doctor@latest"
@@ -28,6 +32,7 @@
     "react-dom": "^19.0.1"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.4",
     "@supabase/mcp-server-supabase": "^0.8.2",
     "@tailwindcss/language-server": "^0.14.29",
     "@types/compression": "^1.8.1",

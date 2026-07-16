@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import type React from 'react';
+import { createContext, useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { CheckCircle, AlertTriangle, XCircle, Info, X } from 'lucide-react';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
@@ -35,9 +36,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
   const addToast = useCallback((type: ToastType, message: string) => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    setToasts(prev => [...prev, { id, type, message }]);
+    setToasts((prev) => [...prev, { id, type, message }]);
     const timer = setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
+      setToasts((prev) => prev.filter((t) => t.id !== id));
       timersRef.current.delete(id);
     }, 4000);
     timersRef.current.set(id, timer);
@@ -49,12 +50,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       clearTimeout(timer);
       timersRef.current.delete(id);
     }
-    setToasts(prev => prev.filter(t => t.id !== id));
+    setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
   useEffect(() => {
     return () => {
-      timersRef.current.forEach(timer => clearTimeout(timer));
+      for (const timer of timersRef.current.values()) {
+        clearTimeout(timer);
+      }
     };
   }, []);
 
@@ -63,20 +66,23 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={contextValue}>
       {children}
-      <div className="fixed top-20 right-4 z-[100] flex flex-col gap-2 pointer-events-none" aria-atomic="true">
-        {toasts.map(toast => (
+      <div
+        className="pointer-events-none fixed top-20 right-4 z-[100] flex flex-col gap-2"
+        aria-atomic="true"
+      >
+        {toasts.map((toast) => (
           <div
             key={toast.id}
             role={toast.type === 'error' ? 'alert' : 'status'}
             aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
-            className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg max-w-sm animate-toast-in ${TOAST_STYLES[toast.type]}`}
+            className={`pointer-events-auto flex max-w-sm animate-toast-in items-center gap-3 rounded-xl border px-4 py-3 shadow-lg ${TOAST_STYLES[toast.type]}`}
           >
             {TOAST_ICONS[toast.type]}
-            <span className="text-xs font-medium text-neutral-700 flex-1">{toast.message}</span>
+            <span className="flex-1 font-medium text-neutral-700 text-xs">{toast.message}</span>
             <button
               type="button"
               onClick={() => removeToast(toast.id)}
-              className="text-neutral-400 hover:text-neutral-600 transition-colors shrink-0"
+              className="shrink-0 text-neutral-400 transition-colors hover:text-neutral-600"
               aria-label="Cerrar notificación"
             >
               <X className="h-3.5 w-3.5" aria-hidden="true" />
@@ -86,10 +92,4 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       </div>
     </ToastContext.Provider>
   );
-}
-
-function useToast() {
-  const ctx = useContext(ToastContext);
-  if (!ctx) throw new Error('useToast must be used within ToastProvider');
-  return ctx;
 }

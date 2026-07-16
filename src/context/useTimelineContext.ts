@@ -64,6 +64,6 @@ export const TimelineContext = createContext<TimelineContextValue | null>(null);
 
 export function useTimelineContext() {
   const ctx = useContext(TimelineContext);
-  if (!ctx) throw new Error('useTimelineContext debe usarse dentro de TimelineProvider');
+  if (!ctx) { throw new Error('useTimelineContext debe usarse dentro de TimelineProvider'); }
   return ctx;
 }

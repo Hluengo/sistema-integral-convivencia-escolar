@@ -15,14 +15,14 @@ export default function AnotacionesDashboardStats({
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <div className="p-1.5 rounded-lg bg-neutral-100">
+        <div className="rounded-lg bg-neutral-100 p-1.5">
           <BarChart3 className="h-3.5 w-3.5 text-neutral-500" aria-hidden="true" />
         </div>
-        <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-[0.06em]">
+        <h3 className="font-semibold text-neutral-500 text-xs uppercase tracking-[0.06em]">
           Anotaciones
         </h3>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         
         <MetricCard
           label="Carta de Amonestación"

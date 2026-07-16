@@ -1,5 +1,5 @@
-import https from 'https';
-import { readFileSync } from 'fs';
+import https from 'node:https';
+import { readFileSync } from 'node:fs';
 
 const envContent = readFileSync(new URL('../.env.local', import.meta.url), 'utf8');
 const envLines = envContent.split('\n').filter(l => l.trim() && !l.startsWith('#'));

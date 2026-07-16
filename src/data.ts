@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Causa, EstadoCausa, ChecklistItem, Statistics } from './types';
+import { type Causa, EstadoCausa, type ChecklistItem, type Statistics } from './types';
 
 // Helper to calculate relative dates from current time
 const relativeDate = (daysAgo: number): string => {
@@ -12,7 +12,7 @@ const relativeDate = (daysAgo: number): string => {
   return date.toISOString().split('T')[0];
  };
 
-const relativeDateTime = (daysAgo: number, timeStr: string): string => {
+const _relativeDateTime = (daysAgo: number, timeStr: string): string => {
   const dStr = relativeDate(daysAgo);
   return `${dStr}T${timeStr}:00Z`;
 };
@@ -284,7 +284,7 @@ export const getBaseChecklist = (): ChecklistItem[] => [
   }
 ];
 
-const buildChecklistForCausa = (
+const _buildChecklistForCausa = (
   completedItems: { id: string; registradoPor?: string; observaciones?: string; documentoNombre?: string; fechaCompletado?: string }[]
 ): ChecklistItem[] => {
   return getBaseChecklist().map(baseItem => {
@@ -362,7 +362,7 @@ export const PHASE_SHORT: Record<string, string> = {
 
 export function getPhaseProgress(checklist: Causa['checklistDebidoProceso'], phaseName: string) {
   const prefix = PHASE_PREFIXES[phaseName];
-  if (!prefix) return { total: 0, completed: 0 };
+  if (!prefix) { return { total: 0, completed: 0 }; }
   const items = checklist.filter(item => item.id.startsWith(prefix));
   const total = items.length;
   const completed = items.filter(item => item.completado).length;

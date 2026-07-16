@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useReducer, useMemo } from 'react';
+import { useEffect, useReducer, useMemo } from 'react';
 import { Users, Search, GraduationCap, Loader2, AlertCircle, BookOpen } from 'lucide-react';
 import { fetchCourses, fetchStudentsWithCourses, type Course, type StudentWithCourse } from '../lib/supabase';
 
@@ -79,7 +79,7 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
 
   const filteredStudents = useMemo(() => {
     return students.filter((s) => {
-      if (selectedCourseId !== 'all' && s.course_id !== selectedCourseId) return false;
+      if (selectedCourseId !== 'all' && s.course_id !== selectedCourseId) { return false; }
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         return (
@@ -104,7 +104,7 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
         const course = courseById.get(key) ?? null;
         groups.set(key, { course, students: [] });
       }
-      groups.get(key)!.students.push(student);
+      groups.get(key)?.students.push(student);
     }
     return Array.from(groups.values()).sort((a, b) => {
       const posA = a.course?.position ?? 999;
@@ -121,29 +121,29 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
   });
 
   return (
-    <section aria-label="Gestión de alumnos" className="space-y-6 animate-fade-in">
+    <section aria-label="Gestión de alumnos" className="animate-fade-in space-y-6">
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-700 via-brand-600 to-brand-800 p-6 sm:p-8 text-white shadow-lg">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-700 via-brand-600 to-brand-800 p-6 text-white shadow-lg sm:p-8">
         <div
           className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-60"
           aria-hidden="true"
         />
-        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-blue-200/80 text-xs font-semibold uppercase tracking-wider mb-1">
+            <p className="mb-1 font-semibold text-blue-200/80 text-xs uppercase tracking-wider">
               Matrícula · Supabase
             </p>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Estudiantes</h2>
-            <p className="text-blue-100/80 text-sm mt-2 capitalize">{todayLabel}</p>
+            <h2 className="font-bold text-2xl tracking-tight sm:text-3xl">Estudiantes</h2>
+            <p className="mt-2 text-blue-100/80 text-sm capitalize">{todayLabel}</p>
           </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="bg-white/15 backdrop-blur-sm rounded-xl px-4 py-3 text-center ring-1 ring-white/20">
-              <p className="text-2xl font-bold tabular-nums">{students.length}</p>
-              <p className="text-[10px] text-blue-200/80 font-semibold uppercase tracking-wider">Total</p>
+          <div className="flex shrink-0 items-center gap-3">
+            <div className="rounded-xl bg-white/15 px-4 py-3 text-center ring-1 ring-white/20 backdrop-blur-sm">
+              <p className="font-bold text-2xl tabular-nums">{students.length}</p>
+              <p className="font-semibold text-[10px] text-blue-200/80 uppercase tracking-wider">Total</p>
             </div>
-            <div className="bg-white/15 backdrop-blur-sm rounded-xl px-4 py-3 text-center ring-1 ring-white/20">
-              <p className="text-2xl font-bold tabular-nums">{courses.length}</p>
-              <p className="text-[10px] text-blue-200/80 font-semibold uppercase tracking-wider">Cursos</p>
+            <div className="rounded-xl bg-white/15 px-4 py-3 text-center ring-1 ring-white/20 backdrop-blur-sm">
+              <p className="font-bold text-2xl tabular-nums">{courses.length}</p>
+              <p className="font-semibold text-[10px] text-blue-200/80 uppercase tracking-wider">Cursos</p>
             </div>
           </div>
         </div>
@@ -151,23 +151,23 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
 
       {/* Filters */}
       <div className="card p-5">
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" aria-hidden="true" />
+            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-neutral-400" aria-hidden="true" />
 <input
   type="text"
   spellCheck={false}
   value={searchQuery}
   onChange={(e) => dispatch({ type: 'SET_SEARCH', query: e.target.value })}
   placeholder="Buscar por nombre, RUN o curso..."
-  className="w-full bg-neutral-50 text-neutral-800 pl-10 pr-4 py-2.5 text-sm font-medium rounded-xl border border-neutral-200/60 hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 focus:bg-white transition-all placeholder:text-neutral-400"
+  className="w-full rounded-xl border border-neutral-200/60 bg-neutral-50 py-2.5 pr-4 pl-10 font-medium text-neutral-800 text-sm transition-all placeholder:text-neutral-400 hover:border-neutral-300 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
   aria-label="Buscar estudiantes"
 />
           </div>
           <select
             value={selectedCourseId}
             onChange={(e) => dispatch({ type: 'SET_COURSE', courseId: e.target.value })}
-            className="sm:w-56 bg-neutral-50 text-neutral-800 px-4 py-2.5 text-sm font-medium rounded-xl border border-neutral-200/80 hover:border-neutral-300 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all"
+            className="rounded-xl border border-neutral-200/80 bg-neutral-50 px-4 py-2.5 font-medium text-neutral-800 text-sm transition-all hover:border-neutral-300 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 sm:w-56"
             aria-label="Filtrar por curso"
           >
             <option value="all">Todos los cursos</option>
@@ -191,46 +191,46 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
 
       {/* Content */}
       {isLoading ? (
-        <div className="card p-12 flex flex-col items-center gap-3 text-neutral-500">
+        <div className="card flex flex-col items-center gap-3 p-12 text-neutral-500">
           <Loader2 className="h-8 w-8 animate-spin text-brand-600" aria-hidden="true" />
-          <p className="text-sm font-medium">Cargando estudiantes desde Supabase...</p>
+          <p className="font-medium text-sm">Cargando estudiantes desde Supabase...</p>
         </div>
       ) : error ? (
-        <div className="card p-8 flex items-start gap-3 bg-gravisima-50 border-gravisima-200">
-          <AlertCircle className="h-5 w-5 text-gravisima-600 shrink-0 mt-0.5" aria-hidden="true" />
+        <div className="card flex items-start gap-3 border-gravisima-200 bg-gravisima-50 p-8">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-gravisima-600" aria-hidden="true" />
           <div>
-            <p className="text-sm font-semibold text-gravisima-800">Error de conexión</p>
-            <p className="text-xs text-gravisima-700 mt-1">{error}</p>
+            <p className="font-semibold text-gravisima-800 text-sm">Error de conexión</p>
+            <p className="mt-1 text-gravisima-700 text-xs">{error}</p>
           </div>
         </div>
       ) : filteredStudents.length === 0 ? (
         <div className="card p-12 text-center">
-          <Users className="h-10 w-10 text-neutral-300 mx-auto mb-3" aria-hidden="true" />
-          <p className="text-sm font-medium text-neutral-600">No se encontraron estudiantes</p>
-          <p className="text-xs text-neutral-400 mt-1">
+          <Users className="mx-auto mb-3 h-10 w-10 text-neutral-300" aria-hidden="true" />
+          <p className="font-medium text-neutral-600 text-sm">No se encontraron estudiantes</p>
+          <p className="mt-1 text-neutral-400 text-xs">
             {students.length === 0
               ? 'La tabla students está vacía en Supabase.'
               : 'Pruebe con otro filtro o término de búsqueda.'}
           </p>
         </div>
       ) : (
-        <div className="space-y-4 stagger-children">
+        <div className="stagger-children space-y-4">
           {groupedByCourse.map(({ course, students: courseStudents }, gi) => (
             <div key={course?.id ?? `unknown-${gi}`} className="card overflow-hidden">
-              <div className="relative px-5 py-4 border-b border-neutral-100 bg-neutral-50/50">
+              <div className="relative border-neutral-100 border-b bg-neutral-50/50 px-5 py-4">
                 <div
-                  className="absolute top-0 left-4 right-4 h-[3px] rounded-full bg-brand-600"
+                  className="absolute top-0 right-4 left-4 h-[3px] rounded-full bg-brand-600"
                   aria-hidden="true"
                 />
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-brand-50">
+                  <div className="rounded-lg bg-brand-50 p-2">
                     <GraduationCap className="h-4 w-4 text-brand-600" aria-hidden="true" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-neutral-900">
+                    <h3 className="font-bold text-neutral-900 text-sm">
                       {course?.name ?? 'Sin curso asignado'}
                     </h3>
-                    <p className="text-[11px] text-neutral-400 font-medium">
+                    <p className="font-medium text-[11px] text-neutral-400">
                       {course?.level === 'BASICA' ? 'Enseñanza Básica' : course?.level === 'MEDIA' ? 'Enseñanza Media' : 'Sin nivel'}
                       {' · '}{courseStudents.length} estudiante{courseStudents.length !== 1 ? 's' : ''}
                     </p>
@@ -241,37 +241,37 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="border-b border-neutral-100">
-                      <th className="px-5 py-3 text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">Nombre</th>
-                      <th className="px-5 py-3 text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">RUN</th>
-                      <th className="px-5 py-3 text-[10px] font-semibold text-neutral-400 uppercase tracking-wider hidden sm:table-cell">Curso</th>
+                    <tr className="border-neutral-100 border-b">
+                      <th className="px-5 py-3 font-semibold text-[10px] text-neutral-400 uppercase tracking-wider">Nombre</th>
+                      <th className="px-5 py-3 font-semibold text-[10px] text-neutral-400 uppercase tracking-wider">RUN</th>
+                      <th className="hidden px-5 py-3 font-semibold text-[10px] text-neutral-400 uppercase tracking-wider sm:table-cell">Curso</th>
                     </tr>
                   </thead>
                   <tbody>
                     {courseStudents.map((student) => (
                       <tr
                         key={student.id}
-                        className="border-b border-neutral-50 last:border-b-0 hover:bg-neutral-50/80 transition-colors"
+                        className="border-neutral-50 border-b transition-colors last:border-b-0 hover:bg-neutral-50/80"
                       >
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-2.5">
-                            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-brand-100 to-brand-200 flex items-center justify-center text-brand-700 text-[10px] font-bold shrink-0">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-100 to-brand-200 font-bold text-[10px] text-brand-700">
                               {student.full_name.split(' ').filter((w) => w.length > 2).slice(0, 2).map((w) => w[0]).join('')}
                             </div>
-                            <span className="text-sm font-semibold text-neutral-900">
+                            <span className="font-semibold text-neutral-900 text-sm">
                               {privacyMode
-                                ? student.full_name.split(' ').filter((w) => w.length > 2).map((w) => w[0] + '.').join(' ')
+                                ? student.full_name.split(' ').filter((w) => w.length > 2).map((w) => `${w[0]}.`).join(' ')
                                 : student.full_name}
                             </span>
                           </div>
                         </td>
                         <td className="px-5 py-3">
-                          <span className="text-xs font-mono font-medium text-neutral-600">
+                          <span className="font-medium font-mono text-neutral-600 text-xs">
                             {privacyMode ? 'XX.XXX.XXX-X' : student.rut}
                           </span>
                         </td>
-                        <td className="px-5 py-3 hidden sm:table-cell">
-                          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-neutral-500 bg-neutral-50 px-2 py-0.5 rounded-md border border-neutral-200/60">
+                        <td className="hidden px-5 py-3 sm:table-cell">
+                          <span className="inline-flex items-center gap-1 rounded-md border border-neutral-200/60 bg-neutral-50 px-2 py-0.5 font-medium text-[11px] text-neutral-500">
                             <BookOpen className="h-3 w-3" aria-hidden="true" />
                             {student.course_name}
                           </span>

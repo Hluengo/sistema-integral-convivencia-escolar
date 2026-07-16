@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import { getSeverityColor } from '../lib/severityUtils';
 import type { SeverityLevel } from '../lib/severityUtils';
 
@@ -29,7 +29,7 @@ export default memo(function SeverityBadge({ level, size = 'md', showDot = true 
 
   return (
     <span
-      className={`inline-flex items-center font-bold rounded-full uppercase tracking-wider ${colors.bg} ${colors.text} ${sizeClass}`}
+      className={`inline-flex items-center rounded-full font-bold uppercase tracking-wider ${colors.bg} ${colors.text} ${sizeClass}`}
       role="status"
       aria-label={`Gravedad: ${level}`}
     >

@@ -8,9 +8,9 @@ export const nowDateOnly = (): string => toDateOnly(new Date());
 export const nowIso = (): string => toIsoWithoutMilliseconds(new Date());
 
 export const daysElapsedCeil = (startDate: string, today: Date = new Date()): number => {
-  if (!startDate) return 0;
+  if (!startDate) { return 0; }
   const start = new Date(startDate);
-  if (isNaN(start.getTime())) return 0;
+  if (Number.isNaN(start.getTime())) { return 0; }
   const diffTime = today.getTime() - start.getTime();
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 };

@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { memo } from 'react';
+import type React from 'react';
+import { memo } from 'react';
 
 interface MetricCardProps {
   label: string;
@@ -38,37 +39,35 @@ export default memo(function MetricCard({
   return (
     <Comp
       {...interactionProps}
-      className={`group relative bg-white rounded-xl border border-neutral-200/80 p-5 shadow-md transition-all duration-300 ${
+      className={`group relative rounded-xl border border-neutral-200/80 bg-white p-5 shadow-md transition-all duration-300 ${
         onClick
-          ? 'cursor-pointer hover:border-neutral-300 hover:shadow-lg hover:-translate-y-1 active:scale-[0.99]'
-          : 'hover:shadow-lg hover:-translate-y-0.5'
+          ? 'cursor-pointer hover:-translate-y-1 hover:border-neutral-300 hover:shadow-lg active:scale-[0.99]'
+          : 'hover:-translate-y-0.5 hover:shadow-lg'
       }`}
     >
       {/* Accent top border */}
       <div
-        className="absolute top-0 left-4 right-4 h-[3px] rounded-full opacity-80"
+        className="absolute top-0 right-4 left-4 h-[3px] rounded-full opacity-80"
         style={{ background: accentColor }}
       />
 
-      <div className="flex items-start justify-between mb-4">
+      <div className="mb-4 flex items-start justify-between">
         <div>
-          <span className="text-xs font-semibold text-neutral-400 uppercase tracking-[0.06em]">
+          <span className="font-semibold text-neutral-400 text-xs uppercase tracking-[0.06em]">
             {label}
           </span>
           {sublabel && (
-            <span className="block text-xs text-neutral-300 font-medium mt-0.5">
-              {sublabel}
-            </span>
+            <span className="mt-0.5 block font-medium text-neutral-300 text-xs">{sublabel}</span>
           )}
         </div>
-        <div className={`p-2.5 rounded-xl ${iconBg} ring-1 ring-black/5 shrink-0`}>
+        <div className={`rounded-xl p-2.5 ${iconBg} shrink-0 ring-1 ring-black/5`}>
           <Icon className={`h-4 w-4 ${iconColor}`} aria-hidden="true" />
         </div>
       </div>
 
       <div className="flex items-baseline justify-between gap-2">
         <span
-          className={`text-3xl font-bold tracking-tight ${
+          className={`font-bold text-3xl tracking-tight ${
             isAlert ? 'text-gravisima-600' : 'text-neutral-900'
           }`}
         >
@@ -76,10 +75,8 @@ export default memo(function MetricCard({
         </span>
         {trend && (
           <span
-            className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-              trend.positive
-                ? 'bg-leve-50 text-leve-700'
-                : 'bg-gravisima-50 text-gravisima-700'
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold text-[11px] ${
+              trend.positive ? 'bg-leve-50 text-leve-700' : 'bg-gravisima-50 text-gravisima-700'
             }`}
           >
             <svg
@@ -90,7 +87,10 @@ export default memo(function MetricCard({
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
+              role="img"
+              aria-label={trend.positive ? 'Tendencia positiva' : 'Tendencia negativa'}
             >
+              <title>{trend.positive ? 'Tendencia positiva' : 'Tendencia negativa'}</title>
               <polyline points="18 15 12 9 6 15" />
             </svg>
             {trend.value}
