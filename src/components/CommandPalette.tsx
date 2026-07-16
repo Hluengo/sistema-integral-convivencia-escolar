@@ -1,3 +1,8 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 import type React from 'react';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
@@ -9,6 +14,7 @@ import {
 } from 'lucide-react';
 import type { Causa } from '../types';
 import type { SidebarView } from './Sidebar';
+import { Dialog, DialogContent } from './ui/Dialog';
 
 interface CommandPaletteProps {
   causas: Causa[];
@@ -22,7 +28,6 @@ export default function CommandPalette({ causas, onNavigate, onSelectCausa }: Co
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const focusTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const items = useMemo(
@@ -104,18 +109,12 @@ export default function CommandPalette({ causas, onNavigate, onSelectCausa }: Co
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        if (isOpen) {
-          dialogRef.current?.close();
-          setIsOpen(false);
-        } else {
-          dialogRef.current?.showModal();
-          setIsOpen(true);
-        }
+        setIsOpen((prev) => !prev);
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [isOpen]);
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -132,11 +131,6 @@ export default function CommandPalette({ causas, onNavigate, onSelectCausa }: Co
     const el = listRef.current?.children[clampedIndex] as HTMLElement;
     el?.scrollIntoView({ block: 'nearest' });
   }, [clampedIndex]);
-
-  const _handleClose = useCallback(() => {
-    dialogRef.current?.close();
-    setIsOpen(false);
-  }, []);
 
   const handleQueryChange = useCallback((value: string) => {
     setQuery(value);
@@ -159,113 +153,109 @@ export default function CommandPalette({ causas, onNavigate, onSelectCausa }: Co
     [filtered, clampedIndex]
   );
 
-  const handleDialogClose = useCallback(() => {
-    setIsOpen(false);
-  }, []);
-
   const activeDescendantId = filtered[clampedIndex]
     ? `cmd-option-${filtered[clampedIndex].id}`
     : undefined;
 
   return (
-    <dialog
-      ref={dialogRef}
-      className="w-full max-w-lg animate-palette-in rounded-2xl border border-neutral-200 p-0 shadow-2xl backdrop:bg-black/30 backdrop:backdrop-blur-sm"
-      onClose={handleDialogClose}
-      aria-label="Paleta de comandos"
-    >
-      <div
-        className="flex items-center gap-3 border-neutral-100 border-b px-4 py-3"
-        role="combobox"
-        tabIndex={0}
-        aria-expanded={isOpen}
-        aria-haspopup="listbox"
-        aria-controls="cmd-listbox"
+    <Dialog open={isOpen} onOpenChange={(o) => { if (!o) setIsOpen(false); }}>
+      <DialogContent
+        className="max-w-lg p-0 gap-0 overflow-hidden rounded-2xl"
+        onOpenAutoFocus={(e) => e.preventDefault()}
       >
-        <Search className="h-4 w-4 shrink-0 text-neutral-400" aria-hidden="true" />
-        <input
-          ref={inputRef}
-          type="search"
-          value={query}
-          onChange={(e) => handleQueryChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Buscar expedientes, vistas, acciones..."
-          className="flex-1 bg-transparent text-neutral-800 text-sm placeholder-neutral-400 focus:outline-none"
-          aria-label="Buscar en la paleta de comandos"
-          aria-autocomplete="list"
+        <div
+          className="flex items-center gap-3 border-b border-neutral-100 px-4 py-3"
+          role="combobox"
+          tabIndex={0}
+          aria-expanded={isOpen}
+          aria-haspopup="listbox"
           aria-controls="cmd-listbox"
-          aria-activedescendant={activeDescendantId}
-        />
-        <kbd className="hidden items-center gap-0.5 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] text-neutral-400 sm:inline-flex">
-          ESC
-        </kbd>
-      </div>
+        >
+          <Search className="h-4 w-4 shrink-0 text-neutral-400" aria-hidden="true" />
+          <input
+            ref={inputRef}
+            type="search"
+            value={query}
+            onChange={(e) => handleQueryChange(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Buscar expedientes, vistas, acciones..."
+            className="flex-1 bg-transparent text-neutral-800 text-sm placeholder-neutral-400 focus:outline-none"
+            aria-label="Buscar en la paleta de comandos"
+            aria-autocomplete="list"
+            aria-controls="cmd-listbox"
+            aria-activedescendant={activeDescendantId}
+          />
+          <kbd className="hidden items-center gap-0.5 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] text-neutral-400 sm:inline-flex">
+            ESC
+          </kbd>
+        </div>
 
-      <div
-        ref={listRef}
-        id="cmd-listbox"
-        role="listbox"
-        aria-label="Resultados de búsqueda"
-        className="max-h-72 overflow-y-auto py-2"
-      >
-        {filtered.length === 0 ? (
-          <div role="status" className="px-4 py-8 text-center">
-            <p className="text-neutral-500 text-xs">Sin resultados para &quot;{query}&quot;</p>
-          </div>
-        ) : (
-          filtered.map((item, idx) => (
-            <button
-              key={item.id}
-              id={`cmd-option-${item.id}`}
-              type="button"
-              role="option"
-              aria-selected={idx === clampedIndex}
-              onClick={item.action}
-              className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors ${
-                idx === clampedIndex
-                  ? 'bg-brand-50 text-brand-700'
-                  : 'text-neutral-700 hover:bg-neutral-50'
-              }`}
-            >
-              <span
-                className={`shrink-0 ${idx === clampedIndex ? 'text-brand-600' : 'text-neutral-400'}`}
+        <div
+          ref={listRef}
+          id="cmd-listbox"
+          role="listbox"
+          aria-label="Resultados de búsqueda"
+          className="max-h-72 overflow-y-auto py-2"
+        >
+          {filtered.length === 0 ? (
+            <div role="status" className="px-4 py-8 text-center">
+              <p className="text-neutral-500 text-xs">Sin resultados para &quot;{query}&quot;</p>
+            </div>
+          ) : (
+            filtered.map((item, idx) => (
+              <button
+                key={item.id}
+                id={`cmd-option-${item.id}`}
+                type="button"
+                role="option"
+                aria-selected={idx === clampedIndex}
+                onClick={item.action}
+                className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors ${
+                  idx === clampedIndex
+                    ? 'bg-brand-50 text-brand-700'
+                    : 'text-neutral-700 hover:bg-neutral-50'
+                }`}
               >
-                {item.icon}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-sm">{item.label}</p>
-                {item.description && (
-                  <p className="truncate text-[11px] text-neutral-500">{item.description}</p>
-                )}
-              </div>
-              <span className="shrink-0 font-medium text-[10px] text-neutral-400">
-                {item.category}
-              </span>
-            </button>
-          ))
-        )}
-      </div>
+                <span
+                  className={`shrink-0 ${idx === clampedIndex ? 'text-brand-600' : 'text-neutral-400'}`}
+                >
+                  {item.icon}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium text-sm">{item.label}</p>
+                  {item.description && (
+                    <p className="truncate text-[11px] text-neutral-500">{item.description}</p>
+                  )}
+                </div>
+                <span className="shrink-0 font-medium text-[10px] text-neutral-400">
+                  {item.category}
+                </span>
+              </button>
+            ))
+          )}
+        </div>
 
-      <div className="flex items-center gap-4 border-neutral-100 border-t px-4 py-2 text-[10px] text-neutral-400">
-        <span className="flex items-center gap-1">
-          <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1 py-0.5 font-mono">
-            ↑↓
-          </kbd>
-          navegar
-        </span>
-        <span className="flex items-center gap-1">
-          <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1 py-0.5 font-mono">
-            ↵
-          </kbd>
-          seleccionar
-        </span>
-        <span className="flex items-center gap-1">
-          <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1 py-0.5 font-mono">
-            esc
-          </kbd>
-          cerrar
-        </span>
-      </div>
-    </dialog>
+        <div className="flex items-center gap-4 border-t border-neutral-100 px-4 py-2 text-[10px] text-neutral-400">
+          <span className="flex items-center gap-1">
+            <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1 py-0.5 font-mono">
+              ↑↓
+            </kbd>
+            navegar
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1 py-0.5 font-mono">
+              ↵
+            </kbd>
+            seleccionar
+          </span>
+          <span className="flex items-center gap-1">
+            <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1 py-0.5 font-mono">
+              esc
+            </kbd>
+            cerrar
+          </span>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -4,10 +4,11 @@
  */
 
 import type React from 'react';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { Scale, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { signInWithEmail } from '../lib/supabase';
 import { useAppContext } from '../context/useAppContext';
+import { Dialog, DialogContent } from './ui/Dialog';
 
 interface LoginPageProps {
   onClose?: () => void;
@@ -20,43 +21,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { setShowLoginModal } = useAppContext();
-  const dialogRef = useRef<HTMLDialogElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) { return; }
-    dialog.showModal();
-    const timerId = setTimeout(() => emailRef.current?.focus(), 100);
-    return () => {
-      clearTimeout(timerId);
-      dialog.close();
-    };
-  }, []);
-
-  useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && onClose) { onClose(); }
-    };
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [onClose]);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) { return; }
-    const handleClick = (e: MouseEvent) => {
-      const rect = dialog.getBoundingClientRect();
-      const isInDialog =
-        e.clientX >= rect.left &&
-        e.clientX <= rect.right &&
-        e.clientY >= rect.top &&
-        e.clientY <= rect.bottom;
-      if (!isInDialog && onClose) { onClose(); }
-    };
-    dialog.addEventListener('click', handleClick);
-    return () => dialog.removeEventListener('click', handleClick);
-  }, [onClose]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,54 +49,25 @@ export default function LoginPage({ onClose }: LoginPageProps) {
   };
 
   return (
-    <dialog
-      ref={dialogRef}
-      className="m-auto overflow-visible rounded-2xl bg-transparent p-0"
-      aria-label="Iniciar sesión"
-      style={{ maxWidth: '420px', width: '92vw' }}
-      onClose={(e) => {
-        if (e.target === e.currentTarget && onClose) { onClose(); }
-      }}
-    >
-      {/* Backdrop blur */}
-      <div className="fixed inset-0 -z-10 bg-black/40 backdrop-blur-sm" />
-
-      <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white shadow-2xl">
-        {/* Header accent */}
+    <Dialog open onOpenChange={(o: boolean) => { if (!o) { setShowLoginModal(false); onClose?.(); } }}>
+      <DialogContent
+        className="max-w-[420px] overflow-hidden p-0"
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          emailRef.current?.focus();
+        }}
+      >
         <div className="h-1 w-full bg-gradient-to-r from-brand-500 via-brand-600 to-brand-700" />
 
         <div className="p-8 pb-7">
-          {/* Close button */}
-          {onClose && (
-            <button
-              type="button"
-              onClick={onClose}
-              className="absolute top-4 right-4 rounded-xl p-2 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600"
-              aria-label="Cerrar"
-            >
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <title>Cerrar diálogo</title>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
-
-          {/* Logo + title */}
           <div className="mb-7 text-center">
-            <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-brand-500/25 shadow-lg">
+            <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-lg shadow-brand-500/25">
               <Scale className="h-7 w-7 text-white" />
             </div>
             <h1 className="font-bold text-neutral-900 text-xl">Iniciar sesión</h1>
             <p className="mt-1 text-neutral-500 text-sm">Acceda para gestionar expedientes</p>
           </div>
 
-          {/* Error */}
           {error && (
             <div
               role="alert"
@@ -142,7 +78,6 @@ export default function LoginPage({ onClose }: LoginPageProps) {
             </div>
           )}
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label
@@ -232,13 +167,12 @@ export default function LoginPage({ onClose }: LoginPageProps) {
           </form>
         </div>
 
-        {/* Footer */}
-        <div className="border-neutral-100 border-t bg-neutral-50 px-8 py-4">
+        <div className="border-t border-neutral-100 bg-neutral-50 px-8 py-4">
           <p className="text-center text-neutral-400 text-xs">
             Debido Proceso · Sistema de convivencia escolar
           </p>
         </div>
-      </div>
-    </dialog>
+      </DialogContent>
+    </Dialog>
   );
 }

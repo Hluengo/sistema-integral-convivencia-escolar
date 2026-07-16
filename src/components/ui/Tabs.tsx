@@ -3,70 +3,52 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { ReactNode } from 'react';
+import * as TabsPrimitive from '@radix-ui/react-tabs';
+import { forwardRef, type ComponentPropsWithoutRef, type ElementRef } from 'react';
 
-interface Tab {
-  id: string;
-  label: string;
-  count?: number;
-}
+const Tabs = TabsPrimitive.Root;
 
-interface TabsProps {
-  tabs: Tab[];
-  activeTab: string;
-  onChange: (id: string) => void;
-  variant?: 'underline' | 'pill';
-  className?: string;
-  children?: ReactNode;
-}
+const TabsList = forwardRef<
+  ElementRef<typeof TabsPrimitive.List>,
+  ComponentPropsWithoutRef<typeof TabsPrimitive.List>
+>(({ className = '', ...props }, ref) => (
+  <TabsPrimitive.List
+    ref={ref}
+    className={`inline-flex items-center gap-1 rounded-xl bg-neutral-100 p-1 ${className}`}
+    {...props}
+  />
+));
+TabsList.displayName = TabsPrimitive.List.displayName;
 
-const variantStyles = {
-  underline: {
-    container: 'flex gap-0 border-b border-neutral-200',
-    tab: (isActive: boolean) =>
-      `px-4 py-2.5 text-sm font-semibold transition-all duration-150 border-b-2 -mb-px ${
-        isActive
-          ? 'border-brand-600 text-brand-700'
-          : 'border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300'
-      }`,
-  },
-  pill: {
-    container: 'flex gap-1 rounded-xl bg-neutral-100 p-1',
-    tab: (isActive: boolean) =>
-      `px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-150 ${
-        isActive ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500 hover:text-neutral-700'
-      }`,
-  },
-};
+const TabsTrigger = forwardRef<
+  ElementRef<typeof TabsPrimitive.Trigger>,
+  ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger> & { count?: number }
+>(({ className = '', children, count, ...props }, ref) => (
+  <TabsPrimitive.Trigger
+    ref={ref}
+    className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-neutral-500 transition-all duration-150 hover:text-neutral-700 data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=active]:shadow-sm ${className}`}
+    {...props}
+  >
+    {children}
+    {count !== undefined && (
+      <span className="rounded-full bg-neutral-200 px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-neutral-600">
+        {count}
+      </span>
+    )}
+  </TabsPrimitive.Trigger>
+));
+TabsTrigger.displayName = TabsPrimitive.Trigger.displayName;
 
-export default function Tabs({
-  tabs,
-  activeTab,
-  onChange,
-  variant = 'underline',
-  className = '',
-}: TabsProps) {
-  const styles = variantStyles[variant];
+const TabsContent = forwardRef<
+  ElementRef<typeof TabsPrimitive.Content>,
+  ComponentPropsWithoutRef<typeof TabsPrimitive.Content>
+>(({ className = '', ...props }, ref) => (
+  <TabsPrimitive.Content
+    ref={ref}
+    className={`mt-4 outline-none ${className}`}
+    {...props}
+  />
+));
+TabsContent.displayName = TabsPrimitive.Content.displayName;
 
-  return (
-    <div className={`${styles.container} ${className}`} role="tablist">
-      {tabs.map((tab) => (
-        <button
-          key={tab.id}
-          type="button"
-          role="tab"
-          aria-selected={activeTab === tab.id}
-          onClick={() => onChange(tab.id)}
-          className={`${styles.tab(activeTab === tab.id)} inline-flex items-center gap-2`}
-        >
-          {tab.label}
-          {tab.count !== undefined && (
-            <span className="rounded-full bg-neutral-200 px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-neutral-600">
-              {tab.count}
-            </span>
-          )}
-        </button>
-      ))}
-    </div>
-  );
-}
+export { Tabs, TabsList, TabsTrigger, TabsContent };
