@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef } from 'react';
 import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react';
 import type { Student } from './NewDisciplinaryProcessModal/constants';
-import { STEPS } from './NewDisciplinaryProcessModal/constants';
+import { STEPS, sortCourses } from './NewDisciplinaryProcessModal/constants';
 import CourseSelectStep from './NewDisciplinaryProcessModal/CourseSelectStep';
 import StudentSelectStep from './NewDisciplinaryProcessModal/StudentSelectStep';
 import UploadAnalyzeStep from './NewDisciplinaryProcessModal/UploadAnalyzeStep';
@@ -40,7 +40,7 @@ export default function NewDisciplinaryProcessModal({
       const cn = s.course_name || s.course_id;
       if (cn) map.set(cn, (map.get(cn) || 0) + 1);
     });
-    return Array.from(map.entries()).map(([n, c]) => ({ n, c }));
+    return sortCourses(Array.from(map.entries()).map(([n, c]) => ({ n, c })));
   }, [students]);
 
   const canNext = () => {

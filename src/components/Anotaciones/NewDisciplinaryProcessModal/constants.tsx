@@ -61,6 +61,29 @@ export function levelFromCourse(name: string): string {
   return name.includes('Medio') ? 'MEDIA' : 'BASICA';
 }
 
+const COURSE_SORT_ORDER: Record<string, number> = {
+  '1° BÁSICO A': 1, '1° BÁSICO B': 2,
+  '2° BÁSICO A': 3, '2° BÁSICO B': 4,
+  '3° BÁSICO A': 5, '3° BÁSICO B': 6,
+  '4° BÁSICO A': 7, '4° BÁSICO B': 8,
+  '5° BÁSICO A': 9, '5° BÁSICO B': 10,
+  '6° BÁSICO A': 11, '6° BÁSICO B': 12,
+  '7° BÁSICO A': 13, '7° BÁSICO B': 14,
+  '8° BÁSICO A': 15, '8° BÁSICO B': 16,
+  '1° MEDIO A': 17, '1° MEDIO B': 18,
+  '2° MEDIO A': 19, '2° MEDIO B': 20,
+  '3° MEDIO A': 21, '3° MEDIO B': 22,
+  '4° MEDIO A': 23, '4° MEDIO B': 24,
+};
+
+export function sortCourses(courses: CourseInfo[]): CourseInfo[] {
+  return [...courses].sort((a, b) => {
+    const orderA = COURSE_SORT_ORDER[a.n] ?? 999;
+    const orderB = COURSE_SORT_ORDER[b.n] ?? 999;
+    return orderA - orderB;
+  });
+}
+
 export function statusStyle(status?: string): string {
   switch (status) {
     case 'Verde': return 'bg-emerald-100 text-emerald-700';
