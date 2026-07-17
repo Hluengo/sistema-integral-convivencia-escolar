@@ -11,7 +11,7 @@ import HeaderActions from './Header/HeaderActions';
 import PageTitle from './Header/PageTitle';
 import UserAvatar from './Header/UserAvatar';
 
-const MOBILE_BRAND = '/veritas2.png';
+const MOBILE_BRAND = '/veritas2.webp';
 
 interface HeaderProps {
   privacyMode: boolean;
