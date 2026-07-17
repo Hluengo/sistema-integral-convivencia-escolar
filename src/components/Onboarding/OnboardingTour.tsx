@@ -15,7 +15,7 @@ interface Step {
 
 const STEPS: Step[] = [
   {
-    title: 'Bienvenido a Gestión Debido Proceso',
+    title: 'Bienvenido a Gestión de Casos',
     description:
       'Plataforma integral para la gestión de convivencia escolar. Aquí podrás registrar anotaciones, dar seguimiento a casos y generar documentos oficiales alineados a la Circular 482 y Ley 21809.',
     icon: '🎓',

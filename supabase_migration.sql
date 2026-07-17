@@ -1,7 +1,7 @@
 -- ============================================================
 -- MIGRACIÓN: Esquema completo para Gestión de Debido Proceso
 -- Ejecutar en el SQL Editor de Supabase
--- Proyecto: Gestión Debido Proceso / Convivencia Escolar
+-- Proyecto: Gestión de Casos / Convivencia Escolar
 -- ============================================================
 
 -- Nota: Esta migración solo cubre las tablas del módulo de

@@ -82,7 +82,7 @@ function SidebarContent({
         {(!isCollapsed || mobile) && (
           <div className="min-w-0">
             <h1 className="font-bold text-[17px] text-white leading-tight tracking-tight">
-              Gestión Debido Proceso
+              Gestión de Casos
             </h1>
             <p className="mt-0.5 font-semibold text-[10px] text-neutral-400 uppercase leading-tight tracking-[0.12em]">
               Convivencia Escolar
