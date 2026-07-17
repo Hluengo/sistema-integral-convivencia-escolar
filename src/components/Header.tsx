@@ -57,28 +57,6 @@ export default memo(function Header({
 
           <div className="hidden h-8 w-px shrink-0 bg-neutral-200 sm:block" aria-hidden="true" />
 
-          {/* Desktop search */}
-          <div className="relative hidden max-w-md flex-1 md:flex">
-            <input
-              id="global-search"
-              type="text"
-              spellCheck={false}
-              value={searchQuery || ''}
-              onChange={(e) => onSearchChange?.(e.target.value)}
-              placeholder="Buscar causas, estudiantes, cursos..."
-              className="w-full rounded-xl border border-neutral-200/60 bg-neutral-100 py-2 pr-16 pl-10 font-medium text-neutral-800 text-sm transition-all placeholder:text-neutral-400 hover:border-neutral-300 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-              aria-label="Búsqueda global"
-            />
-            <button
-              type="button"
-              onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
-              className="absolute top-1/2 right-2 flex -translate-y-1/2 cursor-pointer items-center gap-1 rounded border border-neutral-200 bg-neutral-50 px-2 text-[11px] text-neutral-400 transition-colors hover:bg-neutral-100"
-              aria-label="Atajo de búsqueda: Ctrl+K"
-            >
-              <kbd className="h-5 px-1.5 rounded border border-neutral-200 bg-white text-neutral-600 font-mono text-[10px]">⌘K</kbd>
-            </button>
-          </div>
-
           {/* Mobile search toggle */}
           <button
             type="button"
