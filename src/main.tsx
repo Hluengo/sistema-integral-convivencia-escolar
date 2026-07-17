@@ -7,6 +7,8 @@ import { queryClient } from './lib/queryClient';
 import ErrorBoundary from './components/ErrorBoundary';
 import { initSentry } from './lib/sentry';
 import { initPostHog } from './lib/posthog';
+import { reportWebVitals } from './lib/webVitals';
+import PerformanceProfiler from './lib/PerformanceProfiler';
 import App from './App.tsx';
 import './index.css';
 
@@ -16,6 +18,9 @@ initSentry();
 // Initialize PostHog
 initPostHog();
 
+// Report Web Vitals to PostHog + Sentry
+reportWebVitals();
+
 const rootEl = document.getElementById('root');
 if (!rootEl) {
   throw new Error('Root element not found');
@@ -24,7 +29,9 @@ createRoot(rootEl).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary>
-        <App />
+        <PerformanceProfiler id="App">
+          <App />
+        </PerformanceProfiler>
       </ErrorBoundary>
     </QueryClientProvider>
   </StrictMode>
