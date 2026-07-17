@@ -26,11 +26,26 @@ async function loadTenantId(userId: string): Promise<string | null> {
 }
 
 export const useAuthStore = create<AuthState>((set) => {
+  let resolved = false;
+  const AUTH_TIMEOUT_MS = 8000;
+
   subscribeAuth(async (_event, session) => {
+    if (resolved) { return; }
+    resolved = true;
     const user = session?.user ?? null;
     const tenantId = user ? await loadTenantId(user.id) : null;
     set({ user, tenantId, authLoading: false, isAuthenticated: !!user });
   });
+
+  setTimeout(() => {
+    if (resolved) {
+      return;
+    }
+    resolved = true;
+    set({ authLoading: false });
+    console.warn('Auth initialization timed out — continuing without session');
+  }, AUTH_TIMEOUT_MS);
+
   return {
     user: null,
     tenantId: null,
