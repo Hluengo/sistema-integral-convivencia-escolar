@@ -21,6 +21,7 @@ const CommandPalette = lazy(() => import('./components/CommandPalette'));
 const NewCausaModal = lazy(() => import('./components/NewCausaModal'));
 const ShortcutsModal = lazy(() => import('./components/ShortcutsModal'));
 const LoginPage = lazy(() => import('./components/LoginPage'));
+const OnboardingTour = lazy(() => import('./components/Onboarding/OnboardingTour'));
 
 export default function App() {
   const user = useAuthStore((s) => s.user);
@@ -217,6 +218,9 @@ export default function App() {
               <LoginPage onClose={() => setShowLoginModal(false)} />
             </Suspense>
           )}
+          <Suspense fallback={null}>
+            <OnboardingTour />
+          </Suspense>
         </div>
       </AppProvider>
     </ToastProvider>

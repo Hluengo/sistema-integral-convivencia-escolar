@@ -17,6 +17,7 @@ import draftRoutes from './routes/draft.js';
 import debugRoutes from './routes/debug.js';
 import templatesRoutes from './routes/templates.js';
 import parseRoutes from './routes/parse.js';
+import usageRoutes from './routes/usage.js';
 
 app.use('/api', improveRoutes);
 app.use('/api', advisorRoutes);
@@ -25,6 +26,7 @@ app.use('/api', draftRoutes);
 app.use('/api', debugRoutes);
 app.use('/api', templatesRoutes);
 app.use('/api', parseRoutes);
+app.use('/api', usageRoutes);
 
 const distPath = path.join(__dirname, '..', 'dist');
 app.use(express.static(distPath));

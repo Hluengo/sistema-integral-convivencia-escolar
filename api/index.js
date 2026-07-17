@@ -743,6 +743,83 @@ Imagen del documento: ${imageUrl.substring(0, 500)}...`
 });
 var parse_default = router7;
 
+// server/api/routes/usage.ts
+import { Router as Router8 } from "express";
+var router8 = Router8();
+router8.post("/usage/events", requireAuth, async (req, res) => {
+  try {
+    const { eventName, properties } = req.body;
+    if (!eventName || typeof eventName !== "string") {
+      res.status(400).json({ error: "Campo requerido: eventName (string)" });
+      return;
+    }
+    const { createClient } = await import("@supabase/supabase-js");
+    const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY ?? "";
+    if (!supabaseUrl || !supabaseKey) {
+      res.status(500).json({ error: "Supabase no configurado" });
+      return;
+    }
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: { persistSession: false }
+    });
+    const authReq = req;
+    await supabase.from("usage_events").insert({
+      event_name: eventName,
+      user_id: authReq.user?.sub ?? null,
+      properties: properties ?? {}
+    });
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error logging usage event:", error);
+    res.status(500).json({ error: "Error interno al registrar evento." });
+  }
+});
+router8.get("/usage/stats", requireAuth, async (req, res) => {
+  try {
+    const authReq = req;
+    const since = authReq.query.since ?? void 0;
+    const until = req.query.until ?? void 0;
+    const { createClient } = await import("@supabase/supabase-js");
+    const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY ?? "";
+    if (!supabaseUrl || !supabaseKey) {
+      res.status(500).json({ error: "Supabase no configurado" });
+      return;
+    }
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: { persistSession: false }
+    });
+    const params = {};
+    if (since) params.since = since;
+    if (until) params.until = until;
+    const { data: eventStats, error: eventError } = await supabase.rpc(
+      "get_usage_stats",
+      params
+    );
+    if (eventError) {
+      console.error("Error fetching usage stats:", eventError);
+      res.status(500).json({ error: "Error al obtener estad\xEDsticas." });
+      return;
+    }
+    const { data: dailyActive, error: dailyError } = await supabase.rpc(
+      "get_daily_active_users",
+      params
+    );
+    if (dailyError) {
+      console.error("Error fetching daily active users:", dailyError);
+    }
+    res.json({
+      events: eventStats ?? [],
+      dailyActiveUsers: dailyActive ?? []
+    });
+  } catch (error) {
+    console.error("Error fetching usage stats:", error);
+    res.status(500).json({ error: "Error interno al obtener estad\xEDsticas." });
+  }
+});
+var usage_default = router8;
+
 // server/api/index.ts
 var __filename = fileURLToPath(import.meta.url);
 var __dirname = path.dirname(__filename);
@@ -755,6 +832,7 @@ app.use("/api", draft_default);
 app.use("/api", debug_default);
 app.use("/api", templates_default);
 app.use("/api", parse_default);
+app.use("/api", usage_default);
 var distPath = path.join(__dirname, "..", "dist");
 app.use(express.static(distPath));
 app.get("*", (_req, res) => {
