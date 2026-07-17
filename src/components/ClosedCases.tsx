@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { type Causa, EstadoCausa } from '../types';
 import { 
   Search, Archive, Clock, UserCheck, RotateCcw, CalendarDays, CheckCircle2,
@@ -17,7 +17,7 @@ interface ClosedCasesProps {
   onSelectCausa: (causa: Causa) => void;
 }
 
-export default function ClosedCases({ 
+function ClosedCases({ 
   causas, 
   privacyMode, 
   onReopenCausa,
@@ -26,11 +26,12 @@ export default function ClosedCases({
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<'fecha' | 'nombre'>('fecha');
 
-  // Filter only closed cases
-  const closedCausas = causas.filter(c => c.estadoActual === EstadoCausa.CAUSA_CERRADA);
+  const closedCausas = useMemo(
+    () => causas.filter(c => c.estadoActual === EstadoCausa.CAUSA_CERRADA),
+    [causas]
+  );
 
-  // Apply search and sort
-  const filteredCausas = closedCausas.filter(c => {
+  const filteredCausas = useMemo(() => closedCausas.filter(c => {
     if (!searchQuery.trim()) { return true; }
     const query = searchQuery.toLowerCase();
     return (
@@ -44,7 +45,7 @@ export default function ClosedCases({
       return new Date(b.fechaUltimaActualizacion).getTime() - new Date(a.fechaUltimaActualizacion).getTime();
     }
     return a.estudianteNombre.localeCompare(b.estudianteNombre);
-  });
+  }), [closedCausas, searchQuery, sortBy]);
 
   if (closedCausas.length === 0) {
     return (
@@ -247,3 +248,5 @@ export default function ClosedCases({
     </div>
   );
 }
+
+export default memo(ClosedCases);

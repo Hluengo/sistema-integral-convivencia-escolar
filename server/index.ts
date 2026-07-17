@@ -16,6 +16,7 @@ import advisorRoutes from './routes/advisor';
 import templatesRoutes from './routes/templates';
 import parseRoutes from './routes/parse';
 import debugRoutes from './routes/debug';
+import usageRoutes from './routes/usage';
 
 dotenv.config();
 dotenv.config({ path: '.env.local' });
@@ -34,6 +35,7 @@ app.use('/api', advisorRoutes);
 app.use('/api', templatesRoutes);
 app.use('/api', parseRoutes);
 app.use('/api', debugRoutes);
+app.use('/api', usageRoutes);
 
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {

@@ -31,7 +31,6 @@
     "@radix-ui/react-tabs": "^1.1.17",
     "@radix-ui/react-tooltip": "^1.2.12",
     "@sentry/browser": "^10.66.0",
-    "@sentry/node": "^10.66.0",
     "@sentry/react": "^10.66.0",
     "@supabase/supabase-js": "^2.108.2",
     "@tailwindcss/vite": "^4.1.14",

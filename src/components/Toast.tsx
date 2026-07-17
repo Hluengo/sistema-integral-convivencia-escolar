@@ -1,20 +1,7 @@
 import type React from 'react';
-import { createContext, useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { CheckCircle, AlertTriangle, XCircle, Info, X } from 'lucide-react';
-
-type ToastType = 'success' | 'error' | 'warning' | 'info';
-
-interface Toast {
-  id: string;
-  type: ToastType;
-  message: string;
-}
-
-interface ToastContextValue {
-  addToast: (type: ToastType, message: string) => void;
-}
-
-const ToastContext = createContext<ToastContextValue | null>(null);
+import { useToastStore } from '../shared/lib/stores/toastStore';
+import type { ToastType } from '../shared/lib/stores/toastStore';
 
 const TOAST_ICONS: Record<ToastType, React.ReactNode> = {
   success: <CheckCircle className="h-4 w-4 text-leve-600" aria-hidden="true" />,
@@ -31,40 +18,11 @@ const TOAST_STYLES: Record<ToastType, string> = {
 };
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const [toasts, setToasts] = useState<Toast[]>([]);
-  const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-
-  const addToast = useCallback((type: ToastType, message: string) => {
-    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    setToasts((prev) => [...prev, { id, type, message }]);
-    const timer = setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-      timersRef.current.delete(id);
-    }, 4000);
-    timersRef.current.set(id, timer);
-  }, []);
-
-  const removeToast = useCallback((id: string) => {
-    const timer = timersRef.current.get(id);
-    if (timer) {
-      clearTimeout(timer);
-      timersRef.current.delete(id);
-    }
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      for (const timer of timersRef.current.values()) {
-        clearTimeout(timer);
-      }
-    };
-  }, []);
-
-  const contextValue = useMemo(() => ({ addToast }), [addToast]);
+  const toasts = useToastStore((s) => s.toasts);
+  const removeToast = useToastStore((s) => s.removeToast);
 
   return (
-    <ToastContext.Provider value={contextValue}>
+    <>
       {children}
       <div
         className="pointer-events-none fixed top-20 right-4 z-[100] flex flex-col gap-2"
@@ -90,6 +48,6 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           </div>
         ))}
       </div>
-    </ToastContext.Provider>
+    </>
   );
 }

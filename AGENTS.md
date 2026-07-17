@@ -23,16 +23,25 @@ Al modificar rutas API, actualizar **ambos archivos**.
 
 **Client entry:** `index.html` → `src/main.tsx` → `App.tsx`
 
+**Estructura FSD:** `app/`, `features/`, `widgets/`, `shared/`, más `components/` legacy con barrels retrocompatibles.
+
+**Multi-tenant:** Tabla `tenants`, columna `tenant_id` en 10 tablas, RLS por tenant + rol. JWT claim `app_metadata.tenant_id` para RLS rápido. Trigger `sync_tenant_to_jwt()` en profiles.
+
 **AI provider:** Groq API (`llama-3.3-70b-versatile`). Env: `GROQ_API_KEY`.
 
-**Auth:** Supabase Auth (email/password). Dashboard público (read-only); CRUD requiere login.
+**Auth:** Supabase Auth (email/password). Dashboard público (read-only); CRUD requiere login. Rol desde `profiles.role`.
 
-**Database:** Supabase PostgreSQL. Tablas: `causas`, `bitacora_entries`, `checklist_items`, `document_templates`. Schema: `supabase_migration.sql`.
+**Database:** Supabase PostgreSQL. Tablas: `tenants`, `profiles`, `causas`, `bitacora_entries`, `checklist_items`, `cartas_disciplinarias`, `etapas_disciplinarias`, `inspectorate_records`, `document_templates`, `students`, `courses`. Migraciones en `supabase/migrations/`.
+
+**Almacenamiento local:** Zustand stores (authStore, causasStore, gearStore, toastStore) para estado de sesión, casos, preferencias y notificaciones.
+
+**Tests:** `node:test` + `node:assert/strict`. 57 tests. Ejecutar siempre antes de commit.
 
 **Convenciones:**
 - TypeScript estricto (`noEmit: true`, `isolatedModules: true`)
 - Path alias `@/` → project root
 - Tailwind CSS v4 (`@theme` en `src/index.css`)
+- Zustand para estado global, Zod para schemas, Supabase para servicios
 - DB columns: snake_case (Supabase) ↔ camelCase (TypeScript)
 - Todo el UI en español chileno
 - License headers: `/** @license SPDX-License-Identifier: Apache-2.0 */`

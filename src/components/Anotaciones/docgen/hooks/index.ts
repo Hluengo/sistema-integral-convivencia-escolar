@@ -1,5 +1,2 @@
-export * from './useDocumentState';
-export * from './useSelectedAnnotations';
-export * from './useDocumentExport';
-export * from './useDocumentRegistry';
-export * from './useRegisterCommitment';
+/** @license SPDX-License-Identifier: Apache-2.0 */
+export * from '../../../../features/anotaciones/docgen/hooks/index';

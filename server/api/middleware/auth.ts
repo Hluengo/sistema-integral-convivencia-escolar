@@ -3,11 +3,12 @@
 import type { Request, Response, NextFunction } from 'express';
 import https from 'node:https';
 
-interface JwtPayload {
+export interface JwtPayload {
   sub?: string;
   email?: string;
   role?: string;
   exp?: number;
+  app_metadata?: Record<string, unknown>;
 }
 
 async function verifyJwtViaHmac(token: string, secret: string): Promise<JwtPayload | null> {
@@ -95,6 +96,48 @@ async function verifyJwtSignature(
   return verifyViaSupabaseApi(token);
 }
 
+async function injectTenantContext(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const user = (req as Request & { user: JwtPayload }).user;
+  if (!user?.sub) return;
+  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const anonKey = process.env.VITE_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !anonKey) return;
+  try {
+    const hostname = new URL(supabaseUrl).hostname;
+    const userId = user.sub;
+    const data = await new Promise<unknown>((resolve) => {
+      const r = https.request(
+        {
+          hostname,
+          path: `/rest/v1/profiles?user_id=eq.${encodeURIComponent(userId)}&select=tenant_id&limit=1`,
+          method: 'GET',
+          headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` },
+        },
+        (res2) => {
+          let chunks = '';
+          res2.on('data', (c: string) => { chunks += c; });
+          res2.on('end', () => {
+            if (res2.statusCode !== 200) return resolve(null);
+            try { resolve(JSON.parse(chunks)); } catch { resolve(null); }
+          });
+        },
+      );
+      r.on('error', () => resolve(null));
+      r.setTimeout(3000, () => { r.destroy(); resolve(null); });
+      r.end();
+    });
+    if (Array.isArray(data) && data.length > 0 && (data[0] as { tenant_id?: string }).tenant_id) {
+      (req as Request & { tenantId?: string }).tenantId = (data[0] as { tenant_id: string }).tenant_id;
+      res.setHeader('x-tenant-id', (data[0] as { tenant_id: string }).tenant_id);
+    }
+  } catch {
+    // Tenant context is best-effort; continue without it
+  }
+}
+
 export async function requireAuth(
   req: Request,
   res: Response,
@@ -125,6 +168,7 @@ export async function requireAuth(
       return;
     }
     (req as Request & { user: JwtPayload }).user = payload;
+    await injectTenantContext(req, res);
     next();
   } catch {
     res.status(401).json({ error: 'Token JWT inválido.' });
