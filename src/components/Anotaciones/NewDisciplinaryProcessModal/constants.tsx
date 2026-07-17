@@ -60,7 +60,7 @@ export function levelFromCourse(name: string): string {
   if (!name) return 'BASICA';
   const up = name.toUpperCase();
   if (up.includes('MEDIO')) return 'MEDIA';
-  const grade = parseInt(name, 10);
+  const grade = Number.parseInt(name, 10);
   if (isNaN(grade)) return 'BASICA';
   return grade >= 7 ? 'MEDIA' : 'BASICA';
 }
