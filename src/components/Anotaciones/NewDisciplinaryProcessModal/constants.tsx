@@ -31,8 +31,8 @@ export const STEPS = [
 ];
 
 export const LEVELS = [
-  { key: 'BASICA', label: 'Educación Básica', icon: School },
-  { key: 'MEDIA', label: 'Educación Media', icon: Users },
+  { key: 'BASICA', label: 'Primaria', icon: School },
+  { key: 'MEDIA', label: 'Secundaria', icon: Users },
 ];
 
 export const CLASSIFICATION_OPTIONS = [
