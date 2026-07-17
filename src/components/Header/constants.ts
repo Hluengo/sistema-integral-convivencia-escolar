@@ -1,4 +1,4 @@
-import { type SidebarView } from '../Sidebar';
+import type { SidebarView } from '../Sidebar';
 
 export const VIEW_TITLES: Record<SidebarView, { title: string; subtitle: string }> = {
   dashboard: { title: 'Dashboard', subtitle: 'Panel de control ejecutivo' },

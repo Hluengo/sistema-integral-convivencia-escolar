@@ -13,7 +13,7 @@ import {
   MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS,
   DIAS_ALERTA_PLAZO_CRITICO,
 } from './constants';
-import { type ItemConformidad, type NivelConformidad } from './types';
+import type { ItemConformidad, NivelConformidad } from './types';
 
 /**
  * Verifica conformidad legal completa de una causa

@@ -1,4 +1,4 @@
-import { type Causa } from '@/src/types';
+import type { Causa } from '@/src/types';
 import {
   calcularDiasHabiles,
   agregarDiasHabiles,
@@ -10,7 +10,7 @@ import {
   MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS,
   DIAS_ALERTA_PLAZO_CRITICO,
 } from './constants';
-import { type ResultadoPlazo, type EstadoPlazo } from './types';
+import type { ResultadoPlazo, EstadoPlazo } from './types';
 
 /**
  * Verifica el estado del plazo de investigación
@@ -147,7 +147,7 @@ export function verificarPlazoNotificacionSuperintendencia(causa: Causa): Result
         diasRestantes: 0,
         diasTranscurridos,
         fechaLimite,
-        mensaje: `PLAZO VENCIDO: No se ha notificado a Superintendencia dentro de los 5 días hábiles`,
+        mensaje: 'PLAZO VENCIDO: No se ha notificado a Superintendencia dentro de los 5 días hábiles',
       };
     }
 

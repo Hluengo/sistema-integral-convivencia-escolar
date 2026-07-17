@@ -4,7 +4,7 @@
  */
 
 import { Suspense, lazy, useState, useMemo } from 'react';
-import { type Causa, type UserRole } from '@/src/types';
+import type { Causa, UserRole } from '@/src/types';
 import { getFaseForEstado } from '@/src/data';
 import TimelineHeader from './InteractiveTimeline/TimelineHeader';
 import TimelineTabs from './InteractiveTimeline/TimelineTabs';

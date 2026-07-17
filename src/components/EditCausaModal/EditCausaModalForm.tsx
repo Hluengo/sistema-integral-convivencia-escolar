@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Scale, AlertCircle, FileText, Shield } from 'lucide-react';
 import { type Causa, EstadoCausa, type TipoInfraccion } from '@/src/types';
 import { nowDateOnly } from '@/src/lib/dateUtils';
@@ -87,7 +87,7 @@ export default function EditCausaModalForm({ causa, onSave, onDelete, onClose }:
   return (
     <>
       <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
+        <DialogContent hideClose className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50">
