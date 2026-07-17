@@ -58,7 +58,11 @@ export const CLASSIFICATION_OPTIONS = [
 
 export function levelFromCourse(name: string): string {
   if (!name) return 'BASICA';
-  return name.toUpperCase().includes('MEDIO') ? 'MEDIA' : 'BASICA';
+  const up = name.toUpperCase();
+  if (up.includes('MEDIO')) return 'MEDIA';
+  const grade = parseInt(name, 10);
+  if (isNaN(grade)) return 'BASICA';
+  return grade >= 7 ? 'MEDIA' : 'BASICA';
 }
 
 const COURSE_SORT_ORDER: Record<string, number> = {
