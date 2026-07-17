@@ -1,8 +1,9 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { supabase } from '../../lib/supabase';
-import type { Causa } from '../../types';
-import { CausaSchema } from '../../schemas';
+import type { Causa, ChecklistItem } from '../../types';
+import { CausaSchema, ChecklistItemSchema } from '../../schemas';
+import { getBaseChecklist } from '../../data';
 
 interface SupabaseCausaRow {
   id: string;
@@ -21,8 +22,39 @@ interface SupabaseCausaRow {
   medidas_ejecutadas: string[];
 }
 
+interface SupabaseChecklistRow {
+  id: string;
+  causa_id: string;
+  label: string;
+  descripcion: string;
+  completado: boolean;
+  fecha_completado: string | null;
+  requerido_por: string;
+  registrado_por: string | null;
+  observaciones: string | null;
+  documento_nombre: string | null;
+  documento_url: string | null;
+}
+
+function mapChecklistRow(row: SupabaseChecklistRow): ChecklistItem {
+  return ChecklistItemSchema.parse({
+    id: row.id,
+    label: row.label,
+    descripcion: row.descripcion,
+    completado: row.completado,
+    fechaCompletado: row.fecha_completado || undefined,
+    requeridoPor: row.requerido_por,
+    registradoPor: row.registrado_por || undefined,
+    observaciones: row.observaciones || undefined,
+    documentoNombre: row.documento_nombre || undefined,
+    documentoUrl: row.documento_url || undefined,
+  });
+}
+
 /**
- * Fetch all causas ordered by last update (most recent first).
+ * Fetch all causas ordered by last update (most recent first),
+ * including their checklist items from the checklist_items table.
+ * Causas without stored checklist items get the default checklist.
  */
 export async function fetchCausas(): Promise<Causa[]> {
   const { data, error } = await supabase
@@ -35,7 +67,7 @@ export async function fetchCausas(): Promise<Causa[]> {
     return [];
   }
 
-  return data.map((row: SupabaseCausaRow) =>
+  const causas = data.map((row: SupabaseCausaRow) =>
     CausaSchema.parse({
       id: row.id,
       estudianteNombre: row.estudiante_nombre,
@@ -55,6 +87,35 @@ export async function fetchCausas(): Promise<Causa[]> {
       checklistDebidoProceso: [],
     })
   );
+
+  const ids = causas.map((c) => c.id);
+  if (ids.length === 0) return causas;
+
+  const { data: checklistRows, error: checklistError } = await supabase
+    .from('checklist_items')
+    .select('*')
+    .in('causa_id', ids);
+
+  if (checklistError) {
+    console.error('Error fetching checklist items:', checklistError);
+  }
+
+  const checklistByCausa = new Map<string, ChecklistItem[]>();
+  if (checklistRows) {
+    for (const row of checklistRows as SupabaseChecklistRow[]) {
+      const list = checklistByCausa.get(row.causa_id);
+      if (list) {
+        list.push(mapChecklistRow(row));
+      } else {
+        checklistByCausa.set(row.causa_id, [mapChecklistRow(row)]);
+      }
+    }
+  }
+
+  return causas.map((causa) => ({
+    ...causa,
+    checklistDebidoProceso: checklistByCausa.get(causa.id) || getBaseChecklist(),
+  }));
 }
 
 /**
