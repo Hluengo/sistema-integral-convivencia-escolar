@@ -58,28 +58,39 @@ export const CLASSIFICATION_OPTIONS = [
 
 export function levelFromCourse(name: string): string {
   if (!name) return 'BASICA';
-  return name.includes('Medio') ? 'MEDIA' : 'BASICA';
+  return name.toUpperCase().includes('MEDIO') ? 'MEDIA' : 'BASICA';
 }
 
 const COURSE_SORT_ORDER: Record<string, number> = {
-  '1° BÁSICO A': 1, '1° BÁSICO B': 2,
-  '2° BÁSICO A': 3, '2° BÁSICO B': 4,
-  '3° BÁSICO A': 5, '3° BÁSICO B': 6,
-  '4° BÁSICO A': 7, '4° BÁSICO B': 8,
-  '5° BÁSICO A': 9, '5° BÁSICO B': 10,
-  '6° BÁSICO A': 11, '6° BÁSICO B': 12,
-  '7° BÁSICO A': 13, '7° BÁSICO B': 14,
-  '8° BÁSICO A': 15, '8° BÁSICO B': 16,
+  '1° BASICO A': 1, '1° BASICO B': 2,
+  '2° BASICO A': 3, '2° BASICO B': 4,
+  '3° BASICO A': 5, '3° BASICO B': 6,
+  '4° BASICO A': 7, '4° BASICO B': 8,
+  '5° BASICO A': 9, '5° BASICO B': 10,
+  '6° BASICO A': 11, '6° BASICO B': 12,
+  '7° BASICO A': 13, '7° BASICO B': 14,
+  '8° BASICO A': 15, '8° BASICO B': 16,
   '1° MEDIO A': 17, '1° MEDIO B': 18,
   '2° MEDIO A': 19, '2° MEDIO B': 20,
   '3° MEDIO A': 21, '3° MEDIO B': 22,
   '4° MEDIO A': 23, '4° MEDIO B': 24,
 };
 
+function normalizeCourse(name: string): string {
+  return name
+    .toUpperCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+const NORMALIZED_SORT_ORDER: Record<string, number> = Object.fromEntries(
+  Object.entries(COURSE_SORT_ORDER).map(([k, v]) => [normalizeCourse(k), v])
+);
+
 export function sortCourses(courses: CourseInfo[]): CourseInfo[] {
   return [...courses].sort((a, b) => {
-    const orderA = COURSE_SORT_ORDER[a.n] ?? 999;
-    const orderB = COURSE_SORT_ORDER[b.n] ?? 999;
+    const orderA = NORMALIZED_SORT_ORDER[normalizeCourse(a.n)] ?? 999;
+    const orderB = NORMALIZED_SORT_ORDER[normalizeCourse(b.n)] ?? 999;
     return orderA - orderB;
   });
 }
