@@ -70,3 +70,41 @@ BEGIN
   ORDER BY s.full_name;
 END;
 $$;
+
+-- 3. RPC: get_annotation_stage_counts for dashboard KPIs (was defined in monolithic SQL but never migrated)
+CREATE OR REPLACE FUNCTION get_annotation_stage_counts()
+RETURNS TABLE (stage TEXT, count BIGINT)
+LANGUAGE plpgsql STABLE SECURITY DEFINER AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 'amonestacion'::TEXT, COUNT(*)::BIGINT
+  FROM (
+    SELECT s.id
+    FROM students s
+    LEFT JOIN inspectorate_records ir ON ir.student_id = s.id AND ir.type = 'Negativa'
+    GROUP BY s.id
+    HAVING COUNT(ir.id) >= 5 AND COUNT(ir.id) < 10
+  ) am
+  UNION ALL
+  SELECT 'compromiso'::TEXT, COUNT(*)::BIGINT
+  FROM (
+    SELECT s.id
+    FROM students s
+    LEFT JOIN inspectorate_records ir ON ir.student_id = s.id AND ir.type = 'Negativa'
+    GROUP BY s.id
+    HAVING COUNT(ir.id) >= 10 AND COUNT(ir.id) < 15
+  ) co
+  UNION ALL
+  SELECT 'derivacion'::TEXT, COUNT(*)::BIGINT
+  FROM (
+    SELECT s.id
+    FROM students s
+    LEFT JOIN inspectorate_records ir ON ir.student_id = s.id AND ir.type = 'Negativa'
+    GROUP BY s.id
+    HAVING COUNT(ir.id) >= 15
+  ) de;
+END;
+$$;
+
+-- 4. Refresh PostgREST schema cache so RPCs are immediately available
+SELECT pg_notify('pgrst', 'reload schema');
