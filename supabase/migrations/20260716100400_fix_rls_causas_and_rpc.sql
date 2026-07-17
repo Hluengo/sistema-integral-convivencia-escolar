@@ -2,7 +2,23 @@
 -- Migration 20260716100400: Fix RLS policy for causas + create RPC
 -- ============================================================
 
--- 1. RLS policy for causas (was defined in monolithic SQL but never migrated)
+-- 1. Fix RLS policies for causas — widen write/update to include teacher/profesor_jefe/staff
+DROP POLICY IF EXISTS causas_write_staff ON causas;
+CREATE POLICY causas_write_staff ON causas
+  FOR INSERT
+  WITH CHECK (current_app_role() = ANY (ARRAY[
+    'admin', 'direccion', 'convivencia', 'inspectoria',
+    'profesor_jefe', 'teacher', 'staff'
+  ]));
+
+DROP POLICY IF EXISTS causas_update_staff ON causas;
+CREATE POLICY causas_update_staff ON causas
+  FOR UPDATE
+  USING (current_app_role() = ANY (ARRAY[
+    'admin', 'direccion', 'convivencia', 'inspectoria',
+    'profesor_jefe', 'teacher', 'staff'
+  ]));
+
 DROP POLICY IF EXISTS "Allow authenticated on causas" ON causas;
 CREATE POLICY "Allow authenticated on causas" ON causas
   FOR ALL
