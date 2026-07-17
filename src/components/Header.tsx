@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { memo } from 'react';
 import { Search } from 'lucide-react';
 import { VIEW_TITLES } from './Header/constants';
 import { useNotifications } from '@/src/hooks/useNotifications';
@@ -25,7 +26,7 @@ interface HeaderProps {
   onNotificationClick?: (causaId: string) => void;
 }
 
-export default function Header({
+export default memo(function Header({
   privacyMode,
   setPrivacyMode,
   saveStatus = 'idle',
@@ -102,4 +103,4 @@ export default function Header({
       </div>
     </header>
   );
-}
+});

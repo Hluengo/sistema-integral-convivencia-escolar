@@ -4,7 +4,7 @@
  */
 
 import type React from 'react';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import {
   LayoutDashboard,
   Scale,
@@ -157,7 +157,7 @@ function SidebarContent({
   );
 }
 
-export default function Sidebar({
+export default memo(function Sidebar({
   currentView,
   onViewChange,
   isCollapsed,
@@ -259,4 +259,4 @@ export default function Sidebar({
       </aside>
     </>
   );
-}
+});
