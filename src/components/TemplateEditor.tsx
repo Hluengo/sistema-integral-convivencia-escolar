@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Save, Loader2, CheckCircle, AlertCircle, FileText, ArrowLeft } from 'lucide-react';
 import { TextBlockSkeleton } from './Skeleton';
 
@@ -30,6 +30,7 @@ export default function TemplateEditor({ onBack }: { onBack: () => void }) {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editPrompt, setEditPrompt] = useState('');
+  const saveSuccessTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const fetchTemplates = useCallback(async () => {
     try {
@@ -51,6 +52,7 @@ export default function TemplateEditor({ onBack }: { onBack: () => void }) {
 
   useEffect(() => {
     fetchTemplates();
+    return () => clearTimeout(saveSuccessTimer.current);
   }, [fetchTemplates]);
 
   const handleSelect = (tpl: Template) => {
@@ -86,7 +88,7 @@ export default function TemplateEditor({ onBack }: { onBack: () => void }) {
         setTemplates(prev =>
           prev.map(t => t.id === selectedId ? { ...t, system_prompt: editPrompt } : t)
         );
-        setTimeout(() => setSaveSuccess(null), 2000);
+        saveSuccessTimer.current = setTimeout(() => setSaveSuccess(null), 2000);
       } else {
         setSaveError(result.error || 'Error al guardar.');
       }
