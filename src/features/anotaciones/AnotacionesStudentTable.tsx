@@ -4,7 +4,7 @@
 
 import { memo } from 'react';
 import { Search } from 'lucide-react';
-import { maskName, getSemaphoricStyle, TEACHERS_BY_COURSE } from '../../lib/anotacionesUtils';
+import { maskName, getSemaphoricStyle } from '../../lib/anotacionesUtils';
 import type { DisciplinaryStatus } from '../../types';
 
 /** @license SPDX-License-Identifier: Apache-2.0 */
@@ -30,6 +30,14 @@ const DISC_STATUS: Record<string, { text: string; bg: string }> = {
   Rojo: { text: 'Derivación a Convivencia Escolar', bg: 'bg-rose-100 text-rose-800' },
 };
 
+const CARD_STATUS_BADGE: Record<string, { bg: string; text: string }> = {
+  Vigente: { bg: 'bg-emerald-100', text: 'text-emerald-800' },
+  Pendiente: { bg: 'bg-amber-100', text: 'text-amber-800' },
+  Cumplida: { bg: 'bg-blue-100', text: 'text-blue-800' },
+  Incumplida: { bg: 'bg-red-100', text: 'text-red-800' },
+  Anulada: { bg: 'bg-neutral-100', text: 'text-neutral-500' },
+};
+
 const getDisciplinaryStatusLabel = (count: number): { text: string; bg: string } => {
   if (count < 5) { return DISC_STATUS.Verde; }
   if (count < 10) { return DISC_STATUS.Amarillo; }
@@ -46,6 +54,7 @@ interface AnotacionesStudentTableProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   isLoading: boolean;
+  cartaStatuses?: Record<string, string[]>;
 }
 
 const FILTER_TABS = [
@@ -117,6 +126,7 @@ export default memo(function AnotacionesStudentTable({
   searchQuery,
   setSearchQuery,
   isLoading,
+  cartaStatuses = {},
 }: AnotacionesStudentTableProps) {
   const filteredStudents = filterStudents(students, activeFilter, searchQuery);
 
@@ -167,9 +177,7 @@ export default memo(function AnotacionesStudentTable({
                 <th className="hidden px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider md:table-cell">
                   Curso
                 </th>
-                <th className="hidden px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider lg:table-cell">
-                  Profesor/a Jefe
-                </th>
+
                 <th className="px-4 py-3 text-center font-semibold text-neutral-600 text-xs uppercase tracking-wider">
                   Positivas
                 </th>
@@ -181,6 +189,9 @@ export default memo(function AnotacionesStudentTable({
                 </th>
                 <th className="px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider">
                   Estado
+                </th>
+                <th className="hidden px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider md:table-cell">
+                  Documentos
                 </th>
               </tr>
             </thead>
@@ -220,9 +231,6 @@ export default memo(function AnotacionesStudentTable({
                       <td className="hidden whitespace-nowrap px-4 py-3 text-neutral-600 text-sm md:table-cell">
                         {student.course_name || '—'}
                       </td>
-                      <td className="hidden whitespace-nowrap px-4 py-3 text-neutral-600 text-sm lg:table-cell">
-                        {TEACHERS_BY_COURSE[student.course_name ?? ''] || '—'}
-                      </td>
                       <td className="whitespace-nowrap px-4 py-3 text-center text-neutral-600 text-sm">
                         <span className="inline-flex items-center justify-center rounded-full bg-emerald-50 px-2.5 py-0.5 font-semibold text-emerald-700 text-xs">
                           {Number(student.positive_annotations_count) || 0}
@@ -241,6 +249,32 @@ export default memo(function AnotacionesStudentTable({
                           <span className={`inline-block size-2 rounded-full ${style.dot}`} />
                           <span className="hidden md:inline">{status.text}</span>
                         </span>
+                      </td>
+                      <td className="hidden whitespace-nowrap px-4 py-3 text-sm md:table-cell">
+                        {(() => {
+                          const statuses = cartaStatuses[student.id];
+                          if (!statuses || statuses.length === 0) {
+                            return <span className="text-neutral-400">—</span>;
+                          }
+                          const sorted = [...statuses].sort((a, b) => {
+                            if (a === 'Pendiente') return -1;
+                            if (b === 'Pendiente') return 1;
+                            return 0;
+                          });
+                          return (
+                            <div className="flex flex-wrap gap-1">
+                              {sorted.map((s) => {
+                                const badge = CARD_STATUS_BADGE[s];
+                                if (!badge) return null;
+                                return (
+                                  <span key={s} className={`inline-flex items-center rounded-full px-2 py-0.5 font-medium text-[10px] ${badge.bg} ${badge.text}`}>
+                                    {badge.text}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
                       </td>
                     </tr>
                   );

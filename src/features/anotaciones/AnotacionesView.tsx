@@ -24,6 +24,7 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
   const [activeFilter, setActiveFilter] = useState<string>('con_registro');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [dbError, setDbError] = useState<string | null>(null);
+  const [cartaStatuses, setCartaStatuses] = useState<Record<string, string[]>>({});
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -31,6 +32,19 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
     try {
       const fetchedStudents = await fetchStudentsWithAnnotationCounts();
       setStudents(fetchedStudents ?? []);
+      const { data: cartasData } = await supabase
+        .from('cartas_disciplinarias')
+        .select('student_id, status');
+      const map: Record<string, string[]> = {};
+      const seen = new Set<string>();
+      for (const c of cartasData ?? []) {
+        const key = `${c.student_id}:${c.status}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        if (!map[c.student_id]) map[c.student_id] = [];
+        map[c.student_id].push(c.status);
+      }
+      setCartaStatuses(map);
     } catch (error: unknown) {
       console.error('Error cargando datos desde Supabase:', error);
       setDbError(error instanceof Error ? error.message : 'Error de conexión con la base de datos');
@@ -181,6 +195,7 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         isLoading={isLoading}
+        cartaStatuses={cartaStatuses}
       />
 
       {/* Student Detail Modal */}

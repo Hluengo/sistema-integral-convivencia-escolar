@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useMemo, useEffect, useState, useRef } from 'react';
-import { Printer, FileDown, FileText, AlertTriangle, X } from 'lucide-react';
+import { Printer, FileDown, FileText, AlertTriangle, CheckCircle2, X } from 'lucide-react';
 import type { Annotation } from '@/src/types';
 import { getCurrentDateStr, getSemaphoricStyle } from '@/src/lib/anotacionesUtils';
 import DocTypeSelector from './docgen/DocTypeSelector';
@@ -77,6 +77,24 @@ export default function AnotacionesDocumentGenerator({
 
   const [exportError, setExportError] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [showEmissionConfirm, setShowEmissionConfirm] = useState(false);
+
+  const handleEmitAfterExport = () => {
+    handleRegisterCommitment({
+      student,
+      docType,
+      negativeCount,
+      apoderadoName: documentState.apoderadoName,
+      coordinatorName: documentState.coordinatorName,
+      emittedBy: documentState.emittedBy,
+      docObservations: documentState.docObservations,
+      compromisoStatus: 'Vigente',
+      teachers,
+      onSuccess: (entry) => documentRegistry.addEntry(entry),
+      setIsRegistering: documentState.setIsRegistering,
+    });
+    setShowEmissionConfirm(false);
+  };
 
   // Handle registration
   const handleRegisterCommitment = useMemo(
@@ -146,6 +164,7 @@ export default function AnotacionesDocumentGenerator({
     try {
       const blob = await documentExport.generatePDF(previewContent);
       documentExport.downloadBlob(blob, `Carta_de_${docType}_${student.full_name.replace(/\s+/g, '_')}.pdf`);
+      setShowEmissionConfirm(true);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Error al generar el PDF.';
       setExportError(msg);
@@ -160,6 +179,7 @@ export default function AnotacionesDocumentGenerator({
     try {
       const blob = await documentExport.generateWord(previewContent);
       documentExport.downloadBlob(blob, `Carta_de_${docType}_${student.full_name.replace(/\s+/g, '_')}.docx`);
+      setShowEmissionConfirm(true);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Error al generar el documento Word.';
       setExportError(msg);
@@ -191,6 +211,7 @@ export default function AnotacionesDocumentGenerator({
     `;
 
     documentExport.printDocument(htmlContent);
+    setShowEmissionConfirm(true);
   };
 
   // Render
@@ -203,6 +224,31 @@ export default function AnotacionesDocumentGenerator({
           <button type="button" onClick={() => setExportError(null)} aria-label="Cerrar mensaje de error" className="shrink-0 text-red-400 hover:text-red-600">
             <X className="h-4 w-4" />
           </button>
+        </div>
+      )}
+
+      {showEmissionConfirm && (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-xs">
+          <div className="flex items-center gap-2 text-amber-800 text-sm">
+            <CheckCircle2 className="h-5 w-5 shrink-0 text-amber-600" />
+            <span>Documento exportado correctamente. ¿Marcar como emitido en el historial?</span>
+          </div>
+          <div className="flex shrink-0 gap-2">
+            <button
+              type="button"
+              onClick={handleEmitAfterExport}
+              className="rounded-lg bg-amber-600 px-3 py-1.5 font-medium text-white text-xs transition-colors hover:bg-amber-700"
+            >
+              Sí, marcar como emitida
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowEmissionConfirm(false)}
+              className="rounded-lg bg-white px-3 py-1.5 font-medium text-neutral-600 text-xs transition-colors hover:bg-neutral-100"
+            >
+              No
+            </button>
+          </div>
         </div>
       )}
 

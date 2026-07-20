@@ -25,6 +25,7 @@ function getCtaForCount(count: number): (typeof CTA_THRESHOLDS)[number] | null {
 
 const STATUS_BADGE: Record<string, { bg: string; text: string }> = {
   Vigente: { bg: 'bg-emerald-100', text: 'text-emerald-800' },
+  Pendiente: { bg: 'bg-amber-100', text: 'text-amber-800' },
   Cumplida: { bg: 'bg-blue-100', text: 'text-blue-800' },
   Incumplida: { bg: 'bg-red-100', text: 'text-red-800' },
   Anulada: { bg: 'bg-neutral-100', text: 'text-neutral-500' },
