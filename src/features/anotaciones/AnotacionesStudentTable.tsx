@@ -4,7 +4,7 @@
 
 import { memo } from 'react';
 import { Search } from 'lucide-react';
-import { maskName, maskRut, getSemaphoricStyle, TEACHERS_BY_COURSE } from '../../lib/anotacionesUtils';
+import { maskName, getSemaphoricStyle, TEACHERS_BY_COURSE } from '../../lib/anotacionesUtils';
 import type { DisciplinaryStatus } from '../../types';
 
 /** @license SPDX-License-Identifier: Apache-2.0 */
@@ -163,9 +163,7 @@ export default memo(function AnotacionesStudentTable({
                 <th className="px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider">
                   Estudiante
                 </th>
-                <th className="hidden px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider md:table-cell">
-                  RUT
-                </th>
+
                 <th className="hidden px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider md:table-cell">
                   Curso
                 </th>
@@ -189,7 +187,7 @@ export default memo(function AnotacionesStudentTable({
             <tbody className="divide-y divide-neutral-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-neutral-500 text-sm">
+                  <td colSpan={7} className="px-4 py-12 text-center text-neutral-500 text-sm">
                     <div className="flex items-center justify-center gap-2">
                       <div className="size-4 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
                       Cargando estudiantes...
@@ -198,7 +196,7 @@ export default memo(function AnotacionesStudentTable({
                 </tr>
               ) : filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-neutral-500 text-sm">
+                  <td colSpan={7} className="px-4 py-12 text-center text-neutral-500 text-sm">
                     No se encontraron estudiantes con los filtros seleccionados.
                   </td>
                 </tr>
@@ -218,9 +216,6 @@ export default memo(function AnotacionesStudentTable({
                     >
                       <td className="whitespace-nowrap px-4 py-3 font-medium text-neutral-900 text-sm">
                         {maskName(student.full_name, privacyMode)}
-                      </td>
-                      <td className="hidden whitespace-nowrap px-4 py-3 text-neutral-600 text-sm md:table-cell">
-                        {maskRut(student.rut, privacyMode)}
                       </td>
                       <td className="hidden whitespace-nowrap px-4 py-3 text-neutral-600 text-sm md:table-cell">
                         {student.course_name || '—'}
