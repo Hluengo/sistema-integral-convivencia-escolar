@@ -62,7 +62,7 @@ interface RpcStudentSummary {
   rut: string;
   course_name: string;
   annotations_count: number;
-  positive_count: number;
+  positive_annotations_count: number;
   last_annotation_date: string | null;
   disciplinary_status: string;
 }
@@ -80,7 +80,7 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStud
       teacher_id: '',
       status: 'Activo',
       annotations_count: Number(row.annotations_count),
-      positive_annotations_count: Number(row.positive_count),
+      positive_annotations_count: Number(row.positive_annotations_count),
       last_annotation_date: row.last_annotation_date || undefined,
       disciplinary_status: row.disciplinary_status as AnotacionStudent['disciplinary_status'],
       rut: row.rut || '',
