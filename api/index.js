@@ -751,14 +751,18 @@ router7.post("/parse-annotations", async (req, res) => {
     const systemInstruction = `Eres un asistente experto de Convivencia Escolar en Chile.
 Analiza el texto de una hoja de vida y extrae TODAS las anotaciones en JSON.
 
-Campos requeridos: text, date (YYYY-MM-DD), registered_by, type (Positiva|Negativa).
+Campos requeridos: text, date (YYYY-MM-DD), registered_by, type.
+
+type debe ser exactamente "Positiva" o "Negativa":
+- Positiva: felicitaciones, reconocimientos, logros, buena conducta, m\xE9ritos.
+- Negativa: atrasos, mala conducta, incumplimientos, faltas, observaciones disciplinarias, llamados de atenci\xF3n.
 
 Si no figura registered_by usa "Inspector\xEDa".
 Devuelve SOLO el arreglo JSON, sin texto adicional.`;
     const messages = [
       {
         role: "user",
-        content: `A continuaci\xF3n est\xE1 el texto completo extra\xEDdo de la hoja de vida del estudiante. Extrae TODAS las anotaciones de conducta (tanto positivas como negativas) en formato JSON:
+        content: `Extrae TODAS las anotaciones de conducta del siguiente texto de hoja de vida. Clasifica CADA una como "Positiva" o "Negativa" seg\xFAn el tipo. Devuelve SOLO el JSON:
 
 --- INICIO DEL DOCUMENTO ---
 ${cleanText}
