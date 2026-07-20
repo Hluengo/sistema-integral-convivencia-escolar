@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { supabase } from '@/src/lib/supabase';
+import { useAuthStore } from '@/src/stores/authStore';
 import type { Annotation } from '@/src/types';
 
 GlobalWorkerOptions.workerSrc = workerUrl;
@@ -137,6 +138,7 @@ export function usePdfProcessing(
     if (parsedAnnotations.length === 0) return;
     try {
       setParsingStatus('Registrando anotaciones en la base de datos...');
+      const tenantId = useAuthStore.getState().tenantId;
       const annotationsToSave = parsedAnnotations.map((ann: unknown) => {
         const a = ann as Record<string, string | undefined>;
         return {
@@ -144,7 +146,8 @@ export function usePdfProcessing(
           observation: a.text || a.observation || '',
           severity: a.severity || 'Leve',
           type: a.type || 'Negativa',
-          registered_by: a.registered_by || 'Inspectoria',
+          registered_by: a.registered_by || 'Inspectoría',
+          tenant_id: tenantId,
         };
       });
 
