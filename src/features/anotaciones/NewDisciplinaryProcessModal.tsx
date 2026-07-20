@@ -7,6 +7,7 @@ import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import type { Student } from './NewDisciplinaryProcessModal/constants';
 import { STEPS, sortCourses } from './NewDisciplinaryProcessModal/constants';
 import { supabase } from '../../lib/supabase';
+import { useAuthStore } from '@/src/stores/authStore';
 import CourseSelectStep from './NewDisciplinaryProcessModal/CourseSelectStep';
 import StudentSelectStep from './NewDisciplinaryProcessModal/StudentSelectStep';
 import UploadAnalyzeStep from './NewDisciplinaryProcessModal/UploadAnalyzeStep';
@@ -14,6 +15,22 @@ import ClassificationStep from './NewDisciplinaryProcessModal/ClassificationStep
 import ReviewStep from './NewDisciplinaryProcessModal/ReviewStep';
 
 GlobalWorkerOptions.workerSrc = workerUrl;
+
+const STORAGE_BUCKET = 'anotaciones';
+
+async function uploadPdf(file: File): Promise<string | null> {
+  const tenantId = useAuthStore.getState().tenantId;
+  if (!tenantId) return null;
+  const filePath = `${tenantId}/${Date.now()}_${file.name}`;
+  const { error } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .upload(filePath, file, { cacheControl: '3600', upsert: false });
+  if (error) {
+    console.error('Error uploading PDF to storage:', error);
+    return null;
+  }
+  return filePath;
+}
 
 async function extractPdfText(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
@@ -30,10 +47,15 @@ async function extractPdfText(file: File): Promise<string> {
   return text.trim();
 }
 
+interface FileData {
+  name: string;
+  storagePath?: string | null;
+}
+
 interface NewDisciplinaryProcessModalProps {
   students: Student[];
   onClose: () => void;
-  onRegisterCase: (studentId: string, annotations: unknown[], fileData?: { name: string }) => void;
+  onRegisterCase: (studentId: string, annotations: unknown[], fileData?: FileData) => void;
   currentUserEmail: string;
 }
 
@@ -51,6 +73,7 @@ export default function NewDisciplinaryProcessModal({
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [detected, setDetected] = useState<unknown[]>([]);
   const [classification, setClassification] = useState('');
+  const pdfStoragePathRef = useRef<string | null>(null);
 
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -75,7 +98,13 @@ export default function NewDisciplinaryProcessModal({
     if (!file) return;
     setIsAnalyzing(true);
     setAnalysisError(null);
+    pdfStoragePathRef.current = null;
     try {
+      const storagePath = await uploadPdf(file);
+      if (storagePath) {
+        pdfStoragePathRef.current = storagePath;
+      }
+
       const textContent = await extractPdfText(file);
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch('/api/parse-annotations', {
@@ -102,7 +131,7 @@ export default function NewDisciplinaryProcessModal({
 
   const handleRegister = () => {
     if (!selectedStudent) return;
-    onRegisterCase(selectedStudent.id, detected, file ? { name: file.name } : undefined);
+    onRegisterCase(selectedStudent.id, detected, file ? { name: file.name, storagePath: pdfStoragePathRef.current } : undefined);
     setStep(6);
   };
 

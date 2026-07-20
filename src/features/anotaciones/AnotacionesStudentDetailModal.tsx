@@ -19,7 +19,8 @@ import {
 import StudentSummaryTab from './AnotacionesStudentDetailModal/StudentSummaryTab';
 import UploadPdfTab from './AnotacionesStudentDetailModal/UploadPdfTab';
 import HistoryTab from './AnotacionesStudentDetailModal/HistoryTab';
-import { useDisciplinaryData, usePdfProcessing } from './AnotacionesStudentDetailModal/hooks';
+import { useDisciplinaryData } from './AnotacionesStudentDetailModal/hooks/useDisciplinaryData';
+import { usePdfProcessing } from './AnotacionesStudentDetailModal/hooks/usePdfProcessing';
 
 const EMPTY_TEACHERS: Record<string, string> = {};
 
@@ -119,6 +120,8 @@ export default function AnotacionesStudentDetailModal({
             etapas={etapas}
             activeCase={activeCase}
             dateStr={dateStr}
+            pendingParsedCount={parsedAnnotations.length}
+            onGoToUploadTab={() => setActiveTab('subir_pdf')}
           />
         );
       case 'subir_pdf':
@@ -159,7 +162,7 @@ export default function AnotacionesStudentDetailModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4">
       <button type="button" className="fixed inset-0 bg-black/50 backdrop-blur-sm" aria-label="Cerrar" onClick={onClose} />
       <div className="relative w-full max-w-3xl animate-scale-in rounded-2xl bg-white shadow-2xl" role="dialog" aria-modal="true" aria-label={`Detalles de ${student.full_name}`}>
-        <div className="border-b border-neutral-100 px-6 py-4">
+        <div className="border-b border-neutral-100 px-4 py-4 sm:px-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50">
@@ -207,7 +210,7 @@ export default function AnotacionesStudentDetailModal({
           </div>
         </div>
 
-        <div className="bg-white px-6 pb-2">
+        <div className="bg-white px-4 pb-2 sm:px-6">
           <div className="flex gap-1 overflow-x-auto rounded-xl bg-neutral-100/60 p-1">
             {(Object.keys(TAB_ICONS) as ActiveTab[]).map((tab) => (
               <button
@@ -227,7 +230,7 @@ export default function AnotacionesStudentDetailModal({
           </div>
         </div>
 
-        <div className="p-6">{renderTabContent()}</div>
+        <div className="p-4 sm:p-6">{renderTabContent()}</div>
       </div>
     </div>
   );

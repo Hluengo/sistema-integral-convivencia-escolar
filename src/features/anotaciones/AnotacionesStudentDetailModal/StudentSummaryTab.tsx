@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Shield, AlertTriangle, History, CheckCircle2 } from 'lucide-react';
+import { Shield, AlertTriangle, History, CheckCircle2, FileText } from 'lucide-react';
 import type { Annotation } from '../../../types';
 import { getSemaphoricStyle } from '../../../lib/anotacionesUtils';
 import { formatDate, STATUS_STYLE, SEVERITY_BADGE, type StudentInfo, type DisciplinayRecord } from './constants';
@@ -16,6 +16,8 @@ interface StudentSummaryTabProps {
   etapas: DisciplinayRecord[];
   activeCase: DisciplinayRecord | null;
   dateStr: string;
+  pendingParsedCount?: number;
+  onGoToUploadTab?: () => void;
 }
 
 export default function StudentSummaryTab({
@@ -26,69 +28,69 @@ export default function StudentSummaryTab({
   etapas,
   activeCase,
   dateStr,
+  pendingParsedCount = 0,
+  onGoToUploadTab,
 }: StudentSummaryTabProps) {
   const negativeCount = annotations.filter((a) => a.type === 'Negativa').length;
+  const positiveCount = student.positive_annotations_count ?? annotations.filter((a) => a.type === 'Positiva').length;
   const semaphoric = getSemaphoricStyle(negativeCount);
   const statusKey = student.disciplinary_status || 'Verde';
   const statusInfo = STATUS_STYLE[statusKey] || STATUS_STYLE.Verde;
 
   return (
     <div className="stagger-children space-y-5">
-      <div className="animate-slide-up rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md" style={{ animationDelay: '0ms' }}>
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="flex items-center gap-2 font-bold text-neutral-900 text-sm">
-            <Shield className="h-4 w-4 text-brand-600" />
-            Medida Disciplinaria Actual
-          </h3>
-          <span
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-semibold text-xs${semaphoric.badge}`}
-          >
-            <span className={`inline-block h-2 w-2 rounded-full${semaphoric.dot}`} />
-            {student.disciplinary_status}
-          </span>
-        </div>
-        {currentMeasure ? (
-          <div className="rounded-xl border border-neutral-100 bg-neutral-50 p-4">
-            <p className="font-medium text-neutral-700 text-sm">{currentMeasure}</p>
-            <p className="mt-1 text-neutral-400 text-xs">Ultima actualizacion: {dateStr}</p>
+      {pendingParsedCount > 0 && (
+        <div className="animate-slide-up rounded-2xl border border-brand-200 bg-brand-50 p-4 shadow-xs" style={{ animationDelay: '0ms' }}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-brand-600" />
+              <p className="font-medium text-brand-800 text-sm">
+                {pendingParsedCount} anotación{pendingParsedCount !== 1 ? 'es' : ''} pendiente{pendingParsedCount !== 1 ? 's' : ''} de registrar desde PDF
+              </p>
+            </div>
+            {onGoToUploadTab && (
+              <button
+                type="button"
+                onClick={onGoToUploadTab}
+                className="rounded-lg bg-brand-600 px-3 py-1.5 font-medium text-xs text-white transition-colors hover:bg-brand-700"
+              >
+                Ir a subir PDF
+              </button>
+            )}
           </div>
-        ) : (
-          <p className="text-neutral-400 text-sm italic">
-            No hay una medida disciplinaria activa registrada.
-          </p>
-        )}
-      </div>
+        </div>
+      )}
 
-      <div className="animate-slide-up grid grid-cols-1 gap-4 sm:grid-cols-3" style={{ animationDelay: '60ms' }}>
-        <div className="rounded-2xl border border-neutral-200/80 bg-white p-4 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-          <p className="mb-1 flex items-center gap-1.5 font-semibold text-neutral-500 text-xs uppercase tracking-wider">
-            <Shield className="h-3 w-3" />
-            Estado General
-          </p>
-          <div className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 font-bold text-xs ${statusInfo.bg} ${statusInfo.text}`}>
-            <span className={`inline-block h-2 w-2 rounded-full${semaphoric.dot}`} />
-            {statusInfo.label}
+      <div className="animate-slide-up rounded-2xl border border-neutral-200/80 bg-white p-4 shadow-xs transition-shadow hover:shadow-md" style={{ animationDelay: '0ms' }}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <Shield className="h-4 w-4 text-brand-600" />
+            <h3 className="font-bold text-neutral-900 text-sm">Medida Disciplinaria Actual</h3>
           </div>
-        </div>
-        <div className="rounded-2xl border border-neutral-200/80 bg-white p-4 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-          <p className="mb-1 font-semibold text-neutral-500 text-xs uppercase tracking-wider">
-            Anotaciones Negativas
-          </p>
-          <div className="flex items-baseline gap-2">
-            <span className={`font-extrabold text-2xl${semaphoric.text}`}>{negativeCount}</span>
-            <span className="text-neutral-400 text-xs">registros</span>
-          </div>
-        </div>
-        <div className="rounded-2xl border border-neutral-200/80 bg-white p-4 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
-          <p className="mb-1 font-semibold text-neutral-500 text-xs uppercase tracking-wider">
-            Anotaciones Positivas
-          </p>
-          <div className="flex items-baseline gap-2">
-            <span className="font-extrabold text-2xl text-emerald-600">
-              {student.positive_annotations_count ?? 0}
+          <div className="flex flex-wrap items-center gap-3 text-xs">
+            <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold${semaphoric.badge}`}>
+              <span className={`inline-block h-1.5 w-1.5 rounded-full${semaphoric.dot}`} />
+              {statusInfo.label}
             </span>
-            <span className="text-neutral-400 text-xs">registros</span>
+            <span className="text-neutral-400">|</span>
+            <span className={`font-bold${semaphoric.text}`}>{negativeCount}</span>
+            <span className="text-neutral-400">negativas</span>
+            <span className="text-neutral-300">·</span>
+            <span className="font-bold text-emerald-600">{positiveCount}</span>
+            <span className="text-neutral-400">positivas</span>
           </div>
+        </div>
+        <div className="mt-3 border-t border-neutral-100 pt-3">
+          {currentMeasure ? (
+            <div className="flex items-center justify-between">
+              <p className="font-medium text-neutral-700 text-sm">{currentMeasure}</p>
+              <p className="text-neutral-400 text-xs">{dateStr}</p>
+            </div>
+          ) : (
+            <p className="text-neutral-400 text-sm italic">
+              No hay una medida disciplinaria activa registrada.
+            </p>
+          )}
         </div>
       </div>
 

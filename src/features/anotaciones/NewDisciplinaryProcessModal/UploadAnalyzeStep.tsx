@@ -3,6 +3,15 @@
 import { useState, useCallback, useRef } from 'react';
 import { Upload, FileText, Loader2, AlertTriangle, Star } from 'lucide-react';
 
+export const severityDot = (severity?: string) => {
+  switch (severity) {
+    case 'Leve': return 'bg-emerald-500';
+    case 'Grave': return 'bg-yellow-500';
+    case 'Muy Grave': return 'bg-orange-500';
+    default: return 'bg-rose-500';
+  }
+};
+
 interface UploadAnalyzeStepProps {
   file: File | null;
   isAnalyzing: boolean;
@@ -36,15 +45,6 @@ export default function UploadAnalyzeStep({
 
   const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) onFileChange(e.target.files[0]);
-  };
-
-  const severityDot = (severity?: string) => {
-    switch (severity) {
-      case 'Leve': return 'bg-emerald-500';
-      case 'Grave': return 'bg-yellow-500';
-      case 'Muy Grave': return 'bg-orange-500';
-      default: return 'bg-rose-500';
-    }
   };
 
   return (

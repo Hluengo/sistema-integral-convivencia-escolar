@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { Printer, FileDown, FileText, AlertTriangle } from 'lucide-react';
 import type { Annotation } from '@/src/types';
 import { getCurrentDateStr, getSemaphoricStyle } from '@/src/lib/anotacionesUtils';
@@ -8,13 +8,11 @@ import DocTypeSelector from './docgen/DocTypeSelector';
 import DocumentForm from './docgen/DocumentForm';
 import DocumentPreview from './docgen/DocumentPreview';
 import DocumentWarnings from './docgen/DocumentWarnings';
-import {
-  useDocumentState,
-  useSelectedAnnotations,
-  useDocumentExport,
-  useDocumentRegistry,
-  useRegisterCommitment,
-} from './docgen/hooks';
+import { useDocumentState } from './docgen/hooks/useDocumentState';
+import { useSelectedAnnotations } from './docgen/hooks/useSelectedAnnotations';
+import { useDocumentExport } from './docgen/hooks/useDocumentExport';
+import { useDocumentRegistry } from './docgen/hooks/useDocumentRegistry';
+import { useRegisterCommitment } from './docgen/hooks/useRegisterCommitment';
 
 interface AnotacionesDocumentGeneratorProps {
   student: {
@@ -48,9 +46,9 @@ export default function AnotacionesDocumentGenerator({
   const documentRegistry = useDocumentRegistry();
   const registerCommitment = useRegisterCommitment();
 
-  // Sync docType when annotations cross threshold
   const { docType, setDocType } = documentState;
-  useMemo(() => {
+
+  useEffect(() => {
     if (negativeCount >= 10 && docType !== 'compromiso_conductual') {
       setDocType('compromiso_conductual');
     } else if (negativeCount < 10 && docType === 'compromiso_conductual') {
@@ -58,10 +56,10 @@ export default function AnotacionesDocumentGenerator({
     }
   }, [negativeCount, docType, setDocType]);
 
-  // Select all negative annotations by default
-  useMemo(() => {
+  useEffect(() => {
     selectedAnnotations.selectAllNegative();
-  }, [negativeAnnotations, selectedAnnotations.selectAllNegative]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Handle registration
   const handleRegisterCommitment = useMemo(

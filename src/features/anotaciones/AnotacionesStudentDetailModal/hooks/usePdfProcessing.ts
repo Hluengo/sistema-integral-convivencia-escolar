@@ -7,6 +7,8 @@ import type { Annotation } from '@/src/types';
 
 GlobalWorkerOptions.workerSrc = workerUrl;
 
+const STORAGE_BUCKET = 'anotaciones';
+
 async function extractPdfText(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await getDocument({ data: arrayBuffer }).promise;
@@ -22,6 +24,20 @@ async function extractPdfText(file: File): Promise<string> {
   return text.trim();
 }
 
+async function uploadPdf(file: File): Promise<string | null> {
+  const tenantId = useAuthStore.getState().tenantId;
+  if (!tenantId) return null;
+  const filePath = `${tenantId}/${Date.now()}_${file.name}`;
+  const { error } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .upload(filePath, file, { cacheControl: '3600', upsert: false });
+  if (error) {
+    console.error('Error uploading PDF to storage:', error);
+    return null;
+  }
+  return filePath;
+}
+
 interface UsePdfProcessingResult {
   isDragging: boolean;
   setIsDragging: (v: boolean) => void;
@@ -29,6 +45,7 @@ interface UsePdfProcessingResult {
   parsingStatus: string;
   errorMessage: string | null;
   parsedAnnotations: unknown[];
+  pdfStoragePath: string | null;
   processPdfFile: (file: File) => Promise<void>;
   handleDrop: (e: React.DragEvent) => Promise<void>;
   handleFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
@@ -53,6 +70,7 @@ export function usePdfProcessing(
   const [parsingStatus, setParsingStatus] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [parsedAnnotations, setParsedAnnotations] = useState<unknown[]>([]);
+  const [pdfStoragePath, setPdfStoragePath] = useState<string | null>(null);
 
   const processPdfFile = useCallback(
     async (file: File) => {
@@ -60,10 +78,17 @@ export function usePdfProcessing(
       setParsingStatus('Leyendo archivo PDF...');
       setErrorMessage(null);
       setParsedAnnotations([]);
+      setPdfStoragePath(null);
 
       try {
         setParsingStatus('Extrayendo texto del PDF...');
         const textContent = await extractPdfText(file);
+
+        setParsingStatus('Guardando PDF en almacenamiento...');
+        const storagePath = await uploadPdf(file);
+        if (storagePath) {
+          setPdfStoragePath(storagePath);
+        }
 
         setParsingStatus('Enviando a procesamiento...');
 
@@ -151,6 +176,7 @@ export function usePdfProcessing(
           type: a.type || 'Negativa',
           registered_by: a.registered_by || 'Inspectoría',
           tenant_id: tenantId,
+          pdf_file_path: pdfStoragePath,
         };
       });
 
@@ -167,6 +193,7 @@ export function usePdfProcessing(
       onAddAnnotations(studentId, annotationsToSave);
       setParsingStatus(`${annotationsToSave.length} anotaciones registradas exitosamente.`);
       setParsedAnnotations([]);
+      setPdfStoragePath(null);
 
       const [cartasData, etapasData] = await Promise.all([
         fetchCartas(studentId),
@@ -180,7 +207,7 @@ export function usePdfProcessing(
       setErrorMessage(msg);
       setParsingStatus('Error al registrar');
     }
-  }, [parsedAnnotations, studentId, onAddAnnotations, cartasRef, setEtapas, fetchCartas, fetchEtapas]);
+  }, [parsedAnnotations, studentId, onAddAnnotations, cartasRef, setEtapas, fetchCartas, fetchEtapas, pdfStoragePath]);
 
   return {
     isDragging,
@@ -189,6 +216,7 @@ export function usePdfProcessing(
     parsingStatus,
     errorMessage,
     parsedAnnotations,
+    pdfStoragePath,
     processPdfFile,
     handleDrop,
     handleFileSelect,

@@ -130,7 +130,7 @@ export default memo(function AnotacionesStudentTable({
       </div>
 
       {/* Filter Tabs */}
-      <div className="inline-flex gap-1 rounded-xl bg-neutral-100 p-1">
+      <div className="inline-flex flex-wrap gap-1 rounded-xl bg-neutral-100 p-1">
         {FILTER_TABS.map((tab) => (
           <button
             key={tab.key}
@@ -156,13 +156,13 @@ export default memo(function AnotacionesStudentTable({
                 <th className="px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider">
                   Estudiante
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider">
+                <th className="hidden px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider md:table-cell">
                   RUT
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider">
+                <th className="hidden px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider md:table-cell">
                   Curso
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider">
+                <th className="hidden px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider lg:table-cell">
                   Profesor/a Jefe
                 </th>
                 <th className="px-4 py-3 text-center font-semibold text-neutral-600 text-xs uppercase tracking-wider">
@@ -171,7 +171,7 @@ export default memo(function AnotacionesStudentTable({
                 <th className="px-4 py-3 text-center font-semibold text-neutral-600 text-xs uppercase tracking-wider">
                   Negativas
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider">
+                <th className="hidden px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider lg:table-cell">
                   Último Registro
                 </th>
                 <th className="px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider">
@@ -212,13 +212,13 @@ export default memo(function AnotacionesStudentTable({
                       <td className="whitespace-nowrap px-4 py-3 font-medium text-neutral-900 text-sm">
                         {maskName(student.full_name, privacyMode)}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-neutral-600 text-sm">
+                      <td className="hidden whitespace-nowrap px-4 py-3 text-neutral-600 text-sm md:table-cell">
                         {maskRut(student.rut, privacyMode)}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-neutral-600 text-sm">
+                      <td className="hidden whitespace-nowrap px-4 py-3 text-neutral-600 text-sm md:table-cell">
                         {student.course_name || '—'}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-neutral-600 text-sm">
+                      <td className="hidden whitespace-nowrap px-4 py-3 text-neutral-600 text-sm lg:table-cell">
                         {TEACHERS_BY_COURSE[student.course_name ?? ''] || '—'}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-center text-neutral-600 text-sm">
@@ -231,13 +231,13 @@ export default memo(function AnotacionesStudentTable({
                           {negativeCount}
                         </span>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-neutral-600 text-sm">
+                      <td className="hidden whitespace-nowrap px-4 py-3 text-neutral-600 text-sm lg:table-cell">
                         {formatDate(student.last_annotation_date)}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm">
                         <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-medium text-xs ${status.bg}`}>
                           <span className={`inline-block size-2 rounded-full ${style.dot}`} />
-                          {status.text}
+                          <span className="hidden md:inline">{status.text}</span>
                         </span>
                       </td>
                     </tr>

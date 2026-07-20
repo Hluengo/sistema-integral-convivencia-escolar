@@ -126,6 +126,7 @@ export const AnnotationSchema = z.object({
   severity: TipoInfraccionEnum,
   registered_by: z.string(),
   type: z.enum(['Positiva', 'Negativa']),
+  pdf_file_path: z.string().nullable().optional(),
 });
 
 export const CartaDisciplinariaSchema = z.object({

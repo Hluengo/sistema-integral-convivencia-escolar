@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useMemo } from 'react';
 import { X, Upload, FileText, Plus, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { formatDate, SEVERITY_BADGE, type StudentInfo } from './constants';
 
@@ -150,10 +150,17 @@ export default function UploadPdfTab({
 
       {parsedAnnotations.length > 0 && (
         <div className="rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-xs">
-          <h3 className="mb-3 flex items-center gap-2 font-bold text-neutral-900 text-sm">
+          <h3 className="mb-1 flex items-center gap-2 font-bold text-neutral-900 text-sm">
             <FileText className="h-4 w-4 text-brand-600" />
             Anotaciones Detectadas ({parsedAnnotations.length})
           </h3>
+          <p className="mb-3 font-medium text-neutral-500 text-xs">
+            {(() => {
+              const pos = parsedAnnotations.filter((a: unknown) => (a as { type?: string }).type === 'Positiva').length;
+              const neg = parsedAnnotations.length - pos;
+              return `Se detectaron ${parsedAnnotations.length} anotaciones (${neg} negativas, ${pos} positivas):`;
+            })()}
+          </p>
           <div className="max-h-80 space-y-3 overflow-y-auto">
             {parsedAnnotations.map((ann: unknown, index: number) => {
               const a = ann as Record<string, string | undefined>;
@@ -161,7 +168,7 @@ export default function UploadPdfTab({
               const badge = SEVERITY_BADGE[severity] || SEVERITY_BADGE.Leve;
               return (
                 <div
-                  key={a.id || a.text || a.observation || index}
+                  key={a.id || `pdf-ann-${index}`}
                   className="flex items-start gap-3 rounded-xl border border-neutral-100 bg-neutral-50 p-3"
                 >
                   <span className={`mt-1.5 h-2 w-2 flex-shrink-0 rounded-full${badge.dot}`} />
