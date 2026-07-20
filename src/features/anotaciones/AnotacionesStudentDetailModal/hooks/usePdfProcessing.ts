@@ -86,7 +86,9 @@ export function usePdfProcessing(
 
         if (result.annotations && result.annotations.length > 0) {
           setParsedAnnotations(result.annotations);
-          setParsingStatus(`Se detectaron ${result.annotations.length} anotaciones. Revisa los datos antes de registrar.`);
+          const posCount = result.annotations.filter((a: { type?: string }) => a.type === 'Positiva').length;
+          const negCount = result.annotations.length - posCount;
+          setParsingStatus(`Se detectaron ${result.annotations.length} anotaciones (${negCount} negativas, ${posCount} positivas). Revisa los datos antes de registrar.`);
         } else {
           setParsingStatus('No se detectaron anotaciones en el PDF. Revisa que el archivo contenga datos de hoja de vida.');
         }

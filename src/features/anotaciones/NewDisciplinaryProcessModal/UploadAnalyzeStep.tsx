@@ -96,7 +96,10 @@ export default function UploadAnalyzeStep({
             <Star className="h-4 w-4 text-indigo-600" /> Análisis del Documento
           </p>
           <p className="font-medium text-neutral-700 text-xs">
-            Se detectaron {detected.length} anotaciones:
+            {(() => {
+              const pos = detected.filter((a: unknown) => (a as { type?: string }).type === 'Positiva').length;
+              return `Se detectaron ${detected.length} anotaciones (${detected.length - pos} negativas, ${pos} positivas):`;
+            })()}
           </p>
           {detected.map((a: unknown, i: number) => {
             const ann = a as { id?: string; date?: string; text?: string; severity?: string; type?: string; registered_by?: string };
