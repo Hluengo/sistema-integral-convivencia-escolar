@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useRef, memo } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import { X, Eye, EyeOff } from 'lucide-react';
+import { useUIStore } from '@/src/shared/lib/stores/uiStore';
 import type { Annotation } from '@/src/types';
 import { maskName, maskRut, getSemaphoricStyle, getCurrentDateStr } from '@/src/lib/anotacionesUtils';
-import AnotacionesDocumentGenerator from './AnotacionesDocumentGenerator';
 import {
   STATUS_STYLE,
   TAB_ICONS,
@@ -87,6 +87,14 @@ export default function AnotacionesStudentDetailModal({
     async (id) => { const { fetchEtapas } = await import('@/src/services/etapas.service'); return fetchEtapas(id); }
   );
 
+  const setCurrentView = useUIStore((s) => s.setCurrentView);
+  const setSelectedStudentForDocs = useUIStore((s) => s.setSelectedStudentForDocs);
+
+  const handleGoToDocumentos = () => {
+    setSelectedStudentForDocs(student.id);
+    setCurrentView('documentos');
+  };
+
   const negativeCount = annotations.filter((a) => a.type === 'Negativa').length || 0;
   const positiveCount = annotations.filter((a) => a.type === 'Positiva').length || 0;
   const semaphoric = getSemaphoricStyle(negativeCount);
@@ -123,6 +131,7 @@ export default function AnotacionesStudentDetailModal({
             dateStr={dateStr}
             pendingParsedCount={parsedAnnotations.length}
             onGoToUploadTab={() => setActiveTab('subir_pdf')}
+            onGoToDocumentos={handleGoToDocumentos}
           />
         );
       case 'subir_pdf':
@@ -143,26 +152,30 @@ export default function AnotacionesStudentDetailModal({
         );
       case 'historial':
         return <HistoryTab annotations={annotations} />;
-      case 'documentos':
-        return (
-          <div className="rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-xs">
-            <AnotacionesDocumentGenerator
-              student={student}
-              annotations={annotations}
-              privacyMode={privacyMode}
-              teachers={teachers}
-            />
-          </div>
-        );
       default:
         return null;
     }
   };
 
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const hasOpened = useRef(false);
+
+  useEffect(() => {
+    if (!hasOpened.current && dialogRef.current) {
+      dialogRef.current.showModal();
+      hasOpened.current = true;
+    }
+  }, []);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4">
-      <button type="button" className="fixed inset-0 bg-black/50 backdrop-blur-sm" aria-label="Cerrar" onClick={onClose} />
-      <div className="relative w-full max-w-3xl animate-scale-in rounded-2xl bg-white shadow-2xl" role="dialog" aria-modal="true" aria-label={`Detalles de ${student.full_name}`}>
+    <dialog
+      ref={dialogRef}
+      onClose={onClose}
+      className="fixed inset-0 z-50 max-h-full max-w-full bg-transparent p-0 backdrop:bg-black/50 backdrop:backdrop-blur-sm open:flex open:items-center open:justify-center"
+      style={{ border: 'none' }}
+      aria-label={`Detalles de ${student.full_name}`}
+    >
+      <div className="relative w-full max-w-3xl animate-scale-in rounded-2xl bg-white shadow-2xl my-4 mx-4">
         <div className="border-b border-neutral-100 px-4 py-4 sm:px-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -236,6 +249,6 @@ export default function AnotacionesStudentDetailModal({
 
         <div className="max-h-[65vh] overflow-y-auto p-4 sm:p-6">{renderTabContent()}</div>
       </div>
-    </div>
+    </dialog>
   );
 }

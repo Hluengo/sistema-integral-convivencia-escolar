@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Shield, AlertTriangle, History, CheckCircle2, FileText } from 'lucide-react';
+import { Shield, AlertTriangle, History, CheckCircle2, FileText, ScrollText } from 'lucide-react';
 import type { Annotation } from '../../../types';
 import { getSemaphoricStyle } from '../../../lib/anotacionesUtils';
 import { formatDate, STATUS_STYLE, SEVERITY_BADGE, type StudentInfo, type DisciplinayRecord } from './constants';
@@ -18,6 +18,7 @@ interface StudentSummaryTabProps {
   dateStr: string;
   pendingParsedCount?: number;
   onGoToUploadTab?: () => void;
+  onGoToDocumentos?: () => void;
 }
 
 export default function StudentSummaryTab({
@@ -30,6 +31,7 @@ export default function StudentSummaryTab({
   dateStr,
   pendingParsedCount = 0,
   onGoToUploadTab,
+  onGoToDocumentos,
 }: StudentSummaryTabProps) {
   const negativeCount = annotations.filter((a) => a.type === 'Negativa').length;
   const positiveCount = Number(student.positive_annotations_count) || annotations.filter((a) => a.type === 'Positiva').length || 0;
@@ -94,6 +96,27 @@ export default function StudentSummaryTab({
         </div>
       </div>
 
+      <div className="animate-slide-up rounded-2xl border border-neutral-200/80 bg-white p-4 shadow-xs transition-shadow hover:shadow-md" style={{ animationDelay: '60ms' }}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ScrollText className="h-4 w-4 text-brand-600" />
+            <h3 className="font-bold text-neutral-900 text-sm">Gestión de Documentos</h3>
+          </div>
+          {onGoToDocumentos && (
+            <button
+              type="button"
+              onClick={onGoToDocumentos}
+              className="rounded-lg bg-brand-600 px-3 py-1.5 font-medium text-xs text-white transition-colors hover:bg-brand-700"
+            >
+              Gestionar Documentos
+            </button>
+          )}
+        </div>
+        <p className="mt-2 text-neutral-500 text-xs">
+          Administra cartas, amonestaciones y documentos oficiales asociados al estudiante.
+        </p>
+      </div>
+
       {activeCase && (
         <div className="animate-slide-up rounded-2xl border border-amber-200/80 bg-white p-5 shadow-xs transition-shadow hover:shadow-md" style={{ animationDelay: '120ms' }}>
           <div className="mb-3 flex items-center gap-2">
@@ -133,7 +156,7 @@ export default function StudentSummaryTab({
             {transitions.map((t, i) => {
               return (
                 <div
-                  key={String(t.id) || i}
+                  key={String(t.id)}
                   className="flex items-start gap-3 border-b border-neutral-100 pb-3 last:border-b-0 last:pb-0"
                 >
                   <div className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-brand-400" />

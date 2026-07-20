@@ -11,6 +11,7 @@ import {
   Users,
   FileBarChart,
   ClipboardList,
+  FileText,
   ChevronLeft,
   ChevronRight,
   Menu,
@@ -19,7 +20,7 @@ import {
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { SidebarUserMenu, SidebarAulaSeguraAlert } from './SidebarUserMenu';
 
-export type SidebarView = 'dashboard' | 'causas' | 'alumnos' | 'informes' | 'anotaciones';
+export type SidebarView = 'dashboard' | 'causas' | 'alumnos' | 'informes' | 'anotaciones' | 'documentos';
 
 interface SidebarProps {
   currentView: SidebarView;
@@ -57,6 +58,7 @@ const NAV_ITEMS: {
   { id: 'alumnos', label: 'Estudiantes', Icon: Users },
   { id: 'informes', label: 'Asistente IA', Icon: FileBarChart },
   { id: 'anotaciones', label: 'Anotaciones', Icon: ClipboardList },
+  { id: 'documentos', label: 'Documentos', Icon: FileText },
 ];
 
 function SidebarContent({

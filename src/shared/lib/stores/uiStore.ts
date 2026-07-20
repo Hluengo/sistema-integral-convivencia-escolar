@@ -11,12 +11,14 @@ interface UIState {
   privacyMode: boolean;
   showShortcuts: boolean;
   currentRole: UserRole;
+  selectedStudentForDocs: string | null;
 
   setCurrentView: (view: SidebarView) => void;
   setIsSidebarCollapsed: (v: boolean) => void;
   setMobileShowDetail: (v: boolean) => void;
   setPrivacyMode: (v: boolean) => void;
   setShowShortcuts: (v: boolean | ((prev: boolean) => boolean)) => void;
+  setSelectedStudentForDocs: (id: string | null) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -26,6 +28,7 @@ export const useUIStore = create<UIState>((set) => ({
   privacyMode: false,
   showShortcuts: false,
   currentRole: 'convivencia_escolar',
+  selectedStudentForDocs: null,
 
   setCurrentView: (view) => set({ currentView: view }),
   setIsSidebarCollapsed: (v) => set({ isSidebarCollapsed: v }),
@@ -34,4 +37,5 @@ export const useUIStore = create<UIState>((set) => ({
   setShowShortcuts: (v) => set((state) => ({
     showShortcuts: typeof v === 'function' ? (v as (prev: boolean) => boolean)(state.showShortcuts) : v,
   })),
+  setSelectedStudentForDocs: (id) => set({ selectedStudentForDocs: id }),
 }));

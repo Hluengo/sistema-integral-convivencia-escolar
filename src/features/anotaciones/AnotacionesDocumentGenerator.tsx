@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useMemo, useEffect, useState } from 'react';
+import { useMemo, useEffect, useState, useRef } from 'react';
 import { Printer, FileDown, FileText, AlertTriangle, X } from 'lucide-react';
 import type { Annotation } from '@/src/types';
 import { getCurrentDateStr, getSemaphoricStyle } from '@/src/lib/anotacionesUtils';
@@ -25,6 +25,7 @@ interface AnotacionesDocumentGeneratorProps {
   annotations: Annotation[];
   privacyMode: boolean;
   teachers: Record<string, string>;
+  initialDocType?: string;
 }
 
 export default function AnotacionesDocumentGenerator({
@@ -32,7 +33,10 @@ export default function AnotacionesDocumentGenerator({
   annotations,
   privacyMode: _privacyMode,
   teachers,
+  initialDocType,
 }: AnotacionesDocumentGeneratorProps) {
+  const initialDocTypeApplied = useRef(false);
+
   // Derived data
   const negativeAnnotations = annotations.filter((a) => a.type === 'Negativa');
   const negativeCount = negativeAnnotations.length;
@@ -49,12 +53,22 @@ export default function AnotacionesDocumentGenerator({
   const { docType, setDocType } = documentState;
 
   useEffect(() => {
+    if (initialDocType && !initialDocTypeApplied.current) {
+      setDocType(initialDocType as 'amonestacion' | 'compromiso_conductual' | 'derivacion');
+      initialDocTypeApplied.current = true;
+    }
+  }, [initialDocType, setDocType]);
+
+  const hasInitialDocType = initialDocType !== undefined;
+
+  useEffect(() => {
+    if (hasInitialDocType) return;
     if (negativeCount >= 10 && docType !== 'compromiso_conductual') {
       setDocType('compromiso_conductual');
     } else if (negativeCount < 10 && docType === 'compromiso_conductual') {
       setDocType('amonestacion');
     }
-  }, [negativeCount, docType, setDocType]);
+  }, [negativeCount, docType, setDocType, hasInitialDocType]);
 
   useEffect(() => {
     selectedAnnotations.selectAllNegative();
@@ -186,7 +200,7 @@ export default function AnotacionesDocumentGenerator({
         <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700 text-sm">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <span className="flex-1">{exportError}</span>
-          <button type="button" onClick={() => setExportError(null)} className="shrink-0 text-red-400 hover:text-red-600">
+          <button type="button" onClick={() => setExportError(null)} aria-label="Cerrar mensaje de error" className="shrink-0 text-red-400 hover:text-red-600">
             <X className="h-4 w-4" />
           </button>
         </div>

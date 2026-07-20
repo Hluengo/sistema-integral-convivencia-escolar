@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { FileText, Upload, History, ScrollText } from 'lucide-react';
+import { FileText, Upload, History } from 'lucide-react';
 
 export interface StudentInfo {
   id: string;
@@ -33,7 +33,7 @@ export interface DisciplinayRecord {
   fecha_ultima_actualizacion?: string;
 }
 
-export type ActiveTab = 'resumen' | 'subir_pdf' | 'historial' | 'documentos';
+export type ActiveTab = 'resumen' | 'subir_pdf' | 'historial';
 
 export const SEVERITY_BADGE: Record<string, { bg: string; text: string; dot: string }> = {
   Leve: { bg: 'bg-yellow-50', text: 'text-yellow-800', dot: 'bg-yellow-500' },
@@ -53,14 +53,12 @@ export const TAB_ICONS: Record<ActiveTab, React.ReactNode> = {
   resumen: <FileText className="h-4 w-4" />,
   subir_pdf: <Upload className="h-4 w-4" />,
   historial: <History className="h-4 w-4" />,
-  documentos: <ScrollText className="h-4 w-4" />,
 };
 
 export const TAB_LABELS: Record<ActiveTab, string> = {
   resumen: 'Ficha / Resumen',
   subir_pdf: 'Subir PDF',
   historial: 'Historial',
-  documentos: 'Documentos',
 };
 
 export function formatDate(dateStr?: string): string {
