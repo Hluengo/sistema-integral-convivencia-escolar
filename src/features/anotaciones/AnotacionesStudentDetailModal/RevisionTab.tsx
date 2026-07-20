@@ -1,14 +1,52 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
+/** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useRef, useCallback, useMemo } from 'react';
-import { X, Upload, FileText, Plus, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { X, Upload, FileText, Plus, CheckCircle2, AlertTriangle, RefreshCw, ArrowRight } from 'lucide-react';
 import { formatDate, SEVERITY_BADGE, type StudentInfo } from './constants';
+import type { CartaDisciplinaria } from '@/src/shared/lib/types';
 
-interface UploadPdfTabProps {
+const STATUS_BADGE: Record<string, { bg: string; text: string }> = {
+  Vigente: { bg: 'bg-emerald-100', text: 'text-emerald-800' },
+  Cumplida: { bg: 'bg-blue-100', text: 'text-blue-800' },
+  Incumplida: { bg: 'bg-red-100', text: 'text-red-800' },
+  Anulada: { bg: 'bg-neutral-100', text: 'text-neutral-500' },
+};
+
+const CTA_THRESHOLDS = [
+  { min: 5, max: 9, docType: 'amonestacion' as const, label: 'Carta de Amonestación' },
+  { min: 10, max: 14, docType: 'compromiso_conductual' as const, label: 'Carta de Compromiso Conductual' },
+  { min: 15, max: Infinity, docType: 'derivacion' as const, label: 'Ficha de Derivación' },
+];
+
+function getCtaForCount(count: number): (typeof CTA_THRESHOLDS)[number] | null {
+  for (const t of CTA_THRESHOLDS) {
+    if (count >= t.min && count <= t.max) return t;
+  }
+  return null;
+}
+
+function getNextStepSuggestion(currentLetterType: string | null, negativeCount: number): { label: string; description: string } | null {
+  const cta = getCtaForCount(negativeCount);
+  if (!cta) return null;
+
+  if (!currentLetterType) {
+    return { label: cta.label, description: `El estudiante no tiene carta vigente. Según las ${negativeCount} negativas, corresponde: ${cta.label}.` };
+  }
+
+  if (currentLetterType === 'Amonestación Escrita' && cta.docType !== 'amonestacion') {
+    return { label: cta.label, description: `Ya tiene Amonestación Escrita vigente. Con ${negativeCount} negativas, sugiere avanzar a: ${cta.label}.` };
+  }
+
+  if (currentLetterType === 'Carta de Compromiso Conductual' && (cta.docType === 'derivacion' || cta.docType === 'compromiso_conductual')) {
+    return { label: cta.label, description: `Ya tiene Compromiso Conductual vigente. Con ${negativeCount} negativas, sugiere: ${cta.label}.` };
+  }
+
+  return null;
+}
+
+interface RevisionTabProps {
   student: StudentInfo;
+  cartas: CartaDisciplinaria[];
   isDragging: boolean;
   setIsDragging: (v: boolean) => void;
   isParsing: boolean;
@@ -21,7 +59,9 @@ interface UploadPdfTabProps {
   onRegisterParsed: () => Promise<void>;
 }
 
-export default function UploadPdfTab({
+export default function RevisionTab({
+  student,
+  cartas,
   isDragging,
   setIsDragging,
   isParsing,
@@ -32,7 +72,7 @@ export default function UploadPdfTab({
   onDrop,
   onFileSelect,
   onRegisterParsed,
-}: UploadPdfTabProps) {
+}: RevisionTabProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLButtonElement>(null);
 
@@ -55,8 +95,51 @@ export default function UploadPdfTab({
     e.stopPropagation();
   }, []);
 
+  const currentCarta = useMemo(() => {
+    const vigentes = cartas.filter((c) => c.status === 'Vigente');
+    if (vigentes.length > 0) {
+      return vigentes.reduce((a, b) =>
+        new Date(a.emission_date) > new Date(b.emission_date) ? a : b
+      );
+    }
+    return cartas.length > 0 ? cartas[0] : null;
+  }, [cartas]);
+
+  const parsedNegCount = parsedAnnotations.filter(
+    (a: unknown) => (a as { type?: string }).type === 'Negativa'
+  ).length;
+
+  const suggestion = currentCarta
+    ? getNextStepSuggestion(currentCarta.letter_type, parsedNegCount)
+    : parsedNegCount > 0
+      ? getNextStepSuggestion(null, parsedNegCount)
+      : null;
+
   return (
     <div className="space-y-5">
+      {currentCarta && (
+        <div className="rounded-2xl border border-neutral-200/80 bg-white p-4 shadow-xs">
+          <div className="flex items-center gap-2 mb-2">
+            <FileText className="h-4 w-4 text-brand-600" />
+            <h4 className="font-bold text-neutral-800 text-xs uppercase tracking-wider">Carta Vigente</h4>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="font-medium text-neutral-800 text-sm">
+                {currentCarta.letter_type}
+              </p>
+              <p className="text-neutral-500 text-xs">
+                Emitida: {currentCarta.emission_date ? formatDate(currentCarta.emission_date) : '-'}
+                {currentCarta.apoderado_name && ` · Apoderado: ${currentCarta.apoderado_name}`}
+              </p>
+            </div>
+            <span className={`shrink-0 rounded-full px-2.5 py-1 font-semibold text-[10px] ${(STATUS_BADGE[currentCarta.status] || STATUS_BADGE.Vigente).bg} ${(STATUS_BADGE[currentCarta.status] || STATUS_BADGE.Vigente).text}`}>
+              {currentCarta.status}
+            </span>
+          </div>
+        </div>
+      )}
+
       <button
         ref={dropZoneRef}
         type="button"
@@ -71,7 +154,7 @@ export default function UploadPdfTab({
         onDragOver={handleDragOver}
         onDrop={onDrop}
         onClick={() => fileInputRef.current?.click()}
-        className={`relative cursor-pointer rounded-2xl border-2 border-dashed p-10 text-center transition-all duration-200 ${
+        className={`relative cursor-pointer rounded-2xl border-2 border-dashed p-8 text-center transition-all duration-200 ${
           isDragging
             ? 'border-brand-400 bg-brand-50/50 shadow-lg'
             : 'border-neutral-300 bg-white hover:border-brand-300 hover:bg-brand-50/20'
@@ -95,13 +178,15 @@ export default function UploadPdfTab({
           ) : (
             <>
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100">
-                <Upload className="h-6 w-6 text-neutral-400" />
+                <RefreshCw className="h-6 w-6 text-neutral-400" />
               </div>
               <div>
                 <p className="font-medium text-neutral-700 text-sm">
-                  Arrastra un PDF de Hoja de Vida o haz clic para seleccionar
+                  {currentCarta
+                    ? 'Sube un PDF actualizado para comparar con la carta vigente'
+                    : 'Sube un PDF de hoja de vida para revisar situación del estudiante'}
                 </p>
-                <p className="mt-1 text-neutral-400 text-xs">Solo archivos PDF - Maximo 10 MB</p>
+                <p className="mt-1 text-neutral-400 text-xs">Solo archivos PDF - Máximo 10 MB</p>
               </div>
             </>
           )}
@@ -127,6 +212,18 @@ export default function UploadPdfTab({
               <FileText className="h-4 w-4 flex-shrink-0 text-neutral-500" />
             )}
             <span>{parsingStatus}</span>
+          </div>
+        </div>
+      )}
+
+      {suggestion && parsedAnnotations.length > 0 && (
+        <div className="rounded-2xl border border-brand-200 bg-brand-50 p-4 shadow-xs">
+          <div className="flex items-start gap-3">
+            <ArrowRight className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" />
+            <div>
+              <p className="font-bold text-brand-800 text-sm">Sugerencia de documento</p>
+              <p className="mt-1 text-brand-700 text-xs leading-relaxed">{suggestion.description}</p>
+            </div>
           </div>
         </div>
       )}
@@ -161,7 +258,7 @@ export default function UploadPdfTab({
               return `Se detectaron ${parsedAnnotations.length} anotaciones (${neg} negativas, ${pos} positivas):`;
             })()}
           </p>
-          <div className="max-h-80 space-y-3 overflow-y-auto">
+          <div className="max-h-72 space-y-3 overflow-y-auto">
             {parsedAnnotations.map((ann: unknown, index: number) => {
               const a = ann as Record<string, string | undefined>;
               const severity = a.severity || 'Leve';

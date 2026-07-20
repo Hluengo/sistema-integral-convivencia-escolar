@@ -3,6 +3,7 @@ import { supabase } from '@/src/lib/supabase';
 import { fetchCartas } from '@/src/services/cartas.service';
 import { fetchEtapas } from '@/src/services/etapas.service';
 import type { DisciplinayRecord } from '../constants';
+import type { CartaDisciplinaria } from '@/src/shared/lib/types';
 
 interface DisciplinaryDataResult {
   isDataLoading: boolean;
@@ -10,6 +11,7 @@ interface DisciplinaryDataResult {
   etapas: DisciplinayRecord[];
   currentMeasure: string;
   transitions: DisciplinayRecord[];
+  cartas: CartaDisciplinaria[];
   setCurrentMeasure: (v: string) => void;
   setTransitions: (v: DisciplinayRecord[]) => void;
 }
@@ -23,6 +25,7 @@ export function useDisciplinaryData(
   const [etapas, setEtapas] = useState<DisciplinayRecord[]>([]);
   const [currentMeasure, setCurrentMeasure] = useState('');
   const [transitions, setTransitions] = useState<DisciplinayRecord[]>([]);
+  const [cartas, setCartas] = useState<CartaDisciplinaria[]>([]);
   const cartasRef = useRef<unknown[]>([]);
 
   useEffect(() => {
@@ -45,6 +48,7 @@ export function useDisciplinaryData(
         if (cancelled) return;
 
         cartasRef.current = cartasData;
+        setCartas(cartasData as CartaDisciplinaria[]);
         setEtapas(etapasData);
 
         if (causasResult.data && causasResult.data.length > 0) {
@@ -79,6 +83,7 @@ export function useDisciplinaryData(
     etapas,
     currentMeasure,
     transitions,
+    cartas,
     setCurrentMeasure,
     setTransitions,
   };

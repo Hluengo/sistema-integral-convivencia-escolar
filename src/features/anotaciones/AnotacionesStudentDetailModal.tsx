@@ -17,7 +17,7 @@ import {
   type ActiveTab,
 } from './AnotacionesStudentDetailModal/constants';
 import StudentSummaryTab from './AnotacionesStudentDetailModal/StudentSummaryTab';
-import UploadPdfTab from './AnotacionesStudentDetailModal/UploadPdfTab';
+import RevisionTab from './AnotacionesStudentDetailModal/RevisionTab';
 import HistoryTab from './AnotacionesStudentDetailModal/HistoryTab';
 import { useDisciplinaryData } from './AnotacionesStudentDetailModal/hooks/useDisciplinaryData';
 import { usePdfProcessing } from './AnotacionesStudentDetailModal/hooks/usePdfProcessing';
@@ -58,6 +58,7 @@ export default function AnotacionesStudentDetailModal({
     etapas,
     currentMeasure,
     transitions,
+    cartas,
     setCurrentMeasure,
     setTransitions,
   } = useDisciplinaryData(student.id, student.full_name);
@@ -130,14 +131,15 @@ export default function AnotacionesStudentDetailModal({
             activeCase={activeCase}
             dateStr={dateStr}
             pendingParsedCount={parsedAnnotations.length}
-            onGoToUploadTab={() => setActiveTab('subir_pdf')}
+            onGoToRevisionTab={() => setActiveTab('revision')}
             onGoToDocumentos={handleGoToDocumentos}
           />
         );
-      case 'subir_pdf':
+      case 'revision':
         return (
-          <UploadPdfTab
+          <RevisionTab
             student={student}
+            cartas={cartas}
             isDragging={isDragging}
             setIsDragging={setIsDragging}
             isParsing={isParsing}
@@ -151,7 +153,7 @@ export default function AnotacionesStudentDetailModal({
           />
         );
       case 'historial':
-        return <HistoryTab annotations={annotations} />;
+        return <HistoryTab cartas={cartas} />;
       default:
         return null;
     }
@@ -247,7 +249,7 @@ export default function AnotacionesStudentDetailModal({
           </div>
         </div>
 
-        <div className="max-h-[65vh] overflow-y-auto p-4 sm:p-6">{renderTabContent()}</div>
+        <div className="h-[480px] overflow-y-auto p-4 sm:p-6">{renderTabContent()}</div>
       </div>
     </dialog>
   );

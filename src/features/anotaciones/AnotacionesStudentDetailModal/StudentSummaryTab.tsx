@@ -6,7 +6,7 @@
 import { Shield, AlertTriangle, History, CheckCircle2, FileText, ScrollText } from 'lucide-react';
 import type { Annotation } from '../../../types';
 import { getSemaphoricStyle } from '../../../lib/anotacionesUtils';
-import { formatDate, STATUS_STYLE, SEVERITY_BADGE, type StudentInfo, type DisciplinayRecord } from './constants';
+import { formatDate, STATUS_STYLE, type StudentInfo, type DisciplinayRecord } from './constants';
 
 interface StudentSummaryTabProps {
   student: StudentInfo;
@@ -17,7 +17,7 @@ interface StudentSummaryTabProps {
   activeCase: DisciplinayRecord | null;
   dateStr: string;
   pendingParsedCount?: number;
-  onGoToUploadTab?: () => void;
+  onGoToRevisionTab?: () => void;
   onGoToDocumentos?: () => void;
 }
 
@@ -30,7 +30,7 @@ export default function StudentSummaryTab({
   activeCase,
   dateStr,
   pendingParsedCount = 0,
-  onGoToUploadTab,
+  onGoToRevisionTab,
   onGoToDocumentos,
 }: StudentSummaryTabProps) {
   const negativeCount = annotations.filter((a) => a.type === 'Negativa').length;
@@ -50,13 +50,13 @@ export default function StudentSummaryTab({
                 {pendingParsedCount} anotación{pendingParsedCount !== 1 ? 'es' : ''} pendiente{pendingParsedCount !== 1 ? 's' : ''} de registrar desde PDF
               </p>
             </div>
-            {onGoToUploadTab && (
+            {onGoToRevisionTab && (
               <button
                 type="button"
-                onClick={onGoToUploadTab}
+                onClick={onGoToRevisionTab}
                 className="rounded-lg bg-brand-600 px-3 py-1.5 font-medium text-xs text-white transition-colors hover:bg-brand-700"
               >
-                Ir a subir PDF
+                Ir a Revisión
               </button>
             )}
           </div>
@@ -215,17 +215,7 @@ export default function StudentSummaryTab({
         </div>
       )}
 
-      {!currentMeasure && transitions.length === 0 && etapas.length === 0 && !activeCase && (
-        <div className="rounded-2xl border border-neutral-200/80 bg-white p-8 text-center shadow-xs">
-          <Shield className="mx-auto mb-3 h-12 w-12 text-neutral-300" />
-          <p className="text-neutral-500 text-sm">
-            No hay informacion adicional disponible del proceso disciplinario.
-          </p>
-          <p className="mt-1 text-neutral-400 text-xs">
-            Los datos apareceran a medida que se registren medidas y transiciones.
-          </p>
-        </div>
-      )}
+
     </div>
   );
 }
