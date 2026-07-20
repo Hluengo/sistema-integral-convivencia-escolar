@@ -1,7 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useMemo, useEffect, useState, useRef } from 'react';
-import { Printer, FileDown, FileText, AlertTriangle, CheckCircle2, X } from 'lucide-react';
 import type { Annotation } from '@/src/types';
 import { getCurrentDateStr, getSemaphoricStyle } from '@/src/lib/anotacionesUtils';
 import DocTypeSelector from './docgen/DocTypeSelector';
@@ -13,6 +12,10 @@ import { useSelectedAnnotations } from './docgen/hooks/useSelectedAnnotations';
 import { useDocumentExport } from './docgen/hooks/useDocumentExport';
 import { useDocumentRegistry } from './docgen/hooks/useDocumentRegistry';
 import { useRegisterCommitment } from './docgen/hooks/useRegisterCommitment';
+import GeneratorHeader from './docgen/components/GeneratorHeader';
+import ExportError from './docgen/components/ExportError';
+import EmissionConfirmDialog from './docgen/components/EmissionConfirmDialog';
+import RecentlyEmitted from './docgen/components/RecentlyEmitted';
 
 interface AnotacionesDocumentGeneratorProps {
   student: {
@@ -96,7 +99,7 @@ export default function AnotacionesDocumentGenerator({
     setShowEmissionConfirm(false);
   };
 
-  // Handle registration
+// Handle registration
   const handleRegisterCommitment = useMemo(
     () => registerCommitment.handleRegisterCommitment,
     [registerCommitment.handleRegisterCommitment]
@@ -217,65 +220,16 @@ export default function AnotacionesDocumentGenerator({
   // Render
   return (
     <div className="space-y-6">
-      {exportError && (
-        <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700 text-sm">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-          <span className="flex-1">{exportError}</span>
-          <button type="button" onClick={() => setExportError(null)} aria-label="Cerrar mensaje de error" className="shrink-0 text-red-400 hover:text-red-600">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
+      <ExportError message={exportError} onClose={() => setExportError(null)} />
 
-      {showEmissionConfirm && (
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 shadow-xs">
-          <div className="flex items-center gap-2 text-amber-800 text-sm">
-            <CheckCircle2 className="h-5 w-5 shrink-0 text-amber-600" />
-            <span>Documento exportado correctamente. ¿Marcar como emitido en el historial?</span>
-          </div>
-          <div className="flex shrink-0 gap-2">
-            <button
-              type="button"
-              onClick={handleEmitAfterExport}
-              className="rounded-lg bg-amber-600 px-3 py-1.5 font-medium text-white text-xs transition-colors hover:bg-amber-700"
-            >
-              Sí, marcar como emitida
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowEmissionConfirm(false)}
-              className="rounded-lg bg-white px-3 py-1.5 font-medium text-neutral-600 text-xs transition-colors hover:bg-neutral-100"
-            >
-              No
-            </button>
-          </div>
-        </div>
-      )}
+      <EmissionConfirmDialog
+        isOpen={showEmissionConfirm}
+        onConfirm={handleEmitAfterExport}
+        onCancel={() => setShowEmissionConfirm(false)}
+      />
 
-      {/* Header */}
-      <div className="flex flex-col justify-between gap-4 rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-xs sm:flex-row sm:items-center">
-        <div>
-          <h3 className="flex items-center gap-2 font-bold text-neutral-900 text-sm">
-            <FileText className="h-5 w-5 text-indigo-600" />
-            Generaci\u00f3n de Documentos Disciplinarios
-          </h3>
-          <p className="mt-1 text-neutral-500 text-xs">
-            Emisi\u00f3n de cartas de amonestaci\u00f3n, compromiso conductual y derivaci\u00f3n.
-          </p>
-        </div>
-        <div
-          className={`flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2 font-semibold text-xs ${semaphoric.badge}`}
-        >
-          <AlertTriangle className="h-4 w-4 shrink-0" />
-          <span>
-            {negativeCount >= 10
-              ? `Reiteraci\u00f3n de faltas (${negativeCount} negativas)`
-              : `Estado: ${negativeCount} anotaciones negativas`}
-          </span>
-        </div>
-      </div>
+      <GeneratorHeader negativeCount={negativeCount} semaphoric={semaphoric} />
 
-      {/* Main grid: Left form / Right preview */}
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
         {/* Left column */}
         <div className="space-y-6 lg:col-span-5">
@@ -330,7 +284,7 @@ export default function AnotacionesDocumentGenerator({
 
         {/* Right column */}
         <div className="space-y-4 lg:col-span-7">
-          {/* Document preview */}
+          {/* Document preview - already includes action buttons */}
           <DocumentPreview
             docType={docType}
             currentName={student.full_name}
@@ -350,65 +304,7 @@ export default function AnotacionesDocumentGenerator({
             onExportWord={handleExportWord}
           />
 
-          {/* Action buttons */}
-          <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-xs">
-            <p className="mb-3 font-semibold text-neutral-500 text-xs uppercase tracking-wider">
-              Acciones del Documento
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={handlePrintDoc}
-                disabled={isExporting}
-                className="inline-flex items-center gap-2 rounded-xl bg-neutral-700 px-4 py-2.5 font-medium text-sm text-white shadow-xs transition-colors hover:bg-neutral-800 disabled:opacity-50"
-              >
-                <Printer className="h-4 w-4" />
-                Imprimir
-              </button>
-              <button
-                type="button"
-                onClick={handleExportPDF}
-                disabled={isExporting}
-                className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 font-medium text-sm text-white shadow-xs transition-colors hover:bg-red-700 disabled:opacity-50"
-              >
-                <FileDown className="h-4 w-4" />
-                {isExporting ? 'Exportando...' : 'Descargar PDF'}
-              </button>
-              <button
-                type="button"
-                onClick={handleExportWord}
-                disabled={isExporting}
-                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 font-medium text-sm text-white shadow-xs transition-colors hover:bg-blue-700 disabled:opacity-50"
-              >
-                <FileDown className="h-4 w-4" />
-                {isExporting ? 'Exportando...' : 'Descargar Word'}
-              </button>
-            </div>
-          </div>
-
-          {/* Recently emitted */}
-          {documentRegistry.emittedList.length > 0 && (
-            <div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-xs">
-              <h4 className="mb-3 font-semibold text-neutral-500 text-xs uppercase tracking-wider">
-                \u00daltimos documentos emitidos
-              </h4>
-              <ul className="space-y-2">
-                {documentRegistry.emittedList.slice(0, 5).map((entry, i) => (
-                  <li
-                    key={entry.id || i}
-                    className="flex items-center justify-between rounded-lg bg-neutral-50 px-3 py-2 text-neutral-700 text-xs"
-                  >
-                    <span className="truncate font-medium">
-                      {entry.studentName || entry.student_name}
-                    </span>
-                    <span className="ml-2 shrink-0 text-neutral-400">
-                      {entry.emissionDate || entry.emission_date}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          <RecentlyEmitted emittedList={documentRegistry.emittedList} />
         </div>
       </div>
     </div>
