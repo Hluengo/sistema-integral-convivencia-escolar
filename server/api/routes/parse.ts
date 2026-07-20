@@ -1,13 +1,12 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { Router } from 'express';
-import { requireAuth } from '../middleware/auth.js';
 import { checkRateLimit } from '../services/rateLimit.js';
 import { callGroq } from '../services/groq.js';
 
 const router = Router();
 
-router.post('/parse-annotations', requireAuth, async (req, res) => {
+router.post('/parse-annotations', async (req, res) => {
   try {
     const { base64Data, mimeType } = req.body as {
       base64Data?: string;

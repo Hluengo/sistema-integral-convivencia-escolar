@@ -4,13 +4,12 @@
  */
 
 import { Router } from 'express';
-import { requireAuth } from '../middleware/auth';
 import { checkRateLimit } from '../lib/rateLimit';
 import { callGroq } from '../lib/groq';
 
 const router = Router();
 
-router.post('/parse-annotations', requireAuth, async (req, res) => {
+router.post('/parse-annotations', async (req, res) => {
   try {
     const { base64Data, mimeType } = req.body as Record<string, string>;
     if (!base64Data) {
