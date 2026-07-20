@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useState, useMemo, useRef } from 'react';
-import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, X, Loader2 } from 'lucide-react';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import type { Student } from './NewDisciplinaryProcessModal/constants';
@@ -73,6 +73,8 @@ export default function NewDisciplinaryProcessModal({
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [detected, setDetected] = useState<unknown[]>([]);
   const [classification, setClassification] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [registerError, setRegisterError] = useState<string | null>(null);
   const pdfStoragePathRef = useRef<string | null>(null);
 
   const fileRef = useRef<HTMLInputElement>(null);
@@ -87,6 +89,7 @@ export default function NewDisciplinaryProcessModal({
   }, [students]);
 
   const canNext = () => {
+    if (isRegistering) return false;
     if (step === 1) return !!course;
     if (step === 2) return !!selectedStudent;
     if (step === 3) return detected.length > 0;
@@ -129,10 +132,19 @@ export default function NewDisciplinaryProcessModal({
     }
   };
 
-  const handleRegister = () => {
-    if (!selectedStudent) return;
-    onRegisterCase(selectedStudent.id, detected, file ? { name: file.name, storagePath: pdfStoragePathRef.current } : undefined);
-    setStep(6);
+  const handleRegister = async () => {
+    if (!selectedStudent || isRegistering) return;
+    setIsRegistering(true);
+    setRegisterError(null);
+    try {
+      await onRegisterCase(selectedStudent.id, detected, file ? { name: file.name, storagePath: pdfStoragePathRef.current } : undefined);
+      onClose();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error al registrar el caso.';
+      setRegisterError(msg);
+    } finally {
+      setIsRegistering(false);
+    }
   };
 
   const stepIndicator = (i: number) => {
@@ -179,31 +191,25 @@ export default function NewDisciplinaryProcessModal({
             <ReviewStep
               studentName={selectedStudent?.full_name ?? ''}
               course={course ?? ''}
-              annotationCount={detected.length}
+              annotations={detected}
               classification={classification}
               fileName={file?.name ?? ''}
             />
           )}
-          {step === 6 && (
-            <div className="space-y-4 py-8 text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
-                <Check className="h-8 w-8 text-emerald-600" />
-              </div>
-              <h3 className="font-bold text-lg text-neutral-800">Proceso Registrado</h3>
-              <p className="text-neutral-500 text-sm">El caso ha sido registrado exitosamente.</p>
-              <button type="button" onClick={onClose} className="mt-4 rounded-xl bg-indigo-600 px-6 py-2.5 font-medium text-sm text-white hover:bg-indigo-700">
-                Cerrar
-              </button>
+
+          {registerError && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700 text-sm">
+              {registerError}
             </div>
           )}
         </div>
 
-        {step < 6 && (
+        {step <= 5 && (
           <div className="flex justify-between border-neutral-100 border-t p-4">
             <button
               type="button"
               onClick={() => setStep((s) => Math.max(1, s - 1))}
-              disabled={step === 1}
+              disabled={step === 1 || isRegistering}
               className="flex items-center gap-1.5 rounded-xl px-4 py-2 font-medium text-neutral-600 text-sm hover:bg-neutral-100 disabled:opacity-30"
             >
               <ArrowLeft className="h-4 w-4" /> Anterior
@@ -214,7 +220,11 @@ export default function NewDisciplinaryProcessModal({
               disabled={!canNext()}
               className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-5 py-2 font-medium text-sm text-white hover:bg-indigo-700 disabled:opacity-40"
             >
-              {step === 5 ? 'Registrar' : 'Siguiente'} <ArrowRight className="h-4 w-4" />
+              {isRegistering ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> Registrando...</>
+              ) : (
+                <>{step === 5 ? 'Registrar' : 'Siguiente'} <ArrowRight className="h-4 w-4" /></>
+              )}
             </button>
           </div>
         )}

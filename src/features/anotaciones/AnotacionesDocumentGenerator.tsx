@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useMemo, useEffect } from 'react';
-import { Printer, FileDown, FileText, AlertTriangle } from 'lucide-react';
+import { useMemo, useEffect, useState } from 'react';
+import { Printer, FileDown, FileText, AlertTriangle, X } from 'lucide-react';
 import type { Annotation } from '@/src/types';
 import { getCurrentDateStr, getSemaphoricStyle } from '@/src/lib/anotacionesUtils';
 import DocTypeSelector from './docgen/DocTypeSelector';
@@ -60,6 +60,9 @@ export default function AnotacionesDocumentGenerator({
     selectedAnnotations.selectAllNegative();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   // Handle registration
   const handleRegisterCommitment = useMemo(
@@ -124,13 +127,31 @@ export default function AnotacionesDocumentGenerator({
 
   // Export handlers
   const handleExportPDF = async () => {
-    const blob = await documentExport.generatePDF(previewContent);
-    documentExport.downloadBlob(blob, `Carta_de_${docType}_${student.full_name.replace(/\s+/g, '_')}.pdf`);
+    setExportError(null);
+    setIsExporting(true);
+    try {
+      const blob = await documentExport.generatePDF(previewContent);
+      documentExport.downloadBlob(blob, `Carta_de_${docType}_${student.full_name.replace(/\s+/g, '_')}.pdf`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error al generar el PDF.';
+      setExportError(msg);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleExportWord = async () => {
-    const blob = await documentExport.generateWord(previewContent);
-    documentExport.downloadBlob(blob, `Carta_de_${docType}_${student.full_name.replace(/\s+/g, '_')}.docx`);
+    setExportError(null);
+    setIsExporting(true);
+    try {
+      const blob = await documentExport.generateWord(previewContent);
+      documentExport.downloadBlob(blob, `Carta_de_${docType}_${student.full_name.replace(/\s+/g, '_')}.docx`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error al generar el documento Word.';
+      setExportError(msg);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handlePrintDoc = () => {
@@ -161,6 +182,16 @@ export default function AnotacionesDocumentGenerator({
   // Render
   return (
     <div className="space-y-6">
+      {exportError && (
+        <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700 text-sm">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span className="flex-1">{exportError}</span>
+          <button type="button" onClick={() => setExportError(null)} className="shrink-0 text-red-400 hover:text-red-600">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col justify-between gap-4 rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-xs sm:flex-row sm:items-center">
         <div>
@@ -268,7 +299,8 @@ export default function AnotacionesDocumentGenerator({
               <button
                 type="button"
                 onClick={handlePrintDoc}
-                className="inline-flex items-center gap-2 rounded-xl bg-neutral-700 px-4 py-2.5 font-medium text-sm text-white shadow-xs transition-colors hover:bg-neutral-800"
+                disabled={isExporting}
+                className="inline-flex items-center gap-2 rounded-xl bg-neutral-700 px-4 py-2.5 font-medium text-sm text-white shadow-xs transition-colors hover:bg-neutral-800 disabled:opacity-50"
               >
                 <Printer className="h-4 w-4" />
                 Imprimir
@@ -276,18 +308,20 @@ export default function AnotacionesDocumentGenerator({
               <button
                 type="button"
                 onClick={handleExportPDF}
-                className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 font-medium text-sm text-white shadow-xs transition-colors hover:bg-red-700"
+                disabled={isExporting}
+                className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 font-medium text-sm text-white shadow-xs transition-colors hover:bg-red-700 disabled:opacity-50"
               >
                 <FileDown className="h-4 w-4" />
-                Descargar PDF
+                {isExporting ? 'Exportando...' : 'Descargar PDF'}
               </button>
               <button
                 type="button"
                 onClick={handleExportWord}
-                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 font-medium text-sm text-white shadow-xs transition-colors hover:bg-blue-700"
+                disabled={isExporting}
+                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 font-medium text-sm text-white shadow-xs transition-colors hover:bg-blue-700 disabled:opacity-50"
               >
                 <FileDown className="h-4 w-4" />
-                Descargar Word
+                {isExporting ? 'Exportando...' : 'Descargar Word'}
               </button>
             </div>
           </div>

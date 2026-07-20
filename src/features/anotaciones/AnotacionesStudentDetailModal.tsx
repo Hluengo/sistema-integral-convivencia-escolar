@@ -88,6 +88,7 @@ export default function AnotacionesStudentDetailModal({
   );
 
   const negativeCount = annotations.filter((a) => a.type === 'Negativa').length;
+  const positiveCount = annotations.filter((a) => a.type === 'Positiva').length;
   const semaphoric = getSemaphoricStyle(negativeCount);
   const statusKey = student.disciplinary_status || 'Verde';
   const statusInfo = STATUS_STYLE[statusKey] || STATUS_STYLE.Verde;
@@ -183,8 +184,11 @@ export default function AnotacionesStudentDetailModal({
                   <span className="text-neutral-300">|</span>
                   <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 font-semibold text-[10px] ${statusInfo.bg} ${statusInfo.text}`}>
                     <span className={`inline-block h-1.5 w-1.5 rounded-full${semaphoric.dot}`} />
-                    {student.disciplinary_status}
+                    {statusInfo.label}
                   </span>
+                  <span className="text-neutral-300">|</span>
+                  <span className="text-neutral-500">{negativeCount} neg</span>
+                  <span className="text-emerald-600 font-semibold">{positiveCount} pos</span>
                 </div>
               </div>
             </div>
@@ -230,7 +234,7 @@ export default function AnotacionesStudentDetailModal({
           </div>
         </div>
 
-        <div className="p-4 sm:p-6">{renderTabContent()}</div>
+        <div className="max-h-[65vh] overflow-y-auto p-4 sm:p-6">{renderTabContent()}</div>
       </div>
     </div>
   );

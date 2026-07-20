@@ -43,10 +43,10 @@ export const SEVERITY_BADGE: Record<string, { bg: string; text: string; dot: str
 };
 
 export const STATUS_STYLE: Record<string, { bg: string; text: string; label: string }> = {
-  Verde: { bg: 'bg-emerald-100', text: 'text-emerald-800', label: 'Verde - Buen Comportamiento' },
-  Amarillo: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Amarillo - Advertencia' },
-  Naranja: { bg: 'bg-orange-100', text: 'text-orange-800', label: 'Naranja - Compromiso' },
-  Rojo: { bg: 'bg-rose-100', text: 'text-rose-800', label: 'Rojo - Alerta Crítica' },
+  Verde: { bg: 'bg-emerald-100', text: 'text-emerald-800', label: 'Sin medida activa' },
+  Amarillo: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Amonestación Escrita' },
+  Naranja: { bg: 'bg-orange-100', text: 'text-orange-800', label: 'Carta de Compromiso Conductual' },
+  Rojo: { bg: 'bg-rose-100', text: 'text-rose-800', label: 'Derivación a Convivencia Escolar' },
 };
 
 export const TAB_ICONS: Record<ActiveTab, React.ReactNode> = {
