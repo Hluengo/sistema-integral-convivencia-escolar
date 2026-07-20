@@ -747,22 +747,29 @@ router7.post("/parse-annotations", async (req, res) => {
       res.status(429).json({ error: "L\xEDmite de solicitudes alcanzado. Intente en un minuto." });
       return;
     }
-    let cleanText = textContent.replace(/\n{3,}/g, "\n\n").replace(/\s{3,}/g, "  ").replace(/Página\s*\d+.*/gi, "").replace(/^\s*[-•·]\s*/gm, "").trim();
+    let cleanText = textContent.replace(/\n{3,}/g, "\n\n").replace(/\s{3,}/g, "  ").replace(/P\xE1gina\s*\d+.*/gi, "").trim();
     const systemInstruction = `Eres un asistente experto de Convivencia Escolar en Chile.
-Analiza el texto de una hoja de vida y extrae TODAS las anotaciones en JSON.
+Analiza el texto extra\xEDdo de una hoja de vida estudiantil y extrae TODAS las anotaciones en JSON.
 
-Campos requeridos: text, date (YYYY-MM-DD), registered_by, type.
+CADA ANOTACI\xD3N es una entrada independiente en el listado (usualmente una fila o un p\xE1rrafo separado por bullet).
+NO dividas una anotaci\xF3n en m\xFAltiple entradas.
+NO incluyas encabezados, t\xEDtulos, res\xFAmenes, totales, sumarios o l\xEDneas de formato como anotaciones.
+NO inventes ni dupliques informaci\xF3n que no est\xE9 expl\xEDcitamente en el texto.
 
-type debe ser exactamente "Positiva" o "Negativa":
-- Positiva: felicitaciones, reconocimientos, logros, buena conducta, m\xE9ritos.
-- Negativa: atrasos, mala conducta, incumplimientos, faltas, observaciones disciplinarias, llamados de atenci\xF3n.
+Campos requeridos para cada anotaci\xF3n:
+- text: descripci\xF3n completa de la anotaci\xF3n (texto del evento).
+- date: fecha en formato YYYY-MM-DD. Si no hay fecha usa null.
+- registered_by: responsable que registr\xF3. Si no figura usa "Inspector\xEDa".
+- type: exactamente "Positiva" para logros, reconocimientos, buena conducta, m\xE9ritos;
+        exactamente "Negativa" para atrasos, mala conducta, incumplimientos, faltas, llamados de atenci\xF3n.
+- severity: para anotaciones Negativas: "Leve", "Grave", "Muy Grave" o "Grav\xEDsima" seg\xFAn la gravedad de la falta;
+            para anotaciones Positivas usa null.
 
-Si no figura registered_by usa "Inspector\xEDa".
 Devuelve SOLO el arreglo JSON, sin texto adicional.`;
     const messages = [
       {
         role: "user",
-        content: `Extrae TODAS las anotaciones de conducta del siguiente texto de hoja de vida. Clasifica CADA una como "Positiva" o "Negativa" seg\xFAn el tipo. Devuelve SOLO el JSON:
+        content: `Extrae TODAS las anotaciones del siguiente texto de hoja de vida. Respeta estrictamente la estructura del documento: cada entrada independiente (fila o bullet) es UNA anotaci\xF3n. Devuelve SOLO el JSON:
 
 --- INICIO DEL DOCUMENTO ---
 ${cleanText}

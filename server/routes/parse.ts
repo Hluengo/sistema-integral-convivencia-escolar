@@ -31,25 +31,31 @@ router.post('/parse-annotations', async (req, res) => {
       .replace(/\n{3,}/g, '\n\n')
       .replace(/\s{3,}/g, '  ')
       .replace(/Página\s*\d+.*/gi, '')
-      .replace(/^\s*[-•·]\s*/gm, '')
       .trim();
 
     const systemInstruction = `Eres un asistente experto de Convivencia Escolar en Chile.
-Analiza el texto de una hoja de vida y extrae TODAS las anotaciones en JSON.
+Analiza el texto extraído de una hoja de vida estudiantil y extrae TODAS las anotaciones en JSON.
 
-Campos requeridos: text, date (YYYY-MM-DD), registered_by, type.
+CADA ANOTACIÓN es una entrada independiente en el listado (usualmente una fila o un párrafo separado por bullet).
+NO dividas una anotación en múltiples entradas.
+NO incluyas encabezados, títulos, resúmenes, totales, sumarios o líneas de formato como anotaciones.
+NO inventes ni dupliques información que no esté explícitamente en el texto.
 
-type debe ser exactamente "Positiva" o "Negativa":
-- Positiva: felicitaciones, reconocimientos, logros, buena conducta, méritos.
-- Negativa: atrasos, mala conducta, incumplimientos, faltas, observaciones disciplinarias, llamados de atención.
+Campos requeridos para cada anotación:
+- text: descripción completa de la anotación (texto del evento).
+- date: fecha en formato YYYY-MM-DD. Si no hay fecha usa null.
+- registered_by: responsable que registró. Si no figura usa "Inspectoría".
+- type: exactamente "Positiva" para logros, reconocimientos, buena conducta, méritos;
+        exactamente "Negativa" para atrasos, mala conducta, incumplimientos, faltas, llamados de atención.
+- severity: para anotaciones Negativas: "Leve", "Grave", "Muy Grave" o "Gravísima" según la gravedad de la falta;
+            para anotaciones Positivas usa null.
 
-Si no figura registered_by usa "Inspectoría".
 Devuelve SOLO el arreglo JSON, sin texto adicional.`;
 
     const messages = [
       {
         role: 'user' as const,
-        content: `Extrae TODAS las anotaciones de conducta del siguiente texto de hoja de vida. Clasifica CADA una como "Positiva" o "Negativa" según el tipo. Devuelve SOLO el JSON:\n\n--- INICIO DEL DOCUMENTO ---\n${cleanText}\n--- FIN DEL DOCUMENTO ---`,
+        content: `Extrae TODAS las anotaciones del siguiente texto de hoja de vida. Respeta estrictamente la estructura del documento: cada entrada independiente (fila o bullet) es UNA anotación. Devuelve SOLO el JSON:\n\n--- INICIO DEL DOCUMENTO ---\n${cleanText}\n--- FIN DEL DOCUMENTO ---`,
       },
     ];
 
