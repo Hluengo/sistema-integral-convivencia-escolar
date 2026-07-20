@@ -4,6 +4,7 @@ import { useState, useMemo, useRef } from 'react';
 import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react';
 import type { Student } from './NewDisciplinaryProcessModal/constants';
 import { STEPS, sortCourses } from './NewDisciplinaryProcessModal/constants';
+import { supabase } from '../../lib/supabase';
 import CourseSelectStep from './NewDisciplinaryProcessModal/CourseSelectStep';
 import StudentSelectStep from './NewDisciplinaryProcessModal/StudentSelectStep';
 import UploadAnalyzeStep from './NewDisciplinaryProcessModal/UploadAnalyzeStep';
@@ -60,9 +61,13 @@ export default function NewDisciplinaryProcessModal({
       reader.readAsDataURL(file);
       await new Promise((resolve) => { reader.onload = resolve; });
       const base64 = (reader.result as string).split(',')[1];
+      const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch('/api/parse-annotations', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
         body: JSON.stringify({ base64Data: base64, mimeType: file.type || 'application/pdf', fileName: file.name }),
       });
       const data = await res.json();

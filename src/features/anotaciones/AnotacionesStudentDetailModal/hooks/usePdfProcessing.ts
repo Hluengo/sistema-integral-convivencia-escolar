@@ -50,9 +50,13 @@ export function usePdfProcessing(
 
         setParsingStatus('Enviando a procesamiento...');
 
+        const { data: { session } } = await supabase.auth.getSession();
         const response = await fetch('/api/parse-annotations', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+          },
           body: JSON.stringify({ fileName: file.name, fileData: base64Data, studentId }),
         });
 
