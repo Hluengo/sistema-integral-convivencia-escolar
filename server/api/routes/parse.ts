@@ -3,16 +3,22 @@
 import { Router } from 'express';
 import { checkRateLimit } from '../services/rateLimit.js';
 import { callGroq } from '../services/groq.js';
+import pdfParse from 'pdf-parse';
 
 const router = Router();
 
 router.post('/parse-annotations', async (req, res) => {
   try {
-    const { base64Data, mimeType } = req.body as {
+    const { fileData, base64Data, mimeType } = req.body as {
+      fileData?: string;
       base64Data?: string;
       mimeType?: string;
+      fileName?: string;
+      studentId?: string;
     };
-    if (!base64Data) {
+
+    const b64 = fileData || base64Data;
+    if (!b64) {
       res.status(400).json({ error: 'Faltan los datos del archivo en formato base64.' });
       return;
     }
@@ -25,9 +31,23 @@ router.post('/parse-annotations', async (req, res) => {
       return;
     }
 
-    const imageUrl = `data:${mimeType || 'application/pdf'};base64,${base64Data}`;
+    const buffer = Buffer.from(b64, 'base64');
+    let textContent = '';
 
-    const systemInstruction = `Eres un asistente experto de Convivencia Escolar en Chile, alineado al Reglamento Interno de Convivencia Escolar (RICE) 2026. Analiza el documento del estudiante y extrae TODAS las anotaciones o registros de conducta, reconociendo tanto las anotaciones NEGATIVAS (atrasos, uniforme, faltas disciplinarias) como las POSITIVAS (felicitaciones, meritos academicos).
+    try {
+      const pdfData = await pdfParse(buffer);
+      textContent = pdfData.text || '';
+    } catch {
+      res.status(400).json({ error: 'No se pudo leer el PDF. Asegúrate de que sea un archivo PDF válido con texto seleccionable.' });
+      return;
+    }
+
+    if (!textContent.trim()) {
+      res.status(400).json({ error: 'El PDF no contiene texto seleccionable. Escanea el documento con OCR o usa un PDF con texto digital.' });
+      return;
+    }
+
+    const systemInstruction = `Eres un asistente experto de Convivencia Escolar en Chile, alineado al Reglamento Interno de Convivencia Escolar (RICE) 2026. Analiza el texto extraído de la hoja de vida de un estudiante y extrae TODAS las anotaciones o registros de conducta, reconociendo tanto las anotaciones NEGATIVAS como las POSITIVAS.
 
 Clasifica la gravedad de forma rigurosa de acuerdo a las pautas del RICE 2026:
 - 'Leve' (Art. 24): Atrasos, uniforme incompleto, deficiencia de higiene, no entregar circulares, interrumpir clases, comer en el aula, etc.
@@ -36,18 +56,18 @@ Clasifica la gravedad de forma rigurosa de acuerdo a las pautas del RICE 2026:
 - 'Gravísima' (Art. 27 - Aula Segura): Agresion fisica severa, porte/uso de armas o artefactos explosivos (incluye encender fuego), drogas/alcohol, acoso o abuso sexual.
 
 Para cada anotacion identificada, estructura la informacion como un arreglo JSON con los siguientes campos:
-1. "text": Breve descripcion del hecho de la anotacion de forma clara y literal.
+1. "text": Descripcion del hecho de forma clara y literal.
 2. "date": Fecha en formato 'YYYY-MM-DD'. Si solo indica dia/mes, asume el año 2026.
-3. "severity": Gravedad de la anotacion, clasificada estrictamente como 'Leve', 'Grave', 'Muy Grave' o 'Gravísima'. Si es positiva, asignale siempre 'Leve'.
+3. "severity": Gravedad clasificada como 'Leve', 'Grave', 'Muy Grave' o 'Gravísima'. Si es positiva, asignale 'Leve'.
 4. "registered_by": Persona que registro la observacion. Si no figura, escribe "Inspectoría".
-5. "type": Tipo de anotacion, clasificada estrictamente como 'Positiva' o 'Negativa'.
+5. "type": 'Positiva' o 'Negativa'.
 
-Devuelve estrictamente un arreglo JSON que contenga las anotaciones del estudiante ordenadas cronologicamente.`;
+Devuelve estrictamente SOLO un arreglo JSON con TODAS las anotaciones encontradas. No incluyas texto adicional fuera del JSON.`;
 
     const messages = [
       {
         role: 'user' as const,
-        content: `Analiza la siguiente hoja de vida de estudiante y extrae todas las anotaciones en formato JSON:\n\nImagen del documento: ${imageUrl.substring(0, 500)}...`,
+        content: `A continuación está el texto completo extraído de la hoja de vida del estudiante. Extrae TODAS las anotaciones de conducta (tanto positivas como negativas) en formato JSON:\n\n--- INICIO DEL DOCUMENTO ---\n${textContent}\n--- FIN DEL DOCUMENTO ---`,
       },
     ];
 
