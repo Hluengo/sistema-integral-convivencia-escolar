@@ -35,7 +35,7 @@ export default function AnnotationsSelector({
       ) : (
         <div className="max-h-60 space-y-1.5 overflow-y-auto rounded-lg border border-neutral-200 p-2">
           {negativeAnnotations.map((a) => {
-            const isSelected = selectedAnnotationsForDoc.includes(a.id);
+            const isSelected = selectedAnnotationsSet.has(a.id);
             return (
               <button
                 key={a.id}

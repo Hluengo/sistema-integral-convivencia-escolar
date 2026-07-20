@@ -58,7 +58,7 @@ export default function CustomCommitments({
         <ul className="space-y-1.5">
           {customCommitments.map((c, i) => (
             <li
-              key={c || i}
+              key={`commitment-${i}-${c.slice(0, 20)}`}
               className="flex items-start gap-2 rounded-lg bg-neutral-50 px-3 py-2 text-neutral-700 text-sm"
             >
               <span className="flex-1">{c}</span>
