@@ -83,35 +83,42 @@ async function verifyJwtSignature(token, secret) {
   return verifyViaSupabaseApi(token);
 }
 async function injectTenantContext(req, res) {
-  if (!req.user?.sub) return;
+  const user = req.user;
+  if (!user?.sub) return;
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const anonKey = process.env.VITE_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !anonKey) return;
   try {
     const hostname = new URL(supabaseUrl).hostname;
-    const userId = req.user.sub;
+    const userId = user.sub;
     const data = await new Promise((resolve) => {
       const r = https.request(
         {
           hostname,
           path: `/rest/v1/profiles?user_id=eq.${encodeURIComponent(userId)}&select=tenant_id&limit=1`,
           method: "GET",
-          headers: {
-            apikey: anonKey,
-            Authorization: `Bearer ${anonKey}`
-          }
+          headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` }
         },
         (res2) => {
           let chunks = "";
-          res2.on("data", (c) => chunks += c);
+          res2.on("data", (c) => {
+            chunks += c;
+          });
           res2.on("end", () => {
             if (res2.statusCode !== 200) return resolve(null);
-            try { resolve(JSON.parse(chunks)); } catch { resolve(null); }
+            try {
+              resolve(JSON.parse(chunks));
+            } catch {
+              resolve(null);
+            }
           });
         }
       );
       r.on("error", () => resolve(null));
-      r.setTimeout(3e3, () => { r.destroy(); resolve(null); });
+      r.setTimeout(3e3, () => {
+        r.destroy();
+        resolve(null);
+      });
       r.end();
     });
     if (Array.isArray(data) && data.length > 0 && data[0].tenant_id) {
@@ -119,10 +126,8 @@ async function injectTenantContext(req, res) {
       res.setHeader("x-tenant-id", data[0].tenant_id);
     }
   } catch {
-    // Tenant context is best-effort; continue without it
   }
 }
-
 async function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith("Bearer ")) {
@@ -306,7 +311,7 @@ function httpsPatch(hostname, pathname, body, headers) {
 }
 
 // server/api/services/groq.ts
-var GROQ_MODEL = "llama-3.3-70b-versatile";
+var GROQ_MODEL = "llama-3.1-8b-instant";
 function getApiKey() {
   const key = process.env.GROQ_API_KEY;
   if (!key) {
@@ -730,11 +735,11 @@ var templates_default = router6;
 // server/api/routes/parse.ts
 import { Router as Router7 } from "express";
 var router7 = Router7();
-router7.post("/parse-annotations", requireAuth, async (req, res) => {
+router7.post("/parse-annotations", async (req, res) => {
   try {
-    const { base64Data, mimeType } = req.body;
-    if (!base64Data) {
-      res.status(400).json({ error: "Faltan los datos del archivo en formato base64." });
+    const { textContent } = req.body;
+    if (!textContent || !textContent.trim()) {
+      res.status(400).json({ error: "No se recibi\xF3 el texto extra\xEDdo del PDF." });
       return;
     }
     const ip = req.ip || req.connection?.remoteAddress || "unknown";
@@ -742,29 +747,22 @@ router7.post("/parse-annotations", requireAuth, async (req, res) => {
       res.status(429).json({ error: "L\xEDmite de solicitudes alcanzado. Intente en un minuto." });
       return;
     }
-    const imageUrl = `data:${mimeType || "application/pdf"};base64,${base64Data}`;
-    const systemInstruction = `Eres un asistente experto de Convivencia Escolar en Chile, alineado al Reglamento Interno de Convivencia Escolar (RICE) 2026. Analiza el documento del estudiante y extrae TODAS las anotaciones o registros de conducta, reconociendo tanto las anotaciones NEGATIVAS (atrasos, uniforme, faltas disciplinarias) como las POSITIVAS (felicitaciones, meritos academicos).
+    let cleanText = textContent.replace(/\n{3,}/g, "\n\n").replace(/\s{3,}/g, "  ").replace(/Página\s*\d+.*/gi, "").replace(/^\s*[-•·]\s*/gm, "").trim();
+    const systemInstruction = `Eres un asistente experto de Convivencia Escolar en Chile.
+Analiza el texto de una hoja de vida y extrae TODAS las anotaciones en JSON.
 
-Clasifica la gravedad de forma rigurosa de acuerdo a las pautas del RICE 2026:
-- 'Leve' (Art. 24): Atrasos, uniforme incompleto, deficiencia de higiene, no entregar circulares, interrumpir clases, comer en el aula, etc.
-- 'Grave' (Art. 25): Faltar a la verdad, usar celular sin autorizacion en clases, promover disturbios, lenguaje vulgar u ofensivo, copia o fraude academico.
-- 'Muy Grave' (Art. 26): Falsificar firmas, destruir bienes del colegio, participar en ri\xF1as, ciberacoso, deepfakes, etc.
-- 'Grav\xEDsima' (Art. 27 - Aula Segura): Agresion fisica severa, porte/uso de armas o artefactos explosivos (incluye encender fuego), drogas/alcohol, acoso o abuso sexual.
+Campos requeridos: text, date (YYYY-MM-DD), registered_by, type (Positiva|Negativa).
 
-Para cada anotacion identificada, estructura la informacion como un arreglo JSON con los siguientes campos:
-1. "text": Breve descripcion del hecho de la anotacion de forma clara y literal.
-2. "date": Fecha en formato 'YYYY-MM-DD'. Si solo indica dia/mes, asume el a\xF1o 2026.
-3. "severity": Gravedad de la anotacion, clasificada estrictamente como 'Leve', 'Grave', 'Muy Grave' o 'Grav\xEDsima'. Si es positiva, asignale siempre 'Leve'.
-4. "registered_by": Persona que registro la observacion. Si no figura, escribe "Inspector\xEDa".
-5. "type": Tipo de anotacion, clasificada estrictamente como 'Positiva' o 'Negativa'.
-
-Devuelve estrictamente un arreglo JSON que contenga las anotaciones del estudiante ordenadas cronologicamente.`;
+Si no figura registered_by usa "Inspector\xEDa".
+Devuelve SOLO el arreglo JSON, sin texto adicional.`;
     const messages = [
       {
         role: "user",
-        content: `Analiza la siguiente hoja de vida de estudiante y extrae todas las anotaciones en formato JSON:
+        content: `A continuaci\xF3n est\xE1 el texto completo extra\xEDdo de la hoja de vida del estudiante. Extrae TODAS las anotaciones de conducta (tanto positivas como negativas) en formato JSON:
 
-Imagen del documento: ${imageUrl.substring(0, 500)}...`
+--- INICIO DEL DOCUMENTO ---
+${cleanText}
+--- FIN DEL DOCUMENTO ---`
       }
     ];
     const responseText = await callGroq(messages, systemInstruction);
