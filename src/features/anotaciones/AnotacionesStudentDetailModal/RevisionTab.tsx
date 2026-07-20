@@ -266,7 +266,7 @@ export default function RevisionTab({
               const badge = SEVERITY_BADGE[severity] || SEVERITY_BADGE.Leve;
               return (
                 <div
-                  key={a.id || `pdf-ann-${index}`}
+                  key={a.id || `pdf-ann-${severity}-${a.type || 'Negativa'}-${(a.text || '').slice(0, 40)}`}
                   className="flex items-start gap-3 rounded-xl border border-neutral-100 bg-neutral-50 p-3"
                 >
                   <span className={`mt-1.5 h-2 w-2 flex-shrink-0 rounded-full${badge.dot}`} />
