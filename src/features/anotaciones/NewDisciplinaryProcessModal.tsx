@@ -186,7 +186,7 @@ export default function NewDisciplinaryProcessModal({
               onAnalyze={handleAnalyze}
             />
           )}
-          {step === 4 && <ClassificationStep value={classification} onChange={setClassification} />}
+          {step === 4 && <ClassificationStep value={classification} onChange={setClassification} detected={detected} />}
           {step === 5 && (
             <ReviewStep
               studentName={selectedStudent?.full_name ?? ''}

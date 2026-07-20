@@ -32,7 +32,7 @@ export default function StudentSummaryTab({
   onGoToUploadTab,
 }: StudentSummaryTabProps) {
   const negativeCount = annotations.filter((a) => a.type === 'Negativa').length;
-  const positiveCount = student.positive_annotations_count ?? annotations.filter((a) => a.type === 'Positiva').length;
+  const positiveCount = Number(student.positive_annotations_count) || annotations.filter((a) => a.type === 'Positiva').length || 0;
   const semaphoric = getSemaphoricStyle(negativeCount);
   const statusKey = student.disciplinary_status || 'Verde';
   const statusInfo = STATUS_STYLE[statusKey] || STATUS_STYLE.Verde;

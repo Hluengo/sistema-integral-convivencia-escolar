@@ -87,8 +87,8 @@ export default function AnotacionesStudentDetailModal({
     async (id) => { const { fetchEtapas } = await import('@/src/services/etapas.service'); return fetchEtapas(id); }
   );
 
-  const negativeCount = annotations.filter((a) => a.type === 'Negativa').length;
-  const positiveCount = annotations.filter((a) => a.type === 'Positiva').length;
+  const negativeCount = annotations.filter((a) => a.type === 'Negativa').length || 0;
+  const positiveCount = annotations.filter((a) => a.type === 'Positiva').length || 0;
   const semaphoric = getSemaphoricStyle(negativeCount);
   const statusKey = student.disciplinary_status || 'Verde';
   const statusInfo = STATUS_STYLE[statusKey] || STATUS_STYLE.Verde;

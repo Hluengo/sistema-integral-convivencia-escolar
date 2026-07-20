@@ -5,12 +5,29 @@ import { CLASSIFICATION_OPTIONS } from './constants';
 interface ClassificationStepProps {
   value: string;
   onChange: (value: string) => void;
+  detected: unknown[];
 }
 
-export default function ClassificationStep({ value, onChange }: ClassificationStepProps) {
+export default function ClassificationStep({ value, onChange, detected }: ClassificationStepProps) {
+  const negativeCount = detected.filter((a) => (a as Record<string, string>).type !== 'Positiva').length;
+  const positiveCount = detected.filter((a) => (a as Record<string, string>).type === 'Positiva').length;
+
   return (
     <div className="space-y-4">
       <p className="font-medium text-neutral-600 text-sm">Clasificación de la Medida</p>
+
+      {detected.length > 0 && (
+        <div className="rounded-xl bg-neutral-50 p-3 text-sm">
+          <p className="text-neutral-600">
+            <span className="font-semibold text-neutral-800">{detected.length}</span> anotaciones detectadas:
+            {' '}<span className="font-semibold text-red-600">{negativeCount} negativas</span>
+            {positiveCount > 0 && (
+              <>, <span className="font-semibold text-emerald-600">{positiveCount} positivas</span></>
+            )}
+          </p>
+        </div>
+      )}
+
       <div className="space-y-2">
         {CLASSIFICATION_OPTIONS.map((opt) => (
           <button

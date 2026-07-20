@@ -23,11 +23,18 @@ interface StudentRowData {
   course_name?: string;
 }
 
+const DISC_STATUS: Record<string, { text: string; bg: string }> = {
+  Verde: { text: 'Sin medida activa', bg: 'bg-emerald-100 text-emerald-800' },
+  Amarillo: { text: 'Amonestación Escrita', bg: 'bg-yellow-100 text-yellow-800' },
+  Naranja: { text: 'Carta de Compromiso Conductual', bg: 'bg-orange-100 text-orange-800' },
+  Rojo: { text: 'Derivación a Convivencia Escolar', bg: 'bg-rose-100 text-rose-800' },
+};
+
 const getDisciplinaryStatusLabel = (count: number): { text: string; bg: string } => {
-  if (count < 5) { return { text: 'Verde - Buen Comportamiento', bg: 'bg-emerald-100 text-emerald-800' }; }
-  if (count < 10) { return { text: 'Amarillo - Advertencia', bg: 'bg-yellow-100 text-yellow-800' }; }
-  if (count < 15) { return { text: 'Naranja - Compromiso', bg: 'bg-orange-100 text-orange-800' }; }
-  return { text: 'Rojo - Alerta Crítica', bg: 'bg-rose-100 text-rose-800' };
+  if (count < 5) { return DISC_STATUS.Verde; }
+  if (count < 10) { return DISC_STATUS.Amarillo; }
+  if (count < 15) { return DISC_STATUS.Naranja; }
+  return DISC_STATUS.Rojo;
 };
 
 interface AnotacionesStudentTableProps {
@@ -223,7 +230,7 @@ export default memo(function AnotacionesStudentTable({
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-center text-neutral-600 text-sm">
                         <span className="inline-flex items-center justify-center rounded-full bg-emerald-50 px-2.5 py-0.5 font-semibold text-emerald-700 text-xs">
-                          {student.positive_annotations_count ?? 0}
+                          {Number(student.positive_annotations_count) || 0}
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-center text-neutral-600 text-sm">
