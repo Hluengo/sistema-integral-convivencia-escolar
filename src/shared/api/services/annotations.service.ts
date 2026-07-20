@@ -40,6 +40,7 @@ export async function saveAnnotation(annotation: {
   const tenantId = useAuthStore.getState().tenantId;
   const { error } = await supabase.from('inspectorate_records').insert({
     student_id: annotation.student_id,
+    date_time: new Date().toISOString(),
     observation: annotation.observation,
     severity: annotation.severity,
     type: annotation.type,

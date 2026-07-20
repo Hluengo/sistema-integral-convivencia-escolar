@@ -143,6 +143,7 @@ export function usePdfProcessing(
         const a = ann as Record<string, string | undefined>;
         return {
           student_id: studentId,
+          date_time: new Date().toISOString(),
           observation: a.text || a.observation || '',
           severity: a.severity || 'Leve',
           type: a.type || 'Negativa',
