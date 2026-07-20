@@ -34,28 +34,32 @@ router.post('/parse-annotations', async (req, res) => {
       .trim();
 
     const systemInstruction = `Eres un asistente experto de Convivencia Escolar en Chile.
-Analiza el texto extraído de una hoja de vida estudiantil y extrae TODAS las anotaciones en JSON.
+Analiza el texto de una hoja de vida estudiantil y extrae TODAS las anotaciones en JSON.
 
-CADA ANOTACIÓN es una entrada independiente en el listado (usualmente una fila o un párrafo separado por bullet).
-NO dividas una anotación en múltiples entradas.
-NO incluyas encabezados, títulos, resúmenes, totales, sumarios o líneas de formato como anotaciones.
-NO inventes ni dupliques información que no esté explícitamente en el texto.
+CADA ANOTACIÓN en la hoja de vida tiene esta estructura de bloque:
+[Fecha] Tipo: Positiva o Negativa
+Categoria: [categoría]
+Anotación:
+[texto del evento, puede ocupar varias líneas]
+Profesor: [nombre del profesor]
+
+CADA bloque fecha+tipo+categoría+texto+profesor = UNA anotación.
+NO dividas un bloque en múltiples anotaciones.
+NO incluyas encabezados, títulos, resúmenes, totales o líneas sueltas como anotaciones.
+NO inventes información que no esté en el texto.
 
 Campos requeridos para cada anotación:
-- text: descripción completa de la anotación (texto del evento).
-- date: fecha en formato YYYY-MM-DD. Si no hay fecha usa null.
-- registered_by: responsable que registró. Si no figura usa "Inspectoría".
-- type: exactamente "Positiva" para logros, reconocimientos, buena conducta, méritos;
-        exactamente "Negativa" para atrasos, mala conducta, incumplimientos, faltas, llamados de atención.
-- severity: para anotaciones Negativas: "Leve", "Grave", "Muy Grave" o "Gravísima" según la gravedad de la falta;
-            para anotaciones Positivas usa null.
+- text: TODO el texto del evento (líneas después de "Anotación:" hasta antes de "Profesor:").
+- date: fecha en formato YYYY-MM-DD (primer token del bloque).
+- registered_by: el nombre después de "Profesor:" en cada bloque. Si no hay usa "Inspectoría".
+- type: exactamente "Positiva" o "Negativa", según el texto "Tipo:" en el bloque.
 
 Devuelve SOLO el arreglo JSON, sin texto adicional.`;
 
     const messages = [
       {
         role: 'user' as const,
-        content: `Extrae TODAS las anotaciones del siguiente texto de hoja de vida. Respeta estrictamente la estructura del documento: cada entrada independiente (fila o bullet) es UNA anotación. Devuelve SOLO el JSON:\n\n--- INICIO DEL DOCUMENTO ---\n${cleanText}\n--- FIN DEL DOCUMENTO ---`,
+        content: `Extrae TODAS las anotaciones del siguiente texto de hoja de vida. Cada bloque fecha+tipo+categoría+texto+profesor es UNA anotación. Respeta esa estructura. Devuelve SOLO el JSON:\n\n--- INICIO DEL DOCUMENTO ---\n${cleanText}\n--- FIN DEL DOCUMENTO ---`,
       },
     ];
 

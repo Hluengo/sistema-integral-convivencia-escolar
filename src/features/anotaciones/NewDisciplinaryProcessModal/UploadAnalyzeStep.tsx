@@ -3,12 +3,12 @@
 import { useState, useCallback, useRef } from 'react';
 import { Upload, FileText, Loader2, AlertTriangle, Star } from 'lucide-react';
 
-export const severityDot = (severity?: string) => {
+export const severityDot = (severity?: string | null) => {
   switch (severity) {
     case 'Leve': return 'bg-emerald-500';
     case 'Grave': return 'bg-yellow-500';
     case 'Muy Grave': return 'bg-orange-500';
-    default: return 'bg-rose-500';
+    default: return 'bg-neutral-300';
   }
 };
 
@@ -113,7 +113,7 @@ export default function UploadAnalyzeStep({
                   <p className="text-neutral-400 text-xs">{ann.date || 'Sin fecha'}</p>
                   <p className="text-neutral-700 text-sm">{ann.text}</p>
                   <p className="text-neutral-400 text-xs">
-                    {ann.registered_by} - {ann.severity} ({ann.type})
+                    {ann.registered_by}{ann.severity ? ` - ${ann.severity}` : ''} ({ann.type})
                   </p>
                 </div>
               </div>

@@ -749,27 +749,31 @@ router7.post("/parse-annotations", async (req, res) => {
     }
     let cleanText = textContent.replace(/\n{3,}/g, "\n\n").replace(/\s{3,}/g, "  ").replace(/P\xE1gina\s*\d+.*/gi, "").trim();
     const systemInstruction = `Eres un asistente experto de Convivencia Escolar en Chile.
-Analiza el texto extra\xEDdo de una hoja de vida estudiantil y extrae TODAS las anotaciones en JSON.
+Analiza el texto de una hoja de vida estudiantil y extrae TODAS las anotaciones en JSON.
 
-CADA ANOTACI\xD3N es una entrada independiente en el listado (usualmente una fila o un p\xE1rrafo separado por bullet).
-NO dividas una anotaci\xF3n en m\xFAltiple entradas.
-NO incluyas encabezados, t\xEDtulos, res\xFAmenes, totales, sumarios o l\xEDneas de formato como anotaciones.
-NO inventes ni dupliques informaci\xF3n que no est\xE9 expl\xEDcitamente en el texto.
+CADA ANOTACI\xD3N en la hoja de vida tiene esta estructura de bloque:
+[Fecha] Tipo: Positiva o Negativa
+Categoria: [categor\xEDa]
+Anotaci\xF3n:
+[texto del evento, puede ocupar varias l\xEDneas]
+Profesor: [nombre del profesor]
+
+CADA bloque fecha+tipo+categor\xEDa+texto+profesor = UNA anotaci\xF3n.
+NO dividas un bloque en m\xFAltiple anotaciones.
+NO incluyas encabezados, t\xEDtulos, res\xFAmenes, totales o l\xEDneas sueltas como anotaciones.
+NO inventes informaci\xF3n que no est\xE9 en el texto.
 
 Campos requeridos para cada anotaci\xF3n:
-- text: descripci\xF3n completa de la anotaci\xF3n (texto del evento).
-- date: fecha en formato YYYY-MM-DD. Si no hay fecha usa null.
-- registered_by: responsable que registr\xF3. Si no figura usa "Inspector\xEDa".
-- type: exactamente "Positiva" para logros, reconocimientos, buena conducta, m\xE9ritos;
-        exactamente "Negativa" para atrasos, mala conducta, incumplimientos, faltas, llamados de atenci\xF3n.
-- severity: para anotaciones Negativas: "Leve", "Grave", "Muy Grave" o "Grav\xEDsima" seg\xFAn la gravedad de la falta;
-            para anotaciones Positivas usa null.
+- text: TODO el texto del evento (l\xEDneas despu\xE9s de "Anotaci\xF3n:" hasta antes de "Profesor:").
+- date: fecha en formato YYYY-MM-DD (primer token del bloque).
+- registered_by: el nombre despu\xE9s de "Profesor:" en cada bloque. Si no hay usa "Inspector\xEDa".
+- type: exactamente "Positiva" o "Negativa", seg\xFAn el texto "Tipo:" en el bloque.
 
 Devuelve SOLO el arreglo JSON, sin texto adicional.`;
     const messages = [
       {
         role: "user",
-        content: `Extrae TODAS las anotaciones del siguiente texto de hoja de vida. Respeta estrictamente la estructura del documento: cada entrada independiente (fila o bullet) es UNA anotaci\xF3n. Devuelve SOLO el JSON:
+        content: `Extrae TODAS las anotaciones del siguiente texto de hoja de vida. Cada bloque fecha+tipo+categor\xEDa+texto+profesor es UNA anotaci\xF3n. Respeta esa estructura. Devuelve SOLO el JSON:
 
 --- INICIO DEL DOCUMENTO ---
 ${cleanText}
