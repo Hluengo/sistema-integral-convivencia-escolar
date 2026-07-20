@@ -1,6 +1,25 @@
 import { useState, useCallback } from 'react';
+import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
+import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { supabase } from '@/src/lib/supabase';
 import type { Annotation } from '@/src/types';
+
+GlobalWorkerOptions.workerSrc = workerUrl;
+
+async function extractPdfText(file: File): Promise<string> {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await getDocument({ data: arrayBuffer }).promise;
+  let text = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items
+      .filter((item) => 'str' in item)
+      .map((item) => (item as { str: string }).str)
+      .join(' ') + '\n';
+  }
+  return text.trim();
+}
 
 interface UsePdfProcessingResult {
   isDragging: boolean;
@@ -42,11 +61,8 @@ export function usePdfProcessing(
       setParsedAnnotations([]);
 
       try {
-        const buffer = await file.arrayBuffer();
-        const bytes = new Uint8Array(buffer);
-        let binary = '';
-        bytes.forEach((b) => { binary += String.fromCharCode(b); });
-        const base64Data = btoa(binary);
+        setParsingStatus('Extrayendo texto del PDF...');
+        const textContent = await extractPdfText(file);
 
         setParsingStatus('Enviando a procesamiento...');
 
@@ -57,7 +73,7 @@ export function usePdfProcessing(
             'Content-Type': 'application/json',
             ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
           },
-          body: JSON.stringify({ fileName: file.name, fileData: base64Data, studentId }),
+          body: JSON.stringify({ fileName: file.name, textContent, studentId }),
         });
 
         if (!response.ok) {

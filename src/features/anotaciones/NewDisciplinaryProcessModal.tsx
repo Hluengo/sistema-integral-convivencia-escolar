@@ -2,6 +2,8 @@
 
 import { useState, useMemo, useRef } from 'react';
 import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react';
+import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
+import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import type { Student } from './NewDisciplinaryProcessModal/constants';
 import { STEPS, sortCourses } from './NewDisciplinaryProcessModal/constants';
 import { supabase } from '../../lib/supabase';
@@ -10,6 +12,23 @@ import StudentSelectStep from './NewDisciplinaryProcessModal/StudentSelectStep';
 import UploadAnalyzeStep from './NewDisciplinaryProcessModal/UploadAnalyzeStep';
 import ClassificationStep from './NewDisciplinaryProcessModal/ClassificationStep';
 import ReviewStep from './NewDisciplinaryProcessModal/ReviewStep';
+
+GlobalWorkerOptions.workerSrc = workerUrl;
+
+async function extractPdfText(file: File): Promise<string> {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await getDocument({ data: arrayBuffer }).promise;
+  let text = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items
+      .filter((item) => 'str' in item)
+      .map((item) => (item as { str: string }).str)
+      .join(' ') + '\n';
+  }
+  return text.trim();
+}
 
 interface NewDisciplinaryProcessModalProps {
   students: Student[];
@@ -57,10 +76,7 @@ export default function NewDisciplinaryProcessModal({
     setIsAnalyzing(true);
     setAnalysisError(null);
     try {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      await new Promise((resolve) => { reader.onload = resolve; });
-      const base64 = (reader.result as string).split(',')[1];
+      const textContent = await extractPdfText(file);
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch('/api/parse-annotations', {
         method: 'POST',
@@ -68,7 +84,7 @@ export default function NewDisciplinaryProcessModal({
           'Content-Type': 'application/json',
           ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
         },
-        body: JSON.stringify({ base64Data: base64, mimeType: file.type || 'application/pdf', fileName: file.name }),
+        body: JSON.stringify({ textContent, fileName: file.name }),
       });
       const data = await res.json();
       if (data.success && data.annotations) {

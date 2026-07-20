@@ -2,7 +2,7 @@
 
 import { httpsPost } from '../lib/https.js';
 
-const GROQ_MODEL = 'llama-3.3-70b-versatile';
+const GROQ_MODEL = 'llama-3.1-8b-instant';
 
 function getApiKey(): string {
   const key = process.env.GROQ_API_KEY;

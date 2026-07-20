@@ -61,7 +61,7 @@ export default defineConfig(() => {
             // Only split out the biggest vendor deps to keep chunks reasonable.
             // Everything else (React, scheduler, radix, tanstack, zustand, etc.)
             // stays together in vendor to avoid cross-chunk circular deps.
-            if (id.includes('pdf-lib')) {
+            if (id.includes('pdf-lib') || id.includes('pdfjs-dist')) {
               return 'pdf';
             }
             if (id.includes('docx')) {
