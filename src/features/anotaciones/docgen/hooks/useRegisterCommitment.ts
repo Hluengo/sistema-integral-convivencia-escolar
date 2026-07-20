@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { supabase } from '@/src/lib/supabase';
+import { useAuthStore } from '@/src/stores/authStore';
 
 interface RegisterCommitmentParams {
   student: {
@@ -46,8 +47,10 @@ export function useRegisterCommitment() {
 
     setIsRegistering(true);
     try {
+      const tenantId = useAuthStore.getState().tenantId;
       const { error } = await supabase.from('cartas_disciplinarias').insert({
         student_id: student.id,
+        tenant_id: tenantId,
         letter_type:
           docType === 'amonestacion'
             ? 'Amonestaci\u00f3n Escrita'
