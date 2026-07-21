@@ -116,7 +116,10 @@ export default function AnotacionesDocumentGenerator({
       docObservations: documentState.docObservations,
       compromisoStatus: 'Vigente',
       teachers,
-      onSuccess: (entry) => documentRegistry.addEntry(entry),
+      onSuccess: (entry) => {
+        documentRegistry.addEntry(entry);
+        handleExportPDF();
+      },
       setIsRegistering: documentState.setIsRegistering,
     });
   };

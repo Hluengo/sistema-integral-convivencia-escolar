@@ -66,7 +66,7 @@ if (!user) return res.status(401).json({ ok: false, error: 'No autenticado' });
 1. **memory** — Memoria persistente entre sesiones
 2. **sequential-thinking** — Razonamiento paso a paso
 3. **codebase-memory** — Memoria del codebase
-4. **supabase** — Acceso directo a Supabase (deshabilitado, requiere token)
+4. **supabase** — Acceso directo a Supabase (habilitado con service role key)
 5. **context7** — Documentación actualizada de librerías
 
 ### Agentes Educativos (8 especializados)

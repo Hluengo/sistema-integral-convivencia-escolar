@@ -26,11 +26,11 @@
 - **Cuándo usar:** Cuando se necesita API syntax o configuración
 - **Comando:** `npx -y @upstash/context7-mcp`
 
-### 5. supabase (deshabilitado)
+### 5. supabase (habilitado)
 - **Propósito:** Acceso directo a Supabase
 - **Uso:** Consultas, migraciones, administración de DB
 - **Cuándo usar:** Cuando se necesita acceso directo a la base de datos
-- **Requiere:** `SUPABASE_ACCESS_TOKEN` en variables de entorno
+- **Requiere:** `SUPABASE_SERVICE_ROLE_KEY` en .env.local
 - **Comando:** `npx -y @supabase/mcp-server`
 
 ## Antes de Usar MCP

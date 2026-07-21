@@ -121,7 +121,8 @@ export default function DocumentForm({
         </div>
       )}
 
-      {/* Observaciones */}
+      {/* Observaciones — solo para compromiso y derivación */}
+      {docType !== 'amonestacion' && (
       <div>
         <label
           htmlFor="doc-observations"
@@ -138,6 +139,7 @@ export default function DocumentForm({
           className="w-full resize-y rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
         />
       </div>
+      )}
 
       {/* Anotaciones negativas seleccionables */}
       <fieldset>
