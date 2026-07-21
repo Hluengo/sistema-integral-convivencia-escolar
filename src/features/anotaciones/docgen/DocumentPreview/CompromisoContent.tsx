@@ -95,8 +95,7 @@ export default function CompromisoContent(props: DocContentProps) {
           </div>
         </div>
         <p className="mt-4 text-center text-[10px] text-neutral-400 italic">
-          Firmado en {dateStr}, en conformidad con el debido proceso establecido en la Circular
-          482/2018 y la Ley 21.809.
+          El incumplimiento de los acuerdos y objetivos de mejora establecidos en este documento derivará en una escalada a falta muy grave y derivación al equipo de convivencia escolar.
         </p>
       </div>
     </div>

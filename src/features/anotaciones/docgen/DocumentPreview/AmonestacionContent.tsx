@@ -16,9 +16,6 @@ export default function AmonestacionContent(props: DocContentProps) {
         <DataRow label="Apoderado" value={apoderadoName || '________________'} />
         <DataRow label="Fecha de Emisión" value={dateStr} />
         <DataRow label="N° de Anotaciones Negativas" value={negativeCount} />
-        <p className="mt-1 text-neutral-500 text-xs italic">
-          En virtud de lo dispuesto en el Reglamento Interno RICE 2026 y la Circular 482/2018.
-        </p>
       </Section>
 
       <Section number={2} title="Hechos">
@@ -65,8 +62,7 @@ export default function AmonestacionContent(props: DocContentProps) {
           <li>Reparar el daño causado, si correspondiere, según lo acordado con Convivencia Escolar.</li>
         </ol>
         <p className="mt-3 text-[10px] text-neutral-500 italic">
-          El incumplimiento de los presentes compromisos podrá derivar en la aplicación de medidas
-          disciplinarias de mayor severidad, conforme al debido proceso y la normativa vigente.
+          La reincidencia en la conducta posterior a la firma de esta comunicación oficial derivará en una escalada a falta grave.
         </p>
       </Section>
 
