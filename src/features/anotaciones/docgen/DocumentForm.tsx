@@ -8,12 +8,12 @@ interface DocumentFormProps {
   docType: string;
   apoderadoName: string;
   onApoderadoNameChange: (value: string) => void;
+  inspectorName: string;
+  onInspectorNameChange: (value: string) => void;
   coordinatorName: string;
   onCoordinatorNameChange: (value: string) => void;
   emittedBy: string;
   onEmittedByChange: (value: string) => void;
-  docObservations: string;
-  onObservationsChange: (value: string) => void;
   selectedAnnotationsForDoc: string[];
   onToggleAnnotation: (id: string) => void;
   compromisoStatus: string;
@@ -38,12 +38,12 @@ export default function DocumentForm({
   docType,
   apoderadoName,
   onApoderadoNameChange,
+  inspectorName,
+  onInspectorNameChange,
   coordinatorName,
   onCoordinatorNameChange,
   emittedBy,
   onEmittedByChange,
-  docObservations,
-  onObservationsChange,
   selectedAnnotationsForDoc,
   onToggleAnnotation,
   compromisoStatus,
@@ -157,27 +157,25 @@ export default function DocumentForm({
         </div>
       )}
 
-      {/* Observaciones / Fundamentación */}
-      <div>
-        <label
-          htmlFor="doc-observations"
-          className="mb-1 block font-medium text-neutral-700 text-sm"
-        >
-          {docType === 'derivacion' ? 'Fundamentación de la Derivación' : 'Observaciones'}
-        </label>
-        <textarea
-          id="doc-observations"
-          value={docObservations}
-          onChange={(e) => onObservationsChange(e.target.value)}
-          placeholder={
-            docType === 'derivacion'
-              ? 'Describa los motivos y antecedentes de la derivación...'
-              : 'Observaciones adicionales para el documento...'
-          }
-          rows={4}
-          className="w-full resize-y rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
+      {/* Nombre Inspector/a — reemplaza Observaciones */}
+      {docType !== 'derivacion' && (
+        <div>
+          <label
+            htmlFor="inspector-name"
+            className="mb-1 block font-medium text-neutral-700 text-sm"
+          >
+            Nombre Inspector/a
+          </label>
+          <input
+            id="inspector-name"
+            type="text"
+            value={inspectorName}
+            onChange={(e) => onInspectorNameChange(e.target.value)}
+            placeholder="Ingrese el nombre del inspector/a"
+            className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      )}
 
       {/* Anotaciones negativas seleccionables */}
       <fieldset>

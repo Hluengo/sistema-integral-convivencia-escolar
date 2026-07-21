@@ -5,6 +5,7 @@ type DocType = 'amonestacion' | 'compromiso_conductual' | 'derivacion';
 interface DocumentState {
   docType: DocType;
   apoderadoName: string;
+  inspectorName: string;
   coordinatorName: string;
   emittedBy: string;
   docObservations: string;
@@ -19,6 +20,7 @@ interface DocumentState {
 export function useDocumentState() {
   const [docType, setDocType] = useState<'amonestacion' | 'compromiso_conductual' | 'derivacion'>('amonestacion');
   const [apoderadoName, setApoderadoName] = useState('');
+  const [inspectorName, setInspectorName] = useState('');
   const [coordinatorName, setCoordinatorName] = useState('');
   const [emittedBy, setEmittedBy] = useState('');
   const [docObservations, setDocObservations] = useState('');
@@ -49,6 +51,8 @@ export function useDocumentState() {
     setDocType,
     apoderadoName,
     setApoderadoName,
+    inspectorName,
+    setInspectorName,
     coordinatorName,
     setCoordinatorName,
     emittedBy,

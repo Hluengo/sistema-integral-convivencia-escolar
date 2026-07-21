@@ -209,7 +209,7 @@ export default function AnotacionesDocumentGenerator({
         <p><strong>Fecha:</strong> ${getCurrentDateStr()}</p>
         <p><strong>Anotaciones consideradas:</strong> ${negativeCount}</p>
         <hr />
-        <p>${documentState.docObservations || 'Sin observaciones adicionales.'}</p>
+        <p>${documentState.inspectorName || 'Sin observaciones adicionales.'}</p>
       </div>
     `;
 
@@ -266,8 +266,8 @@ export default function AnotacionesDocumentGenerator({
             onCoordinatorNameChange={documentState.setCoordinatorName}
             emittedBy={documentState.emittedBy}
             onEmittedByChange={documentState.setEmittedBy}
-            docObservations={documentState.docObservations}
-            onObservationsChange={documentState.setDocObservations}
+            inspectorName={documentState.inspectorName}
+            onInspectorNameChange={documentState.setInspectorName}
             selectedAnnotationsForDoc={Array.from(selectedAnnotations.selectedIds)}
             onToggleAnnotation={selectedAnnotations.toggleAnnotation}
             compromisoStatus={documentState.compromisoStatus}
@@ -295,7 +295,7 @@ export default function AnotacionesDocumentGenerator({
             apoderadoName={documentState.apoderadoName}
             dateStr={getCurrentDateStr()}
             negativeCount={negativeCount}
-            docObservations={documentState.docObservations}
+            docObservations={documentState.inspectorName}
             customCommitments={documentState.customCommitments}
             selectedAnnsObjects={selectedAnnsObjects}
             hasTenOrMore={negativeCount >= 10}
