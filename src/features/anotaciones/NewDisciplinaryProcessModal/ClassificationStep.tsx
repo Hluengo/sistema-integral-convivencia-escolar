@@ -9,8 +9,9 @@ interface ClassificationStepProps {
 }
 
 export default function ClassificationStep({ value, onChange, detected }: ClassificationStepProps) {
-  const negativeCount = detected.filter((a) => (a as Record<string, string>).type !== 'Positiva').length;
+  const negativeCount = detected.filter((a) => (a as Record<string, string>).type === 'Negativa').length;
   const positiveCount = detected.filter((a) => (a as Record<string, string>).type === 'Positiva').length;
+  const infoCount = detected.length - negativeCount - positiveCount;
 
   return (
     <div className="space-y-4">
@@ -23,6 +24,9 @@ export default function ClassificationStep({ value, onChange, detected }: Classi
             {' '}<span className="font-semibold text-red-600">{negativeCount} negativas</span>
             {positiveCount > 0 && (
               <>, <span className="font-semibold text-emerald-600">{positiveCount} positivas</span></>
+            )}
+            {infoCount > 0 && (
+              <>, <span className="font-semibold text-blue-600">{infoCount} informativas</span></>
             )}
           </p>
         </div>

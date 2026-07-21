@@ -28,7 +28,9 @@ export function mapInspectorateToAnnotation(row: InspectorateRecord): Annotation
     severity: row.severity as Annotation['severity'],
     registered_by: row.registered_by,
     type: (
-      row.type === 'Positiva' ? 'Positiva' : 'Negativa'
+      row.type === 'Positiva' ? 'Positiva' :
+      row.type === 'Información' ? 'Información' :
+      'Negativa'
     ) as Annotation['type'],
     pdf_file_path: row.pdf_file_path || null,
   };

@@ -156,7 +156,7 @@ export interface Annotation {
   date: string;
   severity: 'Leve' | 'Grave' | 'Muy Grave' | 'Gravísima';
   registered_by: string;
-  type: 'Positiva' | 'Negativa';
+  type: 'Positiva' | 'Negativa' | 'Información';
   pdf_file_path?: string | null;
 }
 

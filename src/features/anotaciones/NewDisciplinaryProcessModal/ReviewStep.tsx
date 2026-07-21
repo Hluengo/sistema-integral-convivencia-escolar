@@ -29,8 +29,9 @@ export default function ReviewStep({
   fileName,
 }: ReviewStepProps) {
   const classLabel = CLASSIFICATION_OPTIONS.find((o) => o.value === classification)?.label || classification;
-  const negativeAnnotations = annotations.filter((a) => (a as Record<string, string>).type !== 'Positiva');
-  const positiveCount = annotations.length - negativeAnnotations.length;
+  const negativeAnnotations = annotations.filter((a) => (a as Record<string, string>).type === 'Negativa');
+  const positiveCount = annotations.filter((a) => (a as Record<string, string>).type === 'Positiva').length;
+  const infoCount = annotations.length - negativeAnnotations.length - positiveCount;
 
   return (
     <div className="space-y-4">
@@ -49,7 +50,7 @@ export default function ReviewStep({
         <div className="flex justify-between">
           <span className="text-neutral-500">Anotaciones:</span>
           <span className="font-medium text-neutral-800">
-            {annotations.length} total ({negativeAnnotations.length} negativas{positiveCount > 0 ? ` / ${positiveCount} positivas` : ''})
+            {annotations.length} total ({negativeAnnotations.length} negativas{positiveCount > 0 ? ` / ${positiveCount} positivas` : ''}{infoCount > 0 ? ` / ${infoCount} informativas` : ''})
           </span>
         </div>
         <div className="flex justify-between">

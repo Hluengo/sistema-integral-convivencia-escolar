@@ -97,8 +97,10 @@ export default function UploadAnalyzeStep({
           </p>
           <p className="font-medium text-neutral-700 text-xs">
             {(() => {
+              const neg = detected.filter((a: unknown) => (a as { type?: string }).type === 'Negativa').length;
               const pos = detected.filter((a: unknown) => (a as { type?: string }).type === 'Positiva').length;
-              return `Se detectaron ${detected.length} anotaciones (${detected.length - pos} negativas, ${pos} positivas):`;
+              const inf = detected.length - neg - pos;
+              return `Se detectaron ${detected.length} anotaciones (${neg} negativas, ${pos} positivas${inf > 0 ? `, ${inf} informativas` : ''}):`;
             })()}
           </p>
           {detected.map((a: unknown, i: number) => {
