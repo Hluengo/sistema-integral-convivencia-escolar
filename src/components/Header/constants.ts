@@ -7,4 +7,5 @@ export const VIEW_TITLES: Record<SidebarView, { title: string; subtitle: string 
   informes: { title: 'Informes', subtitle: 'Asistente y reportes' },
   anotaciones: { title: 'Gestión de Anotaciones', subtitle: 'Documentos y hojas de vida' },
   documentos: { title: 'Documentos', subtitle: 'Cartas y documentos oficiales' },
+  documentHub: { title: 'Document Hub', subtitle: 'Vista unificada de documentos' },
 };

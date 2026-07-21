@@ -12,6 +12,7 @@ import {
   FileBarChart,
   ClipboardList,
   FileText,
+  FolderOpen,
   ChevronLeft,
   ChevronRight,
   Menu,
@@ -20,7 +21,7 @@ import {
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { SidebarUserMenu, SidebarAulaSeguraAlert } from './SidebarUserMenu';
 
-export type SidebarView = 'dashboard' | 'causas' | 'alumnos' | 'informes' | 'anotaciones' | 'documentos';
+export type SidebarView = 'dashboard' | 'causas' | 'alumnos' | 'informes' | 'anotaciones' | 'documentos' | 'documentHub';
 
 interface SidebarProps {
   currentView: SidebarView;
@@ -59,6 +60,7 @@ const NAV_ITEMS: {
   { id: 'informes', label: 'Asistente IA', Icon: FileBarChart },
   { id: 'anotaciones', label: 'Anotaciones', Icon: ClipboardList },
   { id: 'documentos', label: 'Documentos', Icon: FileText },
+  { id: 'documentHub', label: 'Document Hub', Icon: FolderOpen },
 ];
 
 function SidebarContent({
