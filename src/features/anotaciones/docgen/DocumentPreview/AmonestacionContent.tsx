@@ -36,9 +36,6 @@ export default function AmonestacionContent(props: DocContentProps) {
           Superintendencia de Educación, se procede a emitir la presente amonestación escrita como
           medida formativa y correctiva.
         </p>
-        {docObservations && (
-          <p className="mt-2 text-neutral-600 italic">Observaciones: {docObservations}</p>
-        )}
       </Section>
 
       <Section number={4} title="Medida">
@@ -79,7 +76,7 @@ export default function AmonestacionContent(props: DocContentProps) {
           </div>
           <div className="text-center">
             <div className="mt-8 border-neutral-400 border-t pt-1">
-              {props.coordinatorName || '_________________________'}
+              {props.inspectorName || '_________________________'}
             </div>
             <p className="mt-0.5 text-[10px] text-neutral-500">Inspector/a</p>
           </div>
