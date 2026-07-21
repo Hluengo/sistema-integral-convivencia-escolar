@@ -149,13 +149,13 @@ export default function AiAdvisor() {
 
   return (
     <section
-      className="flex min-h-[420px] animate-slide-up flex-col overflow-hidden rounded-xl border border-neutral-200/80 bg-white shadow-sm transition-all"
+      className="flex min-h-[420px] animate-slide-up flex-col overflow-hidden rounded-xl border border-neutral-200/80 bg-white shadow-sm transition-colors"
       aria-label="Asesor legal de convivencia"
     >
       {/* Advisor header */}
       <div className="flex items-center justify-between border-neutral-200/60 border-b bg-white px-4 py-3.5 sm:px-5">
         <div className="flex items-center gap-3 text-left">
-          <div className="flex items-center justify-center rounded-lg border border-brand-500/20 bg-gradient-to-br from-brand-600 to-brand-800 p-2 font-bold text-white shadow-sm">
+          <div className="flex items-center justify-center rounded-lg border border-brand-500/20 bg-linear-to-br from-brand-600 to-brand-800 p-2 font-bold text-white shadow-sm">
             <Gavel className="h-4 w-4 text-brand-100" aria-hidden="true" />
           </div>
           <div>
@@ -256,7 +256,7 @@ export default function AiAdvisor() {
                 key={p}
                 type="button"
                 onClick={() => handleSendMessage(p)}
-                className="rounded-lg border border-neutral-200 bg-neutral-50 p-2.5 text-left font-medium text-[11px] text-neutral-700 leading-normal transition-all hover:scale-[1.005] hover:border-brand-200/60 hover:bg-brand-50/40 hover:shadow-xs"
+                className="rounded-lg border border-neutral-200 bg-neutral-50 p-2.5 text-left font-medium text-[11px] text-neutral-700 leading-normal transition-colors hover:scale-[1.005] hover:border-brand-200/60 hover:bg-brand-50/40 hover:shadow-xs"
               >
                 {p}
               </button>
@@ -268,7 +268,7 @@ export default function AiAdvisor() {
       {/* Input */}
       <div className="border-neutral-200 border-t bg-white p-3 sm:p-4">
         <form onSubmit={handleSubmit} className="flex gap-2">
-          <div className="flex flex-1 items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3.5 transition-all hover:border-neutral-300 has-focus:border-brand-400 has-focus:ring-2 has-focus:ring-brand-500/30">
+          <div className="flex flex-1 items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3.5 transition-colors hover:border-neutral-300 has-focus:border-brand-400 has-focus:ring-2 has-focus:ring-brand-500/30">
             <input
               type="text"
               required
@@ -286,7 +286,7 @@ export default function AiAdvisor() {
               disabled={isImprovingChat || !inputMessage.trim() || isLoading}
               title="Mejorar redacción con IA"
               aria-label="Mejorar redacción con IA"
-              className="shrink-0 rounded-md p-1.5 text-neutral-400 transition-all hover:bg-brand-50 hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-30"
+              className="shrink-0 rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-brand-50 hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-30"
             >
               {isImprovingChat ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -298,7 +298,7 @@ export default function AiAdvisor() {
           <button
             type="submit"
             disabled={isLoading || !inputMessage.trim()}
-            className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-neutral-900 px-4 py-2.5 font-semibold text-white text-xs transition-all hover:scale-[1.02] hover:bg-neutral-800 active:scale-95 disabled:bg-neutral-300 disabled:opacity-50"
+            className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-neutral-900 px-4 py-2.5 font-semibold text-white text-xs transition-colors hover:scale-[1.02] hover:bg-neutral-800 active:scale-95 disabled:bg-neutral-300 disabled:opacity-50"
           >
             <span className="hidden sm:inline">Enviar</span>
             <Send className="h-3.5 w-3.5" aria-hidden="true" />

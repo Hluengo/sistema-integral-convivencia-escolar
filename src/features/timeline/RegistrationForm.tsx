@@ -52,7 +52,7 @@ export default function RegistrationForm({
   id={`reg-name-${item.id}`}
   type="text"
   spellCheck={false}
-  className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-medium text-neutral-800 text-xs placeholder-neutral-400 transition-all focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+  className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-medium text-neutral-800 text-xs placeholder-neutral-400 transition-colors focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
   value={regName}
   onChange={(e) => setRegName(e.target.value)}
   aria-label="Nombre del responsable"
@@ -63,7 +63,7 @@ export default function RegistrationForm({
           <span id={`reg-file-label-${item.id}`} className="block font-semibold text-[9px] text-neutral-400 uppercase">
             Documento de respaldo:
           </span>
-          <div className="relative mt-1 flex items-center justify-center rounded-lg border-2 border-neutral-300 border-dashed bg-neutral-50/50 px-2 py-1.5 transition-all hover:bg-neutral-50">
+          <div className="relative mt-1 flex items-center justify-center rounded-lg border-2 border-neutral-300 border-dashed bg-neutral-50/50 px-2 py-1.5 transition-colors hover:bg-neutral-50">
             <label htmlFor={`reg-file-${item.id}`} className="flex cursor-pointer items-center gap-1.5 font-medium text-[11px] text-neutral-500">
               <Upload className="h-3.5 w-3.5 text-neutral-400" aria-hidden="true" />
               {regFileName || 'Seleccionar archivo...'}
@@ -88,7 +88,7 @@ export default function RegistrationForm({
           value={regObservations}
           onChange={(v) => setRegObservations(v)}
           rows={2}
-          className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-medium text-neutral-800 text-xs placeholder-neutral-400 transition-all focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+          className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-medium text-neutral-800 text-xs placeholder-neutral-400 transition-colors focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
         />
       </div>
 
@@ -96,7 +96,7 @@ export default function RegistrationForm({
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-lg px-3 py-1.5 font-medium text-[11px] text-neutral-500 transition-all hover:bg-neutral-50"
+          className="rounded-lg px-3 py-1.5 font-medium text-[11px] text-neutral-500 transition-colors hover:bg-neutral-50"
         >
           Cancelar
         </button>
@@ -104,7 +104,7 @@ export default function RegistrationForm({
           type="button"
           onClick={onSubmit}
           disabled={isUploadingDocument}
-          className="flex items-center gap-1 rounded-lg bg-brand-600 px-4 py-1.5 font-medium text-[11px] text-white transition-all hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex items-center gap-1 rounded-lg bg-brand-600 px-4 py-1.5 font-medium text-[11px] text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isUploadingDocument ? (
             <>Subiendo...</>

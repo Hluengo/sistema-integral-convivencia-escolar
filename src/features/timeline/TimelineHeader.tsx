@@ -44,7 +44,7 @@ export default function TimelineHeader({
   return (
     <>
       {/* Title Header area */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-brand-700 via-brand-600 to-brand-800 p-5 text-white sm:p-6">
+      <div className="relative overflow-hidden bg-linear-to-br from-brand-700 via-brand-600 to-brand-800 p-5 text-white sm:p-6">
         <div
           className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-60"
           aria-hidden="true"
@@ -64,7 +64,7 @@ export default function TimelineHeader({
                 <button
                   type="button"
                   onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                  className={`flex cursor-pointer select-none items-center gap-1 rounded-lg border px-2 py-1 font-semibold text-xs transition-all ${
+                  className={`flex cursor-pointer select-none items-center gap-1 rounded-lg border px-2 py-1 font-semibold text-xs transition-colors ${
                     isSidebarCollapsed
                       ? 'border-brand-700 bg-brand-600 text-white hover:bg-brand-700'
                       : 'border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50'
@@ -95,7 +95,7 @@ export default function TimelineHeader({
                 <button
                   type="button"
                   onClick={() => setIsTimelineCollapsed(true)}
-                  className="flex cursor-pointer select-none items-center gap-1 rounded-lg border border-neutral-200 bg-white px-2 py-1 font-semibold text-neutral-600 text-xs transition-all hover:bg-neutral-50"
+                  className="flex cursor-pointer select-none items-center gap-1 rounded-lg border border-neutral-200 bg-white px-2 py-1 font-semibold text-neutral-600 text-xs transition-colors hover:bg-neutral-50"
                   title="Cerrar detalle del expediente"
                   aria-label="Cerrar vista detallada"
                 >
@@ -109,7 +109,7 @@ export default function TimelineHeader({
                   <button
                     type="button"
                     onClick={onEditClick}
-                    className="flex cursor-pointer select-none items-center gap-1 rounded-lg border border-neutral-200 bg-white px-2 py-1 font-semibold text-neutral-600 text-xs transition-all hover:bg-neutral-50"
+                    className="flex cursor-pointer select-none items-center gap-1 rounded-lg border border-neutral-200 bg-white px-2 py-1 font-semibold text-neutral-600 text-xs transition-colors hover:bg-neutral-50"
                     title="Editar expediente"
                     aria-label="Editar expediente"
                   >
@@ -119,7 +119,7 @@ export default function TimelineHeader({
                   <button
                     type="button"
                     onClick={onDeleteClick}
-                    className="flex cursor-pointer select-none items-center gap-1 rounded-lg border border-red-200 bg-white px-2 py-1 font-semibold text-red-600 text-xs transition-all hover:bg-red-50"
+                    className="flex cursor-pointer select-none items-center gap-1 rounded-lg border border-red-200 bg-white px-2 py-1 font-semibold text-red-600 text-xs transition-colors hover:bg-red-50"
                     title="Eliminar expediente"
                     aria-label="Eliminar expediente"
                   >

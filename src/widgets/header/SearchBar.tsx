@@ -17,7 +17,7 @@ export default function SearchBar({ value, onChange, placeholder = 'Buscar causa
         value={value}
         onChange={(e) => onChange?.(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-xl border border-neutral-200/60 bg-neutral-100 py-2 pr-16 pl-10 font-medium text-neutral-800 text-sm transition-all placeholder:text-neutral-400 hover:border-neutral-300 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+        className="w-full rounded-xl border border-neutral-200/60 bg-neutral-100 py-2 pr-16 pl-10 font-medium text-neutral-800 text-sm transition-colors placeholder:text-neutral-400 hover:border-neutral-300 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
         aria-label="Búsqueda global"
       />
       <button

@@ -57,11 +57,11 @@ export default function LoginPage({ onClose }: LoginPageProps) {
           emailRef.current?.focus();
         }}
       >
-        <div className="h-1 w-full bg-gradient-to-r from-brand-500 via-brand-600 to-brand-700" />
+        <div className="h-1 w-full bg-linear-to-r from-brand-500 via-brand-600 to-brand-700" />
 
         <div className="p-8 pb-7">
           <div className="mb-7 text-center">
-            <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 shadow-lg shadow-brand-500/25">
+            <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br from-brand-500 to-brand-700 shadow-lg shadow-brand-500/25">
               <Scale className="h-7 w-7 text-white" />
             </div>
             <h1 className="font-bold text-neutral-900 text-xl">Iniciar sesión</h1>
@@ -95,7 +95,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
                 placeholder="usuario@colegio.cl"
                 autoComplete="email"
                 required
-                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-neutral-900 text-sm placeholder-neutral-400 transition-all duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/15"
+                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-neutral-900 text-sm placeholder-neutral-400 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/15"
               />
             </div>
 
@@ -115,7 +115,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
                   placeholder="••••••••"
                   autoComplete="current-password"
                   required
-                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 pr-11 text-neutral-900 text-sm placeholder-neutral-400 transition-all duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/15"
+                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 pr-11 text-neutral-900 text-sm placeholder-neutral-400 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/15"
                 />
                 <button
                   type="button"
@@ -153,7 +153,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
             <button
               type="submit"
               disabled={isLoading}
-              className="mt-2 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3 font-semibold text-sm text-white shadow-sm transition-all duration-200 hover:bg-brand-700 hover:shadow-md disabled:cursor-not-allowed disabled:bg-brand-400"
+              className="mt-2 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3 font-semibold text-sm text-white shadow-sm transition-colors duration-200 hover:bg-brand-700 hover:shadow-md disabled:cursor-not-allowed disabled:bg-brand-400"
             >
               {isLoading ? (
                 <>

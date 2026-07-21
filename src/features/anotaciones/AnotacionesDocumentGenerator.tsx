@@ -175,25 +175,37 @@ export default function AnotacionesDocumentGenerator({
     return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Documento</title>${styles}<style>body{margin:0;display:flex;justify-content:center;background:#fff}@page{size:A4;margin:0}</style></head><body>${el.outerHTML}</body></html>`;
   };
 
+  const openPrintWindow = (html: string) => {
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, '_blank');
+    if (!w) return false;
+    const timer = setInterval(() => {
+      try {
+        if (w.document.readyState === 'complete') {
+          clearInterval(timer);
+          w.print();
+          URL.revokeObjectURL(url);
+        }
+      } catch { /* cross-origin */ }
+    }, 100);
+    setTimeout(() => { clearInterval(timer); URL.revokeObjectURL(url); }, 10000);
+    return true;
+  };
+
   // Export handlers
-  const handleExportPDF = async () => {
+  const handleExportPDF = () => {
     const html = getPreviewHtml();
     if (!html) { setExportError('No se pudo generar el PDF. Intente de nuevo.'); return; }
-    const w = window.open('', '_blank', 'width=900,height=700');
-    if (!w) { setExportError('El navegador bloqueó la ventana. Permita ventanas emergentes.'); return; }
-    w.document.write(html);
-    w.document.close();
-    w.onload = () => { w.print(); setShowEmissionConfirm(true); };
+    if (!openPrintWindow(html)) { setExportError('El navegador bloqueó la ventana. Permita ventanas emergentes.'); return; }
+    setShowEmissionConfirm(true);
   };
 
   const handlePrintDoc = () => {
     const html = getPreviewHtml();
     if (!html) return;
-    const w = window.open('', '_blank', 'width=900,height=700');
-    if (!w) return;
-    w.document.write(html);
-    w.document.close();
-    w.onload = () => { w.print(); setShowEmissionConfirm(true); };
+    if (!openPrintWindow(html)) return;
+    setShowEmissionConfirm(true);
   };
 
   const handleExportWord = async () => {

@@ -37,7 +37,7 @@ export default function AuditPanel({
         type="button"
         onClick={handleRunAudit}
         disabled={isAuditing}
-        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 font-semibold text-white text-xs transition-all hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-brand-400"
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 font-semibold text-white text-xs transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-brand-400"
       >
         {isAuditing ? (
           <><RefreshCw className="h-4 w-4 animate-spin" aria-hidden="true" /> Analizando expediente...</>

@@ -138,7 +138,7 @@ export default function App() {
           <Suspense fallback={null}>
             <CommandPalette causas={causas} onNavigate={handleViewChange} onSelectCausa={setSelectedCausaId} />
           </Suspense>
-          <Suspense fallback={<div className="hidden h-screen w-[68px] flex-col bg-gradient-to-b from-neutral-800 to-neutral-950 shadow-xl lg:flex" />}>
+          <Suspense fallback={<div className="hidden h-screen w-[68px] flex-col bg-linear-to-b from-neutral-800 to-neutral-950 shadow-xl lg:flex" />}>
             <Sidebar
               currentView={currentView} onViewChange={handleViewChange}
               isCollapsed={isSidebarCollapsed} onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}

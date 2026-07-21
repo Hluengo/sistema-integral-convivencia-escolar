@@ -38,7 +38,7 @@ export default function ClassificationStep({ value, onChange, detected }: Classi
             key={opt.value}
             type="button"
             onClick={() => onChange(opt.value)}
-            className={`w-full rounded-xl border p-4 text-left transition-all${
+            className={`w-full rounded-xl border p-4 text-left transition-colors${
               value === opt.value
                 ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200'
                 : 'border-neutral-200 hover:border-neutral-300'

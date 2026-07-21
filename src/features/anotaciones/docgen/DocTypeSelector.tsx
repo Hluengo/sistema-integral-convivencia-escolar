@@ -55,7 +55,7 @@ export default function DocTypeSelector({
               type="button"
               onClick={() => enabled && onDocTypeChange(id)}
               disabled={!enabled}
-              className={`relative flex flex-col items-center gap-2 rounded-lg border-2 p-4 text-left transition-all ${
+              className={`relative flex flex-col items-center gap-2 rounded-lg border-2 p-4 text-left transition-colors ${
                   isActive
                     ? 'border-brand-500 bg-blue-50 ring-2 ring-blue-200'
                     : 'border-neutral-200 bg-white hover:border-neutral-300'

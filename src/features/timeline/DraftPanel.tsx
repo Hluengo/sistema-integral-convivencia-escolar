@@ -75,7 +75,7 @@ export default function DraftPanel({
   value={fatherName}
   onChange={(e) => setFatherName(e.target.value)}
   placeholder="Ej. Juan Pérez González"
-  className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-2.5 font-medium text-neutral-700 text-xs placeholder-neutral-400 transition-all focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+  className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-2.5 font-medium text-neutral-700 text-xs placeholder-neutral-400 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/30"
 />
       </div>
 
@@ -83,7 +83,7 @@ export default function DraftPanel({
         type="button"
         onClick={handleDraftDocument}
         disabled={isDrafting}
-        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 font-semibold text-white text-xs transition-all hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-brand-400"
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 font-semibold text-white text-xs transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-brand-400"
       >
         {isDrafting ? (
           <><RefreshCw className="h-4 w-4 animate-spin" aria-hidden="true" /> Redactando documento...</>
@@ -98,7 +98,7 @@ export default function DraftPanel({
             <button
               type="button"
               onClick={handleCopyToClipboard}
-              className="flex cursor-pointer items-center gap-1 font-semibold text-[10px] text-brand-600 transition-all hover:text-brand-700"
+              className="flex cursor-pointer items-center gap-1 font-semibold text-[10px] text-brand-600 transition-colors hover:text-brand-700"
             >
               <Copy className="h-3 w-3" aria-hidden="true" />
               {copyFeedback ? '¡Copiado!' : 'Copiar al portapapeles'}

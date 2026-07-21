@@ -159,7 +159,7 @@ export default function RevisionTab({
         onDragOver={handleDragOver}
         onDrop={onDrop}
         onClick={() => fileInputRef.current?.click()}
-        className={`relative cursor-pointer rounded-2xl border-2 border-dashed p-8 text-center transition-all duration-200 ${
+        className={`relative cursor-pointer rounded-2xl border-2 border-dashed p-8 text-center transition-colors duration-200 ${
           isDragging
             ? 'border-brand-400 bg-brand-50/50 shadow-lg'
             : 'border-neutral-300 bg-white hover:border-brand-300 hover:bg-brand-50/20'

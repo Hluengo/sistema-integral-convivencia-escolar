@@ -56,7 +56,7 @@ export default function AsistenteIATab({
           onClick={() => setAiSubTab('auditoria')}
           role="tab"
           aria-selected={aiSubTab === 'auditoria'}
-          className={`flex-1 cursor-pointer rounded-md px-3 py-2 font-semibold text-[11px] transition-all ${
+          className={`flex-1 cursor-pointer rounded-md px-3 py-2 font-semibold text-[11px] transition-colors ${
             aiSubTab === 'auditoria'
               ? 'bg-white text-neutral-900 shadow-xs'
               : 'text-neutral-500 hover:text-neutral-700'
@@ -69,7 +69,7 @@ export default function AsistenteIATab({
           onClick={() => setAiSubTab('borradores')}
           role="tab"
           aria-selected={aiSubTab === 'borradores'}
-          className={`flex-1 cursor-pointer rounded-md px-3 py-2 font-semibold text-[11px] transition-all ${
+          className={`flex-1 cursor-pointer rounded-md px-3 py-2 font-semibold text-[11px] transition-colors ${
             aiSubTab === 'borradores'
               ? 'bg-white text-neutral-900 shadow-xs'
               : 'text-neutral-500 hover:text-neutral-700'

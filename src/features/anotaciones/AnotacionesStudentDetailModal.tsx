@@ -226,7 +226,7 @@ export default function AnotacionesStudentDetailModal({
                 type="button"
                 aria-label="Cerrar"
                 onClick={onClose}
-                className="rounded-lg p-2 text-neutral-400 transition-all duration-200 hover:rotate-90 hover:bg-neutral-100 hover:text-neutral-600"
+                className="rounded-lg p-2 text-neutral-400 transition-colors duration-200 hover:rotate-90 hover:bg-neutral-100 hover:text-neutral-600"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -241,7 +241,7 @@ export default function AnotacionesStudentDetailModal({
                 key={tab}
                 type="button"
                 onClick={() => setActiveTab(tab)}
-                className={`flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 font-medium text-sm transition-all duration-200 ${
+                className={`flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 font-medium text-sm transition-colors duration-200 ${
                   activeTab === tab
                     ? 'bg-white text-brand-700 shadow-sm'
                     : 'text-neutral-500 hover:bg-white/50 hover:text-neutral-700'

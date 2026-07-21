@@ -191,6 +191,7 @@ export default function DocumentosView() {
       setCartas([]);
       return;
     }
+    let cancelled = false;
     (async () => {
       setIsLoadingCartas(true);
       try {
@@ -198,6 +199,7 @@ export default function DocumentosView() {
           fetchCartas(selectedStudent.id),
           fetchAnnotations(selectedStudent.id),
         ]);
+        if (cancelled) return;
         setCartas(data ?? []);
         if (anns.length > 0) {
           setAllAnnotations((prev) => {
@@ -209,11 +211,12 @@ export default function DocumentosView() {
           });
         }
       } catch {
-        setCartas([]);
+        if (!cancelled) setCartas([]);
       } finally {
-        setIsLoadingCartas(false);
+        if (!cancelled) setIsLoadingCartas(false);
       }
     })();
+    return () => { cancelled = true; };
   }, [selectedStudent?.id, selectedStudent]);
 
   // Annotations filtered for selected student (used by AnotacionesDocumentGenerator)

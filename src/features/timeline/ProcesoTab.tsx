@@ -96,7 +96,7 @@ export default function ProcesoTab({
                     r="15"
                   />
                   <circle
-                    className={`${isComplete ? 'text-success-600' : isActive ? 'text-brand-600' : 'text-neutral-400'} transition-all duration-500`}
+                    className={`${isComplete ? 'text-success-600' : isActive ? 'text-brand-600' : 'text-neutral-400'} transition-colors duration-500`}
                     strokeWidth="3"
                     strokeDasharray={`${progress * 100}, 100`}
                     strokeLinecap="round"
@@ -131,7 +131,7 @@ export default function ProcesoTab({
       </ul>
 
       {/* Current State */}
-      <div className="mt-4 flex items-start gap-3 rounded-xl border border-info-200/60 bg-gradient-to-r from-info-50/80 to-neutral-50 p-3.5 text-left sm:p-4">
+      <div className="mt-4 flex items-start gap-3 rounded-xl border border-info-200/60 bg-linear-to-r from-info-50/80 to-neutral-50 p-3.5 text-left sm:p-4">
         <div className="shrink-0 rounded-lg bg-info-100/60 p-2 text-info-600" aria-hidden="true">
           <ShieldCheck className="h-5 w-5" />
         </div>

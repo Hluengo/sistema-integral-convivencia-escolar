@@ -89,7 +89,7 @@ export default function ProcessChecklist({
             <div
               key={section.id}
               id={`stage-${section.id}`}
-              className={`overflow-hidden rounded-lg border bg-white transition-all ${isActive ? 'border-brand-300 bg-brand-50/5 ring-1 ring-brand-300/30' : 'border-neutral-200'}`}
+              className={`overflow-hidden rounded-lg border bg-white transition-colors ${isActive ? 'border-brand-300 bg-brand-50/5 ring-1 ring-brand-300/30' : 'border-neutral-200'}`}
             >
               {/* Section Header */}
               <button
@@ -128,7 +128,7 @@ export default function ProcessChecklist({
                   </span>
                 </div>
                 <span
-                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-all ${
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors ${
                     isExpanded
                       ? 'border-brand-600 bg-brand-600 text-white'
                       : 'border-neutral-300 bg-white text-neutral-400 hover:border-brand-400 hover:text-brand-600'
@@ -153,7 +153,7 @@ export default function ProcessChecklist({
                     return (
                       <div
                         key={item.id}
-                        className={`rounded-lg border p-3 text-left transition-all ${
+                        className={`rounded-lg border p-3 text-left transition-colors ${
                           item.completado
                             ? 'border-success-200 bg-success-50/30'
                             : isSelected
@@ -231,7 +231,7 @@ export default function ProcessChecklist({
                                 <button
                                   type="button"
                                   onClick={() => handleResetRegistration(item.id)}
-                                  className="flex items-center gap-1 font-semibold text-[10px] text-danger-600 transition-all hover:text-danger-700"
+                                  className="flex items-center gap-1 font-semibold text-[10px] text-danger-600 transition-colors hover:text-danger-700"
                                 >
                                   <Trash className="h-3 w-3" aria-hidden="true" /> Anular registro
                                 </button>
@@ -248,7 +248,7 @@ export default function ProcessChecklist({
                                 <button
                                   type="button"
                                   onClick={() => handleStartRegister(item)}
-                                  className="flex cursor-pointer items-center gap-1.5 rounded border border-neutral-300 bg-white px-2.5 py-1 font-medium text-[11px] text-neutral-700 transition-all hover:bg-neutral-50"
+                                  className="flex cursor-pointer items-center gap-1.5 rounded border border-neutral-300 bg-white px-2.5 py-1 font-medium text-[11px] text-neutral-700 transition-colors hover:bg-neutral-50"
                                 >
                                   <Plus
                                     className="h-3.5 w-3.5 text-success-600"

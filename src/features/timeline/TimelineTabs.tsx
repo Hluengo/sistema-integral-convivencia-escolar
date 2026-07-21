@@ -20,7 +20,7 @@ export default function TimelineTabs({ activeTab, setActiveTab, bitacoraCount }:
         onClick={() => setActiveTab('proceso')}
         role="tab"
         aria-selected={activeTab === 'proceso'}
-        className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl px-3 py-2.5 font-semibold text-[12px] transition-all duration-200 ${
+        className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl px-3 py-2.5 font-semibold text-[12px] transition-colors duration-200 ${
           activeTab === 'proceso'
             ? 'bg-brand-600 text-white shadow-brand-600/20 shadow-sm'
             : 'border border-transparent text-neutral-600 hover:border-neutral-200/80 hover:bg-white hover:text-neutral-800'
@@ -36,7 +36,7 @@ export default function TimelineTabs({ activeTab, setActiveTab, bitacoraCount }:
         onClick={() => setActiveTab('bitacora')}
         role="tab"
         aria-selected={activeTab === 'bitacora'}
-        className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl px-3 py-2.5 font-semibold text-[12px] transition-all duration-200 ${
+        className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl px-3 py-2.5 font-semibold text-[12px] transition-colors duration-200 ${
           activeTab === 'bitacora'
             ? 'bg-brand-600 text-white shadow-brand-600/20 shadow-sm'
             : 'border border-transparent text-neutral-600 hover:border-neutral-200/80 hover:bg-white hover:text-neutral-800'
@@ -51,7 +51,7 @@ export default function TimelineTabs({ activeTab, setActiveTab, bitacoraCount }:
         onClick={() => setActiveTab('asistente_ia')}
         role="tab"
         aria-selected={activeTab === 'asistente_ia'}
-        className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl px-3 py-2.5 font-semibold text-[12px] transition-all duration-200 ${
+        className={`flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl px-3 py-2.5 font-semibold text-[12px] transition-colors duration-200 ${
           activeTab === 'asistente_ia'
             ? 'bg-secondary-500 text-white shadow-secondary-500/20 shadow-sm'
             : 'border border-transparent text-secondary-600 hover:border-secondary-200/80 hover:bg-secondary-50 hover:text-secondary-800'

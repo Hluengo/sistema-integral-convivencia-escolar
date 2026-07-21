@@ -42,7 +42,7 @@ export default memo(function Header({
 
   return (
     <header className="glass sticky top-0 z-30">
-      <div className="absolute top-0 right-0 left-0 h-[3px] bg-gradient-to-r from-brand-700 via-brand-600 to-secondary-500" />
+      <div className="absolute top-0 right-0 left-0 h-[3px] bg-linear-to-r from-brand-700 via-brand-600 to-secondary-500" />
 
       <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         {/* Left: Mobile brand + Page title + Search */}
@@ -60,7 +60,7 @@ export default memo(function Header({
           {/* Mobile search toggle */}
           <button
             type="button"
-            className="ml-auto cursor-pointer rounded-xl p-2 text-neutral-500 transition-all hover:bg-neutral-100 md:hidden"
+            className="ml-auto cursor-pointer rounded-xl p-2 text-neutral-500 transition-colors hover:bg-neutral-100 md:hidden"
             aria-label="Buscar"
           >
             <Search className="h-5 w-5" />

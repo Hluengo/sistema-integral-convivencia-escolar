@@ -51,7 +51,7 @@ export default function BitacoraTab({
           <button
             type="button"
             onClick={() => setShowLogForm(!showLogForm)}
-            className="flex cursor-pointer items-center gap-1 rounded-lg bg-brand-600 px-3 py-1.5 font-medium text-[11px] text-white transition-all hover:bg-brand-700"
+            className="flex cursor-pointer items-center gap-1 rounded-lg bg-brand-600 px-3 py-1.5 font-medium text-[11px] text-white transition-colors hover:bg-brand-700"
             aria-expanded={showLogForm}
           >
             <Plus className="h-3.5 w-3.5" aria-hidden="true" />
@@ -123,13 +123,13 @@ export default function BitacoraTab({
             <button
               type="button"
               onClick={() => setShowLogForm(false)}
-              className="rounded-lg px-3 py-1.5 font-medium text-[11px] text-neutral-500 transition-all hover:bg-neutral-50"
+              className="rounded-lg px-3 py-1.5 font-medium text-[11px] text-neutral-500 transition-colors hover:bg-neutral-50"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="flex items-center gap-1 rounded-lg bg-brand-600 px-4 py-1.5 font-medium text-[11px] text-white transition-all hover:bg-brand-700"
+              className="flex items-center gap-1 rounded-lg bg-brand-600 px-4 py-1.5 font-medium text-[11px] text-white transition-colors hover:bg-brand-700"
             >
               <Send className="h-3.5 w-3.5" aria-hidden="true" /> Agregar
             </button>
@@ -150,7 +150,7 @@ export default function BitacoraTab({
               'Otro': 'bg-neutral-100 text-neutral-700',
             };
             return (
-              <div key={entry.id} className="rounded-lg border border-neutral-200/80 bg-white p-4 text-left transition-all hover:border-neutral-300">
+              <div key={entry.id} className="rounded-lg border border-neutral-200/80 bg-white p-4 text-left transition-colors hover:border-neutral-300">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">

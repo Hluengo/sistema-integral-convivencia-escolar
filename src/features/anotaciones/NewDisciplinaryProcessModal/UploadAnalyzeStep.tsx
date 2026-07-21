@@ -59,7 +59,7 @@ export default function UploadAnalyzeStep({
         onDragLeave={() => setDrag(false)}
         onDrop={onDrop}
         onClick={() => fileRef.current?.click()}
-        className={`w-full cursor-pointer rounded-2xl border-2 border-dashed p-8 text-center transition-all${
+        className={`w-full cursor-pointer rounded-2xl border-2 border-dashed p-8 text-center transition-colors${
           drag ? 'border-indigo-500 bg-indigo-50' : 'border-neutral-300 hover:border-neutral-400'
         }`}
       >

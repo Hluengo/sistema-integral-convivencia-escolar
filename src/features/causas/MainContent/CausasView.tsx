@@ -72,7 +72,7 @@ export default function CausasView({
   return (
     <div className="animate-fade-in space-y-6">
       {/* Hero header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-700 via-brand-600 to-brand-800 p-6 text-white shadow-lg sm:p-8">
+      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-brand-700 via-brand-600 to-brand-800 p-6 text-white shadow-lg sm:p-8">
         <div
           className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-60"
           aria-hidden="true"
@@ -96,7 +96,7 @@ export default function CausasView({
           <button
             type="button"
             onClick={() => dispatchForm({ type: showCreateForm ? 'CLOSE' : 'OPEN' })}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-secondary-500 px-5 py-3 font-semibold text-white shadow-md shadow-secondary-500/30 transition-all hover:bg-secondary-600 active:scale-[0.97]"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-secondary-500 px-5 py-3 font-semibold text-white shadow-md shadow-secondary-500/30 transition-colors hover:bg-secondary-600 active:scale-[0.97]"
             aria-label="Crear nueva causa"
           >
             <BookOpen className="h-4 w-4" aria-hidden="true" />
@@ -117,7 +117,7 @@ export default function CausasView({
             role="tab"
             aria-selected={!mobileShowDetail}
             onClick={() => setMobileShowDetail(false)}
-            className={`flex-1 rounded-lg py-2 font-semibold text-xs transition-all ${
+            className={`flex-1 rounded-lg py-2 font-semibold text-xs transition-colors ${
               !mobileShowDetail
                 ? 'bg-white text-neutral-800 shadow-sm'
                 : 'text-neutral-500 hover:text-neutral-700'
@@ -130,7 +130,7 @@ export default function CausasView({
             role="tab"
             aria-selected={mobileShowDetail}
             onClick={() => setMobileShowDetail(true)}
-            className={`flex-1 rounded-lg py-2 font-semibold text-xs transition-all ${
+            className={`flex-1 rounded-lg py-2 font-semibold text-xs transition-colors ${
               mobileShowDetail
                 ? 'bg-brand-600 text-white shadow-sm'
                 : 'text-neutral-500 hover:text-neutral-700'
@@ -144,7 +144,7 @@ export default function CausasView({
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
         {/* Left column */}
         <div
-          className={`space-y-4 transition-all duration-300 lg:col-span-5 ${
+          className={`space-y-4 transition-colors duration-300 lg:col-span-5 ${
             mobileShowDetail &&
             selectedCausa &&
             selectedCausa.estadoActual !== EstadoCausa.CAUSA_CERRADA
@@ -190,7 +190,7 @@ export default function CausasView({
                   }}
                   role="tab"
                   aria-selected={selectedFaseFilter === fase}
-                  className={`cursor-pointer rounded-xl border px-3 py-2 font-semibold text-xs transition-all duration-200 ${
+                  className={`cursor-pointer rounded-xl border px-3 py-2 font-semibold text-xs transition-colors duration-200 ${
                     selectedFaseFilter === fase
                       ? fase === 'Todas'
                         ? 'border-neutral-900 bg-neutral-900 text-white shadow-sm'
@@ -237,7 +237,7 @@ export default function CausasView({
 
         {/* Right Column */}
         <div
-          className={`h-full transition-all duration-300 lg:col-span-7 ${
+          className={`h-full transition-colors duration-300 lg:col-span-7 ${
             mobileShowDetail &&
             selectedCausa &&
             selectedCausa.estadoActual !== EstadoCausa.CAUSA_CERRADA

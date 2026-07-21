@@ -29,7 +29,7 @@ export default function CourseSelectStep({ courses, course, onSelect }: CourseSe
                   key={c.n}
                   type="button"
                   onClick={() => onSelect(c.n)}
-                  className={`rounded-xl border p-3 text-left transition-all${
+                  className={`rounded-xl border p-3 text-left transition-colors${
                     course === c.n
                       ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200'
                       : 'border-neutral-200 hover:border-neutral-300'

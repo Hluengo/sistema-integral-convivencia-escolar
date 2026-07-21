@@ -35,7 +35,7 @@ export default function StudentSelectStep({ students, course, selectedId, onSele
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar por nombre o RUT..."
-          className="w-full rounded-xl border border-neutral-300 py-2.5 pr-3 pl-9 text-sm outline-none transition-all focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+          className="w-full rounded-xl border border-neutral-300 py-2.5 pr-3 pl-9 text-sm outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
         />
       </div>
       {searched.length === 0 ? (
@@ -49,7 +49,7 @@ export default function StudentSelectStep({ students, course, selectedId, onSele
               key={s.id}
               type="button"
               onClick={() => onSelect(s)}
-              className={`flex w-full items-center justify-between rounded-xl border p-3 text-left transition-all${
+              className={`flex w-full items-center justify-between rounded-xl border p-3 text-left transition-colors${
                 selectedId === s.id
                   ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200'
                   : 'border-neutral-200 hover:border-neutral-300'

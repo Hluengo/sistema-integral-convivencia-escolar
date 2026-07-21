@@ -138,7 +138,7 @@ function ClosedCases({
             return (
               <div
                 key={causa.id}
-                className="rounded-xl border border-neutral-200/80 bg-white transition-all hover:border-neutral-300 hover:shadow-sm"
+                className="rounded-xl border border-neutral-200/80 bg-white transition-colors hover:border-neutral-300 hover:shadow-sm"
               >
                 <div className="p-4 sm:p-5">
                   <div className="flex items-start justify-between gap-4">
@@ -217,7 +217,7 @@ function ClosedCases({
                       <button
                         type="button"
                         onClick={() => onSelectCausa(causa)}
-                        className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 font-semibold text-[10px] text-white transition-all hover:bg-brand-700"
+                        className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 font-semibold text-[10px] text-white transition-colors hover:bg-brand-700"
                         title="Ver detalle del caso"
                       >
                         <FileText className="h-3 w-3" aria-hidden="true" />
@@ -226,7 +226,7 @@ function ClosedCases({
                       <button
                         type="button"
                         onClick={() => onReopenCausa(causa)}
-                        className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 font-semibold text-[10px] text-amber-700 transition-all hover:bg-amber-100"
+                        className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 font-semibold text-[10px] text-amber-700 transition-colors hover:bg-amber-100"
                         title="Reabrir caso"
                       >
                         <RotateCcw className="h-3 w-3" aria-hidden="true" />

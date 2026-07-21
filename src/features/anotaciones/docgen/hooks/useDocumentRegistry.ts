@@ -34,15 +34,15 @@ export function useDocumentRegistry() {
       ...entry,
       id: crypto.randomUUID(),
     };
-    setEmittedList((prev) => {
-      const updated = [newEntry, ...prev];
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      } catch {
-        // Ignore storage errors
-      }
-      return updated;
-    });
+    setEmittedList((prev) => [newEntry, ...prev]);
+    // Persist after state update (side effect outside setter)
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      const list = stored ? JSON.parse(stored) : [];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([newEntry, ...list]));
+    } catch {
+      // Ignore storage errors
+    }
   }, []);
 
   const clearRegistry = useCallback(() => {

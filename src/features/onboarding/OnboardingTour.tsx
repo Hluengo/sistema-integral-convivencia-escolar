@@ -110,7 +110,7 @@ export default function OnboardingTour() {
         {/* Progress bar */}
         <div className="h-1.5 w-full bg-neutral-100">
           <div
-            className="h-full bg-gradient-to-r from-brand-500 to-secondary-500 transition-all duration-500 ease-out"
+            className="h-full bg-linear-to-r from-brand-500 to-secondary-500 transition-colors duration-500 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -145,7 +145,7 @@ export default function OnboardingTour() {
             {STEPS.map((_, i) => (
               <div
                 key={i}
-                className={`h-2 w-2 rounded-full transition-all duration-300 ${
+                className={`h-2 w-2 rounded-full transition-colors duration-300 ${
                   i === step
                     ? 'w-6 bg-brand-600'
                     : i < step
@@ -161,7 +161,7 @@ export default function OnboardingTour() {
             <button
               type="button"
               onClick={isFirst ? handleSkip : handlePrev}
-              className={`flex cursor-pointer items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
+              className={`flex cursor-pointer items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
                 isFirst
                   ? 'text-neutral-400 hover:text-neutral-600'
                   : 'text-neutral-600 hover:bg-neutral-100'
@@ -174,7 +174,7 @@ export default function OnboardingTour() {
             <button
               type="button"
               onClick={handleNext}
-              className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-brand-600 px-5 py-2.5 font-medium text-white text-sm transition-all hover:bg-brand-700"
+              className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-brand-600 px-5 py-2.5 font-medium text-white text-sm transition-colors hover:bg-brand-700"
             >
               {isLast ? (
                 <>

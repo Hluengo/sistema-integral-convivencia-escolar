@@ -122,7 +122,7 @@ function SidebarContent({
                 onViewChange(item.id);
                 onNavigate?.();
               }}
-              className={`flex w-full cursor-pointer select-none items-center gap-3 rounded-lg font-medium text-[13px] transition-all duration-150 ${isCollapsed && !mobile ? 'justify-center px-0 py-3' : 'px-3.5 py-2.5'}
+              className={`flex w-full cursor-pointer select-none items-center gap-3 rounded-lg font-medium text-[13px] transition-colors duration-150 ${isCollapsed && !mobile ? 'justify-center px-0 py-3' : 'px-3.5 py-2.5'}
                 ${
                   isActive
                     ? 'bg-white/15 font-semibold text-white'
@@ -207,7 +207,7 @@ export default memo(function Sidebar({
       <button
         type="button"
         onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-50 rounded-xl bg-neutral-900 p-2.5 text-white shadow-lg shadow-neutral-900/20 transition-all hover:bg-neutral-800 active:scale-95 lg:hidden"
+        className="fixed top-4 left-4 z-50 rounded-xl bg-neutral-900 p-2.5 text-white shadow-lg shadow-neutral-900/20 transition-colors hover:bg-neutral-800 active:scale-95 lg:hidden"
         aria-label="Abrir menú"
       >
         <Menu className="h-5 w-5" />
@@ -224,14 +224,14 @@ export default memo(function Sidebar({
 
       <div
         ref={mobileSidebarRef}
-        className={`fixed inset-y-0 left-0 z-50 w-[280px] bg-gradient-to-b from-neutral-900 to-neutral-950 shadow-2xl shadow-neutral-950/50 transition-transform duration-300 ease-out-expo lg:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 w-[280px] bg-linear-to-b from-neutral-900 to-neutral-950 shadow-2xl shadow-neutral-950/50 transition-transform duration-300 ease-out-expo lg:hidden ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <button
           type="button"
           onClick={() => setMobileOpen(false)}
-          className="absolute top-4 right-4 rounded-lg p-1.5 text-white/40 transition-all hover:bg-white/10 hover:text-white"
+          className="absolute top-4 right-4 rounded-lg p-1.5 text-white/40 transition-colors hover:bg-white/10 hover:text-white"
           aria-label="Cerrar menú"
         >
           <X className="h-4 w-4" />
@@ -240,7 +240,7 @@ export default memo(function Sidebar({
       </div>
 
       <aside
-        className={`relative hidden shrink-0 flex-col bg-gradient-to-b from-neutral-900 to-neutral-950 shadow-2xl shadow-neutral-950/30 transition-all duration-300 ease-out-expo lg:flex ${
+        className={`relative hidden shrink-0 flex-col bg-linear-to-b from-neutral-900 to-neutral-950 shadow-2xl shadow-neutral-950/30 transition-colors duration-300 ease-out-expo lg:flex ${
           isCollapsed ? 'w-[68px]' : 'w-[240px]'
         }`}
         aria-label="Barra de navegación principal"
@@ -248,7 +248,7 @@ export default memo(function Sidebar({
         <button
           type="button"
           onClick={onToggleCollapse}
-          className="absolute top-[72px] -right-3 z-10 cursor-pointer rounded-full border border-neutral-200/80 bg-white p-1.5 shadow-md transition-all hover:bg-neutral-50 hover:shadow-lg active:scale-90"
+          className="absolute top-[72px] -right-3 z-10 cursor-pointer rounded-full border border-neutral-200/80 bg-white p-1.5 shadow-md transition-colors hover:bg-neutral-50 hover:shadow-lg active:scale-90"
           aria-label={isCollapsed ? 'Expandir menú lateral' : 'Colapsar menú lateral'}
         >
           {isCollapsed ? (

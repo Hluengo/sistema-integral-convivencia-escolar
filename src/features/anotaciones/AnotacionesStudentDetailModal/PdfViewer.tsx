@@ -32,7 +32,7 @@ export default function PdfViewer({ pdfPath, onClose }: PdfViewerProps) {
       } catch {
         if (!cancelled) setError('Error al conectar con el almacenamiento.');
       } finally {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       }
     })();
     return () => { cancelled = true; };

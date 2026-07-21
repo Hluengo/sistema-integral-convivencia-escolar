@@ -149,7 +149,7 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
   return (
     <section aria-label="Gestión de alumnos" className="animate-fade-in space-y-6">
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-700 via-brand-600 to-brand-800 p-6 text-white shadow-lg sm:p-8">
+      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-brand-700 via-brand-600 to-brand-800 p-6 text-white shadow-lg sm:p-8">
         <div
           className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-60"
           aria-hidden="true"
@@ -186,14 +186,14 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
   value={searchQuery}
   onChange={(e) => dispatch({ type: 'SET_SEARCH', query: e.target.value })}
   placeholder="Buscar por nombre, RUN o curso..."
-  className="w-full rounded-xl border border-neutral-200/60 bg-neutral-50 py-2.5 pr-4 pl-10 font-medium text-neutral-800 text-sm transition-all placeholder:text-neutral-400 hover:border-neutral-300 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+  className="w-full rounded-xl border border-neutral-200/60 bg-neutral-50 py-2.5 pr-4 pl-10 font-medium text-neutral-800 text-sm transition-colors placeholder:text-neutral-400 hover:border-neutral-300 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
   aria-label="Buscar estudiantes"
 />
           </div>
           <select
             value={selectedCourseId}
             onChange={(e) => dispatch({ type: 'SET_COURSE', courseId: e.target.value })}
-            className="rounded-xl border border-neutral-200/80 bg-neutral-50 px-4 py-2.5 font-medium text-neutral-800 text-sm transition-all hover:border-neutral-300 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 sm:w-56"
+            className="rounded-xl border border-neutral-200/80 bg-neutral-50 px-4 py-2.5 font-medium text-neutral-800 text-sm transition-colors hover:border-neutral-300 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 sm:w-56"
             aria-label="Filtrar por curso"
           >
             <option value="all">Todos los cursos</option>
@@ -303,7 +303,7 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
                       >
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-2.5">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-100 to-brand-200 font-bold text-[10px] text-brand-700">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-brand-100 to-brand-200 font-bold text-[10px] text-brand-700">
                               {student.full_name.split(' ').filter((w) => w.length > 2).slice(0, 2).map((w) => w[0]).join('')}
                             </div>
                             <span className="font-semibold text-neutral-900 text-sm">

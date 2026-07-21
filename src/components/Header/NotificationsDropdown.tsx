@@ -41,7 +41,7 @@ export default function NotificationsDropdown({ notifications, onNotificationCli
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative cursor-pointer rounded-xl p-2.5 text-neutral-500 transition-all hover:bg-neutral-100"
+        className="relative cursor-pointer rounded-xl p-2.5 text-neutral-500 transition-colors hover:bg-neutral-100"
         aria-label="Notificaciones"
         aria-haspopup="true"
         aria-expanded={isOpen}
@@ -88,7 +88,7 @@ export default function NotificationsDropdown({ notifications, onNotificationCli
                       setIsOpen(false);
                       onNotificationClick?.(n.causaId!);
                     }}
-                    className="flex w-full items-start gap-3 border-neutral-100 border-b p-4 text-left transition-all last:border-b-0 hover:bg-neutral-50"
+                    className="flex w-full items-start gap-3 border-neutral-100 border-b p-4 text-left transition-colors last:border-b-0 hover:bg-neutral-50"
                   >
                     <div className={`shrink-0 rounded-lg p-1.5 ${n.urgent ? 'bg-gravisima-50' : 'bg-brand-50'}`}>
                       <Bell

@@ -76,7 +76,7 @@ export default function NewCausaForm({
         <button
           type="button"
           onClick={onClose}
-          className="cursor-pointer rounded-xl bg-neutral-50 px-3 py-1.5 font-medium text-neutral-500 text-xs transition-all hover:bg-neutral-100 hover:text-neutral-700"
+          className="cursor-pointer rounded-xl bg-neutral-50 px-3 py-1.5 font-medium text-neutral-500 text-xs transition-colors hover:bg-neutral-100 hover:text-neutral-700"
         >
           ✕ Cerrar
         </button>
@@ -95,7 +95,7 @@ export default function NewCausaForm({
             id="create-course"
             value={selectedCourseId}
             onChange={(e) => onCourseChange(e.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-medium text-neutral-700 transition-all duration-200 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+            className="mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-medium text-neutral-700 transition-colors duration-200 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30"
             required
           >
             <option value="">-- Seleccionar curso --</option>
@@ -159,7 +159,7 @@ export default function NewCausaForm({
                   id="create-student"
                   value={students.find((s) => s.full_name === newEstNombre)?.id || ''}
                   onChange={(e) => onStudentSelect(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-medium text-neutral-700 transition-all duration-200 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                  className="mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-medium text-neutral-700 transition-colors duration-200 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30"
                 >
                   <option value="">-- Seleccionar estudiante --</option>
                   {students.map((s) => (
@@ -204,7 +204,7 @@ export default function NewCausaForm({
                 ? 'Ingrese RUN manualmente (sin estudiantes en el curso)'
                 : 'Se auto-completa al seleccionar estudiante'
             }
-            className="mt-1.5 w-full cursor-not-allowed rounded-xl border border-neutral-200 bg-neutral-100 p-3 font-medium text-neutral-600 text-xs transition-all duration-200 focus:outline-none"
+            className="mt-1.5 w-full cursor-not-allowed rounded-xl border border-neutral-200 bg-neutral-100 p-3 font-medium text-neutral-600 text-xs transition-colors duration-200 focus:outline-none"
           />
         </div>
 
@@ -227,7 +227,7 @@ export default function NewCausaForm({
               id="create-gravedad"
               value={newInfTipo}
               onChange={(e) => setNewInfTipo(e.target.value as Causa['tipoInfraccion'])}
-              className="mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-medium text-neutral-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+              className="mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-medium text-neutral-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
             >
               <option value="Leve">Falta Leve</option>
               <option value="Grave">Falta Grave</option>
@@ -257,7 +257,7 @@ export default function NewCausaForm({
           value={newObs}
           onChange={setNewObs}
           required
-          className="mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-sans text-xs leading-relaxed transition-all duration-200 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+          className="mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-sans text-xs leading-relaxed transition-colors duration-200 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30"
         />
 
         <div>
@@ -274,7 +274,7 @@ export default function NewCausaForm({
             spellCheck={false}
             value={newResponsable}
             onChange={(e) => setNewResponsable(e.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-100 p-3 font-bold text-neutral-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+            className="mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-100 p-3 font-bold text-neutral-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
           />
         </div>
 
@@ -290,13 +290,13 @@ export default function NewCausaForm({
           <button
             type="button"
             onClick={onClose}
-            className="cursor-pointer rounded-lg px-3 py-1.5 font-medium text-neutral-500 transition-all hover:bg-neutral-50"
+            className="cursor-pointer rounded-lg px-3 py-1.5 font-medium text-neutral-500 transition-colors hover:bg-neutral-50"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="flex cursor-pointer items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 font-semibold text-white shadow-brand-600/20 shadow-sm transition-all hover:scale-[1.02] hover:bg-brand-700 active:scale-95"
+            className="flex cursor-pointer items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 font-semibold text-white shadow-brand-600/20 shadow-sm transition-colors hover:scale-[1.02] hover:bg-brand-700 active:scale-95"
           >
             <FileText className="h-4 w-4" aria-hidden="true" /> Registrar Expediente
           </button>

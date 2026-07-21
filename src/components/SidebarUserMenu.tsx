@@ -30,7 +30,7 @@ export function SidebarUserMenu({
         <button
           type="button"
           onClick={onLogin}
-          className={`flex w-full cursor-pointer select-none items-center gap-2.5 rounded-xl font-semibold text-[12px] transition-all ${
+          className={`flex w-full cursor-pointer select-none items-center gap-2.5 rounded-xl font-semibold text-[12px] transition-colors ${
             isCollapsed && !mobile
               ? 'justify-center bg-brand-500 px-0 py-2.5 text-white hover:bg-brand-600'
               : 'bg-brand-500 px-3.5 py-2.5 text-white shadow-brand-500/20 shadow-lg hover:bg-brand-600'
@@ -46,7 +46,7 @@ export function SidebarUserMenu({
   return (
     <div className={`px-3 ${isCollapsed && !mobile ? 'pt-3' : 'pt-4'}`}>
       <div
-        className={`flex items-center gap-2.5 rounded-xl transition-all ${
+        className={`flex items-center gap-2.5 rounded-xl transition-colors ${
           isCollapsed && !mobile
             ? 'justify-center px-2 py-2'
             : 'bg-white/10 px-3 py-2.5 hover:bg-white/15'
@@ -64,7 +64,7 @@ export function SidebarUserMenu({
         <button
           type="button"
           onClick={onLogout}
-          className="shrink-0 cursor-pointer rounded-lg p-1.5 text-neutral-400 transition-all hover:bg-white/10 hover:text-white"
+          className="shrink-0 cursor-pointer rounded-lg p-1.5 text-neutral-400 transition-colors hover:bg-white/10 hover:text-white"
           aria-label="Cerrar sesión"
           title="Cerrar sesión"
         >

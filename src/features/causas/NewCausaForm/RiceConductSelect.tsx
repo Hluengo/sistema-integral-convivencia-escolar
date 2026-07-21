@@ -44,7 +44,7 @@ export default function RiceConductSelect({
       <select
         id="create-rice"
         onChange={(event) => applyConducta(event.target.value)}
-        className="mt-1.5 w-full rounded-xl border border-brand-200 bg-brand-50/20 p-3 font-medium text-[11px] text-brand-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+        className="mt-1.5 w-full rounded-xl border border-brand-200 bg-brand-50/20 p-3 font-medium text-[11px] text-brand-900 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
         defaultValue=""
       >
         <option value="" className="text-neutral-500">-- Seleccionar conducta --</option>
