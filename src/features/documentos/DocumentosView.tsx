@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
-import { Search, Scale, FileText, ScrollText, Plus, ChevronRight, BookOpen, Sparkles, User, Circle } from 'lucide-react';
+import { Search, Scale, FileText, ScrollText, Plus, ChevronRight, BookOpen, Sparkles, User, Circle, Download } from 'lucide-react';
 import { useUIStore } from '@/src/shared/lib/stores/uiStore';
 import { useCausasStore } from '@/src/shared/lib/stores/causasStore';
 import { fetchStudentsWithAnnotationCounts, fetchAnnotations } from '@/src/services/annotations.service';
@@ -9,6 +9,7 @@ import { fetchCartas } from '@/src/services/cartas.service';
 import { fetchCausas } from '@/src/services/cases';
 import type { AnotacionStudent, Annotation, CartaDisciplinaria, Causa } from '@/src/shared/lib/types';
 import { getSemaphoricStyle, TEACHERS_BY_COURSE } from '@/src/lib/anotacionesUtils';
+import { downloadCartaPdf } from '@/src/features/anotaciones/docgen/downloadCartaPdf';
 
 const AnotacionesDocumentGenerator = lazy(() => import('@/src/features/anotaciones/AnotacionesDocumentGenerator'));
 
@@ -102,6 +103,7 @@ export default function DocumentosView() {
   const [selectedStudent, setSelectedStudent] = useState<AnotacionStudent | null>(null);
   const [cartas, setCartas] = useState<CartaDisciplinaria[]>([]);
   const [isLoadingCartas, setIsLoadingCartas] = useState(false);
+  const [downloadingCartaId, setDownloadingCartaId] = useState<string | null>(null);
   const [showGenerator, setShowGenerator] = useState(false);
   const [initialDocType, setInitialDocType] = useState<string | undefined>(undefined);
 
@@ -282,6 +284,21 @@ export default function DocumentosView() {
   const handleNewDocument = () => {
     setInitialDocType(undefined);
     setShowGenerator(true);
+  };
+
+  const handleDownloadCarta = async (carta: CartaDisciplinaria) => {
+    setDownloadingCartaId(carta.id);
+    try {
+      await downloadCartaPdf(carta, {
+        full_name: carta.student_name,
+        course_name: carta.course,
+        rut: '',
+      });
+    } catch (err) {
+      console.error('Error al descargar PDF:', err);
+    } finally {
+      setDownloadingCartaId(null);
+    }
   };
 
   return (
@@ -531,6 +548,7 @@ export default function DocumentosView() {
                   <div className="divide-y divide-neutral-100">
                     {cartas.map((carta) => {
                       const badge = STATUS_BADGE[carta.status] || STATUS_BADGE.Vigente;
+                      const isDownloading = downloadingCartaId === carta.id;
                       return (
                         <div key={carta.id} className="flex items-center justify-between px-5 py-4">
                           <div className="min-w-0 flex-1">
@@ -543,9 +561,21 @@ export default function DocumentosView() {
                               <span>Emitido por: {carta.emitted_by || '-'}</span>
                             </div>
                           </div>
-                          <span className={`shrink-0 rounded-full px-2.5 py-1 font-semibold text-[10px] ${badge.bg} ${badge.text}`}>
-                            {carta.status}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleDownloadCarta(carta)}
+                              disabled={isDownloading}
+                              className="flex shrink-0 items-center gap-1 rounded-lg bg-brand-50 px-2 py-1 font-medium text-brand-700 text-xs transition-colors hover:bg-brand-100 disabled:opacity-50"
+                              title="Descargar PDF"
+                            >
+                              <Download className={`h-3.5 w-3.5 ${isDownloading ? 'animate-pulse' : ''}`} />
+                              {isDownloading ? 'PDF...' : 'PDF'}
+                            </button>
+                            <span className={`shrink-0 rounded-full px-2.5 py-1 font-semibold text-[10px] ${badge.bg} ${badge.text}`}>
+                              {carta.status}
+                            </span>
+                          </div>
                         </div>
                       );
                     })}

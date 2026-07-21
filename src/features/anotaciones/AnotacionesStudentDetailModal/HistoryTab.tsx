@@ -1,8 +1,10 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { ScrollText } from 'lucide-react';
+import { useState } from 'react';
+import { ScrollText, Download } from 'lucide-react';
 import type { CartaDisciplinaria } from '@/src/shared/lib/types';
 import { formatDate } from './constants';
+import { downloadCartaPdf } from '../docgen/downloadCartaPdf';
 
 const STATUS_BADGE: Record<string, { bg: string; text: string }> = {
   Vigente: { bg: 'bg-emerald-100', text: 'text-emerald-800' },
@@ -22,6 +24,23 @@ interface HistoryTabProps {
 }
 
 export default function HistoryTab({ cartas }: HistoryTabProps) {
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const handleDownload = async (carta: CartaDisciplinaria) => {
+    setDownloadingId(carta.id);
+    try {
+      await downloadCartaPdf(carta, {
+        full_name: carta.student_name,
+        course_name: carta.course,
+        rut: '',
+      });
+    } catch (err) {
+      console.error('Error al descargar PDF:', err);
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   if (cartas.length === 0) {
     return (
       <div className="rounded-2xl border border-neutral-200/80 bg-white p-8 text-center shadow-xs">
@@ -37,6 +56,7 @@ export default function HistoryTab({ cartas }: HistoryTabProps) {
     <div className="space-y-3">
       {cartas.map((carta) => {
         const badge = STATUS_BADGE[carta.status] || STATUS_BADGE.Vigente;
+        const isDownloading = downloadingId === carta.id;
         return (
           <div
             key={carta.id}
@@ -61,6 +81,16 @@ export default function HistoryTab({ cartas }: HistoryTabProps) {
                   <p className="mt-2 text-neutral-600 text-sm leading-relaxed">{carta.observations}</p>
                 )}
               </div>
+              <button
+                type="button"
+                onClick={() => handleDownload(carta)}
+                disabled={isDownloading}
+                className="flex shrink-0 items-center gap-1.5 rounded-lg bg-brand-50 px-2.5 py-1.5 font-medium text-brand-700 text-xs transition-colors hover:bg-brand-100 disabled:opacity-50"
+                title="Descargar PDF"
+              >
+                <Download className={`h-3.5 w-3.5 ${isDownloading ? 'animate-pulse' : ''}`} />
+                {isDownloading ? 'PDF...' : 'PDF'}
+              </button>
             </div>
           </div>
         );
