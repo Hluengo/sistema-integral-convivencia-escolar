@@ -17,7 +17,6 @@ const StudentsPanel = lazy(() => import('../../features/students/StudentsPanel')
 const AdvisorView = lazy(() => import('./MainContent/AdvisorView'));
 const AnotacionesView = lazy(() => import('../../features/anotaciones/AnotacionesView'));
 const DocumentosView = lazy(() => import('../../features/documentos/DocumentosView'));
-const DocumentHubView = lazy(() => import('../../features/documentHub/DocumentHubView'));
 
 function DashboardFallback() {
   return (
@@ -111,7 +110,6 @@ export default function MainContent({
         {currentView === 'alumnos' && 'Vista: Alumnos'}
         {currentView === 'anotaciones' && 'Vista: Gesti\u00f3n de Anotaciones'}
         {currentView === 'documentos' && 'Vista: Documentos'}
-        {currentView === 'documentHub' && 'Vista: Document Hub'}
       </div>
       {/* VIEW 1: DASHBOARD - Fully redesigned */}
       {currentView === 'dashboard' && (
@@ -179,15 +177,6 @@ export default function MainContent({
         <ErrorBoundary>
           <Suspense fallback={<AnotacionesFallback />}>
             <DocumentosView />
-          </Suspense>
-        </ErrorBoundary>
-      )}
-
-      {/* VIEW 8: DOCUMENT HUB */}
-      {currentView === 'documentHub' && (
-        <ErrorBoundary>
-          <Suspense fallback={<AnotacionesFallback />}>
-            <DocumentHubView />
           </Suspense>
         </ErrorBoundary>
       )}
