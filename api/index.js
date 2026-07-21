@@ -748,32 +748,36 @@ router7.post("/parse-annotations", async (req, res) => {
       return;
     }
     let cleanText = textContent.replace(/\n{3,}/g, "\n\n").replace(/\s{3,}/g, "  ").replace(/P\xE1gina\s*\d+.*/gi, "").trim();
-    const systemInstruction = `Eres un asistente experto de Convivencia Escolar en Chile.
-Analiza el texto de una hoja de vida estudiantil y extrae TODAS las anotaciones en JSON.
+    const systemInstruction = `Eres un analizador de documentos educativos. Tu tarea es extraer TODAS las anotaciones de un texto de hoja de vida estudiantil y devolverlas en JSON.
 
-CADA ANOTACI\xD3N en la hoja de vida tiene esta estructura de bloque:
-[Fecha] Tipo: Positiva, Negativa o Informaci\xF3n
-Categoria: [categor\xEDa]
-Anotaci\xF3n:
-[texto del evento, puede ocupar varias l\xEDneas]
-Profesor: [nombre del profesor]
+CADA ANOTACI\xD3N tiene esta estructura (en una sola l\xEDnea o bloque contiguo):
+[FECHA] Profesor: [nombre] Tipo: [tipo] Categoria: [categor\xEDa] Anotaci\xF3n: [descripci\xF3n]
 
-CADA bloque fecha+tipo+categor\xEDa+texto+profesor = UNA anotaci\xF3n.
-NO dividas un bloque en m\xFAltiple anotaciones.
-NO incluyas encabezados, t\xEDtulos, res\xFAmenes, totales o l\xEDneas sueltas como anotaciones.
-NO inventes informaci\xF3n que no est\xE9 en el texto.
+Orden exacto de los campos:
+1. FECHA al inicio, formato DD/MM/AAAA.
+2. Profesor: nombre del profesor.
+3. Tipo: SOLO puede ser "Informaci\xF3n", "Positiva" o "Negativa".
+4. Categoria: INFORMACI\xD3N, COMPORTAMIENTO, RESPONSABILIDAD o RESPONSABILIDAD Y COMPORTAMIENTO.
+5. Anotaci\xF3n: texto descriptivo del evento.
 
-Campos requeridos para cada anotaci\xF3n:
-- text: TODO el texto del evento (l\xEDneas despu\xE9s de "Anotaci\xF3n:" hasta antes de "Profesor:").
-- date: fecha en formato YYYY-MM-DD (primer token del bloque).
-- registered_by: el nombre despu\xE9s de "Profesor:" en cada bloque. Si no hay usa "Inspector\xEDa".
-- type: exactamente "Positiva", "Negativa" o "Informaci\xF3n", seg\xFAn el texto "Tipo:" en el bloque. Las anotaciones de tipo "Informaci\xF3n" son neutras (no son ni positivas ni negativas).
+REGLAS:
+- Cada l\xEDnea que empieza con una fecha (DD/MM/AAAA) es UNA anotaci\xF3n.
+- Si una anotaci\xF3n no cabe en una l\xEDnea, el texto contin\xFAa en la siguiente hasta la pr\xF3xima fecha.
+- NO dividas una anotaci\xF3n en m\xFAltiples registros.
+- NO incluyas encabezados, t\xEDtulos de secci\xF3n ni l\xEDneas sin fecha.
+- NO inventes informaci\xF3n que no est\xE9 en el texto.
+
+Campos JSON requeridos:
+- text: texto completo de la anotaci\xF3n.
+- date: fecha en formato YYYY-MM-DD.
+- registered_by: nombre del profesor. Si no hay, usa "Inspector\xEDa".
+- type: exactamente el valor del campo Tipo. "Informaci\xF3n" NO es negativa, es neutra.
 
 Devuelve SOLO el arreglo JSON, sin texto adicional.`;
     const messages = [
       {
         role: "user",
-        content: `Extrae TODAS las anotaciones del siguiente texto de hoja de vida. Cada bloque fecha+tipo+categor\xEDa+texto+profesor es UNA anotaci\xF3n. Respeta esa estructura. Devuelve SOLO el JSON:
+        content: `Extrae TODAS las anotaciones del siguiente texto de hoja de vida. Cada l\xEDnea que empieza con fecha (DD/MM/AAAA) es UNA anotaci\xF3n. Devuelve SOLO el JSON:
 
 --- INICIO DEL DOCUMENTO ---
 ${cleanText}
