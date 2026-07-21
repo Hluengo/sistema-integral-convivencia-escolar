@@ -176,7 +176,7 @@ export default function DocumentosView() {
     }
   }, [selectedStudentForDocs, students, selectedStudent, setSelectedStudentForDocs]);
 
-  // Fetch cartas when student is selected
+  // Fetch cartas when student is selected, and ensure annotations are loaded for that student
   useEffect(() => {
     if (!selectedStudent) {
       setCartas([]);
@@ -185,8 +185,20 @@ export default function DocumentosView() {
     (async () => {
       setIsLoadingCartas(true);
       try {
-        const data = await fetchCartas(selectedStudent.id);
+        const [data, anns] = await Promise.all([
+          fetchCartas(selectedStudent.id),
+          fetchAnnotations(selectedStudent.id),
+        ]);
         setCartas(data ?? []);
+        if (anns.length > 0) {
+          setAllAnnotations((prev) => {
+            const existing = new Map(prev.map((a) => [a.id, a]));
+            for (const ann of anns) {
+              if (!existing.has(ann.id)) existing.set(ann.id, ann);
+            }
+            return Array.from(existing.values());
+          });
+        }
       } catch {
         setCartas([]);
       } finally {
