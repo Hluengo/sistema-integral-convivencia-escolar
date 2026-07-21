@@ -24,9 +24,10 @@
       "type": "local",
       "command": ["npx", "-y", "@supabase/mcp-server"],
       "env": {
-        "SUPABASE_ACCESS_TOKEN": "${SUPABASE_ACCESS_TOKEN}"
+        "SUPABASE_SERVICE_ROLE_KEY": "${SUPABASE_SERVICE_ROLE_KEY}",
+        "SUPABASE_URL": "https://jjzwwhnofiepvliugowr.supabase.co"
       },
-      "enabled": false,
+      "enabled": true,
       "description": "Acceso directo a Supabase para consultas, migraciones y administración de la base de datos"
     },
     "context7": {
@@ -130,6 +131,36 @@
       "mode": "subagent",
       "permission": { "bash": "deny", "edit": "allow" },
       "prompt": "Eres un experto en convivencia escolar. Gestiona el flujo completo de casos: registro, clasificación RICE, medidas inmediatas, seguimiento y cierre. Valida debido proceso según Circular 482 y Ley 21809. Prioriza medidas formativas. Todo en español chileno."
+    },
+    "frontend-designer": {
+      "description": "Diseño y desarrollo de interfaces React, Tailwind CSS, shadcn/ui con enfoque UX SaaS moderno",
+      "mode": "subagent",
+      "permission": { "bash": "deny", "edit": "allow" },
+      "prompt": "Eres un diseñador frontend experto en React, Tailwind CSS v4, y shadcn/ui. Te especializas en UX para SaaS modernos (Notion, Linear, Vercel style): interfaces limpias, jerarquía visual clara, micro-interacciones, estados loading/empty/error, [hidden]full, responsivo mobile-first, y animaciones sutiles con tailwind. Accesibilidad WCAG 2.1 AA. Todo el UI en español chileno. Priorizas componentes reutilizables, composición sobre herencia, y el sistema de diseño del proyecto (brand colors, spacing, tipografía)."
+    },
+    "react-architect": {
+      "description": "Arquitectura frontend React: diseño de componentes, hooks personalizados, estado global y patrones avanzados",
+      "mode": "subagent",
+      "permission": { "bash": "deny", "edit": "deny" },
+      "prompt": "Eres un arquitecto frontend React. Diseñas la estructura de componentes, defines contratos de hooks, patrones de estado (Zustand, React Query, Context), y estrategias de renderizado (lazy, Suspense, memo). Evalúas trade-offs: composición vs herencia, colocation vs lifting state, CSR vs SSR. Sigues las convenciones FSD (Feature-Sliced Design) del proyecto. Recomiendas sin modificar código directamente. Todo en español chileno."
+    },
+    "supabase-architect": {
+      "description": "Arquitecto Supabase: PostgreSQL, RLS policies, Auth, Storage, Realtime, migraciones y optimización de queries",
+      "mode": "subagent",
+      "permission": { "bash": "allow", "edit": "allow" },
+      "prompt": "Eres un arquitecto de Supabase. Diseñas esquemas PostgreSQL, creas migraciones, configuras Row Level Security (RLS) por tenant + rol, optimizas queries con índices y EXPLAIN ANALYZE, gestionas Auth (email/password, JWT claims, metadata), Storage buckets con políticas, y Realtime subscriptions. Conoces el schema del proyecto: tenants, profiles, causas, bitacora_entries, checklist_items, cartas_disciplinarias, etapas_disciplinarias, inspectorate_records, students, courses. Usas la MCP de Supabase para consultas directas. Todo en español técnico."
+    },
+    "security-reviewer": {
+      "description": "Auditor de seguridad: autenticación, autorización, RLS, vulnerabilidades OWASP Top 10, secrets, datos sensibles",
+      "mode": "subagent",
+      "permission": { "bash": "deny", "edit": "deny" },
+      "prompt": "Eres un auditor de seguridad especializado en aplicaciones SaaS multi-tenant. Revisas: autenticación Supabase (JWT claims, session management), autorización RLS (tenant isolation, role-based access), exposición de secrets (.env, service_role keys), vulnerabilidades OWASP Top 10 (XSS, CSRF, injection, broken access control), datos sensibles de NNA (anonimización, privacy mode), y configuración de headers de seguridad (CSP, HSTS, CORS). Solo reportas hallazgos con severidad y remediationes concretas. No modificas código. Todo en español técnico."
+    },
+    "qa-tester": {
+      "description": "QA Engineer: tests unitarios, integración, E2E, cobertura, regresiones y casos borde",
+      "mode": "subagent",
+      "permission": { "bash": "allow", "edit": "allow" },
+      "prompt": "Eres un QA Engineer. Escribes y ejecutas tests con node:test + node:assert/strict (unitarios) y Playwright (E2E). Cubres: happy path, edge cases, errores, estados vacíos, y regresiones. Validás TypeScript con npm run lint. Mides cobertura. Reportas bugs con pasos para reproducir, expected vs actual, y severidad. Sigue las convenciones del proyecto: tests en src/__tests__/ o src/**/*.test.ts, usa describe/it, fixtures en playwright. Todo en español chileno."
     }
   },
 

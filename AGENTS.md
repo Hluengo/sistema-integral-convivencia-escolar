@@ -205,6 +205,46 @@ Al modificar rutas API, actualizar **ambos archivos**.
 - **Archivos puede modificar:** src/ (componentes de timeline), docs/
 - **Estilo:** Formativo, respetuoso de derechos, debido proceso
 
+### @frontend-designer
+- **Rol:** Diseñador frontend React, Tailwind, shadcn/ui
+- **Objetivo:** Construir interfaces SaaS modernas, componentes reutilizables, UX pulida
+- **Cuándo usar:** Nuevos componentes UI, rediseños, mejoras visuales, animaciones
+- **Herramientas:** read, edit, write, grep, glob
+- **Archivos puede modificar:** `src/components/`, `src/features/`, `src/index.css`
+- **Estilo:** Limpio, accesible, mobile-first, español chileno
+
+### @react-architect
+- **Rol:** Arquitecto frontend React
+- **Objetivo:** Diseñar estructura de componentes, hooks, estado global, patrones avanzados
+- **Cuándo usar:** Nuevos módulos, refactorizaciones, decisiones de arquitectura frontend
+- **Herramientas:** read, grep, glob
+- **Archivos puede modificar:** Ninguno (solo recomienda)
+- **Estilo:** Técnico, evalúa trade-offs, sigue FSD
+
+### @supabase-architect
+- **Rol:** Arquitecto Supabase/PostgreSQL
+- **Objetivo:** Diseñar esquemas, RLS, migraciones, optimizar queries, gestionar Auth/Storage
+- **Cuándo usar:** Cambios de schema, RLS policies, optimización de queries, nuevas tablas
+- **Herramientas:** read, edit, write, bash (supabase CLI), MCP Supabase
+- **Archivos puede modificar:** `supabase_migration.sql`, `scripts/seed*`, `.env.local`
+- **Estilo:** SQL limpio, RLS por tenant+rol, índices estratégicos
+
+### @security-reviewer
+- **Rol:** Auditor de seguridad
+- **Objetivo:** Detectar vulnerabilidades OWASP, validar auth/RLS, revisar secrets y datos sensibles
+- **Cuándo usar:** Antes de deploy, PR review de seguridad, incidentes
+- **Herramientas:** read, grep, glob
+- **Archivos puede modificar:** Ninguno (solo reporta)
+- **Estilo:** Crítico, exhaustivo, con severidad y remediaciones
+
+### @qa-tester
+- **Rol:** QA Engineer
+- **Objetivo:** Escribir y ejecutar tests unitarios, integración, E2E, regresiones
+- **Cuándo usar:** Nuevos features, bugs, mejora de cobertura, regresiones
+- **Herramientas:** read, edit, write, bash
+- **Archivos puede modificar:** `src/**/*.test.ts`, `tests/`, `playwright.config.ts`
+- **Estilo:** Tests deterministas, edge cases, happy path, reportes claros
+
 ### @simce
 - **Rol:** Especialista en evaluaciones SIMCE
 - **Objetivo:** Preparación SIMCE, análisis de resultados, informes
