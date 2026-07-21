@@ -62,6 +62,13 @@ const FASE_BADGE: Record<string, string> = {
   Seguimiento: 'bg-emerald-100 text-emerald-800',
 };
 
+const STATUS_LABEL: Record<string, string> = {
+  Verde: 'Sin medida activa',
+  Amarillo: 'Amonestación Escrita',
+  Naranja: 'Carta de Compromiso Conductual',
+  Rojo: 'Derivación a Convivencia Escolar',
+};
+
 function getFaseForEstado(estadoActual: string): string {
   if (estadoActual.includes('Recepción') || estadoActual.includes('Denuncia')) return 'Recepción';
   if (estadoActual.includes('Indagación') || estadoActual.includes('Investigación') || estadoActual.includes('Mediación')) return 'Investigación';
@@ -398,7 +405,7 @@ export default function DocumentosView() {
                         {isStudent && semStyle.dot && (
                           <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold text-[10px] ${semStyle.badge}`}>
                             <Circle className={`h-1.5 w-1.5 fill-current${semStyle.dot}`} />
-                            {item.status}
+                            {STATUS_LABEL[item.status] || item.status}
                           </span>
                         )}
                       </div>
@@ -551,6 +558,7 @@ export default function DocumentosView() {
                   <p className="mt-1 text-neutral-400 text-xs">
                     Aún no se han generado cartas de amonestación, compromiso conductual o derivaciones para este estudiante.
                   </p>
+                  {!cta && (
                   <button
                     type="button"
                     onClick={handleNewDocument}
@@ -559,6 +567,7 @@ export default function DocumentosView() {
                     <Plus className="h-4 w-4" />
                     Crear Primer Documento
                   </button>
+                  )}
                 </div>
               )}
             </>
