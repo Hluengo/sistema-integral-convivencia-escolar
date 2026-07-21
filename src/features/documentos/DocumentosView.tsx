@@ -1,13 +1,13 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
-import { Search, Scale, FileText, ScrollText, Plus, ChevronRight, BookOpen, Sparkles } from 'lucide-react';
+import { Search, Scale, FileText, ScrollText, Plus, ChevronRight, BookOpen, Sparkles, MessageSquare } from 'lucide-react';
 import { useUIStore } from '@/src/shared/lib/stores/uiStore';
 import { useCausasStore } from '@/src/shared/lib/stores/causasStore';
-import { fetchStudentsWithAnnotationCounts } from '@/src/services/annotations.service';
+import { fetchStudentsWithAnnotationCounts, fetchAnnotations } from '@/src/services/annotations.service';
 import { fetchCartas } from '@/src/services/cartas.service';
 import { fetchCausas } from '@/src/services/cases';
-import type { AnotacionStudent, CartaDisciplinaria, Causa } from '@/src/shared/lib/types';
+import type { AnotacionStudent, Annotation, CartaDisciplinaria, Causa } from '@/src/shared/lib/types';
 import { getSemaphoricStyle } from '@/src/lib/anotacionesUtils';
 
 const AnotacionesDocumentGenerator = lazy(() => import('@/src/features/anotaciones/AnotacionesDocumentGenerator'));
@@ -15,17 +15,17 @@ const AnotacionesDocumentGenerator = lazy(() => import('@/src/features/anotacion
 type DocSource = 'causa' | 'anotacion';
 type DocFiltro = 'todos' | 'causas' | 'anotaciones';
 
-interface UnifiedDoc {
+interface HubItem {
   id: string;
-  source: DocSource;
-  titulo: string;
-  estudiante: string;
-  estudianteId: string;
-  curso: string;
-  fecha: string;
-  estado: string;
-  causaId?: string;
-  tieneIA: boolean;
+  type: 'causa' | 'annotation';
+  date: string;
+  studentId: string;
+  studentName: string;
+  course: string;
+  title: string;
+  description: string;
+  status: string;
+  sourceRecord: Causa | Annotation;
 }
 
 const CTA_THRESHOLDS = [
@@ -62,6 +62,18 @@ const FASE_BADGE: Record<string, string> = {
   Seguimiento: 'bg-emerald-100 text-emerald-800',
 };
 
+const ANNOTATION_TYPE_BADGE: Record<string, { bg: string; text: string }> = {
+  Positiva: { bg: 'bg-emerald-100', text: 'text-emerald-800' },
+  Negativa: { bg: 'bg-red-100', text: 'text-red-800' },
+};
+
+const SEVERITY_BADGE: Record<string, string> = {
+  Leve: 'bg-yellow-100 text-yellow-800',
+  Grave: 'bg-orange-100 text-orange-800',
+  'Muy Grave': 'bg-red-100 text-red-800',
+  Gravíssima: 'bg-pink-100 text-pink-800',
+};
+
 function getFaseForEstado(estadoActual: string): string {
   if (estadoActual.includes('Recepción') || estadoActual.includes('Denuncia')) return 'Recepción';
   if (estadoActual.includes('Indagación') || estadoActual.includes('Investigación') || estadoActual.includes('Mediación')) return 'Investigación';
@@ -84,7 +96,8 @@ export default function DocumentosView() {
   const setSelectedStudentForDocs = useUIStore((s) => s.setSelectedStudentForDocs);
 
   // Unified document state
-  const [docs, setDocs] = useState<UnifiedDoc[]>([]);
+  const [hubItems, setHubItems] = useState<HubItem[]>([]);
+  const [allAnnotations, setAllAnnotations] = useState<Annotation[]>([]);
   const [filtro, setFiltro] = useState<DocFiltro>('todos');
   const [busqueda, setBusqueda] = useState('');
   const [cargando, setCargando] = useState(true);
@@ -103,77 +116,58 @@ export default function DocumentosView() {
     (async () => {
       setCargando(true);
       try {
-        const [causas, estudiantesData] = await Promise.all([
+        const [causas, annotations, estudiantesData] = await Promise.all([
           fetchCausas(0),
+          fetchAnnotations(),
           fetchStudentsWithAnnotationCounts(),
         ]);
         if (cancelled) return;
-        const allStudents = estudiantesData ?? [];
-        setStudents(allStudents);
 
-        const estudiantesConAnotaciones = allStudents.filter(
-          (s) => (s.annotations_count || 0) > 0
-        );
+        const studentList = estudiantesData ?? [];
+        setStudents(studentList);
+        setAllAnnotations(annotations ?? []);
 
-        const cartasPorEstudiante = estudiantesConAnotaciones.length > 0
-          ? await Promise.all(estudiantesConAnotaciones.map((s) => fetchCartas(s.id)))
-          : [];
-        if (cancelled) return;
+        const studentMap = new Map(studentList.map((s) => [s.id, s]));
 
-        const causaDocs: UnifiedDoc[] = causas.map((c: Causa) => ({
+        const causaItems: HubItem[] = (causas ?? []).map((c: Causa) => ({
           id: `causa-${c.id}`,
-          source: 'causa' as const,
-          titulo: `Expediente ${c.id}`,
-          estudiante: c.estudianteNombre,
-          estudianteId: '',
-          curso: c.estudianteCurso,
-          fecha: c.fechaUltimaActualizacion || c.fechaApertura,
-          estado: c.estadoActual,
-          causaId: c.id,
-          tieneIA: true,
+          type: 'causa',
+          date: c.fechaUltimaActualizacion || c.fechaApertura,
+          studentId: '',
+          studentName: c.estudianteNombre,
+          course: c.estudianteCurso,
+          title: `Causa ${c.id}`,
+          description: c.observaciones || '',
+          status: c.estadoActual,
+          sourceRecord: c,
         }));
 
-        const anotacionDocs: UnifiedDoc[] = [];
-        for (let i = 0; i < estudiantesConAnotaciones.length; i++) {
-          const student = estudiantesConAnotaciones[i];
-          const studentCartas = cartasPorEstudiante[i] || [];
-          for (const carta of studentCartas) {
-            anotacionDocs.push({
-              id: `anotacion-${carta.id}`,
-              source: 'anotacion' as const,
-              titulo: LETTER_TYPE_LABEL[carta.letter_type] || carta.letter_type,
-              estudiante: student.full_name,
-              estudianteId: student.id,
-              curso: student.course_name || '',
-              fecha: carta.emission_date,
-              estado: carta.status,
-              tieneIA: false,
-            });
-          }
-          if (studentCartas.length === 0) {
-            const negCount = Number(student.annotations_count) || 0;
-            const lastDate = student.last_annotation_date || new Date().toISOString();
-            anotacionDocs.push({
-              id: `anotacion-pending-${student.id}`,
-              source: 'anotacion' as const,
-              titulo: `${negCount} anotaci\u00f3n${negCount !== 1 ? 'es' : ''} sin carta`,
-              estudiante: student.full_name,
-              estudianteId: student.id,
-              curso: student.course_name || '',
-              fecha: lastDate,
-              estado: 'Pendiente',
-              tieneIA: false,
-            });
-          }
-        }
+        const annotationItems: HubItem[] = (annotations ?? []).map((ann: Annotation) => {
+          const student = studentMap.get(ann.student_id);
+          return {
+            id: `annotation-${ann.id}`,
+            type: 'annotation',
+            date: ann.date,
+            studentId: ann.student_id,
+            studentName: student?.full_name ?? 'Desconocido',
+            course: student?.course_name ?? student?.course_id ?? '',
+            title: `Anotación ${ann.type}`,
+            description: ann.text,
+            status: ann.type,
+            sourceRecord: ann,
+          };
+        });
 
-        setDocs(
-          [...causaDocs, ...anotacionDocs].sort(
-            (a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
+        setHubItems(
+          [...causaItems, ...annotationItems].sort(
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
           )
         );
       } catch {
-        if (!cancelled) setDocs([]);
+        if (!cancelled) {
+          setHubItems([]);
+          setAllAnnotations([]);
+        }
       } finally {
         if (!cancelled) setCargando(false);
       }
@@ -211,40 +205,51 @@ export default function DocumentosView() {
     })();
   }, [selectedStudent?.id, selectedStudent]);
 
+  // Annotations filtered for selected student (used by AnotacionesDocumentGenerator)
+  const studentAnnotations = useMemo(() => {
+    if (!selectedStudent) return [];
+    return allAnnotations.filter((a) => a.student_id === selectedStudent.id);
+  }, [selectedStudent, allAnnotations]);
+
   // Filtered documents
   const docsFiltrados = useMemo(() => {
-    let result = docs;
+    let result = hubItems;
     if (filtro !== 'todos') {
-      const sourceMap: Record<string, DocSource> = { causas: 'causa', anotaciones: 'anotacion' };
-      result = result.filter((d) => d.source === sourceMap[filtro]);
+      const sourceMap: Record<string, HubItem['type']> = { causas: 'causa', anotaciones: 'annotation' };
+      result = result.filter((d) => d.type === sourceMap[filtro]);
     }
     if (busqueda.trim()) {
       const q = busqueda.trim().toLowerCase();
       result = result.filter(
-        (d) =>
-          d.estudiante.toLowerCase().includes(q) ||
-          d.titulo.toLowerCase().includes(q) ||
-          (d.curso && d.curso.toLowerCase().includes(q))
+        (item) =>
+          item.studentName.toLowerCase().includes(q) ||
+          item.title.toLowerCase().includes(q) ||
+          (item.course && item.course.toLowerCase().includes(q)) ||
+          item.description.toLowerCase().includes(q) ||
+          item.status.toLowerCase().includes(q) ||
+          (item.type === 'causa' && (item.sourceRecord as Causa).id.toLowerCase().includes(q)) ||
+          (item.type === 'annotation' && (item.sourceRecord as Annotation).severity.toLowerCase().includes(q))
       );
     }
     return result;
-  }, [docs, filtro, busqueda]);
+  }, [hubItems, filtro, busqueda]);
 
   const filterCounts = useMemo(
     () => ({
-      todos: docs.length,
-      causas: docs.filter((d) => d.source === 'causa').length,
-      anotaciones: docs.filter((d) => d.source === 'anotacion').length,
+      todos: hubItems.length,
+      causas: hubItems.filter((d) => d.type === 'causa').length,
+      anotaciones: hubItems.filter((d) => d.type === 'annotation').length,
     }),
-    [docs]
+    [hubItems]
   );
 
-  const handleDocClick = (doc: UnifiedDoc) => {
-    if (doc.source === 'causa' && doc.causaId) {
-      setSelectedCausaId(doc.causaId);
+  const handleDocClick = (item: HubItem) => {
+    if (item.type === 'causa') {
+      const causa = item.sourceRecord as Causa;
+      setSelectedCausaId(causa.id);
       setCurrentView('causas');
-    } else if (doc.source === 'anotacion' && doc.estudianteId) {
-      const match = students.find((s) => s.id === doc.estudianteId);
+    } else if (item.type === 'annotation' && item.studentId) {
+      const match = students.find((s) => s.id === item.studentId);
       if (match) {
         setSelectedStudent(match);
         setBusqueda('');
@@ -359,38 +364,51 @@ export default function DocumentosView() {
             </div>
           ) : (
             <div className="space-y-3">
-              {docsFiltrados.map((doc) => {
-                const isCausa = doc.source === 'causa';
-                const fase = isCausa ? getFaseForEstado(doc.estado) : '';
+              {docsFiltrados.map((item) => {
+                const isCausa = item.type === 'causa';
+                const fase = isCausa ? getFaseForEstado(item.status) : '';
+                const ann = !isCausa ? item.sourceRecord as Annotation : null;
+                const typeBadge = ann ? ANNOTATION_TYPE_BADGE[ann.type] : null;
+                const severityClass = ann ? SEVERITY_BADGE[ann.severity] : '';
                 return (
                   <button
-                    key={doc.id}
+                    key={item.id}
                     type="button"
-                    onClick={() => handleDocClick(doc)}
+                    onClick={() => handleDocClick(item)}
                     className="flex w-full items-center gap-4 rounded-2xl border border-neutral-200/80 bg-white p-5 text-left shadow-xs transition-colors transition-shadow hover:border-brand-200 hover:shadow-md"
                   >
-                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isCausa ? 'bg-brand-50' : 'bg-indigo-50'}`}>
+                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isCausa ? 'bg-brand-50' : ann?.type === 'Negativa' ? 'bg-red-50' : 'bg-emerald-50'}`}>
                       {isCausa ? (
                         <Scale className="h-5 w-5 text-brand-600" />
                       ) : (
-                        <FileText className="h-5 w-5 text-indigo-600" />
+                        <MessageSquare className={`h-5 w-5 ${ann?.type === 'Negativa' ? 'text-red-600' : 'text-emerald-600'}`} />
                       )}
                     </div>
 
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-baseline gap-2">
-                        <h3 className="font-bold text-neutral-900 text-sm truncate">{doc.titulo}</h3>
-                        <span className={`shrink-0 rounded-full px-2 py-0.5 font-semibold text-[10px] ${isCausa ? 'bg-brand-100 text-brand-700' : 'bg-indigo-100 text-indigo-700'}`}>
+                        <h3 className="font-bold text-neutral-900 text-sm truncate">{item.title}</h3>
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 font-semibold text-[10px] ${isCausa ? 'bg-brand-100 text-brand-700' : ann?.type === 'Negativa' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
                           {isCausa ? 'Causa' : 'Anotación'}
                         </span>
+                        {typeBadge && (
+                          <span className={`shrink-0 rounded-full px-2 py-0.5 font-semibold text-[10px] ${typeBadge.bg} ${typeBadge.text}`}>
+                            {ann?.type}
+                          </span>
+                        )}
                       </div>
                       <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-neutral-500 text-xs">
-                        <span className="font-medium text-neutral-700">{doc.estudiante}</span>
-                        {doc.curso && <span className="text-neutral-400">{doc.curso}</span>}
+                        <span className="font-medium text-neutral-700">{item.studentName}</span>
+                        {item.course && <span className="text-neutral-400">{item.course}</span>}
                         <span className="text-neutral-400">
-                          {doc.fecha ? new Date(doc.fecha).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}
+                          {item.date ? new Date(item.date).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}
                         </span>
                       </div>
+                      {item.description && (
+                        <p className="mt-1.5 line-clamp-2 text-neutral-500 text-xs">
+                          {item.description.length > 120 ? `${item.description.slice(0, 120)}...` : item.description}
+                        </p>
+                      )}
                       <div className="mt-2 flex flex-wrap items-center gap-2">
                         {isCausa ? (
                           <>
@@ -404,15 +422,17 @@ export default function DocumentosView() {
                               IA Disponible
                             </span>
                           </>
-                        ) : doc.estado ? (
-                          (() => {
-                            const badge = STATUS_BADGE[doc.estado] || STATUS_BADGE.Vigente;
-                            return (
-                              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-semibold text-[10px] ${badge.bg} ${badge.text}`}>
-                                {doc.estado}
+                        ) : ann ? (
+                          <>
+                            {severityClass && (
+                              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-semibold text-[10px] ${severityClass}`}>
+                                {ann.severity}
                               </span>
-                            );
-                          })()
+                            )}
+                            <span className="inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-0.5 font-semibold text-[10px] text-neutral-600">
+                              Por: {ann.registered_by || 'Sistema'}
+                            </span>
+                          </>
                         ) : null}
                       </div>
                     </div>
@@ -427,7 +447,7 @@ export default function DocumentosView() {
                         ) : (
                           <>
                             <FileText className="h-3 w-3" />
-                            Ver Carta
+                            Ver Estudiante
                           </>
                         )}
                       </span>
@@ -573,7 +593,7 @@ export default function DocumentosView() {
                     rut: selectedStudent.rut,
                     teacher_id: selectedStudent.teacher_id,
                   }}
-                  annotations={[]}
+                  annotations={studentAnnotations}
                   privacyMode={false}
                   teachers={{}}
                   initialDocType={initialDocType}
