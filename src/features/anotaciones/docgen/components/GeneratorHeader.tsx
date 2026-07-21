@@ -16,17 +16,17 @@ export default function GeneratorHeader({
       <div>
         <h3 className="flex items-center gap-2 font-bold text-neutral-900 text-sm">
           <FileText className="h-5 w-5 text-indigo-600" />
-          Generaci\u00f3n de Documentos Disciplinarios
+          Generación de Documentos Disciplinarios
         </h3>
         <p className="mt-1 text-neutral-500 text-xs">
-          Emisi\u00f3n de cartas de amonestaci\u00f3n, compromiso conductual y derivaci\u00f3n.
+          Emisión de cartas de amonestación, compromiso conductual y derivación.
         </p>
       </div>
       <div className={`flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2 font-semibold text-xs ${negativeCount >= 10 ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-yellow-50 border-yellow-200 text-yellow-800'}`}>
         <AlertTriangle className="h-4 w-4 shrink-0" />
         <span>
           {negativeCount >= 10
-            ? `Reiteraci\u00f3n de faltas (${negativeCount} negativas)`
+            ? `Reiteración de faltas (${negativeCount} negativas)`
             : `Estado: ${negativeCount} anotaciones negativas`}
         </span>
       </div>

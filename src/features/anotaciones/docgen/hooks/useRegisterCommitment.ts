@@ -54,6 +54,8 @@ export function useRegisterCommitment() {
         letter_type:
           docType === 'amonestacion'
             ? 'Amonestaci\u00f3n Escrita'
+            : docType === 'derivacion'
+            ? 'Ficha de Derivaci\u00f3n'
             : 'Carta de Compromiso Conductual',
         emission_date: new Date().toISOString().split('T')[0],
         status: compromisoStatus,

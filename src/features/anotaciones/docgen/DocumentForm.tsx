@@ -189,20 +189,18 @@ export default function DocumentForm({
         )}
       </fieldset>
 
-      {/* Botón de registro — solo para compromiso_conductual */}
-      {docType === 'compromiso_conductual' && (
-        <div className="border-neutral-200 border-t pt-4">
-          <button
-            type="button"
-            onClick={onRegisterCommitment}
-            disabled={isRegistering}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 font-medium text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <FileText className="h-5 w-5" />
-            {isRegistering ? 'Registrando...' : 'Registrar y Emitir Carta'}
-          </button>
-        </div>
-      )}
+      {/* Botón de registro y emisión */}
+      <div className="border-neutral-200 border-t pt-4">
+        <button
+          type="button"
+          onClick={onRegisterCommitment}
+          disabled={isRegistering}
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 font-medium text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <FileText className="h-5 w-5" />
+          {isRegistering ? 'Registrando...' : 'Registrar y Emitir Carta'}
+        </button>
+      </div>
     </div>
   );
 }
