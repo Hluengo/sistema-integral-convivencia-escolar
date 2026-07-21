@@ -48,3 +48,40 @@ if (!user) return res.status(401).json({ ok: false, error: 'No autenticado' });
 - License headers: `/** @license SPDX-License-Identifier: Apache-2.0 */`
 - Path alias `@/` → project root
 - Snake_case en DB, camelCase en TypeScript
+
+## Ecosistema de Agentes (Actualizado)
+
+### Skills Disponibles (29 total)
+- **Core:** react-builder, typescript-review, tailwind-review, vite-optimizer, testing
+- **Documentos:** pdf-official, docx-official, xlsx-official
+- **Educación:** school-dashboard, data-analytics, convivencia-manager
+- **Legal:** legal-compliance, due-process-validator
+- **Base de datos:** db-migration, postgres-review, supabase-audit
+- **DevOps:** deploy, gitflow, github
+- **Investigación:** academic-writing, research, prompt-engineering
+- **Automatización:** python-automation, powershell, apps-script
+- **Calidad:** ponytail (YAGNI), documentation
+
+### MCP Servers (5 configurados)
+1. **memory** — Memoria persistente entre sesiones
+2. **sequential-thinking** — Razonamiento paso a paso
+3. **codebase-memory** — Memoria del codebase
+4. **supabase** — Acceso directo a Supabase (deshabilitado, requiere token)
+5. **context7** — Documentación actualizada de librerías
+
+### Agentes Educativos (8 especializados)
+- `@analytics` — Métricas y KPIs educativos
+- `@pie` — Programa de Integración Escolar
+- `@utp` — Unidad Técnico Pedagógica
+- `@convivencia` — Gestión de casos de convivencia
+- `@legal` — Análisis legal educativo
+- `@security` — Auditoría de seguridad
+- `@reviewer` — Code review
+- `@test` — Testing
+
+### Workflows Disponibles (5)
+1. `auditoria-seguridad` — Auditoría completa de seguridad
+2. `fix-bug-critico` — Proceso de fix de bugs críticos
+3. `nuevo-feature-legal` — Nuevo feature con validación legal
+4. `reporte-convivencia` — Reporte completo de convivencia
+5. `auditoria-completa` — Auditoría integral del sistema

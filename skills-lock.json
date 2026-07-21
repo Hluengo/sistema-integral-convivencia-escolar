@@ -12,6 +12,26 @@
       "sourceType": "github",
       "skillPath": "skills/frontend-design/SKILL.md",
       "computedHash": "93f53fd1c0352d3d7ec17b8f73d7351bf76f4821e55d123c9d2abc2c53ba48e4"
+    },
+    "pdf-official": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": ".opencode/skills/pdf-official/SKILL.md"
+    },
+    "docx-official": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": ".opencode/skills/docx-official/SKILL.md"
+    },
+    "xlsx-official": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": ".opencode/skills/xlsx-official/SKILL.md"
+    },
+    "data-analytics": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": ".opencode/skills/data-analytics/SKILL.md"
     }
   }
 }

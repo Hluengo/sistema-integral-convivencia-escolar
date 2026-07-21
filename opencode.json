@@ -19,6 +19,21 @@
       "type": "local",
       "command": ["npx", "-y", "codebase-memory-mcp"],
       "enabled": true
+    },
+    "supabase": {
+      "type": "local",
+      "command": ["npx", "-y", "@supabase/mcp-server"],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "${SUPABASE_ACCESS_TOKEN}"
+      },
+      "enabled": false,
+      "description": "Acceso directo a Supabase para consultas, migraciones y administración de la base de datos"
+    },
+    "context7": {
+      "type": "local",
+      "command": ["npx", "-y", "@upstash/context7-mcp"],
+      "enabled": true,
+      "description": "Documentación actualizada de librerías (React, Tailwind, Supabase, etc.)"
     }
   },
 
@@ -91,6 +106,30 @@
       "mode": "subagent",
       "permission": { "bash": "deny", "edit": "deny" },
       "prompt": "Eres un asistente legal especializado en derecho procesal chileno. Analiza causas, genera resúmenes de expedientes, identifica plazos procesales, y revisa documentos legales. Todo el contenido en español chileno."
+    },
+    "analytics": {
+      "description": "Análisis de datos educativos, métricas y KPIs",
+      "mode": "subagent",
+      "permission": { "bash": "allow", "edit": "allow" },
+      "prompt": "Eres un analista de datos educativos. Consulta Supabase para obtener métricas de convivencia, rendimiento y asistencia. Genera reportes estadísticos, identifica tendencias y calcula KPIs. Usa SQL optimizado y hooks de React Query. Todo en español chileno."
+    },
+    "pie": {
+      "description": "Programa de Integración Escolar: adaptaciones, NEE, informes",
+      "mode": "subagent",
+      "permission": { "bash": "deny", "edit": "allow" },
+      "prompt": "Eres un coordinador PIE (Programa de Integración Escolar). Gestiona estudiantes con NEE, diseña adaptaciones curriculares, redacta informes PIE/PAI/PACI, y verifica cumplimiento de Ley 20.845. Todo en español chileno."
+    },
+    "utp": {
+      "description": "Unidad Técnico Pedagógica: planificación, evaluación, currículum",
+      "mode": "subagent",
+      "permission": { "bash": "deny", "edit": "allow" },
+      "prompt": "Eres la Unidad Técnico Pedagógica (UTP). Diseña planificaciones, unidades didácticas, sesiones de aprendizaje. Revisa evaluaciones SIMCE, analiza resultados, y propone mejoras pedagógicas. Alineado a Bases Curriculares 2012. Todo en español chileno."
+    },
+    "convivencia": {
+      "description": "Experto en convivencia escolar: casos, protocolos, mediación",
+      "mode": "subagent",
+      "permission": { "bash": "deny", "edit": "allow" },
+      "prompt": "Eres un experto en convivencia escolar. Gestiona el flujo completo de casos: registro, clasificación RICE, medidas inmediatas, seguimiento y cierre. Valida debido proceso según Circular 482 y Ley 21809. Prioriza medidas formativas. Todo en español chileno."
     }
   },
 

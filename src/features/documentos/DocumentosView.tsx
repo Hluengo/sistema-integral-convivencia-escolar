@@ -150,6 +150,21 @@ export default function DocumentosView() {
               tieneIA: false,
             });
           }
+          if (studentCartas.length === 0) {
+            const negCount = Number(student.annotations_count) || 0;
+            const lastDate = student.last_annotation_date || new Date().toISOString();
+            anotacionDocs.push({
+              id: `anotacion-pending-${student.id}`,
+              source: 'anotacion' as const,
+              titulo: `${negCount} anotaci\u00f3n${negCount !== 1 ? 'es' : ''} sin carta`,
+              estudiante: student.full_name,
+              estudianteId: student.id,
+              curso: student.course_name || '',
+              fecha: lastDate,
+              estado: 'Pendiente',
+              tieneIA: false,
+            });
+          }
         }
 
         setDocs(
