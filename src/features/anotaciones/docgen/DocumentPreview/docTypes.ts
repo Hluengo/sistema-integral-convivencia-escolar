@@ -10,15 +10,12 @@ export interface DocContentProps {
   currentCourse: string;
   currentTeacher: string;
   coordinatorName: string;
+  inspectorName: string;
   apoderadoName: string;
   dateStr: string;
   negativeCount: number;
   docObservations: string;
   selectedAnnsObjects: Annotation[];
-}
-
-export interface CompromisoDocProps extends DocContentProps {
-  customCommitments: string[];
 }
 
 export const TITLE_MAP: Record<DocType, string> = {

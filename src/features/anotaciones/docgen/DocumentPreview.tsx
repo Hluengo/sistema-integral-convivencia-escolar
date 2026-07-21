@@ -15,11 +15,11 @@ interface DocumentPreviewProps {
   currentCourse: string;
   currentTeacher: string;
   coordinatorName: string;
+  inspectorName: string;
   apoderadoName: string;
   dateStr: string;
   negativeCount: number;
   docObservations: string;
-  customCommitments: string[];
   selectedAnnsObjects: Annotation[];
   hasTenOrMore: boolean;
   onPrint: () => void;
@@ -34,11 +34,11 @@ export default function DocumentPreview({
   currentCourse,
   currentTeacher,
   coordinatorName,
+  inspectorName,
   apoderadoName,
   dateStr,
   negativeCount,
   docObservations,
-  customCommitments,
   selectedAnnsObjects,
   onPrint,
   onExportPDF,
@@ -46,7 +46,7 @@ export default function DocumentPreview({
 }: DocumentPreviewProps) {
   const title = TITLE_MAP[docType] ?? 'Documento Disciplinario';
 
-  const sharedProps = { currentName, currentRut, currentCourse, currentTeacher, coordinatorName, apoderadoName, dateStr, negativeCount, docObservations, selectedAnnsObjects };
+  const sharedProps = { currentName, currentRut, currentCourse, currentTeacher, coordinatorName, inspectorName, apoderadoName, dateStr, negativeCount, docObservations, selectedAnnsObjects };
 
   return (
     <div className="space-y-4">
@@ -98,7 +98,7 @@ export default function DocumentPreview({
         </h2>
 
         {docType === 'amonestacion' && <AmonestacionContent {...sharedProps} />}
-        {docType === 'compromiso_conductual' && <CompromisoContent {...sharedProps} customCommitments={customCommitments} />}
+        {docType === 'compromiso_conductual' && <CompromisoContent {...sharedProps} />}
         {docType === 'derivacion' && <DerivacionContent {...sharedProps} />}
       </div>
     </div>

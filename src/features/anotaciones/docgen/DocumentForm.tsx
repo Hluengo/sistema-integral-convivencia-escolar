@@ -1,7 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useState } from 'react';
-import { Plus, X, CheckSquare, Square, FileText } from 'lucide-react';
+import { CheckSquare, Square, FileText } from 'lucide-react';
 import type { Annotation } from '../../../types';
 
 interface DocumentFormProps {
@@ -14,25 +13,15 @@ interface DocumentFormProps {
   onCoordinatorNameChange: (value: string) => void;
   emittedBy: string;
   onEmittedByChange: (value: string) => void;
+  docObservations: string;
+  onObservationsChange: (value: string) => void;
   selectedAnnotationsForDoc: string[];
   onToggleAnnotation: (id: string) => void;
-  compromisoStatus: string;
-  onCompromisoStatusChange: (value: string) => void;
-  customCommitments: string[];
-  onAddCommitment: (commitment: string) => void;
-  onRemoveCommitment: (index: number) => void;
   negativeCount: number;
   annotations: Annotation[];
   onRegisterCommitment: () => void;
   isRegistering: boolean;
 }
-
-const COMPROMISO_STATUS_OPTIONS = [
-  { value: 'pendiente', label: 'Pendiente' },
-  { value: 'aceptado', label: 'Aceptado' },
-  { value: 'rechazado', label: 'Rechazado' },
-  { value: 'cumplido', label: 'Cumplido' },
-];
 
 export default function DocumentForm({
   docType,
@@ -44,62 +33,61 @@ export default function DocumentForm({
   onCoordinatorNameChange,
   emittedBy,
   onEmittedByChange,
+  docObservations,
+  onObservationsChange,
   selectedAnnotationsForDoc,
   onToggleAnnotation,
-  compromisoStatus,
-  onCompromisoStatusChange,
-  customCommitments,
-  onAddCommitment,
-  onRemoveCommitment,
   negativeCount,
   annotations,
   onRegisterCommitment,
   isRegistering,
 }: DocumentFormProps) {
-  const [newCommitment, setNewCommitment] = useState('');
-
   const negativeAnnotations = annotations.filter((a) => (a.type || '').toLowerCase() === 'negativa');
 
   const selectedAnnotationsSet = new Set(selectedAnnotationsForDoc);
 
-  const handleAddCommitment = () => {
-    const trimmed = newCommitment.trim();
-    if (trimmed.length === 0) { return; }
-    onAddCommitment(trimmed);
-    setNewCommitment('');
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleAddCommitment();
-    }
-  };
+  const showAdvanced = docType === 'compromiso_conductual' || docType === 'derivacion';
 
   return (
     <div className="space-y-6">
-      {/* Apoderado — visible para todos excepto derivación */}
-      {docType !== 'derivacion' && (
-        <div>
-          <label
-            htmlFor="apoderado-name"
-            className="mb-1 block font-medium text-neutral-700 text-sm"
-          >
-            Nombre del Apoderado
-          </label>
-          <input
-            id="apoderado-name"
-            type="text"
-            value={apoderadoName}
-            onChange={(e) => onApoderadoNameChange(e.target.value)}
-            placeholder="Ingrese el nombre del apoderado"
-            className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      )}
+      {/* Apoderado */}
+      <div>
+        <label
+          htmlFor="apoderado-name"
+          className="mb-1 block font-medium text-neutral-700 text-sm"
+        >
+          Nombre del Apoderado
+        </label>
+        <input
+          id="apoderado-name"
+          type="text"
+          value={apoderadoName}
+          onChange={(e) => onApoderadoNameChange(e.target.value)}
+          placeholder="Ingrese el nombre del apoderado"
+          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
 
-      {/* Coordinador / Emitido por — solo para compromiso_conductual */}
-      {docType === 'compromiso_conductual' && (
+      {/* Inspector/a */}
+      <div>
+        <label
+          htmlFor="inspector-name"
+          className="mb-1 block font-medium text-neutral-700 text-sm"
+        >
+          Nombre Inspector/a
+        </label>
+        <input
+          id="inspector-name"
+          type="text"
+          value={inspectorName}
+          onChange={(e) => onInspectorNameChange(e.target.value)}
+          placeholder="Ingrese el nombre del inspector/a"
+          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      {/* Coordinador / Emitido por — para compromiso y derivación */}
+      {showAdvanced && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label
@@ -133,49 +121,23 @@ export default function DocumentForm({
         </div>
       )}
 
-      {/* Estado del compromiso — solo para compromiso_conductual */}
-      {docType === 'compromiso_conductual' && (
-        <div>
-          <label
-            htmlFor="compromiso-status"
-            className="mb-1 block font-medium text-neutral-700 text-sm"
-          >
-            Estado del Compromiso
-          </label>
-          <select
-            id="compromiso-status"
-            value={compromisoStatus}
-            onChange={(e) => onCompromisoStatusChange(e.target.value)}
-            className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
-          >
-            {COMPROMISO_STATUS_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {/* Nombre Inspector/a — reemplaza Observaciones */}
-      {docType !== 'derivacion' && (
-        <div>
-          <label
-            htmlFor="inspector-name"
-            className="mb-1 block font-medium text-neutral-700 text-sm"
-          >
-            Nombre Inspector/a
-          </label>
-          <input
-            id="inspector-name"
-            type="text"
-            value={inspectorName}
-            onChange={(e) => onInspectorNameChange(e.target.value)}
-            placeholder="Ingrese el nombre del inspector/a"
-            className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      )}
+      {/* Observaciones */}
+      <div>
+        <label
+          htmlFor="doc-observations"
+          className="mb-1 block font-medium text-neutral-700 text-sm"
+        >
+          Observaciones
+        </label>
+        <textarea
+          id="doc-observations"
+          value={docObservations}
+          onChange={(e) => onObservationsChange(e.target.value)}
+          placeholder="Observaciones adicionales para el documento..."
+          rows={4}
+          className="w-full resize-y rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
 
       {/* Anotaciones negativas seleccionables */}
       <fieldset>
@@ -226,62 +188,6 @@ export default function DocumentForm({
           </div>
         )}
       </fieldset>
-
-      {/* Compromisos personalizados — solo para compromiso_conductual */}
-      {docType === 'compromiso_conductual' && (
-        <div>
-          <label
-            htmlFor="custom-commitment"
-            className="mb-1 block font-medium text-neutral-700 text-sm"
-          >
-            Compromisos Personalizados
-          </label>
-          <div className="mb-2 flex gap-2">
-            <input
-              id="custom-commitment"
-              type="text"
-              value={newCommitment}
-              onChange={(e) => setNewCommitment(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Escriba un compromiso y presione Enter o el botón +"
-              className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              type="button"
-              aria-label="Agregar compromiso"
-              onClick={handleAddCommitment}
-              disabled={newCommitment.trim().length === 0}
-              className="rounded-lg bg-brand-600 px-3 py-2 text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <Plus className="h-4 w-4" />
-            </button>
-          </div>
-          {customCommitments.length > 0 ? (
-            <ul className="space-y-1.5">
-              {customCommitments.map((c, i) => (
-                <li
-                  key={c || i}
-                  className="flex items-start gap-2 rounded-lg bg-neutral-50 px-3 py-2 text-neutral-700 text-sm"
-                >
-                  <span className="flex-1">{c}</span>
-                  <button
-                    type="button"
-                    aria-label={`Eliminar compromiso: ${c}`}
-                    onClick={() => onRemoveCommitment(i)}
-                    className="mt-0.5 flex-shrink-0 text-red-500 transition-colors hover:text-red-700"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-neutral-500 text-sm italic">
-              No se han agregado compromisos personalizados.
-            </p>
-          )}
-        </div>
-      )}
 
       {/* Botón de registro — solo para compromiso_conductual */}
       {docType === 'compromiso_conductual' && (

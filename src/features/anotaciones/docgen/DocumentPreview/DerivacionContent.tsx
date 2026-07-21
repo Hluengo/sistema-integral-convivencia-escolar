@@ -4,7 +4,7 @@ import { AnnotationsList, Section, DataRow } from './SharedComponents';
 import type { DocContentProps } from './docTypes';
 
 export default function DerivacionContent(props: DocContentProps) {
-  const { currentName, currentCourse, coordinatorName, dateStr, docObservations } = props;
+  const { currentName, currentCourse, coordinatorName, inspectorName, currentTeacher, dateStr, docObservations } = props;
 
   return (
     <div className="space-y-1">
@@ -12,10 +12,10 @@ export default function DerivacionContent(props: DocContentProps) {
         <DataRow label="Nombre del Estudiante" value={currentName} />
         <DataRow label="RUT" value={props.currentRut} />
         <DataRow label="Curso" value={currentCourse} />
-        <DataRow label="Profesor Jefe" value={props.currentTeacher} />
-        <DataRow label="Apoderado" value={props.apoderadoName || '________________'} />
+        <DataRow label="Profesor Jefe" value={currentTeacher} />
+        <DataRow label="Inspector/a" value={inspectorName || '________________'} />
+        <DataRow label="Coordinador/a de Ciclo" value={coordinatorName || '________________'} />
         <DataRow label="Fecha de Derivación" value={dateStr} />
-        <DataRow label="Derivado por" value={coordinatorName || '________________'} />
         <DataRow label="N° de Anotaciones Negativas" value={props.negativeCount} />
         <p className="mt-1 text-neutral-500 text-xs italic">
           En el marco de la Ley 21.809, Ley 20.845 de Inclusión Escolar, Circular 482/2018 y
@@ -41,7 +41,7 @@ export default function DerivacionContent(props: DocContentProps) {
           <li>Comunicaciones y citaciones al apoderado.</li>
           <li>Registro de anotaciones negativas en el sistema de convivencia escolar.</li>
           <li>Medidas pedagógicas y formativas previas aplicadas en el aula.</li>
-          <li>Entrevista con el equipo directivo y/o UTP según corresponda.</li>
+          <li>Entrevista con Inspector/a, Coordinador/a o algún miembro del Equipo de Convivencia Escolar.</li>
         </ul>
       </Section>
 
@@ -73,11 +73,30 @@ export default function DerivacionContent(props: DocContentProps) {
         </div>
       </Section>
 
-      <div className="mt-8 border-neutral-300 border-t pt-4 text-center">
-        <div className="mt-8 inline-block border-neutral-400 border-t px-12 pt-1">
-          {coordinatorName || '_________________________'}
+      <div className="mt-8 border-neutral-300 border-t pt-4">
+        <p className="mb-6 text-center font-bold text-neutral-700 text-xs uppercase tracking-wide">
+          Firmas
+        </p>
+        <div className="grid grid-cols-3 gap-4 text-neutral-600 text-xs">
+          <div className="text-center">
+            <div className="mt-8 border-neutral-400 border-t pt-1">
+              {inspectorName || '_________________________'}
+            </div>
+            <p className="mt-0.5 text-[10px] text-neutral-500">Inspector/a</p>
+          </div>
+          <div className="text-center">
+            <div className="mt-8 border-neutral-400 border-t pt-1">
+              {coordinatorName || '_________________________'}
+            </div>
+            <p className="mt-0.5 text-[10px] text-neutral-500">Coordinador/a de Ciclo</p>
+          </div>
+          <div className="text-center">
+            <div className="mt-8 border-neutral-400 border-t pt-1">
+              {currentTeacher || '_________________________'}
+            </div>
+            <p className="mt-0.5 text-[10px] text-neutral-500">Profesor/a Jefe</p>
+          </div>
         </div>
-        <p className="mt-0.5 text-[10px] text-neutral-500">Encargado/a de Convivencia Escolar</p>
       </div>
     </div>
   );

@@ -2,9 +2,9 @@
 
 import { Section, DataRow } from './SharedComponents';
 import { DEFAULT_COMMITMENTS } from './docTypes';
-import type { CompromisoDocProps } from './docTypes';
+import type { DocContentProps } from './docTypes';
 
-export default function CompromisoContent(props: CompromisoDocProps) {
+export default function CompromisoContent(props: DocContentProps) {
   const { currentName, currentCourse, apoderadoName, dateStr, coordinatorName, docObservations } = props;
 
   return (
@@ -14,9 +14,10 @@ export default function CompromisoContent(props: CompromisoDocProps) {
         <DataRow label="RUT" value={props.currentRut} />
         <DataRow label="Curso" value={currentCourse} />
         <DataRow label="Profesor Jefe" value={props.currentTeacher} />
+        <DataRow label="Inspector/a" value={props.inspectorName || '________________'} />
         <DataRow label="Apoderado" value={apoderadoName || '________________'} />
         <DataRow label="Fecha de Emisión" value={dateStr} />
-        <DataRow label="Encargado de Convivencia" value={coordinatorName || '________________'} />
+        <DataRow label="Coordinador/a de Ciclo" value={coordinatorName || '________________'} />
         <DataRow label="N° de Anotaciones Negativas" value={props.negativeCount} />
         <p className="mt-1 text-neutral-500 text-xs italic">
           De conformidad con el Artículo 16E de la Ley 21.809, Reglamento Interno RICE 2026 y
@@ -38,9 +39,7 @@ export default function CompromisoContent(props: CompromisoDocProps) {
           El/La estudiante se compromete libre y voluntariamente a:
         </p>
         <ol className="ml-2 list-inside list-decimal space-y-1 text-neutral-700 text-xs">
-          {props.customCommitments.length > 0
-            ? props.customCommitments.map((c, i) => <li key={c || i}>{c}</li>)
-            : DEFAULT_COMMITMENTS.map((c, i) => <li key={c || i}>{c}</li>)}
+          {DEFAULT_COMMITMENTS.map((c, i) => <li key={c || i}>{c}</li>)}
         </ol>
       </Section>
 

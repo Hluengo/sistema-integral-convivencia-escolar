@@ -268,13 +268,10 @@ export default function AnotacionesDocumentGenerator({
             onEmittedByChange={documentState.setEmittedBy}
             inspectorName={documentState.inspectorName}
             onInspectorNameChange={documentState.setInspectorName}
+            docObservations={documentState.docObservations}
+            onObservationsChange={documentState.setDocObservations}
             selectedAnnotationsForDoc={Array.from(selectedAnnotations.selectedIds)}
             onToggleAnnotation={selectedAnnotations.toggleAnnotation}
-            compromisoStatus={documentState.compromisoStatus}
-            onCompromisoStatusChange={documentState.setCompromisoStatus}
-            customCommitments={documentState.customCommitments}
-            onAddCommitment={documentState.handleAddCustomCommitment}
-            onRemoveCommitment={documentState.handleRemoveCustomCommitment}
             negativeCount={negativeCount}
             annotations={annotations}
             onRegisterCommitment={handleRegisterCommitmentWrapper}
@@ -292,11 +289,11 @@ export default function AnotacionesDocumentGenerator({
             currentRut={student.rut || ''}
             currentTeacher={teachers[student.course_id] || student.teacher_id || 'Sin Profesor'}
             coordinatorName={documentState.coordinatorName}
+            inspectorName={documentState.inspectorName}
             apoderadoName={documentState.apoderadoName}
             dateStr={getCurrentDateStr()}
             negativeCount={negativeCount}
-            docObservations={documentState.inspectorName}
-            customCommitments={documentState.customCommitments}
+            docObservations={documentState.docObservations}
             selectedAnnsObjects={selectedAnnsObjects}
             hasTenOrMore={negativeCount >= 10}
             onPrint={handlePrintDoc}
