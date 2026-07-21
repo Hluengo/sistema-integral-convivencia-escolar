@@ -752,7 +752,7 @@ router7.post("/parse-annotations", async (req, res) => {
 Analiza el texto de una hoja de vida estudiantil y extrae TODAS las anotaciones en JSON.
 
 CADA ANOTACI\xD3N en la hoja de vida tiene esta estructura de bloque:
-[Fecha] Tipo: Positiva o Negativa
+[Fecha] Tipo: Positiva, Negativa o Informaci\xF3n
 Categoria: [categor\xEDa]
 Anotaci\xF3n:
 [texto del evento, puede ocupar varias l\xEDneas]
@@ -767,7 +767,7 @@ Campos requeridos para cada anotaci\xF3n:
 - text: TODO el texto del evento (l\xEDneas despu\xE9s de "Anotaci\xF3n:" hasta antes de "Profesor:").
 - date: fecha en formato YYYY-MM-DD (primer token del bloque).
 - registered_by: el nombre despu\xE9s de "Profesor:" en cada bloque. Si no hay usa "Inspector\xEDa".
-- type: exactamente "Positiva" o "Negativa", seg\xFAn el texto "Tipo:" en el bloque.
+- type: exactamente "Positiva", "Negativa" o "Informaci\xF3n", seg\xFAn el texto "Tipo:" en el bloque. Las anotaciones de tipo "Informaci\xF3n" son neutras (no son ni positivas ni negativas).
 
 Devuelve SOLO el arreglo JSON, sin texto adicional.`;
     const messages = [
