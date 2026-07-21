@@ -16,7 +16,7 @@ export default function AdvisorView() {
             <p className="mb-1 font-semibold text-blue-200/80 text-xs uppercase tracking-wider">
               Informes · Asistencia Legal
             </p>
-            <h2 className="font-bold text-2xl tracking-tight sm:text-3xl">Asistente IA</h2>
+            <h2 className="font-bold text-2xl tracking-tight sm:text-3xl">Asistente Legal</h2>
             <p className="mt-2 text-blue-100/80 text-sm">
               Redacta informes y fiscaliza plazos con apoyo de IA
             </p>

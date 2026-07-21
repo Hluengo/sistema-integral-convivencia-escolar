@@ -58,7 +58,7 @@ export default function TimelineTabs({ activeTab, setActiveTab, bitacoraCount }:
         }`}
       >
         <Sparkles className="h-4 w-4" aria-hidden="true" />
-        <span className="hidden sm:inline">Asistente IA</span>
+        <span className="hidden sm:inline">Asistente Legal</span>
         <span className="sm:hidden">IA</span>
       </button>
     </div>

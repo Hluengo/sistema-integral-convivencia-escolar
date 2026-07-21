@@ -280,7 +280,7 @@ export default function DocumentosView() {
   return (
     <div className="animate-fade-in space-y-6">
       {/* Hero header */}
-      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-brand-700 via-brand-600 to-brand-800 p-6 text-white shadow-lg sm:p-8">
+      <div className="relative overflow-hidden rounded-xl bg-linear-to-br from-brand-700 via-brand-600 to-brand-800 p-6 text-white shadow-lg sm:p-8">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-60" aria-hidden="true" />
         <div className="relative">
           <p className="mb-1 font-semibold text-blue-200/80 text-xs uppercase tracking-wider">
@@ -343,7 +343,7 @@ export default function DocumentosView() {
           {cargando ? (
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={`skel-${i}`} className="flex animate-pulse items-center gap-4 rounded-2xl border border-neutral-200/60 bg-white p-5">
+                <div key={`skel-${i}`} className="flex animate-pulse items-center gap-4 rounded-xl border border-neutral-200/60 bg-white p-5">
                   <div className="h-10 w-10 shrink-0 rounded-xl bg-neutral-200" />
                   <div className="min-w-0 flex-1 space-y-2">
                     <div className="h-4 w-48 rounded bg-neutral-200" />
@@ -354,7 +354,7 @@ export default function DocumentosView() {
               ))}
             </div>
           ) : docsFiltrados.length === 0 ? (
-            <div className="rounded-2xl border border-neutral-200/80 bg-white p-12 text-center shadow-xs">
+            <div className="rounded-xl border border-neutral-200/80 bg-white p-12 text-center shadow-xs">
               <ScrollText className="mx-auto mb-4 h-12 w-12 text-neutral-300" />
               <h3 className="font-semibold text-neutral-700 text-sm">No se encontraron documentos</h3>
               <p className="mt-1 text-neutral-400 text-xs">
@@ -379,7 +379,7 @@ export default function DocumentosView() {
                     key={item.id}
                     type="button"
                     onClick={() => handleDocClick(item)}
-                    className="flex w-full items-center gap-4 rounded-2xl border border-neutral-200/80 bg-white p-5 text-left shadow-xs transition-colors transition-shadow hover:border-brand-200 hover:shadow-md"
+                    className="flex w-full items-center gap-4 rounded-xl border border-neutral-200/80 bg-white p-5 text-left shadow-xs transition-colors transition-shadow hover:border-brand-200 hover:shadow-md"
                   >
                     <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isCausa ? 'bg-brand-50' : 'bg-violet-50'}`}>
                       {isCausa ? (
@@ -457,7 +457,7 @@ export default function DocumentosView() {
       ) : (
         /* Student carta detail view (existing flow) */
         <div className="space-y-6">
-          <div className="rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-xs">
+          <div className="rounded-xl border border-neutral-200/80 bg-white p-5 shadow-xs">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50">
@@ -514,7 +514,7 @@ export default function DocumentosView() {
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
                 </div>
               ) : cartas.length > 0 ? (
-                <div className="rounded-2xl border border-neutral-200/80 bg-white shadow-xs">
+                <div className="rounded-xl border border-neutral-200/80 bg-white shadow-xs">
                   <div className="border-b border-neutral-100 px-5 py-4">
                     <h3 className="flex items-center gap-2 font-bold text-neutral-900 text-sm">
                       <ScrollText className="h-4 w-4 text-brand-600" />
@@ -545,7 +545,7 @@ export default function DocumentosView() {
                   </div>
                 </div>
               ) : (
-                <div className="rounded-2xl border border-neutral-200/80 bg-white p-8 text-center shadow-xs">
+                <div className="rounded-xl border border-neutral-200/80 bg-white p-8 text-center shadow-xs">
                   <ScrollText className="mx-auto mb-3 h-12 w-12 text-neutral-300" />
                   <p className="font-medium text-neutral-700 text-sm">No hay documentos emitidos</p>
                   <p className="mt-1 text-neutral-400 text-xs">
@@ -565,7 +565,7 @@ export default function DocumentosView() {
           )}
 
           {showGenerator && (
-            <div className="rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-xs">
+            <div className="rounded-xl border border-neutral-200/80 bg-white p-5 shadow-xs">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="flex items-center gap-2 font-bold text-neutral-900 text-sm">
                   <FileText className="h-4 w-4 text-indigo-600" />
