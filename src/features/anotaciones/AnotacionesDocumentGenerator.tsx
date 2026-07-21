@@ -114,7 +114,7 @@ export default function AnotacionesDocumentGenerator({
       coordinatorName: documentState.coordinatorName,
       emittedBy: documentState.emittedBy,
       docObservations: documentState.docObservations,
-      compromisoStatus: documentState.compromisoStatus,
+      compromisoStatus: 'Vigente',
       teachers,
       onSuccess: (entry) => documentRegistry.addEntry(entry),
       setIsRegistering: documentState.setIsRegistering,
