@@ -272,9 +272,9 @@ export default function DocumentosView() {
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-60" aria-hidden="true" />
         <div className="relative">
           <p className="mb-1 font-semibold text-blue-200/80 text-xs uppercase tracking-wider">
-            Convivencia Escolar · Documentos
+            Convivencia Escolar · Registros
           </p>
-          <h2 className="font-bold text-2xl tracking-tight sm:text-3xl">Documentos</h2>
+          <h2 className="font-bold text-2xl tracking-tight sm:text-3xl">Registros</h2>
           <p className="mt-2 text-blue-100/80 text-sm">
             Hub de navegación de causas y anotaciones registradas en el sistema
           </p>

@@ -54,11 +54,11 @@ const NAV_ITEMS: {
   badgeKey?: 'activeCount';
 }[] = [
   { id: 'dashboard', label: 'Dashboard', Icon: LayoutDashboard },
+  { id: 'documentos', label: 'Registros', Icon: FileText },
   { id: 'causas', label: 'Causas', Icon: Scale, badgeKey: 'activeCount' },
-  { id: 'alumnos', label: 'Estudiantes', Icon: Users },
-  { id: 'informes', label: 'Asistente IA', Icon: FileBarChart },
   { id: 'anotaciones', label: 'Anotaciones', Icon: ClipboardList },
-  { id: 'documentos', label: 'Documentos', Icon: FileText },
+  { id: 'informes', label: 'Asistente Legal', Icon: FileBarChart },
+  { id: 'alumnos', label: 'Estudiantes', Icon: Users },
 ];
 
 function SidebarContent({
