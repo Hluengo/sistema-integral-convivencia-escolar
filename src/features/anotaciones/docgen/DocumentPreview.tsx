@@ -1,5 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
+import { forwardRef } from 'react';
 import { Printer, FileDown, FileText } from 'lucide-react';
 import type { Annotation } from '../../../types';
 import { LOGO_BASE64 } from '../../../lib/logoBase64';
@@ -27,7 +28,7 @@ interface DocumentPreviewProps {
   onExportWord: () => void;
 }
 
-export default function DocumentPreview({
+const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(function DocumentPreview({
   docType,
   currentName,
   currentRut,
@@ -43,7 +44,7 @@ export default function DocumentPreview({
   onPrint,
   onExportPDF,
   onExportWord,
-}: DocumentPreviewProps) {
+}, ref) {
   const title = TITLE_MAP[docType] ?? 'Documento Disciplinario';
 
   const sharedProps = { currentName, currentRut, currentCourse, currentTeacher, coordinatorName, inspectorName, apoderadoName, dateStr, negativeCount, docObservations, selectedAnnsObjects };
@@ -79,7 +80,11 @@ export default function DocumentPreview({
         </div>
       </div>
 
-      <div className="mx-auto min-h-[297mm] w-[210mm] rounded-xl border border-neutral-200 bg-white p-8 shadow-lg print:border-none print:p-0 print:shadow-none">
+      <div
+        ref={ref}
+        id="document-preview-a4"
+        className="mx-auto min-h-[297mm] w-[210mm] rounded-xl border border-neutral-200 bg-white p-8 shadow-lg print:border-none print:p-0 print:shadow-none"
+      >
         <div className="mb-5 flex items-center gap-4 border-neutral-300 border-b-2 pb-5">
           <img src={LOGO_BASE64} alt="Logo Colegio" className="h-16 w-auto shrink-0 object-contain" />
           <div className="flex flex-col">
@@ -103,4 +108,6 @@ export default function DocumentPreview({
       </div>
     </div>
   );
-}
+});
+
+export default DocumentPreview;

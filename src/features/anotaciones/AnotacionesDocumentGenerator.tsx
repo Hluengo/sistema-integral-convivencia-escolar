@@ -163,20 +163,37 @@ export default function AnotacionesDocumentGenerator({
     };
   }, [docType, student, dateStr, negativeCount, documentState]);
 
+  // Ref to the A4 preview container for PDF/Print export
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  const getPreviewHtml = () => {
+    const el = previewRef.current;
+    if (!el) return '';
+    const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+      .map((s) => s.outerHTML)
+      .join('\n');
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Documento</title>${styles}<style>body{margin:0;display:flex;justify-content:center;background:#fff}@page{size:A4;margin:0}</style></head><body>${el.outerHTML}</body></html>`;
+  };
+
   // Export handlers
   const handleExportPDF = async () => {
-    setExportError(null);
-    setIsExporting(true);
-    try {
-      const blob = await documentExport.generatePDF(previewContent);
-      documentExport.downloadBlob(blob, `Carta_de_${docType}_${student.full_name.replace(/\s+/g, '_')}.pdf`);
-      setShowEmissionConfirm(true);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Error al generar el PDF.';
-      setExportError(msg);
-    } finally {
-      setIsExporting(false);
-    }
+    const html = getPreviewHtml();
+    if (!html) { setExportError('No se pudo generar el PDF. Intente de nuevo.'); return; }
+    const w = window.open('', '_blank', 'width=900,height=700');
+    if (!w) { setExportError('El navegador bloqueó la ventana. Permita ventanas emergentes.'); return; }
+    w.document.write(html);
+    w.document.close();
+    w.onload = () => { w.print(); setShowEmissionConfirm(true); };
+  };
+
+  const handlePrintDoc = () => {
+    const html = getPreviewHtml();
+    if (!html) return;
+    const w = window.open('', '_blank', 'width=900,height=700');
+    if (!w) return;
+    w.document.write(html);
+    w.document.close();
+    w.onload = () => { w.print(); setShowEmissionConfirm(true); };
   };
 
   const handleExportWord = async () => {
@@ -192,32 +209,6 @@ export default function AnotacionesDocumentGenerator({
     } finally {
       setIsExporting(false);
     }
-  };
-
-  const handlePrintDoc = () => {
-    const titleMap: Record<string, string> = {
-      amonestacion: 'Carta de Amonestaci\u00f3n',
-      compromiso_conductual: 'Carta de Compromiso Conductual',
-      derivacion: 'Ficha de Derivaci\u00f3n',
-    };
-
-    const htmlContent = `
-      <div style="max-width: 210mm; margin: 0 auto; font-family: Arial, sans-serif;">
-        <h2 style="text-align: center;">${previewContent.title}</h2>
-        <p><strong>Estudiante:</strong> ${student.full_name}</p>
-        <p><strong>Curso:</strong> ${student.course_id}</p>
-        <p><strong>RUN:</strong> ${student.rut || 'N/A'}</p>
-        <p><strong>Apoderado:</strong> ${documentState.apoderadoName || '________________'}</p>
-        <hr />
-        <p><strong>Fecha:</strong> ${getCurrentDateStr()}</p>
-        <p><strong>Anotaciones consideradas:</strong> ${negativeCount}</p>
-        <hr />
-        <p>${documentState.inspectorName || 'Sin observaciones adicionales.'}</p>
-      </div>
-    `;
-
-    documentExport.printDocument(htmlContent);
-    setShowEmissionConfirm(true);
   };
 
   // Render
@@ -286,6 +277,7 @@ export default function AnotacionesDocumentGenerator({
         <div className="space-y-4 lg:col-span-7">
           {/* Document preview - already includes action buttons */}
           <DocumentPreview
+            ref={previewRef}
             docType={docType}
             currentName={student.full_name}
             currentCourse={student.course_id}
