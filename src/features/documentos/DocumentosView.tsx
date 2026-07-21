@@ -8,7 +8,7 @@ import { fetchStudentsWithAnnotationCounts, fetchAnnotations } from '@/src/servi
 import { fetchCartas } from '@/src/services/cartas.service';
 import { fetchCausas } from '@/src/services/cases';
 import type { AnotacionStudent, Annotation, CartaDisciplinaria, Causa } from '@/src/shared/lib/types';
-import { getSemaphoricStyle } from '@/src/lib/anotacionesUtils';
+import { getSemaphoricStyle, TEACHERS_BY_COURSE } from '@/src/lib/anotacionesUtils';
 
 const AnotacionesDocumentGenerator = lazy(() => import('@/src/features/anotaciones/AnotacionesDocumentGenerator'));
 
@@ -572,13 +572,13 @@ export default function DocumentosView() {
                   student={{
                     id: selectedStudent.id,
                     full_name: selectedStudent.full_name,
-                    course_id: selectedStudent.course_id,
+                    course_id: selectedStudent.course_name || selectedStudent.course_id,
                     rut: selectedStudent.rut,
                     teacher_id: selectedStudent.teacher_id,
                   }}
                   annotations={studentAnnotations}
                   privacyMode={false}
-                  teachers={{}}
+                  teachers={TEACHERS_BY_COURSE}
                   initialDocType={initialDocType}
                 />
               </Suspense>

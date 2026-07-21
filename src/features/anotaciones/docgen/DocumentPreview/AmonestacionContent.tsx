@@ -1,10 +1,10 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { AnnotationsList, Section, DataRow } from './SharedComponents';
+import { Section, DataRow } from './SharedComponents';
 import type { DocContentProps } from './docTypes';
 
 export default function AmonestacionContent(props: DocContentProps) {
-  const { currentName, currentCourse, coordinatorName, apoderadoName, dateStr, docObservations } = props;
+  const { currentName, currentCourse, currentTeacher, apoderadoName, dateStr, docObservations, negativeCount } = props;
 
   return (
     <div className="space-y-1">
@@ -12,22 +12,20 @@ export default function AmonestacionContent(props: DocContentProps) {
         <DataRow label="Nombre del Estudiante" value={currentName} />
         <DataRow label="RUT" value={props.currentRut} />
         <DataRow label="Curso" value={currentCourse} />
-        <DataRow label="Profesor Jefe" value={props.currentTeacher} />
+        <DataRow label="Profesor Jefe" value={currentTeacher} />
         <DataRow label="Apoderado" value={apoderadoName || '________________'} />
         <DataRow label="Fecha de Emisión" value={dateStr} />
-        <DataRow label="Encargado de Convivencia" value={coordinatorName || '________________'} />
-        <DataRow label="N° de Anotaciones Negativas" value={props.negativeCount} />
+        <DataRow label="N° de Anotaciones Negativas" value={negativeCount} />
         <p className="mt-1 text-neutral-500 text-xs italic">
           En virtud de lo dispuesto en el Reglamento Interno RICE 2026 y la Circular 482/2018.
         </p>
       </Section>
 
       <Section number={2} title="Hechos">
-        <p className="mb-2">
+        <p>
           El/La estudiante <strong>{currentName}</strong> del curso <strong>{currentCourse}</strong>{' '}
-          ha incurrido en las siguientes faltas registradas en el sistema de anotaciones del establecimiento:
+          ha incurrido en <strong>{negativeCount} falta{negativeCount !== 1 ? 's' : ''}</strong> registrada{negativeCount !== 1 ? 's' : ''} en el libro de clases y hoja de vida del estudiante, cuyo detalle consta en el sistema de anotaciones del establecimiento, conforme al Reglamento Interno RICE 2026.
         </p>
-        <AnnotationsList annotations={props.selectedAnnsObjects} />
       </Section>
 
       <Section number={3} title="Fundamentación">
@@ -72,18 +70,35 @@ export default function AmonestacionContent(props: DocContentProps) {
         </p>
       </Section>
 
-      <div className="mt-8 grid grid-cols-2 gap-8 border-neutral-300 border-t pt-4 text-neutral-600 text-xs">
-        <div className="text-center">
-          <div className="mt-8 border-neutral-400 border-t pt-1">
-            {coordinatorName || '_________________________'}
+      <div className="mt-8 border-neutral-300 border-t pt-4">
+        <p className="mb-6 text-center font-bold text-neutral-700 text-xs uppercase tracking-wide">
+          Firmas
+        </p>
+        <div className="grid grid-cols-4 gap-4 text-neutral-600 text-xs">
+          <div className="text-center">
+            <div className="mt-8 border-neutral-400 border-t pt-1">
+              {currentTeacher || '_________________________'}
+            </div>
+            <p className="mt-0.5 text-[10px] text-neutral-500">Profesor/a Jefe</p>
           </div>
-          <p className="mt-0.5 text-[10px] text-neutral-500">Encargado/a de Convivencia Escolar</p>
-        </div>
-        <div className="text-center">
-          <div className="mt-8 border-neutral-400 border-t pt-1">
-            {apoderadoName || '_________________________'}
+          <div className="text-center">
+            <div className="mt-8 border-neutral-400 border-t pt-1">
+              {props.coordinatorName || '_________________________'}
+            </div>
+            <p className="mt-0.5 text-[10px] text-neutral-500">Inspector/a</p>
           </div>
-          <p className="mt-0.5 text-[10px] text-neutral-500">Apoderado/a</p>
+          <div className="text-center">
+            <div className="mt-8 border-neutral-400 border-t pt-1">
+              {apoderadoName || '_________________________'}
+            </div>
+            <p className="mt-0.5 text-[10px] text-neutral-500">Apoderado</p>
+          </div>
+          <div className="text-center">
+            <div className="mt-8 border-neutral-400 border-t pt-1">
+              {currentName}
+            </div>
+            <p className="mt-0.5 text-[10px] text-neutral-500">Estudiante</p>
+          </div>
         </div>
       </div>
     </div>

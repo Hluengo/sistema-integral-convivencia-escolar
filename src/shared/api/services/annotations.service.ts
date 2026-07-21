@@ -9,7 +9,7 @@ import { mapInspectorateToAnnotation } from '../../../lib/mappers';
 import { calculateDisciplinaryStatus } from '../../../domain/disciplinaryStatus';
 import { useAuthStore } from '../../../stores/authStore';
 
-const ANNOTATION_COLUMNS = 'id,student_id,date_time,observation,severity,type,registered_by,created_at,created_by';
+const ANNOTATION_COLUMNS = 'id,student_id,date_time,observation,severity,type,registered_by,created_at,created_by,pdf_file_path';
 
 export async function fetchAnnotations(studentId?: string): Promise<Annotation[]> {
   let query = supabase

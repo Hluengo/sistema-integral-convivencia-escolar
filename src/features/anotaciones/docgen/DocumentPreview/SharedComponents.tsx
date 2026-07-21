@@ -16,7 +16,9 @@ export function AnnotationsList({ annotations }: { annotations: Annotation[] }) 
         >
           <span className="w-5 shrink-0 text-right font-mono text-neutral-400">{idx + 1}.</span>
           <span className="shrink-0 whitespace-nowrap font-medium text-neutral-500">
-            {ann.date ?? '—'}
+            {ann.date
+              ? new Date(ann.date).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })
+              : '—'}
           </span>
           <span className="text-neutral-700 leading-snug">{ann.text}</span>
           <span className={`ml-auto shrink-0 rounded-full px-1.5 py-0.5 font-semibold text-[10px] uppercase tracking-wide ${

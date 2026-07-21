@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useEffect, useReducer, useMemo } from 'react';
-import { Users, Search, GraduationCap, Loader2, AlertCircle, BookOpen } from 'lucide-react';
+import { useEffect, useReducer, useMemo, useState, useCallback } from 'react';
+import { Users, Search, GraduationCap, Loader2, AlertCircle, BookOpen, ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
 import { fetchCourses, fetchStudentsWithCourses, type Course, type StudentWithCourse } from '../../services/courses.service';
 import { TableSkeleton } from '../../components/Skeleton';
 
@@ -96,6 +96,8 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
   const basicCourses = useMemo(() => courses.filter(c => c.level === 'BASICA'), [courses]);
   const mediaCourses = useMemo(() => courses.filter(c => c.level === 'MEDIA'), [courses]);
 
+  const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set());
+
   const groupedByCourse = useMemo(() => {
     const courseById = new Map(courses.map(c => [c.id, c]));
     const groups = new Map<string, { course: Course | null; students: StudentWithCourse[] }>();
@@ -113,6 +115,29 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
       return posA - posB;
     });
   }, [filteredStudents, courses]);
+
+  const toggleCourse = useCallback((courseId: string) => {
+    setExpandedCourses((prev) => {
+      const next = new Set(prev);
+      if (next.has(courseId)) {
+        next.delete(courseId);
+      } else {
+        next.add(courseId);
+      }
+      return next;
+    });
+  }, []);
+
+  const expandAll = useCallback(() => {
+    const allIds = new Set(groupedByCourse.map((g) => g.course?.id).filter(Boolean) as string[]);
+    setExpandedCourses(allIds);
+  }, [groupedByCourse]);
+
+  const collapseAll = useCallback(() => {
+    setExpandedCourses(new Set());
+  }, []);
+
+  const allExpanded = groupedByCourse.length > 0 && groupedByCourse.every((g) => expandedCourses.has(g.course?.id ?? ''));
 
   const todayLabel = new Date().toLocaleDateString('es-CL', {
     weekday: 'long',
@@ -187,6 +212,16 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
               </optgroup>
             )}
           </select>
+          {groupedByCourse.length > 0 && (
+            <button
+              type="button"
+              onClick={allExpanded ? collapseAll : expandAll}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 font-medium text-neutral-600 text-xs transition-colors hover:bg-neutral-50 hover:text-neutral-800"
+            >
+              <ChevronsUpDown className="h-3.5 w-3.5" />
+              {allExpanded ? 'Colapsar todos' : 'Expandir todos'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -213,9 +248,16 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
         </div>
       ) : (
         <div className="stagger-children space-y-4">
-          {groupedByCourse.map(({ course, students: courseStudents }, gi) => (
-            <div key={course?.id ?? `unknown-${gi}`} className="card overflow-hidden">
-              <div className="relative border-neutral-100 border-b bg-neutral-50/50 px-5 py-4">
+          {groupedByCourse.map(({ course, students: courseStudents }, gi) => {
+            const courseId = course?.id ?? `unknown-${gi}`;
+            const isExpanded = expandedCourses.has(courseId);
+            return (
+            <div key={courseId} className="card overflow-hidden">
+              <button
+                type="button"
+                onClick={() => toggleCourse(courseId)}
+                className="relative w-full border-neutral-100 border-b bg-neutral-50/50 px-5 py-4 text-left transition-colors hover:bg-neutral-100/80"
+              >
                 <div
                   className="absolute top-0 right-4 left-4 h-[3px] rounded-full bg-brand-600"
                   aria-hidden="true"
@@ -224,7 +266,7 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
                   <div className="rounded-lg bg-brand-50 p-2">
                     <GraduationCap className="h-4 w-4 text-brand-600" aria-hidden="true" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <h3 className="font-bold text-neutral-900 text-sm">
                       {course?.name ?? 'Sin curso asignado'}
                     </h3>
@@ -233,9 +275,17 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
                       {' · '}{courseStudents.length} estudiante{courseStudents.length !== 1 ? 's' : ''}
                     </p>
                   </div>
+                  <div className="shrink-0 rounded-lg bg-neutral-200 p-1">
+                    {isExpanded ? (
+                      <ChevronUp className="h-4 w-4 text-neutral-600" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-neutral-600" />
+                    )}
+                  </div>
                 </div>
-              </div>
+              </button>
 
+              {isExpanded && (
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
@@ -279,8 +329,10 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
                   </tbody>
                 </table>
               </div>
+              )}
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </section>

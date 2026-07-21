@@ -16,6 +16,7 @@ export interface InspectorateRecord {
   registered_by: string;
   created_at: string;
   created_by: string | null;
+  pdf_file_path?: string | null;
 }
 
 export function mapInspectorateToAnnotation(row: InspectorateRecord): Annotation {
@@ -29,6 +30,7 @@ export function mapInspectorateToAnnotation(row: InspectorateRecord): Annotation
     type: (
       row.type === 'Positiva' ? 'Positiva' : 'Negativa'
     ) as Annotation['type'],
+    pdf_file_path: row.pdf_file_path || null,
   };
 }
 

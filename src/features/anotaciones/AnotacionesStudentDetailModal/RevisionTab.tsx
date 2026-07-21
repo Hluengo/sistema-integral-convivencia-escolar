@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useRef, useCallback, useMemo } from 'react';
-import { X, Upload, FileText, Plus, CheckCircle2, AlertTriangle, RefreshCw, ArrowRight } from 'lucide-react';
+import { X, Upload, FileText, Plus, CheckCircle2, AlertTriangle, RefreshCw, ArrowRight, FileSearch } from 'lucide-react';
 import { formatDate, SEVERITY_BADGE, type StudentInfo } from './constants';
 import type { CartaDisciplinaria } from '@/src/shared/lib/types';
 
@@ -55,6 +55,8 @@ interface RevisionTabProps {
   errorMessage: string | null;
   setErrorMessage: (v: string | null) => void;
   parsedAnnotations: unknown[];
+  pdfStoragePath: string | null;
+  onViewPdf: (path: string) => void;
   onDrop: (e: React.DragEvent) => Promise<void>;
   onFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   onRegisterParsed: () => Promise<void>;
@@ -70,6 +72,8 @@ export default function RevisionTab({
   errorMessage,
   setErrorMessage,
   parsedAnnotations,
+  pdfStoragePath,
+  onViewPdf,
   onDrop,
   onFileSelect,
   onRegisterParsed,
@@ -213,6 +217,25 @@ export default function RevisionTab({
               <FileText className="h-4 w-4 flex-shrink-0 text-neutral-500" />
             )}
             <span>{parsingStatus}</span>
+          </div>
+        </div>
+      )}
+
+      {pdfStoragePath && (
+        <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-4 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileSearch className="h-4 w-4 text-indigo-600" />
+              <span className="font-medium text-indigo-800 text-sm">PDF cargado correctamente</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => onViewPdf(pdfStoragePath)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 font-medium text-xs text-white transition-colors hover:bg-indigo-700"
+            >
+              <FileSearch className="h-3.5 w-3.5" />
+              Ver PDF
+            </button>
           </div>
         </div>
       )}

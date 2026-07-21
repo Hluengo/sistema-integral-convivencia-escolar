@@ -4,7 +4,7 @@
  */
 
 import { useState, useRef, useEffect, memo } from 'react';
-import { X, Eye, EyeOff } from 'lucide-react';
+import { X, Eye, EyeOff, FileSearch } from 'lucide-react';
 import { useUIStore } from '@/src/shared/lib/stores/uiStore';
 import type { Annotation } from '@/src/types';
 import { maskName, maskRut, getSemaphoricStyle, getCurrentDateStr } from '@/src/lib/anotacionesUtils';
@@ -21,6 +21,7 @@ import RevisionTab from './AnotacionesStudentDetailModal/RevisionTab';
 import HistoryTab from './AnotacionesStudentDetailModal/HistoryTab';
 import { useDisciplinaryData } from './AnotacionesStudentDetailModal/hooks/useDisciplinaryData';
 import { usePdfProcessing } from './AnotacionesStudentDetailModal/hooks/usePdfProcessing';
+import PdfViewer from './AnotacionesStudentDetailModal/PdfViewer';
 
 const EMPTY_TEACHERS: Record<string, string> = {};
 
@@ -50,6 +51,7 @@ export default function AnotacionesStudentDetailModal({
   teachers = EMPTY_TEACHERS,
 }: AnotacionesStudentDetailModalProps) {
   const [activeTab, setActiveTab] = useState<ActiveTab>('resumen');
+  const [pdfViewPath, setPdfViewPath] = useState<string | null>(null);
   const cartasRef = useRef<unknown[]>([]);
 
   const {
@@ -75,6 +77,7 @@ export default function AnotacionesStudentDetailModal({
     handleFileSelect,
     handleRegisterParsed,
     setErrorMessage,
+    pdfStoragePath,
     setParsingStatus,
     setIsParsing,
     setParsedAnnotations,
@@ -147,6 +150,8 @@ export default function AnotacionesStudentDetailModal({
             errorMessage={errorMessage}
             setErrorMessage={setErrorMessage}
             parsedAnnotations={parsedAnnotations}
+            pdfStoragePath={pdfStoragePath}
+            onViewPdf={setPdfViewPath}
             onDrop={handleDrop}
             onFileSelect={handleFileSelect}
             onRegisterParsed={handleRegisterParsed}
@@ -251,6 +256,9 @@ export default function AnotacionesStudentDetailModal({
 
         <div className="h-[480px] overflow-y-auto p-4 sm:p-6">{renderTabContent()}</div>
       </div>
+      {pdfViewPath && (
+        <PdfViewer pdfPath={pdfViewPath} onClose={() => setPdfViewPath(null)} />
+      )}
     </dialog>
   );
 }

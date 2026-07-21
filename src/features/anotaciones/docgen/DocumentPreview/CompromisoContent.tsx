@@ -92,7 +92,7 @@ export default function CompromisoContent(props: CompromisoDocProps) {
             <div className="mt-8 border-neutral-400 border-t pt-1">
               {coordinatorName || '_________________________'}
             </div>
-            <p className="mt-0.5 text-[10px] text-neutral-500">Encargado/a de Convivencia Escolar</p>
+            <p className="mt-0.5 text-[10px] text-neutral-500">Coordinador/a de Ciclo</p>
           </div>
         </div>
         <p className="mt-4 text-center text-[10px] text-neutral-400 italic">
