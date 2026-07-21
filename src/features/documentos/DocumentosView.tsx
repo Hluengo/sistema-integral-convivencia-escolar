@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
-import { Search, Scale, FileText, ScrollText, Plus, ChevronRight, BookOpen, Sparkles, MessageSquare } from 'lucide-react';
+import { Search, Scale, FileText, ScrollText, Plus, ChevronRight, BookOpen, Sparkles, User, Circle } from 'lucide-react';
 import { useUIStore } from '@/src/shared/lib/stores/uiStore';
 import { useCausasStore } from '@/src/shared/lib/stores/causasStore';
 import { fetchStudentsWithAnnotationCounts, fetchAnnotations } from '@/src/services/annotations.service';
@@ -17,7 +17,7 @@ type DocFiltro = 'todos' | 'causas' | 'anotaciones';
 
 interface HubItem {
   id: string;
-  type: 'causa' | 'annotation';
+  type: 'causa' | 'student';
   date: string;
   studentId: string;
   studentName: string;
@@ -25,7 +25,7 @@ interface HubItem {
   title: string;
   description: string;
   status: string;
-  sourceRecord: Causa | Annotation;
+  sourceRecord: Causa | AnotacionStudent;
 }
 
 const CTA_THRESHOLDS = [
@@ -60,18 +60,6 @@ const FASE_BADGE: Record<string, string> = {
   Resolución: 'bg-purple-100 text-purple-800',
   Apelación: 'bg-orange-100 text-orange-800',
   Seguimiento: 'bg-emerald-100 text-emerald-800',
-};
-
-const ANNOTATION_TYPE_BADGE: Record<string, { bg: string; text: string }> = {
-  Positiva: { bg: 'bg-emerald-100', text: 'text-emerald-800' },
-  Negativa: { bg: 'bg-red-100', text: 'text-red-800' },
-};
-
-const SEVERITY_BADGE: Record<string, string> = {
-  Leve: 'bg-yellow-100 text-yellow-800',
-  Grave: 'bg-orange-100 text-orange-800',
-  'Muy Grave': 'bg-red-100 text-red-800',
-  Gravíssima: 'bg-pink-100 text-pink-800',
 };
 
 function getFaseForEstado(estadoActual: string): string {
@@ -127,8 +115,6 @@ export default function DocumentosView() {
         setStudents(studentList);
         setAllAnnotations(annotations ?? []);
 
-        const studentMap = new Map(studentList.map((s) => [s.id, s]));
-
         const causaItems: HubItem[] = (causas ?? []).map((c: Causa) => ({
           id: `causa-${c.id}`,
           type: 'causa',
@@ -142,24 +128,28 @@ export default function DocumentosView() {
           sourceRecord: c,
         }));
 
-        const annotationItems: HubItem[] = (annotations ?? []).map((ann: Annotation) => {
-          const student = studentMap.get(ann.student_id);
-          return {
-            id: `annotation-${ann.id}`,
-            type: 'annotation',
-            date: ann.date,
-            studentId: ann.student_id,
-            studentName: student?.full_name ?? 'Desconocido',
-            course: student?.course_name ?? student?.course_id ?? '',
-            title: `Anotación ${ann.type}`,
-            description: ann.text,
-            status: ann.type,
-            sourceRecord: ann,
-          };
-        });
+        const studentItems: HubItem[] = studentList
+          .filter((s) => (s.annotations_count || 0) > 0)
+          .map((s) => {
+            const negCount = Number(s.annotations_count) || 0;
+            const posCount = Number(s.positive_annotations_count || 0);
+            const totalCount = negCount + posCount;
+            return {
+              id: `student-${s.id}`,
+              type: 'student',
+              date: s.last_annotation_date || '',
+              studentId: s.id,
+              studentName: s.full_name,
+              course: s.course_name || s.course_id || '',
+              title: s.full_name,
+              description: `${totalCount} anotaciones (${negCount} negativas / ${posCount} positivas)`,
+              status: s.disciplinary_status,
+              sourceRecord: s,
+            };
+          });
 
         setHubItems(
-          [...causaItems, ...annotationItems].sort(
+          [...causaItems, ...studentItems].sort(
             (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
           )
         );
@@ -215,7 +205,7 @@ export default function DocumentosView() {
   const docsFiltrados = useMemo(() => {
     let result = hubItems;
     if (filtro !== 'todos') {
-      const sourceMap: Record<string, HubItem['type']> = { causas: 'causa', anotaciones: 'annotation' };
+      const sourceMap: Record<string, HubItem['type']> = { causas: 'causa', anotaciones: 'student' };
       result = result.filter((d) => d.type === sourceMap[filtro]);
     }
     if (busqueda.trim()) {
@@ -227,8 +217,7 @@ export default function DocumentosView() {
           (item.course && item.course.toLowerCase().includes(q)) ||
           item.description.toLowerCase().includes(q) ||
           item.status.toLowerCase().includes(q) ||
-          (item.type === 'causa' && (item.sourceRecord as Causa).id.toLowerCase().includes(q)) ||
-          (item.type === 'annotation' && (item.sourceRecord as Annotation).severity.toLowerCase().includes(q))
+          (item.type === 'causa' && (item.sourceRecord as Causa).id.toLowerCase().includes(q))
       );
     }
     return result;
@@ -238,7 +227,7 @@ export default function DocumentosView() {
     () => ({
       todos: hubItems.length,
       causas: hubItems.filter((d) => d.type === 'causa').length,
-      anotaciones: hubItems.filter((d) => d.type === 'annotation').length,
+      anotaciones: hubItems.filter((d) => d.type === 'student').length,
     }),
     [hubItems]
   );
@@ -248,7 +237,7 @@ export default function DocumentosView() {
       const causa = item.sourceRecord as Causa;
       setSelectedCausaId(causa.id);
       setCurrentView('causas');
-    } else if (item.type === 'annotation' && item.studentId) {
+    } else if (item.type === 'student' && item.studentId) {
       const match = students.find((s) => s.id === item.studentId);
       if (match) {
         setSelectedStudent(match);
@@ -366,10 +355,13 @@ export default function DocumentosView() {
             <div className="space-y-3">
               {docsFiltrados.map((item) => {
                 const isCausa = item.type === 'causa';
+                const isStudent = item.type === 'student';
                 const fase = isCausa ? getFaseForEstado(item.status) : '';
-                const ann = !isCausa ? item.sourceRecord as Annotation : null;
-                const typeBadge = ann ? ANNOTATION_TYPE_BADGE[ann.type] : null;
-                const severityClass = ann ? SEVERITY_BADGE[ann.severity] : '';
+                const studentRecord = isStudent ? item.sourceRecord as AnotacionStudent : null;
+                const negCount = studentRecord
+                  ? Number(studentRecord.annotations_count) || 0
+                  : 0;
+                const semStyle = studentRecord ? getSemaphoricStyle(negCount) : { badge: '', dot: '', text: '' };
                 return (
                   <button
                     key={item.id}
@@ -377,37 +369,35 @@ export default function DocumentosView() {
                     onClick={() => handleDocClick(item)}
                     className="flex w-full items-center gap-4 rounded-2xl border border-neutral-200/80 bg-white p-5 text-left shadow-xs transition-colors transition-shadow hover:border-brand-200 hover:shadow-md"
                   >
-                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isCausa ? 'bg-brand-50' : ann?.type === 'Negativa' ? 'bg-red-50' : 'bg-emerald-50'}`}>
+                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isCausa ? 'bg-brand-50' : 'bg-violet-50'}`}>
                       {isCausa ? (
                         <Scale className="h-5 w-5 text-brand-600" />
                       ) : (
-                        <MessageSquare className={`h-5 w-5 ${ann?.type === 'Negativa' ? 'text-red-600' : 'text-emerald-600'}`} />
+                        <User className="h-5 w-5 text-violet-600" />
                       )}
                     </div>
 
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-baseline gap-2">
                         <h3 className="font-bold text-neutral-900 text-sm truncate">{item.title}</h3>
-                        <span className={`shrink-0 rounded-full px-2 py-0.5 font-semibold text-[10px] ${isCausa ? 'bg-brand-100 text-brand-700' : ann?.type === 'Negativa' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                          {isCausa ? 'Causa' : 'Anotación'}
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 font-semibold text-[10px] ${isCausa ? 'bg-brand-100 text-brand-700' : 'bg-violet-100 text-violet-700'}`}>
+                          {isCausa ? 'Causa' : 'Anotaciones'}
                         </span>
-                        {typeBadge && (
-                          <span className={`shrink-0 rounded-full px-2 py-0.5 font-semibold text-[10px] ${typeBadge.bg} ${typeBadge.text}`}>
-                            {ann?.type}
+                        {isStudent && semStyle.dot && (
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold text-[10px] ${semStyle.badge}`}>
+                            <Circle className={`h-1.5 w-1.5 fill-current${semStyle.dot}`} />
+                            {item.status}
                           </span>
                         )}
                       </div>
                       <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-neutral-500 text-xs">
-                        <span className="font-medium text-neutral-700">{item.studentName}</span>
                         {item.course && <span className="text-neutral-400">{item.course}</span>}
                         <span className="text-neutral-400">
                           {item.date ? new Date(item.date).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}
                         </span>
                       </div>
                       {item.description && (
-                        <p className="mt-1.5 line-clamp-2 text-neutral-500 text-xs">
-                          {item.description.length > 120 ? `${item.description.slice(0, 120)}...` : item.description}
-                        </p>
+                        <p className="mt-1 text-neutral-500 text-xs">{item.description}</p>
                       )}
                       <div className="mt-2 flex flex-wrap items-center gap-2">
                         {isCausa ? (
@@ -422,17 +412,10 @@ export default function DocumentosView() {
                               IA Disponible
                             </span>
                           </>
-                        ) : ann ? (
-                          <>
-                            {severityClass && (
-                              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-semibold text-[10px] ${severityClass}`}>
-                                {ann.severity}
-                              </span>
-                            )}
-                            <span className="inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-neutral-50 px-2 py-0.5 font-semibold text-[10px] text-neutral-600">
-                              Por: {ann.registered_by || 'Sistema'}
-                            </span>
-                          </>
+                        ) : isStudent && studentRecord ? (
+                          <span className="inline-flex items-center rounded-md border border-neutral-200 bg-neutral-50 px-2 py-0.5 font-semibold text-[10px] text-neutral-600">
+                            {studentRecord.annotations_count} anot. totales
+                          </span>
                         ) : null}
                       </div>
                     </div>
