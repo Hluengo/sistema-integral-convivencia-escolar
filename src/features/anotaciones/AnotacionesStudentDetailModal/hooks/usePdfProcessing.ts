@@ -119,13 +119,17 @@ export function usePdfProcessing(studentId: string): UsePdfProcessingResult {
           const s = result.summary as AnnotationSummary;
           setSummary(s);
 
-          await saveDocumentAnalysis({
-            studentId,
-            fileName: file.name,
-            negativas: s.negativas,
-            positivas: s.positivas,
-            informativas: s.informativas,
-          });
+          try {
+            await saveDocumentAnalysis({
+              studentId,
+              fileName: file.name,
+              negativas: s.negativas,
+              positivas: s.positivas,
+              informativas: s.informativas,
+            });
+          } catch (saveErr) {
+            console.error('Error guardando análisis en DB:', saveErr);
+          }
 
           const total = s.negativas + s.positivas + s.informativas;
           if (total > 0) {

@@ -7,6 +7,7 @@ import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import type { Student } from './NewDisciplinaryProcessModal/constants';
 import { STEPS, sortCourses } from './NewDisciplinaryProcessModal/constants';
 import { supabase } from '../../lib/supabase';
+import { useAuthStore } from '@/src/stores/authStore';
 import type { AnnotationSummary } from '@/src/shared/lib/types';
 import CourseSelectStep from './NewDisciplinaryProcessModal/CourseSelectStep';
 import StudentSelectStep from './NewDisciplinaryProcessModal/StudentSelectStep';
@@ -126,15 +127,20 @@ export default function NewDisciplinaryProcessModal({
       if (data.success && data.summary) {
         setSummary(data.summary as AnnotationSummary);
         if (selectedStudent) {
-          const s = data.summary as AnnotationSummary;
-          await supabase.from('document_analyses').insert({
-            student_id: selectedStudent.id,
-            file_name: file?.name || null,
-            negativas: s.negativas,
-            positivas: s.positivas,
-            informativas: s.informativas,
-            tenant_id: (await supabase.auth.getUser()).data.user?.app_metadata?.tenant_id,
-          });
+          try {
+            const s = data.summary as AnnotationSummary;
+            const tenantId = useAuthStore.getState().tenantId;
+            await supabase.from('document_analyses').insert({
+              student_id: selectedStudent.id,
+              file_name: file?.name || null,
+              negativas: s.negativas,
+              positivas: s.positivas,
+              informativas: s.informativas,
+              tenant_id: tenantId,
+            });
+          } catch (saveErr) {
+            console.error('Error guardando análisis en DB:', saveErr);
+          }
         }
         setStep(4);
       } else {
