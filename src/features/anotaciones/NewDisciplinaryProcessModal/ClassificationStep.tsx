@@ -1,17 +1,66 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { Star } from 'lucide-react';
-import { CLASSIFICATION_OPTIONS } from './constants';
 import type { AnnotationSummary } from '@/src/shared/lib/types';
+
+interface ClassificationOption {
+  value: string;
+  label: string;
+  desc: string;
+  legal?: string;
+}
 
 interface ClassificationStepProps {
   value: string;
   onChange: (value: string) => void;
   summary: AnnotationSummary | null;
+  options?: ClassificationOption[];
+  suggestedType?: string | null;
 }
 
-export default function ClassificationStep({ value, onChange, summary }: ClassificationStepProps) {
+const FALLBACK_OPTIONS: ClassificationOption[] = [
+  {
+    value: 'none',
+    label: 'Sin carta',
+    desc: 'Menos de 5 anotaciones negativas. No requiere medida disciplinaria.',
+  },
+  {
+    value: 'amonestacion',
+    label: 'Amonestación Escrita',
+    desc: 'Para estudiantes con 5-9 anotaciones negativas. Medida formativa.',
+    legal: 'Art. 24 RICE 2026 - Circular 482',
+  },
+  {
+    value: 'compromiso',
+    label: 'Carta de Compromiso Conductual',
+    desc: 'Para estudiantes con 10-14 anotaciones. Acuerdo formal.',
+    legal: 'Art. 25 RICE 2026 - Ley 21.809',
+  },
+  {
+    value: 'derivacion',
+    label: 'Derivación a Convivencia Escolar',
+    desc: 'Para estudiantes con 15+ anotaciones. Intervención especializada.',
+    legal: 'Art. 26-27 RICE 2026 - Circular 482',
+  },
+];
+
+const LEGEND: Record<string, { label: string; legal: string }> = {
+  none: { label: 'Sin carta', legal: 'Sin medida requerida' },
+  amonestacion: { label: 'Amonestación Escrita', legal: 'Circular 482' },
+  compromiso: { label: 'Carta de Compromiso Conductual', legal: 'Ley 21.809' },
+  derivacion: { label: 'Derivación a Convivencia Escolar', legal: 'Circular 482' },
+};
+
+export default function ClassificationStep({
+  value,
+  onChange,
+  summary,
+  options,
+  suggestedType,
+}: ClassificationStepProps) {
   const total = summary ? summary.negativas + summary.positivas + summary.informativas : 0;
+
+  const displayOptions = options && options.length > 0 ? options : FALLBACK_OPTIONS;
 
   return (
     <div className="space-y-4">
@@ -37,6 +86,13 @@ export default function ClassificationStep({ value, onChange, summary }: Classif
               <p className="mt-1 font-medium text-blue-600 text-xs">Informativas</p>
             </div>
           </div>
+          {suggestedType && suggestedType !== 'none' && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-center">
+              <p className="font-medium text-amber-700 text-xs">
+                Sugerido: {LEGEND[suggestedType]?.label || suggestedType}
+              </p>
+            </div>
+          )}
           <p className="text-center font-medium text-neutral-500 text-xs">
             Total: {total} anotaciones detectadas
           </p>
@@ -44,7 +100,7 @@ export default function ClassificationStep({ value, onChange, summary }: Classif
       )}
 
       <div className="space-y-2">
-        {CLASSIFICATION_OPTIONS.map((opt) => (
+        {displayOptions.map((opt) => (
           <button
             key={opt.value}
             type="button"
@@ -56,8 +112,8 @@ export default function ClassificationStep({ value, onChange, summary }: Classif
             }`}
           >
             <p className="font-semibold text-neutral-800 text-sm">{opt.label}</p>
-            <p className="mt-1 text-neutral-500 text-xs">{opt.desc}</p>
-            <p className="mt-1 font-mono text-neutral-400 text-xs">{opt.legal}</p>
+            {opt.desc && <p className="mt-1 text-neutral-500 text-xs">{opt.desc}</p>}
+            {opt.legal && <p className="mt-1 font-mono text-neutral-400 text-xs">{opt.legal}</p>}
           </button>
         ))}
       </div>

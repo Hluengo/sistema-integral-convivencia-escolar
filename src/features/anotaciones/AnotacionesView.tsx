@@ -190,6 +190,7 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
           students={students}
           onClose={() => setIsNewProcessModalOpen(false)}
           currentUserEmail=""
+          onProcessCreated={loadData}
         />
       )}
     </div>

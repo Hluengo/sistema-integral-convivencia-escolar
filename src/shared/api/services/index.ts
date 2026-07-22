@@ -9,3 +9,5 @@ export * from './storage.service';
 export * from './bitacora.service';
 export * from './causas.service';
 export * from './checklist.service';
+export * from './disciplinary-rules.service';
+export * from './disciplinary-storage.service';

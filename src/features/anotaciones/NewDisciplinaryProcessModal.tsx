@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
@@ -9,6 +9,9 @@ import { STEPS, sortCourses } from './NewDisciplinaryProcessModal/constants';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '@/src/stores/authStore';
 import type { AnnotationSummary } from '@/src/shared/lib/types';
+import { fetchDisciplinaryRules } from '@/src/shared/api/services/disciplinary-rules.service';
+import type { DisciplinaryRule } from '@/src/shared/api/services/disciplinary-rules.service';
+import { uploadDisciplinaryFile } from '@/src/shared/api/services/disciplinary-storage.service';
 import CourseSelectStep from './NewDisciplinaryProcessModal/CourseSelectStep';
 import StudentSelectStep from './NewDisciplinaryProcessModal/StudentSelectStep';
 import UploadAnalyzeStep from './NewDisciplinaryProcessModal/UploadAnalyzeStep';
@@ -51,16 +54,24 @@ async function extractFileText(file: File): Promise<string> {
   return cleanText(pageTexts.join('\n').trim());
 }
 
+interface ProcessResult {
+  suggestedLetterType?: string;
+  studentId?: string;
+  summary?: AnnotationSummary;
+}
+
 interface NewDisciplinaryProcessModalProps {
   students: Student[];
   onClose: () => void;
   currentUserEmail: string;
+  onProcessCreated?: (result?: ProcessResult) => void;
 }
 
 export default function NewDisciplinaryProcessModal({
   students,
   onClose,
   currentUserEmail: _currentUserEmail,
+  onProcessCreated,
 }: NewDisciplinaryProcessModalProps) {
   const [step, setStep] = useState(1);
   const [course, setCourse] = useState<string | null>(null);
@@ -68,8 +79,15 @@ export default function NewDisciplinaryProcessModal({
   const [file, setFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
   const [summary, setSummary] = useState<AnnotationSummary | null>(null);
+  const [suggestedType, setSuggestedType] = useState<string | null>(null);
   const [classification, setClassification] = useState('');
+  const [rules, setRules] = useState<DisciplinaryRule[]>([]);
+
+  useEffect(() => {
+    fetchDisciplinaryRules().then(setRules);
+  }, []);
 
   const courses = useMemo(() => {
     const map = new Map<string, number>();
@@ -82,6 +100,16 @@ export default function NewDisciplinaryProcessModal({
 
   const totalDetected = summary ? summary.negativas + summary.positivas + summary.informativas : 0;
 
+  const ruleOptions = useMemo(() => {
+    if (rules.length === 0) return [];
+    return rules.map((r) => ({
+      value: r.suggested_letter_type,
+      label: r.rule_name,
+      desc: r.description || `Negativas: ${r.min_negativas ?? 0}-${r.max_negativas ?? '∞'}`,
+      legal: `Prioridad ${r.priority}`,
+    }));
+  }, [rules]);
+
   const canNext = () => {
     if (step === 1) return !!course;
     if (step === 2) return !!selectedStudent;
@@ -92,6 +120,8 @@ export default function NewDisciplinaryProcessModal({
 
   const handleAnalyze = async () => {
     if (!file) return;
+    const controller = new AbortController();
+    abortRef.current = controller;
     setIsAnalyzing(true);
     setAnalysisError(null);
     setSummary(null);
@@ -109,14 +139,30 @@ export default function NewDisciplinaryProcessModal({
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      const res = await fetch('/api/parse-annotations', {
+      const tenantId = useAuthStore.getState().tenantId;
+      const authHeaders = session?.access_token
+        ? { Authorization: `Bearer ${session.access_token}` }
+        : {};
+
+      let storagePath = '';
+      if (tenantId && selectedStudent) {
+        storagePath = (await uploadDisciplinaryFile(selectedStudent.id, file, tenantId)) || '';
+      }
+
+      const res = await fetch('/api/process-disciplinary-pdf', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
-        },
-        body: JSON.stringify({ textContent, fileName: file.name }),
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        body: JSON.stringify({
+          textContent,
+          fileName: file.name,
+          studentId: selectedStudent?.id || null,
+          tenantId,
+          storagePath: storagePath || undefined,
+        }),
+        signal: controller.signal,
       });
+
+      let data: Record<string, unknown>;
       if (!res.ok) {
         const text = await res.text().catch(() => '');
         let errMsg = `Error del servidor (${res.status})`;
@@ -131,33 +177,52 @@ export default function NewDisciplinaryProcessModal({
         }
         throw new Error(errMsg);
       }
-      const data = await res.json();
+      data = await res.json();
+
       if (data.success && data.summary) {
-        setSummary(data.summary as AnnotationSummary);
-        if (selectedStudent) {
-          try {
-            const s = data.summary as AnnotationSummary;
-            const tenantId = useAuthStore.getState().tenantId;
-            await supabase.from('document_analyses').insert({
-              student_id: selectedStudent.id,
-              file_name: file?.name || null,
-              negativas: s.negativas,
-              positivas: s.positivas,
-              informativas: s.informativas,
-              tenant_id: tenantId,
-            });
-          } catch (saveErr) {
-            console.error('Error guardando análisis en DB:', saveErr);
+        const s = data.summary as AnnotationSummary;
+        setSummary(s);
+
+        if (data.suggestedLetterType) {
+          const suggestedVal = data.suggestedLetterType as string;
+          setSuggestedType(suggestedVal);
+          if (suggestedVal !== 'none') {
+            setClassification(suggestedVal);
+          }
+        }
+
+        if (studentId === null && data.detectedStudents && Array.isArray(data.detectedStudents)) {
+          const ds = data.detectedStudents as Array<{ id: string; full_name: string }>;
+          if (ds.length === 1 && !selectedStudent) {
+            setSelectedStudent(ds[0] as unknown as Student);
+          } else if (ds.length === 0 && selectedStudent) {
+            try {
+              await supabase.from('document_analyses').insert({
+                student_id: selectedStudent.id,
+                file_name: file?.name || null,
+                negativas: s.negativas,
+                positivas: s.positivas,
+                informativas: s.informativas,
+                tenant_id: tenantId,
+              });
+            } catch {
+              /**/
+            }
           }
         }
         setStep(4);
       } else {
-        setAnalysisError(data.error || 'Error al analizar el documento');
+        setAnalysisError((data.error as string) || 'Error al analizar el documento');
       }
     } catch (err: unknown) {
-      setAnalysisError(err instanceof Error ? err.message : 'Error de conexión');
+      if ((err as Error)?.name === 'AbortError') {
+        setAnalysisError('Análisis cancelado');
+      } else {
+        setAnalysisError(err instanceof Error ? err.message : 'Error de conexión');
+      }
     } finally {
       setIsAnalyzing(false);
+      abortRef.current = null;
     }
   };
 
@@ -186,7 +251,7 @@ export default function NewDisciplinaryProcessModal({
             </button>
           </div>
           <div className="flex gap-1">
-            {STEPS.filter((_, i) => i < 5).map((l, i) => (
+            {STEPS.slice(0, 5).map((l, i) => (
               <div key={l} className="flex flex-1 flex-col items-center gap-1">
                 <div
                   className={`h-1 w-full rounded-full ${i + 1 <= step ? 'bg-indigo-500' : 'bg-neutral-200'}`}
@@ -224,6 +289,8 @@ export default function NewDisciplinaryProcessModal({
               value={classification}
               onChange={setClassification}
               summary={summary}
+              options={ruleOptions.length > 0 ? ruleOptions : undefined}
+              suggestedType={suggestedType}
             />
           )}
           {step === 5 && (
@@ -241,15 +308,32 @@ export default function NewDisciplinaryProcessModal({
           <div className="flex justify-between border-neutral-100 border-t p-4">
             <button
               type="button"
-              onClick={() => setStep((s) => Math.max(1, s - 1))}
-              disabled={step === 1}
+              onClick={() => {
+                if (isAnalyzing) {
+                  abortRef.current?.abort();
+                } else {
+                  setStep((s) => Math.max(1, s - 1));
+                }
+              }}
+              disabled={step === 1 && !isAnalyzing}
               className="flex items-center gap-1.5 rounded-xl px-4 py-2 font-medium text-neutral-600 text-sm hover:bg-neutral-100 disabled:opacity-30"
             >
-              <ArrowLeft className="h-4 w-4" /> Anterior
+              <ArrowLeft className="h-4 w-4" /> {isAnalyzing ? 'Cancelar' : 'Anterior'}
             </button>
             <button
               type="button"
-              onClick={() => (step === maxStep ? onClose() : setStep((s) => s + 1))}
+              onClick={() => {
+                if (step === maxStep) {
+                  onProcessCreated?.({
+                    suggestedLetterType: suggestedType ?? undefined,
+                    studentId: selectedStudent?.id,
+                    summary: summary ?? undefined,
+                  });
+                  onClose();
+                } else {
+                  setStep((s) => s + 1);
+                }
+              }}
               disabled={!canNext()}
               className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-5 py-2 font-medium text-sm text-white hover:bg-indigo-700 disabled:opacity-40"
             >
