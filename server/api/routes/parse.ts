@@ -2,7 +2,6 @@
 
 import { Router } from 'express';
 import { checkRateLimit } from '../services/rateLimit.js';
-import { callGroq } from '../services/groq.js';
 
 const router = Router();
 
@@ -25,39 +24,33 @@ router.post('/parse-annotations', async (req, res) => {
       return;
     }
 
-    let cleanText = textContent
+    const lines = textContent
       .split('\n')
-      .filter((l) => !l.trim().startsWith('![') && !l.includes('data:image'))
-      .join('\n')
-      .replace(/\n{3,}/g, '\n\n')
-      .replace(/\s{3,}/g, '  ')
-      .replace(/Página\s*\d+.*/gi, '')
-      .trim();
+      .filter((l) => !l.trim().startsWith('![') && !l.includes('data:image'));
 
-    const systemInstruction = `Eres un analizador de hojas de vida escolares. Cuenta las anotaciones clasificándolas SOLO por el campo "Tipo". Los valores válidos son: "Positiva" (elogios, felicitaciones, logros), "Negativa" (faltas, sanciones, observaciones disciplinarias), "Información" (datos neutros, comunicaciones, citaciones sin sanción). Ignora líneas sin Tipo. Si el Tipo no es claro, asigna "Información". Cuenta CADA anotación individual. Devuelve SOLO: {"negativas": N, "positivas": N, "informativas": N}.`;
-
-    const messages = [
-      {
-        role: 'user' as const,
-        content: `Cuenta las anotaciones por Tipo del siguiente texto:\n\n--- INICIO ---\n${cleanText}\n--- FIN ---`,
-      },
-    ];
-
-    const responseText = await callGroq(messages, systemInstruction);
-
-    let summary = { negativas: 0, positivas: 0, informativas: 0 };
-    try {
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        summary = {
-          negativas: Number(parsed.negativas) || 0,
-          positivas: Number(parsed.positivas) || 0,
-          informativas: Number(parsed.informativas) || 0,
-        };
+    const blocks: string[] = [];
+    let current: string[] = [];
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      if (/^\d{2}\/\d{2}\/\d{4}/.test(trimmed)) {
+        if (current.length > 0) blocks.push(current.join('\n'));
+        current = [line];
+      } else if (current.length > 0) {
+        current.push(line);
       }
-    } catch (parseError) {
-      console.error('Error parsing Groq response as JSON:', parseError);
+    }
+    if (current.length > 0) blocks.push(current.join('\n'));
+
+    const summary = { negativas: 0, positivas: 0, informativas: 0 };
+    for (const block of blocks) {
+      const m = block.match(/Tipo:\s*(Negativa|Positiva|Informaci[oó]n)/i);
+      if (m) {
+        const t = m[1].toLowerCase();
+        if (t.startsWith('neg')) summary.negativas++;
+        else if (t.startsWith('pos')) summary.positivas++;
+        else summary.informativas++;
+      }
     }
 
     res.json({ success: true, summary });

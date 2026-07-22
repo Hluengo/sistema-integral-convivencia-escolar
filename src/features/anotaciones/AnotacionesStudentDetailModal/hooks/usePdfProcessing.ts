@@ -86,15 +86,6 @@ export function usePdfProcessing(studentId: string): UsePdfProcessingResult {
         setParsingStatus(`Extrayendo texto del ${fileType}...`);
         const textContent = await extractFileText(file);
 
-        console.log(
-          '[PDF-PROCESS] fileName:',
-          file.name,
-          '| length:',
-          textContent.length,
-          '| first 300:',
-          textContent.substring(0, 300)
-        );
-
         if (!textContent || textContent.length < 20) {
           throw new Error(
             `El archivo ${fileType} no contiene texto legible. Si es un PDF escaneado o protegido, conviértelo a Markdown (.md) y súbelo de nuevo.`

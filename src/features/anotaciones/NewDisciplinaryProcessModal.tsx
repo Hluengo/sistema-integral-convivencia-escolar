@@ -98,15 +98,6 @@ export default function NewDisciplinaryProcessModal({
     try {
       const textContent = await extractFileText(file);
 
-      console.log(
-        '[ANALYZE] fileName:',
-        file.name,
-        '| length:',
-        textContent.length,
-        '| first 300:',
-        textContent.substring(0, 300)
-      );
-
       if (!textContent || textContent.length < 20) {
         const isMd = file.name.toLowerCase().endsWith('.md');
         throw new Error(
@@ -141,7 +132,6 @@ export default function NewDisciplinaryProcessModal({
         throw new Error(errMsg);
       }
       const data = await res.json();
-      console.log('[ANALYZE] API response:', JSON.stringify(data));
       if (data.success && data.summary) {
         setSummary(data.summary as AnnotationSummary);
         if (selectedStudent) {

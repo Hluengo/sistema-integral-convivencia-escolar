@@ -786,20 +786,14 @@ router7.post('/parse-annotations', async (req, res) => {
       res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
       return;
     }
-    let cleanText = textContent
+    const lines = textContent
       .split('\n')
-      .filter((l) => !l.trim().startsWith('![') && !l.includes('data:image'))
-      .join('\n')
-      .replace(/\n{3,}/g, '\n\n')
-      .replace(/\s{3,}/g, '  ')
-      .replace(/P\xE1gina\s*\d+.*/gi, '')
-      .trim();
-
-    const lines = cleanText.split('\n');
+      .filter((l) => !l.trim().startsWith('![') && !l.includes('data:image'));
     const blocks = [];
     let current = [];
     for (const line of lines) {
       const trimmed = line.trim();
+      if (!trimmed) continue;
       if (trimmed.startsWith('![') || trimmed.includes('data:image')) continue;
       if (/^\d{2}\/\d{2}\/\d{4}/.test(trimmed)) {
         if (current.length > 0) blocks.push(current.join('\n'));
@@ -809,51 +803,15 @@ router7.post('/parse-annotations', async (req, res) => {
       }
     }
     if (current.length > 0) blocks.push(current.join('\n'));
-    let filteredText = blocks.join('\n\n');
-
-    const MAX_LENGTH = 10000;
-    if (filteredText.length > MAX_LENGTH) {
-      filteredText = filteredText.slice(0, MAX_LENGTH) + '\n\n[Truncado]';
-    }
-    const systemInstruction =
-      'Eres un analizador de hojas de vida escolares. Cuenta las anotaciones clasific\u00E1ndolas SOLO por el campo "Tipo". Los valores v\u00E1lidos son: "Positiva" (elogios, felicitaciones, logros), "Negativa" (faltas, sanciones, observaciones disciplinarias), "Informaci\u00F3n" (datos neutros, comunicaciones, citaciones sin sanci\u00F3n). Ignora l\u00EDneas sin Tipo. Si el Tipo no es claro, asigna "Informaci\u00F3n". Cuenta CADA anotaci\u00F3n individual. Devuelve SOLO: {"negativas": N, "positivas": N, "informativas": N}.';
-    const messages = [
-      {
-        role: 'user',
-        content:
-          filteredText.length > 0
-            ? `Cuenta anotaciones por Tipo:\n\n${filteredText}`
-            : `Cuenta anotaciones por Tipo:\n\n${cleanText}`,
-      },
-    ];
-    const responseText = await callAI(messages, systemInstruction).catch((err) => {
-      console.error('Groq API error:', err.message);
-      throw new Error(
-        'El servicio de IA no pudo procesar el documento. Si el PDF es escaneado o tiene im\u00E1genes, convi\u00E9rtelo a texto primero.'
-      );
-    });
-    let summary = { negativas: 0, positivas: 0, informativas: 0 };
-    try {
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      console.log('[SERVER-PARSE] AI raw response:', responseText.substring(0, 500));
-      console.log(
-        '[SERVER-PARSE] Text sent length:',
-        filteredText.length > 0 ? filteredText.length : cleanText.length
-      );
-      console.log(
-        '[SERVER-PARSE] Text sent first 300:',
-        (filteredText.length > 0 ? filteredText : cleanText).substring(0, 300)
-      );
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        summary = {
-          negativas: Number(parsed.negativas) || 0,
-          positivas: Number(parsed.positivas) || 0,
-          informativas: Number(parsed.informativas) || 0,
-        };
+    const summary = { negativas: 0, positivas: 0, informativas: 0 };
+    for (const block of blocks) {
+      const m = block.match(/Tipo:\s*(Negativa|Positiva|Informaci[\u00F3o]n)/i);
+      if (m) {
+        const t = m[1].toLowerCase();
+        if (t.startsWith('neg')) summary.negativas++;
+        else if (t.startsWith('pos')) summary.positivas++;
+        else summary.informativas++;
       }
-    } catch (parseError) {
-      console.error('Error parsing Groq response as JSON:', parseError);
     }
     res.json({ success: true, summary });
   } catch (error) {
