@@ -138,9 +138,11 @@ export default memo(function AnotacionesStudentTable({
           <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400" />
           <input
             type="text"
+            id="search-student"
             placeholder="Buscar estudiante, RUT o curso..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Buscar estudiante"
             className="w-full rounded-xl border border-neutral-200/60 bg-neutral-100 py-2 pr-4 pl-10 font-medium text-neutral-800 text-sm transition-colors placeholder:text-neutral-400 hover:border-neutral-300 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
           />
         </div>

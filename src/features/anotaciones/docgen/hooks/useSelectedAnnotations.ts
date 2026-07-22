@@ -26,8 +26,11 @@ export function useSelectedAnnotations(annotations: Annotation[]) {
   }, []);
 
   const selectAllNegative = useCallback(() => {
-    const negIds = annotations.filter((a) => a.type === 'Negativa').map((a) => a.id);
-    setSelectedIds(new Set(negIds));
+    const negIds = annotations.reduce<Set<string>>((acc, a) => {
+      if (a.type === 'Negativa') acc.add(a.id);
+      return acc;
+    }, new Set());
+    setSelectedIds(negIds);
   }, [annotations]);
 
   const clearSelection = useCallback(() => {

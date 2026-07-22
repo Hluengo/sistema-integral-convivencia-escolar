@@ -54,10 +54,14 @@ export default function AnnotationReviewTable({ annotations, onChange }: Props) 
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {annotations.map((ann, idx) => (
-              <tr key={idx} className="bg-white">
+            {annotations.map((ann, idx) => {
+              const annId = (ann as { id?: string }).id ?? `ann-${idx}`;
+              return (
+              <tr key={annId} className="bg-white">
                 <td className="px-3 py-2">
+                  <label htmlFor={`ann-date-${idx}`} className="sr-only">Fecha</label>
                   <input
+                    id={`ann-date-${idx}`}
                     type="date"
                     value={ann.date?.slice(0, 10) || ''}
                     onChange={(e) => update(idx, { date: e.target.value })}
@@ -65,7 +69,9 @@ export default function AnnotationReviewTable({ annotations, onChange }: Props) 
                   />
                 </td>
                 <td className="px-3 py-2">
+                  <label htmlFor={`ann-type-${idx}`} className="sr-only">Tipo</label>
                   <select
+                    id={`ann-type-${idx}`}
                     value={ann.type}
                     onChange={(e) => update(idx, { type: e.target.value as ReviewAnnotation['type'] })}
                     className="border border-slate-200 rounded px-1.5 py-1"
@@ -75,7 +81,9 @@ export default function AnnotationReviewTable({ annotations, onChange }: Props) 
                   </select>
                 </td>
                 <td className="px-3 py-2">
+                  <label htmlFor={`ann-severity-${idx}`} className="sr-only">Gravedad</label>
                   <select
+                    id={`ann-severity-${idx}`}
                     value={ann.severity}
                     onChange={(e) =>
                       update(idx, { severity: e.target.value as ReviewAnnotation['severity'] })
@@ -90,7 +98,9 @@ export default function AnnotationReviewTable({ annotations, onChange }: Props) 
                   </select>
                 </td>
                 <td className="px-3 py-2 min-w-[220px]">
+                  <label htmlFor={`ann-text-${idx}`} className="sr-only">Descripción</label>
                   <input
+                    id={`ann-text-${idx}`}
                     type="text"
                     value={ann.text}
                     onChange={(e) => update(idx, { text: e.target.value })}
@@ -98,9 +108,9 @@ export default function AnnotationReviewTable({ annotations, onChange }: Props) 
                   />
                 </td>
                 <td className="px-3 py-2">
+                  <label htmlFor={`ann-registered-${idx}`} className="sr-only">Registrado por</label>
                   <input
-                    type="text"
-                    value={ann.registered_by}
+                    id={`ann-registered-${idx}`}
                     onChange={(e) => update(idx, { registered_by: e.target.value })}
                     className="border border-slate-200 rounded px-1.5 py-1 w-36"
                   />
@@ -116,7 +126,8 @@ export default function AnnotationReviewTable({ annotations, onChange }: Props) 
                   </button>
                 </td>
               </tr>
-            ))}
+            );
+            })}
           </tbody>
         </table>
       </div>

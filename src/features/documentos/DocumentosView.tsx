@@ -137,13 +137,12 @@ export default function DocumentosView() {
           sourceRecord: c,
         }));
 
-        const studentItems: HubItem[] = studentList
-          .filter((s) => (s.annotations_count || 0) > 0)
-          .map((s) => {
+        const studentItems: HubItem[] = studentList.reduce<HubItem[]>((acc, s) => {
+          if ((s.annotations_count || 0) > 0) {
             const negCount = Number(s.annotations_count) || 0;
             const posCount = Number(s.positive_annotations_count || 0);
             const totalCount = negCount + posCount;
-            return {
+            acc.push({
               id: `student-${s.id}`,
               type: 'student',
               date: s.last_annotation_date || '',
@@ -154,8 +153,10 @@ export default function DocumentosView() {
               description: `${totalCount} anotaciones (${negCount} negativas / ${posCount} positivas)`,
               status: s.disciplinary_status,
               sourceRecord: s,
-            };
-          });
+            });
+          }
+          return acc;
+        }, []);
 
         setHubItems(
           [...causaItems, ...studentItems].sort(
@@ -217,7 +218,7 @@ export default function DocumentosView() {
       }
     })();
     return () => { cancelled = true; };
-  }, [selectedStudent?.id, selectedStudent]);
+  }, [selectedStudent]);
 
   // Annotations filtered for selected student (used by AnotacionesDocumentGenerator)
   const studentAnnotations = useMemo(() => {

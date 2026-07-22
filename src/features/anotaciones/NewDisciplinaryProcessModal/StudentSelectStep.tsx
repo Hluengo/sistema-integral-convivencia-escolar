@@ -32,9 +32,11 @@ export default function StudentSelectStep({ students, course, selectedId, onSele
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
         <input
           type="text"
+          id="search-student-step"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar por nombre o RUT..."
+          aria-label="Buscar estudiante por nombre o RUT"
           className="w-full rounded-xl border border-neutral-300 py-2.5 pr-3 pl-9 text-sm outline-none transition-colors focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
         />
       </div>

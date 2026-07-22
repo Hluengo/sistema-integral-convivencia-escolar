@@ -57,7 +57,7 @@ export default function App() {
       setCurrentView(view);
       isTimelineCollapsedRef.current = false;
     },
-    [user]
+    [user, setShowLoginModal, setCurrentView]
   );
 
   const handleStudentSelect = useCallback(
@@ -76,20 +76,20 @@ export default function App() {
       const result = await causasStore.handleCreateCausa({ newEstNombre, newEstRut, newEstCurso, newInfTipo, newAulaSegura, newObs, newResponsable });
       if (result) { dispatchForm({ type: 'RESET' }); setCurrentView('causas'); }
     },
-    [newEstNombre, newEstRut, newEstCurso, newInfTipo, newAulaSegura, newObs, newResponsable, dispatchForm]
+    [newEstNombre, newEstRut, newEstCurso, newInfTipo, newAulaSegura, newObs, newResponsable, dispatchForm, causasStore, setCurrentView]
   );
 
   const requireAuth = useCallback(() => {
     if (!user) { setShowLoginModal(true); return false; }
     return true;
-  }, [user]);
+  }, [user, setShowLoginModal]);
 
   const handleReopenCausa = useCallback((causa: typeof selectedCausa) => {
     if (!causa) return;
     causasStore.handleReopenCausa(causa);
     setCurrentView('causas');
     isTimelineCollapsedRef.current = false;
-  }, []);
+  }, [causasStore, setCurrentView]);
 
   const handleSelectCausaFromDashboard = useCallback(
     (causaId: string) => {
@@ -99,14 +99,14 @@ export default function App() {
       setMobileShowDetail(true);
       isTimelineCollapsedRef.current = false;
     },
-    [user]
+    [user, setShowLoginModal, setSelectedCausaId, setCurrentView, setMobileShowDetail]
   );
 
   const handleOpenCreateForm = useCallback(() => {
     if (!requireAuth()) return;
     dispatchForm({ type: 'OPEN' });
     setCurrentView('causas');
-  }, [dispatchForm, requireAuth]);
+  }, [dispatchForm, requireAuth, setCurrentView]);
 
   useKeyboardShortcuts({
     onNewCausa: handleOpenCreateForm,
@@ -119,7 +119,7 @@ export default function App() {
 
   if (authLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-neutral-100">
+      <div className="flex min-h-dvh items-center justify-center bg-neutral-100">
         <div className="text-center">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand-600 border-r-transparent border-solid" />
           <p className="mt-3 text-neutral-500 text-xs">Cargando...</p>
@@ -131,14 +131,14 @@ export default function App() {
   return (
     <ToastProvider>
       <AppProvider>
-        <div className="flex min-h-screen bg-neutral-100 font-sans text-neutral-800 antialiased">
+        <div className="flex min-h-dvh bg-neutral-100 font-sans text-neutral-800 antialiased">
           <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:rounded-lg focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-white focus:shadow-lg focus:outline-none">
             Saltar al contenido principal
           </a>
           <Suspense fallback={null}>
             <CommandPalette causas={causas} onNavigate={handleViewChange} onSelectCausa={setSelectedCausaId} />
           </Suspense>
-          <Suspense fallback={<div className="hidden h-screen w-[68px] flex-col bg-linear-to-b from-neutral-800 to-neutral-950 shadow-xl lg:flex" />}>
+          <Suspense fallback={<div className="hidden h-dvh w-[68px] flex-col bg-linear-to-b from-neutral-800 to-neutral-950 shadow-xl lg:flex" />}>
             <Sidebar
               currentView={currentView} onViewChange={handleViewChange}
               isCollapsed={isSidebarCollapsed} onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}

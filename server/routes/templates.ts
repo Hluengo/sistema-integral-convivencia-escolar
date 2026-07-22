@@ -20,6 +20,10 @@ router.get('/document-templates', async (_req, res) => {
         },
       }
     );
+    if (!result.ok) {
+      res.status(result.status).json({ error: `Template fetch failed: ${result.status}` });
+      return;
+    }
     const data = await result.json();
     res.json(data);
   } catch (_error) {

@@ -129,7 +129,10 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
   }, []);
 
   const expandAll = useCallback(() => {
-    const allIds = new Set(groupedByCourse.map((g) => g.course?.id).filter(Boolean) as string[]);
+    const allIds = groupedByCourse.reduce<Set<string>>((acc, g) => {
+      if (g.course?.id) acc.add(g.course.id);
+      return acc;
+    }, new Set());
     setExpandedCourses(allIds);
   }, [groupedByCourse]);
 

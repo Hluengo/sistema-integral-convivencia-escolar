@@ -63,7 +63,7 @@ export default function TemplateEditor({ onBack }: { onBack: () => void }) {
   };
 
   const handleSave = async () => {
-    if (!selectedId) { return; }
+    if (!selectedId || saving) { return; }
     setSaving(selectedId);
     setSaveSuccess(null);
     setSaveError(null);

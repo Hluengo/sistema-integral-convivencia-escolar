@@ -15,6 +15,8 @@ interface HeaderActionsProps {
   onNotificationClick?: (causaId: string) => void;
 }
 
+const EMPTY_NOTIFICATIONS: never[] = [];
+
 export default function HeaderActions({
   privacyMode,
   setPrivacyMode,
@@ -22,7 +24,7 @@ export default function HeaderActions({
   searchQuery = '',
   onSearchChange,
   user = null,
-  notifications = [],
+  notifications = EMPTY_NOTIFICATIONS,
   onNotificationClick,
 }: HeaderActionsProps) {
   return (

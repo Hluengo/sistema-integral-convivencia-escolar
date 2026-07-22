@@ -210,11 +210,11 @@ export default function RevisionTab({
         >
           <div className="flex items-center gap-2">
             {parsingStatus.includes('exitosamente') || parsingStatus.includes('detectaron') ? (
-              <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-600" />
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
             ) : parsingStatus.includes('Error') ? (
-              <AlertTriangle className="h-4 w-4 flex-shrink-0 text-amber-600" />
+              <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
             ) : (
-              <FileText className="h-4 w-4 flex-shrink-0 text-neutral-500" />
+              <FileText className="h-4 w-4 shrink-0 text-neutral-500" />
             )}
             <span>{parsingStatus}</span>
           </div>
@@ -255,13 +255,13 @@ export default function RevisionTab({
       {errorMessage && (
         <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700 text-sm">
           <div className="flex items-start gap-2">
-            <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-500" />
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
             <span>{errorMessage}</span>
             <button
               type="button"
               aria-label="Cerrar mensaje"
               onClick={() => setErrorMessage(null)}
-              className="ml-auto flex-shrink-0 text-red-400 hover:text-red-600"
+              className="ml-auto shrink-0 text-red-400 hover:text-red-600"
             >
               <X className="h-4 w-4" />
             </button>
@@ -292,7 +292,7 @@ export default function RevisionTab({
                   key={a.id || `pdf-ann-${severity}-${a.type || 'Negativa'}-${(a.text || '').slice(0, 40)}`}
                   className="flex items-start gap-3 rounded-xl border border-neutral-100 bg-neutral-50 p-3"
                 >
-                  <span className={`mt-1.5 h-2 w-2 flex-shrink-0 rounded-full${badge.dot}`} />
+                  <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full${badge.dot}`} />
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex items-center gap-2">
                       <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-bold text-[10px] uppercase tracking-wider${badge.bg} ${badge.text}`}>

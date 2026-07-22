@@ -407,6 +407,22 @@ ALTER TABLE IF EXISTS cartas_disciplinarias ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS etapas_disciplinarias ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS document_templates ENABLE ROW LEVEL SECURITY;
 
+ALTER TABLE tenants ENABLE ROW LEVEL SECURITY;
+
+-- --- tenants ---
+CREATE POLICY "tenants_select_own" ON tenants
+  FOR SELECT USING (id = current_tenant_id());
+
+CREATE POLICY "tenants_insert_admin" ON tenants
+  FOR INSERT WITH CHECK (current_app_role() IN ('admin'));
+
+CREATE POLICY "tenants_update_own" ON tenants
+  FOR UPDATE USING (id = current_tenant_id() AND current_app_role() IN ('admin', 'direccion'))
+  WITH CHECK (id = current_tenant_id());
+
+CREATE POLICY "tenants_delete_own" ON tenants
+  FOR DELETE USING (id = current_tenant_id() AND current_app_role() IN ('admin'));
+
 -- ============================================================
 -- Refresh PostgREST schema cache
 -- ============================================================

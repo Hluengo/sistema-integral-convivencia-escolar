@@ -24,8 +24,10 @@ export async function downloadCartaPdf(
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage();
   const { width } = page.getSize();
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const [font, fontBold] = await Promise.all([
+    pdfDoc.embedFont(StandardFonts.Helvetica),
+    pdfDoc.embedFont(StandardFonts.HelveticaBold),
+  ]);
   const margin = 50;
 
   const courseName = student?.course_name || carta.course || '-';

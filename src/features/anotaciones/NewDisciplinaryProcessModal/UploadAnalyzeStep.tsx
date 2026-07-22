@@ -2,15 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { Upload, FileText, Loader2, AlertTriangle, Star } from 'lucide-react';
-
-export const severityDot = (severity?: string | null) => {
-  switch (severity) {
-    case 'Leve': return 'bg-emerald-500';
-    case 'Grave': return 'bg-yellow-500';
-    case 'Muy Grave': return 'bg-orange-500';
-    default: return 'bg-neutral-300';
-  }
-};
+import { severityDot } from '@/src/shared/lib/severityStyles';
 
 interface UploadAnalyzeStepProps {
   file: File | null;

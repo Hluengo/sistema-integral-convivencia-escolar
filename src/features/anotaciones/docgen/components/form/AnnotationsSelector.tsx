@@ -48,9 +48,9 @@ export default function AnnotationsSelector({
                 }`}
               >
                 {isSelected ? (
-                  <Square className="mt-0.5 h-4 w-4 flex-shrink-0 text-brand-600" />
+                  <Square className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
                 ) : (
-                  <Square className="mt-0.5 h-4 w-4 flex-shrink-0 text-neutral-400" />
+                  <Square className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" />
                 )}
                 <div className="min-w-0 flex-1">
                   <span className="block truncate font-medium text-neutral-800 text-sm">

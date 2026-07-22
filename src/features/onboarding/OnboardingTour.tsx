@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { X, ChevronRight, ChevronLeft, Check } from 'lucide-react';
 import { useAuthStore } from '@/src/stores/authStore';
 import { track } from '@/src/lib/analytics';
@@ -59,18 +59,23 @@ function markCompleted(): void {
 export default function OnboardingTour() {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(0);
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const authLoading = useAuthStore((s) => s.authLoading);
 
   useEffect(() => {
     if (authLoading) return;
     if (isAuthenticated && !isCompleted()) {
-      const timer = setTimeout(() => setIsOpen(true), 800);
+      const timer = setTimeout(() => {
+        dialogRef.current?.showModal();
+        setIsOpen(true);
+      }, 800);
       return () => clearTimeout(timer);
     }
   }, [isAuthenticated, authLoading]);
 
   const handleClose = useCallback(() => {
+    dialogRef.current?.close();
     setIsOpen(false);
     markCompleted();
     track('feature_used', { feature: 'onboarding_tour' });
@@ -86,7 +91,7 @@ export default function OnboardingTour() {
 
   const handlePrev = useCallback(() => {
     if (step > 0) setStep((s) => s - 1);
-  }, []);
+  }, [step]);
 
   const handleSkip = useCallback(() => {
     handleClose();
@@ -100,13 +105,13 @@ export default function OnboardingTour() {
   const progress = ((step + 1) / STEPS.length) * 100;
 
   return (
-    <div
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
+    <dialog
+      ref={dialogRef}
+      onClose={handleClose}
+      className="mx-4 w-full max-w-md overflow-hidden rounded-2xl bg-white p-0 shadow-2xl backdrop:bg-black/40 backdrop:backdrop-blur-sm"
       aria-label="Tour de primeros pasos"
     >
-      <div className="mx-4 w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
+      <div>
         {/* Progress bar */}
         <div className="h-1.5 w-full bg-neutral-100">
           <div
@@ -191,6 +196,6 @@ export default function OnboardingTour() {
           </div>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }

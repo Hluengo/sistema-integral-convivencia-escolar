@@ -12,16 +12,17 @@ const STORAGE_BUCKET = 'anotaciones';
 async function extractPdfText(file: File): Promise<string> {
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await getDocument({ data: arrayBuffer }).promise;
-  let text = '';
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    text += content.items
-      .filter((item) => 'str' in item)
-      .map((item) => (item as { str: string }).str)
-      .join(' ') + '\n';
-  }
-  return text.trim();
+  const pageTexts = await Promise.all(
+    Array.from({ length: pdf.numPages }, (_, i) =>
+      pdf.getPage(i + 1).then(async (page) => {
+        const content = await page.getTextContent();
+        return content.items
+          .flatMap((item) => ('str' in item ? [(item as { str: string }).str] : []))
+          .join(' ');
+      })
+    )
+  );
+  return pageTexts.join('\n').trim();
 }
 
 async function uploadPdf(file: File): Promise<string | null> {

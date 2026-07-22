@@ -17,8 +17,10 @@ export function useDocumentExport() {
     const pdfDoc = await PDFDocument.create();
     const page = pdfDoc.addPage();
     const { width, height } = page.getSize();
-    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const [font, fontBold] = await Promise.all([
+      pdfDoc.embedFont(StandardFonts.Helvetica),
+      pdfDoc.embedFont(StandardFonts.HelveticaBold),
+    ]);
     const margin = 50;
     let y = height - margin;
 
@@ -112,24 +114,21 @@ export function useDocumentExport() {
   }, []);
 
   const printDocument = useCallback(async (htmlContent: string) => {
-    const printWindow = window.open('', '_blank');
+    const fullHtml = `<!DOCTYPE html><html><head><title>Imprimir Documento</title><style>body{font-family:Arial,sans-serif;padding:20px}@media print{body{padding:0}}</style></head><body>${htmlContent}</body></html>`;
+    const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const printWindow = window.open(url, '_blank');
     if (!printWindow) return;
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Imprimir Documento</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            @media print { body { padding: 0; } }
-          </style>
-        </head>
-        <body>${htmlContent}</body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => printWindow.print(), 250);
+    const timer = setInterval(() => {
+      try {
+        if (printWindow.document.readyState === 'complete') {
+          clearInterval(timer);
+          printWindow.print();
+          URL.revokeObjectURL(url);
+        }
+      } catch { /* cross-origin */ }
+    }, 100);
+    setTimeout(() => { clearInterval(timer); URL.revokeObjectURL(url); }, 10000);
   }, []);
 
   return {

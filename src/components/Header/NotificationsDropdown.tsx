@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Bell } from 'lucide-react';
 import { useEscapeClose } from './hooks/useEscapeClose';
 
@@ -19,8 +19,9 @@ interface NotificationsDropdownProps {
 export default function NotificationsDropdown({ notifications, onNotificationClick }: NotificationsDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const closeDropdown = useCallback(() => setIsOpen(false), []);
 
-  useEscapeClose(isOpen, () => setIsOpen(false));
+  useEscapeClose(isOpen, closeDropdown);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {

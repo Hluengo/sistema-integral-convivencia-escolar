@@ -6,14 +6,14 @@ import {
   useRef,
   useState,
 } from 'react';
-import type { Causa } from '../../../types';
+import type { Causa } from '@/src/types';
 import {
   createCausa,
   fetchCausas,
   saveBitacora,
   saveChecklist,
   updateCausa,
-} from '../../../services/cases';
+} from '@/src/services/cases';
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 

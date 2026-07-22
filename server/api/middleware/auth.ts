@@ -49,7 +49,7 @@ async function verifyJwtViaHmac(token: string, secret: string): Promise<JwtPaylo
 function verifyViaSupabaseApi(token: string): Promise<JwtPayload | null> {
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const anonKey = process.env.VITE_SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !anonKey) {
+  if (!supabaseUrl || !anonKey || !URL.canParse(supabaseUrl)) {
     return Promise.resolve(null);
   }
 

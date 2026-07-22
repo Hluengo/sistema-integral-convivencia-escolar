@@ -33,19 +33,21 @@ export default function LoginPage({ onClose }: LoginPageProps) {
     setIsLoading(true);
     setError(null);
 
-    const { error: authError } = await signInWithEmail(email, password);
+    try {
+      const { error: authError } = await signInWithEmail(email, password);
 
-    if (authError) {
-      setError(
-        authError.message === 'Invalid login credentials'
-          ? 'Credenciales incorrectas. Verifique su email y contraseña.'
-          : authError.message
-      );
+      if (authError) {
+        setError(
+          authError.message === 'Invalid login credentials'
+            ? 'Credenciales incorrectas. Verifique su email y contraseña.'
+            : authError.message
+        );
+        return;
+      }
+      setShowLoginModal(false);
+    } finally {
       setIsLoading(false);
-      return;
     }
-    setShowLoginModal(false);
-    setIsLoading(false);
   };
 
   return (

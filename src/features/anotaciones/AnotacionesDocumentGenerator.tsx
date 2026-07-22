@@ -17,6 +17,24 @@ import ExportError from './docgen/components/ExportError';
 import EmissionConfirmDialog from './docgen/components/EmissionConfirmDialog';
 import RecentlyEmitted from './docgen/components/RecentlyEmitted';
 
+function openPrintWindow(html: string): boolean {
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const w = window.open(url, '_blank');
+  if (!w) return false;
+  const timer = setInterval(() => {
+    try {
+      if (w.document.readyState === 'complete') {
+        clearInterval(timer);
+        w.print();
+        URL.revokeObjectURL(url);
+      }
+    } catch { /* cross-origin */ }
+  }, 100);
+  setTimeout(() => { clearInterval(timer); URL.revokeObjectURL(url); }, 10000);
+  return true;
+}
+
 interface AnotacionesDocumentGeneratorProps {
   student: {
     id: string;
@@ -79,7 +97,6 @@ export default function AnotacionesDocumentGenerator({
   }, []);
 
   const [exportError, setExportError] = useState<string | null>(null);
-  const [isExporting, setIsExporting] = useState(false);
   const [showEmissionConfirm, setShowEmissionConfirm] = useState(false);
 
   const handleEmitAfterExport = () => {
@@ -173,24 +190,6 @@ export default function AnotacionesDocumentGenerator({
       .map((s) => s.outerHTML)
       .join('\n');
     return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Documento</title>${styles}<style>body{margin:0;display:flex;justify-content:center;background:#fff}@page{size:A4;margin:0}</style></head><body>${el.outerHTML}</body></html>`;
-  };
-
-  const openPrintWindow = (html: string) => {
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const w = window.open(url, '_blank');
-    if (!w) return false;
-    const timer = setInterval(() => {
-      try {
-        if (w.document.readyState === 'complete') {
-          clearInterval(timer);
-          w.print();
-          URL.revokeObjectURL(url);
-        }
-      } catch { /* cross-origin */ }
-    }, 100);
-    setTimeout(() => { clearInterval(timer); URL.revokeObjectURL(url); }, 10000);
-    return true;
   };
 
   // Export handlers

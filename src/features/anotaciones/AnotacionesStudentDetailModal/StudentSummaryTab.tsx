@@ -159,7 +159,7 @@ export default function StudentSummaryTab({
                   key={String(t.id)}
                   className="flex items-start gap-3 border-b border-neutral-100 pb-3 last:border-b-0 last:pb-0"
                 >
-                  <div className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-brand-400" />
+                  <div className="mt-2 h-2 w-2 shrink-0 rounded-full bg-brand-400" />
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-neutral-800 text-sm">
                       {`${String(t.from) || 'Inicio'} -> ${String(t.to) || String(t.stage_name) || '(sin destino)'}`}
@@ -193,7 +193,7 @@ export default function StudentSummaryTab({
                 className="flex items-center justify-between rounded-xl border border-neutral-100 bg-neutral-50 px-4 py-3"
               >
                 <div className="flex items-center gap-3">
-                  <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-brand-100 font-bold text-brand-700 text-xs">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-100 font-bold text-brand-700 text-xs">
                     {String(etapa.step_number)}
                   </span>
                   <div>

@@ -32,7 +32,7 @@ export default function PdfViewer({ pdfPath, onClose }: PdfViewerProps) {
       } catch {
         if (!cancelled) setError('Error al conectar con el almacenamiento.');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true; };
@@ -69,7 +69,7 @@ export default function PdfViewer({ pdfPath, onClose }: PdfViewerProps) {
               src={signedUrl}
               className="h-full w-full border-0"
               title="Visor de documento PDF"
-              sandbox="allow-scripts allow-same-origin"
+              sandbox="allow-same-origin"
             />
           ) : null}
         </div>

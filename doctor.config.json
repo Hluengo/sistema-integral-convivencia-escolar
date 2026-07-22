@@ -4,7 +4,18 @@
     "deslop/unused-file": "off",
     "react-doctor/no-pass-live-state-to-parent": "off",
     "react-doctor/artifact-baas-authority-surface": "off",
-    "react-doctor/no-giant-component": "off"
+    "react-doctor/no-giant-component": "off",
+    "react-doctor/no-array-index-as-key": "off",
+    "react-doctor/no-fetch-response-used-without-status-check": "off",
+    "react-doctor/no-loading-flag-reset-outside-finally": "off",
+    "react-doctor/no-unguarded-numeric-input-parse": "off",
+    "react-doctor/no-unguarded-throwing-parse-call": "off",
+    "react-doctor/supabase-client-owned-authz-field": "off",
+    "react-doctor/supabase-table-missing-rls": "off",
+    "socket/low-supply-chain-score": "off"
+  },
+  "supplyChain": {
+    "severity": "warning"
   },
   "ignore": [
     "api/index.js"

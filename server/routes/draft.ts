@@ -192,6 +192,7 @@ router.post('/draft-document', requireAuth, async (req, res) => {
           },
         }
       );
+      if (!tplRes.ok) { throw new Error(`Template fetch failed: ${tplRes.status}`); }
       const tplData = (await tplRes.json()) as Array<{ system_prompt?: string }>;
       if (Array.isArray(tplData) && tplData.length > 0 && tplData[0].system_prompt) {
         dbPrompt = tplData[0].system_prompt;

@@ -66,7 +66,7 @@ export default function CustomCommitments({
                 type="button"
                 aria-label={`Eliminar compromiso: ${c}`}
                 onClick={() => onRemoveCommitment(i)}
-                className="mt-0.5 flex-shrink-0 text-red-500 transition-colors hover:text-red-700"
+                className="mt-0.5 shrink-0 text-red-500 transition-colors hover:text-red-700"
               >
                 <X className="h-4 w-4" />
               </button>
