@@ -835,6 +835,15 @@ router7.post('/parse-annotations', async (req, res) => {
     let summary = { negativas: 0, positivas: 0, informativas: 0 };
     try {
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      console.log('[SERVER-PARSE] AI raw response:', responseText.substring(0, 500));
+      console.log(
+        '[SERVER-PARSE] Text sent length:',
+        filteredText.length > 0 ? filteredText.length : cleanText.length
+      );
+      console.log(
+        '[SERVER-PARSE] Text sent first 300:',
+        (filteredText.length > 0 ? filteredText : cleanText).substring(0, 300)
+      );
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
         summary = {

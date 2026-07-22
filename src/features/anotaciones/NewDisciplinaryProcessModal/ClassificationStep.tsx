@@ -12,6 +12,7 @@ interface ClassificationStepProps {
 
 export default function ClassificationStep({ value, onChange, summary }: ClassificationStepProps) {
   const total = summary ? summary.negativas + summary.positivas + summary.informativas : 0;
+  console.log('[CLASSIFY] summary:', JSON.stringify(summary), 'total:', total);
 
   return (
     <div className="space-y-4">
