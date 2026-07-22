@@ -1,5 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
+import { Star } from 'lucide-react';
 import { CLASSIFICATION_OPTIONS } from './constants';
 import type { AnnotationSummary } from '@/src/shared/lib/types';
 
@@ -16,27 +17,28 @@ export default function ClassificationStep({ value, onChange, summary }: Classif
     <div className="space-y-4">
       <p className="font-medium text-neutral-600 text-sm">Clasificación de la Medida</p>
 
-      {summary && total > 0 && (
-        <div className="rounded-xl bg-neutral-50 p-3 text-sm">
-          <p className="text-neutral-600">
-            <span className="font-semibold text-neutral-800">{total}</span> anotaciones detectadas:{' '}
-            <span className="font-semibold text-red-600">{summary.negativas} negativas</span>
-            {summary.positivas > 0 && (
-              <>
-                ,{' '}
-                <span className="font-semibold text-emerald-600">
-                  {summary.positivas} positivas
-                </span>
-              </>
-            )}
-            {summary.informativas > 0 && (
-              <>
-                ,{' '}
-                <span className="font-semibold text-blue-600">
-                  {summary.informativas} informativas
-                </span>
-              </>
-            )}
+      {summary && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Star className="h-4 w-4 text-indigo-600" />
+            <p className="font-medium text-neutral-700 text-sm">Resultado del Análisis</p>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-center">
+              <p className="font-bold text-2xl text-red-700">{summary.negativas}</p>
+              <p className="mt-1 font-medium text-red-600 text-xs">Negativas</p>
+            </div>
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
+              <p className="font-bold text-2xl text-emerald-700">{summary.positivas}</p>
+              <p className="mt-1 font-medium text-emerald-600 text-xs">Positivas</p>
+            </div>
+            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-center">
+              <p className="font-bold text-2xl text-blue-700">{summary.informativas}</p>
+              <p className="mt-1 font-medium text-blue-600 text-xs">Informativas</p>
+            </div>
+          </div>
+          <p className="text-center font-medium text-neutral-500 text-xs">
+            Total: {total} anotaciones detectadas
           </p>
         </div>
       )}
