@@ -3,17 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const GROQ_MODEL = 'llama-3.1-8b-instant';
+const AI_MODEL = 'gemini-2.0-flash';
 
 export async function callGroq(
   messages: { role: string; content: string }[],
   systemInstruction?: string
 ): Promise<string> {
-  const apiKey = process.env.GROQ_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error('La variable de entorno GROQ_API_KEY es requerida.');
+    throw new Error('La variable de entorno GEMINI_API_KEY es requerida.');
   }
-  const body: Record<string, unknown> = { model: GROQ_MODEL, messages: [] };
+  const body: Record<string, unknown> = { model: AI_MODEL, messages: [] };
   if (systemInstruction) {
     (body.messages as { role: string; content: string }[]).push({
       role: 'system',
@@ -21,7 +21,7 @@ export async function callGroq(
     });
   }
   (body.messages as { role: string; content: string }[]).push(...messages);
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  const response = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -31,12 +31,12 @@ export async function callGroq(
   });
   if (!response.ok) {
     const errText = await response.text();
-    let groqMsg = errText;
+    let aiMsg = errText;
     try {
       const errJson = JSON.parse(errText);
-      groqMsg = errJson.error?.message || errText;
+      aiMsg = errJson.error?.message || errText;
     } catch { /* not JSON */ }
-    throw new Error(`Groq API error (${response.status}): ${groqMsg}`);
+    throw new Error(`Gemini API error (${response.status}): ${aiMsg}`);
   }
   const data = (await response.json()) as Record<string, unknown>;
   const choices = data?.choices as Array<{ message?: { content?: string } }> | undefined;

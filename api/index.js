@@ -311,31 +311,31 @@ function httpsPatch(hostname, pathname, body, headers) {
 }
 
 // server/api/services/groq.ts
-var GROQ_MODEL = "llama-3.1-8b-instant";
+var AI_MODEL = "gemini-2.0-flash";
 function getApiKey() {
-  const key = process.env.GROQ_API_KEY;
+  const key = process.env.GEMINI_API_KEY;
   if (!key) {
-    throw new Error("GROQ_API_KEY no configurada");
+    throw new Error("GEMINI_API_KEY no configurada");
   }
   return key;
 }
-async function callGroq(messages, systemInstruction) {
+async function callAI(messages, systemInstruction) {
   const apiKey = getApiKey();
   const body = {
-    model: GROQ_MODEL,
+    model: AI_MODEL,
     messages: []
   };
   if (systemInstruction) {
     body.messages.push({ role: "system", content: systemInstruction });
   }
   body.messages.push(...messages);
-  const res = await httpsPost("api.groq.com", "/openai/v1/chat/completions", body, {
+  const res = await httpsPost("generativelanguage.googleapis.com", "/v1beta/openai/chat/completions", body, {
     Authorization: `Bearer ${apiKey}`
   });
   if (res.status !== 200) {
     const errBody = res.body;
-    const groqMsg = errBody?.error?.message || JSON.stringify(errBody);
-    throw new Error(`Groq API error (${res.status}): ${groqMsg}`);
+    const aiMsg = errBody?.error?.message || JSON.stringify(errBody);
+    throw new Error(`Gemini API error (${res.status}): ${aiMsg}`);
   }
   const resBody = res.body;
   const choices = resBody?.choices;
@@ -369,7 +369,7 @@ router.post("/improve-text", requireAuth, async (req, res) => {
     }
     const systemMsg = "Eres un asistente de redacci\xF3n especializado en redacci\xF3n institucional educativa chilena. Tu \xFAnica funci\xF3n es mejorar la ortograf\xEDa, gram\xE1tica, coherencia y redacci\xF3n del texto que el usuario te entrega. Usa siempre un tono neutro, objetivo y sin juicios de valor. No agregues explicaciones, comentarios ni evaluaciones. No respondas preguntas ni interpretes el contenido. Devuelve \xDANICAMENTE el texto corregido, sin ning\xFAn formato adicional ni prefacio.";
     const userContent = sanitizeForAI(text);
-    const improved = await callGroq(
+    const improved = await callAI(
       [{ role: "user", content: `Texto a corregir:
 
 ${userContent}` }],
@@ -426,7 +426,7 @@ Tus respuestas deben estar redactadas en espa\xF1ol formal de Chile, alineadas c
       });
     }
     messages.push({ role: "user", content: sanitizeForAI(message) });
-    const reply = await callGroq(messages, systemInstruction);
+    const reply = await callAI(messages, systemInstruction);
     setCache(cacheKey, reply);
     res.json({ success: true, reply });
   } catch (error) {
@@ -472,7 +472,7 @@ Escribe un an\xE1lisis de auditor\xEDa en formato de informe t\xE9cnico formal e
 4. **Instrucciones Remediales**: Pasos obligatorios urgentes de resguardo y tramitaci\xF3n para sanear el caso, junto con los plazos reglamentarios vigentes.
 
 Utiliza un tono sumamente profesional, corporativo, t\xE9cnico e institucional (el "vibe" SaaS legal de alto nivel chileno).`;
-    const responseText = await callGroq([{ role: "user", content: systemPrompt }]);
+    const responseText = await callAI([{ role: "user", content: systemPrompt }]);
     res.json({ success: true, report: responseText });
   } catch (error) {
     console.error("Error al auditar debido proceso:", error);
@@ -618,7 +618,7 @@ DATOS: C\xF3digo: ${id}, Estudiante: ${sanitizeForAI(studentName)} (Curso: ${cou
       });
       return;
     }
-    const responseText = await callGroq([
+    const responseText = await callAI([
       { role: "user", content: systemPrompt + caseDataAppendix }
     ]);
     res.json({ success: true, document: responseText });
@@ -772,7 +772,7 @@ No inventes anotaciones. Devuelve SOLO el JSON, sin explicaciones.`;
         content: `Extrae TODAS las anotaciones:\n\n${cleanText}`
       }
     ];
-    const responseText = await callGroq(messages, systemInstruction).catch(err => {
+    const responseText = await callAI(messages, systemInstruction).catch(err => {
       console.error("Groq API error:", err.message);
       throw new Error("El servicio de IA no pudo procesar el documento. Si el PDF es escaneado o tiene im\u00E1genes, convi\u00E9rtelo a texto primero.");
     });

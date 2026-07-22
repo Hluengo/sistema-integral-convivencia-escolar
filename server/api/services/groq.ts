@@ -2,12 +2,12 @@
 
 import { httpsPost } from '../lib/https.js';
 
-const GROQ_MODEL = 'llama-3.1-8b-instant';
+const AI_MODEL = 'gemini-2.0-flash';
 
 function getApiKey(): string {
-  const key = process.env.GROQ_API_KEY;
+  const key = process.env.GEMINI_API_KEY;
   if (!key) {
-    throw new Error('GROQ_API_KEY no configurada');
+    throw new Error('GEMINI_API_KEY no configurada');
   }
   return key;
 }
@@ -18,18 +18,18 @@ export async function callGroq(
 ): Promise<string> {
   const apiKey = getApiKey();
   const body: { model: string; messages: Array<{ role: string; content: string }> } = {
-    model: GROQ_MODEL,
+    model: AI_MODEL,
     messages: [],
   };
   if (systemInstruction) {
     body.messages.push({ role: 'system', content: systemInstruction });
   }
   body.messages.push(...messages);
-  const res = await httpsPost('api.groq.com', '/openai/v1/chat/completions', body, {
+  const res = await httpsPost('generativelanguage.googleapis.com', '/v1beta/openai/chat/completions', body, {
     Authorization: `Bearer ${apiKey}`,
   });
   if (res.status !== 200) {
-    throw new Error(`Groq API error: ${res.status} ${JSON.stringify(res.body)}`);
+    throw new Error(`Gemini API error: ${res.status} ${JSON.stringify(res.body)}`);
   }
   const resBody = res.body as Record<string, unknown>;
   const choices = resBody?.choices as Array<Record<string, unknown>> | undefined;
