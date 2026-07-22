@@ -78,7 +78,7 @@ interface RevisionTabProps {
   dbNegativeCount: number;
   onDrop: (e: React.DragEvent) => Promise<void>;
   onFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
-  setSummary: (v: AnnotationSummary | null) => void;
+  clearAnalysis: () => Promise<void>;
   onClearAll: () => void;
 }
 
@@ -95,7 +95,7 @@ export default function RevisionTab({
   dbNegativeCount,
   onDrop,
   onFileSelect,
-  setSummary,
+  clearAnalysis,
   onClearAll,
 }: RevisionTabProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -257,7 +257,7 @@ export default function RevisionTab({
 
           <button
             type="button"
-            onClick={() => setSummary(null)}
+            onClick={clearAnalysis}
             className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-neutral-200 px-4 py-2 font-medium text-neutral-500 text-sm transition-colors hover:bg-neutral-50 hover:text-neutral-700"
           >
             <X className="h-4 w-4" />

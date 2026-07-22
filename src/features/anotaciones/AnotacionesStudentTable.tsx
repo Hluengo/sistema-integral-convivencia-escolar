@@ -86,6 +86,13 @@ function getAnnotationRange(filter: string): [number, number] | null {
   }
 }
 
+function getEffectiveNegCount(s: {
+  annotations_count: number;
+  ai_analysis?: { negativas: number };
+}): number {
+  return Math.max(s.annotations_count || 0, s.ai_analysis?.negativas || 0);
+}
+
 function filterStudents(
   students: AnotacionesStudentTableProps['students'],
   activeFilter: string,
@@ -97,7 +104,7 @@ function filterStudents(
   if (range) {
     const [min, max] = range;
     filtered = filtered.filter((s) => {
-      const count = s.annotations_count || 0;
+      const count = getEffectiveNegCount(s);
       return count >= min && count <= max;
     });
   }
@@ -229,8 +236,9 @@ export default memo(function AnotacionesStudentTable({
                 </tr>
               ) : (
                 filteredStudents.map((student) => {
-                  const style = getSemaphoricStyle(student.annotations_count || 0);
-                  const status = getDisciplinaryStatusLabel(student.annotations_count || 0);
+                  const effectiveNeg = getEffectiveNegCount(student);
+                  const style = getSemaphoricStyle(effectiveNeg);
+                  const status = getDisciplinaryStatusLabel(effectiveNeg);
                   const negativeCount = student.annotations_count || 0;
 
                   return (

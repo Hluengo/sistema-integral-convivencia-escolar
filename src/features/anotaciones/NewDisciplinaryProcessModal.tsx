@@ -125,6 +125,14 @@ export default function NewDisciplinaryProcessModal({
       const data = await res.json();
       if (data.success && data.summary) {
         setSummary(data.summary as AnnotationSummary);
+        if (selectedStudent) {
+          await supabase
+            .from('students')
+            .update({
+              ai_analysis: { ...(data.summary as object), analyzed_at: new Date().toISOString() },
+            })
+            .eq('id', selectedStudent.id);
+        }
         setStep(4);
       } else {
         setAnalysisError(data.error || 'Error al analizar el documento');

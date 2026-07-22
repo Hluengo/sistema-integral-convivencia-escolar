@@ -67,7 +67,7 @@ export default function AnotacionesStudentDetailModal({
     handleDrop,
     handleFileSelect,
     setErrorMessage,
-    setSummary,
+    clearAnalysis,
   } = usePdfProcessing(student.id);
 
   const setCurrentView = useUIStore((s) => s.setCurrentView);
@@ -136,7 +136,7 @@ export default function AnotacionesStudentDetailModal({
             dbNegativeCount={negativeCount}
             onDrop={handleDrop}
             onFileSelect={handleFileSelect}
-            setSummary={setSummary}
+            clearAnalysis={clearAnalysis}
             onClearAll={() => onClearAnnotations(student.id)}
           />
         );

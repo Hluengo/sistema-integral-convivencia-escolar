@@ -55,6 +55,7 @@ interface UsePdfProcessingResult {
   setParsingStatus: (v: string) => void;
   setIsParsing: (v: boolean) => void;
   setSummary: (v: AnnotationSummary | null) => void;
+  clearAnalysis: () => Promise<void>;
 }
 
 export function usePdfProcessing(studentId: string): UsePdfProcessingResult {
@@ -184,6 +185,11 @@ export function usePdfProcessing(studentId: string): UsePdfProcessingResult {
     [processPdfFile]
   );
 
+  const clearAnalysis = useCallback(async () => {
+    setSummary(null);
+    await supabase.from('students').update({ ai_analysis: null }).eq('id', studentId);
+  }, [studentId]);
+
   return {
     isDragging,
     setIsDragging,
@@ -198,5 +204,6 @@ export function usePdfProcessing(studentId: string): UsePdfProcessingResult {
     setParsingStatus,
     setIsParsing,
     setSummary,
+    clearAnalysis,
   };
 }
