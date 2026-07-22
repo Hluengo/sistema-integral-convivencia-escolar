@@ -30,7 +30,7 @@ export default function UploadAnalyzeStep({
       e.preventDefault();
       setDrag(false);
       const f = e.dataTransfer.files[0];
-      if (f && f.type === 'application/pdf') onFileChange(f);
+      if (f && (f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.md'))) onFileChange(f);
     },
     [onFileChange]
   );
@@ -42,7 +42,7 @@ export default function UploadAnalyzeStep({
   return (
     <div className="space-y-4">
       <p className="flex items-center gap-2 font-medium text-neutral-600 text-sm">
-        <Upload className="h-4 w-4 text-indigo-600" /> Subir Hoja de Vida (PDF)
+        <Upload className="h-4 w-4 text-indigo-600" /> Subir Hoja de Vida (PDF o .md)
       </p>
 
       <button
@@ -55,10 +55,10 @@ export default function UploadAnalyzeStep({
           drag ? 'border-indigo-500 bg-indigo-50' : 'border-neutral-300 hover:border-neutral-400'
         }`}
       >
-        <input ref={fileRef} type="file" accept=".pdf" onChange={onPick} className="hidden" />
+        <input ref={fileRef} type="file" accept=".pdf,.md" onChange={onPick} className="hidden" />
         <div className="flex flex-col items-center gap-2">
           <Upload className="h-8 w-8 text-neutral-400" />
-          <p className="text-neutral-500 text-sm">Arrastra un PDF o haz clic para seleccionar</p>
+          <p className="text-neutral-500 text-sm">Arrastra un PDF o .md, o haz clic para seleccionar</p>
           {file && <p className="font-medium text-indigo-600 text-xs">{file.name}</p>}
         </div>
       </button>

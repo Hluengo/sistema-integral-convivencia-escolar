@@ -168,7 +168,7 @@ export default function RevisionTab({
         <input
           ref={fileInputRef}
           type="file"
-          accept=".pdf,application/pdf"
+          accept=".pdf,.md,application/pdf"
           onChange={onFileSelect}
           className="hidden"
         />
@@ -188,10 +188,10 @@ export default function RevisionTab({
               <div>
                 <p className="font-medium text-neutral-700 text-sm">
                   {currentCarta
-                    ? 'Sube un PDF actualizado para comparar con la carta vigente'
-                    : 'Sube un PDF de hoja de vida para revisar situación del estudiante'}
+                    ? 'Sube un PDF o Markdown (.md) actualizado para comparar con la carta vigente'
+                    : 'Sube un PDF o Markdown (.md) de hoja de vida para revisar situación del estudiante'}
                 </p>
-                <p className="mt-1 text-neutral-400 text-xs">Solo archivos PDF - Máximo 10 MB</p>
+                <p className="mt-1 text-neutral-400 text-xs">PDF y Markdown (.md) - Máximo 10 MB</p>
               </div>
             </>
           )}
@@ -277,9 +277,12 @@ export default function RevisionTab({
           </h3>
           <p className="mb-3 font-medium text-neutral-500 text-xs">
             {(() => {
+              const neg = parsedAnnotations.filter((a: unknown) => (a as { type?: string }).type === 'Negativa').length;
               const pos = parsedAnnotations.filter((a: unknown) => (a as { type?: string }).type === 'Positiva').length;
-              const neg = parsedAnnotations.length - pos;
-              return `Se detectaron ${parsedAnnotations.length} anotaciones (${neg} negativas, ${pos} positivas):`;
+              const inf = parsedAnnotations.filter((a: unknown) => (a as { type?: string }).type === 'Información').length;
+              const parts = [`${neg} negativas`, `${pos} positivas`];
+              if (inf > 0) parts.push(`${inf} informativas`);
+              return `Se detectaron ${parsedAnnotations.length} anotaciones (${parts.join(', ')}):`;
             })()}
           </p>
           <div className="max-h-72 space-y-3 overflow-y-auto">

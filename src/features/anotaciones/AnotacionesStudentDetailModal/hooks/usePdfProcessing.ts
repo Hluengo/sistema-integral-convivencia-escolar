@@ -9,7 +9,17 @@ GlobalWorkerOptions.workerSrc = workerUrl;
 
 const STORAGE_BUCKET = 'anotaciones';
 
-async function extractPdfText(file: File): Promise<string> {
+async function extractFileText(file: File): Promise<string> {
+  const name = file.name.toLowerCase();
+  if (name.endsWith('.md')) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error('Error al leer el archivo .md'));
+      reader.readAsText(file);
+    });
+  }
+
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await getDocument({ data: arrayBuffer }).promise;
   const pageTexts = await Promise.all(
@@ -25,13 +35,22 @@ async function extractPdfText(file: File): Promise<string> {
   return pageTexts.join('\n').trim();
 }
 
+function isSupportedFile(file: File): boolean {
+  const name = file.name.toLowerCase();
+  return file.type === 'application/pdf' || name.endsWith('.pdf') || name.endsWith('.md');
+}
+
+function getFileTypeLabel(file: File): string {
+  return file.name.toLowerCase().endsWith('.md') ? 'MD' : 'PDF';
+}
+
 async function uploadPdf(file: File): Promise<string | null> {
   const tenantId = useAuthStore.getState().tenantId;
   if (!tenantId) return null;
   const filePath = `${tenantId}/${Date.now()}_${file.name}`;
-  const { error } = await supabase.storage
+    const { error } = await supabase.storage
     .from(STORAGE_BUCKET)
-    .upload(filePath, file, { cacheControl: '3600', upsert: false });
+    .upload(filePath, file, { cacheControl: '3600', upsert: false, contentType: file.type || 'application/octet-stream' });
   if (error) {
     console.error('Error uploading PDF to storage:', error);
     return null;
@@ -76,20 +95,21 @@ export function usePdfProcessing(
   const processPdfFile = useCallback(
     async (file: File) => {
       setIsParsing(true);
-      setParsingStatus('Leyendo archivo PDF...');
+      const fileType = getFileTypeLabel(file);
+      setParsingStatus(`Leyendo archivo ${fileType}...`);
       setErrorMessage(null);
       setParsedAnnotations([]);
       setPdfStoragePath(null);
 
       try {
-        setParsingStatus('Extrayendo texto del PDF...');
-        const textContent = await extractPdfText(file);
+        setParsingStatus(`Extrayendo texto del ${fileType}...`);
+        const textContent = await extractFileText(file);
 
         if (!textContent || textContent.length < 20) {
-          throw new Error('El PDF no contiene texto legible. Puede ser un documento escaneado o protegido. Convierta el PDF a texto antes de subirlo.');
+          throw new Error(`El archivo ${fileType} no contiene texto legible. Si es un PDF escaneado o protegido, conviértelo a Markdown (.md) y súbelo de nuevo.`);
         }
 
-        setParsingStatus('Guardando PDF en almacenamiento...');
+        setParsingStatus(`Guardando ${fileType} en almacenamiento...`);
         const storagePath = await uploadPdf(file);
         if (storagePath) {
           setPdfStoragePath(storagePath);
@@ -123,11 +143,11 @@ export function usePdfProcessing(
           if (infoCount > 0) parts.push(`${infoCount} informativas`);
           setParsingStatus(`Se detectaron ${result.annotations.length} anotaciones (${parts.join(', ')}). Revisa los datos antes de registrar.`);
         } else {
-          setParsingStatus('No se detectaron anotaciones en el PDF. Revisa que el archivo contenga datos de hoja de vida.');
+          setParsingStatus(`No se detectaron anotaciones en el ${fileType}. Revisa que el archivo contenga datos de hoja de vida.`);
         }
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : 'Error al procesar el archivo PDF.';
-        console.error('Error parsing PDF:', err);
+        const msg = err instanceof Error ? err.message : `Error al procesar el archivo ${fileType}.`;
+        console.error(`Error parsing ${fileType}:`, err);
         setErrorMessage(msg);
         setParsingStatus('Error al procesar el archivo');
       } finally {
@@ -145,8 +165,8 @@ export function usePdfProcessing(
       const files = e.dataTransfer.files;
       if (files.length === 0) return;
       const file = files[0];
-      if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-        setErrorMessage('Solo se aceptan archivos PDF.');
+      if (!isSupportedFile(file)) {
+        setErrorMessage('Solo se aceptan archivos PDF y Markdown (.md).');
         return;
       }
       await processPdfFile(file);
@@ -159,8 +179,8 @@ export function usePdfProcessing(
       const files = e.target.files;
       if (!files || files.length === 0) return;
       const file = files[0];
-      if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-        setErrorMessage('Solo se aceptan archivos PDF.');
+      if (!isSupportedFile(file)) {
+        setErrorMessage('Solo se aceptan archivos PDF y Markdown (.md).');
         return;
       }
       await processPdfFile(file);
