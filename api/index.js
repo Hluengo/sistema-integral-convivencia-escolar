@@ -333,7 +333,9 @@ async function callGroq(messages, systemInstruction) {
     Authorization: `Bearer ${apiKey}`
   });
   if (res.status !== 200) {
-    throw new Error(`Groq API error: ${res.status} ${JSON.stringify(res.body)}`);
+    const errBody = res.body;
+    const groqMsg = errBody?.error?.message || JSON.stringify(errBody);
+    throw new Error(`Groq API error (${res.status}): ${groqMsg}`);
   }
   const resBody = res.body;
   const choices = resBody?.choices;
@@ -748,6 +750,11 @@ router7.post("/parse-annotations", async (req, res) => {
       return;
     }
     let cleanText = textContent.replace(/\n{3,}/g, "\n\n").replace(/\s{3,}/g, "  ").replace(/P\xE1gina\s*\d+.*/gi, "").trim();
+    const MAX_LENGTH = 80000;
+    if (cleanText.length > MAX_LENGTH) {
+      cleanText = cleanText.slice(0, MAX_LENGTH) + "\n\n[Documento truncado por exceder el límite de procesamiento]";
+      console.warn(`Texto truncado de ${textContent.length} a ${MAX_LENGTH} caracteres`);
+    }
     const systemInstruction = `Eres un analizador de documentos educativos. Tu tarea es extraer TODAS las anotaciones de un texto de hoja de vida estudiantil y devolverlas en JSON.
 
 CADA ANOTACI\xD3N tiene esta estructura (en una sola l\xEDnea o bloque contiguo):
@@ -800,7 +807,8 @@ ${cleanText}
     res.json({ success: true, annotations });
   } catch (error) {
     console.error("Error al analizar documento:", error);
-    res.status(500).json({ error: "Error interno al procesar el archivo." });
+    const msg = error instanceof Error ? error.message : "Error interno al procesar el archivo.";
+    res.status(500).json({ error: msg });
   }
 });
 var parse_default = router7;

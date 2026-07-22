@@ -33,6 +33,12 @@ router.post('/parse-annotations', async (req, res) => {
       .replace(/Página\s*\d+.*/gi, '')
       .trim();
 
+    const MAX_LENGTH = 80000;
+    if (cleanText.length > MAX_LENGTH) {
+      cleanText = cleanText.slice(0, MAX_LENGTH) + '\n\n[Documento truncado por exceder el límite de procesamiento]';
+      console.warn(`Texto truncado de ${textContent.length} a ${MAX_LENGTH} caracteres`);
+    }
+
     const systemInstruction = `Eres un analizador de documentos educativos. Tu tarea es extraer TODAS las anotaciones de un texto de hoja de vida estudiantil y devolverlas en JSON.
 
 CADA ANOTACIÓN tiene esta estructura (en una sola línea o bloque contiguo):
@@ -85,7 +91,8 @@ Devuelve SOLO el arreglo JSON, sin texto adicional.`;
     res.json({ success: true, annotations });
   } catch (error) {
     console.error('Error al analizar documento:', error);
-    res.status(500).json({ error: 'Error interno al procesar el archivo.' });
+    const msg = error instanceof Error ? error.message : 'Error interno al procesar el archivo.';
+    res.status(500).json({ error: msg });
   }
 });
 

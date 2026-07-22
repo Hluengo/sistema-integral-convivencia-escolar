@@ -85,6 +85,10 @@ export function usePdfProcessing(
         setParsingStatus('Extrayendo texto del PDF...');
         const textContent = await extractPdfText(file);
 
+        if (!textContent || textContent.length < 20) {
+          throw new Error('El PDF no contiene texto legible. Puede ser un documento escaneado o protegido. Convierta el PDF a texto antes de subirlo.');
+        }
+
         setParsingStatus('Guardando PDF en almacenamiento...');
         const storagePath = await uploadPdf(file);
         if (storagePath) {

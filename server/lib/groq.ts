@@ -31,7 +31,12 @@ export async function callGroq(
   });
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(`Groq API error: ${response.status} ${errText}`);
+    let groqMsg = errText;
+    try {
+      const errJson = JSON.parse(errText);
+      groqMsg = errJson.error?.message || errText;
+    } catch { /* not JSON */ }
+    throw new Error(`Groq API error (${response.status}): ${groqMsg}`);
   }
   const data = (await response.json()) as Record<string, unknown>;
   const choices = data?.choices as Array<{ message?: { content?: string } }> | undefined;
