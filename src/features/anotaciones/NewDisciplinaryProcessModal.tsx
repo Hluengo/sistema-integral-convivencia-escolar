@@ -19,10 +19,18 @@ GlobalWorkerOptions.workerSrc = workerUrl;
 
 async function extractFileText(file: File): Promise<string> {
   const name = file.name.toLowerCase();
+
+  function cleanText(raw: string): string {
+    return raw
+      .split('\n')
+      .filter((l) => !l.trim().startsWith('![') && !l.includes('data:image'))
+      .join('\n');
+  }
+
   if (name.endsWith('.md')) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
+      reader.onload = () => resolve(cleanText(reader.result as string));
       reader.onerror = () => reject(new Error('Error al leer el archivo .md'));
       reader.readAsText(file);
     });
@@ -40,7 +48,7 @@ async function extractFileText(file: File): Promise<string> {
       })
     )
   );
-  return pageTexts.join('\n').trim();
+  return cleanText(pageTexts.join('\n').trim());
 }
 
 interface NewDisciplinaryProcessModalProps {
