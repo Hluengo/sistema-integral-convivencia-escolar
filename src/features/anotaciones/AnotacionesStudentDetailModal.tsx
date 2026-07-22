@@ -133,9 +133,11 @@ export default function AnotacionesStudentDetailModal({
             errorMessage={errorMessage}
             setErrorMessage={setErrorMessage}
             summary={summary}
+            dbNegativeCount={negativeCount}
             onDrop={handleDrop}
             onFileSelect={handleFileSelect}
             setSummary={setSummary}
+            onClearAll={() => onClearAnnotations(student.id)}
           />
         );
       case 'historial':

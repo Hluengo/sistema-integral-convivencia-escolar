@@ -152,6 +152,7 @@ export interface AnotacionStudent {
   disciplinary_status: DisciplinaryStatus;
   rut?: string;
   course_name?: string;
+  ai_analysis?: AnnotationSummary;
 }
 
 export interface Annotation {

@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useRef, useCallback, useMemo } from 'react';
-import { X, Upload, FileText, AlertTriangle, RefreshCw, ArrowRight } from 'lucide-react';
+import { X, Upload, FileText, AlertTriangle, RefreshCw, ArrowRight, Trash2 } from 'lucide-react';
 import { formatDate, type StudentInfo } from './constants';
 import type { CartaDisciplinaria, AnnotationSummary } from '@/src/shared/lib/types';
 
@@ -75,9 +75,11 @@ interface RevisionTabProps {
   errorMessage: string | null;
   setErrorMessage: (v: string | null) => void;
   summary: AnnotationSummary | null;
+  dbNegativeCount: number;
   onDrop: (e: React.DragEvent) => Promise<void>;
   onFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
   setSummary: (v: AnnotationSummary | null) => void;
+  onClearAll: () => void;
 }
 
 export default function RevisionTab({
@@ -90,9 +92,11 @@ export default function RevisionTab({
   errorMessage,
   setErrorMessage,
   summary,
+  dbNegativeCount,
   onDrop,
   onFileSelect,
   setSummary,
+  onClearAll,
 }: RevisionTabProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLButtonElement>(null);
@@ -133,12 +137,13 @@ export default function RevisionTab({
   }, [cartas]);
 
   const parsedNegCount = summary?.negativas ?? 0;
+  const effectiveNegCount = Math.max(dbNegativeCount, parsedNegCount);
   const total = summary ? summary.negativas + summary.positivas + summary.informativas : 0;
 
   const suggestion = currentCarta
-    ? getNextStepSuggestion(currentCarta.letter_type, parsedNegCount)
-    : parsedNegCount > 0
-      ? getNextStepSuggestion(null, parsedNegCount)
+    ? getNextStepSuggestion(currentCarta.letter_type, effectiveNegCount)
+    : effectiveNegCount > 0
+      ? getNextStepSuggestion(null, effectiveNegCount)
       : null;
 
   return (
@@ -280,6 +285,39 @@ export default function RevisionTab({
                 {suggestion.description}
               </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {(dbNegativeCount > 0 || summary) && (
+        <div className="rounded-2xl border border-red-200 bg-white p-4 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-bold text-neutral-800 text-xs uppercase tracking-wider">
+                Empezar de cero
+              </p>
+              <p className="mt-0.5 text-neutral-500 text-xs">
+                {dbNegativeCount > 0
+                  ? `Elimina ${dbNegativeCount} anotaciones registradas y el último análisis de IA.`
+                  : `Elimina el último análisis de IA para este estudiante.`}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (
+                  window.confirm(
+                    `¿Eliminar TODAS las anotaciones de ${student.full_name} y reiniciar el análisis? Esta acción no se puede deshacer.`
+                  )
+                ) {
+                  onClearAll();
+                }
+              }}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-red-300 bg-white px-3 py-1.5 font-medium text-red-600 text-xs transition-colors hover:bg-red-50"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Eliminar registros
+            </button>
           </div>
         </div>
       )}

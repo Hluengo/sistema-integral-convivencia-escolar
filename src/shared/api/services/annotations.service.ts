@@ -9,7 +9,8 @@ import { mapInspectorateToAnnotation } from '../../../lib/mappers';
 import { calculateDisciplinaryStatus } from '../../../domain/disciplinaryStatus';
 import { useAuthStore } from '../../../stores/authStore';
 
-const ANNOTATION_COLUMNS = 'id,student_id,date_time,observation,severity,type,registered_by,created_at,created_by';
+const ANNOTATION_COLUMNS =
+  'id,student_id,date_time,observation,severity,type,registered_by,created_at,created_by';
 
 export async function fetchAnnotations(studentId?: string): Promise<Annotation[]> {
   let query = supabase
@@ -65,12 +66,12 @@ interface RpcStudentSummary {
   positive_annotations_count: number;
   last_annotation_date: string | null;
   disciplinary_status: string;
+  ai_analysis: Record<string, number> | null;
 }
 
 export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStudent[]> {
   // 1. Try RPC (agregación server-side, single query)
-  const { data: rpcData, error: rpcError } = await supabase
-    .rpc('get_student_annotation_summary');
+  const { data: rpcData, error: rpcError } = await supabase.rpc('get_student_annotation_summary');
 
   if (!rpcError && rpcData) {
     return (rpcData as RpcStudentSummary[]).map((row) => ({
@@ -85,14 +86,27 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStud
       disciplinary_status: row.disciplinary_status as AnotacionStudent['disciplinary_status'],
       rut: row.rut || '',
       course_name: row.course_name || 'Sin curso',
+      ai_analysis: row.ai_analysis
+        ? {
+            negativas: Number(row.ai_analysis.negativas) || 0,
+            positivas: Number(row.ai_analysis.positivas) || 0,
+            informativas: Number(row.ai_analysis.informativas) || 0,
+          }
+        : undefined,
     }));
   }
 
   // 2. Fallback: client-side aggregation (migration no ejecutada)
-  console.warn('RPC get_student_annotation_summary no disponible, usando fallback:', rpcError?.message);
+  console.warn(
+    'RPC get_student_annotation_summary no disponible, usando fallback:',
+    rpcError?.message
+  );
 
   const [studentsResult, annResult] = await Promise.all([
-    supabase.from('students').select('*, courses(name, level)').order('full_name', { ascending: true }),
+    supabase
+      .from('students')
+      .select('*, courses(name, level)')
+      .order('full_name', { ascending: true }),
     supabase.from('inspectorate_records').select('student_id, type, date_time'),
   ]);
 
@@ -104,7 +118,8 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStud
     return [];
   }
 
-  const annByStudent: Record<string, { type: string; date_time: string; student_id: string }[]> = {};
+  const annByStudent: Record<string, { type: string; date_time: string; student_id: string }[]> =
+    {};
   for (const ann of allAnnotations || []) {
     if (!annByStudent[ann.student_id]) {
       annByStudent[ann.student_id] = [];
@@ -118,10 +133,12 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStud
     const pos = studentAnns.filter((a) => a.type === 'Positiva');
     const negativeCount = negs.length;
     const sorted = [...negs].sort(
-      (a: { date_time: string }, b: { date_time: string }) => new Date(b.date_time).getTime() - new Date(a.date_time).getTime()
+      (a: { date_time: string }, b: { date_time: string }) =>
+        new Date(b.date_time).getTime() - new Date(a.date_time).getTime()
     );
 
     const courses = s.courses as { name: string; level: string } | null;
+    const rawAi = s.ai_analysis as Record<string, number> | null;
     return {
       id: s.id as string,
       full_name: s.full_name as string,
@@ -134,6 +151,13 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStud
       disciplinary_status: calculateDisciplinaryStatus(negativeCount),
       rut: (s.rut as string) || '',
       course_name: courses?.name ?? 'Sin curso',
+      ai_analysis: rawAi
+        ? {
+            negativas: Number(rawAi.negativas) || 0,
+            positivas: Number(rawAi.positivas) || 0,
+            informativas: Number(rawAi.informativas) || 0,
+          }
+        : undefined,
     };
   });
 }
@@ -150,8 +174,11 @@ export async function fetchAnnotationStageCounts(): Promise<{
   const fallback = async () => {
     const students = await fetchStudentsWithAnnotationCounts();
     return {
-      amonestacionCount: students.filter((s) => s.annotations_count >= 5 && s.annotations_count < 10).length,
-      compromisoCount: students.filter((s) => s.annotations_count >= 10 && s.annotations_count < 15).length,
+      amonestacionCount: students.filter(
+        (s) => s.annotations_count >= 5 && s.annotations_count < 10
+      ).length,
+      compromisoCount: students.filter((s) => s.annotations_count >= 10 && s.annotations_count < 15)
+        .length,
       derivacionCount: students.filter((s) => s.annotations_count >= 15).length,
     };
   };

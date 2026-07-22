@@ -88,6 +88,13 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
         if (error) {
           throw error;
         }
+        const { error: updateErr } = await supabase
+          .from('students')
+          .update({ ai_analysis: null })
+          .eq('id', studentId);
+        if (updateErr) {
+          console.error('Error limpiando ai_analysis:', updateErr);
+        }
         await loadData();
         if (selectedStudent && selectedStudent.id === studentId) {
           const fresh = students.find((s) => s.id === studentId);

@@ -116,6 +116,14 @@ export function usePdfProcessing(studentId: string): UsePdfProcessingResult {
         if (result.success && result.summary) {
           const s = result.summary as AnnotationSummary;
           setSummary(s);
+
+          await supabase
+            .from('students')
+            .update({
+              ai_analysis: { ...s, analyzed_at: new Date().toISOString() },
+            })
+            .eq('id', studentId);
+
           const total = s.negativas + s.positivas + s.informativas;
           if (total > 0) {
             const parts = [`${s.negativas} negativas`, `${s.positivas} positivas`];

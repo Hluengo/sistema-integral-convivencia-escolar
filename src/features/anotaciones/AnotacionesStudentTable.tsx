@@ -21,6 +21,7 @@ interface StudentRowData {
   disciplinary_status: DisciplinaryStatus;
   rut?: string;
   course_name?: string;
+  ai_analysis?: { negativas: number; positivas: number; informativas: number };
 }
 
 const DISC_STATUS: Record<string, { text: string; bg: string }> = {
@@ -39,9 +40,15 @@ const CARD_STATUS_BADGE: Record<string, { bg: string; text: string }> = {
 };
 
 const getDisciplinaryStatusLabel = (count: number): { text: string; bg: string } => {
-  if (count < 5) { return DISC_STATUS.Verde; }
-  if (count < 10) { return DISC_STATUS.Amarillo; }
-  if (count < 15) { return DISC_STATUS.Naranja; }
+  if (count < 5) {
+    return DISC_STATUS.Verde;
+  }
+  if (count < 10) {
+    return DISC_STATUS.Amarillo;
+  }
+  if (count < 15) {
+    return DISC_STATUS.Naranja;
+  }
   return DISC_STATUS.Rojo;
 };
 
@@ -66,11 +73,16 @@ const FILTER_TABS = [
 
 function getAnnotationRange(filter: string): [number, number] | null {
   switch (filter) {
-    case 'con_registro': return [5, Number.POSITIVE_INFINITY];
-    case 'amonestacion': return [5, 9];
-    case 'compromiso': return [10, 14];
-    case 'derivacion': return [15, Number.POSITIVE_INFINITY];
-    default: return null;
+    case 'con_registro':
+      return [5, Number.POSITIVE_INFINITY];
+    case 'amonestacion':
+      return [5, 9];
+    case 'compromiso':
+      return [10, 14];
+    case 'derivacion':
+      return [15, Number.POSITIVE_INFINITY];
+    default:
+      return null;
   }
 }
 
@@ -95,8 +107,8 @@ function filterStudents(
     filtered = filtered.filter(
       (s) =>
         s.full_name.toLowerCase().includes(q) ||
-        (s.rut?.toLowerCase().includes(q)) ||
-        (s.course_name?.toLowerCase().includes(q))
+        s.rut?.toLowerCase().includes(q) ||
+        s.course_name?.toLowerCase().includes(q)
     );
   }
 
@@ -104,7 +116,9 @@ function filterStudents(
 }
 
 function formatDate(dateStr?: string): string {
-  if (!dateStr) { return '—'; }
+  if (!dateStr) {
+    return '—';
+  }
   try {
     const date = new Date(dateStr);
     return date.toLocaleDateString('es-CL', {
@@ -223,7 +237,12 @@ export default memo(function AnotacionesStudentTable({
                     <tr
                       key={student.id}
                       onClick={() => onSelectStudent(student)}
-                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectStudent(student); } }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          onSelectStudent(student);
+                        }
+                      }}
                       tabIndex={0}
                       className={`cursor-pointer transition-colors ${style.rowBg}`}
                     >
@@ -234,12 +253,24 @@ export default memo(function AnotacionesStudentTable({
                         {student.course_name || '—'}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-center text-neutral-600 text-sm">
-                        <span className="inline-flex items-center justify-center rounded-full bg-emerald-50 px-2.5 py-0.5 font-semibold text-emerald-700 text-xs">
-                          {Number(student.positive_annotations_count) || 0}
+                        <span
+                          className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 font-semibold text-xs ${style.badge}`}
+                        >
+                          {negativeCount}
                         </span>
+                        {student.ai_analysis && (
+                          <span
+                            className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 font-semibold text-[10px] text-indigo-600"
+                            title={`Análisis IA: ${student.ai_analysis.negativas} negativas, ${student.ai_analysis.positivas} positivas, ${student.ai_analysis.informativas} informativas`}
+                          >
+                            IA: {student.ai_analysis.negativas}
+                          </span>
+                        )}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-center text-neutral-600 text-sm">
-                        <span className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 font-semibold text-xs ${style.badge}`}>
+                        <span
+                          className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 font-semibold text-xs ${style.badge}`}
+                        >
                           {negativeCount}
                         </span>
                       </td>
@@ -247,7 +278,9 @@ export default memo(function AnotacionesStudentTable({
                         {formatDate(student.last_annotation_date)}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-sm">
-                        <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-medium text-xs ${status.bg}`}>
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-medium text-xs ${status.bg}`}
+                        >
                           <span className={`inline-block size-2 rounded-full ${style.dot}`} />
                           <span className="hidden md:inline">{status.text}</span>
                         </span>
@@ -269,7 +302,10 @@ export default memo(function AnotacionesStudentTable({
                                 const badge = CARD_STATUS_BADGE[s];
                                 if (!badge) return null;
                                 return (
-                                  <span key={s} className={`inline-flex items-center rounded-full px-2 py-0.5 font-medium text-[10px] ${badge.bg} ${badge.text}`}>
+                                  <span
+                                    key={s}
+                                    className={`inline-flex items-center rounded-full px-2 py-0.5 font-medium text-[10px] ${badge.bg} ${badge.text}`}
+                                  >
                                     {badge.text}
                                   </span>
                                 );
@@ -290,11 +326,8 @@ export default memo(function AnotacionesStudentTable({
       {/* Footer: Pagination info and color legend */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-neutral-500 text-sm">
-          Mostrando{' '}
-          <span className="font-medium text-neutral-700">{filteredStudents.length}</span>
-          {' '}de{' '}
-          <span className="font-medium text-neutral-700">{students.length}</span>
-          {' '}estudiantes
+          Mostrando <span className="font-medium text-neutral-700">{filteredStudents.length}</span>{' '}
+          de <span className="font-medium text-neutral-700">{students.length}</span> estudiantes
         </p>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -316,4 +349,3 @@ export default memo(function AnotacionesStudentTable({
     </div>
   );
 });
-
