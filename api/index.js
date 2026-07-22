@@ -812,12 +812,14 @@ router7.post('/parse-annotations', async (req, res) => {
       filteredText = filteredText.slice(0, MAX_LENGTH) + '\n\n[Truncado]';
     }
     const systemInstruction =
-      'Analiza un documento de hoja de vida estudiantil. Cuenta cu\u00E1ntas anotaciones hay de cada Tipo: "Positiva", "Negativa" o "Informaci\u00F3n". Devuelve SOLO un JSON con los conteos: {"negativas": N, "positivas": N, "informativas": N}.';
+      'Eres un analizador de hojas de vida escolares. Cuenta las anotaciones clasific\u00E1ndolas SOLO por el campo "Tipo". Los valores v\u00E1lidos son: "Positiva" (elogios, felicitaciones, logros), "Negativa" (faltas, sanciones, observaciones disciplinarias), "Informaci\u00F3n" (datos neutros, comunicaciones, citaciones sin sanci\u00F3n). Ignora l\u00EDneas sin Tipo. Si el Tipo no es claro, asigna "Informaci\u00F3n". Cuenta CADA anotaci\u00F3n individual. Devuelve SOLO: {"negativas": N, "positivas": N, "informativas": N}.';
     const messages = [
       {
         role: 'user',
         content:
-          filteredText.length > 0 ? `Analiza:\n\n${filteredText}` : `Analiza:\n\n${cleanText}`,
+          filteredText.length > 0
+            ? `Cuenta anotaciones por Tipo:\n\n${filteredText}`
+            : `Cuenta anotaciones por Tipo:\n\n${cleanText}`,
       },
     ];
     const responseText = await callAI(messages, systemInstruction).catch((err) => {

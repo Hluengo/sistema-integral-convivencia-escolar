@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { supabase } from '@/src/lib/supabase';
+import { saveDocumentAnalysis } from '@/src/shared/api/services/annotations.service';
 import type { AnnotationSummary } from '@/src/shared/lib/types';
 
 GlobalWorkerOptions.workerSrc = workerUrl;
@@ -118,12 +119,13 @@ export function usePdfProcessing(studentId: string): UsePdfProcessingResult {
           const s = result.summary as AnnotationSummary;
           setSummary(s);
 
-          await supabase
-            .from('students')
-            .update({
-              ai_analysis: { ...s, analyzed_at: new Date().toISOString() },
-            })
-            .eq('id', studentId);
+          await saveDocumentAnalysis({
+            studentId,
+            fileName: file.name,
+            negativas: s.negativas,
+            positivas: s.positivas,
+            informativas: s.informativas,
+          });
 
           const total = s.negativas + s.positivas + s.informativas;
           if (total > 0) {
@@ -187,7 +189,7 @@ export function usePdfProcessing(studentId: string): UsePdfProcessingResult {
 
   const clearAnalysis = useCallback(async () => {
     setSummary(null);
-    await supabase.from('students').update({ ai_analysis: null }).eq('id', studentId);
+    await supabase.from('document_analyses').delete().eq('student_id', studentId);
   }, [studentId]);
 
   return {

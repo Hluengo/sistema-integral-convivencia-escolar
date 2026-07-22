@@ -126,12 +126,15 @@ export default function NewDisciplinaryProcessModal({
       if (data.success && data.summary) {
         setSummary(data.summary as AnnotationSummary);
         if (selectedStudent) {
-          await supabase
-            .from('students')
-            .update({
-              ai_analysis: { ...(data.summary as object), analyzed_at: new Date().toISOString() },
-            })
-            .eq('id', selectedStudent.id);
+          const s = data.summary as AnnotationSummary;
+          await supabase.from('document_analyses').insert({
+            student_id: selectedStudent.id,
+            file_name: file?.name || null,
+            negativas: s.negativas,
+            positivas: s.positivas,
+            informativas: s.informativas,
+            tenant_id: (await supabase.auth.getUser()).data.user?.app_metadata?.tenant_id,
+          });
         }
         setStep(4);
       } else {

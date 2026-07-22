@@ -89,11 +89,11 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
           throw error;
         }
         const { error: updateErr } = await supabase
-          .from('students')
-          .update({ ai_analysis: null })
-          .eq('id', studentId);
+          .from('document_analyses')
+          .delete()
+          .eq('student_id', studentId);
         if (updateErr) {
-          console.error('Error limpiando ai_analysis:', updateErr);
+          console.error('Error limpiando document_analyses:', updateErr);
         }
         await loadData();
         if (selectedStudent && selectedStudent.id === studentId) {

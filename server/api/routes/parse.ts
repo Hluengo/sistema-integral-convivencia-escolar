@@ -31,12 +31,12 @@ router.post('/parse-annotations', async (req, res) => {
       .replace(/Página\s*\d+.*/gi, '')
       .trim();
 
-    const systemInstruction = `Analiza un documento de hoja de vida estudiantil. Cuenta cuántas anotaciones hay de cada Tipo: "Positiva", "Negativa" o "Información". Devuelve SOLO un JSON con los conteos: {"negativas": N, "positivas": N, "informativas": N}.`;
+    const systemInstruction = `Eres un analizador de hojas de vida escolares. Cuenta las anotaciones clasificándolas SOLO por el campo "Tipo". Los valores válidos son: "Positiva" (elogios, felicitaciones, logros), "Negativa" (faltas, sanciones, observaciones disciplinarias), "Información" (datos neutros, comunicaciones, citaciones sin sanción). Ignora líneas sin Tipo. Si el Tipo no es claro, asigna "Información". Cuenta CADA anotación individual. Devuelve SOLO: {"negativas": N, "positivas": N, "informativas": N}.`;
 
     const messages = [
       {
         role: 'user' as const,
-        content: `Analiza el siguiente texto de hoja de vida y cuenta las anotaciones por tipo:\n\n--- INICIO ---\n${cleanText}\n--- FIN ---`,
+        content: `Cuenta las anotaciones por Tipo del siguiente texto:\n\n--- INICIO ---\n${cleanText}\n--- FIN ---`,
       },
     ];
 

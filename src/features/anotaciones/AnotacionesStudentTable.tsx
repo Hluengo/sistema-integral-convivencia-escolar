@@ -261,17 +261,12 @@ export default memo(function AnotacionesStudentTable({
                         {student.course_name || '—'}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-center text-neutral-600 text-sm">
-                        <span
-                          className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 font-semibold text-xs ${style.badge}`}
-                        >
-                          {negativeCount}
+                        <span className="inline-flex items-center justify-center rounded-full bg-emerald-50 px-2.5 py-0.5 font-semibold text-emerald-700 text-xs">
+                          {Number(student.positive_annotations_count) || 0}
                         </span>
-                        {student.ai_analysis && (
-                          <span
-                            className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 font-semibold text-[10px] text-indigo-600"
-                            title={`Análisis IA: ${student.ai_analysis.negativas} negativas, ${student.ai_analysis.positivas} positivas, ${student.ai_analysis.informativas} informativas`}
-                          >
-                            IA: {student.ai_analysis.negativas}
+                        {student.ai_analysis && student.ai_analysis.positivas > 0 && (
+                          <span className="ml-1 inline-flex items-center rounded-full bg-indigo-50 px-1.5 py-0.5 font-semibold text-[10px] text-indigo-500">
+                            +{student.ai_analysis.positivas}
                           </span>
                         )}
                       </td>
@@ -279,8 +274,16 @@ export default memo(function AnotacionesStudentTable({
                         <span
                           className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 font-semibold text-xs ${style.badge}`}
                         >
-                          {negativeCount}
+                          {effectiveNeg}
                         </span>
+                        {student.ai_analysis && student.ai_analysis.negativas > negativeCount && (
+                          <span
+                            className="ml-1 inline-flex items-center rounded-full bg-indigo-50 px-1.5 py-0.5 font-semibold text-[10px] text-indigo-600"
+                            title={`${negativeCount} registradas + ${student.ai_analysis.negativas} IA`}
+                          >
+                            IA
+                          </span>
+                        )}
                       </td>
                       <td className="hidden whitespace-nowrap px-4 py-3 text-neutral-600 text-sm lg:table-cell">
                         {formatDate(student.last_annotation_date)}

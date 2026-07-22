@@ -172,6 +172,18 @@ export interface AnnotationSummary {
   informativas: number;
 }
 
+export interface DocumentAnalysis {
+  id: string;
+  student_id: string;
+  file_name: string;
+  negativas: number;
+  positivas: number;
+  informativas: number;
+  analyzed_at: string;
+  tenant_id: string;
+  created_at: string;
+}
+
 export interface CartaDisciplinaria {
   id: string;
   student_id: string;

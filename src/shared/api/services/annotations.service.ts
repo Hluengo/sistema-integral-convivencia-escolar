@@ -4,7 +4,7 @@
  */
 
 import { supabase } from '../lib/supabase';
-import type { Annotation, AnotacionStudent } from '../../../types';
+import type { Annotation, AnotacionStudent, DocumentAnalysis } from '../../../types';
 import { mapInspectorateToAnnotation } from '../../../lib/mappers';
 import { calculateDisciplinaryStatus } from '../../../domain/disciplinaryStatus';
 import { useAuthStore } from '../../../stores/authStore';
@@ -29,6 +29,44 @@ export async function fetchAnnotations(studentId?: string): Promise<Annotation[]
     return [];
   }
   return (data || []).map(mapInspectorateToAnnotation);
+}
+
+export async function fetchDocumentAnalyses(studentId: string): Promise<DocumentAnalysis[]> {
+  const { data, error } = await supabase
+    .from('document_analyses')
+    .select('*')
+    .eq('student_id', studentId)
+    .order('analyzed_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching document analyses:', error);
+    return [];
+  }
+  return (data || []) as DocumentAnalysis[];
+}
+
+export async function saveDocumentAnalysis(params: {
+  studentId: string;
+  fileName?: string;
+  negativas: number;
+  positivas: number;
+  informativas: number;
+}): Promise<boolean> {
+  const tenantId = useAuthStore.getState().tenantId;
+  const { error } = await supabase.from('document_analyses').insert({
+    student_id: params.studentId,
+    file_name: params.fileName || null,
+    negativas: params.negativas,
+    positivas: params.positivas,
+    informativas: params.informativas,
+    tenant_id: tenantId,
+  });
+
+  if (error) {
+    console.error('Error saving document analysis:', error);
+    return false;
+  }
+  return true;
 }
 
 export async function saveAnnotation(annotation: {

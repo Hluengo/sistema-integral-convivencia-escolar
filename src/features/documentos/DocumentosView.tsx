@@ -1,17 +1,41 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
-import { Search, Scale, FileText, ScrollText, Plus, ChevronRight, BookOpen, Sparkles, User, Circle, Download } from 'lucide-react';
+import {
+  Search,
+  Scale,
+  FileText,
+  ScrollText,
+  Plus,
+  ChevronRight,
+  BookOpen,
+  Sparkles,
+  User,
+  Circle,
+  Download,
+} from 'lucide-react';
 import { useUIStore } from '@/src/shared/lib/stores/uiStore';
 import { useCausasStore } from '@/src/shared/lib/stores/causasStore';
-import { fetchStudentsWithAnnotationCounts, fetchAnnotations } from '@/src/services/annotations.service';
+import {
+  fetchStudentsWithAnnotationCounts,
+  fetchAnnotations,
+  fetchDocumentAnalyses,
+} from '@/src/services/annotations.service';
 import { fetchCartas } from '@/src/services/cartas.service';
 import { fetchCausas } from '@/src/services/cases';
-import type { AnotacionStudent, Annotation, CartaDisciplinaria, Causa } from '@/src/shared/lib/types';
+import type {
+  AnotacionStudent,
+  Annotation,
+  CartaDisciplinaria,
+  Causa,
+  DocumentAnalysis,
+} from '@/src/shared/lib/types';
 import { getSemaphoricStyle, TEACHERS_BY_COURSE } from '@/src/lib/anotacionesUtils';
 import { downloadCartaPdf } from '@/src/features/anotaciones/docgen/downloadCartaPdf';
 
-const AnotacionesDocumentGenerator = lazy(() => import('@/src/features/anotaciones/AnotacionesDocumentGenerator'));
+const AnotacionesDocumentGenerator = lazy(
+  () => import('@/src/features/anotaciones/AnotacionesDocumentGenerator')
+);
 
 type DocSource = 'causa' | 'anotacion';
 type DocFiltro = 'todos' | 'causas' | 'anotaciones';
@@ -31,7 +55,12 @@ interface HubItem {
 
 const CTA_THRESHOLDS = [
   { min: 5, max: 9, docType: 'amonestacion' as const, label: 'Crear Carta de Amonestación' },
-  { min: 10, max: 14, docType: 'compromiso_conductual' as const, label: 'Crear Carta de Compromiso Conductual' },
+  {
+    min: 10,
+    max: 14,
+    docType: 'compromiso_conductual' as const,
+    label: 'Crear Carta de Compromiso Conductual',
+  },
   { min: 15, max: Infinity, docType: 'derivacion' as const, label: 'Crear Ficha de Derivación' },
 ] as const;
 
@@ -72,10 +101,22 @@ const STATUS_LABEL: Record<string, string> = {
 
 function getFaseForEstado(estadoActual: string): string {
   if (estadoActual.includes('Recepción') || estadoActual.includes('Denuncia')) return 'Recepción';
-  if (estadoActual.includes('Indagación') || estadoActual.includes('Investigación') || estadoActual.includes('Mediación')) return 'Investigación';
-  if (estadoActual.includes('Informe') || estadoActual.includes('Entrevista') || estadoActual.includes('Resolución')) return 'Resolución';
-  if (estadoActual.includes('Apelación') || estadoActual.includes('Ejecutoriada')) return 'Apelación';
-  if (estadoActual.includes('Seguimiento') || estadoActual.includes('Cerrada')) return 'Seguimiento';
+  if (
+    estadoActual.includes('Indagación') ||
+    estadoActual.includes('Investigación') ||
+    estadoActual.includes('Mediación')
+  )
+    return 'Investigación';
+  if (
+    estadoActual.includes('Informe') ||
+    estadoActual.includes('Entrevista') ||
+    estadoActual.includes('Resolución')
+  )
+    return 'Resolución';
+  if (estadoActual.includes('Apelación') || estadoActual.includes('Ejecutoriada'))
+    return 'Apelación';
+  if (estadoActual.includes('Seguimiento') || estadoActual.includes('Cerrada'))
+    return 'Seguimiento';
   return 'Investigación';
 }
 
@@ -106,6 +147,7 @@ export default function DocumentosView() {
   const [downloadingCartaId, setDownloadingCartaId] = useState<string | null>(null);
   const [showGenerator, setShowGenerator] = useState(false);
   const [initialDocType, setInitialDocType] = useState<string | undefined>(undefined);
+  const [documentAnalyses, setDocumentAnalyses] = useState<DocumentAnalysis[]>([]);
 
   // Load unified documents on mount
   useEffect(() => {
@@ -172,7 +214,9 @@ export default function DocumentosView() {
         if (!cancelled) setCargando(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Cross-navigation from Anotaciones → Documentos
@@ -190,18 +234,21 @@ export default function DocumentosView() {
   useEffect(() => {
     if (!selectedStudent) {
       setCartas([]);
+      setDocumentAnalyses([]);
       return;
     }
     let cancelled = false;
     (async () => {
       setIsLoadingCartas(true);
       try {
-        const [data, anns] = await Promise.all([
+        const [data, anns, analyses] = await Promise.all([
           fetchCartas(selectedStudent.id),
           fetchAnnotations(selectedStudent.id),
+          fetchDocumentAnalyses(selectedStudent.id),
         ]);
         if (cancelled) return;
         setCartas(data ?? []);
+        setDocumentAnalyses(analyses ?? []);
         if (anns.length > 0) {
           setAllAnnotations((prev) => {
             const existing = new Map(prev.map((a) => [a.id, a]));
@@ -217,7 +264,9 @@ export default function DocumentosView() {
         if (!cancelled) setIsLoadingCartas(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [selectedStudent]);
 
   // Annotations filtered for selected student (used by AnotacionesDocumentGenerator)
@@ -230,7 +279,10 @@ export default function DocumentosView() {
   const docsFiltrados = useMemo(() => {
     let result = hubItems;
     if (filtro !== 'todos') {
-      const sourceMap: Record<string, HubItem['type']> = { causas: 'causa', anotaciones: 'student' };
+      const sourceMap: Record<string, HubItem['type']> = {
+        causas: 'causa',
+        anotaciones: 'student',
+      };
       result = result.filter((d) => d.type === sourceMap[filtro]);
     }
     if (busqueda.trim()) {
@@ -274,8 +326,10 @@ export default function DocumentosView() {
   };
 
   // Student detail handlers (existing logic)
-  const negativeCount = selectedStudent ? (Number(selectedStudent.annotations_count) || 0) : 0;
-  const semaphoric = selectedStudent ? getSemaphoricStyle(negativeCount) : { badge: '', dot: '', text: '' };
+  const negativeCount = selectedStudent ? Number(selectedStudent.annotations_count) || 0 : 0;
+  const semaphoric = selectedStudent
+    ? getSemaphoricStyle(negativeCount)
+    : { badge: '', dot: '', text: '' };
   const cta = selectedStudent ? getCtaForCount(negativeCount) : null;
 
   const handleCtaClick = () => {
@@ -309,7 +363,10 @@ export default function DocumentosView() {
     <div className="animate-fade-in space-y-6">
       {/* Hero header */}
       <div className="relative overflow-hidden rounded-xl bg-linear-to-br from-brand-700 via-brand-600 to-brand-800 p-6 text-white shadow-lg sm:p-8">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-60" aria-hidden="true" />
+        <div
+          className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-60"
+          aria-hidden="true"
+        />
         <div className="relative">
           <p className="mb-1 font-semibold text-blue-200/80 text-xs uppercase tracking-wider">
             Convivencia Escolar · Registros
@@ -371,7 +428,10 @@ export default function DocumentosView() {
           {cargando ? (
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={`skel-${i}`} className="flex animate-pulse items-center gap-4 rounded-xl border border-neutral-200/60 bg-white p-5">
+                <div
+                  key={`skel-${i}`}
+                  className="flex animate-pulse items-center gap-4 rounded-xl border border-neutral-200/60 bg-white p-5"
+                >
                   <div className="h-10 w-10 shrink-0 rounded-xl bg-neutral-200" />
                   <div className="min-w-0 flex-1 space-y-2">
                     <div className="h-4 w-48 rounded bg-neutral-200" />
@@ -384,7 +444,9 @@ export default function DocumentosView() {
           ) : docsFiltrados.length === 0 ? (
             <div className="rounded-xl border border-neutral-200/80 bg-white p-12 text-center shadow-xs">
               <ScrollText className="mx-auto mb-4 h-12 w-12 text-neutral-300" />
-              <h3 className="font-semibold text-neutral-700 text-sm">No se encontraron documentos</h3>
+              <h3 className="font-semibold text-neutral-700 text-sm">
+                No se encontraron documentos
+              </h3>
               <p className="mt-1 text-neutral-400 text-xs">
                 {busqueda
                   ? 'No hay documentos que coincidan con la búsqueda.'
@@ -397,11 +459,11 @@ export default function DocumentosView() {
                 const isCausa = item.type === 'causa';
                 const isStudent = item.type === 'student';
                 const fase = isCausa ? getFaseForEstado(item.status) : '';
-                const studentRecord = isStudent ? item.sourceRecord as AnotacionStudent : null;
-                const negCount = studentRecord
-                  ? Number(studentRecord.annotations_count) || 0
-                  : 0;
-                const semStyle = studentRecord ? getSemaphoricStyle(negCount) : { badge: '', dot: '', text: '' };
+                const studentRecord = isStudent ? (item.sourceRecord as AnotacionStudent) : null;
+                const negCount = studentRecord ? Number(studentRecord.annotations_count) || 0 : 0;
+                const semStyle = studentRecord
+                  ? getSemaphoricStyle(negCount)
+                  : { badge: '', dot: '', text: '' };
                 return (
                   <button
                     key={item.id}
@@ -409,7 +471,9 @@ export default function DocumentosView() {
                     onClick={() => handleDocClick(item)}
                     className="flex w-full items-center gap-4 rounded-xl border border-neutral-200/80 bg-white p-5 text-left shadow-xs transition-colors transition-shadow hover:border-brand-200 hover:shadow-md"
                   >
-                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isCausa ? 'bg-brand-50' : 'bg-violet-50'}`}>
+                    <div
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isCausa ? 'bg-brand-50' : 'bg-violet-50'}`}
+                    >
                       {isCausa ? (
                         <Scale className="h-5 w-5 text-brand-600" />
                       ) : (
@@ -419,12 +483,18 @@ export default function DocumentosView() {
 
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-baseline gap-2">
-                        <h3 className="font-bold text-neutral-900 text-sm truncate">{item.title}</h3>
-                        <span className={`shrink-0 rounded-full px-2 py-0.5 font-semibold text-[10px] ${isCausa ? 'bg-brand-100 text-brand-700' : 'bg-violet-100 text-violet-700'}`}>
+                        <h3 className="font-bold text-neutral-900 text-sm truncate">
+                          {item.title}
+                        </h3>
+                        <span
+                          className={`shrink-0 rounded-full px-2 py-0.5 font-semibold text-[10px] ${isCausa ? 'bg-brand-100 text-brand-700' : 'bg-violet-100 text-violet-700'}`}
+                        >
                           {isCausa ? 'Causa' : 'Anotaciones'}
                         </span>
                         {isStudent && semStyle.dot && (
-                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold text-[10px] ${semStyle.badge}`}>
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold text-[10px] ${semStyle.badge}`}
+                          >
                             <Circle className={`h-1.5 w-1.5 fill-current${semStyle.dot}`} />
                             {STATUS_LABEL[item.status] || item.status}
                           </span>
@@ -433,7 +503,13 @@ export default function DocumentosView() {
                       <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-neutral-500 text-xs">
                         {item.course && <span className="text-neutral-400">{item.course}</span>}
                         <span className="text-neutral-400">
-                          {item.date ? new Date(item.date).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '-'}
+                          {item.date
+                            ? new Date(item.date).toLocaleDateString('es-CL', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric',
+                              })
+                            : '-'}
                         </span>
                       </div>
                       {item.description && (
@@ -443,7 +519,9 @@ export default function DocumentosView() {
                         {isCausa ? (
                           <>
                             {fase && FASE_BADGE[fase] && (
-                              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-semibold text-[10px] ${FASE_BADGE[fase]}`}>
+                              <span
+                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-semibold text-[10px] ${FASE_BADGE[fase]}`}
+                              >
                                 {fase}
                               </span>
                             )}
@@ -489,10 +567,14 @@ export default function DocumentosView() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50">
-                  <span className="font-bold text-brand-600 text-sm">{selectedStudent.full_name.charAt(0)}</span>
+                  <span className="font-bold text-brand-600 text-sm">
+                    {selectedStudent.full_name.charAt(0)}
+                  </span>
                 </div>
                 <div>
-                  <h3 className="font-bold text-neutral-900 text-sm">{selectedStudent.full_name}</h3>
+                  <h3 className="font-bold text-neutral-900 text-sm">
+                    {selectedStudent.full_name}
+                  </h3>
                   <p className="text-neutral-500 text-xs">
                     {selectedStudent.course_name || selectedStudent.course_id}
                     {selectedStudent.rut && ` · ${selectedStudent.rut}`}
@@ -501,7 +583,10 @@ export default function DocumentosView() {
               </div>
               <button
                 type="button"
-                onClick={() => { setSelectedStudent(null); setShowGenerator(false); }}
+                onClick={() => {
+                  setSelectedStudent(null);
+                  setShowGenerator(false);
+                }}
                 className="rounded-lg px-3 py-1.5 text-neutral-500 text-xs transition-colors hover:bg-neutral-100 hover:text-neutral-700"
               >
                 Cambiar estudiante
@@ -510,7 +595,9 @@ export default function DocumentosView() {
             <div className="mt-4 flex items-center gap-4 border-t border-neutral-100 pt-4">
               <div className="flex items-center gap-2">
                 <span className={`inline-block h-2 w-2 rounded-full${semaphoric.dot}`} />
-                <span className={`font-semibold text-xs${semaphoric.text}`}>{negativeCount} anotaciones negativas</span>
+                <span className={`font-semibold text-xs${semaphoric.text}`}>
+                  {negativeCount} anotaciones negativas
+                </span>
               </div>
               {cta && cartas.length === 0 && !showGenerator && (
                 <button
@@ -560,7 +647,11 @@ export default function DocumentosView() {
                               {LETTER_TYPE_LABEL[carta.letter_type] || carta.letter_type}
                             </p>
                             <div className="mt-1 flex flex-wrap items-center gap-3 text-neutral-500 text-xs">
-                              <span>{carta.emission_date ? new Date(carta.emission_date).toLocaleDateString('es-CL') : '-'}</span>
+                              <span>
+                                {carta.emission_date
+                                  ? new Date(carta.emission_date).toLocaleDateString('es-CL')
+                                  : '-'}
+                              </span>
                               <span>Apoderado: {carta.apoderado_name || '-'}</span>
                               <span>Emitido por: {carta.emitted_by || '-'}</span>
                             </div>
@@ -573,10 +664,14 @@ export default function DocumentosView() {
                               className="flex shrink-0 items-center gap-1 rounded-lg bg-brand-50 px-2 py-1 font-medium text-brand-700 text-xs transition-colors hover:bg-brand-100 disabled:opacity-50"
                               title="Descargar PDF"
                             >
-                              <Download className={`h-3.5 w-3.5 ${isDownloading ? 'animate-pulse' : ''}`} />
+                              <Download
+                                className={`h-3.5 w-3.5 ${isDownloading ? 'animate-pulse' : ''}`}
+                              />
                               {isDownloading ? 'PDF...' : 'PDF'}
                             </button>
-                            <span className={`shrink-0 rounded-full px-2.5 py-1 font-semibold text-[10px] ${badge.bg} ${badge.text}`}>
+                            <span
+                              className={`shrink-0 rounded-full px-2.5 py-1 font-semibold text-[10px] ${badge.bg} ${badge.text}`}
+                            >
                               {carta.status}
                             </span>
                           </div>
@@ -590,21 +685,63 @@ export default function DocumentosView() {
                   <ScrollText className="mx-auto mb-3 h-12 w-12 text-neutral-300" />
                   <p className="font-medium text-neutral-700 text-sm">No hay documentos emitidos</p>
                   <p className="mt-1 text-neutral-400 text-xs">
-                    Aún no se han generado cartas de amonestación, compromiso conductual o derivaciones para este estudiante.
+                    Aún no se han generado cartas de amonestación, compromiso conductual o
+                    derivaciones para este estudiante.
                   </p>
                   {!cta && (
-                  <button
-                    type="button"
-                    onClick={handleNewDocument}
-                    className="mx-auto mt-4 inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 font-medium text-sm text-white shadow-xs transition-colors hover:bg-brand-700"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Crear Primer Documento
-                  </button>
+                    <button
+                      type="button"
+                      onClick={handleNewDocument}
+                      className="mx-auto mt-4 inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 font-medium text-sm text-white shadow-xs transition-colors hover:bg-brand-700"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Crear Primer Documento
+                    </button>
                   )}
                 </div>
               )}
             </>
+          )}
+
+          {documentAnalyses.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="flex items-center gap-2 font-bold text-neutral-600 text-xs uppercase tracking-wider">
+                <Sparkles className="h-4 w-4 text-indigo-500" />
+                Historial de Análisis IA
+              </h3>
+              {documentAnalyses.map((analysis) => (
+                <div
+                  key={analysis.id}
+                  className="rounded-xl border border-indigo-100 bg-indigo-50/40 p-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-medium text-neutral-800 text-sm">
+                      {analysis.file_name || 'Documento sin nombre'}
+                    </p>
+                    <span className="text-neutral-400 text-xs">
+                      {new Date(analysis.analyzed_at).toLocaleDateString('es-CL', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex gap-3">
+                    <span className="rounded-lg bg-red-100 px-3 py-1 font-semibold text-red-700 text-xs">
+                      {analysis.negativas} negativas
+                    </span>
+                    <span className="rounded-lg bg-emerald-100 px-3 py-1 font-semibold text-emerald-700 text-xs">
+                      {analysis.positivas} positivas
+                    </span>
+                    <span className="rounded-lg bg-blue-100 px-3 py-1 font-semibold text-blue-700 text-xs">
+                      {analysis.informativas} informativas
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
 
           {showGenerator && (
@@ -616,13 +753,22 @@ export default function DocumentosView() {
                 </h3>
                 <button
                   type="button"
-                  onClick={() => { setShowGenerator(false); setInitialDocType(undefined); }}
+                  onClick={() => {
+                    setShowGenerator(false);
+                    setInitialDocType(undefined);
+                  }}
                   className="rounded-lg px-3 py-1.5 text-neutral-500 text-xs transition-colors hover:bg-neutral-100 hover:text-neutral-700"
                 >
                   Cerrar
                 </button>
               </div>
-              <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" /></div>}>
+              <Suspense
+                fallback={
+                  <div className="flex items-center justify-center py-12">
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
+                  </div>
+                }
+              >
                 <AnotacionesDocumentGenerator
                   student={{
                     id: selectedStudent.id,
