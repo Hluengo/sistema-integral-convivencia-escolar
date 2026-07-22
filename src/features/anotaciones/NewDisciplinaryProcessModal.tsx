@@ -32,7 +32,17 @@ async function uploadPdf(file: File): Promise<string | null> {
   return filePath;
 }
 
-async function extractPdfText(file: File): Promise<string> {
+async function extractFileText(file: File): Promise<string> {
+  const name = file.name.toLowerCase();
+  if (name.endsWith('.md')) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error('Error al leer el archivo .md'));
+      reader.readAsText(file);
+    });
+  }
+
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await getDocument({ data: arrayBuffer }).promise;
   const pageTexts = await Promise.all(
@@ -109,7 +119,14 @@ export default function NewDisciplinaryProcessModal({
         pdfStoragePathRef.current = storagePath;
       }
 
-      const textContent = await extractPdfText(file);
+      const textContent = await extractFileText(file);
+
+      if (!textContent || textContent.length < 20) {
+        const isMd = file.name.toLowerCase().endsWith('.md');
+        throw new Error(isMd
+          ? 'El archivo .md está vacío. Verifica que contenga el texto de la hoja de vida.'
+          : 'El PDF no contiene texto legible. Si es un documento escaneado, conviértelo a Markdown (.md) y súbelo de nuevo.');
+      }
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch('/api/parse-annotations', {
         method: 'POST',
