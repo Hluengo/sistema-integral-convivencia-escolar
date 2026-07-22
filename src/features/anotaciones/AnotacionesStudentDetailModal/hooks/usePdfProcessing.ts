@@ -2,12 +2,9 @@ import { useState, useCallback } from 'react';
 import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { supabase } from '@/src/lib/supabase';
-import { useAuthStore } from '@/src/stores/authStore';
-import type { Annotation } from '@/src/types';
+import type { AnnotationSummary } from '@/src/shared/lib/types';
 
 GlobalWorkerOptions.workerSrc = workerUrl;
-
-const STORAGE_BUCKET = 'anotaciones';
 
 async function extractFileText(file: File): Promise<string> {
   const name = file.name.toLowerCase();
@@ -44,53 +41,28 @@ function getFileTypeLabel(file: File): string {
   return file.name.toLowerCase().endsWith('.md') ? 'MD' : 'PDF';
 }
 
-async function uploadPdf(file: File): Promise<string | null> {
-  const tenantId = useAuthStore.getState().tenantId;
-  if (!tenantId) return null;
-  const filePath = `${tenantId}/${Date.now()}_${file.name}`;
-    const { error } = await supabase.storage
-    .from(STORAGE_BUCKET)
-    .upload(filePath, file, { cacheControl: '3600', upsert: false, contentType: file.name.toLowerCase().endsWith('.md') ? 'text/plain' : (file.type || 'application/pdf') });
-  if (error) {
-    console.error('Error uploading PDF to storage:', error);
-    return null;
-  }
-  return filePath;
-}
-
 interface UsePdfProcessingResult {
   isDragging: boolean;
   setIsDragging: (v: boolean) => void;
   isParsing: boolean;
   parsingStatus: string;
   errorMessage: string | null;
-  parsedAnnotations: unknown[];
-  pdfStoragePath: string | null;
+  summary: AnnotationSummary | null;
   processPdfFile: (file: File) => Promise<void>;
   handleDrop: (e: React.DragEvent) => Promise<void>;
   handleFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
-  handleRegisterParsed: () => Promise<void>;
   setErrorMessage: (v: string | null) => void;
   setParsingStatus: (v: string) => void;
   setIsParsing: (v: boolean) => void;
-  setParsedAnnotations: (v: unknown[]) => void;
+  setSummary: (v: AnnotationSummary | null) => void;
 }
 
-export function usePdfProcessing(
-  studentId: string,
-  student: { id: string; full_name: string },
-  onAddAnnotations: (studentId: string, annotations: unknown[]) => void,
-  cartasRef: React.MutableRefObject<unknown[]>,
-  setEtapas: React.Dispatch<React.SetStateAction<unknown[]>>,
-  fetchCartas: (id: string) => Promise<unknown[]>,
-  fetchEtapas: (id: string) => Promise<unknown[]>
-): UsePdfProcessingResult {
+export function usePdfProcessing(studentId: string): UsePdfProcessingResult {
   const [isDragging, setIsDragging] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
   const [parsingStatus, setParsingStatus] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [parsedAnnotations, setParsedAnnotations] = useState<unknown[]>([]);
-  const [pdfStoragePath, setPdfStoragePath] = useState<string | null>(null);
+  const [summary, setSummary] = useState<AnnotationSummary | null>(null);
 
   const processPdfFile = useCallback(
     async (file: File) => {
@@ -98,26 +70,23 @@ export function usePdfProcessing(
       const fileType = getFileTypeLabel(file);
       setParsingStatus(`Leyendo archivo ${fileType}...`);
       setErrorMessage(null);
-      setParsedAnnotations([]);
-      setPdfStoragePath(null);
+      setSummary(null);
 
       try {
         setParsingStatus(`Extrayendo texto del ${fileType}...`);
         const textContent = await extractFileText(file);
 
         if (!textContent || textContent.length < 20) {
-          throw new Error(`El archivo ${fileType} no contiene texto legible. Si es un PDF escaneado o protegido, conviértelo a Markdown (.md) y súbelo de nuevo.`);
-        }
-
-        setParsingStatus(`Guardando ${fileType} en almacenamiento...`);
-        const storagePath = await uploadPdf(file);
-        if (storagePath) {
-          setPdfStoragePath(storagePath);
+          throw new Error(
+            `El archivo ${fileType} no contiene texto legible. Si es un PDF escaneado o protegido, conviértelo a Markdown (.md) y súbelo de nuevo.`
+          );
         }
 
         setParsingStatus('Enviando a procesamiento...');
 
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         const response = await fetch('/api/parse-annotations', {
           method: 'POST',
           headers: {
@@ -134,7 +103,9 @@ export function usePdfProcessing(
             const errData = JSON.parse(text);
             if (errData.error) errMsg = errData.error;
           } catch {
-            if (response.status === 504) errMsg = 'El procesamiento excedió el tiempo límite. Intenta con un archivo .md más corto o divide el PDF en páginas individuales.';
+            if (response.status === 504)
+              errMsg =
+                'El procesamiento excedió el tiempo límite. Intenta con un archivo .md más corto o divide el PDF en páginas individuales.';
             else if (text) errMsg = text.slice(0, 200);
           }
           throw new Error(errMsg);
@@ -142,19 +113,27 @@ export function usePdfProcessing(
 
         const result = await response.json();
 
-        if (result.annotations && result.annotations.length > 0) {
-          setParsedAnnotations(result.annotations);
-          const negCount = result.annotations.filter((a: { type?: string }) => a.type === 'Negativa').length;
-          const posCount = result.annotations.filter((a: { type?: string }) => a.type === 'Positiva').length;
-          const infoCount = result.annotations.filter((a: { type?: string }) => a.type === 'Información').length;
-          const parts = [`${negCount} negativas`, `${posCount} positivas`];
-          if (infoCount > 0) parts.push(`${infoCount} informativas`);
-          setParsingStatus(`Se detectaron ${result.annotations.length} anotaciones (${parts.join(', ')}). Revisa los datos antes de registrar.`);
+        if (result.success && result.summary) {
+          const s = result.summary as AnnotationSummary;
+          setSummary(s);
+          const total = s.negativas + s.positivas + s.informativas;
+          if (total > 0) {
+            const parts = [`${s.negativas} negativas`, `${s.positivas} positivas`];
+            if (s.informativas > 0) parts.push(`${s.informativas} informativas`);
+            setParsingStatus(`Se detectaron ${total} anotaciones (${parts.join(', ')}).`);
+          } else {
+            setParsingStatus(
+              `No se detectaron anotaciones en el ${fileType}. Revisa que el archivo contenga datos de hoja de vida.`
+            );
+          }
         } else {
-          setParsingStatus(`No se detectaron anotaciones en el ${fileType}. Revisa que el archivo contenga datos de hoja de vida.`);
+          setParsingStatus(
+            `No se detectaron anotaciones en el ${fileType}. Revisa que el archivo contenga datos de hoja de vida.`
+          );
         }
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : `Error al procesar el archivo ${fileType}.`;
+        const msg =
+          err instanceof Error ? err.message : `Error al procesar el archivo ${fileType}.`;
         console.error(`Error parsing ${fileType}:`, err);
         setErrorMessage(msg);
         setParsingStatus('Error al procesar el archivo');
@@ -197,69 +176,19 @@ export function usePdfProcessing(
     [processPdfFile]
   );
 
-  const handleRegisterParsed = useCallback(async () => {
-    if (parsedAnnotations.length === 0) return;
-    try {
-      setParsingStatus('Registrando anotaciones en la base de datos...');
-      const tenantId = useAuthStore.getState().tenantId;
-      const annotationsToSave = parsedAnnotations.map((ann: unknown) => {
-        const a = ann as Record<string, string | undefined>;
-        return {
-          student_id: studentId,
-          date_time: new Date().toISOString(),
-          observation: a.text || a.observation || '',
-          severity: a.severity || 'Leve',
-          type: a.type === 'Información' ? 'Negativa' : (a.type || 'Negativa'),
-          registered_by: a.registered_by || 'Inspectoría',
-          tenant_id: tenantId,
-          pdf_file_path: pdfStoragePath,
-        };
-      });
-
-      for (const ann of annotationsToSave) {
-        const { error } = await supabase.from('inspectorate_records').insert(ann);
-        if (error) {
-          console.error('Error saving parsed annotation:', error);
-          setErrorMessage(`Error al guardar anotacion: ${error.message}`);
-          setParsingStatus('Algunas anotaciones no se pudieron registrar.');
-          return;
-        }
-      }
-
-      onAddAnnotations(studentId, annotationsToSave);
-      setParsingStatus(`${annotationsToSave.length} anotaciones registradas exitosamente.`);
-      setParsedAnnotations([]);
-      setPdfStoragePath(null);
-
-      const [cartasData, etapasData] = await Promise.all([
-        fetchCartas(studentId),
-        fetchEtapas(studentId),
-      ]);
-      cartasRef.current = cartasData;
-      setEtapas(etapasData);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Error al registrar las anotaciones.';
-      console.error('Error registering parsed annotations:', err);
-      setErrorMessage(msg);
-      setParsingStatus('Error al registrar');
-    }
-  }, [parsedAnnotations, studentId, onAddAnnotations, cartasRef, setEtapas, fetchCartas, fetchEtapas, pdfStoragePath]);
-
   return {
     isDragging,
     setIsDragging,
     isParsing,
     parsingStatus,
     errorMessage,
-    parsedAnnotations,
-    pdfStoragePath,
+    summary,
     processPdfFile,
     handleDrop,
     handleFileSelect,
-    handleRegisterParsed,
     setErrorMessage,
     setParsingStatus,
     setIsParsing,
-    setParsedAnnotations,
+    setSummary,
   };
 }

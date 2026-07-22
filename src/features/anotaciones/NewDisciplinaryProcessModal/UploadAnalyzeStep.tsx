@@ -2,23 +2,22 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { Upload, FileText, Loader2, AlertTriangle, Star } from 'lucide-react';
-import { severityDot } from '@/src/shared/lib/severityStyles';
+import type { AnnotationSummary } from '@/src/shared/lib/types';
 
 interface UploadAnalyzeStepProps {
   file: File | null;
   isAnalyzing: boolean;
   analysisError: string | null;
-  detected: unknown[];
+  summary: AnnotationSummary | null;
   onFileChange: (file: File | null) => void;
   onAnalyze: () => void;
-  onRetry?: () => void;
 }
 
 export default function UploadAnalyzeStep({
   file,
   isAnalyzing,
   analysisError,
-  detected,
+  summary,
   onFileChange,
   onAnalyze,
 }: UploadAnalyzeStepProps) {
@@ -30,7 +29,8 @@ export default function UploadAnalyzeStep({
       e.preventDefault();
       setDrag(false);
       const f = e.dataTransfer.files[0];
-      if (f && (f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.md'))) onFileChange(f);
+      if (f && (f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.md')))
+        onFileChange(f);
     },
     [onFileChange]
   );
@@ -38,6 +38,8 @@ export default function UploadAnalyzeStep({
   const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) onFileChange(e.target.files[0]);
   };
+
+  const total = summary ? summary.negativas + summary.positivas + summary.informativas : 0;
 
   return (
     <div className="space-y-4">
@@ -47,7 +49,10 @@ export default function UploadAnalyzeStep({
 
       <button
         type="button"
-        onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDrag(true);
+        }}
         onDragLeave={() => setDrag(false)}
         onDrop={onDrop}
         onClick={() => fileRef.current?.click()}
@@ -58,7 +63,9 @@ export default function UploadAnalyzeStep({
         <input ref={fileRef} type="file" accept=".pdf,.md" onChange={onPick} className="hidden" />
         <div className="flex flex-col items-center gap-2">
           <Upload className="h-8 w-8 text-neutral-400" />
-          <p className="text-neutral-500 text-sm">Arrastra un PDF o .md, o haz clic para seleccionar</p>
+          <p className="text-neutral-500 text-sm">
+            Arrastra un PDF o .md, o haz clic para seleccionar
+          </p>
           {file && <p className="font-medium text-indigo-600 text-xs">{file.name}</p>}
         </div>
       </button>
@@ -70,7 +77,11 @@ export default function UploadAnalyzeStep({
           disabled={isAnalyzing}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 font-medium text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
         >
-          {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+          {isAnalyzing ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <FileText className="h-4 w-4" />
+          )}
           {isAnalyzing ? 'Analizando...' : 'Subir y Analizar'}
         </button>
       )}
@@ -82,41 +93,32 @@ export default function UploadAnalyzeStep({
         </div>
       )}
 
-      {detected.length > 0 && (
+      {summary && total > 0 && (
         <div className="space-y-2">
           <p className="flex items-center gap-2 font-medium text-neutral-700 text-sm">
-            <Star className="h-4 w-4 text-indigo-600" /> Análisis del Documento
+            <Star className="h-4 w-4 text-indigo-600" /> Resultado del Análisis
           </p>
-          <p className="font-medium text-neutral-700 text-xs">
-            {(() => {
-              const neg = detected.filter((a: unknown) => (a as { type?: string }).type === 'Negativa').length;
-              const pos = detected.filter((a: unknown) => (a as { type?: string }).type === 'Positiva').length;
-              const inf = detected.length - neg - pos;
-              return `Se detectaron ${detected.length} anotaciones (${neg} negativas, ${pos} positivas${inf > 0 ? `, ${inf} informativas` : ''}):`;
-            })()}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-center">
+              <p className="font-bold text-2xl text-red-700">{summary.negativas}</p>
+              <p className="mt-1 font-medium text-red-600 text-xs">Negativas</p>
+            </div>
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
+              <p className="font-bold text-2xl text-emerald-700">{summary.positivas}</p>
+              <p className="mt-1 font-medium text-emerald-600 text-xs">Positivas</p>
+            </div>
+            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-center">
+              <p className="font-bold text-2xl text-blue-700">{summary.informativas}</p>
+              <p className="mt-1 font-medium text-blue-600 text-xs">Informativas</p>
+            </div>
+          </div>
+          <p className="text-center font-medium text-neutral-500 text-xs">
+            Total: {total} anotaciones detectadas
           </p>
-          {detected.map((a: unknown, i: number) => {
-            const ann = a as { id?: string; date?: string; text?: string; severity?: string; type?: string; registered_by?: string };
-            return (
-              <div
-                key={ann.id || ann.date + (ann.text || '') || i}
-                className="flex items-start gap-2 rounded-lg border border-neutral-100 bg-neutral-50 p-2.5"
-              >
-                <div className={`mt-0.5 h-2 w-2 shrink-0 rounded-full ${severityDot(ann.severity)}`} />
-                <div className="min-w-0 flex-1">
-                  <p className="text-neutral-400 text-xs">{ann.date || 'Sin fecha'}</p>
-                  <p className="text-neutral-700 text-sm">{ann.text}</p>
-                  <p className="text-neutral-400 text-xs">
-                    {ann.registered_by}{ann.severity ? ` - ${ann.severity}` : ''} ({ann.type})
-                  </p>
-                </div>
-              </div>
-            );
-          })}
         </div>
       )}
 
-      {!isAnalyzing && !analysisError && detected.length === 0 && file && (
+      {!isAnalyzing && !analysisError && !summary && file && (
         <p className="py-4 text-center text-neutral-500 text-sm">
           Haz clic en "Subir y Analizar" para procesar el documento.
         </p>

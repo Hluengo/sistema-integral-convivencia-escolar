@@ -4,16 +4,20 @@
  */
 
 import { useState, useRef, useEffect, memo } from 'react';
-import { X, Eye, EyeOff, FileSearch } from 'lucide-react';
+import { X, Eye, EyeOff } from 'lucide-react';
 import { useUIStore } from '@/src/shared/lib/stores/uiStore';
 import type { Annotation } from '@/src/types';
-import { maskName, maskRut, getSemaphoricStyle, getCurrentDateStr } from '@/src/lib/anotacionesUtils';
+import {
+  maskName,
+  maskRut,
+  getSemaphoricStyle,
+  getCurrentDateStr,
+} from '@/src/lib/anotacionesUtils';
 import {
   STATUS_STYLE,
   TAB_ICONS,
   TAB_LABELS,
   type StudentInfo,
-  type DisciplinayRecord,
   type ActiveTab,
 } from './AnotacionesStudentDetailModal/constants';
 import StudentSummaryTab from './AnotacionesStudentDetailModal/StudentSummaryTab';
@@ -21,7 +25,6 @@ import RevisionTab from './AnotacionesStudentDetailModal/RevisionTab';
 import HistoryTab from './AnotacionesStudentDetailModal/HistoryTab';
 import { useDisciplinaryData } from './AnotacionesStudentDetailModal/hooks/useDisciplinaryData';
 import { usePdfProcessing } from './AnotacionesStudentDetailModal/hooks/usePdfProcessing';
-import PdfViewer from './AnotacionesStudentDetailModal/PdfViewer';
 
 const EMPTY_TEACHERS: Record<string, string> = {};
 
@@ -34,7 +37,6 @@ interface AnotacionesStudentDetailModalProps {
   annotations: Annotation[];
   privacyMode: boolean;
   onClose: () => void;
-  onAddAnnotations: (studentId: string, annotations: unknown[]) => void;
   onClearAnnotations: (studentId: string) => void;
   onTogglePrivacy?: () => void;
   teachers?: Record<string, string>;
@@ -45,25 +47,15 @@ export default function AnotacionesStudentDetailModal({
   annotations,
   privacyMode,
   onClose,
-  onAddAnnotations,
   onClearAnnotations,
   onTogglePrivacy,
   teachers = EMPTY_TEACHERS,
 }: AnotacionesStudentDetailModalProps) {
   const [activeTab, setActiveTab] = useState<ActiveTab>('resumen');
-  const [pdfViewPath, setPdfViewPath] = useState<string | null>(null);
   const cartasRef = useRef<unknown[]>([]);
 
-  const {
-    isDataLoading,
-    activeCase,
-    etapas,
-    currentMeasure,
-    transitions,
-    cartas,
-    setCurrentMeasure,
-    setTransitions,
-  } = useDisciplinaryData(student.id, student.full_name);
+  const { isDataLoading, activeCase, etapas, currentMeasure, transitions, cartas } =
+    useDisciplinaryData(student.id, student.full_name);
 
   const {
     isDragging,
@@ -71,25 +63,12 @@ export default function AnotacionesStudentDetailModal({
     isParsing,
     parsingStatus,
     errorMessage,
-    parsedAnnotations,
-    processPdfFile,
+    summary,
     handleDrop,
     handleFileSelect,
-    handleRegisterParsed,
     setErrorMessage,
-    pdfStoragePath,
-    setParsingStatus,
-    setIsParsing,
-    setParsedAnnotations,
-  } = usePdfProcessing(
-    student.id,
-    student,
-    onAddAnnotations,
-    cartasRef,
-    (v) => { /* setEtapas is handled by hook */ },
-    async (id) => { const { fetchCartas } = await import('@/src/services/cartas.service'); return fetchCartas(id); },
-    async (id) => { const { fetchEtapas } = await import('@/src/services/etapas.service'); return fetchEtapas(id); }
-  );
+    setSummary,
+  } = usePdfProcessing(student.id);
 
   const setCurrentView = useUIStore((s) => s.setCurrentView);
   const setSelectedStudentForDocs = useUIStore((s) => s.setSelectedStudentForDocs);
@@ -105,6 +84,9 @@ export default function AnotacionesStudentDetailModal({
   const statusKey = student.disciplinary_status || 'Verde';
   const statusInfo = STATUS_STYLE[statusKey] || STATUS_STYLE.Verde;
   const dateStr = getCurrentDateStr();
+  const pendingSummaryCount = summary
+    ? summary.negativas + summary.positivas + summary.informativas
+    : 0;
 
   const renderTabContent = () => {
     if (isDataLoading) {
@@ -133,7 +115,7 @@ export default function AnotacionesStudentDetailModal({
             etapas={etapas}
             activeCase={activeCase}
             dateStr={dateStr}
-            pendingParsedCount={parsedAnnotations.length}
+            pendingParsedCount={pendingSummaryCount}
             onGoToRevisionTab={() => setActiveTab('revision')}
             onGoToDocumentos={handleGoToDocumentos}
             onClearAnnotations={() => onClearAnnotations(student.id)}
@@ -150,12 +132,10 @@ export default function AnotacionesStudentDetailModal({
             parsingStatus={parsingStatus}
             errorMessage={errorMessage}
             setErrorMessage={setErrorMessage}
-            parsedAnnotations={parsedAnnotations}
-            pdfStoragePath={pdfStoragePath}
-            onViewPdf={setPdfViewPath}
+            summary={summary}
             onDrop={handleDrop}
             onFileSelect={handleFileSelect}
-            onRegisterParsed={handleRegisterParsed}
+            setSummary={setSummary}
           />
         );
       case 'historial':
@@ -188,7 +168,9 @@ export default function AnotacionesStudentDetailModal({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50">
-                <span className="font-bold text-brand-600 text-sm">{student.full_name.charAt(0)}</span>
+                <span className="font-bold text-brand-600 text-sm">
+                  {student.full_name.charAt(0)}
+                </span>
               </div>
               <div>
                 <h2 className="font-bold text-neutral-900 text-base">
@@ -203,7 +185,9 @@ export default function AnotacionesStudentDetailModal({
                     </>
                   )}
                   <span className="text-neutral-300">|</span>
-                  <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 font-semibold text-[10px] ${statusInfo.bg} ${statusInfo.text}`}>
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 font-semibold text-[10px] ${statusInfo.bg} ${statusInfo.text}`}
+                  >
                     <span className={`inline-block h-1.5 w-1.5 rounded-full${semaphoric.dot}`} />
                     {statusInfo.label}
                   </span>
@@ -257,9 +241,6 @@ export default function AnotacionesStudentDetailModal({
 
         <div className="h-[480px] overflow-y-auto p-4 sm:p-6">{renderTabContent()}</div>
       </div>
-      {pdfViewPath && (
-        <PdfViewer pdfPath={pdfViewPath} onClose={() => setPdfViewPath(null)} />
-      )}
     </dialog>
   );
 }

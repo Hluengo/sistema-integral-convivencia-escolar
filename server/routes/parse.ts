@@ -7,7 +7,6 @@ import { Router } from 'express';
 import { checkRateLimit } from '../lib/rateLimit';
 import { callGroq } from '../lib/groq';
 
-
 const router = Router();
 
 router.post('/parse-annotations', async (req, res) => {
@@ -21,9 +20,7 @@ router.post('/parse-annotations', async (req, res) => {
 
     const ip = req.ip || req.connection?.remoteAddress || 'unknown';
     if (!checkRateLimit(ip)) {
-      res
-        .status(429)
-        .json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
+      res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
       return;
     }
 
@@ -53,35 +50,39 @@ router.post('/parse-annotations', async (req, res) => {
       filteredText = filteredText.slice(0, MAX_LENGTH) + '\n\n[Truncado]';
     }
 
-    const systemInstruction = `Extrae anotaciones. Cada línea con fecha DD/MM/AAAA inicia una anotación. El texto de la anotación está desde "Anotación:" hasta la siguiente fecha.
-
-Campos: text (descripción completa), date (YYYY-MM-DD), type = Tipo (Positiva, Negativa o Información).
-
-Devuelve SOLO el array JSON.`;
+    const systemInstruction = `Analiza un documento de hoja de vida estudiantil. Cuenta cuántas anotaciones hay de cada Tipo: "Positiva", "Negativa" o "Información". Devuelve SOLO un JSON con los conteos: {"negativas": N, "positivas": N, "informativas": N}.`;
 
     const messages = [
       {
         role: 'user' as const,
-        content: filteredText.length > 0 ? `Extrae anotaciones:\n\n${filteredText}` : `Extrae anotaciones:\n\n${cleanText}`,
+        content:
+          filteredText.length > 0 ? `Analiza:\n\n${filteredText}` : `Analiza:\n\n${cleanText}`,
       },
     ];
 
-    const responseText = await callGroq(messages, systemInstruction).catch(err => {
+    const responseText = await callGroq(messages, systemInstruction).catch((err) => {
       console.error('Groq API error:', (err as Error).message);
-      throw new Error('El servicio de IA no pudo procesar el documento. Si el PDF es escaneado o tiene imágenes, conviértelo a texto primero.');
+      throw new Error(
+        'El servicio de IA no pudo procesar el documento. Si el PDF es escaneado o tiene imágenes, conviértelo a texto primero.'
+      );
     });
 
-    let annotations: Array<Record<string, unknown>> = [];
+    let summary = { negativas: 0, positivas: 0, informativas: 0 };
     try {
-      const jsonMatch = responseText.match(/\[[\s\S]*\]/);
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        annotations = JSON.parse(jsonMatch[0]);
+        const parsed = JSON.parse(jsonMatch[0]);
+        summary = {
+          negativas: Number(parsed.negativas) || 0,
+          positivas: Number(parsed.positivas) || 0,
+          informativas: Number(parsed.informativas) || 0,
+        };
       }
     } catch (parseError) {
       console.error('Error parsing Groq response as JSON:', parseError);
     }
 
-    res.json({ success: true, annotations });
+    res.json({ success: true, summary });
   } catch (error) {
     console.error('Error al analizar documento:', error);
     const msg = error instanceof Error ? error.message : 'Error interno al procesar el archivo.';

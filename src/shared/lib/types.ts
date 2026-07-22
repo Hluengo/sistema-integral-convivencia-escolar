@@ -5,41 +5,46 @@
 
 export enum EstadoCausa {
   // Phase 1: Recepción y Apertura
-  DENUNCIA_RECEPCIONADA = "Recepción de Denuncia",
-  ANTECEDENTES_REVISION_INICIAL = "Revisión Inicial de Antecedentes",
-  INICIO_INDAGACION_NOTIFICADO = "Notificación de Inicio de Indagación",
+  DENUNCIA_RECEPCIONADA = 'Recepción de Denuncia',
+  ANTECEDENTES_REVISION_INICIAL = 'Revisión Inicial de Antecedentes',
+  INICIO_INDAGACION_NOTIFICADO = 'Notificación de Inicio de Indagación',
 
   // Phase 2: Investigación
-  EN_PROCESO_INDAGACION = "En Proceso de Indagación",
-  RECOPILACION_EVIDENCIAS_CURSO = "Recopilación de Evidencias en Curso",
-  DERIVADO_A_MEDIACION = "Derivado a Mediación",
-  MEDIACION_EN_DESARROLLO = "Mediación en Desarrollo",
-  MEDIACION_CERRADA_ACUERDO = "Mediación Cerrada con Acuerdo",
-  MEDIACION_FRACASADA_RETORNO = "Mediación Fracasada – Retorno a Indagación",
+  EN_PROCESO_INDAGACION = 'En Proceso de Indagación',
+  RECOPILACION_EVIDENCIAS_CURSO = 'Recopilación de Evidencias en Curso',
+  DERIVADO_A_MEDIACION = 'Derivado a Mediación',
+  MEDIACION_EN_DESARROLLO = 'Mediación en Desarrollo',
+  MEDIACION_CERRADA_ACUERDO = 'Mediación Cerrada con Acuerdo',
+  MEDIACION_FRACASADA_RETORNO = 'Mediación Fracasada – Retorno a Indagación',
 
   // Phase 3: Análisis y Resolución
-  INFORME_CONCLUYENTE_ELABORACION = "Informe Cierre de Indagación en Elaboración",
-  INFORME_CONCLUYENTE_EMITIDO = "Informe Cierre de Indagación Emitido",
-  ENTREVISTA_DISCIPLINARIA_PENDIENTE = "Entrevista Disciplinaria Pendiente",
-  ENTREVISTA_DISCIPLINARIA_REALIZADA = "Entrevista Disciplinaria Realizada",
-  RESOLUCION_ELABORACION = "Informe Concluyente en Elaboración",
-  RESOLUCION_FINAL_NOTIFICADA = "Informe Concluyente Emitido",
+  INFORME_CONCLUYENTE_ELABORACION = 'Informe Cierre de Indagación en Elaboración',
+  INFORME_CONCLUYENTE_EMITIDO = 'Informe Cierre de Indagación Emitido',
+  ENTREVISTA_DISCIPLINARIA_PENDIENTE = 'Entrevista Disciplinaria Pendiente',
+  ENTREVISTA_DISCIPLINARIA_REALIZADA = 'Entrevista Disciplinaria Realizada',
+  RESOLUCION_ELABORACION = 'Informe Concluyente en Elaboración',
+  RESOLUCION_FINAL_NOTIFICADA = 'Informe Concluyente Emitido',
 
   // Phase 4: Apelación
-  EN_PLAZO_APELACION = "En Plazo de Apelación",
-  APELACION_RECEPCIONADA = "Apelación Recepcionada",
-  APELACION_REVISION_RECTORIA = "Apelación en Revisión por Rectoría",
-  APELACION_RESUELTA = "Apelación Resuelta",
-  RESOLUCION_EJECUTORIADA = "Resolución Ejecutoriada",
+  EN_PLAZO_APELACION = 'En Plazo de Apelación',
+  APELACION_RECEPCIONADA = 'Apelación Recepcionada',
+  APELACION_REVISION_RECTORIA = 'Apelación en Revisión por Rectoría',
+  APELACION_RESUELTA = 'Apelación Resuelta',
+  RESOLUCION_EJECUTORIADA = 'Resolución Ejecutoriada',
 
   // Phase 5: Seguimiento
-  MEDIDA_EJECUCION = "Medida en Ejecución",
-  PROCESO_SEGUIMIENTO = "En Proceso de Seguimiento",
-  SEGUIMIENTO_FINALIZADO = "Seguimiento Finalizado",
-  CAUSA_CERRADA = "Causa Cerrada",
+  MEDIDA_EJECUCION = 'Medida en Ejecución',
+  PROCESO_SEGUIMIENTO = 'En Proceso de Seguimiento',
+  SEGUIMIENTO_FINALIZADO = 'Seguimiento Finalizado',
+  CAUSA_CERRADA = 'Causa Cerrada',
 }
 
-export type FaseProcedimental = 'Recepción' | 'Investigación' | 'Resolución' | 'Apelación' | 'Seguimiento';
+export type FaseProcedimental =
+  | 'Recepción'
+  | 'Investigación'
+  | 'Resolución'
+  | 'Apelación'
+  | 'Seguimiento';
 
 export interface BitacoraEntry {
   id: string;
@@ -83,35 +88,35 @@ export interface Causa {
   checklistDebidoProceso: ChecklistItem[];
   conductaRiceId?: string;
   medidasEjecutadas?: string[];
-  
+
   // === CAMPOS LEGALES OBLIGATORIOS (Ley 21809, Art. 16E) ===
-  
+
   // Canal seguro y confidencial de denuncias
   esDenunciaConfidencial?: boolean;
   denunciantAnonimo?: boolean;
   identidadReservada?: boolean;
-  
+
   // Control de plazos legales
   fechaInicioInvestigacion?: string;
   plazoInvestigacionDias?: number; // Máximo 60 días (2 meses)
   fechaLimiteInvestigacion?: string;
-  
+
   // Suspensión (máximo 15 días hábiles)
   fechaInicioSuspension?: string;
   duracionSuspensionDias?: number;
   fechaFinSuspension?: string;
   monitoreoPedagogico?: boolean;
-  
+
   // Notificación a Superintendencia (5 días hábiles para expulsión)
   requiereNotificacionSuperintendencia?: boolean;
   fechaNotificacionSuperintendencia?: string;
   plazoNotificacionDias?: number; // Máximo 5 días hábiles
   fechaLimiteNotificacion?: string;
-  
+
   // Protección de víctimas (Ley 21809, Art. 16E, letra j)
   medidasProteccionVictima?: string[];
   medidasProteccionDenunciado?: string[];
-  
+
   // Registro de NEE/Discapacidad (para evitar sanciones discriminatorias)
   estudianteTieneNEE?: boolean;
   tipoNEE?: string;
@@ -158,6 +163,12 @@ export interface Annotation {
   registered_by: string;
   type: 'Positiva' | 'Negativa' | 'Información';
   pdf_file_path?: string | null;
+}
+
+export interface AnnotationSummary {
+  negativas: number;
+  positivas: number;
+  informativas: number;
 }
 
 export interface CartaDisciplinaria {

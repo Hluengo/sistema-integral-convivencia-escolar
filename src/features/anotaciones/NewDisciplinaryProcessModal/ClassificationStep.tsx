@@ -1,32 +1,41 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { CLASSIFICATION_OPTIONS } from './constants';
+import type { AnnotationSummary } from '@/src/shared/lib/types';
 
 interface ClassificationStepProps {
   value: string;
   onChange: (value: string) => void;
-  detected: unknown[];
+  summary: AnnotationSummary | null;
 }
 
-export default function ClassificationStep({ value, onChange, detected }: ClassificationStepProps) {
-  const negativeCount = detected.filter((a) => (a as Record<string, string>).type === 'Negativa').length;
-  const positiveCount = detected.filter((a) => (a as Record<string, string>).type === 'Positiva').length;
-  const infoCount = detected.length - negativeCount - positiveCount;
+export default function ClassificationStep({ value, onChange, summary }: ClassificationStepProps) {
+  const total = summary ? summary.negativas + summary.positivas + summary.informativas : 0;
 
   return (
     <div className="space-y-4">
       <p className="font-medium text-neutral-600 text-sm">Clasificación de la Medida</p>
 
-      {detected.length > 0 && (
+      {summary && total > 0 && (
         <div className="rounded-xl bg-neutral-50 p-3 text-sm">
           <p className="text-neutral-600">
-            <span className="font-semibold text-neutral-800">{detected.length}</span> anotaciones detectadas:
-            {' '}<span className="font-semibold text-red-600">{negativeCount} negativas</span>
-            {positiveCount > 0 && (
-              <>, <span className="font-semibold text-emerald-600">{positiveCount} positivas</span></>
+            <span className="font-semibold text-neutral-800">{total}</span> anotaciones detectadas:{' '}
+            <span className="font-semibold text-red-600">{summary.negativas} negativas</span>
+            {summary.positivas > 0 && (
+              <>
+                ,{' '}
+                <span className="font-semibold text-emerald-600">
+                  {summary.positivas} positivas
+                </span>
+              </>
             )}
-            {infoCount > 0 && (
-              <>, <span className="font-semibold text-blue-600">{infoCount} informativas</span></>
+            {summary.informativas > 0 && (
+              <>
+                ,{' '}
+                <span className="font-semibold text-blue-600">
+                  {summary.informativas} informativas
+                </span>
+              </>
             )}
           </p>
         </div>
