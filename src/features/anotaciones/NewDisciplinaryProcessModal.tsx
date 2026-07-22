@@ -140,9 +140,9 @@ export default function NewDisciplinaryProcessModal({
         data: { session },
       } = await supabase.auth.getSession();
       const tenantId = useAuthStore.getState().tenantId;
-      const authHeaders = session?.access_token
-        ? { Authorization: `Bearer ${session.access_token}` }
-        : {};
+      const authToken = session?.access_token;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
 
       let storagePath = '';
       if (tenantId && selectedStudent) {
@@ -151,7 +151,7 @@ export default function NewDisciplinaryProcessModal({
 
       const res = await fetch('/api/process-disciplinary-pdf', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
+        headers,
         body: JSON.stringify({
           textContent,
           fileName: file.name,
@@ -191,8 +191,9 @@ export default function NewDisciplinaryProcessModal({
           }
         }
 
-        if (studentId === null && data.detectedStudents && Array.isArray(data.detectedStudents)) {
-          const ds = data.detectedStudents as Array<{ id: string; full_name: string }>;
+        const detectedStudents = data.detectedStudents;
+        if (Array.isArray(detectedStudents)) {
+          const ds = detectedStudents as Array<{ id: string; full_name: string }>;
           if (ds.length === 1 && !selectedStudent) {
             setSelectedStudent(ds[0] as unknown as Student);
           } else if (ds.length === 0 && selectedStudent) {

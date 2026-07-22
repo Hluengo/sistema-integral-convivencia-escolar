@@ -2,7 +2,7 @@
 
 import { Router } from 'express';
 import { checkRateLimit } from '../services/rateLimit.js';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
@@ -51,7 +51,7 @@ function extractCourse(text: string): string | null {
 }
 
 async function findStudent(
-  supabase: ReturnType<typeof createClient>,
+  supabase: SupabaseClient,
   fullName: string,
   courseName: string | null,
   tenantId: string
@@ -107,8 +107,10 @@ async function findStudent(
       .eq('tenant_id', tenantId)
       .ilike('name', `%${normalizedCourse}%`)
       .maybeSingle();
-    if (course) {
-      const { data: courseStudents } = await makeQuery().eq('course_id', course.id).limit(50);
+    if (course && (course as { id: string }).id) {
+      const { data: courseStudents } = await makeQuery()
+        .eq('course_id', (course as { id: string }).id)
+        .limit(50);
       if (courseStudents && courseStudents.length > 0) return enrichWithCourse(courseStudents);
     }
   }

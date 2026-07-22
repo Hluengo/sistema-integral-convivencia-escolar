@@ -1,39 +1,74 @@
+"use strict";
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
 // server/api/index.ts
-import express from 'express';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+var index_exports = {};
+__export(index_exports, {
+  default: () => index_default
+});
+module.exports = __toCommonJS(index_exports);
+var import_express10 = __toESM(require("express"), 1);
+var import_node_path = __toESM(require("node:path"), 1);
+var import_node_url = require("node:url");
 
 // server/api/routes/improve.ts
-import { Router } from 'express';
+var import_express = require("express");
 
 // server/api/middleware/auth.ts
-import https from 'node:https';
+var import_node_https = __toESM(require("node:https"), 1);
 async function verifyJwtViaHmac(token, secret) {
-  const parts = token.split('.');
+  const parts = token.split(".");
   if (parts.length !== 3) return null;
   let payload;
   try {
-    payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+    payload = JSON.parse(Buffer.from(parts[1], "base64url").toString());
   } catch {
     return null;
   }
-  const signature = Buffer.from(parts[2], 'base64url');
-  for (const secretBytes of [new TextEncoder().encode(secret), Buffer.from(secret, 'base64')]) {
+  const signature = Buffer.from(parts[2], "base64url");
+  for (const secretBytes of [new TextEncoder().encode(secret), Buffer.from(secret, "base64")]) {
     try {
       const key = await crypto.subtle.importKey(
-        'raw',
+        "raw",
         secretBytes,
-        { name: 'HMAC', hash: 'SHA-256' },
+        { name: "HMAC", hash: "SHA-256" },
         false,
-        ['verify']
+        ["verify"]
       );
       const data = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
-      const valid = await crypto.subtle.verify('HMAC', key, signature, data);
+      const valid = await crypto.subtle.verify("HMAC", key, signature, data);
       if (valid) {
         if (payload.exp && payload.exp * 1e3 < Date.now()) return null;
         return payload;
       }
-    } catch {}
+    } catch {
+    }
   }
   return null;
 }
@@ -45,19 +80,19 @@ function verifyViaSupabaseApi(token) {
   }
   const hostname = new URL(supabaseUrl).hostname;
   return new Promise((resolve) => {
-    const req = https.request(
+    const req = import_node_https.default.request(
       {
         hostname,
-        path: '/auth/v1/user',
-        method: 'GET',
-        headers: { Authorization: `Bearer ${token}`, apikey: anonKey },
+        path: "/auth/v1/user",
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}`, apikey: anonKey }
       },
       (res) => {
-        let data = '';
-        res.on('data', (chunk) => {
+        let data = "";
+        res.on("data", (chunk) => {
           data += chunk;
         });
-        res.on('end', () => {
+        res.on("end", () => {
           if (res.statusCode !== 200) return resolve(null);
           try {
             const user = JSON.parse(data);
@@ -68,7 +103,7 @@ function verifyViaSupabaseApi(token) {
         });
       }
     );
-    req.on('error', () => resolve(null));
+    req.on("error", () => resolve(null));
     req.setTimeout(5e3, () => {
       req.destroy();
       resolve(null);
@@ -91,19 +126,19 @@ async function injectTenantContext(req, res) {
     const hostname = new URL(supabaseUrl).hostname;
     const userId = user.sub;
     const data = await new Promise((resolve) => {
-      const r = https.request(
+      const r = import_node_https.default.request(
         {
           hostname,
           path: `/rest/v1/profiles?user_id=eq.${encodeURIComponent(userId)}&select=tenant_id&limit=1`,
-          method: 'GET',
-          headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` },
+          method: "GET",
+          headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` }
         },
         (res2) => {
-          let chunks = '';
-          res2.on('data', (c) => {
+          let chunks = "";
+          res2.on("data", (c) => {
             chunks += c;
           });
-          res2.on('end', () => {
+          res2.on("end", () => {
             if (res2.statusCode !== 200) return resolve(null);
             try {
               resolve(JSON.parse(chunks));
@@ -113,7 +148,7 @@ async function injectTenantContext(req, res) {
           });
         }
       );
-      r.on('error', () => resolve(null));
+      r.on("error", () => resolve(null));
       r.setTimeout(3e3, () => {
         r.destroy();
         resolve(null);
@@ -122,48 +157,49 @@ async function injectTenantContext(req, res) {
     });
     if (Array.isArray(data) && data.length > 0 && data[0].tenant_id) {
       req.tenantId = data[0].tenant_id;
-      res.setHeader('x-tenant-id', data[0].tenant_id);
+      res.setHeader("x-tenant-id", data[0].tenant_id);
     }
-  } catch {}
+  } catch {
+  }
 }
 async function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith('Bearer ')) {
-    res.status(401).json({ error: 'Autenticaci\xF3n requerida.' });
+  if (!authHeader?.startsWith("Bearer ")) {
+    res.status(401).json({ error: "Autenticaci\xF3n requerida." });
     return;
   }
-  const token = authHeader.replace('Bearer ', '');
+  const token = authHeader.replace("Bearer ", "");
   if (token.length < 10) {
-    res.status(401).json({ error: 'Token inv\xE1lido.' });
+    res.status(401).json({ error: "Token inv\xE1lido." });
     return;
   }
   const JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
   if (!JWT_SECRET) {
-    console.error('SUPABASE_JWT_SECRET no configurada');
-    res.status(500).json({ error: 'Error de configuraci\xF3n del servidor.' });
+    console.error("SUPABASE_JWT_SECRET no configurada");
+    res.status(500).json({ error: "Error de configuraci\xF3n del servidor." });
     return;
   }
   try {
     const payload = await verifyJwtSignature(token, JWT_SECRET);
     if (!payload) {
-      res.status(401).json({ error: 'Token JWT inv\xE1lido o expirado.' });
+      res.status(401).json({ error: "Token JWT inv\xE1lido o expirado." });
       return;
     }
     req.user = payload;
     await injectTenantContext(req, res);
     next();
   } catch {
-    res.status(401).json({ error: 'Token JWT inv\xE1lido.' });
+    res.status(401).json({ error: "Token JWT inv\xE1lido." });
   }
 }
 
 // server/api/validators/sanitizers.ts
 var MAX_STR = 1e4;
 var sanitize = (s) => {
-  if (typeof s !== 'string') {
-    return '';
+  if (typeof s !== "string") {
+    return "";
   }
-  return s.slice(0, MAX_STR).replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+  return s.slice(0, MAX_STR).replace(/[\x00-\x1F\x7F-\x9F]/g, "");
 };
 var requireStr = (obj, key, max = 200) => {
   const v = sanitize(obj[key]);
@@ -173,25 +209,18 @@ var requireStr = (obj, key, max = 200) => {
   return v.slice(0, max);
 };
 var optStr = (obj, key, max = MAX_STR) => sanitize(obj[key]).slice(0, max);
-var optArr = (obj, key) => (Array.isArray(obj[key]) ? obj[key] : []);
+var optArr = (obj, key) => Array.isArray(obj[key]) ? obj[key] : [];
 function sanitizeForAI(text) {
-  if (!text || typeof text !== 'string') {
-    return '';
+  if (!text || typeof text !== "string") {
+    return "";
   }
-  return text
-    .replace(/\[INST\]|\[\/INST\]|<<SYS>>|<<\/SYS>>/gi, '')
-    .replace(/<\|im_start\|>|<\|im_end\|>/gi, '')
-    .replace(/<\|system\|>|<\|user\|>|<\|assistant\|>/gi, '')
-    .replace(
-      /^(ignore|olvida|disregard|anula).{0,50}(instrucciones|instructions|reglas|rules|sistema|system)/gim,
-      ''
-    )
-    .replace(
-      /(eres|you are|act as|actúa como|actuá como).{0,30}(un|a|el|la|un(a)?\s+abogado|lawyer|juez|judge)/gim,
-      ''
-    )
-    .replace(/\n{3,}/g, '\n\n')
-    .slice(0, MAX_STR);
+  return text.replace(/\[INST\]|\[\/INST\]|<<SYS>>|<<\/SYS>>/gi, "").replace(/<\|im_start\|>|<\|im_end\|>/gi, "").replace(/<\|system\|>|<\|user\|>|<\|assistant\|>/gi, "").replace(
+    /^(ignore|olvida|disregard|anula).{0,50}(instrucciones|instructions|reglas|rules|sistema|system)/gim,
+    ""
+  ).replace(
+    /(eres|you are|act as|actúa como|actuá como).{0,30}(un|a|el|la|un(a)?\s+abogado|lawyer|juez|judge)/gim,
+    ""
+  ).replace(/\n{3,}/g, "\n\n").slice(0, MAX_STR);
 }
 
 // server/api/services/rateLimit.ts
@@ -213,14 +242,14 @@ function checkRateLimit(ip) {
 }
 
 // server/api/services/cache.ts
-import crypto2 from 'node:crypto';
+var import_node_crypto = __toESM(require("node:crypto"), 1);
 var CACHE_TTL = 5 * 60 * 1e3;
 var cache = /* @__PURE__ */ new Map();
 function getCacheKey(endpoint, body) {
-  const hash = crypto2.createHash('sha256');
+  const hash = import_node_crypto.default.createHash("sha256");
   hash.update(endpoint);
   hash.update(JSON.stringify(body));
-  return hash.digest('hex');
+  return hash.digest("hex");
 }
 function getFromCache(key) {
   const entry = cache.get(key);
@@ -240,20 +269,20 @@ function setCache(key, value) {
 }
 
 // server/api/lib/https.ts
-import https2 from 'node:https';
+var import_node_https2 = __toESM(require("node:https"), 1);
 function httpsPost(hostname, pathname, body, headers) {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify(body);
     const opts = {
       hostname,
       path: pathname,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...headers },
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...headers }
     };
-    const req = https2.request(opts, (res) => {
-      let chunks = '';
-      res.on('data', (chunk) => (chunks += chunk));
-      res.on('end', () => {
+    const req = import_node_https2.default.request(opts, (res) => {
+      let chunks = "";
+      res.on("data", (chunk) => chunks += chunk);
+      res.on("end", () => {
         try {
           resolve({ status: res.statusCode ?? 500, body: JSON.parse(chunks) });
         } catch {
@@ -261,7 +290,7 @@ function httpsPost(hostname, pathname, body, headers) {
         }
       });
     });
-    req.on('error', reject);
+    req.on("error", reject);
     req.write(data);
     req.end();
   });
@@ -271,13 +300,13 @@ function httpsGet(hostname, pathname, headers) {
     const opts = {
       hostname,
       path: pathname,
-      method: 'GET',
-      headers: headers || {},
+      method: "GET",
+      headers: headers || {}
     };
-    const req = https2.request(opts, (res) => {
-      let chunks = '';
-      res.on('data', (chunk) => (chunks += chunk));
-      res.on('end', () => {
+    const req = import_node_https2.default.request(opts, (res) => {
+      let chunks = "";
+      res.on("data", (chunk) => chunks += chunk);
+      res.on("end", () => {
         try {
           resolve(JSON.parse(chunks));
         } catch {
@@ -285,7 +314,7 @@ function httpsGet(hostname, pathname, headers) {
         }
       });
     });
-    req.on('error', reject);
+    req.on("error", reject);
     req.end();
   });
 }
@@ -295,13 +324,13 @@ function httpsPatch(hostname, pathname, body, headers) {
     const opts = {
       hostname,
       path: pathname,
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', ...headers },
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...headers }
     };
-    const req = https2.request(opts, (res) => {
-      let chunks = '';
-      res.on('data', (chunk) => (chunks += chunk));
-      res.on('end', () => {
+    const req = import_node_https2.default.request(opts, (res) => {
+      let chunks = "";
+      res.on("data", (chunk) => chunks += chunk);
+      res.on("end", () => {
         try {
           resolve({ status: res.statusCode ?? 500, body: JSON.parse(chunks) });
         } catch {
@@ -309,109 +338,101 @@ function httpsPatch(hostname, pathname, body, headers) {
         }
       });
     });
-    req.on('error', reject);
+    req.on("error", reject);
     req.write(data);
     req.end();
   });
 }
 
 // server/api/services/groq.ts
-var AI_MODEL = 'meta-llama/llama-3.1-8b-instruct';
+var AI_MODEL = "meta-llama/llama-3.1-8b-instruct";
 function getApiKey() {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) {
-    throw new Error('OPENROUTER_API_KEY no configurada');
+    throw new Error("OPENROUTER_API_KEY no configurada");
   }
   return key;
 }
-async function callAI(messages, systemInstruction) {
+async function callGroq(messages, systemInstruction) {
   const apiKey = getApiKey();
   const body = {
     model: AI_MODEL,
-    max_tokens: 2000,
+    max_tokens: 2e3,
     temperature: 0,
-    messages: [],
+    messages: []
   };
   if (systemInstruction) {
-    body.messages.push({ role: 'system', content: systemInstruction });
+    body.messages.push({ role: "system", content: systemInstruction });
   }
   body.messages.push(...messages);
-  const res = await httpsPost('openrouter.ai', '/api/v1/chat/completions', body, {
+  const res = await httpsPost("openrouter.ai", "/api/v1/chat/completions", body, {
     Authorization: `Bearer ${apiKey}`,
-    'HTTP-Referer': 'https://sistema-integral-convivencia-escola.vercel.app',
-    'X-Title': 'Sistema Integral Convivencia Escolar',
+    "HTTP-Referer": "http://localhost:3001",
+    "X-Title": "Sistema Integral Convivencia Escolar"
   });
   if (res.status !== 200) {
-    const errBody = res.body;
-    const aiMsg = errBody?.error?.message || JSON.stringify(errBody);
-    throw new Error(`OpenRouter error (${res.status}): ${aiMsg}`);
+    throw new Error(`OpenRouter error: ${res.status} ${JSON.stringify(res.body)}`);
   }
   const resBody = res.body;
   const choices = resBody?.choices;
   const content = choices?.[0]?.message?.content;
-  return content || '';
+  return content || "";
 }
 
 // server/api/routes/improve.ts
-var router = Router();
-router.post('/improve-text', requireAuth, async (req, res) => {
+var router = (0, import_express.Router)();
+router.post("/improve-text", requireAuth, async (req, res) => {
   try {
     const { text } = req.body;
-    if (!text || typeof text !== 'string' || text.trim().length === 0) {
-      res.status(400).json({ error: 'Campo requerido: text' });
+    if (!text || typeof text !== "string" || text.trim().length === 0) {
+      res.status(400).json({ error: "Campo requerido: text" });
       return;
     }
     if (text.length > 5e3) {
-      res.status(400).json({ error: 'El texto no puede exceder 5000 caracteres.' });
+      res.status(400).json({ error: "El texto no puede exceder 5000 caracteres." });
       return;
     }
-    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
+    const ip = req.ip || req.connection?.remoteAddress || "unknown";
     if (!checkRateLimit(ip)) {
-      res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
+      res.status(429).json({ error: "L\xEDmite de solicitudes alcanzado. Intente en un minuto." });
       return;
     }
-    const cacheKey = getCacheKey('improve-text', { text });
+    const cacheKey = getCacheKey("improve-text", { text });
     const cached = getFromCache(cacheKey);
     if (cached) {
       res.json({ success: true, improved: cached, cached: true });
       return;
     }
-    const systemMsg =
-      'Eres un asistente de redacci\xF3n especializado en redacci\xF3n institucional educativa chilena. Tu \xFAnica funci\xF3n es mejorar la ortograf\xEDa, gram\xE1tica, coherencia y redacci\xF3n del texto que el usuario te entrega. Usa siempre un tono neutro, objetivo y sin juicios de valor. No agregues explicaciones, comentarios ni evaluaciones. No respondas preguntas ni interpretes el contenido. Devuelve \xDANICAMENTE el texto corregido, sin ning\xFAn formato adicional ni prefacio.';
+    const systemMsg = "Eres un asistente de redacci\xF3n especializado en redacci\xF3n institucional educativa chilena. Tu \xFAnica funci\xF3n es mejorar la ortograf\xEDa, gram\xE1tica, coherencia y redacci\xF3n del texto que el usuario te entrega. Usa siempre un tono neutro, objetivo y sin juicios de valor. No agregues explicaciones, comentarios ni evaluaciones. No respondas preguntas ni interpretes el contenido. Devuelve \xDANICAMENTE el texto corregido, sin ning\xFAn formato adicional ni prefacio.";
     const userContent = sanitizeForAI(text);
-    const improved = await callAI(
-      [
-        {
-          role: 'user',
-          content: `Texto a corregir:
+    const improved = await callGroq(
+      [{ role: "user", content: `Texto a corregir:
 
-${userContent}`,
-        },
-      ],
+${userContent}` }],
       systemMsg
     );
     setCache(cacheKey, improved);
     res.json({ success: true, improved });
   } catch (error) {
-    console.error('Error al mejorar texto:', error);
-    res.status(500).json({ error: 'Error interno del servidor al mejorar texto.' });
+    console.error("Error al mejorar texto:", error);
+    res.status(500).json({ error: "Error interno del servidor al mejorar texto." });
   }
 });
 var improve_default = router;
 
 // server/api/routes/advisor.ts
-import { Router as Router2 } from 'express';
-var router2 = Router2();
-router2.post('/advisor-chat', requireAuth, async (req, res) => {
+var import_express2 = require("express");
+var router2 = (0, import_express2.Router)();
+router2.post("/advisor-chat", requireAuth, async (req, res) => {
   try {
     const { message, history } = req.body;
-    if (!message || typeof message !== 'string' || !message.trim()) {
-      res.status(400).json({ error: 'Campo requerido: message' });
+    if (!message || typeof message !== "string" || !message.trim()) {
+      res.status(400).json({ error: "Campo requerido: message" });
       return;
     }
-    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
+    const ip = req.ip || req.connection?.remoteAddress || "unknown";
     if (!checkRateLimit(ip)) {
-      res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
+      res.status(429).json({ error: "L\xEDmite de solicitudes alcanzado. Intente en un minuto." });
       return;
     }
     const systemInstruction = `Act\xFAas como un Abogado Senior y Experto Legal de la Superintendencia de Educaci\xF3n de Chile, experto en fiscalizaciones aplicadas a establecimientos escolares chilenos. Tu dominio de especialidad abarca:
@@ -420,11 +441,11 @@ router2.post('/advisor-chat', requireAuth, async (req, res) => {
 - Reglamento Interno de Convivencia Escolar (RICE / RIE) y las formalidades indispensables de proporcionalidad, gradualidad y acompa\xF1amiento formativo.
 
 Tus respuestas deben estar redactadas en espa\xF1ol formal de Chile, alineadas con el rigor burocr\xE1tico y legal que evitar\xE1 cargos, multas pecuniarias o recursos judiciales contra el colegio. Cita art\xEDculos cuando corresponda y explica paso a paso c\xF3mo resguardar el "Debido Proceso Escolar" y la integridad mediante medidas de resguardo. Proporciona respuestas muy estructuradas, did\xE1cticas y extremadamente precisas.`;
-    const userId = req.user?.sub || 'anonymous';
-    const cacheKey = getCacheKey('advisor-chat', {
+    const userId = req.user?.sub || "anonymous";
+    const cacheKey = getCacheKey("advisor-chat", {
       userId,
       message,
-      historyCount: history?.length || 0,
+      historyCount: history?.length || 0
     });
     const cached = getFromCache(cacheKey);
     if (cached) {
@@ -435,41 +456,37 @@ Tus respuestas deben estar redactadas en espa\xF1ol formal de Chile, alineadas c
     if (history && Array.isArray(history)) {
       history.forEach((h) => {
         messages.push({
-          role: h.role === 'user' ? 'user' : 'assistant',
-          content: sanitizeForAI(h.content),
+          role: h.role === "user" ? "user" : "assistant",
+          content: sanitizeForAI(h.content)
         });
       });
     }
-    messages.push({ role: 'user', content: sanitizeForAI(message) });
-    const reply = await callAI(messages, systemInstruction);
+    messages.push({ role: "user", content: sanitizeForAI(message) });
+    const reply = await callGroq(messages, systemInstruction);
     setCache(cacheKey, reply);
     res.json({ success: true, reply });
   } catch (error) {
-    console.error('Error en el Chat de Consultor\xEDa:', error.message || error);
-    const detail = error.message?.includes('GROQ_API_KEY')
-      ? 'API key de Groq no configurada en variables de entorno de Vercel.'
-      : error.message?.includes('Groq API error')
-        ? `Error de Groq: ${error.message}`
-        : 'Error interno del servidor.';
+    console.error("Error en el Chat de Consultor\xEDa:", error.message || error);
+    const detail = error.message?.includes("OPENROUTER_API_KEY") ? "API key de OpenRouter no configurada en variables de entorno de Vercel." : error.message?.includes("OpenRouter error") ? `Error de OpenRouter: ${error.message}` : "Error interno del servidor.";
     res.status(500).json({ error: detail });
   }
 });
 var advisor_default = router2;
 
 // server/api/routes/audit.ts
-import { Router as Router3 } from 'express';
-var router3 = Router3();
-router3.post('/audit-due-process', requireAuth, async (req, res) => {
+var import_express3 = require("express");
+var router3 = (0, import_express3.Router)();
+router3.post("/audit-due-process", requireAuth, async (req, res) => {
   try {
     const body = req.body;
-    const id = requireStr(body, 'id', 50);
-    const infractionType = requireStr(body, 'infractionType', 50);
+    const id = requireStr(body, "id", 50);
+    const infractionType = requireStr(body, "infractionType", 50);
     const isAulaSegura = Boolean(body.isAulaSegura);
-    const checkedItems = optArr(body, 'checkedItems');
-    const observations = optStr(body, 'observations', 5e3);
-    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
+    const checkedItems = optArr(body, "checkedItems");
+    const observations = optStr(body, "observations", 5e3);
+    const ip = req.ip || req.connection?.remoteAddress || "unknown";
     if (!checkRateLimit(ip)) {
-      res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
+      res.status(429).json({ error: "L\xEDmite de solicitudes alcanzado. Intente en un minuto." });
       return;
     }
     const systemPrompt = `Eres un Abogado Experto Legal en Educaci\xF3n Chilena y Fiscalizador de la Superintendencia de Educaci\xF3n, especializado en la Circular N\xB0 482 y Ley N\xB0 21809 de la Superintendencia de Educaci\xF3n (reglamentaci\xF3n de convivencia escolar, debido proceso y medidas de resguardo de NNA) y en la Ley de Aula Segura (Ley 21.128). 
@@ -478,7 +495,7 @@ Tu misi\xF3n es auditar un caso de convivencia escolar de un colegio chileno par
 Analiza rigurosamente los siguientes detalles:
 - C\xF3digo de causa: ${id}
 - Tipo de Infracci\xF3n: ${infractionType} (bajo Reglamento Interno de Convivencia Escolar / RIE)
-- Enfoque de Ley de Aula Segura: ${isAulaSegura ? 'S\xED (Sometido a Ley Aula Segura - Suspensi\xF3n provisoria, plazo fatal de 10 d\xEDas h\xE1biles de resoluci\xF3n)' : 'No (Procedimiento ordinario seg\xFAn RIE, Circular 482 y Ley 21809)'}
+- Enfoque de Ley de Aula Segura: ${isAulaSegura ? "S\xED (Sometido a Ley Aula Segura - Suspensi\xF3n provisoria, plazo fatal de 10 d\xEDas h\xE1biles de resoluci\xF3n)" : "No (Procedimiento ordinario seg\xFAn RIE, Circular 482 y Ley 21809)"}
 - Checklists de Medidas de Resguardo Inmediatas Adoptadas (Circular 482 / Ley 21809):
 ${JSON.stringify(checkedItems, null, 2)}
 - Observaciones:
@@ -491,125 +508,105 @@ Escribe un an\xE1lisis de auditor\xEDa en formato de informe t\xE9cnico formal e
 4. **Instrucciones Remediales**: Pasos obligatorios urgentes de resguardo y tramitaci\xF3n para sanear el caso, junto con los plazos reglamentarios vigentes.
 
 Utiliza un tono sumamente profesional, corporativo, t\xE9cnico e institucional (el "vibe" SaaS legal de alto nivel chileno).`;
-    const responseText = await callAI([{ role: 'user', content: systemPrompt }]);
+    const responseText = await callGroq([{ role: "user", content: systemPrompt }]);
     res.json({ success: true, report: responseText });
   } catch (error) {
-    console.error('Error al auditar debido proceso:', error);
-    const status = error.message?.startsWith('Campo requerido') ? 400 : 500;
-    res.status(status).json({ error: 'Error interno del servidor en auditor\xEDa.' });
+    console.error("Error al auditar debido proceso:", error);
+    const status = error.message?.startsWith("Campo requerido") ? 400 : 500;
+    res.status(status).json({ error: "Error interno del servidor en auditor\xEDa." });
   }
 });
 var audit_default = router3;
 
 // server/api/routes/draft.ts
-import { Router as Router4 } from 'express';
-var router4 = Router4();
-router4.post('/draft-document', requireAuth, async (req, res) => {
+var import_express4 = require("express");
+var router4 = (0, import_express4.Router)();
+router4.post("/draft-document", requireAuth, async (req, res) => {
   try {
     const body = req.body;
-    const docType = requireStr(body, 'docType', 50);
-    const id = requireStr(body, 'id', 100);
-    const studentName = requireStr(body, 'studentName', 200);
-    const course = optStr(body, 'course', 100);
-    const fatherName = optStr(body, 'fatherName', 200);
-    const managerName = optStr(body, 'managerName', 200);
-    const infractionType = optStr(body, 'infractionType', 100);
-    const observations = optStr(body, 'observations', 2e3);
+    const docType = requireStr(body, "docType", 50);
+    const id = requireStr(body, "id", 100);
+    const studentName = requireStr(body, "studentName", 200);
+    const course = optStr(body, "course", 100);
+    const fatherName = optStr(body, "fatherName", 200);
+    const managerName = optStr(body, "managerName", 200);
+    const infractionType = optStr(body, "infractionType", 100);
+    const observations = optStr(body, "observations", 2e3);
     const isAulaSegura = Boolean(body.isAulaSegura);
-    const conductaRiceId = optStr(body, 'conductaRiceId', 100);
-    const runEstudiante = optStr(body, 'runEstudiante', 50);
-    const fechaApertura = optStr(body, 'fechaApertura', 50);
-    const estadoActual = optStr(body, 'estadoActual', 50);
-    const fechaUltimaActualizacion = optStr(body, 'fechaUltimaActualizacion', 50);
-    const medidasEjecutadas = optArr(body, 'medidasEjecutadas');
-    const bitacora = optArr(body, 'bitacora');
-    const checklist = optArr(body, 'checklist');
-    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
+    const conductaRiceId = optStr(body, "conductaRiceId", 100);
+    const runEstudiante = optStr(body, "runEstudiante", 50);
+    const fechaApertura = optStr(body, "fechaApertura", 50);
+    const estadoActual = optStr(body, "estadoActual", 50);
+    const fechaUltimaActualizacion = optStr(body, "fechaUltimaActualizacion", 50);
+    const medidasEjecutadas = optArr(body, "medidasEjecutadas");
+    const bitacora = optArr(body, "bitacora");
+    const checklist = optArr(body, "checklist");
+    const ip = req.ip || req.connection?.remoteAddress || "unknown";
     if (!checkRateLimit(ip)) {
-      res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
+      res.status(429).json({ error: "L\xEDmite de solicitudes alcanzado. Intente en un minuto." });
       return;
     }
-    const safeMedidasEjecutadas = medidasEjecutadas
-      .map((m) => sanitize(m).slice(0, 500))
-      .slice(0, 50);
-    const safeBitacora = bitacora
-      .map((b) => ({
-        titulo: sanitize(b.titulo).slice(0, 200),
-        fecha: sanitize(b.fecha).slice(0, 50),
-        tipo: sanitize(b.tipo).slice(0, 50),
-        descripcion: sanitize(b.descripcion).slice(0, 2e3),
-        participantes: Array.isArray(b.participantes)
-          ? b.participantes.map((p) => sanitize(p).slice(0, 100)).slice(0, 20)
-          : [],
-        documentoAdjunto: sanitize(b.documentoAdjunto).slice(0, 200),
-      }))
-      .slice(0, 100);
-    const safeChecklist = checklist
-      .map((c) => ({
-        label: sanitize(c.label).slice(0, 300),
-        completado: Boolean(c.completado),
-        descripcion: sanitize(c.descripcion).slice(0, 1e3),
-        requeridoPor: sanitize(c.requeridoPor).slice(0, 100),
-        registradoPor: sanitize(c.registradoPor).slice(0, 200),
-        fechaCompletado: sanitize(c.fechaCompletado).slice(0, 50),
-        observaciones: sanitize(c.observaciones).slice(0, 1e3),
-        documentoNombre: sanitize(c.documentoNombre).slice(0, 200),
-      }))
-      .slice(0, 100);
+    const safeMedidasEjecutadas = medidasEjecutadas.map((m) => sanitize(m).slice(0, 500)).slice(0, 50);
+    const safeBitacora = bitacora.map((b) => ({
+      titulo: sanitize(b.titulo).slice(0, 200),
+      fecha: sanitize(b.fecha).slice(0, 50),
+      tipo: sanitize(b.tipo).slice(0, 50),
+      descripcion: sanitize(b.descripcion).slice(0, 2e3),
+      participantes: Array.isArray(b.participantes) ? b.participantes.map((p) => sanitize(p).slice(0, 100)).slice(0, 20) : [],
+      documentoAdjunto: sanitize(b.documentoAdjunto).slice(0, 200)
+    })).slice(0, 100);
+    const safeChecklist = checklist.map((c) => ({
+      label: sanitize(c.label).slice(0, 300),
+      completado: Boolean(c.completado),
+      descripcion: sanitize(c.descripcion).slice(0, 1e3),
+      requeridoPor: sanitize(c.requeridoPor).slice(0, 100),
+      registradoPor: sanitize(c.registradoPor).slice(0, 200),
+      fechaCompletado: sanitize(c.fechaCompletado).slice(0, 50),
+      observaciones: sanitize(c.observaciones).slice(0, 1e3),
+      documentoNombre: sanitize(c.documentoNombre).slice(0, 200)
+    })).slice(0, 100);
     const caseDataSection = `
 ==================== EXPEDIENTE COMPLETO DEL CASO ====================
 
 DATOS GENERALES:
 - C\xF3digo de Causa: ${id}
-- Estudiante: ${sanitizeForAI(studentName)} (RUN: ${runEstudiante || 'No registrado'})
+- Estudiante: ${sanitizeForAI(studentName)} (RUN: ${runEstudiante || "No registrado"})
 - Curso: ${course}
 - Apoderado: ${fatherName}
-- Fecha de Apertura: ${fechaApertura || 'No registrada'}
-- Estado Actual: ${estadoActual || 'No registrado'}
-- \xDAltima Actualizaci\xF3n: ${fechaUltimaActualizacion || 'No registrada'}
+- Fecha de Apertura: ${fechaApertura || "No registrada"}
+- Estado Actual: ${estadoActual || "No registrado"}
+- \xDAltima Actualizaci\xF3n: ${fechaUltimaActualizacion || "No registrada"}
 - Infracci\xF3n: ${infractionType}
 - Encargado: ${managerName}
-- Aula Segura: ${isAulaSegura ? 'S\xCD - Ley 21.128' : 'No'}
-- Conducta RICE vinculada: ${conductaRiceId || 'Ninguna'}
-- Observaciones del caso: "${sanitizeForAI(observations) || 'Sin observaciones'}"
+- Aula Segura: ${isAulaSegura ? "S\xCD - Ley 21.128" : "No"}
+- Conducta RICE vinculada: ${conductaRiceId || "Ninguna"}
+- Observaciones del caso: "${sanitizeForAI(observations) || "Sin observaciones"}"
 
 MEDIDAS EJECUTADAS:
-${safeMedidasEjecutadas.length > 0 ? safeMedidasEjecutadas.map((m) => `- ${m}`).join('\n') : 'No se han registrado medidas ejecutadas.'}
+${safeMedidasEjecutadas.length > 0 ? safeMedidasEjecutadas.map((m) => `- ${m}`).join("\n") : "No se han registrado medidas ejecutadas."}
 
 BIT\xC1CORA COMPLETA DEL EXPEDIENTE:
-${
-  safeBitacora.length > 0
-    ? safeBitacora
-        .map(
-          (b) => `
+${safeBitacora.length > 0 ? safeBitacora.map(
+      (b) => `
 --- Registro: ${b.titulo} ---
   Fecha: ${b.fecha}
   Tipo: ${b.tipo}
   Descripci\xF3n: ${b.descripcion}
-  Participantes: ${Array.isArray(b.participantes) ? b.participantes.join(', ') : ''}
-  Documento adjunto: ${b.documentoAdjunto || 'Ninguno'}`
-        )
-        .join('\n')
-    : 'No hay registros en la bit\xE1cora.'
-}
+  Participantes: ${Array.isArray(b.participantes) ? b.participantes.join(", ") : ""}
+  Documento adjunto: ${b.documentoAdjunto || "Ninguno"}`
+    ).join("\n") : "No hay registros en la bit\xE1cora."}
 
 CHECKLIST DEL DEBIDO PROCESO:
-${
-  safeChecklist.length > 0
-    ? safeChecklist
-        .map(
-          (c) => `
-- [${c.completado ? 'X' : ' '}] ${c.label}
-  Estado: ${c.completado ? 'COMPLETADO' : 'PENDIENTE'}
-  Descripci\xF3n: ${c.descripcion || ''}
-  Requerido por: ${c.requeridoPor || ''}
-  ${c.completado ? `Registrado por: ${c.registradoPor || ''} | Fecha: ${c.fechaCompletado || ''}` : ''}
-  ${c.observaciones ? `Observaciones: ${c.observaciones}` : ''}
-  ${c.documentoNombre ? `Documento adjunto: ${c.documentoNombre}` : ''}`
-        )
-        .join('\n')
-    : 'No hay checklist disponible.'
-}
+${safeChecklist.length > 0 ? safeChecklist.map(
+      (c) => `
+- [${c.completado ? "X" : " "}] ${c.label}
+  Estado: ${c.completado ? "COMPLETADO" : "PENDIENTE"}
+  Descripci\xF3n: ${c.descripcion || ""}
+  Requerido por: ${c.requeridoPor || ""}
+  ${c.completado ? `Registrado por: ${c.registradoPor || ""} | Fecha: ${c.fechaCompletado || ""}` : ""}
+  ${c.observaciones ? `Observaciones: ${c.observaciones}` : ""}
+  ${c.documentoNombre ? `Documento adjunto: ${c.documentoNombre}` : ""}`
+    ).join("\n") : "No hay checklist disponible."}
 
 =====================================================================`;
     const caseDataAppendix = `
@@ -617,84 +614,86 @@ ${
 ${caseDataSection}
 
 IMPORTANTE: Utiliza TODOS los antecedentes del expediente proporcionados arriba (bit\xE1cora, checklist, medidas ejecutadas) para fundamentar el documento.`;
-    let systemPrompt = '';
+    let systemPrompt = "";
     let dbPrompt = null;
     try {
       const templates = await httpsGet(
-        'jjzwwhnofiepvliugowr.supabase.co',
+        "jjzwwhnofiepvliugowr.supabase.co",
         `/rest/v1/document_templates?doc_type=eq.${docType}&select=system_prompt&limit=1`,
         {
-          apikey: process.env.VITE_SUPABASE_ANON_KEY ?? '',
-          Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY ?? ''}`,
+          apikey: process.env.VITE_SUPABASE_ANON_KEY ?? "",
+          Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY ?? ""}`
         }
       );
       if (Array.isArray(templates) && templates.length > 0 && templates[0].system_prompt) {
         dbPrompt = templates[0].system_prompt;
       }
-    } catch {}
+    } catch {
+    }
     if (dbPrompt) {
       systemPrompt = dbPrompt;
-    } else if (docType === 'notificacion_apertura') {
+    } else if (docType === "notificacion_apertura") {
       systemPrompt = `Act\xFAa como un profesional experto en convivencia escolar, normativa educacional chilena, procedimientos disciplinarios, debido proceso y redacci\xF3n institucional.
 Redacta una "NOTIFICACI\xD3N DE INICIO DE INDAGACI\xD3N DE CONVIVENCIA ESCOLAR", manteniendo un formato formal, objetivo, descriptivo y jur\xEDdicamente prudente.
-DATOS: Estudiante: ${sanitizeForAI(studentName)}, Curso: ${course}, Infracci\xF3n: ${sanitizeForAI(infractionType)}, Encargado: ${sanitizeForAI(managerName)}, Observaciones: ${sanitizeForAI(observations)}, Aula Segura: ${isAulaSegura ? 'S\xED' : 'No'}, Apoderado: ${sanitizeForAI(fatherName)}.`;
-    } else if (docType === 'citacion_entrevista') {
+DATOS: Estudiante: ${sanitizeForAI(studentName)}, Curso: ${course}, Infracci\xF3n: ${sanitizeForAI(infractionType)}, Encargado: ${sanitizeForAI(managerName)}, Observaciones: ${sanitizeForAI(observations)}, Aula Segura: ${isAulaSegura ? "S\xED" : "No"}, Apoderado: ${sanitizeForAI(fatherName)}.`;
+    } else if (docType === "citacion_entrevista") {
       systemPrompt = `Act\xFAa como un profesional experto en convivencia escolar y redacci\xF3n institucional chilena.
 Redacta una "CITACI\xD3N A ENTREVISTA DE DESCARGOS" formal, objetiva y jur\xEDdicamente s\xF3lida.
-DATOS: Estudiante: ${sanitizeForAI(studentName)} (Curso: ${course}), Apoderado: ${sanitizeForAI(fatherName)}, Infracci\xF3n: ${sanitizeForAI(infractionType)}, Encargado: ${sanitizeForAI(managerName)}, Hechos: ${sanitizeForAI(observations)}, Aula Segura: ${isAulaSegura ? 'S\xED' : 'No'}.`;
-    } else if (docType === 'informe_cierre_indagacion') {
+DATOS: Estudiante: ${sanitizeForAI(studentName)} (Curso: ${course}), Apoderado: ${sanitizeForAI(fatherName)}, Infracci\xF3n: ${sanitizeForAI(infractionType)}, Encargado: ${sanitizeForAI(managerName)}, Hechos: ${sanitizeForAI(observations)}, Aula Segura: ${isAulaSegura ? "S\xED" : "No"}.`;
+    } else if (docType === "informe_cierre_indagacion") {
       systemPrompt = `Act\xFAa como un especialista en convivencia escolar y normativa educacional chilena.
 Elabora un INFORME DE CIERRE DE INDAGACI\xD3N DISCIPLINARIA con nivel t\xE9cnico-profesional.
-DATOS: Estudiante: ${sanitizeForAI(studentName)} (Curso: ${course}), Apoderado: ${sanitizeForAI(fatherName)}, C\xF3digo: ${id}, Infracci\xF3n: ${sanitizeForAI(infractionType)}, Encargado: ${sanitizeForAI(managerName)}, Contexto: ${sanitizeForAI(observations)}, Aula Segura: ${isAulaSegura ? 'S\xED' : 'No'}.`;
-    } else if (docType === 'informe_concluyente') {
+DATOS: Estudiante: ${sanitizeForAI(studentName)} (Curso: ${course}), Apoderado: ${sanitizeForAI(fatherName)}, C\xF3digo: ${id}, Infracci\xF3n: ${sanitizeForAI(infractionType)}, Encargado: ${sanitizeForAI(managerName)}, Contexto: ${sanitizeForAI(observations)}, Aula Segura: ${isAulaSegura ? "S\xED" : "No"}.`;
+    } else if (docType === "informe_concluyente") {
       systemPrompt = `Act\xFAa como un equipo interdisciplinario (abogado educacional, experto convivencia escolar, auditor debido proceso).
 Elabora un INFORME CONCLUYENTE DISCIPLINARIO Y FORMATIVO INTEGRAL.
-DATOS: C\xF3digo: ${id}, Estudiante: ${sanitizeForAI(studentName)} (Curso: ${course}), Apoderado: ${sanitizeForAI(fatherName)}, Infracci\xF3n: ${sanitizeForAI(infractionType)}, Encargado: ${sanitizeForAI(managerName)}, Contexto: ${sanitizeForAI(observations)}, Aula Segura: ${isAulaSegura ? 'S\xED (Ley 21.128)' : 'No'}.`;
+DATOS: C\xF3digo: ${id}, Estudiante: ${sanitizeForAI(studentName)} (Curso: ${course}), Apoderado: ${sanitizeForAI(fatherName)}, Infracci\xF3n: ${sanitizeForAI(infractionType)}, Encargado: ${sanitizeForAI(managerName)}, Contexto: ${sanitizeForAI(observations)}, Aula Segura: ${isAulaSegura ? "S\xED (Ley 21.128)" : "No"}.`;
     } else {
       res.status(400).json({
-        error:
-          'docType no v\xE1lido. Use: notificacion_apertura, citacion_entrevista, informe_cierre_indagacion, informe_concluyente',
+        error: "docType no v\xE1lido. Use: notificacion_apertura, citacion_entrevista, informe_cierre_indagacion, informe_concluyente"
       });
       return;
     }
-    const responseText = await callAI([{ role: 'user', content: systemPrompt + caseDataAppendix }]);
+    const responseText = await callGroq([
+      { role: "user", content: systemPrompt + caseDataAppendix }
+    ]);
     res.json({ success: true, document: responseText });
   } catch (error) {
-    console.error('Error al generar borrador de documento:', error);
-    const status = error.message?.startsWith('Campo requerido') ? 400 : 500;
-    res.status(status).json({ error: 'Error interno del servidor al redactar documento.' });
+    console.error("Error al generar borrador de documento:", error);
+    const status = error.message?.startsWith("Campo requerido") ? 400 : 500;
+    res.status(status).json({ error: "Error interno del servidor al redactar documento." });
   }
 });
 var draft_default = router4;
 
 // server/api/routes/debug.ts
-import { Router as Router5 } from 'express';
-import crypto3 from 'node:crypto';
-var router5 = Router5();
-router5.get('/auth-debug', async (req, res) => {
-  const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+var import_express5 = require("express");
+var import_node_crypto2 = __toESM(require("node:crypto"), 1);
+var router5 = (0, import_express5.Router)();
+router5.get("/auth-debug", async (req, res) => {
+  const token = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
   const JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
   const info = {
     hasToken: token.length > 10,
     hasSecret: !!JWT_SECRET,
     secretLength: JWT_SECRET ? JWT_SECRET.length : 0,
-    tokenParts: token.split('.').length,
+    tokenParts: token.split(".").length
   };
   if (info.hasToken && JWT_SECRET) {
-    const parts = token.split('.');
-    const sig = Buffer.from(parts[2], 'base64url');
+    const parts = token.split(".");
+    const sig = Buffer.from(parts[2], "base64url");
     const rawKey = new TextEncoder().encode(JWT_SECRET);
-    const b64Key = Buffer.from(JWT_SECRET, 'base64');
+    const b64Key = Buffer.from(JWT_SECRET, "base64");
     try {
-      const k1 = await crypto3.subtle.importKey(
-        'raw',
+      const k1 = await import_node_crypto2.default.subtle.importKey(
+        "raw",
         rawKey,
-        { name: 'HMAC', hash: 'SHA-256' },
+        { name: "HMAC", hash: "SHA-256" },
         false,
-        ['verify']
+        ["verify"]
       );
-      info.rawSecretWorks = await crypto3.subtle.verify(
-        'HMAC',
+      info.rawSecretWorks = await import_node_crypto2.default.subtle.verify(
+        "HMAC",
         k1,
         sig,
         new TextEncoder().encode(`${parts[0]}.${parts[1]}`)
@@ -703,15 +702,15 @@ router5.get('/auth-debug', async (req, res) => {
       info.rawSecretWorks = false;
     }
     try {
-      const k2 = await crypto3.subtle.importKey(
-        'raw',
+      const k2 = await import_node_crypto2.default.subtle.importKey(
+        "raw",
         b64Key,
-        { name: 'HMAC', hash: 'SHA-256' },
+        { name: "HMAC", hash: "SHA-256" },
         false,
-        ['verify']
+        ["verify"]
       );
-      info.b64SecretWorks = await crypto3.subtle.verify(
-        'HMAC',
+      info.b64SecretWorks = await import_node_crypto2.default.subtle.verify(
+        "HMAC",
         k2,
         sig,
         new TextEncoder().encode(`${parts[0]}.${parts[1]}`)
@@ -725,369 +724,463 @@ router5.get('/auth-debug', async (req, res) => {
 var debug_default = router5;
 
 // server/api/routes/templates.ts
-import { Router as Router6 } from 'express';
-var router6 = Router6();
-router6.get('/document-templates', async (_req, res) => {
+var import_express6 = require("express");
+var router6 = (0, import_express6.Router)();
+router6.get("/document-templates", async (_req, res) => {
   try {
     const data = await httpsGet(
-      'jjzwwhnofiepvliugowr.supabase.co',
-      '/rest/v1/document_templates?select=*&order=doc_type',
+      "jjzwwhnofiepvliugowr.supabase.co",
+      "/rest/v1/document_templates?select=*&order=doc_type",
       {
-        apikey: process.env.VITE_SUPABASE_ANON_KEY ?? '',
-        Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY ?? ''}`,
+        apikey: process.env.VITE_SUPABASE_ANON_KEY ?? "",
+        Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY ?? ""}`
       }
     );
     res.json(data);
   } catch {
-    res.status(500).json({ error: 'Error al obtener plantillas.' });
+    res.status(500).json({ error: "Error al obtener plantillas." });
   }
 });
-router6.put('/document-templates', requireAuth, async (req, res) => {
+router6.put("/document-templates", requireAuth, async (req, res) => {
   const { id, system_prompt } = req.body;
   if (!id || !system_prompt) {
-    res.status(400).json({ error: 'Campos requeridos: id, system_prompt' });
+    res.status(400).json({ error: "Campos requeridos: id, system_prompt" });
     return;
   }
   try {
     const sanitized = sanitize(system_prompt).slice(0, 2e4);
     await httpsPatch(
-      'jjzwwhnofiepvliugowr.supabase.co',
+      "jjzwwhnofiepvliugowr.supabase.co",
       `/rest/v1/document_templates?id=eq.${id}`,
       {
         system_prompt: sanitized,
-        updated_at: /* @__PURE__ */ new Date().toISOString(),
+        updated_at: (/* @__PURE__ */ new Date()).toISOString()
       },
       {
-        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''}`,
-        Prefer: 'return=minimal',
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY ?? ""}`,
+        Prefer: "return=minimal"
       }
     );
     res.json({ success: true });
   } catch (error) {
-    console.error('Error updating template:', error);
-    res.status(500).json({ error: 'Error al actualizar plantilla.' });
+    console.error("Error updating template:", error);
+    res.status(500).json({ error: "Error al actualizar plantilla." });
   }
 });
 var templates_default = router6;
 
 // server/api/routes/parse.ts
-import { Router as Router7 } from 'express';
-var router7 = Router7();
-router7.post('/parse-annotations', async (req, res) => {
+var import_express7 = require("express");
+var router7 = (0, import_express7.Router)();
+router7.post("/parse-annotations", async (req, res) => {
   try {
     const { textContent } = req.body;
     if (!textContent || !textContent.trim()) {
-      res.status(400).json({ error: 'No se recibi\xF3 el texto extra\xEDdo del PDF.' });
+      res.status(400).json({ error: "No se recibi\xF3 el texto extra\xEDdo del PDF." });
       return;
     }
-    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
+    const ip = req.ip || req.connection?.remoteAddress || "unknown";
     if (!checkRateLimit(ip)) {
-      res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
+      res.status(429).json({ error: "L\xEDmite de solicitudes alcanzado. Intente en un minuto." });
       return;
     }
-    const lines = textContent
-      .split('\n')
-      .filter((l) => !l.trim().startsWith('![') && !l.includes('data:image'));
-    const blocks = [];
-    let current = [];
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed) continue;
-      if (trimmed.startsWith('![') || trimmed.includes('data:image')) continue;
-      if (/^\d{2}\/\d{2}\/\d{4}/.test(trimmed)) {
-        if (current.length > 0) blocks.push(current.join('\n'));
-        current = [line];
-      } else if (current.length > 0 && trimmed) {
-        current.push(line);
-      }
-    }
-    if (current.length > 0) blocks.push(current.join('\n'));
-    const summary = { negativas: 0, positivas: 0, informativas: 0 };
-    for (const block of blocks) {
-      const m = block.match(/Tipo:\s*(Negativa|Positiva|Informaci[\u00F3o]n)/i);
-      if (m) {
-        const t = m[1].toLowerCase();
-        if (t.startsWith('neg')) summary.negativas++;
-        else if (t.startsWith('pos')) summary.positivas++;
-        else summary.informativas++;
-      }
-    }
-    res.json({ success: true, summary });
-  } catch (error) {
-    console.error('Error al analizar documento:', error);
-    const msg = error instanceof Error ? error.message : 'Error interno al procesar el archivo.';
-    res.status(500).json({ error: msg });
-  }
-});
-var parse_default = router7;
-
-// server/api/routes/usage.ts
-import { Router as Router8 } from 'express';
-var router8 = Router8();
-router8.post('/usage/events', requireAuth, async (req, res) => {
-  try {
-    const { eventName, properties } = req.body;
-    if (!eventName || typeof eventName !== 'string') {
-      res.status(400).json({ error: 'Campo requerido: eventName (string)' });
-      return;
-    }
-    const { createClient } = await import('@supabase/supabase-js');
-    const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY ?? '';
-    if (!supabaseUrl || !supabaseKey) {
-      res.status(500).json({ error: 'Supabase no configurado' });
-      return;
-    }
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: { persistSession: false },
-    });
-    const authReq = req;
-    await supabase.from('usage_events').insert({
-      event_name: eventName,
-      user_id: authReq.user?.sub ?? null,
-      properties: properties ?? {},
-    });
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error logging usage event:', error);
-    res.status(500).json({ error: 'Error interno al registrar evento.' });
-  }
-});
-router8.get('/usage/stats', requireAuth, async (req, res) => {
-  try {
-    const authReq = req;
-    const since = authReq.query.since ?? void 0;
-    const until = req.query.until ?? void 0;
-    const { createClient } = await import('@supabase/supabase-js');
-    const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY ?? '';
-    if (!supabaseUrl || !supabaseKey) {
-      res.status(500).json({ error: 'Supabase no configurado' });
-      return;
-    }
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: { persistSession: false },
-    });
-    const params = {};
-    if (since) params.since = since;
-    if (until) params.until = until;
-    const { data: eventStats, error: eventError } = await supabase.rpc('get_usage_stats', params);
-    if (eventError) {
-      console.error('Error fetching usage stats:', eventError);
-      res.status(500).json({ error: 'Error al obtener estad\xEDsticas.' });
-      return;
-    }
-    const { data: dailyActive, error: dailyError } = await supabase.rpc(
-      'get_daily_active_users',
-      params
-    );
-    if (dailyError) {
-      console.error('Error fetching daily active users:', dailyError);
-    }
-    res.json({
-      events: eventStats ?? [],
-      dailyActiveUsers: dailyActive ?? [],
-    });
-  } catch (error) {
-    console.error('Error fetching usage stats:', error);
-    res.status(500).json({ error: 'Error interno al obtener estad\xEDsticas.' });
-  }
-});
-var usage_default = router8;
-
-// server/api/routes/processDisciplinaryPdf.ts
-import { Router as Router9 } from 'express';
-var router9 = Router9();
-router9.post('/process-disciplinary-pdf', async (req, res) => {
-  try {
-    const { textContent, fileName, studentId, tenantId } = req.body;
-    if (!textContent || !fileName || !studentId || !tenantId) {
-      res.status(400).json({
-        error: 'Faltan par\xE1metros requeridos: textContent, fileName, studentId, tenantId',
-      });
-      return;
-    }
-    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-    if (!checkRateLimit(ip)) {
-      res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
-      return;
-    }
-    const lines = textContent
-      .split('\n')
-      .filter((l) => !l.trim().startsWith('![') && !l.includes('data:image'));
+    const lines = textContent.split("\n").filter((l) => !l.trim().startsWith("![") && !l.includes("data:image"));
     const blocks = [];
     let current = [];
     for (const line of lines) {
       const trimmed = line.trim();
       if (!trimmed) continue;
       if (/^\d{2}\/\d{2}\/\d{4}/.test(trimmed)) {
-        if (current.length > 0) blocks.push(current.join('\n'));
+        if (current.length > 0) blocks.push(current.join("\n"));
         current = [line];
       } else if (current.length > 0) {
         current.push(line);
       }
     }
-    if (current.length > 0) blocks.push(current.join('\n'));
+    if (current.length > 0) blocks.push(current.join("\n"));
     const summary = { negativas: 0, positivas: 0, informativas: 0 };
-    const detectedAnnotations = [];
-    for (let i = 0; i < blocks.length; i++) {
-      const block = blocks[i];
-      const typeMatch = block.match(/Tipo:\s*(Negativa|Positiva|Informaci[\xF3o]n)/i);
-      if (typeMatch) {
-        const type = typeMatch[1].toLowerCase().startsWith('neg')
-          ? 'Negativa'
-          : typeMatch[1].toLowerCase().startsWith('pos')
-            ? 'Positiva'
-            : 'Informaci\xF3n';
-        if (type === 'Negativa') summary.negativas++;
-        else if (type === 'Positiva') summary.positivas++;
+    for (const block of blocks) {
+      const m = block.match(/Tipo:\s*(Negativa|Positiva|Informaci[oó]n)/i);
+      if (m) {
+        const t = m[1].toLowerCase();
+        if (t.startsWith("neg")) summary.negativas++;
+        else if (t.startsWith("pos")) summary.positivas++;
         else summary.informativas++;
-        const dateMatch = block.match(/(\d{2}\/\d{2}\/\d{4})/);
-        const teacherMatch = block.match(/Profesor:\s*([^\n]+)/i);
-        const textLines = block
-          .split('\n')
-          .filter(
-            (l) =>
-              !l.includes('Tipo:') && !l.includes('Profesor:') && !l.match(/^\d{2}\/\d{2}\/\d{4}/)
-          );
-        const annotationText = textLines.join(' ').trim();
-        detectedAnnotations.push({
-          type,
-          text: annotationText,
-          lineNumber: i + 1,
-          date: dateMatch ? dateMatch[1] : void 0,
-          teacher: teacherMatch ? teacherMatch[1].trim() : void 0,
-        });
       }
     }
-    const { createClient } = await import('@supabase/supabase-js');
-    const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY ?? '';
-    if (!supabaseUrl || !supabaseKey) {
-      res.status(500).json({ error: 'Supabase no configurado' });
+    res.json({ success: true, summary });
+  } catch (error) {
+    console.error("Error al analizar documento:", error);
+    res.status(500).json({ error: "Error interno al procesar el archivo." });
+  }
+});
+var parse_default = router7;
+
+// server/api/routes/processDisciplinaryPdf.ts
+var import_express8 = require("express");
+var import_supabase_js = require("@supabase/supabase-js");
+var router8 = (0, import_express8.Router)();
+router8.use(requireAuth);
+function normalizeName(name) {
+  return name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim();
+}
+function extractStudentName(text) {
+  const lines = text.split("\n");
+  const headings = [];
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith("## ")) continue;
+    const content = trimmed.slice(3).trim();
+    if (/^(FUNDACIÓN|Saber|FICHA|Rango|Curso|Fecha)/i.test(content)) continue;
+    if (content.length < 2) continue;
+    headings.push(content);
+  }
+  if (headings.length >= 3) {
+    const apellido1 = headings[0];
+    const apellido2 = headings[1];
+    const nombres = headings.slice(2).join(" ");
+    return `${apellido1} ${apellido2} ${nombres}`;
+  }
+  if (headings.length === 2) {
+    return `${headings[0]} ${headings[1]}`;
+  }
+  if (headings.length === 1) {
+    return headings[0];
+  }
+  return null;
+}
+function extractCourse(text) {
+  const match = text.match(/Curso\s*:\s*([^\n]+)/i);
+  return match ? match[1].trim() : null;
+}
+async function findStudent(supabase, fullName, courseName, tenantId) {
+  const normalized = normalizeName(fullName);
+  const nameParts = normalized.split(/\s+/).filter(Boolean);
+  const makeQuery = () => supabase.from("students").select("id, full_name, rut, course_id").eq("tenant_id", tenantId);
+  const enrichWithCourse = async (rows) => {
+    if (rows.length === 0) return [];
+    const courseIds = [...new Set(rows.map((r) => r.course_id))];
+    const { data: courses } = await supabase.from("courses").select("id, name").in("id", courseIds);
+    const courseMap = new Map(
+      (courses || []).map((c) => [c.id, c.name])
+    );
+    return rows.map((r) => ({
+      id: r.id,
+      full_name: r.full_name,
+      rut: r.rut,
+      course_name: courseMap.get(r.course_id) || null
+    }));
+  };
+  const { data: exact } = await makeQuery().ilike("full_name", fullName.trim()).limit(5);
+  if (exact && exact.length > 0) return enrichWithCourse(exact);
+  const { data: normalizedMatch } = await makeQuery().ilike("full_name", `%${normalized}%`).limit(5);
+  if (normalizedMatch && normalizedMatch.length > 0) return enrichWithCourse(normalizedMatch);
+  for (const part of nameParts) {
+    if (part.length < 3) continue;
+    const { data: byPart } = await makeQuery().ilike("full_name", `%${part}%`).limit(5);
+    if (byPart && byPart.length > 0) return enrichWithCourse(byPart);
+  }
+  const lastName = nameParts[0];
+  if (lastName && lastName.length >= 3) {
+    const { data: byLastName } = await makeQuery().ilike("full_name", `${lastName}%`).limit(10);
+    if (byLastName && byLastName.length > 0) return enrichWithCourse(byLastName);
+  }
+  if (courseName) {
+    const normalizedCourse = normalizeName(courseName);
+    const { data: course } = await supabase.from("courses").select("id").eq("tenant_id", tenantId).ilike("name", `%${normalizedCourse}%`).maybeSingle();
+    if (course) {
+      const { data: courseStudents } = await makeQuery().eq("course_id", course.id).limit(50);
+      if (courseStudents && courseStudents.length > 0) return enrichWithCourse(courseStudents);
+    }
+  }
+  return [];
+}
+function parseAnnotations(textContent) {
+  const lines = textContent.split("\n").filter((l) => !l.trim().startsWith("![") && !l.includes("data:image"));
+  const blocks = [];
+  let current = [];
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    if (/^\d{2}\/\d{2}\/\d{4}/.test(trimmed)) {
+      if (current.length > 0) blocks.push(current.join("\n"));
+      current = [line];
+    } else if (current.length > 0) {
+      current.push(line);
+    }
+  }
+  if (current.length > 0) blocks.push(current.join("\n"));
+  const summary = { negativas: 0, positivas: 0, informativas: 0 };
+  const detectedAnnotations = [];
+  for (let i = 0; i < blocks.length; i++) {
+    const block = blocks[i];
+    const typeMatch = block.match(/Tipo:\s*(Negativa|Positiva|Informaci[oó]n)/i);
+    if (typeMatch) {
+      const t = typeMatch[1].toLowerCase();
+      const type = t.startsWith("neg") ? "Negativa" : t.startsWith("pos") ? "Positiva" : "Informaci\xF3n";
+      if (type === "Negativa") summary.negativas++;
+      else if (type === "Positiva") summary.positivas++;
+      else summary.informativas++;
+      const dateMatch = block.match(/(\d{2}\/\d{2}\/\d{4})/);
+      const teacherMatch = block.match(/Profesor:\s*([^\n]+)/i);
+      const categoryMatch = block.match(/Categoría:\s*([^\n]+)/i);
+      const textLines = block.split("\n").filter(
+        (l) => !l.includes("Tipo:") && !l.includes("Profesor:") && !l.includes("Categor\xEDa:") && !l.match(/^\d{2}\/\d{2}\/\d{4}/)
+      );
+      detectedAnnotations.push({
+        type,
+        text: textLines.join(" ").trim(),
+        lineNumber: i + 1,
+        date: dateMatch?.[1],
+        teacher: teacherMatch?.[1]?.trim(),
+        category: categoryMatch?.[1]?.trim()
+      });
+    }
+  }
+  return { summary, detectedAnnotations };
+}
+router8.post("/process-disciplinary-pdf", async (req, res) => {
+  try {
+    const { textContent, fileName, studentId, tenantId, storagePath } = req.body;
+    if (!textContent || !fileName) {
+      res.status(400).json({ error: "Faltan par\xE1metros requeridos: textContent y fileName" });
       return;
     }
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: { persistSession: false },
-    });
-    const { data: suggestedLetter, error: ruleError } = await supabase.rpc(
-      'get_suggested_letter_type',
-      {
-        p_negativas: summary.negativas,
-        p_positivas: summary.positivas,
-        p_informativas: summary.informativas,
-        p_tenant_id: tenantId,
-      }
-    );
-    if (ruleError) {
-      console.error('Error getting suggested letter type:', ruleError);
+    const ip = req.ip || req.connection?.remoteAddress || "unknown";
+    if (!checkRateLimit(ip)) {
+      res.status(429).json({ error: "L\xEDmite de solicitudes alcanzado. Intente en un minuto." });
+      return;
+    }
+    const { summary, detectedAnnotations } = parseAnnotations(textContent);
+    const detectedName = extractStudentName(textContent);
+    const detectedCourse = extractCourse(textContent);
+    const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY ?? "";
+    if (!supabaseUrl || !supabaseKey) {
+      res.status(500).json({ error: "Supabase no configurado" });
+      return;
+    }
+    const supabase = (0, import_supabase_js.createClient)(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
+    const resolvedTenantId = tenantId || process.env.DEFAULT_TENANT_ID || "";
+    const suggestedLetter = resolvedTenantId ? await supabase.rpc("get_suggested_letter_type", {
+      p_negativas: summary.negativas,
+      p_positivas: summary.positivas,
+      p_informativas: summary.informativas,
+      p_tenant_id: resolvedTenantId
+    }).then((r) => r.data) : null;
+    let detectedStudents = [];
+    if (detectedName && resolvedTenantId) {
+      detectedStudents = await findStudent(
+        supabase,
+        detectedName,
+        detectedCourse,
+        resolvedTenantId
+      );
+    }
+    const resolvedStudentId = studentId || (detectedStudents.length === 1 ? detectedStudents[0].id : null);
+    const resolvedStudentName = studentId ? null : detectedStudents.length === 1 ? detectedStudents[0].full_name : detectedName;
+    if (!resolvedTenantId) {
+      res.json({
+        success: true,
+        mode: "preview",
+        summary,
+        detectedName,
+        detectedCourse,
+        detectedStudents: [],
+        suggestedLetterType: null,
+        detectedAnnotations,
+        detectedAnnotationsCount: detectedAnnotations.length
+      });
+      return;
+    }
+    if (!resolvedStudentId) {
+      res.json({
+        success: true,
+        mode: "student_pending",
+        summary,
+        detectedName,
+        detectedCourse,
+        detectedStudents,
+        suggestedLetterType: suggestedLetter || "none",
+        detectedAnnotations,
+        detectedAnnotationsCount: detectedAnnotations.length
+      });
+      return;
     }
     const { data: processNumber, error: numberError } = await supabase.rpc(
-      'generate_process_number',
-      { p_tenant_id: tenantId }
+      "generate_process_number",
+      { p_tenant_id: resolvedTenantId }
     );
     if (numberError) {
-      console.error('Error generating process number:', numberError);
-      res.status(500).json({ error: 'Error al generar n\xFAmero de proceso' });
+      res.status(500).json({ error: "Error al generar n\xFAmero de proceso" });
       return;
     }
-    const { data: dpRow, error: processError } = await supabase
-      .from('disciplinary_processes')
-      .insert({
-        student_id: studentId,
-        process_number: processNumber,
-        status: 'draft',
-        tenant_id: tenantId,
-        suggested_letter_type: suggestedLetter || 'none',
-        total_negativas: summary.negativas,
-        total_positivas: summary.positivas,
-        total_informativas: summary.informativas,
-        is_completed: false,
-      })
-      .select()
-      .single();
+    const { data: dpRow, error: processError } = await supabase.from("disciplinary_processes").insert({
+      student_id: resolvedStudentId,
+      process_number: processNumber,
+      status: "draft",
+      tenant_id: resolvedTenantId,
+      suggested_letter_type: suggestedLetter || "none",
+      total_negativas: summary.negativas,
+      total_positivas: summary.positivas,
+      total_informativas: summary.informativas,
+      is_completed: false
+    }).select().single();
     if (processError || !dpRow) {
-      console.error('Error creating disciplinary process:', processError);
-      res.status(500).json({ error: 'Error al crear proceso disciplinario' });
+      res.status(500).json({ error: "Error al crear proceso" });
       return;
+    }
+    const dpId = dpRow.id;
+    const dpNumber = dpRow.process_number;
+    if (storagePath) {
+      await supabase.from("disciplinary_process_files").insert({
+        process_id: dpId,
+        file_name: fileName,
+        storage_path: storagePath,
+        file_size: 0,
+        mime_type: fileName.toLowerCase().endsWith(".md") ? "text/markdown" : "application/pdf",
+        tenant_id: resolvedTenantId
+      });
     }
     if (detectedAnnotations.length > 0) {
-      const annotationsToInsert = detectedAnnotations.map((ann) => ({
-        process_id: dpRow.id,
-        student_id: studentId,
-        annotation_type: ann.type,
-        annotation_text: ann.text,
-        line_number: ann.lineNumber,
-        annotation_date: ann.date ? new Date(ann.date.split('/').reverse().join('-')) : null,
-        teacher_name: ann.teacher,
-        tenant_id: tenantId,
-      }));
-      const { error: annotationsError } = await supabase
-        .from('disciplinary_annotations_detected')
-        .insert(annotationsToInsert);
-      if (annotationsError) {
-        console.error('Error saving detected annotations:', annotationsError);
-      }
+      await supabase.from("disciplinary_annotations_detected").insert(
+        detectedAnnotations.map((ann) => ({
+          process_id: dpId,
+          student_id: resolvedStudentId,
+          annotation_type: ann.type,
+          annotation_text: ann.text,
+          line_number: ann.lineNumber,
+          annotation_date: ann.date ? new Date(ann.date.split("/").reverse().join("-")) : null,
+          teacher_name: ann.teacher,
+          category: ann.category,
+          tenant_id: resolvedTenantId
+        }))
+      );
     }
-    await supabase.from('document_analyses').insert({
-      student_id: studentId,
+    await supabase.from("document_analyses").insert({
+      student_id: resolvedStudentId,
       file_name: fileName,
       negativas: summary.negativas,
       positivas: summary.positivas,
       informativas: summary.informativas,
-      tenant_id: tenantId,
+      tenant_id: resolvedTenantId
     });
     res.json({
       success: true,
-      processId: disciplinaryProcess.id,
-      processNumber: disciplinaryProcess.process_number,
+      mode: "completed",
+      processId: dpId,
+      processNumber: dpNumber,
       summary,
-      suggestedLetterType: suggestedLetter || 'none',
-      detectedAnnotationsCount: detectedAnnotations.length,
-    });
-    res.json({
-      success: true,
-      processId: dpRow.id,
-      processNumber: dpRow.process_number,
-      summary,
-      suggestedLetterType: suggestedLetter || 'none',
-      detectedAnnotationsCount: detectedAnnotations.length,
+      detectedName: resolvedStudentName,
+      detectedCourse,
+      detectedStudents,
+      suggestedLetterType: suggestedLetter || "none",
+      detectedAnnotationsCount: detectedAnnotations.length
     });
   } catch (error) {
-      summary,
-      suggestedLetterType: suggestedLetter || 'none',
-      detectedAnnotationsCount: detectedAnnotations.length,
-    });
-  } catch (error) {
-    console.error('Error processing disciplinary PDF:', error);
-    res.status(500).json({
-      error: 'Error interno al procesar el documento',
-      details: error instanceof Error ? error.message : 'Unknown error',
-    });
+    console.error("Error processing disciplinary PDF:", error);
+    res.status(500).json({ error: "Error interno al procesar el documento" });
   }
 });
-var processDisciplinaryPdf_default = router9;
+var processDisciplinaryPdf_default = router8;
+
+// server/api/routes/usage.ts
+var import_express9 = require("express");
+var router9 = (0, import_express9.Router)();
+router9.post("/usage/events", requireAuth, async (req, res) => {
+  try {
+    const { eventName, properties } = req.body;
+    if (!eventName || typeof eventName !== "string") {
+      res.status(400).json({ error: "Campo requerido: eventName (string)" });
+      return;
+    }
+    const { createClient: createClient2 } = await import("@supabase/supabase-js");
+    const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY ?? "";
+    if (!supabaseUrl || !supabaseKey) {
+      res.status(500).json({ error: "Supabase no configurado" });
+      return;
+    }
+    const supabase = createClient2(supabaseUrl, supabaseKey, {
+      auth: { persistSession: false }
+    });
+    const authReq = req;
+    await supabase.from("usage_events").insert({
+      event_name: eventName,
+      user_id: authReq.user?.sub ?? null,
+      properties: properties ?? {}
+    });
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error logging usage event:", error);
+    res.status(500).json({ error: "Error interno al registrar evento." });
+  }
+});
+router9.get("/usage/stats", requireAuth, async (req, res) => {
+  try {
+    const authReq = req;
+    const since = authReq.query.since ?? void 0;
+    const until = req.query.until ?? void 0;
+    const { createClient: createClient2 } = await import("@supabase/supabase-js");
+    const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY ?? "";
+    if (!supabaseUrl || !supabaseKey) {
+      res.status(500).json({ error: "Supabase no configurado" });
+      return;
+    }
+    const supabase = createClient2(supabaseUrl, supabaseKey, {
+      auth: { persistSession: false }
+    });
+    const params = {};
+    if (since) params.since = since;
+    if (until) params.until = until;
+    const { data: eventStats, error: eventError } = await supabase.rpc(
+      "get_usage_stats",
+      params
+    );
+    if (eventError) {
+      console.error("Error fetching usage stats:", eventError);
+      res.status(500).json({ error: "Error al obtener estad\xEDsticas." });
+      return;
+    }
+    const { data: dailyActive, error: dailyError } = await supabase.rpc(
+      "get_daily_active_users",
+      params
+    );
+    if (dailyError) {
+      console.error("Error fetching daily active users:", dailyError);
+    }
+    res.json({
+      events: eventStats ?? [],
+      dailyActiveUsers: dailyActive ?? []
+    });
+  } catch (error) {
+    console.error("Error fetching usage stats:", error);
+    res.status(500).json({ error: "Error interno al obtener estad\xEDsticas." });
+  }
+});
+var usage_default = router9;
 
 // server/api/index.ts
-var __filename = fileURLToPath(import.meta.url);
-var __dirname = path.dirname(__filename);
-var app = express();
-app.use(express.json({ limit: '512kb' }));
-app.use('/api', improve_default);
-app.use('/api', advisor_default);
-app.use('/api', audit_default);
-app.use('/api', draft_default);
-app.use('/api', debug_default);
-app.use('/api', templates_default);
-app.use('/api', parse_default);
-app.use('/api', processDisciplinaryPdf_default);
-app.use('/api', usage_default);
-var distPath = path.join(__dirname, '..', 'dist');
-app.use(express.static(distPath));
-app.get('*', (_req, res) => {
-  res.sendFile(path.join(distPath, 'index.html'));
+var import_meta = {};
+var __filename = (0, import_node_url.fileURLToPath)(import_meta.url);
+var __dirname = import_node_path.default.dirname(__filename);
+var app = (0, import_express10.default)();
+app.use(import_express10.default.json({ limit: "512kb" }));
+app.use("/api", improve_default);
+app.use("/api", advisor_default);
+app.use("/api", audit_default);
+app.use("/api", draft_default);
+app.use("/api", debug_default);
+app.use("/api", templates_default);
+app.use("/api", parse_default);
+app.use("/api", processDisciplinaryPdf_default);
+app.use("/api", usage_default);
+var distPath = import_node_path.default.join(__dirname, "..", "dist");
+app.use(import_express10.default.static(distPath));
+app.get("*", (_req, res) => {
+  res.sendFile(import_node_path.default.join(distPath, "index.html"));
 });
 var index_default = app;
-export { index_default as default };
 /** @license SPDX-License-Identifier: Apache-2.0 */
