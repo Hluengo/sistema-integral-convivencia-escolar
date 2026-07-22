@@ -46,7 +46,7 @@ export default function AnotacionesStudentDetailModal({
   privacyMode,
   onClose,
   onAddAnnotations,
-  onClearAnnotations: _onClearAnnotations,
+  onClearAnnotations,
   onTogglePrivacy,
   teachers = EMPTY_TEACHERS,
 }: AnotacionesStudentDetailModalProps) {
@@ -136,6 +136,7 @@ export default function AnotacionesStudentDetailModal({
             pendingParsedCount={parsedAnnotations.length}
             onGoToRevisionTab={() => setActiveTab('revision')}
             onGoToDocumentos={handleGoToDocumentos}
+            onClearAnnotations={() => onClearAnnotations(student.id)}
           />
         );
       case 'revision':

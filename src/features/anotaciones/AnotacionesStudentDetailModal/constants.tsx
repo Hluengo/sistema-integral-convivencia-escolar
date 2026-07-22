@@ -35,6 +35,33 @@ export interface DisciplinayRecord {
 
 export type ActiveTab = 'resumen' | 'revision' | 'historial';
 
+export const DISCIPLINARY_SUGGESTION: Record<string, { title: string; description: string; action: string; accent: string }> = {
+  Verde: {
+    title: 'Sin observaciones mayores',
+    description: 'El estudiante mantiene un comportamiento dentro de lo esperado. No se requiere acción disciplinaria.',
+    action: 'Continuar con seguimiento regular.',
+    accent: 'border-emerald-300 bg-emerald-50',
+  },
+  Amarillo: {
+    title: 'Etapa de Amonestación',
+    description: 'El estudiante ha acumulado entre 5 y 9 anotaciones negativas.',
+    action: 'Se sugiere emitir Amonestación Escrita y citar al apoderado.',
+    accent: 'border-yellow-300 bg-yellow-50',
+  },
+  Naranja: {
+    title: 'Etapa de Compromiso',
+    description: 'El estudiante ha acumulado entre 10 y 14 anotaciones negativas.',
+    action: 'Se sugiere emitir Carta de Compromiso Conductual con firma del apoderado.',
+    accent: 'border-orange-300 bg-orange-50',
+  },
+  Rojo: {
+    title: 'Etapa de Derivación',
+    description: 'El estudiante ha acumulado 15 o más anotaciones negativas.',
+    action: 'Derivar a proceso disciplinario formal con Inspectoría General.',
+    accent: 'border-rose-300 bg-rose-50',
+  },
+};
+
 export const SEVERITY_BADGE: Record<string, { bg: string; text: string; dot: string }> = {
   Leve: { bg: 'bg-yellow-50', text: 'text-yellow-800', dot: 'bg-yellow-500' },
   Grave: { bg: 'bg-orange-50', text: 'text-orange-800', dot: 'bg-orange-500' },

@@ -97,7 +97,7 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
     async (studentId: string) => {
       try {
         const { error } = await supabase
-          .from('annotations')
+          .from('inspectorate_records')
           .delete()
           .eq('student_id', studentId);
         if (error) { throw error; }

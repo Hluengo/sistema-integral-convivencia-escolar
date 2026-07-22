@@ -98,6 +98,7 @@ export default function AnotacionesDocumentGenerator({
 
   const [exportError, setExportError] = useState<string | null>(null);
   const [showEmissionConfirm, setShowEmissionConfirm] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleEmitAfterExport = () => {
     handleRegisterCommitment({
