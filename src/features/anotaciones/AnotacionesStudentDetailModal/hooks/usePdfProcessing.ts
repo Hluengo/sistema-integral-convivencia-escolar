@@ -50,7 +50,7 @@ async function uploadPdf(file: File): Promise<string | null> {
   const filePath = `${tenantId}/${Date.now()}_${file.name}`;
     const { error } = await supabase.storage
     .from(STORAGE_BUCKET)
-    .upload(filePath, file, { cacheControl: '3600', upsert: false, contentType: file.type || 'application/octet-stream' });
+    .upload(filePath, file, { cacheControl: '3600', upsert: false, contentType: file.name.toLowerCase().endsWith('.md') ? 'text/plain' : (file.type || 'application/pdf') });
   if (error) {
     console.error('Error uploading PDF to storage:', error);
     return null;
