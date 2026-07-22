@@ -37,6 +37,7 @@ router.post('/parse-annotations', async (req, res) => {
     let current: string[] = [];
     for (const line of lines) {
       const trimmed = line.trim();
+      if (trimmed.startsWith('![') || trimmed.includes('data:image')) continue;
       if (/^\d{2}\/\d{2}\/\d{4}/.test(trimmed)) {
         if (current.length > 0) blocks.push(current.join('\n'));
         current = [line];

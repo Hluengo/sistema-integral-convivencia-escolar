@@ -26,6 +26,9 @@ router.post('/parse-annotations', async (req, res) => {
     }
 
     let cleanText = textContent
+      .split('\n')
+      .filter((l) => !l.trim().startsWith('![') && !l.includes('data:image'))
+      .join('\n')
       .replace(/^!\[.*$[\r\n]*/gm, '')
       .replace(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/g, '')
       .replace(/\n{3,}/g, '\n\n')
