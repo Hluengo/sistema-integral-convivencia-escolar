@@ -787,6 +787,8 @@ router7.post('/parse-annotations', async (req, res) => {
       return;
     }
     let cleanText = textContent
+      .replace(/^!\[.*$[\r\n]*/gm, '')
+      .replace(/data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/g, '')
       .replace(/\n{3,}/g, '\n\n')
       .replace(/\s{3,}/g, '  ')
       .replace(/P\xE1gina\s*\d+.*/gi, '')
