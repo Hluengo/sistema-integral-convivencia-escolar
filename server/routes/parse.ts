@@ -33,7 +33,7 @@ router.post('/parse-annotations', async (req, res) => {
       .replace(/Página\s*\d+.*/gi, '')
       .trim();
 
-    const MAX_LENGTH = 25000;
+    const MAX_LENGTH = 15000;
     if (cleanText.length > MAX_LENGTH) {
       cleanText = cleanText.slice(0, MAX_LENGTH) + '\n\n[Documento truncado por exceder el límite de procesamiento]';
       console.warn(`Texto truncado de ${textContent.length} a ${MAX_LENGTH} caracteres`);

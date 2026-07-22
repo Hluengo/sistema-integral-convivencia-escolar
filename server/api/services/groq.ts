@@ -17,8 +17,10 @@ export async function callGroq(
   systemInstruction?: string,
 ): Promise<string> {
   const apiKey = getApiKey();
-  const body: { model: string; messages: Array<{ role: string; content: string }> } = {
+  const body: { model: string; max_tokens: number; temperature: number; messages: Array<{ role: string; content: string }> } = {
     model: AI_MODEL,
+    max_tokens: 4000,
+    temperature: 0,
     messages: [],
   };
   if (systemInstruction) {

@@ -128,8 +128,16 @@ export function usePdfProcessing(
         });
 
         if (!response.ok) {
-          const errData = await response.json().catch(() => ({}));
-          throw new Error(errData.error || `Error del servidor (${response.status})`);
+          const text = await response.text().catch(() => '');
+          let errMsg = `Error del servidor (${response.status})`;
+          try {
+            const errData = JSON.parse(text);
+            if (errData.error) errMsg = errData.error;
+          } catch {
+            if (response.status === 504) errMsg = 'El procesamiento excedió el tiempo límite. Intenta con un archivo .md más corto o divide el PDF en páginas individuales.';
+            else if (text) errMsg = text.slice(0, 200);
+          }
+          throw new Error(errMsg);
         }
 
         const result = await response.json();

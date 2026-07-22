@@ -323,6 +323,8 @@ async function callAI(messages, systemInstruction) {
   const apiKey = getApiKey();
   const body = {
     model: AI_MODEL,
+    max_tokens: 4000,
+    temperature: 0,
     messages: []
   };
   if (systemInstruction) {
@@ -752,7 +754,7 @@ router7.post("/parse-annotations", async (req, res) => {
       return;
     }
     let cleanText = textContent.replace(/\n{3,}/g, "\n\n").replace(/\s{3,}/g, "  ").replace(/P\xE1gina\s*\d+.*/gi, "").trim();
-    const MAX_LENGTH = 25000;
+    const MAX_LENGTH = 15000;
     if (cleanText.length > MAX_LENGTH) {
       cleanText = cleanText.slice(0, MAX_LENGTH) + "\n\n[Documento truncado por exceder el límite de procesamiento]";
       console.warn(`Texto truncado de ${textContent.length} a ${MAX_LENGTH} caracteres`);

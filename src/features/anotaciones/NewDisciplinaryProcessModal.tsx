@@ -136,6 +136,18 @@ export default function NewDisciplinaryProcessModal({
         },
         body: JSON.stringify({ textContent, fileName: file.name }),
       });
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        let errMsg = `Error del servidor (${res.status})`;
+        try {
+          const errData = JSON.parse(text);
+          if (errData.error) errMsg = errData.error;
+        } catch {
+          if (res.status === 504) errMsg = 'El procesamiento excedió el tiempo límite. Intenta con un archivo .md más corto o divide el PDF.';
+          else if (text) errMsg = text.slice(0, 200);
+        }
+        throw new Error(errMsg);
+      }
       const data = await res.json();
       if (data.success && data.annotations) {
         setDetected(data.annotations);
