@@ -59,10 +59,10 @@ Tus respuestas deben estar redactadas en español formal de Chile, alineadas con
     res.json({ success: true, reply });
   } catch (error) {
     console.error('Error en el Chat de Consultoría:', (error as Error).message || error);
-    const detail = (error as Error).message?.includes('GEMINI_API_KEY')
-      ? 'API key de Gemini no configurada en variables de entorno de Vercel.'
-      : (error as Error).message?.includes('Gemini API error')
-        ? `Error de Gemini: ${(error as Error).message}`
+    const detail = (error as Error).message?.includes('OPENROUTER_API_KEY')
+      ? 'API key de OpenRouter no configurada en variables de entorno de Vercel.'
+      : (error as Error).message?.includes('OpenRouter error')
+        ? `Error de OpenRouter: ${(error as Error).message}`
         : 'Error interno del servidor.';
     res.status(500).json({ error: detail });
   }

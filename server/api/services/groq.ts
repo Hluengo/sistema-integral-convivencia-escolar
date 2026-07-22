@@ -2,12 +2,12 @@
 
 import { httpsPost } from '../lib/https.js';
 
-const AI_MODEL = 'gemini-2.0-flash';
+const AI_MODEL = 'meta-llama/llama-3.1-8b-instruct';
 
 function getApiKey(): string {
-  const key = process.env.GEMINI_API_KEY;
+  const key = process.env.OPENROUTER_API_KEY;
   if (!key) {
-    throw new Error('GEMINI_API_KEY no configurada');
+    throw new Error('OPENROUTER_API_KEY no configurada');
   }
   return key;
 }
@@ -25,11 +25,13 @@ export async function callGroq(
     body.messages.push({ role: 'system', content: systemInstruction });
   }
   body.messages.push(...messages);
-  const res = await httpsPost('generativelanguage.googleapis.com', '/v1beta/openai/chat/completions', body, {
+  const res = await httpsPost('openrouter.ai', '/api/v1/chat/completions', body, {
     Authorization: `Bearer ${apiKey}`,
+    'HTTP-Referer': 'http://localhost:3001',
+    'X-Title': 'Sistema Integral Convivencia Escolar',
   });
   if (res.status !== 200) {
-    throw new Error(`Gemini API error: ${res.status} ${JSON.stringify(res.body)}`);
+    throw new Error(`OpenRouter error: ${res.status} ${JSON.stringify(res.body)}`);
   }
   const resBody = res.body as Record<string, unknown>;
   const choices = resBody?.choices as Array<Record<string, unknown>> | undefined;

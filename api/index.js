@@ -311,11 +311,11 @@ function httpsPatch(hostname, pathname, body, headers) {
 }
 
 // server/api/services/groq.ts
-var AI_MODEL = "gemini-2.0-flash";
+var AI_MODEL = "meta-llama/llama-3.1-8b-instruct";
 function getApiKey() {
-  const key = process.env.GEMINI_API_KEY;
+  const key = process.env.OPENROUTER_API_KEY;
   if (!key) {
-    throw new Error("GEMINI_API_KEY no configurada");
+    throw new Error("OPENROUTER_API_KEY no configurada");
   }
   return key;
 }
@@ -329,13 +329,15 @@ async function callAI(messages, systemInstruction) {
     body.messages.push({ role: "system", content: systemInstruction });
   }
   body.messages.push(...messages);
-  const res = await httpsPost("generativelanguage.googleapis.com", "/v1beta/openai/chat/completions", body, {
-    Authorization: `Bearer ${apiKey}`
+  const res = await httpsPost("openrouter.ai", "/api/v1/chat/completions", body, {
+    Authorization: `Bearer ${apiKey}`,
+    "HTTP-Referer": "https://sistema-integral-convivencia-escola.vercel.app",
+    "X-Title": "Sistema Integral Convivencia Escolar"
   });
   if (res.status !== 200) {
     const errBody = res.body;
     const aiMsg = errBody?.error?.message || JSON.stringify(errBody);
-    throw new Error(`Gemini API error (${res.status}): ${aiMsg}`);
+    throw new Error(`OpenRouter error (${res.status}): ${aiMsg}`);
   }
   const resBody = res.body;
   const choices = resBody?.choices;

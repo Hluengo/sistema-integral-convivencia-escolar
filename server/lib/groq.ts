@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const AI_MODEL = 'gemini-2.0-flash';
+const AI_MODEL = 'meta-llama/llama-3.1-8b-instruct';
 
 export async function callGroq(
   messages: { role: string; content: string }[],
   systemInstruction?: string
 ): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
-    throw new Error('La variable de entorno GEMINI_API_KEY es requerida.');
+    throw new Error('La variable de entorno OPENROUTER_API_KEY es requerida.');
   }
   const body: Record<string, unknown> = { model: AI_MODEL, messages: [] };
   if (systemInstruction) {
@@ -21,11 +21,13 @@ export async function callGroq(
     });
   }
   (body.messages as { role: string; content: string }[]).push(...messages);
-  const response = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
+      'HTTP-Referer': 'http://localhost:3001',
+      'X-Title': 'Sistema Integral Convivencia Escolar',
     },
     body: JSON.stringify(body),
   });
@@ -36,7 +38,7 @@ export async function callGroq(
       const errJson = JSON.parse(errText);
       aiMsg = errJson.error?.message || errText;
     } catch { /* not JSON */ }
-    throw new Error(`Gemini API error (${response.status}): ${aiMsg}`);
+    throw new Error(`OpenRouter error (${response.status}): ${aiMsg}`);
   }
   const data = (await response.json()) as Record<string, unknown>;
   const choices = data?.choices as Array<{ message?: { content?: string } }> | undefined;
