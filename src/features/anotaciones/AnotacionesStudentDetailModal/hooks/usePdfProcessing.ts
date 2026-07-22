@@ -112,9 +112,12 @@ export function usePdfProcessing(
 
         if (result.annotations && result.annotations.length > 0) {
           setParsedAnnotations(result.annotations);
+          const negCount = result.annotations.filter((a: { type?: string }) => a.type === 'Negativa').length;
           const posCount = result.annotations.filter((a: { type?: string }) => a.type === 'Positiva').length;
-          const negCount = result.annotations.length - posCount;
-          setParsingStatus(`Se detectaron ${result.annotations.length} anotaciones (${negCount} negativas, ${posCount} positivas). Revisa los datos antes de registrar.`);
+          const infoCount = result.annotations.filter((a: { type?: string }) => a.type === 'Información').length;
+          const parts = [`${negCount} negativas`, `${posCount} positivas`];
+          if (infoCount > 0) parts.push(`${infoCount} informativas`);
+          setParsingStatus(`Se detectaron ${result.annotations.length} anotaciones (${parts.join(', ')}). Revisa los datos antes de registrar.`);
         } else {
           setParsingStatus('No se detectaron anotaciones en el PDF. Revisa que el archivo contenga datos de hoja de vida.');
         }
@@ -174,7 +177,7 @@ export function usePdfProcessing(
           date_time: new Date().toISOString(),
           observation: a.text || a.observation || '',
           severity: a.severity || 'Leve',
-          type: a.type || 'Negativa',
+          type: a.type === 'Información' ? 'Negativa' : (a.type || 'Negativa'),
           registered_by: a.registered_by || 'Inspectoría',
           tenant_id: tenantId,
           pdf_file_path: pdfStoragePath,

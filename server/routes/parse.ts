@@ -67,7 +67,10 @@ Devuelve SOLO el arreglo JSON, sin texto adicional.`;
       },
     ];
 
-    const responseText = await callGroq(messages, systemInstruction);
+    const responseText = await callGroq(messages, systemInstruction).catch(err => {
+      console.error('Groq API error:', (err as Error).message);
+      throw new Error('El servicio de IA no pudo procesar el documento. Si el PDF es escaneado o tiene imágenes, conviértelo a texto primero.');
+    });
 
     let annotations: Array<Record<string, unknown>> = [];
     try {

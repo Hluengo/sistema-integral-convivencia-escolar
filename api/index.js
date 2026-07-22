@@ -784,7 +784,10 @@ ${cleanText}
 --- FIN DEL DOCUMENTO ---`
       }
     ];
-    const responseText = await callGroq(messages, systemInstruction);
+    const responseText = await callGroq(messages, systemInstruction).catch(err => {
+      console.error("Groq API error:", err.message);
+      throw new Error("El servicio de IA no pudo procesar el documento. Si el PDF es escaneado o tiene im\u00E1genes, convi\u00E9rtelo a texto primero.");
+    });
     let annotations = [];
     try {
       const jsonMatch = responseText.match(/\[[\s\S]*\]/);
