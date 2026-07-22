@@ -13,7 +13,7 @@ export async function callGroq(
   if (!apiKey) {
     throw new Error('La variable de entorno OPENROUTER_API_KEY es requerida.');
   }
-  const body: Record<string, unknown> = { model: AI_MODEL, max_tokens: 4000, temperature: 0, messages: [] };
+  const body: Record<string, unknown> = { model: AI_MODEL, max_tokens: 2000, temperature: 0, messages: [] };
   if (systemInstruction) {
     (body.messages as { role: string; content: string }[]).push({
       role: 'system',

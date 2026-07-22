@@ -19,7 +19,7 @@ export async function callGroq(
   const apiKey = getApiKey();
   const body: { model: string; max_tokens: number; temperature: number; messages: Array<{ role: string; content: string }> } = {
     model: AI_MODEL,
-    max_tokens: 4000,
+    max_tokens: 2000,
     temperature: 0,
     messages: [],
   };

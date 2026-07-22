@@ -33,28 +33,36 @@ router.post('/parse-annotations', async (req, res) => {
       .replace(/Página\s*\d+.*/gi, '')
       .trim();
 
-    const MAX_LENGTH = 15000;
-    if (cleanText.length > MAX_LENGTH) {
-      cleanText = cleanText.slice(0, MAX_LENGTH) + '\n\n[Documento truncado por exceder el límite de procesamiento]';
-      console.warn(`Texto truncado de ${textContent.length} a ${MAX_LENGTH} caracteres`);
+    const lines = cleanText.split('\n');
+    const blocks: string[] = [];
+    let current: string[] = [];
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (/^\d{2}\/\d{2}\/\d{4}/.test(trimmed)) {
+        if (current.length > 0) blocks.push(current.join('\n'));
+        current = [line];
+      } else if (current.length > 0 && trimmed) {
+        current.push(line);
+      }
+    }
+    if (current.length > 0) blocks.push(current.join('\n'));
+    let filteredText = blocks.join('\n\n');
+
+    const MAX_LENGTH = 10000;
+    if (filteredText.length > MAX_LENGTH) {
+      filteredText = filteredText.slice(0, MAX_LENGTH) + '\n\n[Truncado]';
     }
 
-    const systemInstruction = `Extrae TODAS las anotaciones de este texto de hoja de vida estudiantil. Cada línea que empieza con fecha DD/MM/AAAA es una anotación distinta.
+    const systemInstruction = `Extrae anotaciones. Cada línea con fecha DD/MM/AAAA inicia una anotación. El texto de la anotación está desde "Anotación:" hasta la siguiente fecha.
 
-Formato esperado: [FECHA] Profesor: [nombre] Tipo: [Información|Positiva|Negativa] Categoria: [categoría] Anotación: [descripción]
+Campos: text (descripción completa), date (YYYY-MM-DD), type = Tipo (Positiva, Negativa o Información).
 
-Devuelve SOLO un array JSON con estos campos:
-- text: descripción completa
-- date: YYYY-MM-DD
-- registered_by: nombre del profesor o "Inspectoría"
-- type: "Información", "Positiva" o "Negativa"
-
-No inventes anotaciones. Devuelve SOLO el JSON, sin explicaciones.`;
+Devuelve SOLO el array JSON.`;
 
     const messages = [
       {
         role: 'user' as const,
-        content: `Extrae TODAS las anotaciones:\n\n${cleanText}`,
+        content: filteredText.length > 0 ? `Extrae anotaciones:\n\n${filteredText}` : `Extrae anotaciones:\n\n${cleanText}`,
       },
     ];
 

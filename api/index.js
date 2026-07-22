@@ -323,7 +323,7 @@ async function callAI(messages, systemInstruction) {
   const apiKey = getApiKey();
   const body = {
     model: AI_MODEL,
-    max_tokens: 4000,
+    max_tokens: 2000,
     temperature: 0,
     messages: []
   };
@@ -754,26 +754,35 @@ router7.post("/parse-annotations", async (req, res) => {
       return;
     }
     let cleanText = textContent.replace(/\n{3,}/g, "\n\n").replace(/\s{3,}/g, "  ").replace(/P\xE1gina\s*\d+.*/gi, "").trim();
-    const MAX_LENGTH = 15000;
-    if (cleanText.length > MAX_LENGTH) {
-      cleanText = cleanText.slice(0, MAX_LENGTH) + "\n\n[Documento truncado por exceder el límite de procesamiento]";
-      console.warn(`Texto truncado de ${textContent.length} a ${MAX_LENGTH} caracteres`);
+
+    const lines = cleanText.split("\n");
+    const blocks = [];
+    let current = [];
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (/^\d{2}\/\d{2}\/\d{4}/.test(trimmed)) {
+        if (current.length > 0) blocks.push(current.join("\n"));
+        current = [line];
+      } else if (current.length > 0 && trimmed) {
+        current.push(line);
+      }
     }
-    const systemInstruction = `Extrae TODAS las anotaciones de este texto de hoja de vida estudiantil. Cada línea que empieza con fecha DD/MM/AAAA es una anotación distinta.
+    if (current.length > 0) blocks.push(current.join("\n"));
+    let filteredText = blocks.join("\n\n");
 
-Formato esperado: [FECHA] Profesor: [nombre] Tipo: [Información|Positiva|Negativa] Categoria: [categoría] Anotación: [descripción]
+    const MAX_LENGTH = 10000;
+    if (filteredText.length > MAX_LENGTH) {
+      filteredText = filteredText.slice(0, MAX_LENGTH) + "\n\n[Truncado]";
+    }
+    const systemInstruction = `Extrae anotaciones. Cada linea con fecha DD/MM/AAAA inicia una anotacion. El texto de la anotacion esta desde "Anotaci\u00F3n:" hasta la siguiente fecha.
 
-Devuelve SOLO un array JSON con estos campos:
-- text: descripción completa
-- date: YYYY-MM-DD
-- registered_by: nombre del profesor o "Inspectoría"
-- type: "Información", "Positiva" o "Negativa"
+Campos: text (descripcion completa), date (YYYY-MM-DD), type = Tipo (Positiva, Negativa o Informaci\u00F3n).
 
-No inventes anotaciones. Devuelve SOLO el JSON, sin explicaciones.`;
+Devuelve SOLO el array JSON.`;
     const messages = [
       {
         role: "user",
-        content: `Extrae TODAS las anotaciones:\n\n${cleanText}`
+        content: filteredText.length > 0 ? `Extrae anotaciones:\n\n${filteredText}` : `Extrae anotaciones:\n\n${cleanText}`
       }
     ];
     const responseText = await callAI(messages, systemInstruction).catch(err => {
