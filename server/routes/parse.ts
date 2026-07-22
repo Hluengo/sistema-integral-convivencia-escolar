@@ -33,43 +33,28 @@ router.post('/parse-annotations', async (req, res) => {
       .replace(/Página\s*\d+.*/gi, '')
       .trim();
 
-    const MAX_LENGTH = 80000;
+    const MAX_LENGTH = 25000;
     if (cleanText.length > MAX_LENGTH) {
       cleanText = cleanText.slice(0, MAX_LENGTH) + '\n\n[Documento truncado por exceder el límite de procesamiento]';
       console.warn(`Texto truncado de ${textContent.length} a ${MAX_LENGTH} caracteres`);
     }
 
-    const systemInstruction = `Eres un analizador de documentos educativos. Tu tarea es extraer TODAS las anotaciones de un texto de hoja de vida estudiantil y devolverlas en JSON.
+    const systemInstruction = `Extrae TODAS las anotaciones de este texto de hoja de vida estudiantil. Cada línea que empieza con fecha DD/MM/AAAA es una anotación distinta.
 
-CADA ANOTACIÓN tiene esta estructura (en una sola línea o bloque contiguo):
-[FECHA] Profesor: [nombre] Tipo: [tipo] Categoria: [categoría] Anotación: [descripción]
+Formato esperado: [FECHA] Profesor: [nombre] Tipo: [Información|Positiva|Negativa] Categoria: [categoría] Anotación: [descripción]
 
-Orden exacto de los campos:
-1. FECHA al inicio, formato DD/MM/AAAA.
-2. Profesor: nombre del profesor.
-3. Tipo: SOLO puede ser "Información", "Positiva" o "Negativa".
-4. Categoria: INFORMACIÓN, COMPORTAMIENTO, RESPONSABILIDAD o RESPONSABILIDAD Y COMPORTAMIENTO.
-5. Anotación: texto descriptivo del evento.
+Devuelve SOLO un array JSON con estos campos:
+- text: descripción completa
+- date: YYYY-MM-DD
+- registered_by: nombre del profesor o "Inspectoría"
+- type: "Información", "Positiva" o "Negativa"
 
-REGLAS:
-- Cada línea que empieza con una fecha (DD/MM/AAAA) es UNA anotación.
-- Si una anotación no cabe en una línea, el texto continúa en la siguiente hasta la próxima fecha.
-- NO dividas una anotación en múltiples registros.
-- NO incluyas encabezados, títulos de sección ni líneas sin fecha.
-- NO inventes información que no esté en el texto.
-
-Campos JSON requeridos:
-- text: texto completo de la anotación.
-- date: fecha en formato YYYY-MM-DD.
-- registered_by: nombre del profesor. Si no hay, usa "Inspectoría".
-- type: exactamente el valor del campo Tipo. "Información" NO es negativa, es neutra.
-
-Devuelve SOLO el arreglo JSON, sin texto adicional.`;
+No inventes anotaciones. Devuelve SOLO el JSON, sin explicaciones.`;
 
     const messages = [
       {
         role: 'user' as const,
-        content: `Extrae TODAS las anotaciones del siguiente texto de hoja de vida. Cada línea que empieza con fecha (DD/MM/AAAA) es UNA anotación. Devuelve SOLO el JSON:\n\n--- INICIO DEL DOCUMENTO ---\n${cleanText}\n--- FIN DEL DOCUMENTO ---`,
+        content: `Extrae TODAS las anotaciones:\n\n${cleanText}`,
       },
     ];
 

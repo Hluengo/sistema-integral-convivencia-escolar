@@ -750,45 +750,26 @@ router7.post("/parse-annotations", async (req, res) => {
       return;
     }
     let cleanText = textContent.replace(/\n{3,}/g, "\n\n").replace(/\s{3,}/g, "  ").replace(/P\xE1gina\s*\d+.*/gi, "").trim();
-    const MAX_LENGTH = 80000;
+    const MAX_LENGTH = 25000;
     if (cleanText.length > MAX_LENGTH) {
       cleanText = cleanText.slice(0, MAX_LENGTH) + "\n\n[Documento truncado por exceder el límite de procesamiento]";
       console.warn(`Texto truncado de ${textContent.length} a ${MAX_LENGTH} caracteres`);
     }
-    const systemInstruction = `Eres un analizador de documentos educativos. Tu tarea es extraer TODAS las anotaciones de un texto de hoja de vida estudiantil y devolverlas en JSON.
+    const systemInstruction = `Extrae TODAS las anotaciones de este texto de hoja de vida estudiantil. Cada línea que empieza con fecha DD/MM/AAAA es una anotación distinta.
 
-CADA ANOTACI\xD3N tiene esta estructura (en una sola l\xEDnea o bloque contiguo):
-[FECHA] Profesor: [nombre] Tipo: [tipo] Categoria: [categor\xEDa] Anotaci\xF3n: [descripci\xF3n]
+Formato esperado: [FECHA] Profesor: [nombre] Tipo: [Información|Positiva|Negativa] Categoria: [categoría] Anotación: [descripción]
 
-Orden exacto de los campos:
-1. FECHA al inicio, formato DD/MM/AAAA.
-2. Profesor: nombre del profesor.
-3. Tipo: SOLO puede ser "Informaci\xF3n", "Positiva" o "Negativa".
-4. Categoria: INFORMACI\xD3N, COMPORTAMIENTO, RESPONSABILIDAD o RESPONSABILIDAD Y COMPORTAMIENTO.
-5. Anotaci\xF3n: texto descriptivo del evento.
+Devuelve SOLO un array JSON con estos campos:
+- text: descripción completa
+- date: YYYY-MM-DD
+- registered_by: nombre del profesor o "Inspectoría"
+- type: "Información", "Positiva" o "Negativa"
 
-REGLAS:
-- Cada l\xEDnea que empieza con una fecha (DD/MM/AAAA) es UNA anotaci\xF3n.
-- Si una anotaci\xF3n no cabe en una l\xEDnea, el texto contin\xFAa en la siguiente hasta la pr\xF3xima fecha.
-- NO dividas una anotaci\xF3n en m\xFAltiples registros.
-- NO incluyas encabezados, t\xEDtulos de secci\xF3n ni l\xEDneas sin fecha.
-- NO inventes informaci\xF3n que no est\xE9 en el texto.
-
-Campos JSON requeridos:
-- text: texto completo de la anotaci\xF3n.
-- date: fecha en formato YYYY-MM-DD.
-- registered_by: nombre del profesor. Si no hay, usa "Inspector\xEDa".
-- type: exactamente el valor del campo Tipo. "Informaci\xF3n" NO es negativa, es neutra.
-
-Devuelve SOLO el arreglo JSON, sin texto adicional.`;
+No inventes anotaciones. Devuelve SOLO el JSON, sin explicaciones.`;
     const messages = [
       {
         role: "user",
-        content: `Extrae TODAS las anotaciones del siguiente texto de hoja de vida. Cada l\xEDnea que empieza con fecha (DD/MM/AAAA) es UNA anotaci\xF3n. Devuelve SOLO el JSON:
-
---- INICIO DEL DOCUMENTO ---
-${cleanText}
---- FIN DEL DOCUMENTO ---`
+        content: `Extrae TODAS las anotaciones:\n\n${cleanText}`
       }
     ];
     const responseText = await callGroq(messages, systemInstruction).catch(err => {
