@@ -896,6 +896,179 @@ router8.get('/usage/stats', requireAuth, async (req, res) => {
 });
 var usage_default = router8;
 
+// server/api/routes/processDisciplinaryPdf.ts
+import { Router as Router9 } from 'express';
+var router9 = Router9();
+router9.post('/process-disciplinary-pdf', async (req, res) => {
+  try {
+    const { textContent, fileName, studentId, tenantId } = req.body;
+    if (!textContent || !fileName || !studentId || !tenantId) {
+      res.status(400).json({
+        error: 'Faltan par\xE1metros requeridos: textContent, fileName, studentId, tenantId',
+      });
+      return;
+    }
+    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
+    if (!checkRateLimit(ip)) {
+      res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
+      return;
+    }
+    const lines = textContent
+      .split('\n')
+      .filter((l) => !l.trim().startsWith('![') && !l.includes('data:image'));
+    const blocks = [];
+    let current = [];
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      if (/^\d{2}\/\d{2}\/\d{4}/.test(trimmed)) {
+        if (current.length > 0) blocks.push(current.join('\n'));
+        current = [line];
+      } else if (current.length > 0) {
+        current.push(line);
+      }
+    }
+    if (current.length > 0) blocks.push(current.join('\n'));
+    const summary = { negativas: 0, positivas: 0, informativas: 0 };
+    const detectedAnnotations = [];
+    for (let i = 0; i < blocks.length; i++) {
+      const block = blocks[i];
+      const typeMatch = block.match(/Tipo:\s*(Negativa|Positiva|Informaci[\xF3o]n)/i);
+      if (typeMatch) {
+        const type = typeMatch[1].toLowerCase().startsWith('neg')
+          ? 'Negativa'
+          : typeMatch[1].toLowerCase().startsWith('pos')
+            ? 'Positiva'
+            : 'Informaci\xF3n';
+        if (type === 'Negativa') summary.negativas++;
+        else if (type === 'Positiva') summary.positivas++;
+        else summary.informativas++;
+        const dateMatch = block.match(/(\d{2}\/\d{2}\/\d{4})/);
+        const teacherMatch = block.match(/Profesor:\s*([^\n]+)/i);
+        const textLines = block
+          .split('\n')
+          .filter(
+            (l) =>
+              !l.includes('Tipo:') && !l.includes('Profesor:') && !l.match(/^\d{2}\/\d{2}\/\d{4}/)
+          );
+        const annotationText = textLines.join(' ').trim();
+        detectedAnnotations.push({
+          type,
+          text: annotationText,
+          lineNumber: i + 1,
+          date: dateMatch ? dateMatch[1] : void 0,
+          teacher: teacherMatch ? teacherMatch[1].trim() : void 0,
+        });
+      }
+    }
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY ?? '';
+    if (!supabaseUrl || !supabaseKey) {
+      res.status(500).json({ error: 'Supabase no configurado' });
+      return;
+    }
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: { persistSession: false },
+    });
+    const { data: suggestedLetter, error: ruleError } = await supabase.rpc(
+      'get_suggested_letter_type',
+      {
+        p_negativas: summary.negativas,
+        p_positivas: summary.positivas,
+        p_informativas: summary.informativas,
+        p_tenant_id: tenantId,
+      }
+    );
+    if (ruleError) {
+      console.error('Error getting suggested letter type:', ruleError);
+    }
+    const { data: processNumber, error: numberError } = await supabase.rpc(
+      'generate_process_number',
+      { p_tenant_id: tenantId }
+    );
+    if (numberError) {
+      console.error('Error generating process number:', numberError);
+      res.status(500).json({ error: 'Error al generar n\xFAmero de proceso' });
+      return;
+    }
+    const { data: dpRow, error: processError } = await supabase
+      .from('disciplinary_processes')
+      .insert({
+        student_id: studentId,
+        process_number: processNumber,
+        status: 'draft',
+        tenant_id: tenantId,
+        suggested_letter_type: suggestedLetter || 'none',
+        total_negativas: summary.negativas,
+        total_positivas: summary.positivas,
+        total_informativas: summary.informativas,
+        is_completed: false,
+      })
+      .select()
+      .single();
+    if (processError || !dpRow) {
+      console.error('Error creating disciplinary process:', processError);
+      res.status(500).json({ error: 'Error al crear proceso disciplinario' });
+      return;
+    }
+    if (detectedAnnotations.length > 0) {
+      const annotationsToInsert = detectedAnnotations.map((ann) => ({
+        process_id: dpRow.id,
+        student_id: studentId,
+        annotation_type: ann.type,
+        annotation_text: ann.text,
+        line_number: ann.lineNumber,
+        annotation_date: ann.date ? new Date(ann.date.split('/').reverse().join('-')) : null,
+        teacher_name: ann.teacher,
+        tenant_id: tenantId,
+      }));
+      const { error: annotationsError } = await supabase
+        .from('disciplinary_annotations_detected')
+        .insert(annotationsToInsert);
+      if (annotationsError) {
+        console.error('Error saving detected annotations:', annotationsError);
+      }
+    }
+    await supabase.from('document_analyses').insert({
+      student_id: studentId,
+      file_name: fileName,
+      negativas: summary.negativas,
+      positivas: summary.positivas,
+      informativas: summary.informativas,
+      tenant_id: tenantId,
+    });
+    res.json({
+      success: true,
+      processId: disciplinaryProcess.id,
+      processNumber: disciplinaryProcess.process_number,
+      summary,
+      suggestedLetterType: suggestedLetter || 'none',
+      detectedAnnotationsCount: detectedAnnotations.length,
+    });
+    res.json({
+      success: true,
+      processId: dpRow.id,
+      processNumber: dpRow.process_number,
+      summary,
+      suggestedLetterType: suggestedLetter || 'none',
+      detectedAnnotationsCount: detectedAnnotations.length,
+    });
+  } catch (error) {
+      summary,
+      suggestedLetterType: suggestedLetter || 'none',
+      detectedAnnotationsCount: detectedAnnotations.length,
+    });
+  } catch (error) {
+    console.error('Error processing disciplinary PDF:', error);
+    res.status(500).json({
+      error: 'Error interno al procesar el documento',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+var processDisciplinaryPdf_default = router9;
+
 // server/api/index.ts
 var __filename = fileURLToPath(import.meta.url);
 var __dirname = path.dirname(__filename);
@@ -908,6 +1081,7 @@ app.use('/api', draft_default);
 app.use('/api', debug_default);
 app.use('/api', templates_default);
 app.use('/api', parse_default);
+app.use('/api', processDisciplinaryPdf_default);
 app.use('/api', usage_default);
 var distPath = path.join(__dirname, '..', 'dist');
 app.use(express.static(distPath));

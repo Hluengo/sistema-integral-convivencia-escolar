@@ -15,6 +15,7 @@ import improveRoutes from './routes/improve';
 import advisorRoutes from './routes/advisor';
 import templatesRoutes from './routes/templates';
 import parseRoutes from './routes/parse';
+import processDisciplinaryPdfRoutes from './routes/processDisciplinaryPdf';
 import debugRoutes from './routes/debug';
 import usageRoutes from './routes/usage';
 
@@ -34,6 +35,7 @@ app.use('/api', improveRoutes);
 app.use('/api', advisorRoutes);
 app.use('/api', templatesRoutes);
 app.use('/api', parseRoutes);
+app.use('/api', processDisciplinaryPdfRoutes);
 app.use('/api', debugRoutes);
 app.use('/api', usageRoutes);
 
