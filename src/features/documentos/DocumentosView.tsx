@@ -21,7 +21,7 @@ import {
   fetchAnnotations,
   fetchDocumentAnalyses,
 } from '@/src/services/annotations.service';
-import { fetchCartas } from '@/src/services/cartas.service';
+import { fetchCartaAnnotations, fetchCartas } from '@/src/services/cartas.service';
 import { fetchCausas } from '@/src/services/cases';
 import type {
   AnotacionStudent,
@@ -31,7 +31,8 @@ import type {
   DocumentAnalysis,
 } from '@/src/shared/lib/types';
 import { getSemaphoricStyle, TEACHERS_BY_COURSE } from '@/src/lib/anotacionesUtils';
-import { downloadCartaPdf } from '@/src/features/anotaciones/docgen/downloadCartaPdf';
+import { downloadHistoricalCartaPdf } from '@/src/features/anotaciones/docgen/letterPrintService';
+import { getSuggestedLetterType, mapDocTypeToLetterType } from '@/src/shared/lib/domain/disciplinaryStage';
 
 const AnotacionesDocumentGenerator = lazy(
   () => import('@/src/features/anotaciones/AnotacionesDocumentGenerator')
@@ -52,23 +53,6 @@ interface HubItem {
   sourceRecord: Causa | AnotacionStudent;
 }
 
-const CTA_THRESHOLDS = [
-  { min: 5, max: 9, docType: 'amonestacion' as const, label: 'Crear Carta de Amonestación' },
-  {
-    min: 10,
-    max: 14,
-    docType: 'compromiso_conductual' as const,
-    label: 'Crear Carta de Compromiso Conductual',
-  },
-  { min: 15, max: Infinity, docType: 'derivacion' as const, label: 'Crear Ficha de Derivación' },
-] as const;
-
-function getCtaForCount(count: number): (typeof CTA_THRESHOLDS)[number] | null {
-  for (const t of CTA_THRESHOLDS) {
-    if (count >= t.min && count <= t.max) return t;
-  }
-  return null;
-}
 
 const STATUS_BADGE: Record<string, { bg: string; text: string }> = {
   Vigente: { bg: 'bg-emerald-100', text: 'text-emerald-800' },
@@ -120,6 +104,20 @@ function getFaseForEstado(estadoActual: string): string {
   return 'Investigación';
 }
 
+function formatAnnotationSummary(negativeCount: number, positiveCount: number, informativeCount: number): string {
+  const totalCount = negativeCount + positiveCount + informativeCount;
+  const infoLabel = informativeCount === 1 ? 'informativa' : 'informativas';
+  return `${totalCount} anotaciones (${negativeCount} negativas / ${positiveCount} positivas / ${informativeCount} ${infoLabel})`;
+}
+
+function formatLastRecordLabel(date?: string): string {
+  if (!date) return 'Último Registro: -';
+  return `Último Registro: ${new Date(date).toLocaleDateString('es-CL', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })}`;
+}
 const FILTER_TABS: { key: DocFiltro; label: string }[] = [
   { key: 'todos', label: 'Todos' },
   { key: 'causas', label: 'Causas' },
@@ -180,10 +178,10 @@ export default function DocumentosView() {
         }));
 
         const studentItems: HubItem[] = studentList.reduce<HubItem[]>((acc, s) => {
-          if ((s.annotations_count || 0) > 0) {
-            const negCount = Number(s.annotations_count) || 0;
-            const posCount = Number(s.positive_annotations_count || 0);
-            const totalCount = negCount + posCount;
+          const negCount = Number(s.annotations_count) || 0;
+          const posCount = Number(s.positive_annotations_count || 0);
+          const infoCount = Number(s.informative_annotations_count || 0);
+          if (negCount + posCount + infoCount > 0) {
             acc.push({
               id: `student-${s.id}`,
               type: 'student',
@@ -192,7 +190,7 @@ export default function DocumentosView() {
               studentName: s.full_name,
               course: s.course_name || s.course_id || '',
               title: s.full_name,
-              description: `${totalCount} anotaciones (${negCount} negativas / ${posCount} positivas)`,
+              description: formatAnnotationSummary(negCount, posCount, infoCount),
               status: s.disciplinary_status,
               sourceRecord: s,
             });
@@ -330,7 +328,10 @@ export default function DocumentosView() {
   const semaphoric = selectedStudent
     ? getSemaphoricStyle(negativeCount)
     : { badge: '', dot: '', text: '' };
-  const cta = selectedStudent ? getCtaForCount(negativeCount) : null;
+  const suggestedDocType = selectedStudent ? getSuggestedLetterType(negativeCount) : null;
+  const cta = suggestedDocType
+    ? { docType: suggestedDocType, label: 'Crear ' + (mapDocTypeToLetterType(suggestedDocType) || 'documento') }
+    : null;
 
   const handleCtaClick = () => {
     if (cta) {
@@ -347,11 +348,16 @@ export default function DocumentosView() {
   const handleDownloadCarta = async (carta: CartaDisciplinaria) => {
     setDownloadingCartaId(carta.id);
     try {
-      await downloadCartaPdf(carta, {
-        full_name: carta.student_name,
-        course_name: carta.course,
-        rut: '',
-      });
+      const cartaAnnotations = await fetchCartaAnnotations(carta);
+      await downloadHistoricalCartaPdf(
+        carta,
+        {
+          full_name: carta.student_name,
+          course_name: carta.course,
+          rut: '',
+        },
+        cartaAnnotations
+      );
     } catch (err) {
       console.error('Error al descargar PDF:', err);
     } finally {
@@ -502,15 +508,7 @@ export default function DocumentosView() {
                       </div>
                       <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-neutral-500 text-xs">
                         {item.course && <span className="text-neutral-400">{item.course}</span>}
-                        <span className="text-neutral-400">
-                          {item.date
-                            ? new Date(item.date).toLocaleDateString('es-CL', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric',
-                              })
-                            : '-'}
-                        </span>
+                        <span className="text-neutral-400">{formatLastRecordLabel(item.date)}</span>
                       </div>
                       {item.description && (
                         <p className="mt-1 text-neutral-500 text-xs">{item.description}</p>
@@ -530,11 +528,8 @@ export default function DocumentosView() {
                               IA Disponible
                             </span>
                           </>
-                        ) : isStudent && studentRecord ? (
-                          <span className="inline-flex items-center rounded-md border border-neutral-200 bg-neutral-50 px-2 py-0.5 font-semibold text-[10px] text-neutral-600">
-                            {studentRecord.annotations_count} anot. totales
-                          </span>
                         ) : null}
+
                       </div>
                     </div>
 

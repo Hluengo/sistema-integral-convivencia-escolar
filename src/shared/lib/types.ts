@@ -148,6 +148,7 @@ export interface AnotacionStudent {
   tenant_id?: string;
   annotations_count: number;
   positive_annotations_count: number;
+  informative_annotations_count?: number;
   last_annotation_date?: string;
   disciplinary_status: DisciplinaryStatus;
   rut?: string;

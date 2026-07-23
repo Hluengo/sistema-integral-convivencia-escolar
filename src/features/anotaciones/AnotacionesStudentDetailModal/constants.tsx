@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { FileText, RefreshCw, History } from 'lucide-react';
+import { FileText, RefreshCw, History, ScrollText } from 'lucide-react';
 
 export interface StudentInfo {
   id: string;
@@ -33,63 +33,46 @@ export interface DisciplinayRecord {
   fecha_ultima_actualizacion?: string;
 }
 
-export type ActiveTab = 'resumen' | 'revision' | 'historial';
-
-export const DISCIPLINARY_SUGGESTION: Record<string, { title: string; description: string; action: string; accent: string }> = {
-  Verde: {
-    title: 'Sin observaciones mayores',
-    description: 'El estudiante mantiene un comportamiento dentro de lo esperado. No se requiere acción disciplinaria.',
-    action: 'Continuar con seguimiento regular.',
-    accent: 'border-emerald-300 bg-emerald-50',
-  },
-  Amarillo: {
-    title: 'Etapa de Amonestación',
-    description: 'El estudiante ha acumulado entre 5 y 9 anotaciones negativas.',
-    action: 'Se sugiere emitir Amonestación Escrita y citar al apoderado.',
-    accent: 'border-yellow-300 bg-yellow-50',
-  },
-  Naranja: {
-    title: 'Etapa de Compromiso',
-    description: 'El estudiante ha acumulado entre 10 y 14 anotaciones negativas.',
-    action: 'Se sugiere emitir Carta de Compromiso Conductual con firma del apoderado.',
-    accent: 'border-orange-300 bg-orange-50',
-  },
-  Rojo: {
-    title: 'Etapa de Derivación',
-    description: 'El estudiante ha acumulado 15 o más anotaciones negativas.',
-    action: 'Derivar a proceso disciplinario formal con Inspectoría General.',
-    accent: 'border-rose-300 bg-rose-50',
-  },
-};
+export type ActiveTab = 'estado' | 'revisar_pdf' | 'cartas' | 'historial';
 
 export const SEVERITY_BADGE: Record<string, { bg: string; text: string; dot: string }> = {
   Leve: { bg: 'bg-yellow-50', text: 'text-yellow-800', dot: 'bg-yellow-500' },
   Grave: { bg: 'bg-orange-50', text: 'text-orange-800', dot: 'bg-orange-500' },
   'Muy Grave': { bg: 'bg-red-50', text: 'text-red-800', dot: 'bg-red-500' },
-  'Gravísima': { bg: 'bg-rose-50', text: 'text-rose-800', dot: 'bg-rose-600' },
+  Gravísima: { bg: 'bg-rose-50', text: 'text-rose-800', dot: 'bg-rose-600' },
 };
 
-export const STATUS_STYLE: Record<string, { bg: string; text: string; label: string }> = {
-  Verde: { bg: 'bg-emerald-100', text: 'text-emerald-800', label: 'Sin medida activa' },
-  Amarillo: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Amonestación Escrita' },
-  Naranja: { bg: 'bg-orange-100', text: 'text-orange-800', label: 'Carta de Compromiso Conductual' },
-  Rojo: { bg: 'bg-rose-100', text: 'text-rose-800', label: 'Derivación a Convivencia Escolar' },
+export const STAGE_STYLE: Record<string, { bg: string; text: string; border: string }> = {
+  none: { bg: 'bg-neutral-100', text: 'text-neutral-700', border: 'border-neutral-200' },
+  amonestacion: { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-200' },
+  compromiso_conductual: { bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-200' },
+  derivacion: { bg: 'bg-rose-100', text: 'text-rose-800', border: 'border-rose-200' },
+};
+
+export const STATUS_BADGE: Record<string, { bg: string; text: string }> = {
+  Vigente: { bg: 'bg-emerald-100', text: 'text-emerald-800' },
+  Pendiente: { bg: 'bg-amber-100', text: 'text-amber-800' },
+  Cumplida: { bg: 'bg-blue-100', text: 'text-blue-800' },
+  Incumplida: { bg: 'bg-red-100', text: 'text-red-800' },
+  Anulada: { bg: 'bg-neutral-100', text: 'text-neutral-500' },
 };
 
 export const TAB_ICONS: Record<ActiveTab, React.ReactNode> = {
-  resumen: <FileText className="h-4 w-4" />,
-  revision: <RefreshCw className="h-4 w-4" />,
+  estado: <FileText className="h-4 w-4" />,
+  revisar_pdf: <RefreshCw className="h-4 w-4" />,
+  cartas: <ScrollText className="h-4 w-4" />,
   historial: <History className="h-4 w-4" />,
 };
 
 export const TAB_LABELS: Record<ActiveTab, string> = {
-  resumen: 'Ficha / Resumen',
-  revision: 'Revisión',
+  estado: 'Estado',
+  revisar_pdf: 'Revisar PDF',
+  cartas: 'Cartas',
   historial: 'Historial',
 };
 
 export function formatDate(dateStr?: string): string {
-  if (!dateStr) { return '-'; }
+  if (!dateStr) return '-';
   try {
     const date = new Date(dateStr);
     return date.toLocaleDateString('es-CL', {

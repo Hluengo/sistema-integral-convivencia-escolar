@@ -1,10 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import type {
-  Annotation,
-  CartaDisciplinaria,
-  EtapaDisciplinaria,
-} from '../../types';
+import type { Annotation, CartaDisciplinaria, EtapaDisciplinaria } from '../../types';
 
 export interface InspectorateRecord {
   id: string;
@@ -28,9 +24,11 @@ export function mapInspectorateToAnnotation(row: InspectorateRecord): Annotation
     severity: row.severity as Annotation['severity'],
     registered_by: row.registered_by,
     type: (
-      row.type === 'Positiva' ? 'Positiva' :
-      row.type === 'Información' ? 'Información' :
-      'Negativa'
+      row.type === 'Positiva'
+        ? 'Positiva'
+        : row.type === 'Información'
+          ? 'Información'
+          : 'Negativa'
     ) as Annotation['type'],
     pdf_file_path: row.pdf_file_path || null,
   };
@@ -43,11 +41,13 @@ export interface CauseRow {
   emission_date: string;
   status: string;
   emitted_by: string;
+  supervisor_name?: string | null;
   apoderado_name: string;
   annotations_count: number;
   student_name: string;
   course: string;
   regulation_basis: string;
+  observations?: string | null;
   created_at: string;
 }
 
@@ -63,11 +63,13 @@ export function mapCauseRowToCarta(row: CauseRow): CartaDisciplinaria {
     emission_date: row.emission_date,
     status: validStatus(row.status),
     emitted_by: row.emitted_by,
+    supervisor_name: row.supervisor_name || undefined,
     apoderado_name: row.apoderado_name,
     annotations_count: row.annotations_count,
     student_name: row.student_name,
     course: row.course,
     regulation_basis: row.regulation_basis,
+    observations: row.observations || undefined,
     created_at: row.created_at,
   };
 }
@@ -79,6 +81,7 @@ export interface StageRow {
   stage_name: string;
   responsible: string;
   transition_date: string;
+  comment?: string | null;
   created_at: string;
 }
 
@@ -90,6 +93,7 @@ export function mapStageRowToEtapa(row: StageRow): EtapaDisciplinaria {
     stage_name: row.stage_name,
     responsible: row.responsible,
     transition_date: row.transition_date,
+    comment: row.comment || undefined,
     created_at: row.created_at,
   };
 }

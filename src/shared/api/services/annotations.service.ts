@@ -12,6 +12,13 @@ import { useAuthStore } from '../../../stores/authStore';
 const ANNOTATION_COLUMNS =
   'id,student_id,date_time,observation,severity,type,registered_by,created_at,created_by';
 
+interface AnnotationCountStats {
+  negativas: number;
+  positivas: number;
+  informativas: number;
+  lastDate?: string;
+}
+
 export async function fetchAnnotations(studentId?: string): Promise<Annotation[]> {
   let query = supabase
     .from('inspectorate_records')
@@ -102,79 +109,113 @@ interface RpcStudentSummary {
   course_name: string;
   annotations_count: number;
   positive_annotations_count: number;
+  informative_annotations_count?: number;
   last_annotation_date: string | null;
   disciplinary_status: string;
   ai_analysis: Record<string, number> | null;
 }
 
-export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStudent[]> {
-  // 1. Try RPC (agregación server-side, single query)
-  const { data: rpcData, error: rpcError } = await supabase.rpc('get_student_annotation_summary');
+function addAnnotationToStats(
+  stats: Record<string, AnnotationCountStats>,
+  annotation: { student_id: string; type: string; date_time: string | null }
+) {
+  const studentStats = stats[annotation.student_id] || {
+    negativas: 0,
+    positivas: 0,
+    informativas: 0,
+    lastDate: undefined,
+  };
 
-  if (!rpcError && rpcData) {
-    return (rpcData as RpcStudentSummary[]).map((row) => ({
-      id: row.id,
-      full_name: row.full_name,
-      course_id: row.course_id,
-      teacher_id: '',
-      status: 'Activo',
-      annotations_count: Number(row.annotations_count),
-      positive_annotations_count: Number(row.positive_annotations_count),
-      last_annotation_date: row.last_annotation_date || undefined,
-      disciplinary_status: row.disciplinary_status as AnotacionStudent['disciplinary_status'],
-      rut: row.rut || '',
-      course_name: row.course_name || 'Sin curso',
-      ai_analysis: row.ai_analysis
-        ? {
-            negativas: Number(row.ai_analysis.negativas) || 0,
-            positivas: Number(row.ai_analysis.positivas) || 0,
-            informativas: Number(row.ai_analysis.informativas) || 0,
-          }
-        : undefined,
-    }));
+  if (annotation.type === 'Negativa') studentStats.negativas += 1;
+  if (annotation.type === 'Positiva') studentStats.positivas += 1;
+  if (annotation.type === 'Información') studentStats.informativas += 1;
+
+  if (annotation.date_time) {
+    const current = studentStats.lastDate ? new Date(studentStats.lastDate).getTime() : 0;
+    const next = new Date(annotation.date_time).getTime();
+    if (next > current) studentStats.lastDate = annotation.date_time;
   }
 
-  // 2. Fallback: client-side aggregation (migration no ejecutada)
+  stats[annotation.student_id] = studentStats;
+}
+
+async function fetchAnnotationStatsByStudent(): Promise<Record<string, AnnotationCountStats>> {
+  const { data, error } = await supabase
+    .from('inspectorate_records')
+    .select('student_id,type,date_time');
+
+  if (error) {
+    console.error('Error fetching annotation stats:', error);
+    return {};
+  }
+
+  const stats: Record<string, AnnotationCountStats> = {};
+  for (const annotation of data || []) {
+    addAnnotationToStats(stats, annotation as { student_id: string; type: string; date_time: string | null });
+  }
+  return stats;
+}
+
+export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStudent[]> {
+  const [summaryResult, statsByStudent] = await Promise.all([
+    supabase.rpc('get_student_annotation_summary'),
+    fetchAnnotationStatsByStudent(),
+  ]);
+  const { data: rpcData, error: rpcError } = summaryResult;
+
+  if (!rpcError && rpcData) {
+    return (rpcData as RpcStudentSummary[]).map((row) => {
+      const stats = statsByStudent[row.id];
+      const negativeCount = stats?.negativas ?? Number(row.annotations_count) ?? 0;
+      const positiveCount = stats?.positivas ?? Number(row.positive_annotations_count) ?? 0;
+      const informativeCount =
+        stats?.informativas ?? Number(row.informative_annotations_count || 0) ?? 0;
+      return {
+        id: row.id,
+        full_name: row.full_name,
+        course_id: row.course_id,
+        teacher_id: '',
+        status: 'Activo',
+        annotations_count: negativeCount,
+        positive_annotations_count: positiveCount,
+        informative_annotations_count: informativeCount,
+        last_annotation_date: stats?.lastDate || row.last_annotation_date || undefined,
+        disciplinary_status: calculateDisciplinaryStatus(negativeCount),
+        rut: row.rut || '',
+        course_name: row.course_name || 'Sin curso',
+        ai_analysis: row.ai_analysis
+          ? {
+              negativas: Number(row.ai_analysis.negativas) || 0,
+              positivas: Number(row.ai_analysis.positivas) || 0,
+              informativas: Number(row.ai_analysis.informativas) || 0,
+            }
+          : undefined,
+      };
+    });
+  }
+
   console.warn(
     'RPC get_student_annotation_summary no disponible, usando fallback:',
     rpcError?.message
   );
 
-  const [studentsResult, annResult] = await Promise.all([
-    supabase
-      .from('students')
-      .select('*, courses(name, level)')
-      .order('full_name', { ascending: true }),
-    supabase.from('inspectorate_records').select('student_id, type, date_time'),
-  ]);
-
-  const students = studentsResult.data;
-  const allAnnotations = annResult.data;
+  const { data: students, error: studentsError } = await supabase
+    .from('students')
+    .select('*, courses(name, level)')
+    .order('full_name', { ascending: true });
 
   if (!students) {
-    console.error('Error fetching students:', studentsResult.error);
+    console.error('Error fetching students:', studentsError);
     return [];
   }
 
-  const annByStudent: Record<string, { type: string; date_time: string; student_id: string }[]> =
-    {};
-  for (const ann of allAnnotations || []) {
-    if (!annByStudent[ann.student_id]) {
-      annByStudent[ann.student_id] = [];
-    }
-    annByStudent[ann.student_id].push(ann);
-  }
-
   return students.map((s: Record<string, unknown>) => {
-    const studentAnns = annByStudent[s.id as string] || [];
-    const negs = studentAnns.filter((a) => a.type === 'Negativa');
-    const pos = studentAnns.filter((a) => a.type === 'Positiva');
-    const negativeCount = negs.length;
-    const sorted = [...negs].sort(
-      (a: { date_time: string }, b: { date_time: string }) =>
-        new Date(b.date_time).getTime() - new Date(a.date_time).getTime()
-    );
-
+    const stats = statsByStudent[s.id as string] || {
+      negativas: 0,
+      positivas: 0,
+      informativas: 0,
+      lastDate: undefined,
+    };
     const courses = s.courses as { name: string; level: string } | null;
     const rawAi = s.ai_analysis as Record<string, number> | null;
     return {
@@ -183,10 +224,11 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStud
       course_id: s.course_id as string,
       teacher_id: (s.teacher_id as string) || '',
       status: (s.status as string) || 'Activo',
-      annotations_count: negativeCount,
-      positive_annotations_count: pos.length,
-      last_annotation_date: sorted[0]?.date_time || undefined,
-      disciplinary_status: calculateDisciplinaryStatus(negativeCount),
+      annotations_count: stats.negativas,
+      positive_annotations_count: stats.positivas,
+      informative_annotations_count: stats.informativas,
+      last_annotation_date: stats.lastDate,
+      disciplinary_status: calculateDisciplinaryStatus(stats.negativas),
       rut: (s.rut as string) || '',
       course_name: courses?.name ?? 'Sin curso',
       ai_analysis: rawAi

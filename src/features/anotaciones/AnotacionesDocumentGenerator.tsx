@@ -47,6 +47,7 @@ interface AnotacionesDocumentGeneratorProps {
   privacyMode: boolean;
   teachers: Record<string, string>;
   initialDocType?: string;
+  onRegistered?: () => void | Promise<void>;
 }
 
 export default function AnotacionesDocumentGenerator({
@@ -55,6 +56,7 @@ export default function AnotacionesDocumentGenerator({
   privacyMode: _privacyMode,
   teachers,
   initialDocType,
+  onRegistered,
 }: AnotacionesDocumentGeneratorProps) {
   const initialDocTypeApplied = useRef(false);
 
@@ -110,7 +112,10 @@ export default function AnotacionesDocumentGenerator({
       docObservations: documentState.docObservations,
       compromisoStatus: 'Vigente',
       teachers,
-      onSuccess: (entry) => documentRegistry.addEntry(entry),
+      onSuccess: (entry) => {
+        documentRegistry.addEntry(entry);
+        void onRegistered?.();
+      },
       setIsRegistering: documentState.setIsRegistering,
     });
     setShowEmissionConfirm(false);
@@ -135,6 +140,7 @@ export default function AnotacionesDocumentGenerator({
       teachers,
       onSuccess: (entry) => {
         documentRegistry.addEntry(entry);
+        void onRegistered?.();
         handleExportPDF();
       },
       setIsRegistering: documentState.setIsRegistering,

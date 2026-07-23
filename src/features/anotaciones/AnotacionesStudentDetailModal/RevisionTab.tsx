@@ -1,342 +1,218 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useRef, useCallback, useMemo } from 'react';
-import { X, FileText, AlertTriangle, RefreshCw, ArrowRight, Trash2 } from 'lucide-react';
+import { useCallback, useRef } from 'react';
+import { AlertTriangle, CheckCircle2, FileText, RefreshCw, X } from 'lucide-react';
+import type { CartaDisciplinaria } from '@/src/shared/lib/types';
+import type { ReviewAnnotationType } from '../NewDisciplinaryProcessModal/ReviewStep';
+import ReviewStep from '../NewDisciplinaryProcessModal/ReviewStep';
 import { formatDate, type StudentInfo } from './constants';
-import type { CartaDisciplinaria, AnnotationSummary } from '@/src/shared/lib/types';
-
-const STATUS_BADGE: Record<string, { bg: string; text: string }> = {
-  Vigente: { bg: 'bg-emerald-100', text: 'text-emerald-800' },
-  Pendiente: { bg: 'bg-amber-100', text: 'text-amber-800' },
-  Cumplida: { bg: 'bg-blue-100', text: 'text-blue-800' },
-  Incumplida: { bg: 'bg-red-100', text: 'text-red-800' },
-  Anulada: { bg: 'bg-neutral-100', text: 'text-neutral-500' },
-};
-
-const CTA_THRESHOLDS = [
-  { min: 5, max: 9, docType: 'amonestacion' as const, label: 'Carta de Amonestación' },
-  {
-    min: 10,
-    max: 14,
-    docType: 'compromiso_conductual' as const,
-    label: 'Carta de Compromiso Conductual',
-  },
-  { min: 15, max: Infinity, docType: 'derivacion' as const, label: 'Ficha de Derivación' },
-];
-
-function getCtaForCount(count: number): (typeof CTA_THRESHOLDS)[number] | null {
-  for (const t of CTA_THRESHOLDS) {
-    if (count >= t.min && count <= t.max) return t;
-  }
-  return null;
-}
-
-function getNextStepSuggestion(
-  currentLetterType: string | null,
-  negativeCount: number
-): { label: string; description: string } | null {
-  const cta = getCtaForCount(negativeCount);
-  if (!cta) return null;
-
-  if (!currentLetterType) {
-    return {
-      label: cta.label,
-      description: `El estudiante no tiene carta vigente. Según las ${negativeCount} negativas, corresponde: ${cta.label}.`,
-    };
-  }
-
-  if (currentLetterType === 'Amonestación Escrita' && cta.docType !== 'amonestacion') {
-    return {
-      label: cta.label,
-      description: `Ya tiene Amonestación Escrita vigente. Con ${negativeCount} negativas, sugiere avanzar a: ${cta.label}.`,
-    };
-  }
-
-  if (
-    currentLetterType === 'Carta de Compromiso Conductual' &&
-    (cta.docType === 'derivacion' || cta.docType === 'compromiso_conductual')
-  ) {
-    return {
-      label: cta.label,
-      description: `Ya tiene Compromiso Conductual vigente. Con ${negativeCount} negativas, sugiere: ${cta.label}.`,
-    };
-  }
-
-  return null;
-}
+import { useStudentPdfDisciplinaryReview } from './hooks/useStudentPdfDisciplinaryReview';
 
 interface RevisionTabProps {
   student: StudentInfo;
-  cartas: CartaDisciplinaria[];
-  isDragging: boolean;
-  setIsDragging: (v: boolean) => void;
-  isParsing: boolean;
-  parsingStatus: string;
-  errorMessage: string | null;
-  setErrorMessage: (v: string | null) => void;
-  summary: AnnotationSummary | null;
-  dbNegativeCount: number;
-  onDrop: (e: React.DragEvent) => Promise<void>;
-  onFileSelect: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
-  clearAnalysis: () => Promise<void>;
-  onClearAll: () => void;
+  counts: { negativas: number; positivas: number; informativas: number };
+  currentCarta: CartaDisciplinaria | null;
+  onConfirmed: () => void | Promise<void>;
 }
 
-export default function RevisionTab({
-  student,
-  cartas,
-  isDragging,
-  setIsDragging,
-  isParsing,
-  parsingStatus,
-  errorMessage,
-  setErrorMessage,
-  summary,
-  dbNegativeCount,
-  onDrop,
-  onFileSelect,
-  clearAnalysis,
-  onClearAll,
-}: RevisionTabProps) {
+const RECOMMENDATION_LABEL: Record<string, string> = {
+  mantener: 'Mantener seguimiento actual',
+  escalar: 'Escalar medida disciplinaria',
+  derivar: 'Derivar a Convivencia Escolar',
+  revisar_conflicto: 'Revisar conflicto de estudiante',
+};
+
+export default function RevisionTab({ student, counts, currentCarta, onConfirmed }: RevisionTabProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLButtonElement>(null);
+  const review = useStudentPdfDisciplinaryReview({
+    studentId: student.id,
+    studentName: student.full_name,
+    currentNegativeCount: counts.negativas,
+    currentLetterType: currentCarta?.letter_type,
+    onConfirmed,
+  });
 
   const handleDragEnter = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setIsDragging(true);
+    (event: React.DragEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      review.setIsDragging(true);
     },
-    [setIsDragging]
+    [review]
   );
 
   const handleDragLeave = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (dropZoneRef.current && !dropZoneRef.current.contains(e.relatedTarget as Node)) {
-        setIsDragging(false);
+    (event: React.DragEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (dropZoneRef.current && !dropZoneRef.current.contains(event.relatedTarget as Node)) {
+        review.setIsDragging(false);
       }
     },
-    [setIsDragging]
+    [review]
   );
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
-
-  const currentCarta = useMemo(() => {
-    const vigentes = cartas.filter((c) => c.status === 'Vigente');
-    if (vigentes.length > 0) {
-      return vigentes.reduce((a, b) =>
-        new Date(a.emission_date) > new Date(b.emission_date) ? a : b
-      );
-    }
-    return cartas.length > 0 ? cartas[0] : null;
-  }, [cartas]);
-
-  const parsedNegCount = summary?.negativas ?? 0;
-  const effectiveNegCount = Math.max(dbNegativeCount, parsedNegCount);
-  const total = summary ? summary.negativas + summary.positivas + summary.informativas : 0;
-
-  const suggestion = currentCarta
-    ? getNextStepSuggestion(currentCarta.letter_type, effectiveNegCount)
-    : effectiveNegCount > 0
-      ? getNextStepSuggestion(null, effectiveNegCount)
-      : null;
+  const totalDetected = review.summary
+    ? review.summary.negativas + review.summary.positivas + review.summary.informativas
+    : 0;
 
   return (
     <div className="space-y-5">
-      {currentCarta && (
-        <div className="rounded-2xl border border-neutral-200/80 bg-white p-4 shadow-xs">
-          <div className="flex items-center gap-2 mb-2">
-            <FileText className="h-4 w-4 text-brand-600" />
-            <h4 className="font-bold text-neutral-800 text-xs uppercase tracking-wider">
-              Carta Vigente
-            </h4>
+      <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
+        <div className="mb-3 flex items-center gap-2">
+          <FileText className="h-4 w-4 text-brand-600" />
+          <h3 className="text-sm font-bold text-neutral-900">Revisión de PDF del estudiante</h3>
+        </div>
+        <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
+          <div className="rounded-lg bg-neutral-50 p-3">
+            <p className="text-xs font-semibold text-neutral-400">Negativas en Supabase</p>
+            <p className="mt-1 text-xl font-black text-neutral-900">{counts.negativas}</p>
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <p className="font-medium text-neutral-800 text-sm">{currentCarta.letter_type}</p>
-              <p className="text-neutral-500 text-xs">
-                Emitida: {currentCarta.emission_date ? formatDate(currentCarta.emission_date) : '-'}
-                {currentCarta.apoderado_name && ` · Apoderado: ${currentCarta.apoderado_name}`}
-              </p>
-            </div>
-            <span
-              className={`shrink-0 rounded-full px-2.5 py-1 font-semibold text-[10px] ${(STATUS_BADGE[currentCarta.status] || STATUS_BADGE.Vigente).bg} ${(STATUS_BADGE[currentCarta.status] || STATUS_BADGE.Vigente).text}`}
-            >
-              {currentCarta.status}
-            </span>
+          <div className="rounded-lg bg-neutral-50 p-3">
+            <p className="text-xs font-semibold text-neutral-400">Carta vigente</p>
+            <p className="mt-1 text-sm font-bold text-neutral-900">{currentCarta?.letter_type || 'Sin carta vigente'}</p>
+          </div>
+          <div className="rounded-lg bg-neutral-50 p-3">
+            <p className="text-xs font-semibold text-neutral-400">Última emisión</p>
+            <p className="mt-1 text-sm font-bold text-neutral-900">{currentCarta ? formatDate(currentCarta.emission_date) : '-'}</p>
           </div>
         </div>
-      )}
+      </section>
 
       <button
         ref={dropZoneRef}
         type="button"
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            fileInputRef.current?.click();
-          }
-        }}
+        onClick={() => fileInputRef.current?.click()}
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
-        onDragOver={handleDragOver}
-        onDrop={onDrop}
-        onClick={() => fileInputRef.current?.click()}
-        className={`relative cursor-pointer rounded-2xl border-2 border-dashed p-8 text-center transition-colors duration-200 ${
-          isDragging
-            ? 'border-brand-400 bg-brand-50/50 shadow-lg'
-            : 'border-neutral-300 bg-white hover:border-brand-300 hover:bg-brand-50/20'
-        } ${isParsing ? 'pointer-events-none opacity-60' : ''}`}
+        onDragOver={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}
+        onDrop={review.handleDrop}
+        disabled={review.isBusy}
+        className={`w-full rounded-xl border-2 border-dashed p-8 text-center transition-colors ${
+          review.isDragging ? 'border-brand-400 bg-brand-50' : 'border-neutral-300 bg-white hover:border-brand-300 hover:bg-brand-50/30'
+        } ${review.isBusy ? 'cursor-wait opacity-70' : ''}`}
       >
         <input
           ref={fileInputRef}
-          aria-label="Seleccionar archivo para analizar"
           type="file"
-          accept=".pdf,.md,application/pdf"
-          onChange={onFileSelect}
+          accept=".pdf,application/pdf"
+          onChange={review.handleFileSelect}
           className="hidden"
+          aria-label="Seleccionar PDF de hoja de vida"
         />
         <div className="flex flex-col items-center gap-3">
-          {isParsing ? (
-            <>
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-100">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
-              </div>
-              <p className="font-medium text-brand-600 text-sm">{parsingStatus}</p>
-            </>
+          {review.isBusy ? (
+            <div className="h-10 w-10 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
           ) : (
-            <>
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-100">
-                <RefreshCw className="h-6 w-6 text-neutral-400" />
-              </div>
-              <div>
-                <p className="font-medium text-neutral-700 text-sm">
-                  {currentCarta
-                    ? 'Sube un PDF o Markdown (.md) actualizado para comparar con la carta vigente'
-                    : 'Sube un PDF o Markdown (.md) de hoja de vida para analizar las anotaciones del estudiante'}
-                </p>
-                <p className="mt-1 text-neutral-400 text-xs">PDF y Markdown (.md) - Máximo 10 MB</p>
-              </div>
-            </>
+            <RefreshCw className="h-10 w-10 text-neutral-300" />
           )}
+          <div>
+            <p className="text-sm font-semibold text-neutral-800">
+              {review.file ? review.file.name : 'Subir PDF actualizado de hoja de vida'}
+            </p>
+            <p className="mt-1 text-xs text-neutral-400">
+              Se analizará y comparará antes de registrar cualquier cambio.
+            </p>
+          </div>
         </div>
       </button>
 
-      {parsingStatus && !isParsing && summary && (
-        <div className="rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-xs">
-          <h3 className="mb-1 flex items-center gap-2 font-bold text-neutral-900 text-sm">
-            <FileText className="h-4 w-4 text-brand-600" />
-            Anotaciones Detectadas ({total})
-          </h3>
-          <p className="mb-3 font-medium text-neutral-500 text-xs">
-            {(() => {
-              const parts = [`${summary.negativas} negativas`, `${summary.positivas} positivas`];
-              if (summary.informativas > 0) parts.push(`${summary.informativas} informativas`);
-              return `Se detectaron ${total} anotaciones (${parts.join(', ')}):`;
-            })()}
-          </p>
-
-          <div className="grid grid-cols-3 gap-3">
-            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-center">
-              <p className="font-bold text-2xl text-red-700">{summary.negativas}</p>
-              <p className="mt-1 font-medium text-red-600 text-xs">Negativas</p>
-            </div>
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
-              <p className="font-bold text-2xl text-emerald-700">{summary.positivas}</p>
-              <p className="mt-1 font-medium text-emerald-600 text-xs">Positivas</p>
-            </div>
-            <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-center">
-              <p className="font-bold text-2xl text-blue-700">{summary.informativas}</p>
-              <p className="mt-1 font-medium text-blue-600 text-xs">Informativas</p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={clearAnalysis}
-            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-neutral-200 px-4 py-2 font-medium text-neutral-500 text-sm transition-colors hover:bg-neutral-50 hover:text-neutral-700"
-          >
-            <X className="h-4 w-4" />
-            Limpiar análisis
-          </button>
+      {review.statusMessage && (
+        <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-600">
+          {review.statusMessage}
         </div>
       )}
 
-      {parsingStatus && !isParsing && !summary && !errorMessage && (
-        <div className="rounded-2xl border border-neutral-200 bg-neutral-50 p-4 text-neutral-600 text-sm">
-          <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-neutral-500" />
-            <span>{parsingStatus}</span>
-          </div>
-        </div>
-      )}
-
-      {suggestion && summary && total > 0 && (
-        <div className="rounded-2xl border border-brand-200 bg-brand-50 p-4 shadow-xs">
-          <div className="flex items-start gap-3">
-            <ArrowRight className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" />
-            <div>
-              <p className="font-bold text-brand-800 text-sm">Sugerencia de documento</p>
-              <p className="mt-1 text-brand-700 text-xs leading-relaxed">
-                {suggestion.description}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {(dbNegativeCount > 0 || summary) && (
-        <div className="rounded-2xl border border-red-200 bg-white p-4 shadow-xs">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-bold text-neutral-800 text-xs uppercase tracking-wider">
-                Empezar de cero
-              </p>
-              <p className="mt-0.5 text-neutral-500 text-xs">
-                {dbNegativeCount > 0
-                  ? `Elimina ${dbNegativeCount} anotaciones registradas y el último análisis de IA.`
-                  : `Elimina el último análisis de IA para este estudiante.`}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                if (
-                  window.confirm(
-                    `¿Eliminar TODAS las anotaciones de ${student.full_name} y reiniciar el análisis? Esta acción no se puede deshacer.`
-                  )
-                ) {
-                  onClearAll();
-                }
-              }}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-red-300 bg-white px-3 py-1.5 font-medium text-red-600 text-xs transition-colors hover:bg-red-50"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              Eliminar registros
-            </button>
-          </div>
-        </div>
-      )}
-
-      {errorMessage && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-red-700 text-sm">
+      {review.errorMessage && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           <div className="flex items-start gap-2">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
-            <span>{errorMessage}</span>
-            <button
-              type="button"
-              aria-label="Cerrar mensaje"
-              onClick={() => setErrorMessage(null)}
-              className="ml-auto shrink-0 text-red-400 hover:text-red-600"
-            >
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{review.errorMessage}</span>
+            <button type="button" onClick={() => review.setErrorMessage(null)} className="ml-auto text-red-500 hover:text-red-700" aria-label="Cerrar error">
               <X className="h-4 w-4" />
             </button>
           </div>
+        </div>
+      )}
+
+      {review.summary && review.comparison && (
+        <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-neutral-900">Resultado comparado</h3>
+              <p className="text-xs text-neutral-500">{totalDetected} anotaciones detectadas en el PDF.</p>
+            </div>
+            <span className="w-fit rounded-full bg-brand-100 px-3 py-1 text-xs font-bold text-brand-800">
+              {RECOMMENDATION_LABEL[review.comparison.recommendation]}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <div className="rounded-lg border border-neutral-100 p-3">
+              <p className="text-xs text-neutral-400">Negativas registradas</p>
+              <p className="text-xl font-black text-neutral-900">{review.comparison.registeredNegativeCount}</p>
+            </div>
+            <div className="rounded-lg border border-red-100 bg-red-50 p-3">
+              <p className="text-xs text-red-500">Negativas en PDF</p>
+              <p className="text-xl font-black text-red-700">{review.comparison.detectedNegativeCount}</p>
+            </div>
+            <div className="rounded-lg border border-amber-100 bg-amber-50 p-3">
+              <p className="text-xs text-amber-600">Diferencia</p>
+              <p className="text-xl font-black text-amber-700">{review.comparison.difference >= 0 ? '+' : ''}{review.comparison.difference}</p>
+            </div>
+            <div className="rounded-lg border border-blue-100 bg-blue-50 p-3">
+              <p className="text-xs text-blue-600">Posibles nuevas</p>
+              <p className="text-xl font-black text-blue-700">{review.comparison.possibleNewAnnotations}</p>
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-3 text-sm lg:grid-cols-2">
+            <div className="rounded-lg bg-neutral-50 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Carta vigente</p>
+              <p className="mt-1 font-semibold text-neutral-800">{review.comparison.currentLetterType || 'Sin carta vigente'}</p>
+            </div>
+            <div className="rounded-lg bg-neutral-50 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Nueva sugerencia</p>
+              <p className="mt-1 font-semibold text-neutral-800">{review.comparison.suggestedLetterType || 'Mantener estado actual'}</p>
+            </div>
+          </div>
+
+          {review.comparison.conflictMessage && (
+            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              {review.comparison.conflictMessage}
+            </div>
+          )}
+        </section>
+      )}
+
+      {review.analysis && (
+        <ReviewStep
+          studentName={student.full_name}
+          course={student.course_name || student.course_id || ''}
+          summary={review.summary}
+          classification={review.comparison?.suggestedDocType || review.analysis.recommended_letter_type || 'none'}
+          fileName={review.file?.name || ''}
+          annotations={review.annotations}
+          warnings={review.analysis.warnings || []}
+          onAnnotationTypeChange={(sequenceNumber, type: ReviewAnnotationType) =>
+            review.handleAnnotationTypeChange(sequenceNumber, type)
+          }
+        />
+      )}
+
+      {review.summary && (
+        <div className="flex flex-col-reverse gap-3 border-t border-neutral-100 pt-4 sm:flex-row sm:justify-end">
+          <button type="button" onClick={() => void review.reset()} disabled={review.isBusy} className="rounded-xl border border-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-600 hover:bg-neutral-50 disabled:opacity-50">
+            Limpiar revisión
+          </button>
+          <button type="button" onClick={() => void review.confirmReview()} disabled={review.isBusy || !!review.comparison?.conflictMessage} className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50">
+            <CheckCircle2 className="h-4 w-4" />
+            Confirmar actualización
+          </button>
         </div>
       )}
     </div>
