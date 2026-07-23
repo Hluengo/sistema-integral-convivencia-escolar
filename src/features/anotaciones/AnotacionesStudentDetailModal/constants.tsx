@@ -67,7 +67,7 @@ export const TAB_ICONS: Record<ActiveTab, React.ReactNode> = {
 export const TAB_LABELS: Record<ActiveTab, string> = {
   estado: 'Estado',
   revisar_pdf: 'Revisar PDF',
-  cartas: 'Cartas',
+  cartas: 'Carta',
   historial: 'Historial',
 };
 

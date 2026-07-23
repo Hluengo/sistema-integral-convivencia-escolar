@@ -3,11 +3,13 @@
 import { CheckCircle2, FileSearch, FileText, History, ScrollText, Upload } from 'lucide-react';
 import type { CartaDisciplinaria, DocumentAnalysis, EtapaDisciplinaria } from '@/src/shared/lib/types';
 import type {
+  CartaEvent,
   DetectedAnnotationRecord,
   DisciplinaryFileRecord,
   DisciplinaryProcessRecord,
   LetterOutputEvent,
 } from '@/src/services/cartas.service';
+import { resolveCartaWorkflowStatus } from '@/src/services/cartas.service';
 import { formatDate } from './constants';
 
 interface TimelineItem {
@@ -27,6 +29,79 @@ interface HistoryTabProps {
   files: DisciplinaryFileRecord[];
   detectedAnnotations: DetectedAnnotationRecord[];
   letterOutputEvents: LetterOutputEvent[];
+  cartaEvents: CartaEvent[];
+}
+
+function describeCartaEvent(event: CartaEvent, carta?: CartaDisciplinaria): TimelineItem {
+  const letterType = carta?.letter_type || 'Carta disciplinaria';
+  const base = {
+    id: `carta-event-${event.id}`,
+    date: event.created_at,
+    icon: <FileText className="h-4 w-4" />,
+  };
+
+  if (event.event_type === 'printed') {
+    return {
+      ...base,
+      title: `Carta emitida: ${letterType}`,
+      description: 'Medio de validación: impresión.',
+      tone: 'bg-emerald-50 text-emerald-700',
+    };
+  }
+  if (event.event_type === 'downloaded_pdf') {
+    return {
+      ...base,
+      title: `Carta emitida: ${letterType}`,
+      description: 'Medio de validación: descarga PDF.',
+      tone: 'bg-emerald-50 text-emerald-700',
+    };
+  }
+  if (event.event_type === 'downloaded_word') {
+    return {
+      ...base,
+      title: `Carta emitida: ${letterType}`,
+      description: 'Medio de validación: descarga Word.',
+      tone: 'bg-emerald-50 text-emerald-700',
+    };
+  }
+  if (event.event_type === 'processed_manually') {
+    return {
+      ...base,
+      title: `Carta procesada manualmente: ${letterType}`,
+      description: `Observación: ${event.event_detail || 'Sin observación.'}`,
+      tone: 'bg-emerald-50 text-emerald-700',
+    };
+  }
+  if (event.event_type === 'registered') {
+    return {
+      ...base,
+      title: `Carta registrada: ${letterType}`,
+      description: event.event_detail || 'Registro en Supabase confirmado.',
+      tone: 'bg-emerald-50 text-emerald-700',
+    };
+  }
+  if (event.event_type === 'annulled') {
+    return {
+      ...base,
+      title: `Carta anulada: ${letterType}`,
+      description: event.event_detail || 'Sin motivo registrado.',
+      tone: 'bg-neutral-100 text-neutral-600',
+    };
+  }
+  if (event.event_type === 'created') {
+    return {
+      ...base,
+      title: `Carta creada: ${letterType}`,
+      description: 'Documento abierto en generador. Estado: pendiente.',
+      tone: 'bg-amber-50 text-amber-700',
+    };
+  }
+  return {
+    ...base,
+    title: `Carta sugerida: ${letterType}`,
+    description: 'Estado: pendiente.',
+    tone: 'bg-amber-50 text-amber-700',
+  };
 }
 
 export default function HistoryTab({
@@ -37,7 +112,46 @@ export default function HistoryTab({
   files,
   detectedAnnotations,
   letterOutputEvents,
+  cartaEvents,
 }: HistoryTabProps) {
+  const cartasById = new Map(cartas.map((carta) => [carta.id, carta]));
+  const cartasWithEvents = new Set(cartaEvents.map((event) => event.carta_id));
+  const syntheticCartaItems = cartas.reduce<TimelineItem[]>((items, carta) => {
+    if (cartasWithEvents.has(carta.id)) return items;
+    const status = resolveCartaWorkflowStatus(carta);
+    if (status === 'completed') {
+      items.push({
+        id: `carta-${carta.id}`,
+        date: carta.created_at || carta.emission_date,
+        icon: <FileText className="h-4 w-4" />,
+        title: `Carta realizada: ${carta.letter_type}`,
+        description: 'Medio de validación registrado en la carta.',
+        tone: 'bg-emerald-50 text-emerald-700',
+      });
+      return items;
+    }
+    if (status === 'annulled') {
+      items.push({
+        id: `carta-${carta.id}`,
+        date: carta.created_at || carta.emission_date,
+        icon: <FileText className="h-4 w-4" />,
+        title: `Carta anulada: ${carta.letter_type}`,
+        description: carta.annulled_reason || carta.observations || 'Sin motivo registrado.',
+        tone: 'bg-neutral-100 text-neutral-600',
+      });
+      return items;
+    }
+    items.push({
+      id: `carta-${carta.id}`,
+      date: carta.created_at || carta.emission_date,
+      icon: <FileText className="h-4 w-4" />,
+      title: `Carta sugerida: ${carta.letter_type}`,
+      description: 'Estado: pendiente.',
+      tone: 'bg-amber-50 text-amber-700',
+    });
+    return items;
+  }, []);
+
   const items: TimelineItem[] = [
     ...files.map((file) => ({
       id: `file-${file.id}`,
@@ -51,7 +165,7 @@ export default function HistoryTab({
       id: `analysis-${analysis.id}`,
       date: analysis.analyzed_at,
       icon: <FileSearch className="h-4 w-4" />,
-      title: 'Análisis realizado',
+      title: 'PDF analizado',
       description: `${analysis.file_name || 'Documento'} · ${analysis.negativas} negativas, ${analysis.positivas} positivas, ${analysis.informativas} informativas`,
       tone: 'bg-indigo-50 text-indigo-700',
     })),
@@ -59,7 +173,7 @@ export default function HistoryTab({
       id: `process-${process.id}`,
       date: process.completed_at || process.created_at,
       icon: <CheckCircle2 className="h-4 w-4" />,
-      title: process.is_completed ? 'Actualización confirmada' : 'Proceso creado',
+      title: process.is_completed ? 'Actualización PDF confirmada' : 'Proceso PDF creado',
       description: `${process.process_number} · ${process.total_negativas} negativas · sugerencia: ${process.final_letter_type || process.suggested_letter_type || 'sin carta'}`,
       tone: 'bg-emerald-50 text-emerald-700',
     })),
@@ -71,27 +185,21 @@ export default function HistoryTab({
       description: annotation.annotation_text || annotation.raw_text || 'Sin texto registrado',
       tone: 'bg-neutral-50 text-neutral-700',
     })),
+    ...cartaEvents.map((event) => describeCartaEvent(event, cartasById.get(event.carta_id))),
     ...letterOutputEvents.map((event) => ({
       id: `letter-output-${event.id}`,
       date: event.created_at,
       icon: <FileText className="h-4 w-4" />,
       title: event.event_name === 'letter_printed' ? 'Carta impresa' : 'Carta descargada',
-      description: `${event.properties.letterType || 'Carta'} · Estado al evento: ${event.properties.status || '-'}`,
+      description: `${event.properties.letterType || 'Carta'} · evento legacy de uso`,
       tone: 'bg-cyan-50 text-cyan-700',
     })),
-    ...cartas.map((carta) => ({
-      id: `carta-${carta.id}`,
-      date: carta.emission_date || carta.created_at,
-      icon: <FileText className="h-4 w-4" />,
-      title: `Carta emitida: ${carta.letter_type}`,
-      description: `${carta.status} · Apoderado: ${carta.apoderado_name || '-'} · Emitido por: ${carta.emitted_by || '-'}`,
-      tone: carta.status === 'Anulada' ? 'bg-neutral-100 text-neutral-600' : 'bg-amber-50 text-amber-700',
-    })),
+    ...syntheticCartaItems,
     ...etapas.map((etapa) => ({
       id: `etapa-${etapa.id}`,
       date: etapa.transition_date || etapa.created_at,
       icon: <ScrollText className="h-4 w-4" />,
-      title: `Cambio de etapa: ${etapa.stage_name}`,
+      title: `Cambio de etapa disciplinaria: ${etapa.stage_name}`,
       description: `${etapa.responsible || 'Sin responsable'}${etapa.comment ? ` · ${etapa.comment}` : ''}`,
       tone: 'bg-purple-50 text-purple-700',
     })),

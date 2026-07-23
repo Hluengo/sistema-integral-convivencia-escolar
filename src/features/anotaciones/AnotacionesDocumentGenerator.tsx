@@ -47,6 +47,8 @@ interface AnotacionesDocumentGeneratorProps {
   privacyMode: boolean;
   teachers: Record<string, string>;
   initialDocType?: string;
+  existingCartaId?: string;
+  onLetterAction?: (action: 'printed' | 'downloaded_pdf' | 'downloaded_word') => void | Promise<void>;
   onRegistered?: () => void | Promise<void>;
 }
 
@@ -56,6 +58,8 @@ export default function AnotacionesDocumentGenerator({
   privacyMode: _privacyMode,
   teachers,
   initialDocType,
+  existingCartaId,
+  onLetterAction,
   onRegistered,
 }: AnotacionesDocumentGeneratorProps) {
   const initialDocTypeApplied = useRef(false);
@@ -112,6 +116,7 @@ export default function AnotacionesDocumentGenerator({
       docObservations: documentState.docObservations,
       compromisoStatus: 'Vigente',
       teachers,
+      existingCartaId,
       onSuccess: (entry) => {
         documentRegistry.addEntry(entry);
         void onRegistered?.();
@@ -138,6 +143,7 @@ export default function AnotacionesDocumentGenerator({
       docObservations: documentState.docObservations,
       compromisoStatus: 'Vigente',
       teachers,
+      existingCartaId,
       onSuccess: (entry) => {
         documentRegistry.addEntry(entry);
         void onRegistered?.();
@@ -203,6 +209,7 @@ export default function AnotacionesDocumentGenerator({
     const html = getPreviewHtml();
     if (!html) { setExportError('No se pudo generar el PDF. Intente de nuevo.'); return; }
     if (!openPrintWindow(html)) { setExportError('El navegador bloqueó la ventana. Permita ventanas emergentes.'); return; }
+    void onLetterAction?.('downloaded_pdf');
     setShowEmissionConfirm(true);
   };
 
@@ -210,6 +217,7 @@ export default function AnotacionesDocumentGenerator({
     const html = getPreviewHtml();
     if (!html) return;
     if (!openPrintWindow(html)) return;
+    void onLetterAction?.('printed');
     setShowEmissionConfirm(true);
   };
 
@@ -218,6 +226,7 @@ export default function AnotacionesDocumentGenerator({
     try {
       const blob = await documentExport.generateWord(previewContent);
       documentExport.downloadBlob(blob, `Carta_de_${docType}_${student.full_name.replace(/\s+/g, '_')}.docx`);
+      void onLetterAction?.('downloaded_word');
       setShowEmissionConfirm(true);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Error al generar el documento Word.';

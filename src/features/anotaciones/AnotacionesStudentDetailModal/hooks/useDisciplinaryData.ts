@@ -17,6 +17,7 @@ const EMPTY_SNAPSHOT: StudentDisciplinarySnapshot = {
   files: [],
   detectedAnnotations: [],
   letterOutputEvents: [],
+  cartaEvents: [],
   counts: { negativas: 0, positivas: 0, informativas: 0 },
   lastAnalysis: null,
 };

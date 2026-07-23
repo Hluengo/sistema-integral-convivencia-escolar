@@ -10,6 +10,7 @@ import {
   mapDocTypeToLetterType,
 } from '@/src/shared/lib/domain/disciplinaryStage';
 import { formatDate, STAGE_STYLE, type StudentInfo } from './constants';
+import { getCartaWorkflowLabel } from '@/src/services/cartas.service';
 
 interface StudentSummaryTabProps {
   student: StudentInfo;
@@ -28,7 +29,7 @@ function getActionText(negativeCount: number, currentCarta: CartaDisciplinaria |
   }
   const letterType = mapDocTypeToLetterType(suggested);
   if (suggested === 'derivacion') return `Escalar a ${letterType}.`;
-  return `Emitir ${letterType}.`;
+  return `Tramitar ${letterType}.`;
 }
 
 export default function StudentSummaryTab({
@@ -103,21 +104,21 @@ export default function StudentSummaryTab({
         <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
           <div className="mb-3 flex items-center gap-2">
             <FileText className="h-4 w-4 text-brand-600" />
-            <h4 className="text-sm font-bold text-neutral-900">Carta vigente</h4>
+            <h4 className="text-sm font-bold text-neutral-900">Carta vigente y trámite</h4>
           </div>
           {currentCarta ? (
             <div className="space-y-1 text-sm text-neutral-600">
               <p className="font-semibold text-neutral-900">{currentCarta.letter_type}</p>
-              <p>Emitida: {formatDate(currentCarta.emission_date)}</p>
+              <p>Registro: {formatDate(currentCarta.created_at || currentCarta.emission_date)}</p>
               <p>Apoderado: {currentCarta.apoderado_name || '-'}</p>
-              <p>Estado: {currentCarta.status}</p>
+              <p>Estado del trámite: {getCartaWorkflowLabel(currentCarta)}</p>
             </div>
           ) : (
             <p className="text-sm text-neutral-500">No hay carta vigente registrada en Supabase.</p>
           )}
           {onGoToCartasTab && (
             <button type="button" onClick={onGoToCartasTab} className="mt-4 inline-flex items-center gap-2 rounded-lg border border-brand-200 px-3 py-2 text-xs font-semibold text-brand-700 hover:bg-brand-50">
-              Gestionar cartas <ArrowRight className="h-3.5 w-3.5" />
+              Ir a Carta <ArrowRight className="h-3.5 w-3.5" />
             </button>
           )}
         </section>

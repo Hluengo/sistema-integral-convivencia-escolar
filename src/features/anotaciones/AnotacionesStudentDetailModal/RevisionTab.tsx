@@ -1,8 +1,9 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useCallback, useRef } from 'react';
-import { AlertTriangle, CheckCircle2, FileText, RefreshCw, X } from 'lucide-react';
+import { AlertTriangle, ArrowRight, CheckCircle2, FileText, RefreshCw, X } from 'lucide-react';
 import type { CartaDisciplinaria } from '@/src/shared/lib/types';
+import { mapDocTypeToLetterType, type LetterDocType } from '@/src/shared/lib/domain/disciplinaryStage';
 import type { ReviewAnnotationType } from '../NewDisciplinaryProcessModal/ReviewStep';
 import ReviewStep from '../NewDisciplinaryProcessModal/ReviewStep';
 import { formatDate, type StudentInfo } from './constants';
@@ -13,6 +14,7 @@ interface RevisionTabProps {
   counts: { negativas: number; positivas: number; informativas: number };
   currentCarta: CartaDisciplinaria | null;
   onConfirmed: () => void | Promise<void>;
+  onGoToCarta?: (docType: LetterDocType, negativeCount: number) => void;
 }
 
 const RECOMMENDATION_LABEL: Record<string, string> = {
@@ -22,7 +24,7 @@ const RECOMMENDATION_LABEL: Record<string, string> = {
   revisar_conflicto: 'Revisar conflicto de estudiante',
 };
 
-export default function RevisionTab({ student, counts, currentCarta, onConfirmed }: RevisionTabProps) {
+export default function RevisionTab({ student, counts, currentCarta, onConfirmed, onGoToCarta }: RevisionTabProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLButtonElement>(null);
   const review = useStudentPdfDisciplinaryReview({
@@ -56,6 +58,19 @@ export default function RevisionTab({ student, counts, currentCarta, onConfirmed
   const totalDetected = review.summary
     ? review.summary.negativas + review.summary.positivas + review.summary.informativas
     : 0;
+  const canGoToCarta = Boolean(
+    review.comparison?.suggestedDocType &&
+      !review.comparison.conflictMessage &&
+      (review.comparison.recommendation === 'escalar' || review.comparison.recommendation === 'derivar')
+  );
+
+  const handleGoToCarta = async () => {
+    const docType = review.comparison?.suggestedDocType;
+    if (!docType) return;
+    const confirmed = await review.confirmReview();
+    if (!confirmed) return;
+    onGoToCarta?.(docType, Math.max(counts.negativas, review.summary?.negativas || 0));
+  };
 
   return (
     <div className="space-y-5">
@@ -176,7 +191,7 @@ export default function RevisionTab({ student, counts, currentCarta, onConfirmed
               <p className="mt-1 font-semibold text-neutral-800">{review.comparison.currentLetterType || 'Sin carta vigente'}</p>
             </div>
             <div className="rounded-lg bg-neutral-50 p-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Nueva sugerencia</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Carta sugerida</p>
               <p className="mt-1 font-semibold text-neutral-800">{review.comparison.suggestedLetterType || 'Mantener estado actual'}</p>
             </div>
           </div>
@@ -209,10 +224,16 @@ export default function RevisionTab({ student, counts, currentCarta, onConfirmed
           <button type="button" onClick={() => void review.reset()} disabled={review.isBusy} className="rounded-xl border border-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-600 hover:bg-neutral-50 disabled:opacity-50">
             Limpiar revisión
           </button>
-          <button type="button" onClick={() => void review.confirmReview()} disabled={review.isBusy || !!review.comparison?.conflictMessage} className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50">
+          <button type="button" onClick={() => void review.confirmReview()} disabled={review.isBusy || !!review.comparison?.conflictMessage} className="inline-flex items-center justify-center gap-2 rounded-xl border border-brand-200 px-5 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50 disabled:opacity-50">
             <CheckCircle2 className="h-4 w-4" />
             Confirmar actualización
           </button>
+          {canGoToCarta && review.comparison?.suggestedDocType && (
+            <button type="button" onClick={() => void handleGoToCarta()} disabled={review.isBusy} className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50">
+              Ir a Carta: {mapDocTypeToLetterType(review.comparison.suggestedDocType)}
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          )}
         </div>
       )}
     </div>

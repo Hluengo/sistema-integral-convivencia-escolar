@@ -4,7 +4,7 @@ import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Eye, EyeOff, X } from 'lucide-react';
 import type { Annotation } from '@/src/types';
 import { maskName, maskRut } from '@/src/lib/anotacionesUtils';
-import { getDisciplinaryStage } from '@/src/shared/lib/domain/disciplinaryStage';
+import { getDisciplinaryStage, type LetterDocType } from '@/src/shared/lib/domain/disciplinaryStage';
 import { STAGE_STYLE, TAB_ICONS, TAB_LABELS, type ActiveTab, type StudentInfo } from './AnotacionesStudentDetailModal/constants';
 import StudentSummaryTab from './AnotacionesStudentDetailModal/StudentSummaryTab';
 import RevisionTab from './AnotacionesStudentDetailModal/RevisionTab';
@@ -35,6 +35,11 @@ export default function AnotacionesStudentDetailModal({
   teachers,
 }: AnotacionesStudentDetailModalProps) {
   const [activeTab, setActiveTab] = useState<ActiveTab>('estado');
+  const [pendingCartaSuggestion, setPendingCartaSuggestion] = useState<{
+    docType: LetterDocType;
+    negativeCount: number;
+    source: 'pdf' | 'supabase';
+  } | null>(null);
   const disciplinaryData = useDisciplinaryData(student.id);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const hasOpened = useRef(false);
@@ -105,6 +110,10 @@ export default function AnotacionesStudentDetailModal({
             counts={counts}
             currentCarta={disciplinaryData.currentCarta}
             onConfirmed={disciplinaryData.refresh}
+            onGoToCarta={(docType, negativeCount) => {
+              setPendingCartaSuggestion({ docType, negativeCount, source: 'pdf' });
+              setActiveTab('cartas');
+            }}
           />
         );
       case 'cartas':
@@ -115,6 +124,7 @@ export default function AnotacionesStudentDetailModal({
             cartas={disciplinaryData.cartas}
             counts={counts}
             currentCarta={disciplinaryData.currentCarta}
+            pendingSuggestion={pendingCartaSuggestion}
             privacyMode={privacyMode}
             teachers={teachers}
             onRefresh={disciplinaryData.refresh}
@@ -130,6 +140,7 @@ export default function AnotacionesStudentDetailModal({
             files={disciplinaryData.files}
             detectedAnnotations={disciplinaryData.detectedAnnotations}
             letterOutputEvents={disciplinaryData.letterOutputEvents}
+            cartaEvents={disciplinaryData.cartaEvents}
           />
         );
       default:

@@ -156,6 +156,11 @@ Tenant (Establecimiento Educacional)
   │   ├── emitted_by, supervisor_name, apoderado_name
   │   └── tenant_id
   │
+  ├── CartaEvents
+  │   ├── carta_id, student_id, event_type, event_detail
+  │   ├── event_type: suggested|created|registered|printed|downloaded_pdf|downloaded_word|processed_manually|annulled
+  │   └── tenant_id
+  │
   ├── EtapasDisciplinarias
   │   ├── student_id, step_number, stage_name, responsible
   │   └── tenant_id
@@ -262,6 +267,7 @@ Rojo (15+ negativas)
 | `disciplinary_annotations_detected` | Anotaciones parseadas de PDF | ✅ | `processes(id)`, `students(id)`, `tenants(id)` |
 | `disciplinary_rules` | Reglas de sugerencia de cartas | ✅ | `tenants(id)` |
 | `usage_events` | Eventos de uso del sistema | ✅ | `auth.users(id)` |
+| `carta_events` | Trazabilidad de trámite de cartas | ✅ | `cartas_disciplinarias.id`, `students.id`, `tenants.id` |
 
 ### 4.2 RLS Policy Map (Patrón Consistente)
 
@@ -424,7 +430,7 @@ Rate Limiting: 10 req/min/IP por endpoint (in-memory Map)
 | `checklist.service.ts` | saveChecklist (delete all + re-insert) |
 | `annotations.service.ts` | fetchAnnotations, fetchDocumentAnalyses, saveAnnotation, fetchStudentsWithAnnotationCounts |
 | `courses.service.ts` | fetchCourses, fetchStudentsByCourse, fetchStudentsWithCourses |
-| `cartas.service.ts` | fetchCartas |
+| `cartas.service.ts` | fetchCartas, fetchStudentDisciplinarySnapshot, createCartaEvent, markCartaPrinted, markCartaDownloadedPdf, markCartaDownloadedWord, markCartaProcessedManually, annulCarta, resolveCartaWorkflowStatus |
 | `etapas.service.ts` | fetchEtapas |
 | `storage.service.ts` | uploadDocument, listDocuments, deleteDocument (bucket: documentos_convivencia) |
 | `disciplinary-storage.service.ts` | validateDisciplinaryPdf, uploadDisciplinaryFile, getDisciplinaryFileUrl, deleteDisciplinaryFile |
