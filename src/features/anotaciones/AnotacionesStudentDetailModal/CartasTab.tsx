@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { lazy, Suspense, useState } from 'react';
-import { Ban, CheckCircle2, Download, FileText, Printer, Save, XCircle } from 'lucide-react';
+import { Ban, CheckCircle2, Download, FileText, Printer, XCircle } from 'lucide-react';
 import type { Annotation, CartaDisciplinaria } from '@/src/shared/lib/types';
 import { TEACHERS_BY_COURSE } from '@/src/lib/anotacionesUtils';
 import {
@@ -11,7 +11,6 @@ import {
   fetchCartaAnnotations,
   getCartaWorkflowLabel,
   markCartaDownloadedPdf,
-  markCartaDownloadedWord,
   markCartaPrinted,
   markCartaProcessedManually,
   resolveCartaWorkflowStatus,
@@ -46,29 +45,6 @@ interface CartasTabProps {
   privacyMode: boolean;
   teachers?: Record<string, string>;
   onRefresh: () => void | Promise<void>;
-}
-
-function downloadCartaWordFile(carta: CartaDisciplinaria, student: StudentInfo) {
-  const html = `<!doctype html><html><head><meta charset="utf-8"></head><body>
-    <h1>${carta.letter_type}</h1>
-    <p><strong>Estudiante:</strong> ${student.full_name}</p>
-    <p><strong>Curso:</strong> ${student.course_name || student.course_id || '-'}</p>
-    <p><strong>RUN:</strong> ${student.rut || '-'}</p>
-    <p><strong>Fecha:</strong> ${carta.emission_date}</p>
-    <p><strong>Estado del trámite:</strong> ${getCartaWorkflowLabel(carta)}</p>
-    <p><strong>Anotaciones negativas consideradas:</strong> ${carta.annotations_count}</p>
-    <p><strong>Observaciones:</strong></p>
-    <p>${carta.observations || 'Sin observaciones.'}</p>
-  </body></html>`;
-  const blob = new Blob([html], { type: 'application/msword;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${carta.letter_type.replace(/\s+/g, '_')}_${student.full_name.replace(/\s+/g, '_')}.doc`;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
 }
 
 export default function CartasTab({
@@ -173,11 +149,6 @@ export default function CartasTab({
     return downloaded;
   };
 
-  const handleDownloadWord = async (carta: CartaDisciplinaria) => {
-    downloadCartaWordFile(carta, student);
-    return markCartaDownloadedWord(carta.id);
-  };
-
   const handleManualProcess = async () => {
     const note = window.prompt('Observación del trámite procesado manualmente')?.trim();
     if (!note) return;
@@ -194,13 +165,12 @@ export default function CartasTab({
     await runCartaAction((carta) => annulCarta(carta.id, reason), 'Carta anulada.');
   };
 
-  const handleGeneratorAction = async (action: 'printed' | 'downloaded_pdf' | 'downloaded_word') => {
+  const handleGeneratorAction = async (action: 'printed' | 'downloaded_pdf') => {
     const carta = await ensureCarta();
     if (!carta) return;
     if (action === 'printed') await markCartaPrinted(carta.id);
     if (action === 'downloaded_pdf') await markCartaDownloadedPdf(carta.id);
-    if (action === 'downloaded_word') await markCartaDownloadedWord(carta.id);
-    await refreshAfterChange();
+    setMessage('Acción de carta registrada.');
   };
 
   const statusLabel = activeCarta ? getCartaWorkflowLabel(activeCarta) : activeLetterType ? 'Carta sugerida' : 'Sin carta requerida';
@@ -249,7 +219,7 @@ export default function CartasTab({
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <h3 className="text-sm font-bold text-neutral-900">Acciones principales</h3>
-            <p className="mt-1 text-xs text-neutral-500">Una carta queda realizada solo con impresión, descarga, registro o procesamiento manual.</p>
+            <p className="mt-1 text-xs text-neutral-500">Una carta queda realizada solo con impresión, descarga PDF, registro o procesamiento manual.</p>
           </div>
           {message && <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">{message}</span>}
         </div>
@@ -265,10 +235,6 @@ export default function CartasTab({
           <button type="button" onClick={() => void runCartaAction(handleDownloadPdf, 'Carta descargada en PDF.')} disabled={!canAct || busy} className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 disabled:opacity-50">
             <Download className="h-4 w-4" />
             Descargar PDF
-          </button>
-          <button type="button" onClick={() => void runCartaAction(handleDownloadWord, 'Carta descargada en Word.')} disabled={!canAct || busy} className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 disabled:opacity-50">
-            <Save className="h-4 w-4" />
-            Descargar Word
           </button>
           <button type="button" onClick={() => void handleManualProcess()} disabled={!canAct || busy} className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50">
             <CheckCircle2 className="h-4 w-4" />
@@ -286,7 +252,7 @@ export default function CartasTab({
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <h3 className="text-sm font-bold text-neutral-900">Generador de carta</h3>
-              <p className="mt-1 text-xs text-neutral-500">Se abre solo para completar y emitir el documento.</p>
+              <p className="mt-1 text-xs text-neutral-500">Edita la carta en la aplicación y luego imprime o genera PDF desde la plantilla visible.</p>
             </div>
             <button type="button" onClick={() => setShowGenerator(false)} className="rounded-lg p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700" aria-label="Cerrar generador">
               <XCircle className="h-5 w-5" />

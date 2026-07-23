@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useMemo, useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import type { Annotation } from '@/src/types';
 import { getCurrentDateStr, getSemaphoricStyle } from '@/src/lib/anotacionesUtils';
 import DocTypeSelector from './docgen/DocTypeSelector';
@@ -9,7 +9,6 @@ import DocumentPreview from './docgen/DocumentPreview';
 import DocumentWarnings from './docgen/DocumentWarnings';
 import { useDocumentState } from './docgen/hooks/useDocumentState';
 import { useSelectedAnnotations } from './docgen/hooks/useSelectedAnnotations';
-import { useDocumentExport } from './docgen/hooks/useDocumentExport';
 import { useDocumentRegistry } from './docgen/hooks/useDocumentRegistry';
 import { useRegisterCommitment } from './docgen/hooks/useRegisterCommitment';
 import GeneratorHeader from './docgen/components/GeneratorHeader';
@@ -17,21 +16,37 @@ import ExportError from './docgen/components/ExportError';
 import EmissionConfirmDialog from './docgen/components/EmissionConfirmDialog';
 import RecentlyEmitted from './docgen/components/RecentlyEmitted';
 
-function openPrintWindow(html: string): boolean {
-  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+function getDocumentStyles(): string {
+  return Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+    .map((styleNode) => styleNode.outerHTML)
+    .join('\n');
+}
+
+function openPrintWindow(html: string, title: string): boolean {
+  const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title>${getDocumentStyles()}<style>html,body{margin:0;background:#fff}body{display:flex;justify-content:center;color:#111827}@page{size:A4;margin:0}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}#document-preview-a4{box-shadow:none!important;border:0!important;border-radius:0!important}}</style></head><body>${html}</body></html>`;
+  const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
   const url = URL.createObjectURL(blob);
-  const w = window.open(url, '_blank');
-  if (!w) return false;
-  const timer = setInterval(() => {
+  const win = window.open(url, '_blank');
+  if (!win) {
+    URL.revokeObjectURL(url);
+    return false;
+  }
+  const timer = window.setInterval(() => {
     try {
-      if (w.document.readyState === 'complete') {
-        clearInterval(timer);
-        w.print();
+      if (win.document.readyState === 'complete') {
+        window.clearInterval(timer);
+        win.print();
         URL.revokeObjectURL(url);
       }
-    } catch { /* cross-origin */ }
+    } catch {
+      window.clearInterval(timer);
+      URL.revokeObjectURL(url);
+    }
   }, 100);
-  setTimeout(() => { clearInterval(timer); URL.revokeObjectURL(url); }, 10000);
+  window.setTimeout(() => {
+    window.clearInterval(timer);
+    URL.revokeObjectURL(url);
+  }, 10000);
   return true;
 }
 
@@ -48,7 +63,7 @@ interface AnotacionesDocumentGeneratorProps {
   teachers: Record<string, string>;
   initialDocType?: string;
   existingCartaId?: string;
-  onLetterAction?: (action: 'printed' | 'downloaded_pdf' | 'downloaded_word') => void | Promise<void>;
+  onLetterAction?: (action: 'printed' | 'downloaded_pdf') => void | Promise<void>;
   onRegistered?: () => void | Promise<void>;
 }
 
@@ -63,19 +78,15 @@ export default function AnotacionesDocumentGenerator({
   onRegistered,
 }: AnotacionesDocumentGeneratorProps) {
   const initialDocTypeApplied = useRef(false);
-
-  // Derived data
   const negativeAnnotations = annotations.filter((a) => a.type === 'Negativa');
   const negativeCount = negativeAnnotations.length;
   const semaphoric = getSemaphoricStyle(negativeCount);
-  const dateStr = getCurrentDateStr();
 
-  // Hooks
   const documentState = useDocumentState();
   const selectedAnnotations = useSelectedAnnotations(annotations);
-  const documentExport = useDocumentExport();
   const documentRegistry = useDocumentRegistry();
   const registerCommitment = useRegisterCommitment();
+  const previewRef = useRef<HTMLDivElement>(null);
 
   const { docType, setDocType } = documentState;
 
@@ -105,7 +116,9 @@ export default function AnotacionesDocumentGenerator({
   const [exportError, setExportError] = useState<string | null>(null);
   const [showEmissionConfirm, setShowEmissionConfirm] = useState(false);
 
-  const handleEmitAfterExport = () => {
+  const handleRegisterCommitment = registerCommitment.handleRegisterCommitment;
+
+  const registerCarta = (afterSuccess?: () => void) => {
     handleRegisterCommitment({
       student,
       docType,
@@ -120,121 +133,59 @@ export default function AnotacionesDocumentGenerator({
       onSuccess: (entry) => {
         documentRegistry.addEntry(entry);
         void onRegistered?.();
+        afterSuccess?.();
       },
       setIsRegistering: documentState.setIsRegistering,
     });
+  };
+
+  const handleEmitAfterExport = () => {
+    registerCarta();
     setShowEmissionConfirm(false);
   };
 
-// Handle registration
-  const handleRegisterCommitment = useMemo(
-    () => registerCommitment.handleRegisterCommitment,
-    [registerCommitment.handleRegisterCommitment]
-  );
-
   const handleRegisterCommitmentWrapper = () => {
-    handleRegisterCommitment({
-      student,
-      docType,
-      negativeCount,
-      apoderadoName: documentState.apoderadoName,
-      coordinatorName: documentState.coordinatorName,
-      emittedBy: documentState.emittedBy,
-      docObservations: documentState.docObservations,
-      compromisoStatus: 'Vigente',
-      teachers,
-      existingCartaId,
-      onSuccess: (entry) => {
-        documentRegistry.addEntry(entry);
-        void onRegistered?.();
-        handleExportPDF();
-      },
-      setIsRegistering: documentState.setIsRegistering,
-    });
+    registerCarta(() => handleExportPDF());
   };
 
-  // Selected annotations for preview
   const selectedAnnsObjects = selectedAnnotations.selectedAnnsObjects;
-
-  // Preview content for export/print
-  const previewContent = useMemo(() => {
-    const titleMap: Record<string, string> = {
-      amonestacion: 'Carta de Amonestaci\u00f3n',
-      compromiso_conductual: 'Carta de Compromiso Conductual',
-      derivacion: 'Ficha de Derivaci\u00f3n',
-    };
-
-    return {
-      title: titleMap[docType] || 'Documento Disciplinario',
-      content: `
-        Estudiante: ${student.full_name}
-        Curso: ${student.course_id}
-        RUN: ${student.rut || 'N/A'}
-        Apoderado: ${documentState.apoderadoName || '________________'}
-        Coordinador: ${documentState.coordinatorName || '________________'}
-        Emitido por: ${documentState.emittedBy || 'Inspector\u00eda'}
-        Fecha: ${dateStr}
-        Anotaciones negativas: ${negativeCount}
-        
-        Observaciones:
-        ${documentState.docObservations || 'Sin observaciones adicionales.'}
-        
-        Compromisos personalizados:
-        ${documentState.customCommitments.length > 0
-          ? documentState.customCommitments.map((c, i) => `${i + 1}. ${c}`).join('\n')
-          : 'Ninguno'}
-      `,
-      metadata: {
-        'Tipo de documento': docType === 'amonestacion' ? 'Amonestación' : docType === 'compromiso_conductual' ? 'Compromiso Conductual' : 'Derivación',
-        'Estado': documentState.compromisoStatus,
-        'Reiteración': negativeCount >= 10 ? 'Sí (≥10 anotaciones negativas)' : 'No',
-      },
-    };
-  }, [docType, student, dateStr, negativeCount, documentState]);
-
-  // Ref to the A4 preview container for PDF/Print export
-  const previewRef = useRef<HTMLDivElement>(null);
 
   const getPreviewHtml = () => {
     const el = previewRef.current;
     if (!el) return '';
-    const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
-      .map((s) => s.outerHTML)
-      .join('\n');
-    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Documento</title>${styles}<style>body{margin:0;display:flex;justify-content:center;background:#fff}@page{size:A4;margin:0}</style></head><body>${el.outerHTML}</body></html>`;
-  };
-
-  // Export handlers
-  const handleExportPDF = () => {
-    const html = getPreviewHtml();
-    if (!html) { setExportError('No se pudo generar el PDF. Intente de nuevo.'); return; }
-    if (!openPrintWindow(html)) { setExportError('El navegador bloqueó la ventana. Permita ventanas emergentes.'); return; }
-    void onLetterAction?.('downloaded_pdf');
-    setShowEmissionConfirm(true);
+    return el.outerHTML;
   };
 
   const handlePrintDoc = () => {
+    setExportError(null);
     const html = getPreviewHtml();
-    if (!html) return;
-    if (!openPrintWindow(html)) return;
+    if (!html) {
+      setExportError('No se pudo leer la plantilla visible para imprimir.');
+      return;
+    }
+    if (!openPrintWindow(html, 'Imprimir carta disciplinaria')) {
+      setExportError('El navegador bloqueó la ventana de impresión. Permita ventanas emergentes.');
+      return;
+    }
     void onLetterAction?.('printed');
     setShowEmissionConfirm(true);
   };
 
-  const handleExportWord = async () => {
+  const handleExportPDF = () => {
     setExportError(null);
-    try {
-      const blob = await documentExport.generateWord(previewContent);
-      documentExport.downloadBlob(blob, `Carta_de_${docType}_${student.full_name.replace(/\s+/g, '_')}.docx`);
-      void onLetterAction?.('downloaded_word');
-      setShowEmissionConfirm(true);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Error al generar el documento Word.';
-      setExportError(msg);
+    const html = getPreviewHtml();
+    if (!html) {
+      setExportError('No se pudo leer la plantilla visible para generar PDF.');
+      return;
     }
+    if (!openPrintWindow(html, 'Guardar carta como PDF')) {
+      setExportError('El navegador bloqueó la ventana. Permita ventanas emergentes y use Guardar como PDF.');
+      return;
+    }
+    void onLetterAction?.('downloaded_pdf');
+    setShowEmissionConfirm(true);
   };
 
-  // Render
   return (
     <div className="space-y-6">
       <ExportError message={exportError} onClose={() => setExportError(null)} />
@@ -245,36 +196,34 @@ export default function AnotacionesDocumentGenerator({
         onCancel={() => setShowEmissionConfirm(false)}
       />
 
-      <GeneratorHeader negativeCount={negativeCount} semaphoric={semaphoric} />
+      <div className="mx-auto w-full max-w-[210mm] space-y-5">
+        <GeneratorHeader negativeCount={negativeCount} semaphoric={semaphoric} />
 
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
-        {/* Left column */}
-        <div className="space-y-6 lg:col-span-5">
-          {/* Document type selector */}
-          <div className="space-y-4 rounded-2xl border border-neutral-200 bg-white p-5 shadow-xs">
-            <DocTypeSelector
-              docType={docType}
-              onDocTypeChange={(type: string) => setDocType(type as 'amonestacion' | 'compromiso_conductual' | 'derivacion')}
-              hasTenOrMore={negativeCount >= 10}
-              negativeCount={negativeCount}
-            />
+        <div className="space-y-4 rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
+          <DocTypeSelector
+            docType={docType}
+            onDocTypeChange={(type: string) => setDocType(type as 'amonestacion' | 'compromiso_conductual' | 'derivacion')}
+            hasTenOrMore={negativeCount >= 10}
+            negativeCount={negativeCount}
+          />
 
-            <DocumentWarnings
-              docType={docType}
-              negativeCount={negativeCount}
-              hasTenOrMore={negativeCount >= 10}
-              authorizedBypass={documentState.authorizedBypass}
-              onAuthorizedBypass={() => documentState.setAuthorizedBypass((v) => !v)}
-              authorizedDuplicate={documentState.authorizedDuplicate}
-              onAuthorizedDuplicate={() => documentState.setAuthorizedDuplicate((v) => !v)}
-              isDocLockedByProgress={false}
-              existingLetter={null}
-              bypassProgressLock={documentState.bypassProgressLock}
-              onBypassProgressLock={() => documentState.setBypassProgressLock((v) => !v)}
-            />
-          </div>
+          <DocumentWarnings
+            docType={docType}
+            negativeCount={negativeCount}
+            hasTenOrMore={negativeCount >= 10}
+            authorizedBypass={documentState.authorizedBypass}
+            onAuthorizedBypass={() => documentState.setAuthorizedBypass((v) => !v)}
+            authorizedDuplicate={documentState.authorizedDuplicate}
+            onAuthorizedDuplicate={() => documentState.setAuthorizedDuplicate((v) => !v)}
+            isDocLockedByProgress={false}
+            existingLetter={null}
+            bypassProgressLock={documentState.bypassProgressLock}
+            onBypassProgressLock={() => documentState.setBypassProgressLock((v) => !v)}
+          />
+        </div>
 
-          {/* Document form */}
+        <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
+          <h4 className="mb-4 text-sm font-bold text-neutral-900">Datos editables de la carta</h4>
           <DocumentForm
             docType={docType}
             apoderadoName={documentState.apoderadoName}
@@ -295,32 +244,29 @@ export default function AnotacionesDocumentGenerator({
             isRegistering={documentState.isRegistering}
           />
         </div>
+      </div>
 
-        {/* Right column */}
-        <div className="space-y-4 lg:col-span-7">
-          {/* Document preview - already includes action buttons */}
-          <DocumentPreview
-            ref={previewRef}
-            docType={docType}
-            currentName={student.full_name}
-            currentCourse={student.course_id}
-            currentRut={student.rut || ''}
-            currentTeacher={teachers[student.course_id] || student.teacher_id || 'Sin Profesor'}
-            coordinatorName={documentState.coordinatorName}
-            inspectorName={documentState.inspectorName}
-            apoderadoName={documentState.apoderadoName}
-            dateStr={getCurrentDateStr()}
-            negativeCount={negativeCount}
-            docObservations={documentState.docObservations}
-            selectedAnnsObjects={selectedAnnsObjects}
-            hasTenOrMore={negativeCount >= 10}
-            onPrint={handlePrintDoc}
-            onExportPDF={handleExportPDF}
-            onExportWord={handleExportWord}
-          />
+      <DocumentPreview
+        ref={previewRef}
+        docType={docType}
+        currentName={student.full_name}
+        currentCourse={student.course_id}
+        currentRut={student.rut || ''}
+        currentTeacher={teachers[student.course_id] || student.teacher_id || 'Sin Profesor'}
+        coordinatorName={documentState.coordinatorName}
+        inspectorName={documentState.inspectorName}
+        apoderadoName={documentState.apoderadoName}
+        dateStr={getCurrentDateStr()}
+        negativeCount={negativeCount}
+        docObservations={documentState.docObservations}
+        selectedAnnsObjects={selectedAnnsObjects}
+        hasTenOrMore={negativeCount >= 10}
+        onPrint={handlePrintDoc}
+        onExportPDF={handleExportPDF}
+      />
 
-          <RecentlyEmitted emittedList={documentRegistry.emittedList} />
-        </div>
+      <div className="mx-auto w-full max-w-[210mm]">
+        <RecentlyEmitted emittedList={documentRegistry.emittedList} />
       </div>
     </div>
   );

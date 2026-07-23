@@ -1,7 +1,6 @@
 import { useCallback, useRef } from 'react';
 import { saveAs } from 'file-saver';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import { Document, Packer, Paragraph, TextRun, AlignmentType, HeadingLevel } from 'docx';
 
 interface PreviewContent {
   title: string;
@@ -11,7 +10,6 @@ interface PreviewContent {
 
 export function useDocumentExport() {
   const pdfBlobRef = useRef<Blob | null>(null);
-  const docxBlobRef = useRef<Blob | null>(null);
 
   const generatePDF = useCallback(async (preview: PreviewContent) => {
     const pdfDoc = await PDFDocument.create();
@@ -37,11 +35,9 @@ export function useDocumentExport() {
       y -= size + 4;
     };
 
-    // Title
     drawText(preview.title, font, 18, true);
     y -= 10;
 
-    // Metadata
     Object.entries(preview.metadata).forEach(([key, value]) => {
       drawText(`${key}: ${value}`, font, 10, true);
       drawText(value, font, 10);
@@ -51,7 +47,6 @@ export function useDocumentExport() {
     drawText('CONTENIDO', font, 12, true);
     y -= 4;
 
-    // Content
     const lines = preview.content.split('\n');
     lines.forEach((line) => {
       if (y < margin + 20) {
@@ -64,48 +59,6 @@ export function useDocumentExport() {
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
     pdfBlobRef.current = blob;
-    return blob;
-  }, []);
-
-  const generateWord = useCallback(async (preview: PreviewContent) => {
-    const doc = new Document({
-      sections: [
-        {
-          properties: {},
-          children: [
-            new Paragraph({
-              text: preview.title,
-              heading: HeadingLevel.TITLE,
-              alignment: AlignmentType.CENTER,
-            }),
-            new Paragraph({ text: '', spacing: { after: 200 } }),
-            ...Object.entries(preview.metadata).map(
-              ([key, value]) =>
-                new Paragraph({
-                  children: [
-                    new TextRun({ text: `${key}: `, bold: true }),
-                    new TextRun({ text: value }),
-                  ],
-                })
-            ),
-            new Paragraph({ text: '', spacing: { after: 200 } }),
-            new Paragraph({
-              text: 'CONTENIDO',
-              heading: HeadingLevel.HEADING_1,
-            }),
-            ...preview.content.split('\n').map(
-              (line) =>
-                new Paragraph({
-                  children: [new TextRun({ text: line, size: 22 })],
-                })
-            ),
-          ],
-        },
-      ],
-    });
-
-    const blob = await Packer.toBlob(doc);
-    docxBlobRef.current = blob;
     return blob;
   }, []);
 
@@ -126,17 +79,20 @@ export function useDocumentExport() {
           printWindow.print();
           URL.revokeObjectURL(url);
         }
-      } catch { /* cross-origin */ }
+      } catch {
+        // cross-origin
+      }
     }, 100);
-    setTimeout(() => { clearInterval(timer); URL.revokeObjectURL(url); }, 10000);
+    setTimeout(() => {
+      clearInterval(timer);
+      URL.revokeObjectURL(url);
+    }, 10000);
   }, []);
 
   return {
     generatePDF,
-    generateWord,
     downloadBlob,
     printDocument,
     pdfBlobRef,
-    docxBlobRef,
   };
 }
