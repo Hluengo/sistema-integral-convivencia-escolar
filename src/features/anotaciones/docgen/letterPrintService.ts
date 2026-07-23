@@ -76,11 +76,14 @@ export async function recordLetterOutputEvent(
     const {
       data: { session },
     } = await supabase.auth.getSession();
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
-    await fetch('/api/usage/events', {
+    if (!session?.access_token) return;
+
+    const response = await fetch('/api/usage/events', {
       method: 'POST',
-      headers,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
       body: JSON.stringify({
         eventName: action === 'print' ? 'letter_printed' : 'letter_downloaded',
         properties: {
@@ -91,6 +94,10 @@ export async function recordLetterOutputEvent(
         },
       }),
     });
+
+    if (!response.ok && response.status !== 401) {
+      console.warn('No se pudo registrar evento de uso de carta:', response.status);
+    }
   } catch (error) {
     console.error('Error registrando evento de carta:', error);
   }
