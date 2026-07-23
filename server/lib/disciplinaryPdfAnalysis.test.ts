@@ -48,3 +48,13 @@ test('metadata parser detects student and course from convivencia report format'
   assert.equal(result.studentName, 'Ancalao Solorza Benjamín Adolfo');
   assert.equal(result.course, '1A MEDIO');
 });
+test('parser deduplicates repeated PDF text layers', () => {
+  const repeated = Array.from({ length: 3 }, () =>
+    '23/04/2026 Tipo: Negativa Profesor: Ana Lopez Falta reiterada al reglamento interno. 10/04/2026 Tipo: Información Entrevista con apoderado.'
+  ).join(' ');
+  const result = parseDisciplinaryTextPagesForTest([repeated]);
+
+  assert.equal(result.summary.negativas, 1);
+  assert.equal(result.summary.informativas, 1);
+  assert.equal(result.annotations.length, 2);
+});

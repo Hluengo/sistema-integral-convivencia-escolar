@@ -1037,6 +1037,7 @@ function classifyAnnotation(block) {
 }
 function parseAnnotationsByPage(pages) {
   const annotations = [];
+  const seenAnnotations = /* @__PURE__ */ new Set();
   pages.forEach((pageText, pageIndex) => {
     const blocks = splitAnnotationBlocks(pageText);
     blocks.forEach((block) => {
@@ -1044,14 +1045,20 @@ function parseAnnotationsByPage(pages) {
       if (!classification.type) return;
       const dateMatch = block.match(/\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})\b/);
       const teacherMatch = block.match(/(?:profesor(?:a)?|responsable)\s*[:-]\s*([^|\n]{3,60})/i);
+      const normalizedBlock = normalizeText(block);
+      const detectedDate = toIsoDate(dateMatch?.[1]);
+      const detectedTeacher = teacherMatch?.[1]?.trim() ?? null;
+      const dedupeKey = [pageIndex + 1, classification.type, detectedDate ?? "", normalizedBlock].join("|");
+      if (seenAnnotations.has(dedupeKey)) return;
+      seenAnnotations.add(dedupeKey);
       annotations.push({
         raw_text: block.trim(),
-        normalized_text: normalizeText(block),
+        normalized_text: normalizedBlock,
         type: classification.type,
         page_number: pageIndex + 1,
         sequence_number: annotations.length + 1,
-        detected_date: toIsoDate(dateMatch?.[1]),
-        detected_teacher: teacherMatch?.[1]?.trim() ?? null,
+        detected_date: detectedDate,
+        detected_teacher: detectedTeacher,
         classification_method: "regex",
         confidence: classification.confidence,
         parser_version: PARSER_VERSION
