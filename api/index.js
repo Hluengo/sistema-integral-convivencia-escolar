@@ -1186,6 +1186,25 @@ function assertRateLimit(req) {
   const ip = req.ip || req.connection?.remoteAddress || "unknown";
   return checkRateLimit(ip);
 }
+function getProcessErrorResponse(error) {
+  const message = error instanceof Error ? error.message : "Error interno al procesar el documento";
+  if (message === "Supabase no configurado") {
+    return {
+      status: 503,
+      message: "Supabase no est\xE1 configurado en el servidor para procesar PDFs privados."
+    };
+  }
+  if (message.includes("Bucket de documentos disciplinarios no permitido") || message.includes("Ruta de archivo no v\xE1lida") || message.includes("El archivo no pertenece") || message.includes("El PDF excede") || message.includes("PDF v\xE1lido")) {
+    return { status: 400, message };
+  }
+  if (message.includes("No fue posible descargar")) {
+    return {
+      status: 404,
+      message: "No fue posible encontrar o leer el PDF privado subido."
+    };
+  }
+  return { status: 500, message };
+}
 router8.post("/process-disciplinary-pdf", async (req, res) => {
   try {
     if (!assertRateLimit(req)) {
@@ -1206,8 +1225,9 @@ router8.post("/process-disciplinary-pdf", async (req, res) => {
     });
     res.json(result);
   } catch (error) {
+    const response = getProcessErrorResponse(error);
     console.error("Error processing disciplinary PDF:", error instanceof Error ? error.message : error);
-    res.status(500).json({ error: error instanceof Error ? error.message : "Error interno al procesar el documento" });
+    res.status(response.status).json({ error: response.message });
   }
 });
 router8.post("/process-disciplinary-pdf/confirm", async (req, res) => {
