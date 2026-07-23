@@ -40,13 +40,16 @@ test('metadata parser detects student and course from convivencia report format'
   const result = extractDisciplinaryMetadataForTest(`
     ANCALAO SOLORZA BENJAMÍN ADOLFO
     FICHA PERSONAL DE CONVIVENCIA ESCOLAR
-    Curso : 1A MEDIO
+    Rango Fechas:
+    Curso :
+    02/03/2026 a 20/07/2026
+    1A MEDIO
     10/04/2026 Tipo: Información
     23/04/2026 Tipo: Negativa
   `);
 
   assert.equal(result.studentName, 'Ancalao Solorza Benjamín Adolfo');
-  assert.equal(result.course, '1A MEDIO');
+  assert.equal(result.course, '1° Medio A');
 });
 test('parser deduplicates repeated PDF text layers', () => {
   const repeated = Array.from({ length: 3 }, () =>
@@ -57,4 +60,15 @@ test('parser deduplicates repeated PDF text layers', () => {
   assert.equal(result.summary.negativas, 1);
   assert.equal(result.summary.informativas, 1);
   assert.equal(result.annotations.length, 2);
+});
+
+test('metadata parser normalizes basic course labels', () => {
+  const result = extractDisciplinaryMetadataForTest(`
+    ESTUDIANTE DE PRUEBA APELLIDO
+    FICHA PERSONAL DE CONVIVENCIA ESCOLAR
+    Curso :
+    7A BASICO
+  `);
+
+  assert.equal(result.course, '7° Básico A');
 });

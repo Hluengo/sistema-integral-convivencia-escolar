@@ -81,6 +81,7 @@ const STATUS_BADGE: Record<string, { bg: string; text: string }> = {
 const LETTER_TYPE_LABEL: Record<string, string> = {
   'Amonestación Escrita': 'Carta de Amonestación',
   'Carta de Compromiso Conductual': 'Carta de Compromiso Conductual',
+  'Ficha de Derivación': 'Ficha de Derivación',
 };
 
 const FASE_BADGE: Record<string, string> = {

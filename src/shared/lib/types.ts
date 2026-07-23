@@ -187,7 +187,7 @@ export interface DocumentAnalysis {
 export interface CartaDisciplinaria {
   id: string;
   student_id: string;
-  letter_type: 'Amonestación Escrita' | 'Carta de Compromiso Conductual';
+  letter_type: 'Amonestación Escrita' | 'Carta de Compromiso Conductual' | 'Ficha de Derivación';
   emission_date: string;
   status: 'Vigente' | 'Cumplida' | 'Incumplida' | 'Anulada';
   emitted_by: string;

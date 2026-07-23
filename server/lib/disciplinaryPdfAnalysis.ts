@@ -279,6 +279,34 @@ function normalizeText(value: string): string {
     .trim();
 }
 
+function isDateRangeLine(value: string): boolean {
+  return /\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b\s*(?:a|-|hasta)\s*\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b/i.test(
+    value
+  );
+}
+
+function normalizeCourseLabel(value: string): string | null {
+  const normalized = value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/º/g, '°')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toUpperCase();
+  const match = normalized.match(/\b(\d{1,2})\s*(?:°\s*)?([A-Z])\s*(MEDIO|BASICO|BASICA)\b/);
+  if (!match) return null;
+
+  const level = Number(match[1]);
+  const letter = match[2];
+  const cycle = match[3].startsWith('MEDIO') ? 'Medio' : 'Básico';
+  return `${level}° ${cycle} ${letter}`;
+}
+
+function courseMatchKey(value: string | null | undefined): string | null {
+  const normalized = value ? normalizeCourseLabel(value) : null;
+  return normalized ? normalizeText(normalized) : null;
+}
+
 function titleCaseFromUpper(value: string): string {
   return value
     .toLowerCase()
@@ -348,12 +376,27 @@ async function extractPdfPages(buffer: Uint8Array): Promise<string[]> {
 }
 
 function extractCourse(text: string): string | null {
-  const match = text.match(/curso\s*[:-]?\s*([^\n|]{2,40})/i);
-  if (match?.[1]) return match[1].trim();
+  const lines = text
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
 
-  const normalized = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const courseMatch = normalized.match(/\b(\d{1,2}\s*[A-Z]\s*(?:MEDIO|BASICO|BASICA))\b/i);
-  return courseMatch?.[1]?.replace(/\s+/g, ' ').trim().toUpperCase() ?? null;
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (!/\bcurso\b/i.test(line)) continue;
+
+    const sameLineValue = line.replace(/^.*\bcurso\b\s*[:-]?\s*/i, '').trim();
+    const candidates = [sameLineValue, lines[index + 1], lines[index + 2], lines[index + 3]];
+    for (const candidate of candidates) {
+      if (!candidate || /^rango\s+fechas?/i.test(candidate) || isDateRangeLine(candidate)) continue;
+      const normalized = normalizeCourseLabel(candidate);
+      if (normalized) return normalized;
+    }
+  }
+
+  const normalizedText = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const courseMatch = normalizedText.match(/\b\d{1,2}\s*(?:°\s*)?[A-Z]\s*(?:MEDIO|BASICO|BASICA)\b/i);
+  return courseMatch?.[0] ? normalizeCourseLabel(courseMatch[0]) : null;
 }
 
 function extractStudentName(text: string): string | null {
@@ -554,6 +597,19 @@ async function findStudentCandidates(
   const baseSelect = 'id, full_name, rut, course_id';
   const exactName = detectedName.trim();
   const normalizedDetected = normalizeText(detectedName);
+  const detectedCourseKey = courseMatchKey(detectedCourse);
+
+  const { data: courseRows } = await supabase
+    .from('courses')
+    .select('id, name')
+    .eq('tenant_id', tenantId)
+    .limit(200);
+  const courseKeyById = new Map(
+    (courseRows ?? []).map((course: { id: string; name: string }) => [
+      course.id,
+      courseMatchKey(course.name),
+    ])
+  );
 
   const { data: exactRows } = await supabase
     .from('students')
@@ -610,9 +666,8 @@ async function findStudentCandidates(
       const overlap = [...detectedParts].filter((part) => studentParts.has(part)).length;
       const denominator = Math.max(detectedParts.size, studentParts.size, 1);
       const courseBoost =
-        detectedCourse &&
-        normalizeText(detectedCourse) === normalizeText(String(student.course_id ?? ''))
-          ? 0.05
+        detectedCourseKey && student.course_id && courseKeyById.get(student.course_id) === detectedCourseKey
+          ? 0.15
           : 0;
       return { student, score: overlap / denominator + courseBoost };
     })
@@ -620,15 +675,10 @@ async function findStudentCandidates(
     .sort((a, b) => b.score - a.score)
     .slice(0, 8);
 
-  if (approximate.length === 0 && detectedCourse) {
-    const normalizedCourse = normalizeText(detectedCourse);
-    const { data: courseRows } = await supabase
-      .from('courses')
-      .select('id')
-      .eq('tenant_id', tenantId)
-      .ilike('name', `%${normalizedCourse}%`)
-      .limit(3);
-    const courseIds = (courseRows ?? []).map((course: { id: string }) => course.id);
+  if (approximate.length === 0 && detectedCourseKey) {
+    const courseIds = (courseRows ?? [])
+      .filter((course: { id: string; name: string }) => courseMatchKey(course.name) === detectedCourseKey)
+      .map((course: { id: string }) => course.id);
     if (courseIds.length > 0) {
       const { data: courseStudents } = await supabase
         .from('students')
@@ -653,7 +703,140 @@ async function findStudentCandidates(
     status: candidates.length > 0 ? 'multiple_candidates' : 'no_match',
   };
 }
+function annotationTypeToLegacy(type: AnnotationType): 'Negativa' | 'Positiva' | 'Información' {
+  if (type === 'positive') return 'Positiva';
+  if (type === 'information') return 'Información';
+  return 'Negativa';
+}
 
+function severityForAnnotation(type: AnnotationType): 'Leve' | 'Grave' | 'Muy Grave' | 'Gravísima' {
+  return type === 'negative' ? 'Leve' : 'Leve';
+}
+
+function suggestedLetterToDocumentType(
+  suggestedLetterType: string | null | undefined
+): 'Amonestación Escrita' | 'Carta de Compromiso Conductual' | 'Ficha de Derivación' | null {
+  if (suggestedLetterType === 'amonestacion') return 'Amonestación Escrita';
+  if (suggestedLetterType === 'compromiso' || suggestedLetterType === 'compromiso_conductual') {
+    return 'Carta de Compromiso Conductual';
+  }
+  if (suggestedLetterType === 'derivacion') return 'Ficha de Derivación';
+  return null;
+}
+
+function suggestedLetterToStageName(suggestedLetterType: string | null | undefined): string | null {
+  if (suggestedLetterType === 'amonestacion') return 'amonestacion';
+  if (suggestedLetterType === 'compromiso' || suggestedLetterType === 'compromiso_conductual') {
+    return 'compromiso';
+  }
+  if (suggestedLetterType === 'derivacion') return 'derivacion';
+  return null;
+}
+
+async function syncConfirmedProcessToLegacyViews(
+  supabase: SupabaseClient,
+  input: ConfirmInput,
+  processId: string,
+  processNumber: string,
+  summary: AnnotationSummary,
+  student: { id: string; full_name?: string | null; course_id?: string | null }
+): Promise<void> {
+  const { data: existingRecords } = await supabase
+    .from('inspectorate_records')
+    .select('id')
+    .eq('tenant_id', input.tenantId)
+    .eq('student_id', input.studentId)
+    .eq('pdf_file_path', input.storagePath)
+    .limit(1);
+
+  if (!existingRecords || existingRecords.length === 0) {
+    const legacyRecords = input.annotations.map((annotation) => ({
+      student_id: input.studentId,
+      tenant_id: input.tenantId,
+      date_time: annotation.detected_date ? `${annotation.detected_date}T12:00:00.000Z` : new Date().toISOString(),
+      observation: annotation.raw_text,
+      severity: severityForAnnotation(annotation.type),
+      type: annotationTypeToLegacy(annotation.type),
+      registered_by: 'PDF Convivencia Escolar',
+      created_by: 'Sistema PDF',
+      pdf_file_path: input.storagePath,
+    }));
+
+    if (legacyRecords.length > 0) {
+      const { error } = await supabase.from('inspectorate_records').insert(legacyRecords);
+      if (error) throw new Error('Error al registrar anotaciones en la vista de registros');
+    }
+  }
+
+  const documentType = suggestedLetterToDocumentType(input.suggestedLetterType);
+  let courseName = student.course_id || 'Sin curso';
+  if (student.course_id) {
+    const { data: course } = await supabase
+      .from('courses')
+      .select('name')
+      .eq('tenant_id', input.tenantId)
+      .eq('id', student.course_id)
+      .maybeSingle();
+    courseName = (course as { name?: string } | null)?.name || courseName;
+  }
+  const processMarker = `Proceso PDF ${processNumber} (${processId})`;
+
+  if (documentType) {
+    const { data: existingDocument } = await supabase
+      .from('cartas_disciplinarias')
+      .select('id')
+      .eq('tenant_id', input.tenantId)
+      .eq('student_id', input.studentId)
+      .ilike('observations', `%${processId}%`)
+      .limit(1);
+
+    if (!existingDocument || existingDocument.length === 0) {
+      const { error } = await supabase.from('cartas_disciplinarias').insert({
+        student_id: input.studentId,
+        tenant_id: input.tenantId,
+        letter_type: documentType,
+        emission_date: new Date().toISOString().split('T')[0],
+        status: 'Vigente',
+        emitted_by: 'Convivencia Escolar',
+        supervisor_name: null,
+        apoderado_name: 'Por definir',
+        annotations_count: summary.negativas,
+        student_name: student.full_name || 'Estudiante seleccionado',
+        course: courseName,
+        regulation_basis: 'RICE 2026 - Registro de anotaciones y debido proceso',
+        observations: `${processMarker}. Documento sugerido automáticamente desde PDF confirmado.`,
+        created_by: 'Sistema PDF',
+      });
+      if (error) throw new Error('Error al registrar el documento sugerido');
+    }
+  }
+
+  const stageName = suggestedLetterToStageName(input.suggestedLetterType);
+  if (stageName) {
+    const { data: existingStage } = await supabase
+      .from('etapas_disciplinarias')
+      .select('id')
+      .eq('tenant_id', input.tenantId)
+      .eq('student_id', input.studentId)
+      .eq('stage_name', stageName)
+      .ilike('comment', `%${processId}%`)
+      .limit(1);
+
+    if (!existingStage || existingStage.length === 0) {
+      const stepNumber = stageName === 'amonestacion' ? 1 : stageName === 'compromiso' ? 2 : 3;
+      const { error } = await supabase.from('etapas_disciplinarias').insert({
+        student_id: input.studentId,
+        tenant_id: input.tenantId,
+        step_number: stepNumber,
+        stage_name: stageName,
+        responsible: 'Convivencia Escolar',
+        comment: `${processMarker}. Etapa sugerida automáticamente desde PDF confirmado.`,
+        created_by: 'Sistema PDF',
+      });
+      if (error) throw new Error('Error al registrar la etapa disciplinaria sugerida');
+    }
+  }
+}
 async function getSuggestedLetter(
   supabase: SupabaseClient,
   tenantId: string,
@@ -780,7 +963,7 @@ export async function confirmDisciplinaryProcess(
 
   const { data: student, error: studentError } = await supabase
     .from('students')
-    .select('id, tenant_id')
+    .select('id, tenant_id, full_name, course_id')
     .eq('id', input.studentId)
     .eq('tenant_id', input.tenantId)
     .maybeSingle();
@@ -814,10 +997,20 @@ export async function confirmDisciplinaryProcess(
     if (existing && (existing as { process_id?: string }).process_id) {
       const nested = (existing as { disciplinary_processes?: { process_number?: string } })
         .disciplinary_processes;
+      const existingProcessId = (existing as { process_id: string }).process_id;
+      const existingProcessNumber = nested?.process_number ?? '';
+      await syncConfirmedProcessToLegacyViews(
+        supabase,
+        input,
+        existingProcessId,
+        existingProcessNumber,
+        summary,
+        student as { id: string; full_name?: string | null; course_id?: string | null }
+      );
       return {
         success: true,
-        processId: (existing as { process_id: string }).process_id,
-        processNumber: nested?.process_number ?? '',
+        processId: existingProcessId,
+        processNumber: existingProcessNumber,
       };
     }
   }
@@ -898,6 +1091,14 @@ export async function confirmDisciplinaryProcess(
     if (annotationsError) throw new Error('Error al guardar las anotaciones detectadas');
   }
 
+  await syncConfirmedProcessToLegacyViews(
+    supabase,
+    input,
+    processId,
+    String((processRow as { process_number: string }).process_number),
+    summary,
+    student as { id: string; full_name?: string | null; course_id?: string | null }
+  );
   await supabase.from('document_analyses').insert({
     student_id: input.studentId,
     file_name: input.fileName,

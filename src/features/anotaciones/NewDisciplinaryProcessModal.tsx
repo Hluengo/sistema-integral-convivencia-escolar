@@ -70,7 +70,7 @@ interface NewDisciplinaryProcessModalProps {
   students: Student[];
   onClose: () => void;
   currentUserEmail: string;
-  onProcessCreated?: (result?: ProcessResult) => void;
+  onProcessCreated?: (result?: ProcessResult) => void | Promise<void>;
 }
 
 const STEP_LABELS: Record<FlowStep, string> = {
@@ -107,6 +107,14 @@ function matchLocalStudent(students: Student[], candidate: StudentCandidate): St
     teacher_id: '',
   };
 }
+
+const LETTER_TYPE_LABELS: Record<string, string> = {
+  none: 'Sin carta',
+  amonestacion: 'Amonestación Escrita',
+  compromiso: 'Carta de Compromiso Conductual',
+  compromiso_conductual: 'Carta de Compromiso Conductual',
+  derivacion: 'Derivación a Convivencia Escolar',
+};
 
 function getStatusLabel(status: ProcessingState): string {
   switch (status) {
@@ -172,7 +180,7 @@ export default function NewDisciplinaryProcessModal({
       .sort((a, b) => b.priority - a.priority)
       .map((rule) => ({
         value: rule.suggested_letter_type,
-        label: rule.rule_name,
+        label: LETTER_TYPE_LABELS[rule.suggested_letter_type] ?? rule.rule_name,
         desc: rule.description || `Negativas: ${rule.min_negativas ?? 0}-${rule.max_negativas ?? '∞'}`,
         legal: `Prioridad ${rule.priority}`,
       }));
@@ -351,13 +359,15 @@ export default function NewDisciplinaryProcessModal({
       setCreatedProcess({ id: data.processId, number: data.processNumber });
       setStep('success');
       setStatus('success');
-      onProcessCreated?.({
+      uploadedFileRef.current = null;
+      await onProcessCreated?.({
         suggestedLetterType: classification || suggestedType || undefined,
         studentId: selectedStudent.id,
         processId: data.processId,
         processNumber: data.processNumber,
         summary: summary ?? undefined,
       });
+      onClose();
     } catch (error) {
       setAnalysisError(error instanceof Error ? error.message : 'Error al confirmar el proceso.');
       setStatus('error');

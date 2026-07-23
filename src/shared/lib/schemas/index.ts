@@ -125,14 +125,14 @@ export const AnnotationSchema = z.object({
   date: z.string(),
   severity: TipoInfraccionEnum,
   registered_by: z.string(),
-  type: z.enum(['Positiva', 'Negativa']),
+  type: z.enum(['Positiva', 'Negativa', 'Información']),
   pdf_file_path: z.string().nullable().optional(),
 });
 
 export const CartaDisciplinariaSchema = z.object({
   id: z.string(),
   student_id: z.string(),
-  letter_type: z.enum(['Amonestación Escrita', 'Carta de Compromiso Conductual']),
+  letter_type: z.enum(['Amonestación Escrita', 'Carta de Compromiso Conductual', 'Ficha de Derivación']),
   emission_date: z.string(),
   status: z.enum(['Vigente', 'Cumplida', 'Incumplida', 'Anulada']),
   emitted_by: z.string(),
