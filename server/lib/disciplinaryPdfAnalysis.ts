@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+
 type AnnotationType = 'negative' | 'positive' | 'information';
 type StudentMatchStatus =
   | 'exact_match'
@@ -244,6 +245,10 @@ interface PdfJsModule {
   };
 }
 
+interface PdfJsWorkerModule {
+  WorkerMessageHandler: unknown;
+}
+
 export function getSupabaseAdmin(authToken?: string): SupabaseClient {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
   const serviceKey =
@@ -314,6 +319,10 @@ function toIsoDate(date: string | undefined): string | null {
 
 async function extractPdfPages(buffer: Uint8Array): Promise<string[]> {
   ensurePdfJsNodePolyfills();
+  const workerModule = (await import('pdfjs-dist/legacy/build/pdf.worker.mjs')) as PdfJsWorkerModule;
+  (globalThis as Record<string, unknown>).pdfjsWorker = {
+    WorkerMessageHandler: workerModule.WorkerMessageHandler,
+  };
   const pdfjs = (await import('pdfjs-dist/legacy/build/pdf.mjs')) as PdfJsModule;
   const pdf = await pdfjs.getDocument({
     data: buffer,

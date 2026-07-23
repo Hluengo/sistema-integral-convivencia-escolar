@@ -954,6 +954,10 @@ function toIsoDate(date) {
 }
 async function extractPdfPages(buffer) {
   ensurePdfJsNodePolyfills();
+  const workerModule = await import("pdfjs-dist/legacy/build/pdf.worker.mjs");
+  globalThis.pdfjsWorker = {
+    WorkerMessageHandler: workerModule.WorkerMessageHandler
+  };
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const pdf = await pdfjs.getDocument({
     data: buffer,
