@@ -806,6 +806,107 @@ import { createClient } from "@supabase/supabase-js";
 var PARSER_VERSION = "disciplinary-pdf-parser-v1";
 var PDF_BUCKET = "disciplinary-processes";
 var MAX_PDF_BYTES = 10 * 1024 * 1024;
+var NodeDomMatrixPolyfill = class _NodeDomMatrixPolyfill {
+  constructor(init) {
+    this.a = 1;
+    this.b = 0;
+    this.c = 0;
+    this.d = 1;
+    this.e = 0;
+    this.f = 0;
+    if (Array.isArray(init) && init.length >= 6) {
+      [this.a, this.b, this.c, this.d, this.e, this.f] = init;
+    }
+  }
+  multiplySelf(other) {
+    const a = this.a * other.a + this.c * other.b;
+    const b = this.b * other.a + this.d * other.b;
+    const c = this.a * other.c + this.c * other.d;
+    const d = this.b * other.c + this.d * other.d;
+    const e = this.a * other.e + this.c * other.f + this.e;
+    const f = this.b * other.e + this.d * other.f + this.f;
+    this.a = a;
+    this.b = b;
+    this.c = c;
+    this.d = d;
+    this.e = e;
+    this.f = f;
+    return this;
+  }
+  preMultiplySelf(other) {
+    const copy = new _NodeDomMatrixPolyfill([other.a, other.b, other.c, other.d, other.e, other.f]);
+    copy.multiplySelf(this);
+    this.a = copy.a;
+    this.b = copy.b;
+    this.c = copy.c;
+    this.d = copy.d;
+    this.e = copy.e;
+    this.f = copy.f;
+    return this;
+  }
+  translate(tx = 0, ty = 0) {
+    return new _NodeDomMatrixPolyfill([
+      this.a,
+      this.b,
+      this.c,
+      this.d,
+      this.e,
+      this.f
+    ]).translateSelf(tx, ty);
+  }
+  translateSelf(tx = 0, ty = 0) {
+    return this.multiplySelf(new _NodeDomMatrixPolyfill([1, 0, 0, 1, tx, ty]));
+  }
+  scale(scaleX = 1, scaleY = scaleX) {
+    return new _NodeDomMatrixPolyfill([this.a, this.b, this.c, this.d, this.e, this.f]).scaleSelf(
+      scaleX,
+      scaleY
+    );
+  }
+  scaleSelf(scaleX = 1, scaleY = scaleX) {
+    return this.multiplySelf(new _NodeDomMatrixPolyfill([scaleX, 0, 0, scaleY, 0, 0]));
+  }
+  invertSelf() {
+    const determinant = this.a * this.d - this.b * this.c;
+    if (!determinant) return this;
+    const a = this.d / determinant;
+    const b = -this.b / determinant;
+    const c = -this.c / determinant;
+    const d = this.a / determinant;
+    const e = (this.c * this.f - this.d * this.e) / determinant;
+    const f = (this.b * this.e - this.a * this.f) / determinant;
+    this.a = a;
+    this.b = b;
+    this.c = c;
+    this.d = d;
+    this.e = e;
+    this.f = f;
+    return this;
+  }
+};
+var NodeImageDataPolyfill = class {
+  constructor(dataOrWidth, width, height) {
+    if (typeof dataOrWidth === "number") {
+      this.width = dataOrWidth;
+      this.height = width ?? 0;
+      this.data = new Uint8ClampedArray(this.width * this.height * 4);
+    } else {
+      this.data = dataOrWidth;
+      this.width = width ?? 0;
+      this.height = height ?? 0;
+    }
+  }
+};
+var NodePath2DPolyfill = class {
+  addPath() {
+  }
+};
+function ensurePdfJsNodePolyfills() {
+  const globals = globalThis;
+  globals.DOMMatrix ??= NodeDomMatrixPolyfill;
+  globals.ImageData ??= NodeImageDataPolyfill;
+  globals.Path2D ??= NodePath2DPolyfill;
+}
 function getSupabaseAdmin(authToken) {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
@@ -852,8 +953,13 @@ function toIsoDate(date) {
   return `${year}-${month}-${day}`;
 }
 async function extractPdfPages(buffer) {
+  ensurePdfJsNodePolyfills();
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  const pdf = await pdfjs.getDocument({ data: buffer, useWorkerFetch: false, isEvalSupported: false }).promise;
+  const pdf = await pdfjs.getDocument({
+    data: buffer,
+    useWorkerFetch: false,
+    isEvalSupported: false
+  }).promise;
   const pages = [];
   for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
     const page = await pdf.getPage(pageNumber);
@@ -868,10 +974,15 @@ function extractCourse(text) {
   return match?.[1]?.trim() ?? null;
 }
 function extractStudentName(text) {
-  const labelled = text.match(/(?:estudiante|alumno|nombre(?: completo)?)\s*[:-]\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ'-]+(?:\s+[A-ZÁÉÍÓÚÑa-záéíóúñ'-]+){1,5})/i);
+  const labelled = text.match(
+    /(?:estudiante|alumno|nombre(?: completo)?)\s*[:-]\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ'-]+(?:\s+[A-ZÁÉÍÓÚÑa-záéíóúñ'-]+){1,5})/i
+  );
   if (labelled?.[1]) return labelled[1].trim();
-  const headingLines = text.split("\n").map((line) => line.trim()).filter((line) => line.startsWith("## ")).map((line) => line.slice(3).trim()).filter((line) => line.length > 1 && !/^(fundaci[oó]n|saber|ficha|rango|curso|fecha)/i.test(line));
-  if (headingLines.length >= 3) return `${headingLines[0]} ${headingLines[1]} ${headingLines.slice(2).join(" ")}`;
+  const headingLines = text.split("\n").map((line) => line.trim()).filter((line) => line.startsWith("## ")).map((line) => line.slice(3).trim()).filter(
+    (line) => line.length > 1 && !/^(fundaci[oó]n|saber|ficha|rango|curso|fecha)/i.test(line)
+  );
+  if (headingLines.length >= 3)
+    return `${headingLines[0]} ${headingLines[1]} ${headingLines.slice(2).join(" ")}`;
   if (headingLines.length > 0) return headingLines.join(" ");
   const uppercaseLine = text.split("\n").map((line) => line.trim()).find((line) => {
     const normalized = normalizeText(line);
@@ -905,9 +1016,12 @@ function classifyAnnotation(block) {
   if (value?.startsWith("neg")) return { type: "negative", confidence: 0.95 };
   if (value?.startsWith("pos")) return { type: "positive", confidence: 0.95 };
   if (value?.startsWith("info")) return { type: "information", confidence: 0.95 };
-  if (/\b(reconocimiento|felicitacion|destaca|positiva)\b/.test(normalized)) return { type: "positive", confidence: 0.7 };
-  if (/\b(negativa|falta|agresion|interrumpe|incumple|atraso)\b/.test(normalized)) return { type: "negative", confidence: 0.65 };
-  if (/\b(informacion|informativa|entrevista|comunicacion)\b/.test(normalized)) return { type: "information", confidence: 0.65 };
+  if (/\b(reconocimiento|felicitacion|destaca|positiva)\b/.test(normalized))
+    return { type: "positive", confidence: 0.7 };
+  if (/\b(negativa|falta|agresion|interrumpe|incumple|atraso)\b/.test(normalized))
+    return { type: "negative", confidence: 0.65 };
+  if (/\b(informacion|informativa|entrevista|comunicacion)\b/.test(normalized))
+    return { type: "information", confidence: 0.65 };
   return { type: null, confidence: 0 };
 }
 function parseAnnotationsByPage(pages) {
@@ -950,7 +1064,9 @@ async function enrichStudentRows(supabase, rows, confidence, status) {
   if (rows.length === 0) return [];
   const courseIds = [...new Set(rows.map((row) => row.course_id).filter(Boolean))];
   const { data: courses } = courseIds.length ? await supabase.from("courses").select("id, name").in("id", courseIds) : { data: [] };
-  const courseMap = new Map((courses ?? []).map((course) => [course.id, course.name]));
+  const courseMap = new Map(
+    (courses ?? []).map((course) => [course.id, course.name])
+  );
   return rows.map((row) => ({
     id: row.id,
     full_name: row.full_name,
@@ -968,18 +1084,40 @@ async function findStudentCandidates(supabase, tenantId, detectedName, detectedC
   const normalizedDetected = normalizeText(detectedName);
   const { data: exactRows } = await supabase.from("students").select(baseSelect).eq("tenant_id", tenantId).ilike("full_name", exactName).limit(5);
   if (exactRows && exactRows.length > 0) {
-    const candidates2 = await enrichStudentRows(supabase, exactRows, 0.99, exactRows.length === 1 ? "exact_match" : "multiple_candidates");
-    return { candidates: candidates2, selectedStudentId: candidates2.length === 1 ? candidates2[0].id : null, status: candidates2.length === 1 ? "exact_match" : "multiple_candidates" };
+    const candidates2 = await enrichStudentRows(
+      supabase,
+      exactRows,
+      0.99,
+      exactRows.length === 1 ? "exact_match" : "multiple_candidates"
+    );
+    return {
+      candidates: candidates2,
+      selectedStudentId: candidates2.length === 1 ? candidates2[0].id : null,
+      status: candidates2.length === 1 ? "exact_match" : "multiple_candidates"
+    };
   }
   const { data: tenantStudents } = await supabase.from("students").select(baseSelect).eq("tenant_id", tenantId).limit(500);
-  const normalizedMatches = (tenantStudents ?? []).filter((student) => normalizeText(student.full_name) === normalizedDetected);
+  const normalizedMatches = (tenantStudents ?? []).filter(
+    (student) => normalizeText(student.full_name) === normalizedDetected
+  );
   if (normalizedMatches.length > 0) {
-    const candidates2 = await enrichStudentRows(supabase, normalizedMatches, 0.94, normalizedMatches.length === 1 ? "unique_normalized_match" : "multiple_candidates");
-    return { candidates: candidates2, selectedStudentId: candidates2.length === 1 ? candidates2[0].id : null, status: candidates2.length === 1 ? "unique_normalized_match" : "multiple_candidates" };
+    const candidates2 = await enrichStudentRows(
+      supabase,
+      normalizedMatches,
+      0.94,
+      normalizedMatches.length === 1 ? "unique_normalized_match" : "multiple_candidates"
+    );
+    return {
+      candidates: candidates2,
+      selectedStudentId: candidates2.length === 1 ? candidates2[0].id : null,
+      status: candidates2.length === 1 ? "unique_normalized_match" : "multiple_candidates"
+    };
   }
   const detectedParts = new Set(normalizedDetected.split(" ").filter((part) => part.length >= 3));
   let approximate = (tenantStudents ?? []).map((student) => {
-    const studentParts = new Set(normalizeText(student.full_name).split(" ").filter((part) => part.length >= 3));
+    const studentParts = new Set(
+      normalizeText(student.full_name).split(" ").filter((part) => part.length >= 3)
+    );
     const overlap = [...detectedParts].filter((part) => studentParts.has(part)).length;
     const denominator = Math.max(detectedParts.size, studentParts.size, 1);
     const courseBoost = detectedCourse && normalizeText(detectedCourse) === normalizeText(String(student.course_id ?? "")) ? 0.05 : 0;
@@ -1000,7 +1138,11 @@ async function findStudentCandidates(supabase, tenantId, detectedName, detectedC
     approximate[0]?.score ?? 0,
     approximate.length > 0 ? "multiple_candidates" : "no_match"
   );
-  return { candidates, selectedStudentId: null, status: candidates.length > 0 ? "multiple_candidates" : "no_match" };
+  return {
+    candidates,
+    selectedStudentId: null,
+    status: candidates.length > 0 ? "multiple_candidates" : "no_match"
+  };
 }
 async function getSuggestedLetter(supabase, tenantId, summary) {
   const { data, error } = await supabase.rpc("get_suggested_letter_type", {
@@ -1036,11 +1178,19 @@ async function analyzeDisciplinaryPdf(input) {
   const annotations = normalizeText(textContent).length < 20 ? [] : parseAnnotationsByPage(pages);
   const summary = summarizeAnnotations(annotations);
   const recommendedLetterType = await getSuggestedLetter(supabase, input.tenantId, summary);
-  const studentMatch = await findStudentCandidates(supabase, input.tenantId, detectedStudentName, detectedCourse);
+  const studentMatch = await findStudentCandidates(
+    supabase,
+    input.tenantId,
+    detectedStudentName,
+    detectedCourse
+  );
   if (!detectedStudentName) warnings.push("No se pudo detectar un nombre de estudiante en el PDF.");
-  if (annotations.length === 0 && normalizeText(textContent).length >= 20) warnings.push("No se detectaron anotaciones clasificables en el documento.");
-  if (studentMatch.status === "multiple_candidates") warnings.push("Se requiere confirmar el estudiante porque existen m\xFAltiples candidatos.");
-  if (studentMatch.status === "no_match") warnings.push("Se requiere seleccionar manualmente un estudiante autorizado.");
+  if (annotations.length === 0 && normalizeText(textContent).length >= 20)
+    warnings.push("No se detectaron anotaciones clasificables en el documento.");
+  if (studentMatch.status === "multiple_candidates")
+    warnings.push("Se requiere confirmar el estudiante porque existen m\xFAltiples candidatos.");
+  if (studentMatch.status === "no_match")
+    warnings.push("Se requiere seleccionar manualmente un estudiante autorizado.");
   const processingStatus = normalizeText(textContent).length < 20 ? "ocr_required" : studentMatch.selectedStudentId ? "completed" : "student_resolution";
   const { data: analysisRow } = await supabase.from("document_analyses").insert({
     student_id: studentMatch.selectedStudentId,
@@ -1091,28 +1241,37 @@ async function confirmDisciplinaryProcess(input) {
   if (studentError || !student) {
     throw new Error("El estudiante seleccionado no pertenece al establecimiento activo");
   }
-  const summary = summarizeAnnotations(input.annotations.map((annotation, index) => ({
-    raw_text: annotation.raw_text,
-    normalized_text: annotation.normalized_text ?? normalizeText(annotation.raw_text),
-    type: annotation.type,
-    page_number: annotation.page_number ?? null,
-    sequence_number: annotation.sequence_number || index + 1,
-    detected_date: annotation.detected_date ?? null,
-    detected_teacher: annotation.detected_teacher ?? null,
-    classification_method: "regex",
-    confidence: annotation.confidence ?? 0.8,
-    parser_version: PARSER_VERSION
-  })));
+  const summary = summarizeAnnotations(
+    input.annotations.map((annotation, index) => ({
+      raw_text: annotation.raw_text,
+      normalized_text: annotation.normalized_text ?? normalizeText(annotation.raw_text),
+      type: annotation.type,
+      page_number: annotation.page_number ?? null,
+      sequence_number: annotation.sequence_number || index + 1,
+      detected_date: annotation.detected_date ?? null,
+      detected_teacher: annotation.detected_teacher ?? null,
+      classification_method: "regex",
+      confidence: annotation.confidence ?? 0.8,
+      parser_version: PARSER_VERSION
+    }))
+  );
   if (input.idempotencyKey) {
     const { data: existing } = await supabase.from("disciplinary_process_files").select("process_id, disciplinary_processes(process_number)").eq("tenant_id", input.tenantId).eq("storage_path", input.storagePath).maybeSingle();
     if (existing && existing.process_id) {
       const nested = existing.disciplinary_processes;
-      return { success: true, processId: existing.process_id, processNumber: nested?.process_number ?? "" };
+      return {
+        success: true,
+        processId: existing.process_id,
+        processNumber: nested?.process_number ?? ""
+      };
     }
   }
-  const { data: processNumber, error: numberError } = await supabase.rpc("generate_process_number", {
-    p_tenant_id: input.tenantId
-  });
+  const { data: processNumber, error: numberError } = await supabase.rpc(
+    "generate_process_number",
+    {
+      p_tenant_id: input.tenantId
+    }
+  );
   if (numberError || !processNumber) throw new Error("Error al generar n\xFAmero de proceso");
   const { data: processRow, error: processError } = await supabase.from("disciplinary_processes").insert({
     student_id: input.studentId,
@@ -1179,7 +1338,11 @@ async function confirmDisciplinaryProcess(input) {
     parser_version: PARSER_VERSION,
     confirmed_at: (/* @__PURE__ */ new Date()).toISOString()
   });
-  return { success: true, processId, processNumber: String(processRow.process_number) };
+  return {
+    success: true,
+    processId,
+    processNumber: String(processRow.process_number)
+  };
 }
 
 // server/api/routes/processDisciplinaryPdf.ts
