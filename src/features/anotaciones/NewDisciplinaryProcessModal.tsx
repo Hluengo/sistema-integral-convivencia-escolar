@@ -153,12 +153,23 @@ export default function NewDisciplinaryProcessModal({
 
   const ruleOptions = useMemo(() => {
     if (rules.length === 0) return [];
-    return rules.map((rule) => ({
-      value: rule.suggested_letter_type,
-      label: rule.rule_name,
-      desc: rule.description || `Negativas: ${rule.min_negativas ?? 0}-${rule.max_negativas ?? '∞'}`,
-      legal: `Prioridad ${rule.priority}`,
-    }));
+    const uniqueRules = new Map<string, DisciplinaryRule>();
+
+    rules.forEach((rule) => {
+      const existing = uniqueRules.get(rule.suggested_letter_type);
+      if (!existing || rule.priority > existing.priority) {
+        uniqueRules.set(rule.suggested_letter_type, rule);
+      }
+    });
+
+    return Array.from(uniqueRules.values())
+      .sort((a, b) => b.priority - a.priority)
+      .map((rule) => ({
+        value: rule.suggested_letter_type,
+        label: rule.rule_name,
+        desc: rule.description || `Negativas: ${rule.min_negativas ?? 0}-${rule.max_negativas ?? '∞'}`,
+        legal: `Prioridad ${rule.priority}`,
+      }));
   }, [rules]);
 
   const availableStudents = studentCandidates.length > 0 ? studentCandidates : students;
