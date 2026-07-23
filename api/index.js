@@ -1,47 +1,13 @@
-"use strict";
-var __create = Object.create;
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __getProtoOf = Object.getPrototypeOf;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
-  // If the importer is in node compatibility mode or this is not an ESM
-  // file that has been converted to a CommonJS file using a Babel-
-  // compatible transform (i.e. "__esModule" has not been set), then set
-  // "default" to the CommonJS "module.exports" for node compatibility.
-  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
-  mod
-));
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-
 // server/api/index.ts
-var index_exports = {};
-__export(index_exports, {
-  default: () => index_default
-});
-module.exports = __toCommonJS(index_exports);
-var import_express10 = __toESM(require("express"), 1);
-var import_node_path = __toESM(require("node:path"), 1);
-var import_node_url = require("node:url");
+import express from "express";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 // server/api/routes/improve.ts
-var import_express = require("express");
+import { Router } from "express";
 
 // server/api/middleware/auth.ts
-var import_node_https = __toESM(require("node:https"), 1);
+import https from "node:https";
 async function verifyJwtViaHmac(token, secret) {
   const parts = token.split(".");
   if (parts.length !== 3) return null;
@@ -80,7 +46,7 @@ function verifyViaSupabaseApi(token) {
   }
   const hostname = new URL(supabaseUrl).hostname;
   return new Promise((resolve) => {
-    const req = import_node_https.default.request(
+    const req = https.request(
       {
         hostname,
         path: "/auth/v1/user",
@@ -126,7 +92,7 @@ async function injectTenantContext(req, res) {
     const hostname = new URL(supabaseUrl).hostname;
     const userId = user.sub;
     const data = await new Promise((resolve) => {
-      const r = import_node_https.default.request(
+      const r = https.request(
         {
           hostname,
           path: `/rest/v1/profiles?user_id=eq.${encodeURIComponent(userId)}&select=tenant_id&limit=1`,
@@ -242,11 +208,11 @@ function checkRateLimit(ip) {
 }
 
 // server/api/services/cache.ts
-var import_node_crypto = __toESM(require("node:crypto"), 1);
+import crypto2 from "node:crypto";
 var CACHE_TTL = 5 * 60 * 1e3;
 var cache = /* @__PURE__ */ new Map();
 function getCacheKey(endpoint, body) {
-  const hash = import_node_crypto.default.createHash("sha256");
+  const hash = crypto2.createHash("sha256");
   hash.update(endpoint);
   hash.update(JSON.stringify(body));
   return hash.digest("hex");
@@ -269,7 +235,7 @@ function setCache(key, value) {
 }
 
 // server/api/lib/https.ts
-var import_node_https2 = __toESM(require("node:https"), 1);
+import https2 from "node:https";
 function httpsPost(hostname, pathname, body, headers) {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify(body);
@@ -279,7 +245,7 @@ function httpsPost(hostname, pathname, body, headers) {
       method: "POST",
       headers: { "Content-Type": "application/json", ...headers }
     };
-    const req = import_node_https2.default.request(opts, (res) => {
+    const req = https2.request(opts, (res) => {
       let chunks = "";
       res.on("data", (chunk) => chunks += chunk);
       res.on("end", () => {
@@ -303,7 +269,7 @@ function httpsGet(hostname, pathname, headers) {
       method: "GET",
       headers: headers || {}
     };
-    const req = import_node_https2.default.request(opts, (res) => {
+    const req = https2.request(opts, (res) => {
       let chunks = "";
       res.on("data", (chunk) => chunks += chunk);
       res.on("end", () => {
@@ -327,7 +293,7 @@ function httpsPatch(hostname, pathname, body, headers) {
       method: "PATCH",
       headers: { "Content-Type": "application/json", ...headers }
     };
-    const req = import_node_https2.default.request(opts, (res) => {
+    const req = https2.request(opts, (res) => {
       let chunks = "";
       res.on("data", (chunk) => chunks += chunk);
       res.on("end", () => {
@@ -380,7 +346,7 @@ async function callGroq(messages, systemInstruction) {
 }
 
 // server/api/routes/improve.ts
-var router = (0, import_express.Router)();
+var router = Router();
 router.post("/improve-text", requireAuth, async (req, res) => {
   try {
     const { text } = req.body;
@@ -421,8 +387,8 @@ ${userContent}` }],
 var improve_default = router;
 
 // server/api/routes/advisor.ts
-var import_express2 = require("express");
-var router2 = (0, import_express2.Router)();
+import { Router as Router2 } from "express";
+var router2 = Router2();
 router2.post("/advisor-chat", requireAuth, async (req, res) => {
   try {
     const { message, history } = req.body;
@@ -474,8 +440,8 @@ Tus respuestas deben estar redactadas en espa\xF1ol formal de Chile, alineadas c
 var advisor_default = router2;
 
 // server/api/routes/audit.ts
-var import_express3 = require("express");
-var router3 = (0, import_express3.Router)();
+import { Router as Router3 } from "express";
+var router3 = Router3();
 router3.post("/audit-due-process", requireAuth, async (req, res) => {
   try {
     const body = req.body;
@@ -519,8 +485,8 @@ Utiliza un tono sumamente profesional, corporativo, t\xE9cnico e institucional (
 var audit_default = router3;
 
 // server/api/routes/draft.ts
-var import_express4 = require("express");
-var router4 = (0, import_express4.Router)();
+import { Router as Router4 } from "express";
+var router4 = Router4();
 router4.post("/draft-document", requireAuth, async (req, res) => {
   try {
     const body = req.body;
@@ -667,9 +633,9 @@ DATOS: C\xF3digo: ${id}, Estudiante: ${sanitizeForAI(studentName)} (Curso: ${cou
 var draft_default = router4;
 
 // server/api/routes/debug.ts
-var import_express5 = require("express");
-var import_node_crypto2 = __toESM(require("node:crypto"), 1);
-var router5 = (0, import_express5.Router)();
+import { Router as Router5 } from "express";
+import crypto3 from "node:crypto";
+var router5 = Router5();
 router5.get("/auth-debug", async (req, res) => {
   const token = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
   const JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
@@ -685,14 +651,14 @@ router5.get("/auth-debug", async (req, res) => {
     const rawKey = new TextEncoder().encode(JWT_SECRET);
     const b64Key = Buffer.from(JWT_SECRET, "base64");
     try {
-      const k1 = await import_node_crypto2.default.subtle.importKey(
+      const k1 = await crypto3.subtle.importKey(
         "raw",
         rawKey,
         { name: "HMAC", hash: "SHA-256" },
         false,
         ["verify"]
       );
-      info.rawSecretWorks = await import_node_crypto2.default.subtle.verify(
+      info.rawSecretWorks = await crypto3.subtle.verify(
         "HMAC",
         k1,
         sig,
@@ -702,14 +668,14 @@ router5.get("/auth-debug", async (req, res) => {
       info.rawSecretWorks = false;
     }
     try {
-      const k2 = await import_node_crypto2.default.subtle.importKey(
+      const k2 = await crypto3.subtle.importKey(
         "raw",
         b64Key,
         { name: "HMAC", hash: "SHA-256" },
         false,
         ["verify"]
       );
-      info.b64SecretWorks = await import_node_crypto2.default.subtle.verify(
+      info.b64SecretWorks = await crypto3.subtle.verify(
         "HMAC",
         k2,
         sig,
@@ -724,8 +690,8 @@ router5.get("/auth-debug", async (req, res) => {
 var debug_default = router5;
 
 // server/api/routes/templates.ts
-var import_express6 = require("express");
-var router6 = (0, import_express6.Router)();
+import { Router as Router6 } from "express";
+var router6 = Router6();
 router6.get("/document-templates", async (_req, res) => {
   try {
     const data = await httpsGet(
@@ -771,8 +737,8 @@ router6.put("/document-templates", requireAuth, async (req, res) => {
 var templates_default = router6;
 
 // server/api/routes/parse.ts
-var import_express7 = require("express");
-var router7 = (0, import_express7.Router)();
+import { Router as Router7 } from "express";
+var router7 = Router7();
 router7.post("/parse-annotations", async (req, res) => {
   try {
     const { textContent } = req.body;
@@ -818,9 +784,9 @@ router7.post("/parse-annotations", async (req, res) => {
 var parse_default = router7;
 
 // server/api/routes/processDisciplinaryPdf.ts
-var import_express8 = require("express");
-var import_supabase_js = require("@supabase/supabase-js");
-var router8 = (0, import_express8.Router)();
+import { Router as Router8 } from "express";
+import { createClient } from "@supabase/supabase-js";
+var router8 = Router8();
 router8.use(requireAuth);
 function normalizeName(name) {
   return name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim();
@@ -889,7 +855,7 @@ async function findStudent(supabase, fullName, courseName, tenantId) {
   if (courseName) {
     const normalizedCourse = normalizeName(courseName);
     const { data: course } = await supabase.from("courses").select("id").eq("tenant_id", tenantId).ilike("name", `%${normalizedCourse}%`).maybeSingle();
-    if (course) {
+    if (course && course.id) {
       const { data: courseStudents } = await makeQuery().eq("course_id", course.id).limit(50);
       if (courseStudents && courseStudents.length > 0) return enrichWithCourse(courseStudents);
     }
@@ -961,7 +927,7 @@ router8.post("/process-disciplinary-pdf", async (req, res) => {
       res.status(500).json({ error: "Supabase no configurado" });
       return;
     }
-    const supabase = (0, import_supabase_js.createClient)(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
+    const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
     const resolvedTenantId = tenantId || process.env.DEFAULT_TENANT_ID || "";
     const suggestedLetter = resolvedTenantId ? await supabase.rpc("get_suggested_letter_type", {
       p_negativas: summary.negativas,
@@ -1086,8 +1052,8 @@ router8.post("/process-disciplinary-pdf", async (req, res) => {
 var processDisciplinaryPdf_default = router8;
 
 // server/api/routes/usage.ts
-var import_express9 = require("express");
-var router9 = (0, import_express9.Router)();
+import { Router as Router9 } from "express";
+var router9 = Router9();
 router9.post("/usage/events", requireAuth, async (req, res) => {
   try {
     const { eventName, properties } = req.body;
@@ -1163,11 +1129,10 @@ router9.get("/usage/stats", requireAuth, async (req, res) => {
 var usage_default = router9;
 
 // server/api/index.ts
-var import_meta = {};
-var __filename = (0, import_node_url.fileURLToPath)(import_meta.url);
-var __dirname = import_node_path.default.dirname(__filename);
-var app = (0, import_express10.default)();
-app.use(import_express10.default.json({ limit: "512kb" }));
+var __filename = fileURLToPath(import.meta.url);
+var __dirname = path.dirname(__filename);
+var app = express();
+app.use(express.json({ limit: "512kb" }));
 app.use("/api", improve_default);
 app.use("/api", advisor_default);
 app.use("/api", audit_default);
@@ -1177,10 +1142,13 @@ app.use("/api", templates_default);
 app.use("/api", parse_default);
 app.use("/api", processDisciplinaryPdf_default);
 app.use("/api", usage_default);
-var distPath = import_node_path.default.join(__dirname, "..", "dist");
-app.use(import_express10.default.static(distPath));
+var distPath = path.join(__dirname, "..", "dist");
+app.use(express.static(distPath));
 app.get("*", (_req, res) => {
-  res.sendFile(import_node_path.default.join(distPath, "index.html"));
+  res.sendFile(path.join(distPath, "index.html"));
 });
 var index_default = app;
+export {
+  index_default as default
+};
 /** @license SPDX-License-Identifier: Apache-2.0 */
