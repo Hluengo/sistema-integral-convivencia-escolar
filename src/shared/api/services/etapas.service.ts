@@ -10,7 +10,7 @@ import { mapStageRowToEtapa } from '../../../lib/mappers';
 export async function fetchEtapas(studentId: string): Promise<EtapaDisciplinaria[]> {
   const { data, error } = await supabase
     .from('etapas_disciplinarias')
-    .select('*')
+    .select('id,student_id,step_number,stage_name,responsible,transition_date,comment,created_at')
     .eq('student_id', studentId)
     .order('step_number', { ascending: true });
 
@@ -20,5 +20,3 @@ export async function fetchEtapas(studentId: string): Promise<EtapaDisciplinaria
   }
   return (data || []).map(mapStageRowToEtapa);
 }
-
-

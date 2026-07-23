@@ -65,7 +65,10 @@ export default function DocumentForm({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="apoderado-name" className="mb-1 block text-sm font-medium text-neutral-700">
+          <label
+            htmlFor="apoderado-name"
+            className="mb-1 block text-sm font-medium text-neutral-700"
+          >
             Nombre del Apoderado
           </label>
           <input
@@ -80,7 +83,10 @@ export default function DocumentForm({
         </div>
 
         <div>
-          <label htmlFor="inspector-name" className="mb-1 block text-sm font-medium text-neutral-700">
+          <label
+            htmlFor="inspector-name"
+            className="mb-1 block text-sm font-medium text-neutral-700"
+          >
             Nombre Inspector/a
           </label>
           <input
@@ -98,7 +104,10 @@ export default function DocumentForm({
       {showAdvanced && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="coordinator-name" className="mb-1 block text-sm font-medium text-neutral-700">
+            <label
+              htmlFor="coordinator-name"
+              className="mb-1 block text-sm font-medium text-neutral-700"
+            >
               Nombre del Coordinador
             </label>
             <input
@@ -132,7 +141,9 @@ export default function DocumentForm({
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h5 className="text-sm font-bold text-neutral-900">Texto de la carta</h5>
-            <p className="mt-1 text-xs text-neutral-500">Estos textos actualizan la plantilla A4 en vivo.</p>
+            <p className="mt-1 text-xs text-neutral-500">
+              Estos textos actualizan la plantilla A4 en vivo.
+            </p>
           </div>
           <button
             type="button"
@@ -145,11 +156,15 @@ export default function DocumentForm({
         <div className="space-y-4">
           {TEXT_FIELDS.map((field) => (
             <div key={field.key}>
-              <label htmlFor={`letter-${field.key}`} className="mb-1 block text-sm font-medium text-neutral-700">
+              <label
+                htmlFor={`letter-${field.key}`}
+                className="mb-1 block text-sm font-medium text-neutral-700"
+              >
                 {field.label}
               </label>
               <textarea
                 id={`letter-${field.key}`}
+                aria-label={field.label}
                 value={letterContent[field.key]}
                 onChange={(event) => onLetterContentChange(field.key, event.target.value)}
                 rows={field.rows}
@@ -161,7 +176,10 @@ export default function DocumentForm({
       </section>
 
       <div>
-        <label htmlFor="doc-observations" className="mb-1 block text-sm font-medium text-neutral-700">
+        <label
+          htmlFor="doc-observations"
+          className="mb-1 block text-sm font-medium text-neutral-700"
+        >
           Observación administrativa
         </label>
         <textarea

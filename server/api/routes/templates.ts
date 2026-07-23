@@ -6,6 +6,7 @@ import { sanitize } from '../validators/sanitizers.js';
 import { httpsGet, httpsPatch } from '../lib/https.js';
 
 const router = Router();
+const TEMPLATE_SELECT = 'id,doc_type,label,system_prompt,updated_at';
 
 function getSupabaseHostname(): string {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
@@ -23,7 +24,7 @@ router.get('/document-templates', requireAuth, async (_req, res) => {
   try {
     const data = await httpsGet(
       getSupabaseHostname(),
-      '/rest/v1/document_templates?select=*&order=doc_type',
+      `/rest/v1/document_templates?select=${TEMPLATE_SELECT}&order=doc_type`,
       {
         apikey: process.env.VITE_SUPABASE_ANON_KEY ?? '',
         Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY ?? ''}`,

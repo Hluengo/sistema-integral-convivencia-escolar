@@ -24,6 +24,9 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
+      - name: Code lint
+        run: npm run lint:code
+
       - name: Unit tests
         run: npm run test
 
@@ -33,3 +36,6 @@ jobs:
           VITE_SUPABASE_URL: https://example.supabase.co
           VITE_SUPABASE_ANON_KEY: public-anon-key-for-ci
           VITE_ALLOW_LOCAL_DEMO: 'true'
+
+      - name: Security audit
+        run: npm audit --omit=dev

@@ -33,7 +33,7 @@ export interface StudentWithCourse extends Student {
 export async function fetchCourses(): Promise<Course[]> {
   const { data, error } = await supabase
     .from('courses')
-    .select('*')
+    .select('id,name,position,level,created_at')
     .order('position', { ascending: true });
 
   if (error) {
@@ -54,7 +54,7 @@ export async function fetchStudentsByCourse(courseId: string): Promise<Student[]
 
   const { data, error } = await supabase
     .from('students')
-    .select('*')
+    .select('id,full_name,course_id,rut,created_at')
     .eq('course_id', courseId)
     .order('full_name', { ascending: true });
 
@@ -72,7 +72,7 @@ export async function fetchStudentsByCourse(courseId: string): Promise<Student[]
 export async function fetchStudentsWithCourses(): Promise<StudentWithCourse[]> {
   const { data, error } = await supabase
     .from('students')
-    .select('*, courses(name, level)')
+    .select('id,full_name,course_id,rut,created_at,courses(name, level)')
     .order('full_name', { ascending: true });
 
   if (error) {

@@ -33,7 +33,7 @@ function mapBitacoraRow(row: SupabaseBitacoraRow): BitacoraEntry {
 export async function fetchBitacora(causaId: string): Promise<BitacoraEntry[]> {
   const { data, error } = await supabase
     .from('bitacora_entries')
-    .select('*')
+    .select('id,fecha,tipo,titulo,descripcion,participantes,documento_adjunto')
     .eq('causa_id', causaId)
     .order('fecha', { ascending: true });
 

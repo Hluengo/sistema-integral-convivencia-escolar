@@ -16,6 +16,7 @@ interface EmittedEntry {
 const STORAGE_KEY = 'convivencia_anotaciones_emitted:v1';
 
 export function useDocumentRegistry() {
+  // Caché visual local: el estado oficial vive en Supabase (cartas_disciplinarias + carta_events).
   const [emittedList, setEmittedList] = useState<EmittedEntry[]>([]);
 
   useEffect(() => {

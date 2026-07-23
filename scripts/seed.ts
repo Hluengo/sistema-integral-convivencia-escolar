@@ -51,7 +51,7 @@ async function clearAllData(): Promise<boolean> {
 }
 
 async function seedInitialData(causas: Causa[]): Promise<boolean> {
-  const { count } = await supabase.from('causas').select('*', { count: 'exact', head: true });
+  const { count } = await supabase.from('causas').select('id', { count: 'exact', head: true });
 
   if (count && count > 0) {
     console.log('Data already seeded, skipping.');

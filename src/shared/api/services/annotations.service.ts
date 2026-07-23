@@ -10,7 +10,9 @@ import { calculateDisciplinaryStatus } from '../../../domain/disciplinaryStatus'
 import { useAuthStore } from '../../../stores/authStore';
 
 const ANNOTATION_COLUMNS =
-  'id,student_id,date_time,observation,severity,type,registered_by,created_at,created_by';
+  'id,student_id,date_time,observation,severity,type,registered_by,created_at,created_by,pdf_file_path';
+const DOCUMENT_ANALYSIS_COLUMNS =
+  'id,student_id,file_name,negativas,positivas,informativas,analyzed_at,tenant_id,created_at';
 
 interface AnnotationCountStats {
   negativas: number;
@@ -41,7 +43,7 @@ export async function fetchAnnotations(studentId?: string): Promise<Annotation[]
 export async function fetchDocumentAnalyses(studentId: string): Promise<DocumentAnalysis[]> {
   const { data, error } = await supabase
     .from('document_analyses')
-    .select('*')
+    .select(DOCUMENT_ANALYSIS_COLUMNS)
     .eq('student_id', studentId)
     .order('analyzed_at', { ascending: false });
 
@@ -151,7 +153,10 @@ async function fetchAnnotationStatsByStudent(): Promise<Record<string, Annotatio
 
   const stats: Record<string, AnnotationCountStats> = {};
   for (const annotation of data || []) {
-    addAnnotationToStats(stats, annotation as { student_id: string; type: string; date_time: string | null });
+    addAnnotationToStats(
+      stats,
+      annotation as { student_id: string; type: string; date_time: string | null }
+    );
   }
   return stats;
 }
@@ -166,10 +171,10 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStud
   if (!rpcError && rpcData) {
     return (rpcData as RpcStudentSummary[]).map((row) => {
       const stats = statsByStudent[row.id];
-      const negativeCount = stats?.negativas ?? Number(row.annotations_count) ?? 0;
-      const positiveCount = stats?.positivas ?? Number(row.positive_annotations_count) ?? 0;
+      const negativeCount = stats?.negativas ?? Number(row.annotations_count || 0);
+      const positiveCount = stats?.positivas ?? Number(row.positive_annotations_count || 0);
       const informativeCount =
-        stats?.informativas ?? Number(row.informative_annotations_count || 0) ?? 0;
+        stats?.informativas ?? Number(row.informative_annotations_count || 0);
       return {
         id: row.id,
         full_name: row.full_name,
@@ -201,7 +206,7 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStud
 
   const { data: students, error: studentsError } = await supabase
     .from('students')
-    .select('*, courses(name, level)')
+    .select('id,full_name,course_id,teacher_id,status,rut,ai_analysis,courses(name, level)')
     .order('full_name', { ascending: true });
 
   if (!students) {

@@ -9,10 +9,10 @@
     "build:web": "vite build",
     "start": "node dist/server.cjs",
     "clean": "rimraf dist server.js",
-    "lint": "tsc --noEmit",
+    "lint": "npm run lint:code && npm run typecheck",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test src/domain/disciplinaryStatus.test.ts src/domain/riceMeasures.test.ts src/lib/mappers.test.ts server/lib/disciplinaryPdfAnalysis.test.ts server/lib/validators.test.ts",
-    "ci": "npm run lint && npm run test && npm run build:web",
+    "ci": "npm run lint && npm run test && npm run build:web && npm run security-audit",
     "doctor": "npx react-doctor@latest",
     "prepare": "husky",
     "lint:types": "tsc --noEmit",
@@ -30,7 +30,8 @@
     "depcheck": "depcheck",
     "knip": "knip",
     "security-audit": "npm audit --omit=dev",
-    "pre-push": "npm run lint && npm run test && npm run build:web"
+    "security:secrets": "npx gitleaks detect --source . --verbose",
+    "pre-push": "npm run lint && npm run test && npm run build:web && npm run security-audit"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.19",

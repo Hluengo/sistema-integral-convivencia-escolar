@@ -5,15 +5,21 @@
 
 import { Router } from 'express';
 import { checkRateLimit } from '../lib/rateLimit';
+import { requireAuth } from '../middleware/auth';
 
 const router = Router();
+const MAX_TEXT_CONTENT_LENGTH = 80_000;
 
-router.post('/parse-annotations', async (req, res) => {
+router.post('/parse-annotations', requireAuth, async (req, res) => {
   try {
     const { textContent } = req.body as Record<string, string | undefined>;
 
     if (!textContent || !textContent.trim()) {
       res.status(400).json({ error: 'No se recibió el texto extraído del PDF.' });
+      return;
+    }
+    if (textContent.length > MAX_TEXT_CONTENT_LENGTH) {
+      res.status(413).json({ error: 'El texto excede el tamaño máximo permitido.' });
       return;
     }
 

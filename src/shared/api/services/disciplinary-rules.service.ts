@@ -25,7 +25,9 @@ export async function fetchDisciplinaryRules(): Promise<DisciplinaryRule[]> {
 
   const { data, error } = await supabase
     .from('disciplinary_rules')
-    .select('*')
+    .select(
+      'id,rule_type,rule_name,description,min_negativas,max_negativas,min_positivas,max_positivas,min_informativas,max_informativas,suggested_letter_type,priority,is_active'
+    )
     .eq('tenant_id', tenantId)
     .eq('is_active', true)
     .order('priority', { ascending: false });

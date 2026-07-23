@@ -655,64 +655,20 @@ var draft_default = router4;
 
 // server/api/routes/debug.ts
 import { Router as Router5 } from "express";
-import crypto3 from "node:crypto";
 var router5 = Router5();
-router5.get("/auth-debug", requireAuth, async (req, res) => {
-  const token = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
-  const JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
-  const info = {
-    hasToken: token.length > 10,
-    hasSecret: !!JWT_SECRET,
-    secretLength: JWT_SECRET ? JWT_SECRET.length : 0,
-    tokenParts: token.split(".").length
-  };
-  if (info.hasToken && JWT_SECRET) {
-    const parts = token.split(".");
-    const sig = Buffer.from(parts[2], "base64url");
-    const rawKey = new TextEncoder().encode(JWT_SECRET);
-    const b64Key = Buffer.from(JWT_SECRET, "base64");
-    try {
-      const k1 = await crypto3.subtle.importKey(
-        "raw",
-        rawKey,
-        { name: "HMAC", hash: "SHA-256" },
-        false,
-        ["verify"]
-      );
-      info.rawSecretWorks = await crypto3.subtle.verify(
-        "HMAC",
-        k1,
-        sig,
-        new TextEncoder().encode(`${parts[0]}.${parts[1]}`)
-      );
-    } catch {
-      info.rawSecretWorks = false;
-    }
-    try {
-      const k2 = await crypto3.subtle.importKey(
-        "raw",
-        b64Key,
-        { name: "HMAC", hash: "SHA-256" },
-        false,
-        ["verify"]
-      );
-      info.b64SecretWorks = await crypto3.subtle.verify(
-        "HMAC",
-        k2,
-        sig,
-        new TextEncoder().encode(`${parts[0]}.${parts[1]}`)
-      );
-    } catch {
-      info.b64SecretWorks = false;
-    }
+router5.get("/auth-debug", requireAuth, async (_req, res) => {
+  if (process.env.NODE_ENV === "production") {
+    res.status(404).json({ error: "No encontrado." });
+    return;
   }
-  res.json(info);
+  res.json({ authenticated: true });
 });
 var debug_default = router5;
 
 // server/api/routes/templates.ts
 import { Router as Router6 } from "express";
 var router6 = Router6();
+var TEMPLATE_SELECT = "id,doc_type,label,system_prompt,updated_at";
 function getSupabaseHostname2() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   if (!supabaseUrl || !URL.canParse(supabaseUrl)) {
@@ -727,7 +683,7 @@ router6.get("/document-templates", requireAuth, async (_req, res) => {
   try {
     const data = await httpsGet(
       getSupabaseHostname2(),
-      "/rest/v1/document_templates?select=*&order=doc_type",
+      `/rest/v1/document_templates?select=${TEMPLATE_SELECT}&order=doc_type`,
       {
         apikey: process.env.VITE_SUPABASE_ANON_KEY ?? "",
         Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY ?? ""}`
@@ -771,11 +727,16 @@ var templates_default = router6;
 // server/api/routes/parse.ts
 import { Router as Router7 } from "express";
 var router7 = Router7();
-router7.post("/parse-annotations", async (req, res) => {
+var MAX_TEXT_CONTENT_LENGTH = 8e4;
+router7.post("/parse-annotations", requireAuth, async (req, res) => {
   try {
     const { textContent } = req.body;
     if (!textContent || !textContent.trim()) {
       res.status(400).json({ error: "No se recibi\xF3 el texto extra\xEDdo del PDF." });
+      return;
+    }
+    if (textContent.length > MAX_TEXT_CONTENT_LENGTH) {
+      res.status(413).json({ error: "El texto excede el tama\xF1o m\xE1ximo permitido." });
       return;
     }
     const ip = req.ip || req.connection?.remoteAddress || "unknown";

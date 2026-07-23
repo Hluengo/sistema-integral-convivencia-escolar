@@ -8,6 +8,7 @@ import { requireAuth } from '../middleware/auth';
 import { sanitize } from '../lib/validators';
 
 const router = Router();
+const TEMPLATE_SELECT = 'id,doc_type,label,system_prompt,updated_at';
 
 function getSupabaseRestUrl(path: string): string {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
@@ -21,14 +22,17 @@ function getServiceRoleKey(): string {
   return process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? '';
 }
 
-router.get('/document-templates', async (_req, res) => {
+router.get('/document-templates', requireAuth, async (_req, res) => {
   try {
-    const result = await fetch(getSupabaseRestUrl('document_templates?select=*&order=doc_type'), {
-      headers: {
-        apikey: process.env.VITE_SUPABASE_ANON_KEY || '',
-        Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY}`,
-      },
-    });
+    const result = await fetch(
+      getSupabaseRestUrl(`document_templates?select=${TEMPLATE_SELECT}&order=doc_type`),
+      {
+        headers: {
+          apikey: process.env.VITE_SUPABASE_ANON_KEY || '',
+          Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+      }
+    );
     if (!result.ok) {
       res.status(result.status).json({ error: `Template fetch failed: ${result.status}` });
       return;
@@ -57,7 +61,10 @@ router.put('/document-templates', requireAuth, async (req, res) => {
         Prefer: 'return=minimal',
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ system_prompt: sanitizedPrompt, updated_at: new Date().toISOString() }),
+      body: JSON.stringify({
+        system_prompt: sanitizedPrompt,
+        updated_at: new Date().toISOString(),
+      }),
     });
     res.json({ success: true });
   } catch (error: unknown) {
