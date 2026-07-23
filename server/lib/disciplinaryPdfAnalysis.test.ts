@@ -72,3 +72,22 @@ test('metadata parser normalizes basic course labels', () => {
 
   assert.equal(result.course, '7° Básico A');
 });
+test('metadata parser accepts Supabase course order', () => {
+  const result = extractDisciplinaryMetadataForTest(`
+    ESTUDIANTE DE PRUEBA APELLIDO
+    FICHA PERSONAL DE CONVIVENCIA ESCOLAR
+    Curso : 1° Básico A
+  `);
+
+  assert.equal(result.course, '1° Básico A');
+});
+
+test('metadata parser accepts legacy letter-before-cycle course order', () => {
+  const result = extractDisciplinaryMetadataForTest(`
+    ESTUDIANTE DE PRUEBA APELLIDO
+    FICHA PERSONAL DE CONVIVENCIA ESCOLAR
+    Curso : 1° A Básico
+  `);
+
+  assert.equal(result.course, '1° Básico A');
+});

@@ -293,12 +293,18 @@ function normalizeCourseLabel(value: string): string | null {
     .replace(/\s+/g, ' ')
     .trim()
     .toUpperCase();
-  const match = normalized.match(/\b(\d{1,2})\s*(?:°\s*)?([A-Z])\s*(MEDIO|BASICO|BASICA)\b/);
-  if (!match) return null;
+  const letterBeforeCycle = normalized.match(
+    /\b(\d{1,2})\s*(?:°\s*)?([A-Z])\s*(MEDIO|BASICO|BASICA)\b/
+  );
+  const cycleBeforeLetter = normalized.match(
+    /\b(\d{1,2})\s*(?:°\s*)?(MEDIO|BASICO|BASICA)\s*([A-Z])\b/
+  );
+  const level = Number(letterBeforeCycle?.[1] ?? cycleBeforeLetter?.[1]);
+  const letter = letterBeforeCycle?.[2] ?? cycleBeforeLetter?.[3];
+  const rawCycle = letterBeforeCycle?.[3] ?? cycleBeforeLetter?.[2];
+  if (!level || !letter || !rawCycle) return null;
 
-  const level = Number(match[1]);
-  const letter = match[2];
-  const cycle = match[3].startsWith('MEDIO') ? 'Medio' : 'Básico';
+  const cycle = rawCycle.startsWith('MEDIO') ? 'Medio' : 'Básico';
   return `${level}° ${cycle} ${letter}`;
 }
 
@@ -395,7 +401,7 @@ function extractCourse(text: string): string | null {
   }
 
   const normalizedText = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const courseMatch = normalizedText.match(/\b\d{1,2}\s*(?:°\s*)?[A-Z]\s*(?:MEDIO|BASICO|BASICA)\b/i);
+  const courseMatch = normalizedText.match(/\b(?:\d{1,2}\s*(?:°\s*)?[A-Z]\s*(?:MEDIO|BASICO|BASICA)|\d{1,2}\s*(?:°\s*)?(?:MEDIO|BASICO|BASICA)\s*[A-Z])\b/i);
   return courseMatch?.[0] ? normalizeCourseLabel(courseMatch[0]) : null;
 }
 
