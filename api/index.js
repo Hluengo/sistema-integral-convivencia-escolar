@@ -1135,6 +1135,12 @@ function summarizeAnnotations(annotations) {
     { negativas: 0, positivas: 0, informativas: 0 }
   );
 }
+function getNameParts(value) {
+  return normalizeText(value).split(" ").filter((part) => part.length >= 3);
+}
+function buildNameTokenQuery(parts) {
+  return [...new Set(parts)].map((part) => `full_name.ilike.%${part}%`).join(",");
+}
 async function enrichStudentRows(supabase, rows, confidence, status) {
   if (rows.length === 0) return [];
   const courseIds = [...new Set(rows.map((row) => row.course_id).filter(Boolean))];
@@ -1179,7 +1185,10 @@ async function findStudentCandidates(supabase, tenantId, detectedName, detectedC
       status: candidates2.length === 1 ? "exact_match" : "multiple_candidates"
     };
   }
-  const { data: tenantStudents } = await supabase.from("students").select(baseSelect).eq("tenant_id", tenantId).limit(500);
+  const detectedParts = getNameParts(detectedName);
+  const tokenQuery = buildNameTokenQuery(detectedParts);
+  const tokenCandidatesQuery = supabase.from("students").select(baseSelect).eq("tenant_id", tenantId).limit(1e3);
+  const { data: tenantStudents } = tokenQuery ? await tokenCandidatesQuery.or(tokenQuery) : await tokenCandidatesQuery;
   const normalizedMatches = (tenantStudents ?? []).filter(
     (student) => normalizeText(student.full_name) === normalizedDetected
   );
@@ -1196,13 +1205,11 @@ async function findStudentCandidates(supabase, tenantId, detectedName, detectedC
       status: candidates2.length === 1 ? "unique_normalized_match" : "multiple_candidates"
     };
   }
-  const detectedParts = new Set(normalizedDetected.split(" ").filter((part) => part.length >= 3));
+  const detectedPartSet = new Set(detectedParts);
   let approximate = (tenantStudents ?? []).map((student) => {
-    const studentParts = new Set(
-      normalizeText(student.full_name).split(" ").filter((part) => part.length >= 3)
-    );
-    const overlap = [...detectedParts].filter((part) => studentParts.has(part)).length;
-    const denominator = Math.max(detectedParts.size, studentParts.size, 1);
+    const studentParts = new Set(getNameParts(student.full_name));
+    const overlap = [...detectedPartSet].filter((part) => studentParts.has(part)).length;
+    const denominator = Math.max(detectedPartSet.size, studentParts.size, 1);
     const courseBoost = detectedCourseKey && student.course_id && courseKeyById.get(student.course_id) === detectedCourseKey ? 0.15 : 0;
     return { student, score: overlap / denominator + courseBoost };
   }).filter((item) => item.score >= 0.5).sort((a, b) => b.score - a.score).slice(0, 8);

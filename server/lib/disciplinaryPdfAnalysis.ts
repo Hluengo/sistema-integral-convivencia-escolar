@@ -562,6 +562,17 @@ function summarizeAnnotations(annotations: DetectedAnnotation[]): AnnotationSumm
   );
 }
 
+function getNameParts(value: string): string[] {
+  return normalizeText(value)
+    .split(' ')
+    .filter((part) => part.length >= 3);
+}
+
+function buildNameTokenQuery(parts: string[]): string {
+  return [...new Set(parts)]
+    .map((part) => `full_name.ilike.%${part}%`)
+    .join(',');
+}
 async function enrichStudentRows(
   supabase: SupabaseClient,
   rows: Array<{ id: string; full_name: string; rut: string | null; course_id: string | null }>,
@@ -638,11 +649,16 @@ async function findStudentCandidates(
     };
   }
 
-  const { data: tenantStudents } = await supabase
+  const detectedParts = getNameParts(detectedName);
+  const tokenQuery = buildNameTokenQuery(detectedParts);
+  const tokenCandidatesQuery = supabase
     .from('students')
     .select(baseSelect)
     .eq('tenant_id', tenantId)
-    .limit(500);
+    .limit(1000);
+  const { data: tenantStudents } = tokenQuery
+    ? await tokenCandidatesQuery.or(tokenQuery)
+    : await tokenCandidatesQuery;
 
   const normalizedMatches = (tenantStudents ?? []).filter(
     (student) => normalizeText(student.full_name) === normalizedDetected
@@ -661,16 +677,12 @@ async function findStudentCandidates(
     };
   }
 
-  const detectedParts = new Set(normalizedDetected.split(' ').filter((part) => part.length >= 3));
+  const detectedPartSet = new Set(detectedParts);
   let approximate = (tenantStudents ?? [])
     .map((student) => {
-      const studentParts = new Set(
-        normalizeText(student.full_name)
-          .split(' ')
-          .filter((part) => part.length >= 3)
-      );
-      const overlap = [...detectedParts].filter((part) => studentParts.has(part)).length;
-      const denominator = Math.max(detectedParts.size, studentParts.size, 1);
+      const studentParts = new Set(getNameParts(student.full_name));
+      const overlap = [...detectedPartSet].filter((part) => studentParts.has(part)).length;
+      const denominator = Math.max(detectedPartSet.size, studentParts.size, 1);
       const courseBoost =
         detectedCourseKey && student.course_id && courseKeyById.get(student.course_id) === detectedCourseKey
           ? 0.15
