@@ -19,7 +19,7 @@ function getServiceRoleKey(): string {
   return process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? '';
 }
 
-router.get('/document-templates', async (_req, res) => {
+router.get('/document-templates', requireAuth, async (_req, res) => {
   try {
     const data = await httpsGet(
       getSupabaseHostname(),
@@ -27,7 +27,7 @@ router.get('/document-templates', async (_req, res) => {
       {
         apikey: process.env.VITE_SUPABASE_ANON_KEY ?? '',
         Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY ?? ''}`,
-      },
+      }
     );
     res.json(data);
   } catch {
@@ -56,7 +56,7 @@ router.put('/document-templates', requireAuth, async (req, res) => {
         apikey: serviceRoleKey,
         Authorization: `Bearer ${serviceRoleKey}`,
         Prefer: 'return=minimal',
-      },
+      }
     );
     res.json({ success: true });
   } catch (error) {

@@ -1,0 +1,70 @@
+# Frontend (React, Vite, Tailwind, Zustand, React Query)
+src/features/anotaciones/ @frontend-designer @convivencia
+src/features/causas/ @frontend-designer @legal
+src/features/timeline/ @frontend-designer @legal
+src/features/dashboard/ @frontend-designer @analytics
+src/features/students/ @frontend-designer @pie
+src/features/documentos/ @frontend-designer @legal
+src/features/ai-advisor/ @frontend-designer @legal
+src/features/command-palette/ @frontend-designer
+src/features/onboarding/ @frontend-designer
+src/shared/ui/ @frontend-designer
+src/shared/lib/ @frontend-designer
+src/shared/api/ @frontend-designer @supabase
+src/widgets/ @frontend-designer
+src/app/ @frontend-designer
+src/hooks/ @frontend-designer
+src/stores/ @frontend-designer
+src/services/ @frontend-designer @supabase
+
+# Backend (Express, API, Vercel Serverless)
+server/ @backend
+server/routes/ @backend
+server/api/ @backend @devops
+server/middleware/ @backend @security
+server/lib/ @backend
+
+# Database (Supabase, PostgreSQL, RLS, Migrations)
+supabase/ @supabase @database
+supabase/migrations/ @supabase @database
+supabase/seed.sql @supabase @database
+supabase/config.toml @supabase @database
+
+# Documentation
+docs/ @documentation @writer
+docs/architecture/ @documentation @react-architect
+docs/engineering/ @documentation
+docs/adr/ @documentation @react-architect
+docs/leyes/ @legal
+docs/reviews/ @security-reviewer @qa-tester
+
+# AI / OpenCode
+.opencode/ @documentation
+.opencode/memory/ @documentation
+.opencode/rules/ @documentation
+.opencode/skills/ @documentation
+.ai/ @documentation
+
+# Configuration
+opencode.json @documentation
+package.json @devops
+vite.config.ts @frontend-designer @devops
+tsconfig.json @frontend-designer
+eslint.config.js @frontend-designer
+vercel.json @devops
+playwright.config.ts @qa-tester
+vitest.config.ts @qa-tester
+
+# CI/CD
+.github/ @devops
+.github/workflows/ @devops
+
+# E2E Tests
+tests/ @qa-tester
+e2e/ @qa-tester
+
+# Scripts
+scripts/ @devops @database
+
+# Public Assets
+public/ @frontend-designer

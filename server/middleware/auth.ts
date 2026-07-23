@@ -31,7 +31,7 @@ async function verifyJwtViaHmac(token: string, secret: string): Promise<JwtPaylo
         secretBytes,
         { name: 'HMAC', hash: 'SHA-256' },
         false,
-        ['verify'],
+        ['verify']
       );
       const data = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
       const valid = await crypto.subtle.verify('HMAC', key, signature, data);
@@ -76,7 +76,7 @@ function verifyViaSupabaseApi(token: string): Promise<JwtPayload | null> {
             resolve(null);
           }
         });
-      },
+      }
     );
     req.on('error', () => resolve(null));
     req.setTimeout(5000, () => {
@@ -87,19 +87,13 @@ function verifyViaSupabaseApi(token: string): Promise<JwtPayload | null> {
   });
 }
 
-async function verifyJwtSignature(
-  token: string,
-  secret: string,
-): Promise<JwtPayload | null> {
+async function verifyJwtSignature(token: string, secret: string): Promise<JwtPayload | null> {
   const hmacResult = await verifyJwtViaHmac(token, secret);
   if (hmacResult) return hmacResult;
   return verifyViaSupabaseApi(token);
 }
 
-async function injectTenantContext(
-  req: Request,
-  res: Response,
-): Promise<void> {
+async function injectTenantContext(req: Request, res: Response): Promise<void> {
   const user = (req as Request & { user: JwtPayload }).user;
   if (!user?.sub) return;
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
@@ -118,23 +112,37 @@ async function injectTenantContext(
         },
         (res2) => {
           let chunks = '';
-          res2.on('data', (c: string) => { chunks += c; });
+          res2.on('data', (c: string) => {
+            chunks += c;
+          });
           res2.on('end', () => {
             if (res2.statusCode !== 200) return resolve(null);
-            try { resolve(JSON.parse(chunks)); } catch { resolve(null); }
+            try {
+              resolve(JSON.parse(chunks));
+            } catch {
+              resolve(null);
+            }
           });
-        },
+        }
       );
       r.on('error', () => resolve(null));
-      r.setTimeout(3000, () => { r.destroy(); resolve(null); });
+      r.setTimeout(3000, () => {
+        r.destroy();
+        resolve(null);
+      });
       r.end();
     });
     if (Array.isArray(data) && data.length > 0 && (data[0] as { tenant_id?: string }).tenant_id) {
-      (req as Request & { tenantId?: string }).tenantId = (data[0] as { tenant_id: string }).tenant_id;
+      (req as Request & { tenantId?: string }).tenantId = (
+        data[0] as { tenant_id: string }
+      ).tenant_id;
       res.setHeader('x-tenant-id', (data[0] as { tenant_id: string }).tenant_id);
     }
-  } catch {
-    // Tenant context is best-effort; continue without it
+  } catch (err) {
+    console.error(
+      '[tenant] Failed to inject tenant context:',
+      err instanceof Error ? err.message : err
+    );
   }
 }
 

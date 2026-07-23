@@ -25,8 +25,9 @@ dotenv.config({ path: '.env.local' });
 const app = express();
 const PORT = Number.parseInt(process.env.PORT || '3001', 10);
 
+app.set('trust proxy', 1);
 app.use(compression());
-app.use(express.json({ limit: '512kb' }));
+app.use(express.json({ limit: '100kb' }));
 
 // API routes
 app.use('/api', auditRoutes);

@@ -2,10 +2,11 @@
 
 import { Router } from 'express';
 import crypto from 'node:crypto';
+import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
 
-router.get('/auth-debug', async (req, res) => {
+router.get('/auth-debug', requireAuth, async (req, res) => {
   const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
   const JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
 
@@ -28,13 +29,13 @@ router.get('/auth-debug', async (req, res) => {
         rawKey,
         { name: 'HMAC', hash: 'SHA-256' },
         false,
-        ['verify'],
+        ['verify']
       );
       info.rawSecretWorks = await crypto.subtle.verify(
         'HMAC',
         k1,
         sig,
-        new TextEncoder().encode(`${parts[0]}.${parts[1]}`),
+        new TextEncoder().encode(`${parts[0]}.${parts[1]}`)
       );
     } catch {
       info.rawSecretWorks = false;
@@ -46,13 +47,13 @@ router.get('/auth-debug', async (req, res) => {
         b64Key,
         { name: 'HMAC', hash: 'SHA-256' },
         false,
-        ['verify'],
+        ['verify']
       );
       info.b64SecretWorks = await crypto.subtle.verify(
         'HMAC',
         k2,
         sig,
-        new TextEncoder().encode(`${parts[0]}.${parts[1]}`),
+        new TextEncoder().encode(`${parts[0]}.${parts[1]}`)
       );
     } catch {
       info.b64SecretWorks = false;

@@ -1,5 +1,44 @@
 # AGENTS.md — Debido Proceso
 
+## 📖 Autoload (Lectura Automática al Iniciar Tarea)
+
+Antes de cualquier tarea, leer en este orden:
+1. **`docs/CONSTITUTION.md`** — 23 reglas inmutables del proyecto
+2. **`.ai/brain.md`** — Staff Engineer memory (entry point)
+3. **`.ai/rules.md`** — 16 "always do" reglas por área
+4. **`.ai/anti-patterns.md`** — 25 "never do" reglas
+5. **`.opencode/memory/project.md`** — Memoria del proyecto
+6. **`docs/architecture/`** — Documentación específica del módulo afectado
+7. **`docs/reviews/security-review.md`** o **`performance-review.md`** si aplica
+
+Usar contexto progresivo: base → dominio → módulo → implementación.
+
+## 🧠 Routing de Tareas (Selección de Agente)
+
+| Tipo de cambio | Agente |
+|----------------|--------|
+| React/UI/Tailwind | `frontend` |
+| API/Express/serverless | `backend` |
+| Tablas/RLS/Storage/migraciones | `supabase-architect` |
+| Vulnerabilidades/OWASP | `security-reviewer` |
+| Lentitud/bundle/queries/rendimiento | `performance-engineer` |
+| Pruebas unitarias/E2E/cobertura | `qa-tester` |
+| Revisión de diff/PR | `reviewer` |
+| Limpieza técnica/refactor | `refactor` |
+| Actualización de memoria/docs/ADR | `documentation` |
+
+Flujo multi-área: planner analiza → especialista implementa → qa valida → reviewer revisa → documentation actualiza memoria.
+
+## 🔄 Autoactualización de Memoria (Al Finalizar Tarea)
+
+1. Determinar si cambió: arquitectura, modelo de datos, API, flujo, patrón, convención, dependencia, seguridad, rendimiento
+2. **Solo** actualizar documentos afectados
+3. Crear ADR únicamente si hubo decisión arquitectónica real
+4. Actualizar `.opencode/memory/project.md` cuando cambie conocimiento estable
+5. Actualizar `.ai/roadmap.md` cuando cambie estado de funcionalidad
+6. No actualizar por cambios triviales
+7. Evitar duplicación y documentación contradictoria
+
 ## Comandos del Proyecto
 
 - `npm run build` — Vite client build + esbuild server bundle (`dist/`)
@@ -67,21 +106,23 @@ Al modificar rutas API, actualizar **ambos archivos**.
 - **Estilo:** Conciso, código limpio, seguir convenciones existentes
 
 ### @frontend
-- **Rol:** Especialista en React, Tailwind CSS, UX/UI
-- **Objetivo:** Construir interfaces, componentes, layouts responsivos
-- **Cuándo usar:** Cambios en componentes UI, estilos, diseño visual
+- **Rol:** Especialista en React 19, Tailwind CSS v4, Radix UI, Zustand 5, React Query 5
+- **Objetivo:** Construir interfaces SaaS, componentes reutilizables, lazy loading, selectores Zustand
+- **Cuándo usar:** Cambios en componentes UI, estilos, diseño visual, rendimiento frontend
 - **Herramientas:** read, edit, write, grep, glob
-- **Archivos puede modificar:** `src/components/`, `src/index.css`, `src/App.tsx`
-- **Estilo:** Componentes limpios, Tailwind, accesibilidad, responsive
+- **Archivos puede modificar:** `src/` (frontend), excepto stores de alto riesgo
+- **Lectura obligatoria:** .ai/brain.md, .ai/architecture.md, .ai/rules.md, docs/CONSTITUTION.md
+- **Estilo:** Componentes limpios, FSD, móvil-first, accesibilidad WCAG AA
 
 ### @backend
-- **Rol:** Especialista en Express, APIs REST, serverless
-- **Objetivo:** Implementar endpoints, lógica de servidor, middleware
-- **Cuándo usar:** Nuevos endpoints, cambios en API, lógica server-side
+- **Rol:** Especialista en Express 4, Vercel Serverless, APIs REST
+- **Objetivo:** Implementar endpoints, lógica de servidor, middleware, validación
+- **Cuándo usar:** Nuevos endpoints, cambios en API, lógica server-side, rutas duales
 - **Herramientas:** read, edit, write, bash, grep
-- **Archivos puede modificar:** `api/index.js`, `server.ts`
-- **Archivos NO debe modificar:** `src/` (frontend)
-- **Estilo:** API REST limpia, manejo de errores, validación
+- **Archivos puede modificar:** `api/index.js`, `server/index.ts`, `server/api/index.ts`, `server/routes/`
+- **Archivos NO debe modificar:** `src/` (frontend), migraciones SQL
+- **Regla:** Al modificar rutas, actualizar **ambos entry points** (server/index.ts + server/api/index.ts)
+- **Estilo:** API REST limpia, manejo de errores, validación con sanitize/requireStr
 
 ### @database
 - **Rol:** Especialista en PostgreSQL y Supabase
@@ -123,13 +164,29 @@ Al modificar rutas API, actualizar **ambos archivos**.
 - **Archivos puede modificar:** Ninguno (solo reporta)
 - **Estilo:** Constructivo, específico, con líneas y sugerencias
 
+### @refactor
+- **Rol:** Especialista en refactorización
+- **Objetivo:** Reducir deuda técnica, eliminar código muerto, simplificar complejidad
+- **Cuándo usar:** Código duplicado, complejidad alta, acoplamiento excesivo, bundle grande
+- **Herramientas:** read, edit, write, grep, bash
+- **Archivos puede modificar:** `src/`, `server/` según aplique
+- **Estilo:** YAGNI, DRY, KISS, stdlib first, evidencia antes de eliminar
+
+### @performance-engineer
+- **Rol:** Ingeniero de rendimiento
+- **Objetivo:** Optimizar bundle, queries, renders, memoria, caché
+- **Cuándo usar:** Lentitud, bundle grande, re-renders, N+1 queries, memory leaks
+- **Herramientas:** read, edit, write, bash, glob, grep
+- **Archivos puede modificar:** `src/`, `server/`, `vite.config.ts`
+- **Estilo:** Medir antes/después, quick wins primero, no afirmar sin datos
+
 ### @documentation
-- **Rol:** Documentador técnico
-- **Objetivo:** Crear y mantener documentación clara y completa
-- **Cuándo usar:** Nuevos features, cambios de arquitectura, onboarding
-- **Herramientas:** read, edit, write, glob
-- **Archivos puede modificar:** `docs/`, `README.md`, `AGENTS.md`
-- **Estilo:** Claro, conciso, con ejemplos, en español
+- **Rol:** Documentador técnico / Staff memory synchronizer
+- **Objetivo:** Mantener memoria sincronizada con código real; actualizar ADR, roadmap, .ai/
+- **Cuándo usar:** Después de cambios de arquitectura, API, modelo de datos, flujo, patrón, convención
+- **Herramientas:** read, edit, write, glob, grep
+- **Archivos puede modificar:** `docs/`, `README.md`, `AGENTS.md`, `.ai/`, `.opencode/memory/`
+- **Estilo:** Claro, conciso, con ejemplos, en español chileno, sin especulación
 
 ### @devops
 - **Rol:** Especialista en CI/CD, deploy, infraestructura

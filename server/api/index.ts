@@ -1,5 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
+import compression from 'compression';
 import express from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,7 +9,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-app.use(express.json({ limit: '512kb' }));
+app.set('trust proxy', 1);
+app.use(compression());
+app.use(express.json({ limit: '100kb' }));
 
 import improveRoutes from './routes/improve.js';
 import advisorRoutes from './routes/advisor.js';

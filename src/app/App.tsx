@@ -30,30 +30,64 @@ export default function App() {
   const setShowLoginModal = useAuthStore((s) => s.setShowLoginModal);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
-  const causasStore = useCausasStore();
-  const {selectedCausaId, setSelectedCausaId, causas, saveStatus, setSaveStatus} = causasStore;
-  const selectedCausa = selectSelectedCausa(causasStore);
-  const filteredCausas = selectFilteredCausas(causasStore);
+  const causas = useCausasStore((s) => s.causas);
+  const selectedCausaId = useCausasStore((s) => s.selectedCausaId);
+  const setSelectedCausaId = useCausasStore((s) => s.setSelectedCausaId);
+  const saveStatus = useCausasStore((s) => s.saveStatus);
+  const setSaveStatus = useCausasStore((s) => s.setSaveStatus);
+  const selectedFaseFilter = useCausasStore((s) => s.selectedFaseFilter);
+  const setSelectedFaseFilter = useCausasStore((s) => s.setSelectedFaseFilter);
+  const searchQuery = useCausasStore((s) => s.searchQuery);
+  const setSearchQuery = useCausasStore((s) => s.setSearchQuery);
+  const setCausas = useCausasStore((s) => s.setCausas);
+  const handleCreateCausaAction = useCausasStore((s) => s.handleCreateCausa);
+  const handleReopenCausaAction = useCausasStore((s) => s.handleReopenCausa);
+  const selectedCausa = useCausasStore(selectSelectedCausa);
+  const filteredCausas = useCausasStore(selectFilteredCausas);
 
-  const uiStore = useUIStore();
-  const {currentView, setCurrentView, isSidebarCollapsed, setIsSidebarCollapsed} = uiStore;
-  const {mobileShowDetail, setMobileShowDetail, privacyMode, setPrivacyMode, showShortcuts, setShowShortcuts} = uiStore;
-  const {selectedFaseFilter, setSelectedFaseFilter, searchQuery, setSearchQuery} = causasStore;
+  const currentView = useUIStore((s) => s.currentView);
+  const setCurrentView = useUIStore((s) => s.setCurrentView);
+  const isSidebarCollapsed = useUIStore((s) => s.isSidebarCollapsed);
+  const setIsSidebarCollapsed = useUIStore((s) => s.setIsSidebarCollapsed);
+  const mobileShowDetail = useUIStore((s) => s.mobileShowDetail);
+  const setMobileShowDetail = useUIStore((s) => s.setMobileShowDetail);
+  const privacyMode = useUIStore((s) => s.privacyMode);
+  const setPrivacyMode = useUIStore((s) => s.setPrivacyMode);
+  const showShortcuts = useUIStore((s) => s.showShortcuts);
+  const setShowShortcuts = useUIStore((s) => s.setShowShortcuts);
 
   const isTimelineCollapsedRef = useRef(false);
 
   const { formState, dispatchForm } = useNewCausaForm();
-  const { showCreateForm, newEstNombre, selectedCourseId, newEstRut, newInfTipo, newAulaSegura, newObs, newResponsable } = formState;
+  const {
+    showCreateForm,
+    newEstNombre,
+    selectedCourseId,
+    newEstRut,
+    newInfTipo,
+    newAulaSegura,
+    newObs,
+    newResponsable,
+  } = formState;
 
   const { data: courses = [], isLoading: isLoadingCourses } = useCoursesQuery();
   const { data: students = [], isLoading: isLoadingStudents } = useStudentsQuery(selectedCourseId);
   const newEstCurso = courses.find((c) => c.id === selectedCourseId)?.name ?? '';
 
-  useCausasPersistence({ causas, setCausas: causasStore.setCausas, setSelectedCausaId, setSaveStatus, isAuthenticated });
+  useCausasPersistence({
+    causas,
+    setCausas,
+    setSelectedCausaId,
+    setSaveStatus,
+    isAuthenticated,
+  });
 
   const handleViewChange = useCallback(
     (view: typeof currentView) => {
-      if (view !== 'dashboard' && !user) { setShowLoginModal(true); return; }
+      if (view !== 'dashboard' && !user) {
+        setShowLoginModal(true);
+        return;
+      }
       setCurrentView(view);
       isTimelineCollapsedRef.current = false;
     },
@@ -62,9 +96,13 @@ export default function App() {
 
   const handleStudentSelect = useCallback(
     (studentId: string) => {
-      if (!studentId) { dispatchForm({ type: 'SET_STUDENT', nombre: '', rut: '' }); return; }
+      if (!studentId) {
+        dispatchForm({ type: 'SET_STUDENT', nombre: '', rut: '' });
+        return;
+      }
       const student = students.find((s) => s.id === studentId);
-      if (student) dispatchForm({ type: 'SET_STUDENT', nombre: student.full_name, rut: student.rut });
+      if (student)
+        dispatchForm({ type: 'SET_STUDENT', nombre: student.full_name, rut: student.rut });
     },
     [students, dispatchForm]
   );
@@ -73,27 +111,58 @@ export default function App() {
     async (e: React.FormEvent) => {
       e.preventDefault();
       if (!newEstNombre || !newEstRut) return;
-      const result = await causasStore.handleCreateCausa({ newEstNombre, newEstRut, newEstCurso, newInfTipo, newAulaSegura, newObs, newResponsable });
-      if (result) { dispatchForm({ type: 'RESET' }); setCurrentView('causas'); }
+      const result = await handleCreateCausaAction({
+        newEstNombre,
+        newEstRut,
+        newEstCurso,
+        newInfTipo,
+        newAulaSegura,
+        newObs,
+        newResponsable,
+      });
+      if (result) {
+        dispatchForm({ type: 'RESET' });
+        setCurrentView('causas');
+      }
     },
-    [newEstNombre, newEstRut, newEstCurso, newInfTipo, newAulaSegura, newObs, newResponsable, dispatchForm, causasStore, setCurrentView]
+    [
+      newEstNombre,
+      newEstRut,
+      newEstCurso,
+      newInfTipo,
+      newAulaSegura,
+      newObs,
+      newResponsable,
+      dispatchForm,
+      handleCreateCausaAction,
+      setCurrentView,
+    ]
   );
 
   const requireAuth = useCallback(() => {
-    if (!user) { setShowLoginModal(true); return false; }
+    if (!user) {
+      setShowLoginModal(true);
+      return false;
+    }
     return true;
   }, [user, setShowLoginModal]);
 
-  const handleReopenCausa = useCallback((causa: typeof selectedCausa) => {
-    if (!causa) return;
-    causasStore.handleReopenCausa(causa);
-    setCurrentView('causas');
-    isTimelineCollapsedRef.current = false;
-  }, [causasStore, setCurrentView]);
+  const handleReopenCausa = useCallback(
+    (causa: typeof selectedCausa) => {
+      if (!causa) return;
+      handleReopenCausaAction(causa);
+      setCurrentView('causas');
+      isTimelineCollapsedRef.current = false;
+    },
+    [handleReopenCausaAction, setCurrentView]
+  );
 
   const handleSelectCausaFromDashboard = useCallback(
     (causaId: string) => {
-      if (!user) { setShowLoginModal(true); return; }
+      if (!user) {
+        setShowLoginModal(true);
+        return;
+      }
       setSelectedCausaId(causaId);
       setCurrentView('causas');
       setMobileShowDetail(true);
@@ -114,7 +183,9 @@ export default function App() {
     onCloseCreateForm: () => dispatchForm({ type: 'CLOSE' }),
     onCloseLoginModal: () => setShowLoginModal(false),
     onCloseShortcuts: () => setShowShortcuts(false),
-    showCreateForm, showLoginModal, showShortcuts,
+    showCreateForm,
+    showLoginModal,
+    showShortcuts,
   });
 
   if (authLoading) {
@@ -132,40 +203,67 @@ export default function App() {
     <ToastProvider>
       <AppProvider>
         <div className="flex min-h-dvh bg-neutral-100 font-sans text-neutral-800 antialiased">
-          <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:rounded-lg focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-white focus:shadow-lg focus:outline-none">
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:rounded-lg focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-white focus:shadow-lg focus:outline-none"
+          >
             Saltar al contenido principal
           </a>
           <Suspense fallback={null}>
-            <CommandPalette causas={causas} onNavigate={handleViewChange} onSelectCausa={setSelectedCausaId} />
+            <CommandPalette
+              causas={causas}
+              onNavigate={handleViewChange}
+              onSelectCausa={setSelectedCausaId}
+            />
           </Suspense>
-          <Suspense fallback={<div className="hidden h-dvh w-[68px] flex-col bg-linear-to-b from-neutral-800 to-neutral-950 shadow-xl lg:flex" />}>
+          <Suspense
+            fallback={
+              <div className="hidden h-dvh w-[68px] flex-col bg-linear-to-b from-neutral-800 to-neutral-950 shadow-xl lg:flex" />
+            }
+          >
             <Sidebar
-              currentView={currentView} onViewChange={handleViewChange}
-              isCollapsed={isSidebarCollapsed} onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              currentView={currentView}
+              onViewChange={handleViewChange}
+              isCollapsed={isSidebarCollapsed}
+              onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
               activeCount={filteredCausas.length}
               aulaSeguraCount={causas.filter((c) => c.comprometeAulaSegura).length}
-              user={user} onLogin={() => setShowLoginModal(true)} onLogout={() => signOut()}
+              user={user}
+              onLogin={() => setShowLoginModal(true)}
+              onLogout={() => signOut()}
             />
           </Suspense>
           <div className="flex min-w-0 flex-1 flex-col">
             <Suspense fallback={<div className="h-16 border-neutral-200/60 border-b bg-white" />}>
               <Header
-                privacyMode={privacyMode} setPrivacyMode={setPrivacyMode} saveStatus={saveStatus}
-                searchQuery={searchQuery} onSearchChange={setSearchQuery}
-                currentView={currentView} causas={causas} user={user}
+                privacyMode={privacyMode}
+                setPrivacyMode={setPrivacyMode}
+                saveStatus={saveStatus}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                currentView={currentView}
+                causas={causas}
+                user={user}
                 onNotificationClick={handleSelectCausaFromDashboard}
               />
             </Suspense>
             <Suspense fallback={<MainContentSkeleton />}>
               <MainContent
-                currentView={currentView} causas={causas} selectedCausaId={selectedCausaId}
-                setSelectedCausaId={setSelectedCausaId}                 selectedCausa={selectedCausa ?? undefined}
-                selectedFaseFilter={selectedFaseFilter} setSelectedFaseFilter={setSelectedFaseFilter}
-                privacyMode={privacyMode} mobileShowDetail={mobileShowDetail}
+                currentView={currentView}
+                causas={causas}
+                selectedCausaId={selectedCausaId}
+                setSelectedCausaId={setSelectedCausaId}
+                selectedCausa={selectedCausa ?? undefined}
+                selectedFaseFilter={selectedFaseFilter}
+                setSelectedFaseFilter={setSelectedFaseFilter}
+                privacyMode={privacyMode}
+                mobileShowDetail={mobileShowDetail}
                 setMobileShowDetail={setMobileShowDetail}
                 aulaSeguraCausas={causas.filter((c) => c.comprometeAulaSegura)}
-                filteredCausas={filteredCausas} showCreateForm={showCreateForm}
-                dispatchForm={dispatchForm} handleReopenCausa={handleReopenCausa}
+                filteredCausas={filteredCausas}
+                showCreateForm={showCreateForm}
+                dispatchForm={dispatchForm}
+                handleReopenCausa={handleReopenCausa}
                 handleSelectCausaFromDashboard={handleSelectCausaFromDashboard}
                 handleOpenCreateForm={handleOpenCreateForm}
               />
@@ -175,7 +273,9 @@ export default function App() {
                 <span className="font-semibold text-brand-700">Gestión de Casos</span>
                 <span aria-hidden="true">·</span>
                 <span>Convivencia Escolar</span>
-                <span className="hidden sm:inline" aria-hidden="true">·</span>
+                <span className="hidden sm:inline" aria-hidden="true">
+                  ·
+                </span>
                 <span className="hidden sm:inline">Fiscalización &amp; Debido Proceso 2026</span>
               </div>
               <p className="mx-auto max-w-lg px-4 font-mono text-[9px] text-neutral-400 leading-relaxed">
@@ -187,23 +287,40 @@ export default function App() {
             <Suspense fallback={null}>
               <NewCausaModal
                 newEstNombre={newEstNombre}
-                setNewEstNombre={(v: string) => dispatchForm({ type: 'SET_FIELD', field: 'newEstNombre', value: v })}
+                setNewEstNombre={(v: string) =>
+                  dispatchForm({ type: 'SET_FIELD', field: 'newEstNombre', value: v })
+                }
                 newEstRut={newEstRut}
-                setNewEstRut={(v: string) => dispatchForm({ type: 'SET_FIELD', field: 'newEstRut', value: v })}
+                setNewEstRut={(v: string) =>
+                  dispatchForm({ type: 'SET_FIELD', field: 'newEstRut', value: v })
+                }
                 newEstCurso={newEstCurso}
                 newInfTipo={newInfTipo}
-                setNewInfTipo={(v: typeof newInfTipo) => dispatchForm({ type: 'SET_FIELD', field: 'newInfTipo', value: v })}
+                setNewInfTipo={(v: typeof newInfTipo) =>
+                  dispatchForm({ type: 'SET_FIELD', field: 'newInfTipo', value: v })
+                }
                 newAulaSegura={newAulaSegura}
-                setNewAulaSegura={(v: boolean) => dispatchForm({ type: 'SET_FIELD', field: 'newAulaSegura', value: v })}
+                setNewAulaSegura={(v: boolean) =>
+                  dispatchForm({ type: 'SET_FIELD', field: 'newAulaSegura', value: v })
+                }
                 newObs={newObs}
-                setNewObs={(v: string) => dispatchForm({ type: 'SET_FIELD', field: 'newObs', value: v })}
+                setNewObs={(v: string) =>
+                  dispatchForm({ type: 'SET_FIELD', field: 'newObs', value: v })
+                }
                 newResponsable={newResponsable}
-                setNewResponsable={(v: string) => dispatchForm({ type: 'SET_FIELD', field: 'newResponsable', value: v })}
-                selectedCourseId={selectedCourseId} courses={courses} students={students}
-                isLoadingCourses={isLoadingCourses} isLoadingStudents={isLoadingStudents}
+                setNewResponsable={(v: string) =>
+                  dispatchForm({ type: 'SET_FIELD', field: 'newResponsable', value: v })
+                }
+                selectedCourseId={selectedCourseId}
+                courses={courses}
+                students={students}
+                isLoadingCourses={isLoadingCourses}
+                isLoadingStudents={isLoadingStudents}
                 onClose={() => dispatchForm({ type: 'CLOSE' })}
                 onSubmit={handleCreateCausa}
-                onCourseChange={(courseId: string) => dispatchForm({ type: 'SET_COURSE', courseId })}
+                onCourseChange={(courseId: string) =>
+                  dispatchForm({ type: 'SET_COURSE', courseId })
+                }
                 onStudentSelect={handleStudentSelect}
               />
             </Suspense>
