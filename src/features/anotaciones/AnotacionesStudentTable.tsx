@@ -86,11 +86,8 @@ function getAnnotationRange(filter: string): [number, number] | null {
   }
 }
 
-function getEffectiveNegCount(s: {
-  annotations_count: number;
-  ai_analysis?: { negativas: number };
-}): number {
-  return Math.max(s.annotations_count || 0, s.ai_analysis?.negativas || 0);
+function getEffectiveNegCount(s: { annotations_count: number }): number {
+  return Number(s.annotations_count) || 0;
 }
 
 function filterStudents(
@@ -347,15 +344,15 @@ export default memo(function AnotacionesStudentTable({
           <span className="font-medium text-neutral-500 text-xs">Leyenda:</span>
           <span className="inline-flex items-center gap-1 text-neutral-600 text-xs">
             <span className="inline-block size-2.5 rounded-full bg-yellow-500" />
-            Amarillo (5–9)
+            Amonestación (5–9)
           </span>
           <span className="inline-flex items-center gap-1 text-neutral-600 text-xs">
             <span className="inline-block size-2.5 rounded-full bg-orange-500" />
-            Naranja (10–14)
+            Compromiso (10–14)
           </span>
           <span className="inline-flex items-center gap-1 text-neutral-600 text-xs">
             <span className="inline-block size-2.5 rounded-full bg-rose-500" />
-            Rojo (15+)
+            Derivación (15+)
           </span>
         </div>
       </div>

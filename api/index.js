@@ -1,4 +1,5 @@
 // server/api/index.ts
+import compression from "compression";
 import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -188,11 +189,28 @@ function sanitizeForAI(text) {
 // server/api/services/rateLimit.ts
 var RATE_LIMIT = 10;
 var RATE_WINDOW = 60 * 1e3;
+var MAX_ENTRIES = 1e4;
+var PRUNE_THRESHOLD = 5e3;
+var insertsSincePrune = 0;
 var rateLimitMap = /* @__PURE__ */ new Map();
+function prune() {
+  const now = Date.now();
+  for (const [key, val] of rateLimitMap) {
+    if (now > val.resetAt) rateLimitMap.delete(key);
+  }
+}
 function checkRateLimit(ip) {
   const now = Date.now();
   const record = rateLimitMap.get(ip);
   if (!record || now > record.resetAt) {
+    if (rateLimitMap.size >= MAX_ENTRIES) {
+      prune();
+    }
+    insertsSincePrune++;
+    if (insertsSincePrune >= PRUNE_THRESHOLD) {
+      prune();
+      insertsSincePrune = 0;
+    }
     rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
     return true;
   }
@@ -639,7 +657,7 @@ var draft_default = router4;
 import { Router as Router5 } from "express";
 import crypto3 from "node:crypto";
 var router5 = Router5();
-router5.get("/auth-debug", async (req, res) => {
+router5.get("/auth-debug", requireAuth, async (req, res) => {
   const token = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
   const JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
   const info = {
@@ -705,7 +723,7 @@ function getSupabaseHostname2() {
 function getServiceRoleKey() {
   return process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
 }
-router6.get("/document-templates", async (_req, res) => {
+router6.get("/document-templates", requireAuth, async (_req, res) => {
   try {
     const data = await httpsGet(
       getSupabaseHostname2(),
@@ -1692,7 +1710,9 @@ var usage_default = router9;
 var __filename = fileURLToPath(import.meta.url);
 var __dirname = path.dirname(__filename);
 var app = express();
-app.use(express.json({ limit: "512kb" }));
+app.set("trust proxy", 1);
+app.use(compression());
+app.use(express.json({ limit: "100kb" }));
 app.use("/api", improve_default);
 app.use("/api", advisor_default);
 app.use("/api", audit_default);
