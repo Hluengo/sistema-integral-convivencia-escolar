@@ -9,6 +9,7 @@ import type { AnnotationSummary } from '@/src/shared/lib/types';
 import { fetchDisciplinaryRules } from '@/src/shared/api/services/disciplinary-rules.service';
 import type { DisciplinaryRule } from '@/src/shared/api/services/disciplinary-rules.service';
 import {
+  deleteDisciplinaryFile,
   type UploadedDisciplinaryFile,
   uploadDisciplinaryFile,
 } from '@/src/shared/api/services/disciplinary-storage.service';
@@ -144,11 +145,16 @@ export default function NewDisciplinaryProcessModal({
   const [rules, setRules] = useState<DisciplinaryRule[]>([]);
   const [createdProcess, setCreatedProcess] = useState<{ id: string; number: string } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const [idempotencyKey] = useState(() => crypto.randomUUID());
+  const uploadedFileRef = useRef<UploadedDisciplinaryFile | null>(null);
+  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
 
   useEffect(() => {
     fetchDisciplinaryRules().then(setRules).catch(() => setRules([]));
   }, []);
+
+  useEffect(() => {
+    uploadedFileRef.current = uploadedFile;
+  }, [uploadedFile]);
 
 
   const ruleOptions = useMemo(() => {
@@ -172,6 +178,34 @@ export default function NewDisciplinaryProcessModal({
       }));
   }, [rules]);
 
+  const resetDraftState = () => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    uploadedFileRef.current = null;
+    setStep('upload');
+    setStatus('idle');
+    setCourse(null);
+    setSelectedStudent(null);
+    setStudentCandidates([]);
+    setFile(null);
+    setUploadedFile(null);
+    setAnalysis(null);
+    setAnalysisError(null);
+    setSummary(null);
+    setAnnotations([]);
+    setSuggestedType(null);
+    setClassification('');
+    setCreatedProcess(null);
+    setIdempotencyKey(crypto.randomUUID());
+  };
+
+  const cleanupUploadedDraft = async () => {
+    const draft = uploadedFileRef.current;
+    if (!draft) return;
+    uploadedFileRef.current = null;
+    setUploadedFile(null);
+    await deleteDisciplinaryFile(draft.storagePath);
+  };
   const availableStudents = studentCandidates.length > 0 ? studentCandidates : students;
   const isBusy = status === 'validating' || status === 'uploading' || status === 'processing' || status === 'confirming';
   const currentStepIndex = STEP_ORDER.indexOf(step);
@@ -199,6 +233,7 @@ export default function NewDisciplinaryProcessModal({
       setStatus('uploading');
       const uploaded = await uploadDisciplinaryFile(file, tenantId);
       if (!uploaded) throw new Error('No fue posible subir el PDF.');
+      uploadedFileRef.current = uploaded;
       setUploadedFile(uploaded);
 
       const {
@@ -347,13 +382,27 @@ export default function NewDisciplinaryProcessModal({
     }
   };
 
-  const goBack = () => {
+  const goBack = async () => {
     if (isBusy) {
       abortRef.current?.abort();
+      await cleanupUploadedDraft();
+      resetDraftState();
       return;
     }
-    if (step === 'student_resolution') setStep('upload');
-    if (step === 'classification') setStep(analysis?.selected_student_id ? 'upload' : 'student_resolution');
+    if (step === 'student_resolution') {
+      await cleanupUploadedDraft();
+      resetDraftState();
+      return;
+    }
+    if (step === 'classification') {
+      if (analysis?.selected_student_id) {
+        await cleanupUploadedDraft();
+        resetDraftState();
+      } else {
+        setStep('student_resolution');
+      }
+      return;
+    }
     if (step === 'review') setStep('classification');
   };
 
@@ -364,8 +413,12 @@ export default function NewDisciplinaryProcessModal({
     return false;
   };
 
-  const closeSafely = () => {
+  const closeSafely = async () => {
     if (isBusy) return;
+    if (status !== 'success') {
+      await cleanupUploadedDraft();
+      resetDraftState();
+    }
     onClose();
   };
 
@@ -378,7 +431,7 @@ export default function NewDisciplinaryProcessModal({
             <button
               type="button"
               aria-label="Cerrar"
-              onClick={closeSafely}
+              onClick={() => void closeSafely()}
               disabled={isBusy}
               className="rounded-lg p-2 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 disabled:cursor-not-allowed disabled:opacity-40"
             >
@@ -406,6 +459,7 @@ export default function NewDisciplinaryProcessModal({
               summary={summary}
               statusLabel={getStatusLabel(status)}
               onFileChange={(nextFile) => {
+                void cleanupUploadedDraft();
                 setFile(nextFile);
                 setUploadedFile(null);
                 setAnalysis(null);
@@ -476,7 +530,7 @@ export default function NewDisciplinaryProcessModal({
         <div className="flex justify-between border-neutral-100 border-t p-4">
           <button
             type="button"
-            onClick={step === 'success' ? onClose : goBack}
+            onClick={step === 'success' ? onClose : () => void goBack()}
             disabled={(step === 'upload' && !isBusy) || status === 'confirming'}
             className="flex items-center gap-1.5 rounded-xl px-4 py-2 font-medium text-neutral-600 text-sm hover:bg-neutral-100 disabled:opacity-30"
           >

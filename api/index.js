@@ -1007,17 +1007,22 @@ function splitAnnotationBlocks(pageText) {
   const lines = normalized.split("\n").map((line) => line.trim()).filter(Boolean);
   const blocks = [];
   let current = [];
+  let hasDatedRecords = false;
   for (const line of lines) {
-    const startsRecord = /(?:^|\s)(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})\b/.test(line) || /\b(?:tipo|anotaci[oó]n|observaci[oó]n)\s*[:-]/i.test(line);
-    if (startsRecord && current.length > 0) {
-      blocks.push(current.join(" "));
+    const startsDatedRecord = /(?:^|\s)(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})\b/.test(line);
+    if (startsDatedRecord) {
+      hasDatedRecords = true;
+      if (current.length > 0) blocks.push(current.join(" "));
       current = [line];
-    } else {
+      continue;
+    }
+    if (current.length > 0) {
       current.push(line);
     }
   }
   if (current.length > 0) blocks.push(current.join(" "));
-  return blocks;
+  if (hasDatedRecords) return blocks;
+  return lines.filter((line) => /\b(?:tipo|anotaci[oó]n|observaci[oó]n)\s*[:-]/i.test(line));
 }
 function classifyAnnotation(block) {
   const normalized = normalizeText(block);

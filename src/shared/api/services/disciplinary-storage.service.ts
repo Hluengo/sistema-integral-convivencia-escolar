@@ -95,3 +95,10 @@ export async function getDisciplinaryFileUrl(filePath: string): Promise<string |
 
   return data.signedUrl;
 }
+export async function deleteDisciplinaryFile(filePath: string): Promise<void> {
+  const { error } = await supabase.storage.from(DISCIPLINARY_BUCKET).remove([filePath]);
+
+  if (error) {
+    console.error('Error deleting disciplinary file:', error);
+  }
+}
