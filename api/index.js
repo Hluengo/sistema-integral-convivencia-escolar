@@ -968,20 +968,27 @@ async function extractPdfPages(buffer) {
   for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
     const page = await pdf.getPage(pageNumber);
     const content = await page.getTextContent();
-    const text = content.items.map((item) => item.str ?? "").filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+    const text = content.items.map((item) => (item.str ?? "") + (item.hasEOL ? "\n" : " ")).join("").replace(/[^\S\n]+/g, " ").replace(/\s*\n\s*/g, "\n").trim();
     pages.push(text);
   }
   return pages;
 }
 function extractCourse(text) {
   const match = text.match(/curso\s*[:-]?\s*([^\n|]{2,40})/i);
-  return match?.[1]?.trim() ?? null;
+  if (match?.[1]) return match[1].trim();
+  const normalized = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const courseMatch = normalized.match(/\b(\d{1,2}\s*[A-Z]\s*(?:MEDIO|BASICO|BASICA))\b/i);
+  return courseMatch?.[1]?.replace(/\s+/g, " ").trim().toUpperCase() ?? null;
 }
 function extractStudentName(text) {
   const labelled = text.match(
     /(?:estudiante|alumno|nombre(?: completo)?)\s*[:-]\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ'-]+(?:\s+[A-ZÁÉÍÓÚÑa-záéíóúñ'-]+){1,5})/i
   );
   if (labelled?.[1]) return labelled[1].trim();
+  const fichaMatch = text.match(
+    /([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ'-]+(?:\s+[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ'-]+){2,6})\s+FICHA\s+PERSONAL\s+DE\s+CONVIVENCIA\s+ESCOLAR/i
+  );
+  if (fichaMatch?.[1]) return titleCaseFromUpper(fichaMatch[1].trim());
   const headingLines = text.split("\n").map((line) => line.trim()).filter((line) => line.startsWith("## ")).map((line) => line.slice(3).trim()).filter(
     (line) => line.length > 1 && !/^(fundaci[oó]n|saber|ficha|rango|curso|fecha)/i.test(line)
   );

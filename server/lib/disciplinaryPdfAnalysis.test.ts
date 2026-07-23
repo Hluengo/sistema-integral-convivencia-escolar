@@ -2,7 +2,10 @@
 
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { parseDisciplinaryTextPagesForTest } from './disciplinaryPdfAnalysis';
+import {
+  extractDisciplinaryMetadataForTest,
+  parseDisciplinaryTextPagesForTest,
+} from './disciplinaryPdfAnalysis';
 
 test('parser detects the three annotation categories with accents and casing', () => {
   const result = parseDisciplinaryTextPagesForTest([
@@ -32,4 +35,16 @@ test('parser returns zero annotations for empty or scanned text', () => {
 
   assert.deepEqual(result.summary, { negativas: 0, positivas: 0, informativas: 0 });
   assert.equal(result.annotations.length, 0);
+});
+test('metadata parser detects student and course from convivencia report format', () => {
+  const result = extractDisciplinaryMetadataForTest(`
+    ANCALAO SOLORZA BENJAMÍN ADOLFO
+    FICHA PERSONAL DE CONVIVENCIA ESCOLAR
+    Curso : 1A MEDIO
+    10/04/2026 Tipo: Información
+    23/04/2026 Tipo: Negativa
+  `);
+
+  assert.equal(result.studentName, 'Ancalao Solorza Benjamín Adolfo');
+  assert.equal(result.course, '1A MEDIO');
 });
