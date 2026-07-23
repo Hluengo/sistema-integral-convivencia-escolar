@@ -38,7 +38,7 @@ function getSnapshotString(snapshot: Record<string, unknown> | null | undefined,
 }
 
 function openPrintWindow(html: string, title: string): boolean {
-  const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title>${getDocumentStyles()}<style>html,body{margin:0;background:#fff}body{display:flex;justify-content:center;color:#111827}@page{size:A4;margin:0}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}#document-preview-a4{box-shadow:none!important;border:0!important;border-radius:0!important}}</style></head><body>${html}</body></html>`;
+  const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title>${getDocumentStyles()}<style>html,body{margin:0;background:#fff}body{display:flex;justify-content:center;color:#111827}#document-preview-a4{box-sizing:border-box;width:210mm;min-height:297mm}@page{size:A4;margin:0}@media print{html,body{width:210mm;min-height:297mm}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}#document-preview-a4{max-width:none!important;box-shadow:none!important;border:0!important;border-radius:0!important}}</style></head><body>${html}</body></html>`;
   const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const win = window.open(url, '_blank');
@@ -112,8 +112,25 @@ export default function AnotacionesDocumentGenerator({
   const documentRegistry = useDocumentRegistry();
   const registerCommitment = useRegisterCommitment();
   const previewRef = useRef<HTMLDivElement>(null);
-
   const { docType, setDocType } = documentState;
+
+  useEffect(() => {
+    if (!initialContentSnapshot || initialSnapshotApplied.current) return;
+    const snapshotDocType = getSnapshotString(initialContentSnapshot, 'docType');
+    if (snapshotDocType === 'amonestacion' || snapshotDocType === 'compromiso_conductual' || snapshotDocType === 'derivacion') {
+      setDocType(snapshotDocType);
+      initialDocTypeApplied.current = true;
+    }
+    if (isLetterContent(initialContentSnapshot.letterContent)) {
+      documentState.setLetterContent(initialContentSnapshot.letterContent);
+    }
+    documentState.setApoderadoName(getSnapshotString(initialContentSnapshot, 'apoderadoName') || '');
+    documentState.setInspectorName(getSnapshotString(initialContentSnapshot, 'inspectorName') || '');
+    documentState.setCoordinatorName(getSnapshotString(initialContentSnapshot, 'coordinatorName') || '');
+    documentState.setEmittedBy(getSnapshotString(initialContentSnapshot, 'emittedBy') || '');
+    documentState.setDocObservations(getSnapshotString(initialContentSnapshot, 'administrativeObservation') || '');
+    initialSnapshotApplied.current = true;
+  }, [documentState, initialContentSnapshot, setDocType]);
 
   useEffect(() => {
     if (initialDocType && !initialDocTypeApplied.current) {
@@ -181,7 +198,6 @@ export default function AnotacionesDocumentGenerator({
     negativeCount,
     sourceAnalysisId,
     sourceProcessId,
-  initialContentSnapshot,
     student.course_id,
     student.full_name,
     student.id,

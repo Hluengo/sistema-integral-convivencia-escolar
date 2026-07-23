@@ -33,7 +33,8 @@ function buildLetterHtml(
     @page { size: A4; margin: 0; }
     @media print {
       body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      #letter-print-a4 { box-shadow: none !important; border: 0 !important; }
+      html, body { width: 210mm; min-height: 297mm; }
+      #document-preview-a4 { max-width: none !important; box-shadow: none !important; border: 0 !important; border-radius: 0 !important; }
     }
   </style>
 </head>
