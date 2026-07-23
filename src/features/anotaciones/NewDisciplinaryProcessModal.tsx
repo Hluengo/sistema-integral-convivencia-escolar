@@ -1,63 +1,68 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useState, useMemo, useEffect, useRef } from 'react';
-import { ArrowLeft, ArrowRight, Check, X } from 'lucide-react';
-import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
-import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowLeft, ArrowRight, Check, X, Loader2 } from 'lucide-react';
 import type { Student } from './NewDisciplinaryProcessModal/constants';
-import { STEPS, sortCourses } from './NewDisciplinaryProcessModal/constants';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '@/src/stores/authStore';
 import type { AnnotationSummary } from '@/src/shared/lib/types';
 import { fetchDisciplinaryRules } from '@/src/shared/api/services/disciplinary-rules.service';
 import type { DisciplinaryRule } from '@/src/shared/api/services/disciplinary-rules.service';
-import { uploadDisciplinaryFile } from '@/src/shared/api/services/disciplinary-storage.service';
-import CourseSelectStep from './NewDisciplinaryProcessModal/CourseSelectStep';
+import {
+  type UploadedDisciplinaryFile,
+  uploadDisciplinaryFile,
+} from '@/src/shared/api/services/disciplinary-storage.service';
 import StudentSelectStep from './NewDisciplinaryProcessModal/StudentSelectStep';
 import UploadAnalyzeStep from './NewDisciplinaryProcessModal/UploadAnalyzeStep';
 import ClassificationStep from './NewDisciplinaryProcessModal/ClassificationStep';
-import ReviewStep from './NewDisciplinaryProcessModal/ReviewStep';
+import ReviewStep, {
+  type ReviewAnnotation,
+  type ReviewAnnotationType,
+} from './NewDisciplinaryProcessModal/ReviewStep';
 
-GlobalWorkerOptions.workerSrc = workerUrl;
-
-async function extractFileText(file: File): Promise<string> {
-  const name = file.name.toLowerCase();
-
-  function cleanText(raw: string): string {
-    return raw
-      .split('\n')
-      .filter((l) => !l.trim().startsWith('![') && !l.includes('data:image'))
-      .join('\n');
-  }
-
-  if (name.endsWith('.md')) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(cleanText(reader.result as string));
-      reader.onerror = () => reject(new Error('Error al leer el archivo .md'));
-      reader.readAsText(file);
-    });
-  }
-
-  const arrayBuffer = await file.arrayBuffer();
-  const pdf = await getDocument({ data: arrayBuffer }).promise;
-  const pageTexts = await Promise.all(
-    Array.from({ length: pdf.numPages }, (_, i) =>
-      pdf.getPage(i + 1).then(async (page) => {
-        const content = await page.getTextContent();
-        return content.items
-          .flatMap((item) => ('str' in item ? [(item as { str: string }).str] : []))
-          .join(' ');
-      })
-    )
-  );
-  return cleanText(pageTexts.join('\n').trim());
-}
+type FlowStep = 'upload' | 'student_resolution' | 'classification' | 'review' | 'success';
+type ProcessingState =
+  | 'idle'
+  | 'validating'
+  | 'uploading'
+  | 'processing'
+  | 'student_resolution'
+  | 'review'
+  | 'confirming'
+  | 'success'
+  | 'error';
 
 interface ProcessResult {
   suggestedLetterType?: string;
   studentId?: string;
+  processId?: string;
+  processNumber?: string;
   summary?: AnnotationSummary;
+}
+
+interface StudentCandidate {
+  id: string;
+  full_name: string;
+  rut: string | null;
+  course_id: string | null;
+  course_name: string | null;
+  confidence: number;
+}
+
+interface AnalysisResponse {
+  success: true;
+  analysis_id: string | null;
+  file_id: string | null;
+  selected_student_id: string | null;
+  detected_student_name: string | null;
+  detected_course: string | null;
+  student_candidates: StudentCandidate[];
+  summary: AnnotationSummary;
+  annotations: ReviewAnnotation[];
+  recommended_letter_type: string;
+  warnings: string[];
+  processing_status: string;
+  file_hash: string;
 }
 
 interface NewDisciplinaryProcessModalProps {
@@ -67,174 +72,291 @@ interface NewDisciplinaryProcessModalProps {
   onProcessCreated?: (result?: ProcessResult) => void;
 }
 
+const STEP_LABELS: Record<FlowStep, string> = {
+  upload: 'Documento',
+  student_resolution: 'Estudiante',
+  classification: 'Carta',
+  review: 'Revisión',
+  success: 'Éxito',
+};
+
+const STEP_ORDER: FlowStep[] = ['upload', 'student_resolution', 'classification', 'review', 'success'];
+
+function summaryFromAnnotations(annotations: ReviewAnnotation[]): AnnotationSummary {
+  return annotations.reduce(
+    (acc, annotation) => {
+      if (annotation.type === 'negative') acc.negativas += 1;
+      if (annotation.type === 'positive') acc.positivas += 1;
+      if (annotation.type === 'information') acc.informativas += 1;
+      return acc;
+    },
+    { negativas: 0, positivas: 0, informativas: 0 }
+  );
+}
+
+function matchLocalStudent(students: Student[], candidate: StudentCandidate): Student {
+  const local = students.find((student) => student.id === candidate.id);
+  if (local) return local;
+  return {
+    id: candidate.id,
+    full_name: candidate.full_name,
+    rut: candidate.rut ?? undefined,
+    course_id: candidate.course_id ?? '',
+    course_name: candidate.course_name ?? undefined,
+    teacher_id: '',
+  };
+}
+
+function getStatusLabel(status: ProcessingState): string {
+  switch (status) {
+    case 'validating':
+      return 'Validando archivo...';
+    case 'uploading':
+      return 'Subiendo PDF privado...';
+    case 'processing':
+      return 'Analizando en backend...';
+    case 'confirming':
+      return 'Confirmando proceso...';
+    default:
+      return 'Analizando...';
+  }
+}
+
 export default function NewDisciplinaryProcessModal({
   students,
   onClose,
   currentUserEmail: _currentUserEmail,
   onProcessCreated,
 }: NewDisciplinaryProcessModalProps) {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState<FlowStep>('upload');
+  const [status, setStatus] = useState<ProcessingState>('idle');
   const [course, setCourse] = useState<string | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [studentCandidates, setStudentCandidates] = useState<Student[]>([]);
   const [file, setFile] = useState<File | null>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<UploadedDisciplinaryFile | null>(null);
+  const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
-  const abortRef = useRef<AbortController | null>(null);
   const [summary, setSummary] = useState<AnnotationSummary | null>(null);
+  const [annotations, setAnnotations] = useState<ReviewAnnotation[]>([]);
   const [suggestedType, setSuggestedType] = useState<string | null>(null);
   const [classification, setClassification] = useState('');
   const [rules, setRules] = useState<DisciplinaryRule[]>([]);
+  const [createdProcess, setCreatedProcess] = useState<{ id: string; number: string } | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const [idempotencyKey] = useState(() => crypto.randomUUID());
 
   useEffect(() => {
-    fetchDisciplinaryRules().then(setRules);
+    fetchDisciplinaryRules().then(setRules).catch(() => setRules([]));
   }, []);
 
-  const courses = useMemo(() => {
-    const map = new Map<string, number>();
-    students.forEach((s) => {
-      const cn = s.course_name || s.course_id;
-      if (cn) map.set(cn, (map.get(cn) || 0) + 1);
-    });
-    return sortCourses(Array.from(map.entries()).map(([n, c]) => ({ n, c })));
-  }, [students]);
-
-  const totalDetected = summary ? summary.negativas + summary.positivas + summary.informativas : 0;
 
   const ruleOptions = useMemo(() => {
     if (rules.length === 0) return [];
-    return rules.map((r) => ({
-      value: r.suggested_letter_type,
-      label: r.rule_name,
-      desc: r.description || `Negativas: ${r.min_negativas ?? 0}-${r.max_negativas ?? '∞'}`,
-      legal: `Prioridad ${r.priority}`,
+    return rules.map((rule) => ({
+      value: rule.suggested_letter_type,
+      label: rule.rule_name,
+      desc: rule.description || `Negativas: ${rule.min_negativas ?? 0}-${rule.max_negativas ?? '∞'}`,
+      legal: `Prioridad ${rule.priority}`,
     }));
   }, [rules]);
 
-  const canNext = () => {
-    if (step === 1) return !!course;
-    if (step === 2) return !!selectedStudent;
-    if (step === 3) return totalDetected > 0;
-    if (step === 4) return !!classification;
-    return true;
-  };
+  const availableStudents = studentCandidates.length > 0 ? studentCandidates : students;
+  const isBusy = status === 'validating' || status === 'uploading' || status === 'processing' || status === 'confirming';
+  const currentStepIndex = STEP_ORDER.indexOf(step);
 
   const handleAnalyze = async () => {
     if (!file) return;
+    const tenantId = useAuthStore.getState().tenantId;
+    if (!tenantId) {
+      setAnalysisError('No se pudo resolver el establecimiento activo del usuario.');
+      setStatus('error');
+      return;
+    }
+
     const controller = new AbortController();
     abortRef.current = controller;
-    setIsAnalyzing(true);
+    setStatus('validating');
     setAnalysisError(null);
+    setAnalysis(null);
     setSummary(null);
-    try {
-      const textContent = await extractFileText(file);
+    setAnnotations([]);
+    setSelectedStudent(null);
+    setStudentCandidates([]);
 
-      if (!textContent || textContent.length < 20) {
-        const isMd = file.name.toLowerCase().endsWith('.md');
-        throw new Error(
-          isMd
-            ? 'El archivo .md está vacío. Verifica que contenga el texto de la hoja de vida.'
-            : 'El PDF no contiene texto legible. Si es un documento escaneado, conviértelo a Markdown (.md) y súbelo de nuevo.'
-        );
-      }
+    try {
+      setStatus('uploading');
+      const uploaded = await uploadDisciplinaryFile(file, tenantId);
+      if (!uploaded) throw new Error('No fue posible subir el PDF.');
+      setUploadedFile(uploaded);
+
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      const tenantId = useAuthStore.getState().tenantId;
-      const authToken = session?.access_token;
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+      if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
 
-      let storagePath = '';
-      if (tenantId && selectedStudent) {
-        storagePath = (await uploadDisciplinaryFile(selectedStudent.id, file, tenantId)) || '';
-      }
-
-      const res = await fetch('/api/process-disciplinary-pdf', {
+      setStatus('processing');
+      const response = await fetch('/api/process-disciplinary-pdf', {
         method: 'POST',
         headers,
         body: JSON.stringify({
-          textContent,
-          fileName: file.name,
-          studentId: selectedStudent?.id || null,
+          bucket: uploaded.bucket,
+          storagePath: uploaded.storagePath,
+          fileName: uploaded.originalName,
           tenantId,
-          storagePath: storagePath || undefined,
         }),
         signal: controller.signal,
       });
 
-      let data: Record<string, unknown>;
-      if (!res.ok) {
-        const text = await res.text().catch(() => '');
-        let errMsg = `Error del servidor (${res.status})`;
-        try {
-          const errData = JSON.parse(text);
-          if (errData.error) errMsg = errData.error;
-        } catch {
-          if (res.status === 504)
-            errMsg =
-              'El procesamiento excedió el tiempo límite. Intenta con un archivo .md más corto o divide el PDF.';
-          else if (text) errMsg = text.slice(0, 200);
-        }
-        throw new Error(errMsg);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || `Error del servidor (${response.status})`);
       }
-      data = await res.json();
 
-      if (data.success && data.summary) {
-        const s = data.summary as AnnotationSummary;
-        setSummary(s);
+      const data = (await response.json()) as AnalysisResponse;
+      setAnalysis(data);
+      setSummary(data.summary);
+      setAnnotations(data.annotations || []);
+      setSuggestedType(data.recommended_letter_type || 'none');
+      setClassification(data.recommended_letter_type && data.recommended_letter_type !== 'none' ? data.recommended_letter_type : 'none');
 
-        if (data.suggestedLetterType) {
-          const suggestedVal = data.suggestedLetterType as string;
-          setSuggestedType(suggestedVal);
-          if (suggestedVal !== 'none') {
-            setClassification(suggestedVal);
-          }
-        }
+      const candidates = (data.student_candidates || []).map((candidate) => matchLocalStudent(students, candidate));
+      setStudentCandidates(candidates);
 
-        const detectedStudents = data.detectedStudents;
-        if (Array.isArray(detectedStudents)) {
-          const ds = detectedStudents as Array<{ id: string; full_name: string }>;
-          if (ds.length === 1 && !selectedStudent) {
-            setSelectedStudent(ds[0] as unknown as Student);
-          } else if (ds.length === 0 && selectedStudent) {
-            try {
-              await supabase.from('document_analyses').insert({
-                student_id: selectedStudent.id,
-                file_name: file?.name || null,
-                negativas: s.negativas,
-                positivas: s.positivas,
-                informativas: s.informativas,
-                tenant_id: tenantId,
-              });
-            } catch {
-              /**/
-            }
-          }
-        }
-        setStep(4);
+      const selected = data.selected_student_id
+        ? students.find((student) => student.id === data.selected_student_id) ||
+          candidates.find((student) => student.id === data.selected_student_id) ||
+          null
+        : null;
+
+      if (selected) {
+        setSelectedStudent(selected);
+        setCourse(selected.course_name || selected.course_id || data.detected_course || null);
+        setStep('classification');
+        setStatus('review');
       } else {
-        setAnalysisError((data.error as string) || 'Error al analizar el documento');
+        setCourse(data.detected_course || null);
+        setStep('student_resolution');
+        setStatus('student_resolution');
       }
-    } catch (err: unknown) {
-      if ((err as Error)?.name === 'AbortError') {
-        setAnalysisError('Análisis cancelado');
+    } catch (error) {
+      if ((error as Error)?.name === 'AbortError') {
+        setAnalysisError('Análisis cancelado.');
       } else {
-        setAnalysisError(err instanceof Error ? err.message : 'Error de conexión');
+        setAnalysisError(error instanceof Error ? error.message : 'Error de conexión.');
       }
+      setStatus('error');
     } finally {
-      setIsAnalyzing(false);
       abortRef.current = null;
     }
   };
 
-  const stepIndicator = (i: number) => {
-    if (i + 1 < step) return <Check className="h-3 w-3 text-white" />;
-    if (i + 1 === step)
-      return <div className="h-3 w-3 rounded-full border-2 border-indigo-500 bg-white" />;
-    return <div className="h-3 w-3 rounded-full bg-neutral-200" />;
+  const handleAnnotationTypeChange = (sequenceNumber: number, type: ReviewAnnotationType) => {
+    const next = annotations.map((annotation) =>
+      annotation.sequence_number === sequenceNumber ? { ...annotation, type } : annotation
+    );
+    setAnnotations(next);
+    setSummary(summaryFromAnnotations(next));
   };
 
-  const maxStep = 5;
+  const handleConfirm = async () => {
+    const tenantId = useAuthStore.getState().tenantId;
+    if (!tenantId || !uploadedFile || !analysis || !selectedStudent || !file) {
+      setAnalysisError('Faltan datos para confirmar el proceso.');
+      return;
+    }
+
+    try {
+      setStatus('confirming');
+      setAnalysisError(null);
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
+
+      const response = await fetch('/api/process-disciplinary-pdf/confirm', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          analysisId: analysis.analysis_id,
+          fileId: analysis.file_id,
+          bucket: uploadedFile.bucket,
+          storagePath: uploadedFile.storagePath,
+          fileName: uploadedFile.originalName,
+          fileHash: analysis.file_hash,
+          fileSize: uploadedFile.size,
+          mimeType: uploadedFile.mimeType,
+          tenantId,
+          studentId: selectedStudent.id,
+          suggestedLetterType: classification || suggestedType || 'none',
+          annotations,
+          idempotencyKey,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || `Error del servidor (${response.status})`);
+      }
+
+      const data = (await response.json()) as { processId: string; processNumber: string };
+      setCreatedProcess({ id: data.processId, number: data.processNumber });
+      setStep('success');
+      setStatus('success');
+      onProcessCreated?.({
+        suggestedLetterType: classification || suggestedType || undefined,
+        studentId: selectedStudent.id,
+        processId: data.processId,
+        processNumber: data.processNumber,
+        summary: summary ?? undefined,
+      });
+    } catch (error) {
+      setAnalysisError(error instanceof Error ? error.message : 'Error al confirmar el proceso.');
+      setStatus('error');
+    }
+  };
+
+  const goNext = () => {
+    if (step === 'student_resolution') {
+      if (selectedStudent) {
+        setCourse(selectedStudent.course_name || selectedStudent.course_id || course);
+        setStep('classification');
+      }
+      return;
+    }
+    if (step === 'classification') {
+      setStep('review');
+      setStatus('review');
+      return;
+    }
+    if (step === 'review') {
+      void handleConfirm();
+    }
+  };
+
+  const goBack = () => {
+    if (isBusy) {
+      abortRef.current?.abort();
+      return;
+    }
+    if (step === 'student_resolution') setStep('upload');
+    if (step === 'classification') setStep(analysis?.selected_student_id ? 'upload' : 'student_resolution');
+    if (step === 'review') setStep('classification');
+  };
+
+  const canNext = () => {
+    if (step === 'student_resolution') return !!selectedStudent;
+    if (step === 'classification') return !!classification;
+    if (step === 'review') return !!selectedStudent && !!uploadedFile && !!analysis && !isBusy;
+    return false;
+  };
+
+  const closeSafely = () => {
+    if (isBusy) return;
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
@@ -245,47 +367,60 @@ export default function NewDisciplinaryProcessModal({
             <button
               type="button"
               aria-label="Cerrar"
-              onClick={onClose}
-              className="rounded-lg p-2 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"
+              onClick={closeSafely}
+              disabled={isBusy}
+              className="rounded-lg p-2 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
           <div className="flex gap-1">
-            {STEPS.slice(0, 5).map((l, i) => (
-              <div key={l} className="flex flex-1 flex-col items-center gap-1">
+            {STEP_ORDER.map((labelStep, index) => (
+              <div key={labelStep} className="flex flex-1 flex-col items-center gap-1">
                 <div
-                  className={`h-1 w-full rounded-full ${i + 1 <= step ? 'bg-indigo-500' : 'bg-neutral-200'}`}
+                  className={`h-1 w-full rounded-full ${index <= currentStepIndex ? 'bg-indigo-500' : 'bg-neutral-200'}`}
                 />
-                <span className="font-medium text-[10px] text-neutral-500">{l}</span>
+                <span className="font-medium text-[10px] text-neutral-500">{STEP_LABELS[labelStep]}</span>
               </div>
             ))}
           </div>
         </div>
 
         <div className="space-y-5 p-6">
-          {step === 1 && (
-            <CourseSelectStep courses={courses} course={course} onSelect={setCourse} />
-          )}
-          {step === 2 && (
-            <StudentSelectStep
-              students={students}
-              course={course}
-              selectedId={selectedStudent?.id ?? null}
-              onSelect={setSelectedStudent}
-            />
-          )}
-          {step === 3 && (
+          {step === 'upload' && (
             <UploadAnalyzeStep
               file={file}
-              isAnalyzing={isAnalyzing}
+              isAnalyzing={isBusy}
               analysisError={analysisError}
               summary={summary}
-              onFileChange={setFile}
+              statusLabel={getStatusLabel(status)}
+              onFileChange={(nextFile) => {
+                setFile(nextFile);
+                setUploadedFile(null);
+                setAnalysis(null);
+                setSummary(null);
+                setAnnotations([]);
+                setAnalysisError(null);
+                setStatus('idle');
+              }}
               onAnalyze={handleAnalyze}
             />
           )}
-          {step === 4 && (
+          {step === 'student_resolution' && (
+            <StudentSelectStep
+              students={availableStudents}
+              course={null}
+              selectedId={selectedStudent?.id ?? null}
+              onSelect={setSelectedStudent}
+              title="Confirmar estudiante"
+              helperText={
+                analysis?.detected_student_name
+                  ? `Nombre detectado: ${analysis.detected_student_name}`
+                  : 'Selecciona manualmente un estudiante autorizado.'
+              }
+            />
+          )}
+          {step === 'classification' && (
             <ClassificationStep
               value={classification}
               onChange={setClassification}
@@ -294,55 +429,59 @@ export default function NewDisciplinaryProcessModal({
               suggestedType={suggestedType}
             />
           )}
-          {step === 5 && (
+          {step === 'review' && (
             <ReviewStep
               studentName={selectedStudent?.full_name ?? ''}
-              course={course ?? ''}
+              course={course ?? selectedStudent?.course_name ?? ''}
               summary={summary}
               classification={classification}
               fileName={file?.name ?? ''}
+              annotations={annotations}
+              warnings={analysis?.warnings ?? []}
+              onAnnotationTypeChange={handleAnnotationTypeChange}
             />
+          )}
+          {step === 'success' && (
+            <div className="space-y-4 py-8 text-center">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
+                <Check className="h-6 w-6 text-emerald-700" />
+              </div>
+              <div>
+                <p className="font-semibold text-neutral-800">Proceso creado correctamente</p>
+                <p className="mt-1 text-neutral-500 text-sm">
+                  {createdProcess?.number ? `Número de proceso: ${createdProcess.number}` : 'El registro fue actualizado.'}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {analysisError && step !== 'upload' && (
+            <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-rose-700 text-sm">
+              {analysisError}
+            </div>
           )}
         </div>
 
-        {step <= maxStep && (
-          <div className="flex justify-between border-neutral-100 border-t p-4">
-            <button
-              type="button"
-              onClick={() => {
-                if (isAnalyzing) {
-                  abortRef.current?.abort();
-                } else {
-                  setStep((s) => Math.max(1, s - 1));
-                }
-              }}
-              disabled={step === 1 && !isAnalyzing}
-              className="flex items-center gap-1.5 rounded-xl px-4 py-2 font-medium text-neutral-600 text-sm hover:bg-neutral-100 disabled:opacity-30"
-            >
-              <ArrowLeft className="h-4 w-4" /> {isAnalyzing ? 'Cancelar' : 'Anterior'}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                if (step === maxStep) {
-                  onProcessCreated?.({
-                    suggestedLetterType: suggestedType ?? undefined,
-                    studentId: selectedStudent?.id,
-                    summary: summary ?? undefined,
-                  });
-                  onClose();
-                } else {
-                  setStep((s) => s + 1);
-                }
-              }}
-              disabled={!canNext()}
-              className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-5 py-2 font-medium text-sm text-white hover:bg-indigo-700 disabled:opacity-40"
-            >
-              {step === maxStep ? 'Finalizar' : 'Siguiente'}{' '}
-              {step !== maxStep && <ArrowRight className="h-4 w-4" />}
-            </button>
-          </div>
-        )}
+        <div className="flex justify-between border-neutral-100 border-t p-4">
+          <button
+            type="button"
+            onClick={step === 'success' ? onClose : goBack}
+            disabled={(step === 'upload' && !isBusy) || status === 'confirming'}
+            className="flex items-center gap-1.5 rounded-xl px-4 py-2 font-medium text-neutral-600 text-sm hover:bg-neutral-100 disabled:opacity-30"
+          >
+            <ArrowLeft className="h-4 w-4" /> {isBusy && status !== 'confirming' ? 'Cancelar' : 'Anterior'}
+          </button>
+          <button
+            type="button"
+            onClick={step === 'success' ? onClose : goNext}
+            disabled={step !== 'success' && !canNext()}
+            className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-5 py-2 font-medium text-sm text-white hover:bg-indigo-700 disabled:opacity-40"
+          >
+            {status === 'confirming' && <Loader2 className="h-4 w-4 animate-spin" />}
+            {step === 'review' ? 'Confirmar proceso' : step === 'success' ? 'Cerrar' : 'Siguiente'}
+            {step !== 'review' && step !== 'success' && <ArrowRight className="h-4 w-4" />}
+          </button>
+        </div>
       </div>
     </div>
   );

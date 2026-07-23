@@ -9,17 +9,26 @@ import { sanitize } from '../lib/validators';
 
 const router = Router();
 
+function getSupabaseRestUrl(path: string): string {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
+  if (!supabaseUrl) {
+    throw new Error('Supabase no configurado');
+  }
+  return `${supabaseUrl.replace(/\/$/, '')}/rest/v1/${path}`;
+}
+
+function getServiceRoleKey(): string {
+  return process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? '';
+}
+
 router.get('/document-templates', async (_req, res) => {
   try {
-    const result = await fetch(
-      'https://jjzwwhnofiepvliugowr.supabase.co/rest/v1/document_templates?select=*&order=doc_type',
-      {
-        headers: {
-          apikey: process.env.VITE_SUPABASE_ANON_KEY || '',
-          Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY}`,
-        },
-      }
-    );
+    const result = await fetch(getSupabaseRestUrl('document_templates?select=*&order=doc_type'), {
+      headers: {
+        apikey: process.env.VITE_SUPABASE_ANON_KEY || '',
+        Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY}`,
+      },
+    });
     if (!result.ok) {
       res.status(result.status).json({ error: `Template fetch failed: ${result.status}` });
       return;
@@ -38,12 +47,13 @@ router.put('/document-templates', requireAuth, async (req, res) => {
   }
 
   try {
+    const serviceRoleKey = getServiceRoleKey();
     const sanitizedPrompt = sanitize(system_prompt).slice(0, 20000);
-    await fetch(`https://jjzwwhnofiepvliugowr.supabase.co/rest/v1/document_templates?id=eq.${id}`, {
+    await fetch(getSupabaseRestUrl(`document_templates?id=eq.${id}`), {
       method: 'PATCH',
       headers: {
-        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
         Prefer: 'return=minimal',
         'Content-Type': 'application/json',
       },

@@ -11,6 +11,14 @@ import { callGroq } from '../lib/groq';
 
 const router = Router();
 
+function getSupabaseRestUrl(path: string): string {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
+  if (!supabaseUrl) {
+    throw new Error('Supabase no configurado');
+  }
+  return supabaseUrl.replace(/\/$/, '') + '/rest/v1/' + path;
+}
+
 type SafeBitacoraEntry = {
   titulo: string;
   fecha: string;
@@ -184,7 +192,7 @@ router.post('/draft-document', requireAuth, async (req, res) => {
     let dbPrompt: string | null = null;
     try {
       const tplRes = await fetch(
-        `https://jjzwwhnofiepvliugowr.supabase.co/rest/v1/document_templates?doc_type=eq.${docType}&select=system_prompt&limit=1`,
+        getSupabaseRestUrl('document_templates?doc_type=eq.' + encodeURIComponent(docType) + '&select=system_prompt&limit=1'),
         {
           headers: {
             apikey: process.env.VITE_SUPABASE_ANON_KEY || '',

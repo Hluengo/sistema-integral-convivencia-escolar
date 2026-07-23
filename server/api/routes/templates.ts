@@ -7,10 +7,22 @@ import { httpsGet, httpsPatch } from '../lib/https.js';
 
 const router = Router();
 
+function getSupabaseHostname(): string {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
+  if (!supabaseUrl || !URL.canParse(supabaseUrl)) {
+    throw new Error('Supabase no configurado');
+  }
+  return new URL(supabaseUrl).hostname;
+}
+
+function getServiceRoleKey(): string {
+  return process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? '';
+}
+
 router.get('/document-templates', async (_req, res) => {
   try {
     const data = await httpsGet(
-      'jjzwwhnofiepvliugowr.supabase.co',
+      getSupabaseHostname(),
       '/rest/v1/document_templates?select=*&order=doc_type',
       {
         apikey: process.env.VITE_SUPABASE_ANON_KEY ?? '',
@@ -31,17 +43,18 @@ router.put('/document-templates', requireAuth, async (req, res) => {
   }
 
   try {
+    const serviceRoleKey = getServiceRoleKey();
     const sanitized = sanitize(system_prompt).slice(0, 20000);
     await httpsPatch(
-      'jjzwwhnofiepvliugowr.supabase.co',
+      getSupabaseHostname(),
       `/rest/v1/document_templates?id=eq.${id}`,
       {
         system_prompt: sanitized,
         updated_at: new Date().toISOString(),
       },
       {
-        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''}`,
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
         Prefer: 'return=minimal',
       },
     );

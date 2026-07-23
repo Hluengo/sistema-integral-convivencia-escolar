@@ -9,6 +9,14 @@ import { httpsGet, httpsPatch } from '../lib/https.js';
 
 const router = Router();
 
+function getSupabaseHostname(): string {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
+  if (!supabaseUrl || !URL.canParse(supabaseUrl)) {
+    throw new Error('Supabase no configurado');
+  }
+  return new URL(supabaseUrl).hostname;
+}
+
 router.post('/draft-document', requireAuth, async (req, res) => {
   try {
     const body = req.body as Record<string, unknown>;
@@ -128,7 +136,7 @@ ${
     let dbPrompt: string | null = null;
     try {
       const templates = (await httpsGet(
-        'jjzwwhnofiepvliugowr.supabase.co',
+        getSupabaseHostname(),
         `/rest/v1/document_templates?doc_type=eq.${docType}&select=system_prompt&limit=1`,
         {
           apikey: process.env.VITE_SUPABASE_ANON_KEY ?? '',

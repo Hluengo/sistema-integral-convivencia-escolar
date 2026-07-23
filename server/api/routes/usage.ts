@@ -24,7 +24,7 @@ router.post('/usage/events', requireAuth, async (req, res) => {
 
     const { createClient } = await import('@supabase/supabase-js');
     const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY ?? '';
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? '';
     if (!supabaseUrl || !supabaseKey) {
       res.status(500).json({ error: 'Supabase no configurado' });
       return;
@@ -57,7 +57,7 @@ router.get('/usage/stats', requireAuth, async (req, res) => {
 
     const { createClient } = await import('@supabase/supabase-js');
     const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY ?? '';
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? '';
     if (!supabaseUrl || !supabaseKey) {
       res.status(500).json({ error: 'Supabase no configurado' });
       return;

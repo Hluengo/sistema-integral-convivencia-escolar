@@ -487,6 +487,13 @@ var audit_default = router3;
 // server/api/routes/draft.ts
 import { Router as Router4 } from "express";
 var router4 = Router4();
+function getSupabaseHostname() {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
+  if (!supabaseUrl || !URL.canParse(supabaseUrl)) {
+    throw new Error("Supabase no configurado");
+  }
+  return new URL(supabaseUrl).hostname;
+}
 router4.post("/draft-document", requireAuth, async (req, res) => {
   try {
     const body = req.body;
@@ -584,7 +591,7 @@ IMPORTANTE: Utiliza TODOS los antecedentes del expediente proporcionados arriba 
     let dbPrompt = null;
     try {
       const templates = await httpsGet(
-        "jjzwwhnofiepvliugowr.supabase.co",
+        getSupabaseHostname(),
         `/rest/v1/document_templates?doc_type=eq.${docType}&select=system_prompt&limit=1`,
         {
           apikey: process.env.VITE_SUPABASE_ANON_KEY ?? "",
@@ -692,10 +699,20 @@ var debug_default = router5;
 // server/api/routes/templates.ts
 import { Router as Router6 } from "express";
 var router6 = Router6();
+function getSupabaseHostname2() {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
+  if (!supabaseUrl || !URL.canParse(supabaseUrl)) {
+    throw new Error("Supabase no configurado");
+  }
+  return new URL(supabaseUrl).hostname;
+}
+function getServiceRoleKey() {
+  return process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
+}
 router6.get("/document-templates", async (_req, res) => {
   try {
     const data = await httpsGet(
-      "jjzwwhnofiepvliugowr.supabase.co",
+      getSupabaseHostname2(),
       "/rest/v1/document_templates?select=*&order=doc_type",
       {
         apikey: process.env.VITE_SUPABASE_ANON_KEY ?? "",
@@ -714,17 +731,18 @@ router6.put("/document-templates", requireAuth, async (req, res) => {
     return;
   }
   try {
+    const serviceRoleKey = getServiceRoleKey();
     const sanitized = sanitize(system_prompt).slice(0, 2e4);
     await httpsPatch(
-      "jjzwwhnofiepvliugowr.supabase.co",
+      getSupabaseHostname2(),
       `/rest/v1/document_templates?id=eq.${id}`,
       {
         system_prompt: sanitized,
         updated_at: (/* @__PURE__ */ new Date()).toISOString()
       },
       {
-        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY ?? ""}`,
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
         Prefer: "return=minimal"
       }
     );
@@ -922,7 +940,7 @@ router8.post("/process-disciplinary-pdf", async (req, res) => {
     const detectedName = extractStudentName(textContent);
     const detectedCourse = extractCourse(textContent);
     const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY ?? "";
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
     if (!supabaseUrl || !supabaseKey) {
       res.status(500).json({ error: "Supabase no configurado" });
       return;
@@ -1063,7 +1081,7 @@ router9.post("/usage/events", requireAuth, async (req, res) => {
     }
     const { createClient: createClient2 } = await import("@supabase/supabase-js");
     const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY ?? "";
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
     if (!supabaseUrl || !supabaseKey) {
       res.status(500).json({ error: "Supabase no configurado" });
       return;
@@ -1090,7 +1108,7 @@ router9.get("/usage/stats", requireAuth, async (req, res) => {
     const until = req.query.until ?? void 0;
     const { createClient: createClient2 } = await import("@supabase/supabase-js");
     const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
-    const supabaseKey = process.env.SUPABASE_SERVICE_KEY ?? "";
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
     if (!supabaseUrl || !supabaseKey) {
       res.status(500).json({ error: "Supabase no configurado" });
       return;
