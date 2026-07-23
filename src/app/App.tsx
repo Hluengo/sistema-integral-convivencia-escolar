@@ -1,9 +1,9 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { Suspense, lazy, useCallback, useRef } from 'react';
+import { Suspense, lazy, useCallback, useMemo, useRef } from 'react';
 import { signOut } from '../services/auth.service';
 import { useAuthStore } from '../stores/authStore';
-import { useCausasStore, selectSelectedCausa, selectFilteredCausas } from '../stores/causasStore';
+import { useCausasStore } from '../stores/causasStore';
 import { useUIStore } from '../stores/uiStore';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { useNewCausaForm } from '../hooks/useNewCausaForm';
@@ -13,6 +13,8 @@ import { useCausasPersistence } from '../hooks/useCausasPersistence';
 import { ToastProvider } from '../components/Toast';
 import { MainContentSkeleton } from '../components/Skeleton';
 import { AppProvider } from '../context/AppContext';
+import { getFaseForEstado } from '../data';
+import { EstadoCausa } from '../types';
 
 const Header = lazy(() => import('../components/Header'));
 const Sidebar = lazy(() => import('../components/Sidebar'));
@@ -42,8 +44,29 @@ export default function App() {
   const setCausas = useCausasStore((s) => s.setCausas);
   const handleCreateCausaAction = useCausasStore((s) => s.handleCreateCausa);
   const handleReopenCausaAction = useCausasStore((s) => s.handleReopenCausa);
-  const selectedCausa = useCausasStore(selectSelectedCausa);
-  const filteredCausas = useCausasStore(selectFilteredCausas);
+  const selectedCausa = useMemo(
+    () => causas.find((c) => c.id === selectedCausaId) || null,
+    [causas, selectedCausaId]
+  );
+  const filteredCausas = useMemo(() => {
+    const trimmedQuery = searchQuery.trim().toLowerCase();
+    return causas.filter((c) => {
+      if (c.estadoActual === EstadoCausa.CAUSA_CERRADA) return false;
+      if (
+        selectedFaseFilter !== 'Todas' &&
+        getFaseForEstado(c.estadoActual) !== selectedFaseFilter
+      ) {
+        return false;
+      }
+      if (!trimmedQuery) return true;
+      return (
+        c.estudianteNombre.toLowerCase().includes(trimmedQuery) ||
+        c.nnaProtectedName.toLowerCase().includes(trimmedQuery) ||
+        c.id.toLowerCase().includes(trimmedQuery) ||
+        c.estudianteCurso.toLowerCase().includes(trimmedQuery)
+      );
+    });
+  }, [causas, selectedFaseFilter, searchQuery]);
 
   const currentView = useUIStore((s) => s.currentView);
   const setCurrentView = useUIStore((s) => s.setCurrentView);
