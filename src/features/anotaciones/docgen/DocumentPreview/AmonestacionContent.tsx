@@ -4,7 +4,7 @@ import { Section, DataRow } from './SharedComponents';
 import type { DocContentProps } from './docTypes';
 
 export default function AmonestacionContent(props: DocContentProps) {
-  const { currentName, currentCourse, currentTeacher, apoderadoName, dateStr, docObservations, negativeCount } = props;
+  const { currentName, currentCourse, currentTeacher, apoderadoName, dateStr, negativeCount } = props;
 
   return (
     <div className="space-y-1">

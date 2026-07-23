@@ -5,12 +5,10 @@
 
 import { memo } from 'react';
 import { Search } from 'lucide-react';
-import { VIEW_TITLES } from '../../components/Header/constants';
 import { useNotifications } from '@/src/hooks/useNotifications';
 import type { Causa } from '@/src/types';
 import HeaderActions from '../../components/Header/HeaderActions';
 import PageTitle from '../../components/Header/PageTitle';
-import UserAvatar from '../../components/Header/UserAvatar';
 
 const MOBILE_BRAND = '/veritas2.webp';
 
@@ -38,7 +36,6 @@ export default memo(function Header({
   onNotificationClick,
 }: HeaderProps) {
   const NOTIFICATIONS = useNotifications(causas);
-  const viewMeta = VIEW_TITLES[currentView as keyof typeof VIEW_TITLES] || VIEW_TITLES.dashboard;
 
   return (
     <header className="glass sticky top-0 z-30">

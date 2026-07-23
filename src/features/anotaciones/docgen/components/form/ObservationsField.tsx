@@ -22,7 +22,7 @@ export default function ObservationsField({
         {isDerivacion ? 'Fundamentación de la Derivación' : 'Observaciones'}
       </label>
       <textarea
-        id="doc-observations"
+        id="doc-observations" aria-label="Observaciones"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={

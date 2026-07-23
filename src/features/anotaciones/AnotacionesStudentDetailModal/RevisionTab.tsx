@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useRef, useCallback, useMemo } from 'react';
-import { X, Upload, FileText, AlertTriangle, RefreshCw, ArrowRight, Trash2 } from 'lucide-react';
+import { X, FileText, AlertTriangle, RefreshCw, ArrowRight, Trash2 } from 'lucide-react';
 import { formatDate, type StudentInfo } from './constants';
 import type { CartaDisciplinaria, AnnotationSummary } from '@/src/shared/lib/types';
 
@@ -195,6 +195,7 @@ export default function RevisionTab({
       >
         <input
           ref={fileInputRef}
+          aria-label="Seleccionar archivo para analizar"
           type="file"
           accept=".pdf,.md,application/pdf"
           onChange={onFileSelect}

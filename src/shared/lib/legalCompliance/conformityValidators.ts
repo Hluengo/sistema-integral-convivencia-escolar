@@ -5,14 +5,7 @@
  */
 
 import { type Causa, EstadoCausa } from '@/src/types';
-import { getFaseForEstado } from '@/src/data';
 import { verificarPlazoInvestigacion, verificarPlazoSuspension, verificarPlazoNotificacionSuperintendencia } from './deadlineValidators';
-import {
-  MAX_PLAZO_INVESTIGACION_DIAS,
-  MAX_PLAZO_SUSPENSION_DIAS,
-  MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS,
-  DIAS_ALERTA_PLAZO_CRITICO,
-} from './constants';
 import type { ItemConformidad, NivelConformidad } from './types';
 
 /**

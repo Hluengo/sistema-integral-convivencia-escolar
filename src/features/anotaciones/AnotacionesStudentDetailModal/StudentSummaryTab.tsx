@@ -185,7 +185,7 @@ export default function StudentSummaryTab({
             Historial de Transiciones
           </h3>
           <div className="space-y-3">
-            {transitions.map((t, i) => {
+            {transitions.map((t) => {
               return (
                 <div
                   key={String(t.id)}

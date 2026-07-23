@@ -1,4 +1,3 @@
-
 import { Sparkles, Loader2 } from 'lucide-react';
 import { useTextImprovement } from '../hooks/useTextImprovement';
 
@@ -46,6 +45,7 @@ export default function ImproveTextarea({
       )}
       <textarea
         id={id}
+        aria-label={label || placeholder || id}
         rows={rows}
         required={required}
         spellCheck={true}

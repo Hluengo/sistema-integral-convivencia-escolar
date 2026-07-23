@@ -1,4 +1,3 @@
-
 import { Sparkles, Loader2 } from 'lucide-react';
 import { useTextImprovement } from '../hooks/useTextImprovement';
 
@@ -45,6 +44,7 @@ export default function ImproveInput({
       )}
       <input
         id={id}
+        aria-label={label || placeholder || id}
         type="text"
         required={required}
         spellCheck={true}

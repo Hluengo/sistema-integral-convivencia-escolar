@@ -59,7 +59,7 @@ export default function DocumentForm({
           Nombre del Apoderado
         </label>
         <input
-          id="apoderado-name"
+          id="apoderado-name" aria-label="Nombre del apoderado"
           type="text"
           value={apoderadoName}
           onChange={(e) => onApoderadoNameChange(e.target.value)}
@@ -77,7 +77,7 @@ export default function DocumentForm({
           Nombre Inspector/a
         </label>
         <input
-          id="inspector-name"
+          id="inspector-name" aria-label="Nombre inspector/a"
           type="text"
           value={inspectorName}
           onChange={(e) => onInspectorNameChange(e.target.value)}
@@ -97,7 +97,7 @@ export default function DocumentForm({
               Nombre del Coordinador
             </label>
             <input
-              id="coordinator-name"
+              id="coordinator-name" aria-label="Nombre del coordinador"
               type="text"
               value={coordinatorName}
               onChange={(e) => onCoordinatorNameChange(e.target.value)}
@@ -110,7 +110,7 @@ export default function DocumentForm({
               Emitido por
             </label>
             <input
-              id="emitted-by"
+              id="emitted-by" aria-label="Emitido por"
               type="text"
               value={emittedBy}
               onChange={(e) => onEmittedByChange(e.target.value)}
@@ -131,7 +131,7 @@ export default function DocumentForm({
           Observaciones
         </label>
         <textarea
-          id="doc-observations"
+          id="doc-observations" aria-label="Observaciones del documento"
           value={docObservations}
           onChange={(e) => onObservationsChange(e.target.value)}
           placeholder="Observaciones adicionales para el documento..."

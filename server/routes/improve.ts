@@ -5,7 +5,7 @@
 
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth';
-import { requireStr, optStr, sanitize, sanitizeForAI } from '../lib/validators';
+import { sanitizeForAI } from '../lib/validators';
 import { checkRateLimit } from '../lib/rateLimit';
 import { callGroq } from '../lib/groq';
 

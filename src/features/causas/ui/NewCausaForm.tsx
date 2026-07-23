@@ -92,7 +92,7 @@ export default function NewCausaForm({
             Curso del estudiante
           </label>
           <select
-            id="create-course"
+            id="create-course" aria-label="Curso del estudiante"
             value={selectedCourseId}
             onChange={(e) => onCourseChange(e.target.value)}
             className="mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-medium text-neutral-700 transition-colors duration-200 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30"
@@ -156,7 +156,7 @@ export default function NewCausaForm({
                 </div>
               ) : students.length > 0 ? (
                 <select
-                  id="create-student"
+                  id="create-student" aria-label="Estudiante"
                   value={students.find((s) => s.full_name === newEstNombre)?.id || ''}
                   onChange={(e) => onStudentSelect(e.target.value)}
                   className="mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-medium text-neutral-700 transition-colors duration-200 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30"
@@ -192,7 +192,7 @@ export default function NewCausaForm({
             RUN / RUT:
           </label>
           <input
-            id="create-rut"
+            id="create-rut" aria-label="RUN o RUT"
             type="text"
             required
             spellCheck={false}
@@ -224,7 +224,7 @@ export default function NewCausaForm({
               Gravedad:
             </label>
             <select
-              id="create-gravedad"
+              id="create-gravedad" aria-label="Gravedad"
               value={newInfTipo}
               onChange={(e) => setNewInfTipo(e.target.value as Causa['tipoInfraccion'])}
               className="mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-medium text-neutral-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
@@ -238,7 +238,7 @@ export default function NewCausaForm({
           <div className="flex flex-col justify-end">
             <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-2.5 font-medium text-neutral-700 transition hover:bg-neutral-100/60">
               <input
-                id="create-aula-segura"
+                id="create-aula-segura" aria-label="Afecta Aula Segura"
                 name="create-aula-segura"
                 type="checkbox"
                 checked={newAulaSegura}
@@ -268,7 +268,7 @@ export default function NewCausaForm({
             Fiscalizador a cargo:
           </label>
           <input
-            id="create-responsable"
+            id="create-responsable" aria-label="Fiscalizador a cargo"
             type="text"
             required
             spellCheck={false}

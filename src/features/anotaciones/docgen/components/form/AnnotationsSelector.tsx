@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { CheckSquare, Square } from 'lucide-react';
+import { Square } from 'lucide-react';
 import type { Annotation } from '@/src/types';
 
 interface AnnotationsSelectorProps {

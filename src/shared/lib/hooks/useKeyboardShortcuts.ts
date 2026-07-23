@@ -17,16 +17,28 @@ interface ShortcutHandlers {
 }
 
 export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
-  const handleOpenCreateFormRef = useRef(handlers.onNewCausa);
+  const {
+    onNewCausa,
+    onToggleShortcuts,
+    onCloseCreateForm,
+    onCloseLoginModal,
+    onCloseShortcuts,
+    showCreateForm,
+    showLoginModal,
+    showShortcuts,
+  } = handlers;
+
+  const handleOpenCreateFormRef = useRef(onNewCausa);
+
   useEffect(() => {
-    handleOpenCreateFormRef.current = handlers.onNewCausa;
-  }, [handlers.onNewCausa]);
+    handleOpenCreateFormRef.current = onNewCausa;
+  }, [onNewCausa]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement).tagName;
-      const isInput =
-        tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable;
+      const target = e.target as HTMLElement;
+      const tag = target.tagName;
+      const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || target.isContentEditable;
       if (isInput) return;
 
       if (e.key === 'n' && !e.ctrlKey && !e.metaKey && !e.altKey) {
@@ -34,22 +46,22 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
         handleOpenCreateFormRef.current();
       } else if (e.key === '?') {
         e.preventDefault();
-        handlers.onToggleShortcuts();
+        onToggleShortcuts();
       } else if (e.key === 'Escape') {
-        if (handlers.showCreateForm) handlers.onCloseCreateForm();
-        else if (handlers.showLoginModal) handlers.onCloseLoginModal();
-        else if (handlers.showShortcuts) handlers.onCloseShortcuts();
+        if (showCreateForm) onCloseCreateForm();
+        else if (showLoginModal) onCloseLoginModal();
+        else if (showShortcuts) onCloseShortcuts();
       }
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [
-    handlers.showCreateForm,
-    handlers.showLoginModal,
-    handlers.showShortcuts,
-    handlers.onToggleShortcuts,
-    handlers.onCloseCreateForm,
-    handlers.onCloseLoginModal,
-    handlers.onCloseShortcuts,
+    showCreateForm,
+    showLoginModal,
+    showShortcuts,
+    onToggleShortcuts,
+    onCloseCreateForm,
+    onCloseLoginModal,
+    onCloseShortcuts,
   ]);
 }

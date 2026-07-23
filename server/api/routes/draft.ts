@@ -5,7 +5,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { sanitizeForAI, requireStr, optStr, optArr, sanitize } from '../validators/sanitizers.js';
 import { checkRateLimit } from '../services/rateLimit.js';
 import { callGroq } from '../services/groq.js';
-import { httpsGet, httpsPatch } from '../lib/https.js';
+import { httpsGet } from '../lib/https.js';
 
 const router = Router();
 

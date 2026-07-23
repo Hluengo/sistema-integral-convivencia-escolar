@@ -10,7 +10,6 @@ import { Activity, FileSearch, ShieldAlert, CheckCircle, BarChart3, AlertCircle,
 import MetricCard from '../../components/MetricCard';
 import SeverityBadge from '../../components/SeverityBadge';
 import AnotacionesDashboardStats from '../anotaciones/AnotacionesDashboardStats';
-import { countByStage } from '../../domain/disciplinaryStatus';
 import EmptyState from '../../components/EmptyState';
 import { fetchAnnotationStageCounts } from '../../services/annotations.service';
 

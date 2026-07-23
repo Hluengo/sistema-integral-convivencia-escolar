@@ -63,7 +63,7 @@ const DEFAULT_PAGE_SIZE = 100;
 export async function fetchCausas(limit = DEFAULT_PAGE_SIZE): Promise<Causa[]> {
   let query = supabase
     .from('causas')
-    .select('*')
+    .select('id,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas')
     .order('fecha_ultima_actualizacion', { ascending: false });
 
   if (limit > 0) {
@@ -103,7 +103,7 @@ export async function fetchCausas(limit = DEFAULT_PAGE_SIZE): Promise<Causa[]> {
 
   const { data: checklistRows, error: checklistError } = await supabase
     .from('checklist_items')
-    .select('*')
+    .select('id,causa_id,label,descripcion,completado,fecha_completado,requerido_por,registrado_por,observaciones,documento_nombre,documento_url')
     .in('causa_id', ids);
 
   if (checklistError) {

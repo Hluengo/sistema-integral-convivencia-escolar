@@ -4,12 +4,13 @@
  */
 
 const MAX_STR = 10000;
+const CONTROL_CHARS = new RegExp(`[${String.fromCharCode(0)}-${String.fromCharCode(31)}${String.fromCharCode(127)}-${String.fromCharCode(159)}]`, 'g');
 
 export const sanitize = (s: unknown): string => {
   if (typeof s !== 'string') {
     return '';
   }
-  return s.slice(0, MAX_STR).replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+  return s.slice(0, MAX_STR).replace(CONTROL_CHARS, '');
 };
 
 export const requireStr = (obj: Record<string, unknown>, key: string, max = 200): string => {

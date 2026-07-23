@@ -2,13 +2,6 @@
 
 import { useState } from 'react';
 import { Plus, X } from 'lucide-react';
-
-interface CustomCommitmentsProps {
-  customCommitments: string[];
-  onAddCommitment: (commitment: string) => void;
-  onRemoveCommitment: (index: number) => void;
-}
-
 export default function CustomCommitments({
   customCommitments,
   onAddCommitment,
@@ -34,6 +27,7 @@ export default function CustomCommitments({
       <div className="mb-2 flex gap-2">
         <input
           id="custom-commitment"
+          aria-label="Compromiso personalizado"
           type="text"
           value={newCommitment}
           onChange={(e) => setNewCommitment(e.target.value)}

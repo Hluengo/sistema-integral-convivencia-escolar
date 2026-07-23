@@ -5,7 +5,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 type QueryBuilder = {
   select: (columns: string) => QueryBuilder;
   insert: (values: unknown) => QueryBuilder;
-  update: (values: unknown) => QueryBuilder;
+  update: (_values: unknown) => QueryBuilder;
   delete: () => QueryBuilder;
   eq: (col: string, val: unknown) => QueryBuilder;
   in: (col: string, vals: unknown[]) => QueryBuilder;
@@ -17,7 +17,7 @@ type QueryBuilder = {
 type FromResult = {
   select: (columns: string) => QueryBuilder;
   insert: (values: unknown) => { select: () => { single: () => Promise<{ data: unknown; error: null }> }; error: null };
-  update: (values: unknown) => QueryBuilder;
+  update: (_values: unknown) => QueryBuilder;
   delete: () => QueryBuilder;
 };
 
@@ -39,7 +39,7 @@ export function createMockSupabase(
         data[table].push(newRow);
         return q;
       },
-      update(values: unknown) {
+      update(_values: unknown) {
         return q;
       },
       delete() {
@@ -72,13 +72,13 @@ export function createMockSupabase(
       const builder = queryTable(table);
       return {
         select: (columns: string) => builder.select(columns),
-        insert: (values: unknown) => ({
+        insert: (_values: unknown) => ({
           select: () => ({
             single: async () => ({ data: null, error: null }),
           }),
           error: null,
         }),
-        update: (values: unknown) => builder,
+        update: (_values: unknown) => builder,
         delete: () => builder,
       };
     },

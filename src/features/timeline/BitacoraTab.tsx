@@ -86,7 +86,7 @@ export default function BitacoraTab({
             <div>
               <label htmlFor="log-participantes" className="mb-1 block font-semibold text-[9px] text-neutral-400 uppercase">Participantes</label>
 <input
-  id="log-participantes"
+  id="log-participantes" aria-label="Participantes"
   type="text"
   spellCheck={false}
   value={logParticipantes}

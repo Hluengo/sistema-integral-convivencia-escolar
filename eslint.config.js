@@ -122,6 +122,14 @@ export default tseslint.config(
       'no-undef': 'off',
       'react-hooks/exhaustive-deps': 'warn',
       'react-hooks/rules-of-hooks': 'error',
+    },
+  },
+  {
+    files: ['**/*.{jsx,tsx}'],
+    plugins: {
+      'react-refresh': reactRefresh,
+    },
+    rules: {
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     },
   }

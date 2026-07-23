@@ -90,7 +90,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
               </label>
               <input
                 ref={emailRef}
-                id="login-email"
+                id="login-email" aria-label="Correo electrónico"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -110,7 +110,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
               </label>
               <div className="relative">
                 <input
-                  id="login-password"
+                  id="login-password" aria-label="Contraseña"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -137,7 +137,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
                 className="flex cursor-pointer select-none items-center gap-2 text-neutral-500"
               >
                 <input
-                  id="remember-me"
+                  id="remember-me" aria-label="Recordarme"
                   name="remember-me"
                   type="checkbox"
                   className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500/20"

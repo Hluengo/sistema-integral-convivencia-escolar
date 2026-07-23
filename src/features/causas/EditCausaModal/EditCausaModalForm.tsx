@@ -37,7 +37,7 @@ export default function EditCausaModalForm({ causa, onSave, onDelete, onClose }:
   const [responsable, setResponsable] = useState(causa.responsable);
   const [estadoActual, setEstadoActual] = useState<EstadoCausa>(causa.estadoActual);
   const [observaciones, setObservaciones] = useState(causa.observaciones);
-  const [aulaSegura, _setAulaSegura] = useState(causa.comprometeAulaSegura);
+  const [aulaSegura, setAulaSegura] = useState(causa.comprometeAulaSegura);
 
   const [esDenunciaConfidencial, setEsDenunciaConfidencial] = useState(causa.esDenunciaConfidencial || false);
   const [identidadReservada, setIdentidadReservada] = useState(causa.identidadReservada || false);
@@ -102,29 +102,29 @@ export default function EditCausaModalForm({ causa, onSave, onDelete, onClose }:
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label htmlFor="edit-estudiante" className={labelClass}>Estudiante</label>
-                <input id="edit-estudiante" value={estudianteNombre} onChange={(e) => setEstudianteNombre(e.target.value)} className={fieldClass} placeholder="Nombre completo" required />
+                <input id="edit-estudiante" aria-label="Estudiante" value={estudianteNombre} onChange={(e) => setEstudianteNombre(e.target.value)} className={fieldClass} placeholder="Nombre completo" required />
               </div>
               <div>
                 <label htmlFor="edit-curso" className={labelClass}>Curso</label>
-                <input id="edit-curso" value={estudianteCurso} onChange={(e) => setEstudianteCurso(e.target.value)} className={fieldClass} placeholder="Ej: 7° Básico A" />
+                <input id="edit-curso" aria-label="Curso" value={estudianteCurso} onChange={(e) => setEstudianteCurso(e.target.value)} className={fieldClass} placeholder="Ej: 7° Básico A" />
               </div>
               <div>
                 <label htmlFor="edit-run" className={labelClass}>RUN</label>
-                <input id="edit-run" value={runEstudiante} onChange={(e) => setRunEstudiante(e.target.value)} className={fieldClass} placeholder="12.345.678-9" />
+                <input id="edit-run" aria-label="RUN" value={runEstudiante} onChange={(e) => setRunEstudiante(e.target.value)} className={fieldClass} placeholder="12.345.678-9" />
               </div>
               <div>
                 <label htmlFor="edit-tipo-infraccion" className={labelClass}>Tipo Infracción</label>
-                <select id="edit-tipo-infraccion" value={tipoInfraccion} onChange={(e) => setTipoInfraccion(e.target.value as TipoInfraccion)} className={selectClass} required>
+                <select id="edit-tipo-infraccion" aria-label="Tipo de infracción" value={tipoInfraccion} onChange={(e) => setTipoInfraccion(e.target.value as TipoInfraccion)} className={selectClass} required>
                   {INFRACCIONES.map(i => <option key={i} value={i}>{i}</option>)}
                 </select>
               </div>
               <div>
                 <label htmlFor="edit-responsable" className={labelClass}>Encargado / Responsable</label>
-                <input id="edit-responsable" value={responsable} onChange={(e) => setResponsable(e.target.value)} className={fieldClass} placeholder="Nombre del inspector/a" required />
+                <input id="edit-responsable" aria-label="Encargado o responsable" value={responsable} onChange={(e) => setResponsable(e.target.value)} className={fieldClass} placeholder="Nombre del inspector/a" required />
               </div>
               <div>
                 <label htmlFor="edit-estado" className={labelClass}>Estado Actual</label>
-                <select id="edit-estado" value={estadoActual} onChange={(e) => setEstadoActual(e.target.value as EstadoCausa)} className={selectClass} required>
+                <select id="edit-estado" aria-label="Estado actual" value={estadoActual} onChange={(e) => setEstadoActual(e.target.value as EstadoCausa)} className={selectClass} required>
                   {Object.values(EstadoCausa).map(e => <option key={e} value={e}>{e}</option>)}
                 </select>
               </div>
@@ -142,15 +142,15 @@ export default function EditCausaModalForm({ causa, onSave, onDelete, onClose }:
               </div>
               <div className="mt-3 grid gap-3 md:grid-cols-2">
                 <label className="flex items-center gap-2">
-                  <input type="checkbox" checked={aulaSegura} onChange={(e) => _setAulaSegura(e.target.checked)} className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500" />
+                  <input type="checkbox" aria-label="Compromete Aula Segura" checked={aulaSegura} onChange={(e) => setAulaSegura(e.target.checked)} className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500" />
                   <span className="text-sm text-neutral-700">Compromete Aula Segura</span>
                 </label>
                 <label className="flex items-center gap-2">
-                  <input type="checkbox" checked={esDenunciaConfidencial} onChange={(e) => setEsDenunciaConfidencial(e.target.checked)} className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500" />
+                  <input type="checkbox" aria-label="Denuncia confidencial" checked={esDenunciaConfidencial} onChange={(e) => setEsDenunciaConfidencial(e.target.checked)} className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500" />
                   <span className="text-sm text-neutral-700">Denuncia Confidencial</span>
                 </label>
                 <label className="flex items-center gap-2">
-                  <input type="checkbox" checked={identidadReservada} onChange={(e) => setIdentidadReservada(e.target.checked)} className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500" />
+                  <input type="checkbox" aria-label="Identidad reservada" checked={identidadReservada} onChange={(e) => setIdentidadReservada(e.target.checked)} className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500" />
                   <span className="text-sm text-neutral-700">Identidad Reservada</span>
                 </label>
               </div>
@@ -164,18 +164,18 @@ export default function EditCausaModalForm({ causa, onSave, onDelete, onClose }:
               <div className="mt-3 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                 <div>
                   <label htmlFor="edit-inicio-investigacion" className={labelClass}>Inicio Investigación</label>
-                  <input id="edit-inicio-investigacion" type="date" value={fechaInicioInvestigacion} onChange={(e) => setFechaInicioInvestigacion(e.target.value)} className={fieldClass} />
+                  <input id="edit-inicio-investigacion" aria-label="Inicio investigación" type="date" value={fechaInicioInvestigacion} onChange={(e) => setFechaInicioInvestigacion(e.target.value)} className={fieldClass} />
                 </div>
                 <div>
                   <label htmlFor="edit-inicio-suspension" className={labelClass}>Inicio Suspensión</label>
-                  <input id="edit-inicio-suspension" type="date" value={fechaInicioSuspension} onChange={(e) => setFechaInicioSuspension(e.target.value)} className={fieldClass} />
+                  <input id="edit-inicio-suspension" aria-label="Inicio suspensión" type="date" value={fechaInicioSuspension} onChange={(e) => setFechaInicioSuspension(e.target.value)} className={fieldClass} />
                 </div>
                 <div>
                   <label htmlFor="edit-dias-suspension" className={labelClass}>Días Suspensión</label>
-                  <input id="edit-dias-suspension" type="number" min="0" max="15" value={duracionSuspensionDias} onChange={(e) => { const v = Number(e.target.value); if (!Number.isNaN(v)) setDuracionSuspensionDias(v); }} className={fieldClass} />
+                  <input id="edit-dias-suspension" aria-label="Días de suspensión" type="number" min="0" max="15" value={duracionSuspensionDias} onChange={(e) => { const v = Number(e.target.value); if (!Number.isNaN(v)) setDuracionSuspensionDias(v); }} className={fieldClass} />
                 </div>
                 <label className="flex items-center gap-2 md:col-span-2">
-                  <input type="checkbox" checked={monitoreoPedagogico} onChange={(e) => setMonitoreoPedagogico(e.target.checked)} className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500" />
+                  <input type="checkbox" aria-label="Monitoreo pedagógico obligatorio" checked={monitoreoPedagogico} onChange={(e) => setMonitoreoPedagogico(e.target.checked)} className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500" />
                   <span className="text-sm text-neutral-700">Monitoreo Pedagógico Obligatorio</span>
                 </label>
               </div>
@@ -188,12 +188,12 @@ export default function EditCausaModalForm({ causa, onSave, onDelete, onClose }:
               </div>
               <div className="mt-3 grid gap-3 md:grid-cols-2">
                 <label className="flex items-center gap-2">
-                  <input type="checkbox" checked={requiereNotificacionSuperintendencia} onChange={(e) => setRequiereNotificacionSuperintendencia(e.target.checked)} className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500" />
+                  <input type="checkbox" aria-label="Requiere notificación a Superintendencia" checked={requiereNotificacionSuperintendencia} onChange={(e) => setRequiereNotificacionSuperintendencia(e.target.checked)} className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500" />
                   <span className="text-sm text-neutral-700">Requiere Notificación a Superintendencia</span>
                 </label>
                 <div>
                   <label htmlFor="edit-fecha-notificacion" className={labelClass}>Fecha Notificación</label>
-                  <input id="edit-fecha-notificacion" type="date" value={fechaNotificacionSuperintendencia} onChange={(e) => setFechaNotificacionSuperintendencia(e.target.value)} className={fieldClass} />
+                  <input id="edit-fecha-notificacion" aria-label="Fecha de notificación" type="date" value={fechaNotificacionSuperintendencia} onChange={(e) => setFechaNotificacionSuperintendencia(e.target.value)} className={fieldClass} />
                 </div>
               </div>
             </div>
@@ -205,12 +205,12 @@ export default function EditCausaModalForm({ causa, onSave, onDelete, onClose }:
               </div>
               <div className="mt-3 grid gap-3 md:grid-cols-2">
                 <label className="flex items-center gap-2">
-                  <input type="checkbox" checked={estudianteTieneNEE} onChange={(e) => setEstudianteTieneNEE(e.target.checked)} className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500" />
+                  <input type="checkbox" aria-label="Estudiante con NEE" checked={estudianteTieneNEE} onChange={(e) => setEstudianteTieneNEE(e.target.checked)} className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500" />
                   <span className="text-sm text-neutral-700">Estudiante con NEE</span>
                 </label>
                 <div>
                   <label htmlFor="edit-tipo-nee" className={labelClass}>Tipo NEE</label>
-                  <input id="edit-tipo-nee" value={tipoNEE} onChange={(e) => setTipoNEE(e.target.value)} className={fieldClass} placeholder="TEA, TDAH, Disc. Intelectual, etc." disabled={!estudianteTieneNEE} />
+                  <input id="edit-tipo-nee" aria-label="Tipo NEE" value={tipoNEE} onChange={(e) => setTipoNEE(e.target.value)} className={fieldClass} placeholder="TEA, TDAH, Disc. Intelectual, etc." disabled={!estudianteTieneNEE} />
                 </div>
               </div>
             </div>
@@ -247,8 +247,4 @@ export default function EditCausaModalForm({ causa, onSave, onDelete, onClose }:
       </AlertDialog>
     </>
   );
-}
-
-function _setAulaSegura(value: boolean) {
-  // No-op placeholder
 }

@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useReducer, useMemo, useState, useCallback } from 'react';
-import { Users, Search, GraduationCap, Loader2, AlertCircle, BookOpen, ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
+import { Users, Search, GraduationCap, AlertCircle, BookOpen, ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
 import { fetchCourses, fetchStudentsWithCourses, type Course, type StudentWithCourse } from '../../services/courses.service';
 import { TableSkeleton } from '../../components/Skeleton';
 
@@ -218,6 +218,7 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
           {groupedByCourse.length > 0 && (
             <button
               type="button"
+              aria-label={allExpanded ? 'Colapsar todos los cursos' : 'Expandir todos los cursos'}
               onClick={allExpanded ? collapseAll : expandAll}
               className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 font-medium text-neutral-600 text-xs transition-colors hover:bg-neutral-50 hover:text-neutral-800"
             >
@@ -258,6 +259,7 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
             <div key={courseId} className="card overflow-hidden">
               <button
                 type="button"
+                aria-label={`Alternar curso ${course?.name ?? 'sin nombre'}`}
                 onClick={() => toggleCourse(courseId)}
                 className="relative w-full border-neutral-100 border-b bg-neutral-50/50 px-5 py-4 text-left transition-colors hover:bg-neutral-100/80"
               >
@@ -280,9 +282,9 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
                   </div>
                   <div className="shrink-0 rounded-lg bg-neutral-200 p-1">
                     {isExpanded ? (
-                      <ChevronUp className="h-4 w-4 text-neutral-600" />
+                      <ChevronUp className="h-4 w-4 text-neutral-600" aria-hidden="true" />
                     ) : (
-                      <ChevronDown className="h-4 w-4 text-neutral-600" />
+                      <ChevronDown className="h-4 w-4 text-neutral-600" aria-hidden="true" />
                     )}
                   </div>
                 </div>
@@ -302,9 +304,10 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
                     {courseStudents.map((student) => (
                       <tr
                         key={student.id}
+                        aria-label={`Estudiante ${student.full_name}`}
                         className="border-neutral-50 border-b transition-colors last:border-b-0 hover:bg-neutral-50/80"
                       >
-                        <td className="px-5 py-3">
+                        <td className="px-5 py-3" aria-label={`Nombre ${student.full_name}`}>
                           <div className="flex items-center gap-2.5">
                             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-brand-100 to-brand-200 font-bold text-[10px] text-brand-700">
                               {student.full_name.split(' ').filter((w) => w.length > 2).slice(0, 2).map((w) => w[0]).join('')}
@@ -316,7 +319,7 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
                             </span>
                           </div>
                         </td>
-                        <td className="px-5 py-3">
+                        <td className="px-5 py-3" aria-label={`Nombre ${student.full_name}`}>
                           <span className="font-medium font-mono text-neutral-600 text-xs">
                             {privacyMode ? 'XX.XXX.XXX-X' : student.rut}
                           </span>

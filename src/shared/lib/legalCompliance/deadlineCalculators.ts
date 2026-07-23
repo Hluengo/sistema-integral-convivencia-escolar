@@ -7,7 +7,6 @@
 import { agregarDiasHabiles } from './dateUtils';
 import {
   MAX_PLAZO_INVESTIGACION_DIAS,
-  MAX_PLAZO_SUSPENSION_DIAS,
   MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS,
 } from './constants';
 

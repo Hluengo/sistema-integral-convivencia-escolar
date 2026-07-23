@@ -69,7 +69,7 @@ export default function DraftPanel({
           Nombre del apoderado/tutor
         </label>
 <input
-  id="father-name"
+  id="father-name" aria-label="Nombre del apoderado o tutor"
   type="text"
   spellCheck={false}
   value={fatherName}

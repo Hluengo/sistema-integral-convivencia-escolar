@@ -9,7 +9,7 @@ interface GeneratorHeaderProps {
 
 export default function GeneratorHeader({
   negativeCount,
-  semaphoric,
+  semaphoric: _semaphoric,
 }: GeneratorHeaderProps) {
   return (
     <div className="flex flex-col justify-between gap-4 rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-xs sm:flex-row sm:items-center">

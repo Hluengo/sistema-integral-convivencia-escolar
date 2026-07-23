@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/src/lib/supabase';
 import { fetchCartas } from '@/src/services/cartas.service';
 import { fetchEtapas } from '@/src/services/etapas.service';

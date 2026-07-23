@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, lazy } from 'react';
 import { Shield, Plus } from 'lucide-react';
 import type { Annotation, AnotacionStudent } from '../../types';
 import { supabase } from '../../lib/supabase';

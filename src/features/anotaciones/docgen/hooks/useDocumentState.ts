@@ -1,22 +1,4 @@
 import { useState, useCallback } from 'react';
-
-type DocType = 'amonestacion' | 'compromiso_conductual' | 'derivacion';
-
-interface DocumentState {
-  docType: DocType;
-  apoderadoName: string;
-  inspectorName: string;
-  coordinatorName: string;
-  emittedBy: string;
-  docObservations: string;
-  compromisoStatus: string;
-  customCommitments: string[];
-  authorizedBypass: boolean;
-  authorizedDuplicate: boolean;
-  bypassProgressLock: boolean;
-  isRegistering: boolean;
-}
-
 export function useDocumentState() {
   const [docType, setDocType] = useState<'amonestacion' | 'compromiso_conductual' | 'derivacion'>('amonestacion');
   const [apoderadoName, setApoderadoName] = useState('');

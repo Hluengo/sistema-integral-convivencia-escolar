@@ -1,13 +1,4 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
-
-interface CoordinatorEmittedByFieldsProps {
-  docType: string;
-  coordinatorName: string;
-  onCoordinatorNameChange: (value: string) => void;
-  emittedBy: string;
-  onEmittedByChange: (value: string) => void;
-}
-
 export default function CoordinatorEmittedByFields({
   docType,
   coordinatorName,
@@ -34,6 +25,7 @@ export default function CoordinatorEmittedByFields({
         </label>
         <input
           id="coordinator-name"
+          aria-label="Nombre del coordinador"
           type="text"
           value={coordinatorName}
           onChange={(e) => onCoordinatorNameChange(e.target.value)}
@@ -47,6 +39,7 @@ export default function CoordinatorEmittedByFields({
         </label>
         <input
           id="emitted-by"
+          aria-label="Emitido por"
           type="text"
           value={emittedBy}
           onChange={(e) => onEmittedByChange(e.target.value)}

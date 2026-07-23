@@ -37,7 +37,6 @@ export function isLocalDemoAllowed(): boolean {
   return m?.VITE_ALLOW_LOCAL_DEMO === 'true';
 }
 
-const browserSupabaseKey = Symbol();
 let browserClient: typeof supabase | null = null;
 
 export function getBrowserSupabase(): typeof supabase | null {

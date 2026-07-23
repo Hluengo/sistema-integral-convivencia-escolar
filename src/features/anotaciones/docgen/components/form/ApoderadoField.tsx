@@ -1,11 +1,4 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
-
-interface ApoderadoFieldProps {
-  value: string;
-  onChange: (value: string) => void;
-  docType: string;
-}
-
 export default function ApoderadoField({
   value,
   onChange,
@@ -23,6 +16,7 @@ export default function ApoderadoField({
       </label>
       <input
         id="apoderado-name"
+          aria-label="Nombre del apoderado"
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}

@@ -37,7 +37,6 @@ const AnotacionesDocumentGenerator = lazy(
   () => import('@/src/features/anotaciones/AnotacionesDocumentGenerator')
 );
 
-type DocSource = 'causa' | 'anotacion';
 type DocFiltro = 'todos' | 'causas' | 'anotaciones';
 
 interface HubItem {

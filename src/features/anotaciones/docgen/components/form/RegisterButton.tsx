@@ -1,13 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { FileText } from 'lucide-react';
-
-interface RegisterButtonProps {
-  onClick: () => void;
-  disabled?: boolean;
-  isRegistering?: boolean;
-}
-
 export default function RegisterButton({
   onClick,
   disabled = false,

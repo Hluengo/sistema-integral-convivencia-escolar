@@ -26,7 +26,6 @@ import HistoryTab from './AnotacionesStudentDetailModal/HistoryTab';
 import { useDisciplinaryData } from './AnotacionesStudentDetailModal/hooks/useDisciplinaryData';
 import { usePdfProcessing } from './AnotacionesStudentDetailModal/hooks/usePdfProcessing';
 
-const EMPTY_TEACHERS: Record<string, string> = {};
 
 const Skeleton = memo(function Skeleton({ className = '' }: { className?: string }) {
   return <div className={`animate-pulse rounded-xl bg-neutral-200 ${className}`} />;
@@ -49,10 +48,8 @@ export default function AnotacionesStudentDetailModal({
   onClose,
   onClearAnnotations,
   onTogglePrivacy,
-  teachers = EMPTY_TEACHERS,
 }: AnotacionesStudentDetailModalProps) {
   const [activeTab, setActiveTab] = useState<ActiveTab>('resumen');
-  const cartasRef = useRef<unknown[]>([]);
 
   const { isDataLoading, activeCase, etapas, currentMeasure, transitions, cartas } =
     useDisciplinaryData(student.id, student.full_name);

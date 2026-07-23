@@ -9,7 +9,7 @@ import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { useNewCausaForm } from '../hooks/useNewCausaForm';
 import { useCoursesQuery } from '../hooks/useCoursesQuery';
 import { useStudentsQuery } from '../hooks/useStudentsQuery';
-import { type SaveStatus, useCausasPersistence } from '../hooks/useCausasPersistence';
+import { useCausasPersistence } from '../hooks/useCausasPersistence';
 import { ToastProvider } from '../components/Toast';
 import { MainContentSkeleton } from '../components/Skeleton';
 import { AppProvider } from '../context/AppContext';

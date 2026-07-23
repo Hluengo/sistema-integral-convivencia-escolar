@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Suspense, lazy, useState, useMemo } from 'react';
+import { Suspense, lazy, useState } from 'react';
 import type { Causa, UserRole } from '@/src/types';
 import { getFaseForEstado } from '@/src/data';
 import TimelineHeader from './InteractiveTimeline/TimelineHeader';

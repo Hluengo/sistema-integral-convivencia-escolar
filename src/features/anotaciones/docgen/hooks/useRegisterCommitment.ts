@@ -40,7 +40,6 @@ export function useRegisterCommitment() {
       emittedBy,
       docObservations,
       compromisoStatus,
-      teachers,
       onSuccess,
       setIsRegistering,
     } = params;

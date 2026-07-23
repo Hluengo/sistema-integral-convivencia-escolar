@@ -98,7 +98,6 @@ export default function AnotacionesDocumentGenerator({
 
   const [exportError, setExportError] = useState<string | null>(null);
   const [showEmissionConfirm, setShowEmissionConfirm] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
 
   const handleEmitAfterExport = () => {
     handleRegisterCommitment({
@@ -210,7 +209,6 @@ export default function AnotacionesDocumentGenerator({
 
   const handleExportWord = async () => {
     setExportError(null);
-    setIsExporting(true);
     try {
       const blob = await documentExport.generateWord(previewContent);
       documentExport.downloadBlob(blob, `Carta_de_${docType}_${student.full_name.replace(/\s+/g, '_')}.docx`);
@@ -218,8 +216,6 @@ export default function AnotacionesDocumentGenerator({
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Error al generar el documento Word.';
       setExportError(msg);
-    } finally {
-      setIsExporting(false);
     }
   };
 

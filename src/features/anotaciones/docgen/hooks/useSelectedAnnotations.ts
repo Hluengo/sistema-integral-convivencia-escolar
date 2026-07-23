@@ -1,13 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import type { Annotation } from '@/src/types';
-
-interface SelectedAnnotation {
-  id: string;
-  observation: string;
-  severity: string;
-  type: string;
-}
-
 export function useSelectedAnnotations(annotations: Annotation[]) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 

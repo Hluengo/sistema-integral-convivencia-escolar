@@ -192,7 +192,7 @@ export default memo(function AnotacionesStudentTable({
         <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead className="border-b border-neutral-200/60 bg-neutral-50">
-              <tr>
+              <tr aria-label="Estado de carga de estudiantes">
                 <th className="px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider">
                   Estudiante
                 </th>
@@ -220,16 +220,16 @@ export default memo(function AnotacionesStudentTable({
             </thead>
             <tbody className="divide-y divide-neutral-100">
               {isLoading ? (
-                <tr>
+                <tr aria-label="Estado de carga de estudiantes">
                   <td colSpan={7} className="px-4 py-12 text-center text-neutral-500 text-sm">
                     <div className="flex items-center justify-center gap-2">
-                      <div className="size-4 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
+                      <div className="size-4 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" aria-hidden="true" />
                       Cargando estudiantes...
                     </div>
                   </td>
                 </tr>
               ) : filteredStudents.length === 0 ? (
-                <tr>
+                <tr aria-label="Estado de carga de estudiantes">
                   <td colSpan={7} className="px-4 py-12 text-center text-neutral-500 text-sm">
                     No se encontraron estudiantes con los filtros seleccionados.
                   </td>
@@ -252,6 +252,8 @@ export default memo(function AnotacionesStudentTable({
                         }
                       }}
                       tabIndex={0}
+                      role="button"
+                      aria-label={`Ver detalle de ${student.full_name}`}
                       className={`cursor-pointer transition-colors ${style.rowBg}`}
                     >
                       <td className="whitespace-nowrap px-4 py-3 font-medium text-neutral-900 text-sm">
@@ -288,11 +290,11 @@ export default memo(function AnotacionesStudentTable({
                       <td className="hidden whitespace-nowrap px-4 py-3 text-neutral-600 text-sm lg:table-cell">
                         {formatDate(student.last_annotation_date)}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm">
+                      <td className="whitespace-nowrap px-4 py-3 text-sm" aria-label={`Estado disciplinario: ${status.text}`}>
                         <span
                           className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-medium text-xs ${status.bg}`}
                         >
-                          <span className={`inline-block size-2 rounded-full ${style.dot}`} />
+                          <span className={`inline-block size-2 rounded-full ${style.dot}`} aria-hidden="true" />
                           <span className="hidden md:inline">{status.text}</span>
                         </span>
                       </td>

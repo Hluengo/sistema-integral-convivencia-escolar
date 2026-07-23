@@ -7,10 +7,9 @@ import { calcularFechaLimiteInvestigacion, calcularFechaLimiteNotificacionSuperi
 import {
   MAX_PLAZO_INVESTIGACION_DIAS,
   MAX_PLAZO_SUSPENSION_DIAS,
-  MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS,
   DIAS_ALERTA_PLAZO_CRITICO,
 } from './constants';
-import type { ResultadoPlazo, EstadoPlazo } from './types';
+import type { ResultadoPlazo } from './types';
 
 /**
  * Verifica el estado del plazo de investigación

@@ -35,7 +35,7 @@ router.get('/document-templates', async (_req, res) => {
     }
     const data = await result.json();
     res.json(data);
-  } catch (_error) {
+  } catch {
     res.status(500).json({ error: 'Error al obtener plantillas.' });
   }
 });

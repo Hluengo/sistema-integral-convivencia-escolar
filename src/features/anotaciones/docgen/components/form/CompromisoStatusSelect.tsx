@@ -1,10 +1,4 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
-
-interface CompromisoStatusSelectProps {
-  value: string;
-  onChange: (value: string) => void;
-}
-
 const COMPROMISO_STATUS_OPTIONS = [
   { value: 'pendiente', label: 'Pendiente' },
   { value: 'aceptado', label: 'Aceptado' },

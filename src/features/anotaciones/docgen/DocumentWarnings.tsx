@@ -43,7 +43,7 @@ export default function DocumentWarnings({
             <p className="font-medium text-amber-800">Etapa de progreso bloqueada</p>
             <p className="mt-1 text-amber-700">El estudiante se encuentra en una etapa donde la emisión de documentos está restringida.</p>
             <label className="mt-2 flex cursor-pointer items-center gap-2 text-amber-700">
-              <input type="checkbox" checked={bypassProgressLock} onChange={onBypassProgressLock} className="rounded border-amber-300" />
+              <input type="checkbox" aria-label="Autorizar emisión ignorando bloqueo de etapa" checked={bypassProgressLock} onChange={onBypassProgressLock} className="rounded border-amber-300" />
               Autorizar emisión ignorando bloqueo de etapa
             </label>
           </div>
@@ -61,7 +61,7 @@ export default function DocumentWarnings({
             <p className="font-medium text-yellow-800">Umbral no alcanzado</p>
             <p className="mt-1 text-yellow-700">Se requieren al menos 10 anotaciones negativas para emitir una Carta de Compromiso. Actualmente tiene {negativeCount}.</p>
             <label className="mt-2 flex cursor-pointer items-center gap-2 text-yellow-700">
-              <input type="checkbox" checked={authorizedBypass} onChange={onAuthorizedBypass} className="rounded border-yellow-300" />
+              <input type="checkbox" aria-label="Autorizar emisión excepcional" checked={authorizedBypass} onChange={onAuthorizedBypass} className="rounded border-yellow-300" />
               Autorizar emisión excepcional
             </label>
           </div>
@@ -79,7 +79,7 @@ export default function DocumentWarnings({
             <p className="font-medium text-blue-800">Documento existente</p>
             <p className="mt-1 text-blue-700">Ya existe una carta de este tipo emitida para este estudiante ({existingLetter.emission_date}).</p>
             <label className="mt-2 flex cursor-pointer items-center gap-2 text-blue-700">
-              <input type="checkbox" checked={authorizedDuplicate} onChange={onAuthorizedDuplicate} className="rounded border-blue-300" />
+              <input type="checkbox" aria-label="Autorizar duplicado" checked={authorizedDuplicate} onChange={onAuthorizedDuplicate} className="rounded border-blue-300" />
               Autorizar duplicado
             </label>
           </div>
