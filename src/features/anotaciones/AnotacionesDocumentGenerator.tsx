@@ -160,6 +160,8 @@ export default function AnotacionesDocumentGenerator({
   }, []);
 
   const [exportError, setExportError] = useState<string | null>(null);
+  const [registrationMessage, setRegistrationMessage] = useState<string | null>(null);
+  const [registrationError, setRegistrationError] = useState<string | null>(null);
   const [showEmissionConfirm, setShowEmissionConfirm] = useState(false);
 
   const selectedAnnsObjects = selectedAnnotations.selectedAnnsObjects;
@@ -243,9 +245,17 @@ export default function AnotacionesDocumentGenerator({
       contentSnapshot,
       onSuccess: (entry) => {
         documentRegistry.addEntry(entry);
-        void onRegistered?.();
+        setRegistrationMessage('Carta registrada correctamente. La plantilla permanece disponible para imprimir o descargar.');
+        void (async () => {
+          try {
+            await onRegistered?.();
+          } catch {
+            setRegistrationError('La carta se registró, pero no se pudo actualizar el estado de la ficha.');
+          }
+        })();
         afterSuccess?.();
       },
+      onError: setRegistrationError,
       setIsRegistering: documentState.setIsRegistering,
     });
   };
@@ -256,7 +266,7 @@ export default function AnotacionesDocumentGenerator({
   };
 
   const handleRegisterCommitmentWrapper = () => {
-    registerCarta(() => handleExportPDF());
+    registerCarta();
   };
 
   const getPreviewHtml = () => previewRef.current?.outerHTML || '';
@@ -306,6 +316,18 @@ export default function AnotacionesDocumentGenerator({
   return (
     <div className="space-y-6">
       <ExportError message={exportError} onClose={() => setExportError(null)} />
+
+      {registrationMessage && (
+        <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+          {registrationMessage}
+        </div>
+      )}
+      {registrationError && (
+        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          {registrationError}
+        </div>
+      )}
+
 
       <EmissionConfirmDialog isOpen={showEmissionConfirm} onConfirm={handleEmitAfterExport} onCancel={() => setShowEmissionConfirm(false)} />
 

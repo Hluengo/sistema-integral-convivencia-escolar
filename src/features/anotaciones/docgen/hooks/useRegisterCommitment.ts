@@ -29,6 +29,7 @@ interface RegisterCommitmentParams {
     status: string;
     apoderadoName: string;
   }) => void;
+  onError: (message: string) => void;
   setIsRegistering: (v: boolean) => void;
 }
 
@@ -52,6 +53,7 @@ export function useRegisterCommitment() {
       existingCartaId,
       contentSnapshot,
       onSuccess,
+      onError,
       setIsRegistering,
     } = params;
 
@@ -97,14 +99,14 @@ export function useRegisterCommitment() {
           status: compromisoStatus,
           apoderadoName,
         });
-        alert('Documento registrado exitosamente en cartas_disciplinarias.');
+        return;
       } else {
         console.error('Error al registrar carta:', result.error);
-        alert(`Error al registrar el documento: ${result.error?.message || 'sin detalle'}`);
+        onError('No se pudo registrar la carta: ' + (result.error?.message || 'sin detalle'));
       }
     } catch (err) {
       console.error('Error en handleRegisterCommitment:', err);
-      alert('Ocurrió un error inesperado. Intente nuevamente.');
+      onError('Ocurrió un error inesperado al registrar la carta. Intente nuevamente.');
     } finally {
       setIsRegistering(false);
     }

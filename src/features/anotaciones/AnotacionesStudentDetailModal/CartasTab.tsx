@@ -124,7 +124,7 @@ export default function CartasTab({
   };
 
   const handleManualProcess = async () => {
-    const note = window.prompt('Observación del trámite procesado manualmente')?.trim();
+    const note = window.prompt('Motivo y observación del procesamiento manual. Indique qué se hizo y cuándo.')?.trim();
     if (!note) return;
     await runCartaAction(
       (carta) => markCartaProcessedManually(carta.id, note),
