@@ -48,7 +48,7 @@ async function verifyJwtViaHmac(token: string, secret: string): Promise<JwtPaylo
 
 function verifyViaSupabaseApi(token: string): Promise<JwtPayload | null> {
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const anonKey = process.env.VITE_SUPABASE_ANON_KEY;
+  const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   if (!supabaseUrl || !anonKey || !URL.canParse(supabaseUrl)) {
     return Promise.resolve(null);
   }
@@ -103,7 +103,7 @@ async function injectTenantContext(
   const user = (req as Request & { user: JwtPayload }).user;
   if (!user?.sub) return;
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const anonKey = process.env.VITE_SUPABASE_ANON_KEY;
+  const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   if (!supabaseUrl || !anonKey) return;
   try {
     const hostname = new URL(supabaseUrl).hostname;
@@ -154,15 +154,11 @@ export async function requireAuth(
     return;
   }
 
-  const JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
-  if (!JWT_SECRET) {
-    console.error('SUPABASE_JWT_SECRET no configurada');
-    res.status(500).json({ error: 'Error de configuración del servidor.' });
-    return;
-  }
-
   try {
-    const payload = await verifyJwtSignature(token, JWT_SECRET);
+    const JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
+    const payload = JWT_SECRET
+      ? await verifyJwtSignature(token, JWT_SECRET)
+      : await verifyViaSupabaseApi(token);
     if (!payload) {
       res.status(401).json({ error: 'Token JWT inválido o expirado.' });
       return;
