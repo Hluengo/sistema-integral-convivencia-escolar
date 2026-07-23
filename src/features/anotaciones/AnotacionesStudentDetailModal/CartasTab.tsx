@@ -139,11 +139,12 @@ export default function CartasTab({
 
   const handleCreate = async () => {
     setBusy(true);
+    setMessage(null);
     const carta = await ensureCarta();
     if (carta) {
-      await createCartaEvent(carta.id, 'created', 'Carta abierta en generador desde ficha disciplinaria');
       setShowGenerator(true);
-      await refreshAfterChange();
+      setMessage('Generador abierto.');
+      void createCartaEvent(carta.id, 'created', 'Carta abierta en generador desde ficha disciplinaria');
     } else {
       setMessage('No hay carta requerida para este estudiante.');
     }
