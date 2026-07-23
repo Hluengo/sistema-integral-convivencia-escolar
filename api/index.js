@@ -806,13 +806,19 @@ import { createClient } from "@supabase/supabase-js";
 var PARSER_VERSION = "disciplinary-pdf-parser-v1";
 var PDF_BUCKET = "disciplinary-processes";
 var MAX_PDF_BYTES = 10 * 1024 * 1024;
-function getSupabaseAdmin() {
+function getSupabaseAdmin(authToken) {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
+  const userScopedKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "";
+  const supabaseKey = serviceKey || userScopedKey;
   if (!supabaseUrl || !supabaseKey) {
     throw new Error("Supabase no configurado");
   }
-  return createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
+  const headers = !serviceKey && authToken ? { Authorization: `Bearer ${authToken}` } : void 0;
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false },
+    global: headers ? { headers } : void 0
+  });
 }
 function normalizeText(value) {
   return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[.,;:()[\]{}]/g, " ").replace(/\s+/g, " ").trim();
@@ -1007,7 +1013,7 @@ async function getSuggestedLetter(supabase, tenantId, summary) {
   return String(data);
 }
 async function analyzeDisciplinaryPdf(input) {
-  const supabase = getSupabaseAdmin();
+  const supabase = getSupabaseAdmin(input.authToken);
   assertStoragePathAllowed(input.bucket, input.storagePath, input.tenantId);
   const { data: fileBlob, error: downloadError } = await supabase.storage.from(input.bucket).download(input.storagePath);
   if (downloadError || !fileBlob) {
@@ -1079,7 +1085,7 @@ async function analyzeDisciplinaryPdf(input) {
   };
 }
 async function confirmDisciplinaryProcess(input) {
-  const supabase = getSupabaseAdmin();
+  const supabase = getSupabaseAdmin(input.authToken);
   assertStoragePathAllowed(input.bucket, input.storagePath, input.tenantId);
   const { data: student, error: studentError } = await supabase.from("students").select("id, tenant_id").eq("id", input.studentId).eq("tenant_id", input.tenantId).maybeSingle();
   if (studentError || !student) {
@@ -1186,6 +1192,10 @@ function assertRateLimit(req) {
   const ip = req.ip || req.connection?.remoteAddress || "unknown";
   return checkRateLimit(ip);
 }
+function getBearerToken(req) {
+  const authHeader = req.headers.authorization;
+  return authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : void 0;
+}
 function getProcessErrorResponse(error) {
   const message = error instanceof Error ? error.message : "Error interno al procesar el documento";
   if (message === "Supabase no configurado") {
@@ -1221,7 +1231,8 @@ router8.post("/process-disciplinary-pdf", async (req, res) => {
       bucket: body.bucket,
       storagePath: body.storagePath,
       fileName: body.fileName,
-      tenantId
+      tenantId,
+      authToken: getBearerToken(req)
     });
     res.json(result);
   } catch (error) {
@@ -1255,7 +1266,8 @@ router8.post("/process-disciplinary-pdf/confirm", async (req, res) => {
       studentId: body.studentId,
       suggestedLetterType: body.suggestedLetterType || "none",
       annotations: body.annotations ?? [],
-      idempotencyKey: body.idempotencyKey
+      idempotencyKey: body.idempotencyKey,
+      authToken: getBearerToken(req)
     });
     res.json(result);
   } catch (error) {

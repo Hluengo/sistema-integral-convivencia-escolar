@@ -42,6 +42,10 @@ function assertRateLimit(req: Parameters<Parameters<Router['post']>[1]>[0]): boo
   return checkRateLimit(ip);
 }
 
+function getBearerToken(req: Parameters<Parameters<Router['post']>[1]>[0]): string | undefined {
+  const authHeader = req.headers.authorization;
+  return authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
+}
 function getProcessErrorResponse(error: unknown): { status: number; message: string } {
   const message = error instanceof Error ? error.message : 'Error interno al procesar el documento';
 
@@ -90,6 +94,7 @@ router.post('/process-disciplinary-pdf', async (req, res) => {
       storagePath: body.storagePath,
       fileName: body.fileName,
       tenantId,
+      authToken: getBearerToken(req),
     });
     res.json(result);
   } catch (error) {
@@ -127,6 +132,7 @@ router.post('/process-disciplinary-pdf/confirm', async (req, res) => {
       suggestedLetterType: body.suggestedLetterType || 'none',
       annotations: body.annotations ?? [],
       idempotencyKey: body.idempotencyKey,
+      authToken: getBearerToken(req),
     });
     res.json(result);
   } catch (error) {

@@ -73,6 +73,7 @@ interface AnalyzeInput {
   storagePath: string;
   fileName: string;
   tenantId: string;
+  authToken?: string;
 }
 
 interface ConfirmAnnotationInput {
@@ -100,6 +101,7 @@ interface ConfirmInput {
   suggestedLetterType: string;
   annotations: ConfirmAnnotationInput[];
   idempotencyKey?: string;
+  authToken?: string;
 }
 
 const PARSER_VERSION = 'disciplinary-pdf-parser-v1';
@@ -125,15 +127,21 @@ interface PdfJsModule {
   };
 }
 
-export function getSupabaseAdmin(): SupabaseClient {
+export function getSupabaseAdmin(authToken?: string): SupabaseClient {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? '';
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? '';
+  const userScopedKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
+  const supabaseKey = serviceKey || userScopedKey;
 
   if (!supabaseUrl || !supabaseKey) {
     throw new Error('Supabase no configurado');
   }
 
-  return createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
+  const headers = !serviceKey && authToken ? { Authorization: `Bearer ${authToken}` } : undefined;
+  return createClient(supabaseUrl, supabaseKey, {
+    auth: { persistSession: false },
+    global: headers ? { headers } : undefined,
+  });
 }
 
 function normalizeText(value: string): string {
@@ -440,7 +448,7 @@ async function getSuggestedLetter(
 }
 
 export async function analyzeDisciplinaryPdf(input: AnalyzeInput): Promise<AnalysisResult> {
-  const supabase = getSupabaseAdmin();
+  const supabase = getSupabaseAdmin(input.authToken);
   assertStoragePathAllowed(input.bucket, input.storagePath, input.tenantId);
 
   const { data: fileBlob, error: downloadError } = await supabase.storage
@@ -533,7 +541,7 @@ export async function analyzeDisciplinaryPdf(input: AnalyzeInput): Promise<Analy
 }
 
 export async function confirmDisciplinaryProcess(input: ConfirmInput): Promise<{ success: true; processId: string; processNumber: string }> {
-  const supabase = getSupabaseAdmin();
+  const supabase = getSupabaseAdmin(input.authToken);
   assertStoragePathAllowed(input.bucket, input.storagePath, input.tenantId);
 
   const { data: student, error: studentError } = await supabase
