@@ -1,14 +1,13 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { lazy, Suspense, useState } from 'react';
-import { Ban, CheckCircle2, Download, FileText, Printer, Save, XCircle } from 'lucide-react';
+import { Ban, CheckCircle2, FileText, XCircle } from 'lucide-react';
 import type { Annotation, CartaDisciplinaria } from '@/src/shared/lib/types';
 import { TEACHERS_BY_COURSE } from '@/src/lib/anotacionesUtils';
 import {
   annulCarta,
   createCartaEvent,
   createPendingCartaForStudent,
-  fetchCartaAnnotations,
   getCartaWorkflowLabel,
   markCartaDownloadedPdf,
   markCartaDownloadedWord,
@@ -16,10 +15,6 @@ import {
   markCartaProcessedManually,
   resolveCartaWorkflowStatus,
 } from '@/src/services/cartas.service';
-import {
-  downloadHistoricalCartaPdf,
-  printHistoricalCarta,
-} from '@/src/features/anotaciones/docgen/letterPrintService';
 import {
   getSuggestedLetterType,
   mapDocTypeToLetterType,
@@ -128,28 +123,6 @@ export default function CartasTab({
     setBusy(false);
   };
 
-  const handlePrint = async (carta: CartaDisciplinaria) => {
-    const cartaAnnotations = await fetchCartaAnnotations(carta);
-    const opened = await printHistoricalCarta(
-      carta,
-      { full_name: student.full_name, course_name: student.course_name, course_id: student.course_id, rut: student.rut },
-      cartaAnnotations
-    );
-    if (opened) await markCartaPrinted(carta.id);
-    return opened;
-  };
-
-  const handleDownloadPdf = async (carta: CartaDisciplinaria) => {
-    const cartaAnnotations = await fetchCartaAnnotations(carta);
-    const downloaded = await downloadHistoricalCartaPdf(
-      carta,
-      { full_name: student.full_name, course_name: student.course_name, course_id: student.course_id, rut: student.rut },
-      cartaAnnotations
-    );
-    if (downloaded) await markCartaDownloadedPdf(carta.id);
-    return downloaded;
-  };
-
   const handleManualProcess = async () => {
     const note = window.prompt('Observación del trámite procesado manualmente')?.trim();
     if (!note) return;
@@ -221,7 +194,7 @@ export default function CartasTab({
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <h3 className="text-sm font-bold text-neutral-900">Acciones principales</h3>
-            <p className="mt-1 text-xs text-neutral-500">Una carta queda realizada solo con impresión, descarga PDF, descarga Word, registro o procesamiento manual.</p>
+            <p className="mt-1 text-xs text-neutral-500">Abre el generador para editar, imprimir o guardar la plantilla visible. El registro conserva el contenido final.</p>
           </div>
           {message && <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">{message}</span>}
         </div>
@@ -229,18 +202,6 @@ export default function CartasTab({
           <button type="button" onClick={() => void handleCreate()} disabled={!canAct || busy} className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50">
             <FileText className="h-4 w-4" />
             Crear carta
-          </button>
-          <button type="button" onClick={() => void runCartaAction(handlePrint, 'Carta impresa.')} disabled={!canAct || busy} className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 disabled:opacity-50">
-            <Printer className="h-4 w-4" />
-            Imprimir carta
-          </button>
-          <button type="button" onClick={() => void runCartaAction(handleDownloadPdf, 'Carta descargada en PDF.')} disabled={!canAct || busy} className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 disabled:opacity-50">
-            <Download className="h-4 w-4" />
-            Descargar PDF
-          </button>
-          <button type="button" onClick={() => void handleCreate()} disabled={!canAct || busy} className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 disabled:opacity-50">
-            <Save className="h-4 w-4" />
-            Descargar Word
           </button>
           <button type="button" onClick={() => void handleManualProcess()} disabled={!canAct || busy} className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50">
             <CheckCircle2 className="h-4 w-4" />
