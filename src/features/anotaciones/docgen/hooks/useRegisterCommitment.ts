@@ -18,6 +18,7 @@ interface RegisterCommitmentParams {
   compromisoStatus: string;
   teachers: Record<string, string>;
   existingCartaId?: string;
+  contentSnapshot?: Record<string, unknown>;
   onSuccess: (entry: {
     id: string;
     studentId: string;
@@ -49,6 +50,7 @@ export function useRegisterCommitment() {
       docObservations,
       compromisoStatus,
       existingCartaId,
+      contentSnapshot,
       onSuccess,
       setIsRegistering,
     } = params;
@@ -69,29 +71,21 @@ export function useRegisterCommitment() {
         annotations_count: negativeCount,
         student_name: student.full_name,
         course: student.course_id,
-        regulation_basis:
-          'RICE 2026 - Fundación Educacional Colegio Carmela Romero de Espinosa',
+        regulation_basis: 'RICE 2026 - Fundación Educacional Colegio Carmela Romero de Espinosa',
         observations: docObservations || null,
+        content_snapshot: contentSnapshot || null,
       };
 
       const result = existingCartaId
-        ? await supabase
-            .from('cartas_disciplinarias')
-            .update(payload)
-            .eq('id', existingCartaId)
-            .select('id')
-            .single()
-        : await supabase
-            .from('cartas_disciplinarias')
-            .insert(payload)
-            .select('id')
-            .single();
+        ? await supabase.from('cartas_disciplinarias').update(payload).eq('id', existingCartaId).select('id').single()
+        : await supabase.from('cartas_disciplinarias').insert(payload).select('id').single();
 
       if (!result.error && result.data) {
         const cartaId = String(result.data.id);
         await createCartaEvent(cartaId, 'registered', 'Carta registrada desde generador de anotaciones', {
           docType,
           negativeCount,
+          contentSnapshot,
         });
         onSuccess({
           id: cartaId,

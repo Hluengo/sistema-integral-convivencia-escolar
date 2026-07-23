@@ -1,7 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { CheckSquare, Square, FileText } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import type { Annotation } from '../../../types';
+import type { LetterContent } from './DocumentPreview/docTypes';
 
 interface DocumentFormProps {
   docType: string;
@@ -15,6 +16,9 @@ interface DocumentFormProps {
   onEmittedByChange: (value: string) => void;
   docObservations: string;
   onObservationsChange: (value: string) => void;
+  letterContent: LetterContent;
+  onLetterContentChange: (field: keyof LetterContent, value: string) => void;
+  onResetLetterContent: () => void;
   selectedAnnotationsForDoc: string[];
   onToggleAnnotation: (id: string) => void;
   negativeCount: number;
@@ -22,6 +26,15 @@ interface DocumentFormProps {
   onRegisterCommitment: () => void;
   isRegistering: boolean;
 }
+
+const TEXT_FIELDS: Array<{ key: keyof LetterContent; label: string; rows: number }> = [
+  { key: 'motivo', label: 'Motivo', rows: 2 },
+  { key: 'descripcion', label: 'Descripción / antecedentes', rows: 4 },
+  { key: 'medida', label: 'Medida o acuerdo', rows: 4 },
+  { key: 'acuerdos', label: 'Acuerdos / acciones', rows: 4 },
+  { key: 'cierre', label: 'Cierre', rows: 3 },
+  { key: 'observaciones', label: 'Observaciones', rows: 3 },
+];
 
 export default function DocumentForm({
   docType,
@@ -35,69 +48,62 @@ export default function DocumentForm({
   onEmittedByChange,
   docObservations,
   onObservationsChange,
-  selectedAnnotationsForDoc,
-  onToggleAnnotation,
+  letterContent,
+  onLetterContentChange,
+  onResetLetterContent,
   negativeCount,
-  annotations,
   onRegisterCommitment,
   isRegistering,
 }: DocumentFormProps) {
-  const negativeAnnotations = annotations.filter((a) => (a.type || '').toLowerCase() === 'negativa');
-
-  const selectedAnnotationsSet = new Set(selectedAnnotationsForDoc);
-
   const showAdvanced = docType === 'compromiso_conductual' || docType === 'derivacion';
 
   return (
     <div className="space-y-6">
-      {/* Apoderado */}
-      <div>
-        <label
-          htmlFor="apoderado-name"
-          className="mb-1 block font-medium text-neutral-700 text-sm"
-        >
-          Nombre del Apoderado
-        </label>
-        <input
-          id="apoderado-name" aria-label="Nombre del apoderado"
-          type="text"
-          value={apoderadoName}
-          onChange={(e) => onApoderadoNameChange(e.target.value)}
-          placeholder="Ingrese el nombre del apoderado"
-          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
-        />
+      <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-700">
+        Cantidad de anotaciones negativas consideradas: <strong>{negativeCount}</strong>
       </div>
 
-      {/* Inspector/a */}
-      <div>
-        <label
-          htmlFor="inspector-name"
-          className="mb-1 block font-medium text-neutral-700 text-sm"
-        >
-          Nombre Inspector/a
-        </label>
-        <input
-          id="inspector-name" aria-label="Nombre inspector/a"
-          type="text"
-          value={inspectorName}
-          onChange={(e) => onInspectorNameChange(e.target.value)}
-          placeholder="Ingrese el nombre del inspector/a"
-          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
-        />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="apoderado-name" className="mb-1 block text-sm font-medium text-neutral-700">
+            Nombre del Apoderado
+          </label>
+          <input
+            id="apoderado-name"
+            aria-label="Nombre del apoderado"
+            type="text"
+            value={apoderadoName}
+            onChange={(e) => onApoderadoNameChange(e.target.value)}
+            placeholder="Ingrese el nombre del apoderado"
+            className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="inspector-name" className="mb-1 block text-sm font-medium text-neutral-700">
+            Nombre Inspector/a
+          </label>
+          <input
+            id="inspector-name"
+            aria-label="Nombre inspector/a"
+            type="text"
+            value={inspectorName}
+            onChange={(e) => onInspectorNameChange(e.target.value)}
+            placeholder="Ingrese el nombre del inspector/a"
+            className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
       </div>
 
-      {/* Coordinador / Emitido por — para compromiso y derivación */}
       {showAdvanced && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label
-              htmlFor="coordinator-name"
-              className="mb-1 block font-medium text-neutral-700 text-sm"
-            >
+            <label htmlFor="coordinator-name" className="mb-1 block text-sm font-medium text-neutral-700">
               Nombre del Coordinador
             </label>
             <input
-              id="coordinator-name" aria-label="Nombre del coordinador"
+              id="coordinator-name"
+              aria-label="Nombre del coordinador"
               type="text"
               value={coordinatorName}
               onChange={(e) => onCoordinatorNameChange(e.target.value)}
@@ -106,11 +112,12 @@ export default function DocumentForm({
             />
           </div>
           <div>
-            <label htmlFor="emitted-by" className="mb-1 block font-medium text-neutral-700 text-sm">
+            <label htmlFor="emitted-by" className="mb-1 block text-sm font-medium text-neutral-700">
               Emitido por
             </label>
             <input
-              id="emitted-by" aria-label="Emitido por"
+              id="emitted-by"
+              aria-label="Emitido por"
               type="text"
               value={emittedBy}
               onChange={(e) => onEmittedByChange(e.target.value)}
@@ -121,78 +128,54 @@ export default function DocumentForm({
         </div>
       )}
 
-      {/* Observaciones — solo para compromiso y derivación */}
-      {docType !== 'amonestacion' && (
+      <section className="rounded-xl border border-neutral-200 bg-white p-4">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h5 className="text-sm font-bold text-neutral-900">Texto de la carta</h5>
+            <p className="mt-1 text-xs text-neutral-500">Estos textos actualizan la plantilla A4 en vivo.</p>
+          </div>
+          <button
+            type="button"
+            onClick={onResetLetterContent}
+            className="rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-semibold text-neutral-600 hover:bg-neutral-50"
+          >
+            Restaurar texto base
+          </button>
+        </div>
+        <div className="space-y-4">
+          {TEXT_FIELDS.map((field) => (
+            <div key={field.key}>
+              <label htmlFor={`letter-${field.key}`} className="mb-1 block text-sm font-medium text-neutral-700">
+                {field.label}
+              </label>
+              <textarea
+                id={`letter-${field.key}`}
+                value={letterContent[field.key]}
+                onChange={(event) => onLetterContentChange(field.key, event.target.value)}
+                rows={field.rows}
+                className="w-full resize-y rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          ))}
+        </div>
+      </section>
+
       <div>
-        <label
-          htmlFor="doc-observations"
-          className="mb-1 block font-medium text-neutral-700 text-sm"
-        >
-          Observaciones
+        <label htmlFor="doc-observations" className="mb-1 block text-sm font-medium text-neutral-700">
+          Observación administrativa
         </label>
         <textarea
-          id="doc-observations" aria-label="Observaciones del documento"
+          id="doc-observations"
+          aria-label="Observación administrativa del documento"
           value={docObservations}
           onChange={(e) => onObservationsChange(e.target.value)}
-          placeholder="Observaciones adicionales para el documento..."
-          rows={4}
+          placeholder="Observación administrativa para el registro en Supabase..."
+          rows={3}
           className="w-full resize-y rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
         />
       </div>
-      )}
 
-      {/* Anotaciones negativas seleccionables */}
-      <fieldset>
-        <legend className="block font-medium text-neutral-700 text-sm">
-          Anotaciones Negativas ({negativeCount})
-        </legend>
-        {selectedAnnotationsForDoc.length > 0 && (
-          <span className="mb-2 block font-medium text-brand-600 text-xs">
-            {selectedAnnotationsForDoc.length} seleccionada(s)
-          </span>
-        )}
-        {negativeAnnotations.length === 0 ? (
-          <p className="text-neutral-500 text-sm italic">
-            No hay anotaciones negativas para seleccionar.
-          </p>
-        ) : (
-          <div className="max-h-60 space-y-1.5 overflow-y-auto rounded-lg border border-neutral-200 p-2">
-            {negativeAnnotations.map((a) => {
-              const isSelected = selectedAnnotationsSet.has(a.id);
-              return (
-                <button
-                  key={a.id}
-                  type="button"
-                  onClick={() => onToggleAnnotation(a.id)}
-                  className={`flex w-full items-start gap-2.5 rounded-md p-2.5 text-left transition-colors ${
-                    isSelected
-                      ? 'border border-brand-200 bg-brand-50'
-                      : 'border border-neutral-100 bg-white hover:bg-neutral-50'
-                  }`}
-                >
-                  {isSelected ? (
-                    <CheckSquare className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
-                  ) : (
-                    <Square className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <span className="block truncate font-medium text-neutral-800 text-sm">
-                      {(a as Annotation).text || ''}
-                    </span>
-                    <span className="mt-0.5 block text-neutral-500 text-xs">
-                      {(a as Annotation).date ? new Date((a as Annotation).date).toLocaleDateString('es-CL') : ''} &middot;{' '}
-                      {(a as Annotation).severity || 'Sin asignatura'}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </fieldset>
-
-      {/* Botón de registro y emisión */}
-      <div className="border-neutral-200 border-t pt-4">
+      <div className="border-t border-neutral-200 pt-4">
         <button
           type="button"
           onClick={onRegisterCommitment}

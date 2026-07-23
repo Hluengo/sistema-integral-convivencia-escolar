@@ -49,6 +49,7 @@ export interface CauseRow {
   regulation_basis: string;
   observations?: string | null;
   created_at: string;
+  content_snapshot?: Record<string, unknown> | null;
 }
 
 export function mapCauseRowToCarta(row: CauseRow): CartaDisciplinaria {
@@ -71,6 +72,7 @@ export function mapCauseRowToCarta(row: CauseRow): CartaDisciplinaria {
     regulation_basis: row.regulation_basis,
     observations: row.observations || undefined,
     created_at: row.created_at,
+    content_snapshot: row.content_snapshot || null,
   };
 }
 

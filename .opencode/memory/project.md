@@ -154,6 +154,7 @@ Tenant (Establecimiento Educacional)
   │   ├── student_id, letter_type (Amonestación|Compromiso|Derivación)
   │   ├── emission_date, status (Vigente|Cumplida|Incumplida|Anulada)
   │   ├── emitted_by, supervisor_name, apoderado_name
+  │   ├── content_snapshot (JSONB con textos editados y datos visibles congelados)
   │   └── tenant_id
   │
   ├── CartaEvents

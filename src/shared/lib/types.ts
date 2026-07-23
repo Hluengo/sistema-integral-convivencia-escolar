@@ -213,6 +213,7 @@ export interface CartaDisciplinaria {
   annulled_reason?: string | null;
   source_analysis_id?: string | null;
   source_process_id?: string | null;
+  content_snapshot?: Record<string, unknown> | null;
 }
 
 export interface EtapaDisciplinaria {

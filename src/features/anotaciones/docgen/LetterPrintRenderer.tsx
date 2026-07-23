@@ -6,7 +6,7 @@ import { mapLetterTypeToDocType } from '@/src/shared/lib/domain/disciplinaryStag
 import AmonestacionContent from './DocumentPreview/AmonestacionContent';
 import CompromisoContent from './DocumentPreview/CompromisoContent';
 import DerivacionContent from './DocumentPreview/DerivacionContent';
-import { TITLE_MAP, type DocType } from './DocumentPreview/docTypes';
+import { DEFAULT_LETTER_CONTENT, TITLE_MAP, type DocType, type LetterContent } from './DocumentPreview/docTypes';
 
 export interface LetterPrintStudent {
   full_name: string;
@@ -31,28 +31,58 @@ function formatEmissionDate(date: string): string {
   });
 }
 
+function isLetterContent(value: unknown): value is LetterContent {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Record<keyof LetterContent, unknown>;
+  return ['motivo', 'descripcion', 'medida', 'acuerdos', 'cierre', 'observaciones'].every(
+    (field) => typeof candidate[field as keyof LetterContent] === 'string'
+  );
+}
+
+function getSnapshotString(snapshot: Record<string, unknown> | null | undefined, key: string): string | null {
+  const value = snapshot?.[key];
+  return typeof value === 'string' ? value : null;
+}
+
 export default function LetterPrintRenderer({
   carta,
   student,
   annotations = [],
 }: LetterPrintRendererProps) {
-  const docType = mapLetterTypeToDocType(carta.letter_type) || 'amonestacion';
-  const currentName = student?.full_name || carta.student_name;
-  const currentCourse = student?.course_name || student?.course_id || carta.course || '-';
+  const docType = (mapLetterTypeToDocType(carta.letter_type) || 'amonestacion') as DocType;
+  const snapshot = carta.content_snapshot;
+  const snapshotStudent = snapshot?.student && typeof snapshot.student === 'object'
+    ? (snapshot.student as Record<string, unknown>)
+    : null;
+  const letterContent = isLetterContent(snapshot?.letterContent)
+    ? snapshot.letterContent
+    : DEFAULT_LETTER_CONTENT[docType];
+
+  const currentName =
+    student?.full_name ||
+    (typeof snapshotStudent?.fullName === 'string' ? snapshotStudent.fullName : null) ||
+    carta.student_name;
+  const currentCourse =
+    student?.course_name ||
+    student?.course_id ||
+    (typeof snapshotStudent?.course === 'string' ? snapshotStudent.course : null) ||
+    carta.course ||
+    '-';
   const sharedProps = {
     currentName,
-    currentRut: student?.rut || '',
+    currentRut: student?.rut || (typeof snapshotStudent?.rut === 'string' ? snapshotStudent.rut : '') || '',
     currentCourse,
     currentTeacher: student?.teacher_name || 'Sin Profesor',
-    coordinatorName: carta.supervisor_name || '',
-    inspectorName: carta.emitted_by || '',
-    apoderadoName: carta.apoderado_name || '',
-    dateStr: formatEmissionDate(carta.emission_date),
-    negativeCount: Number(carta.annotations_count) || annotations.length,
+    coordinatorName: getSnapshotString(snapshot, 'coordinatorName') || carta.supervisor_name || '',
+    inspectorName: getSnapshotString(snapshot, 'inspectorName') || carta.emitted_by || '',
+    apoderadoName: getSnapshotString(snapshot, 'apoderadoName') || carta.apoderado_name || '',
+    dateStr: getSnapshotString(snapshot, 'emissionDate') || formatEmissionDate(carta.emission_date),
+    negativeCount: Number(snapshot?.negativeCount) || Number(carta.annotations_count) || annotations.length,
     docObservations: carta.observations || '',
     selectedAnnsObjects: annotations,
+    letterContent,
   };
-  const title = TITLE_MAP[docType as DocType] ?? carta.letter_type;
+  const title = TITLE_MAP[docType] ?? carta.letter_type;
 
   return (
     <div

@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Annotation } from '@/src/types';
 import { getCurrentDateStr, getSemaphoricStyle } from '@/src/lib/anotacionesUtils';
 import DocTypeSelector from './docgen/DocTypeSelector';
@@ -9,17 +9,32 @@ import DocumentPreview from './docgen/DocumentPreview';
 import DocumentWarnings from './docgen/DocumentWarnings';
 import { useDocumentState } from './docgen/hooks/useDocumentState';
 import { useSelectedAnnotations } from './docgen/hooks/useSelectedAnnotations';
+import { useDocumentExport } from './docgen/hooks/useDocumentExport';
 import { useDocumentRegistry } from './docgen/hooks/useDocumentRegistry';
 import { useRegisterCommitment } from './docgen/hooks/useRegisterCommitment';
 import GeneratorHeader from './docgen/components/GeneratorHeader';
 import ExportError from './docgen/components/ExportError';
 import EmissionConfirmDialog from './docgen/components/EmissionConfirmDialog';
 import RecentlyEmitted from './docgen/components/RecentlyEmitted';
+import { TITLE_MAP, type DocType, type LetterContent } from './docgen/DocumentPreview/docTypes';
 
 function getDocumentStyles(): string {
   return Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
     .map((styleNode) => styleNode.outerHTML)
     .join('\n');
+}
+
+function isLetterContent(value: unknown): value is LetterContent {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Record<keyof LetterContent, unknown>;
+  return ['motivo', 'descripcion', 'medida', 'acuerdos', 'cierre', 'observaciones'].every(
+    (field) => typeof candidate[field as keyof LetterContent] === 'string'
+  );
+}
+
+function getSnapshotString(snapshot: Record<string, unknown> | null | undefined, key: string): string | null {
+  const value = snapshot?.[key];
+  return typeof value === 'string' ? value : null;
 }
 
 function openPrintWindow(html: string, title: string): boolean {
@@ -63,7 +78,11 @@ interface AnotacionesDocumentGeneratorProps {
   teachers: Record<string, string>;
   initialDocType?: string;
   existingCartaId?: string;
-  onLetterAction?: (action: 'printed' | 'downloaded_pdf') => void | Promise<void>;
+  negativeCount?: number;
+  sourceAnalysisId?: string | null;
+  sourceProcessId?: string | null;
+  initialContentSnapshot?: Record<string, unknown> | null;
+  onLetterAction?: (action: 'printed' | 'downloaded_pdf' | 'downloaded_word') => void | Promise<void>;
   onRegistered?: () => void | Promise<void>;
 }
 
@@ -74,16 +93,22 @@ export default function AnotacionesDocumentGenerator({
   teachers,
   initialDocType,
   existingCartaId,
+  negativeCount: providedNegativeCount,
+  sourceAnalysisId,
+  sourceProcessId,
+  initialContentSnapshot,
   onLetterAction,
   onRegistered,
 }: AnotacionesDocumentGeneratorProps) {
   const initialDocTypeApplied = useRef(false);
+  const initialSnapshotApplied = useRef(false);
   const negativeAnnotations = annotations.filter((a) => a.type === 'Negativa');
-  const negativeCount = negativeAnnotations.length;
+  const negativeCount = providedNegativeCount ?? negativeAnnotations.length;
   const semaphoric = getSemaphoricStyle(negativeCount);
 
   const documentState = useDocumentState();
   const selectedAnnotations = useSelectedAnnotations(annotations);
+  const documentExport = useDocumentExport();
   const documentRegistry = useDocumentRegistry();
   const registerCommitment = useRegisterCommitment();
   const previewRef = useRef<HTMLDivElement>(null);
@@ -92,10 +117,12 @@ export default function AnotacionesDocumentGenerator({
 
   useEffect(() => {
     if (initialDocType && !initialDocTypeApplied.current) {
-      setDocType(initialDocType as 'amonestacion' | 'compromiso_conductual' | 'derivacion');
+      const nextDocType = initialDocType as DocType;
+      setDocType(nextDocType);
+      documentState.loadDefaultLetterContent(nextDocType);
       initialDocTypeApplied.current = true;
     }
-  }, [initialDocType, setDocType]);
+  }, [documentState, initialDocType, setDocType]);
 
   const hasInitialDocType = initialDocType !== undefined;
 
@@ -103,10 +130,12 @@ export default function AnotacionesDocumentGenerator({
     if (hasInitialDocType) return;
     if (negativeCount >= 10 && docType !== 'compromiso_conductual') {
       setDocType('compromiso_conductual');
+      documentState.loadDefaultLetterContent('compromiso_conductual');
     } else if (negativeCount < 10 && docType === 'compromiso_conductual') {
       setDocType('amonestacion');
+      documentState.loadDefaultLetterContent('amonestacion');
     }
-  }, [negativeCount, docType, setDocType, hasInitialDocType]);
+  }, [documentState, negativeCount, docType, setDocType, hasInitialDocType]);
 
   useEffect(() => {
     selectedAnnotations.selectAllNegative();
@@ -115,6 +144,71 @@ export default function AnotacionesDocumentGenerator({
 
   const [exportError, setExportError] = useState<string | null>(null);
   const [showEmissionConfirm, setShowEmissionConfirm] = useState(false);
+
+  const selectedAnnsObjects = selectedAnnotations.selectedAnnsObjects;
+  const dateStr = getCurrentDateStr();
+  const title = TITLE_MAP[docType];
+
+  const contentSnapshot = useMemo(() => ({
+    templateVersion: 'disciplinary-letter-v2',
+    docType,
+    title,
+    negativeCount,
+    letterContent: documentState.letterContent,
+    student: {
+      id: student.id,
+      fullName: student.full_name,
+      course: student.course_id,
+      rut: student.rut || null,
+    },
+    apoderadoName: documentState.apoderadoName,
+    inspectorName: documentState.inspectorName,
+    coordinatorName: documentState.coordinatorName,
+    emittedBy: documentState.emittedBy || 'Inspectoría',
+    emissionDate: dateStr,
+    sourceAnalysisId: sourceAnalysisId || null,
+    sourceProcessId: sourceProcessId || null,
+    administrativeObservation: documentState.docObservations || null,
+  }), [
+    dateStr,
+    docType,
+    documentState.apoderadoName,
+    documentState.coordinatorName,
+    documentState.docObservations,
+    documentState.emittedBy,
+    documentState.inspectorName,
+    documentState.letterContent,
+    negativeCount,
+    sourceAnalysisId,
+    sourceProcessId,
+  initialContentSnapshot,
+    student.course_id,
+    student.full_name,
+    student.id,
+    student.rut,
+    title,
+  ]);
+
+  const previewContent = useMemo(() => ({
+    title,
+    content: [
+      documentState.letterContent.motivo,
+      documentState.letterContent.descripcion,
+      documentState.letterContent.medida,
+      documentState.letterContent.acuerdos,
+      documentState.letterContent.cierre,
+      documentState.letterContent.observaciones,
+    ].filter(Boolean).join('\n\n'),
+    metadata: {
+      Estudiante: student.full_name,
+      Curso: student.course_id,
+      RUN: student.rut || '-',
+      'Anotaciones negativas': String(negativeCount),
+      'Tipo de documento': title,
+      'Fecha de emisión': dateStr,
+    },
+    letterContent: documentState.letterContent,
+  }), [dateStr, documentState.letterContent, negativeCount, student.course_id, student.full_name, student.rut, title]);
 
   const handleRegisterCommitment = registerCommitment.handleRegisterCommitment;
 
@@ -130,6 +224,7 @@ export default function AnotacionesDocumentGenerator({
       compromisoStatus: 'Vigente',
       teachers,
       existingCartaId,
+      contentSnapshot,
       onSuccess: (entry) => {
         documentRegistry.addEntry(entry);
         void onRegistered?.();
@@ -148,13 +243,7 @@ export default function AnotacionesDocumentGenerator({
     registerCarta(() => handleExportPDF());
   };
 
-  const selectedAnnsObjects = selectedAnnotations.selectedAnnsObjects;
-
-  const getPreviewHtml = () => {
-    const el = previewRef.current;
-    if (!el) return '';
-    return el.outerHTML;
-  };
+  const getPreviewHtml = () => previewRef.current?.outerHTML || '';
 
   const handlePrintDoc = () => {
     setExportError(null);
@@ -186,15 +275,23 @@ export default function AnotacionesDocumentGenerator({
     setShowEmissionConfirm(true);
   };
 
+  const handleExportWord = async () => {
+    setExportError(null);
+    try {
+      const blob = await documentExport.generateWord(previewContent);
+      documentExport.downloadBlob(blob, `Carta_${docType}_${student.full_name.replace(/\s+/g, '_')}.docx`);
+      void onLetterAction?.('downloaded_word');
+      setShowEmissionConfirm(true);
+    } catch (err) {
+      setExportError(err instanceof Error ? err.message : 'No se pudo generar el documento Word.');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <ExportError message={exportError} onClose={() => setExportError(null)} />
 
-      <EmissionConfirmDialog
-        isOpen={showEmissionConfirm}
-        onConfirm={handleEmitAfterExport}
-        onCancel={() => setShowEmissionConfirm(false)}
-      />
+      <EmissionConfirmDialog isOpen={showEmissionConfirm} onConfirm={handleEmitAfterExport} onCancel={() => setShowEmissionConfirm(false)} />
 
       <div className="mx-auto w-full max-w-[210mm] space-y-5">
         <GeneratorHeader negativeCount={negativeCount} semaphoric={semaphoric} />
@@ -202,7 +299,11 @@ export default function AnotacionesDocumentGenerator({
         <div className="space-y-4 rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
           <DocTypeSelector
             docType={docType}
-            onDocTypeChange={(type: string) => setDocType(type as 'amonestacion' | 'compromiso_conductual' | 'derivacion')}
+            onDocTypeChange={(type: string) => {
+              const nextDocType = type as DocType;
+              setDocType(nextDocType);
+              documentState.loadDefaultLetterContent(nextDocType);
+            }}
             hasTenOrMore={negativeCount >= 10}
             negativeCount={negativeCount}
           />
@@ -236,6 +337,9 @@ export default function AnotacionesDocumentGenerator({
             onInspectorNameChange={documentState.setInspectorName}
             docObservations={documentState.docObservations}
             onObservationsChange={documentState.setDocObservations}
+            letterContent={documentState.letterContent}
+            onLetterContentChange={documentState.updateLetterContent}
+            onResetLetterContent={() => documentState.resetLetterContent(docType)}
             selectedAnnotationsForDoc={Array.from(selectedAnnotations.selectedIds)}
             onToggleAnnotation={selectedAnnotations.toggleAnnotation}
             negativeCount={negativeCount}
@@ -256,13 +360,15 @@ export default function AnotacionesDocumentGenerator({
         coordinatorName={documentState.coordinatorName}
         inspectorName={documentState.inspectorName}
         apoderadoName={documentState.apoderadoName}
-        dateStr={getCurrentDateStr()}
+        dateStr={dateStr}
         negativeCount={negativeCount}
         docObservations={documentState.docObservations}
         selectedAnnsObjects={selectedAnnsObjects}
         hasTenOrMore={negativeCount >= 10}
+        letterContent={documentState.letterContent}
         onPrint={handlePrintDoc}
         onExportPDF={handleExportPDF}
+        onExportWord={handleExportWord}
       />
 
       <div className="mx-auto w-full max-w-[210mm]">

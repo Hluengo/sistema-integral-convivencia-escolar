@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { lazy, Suspense, useState } from 'react';
-import { Ban, CheckCircle2, Download, FileText, Printer, XCircle } from 'lucide-react';
+import { Ban, CheckCircle2, Download, FileText, Printer, Save, XCircle } from 'lucide-react';
 import type { Annotation, CartaDisciplinaria } from '@/src/shared/lib/types';
 import { TEACHERS_BY_COURSE } from '@/src/lib/anotacionesUtils';
 import {
@@ -11,6 +11,7 @@ import {
   fetchCartaAnnotations,
   getCartaWorkflowLabel,
   markCartaDownloadedPdf,
+  markCartaDownloadedWord,
   markCartaPrinted,
   markCartaProcessedManually,
   resolveCartaWorkflowStatus,
@@ -165,11 +166,12 @@ export default function CartasTab({
     await runCartaAction((carta) => annulCarta(carta.id, reason), 'Carta anulada.');
   };
 
-  const handleGeneratorAction = async (action: 'printed' | 'downloaded_pdf') => {
+  const handleGeneratorAction = async (action: 'printed' | 'downloaded_pdf' | 'downloaded_word') => {
     const carta = await ensureCarta();
     if (!carta) return;
     if (action === 'printed') await markCartaPrinted(carta.id);
     if (action === 'downloaded_pdf') await markCartaDownloadedPdf(carta.id);
+    if (action === 'downloaded_word') await markCartaDownloadedWord(carta.id);
     setMessage('Acción de carta registrada.');
   };
 
@@ -219,7 +221,7 @@ export default function CartasTab({
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <h3 className="text-sm font-bold text-neutral-900">Acciones principales</h3>
-            <p className="mt-1 text-xs text-neutral-500">Una carta queda realizada solo con impresión, descarga PDF, registro o procesamiento manual.</p>
+            <p className="mt-1 text-xs text-neutral-500">Una carta queda realizada solo con impresión, descarga PDF, descarga Word, registro o procesamiento manual.</p>
           </div>
           {message && <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">{message}</span>}
         </div>
@@ -235,6 +237,10 @@ export default function CartasTab({
           <button type="button" onClick={() => void runCartaAction(handleDownloadPdf, 'Carta descargada en PDF.')} disabled={!canAct || busy} className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 disabled:opacity-50">
             <Download className="h-4 w-4" />
             Descargar PDF
+          </button>
+          <button type="button" onClick={() => void handleCreate()} disabled={!canAct || busy} className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-700 hover:bg-neutral-50 disabled:opacity-50">
+            <Save className="h-4 w-4" />
+            Descargar Word
           </button>
           <button type="button" onClick={() => void handleManualProcess()} disabled={!canAct || busy} className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50">
             <CheckCircle2 className="h-4 w-4" />
@@ -272,6 +278,7 @@ export default function CartasTab({
               teachers={teachers}
               initialDocType={activeDocType}
               existingCartaId={activeCarta?.id || localCarta?.id}
+              initialContentSnapshot={activeCarta?.content_snapshot || localCarta?.content_snapshot || null}
               onLetterAction={handleGeneratorAction}
               onRegistered={() => void refreshAfterChange()}
             />
