@@ -968,12 +968,15 @@ async function extractPdfPages(buffer) {
     isEvalSupported: false
   }).promise;
   const pages = [];
-  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-    const page = await pdf.getPage(pageNumber);
-    const content = await page.getTextContent();
-    const text = content.items.map((item) => (item.str ?? "") + (item.hasEOL ? "\n" : " ")).join("").replace(/[^\S\n]+/g, " ").replace(/\s*\n\s*/g, "\n").trim();
-    pages.push(text);
-  }
+  const pagePromises = Array.from({ length: pdf.numPages }, (_, i) => i + 1).map(
+    async (pageNumber) => {
+      const page = await pdf.getPage(pageNumber);
+      const content = await page.getTextContent();
+      return content.items.map((item) => (item.str ?? "") + (item.hasEOL ? "\n" : " ")).join("").replace(/[^\S\n]+/g, " ").replace(/\s*\n\s*/g, "\n").trim();
+    }
+  );
+  const resolvedPages = await Promise.all(pagePromises);
+  pages.push(...resolvedPages);
   return pages;
 }
 function extractCourse(text) {
@@ -990,7 +993,9 @@ function extractCourse(text) {
     }
   }
   const normalizedText = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const courseMatch = normalizedText.match(/\b(?:\d{1,2}\s*(?:°\s*)?[A-Z]\s*(?:MEDIO|BASICO|BASICA)|\d{1,2}\s*(?:°\s*)?(?:MEDIO|BASICO|BASICA)\s*[A-Z])\b/i);
+  const courseMatch = normalizedText.match(
+    /\b(?:\d{1,2}\s*(?:°\s*)?[A-Z]\s*(?:MEDIO|BASICO|BASICA)|\d{1,2}\s*(?:°\s*)?(?:MEDIO|BASICO|BASICA)\s*[A-Z])\b/i
+  );
   return courseMatch?.[0] ? normalizeCourseLabel(courseMatch[0]) : null;
 }
 function extractStudentName(text) {
@@ -1066,7 +1071,12 @@ function parseAnnotationsByPage(pages) {
       const normalizedBlock = normalizeText(block);
       const detectedDate = toIsoDate(dateMatch?.[1]);
       const detectedTeacher = teacherMatch?.[1]?.trim() ?? null;
-      const dedupeKey = [pageIndex + 1, classification.type, detectedDate ?? "", normalizedBlock].join("|");
+      const dedupeKey = [
+        pageIndex + 1,
+        classification.type,
+        detectedDate ?? "",
+        normalizedBlock
+      ].join("|");
       if (seenAnnotations.has(dedupeKey)) return;
       seenAnnotations.add(dedupeKey);
       annotations.push({
@@ -1104,7 +1114,7 @@ function buildNameTokenQuery(parts) {
 }
 async function enrichStudentRows(supabase, rows, confidence, status) {
   if (rows.length === 0) return [];
-  const courseIds = [...new Set(rows.map((row) => row.course_id).filter(Boolean))];
+  const courseIds = [...new Set(rows.flatMap((row) => row.course_id ? [row.course_id] : []))];
   const { data: courses } = courseIds.length ? await supabase.from("courses").select("id, name").in("id", courseIds) : { data: [] };
   const courseMap = new Map(
     (courses ?? []).map((course) => [course.id, course.name])
@@ -1167,15 +1177,22 @@ async function findStudentCandidates(supabase, tenantId, detectedName, detectedC
     };
   }
   const detectedPartSet = new Set(detectedParts);
-  let approximate = (tenantStudents ?? []).map((student) => {
+  const scored = [];
+  for (const student of tenantStudents ?? []) {
     const studentParts = new Set(getNameParts(student.full_name));
     const overlap = [...detectedPartSet].filter((part) => studentParts.has(part)).length;
     const denominator = Math.max(detectedPartSet.size, studentParts.size, 1);
     const courseBoost = detectedCourseKey && student.course_id && courseKeyById.get(student.course_id) === detectedCourseKey ? 0.15 : 0;
-    return { student, score: overlap / denominator + courseBoost };
-  }).filter((item) => item.score >= 0.5).sort((a, b) => b.score - a.score).slice(0, 8);
+    const score = overlap / denominator + courseBoost;
+    if (score >= 0.5) scored.push({ student, score });
+  }
+  scored.sort((a, b) => b.score - a.score);
+  let approximate = scored.slice(0, 8);
   if (approximate.length === 0 && detectedCourseKey) {
-    const courseIds = (courseRows ?? []).filter((course) => courseMatchKey(course.name) === detectedCourseKey).map((course) => course.id);
+    const courseIds = [];
+    for (const course of courseRows ?? []) {
+      if (courseMatchKey(course.name) === detectedCourseKey) courseIds.push(course.id);
+    }
     if (courseIds.length > 0) {
       const { data: courseStudents } = await supabase.from("students").select(baseSelect).eq("tenant_id", tenantId).in("course_id", courseIds).limit(50);
       approximate = (courseStudents ?? []).slice(0, 8).map((student) => ({ student, score: 0.45 }));
@@ -1316,13 +1333,10 @@ async function analyzeDisciplinaryPdf(input) {
   const detectedCourse = extractCourse(textContent);
   const annotations = normalizeText(textContent).length < 20 ? [] : parseAnnotationsByPage(pages);
   const summary = summarizeAnnotations(annotations);
-  const recommendedLetterType = await getSuggestedLetter(supabase, input.tenantId, summary);
-  const studentMatch = await findStudentCandidates(
-    supabase,
-    input.tenantId,
-    detectedStudentName,
-    detectedCourse
-  );
+  const [recommendedLetterType, studentMatch] = await Promise.all([
+    getSuggestedLetter(supabase, input.tenantId, summary),
+    findStudentCandidates(supabase, input.tenantId, detectedStudentName, detectedCourse)
+  ]);
   if (!detectedStudentName) warnings.push("No se pudo detectar un nombre de estudiante en el PDF.");
   if (annotations.length === 0 && normalizeText(textContent).length >= 20)
     warnings.push("No se detectaron anotaciones clasificables en el documento.");

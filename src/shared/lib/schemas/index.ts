@@ -47,11 +47,17 @@ export const ChecklistItemSchema = z.object({
   documentoUrl: z.string().optional(),
 });
 
-export const EstadoCausaEnum = z.nativeEnum(EstadoCausa);
+export const EstadoCausaEnum = z.enum(Object.values(EstadoCausa));
 
 export const TipoInfraccionEnum = z.enum(['Leve', 'Grave', 'Muy Grave', 'Gravísima']);
 
-export const FaseProcedimentalSchema = z.enum(['Recepción', 'Investigación', 'Resolución', 'Apelación', 'Seguimiento']);
+export const FaseProcedimentalSchema = z.enum([
+  'Recepción',
+  'Investigación',
+  'Resolución',
+  'Apelación',
+  'Seguimiento',
+]);
 
 export const CausaSchema = z.object({
   id: z.string(),
@@ -99,7 +105,12 @@ export const StatisticsSchema = z.object({
   aulaSeguraActivas: z.number(),
 });
 
-export const UserRoleSchema = z.enum(['convivencia_escolar', 'director_rector', 'mediador', 'docente']);
+export const UserRoleSchema = z.enum([
+  'convivencia_escolar',
+  'director_rector',
+  'mediador',
+  'docente',
+]);
 
 export const DisciplinaryStatusSchema = z.enum(['Verde', 'Amarillo', 'Naranja', 'Rojo']);
 
@@ -132,7 +143,11 @@ export const AnnotationSchema = z.object({
 export const CartaDisciplinariaSchema = z.object({
   id: z.string(),
   student_id: z.string(),
-  letter_type: z.enum(['Amonestación Escrita', 'Carta de Compromiso Conductual', 'Ficha de Derivación']),
+  letter_type: z.enum([
+    'Amonestación Escrita',
+    'Carta de Compromiso Conductual',
+    'Ficha de Derivación',
+  ]),
   emission_date: z.string(),
   status: z.enum(['Vigente', 'Cumplida', 'Incumplida', 'Anulada']),
   emitted_by: z.string(),

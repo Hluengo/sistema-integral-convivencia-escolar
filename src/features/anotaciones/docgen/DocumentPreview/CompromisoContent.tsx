@@ -4,10 +4,11 @@ import { Section, DataRow } from './SharedComponents';
 import type { DocContentProps } from './docTypes';
 
 export default function CompromisoContent(props: DocContentProps) {
-  const { currentName, currentCourse, apoderadoName, dateStr, coordinatorName, letterContent } = props;
+  const { currentName, currentCourse, apoderadoName, dateStr, coordinatorName, letterContent } =
+    props;
 
   return (
-    <div className="space-y-1">
+    <div>
       <Section number={1} title="Antecedentes">
         <DataRow label="Nombre del Estudiante" value={currentName} />
         <DataRow label="RUT" value={props.currentRut} />
@@ -26,7 +27,7 @@ export default function CompromisoContent(props: DocContentProps) {
 
       <Section number={3} title="Descripción / antecedentes">
         <p>{letterContent.descripcion}</p>
-        <p className="mt-2">
+        <p style={{ marginTop: '8px' }}>
           Cantidad de anotaciones negativas consideradas: <strong>{props.negativeCount}</strong>.
         </p>
       </Section>
@@ -36,27 +37,42 @@ export default function CompromisoContent(props: DocContentProps) {
       </Section>
 
       <Section number={5} title="Acuerdos y seguimiento">
-        <p className="whitespace-pre-line">{letterContent.acuerdos}</p>
-        <p className="mt-3 whitespace-pre-line text-neutral-600">{letterContent.cierre}</p>
+        <p style={{ whiteSpace: 'pre-line' }}>{letterContent.acuerdos}</p>
+        <p style={{ marginTop: '12px', whiteSpace: 'pre-line', color: '#4b5563' }}>
+          {letterContent.cierre}
+        </p>
         {letterContent.observaciones && (
-          <p className="mt-2 whitespace-pre-line text-neutral-600 italic">Observaciones: {letterContent.observaciones}</p>
+          <p
+            style={{
+              marginTop: '8px',
+              whiteSpace: 'pre-line',
+              color: '#4b5563',
+              fontStyle: 'italic',
+            }}
+          >
+            Observaciones: {letterContent.observaciones}
+          </p>
         )}
       </Section>
 
-      <div className="mt-8 border-t border-neutral-300 pt-4">
-        <p className="mb-6 text-center text-xs font-bold uppercase tracking-wide text-neutral-700">Firma de Compromiso</p>
-        <div className="grid grid-cols-3 gap-6 text-xs text-neutral-600">
-          <div className="text-center">
-            <div className="mt-8 border-t border-neutral-400 pt-1">{currentName}</div>
-            <p className="mt-0.5 text-[10px] text-neutral-500">Estudiante</p>
+      <div className="letter-signatures">
+        <p className="letter-signatures-title">Firma de Compromiso</p>
+        <div className="letter-signatures-grid letter-signatures-grid-3">
+          <div className="letter-signature-item">
+            <div className="letter-signature-line">{currentName}</div>
+            <p className="letter-signature-role">Estudiante</p>
           </div>
-          <div className="text-center">
-            <div className="mt-8 border-t border-neutral-400 pt-1">{apoderadoName || '_________________________'}</div>
-            <p className="mt-0.5 text-[10px] text-neutral-500">Apoderado/a</p>
+          <div className="letter-signature-item">
+            <div className="letter-signature-line">
+              {apoderadoName || '_________________________'}
+            </div>
+            <p className="letter-signature-role">Apoderado/a</p>
           </div>
-          <div className="text-center">
-            <div className="mt-8 border-t border-neutral-400 pt-1">{coordinatorName || '_________________________'}</div>
-            <p className="mt-0.5 text-[10px] text-neutral-500">Coordinador/a de Ciclo</p>
+          <div className="letter-signature-item">
+            <div className="letter-signature-line">
+              {coordinatorName || '_________________________'}
+            </div>
+            <p className="letter-signature-role">Coordinador/a de Ciclo</p>
           </div>
         </div>
       </div>

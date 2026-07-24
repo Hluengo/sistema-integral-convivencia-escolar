@@ -1,10 +1,16 @@
-/** @license SPDX-License-Identifier: Apache-2.0 */
+/**
+ * @license SPDX-License-Identifier: Apache-2.0
+ *
+ * Letter Print Service — Servicio unificado para cartas historicas.
+ * Reutiliza LetterA4Document + letterExportService para impresion y descarga.
+ */
 
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { Annotation, CartaDisciplinaria } from '@/src/shared/lib/types';
 import { supabase } from '@/src/lib/supabase';
 import LetterPrintRenderer, { type LetterPrintStudent } from './LetterPrintRenderer';
+import { TITLE_MAP, type DocType } from './DocumentPreview/docTypes';
 
 function getDocumentStyles(): string {
   return Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
@@ -28,14 +34,10 @@ function buildLetterHtml(
   <title>${carta.letter_type}</title>
   ${getDocumentStyles()}
   <style>
-    html, body { margin: 0; background: #fff; }
-    body { display: flex; justify-content: center; color: #111827; }
     @page { size: A4; margin: 0; }
-    @media print {
-      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      html, body { width: 210mm; min-height: 297mm; }
-      #document-preview-a4 { max-width: none !important; box-shadow: none !important; border: 0 !important; border-radius: 0 !important; }
-    }
+    html, body { margin: 0; padding: 0; width: 210mm; background: white; }
+    body { display: flex; justify-content: center; color: #111827; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   </style>
 </head>
 <body>${markup}</body>
@@ -122,4 +124,18 @@ export async function downloadHistoricalCartaPdf(
   const opened = openPrintWindow(buildLetterHtml(carta, student, annotations));
   if (opened) await recordLetterOutputEvent(carta, 'download');
   return opened;
+}
+
+/**
+ * @deprecated Usar printLetter() de letterExportService.ts para cartas nuevas.
+ * Mantener solo para cartas historicas que usan renderToStaticMarkup.
+ */
+export function getDocTypeLabel(carta: CartaDisciplinaria): string {
+  const docTypeMap: Record<string, DocType> = {
+    'Amonestacion Escrita': 'amonestacion',
+    'Carta de Compromiso Conductual': 'compromiso_conductual',
+    'Ficha de Derivacion': 'derivacion',
+  };
+  const docType = docTypeMap[carta.letter_type] || 'amonestacion';
+  return TITLE_MAP[docType] || carta.letter_type;
 }

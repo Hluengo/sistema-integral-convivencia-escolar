@@ -89,11 +89,14 @@ export function useStudentPdfDisciplinaryReview({
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [annotations, setAnnotations] = useState<ReviewAnnotation[]>([]);
   const [summary, setSummary] = useState<AnnotationSummary | null>(null);
-  const [status, setStatus] = useState<'idle' | 'uploading' | 'processing' | 'ready' | 'confirming' | 'success' | 'error'>('idle');
+  const [status, setStatus] = useState<
+    'idle' | 'uploading' | 'processing' | 'ready' | 'confirming' | 'success' | 'error'
+  >('idle');
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
+  const idempotencyKeyRef = useRef<string | null>(null);
+  if (idempotencyKeyRef.current === null) idempotencyKeyRef.current = crypto.randomUUID();
   const abortRef = useRef<AbortController | null>(null);
 
   const cleanupDraft = useCallback(async () => {
@@ -111,7 +114,7 @@ export function useStudentPdfDisciplinaryReview({
     setStatus('idle');
     setStatusMessage('');
     setErrorMessage(null);
-    setIdempotencyKey(crypto.randomUUID());
+    idempotencyKeyRef.current = crypto.randomUUID();
   }, [cleanupDraft]);
 
   const comparison = useMemo<ReviewComparison | null>(() => {
@@ -122,12 +125,18 @@ export function useStudentPdfDisciplinaryReview({
     const suggestedLetterType = mapDocTypeToLetterType(suggestedDocType);
     const detectedOtherStudent =
       analysis?.selected_student_id && analysis.selected_student_id !== studentId
-        ? analysis.student_candidates.find((candidate) => candidate.id === analysis.selected_student_id)
+        ? analysis.student_candidates.find(
+            (candidate) => candidate.id === analysis.selected_student_id
+          )
         : null;
     const nameConflict =
       analysis?.detected_student_name &&
-      !analysis.detected_student_name.toLowerCase().includes(studentName.split(' ')[0].toLowerCase()) &&
-      !studentName.toLowerCase().includes(analysis.detected_student_name.split(' ')[0].toLowerCase());
+      !analysis.detected_student_name
+        .toLowerCase()
+        .includes(studentName.split(' ')[0].toLowerCase()) &&
+      !studentName
+        .toLowerCase()
+        .includes(analysis.detected_student_name.split(' ')[0].toLowerCase());
     const conflictMessage = detectedOtherStudent
       ? `El PDF parece corresponder a ${detectedOtherStudent.full_name}.`
       : nameConflict
@@ -244,7 +253,9 @@ export function useStudentPdfDisciplinaryReview({
       return false;
     }
     if (comparison?.conflictMessage) {
-      setErrorMessage('El PDF detecta un estudiante distinto. Revisa el archivo antes de confirmar.');
+      setErrorMessage(
+        'El PDF detecta un estudiante distinto. Revisa el archivo antes de confirmar.'
+      );
       return false;
     }
 
@@ -272,9 +283,10 @@ export function useStudentPdfDisciplinaryReview({
           mimeType: uploadedFile.mimeType,
           tenantId,
           studentId,
-          suggestedLetterType: comparison?.suggestedDocType || analysis.recommended_letter_type || 'none',
+          suggestedLetterType:
+            comparison?.suggestedDocType || analysis.recommended_letter_type || 'none',
           annotations,
-          idempotencyKey,
+          idempotencyKey: idempotencyKeyRef.current,
         }),
       });
 
@@ -294,7 +306,7 @@ export function useStudentPdfDisciplinaryReview({
       setStatusMessage('Error al confirmar.');
       return false;
     }
-  }, [analysis, annotations, comparison, file, idempotencyKey, onConfirmed, studentId, summary, uploadedFile]);
+  }, [analysis, annotations, comparison, file, onConfirmed, studentId, summary, uploadedFile]);
 
   const handleDrop = useCallback(
     async (event: React.DragEvent) => {

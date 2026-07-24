@@ -81,7 +81,13 @@ const STEP_LABELS: Record<FlowStep, string> = {
   success: 'Éxito',
 };
 
-const STEP_ORDER: FlowStep[] = ['upload', 'student_resolution', 'classification', 'review', 'success'];
+const STEP_ORDER: FlowStep[] = [
+  'upload',
+  'student_resolution',
+  'classification',
+  'review',
+  'success',
+];
 
 function summaryFromAnnotations(annotations: ReviewAnnotation[]): AnnotationSummary {
   return annotations.reduce(
@@ -154,16 +160,18 @@ export default function NewDisciplinaryProcessModal({
   const [createdProcess, setCreatedProcess] = useState<{ id: string; number: string } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const uploadedFileRef = useRef<UploadedDisciplinaryFile | null>(null);
-  const [idempotencyKey, setIdempotencyKey] = useState(() => crypto.randomUUID());
+  const idempotencyKeyRef = useRef<string | null>(null);
+  if (idempotencyKeyRef.current === null) idempotencyKeyRef.current = crypto.randomUUID();
 
   useEffect(() => {
-    fetchDisciplinaryRules().then(setRules).catch(() => setRules([]));
+    fetchDisciplinaryRules()
+      .then(setRules)
+      .catch(() => setRules([]));
   }, []);
 
   useEffect(() => {
     uploadedFileRef.current = uploadedFile;
   }, [uploadedFile]);
-
 
   const ruleOptions = useMemo(() => {
     if (rules.length === 0) return [];
@@ -181,7 +189,8 @@ export default function NewDisciplinaryProcessModal({
       .map((rule) => ({
         value: rule.suggested_letter_type,
         label: LETTER_TYPE_LABELS[rule.suggested_letter_type] ?? rule.rule_name,
-        desc: rule.description || `Negativas: ${rule.min_negativas ?? 0}-${rule.max_negativas ?? '∞'}`,
+        desc:
+          rule.description || `Negativas: ${rule.min_negativas ?? 0}-${rule.max_negativas ?? '∞'}`,
         legal: `Prioridad ${rule.priority}`,
       }));
   }, [rules]);
@@ -204,7 +213,7 @@ export default function NewDisciplinaryProcessModal({
     setSuggestedType(null);
     setClassification('');
     setCreatedProcess(null);
-    setIdempotencyKey(crypto.randomUUID());
+    idempotencyKeyRef.current = crypto.randomUUID();
   };
 
   const cleanupUploadedDraft = async () => {
@@ -215,7 +224,11 @@ export default function NewDisciplinaryProcessModal({
     await deleteDisciplinaryFile(draft.storagePath);
   };
   const availableStudents = studentCandidates.length > 0 ? studentCandidates : students;
-  const isBusy = status === 'validating' || status === 'uploading' || status === 'processing' || status === 'confirming';
+  const isBusy =
+    status === 'validating' ||
+    status === 'uploading' ||
+    status === 'processing' ||
+    status === 'confirming';
   const currentStepIndex = STEP_ORDER.indexOf(step);
 
   const handleAnalyze = async () => {
@@ -273,9 +286,15 @@ export default function NewDisciplinaryProcessModal({
       setSummary(data.summary);
       setAnnotations(data.annotations || []);
       setSuggestedType(data.recommended_letter_type || 'none');
-      setClassification(data.recommended_letter_type && data.recommended_letter_type !== 'none' ? data.recommended_letter_type : 'none');
+      setClassification(
+        data.recommended_letter_type && data.recommended_letter_type !== 'none'
+          ? data.recommended_letter_type
+          : 'none'
+      );
 
-      const candidates = (data.student_candidates || []).map((candidate) => matchLocalStudent(students, candidate));
+      const candidates = (data.student_candidates || []).map((candidate) =>
+        matchLocalStudent(students, candidate)
+      );
       setStudentCandidates(candidates);
 
       const selected = data.selected_student_id
@@ -346,7 +365,7 @@ export default function NewDisciplinaryProcessModal({
           studentId: selectedStudent.id,
           suggestedLetterType: classification || suggestedType || 'none',
           annotations,
-          idempotencyKey,
+          idempotencyKey: idempotencyKeyRef.current!,
         }),
       });
 
@@ -454,7 +473,9 @@ export default function NewDisciplinaryProcessModal({
                 <div
                   className={`h-1 w-full rounded-full ${index <= currentStepIndex ? 'bg-indigo-500' : 'bg-neutral-200'}`}
                 />
-                <span className="font-medium text-[10px] text-neutral-500">{STEP_LABELS[labelStep]}</span>
+                <span className="font-medium text-[10px] text-neutral-500">
+                  {STEP_LABELS[labelStep]}
+                </span>
               </div>
             ))}
           </div>
@@ -524,7 +545,9 @@ export default function NewDisciplinaryProcessModal({
               <div>
                 <p className="font-semibold text-neutral-800">Proceso creado correctamente</p>
                 <p className="mt-1 text-neutral-500 text-sm">
-                  {createdProcess?.number ? `Número de proceso: ${createdProcess.number}` : 'El registro fue actualizado.'}
+                  {createdProcess?.number
+                    ? `Número de proceso: ${createdProcess.number}`
+                    : 'El registro fue actualizado.'}
                 </p>
               </div>
             </div>
@@ -544,7 +567,8 @@ export default function NewDisciplinaryProcessModal({
             disabled={(step === 'upload' && !isBusy) || status === 'confirming'}
             className="flex items-center gap-1.5 rounded-xl px-4 py-2 font-medium text-neutral-600 text-sm hover:bg-neutral-100 disabled:opacity-30"
           >
-            <ArrowLeft className="h-4 w-4" /> {isBusy && status !== 'confirming' ? 'Cancelar' : 'Anterior'}
+            <ArrowLeft className="h-4 w-4" />{' '}
+            {isBusy && status !== 'confirming' ? 'Cancelar' : 'Anterior'}
           </button>
           <button
             type="button"

@@ -4,10 +4,18 @@ import { Section, DataRow } from './SharedComponents';
 import type { DocContentProps } from './docTypes';
 
 export default function AmonestacionContent(props: DocContentProps) {
-  const { currentName, currentCourse, currentTeacher, apoderadoName, dateStr, negativeCount, letterContent } = props;
+  const {
+    currentName,
+    currentCourse,
+    currentTeacher,
+    apoderadoName,
+    dateStr,
+    negativeCount,
+    letterContent,
+  } = props;
 
   return (
-    <div className="space-y-1">
+    <div>
       <Section number={1} title="Antecedentes">
         <DataRow label="Nombre del Estudiante" value={currentName} />
         <DataRow label="RUT" value={props.currentRut} />
@@ -24,7 +32,7 @@ export default function AmonestacionContent(props: DocContentProps) {
 
       <Section number={3} title="Descripción / antecedentes">
         <p>{letterContent.descripcion}</p>
-        <p className="mt-2">
+        <p style={{ marginTop: '8px' }}>
           Cantidad de anotaciones negativas consideradas: <strong>{negativeCount}</strong>.
         </p>
       </Section>
@@ -34,31 +42,56 @@ export default function AmonestacionContent(props: DocContentProps) {
       </Section>
 
       <Section number={5} title="Acuerdos y cierre">
-        <p className="whitespace-pre-line">{letterContent.acuerdos}</p>
-        <p className="mt-3 whitespace-pre-line text-[10px] text-neutral-500 italic">{letterContent.cierre}</p>
+        <p style={{ whiteSpace: 'pre-line' }}>{letterContent.acuerdos}</p>
+        <p
+          style={{
+            marginTop: '12px',
+            whiteSpace: 'pre-line',
+            fontSize: '9pt',
+            color: '#6b7280',
+            fontStyle: 'italic',
+          }}
+        >
+          {letterContent.cierre}
+        </p>
         {letterContent.observaciones && (
-          <p className="mt-3 whitespace-pre-line text-neutral-600 italic">Observaciones: {letterContent.observaciones}</p>
+          <p
+            style={{
+              marginTop: '12px',
+              whiteSpace: 'pre-line',
+              color: '#4b5563',
+              fontStyle: 'italic',
+            }}
+          >
+            Observaciones: {letterContent.observaciones}
+          </p>
         )}
       </Section>
 
-      <div className="mt-8 border-t border-neutral-300 pt-4">
-        <p className="mb-6 text-center text-xs font-bold uppercase tracking-wide text-neutral-700">Firmas</p>
-        <div className="grid grid-cols-4 gap-4 text-xs text-neutral-600">
-          <div className="text-center">
-            <div className="mt-8 border-t border-neutral-400 pt-1">{currentTeacher || '_________________________'}</div>
-            <p className="mt-0.5 text-[10px] text-neutral-500">Profesor/a Jefe</p>
+      <div className="letter-signatures">
+        <p className="letter-signatures-title">Firmas</p>
+        <div className="letter-signatures-grid letter-signatures-grid-4">
+          <div className="letter-signature-item">
+            <div className="letter-signature-line">
+              {currentTeacher || '_________________________'}
+            </div>
+            <p className="letter-signature-role">Profesor/a Jefe</p>
           </div>
-          <div className="text-center">
-            <div className="mt-8 border-t border-neutral-400 pt-1">{props.inspectorName || '_________________________'}</div>
-            <p className="mt-0.5 text-[10px] text-neutral-500">Inspector/a</p>
+          <div className="letter-signature-item">
+            <div className="letter-signature-line">
+              {props.inspectorName || '_________________________'}
+            </div>
+            <p className="letter-signature-role">Inspector/a</p>
           </div>
-          <div className="text-center">
-            <div className="mt-8 border-t border-neutral-400 pt-1">{apoderadoName || '_________________________'}</div>
-            <p className="mt-0.5 text-[10px] text-neutral-500">Apoderado</p>
+          <div className="letter-signature-item">
+            <div className="letter-signature-line">
+              {apoderadoName || '_________________________'}
+            </div>
+            <p className="letter-signature-role">Apoderado</p>
           </div>
-          <div className="text-center">
-            <div className="mt-8 border-t border-neutral-400 pt-1">{currentName}</div>
-            <p className="mt-0.5 text-[10px] text-neutral-500">Estudiante</p>
+          <div className="letter-signature-item">
+            <div className="letter-signature-line">{currentName}</div>
+            <p className="letter-signature-role">Estudiante</p>
           </div>
         </div>
       </div>

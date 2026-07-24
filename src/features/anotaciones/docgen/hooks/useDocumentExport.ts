@@ -1,6 +1,5 @@
 import { useCallback, useRef } from 'react';
 import { saveAs } from 'file-saver';
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { AlignmentType, Document, HeadingLevel, Packer, Paragraph, TextRun } from 'docx';
 import type { LetterContent } from '../DocumentPreview/docTypes';
 
@@ -12,49 +11,13 @@ interface PreviewContent {
 }
 
 export function useDocumentExport() {
-  const pdfBlobRef = useRef<Blob | null>(null);
   const docxBlobRef = useRef<Blob | null>(null);
-
-  const generatePDF = useCallback(async (preview: PreviewContent) => {
-    const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage();
-    const { width, height } = page.getSize();
-    const [font, fontBold] = await Promise.all([
-      pdfDoc.embedFont(StandardFonts.Helvetica),
-      pdfDoc.embedFont(StandardFonts.HelveticaBold),
-    ]);
-    const margin = 50;
-    let y = height - margin;
-
-    const drawText = (text: string, fontRef: typeof font, size: number, isBold = false) => {
-      const f = isBold ? fontBold : fontRef;
-      page.drawText(text, { x: margin, y, size, font: f, color: rgb(0, 0, 0), maxWidth: width - 2 * margin });
-      y -= size + 4;
-    };
-
-    drawText(preview.title, font, 18, true);
-    y -= 10;
-    Object.entries(preview.metadata).forEach(([key, value]) => drawText(`${key}: ${value}`, font, 10, true));
-    y -= 10;
-    for (const line of preview.content.split('\n')) {
-      if (y < margin + 20) {
-        pdfDoc.addPage();
-        y = height - margin;
-      }
-      drawText(line, font, 10);
-    }
-
-    const pdfBytes = await pdfDoc.save();
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    pdfBlobRef.current = blob;
-    return blob;
-  }, []);
 
   const generateWord = useCallback(async (preview: PreviewContent) => {
     const sections = preview.letterContent
       ? [
           ['Motivo', preview.letterContent.motivo],
-          ['Descripción / antecedentes', preview.letterContent.descripcion],
+          ['Descripcion / antecedentes', preview.letterContent.descripcion],
           ['Medida o acuerdo', preview.letterContent.medida],
           ['Acuerdos / acciones', preview.letterContent.acuerdos],
           ['Cierre', preview.letterContent.cierre],
@@ -67,16 +30,29 @@ export function useDocumentExport() {
         {
           properties: {},
           children: [
-            new Paragraph({ text: preview.title, heading: HeadingLevel.TITLE, alignment: AlignmentType.CENTER }),
+            new Paragraph({
+              text: preview.title,
+              heading: HeadingLevel.TITLE,
+              alignment: AlignmentType.CENTER,
+            }),
             new Paragraph({ text: '', spacing: { after: 200 } }),
             ...Object.entries(preview.metadata).map(
               ([key, value]) =>
-                new Paragraph({ children: [new TextRun({ text: `${key}: `, bold: true }), new TextRun({ text: value })] })
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: `${key}: `, bold: true }),
+                    new TextRun({ text: value }),
+                  ],
+                })
             ),
             new Paragraph({ text: '', spacing: { after: 200 } }),
             ...sections.flatMap(([heading, body]) => [
               new Paragraph({ text: heading, heading: HeadingLevel.HEADING_2 }),
-              ...String(body || '').split('\n').map((line) => new Paragraph({ children: [new TextRun({ text: line, size: 22 })] })),
+              ...String(body || '')
+                .split('\n')
+                .map(
+                  (line) => new Paragraph({ children: [new TextRun({ text: line, size: 22 })] })
+                ),
               new Paragraph({ text: '', spacing: { after: 120 } }),
             ]),
           ],
@@ -91,6 +67,10 @@ export function useDocumentExport() {
 
   const downloadBlob = useCallback((blob: Blob, filename: string) => saveAs(blob, filename), []);
 
+  /**
+   * @deprecated Para cartas nuevas, usar printLetter() de letterExportService.ts.
+   * Este metodo se mantiene para compatibilidad con otros usos de impresion HTML.
+   */
   const printDocument = useCallback(async (htmlContent: string) => {
     const fullHtml = `<!DOCTYPE html><html><head><title>Imprimir Documento</title><style>body{font-family:Arial,sans-serif;padding:20px}@media print{body{padding:0}}</style></head><body>${htmlContent}</body></html>`;
     const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
@@ -114,5 +94,5 @@ export function useDocumentExport() {
     }, 10000);
   }, []);
 
-  return { generatePDF, generateWord, downloadBlob, printDocument, pdfBlobRef, docxBlobRef };
+  return { generateWord, downloadBlob, printDocument, docxBlobRef };
 }

@@ -1,0 +1,261 @@
+/**
+ * @license SPDX-License-Identifier: Apache-2.0
+ *
+ * Letter Document — Estilos deterministas para cartas disciplinarias A4.
+ * Este archivo define dimensiones, tipografía y layout del documento oficial.
+ * NO debe contener animaciones, hover, focus ni reglas de la aplicación.
+ */
+
+/* ============================================================
+   A4 PAGE — Dimensiones canónicas
+   ============================================================ */
+
+.letter-page {
+  width: 210mm;
+  min-width: 210mm;
+  height: 297mm;
+  min-height: 297mm;
+  box-sizing: border-box;
+  padding: 20mm 25mm 20mm 25mm;
+  margin: 0;
+  background: white;
+  color: #111827;
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-size: 11pt;
+  line-height: 1.5;
+  overflow: hidden;
+  position: relative;
+  break-after: page;
+  page-break-after: always;
+}
+
+/* ============================================================
+   HEADER — Logo + datos institucionales
+   ============================================================ */
+
+.letter-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #d1d5db;
+}
+
+.letter-header-logo {
+  height: 64px;
+  width: auto;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.letter-header-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.letter-header-institution {
+  font-size: 10pt;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #6b7280;
+}
+
+.letter-header-department {
+  margin-top: 2px;
+  font-size: 12pt;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.letter-header-year {
+  font-size: 11pt;
+  color: #6b7280;
+}
+
+/* ============================================================
+   TITLE — Título del documento
+   ============================================================ */
+
+.letter-title {
+  margin-bottom: 24px;
+  text-align: center;
+  font-size: 16pt;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #111827;
+}
+
+/* ============================================================
+   SECTIONS — Contenido numerado
+   ============================================================ */
+
+.letter-section {
+  margin-bottom: 18px;
+}
+
+.letter-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 4px;
+  margin-bottom: 10px;
+  border-bottom: 2px solid #d1d5db;
+  font-size: 12pt;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.letter-section-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #1f2937;
+  color: white;
+  font-size: 11pt;
+  font-weight: 700;
+}
+
+.letter-section-body {
+  font-size: 10.5pt;
+  line-height: 1.6;
+  color: #374151;
+}
+
+/* ============================================================
+   DATA ROWS — Campos de datos
+   ============================================================ */
+
+.letter-data-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 2px;
+  font-size: 10.5pt;
+  line-height: 1.5;
+}
+
+.letter-data-label {
+  width: 144px;
+  flex-shrink: 0;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.letter-data-value {
+  color: #1f2937;
+}
+
+/* ============================================================
+   SIGNATURES — Bloques de firma
+   ============================================================ */
+
+.letter-signatures {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid #d1d5db;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.letter-signatures-title {
+  margin-bottom: 24px;
+  text-align: center;
+  font-size: 10pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #374151;
+}
+
+.letter-signatures-grid {
+  display: grid;
+  gap: 16px;
+  font-size: 10pt;
+  color: #4b5563;
+}
+
+.letter-signatures-grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.letter-signatures-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.letter-signature-item {
+  text-align: center;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.letter-signature-line {
+  margin-top: 32px;
+  padding-top: 4px;
+  border-top: 1px solid #9ca3af;
+}
+
+.letter-signature-role {
+  margin-top: 2px;
+  font-size: 9pt;
+  color: #6b7280;
+}
+
+/* ============================================================
+   LEGAL FRAMEWORK — Marco legal (derivación)
+   ============================================================ */
+
+.letter-legal-box {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f9fafb;
+}
+
+.letter-legal-text {
+  font-size: 9pt;
+  line-height: 1.6;
+  color: #6b7280;
+}
+
+/* ============================================================
+   PRINT STYLES
+   ============================================================ */
+
+@media print {
+  .letter-page {
+    width: 210mm;
+    min-width: 210mm;
+    height: 297mm;
+    min-height: 297mm;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 20mm 25mm 20mm 25mm;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    width: 210mm;
+    background: white;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+@page {
+  size: A4;
+  margin: 0;
+}

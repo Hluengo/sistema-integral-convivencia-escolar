@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Test Letter A4 Document</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Inter", ui-sans-serif, system-ui, sans-serif; background: #f3f4f6; padding: 20px; }
+
+    .letter-page {
+      width: 210mm; min-width: 210mm; height: 297mm; min-height: 297mm;
+      box-sizing: border-box; padding: 20mm 25mm; margin: 0 auto;
+      background: white; color: #111827; font-size: 11pt; line-height: 1.5;
+      overflow: hidden; position: relative;
+    }
+    .letter-header { display: flex; align-items: center; gap: 16px; padding-bottom: 16px; margin-bottom: 20px; border-bottom: 2px solid #d1d5db; }
+    .letter-header-logo { height: 64px; width: auto; flex-shrink: 0; object-fit: contain; }
+    .letter-header-text { display: flex; flex-direction: column; }
+    .letter-header-institution { font-size: 10pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: #6b7280; }
+    .letter-header-department { margin-top: 2px; font-size: 12pt; font-weight: 700; color: #1f2937; }
+    .letter-header-year { font-size: 11pt; color: #6b7280; }
+    .letter-title { margin-bottom: 24px; text-align: center; font-size: 16pt; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #111827; }
+    .letter-section { margin-bottom: 18px; }
+    .letter-section-heading { display: flex; align-items: center; gap: 8px; padding-bottom: 4px; margin-bottom: 10px; border-bottom: 2px solid #d1d5db; font-size: 12pt; font-weight: 700; color: #1f2937; }
+    .letter-section-number { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; flex-shrink: 0; border-radius: 50%; background: #1f2937; color: white; font-size: 11pt; font-weight: 700; }
+    .letter-section-body { font-size: 10.5pt; line-height: 1.6; color: #374151; }
+    .letter-data-row { display: flex; gap: 8px; margin-bottom: 2px; font-size: 10.5pt; line-height: 1.5; }
+    .letter-data-label { width: 144px; flex-shrink: 0; font-weight: 600; color: #4b5563; }
+    .letter-data-value { color: #1f2937; }
+    .letter-signatures { margin-top: 32px; padding-top: 16px; border-top: 1px solid #d1d5db; }
+    .letter-signatures-title { margin-bottom: 24px; text-align: center; font-size: 10pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #374151; }
+    .letter-signatures-grid { display: grid; gap: 16px; font-size: 10pt; color: #4b5563; }
+    .letter-signatures-grid-4 { grid-template-columns: repeat(4, 1fr); }
+    .letter-signatures-grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .letter-signature-item { text-align: center; }
+    .letter-signature-line { margin-top: 32px; padding-top: 4px; border-top: 1px solid #9ca3af; }
+    .letter-signature-role { margin-top: 2px; font-size: 9pt; color: #6b7280; }
+
+    .actions { max-width: 210mm; margin: 0 auto 16px; padding: 16px; background: white; border-radius: 12px; border: 1px solid #e5e7eb; }
+    .actions h2 { font-size: 14px; margin-bottom: 12px; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; color: white; }
+    .btn-print { background: #374151; }
+    .btn-pdf { background: #dc2626; }
+    .btn-word { background: #2563eb; }
+
+    .viewport { display: flex; justify-content: center; overflow: hidden; border-radius: 12px; padding: 16px; background: #e5e7eb; }
+    .viewport-inner { transform-origin: top center; }
+
+    #overflow-warning { display: none; max-width: 210mm; margin: 16px auto; padding: 12px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; color: #92400e; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="actions">
+    <h2>Acciones del Documento</h2>
+    <button class="btn btn-print" id="btn-print" onclick="handlePrint()">Imprimir</button>
+    <button class="btn btn-pdf" id="btn-pdf" onclick="handleDownloadPdf()">Descargar PDF</button>
+    <button class="btn btn-word" id="btn-word" onclick="handleDownloadWord()">Descargar Word</button>
+  </div>
+
+  <div id="overflow-warning">
+    El contenido supera una pagina A4. Reduzca el texto o utilice una version de varias paginas antes de imprimir o descargar.
+  </div>
+
+  <div class="viewport" id="viewport">
+    <div class="viewport-inner" id="viewport-inner">
+      <div class="letter-page" id="document-preview-a4">
+        <div class="letter-header">
+          <div class="letter-header-logo" id="logo-placeholder" style="width:64px;height:64px;background:#e5e7eb;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#9ca3af;">LOGO</div>
+          <div class="letter-header-text">
+            <span class="letter-header-institution">Fundacion Educacional Colegio Carmela Romero de Espinosa</span>
+            <span class="letter-header-department">DIRECCION DE CONVIVENCIA ESCOLAR</span>
+            <span class="letter-header-year">Ano 2026</span>
+          </div>
+        </div>
+
+        <h2 class="letter-title" id="letter-title">Amonestacion Escrita</h2>
+
+        <div class="letter-section">
+          <h3 class="letter-section-heading">
+            <span class="letter-section-number">1</span>
+            Antecedentes
+          </h3>
+          <div class="letter-section-body">
+            <div class="letter-data-row"><span class="letter-data-label">Nombre del Estudiante:</span><span class="letter-data-value" id="student-name">Juan Perez Gonzalez</span></div>
+            <div class="letter-data-row"><span class="letter-data-label">RUT:</span><span class="letter-data-value" id="student-rut">12.345.678-9</span></div>
+            <div class="letter-data-row"><span class="letter-data-label">Curso:</span><span class="letter-data-value" id="student-course">3 Basico B</span></div>
+            <div class="letter-data-row"><span class="letter-data-label">Profesor Jefe:</span><span class="letter-data-value" id="teacher-name">Maria Lopez Soto</span></div>
+            <div class="letter-data-row"><span class="letter-data-label">Apoderado:</span><span class="letter-data-value">Pedro Perez Martinez</span></div>
+            <div class="letter-data-row"><span class="letter-data-label">Fecha de Emision:</span><span class="letter-data-value" id="date-str">23/07/2026</span></div>
+            <div class="letter-data-row"><span class="letter-data-label">Anotaciones Negativas:</span><span class="letter-data-value" id="negative-count">7</span></div>
+          </div>
+        </div>
+
+        <div class="letter-section">
+          <h3 class="letter-section-heading">
+            <span class="letter-section-number">2</span>
+            Motivo
+          </h3>
+          <div class="letter-section-body">
+            <p>Acumulacion de anotaciones negativas registradas en la hoja de vida escolar.</p>
+          </div>
+        </div>
+
+        <div class="letter-section">
+          <h3 class="letter-section-heading">
+            <span class="letter-section-number">3</span>
+            Descripcion / antecedentes
+          </h3>
+          <div class="letter-section-body">
+            <p>El/La estudiante registra conductas contrarias a las normas de convivencia escolar, de acuerdo con los antecedentes disponibles en el sistema de anotaciones del establecimiento.</p>
+            <p style="margin-top:8px">Cantidad de anotaciones negativas consideradas: <strong>7</strong>.</p>
+          </div>
+        </div>
+
+        <div class="letter-section">
+          <h3 class="letter-section-heading">
+            <span class="letter-section-number">4</span>
+            Medida
+          </h3>
+          <div class="letter-section-body">
+            <p>Se aplica la medida de Amonestacion Escrita, consistente en la notificacion formal al estudiante, apoderado y profesor jefe, quedando registro en la hoja de vida escolar.</p>
+          </div>
+        </div>
+
+        <div class="letter-section">
+          <h3 class="letter-section-heading">
+            <span class="letter-section-number">5</span>
+            Acuerdos y cierre
+          </h3>
+          <div class="letter-section-body">
+            <p style="white-space:pre-line">El apoderado toma conocimiento y se compromete a reforzar en el hogar las normas de conducta, respeto y responsabilidad escolar.</p>
+            <p style="margin-top:12px;white-space:pre-line;font-size:9pt;color:#6b7280;font-style:italic">La reincidencia posterior a esta comunicacion podra activar medidas disciplinarias superiores segun el Reglamento Interno RICE 2026.</p>
+          </div>
+        </div>
+
+        <div class="letter-signatures">
+          <p class="letter-signatures-title">Firmas</p>
+          <div class="letter-signatures-grid letter-signatures-grid-4">
+            <div class="letter-signature-item">
+              <div class="letter-signature-line">Maria Lopez Soto</div>
+              <p class="letter-signature-role">Profesor/a Jefe</p>
+            </div>
+            <div class="letter-signature-item">
+              <div class="letter-signature-line">Carlos Gonzalez Vera</div>
+              <p class="letter-signature-role">Inspector/a</p>
+            </div>
+            <div class="letter-signature-item">
+              <div class="letter-signature-line">Pedro Perez Martinez</div>
+              <p class="letter-signature-role">Apoderado</p>
+            </div>
+            <div class="letter-signature-item">
+              <div class="letter-signature-line">Juan Perez Gonzalez</div>
+              <p class="letter-signature-role">Estudiante</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function checkOverflow() {
+      var el = document.getElementById('document-preview-a4');
+      var warn = document.getElementById('overflow-warning');
+      if (el.scrollHeight > el.clientHeight + 2) {
+        warn.style.display = 'block';
+        return true;
+      }
+      warn.style.display = 'none';
+      return false;
+    }
+
+    function handlePrint() {
+      if (checkOverflow()) return;
+      var el = document.getElementById('document-preview-a4');
+      var styles = document.querySelectorAll('style');
+      var styleHtml = '';
+      styles.forEach(function(s) { styleHtml += s.outerHTML; });
+      var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Imprimir</title>' + styleHtml + '<style>@page{size:A4;margin:0}html,body{margin:0;padding:0;width:210mm;background:white}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}</style></head><body>' + el.outerHTML + '</body></html>';
+      var blob = new Blob([html], {type:'text/html;charset=utf-8'});
+      var url = URL.createObjectURL(blob);
+      var win = window.open(url, '_blank');
+      if (win) {
+        var timer = setInterval(function() {
+          try {
+            if (win.document.readyState === 'complete') {
+              clearInterval(timer);
+              win.print();
+              URL.revokeObjectURL(url);
+            }
+          } catch(e) { clearInterval(timer); URL.revokeObjectURL(url); }
+        }, 100);
+        setTimeout(function() { clearInterval(timer); URL.revokeObjectURL(url); }, 10000);
+      }
+    }
+
+    function handleDownloadPdf() {
+      if (checkOverflow()) return;
+      alert('PDF_DOWNLOAD_TRIGGERED');
+    }
+
+    function handleDownloadWord() {
+      alert('WORD_DOWNLOAD_TRIGGERED');
+    }
+
+    checkOverflow();
+  </script>
+</body>
+</html>

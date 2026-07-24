@@ -17,12 +17,7 @@ import ExportError from './docgen/components/ExportError';
 import EmissionConfirmDialog from './docgen/components/EmissionConfirmDialog';
 import RecentlyEmitted from './docgen/components/RecentlyEmitted';
 import { TITLE_MAP, type DocType, type LetterContent } from './docgen/DocumentPreview/docTypes';
-
-function getDocumentStyles(): string {
-  return Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
-    .map((styleNode) => styleNode.outerHTML)
-    .join('\n');
-}
+import { printLetter, downloadLetterPdf } from './docgen/letterExportService';
 
 function isLetterContent(value: unknown): value is LetterContent {
   if (!value || typeof value !== 'object') return false;
@@ -32,37 +27,12 @@ function isLetterContent(value: unknown): value is LetterContent {
   );
 }
 
-function getSnapshotString(snapshot: Record<string, unknown> | null | undefined, key: string): string | null {
+function getSnapshotString(
+  snapshot: Record<string, unknown> | null | undefined,
+  key: string
+): string | null {
   const value = snapshot?.[key];
   return typeof value === 'string' ? value : null;
-}
-
-function openPrintWindow(html: string, title: string): boolean {
-  const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title>${getDocumentStyles()}<style>html,body{margin:0;background:#fff}body{display:flex;justify-content:center;color:#111827}#document-preview-a4{box-sizing:border-box;width:210mm;min-height:297mm}@page{size:A4;margin:0}@media print{html,body{width:210mm;min-height:297mm}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}#document-preview-a4{max-width:none!important;box-shadow:none!important;border:0!important;border-radius:0!important}}</style></head><body>${html}</body></html>`;
-  const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const win = window.open(url, '_blank');
-  if (!win) {
-    URL.revokeObjectURL(url);
-    return false;
-  }
-  const timer = window.setInterval(() => {
-    try {
-      if (win.document.readyState === 'complete') {
-        window.clearInterval(timer);
-        win.print();
-        URL.revokeObjectURL(url);
-      }
-    } catch {
-      window.clearInterval(timer);
-      URL.revokeObjectURL(url);
-    }
-  }, 100);
-  window.setTimeout(() => {
-    window.clearInterval(timer);
-    URL.revokeObjectURL(url);
-  }, 10000);
-  return true;
 }
 
 interface AnotacionesDocumentGeneratorProps {
@@ -82,7 +52,9 @@ interface AnotacionesDocumentGeneratorProps {
   sourceAnalysisId?: string | null;
   sourceProcessId?: string | null;
   initialContentSnapshot?: Record<string, unknown> | null;
-  onLetterAction?: (action: 'printed' | 'downloaded_pdf' | 'downloaded_word') => void | Promise<void>;
+  onLetterAction?: (
+    action: 'printed' | 'downloaded_pdf' | 'downloaded_word'
+  ) => void | Promise<void>;
   onRegistered?: () => void | Promise<void>;
 }
 
@@ -117,18 +89,30 @@ export default function AnotacionesDocumentGenerator({
   useEffect(() => {
     if (!initialContentSnapshot || initialSnapshotApplied.current) return;
     const snapshotDocType = getSnapshotString(initialContentSnapshot, 'docType');
-    if (snapshotDocType === 'amonestacion' || snapshotDocType === 'compromiso_conductual' || snapshotDocType === 'derivacion') {
+    if (
+      snapshotDocType === 'amonestacion' ||
+      snapshotDocType === 'compromiso_conductual' ||
+      snapshotDocType === 'derivacion'
+    ) {
       setDocType(snapshotDocType);
       initialDocTypeApplied.current = true;
     }
     if (isLetterContent(initialContentSnapshot.letterContent)) {
       documentState.setLetterContent(initialContentSnapshot.letterContent);
     }
-    documentState.setApoderadoName(getSnapshotString(initialContentSnapshot, 'apoderadoName') || '');
-    documentState.setInspectorName(getSnapshotString(initialContentSnapshot, 'inspectorName') || '');
-    documentState.setCoordinatorName(getSnapshotString(initialContentSnapshot, 'coordinatorName') || '');
+    documentState.setApoderadoName(
+      getSnapshotString(initialContentSnapshot, 'apoderadoName') || ''
+    );
+    documentState.setInspectorName(
+      getSnapshotString(initialContentSnapshot, 'inspectorName') || ''
+    );
+    documentState.setCoordinatorName(
+      getSnapshotString(initialContentSnapshot, 'coordinatorName') || ''
+    );
     documentState.setEmittedBy(getSnapshotString(initialContentSnapshot, 'emittedBy') || '');
-    documentState.setDocObservations(getSnapshotString(initialContentSnapshot, 'administrativeObservation') || '');
+    documentState.setDocObservations(
+      getSnapshotString(initialContentSnapshot, 'administrativeObservation') || ''
+    );
     initialSnapshotApplied.current = true;
   }, [documentState, initialContentSnapshot, setDocType]);
 
@@ -163,70 +147,87 @@ export default function AnotacionesDocumentGenerator({
   const [registrationMessage, setRegistrationMessage] = useState<string | null>(null);
   const [registrationError, setRegistrationError] = useState<string | null>(null);
   const [showEmissionConfirm, setShowEmissionConfirm] = useState(false);
+  const [hasOverflow, setHasOverflow] = useState(false);
 
   const selectedAnnsObjects = selectedAnnotations.selectedAnnsObjects;
   const dateStr = getCurrentDateStr();
   const title = TITLE_MAP[docType];
 
-  const contentSnapshot = useMemo(() => ({
-    templateVersion: 'disciplinary-letter-v2',
-    docType,
-    title,
-    negativeCount,
-    letterContent: documentState.letterContent,
-    student: {
-      id: student.id,
-      fullName: student.full_name,
-      course: student.course_id,
-      rut: student.rut || null,
-    },
-    apoderadoName: documentState.apoderadoName,
-    inspectorName: documentState.inspectorName,
-    coordinatorName: documentState.coordinatorName,
-    emittedBy: documentState.emittedBy || 'Inspectoría',
-    emissionDate: dateStr,
-    sourceAnalysisId: sourceAnalysisId || null,
-    sourceProcessId: sourceProcessId || null,
-    administrativeObservation: documentState.docObservations || null,
-  }), [
-    dateStr,
-    docType,
-    documentState.apoderadoName,
-    documentState.coordinatorName,
-    documentState.docObservations,
-    documentState.emittedBy,
-    documentState.inspectorName,
-    documentState.letterContent,
-    negativeCount,
-    sourceAnalysisId,
-    sourceProcessId,
-    student.course_id,
-    student.full_name,
-    student.id,
-    student.rut,
-    title,
-  ]);
+  const contentSnapshot = useMemo(
+    () => ({
+      templateVersion: 'disciplinary-letter-v2',
+      docType,
+      title,
+      negativeCount,
+      letterContent: documentState.letterContent,
+      student: {
+        id: student.id,
+        fullName: student.full_name,
+        course: student.course_id,
+        rut: student.rut || null,
+      },
+      apoderadoName: documentState.apoderadoName,
+      inspectorName: documentState.inspectorName,
+      coordinatorName: documentState.coordinatorName,
+      emittedBy: documentState.emittedBy || 'Inspectoria',
+      emissionDate: dateStr,
+      sourceAnalysisId: sourceAnalysisId || null,
+      sourceProcessId: sourceProcessId || null,
+      administrativeObservation: documentState.docObservations || null,
+    }),
+    [
+      dateStr,
+      docType,
+      documentState.apoderadoName,
+      documentState.coordinatorName,
+      documentState.docObservations,
+      documentState.emittedBy,
+      documentState.inspectorName,
+      documentState.letterContent,
+      negativeCount,
+      sourceAnalysisId,
+      sourceProcessId,
+      student.course_id,
+      student.full_name,
+      student.id,
+      student.rut,
+      title,
+    ]
+  );
 
-  const previewContent = useMemo(() => ({
-    title,
-    content: [
-      documentState.letterContent.motivo,
-      documentState.letterContent.descripcion,
-      documentState.letterContent.medida,
-      documentState.letterContent.acuerdos,
-      documentState.letterContent.cierre,
-      documentState.letterContent.observaciones,
-    ].filter(Boolean).join('\n\n'),
-    metadata: {
-      Estudiante: student.full_name,
-      Curso: student.course_id,
-      RUN: student.rut || '-',
-      'Anotaciones negativas': String(negativeCount),
-      'Tipo de documento': title,
-      'Fecha de emisión': dateStr,
-    },
-    letterContent: documentState.letterContent,
-  }), [dateStr, documentState.letterContent, negativeCount, student.course_id, student.full_name, student.rut, title]);
+  const previewContent = useMemo(
+    () => ({
+      title,
+      content: [
+        documentState.letterContent.motivo,
+        documentState.letterContent.descripcion,
+        documentState.letterContent.medida,
+        documentState.letterContent.acuerdos,
+        documentState.letterContent.cierre,
+        documentState.letterContent.observaciones,
+      ]
+        .filter(Boolean)
+        .join('\n\n'),
+      metadata: {
+        Estudiante: student.full_name,
+        Curso: student.course_id,
+        RUN: student.rut || '-',
+        'Anotaciones negativas': String(negativeCount),
+        'Tipo de documento': title,
+        'Fecha de emision': dateStr,
+      },
+      letterContent: documentState.letterContent,
+    }),
+    [
+      dateStr,
+      documentState.letterContent,
+      negativeCount,
+      student.course_id,
+      student.full_name,
+      student.rut,
+      title,
+    ]
+  );
 
   const handleRegisterCommitment = registerCommitment.handleRegisterCommitment;
 
@@ -245,12 +246,16 @@ export default function AnotacionesDocumentGenerator({
       contentSnapshot,
       onSuccess: (entry) => {
         documentRegistry.addEntry(entry);
-        setRegistrationMessage('Carta registrada correctamente. La plantilla permanece disponible para imprimir o descargar.');
+        setRegistrationMessage(
+          'Carta registrada correctamente. La plantilla permanece disponible para imprimir o descargar.'
+        );
         void (async () => {
           try {
             await onRegistered?.();
           } catch {
-            setRegistrationError('La carta se registró, pero no se pudo actualizar el estado de la ficha.');
+            setRegistrationError(
+              'La carta se registro, pero no se pudo actualizar el estado de la ficha.'
+            );
           }
         })();
         afterSuccess?.();
@@ -269,43 +274,56 @@ export default function AnotacionesDocumentGenerator({
     registerCarta();
   };
 
-  const getPreviewHtml = () => previewRef.current?.outerHTML || '';
+  const getPreviewElement = (): HTMLElement | null => previewRef.current;
 
-  const handlePrintDoc = () => {
+  const handlePrintDoc = async () => {
     setExportError(null);
-    const html = getPreviewHtml();
-    if (!html) {
+    const el = getPreviewElement();
+    if (!el) {
       setExportError('No se pudo leer la plantilla visible para imprimir.');
       return;
     }
-    if (!openPrintWindow(html, 'Imprimir carta disciplinaria')) {
-      setExportError('El navegador bloqueó la ventana de impresión. Permita ventanas emergentes.');
-      return;
+    const result = await printLetter(el, {
+      docType: title,
+      studentName: student.full_name,
+      dateStr,
+    });
+    if (result.success) {
+      void onLetterAction?.('printed');
+      setShowEmissionConfirm(true);
+    } else if (result.error) {
+      setExportError(result.error);
     }
-    void onLetterAction?.('printed');
-    setShowEmissionConfirm(true);
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     setExportError(null);
-    const html = getPreviewHtml();
-    if (!html) {
+    const el = getPreviewElement();
+    if (!el) {
       setExportError('No se pudo leer la plantilla visible para generar PDF.');
       return;
     }
-    if (!openPrintWindow(html, 'Guardar carta como PDF')) {
-      setExportError('El navegador bloqueó la ventana. Permita ventanas emergentes y use Guardar como PDF.');
-      return;
+    const result = await downloadLetterPdf(el, {
+      docType: title,
+      studentName: student.full_name,
+      dateStr,
+    });
+    if (result.success) {
+      void onLetterAction?.('downloaded_pdf');
+      setShowEmissionConfirm(true);
+    } else if (result.error) {
+      setExportError(result.error);
     }
-    void onLetterAction?.('downloaded_pdf');
-    setShowEmissionConfirm(true);
   };
 
   const handleExportWord = async () => {
     setExportError(null);
     try {
       const blob = await documentExport.generateWord(previewContent);
-      documentExport.downloadBlob(blob, `Carta_${docType}_${student.full_name.replace(/\s+/g, '_')}.docx`);
+      documentExport.downloadBlob(
+        blob,
+        `Carta_${docType}_${student.full_name.replace(/\s+/g, '_')}.docx`
+      );
       void onLetterAction?.('downloaded_word');
       setShowEmissionConfirm(true);
     } catch (err) {
@@ -313,23 +331,46 @@ export default function AnotacionesDocumentGenerator({
     }
   };
 
+  const handleOverflowChange = (overflow: boolean) => {
+    setHasOverflow(overflow);
+  };
+
   return (
     <div className="space-y-6">
       <ExportError message={exportError} onClose={() => setExportError(null)} />
 
       {registrationMessage && (
-        <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+        <div
+          role="status"
+          className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"
+        >
           {registrationMessage}
         </div>
       )}
       {registrationError && (
-        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+        <div
+          role="alert"
+          className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+        >
           {registrationError}
         </div>
       )}
 
+      {hasOverflow && (
+        <div
+          role="alert"
+          className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
+        >
+          El contenido supera una pagina A4. Reduzca el texto o utilice una version de varias
+          paginas antes de imprimir o descargar.
+        </div>
+      )}
 
-      <EmissionConfirmDialog isOpen={showEmissionConfirm} onConfirm={handleEmitAfterExport} onCancel={() => setShowEmissionConfirm(false)} />
+      <EmissionConfirmDialog
+        isOpen={showEmissionConfirm}
+        onConfirm={handleEmitAfterExport}
+        onCancel={() => setShowEmissionConfirm(false)}
+      />
 
       <div className="mx-auto w-full max-w-[210mm] space-y-5">
         <GeneratorHeader negativeCount={negativeCount} semaphoric={semaphoric} />
@@ -407,6 +448,7 @@ export default function AnotacionesDocumentGenerator({
         onPrint={handlePrintDoc}
         onExportPDF={handleExportPDF}
         onExportWord={handleExportWord}
+        onOverflowChange={handleOverflowChange}
       />
 
       <div className="mx-auto w-full max-w-[210mm]">

@@ -4,32 +4,86 @@ import type { Annotation } from '../../../../types';
 
 export function AnnotationsList({ annotations }: { annotations: Annotation[] }) {
   if (!annotations.length) {
-    return <p className="text-neutral-400 text-sm italic">No se han seleccionado anotaciones.</p>;
+    return (
+      <p style={{ color: '#9ca3af', fontSize: '10pt', fontStyle: 'italic' }}>
+        No se han seleccionado anotaciones.
+      </p>
+    );
   }
 
   return (
-    <ul className="space-y-1.5">
+    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
       {annotations.map((ann, idx) => (
         <li
           key={ann.id}
-          className="flex items-start gap-2 border-neutral-200 border-b border-dashed pb-1.5 text-neutral-700 text-xs last:border-b-0"
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '8px',
+            borderBottom: '1px dashed #e5e7eb',
+            paddingBottom: '6px',
+            marginBottom: '6px',
+            fontSize: '10pt',
+            color: '#374151',
+          }}
         >
-          <span className="w-5 shrink-0 text-right font-mono text-neutral-400">{idx + 1}.</span>
-          <span className="shrink-0 whitespace-nowrap font-medium text-neutral-500">
+          <span
+            style={{
+              width: '20px',
+              flexShrink: 0,
+              textAlign: 'right',
+              fontFamily: 'monospace',
+              color: '#9ca3af',
+            }}
+          >
+            {idx + 1}.
+          </span>
+          <span
+            style={{
+              flexShrink: 0,
+              whiteSpace: 'nowrap',
+              fontWeight: 500,
+              color: '#6b7280',
+              fontSize: '9pt',
+            }}
+          >
             {ann.date
-              ? new Date(ann.date).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })
+              ? new Date(ann.date).toLocaleDateString('es-CL', {
+                  day: '2-digit',
+                  month: '2-digit',
+                  year: 'numeric',
+                })
               : '—'}
           </span>
-          <span className="text-neutral-700 leading-snug">{ann.text}</span>
-          <span className={`ml-auto shrink-0 rounded-full px-1.5 py-0.5 font-semibold text-[10px] uppercase tracking-wide ${
-            ann.severity === 'Leve'
-              ? 'bg-yellow-100 text-yellow-700'
-              : ann.severity === 'Grave'
-                ? 'bg-orange-100 text-orange-700'
-                : ann.severity === 'Muy Grave'
-                  ? 'bg-red-100 text-red-700'
-                  : 'bg-rose-100 text-rose-800'
-          }`}>
+          <span style={{ color: '#374151', lineHeight: 1.4 }}>{ann.text}</span>
+          <span
+            style={{
+              marginLeft: 'auto',
+              flexShrink: 0,
+              padding: '2px 6px',
+              borderRadius: '9999px',
+              fontWeight: 600,
+              fontSize: '9pt',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              background:
+                ann.severity === 'Leve'
+                  ? '#fef9c3'
+                  : ann.severity === 'Grave'
+                    ? '#ffedd5'
+                    : ann.severity === 'Muy Grave'
+                      ? '#fee2e2'
+                      : '#ffe4e6',
+              color:
+                ann.severity === 'Leve'
+                  ? '#a16207'
+                  : ann.severity === 'Grave'
+                    ? '#c2410c'
+                    : ann.severity === 'Muy Grave'
+                      ? '#dc2626'
+                      : '#be123c',
+            }}
+          >
             {ann.severity}
           </span>
         </li>
@@ -38,25 +92,31 @@ export function AnnotationsList({ annotations }: { annotations: Annotation[] }) 
   );
 }
 
-export function Section({ number, title, children }: { number: number; title: string; children: React.ReactNode }) {
+export function Section({
+  number,
+  title,
+  children,
+}: {
+  number: number;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="mb-5">
-      <h3 className="mb-3 flex items-center gap-2 border-neutral-300 border-b-2 pb-1 font-bold text-neutral-800 text-sm">
-        <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-800 font-bold text-[11px] text-white">
-          {number}
-        </span>
+    <div className="letter-section">
+      <h3 className="letter-section-heading">
+        <span className="letter-section-number">{number}</span>
         {title}
       </h3>
-      <div className="space-y-1.5 text-neutral-700 text-xs leading-relaxed">{children}</div>
+      <div className="letter-section-body">{children}</div>
     </div>
   );
 }
 
 export function DataRow({ label, value }: { label: string; value: string | number }) {
   return (
-    <p className="flex gap-2">
-      <span className="w-36 shrink-0 font-semibold text-neutral-600">{label}:</span>
-      <span className="text-neutral-800">{value}</span>
+    <p className="letter-data-row">
+      <span className="letter-data-label">{label}:</span>
+      <span className="letter-data-value">{value}</span>
     </p>
   );
 }

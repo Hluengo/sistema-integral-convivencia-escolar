@@ -5,6 +5,7 @@ import { FileDown, FileText, Printer } from 'lucide-react';
 import type { Annotation } from '../../../types';
 import type { DocType, LetterContent } from './DocumentPreview/docTypes';
 import LetterA4Document from './LetterA4Document';
+import LetterPreviewViewport from './LetterPreviewViewport';
 
 interface DocumentPreviewProps {
   docType: DocType;
@@ -24,26 +25,31 @@ interface DocumentPreviewProps {
   onPrint: () => void;
   onExportPDF: () => void;
   onExportWord: () => void;
+  onOverflowChange?: (hasOverflow: boolean) => void;
 }
 
-const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(function DocumentPreview({
-  docType,
-  currentName,
-  currentRut,
-  currentCourse,
-  currentTeacher,
-  coordinatorName,
-  inspectorName,
-  apoderadoName,
-  dateStr,
-  negativeCount,
-  docObservations,
-  selectedAnnsObjects,
-  letterContent,
-  onPrint,
-  onExportPDF,
-  onExportWord,
-}, ref) {
+const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(function DocumentPreview(
+  {
+    docType,
+    currentName,
+    currentRut,
+    currentCourse,
+    currentTeacher,
+    coordinatorName,
+    inspectorName,
+    apoderadoName,
+    dateStr,
+    negativeCount,
+    docObservations,
+    selectedAnnsObjects,
+    letterContent,
+    onPrint,
+    onExportPDF,
+    onExportWord,
+    onOverflowChange,
+  },
+  ref
+) {
   return (
     <div className="space-y-4">
       <div className="mx-auto w-full max-w-[210mm] rounded-xl border border-neutral-200 bg-white p-4 shadow-xs">
@@ -51,19 +57,31 @@ const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(functio
           Acciones del Documento
         </p>
         <div className="flex flex-wrap gap-3">
-          <button type="button" onClick={onPrint} className="inline-flex items-center gap-2 rounded-xl bg-neutral-700 px-4 py-2.5 text-sm font-medium text-white shadow-xs transition-colors hover:bg-neutral-800">
+          <button
+            type="button"
+            onClick={onPrint}
+            className="inline-flex items-center gap-2 rounded-xl bg-neutral-700 px-4 py-2.5 text-sm font-medium text-white shadow-xs transition-colors hover:bg-neutral-800"
+          >
             <Printer className="h-4 w-4" /> Imprimir
           </button>
-          <button type="button" onClick={onExportPDF} className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-medium text-white shadow-xs transition-colors hover:bg-red-700">
+          <button
+            type="button"
+            onClick={onExportPDF}
+            className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-medium text-white shadow-xs transition-colors hover:bg-red-700"
+          >
             <FileDown className="h-4 w-4" /> Descargar PDF
           </button>
-          <button type="button" onClick={onExportWord} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-xs transition-colors hover:bg-blue-700">
+          <button
+            type="button"
+            onClick={onExportWord}
+            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-xs transition-colors hover:bg-blue-700"
+          >
             <FileText className="h-4 w-4" /> Descargar Word
           </button>
         </div>
       </div>
 
-      <div className="overflow-x-auto pb-2">
+      <LetterPreviewViewport onOverflowChange={onOverflowChange}>
         <LetterA4Document
           ref={ref}
           id="document-preview-a4"
@@ -81,7 +99,7 @@ const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(functio
           selectedAnnsObjects={selectedAnnsObjects}
           letterContent={letterContent}
         />
-      </div>
+      </LetterPreviewViewport>
     </div>
   );
 });

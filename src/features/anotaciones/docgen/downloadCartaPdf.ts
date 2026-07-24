@@ -1,13 +1,22 @@
-/** @license SPDX-License-Identifier: Apache-2.0 */
+/**
+ * @license SPDX-License-Identifier: Apache-2.0
+ *
+ * @deprecated Este modulo genera PDFs con texto plano sin fidelidad visual.
+ * Usar letterExportService.ts::downloadLetterPdf() en su lugar.
+ * El nuevo servicio captura el componente React LetterA4Document como imagen
+ * y genera un PDF visualmente identico a la vista previa.
+ *
+ * Mantener solo si se necesita generacion de PDF sin DOM (ej: server-side).
+ */
 
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { saveAs } from 'file-saver';
 import type { CartaDisciplinaria } from '@/src/shared/lib/types';
 
 const TITLE_MAP: Record<string, string> = {
-  'Amonestación Escrita': 'Amonestación Escrita',
+  'Amonestacion Escrita': 'Amonestacion Escrita',
   'Carta de Compromiso Conductual': 'Carta de Compromiso Conductual',
-  'Ficha de Derivación': 'Ficha de Derivación',
+  'Ficha de Derivacion': 'Ficha de Derivacion',
 };
 
 interface StudentInfo {
@@ -17,6 +26,9 @@ interface StudentInfo {
   rut?: string;
 }
 
+/**
+ * @deprecated Usar letterExportService.ts::downloadLetterPdf() para PDFs visualmente fieles.
+ */
 export async function downloadCartaPdf(
   carta: CartaDisciplinaria,
   student?: StudentInfo
@@ -35,8 +47,8 @@ export async function downloadCartaPdf(
   const studentRut = student?.rut || '-';
 
   const lines: { text: string; bold?: boolean; size?: number; gap?: number }[] = [
-    { text: 'Fundación Educacional Colegio Carmela Romero de Espinosa', bold: true, size: 10 },
-    { text: 'DIRECCIÓN DE CONVIVENCIA ESCOLAR', bold: true, size: 12, gap: 6 },
+    { text: 'Fundacion Educacional Colegio Carmela Romero de Espinosa', bold: true, size: 10 },
+    { text: 'DIRECCION DE CONVIVENCIA ESCOLAR', bold: true, size: 12, gap: 6 },
     { text: '', size: 6 },
     { text: TITLE_MAP[carta.letter_type] || carta.letter_type, bold: true, size: 16, gap: 12 },
     { text: 'DATOS DEL DOCUMENTO', bold: true, size: 11, gap: 6 },
@@ -44,13 +56,17 @@ export async function downloadCartaPdf(
     { text: `Curso: ${courseName}`, size: 10 },
     { text: `RUN: ${studentRut}`, size: 10 },
     { text: `Tipo de Carta: ${carta.letter_type}`, size: 10 },
-    { text: `Fecha de Emisión: ${carta.emission_date}`, size: 10 },
+    { text: `Fecha de Emision: ${carta.emission_date}`, size: 10 },
     { text: `Estado: ${carta.status}`, size: 10 },
     { text: `Emitido por: ${carta.emitted_by || '-'}`, size: 10, gap: 4 },
     { text: '', size: 4 },
     { text: 'FIRMANTES', bold: true, size: 11, gap: 6 },
     { text: `Apoderado: ${carta.apoderado_name || '_________________________'}`, size: 10 },
-    { text: `Supervisor: ${carta.supervisor_name || '_________________________'}`, size: 10, gap: 4 },
+    {
+      text: `Supervisor: ${carta.supervisor_name || '_________________________'}`,
+      size: 10,
+      gap: 4,
+    },
   ];
 
   if (carta.observations) {
@@ -61,7 +77,7 @@ export async function downloadCartaPdf(
 
   lines.push({ text: '', size: 4 });
   lines.push({ text: 'ANOTACIONES CONSIDERADAS', bold: true, size: 11, gap: 6 });
-  lines.push({ text: `N° de Anotaciones Negativas: ${carta.annotations_count}`, size: 10, gap: 6 });
+  lines.push({ text: `N de Anotaciones Negativas: ${carta.annotations_count}`, size: 10, gap: 6 });
 
   lines.push({ text: 'Base Reglamentaria: RICE 2026', size: 8, gap: 20 });
   lines.push({ text: 'Firma Apoderado/a', size: 10, gap: 30 });
