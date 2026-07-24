@@ -5,6 +5,8 @@ import { equal, ok } from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+const srcDir = resolve(import.meta.dirname!, '../../../../..');
+
 describe('letter-document — Formato Carta (216x279mm)', () => {
   const cssPath = resolve(import.meta.dirname!, '../letter-document.css');
   let css: string;
