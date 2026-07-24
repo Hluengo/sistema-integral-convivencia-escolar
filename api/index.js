@@ -1,5 +1,7 @@
 // server/api/index.ts
 import compression from "compression";
+import helmet from "helmet";
+import cors from "cors";
 import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -96,7 +98,7 @@ async function injectTenantContext(req, res) {
       const r = https.request(
         {
           hostname,
-          path: `/rest/v1/profiles?user_id=eq.${encodeURIComponent(userId)}&select=tenant_id&limit=1`,
+          path: `/rest/v1/profiles?user_id=eq.${encodeURIComponent(userId)}&select=tenant_id,role&limit=1`,
           method: "GET",
           headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` }
         },
@@ -122,9 +124,14 @@ async function injectTenantContext(req, res) {
       });
       r.end();
     });
-    if (Array.isArray(data) && data.length > 0 && data[0].tenant_id) {
-      req.tenantId = data[0].tenant_id;
-      res.setHeader("x-tenant-id", data[0].tenant_id);
+    if (Array.isArray(data) && data.length > 0) {
+      const profile = data[0];
+      if (profile.tenant_id) {
+        req.tenantId = profile.tenant_id;
+      }
+      if (profile.role) {
+        req.profileRole = profile.role;
+      }
     }
   } catch {
   }
@@ -197,6 +204,51 @@ function prune() {
   const now = Date.now();
   for (const [key, val] of rateLimitMap) {
     if (now > val.resetAt) rateLimitMap.delete(key);
+  }
+}
+var redisClient = null;
+function getRedisClient() {
+  if (redisClient) return redisClient;
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) {
+    if (process.env.NODE_ENV === "production") {
+      console.warn(
+        "[rate-limit] UPSTASH_REDIS_REST_URL no configurado. Rate limit en memoria (in\xFAtil en serverless)."
+      );
+    }
+    return null;
+  }
+  redisClient = {
+    async incr(key) {
+      const res = await fetch(`${url}/incr/${encodeURIComponent(key)}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      return data.result ?? 0;
+    },
+    async pexpire(key, ms) {
+      await fetch(`${url}/pexpire/${encodeURIComponent(key)}/${ms}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    }
+  };
+  return redisClient;
+}
+async function checkRateLimitAsync(ip) {
+  const redis = getRedisClient();
+  if (!redis) {
+    return checkRateLimit(ip);
+  }
+  try {
+    const key = `rl:${ip}`;
+    const count = await redis.incr(key);
+    if (count === 1) {
+      await redis.pexpire(key, RATE_WINDOW);
+    }
+    return count <= RATE_LIMIT;
+  } catch {
+    return checkRateLimit(ip);
   }
 }
 function checkRateLimit(ip) {
@@ -373,7 +425,7 @@ router.post("/improve-text", requireAuth, async (req, res) => {
       return;
     }
     const ip = req.ip || req.connection?.remoteAddress || "unknown";
-    if (!checkRateLimit(ip)) {
+    if (!await checkRateLimitAsync(ip)) {
       res.status(429).json({ error: "L\xEDmite de solicitudes alcanzado. Intente en un minuto." });
       return;
     }
@@ -410,8 +462,13 @@ router2.post("/advisor-chat", requireAuth, async (req, res) => {
       res.status(400).json({ error: "Campo requerido: message" });
       return;
     }
+    const MAX_ADVISOR_MESSAGE_LENGTH = 8e3;
+    if (message.length > MAX_ADVISOR_MESSAGE_LENGTH) {
+      res.status(400).json({ error: "El mensaje supera el m\xE1ximo permitido." });
+      return;
+    }
     const ip = req.ip || req.connection?.remoteAddress || "unknown";
-    if (!checkRateLimit(ip)) {
+    if (!await checkRateLimitAsync(ip)) {
       res.status(429).json({ error: "L\xEDmite de solicitudes alcanzado. Intente en un minuto." });
       return;
     }
@@ -447,8 +504,7 @@ Tus respuestas deben estar redactadas en espa\xF1ol formal de Chile, alineadas c
     res.json({ success: true, reply });
   } catch (error) {
     console.error("Error en el Chat de Consultor\xEDa:", error.message || error);
-    const detail = error.message?.includes("OPENROUTER_API_KEY") ? "API key de OpenRouter no configurada en variables de entorno de Vercel." : error.message?.includes("OpenRouter error") ? `Error de OpenRouter: ${error.message}` : "Error interno del servidor.";
-    res.status(500).json({ error: detail });
+    res.status(500).json({ error: "Error interno del servidor." });
   }
 });
 var advisor_default = router2;
@@ -465,7 +521,7 @@ router3.post("/audit-due-process", requireAuth, async (req, res) => {
     const checkedItems = optArr(body, "checkedItems");
     const observations = optStr(body, "observations", 5e3);
     const ip = req.ip || req.connection?.remoteAddress || "unknown";
-    if (!checkRateLimit(ip)) {
+    if (!await checkRateLimitAsync(ip)) {
       res.status(429).json({ error: "L\xEDmite de solicitudes alcanzado. Intente en un minuto." });
       return;
     }
@@ -529,7 +585,7 @@ router4.post("/draft-document", requireAuth, async (req, res) => {
     const bitacora = optArr(body, "bitacora");
     const checklist = optArr(body, "checklist");
     const ip = req.ip || req.connection?.remoteAddress || "unknown";
-    if (!checkRateLimit(ip)) {
+    if (!await checkRateLimitAsync(ip)) {
       res.status(429).json({ error: "L\xEDmite de solicitudes alcanzado. Intente en un minuto." });
       return;
     }
@@ -667,8 +723,50 @@ var debug_default = router5;
 
 // server/api/routes/templates.ts
 import { Router as Router6 } from "express";
+
+// server/api/middleware/requireTenant.ts
+function requireTenant(req, res, next) {
+  const authReq = req;
+  if (!authReq.user?.sub) {
+    res.status(401).json({ error: "Autenticaci\xF3n requerida." });
+    return;
+  }
+  if (!authReq.tenantId) {
+    res.status(403).json({ error: "No fue posible determinar el establecimiento autenticado." });
+    return;
+  }
+  next();
+}
+
+// server/api/middleware/requireRole.ts
+function requireRole(allowedRoles) {
+  return (req, res, next) => {
+    const authReq = req;
+    if (!authReq.user?.sub) {
+      res.status(401).json({ error: "Autenticaci\xF3n requerida." });
+      return;
+    }
+    if (!authReq.tenantId) {
+      res.status(403).json({ error: "No fue posible determinar el establecimiento autenticado." });
+      return;
+    }
+    const role = authReq.profileRole;
+    if (!role) {
+      res.status(403).json({ error: "No fue posible determinar el rol del usuario." });
+      return;
+    }
+    if (!allowedRoles.includes(role)) {
+      res.status(403).json({ error: "No tiene permisos para realizar esta acci\xF3n." });
+      return;
+    }
+    next();
+  };
+}
+
+// server/api/routes/templates.ts
 var router6 = Router6();
-var TEMPLATE_SELECT = "id,doc_type,label,system_prompt,updated_at";
+var TEMPLATE_SELECT_PUBLIC = "id,doc_type,label,updated_at";
+var TEMPLATE_SELECT_ADMIN = "id,doc_type,label,system_prompt,updated_at";
 function getSupabaseHostname2() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   if (!supabaseUrl || !URL.canParse(supabaseUrl)) {
@@ -679,11 +777,11 @@ function getSupabaseHostname2() {
 function getServiceRoleKey() {
   return process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
 }
-router6.get("/document-templates", requireAuth, async (_req, res) => {
+router6.get("/document-templates", requireAuth, requireTenant, async (_req, res) => {
   try {
     const data = await httpsGet(
       getSupabaseHostname2(),
-      `/rest/v1/document_templates?select=${TEMPLATE_SELECT}&order=doc_type`,
+      `/rest/v1/document_templates?select=${TEMPLATE_SELECT_PUBLIC}&order=doc_type`,
       {
         apikey: process.env.VITE_SUPABASE_ANON_KEY ?? "",
         Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY ?? ""}`
@@ -694,34 +792,69 @@ router6.get("/document-templates", requireAuth, async (_req, res) => {
     res.status(500).json({ error: "Error al obtener plantillas." });
   }
 });
-router6.put("/document-templates", requireAuth, async (req, res) => {
-  const { id, system_prompt } = req.body;
-  if (!id || !system_prompt) {
-    res.status(400).json({ error: "Campos requeridos: id, system_prompt" });
-    return;
+router6.get(
+  "/document-templates/admin",
+  requireAuth,
+  requireTenant,
+  requireRole(["admin", "direccion"]),
+  async (_req, res) => {
+    try {
+      const data = await httpsGet(
+        getSupabaseHostname2(),
+        `/rest/v1/document_templates?select=${TEMPLATE_SELECT_ADMIN}&order=doc_type`,
+        {
+          apikey: process.env.VITE_SUPABASE_ANON_KEY ?? "",
+          Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY ?? ""}`
+        }
+      );
+      res.json(data);
+    } catch {
+      res.status(500).json({ error: "Error al obtener plantillas." });
+    }
   }
-  try {
-    const serviceRoleKey = getServiceRoleKey();
-    const sanitized = sanitize(system_prompt).slice(0, 2e4);
-    await httpsPatch(
-      getSupabaseHostname2(),
-      `/rest/v1/document_templates?id=eq.${id}`,
-      {
-        system_prompt: sanitized,
-        updated_at: (/* @__PURE__ */ new Date()).toISOString()
-      },
-      {
-        apikey: serviceRoleKey,
-        Authorization: `Bearer ${serviceRoleKey}`,
-        Prefer: "return=minimal"
-      }
-    );
-    res.json({ success: true });
-  } catch (error) {
-    console.error("Error updating template:", error);
-    res.status(500).json({ error: "Error al actualizar plantilla." });
+);
+router6.put(
+  "/document-templates",
+  requireAuth,
+  requireTenant,
+  requireRole(["admin", "direccion"]),
+  async (req, res) => {
+    const { id, system_prompt } = req.body;
+    if (!id || !system_prompt) {
+      res.status(400).json({ error: "Campos requeridos: id, system_prompt" });
+      return;
+    }
+    if (typeof system_prompt !== "string" || system_prompt.trim().length === 0) {
+      res.status(400).json({ error: "El system_prompt no puede estar vac\xEDo." });
+      return;
+    }
+    if (system_prompt.length > 2e4) {
+      res.status(400).json({ error: "El system_prompt excede el m\xE1ximo permitido (20000 caracteres)." });
+      return;
+    }
+    try {
+      const serviceRoleKey = getServiceRoleKey();
+      const sanitized = sanitize(system_prompt).slice(0, 2e4);
+      await httpsPatch(
+        getSupabaseHostname2(),
+        `/rest/v1/document_templates?id=eq.${id}`,
+        {
+          system_prompt: sanitized,
+          updated_at: (/* @__PURE__ */ new Date()).toISOString()
+        },
+        {
+          apikey: serviceRoleKey,
+          Authorization: `Bearer ${serviceRoleKey}`,
+          Prefer: "return=minimal"
+        }
+      );
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error updating template:", error);
+      res.status(500).json({ error: "Error al actualizar plantilla." });
+    }
   }
-});
+);
 var templates_default = router6;
 
 // server/api/routes/parse.ts
@@ -740,7 +873,7 @@ router7.post("/parse-annotations", requireAuth, async (req, res) => {
       return;
     }
     const ip = req.ip || req.connection?.remoteAddress || "unknown";
-    if (!checkRateLimit(ip)) {
+    if (!await checkRateLimitAsync(ip)) {
       res.status(429).json({ error: "L\xEDmite de solicitudes alcanzado. Intente en un minuto." });
       return;
     }
@@ -1519,12 +1652,9 @@ async function confirmDisciplinaryProcess(input) {
 // server/api/routes/processDisciplinaryPdf.ts
 var router8 = Router8();
 router8.use(requireAuth);
-function getTenantId(body) {
-  return body.tenantId || process.env.DEFAULT_TENANT_ID || "";
-}
-function assertRateLimit(req) {
+async function assertRateLimit(req) {
   const ip = req.ip || req.connection?.remoteAddress || "unknown";
-  return checkRateLimit(ip);
+  return checkRateLimitAsync(ip);
 }
 function getBearerToken(req) {
   const authHeader = req.headers.authorization;
@@ -1549,15 +1679,16 @@ function getProcessErrorResponse(error) {
   }
   return { status: 500, message };
 }
-router8.post("/process-disciplinary-pdf", async (req, res) => {
+router8.post("/process-disciplinary-pdf", requireTenant, async (req, res) => {
   try {
-    if (!assertRateLimit(req)) {
+    if (!await assertRateLimit(req)) {
       res.status(429).json({ error: "L\xEDmite de solicitudes alcanzado. Intente en un minuto." });
       return;
     }
     const body = req.body;
-    const tenantId = getTenantId(body);
-    if (!tenantId || !body.bucket || !body.storagePath || !body.fileName) {
+    const authReq = req;
+    const tenantId = authReq.tenantId;
+    if (!body.bucket || !body.storagePath || !body.fileName) {
       res.status(400).json({ error: "Faltan par\xE1metros requeridos para analizar el PDF" });
       return;
     }
@@ -1575,15 +1706,16 @@ router8.post("/process-disciplinary-pdf", async (req, res) => {
     res.status(response.status).json({ error: response.message });
   }
 });
-router8.post("/process-disciplinary-pdf/confirm", async (req, res) => {
+router8.post("/process-disciplinary-pdf/confirm", requireTenant, async (req, res) => {
   try {
-    if (!assertRateLimit(req)) {
+    if (!await assertRateLimit(req)) {
       res.status(429).json({ error: "L\xEDmite de solicitudes alcanzado. Intente en un minuto." });
       return;
     }
     const body = req.body;
-    const tenantId = getTenantId(body);
-    if (!tenantId || !body.bucket || !body.storagePath || !body.fileName || !body.fileHash || !body.studentId) {
+    const authReq = req;
+    const tenantId = authReq.tenantId;
+    if (!body.bucket || !body.storagePath || !body.fileName || !body.fileHash || !body.studentId) {
       res.status(400).json({ error: "Faltan par\xE1metros requeridos para confirmar el proceso" });
       return;
     }
@@ -1635,6 +1767,7 @@ router9.post("/usage/events", requireAuth, async (req, res) => {
     await supabase.from("usage_events").insert({
       event_name: eventName,
       user_id: authReq.user?.sub ?? null,
+      tenant_id: authReq.tenantId ?? null,
       properties: properties ?? {}
     });
     res.json({ success: true });
@@ -1643,57 +1776,74 @@ router9.post("/usage/events", requireAuth, async (req, res) => {
     res.status(500).json({ error: "Error interno al registrar evento." });
   }
 });
-router9.get("/usage/stats", requireAuth, async (req, res) => {
-  try {
-    const authReq = req;
-    const since = authReq.query.since ?? void 0;
-    const until = req.query.until ?? void 0;
-    const { createClient: createClient2 } = await import("@supabase/supabase-js");
-    const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
-    if (!supabaseUrl || !supabaseKey) {
-      res.status(500).json({ error: "Supabase no configurado" });
-      return;
+router9.get(
+  "/usage/stats",
+  requireAuth,
+  requireTenant,
+  requireRole(["admin", "direccion"]),
+  async (req, res) => {
+    try {
+      const authReq = req;
+      const since = authReq.query.since ?? void 0;
+      const until = req.query.until ?? void 0;
+      const { createClient: createClient2 } = await import("@supabase/supabase-js");
+      const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
+      if (!supabaseUrl || !supabaseKey) {
+        res.status(500).json({ error: "Supabase no configurado" });
+        return;
+      }
+      const supabase = createClient2(supabaseUrl, supabaseKey, {
+        auth: { persistSession: false }
+      });
+      const params = {};
+      if (since) params.since = since;
+      if (until) params.until = until;
+      const { data: eventStats, error: eventError } = await supabase.rpc(
+        "get_usage_stats",
+        params
+      );
+      if (eventError) {
+        console.error("Error fetching usage stats:", eventError);
+        res.status(500).json({ error: "Error al obtener estad\xEDsticas." });
+        return;
+      }
+      const { data: dailyActive, error: dailyError } = await supabase.rpc(
+        "get_daily_active_users",
+        params
+      );
+      if (dailyError) {
+        console.error("Error fetching daily active users:", dailyError);
+      }
+      res.json({
+        events: eventStats ?? [],
+        dailyActiveUsers: dailyActive ?? []
+      });
+    } catch (error) {
+      console.error("Error fetching usage stats:", error);
+      res.status(500).json({ error: "Error interno al obtener estad\xEDsticas." });
     }
-    const supabase = createClient2(supabaseUrl, supabaseKey, {
-      auth: { persistSession: false }
-    });
-    const params = {};
-    if (since) params.since = since;
-    if (until) params.until = until;
-    const { data: eventStats, error: eventError } = await supabase.rpc(
-      "get_usage_stats",
-      params
-    );
-    if (eventError) {
-      console.error("Error fetching usage stats:", eventError);
-      res.status(500).json({ error: "Error al obtener estad\xEDsticas." });
-      return;
-    }
-    const { data: dailyActive, error: dailyError } = await supabase.rpc(
-      "get_daily_active_users",
-      params
-    );
-    if (dailyError) {
-      console.error("Error fetching daily active users:", dailyError);
-    }
-    res.json({
-      events: eventStats ?? [],
-      dailyActiveUsers: dailyActive ?? []
-    });
-  } catch (error) {
-    console.error("Error fetching usage stats:", error);
-    res.status(500).json({ error: "Error interno al obtener estad\xEDsticas." });
   }
-});
+);
 var usage_default = router9;
 
 // server/api/index.ts
 var __filename = fileURLToPath(import.meta.url);
 var __dirname = path.dirname(__filename);
+var allowedOrigins = (process.env.ALLOWED_ORIGINS || "").split(",").map((o) => o.trim()).filter(Boolean);
 var app = express();
 app.set("trust proxy", 1);
 app.use(compression());
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false
+}));
+app.use(cors({
+  origin: allowedOrigins.length > 0 ? allowedOrigins : false,
+  credentials: allowedOrigins.length > 0,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 app.use(express.json({ limit: "100kb" }));
 app.use("/api", improve_default);
 app.use("/api", advisor_default);

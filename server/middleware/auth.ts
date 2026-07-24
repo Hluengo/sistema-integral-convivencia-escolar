@@ -2,6 +2,7 @@
 
 import type { Request, Response, NextFunction } from 'express';
 import https from 'node:https';
+import type { ProfileRole } from '../types';
 
 export interface JwtPayload {
   sub?: string;
@@ -106,7 +107,7 @@ async function injectTenantContext(req: Request, res: Response): Promise<void> {
       const r = https.request(
         {
           hostname,
-          path: `/rest/v1/profiles?user_id=eq.${encodeURIComponent(userId)}&select=tenant_id&limit=1`,
+          path: `/rest/v1/profiles?user_id=eq.${encodeURIComponent(userId)}&select=tenant_id,role&limit=1`,
           method: 'GET',
           headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` },
         },
@@ -132,11 +133,14 @@ async function injectTenantContext(req: Request, res: Response): Promise<void> {
       });
       r.end();
     });
-    if (Array.isArray(data) && data.length > 0 && (data[0] as { tenant_id?: string }).tenant_id) {
-      (req as Request & { tenantId?: string }).tenantId = (
-        data[0] as { tenant_id: string }
-      ).tenant_id;
-      res.setHeader('x-tenant-id', (data[0] as { tenant_id: string }).tenant_id);
+    if (Array.isArray(data) && data.length > 0) {
+      const profile = data[0] as { tenant_id?: string; role?: string };
+      if (profile.tenant_id) {
+        (req as Request & { tenantId?: string }).tenantId = profile.tenant_id;
+      }
+      if (profile.role) {
+        (req as Request & { profileRole?: ProfileRole }).profileRole = profile.role as ProfileRole;
+      }
     }
   } catch (err) {
     console.error(

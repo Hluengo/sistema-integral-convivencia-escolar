@@ -3,7 +3,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { sanitizeForAI } from '../validators/sanitizers.js';
-import { checkRateLimit } from '../services/rateLimit.js';
+import { checkRateLimitAsync } from '../services/rateLimit.js';
 import { getCacheKey, getFromCache, setCache } from '../services/cache.js';
 import { callGroq } from '../services/groq.js';
 
@@ -17,8 +17,14 @@ router.post('/advisor-chat', requireAuth, async (req, res) => {
       return;
     }
 
+    const MAX_ADVISOR_MESSAGE_LENGTH = 8_000;
+    if (message.length > MAX_ADVISOR_MESSAGE_LENGTH) {
+      res.status(400).json({ error: 'El mensaje supera el máximo permitido.' });
+      return;
+    }
+
     const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-    if (!checkRateLimit(ip)) {
+    if (!await checkRateLimitAsync(ip)) {
       res
         .status(429)
         .json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
@@ -59,12 +65,7 @@ Tus respuestas deben estar redactadas en español formal de Chile, alineadas con
     res.json({ success: true, reply });
   } catch (error) {
     console.error('Error en el Chat de Consultoría:', (error as Error).message || error);
-    const detail = (error as Error).message?.includes('OPENROUTER_API_KEY')
-      ? 'API key de OpenRouter no configurada en variables de entorno de Vercel.'
-      : (error as Error).message?.includes('OpenRouter error')
-        ? `Error de OpenRouter: ${(error as Error).message}`
-        : 'Error interno del servidor.';
-    res.status(500).json({ error: detail });
+    res.status(500).json({ error: 'Error interno del servidor.' });
   }
 });
 

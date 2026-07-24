@@ -6,6 +6,8 @@
 import express from 'express';
 import path from 'node:path';
 import compression from 'compression';
+import helmet from 'helmet';
+import cors from 'cors';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
 
@@ -25,8 +27,23 @@ dotenv.config({ path: '.env.local' });
 const app = express();
 const PORT = Number.parseInt(process.env.PORT || '3001', 10);
 
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
 app.set('trust proxy', 1);
 app.use(compression());
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+}));
+app.use(cors({
+  origin: allowedOrigins.length > 0 ? allowedOrigins : false,
+  credentials: allowedOrigins.length > 0,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 app.use(express.json({ limit: '100kb' }));
 
 // API routes

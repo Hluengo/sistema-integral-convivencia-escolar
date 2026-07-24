@@ -34,7 +34,15 @@ export default function TemplateEditor({ onBack }: { onBack: () => void }) {
 
   const fetchTemplates = useCallback(async () => {
     try {
-      const res = await fetch('/api/document-templates');
+      const res = await fetch('/api/document-templates/admin');
+      if (res.status === 401) {
+        setSaveError('Sesión no válida. Inicie sesión nuevamente.');
+        return;
+      }
+      if (res.status === 403) {
+        setSaveError('No tiene permisos para administrar plantillas.');
+        return;
+      }
       const data = await res.json();
       if (Array.isArray(data)) {
         setTemplates(data);

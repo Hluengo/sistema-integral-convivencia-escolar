@@ -1,8 +1,10 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { Router } from 'express';
-import { checkRateLimit } from '../lib/rateLimit';
+import { checkRateLimitAsync } from '../lib/rateLimit';
 import { requireAuth } from '../middleware/auth';
+import { requireTenant } from '../middleware/requireTenant';
+import type { AuthenticatedRequest } from '../types';
 import { analyzeDisciplinaryPdf, confirmDisciplinaryProcess } from '../lib/disciplinaryPdfAnalysis';
 
 const router = Router();
@@ -33,13 +35,9 @@ interface AuthedRequestBody {
   idempotencyKey?: string;
 }
 
-function getTenantId(body: AuthedRequestBody): string {
-  return body.tenantId || process.env.DEFAULT_TENANT_ID || '';
-}
-
-function assertRateLimit(req: Parameters<Parameters<Router['post']>[1]>[0]): boolean {
+async function assertRateLimit(req: Parameters<Parameters<Router['post']>[1]>[0]): Promise<boolean> {
   const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-  return checkRateLimit(ip);
+  return checkRateLimitAsync(ip);
 }
 
 function getBearerToken(req: Parameters<Parameters<Router['post']>[1]>[0]): string | undefined {
@@ -75,16 +73,17 @@ function getProcessErrorResponse(error: unknown): { status: number; message: str
 
   return { status: 500, message };
 }
-router.post('/process-disciplinary-pdf', async (req, res) => {
+router.post('/process-disciplinary-pdf', requireTenant, async (req, res) => {
   try {
-    if (!assertRateLimit(req)) {
+    if (!await assertRateLimit(req)) {
       res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
       return;
     }
 
     const body = req.body as AuthedRequestBody;
-    const tenantId = getTenantId(body);
-    if (!tenantId || !body.bucket || !body.storagePath || !body.fileName) {
+    const authReq = req as AuthenticatedRequest;
+    const tenantId = authReq.tenantId!;
+    if (!body.bucket || !body.storagePath || !body.fileName) {
       res.status(400).json({ error: 'Faltan parámetros requeridos para analizar el PDF' });
       return;
     }
@@ -104,16 +103,17 @@ router.post('/process-disciplinary-pdf', async (req, res) => {
   }
 });
 
-router.post('/process-disciplinary-pdf/confirm', async (req, res) => {
+router.post('/process-disciplinary-pdf/confirm', requireTenant, async (req, res) => {
   try {
-    if (!assertRateLimit(req)) {
+    if (!await assertRateLimit(req)) {
       res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
       return;
     }
 
     const body = req.body as AuthedRequestBody;
-    const tenantId = getTenantId(body);
-    if (!tenantId || !body.bucket || !body.storagePath || !body.fileName || !body.fileHash || !body.studentId) {
+    const authReq = req as AuthenticatedRequest;
+    const tenantId = authReq.tenantId!;
+    if (!body.bucket || !body.storagePath || !body.fileName || !body.fileHash || !body.studentId) {
       res.status(400).json({ error: 'Faltan parámetros requeridos para confirmar el proceso' });
       return;
     }

@@ -6,7 +6,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth';
 import { sanitizeForAI } from '../lib/validators';
-import { checkRateLimit } from '../lib/rateLimit';
+import { checkRateLimitAsync } from '../lib/rateLimit';
 import { getCacheKey, getFromCache, setCache } from '../lib/cache';
 import { callGroq } from '../lib/groq';
 
@@ -16,8 +16,19 @@ router.post('/advisor-chat', requireAuth, async (req, res) => {
   try {
     const { message, history } = req.body;
 
+    if (!message || typeof message !== 'string' || !message.trim()) {
+      res.status(400).json({ error: 'Campo requerido: message' });
+      return;
+    }
+
+    const MAX_ADVISOR_MESSAGE_LENGTH = 8_000;
+    if (message.length > MAX_ADVISOR_MESSAGE_LENGTH) {
+      res.status(400).json({ error: 'El mensaje supera el máximo permitido.' });
+      return;
+    }
+
     const ip = req.ip || req.socket?.remoteAddress || 'unknown';
-    if (!checkRateLimit(ip)) {
+    if (!await checkRateLimitAsync(ip)) {
       res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
       return;
     }

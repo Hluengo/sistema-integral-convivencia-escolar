@@ -4,7 +4,7 @@
  */
 
 import { Router } from 'express';
-import { checkRateLimit } from '../lib/rateLimit';
+import { checkRateLimitAsync } from '../lib/rateLimit';
 import { requireAuth } from '../middleware/auth';
 
 const router = Router();
@@ -24,7 +24,7 @@ router.post('/parse-annotations', requireAuth, async (req, res) => {
     }
 
     const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-    if (!checkRateLimit(ip)) {
+    if (!await checkRateLimitAsync(ip)) {
       res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
       return;
     }

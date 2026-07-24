@@ -3,7 +3,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { sanitizeForAI, requireStr, optStr, optArr } from '../validators/sanitizers.js';
-import { checkRateLimit } from '../services/rateLimit.js';
+import { checkRateLimitAsync } from '../services/rateLimit.js';
 import { callGroq } from '../services/groq.js';
 
 const router = Router();
@@ -18,7 +18,7 @@ router.post('/audit-due-process', requireAuth, async (req, res) => {
     const observations = optStr(body, 'observations', 5000);
 
     const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-    if (!checkRateLimit(ip)) {
+    if (!await checkRateLimitAsync(ip)) {
       res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
       return;
     }
