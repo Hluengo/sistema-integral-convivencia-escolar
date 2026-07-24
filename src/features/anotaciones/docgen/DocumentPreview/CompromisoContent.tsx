@@ -36,15 +36,23 @@ export default function CompromisoContent(props: DocContentProps) {
         <p>{letterContent.medida}</p>
       </Section>
 
-      <Section number={5} title="Acuerdos y seguimiento">
+      <Section number={5} title="Acuerdos y cierre">
         <p style={{ whiteSpace: 'pre-line' }}>{letterContent.acuerdos}</p>
-        <p style={{ marginTop: '12px', whiteSpace: 'pre-line', color: '#4b5563' }}>
+        <p
+          style={{
+            marginTop: '12px',
+            whiteSpace: 'pre-line',
+            fontSize: '9pt',
+            color: '#6b7280',
+            fontStyle: 'italic',
+          }}
+        >
           {letterContent.cierre}
         </p>
         {letterContent.observaciones && (
           <p
             style={{
-              marginTop: '8px',
+              marginTop: '12px',
               whiteSpace: 'pre-line',
               color: '#4b5563',
               fontStyle: 'italic',

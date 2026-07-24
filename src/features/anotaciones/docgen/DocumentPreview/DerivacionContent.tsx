@@ -40,16 +40,31 @@ export default function DerivacionContent(props: DocContentProps) {
 
       <Section number={4} title="Medida / acciones sugeridas">
         <p>{letterContent.medida}</p>
-        <p style={{ marginTop: '8px', whiteSpace: 'pre-line' }}>{letterContent.acuerdos}</p>
       </Section>
 
-      <Section number={5} title="Cierre y observaciones">
-        <p style={{ whiteSpace: 'pre-line' }}>{letterContent.cierre}</p>
-        {letterContent.observaciones ? (
-          <p style={{ marginTop: '8px', whiteSpace: 'pre-line' }}>{letterContent.observaciones}</p>
-        ) : (
-          <p style={{ marginTop: '8px', color: '#9ca3af', fontStyle: 'italic' }}>
-            Sin observaciones adicionales.
+      <Section number={5} title="Acuerdos y cierre">
+        <p style={{ whiteSpace: 'pre-line' }}>{letterContent.acuerdos}</p>
+        <p
+          style={{
+            marginTop: '12px',
+            whiteSpace: 'pre-line',
+            fontSize: '9pt',
+            color: '#6b7280',
+            fontStyle: 'italic',
+          }}
+        >
+          {letterContent.cierre}
+        </p>
+        {letterContent.observaciones && (
+          <p
+            style={{
+              marginTop: '12px',
+              whiteSpace: 'pre-line',
+              color: '#4b5563',
+              fontStyle: 'italic',
+            }}
+          >
+            Observaciones: {letterContent.observaciones}
           </p>
         )}
         <div className="letter-legal-box">
