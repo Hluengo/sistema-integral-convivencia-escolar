@@ -99,7 +99,7 @@ async function verifyJwtSignature(
 
 async function injectTenantContext(
   req: Request,
-  res: Response,
+  _res: Response,
 ): Promise<void> {
   const user = (req as Request & { user: JwtPayload }).user;
   if (!user?.sub) return;

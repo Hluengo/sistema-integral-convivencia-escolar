@@ -6,8 +6,8 @@ import { requireAuth } from '../../middleware/auth';
 import { requireTenant } from '../../middleware/requireTenant';
 import { requireRole } from '../../middleware/requireRole';
 
-function createMockReq(overrides: Record<string, unknown> = {}) {
-  return {
+function createMockReq(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  const req: Record<string, unknown> = {
     user: undefined,
     tenantId: undefined,
     profileRole: undefined,
@@ -15,11 +15,12 @@ function createMockReq(overrides: Record<string, unknown> = {}) {
     body: {},
     query: {},
     ...overrides,
-  } as any;
+  };
+  return req;
 }
 
 function createMockRes() {
-  const res: any = {};
+  const res: Record<string, unknown> = {};
   res.status = (code: number) => { res._status = code; return res; };
   res.json = (body: unknown) => { res._body = body; return res; };
   res.setHeader = () => res;

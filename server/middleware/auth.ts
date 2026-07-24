@@ -94,7 +94,7 @@ async function verifyJwtSignature(token: string, secret: string): Promise<JwtPay
   return verifyViaSupabaseApi(token);
 }
 
-async function injectTenantContext(req: Request, res: Response): Promise<void> {
+async function injectTenantContext(req: Request, _res: Response): Promise<void> {
   const user = (req as Request & { user: JwtPayload }).user;
   if (!user?.sub) return;
   const supabaseUrl = process.env.VITE_SUPABASE_URL;

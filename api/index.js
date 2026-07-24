@@ -85,7 +85,7 @@ async function verifyJwtSignature(token, secret) {
   if (hmacResult) return hmacResult;
   return verifyViaSupabaseApi(token);
 }
-async function injectTenantContext(req, res) {
+async function injectTenantContext(req, _res) {
   const user = req.user;
   if (!user?.sub) return;
   const supabaseUrl = process.env.VITE_SUPABASE_URL;

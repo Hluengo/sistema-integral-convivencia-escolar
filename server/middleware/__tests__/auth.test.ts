@@ -5,17 +5,18 @@ import { describe, it } from 'node:test';
 import { requireRole } from '../requireRole';
 import { requireTenant } from '../requireTenant';
 
-function createMockReq(overrides: Record<string, unknown> = {}) {
-  return {
+function createMockReq(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  const req: Record<string, unknown> = {
     user: undefined,
     tenantId: undefined,
     profileRole: undefined,
     ...overrides,
-  } as any;
+  };
+  return req;
 }
 
 function createMockRes() {
-  const res: any = {};
+  const res: Record<string, unknown> = {};
   res.status = (code: number) => { res._status = code; return res; };
   res.json = (body: unknown) => { res._body = body; return res; };
   return res;
