@@ -33,7 +33,7 @@ const LETTER_DOCUMENT_CSS = `
   .letter-section { margin-bottom: 3mm; }
   .letter-section-heading { display: flex; align-items: center; gap: 8px; padding-bottom: 2px; margin-bottom: 1.5mm; border-bottom: 2px solid #d1d5db; font-size: 11pt; font-weight: 700; color: #1f2937; }
   .letter-section-number { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex-shrink: 0; border-radius: 50%; background: #1f2937; color: white; font-size: 10pt; font-weight: 700; }
-  .letter-section-body { font-size: 9.5pt; line-height: 1.4; color: #374151; }
+  .letter-section-body { font-size: 9.5pt; line-height: 1.4; text-align: justify; color: #374151; }
   .letter-data-row { display: flex; gap: 6px; margin-bottom: 2px; font-size: 9.5pt; line-height: 1.5; }
   .letter-data-label { width: 130px; flex-shrink: 0; font-weight: 600; color: #4b5563; }
   .letter-data-value { color: #1f2937; }

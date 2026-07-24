@@ -125,6 +125,7 @@
 .letter-section-body {
   font-size: 9.5pt;
   line-height: 1.4;
+  text-align: justify;
   color: #374151;
 }
 

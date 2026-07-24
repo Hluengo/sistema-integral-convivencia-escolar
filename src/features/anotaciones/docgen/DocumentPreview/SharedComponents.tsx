@@ -181,10 +181,14 @@ export function LetterMetadataGrid({ items }: { items: LetterMetadataItem[] }) {
 }
 
 export function LetterSignatureGrid({ signatures }: { signatures: LetterSignature[] }) {
+  const cols = Math.min(Math.max(signatures.length, 1), 4);
   return (
     <div className="letter-signatures">
       <p className="letter-signatures-title">Firmas</p>
-      <div className="letter-signature-grid">
+      <div
+        className="letter-signature-grid"
+        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+      >
         {signatures.map((sig, idx) => (
           <div key={idx} className="letter-signature-item">
             <div className="letter-signature-line">{sig.name || '_________________________'}</div>
