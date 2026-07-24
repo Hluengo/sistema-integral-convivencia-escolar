@@ -29,8 +29,8 @@ export interface DocContentProps {
 
 export const TITLE_MAP: Record<DocType, string> = {
   amonestacion: 'Amonestación Escrita',
-  compromiso_conductual: 'Carta de Compromiso Conductual',
-  derivacion: 'Derivación Equipo de Convivencia Escolar',
+  compromiso_conductual: 'Compromiso Conductual',
+  derivacion: 'Derivación a Convivencia Escolar',
 };
 
 export const DEFAULT_COMMITMENTS = [

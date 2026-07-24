@@ -1,30 +1,40 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { Section, DataRow } from './SharedComponents';
+import { Section, LetterMetadataGrid, LetterSignatureGrid } from './SharedComponents';
+import type { LetterMetadataItem, LetterSignature } from './SharedComponents';
 import type { DocContentProps } from './docTypes';
 
 export default function DerivacionContent(props: DocContentProps) {
   const {
     currentName,
+    currentRut,
     currentCourse,
-    coordinatorName,
-    inspectorName,
     currentTeacher,
     dateStr,
+    negativeCount,
     letterContent,
   } = props;
+
+  const metadataItems: LetterMetadataItem[] = [
+    { label: 'Nombre del Estudiante', value: currentName },
+    { label: 'RUT', value: currentRut },
+    { label: 'Curso', value: currentCourse },
+    { label: 'Fecha de Emisión', value: dateStr },
+    { label: 'Profesor/a Jefe', value: currentTeacher },
+    { label: 'Apoderado/a', value: props.apoderadoName || '________________' },
+    { label: 'Anotaciones Negativas', value: negativeCount },
+  ];
+
+  const signatures: LetterSignature[] = [
+    { name: props.inspectorName, role: 'Inspector/a' },
+    { name: props.coordinatorName, role: 'Coordinador/a de Ciclo' },
+    { name: currentTeacher, role: 'Profesor/a Jefe' },
+  ];
 
   return (
     <div>
       <Section number={1} title="Antecedentes">
-        <DataRow label="Nombre del Estudiante" value={currentName} />
-        <DataRow label="RUT" value={props.currentRut} />
-        <DataRow label="Curso" value={currentCourse} />
-        <DataRow label="Profesor Jefe" value={currentTeacher} />
-        <DataRow label="Inspector/a" value={inspectorName || '________________'} />
-        <DataRow label="Coordinador/a de Ciclo" value={coordinatorName || '________________'} />
-        <DataRow label="Fecha de Derivación" value={dateStr} />
-        <DataRow label="Anotaciones Negativas" value={props.negativeCount} />
+        <LetterMetadataGrid items={metadataItems} />
       </Section>
 
       <Section number={2} title="Motivo de Derivación">
@@ -34,7 +44,7 @@ export default function DerivacionContent(props: DocContentProps) {
       <Section number={3} title="Descripción / antecedentes">
         <p>{letterContent.descripcion}</p>
         <p style={{ marginTop: '8px' }}>
-          Cantidad de anotaciones negativas consideradas: <strong>{props.negativeCount}</strong>.
+          Cantidad de anotaciones negativas consideradas: <strong>{negativeCount}</strong>.
         </p>
       </Section>
 
@@ -76,29 +86,7 @@ export default function DerivacionContent(props: DocContentProps) {
         </div>
       </Section>
 
-      <div className="letter-signatures">
-        <p className="letter-signatures-title">Firmas</p>
-        <div className="letter-signatures-grid letter-signatures-grid-3">
-          <div className="letter-signature-item">
-            <div className="letter-signature-line">
-              {inspectorName || '_________________________'}
-            </div>
-            <p className="letter-signature-role">Inspector/a</p>
-          </div>
-          <div className="letter-signature-item">
-            <div className="letter-signature-line">
-              {coordinatorName || '_________________________'}
-            </div>
-            <p className="letter-signature-role">Coordinador/a de Ciclo</p>
-          </div>
-          <div className="letter-signature-item">
-            <div className="letter-signature-line">
-              {currentTeacher || '_________________________'}
-            </div>
-            <p className="letter-signature-role">Profesor/a Jefe</p>
-          </div>
-        </div>
-      </div>
+      <LetterSignatureGrid signatures={signatures} />
     </div>
   );
 }

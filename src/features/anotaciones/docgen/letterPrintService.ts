@@ -23,27 +23,30 @@ const LETTER_DOCUMENT_CSS = `
     font-size: 10pt; line-height: 1.5; overflow: hidden; position: relative;
     break-after: page; page-break-after: always;
   }
-  .letter-header { display: flex; align-items: center; gap: 14px; padding-bottom: 14px; margin-bottom: 16px; border-bottom: 2px solid #d1d5db; }
+  .letter-header { display: flex; align-items: center; gap: 14px; padding-bottom: 10px; margin-bottom: 3mm; border-bottom: 2px solid #d1d5db; }
   .letter-header-logo { height: 60px; width: auto; flex-shrink: 0; object-fit: contain; }
   .letter-header-text { display: flex; flex-direction: column; }
   .letter-header-institution { font-size: 9pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: #6b7280; }
   .letter-header-department { margin-top: 2px; font-size: 11pt; font-weight: 700; color: #1f2937; }
   .letter-header-year { font-size: 10pt; color: #6b7280; }
-  .letter-title { margin-bottom: 20px; text-align: center; font-size: 14pt; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #111827; }
-  .letter-section { margin-bottom: 14px; }
-  .letter-section-heading { display: flex; align-items: center; gap: 8px; padding-bottom: 4px; margin-bottom: 8px; border-bottom: 2px solid #d1d5db; font-size: 11pt; font-weight: 700; color: #1f2937; }
+  .letter-title { margin-bottom: 3mm; text-align: center; font-size: 14pt; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #111827; }
+  .letter-section { margin-bottom: 3mm; }
+  .letter-section-heading { display: flex; align-items: center; gap: 8px; padding-bottom: 2px; margin-bottom: 1.5mm; border-bottom: 2px solid #d1d5db; font-size: 11pt; font-weight: 700; color: #1f2937; }
   .letter-section-number { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex-shrink: 0; border-radius: 50%; background: #1f2937; color: white; font-size: 10pt; font-weight: 700; }
-  .letter-section-body { font-size: 9.5pt; line-height: 1.6; color: #374151; }
+  .letter-section-body { font-size: 9.5pt; line-height: 1.4; color: #374151; }
   .letter-data-row { display: flex; gap: 6px; margin-bottom: 2px; font-size: 9.5pt; line-height: 1.5; }
   .letter-data-label { width: 130px; flex-shrink: 0; font-weight: 600; color: #4b5563; }
   .letter-data-value { color: #1f2937; }
-  .letter-signatures { margin-top: 28px; padding-top: 14px; border-top: 1px solid #d1d5db; break-inside: avoid; page-break-inside: avoid; }
-  .letter-signatures-title { margin-bottom: 20px; text-align: center; font-size: 9pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #374151; }
-  .letter-signatures-grid { display: grid; gap: 14px; font-size: 9pt; color: #4b5563; }
-  .letter-signatures-grid-4 { grid-template-columns: repeat(4, 1fr); }
-  .letter-signatures-grid-3 { grid-template-columns: repeat(3, 1fr); }
-  .letter-signature-item { text-align: center; break-inside: avoid; page-break-inside: avoid; }
-  .letter-signature-line { margin-top: 28px; padding-top: 4px; border-top: 1px solid #9ca3af; }
+  .letter-metadata-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); column-gap: 10mm; row-gap: 1.5mm; margin-top: 1.5mm; margin-bottom: 2.5mm; align-items: start; }
+  .letter-metadata-item { display: grid; grid-template-columns: 36mm minmax(0,1fr); column-gap: 2mm; min-width: 0; align-items: start; font-size: 8.5pt; line-height: 1.25; }
+  .letter-metadata-item--full { grid-column: 1 / -1; }
+  .letter-metadata-label { font-weight: 600; color: #4b5563; line-height: 1.25; }
+  .letter-metadata-value { min-width: 0; overflow-wrap: anywhere; line-height: 1.25; color: #1f2937; }
+  .letter-signatures { margin-top: 18px; padding-top: 10px; border-top: 1px solid #d1d5db; break-inside: avoid; page-break-inside: avoid; }
+  .letter-signatures-title { margin-bottom: 14px; text-align: center; font-size: 9pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #374151; }
+  .letter-signature-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 3mm; font-size: 9pt; color: #4b5563; }
+  .letter-signature-item { text-align: center; break-inside: avoid; page-break-inside: avoid; min-width: 0; }
+  .letter-signature-line { margin-top: 20px; padding-top: 4px; border-top: 1px solid #9ca3af; overflow-wrap: anywhere; word-break: break-word; }
   .letter-signature-role { margin-top: 2px; font-size: 8pt; color: #6b7280; }
   .letter-legal-box { margin-top: 14px; padding: 10px; border: 1px solid #e5e7eb; border-radius: 6px; background: #f9fafb; }
   .letter-legal-text { font-size: 8pt; line-height: 1.6; color: #6b7280; }

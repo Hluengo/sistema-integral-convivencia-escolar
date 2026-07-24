@@ -4,6 +4,7 @@ import { forwardRef } from 'react';
 import type { Annotation } from '@/src/shared/lib/types';
 import { LOGO_BASE64 } from '@/src/lib/logoBase64';
 import { TITLE_MAP, type DocType, type LetterContent } from './DocumentPreview/docTypes';
+import { LetterInstitutionalHeader, LetterTitle } from './DocumentPreview/SharedComponents';
 import AmonestacionContent from './DocumentPreview/AmonestacionContent';
 import CompromisoContent from './DocumentPreview/CompromisoContent';
 import DerivacionContent from './DocumentPreview/DerivacionContent';
@@ -63,18 +64,8 @@ const LetterA4Document = forwardRef<HTMLDivElement, LetterA4DocumentProps>(
 
     return (
       <div ref={ref} id={id} className={`letter-document ${className}`}>
-        <div className="letter-header">
-          <img src={LOGO_BASE64} alt="Logo Colegio" className="letter-header-logo" />
-          <div className="letter-header-text">
-            <span className="letter-header-institution">
-              Fundación Educacional Colegio Carmela Romero de Espinosa
-            </span>
-            <span className="letter-header-department">DIRECCIÓN DE CONVIVENCIA ESCOLAR</span>
-            <span className="letter-header-year">Año 2026</span>
-          </div>
-        </div>
-
-        <h2 className="letter-title">{title}</h2>
+        <LetterInstitutionalHeader year="2026" logoSrc={LOGO_BASE64} />
+        <LetterTitle>{title}</LetterTitle>
 
         {docType === 'amonestacion' && <AmonestacionContent {...sharedProps} />}
         {docType === 'compromiso_conductual' && <CompromisoContent {...sharedProps} />}

@@ -1,11 +1,13 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { Section, DataRow } from './SharedComponents';
+import { Section, LetterMetadataGrid, LetterSignatureGrid } from './SharedComponents';
+import type { LetterMetadataItem, LetterSignature } from './SharedComponents';
 import type { DocContentProps } from './docTypes';
 
 export default function AmonestacionContent(props: DocContentProps) {
   const {
     currentName,
+    currentRut,
     currentCourse,
     currentTeacher,
     apoderadoName,
@@ -14,16 +16,27 @@ export default function AmonestacionContent(props: DocContentProps) {
     letterContent,
   } = props;
 
+  const metadataItems: LetterMetadataItem[] = [
+    { label: 'Nombre del Estudiante', value: currentName },
+    { label: 'RUT', value: currentRut },
+    { label: 'Curso', value: currentCourse },
+    { label: 'Fecha de Emisión', value: dateStr },
+    { label: 'Profesor/a Jefe', value: currentTeacher },
+    { label: 'Apoderado/a', value: apoderadoName || '________________' },
+    { label: 'Anotaciones Negativas', value: negativeCount },
+  ];
+
+  const signatures: LetterSignature[] = [
+    { name: currentTeacher, role: 'Profesor/a Jefe' },
+    { name: props.inspectorName, role: 'Inspector/a' },
+    { name: apoderadoName, role: 'Apoderado' },
+    { name: currentName, role: 'Estudiante' },
+  ];
+
   return (
     <div>
       <Section number={1} title="Antecedentes">
-        <DataRow label="Nombre del Estudiante" value={currentName} />
-        <DataRow label="RUT" value={props.currentRut} />
-        <DataRow label="Curso" value={currentCourse} />
-        <DataRow label="Profesor Jefe" value={currentTeacher} />
-        <DataRow label="Apoderado" value={apoderadoName || '________________'} />
-        <DataRow label="Fecha de Emisión" value={dateStr} />
-        <DataRow label="Anotaciones Negativas" value={negativeCount} />
+        <LetterMetadataGrid items={metadataItems} />
       </Section>
 
       <Section number={2} title="Motivo">
@@ -68,33 +81,7 @@ export default function AmonestacionContent(props: DocContentProps) {
         )}
       </Section>
 
-      <div className="letter-signatures">
-        <p className="letter-signatures-title">Firmas</p>
-        <div className="letter-signatures-grid letter-signatures-grid-4">
-          <div className="letter-signature-item">
-            <div className="letter-signature-line">
-              {currentTeacher || '_________________________'}
-            </div>
-            <p className="letter-signature-role">Profesor/a Jefe</p>
-          </div>
-          <div className="letter-signature-item">
-            <div className="letter-signature-line">
-              {props.inspectorName || '_________________________'}
-            </div>
-            <p className="letter-signature-role">Inspector/a</p>
-          </div>
-          <div className="letter-signature-item">
-            <div className="letter-signature-line">
-              {apoderadoName || '_________________________'}
-            </div>
-            <p className="letter-signature-role">Apoderado</p>
-          </div>
-          <div className="letter-signature-item">
-            <div className="letter-signature-line">{currentName}</div>
-            <p className="letter-signature-role">Estudiante</p>
-          </div>
-        </div>
-      </div>
+      <LetterSignatureGrid signatures={signatures} />
     </div>
   );
 }
