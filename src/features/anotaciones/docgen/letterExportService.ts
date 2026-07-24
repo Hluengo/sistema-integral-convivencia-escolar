@@ -4,8 +4,8 @@
  * Letter Export Service — Servicio unico de exportacion para cartas disciplinarias.
  * Proporciona descarga PDF desde el componente LetterA4Document.
  *
- * La impresion ahora se maneja via useReactToPrint en AnotacionesDocumentGenerator,
- * ya que imprime el componente React montado con sus estilos CSS reales.
+ * Usa contenedor temporal off-screen para capturar el documento fuera del
+ * contexto del <dialog> nativo, donde html-to-image no funciona correctamente.
  */
 
 import { toPng } from 'html-to-image';
@@ -71,29 +71,6 @@ export function checkOverflow(element: HTMLElement): boolean {
   return element.scrollHeight > element.clientHeight + tolerance;
 }
 
-async function captureNodeAsImage(element: HTMLElement): Promise<string> {
-  const dataUrl = await toPng(element, {
-    quality: 1.0,
-    pixelRatio: CAPTURE_SCALE,
-    backgroundColor: '#ffffff',
-    cacheBust: true,
-    style: {
-      width: '216mm',
-      height: '330mm',
-      transform: 'none',
-      transformOrigin: 'top left',
-      boxShadow: 'none',
-      borderRadius: '0',
-    },
-    filter: (node: HTMLElement) => {
-      const isButton = node.tagName === 'BUTTON';
-      const isControl = node.getAttribute('role') === 'button';
-      return !isButton && !isControl;
-    },
-  });
-  return dataUrl;
-}
-
 function dataUrlToBytes(dataUrl: string): Uint8Array {
   const base64 = dataUrl.split(',')[1];
   const binary = atob(base64);
@@ -118,14 +95,47 @@ async function createPdfFromImage(imageDataUrl: string): Promise<Uint8Array> {
   return pdfDoc.save();
 }
 
-async function prepareElement(element: HTMLElement): Promise<void> {
-  await waitForFonts();
-  await waitForImages(element);
-}
+/**
+ * Captura un elemento como PNG usando un contenedor temporal off-screen.
+ * Esto es necesario porque html-to-image no puede capturar correctamente
+ * contenido dentro de un <dialog> nativo (top layer context).
+ */
+async function captureElementOffScreen(element: HTMLElement): Promise<string> {
+  const container = document.createElement('div');
+  container.style.cssText =
+    'position:fixed;left:-9999px;top:0;width:216mm;background:white;overflow:hidden;';
+  document.body.appendChild(container);
 
-function findLetterDocument(element: HTMLElement): HTMLElement {
-  const letterDocument = element.querySelector('.letter-document') as HTMLElement | null;
-  return letterDocument || element;
+  const clone = element.cloneNode(true) as HTMLElement;
+  clone.style.cssText =
+    'width:216mm;height:330mm;margin:0;padding:20mm 25mm;transform:none;box-shadow:none;border:none;border-radius:0;';
+  container.appendChild(clone);
+
+  await waitForFonts();
+  await waitForImages(clone);
+
+  const dataUrl = await toPng(clone, {
+    quality: 1.0,
+    pixelRatio: CAPTURE_SCALE,
+    backgroundColor: '#ffffff',
+    cacheBust: true,
+    style: {
+      width: '216mm',
+      height: '330mm',
+      transform: 'none',
+      transformOrigin: 'top left',
+      boxShadow: 'none',
+      borderRadius: '0',
+    },
+    filter: (node: HTMLElement) => {
+      const isButton = node.tagName === 'BUTTON';
+      const isControl = node.getAttribute('role') === 'button';
+      return !isButton && !isControl;
+    },
+  });
+
+  container.remove();
+  return dataUrl;
 }
 
 /**
@@ -133,9 +143,9 @@ function findLetterDocument(element: HTMLElement): HTMLElement {
  * No abre el dialogo de impresion.
  *
  * Flujo:
- * 1. Espera fuentes e imagenes
- * 2. Captura el nodo .letter-document como PNG de alta resolucion
- * 3. Genera un PDF A4 con pdf-lib
+ * 1. Clona el nodo .letter-document en un contenedor temporal off-screen
+ * 2. Captura como PNG de alta resolucion
+ * 3. Genera un PDF Oficio (216x330mm) con pdf-lib
  * 4. Descarga el archivo via file-saver
  */
 export async function downloadLetterPdf(
@@ -143,8 +153,6 @@ export async function downloadLetterPdf(
   options: LetterExportOptions
 ): Promise<LetterExportResult> {
   try {
-    await prepareElement(element);
-
     if (checkOverflow(element)) {
       return {
         success: false,
@@ -153,8 +161,9 @@ export async function downloadLetterPdf(
       };
     }
 
-    const letterDocument = findLetterDocument(element);
-    const imageDataUrl = await captureNodeAsImage(letterDocument);
+    const letterDocument =
+      (element.querySelector('.letter-document') as HTMLElement | null) || element;
+    const imageDataUrl = await captureElementOffScreen(letterDocument);
     const pdfBytes = await createPdfFromImage(imageDataUrl);
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
     const fileName = buildFileName(options);

@@ -332,7 +332,7 @@ export default function AnotacionesDocumentGenerator({
 
   const handlePrintHintConfirm = () => {
     setShowPrintHint(false);
-    handlePrint();
+    setTimeout(() => handlePrint(), 100);
   };
 
   const handleExportPDF = async () => {

@@ -1,13 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { Printer, AlertTriangle } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/src/shared/ui/Dialog';
+import { Printer, AlertTriangle, X } from 'lucide-react';
 
 interface PrintHintDialogProps {
   isOpen: boolean;
@@ -16,20 +9,38 @@ interface PrintHintDialogProps {
 }
 
 export default function PrintHintDialog({ isOpen, onConfirm, onCancel }: PrintHintDialogProps) {
+  if (!isOpen) return null;
+
   return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={(open) => {
-        if (!open) onCancel();
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCancel();
       }}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') onCancel();
+      }}
+      role="presentation"
     >
-      <DialogContent className="max-w-md" hideClose>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Printer className="h-5 w-5 text-neutral-600" />
-            Configurar impresion
-          </DialogTitle>
-        </DialogHeader>
+      <div
+        className="relative w-full max-w-md animate-scale-in rounded-2xl bg-white p-6 shadow-xl"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Configurar impresion"
+      >
+        <button
+          type="button"
+          onClick={onCancel}
+          className="absolute top-4 right-4 rounded-xl p-2 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600"
+          aria-label="Cerrar"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        <div className="mb-5 flex items-center gap-2">
+          <Printer className="h-5 w-5 text-neutral-600" />
+          <h2 className="font-semibold text-base text-neutral-900">Configurar impresion</h2>
+        </div>
 
         <div className="space-y-3 text-sm text-neutral-700">
           <p className="font-medium text-neutral-900">
@@ -71,7 +82,7 @@ export default function PrintHintDialog({ isOpen, onConfirm, onCancel }: PrintHi
           </div>
         </div>
 
-        <DialogFooter>
+        <div className="mt-6 flex items-center justify-end gap-3">
           <button
             type="button"
             onClick={onCancel}
@@ -87,8 +98,8 @@ export default function PrintHintDialog({ isOpen, onConfirm, onCancel }: PrintHi
             <Printer className="h-4 w-4" />
             Imprimir
           </button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+    </div>
   );
 }
