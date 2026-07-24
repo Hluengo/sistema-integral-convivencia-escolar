@@ -2,24 +2,24 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import type { Request, Response } from 'express';
 import { requireRole } from '../requireRole';
 import { requireTenant } from '../requireTenant';
 
-function createMockReq(overrides: Record<string, unknown> = {}): Record<string, unknown> {
-  const req: Record<string, unknown> = {
+function createMockReq(overrides: Record<string, unknown> = {}): Request {
+  return {
     user: undefined,
     tenantId: undefined,
     profileRole: undefined,
     ...overrides,
-  };
-  return req;
+  } as unknown as Request;
 }
 
-function createMockRes() {
+function createMockRes(): Response & { _status?: number; _body?: unknown } {
   const res: Record<string, unknown> = {};
   res.status = (code: number) => { res._status = code; return res; };
   res.json = (body: unknown) => { res._body = body; return res; };
-  return res;
+  return res as unknown as Response & { _status?: number; _body?: unknown };
 }
 
 describe('requireRole', () => {
@@ -56,7 +56,7 @@ describe('requireRole', () => {
     const res = createMockRes();
     requireRole(['admin', 'direccion'])(req, res, () => {});
     assert.equal(res._status, 403);
-    assert.equal(res._body.error, 'No tiene permisos para realizar esta acción.');
+    assert.equal((res._body as Record<string, string>).error, 'No tiene permisos para realizar esta acción.');
   });
 
   it('rejects when profileRole is undefined', () => {
@@ -67,7 +67,7 @@ describe('requireRole', () => {
     const res = createMockRes();
     requireRole(['admin'])(req, res, () => {});
     assert.equal(res._status, 403);
-    assert.equal(res._body.error, 'No fue posible determinar el rol del usuario.');
+    assert.equal((res._body as Record<string, string>).error, 'No fue posible determinar el rol del usuario.');
   });
 
   it('rejects when tenantId is missing', () => {
@@ -78,7 +78,7 @@ describe('requireRole', () => {
     const res = createMockRes();
     requireRole(['admin'])(req, res, () => {});
     assert.equal(res._status, 403);
-    assert.equal(res._body.error, 'No fue posible determinar el establecimiento autenticado.');
+    assert.equal((res._body as Record<string, string>).error, 'No fue posible determinar el establecimiento autenticado.');
   });
 
   it('rejects when user is not authenticated', () => {
@@ -86,7 +86,7 @@ describe('requireRole', () => {
     const res = createMockRes();
     requireRole(['admin'])(req, res, () => {});
     assert.equal(res._status, 401);
-    assert.equal(res._body.error, 'Autenticación requerida.');
+    assert.equal((res._body as Record<string, string>).error, 'Autenticación requerida.');
   });
 
   it('does not read role from req.user.role', () => {
@@ -120,7 +120,7 @@ describe('requireTenant', () => {
     const res = createMockRes();
     requireTenant(req, res, () => {});
     assert.equal(res._status, 403);
-    assert.equal(res._body.error, 'No fue posible determinar el establecimiento autenticado.');
+    assert.equal((res._body as Record<string, string>).error, 'No fue posible determinar el establecimiento autenticado.');
   });
 
   it('rejects when user is not authenticated', () => {
@@ -128,6 +128,6 @@ describe('requireTenant', () => {
     const res = createMockRes();
     requireTenant(req, res, () => {});
     assert.equal(res._status, 401);
-    assert.equal(res._body.error, 'Autenticación requerida.');
+    assert.equal((res._body as Record<string, string>).error, 'Autenticación requerida.');
   });
 });

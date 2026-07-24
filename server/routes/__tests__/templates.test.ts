@@ -2,12 +2,13 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import type { Request, Response } from 'express';
 import { requireAuth } from '../../middleware/auth';
 import { requireTenant } from '../../middleware/requireTenant';
 import { requireRole } from '../../middleware/requireRole';
 
-function createMockReq(overrides: Record<string, unknown> = {}): Record<string, unknown> {
-  const req: Record<string, unknown> = {
+function createMockReq(overrides: Record<string, unknown> = {}): Request {
+  return {
     user: undefined,
     tenantId: undefined,
     profileRole: undefined,
@@ -15,16 +16,15 @@ function createMockReq(overrides: Record<string, unknown> = {}): Record<string, 
     body: {},
     query: {},
     ...overrides,
-  };
-  return req;
+  } as unknown as Request;
 }
 
-function createMockRes() {
+function createMockRes(): Response & { _status?: number; _body?: unknown } {
   const res: Record<string, unknown> = {};
   res.status = (code: number) => { res._status = code; return res; };
   res.json = (body: unknown) => { res._body = body; return res; };
   res.setHeader = () => res;
-  return res;
+  return res as unknown as Response & { _status?: number; _body?: unknown };
 }
 
 describe('Templates middleware chain', () => {
@@ -147,8 +147,8 @@ describe('Templates middleware chain', () => {
       });
       const res = createMockRes();
       requireTenant(req, res, () => {});
-      assert.equal(req.tenantId, 'tenant-A');
-      assert.notEqual(req.tenantId, 'tenant-B');
+      assert.equal((req as unknown as Record<string, unknown>).tenantId, 'tenant-A');
+      assert.notEqual((req as unknown as Record<string, unknown>).tenantId, 'tenant-B');
     });
   });
 });
