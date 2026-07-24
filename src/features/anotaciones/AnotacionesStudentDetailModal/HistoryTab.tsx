@@ -1,7 +1,11 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { CheckCircle2, FileSearch, FileText, History, ScrollText, Upload } from 'lucide-react';
-import type { CartaDisciplinaria, DocumentAnalysis, EtapaDisciplinaria } from '@/src/shared/lib/types';
+import type {
+  CartaDisciplinaria,
+  DocumentAnalysis,
+  EtapaDisciplinaria,
+} from '@/src/shared/lib/types';
 import type {
   CartaEvent,
   DetectedAnnotationRecord,
@@ -45,22 +49,6 @@ function describeCartaEvent(event: CartaEvent, carta?: CartaDisciplinaria): Time
       ...base,
       title: `Carta emitida: ${letterType}`,
       description: 'Medio de validación: impresión.',
-      tone: 'bg-emerald-50 text-emerald-700',
-    };
-  }
-  if (event.event_type === 'downloaded_pdf') {
-    return {
-      ...base,
-      title: `Carta emitida: ${letterType}`,
-      description: 'Medio de validación: descarga PDF.',
-      tone: 'bg-emerald-50 text-emerald-700',
-    };
-  }
-  if (event.event_type === 'downloaded_word') {
-    return {
-      ...base,
-      title: `Carta emitida: ${letterType}`,
-      description: 'Medio de validación: descarga Word.',
       tone: 'bg-emerald-50 text-emerald-700',
     };
   }
@@ -209,7 +197,9 @@ export default function HistoryTab({
     return (
       <div className="rounded-xl border border-neutral-200 bg-white p-8 text-center shadow-xs">
         <History className="mx-auto mb-3 h-12 w-12 text-neutral-300" />
-        <p className="text-sm text-neutral-500">No hay eventos disciplinarios registrados para este estudiante.</p>
+        <p className="text-sm text-neutral-500">
+          No hay eventos disciplinarios registrados para este estudiante.
+        </p>
       </div>
     );
   }
@@ -217,8 +207,13 @@ export default function HistoryTab({
   return (
     <div className="space-y-3">
       {items.map((item) => (
-        <article key={item.id} className="flex gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-xs">
-          <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${item.tone}`}>
+        <article
+          key={item.id}
+          className="flex gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-xs"
+        >
+          <div
+            className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${item.tone}`}
+          >
             {item.icon}
           </div>
           <div className="min-w-0 flex-1">

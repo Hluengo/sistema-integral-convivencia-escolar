@@ -23,7 +23,6 @@ export interface DocContentProps {
   apoderadoName: string;
   dateStr: string;
   negativeCount: number;
-  docObservations: string;
   selectedAnnsObjects: Annotation[];
   letterContent: LetterContent;
 }
@@ -55,19 +54,20 @@ export const DEFAULT_LETTER_CONTENT: Record<DocType, LetterContent> = {
     observaciones: '',
   },
   compromiso_conductual: {
-    motivo: 'Reiteración de anotaciones negativas que supera el umbral institucional para compromiso conductual.',
+    motivo:
+      'Reiteración de anotaciones negativas que supera el umbral institucional para compromiso conductual.',
     descripcion:
       'El/La estudiante ha acumulado anotaciones negativas que evidencian conductas reiteradas contrarias a las normas de convivencia escolar.',
     medida:
       'Se establece una Carta de Compromiso Conductual orientada a mejorar la conducta, reparar eventuales daños y sostener un seguimiento formativo.',
-    acuerdos:
-      DEFAULT_COMMITMENTS.join('\n'),
+    acuerdos: DEFAULT_COMMITMENTS.join('\n'),
     cierre:
       'El incumplimiento de los acuerdos establecidos podrá derivar en una escalada disciplinaria y derivación al equipo de Convivencia Escolar.',
     observaciones: '',
   },
   derivacion: {
-    motivo: 'Acumulación de anotaciones negativas que activa derivación al equipo de Convivencia Escolar.',
+    motivo:
+      'Acumulación de anotaciones negativas que activa derivación al equipo de Convivencia Escolar.',
     descripcion:
       'Los antecedentes registrados dan cuenta de conductas reiteradas que afectan la sana convivencia y requieren intervención especializada.',
     medida:

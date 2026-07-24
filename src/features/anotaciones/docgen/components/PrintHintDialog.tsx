@@ -50,7 +50,7 @@ export default function PrintHintDialog({ isOpen, onConfirm, onCancel }: PrintHi
             <li className="flex items-start gap-2">
               <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-neutral-400" />
               <span>
-                <strong>Papel:</strong> Oficio chileno / Folio (216 x 330 mm)
+                <strong>Papel:</strong> Carta (216 x 279 mm) / Letter 8.5 x 11 in
               </span>
             </li>
             <li className="flex items-start gap-2">
@@ -76,8 +76,8 @@ export default function PrintHintDialog({ isOpen, onConfirm, onCancel }: PrintHi
           <div className="flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-amber-800">
             <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-amber-600" />
             <span className="text-xs">
-              No seleccione papel Legal (8.5 x 14 pulgadas) ni A4 (210 x 297 mm). El documento esta
-              dimensionado para Oficio chileno de 216 x 330 mm.
+              No seleccione papel Legal (8.5 x 14 in) ni A4 (210 x 297 mm). El documento esta
+              dimensionado para Carta de 216 x 279 mm (Letter).
             </span>
           </div>
         </div>

@@ -205,8 +205,6 @@ export interface CartaDisciplinaria {
   created_event_at?: string | null;
   registered_at?: string | null;
   printed_at?: string | null;
-  downloaded_pdf_at?: string | null;
-  downloaded_word_at?: string | null;
   processed_manually_at?: string | null;
   processed_note?: string | null;
   annulled_at?: string | null;

@@ -27,8 +27,6 @@ export type CartaEventType =
   | 'created'
   | 'registered'
   | 'printed'
-  | 'downloaded_pdf'
-  | 'downloaded_word'
   | 'processed_manually'
   | 'annulled';
 
@@ -117,13 +115,7 @@ const CARTA_SELECT =
   'id,student_id,letter_type,emission_date,status,emitted_by,supervisor_name,apoderado_name,annotations_count,student_name,course,regulation_basis,observations,created_at,content_snapshot';
 const CARTA_EVENT_SELECT =
   'id,carta_id,student_id,event_type,event_detail,created_by,created_at,metadata';
-const COMPLETION_EVENTS: CartaEventType[] = [
-  'registered',
-  'printed',
-  'downloaded_pdf',
-  'downloaded_word',
-  'processed_manually',
-];
+const COMPLETION_EVENTS: CartaEventType[] = ['registered', 'printed', 'processed_manually'];
 
 function latestEvent(events: CartaEvent[], type: CartaEventType): CartaEvent | undefined {
   return events.find((event) => event.event_type === type);
@@ -144,8 +136,6 @@ function hydrateCartaWorkflow(carta: CartaDisciplinaria, events: CartaEvent[]): 
     created_event_at: latestEvent(cartaEvents, 'created')?.created_at ?? null,
     registered_at: latestEvent(cartaEvents, 'registered')?.created_at ?? null,
     printed_at: latestEvent(cartaEvents, 'printed')?.created_at ?? null,
-    downloaded_pdf_at: latestEvent(cartaEvents, 'downloaded_pdf')?.created_at ?? null,
-    downloaded_word_at: latestEvent(cartaEvents, 'downloaded_word')?.created_at ?? null,
     processed_manually_at: processed?.created_at ?? null,
     processed_note: processed?.event_detail ?? null,
     annulled_at: annulled?.created_at ?? null,
@@ -158,13 +148,7 @@ export function resolveCartaWorkflowStatus(
 ): CartaWorkflowStatus | 'none' {
   if (!carta) return 'none';
   if (carta.status === 'Anulada' || carta.annulled_at) return 'annulled';
-  if (
-    carta.printed_at ||
-    carta.downloaded_pdf_at ||
-    carta.downloaded_word_at ||
-    carta.registered_at ||
-    carta.processed_manually_at
-  ) {
+  if (carta.printed_at || carta.registered_at || carta.processed_manually_at) {
     return 'completed';
   }
   return 'pending';
@@ -253,22 +237,6 @@ export async function createCartaEvent(
 
 export async function markCartaPrinted(cartaId: string): Promise<boolean> {
   return createCartaEvent(cartaId, 'printed', 'Carta impresa desde ficha disciplinaria');
-}
-
-export async function markCartaDownloadedPdf(cartaId: string): Promise<boolean> {
-  return createCartaEvent(
-    cartaId,
-    'downloaded_pdf',
-    'Carta descargada en PDF desde ficha disciplinaria'
-  );
-}
-
-export async function markCartaDownloadedWord(cartaId: string): Promise<boolean> {
-  return createCartaEvent(
-    cartaId,
-    'downloaded_word',
-    'Carta descargada en Word desde ficha disciplinaria'
-  );
 }
 
 export async function markCartaProcessedManually(cartaId: string, note: string): Promise<boolean> {

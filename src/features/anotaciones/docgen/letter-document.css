@@ -1,27 +1,27 @@
 /**
  * @license SPDX-License-Identifier: Apache-2.0
  *
- * Letter Document — Estilos deterministas para cartas disciplinarias Oficio chileno (216x330mm).
+ * Letter Document — Estilos deterministas para cartas disciplinarias Carta (216x279mm).
  * Este archivo define dimensiones, tipografia y layout del documento oficial.
  * NO debe contener animaciones, hover, focus ni reglas de la aplicacion.
  */
 
 /* ============================================================
-   FOLIO PAGE — Dimensiones canonicas (216mm x 330mm)
+   LETTER PAGE — Dimensiones canonicas (216mm x 279mm)
    ============================================================ */
 
 .letter-document {
   width: 216mm;
   min-width: 216mm;
-  height: 330mm;
-  min-height: 330mm;
+  height: 279mm;
+  min-height: 279mm;
   box-sizing: border-box;
-  padding: 20mm 25mm 20mm 25mm;
+  padding: 15mm;
   margin: 0;
   background: white;
   color: #111827;
   font-family: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  font-size: 11pt;
+  font-size: 10pt;
   line-height: 1.5;
   overflow: hidden;
   position: relative;
@@ -36,14 +36,14 @@
 .letter-header {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding-bottom: 16px;
-  margin-bottom: 20px;
+  gap: 14px;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
   border-bottom: 2px solid #d1d5db;
 }
 
 .letter-header-logo {
-  height: 64px;
+  height: 60px;
   width: auto;
   flex-shrink: 0;
   object-fit: contain;
@@ -55,7 +55,7 @@
 }
 
 .letter-header-institution {
-  font-size: 10pt;
+  font-size: 9pt;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -64,13 +64,13 @@
 
 .letter-header-department {
   margin-top: 2px;
-  font-size: 12pt;
+  font-size: 11pt;
   font-weight: 700;
   color: #1f2937;
 }
 
 .letter-header-year {
-  font-size: 11pt;
+  font-size: 10pt;
   color: #6b7280;
 }
 
@@ -79,9 +79,9 @@
    ============================================================ */
 
 .letter-title {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   text-align: center;
-  font-size: 16pt;
+  font-size: 14pt;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -93,7 +93,7 @@
    ============================================================ */
 
 .letter-section {
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .letter-section-heading {
@@ -101,9 +101,9 @@
   align-items: center;
   gap: 8px;
   padding-bottom: 4px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   border-bottom: 2px solid #d1d5db;
-  font-size: 12pt;
+  font-size: 11pt;
   font-weight: 700;
   color: #1f2937;
 }
@@ -112,18 +112,18 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   flex-shrink: 0;
   border-radius: 50%;
   background: #1f2937;
   color: white;
-  font-size: 11pt;
+  font-size: 10pt;
   font-weight: 700;
 }
 
 .letter-section-body {
-  font-size: 10.5pt;
+  font-size: 9.5pt;
   line-height: 1.6;
   color: #374151;
 }
@@ -134,14 +134,14 @@
 
 .letter-data-row {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 2px;
-  font-size: 10.5pt;
+  font-size: 9.5pt;
   line-height: 1.5;
 }
 
 .letter-data-label {
-  width: 144px;
+  width: 130px;
   flex-shrink: 0;
   font-weight: 600;
   color: #4b5563;
@@ -156,17 +156,17 @@
    ============================================================ */
 
 .letter-signatures {
-  margin-top: 32px;
-  padding-top: 16px;
+  margin-top: 28px;
+  padding-top: 14px;
   border-top: 1px solid #d1d5db;
   break-inside: avoid;
   page-break-inside: avoid;
 }
 
 .letter-signatures-title {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   text-align: center;
-  font-size: 10pt;
+  font-size: 9pt;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -175,8 +175,8 @@
 
 .letter-signatures-grid {
   display: grid;
-  gap: 16px;
-  font-size: 10pt;
+  gap: 14px;
+  font-size: 9pt;
   color: #4b5563;
 }
 
@@ -195,14 +195,14 @@
 }
 
 .letter-signature-line {
-  margin-top: 32px;
+  margin-top: 28px;
   padding-top: 4px;
   border-top: 1px solid #9ca3af;
 }
 
 .letter-signature-role {
   margin-top: 2px;
-  font-size: 9pt;
+  font-size: 8pt;
   color: #6b7280;
 }
 
@@ -211,15 +211,15 @@
    ============================================================ */
 
 .letter-legal-box {
-  margin-top: 16px;
-  padding: 12px;
+  margin-top: 14px;
+  padding: 10px;
   border: 1px solid #e5e7eb;
   border-radius: 6px;
   background: #f9fafb;
 }
 
 .letter-legal-text {
-  font-size: 9pt;
+  font-size: 8pt;
   line-height: 1.6;
   color: #6b7280;
 }
@@ -232,13 +232,13 @@
   .letter-document {
     width: 216mm;
     min-width: 216mm;
-    height: 330mm;
-    min-height: 330mm;
+    height: 279mm;
+    min-height: 279mm;
     box-shadow: none !important;
     border: none !important;
     border-radius: 0 !important;
     margin: 0 !important;
-    padding: 20mm 25mm 20mm 25mm;
+    padding: 15mm;
   }
 
   html,
@@ -256,6 +256,6 @@
 }
 
 @page {
-  size: 216mm 330mm;
+  size: 216mm 279mm;
   margin: 0;
 }

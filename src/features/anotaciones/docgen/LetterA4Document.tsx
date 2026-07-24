@@ -21,7 +21,6 @@ export interface LetterA4DocumentProps {
   apoderadoName: string;
   dateStr: string;
   negativeCount: number;
-  docObservations: string;
   selectedAnnsObjects: Annotation[];
   letterContent: LetterContent;
   className?: string;
@@ -41,7 +40,6 @@ const LetterA4Document = forwardRef<HTMLDivElement, LetterA4DocumentProps>(
       apoderadoName,
       dateStr,
       negativeCount,
-      docObservations,
       selectedAnnsObjects,
       letterContent,
       className = '',
@@ -59,7 +57,6 @@ const LetterA4Document = forwardRef<HTMLDivElement, LetterA4DocumentProps>(
       apoderadoName,
       dateStr,
       negativeCount,
-      docObservations,
       selectedAnnsObjects,
       letterContent,
     };

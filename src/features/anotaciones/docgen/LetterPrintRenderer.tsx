@@ -3,7 +3,11 @@
 import type { Annotation, CartaDisciplinaria } from '@/src/shared/lib/types';
 import { mapLetterTypeToDocType } from '@/src/shared/lib/domain/disciplinaryStage';
 import LetterA4Document from './LetterA4Document';
-import { DEFAULT_LETTER_CONTENT, type DocType, type LetterContent } from './DocumentPreview/docTypes';
+import {
+  DEFAULT_LETTER_CONTENT,
+  type DocType,
+  type LetterContent,
+} from './DocumentPreview/docTypes';
 
 const EMPTY_ANNOTATIONS: Annotation[] = [];
 
@@ -38,7 +42,10 @@ function isLetterContent(value: unknown): value is LetterContent {
   );
 }
 
-function getSnapshotString(snapshot: Record<string, unknown> | null | undefined, key: string): string | null {
+function getSnapshotString(
+  snapshot: Record<string, unknown> | null | undefined,
+  key: string
+): string | null {
   const value = snapshot?.[key];
   return typeof value === 'string' ? value : null;
 }
@@ -50,9 +57,10 @@ export default function LetterPrintRenderer({
 }: LetterPrintRendererProps) {
   const docType = (mapLetterTypeToDocType(carta.letter_type) || 'amonestacion') as DocType;
   const snapshot = carta.content_snapshot;
-  const snapshotStudent = snapshot?.student && typeof snapshot.student === 'object'
-    ? (snapshot.student as Record<string, unknown>)
-    : null;
+  const snapshotStudent =
+    snapshot?.student && typeof snapshot.student === 'object'
+      ? (snapshot.student as Record<string, unknown>)
+      : null;
   const letterContent = isLetterContent(snapshot?.letterContent)
     ? snapshot.letterContent
     : DEFAULT_LETTER_CONTENT[docType];
@@ -72,15 +80,22 @@ export default function LetterPrintRenderer({
       id="document-preview-a4"
       docType={docType}
       currentName={currentName}
-      currentRut={student?.rut || (typeof snapshotStudent?.rut === 'string' ? snapshotStudent.rut : '') || ''}
+      currentRut={
+        student?.rut || (typeof snapshotStudent?.rut === 'string' ? snapshotStudent.rut : '') || ''
+      }
       currentCourse={currentCourse}
       currentTeacher={student?.teacher_name || 'Sin Profesor'}
-      coordinatorName={getSnapshotString(snapshot, 'coordinatorName') || carta.supervisor_name || ''}
+      coordinatorName={
+        getSnapshotString(snapshot, 'coordinatorName') || carta.supervisor_name || ''
+      }
       inspectorName={getSnapshotString(snapshot, 'inspectorName') || carta.emitted_by || ''}
       apoderadoName={getSnapshotString(snapshot, 'apoderadoName') || carta.apoderado_name || ''}
-      dateStr={getSnapshotString(snapshot, 'emissionDate') || formatEmissionDate(carta.emission_date)}
-      negativeCount={Number(snapshot?.negativeCount) || Number(carta.annotations_count) || annotations.length}
-      docObservations={carta.observations || ''}
+      dateStr={
+        getSnapshotString(snapshot, 'emissionDate') || formatEmissionDate(carta.emission_date)
+      }
+      negativeCount={
+        Number(snapshot?.negativeCount) || Number(carta.annotations_count) || annotations.length
+      }
       selectedAnnsObjects={annotations}
       letterContent={letterContent}
     />

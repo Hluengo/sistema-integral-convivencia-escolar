@@ -10,7 +10,6 @@ import DocumentPreview from './docgen/DocumentPreview';
 import DocumentWarnings from './docgen/DocumentWarnings';
 import { useDocumentState } from './docgen/hooks/useDocumentState';
 import { useSelectedAnnotations } from './docgen/hooks/useSelectedAnnotations';
-import { useDocumentExport } from './docgen/hooks/useDocumentExport';
 import { useDocumentRegistry } from './docgen/hooks/useDocumentRegistry';
 import { useRegisterCommitment } from './docgen/hooks/useRegisterCommitment';
 import GeneratorHeader from './docgen/components/GeneratorHeader';
@@ -19,7 +18,6 @@ import EmissionConfirmDialog from './docgen/components/EmissionConfirmDialog';
 import PrintHintDialog from './docgen/components/PrintHintDialog';
 import RecentlyEmitted from './docgen/components/RecentlyEmitted';
 import { TITLE_MAP, type DocType, type LetterContent } from './docgen/DocumentPreview/docTypes';
-import { downloadLetterPdf } from './docgen/letterExportService';
 
 function isLetterContent(value: unknown): value is LetterContent {
   if (!value || typeof value !== 'object') return false;
@@ -54,9 +52,7 @@ interface AnotacionesDocumentGeneratorProps {
   sourceAnalysisId?: string | null;
   sourceProcessId?: string | null;
   initialContentSnapshot?: Record<string, unknown> | null;
-  onLetterAction?: (
-    action: 'printed' | 'downloaded_pdf' | 'downloaded_word'
-  ) => void | Promise<void>;
+  onLetterAction?: () => void | Promise<void>;
   onRegistered?: () => void | Promise<void>;
 }
 
@@ -82,7 +78,6 @@ export default function AnotacionesDocumentGenerator({
 
   const documentState = useDocumentState();
   const selectedAnnotations = useSelectedAnnotations(annotations);
-  const documentExport = useDocumentExport();
   const documentRegistry = useDocumentRegistry();
   const registerCommitment = useRegisterCommitment();
   const previewRef = useRef<HTMLDivElement>(null);
@@ -112,9 +107,6 @@ export default function AnotacionesDocumentGenerator({
       getSnapshotString(initialContentSnapshot, 'coordinatorName') || ''
     );
     documentState.setEmittedBy(getSnapshotString(initialContentSnapshot, 'emittedBy') || '');
-    documentState.setDocObservations(
-      getSnapshotString(initialContentSnapshot, 'administrativeObservation') || ''
-    );
     initialSnapshotApplied.current = true;
   }, [documentState, initialContentSnapshot, setDocType]);
 
@@ -146,7 +138,6 @@ export default function AnotacionesDocumentGenerator({
   }, []);
 
   const [exportError, setExportError] = useState<string | null>(null);
-  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [registrationMessage, setRegistrationMessage] = useState<string | null>(null);
   const [registrationError, setRegistrationError] = useState<string | null>(null);
   const [showEmissionConfirm, setShowEmissionConfirm] = useState(false);
@@ -177,14 +168,12 @@ export default function AnotacionesDocumentGenerator({
       emissionDate: dateStr,
       sourceAnalysisId: sourceAnalysisId || null,
       sourceProcessId: sourceProcessId || null,
-      administrativeObservation: documentState.docObservations || null,
     }),
     [
       dateStr,
       docType,
       documentState.apoderadoName,
       documentState.coordinatorName,
-      documentState.docObservations,
       documentState.emittedBy,
       documentState.inspectorName,
       documentState.letterContent,
@@ -194,40 +183,6 @@ export default function AnotacionesDocumentGenerator({
       student.course_id,
       student.full_name,
       student.id,
-      student.rut,
-      title,
-    ]
-  );
-
-  const previewContent = useMemo(
-    () => ({
-      title,
-      content: [
-        documentState.letterContent.motivo,
-        documentState.letterContent.descripcion,
-        documentState.letterContent.medida,
-        documentState.letterContent.acuerdos,
-        documentState.letterContent.cierre,
-        documentState.letterContent.observaciones,
-      ]
-        .filter(Boolean)
-        .join('\n\n'),
-      metadata: {
-        Estudiante: student.full_name,
-        Curso: student.course_id,
-        RUN: student.rut || '-',
-        'Anotaciones negativas': String(negativeCount),
-        'Tipo de documento': title,
-        'Fecha de emision': dateStr,
-      },
-      letterContent: documentState.letterContent,
-    }),
-    [
-      dateStr,
-      documentState.letterContent,
-      negativeCount,
-      student.course_id,
-      student.full_name,
       student.rut,
       title,
     ]
@@ -243,7 +198,6 @@ export default function AnotacionesDocumentGenerator({
       apoderadoName: documentState.apoderadoName,
       coordinatorName: documentState.coordinatorName,
       emittedBy: documentState.emittedBy,
-      docObservations: documentState.docObservations,
       compromisoStatus: 'Vigente',
       teachers,
       existingCartaId,
@@ -251,7 +205,7 @@ export default function AnotacionesDocumentGenerator({
       onSuccess: (entry) => {
         documentRegistry.addEntry(entry);
         setRegistrationMessage(
-          'Carta registrada correctamente. La plantilla permanece disponible para imprimir o descargar.'
+          'Carta registrada correctamente. La plantilla permanece disponible para imprimir.'
         );
         void (async () => {
           try {
@@ -278,15 +232,13 @@ export default function AnotacionesDocumentGenerator({
     registerCarta();
   };
 
-  const getPreviewElement = (): HTMLElement | null => previewRef.current;
-
   const printFileName = useMemo(
     () => `Carta_${docType}_${student.full_name.replace(/\s+/g, '_')}_${dateStr}`,
     [docType, student.full_name, dateStr]
   );
 
   const handleAfterPrint = useCallback(() => {
-    void onLetterAction?.('printed');
+    void onLetterAction?.();
     setShowEmissionConfirm(true);
   }, [onLetterAction]);
 
@@ -300,7 +252,7 @@ export default function AnotacionesDocumentGenerator({
     ignoreGlobalStyles: false,
     pageStyle: `
       @page {
-        size: 216mm 330mm;
+        size: 216mm 279mm;
         margin: 0;
       }
       html, body {
@@ -335,48 +287,6 @@ export default function AnotacionesDocumentGenerator({
     setTimeout(() => handlePrint(), 100);
   };
 
-  const handleExportPDF = async () => {
-    setExportError(null);
-    setIsExportingPdf(true);
-    try {
-      const el = getPreviewElement();
-      if (!el) {
-        setExportError('No se pudo leer la plantilla visible para generar PDF.');
-        return;
-      }
-      const result = await downloadLetterPdf(el, {
-        docType: title,
-        studentName: student.full_name,
-        dateStr,
-      });
-      if (result.success) {
-        void onLetterAction?.('downloaded_pdf');
-        setShowEmissionConfirm(true);
-      } else if (result.error) {
-        setExportError(result.error);
-      }
-    } catch (err) {
-      setExportError(err instanceof Error ? err.message : 'No fue posible generar el PDF.');
-    } finally {
-      setIsExportingPdf(false);
-    }
-  };
-
-  const handleExportWord = async () => {
-    setExportError(null);
-    try {
-      const blob = await documentExport.generateWord(previewContent);
-      documentExport.downloadBlob(
-        blob,
-        `Carta_${docType}_${student.full_name.replace(/\s+/g, '_')}.docx`
-      );
-      void onLetterAction?.('downloaded_word');
-      setShowEmissionConfirm(true);
-    } catch (err) {
-      setExportError(err instanceof Error ? err.message : 'No se pudo generar el documento Word.');
-    }
-  };
-
   const handleOverflowChange = (overflow: boolean) => {
     setHasOverflow(overflow);
   };
@@ -407,8 +317,8 @@ export default function AnotacionesDocumentGenerator({
           role="alert"
           className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
         >
-          El contenido supera una pagina Oficio (216 x 330 mm). Reduzca el texto o utilice una
-          version de varias paginas antes de imprimir o descargar.
+          El contenido supera una pagina Carta (216 x 279 mm). Reduzca el texto o utilice una
+          version de varias paginas antes de imprimir.
         </div>
       )}
 
@@ -466,8 +376,6 @@ export default function AnotacionesDocumentGenerator({
             onEmittedByChange={documentState.setEmittedBy}
             inspectorName={documentState.inspectorName}
             onInspectorNameChange={documentState.setInspectorName}
-            docObservations={documentState.docObservations}
-            onObservationsChange={documentState.setDocObservations}
             letterContent={documentState.letterContent}
             onLetterContentChange={documentState.updateLetterContent}
             onResetLetterContent={() => documentState.resetLetterContent(docType)}
@@ -493,14 +401,9 @@ export default function AnotacionesDocumentGenerator({
         apoderadoName={documentState.apoderadoName}
         dateStr={dateStr}
         negativeCount={negativeCount}
-        docObservations={documentState.docObservations}
         selectedAnnsObjects={selectedAnnsObjects}
-        hasTenOrMore={negativeCount >= 10}
         letterContent={documentState.letterContent}
         onPrint={handlePrintDoc}
-        onExportPDF={handleExportPDF}
-        onExportWord={handleExportWord}
-        isExportingPdf={isExportingPdf}
         onOverflowChange={handleOverflowChange}
       />
 

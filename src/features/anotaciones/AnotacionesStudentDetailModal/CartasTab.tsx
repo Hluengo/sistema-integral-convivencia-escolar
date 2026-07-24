@@ -9,8 +9,6 @@ import {
   createCartaEvent,
   createPendingCartaForStudent,
   getCartaWorkflowLabel,
-  markCartaDownloadedPdf,
-  markCartaDownloadedWord,
   markCartaPrinted,
   markCartaProcessedManually,
   resolveCartaWorkflowStatus,
@@ -54,7 +52,9 @@ export default function CartasTab({
   teachers = TEACHERS_BY_COURSE,
   onRefresh,
 }: CartasTabProps) {
-  const suggestedDocType = pendingSuggestion?.docType ?? getSuggestedLetterType(counts.negativas, currentCarta?.letter_type);
+  const suggestedDocType =
+    pendingSuggestion?.docType ??
+    getSuggestedLetterType(counts.negativas, currentCarta?.letter_type);
   const currentDocType = mapLetterTypeToDocType(currentCarta?.letter_type);
   const activeDocType = suggestedDocType ?? currentDocType;
   const activeLetterType = mapDocTypeToLetterType(activeDocType);
@@ -92,7 +92,10 @@ export default function CartasTab({
     return created;
   };
 
-  const runCartaAction = async (action: (carta: CartaDisciplinaria) => Promise<boolean>, successText: string) => {
+  const runCartaAction = async (
+    action: (carta: CartaDisciplinaria) => Promise<boolean>,
+    successText: string
+  ) => {
     setBusy(true);
     setMessage(null);
     const carta = await ensureCarta();
@@ -116,7 +119,11 @@ export default function CartasTab({
     if (carta) {
       setShowGenerator(true);
       setMessage('Generador abierto.');
-      void createCartaEvent(carta.id, 'created', 'Carta abierta en generador desde ficha disciplinaria');
+      void createCartaEvent(
+        carta.id,
+        'created',
+        'Carta abierta en generador desde ficha disciplinaria'
+      );
     } else {
       setMessage('No hay carta requerida para este estudiante.');
     }
@@ -124,7 +131,9 @@ export default function CartasTab({
   };
 
   const handleManualProcess = async () => {
-    const note = window.prompt('Motivo y observación del procesamiento manual. Indique qué se hizo y cuándo.')?.trim();
+    const note = window
+      .prompt('Motivo y observación del procesamiento manual. Indique qué se hizo y cuándo.')
+      ?.trim();
     if (!note) return;
     await runCartaAction(
       (carta) => markCartaProcessedManually(carta.id, note),
@@ -139,16 +148,18 @@ export default function CartasTab({
     await runCartaAction((carta) => annulCarta(carta.id, reason), 'Carta anulada.');
   };
 
-  const handleGeneratorAction = async (action: 'printed' | 'downloaded_pdf' | 'downloaded_word') => {
+  const handleGeneratorAction = async () => {
     const carta = await ensureCarta();
     if (!carta) return;
-    if (action === 'printed') await markCartaPrinted(carta.id);
-    if (action === 'downloaded_pdf') await markCartaDownloadedPdf(carta.id);
-    if (action === 'downloaded_word') await markCartaDownloadedWord(carta.id);
-    setMessage('Acción de carta registrada.');
+    await markCartaPrinted(carta.id);
+    setMessage('Carta impresa registrada.');
   };
 
-  const statusLabel = activeCarta ? getCartaWorkflowLabel(activeCarta) : activeLetterType ? 'Carta sugerida' : 'Sin carta requerida';
+  const statusLabel = activeCarta
+    ? getCartaWorkflowLabel(activeCarta)
+    : activeLetterType
+      ? 'Carta sugerida'
+      : 'Sin carta requerida';
   const originLabel = source === 'pdf' ? 'nuevo PDF' : 'conteo Supabase';
   const canAct = Boolean(activeDocType && activeLetterType);
   const realized = workflowStatus === 'completed';
@@ -172,7 +183,9 @@ export default function CartasTab({
             </div>
             <div className="rounded-lg bg-neutral-50 p-3">
               <p className="text-xs font-semibold text-neutral-400">Motivo</p>
-              <p className="mt-1 font-bold text-neutral-900">{negativeCount} negativas detectadas</p>
+              <p className="mt-1 font-bold text-neutral-900">
+                {negativeCount} negativas detectadas
+              </p>
             </div>
             <div className="rounded-lg bg-neutral-50 p-3">
               <p className="text-xs font-semibold text-neutral-400">Origen de la sugerencia</p>
@@ -180,7 +193,9 @@ export default function CartasTab({
             </div>
           </div>
         ) : (
-          <div className="rounded-lg bg-neutral-50 p-4 text-sm text-neutral-600">No hay carta requerida.</div>
+          <div className="rounded-lg bg-neutral-50 p-4 text-sm text-neutral-600">
+            No hay carta requerida.
+          </div>
         )}
         {activeCarta && (
           <p className="mt-3 text-xs text-neutral-500">
@@ -194,20 +209,42 @@ export default function CartasTab({
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <h3 className="text-sm font-bold text-neutral-900">Acciones principales</h3>
-            <p className="mt-1 text-xs text-neutral-500">Abre el generador para editar, imprimir o guardar la plantilla visible. El registro conserva el contenido final.</p>
+            <p className="mt-1 text-xs text-neutral-500">
+              Abre el generador para editar, imprimir o guardar la plantilla visible. El registro
+              conserva el contenido final.
+            </p>
           </div>
-          {message && <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">{message}</span>}
+          {message && (
+            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+              {message}
+            </span>
+          )}
         </div>
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={() => void handleCreate()} disabled={!canAct || busy} className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50">
+          <button
+            type="button"
+            onClick={() => void handleCreate()}
+            disabled={!canAct || busy}
+            className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
+          >
             <FileText className="h-4 w-4" />
             Crear carta
           </button>
-          <button type="button" onClick={() => void handleManualProcess()} disabled={!canAct || busy} className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50">
+          <button
+            type="button"
+            onClick={() => void handleManualProcess()}
+            disabled={!canAct || busy}
+            className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+          >
             <CheckCircle2 className="h-4 w-4" />
             Marcar como procesada
           </button>
-          <button type="button" onClick={() => void handleAnnul()} disabled={!activeCarta || busy} className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50">
+          <button
+            type="button"
+            onClick={() => void handleAnnul()}
+            disabled={!activeCarta || busy}
+            className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+          >
             <Ban className="h-4 w-4" />
             Anular
           </button>
@@ -219,13 +256,27 @@ export default function CartasTab({
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
               <h3 className="text-sm font-bold text-neutral-900">Generador de carta</h3>
-              <p className="mt-1 text-xs text-neutral-500">Edita la carta en la aplicación y luego imprime o genera PDF desde la plantilla visible.</p>
+              <p className="mt-1 text-xs text-neutral-500">
+                Edita la carta en la aplicación y luego imprime o genera PDF desde la plantilla
+                visible.
+              </p>
             </div>
-            <button type="button" onClick={() => setShowGenerator(false)} className="rounded-lg p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700" aria-label="Cerrar generador">
+            <button
+              type="button"
+              onClick={() => setShowGenerator(false)}
+              className="rounded-lg p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"
+              aria-label="Cerrar generador"
+            >
               <XCircle className="h-5 w-5" />
             </button>
           </div>
-          <Suspense fallback={<div className="py-10 text-center text-sm text-neutral-500">Cargando generador...</div>}>
+          <Suspense
+            fallback={
+              <div className="py-10 text-center text-sm text-neutral-500">
+                Cargando generador...
+              </div>
+            }
+          >
             <AnotacionesDocumentGenerator
               student={{
                 id: student.id,
@@ -239,7 +290,9 @@ export default function CartasTab({
               teachers={teachers}
               initialDocType={activeDocType}
               existingCartaId={activeCarta?.id || localCarta?.id}
-              initialContentSnapshot={activeCarta?.content_snapshot || localCarta?.content_snapshot || null}
+              initialContentSnapshot={
+                activeCarta?.content_snapshot || localCarta?.content_snapshot || null
+              }
               onLetterAction={handleGeneratorAction}
               onRegistered={() => void refreshAfterChange()}
             />

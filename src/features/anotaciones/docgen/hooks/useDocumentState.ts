@@ -1,5 +1,9 @@
 import { useState, useCallback } from 'react';
-import { DEFAULT_LETTER_CONTENT, type DocType, type LetterContent } from '../DocumentPreview/docTypes';
+import {
+  DEFAULT_LETTER_CONTENT,
+  type DocType,
+  type LetterContent,
+} from '../DocumentPreview/docTypes';
 
 export function useDocumentState() {
   const [docType, setDocType] = useState<DocType>('amonestacion');
@@ -7,10 +11,11 @@ export function useDocumentState() {
   const [inspectorName, setInspectorName] = useState('');
   const [coordinatorName, setCoordinatorName] = useState('');
   const [emittedBy, setEmittedBy] = useState('');
-  const [docObservations, setDocObservations] = useState('');
   const [compromisoStatus, setCompromisoStatus] = useState('pendiente');
   const [customCommitments, setCustomCommitments] = useState<string[]>([]);
-  const [letterContent, setLetterContentState] = useState<LetterContent>(DEFAULT_LETTER_CONTENT.amonestacion);
+  const [letterContent, setLetterContentState] = useState<LetterContent>(
+    DEFAULT_LETTER_CONTENT.amonestacion
+  );
   const [letterContentTouched, setLetterContentTouched] = useState(false);
   const [authorizedBypass, setAuthorizedBypass] = useState(false);
   const [authorizedDuplicate, setAuthorizedDuplicate] = useState(false);
@@ -27,14 +32,20 @@ export function useDocumentState() {
     setLetterContentTouched(true);
   }, []);
 
-  const loadDefaultLetterContent = useCallback((nextDocType: DocType) => {
-    if (!letterContentTouched) setLetterContentState(DEFAULT_LETTER_CONTENT[nextDocType]);
-  }, [letterContentTouched]);
+  const loadDefaultLetterContent = useCallback(
+    (nextDocType: DocType) => {
+      if (!letterContentTouched) setLetterContentState(DEFAULT_LETTER_CONTENT[nextDocType]);
+    },
+    [letterContentTouched]
+  );
 
-  const resetLetterContent = useCallback((nextDocType: DocType = docType) => {
-    setLetterContentState(DEFAULT_LETTER_CONTENT[nextDocType]);
-    setLetterContentTouched(false);
-  }, [docType]);
+  const resetLetterContent = useCallback(
+    (nextDocType: DocType = docType) => {
+      setLetterContentState(DEFAULT_LETTER_CONTENT[nextDocType]);
+      setLetterContentTouched(false);
+    },
+    [docType]
+  );
 
   const handleAddCustomCommitment = useCallback((text: string) => {
     if (text.trim()) {
@@ -61,8 +72,6 @@ export function useDocumentState() {
     setCoordinatorName,
     emittedBy,
     setEmittedBy,
-    docObservations,
-    setDocObservations,
     compromisoStatus,
     setCompromisoStatus,
     customCommitments,

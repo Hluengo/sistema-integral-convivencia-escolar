@@ -8,7 +8,7 @@ interface LetterPreviewViewportProps {
   onOverflowChange?: (hasOverflow: boolean) => void;
 }
 
-const FOLIO_WIDTH_MM = 216;
+const LETTER_WIDTH_MM = 216;
 
 export default function LetterPreviewViewport({
   children,
@@ -31,8 +31,8 @@ export default function LetterPreviewViewport({
 
     const updateScale = () => {
       const containerWidth = container.clientWidth;
-      const folioWidthPx = (FOLIO_WIDTH_MM / 25.4) * 96;
-      const newScale = Math.min(1, containerWidth / folioWidthPx);
+      const letterWidthPx = (LETTER_WIDTH_MM / 25.4) * 96;
+      const newScale = Math.min(1, containerWidth / letterWidthPx);
       setScale(newScale);
     };
 
@@ -64,7 +64,7 @@ export default function LetterPreviewViewport({
         style={{
           transform: `scale(${scale})`,
           transformOrigin: 'top center',
-          width: `${(FOLIO_WIDTH_MM / 25.4) * 96}px`,
+          width: `${(LETTER_WIDTH_MM / 25.4) * 96}px`,
           flexShrink: 0,
         }}
       >
@@ -74,4 +74,4 @@ export default function LetterPreviewViewport({
   );
 }
 
-export { FOLIO_WIDTH_MM };
+export { LETTER_WIDTH_MM };

@@ -14,8 +14,6 @@ interface DocumentFormProps {
   onCoordinatorNameChange: (value: string) => void;
   emittedBy: string;
   onEmittedByChange: (value: string) => void;
-  docObservations: string;
-  onObservationsChange: (value: string) => void;
   letterContent: LetterContent;
   onLetterContentChange: (field: keyof LetterContent, value: string) => void;
   onResetLetterContent: () => void;
@@ -46,8 +44,6 @@ export default function DocumentForm({
   onCoordinatorNameChange,
   emittedBy,
   onEmittedByChange,
-  docObservations,
-  onObservationsChange,
   letterContent,
   onLetterContentChange,
   onResetLetterContent,
@@ -142,7 +138,7 @@ export default function DocumentForm({
           <div>
             <h5 className="text-sm font-bold text-neutral-900">Texto de la carta</h5>
             <p className="mt-1 text-xs text-neutral-500">
-              Estos textos actualizan la plantilla A4 en vivo.
+              Estos textos actualizan la plantilla en vivo.
             </p>
           </div>
           <button
@@ -174,24 +170,6 @@ export default function DocumentForm({
           ))}
         </div>
       </section>
-
-      <div>
-        <label
-          htmlFor="doc-observations"
-          className="mb-1 block text-sm font-medium text-neutral-700"
-        >
-          Observación administrativa
-        </label>
-        <textarea
-          id="doc-observations"
-          aria-label="Observación administrativa del documento"
-          value={docObservations}
-          onChange={(e) => onObservationsChange(e.target.value)}
-          placeholder="Observación administrativa para el registro en Supabase..."
-          rows={3}
-          className="w-full resize-y rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
 
       <div className="border-t border-neutral-200 pt-4">
         <button
