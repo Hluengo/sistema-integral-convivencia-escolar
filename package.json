@@ -31,7 +31,8 @@
     "knip": "knip",
     "security-audit": "npm audit --omit=dev",
     "security:secrets": "npx gitleaks detect --source . --verbose",
-    "pre-push": "npm run lint && npm run test && npm run build:web && npm run security-audit"
+    "pre-push": "npm run lint && npm run test && npm run build:web && npm run security-audit",
+    "dev:open": "start http://localhost:3001 & npm run dev"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.19",

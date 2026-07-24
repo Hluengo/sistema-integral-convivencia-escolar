@@ -22,7 +22,7 @@
     },
     "supabase": {
       "type": "local",
-      "command": ["npx", "-y", "@supabase/mcp-server"],
+      "command": ["npx", "-y", "@supabase/mcp-server-supabase"],
       "env": {
         "SUPABASE_SERVICE_ROLE_KEY": "${SUPABASE_SERVICE_ROLE_KEY}",
         "SUPABASE_URL": "https://jjzwwhnofiepvliugowr.supabase.co"
@@ -52,12 +52,12 @@
       "command": [
         "npx",
         "-y",
-        "@modelcontextprotocol/server-git",
+        "@anthropic/mcp-server-git",
         "--repository",
         "C:\\Users\\heae2\\sistema-integral-convivencia-escolar"
       ],
-      "enabled": true,
-      "description": "Operaciones Git: status, diff, log, blame"
+      "enabled": false,
+      "description": "Operaciones Git (deshabilitado - usar bash o GitHub MCP)"
     },
     "github": {
       "type": "local",
@@ -70,7 +70,7 @@
     },
     "playwright": {
       "type": "local",
-      "command": ["npx", "-y", "@anthropic/mcp-playwright"],
+      "command": ["npx", "-y", "@playwright/mcp@latest"],
       "enabled": true,
       "description": "Navegación web y testing E2E con Playwright"
     }
