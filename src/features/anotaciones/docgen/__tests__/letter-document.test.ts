@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 import { equal, ok } from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { execSync } from 'node:child_process';
 
 const srcDir = resolve(import.meta.dirname!, '../../../../..');
 
@@ -44,47 +45,21 @@ describe('letter-document — Formato Carta (216x279mm)', () => {
 });
 
 describe('Servicios eliminados — sin dependencias obsoletas', () => {
-  const srcDir = resolve(import.meta.dirname!, '../../../../../');
-
-  it('pdf-lib NO debe importarse en el proyecto', () => {
+  async function checkNoImports(pkg: string): Promise<void> {
     try {
-      require('pdf-lib');
+      await import(pkg);
     } catch {
       return;
     }
-    const files = globImportRefs('pdf-lib');
-    equal(files.length, 0, `pdf-lib aun se importa en: ${files.join(', ')}`);
-  });
+    const files = globImportRefs(pkg);
+    equal(files.length, 0, `${pkg} aun se importa en: ${files.join(', ')}`);
+  }
 
-  it('html-to-image NO debe importarse en el proyecto', () => {
-    try {
-      require('html-to-image');
-    } catch {
-      return;
-    }
-    const files = globImportRefs('html-to-image');
-    equal(files.length, 0, `html-to-image aun se importa en: ${files.join(', ')}`);
-  });
-
-  it('file-saver NO debe importarse en el proyecto', () => {
-    try {
-      require('file-saver');
-    } catch {
-      return;
-    }
-    const files = globImportRefs('file-saver');
-    equal(files.length, 0, `file-saver aun se importa en: ${files.join(', ')}`);
-  });
-
-  it('docx NO debe importarse en el proyecto', () => {
-    try {
-      require('docx');
-    } catch {
-      return;
-    }
-    const files = globImportRefs('docx');
-    equal(files.length, 0, `docx aun se importa en: ${files.join(', ')}`);
-  });
+  it('pdf-lib NO debe importarse en el proyecto', async () => checkNoImports('pdf-lib'));
+  it('html-to-image NO debe importarse en el proyecto', async () =>
+    checkNoImports('html-to-image'));
+  it('file-saver NO debe importarse en el proyecto', async () => checkNoImports('file-saver'));
+  it('docx NO debe importarse en el proyecto', async () => checkNoImports('docx'));
 });
 
 describe('DocumentPreview — solo boton Imprimir', () => {
@@ -154,7 +129,6 @@ describe('PrintHintDialog — texto Carta', () => {
 
 function globImportRefs(pkg: string): string[] {
   try {
-    const { execSync } = require('node:child_process') as typeof import('node:child_process');
     const result = execSync(
       `rg --no-heading -l "from ['\\"]${pkg}['\\"]" "${srcDir}" --include "*.ts" --include "*.tsx" 2>NUL`,
       { encoding: 'utf-8', cwd: srcDir }

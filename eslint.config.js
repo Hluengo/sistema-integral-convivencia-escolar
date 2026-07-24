@@ -78,6 +78,7 @@ export default tseslint.config(
       '.git/**',
       'api/index.js',
       'supabase/.temp/**',
+      'Free-Models-IA/**',
     ],
   },
   js.configs.recommended,
@@ -104,10 +105,7 @@ export default tseslint.config(
       'react-refresh': reactRefresh,
     },
     rules: {
-      '@typescript-eslint/consistent-type-imports': [
-        'error',
-        { prefer: 'type-imports' },
-      ],
+      '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
       '@typescript-eslint/no-unused-vars': [
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
