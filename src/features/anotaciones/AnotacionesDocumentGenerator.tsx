@@ -1,6 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useReactToPrint } from 'react-to-print';
 import type { Annotation } from '@/src/types';
 import { getCurrentDateStr, getSemaphoricStyle } from '@/src/lib/anotacionesUtils';
 import DocTypeSelector from './docgen/DocTypeSelector';
@@ -17,7 +18,7 @@ import ExportError from './docgen/components/ExportError';
 import EmissionConfirmDialog from './docgen/components/EmissionConfirmDialog';
 import RecentlyEmitted from './docgen/components/RecentlyEmitted';
 import { TITLE_MAP, type DocType, type LetterContent } from './docgen/DocumentPreview/docTypes';
-import { printLetter, downloadLetterPdf } from './docgen/letterExportService';
+import { downloadLetterPdf } from './docgen/letterExportService';
 
 function isLetterContent(value: unknown): value is LetterContent {
   if (!value || typeof value !== 'object') return false;
@@ -144,6 +145,7 @@ export default function AnotacionesDocumentGenerator({
   }, []);
 
   const [exportError, setExportError] = useState<string | null>(null);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [registrationMessage, setRegistrationMessage] = useState<string | null>(null);
   const [registrationError, setRegistrationError] = useState<string | null>(null);
   const [showEmissionConfirm, setShowEmissionConfirm] = useState(false);
@@ -276,43 +278,80 @@ export default function AnotacionesDocumentGenerator({
 
   const getPreviewElement = (): HTMLElement | null => previewRef.current;
 
-  const handlePrintDoc = async () => {
+  const printFileName = useMemo(
+    () => `Carta_${docType}_${student.full_name.replace(/\s+/g, '_')}_${dateStr}`,
+    [docType, student.full_name, dateStr]
+  );
+
+  const handleAfterPrint = useCallback(() => {
+    void onLetterAction?.('printed');
+    setShowEmissionConfirm(true);
+  }, [onLetterAction]);
+
+  const handlePrintError = useCallback((_location: 'onBeforePrint' | 'print', error: Error) => {
+    setExportError(`Error al imprimir: ${error.message}`);
+  }, []);
+
+  const handlePrint = useReactToPrint({
+    contentRef: previewRef,
+    documentTitle: printFileName,
+    ignoreGlobalStyles: false,
+    pageStyle: `
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+        width: 210mm;
+      }
+      body {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .letter-page {
+        margin: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        transform: none !important;
+      }
+    `,
+    onAfterPrint: handleAfterPrint,
+    onPrintError: handlePrintError,
+  });
+
+  const handlePrintDoc = () => {
     setExportError(null);
-    const el = getPreviewElement();
-    if (!el) {
-      setExportError('No se pudo leer la plantilla visible para imprimir.');
-      return;
-    }
-    const result = await printLetter(el, {
-      docType: title,
-      studentName: student.full_name,
-      dateStr,
-    });
-    if (result.success) {
-      void onLetterAction?.('printed');
-      setShowEmissionConfirm(true);
-    } else if (result.error) {
-      setExportError(result.error);
-    }
+    handlePrint();
   };
 
   const handleExportPDF = async () => {
     setExportError(null);
-    const el = getPreviewElement();
-    if (!el) {
-      setExportError('No se pudo leer la plantilla visible para generar PDF.');
-      return;
-    }
-    const result = await downloadLetterPdf(el, {
-      docType: title,
-      studentName: student.full_name,
-      dateStr,
-    });
-    if (result.success) {
-      void onLetterAction?.('downloaded_pdf');
-      setShowEmissionConfirm(true);
-    } else if (result.error) {
-      setExportError(result.error);
+    setIsExportingPdf(true);
+    try {
+      const el = getPreviewElement();
+      if (!el) {
+        setExportError('No se pudo leer la plantilla visible para generar PDF.');
+        return;
+      }
+      const result = await downloadLetterPdf(el, {
+        docType: title,
+        studentName: student.full_name,
+        dateStr,
+      });
+      if (result.success) {
+        void onLetterAction?.('downloaded_pdf');
+        setShowEmissionConfirm(true);
+      } else if (result.error) {
+        setExportError(result.error);
+      }
+    } catch (err) {
+      setExportError(err instanceof Error ? err.message : 'No fue posible generar el PDF.');
+    } finally {
+      setIsExportingPdf(false);
     }
   };
 
@@ -448,6 +487,7 @@ export default function AnotacionesDocumentGenerator({
         onPrint={handlePrintDoc}
         onExportPDF={handleExportPDF}
         onExportWord={handleExportWord}
+        isExportingPdf={isExportingPdf}
         onOverflowChange={handleOverflowChange}
       />
 

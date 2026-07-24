@@ -162,6 +162,9 @@
     </div>
   </div>
 
+  <script src="https://unpkg.com/html-to-image@1.11.13/dist/html-to-image.js"></script>
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
   <script>
     function checkOverflow() {
       var el = document.getElementById('document-preview-a4');
@@ -198,9 +201,28 @@
       }
     }
 
-    function handleDownloadPdf() {
+    async function handleDownloadPdf() {
       if (checkOverflow()) return;
-      alert('PDF_DOWNLOAD_TRIGGERED');
+      try {
+        var el = document.getElementById('document-preview-a4');
+        var dataUrl = await htmlToImage.toPng(el, {
+          quality: 1.0,
+          pixelRatio: 3,
+          backgroundColor: '#ffffff',
+          cacheBust: true,
+          style: { transform: 'none', transformOrigin: 'top left' }
+        });
+        var pdfDoc = await PDFLib.PDFDocument.create();
+        var page = pdfDoc.addPage([595.28, 841.89]);
+        var imageBytes = Uint8Array.from(atob(dataUrl.split(',')[1]), function(c) { return c.charCodeAt(0); });
+        var image = await pdfDoc.embedPng(imageBytes);
+        page.drawImage(image, { x: 0, y: 0, width: 595.28, height: 841.89 });
+        var pdfBytes = await pdfDoc.save();
+        var blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        saveAs(blob, 'Carta_Amonestacion_Escrita_Juan_Perez_2026-07-23.pdf');
+      } catch(e) {
+        alert('Error generando PDF: ' + e.message);
+      }
     }
 
     function handleDownloadWord() {

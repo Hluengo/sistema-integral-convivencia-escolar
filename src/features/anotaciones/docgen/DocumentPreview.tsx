@@ -25,6 +25,7 @@ interface DocumentPreviewProps {
   onPrint: () => void;
   onExportPDF: () => void;
   onExportWord: () => void;
+  isExportingPdf?: boolean;
   onOverflowChange?: (hasOverflow: boolean) => void;
 }
 
@@ -46,6 +47,7 @@ const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(functio
     onPrint,
     onExportPDF,
     onExportWord,
+    isExportingPdf = false,
     onOverflowChange,
   },
   ref
@@ -67,9 +69,10 @@ const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(functio
           <button
             type="button"
             onClick={onExportPDF}
-            className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-medium text-white shadow-xs transition-colors hover:bg-red-700"
+            disabled={isExportingPdf}
+            className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-medium text-white shadow-xs transition-colors hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <FileDown className="h-4 w-4" /> Descargar PDF
+            <FileDown className="h-4 w-4" /> {isExportingPdf ? 'Generando PDF...' : 'Descargar PDF'}
           </button>
           <button
             type="button"

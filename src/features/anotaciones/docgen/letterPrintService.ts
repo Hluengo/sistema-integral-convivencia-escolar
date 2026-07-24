@@ -2,21 +2,66 @@
  * @license SPDX-License-Identifier: Apache-2.0
  *
  * Letter Print Service — Servicio unificado para cartas historicas.
- * Reutiliza LetterA4Document + letterExportService para impresion y descarga.
+ * Renderiza LetterA4Document en un contenedor temporal y usa los mismos
+ * mecanismos de exportacion que las cartas nuevas.
+ *
+ * Para impresion: inyecta CSS inline completo en un HTML autocontenido.
+ * Para PDF: usa html-to-image + pdf-lib sobre el nodo renderizado.
  */
 
 import React from 'react';
+import { createRoot } from 'react-dom/client';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { Annotation, CartaDisciplinaria } from '@/src/shared/lib/types';
 import { supabase } from '@/src/lib/supabase';
 import LetterPrintRenderer, { type LetterPrintStudent } from './LetterPrintRenderer';
 import { TITLE_MAP, type DocType } from './DocumentPreview/docTypes';
+import { toPng } from 'html-to-image';
+import { PDFDocument } from 'pdf-lib';
+import { saveAs } from 'file-saver';
 
-function getDocumentStyles(): string {
-  return Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
-    .map((styleNode) => styleNode.outerHTML)
-    .join('\n');
-}
+const A4_WIDTH_PT = 595.28;
+const A4_HEIGHT_PT = 841.89;
+
+/**
+ * CSS completo autocontenido para cartas disciplinarias.
+ * Incluye todas las clases de letter-document.css como string literal
+ * para que funcione en paginas blob: sin dependencia de archivos externos.
+ */
+const LETTER_DOCUMENT_CSS = `
+  .letter-page {
+    width: 210mm; min-width: 210mm; height: 297mm; min-height: 297mm;
+    box-sizing: border-box; padding: 20mm 25mm; margin: 0;
+    background: white; color: #111827;
+    font-family: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-size: 11pt; line-height: 1.5; overflow: hidden; position: relative;
+    break-after: page; page-break-after: always;
+  }
+  .letter-header { display: flex; align-items: center; gap: 16px; padding-bottom: 16px; margin-bottom: 20px; border-bottom: 2px solid #d1d5db; }
+  .letter-header-logo { height: 64px; width: auto; flex-shrink: 0; object-fit: contain; }
+  .letter-header-text { display: flex; flex-direction: column; }
+  .letter-header-institution { font-size: 10pt; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: #6b7280; }
+  .letter-header-department { margin-top: 2px; font-size: 12pt; font-weight: 700; color: #1f2937; }
+  .letter-header-year { font-size: 11pt; color: #6b7280; }
+  .letter-title { margin-bottom: 24px; text-align: center; font-size: 16pt; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #111827; }
+  .letter-section { margin-bottom: 18px; }
+  .letter-section-heading { display: flex; align-items: center; gap: 8px; padding-bottom: 4px; margin-bottom: 10px; border-bottom: 2px solid #d1d5db; font-size: 12pt; font-weight: 700; color: #1f2937; }
+  .letter-section-number { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; flex-shrink: 0; border-radius: 50%; background: #1f2937; color: white; font-size: 11pt; font-weight: 700; }
+  .letter-section-body { font-size: 10.5pt; line-height: 1.6; color: #374151; }
+  .letter-data-row { display: flex; gap: 8px; margin-bottom: 2px; font-size: 10.5pt; line-height: 1.5; }
+  .letter-data-label { width: 144px; flex-shrink: 0; font-weight: 600; color: #4b5563; }
+  .letter-data-value { color: #1f2937; }
+  .letter-signatures { margin-top: 32px; padding-top: 16px; border-top: 1px solid #d1d5db; break-inside: avoid; page-break-inside: avoid; }
+  .letter-signatures-title { margin-bottom: 24px; text-align: center; font-size: 10pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #374151; }
+  .letter-signatures-grid { display: grid; gap: 16px; font-size: 10pt; color: #4b5563; }
+  .letter-signatures-grid-4 { grid-template-columns: repeat(4, 1fr); }
+  .letter-signatures-grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .letter-signature-item { text-align: center; break-inside: avoid; page-break-inside: avoid; }
+  .letter-signature-line { margin-top: 32px; padding-top: 4px; border-top: 1px solid #9ca3af; }
+  .letter-signature-role { margin-top: 2px; font-size: 9pt; color: #6b7280; }
+  .letter-legal-box { margin-top: 16px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #f9fafb; }
+  .letter-legal-text { font-size: 9pt; line-height: 1.6; color: #6b7280; }
+`;
 
 function buildLetterHtml(
   carta: CartaDisciplinaria,
@@ -26,14 +71,17 @@ function buildLetterHtml(
   const markup = renderToStaticMarkup(
     React.createElement(LetterPrintRenderer, { carta, student, annotations })
   );
-  return `<!doctype html>
+  return `<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${carta.letter_type}</title>
-  ${getDocumentStyles()}
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
+    ${LETTER_DOCUMENT_CSS}
     @page { size: A4; margin: 0; }
     html, body { margin: 0; padding: 0; width: 210mm; background: white; }
     body { display: flex; justify-content: center; color: #111827; }
@@ -69,6 +117,61 @@ function openPrintWindow(html: string): boolean {
     URL.revokeObjectURL(url);
   }, 10000);
   return true;
+}
+
+function dataUrlToBytes(dataUrl: string): Uint8Array {
+  const base64 = dataUrl.split(',')[1];
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+async function captureHistoricalLetter(
+  carta: CartaDisciplinaria,
+  student?: LetterPrintStudent,
+  annotations: Annotation[] = []
+): Promise<HTMLElement> {
+  const container = document.createElement('div');
+  container.style.cssText = 'position:fixed;left:-9999px;top:0;background:white;';
+  document.body.appendChild(container);
+
+  const root = createRoot(container);
+  await new Promise<void>((resolve) => {
+    root.render(React.createElement(LetterPrintRenderer, { carta, student, annotations }));
+    setTimeout(resolve, 100);
+  });
+
+  await document.fonts.ready;
+  const letterPage = container.querySelector('.letter-page') as HTMLElement;
+  if (!letterPage) {
+    root.unmount();
+    container.remove();
+    throw new Error('No se pudo renderizar la carta historica.');
+  }
+
+  const images = Array.from(letterPage.querySelectorAll('img'));
+  await Promise.all(
+    images.map(async (img) => {
+      if (!img.complete) {
+        await new Promise<void>((resolve) => {
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
+        });
+      }
+      if (typeof img.decode === 'function') {
+        await img.decode().catch(() => undefined);
+      }
+    })
+  );
+
+  return container;
+}
+
+function cleanupContainer(container: HTMLElement): void {
+  container.remove();
 }
 
 export async function recordLetterOutputEvent(
@@ -111,7 +214,8 @@ export async function printHistoricalCarta(
   student?: LetterPrintStudent,
   annotations: Annotation[] = []
 ): Promise<boolean> {
-  const opened = openPrintWindow(buildLetterHtml(carta, student, annotations));
+  const html = buildLetterHtml(carta, student, annotations);
+  const opened = openPrintWindow(html);
   if (opened) await recordLetterOutputEvent(carta, 'print');
   return opened;
 }
@@ -121,9 +225,47 @@ export async function downloadHistoricalCartaPdf(
   student?: LetterPrintStudent,
   annotations: Annotation[] = []
 ): Promise<boolean> {
-  const opened = openPrintWindow(buildLetterHtml(carta, student, annotations));
-  if (opened) await recordLetterOutputEvent(carta, 'download');
-  return opened;
+  let container: HTMLElement | null = null;
+  try {
+    container = await captureHistoricalLetter(carta, student, annotations);
+    const letterPage = container.querySelector('.letter-page') as HTMLElement;
+
+    const dataUrl = await toPng(letterPage, {
+      quality: 1.0,
+      pixelRatio: 3,
+      backgroundColor: '#ffffff',
+      cacheBust: true,
+      style: {
+        transform: 'none',
+        transformOrigin: 'top left',
+      },
+    });
+
+    const pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage([A4_WIDTH_PT, A4_HEIGHT_PT]);
+    const imageBytes = dataUrlToBytes(dataUrl);
+    const image = await pdfDoc.embedPng(imageBytes);
+    page.drawImage(image, {
+      x: 0,
+      y: 0,
+      width: A4_WIDTH_PT,
+      height: A4_HEIGHT_PT,
+    });
+
+    const pdfBytes = await pdfDoc.save();
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const studentName = student?.full_name || carta.student_name || 'estudiante';
+    const fileName = `${carta.letter_type.replace(/\s+/g, '_')}_${studentName.replace(/\s+/g, '_')}.pdf`;
+    saveAs(blob, fileName);
+
+    await recordLetterOutputEvent(carta, 'download');
+    return true;
+  } catch (error) {
+    console.error('Error generando PDF de carta historica:', error);
+    return false;
+  } finally {
+    if (container) cleanupContainer(container);
+  }
 }
 
 /**

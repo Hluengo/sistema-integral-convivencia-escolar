@@ -106,12 +106,11 @@ test.describe('Letter A4 Document', () => {
   });
 
   test('11. Descarga PDF - boton dispara accion', async ({ page }) => {
-    page.on('dialog', async (dialog) => {
-      expect(dialog.message()).toBe('PDF_DOWNLOAD_TRIGGERED');
-      await dialog.accept();
-    });
+    const downloadPromise = page.waitForEvent('download', { timeout: 10000 });
     const pdfBtn = page.locator('#btn-pdf');
     await pdfBtn.click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toContain('.pdf');
   });
 
   test('12. Impresion - boton dispara accion', async ({ page }) => {

@@ -2,7 +2,10 @@
  * @license SPDX-License-Identifier: Apache-2.0
  *
  * Letter Export Service — Servicio unico de exportacion para cartas disciplinarias.
- * Proporciona impresion y descarga PDF desde el componente LetterA4Document.
+ * Proporciona descarga PDF desde el componente LetterA4Document.
+ *
+ * La impresion ahora se maneja via useReactToPrint en AnotacionesDocumentGenerator,
+ * ya que imprime el componente React montado con sus estilos CSS reales.
  */
 
 import { toPng } from 'html-to-image';
@@ -11,7 +14,7 @@ import { saveAs } from 'file-saver';
 
 const A4_WIDTH_PT = 595.28;
 const A4_HEIGHT_PT = 841.89;
-const CAPTURE_SCALE = 2;
+const CAPTURE_SCALE = 3;
 
 export interface LetterExportOptions {
   docType: string;
@@ -73,9 +76,12 @@ async function captureNodeAsImage(element: HTMLElement): Promise<string> {
     quality: 1.0,
     pixelRatio: CAPTURE_SCALE,
     backgroundColor: '#ffffff',
+    cacheBust: true,
     style: {
       transform: 'none',
       transformOrigin: 'top left',
+      boxShadow: 'none',
+      borderRadius: '0',
     },
     filter: (node: HTMLElement) => {
       const isButton = node.tagName === 'BUTTON';
@@ -115,88 +121,20 @@ async function prepareElement(element: HTMLElement): Promise<void> {
   await waitForImages(element);
 }
 
-function getDocumentStyles(): string {
-  return Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
-    .map((node) => node.outerHTML)
-    .join('\n');
-}
-
-function buildPrintHtml(markup: string): string {
-  return `<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Imprimir carta</title>
-  ${getDocumentStyles()}
-  <style>
-    @page { size: A4; margin: 0; }
-    html, body { margin: 0; padding: 0; width: 210mm; background: white; }
-    body { display: flex; justify-content: center; color: #111827; }
-    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  </style>
-</head>
-<body>${markup}</body>
-</html>`;
-}
-
-function openPrintWindow(html: string): boolean {
-  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const win = window.open(url, '_blank');
-  if (!win) {
-    URL.revokeObjectURL(url);
-    return false;
-  }
-  const timer = window.setInterval(() => {
-    try {
-      if (win.document.readyState === 'complete') {
-        window.clearInterval(timer);
-        win.print();
-        URL.revokeObjectURL(url);
-      }
-    } catch {
-      window.clearInterval(timer);
-      URL.revokeObjectURL(url);
-    }
-  }, 100);
-  window.setTimeout(() => {
-    window.clearInterval(timer);
-    URL.revokeObjectURL(url);
-  }, 10000);
-  return true;
-}
-
-/**
- * Imprime una carta usando un iframe oculto con la plantilla canonic.
- */
-export async function printLetter(
-  element: HTMLElement,
-  _options: LetterExportOptions
-): Promise<LetterExportResult> {
-  try {
-    await prepareElement(element);
-    const markup = element.outerHTML;
-    const html = buildPrintHtml(markup);
-    const opened = openPrintWindow(html);
-    if (!opened) {
-      return {
-        success: false,
-        error: 'El navegador bloqueo la ventana de impresion. Permita ventanas emergentes.',
-      };
-    }
-    return { success: true };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : 'Error desconocido al preparar la impresion.',
-    };
-  }
+function findLetterPage(element: HTMLElement): HTMLElement {
+  const letterPage = element.querySelector('.letter-page') as HTMLElement | null;
+  return letterPage || element;
 }
 
 /**
  * Descarga un PDF real generado desde el nodo LetterA4Document.
  * No abre el dialogo de impresion.
+ *
+ * Flujo:
+ * 1. Espera fuentes e imagenes
+ * 2. Captura el nodo .letter-page como PNG de alta resolucion
+ * 3. Genera un PDF A4 con pdf-lib
+ * 4. Descarga el archivo via file-saver
  */
 export async function downloadLetterPdf(
   element: HTMLElement,
@@ -213,7 +151,8 @@ export async function downloadLetterPdf(
       };
     }
 
-    const imageDataUrl = await captureNodeAsImage(element);
+    const letterPage = findLetterPage(element);
+    const imageDataUrl = await captureNodeAsImage(letterPage);
     const pdfBytes = await createPdfFromImage(imageDataUrl);
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
     const fileName = buildFileName(options);
