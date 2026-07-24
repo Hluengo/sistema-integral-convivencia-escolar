@@ -16,6 +16,7 @@ import { useRegisterCommitment } from './docgen/hooks/useRegisterCommitment';
 import GeneratorHeader from './docgen/components/GeneratorHeader';
 import ExportError from './docgen/components/ExportError';
 import EmissionConfirmDialog from './docgen/components/EmissionConfirmDialog';
+import PrintHintDialog from './docgen/components/PrintHintDialog';
 import RecentlyEmitted from './docgen/components/RecentlyEmitted';
 import { TITLE_MAP, type DocType, type LetterContent } from './docgen/DocumentPreview/docTypes';
 import { downloadLetterPdf } from './docgen/letterExportService';
@@ -149,6 +150,7 @@ export default function AnotacionesDocumentGenerator({
   const [registrationMessage, setRegistrationMessage] = useState<string | null>(null);
   const [registrationError, setRegistrationError] = useState<string | null>(null);
   const [showEmissionConfirm, setShowEmissionConfirm] = useState(false);
+  const [showPrintHint, setShowPrintHint] = useState(false);
   const [hasOverflow, setHasOverflow] = useState(false);
 
   const selectedAnnsObjects = selectedAnnotations.selectedAnnsObjects;
@@ -298,20 +300,20 @@ export default function AnotacionesDocumentGenerator({
     ignoreGlobalStyles: false,
     pageStyle: `
       @page {
-        size: A4 portrait;
+        size: 216mm 330mm;
         margin: 0;
       }
       html, body {
         margin: 0 !important;
         padding: 0 !important;
         background: #fff !important;
-        width: 210mm;
+        width: 216mm;
       }
       body {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
-      .letter-page {
+      .letter-document {
         margin: 0 !important;
         box-shadow: none !important;
         border: none !important;
@@ -325,6 +327,11 @@ export default function AnotacionesDocumentGenerator({
 
   const handlePrintDoc = () => {
     setExportError(null);
+    setShowPrintHint(true);
+  };
+
+  const handlePrintHintConfirm = () => {
+    setShowPrintHint(false);
     handlePrint();
   };
 
@@ -400,8 +407,8 @@ export default function AnotacionesDocumentGenerator({
           role="alert"
           className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
         >
-          El contenido supera una pagina A4. Reduzca el texto o utilice una version de varias
-          paginas antes de imprimir o descargar.
+          El contenido supera una pagina Oficio (216 x 330 mm). Reduzca el texto o utilice una
+          version de varias paginas antes de imprimir o descargar.
         </div>
       )}
 
@@ -411,7 +418,13 @@ export default function AnotacionesDocumentGenerator({
         onCancel={() => setShowEmissionConfirm(false)}
       />
 
-      <div className="mx-auto w-full max-w-[210mm] space-y-5">
+      <PrintHintDialog
+        isOpen={showPrintHint}
+        onConfirm={handlePrintHintConfirm}
+        onCancel={() => setShowPrintHint(false)}
+      />
+
+      <div className="mx-auto w-full max-w-[216mm] space-y-5">
         <GeneratorHeader negativeCount={negativeCount} semaphoric={semaphoric} />
 
         <div className="space-y-4 rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
@@ -491,7 +504,7 @@ export default function AnotacionesDocumentGenerator({
         onOverflowChange={handleOverflowChange}
       />
 
-      <div className="mx-auto w-full max-w-[210mm]">
+      <div className="mx-auto w-full max-w-[216mm]">
         <RecentlyEmitted emittedList={documentRegistry.emittedList} />
       </div>
     </div>

@@ -65,7 +65,7 @@ const LetterA4Document = forwardRef<HTMLDivElement, LetterA4DocumentProps>(
     };
 
     return (
-      <div ref={ref} id={id} className={`letter-page ${className}`}>
+      <div ref={ref} id={id} className={`letter-document ${className}`}>
         <div className="letter-header">
           <img src={LOGO_BASE64} alt="Logo Colegio" className="letter-header-logo" />
           <div className="letter-header-text">

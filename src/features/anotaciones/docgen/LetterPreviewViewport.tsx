@@ -8,7 +8,7 @@ interface LetterPreviewViewportProps {
   onOverflowChange?: (hasOverflow: boolean) => void;
 }
 
-const A4_WIDTH_MM = 210;
+const FOLIO_WIDTH_MM = 216;
 
 export default function LetterPreviewViewport({
   children,
@@ -19,7 +19,7 @@ export default function LetterPreviewViewport({
   const [scale, setScale] = useState(1);
 
   const checkOverflow = useCallback(() => {
-    const el = containerRef.current?.querySelector('.letter-page') as HTMLElement | null;
+    const el = containerRef.current?.querySelector('.letter-document') as HTMLElement | null;
     if (!el) return;
     const overflow = el.scrollHeight > el.clientHeight + 2;
     onOverflowChange?.(overflow);
@@ -31,8 +31,8 @@ export default function LetterPreviewViewport({
 
     const updateScale = () => {
       const containerWidth = container.clientWidth;
-      const a4WidthPx = (A4_WIDTH_MM / 25.4) * 96;
-      const newScale = Math.min(1, containerWidth / a4WidthPx);
+      const folioWidthPx = (FOLIO_WIDTH_MM / 25.4) * 96;
+      const newScale = Math.min(1, containerWidth / folioWidthPx);
       setScale(newScale);
     };
 
@@ -64,7 +64,7 @@ export default function LetterPreviewViewport({
         style={{
           transform: `scale(${scale})`,
           transformOrigin: 'top center',
-          width: `${(A4_WIDTH_MM / 25.4) * 96}px`,
+          width: `${(FOLIO_WIDTH_MM / 25.4) * 96}px`,
           flexShrink: 0,
         }}
       >
@@ -74,4 +74,4 @@ export default function LetterPreviewViewport({
   );
 }
 
-export { A4_WIDTH_MM };
+export { FOLIO_WIDTH_MM };

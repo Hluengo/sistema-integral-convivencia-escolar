@@ -12,8 +12,8 @@ import { toPng } from 'html-to-image';
 import { PDFDocument } from 'pdf-lib';
 import { saveAs } from 'file-saver';
 
-const A4_WIDTH_PT = 595.28;
-const A4_HEIGHT_PT = 841.89;
+const FOLIO_WIDTH_PT = 612.28;
+const FOLIO_HEIGHT_PT = 935.43;
 const CAPTURE_SCALE = 3;
 
 export interface LetterExportOptions {
@@ -78,6 +78,8 @@ async function captureNodeAsImage(element: HTMLElement): Promise<string> {
     backgroundColor: '#ffffff',
     cacheBust: true,
     style: {
+      width: '216mm',
+      height: '330mm',
       transform: 'none',
       transformOrigin: 'top left',
       boxShadow: 'none',
@@ -104,14 +106,14 @@ function dataUrlToBytes(dataUrl: string): Uint8Array {
 
 async function createPdfFromImage(imageDataUrl: string): Promise<Uint8Array> {
   const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([A4_WIDTH_PT, A4_HEIGHT_PT]);
+  const page = pdfDoc.addPage([FOLIO_WIDTH_PT, FOLIO_HEIGHT_PT]);
   const imageBytes = dataUrlToBytes(imageDataUrl);
   const image = await pdfDoc.embedPng(imageBytes);
   page.drawImage(image, {
     x: 0,
     y: 0,
-    width: A4_WIDTH_PT,
-    height: A4_HEIGHT_PT,
+    width: FOLIO_WIDTH_PT,
+    height: FOLIO_HEIGHT_PT,
   });
   return pdfDoc.save();
 }
@@ -121,9 +123,9 @@ async function prepareElement(element: HTMLElement): Promise<void> {
   await waitForImages(element);
 }
 
-function findLetterPage(element: HTMLElement): HTMLElement {
-  const letterPage = element.querySelector('.letter-page') as HTMLElement | null;
-  return letterPage || element;
+function findLetterDocument(element: HTMLElement): HTMLElement {
+  const letterDocument = element.querySelector('.letter-document') as HTMLElement | null;
+  return letterDocument || element;
 }
 
 /**
@@ -132,7 +134,7 @@ function findLetterPage(element: HTMLElement): HTMLElement {
  *
  * Flujo:
  * 1. Espera fuentes e imagenes
- * 2. Captura el nodo .letter-page como PNG de alta resolucion
+ * 2. Captura el nodo .letter-document como PNG de alta resolucion
  * 3. Genera un PDF A4 con pdf-lib
  * 4. Descarga el archivo via file-saver
  */
@@ -147,12 +149,12 @@ export async function downloadLetterPdf(
       return {
         success: false,
         error:
-          'El contenido supera una pagina A4. Reduzca el texto o utilice una version de varias paginas antes de imprimir o descargar.',
+          'El contenido supera una pagina Oficio (216 x 330 mm). Reduzca el texto o utilice una version de varias paginas antes de imprimir o descargar.',
       };
     }
 
-    const letterPage = findLetterPage(element);
-    const imageDataUrl = await captureNodeAsImage(letterPage);
+    const letterDocument = findLetterDocument(element);
+    const imageDataUrl = await captureNodeAsImage(letterDocument);
     const pdfBytes = await createPdfFromImage(imageDataUrl);
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
     const fileName = buildFileName(options);

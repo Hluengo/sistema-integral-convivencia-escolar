@@ -1,7 +1,7 @@
 /**
  * @license SPDX-License-Identifier: Apache-2.0
  *
- * Playwright E2E tests for Letter A4 Document export system.
+ * Playwright E2E tests for Letter Folio Document export system.
  * Tests visual fidelity, PDF download, print, and overflow detection.
  */
 
@@ -9,40 +9,40 @@ import { test, expect } from '@playwright/test';
 
 const LETTER_TEST_URL = '/letter-test.html';
 
-test.describe('Letter A4 Document', () => {
+test.describe('Letter Folio Document', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(LETTER_TEST_URL);
     await page.waitForLoadState('networkidle');
   });
 
   test('1. Amonestacion escrita - renderiza correctamente', async ({ page }) => {
-    const letterPage = page.locator('#document-preview-a4');
-    await expect(letterPage).toBeVisible();
+    const letterDocument = page.locator('#document-preview-a4');
+    await expect(letterDocument).toBeVisible();
     const title = page.locator('#letter-title');
     await expect(title).toHaveText('Amonestacion Escrita');
     const studentName = page.locator('#student-name');
     await expect(studentName).toHaveText('Juan Perez Gonzalez');
   });
 
-  test('2. Mantienie dimensiones A4 en viewport de escritorio', async ({ page }) => {
+  test('2. Mantiene dimensiones Folio en viewport de escritorio', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    const letterPage = page.locator('#document-preview-a4');
-    const box = await letterPage.boundingBox();
+    const letterDocument = page.locator('#document-preview-a4');
+    const box = await letterDocument.boundingBox();
     expect(box).not.toBeNull();
     if (box) {
-      const expectedWidthMm = 210;
+      const expectedWidthMm = 216;
       const expectedWidthPx = (expectedWidthMm / 25.4) * 96;
       expect(box.width).toBeCloseTo(expectedWidthPx, 0);
     }
   });
 
-  test('3. Mantienie dimensiones A4 en viewport estrecho (movil)', async ({ page }) => {
+  test('3. Mantiene dimensiones Folio en viewport estrecho (movil)', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
-    const letterPage = page.locator('#document-preview-a4');
-    const box = await letterPage.boundingBox();
+    const letterDocument = page.locator('#document-preview-a4');
+    const box = await letterDocument.boundingBox();
     expect(box).not.toBeNull();
     if (box) {
-      const expectedWidthMm = 210;
+      const expectedWidthMm = 216;
       const expectedWidthPx = (expectedWidthMm / 25.4) * 96;
       expect(box.width).toBeCloseTo(expectedWidthPx, 0);
     }
@@ -75,8 +75,8 @@ test.describe('Letter A4 Document', () => {
     await studentName.textContent().then(async (text) => {
       expect(text).toBeTruthy();
     });
-    const letterPage = page.locator('#document-preview-a4');
-    const box = await letterPage.boundingBox();
+    const letterDocument = page.locator('#document-preview-a4');
+    const box = await letterDocument.boundingBox();
     expect(box).not.toBeNull();
   });
 
@@ -85,8 +85,8 @@ test.describe('Letter A4 Document', () => {
     const teacher = page.locator('#teacher-name');
     await expect(course).toHaveText('3 Basico B');
     await expect(teacher).toHaveText('Maria Lopez Soto');
-    const letterPage = page.locator('#document-preview-a4');
-    const box = await letterPage.boundingBox();
+    const letterDocument = page.locator('#document-preview-a4');
+    const box = await letterDocument.boundingBox();
     expect(box).not.toBeNull();
   });
 
@@ -105,12 +105,19 @@ test.describe('Letter A4 Document', () => {
     expect(isHidden).toBe(true);
   });
 
-  test('11. Descarga PDF - boton dispara accion', async ({ page }) => {
-    const downloadPromise = page.waitForEvent('download', { timeout: 10000 });
+  test('11. Descarga PDF - boton dispara accion y genera archivo real', async ({ page }) => {
+    const downloadPromise = page.waitForEvent('download', { timeout: 30000 });
     const pdfBtn = page.locator('#btn-pdf');
     await pdfBtn.click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toContain('.pdf');
+    const path = await download.path();
+    expect(path).toBeTruthy();
+    if (path) {
+      const fs = await import('fs');
+      const stat = fs.statSync(path);
+      expect(stat.size).toBeGreaterThan(100_000);
+    }
   });
 
   test('12. Impresion - boton dispara accion', async ({ page }) => {
@@ -120,8 +127,8 @@ test.describe('Letter A4 Document', () => {
 
   test('13. Snapshot visual de la plantilla', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
-    const letterPage = page.locator('#document-preview-a4');
-    await expect(letterPage).toHaveScreenshot('letter-amonestacion.png', {
+    const letterDocument = page.locator('#document-preview-a4');
+    await expect(letterDocument).toHaveScreenshot('letter-amonestacion.png', {
       maxDiffPixelRatio: 0.02,
     });
   });
@@ -138,5 +145,24 @@ test.describe('Letter A4 Document', () => {
     await expect(count).toHaveText('7');
     const date = page.locator('#date-str');
     await expect(date).toHaveText('23/07/2026');
+  });
+
+  test('16. Dimensiones Folio - altura 330mm', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 1200 });
+    const letterDocument = page.locator('#document-preview-a4');
+    const box = await letterDocument.boundingBox();
+    expect(box).not.toBeNull();
+    if (box) {
+      const expectedHeightMm = 330;
+      const expectedHeightPx = (expectedHeightMm / 25.4) * 96;
+      expect(box.height).toBeCloseTo(expectedHeightPx, 0);
+    }
+  });
+
+  test('17. Overflow warning menciona Oficio 216x330mm', async ({ page }) => {
+    const overflowWarning = page.locator('#overflow-warning');
+    const text = await overflowWarning.textContent();
+    expect(text).toContain('216');
+    expect(text).toContain('330');
   });
 });

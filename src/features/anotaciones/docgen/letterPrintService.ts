@@ -20,8 +20,8 @@ import { toPng } from 'html-to-image';
 import { PDFDocument } from 'pdf-lib';
 import { saveAs } from 'file-saver';
 
-const A4_WIDTH_PT = 595.28;
-const A4_HEIGHT_PT = 841.89;
+const FOLIO_WIDTH_PT = 612.28;
+const FOLIO_HEIGHT_PT = 935.43;
 
 /**
  * CSS completo autocontenido para cartas disciplinarias.
@@ -29,8 +29,8 @@ const A4_HEIGHT_PT = 841.89;
  * para que funcione en paginas blob: sin dependencia de archivos externos.
  */
 const LETTER_DOCUMENT_CSS = `
-  .letter-page {
-    width: 210mm; min-width: 210mm; height: 297mm; min-height: 297mm;
+  .letter-document {
+    width: 216mm; min-width: 216mm; height: 330mm; min-height: 330mm;
     box-sizing: border-box; padding: 20mm 25mm; margin: 0;
     background: white; color: #111827;
     font-family: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -82,8 +82,8 @@ function buildLetterHtml(
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
     ${LETTER_DOCUMENT_CSS}
-    @page { size: A4; margin: 0; }
-    html, body { margin: 0; padding: 0; width: 210mm; background: white; }
+    @page { size: 216mm 330mm; margin: 0; }
+    html, body { margin: 0; padding: 0; width: 216mm; background: white; }
     body { display: flex; justify-content: center; color: #111827; }
     body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   </style>
@@ -145,14 +145,14 @@ async function captureHistoricalLetter(
   });
 
   await document.fonts.ready;
-  const letterPage = container.querySelector('.letter-page') as HTMLElement;
-  if (!letterPage) {
+  const letterDocument = container.querySelector('.letter-document') as HTMLElement;
+  if (!letterDocument) {
     root.unmount();
     container.remove();
     throw new Error('No se pudo renderizar la carta historica.');
   }
 
-  const images = Array.from(letterPage.querySelectorAll('img'));
+  const images = Array.from(letterDocument.querySelectorAll('img'));
   await Promise.all(
     images.map(async (img) => {
       if (!img.complete) {
@@ -228,9 +228,9 @@ export async function downloadHistoricalCartaPdf(
   let container: HTMLElement | null = null;
   try {
     container = await captureHistoricalLetter(carta, student, annotations);
-    const letterPage = container.querySelector('.letter-page') as HTMLElement;
+    const letterDocument = container.querySelector('.letter-document') as HTMLElement;
 
-    const dataUrl = await toPng(letterPage, {
+    const dataUrl = await toPng(letterDocument, {
       quality: 1.0,
       pixelRatio: 3,
       backgroundColor: '#ffffff',
@@ -242,14 +242,14 @@ export async function downloadHistoricalCartaPdf(
     });
 
     const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([A4_WIDTH_PT, A4_HEIGHT_PT]);
+    const page = pdfDoc.addPage([FOLIO_WIDTH_PT, FOLIO_HEIGHT_PT]);
     const imageBytes = dataUrlToBytes(dataUrl);
     const image = await pdfDoc.embedPng(imageBytes);
     page.drawImage(image, {
       x: 0,
       y: 0,
-      width: A4_WIDTH_PT,
-      height: A4_HEIGHT_PT,
+      width: FOLIO_WIDTH_PT,
+      height: FOLIO_HEIGHT_PT,
     });
 
     const pdfBytes = await pdfDoc.save();

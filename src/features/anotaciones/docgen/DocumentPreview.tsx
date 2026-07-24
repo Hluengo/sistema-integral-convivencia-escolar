@@ -54,7 +54,7 @@ const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(functio
 ) {
   return (
     <div className="space-y-4">
-      <div className="mx-auto w-full max-w-[210mm] rounded-xl border border-neutral-200 bg-white p-4 shadow-xs">
+      <div className="mx-auto w-full max-w-[216mm] rounded-xl border border-neutral-200 bg-white p-4 shadow-xs">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-neutral-500">
           Acciones del Documento
         </p>
