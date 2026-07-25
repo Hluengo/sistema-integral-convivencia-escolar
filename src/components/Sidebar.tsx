@@ -79,7 +79,7 @@ function SidebarContent({
         className={`flex items-center border-white/10 border-b ${isCollapsed && !mobile ? 'justify-center px-3 py-5' : 'gap-3 px-5 py-5'}`}
       >
         <div className="flex shrink-0 items-center justify-center">
-          <img src="/veritas2.webp" alt="Escudo Veritas" className="h-9 w-auto mix-blend-screen" />
+          <img src="/logo.svg" alt="Escudo Veritas" className="h-9 w-auto invert" />
         </div>
         {(!isCollapsed || mobile) && (
           <div className="min-w-0">

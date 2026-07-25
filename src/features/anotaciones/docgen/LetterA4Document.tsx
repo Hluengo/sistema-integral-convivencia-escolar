@@ -2,7 +2,7 @@
 
 import { forwardRef } from 'react';
 import type { Annotation } from '@/src/shared/lib/types';
-import { LOGO_BASE64 } from '@/src/lib/logoBase64';
+import { LOGO_URL } from '@/src/lib/logoBase64';
 import { TITLE_MAP, type DocType, type LetterContent } from './DocumentPreview/docTypes';
 import { LetterInstitutionalHeader, LetterTitle } from './DocumentPreview/SharedComponents';
 import AmonestacionContent from './DocumentPreview/AmonestacionContent';
@@ -64,7 +64,7 @@ const LetterA4Document = forwardRef<HTMLDivElement, LetterA4DocumentProps>(
 
     return (
       <div ref={ref} id={id} className={`letter-document ${className}`}>
-        <LetterInstitutionalHeader year="2026" logoSrc={LOGO_BASE64} />
+        <LetterInstitutionalHeader year="2026" logoSrc={LOGO_URL} />
         <LetterTitle>{title}</LetterTitle>
 
         {docType === 'amonestacion' && <AmonestacionContent {...sharedProps} />}
