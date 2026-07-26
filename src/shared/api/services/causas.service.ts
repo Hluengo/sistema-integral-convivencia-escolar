@@ -1,8 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { supabase } from '../lib/supabase';
-import type { Causa, ChecklistItem } from '../../../types';
-import { CausaSchema, ChecklistItemSchema } from '../../../schemas';
+import type { BitacoraEntry, Causa, ChecklistItem } from '../../../types';
+import { BitacoraEntrySchema, CausaSchema, ChecklistItemSchema } from '../../../schemas';
 import { getBaseChecklist } from '../../../data';
 import { useAuthStore } from '../../../stores/authStore';
 
@@ -37,8 +37,19 @@ interface SupabaseChecklistRow {
   documento_url: string | null;
 }
 
-function mapChecklistRow(row: SupabaseChecklistRow): ChecklistItem {
-  return ChecklistItemSchema.parse({
+interface SupabaseBitacoraRow {
+  id: string;
+  causa_id: string;
+  fecha: string;
+  tipo: string;
+  titulo: string;
+  descripcion: string;
+  participantes: string[] | null;
+  documento_adjunto: string | null;
+}
+
+function mapChecklistRow(row: SupabaseChecklistRow): ChecklistItem | null {
+  const parsed = ChecklistItemSchema.safeParse({
     id: row.id,
     label: row.label,
     descripcion: row.descripcion,
@@ -50,35 +61,50 @@ function mapChecklistRow(row: SupabaseChecklistRow): ChecklistItem {
     documentoNombre: row.documento_nombre || undefined,
     documentoUrl: row.documento_url || undefined,
   });
+  if (!parsed.success) {
+    console.error(`Invalid checklist item ${row.id}:`, parsed.error.flatten());
+    return null;
+  }
+  return parsed.data;
+}
+
+function mapBitacoraRow(row: SupabaseBitacoraRow): BitacoraEntry | null {
+  const parsed = BitacoraEntrySchema.safeParse({
+    id: row.id,
+    fecha: row.fecha,
+    tipo: row.tipo,
+    titulo: row.titulo,
+    descripcion: row.descripcion,
+    participantes: row.participantes || [],
+    documentoAdjunto: row.documento_adjunto || undefined,
+  });
+  if (!parsed.success) {
+    console.error(`Invalid bitacora entry ${row.id}:`, parsed.error.flatten());
+    return null;
+  }
+  return parsed.data;
 }
 
 const DEFAULT_PAGE_SIZE = 100;
 
-/**
- * Fetch causas ordered by last update (most recent first),
- * including their checklist items from the checklist_items table.
- * Causas without stored checklist items get the default checklist.
- * @param limit - max records to return (default 100, 0 = no limit)
- */
+/** Fetch complete causa workspaces, including bitacora and checklist, in three parallel queries. */
 export async function fetchCausas(limit = DEFAULT_PAGE_SIZE): Promise<Causa[]> {
-  let query = supabase
+  let causaQuery = supabase
     .from('causas')
     .select('id,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas')
     .order('fecha_ultima_actualizacion', { ascending: false });
 
-  if (limit > 0) {
-    query = query.limit(limit);
-  }
+  if (limit > 0) causaQuery = causaQuery.limit(limit);
 
-  const { data, error } = await query;
-
+  const { data, error } = await causaQuery;
   if (error || !data) {
     console.error('Error fetching causas:', error);
-    return [];
+    throw error || new Error('No se recibieron causas desde Supabase.');
   }
 
-  const causas = data.map((row: SupabaseCausaRow) =>
-    CausaSchema.parse({
+  const causas: Causa[] = [];
+  for (const row of data as SupabaseCausaRow[]) {
+    const parsed = CausaSchema.safeParse({
       id: row.id,
       estudianteNombre: row.estudiante_nombre,
       estudianteCurso: row.estudiante_curso,
@@ -95,82 +121,73 @@ export async function fetchCausas(limit = DEFAULT_PAGE_SIZE): Promise<Causa[]> {
       medidasEjecutadas: row.medidas_ejecutadas || [],
       bitacora: [],
       checklistDebidoProceso: [],
-    })
-  );
-
-  const ids = causas.map((c) => c.id);
-  if (ids.length === 0) return causas;
-
-  const { data: checklistRows, error: checklistError } = await supabase
-    .from('checklist_items')
-    .select('id,causa_id,label,descripcion,completado,fecha_completado,requerido_por,registrado_por,observaciones,documento_nombre,documento_url')
-    .in('causa_id', ids);
-
-  if (checklistError) {
-    console.error('Error fetching checklist items:', checklistError);
+    });
+    if (parsed.success) causas.push(parsed.data);
+    else console.error(`Invalid causa ${row.id}:`, parsed.error.flatten());
   }
 
+  const ids = causas.map((causa) => causa.id);
+  if (ids.length === 0) return causas;
+
+  const [checklistResult, bitacoraResult] = await Promise.all([
+    supabase
+      .from('checklist_items')
+      .select('id,causa_id,label,descripcion,completado,fecha_completado,requerido_por,registrado_por,observaciones,documento_nombre,documento_url')
+      .in('causa_id', ids),
+    supabase
+      .from('bitacora_entries')
+      .select('id,causa_id,fecha,tipo,titulo,descripcion,participantes,documento_adjunto')
+      .in('causa_id', ids)
+      .order('fecha', { ascending: false }),
+  ]);
+
+  if (checklistResult.error) console.error('Error fetching checklist items:', checklistResult.error);
+  if (bitacoraResult.error) console.error('Error fetching bitacora entries:', bitacoraResult.error);
+
   const checklistByCausa = new Map<string, ChecklistItem[]>();
-  if (checklistRows) {
-    for (const row of checklistRows as SupabaseChecklistRow[]) {
-      const list = checklistByCausa.get(row.causa_id);
-      if (list) {
-        list.push(mapChecklistRow(row));
-      } else {
-        checklistByCausa.set(row.causa_id, [mapChecklistRow(row)]);
-      }
-    }
+  for (const row of (checklistResult.data || []) as SupabaseChecklistRow[]) {
+    const item = mapChecklistRow(row);
+    if (!item) continue;
+    const current = checklistByCausa.get(row.causa_id) || [];
+    current.push(item);
+    checklistByCausa.set(row.causa_id, current);
+  }
+
+  const bitacoraByCausa = new Map<string, BitacoraEntry[]>();
+  for (const row of (bitacoraResult.data || []) as SupabaseBitacoraRow[]) {
+    const entry = mapBitacoraRow(row);
+    if (!entry) continue;
+    const current = bitacoraByCausa.get(row.causa_id) || [];
+    current.push(entry);
+    bitacoraByCausa.set(row.causa_id, current);
   }
 
   return causas.map((causa) => ({
     ...causa,
+    bitacora: bitacoraByCausa.get(causa.id) || [],
     checklistDebidoProceso: checklistByCausa.get(causa.id) || getBaseChecklist(),
   }));
 }
 
-/**
- * Resolve a unique causa id. Returns the preferred id if free,
- * otherwise computes the next sequential "DC-2026-NNN" id.
- */
 async function resolveUniqueCausaId(preferred: string): Promise<string> {
   const { data: existing, error: checkError } = await supabase
-    .from('causas')
-    .select('id')
-    .eq('id', preferred)
-    .maybeSingle();
-
-  if (!checkError && !existing) {
-    return preferred;
-  }
+    .from('causas').select('id').eq('id', preferred).maybeSingle();
+  if (!checkError && !existing) return preferred;
 
   const { data: all } = await supabase.from('causas').select('id');
-
   const year = new Date().getFullYear();
   let max = 0;
   for (const row of all || []) {
     const match = new RegExp(`^DC-${year}-(\\d+)$`).exec(row.id);
-    if (match) {
-      const n = Number.parseInt(match[1], 10);
-      if (n > max) {
-        max = n;
-      }
-    }
+    if (match) max = Math.max(max, Number.parseInt(match[1], 10));
   }
-
-  const next = max + 1;
-  const padding = next < 10 ? `00${next}` : next < 100 ? `0${next}` : `${next}`;
-  return `DC-${year}-${padding}`;
+  return `DC-${year}-${String(max + 1).padStart(3, '0')}`;
 }
 
-/**
- * Create a new causa with its initial bitacora and checklist.
- * Returns the id actually used, or false on failure.
- */
 export async function createCausa(causa: Causa): Promise<string | false> {
   const causaId = await resolveUniqueCausaId(causa.id);
   const tenantId = useAuthStore.getState().tenantId;
-
-  const { error: causaError } = await supabase.from('causas').insert({
+  const { error } = await supabase.from('causas').insert({
     id: causaId,
     tenant_id: tenantId,
     estudiante_nombre: causa.estudianteNombre,
@@ -187,20 +204,15 @@ export async function createCausa(causa: Causa): Promise<string | false> {
     conducta_rice_id: causa.conductaRiceId || null,
     medidas_ejecutadas: causa.medidasEjecutadas || [],
   });
-
-  if (causaError) {
-    console.error('Error creating causa:', causaError);
+  if (error) {
+    console.error('Error creating causa:', error);
     return false;
   }
-
   return causaId;
 }
 
-/**
- * Update an existing causa (main fields only).
- */
 export async function updateCausa(causa: Causa): Promise<boolean> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('causas')
     .update({
       estudiante_nombre: causa.estudianteNombre,
@@ -217,29 +229,25 @@ export async function updateCausa(causa: Causa): Promise<boolean> {
       conducta_rice_id: causa.conductaRiceId || null,
       medidas_ejecutadas: causa.medidasEjecutadas || [],
     })
-    .eq('id', causa.id);
+    .eq('id', causa.id)
+    .select('id');
 
   if (error) {
     console.error('Error updating causa:', error);
     return false;
   }
-
-  return true;
+  return Boolean(data?.length);
 }
 
-/**
- * Delete a causa and all related data (bitacora, checklist).
- */
 export async function deleteCausa(causaId: string): Promise<boolean> {
-  await supabase.from('bitacora_entries').delete().eq('causa_id', causaId);
-  await supabase.from('checklist_items').delete().eq('causa_id', causaId);
-
+  await Promise.all([
+    supabase.from('bitacora_entries').delete().eq('causa_id', causaId),
+    supabase.from('checklist_items').delete().eq('causa_id', causaId),
+  ]);
   const { error } = await supabase.from('causas').delete().eq('id', causaId);
-
   if (error) {
     console.error('Error deleting causa:', error);
     return false;
   }
-
   return true;
 }
