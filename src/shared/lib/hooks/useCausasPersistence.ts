@@ -35,7 +35,7 @@ export function useCausasPersistence({
   const [loadError, setLoadError] = useState<string | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const saveIdleTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const isLoadingCausasRef = useRef(true);
+  const isLoadingCausasRef = useRef(false);
   const saveGenerationRef = useRef(0);
   const dataInitializedRef = useRef(false);
   const isMountedRef = useRef(true);
@@ -51,48 +51,49 @@ export function useCausasPersistence({
 
   const loadCausas = useCallback(
     async (retryCount = 0) => {
+      if (!isAuthenticated || isLoadingCausasRef.current) return;
+
       isLoadingCausasRef.current = true;
       setLoadError(null);
       try {
         const loaded = await fetchCausas();
-        if (!isMountedRef.current) {
-          return;
-        }
+        if (!isMountedRef.current) return;
+
         setCausas(loaded);
         const newMap = new Map<string, string>();
         for (const c of loaded) {
           newMap.set(c.id, JSON.stringify(c));
         }
         prevCausasMapRef.current = newMap;
-        if (loaded.length > 0) {
-          setSelectedCausaId(loaded[0].id);
-        }
+        setSelectedCausaId(loaded[0]?.id || '');
       } catch (error) {
         console.error('Error loading causas:', error);
-        if (!isMountedRef.current) {
-          return;
-        }
-        if (retryCount < 2) {
-          setTimeout(() => loadCausas(retryCount + 1), 1000 * (retryCount + 1));
+        if (!isMountedRef.current) return;
+
+        if (retryCount < 2 && isAuthenticated) {
+          setTimeout(() => loadCausas(retryCount + 1), 750 * (retryCount + 1));
         } else {
           setLoadError('Error al cargar los expedientes. Verifique su conexión.');
-          setCausas([]);
-          setSelectedCausaId('');
         }
       } finally {
         isLoadingCausasRef.current = false;
       }
     },
-    [setCausas, setSelectedCausaId]
+    [isAuthenticated, setCausas, setSelectedCausaId]
   );
 
   useEffect(() => {
-    if (dataInitializedRef.current) {
+    if (!isAuthenticated) {
+      dataInitializedRef.current = false;
+      prevCausasMapRef.current.clear();
+      pendingSaveRef.current.clear();
       return;
     }
+
+    if (dataInitializedRef.current) return;
     dataInitializedRef.current = true;
-    loadCausas();
-  }, [loadCausas]);
+    void loadCausas();
+  }, [isAuthenticated, loadCausas]);
 
   useEffect(() => {
     if (causas.length === 0 || isLoadingCausasRef.current) {
@@ -165,11 +166,11 @@ export function useCausasPersistence({
                 prev.map((c) => (c.id === originalId ? { ...c, id: createdId } : c))
               );
             }
-            await Promise.all([
+            const [bitacoraSaved, checklistSaved] = await Promise.all([
               saveBitacora(effectiveId, causa.bitacora),
               saveChecklist(effectiveId, causa.checklistDebidoProceso),
             ]);
-            return true;
+            return bitacoraSaved && checklistSaved;
           })
         );
 
