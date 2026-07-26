@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import type { User } from '@supabase/supabase-js';
 import { onAuthStateChange as subscribeAuth } from '../../../services/auth.service';
 import { supabase } from '../../api/lib/supabase';
+import type { MembershipResult, MembershipStatus } from '../../api/types/membership';
 
 interface AuthState {
   user: User | null;
@@ -14,6 +15,11 @@ interface AuthState {
   setShowLoginModal: (v: boolean) => void;
   setUser: (user: User | null) => void;
   setAuthLoading: (v: boolean) => void;
+  membershipStatus: MembershipStatus;
+  membershipRole: string | null;
+  membershipLoading: boolean;
+  setMembership: (result: MembershipResult) => void;
+  clearMembership: () => void;
 }
 
 async function loadTenantId(userId: string): Promise<string | null> {
@@ -45,6 +51,21 @@ export const useAuthStore = create<AuthState>((set) => {
     authLoading: true,
     showLoginModal: false,
     isAuthenticated: false,
+    membershipStatus: 'not_available' as MembershipStatus,
+    membershipRole: null,
+    membershipLoading: false,
+    setMembership: (result: MembershipResult) =>
+      set({
+        membershipStatus: result.status,
+        membershipRole: result.applicationRole,
+        membershipLoading: false,
+      }),
+    clearMembership: () =>
+      set({
+        membershipStatus: 'not_available' as MembershipStatus,
+        membershipRole: null,
+        membershipLoading: false,
+      }),
     setShowLoginModal: (v) => set({ showLoginModal: v }),
     setUser: (user) => set({ user, isAuthenticated: !!user }),
     setAuthLoading: (v) => set({ authLoading: v }),

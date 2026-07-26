@@ -1,32 +1,34 @@
 # STAFF ENGINEER MEMORY — Sistema Integral de Convivencia Escolar
 
-> **Versión:** 1.0 | **Estado:** Producción | **Última actualización:** 2026-07-23
+> **Versión:** 1.1 | **Estado:** Producción | **Última actualización:** 2026-07-25
 
 ---
 
 ## 1. VISIÓN GENERAL
 
 ### Propósito
+
 Sistema SaaS multi-tenant para gestión integral de convivencia escolar en establecimientos educacionales chilenos. Automatiza el debido proceso disciplinario desde la recepción de anotaciones hasta la emisión de cartas y documentos, con cumplimiento garantizado de Circular 482 (2018) y Ley 21.809 (2026).
 
 ### Stack Tecnológico
-| Capa | Tecnología | Versión |
-|------|-----------|---------|
-| Frontend | React + TypeScript | 19.0.1 / 5.8.2 |
-| Build | Vite | 6.4.3 |
-| CSS | Tailwind CSS v4 | 4.1.14 |
-| State | Zustand | 5.0.14 |
-| Queries | TanStack React Query | 5.101.2 |
-| Forms | react-hook-form + Zod | 7.82.0 / 4.4.3 |
-| Backend (dev) | Express + tsx | 4.21.2 / 4.21.0 |
-| Backend (prod) | Vercel Serverless | esbuild bundle |
-| Database | Supabase PostgreSQL | 17.6.1 |
-| Auth | Supabase Auth (email/password) | — |
-| AI | OpenRouter (meta-llama/llama-3.1-8b-instruct) | — |
-| Documentos | docx (Word), pdf-lib + pdfjs-dist (PDF) | 9.7.1 / 1.17.1 / 6.1.200 |
-| Monitoring | Sentry + PostHog | 10.66.0 / 1.404.1 |
-| Tests | node:test + node:assert/strict + Playwright | — |
-| Lint/Format | TypeScript (tsc), ESLint 9, Prettier 3, Biome 2.5 | — |
+
+| Capa           | Tecnología                                        | Versión                  |
+| -------------- | ------------------------------------------------- | ------------------------ |
+| Frontend       | React + TypeScript                                | 19.0.1 / 5.8.2           |
+| Build          | Vite                                              | 6.4.3                    |
+| CSS            | Tailwind CSS v4                                   | 4.1.14                   |
+| State          | Zustand                                           | 5.0.14                   |
+| Queries        | TanStack React Query                              | 5.101.2                  |
+| Forms          | react-hook-form + Zod                             | 7.82.0 / 4.4.3           |
+| Backend (dev)  | Express + tsx                                     | 4.21.2 / 4.21.0          |
+| Backend (prod) | Vercel Serverless                                 | esbuild bundle           |
+| Database       | Supabase PostgreSQL                               | 17.6.1                   |
+| Auth           | Supabase Auth (email/password)                    | —                        |
+| AI             | OpenRouter (meta-llama/llama-3.1-8b-instruct)     | —                        |
+| Documentos     | docx (Word), pdf-lib + pdfjs-dist (PDF)           | 9.7.1 / 1.17.1 / 6.1.200 |
+| Monitoring     | Sentry + PostHog                                  | 10.66.0 / 1.404.1        |
+| Tests          | node:test + node:assert/strict + Playwright       | —                        |
+| Lint/Format    | TypeScript (tsc), ESLint 9, Prettier 3, Biome 2.5 | —                        |
 
 ---
 
@@ -57,9 +59,9 @@ src/
 
 ### 2.2 Dual Server Entry Points
 
-| Entry Point | Uso | Bundle | Comando |
-|------------|-----|--------|---------|
-| `server/index.ts` | Desarrollo | tsx runtime | `npm run dev` |
+| Entry Point                                        | Uso               | Bundle               | Comando         |
+| -------------------------------------------------- | ----------------- | -------------------- | --------------- |
+| `server/index.ts`                                  | Desarrollo        | tsx runtime          | `npm run dev`   |
 | `api/index.js` (generado de `server/api/index.ts`) | Producción Vercel | esbuild bundle (ESM) | `npm run build` |
 
 **Regla crítica:** Al modificar rutas API o lógica de servidor, actualizar **ambos** archivos (`server/routes/` y `server/api/routes/`). Las implementaciones serverless usan `https` module en vez de `fetch` para Node 18 compat.
@@ -89,20 +91,21 @@ Auto-save pipeline (useCausasPersistence)
 
 La navegación **NO usa React Router**. Se maneja con una variable `currentView` (tipo `SidebarView`) en `uiStore`. El componente `MainContent` renderiza condicionalmente según el valor:
 
-| View | Component | Feature Module |
-|------|-----------|---------------|
-| `dashboard` | `<DashboardStats>` | `features/dashboard` |
-| `causas` | `<CausasView>` + `<InteractiveTimeline>` | `features/causas` |
-| `informes` | `<AdvisorView>` (AI Legal + Templates) | `features/causas/MainContent` |
-| `alumnos` | `<StudentsPanel>` | `features/students` |
-| `anotaciones` | `<AnotacionesView>` | `features/anotaciones` |
-| `documentos` | `<DocumentosView>` | `features/documentos` |
+| View          | Component                                | Feature Module                |
+| ------------- | ---------------------------------------- | ----------------------------- |
+| `dashboard`   | `<DashboardStats>`                       | `features/dashboard`          |
+| `causas`      | `<CausasView>` + `<InteractiveTimeline>` | `features/causas`             |
+| `informes`    | `<AdvisorView>` (AI Legal + Templates)   | `features/causas/MainContent` |
+| `alumnos`     | `<StudentsPanel>`                        | `features/students`           |
+| `anotaciones` | `<AnotacionesView>`                      | `features/anotaciones`        |
+| `documentos`  | `<DocumentosView>`                       | `features/documentos`         |
 
 **Modals controlados por estado** (sin rutas): `LoginPage`, `NewCausaModal`, `EditCausaModal`, `ShortcutsModal`, `NewDisciplinaryProcessModal`, `AnotacionesStudentDetailModal`.
 
 ### 2.5 Lazy Loading
 
 Componentes lazy (React.lazy + Suspense):
+
 - `Sidebar`, `Header`, `MainContent`, `CommandPalette`
 - `LoginPage`, `NewCausaModal`, `ShortcutsModal`, `OnboardingTour`
 - `InteractiveTimeline`, `EditCausaModal` (dentro de CausasView)
@@ -247,28 +250,35 @@ Rojo (15+ negativas)
 
 ## 4. BASE DE DATOS
 
-### 4.1 Esquema Completo (16 tablas)
+### 4.1 Esquema Completo (16 tablas del sistema)
 
-| Tabla | Propósito | RLS | FK Clave |
-|-------|-----------|-----|----------|
-| `tenants` | Establecimientos educacionales | ✅ | — |
-| `profiles` | Usuarios del sistema | ✅ | `auth.users(id)`, `tenants(id)` |
-| `students` | Estudiantes | ✅ | `courses(id)`, `tenants(id)` |
-| `courses` | Cursos | ✅ | `tenants(id)` |
-| `causas` | Casos disciplinarios | ✅ | `students(id)`, `tenants(id)` |
-| `bitacora_entries` | Historial de casos | ✅ | `causas(id)`, `tenants(id)` |
-| `checklist_items` | Checklist debido proceso | ✅ | `causas(id)`, `tenants(id)` |
-| `inspectorate_records` | Anotaciones de inspectoría | ✅ | `students(id)`, `tenants(id)` |
-| `cartas_disciplinarias` | Cartas emitidas | ✅ | `students(id)`, `tenants(id)` |
-| `etapas_disciplinarias` | Etapas del proceso | ✅ | `students(id)`, `tenants(id)` |
-| `document_templates` | Prompts AI personalizados | ✅ | `tenants(id)` |
-| `document_analyses` | Resultados análisis PDF | ✅ | `students(id)`, `tenants(id)` |
-| `disciplinary_processes` | Procesos desde PDF | ✅ | `students(id)`, `tenants(id)` |
-| `disciplinary_process_files` | Archivos PDF adjuntos | ✅ | `processes(id)`, `tenants(id)` |
-| `disciplinary_annotations_detected` | Anotaciones parseadas de PDF | ✅ | `processes(id)`, `students(id)`, `tenants(id)` |
-| `disciplinary_rules` | Reglas de sugerencia de cartas | ✅ | `tenants(id)` |
-| `usage_events` | Eventos de uso del sistema | ✅ | `auth.users(id)` |
-| `carta_events` | Trazabilidad de trámite de cartas | ✅ | `cartas_disciplinarias.id`, `students.id`, `tenants.id` |
+| Tabla                               | Propósito                         | RLS | FK Clave                                                |
+| ----------------------------------- | --------------------------------- | --- | ------------------------------------------------------- |
+| `tenants`                           | Establecimientos educacionales    | ✅  | —                                                       |
+| `profiles`                          | Usuarios del sistema              | ✅  | `auth.users(id)`, `tenants(id)`                         |
+| `students`                          | Estudiantes                       | ✅  | `courses(id)`, `tenants(id)`                            |
+| `courses`                           | Cursos                            | ✅  | `tenants(id)`                                           |
+| `causas`                            | Casos disciplinarios              | ✅  | `students(id)`, `tenants(id)`                           |
+| `bitacora_entries`                  | Historial de casos                | ✅  | `causas(id)`, `tenants(id)`                             |
+| `checklist_items`                   | Checklist debido proceso          | ✅  | `causas(id)`, `tenants(id)`                             |
+| `inspectorate_records`              | Anotaciones de inspectoría        | ✅  | `students(id)`, `tenants(id)`                           |
+| `cartas_disciplinarias`             | Cartas emitidas                   | ✅  | `students(id)`, `tenants(id)`                           |
+| `etapas_disciplinarias`             | Etapas del proceso                | ✅  | `students(id)`, `tenants(id)`                           |
+| `document_templates`                | Prompts AI personalizados         | ✅  | `tenants(id)`                                           |
+| `document_analyses`                 | Resultados análisis PDF           | ✅  | `students(id)`, `tenants(id)`                           |
+| `disciplinary_processes`            | Procesos desde PDF                | ✅  | `students(id)`, `tenants(id)`                           |
+| `disciplinary_process_files`        | Archivos PDF adjuntos             | ✅  | `processes(id)`, `tenants(id)`                          |
+| `disciplinary_annotations_detected` | Anotaciones parseadas de PDF      | ✅  | `processes(id)`, `students(id)`, `tenants(id)`          |
+| `disciplinary_rules`                | Reglas de sugerencia de cartas    | ✅  | `tenants(id)`                                           |
+| `usage_events`                      | Eventos de uso del sistema        | ✅  | `auth.users(id)`                                        |
+| `carta_events`                      | Trazabilidad de trámite de cartas | ✅  | `cartas_disciplinarias.id`, `students.id`, `tenants.id` |
+
+### 4.2 Reproducibilidad de Migraciones
+
+- `00001_base_schema.sql`: creada para proveer el schema base ausente en el repo local (perfiles, estudiantes, cursos, causas, bitácora, checklist, plantillas). Esto permite que `supabase db reset` en un proyecto nuevo reconstruya la base usando solo `supabase/migrations/`.
+- `00002_anotaciones_tables.sql`: corregida para usar `UUID` en las PKs y FKs a `students(id)`, alineándose con el schema real de producción y con las migraciones posteriores (`20260716100100`, `20260724`, etc.).
+- El schema local se verificó contra la instancia vinculada (`supabase db query`) y `students.id`, `courses.id`, `profiles.user_id` son UUID; `causas.id`, `document_templates.id`, `bitacora_entries.id`, `checklist_items.id` son TEXT.
+- **Limitación local:** Docker no está disponible en este entorno, por lo que `supabase db reset` no se pudo ejecutar localmente. Se validó `supabase db lint` contra el proyecto remoto sin errores.
 
 ### 4.2 RLS Policy Map (Patrón Consistente)
 
@@ -295,26 +305,26 @@ Trigger de JWT sync: sync_tenant_to_jwt() en profiles
 
 ### 4.3 Storage Buckets
 
-| Bucket | Uso | Público | Max Size | MIME Types | Path Pattern |
-|--------|-----|---------|----------|------------|--------------|
-| `anotaciones` | Documentos de anotaciones | No | 10 MB | PDF, MD, TXT | `{tenant_id}/...` |
-| `disciplinary-processes` | PDFs de procesos disciplinarios | No | 10 MB | PDF | `{tenant_id}/{student_id}/{process_id}/{name}` |
-| `documentos_convivencia` (legacy) | Documentos varios | No | — | — | Referenciado en storage.service.ts |
+| Bucket                            | Uso                             | Público | Max Size | MIME Types   | Path Pattern                                   |
+| --------------------------------- | ------------------------------- | ------- | -------- | ------------ | ---------------------------------------------- |
+| `anotaciones`                     | Documentos de anotaciones       | No      | 10 MB    | PDF, MD, TXT | `{tenant_id}/...`                              |
+| `disciplinary-processes`          | PDFs de procesos disciplinarios | No      | 10 MB    | PDF          | `{tenant_id}/{student_id}/{process_id}/{name}` |
+| `documentos_convivencia` (legacy) | Documentos varios               | No      | —        | —            | Referenciado en storage.service.ts             |
 
 ### 4.4 RPCs (Funciones)
 
-| RPC | Retorna | Propósito |
-|-----|---------|-----------|
-| `current_app_role()` | TEXT | Rol del usuario actual |
-| `is_staff()` | BOOLEAN | Check staff-level role |
-| `current_tenant_id()` | UUID | Tenant actual (JWT fast path) |
-| `get_student_annotation_summary()` | TABLE | Dashboard: students + annotation counts + status |
-| `get_annotation_stage_counts()` | TABLE | Conteo de estudiantes por etapa disciplinaria |
-| `get_usage_stats(since, until)` | TABLE | Stats de uso agregadas |
-| `get_daily_active_users(since, until)` | TABLE | DAU por día |
-| `get_latest_analysis(p_student_id)` | TABLE | Último análisis PDF por estudiante |
-| `generate_process_number(p_tenant_id)` | TEXT | Genera DP-YYYY-NNNN |
-| `get_suggested_letter_type(...)` | TEXT | Sugiere tipo de carta según reglas |
+| RPC                                    | Retorna | Propósito                                        |
+| -------------------------------------- | ------- | ------------------------------------------------ |
+| `current_app_role()`                   | TEXT    | Rol del usuario actual                           |
+| `is_staff()`                           | BOOLEAN | Check staff-level role                           |
+| `current_tenant_id()`                  | UUID    | Tenant actual (JWT fast path)                    |
+| `get_student_annotation_summary()`     | TABLE   | Dashboard: students + annotation counts + status |
+| `get_annotation_stage_counts()`        | TABLE   | Conteo de estudiantes por etapa disciplinaria    |
+| `get_usage_stats(since, until)`        | TABLE   | Stats de uso agregadas                           |
+| `get_daily_active_users(since, until)` | TABLE   | DAU por día                                      |
+| `get_latest_analysis(p_student_id)`    | TABLE   | Último análisis PDF por estudiante               |
+| `generate_process_number(p_tenant_id)` | TEXT    | Genera DP-YYYY-NNNN                              |
+| `get_suggested_letter_type(...)`       | TEXT    | Sugiere tipo de carta según reglas               |
 
 ---
 
@@ -322,19 +332,19 @@ Trigger de JWT sync: sync_tenant_to_jwt() en profiles
 
 ### 5.1 Endpoints
 
-| Método | Ruta | Auth | Rate-Limit | AI | DB Tables |
-|--------|------|------|------------|----|-----------|
-| POST | `/api/advisor-chat` | ✅ | 10/min | ✅ (OpenRouter) | — |
-| POST | `/api/audit-due-process` | ✅ | 10/min | ✅ (OpenRouter) | — |
-| POST | `/api/draft-document` | ✅ | 10/min | ✅ (OpenRouter) | `document_templates` |
-| POST | `/api/improve-text` | ✅ | 10/min | ✅ (OpenRouter) | — |
-| POST | `/api/parse-annotations` | ❌ | 10/min | ❌ (regex) | — |
-| POST | `/api/process-disciplinary-pdf` | ✅ | 10/min | ❌ | `document_analyses`, `students` |
-| POST | `/api/process-disciplinary-pdf/confirm` | ✅ | 10/min | ❌ | `disciplinary_processes`, `files`, `annotations` |
-| GET | `/api/document-templates` | ❌ | ❌ | ❌ | `document_templates` |
-| PUT | `/api/document-templates` | ✅ | ❌ | ❌ | `document_templates` |
-| POST | `/api/usage/events` | ✅ | ❌ | ❌ | `usage_events` |
-| GET | `/api/usage/stats` | ✅ | ❌ | ❌ | RPCs |
+| Método | Ruta                                    | Auth | Rate-Limit | AI              | DB Tables                                        |
+| ------ | --------------------------------------- | ---- | ---------- | --------------- | ------------------------------------------------ |
+| POST   | `/api/advisor-chat`                     | ✅   | 10/min     | ✅ (OpenRouter) | —                                                |
+| POST   | `/api/audit-due-process`                | ✅   | 10/min     | ✅ (OpenRouter) | —                                                |
+| POST   | `/api/draft-document`                   | ✅   | 10/min     | ✅ (OpenRouter) | `document_templates`                             |
+| POST   | `/api/improve-text`                     | ✅   | 10/min     | ✅ (OpenRouter) | —                                                |
+| POST   | `/api/parse-annotations`                | ❌   | 10/min     | ❌ (regex)      | —                                                |
+| POST   | `/api/process-disciplinary-pdf`         | ✅   | 10/min     | ❌              | `document_analyses`, `students`                  |
+| POST   | `/api/process-disciplinary-pdf/confirm` | ✅   | 10/min     | ❌              | `disciplinary_processes`, `files`, `annotations` |
+| GET    | `/api/document-templates`               | ❌   | ❌         | ❌              | `document_templates`                             |
+| PUT    | `/api/document-templates`               | ✅   | ❌         | ❌              | `document_templates`                             |
+| POST   | `/api/usage/events`                     | ✅   | ❌         | ❌              | `usage_events`                                   |
+| GET    | `/api/usage/stats`                      | ✅   | ❌         | ❌              | RPCs                                             |
 
 ### 5.2 Auth Middleware (`requireAuth`)
 
@@ -343,11 +353,13 @@ Trigger de JWT sync: sync_tenant_to_jwt() en profiles
 2. Verificar JWT con HMAC-SHA256 (SUPABASE_JWT_SECRET)
    ├── Intenta raw text + base64-decoded secret
    └── Si falla → fallback a Supabase API /auth/v1/user
-3. Inyectar tenant context (query profiles table)
-4. Adjuntar payload decodificado a req.user
+3. Validar que el JWT contenga un sub (user_id) válido UUID
+4. Consultar profiles para obtener role, full_name, course_ids y tenant_id activo
+5. Rechazar 403 si no existe perfil o tenant_id es inválido / no UUID
+6. Adjuntar { userId, email, role, tenantId, profile } a req.user
 ```
 
-**Regla crítica:** Siempre mantener sincronizados `server/middleware/auth.ts` y `server/api/middleware/auth.ts`.
+**Regla crítica:** `server/api/middleware/auth.ts` re-exporta el middleware canónico de `server/middleware/auth.ts` para evitar drift. El constructor `createRequireAuth({ profileFetcher })` permite inyectar un fetcher de perfiles en tests.
 
 ### 5.3 AI Integration (OpenRouter)
 
@@ -405,37 +417,37 @@ Rate Limiting: 10 req/min/IP por endpoint (in-memory Map)
 
 ### 6.2 Zustand Stores
 
-| Store | Estado Clave | Acciones | Persistencia |
-|-------|-------------|----------|-------------|
-| `authStore` | user, tenantId, authLoading, isAuthenticated | setUser, setShowLoginModal | Subscripción onAuthStateChange |
-| `causasStore` | causas[], selectedCausaId, saveStatus, filters | setCausas, handleCreateCausa, handleDeleteCausa | Auto-save debounced 2s |
-| `uiStore` | currentView, isSidebarCollapsed, privacyMode, currentRole | setCurrentView, toggleSidebar, togglePrivacy | — |
-| `toastStore` | toasts[] | addToast (4s auto-remove), removeToast | — |
+| Store         | Estado Clave                                              | Acciones                                        | Persistencia                   |
+| ------------- | --------------------------------------------------------- | ----------------------------------------------- | ------------------------------ |
+| `authStore`   | user, tenantId, authLoading, isAuthenticated              | setUser, setShowLoginModal                      | Subscripción onAuthStateChange |
+| `causasStore` | causas[], selectedCausaId, saveStatus, filters            | setCausas, handleCreateCausa, handleDeleteCausa | Auto-save debounced 2s         |
+| `uiStore`     | currentView, isSidebarCollapsed, privacyMode, currentRole | setCurrentView, toggleSidebar, togglePrivacy    | —                              |
+| `toastStore`  | toasts[]                                                  | addToast (4s auto-remove), removeToast          | —                              |
 
 ### 6.3 React Query
 
-| Query Key | Hook | Stale Time | Enabled |
-|-----------|------|-----------|---------|
-| `['courses']` | `useCoursesQuery` | 30 min | Siempre |
-| `['students', courseId]` | `useStudentsQuery` | 10 min | `!!courseId` |
+| Query Key                | Hook               | Stale Time | Enabled      |
+| ------------------------ | ------------------ | ---------- | ------------ |
+| `['courses']`            | `useCoursesQuery`  | 30 min     | Siempre      |
+| `['students', courseId]` | `useStudentsQuery` | 10 min     | `!!courseId` |
 
 **No hay useMutation** — las mutaciones se hacen directamente a servicios Supabase desde los stores y hooks.
 
 ### 6.4 Servicios (shared/api/services/)
 
-| Servicio | Métodos Clave |
-|----------|--------------|
-| `auth.service.ts` | signInWithEmail, signOut, onAuthStateChange |
-| `causas.service.ts` | fetchCausas, createCausa, updateCausa, deleteCausa |
-| `bitacora.service.ts` | fetchBitacora, saveBitacora (delete all + re-insert), addBitacoraEntry |
-| `checklist.service.ts` | saveChecklist (delete all + re-insert) |
-| `annotations.service.ts` | fetchAnnotations, fetchDocumentAnalyses, saveAnnotation, fetchStudentsWithAnnotationCounts |
-| `courses.service.ts` | fetchCourses, fetchStudentsByCourse, fetchStudentsWithCourses |
-| `cartas.service.ts` | fetchCartas, fetchStudentDisciplinarySnapshot, createCartaEvent, markCartaPrinted, markCartaDownloadedPdf, markCartaDownloadedWord, markCartaProcessedManually, annulCarta, resolveCartaWorkflowStatus |
-| `etapas.service.ts` | fetchEtapas |
-| `storage.service.ts` | uploadDocument, listDocuments, deleteDocument (bucket: documentos_convivencia) |
-| `disciplinary-storage.service.ts` | validateDisciplinaryPdf, uploadDisciplinaryFile, getDisciplinaryFileUrl, deleteDisciplinaryFile |
-| `disciplinary-rules.service.ts` | fetchDisciplinaryRules |
+| Servicio                          | Métodos Clave                                                                                                                                                                                          |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `auth.service.ts`                 | signInWithEmail, signOut, onAuthStateChange                                                                                                                                                            |
+| `causas.service.ts`               | fetchCausas, createCausa, updateCausa, deleteCausa                                                                                                                                                     |
+| `bitacora.service.ts`             | fetchBitacora, saveBitacora (delete all + re-insert), addBitacoraEntry                                                                                                                                 |
+| `checklist.service.ts`            | saveChecklist (delete all + re-insert)                                                                                                                                                                 |
+| `annotations.service.ts`          | fetchAnnotations, fetchDocumentAnalyses, saveAnnotation, fetchStudentsWithAnnotationCounts                                                                                                             |
+| `courses.service.ts`              | fetchCourses, fetchStudentsByCourse, fetchStudentsWithCourses                                                                                                                                          |
+| `cartas.service.ts`               | fetchCartas, fetchStudentDisciplinarySnapshot, createCartaEvent, markCartaPrinted, markCartaDownloadedPdf, markCartaDownloadedWord, markCartaProcessedManually, annulCarta, resolveCartaWorkflowStatus |
+| `etapas.service.ts`               | fetchEtapas                                                                                                                                                                                            |
+| `storage.service.ts`              | uploadDocument, listDocuments, deleteDocument (bucket: documentos_convivencia)                                                                                                                         |
+| `disciplinary-storage.service.ts` | validateDisciplinaryPdf, uploadDisciplinaryFile, getDisciplinaryFileUrl, deleteDisciplinaryFile                                                                                                        |
+| `disciplinary-rules.service.ts`   | fetchDisciplinaryRules                                                                                                                                                                                 |
 
 ---
 
@@ -501,17 +513,17 @@ Capa 5 — Server-side: service_role key bypasses RLS (uso controlado)
 
 ### 8.2 Roles
 
-| Rol | Permisos |
-|-----|---------|
-| `admin` | Todo: CRUD en todo el tenant |
-| `direccion` | CRUD (excepto delete en algunas tablas) |
-| `convivencia` | CRUD en causas, anotaciones, estudiantes |
-| `inspectoria` | CRUD en inspectorate_records, estudiantes |
-| `profesor_jefe` | Lectura + escritura limitada a su curso |
-| `teacher` | Lectura básica |
-| `inspector` | CRUD básico |
-| `user` | Lectura básica |
-| `staff` | CRUD en causas |
+| Rol             | Permisos                                  |
+| --------------- | ----------------------------------------- |
+| `admin`         | Todo: CRUD en todo el tenant              |
+| `direccion`     | CRUD (excepto delete en algunas tablas)   |
+| `convivencia`   | CRUD en causas, anotaciones, estudiantes  |
+| `inspectoria`   | CRUD en inspectorate_records, estudiantes |
+| `profesor_jefe` | Lectura + escritura limitada a su curso   |
+| `teacher`       | Lectura básica                            |
+| `inspector`     | CRUD básico                               |
+| `user`          | Lectura básica                            |
+| `staff`         | CRUD en causas                            |
 
 ---
 
@@ -548,18 +560,19 @@ Vía cliente (download offline):
 
 ### 9.3 AI Drafted Documents (4 tipos)
 
-| Tipo | System Prompt |
-|------|-------------|
-| `notificacion_apertura` | "Eres un asistente experto..." |
-| `citacion_entrevista` | "Eres un experto..." |
+| Tipo                        | System Prompt                     |
+| --------------------------- | --------------------------------- |
+| `notificacion_apertura`     | "Eres un asistente experto..."    |
+| `citacion_entrevista`       | "Eres un experto..."              |
 | `informe_cierre_indagacion` | Prompt en DB (document_templates) |
-| `informe_concluyente` | Prompt en DB (document_templates) |
+| `informe_concluyente`       | Prompt en DB (document_templates) |
 
 ---
 
 ## 10. SEGURIDAD
 
 ### 10.1 Auth Flow
+
 ```
 Login: Email/password → Supabase Auth → JWT session
 Server: Bearer token → HMAC verification → Supabase API fallback
@@ -568,6 +581,7 @@ Sign-out: supabase.auth.signOut() → limpia sesión
 ```
 
 ### 10.2 JWT Verification Strategy
+
 ```
 Primary: HMAC-SHA256 (HS256) — rápido, sin HTTP calls
   ├── Intenta raw secret (TextEncoder)
@@ -577,11 +591,13 @@ Fallback: Supabase REST API /auth/v1/user
 ```
 
 ### 10.3 Privacy Mode
+
 - Estado global en `uiStore.privacyMode`
 - Oculta RUTs, nombres completos
 - Toggle en Header (UserAvatar)
 
 ### 10.4 Security Headers (vercel.json)
+
 ```
 X-Frame-Options: DENY
 X-Content-Type-Options: nosniff
@@ -596,6 +612,7 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 ## 11. CONVENCIONES DE CÓDIGO
 
 ### 11.1 TypeScript
+
 - Strict mode (`noEmit: true`, `isolatedModules: true`)
 - `import type` para type-only imports (enforced by ESLint)
 - Path alias `@/` → project root
@@ -603,12 +620,14 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - Prefer `interface` sobre `type` para objetos públicos
 
 ### 11.2 Database
+
 - snake_case en columnas, camelCase en TypeScript (mappers.ts)
 - UUIDs como PKs
 - `tenant_id` NOT NULL en todas las tablas multi-tenant
 - Migraciones incrementales con timestamp naming
 
 ### 11.3 UI/UX
+
 - Todo UI en español chileno
 - Tailwind CSS v4 con `@theme` en `src/index.css`
 - shadcn/ui como referencia visual
@@ -619,12 +638,14 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - WCAG 2.1 AA via @axe-core/playwright
 
 ### 11.4 Testing
+
 - Unit: `node:test` + `node:assert/strict`
 - E2E: Playwright
 - Coverage: Vitest + @vitest/coverage-v8
 - Tests alongside source files (`*.test.ts`)
 
 ### 11.5 Git/Commits
+
 - lint antes de commit (husky pre-commit)
 - pre-push: lint + test + build
 - No commit secrets
@@ -636,31 +657,36 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 
 ### 12.1 Errores Activos
 
-| Error | Causa | Solución |
-|-------|-------|----------|
-| Vercel 500 en PDF upload | pdf.worker.mjs no incluido en bundle | ✅ Fixed: vercel.json includeFiles |
-| JWT ES256 verification | Supabase rotación de keys | HMAC + API fallback (implementado) |
-| CSP fonts bloqueados | Google Fonts no en CSP | Agregar dominios a vercel.json |
-| opencode.json corruption | Plugins sobreescriben config | Restaurar desde git |
-| `riceMeasures.test.ts` missing | Test file no creado | Crear o remover de package.json |
+| Error                                          | Causa                                         | Solución                                                          |
+| ---------------------------------------------- | --------------------------------------------- | ----------------------------------------------------------------- |
+| Vercel 500 en PDF upload                       | pdf.worker.mjs no incluido en bundle          | ✅ Fixed: vercel.json includeFiles                                |
+| JWT ES256 verification                         | Supabase rotación de keys                     | HMAC + API fallback (implementado)                                |
+| CSP fonts bloqueados                           | Google Fonts no en CSP                        | Agregar dominios a vercel.json                                    |
+| opencode.json corruption                       | Plugins sobreescriben config                  | Restaurar desde git                                               |
+| `riceMeasures.test.ts` missing                 | Referencia en package.json a test inexistente | ✅ Fixed: removido de package.json                                |
+| `inspectorate_records.student_id` TEXT vs UUID | Migración 00002 usaba TEXT en lugar de UUID   | ✅ Fixed: 00002 corregido a UUID                                  |
+| Tests de API endpoints retornan 403            | Auth middleware requería perfil Supabase real | ✅ Fixed: fast-path JWT tenant+role + JWT self-contained en tests |
 
 ### 12.2 Deuda Técnica
 
-| Ítem | Impacto | Prioridad |
-|------|---------|-----------|
-| `components/` legacy layer | Duplicación con `features/` y `shared/` | Media |
-| No React Router | URL no refleja estado, no deep linking | Media |
-| ManualChunks circular warnings | Build warnings, posible mejor chunking | Baja |
-| Dual server routes (server/ + api/) | Duplicación, riesgo de drift | Alta |
-| `inspectorate_records.student_id` TEXT vs UUID | Type mismatch | Media |
-| No hay test de riceMeasures | Missing test file en package.json | Baja |
-| test:vitest y test corren en paralelo | Dos test runners | Baja |
+| Ítem                                        | Impacto                                                                                   | Prioridad |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------- | --------- |
+| `components/` legacy layer                  | Duplicación con `features/` y `shared/`                                                   | Media     |
+| No React Router                             | URL no refleja estado, no deep linking                                                    | Media     |
+| ManualChunks circular warnings              | Build warnings, posible mejor chunking                                                    | Baja      |
+| Dual server routes (server/ + api/)         | Duplicación, riesgo de drift                                                              | Alta      |
+| Docker no disponible localmente             | No se puede ejecutar `supabase db reset` ni migraciones locales                           | Media     |
+| No hay test de riceMeasures                 | Missing test file en package.json                                                         | Baja      |
+| test:vitest y test corren en paralelo       | Dos test runners                                                                          | Baja      |
+| `carta_events.tenant_id` nullable           | RLS policy SELECT usa `tenant_id = current_tenant_id()`; filas con NULL quedan invisibles | Baja      |
+| `carta_events.student_id` / `carta_id` TEXT | Inconsistente con `students.id` y `cartas_disciplinarias.id` (UUID)                       | Baja      |
 
 ---
 
 ## 13. REGLAS PARA FUTURAS SESIONES
 
 ### 13.1 Al Modificar Frontend
+
 1. Usar componentes de `shared/ui/` en vez de crear nuevos
 2. Estado global en Zustand (no prop drilling > 2 niveles)
 3. Queries con React Query (no fetch manual en useEffect)
@@ -669,6 +695,7 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 6. Respetar FSD layers: app → features → widgets → shared → components (legacy)
 
 ### 13.2 Al Modificar Backend
+
 1. Actualizar AMBOS entry points (`server/routes/` y `server/api/routes/`)
 2. No exponer service_role key al cliente
 3. Rate limit endpoints AI (10 req/min/IP)
@@ -676,6 +703,7 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 5. Usar `http` module (no `fetch`) en Vercel serverless
 
 ### 13.3 Al Modificar Base de Datos
+
 1. Nunca modificar migraciones existentes
 2. Crear nueva migración con timestamp prefix
 3. Agregar `tenant_id` con FK a `tenants(id)` en toda tabla multi-tenant
@@ -684,6 +712,7 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 6. Ejecutar migraciones en Supabase antes de deploy
 
 ### 13.4 Al Trabajar con AI
+
 1. Validar output AI antes de mostrar al usuario (human confirmation)
 2. No enviar datos sensibles de NNA sin anonimizar
 3. Cachear respuestas cuando sea posible (advisor-chat, improve-text)
@@ -691,6 +720,7 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 5. Usar temperatura 0 para outputs deterministas
 
 ### 13.5 Reglas de Oro
+
 1. ✅ Siempre ejecutar `npm run lint` antes de commit
 2. ✅ Siempre ejecutar `npm run test` antes de push
 3. ✅ No duplicar código — buscar en shared/ primero
@@ -699,3 +729,302 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 6. ✅ Preservar license headers
 7. ✅ Mantener español chileno en UI y docs
 8. ✅ Si un cambio toca API, actualizar dev + serverless
+
+---
+
+## 14. ESTADO DE SESIÓN — Cierre documental Fase 0 (2026-07-25)
+
+### Fase 0 — Contención de acceso anónimo ✅ Cerrada
+
+**Orden real de aplicación:**
+
+| #   | Migración        | Propósito                                                                                                 |
+| --- | ---------------- | --------------------------------------------------------------------------------------------------------- |
+| 1   | `20260726000001` | current_tenant_id(), REVOKE tablas, DROP policies públicas, Storage privado                               |
+| 2   | `20260726000003` | REVOKE EXECUTE directo RPCs sensibles (correctiva: DO block no revocó ACL directas)                       |
+| 3   | `20260726000002` | SET search_path=public,pg_temp en 4 funciones SECURITY DEFINER                                            |
+| 4   | `20260726000004` | REVOKE EXECUTE anon/authenticated en 4 funciones SECURITY DEFINER (correctiva: ACL directas persistieron) |
+
+**Resultados confirmados:**
+
+- `current_tenant_id()` retorna NULL para anon
+- anon sin SELECT en tablas escolares
+- anon sin EXECUTE en RPCs sensibles
+- No quedan policies public/anon con USING(true) o WITH CHECK(true)
+- Buckets sensibles en public=false
+- SECURITY DEFINER con search_path=public, pg_temp
+- anon y authenticated sin EXECUTE en funciones internas
+- service_role conserva EXECUTE
+
+**Riesgos residuales:**
+
+- Overloads teacher_get_public_absences → 300 para authenticated sin ruta explícita
+- Vista Docente sin login deshabilitada temporalmente
+- Tablas de Inasistencias sin tenant_id
+- Esquema remoto no reconciliado
+- Migraciones históricas (001, 002, 003) no deben aplicarse en bloque
+
+**Próximo paso:** Fase 1 — Reconciliación canónica del esquema remoto compartido.
+
+### Fase 0.5b — Tenant resolution + Storage signed URLs + Profile trigger (2026-07-25) ✅
+
+**Problema:** Inasistencias hardcodeaba `tenant_id: '00000000-0000-0000-0000-000000000001'` en `inspectorateService.ts`, usaba `getPublicUrl()` en bucket 'documents' (público), y su `handle_new_user_profile()` no incluía `tenant_id`, causando conflictos con Convivencia.
+
+**Bloque 1 — Storage signed URLs:**
+
+- `src/utils/upload.ts`: Reemplazado `getPublicUrl()` por `createSignedUrl()` con expiración de 7 días
+- Eliminada función auxiliar `extractPublicUrl()`
+
+**Bloque 2 — Hardcoded tenant_id:**
+
+- `src/services/inspectorateService.ts`: Eliminado `tenant_id: '00000000-0000-0000-0000-000000000001'` de `createInspectorateRecord`. Ahora depende de DEFAULT `current_tenant_id()` en la columna.
+
+**Bloque 3 — Migración `20260727000001_fase_05b_tenant_storage_profile.sql`:**
+
+1. `ALTER COLUMN tenant_id SET DEFAULT current_tenant_id()` en 10 tablas multi-tenant
+2. Update `handle_new_user_profile()` para leer `tenant_id` de `raw_user_meta_data` con fallback a `current_tenant_id()` y default tenant
+3. Bucket 'documents' cambiado a `public = false` con RLS tenant-aware (por carpeta `{tenant_id}/...`)
+4. Revoke PUBLIC en `handle_new_user_profile()`
+
+**Bloque 4 — Vista Docente modo mantenimiento:**
+
+- `src/hooks/queries/teacher-public.ts`: Detección de RPC no encontrado (códigos PGRST202, 42883, 42P13) → retorna array vacío en vez de error
+- `src/pages/DocentePublico.tsx`: Banner de mantenimiento con icono Construction cuando RPC no disponible
+
+**Bloque 5 — Tests:**
+
+- `absenceService.integration.test.ts`: Mock actualizado de `getPublicUrl` → `createSignedUrl`
+- Resultado: 120/120 Inasistencias, 136/136 Convivencia
+
+**Archivos modificados:**
+
+| Archivo                                                                                                       | Cambio                          |
+| ------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| `registroinasistencia/src/services/inspectorateService.ts`                                                    | Eliminado tenant_id hardcodeado |
+| `registroinasistencia/src/utils/upload.ts`                                                                    | getPublicUrl → createSignedUrl  |
+| `registroinasistencia/src/hooks/queries/teacher-public.ts`                                                    | Mantenimiento RPC no encontrado |
+| `registroinasistencia/src/pages/DocentePublico.tsx`                                                           | Banner mantenimiento            |
+| `registroinasistencia/src/hooks/queries.ts`                                                                   | Export rpcMaintCheck            |
+| `registroinasistencia/src/hooks/queries/index.ts`                                                             | Export rpcMaintCheck            |
+| `registroinasistencia/src/services/absenceService.integration.test.ts`                                        | Mock createSignedUrl            |
+| `sistema-integral-convivencia-escolar/supabase/migrations/20260727000001_fase_05b_tenant_storage_profile.sql` | Nueva migración                 |
+| `sistema-integral-convivencia-escolar/.ai/roadmap.md`                                                         | Fase 0.5b ✅                    |
+| `sistema-integral-convivencia-escolar/.opencode/memory/project.md`                                            | Esta sección                    |
+
+**Riesgos residuales:**
+
+- `handle_new_user_profile()` y `handle_new_user()` coexisten; Convivencia corre primero (orden alfabético)
+- Si se deshabilita el trigger de Convivencia, el de Inasistencias es funcional (tiene tenant_id ahora)
+- Vista Docente muestra datos vacíos si RPC no disponible (no crash)
+- Bucket 'documents' requiere migración aplicada antes de funcionar con signed URLs
+
+### Archivos modificados en esta sesión
+
+| Archivo                                                     | Cambio                                         |
+| ----------------------------------------------------------- | ---------------------------------------------- |
+| `docs/shared-supabase/00-emergency-containment.md`          | Cierre documental Fase 0, riesgos residuales   |
+| `docs/shared-supabase/02-emergency-validation-checklist.md` | Checklist marcado completo, registro de cierre |
+| `.ai/roadmap.md`                                            | Fase 0 ✅, Fase 1 como próximo paso            |
+| `.opencode/memory/project.md`                               | Esta sección                                   |
+
+### Fase 1 — Auth + Tenant ✅ Cerrada
+
+- Middleware auth reescrito con `createRequireAuth`, `ProfileFetcher` inyectable, validación UUID.
+- `server/api/middleware/auth.ts` re-exporta el middleware canónico.
+- 22 tests de auth pasando.
+- Schema reproducible desde `supabase/migrations/`.
+
+### Fase 1 Supabase — Reconciliación canónica del esquema compartido ✅ Cerrada (2026-07-26)
+
+**Objetivo:** Cerrar documentalmente el estado remoto post-Fase 0 + Fase 0.5b, reconciliar migraciones, establecer propiedad de objetos, preparar arquitectura de Fase 2.
+
+**Inventario remoto completado:**
+
+- 25 tablas/vistas (compartidas, Convivencia, Inasistencias, legacy)
+- 28 funciones (26 únicas) clasificadas por aplicación consumidora y riesgo
+- 4 buckets storage (149 + 39 + 24 + 3 objetos)
+- 76 índices documentados
+- 98 policies analizadas (84 public + 14 storage)
+
+**Documentación creada:**
+
+| Archivo                                                  | Propósito                                                        |
+| -------------------------------------------------------- | ---------------------------------------------------------------- |
+| `docs/shared-supabase/04-canonical-object-ledger.md`     | Adoption ledger: 60+ objetos clasificados por propiedad y riesgo |
+| `docs/shared-supabase/05-migration-reconciliation.md`    | Reconciliación: cronología, deriva, política forward-only        |
+| `docs/shared-supabase/06-canonical-baseline-20260727.md` | Línea base canónica post-Fase 0.5b                               |
+| `docs/shared-supabase/07-code-consumption-matrix.md`     | ~58 referencias de código mapeadas en ambos repositorios         |
+| `docs/shared-supabase/08-phase-2-membership-design.md`   | Arquitectura applications + app_memberships                      |
+| `supabase/validation/phase-1-baseline-validation.sql`    | 20 consultas de validación read-only                             |
+
+**Migraciones reconciliadas:**
+
+- 46 migraciones locales analizadas (34 Convivencia + 12 Inasistencias)
+- 9 aplicaciones manuales documentadas con orden real (4 Fase 0 + 5 Fase 0.5b)
+- Deriva documentada: solo 3/55 migraciones registradas en `schema_migrations`
+- Política forward-only: Convivencia como único origen, no reaplicación masiva
+
+**Phase 2 preparada (sin aplicar):**
+
+- `20260728000001_create_applications.sql`
+- `20260728000002_create_app_memberships.sql`
+- `20260728000003_seed_applications.sql`
+- `20260728000004_prepare_membership_backfill.sql`
+- `20260728000005_create_initial_memberships_inasistencias.sql`
+- `20260728000006_create_initial_memberships_convivencia.sql`
+
+**Validación local:**
+
+- Convivencia: lint ✅, 136 tests ✅, build:web ✅
+- Inasistencias: lint ✅, 120 tests ✅, build ✅
+
+**Restricciones respetadas:**
+
+- No se modificó Supabase remoto
+- No se ejecutó SQL de escritura
+- No se aplicaron migraciones nuevas
+- No se reejecutaron migraciones antiguas
+- No se usó db push / db reset / migration up
+- No se hizo deploy / commit / push
+- No se abrió data.sql
+
+**Próximo paso:** Fase 2 — Aplicar al remoto.
+
+### Archivos modificados/creados en esta sesión (Fase 1 Supabase)
+
+| Archivo                                                     | Cambio                                   |
+| ----------------------------------------------------------- | ---------------------------------------- |
+| `docs/shared-supabase/00-emergency-containment.md`          | Agregado cierre Fase 1 como próximo paso |
+| `docs/shared-supabase/02-emergency-validation-checklist.md` | Agregadas secciones Fase 0.5b + Fase 1   |
+| `docs/shared-supabase/03-post-containment-stabilization.md` | Marcado como cerrado                     |
+| `docs/shared-supabase/04-canonical-object-ledger.md`        | **Nuevo** — Adoption ledger              |
+| `docs/shared-supabase/05-migration-reconciliation.md`       | **Nuevo** — Migration reconciliation     |
+| `docs/shared-supabase/06-canonical-baseline-20260727.md`    | **Nuevo** — Canonical baseline           |
+| `docs/shared-supabase/07-code-consumption-matrix.md`        | **Nuevo** — Code consumption matrix      |
+| `docs/shared-supabase/08-phase-2-membership-design.md`      | **Nuevo** — Phase 2 membership design    |
+| `supabase/validation/phase-1-baseline-validation.sql`       | **Nuevo** — Baseline validation script   |
+| `supabase/migrations/20260728*.sql`                         | **Nuevo** (6) — Draft Phase 2 migrations |
+| `.ai/roadmap.md`                                            | Fase 1 ✅, Fase 2 como próximo           |
+| `.opencode/memory/project.md`                               | Esta sección                             |
+
+### Fase 2 — Applications + Memberships ⏳ Implementación local (2026-07-26)
+
+**Estado:** Código completo, pendiente de aplicación en Supabase.
+
+**Decisiones arquitectónicas:**
+
+| Decisión                                                    | Fundamento                                                                                      |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Backfill solo no ambiguos                                   | teacher→inasistencias, direccion/convivencia→convivencia. Staff, admin, etc. requieren revisión |
+| RLS en tenants con current_tenant_id() + current_app_role() | Consistente con Fase 0/0.5b, sin USING(true)                                                    |
+| app_memberships solo SELECT own                             | Usuario solo ve sus propias membresías; service_role administra                                 |
+| helpers con SECURITY DEFINER                                | Necesario para RLS bypass controlado; search_path bloqueado                                     |
+| Feature flag = false                                        | profiles.role sigue como fallback; cero impacto en usuarios                                     |
+| Middleware no conectado                                     | Implementado pero no activo en rutas productivas                                                |
+
+**Archivos de migración:**
+
+| #     | Archivo                                                       | Propósito                                             |
+| ----- | ------------------------------------------------------------- | ----------------------------------------------------- |
+| 00001 | `20260728000001_create_applications.sql`                      | Tabla catálogo con RLS, CHECK, grants                 |
+| 00002 | `20260728000002_create_app_memberships.sql`                   | Tabla membresías con índices, trigger updated_at, RLS |
+| 00003 | `20260728000003_seed_applications.sql`                        | Seed convivencia + inasistencias                      |
+| 00004 | `20260728000004_prepare_membership_backfill.sql`              | Vista readiness (solo service_role)                   |
+| 00005 | `20260728000005_create_initial_memberships_inasistencias.sql` | Backfill teacher→inasistencias                        |
+| 00006 | `20260728000006_create_initial_memberships_convivencia.sql`   | Backfill direccion/convivencia→convivencia            |
+| 00007 | `20260728000007_enable_membership_tables_and_tenants_rls.sql` | RLS hardening                                         |
+| 00008 | `20260728000008_create_membership_helpers.sql`                | current_user_memberships(), has_app_access()          |
+
+**Archivos de validación:**
+
+| Archivo                                                       | Propósito                |
+| ------------------------------------------------------------- | ------------------------ |
+| `supabase/validation/phase-2-pre-application-validation.sql`  | 14 checks pre-migración  |
+| `supabase/validation/phase-2-post-application-validation.sql` | 23 checks post-migración |
+| `supabase/validation/phase-2-membership-rls-tests.sql`        | 15 pruebas RLS manuales  |
+
+**Cambios en Convivencia:**
+
+| Archivo                                         | Tipo       |
+| ----------------------------------------------- | ---------- |
+| `src/shared/api/types/membership.ts`            | Nuevo      |
+| `src/shared/api/services/membership.service.ts` | Nuevo      |
+| `src/shared/api/hooks/useMemberships.ts`        | Nuevo      |
+| `src/shared/lib/stores/authStore.ts`            | Modificado |
+| `server/middleware/requireMembership.ts`        | Nuevo      |
+| `server/api/middleware/requireMembership.ts`    | Nuevo      |
+| `.env.local`                                    | Modificado |
+
+**Cambios en Inasistencias:**
+
+| Archivo                             | Tipo       |
+| ----------------------------------- | ---------- |
+| `src/types/membership.ts`           | Nuevo      |
+| `src/services/membershipService.ts` | Nuevo      |
+| `src/hooks/useAuth.ts`              | Modificado |
+| `.env.local`                        | Modificado |
+
+**Documentación nueva:**
+
+| Archivo                                                  | Propósito                         |
+| -------------------------------------------------------- | --------------------------------- |
+| `docs/shared-supabase/10-membership-backfill-review.md`  | Backfill review con datos remotos |
+| `docs/shared-supabase/11-phase-2-implementation-plan.md` | Orden manual de aplicación        |
+
+**Restricciones respetadas:**
+
+- No se modificó Supabase remoto
+- No se ejecutó SQL de escritura
+- No se aplicaron migraciones nuevas
+- No se hizo deploy / commit / push
+
+### Fase 2 — Applications + Memberships ✅ Cerrada (2026-07-26)
+
+**Estado:** Fase 2 completa — migraciones, RLS y smoke tests aprobados.
+
+**Migraciones aplicadas (8):**
+
+- 00001: `applications` tabla con RLS
+- 00002: `app_memberships` tabla con índices y RLS
+- 00003: Seed convivencia + inasistencias
+- 00004: Vista `membership_readiness`
+- 00005: Backfill teacher→inasistencias
+- 00006: Backfill direccion/convivencia→convivencia
+- 00007: RLS hardening
+- 00008: Helpers `current_user_memberships()`, `has_app_access()`
+
+**Validaciones:**
+
+- RLS activo en applications, app_memberships, tenants
+- anon sin acceso
+- authenticated SELECT restringido, sin INSERT/UPDATE/DELETE
+- service_role con administración completa
+- membership_readiness solo service_role/postgres
+- helpers con search_path seguro, sin EXECUTE para anon
+
+**Smoke tests:**
+
+- Convivencia flag=false: ✅ PASSED (7.0s)
+- Inasistencias flag=false: ✅ PASSED (12.3s)
+- Inasistencias flag=true: ✅ PASSED (12.3s)
+
+**Estado de transición:**
+
+- profiles.role continúa como fallback temporal
+- requireMembership middleware implementado pero no aplicado globalmente
+- Feature flag VITE_APP_MEMBERSHIPS_ENABLED=false (debe permanecer false en producción)
+- Vista Docente continúa en mantenimiento (Fase 0.5b)
+
+**Deuda siguiente (Fase 3):**
+
+- Decidir membership/role del perfil staff
+- Activar enforcement solo en desarrollo
+- Conectar requireMembership a rutas seleccionadas
+- Retirar gradualmente profiles.role
+
+**Documentación:**
+
+- `docs/shared-supabase/12-phase-2-closure.md`: Cierre formal
+- `docs/shared-supabase/08-phase-2-membership-design.md`: Actualizado a completada
+- `docs/shared-supabase/11-phase-2-implementation-plan.md`: Actualizado a completada
+- `.ai/roadmap.md`: Fase 2 marcada como completada
