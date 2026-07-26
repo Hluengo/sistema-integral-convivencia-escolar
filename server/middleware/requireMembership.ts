@@ -4,12 +4,28 @@ import type { Request, Response, NextFunction } from 'express';
 import type { AuthenticatedRequest } from '../types';
 import https from 'node:https';
 
-interface MembershipCheckParams {
+export type MembershipAuthMode = 'legacy' | 'transition' | 'enforced';
+
+export interface MembershipCheckParams {
   applicationCode: string;
   allowedRoles?: readonly string[];
 }
 
-const MEMBERSHIPS_ENABLED = () => process.env.VITE_APP_MEMBERSHIPS_ENABLED === 'true';
+function getMembershipMode(): MembershipAuthMode {
+  const enabled = process.env.VITE_APP_MEMBERSHIPS_ENABLED === 'true';
+  const enforced = process.env.VITE_APP_MEMBERSHIPS_ENFORCED === 'true';
+
+  if (!enabled) return 'legacy';
+  if (enforced) return 'enforced';
+  return 'transition';
+}
+
+function logServer(event: string, detail?: string) {
+  if (process.env.NODE_ENV !== 'production') {
+    const msg = `[membership-server] ${event}${detail ? `: ${detail}` : ''}`;
+    console.log(msg);
+  }
+}
 
 async function checkMembershipViaApi(
   hostname: string,
@@ -59,6 +75,17 @@ async function checkMembershipViaApi(
   });
 }
 
+function getSupabaseConfig(): { hostname: string; anonKey: string } | null {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  if (!supabaseUrl || !anonKey) return null;
+  try {
+    return { hostname: new URL(supabaseUrl).hostname, anonKey };
+  } catch {
+    return null;
+  }
+}
+
 export function requireMembership(params: MembershipCheckParams) {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const authReq = req as AuthenticatedRequest;
@@ -73,7 +100,10 @@ export function requireMembership(params: MembershipCheckParams) {
       return;
     }
 
-    if (!MEMBERSHIPS_ENABLED()) {
+    const mode = getMembershipMode();
+
+    if (mode === 'legacy') {
+      logServer('legacy_mode', 'using profile role');
       if (params.allowedRoles && authReq.profileRole) {
         if (!params.allowedRoles.includes(authReq.profileRole)) {
           res.status(403).json({ error: 'No tiene permisos para realizar esta acción.' });
@@ -84,31 +114,40 @@ export function requireMembership(params: MembershipCheckParams) {
       return;
     }
 
+    const config = getSupabaseConfig();
+    if (!config) {
+      res.status(500).json({ error: 'Error de configuración del servidor.' });
+      return;
+    }
+
+    const token = authReq.authToken;
+    if (!token) {
+      res.status(401).json({ error: 'Token de autenticación requerido.' });
+      return;
+    }
+
     try {
-      const supabaseUrl = process.env.VITE_SUPABASE_URL;
-      const anonKey =
-        process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-      if (!supabaseUrl || !anonKey) {
-        res.status(500).json({ error: 'Error de configuración del servidor.' });
+      logServer('membership_check', `${mode} mode for ${params.applicationCode}`);
+      const hasAccess = await checkMembershipViaApi(config.hostname, config.anonKey, token, params);
+
+      if (hasAccess) {
+        next();
         return;
       }
 
-      const hostname = new URL(supabaseUrl).hostname;
-      const token = authReq.authToken;
-
-      if (!token) {
-        res.status(401).json({ error: 'Token de autenticación requerido.' });
-        return;
+      if (mode === 'transition') {
+        logServer('transition_fallback', 'membership denied, trying profile role');
+        if (params.allowedRoles && authReq.profileRole) {
+          if (params.allowedRoles.includes(authReq.profileRole)) {
+            logServer('transition_fallback_success', authReq.profileRole);
+            next();
+            return;
+          }
+        }
+        logServer('transition_fallback_denied', 'no matching role');
       }
 
-      const hasAccess = await checkMembershipViaApi(hostname, anonKey, token, params);
-
-      if (!hasAccess) {
-        res.status(403).json({ error: 'No tiene una membresía activa para esta aplicación.' });
-        return;
-      }
-
-      next();
+      res.status(403).json({ error: 'No tiene una membresía activa para esta aplicación.' });
     } catch {
       res.status(500).json({ error: 'Error al verificar membresía.' });
     }

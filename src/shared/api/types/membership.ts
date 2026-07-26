@@ -7,10 +7,24 @@ export interface AppMembership {
   app_is_active: boolean;
 }
 
-export type MembershipStatus = 'active' | 'inactive' | 'no_membership' | 'not_available' | 'error';
+export type MembershipStatus =
+  'idle' | 'loading' | 'active' | 'no_membership' | 'inactive' | 'error' | 'not_available';
+
+export type MembershipAuthMode = 'legacy' | 'transition' | 'enforced' | 'invalid';
 
 export interface MembershipResult {
   memberships: AppMembership[];
   status: MembershipStatus;
   applicationRole: string | null;
+}
+
+export interface MembershipState {
+  membershipStatus: MembershipStatus;
+  membershipAuthMode: MembershipAuthMode;
+  applicationCode: string | null;
+  appRole: string | null;
+  membership: AppMembership | null;
+  membershipError: string | null;
+  membershipLoaded: boolean;
+  legacyFallbackUsed: boolean;
 }

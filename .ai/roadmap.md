@@ -38,7 +38,20 @@
 - [x] Feature flag VITE_APP_MEMBERSHIPS_ENABLED=false
 - [x] Smoke tests: Convivencia flag=false ✅, Inasistencias flag=false ✅, Inasistencias flag=true ✅
 - [x] Migraciones aplicadas en Supabase remoto y reconciliadas con locales
-- [ ] Enforcement: profiles.role sigue como fallback (Fase 3)
+
+### Supabase Compartido — Fase 3 ✅ Completada
+
+- [x] 3 modos de autenticación: legacy, transition, enforced
+- [x] Config helpers: getMembershipAuthMode(), APP_ROLE_RULES, env validation
+- [x] Membership service: retry, cache, timeout, mode-aware
+- [x] Auth store: membershipLoaded, legacyFallbackUsed, applicationCode
+- [x] UI components: MembershipLoading, MembershipAccessDenied, MembershipFallbackWarning
+- [x] Server middleware: 3 modes con fallback en transition
+- [x] Convivencia: App.tsx con membership gate
+- [x] Inasistencias: useAuth + App.tsx con membership gate
+- [x] Validación: Convivencia 136/136 + Inasistencias 120/120
+- [x] Docs: staff membership decision, phase 3 report
+- [ ] Enforcement: profiles.role sigue como fallback (pendiente staff membership)
 
 ## Corto Plazo (1-3 meses)
 

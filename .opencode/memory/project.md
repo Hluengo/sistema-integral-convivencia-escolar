@@ -1,6 +1,6 @@
 # STAFF ENGINEER MEMORY — Sistema Integral de Convivencia Escolar
 
-> **Versión:** 1.1 | **Estado:** Producción | **Última actualización:** 2026-07-25
+> **Versión:** 1.2 | **Estado:** Producción | **Última actualización:** 2026-07-26
 
 ---
 
@@ -1032,3 +1032,53 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - `docs/shared-supabase/08-phase-2-membership-design.md`: Actualizado a completada
 - `docs/shared-supabase/11-phase-2-implementation-plan.md`: Actualizado con 9 migraciones
 - `.ai/roadmap.md`: Fase 2 marcada como completada y reconciliada
+
+### Fase 3 — Controlled Membership Enforcement ✅ Completada (2026-07-26)
+
+**Estado:** Fase 3 completa — 3 modos de autenticación implementados, validación aprobada.
+
+**Modos de autenticación:**
+
+| Modo       | `MEMBERSHIPS_ENABLED` | `MEMBERSHIPS_ENFORCED` | Comportamiento                                            |
+| ---------- | --------------------- | ---------------------- | --------------------------------------------------------- |
+| legacy     | `false`               | *                      | Sin verificación. Usa `profiles.role`. Sin carga.         |
+| transition | `true`                | `false`                | Verifica membresía. Fallback a `profiles.role` si denied. |
+| enforced   | `true`                | `true`                 | Solo membresía activa. Sin fallback.                      |
+
+**Archivos creados (Convivencia):**
+
+- `src/shared/api/lib/membershipConfig.ts` — Config helpers
+- `src/shared/ui/MembershipLoading.tsx` — Loading state con timeout
+- `src/shared/ui/MembershipAccessDenied.tsx` — Denied state con retry/logout
+- `src/shared/ui/MembershipFallbackWarning.tsx` — Warning banner transition mode
+- `src/shared/ui/index.ts` — Barrel export
+- `docs/shared-supabase/13-staff-membership-decision.md` — Staff membership decision
+- `docs/shared-supabase/14-phase-3-transition-enforcement.md` — Phase 3 report
+
+**Archivos modificados:**
+
+- Convivencia: types, membership service, useMemberships hook, authStore, App.tsx, server middleware
+- Inasistencias: types, membershipService, useAuth, App.tsx
+- Both: `.env.local` con nuevas variables
+
+**Variables de entorno nuevas:**
+
+- `VITE_APP_MEMBERSHIPS_ENFORCED=false`
+- `VITE_APP_MEMBERSHIPS_ALLOW_LEGACY_FALLBACK=true`
+
+**Validación:**
+
+- Convivencia: lint ✅, 136/136 tests ✅, build ✅
+- Inasistencias: tsc ✅, 120/120 tests ✅, build ✅
+
+**Pendiente:**
+
+- Staff membership decision (`docs/shared-supabase/13-staff-membership-decision.md`)
+- Activar `VITE_APP_MEMBERSHIPS_ENABLED=true` en desarrollo
+- Probar transition mode con usuarios existentes
+
+**Documentación:**
+
+- `docs/shared-supabase/13-staff-membership-decision.md`: Staff membership decision
+- `docs/shared-supabase/14-phase-3-transition-enforcement.md`: Phase 3 report
+- `.ai/roadmap.md`: Fase 3 marcada como completada

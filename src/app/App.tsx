@@ -10,11 +10,13 @@ import { useNewCausaForm } from '../hooks/useNewCausaForm';
 import { useCoursesQuery } from '../hooks/useCoursesQuery';
 import { useStudentsQuery } from '../hooks/useStudentsQuery';
 import { useCausasPersistence } from '../hooks/useCausasPersistence';
+import { useMemberships } from '../shared/api/hooks/useMemberships';
 import { ToastProvider } from '../components/Toast';
 import { MainContentSkeleton } from '../components/Skeleton';
 import { AppProvider } from '../context/AppContext';
 import { getFaseForEstado } from '../data';
 import { EstadoCausa } from '../types';
+import { MembershipLoading, MembershipAccessDenied } from '../shared/ui';
 
 const Header = lazy(() => import('../components/Header'));
 const Sidebar = lazy(() => import('../components/Sidebar'));
@@ -32,6 +34,8 @@ export default function App() {
   const setShowLoginModal = useAuthStore((s) => s.setShowLoginModal);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
+  const membership = useMemberships('convivencia');
+
   const causas = useCausasStore((s) => s.causas);
   const selectedCausaId = useCausasStore((s) => s.selectedCausaId);
   const setSelectedCausaId = useCausasStore((s) => s.setSelectedCausaId);
@@ -46,7 +50,7 @@ export default function App() {
   const handleReopenCausaAction = useCausasStore((s) => s.handleReopenCausa);
   const selectedCausa = useMemo(
     () => causas.find((c) => c.id === selectedCausaId) || null,
-    [causas, selectedCausaId]
+    [causas, selectedCausaId],
   );
   const filteredCausas = useMemo(() => {
     const trimmedQuery = searchQuery.trim().toLowerCase();
@@ -114,7 +118,7 @@ export default function App() {
       setCurrentView(view);
       isTimelineCollapsedRef.current = false;
     },
-    [user, setShowLoginModal, setCurrentView]
+    [user, setShowLoginModal, setCurrentView],
   );
 
   const handleStudentSelect = useCallback(
@@ -127,7 +131,7 @@ export default function App() {
       if (student)
         dispatchForm({ type: 'SET_STUDENT', nombre: student.full_name, rut: student.rut });
     },
-    [students, dispatchForm]
+    [students, dispatchForm],
   );
 
   const handleCreateCausa = useCallback(
@@ -159,7 +163,7 @@ export default function App() {
       dispatchForm,
       handleCreateCausaAction,
       setCurrentView,
-    ]
+    ],
   );
 
   const requireAuth = useCallback(() => {
@@ -177,7 +181,7 @@ export default function App() {
       setCurrentView('causas');
       isTimelineCollapsedRef.current = false;
     },
-    [handleReopenCausaAction, setCurrentView]
+    [handleReopenCausaAction, setCurrentView],
   );
 
   const handleSelectCausaFromDashboard = useCallback(
@@ -191,7 +195,7 @@ export default function App() {
       setMobileShowDetail(true);
       isTimelineCollapsedRef.current = false;
     },
-    [user, setShowLoginModal, setSelectedCausaId, setCurrentView, setMobileShowDetail]
+    [user, setShowLoginModal, setSelectedCausaId, setCurrentView, setMobileShowDetail],
   );
 
   const handleOpenCreateForm = useCallback(() => {
@@ -219,6 +223,25 @@ export default function App() {
           <p className="mt-3 text-neutral-500 text-xs">Cargando...</p>
         </div>
       </div>
+    );
+  }
+
+  if (user && !membership.loaded && membership.authMode !== 'legacy') {
+    return (
+      <MembershipLoading
+        authMode={membership.authMode}
+        legacyFallbackUsed={membership.legacyFallbackUsed}
+      />
+    );
+  }
+
+  if (user && membership.loaded && !membership.hasAccess) {
+    return (
+      <MembershipAccessDenied
+        authMode={membership.authMode}
+        legacyFallbackUsed={membership.legacyFallbackUsed}
+        membershipError={membership.error}
+      />
     );
   }
 
