@@ -47,11 +47,15 @@ function logDev(event: string, detail?: string) {
 }
 
 async function loadTenantId(userId: string): Promise<string | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('profiles')
     .select('tenant_id')
     .eq('user_id', userId)
     .maybeSingle();
+  if (error) {
+    console.error('Error loading tenant profile:', error);
+    return null;
+  }
   return data?.tenant_id ?? null;
 }
 
@@ -62,15 +66,19 @@ export const useAuthStore = create<AuthState>((set) => {
     set({ authLoading: false });
   }, AUTH_TIMEOUT_MS);
 
-  subscribeAuth(async (_event, session) => {
+  // Do not await Supabase queries inside onAuthStateChange. Supabase holds an
+  // internal auth lock while invoking this callback; using the same client
+  // before the callback returns can leave subsequent REST requests without a
+  // usable session and produce repeated 401 responses.
+  subscribeAuth((_event, session) => {
     clearTimeout(timeoutId);
     const user = session?.user ?? null;
-    const tenantId = user ? await loadTenantId(user.id) : null;
+
     set({
       user,
-      tenantId,
+      tenantId: user ? null : null,
       authLoading: false,
-      isAuthenticated: !!user,
+      isAuthenticated: Boolean(session?.access_token && user),
       ...(user === null
         ? {
             membershipStatus: 'not_available' as MembershipStatus,
@@ -85,6 +93,14 @@ export const useAuthStore = create<AuthState>((set) => {
           }
         : {}),
     });
+
+    if (user) {
+      queueMicrotask(() => {
+        void loadTenantId(user.id).then((tenantId) => {
+          set((state) => (state.user?.id === user.id ? { tenantId } : state));
+        });
+      });
+    }
   });
 
   return {
