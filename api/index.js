@@ -10,7 +10,216 @@ import { fileURLToPath } from 'node:url';
 import { Router } from 'express';
 
 // server/middleware/auth.ts
+import https2 from 'node:https';
+
+// server/lib/jwks.ts
 import https from 'node:https';
+var cacheByUrl = /* @__PURE__ */ new Map();
+var CACHE_TTL_MS = 3e5;
+var FETCH_TIMEOUT_MS = 5e3;
+var MAX_RESPONSE_BYTES = 102400;
+var ALLOWED_ASYMMETRIC_ALGS = /* @__PURE__ */ new Set([
+  'ES256',
+  'ES384',
+  'ES512',
+  'RS256',
+  'RS384',
+  'RS512',
+]);
+function getOrCreateCacheEntry(supabaseUrl) {
+  let entry = cacheByUrl.get(supabaseUrl);
+  if (!entry) {
+    entry = { keys: [], timestamp: 0, fetchPromise: null };
+    cacheByUrl.set(supabaseUrl, entry);
+  }
+  return entry;
+}
+function getJwksUrl(supabaseUrl) {
+  const base = supabaseUrl.replace(/\/+$/, '');
+  return `${base}/auth/v1/.well-known/jwks.json`;
+}
+function isHttpsAndValidUrl(urlStr) {
+  try {
+    const url = new URL(urlStr);
+    return url.protocol === 'https:' ? url : null;
+  } catch {
+    return null;
+  }
+}
+function fetchJwksFromServer(supabaseUrl) {
+  const url = isHttpsAndValidUrl(getJwksUrl(supabaseUrl));
+  if (!url) return Promise.reject(new Error('Invalid or non-HTTPS JWKS URL'));
+  return new Promise((resolve, reject) => {
+    const req = https.request(
+      {
+        hostname: url.hostname,
+        path: url.pathname,
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+        timeout: FETCH_TIMEOUT_MS,
+      },
+      (res) => {
+        let data = '';
+        let size = 0;
+        res.on('data', (chunk) => {
+          size += chunk.length;
+          if (size > MAX_RESPONSE_BYTES) {
+            req.destroy();
+            reject(new Error('JWKS response too large'));
+            return;
+          }
+          data += chunk.toString();
+        });
+        res.on('end', () => {
+          if (res.statusCode !== 200) {
+            return reject(new Error(`JWKS fetch returned ${res.statusCode}`));
+          }
+          try {
+            const parsed = JSON.parse(data);
+            const keys = (parsed.keys ?? []).filter((k) => k.use === 'sig');
+            if (keys.length === 0) {
+              return reject(new Error('No signing keys found in JWKS endpoint'));
+            }
+            resolve(keys);
+          } catch {
+            reject(new Error('Invalid JWKS response'));
+          }
+        });
+      },
+    );
+    req.on('error', reject);
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('JWKS fetch timeout'));
+    });
+    req.end();
+  });
+}
+async function getJwksKeys(supabaseUrl) {
+  const entry = getOrCreateCacheEntry(supabaseUrl);
+  const now = Date.now();
+  if (entry.keys.length > 0 && now - entry.timestamp < CACHE_TTL_MS) {
+    return entry.keys;
+  }
+  if (entry.fetchPromise) {
+    return entry.fetchPromise;
+  }
+  entry.fetchPromise = fetchJwksFromServer(supabaseUrl)
+    .then((keys) => {
+      entry.keys = keys;
+      entry.timestamp = Date.now();
+      entry.fetchPromise = null;
+      return keys;
+    })
+    .catch((err) => {
+      entry.fetchPromise = null;
+      if (entry.keys.length > 0) {
+        return entry.keys;
+      }
+      throw err;
+    });
+  return entry.fetchPromise;
+}
+async function refreshJwksOnce(supabaseUrl) {
+  const entry = getOrCreateCacheEntry(supabaseUrl);
+  entry.timestamp = 0;
+  entry.keys = [];
+  return getJwksKeys(supabaseUrl);
+}
+function base64urlToBuffer(b64) {
+  const base64 = b64.replace(/-/g, '+').replace(/_/g, '/');
+  const pad = 4 - (b64.length % 4);
+  const padded = pad < 4 ? base64 + '='.repeat(pad) : base64;
+  const buf = Buffer.from(padded, 'base64');
+  const ab = new ArrayBuffer(buf.length);
+  new Uint8Array(ab).set(buf);
+  return ab;
+}
+async function verifyJwtWithJwks(token, supabaseUrl) {
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  let header;
+  try {
+    header = JSON.parse(new TextDecoder().decode(base64urlToBuffer(parts[0])));
+  } catch {
+    return null;
+  }
+  const alg = header.alg ?? '';
+  const kid = header.kid;
+  if (alg === 'none') return null;
+  if (!ALLOWED_ASYMMETRIC_ALGS.has(alg)) return null;
+  if (!kid) return null;
+  let keys;
+  try {
+    keys = await getJwksKeys(supabaseUrl);
+  } catch {
+    return null;
+  }
+  let key = keys.find((k) => k.kid === kid);
+  if (!key) {
+    try {
+      keys = await refreshJwksOnce(supabaseUrl);
+      key = keys.find((k) => k.kid === kid);
+    } catch {
+      return null;
+    }
+  }
+  if (!key) return null;
+  if (key.alg !== alg) return null;
+  let payload;
+  try {
+    payload = JSON.parse(new TextDecoder().decode(base64urlToBuffer(parts[1])));
+  } catch {
+    return null;
+  }
+  const signature = base64urlToBuffer(parts[2]);
+  const data = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
+  try {
+    let cryptoKey;
+    let valid;
+    if (key.kty === 'EC') {
+      const namedCurve = key.crv === 'P-256' ? 'P-256' : key.crv === 'P-384' ? 'P-384' : key.crv;
+      if (!namedCurve) return null;
+      const jwk = { kty: 'EC', crv: namedCurve, x: key.x, y: key.y, ext: true };
+      cryptoKey = await crypto.subtle.importKey('jwk', jwk, { name: 'ECDSA', namedCurve }, false, [
+        'verify',
+      ]);
+      valid = await crypto.subtle.verify(
+        { name: 'ECDSA', hash: 'SHA-256' },
+        cryptoKey,
+        signature,
+        data,
+      );
+    } else if (key.kty === 'RSA') {
+      const jwk = { kty: 'RSA', n: key.n, e: key.e, alg: key.alg, ext: true };
+      cryptoKey = await crypto.subtle.importKey(
+        'jwk',
+        jwk,
+        { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+        false,
+        ['verify'],
+      );
+      valid = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', cryptoKey, signature, data);
+    } else {
+      return null;
+    }
+    if (!valid) return null;
+    if (payload.exp && typeof payload.exp === 'number' && payload.exp * 1e3 < Date.now())
+      return null;
+    if (payload.nbf && typeof payload.nbf === 'number' && payload.nbf * 1e3 > Date.now())
+      return null;
+    if (!payload.sub || typeof payload.sub !== 'string' || payload.sub.length === 0) return null;
+    if (payload.iss && typeof payload.iss === 'string') {
+      const expectedIss = `${supabaseUrl.replace(/\/+$/, '')}/auth/v1`;
+      if (payload.iss !== expectedIss) return null;
+    }
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+// server/middleware/auth.ts
 var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 var VALID_ROLES = [
   'admin',
@@ -66,7 +275,7 @@ function verifyViaSupabaseApi(token) {
   }
   const hostname = new URL(supabaseUrl).hostname;
   return new Promise((resolve) => {
-    const req = https.request(
+    const req = https2.request(
       {
         hostname,
         path: '/auth/v1/user',
@@ -98,6 +307,29 @@ function verifyViaSupabaseApi(token) {
   });
 }
 async function verifyJwtSignature(token, secret) {
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  let header;
+  try {
+    header = JSON.parse(Buffer.from(parts[0], 'base64url').toString());
+  } catch {
+    return null;
+  }
+  const alg = header.alg ?? '';
+  const kid = header.kid;
+  if (alg === 'none') return null;
+  const isAsymmetric = /^(ES|RS)/.test(alg);
+  if (isAsymmetric) {
+    if (!kid) return null;
+    const supabaseUrl = process.env.VITE_SUPABASE_URL;
+    if (!supabaseUrl) return null;
+    try {
+      const result = await verifyJwtWithJwks(token, supabaseUrl);
+      return result;
+    } catch {
+      return null;
+    }
+  }
   const hmacResult = await verifyJwtViaHmac(token, secret);
   if (hmacResult) return hmacResult;
   return verifyViaSupabaseApi(token);
@@ -166,7 +398,7 @@ async function injectTenantContext(req, token, profileFetcher = defaultProfileFe
     return false;
   }
   try {
-    const result = await profileFetcher({ supabaseUrl, anonKey, token, userId: user.sub }, https);
+    const result = await profileFetcher({ supabaseUrl, anonKey, token, userId: user.sub }, https2);
     if (!result) {
       return false;
     }
@@ -197,10 +429,7 @@ function createRequireAuth(profileFetcher) {
       return;
     }
     try {
-      const JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
-      const payload = JWT_SECRET
-        ? await verifyJwtSignature(token, JWT_SECRET)
-        : await verifyViaSupabaseApi(token);
+      const payload = await verifyJwtSignature(token, process.env.SUPABASE_JWT_SECRET ?? '');
       if (!payload) {
         res.status(401).json({ error: 'Token JWT inv\xE1lido o expirado.' });
         return;
@@ -373,7 +602,7 @@ function setCache(key, value) {
 }
 
 // server/api/lib/https.ts
-import https2 from 'node:https';
+import https3 from 'node:https';
 function httpsPost(hostname, pathname, body, headers) {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify(body);
@@ -383,7 +612,7 @@ function httpsPost(hostname, pathname, body, headers) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...headers },
     };
-    const req = https2.request(opts, (res) => {
+    const req = https3.request(opts, (res) => {
       let chunks = '';
       res.on('data', (chunk) => (chunks += chunk));
       res.on('end', () => {
@@ -407,7 +636,7 @@ function httpsGet(hostname, pathname, headers) {
       method: 'GET',
       headers: headers || {},
     };
-    const req = https2.request(opts, (res) => {
+    const req = https3.request(opts, (res) => {
       let chunks = '';
       res.on('data', (chunk) => (chunks += chunk));
       res.on('end', () => {
@@ -431,7 +660,7 @@ function httpsPatch(hostname, pathname, body, headers) {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', ...headers },
     };
-    const req = https2.request(opts, (res) => {
+    const req = https3.request(opts, (res) => {
       let chunks = '';
       res.on('data', (chunk) => (chunks += chunk));
       res.on('end', () => {

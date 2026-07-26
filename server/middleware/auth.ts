@@ -3,6 +3,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import https from 'node:https';
 import type { AuthenticatedRequest, ProfileRole } from '../types';
+import { verifyJwtWithJwks } from '../lib/jwks';
 
 export interface JwtPayload {
   sub?: string;
@@ -113,6 +114,36 @@ function verifyViaSupabaseApi(token: string): Promise<JwtPayload | null> {
 }
 
 async function verifyJwtSignature(token: string, secret: string): Promise<JwtPayload | null> {
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+
+  let header: { alg?: string; kid?: string };
+  try {
+    header = JSON.parse(Buffer.from(parts[0], 'base64url').toString());
+  } catch {
+    return null;
+  }
+
+  const alg = header.alg ?? '';
+  const kid = header.kid;
+
+  if (alg === 'none') return null;
+
+  const isAsymmetric = /^(ES|RS)/.test(alg);
+
+  if (isAsymmetric) {
+    if (!kid) return null;
+    const supabaseUrl = process.env.VITE_SUPABASE_URL;
+    if (!supabaseUrl) return null;
+    try {
+      const result = await verifyJwtWithJwks(token, supabaseUrl);
+      return result as unknown as JwtPayload;
+    } catch {
+      return null;
+    }
+  }
+
+  // Symmetric or unknown → HMAC legacy or Supabase API
   const hmacResult = await verifyJwtViaHmac(token, secret);
   if (hmacResult) return hmacResult;
   return verifyViaSupabaseApi(token);
@@ -252,10 +283,7 @@ export function createRequireAuth(profileFetcher?: ProfileFetcher) {
     }
 
     try {
-      const JWT_SECRET = process.env.SUPABASE_JWT_SECRET;
-      const payload = JWT_SECRET
-        ? await verifyJwtSignature(token, JWT_SECRET)
-        : await verifyViaSupabaseApi(token);
+      const payload = await verifyJwtSignature(token, process.env.SUPABASE_JWT_SECRET ?? '');
       if (!payload) {
         res.status(401).json({ error: 'Token JWT inválido o expirado.' });
         return;
