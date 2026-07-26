@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import type { BitacoraEntry } from '../../../types';
 import { BitacoraEntrySchema } from '../../../schemas';
 import { useAuthStore } from '../../../stores/authStore';
+import { getDocumentSignedUrl, normalizeDocumentPath } from './storage.service';
 
 interface SupabaseBitacoraRow {
   id: string;
@@ -15,83 +16,52 @@ interface SupabaseBitacoraRow {
   documento_adjunto: string | null;
 }
 
-function mapBitacoraRow(row: SupabaseBitacoraRow): BitacoraEntry {
-  return BitacoraEntrySchema.parse({
+async function mapBitacoraRow(row: SupabaseBitacoraRow): Promise<BitacoraEntry | null> {
+  const documentoAdjunto = row.documento_adjunto
+    ? await getDocumentSignedUrl(row.documento_adjunto)
+    : undefined;
+  const parsed = BitacoraEntrySchema.safeParse({
     id: row.id,
     fecha: row.fecha,
     tipo: row.tipo,
     titulo: row.titulo,
     descripcion: row.descripcion,
     participantes: row.participantes || [],
-    documentoAdjunto: row.documento_adjunto || undefined,
+    documentoAdjunto: documentoAdjunto || undefined,
   });
+  if (!parsed.success) {
+    console.error(`Invalid bitacora entry ${row.id}:`, parsed.error.flatten());
+    return null;
+  }
+  return parsed.data;
 }
 
-/**
- * Fetch all bitacora entries for a causa.
- */
 export async function fetchBitacora(causaId: string): Promise<BitacoraEntry[]> {
   const { data, error } = await supabase
     .from('bitacora_entries')
     .select('id,fecha,tipo,titulo,descripcion,participantes,documento_adjunto')
     .eq('causa_id', causaId)
-    .order('fecha', { ascending: true });
+    .order('fecha', { ascending: false });
 
   if (error || !data) {
     console.error('Error fetching bitacora:', error);
     return [];
   }
 
-  return data.map(mapBitacoraRow);
+  const entries = await Promise.all((data as SupabaseBitacoraRow[]).map(mapBitacoraRow));
+  return entries.filter((entry): entry is BitacoraEntry => entry !== null);
 }
 
-/**
- * Save bitacora entries for a causa (replaces all existing).
- */
 export async function saveBitacora(causaId: string, entries: BitacoraEntry[]): Promise<boolean> {
-  const { error: deleteError } = await supabase
-    .from('bitacora_entries')
-    .delete()
-    .eq('causa_id', causaId);
-
-  if (deleteError) {
-    console.error('Error deleting old bitacora entries:', deleteError);
-    return false;
-  }
+  const tenantId = useAuthStore.getState().tenantId;
 
   if (entries.length === 0) {
-    return true;
+    const { error } = await supabase.from('bitacora_entries').delete().eq('causa_id', causaId);
+    if (error) console.error('Error clearing bitacora entries:', error);
+    return !error;
   }
 
-  const tenantId = useAuthStore.getState().tenantId;
-  const { error: insertError } = await supabase.from('bitacora_entries').insert(
-    entries.map((b) => ({
-      id: b.id,
-      causa_id: causaId,
-      tenant_id: tenantId,
-      fecha: b.fecha,
-      tipo: b.tipo,
-      titulo: b.titulo,
-      descripcion: b.descripcion,
-      participantes: b.participantes || [],
-      documento_adjunto: b.documentoAdjunto || null,
-    }))
-  );
-
-  if (insertError) {
-    console.error('Error inserting bitacora entries:', insertError?.message || insertError);
-    return false;
-  }
-
-  return true;
-}
-
-/**
- * Add a single bitacora entry.
- */
-export async function addBitacoraEntry(causaId: string, entry: BitacoraEntry): Promise<boolean> {
-  const tenantId = useAuthStore.getState().tenantId;
-  const { error } = await supabase.from('bitacora_entries').insert({
+  const rows = entries.map((entry) => ({
     id: entry.id,
     causa_id: causaId,
     tenant_id: tenantId,
@@ -100,13 +70,53 @@ export async function addBitacoraEntry(causaId: string, entry: BitacoraEntry): P
     titulo: entry.titulo,
     descripcion: entry.descripcion,
     participantes: entry.participantes || [],
-    documento_adjunto: entry.documentoAdjunto || null,
-  });
+    documento_adjunto: entry.documentoAdjunto
+      ? normalizeDocumentPath(entry.documentoAdjunto)
+      : null,
+  }));
+
+  const { error: upsertError } = await supabase
+    .from('bitacora_entries')
+    .upsert(rows, { onConflict: 'id' });
+
+  if (upsertError) {
+    console.error('Error upserting bitacora entries:', upsertError.message || upsertError);
+    return false;
+  }
+
+  const activeIds = entries.map((entry) => entry.id);
+  const { error: cleanupError } = await supabase
+    .from('bitacora_entries')
+    .delete()
+    .eq('causa_id', causaId)
+    .not('id', 'in', `(${activeIds.map((id) => `"${id.replace(/"/g, '')}"`).join(',')})`);
+
+  if (cleanupError) {
+    console.error('Error cleaning obsolete bitacora entries:', cleanupError);
+    return false;
+  }
+  return true;
+}
+
+export async function addBitacoraEntry(causaId: string, entry: BitacoraEntry): Promise<boolean> {
+  const tenantId = useAuthStore.getState().tenantId;
+  const { error } = await supabase.from('bitacora_entries').upsert({
+    id: entry.id,
+    causa_id: causaId,
+    tenant_id: tenantId,
+    fecha: entry.fecha,
+    tipo: entry.tipo,
+    titulo: entry.titulo,
+    descripcion: entry.descripcion,
+    participantes: entry.participantes || [],
+    documento_adjunto: entry.documentoAdjunto
+      ? normalizeDocumentPath(entry.documentoAdjunto)
+      : null,
+  }, { onConflict: 'id' });
 
   if (error) {
     console.error('Error adding bitacora entry:', error);
     return false;
   }
-
   return true;
 }
