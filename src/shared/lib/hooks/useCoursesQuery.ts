@@ -3,10 +3,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchCourses } from '../../../services/courses.service';
 
-export function useCoursesQuery() {
+export function useCoursesQuery(enabled = true) {
   return useQuery({
     queryKey: ['courses'],
     queryFn: fetchCourses,
+    enabled,
     staleTime: 1000 * 60 * 30,
   });
 }
