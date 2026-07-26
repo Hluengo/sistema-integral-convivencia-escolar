@@ -148,7 +148,21 @@ export function requireMembership(params: MembershipCheckParams) {
       }
 
       res.status(403).json({ error: 'No tiene una membresía activa para esta aplicación.' });
-    } catch {
+    } catch (err) {
+      if (mode === 'transition') {
+        logServer(
+          'transition_fallback',
+          `membership check failed: ${err instanceof Error ? err.message : 'unknown'}, trying profile role`,
+        );
+        if (params.allowedRoles && authReq.profileRole) {
+          if (params.allowedRoles.includes(authReq.profileRole)) {
+            logServer('transition_fallback_success', authReq.profileRole);
+            next();
+            return;
+          }
+        }
+        logServer('transition_fallback_denied', 'no matching role after error');
+      }
       res.status(500).json({ error: 'Error al verificar membresía.' });
     }
   };

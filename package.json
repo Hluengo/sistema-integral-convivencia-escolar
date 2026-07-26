@@ -11,7 +11,7 @@
     "clean": "rimraf dist server.js",
     "lint": "npm run lint:code && npm run typecheck",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test src/shared/lib/domain/disciplinaryStatus.test.ts src/domain/disciplinaryStatus.test.ts src/domain/riceMeasures.test.ts src/lib/mappers.test.ts src/lib/dateUtils.test.ts src/lib/causaFactory.test.ts src/lib/api.test.ts src/shared/lib/schemas.test.ts server/lib/disciplinaryPdfAnalysis.test.ts server/lib/validators.test.ts src/features/anotaciones/docgen/__tests__/letter-document.test.ts server/middleware/__tests__/auth.test.ts server/lib/__tests__/rateLimit.test.ts server/routes/__tests__/templates.test.ts",
+    "test": "tsx --test src/shared/lib/domain/disciplinaryStatus.test.ts src/domain/disciplinaryStatus.test.ts src/lib/mappers.test.ts src/lib/dateUtils.test.ts src/lib/causaFactory.test.ts src/lib/api.test.ts src/shared/lib/schemas.test.ts server/lib/disciplinaryPdfAnalysis.test.ts server/lib/validators.test.ts src/features/anotaciones/docgen/__tests__/letter-document.test.ts server/middleware/__tests__/auth.test.ts server/lib/__tests__/rateLimit.test.ts server/routes/__tests__/templates.test.ts server/routes/__tests__/pilot.test.ts",
     "ci": "npm run lint && npm run test && npm run build:web && npm run security-audit",
     "doctor": "npx react-doctor@latest",
     "prepare": "husky",

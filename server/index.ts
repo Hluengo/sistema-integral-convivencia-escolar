@@ -20,6 +20,7 @@ import parseRoutes from './routes/parse';
 import processDisciplinaryPdfRoutes from './routes/processDisciplinaryPdf';
 import debugRoutes from './routes/debug';
 import usageRoutes from './routes/usage';
+import pilotRoutes from './routes/pilot';
 
 dotenv.config();
 dotenv.config({ path: '.env.local' });
@@ -34,16 +35,20 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
 
 app.set('trust proxy', 1);
 app.use(compression());
-app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false,
-}));
-app.use(cors({
-  origin: allowedOrigins.length > 0 ? allowedOrigins : false,
-  credentials: allowedOrigins.length > 0,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  }),
+);
+app.use(
+  cors({
+    origin: allowedOrigins.length > 0 ? allowedOrigins : false,
+    credentials: allowedOrigins.length > 0,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  }),
+);
 app.use(express.json({ limit: '100kb' }));
 
 // API routes
@@ -56,6 +61,7 @@ app.use('/api', parseRoutes);
 app.use('/api', processDisciplinaryPdfRoutes);
 app.use('/api', debugRoutes);
 app.use('/api', usageRoutes);
+app.use('/api', pilotRoutes);
 
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {

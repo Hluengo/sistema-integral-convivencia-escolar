@@ -23,7 +23,7 @@ async function createTestJwt(payload: Record<string, unknown>, secret: string): 
     secretBytes,
     { name: 'HMAC', hash: 'SHA-256' },
     false,
-    ['sign']
+    ['sign'],
   );
 
   const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data));
@@ -45,9 +45,18 @@ describe('API endpoints', () => {
     }
 
     // Create a valid token for the test session
+    // Include tenant_id and role in app_metadata so the auth middleware
+    // can resolve tenant context without calling Supabase in this test.
     VALID_TOKEN = await createTestJwt(
-      { sub: 'test-user-id', exp: Math.floor(Date.now() / 1000) + 3600 },
-      b64Secret
+      {
+        sub: '00000000-0000-0000-0000-000000000002',
+        exp: Math.floor(Date.now() / 1000) + 3600,
+        app_metadata: {
+          tenant_id: '00000000-0000-0000-0000-000000000001',
+          role: 'admin',
+        },
+      },
+      b64Secret,
     );
 
     const mod = await import('../../api/index.js');
@@ -70,7 +79,7 @@ describe('API endpoints', () => {
   function post(
     path: string,
     body: Record<string, unknown>,
-    headers: Record<string, string> = {}
+    headers: Record<string, string> = {},
   ): Promise<{ status: number; body: Record<string, unknown> | string }> {
     return new Promise((resolve, reject) => {
       const url = new URL(path, baseUrl);
@@ -91,7 +100,7 @@ describe('API endpoints', () => {
               resolve({ status: res.statusCode || 500, body: chunks });
             }
           });
-        }
+        },
       );
       req.on('error', reject);
       req.write(data);
@@ -111,7 +120,7 @@ describe('API endpoints', () => {
         { text: '' },
         {
           Authorization: `Bearer ${VALID_TOKEN}`,
-        }
+        },
       );
       assert.equal(res.status, 400);
     });
@@ -122,7 +131,7 @@ describe('API endpoints', () => {
         { text: 'x'.repeat(5001) },
         {
           Authorization: `Bearer ${VALID_TOKEN}`,
-        }
+        },
       );
       assert.equal(res.status, 400);
     });
@@ -140,7 +149,7 @@ describe('API endpoints', () => {
         { message: '' },
         {
           Authorization: `Bearer ${VALID_TOKEN}`,
-        }
+        },
       );
       assert.equal(res.status, 400);
     });
@@ -158,7 +167,7 @@ describe('API endpoints', () => {
         {},
         {
           Authorization: `Bearer ${VALID_TOKEN}`,
-        }
+        },
       );
       assert.equal(res.status, 400);
     });
@@ -169,7 +178,7 @@ describe('API endpoints', () => {
         { id: 'DC-2026-001' },
         {
           Authorization: `Bearer ${VALID_TOKEN}`,
-        }
+        },
       );
       assert.equal(res.status, 400);
     });
@@ -187,7 +196,7 @@ describe('API endpoints', () => {
         {},
         {
           Authorization: `Bearer ${VALID_TOKEN}`,
-        }
+        },
       );
       assert.equal(res.status, 400);
     });
@@ -202,7 +211,7 @@ describe('API endpoints', () => {
         },
         {
           Authorization: `Bearer ${VALID_TOKEN}`,
-        }
+        },
       );
       assert.equal(res.status, 400);
     });
@@ -212,14 +221,14 @@ describe('API endpoints', () => {
     it('rejects expired JWT tokens', async () => {
       const expiredToken = await createTestJwt(
         { sub: 'test-user-id', exp: 1 }, // Expired in 1970
-        'test-secret-key-for-unit-tests'
+        'test-secret-key-for-unit-tests',
       );
       const res = await post(
         '/api/improve-text',
         { text: 'test' },
         {
           Authorization: `Bearer ${expiredToken}`,
-        }
+        },
       );
       assert.equal(res.status, 401);
     });
@@ -230,7 +239,7 @@ describe('API endpoints', () => {
         { text: 'test' },
         {
           Authorization: 'Bearer not-a-jwt-token',
-        }
+        },
       );
       assert.equal(res.status, 401);
     });
@@ -241,7 +250,7 @@ describe('API endpoints', () => {
         { text: 'test' },
         {
           Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjk5OTk5OTk5OTl9.wrong-signature',
-        }
+        },
       );
       assert.equal(res.status, 401);
     });

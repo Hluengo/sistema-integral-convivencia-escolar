@@ -92,9 +92,11 @@ describe('Pilot route — GET /pilot/membership-check', () => {
     assert.equal(res._status, 403);
   });
 
-  it('falls back to profile role in transition mode when membership denied', () => {
+  it('falls back to profile role in transition mode when membership denied', async () => {
     process.env.VITE_APP_MEMBERSHIPS_ENABLED = 'true';
     process.env.VITE_APP_MEMBERSHIPS_ENFORCED = 'false';
+    process.env.VITE_SUPABASE_URL = 'https://test.supabase.co';
+    process.env.VITE_SUPABASE_ANON_KEY = 'test-anon-key';
     const req = createMockReq({
       user: { sub: 'user-1' },
       tenantId: 'tenant-1',
@@ -103,7 +105,7 @@ describe('Pilot route — GET /pilot/membership-check', () => {
     });
     const res = createMockRes();
     let called = false;
-    requireMembership({
+    await requireMembership({
       applicationCode: 'convivencia',
       allowedRoles: ['direccion', 'convivencia'],
     })(req, res, () => {

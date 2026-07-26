@@ -22,7 +22,10 @@ export interface AuthenticatedRequest extends Request {
   user?: {
     sub?: string;
     email?: string;
+    role?: string;
+    app_metadata?: Record<string, unknown>;
   };
+  authToken?: string;
   tenantId?: string;
   profileRole?: ProfileRole;
 }
