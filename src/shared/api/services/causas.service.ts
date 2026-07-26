@@ -5,6 +5,7 @@ import type { BitacoraEntry, Causa, ChecklistItem } from '../../../types';
 import { BitacoraEntrySchema, CausaSchema, ChecklistItemSchema } from '../../../schemas';
 import { getBaseChecklist } from '../../../data';
 import { useAuthStore } from '../../../stores/authStore';
+import { getDocumentSignedUrl } from './storage.service';
 
 interface SupabaseCausaRow {
   id: string;
@@ -48,7 +49,10 @@ interface SupabaseBitacoraRow {
   documento_adjunto: string | null;
 }
 
-function mapChecklistRow(row: SupabaseChecklistRow): ChecklistItem | null {
+async function mapChecklistRow(row: SupabaseChecklistRow): Promise<ChecklistItem | null> {
+  const documentoUrl = row.documento_url
+    ? await getDocumentSignedUrl(row.documento_url)
+    : undefined;
   const parsed = ChecklistItemSchema.safeParse({
     id: row.id,
     label: row.label,
@@ -59,7 +63,7 @@ function mapChecklistRow(row: SupabaseChecklistRow): ChecklistItem | null {
     registradoPor: row.registrado_por || undefined,
     observaciones: row.observaciones || undefined,
     documentoNombre: row.documento_nombre || undefined,
-    documentoUrl: row.documento_url || undefined,
+    documentoUrl: documentoUrl || undefined,
   });
   if (!parsed.success) {
     console.error(`Invalid checklist item ${row.id}:`, parsed.error.flatten());
@@ -68,7 +72,10 @@ function mapChecklistRow(row: SupabaseChecklistRow): ChecklistItem | null {
   return parsed.data;
 }
 
-function mapBitacoraRow(row: SupabaseBitacoraRow): BitacoraEntry | null {
+async function mapBitacoraRow(row: SupabaseBitacoraRow): Promise<BitacoraEntry | null> {
+  const documentoAdjunto = row.documento_adjunto
+    ? await getDocumentSignedUrl(row.documento_adjunto)
+    : undefined;
   const parsed = BitacoraEntrySchema.safeParse({
     id: row.id,
     fecha: row.fecha,
@@ -76,7 +83,7 @@ function mapBitacoraRow(row: SupabaseBitacoraRow): BitacoraEntry | null {
     titulo: row.titulo,
     descripcion: row.descripcion,
     participantes: row.participantes || [],
-    documentoAdjunto: row.documento_adjunto || undefined,
+    documentoAdjunto: documentoAdjunto || undefined,
   });
   if (!parsed.success) {
     console.error(`Invalid bitacora entry ${row.id}:`, parsed.error.flatten());
@@ -87,7 +94,6 @@ function mapBitacoraRow(row: SupabaseBitacoraRow): BitacoraEntry | null {
 
 const DEFAULT_PAGE_SIZE = 100;
 
-/** Fetch complete causa workspaces, including bitacora and checklist, in three parallel queries. */
 export async function fetchCausas(limit = DEFAULT_PAGE_SIZE): Promise<Causa[]> {
   let causaQuery = supabase
     .from('causas')
@@ -95,7 +101,6 @@ export async function fetchCausas(limit = DEFAULT_PAGE_SIZE): Promise<Causa[]> {
     .order('fecha_ultima_actualizacion', { ascending: false });
 
   if (limit > 0) causaQuery = causaQuery.limit(limit);
-
   const { data, error } = await causaQuery;
   if (error || !data) {
     console.error('Error fetching causas:', error);
@@ -145,21 +150,31 @@ export async function fetchCausas(limit = DEFAULT_PAGE_SIZE): Promise<Causa[]> {
   if (bitacoraResult.error) console.error('Error fetching bitacora entries:', bitacoraResult.error);
 
   const checklistByCausa = new Map<string, ChecklistItem[]>();
-  for (const row of (checklistResult.data || []) as SupabaseChecklistRow[]) {
-    const item = mapChecklistRow(row);
+  const checklistMapped = await Promise.all(
+    ((checklistResult.data || []) as SupabaseChecklistRow[]).map(async (row) => ({
+      causaId: row.causa_id,
+      item: await mapChecklistRow(row),
+    }))
+  );
+  for (const { causaId, item } of checklistMapped) {
     if (!item) continue;
-    const current = checklistByCausa.get(row.causa_id) || [];
+    const current = checklistByCausa.get(causaId) || [];
     current.push(item);
-    checklistByCausa.set(row.causa_id, current);
+    checklistByCausa.set(causaId, current);
   }
 
   const bitacoraByCausa = new Map<string, BitacoraEntry[]>();
-  for (const row of (bitacoraResult.data || []) as SupabaseBitacoraRow[]) {
-    const entry = mapBitacoraRow(row);
+  const bitacoraMapped = await Promise.all(
+    ((bitacoraResult.data || []) as SupabaseBitacoraRow[]).map(async (row) => ({
+      causaId: row.causa_id,
+      entry: await mapBitacoraRow(row),
+    }))
+  );
+  for (const { causaId, entry } of bitacoraMapped) {
     if (!entry) continue;
-    const current = bitacoraByCausa.get(row.causa_id) || [];
+    const current = bitacoraByCausa.get(causaId) || [];
     current.push(entry);
-    bitacoraByCausa.set(row.causa_id, current);
+    bitacoraByCausa.set(causaId, current);
   }
 
   return causas.map((causa) => ({
@@ -173,7 +188,6 @@ async function resolveUniqueCausaId(preferred: string): Promise<string> {
   const { data: existing, error: checkError } = await supabase
     .from('causas').select('id').eq('id', preferred).maybeSingle();
   if (!checkError && !existing) return preferred;
-
   const { data: all } = await supabase.from('causas').select('id');
   const year = new Date().getFullYear();
   let max = 0;
@@ -231,7 +245,6 @@ export async function updateCausa(causa: Causa): Promise<boolean> {
     })
     .eq('id', causa.id)
     .select('id');
-
   if (error) {
     console.error('Error updating causa:', error);
     return false;
