@@ -27,16 +27,17 @@
 - [x] Arquitectura applications/app_memberships preparada
 - [x] 6 borradores de migraciones Fase 2
 
-### Supabase Compartido — Fase 2 ✅ Cerrada
+### Supabase Compartido — Fase 2 ✅ Cerrada (reconciliada)
 
-- [x] 8 migraciones escritas y aplicadas (00001-00008)
+- [x] 9 migraciones escritas, aplicadas y reconciliadas (00001-00009)
+- [x] 00009 correctiva: revoke_applications_default_privileges
 - [x] Backfill: teacher → inasistencias ✅, staff excluido ⚠️
-- [x] RLS: tenants, applications, app_memberships
-- [x] Helpers: current_user_memberships(), has_app_access()
-- [x] Validaciones SQL pre/post
+- [x] RLS: tenants, applications, app_memberships — least-privilege verificado
+- [x] Helpers: current_user_memberships(), has_app_access() — SECURITY DEFINER
+- [x] Validaciones SQL pre/post + has_table_privilege
 - [x] Feature flag VITE_APP_MEMBERSHIPS_ENABLED=false
 - [x] Smoke tests: Convivencia flag=false ✅, Inasistencias flag=false ✅, Inasistencias flag=true ✅
-- [x] Migraciones aplicadas en Supabase remoto
+- [x] Migraciones aplicadas en Supabase remoto y reconciliadas con locales
 - [ ] Enforcement: profiles.role sigue como fallback (Fase 3)
 
 ## Corto Plazo (1-3 meses)

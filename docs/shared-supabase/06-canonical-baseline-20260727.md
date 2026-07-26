@@ -8,7 +8,7 @@
 
 ---
 
-## 1. TABLES (25 total: 24 tablas + 1 view)
+## 1. TABLES (28 total: 27 tablas + 1 view)
 
 ### 1.1 Convivencia Tables (tenant-aware, default `tenant_id = current_tenant_id()`)
 
@@ -54,13 +54,23 @@
 | 23  | `usage_events`      | 2     | SÍ                           | NO               |
 | 24  | `coexistence_cases` | 0     | SÍ                           | NO existe        |
 
-### 1.5 Views
+### 1.5 Membership Tables (Phase 2)
 
-| #   | Vista                 | Filas (aprox) | Definición                                                                                                                                                                                 |
-| --- | --------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 25  | `teacher_public_view` | ~13           | `SELECT a.id, s.full_name, c.name, c.level, a.start_date, a.end_date, a.status, a.observation FROM absences a JOIN students s ON s.id = a.student_id JOIN courses c ON c.id = s.course_id` |
+| #   | Tabla             | Filas | RLS | tenant_id | Notas                                         |
+| --- | ----------------- | ----- | --- | --------- | --------------------------------------------- |
+| 25  | `applications`    | 2     | SÍ  | N/A       | Catálogo de apps (convivencia, inasistencias) |
+| 26  | `app_memberships` | 1     | SÍ  | UUID      | Membresías por app y tenant                   |
+
+### 1.6 Views
+
+| #   | Vista                  | Filas (aprox) | Definición                                                                                                                                                                                 |
+| --- | ---------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 27  | `membership_readiness` | —             | Vista de diagnóstico para backfill (solo service_role)                                                                                                                                     |
+| 28  | `teacher_public_view`  | ~13           | `SELECT a.id, s.full_name, c.name, c.level, a.start_date, a.end_date, a.status, a.observation FROM absences a JOIN students s ON s.id = a.student_id JOIN courses c ON c.id = s.course_id` |
 
 **Nota sobre `teacher_public_view`:** No filtra por `tenant_id` porque `absences` no tiene la columna. Depende de RLS en las tablas base (`students`, `courses`) para aislamiento. GRANT `SELECT` a `authenticated` únicamente.
+
+**Nota sobre `membership_readiness`:** Vista de diagnóstico para clasificar perfiles por categoría de membresía. Solo accesible por service_role y postgres.
 
 ---
 
@@ -339,12 +349,16 @@ Cobertura completa:
 
 ## 11. NEXT STEPS
 
-### Phase 2 — Applications + app_memberships
+### Phase 2 — COMPLETED (reconciliada 2026-07-28)
 
-- Crear tabla `applications` (id, slug, name, description)
-- Crear tabla `app_memberships` (user_id, app_id, tenant_id, roles)
-- Migrar lógica de roles de `profiles.role` a `app_memberships`
-- `current_app_role()` debe leer desde app_memberships
+- ✅ Tabla `applications` creada (code, name, is_active)
+- ✅ Tabla `app_memberships` creada (user_id, application_code, tenant_id, role)
+- ✅ Membresías iniciales backfilled (teacher → inasistencias)
+- ✅ RLS policies correctas (least-privilege, sin USING(true) en escritura)
+- ✅ Helpers SECURITY DEFINER (`current_user_memberships`, `has_app_access`)
+- ✅ Feature flag `VITE_APP_MEMBERSHIPS_ENABLED=false` en ambos repos
+- ⚠️ Staff excluido del backfill (requiere decisión manual)
+- ⏳ Enforcement no conectado a login (pendiente Fase 3)
 
 ### Phase 3 — Teacher Access Tokens + Vista Docente Restoration
 

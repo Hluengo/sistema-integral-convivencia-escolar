@@ -559,7 +559,25 @@ Con la finalización de Fase 0.5b, se establece un **checkpoint de reconciliaci�
 
 ---
 
-## 12. Firmas y aprobación
+## 12. Reconciliación post-Fase 2
+
+### 2026-07-28 — Reconciliación de migraciones Fase 2
+
+La fase 2 de memberships fue reconciliada con el estado remoto. Se verificó que:
+
+1. **9 migraciones Fase 2 están aplicadas** en remoto (no 8 como se documentó previamente)
+2. La migración correctiva `revoke_applications_default_privileges` (00009 local) fue aplicada como segunda migración en remoto
+3. El orden real de aplicación en remoto difiere de la numeración local
+4. ACL de `applications` verificado: anon=none, authenticated=SELECT, service_role=SELECT/INSERT/UPDATE/DELETE
+5. RLS policies correctas en las 3 tablas
+6. Backfill: 1 membership (inasistencias/teacher), sin duplicados
+7. Helpers SECURITY DEFINER verificados
+
+Ver `12-phase-2-closure.md` para el mapeo completo local ↔ remoto.
+
+---
+
+## 13. Firmas y aprobación
 
 | Rol                      | Nombre | Fecha | Firma |
 | ------------------------ | ------ | ----- | ----- |

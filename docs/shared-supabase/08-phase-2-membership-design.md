@@ -1,7 +1,8 @@
 # Fase 2 — Diseño de `applications` y `app_memberships`
 
-> **Status:** ✅ Fase 2 completada  
+> **Status:** ✅ Fase 2 completada y reconciliada  
 > **Fecha:** 2026-07-28  
+> **Reconciliación:** 9 migraciones aplicadas y verificadas en remoto  
 > **Depende de:** Fase 0.5b (profiles nullable, canonical auth trigger)  
 > **Drive:** Separación de autorización por aplicación en el proyecto Supabase compartido  
 > **Cierre:** Ver `12-phase-2-closure.md`

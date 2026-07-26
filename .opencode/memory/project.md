@@ -978,34 +978,36 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - No se aplicaron migraciones nuevas
 - No se hizo deploy / commit / push
 
-### Fase 2 — Applications + Memberships ✅ Cerrada (2026-07-26)
+### Fase 2 — Applications + Memberships ✅ Cerrada y reconciliada (2026-07-28)
 
-**Estado:** Fase 2 completa — migraciones, RLS y smoke tests aprobados.
+**Estado:** Fase 2 completa — migraciones reconciliadas, RLS y smoke tests aprobados.
 
-**Migraciones aplicadas (8):**
+**Migraciones aplicadas (9) — reconciliadas con remoto:**
 
 - 00001: `applications` tabla con RLS
+- 00009: `revoke_applications_default_privileges` (correctiva, aplicada 2da en remoto)
 - 00002: `app_memberships` tabla con índices y RLS
 - 00003: Seed convivencia + inasistencias
 - 00004: Vista `membership_readiness`
 - 00005: Backfill teacher→inasistencias
-- 00006: Backfill direccion/convivencia→convivencia
+- 00006: Backfill direccion/convivencia→convivencia (no-op)
 - 00007: RLS hardening
 - 00008: Helpers `current_user_memberships()`, `has_app_access()`
 
-**Validaciones:**
+**Validaciones remotas completadas:**
 
 - RLS activo en applications, app_memberships, tenants
-- anon sin acceso
+- ACL verificado con `has_table_privilege`: anon=none, authenticated=SELECT, service_role=ALL
 - authenticated SELECT restringido, sin INSERT/UPDATE/DELETE
 - service_role con administración completa
 - membership_readiness solo service_role/postgres
-- helpers con search_path seguro, sin EXECUTE para anon
+- helpers con search_path seguro, SECURITY DEFINER, sin EXECUTE para anon
+- backfill: 1 membership (inasistencias/teacher), sin duplicados, staff excluido
 
 **Smoke tests:**
 
 - Convivencia flag=false: ✅ PASSED (7.0s)
-- Inasistencias flag=false: ✅ PASSED (12.3s)
+- Inasistencias flag=false: ✅ PASSED (12.4s)
 - Inasistencias flag=true: ✅ PASSED (12.3s)
 
 **Estado de transición:**
@@ -1024,7 +1026,9 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 
 **Documentación:**
 
-- `docs/shared-supabase/12-phase-2-closure.md`: Cierre formal
+- `docs/shared-supabase/12-phase-2-closure.md`: Cierre formal reconciliado
+- `docs/shared-supabase/12-phase-2-security-review.md`: Revisión de seguridad reconciliada
+- `docs/shared-supabase/PHASE-2-DELIVERY-REPORT.md`: Informe de entrega reconciliado
 - `docs/shared-supabase/08-phase-2-membership-design.md`: Actualizado a completada
-- `docs/shared-supabase/11-phase-2-implementation-plan.md`: Actualizado a completada
-- `.ai/roadmap.md`: Fase 2 marcada como completada
+- `docs/shared-supabase/11-phase-2-implementation-plan.md`: Actualizado con 9 migraciones
+- `.ai/roadmap.md`: Fase 2 marcada como completada y reconciliada

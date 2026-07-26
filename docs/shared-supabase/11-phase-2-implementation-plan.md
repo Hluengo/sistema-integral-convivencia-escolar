@@ -1,7 +1,8 @@
 # Implementation Plan — Phase 2: Applications & Memberships
 
-> **Status:** ✅ Fase 2 completada — migraciones aplicadas y validadas  
-> **Fecha:** 2026-07-26  
+> **Status:** ✅ Fase 2 completada — migraciones aplicadas y reconciliadas  
+> **Fecha:** 2026-07-28  
+> **Migraciones:** 9 aplicadas (00001–00009)  
 > **Feature flag:** `VITE_APP_MEMBERSHIPS_ENABLED=false`  
 > **Cierre:** Ver `12-phase-2-closure.md`
 
@@ -35,7 +36,20 @@ SELECT * FROM public.applications;
 # Expected: 0 rows (seed en paso 3)
 ```
 
-### Paso 2: Migración 00002 — Tabla app_memberships
+### Paso 2: Migración 00009 — Revocar privilegios heredados (CORRECTIVA)
+
+Archivo: `20260728000009_revoke_applications_default_privileges.sql`
+
+```bash
+# Consultas POST:
+SELECT grantee, privilege_type FROM information_schema.role_table_grants
+  WHERE table_name='applications' AND grantee IN ('authenticated','anon','service_role');
+# Expected: anon=nothing, authenticated=SELECT, service_role=SELECT/INSERT/UPDATE/DELETE
+```
+
+> **Nota:** Esta migración fue aplicada como segunda en el orden real de remoto, inmediatamente después de00001. Revoca privilegios heredados de Supabase y restaura least-privilege.
+
+### Paso 3: Migración 00002 — Tabla app_memberships
 
 Archivo: `20260728000002_create_app_memberships.sql`
 
@@ -47,7 +61,7 @@ SELECT * FROM public.app_memberships;
 # Expected: PK, FK, UNIQUE, indexes, trigger
 ```
 
-### Paso 3: Migración 00003 — Seed applications
+### Paso 4: Migración 00003 — Seed applications
 
 Archivo: `20260728000003_seed_applications.sql`
 
@@ -57,7 +71,7 @@ SELECT * FROM public.applications;
 # Expected: 2 rows (convivencia, inasistencias)
 ```
 
-### Paso 4: Migración 00004 — Vista de readiness
+### Paso 5: Migración 00004 — Vista de readiness
 
 Archivo: `20260728000004_prepare_membership_backfill.sql`
 
@@ -72,7 +86,7 @@ SELECT * FROM public.membership_readiness;
 # Expected: ERROR (permission denied)
 ```
 
-### Paso 5: Migración 00005 — Backfill Inasistencias
+### Paso 6: Migración 00005 — Backfill Inasistencias
 
 Archivo: `20260728000005_create_initial_memberships_inasistencias.sql`
 
@@ -88,7 +102,7 @@ WHERE m.application_code = 'inasistencias';
 # Expected: only teacher profiles
 ```
 
-### Paso 6: Migración 00006 — Backfill Convivencia
+### Paso 7: Migración 00006 — Backfill Convivencia
 
 Archivo: `20260728000006_create_initial_memberships_convivencia.sql`
 
@@ -104,7 +118,7 @@ WHERE p.role = 'staff';
 # Expected: 0
 ```
 
-### Paso 7: Migración 00007 — RLS hardening
+### Paso 8: Migración 00007 — RLS hardening
 
 Archivo: `20260728000007_enable_membership_tables_and_tenants_rls.sql`
 
@@ -116,7 +130,7 @@ WHERE tablename IN ('applications', 'app_memberships', 'tenants')
 ORDER BY tablename, policyname;
 ```
 
-### Paso 8: Migración 00008 — Helpers
+### Paso 9: Migración 00008 — Helpers
 
 Archivo: `20260728000008_create_membership_helpers.sql`
 
@@ -132,7 +146,7 @@ SELECT public.has_app_access('convivencia');
 SELECT public.has_app_access('inasistencias', ARRAY['teacher']);
 ```
 
-### Paso 9: Validación post-migración
+### Paso 10: Validación post-migración
 
 ```bash
 # Ejecutar en SQL Editor (service_role):
@@ -159,7 +173,7 @@ Mientras sea `false`:
 
 Para activar:
 
-1. Aplicar migraciones 00001-00008 en Supabase
+1. Aplicar migraciones 00001-00009 en Supabase (ver orden en Sección 2)
 2. Cambiar `VITE_APP_MEMBERSHIPS_ENABLED=true` en ambos `.env.local`
 3. Verificar que todos los usuarios tengan membresías correctas
 4. Monitorear logs de acceso
@@ -191,3 +205,4 @@ Para activar:
 | ----------- | ---------- | --------- | ---------------------------------------------- |
 | teacher (1) | `teacher`  | 00005     | ✅ Insertado en `inasistencias` como `teacher` |
 | staff (1)   | `staff`    | Ninguna   | ❌ Excluido. Documentado para revisión manual  |
+| Convivencia | —          | 00006     | ℹ️ No-op (sin perfiles direccion/convivencia)  |
