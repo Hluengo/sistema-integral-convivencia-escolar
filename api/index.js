@@ -2306,6 +2306,181 @@ router9.get(
 );
 var usage_default = router9;
 
+// server/routes/pilot.ts
+import { Router as Router10 } from 'express';
+
+// server/middleware/requireTenant.ts
+function requireTenant2(req, res, next) {
+  const authReq = req;
+  if (!authReq.user?.sub) {
+    res.status(401).json({ error: 'Autenticaci\xF3n requerida.' });
+    return;
+  }
+  if (!authReq.tenantId) {
+    res.status(403).json({ error: 'No fue posible determinar el establecimiento autenticado.' });
+    return;
+  }
+  next();
+}
+
+// server/middleware/requireMembership.ts
+import https4 from 'node:https';
+function getMembershipMode() {
+  const enabled = process.env.VITE_APP_MEMBERSHIPS_ENABLED === 'true';
+  const enforced = process.env.VITE_APP_MEMBERSHIPS_ENFORCED === 'true';
+  if (!enabled) return 'legacy';
+  if (enforced) return 'enforced';
+  return 'transition';
+}
+function logServer(event, detail) {
+  if (process.env.NODE_ENV !== 'production') {
+    const msg = `[membership-server] ${event}${detail ? `: ${detail}` : ''}`;
+    console.log(msg);
+  }
+}
+async function checkMembershipViaApi(hostname, anonKey, token, params) {
+  return new Promise((resolve) => {
+    const body = JSON.stringify({
+      p_application_code: params.applicationCode,
+      p_roles: params.allowedRoles ? [...params.allowedRoles] : null,
+    });
+    const req = https4.request(
+      {
+        hostname,
+        path: '/rest/v1/rpc/has_app_access',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(body),
+          apikey: anonKey,
+          Authorization: `Bearer ${token}`,
+        },
+      },
+      (res) => {
+        let data = '';
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+        res.on('end', () => {
+          if (res.statusCode === 200) {
+            resolve(data === 'true');
+          } else {
+            resolve(false);
+          }
+        });
+      },
+    );
+    req.on('error', () => resolve(false));
+    req.setTimeout(5e3, () => {
+      req.destroy();
+      resolve(false);
+    });
+    req.write(body);
+    req.end();
+  });
+}
+function getSupabaseConfig() {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  if (!supabaseUrl || !anonKey) return null;
+  try {
+    return { hostname: new URL(supabaseUrl).hostname, anonKey };
+  } catch {
+    return null;
+  }
+}
+function requireMembership(params) {
+  return async (req, res, next) => {
+    const authReq = req;
+    if (!authReq.user?.sub) {
+      res.status(401).json({ error: 'Autenticaci\xF3n requerida.' });
+      return;
+    }
+    if (!authReq.tenantId) {
+      res.status(403).json({ error: 'No fue posible determinar el establecimiento autenticado.' });
+      return;
+    }
+    const mode = getMembershipMode();
+    if (mode === 'legacy') {
+      logServer('legacy_mode', 'using profile role');
+      if (params.allowedRoles && authReq.profileRole) {
+        if (!params.allowedRoles.includes(authReq.profileRole)) {
+          res.status(403).json({ error: 'No tiene permisos para realizar esta acci\xF3n.' });
+          return;
+        }
+      }
+      next();
+      return;
+    }
+    const config = getSupabaseConfig();
+    if (!config) {
+      res.status(500).json({ error: 'Error de configuraci\xF3n del servidor.' });
+      return;
+    }
+    const token = authReq.authToken;
+    if (!token) {
+      res.status(401).json({ error: 'Token de autenticaci\xF3n requerido.' });
+      return;
+    }
+    try {
+      logServer('membership_check', `${mode} mode for ${params.applicationCode}`);
+      const hasAccess = await checkMembershipViaApi(config.hostname, config.anonKey, token, params);
+      if (hasAccess) {
+        next();
+        return;
+      }
+      if (mode === 'transition') {
+        logServer('transition_fallback', 'membership denied, trying profile role');
+        if (params.allowedRoles && authReq.profileRole) {
+          if (params.allowedRoles.includes(authReq.profileRole)) {
+            logServer('transition_fallback_success', authReq.profileRole);
+            next();
+            return;
+          }
+        }
+        logServer('transition_fallback_denied', 'no matching role');
+      }
+      res.status(403).json({ error: 'No tiene una membres\xEDa activa para esta aplicaci\xF3n.' });
+    } catch (err) {
+      if (mode === 'transition') {
+        logServer(
+          'transition_fallback',
+          `membership check failed: ${err instanceof Error ? err.message : 'unknown'}, trying profile role`,
+        );
+        if (params.allowedRoles && authReq.profileRole) {
+          if (params.allowedRoles.includes(authReq.profileRole)) {
+            logServer('transition_fallback_success', authReq.profileRole);
+            next();
+            return;
+          }
+        }
+        logServer('transition_fallback_denied', 'no matching role after error');
+      }
+      res.status(500).json({ error: 'Error al verificar membres\xEDa.' });
+    }
+  };
+}
+
+// server/routes/pilot.ts
+var router10 = Router10();
+router10.get(
+  '/pilot/membership-check',
+  requireAuth,
+  requireTenant2,
+  requireMembership({
+    applicationCode: 'convivencia',
+    allowedRoles: ['direccion', 'convivencia'],
+  }),
+  async (_req, res) => {
+    res.json({
+      status: 'ok',
+      message: 'Acceso autorizado por membres\xEDa.',
+      timestamp: /* @__PURE__ */ new Date().toISOString(),
+    });
+  },
+);
+var pilot_default = router10;
+
 // server/api/index.ts
 var __filename = fileURLToPath(import.meta.url);
 var __dirname = path.dirname(__filename);
@@ -2340,6 +2515,7 @@ app.use('/api', templates_default);
 app.use('/api', parse_default);
 app.use('/api', processDisciplinaryPdf_default);
 app.use('/api', usage_default);
+app.use('/api', pilot_default);
 var distPath = path.join(__dirname, '..', 'dist');
 app.use(express.static(distPath));
 app.get('*', (_req, res) => {
@@ -2348,3 +2524,7 @@ app.get('*', (_req, res) => {
 var index_default = app;
 export { index_default as default };
 /** @license SPDX-License-Identifier: Apache-2.0 */
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */

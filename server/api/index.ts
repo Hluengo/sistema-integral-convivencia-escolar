@@ -18,16 +18,20 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
 const app = express();
 app.set('trust proxy', 1);
 app.use(compression());
-app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false,
-}));
-app.use(cors({
-  origin: allowedOrigins.length > 0 ? allowedOrigins : false,
-  credentials: allowedOrigins.length > 0,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  }),
+);
+app.use(
+  cors({
+    origin: allowedOrigins.length > 0 ? allowedOrigins : false,
+    credentials: allowedOrigins.length > 0,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  }),
+);
 app.use(express.json({ limit: '100kb' }));
 
 import improveRoutes from './routes/improve.js';
@@ -39,6 +43,7 @@ import templatesRoutes from './routes/templates.js';
 import parseRoutes from './routes/parse.js';
 import processDisciplinaryPdfRoutes from './routes/processDisciplinaryPdf.js';
 import usageRoutes from './routes/usage.js';
+import pilotRoutes from '../routes/pilot.js';
 
 app.use('/api', improveRoutes);
 app.use('/api', advisorRoutes);
@@ -49,6 +54,7 @@ app.use('/api', templatesRoutes);
 app.use('/api', parseRoutes);
 app.use('/api', processDisciplinaryPdfRoutes);
 app.use('/api', usageRoutes);
+app.use('/api', pilotRoutes);
 
 const distPath = path.join(__dirname, '..', 'dist');
 app.use(express.static(distPath));
