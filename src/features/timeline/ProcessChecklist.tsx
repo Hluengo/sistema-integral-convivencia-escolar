@@ -9,6 +9,7 @@ import { CheckSquare, ChevronUp, ChevronDown, File, Download, Trash, Plus } from
 import { PROCESS_SECTIONS } from './processSections';
 import RegistrationForm from './RegistrationForm';
 import AttachedDocuments from './AttachedDocuments';
+import { openDocument } from '../../shared/api/services/storage.service';
 
 interface ProcessChecklistProps {
   causa: Causa;
@@ -214,15 +215,14 @@ export default function ProcessChecklist({
                                   />
                                   <span className="truncate">{item.documentoNombre}</span>
                                 </span>
-                                <a
-                                  href={item.documentoUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
+                                <button
+                                  type="button"
+                                  onClick={() => void openDocument(item.documentoUrl!)}
                                   className="flex shrink-0 items-center gap-0.5 pl-2 font-semibold text-[9px] text-info-600 hover:underline"
                                   aria-label={`Ver documento ${item.documentoNombre}`}
                                 >
                                   <Download className="h-3 w-3" aria-hidden="true" /> Ver
-                                </a>
+                                </button>
                               </div>
                             )}
 

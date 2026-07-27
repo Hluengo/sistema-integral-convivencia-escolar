@@ -8,6 +8,7 @@ import type { Causa, BitacoraEntry, UserRole } from '../../types';
 import { FileText, Plus, Send, Calendar, File, Download } from 'lucide-react';
 import ImproveInput from '../../components/ImproveInput';
 import ImproveTextarea from '../../components/ImproveTextarea';
+import { openDocument } from '../../shared/api/services/storage.service';
 
 interface BitacoraTabProps {
   causa: Causa;
@@ -172,15 +173,14 @@ export default function BitacoraTab({
                       <div className="mt-2 flex items-center gap-1.5 rounded border border-info-200 bg-info-50 px-2 py-1 text-[10px]">
                         <File className="h-3 w-3 shrink-0 text-info-500" aria-hidden="true" />
                         <span className="truncate font-medium text-info-700">Documento adjunto</span>
-                        <a
-                          href={entry.documentoAdjunto}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          type="button"
+                          onClick={() => void openDocument(entry.documentoAdjunto!)}
                           className="ml-auto flex shrink-0 items-center gap-0.5 font-semibold text-info-600 hover:underline"
                           aria-label="Ver documento adjunto"
                         >
                           <Download className="h-3 w-3" aria-hidden="true" /> Ver
-                        </a>
+                        </button>
                       </div>
                     )}
                   </div>

@@ -49,7 +49,7 @@ export async function uploadDocument(
     console.error('Error uploading document:', error);
     return null;
   }
-  return getDocumentSignedUrl(filePath);
+  return filePath;
 }
 
 export async function getDocumentSignedUrl(pathOrLegacyUrl: string): Promise<string | null> {
@@ -88,14 +88,9 @@ export async function listDocuments(causaId: string): Promise<{ name: string; ur
     console.error('Error listing documents:', error);
     return [];
   }
-  const results = await Promise.all(
-    data.filter((item) => item.name && item.id).map(async (item) => {
-      const path = `${folder}/${item.name}`;
-      const url = await getDocumentSignedUrl(path);
-      return url ? { name: item.name, url } : null;
-    })
-  );
-  return results.filter((item): item is { name: string; url: string } => item !== null);
+  return data
+    .filter((item) => item.name && item.id)
+    .map((item) => ({ name: item.name, url: `${folder}/${item.name}` }));
 }
 
 export async function deleteDocument(pathOrLegacyUrl: string): Promise<boolean> {

@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import type { BitacoraEntry } from '../../../types';
 import { BitacoraEntrySchema } from '../../../schemas';
 import { useAuthStore } from '../../../stores/authStore';
-import { getDocumentSignedUrl, normalizeDocumentPath } from './storage.service';
+import { normalizeDocumentPath } from './storage.service';
 
 interface SupabaseBitacoraRow {
   id: string;
@@ -16,9 +16,9 @@ interface SupabaseBitacoraRow {
   documento_adjunto: string | null;
 }
 
-async function mapBitacoraRow(row: SupabaseBitacoraRow): Promise<BitacoraEntry | null> {
+function mapBitacoraRow(row: SupabaseBitacoraRow): BitacoraEntry | null {
   const documentoAdjunto = row.documento_adjunto
-    ? await getDocumentSignedUrl(row.documento_adjunto)
+    ? normalizeDocumentPath(row.documento_adjunto)
     : undefined;
   const parsed = BitacoraEntrySchema.safeParse({
     id: row.id,
@@ -48,7 +48,7 @@ export async function fetchBitacora(causaId: string): Promise<BitacoraEntry[]> {
     return [];
   }
 
-  const entries = await Promise.all((data as SupabaseBitacoraRow[]).map(mapBitacoraRow));
+  const entries = (data as SupabaseBitacoraRow[]).map(mapBitacoraRow);
   return entries.filter((entry): entry is BitacoraEntry => entry !== null);
 }
 
