@@ -4,6 +4,7 @@
  */
 
 import { FolderOpen } from 'lucide-react';
+import { openDocument } from '../../shared/api/services/storage.service';
 
 interface AttachedDocumentsProps {
   documents: { name: string; url: string; itemId?: string }[];
@@ -33,14 +34,13 @@ export default function AttachedDocuments({
               <p className="truncate text-[9px] text-neutral-500">{doc.url}</p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              <a
-                href={doc.url}
-                target="_blank"
-                rel="noreferrer"
+              <button
+                type="button"
+                onClick={() => void openDocument(doc.url)}
                 className="font-semibold text-[10px] text-brand-700 hover:underline"
               >
                 Abrir
-              </a>
+              </button>
               <button
                 type="button"
                 onClick={() => onRemoveDocument(doc.itemId ?? '', doc.name)}
