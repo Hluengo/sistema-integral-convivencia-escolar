@@ -13,6 +13,7 @@ import {
   type AnnotationExportScope,
   type AnnotationExportStudent,
 } from './annotationsExcelExport';
+import { getAnnotationRange } from './annotationStudentFilters';
 
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
@@ -67,25 +68,11 @@ interface AnotacionesStudentTableProps {
 
 const FILTER_TABS = [
   { key: 'con_registro', label: 'Con Registro' },
+  { key: 'sin_carta', label: 'Sin Carta' },
   { key: 'amonestacion', label: 'Amonestación' },
   { key: 'compromiso', label: 'Compromiso' },
   { key: 'derivacion', label: 'Derivación' },
 ];
-
-function getAnnotationRange(filter: string): [number, number] | null {
-  switch (filter) {
-    case 'con_registro':
-      return [5, Number.POSITIVE_INFINITY];
-    case 'amonestacion':
-      return [5, 9];
-    case 'compromiso':
-      return [10, 14];
-    case 'derivacion':
-      return [15, Number.POSITIVE_INFINITY];
-    default:
-      return null;
-  }
-}
 
 function getEffectiveNegCount(s: { annotations_count: number }): number {
   return Number(s.annotations_count) || 0;
