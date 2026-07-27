@@ -8,6 +8,10 @@ import { supabase } from '../lib/supabase';
 const STORAGE_BUCKET = 'documentos_convivencia';
 const SIGNED_URL_TTL_SECONDS = 3600;
 
+function isMissingStorageObject(error: { message?: string } | null): boolean {
+  return error?.message === 'Object not found';
+}
+
 export function normalizeDocumentPath(value: string): string | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
@@ -55,7 +59,11 @@ export async function getDocumentSignedUrl(pathOrLegacyUrl: string): Promise<str
     .from(STORAGE_BUCKET)
     .createSignedUrl(filePath, SIGNED_URL_TTL_SECONDS);
   if (error || !data?.signedUrl) {
-    console.error('Error creating signed document URL:', error);
+    // Historical rows can survive a migration without their backing Storage
+    // bytes. Treat those as unavailable; keep reporting unexpected failures.
+    if (!isMissingStorageObject(error)) {
+      console.error('Error creating signed document URL:', error);
+    }
     return null;
   }
   return data.signedUrl;
