@@ -3,6 +3,10 @@
 import { z } from 'zod';
 import { EstadoCausa } from '../types';
 
+// Keep Zod validation compatible with the production CSP. Without jitless,
+// Zod probes `new Function`, which Chrome reports as a blocked eval attempt.
+z.config({ jitless: true });
+
 export const CourseSchema = z.object({
   id: z.string(),
   name: z.string(),
