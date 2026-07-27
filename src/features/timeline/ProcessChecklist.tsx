@@ -30,7 +30,8 @@ interface ProcessChecklistProps {
   handleSaveRegistration: (itemId: string) => void;
   handleResetRegistration: (itemId: string) => void;
   regFile: File | null;
-  isUploadingDocument: boolean;
+  isSavingRegistration: boolean;
+  registrationError: string | null;
   documentError: string | null;
   handleAttachDocument: (itemId: string, file: File | null) => Promise<void>;
   handleRemoveDocument: (itemId: string, fileName?: string) => Promise<void>;
@@ -56,7 +57,8 @@ export default function ProcessChecklist({
   handleSaveRegistration,
   handleResetRegistration,
   regFile,
-  isUploadingDocument,
+  isSavingRegistration,
+  registrationError,
   documentError,
   handleAttachDocument: _handleAttachDocument,
   handleRemoveDocument,
@@ -272,7 +274,8 @@ export default function ProcessChecklist({
                                 onSubmit={() => {
                                   handleSaveRegistration(item.id);
                                 }}
-                                isUploadingDocument={isUploadingDocument}
+                                isSaving={isSavingRegistration}
+                                errorMessage={registrationError}
                               />
                             )}
                           </div>

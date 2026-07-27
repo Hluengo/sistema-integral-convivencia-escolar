@@ -19,7 +19,8 @@ interface RegistrationFormProps {
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onCancel: () => void;
   onSubmit: () => void;
-  isUploadingDocument: boolean;
+  isSaving: boolean;
+  errorMessage: string | null;
 }
 
 export default function RegistrationForm({
@@ -33,7 +34,8 @@ export default function RegistrationForm({
   handleFileChange,
   onCancel,
   onSubmit,
-  isUploadingDocument,
+  isSaving,
+  errorMessage,
 }: RegistrationFormProps) {
   return (
     <div className="mt-2 space-y-3 rounded border border-info-200 bg-white p-3 text-left">
@@ -92,10 +94,17 @@ export default function RegistrationForm({
         />
       </div>
 
+      {errorMessage && (
+        <p role="alert" className="rounded-lg border border-danger-200 bg-danger-50 p-2 text-[10px] text-danger-700">
+          {errorMessage}
+        </p>
+      )}
+
       <div className="flex justify-end gap-2 pt-1">
         <button
           type="button"
           onClick={onCancel}
+          disabled={isSaving}
           className="rounded-lg px-3 py-1.5 font-medium text-[11px] text-neutral-500 transition-colors hover:bg-neutral-50"
         >
           Cancelar
@@ -103,10 +112,10 @@ export default function RegistrationForm({
         <button
           type="button"
           onClick={onSubmit}
-          disabled={isUploadingDocument}
+          disabled={isSaving}
           className="flex items-center gap-1 rounded-lg bg-brand-600 px-4 py-1.5 font-medium text-[11px] text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isUploadingDocument ? (
+          {isSaving ? (
             <>Subiendo...</>
           ) : (
             <>
