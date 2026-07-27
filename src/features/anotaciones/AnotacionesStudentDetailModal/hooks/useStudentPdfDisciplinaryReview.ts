@@ -19,6 +19,7 @@ import type {
   ReviewAnnotation,
   ReviewAnnotationType,
 } from '../../NewDisciplinaryProcessModal/ReviewStep';
+import { updateReviewAnnotationText } from '../../NewDisciplinaryProcessModal/reviewAnnotationUtils';
 
 interface StudentPdfReviewParams {
   studentId: string;
@@ -251,6 +252,10 @@ export function useStudentPdfDisciplinaryReview({
     [annotations],
   );
 
+  const handleAnnotationTextChange = useCallback((sequenceNumber: number, text: string) => {
+    setAnnotations((current) => updateReviewAnnotationText(current, sequenceNumber, text));
+  }, []);
+
   const confirmReview = useCallback(async () => {
     const tenantId = useAuthStore.getState().tenantId;
     if (!tenantId || !uploadedFile || !analysis || !file || !summary) {
@@ -356,6 +361,7 @@ export function useStudentPdfDisciplinaryReview({
     handleDrop,
     handleFileSelect,
     handleAnnotationTypeChange,
+    handleAnnotationTextChange,
     confirmReview,
     reset,
   };

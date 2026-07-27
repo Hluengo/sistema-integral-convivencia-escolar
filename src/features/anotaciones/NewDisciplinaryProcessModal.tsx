@@ -20,6 +20,7 @@ import ReviewStep, {
   type ReviewAnnotation,
   type ReviewAnnotationType,
 } from './NewDisciplinaryProcessModal/ReviewStep';
+import { updateReviewAnnotationText } from './NewDisciplinaryProcessModal/reviewAnnotationUtils';
 
 type FlowStep = 'upload' | 'student_resolution' | 'classification' | 'review' | 'success';
 type ProcessingState =
@@ -97,7 +98,7 @@ function summaryFromAnnotations(annotations: ReviewAnnotation[]): AnnotationSumm
       if (annotation.type === 'information') acc.informativas += 1;
       return acc;
     },
-    { negativas: 0, positivas: 0, informativas: 0 }
+    { negativas: 0, positivas: 0, informativas: 0 },
   );
 }
 
@@ -289,11 +290,11 @@ export default function NewDisciplinaryProcessModal({
       setClassification(
         data.recommended_letter_type && data.recommended_letter_type !== 'none'
           ? data.recommended_letter_type
-          : 'none'
+          : 'none',
       );
 
       const candidates = (data.student_candidates || []).map((candidate) =>
-        matchLocalStudent(students, candidate)
+        matchLocalStudent(students, candidate),
       );
       setStudentCandidates(candidates);
 
@@ -327,10 +328,14 @@ export default function NewDisciplinaryProcessModal({
 
   const handleAnnotationTypeChange = (sequenceNumber: number, type: ReviewAnnotationType) => {
     const next = annotations.map((annotation) =>
-      annotation.sequence_number === sequenceNumber ? { ...annotation, type } : annotation
+      annotation.sequence_number === sequenceNumber ? { ...annotation, type } : annotation,
     );
     setAnnotations(next);
     setSummary(summaryFromAnnotations(next));
+  };
+
+  const handleAnnotationTextChange = (sequenceNumber: number, text: string) => {
+    setAnnotations((current) => updateReviewAnnotationText(current, sequenceNumber, text));
   };
 
   const handleConfirm = async () => {
@@ -535,6 +540,7 @@ export default function NewDisciplinaryProcessModal({
               annotations={annotations}
               warnings={analysis?.warnings ?? []}
               onAnnotationTypeChange={handleAnnotationTypeChange}
+              onAnnotationTextChange={handleAnnotationTextChange}
             />
           )}
           {step === 'success' && (

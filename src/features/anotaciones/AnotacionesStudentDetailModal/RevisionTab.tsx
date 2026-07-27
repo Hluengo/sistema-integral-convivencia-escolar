@@ -3,7 +3,10 @@
 import { useCallback, useRef } from 'react';
 import { AlertTriangle, ArrowRight, CheckCircle2, FileText, RefreshCw, X } from 'lucide-react';
 import type { CartaDisciplinaria } from '@/src/shared/lib/types';
-import { mapDocTypeToLetterType, type LetterDocType } from '@/src/shared/lib/domain/disciplinaryStage';
+import {
+  mapDocTypeToLetterType,
+  type LetterDocType,
+} from '@/src/shared/lib/domain/disciplinaryStage';
 import type { ReviewAnnotationType } from '../NewDisciplinaryProcessModal/ReviewStep';
 import ReviewStep from '../NewDisciplinaryProcessModal/ReviewStep';
 import { formatDate, type StudentInfo } from './constants';
@@ -24,7 +27,13 @@ const RECOMMENDATION_LABEL: Record<string, string> = {
   revisar_conflicto: 'Revisar conflicto de estudiante',
 };
 
-export default function RevisionTab({ student, counts, currentCarta, onConfirmed, onGoToCarta }: RevisionTabProps) {
+export default function RevisionTab({
+  student,
+  counts,
+  currentCarta,
+  onConfirmed,
+  onGoToCarta,
+}: RevisionTabProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLButtonElement>(null);
   const review = useStudentPdfDisciplinaryReview({
@@ -41,7 +50,7 @@ export default function RevisionTab({ student, counts, currentCarta, onConfirmed
       event.stopPropagation();
       review.setIsDragging(true);
     },
-    [review]
+    [review],
   );
 
   const handleDragLeave = useCallback(
@@ -52,7 +61,7 @@ export default function RevisionTab({ student, counts, currentCarta, onConfirmed
         review.setIsDragging(false);
       }
     },
-    [review]
+    [review],
   );
 
   const totalDetected = review.summary
@@ -60,8 +69,9 @@ export default function RevisionTab({ student, counts, currentCarta, onConfirmed
     : 0;
   const canGoToCarta = Boolean(
     review.comparison?.suggestedDocType &&
-      !review.comparison.conflictMessage &&
-      (review.comparison.recommendation === 'escalar' || review.comparison.recommendation === 'derivar')
+    !review.comparison.conflictMessage &&
+    (review.comparison.recommendation === 'escalar' ||
+      review.comparison.recommendation === 'derivar'),
   );
 
   const handleGoToCarta = async () => {
@@ -86,11 +96,15 @@ export default function RevisionTab({ student, counts, currentCarta, onConfirmed
           </div>
           <div className="rounded-lg bg-neutral-50 p-3">
             <p className="text-xs font-semibold text-neutral-400">Carta vigente</p>
-            <p className="mt-1 text-sm font-bold text-neutral-900">{currentCarta?.letter_type || 'Sin carta vigente'}</p>
+            <p className="mt-1 text-sm font-bold text-neutral-900">
+              {currentCarta?.letter_type || 'Sin carta vigente'}
+            </p>
           </div>
           <div className="rounded-lg bg-neutral-50 p-3">
             <p className="text-xs font-semibold text-neutral-400">Última emisión</p>
-            <p className="mt-1 text-sm font-bold text-neutral-900">{currentCarta ? formatDate(currentCarta.emission_date) : '-'}</p>
+            <p className="mt-1 text-sm font-bold text-neutral-900">
+              {currentCarta ? formatDate(currentCarta.emission_date) : '-'}
+            </p>
           </div>
         </div>
       </section>
@@ -108,7 +122,9 @@ export default function RevisionTab({ student, counts, currentCarta, onConfirmed
         onDrop={review.handleDrop}
         disabled={review.isBusy}
         className={`w-full rounded-xl border-2 border-dashed p-8 text-center transition-colors ${
-          review.isDragging ? 'border-brand-400 bg-brand-50' : 'border-neutral-300 bg-white hover:border-brand-300 hover:bg-brand-50/30'
+          review.isDragging
+            ? 'border-brand-400 bg-brand-50'
+            : 'border-neutral-300 bg-white hover:border-brand-300 hover:bg-brand-50/30'
         } ${review.isBusy ? 'cursor-wait opacity-70' : ''}`}
       >
         <input
@@ -147,7 +163,12 @@ export default function RevisionTab({ student, counts, currentCarta, onConfirmed
           <div className="flex items-start gap-2">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{review.errorMessage}</span>
-            <button type="button" onClick={() => review.setErrorMessage(null)} className="ml-auto text-red-500 hover:text-red-700" aria-label="Cerrar error">
+            <button
+              type="button"
+              onClick={() => review.setErrorMessage(null)}
+              className="ml-auto text-red-500 hover:text-red-700"
+              aria-label="Cerrar error"
+            >
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -159,7 +180,9 @@ export default function RevisionTab({ student, counts, currentCarta, onConfirmed
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="text-sm font-bold text-neutral-900">Resultado comparado</h3>
-              <p className="text-xs text-neutral-500">{totalDetected} anotaciones detectadas en el PDF.</p>
+              <p className="text-xs text-neutral-500">
+                {totalDetected} anotaciones detectadas en el PDF.
+              </p>
             </div>
             <span className="w-fit rounded-full bg-brand-100 px-3 py-1 text-xs font-bold text-brand-800">
               {RECOMMENDATION_LABEL[review.comparison.recommendation]}
@@ -169,30 +192,47 @@ export default function RevisionTab({ student, counts, currentCarta, onConfirmed
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <div className="rounded-lg border border-neutral-100 p-3">
               <p className="text-xs text-neutral-400">Negativas registradas</p>
-              <p className="text-xl font-black text-neutral-900">{review.comparison.registeredNegativeCount}</p>
+              <p className="text-xl font-black text-neutral-900">
+                {review.comparison.registeredNegativeCount}
+              </p>
             </div>
             <div className="rounded-lg border border-red-100 bg-red-50 p-3">
               <p className="text-xs text-red-500">Negativas en PDF</p>
-              <p className="text-xl font-black text-red-700">{review.comparison.detectedNegativeCount}</p>
+              <p className="text-xl font-black text-red-700">
+                {review.comparison.detectedNegativeCount}
+              </p>
             </div>
             <div className="rounded-lg border border-amber-100 bg-amber-50 p-3">
               <p className="text-xs text-amber-600">Diferencia</p>
-              <p className="text-xl font-black text-amber-700">{review.comparison.difference >= 0 ? '+' : ''}{review.comparison.difference}</p>
+              <p className="text-xl font-black text-amber-700">
+                {review.comparison.difference >= 0 ? '+' : ''}
+                {review.comparison.difference}
+              </p>
             </div>
             <div className="rounded-lg border border-blue-100 bg-blue-50 p-3">
               <p className="text-xs text-blue-600">Posibles nuevas</p>
-              <p className="text-xl font-black text-blue-700">{review.comparison.possibleNewAnnotations}</p>
+              <p className="text-xl font-black text-blue-700">
+                {review.comparison.possibleNewAnnotations}
+              </p>
             </div>
           </div>
 
           <div className="mt-4 grid grid-cols-1 gap-3 text-sm lg:grid-cols-2">
             <div className="rounded-lg bg-neutral-50 p-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Carta vigente</p>
-              <p className="mt-1 font-semibold text-neutral-800">{review.comparison.currentLetterType || 'Sin carta vigente'}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                Carta vigente
+              </p>
+              <p className="mt-1 font-semibold text-neutral-800">
+                {review.comparison.currentLetterType || 'Sin carta vigente'}
+              </p>
             </div>
             <div className="rounded-lg bg-neutral-50 p-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">Carta sugerida</p>
-              <p className="mt-1 font-semibold text-neutral-800">{review.comparison.suggestedLetterType || 'Mantener estado actual'}</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
+                Carta sugerida
+              </p>
+              <p className="mt-1 font-semibold text-neutral-800">
+                {review.comparison.suggestedLetterType || 'Mantener estado actual'}
+              </p>
             </div>
           </div>
 
@@ -209,27 +249,45 @@ export default function RevisionTab({ student, counts, currentCarta, onConfirmed
           studentName={student.full_name}
           course={student.course_name || student.course_id || ''}
           summary={review.summary}
-          classification={review.comparison?.suggestedDocType || review.analysis.recommended_letter_type || 'none'}
+          classification={
+            review.comparison?.suggestedDocType || review.analysis.recommended_letter_type || 'none'
+          }
           fileName={review.file?.name || ''}
           annotations={review.annotations}
           warnings={review.analysis.warnings || []}
           onAnnotationTypeChange={(sequenceNumber, type: ReviewAnnotationType) =>
             review.handleAnnotationTypeChange(sequenceNumber, type)
           }
+          onAnnotationTextChange={review.handleAnnotationTextChange}
         />
       )}
 
       {review.summary && (
         <div className="flex flex-col-reverse gap-3 border-t border-neutral-100 pt-4 sm:flex-row sm:justify-end">
-          <button type="button" onClick={() => void review.reset()} disabled={review.isBusy} className="rounded-xl border border-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-600 hover:bg-neutral-50 disabled:opacity-50">
+          <button
+            type="button"
+            onClick={() => void review.reset()}
+            disabled={review.isBusy}
+            className="rounded-xl border border-neutral-200 px-4 py-2 text-sm font-semibold text-neutral-600 hover:bg-neutral-50 disabled:opacity-50"
+          >
             Limpiar revisión
           </button>
-          <button type="button" onClick={() => void review.confirmReview()} disabled={review.isBusy || !!review.comparison?.conflictMessage} className="inline-flex items-center justify-center gap-2 rounded-xl border border-brand-200 px-5 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50 disabled:opacity-50">
+          <button
+            type="button"
+            onClick={() => void review.confirmReview()}
+            disabled={review.isBusy || !!review.comparison?.conflictMessage}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-brand-200 px-5 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50 disabled:opacity-50"
+          >
             <CheckCircle2 className="h-4 w-4" />
             Confirmar actualización
           </button>
           {canGoToCarta && review.comparison?.suggestedDocType && (
-            <button type="button" onClick={() => void handleGoToCarta()} disabled={review.isBusy} className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50">
+            <button
+              type="button"
+              onClick={() => void handleGoToCarta()}
+              disabled={review.isBusy}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
+            >
               Ir a Carta: {mapDocTypeToLetterType(review.comparison.suggestedDocType)}
               <ArrowRight className="h-4 w-4" />
             </button>
