@@ -12,6 +12,7 @@ import SeverityBadge from '../../components/SeverityBadge';
 import AnotacionesDashboardStats from '../anotaciones/AnotacionesDashboardStats';
 import EmptyState from '../../components/EmptyState';
 import { fetchAnnotationStageCounts } from '../../services/annotations.service';
+import { fetchPublicDashboardKpis, type PublicDashboardKpis } from '../../shared/api/services/public-dashboard.service';
 import { useAuthStore } from '../../stores/authStore';
 
 interface DashboardStatsProps {
@@ -35,24 +36,12 @@ function SeverityCard({ tipo, count, total }: { tipo: TipoInfraccion; count: num
       <div className={`absolute top-0 right-3 left-3 h-[3px] rounded-full ${cfg.dot}`} />
       <div className="mb-3 flex items-center justify-between">
         <SeverityBadge level={tipo} size="sm" />
-        <span
-          className={`font-bold text-xs tabular-nums ${
-            tipo === 'Leve'
-              ? 'text-leve-600'
-              : tipo === 'Grave'
-                ? 'text-grave-600'
-                : tipo === 'Muy Grave'
-                  ? 'text-muygrave-600'
-                  : 'text-gravisima-600'
-          }`}
-        >
+        <span className={`font-bold text-xs tabular-nums ${tipo === 'Leve' ? 'text-leve-600' : tipo === 'Grave' ? 'text-grave-600' : tipo === 'Muy Grave' ? 'text-muygrave-600' : 'text-gravisima-600'}`}>
           {percentage}%
         </span>
       </div>
       <div className="flex items-baseline gap-1.5">
-        <span className="font-bold text-3xl text-neutral-900 tabular-nums">
-          {count < 10 ? `0${count}` : count}
-        </span>
+        <span className="font-bold text-3xl text-neutral-900 tabular-nums">{count < 10 ? `0${count}` : count}</span>
         <span className="font-medium text-neutral-400 text-xs">de {total}</span>
       </div>
       <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-neutral-100">
@@ -68,74 +57,62 @@ function SeverityCard({ tipo, count, total }: { tipo: TipoInfraccion; count: num
   );
 }
 
-function AnnotationKpiSkeleton() {
+function DashboardSkeleton() {
   return (
-    <div className="space-y-2" aria-label="Cargando KPIs de anotaciones">
-      <div className="h-5 w-32 animate-pulse rounded bg-neutral-200" />
+    <div className="space-y-6" aria-label="Cargando indicadores del dashboard">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[0, 1, 2, 3].map((item) => <div key={item} className="card h-28 animate-pulse bg-neutral-100" />)}
+      </div>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {[0, 1, 2, 3].map((item) => <div key={item} className="card h-28 animate-pulse bg-neutral-100" />)}
+      </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {[0, 1, 2].map((item) => (
-          <div key={item} className="card h-28 animate-pulse bg-neutral-100" />
-        ))}
+        {[0, 1, 2].map((item) => <div key={item} className="card h-28 animate-pulse bg-neutral-100" />)}
       </div>
     </div>
   );
 }
 
 export default function DashboardStats({ causas, onFaseSelect }: DashboardStatsProps) {
-  const stats = getStats(causas);
+  const authenticatedStats = getStats(causas);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const tenantId = useAuthStore((state) => state.tenantId);
 
-  const { totalActivas, enInvestigacion, resueltas } = useMemo(() => {
-    const active = causas.filter(
-      (c) =>
-        c.estadoActual !== EstadoCausa.CAUSA_CERRADA &&
-        c.estadoActual !== EstadoCausa.RESOLUCION_EJECUTORIADA
-    ).length;
-    const investigating = causas.filter(
-      (c) => getFaseForEstado(c.estadoActual) === 'Investigación'
-    ).length;
-    const resolved = causas.filter(
-      (c) =>
-        c.estadoActual === EstadoCausa.CAUSA_CERRADA ||
-        c.estadoActual === EstadoCausa.RESOLUCION_EJECUTORIADA
-    ).length;
-    return { totalActivas: active, enInvestigacion: investigating, resueltas: resolved };
+  const authenticatedCauseCounts = useMemo(() => {
+    const active = causas.filter((c) => c.estadoActual !== EstadoCausa.CAUSA_CERRADA && c.estadoActual !== EstadoCausa.RESOLUCION_EJECUTORIADA).length;
+    const investigating = causas.filter((c) => getFaseForEstado(c.estadoActual) === 'Investigación').length;
+    const resolved = causas.filter((c) => c.estadoActual === EstadoCausa.CAUSA_CERRADA || c.estadoActual === EstadoCausa.RESOLUCION_EJECUTORIADA).length;
+    return { active, investigating, resolved };
   }, [causas]);
 
-  const [anotacionesKpis, setAnotacionesKpis] = useState({
-    amonestacionCount: 0,
-    compromisoCount: 0,
-    derivacionCount: 0,
-  });
+  const [publicKpis, setPublicKpis] = useState<PublicDashboardKpis | null>(null);
+  const [anotacionesKpis, setAnotacionesKpis] = useState({ amonestacionCount: 0, compromisoCount: 0, derivacionCount: 0 });
+  const [loading, setLoading] = useState(true);
   const [kpiError, setKpiError] = useState(false);
-  const [kpiLoading, setKpiLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-
-    if (!isAuthenticated || !tenantId) {
-      setKpiLoading(true);
-      setKpiError(false);
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    setKpiLoading(true);
+    setLoading(true);
     setKpiError(false);
 
     void (async () => {
       try {
+        if (!isAuthenticated) {
+          const counts = await fetchPublicDashboardKpis();
+          if (!cancelled) setPublicKpis(counts);
+          return;
+        }
+
+        if (!tenantId) return;
         const counts = await fetchAnnotationStageCounts();
         if (!cancelled) setAnotacionesKpis(counts);
       } catch (error) {
         if (!cancelled) {
-          console.error('Error fetching anotaciones KPIs:', error);
+          console.error('Error fetching dashboard KPIs:', error);
           setKpiError(true);
         }
       } finally {
-        if (!cancelled) setKpiLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
 
@@ -144,16 +121,35 @@ export default function DashboardStats({ causas, onFaseSelect }: DashboardStatsP
     };
   }, [isAuthenticated, tenantId]);
 
-  if (!isAuthenticated) {
-    return <AnnotationKpiSkeleton />;
-  }
+  if (loading) return <DashboardSkeleton />;
 
-  if (causas.length === 0) {
+  const total = isAuthenticated ? authenticatedStats.total : publicKpis?.totalCauses ?? 0;
+  const active = isAuthenticated ? authenticatedCauseCounts.active : publicKpis?.activeCauses ?? 0;
+  const investigating = isAuthenticated ? authenticatedCauseCounts.investigating : publicKpis?.investigationCauses ?? 0;
+  const resolved = isAuthenticated ? authenticatedCauseCounts.resolved : publicKpis?.resolvedCauses ?? 0;
+  const critical = isAuthenticated ? authenticatedStats.conPlazoCritico : publicKpis?.criticalAlerts ?? 0;
+  const severity = isAuthenticated
+    ? authenticatedStats.porGravedad
+    : {
+        Leve: publicKpis?.leveCount ?? 0,
+        Grave: publicKpis?.graveCount ?? 0,
+        'Muy Grave': publicKpis?.muyGraveCount ?? 0,
+        Gravísima: publicKpis?.gravisimaCount ?? 0,
+      };
+  const annotations = isAuthenticated
+    ? anotacionesKpis
+    : {
+        amonestacionCount: publicKpis?.amonestacionCount ?? 0,
+        compromisoCount: publicKpis?.compromisoCount ?? 0,
+        derivacionCount: publicKpis?.derivacionCount ?? 0,
+      };
+
+  if (total === 0 && !kpiError) {
     return (
       <EmptyState
         icon={Inbox}
         title="No hay causas registradas"
-        description="Aún no se han registrado expedientes disciplinarios. Las métricas del dashboard aparecerán cuando existan causas activas."
+        description="Aún no se han registrado expedientes disciplinarios. Las métricas aparecerán cuando existan causas activas."
       />
     );
   }
@@ -161,42 +157,38 @@ export default function DashboardStats({ causas, onFaseSelect }: DashboardStatsP
   return (
     <section aria-label="Panel de control" className="animate-fade-in space-y-6">
       <div className="stagger-children grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Causas Activas" value={totalActivas} sublabel={`de ${stats.total} totales`} icon={Activity} iconBg="bg-brand-50" iconColor="text-brand-600" accentColor="#1d4ed8" trend={{ value: '+12%', positive: true }} onClick={() => onFaseSelect('Todas')} />
-        <MetricCard label="En Investigación" value={enInvestigacion} sublabel="Fase de indagación" icon={FileSearch} iconBg="bg-grave-50" iconColor="text-grave-600" accentColor="#f59e0b" onClick={() => onFaseSelect('Investigación')} />
-        <MetricCard label="Causas Resueltas" value={resueltas} sublabel="Casos cerrados" icon={CheckCircle} iconBg="bg-leve-50" iconColor="text-leve-600" accentColor="#22c55e" trend={{ value: '+8%', positive: true }} />
-        <MetricCard label="Alertas Críticas" value={stats.conPlazoCritico} sublabel="Plazo fatal próximo" icon={ShieldAlert} iconBg="bg-gravisima-50" iconColor="text-gravisima-600" accentColor="#ef4444" isAlert={stats.conPlazoCritico > 0} trend={stats.conPlazoCritico > 0 ? { value: 'Requiere acción', positive: false } : undefined} />
+        <MetricCard label="Causas Activas" value={active} sublabel={`de ${total} totales`} icon={Activity} iconBg="bg-brand-50" iconColor="text-brand-600" accentColor="#1d4ed8" onClick={() => onFaseSelect('Todas')} />
+        <MetricCard label="En Investigación" value={investigating} sublabel="Fase de indagación" icon={FileSearch} iconBg="bg-grave-50" iconColor="text-grave-600" accentColor="#f59e0b" onClick={() => onFaseSelect('Investigación')} />
+        <MetricCard label="Causas Resueltas" value={resolved} sublabel="Casos cerrados" icon={CheckCircle} iconBg="bg-leve-50" iconColor="text-leve-600" accentColor="#22c55e" />
+        <MetricCard label="Alertas Críticas" value={critical} sublabel="Plazo fatal próximo" icon={ShieldAlert} iconBg="bg-gravisima-50" iconColor="text-gravisima-600" accentColor="#ef4444" isAlert={critical > 0} />
       </div>
 
       <div>
         <div className="mb-3 flex items-center gap-2">
-          <div className="rounded-lg bg-neutral-100 p-1.5">
-            <BarChart3 className="h-3.5 w-3.5 text-neutral-500" aria-hidden="true" />
-          </div>
+          <div className="rounded-lg bg-neutral-100 p-1.5"><BarChart3 className="h-3.5 w-3.5 text-neutral-500" aria-hidden="true" /></div>
           <h3 className="font-semibold text-neutral-500 text-xs uppercase tracking-[0.06em]">Distribución por Gravedad</h3>
         </div>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <SeverityCard tipo="Leve" count={stats.porGravedad.Leve} total={stats.total} />
-          <SeverityCard tipo="Grave" count={stats.porGravedad.Grave} total={stats.total} />
-          <SeverityCard tipo="Muy Grave" count={stats.porGravedad['Muy Grave']} total={stats.total} />
-          <SeverityCard tipo="Gravísima" count={stats.porGravedad.Gravísima} total={stats.total} />
+          <SeverityCard tipo="Leve" count={severity.Leve} total={total} />
+          <SeverityCard tipo="Grave" count={severity.Grave} total={total} />
+          <SeverityCard tipo="Muy Grave" count={severity['Muy Grave']} total={total} />
+          <SeverityCard tipo="Gravísima" count={severity.Gravísima} total={total} />
         </div>
       </div>
 
-      {kpiLoading ? (
-        <AnnotationKpiSkeleton />
-      ) : kpiError ? (
+      {kpiError ? (
         <div className="flex items-center gap-3 rounded-xl border border-gravisima-200 bg-gravisima-50 p-4">
           <AlertCircle className="h-5 w-5 shrink-0 text-gravisima-600" />
           <div>
-            <p className="font-semibold text-gravisima-700 text-sm">Error al cargar KPIs de anotaciones</p>
-            <p className="text-gravisima-600 text-xs">No se pudieron obtener las métricas de anotaciones de estudiantes. Verifica la conexión con la base de datos.</p>
+            <p className="font-semibold text-gravisima-700 text-sm">Error al cargar los indicadores</p>
+            <p className="text-gravisima-600 text-xs">No se pudieron obtener las métricas del dashboard.</p>
           </div>
         </div>
       ) : (
         <AnotacionesDashboardStats
-          amonestacionCount={anotacionesKpis.amonestacionCount}
-          compromisoCount={anotacionesKpis.compromisoCount}
-          derivacionCount={anotacionesKpis.derivacionCount}
+          amonestacionCount={annotations.amonestacionCount}
+          compromisoCount={annotations.compromisoCount}
+          derivacionCount={annotations.derivacionCount}
         />
       )}
     </section>
