@@ -10,6 +10,7 @@ import StudentSummaryTab from './AnotacionesStudentDetailModal/StudentSummaryTab
 import RevisionTab from './AnotacionesStudentDetailModal/RevisionTab';
 import HistoryTab from './AnotacionesStudentDetailModal/HistoryTab';
 import CartasTab from './AnotacionesStudentDetailModal/CartasTab';
+import EditAnnotationsTab from './AnotacionesStudentDetailModal/EditAnnotationsTab';
 import { useDisciplinaryData } from './AnotacionesStudentDetailModal/hooks/useDisciplinaryData';
 
 const Skeleton = memo(function Skeleton({ className = '' }: { className?: string }) {
@@ -20,6 +21,7 @@ interface AnotacionesStudentDetailModalProps {
   student: StudentInfo;
   annotations: Annotation[];
   privacyMode: boolean;
+  initialTab?: ActiveTab;
   onClose: () => void;
   onClearAnnotations: (studentId: string) => void;
   onDataChanged?: () => void | Promise<void>;
@@ -31,12 +33,13 @@ export default function AnotacionesStudentDetailModal({
   student,
   annotations,
   privacyMode,
+  initialTab = 'estado',
   onClose,
   onDataChanged,
   onTogglePrivacy,
   teachers,
 }: AnotacionesStudentDetailModalProps) {
-  const [activeTab, setActiveTab] = useState<ActiveTab>('estado');
+  const [activeTab, setActiveTab] = useState<ActiveTab>(initialTab);
   const [pendingCartaSuggestion, setPendingCartaSuggestion] = useState<{
     docType: LetterDocType;
     negativeCount: number;
@@ -76,6 +79,10 @@ export default function AnotacionesStudentDetailModal({
       hasOpened.current = true;
     }
   }, []);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab, student.id]);
 
   const renderTabContent = () => {
     if (disciplinaryData.isDataLoading) {
@@ -117,6 +124,15 @@ export default function AnotacionesStudentDetailModal({
             onGoToCarta={(docType, negativeCount) => {
               setPendingCartaSuggestion({ docType, negativeCount, source: 'pdf' });
               setActiveTab('cartas');
+            }}
+          />
+        );
+      case 'editar_anotaciones':
+        return (
+          <EditAnnotationsTab
+            annotations={effectiveAnnotations}
+            onSaved={async () => {
+              await Promise.all([disciplinaryData.refresh(), onDataChanged?.()]);
             }}
           />
         );

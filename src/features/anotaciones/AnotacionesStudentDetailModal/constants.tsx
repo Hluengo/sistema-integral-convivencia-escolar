@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { FileText, RefreshCw, History, ScrollText } from 'lucide-react';
+import { FileText, RefreshCw, History, Pencil, ScrollText } from 'lucide-react';
 
 export interface StudentInfo {
   id: string;
@@ -33,7 +33,12 @@ export interface DisciplinayRecord {
   fecha_ultima_actualizacion?: string;
 }
 
-export type ActiveTab = 'estado' | 'revisar_pdf' | 'cartas' | 'historial';
+export type ActiveTab =
+  | 'estado'
+  | 'editar_anotaciones'
+  | 'revisar_pdf'
+  | 'cartas'
+  | 'historial';
 
 export const SEVERITY_BADGE: Record<string, { bg: string; text: string; dot: string }> = {
   Leve: { bg: 'bg-yellow-50', text: 'text-yellow-800', dot: 'bg-yellow-500' },
@@ -59,6 +64,7 @@ export const STATUS_BADGE: Record<string, { bg: string; text: string }> = {
 
 export const TAB_ICONS: Record<ActiveTab, React.ReactNode> = {
   estado: <FileText className="h-4 w-4" />,
+  editar_anotaciones: <Pencil className="h-4 w-4" />,
   revisar_pdf: <RefreshCw className="h-4 w-4" />,
   cartas: <ScrollText className="h-4 w-4" />,
   historial: <History className="h-4 w-4" />,
@@ -66,6 +72,7 @@ export const TAB_ICONS: Record<ActiveTab, React.ReactNode> = {
 
 export const TAB_LABELS: Record<ActiveTab, string> = {
   estado: 'Estado',
+  editar_anotaciones: 'Editar anotaciones',
   revisar_pdf: 'Revisar PDF',
   cartas: 'Carta',
   historial: 'Historial',

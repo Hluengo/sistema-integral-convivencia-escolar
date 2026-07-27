@@ -10,6 +10,7 @@ import {
 } from '../../services/annotations.service';
 import AnotacionesStudentTable from './AnotacionesStudentTable';
 import { AnnotationsSkeleton } from '../../components/Skeleton';
+import type { ActiveTab } from './AnotacionesStudentDetailModal/constants';
 
 const AnotacionesStudentDetailModal = lazy(() => import('./AnotacionesStudentDetailModal'));
 const NewDisciplinaryProcessModal = lazy(() => import('./NewDisciplinaryProcessModal'));
@@ -23,6 +24,7 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [selectedStudent, setSelectedStudent] = useState<AnotacionStudent | null>(null);
+  const [detailInitialTab, setDetailInitialTab] = useState<ActiveTab>('estado');
   const [isNewProcessModalOpen, setIsNewProcessModalOpen] = useState<boolean>(false);
   const [activeFilter, setActiveFilter] = useState<string>('con_registro');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -180,7 +182,14 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
       <AnotacionesStudentTable
         students={students}
         privacyMode={privacyMode}
-        onSelectStudent={(s) => setSelectedStudent(s)}
+        onSelectStudent={(student) => {
+          setDetailInitialTab('estado');
+          setSelectedStudent(student);
+        }}
+        onEditAnnotations={(student) => {
+          setDetailInitialTab('editar_anotaciones');
+          setSelectedStudent(student);
+        }}
         activeFilter={activeFilter}
         setActiveFilter={setActiveFilter}
         searchQuery={searchQuery}
@@ -195,6 +204,7 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
           student={selectedStudent}
           annotations={annotations.filter((a) => a.student_id === selectedStudent.id)}
           privacyMode={privacyMode}
+          initialTab={detailInitialTab}
           onClose={() => setSelectedStudent(null)}
           onClearAnnotations={() => handleClearAnnotations(selectedStudent.id)}
           onDataChanged={refreshStudentTable}

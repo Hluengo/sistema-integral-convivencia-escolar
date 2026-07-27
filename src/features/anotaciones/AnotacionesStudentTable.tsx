@@ -3,7 +3,7 @@
  */
 
 import { memo } from 'react';
-import { Search } from 'lucide-react';
+import { Pencil, Search } from 'lucide-react';
 import { maskName, getSemaphoricStyle } from '../../lib/anotacionesUtils';
 import type { DisciplinaryStatus } from '../../types';
 
@@ -56,6 +56,7 @@ interface AnotacionesStudentTableProps {
   students: StudentRowData[];
   privacyMode: boolean;
   onSelectStudent: (student: StudentRowData) => void;
+  onEditAnnotations: (student: StudentRowData) => void;
   activeFilter: string;
   setActiveFilter: (filter: string) => void;
   searchQuery: string;
@@ -139,6 +140,7 @@ export default memo(function AnotacionesStudentTable({
   students,
   privacyMode,
   onSelectStudent,
+  onEditAnnotations,
   activeFilter,
   setActiveFilter,
   searchQuery,
@@ -254,7 +256,22 @@ export default memo(function AnotacionesStudentTable({
                       className={`cursor-pointer transition-colors ${style.rowBg}`}
                     >
                       <td className="whitespace-nowrap px-4 py-3 font-medium text-neutral-900 text-sm">
-                        {maskName(student.full_name, privacyMode)}
+                        <div className="flex items-center gap-2">
+                          <span>{maskName(student.full_name, privacyMode)}</span>
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              onEditAnnotations(student);
+                            }}
+                            onKeyDown={(event) => event.stopPropagation()}
+                            className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-brand-50 hover:text-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                            aria-label={`Editar anotaciones de ${student.full_name}`}
+                            title="Editar anotaciones"
+                          >
+                            <Pencil className="size-3.5" aria-hidden="true" />
+                          </button>
+                        </div>
                       </td>
                       <td className="hidden whitespace-nowrap px-4 py-3 text-neutral-600 text-sm md:table-cell">
                         {student.course_name || '—'}

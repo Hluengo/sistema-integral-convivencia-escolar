@@ -21,6 +21,14 @@ interface AnnotationCountStats {
   lastDate?: string;
 }
 
+export interface UpdateAnnotationInput {
+  id: string;
+  text: string;
+  date: string;
+  severity: Annotation['severity'];
+  type: Annotation['type'];
+}
+
 export async function fetchAnnotations(studentId?: string): Promise<Annotation[]> {
   let query = supabase
     .from('inspectorate_records')
@@ -101,6 +109,37 @@ export async function saveAnnotation(annotation: {
     return false;
   }
   return true;
+}
+
+export async function updateAnnotation(input: UpdateAnnotationInput): Promise<Annotation> {
+  const tenantId = useAuthStore.getState().tenantId;
+  if (!tenantId) {
+    throw new Error('No se pudo identificar el establecimiento de la sesión actual.');
+  }
+
+  const observation = input.text.trim();
+  if (!observation) {
+    throw new Error('La anotación no puede quedar vacía.');
+  }
+
+  const { data, error } = await supabase
+    .from('inspectorate_records')
+    .update({
+      observation,
+      date_time: input.date,
+      severity: input.severity,
+      type: input.type,
+    })
+    .eq('id', input.id)
+    .eq('tenant_id', tenantId)
+    .select(ANNOTATION_COLUMNS)
+    .single();
+
+  if (error) {
+    throw new Error(`No se pudo actualizar la anotación: ${error.message}`);
+  }
+
+  return mapInspectorateToAnnotation(data);
 }
 
 interface RpcStudentSummary {
