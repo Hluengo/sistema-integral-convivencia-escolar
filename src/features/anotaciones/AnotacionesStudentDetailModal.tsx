@@ -22,6 +22,7 @@ interface AnotacionesStudentDetailModalProps {
   privacyMode: boolean;
   onClose: () => void;
   onClearAnnotations: (studentId: string) => void;
+  onDataChanged?: () => void | Promise<void>;
   onTogglePrivacy?: () => void;
   teachers?: Record<string, string>;
 }
@@ -31,6 +32,7 @@ export default function AnotacionesStudentDetailModal({
   annotations,
   privacyMode,
   onClose,
+  onDataChanged,
   onTogglePrivacy,
   teachers,
 }: AnotacionesStudentDetailModalProps) {
@@ -109,7 +111,9 @@ export default function AnotacionesStudentDetailModal({
             student={student}
             counts={counts}
             currentCarta={disciplinaryData.currentCarta}
-            onConfirmed={disciplinaryData.refresh}
+            onConfirmed={async () => {
+              await Promise.all([disciplinaryData.refresh(), onDataChanged?.()]);
+            }}
             onGoToCarta={(docType, negativeCount) => {
               setPendingCartaSuggestion({ docType, negativeCount, source: 'pdf' });
               setActiveTab('cartas');

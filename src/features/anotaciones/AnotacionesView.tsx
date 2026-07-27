@@ -57,6 +57,22 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
     }
   }, []);
 
+  const refreshStudentTable = useCallback(async () => {
+    try {
+      const fetchedStudents = await fetchStudentsWithAnnotationCounts();
+      const nextStudents = fetchedStudents ?? [];
+      setStudents(nextStudents);
+      setSelectedStudent((current) =>
+        current ? nextStudents.find((student) => student.id === current.id) || current : null
+      );
+    } catch (error: unknown) {
+      console.error('Error actualizando la tabla de anotaciones:', error);
+      setDbError(
+        error instanceof Error ? error.message : 'Error al actualizar la tabla de anotaciones'
+      );
+    }
+  }, []);
+
   useEffect(() => {
     loadData();
   }, [loadData]);
@@ -181,6 +197,7 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
           privacyMode={privacyMode}
           onClose={() => setSelectedStudent(null)}
           onClearAnnotations={() => handleClearAnnotations(selectedStudent.id)}
+          onDataChanged={refreshStudentTable}
         />
       )}
 
