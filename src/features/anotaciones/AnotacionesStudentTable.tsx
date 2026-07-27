@@ -2,25 +2,25 @@
  * @license SPDX-License-Identifier: Apache-2.0
  */
 
-import { memo } from 'react';
-import { Pencil, Search } from 'lucide-react';
+import { memo, useRef, useState } from 'react';
+import { ChevronDown, Download, FileSpreadsheet, Pencil, Search } from 'lucide-react';
 import { maskName, getSemaphoricStyle } from '../../lib/anotacionesUtils';
 import type { DisciplinaryStatus } from '../../types';
+import {
+  ANNOTATION_EXPORT_OPTIONS,
+  downloadAnnotationsExcel,
+  getStudentsForAnnotationExport,
+  type AnnotationExportScope,
+  type AnnotationExportStudent,
+} from './annotationsExcelExport';
 
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-interface StudentRowData {
-  id: string;
-  full_name: string;
+interface StudentRowData extends AnnotationExportStudent {
   course_id: string;
   teacher_id: string;
   status: string;
-  annotations_count: number;
-  positive_annotations_count: number;
-  last_annotation_date?: string;
   disciplinary_status: DisciplinaryStatus;
-  rut?: string;
-  course_name?: string;
   ai_analysis?: { negativas: number; positivas: number; informativas: number };
 }
 
@@ -149,6 +149,38 @@ export default memo(function AnotacionesStudentTable({
   cartaStatuses = {},
 }: AnotacionesStudentTableProps) {
   const filteredStudents = filterStudents(students, activeFilter, searchQuery);
+  const exportMenuRef = useRef<HTMLDetailsElement>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  const handleExport = async (scope: AnnotationExportScope) => {
+    const selectedStudents = getStudentsForAnnotationExport(
+      students,
+      filteredStudents,
+      scope
+    );
+    if (selectedStudents.length === 0) {
+      setExportError('No hay estudiantes para exportar con ese criterio.');
+      return;
+    }
+
+    setIsExporting(true);
+    setExportError(null);
+    try {
+      await downloadAnnotationsExcel({
+        students: selectedStudents,
+        cartaStatuses,
+        privacyMode,
+        scope,
+      });
+      exportMenuRef.current?.removeAttribute('open');
+    } catch (error: unknown) {
+      console.error('Error exportando anotaciones a Excel:', error);
+      setExportError('No se pudo generar el archivo Excel. Inténtalo nuevamente.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -166,7 +198,49 @@ export default memo(function AnotacionesStudentTable({
             className="w-full rounded-xl border border-neutral-200/60 bg-neutral-100 py-2 pr-4 pl-10 font-medium text-neutral-800 text-sm transition-colors placeholder:text-neutral-400 hover:border-neutral-300 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
           />
         </div>
+        <details ref={exportMenuRef} className="group relative shrink-0">
+          <summary className="inline-flex w-full cursor-pointer list-none items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 font-semibold text-emerald-800 text-sm transition-colors hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 sm:w-auto">
+            <Download className="size-4" aria-hidden="true" />
+            {isExporting ? 'Generando Excel…' : 'Exportar Excel'}
+            <ChevronDown
+              className="size-4 transition-transform group-open:rotate-180"
+              aria-hidden="true"
+            />
+          </summary>
+          <div className="absolute right-0 z-30 mt-2 w-72 overflow-hidden rounded-xl border border-neutral-200 bg-white p-1.5 shadow-xl">
+            {ANNOTATION_EXPORT_OPTIONS.map((option) => {
+              const count = getStudentsForAnnotationExport(
+                students,
+                filteredStudents,
+                option.scope
+              ).length;
+              return (
+                <button
+                  key={option.scope}
+                  type="button"
+                  onClick={() => void handleExport(option.scope)}
+                  disabled={isExporting || count === 0}
+                  className="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-neutral-700 text-sm transition-colors hover:bg-emerald-50 hover:text-emerald-800 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <span className="flex items-center gap-2">
+                    <FileSpreadsheet className="size-4 shrink-0" aria-hidden="true" />
+                    {option.label}
+                  </span>
+                  <span className="rounded-full bg-neutral-100 px-2 py-0.5 font-semibold text-neutral-500 text-xs">
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </details>
       </div>
+
+      {exportError && (
+        <p className="text-red-600 text-sm" role="alert">
+          {exportError}
+        </p>
+      )}
 
       {/* Filter Tabs */}
       <div className="inline-flex flex-wrap gap-1 rounded-xl bg-neutral-100 p-1">

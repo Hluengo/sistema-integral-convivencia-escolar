@@ -30,6 +30,7 @@ export default defineConfig(() => {
         output: {
           manualChunks(id) {
             if (!id.includes('node_modules')) return;
+            if (id.includes('/write-excel-file/')) return 'excel';
             if (
               id.includes('/react/') ||
               id.includes('/react-dom/') ||
