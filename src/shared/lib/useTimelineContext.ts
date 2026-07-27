@@ -21,6 +21,8 @@ interface TimelineContextValue {
   regFileName: string;
   setRegFileName: React.Dispatch<React.SetStateAction<string>>;
   regFile: File | null;
+  isSavingRegistration: boolean;
+  registrationError: string | null;
   handleStartRegister: (item: ChecklistItem) => void;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSaveRegistration: (itemId: string) => Promise<void>;

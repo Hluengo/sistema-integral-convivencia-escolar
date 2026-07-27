@@ -7,6 +7,8 @@ import { supabase } from '../lib/supabase';
 
 const STORAGE_BUCKET = 'documentos_convivencia';
 const SIGNED_URL_TTL_SECONDS = 3600;
+const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
+const ALLOWED_DOCUMENT_EXTENSIONS = new Set(['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png']);
 
 function isMissingStorageObject(error: { message?: string } | null): boolean {
   return error?.message === 'Object not found';
@@ -38,7 +40,18 @@ export async function uploadDocument(
   causaId: string,
   file: File,
   prefix: string = 'documentos'
-): Promise<string | null> {
+): Promise<string> {
+  const extension = file.name.split('.').pop()?.toLowerCase() || '';
+  if (!ALLOWED_DOCUMENT_EXTENSIONS.has(extension)) {
+    throw new Error('Formato no permitido. Use PDF, DOC, DOCX, JPG o PNG.');
+  }
+  if (file.size === 0) {
+    throw new Error('El documento está vacío.');
+  }
+  if (file.size > MAX_DOCUMENT_BYTES) {
+    throw new Error('El documento supera el tamaño máximo de 10 MB.');
+  }
+
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, '_');
   const filePath = `${causaId}/${prefix}/${Date.now()}_${safeName}`;
   const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(filePath, file, {
@@ -47,7 +60,7 @@ export async function uploadDocument(
   });
   if (error) {
     console.error('Error uploading document:', error);
-    return null;
+    throw new Error('No fue posible subir el documento al almacenamiento privado.');
   }
   return filePath;
 }

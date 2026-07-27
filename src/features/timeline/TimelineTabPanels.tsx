@@ -47,7 +47,8 @@ export default function TimelineTabPanels({
           handleSaveRegistration={ctx.handleSaveRegistration}
           handleResetRegistration={ctx.handleResetRegistration}
           regFile={ctx.regFile}
-          isUploadingDocument={ctx.isUploadingDocument}
+          isSavingRegistration={ctx.isSavingRegistration}
+          registrationError={ctx.registrationError}
           documentError={ctx.documentError}
           handleAttachDocument={ctx.handleAttachDocument}
           handleRemoveDocument={ctx.handleRemoveDocument}
