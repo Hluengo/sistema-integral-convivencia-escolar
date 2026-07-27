@@ -66,8 +66,8 @@ function DashboardSkeleton() {
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[0, 1, 2, 3].map((item) => <div key={item} className="card h-28 animate-pulse bg-neutral-100" />)}
       </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {[0, 1, 2].map((item) => <div key={item} className="card h-28 animate-pulse bg-neutral-100" />)}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[0, 1, 2, 3].map((item) => <div key={item} className="card h-28 animate-pulse bg-neutral-100" />)}
       </div>
     </div>
   );
@@ -86,7 +86,12 @@ export default function DashboardStats({ causas, onFaseSelect }: DashboardStatsP
   }, [causas]);
 
   const [publicKpis, setPublicKpis] = useState<PublicDashboardKpis | null>(null);
-  const [anotacionesKpis, setAnotacionesKpis] = useState({ amonestacionCount: 0, compromisoCount: 0, derivacionCount: 0 });
+  const [anotacionesKpis, setAnotacionesKpis] = useState({
+    sinCartaCount: 0,
+    amonestacionCount: 0,
+    compromisoCount: 0,
+    derivacionCount: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [kpiError, setKpiError] = useState(false);
 
@@ -139,6 +144,7 @@ export default function DashboardStats({ causas, onFaseSelect }: DashboardStatsP
   const annotations = isAuthenticated
     ? anotacionesKpis
     : {
+        sinCartaCount: 0,
         amonestacionCount: publicKpis?.amonestacionCount ?? 0,
         compromisoCount: publicKpis?.compromisoCount ?? 0,
         derivacionCount: publicKpis?.derivacionCount ?? 0,
@@ -186,6 +192,7 @@ export default function DashboardStats({ causas, onFaseSelect }: DashboardStatsP
         </div>
       ) : (
         <AnotacionesDashboardStats
+          sinCartaCount={annotations.sinCartaCount}
           amonestacionCount={annotations.amonestacionCount}
           compromisoCount={annotations.compromisoCount}
           derivacionCount={annotations.derivacionCount}

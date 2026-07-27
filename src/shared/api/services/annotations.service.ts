@@ -4,6 +4,11 @@
  */
 
 import { supabase } from '../lib/supabase';
+import {
+  countAnnotationStages,
+  parseAnnotationStageRows,
+  type AnnotationStageCounts,
+} from '../../lib/domain/annotationStageCounts';
 import type { Annotation, AnotacionStudent, DocumentAnalysis } from '../../../types';
 import { mapInspectorateToAnnotation } from '../../../lib/mappers';
 import { calculateDisciplinaryStatus } from '../../../domain/disciplinaryStatus';
@@ -287,37 +292,22 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStud
 }
 
 /**
- * Lightweight RPC: only returns 3 counts for dashboard KPIs.
+ * Lightweight RPC: returns the annotation stage counts for dashboard KPIs.
  * Falls back to counting from fetchStudentsWithAnnotationCounts if RPC unavailable.
  */
-export async function fetchAnnotationStageCounts(): Promise<{
-  amonestacionCount: number;
-  compromisoCount: number;
-  derivacionCount: number;
-}> {
+export async function fetchAnnotationStageCounts(): Promise<AnnotationStageCounts> {
   const fallback = async () => {
     const students = await fetchStudentsWithAnnotationCounts();
-    return {
-      amonestacionCount: students.filter(
-        (s) => s.annotations_count >= 5 && s.annotations_count < 10
-      ).length,
-      compromisoCount: students.filter((s) => s.annotations_count >= 10 && s.annotations_count < 15)
-        .length,
-      derivacionCount: students.filter((s) => s.annotations_count >= 15).length,
-    };
+    return countAnnotationStages(students);
   };
 
   try {
     const { data, error } = await supabase.rpc('get_annotation_stage_counts');
     if (error || !data) return fallback();
 
-    const result = { amonestacionCount: 0, compromisoCount: 0, derivacionCount: 0 };
-    for (const row of data as Array<{ stage: string; count: number }>) {
-      if (row.stage === 'amonestacion') result.amonestacionCount = Number(row.count);
-      else if (row.stage === 'compromiso') result.compromisoCount = Number(row.count);
-      else if (row.stage === 'derivacion') result.derivacionCount = Number(row.count);
-    }
-    return result;
+    return parseAnnotationStageRows(
+      data as Array<{ stage: string; count: number | string }>,
+    );
   } catch {
     return fallback();
   }

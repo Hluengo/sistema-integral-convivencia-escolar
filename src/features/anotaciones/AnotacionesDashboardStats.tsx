@@ -1,13 +1,15 @@
-import { BarChart3, FileText, FileWarning, AlertTriangle } from 'lucide-react';
+import { AlertTriangle, BarChart3, FileQuestion, FileText, FileWarning } from 'lucide-react';
 import MetricCard from '../../components/MetricCard';
 
 interface AnotacionesDashboardStatsProps {
+  sinCartaCount: number;
   amonestacionCount: number;
   compromisoCount: number;
   derivacionCount: number;
 }
 
 export default function AnotacionesDashboardStats({
+  sinCartaCount,
   amonestacionCount,
   compromisoCount,
   derivacionCount,
@@ -22,8 +24,16 @@ export default function AnotacionesDashboardStats({
           Anotaciones
         </h3>
       </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          label="Sin Carta"
+          value={sinCartaCount}
+          sublabel="1-4 anotaciones negativas"
+          icon={FileQuestion}
+          iconBg="bg-slate-50"
+          iconColor="text-slate-600"
+          accentColor="#64748b"
+        />
         <MetricCard
           label="Carta de Amonestación"
           value={amonestacionCount}
@@ -55,5 +65,4 @@ export default function AnotacionesDashboardStats({
     </div>
   );
 }
-
 
