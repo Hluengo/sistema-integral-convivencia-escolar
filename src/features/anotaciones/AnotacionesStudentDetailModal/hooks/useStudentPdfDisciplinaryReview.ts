@@ -53,6 +53,11 @@ interface AnalysisResponse {
   file_hash: string;
 }
 
+interface ConfirmationResponse {
+  success: true;
+  insertedAnnotations: AnnotationSummary;
+}
+
 interface ReviewComparison {
   registeredNegativeCount: number;
   detectedNegativeCount: number;
@@ -73,7 +78,7 @@ function summaryFromAnnotations(annotations: ReviewAnnotation[]): AnnotationSumm
       if (annotation.type === 'information') acc.informativas += 1;
       return acc;
     },
-    { negativas: 0, positivas: 0, informativas: 0 }
+    { negativas: 0, positivas: 0, informativas: 0 },
   );
 }
 
@@ -126,7 +131,7 @@ export function useStudentPdfDisciplinaryReview({
     const detectedOtherStudent =
       analysis?.selected_student_id && analysis.selected_student_id !== studentId
         ? analysis.student_candidates.find(
-            (candidate) => candidate.id === analysis.selected_student_id
+            (candidate) => candidate.id === analysis.selected_student_id,
           )
         : null;
     const nameConflict =
@@ -232,18 +237,18 @@ export function useStudentPdfDisciplinaryReview({
         abortRef.current = null;
       }
     },
-    [cleanupDraft, studentId]
+    [cleanupDraft, studentId],
   );
 
   const handleAnnotationTypeChange = useCallback(
     (sequenceNumber: number, type: ReviewAnnotationType) => {
       const next = annotations.map((annotation) =>
-        annotation.sequence_number === sequenceNumber ? { ...annotation, type } : annotation
+        annotation.sequence_number === sequenceNumber ? { ...annotation, type } : annotation,
       );
       setAnnotations(next);
       setSummary(summaryFromAnnotations(next));
     },
-    [annotations]
+    [annotations],
   );
 
   const confirmReview = useCallback(async () => {
@@ -254,7 +259,7 @@ export function useStudentPdfDisciplinaryReview({
     }
     if (comparison?.conflictMessage) {
       setErrorMessage(
-        'El PDF detecta un estudiante distinto. Revisa el archivo antes de confirmar.'
+        'El PDF detecta un estudiante distinto. Revisa el archivo antes de confirmar.',
       );
       return false;
     }
@@ -295,8 +300,15 @@ export function useStudentPdfDisciplinaryReview({
         throw new Error(errorData?.error || `Error del servidor (${response.status})`);
       }
 
+      const confirmation = (await response.json()) as ConfirmationResponse;
+      const inserted = confirmation.insertedAnnotations;
+      const insertedTotal = inserted.negativas + inserted.positivas + inserted.informativas;
       setStatus('success');
-      setStatusMessage('Actualización confirmada.');
+      setStatusMessage(
+        insertedTotal === 0
+          ? 'Actualización confirmada. No se encontraron anotaciones nuevas para agregar.'
+          : `Actualización confirmada. Se agregaron ${insertedTotal} anotación${insertedTotal === 1 ? '' : 'es'} nueva${insertedTotal === 1 ? '' : 's'}.`,
+      );
       setUploadedFile(null);
       await onConfirmed?.();
       return true;
@@ -316,7 +328,7 @@ export function useStudentPdfDisciplinaryReview({
       const nextFile = event.dataTransfer.files[0];
       if (nextFile) await analyzeFile(nextFile);
     },
-    [analyzeFile]
+    [analyzeFile],
   );
 
   const handleFileSelect = useCallback(
@@ -325,7 +337,7 @@ export function useStudentPdfDisciplinaryReview({
       if (nextFile) await analyzeFile(nextFile);
       event.target.value = '';
     },
-    [analyzeFile]
+    [analyzeFile],
   );
 
   return {
