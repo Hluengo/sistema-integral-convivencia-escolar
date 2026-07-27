@@ -1,31 +1,24 @@
 // server/api/index.ts
-import compression from 'compression';
-import helmet from 'helmet';
-import cors from 'cors';
-import express from 'express';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import compression from "compression";
+import helmet from "helmet";
+import cors from "cors";
+import express from "express";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 // server/api/routes/improve.ts
-import { Router } from 'express';
+import { Router } from "express";
 
 // server/middleware/auth.ts
-import https2 from 'node:https';
+import https2 from "node:https";
 
 // server/lib/jwks.ts
-import https from 'node:https';
+import https from "node:https";
 var cacheByUrl = /* @__PURE__ */ new Map();
 var CACHE_TTL_MS = 3e5;
 var FETCH_TIMEOUT_MS = 5e3;
 var MAX_RESPONSE_BYTES = 102400;
-var ALLOWED_ASYMMETRIC_ALGS = /* @__PURE__ */ new Set([
-  'ES256',
-  'ES384',
-  'ES512',
-  'RS256',
-  'RS384',
-  'RS512',
-]);
+var ALLOWED_ASYMMETRIC_ALGS = /* @__PURE__ */ new Set(["ES256", "ES384", "ES512", "RS256", "RS384", "RS512"]);
 function getOrCreateCacheEntry(supabaseUrl) {
   let entry = cacheByUrl.get(supabaseUrl);
   if (!entry) {
@@ -35,62 +28,62 @@ function getOrCreateCacheEntry(supabaseUrl) {
   return entry;
 }
 function getJwksUrl(supabaseUrl) {
-  const base = supabaseUrl.replace(/\/+$/, '');
+  const base = supabaseUrl.replace(/\/+$/, "");
   return `${base}/auth/v1/.well-known/jwks.json`;
 }
 function isHttpsAndValidUrl(urlStr) {
   try {
     const url = new URL(urlStr);
-    return url.protocol === 'https:' ? url : null;
+    return url.protocol === "https:" ? url : null;
   } catch {
     return null;
   }
 }
 function fetchJwksFromServer(supabaseUrl) {
   const url = isHttpsAndValidUrl(getJwksUrl(supabaseUrl));
-  if (!url) return Promise.reject(new Error('Invalid or non-HTTPS JWKS URL'));
+  if (!url) return Promise.reject(new Error("Invalid or non-HTTPS JWKS URL"));
   return new Promise((resolve, reject) => {
     const req = https.request(
       {
         hostname: url.hostname,
         path: url.pathname,
-        method: 'GET',
-        headers: { Accept: 'application/json' },
-        timeout: FETCH_TIMEOUT_MS,
+        method: "GET",
+        headers: { Accept: "application/json" },
+        timeout: FETCH_TIMEOUT_MS
       },
       (res) => {
-        let data = '';
+        let data = "";
         let size = 0;
-        res.on('data', (chunk) => {
+        res.on("data", (chunk) => {
           size += chunk.length;
           if (size > MAX_RESPONSE_BYTES) {
             req.destroy();
-            reject(new Error('JWKS response too large'));
+            reject(new Error("JWKS response too large"));
             return;
           }
           data += chunk.toString();
         });
-        res.on('end', () => {
+        res.on("end", () => {
           if (res.statusCode !== 200) {
             return reject(new Error(`JWKS fetch returned ${res.statusCode}`));
           }
           try {
             const parsed = JSON.parse(data);
-            const keys = (parsed.keys ?? []).filter((k) => k.use === 'sig');
+            const keys = (parsed.keys ?? []).filter((k) => k.use === "sig");
             if (keys.length === 0) {
-              return reject(new Error('No signing keys found in JWKS endpoint'));
+              return reject(new Error("No signing keys found in JWKS endpoint"));
             }
             resolve(keys);
           } catch {
-            reject(new Error('Invalid JWKS response'));
+            reject(new Error("Invalid JWKS response"));
           }
         });
-      },
+      }
     );
-    req.on('error', reject);
-    req.on('timeout', () => {
+    req.on("error", reject);
+    req.on("timeout", () => {
       req.destroy();
-      reject(new Error('JWKS fetch timeout'));
+      reject(new Error("JWKS fetch timeout"));
     });
     req.end();
   });
@@ -104,20 +97,18 @@ async function getJwksKeys(supabaseUrl) {
   if (entry.fetchPromise) {
     return entry.fetchPromise;
   }
-  entry.fetchPromise = fetchJwksFromServer(supabaseUrl)
-    .then((keys) => {
-      entry.keys = keys;
-      entry.timestamp = Date.now();
-      entry.fetchPromise = null;
-      return keys;
-    })
-    .catch((err) => {
-      entry.fetchPromise = null;
-      if (entry.keys.length > 0) {
-        return entry.keys;
-      }
-      throw err;
-    });
+  entry.fetchPromise = fetchJwksFromServer(supabaseUrl).then((keys) => {
+    entry.keys = keys;
+    entry.timestamp = Date.now();
+    entry.fetchPromise = null;
+    return keys;
+  }).catch((err) => {
+    entry.fetchPromise = null;
+    if (entry.keys.length > 0) {
+      return entry.keys;
+    }
+    throw err;
+  });
   return entry.fetchPromise;
 }
 async function refreshJwksOnce(supabaseUrl) {
@@ -127,16 +118,16 @@ async function refreshJwksOnce(supabaseUrl) {
   return getJwksKeys(supabaseUrl);
 }
 function base64urlToBuffer(b64) {
-  const base64 = b64.replace(/-/g, '+').replace(/_/g, '/');
-  const pad = 4 - (b64.length % 4);
-  const padded = pad < 4 ? base64 + '='.repeat(pad) : base64;
-  const buf = Buffer.from(padded, 'base64');
+  const base64 = b64.replace(/-/g, "+").replace(/_/g, "/");
+  const pad = 4 - b64.length % 4;
+  const padded = pad < 4 ? base64 + "=".repeat(pad) : base64;
+  const buf = Buffer.from(padded, "base64");
   const ab = new ArrayBuffer(buf.length);
   new Uint8Array(ab).set(buf);
   return ab;
 }
 async function verifyJwtWithJwks(token, supabaseUrl) {
-  const parts = token.split('.');
+  const parts = token.split(".");
   if (parts.length !== 3) return null;
   let header;
   try {
@@ -144,9 +135,9 @@ async function verifyJwtWithJwks(token, supabaseUrl) {
   } catch {
     return null;
   }
-  const alg = header.alg ?? '';
+  const alg = header.alg ?? "";
   const kid = header.kid;
-  if (alg === 'none') return null;
+  if (alg === "none") return null;
   if (!ALLOWED_ASYMMETRIC_ALGS.has(alg)) return null;
   if (!kid) return null;
   let keys;
@@ -177,40 +168,40 @@ async function verifyJwtWithJwks(token, supabaseUrl) {
   try {
     let cryptoKey;
     let valid;
-    if (key.kty === 'EC') {
-      const namedCurve = key.crv === 'P-256' ? 'P-256' : key.crv === 'P-384' ? 'P-384' : key.crv;
+    if (key.kty === "EC") {
+      const namedCurve = key.crv === "P-256" ? "P-256" : key.crv === "P-384" ? "P-384" : key.crv;
       if (!namedCurve) return null;
-      const jwk = { kty: 'EC', crv: namedCurve, x: key.x, y: key.y, ext: true };
-      cryptoKey = await crypto.subtle.importKey('jwk', jwk, { name: 'ECDSA', namedCurve }, false, [
-        'verify',
+      const jwk = { kty: "EC", crv: namedCurve, x: key.x, y: key.y, ext: true };
+      cryptoKey = await crypto.subtle.importKey("jwk", jwk, { name: "ECDSA", namedCurve }, false, [
+        "verify"
       ]);
       valid = await crypto.subtle.verify(
-        { name: 'ECDSA', hash: 'SHA-256' },
+        { name: "ECDSA", hash: "SHA-256" },
         cryptoKey,
         signature,
-        data,
+        data
       );
-    } else if (key.kty === 'RSA') {
-      const jwk = { kty: 'RSA', n: key.n, e: key.e, alg: key.alg, ext: true };
+    } else if (key.kty === "RSA") {
+      const jwk = { kty: "RSA", n: key.n, e: key.e, alg: key.alg, ext: true };
       cryptoKey = await crypto.subtle.importKey(
-        'jwk',
+        "jwk",
         jwk,
-        { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+        { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
         false,
-        ['verify'],
+        ["verify"]
       );
-      valid = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', cryptoKey, signature, data);
+      valid = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", cryptoKey, signature, data);
     } else {
       return null;
     }
     if (!valid) return null;
-    if (payload.exp && typeof payload.exp === 'number' && payload.exp * 1e3 < Date.now())
+    if (payload.exp && typeof payload.exp === "number" && payload.exp * 1e3 < Date.now())
       return null;
-    if (payload.nbf && typeof payload.nbf === 'number' && payload.nbf * 1e3 > Date.now())
+    if (payload.nbf && typeof payload.nbf === "number" && payload.nbf * 1e3 > Date.now())
       return null;
-    if (!payload.sub || typeof payload.sub !== 'string' || payload.sub.length === 0) return null;
-    if (payload.iss && typeof payload.iss === 'string') {
-      const expectedIss = `${supabaseUrl.replace(/\/+$/, '')}/auth/v1`;
+    if (!payload.sub || typeof payload.sub !== "string" || payload.sub.length === 0) return null;
+    if (payload.iss && typeof payload.iss === "string") {
+      const expectedIss = `${supabaseUrl.replace(/\/+$/, "")}/auth/v1`;
       if (payload.iss !== expectedIss) return null;
     }
     return payload;
@@ -222,15 +213,15 @@ async function verifyJwtWithJwks(token, supabaseUrl) {
 // server/middleware/auth.ts
 var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 var VALID_ROLES = [
-  'admin',
-  'direccion',
-  'convivencia',
-  'inspectoria',
-  'profesor_jefe',
-  'teacher',
-  'inspector',
-  'user',
-  'staff',
+  "admin",
+  "direccion",
+  "convivencia",
+  "inspectoria",
+  "profesor_jefe",
+  "teacher",
+  "inspector",
+  "user",
+  "staff"
 ];
 function isValidUuid(value) {
   return UUID_RE.test(value);
@@ -239,31 +230,32 @@ function isValidRole(value) {
   return VALID_ROLES.includes(value);
 }
 async function verifyJwtViaHmac(token, secret) {
-  const parts = token.split('.');
+  const parts = token.split(".");
   if (parts.length !== 3) return null;
   let payload;
   try {
-    payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+    payload = JSON.parse(Buffer.from(parts[1], "base64url").toString());
   } catch {
     return null;
   }
-  const signature = Buffer.from(parts[2], 'base64url');
-  for (const secretBytes of [new TextEncoder().encode(secret), Buffer.from(secret, 'base64')]) {
+  const signature = Buffer.from(parts[2], "base64url");
+  for (const secretBytes of [new TextEncoder().encode(secret), Buffer.from(secret, "base64")]) {
     try {
       const key = await crypto.subtle.importKey(
-        'raw',
+        "raw",
         secretBytes,
-        { name: 'HMAC', hash: 'SHA-256' },
+        { name: "HMAC", hash: "SHA-256" },
         false,
-        ['verify'],
+        ["verify"]
       );
       const data = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
-      const valid = await crypto.subtle.verify('HMAC', key, signature, data);
+      const valid = await crypto.subtle.verify("HMAC", key, signature, data);
       if (valid) {
         if (payload.exp && payload.exp * 1e3 < Date.now()) return null;
         return payload;
       }
-    } catch {}
+    } catch {
+    }
   }
   return null;
 }
@@ -278,16 +270,16 @@ function verifyViaSupabaseApi(token) {
     const req = https2.request(
       {
         hostname,
-        path: '/auth/v1/user',
-        method: 'GET',
-        headers: { Authorization: `Bearer ${token}`, apikey: anonKey },
+        path: "/auth/v1/user",
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}`, apikey: anonKey }
       },
       (res) => {
-        let data = '';
-        res.on('data', (chunk) => {
+        let data = "";
+        res.on("data", (chunk) => {
           data += chunk;
         });
-        res.on('end', () => {
+        res.on("end", () => {
           if (res.statusCode !== 200) return resolve(null);
           try {
             const user = JSON.parse(data);
@@ -296,9 +288,9 @@ function verifyViaSupabaseApi(token) {
             resolve(null);
           }
         });
-      },
+      }
     );
-    req.on('error', () => resolve(null));
+    req.on("error", () => resolve(null));
     req.setTimeout(5e3, () => {
       req.destroy();
       resolve(null);
@@ -307,17 +299,17 @@ function verifyViaSupabaseApi(token) {
   });
 }
 async function verifyJwtSignature(token, secret) {
-  const parts = token.split('.');
+  const parts = token.split(".");
   if (parts.length !== 3) return null;
   let header;
   try {
-    header = JSON.parse(Buffer.from(parts[0], 'base64url').toString());
+    header = JSON.parse(Buffer.from(parts[0], "base64url").toString());
   } catch {
     return null;
   }
-  const alg = header.alg ?? '';
+  const alg = header.alg ?? "";
   const kid = header.kid;
-  if (alg === 'none') return null;
+  if (alg === "none") return null;
   const isAsymmetric = /^(ES|RS)/.test(alg);
   if (isAsymmetric) {
     if (!kid) return null;
@@ -341,15 +333,15 @@ var defaultProfileFetcher = async ({ supabaseUrl, anonKey, token, userId }, http
       {
         hostname,
         path: `/rest/v1/profiles?user_id=eq.${encodeURIComponent(userId)}&select=tenant_id,role&limit=1`,
-        method: 'GET',
-        headers: { apikey: anonKey, Authorization: `Bearer ${token}` },
+        method: "GET",
+        headers: { apikey: anonKey, Authorization: `Bearer ${token}` }
       },
       (res2) => {
-        let chunks = '';
-        res2.on('data', (c) => {
+        let chunks = "";
+        res2.on("data", (c) => {
           chunks += c;
         });
-        res2.on('end', () => {
+        res2.on("end", () => {
           if (res2.statusCode !== 200) return resolve(null);
           try {
             resolve(JSON.parse(chunks));
@@ -357,9 +349,9 @@ var defaultProfileFetcher = async ({ supabaseUrl, anonKey, token, userId }, http
             resolve(null);
           }
         });
-      },
+      }
     );
-    r.on('error', () => resolve(null));
+    r.on("error", () => resolve(null));
     r.setTimeout(3e3, () => {
       r.destroy();
       resolve(null);
@@ -378,15 +370,15 @@ var defaultProfileFetcher = async ({ supabaseUrl, anonKey, token, userId }, http
   }
   return {
     tenantId: profile.tenant_id,
-    profileRole: profile.role,
+    profileRole: profile.role
   };
 };
 async function injectTenantContext(req, token, profileFetcher = defaultProfileFetcher) {
   const user = req.user;
   if (!user?.sub) return false;
   const appMetadata = user.app_metadata;
-  const jwtTenantId = typeof appMetadata?.tenant_id === 'string' ? appMetadata.tenant_id : void 0;
-  const jwtRole = typeof appMetadata?.role === 'string' ? appMetadata.role : void 0;
+  const jwtTenantId = typeof appMetadata?.tenant_id === "string" ? appMetadata.tenant_id : void 0;
+  const jwtRole = typeof appMetadata?.role === "string" ? appMetadata.role : void 0;
   if (jwtTenantId && isValidUuid(jwtTenantId) && jwtRole && isValidRole(jwtRole)) {
     req.tenantId = jwtTenantId;
     req.profileRole = jwtRole;
@@ -410,8 +402,8 @@ async function injectTenantContext(req, token, profileFetcher = defaultProfileFe
     return true;
   } catch (err) {
     console.error(
-      '[tenant] Failed to inject tenant context:',
-      err instanceof Error ? err.message : err,
+      "[tenant] Failed to inject tenant context:",
+      err instanceof Error ? err.message : err
     );
     return false;
   }
@@ -419,19 +411,19 @@ async function injectTenantContext(req, token, profileFetcher = defaultProfileFe
 function createRequireAuth(profileFetcher) {
   return async function requireAuth2(req, res, next) {
     const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith('Bearer ')) {
-      res.status(401).json({ error: 'Autenticaci\xF3n requerida.' });
+    if (!authHeader?.startsWith("Bearer ")) {
+      res.status(401).json({ error: "Autenticaci\xF3n requerida." });
       return;
     }
-    const token = authHeader.replace('Bearer ', '');
+    const token = authHeader.replace("Bearer ", "");
     if (token.length < 10) {
-      res.status(401).json({ error: 'Token inv\xE1lido.' });
+      res.status(401).json({ error: "Token inv\xE1lido." });
       return;
     }
     try {
-      const payload = await verifyJwtSignature(token, process.env.SUPABASE_JWT_SECRET ?? '');
+      const payload = await verifyJwtSignature(token, process.env.SUPABASE_JWT_SECRET ?? "");
       if (!payload) {
-        res.status(401).json({ error: 'Token JWT inv\xE1lido o expirado.' });
+        res.status(401).json({ error: "Token JWT inv\xE1lido o expirado." });
         return;
       }
       const authReq = req;
@@ -440,14 +432,13 @@ function createRequireAuth(profileFetcher) {
       const tenantOk = await injectTenantContext(authReq, token, profileFetcher);
       if (!tenantOk) {
         res.status(403).json({
-          error:
-            'No fue posible determinar el establecimiento autenticado. Verifique que su perfil est\xE9 activo.',
+          error: "No fue posible determinar el establecimiento autenticado. Verifique que su perfil est\xE9 activo."
         });
         return;
       }
       next();
     } catch {
-      res.status(401).json({ error: 'Token JWT inv\xE1lido.' });
+      res.status(401).json({ error: "Token JWT inv\xE1lido." });
     }
   };
 }
@@ -455,15 +446,12 @@ var requireAuth = createRequireAuth();
 
 // server/api/validators/sanitizers.ts
 var MAX_STR = 1e4;
-var CONTROL_CHARS = new RegExp(
-  `[${String.fromCharCode(0)}-${String.fromCharCode(31)}${String.fromCharCode(127)}-${String.fromCharCode(159)}]`,
-  'g',
-);
+var CONTROL_CHARS = new RegExp(`[${String.fromCharCode(0)}-${String.fromCharCode(31)}${String.fromCharCode(127)}-${String.fromCharCode(159)}]`, "g");
 var sanitize = (s) => {
-  if (typeof s !== 'string') {
-    return '';
+  if (typeof s !== "string") {
+    return "";
   }
-  return s.slice(0, MAX_STR).replace(CONTROL_CHARS, '');
+  return s.slice(0, MAX_STR).replace(CONTROL_CHARS, "");
 };
 var requireStr = (obj, key, max = 200) => {
   const v = sanitize(obj[key]);
@@ -473,25 +461,18 @@ var requireStr = (obj, key, max = 200) => {
   return v.slice(0, max);
 };
 var optStr = (obj, key, max = MAX_STR) => sanitize(obj[key]).slice(0, max);
-var optArr = (obj, key) => (Array.isArray(obj[key]) ? obj[key] : []);
+var optArr = (obj, key) => Array.isArray(obj[key]) ? obj[key] : [];
 function sanitizeForAI(text) {
-  if (!text || typeof text !== 'string') {
-    return '';
+  if (!text || typeof text !== "string") {
+    return "";
   }
-  return text
-    .replace(/\[INST\]|\[\/INST\]|<<SYS>>|<<\/SYS>>/gi, '')
-    .replace(/<\|im_start\|>|<\|im_end\|>/gi, '')
-    .replace(/<\|system\|>|<\|user\|>|<\|assistant\|>/gi, '')
-    .replace(
-      /^(ignore|olvida|disregard|anula).{0,50}(instrucciones|instructions|reglas|rules|sistema|system)/gim,
-      '',
-    )
-    .replace(
-      /(eres|you are|act as|actúa como|actuá como).{0,30}(un|a|el|la|un(a)?\s+abogado|lawyer|juez|judge)/gim,
-      '',
-    )
-    .replace(/\n{3,}/g, '\n\n')
-    .slice(0, MAX_STR);
+  return text.replace(/\[INST\]|\[\/INST\]|<<SYS>>|<<\/SYS>>/gi, "").replace(/<\|im_start\|>|<\|im_end\|>/gi, "").replace(/<\|system\|>|<\|user\|>|<\|assistant\|>/gi, "").replace(
+    /^(ignore|olvida|disregard|anula).{0,50}(instrucciones|instructions|reglas|rules|sistema|system)/gim,
+    ""
+  ).replace(
+    /(eres|you are|act as|actúa como|actuá como).{0,30}(un|a|el|la|un(a)?\s+abogado|lawyer|juez|judge)/gim,
+    ""
+  ).replace(/\n{3,}/g, "\n\n").slice(0, MAX_STR);
 }
 
 // server/api/services/rateLimit.ts
@@ -513,9 +494,9 @@ function getRedisClient() {
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
   if (!url || !token) {
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === "production") {
       console.warn(
-        '[rate-limit] UPSTASH_REDIS_REST_URL no configurado. Rate limit en memoria (in\xFAtil en serverless).',
+        "[rate-limit] UPSTASH_REDIS_REST_URL no configurado. Rate limit en memoria (in\xFAtil en serverless)."
       );
     }
     return null;
@@ -523,16 +504,16 @@ function getRedisClient() {
   redisClient = {
     async incr(key) {
       const res = await fetch(`${url}/incr/${encodeURIComponent(key)}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
       return data.result ?? 0;
     },
     async pexpire(key, ms) {
       await fetch(`${url}/pexpire/${encodeURIComponent(key)}/${ms}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` }
       });
-    },
+    }
   };
   return redisClient;
 }
@@ -575,14 +556,14 @@ function checkRateLimit(ip) {
 }
 
 // server/api/services/cache.ts
-import crypto2 from 'node:crypto';
+import crypto2 from "node:crypto";
 var CACHE_TTL = 5 * 60 * 1e3;
 var cache = /* @__PURE__ */ new Map();
 function getCacheKey(endpoint, body) {
-  const hash = crypto2.createHash('sha256');
+  const hash = crypto2.createHash("sha256");
   hash.update(endpoint);
   hash.update(JSON.stringify(body));
-  return hash.digest('hex');
+  return hash.digest("hex");
 }
 function getFromCache(key) {
   const entry = cache.get(key);
@@ -602,20 +583,20 @@ function setCache(key, value) {
 }
 
 // server/api/lib/https.ts
-import https3 from 'node:https';
+import https3 from "node:https";
 function httpsPost(hostname, pathname, body, headers) {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify(body);
     const opts = {
       hostname,
       path: pathname,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...headers },
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...headers }
     };
     const req = https3.request(opts, (res) => {
-      let chunks = '';
-      res.on('data', (chunk) => (chunks += chunk));
-      res.on('end', () => {
+      let chunks = "";
+      res.on("data", (chunk) => chunks += chunk);
+      res.on("end", () => {
         try {
           resolve({ status: res.statusCode ?? 500, body: JSON.parse(chunks) });
         } catch {
@@ -623,7 +604,7 @@ function httpsPost(hostname, pathname, body, headers) {
         }
       });
     });
-    req.on('error', reject);
+    req.on("error", reject);
     req.write(data);
     req.end();
   });
@@ -633,13 +614,13 @@ function httpsGet(hostname, pathname, headers) {
     const opts = {
       hostname,
       path: pathname,
-      method: 'GET',
-      headers: headers || {},
+      method: "GET",
+      headers: headers || {}
     };
     const req = https3.request(opts, (res) => {
-      let chunks = '';
-      res.on('data', (chunk) => (chunks += chunk));
-      res.on('end', () => {
+      let chunks = "";
+      res.on("data", (chunk) => chunks += chunk);
+      res.on("end", () => {
         try {
           resolve(JSON.parse(chunks));
         } catch {
@@ -647,7 +628,7 @@ function httpsGet(hostname, pathname, headers) {
         }
       });
     });
-    req.on('error', reject);
+    req.on("error", reject);
     req.end();
   });
 }
@@ -657,13 +638,13 @@ function httpsPatch(hostname, pathname, body, headers) {
     const opts = {
       hostname,
       path: pathname,
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', ...headers },
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...headers }
     };
     const req = https3.request(opts, (res) => {
-      let chunks = '';
-      res.on('data', (chunk) => (chunks += chunk));
-      res.on('end', () => {
+      let chunks = "";
+      res.on("data", (chunk) => chunks += chunk);
+      res.on("end", () => {
         try {
           resolve({ status: res.statusCode ?? 500, body: JSON.parse(chunks) });
         } catch {
@@ -671,18 +652,18 @@ function httpsPatch(hostname, pathname, body, headers) {
         }
       });
     });
-    req.on('error', reject);
+    req.on("error", reject);
     req.write(data);
     req.end();
   });
 }
 
 // server/api/services/groq.ts
-var AI_MODEL = 'meta-llama/llama-3.1-8b-instruct';
+var AI_MODEL = "meta-llama/llama-3.1-8b-instruct";
 function getApiKey() {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) {
-    throw new Error('OPENROUTER_API_KEY no configurada');
+    throw new Error("OPENROUTER_API_KEY no configurada");
   }
   return key;
 }
@@ -692,16 +673,16 @@ async function callGroq(messages, systemInstruction) {
     model: AI_MODEL,
     max_tokens: 2e3,
     temperature: 0,
-    messages: [],
+    messages: []
   };
   if (systemInstruction) {
-    body.messages.push({ role: 'system', content: systemInstruction });
+    body.messages.push({ role: "system", content: systemInstruction });
   }
   body.messages.push(...messages);
-  const res = await httpsPost('openrouter.ai', '/api/v1/chat/completions', body, {
+  const res = await httpsPost("openrouter.ai", "/api/v1/chat/completions", body, {
     Authorization: `Bearer ${apiKey}`,
-    'HTTP-Referer': 'http://localhost:3001',
-    'X-Title': 'Sistema Integral Convivencia Escolar',
+    "HTTP-Referer": "http://localhost:3001",
+    "X-Title": "Sistema Integral Convivencia Escolar"
   });
   if (res.status !== 200) {
     throw new Error(`OpenRouter error: ${res.status} ${JSON.stringify(res.body)}`);
@@ -709,74 +690,68 @@ async function callGroq(messages, systemInstruction) {
   const resBody = res.body;
   const choices = resBody?.choices;
   const content = choices?.[0]?.message?.content;
-  return content || '';
+  return content || "";
 }
 
 // server/api/routes/improve.ts
 var router = Router();
-router.post('/improve-text', requireAuth, async (req, res) => {
+router.post("/improve-text", requireAuth, async (req, res) => {
   try {
     const { text } = req.body;
-    if (!text || typeof text !== 'string' || text.trim().length === 0) {
-      res.status(400).json({ error: 'Campo requerido: text' });
+    if (!text || typeof text !== "string" || text.trim().length === 0) {
+      res.status(400).json({ error: "Campo requerido: text" });
       return;
     }
     if (text.length > 5e3) {
-      res.status(400).json({ error: 'El texto no puede exceder 5000 caracteres.' });
+      res.status(400).json({ error: "El texto no puede exceder 5000 caracteres." });
       return;
     }
-    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-    if (!(await checkRateLimitAsync(ip))) {
-      res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
+    const ip = req.ip || req.connection?.remoteAddress || "unknown";
+    if (!await checkRateLimitAsync(ip)) {
+      res.status(429).json({ error: "L\xEDmite de solicitudes alcanzado. Intente en un minuto." });
       return;
     }
-    const cacheKey = getCacheKey('improve-text', { text });
+    const cacheKey = getCacheKey("improve-text", { text });
     const cached = getFromCache(cacheKey);
     if (cached) {
       res.json({ success: true, improved: cached, cached: true });
       return;
     }
-    const systemMsg =
-      'Eres un asistente de redacci\xF3n especializado en redacci\xF3n institucional educativa chilena. Tu \xFAnica funci\xF3n es mejorar la ortograf\xEDa, gram\xE1tica, coherencia y redacci\xF3n del texto que el usuario te entrega. Usa siempre un tono neutro, objetivo y sin juicios de valor. No agregues explicaciones, comentarios ni evaluaciones. No respondas preguntas ni interpretes el contenido. Devuelve \xDANICAMENTE el texto corregido, sin ning\xFAn formato adicional ni prefacio.';
+    const systemMsg = "Eres un asistente de redacci\xF3n especializado en redacci\xF3n institucional educativa chilena. Tu \xFAnica funci\xF3n es mejorar la ortograf\xEDa, gram\xE1tica, coherencia y redacci\xF3n del texto que el usuario te entrega. Usa siempre un tono neutro, objetivo y sin juicios de valor. No agregues explicaciones, comentarios ni evaluaciones. No respondas preguntas ni interpretes el contenido. Devuelve \xDANICAMENTE el texto corregido, sin ning\xFAn formato adicional ni prefacio.";
     const userContent = sanitizeForAI(text);
     const improved = await callGroq(
-      [
-        {
-          role: 'user',
-          content: `Texto a corregir:
+      [{ role: "user", content: `Texto a corregir:
 
-${userContent}`,
-        },
-      ],
-      systemMsg,
+${userContent}` }],
+      systemMsg
     );
     setCache(cacheKey, improved);
     res.json({ success: true, improved });
   } catch (error) {
-    console.error('Error al mejorar texto:', error);
-    res.status(500).json({ error: 'Error interno del servidor al mejorar texto.' });
+    console.error("Error al mejorar texto:", error);
+    res.status(500).json({ error: "Error interno del servidor al mejorar texto." });
   }
 });
 var improve_default = router;
 
 // server/api/routes/advisor.ts
-import { Router as Router2 } from 'express';
+import { Router as Router2 } from "express";
 var router2 = Router2();
-router2.post('/advisor-chat', requireAuth, async (req, res) => {
+router2.post("/advisor-chat", requireAuth, async (req, res) => {
   try {
     const { message, history } = req.body;
-    if (!message || typeof message !== 'string' || !message.trim()) {
-      res.status(400).json({ error: 'Campo requerido: message' });
+    if (!message || typeof message !== "string" || !message.trim()) {
+      res.status(400).json({ error: "Campo requerido: message" });
       return;
     }
     const MAX_ADVISOR_MESSAGE_LENGTH = 8e3;
     if (message.length > MAX_ADVISOR_MESSAGE_LENGTH) {
-      res.status(400).json({ error: 'El mensaje supera el m\xE1ximo permitido.' });
+      res.status(400).json({ error: "El mensaje supera el m\xE1ximo permitido." });
       return;
     }
-    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-    if (!(await checkRateLimitAsync(ip))) {
-      res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
+    const ip = req.ip || req.connection?.remoteAddress || "unknown";
+    if (!await checkRateLimitAsync(ip)) {
+      res.status(429).json({ error: "L\xEDmite de solicitudes alcanzado. Intente en un minuto." });
       return;
     }
     const systemInstruction = `Act\xFAas como un Abogado Senior y Experto Legal de la Superintendencia de Educaci\xF3n de Chile, experto en fiscalizaciones aplicadas a establecimientos escolares chilenos. Tu dominio de especialidad abarca:
@@ -785,11 +760,11 @@ router2.post('/advisor-chat', requireAuth, async (req, res) => {
 - Reglamento Interno de Convivencia Escolar (RICE / RIE) y las formalidades indispensables de proporcionalidad, gradualidad y acompa\xF1amiento formativo.
 
 Tus respuestas deben estar redactadas en espa\xF1ol formal de Chile, alineadas con el rigor burocr\xE1tico y legal que evitar\xE1 cargos, multas pecuniarias o recursos judiciales contra el colegio. Cita art\xEDculos cuando corresponda y explica paso a paso c\xF3mo resguardar el "Debido Proceso Escolar" y la integridad mediante medidas de resguardo. Proporciona respuestas muy estructuradas, did\xE1cticas y extremadamente precisas.`;
-    const userId = req.user?.sub || 'anonymous';
-    const cacheKey = getCacheKey('advisor-chat', {
+    const userId = req.user?.sub || "anonymous";
+    const cacheKey = getCacheKey("advisor-chat", {
       userId,
       message,
-      historyCount: history?.length || 0,
+      historyCount: history?.length || 0
     });
     const cached = getFromCache(cacheKey);
     if (cached) {
@@ -800,36 +775,36 @@ Tus respuestas deben estar redactadas en espa\xF1ol formal de Chile, alineadas c
     if (history && Array.isArray(history)) {
       history.forEach((h) => {
         messages.push({
-          role: h.role === 'user' ? 'user' : 'assistant',
-          content: sanitizeForAI(h.content),
+          role: h.role === "user" ? "user" : "assistant",
+          content: sanitizeForAI(h.content)
         });
       });
     }
-    messages.push({ role: 'user', content: sanitizeForAI(message) });
+    messages.push({ role: "user", content: sanitizeForAI(message) });
     const reply = await callGroq(messages, systemInstruction);
     setCache(cacheKey, reply);
     res.json({ success: true, reply });
   } catch (error) {
-    console.error('Error en el Chat de Consultor\xEDa:', error.message || error);
-    res.status(500).json({ error: 'Error interno del servidor.' });
+    console.error("Error en el Chat de Consultor\xEDa:", error.message || error);
+    res.status(500).json({ error: "Error interno del servidor." });
   }
 });
 var advisor_default = router2;
 
 // server/api/routes/audit.ts
-import { Router as Router3 } from 'express';
+import { Router as Router3 } from "express";
 var router3 = Router3();
-router3.post('/audit-due-process', requireAuth, async (req, res) => {
+router3.post("/audit-due-process", requireAuth, async (req, res) => {
   try {
     const body = req.body;
-    const id = requireStr(body, 'id', 50);
-    const infractionType = requireStr(body, 'infractionType', 50);
+    const id = requireStr(body, "id", 50);
+    const infractionType = requireStr(body, "infractionType", 50);
     const isAulaSegura = Boolean(body.isAulaSegura);
-    const checkedItems = optArr(body, 'checkedItems');
-    const observations = optStr(body, 'observations', 5e3);
-    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-    if (!(await checkRateLimitAsync(ip))) {
-      res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
+    const checkedItems = optArr(body, "checkedItems");
+    const observations = optStr(body, "observations", 5e3);
+    const ip = req.ip || req.connection?.remoteAddress || "unknown";
+    if (!await checkRateLimitAsync(ip)) {
+      res.status(429).json({ error: "L\xEDmite de solicitudes alcanzado. Intente en un minuto." });
       return;
     }
     const systemPrompt = `Eres un Abogado Experto Legal en Educaci\xF3n Chilena y Fiscalizador de la Superintendencia de Educaci\xF3n, especializado en la Circular N\xB0 482 y Ley N\xB0 21809 de la Superintendencia de Educaci\xF3n (reglamentaci\xF3n de convivencia escolar, debido proceso y medidas de resguardo de NNA) y en la Ley de Aula Segura (Ley 21.128). 
@@ -838,7 +813,7 @@ Tu misi\xF3n es auditar un caso de convivencia escolar de un colegio chileno par
 Analiza rigurosamente los siguientes detalles:
 - C\xF3digo de causa: ${id}
 - Tipo de Infracci\xF3n: ${infractionType} (bajo Reglamento Interno de Convivencia Escolar / RIE)
-- Enfoque de Ley de Aula Segura: ${isAulaSegura ? 'S\xED (Sometido a Ley Aula Segura - Suspensi\xF3n provisoria, plazo fatal de 10 d\xEDas h\xE1biles de resoluci\xF3n)' : 'No (Procedimiento ordinario seg\xFAn RIE, Circular 482 y Ley 21809)'}
+- Enfoque de Ley de Aula Segura: ${isAulaSegura ? "S\xED (Sometido a Ley Aula Segura - Suspensi\xF3n provisoria, plazo fatal de 10 d\xEDas h\xE1biles de resoluci\xF3n)" : "No (Procedimiento ordinario seg\xFAn RIE, Circular 482 y Ley 21809)"}
 - Checklists de Medidas de Resguardo Inmediatas Adoptadas (Circular 482 / Ley 21809):
 ${JSON.stringify(checkedItems, null, 2)}
 - Observaciones:
@@ -851,132 +826,112 @@ Escribe un an\xE1lisis de auditor\xEDa en formato de informe t\xE9cnico formal e
 4. **Instrucciones Remediales**: Pasos obligatorios urgentes de resguardo y tramitaci\xF3n para sanear el caso, junto con los plazos reglamentarios vigentes.
 
 Utiliza un tono sumamente profesional, corporativo, t\xE9cnico e institucional (el "vibe" SaaS legal de alto nivel chileno).`;
-    const responseText = await callGroq([{ role: 'user', content: systemPrompt }]);
+    const responseText = await callGroq([{ role: "user", content: systemPrompt }]);
     res.json({ success: true, report: responseText });
   } catch (error) {
-    console.error('Error al auditar debido proceso:', error);
-    const status = error.message?.startsWith('Campo requerido') ? 400 : 500;
-    res.status(status).json({ error: 'Error interno del servidor en auditor\xEDa.' });
+    console.error("Error al auditar debido proceso:", error);
+    const status = error.message?.startsWith("Campo requerido") ? 400 : 500;
+    res.status(status).json({ error: "Error interno del servidor en auditor\xEDa." });
   }
 });
 var audit_default = router3;
 
 // server/api/routes/draft.ts
-import { Router as Router4 } from 'express';
+import { Router as Router4 } from "express";
 var router4 = Router4();
 function getSupabaseHostname() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   if (!supabaseUrl || !URL.canParse(supabaseUrl)) {
-    throw new Error('Supabase no configurado');
+    throw new Error("Supabase no configurado");
   }
   return new URL(supabaseUrl).hostname;
 }
-router4.post('/draft-document', requireAuth, async (req, res) => {
+router4.post("/draft-document", requireAuth, async (req, res) => {
   try {
     const body = req.body;
-    const docType = requireStr(body, 'docType', 50);
-    const id = requireStr(body, 'id', 100);
-    const studentName = requireStr(body, 'studentName', 200);
-    const course = optStr(body, 'course', 100);
-    const fatherName = optStr(body, 'fatherName', 200);
-    const managerName = optStr(body, 'managerName', 200);
-    const infractionType = optStr(body, 'infractionType', 100);
-    const observations = optStr(body, 'observations', 2e3);
+    const docType = requireStr(body, "docType", 50);
+    const id = requireStr(body, "id", 100);
+    const studentName = requireStr(body, "studentName", 200);
+    const course = optStr(body, "course", 100);
+    const fatherName = optStr(body, "fatherName", 200);
+    const managerName = optStr(body, "managerName", 200);
+    const infractionType = optStr(body, "infractionType", 100);
+    const observations = optStr(body, "observations", 2e3);
     const isAulaSegura = Boolean(body.isAulaSegura);
-    const conductaRiceId = optStr(body, 'conductaRiceId', 100);
-    const runEstudiante = optStr(body, 'runEstudiante', 50);
-    const fechaApertura = optStr(body, 'fechaApertura', 50);
-    const estadoActual = optStr(body, 'estadoActual', 50);
-    const fechaUltimaActualizacion = optStr(body, 'fechaUltimaActualizacion', 50);
-    const medidasEjecutadas = optArr(body, 'medidasEjecutadas');
-    const bitacora = optArr(body, 'bitacora');
-    const checklist = optArr(body, 'checklist');
-    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-    if (!(await checkRateLimitAsync(ip))) {
-      res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
+    const conductaRiceId = optStr(body, "conductaRiceId", 100);
+    const runEstudiante = optStr(body, "runEstudiante", 50);
+    const fechaApertura = optStr(body, "fechaApertura", 50);
+    const estadoActual = optStr(body, "estadoActual", 50);
+    const fechaUltimaActualizacion = optStr(body, "fechaUltimaActualizacion", 50);
+    const medidasEjecutadas = optArr(body, "medidasEjecutadas");
+    const bitacora = optArr(body, "bitacora");
+    const checklist = optArr(body, "checklist");
+    const ip = req.ip || req.connection?.remoteAddress || "unknown";
+    if (!await checkRateLimitAsync(ip)) {
+      res.status(429).json({ error: "L\xEDmite de solicitudes alcanzado. Intente en un minuto." });
       return;
     }
-    const safeMedidasEjecutadas = medidasEjecutadas
-      .map((m) => sanitize(m).slice(0, 500))
-      .slice(0, 50);
-    const safeBitacora = bitacora
-      .map((b) => ({
-        titulo: sanitize(b.titulo).slice(0, 200),
-        fecha: sanitize(b.fecha).slice(0, 50),
-        tipo: sanitize(b.tipo).slice(0, 50),
-        descripcion: sanitize(b.descripcion).slice(0, 2e3),
-        participantes: Array.isArray(b.participantes)
-          ? b.participantes.map((p) => sanitize(p).slice(0, 100)).slice(0, 20)
-          : [],
-        documentoAdjunto: sanitize(b.documentoAdjunto).slice(0, 200),
-      }))
-      .slice(0, 100);
-    const safeChecklist = checklist
-      .map((c) => ({
-        label: sanitize(c.label).slice(0, 300),
-        completado: Boolean(c.completado),
-        descripcion: sanitize(c.descripcion).slice(0, 1e3),
-        requeridoPor: sanitize(c.requeridoPor).slice(0, 100),
-        registradoPor: sanitize(c.registradoPor).slice(0, 200),
-        fechaCompletado: sanitize(c.fechaCompletado).slice(0, 50),
-        observaciones: sanitize(c.observaciones).slice(0, 1e3),
-        documentoNombre: sanitize(c.documentoNombre).slice(0, 200),
-      }))
-      .slice(0, 100);
+    const safeMedidasEjecutadas = medidasEjecutadas.map((m) => sanitize(m).slice(0, 500)).slice(0, 50);
+    const safeBitacora = bitacora.map((b) => ({
+      titulo: sanitize(b.titulo).slice(0, 200),
+      fecha: sanitize(b.fecha).slice(0, 50),
+      tipo: sanitize(b.tipo).slice(0, 50),
+      descripcion: sanitize(b.descripcion).slice(0, 2e3),
+      participantes: Array.isArray(b.participantes) ? b.participantes.map((p) => sanitize(p).slice(0, 100)).slice(0, 20) : [],
+      documentoAdjunto: sanitize(b.documentoAdjunto).slice(0, 200)
+    })).slice(0, 100);
+    const safeChecklist = checklist.map((c) => ({
+      label: sanitize(c.label).slice(0, 300),
+      completado: Boolean(c.completado),
+      descripcion: sanitize(c.descripcion).slice(0, 1e3),
+      requeridoPor: sanitize(c.requeridoPor).slice(0, 100),
+      registradoPor: sanitize(c.registradoPor).slice(0, 200),
+      fechaCompletado: sanitize(c.fechaCompletado).slice(0, 50),
+      observaciones: sanitize(c.observaciones).slice(0, 1e3),
+      documentoNombre: sanitize(c.documentoNombre).slice(0, 200)
+    })).slice(0, 100);
     const caseDataSection = `
 ==================== EXPEDIENTE COMPLETO DEL CASO ====================
 
 DATOS GENERALES:
 - C\xF3digo de Causa: ${id}
-- Estudiante: ${sanitizeForAI(studentName)} (RUN: ${runEstudiante || 'No registrado'})
+- Estudiante: ${sanitizeForAI(studentName)} (RUN: ${runEstudiante || "No registrado"})
 - Curso: ${course}
 - Apoderado: ${fatherName}
-- Fecha de Apertura: ${fechaApertura || 'No registrada'}
-- Estado Actual: ${estadoActual || 'No registrado'}
-- \xDAltima Actualizaci\xF3n: ${fechaUltimaActualizacion || 'No registrada'}
+- Fecha de Apertura: ${fechaApertura || "No registrada"}
+- Estado Actual: ${estadoActual || "No registrado"}
+- \xDAltima Actualizaci\xF3n: ${fechaUltimaActualizacion || "No registrada"}
 - Infracci\xF3n: ${infractionType}
 - Encargado: ${managerName}
-- Aula Segura: ${isAulaSegura ? 'S\xCD - Ley 21.128' : 'No'}
-- Conducta RICE vinculada: ${conductaRiceId || 'Ninguna'}
-- Observaciones del caso: "${sanitizeForAI(observations) || 'Sin observaciones'}"
+- Aula Segura: ${isAulaSegura ? "S\xCD - Ley 21.128" : "No"}
+- Conducta RICE vinculada: ${conductaRiceId || "Ninguna"}
+- Observaciones del caso: "${sanitizeForAI(observations) || "Sin observaciones"}"
 
 MEDIDAS EJECUTADAS:
-${safeMedidasEjecutadas.length > 0 ? safeMedidasEjecutadas.map((m) => `- ${m}`).join('\n') : 'No se han registrado medidas ejecutadas.'}
+${safeMedidasEjecutadas.length > 0 ? safeMedidasEjecutadas.map((m) => `- ${m}`).join("\n") : "No se han registrado medidas ejecutadas."}
 
 BIT\xC1CORA COMPLETA DEL EXPEDIENTE:
-${
-  safeBitacora.length > 0
-    ? safeBitacora
-        .map(
-          (b) => `
+${safeBitacora.length > 0 ? safeBitacora.map(
+      (b) => `
 --- Registro: ${b.titulo} ---
   Fecha: ${b.fecha}
   Tipo: ${b.tipo}
   Descripci\xF3n: ${b.descripcion}
-  Participantes: ${Array.isArray(b.participantes) ? b.participantes.join(', ') : ''}
-  Documento adjunto: ${b.documentoAdjunto || 'Ninguno'}`,
-        )
-        .join('\n')
-    : 'No hay registros en la bit\xE1cora.'
-}
+  Participantes: ${Array.isArray(b.participantes) ? b.participantes.join(", ") : ""}
+  Documento adjunto: ${b.documentoAdjunto || "Ninguno"}`
+    ).join("\n") : "No hay registros en la bit\xE1cora."}
 
 CHECKLIST DEL DEBIDO PROCESO:
-${
-  safeChecklist.length > 0
-    ? safeChecklist
-        .map(
-          (c) => `
-- [${c.completado ? 'X' : ' '}] ${c.label}
-  Estado: ${c.completado ? 'COMPLETADO' : 'PENDIENTE'}
-  Descripci\xF3n: ${c.descripcion || ''}
-  Requerido por: ${c.requeridoPor || ''}
-  ${c.completado ? `Registrado por: ${c.registradoPor || ''} | Fecha: ${c.fechaCompletado || ''}` : ''}
-  ${c.observaciones ? `Observaciones: ${c.observaciones}` : ''}
-  ${c.documentoNombre ? `Documento adjunto: ${c.documentoNombre}` : ''}`,
-        )
-        .join('\n')
-    : 'No hay checklist disponible.'
-}
+${safeChecklist.length > 0 ? safeChecklist.map(
+      (c) => `
+- [${c.completado ? "X" : " "}] ${c.label}
+  Estado: ${c.completado ? "COMPLETADO" : "PENDIENTE"}
+  Descripci\xF3n: ${c.descripcion || ""}
+  Requerido por: ${c.requeridoPor || ""}
+  ${c.completado ? `Registrado por: ${c.registradoPor || ""} | Fecha: ${c.fechaCompletado || ""}` : ""}
+  ${c.observaciones ? `Observaciones: ${c.observaciones}` : ""}
+  ${c.documentoNombre ? `Documento adjunto: ${c.documentoNombre}` : ""}`
+    ).join("\n") : "No hay checklist disponible."}
 
 =====================================================================`;
     const caseDataAppendix = `
@@ -984,64 +939,64 @@ ${
 ${caseDataSection}
 
 IMPORTANTE: Utiliza TODOS los antecedentes del expediente proporcionados arriba (bit\xE1cora, checklist, medidas ejecutadas) para fundamentar el documento.`;
-    let systemPrompt = '';
+    let systemPrompt = "";
     let dbPrompt = null;
     try {
       const templates = await httpsGet(
         getSupabaseHostname(),
         `/rest/v1/document_templates?doc_type=eq.${docType}&select=system_prompt&limit=1`,
         {
-          apikey: process.env.VITE_SUPABASE_ANON_KEY ?? '',
-          Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY ?? ''}`,
-        },
+          apikey: process.env.VITE_SUPABASE_ANON_KEY ?? "",
+          Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY ?? ""}`
+        }
       );
       if (Array.isArray(templates) && templates.length > 0 && templates[0].system_prompt) {
         dbPrompt = templates[0].system_prompt;
       }
-    } catch {}
+    } catch {
+    }
     if (dbPrompt) {
       systemPrompt = dbPrompt;
-    } else if (docType === 'notificacion_apertura') {
+    } else if (docType === "notificacion_apertura") {
       systemPrompt = `Act\xFAa como un profesional experto en convivencia escolar, normativa educacional chilena, procedimientos disciplinarios, debido proceso y redacci\xF3n institucional.
 Redacta una "NOTIFICACI\xD3N DE INICIO DE INDAGACI\xD3N DE CONVIVENCIA ESCOLAR", manteniendo un formato formal, objetivo, descriptivo y jur\xEDdicamente prudente.
-DATOS: Estudiante: ${sanitizeForAI(studentName)}, Curso: ${course}, Infracci\xF3n: ${sanitizeForAI(infractionType)}, Encargado: ${sanitizeForAI(managerName)}, Observaciones: ${sanitizeForAI(observations)}, Aula Segura: ${isAulaSegura ? 'S\xED' : 'No'}, Apoderado: ${sanitizeForAI(fatherName)}.`;
-    } else if (docType === 'citacion_entrevista') {
+DATOS: Estudiante: ${sanitizeForAI(studentName)}, Curso: ${course}, Infracci\xF3n: ${sanitizeForAI(infractionType)}, Encargado: ${sanitizeForAI(managerName)}, Observaciones: ${sanitizeForAI(observations)}, Aula Segura: ${isAulaSegura ? "S\xED" : "No"}, Apoderado: ${sanitizeForAI(fatherName)}.`;
+    } else if (docType === "citacion_entrevista") {
       systemPrompt = `Act\xFAa como un profesional experto en convivencia escolar y redacci\xF3n institucional chilena.
 Redacta una "CITACI\xD3N A ENTREVISTA DE DESCARGOS" formal, objetiva y jur\xEDdicamente s\xF3lida.
-DATOS: Estudiante: ${sanitizeForAI(studentName)} (Curso: ${course}), Apoderado: ${sanitizeForAI(fatherName)}, Infracci\xF3n: ${sanitizeForAI(infractionType)}, Encargado: ${sanitizeForAI(managerName)}, Hechos: ${sanitizeForAI(observations)}, Aula Segura: ${isAulaSegura ? 'S\xED' : 'No'}.`;
-    } else if (docType === 'informe_cierre_indagacion') {
+DATOS: Estudiante: ${sanitizeForAI(studentName)} (Curso: ${course}), Apoderado: ${sanitizeForAI(fatherName)}, Infracci\xF3n: ${sanitizeForAI(infractionType)}, Encargado: ${sanitizeForAI(managerName)}, Hechos: ${sanitizeForAI(observations)}, Aula Segura: ${isAulaSegura ? "S\xED" : "No"}.`;
+    } else if (docType === "informe_cierre_indagacion") {
       systemPrompt = `Act\xFAa como un especialista en convivencia escolar y normativa educacional chilena.
 Elabora un INFORME DE CIERRE DE INDAGACI\xD3N DISCIPLINARIA con nivel t\xE9cnico-profesional.
-DATOS: Estudiante: ${sanitizeForAI(studentName)} (Curso: ${course}), Apoderado: ${sanitizeForAI(fatherName)}, C\xF3digo: ${id}, Infracci\xF3n: ${sanitizeForAI(infractionType)}, Encargado: ${sanitizeForAI(managerName)}, Contexto: ${sanitizeForAI(observations)}, Aula Segura: ${isAulaSegura ? 'S\xED' : 'No'}.`;
-    } else if (docType === 'informe_concluyente') {
+DATOS: Estudiante: ${sanitizeForAI(studentName)} (Curso: ${course}), Apoderado: ${sanitizeForAI(fatherName)}, C\xF3digo: ${id}, Infracci\xF3n: ${sanitizeForAI(infractionType)}, Encargado: ${sanitizeForAI(managerName)}, Contexto: ${sanitizeForAI(observations)}, Aula Segura: ${isAulaSegura ? "S\xED" : "No"}.`;
+    } else if (docType === "informe_concluyente") {
       systemPrompt = `Act\xFAa como un equipo interdisciplinario (abogado educacional, experto convivencia escolar, auditor debido proceso).
 Elabora un INFORME CONCLUYENTE DISCIPLINARIO Y FORMATIVO INTEGRAL.
-DATOS: C\xF3digo: ${id}, Estudiante: ${sanitizeForAI(studentName)} (Curso: ${course}), Apoderado: ${sanitizeForAI(fatherName)}, Infracci\xF3n: ${sanitizeForAI(infractionType)}, Encargado: ${sanitizeForAI(managerName)}, Contexto: ${sanitizeForAI(observations)}, Aula Segura: ${isAulaSegura ? 'S\xED (Ley 21.128)' : 'No'}.`;
+DATOS: C\xF3digo: ${id}, Estudiante: ${sanitizeForAI(studentName)} (Curso: ${course}), Apoderado: ${sanitizeForAI(fatherName)}, Infracci\xF3n: ${sanitizeForAI(infractionType)}, Encargado: ${sanitizeForAI(managerName)}, Contexto: ${sanitizeForAI(observations)}, Aula Segura: ${isAulaSegura ? "S\xED (Ley 21.128)" : "No"}.`;
     } else {
       res.status(400).json({
-        error:
-          'docType no v\xE1lido. Use: notificacion_apertura, citacion_entrevista, informe_cierre_indagacion, informe_concluyente',
+        error: "docType no v\xE1lido. Use: notificacion_apertura, citacion_entrevista, informe_cierre_indagacion, informe_concluyente"
       });
       return;
     }
     const responseText = await callGroq([
-      { role: 'user', content: systemPrompt + caseDataAppendix },
+      { role: "user", content: systemPrompt + caseDataAppendix }
     ]);
     res.json({ success: true, document: responseText });
   } catch (error) {
-    console.error('Error al generar borrador de documento:', error);
-    const status = error.message?.startsWith('Campo requerido') ? 400 : 500;
-    res.status(status).json({ error: 'Error interno del servidor al redactar documento.' });
+    console.error("Error al generar borrador de documento:", error);
+    const status = error.message?.startsWith("Campo requerido") ? 400 : 500;
+    res.status(status).json({ error: "Error interno del servidor al redactar documento." });
   }
 });
 var draft_default = router4;
 
 // server/api/routes/debug.ts
-import { Router as Router5 } from 'express';
+import { Router as Router5 } from "express";
 var router5 = Router5();
-router5.get('/auth-debug', requireAuth, async (_req, res) => {
-  if (process.env.NODE_ENV === 'production') {
-    res.status(404).json({ error: 'No encontrado.' });
+router5.get("/auth-debug", requireAuth, async (_req, res) => {
+  if (process.env.NODE_ENV === "production") {
+    res.status(404).json({ error: "No encontrado." });
     return;
   }
   res.json({ authenticated: true });
@@ -1049,17 +1004,17 @@ router5.get('/auth-debug', requireAuth, async (_req, res) => {
 var debug_default = router5;
 
 // server/api/routes/templates.ts
-import { Router as Router6 } from 'express';
+import { Router as Router6 } from "express";
 
 // server/api/middleware/requireTenant.ts
 function requireTenant(req, res, next) {
   const authReq = req;
   if (!authReq.user?.sub) {
-    res.status(401).json({ error: 'Autenticaci\xF3n requerida.' });
+    res.status(401).json({ error: "Autenticaci\xF3n requerida." });
     return;
   }
   if (!authReq.tenantId) {
-    res.status(403).json({ error: 'No fue posible determinar el establecimiento autenticado.' });
+    res.status(403).json({ error: "No fue posible determinar el establecimiento autenticado." });
     return;
   }
   next();
@@ -1070,20 +1025,20 @@ function requireRole(allowedRoles) {
   return (req, res, next) => {
     const authReq = req;
     if (!authReq.user?.sub) {
-      res.status(401).json({ error: 'Autenticaci\xF3n requerida.' });
+      res.status(401).json({ error: "Autenticaci\xF3n requerida." });
       return;
     }
     if (!authReq.tenantId) {
-      res.status(403).json({ error: 'No fue posible determinar el establecimiento autenticado.' });
+      res.status(403).json({ error: "No fue posible determinar el establecimiento autenticado." });
       return;
     }
     const role = authReq.profileRole;
     if (!role) {
-      res.status(403).json({ error: 'No fue posible determinar el rol del usuario.' });
+      res.status(403).json({ error: "No fue posible determinar el rol del usuario." });
       return;
     }
     if (!allowedRoles.includes(role)) {
-      res.status(403).json({ error: 'No tiene permisos para realizar esta acci\xF3n.' });
+      res.status(403).json({ error: "No tiene permisos para realizar esta acci\xF3n." });
       return;
     }
     next();
@@ -1092,73 +1047,71 @@ function requireRole(allowedRoles) {
 
 // server/api/routes/templates.ts
 var router6 = Router6();
-var TEMPLATE_SELECT_PUBLIC = 'id,doc_type,label,updated_at';
-var TEMPLATE_SELECT_ADMIN = 'id,doc_type,label,system_prompt,updated_at';
+var TEMPLATE_SELECT_PUBLIC = "id,doc_type,label,updated_at";
+var TEMPLATE_SELECT_ADMIN = "id,doc_type,label,system_prompt,updated_at";
 function getSupabaseHostname2() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   if (!supabaseUrl || !URL.canParse(supabaseUrl)) {
-    throw new Error('Supabase no configurado');
+    throw new Error("Supabase no configurado");
   }
   return new URL(supabaseUrl).hostname;
 }
 function getServiceRoleKey() {
-  return process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? '';
+  return process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
 }
-router6.get('/document-templates', requireAuth, requireTenant, async (_req, res) => {
+router6.get("/document-templates", requireAuth, requireTenant, async (_req, res) => {
   try {
     const data = await httpsGet(
       getSupabaseHostname2(),
       `/rest/v1/document_templates?select=${TEMPLATE_SELECT_PUBLIC}&order=doc_type`,
       {
-        apikey: process.env.VITE_SUPABASE_ANON_KEY ?? '',
-        Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY ?? ''}`,
-      },
+        apikey: process.env.VITE_SUPABASE_ANON_KEY ?? "",
+        Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY ?? ""}`
+      }
     );
     res.json(data);
   } catch {
-    res.status(500).json({ error: 'Error al obtener plantillas.' });
+    res.status(500).json({ error: "Error al obtener plantillas." });
   }
 });
 router6.get(
-  '/document-templates/admin',
+  "/document-templates/admin",
   requireAuth,
   requireTenant,
-  requireRole(['admin', 'direccion']),
+  requireRole(["admin", "direccion"]),
   async (_req, res) => {
     try {
       const data = await httpsGet(
         getSupabaseHostname2(),
         `/rest/v1/document_templates?select=${TEMPLATE_SELECT_ADMIN}&order=doc_type`,
         {
-          apikey: process.env.VITE_SUPABASE_ANON_KEY ?? '',
-          Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY ?? ''}`,
-        },
+          apikey: process.env.VITE_SUPABASE_ANON_KEY ?? "",
+          Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY ?? ""}`
+        }
       );
       res.json(data);
     } catch {
-      res.status(500).json({ error: 'Error al obtener plantillas.' });
+      res.status(500).json({ error: "Error al obtener plantillas." });
     }
-  },
+  }
 );
 router6.put(
-  '/document-templates',
+  "/document-templates",
   requireAuth,
   requireTenant,
-  requireRole(['admin', 'direccion']),
+  requireRole(["admin", "direccion"]),
   async (req, res) => {
     const { id, system_prompt } = req.body;
     if (!id || !system_prompt) {
-      res.status(400).json({ error: 'Campos requeridos: id, system_prompt' });
+      res.status(400).json({ error: "Campos requeridos: id, system_prompt" });
       return;
     }
-    if (typeof system_prompt !== 'string' || system_prompt.trim().length === 0) {
-      res.status(400).json({ error: 'El system_prompt no puede estar vac\xEDo.' });
+    if (typeof system_prompt !== "string" || system_prompt.trim().length === 0) {
+      res.status(400).json({ error: "El system_prompt no puede estar vac\xEDo." });
       return;
     }
     if (system_prompt.length > 2e4) {
-      res
-        .status(400)
-        .json({ error: 'El system_prompt excede el m\xE1ximo permitido (20000 caracteres).' });
+      res.status(400).json({ error: "El system_prompt excede el m\xE1ximo permitido (20000 caracteres)." });
       return;
     }
     try {
@@ -1169,85 +1122,83 @@ router6.put(
         `/rest/v1/document_templates?id=eq.${id}`,
         {
           system_prompt: sanitized,
-          updated_at: /* @__PURE__ */ new Date().toISOString(),
+          updated_at: (/* @__PURE__ */ new Date()).toISOString()
         },
         {
           apikey: serviceRoleKey,
           Authorization: `Bearer ${serviceRoleKey}`,
-          Prefer: 'return=minimal',
-        },
+          Prefer: "return=minimal"
+        }
       );
       res.json({ success: true });
     } catch (error) {
-      console.error('Error updating template:', error);
-      res.status(500).json({ error: 'Error al actualizar plantilla.' });
+      console.error("Error updating template:", error);
+      res.status(500).json({ error: "Error al actualizar plantilla." });
     }
-  },
+  }
 );
 var templates_default = router6;
 
 // server/api/routes/parse.ts
-import { Router as Router7 } from 'express';
+import { Router as Router7 } from "express";
 var router7 = Router7();
 var MAX_TEXT_CONTENT_LENGTH = 8e4;
-router7.post('/parse-annotations', requireAuth, async (req, res) => {
+router7.post("/parse-annotations", requireAuth, async (req, res) => {
   try {
     const { textContent } = req.body;
     if (!textContent || !textContent.trim()) {
-      res.status(400).json({ error: 'No se recibi\xF3 el texto extra\xEDdo del PDF.' });
+      res.status(400).json({ error: "No se recibi\xF3 el texto extra\xEDdo del PDF." });
       return;
     }
     if (textContent.length > MAX_TEXT_CONTENT_LENGTH) {
-      res.status(413).json({ error: 'El texto excede el tama\xF1o m\xE1ximo permitido.' });
+      res.status(413).json({ error: "El texto excede el tama\xF1o m\xE1ximo permitido." });
       return;
     }
-    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-    if (!(await checkRateLimitAsync(ip))) {
-      res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
+    const ip = req.ip || req.connection?.remoteAddress || "unknown";
+    if (!await checkRateLimitAsync(ip)) {
+      res.status(429).json({ error: "L\xEDmite de solicitudes alcanzado. Intente en un minuto." });
       return;
     }
-    const lines = textContent
-      .split('\n')
-      .filter((l) => !l.trim().startsWith('![') && !l.includes('data:image'));
+    const lines = textContent.split("\n").filter((l) => !l.trim().startsWith("![") && !l.includes("data:image"));
     const blocks = [];
     let current = [];
     for (const line of lines) {
       const trimmed = line.trim();
       if (!trimmed) continue;
       if (/^\d{2}\/\d{2}\/\d{4}/.test(trimmed)) {
-        if (current.length > 0) blocks.push(current.join('\n'));
+        if (current.length > 0) blocks.push(current.join("\n"));
         current = [line];
       } else if (current.length > 0) {
         current.push(line);
       }
     }
-    if (current.length > 0) blocks.push(current.join('\n'));
+    if (current.length > 0) blocks.push(current.join("\n"));
     const summary = { negativas: 0, positivas: 0, informativas: 0 };
     for (const block of blocks) {
       const m = block.match(/Tipo:\s*(Negativa|Positiva|Informaci[oó]n)/i);
       if (m) {
         const t = m[1].toLowerCase();
-        if (t.startsWith('neg')) summary.negativas++;
-        else if (t.startsWith('pos')) summary.positivas++;
+        if (t.startsWith("neg")) summary.negativas++;
+        else if (t.startsWith("pos")) summary.positivas++;
         else summary.informativas++;
       }
     }
     res.json({ success: true, summary });
   } catch (error) {
-    console.error('Error al analizar documento:', error);
-    res.status(500).json({ error: 'Error interno al procesar el archivo.' });
+    console.error("Error al analizar documento:", error);
+    res.status(500).json({ error: "Error interno al procesar el archivo." });
   }
 });
 var parse_default = router7;
 
 // server/api/routes/processDisciplinaryPdf.ts
-import { Router as Router8 } from 'express';
+import { Router as Router8 } from "express";
 
 // server/lib/disciplinaryPdfAnalysis.ts
-import { createHash } from 'node:crypto';
-import { createClient } from '@supabase/supabase-js';
-var PARSER_VERSION = 'disciplinary-pdf-parser-v1';
-var PDF_BUCKET = 'disciplinary-processes';
+import { createHash } from "node:crypto";
+import { createClient } from "@supabase/supabase-js";
+var PARSER_VERSION = "disciplinary-pdf-parser-v1";
+var PDF_BUCKET = "disciplinary-processes";
 var MAX_PDF_BYTES = 10 * 1024 * 1024;
 var NodeDomMatrixPolyfill = class _NodeDomMatrixPolyfill {
   constructor(init) {
@@ -1294,7 +1245,7 @@ var NodeDomMatrixPolyfill = class _NodeDomMatrixPolyfill {
       this.c,
       this.d,
       this.e,
-      this.f,
+      this.f
     ]).translateSelf(tx, ty);
   }
   translateSelf(tx = 0, ty = 0) {
@@ -1303,7 +1254,7 @@ var NodeDomMatrixPolyfill = class _NodeDomMatrixPolyfill {
   scale(scaleX = 1, scaleY = scaleX) {
     return new _NodeDomMatrixPolyfill([this.a, this.b, this.c, this.d, this.e, this.f]).scaleSelf(
       scaleX,
-      scaleY,
+      scaleY
     );
   }
   scaleSelf(scaleX = 1, scaleY = scaleX) {
@@ -1329,7 +1280,7 @@ var NodeDomMatrixPolyfill = class _NodeDomMatrixPolyfill {
 };
 var NodeImageDataPolyfill = class {
   constructor(dataOrWidth, width, height) {
-    if (typeof dataOrWidth === 'number') {
+    if (typeof dataOrWidth === "number") {
       this.width = dataOrWidth;
       this.height = width ?? 0;
       this.data = new Uint8ClampedArray(this.width * this.height * 4);
@@ -1341,7 +1292,8 @@ var NodeImageDataPolyfill = class {
   }
 };
 var NodePath2DPolyfill = class {
-  addPath() {}
+  addPath() {
+  }
 };
 function ensurePdfJsNodePolyfills() {
   const globals = globalThis;
@@ -1350,54 +1302,40 @@ function ensurePdfJsNodePolyfills() {
   globals.Path2D ??= NodePath2DPolyfill;
 }
 function getSupabaseAdmin(authToken) {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? '';
-  const userScopedKey =
-    process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
+  const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
+  const userScopedKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "";
   const supabaseKey = serviceKey || userScopedKey;
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Supabase no configurado');
+    throw new Error("Supabase no configurado");
   }
   const headers = !serviceKey && authToken ? { Authorization: `Bearer ${authToken}` } : void 0;
   return createClient(supabaseUrl, supabaseKey, {
     auth: { persistSession: false },
-    global: headers ? { headers } : void 0,
+    global: headers ? { headers } : void 0
   });
 }
 function normalizeText(value) {
-  return value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[.,;:()[\]{}]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[.,;:()[\]{}]/g, " ").replace(/\s+/g, " ").trim();
 }
 function isDateRangeLine(value) {
   return /\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b\s*(?:a|-|hasta)\s*\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b/i.test(
-    value,
+    value
   );
 }
 function normalizeCourseLabel(value) {
-  const normalized = value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/º/g, '\xB0')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toUpperCase();
+  const normalized = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/º/g, "\xB0").replace(/\s+/g, " ").trim().toUpperCase();
   const letterBeforeCycle = normalized.match(
-    /\b(\d{1,2})\s*(?:°\s*)?([A-Z])\s*(MEDIO|BASICO|BASICA)\b/,
+    /\b(\d{1,2})\s*(?:°\s*)?([A-Z])\s*(MEDIO|BASICO|BASICA)\b/
   );
   const cycleBeforeLetter = normalized.match(
-    /\b(\d{1,2})\s*(?:°\s*)?(MEDIO|BASICO|BASICA)\s*([A-Z])\b/,
+    /\b(\d{1,2})\s*(?:°\s*)?(MEDIO|BASICO|BASICA)\s*([A-Z])\b/
   );
   const level = Number(letterBeforeCycle?.[1] ?? cycleBeforeLetter?.[1]);
   const letter = letterBeforeCycle?.[2] ?? cycleBeforeLetter?.[3];
   const rawCycle = letterBeforeCycle?.[3] ?? cycleBeforeLetter?.[2];
   if (!level || !letter || !rawCycle) return null;
-  const cycle = rawCycle.startsWith('MEDIO') ? 'Medio' : 'B\xE1sico';
+  const cycle = rawCycle.startsWith("MEDIO") ? "Medio" : "B\xE1sico";
   return `${level}\xB0 ${cycle} ${letter}`;
 }
 function courseMatchKey(value) {
@@ -1405,76 +1343,63 @@ function courseMatchKey(value) {
   return normalized ? normalizeText(normalized) : null;
 }
 function titleCaseFromUpper(value) {
-  return value
-    .toLowerCase()
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
+  return value.toLowerCase().split(/\s+/).filter(Boolean).map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
 }
 function assertStoragePathAllowed(bucket, storagePath, tenantId) {
   if (bucket !== PDF_BUCKET) {
-    throw new Error('Bucket de documentos disciplinarios no permitido');
+    throw new Error("Bucket de documentos disciplinarios no permitido");
   }
-  if (!storagePath || storagePath.includes('..') || storagePath.startsWith('/')) {
-    throw new Error('Ruta de archivo no v\xE1lida');
+  if (!storagePath || storagePath.includes("..") || storagePath.startsWith("/")) {
+    throw new Error("Ruta de archivo no v\xE1lida");
   }
-  const [tenantSegment] = storagePath.split('/');
+  const [tenantSegment] = storagePath.split("/");
   if (tenantSegment !== tenantId) {
-    throw new Error('El archivo no pertenece al establecimiento activo');
+    throw new Error("El archivo no pertenece al establecimiento activo");
   }
 }
 function isPdf(buffer) {
   if (buffer.byteLength < 5) return false;
-  return String.fromCharCode(...buffer.slice(0, 5)) === '%PDF-';
+  return String.fromCharCode(...buffer.slice(0, 5)) === "%PDF-";
 }
 function toIsoDate(date) {
   if (!date) return null;
   const parts = date.match(/(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})/);
   if (!parts) return null;
-  const day = parts[1].padStart(2, '0');
-  const month = parts[2].padStart(2, '0');
+  const day = parts[1].padStart(2, "0");
+  const month = parts[2].padStart(2, "0");
   const year = parts[3].length === 2 ? `20${parts[3]}` : parts[3];
   return `${year}-${month}-${day}`;
 }
 async function extractPdfPages(buffer) {
   ensurePdfJsNodePolyfills();
-  const workerModule = await import('pdfjs-dist/legacy/build/pdf.worker.mjs');
+  const workerModule = await import("pdfjs-dist/legacy/build/pdf.worker.mjs");
   globalThis.pdfjsWorker = {
-    WorkerMessageHandler: workerModule.WorkerMessageHandler,
+    WorkerMessageHandler: workerModule.WorkerMessageHandler
   };
-  const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
+  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const pdf = await pdfjs.getDocument({
     data: buffer,
     useWorkerFetch: false,
-    isEvalSupported: false,
+    isEvalSupported: false
   }).promise;
   const pages = [];
   const pagePromises = Array.from({ length: pdf.numPages }, (_, i) => i + 1).map(
     async (pageNumber) => {
       const page = await pdf.getPage(pageNumber);
       const content = await page.getTextContent();
-      return content.items
-        .map((item) => (item.str ?? '') + (item.hasEOL ? '\n' : ' '))
-        .join('')
-        .replace(/[^\S\n]+/g, ' ')
-        .replace(/\s*\n\s*/g, '\n')
-        .trim();
-    },
+      return content.items.map((item) => (item.str ?? "") + (item.hasEOL ? "\n" : " ")).join("").replace(/[^\S\n]+/g, " ").replace(/\s*\n\s*/g, "\n").trim();
+    }
   );
   const resolvedPages = await Promise.all(pagePromises);
   pages.push(...resolvedPages);
   return pages;
 }
 function extractCourse(text) {
-  const lines = text
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean);
+  const lines = text.split("\n").map((line) => line.trim()).filter(Boolean);
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
     if (!/\bcurso\b/i.test(line)) continue;
-    const sameLineValue = line.replace(/^.*\bcurso\b\s*[:-]?\s*/i, '').trim();
+    const sameLineValue = line.replace(/^.*\bcurso\b\s*[:-]?\s*/i, "").trim();
     const candidates = [sameLineValue, lines[index + 1], lines[index + 2], lines[index + 3]];
     for (const candidate of candidates) {
       if (!candidate || /^rango\s+fechas?/i.test(candidate) || isDateRangeLine(candidate)) continue;
@@ -1482,53 +1407,37 @@ function extractCourse(text) {
       if (normalized) return normalized;
     }
   }
-  const normalizedText = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const normalizedText = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const courseMatch = normalizedText.match(
-    /\b(?:\d{1,2}\s*(?:°\s*)?[A-Z]\s*(?:MEDIO|BASICO|BASICA)|\d{1,2}\s*(?:°\s*)?(?:MEDIO|BASICO|BASICA)\s*[A-Z])\b/i,
+    /\b(?:\d{1,2}\s*(?:°\s*)?[A-Z]\s*(?:MEDIO|BASICO|BASICA)|\d{1,2}\s*(?:°\s*)?(?:MEDIO|BASICO|BASICA)\s*[A-Z])\b/i
   );
   return courseMatch?.[0] ? normalizeCourseLabel(courseMatch[0]) : null;
 }
 function extractStudentName(text) {
   const labelled = text.match(
-    /(?:estudiante|alumno|nombre(?: completo)?)\s*[:-]\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ'-]+(?:\s+[A-ZÁÉÍÓÚÑa-záéíóúñ'-]+){1,5})/i,
+    /(?:estudiante|alumno|nombre(?: completo)?)\s*[:-]\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ'-]+(?:\s+[A-ZÁÉÍÓÚÑa-záéíóúñ'-]+){1,5})/i
   );
   if (labelled?.[1]) return labelled[1].trim();
   const fichaMatch = text.match(
-    /([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ'-]+(?:\s+[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ'-]+){2,6})\s+FICHA\s+PERSONAL\s+DE\s+CONVIVENCIA\s+ESCOLAR/i,
+    /([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ'-]+(?:\s+[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ'-]+){2,6})\s+FICHA\s+PERSONAL\s+DE\s+CONVIVENCIA\s+ESCOLAR/i
   );
   if (fichaMatch?.[1]) return titleCaseFromUpper(fichaMatch[1].trim());
-  const headingLines = text
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.startsWith('## '))
-    .map((line) => line.slice(3).trim())
-    .filter(
-      (line) => line.length > 1 && !/^(fundaci[oó]n|saber|ficha|rango|curso|fecha)/i.test(line),
-    );
+  const headingLines = text.split("\n").map((line) => line.trim()).filter((line) => line.startsWith("## ")).map((line) => line.slice(3).trim()).filter(
+    (line) => line.length > 1 && !/^(fundaci[oó]n|saber|ficha|rango|curso|fecha)/i.test(line)
+  );
   if (headingLines.length >= 3)
-    return `${headingLines[0]} ${headingLines[1]} ${headingLines.slice(2).join(' ')}`;
-  if (headingLines.length > 0) return headingLines.join(' ');
-  const uppercaseLine = text
-    .split('\n')
-    .map((line) => line.trim())
-    .find((line) => {
-      const normalized = normalizeText(line);
-      const words = normalized.split(' ').filter(Boolean);
-      return (
-        words.length >= 3 &&
-        words.length <= 6 &&
-        line === line.toUpperCase() &&
-        !normalized.includes('curso')
-      );
-    });
+    return `${headingLines[0]} ${headingLines[1]} ${headingLines.slice(2).join(" ")}`;
+  if (headingLines.length > 0) return headingLines.join(" ");
+  const uppercaseLine = text.split("\n").map((line) => line.trim()).find((line) => {
+    const normalized = normalizeText(line);
+    const words = normalized.split(" ").filter(Boolean);
+    return words.length >= 3 && words.length <= 6 && line === line.toUpperCase() && !normalized.includes("curso");
+  });
   return uppercaseLine ? titleCaseFromUpper(uppercaseLine) : null;
 }
 function splitAnnotationBlocks(pageText) {
-  const normalized = pageText.replace(/\s+(?=\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/g, '\n');
-  const lines = normalized
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean);
+  const normalized = pageText.replace(/\s+(?=\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/g, "\n");
+  const lines = normalized.split("\n").map((line) => line.trim()).filter(Boolean);
   const blocks = [];
   let current = [];
   let hasDatedRecords = false;
@@ -1536,7 +1445,7 @@ function splitAnnotationBlocks(pageText) {
     const startsDatedRecord = /(?:^|\s)(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})\b/.test(line);
     if (startsDatedRecord) {
       hasDatedRecords = true;
-      if (current.length > 0) blocks.push(current.join(' '));
+      if (current.length > 0) blocks.push(current.join(" "));
       current = [line];
       continue;
     }
@@ -1544,25 +1453,24 @@ function splitAnnotationBlocks(pageText) {
       current.push(line);
     }
   }
-  if (current.length > 0) blocks.push(current.join(' '));
+  if (current.length > 0) blocks.push(current.join(" "));
   if (hasDatedRecords) return blocks;
   return lines.filter((line) => /\b(?:tipo|anotaci[oó]n|observaci[oó]n)\s*[:-]/i.test(line));
 }
 function classifyAnnotation(block) {
   const normalized = normalizeText(block);
-  const typePattern =
-    /(?:tipo|anotacion|observacion)\s*[:-]?\s*(negativa|positiva|informacion|informativa)/;
+  const typePattern = /(?:tipo|anotacion|observacion)\s*[:-]?\s*(negativa|positiva|informacion|informativa)/;
   const typed = normalized.match(typePattern);
   const value = typed?.[1];
-  if (value?.startsWith('neg')) return { type: 'negative', confidence: 0.95 };
-  if (value?.startsWith('pos')) return { type: 'positive', confidence: 0.95 };
-  if (value?.startsWith('info')) return { type: 'information', confidence: 0.95 };
+  if (value?.startsWith("neg")) return { type: "negative", confidence: 0.95 };
+  if (value?.startsWith("pos")) return { type: "positive", confidence: 0.95 };
+  if (value?.startsWith("info")) return { type: "information", confidence: 0.95 };
   if (/\b(reconocimiento|felicitacion|destaca|positiva)\b/.test(normalized))
-    return { type: 'positive', confidence: 0.7 };
+    return { type: "positive", confidence: 0.7 };
   if (/\b(negativa|falta|agresion|interrumpe|incumple|atraso)\b/.test(normalized))
-    return { type: 'negative', confidence: 0.65 };
+    return { type: "negative", confidence: 0.65 };
   if (/\b(informacion|informativa|entrevista|comunicacion)\b/.test(normalized))
-    return { type: 'information', confidence: 0.65 };
+    return { type: "information", confidence: 0.65 };
   return { type: null, confidence: 0 };
 }
 function parseAnnotationsByPage(pages) {
@@ -1581,9 +1489,9 @@ function parseAnnotationsByPage(pages) {
       const dedupeKey = [
         pageIndex + 1,
         classification.type,
-        detectedDate ?? '',
-        normalizedBlock,
-      ].join('|');
+        detectedDate ?? "",
+        normalizedBlock
+      ].join("|");
       if (seenAnnotations.has(dedupeKey)) return;
       seenAnnotations.add(dedupeKey);
       annotations.push({
@@ -1594,9 +1502,9 @@ function parseAnnotationsByPage(pages) {
         sequence_number: annotations.length + 1,
         detected_date: detectedDate,
         detected_teacher: detectedTeacher,
-        classification_method: 'regex',
+        classification_method: "regex",
         confidence: classification.confidence,
-        parser_version: PARSER_VERSION,
+        parser_version: PARSER_VERSION
       });
     });
   });
@@ -1605,96 +1513,82 @@ function parseAnnotationsByPage(pages) {
 function summarizeAnnotations(annotations) {
   return annotations.reduce(
     (acc, annotation) => {
-      if (annotation.type === 'negative') acc.negativas += 1;
-      if (annotation.type === 'positive') acc.positivas += 1;
-      if (annotation.type === 'information') acc.informativas += 1;
+      if (annotation.type === "negative") acc.negativas += 1;
+      if (annotation.type === "positive") acc.positivas += 1;
+      if (annotation.type === "information") acc.informativas += 1;
       return acc;
     },
-    { negativas: 0, positivas: 0, informativas: 0 },
+    { negativas: 0, positivas: 0, informativas: 0 }
   );
 }
 function getNameParts(value) {
-  return normalizeText(value)
-    .split(' ')
-    .filter((part) => part.length >= 3);
+  return normalizeText(value).split(" ").filter((part) => part.length >= 3);
 }
 function buildNameTokenQuery(parts) {
-  return [...new Set(parts)].map((part) => `full_name.ilike.%${part}%`).join(',');
+  return [...new Set(parts)].map((part) => `full_name.ilike.%${part}%`).join(",");
 }
 async function enrichStudentRows(supabase, rows, confidence, status) {
   if (rows.length === 0) return [];
-  const courseIds = [...new Set(rows.flatMap((row) => (row.course_id ? [row.course_id] : [])))];
-  const { data: courses } = courseIds.length
-    ? await supabase.from('courses').select('id, name').in('id', courseIds)
-    : { data: [] };
-  const courseMap = new Map((courses ?? []).map((course) => [course.id, course.name]));
+  const courseIds = [...new Set(rows.flatMap((row) => row.course_id ? [row.course_id] : []))];
+  const { data: courses } = courseIds.length ? await supabase.from("courses").select("id, name").in("id", courseIds) : { data: [] };
+  const courseMap = new Map(
+    (courses ?? []).map((course) => [course.id, course.name])
+  );
   return rows.map((row) => ({
     id: row.id,
     full_name: row.full_name,
     rut: row.rut,
     course_id: row.course_id,
-    course_name: row.course_id ? (courseMap.get(row.course_id) ?? null) : null,
+    course_name: row.course_id ? courseMap.get(row.course_id) ?? null : null,
     confidence,
-    match_status: status,
+    match_status: status
   }));
 }
 async function findStudentCandidates(supabase, tenantId, detectedName, detectedCourse) {
-  if (!detectedName) return { candidates: [], selectedStudentId: null, status: 'no_match' };
-  const baseSelect = 'id, full_name, rut, course_id';
+  if (!detectedName) return { candidates: [], selectedStudentId: null, status: "no_match" };
+  const baseSelect = "id, full_name, rut, course_id";
   const exactName = detectedName.trim();
   const normalizedDetected = normalizeText(detectedName);
   const detectedCourseKey = courseMatchKey(detectedCourse);
-  const { data: courseRows } = await supabase
-    .from('courses')
-    .select('id, name')
-    .eq('tenant_id', tenantId)
-    .limit(200);
+  const { data: courseRows } = await supabase.from("courses").select("id, name").eq("tenant_id", tenantId).limit(200);
   const courseKeyById = new Map(
-    (courseRows ?? []).map((course) => [course.id, courseMatchKey(course.name)]),
+    (courseRows ?? []).map((course) => [
+      course.id,
+      courseMatchKey(course.name)
+    ])
   );
-  const { data: exactRows } = await supabase
-    .from('students')
-    .select(baseSelect)
-    .eq('tenant_id', tenantId)
-    .ilike('full_name', exactName)
-    .limit(5);
+  const { data: exactRows } = await supabase.from("students").select(baseSelect).eq("tenant_id", tenantId).ilike("full_name", exactName).limit(5);
   if (exactRows && exactRows.length > 0) {
     const candidates2 = await enrichStudentRows(
       supabase,
       exactRows,
       0.99,
-      exactRows.length === 1 ? 'exact_match' : 'multiple_candidates',
+      exactRows.length === 1 ? "exact_match" : "multiple_candidates"
     );
     return {
       candidates: candidates2,
       selectedStudentId: candidates2.length === 1 ? candidates2[0].id : null,
-      status: candidates2.length === 1 ? 'exact_match' : 'multiple_candidates',
+      status: candidates2.length === 1 ? "exact_match" : "multiple_candidates"
     };
   }
   const detectedParts = getNameParts(detectedName);
   const tokenQuery = buildNameTokenQuery(detectedParts);
-  const tokenCandidatesQuery = supabase
-    .from('students')
-    .select(baseSelect)
-    .eq('tenant_id', tenantId)
-    .limit(1e3);
-  const { data: tenantStudents } = tokenQuery
-    ? await tokenCandidatesQuery.or(tokenQuery)
-    : await tokenCandidatesQuery;
+  const tokenCandidatesQuery = supabase.from("students").select(baseSelect).eq("tenant_id", tenantId).limit(1e3);
+  const { data: tenantStudents } = tokenQuery ? await tokenCandidatesQuery.or(tokenQuery) : await tokenCandidatesQuery;
   const normalizedMatches = (tenantStudents ?? []).filter(
-    (student) => normalizeText(student.full_name) === normalizedDetected,
+    (student) => normalizeText(student.full_name) === normalizedDetected
   );
   if (normalizedMatches.length > 0) {
     const candidates2 = await enrichStudentRows(
       supabase,
       normalizedMatches,
       0.94,
-      normalizedMatches.length === 1 ? 'unique_normalized_match' : 'multiple_candidates',
+      normalizedMatches.length === 1 ? "unique_normalized_match" : "multiple_candidates"
     );
     return {
       candidates: candidates2,
       selectedStudentId: candidates2.length === 1 ? candidates2[0].id : null,
-      status: candidates2.length === 1 ? 'unique_normalized_match' : 'multiple_candidates',
+      status: candidates2.length === 1 ? "unique_normalized_match" : "multiple_candidates"
     };
   }
   const detectedPartSet = new Set(detectedParts);
@@ -1703,12 +1597,7 @@ async function findStudentCandidates(supabase, tenantId, detectedName, detectedC
     const studentParts = new Set(getNameParts(student.full_name));
     const overlap = [...detectedPartSet].filter((part) => studentParts.has(part)).length;
     const denominator = Math.max(detectedPartSet.size, studentParts.size, 1);
-    const courseBoost =
-      detectedCourseKey &&
-      student.course_id &&
-      courseKeyById.get(student.course_id) === detectedCourseKey
-        ? 0.15
-        : 0;
+    const courseBoost = detectedCourseKey && student.course_id && courseKeyById.get(student.course_id) === detectedCourseKey ? 0.15 : 0;
     const score = overlap / denominator + courseBoost;
     if (score >= 0.5) scored.push({ student, score });
   }
@@ -1720,12 +1609,7 @@ async function findStudentCandidates(supabase, tenantId, detectedName, detectedC
       if (courseMatchKey(course.name) === detectedCourseKey) courseIds.push(course.id);
     }
     if (courseIds.length > 0) {
-      const { data: courseStudents } = await supabase
-        .from('students')
-        .select(baseSelect)
-        .eq('tenant_id', tenantId)
-        .in('course_id', courseIds)
-        .limit(50);
+      const { data: courseStudents } = await supabase.from("students").select(baseSelect).eq("tenant_id", tenantId).in("course_id", courseIds).limit(50);
       approximate = (courseStudents ?? []).slice(0, 8).map((student) => ({ student, score: 0.45 }));
     }
   }
@@ -1733,168 +1617,178 @@ async function findStudentCandidates(supabase, tenantId, detectedName, detectedC
     supabase,
     approximate.map((item) => item.student),
     approximate[0]?.score ?? 0,
-    approximate.length > 0 ? 'multiple_candidates' : 'no_match',
+    approximate.length > 0 ? "multiple_candidates" : "no_match"
   );
   return {
     candidates,
     selectedStudentId: null,
-    status: candidates.length > 0 ? 'multiple_candidates' : 'no_match',
+    status: candidates.length > 0 ? "multiple_candidates" : "no_match"
   };
 }
 function annotationTypeToLegacy(type) {
-  if (type === 'positive') return 'Positiva';
-  if (type === 'information') return 'Informaci\xF3n';
-  return 'Negativa';
+  if (type === "positive") return "Positiva";
+  if (type === "information") return "Informaci\xF3n";
+  return "Negativa";
+}
+function annotationDateKey(value) {
+  return value?.slice(0, 10) || "";
+}
+function annotationIdentityKey(type, date, text) {
+  return `${normalizeText(type || "")}|${annotationDateKey(date)}|${normalizeText(text || "")}`;
+}
+function selectNewAnnotationsForLegacySync(annotations, existingRecords) {
+  const existingCounts = /* @__PURE__ */ new Map();
+  for (const record of existingRecords) {
+    const key = annotationIdentityKey(record.type, record.date_time, record.observation);
+    existingCounts.set(key, (existingCounts.get(key) || 0) + 1);
+  }
+  return annotations.filter((annotation) => {
+    const key = annotationIdentityKey(
+      annotationTypeToLegacy(annotation.type),
+      annotation.detected_date,
+      annotation.raw_text
+    );
+    const remainingMatches = existingCounts.get(key) || 0;
+    if (remainingMatches === 0) return true;
+    existingCounts.set(key, remainingMatches - 1);
+    return false;
+  });
 }
 function severityForAnnotation(type) {
-  return type === 'negative' ? 'Leve' : 'Leve';
+  return type === "negative" ? "Leve" : "Leve";
 }
 function suggestedLetterToDocumentType(suggestedLetterType) {
-  if (suggestedLetterType === 'amonestacion') return 'Amonestaci\xF3n Escrita';
-  if (suggestedLetterType === 'compromiso' || suggestedLetterType === 'compromiso_conductual') {
-    return 'Carta de Compromiso Conductual';
+  if (suggestedLetterType === "amonestacion") return "Amonestaci\xF3n Escrita";
+  if (suggestedLetterType === "compromiso" || suggestedLetterType === "compromiso_conductual") {
+    return "Carta de Compromiso Conductual";
   }
-  if (suggestedLetterType === 'derivacion') return 'Ficha de Derivaci\xF3n';
+  if (suggestedLetterType === "derivacion") return "Ficha de Derivaci\xF3n";
   return null;
 }
 function suggestedLetterToStageName(suggestedLetterType) {
-  if (suggestedLetterType === 'amonestacion') return 'amonestacion';
-  if (suggestedLetterType === 'compromiso' || suggestedLetterType === 'compromiso_conductual') {
-    return 'compromiso';
+  if (suggestedLetterType === "amonestacion") return "amonestacion";
+  if (suggestedLetterType === "compromiso" || suggestedLetterType === "compromiso_conductual") {
+    return "compromiso";
   }
-  if (suggestedLetterType === 'derivacion') return 'derivacion';
+  if (suggestedLetterType === "derivacion") return "derivacion";
   return null;
 }
-async function syncConfirmedProcessToLegacyViews(
-  supabase,
-  input,
-  processId,
-  processNumber,
-  summary,
-  student,
-) {
-  const { data: existingRecords } = await supabase
-    .from('inspectorate_records')
-    .select('id')
-    .eq('tenant_id', input.tenantId)
-    .eq('student_id', input.studentId)
-    .eq('pdf_file_path', input.storagePath)
-    .limit(1);
-  if (!existingRecords || existingRecords.length === 0) {
-    const legacyRecords = input.annotations.map((annotation) => ({
+async function syncConfirmedProcessToLegacyViews(supabase, input, processId, processNumber, summary, student) {
+  const { data: existingRecords, error: existingRecordsError } = await supabase.from("inspectorate_records").select("type,date_time,observation").eq("tenant_id", input.tenantId).eq("student_id", input.studentId);
+  if (existingRecordsError) {
+    throw new Error("Error al comparar las anotaciones existentes del estudiante");
+  }
+  const newAnnotations = selectNewAnnotationsForLegacySync(
+    input.annotations,
+    existingRecords || []
+  );
+  const insertedSummary = summarizeAnnotations(
+    newAnnotations.map((annotation, index) => ({
+      raw_text: annotation.raw_text,
+      normalized_text: annotation.normalized_text ?? normalizeText(annotation.raw_text),
+      type: annotation.type,
+      page_number: annotation.page_number ?? null,
+      sequence_number: annotation.sequence_number || index + 1,
+      detected_date: annotation.detected_date ?? null,
+      detected_teacher: annotation.detected_teacher ?? null,
+      classification_method: "regex",
+      confidence: annotation.confidence ?? 0.8,
+      parser_version: PARSER_VERSION
+    }))
+  );
+  if (newAnnotations.length > 0) {
+    const legacyRecords = newAnnotations.map((annotation) => ({
       student_id: input.studentId,
       tenant_id: input.tenantId,
-      date_time: annotation.detected_date
-        ? `${annotation.detected_date}T12:00:00.000Z`
-        : /* @__PURE__ */ new Date().toISOString(),
+      date_time: annotation.detected_date ? `${annotation.detected_date}T12:00:00.000Z` : (/* @__PURE__ */ new Date()).toISOString(),
       observation: annotation.raw_text,
       severity: severityForAnnotation(annotation.type),
       type: annotationTypeToLegacy(annotation.type),
-      registered_by: 'PDF Convivencia Escolar',
-      created_by: 'Sistema PDF',
-      pdf_file_path: input.storagePath,
+      registered_by: "PDF Convivencia Escolar",
+      created_by: "Sistema PDF",
+      pdf_file_path: input.storagePath
     }));
     if (legacyRecords.length > 0) {
-      const { error } = await supabase.from('inspectorate_records').insert(legacyRecords);
-      if (error) throw new Error('Error al registrar anotaciones en la vista de registros');
+      const { error } = await supabase.from("inspectorate_records").insert(legacyRecords);
+      if (error) throw new Error("Error al registrar anotaciones en la vista de registros");
     }
   }
   const documentType = suggestedLetterToDocumentType(input.suggestedLetterType);
-  let courseName = student.course_id || 'Sin curso';
+  let courseName = student.course_id || "Sin curso";
   if (student.course_id) {
-    const { data: course } = await supabase
-      .from('courses')
-      .select('name')
-      .eq('tenant_id', input.tenantId)
-      .eq('id', student.course_id)
-      .maybeSingle();
+    const { data: course } = await supabase.from("courses").select("name").eq("tenant_id", input.tenantId).eq("id", student.course_id).maybeSingle();
     courseName = course?.name || courseName;
   }
   const processMarker = `Proceso PDF ${processNumber} (${processId})`;
   if (documentType) {
-    const { data: existingDocument } = await supabase
-      .from('cartas_disciplinarias')
-      .select('id')
-      .eq('tenant_id', input.tenantId)
-      .eq('student_id', input.studentId)
-      .ilike('observations', `%${processId}%`)
-      .limit(1);
+    const { data: existingDocument } = await supabase.from("cartas_disciplinarias").select("id").eq("tenant_id", input.tenantId).eq("student_id", input.studentId).ilike("observations", `%${processId}%`).limit(1);
     if (!existingDocument || existingDocument.length === 0) {
-      const { error } = await supabase.from('cartas_disciplinarias').insert({
+      const { error } = await supabase.from("cartas_disciplinarias").insert({
         student_id: input.studentId,
         tenant_id: input.tenantId,
         letter_type: documentType,
-        emission_date: /* @__PURE__ */ new Date().toISOString().split('T')[0],
-        status: 'Vigente',
-        emitted_by: 'Convivencia Escolar',
+        emission_date: (/* @__PURE__ */ new Date()).toISOString().split("T")[0],
+        status: "Vigente",
+        emitted_by: "Convivencia Escolar",
         supervisor_name: null,
-        apoderado_name: 'Por definir',
+        apoderado_name: "Por definir",
         annotations_count: summary.negativas,
-        student_name: student.full_name || 'Estudiante seleccionado',
+        student_name: student.full_name || "Estudiante seleccionado",
         course: courseName,
-        regulation_basis: 'RICE 2026 - Registro de anotaciones y debido proceso',
+        regulation_basis: "RICE 2026 - Registro de anotaciones y debido proceso",
         observations: `${processMarker}. Documento sugerido autom\xE1ticamente desde PDF confirmado.`,
-        created_by: 'Sistema PDF',
+        created_by: "Sistema PDF"
       });
-      if (error) throw new Error('Error al registrar el documento sugerido');
+      if (error) throw new Error("Error al registrar el documento sugerido");
     }
   }
   const stageName = suggestedLetterToStageName(input.suggestedLetterType);
   if (stageName) {
-    const { data: existingStage } = await supabase
-      .from('etapas_disciplinarias')
-      .select('id')
-      .eq('tenant_id', input.tenantId)
-      .eq('student_id', input.studentId)
-      .eq('stage_name', stageName)
-      .ilike('comment', `%${processId}%`)
-      .limit(1);
+    const { data: existingStage } = await supabase.from("etapas_disciplinarias").select("id").eq("tenant_id", input.tenantId).eq("student_id", input.studentId).eq("stage_name", stageName).ilike("comment", `%${processId}%`).limit(1);
     if (!existingStage || existingStage.length === 0) {
-      const stepNumber = stageName === 'amonestacion' ? 1 : stageName === 'compromiso' ? 2 : 3;
-      const { error } = await supabase.from('etapas_disciplinarias').insert({
+      const stepNumber = stageName === "amonestacion" ? 1 : stageName === "compromiso" ? 2 : 3;
+      const { error } = await supabase.from("etapas_disciplinarias").insert({
         student_id: input.studentId,
         tenant_id: input.tenantId,
         step_number: stepNumber,
         stage_name: stageName,
-        responsible: 'Convivencia Escolar',
+        responsible: "Convivencia Escolar",
         comment: `${processMarker}. Etapa sugerida autom\xE1ticamente desde PDF confirmado.`,
-        created_by: 'Sistema PDF',
+        created_by: "Sistema PDF"
       });
-      if (error) throw new Error('Error al registrar la etapa disciplinaria sugerida');
+      if (error) throw new Error("Error al registrar la etapa disciplinaria sugerida");
     }
   }
+  return insertedSummary;
 }
 async function getSuggestedLetter(supabase, tenantId, summary) {
-  const { data, error } = await supabase.rpc('get_suggested_letter_type', {
+  const { data, error } = await supabase.rpc("get_suggested_letter_type", {
     p_negativas: summary.negativas,
     p_positivas: summary.positivas,
     p_informativas: summary.informativas,
-    p_tenant_id: tenantId,
+    p_tenant_id: tenantId
   });
-  if (error || !data) return 'none';
+  if (error || !data) return "none";
   return String(data);
 }
 async function analyzeDisciplinaryPdf(input) {
   const supabase = getSupabaseAdmin(input.authToken);
   assertStoragePathAllowed(input.bucket, input.storagePath, input.tenantId);
-  const { data: fileBlob, error: downloadError } = await supabase.storage
-    .from(input.bucket)
-    .download(input.storagePath);
+  const { data: fileBlob, error: downloadError } = await supabase.storage.from(input.bucket).download(input.storagePath);
   if (downloadError || !fileBlob) {
-    throw new Error('No fue posible descargar el PDF privado desde Storage');
+    throw new Error("No fue posible descargar el PDF privado desde Storage");
   }
   const bytes = new Uint8Array(await fileBlob.arrayBuffer());
-  if (bytes.byteLength > MAX_PDF_BYTES)
-    throw new Error('El PDF excede el tama\xF1o m\xE1ximo permitido');
-  if (!input.fileName.toLowerCase().endsWith('.pdf') || !isPdf(bytes)) {
-    throw new Error('El archivo no corresponde a un PDF v\xE1lido');
+  if (bytes.byteLength > MAX_PDF_BYTES) throw new Error("El PDF excede el tama\xF1o m\xE1ximo permitido");
+  if (!input.fileName.toLowerCase().endsWith(".pdf") || !isPdf(bytes)) {
+    throw new Error("El archivo no corresponde a un PDF v\xE1lido");
   }
-  const fileHash = createHash('sha256').update(bytes).digest('hex');
+  const fileHash = createHash("sha256").update(bytes).digest("hex");
   const pages = await extractPdfPages(bytes);
-  const textContent = pages.join('\n');
+  const textContent = pages.join("\n");
   const warnings = [];
   if (normalizeText(textContent).length < 20) {
-    warnings.push('El PDF no contiene texto seleccionable suficiente. Puede requerir OCR.');
+    warnings.push("El PDF no contiene texto seleccionable suficiente. Puede requerir OCR.");
   }
   const detectedStudentName = extractStudentName(textContent);
   const detectedCourse = extractCourse(textContent);
@@ -1902,40 +1796,31 @@ async function analyzeDisciplinaryPdf(input) {
   const summary = summarizeAnnotations(annotations);
   const [recommendedLetterType, studentMatch] = await Promise.all([
     getSuggestedLetter(supabase, input.tenantId, summary),
-    findStudentCandidates(supabase, input.tenantId, detectedStudentName, detectedCourse),
+    findStudentCandidates(supabase, input.tenantId, detectedStudentName, detectedCourse)
   ]);
-  if (!detectedStudentName) warnings.push('No se pudo detectar un nombre de estudiante en el PDF.');
+  if (!detectedStudentName) warnings.push("No se pudo detectar un nombre de estudiante en el PDF.");
   if (annotations.length === 0 && normalizeText(textContent).length >= 20)
-    warnings.push('No se detectaron anotaciones clasificables en el documento.');
-  if (studentMatch.status === 'multiple_candidates')
-    warnings.push('Se requiere confirmar el estudiante porque existen m\xFAltiples candidatos.');
-  if (studentMatch.status === 'no_match')
-    warnings.push('Se requiere seleccionar manualmente un estudiante autorizado.');
-  const processingStatus =
-    normalizeText(textContent).length < 20
-      ? 'ocr_required'
-      : studentMatch.selectedStudentId
-        ? 'completed'
-        : 'student_resolution';
-  const { data: analysisRow } = await supabase
-    .from('document_analyses')
-    .insert({
-      student_id: studentMatch.selectedStudentId,
-      file_name: input.fileName,
-      negativas: summary.negativas,
-      positivas: summary.positivas,
-      informativas: summary.informativas,
-      tenant_id: input.tenantId,
-      status: processingStatus,
-      detected_student_name: detectedStudentName,
-      detected_course: detectedCourse,
-      student_match_status: studentMatch.status,
-      warnings,
-      file_hash: fileHash,
-      parser_version: PARSER_VERSION,
-    })
-    .select('id')
-    .maybeSingle();
+    warnings.push("No se detectaron anotaciones clasificables en el documento.");
+  if (studentMatch.status === "multiple_candidates")
+    warnings.push("Se requiere confirmar el estudiante porque existen m\xFAltiples candidatos.");
+  if (studentMatch.status === "no_match")
+    warnings.push("Se requiere seleccionar manualmente un estudiante autorizado.");
+  const processingStatus = normalizeText(textContent).length < 20 ? "ocr_required" : studentMatch.selectedStudentId ? "completed" : "student_resolution";
+  const { data: analysisRow } = await supabase.from("document_analyses").insert({
+    student_id: studentMatch.selectedStudentId,
+    file_name: input.fileName,
+    negativas: summary.negativas,
+    positivas: summary.positivas,
+    informativas: summary.informativas,
+    tenant_id: input.tenantId,
+    status: processingStatus,
+    detected_student_name: detectedStudentName,
+    detected_course: detectedCourse,
+    student_match_status: studentMatch.status,
+    warnings,
+    file_hash: fileHash,
+    parser_version: PARSER_VERSION
+  }).select("id").maybeSingle();
   return {
     success: true,
     analysis_id: analysisRow?.id ?? null,
@@ -1958,22 +1843,17 @@ async function analyzeDisciplinaryPdf(input) {
     suggestedLetterType: recommendedLetterType,
     warnings,
     processing_status: processingStatus,
-    mode: studentMatch.selectedStudentId ? 'preview' : 'student_pending',
+    mode: studentMatch.selectedStudentId ? "preview" : "student_pending",
     file_hash: fileHash,
-    parser_version: PARSER_VERSION,
+    parser_version: PARSER_VERSION
   };
 }
 async function confirmDisciplinaryProcess(input) {
   const supabase = getSupabaseAdmin(input.authToken);
   assertStoragePathAllowed(input.bucket, input.storagePath, input.tenantId);
-  const { data: student, error: studentError } = await supabase
-    .from('students')
-    .select('id, tenant_id, full_name, course_id')
-    .eq('id', input.studentId)
-    .eq('tenant_id', input.tenantId)
-    .maybeSingle();
+  const { data: student, error: studentError } = await supabase.from("students").select("id, tenant_id, full_name, course_id").eq("id", input.studentId).eq("tenant_id", input.tenantId).maybeSingle();
   if (studentError || !student) {
-    throw new Error('El estudiante seleccionado no pertenece al establecimiento activo');
+    throw new Error("El estudiante seleccionado no pertenece al establecimiento activo");
   }
   const summary = summarizeAnnotations(
     input.annotations.map((annotation, index) => ({
@@ -1984,70 +1864,57 @@ async function confirmDisciplinaryProcess(input) {
       sequence_number: annotation.sequence_number || index + 1,
       detected_date: annotation.detected_date ?? null,
       detected_teacher: annotation.detected_teacher ?? null,
-      classification_method: 'regex',
+      classification_method: "regex",
       confidence: annotation.confidence ?? 0.8,
-      parser_version: PARSER_VERSION,
-    })),
+      parser_version: PARSER_VERSION
+    }))
   );
   if (input.idempotencyKey) {
-    const { data: existing } = await supabase
-      .from('disciplinary_process_files')
-      .select('process_id, disciplinary_processes(process_number)')
-      .eq('tenant_id', input.tenantId)
-      .eq('storage_path', input.storagePath)
-      .maybeSingle();
+    const { data: existing } = await supabase.from("disciplinary_process_files").select("process_id, disciplinary_processes(process_number)").eq("tenant_id", input.tenantId).eq("storage_path", input.storagePath).maybeSingle();
     if (existing && existing.process_id) {
       const nested = existing.disciplinary_processes;
       const existingProcessId = existing.process_id;
-      const existingProcessNumber = nested?.process_number ?? '';
-      await syncConfirmedProcessToLegacyViews(
+      const existingProcessNumber = nested?.process_number ?? "";
+      const insertedAnnotations2 = await syncConfirmedProcessToLegacyViews(
         supabase,
         input,
         existingProcessId,
         existingProcessNumber,
         summary,
-        student,
+        student
       );
       return {
         success: true,
         processId: existingProcessId,
         processNumber: existingProcessNumber,
+        insertedAnnotations: insertedAnnotations2
       };
     }
   }
   const { data: processNumber, error: numberError } = await supabase.rpc(
-    'generate_process_number',
+    "generate_process_number",
     {
-      p_tenant_id: input.tenantId,
-    },
+      p_tenant_id: input.tenantId
+    }
   );
-  if (numberError || !processNumber) throw new Error('Error al generar n\xFAmero de proceso');
-  const { data: processRow, error: processError } = await supabase
-    .from('disciplinary_processes')
-    .insert({
-      student_id: input.studentId,
-      process_number: processNumber,
-      status: 'draft',
-      tenant_id: input.tenantId,
-      suggested_letter_type: input.suggestedLetterType || 'none',
-      total_negativas: summary.negativas,
-      total_positivas: summary.positivas,
-      total_informativas: summary.informativas,
-      is_completed: false,
-    })
-    .select('id, process_number')
-    .single();
-  if (processError || !processRow) throw new Error('Error al crear proceso disciplinario');
+  if (numberError || !processNumber) throw new Error("Error al generar n\xFAmero de proceso");
+  const { data: processRow, error: processError } = await supabase.from("disciplinary_processes").insert({
+    student_id: input.studentId,
+    process_number: processNumber,
+    status: "draft",
+    tenant_id: input.tenantId,
+    suggested_letter_type: input.suggestedLetterType || "none",
+    total_negativas: summary.negativas,
+    total_positivas: summary.positivas,
+    total_informativas: summary.informativas,
+    is_completed: false
+  }).select("id, process_number").single();
+  if (processError || !processRow) throw new Error("Error al crear proceso disciplinario");
   const processId = processRow.id;
   const confirmedAnnotations = input.annotations.map((annotation, index) => ({
     process_id: processId,
     student_id: input.studentId,
-    annotation_type:
-      annotation.type === 'negative'
-        ? 'Negativa'
-        : annotation.type === 'positive'
-          ? 'Positiva'
-          : 'Informaci\xF3n',
+    annotation_type: annotation.type === "negative" ? "Negativa" : annotation.type === "positive" ? "Positiva" : "Informaci\xF3n",
     annotation_text: annotation.raw_text,
     line_number: annotation.sequence_number || index + 1,
     annotation_date: annotation.detected_date,
@@ -2057,59 +1924,58 @@ async function confirmDisciplinaryProcess(input) {
     normalized_text: annotation.normalized_text ?? normalizeText(annotation.raw_text),
     page_number: annotation.page_number ?? null,
     position_in_page: annotation.sequence_number || index + 1,
-    classification_method: 'regex',
+    classification_method: "regex",
     confidence: annotation.confidence ?? 0.8,
     parser_version: PARSER_VERSION,
     confirmed_annotation_type: annotation.type,
-    tenant_id: input.tenantId,
+    tenant_id: input.tenantId
   }));
-  const { error: fileError } = await supabase.from('disciplinary_process_files').insert({
+  const { error: fileError } = await supabase.from("disciplinary_process_files").insert({
     process_id: processId,
     file_name: input.fileName,
     storage_path: input.storagePath,
     file_size: input.fileSize ?? 0,
-    mime_type: input.mimeType ?? 'application/pdf',
+    mime_type: input.mimeType ?? "application/pdf",
     file_hash: input.fileHash,
     bucket: input.bucket,
     original_file_name: input.fileName,
-    stored_file_name: input.storagePath.split('/').pop() || input.fileName,
-    processing_status: 'confirmed',
+    stored_file_name: input.storagePath.split("/").pop() || input.fileName,
+    processing_status: "confirmed",
     analysis_version: PARSER_VERSION,
     student_id: input.studentId,
-    tenant_id: input.tenantId,
+    tenant_id: input.tenantId
   });
-  if (fileError) throw new Error('Error al vincular el PDF al proceso');
+  if (fileError) throw new Error("Error al vincular el PDF al proceso");
   if (confirmedAnnotations.length > 0) {
-    const { error: annotationsError } = await supabase
-      .from('disciplinary_annotations_detected')
-      .insert(confirmedAnnotations);
-    if (annotationsError) throw new Error('Error al guardar las anotaciones detectadas');
+    const { error: annotationsError } = await supabase.from("disciplinary_annotations_detected").insert(confirmedAnnotations);
+    if (annotationsError) throw new Error("Error al guardar las anotaciones detectadas");
   }
-  await syncConfirmedProcessToLegacyViews(
+  const insertedAnnotations = await syncConfirmedProcessToLegacyViews(
     supabase,
     input,
     processId,
     String(processRow.process_number),
     summary,
-    student,
+    student
   );
-  await supabase.from('document_analyses').insert({
+  await supabase.from("document_analyses").insert({
     student_id: input.studentId,
     file_name: input.fileName,
     negativas: summary.negativas,
     positivas: summary.positivas,
     informativas: summary.informativas,
     tenant_id: input.tenantId,
-    status: 'confirmed',
+    status: "confirmed",
     process_id: processId,
     file_hash: input.fileHash,
     parser_version: PARSER_VERSION,
-    confirmed_at: /* @__PURE__ */ new Date().toISOString(),
+    confirmed_at: (/* @__PURE__ */ new Date()).toISOString()
   });
   return {
     success: true,
     processId,
     processNumber: String(processRow.process_number),
+    insertedAnnotations
   };
 }
 
@@ -2117,49 +1983,43 @@ async function confirmDisciplinaryProcess(input) {
 var router8 = Router8();
 router8.use(requireAuth);
 async function assertRateLimit(req) {
-  const ip = req.ip || req.connection?.remoteAddress || 'unknown';
+  const ip = req.ip || req.connection?.remoteAddress || "unknown";
   return checkRateLimitAsync(ip);
 }
 function getBearerToken(req) {
   const authHeader = req.headers.authorization;
-  return authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : void 0;
+  return authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : void 0;
 }
 function getProcessErrorResponse(error) {
-  const message = error instanceof Error ? error.message : 'Error interno al procesar el documento';
-  if (message === 'Supabase no configurado') {
+  const message = error instanceof Error ? error.message : "Error interno al procesar el documento";
+  if (message === "Supabase no configurado") {
     return {
       status: 503,
-      message: 'Supabase no est\xE1 configurado en el servidor para procesar PDFs privados.',
+      message: "Supabase no est\xE1 configurado en el servidor para procesar PDFs privados."
     };
   }
-  if (
-    message.includes('Bucket de documentos disciplinarios no permitido') ||
-    message.includes('Ruta de archivo no v\xE1lida') ||
-    message.includes('El archivo no pertenece') ||
-    message.includes('El PDF excede') ||
-    message.includes('PDF v\xE1lido')
-  ) {
+  if (message.includes("Bucket de documentos disciplinarios no permitido") || message.includes("Ruta de archivo no v\xE1lida") || message.includes("El archivo no pertenece") || message.includes("El PDF excede") || message.includes("PDF v\xE1lido")) {
     return { status: 400, message };
   }
-  if (message.includes('No fue posible descargar')) {
+  if (message.includes("No fue posible descargar")) {
     return {
       status: 404,
-      message: 'No fue posible encontrar o leer el PDF privado subido.',
+      message: "No fue posible encontrar o leer el PDF privado subido."
     };
   }
   return { status: 500, message };
 }
-router8.post('/process-disciplinary-pdf', requireTenant, async (req, res) => {
+router8.post("/process-disciplinary-pdf", requireTenant, async (req, res) => {
   try {
-    if (!(await assertRateLimit(req))) {
-      res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
+    if (!await assertRateLimit(req)) {
+      res.status(429).json({ error: "L\xEDmite de solicitudes alcanzado. Intente en un minuto." });
       return;
     }
     const body = req.body;
     const authReq = req;
     const tenantId = authReq.tenantId;
     if (!body.bucket || !body.storagePath || !body.fileName) {
-      res.status(400).json({ error: 'Faltan par\xE1metros requeridos para analizar el PDF' });
+      res.status(400).json({ error: "Faltan par\xE1metros requeridos para analizar el PDF" });
       return;
     }
     const result = await analyzeDisciplinaryPdf({
@@ -2167,29 +2027,26 @@ router8.post('/process-disciplinary-pdf', requireTenant, async (req, res) => {
       storagePath: body.storagePath,
       fileName: body.fileName,
       tenantId,
-      authToken: getBearerToken(req),
+      authToken: getBearerToken(req)
     });
     res.json(result);
   } catch (error) {
     const response = getProcessErrorResponse(error);
-    console.error(
-      'Error processing disciplinary PDF:',
-      error instanceof Error ? error.message : error,
-    );
+    console.error("Error processing disciplinary PDF:", error instanceof Error ? error.message : error);
     res.status(response.status).json({ error: response.message });
   }
 });
-router8.post('/process-disciplinary-pdf/confirm', requireTenant, async (req, res) => {
+router8.post("/process-disciplinary-pdf/confirm", requireTenant, async (req, res) => {
   try {
-    if (!(await assertRateLimit(req))) {
-      res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
+    if (!await assertRateLimit(req)) {
+      res.status(429).json({ error: "L\xEDmite de solicitudes alcanzado. Intente en un minuto." });
       return;
     }
     const body = req.body;
     const authReq = req;
     const tenantId = authReq.tenantId;
     if (!body.bucket || !body.storagePath || !body.fileName || !body.fileHash || !body.studentId) {
-      res.status(400).json({ error: 'Faltan par\xE1metros requeridos para confirmar el proceso' });
+      res.status(400).json({ error: "Faltan par\xE1metros requeridos para confirmar el proceso" });
       return;
     }
     const result = await confirmDisciplinaryProcess({
@@ -2203,138 +2060,132 @@ router8.post('/process-disciplinary-pdf/confirm', requireTenant, async (req, res
       mimeType: body.mimeType,
       tenantId,
       studentId: body.studentId,
-      suggestedLetterType: body.suggestedLetterType || 'none',
+      suggestedLetterType: body.suggestedLetterType || "none",
       annotations: body.annotations ?? [],
       idempotencyKey: body.idempotencyKey,
-      authToken: getBearerToken(req),
+      authToken: getBearerToken(req)
     });
     res.json(result);
   } catch (error) {
-    console.error(
-      'Error confirming disciplinary process:',
-      error instanceof Error ? error.message : error,
-    );
-    res
-      .status(500)
-      .json({
-        error: error instanceof Error ? error.message : 'Error interno al confirmar el proceso',
-      });
+    console.error("Error confirming disciplinary process:", error instanceof Error ? error.message : error);
+    res.status(500).json({ error: error instanceof Error ? error.message : "Error interno al confirmar el proceso" });
   }
 });
 var processDisciplinaryPdf_default = router8;
 
 // server/api/routes/usage.ts
-import { Router as Router9 } from 'express';
+import { Router as Router9 } from "express";
 var router9 = Router9();
-router9.post('/usage/events', requireAuth, async (req, res) => {
+router9.post("/usage/events", requireAuth, async (req, res) => {
   try {
     const { eventName, properties } = req.body;
-    if (!eventName || typeof eventName !== 'string') {
-      res.status(400).json({ error: 'Campo requerido: eventName (string)' });
+    if (!eventName || typeof eventName !== "string") {
+      res.status(400).json({ error: "Campo requerido: eventName (string)" });
       return;
     }
-    const { createClient: createClient2 } = await import('@supabase/supabase-js');
-    const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
-    const supabaseKey =
-      process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? '';
+    const { createClient: createClient2 } = await import("@supabase/supabase-js");
+    const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
     if (!supabaseUrl || !supabaseKey) {
-      res.status(500).json({ error: 'Supabase no configurado' });
+      res.status(500).json({ error: "Supabase no configurado" });
       return;
     }
     const supabase = createClient2(supabaseUrl, supabaseKey, {
-      auth: { persistSession: false },
+      auth: { persistSession: false }
     });
     const authReq = req;
-    await supabase.from('usage_events').insert({
+    await supabase.from("usage_events").insert({
       event_name: eventName,
       user_id: authReq.user?.sub ?? null,
       tenant_id: authReq.tenantId ?? null,
-      properties: properties ?? {},
+      properties: properties ?? {}
     });
     res.json({ success: true });
   } catch (error) {
-    console.error('Error logging usage event:', error);
-    res.status(500).json({ error: 'Error interno al registrar evento.' });
+    console.error("Error logging usage event:", error);
+    res.status(500).json({ error: "Error interno al registrar evento." });
   }
 });
 router9.get(
-  '/usage/stats',
+  "/usage/stats",
   requireAuth,
   requireTenant,
-  requireRole(['admin', 'direccion']),
+  requireRole(["admin", "direccion"]),
   async (req, res) => {
     try {
       const authReq = req;
       const since = authReq.query.since ?? void 0;
       const until = req.query.until ?? void 0;
-      const { createClient: createClient2 } = await import('@supabase/supabase-js');
-      const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
-      const supabaseKey =
-        process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? '';
+      const { createClient: createClient2 } = await import("@supabase/supabase-js");
+      const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
       if (!supabaseUrl || !supabaseKey) {
-        res.status(500).json({ error: 'Supabase no configurado' });
+        res.status(500).json({ error: "Supabase no configurado" });
         return;
       }
       const supabase = createClient2(supabaseUrl, supabaseKey, {
-        auth: { persistSession: false },
+        auth: { persistSession: false }
       });
       const params = {};
       if (since) params.since = since;
       if (until) params.until = until;
-      const { data: eventStats, error: eventError } = await supabase.rpc('get_usage_stats', params);
+      const { data: eventStats, error: eventError } = await supabase.rpc(
+        "get_usage_stats",
+        params
+      );
       if (eventError) {
-        console.error('Error fetching usage stats:', eventError);
-        res.status(500).json({ error: 'Error al obtener estad\xEDsticas.' });
+        console.error("Error fetching usage stats:", eventError);
+        res.status(500).json({ error: "Error al obtener estad\xEDsticas." });
         return;
       }
       const { data: dailyActive, error: dailyError } = await supabase.rpc(
-        'get_daily_active_users',
-        params,
+        "get_daily_active_users",
+        params
       );
       if (dailyError) {
-        console.error('Error fetching daily active users:', dailyError);
+        console.error("Error fetching daily active users:", dailyError);
       }
       res.json({
         events: eventStats ?? [],
-        dailyActiveUsers: dailyActive ?? [],
+        dailyActiveUsers: dailyActive ?? []
       });
     } catch (error) {
-      console.error('Error fetching usage stats:', error);
-      res.status(500).json({ error: 'Error interno al obtener estad\xEDsticas.' });
+      console.error("Error fetching usage stats:", error);
+      res.status(500).json({ error: "Error interno al obtener estad\xEDsticas." });
     }
-  },
+  }
 );
 var usage_default = router9;
 
 // server/routes/pilot.ts
-import { Router as Router10 } from 'express';
+import { Router as Router10 } from "express";
 
 // server/middleware/requireTenant.ts
 function requireTenant2(req, res, next) {
   const authReq = req;
   if (!authReq.user?.sub) {
-    res.status(401).json({ error: 'Autenticaci\xF3n requerida.' });
+    res.status(401).json({ error: "Autenticaci\xF3n requerida." });
     return;
   }
   if (!authReq.tenantId) {
-    res.status(403).json({ error: 'No fue posible determinar el establecimiento autenticado.' });
+    res.status(403).json({ error: "No fue posible determinar el establecimiento autenticado." });
     return;
   }
   next();
 }
 
 // server/middleware/requireMembership.ts
-import https4 from 'node:https';
+import https4 from "node:https";
 function getMembershipMode() {
-  const enabled = process.env.VITE_APP_MEMBERSHIPS_ENABLED === 'true';
-  const enforced = process.env.VITE_APP_MEMBERSHIPS_ENFORCED === 'true';
-  if (!enabled) return 'legacy';
-  if (enforced) return 'enforced';
-  return 'transition';
+  const enabled = process.env.VITE_APP_MEMBERSHIPS_ENABLED === "true";
+  const enforced = process.env.VITE_APP_MEMBERSHIPS_ENFORCED === "true";
+  if (!enabled) return "legacy";
+  if (enforced) return "enforced";
+  return "transition";
 }
 function logServer(event, detail) {
-  if (process.env.NODE_ENV !== 'production') {
-    const msg = `[membership-server] ${event}${detail ? `: ${detail}` : ''}`;
+  if (process.env.NODE_ENV !== "production") {
+    const msg = `[membership-server] ${event}${detail ? `: ${detail}` : ""}`;
     console.log(msg);
   }
 }
@@ -2342,35 +2193,35 @@ async function checkMembershipViaApi(hostname, anonKey, token, params) {
   return new Promise((resolve) => {
     const body = JSON.stringify({
       p_application_code: params.applicationCode,
-      p_roles: params.allowedRoles ? [...params.allowedRoles] : null,
+      p_roles: params.allowedRoles ? [...params.allowedRoles] : null
     });
     const req = https4.request(
       {
         hostname,
-        path: '/rest/v1/rpc/has_app_access',
-        method: 'POST',
+        path: "/rest/v1/rpc/has_app_access",
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(body),
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(body),
           apikey: anonKey,
-          Authorization: `Bearer ${token}`,
-        },
+          Authorization: `Bearer ${token}`
+        }
       },
       (res) => {
-        let data = '';
-        res.on('data', (chunk) => {
+        let data = "";
+        res.on("data", (chunk) => {
           data += chunk;
         });
-        res.on('end', () => {
+        res.on("end", () => {
           if (res.statusCode === 200) {
-            resolve(data === 'true');
+            resolve(data === "true");
           } else {
             resolve(false);
           }
         });
-      },
+      }
     );
-    req.on('error', () => resolve(false));
+    req.on("error", () => resolve(false));
     req.setTimeout(5e3, () => {
       req.destroy();
       resolve(false);
@@ -2393,19 +2244,19 @@ function requireMembership(params) {
   return async (req, res, next) => {
     const authReq = req;
     if (!authReq.user?.sub) {
-      res.status(401).json({ error: 'Autenticaci\xF3n requerida.' });
+      res.status(401).json({ error: "Autenticaci\xF3n requerida." });
       return;
     }
     if (!authReq.tenantId) {
-      res.status(403).json({ error: 'No fue posible determinar el establecimiento autenticado.' });
+      res.status(403).json({ error: "No fue posible determinar el establecimiento autenticado." });
       return;
     }
     const mode = getMembershipMode();
-    if (mode === 'legacy') {
-      logServer('legacy_mode', 'using profile role');
+    if (mode === "legacy") {
+      logServer("legacy_mode", "using profile role");
       if (params.allowedRoles && authReq.profileRole) {
         if (!params.allowedRoles.includes(authReq.profileRole)) {
-          res.status(403).json({ error: 'No tiene permisos para realizar esta acci\xF3n.' });
+          res.status(403).json({ error: "No tiene permisos para realizar esta acci\xF3n." });
           return;
         }
       }
@@ -2414,49 +2265,49 @@ function requireMembership(params) {
     }
     const config = getSupabaseConfig();
     if (!config) {
-      res.status(500).json({ error: 'Error de configuraci\xF3n del servidor.' });
+      res.status(500).json({ error: "Error de configuraci\xF3n del servidor." });
       return;
     }
     const token = authReq.authToken;
     if (!token) {
-      res.status(401).json({ error: 'Token de autenticaci\xF3n requerido.' });
+      res.status(401).json({ error: "Token de autenticaci\xF3n requerido." });
       return;
     }
     try {
-      logServer('membership_check', `${mode} mode for ${params.applicationCode}`);
+      logServer("membership_check", `${mode} mode for ${params.applicationCode}`);
       const hasAccess = await checkMembershipViaApi(config.hostname, config.anonKey, token, params);
       if (hasAccess) {
         next();
         return;
       }
-      if (mode === 'transition') {
-        logServer('transition_fallback', 'membership denied, trying profile role');
+      if (mode === "transition") {
+        logServer("transition_fallback", "membership denied, trying profile role");
         if (params.allowedRoles && authReq.profileRole) {
           if (params.allowedRoles.includes(authReq.profileRole)) {
-            logServer('transition_fallback_success', authReq.profileRole);
+            logServer("transition_fallback_success", authReq.profileRole);
             next();
             return;
           }
         }
-        logServer('transition_fallback_denied', 'no matching role');
+        logServer("transition_fallback_denied", "no matching role");
       }
-      res.status(403).json({ error: 'No tiene una membres\xEDa activa para esta aplicaci\xF3n.' });
+      res.status(403).json({ error: "No tiene una membres\xEDa activa para esta aplicaci\xF3n." });
     } catch (err) {
-      if (mode === 'transition') {
+      if (mode === "transition") {
         logServer(
-          'transition_fallback',
-          `membership check failed: ${err instanceof Error ? err.message : 'unknown'}, trying profile role`,
+          "transition_fallback",
+          `membership check failed: ${err instanceof Error ? err.message : "unknown"}, trying profile role`
         );
         if (params.allowedRoles && authReq.profileRole) {
           if (params.allowedRoles.includes(authReq.profileRole)) {
-            logServer('transition_fallback_success', authReq.profileRole);
+            logServer("transition_fallback_success", authReq.profileRole);
             next();
             return;
           }
         }
-        logServer('transition_fallback_denied', 'no matching role after error');
+        logServer("transition_fallback_denied", "no matching role after error");
       }
-      res.status(500).json({ error: 'Error al verificar membres\xEDa.' });
+      res.status(500).json({ error: "Error al verificar membres\xEDa." });
     }
   };
 }
@@ -2464,65 +2315,67 @@ function requireMembership(params) {
 // server/routes/pilot.ts
 var router10 = Router10();
 router10.get(
-  '/pilot/membership-check',
+  "/pilot/membership-check",
   requireAuth,
   requireTenant2,
   requireMembership({
-    applicationCode: 'convivencia',
-    allowedRoles: ['direccion', 'convivencia'],
+    applicationCode: "convivencia",
+    allowedRoles: ["direccion", "convivencia"]
   }),
   async (_req, res) => {
     res.json({
-      status: 'ok',
-      message: 'Acceso autorizado por membres\xEDa.',
-      timestamp: /* @__PURE__ */ new Date().toISOString(),
+      status: "ok",
+      message: "Acceso autorizado por membres\xEDa.",
+      timestamp: (/* @__PURE__ */ new Date()).toISOString()
     });
-  },
+  }
 );
 var pilot_default = router10;
 
 // server/api/index.ts
 var __filename = fileURLToPath(import.meta.url);
 var __dirname = path.dirname(__filename);
-var allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
-  .split(',')
-  .map((o) => o.trim())
-  .filter(Boolean);
+var allowedOrigins = (process.env.ALLOWED_ORIGINS || "").split(",").map((o) => o.trim()).filter(Boolean);
 var app = express();
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 app.use(compression());
 app.use(
   helmet({
     contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false,
-  }),
+    crossOriginEmbedderPolicy: false
+  })
 );
 app.use(
   cors({
     origin: allowedOrigins.length > 0 ? allowedOrigins : false,
     credentials: allowedOrigins.length > 0,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  }),
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+  })
 );
-app.use(express.json({ limit: '100kb' }));
-app.use('/api', improve_default);
-app.use('/api', advisor_default);
-app.use('/api', audit_default);
-app.use('/api', draft_default);
-app.use('/api', debug_default);
-app.use('/api', templates_default);
-app.use('/api', parse_default);
-app.use('/api', processDisciplinaryPdf_default);
-app.use('/api', usage_default);
-app.use('/api', pilot_default);
-var distPath = path.join(__dirname, '..', 'dist');
+app.use(express.json({ limit: "100kb" }));
+app.get("/api/health", (_req, res) => {
+  res.json({ ok: true });
+});
+app.use("/api", improve_default);
+app.use("/api", advisor_default);
+app.use("/api", audit_default);
+app.use("/api", draft_default);
+app.use("/api", debug_default);
+app.use("/api", templates_default);
+app.use("/api", parse_default);
+app.use("/api", processDisciplinaryPdf_default);
+app.use("/api", usage_default);
+app.use("/api", pilot_default);
+var distPath = path.join(__dirname, "..", "dist");
 app.use(express.static(distPath));
-app.get('*', (_req, res) => {
-  res.sendFile(path.join(distPath, 'index.html'));
+app.get("*", (_req, res) => {
+  res.sendFile(path.join(distPath, "index.html"));
 });
 var index_default = app;
-export { index_default as default };
+export {
+  index_default as default
+};
 /** @license SPDX-License-Identifier: Apache-2.0 */
 /**
  * @license
