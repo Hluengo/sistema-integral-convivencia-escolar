@@ -70,12 +70,17 @@ export const useAuthStore = create<AuthState>((set) => {
   // internal auth lock while invoking this callback; using the same client
   // before the callback returns can leave subsequent REST requests without a
   // usable session and produce repeated 401 responses.
-  subscribeAuth((_event, session) => {
+  subscribeAuth((event, session) => {
     clearTimeout(timeoutId);
     const user = session?.user ?? null;
 
+    if (event === 'PASSWORD_RECOVERY' && typeof window !== 'undefined') {
+      window.sessionStorage.setItem('supabase-password-recovery', 'true');
+    }
+
     set({
       user,
+      ...(event === 'PASSWORD_RECOVERY' ? { showLoginModal: true } : {}),
       tenantId: user ? null : null,
       authLoading: false,
       isAuthenticated: Boolean(session?.access_token && user),
