@@ -5,7 +5,7 @@ import type { BitacoraEntry, Causa, ChecklistItem } from '../../../types';
 import { BitacoraEntrySchema, CausaSchema, ChecklistItemSchema } from '../../../schemas';
 import { getBaseChecklist } from '../../../data';
 import { useAuthStore } from '../../../stores/authStore';
-import { getDocumentSignedUrl } from './storage.service';
+import { normalizeDocumentPath } from './storage.service';
 
 interface SupabaseCausaRow {
   id: string;
@@ -49,9 +49,9 @@ interface SupabaseBitacoraRow {
   documento_adjunto: string | null;
 }
 
-async function mapChecklistRow(row: SupabaseChecklistRow): Promise<ChecklistItem | null> {
+function mapChecklistRow(row: SupabaseChecklistRow): ChecklistItem | null {
   const documentoUrl = row.documento_url
-    ? await getDocumentSignedUrl(row.documento_url)
+    ? normalizeDocumentPath(row.documento_url)
     : undefined;
   const parsed = ChecklistItemSchema.safeParse({
     id: row.id,
@@ -72,9 +72,9 @@ async function mapChecklistRow(row: SupabaseChecklistRow): Promise<ChecklistItem
   return parsed.data;
 }
 
-async function mapBitacoraRow(row: SupabaseBitacoraRow): Promise<BitacoraEntry | null> {
+function mapBitacoraRow(row: SupabaseBitacoraRow): BitacoraEntry | null {
   const documentoAdjunto = row.documento_adjunto
-    ? await getDocumentSignedUrl(row.documento_adjunto)
+    ? normalizeDocumentPath(row.documento_adjunto)
     : undefined;
   const parsed = BitacoraEntrySchema.safeParse({
     id: row.id,
@@ -150,12 +150,11 @@ export async function fetchCausas(limit = DEFAULT_PAGE_SIZE): Promise<Causa[]> {
   if (bitacoraResult.error) console.error('Error fetching bitacora entries:', bitacoraResult.error);
 
   const checklistByCausa = new Map<string, ChecklistItem[]>();
-  const checklistMapped = await Promise.all(
-    ((checklistResult.data || []) as SupabaseChecklistRow[]).map(async (row) => ({
+  const checklistMapped =
+    ((checklistResult.data || []) as SupabaseChecklistRow[]).map((row) => ({
       causaId: row.causa_id,
-      item: await mapChecklistRow(row),
-    }))
-  );
+      item: mapChecklistRow(row),
+    }));
   for (const { causaId, item } of checklistMapped) {
     if (!item) continue;
     const current = checklistByCausa.get(causaId) || [];
@@ -164,12 +163,11 @@ export async function fetchCausas(limit = DEFAULT_PAGE_SIZE): Promise<Causa[]> {
   }
 
   const bitacoraByCausa = new Map<string, BitacoraEntry[]>();
-  const bitacoraMapped = await Promise.all(
-    ((bitacoraResult.data || []) as SupabaseBitacoraRow[]).map(async (row) => ({
+  const bitacoraMapped =
+    ((bitacoraResult.data || []) as SupabaseBitacoraRow[]).map((row) => ({
       causaId: row.causa_id,
-      entry: await mapBitacoraRow(row),
-    }))
-  );
+      entry: mapBitacoraRow(row),
+    }));
   for (const { causaId, entry } of bitacoraMapped) {
     if (!entry) continue;
     const current = bitacoraByCausa.get(causaId) || [];
