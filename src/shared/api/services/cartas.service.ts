@@ -239,7 +239,23 @@ export async function markCartaPrinted(cartaId: string): Promise<boolean> {
   return createCartaEvent(cartaId, 'printed', 'Carta impresa desde ficha disciplinaria');
 }
 
-export async function markCartaProcessedManually(cartaId: string, note: string): Promise<boolean> {
+export async function markCartaProcessedManually(
+  cartaId: string,
+  note: string,
+  contentSnapshot?: Record<string, unknown>
+): Promise<boolean> {
+  if (contentSnapshot) {
+    const { error } = await supabase
+      .from('cartas_disciplinarias')
+      .update({ content_snapshot: contentSnapshot })
+      .eq('id', cartaId);
+
+    if (error) {
+      console.error('Error saving final carta content:', error);
+      return false;
+    }
+  }
+
   return createCartaEvent(
     cartaId,
     'processed_manually',

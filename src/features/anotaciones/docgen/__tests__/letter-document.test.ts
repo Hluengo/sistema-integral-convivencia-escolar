@@ -63,7 +63,7 @@ describe('Servicios eliminados — sin dependencias obsoletas', () => {
   it('docx NO debe importarse en el proyecto', async () => checkNoImports('docx'));
 });
 
-describe('DocumentPreview — solo boton Imprimir', () => {
+describe('DocumentPreview — acciones del trámite', () => {
   const previewPath = resolve(import.meta.dirname!, '../DocumentPreview.tsx');
   let content: string;
 
@@ -74,6 +74,14 @@ describe('DocumentPreview — solo boton Imprimir', () => {
 
   it('debe tener boton Imprimir', () => {
     ok(content.includes('Imprimir'), 'debe contener el texto Imprimir');
+  });
+
+  it('debe mostrar Marcar como procesada junto a Imprimir', () => {
+    ok(content.includes('Marcar como procesada'), 'debe permitir confirmar el trámite');
+    ok(
+      content.indexOf('Imprimir') < content.indexOf('Marcar como procesada'),
+      'Marcar como procesada debe aparecer después de Imprimir',
+    );
   });
 
   it('NO debe tener referencias a PDF', () => {
@@ -125,6 +133,39 @@ describe('PrintHintDialog — texto Carta', () => {
 
   it('NO debe mencionar Oficio', () => {
     ok(!content.includes('Oficio'), 'NO debe mencionar Oficio');
+  });
+
+  it('debe indicar que el trámite se confirma manualmente', () => {
+    ok(
+      content.includes('Marcar como procesada'),
+      'debe instruir al usuario a confirmar el trámite después de imprimir',
+    );
+  });
+});
+
+describe('Generador de cartas — sin registro y emisión duplicados', () => {
+  const generatorPath = resolve(import.meta.dirname!, '../../AnotacionesDocumentGenerator.tsx');
+  const formPath = resolve(import.meta.dirname!, '../DocumentForm.tsx');
+  let generator: string;
+  let form: string;
+
+  it('debe cargar los componentes', () => {
+    generator = readFileSync(generatorPath, 'utf-8');
+    form = readFileSync(formPath, 'utf-8');
+    ok(generator.length > 0);
+    ok(form.length > 0);
+  });
+
+  it('NO debe ofrecer Registrar y Emitir Carta', () => {
+    ok(!form.includes('Registrar y Emitir Carta'));
+    ok(!form.includes('onRegisterCommitment'));
+  });
+
+  it('NO debe conservar el flujo automático de emisión', () => {
+    ok(!generator.includes('EmissionConfirmDialog'));
+    ok(!generator.includes('useRegisterCommitment'));
+    ok(!generator.includes('onRegistered'));
+    ok(!generator.includes('onLetterAction'));
   });
 });
 

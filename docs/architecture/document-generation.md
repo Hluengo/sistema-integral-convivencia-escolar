@@ -74,10 +74,14 @@ AnotacionesView
       ├── DocumentForm → Datos del documento
       ├── DocumentPreview → Vista previa (DOCX mock)
       ├── DocumentWarnings → Alertas de debido proceso
-      └── Export → downloadCartaPdf (pdf-lib) o DOCX nativo
+      └── Imprimir → volver a la aplicación → Marcar como procesada
 
 DocumentosView
   └── DocumentosView (unified hub)
       ├── Causas: cartas existentes
       └── Anotaciones: generador de documentos
 ```
+
+La impresión no completa el trámite por sí sola. **Marcar como procesada** guarda el
+`content_snapshot` final y agrega el evento `processed_manually` a `carta_events`. Los eventos
+históricos `registered` y `printed` se conservan para compatibilidad.

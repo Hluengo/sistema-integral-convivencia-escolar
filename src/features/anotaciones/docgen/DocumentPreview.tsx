@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { forwardRef } from 'react';
-import { Printer } from 'lucide-react';
+import { CheckCircle2, Printer } from 'lucide-react';
 import type { Annotation } from '../../../types';
 import type { DocType, LetterContent } from './DocumentPreview/docTypes';
 import LetterA4Document from './LetterA4Document';
@@ -21,6 +21,8 @@ interface DocumentPreviewProps {
   selectedAnnsObjects: Annotation[];
   letterContent: LetterContent;
   onPrint: () => void;
+  onMarkProcessed: () => void;
+  isProcessing: boolean;
   onOverflowChange?: (hasOverflow: boolean) => void;
 }
 
@@ -39,6 +41,8 @@ const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(functio
     selectedAnnsObjects,
     letterContent,
     onPrint,
+    onMarkProcessed,
+    isProcessing,
     onOverflowChange,
   },
   ref
@@ -56,6 +60,15 @@ const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(functio
             className="inline-flex items-center gap-2 rounded-xl bg-neutral-700 px-4 py-2.5 text-sm font-medium text-white shadow-xs transition-colors hover:bg-neutral-800"
           >
             <Printer className="h-4 w-4" /> Imprimir
+          </button>
+          <button
+            type="button"
+            onClick={onMarkProcessed}
+            disabled={isProcessing}
+            className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-800 shadow-xs transition-colors hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <CheckCircle2 className="h-4 w-4" />
+            {isProcessing ? 'Procesando…' : 'Marcar como procesada'}
           </button>
         </div>
       </div>

@@ -36,8 +36,6 @@
 | `useDocumentState()` | `docgen/hooks/useDocumentState.ts` | Estado del formulario de documento |
 | `useSelectedAnnotations()` | `docgen/hooks/useSelectedAnnotations.ts` | Anotaciones seleccionadas |
 | `useDocumentExport()` | `docgen/hooks/useDocumentExport.ts` | Exportar documento a DOCX |
-| `useDocumentRegistry()` | `docgen/hooks/useDocumentRegistry.ts` | Registrar carta en DB |
-| `useRegisterCommitment()` | `docgen/hooks/useRegisterCommitment.ts` | Registrar compromiso |
 
 ## Disciplinary PDF Hooks
 

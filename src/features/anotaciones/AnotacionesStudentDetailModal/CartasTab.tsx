@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { lazy, Suspense, useState } from 'react';
-import { Ban, CheckCircle2, FileText, XCircle } from 'lucide-react';
+import { Ban, FileText, XCircle } from 'lucide-react';
 import type { Annotation, CartaDisciplinaria } from '@/src/shared/lib/types';
 import { TEACHERS_BY_COURSE } from '@/src/lib/anotacionesUtils';
 import {
@@ -9,7 +9,6 @@ import {
   createCartaEvent,
   createPendingCartaForStudent,
   getCartaWorkflowLabel,
-  markCartaPrinted,
   markCartaProcessedManually,
   resolveCartaWorkflowStatus,
 } from '@/src/services/cartas.service';
@@ -107,6 +106,7 @@ export default function CartasTab({
     const ok = await action(carta);
     if (ok) {
       setMessage(successText);
+      setLocalCarta(null);
       await refreshAfterChange();
     }
     setBusy(false);
@@ -130,13 +130,13 @@ export default function CartasTab({
     setBusy(false);
   };
 
-  const handleManualProcess = async () => {
+  const handleManualProcess = async (contentSnapshot: Record<string, unknown>) => {
     const note = window
       .prompt('Motivo y observación del procesamiento manual. Indique qué se hizo y cuándo.')
       ?.trim();
     if (!note) return;
     await runCartaAction(
-      (carta) => markCartaProcessedManually(carta.id, note),
+      (carta) => markCartaProcessedManually(carta.id, note, contentSnapshot),
       'Carta marcada como procesada manualmente.'
     );
   };
@@ -146,13 +146,6 @@ export default function CartasTab({
     const reason = window.prompt('Motivo de anulación')?.trim();
     if (!reason) return;
     await runCartaAction((carta) => annulCarta(carta.id, reason), 'Carta anulada.');
-  };
-
-  const handleGeneratorAction = async () => {
-    const carta = await ensureCarta();
-    if (!carta) return;
-    await markCartaPrinted(carta.id);
-    setMessage('Carta impresa registrada.');
   };
 
   const statusLabel = activeCarta
@@ -210,8 +203,8 @@ export default function CartasTab({
           <div>
             <h3 className="text-sm font-bold text-neutral-900">Acciones principales</h3>
             <p className="mt-1 text-xs text-neutral-500">
-              Abre el generador para editar, imprimir o guardar la plantilla visible. El registro
-              conserva el contenido final.
+              Abre el generador para editar e imprimir la plantilla. Luego confirma el trámite
+              mediante “Marcar como procesada”.
             </p>
           </div>
           {message && (
@@ -229,15 +222,6 @@ export default function CartasTab({
           >
             <FileText className="h-4 w-4" />
             Crear carta
-          </button>
-          <button
-            type="button"
-            onClick={() => void handleManualProcess()}
-            disabled={!canAct || busy}
-            className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
-          >
-            <CheckCircle2 className="h-4 w-4" />
-            Marcar como procesada
           </button>
           <button
             type="button"
@@ -289,12 +273,11 @@ export default function CartasTab({
               privacyMode={privacyMode}
               teachers={teachers}
               initialDocType={activeDocType}
-              existingCartaId={activeCarta?.id || localCarta?.id}
               initialContentSnapshot={
                 activeCarta?.content_snapshot || localCarta?.content_snapshot || null
               }
-              onLetterAction={handleGeneratorAction}
-              onRegistered={() => void refreshAfterChange()}
+              onMarkProcessed={handleManualProcess}
+              isProcessing={busy}
             />
           </Suspense>
         </section>

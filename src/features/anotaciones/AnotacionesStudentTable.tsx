@@ -274,7 +274,7 @@ export default memo(function AnotacionesStudentTable({
                   Estado
                 </th>
                 <th className="hidden px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider md:table-cell">
-                  Documentos
+                  Estado de cartas
                 </th>
               </tr>
             </thead>

@@ -80,6 +80,13 @@ export default function PrintHintDialog({ isOpen, onConfirm, onCancel }: PrintHi
               dimensionado para Carta de 216 x 279 mm (Letter).
             </span>
           </div>
+          <div className="flex items-start gap-2 rounded-xl bg-emerald-50 p-3 text-emerald-800">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+            <span className="text-xs">
+              Después de imprimir, regrese a la aplicación y haga clic en “Marcar como procesada”
+              para confirmar el trámite y registrarlo en el historial.
+            </span>
+          </div>
         </div>
 
         <div className="mt-6 flex items-center justify-end gap-3">

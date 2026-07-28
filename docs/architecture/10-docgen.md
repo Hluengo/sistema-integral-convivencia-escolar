@@ -15,11 +15,11 @@ Pipeline: Upload → extract (pdfjs-dist) → parse (regex) → match → sugges
 
 El modal individual de Anotaciones funciona como ficha operativa, no como biblioteca documental. Sus pestañas son: Estado, Revisar PDF, Carta e Historial.
 
-Flujo principal: Revisar PDF -> confirmar análisis -> Ir a Carta -> Crear/Imprimir/Descargar/Registrar. La pestaña Carta solo gestiona la carta sugerida o pendiente del estudiante; DocumentosView mantiene la biblioteca/documentación amplia.
+Flujo principal: Revisar PDF -> confirmar análisis -> Ir a Carta -> Crear -> Editar -> Imprimir -> Marcar como procesada. La pestaña Carta solo gestiona la carta sugerida o pendiente del estudiante; DocumentosView mantiene la biblioteca/documentación amplia.
 
-La realización de una carta se valida por eventos comprobables en `carta_events`: `registered`, `printed`, `downloaded_pdf`, `downloaded_word` o `processed_manually`. Una fila en `cartas_disciplinarias` sin esos eventos se considera pendiente, no emitida.
+En el flujo actual, la realización de una carta se confirma explícitamente mediante el evento `processed_manually`. Imprimir no cierra automáticamente el trámite. Los eventos históricos `registered` y `printed` siguen siendo interpretados para mantener compatibilidad con cartas emitidas antes de este cambio. Una fila nueva en `cartas_disciplinarias` sin confirmación se considera pendiente.
 ## Editor interno de cartas disciplinarias
 
 `AnotacionesDocumentGenerator` es un editor liviano dentro de la pestaña Carta de la ficha disciplinaria. No muestra ni permite seleccionar anotaciones negativas; solo muestra la cantidad considerada y conserva internamente trazabilidad (`negativeCount`, `sourceAnalysisId`, `sourceProcessId`).
 
-Los textos editables viven en `letterContent` (`motivo`, `descripcion`, `medida`, `acuerdos`, `cierre`, `observaciones`) y alimentan la vista A4, impresión, PDF, Word y registro en Supabase. Al registrar una carta se guarda `cartas_disciplinarias.content_snapshot` para reabrir/imprimir el contenido exacto emitido, aunque cambien los textos base de plantilla.
+Los textos editables viven en `letterContent` (`motivo`, `descripcion`, `medida`, `acuerdos`, `cierre`, `observaciones`) y alimentan la vista A4 y la impresión. Al usar **Marcar como procesada** se guarda `cartas_disciplinarias.content_snapshot` y se registra el evento de cierre, permitiendo reabrir o imprimir el contenido exacto aunque cambien los textos base de plantilla.

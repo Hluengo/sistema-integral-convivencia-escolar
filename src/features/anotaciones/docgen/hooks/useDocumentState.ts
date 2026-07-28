@@ -20,7 +20,6 @@ export function useDocumentState() {
   const [authorizedBypass, setAuthorizedBypass] = useState(false);
   const [authorizedDuplicate, setAuthorizedDuplicate] = useState(false);
   const [bypassProgressLock, setBypassProgressLock] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
 
   const setLetterContent = useCallback((next: LetterContent) => {
     setLetterContentState(next);
@@ -57,10 +56,6 @@ export function useDocumentState() {
     setCustomCommitments((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
-  const handleRegisterCommitment = useCallback(() => {
-    // This will be overridden by the component with actual logic
-  }, []);
-
   return {
     docType,
     setDocType,
@@ -87,10 +82,7 @@ export function useDocumentState() {
     setAuthorizedDuplicate,
     bypassProgressLock,
     setBypassProgressLock,
-    isRegistering,
-    setIsRegistering,
     handleAddCustomCommitment,
     handleRemoveCustomCommitment,
-    handleRegisterCommitment,
   };
 }
