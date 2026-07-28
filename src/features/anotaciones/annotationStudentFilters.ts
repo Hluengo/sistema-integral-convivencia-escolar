@@ -6,7 +6,7 @@
 export function getAnnotationRange(filter: string): [number, number] | null {
   switch (filter) {
     case 'con_registro':
-      return [5, Number.POSITIVE_INFINITY];
+      return [1, Number.POSITIVE_INFINITY];
     case 'sin_carta':
       return [1, 4];
     case 'amonestacion':
