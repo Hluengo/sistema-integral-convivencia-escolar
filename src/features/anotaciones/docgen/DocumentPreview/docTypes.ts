@@ -43,7 +43,7 @@ export const DEFAULT_COMMITMENTS = [
 export const DEFAULT_LETTER_CONTENT: Record<DocType, LetterContent> = {
   amonestacion: {
     motivo:
-      'Activación de la Medida 3 debido a la primera acumulación crítica de 5 anotaciones leves en la hoja de vida del estudiante, conforme a lo establecido en el sistema de progresión disciplinaria institucional.',
+      'Activación de la Medida 3 debido a la primera acumulación crítica de 5 o más anotaciones leves en la hoja de vida del estudiante, conforme a lo establecido en el sistema de progresión disciplinaria institucional.',
     descripcion:
       'Los registros pedagógicos dan cuenta de la persistencia de conductas tipificadas como faltas leves (Art. 24) que, pese a los llamados de atención verbales previos (Medida 1), no han sido corregidas. Esta reiteración evidencia una falta de adhesión a las normas básicas de convivencia y un impacto negativo en el clima de aula.',
     medida:

@@ -231,7 +231,7 @@ describe('Carta de amonestación — texto institucional', () => {
   it('mantiene el contenido base actualizado', () => {
     const amonestacion = DEFAULT_LETTER_CONTENT.amonestacion;
 
-    ok(amonestacion.motivo.includes('primera acumulación crítica de 5 anotaciones leves'));
+    ok(amonestacion.motivo.includes('primera acumulación crítica de 5 o más anotaciones leves'));
     ok(amonestacion.descripcion.includes('faltas leves (Art. 24)'));
     ok(amonestacion.medida.includes('Amonestación Escrita Formal'));
     ok(amonestacion.acuerdos.includes('Medida 4 (Carta de Compromiso)'));
