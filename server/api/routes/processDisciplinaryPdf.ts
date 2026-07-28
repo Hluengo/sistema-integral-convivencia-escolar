@@ -5,7 +5,10 @@ import { checkRateLimitAsync } from '../services/rateLimit.js';
 import { requireAuth } from '../middleware/auth.js';
 import { requireTenant } from '../middleware/requireTenant.js';
 import type { AuthenticatedRequest } from '../types';
-import { analyzeDisciplinaryPdf, confirmDisciplinaryProcess } from '../../lib/disciplinaryPdfAnalysis';
+import {
+  analyzeDisciplinaryPdf,
+  confirmDisciplinaryProcess,
+} from '../../lib/disciplinaryPdfAnalysis';
 
 const router = Router();
 router.use(requireAuth);
@@ -35,7 +38,9 @@ interface AuthedRequestBody {
   idempotencyKey?: string;
 }
 
-async function assertRateLimit(req: Parameters<Parameters<Router['post']>[1]>[0]): Promise<boolean> {
+async function assertRateLimit(
+  req: Parameters<Parameters<Router['post']>[1]>[0],
+): Promise<boolean> {
   const ip = req.ip || req.connection?.remoteAddress || 'unknown';
   return checkRateLimitAsync(ip);
 }
@@ -71,11 +76,15 @@ function getProcessErrorResponse(error: unknown): { status: number; message: str
     };
   }
 
+  if (message.includes('Este PDF ya fue registrado')) {
+    return { status: 409, message };
+  }
+
   return { status: 500, message };
 }
 router.post('/process-disciplinary-pdf', requireTenant, async (req, res) => {
   try {
-    if (!await assertRateLimit(req)) {
+    if (!(await assertRateLimit(req))) {
       res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
       return;
     }
@@ -98,14 +107,17 @@ router.post('/process-disciplinary-pdf', requireTenant, async (req, res) => {
     res.json(result);
   } catch (error) {
     const response = getProcessErrorResponse(error);
-    console.error('Error processing disciplinary PDF:', error instanceof Error ? error.message : error);
+    console.error(
+      'Error processing disciplinary PDF:',
+      error instanceof Error ? error.message : error,
+    );
     res.status(response.status).json({ error: response.message });
   }
 });
 
 router.post('/process-disciplinary-pdf/confirm', requireTenant, async (req, res) => {
   try {
-    if (!await assertRateLimit(req)) {
+    if (!(await assertRateLimit(req))) {
       res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
       return;
     }
@@ -136,8 +148,12 @@ router.post('/process-disciplinary-pdf/confirm', requireTenant, async (req, res)
     });
     res.json(result);
   } catch (error) {
-    console.error('Error confirming disciplinary process:', error instanceof Error ? error.message : error);
-    res.status(500).json({ error: error instanceof Error ? error.message : 'Error interno al confirmar el proceso' });
+    const response = getProcessErrorResponse(error);
+    console.error(
+      'Error confirming disciplinary process:',
+      error instanceof Error ? error.message : error,
+    );
+    res.status(response.status).json({ error: response.message });
   }
 });
 

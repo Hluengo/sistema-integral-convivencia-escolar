@@ -65,12 +65,12 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
       const nextStudents = fetchedStudents ?? [];
       setStudents(nextStudents);
       setSelectedStudent((current) =>
-        current ? nextStudents.find((student) => student.id === current.id) || current : null
+        current ? nextStudents.find((student) => student.id === current.id) || current : null,
       );
     } catch (error: unknown) {
       console.error('Error actualizando la tabla de anotaciones:', error);
       setDbError(
-        error instanceof Error ? error.message : 'Error al actualizar la tabla de anotaciones'
+        error instanceof Error ? error.message : 'Error al actualizar la tabla de anotaciones',
       );
     }
   }, []);
@@ -125,7 +125,7 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
         setDbError(error instanceof Error ? error.message : 'Error al limpiar anotaciones');
       }
     },
-    [loadData, selectedStudent, students]
+    [loadData, selectedStudent, students],
   );
 
   if (isLoading) {
@@ -218,6 +218,13 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
           onClose={() => setIsNewProcessModalOpen(false)}
           currentUserEmail=""
           onProcessCreated={loadData}
+          onOpenExistingStudent={(studentId) => {
+            const student = students.find((candidate) => candidate.id === studentId);
+            if (!student) return;
+            setIsNewProcessModalOpen(false);
+            setDetailInitialTab('historial');
+            setSelectedStudent(student);
+          }}
         />
       )}
     </div>

@@ -1771,6 +1771,26 @@ async function getSuggestedLetter(supabase, tenantId, summary) {
   if (error || !data) return "none";
   return String(data);
 }
+async function findDuplicateFileByHash(supabase, tenantId, fileHash) {
+  const { data: duplicateFile, error: duplicateFileError } = await supabase.from("disciplinary_process_files").select("process_id,student_id,uploaded_at").eq("tenant_id", tenantId).eq("file_hash", fileHash).order("uploaded_at", { ascending: false }).limit(1).maybeSingle();
+  if (duplicateFileError) {
+    throw new Error("No fue posible comprobar si el PDF ya estaba registrado");
+  }
+  if (!duplicateFile) return null;
+  const processId = String(duplicateFile.process_id);
+  const { data: process2, error: processError } = await supabase.from("disciplinary_processes").select("process_number").eq("tenant_id", tenantId).eq("id", processId).maybeSingle();
+  if (processError) {
+    throw new Error("No fue posible recuperar el proceso asociado al PDF existente");
+  }
+  return {
+    process_id: processId,
+    process_number: String(
+      process2?.process_number ?? "Sin n\xFAmero"
+    ),
+    student_id: duplicateFile.student_id ?? null,
+    uploaded_at: String(duplicateFile.uploaded_at)
+  };
+}
 async function analyzeDisciplinaryPdf(input) {
   const supabase = getSupabaseAdmin(input.authToken);
   assertStoragePathAllowed(input.bucket, input.storagePath, input.tenantId);
@@ -1794,10 +1814,15 @@ async function analyzeDisciplinaryPdf(input) {
   const detectedCourse = extractCourse(textContent);
   const annotations = normalizeText(textContent).length < 20 ? [] : parseAnnotationsByPage(pages);
   const summary = summarizeAnnotations(annotations);
-  const [recommendedLetterType, studentMatch] = await Promise.all([
+  const [recommendedLetterType, studentMatch, duplicateFile] = await Promise.all([
     getSuggestedLetter(supabase, input.tenantId, summary),
-    findStudentCandidates(supabase, input.tenantId, detectedStudentName, detectedCourse)
+    findStudentCandidates(supabase, input.tenantId, detectedStudentName, detectedCourse),
+    findDuplicateFileByHash(supabase, input.tenantId, fileHash)
   ]);
+  if (duplicateFile)
+    warnings.push(
+      `Este mismo PDF ya est\xE1 registrado en el proceso ${duplicateFile.process_number}.`
+    );
   if (!detectedStudentName) warnings.push("No se pudo detectar un nombre de estudiante en el PDF.");
   if (annotations.length === 0 && normalizeText(textContent).length >= 20)
     warnings.push("No se detectaron anotaciones clasificables en el documento.");
@@ -1845,6 +1870,7 @@ async function analyzeDisciplinaryPdf(input) {
     processing_status: processingStatus,
     mode: studentMatch.selectedStudentId ? "preview" : "student_pending",
     file_hash: fileHash,
+    duplicate_file: duplicateFile,
     parser_version: PARSER_VERSION
   };
 }
@@ -1890,6 +1916,12 @@ async function confirmDisciplinaryProcess(input) {
         insertedAnnotations: insertedAnnotations2
       };
     }
+  }
+  const duplicateFile = await findDuplicateFileByHash(supabase, input.tenantId, input.fileHash);
+  if (duplicateFile) {
+    throw new Error(
+      `Este PDF ya fue registrado en el proceso ${duplicateFile.process_number}. No se cre\xF3 un duplicado.`
+    );
   }
   const { data: processNumber, error: numberError } = await supabase.rpc(
     "generate_process_number",
@@ -2007,6 +2039,9 @@ function getProcessErrorResponse(error) {
       message: "No fue posible encontrar o leer el PDF privado subido."
     };
   }
+  if (message.includes("Este PDF ya fue registrado")) {
+    return { status: 409, message };
+  }
   return { status: 500, message };
 }
 router8.post("/process-disciplinary-pdf", requireTenant, async (req, res) => {
@@ -2032,7 +2067,10 @@ router8.post("/process-disciplinary-pdf", requireTenant, async (req, res) => {
     res.json(result);
   } catch (error) {
     const response = getProcessErrorResponse(error);
-    console.error("Error processing disciplinary PDF:", error instanceof Error ? error.message : error);
+    console.error(
+      "Error processing disciplinary PDF:",
+      error instanceof Error ? error.message : error
+    );
     res.status(response.status).json({ error: response.message });
   }
 });
@@ -2067,8 +2105,12 @@ router8.post("/process-disciplinary-pdf/confirm", requireTenant, async (req, res
     });
     res.json(result);
   } catch (error) {
-    console.error("Error confirming disciplinary process:", error instanceof Error ? error.message : error);
-    res.status(500).json({ error: error instanceof Error ? error.message : "Error interno al confirmar el proceso" });
+    const response = getProcessErrorResponse(error);
+    console.error(
+      "Error confirming disciplinary process:",
+      error instanceof Error ? error.message : error
+    );
+    res.status(response.status).json({ error: response.message });
   }
 });
 var processDisciplinaryPdf_default = router8;

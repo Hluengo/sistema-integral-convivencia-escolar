@@ -38,6 +38,13 @@ export interface StudentCandidate {
   match_status: StudentMatchStatus;
 }
 
+export interface DuplicateFileInfo {
+  process_id: string;
+  process_number: string;
+  student_id: string | null;
+  uploaded_at: string;
+}
+
 export interface AnalysisResult {
   success: true;
   analysis_id: string | null;
@@ -62,6 +69,7 @@ export interface AnalysisResult {
   processing_status: ProcessingStatus;
   mode: 'preview' | 'student_pending';
   file_hash: string;
+  duplicate_file: DuplicateFileInfo | null;
   parser_version: string;
 }
 
@@ -948,6 +956,47 @@ async function getSuggestedLetter(
   return String(data);
 }
 
+async function findDuplicateFileByHash(
+  supabase: SupabaseClient,
+  tenantId: string,
+  fileHash: string,
+): Promise<DuplicateFileInfo | null> {
+  const { data: duplicateFile, error: duplicateFileError } = await supabase
+    .from('disciplinary_process_files')
+    .select('process_id,student_id,uploaded_at')
+    .eq('tenant_id', tenantId)
+    .eq('file_hash', fileHash)
+    .order('uploaded_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (duplicateFileError) {
+    throw new Error('No fue posible comprobar si el PDF ya estaba registrado');
+  }
+  if (!duplicateFile) return null;
+
+  const processId = String((duplicateFile as { process_id: string }).process_id);
+  const { data: process, error: processError } = await supabase
+    .from('disciplinary_processes')
+    .select('process_number')
+    .eq('tenant_id', tenantId)
+    .eq('id', processId)
+    .maybeSingle();
+
+  if (processError) {
+    throw new Error('No fue posible recuperar el proceso asociado al PDF existente');
+  }
+
+  return {
+    process_id: processId,
+    process_number: String(
+      (process as { process_number?: string } | null)?.process_number ?? 'Sin número',
+    ),
+    student_id: (duplicateFile as { student_id?: string | null }).student_id ?? null,
+    uploaded_at: String((duplicateFile as { uploaded_at: string }).uploaded_at),
+  };
+}
+
 export async function analyzeDisciplinaryPdf(input: AnalyzeInput): Promise<AnalysisResult> {
   const supabase = getSupabaseAdmin(input.authToken);
   assertStoragePathAllowed(input.bucket, input.storagePath, input.tenantId);
@@ -979,11 +1028,16 @@ export async function analyzeDisciplinaryPdf(input: AnalyzeInput): Promise<Analy
   const detectedCourse = extractCourse(textContent);
   const annotations = normalizeText(textContent).length < 20 ? [] : parseAnnotationsByPage(pages);
   const summary = summarizeAnnotations(annotations);
-  const [recommendedLetterType, studentMatch] = await Promise.all([
+  const [recommendedLetterType, studentMatch, duplicateFile] = await Promise.all([
     getSuggestedLetter(supabase, input.tenantId, summary),
     findStudentCandidates(supabase, input.tenantId, detectedStudentName, detectedCourse),
+    findDuplicateFileByHash(supabase, input.tenantId, fileHash),
   ]);
 
+  if (duplicateFile)
+    warnings.push(
+      `Este mismo PDF ya está registrado en el proceso ${duplicateFile.process_number}.`,
+    );
   if (!detectedStudentName) warnings.push('No se pudo detectar un nombre de estudiante en el PDF.');
   if (annotations.length === 0 && normalizeText(textContent).length >= 20)
     warnings.push('No se detectaron anotaciones clasificables en el documento.');
@@ -1043,6 +1097,7 @@ export async function analyzeDisciplinaryPdf(input: AnalyzeInput): Promise<Analy
     processing_status: processingStatus,
     mode: studentMatch.selectedStudentId ? 'preview' : 'student_pending',
     file_hash: fileHash,
+    duplicate_file: duplicateFile,
     parser_version: PARSER_VERSION,
   };
 }
@@ -1109,6 +1164,13 @@ export async function confirmDisciplinaryProcess(input: ConfirmInput): Promise<{
         insertedAnnotations,
       };
     }
+  }
+
+  const duplicateFile = await findDuplicateFileByHash(supabase, input.tenantId, input.fileHash);
+  if (duplicateFile) {
+    throw new Error(
+      `Este PDF ya fue registrado en el proceso ${duplicateFile.process_number}. No se creó un duplicado.`,
+    );
   }
 
   const { data: processNumber, error: numberError } = await supabase.rpc(
