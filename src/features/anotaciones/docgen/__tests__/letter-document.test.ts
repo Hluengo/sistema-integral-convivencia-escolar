@@ -362,12 +362,14 @@ describe('Carta de derivación — texto institucional', () => {
   it('mantiene el contenido base actualizado', () => {
     const derivacion = DEFAULT_LETTER_CONTENT.derivacion;
 
-    ok(derivacion.motivo.includes('umbral de 15 anotaciones leves'));
-    ok(derivacion.descripcion.includes('evaluación psicosocial'));
-    ok(derivacion.medida.includes('Paso 8 del Debido Proceso'));
-    ok(derivacion.medida.includes('Medida 5 (Suspensión Temporal)'));
-    ok(derivacion.acuerdos.includes('evaluación socioemocional'));
-    ok(derivacion.cierre.includes('Artículos 15, 20 y 24 BIS del RICE 2026'));
+    ok(derivacion.motivo.includes('intervención técnica especializada'));
+    ok(derivacion.motivo.includes('Art. 24 BIS'));
+    ok(derivacion.descripcion.includes('evaluación de factores subyacentes'));
+    ok(derivacion.medida.includes('Psicólogo/a de Ciclo o Trabajadora Social'));
+    ok(derivacion.medida.includes('garantizar el debido proceso'));
+    ok(derivacion.acuerdos.includes('seguimiento quincenal'));
+    ok(derivacion.acuerdos.includes('condicionalidad de matrícula'));
+    ok(derivacion.cierre.includes('Artículos 12, 19, 20 (Paso 8) y 24 BIS'));
   });
 });
 

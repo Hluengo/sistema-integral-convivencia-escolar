@@ -65,15 +65,15 @@ export const DEFAULT_LETTER_CONTENT: Record<DocType, LetterContent> = {
   },
   derivacion: {
     motivo:
-      'Activación de protocolo por acumulación crítica de registros conductuales (Art. 24 BIS), habiendo alcanzado el umbral de 15 anotaciones leves que tipifican el caso como una conducta grave que requiere intervención psicosocial.',
+      'Activación de intervención técnica especializada por agotamiento de instancias pedagógicas iniciales y/o acumulación crítica de registros (Art. 24 BIS), requiriendo un análisis psicosocial antes de la escalada a medidas de alta complejidad administrativa.',
     descripcion:
-      'El historial pedagógico del estudiante evidencia una persistencia de conductas disruptivas que han agotado las instancias formativas de aula. Esta reiteración manifiesta una dificultad en la autorregulación por convicción personal, lo que afecta el clima de aprendizaje y demanda una evaluación psicosocial para identificar factores subyacentes y evitar la escalada a sanciones mayores.',
+      'El historial del estudiante registra una persistencia de conductas disruptivas que no han sido modificadas tras la aplicación de medidas previas (Amonestación Escrita o Carta de Compromiso). Se observa una dificultad en la autorregulación y una falta de adhesión a los acuerdos institucionales, lo que evidencia que la situación ha superado el manejo exclusivamente pedagógico del aula y requiere una evaluación de factores subyacentes.',
     medida:
-      'Escalamiento a intervención formal del Equipo de Convivencia Escolar (Paso 8 del Debido Proceso), debido al incumplimiento de los acuerdos de la Carta de Compromiso Conductual (Medida 4) y la acumulación crítica de anotaciones (Art. 24 BIS). Esta derivación tiene como fin transitar hacia un acompañamiento psicosocial, en donde se EVALÚA la posible aplicación de la Medida 5 (Suspensión Temporal) al configurarse la conducta como una falta muy grave por reiteración y falta de respuesta a las instancias pedagógicas previas.',
+      'Derivación formal al Equipo de Convivencia Escolar (Psicólogo/a de Ciclo o Trabajadora Social) para la realización de una entrevista reflexiva profunda y la orientación estratégica para la modificación efectiva de conductas. Esta medida busca garantizar el debido proceso y agotar el apoyo profesional antes de considerar sanciones que afecten la permanencia del estudiante.',
     acuerdos:
-      'Realización de una evaluación socioemocional por el psicólogo de ciclo a través de una entrevista reflexiva y estructurada con el estudiante para el establecimiento de acuerdos colaborativos.',
+      'Realización de una entrevista reflexiva estructurada con el estudiante para confrontar la falta de modificación conductual, la cual quedará formalizada en una hoja de entrevista oficial; ejecución de un seguimiento quincenal respecto a su evolución; y la notificación explícita de que la persistencia de estas conductas tras esta instancia técnica derivará en medidas gravosas, como la suspensión temporal prolongada o la condicionalidad de matrícula.',
     cierre:
-      'La presente derivación se realiza bajo los principios de gradualidad y disciplina formativa estipulados en los Artículos 15, 20 y 24 BIS del RICE 2026, y los estándares de debido proceso de la Superintendencia de Educación.',
+      'Este procedimiento se fundamenta en los Artículos 12, 19, 20 (Paso 8) y 24 BIS del Reglamento Interno de Convivencia Escolar 2026, asegurando el enfoque formativo y restaurativo mandatado por la normativa educacional vigente.',
     observaciones: '',
   },
 };
