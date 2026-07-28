@@ -23,13 +23,11 @@ export function mapInspectorateToAnnotation(row: InspectorateRecord): Annotation
     date: row.date_time,
     severity: row.severity as Annotation['severity'],
     registered_by: row.registered_by,
-    type: (
-      row.type === 'Positiva'
-        ? 'Positiva'
-        : row.type === 'Información'
-          ? 'Información'
-          : 'Negativa'
-    ) as Annotation['type'],
+    type: (row.type === 'Positiva'
+      ? 'Positiva'
+      : row.type === 'Información'
+        ? 'Información'
+        : 'Negativa') as Annotation['type'],
     pdf_file_path: row.pdf_file_path || null,
   };
 }
@@ -44,6 +42,8 @@ export interface CauseRow {
   supervisor_name?: string | null;
   apoderado_name: string;
   annotations_count: number;
+  origin?: string | null;
+  school_year?: number | null;
   student_name: string;
   course: string;
   regulation_basis: string;
@@ -67,6 +67,8 @@ export function mapCauseRowToCarta(row: CauseRow): CartaDisciplinaria {
     supervisor_name: row.supervisor_name || undefined,
     apoderado_name: row.apoderado_name,
     annotations_count: row.annotations_count,
+    origin: row.origin === 'physical' ? 'physical' : 'platform',
+    school_year: row.school_year ?? new Date(`${row.emission_date}T00:00:00`).getFullYear(),
     student_name: row.student_name,
     course: row.course,
     regulation_basis: row.regulation_basis,

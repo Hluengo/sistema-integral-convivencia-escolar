@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { CausaSchema, ChecklistItemSchema, BitacoraEntrySchema } from './schemas';
+import { physicalCartaRegistrationSchema } from './schemas/physicalCarta';
 
 describe('CausaSchema', () => {
   const validCausa = {
@@ -31,10 +32,13 @@ describe('CausaSchema', () => {
   });
 
   it('rejects missing required fields', () => {
-    assert.throws(() => CausaSchema.parse({}), (err: unknown) => {
-      const zErr = err as { issues?: Array<{ path: (string | number)[] }> };
-      return zErr.issues !== undefined && zErr.issues.length > 0;
-    });
+    assert.throws(
+      () => CausaSchema.parse({}),
+      (err: unknown) => {
+        const zErr = err as { issues?: Array<{ path: (string | number)[] }> };
+        return zErr.issues !== undefined && zErr.issues.length > 0;
+      },
+    );
   });
 
   it('accepts undefined optional fields', () => {
@@ -55,15 +59,11 @@ describe('CausaSchema', () => {
   });
 
   it('rejects invalid tipoInfraccion', () => {
-    assert.throws(() =>
-      CausaSchema.parse({ ...validCausa, tipoInfraccion: 'Invalida' })
-    );
+    assert.throws(() => CausaSchema.parse({ ...validCausa, tipoInfraccion: 'Invalida' }));
   });
 
   it('rejects invalid estadoActual', () => {
-    assert.throws(() =>
-      CausaSchema.parse({ ...validCausa, estadoActual: 'Estado Inexistente' })
-    );
+    assert.throws(() => CausaSchema.parse({ ...validCausa, estadoActual: 'Estado Inexistente' }));
   });
 });
 
@@ -120,7 +120,7 @@ describe('ChecklistItemSchema', () => {
         label: 'Test',
         descripcion: 'Test desc',
         completado: false,
-      })
+      }),
     );
   });
 
@@ -144,7 +144,7 @@ describe('ChecklistItemSchema', () => {
         descripcion: 'Test',
         completado: false,
         requeridoPor: 'Ley Inexistente',
-      })
+      }),
     );
   });
 });
@@ -167,7 +167,14 @@ describe('BitacoraEntrySchema', () => {
   });
 
   it('accepts all tipo values', () => {
-    const values = ['Entrevista', 'Evidencia', 'Notificación', 'Mediación', 'Resolución', 'Otro'] as const;
+    const values = [
+      'Entrevista',
+      'Evidencia',
+      'Notificación',
+      'Mediación',
+      'Resolución',
+      'Otro',
+    ] as const;
     for (const tipo of values) {
       const parsed = BitacoraEntrySchema.parse({ ...validEntry, tipo });
       assert.equal(parsed.tipo, tipo);
@@ -175,9 +182,7 @@ describe('BitacoraEntrySchema', () => {
   });
 
   it('rejects invalid tipo', () => {
-    assert.throws(() =>
-      BitacoraEntrySchema.parse({ ...validEntry, tipo: 'Reunión' })
-    );
+    assert.throws(() => BitacoraEntrySchema.parse({ ...validEntry, tipo: 'Reunión' }));
   });
 
   it('accepts entry without participantes', () => {
@@ -194,5 +199,37 @@ describe('BitacoraEntrySchema', () => {
       documentoAdjunto: 'https://supabase.co/storage/v1/...',
     });
     assert.equal(parsed.documentoAdjunto, 'https://supabase.co/storage/v1/...');
+  });
+});
+
+describe('physicalCartaRegistrationSchema', () => {
+  const validRegistration = {
+    studentId: '06c92366-b5bf-46a0-939a-0dd66422dedb',
+    letterType: 'Amonestación Escrita',
+    emissionDate: '2026-07-28',
+    observations: 'Carta archivada físicamente.',
+  };
+
+  it('acepta una constancia física válida', () => {
+    const parsed = physicalCartaRegistrationSchema.parse(validRegistration);
+    assert.equal(parsed.letterType, 'Amonestación Escrita');
+  });
+
+  it('rechaza una derivación como constancia física', () => {
+    assert.throws(() =>
+      physicalCartaRegistrationSchema.parse({
+        ...validRegistration,
+        letterType: 'Ficha de Derivación',
+      }),
+    );
+  });
+
+  it('rechaza fechas con formato inválido', () => {
+    assert.throws(() =>
+      physicalCartaRegistrationSchema.parse({
+        ...validRegistration,
+        emissionDate: '28-07-2026',
+      }),
+    );
   });
 });

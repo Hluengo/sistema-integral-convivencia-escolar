@@ -158,6 +158,8 @@ export const CartaDisciplinariaSchema = z.object({
   supervisor_name: z.string().optional(),
   apoderado_name: z.string(),
   annotations_count: z.number(),
+  origin: z.enum(['platform', 'physical']).optional(),
+  school_year: z.number().int().optional(),
   student_name: z.string(),
   course: z.string(),
   regulation_basis: z.string(),

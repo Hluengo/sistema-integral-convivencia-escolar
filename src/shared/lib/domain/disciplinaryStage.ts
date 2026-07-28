@@ -5,13 +5,10 @@ export type DisciplinaryStageKey = 'none' | 'amonestacion' | 'compromiso_conduct
 export type LetterDocType = 'amonestacion' | 'compromiso_conductual' | 'derivacion';
 
 export type CartaProcessingBlockReason =
-  | 'derivacion_requires_15_registered'
-  | 'letter_type_mismatch';
+  'derivacion_requires_15_registered' | 'letter_type_mismatch';
 
 export type LetterType =
-  | 'Amonestación Escrita'
-  | 'Carta de Compromiso Conductual'
-  | 'Ficha de Derivación';
+  'Amonestación Escrita' | 'Carta de Compromiso Conductual' | 'Ficha de Derivación';
 
 export interface DisciplinaryStage {
   key: DisciplinaryStageKey;
@@ -50,8 +47,9 @@ const STAGE_RANK: Record<DisciplinaryStageKey, number> = {
 export function getDisciplinaryStage(negativeCount: number): DisciplinaryStage {
   const count = Math.max(0, Number(negativeCount) || 0);
   return (
-    DISCIPLINARY_STAGES.find((stage) => count >= stage.min && (stage.max === null || count <= stage.max)) ||
-    DISCIPLINARY_STAGES[0]
+    DISCIPLINARY_STAGES.find(
+      (stage) => count >= stage.min && (stage.max === null || count <= stage.max),
+    ) || DISCIPLINARY_STAGES[0]
   );
 }
 
@@ -65,7 +63,9 @@ export function mapDocTypeToLetterType(docType: string | null | undefined): Lett
   return null;
 }
 
-export function mapLetterTypeToDocType(letterType: string | null | undefined): LetterDocType | null {
+export function mapLetterTypeToDocType(
+  letterType: string | null | undefined,
+): LetterDocType | null {
   if (!letterType) return null;
   if (letterType === 'Amonestación Escrita') return 'amonestacion';
   if (letterType === 'Carta de Compromiso Conductual') return 'compromiso_conductual';
@@ -77,7 +77,7 @@ export function mapLetterTypeToDocType(letterType: string | null | undefined): L
 
 export function getSuggestedLetterType(
   negativeCount: number,
-  currentLetterType?: string | null
+  currentLetterType?: string | null,
 ): LetterDocType | null {
   const stage = getDisciplinaryStage(negativeCount);
   if (stage.key === 'none') return null;
@@ -88,13 +88,67 @@ export function getSuggestedLetterType(
   return STAGE_RANK[suggested] > STAGE_RANK[currentDocType] ? suggested : null;
 }
 
+export function getNextLetterAfterPhysicalCarta(
+  physicalLetterType: string | null | undefined,
+): LetterDocType | null {
+  if (physicalLetterType === 'Amonestación Escrita') return 'compromiso_conductual';
+  if (physicalLetterType === 'Carta de Compromiso Conductual') return 'derivacion';
+  return null;
+}
+
+export function getPhysicalCartaBaselineType(
+  cartas: Array<{
+    origin?: string;
+    school_year?: number;
+    emission_date: string;
+    status: string;
+    letter_type: string;
+  }>,
+  schoolYear: number,
+): LetterType | null {
+  const currentYearPhysicalTypes = new Set(
+    cartas
+      .filter((carta) => {
+        const cartaYear =
+          carta.school_year ?? new Date(`${carta.emission_date}T00:00:00`).getFullYear();
+        return (
+          carta.origin === 'physical' && carta.status !== 'Anulada' && cartaYear === schoolYear
+        );
+      })
+      .map((carta) => carta.letter_type),
+  );
+
+  if (currentYearPhysicalTypes.has('Carta de Compromiso Conductual')) {
+    return 'Carta de Compromiso Conductual';
+  }
+  if (currentYearPhysicalTypes.has('Amonestación Escrita')) {
+    return 'Amonestación Escrita';
+  }
+  return null;
+}
+
+export function getHighestPriorityLetterType(
+  ...types: Array<LetterDocType | null | undefined>
+): LetterDocType | null {
+  return types.reduce<LetterDocType | null>((highest, candidate) => {
+    if (!candidate) return highest;
+    if (!highest || STAGE_RANK[candidate] > STAGE_RANK[highest]) return candidate;
+    return highest;
+  }, null);
+}
+
 export function getCartaProcessingBlockReason(
   selectedDocType: LetterDocType,
   expectedDocType: LetterDocType | null,
-  registeredNegativeCount: number
+  registeredNegativeCount: number,
+  options: { allowDerivacionFromPhysicalCompromiso?: boolean } = {},
 ): CartaProcessingBlockReason | null {
   const count = Math.max(0, Number(registeredNegativeCount) || 0);
-  if (selectedDocType === 'derivacion' && count < 15) {
+  if (
+    selectedDocType === 'derivacion' &&
+    count < 15 &&
+    !options.allowDerivacionFromPhysicalCompromiso
+  ) {
     return 'derivacion_requires_15_registered';
   }
   if (expectedDocType && selectedDocType !== expectedDocType) {

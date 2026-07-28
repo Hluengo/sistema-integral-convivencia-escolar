@@ -14,12 +14,16 @@ import {
 } from '@/src/services/cartas.service';
 import {
   getCartaProcessingBlockReason,
+  getHighestPriorityLetterType,
+  getNextLetterAfterPhysicalCarta,
+  getPhysicalCartaBaselineType,
   getSuggestedLetterType,
   mapDocTypeToLetterType,
   mapLetterTypeToDocType,
   type LetterDocType,
 } from '@/src/shared/lib/domain/disciplinaryStage';
 import { formatDate, type StudentInfo } from './constants';
+import PhysicalCartaRegistrationCard from './PhysicalCartaRegistrationCard';
 
 const AnotacionesDocumentGenerator = lazy(() => import('../AnotacionesDocumentGenerator'));
 
@@ -36,7 +40,6 @@ interface CartasTabProps {
   annotations: Annotation[];
   cartas: CartaDisciplinaria[];
   counts: { negativas: number; positivas: number; informativas: number };
-  currentCarta: CartaDisciplinaria | null;
   pendingSuggestion?: PendingCartaSuggestion | null;
   privacyMode: boolean;
   teachers?: Record<string, string>;
@@ -48,25 +51,53 @@ export default function CartasTab({
   annotations,
   cartas,
   counts,
-  currentCarta,
   pendingSuggestion,
   privacyMode,
   teachers = TEACHERS_BY_COURSE,
   onRefresh,
 }: CartasTabProps) {
-  const suggestedDocType =
-    pendingSuggestion?.docType ??
-    getSuggestedLetterType(counts.negativas, currentCarta?.letter_type);
-  const currentDocType = mapLetterTypeToDocType(currentCarta?.letter_type);
+  const schoolYear = Number(
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Santiago',
+      year: 'numeric',
+    }).format(new Date()),
+  );
+  const platformCurrentCarta =
+    cartas.find((carta) => carta.status !== 'Anulada' && carta.origin !== 'physical') ?? null;
+  const physicalBaselineType = getPhysicalCartaBaselineType(cartas, schoolYear);
+  const physicalSuggestedDocType = getNextLetterAfterPhysicalCarta(physicalBaselineType);
+  const countSuggestedDocType = getSuggestedLetterType(
+    counts.negativas,
+    platformCurrentCarta?.letter_type,
+  );
+  const nonPhysicalSuggestedDocType = getHighestPriorityLetterType(
+    pendingSuggestion?.docType,
+    countSuggestedDocType,
+  );
+  const suggestedDocType = getHighestPriorityLetterType(
+    physicalSuggestedDocType,
+    nonPhysicalSuggestedDocType,
+  );
+  const currentDocType = mapLetterTypeToDocType(platformCurrentCarta?.letter_type);
   const activeDocType = suggestedDocType ?? currentDocType;
   const activeLetterType = mapDocTypeToLetterType(activeDocType);
   const negativeCount = pendingSuggestion?.negativeCount ?? counts.negativas;
-  const source = pendingSuggestion?.source ?? 'supabase';
+  const usesPhysicalProgression =
+    Boolean(physicalSuggestedDocType) &&
+    activeDocType === physicalSuggestedDocType &&
+    nonPhysicalSuggestedDocType !== activeDocType;
+  const source = pendingSuggestion?.source ?? (usesPhysicalProgression ? 'physical' : 'supabase');
   const matchingCarta = activeLetterType
-    ? cartas.find((carta) => carta.status !== 'Anulada' && carta.letter_type === activeLetterType)
+    ? cartas.find(
+        (carta) =>
+          carta.status !== 'Anulada' &&
+          carta.origin !== 'physical' &&
+          carta.letter_type === activeLetterType,
+      )
     : null;
   const [localCarta, setLocalCarta] = useState<CartaDisciplinaria | null>(null);
-  const activeCarta = localCarta ?? matchingCarta ?? (!suggestedDocType ? currentCarta : null);
+  const activeCarta =
+    localCarta ?? matchingCarta ?? (!suggestedDocType ? platformCurrentCarta : null);
   const workflowStatus = resolveCartaWorkflowStatus(activeCarta);
   const [showGenerator, setShowGenerator] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -97,7 +128,7 @@ export default function CartasTab({
 
   const runCartaAction = async (
     action: (carta: CartaDisciplinaria) => Promise<boolean>,
-    successText: string
+    successText: string,
   ) => {
     setBusy(true);
     setMessage(null);
@@ -132,7 +163,7 @@ export default function CartasTab({
       void createCartaEvent(
         carta.id,
         'created',
-        'Carta abierta en generador desde ficha disciplinaria'
+        'Carta abierta en generador desde ficha disciplinaria',
       );
     } else {
       setMessageTone('error');
@@ -143,36 +174,40 @@ export default function CartasTab({
 
   const handleManualProcess = async (
     contentSnapshot: Record<string, unknown>,
-    selectedDocType: LetterDocType
+    selectedDocType: LetterDocType,
   ) => {
     const blockReason = getCartaProcessingBlockReason(
       selectedDocType,
       activeDocType,
-      counts.negativas
+      counts.negativas,
+      {
+        allowDerivacionFromPhysicalCompromiso:
+          physicalBaselineType === 'Carta de Compromiso Conductual',
+      },
     );
     if (blockReason === 'derivacion_requires_15_registered') {
       setMessageTone('error');
       setMessage(
-        `No se puede procesar la derivación: Supabase registra ${counts.negativas} negativas. Confirme primero la anotación número 15 en “Revisar PDF”.`
+        `No se puede procesar la derivación: Supabase registra ${counts.negativas} negativas. Confirme primero la anotación número 15 en “Revisar PDF”.`,
       );
       return;
     }
     if (blockReason === 'letter_type_mismatch') {
       setMessageTone('error');
       setMessage(
-        `El documento seleccionado no coincide con la etapa registrada. Seleccione “${activeLetterType}” o confirme primero la actualización de anotaciones.`
+        `El documento seleccionado no coincide con la etapa registrada. Seleccione “${activeLetterType}” o confirme primero la actualización de anotaciones.`,
       );
       return;
     }
     const note = window
       .prompt(
-        'Observación de cierre del trámite. Describa qué se realizó y cuándo. Ejemplo: “Carta impresa y entregada al apoderado el 28-07-2026”. Este texto no cambia el tipo de carta.'
+        'Observación de cierre del trámite. Describa qué se realizó y cuándo. Ejemplo: “Carta impresa y entregada al apoderado el 28-07-2026”. Este texto no cambia el tipo de carta.',
       )
       ?.trim();
     if (!note) return;
     await runCartaAction(
       (carta) => markCartaProcessedManually(carta.id, note, contentSnapshot),
-      'Carta marcada como procesada.'
+      'Carta marcada como procesada.',
     );
   };
 
@@ -188,12 +223,23 @@ export default function CartasTab({
     : activeLetterType
       ? 'Carta sugerida'
       : 'Sin carta requerida';
-  const originLabel = source === 'pdf' ? 'nuevo PDF' : 'conteo Supabase';
+  const originLabel = pendingSuggestion
+    ? 'nuevo PDF'
+    : usesPhysicalProgression
+      ? 'carta física existente'
+      : 'conteo Supabase';
   const canAct = Boolean(activeDocType && activeLetterType);
   const realized = workflowStatus === 'completed';
 
   return (
     <div className="space-y-5">
+      <PhysicalCartaRegistrationCard
+        key={student.id}
+        studentId={student.id}
+        cartas={cartas}
+        onRegistered={onRefresh}
+      />
+
       <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
         <div className="mb-4 flex items-center gap-2">
           <FileText className="h-4 w-4 text-brand-600" />
@@ -212,7 +258,9 @@ export default function CartasTab({
             <div className="rounded-lg bg-neutral-50 p-3">
               <p className="text-xs font-semibold text-neutral-400">Motivo</p>
               <p className="mt-1 font-bold text-neutral-900">
-                {negativeCount} negativas detectadas
+                {usesPhysicalProgression
+                  ? `Progresión habilitada por ${physicalBaselineType}`
+                  : `${negativeCount} negativas detectadas`}
               </p>
             </div>
             <div className="rounded-lg bg-neutral-50 p-3">

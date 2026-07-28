@@ -40,11 +40,7 @@ export enum EstadoCausa {
 }
 
 export type FaseProcedimental =
-  | 'Recepción'
-  | 'Investigación'
-  | 'Resolución'
-  | 'Apelación'
-  | 'Seguimiento';
+  'Recepción' | 'Investigación' | 'Resolución' | 'Apelación' | 'Seguimiento';
 
 export interface BitacoraEntry {
   id: string;
@@ -195,6 +191,8 @@ export interface CartaDisciplinaria {
   supervisor_name?: string;
   apoderado_name: string;
   annotations_count: number;
+  origin?: 'platform' | 'physical';
+  school_year?: number;
   student_name: string;
   course: string;
   regulation_basis: string;

@@ -61,10 +61,15 @@ function describeCartaEvent(event: CartaEvent, carta?: CartaDisciplinaria): Time
     };
   }
   if (event.event_type === 'registered') {
+    const isPhysical = event.metadata?.origin === 'physical';
     return {
       ...base,
-      title: `Carta registrada: ${letterType}`,
-      description: event.event_detail || 'Registro en Supabase confirmado.',
+      title: `${isPhysical ? 'Carta física registrada' : 'Carta registrada'}: ${letterType}`,
+      description:
+        event.event_detail ||
+        (isPhysical
+          ? 'Constancia registrada sin modificar anotaciones.'
+          : 'Registro en Supabase confirmado.'),
       tone: 'bg-emerald-50 text-emerald-700',
     };
   }

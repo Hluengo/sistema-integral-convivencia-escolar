@@ -4,8 +4,17 @@ import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { Eye, EyeOff, X } from 'lucide-react';
 import type { Annotation } from '@/src/types';
 import { maskName, maskRut } from '@/src/lib/anotacionesUtils';
-import { getDisciplinaryStage, type LetterDocType } from '@/src/shared/lib/domain/disciplinaryStage';
-import { STAGE_STYLE, TAB_ICONS, TAB_LABELS, type ActiveTab, type StudentInfo } from './AnotacionesStudentDetailModal/constants';
+import {
+  getDisciplinaryStage,
+  type LetterDocType,
+} from '@/src/shared/lib/domain/disciplinaryStage';
+import {
+  STAGE_STYLE,
+  TAB_ICONS,
+  TAB_LABELS,
+  type ActiveTab,
+  type StudentInfo,
+} from './AnotacionesStudentDetailModal/constants';
 import StudentSummaryTab from './AnotacionesStudentDetailModal/StudentSummaryTab';
 import RevisionTab from './AnotacionesStudentDetailModal/RevisionTab';
 import HistoryTab from './AnotacionesStudentDetailModal/HistoryTab';
@@ -64,12 +73,13 @@ export default function AnotacionesStudentDetailModal({
         if (annotation.type === 'Información') acc.informativas += 1;
         return acc;
       },
-      { negativas: 0, positivas: 0, informativas: 0 }
+      { negativas: 0, positivas: 0, informativas: 0 },
     );
   }, [annotations, student.annotations_count, student.positive_annotations_count]);
 
   const counts = disciplinaryData.annotations.length > 0 ? disciplinaryData.counts : fallbackCounts;
-  const effectiveAnnotations = disciplinaryData.annotations.length > 0 ? disciplinaryData.annotations : annotations;
+  const effectiveAnnotations =
+    disciplinaryData.annotations.length > 0 ? disciplinaryData.annotations : annotations;
   const stage = getDisciplinaryStage(counts.negativas);
   const stageStyle = STAGE_STYLE[stage.key];
 
@@ -143,7 +153,6 @@ export default function AnotacionesStudentDetailModal({
             annotations={effectiveAnnotations}
             cartas={disciplinaryData.cartas}
             counts={counts}
-            currentCarta={disciplinaryData.currentCarta}
             pendingSuggestion={pendingCartaSuggestion}
             privacyMode={privacyMode}
             teachers={teachers}
@@ -181,7 +190,9 @@ export default function AnotacionesStudentDetailModal({
           <div className="flex items-center justify-between gap-4">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50">
-                <span className="text-sm font-bold text-brand-600">{student.full_name.charAt(0)}</span>
+                <span className="text-sm font-bold text-brand-600">
+                  {student.full_name.charAt(0)}
+                </span>
               </div>
               <div className="min-w-0">
                 <h2 className="truncate text-base font-bold text-neutral-900">
@@ -190,7 +201,9 @@ export default function AnotacionesStudentDetailModal({
                 <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
                   <span>{student.course_name || student.course_id || 'Sin curso'}</span>
                   {student.rut && <span>{maskRut(student.rut, privacyMode)}</span>}
-                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 font-bold ${stageStyle.bg} ${stageStyle.text}`}>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 font-bold ${stageStyle.bg} ${stageStyle.text}`}
+                  >
                     {stage.label}
                   </span>
                   <span>{counts.negativas} negativas</span>
@@ -198,10 +211,21 @@ export default function AnotacionesStudentDetailModal({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button type="button" aria-label={privacyMode ? 'Desactivar privacidad' : 'Activar privacidad'} onClick={onTogglePrivacy} className="rounded-lg p-2 text-neutral-400 transition-colors hover:bg-brand-50 hover:text-brand-600" title={privacyMode ? 'Desactivar privacidad' : 'Activar privacidad'}>
+              <button
+                type="button"
+                aria-label={privacyMode ? 'Desactivar privacidad' : 'Activar privacidad'}
+                onClick={onTogglePrivacy}
+                className="rounded-lg p-2 text-neutral-400 transition-colors hover:bg-brand-50 hover:text-brand-600"
+                title={privacyMode ? 'Desactivar privacidad' : 'Activar privacidad'}
+              >
                 {privacyMode ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
-              <button type="button" aria-label="Cerrar" onClick={onClose} className="rounded-lg p-2 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600">
+              <button
+                type="button"
+                aria-label="Cerrar"
+                onClick={onClose}
+                className="rounded-lg p-2 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -216,7 +240,9 @@ export default function AnotacionesStudentDetailModal({
                 type="button"
                 onClick={() => setActiveTab(tab)}
                 className={`flex min-w-fit flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                  activeTab === tab ? 'bg-white text-brand-700 shadow-sm' : 'text-neutral-500 hover:bg-white/50 hover:text-neutral-700'
+                  activeTab === tab
+                    ? 'bg-white text-brand-700 shadow-sm'
+                    : 'text-neutral-500 hover:bg-white/50 hover:text-neutral-700'
                 }`}
               >
                 {TAB_ICONS[tab]}

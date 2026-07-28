@@ -6,7 +6,12 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { execSync } from 'node:child_process';
 import { DEFAULT_LETTER_CONTENT } from '../DocumentPreview/docTypes';
-import { getCartaProcessingBlockReason } from '../../../../shared/lib/domain/disciplinaryStage';
+import {
+  getCartaProcessingBlockReason,
+  getHighestPriorityLetterType,
+  getNextLetterAfterPhysicalCarta,
+  getPhysicalCartaBaselineType,
+} from '../../../../shared/lib/domain/disciplinaryStage';
 
 const srcDir = resolve(import.meta.dirname!, '../../../../..');
 
@@ -174,14 +179,14 @@ describe('Cierre de cartas — validación de etapa registrada', () => {
   const generatorPath = resolve(import.meta.dirname!, '../../AnotacionesDocumentGenerator.tsx');
   const cartasTabPath = resolve(
     import.meta.dirname!,
-    '../../AnotacionesStudentDetailModal/CartasTab.tsx'
+    '../../AnotacionesStudentDetailModal/CartasTab.tsx',
   );
   const tablePath = resolve(import.meta.dirname!, '../../AnotacionesStudentTable.tsx');
 
   it('bloquea una derivación cuando Supabase registra menos de 15 negativas', () => {
     equal(
       getCartaProcessingBlockReason('derivacion', 'compromiso_conductual', 14),
-      'derivacion_requires_15_registered'
+      'derivacion_requires_15_registered',
     );
   });
 
@@ -189,10 +194,19 @@ describe('Cierre de cartas — validación de etapa registrada', () => {
     equal(getCartaProcessingBlockReason('derivacion', 'derivacion', 15), null);
   });
 
+  it('permite derivación bajo 15 cuando existe Compromiso físico del año', () => {
+    equal(
+      getCartaProcessingBlockReason('derivacion', 'derivacion', 8, {
+        allowDerivacionFromPhysicalCompromiso: true,
+      }),
+      null,
+    );
+  });
+
   it('bloquea un tipo de documento distinto a la etapa registrada', () => {
     equal(
       getCartaProcessingBlockReason('amonestacion', 'compromiso_conductual', 12),
-      'letter_type_mismatch'
+      'letter_type_mismatch',
     );
   });
 
@@ -211,6 +225,45 @@ describe('Cierre de cartas — validación de etapa registrada', () => {
     ok(table.includes('{s}'));
     ok(table.includes('badge.textClass'));
     ok(!table.includes('{badge.text}'));
+  });
+});
+
+describe('Constancias físicas — progresión anual', () => {
+  const cartas = [
+    {
+      origin: 'physical',
+      school_year: 2026,
+      emission_date: '2026-06-20',
+      status: 'Vigente',
+      letter_type: 'Amonestación Escrita',
+    },
+    {
+      origin: 'physical',
+      school_year: 2025,
+      emission_date: '2025-11-20',
+      status: 'Vigente',
+      letter_type: 'Carta de Compromiso Conductual',
+    },
+  ];
+
+  it('usa solamente la constancia física del año consultado', () => {
+    equal(getPhysicalCartaBaselineType(cartas, 2026), 'Amonestación Escrita');
+    equal(getPhysicalCartaBaselineType(cartas, 2027), null);
+  });
+
+  it('una Amonestación física habilita Compromiso', () => {
+    equal(getNextLetterAfterPhysicalCarta('Amonestación Escrita'), 'compromiso_conductual');
+  });
+
+  it('un Compromiso físico habilita Derivación', () => {
+    equal(getNextLetterAfterPhysicalCarta('Carta de Compromiso Conductual'), 'derivacion');
+  });
+
+  it('la progresión física prevalece sobre una sugerencia inferior por conteo', () => {
+    equal(
+      getHighestPriorityLetterType('amonestacion', 'derivacion', 'compromiso_conductual'),
+      'derivacion',
+    );
   });
 });
 
@@ -257,7 +310,7 @@ function globImportRefs(pkg: string): string[] {
   try {
     const result = execSync(
       `rg --no-heading -l "from ['\\"]${pkg}['\\"]" "${srcDir}" --include "*.ts" --include "*.tsx" 2>NUL`,
-      { encoding: 'utf-8', cwd: srcDir }
+      { encoding: 'utf-8', cwd: srcDir },
     ).trim();
     return result ? result.split('\n').filter(Boolean) : [];
   } catch {
