@@ -5,7 +5,11 @@
 
 import type { SheetData } from 'write-excel-file/browser';
 import { maskName, maskRut } from '../../lib/anotacionesUtils';
-import { getDisciplinaryStage } from '../../shared/lib/domain/disciplinaryStage';
+import {
+  getEffectiveDisciplinaryStage,
+  type LetterType,
+} from '../../shared/lib/domain/disciplinaryStage';
+import { matchesAnnotationFilter } from './annotationStudentFilters';
 
 export type AnnotationExportScope =
   'all' | 'visible' | 'sin_carta' | 'amonestacion' | 'compromiso' | 'derivacion';
@@ -19,6 +23,7 @@ export interface AnnotationExportStudent {
   last_annotation_date?: string;
   rut?: string;
   course_name?: string;
+  effective_letter_type?: LetterType | null;
 }
 
 export interface AnnotationExportRow {
@@ -89,10 +94,7 @@ export function getStudentsForAnnotationExport(
     });
   }
 
-  const stageKey = scope === 'compromiso' ? 'compromiso_conductual' : scope;
-  return students.filter(
-    (student) => getDisciplinaryStage(student.annotations_count).key === stageKey,
-  );
+  return students.filter((student) => matchesAnnotationFilter(student, scope));
 }
 
 export function getAnnotationExportLabel(scope: AnnotationExportScope): string {
@@ -116,7 +118,10 @@ export function buildAnnotationExportRows(
       negatives: Number(student.annotations_count) || 0,
       informatives: Number(student.informative_annotations_count) || 0,
       lastRecord: safeLastRecord,
-      measure: getDisciplinaryStage(student.annotations_count).label,
+      measure: getEffectiveDisciplinaryStage(
+        student.annotations_count,
+        student.effective_letter_type,
+      ).label,
       documentStatus: cartaStatuses[student.id]?.join(', ') || 'Sin documento',
     };
   });

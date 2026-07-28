@@ -4,7 +4,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { getAnnotationRange } from './annotationStudentFilters';
+import { getAnnotationRange, matchesAnnotationFilter } from './annotationStudentFilters';
 
 describe('annotationStudentFilters', () => {
   it('incluye en Con Registro a estudiantes Sin Carta desde una anotación negativa', () => {
@@ -35,5 +35,25 @@ describe('annotationStudentFilters', () => {
     expect(getAnnotationRange('amonestacion')).toEqual([5, 9]);
     expect(getAnnotationRange('compromiso')).toEqual([10, 14]);
     expect(getAnnotationRange('derivacion')).toEqual([15, Number.POSITIVE_INFINITY]);
+  });
+
+  it('clasifica en Derivación una carta procesada aunque el conteo sea 14', () => {
+    const student = {
+      annotations_count: 14,
+      effective_letter_type: 'Ficha de Derivación' as const,
+    };
+
+    expect(matchesAnnotationFilter(student, 'derivacion')).toBe(true);
+    expect(matchesAnnotationFilter(student, 'compromiso')).toBe(false);
+  });
+
+  it('no deja como Sin Carta a quien tiene una constancia física vigente', () => {
+    const student = {
+      annotations_count: 4,
+      effective_letter_type: 'Amonestación Escrita' as const,
+    };
+
+    expect(matchesAnnotationFilter(student, 'sin_carta')).toBe(false);
+    expect(matchesAnnotationFilter(student, 'amonestacion')).toBe(true);
   });
 });

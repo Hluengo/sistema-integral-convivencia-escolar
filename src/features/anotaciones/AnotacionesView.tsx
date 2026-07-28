@@ -8,6 +8,8 @@ import {
   fetchAnnotations,
   fetchStudentsWithAnnotationCounts,
 } from '../../services/annotations.service';
+import { fetchCartaTableStates } from '../../services/cartas.service';
+import { getEffectiveDisciplinaryStage } from '../../shared/lib/domain/disciplinaryStage';
 import AnotacionesStudentTable from './AnotacionesStudentTable';
 import { AnnotationsSkeleton } from '../../components/Skeleton';
 import type { ActiveTab } from './AnotacionesStudentDetailModal/constants';
@@ -17,6 +19,38 @@ const NewDisciplinaryProcessModal = lazy(() => import('./NewDisciplinaryProcessM
 
 interface AnotacionesViewProps {
   privacyMode: boolean;
+}
+
+async function fetchAnotacionesTableData(): Promise<{
+  students: AnotacionStudent[];
+  cartaStatuses: Record<string, string[]>;
+}> {
+  const [fetchedStudents, cartaStates] = await Promise.all([
+    fetchStudentsWithAnnotationCounts(),
+    fetchCartaTableStates(),
+  ]);
+  const students = (fetchedStudents ?? []).map((student) => {
+    const completedLetterType = cartaStates[student.id]?.completedLetterType ?? null;
+    const stage = getEffectiveDisciplinaryStage(student.annotations_count, completedLetterType);
+    return {
+      ...student,
+      effective_letter_type: completedLetterType,
+      disciplinary_status:
+        stage.key === 'derivacion'
+          ? ('Rojo' as const)
+          : stage.key === 'compromiso_conductual'
+            ? ('Naranja' as const)
+            : stage.key === 'amonestacion'
+              ? ('Amarillo' as const)
+              : ('Verde' as const),
+    };
+  });
+  const cartaStatuses: Record<string, string[]> = {};
+  for (const [studentId, state] of Object.entries(cartaStates)) {
+    if (state.workflowStatus === 'completed') cartaStatuses[studentId] = ['Procesada'];
+    if (state.workflowStatus === 'pending') cartaStatuses[studentId] = ['Pendiente'];
+  }
+  return { students, cartaStatuses };
 }
 
 export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
@@ -35,21 +69,9 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
     setIsLoading(true);
     setDbError(null);
     try {
-      const fetchedStudents = await fetchStudentsWithAnnotationCounts();
-      setStudents(fetchedStudents ?? []);
-      const { data: cartasData } = await supabase
-        .from('cartas_disciplinarias')
-        .select('student_id, status');
-      const map: Record<string, string[]> = {};
-      const seen = new Set<string>();
-      for (const c of cartasData ?? []) {
-        const key = `${c.student_id}:${c.status}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        if (!map[c.student_id]) map[c.student_id] = [];
-        map[c.student_id].push(c.status);
-      }
-      setCartaStatuses(map);
+      const tableData = await fetchAnotacionesTableData();
+      setStudents(tableData.students);
+      setCartaStatuses(tableData.cartaStatuses);
     } catch (error: unknown) {
       console.error('Error cargando datos desde Supabase:', error);
       setDbError(error instanceof Error ? error.message : 'Error de conexión con la base de datos');
@@ -61,9 +83,10 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
 
   const refreshStudentTable = useCallback(async () => {
     try {
-      const fetchedStudents = await fetchStudentsWithAnnotationCounts();
-      const nextStudents = fetchedStudents ?? [];
+      const tableData = await fetchAnotacionesTableData();
+      const nextStudents = tableData.students;
       setStudents(nextStudents);
+      setCartaStatuses(tableData.cartaStatuses);
       setSelectedStudent((current) =>
         current ? nextStudents.find((student) => student.id === current.id) || current : null,
       );

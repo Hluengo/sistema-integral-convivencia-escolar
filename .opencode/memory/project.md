@@ -1082,3 +1082,19 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - `docs/shared-supabase/13-staff-membership-decision.md`: Staff membership decision
 - `docs/shared-supabase/14-phase-3-transition-enforcement.md`: Phase 3 report
 - `.ai/roadmap.md`: Fase 3 marcada como completada
+
+### Constancias físicas de cartas disciplinarias (2026-07-28)
+
+- La pestaña Carta de la ficha individual registra Amonestación o Compromiso ya emitidos en papel.
+- `cartas_disciplinarias.origin` distingue `platform` y `physical`; `school_year` limita el efecto al año de la carta.
+- `register_physical_carta` es un RPC `SECURITY INVOKER` exclusivo de `authenticated`, con aislamiento por `current_tenant_id()`.
+- La constancia usa `annotations_count = 0`: no crea ni altera anotaciones y no abre el generador.
+- Progresión anual: Amonestación física habilita Compromiso; Compromiso físico habilita Derivación.
+
+### Estado efectivo de cartas en Anotaciones (2026-07-28)
+
+- La tabla, sus filtros y la exportación combinan el tramo de anotaciones con la carta realizada de mayor nivel del año vigente.
+- Una Derivación `processed_manually` prevalece sobre el tramo numérico; el conteo de anotaciones no se modifica.
+- `status = Vigente` conserva su significado administrativo. La UI obtiene `Pendiente` o `Procesada` desde `carta_events`.
+- Al procesar o registrar una carta desde la ficha individual se recargan tanto el modal como la tabla principal.
+- Reabrir un generador ya creado no vuelve a insertar el evento `created`.

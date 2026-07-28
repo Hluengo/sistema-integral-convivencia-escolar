@@ -36,3 +36,11 @@ Los textos editables viven en `letterContent` (`motivo`, `descripcion`, `medida`
 La pestaña Carta permite registrar una Amonestación o Carta de Compromiso emitida físicamente antes de la adopción de la plataforma. Se almacena en `cartas_disciplinarias` con `origin = 'physical'`, `school_year` derivado de la fecha y `annotations_count = 0`; el RPC autenticado `register_physical_carta` crea en una sola transacción la constancia y su evento `registered`.
 
 La constancia no crea anotaciones ni abre el generador. Solo afecta la progresión del mismo año escolar: Amonestación física habilita Compromiso y Compromiso físico habilita Derivación. Las constancias de años anteriores permanecen como historial y no afectan la progresión anual vigente.
+
+## Estado efectivo en la tabla de Anotaciones
+
+La tabla no usa el conteo como única fuente de verdad. Para el año escolar vigente, una carta
+realizada (`registered`, `printed` o `processed_manually`) puede elevar la etapa efectiva sobre
+el tramo numérico. Por ejemplo, una Derivación procesada con 14 negativas se muestra y filtra
+como Derivación, manteniendo intacto el conteo de 14. Las cartas pendientes se muestran como
+pendientes, pero no elevan por sí solas la etapa disciplinaria efectiva.

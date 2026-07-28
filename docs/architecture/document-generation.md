@@ -45,13 +45,20 @@ PDF upload â†’ Supabase Storage â†’ POST /api/process-disciplinary-pdf
   â”‚   â””â”€â”€ Course (extractCourse)
   â”œâ”€â”€ Annotation parsing (regex):
   â”‚   â”œâ”€â”€ splitAnnotationBlocks (by DD/MM/YYYY)
-  â”‚   â”œâ”€â”€±…ÍÍ¥™å¹¹½Ñ…Ñ¥½¸€¡9•…Ñ¥Ù„½A½Í¥Ñ¥Ù„½%¹™½Éµ…§Í¸¤(€ƒŠR€€ƒŠRSŠRŠRFVGWÆ–6F–öà¢)IÎ)H)H7GVFVçBÖF6†–æs ¢)H")IÎ)H)HW†7BæÖR(i"ã“’6öæf–FVæ6P¢)H")IÎ)H)HädB×7G&—VB(i"ã“@¢)H")IÎ)H)HÛÜ™İ™\›\8¢iML	H8¡¤ˆ˜\šXX›Bˆ8¥ ˆ8¥%8¥ 8¥ Ûİ\œÙH˜[˜XÚÂˆ8¥'8¥ 8¥  Letter suggestion (RPC get_suggested_letter_type)
+  â”‚   â”œâ”€â”€ classifyAnnotation (Negativa/Positiva/InformaciÃ³n)
+  â”‚   â””â”€â”€ Deduplication
+  â”œâ”€â”€ Student matching:
+  â”‚   â”œâ”€â”€ Exact name â†’ 0.99 confidence
+  â”‚   â”œâ”€â”€ NFD-stripped â†’ 0.94
+  â”‚   â”œâ”€â”€ Word overlap â‰¥50% â†’ variable
+  â”‚   â””â”€â”€ Course fallback
+  â”œâ”€â”€ Letter suggestion (RPC get_suggested_letter_type)
   â””â”€â”€ Persist to document_analyses
 ```
 
 ## AI Drafted Documents (Server-side)
 
- | Documento                   | System Prompt Origin          |
+| Documento                   | System Prompt Origin          |
 | --------------------------- | ----------------------------- |
 | `notificacion_apertura`     | Hardcoded en route            |
 | `citacion_entrevista`       | Hardcoded en route            |
@@ -85,3 +92,16 @@ La ficha individual puede registrar como constancia una AmonestaciÃ³n o un Compr
 ya emitidos en papel. El registro no genera una plantilla digital ni modifica el conteo
 de anotaciones. La constancia queda identificada por origen y aÃ±o escolar, y habilita
 la medida inmediatamente siguiente solo dentro de ese mismo aÃ±o.
+
+### ProyecciÃ³n a la tabla principal
+
+El estado visible de un estudiante combina dos fuentes:
+
+1. el tramo sugerido por el nÃºmero de anotaciones negativas;
+2. la carta de mayor nivel efectivamente realizada durante el aÃ±o vigente.
+
+La segunda prevalece cuando representa una etapa superior. Una Ficha de DerivaciÃ³n marcada
+como procesada aparece en Estado, en el filtro DerivaciÃ³n y en las exportaciones, aunque el
+conteo permanezca bajo 15 por existir un Compromiso fÃ­sico habilitante. El estado documental
+se presenta como `Pendiente` o `Procesada` a partir de `carta_events`; `status = Vigente`
+continÃºa representando la vigencia administrativa de la carta y no el cierre del trÃ¡mite.

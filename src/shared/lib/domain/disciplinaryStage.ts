@@ -18,6 +18,25 @@ export interface DisciplinaryStage {
   color: 'neutral' | 'yellow' | 'orange' | 'red';
 }
 
+export interface CartaTableCandidate {
+  letter_type: string;
+  emission_date: string;
+  created_at?: string;
+  origin?: string;
+  school_year?: number;
+  status: string;
+  workflow_status?: 'pending' | 'completed' | 'annulled';
+  registered_at?: string | null;
+  printed_at?: string | null;
+  processed_manually_at?: string | null;
+}
+
+export interface StudentCartaTableState {
+  completedLetterType: LetterType | null;
+  currentLetterType: LetterType | null;
+  workflowStatus: 'pending' | 'completed' | 'none';
+}
+
 export const DISCIPLINARY_STAGES: DisciplinaryStage[] = [
   { key: 'none', label: 'Sin medida activa', min: 0, max: 4, color: 'neutral' },
   { key: 'amonestacion', label: 'Amonestación Escrita', min: 5, max: 9, color: 'yellow' },
@@ -135,6 +154,78 @@ export function getHighestPriorityLetterType(
     if (!highest || STAGE_RANK[candidate] > STAGE_RANK[highest]) return candidate;
     return highest;
   }, null);
+}
+
+function getCartaYear(carta: CartaTableCandidate): number {
+  return carta.school_year ?? new Date(`${carta.emission_date}T00:00:00`).getFullYear();
+}
+
+function isCompletedCarta(carta: CartaTableCandidate): boolean {
+  return (
+    carta.origin === 'physical' ||
+    carta.workflow_status === 'completed' ||
+    Boolean(carta.registered_at || carta.printed_at || carta.processed_manually_at)
+  );
+}
+
+function getCartaTimestamp(carta: CartaTableCandidate): number {
+  const value = carta.created_at || carta.emission_date;
+  const timestamp = new Date(value).getTime();
+  return Number.isNaN(timestamp) ? 0 : timestamp;
+}
+
+function sortCartaCandidates(left: CartaTableCandidate, right: CartaTableCandidate): number {
+  const leftType = mapLetterTypeToDocType(left.letter_type);
+  const rightType = mapLetterTypeToDocType(right.letter_type);
+  const rankDifference = STAGE_RANK[rightType ?? 'none'] - STAGE_RANK[leftType ?? 'none'];
+  if (rankDifference !== 0) return rankDifference;
+
+  const completionDifference = Number(isCompletedCarta(right)) - Number(isCompletedCarta(left));
+  if (completionDifference !== 0) return completionDifference;
+  return getCartaTimestamp(right) - getCartaTimestamp(left);
+}
+
+export function resolveStudentCartaTableState(
+  cartas: CartaTableCandidate[],
+  schoolYear: number,
+): StudentCartaTableState {
+  const currentYearCartas = cartas
+    .filter(
+      (carta) =>
+        carta.status !== 'Anulada' &&
+        carta.workflow_status !== 'annulled' &&
+        getCartaYear(carta) === schoolYear &&
+        mapLetterTypeToDocType(carta.letter_type),
+    )
+    .sort(sortCartaCandidates);
+  const currentCarta = currentYearCartas[0];
+  const completedCarta = currentYearCartas.find(isCompletedCarta);
+
+  return {
+    completedLetterType: completedCarta
+      ? mapDocTypeToLetterType(mapLetterTypeToDocType(completedCarta.letter_type))
+      : null,
+    currentLetterType: currentCarta
+      ? mapDocTypeToLetterType(mapLetterTypeToDocType(currentCarta.letter_type))
+      : null,
+    workflowStatus: currentCarta
+      ? isCompletedCarta(currentCarta)
+        ? 'completed'
+        : 'pending'
+      : 'none',
+  };
+}
+
+export function getEffectiveDisciplinaryStage(
+  negativeCount: number,
+  completedLetterType?: string | null,
+): DisciplinaryStage {
+  const countStage = getDisciplinaryStage(negativeCount);
+  const completedStage = mapLetterTypeToDocType(completedLetterType);
+  if (!completedStage || STAGE_RANK[completedStage] <= STAGE_RANK[countStage.key]) {
+    return countStage;
+  }
+  return DISCIPLINARY_STAGES.find((stage) => stage.key === completedStage) ?? countStage;
 }
 
 export function getCartaProcessingBlockReason(

@@ -13,7 +13,11 @@ import {
   type AnnotationExportScope,
   type AnnotationExportStudent,
 } from './annotationsExcelExport';
-import { getAnnotationRange } from './annotationStudentFilters';
+import {
+  getEffectiveDisciplinaryStage,
+  type LetterType,
+} from '../../shared/lib/domain/disciplinaryStage';
+import { matchesAnnotationFilter } from './annotationStudentFilters';
 
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
@@ -34,23 +38,22 @@ const DISC_STATUS: Record<string, { text: string; bg: string }> = {
 
 const CARD_STATUS_BADGE: Record<string, { bg: string; textClass: string }> = {
   Vigente: { bg: 'bg-emerald-100', textClass: 'text-emerald-800' },
+  Procesada: { bg: 'bg-blue-100', textClass: 'text-blue-800' },
   Pendiente: { bg: 'bg-amber-100', textClass: 'text-amber-800' },
   Cumplida: { bg: 'bg-blue-100', textClass: 'text-blue-800' },
   Incumplida: { bg: 'bg-red-100', textClass: 'text-red-800' },
   Anulada: { bg: 'bg-neutral-100', textClass: 'text-neutral-500' },
 };
 
-const getDisciplinaryStatusLabel = (count: number): { text: string; bg: string } => {
-  if (count < 5) {
-    return DISC_STATUS.Verde;
-  }
-  if (count < 10) {
-    return DISC_STATUS.Amarillo;
-  }
-  if (count < 15) {
-    return DISC_STATUS.Naranja;
-  }
-  return DISC_STATUS.Rojo;
+const getDisciplinaryStatusLabel = (
+  count: number,
+  effectiveLetterType?: LetterType | null,
+): { text: string; bg: string } => {
+  const stage = getEffectiveDisciplinaryStage(count, effectiveLetterType);
+  if (stage.key === 'amonestacion') return DISC_STATUS.Amarillo;
+  if (stage.key === 'compromiso_conductual') return DISC_STATUS.Naranja;
+  if (stage.key === 'derivacion') return DISC_STATUS.Rojo;
+  return DISC_STATUS.Verde;
 };
 
 interface AnotacionesStudentTableProps {
@@ -81,18 +84,11 @@ function getEffectiveNegCount(s: { annotations_count: number }): number {
 function filterStudents(
   students: AnotacionesStudentTableProps['students'],
   activeFilter: string,
-  searchQuery: string
+  searchQuery: string,
 ) {
   let filtered = students;
 
-  const range = getAnnotationRange(activeFilter);
-  if (range) {
-    const [min, max] = range;
-    filtered = filtered.filter((s) => {
-      const count = getEffectiveNegCount(s);
-      return count >= min && count <= max;
-    });
-  }
+  filtered = filtered.filter((student) => matchesAnnotationFilter(student, activeFilter));
 
   if (searchQuery.trim()) {
     const q = searchQuery.trim().toLowerCase();
@@ -100,7 +96,7 @@ function filterStudents(
       (s) =>
         s.full_name.toLowerCase().includes(q) ||
         s.rut?.toLowerCase().includes(q) ||
-        s.course_name?.toLowerCase().includes(q)
+        s.course_name?.toLowerCase().includes(q),
     );
   }
 
@@ -141,11 +137,7 @@ export default memo(function AnotacionesStudentTable({
   const [exportError, setExportError] = useState<string | null>(null);
 
   const handleExport = async (scope: AnnotationExportScope) => {
-    const selectedStudents = getStudentsForAnnotationExport(
-      students,
-      filteredStudents,
-      scope
-    );
+    const selectedStudents = getStudentsForAnnotationExport(students, filteredStudents, scope);
     if (selectedStudents.length === 0) {
       setExportError('No hay estudiantes para exportar con ese criterio.');
       return;
@@ -199,7 +191,7 @@ export default memo(function AnotacionesStudentTable({
               const count = getStudentsForAnnotationExport(
                 students,
                 filteredStudents,
-                option.scope
+                option.scope,
               ).length;
               return (
                 <button
@@ -283,7 +275,10 @@ export default memo(function AnotacionesStudentTable({
                 <tr aria-label="Estado de carga de estudiantes">
                   <td colSpan={7} className="px-4 py-12 text-center text-neutral-500 text-sm">
                     <div className="flex items-center justify-center gap-2">
-                      <div className="size-4 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" aria-hidden="true" />
+                      <div
+                        className="size-4 animate-spin rounded-full border-2 border-brand-600 border-t-transparent"
+                        aria-hidden="true"
+                      />
                       Cargando estudiantes...
                     </div>
                   </td>
@@ -297,8 +292,15 @@ export default memo(function AnotacionesStudentTable({
               ) : (
                 filteredStudents.map((student) => {
                   const effectiveNeg = getEffectiveNegCount(student);
-                  const style = getSemaphoricStyle(effectiveNeg);
-                  const status = getDisciplinaryStatusLabel(effectiveNeg);
+                  const effectiveStage = getEffectiveDisciplinaryStage(
+                    effectiveNeg,
+                    student.effective_letter_type,
+                  );
+                  const style = getSemaphoricStyle(effectiveStage.min);
+                  const status = getDisciplinaryStatusLabel(
+                    effectiveNeg,
+                    student.effective_letter_type,
+                  );
                   const negativeCount = student.annotations_count || 0;
 
                   return (
@@ -365,11 +367,17 @@ export default memo(function AnotacionesStudentTable({
                       <td className="hidden whitespace-nowrap px-4 py-3 text-neutral-600 text-sm lg:table-cell">
                         {formatDate(student.last_annotation_date)}
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm" aria-label={`Estado disciplinario: ${status.text}`}>
+                      <td
+                        className="whitespace-nowrap px-4 py-3 text-sm"
+                        aria-label={`Estado disciplinario: ${status.text}`}
+                      >
                         <span
                           className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-medium text-xs ${status.bg}`}
                         >
-                          <span className={`inline-block size-2 rounded-full ${style.dot}`} aria-hidden="true" />
+                          <span
+                            className={`inline-block size-2 rounded-full ${style.dot}`}
+                            aria-hidden="true"
+                          />
                           <span className="hidden md:inline">{status.text}</span>
                         </span>
                       </td>

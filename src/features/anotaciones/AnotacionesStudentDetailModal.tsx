@@ -156,7 +156,9 @@ export default function AnotacionesStudentDetailModal({
             pendingSuggestion={pendingCartaSuggestion}
             privacyMode={privacyMode}
             teachers={teachers}
-            onRefresh={disciplinaryData.refresh}
+            onRefresh={async () => {
+              await Promise.all([disciplinaryData.refresh(), onDataChanged?.()]);
+            }}
           />
         );
       case 'historial':

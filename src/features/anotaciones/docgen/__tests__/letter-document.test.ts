@@ -8,9 +8,11 @@ import { execSync } from 'node:child_process';
 import { DEFAULT_LETTER_CONTENT } from '../DocumentPreview/docTypes';
 import {
   getCartaProcessingBlockReason,
+  getEffectiveDisciplinaryStage,
   getHighestPriorityLetterType,
   getNextLetterAfterPhysicalCarta,
   getPhysicalCartaBaselineType,
+  resolveStudentCartaTableState,
 } from '../../../../shared/lib/domain/disciplinaryStage';
 
 const srcDir = resolve(import.meta.dirname!, '../../../../..');
@@ -219,6 +221,14 @@ describe('Cierre de cartas — validación de etapa registrada', () => {
     ok(cartasTab.includes('Confirme primero la anotación número 15'));
   });
 
+  it('no vuelve a registrar Carta creada al reabrir el mismo generador', () => {
+    const cartasTab = readFileSync(cartasTabPath, 'utf-8');
+
+    ok(cartasTab.includes('!showGenerator'));
+    ok(cartasTab.includes('!carta.created_event_at'));
+    ok(cartasTab.includes('createdEventCartaIds.current.has(carta.id)'));
+  });
+
   it('muestra el nombre del estado y no la clase CSS en la tabla', () => {
     const table = readFileSync(tablePath, 'utf-8');
 
@@ -264,6 +274,87 @@ describe('Constancias físicas — progresión anual', () => {
       getHighestPriorityLetterType('amonestacion', 'derivacion', 'compromiso_conductual'),
       'derivacion',
     );
+  });
+});
+
+describe('Estado efectivo de cartas en la tabla', () => {
+  it('muestra Derivación procesada aunque existan solo 14 negativas', () => {
+    const cartaState = resolveStudentCartaTableState(
+      [
+        {
+          letter_type: 'Carta de Compromiso Conductual',
+          emission_date: '2026-07-28',
+          created_at: '2026-07-28T20:54:55.000Z',
+          origin: 'physical',
+          school_year: 2026,
+          status: 'Vigente',
+          workflow_status: 'completed',
+        },
+        {
+          letter_type: 'Ficha de Derivación',
+          emission_date: '2026-07-28',
+          created_at: '2026-07-28T20:54:58.000Z',
+          origin: 'platform',
+          school_year: 2026,
+          status: 'Vigente',
+          workflow_status: 'completed',
+          processed_manually_at: '2026-07-28T20:59:32.000Z',
+        },
+      ],
+      2026,
+    );
+
+    equal(cartaState.completedLetterType, 'Ficha de Derivación');
+    equal(cartaState.currentLetterType, 'Ficha de Derivación');
+    equal(cartaState.workflowStatus, 'completed');
+    equal(getEffectiveDisciplinaryStage(14, cartaState.completedLetterType).key, 'derivacion');
+  });
+
+  it('no deja que una carta de un año anterior altere la progresión vigente', () => {
+    const cartaState = resolveStudentCartaTableState(
+      [
+        {
+          letter_type: 'Ficha de Derivación',
+          emission_date: '2025-11-20',
+          origin: 'platform',
+          school_year: 2025,
+          status: 'Vigente',
+          workflow_status: 'completed',
+        },
+      ],
+      2026,
+    );
+
+    equal(cartaState.completedLetterType, null);
+    equal(getEffectiveDisciplinaryStage(7, cartaState.completedLetterType).key, 'amonestacion');
+  });
+
+  it('mantiene pendiente una Derivación creada pero todavía no procesada', () => {
+    const cartaState = resolveStudentCartaTableState(
+      [
+        {
+          letter_type: 'Ficha de Derivación',
+          emission_date: '2026-07-28',
+          origin: 'platform',
+          school_year: 2026,
+          status: 'Vigente',
+          workflow_status: 'pending',
+        },
+        {
+          letter_type: 'Carta de Compromiso Conductual',
+          emission_date: '2026-07-20',
+          origin: 'physical',
+          school_year: 2026,
+          status: 'Vigente',
+          workflow_status: 'completed',
+        },
+      ],
+      2026,
+    );
+
+    equal(cartaState.currentLetterType, 'Ficha de Derivación');
+    equal(cartaState.workflowStatus, 'pending');
+    equal(cartaState.completedLetterType, 'Carta de Compromiso Conductual');
   });
 });
 

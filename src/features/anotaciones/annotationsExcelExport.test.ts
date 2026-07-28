@@ -87,6 +87,30 @@ describe('annotationsExcelExport', () => {
     expect(getStudentsForAnnotationExport(students, [], 'derivacion')).toEqual([students[2]]);
   });
 
+  it('exporta como Derivación una carta procesada aunque el conteo permanezca en 14', () => {
+    const processedDerivation: AnnotationExportStudent = {
+      id: 'student-derivation',
+      full_name: 'ESTUDIANTE CON DERIVACIÓN',
+      annotations_count: 14,
+      positive_annotations_count: 0,
+      effective_letter_type: 'Ficha de Derivación',
+    };
+
+    expect(getStudentsForAnnotationExport([processedDerivation], [], 'derivacion')).toEqual([
+      processedDerivation,
+    ]);
+    expect(
+      buildAnnotationExportRows(
+        [processedDerivation],
+        { 'student-derivation': ['Procesada'] },
+        false,
+      )[0],
+    ).toMatchObject({
+      measure: 'Derivación a Convivencia Escolar',
+      documentStatus: 'Procesada',
+    });
+  });
+
   it('respeta el modo privacidad y conserva valores numéricos y fechas', () => {
     const [row] = buildAnnotationExportRows([students[0]], { 'student-1': ['Vigente'] }, true);
 

@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useRef, useState } from 'react';
 import { Ban, FileText, XCircle } from 'lucide-react';
 import type { Annotation, CartaDisciplinaria } from '@/src/shared/lib/types';
 import { TEACHERS_BY_COURSE } from '@/src/lib/anotacionesUtils';
@@ -103,6 +103,7 @@ export default function CartasTab({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [messageTone, setMessageTone] = useState<FeedbackTone>('info');
+  const createdEventCartaIds = useRef(new Set<string>());
 
   const refreshAfterChange = async () => {
     await onRefresh();
@@ -160,11 +161,19 @@ export default function CartasTab({
       setShowGenerator(true);
       setMessageTone('info');
       setMessage('Generador abierto.');
-      void createCartaEvent(
-        carta.id,
-        'created',
-        'Carta abierta en generador desde ficha disciplinaria',
-      );
+      if (
+        !showGenerator &&
+        !carta.created_event_at &&
+        !createdEventCartaIds.current.has(carta.id)
+      ) {
+        createdEventCartaIds.current.add(carta.id);
+        const eventCreated = await createCartaEvent(
+          carta.id,
+          'created',
+          'Carta abierta en generador desde ficha disciplinaria',
+        );
+        if (!eventCreated) createdEventCartaIds.current.delete(carta.id);
+      }
     } else {
       setMessageTone('error');
       setMessage('No hay carta requerida para este estudiante.');

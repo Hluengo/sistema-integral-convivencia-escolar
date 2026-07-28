@@ -17,7 +17,11 @@ import {
 } from '../../../lib/mappers';
 import { fetchAnnotations, fetchDocumentAnalyses } from './annotations.service';
 import { useAuthStore } from '../../../stores/authStore';
-import type { LetterType } from '../../lib/domain/disciplinaryStage';
+import {
+  resolveStudentCartaTableState,
+  type LetterType,
+  type StudentCartaTableState,
+} from '../../lib/domain/disciplinaryStage';
 import {
   physicalCartaRegistrationSchema,
   type PhysicalCartaRegistrationInput,
@@ -163,6 +167,56 @@ export function getCartaWorkflowLabel(carta: CartaDisciplinaria | null | undefin
 
 export async function fetchCartas(studentId: string): Promise<CartaDisciplinaria[]> {
   return fetchCartasByStudent(studentId);
+}
+
+export async function fetchCartaTableStates(): Promise<Record<string, StudentCartaTableState>> {
+  const { data: cartasData, error: cartasError } = await supabase
+    .from('cartas_disciplinarias')
+    .select(CARTA_SELECT)
+    .order('emission_date', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (cartasError) {
+    console.error('Error fetching carta table states:', cartasError);
+    return {};
+  }
+
+  const cartas = (cartasData || []).map(mapCauseRowToCarta);
+  if (cartas.length === 0) return {};
+
+  const { data: eventsData, error: eventsError } = await supabase
+    .from('carta_events')
+    .select(CARTA_EVENT_SELECT)
+    .in(
+      'carta_id',
+      cartas.map((carta) => carta.id),
+    )
+    .order('created_at', { ascending: false });
+
+  if (eventsError) {
+    console.error('Error fetching carta events for table:', eventsError);
+  }
+
+  const events = (eventsData || []) as CartaEvent[];
+  const cartasByStudent = new Map<string, CartaDisciplinaria[]>();
+  for (const carta of cartas) {
+    const hydrated = hydrateCartaWorkflow(carta, events);
+    const current = cartasByStudent.get(carta.student_id) || [];
+    current.push(hydrated);
+    cartasByStudent.set(carta.student_id, current);
+  }
+
+  const schoolYear = Number(
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Santiago',
+      year: 'numeric',
+    }).format(new Date()),
+  );
+  const states: Record<string, StudentCartaTableState> = {};
+  for (const [studentId, studentCartas] of cartasByStudent) {
+    states[studentId] = resolveStudentCartaTableState(studentCartas, schoolYear);
+  }
+  return states;
 }
 
 export async function fetchCartasByStudent(studentId: string): Promise<CartaDisciplinaria[]> {

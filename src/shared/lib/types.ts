@@ -147,6 +147,7 @@ export interface AnotacionStudent {
   informative_annotations_count?: number;
   last_annotation_date?: string;
   disciplinary_status: DisciplinaryStatus;
+  effective_letter_type?: CartaDisciplinaria['letter_type'] | null;
   rut?: string;
   course_name?: string;
   ai_analysis?: AnnotationSummary;
