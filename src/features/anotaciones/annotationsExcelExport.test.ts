@@ -44,6 +44,40 @@ const students: AnnotationExportStudent[] = [
 ];
 
 describe('annotationsExcelExport', () => {
+  it('exporta como Sin Carta solo estudiantes con 1 a 4 anotaciones negativas', () => {
+    const sinCartaStudents: AnnotationExportStudent[] = [
+      {
+        id: 'student-0',
+        full_name: 'SIN ANOTACIONES',
+        annotations_count: 0,
+        positive_annotations_count: 0,
+      },
+      {
+        id: 'student-1-negative',
+        full_name: 'UNA NEGATIVA',
+        annotations_count: 1,
+        positive_annotations_count: 0,
+      },
+      {
+        id: 'student-4-negative',
+        full_name: 'CUATRO NEGATIVAS',
+        annotations_count: 4,
+        positive_annotations_count: 0,
+      },
+      {
+        id: 'student-5-negative',
+        full_name: 'CINCO NEGATIVAS',
+        annotations_count: 5,
+        positive_annotations_count: 0,
+      },
+    ];
+
+    expect(getStudentsForAnnotationExport(sinCartaStudents, [], 'sin_carta')).toEqual([
+      sinCartaStudents[1],
+      sinCartaStudents[2],
+    ]);
+  });
+
   it('selecciona estudiantes según el tipo de carta', () => {
     expect(getStudentsForAnnotationExport(students, [students[0]], 'visible')).toEqual([
       students[0],
@@ -81,6 +115,9 @@ describe('annotationsExcelExport', () => {
     expect(sheetData).toHaveLength(6);
     expect(buildAnnotationExportFileName('all', new Date(2026, 6, 27))).toBe(
       'anotaciones_lista-completa_2026-07-27.xlsx',
+    );
+    expect(buildAnnotationExportFileName('sin_carta', new Date(2026, 6, 27))).toBe(
+      'anotaciones_sin_carta_2026-07-27.xlsx',
     );
   });
 });
