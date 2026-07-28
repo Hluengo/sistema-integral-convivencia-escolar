@@ -86,6 +86,11 @@ La impresión no completa el trámite por sí sola. **Marcar como procesada** gu
 `content_snapshot` final y agrega el evento `processed_manually` a `carta_events`. Los eventos
 históricos `registered` y `printed` se conservan para compatibilidad.
 
+Abrir el generador no registra una carta en el historial. Las cartas pendientes permanecen
+disponibles para editar o imprimir, pero solo se incorporan al historial al ser procesadas,
+registradas, impresas mediante el flujo histórico o anuladas. Los eventos preliminares
+`created` y `suggested` existentes se conservan en Supabase y se omiten en la interfaz.
+
 ### Carta física existente
 
 La ficha individual puede registrar como constancia una Amonestación o un Compromiso

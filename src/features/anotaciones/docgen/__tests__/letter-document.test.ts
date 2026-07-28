@@ -221,12 +221,19 @@ describe('Cierre de cartas — validación de etapa registrada', () => {
     ok(cartasTab.includes('Confirme primero la anotación número 15'));
   });
 
-  it('no vuelve a registrar Carta creada al reabrir el mismo generador', () => {
+  it('abrir el generador no registra una carta en el historial', () => {
     const cartasTab = readFileSync(cartasTabPath, 'utf-8');
+    const historyTab = readFileSync(
+      resolve(import.meta.dirname!, '../../AnotacionesStudentDetailModal/HistoryTab.tsx'),
+      'utf-8',
+    );
 
-    ok(cartasTab.includes('!showGenerator'));
-    ok(cartasTab.includes('!carta.created_event_at'));
-    ok(cartasTab.includes('createdEventCartaIds.current.has(carta.id)'));
+    ok(!cartasTab.includes("createCartaEvent("));
+    ok(!cartasTab.includes("'created'"));
+    ok(historyTab.includes("event.event_type !== 'created'"));
+    ok(historyTab.includes("event.event_type !== 'suggested'"));
+    ok(!historyTab.includes('Carta creada:'));
+    ok(!historyTab.includes('Carta sugerida:'));
   });
 
   it('muestra el nombre del estado y no la clase CSS en la tabla', () => {

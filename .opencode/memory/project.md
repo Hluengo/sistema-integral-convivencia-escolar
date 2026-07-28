@@ -1097,4 +1097,6 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - Una Derivación `processed_manually` prevalece sobre el tramo numérico; el conteo de anotaciones no se modifica.
 - `status = Vigente` conserva su significado administrativo. La UI obtiene `Pendiente` o `Procesada` desde `carta_events`.
 - Al procesar o registrar una carta desde la ficha individual se recargan tanto el modal como la tabla principal.
-- Reabrir un generador ya creado no vuelve a insertar el evento `created`.
+- Abrir o reabrir el generador no inserta eventos en el historial.
+- Los eventos preliminares históricos `created` y `suggested` se conservan en Supabase, pero no se muestran.
+- Las cartas pendientes no generan entradas sintéticas; aparecen en el historial al procesarse, registrarse, imprimirse mediante el flujo histórico o anularse.

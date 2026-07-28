@@ -81,19 +81,11 @@ function describeCartaEvent(event: CartaEvent, carta?: CartaDisciplinaria): Time
       tone: 'bg-neutral-100 text-neutral-600',
     };
   }
-  if (event.event_type === 'created') {
-    return {
-      ...base,
-      title: `Carta creada: ${letterType}`,
-      description: 'Documento abierto en generador. Estado: pendiente.',
-      tone: 'bg-amber-50 text-amber-700',
-    };
-  }
   return {
     ...base,
-    title: `Carta sugerida: ${letterType}`,
-    description: 'Estado: pendiente.',
-    tone: 'bg-amber-50 text-amber-700',
+    title: `Evento de carta: ${letterType}`,
+    description: event.event_detail || 'Sin detalle registrado.',
+    tone: 'bg-neutral-100 text-neutral-600',
   };
 }
 
@@ -108,7 +100,10 @@ export default function HistoryTab({
   cartaEvents,
 }: HistoryTabProps) {
   const cartasById = new Map(cartas.map((carta) => [carta.id, carta]));
-  const cartasWithEvents = new Set(cartaEvents.map((event) => event.carta_id));
+  const relevantCartaEvents = cartaEvents.filter(
+    (event) => event.event_type !== 'created' && event.event_type !== 'suggested',
+  );
+  const cartasWithEvents = new Set(relevantCartaEvents.map((event) => event.carta_id));
   const syntheticCartaItems = cartas.reduce<TimelineItem[]>((items, carta) => {
     if (cartasWithEvents.has(carta.id)) return items;
     const status = resolveCartaWorkflowStatus(carta);
@@ -134,14 +129,6 @@ export default function HistoryTab({
       });
       return items;
     }
-    items.push({
-      id: `carta-${carta.id}`,
-      date: carta.created_at || carta.emission_date,
-      icon: <FileText className="h-4 w-4" />,
-      title: `Carta sugerida: ${carta.letter_type}`,
-      description: 'Estado: pendiente.',
-      tone: 'bg-amber-50 text-amber-700',
-    });
     return items;
   }, []);
 
@@ -178,7 +165,9 @@ export default function HistoryTab({
       description: annotation.annotation_text || annotation.raw_text || 'Sin texto registrado',
       tone: 'bg-neutral-50 text-neutral-700',
     })),
-    ...cartaEvents.map((event) => describeCartaEvent(event, cartasById.get(event.carta_id))),
+    ...relevantCartaEvents.map((event) =>
+      describeCartaEvent(event, cartasById.get(event.carta_id)),
+    ),
     ...letterOutputEvents.map((event) => ({
       id: `letter-output-${event.id}`,
       date: event.created_at,
