@@ -8,7 +8,7 @@ import { maskName, maskRut } from '../../lib/anotacionesUtils';
 import { getDisciplinaryStage } from '../../shared/lib/domain/disciplinaryStage';
 
 export type AnnotationExportScope =
-  'all' | 'visible' | 'amonestacion' | 'compromiso' | 'derivacion';
+  'all' | 'visible' | 'sin_carta' | 'amonestacion' | 'compromiso' | 'derivacion';
 
 export interface AnnotationExportStudent {
   id: string;
@@ -39,6 +39,7 @@ export const ANNOTATION_EXPORT_OPTIONS: Array<{
 }> = [
   { scope: 'all', label: 'Toda la lista' },
   { scope: 'visible', label: 'Resultados visibles' },
+  { scope: 'sin_carta', label: 'Sin Carta (1-4 negativas)' },
   { scope: 'amonestacion', label: 'Amonestación' },
   { scope: 'compromiso', label: 'Compromiso conductual' },
   { scope: 'derivacion', label: 'Derivación a convivencia' },
@@ -81,6 +82,12 @@ export function getStudentsForAnnotationExport(
 ): AnnotationExportStudent[] {
   if (scope === 'all') return students;
   if (scope === 'visible') return visibleStudents;
+  if (scope === 'sin_carta') {
+    return students.filter((student) => {
+      const negativeCount = Number(student.annotations_count) || 0;
+      return negativeCount >= 1 && negativeCount <= 4;
+    });
+  }
 
   const stageKey = scope === 'compromiso' ? 'compromiso_conductual' : scope;
   return students.filter(
