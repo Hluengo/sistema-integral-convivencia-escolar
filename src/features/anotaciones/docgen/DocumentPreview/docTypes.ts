@@ -67,15 +67,15 @@ export const DEFAULT_LETTER_CONTENT: Record<DocType, LetterContent> = {
   },
   derivacion: {
     motivo:
-      'Acumulación de anotaciones negativas que activa derivación al equipo de Convivencia Escolar.',
+      'Activación de protocolo por acumulación crítica de registros conductuales (Art. 24 BIS), habiendo alcanzado el umbral de 15 anotaciones leves que tipifican el caso como una conducta grave que requiere intervención psicosocial.',
     descripcion:
-      'Los antecedentes registrados dan cuenta de conductas reiteradas que afectan la sana convivencia y requieren intervención especializada.',
+      'El historial pedagógico del estudiante evidencia una persistencia de conductas disruptivas que han agotado las instancias formativas de aula. Esta reiteración manifiesta una dificultad en la autorregulación por convicción personal, lo que afecta el clima de aprendizaje y demanda una evaluación psicosocial para identificar factores subyacentes y evitar la escalada a sanciones mayores.',
     medida:
-      'Se deriva el caso al Equipo de Convivencia Escolar para evaluación, acompañamiento y definición de acciones formativas o de apoyo.',
+      'Escalamiento a intervención formal del Equipo de Convivencia Escolar (Paso 8 del Debido Proceso), debido al incumplimiento de los acuerdos de la Carta de Compromiso Conductual (Medida 4) y la acumulación crítica de anotaciones (Art. 24 BIS). Esta derivación tiene como fin transitar hacia un acompañamiento psicosocial, en donde se EVALÚA la posible aplicación de la Medida 5 (Suspensión Temporal) al configurarse la conducta como una falta muy grave por reiteración y falta de respuesta a las instancias pedagógicas previas.',
     acuerdos:
-      'Evaluación socioemocional, plan de acompañamiento conductual, entrevista con apoderado y seguimiento periódico por el equipo correspondiente.',
+      'Realización de una evaluación socioemocional por el psicólogo de ciclo a través de una entrevista reflexiva y estructurada con el estudiante para el establecimiento de acuerdos colaborativos.',
     cierre:
-      'La derivación se realiza conforme al Reglamento Interno RICE 2026, Circular 482/2018 y normativa vigente sobre convivencia escolar.',
+      'La presente derivación se realiza bajo los principios de gradualidad y disciplina formativa estipulados en los Artículos 15, 20 y 24 BIS del RICE 2026, y los estándares de debido proceso de la Superintendencia de Educación.',
     observaciones: '',
   },
 };

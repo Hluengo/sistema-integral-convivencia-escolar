@@ -5,6 +5,7 @@ import { equal, ok } from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { execSync } from 'node:child_process';
+import { DEFAULT_LETTER_CONTENT } from '../DocumentPreview/docTypes';
 
 const srcDir = resolve(import.meta.dirname!, '../../../../..');
 
@@ -124,6 +125,19 @@ describe('PrintHintDialog — texto Carta', () => {
 
   it('NO debe mencionar Oficio', () => {
     ok(!content.includes('Oficio'), 'NO debe mencionar Oficio');
+  });
+});
+
+describe('Carta de derivación — texto institucional', () => {
+  it('mantiene el contenido base actualizado', () => {
+    const derivacion = DEFAULT_LETTER_CONTENT.derivacion;
+
+    ok(derivacion.motivo.includes('umbral de 15 anotaciones leves'));
+    ok(derivacion.descripcion.includes('evaluación psicosocial'));
+    ok(derivacion.medida.includes('Paso 8 del Debido Proceso'));
+    ok(derivacion.medida.includes('Medida 5 (Suspensión Temporal)'));
+    ok(derivacion.acuerdos.includes('evaluación socioemocional'));
+    ok(derivacion.cierre.includes('Artículos 15, 20 y 24 BIS del RICE 2026'));
   });
 });
 
