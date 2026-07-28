@@ -393,8 +393,11 @@ describe('Carta de compromiso — texto institucional', () => {
     ok(compromiso.descripcion.includes('medidas pedagógicas previas'));
     ok(compromiso.medida.includes('Carta de Compromiso Conductual'));
     ok(compromiso.medida.includes('Medida 5'));
-    ok(compromiso.acuerdos.includes('seguimiento quincenal por inspectoría'));
-    ok(compromiso.acuerdos.includes('falta muy grave'));
+    ok(compromiso.acuerdos.includes('objetivos de mejora conductual claros'));
+    ok(compromiso.acuerdos.includes('conductas que originan anotaciones negativas'));
+    ok(compromiso.acuerdos.includes('evaluación formal del cumplimiento'));
+    ok(compromiso.acuerdos.includes('escalada directa a falta muy grave'));
+    ok(compromiso.acuerdos.includes('Reglamento Interno de Convivencia Escolar (RICE)'));
     ok(compromiso.cierre.includes('artículos 18 y 24 BIS'));
   });
 });

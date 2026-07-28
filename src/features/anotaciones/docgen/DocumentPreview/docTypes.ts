@@ -34,7 +34,7 @@ export const TITLE_MAP: Record<DocType, string> = {
 };
 
 export const DEFAULT_COMMITMENTS = [
-  'Definición de objetivos de mejora claros y medibles; realización de un seguimiento quincenal por inspectoría o semanal por el profesor jefe; y evaluación del cumplimiento al finalizar el periodo. Se notifica explícitamente que el incumplimiento de estos acuerdos escalará la situación a una falta muy grave.',
+  'Establecimiento de objetivos de mejora conductual claros, observables y medibles, orientados al cese de las conductas que originan anotaciones negativas y al fortalecimiento de conductas positivas; ejecución de un seguimiento periódico, con evaluación formal del cumplimiento de dichos objetivos; y notificación explícita al estudiante y a su apoderado de que la inobservancia o el incumplimiento reiterado de estos acuerdos configurará una escalada directa a falta muy grave, con la consecuente aplicación de las medidas estipuladas en el Reglamento Interno de Convivencia Escolar (RICE).',
 ];
 
 export const DEFAULT_LETTER_CONTENT: Record<DocType, LetterContent> = {
