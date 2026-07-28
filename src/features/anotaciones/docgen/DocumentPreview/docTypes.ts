@@ -42,15 +42,16 @@ export const DEFAULT_COMMITMENTS = [
 
 export const DEFAULT_LETTER_CONTENT: Record<DocType, LetterContent> = {
   amonestacion: {
-    motivo: 'Acumulación de anotaciones negativas registradas en la hoja de vida escolar.',
+    motivo:
+      'Activación de la Medida 3 debido a la primera acumulación crítica de 5 anotaciones leves en la hoja de vida del estudiante, conforme a lo establecido en el sistema de progresión disciplinaria institucional.',
     descripcion:
-      'El/La estudiante registra conductas contrarias a las normas de convivencia escolar, de acuerdo con los antecedentes disponibles en el sistema de anotaciones del establecimiento.',
+      'Los registros pedagógicos dan cuenta de la persistencia de conductas tipificadas como faltas leves (Art. 24) que, pese a los llamados de atención verbales previos (Medida 1), no han sido corregidas. Esta reiteración evidencia una falta de adhesión a las normas básicas de convivencia y un impacto negativo en el clima de aula.',
     medida:
-      'Se aplica la medida de Amonestación Escrita, consistente en la notificación formal al estudiante, apoderado y profesor jefe, quedando registro en la hoja de vida escolar.',
+      'Aplicación de una Amonestación Escrita Formal, que constituye una comunicación oficial archivada de forma permanente en la hoja de vida del estudiante. Esta medida actúa como una instancia de advertencia superior antes de escalar a una falta grave o a la firma de una Carta de Compromiso.',
     acuerdos:
-      'El apoderado toma conocimiento y se compromete a reforzar en el hogar las normas de conducta, respeto y responsabilidad escolar.',
+      'Realización de una entrevista formal entre el apoderado, el estudiante y el profesor jefe para analizar los antecedentes; con el objeto de adoptar a un compromiso de cambio conductual inmediato por parte del alumno; y notificación explícita sobre el riesgo de escalar a la Medida 4 (Carta de Compromiso) al alcanzar las 10 anotaciones.',
     cierre:
-      'La reincidencia posterior a esta comunicación podrá activar medidas disciplinarias superiores según el Reglamento Interno RICE 2026.',
+      'Esta acción se fundamenta en los artículos 18 (Medida 3) y 24 BIS del Reglamento Interno de Convivencia Escolar 2026, cumpliendo con los principios de gradualidad y debido proceso de nuestra comunidad educativa.',
     observaciones: '',
   },
   compromiso_conductual: {
