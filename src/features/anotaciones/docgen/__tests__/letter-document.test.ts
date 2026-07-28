@@ -239,6 +239,20 @@ describe('Carta de amonestación — texto institucional', () => {
   });
 });
 
+describe('Carta de compromiso — texto institucional', () => {
+  it('mantiene el contenido base actualizado', () => {
+    const compromiso = DEFAULT_LETTER_CONTENT.compromiso_conductual;
+
+    ok(compromiso.motivo.includes('10 o más anotaciones leves'));
+    ok(compromiso.descripcion.includes('medidas pedagógicas previas'));
+    ok(compromiso.medida.includes('Carta de Compromiso Conductual'));
+    ok(compromiso.medida.includes('Medida 5'));
+    ok(compromiso.acuerdos.includes('seguimiento quincenal por inspectoría'));
+    ok(compromiso.acuerdos.includes('falta muy grave'));
+    ok(compromiso.cierre.includes('artículos 18 y 24 BIS'));
+  });
+});
+
 function globImportRefs(pkg: string): string[] {
   try {
     const result = execSync(

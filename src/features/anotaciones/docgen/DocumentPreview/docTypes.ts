@@ -34,10 +34,7 @@ export const TITLE_MAP: Record<DocType, string> = {
 };
 
 export const DEFAULT_COMMITMENTS = [
-  'Asistir a todas las clases según horario establecido.',
-  'Mantener una conducta respetuosa y acorde a las normas del establecimiento.',
-  'Cumplir con las tareas y trabajos académicos asignados.',
-  'Participar en las actividades formativas y de orientación programadas por Convivencia Escolar.',
+  'Definición de objetivos de mejora claros y medibles; realización de un seguimiento quincenal por inspectoría o semanal por el profesor jefe; y evaluación del cumplimiento al finalizar el periodo. Se notifica explícitamente que el incumplimiento de estos acuerdos escalará la situación a una falta muy grave.',
 ];
 
 export const DEFAULT_LETTER_CONTENT: Record<DocType, LetterContent> = {
@@ -56,14 +53,14 @@ export const DEFAULT_LETTER_CONTENT: Record<DocType, LetterContent> = {
   },
   compromiso_conductual: {
     motivo:
-      'Reiteración de anotaciones negativas que supera el umbral institucional para compromiso conductual.',
+      'Activación de la Medida 4 debido a la acumulación de 10 o más anotaciones leves en la hoja de vida del estudiante (Art. 24 BIS).',
     descripcion:
-      'El/La estudiante ha acumulado anotaciones negativas que evidencian conductas reiteradas contrarias a las normas de convivencia escolar.',
+      'Se registra que las medidas pedagógicas previas (Llamado de atención y Amonestación Escrita) no han sido suficientes para lograr la autorregulación del estudiante. La persistencia de las conductas disruptivas o la naturaleza de la falta cometida evidencian un distanciamiento del compromiso académico y de convivencia, lo que hace imperativo formalizar objetivos de mejora específicos.',
     medida:
-      'Se establece una Carta de Compromiso Conductual orientada a mejorar la conducta, reparar eventuales daños y sostener un seguimiento formativo.',
+      'Firma de una Carta de Compromiso Conductual. Esta medida es una instancia superior de apoyo pedagógico antes de transitar hacia sanciones que afecten la asistencia regular (Medida 5) o la condicionalidad de la permanencia en el establecimiento.',
     acuerdos: DEFAULT_COMMITMENTS.join('\n'),
     cierre:
-      'El incumplimiento de los acuerdos establecidos podrá derivar en una escalada disciplinaria y derivación al equipo de Convivencia Escolar.',
+      'Esta medida se aplica bajo los lineamientos de los artículos 18 y 24 BIS del Reglamento Interno de Convivencia Escolar 2026, garantizando el debido proceso y el enfoque de disciplina formativa para el desarrollo integral del estudiante.',
     observaciones: '',
   },
   derivacion: {
