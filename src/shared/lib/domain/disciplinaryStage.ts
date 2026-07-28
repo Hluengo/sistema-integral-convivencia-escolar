@@ -4,6 +4,10 @@ export type DisciplinaryStageKey = 'none' | 'amonestacion' | 'compromiso_conduct
 
 export type LetterDocType = 'amonestacion' | 'compromiso_conductual' | 'derivacion';
 
+export type CartaProcessingBlockReason =
+  | 'derivacion_requires_15_registered'
+  | 'letter_type_mismatch';
+
 export type LetterType =
   | 'Amonestación Escrita'
   | 'Carta de Compromiso Conductual'
@@ -82,6 +86,21 @@ export function getSuggestedLetterType(
   const currentDocType = mapLetterTypeToDocType(currentLetterType);
   if (!currentDocType) return suggested;
   return STAGE_RANK[suggested] > STAGE_RANK[currentDocType] ? suggested : null;
+}
+
+export function getCartaProcessingBlockReason(
+  selectedDocType: LetterDocType,
+  expectedDocType: LetterDocType | null,
+  registeredNegativeCount: number
+): CartaProcessingBlockReason | null {
+  const count = Math.max(0, Number(registeredNegativeCount) || 0);
+  if (selectedDocType === 'derivacion' && count < 15) {
+    return 'derivacion_requires_15_registered';
+  }
+  if (expectedDocType && selectedDocType !== expectedDocType) {
+    return 'letter_type_mismatch';
+  }
+  return null;
 }
 
 export function getNextThreshold(negativeCount: number): number | null {

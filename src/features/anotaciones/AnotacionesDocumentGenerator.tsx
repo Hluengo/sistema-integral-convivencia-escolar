@@ -47,7 +47,10 @@ interface AnotacionesDocumentGeneratorProps {
   sourceAnalysisId?: string | null;
   sourceProcessId?: string | null;
   initialContentSnapshot?: Record<string, unknown> | null;
-  onMarkProcessed: (contentSnapshot: Record<string, unknown>) => void | Promise<void>;
+  onMarkProcessed: (
+    contentSnapshot: Record<string, unknown>,
+    docType: DocType
+  ) => void | Promise<void>;
   isProcessing: boolean;
 }
 
@@ -335,7 +338,7 @@ export default function AnotacionesDocumentGenerator({
         selectedAnnsObjects={selectedAnnsObjects}
         letterContent={documentState.letterContent}
         onPrint={handlePrintDoc}
-        onMarkProcessed={() => void onMarkProcessed(contentSnapshot)}
+        onMarkProcessed={() => void onMarkProcessed(contentSnapshot, docType)}
         isProcessing={isProcessing}
         onOverflowChange={handleOverflowChange}
       />

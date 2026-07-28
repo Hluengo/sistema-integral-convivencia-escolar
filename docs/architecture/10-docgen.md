@@ -17,6 +17,8 @@ El modal individual de Anotaciones funciona como ficha operativa, no como biblio
 
 Flujo principal: Revisar PDF -> confirmar análisis -> Ir a Carta -> Crear -> Editar -> Imprimir -> Marcar como procesada. La pestaña Carta solo gestiona la carta sugerida o pendiente del estudiante; DocumentosView mantiene la biblioteca/documentación amplia.
 
+Antes de cerrar el trámite, el tipo visible en el generador se valida contra la etapa calculada con las anotaciones ya registradas. Una derivación no puede marcarse como procesada con menos de 15 negativas confirmadas; la observación de cierre documenta lo realizado, pero nunca cambia el tipo de carta.
+
 En el flujo actual, la realización de una carta se confirma explícitamente mediante el evento `processed_manually`. Imprimir no cierra automáticamente el trámite. Los eventos históricos `registered` y `printed` siguen siendo interpretados para mantener compatibilidad con cartas emitidas antes de este cambio. Una fila nueva en `cartas_disciplinarias` sin confirmación se considera pendiente.
 ## Editor interno de cartas disciplinarias
 

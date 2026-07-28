@@ -13,6 +13,7 @@ import {
   resolveCartaWorkflowStatus,
 } from '@/src/services/cartas.service';
 import {
+  getCartaProcessingBlockReason,
   getSuggestedLetterType,
   mapDocTypeToLetterType,
   mapLetterTypeToDocType,
@@ -21,6 +22,8 @@ import {
 import { formatDate, type StudentInfo } from './constants';
 
 const AnotacionesDocumentGenerator = lazy(() => import('../AnotacionesDocumentGenerator'));
+
+type FeedbackTone = 'info' | 'success' | 'error';
 
 interface PendingCartaSuggestion {
   docType: LetterDocType;
@@ -68,6 +71,7 @@ export default function CartasTab({
   const [showGenerator, setShowGenerator] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [messageTone, setMessageTone] = useState<FeedbackTone>('info');
 
   const refreshAfterChange = async () => {
     await onRefresh();
@@ -100,14 +104,19 @@ export default function CartasTab({
     const carta = await ensureCarta();
     if (!carta) {
       setBusy(false);
+      setMessageTone('error');
       setMessage('No hay carta requerida para este estudiante.');
       return;
     }
     const ok = await action(carta);
     if (ok) {
+      setMessageTone('success');
       setMessage(successText);
       setLocalCarta(null);
       await refreshAfterChange();
+    } else {
+      setMessageTone('error');
+      setMessage('No se pudo completar la acción. Inténtelo nuevamente.');
     }
     setBusy(false);
   };
@@ -118,6 +127,7 @@ export default function CartasTab({
     const carta = await ensureCarta();
     if (carta) {
       setShowGenerator(true);
+      setMessageTone('info');
       setMessage('Generador abierto.');
       void createCartaEvent(
         carta.id,
@@ -125,19 +135,44 @@ export default function CartasTab({
         'Carta abierta en generador desde ficha disciplinaria'
       );
     } else {
+      setMessageTone('error');
       setMessage('No hay carta requerida para este estudiante.');
     }
     setBusy(false);
   };
 
-  const handleManualProcess = async (contentSnapshot: Record<string, unknown>) => {
+  const handleManualProcess = async (
+    contentSnapshot: Record<string, unknown>,
+    selectedDocType: LetterDocType
+  ) => {
+    const blockReason = getCartaProcessingBlockReason(
+      selectedDocType,
+      activeDocType,
+      counts.negativas
+    );
+    if (blockReason === 'derivacion_requires_15_registered') {
+      setMessageTone('error');
+      setMessage(
+        `No se puede procesar la derivación: Supabase registra ${counts.negativas} negativas. Confirme primero la anotación número 15 en “Revisar PDF”.`
+      );
+      return;
+    }
+    if (blockReason === 'letter_type_mismatch') {
+      setMessageTone('error');
+      setMessage(
+        `El documento seleccionado no coincide con la etapa registrada. Seleccione “${activeLetterType}” o confirme primero la actualización de anotaciones.`
+      );
+      return;
+    }
     const note = window
-      .prompt('Motivo y observación del procesamiento manual. Indique qué se hizo y cuándo.')
+      .prompt(
+        'Observación de cierre del trámite. Describa qué se realizó y cuándo. Ejemplo: “Carta impresa y entregada al apoderado el 28-07-2026”. Este texto no cambia el tipo de carta.'
+      )
       ?.trim();
     if (!note) return;
     await runCartaAction(
       (carta) => markCartaProcessedManually(carta.id, note, contentSnapshot),
-      'Carta marcada como procesada manualmente.'
+      'Carta marcada como procesada.'
     );
   };
 
@@ -208,7 +243,16 @@ export default function CartasTab({
             </p>
           </div>
           {message && (
-            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+            <span
+              role={messageTone === 'error' ? 'alert' : 'status'}
+              className={`rounded-full px-3 py-1 text-xs font-bold ${
+                messageTone === 'error'
+                  ? 'bg-red-50 text-red-700'
+                  : messageTone === 'success'
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : 'bg-blue-50 text-blue-700'
+              }`}
+            >
               {message}
             </span>
           )}

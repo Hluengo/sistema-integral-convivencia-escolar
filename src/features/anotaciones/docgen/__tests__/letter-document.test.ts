@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { execSync } from 'node:child_process';
 import { DEFAULT_LETTER_CONTENT } from '../DocumentPreview/docTypes';
+import { getCartaProcessingBlockReason } from '../../../../shared/lib/domain/disciplinaryStage';
 
 const srcDir = resolve(import.meta.dirname!, '../../../../..');
 
@@ -166,6 +167,50 @@ describe('Generador de cartas — sin registro y emisión duplicados', () => {
     ok(!generator.includes('useRegisterCommitment'));
     ok(!generator.includes('onRegistered'));
     ok(!generator.includes('onLetterAction'));
+  });
+});
+
+describe('Cierre de cartas — validación de etapa registrada', () => {
+  const generatorPath = resolve(import.meta.dirname!, '../../AnotacionesDocumentGenerator.tsx');
+  const cartasTabPath = resolve(
+    import.meta.dirname!,
+    '../../AnotacionesStudentDetailModal/CartasTab.tsx'
+  );
+  const tablePath = resolve(import.meta.dirname!, '../../AnotacionesStudentTable.tsx');
+
+  it('bloquea una derivación cuando Supabase registra menos de 15 negativas', () => {
+    equal(
+      getCartaProcessingBlockReason('derivacion', 'compromiso_conductual', 14),
+      'derivacion_requires_15_registered'
+    );
+  });
+
+  it('permite procesar la derivación desde 15 negativas registradas', () => {
+    equal(getCartaProcessingBlockReason('derivacion', 'derivacion', 15), null);
+  });
+
+  it('bloquea un tipo de documento distinto a la etapa registrada', () => {
+    equal(
+      getCartaProcessingBlockReason('amonestacion', 'compromiso_conductual', 12),
+      'letter_type_mismatch'
+    );
+  });
+
+  it('envía el tipo seleccionado al confirmar y aclara el propósito de la observación', () => {
+    const generator = readFileSync(generatorPath, 'utf-8');
+    const cartasTab = readFileSync(cartasTabPath, 'utf-8');
+
+    ok(generator.includes('onMarkProcessed(contentSnapshot, docType)'));
+    ok(cartasTab.includes('Este texto no cambia el tipo de carta.'));
+    ok(cartasTab.includes('Confirme primero la anotación número 15'));
+  });
+
+  it('muestra el nombre del estado y no la clase CSS en la tabla', () => {
+    const table = readFileSync(tablePath, 'utf-8');
+
+    ok(table.includes('{s}'));
+    ok(table.includes('badge.textClass'));
+    ok(!table.includes('{badge.text}'));
   });
 });
 

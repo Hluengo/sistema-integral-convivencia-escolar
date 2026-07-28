@@ -32,12 +32,12 @@ const DISC_STATUS: Record<string, { text: string; bg: string }> = {
   Rojo: { text: 'Derivación a Convivencia Escolar', bg: 'bg-rose-100 text-rose-800' },
 };
 
-const CARD_STATUS_BADGE: Record<string, { bg: string; text: string }> = {
-  Vigente: { bg: 'bg-emerald-100', text: 'text-emerald-800' },
-  Pendiente: { bg: 'bg-amber-100', text: 'text-amber-800' },
-  Cumplida: { bg: 'bg-blue-100', text: 'text-blue-800' },
-  Incumplida: { bg: 'bg-red-100', text: 'text-red-800' },
-  Anulada: { bg: 'bg-neutral-100', text: 'text-neutral-500' },
+const CARD_STATUS_BADGE: Record<string, { bg: string; textClass: string }> = {
+  Vigente: { bg: 'bg-emerald-100', textClass: 'text-emerald-800' },
+  Pendiente: { bg: 'bg-amber-100', textClass: 'text-amber-800' },
+  Cumplida: { bg: 'bg-blue-100', textClass: 'text-blue-800' },
+  Incumplida: { bg: 'bg-red-100', textClass: 'text-red-800' },
+  Anulada: { bg: 'bg-neutral-100', textClass: 'text-neutral-500' },
 };
 
 const getDisciplinaryStatusLabel = (count: number): { text: string; bg: string } => {
@@ -392,9 +392,9 @@ export default memo(function AnotacionesStudentTable({
                                 return (
                                   <span
                                     key={s}
-                                    className={`inline-flex items-center rounded-full px-2 py-0.5 font-medium text-[10px] ${badge.bg} ${badge.text}`}
+                                    className={`inline-flex items-center rounded-full px-2 py-0.5 font-medium text-[10px] ${badge.bg} ${badge.textClass}`}
                                   >
-                                    {badge.text}
+                                    {s}
                                   </span>
                                 );
                               })}
