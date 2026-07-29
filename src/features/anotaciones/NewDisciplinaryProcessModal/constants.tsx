@@ -8,6 +8,8 @@ export interface Student {
   course_id: string;
   teacher_id: string;
   annotations_count?: number;
+  positive_annotations_count?: number;
+  informative_annotations_count?: number;
   disciplinary_status?: string;
   rut?: string;
   course_name?: string;

@@ -29,6 +29,7 @@ import {
   matchesCourseFilter,
   WITHOUT_COURSE_FILTER,
 } from './annotationStudentFilters';
+import { formatChileDate } from '../../shared/lib/dateTime';
 
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
@@ -114,22 +115,6 @@ function filterStudents(
   }
 
   return filtered;
-}
-
-function formatDate(dateStr?: string): string {
-  if (!dateStr) {
-    return '—';
-  }
-  try {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('es-CL', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
-  } catch {
-    return dateStr;
-  }
 }
 
 export default memo(function AnotacionesStudentTable({
@@ -419,7 +404,7 @@ export default memo(function AnotacionesStudentTable({
                         )}
                       </td>
                       <td className="hidden whitespace-nowrap px-4 py-3 text-neutral-600 text-sm lg:table-cell">
-                        {formatDate(student.last_annotation_date)}
+                        {formatChileDate(student.last_annotation_date)}
                       </td>
                       <td
                         className="whitespace-nowrap px-4 py-3 text-sm"

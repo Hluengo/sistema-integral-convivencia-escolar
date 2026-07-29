@@ -55,6 +55,7 @@ interface DuplicateFileInfo {
 export interface AnalysisResult {
   success: true;
   analysis_id: string | null;
+  analyzed_at: string;
   file_id: string | null;
   process_id: null;
   detected_student_name: string | null;
@@ -1076,12 +1077,14 @@ export async function analyzeDisciplinaryPdf(input: AnalyzeInput): Promise<Analy
       file_hash: fileHash,
       parser_version: PARSER_VERSION,
     })
-    .select('id')
+    .select('id,analyzed_at')
     .maybeSingle();
 
   return {
     success: true,
     analysis_id: (analysisRow as { id?: string } | null)?.id ?? null,
+    analyzed_at:
+      (analysisRow as { analyzed_at?: string } | null)?.analyzed_at ?? new Date().toISOString(),
     file_id: null,
     process_id: null,
     detected_student_name: detectedStudentName,

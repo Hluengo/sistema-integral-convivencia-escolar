@@ -1100,3 +1100,11 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - Abrir o reabrir el generador no inserta eventos en el historial.
 - Los eventos preliminares históricos `created` y `suggested` se conservan en Supabase, pero no se muestran.
 - Las cartas pendientes no generan entradas sintéticas; aparecen en el historial al procesarse, registrarse, imprimirse mediante el flujo histórico o anularse.
+
+### Resumen y comparación de actualizaciones PDF (2026-07-29)
+
+- `get_student_annotation_summary()` es la fuente canónica de los conteos de la tabla de Anotaciones; agrega negativas, positivas e informativas dentro de PostgreSQL sin depender del límite de filas de PostgREST.
+- `last_annotation_date` corresponde a la fecha de la anotación más reciente de cualquier tipo, no a la fecha de carga del PDF.
+- El fallback del cliente pagina explícitamente `inspectorate_records` y solo se ejecuta si el RPC no está disponible.
+- Al analizar una actualización se comparan el último PDF confirmado y el PDF nuevo por categoría; la diferencia se presenta como variación porque la confirmación todavía puede omitir duplicados.
+- Las fechas civiles se muestran sin conversión UTC y los timestamps se presentan con la zona IANA `America/Santiago`, respetando automáticamente horario de invierno y verano.

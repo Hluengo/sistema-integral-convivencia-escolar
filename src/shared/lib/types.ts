@@ -180,6 +180,7 @@ export interface DocumentAnalysis {
   analyzed_at: string;
   tenant_id: string;
   created_at: string;
+  status?: string;
 }
 
 export interface CartaDisciplinaria {

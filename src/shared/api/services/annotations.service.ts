@@ -17,7 +17,7 @@ import { useAuthStore } from '../../../stores/authStore';
 const ANNOTATION_COLUMNS =
   'id,student_id,date_time,observation,severity,type,registered_by,created_at,created_by,pdf_file_path';
 const DOCUMENT_ANALYSIS_COLUMNS =
-  'id,student_id,file_name,negativas,positivas,informativas,analyzed_at,tenant_id,created_at';
+  'id,student_id,file_name,negativas,positivas,informativas,analyzed_at,tenant_id,created_at,status';
 
 interface AnnotationCountStats {
   negativas: number;
@@ -137,39 +137,44 @@ function addAnnotationToStats(
 }
 
 async function fetchAnnotationStatsByStudent(): Promise<Record<string, AnnotationCountStats>> {
-  const { data, error } = await supabase
-    .from('inspectorate_records')
-    .select('student_id,type,date_time');
-
-  if (error) {
-    console.error('Error fetching annotation stats:', error);
-    return {};
-  }
-
+  const pageSize = 1000;
+  let offset = 0;
   const stats: Record<string, AnnotationCountStats> = {};
-  for (const annotation of data || []) {
-    addAnnotationToStats(
-      stats,
-      annotation as { student_id: string; type: string; date_time: string | null },
-    );
+
+  while (true) {
+    const { data, error } = await supabase
+      .from('inspectorate_records')
+      .select('id,student_id,type,date_time')
+      .order('id', { ascending: true })
+      .range(offset, offset + pageSize - 1);
+
+    if (error) {
+      console.error('Error fetching annotation stats:', error);
+      return {};
+    }
+
+    for (const annotation of data || []) {
+      addAnnotationToStats(
+        stats,
+        annotation as { student_id: string; type: string; date_time: string | null },
+      );
+    }
+
+    if (!data || data.length < pageSize) break;
+    offset += pageSize;
   }
+
   return stats;
 }
 
 export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStudent[]> {
-  const [summaryResult, statsByStudent] = await Promise.all([
-    supabase.rpc('get_student_annotation_summary'),
-    fetchAnnotationStatsByStudent(),
-  ]);
-  const { data: rpcData, error: rpcError } = summaryResult;
+  const { data: rpcData, error: rpcError } = await supabase.rpc('get_student_annotation_summary');
 
   if (!rpcError && rpcData) {
     return (rpcData as RpcStudentSummary[]).map((row) => {
-      const stats = statsByStudent[row.id];
-      const negativeCount = stats?.negativas ?? Number(row.annotations_count || 0);
-      const positiveCount = stats?.positivas ?? Number(row.positive_annotations_count || 0);
-      const informativeCount =
-        stats?.informativas ?? Number(row.informative_annotations_count || 0);
+      const negativeCount = Number(row.annotations_count || 0);
+      const positiveCount = Number(row.positive_annotations_count || 0);
+      const informativeCount = Number(row.informative_annotations_count || 0);
       return {
         id: row.id,
         full_name: row.full_name,
@@ -179,7 +184,7 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStud
         annotations_count: negativeCount,
         positive_annotations_count: positiveCount,
         informative_annotations_count: informativeCount,
-        last_annotation_date: stats?.lastDate || row.last_annotation_date || undefined,
+        last_annotation_date: row.last_annotation_date || undefined,
         disciplinary_status: calculateDisciplinaryStatus(negativeCount),
         rut: row.rut || '',
         course_name: row.course_name || 'Sin curso',
@@ -199,10 +204,14 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStud
     rpcError?.message,
   );
 
-  const { data: students, error: studentsError } = await supabase
-    .from('students')
-    .select('id,full_name,course_id,teacher_id,status,rut,ai_analysis,courses(name, level)')
-    .order('full_name', { ascending: true });
+  const [studentsResult, statsByStudent] = await Promise.all([
+    supabase
+      .from('students')
+      .select('id,full_name,course_id,teacher_id,status,rut,ai_analysis,courses(name, level)')
+      .order('full_name', { ascending: true }),
+    fetchAnnotationStatsByStudent(),
+  ]);
+  const { data: students, error: studentsError } = studentsResult;
 
   if (!students) {
     console.error('Error fetching students:', studentsError);

@@ -16,7 +16,9 @@ import type { Student } from './NewDisciplinaryProcessModal/constants';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '@/src/stores/authStore';
 import type { AnnotationSummary } from '@/src/shared/lib/types';
+import type { DocumentAnalysis } from '@/src/shared/lib/types';
 import { fetchDisciplinaryRules } from '@/src/shared/api/services/disciplinary-rules.service';
+import { fetchDocumentAnalyses } from '@/src/shared/api/services/annotations.service';
 import type { DisciplinaryRule } from '@/src/shared/api/services/disciplinary-rules.service';
 import {
   deleteDisciplinaryFile,
@@ -32,6 +34,7 @@ import ReviewStep, {
 } from './NewDisciplinaryProcessModal/ReviewStep';
 import { updateReviewAnnotationText } from './NewDisciplinaryProcessModal/reviewAnnotationUtils';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/src/shared/ui/Dialog';
+import PdfAnalysisComparison from './NewDisciplinaryProcessModal/PdfAnalysisComparison';
 
 type FlowStep =
   'upload' | 'student_resolution' | 'duplicate_check' | 'classification' | 'review' | 'success';
@@ -66,6 +69,7 @@ interface StudentCandidate {
 interface AnalysisResponse {
   success: true;
   analysis_id: string | null;
+  analyzed_at: string;
   file_id: string | null;
   selected_student_id: string | null;
   detected_student_name: string | null;
@@ -174,6 +178,7 @@ export default function NewDisciplinaryProcessModal({
   const [file, setFile] = useState<File | null>(null);
   const [uploadedFile, setUploadedFile] = useState<UploadedDisciplinaryFile | null>(null);
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
+  const [previousAnalysis, setPreviousAnalysis] = useState<DocumentAnalysis | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [summary, setSummary] = useState<AnnotationSummary | null>(null);
   const [annotations, setAnnotations] = useState<ReviewAnnotation[]>([]);
@@ -234,6 +239,7 @@ export default function NewDisciplinaryProcessModal({
     setFile(null);
     setUploadedFile(null);
     setAnalysis(null);
+    setPreviousAnalysis(null);
     setAnalysisError(null);
     setSummary(null);
     setAnnotations([]);
@@ -261,6 +267,14 @@ export default function NewDisciplinaryProcessModal({
   const existingStudentId = duplicateFile?.student_id ?? selectedStudent?.id ?? null;
   const existingAnnotationCount = Number(selectedStudent?.annotations_count ?? 0);
   const hasExistingStudentRecord = existingAnnotationCount > 0;
+
+  const loadPreviousAnalysis = async (studentId: string, currentAnalysisId: string | null) => {
+    const analyses = await fetchDocumentAnalyses(studentId);
+    const candidates = analyses.filter((item) => item.id !== currentAnalysisId);
+    setPreviousAnalysis(
+      candidates.find((item) => item.status === 'confirmed') ?? candidates[0] ?? null,
+    );
+  };
 
   const continueAfterDuplicateWarning = () => {
     if (duplicateFile) return;
@@ -291,6 +305,7 @@ export default function NewDisciplinaryProcessModal({
     setStatus('validating');
     setAnalysisError(null);
     setAnalysis(null);
+    setPreviousAnalysis(null);
     setSummary(null);
     setAnnotations([]);
     setSelectedStudent(null);
@@ -351,6 +366,7 @@ export default function NewDisciplinaryProcessModal({
 
       if (selected) {
         setSelectedStudent(selected);
+        await loadPreviousAnalysis(selected.id, data.analysis_id);
         setCourse(selected.course_name || selected.course_id || data.detected_course || null);
         setStep(
           data.duplicate_file || Number(selected.annotations_count ?? 0) > 0
@@ -569,6 +585,7 @@ export default function NewDisciplinaryProcessModal({
                 setFile(nextFile);
                 setUploadedFile(null);
                 setAnalysis(null);
+                setPreviousAnalysis(null);
                 setSummary(null);
                 setAnnotations([]);
                 setAnalysisError(null);
@@ -582,7 +599,10 @@ export default function NewDisciplinaryProcessModal({
               students={availableStudents}
               course={null}
               selectedId={selectedStudent?.id ?? null}
-              onSelect={setSelectedStudent}
+              onSelect={(student) => {
+                setSelectedStudent(student);
+                void loadPreviousAnalysis(student.id, analysis?.analysis_id ?? null);
+              }}
               title="Confirmar estudiante"
               helperText={
                 analysis?.detected_student_name
@@ -668,6 +688,15 @@ export default function NewDisciplinaryProcessModal({
                   </div>
                 </div>
               </div>
+
+              {!duplicateFile && previousAnalysis && summary && (
+                <PdfAnalysisComparison
+                  previous={previousAnalysis}
+                  current={summary}
+                  currentFileName={file?.name ?? 'PDF nuevo'}
+                  currentAnalyzedAt={analysis?.analyzed_at}
+                />
+              )}
 
               <div className="flex flex-col gap-2 sm:flex-row">
                 {onOpenExistingStudent && existingStudentId && (
