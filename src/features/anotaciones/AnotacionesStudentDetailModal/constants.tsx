@@ -54,11 +54,23 @@ export const TAB_LABELS: Record<ActiveTab, string> = {
   historial: 'Historial',
 };
 
+const DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+
 export function formatDate(dateStr?: string): string {
   if (!dateStr) return '-';
+
+  const dateOnlyMatch = DATE_ONLY_PATTERN.exec(dateStr);
+  if (dateOnlyMatch) {
+    const [, year, month, day] = dateOnlyMatch;
+    return `${day}-${month}-${year}`;
+  }
+
   try {
     const date = new Date(dateStr);
+    if (Number.isNaN(date.getTime())) return dateStr;
+
     return date.toLocaleDateString('es-CL', {
+      timeZone: 'America/Santiago',
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
