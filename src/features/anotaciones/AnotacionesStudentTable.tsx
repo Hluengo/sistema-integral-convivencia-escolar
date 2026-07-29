@@ -2,8 +2,15 @@
  * @license SPDX-License-Identifier: Apache-2.0
  */
 
-import { memo, useRef, useState } from 'react';
-import { ChevronDown, Download, FileSpreadsheet, Pencil, Search } from 'lucide-react';
+import { memo, useMemo, useRef, useState } from 'react';
+import {
+  ChevronDown,
+  Download,
+  FileSpreadsheet,
+  GraduationCap,
+  Pencil,
+  Search,
+} from 'lucide-react';
 import { maskName, getSemaphoricStyle } from '../../lib/anotacionesUtils';
 import type { DisciplinaryStatus } from '../../types';
 import {
@@ -17,7 +24,11 @@ import {
   getEffectiveDisciplinaryStage,
   type LetterType,
 } from '../../shared/lib/domain/disciplinaryStage';
-import { matchesAnnotationFilter } from './annotationStudentFilters';
+import {
+  matchesAnnotationFilter,
+  matchesCourseFilter,
+  WITHOUT_COURSE_FILTER,
+} from './annotationStudentFilters';
 
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
@@ -85,10 +96,12 @@ function filterStudents(
   students: AnotacionesStudentTableProps['students'],
   activeFilter: string,
   searchQuery: string,
+  selectedCourseId: string,
 ) {
   let filtered = students;
 
   filtered = filtered.filter((student) => matchesAnnotationFilter(student, activeFilter));
+  filtered = filtered.filter((student) => matchesCourseFilter(student, selectedCourseId));
 
   if (searchQuery.trim()) {
     const q = searchQuery.trim().toLowerCase();
@@ -131,7 +144,24 @@ export default memo(function AnotacionesStudentTable({
   isLoading,
   cartaStatuses = {},
 }: AnotacionesStudentTableProps) {
-  const filteredStudents = filterStudents(students, activeFilter, searchQuery);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const courseOptions = useMemo(() => {
+    const courses = new Map<string, string>();
+    for (const student of students) {
+      const value = student.course_id || WITHOUT_COURSE_FILTER;
+      const label = student.course_name?.trim() || 'Sin curso asignado';
+      if (!courses.has(value)) courses.set(value, label);
+    }
+    return [...courses.entries()]
+      .map(([value, label]) => ({ value, label }))
+      .sort((left, right) =>
+        left.label.localeCompare(right.label, 'es-CL', {
+          numeric: true,
+          sensitivity: 'base',
+        }),
+      );
+  }, [students]);
+  const filteredStudents = filterStudents(students, activeFilter, searchQuery, selectedCourseId);
   const exportMenuRef = useRef<HTMLDetailsElement>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -175,6 +205,30 @@ export default memo(function AnotacionesStudentTable({
             onChange={(e) => setSearchQuery(e.target.value)}
             aria-label="Buscar estudiante"
             className="w-full rounded-xl border border-neutral-200/60 bg-neutral-100 py-2 pr-4 pl-10 font-medium text-neutral-800 text-sm transition-colors placeholder:text-neutral-400 hover:border-neutral-300 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+          />
+        </div>
+        <div className="relative sm:w-56">
+          <GraduationCap
+            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400"
+            aria-hidden="true"
+          />
+          <select
+            id="annotation-course-filter"
+            value={selectedCourseId}
+            onChange={(event) => setSelectedCourseId(event.target.value)}
+            aria-label="Filtrar estudiantes por curso"
+            className="w-full appearance-none rounded-xl border border-neutral-200/60 bg-neutral-100 py-2 pr-9 pl-10 font-medium text-neutral-800 text-sm transition-colors hover:border-neutral-300 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+          >
+            <option value="">Todos los cursos</option>
+            {courseOptions.map((course) => (
+              <option key={course.value} value={course.value}>
+                {course.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-neutral-400"
+            aria-hidden="true"
           />
         </div>
         <details ref={exportMenuRef} className="group relative shrink-0">

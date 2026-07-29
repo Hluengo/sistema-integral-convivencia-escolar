@@ -13,6 +13,12 @@ interface AnnotationFilterStudent {
   effective_letter_type?: LetterType | null;
 }
 
+interface CourseFilterStudent {
+  course_id?: string | null;
+}
+
+export const WITHOUT_COURSE_FILTER = '__without_course__';
+
 export function getAnnotationRange(filter: string): [number, number] | null {
   switch (filter) {
     case 'con_registro':
@@ -44,4 +50,13 @@ export function matchesAnnotationFilter(student: AnnotationFilterStudent, filter
   if (filter === 'compromiso') return stage.key === 'compromiso_conductual';
   if (filter === 'derivacion') return stage.key === 'derivacion';
   return true;
+}
+
+export function matchesCourseFilter(
+  student: CourseFilterStudent,
+  selectedCourseId: string,
+): boolean {
+  if (!selectedCourseId) return true;
+  if (selectedCourseId === WITHOUT_COURSE_FILTER) return !student.course_id;
+  return student.course_id === selectedCourseId;
 }

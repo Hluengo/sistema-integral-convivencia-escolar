@@ -5,7 +5,12 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { getAnnotationRange, matchesAnnotationFilter } from './annotationStudentFilters';
+import {
+  getAnnotationRange,
+  matchesAnnotationFilter,
+  matchesCourseFilter,
+  WITHOUT_COURSE_FILTER,
+} from './annotationStudentFilters';
 
 describe('annotationStudentFilters', () => {
   it('incluye en Con Registro a estudiantes Sin Carta desde una anotación negativa', () => {
@@ -58,5 +63,18 @@ describe('annotationStudentFilters', () => {
 
     assert.equal(matchesAnnotationFilter(student, 'sin_carta'), false);
     assert.equal(matchesAnnotationFilter(student, 'amonestacion'), true);
+  });
+
+  it('combina el filtro de curso sin excluir estudiantes cuando se seleccionan todos', () => {
+    const student = { course_id: 'curso-3a' };
+
+    assert.equal(matchesCourseFilter(student, ''), true);
+    assert.equal(matchesCourseFilter(student, 'curso-3a'), true);
+    assert.equal(matchesCourseFilter(student, 'curso-4a'), false);
+  });
+
+  it('permite identificar estudiantes sin curso asignado', () => {
+    assert.equal(matchesCourseFilter({ course_id: '' }, WITHOUT_COURSE_FILTER), true);
+    assert.equal(matchesCourseFilter({ course_id: 'curso-3a' }, WITHOUT_COURSE_FILTER), false);
   });
 });
