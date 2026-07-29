@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { ClipboardCheck, Plus, X } from 'lucide-react';
 import type { CartaDisciplinaria } from '@/src/shared/lib/types';
 import {
-  getNextLetterAfterPhysicalCarta,
   getPhysicalCartaBaselineType,
+  getSuggestedLetterType,
   mapDocTypeToLetterType,
   type LetterType,
 } from '@/src/shared/lib/domain/disciplinaryStage';
@@ -29,12 +29,14 @@ function getTodayInChile(): string {
 interface PhysicalCartaRegistrationCardProps {
   studentId: string;
   cartas: CartaDisciplinaria[];
+  negativeCount: number;
   onRegistered: () => void | Promise<void>;
 }
 
 export default function PhysicalCartaRegistrationCard({
   studentId,
   cartas,
+  negativeCount,
   onRegistered,
 }: PhysicalCartaRegistrationCardProps) {
   const today = getTodayInChile();
@@ -45,8 +47,9 @@ export default function PhysicalCartaRegistrationCard({
     return carta.origin === 'physical' && carta.status !== 'Anulada' && cartaYear === schoolYear;
   });
   const physicalBaselineType = getPhysicalCartaBaselineType(cartas, schoolYear);
-  const nextLetterType = mapDocTypeToLetterType(
-    getNextLetterAfterPhysicalCarta(physicalBaselineType),
+  const requiredLetterType = mapDocTypeToLetterType(getSuggestedLetterType(negativeCount));
+  const outstandingLetterType = mapDocTypeToLetterType(
+    getSuggestedLetterType(negativeCount, physicalBaselineType),
   );
   const registeredTypes = new Set(physicalCartas.map((carta) => carta.letter_type));
   const allPhysicalTypesRegistered = PHYSICAL_LETTER_TYPES.every((type) =>
@@ -136,9 +139,13 @@ export default function PhysicalCartaRegistrationCard({
               </span>
             </div>
           ))}
-          {nextLetterType && (
+          {physicalBaselineType && (
             <p className="text-xs font-semibold text-sky-800">
-              Esta constancia habilita {nextLetterType} durante {schoolYear}.
+              {outstandingLetterType
+                ? `Constancia procesada. Por el conteo actual corresponde ${outstandingLetterType}.`
+                : requiredLetterType
+                  ? `Constancia procesada: acredita ${physicalBaselineType} para el conteo actual.`
+                  : 'Constancia procesada. No hay una carta exigible por el conteo actual.'}
             </p>
           )}
         </div>
