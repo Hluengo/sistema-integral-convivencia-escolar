@@ -147,7 +147,13 @@ export function resolveCartaWorkflowStatus(
 ): CartaWorkflowStatus | 'none' {
   if (!carta) return 'none';
   if (carta.status === 'Anulada' || carta.annulled_at) return 'annulled';
-  if (carta.printed_at || carta.registered_at || carta.processed_manually_at) {
+  if (
+    carta.origin === 'physical' ||
+    carta.workflow_status === 'completed' ||
+    carta.printed_at ||
+    carta.registered_at ||
+    carta.processed_manually_at
+  ) {
     return 'completed';
   }
   return 'pending';
