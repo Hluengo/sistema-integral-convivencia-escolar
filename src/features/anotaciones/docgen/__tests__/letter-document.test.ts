@@ -12,6 +12,7 @@ import {
   getNextLetterAfterPhysicalCarta,
   getOutstandingLetterType,
   getPhysicalCartaBaselineType,
+  getStudentCartaWorkflowLabel,
   resolveStudentCartaTableState,
 } from '../../../../shared/lib/domain/disciplinaryStage';
 
@@ -306,6 +307,28 @@ describe('Constancias físicas — progresión anual', () => {
 });
 
 describe('Estado efectivo de cartas en la tabla', () => {
+  it('prioriza una carta física procesada que coincide con el conteo actual', () => {
+    equal(
+      getStudentCartaWorkflowLabel(5, {
+        completedLetterType: 'Amonestación Escrita',
+        currentLetterType: 'Carta de Compromiso Conductual',
+        workflowStatus: 'pending',
+      }),
+      'Procesada',
+    );
+  });
+
+  it('mantiene pendiente la etapa superior cuando el conteo ya la exige', () => {
+    equal(
+      getStudentCartaWorkflowLabel(10, {
+        completedLetterType: 'Amonestación Escrita',
+        currentLetterType: 'Carta de Compromiso Conductual',
+        workflowStatus: 'pending',
+      }),
+      'Pendiente',
+    );
+  });
+
   it('muestra Derivación procesada aunque existan solo 14 negativas', () => {
     const cartaState = resolveStudentCartaTableState(
       [
