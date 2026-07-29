@@ -242,6 +242,23 @@ export function getEffectiveDisciplinaryStage(
   return DISCIPLINARY_STAGES.find((stage) => stage.key === completedStage) ?? countStage;
 }
 
+export function getStudentCartaWorkflowLabel(
+  negativeCount: number,
+  state: StudentCartaTableState | null | undefined,
+): 'Procesada' | 'Pendiente' | null {
+  if (!state) return null;
+
+  const effectiveStage = getEffectiveDisciplinaryStage(
+    negativeCount,
+    state.completedLetterType,
+  );
+  const completedStage = mapLetterTypeToDocType(state.completedLetterType);
+  if (completedStage && completedStage === effectiveStage.key) return 'Procesada';
+  if (state.workflowStatus === 'pending') return 'Pendiente';
+  if (state.workflowStatus === 'completed') return 'Procesada';
+  return null;
+}
+
 export function getCartaProcessingBlockReason(
   selectedDocType: LetterDocType,
   expectedDocType: LetterDocType | null,
