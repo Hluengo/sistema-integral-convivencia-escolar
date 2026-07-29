@@ -14,11 +14,12 @@ import {
 import {
   getCartaProcessingBlockReason,
   getHighestPriorityLetterType,
-  getNextLetterAfterPhysicalCarta,
+  getOutstandingLetterType,
   getPhysicalCartaBaselineType,
   getSuggestedLetterType,
   mapDocTypeToLetterType,
   mapLetterTypeToDocType,
+  resolveStudentCartaTableState,
   type LetterDocType,
 } from '@/src/shared/lib/domain/disciplinaryStage';
 import { formatDate, type StudentInfo } from './constants';
@@ -70,33 +71,29 @@ export default function CartasTab({
   const platformCurrentCarta =
     cartas.find((carta) => carta.status !== 'Anulada' && carta.origin !== 'physical') ?? null;
   const physicalBaselineType = getPhysicalCartaBaselineType(cartas, schoolYear);
-  const physicalSuggestedDocType = getNextLetterAfterPhysicalCarta(physicalBaselineType);
+  const cartaState = resolveStudentCartaTableState(cartas, schoolYear);
   const countSuggestedDocType = getSuggestedLetterType(
     counts.negativas,
-    platformCurrentCarta?.letter_type,
+    cartaState.completedLetterType,
   );
-  const nonPhysicalSuggestedDocType = getHighestPriorityLetterType(
+  const requiredDocType = getHighestPriorityLetterType(
     pendingSuggestion?.docType,
     countSuggestedDocType,
   );
-  const suggestedDocType = getHighestPriorityLetterType(
-    physicalSuggestedDocType,
-    nonPhysicalSuggestedDocType,
+  const suggestedDocType = getOutstandingLetterType(
+    cartaState.completedLetterType,
+    requiredDocType,
   );
-  const currentDocType = mapLetterTypeToDocType(platformCurrentCarta?.letter_type);
-  const activeDocType = suggestedDocType ?? currentDocType;
+  const currentDocType = mapLetterTypeToDocType(cartaState.currentLetterType);
+  const physicalCurrentDocType = mapLetterTypeToDocType(physicalBaselineType);
+  const activeDocType = suggestedDocType ?? currentDocType ?? physicalCurrentDocType;
   const activeLetterType = mapDocTypeToLetterType(activeDocType);
   const negativeCount = pendingSuggestion?.negativeCount ?? counts.negativas;
-  const usesPhysicalProgression =
-    Boolean(physicalSuggestedDocType) &&
-    activeDocType === physicalSuggestedDocType &&
-    nonPhysicalSuggestedDocType !== activeDocType;
-  const source = pendingSuggestion?.source ?? (usesPhysicalProgression ? 'physical' : 'supabase');
+  const source = pendingSuggestion?.source ?? 'supabase';
   const matchingCarta = activeLetterType
     ? cartas.find(
         (carta) =>
           carta.status !== 'Anulada' &&
-          carta.origin !== 'physical' &&
           carta.letter_type === activeLetterType,
       )
     : null;
@@ -206,10 +203,6 @@ export default function CartasTab({
       selectedDocType,
       activeDocType,
       counts.negativas,
-      {
-        allowDerivacionFromPhysicalCompromiso:
-          physicalBaselineType === 'Carta de Compromiso Conductual',
-      },
     );
     if (blockReason === 'derivacion_requires_15_registered') {
       setMessageTone('error');
@@ -256,10 +249,10 @@ export default function CartasTab({
       : 'Sin carta requerida';
   const originLabel = pendingSuggestion
     ? 'nuevo PDF'
-    : usesPhysicalProgression
-      ? 'carta física existente'
+    : activeCarta?.origin === 'physical'
+      ? 'constancia física'
       : 'conteo Supabase';
-  const canAct = Boolean(activeDocType && activeLetterType);
+  const canCreate = Boolean(suggestedDocType && activeLetterType);
   const realized = workflowStatus === 'completed';
 
   return (
@@ -268,13 +261,14 @@ export default function CartasTab({
         key={student.id}
         studentId={student.id}
         cartas={cartas}
+        negativeCount={counts.negativas}
         onRegistered={onRefresh}
       />
 
       <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
         <div className="mb-4 flex items-center gap-2">
           <FileText className="h-4 w-4 text-brand-600" />
-          <h3 className="text-sm font-bold text-neutral-900">Carta sugerida o pendiente</h3>
+          <h3 className="text-sm font-bold text-neutral-900">Estado de carta</h3>
         </div>
         {activeLetterType ? (
           <div className="grid grid-cols-1 gap-3 text-sm lg:grid-cols-2">
@@ -289,8 +283,8 @@ export default function CartasTab({
             <div className="rounded-lg bg-neutral-50 p-3">
               <p className="text-xs font-semibold text-neutral-400">Motivo</p>
               <p className="mt-1 font-bold text-neutral-900">
-                {usesPhysicalProgression
-                  ? `Progresión habilitada por ${physicalBaselineType}`
+                {activeCarta?.origin === 'physical' && realized
+                  ? `Constancia física coincidente con la etapa de ${counts.negativas} negativas`
                   : `${negativeCount} negativas detectadas`}
               </p>
             </div>
@@ -340,7 +334,7 @@ export default function CartasTab({
           <button
             type="button"
             onClick={() => void handleCreate()}
-            disabled={!canAct || busy}
+            disabled={!canCreate || busy}
             className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
           >
             <FileText className="h-4 w-4" />
