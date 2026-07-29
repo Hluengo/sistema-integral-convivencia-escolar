@@ -156,6 +156,20 @@ export function getHighestPriorityLetterType(
   }, null);
 }
 
+export function getOutstandingLetterType(
+  completedLetterType: string | null | undefined,
+  ...candidates: Array<LetterDocType | null | undefined>
+): LetterDocType | null {
+  const candidate = getHighestPriorityLetterType(...candidates);
+  if (!candidate) return null;
+
+  const completedDocType = mapLetterTypeToDocType(completedLetterType);
+  if (completedDocType && STAGE_RANK[completedDocType] >= STAGE_RANK[candidate]) {
+    return null;
+  }
+  return candidate;
+}
+
 function getCartaYear(carta: CartaTableCandidate): number {
   return carta.school_year ?? new Date(`${carta.emission_date}T00:00:00`).getFullYear();
 }
@@ -232,14 +246,9 @@ export function getCartaProcessingBlockReason(
   selectedDocType: LetterDocType,
   expectedDocType: LetterDocType | null,
   registeredNegativeCount: number,
-  options: { allowDerivacionFromPhysicalCompromiso?: boolean } = {},
 ): CartaProcessingBlockReason | null {
   const count = Math.max(0, Number(registeredNegativeCount) || 0);
-  if (
-    selectedDocType === 'derivacion' &&
-    count < 15 &&
-    !options.allowDerivacionFromPhysicalCompromiso
-  ) {
+  if (selectedDocType === 'derivacion' && count < 15) {
     return 'derivacion_requires_15_registered';
   }
   if (expectedDocType && selectedDocType !== expectedDocType) {
