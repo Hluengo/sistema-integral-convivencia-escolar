@@ -9,7 +9,10 @@ import {
   fetchStudentsWithAnnotationCounts,
 } from '../../services/annotations.service';
 import { fetchCartaTableStates } from '../../services/cartas.service';
-import { getEffectiveDisciplinaryStage } from '../../shared/lib/domain/disciplinaryStage';
+import {
+  getEffectiveDisciplinaryStage,
+  getStudentCartaWorkflowLabel,
+} from '../../shared/lib/domain/disciplinaryStage';
 import AnotacionesStudentTable from './AnotacionesStudentTable';
 import { AnnotationsSkeleton } from '../../components/Skeleton';
 import type { ActiveTab } from './AnotacionesStudentDetailModal/constants';
@@ -29,9 +32,13 @@ async function fetchAnotacionesTableData(): Promise<{
     fetchStudentsWithAnnotationCounts(),
     fetchCartaTableStates(),
   ]);
+  const cartaStatuses: Record<string, string[]> = {};
   const students = (fetchedStudents ?? []).map((student) => {
-    const completedLetterType = cartaStates[student.id]?.completedLetterType ?? null;
+    const cartaState = cartaStates[student.id];
+    const completedLetterType = cartaState?.completedLetterType ?? null;
     const stage = getEffectiveDisciplinaryStage(student.annotations_count, completedLetterType);
+    const cartaStatus = getStudentCartaWorkflowLabel(student.annotations_count, cartaState);
+    if (cartaStatus) cartaStatuses[student.id] = [cartaStatus];
     return {
       ...student,
       effective_letter_type: completedLetterType,
@@ -45,11 +52,6 @@ async function fetchAnotacionesTableData(): Promise<{
               : ('Verde' as const),
     };
   });
-  const cartaStatuses: Record<string, string[]> = {};
-  for (const [studentId, state] of Object.entries(cartaStates)) {
-    if (state.workflowStatus === 'completed') cartaStatuses[studentId] = ['Procesada'];
-    if (state.workflowStatus === 'pending') cartaStatuses[studentId] = ['Pendiente'];
-  }
   return { students, cartaStatuses };
 }
 
