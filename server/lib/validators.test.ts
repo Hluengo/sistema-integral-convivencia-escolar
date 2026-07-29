@@ -3,7 +3,12 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { sanitize as sanitizeApi } from '../api/validators/sanitizers';
-import { sanitize as sanitizeServer } from './validators';
+import {
+  isRequestValidationError,
+  requireStr,
+  RequestValidationError,
+  sanitize as sanitizeServer,
+} from './validators';
 
 const implementations = [
   ['api', sanitizeApi],
@@ -16,7 +21,12 @@ for (const [name, sanitize] of implementations) {
   });
 
   test(`${name} sanitize removes ASCII and C1 control characters`, () => {
-    assert.equal(sanitize(`A${String.fromCharCode(0)}B${String.fromCharCode(31)}C${String.fromCharCode(127)}D${String.fromCharCode(159)}E`), 'ABCDE');
+    assert.equal(
+      sanitize(
+        `A${String.fromCharCode(0)}B${String.fromCharCode(31)}C${String.fromCharCode(127)}D${String.fromCharCode(159)}E`,
+      ),
+      'ABCDE',
+    );
   });
 
   test(`${name} sanitize handles empty and non-string input`, () => {
@@ -33,3 +43,14 @@ for (const [name, sanitize] of implementations) {
     assert.equal(sanitize('áéíóú ü Ñ ñ — ✓'), 'áéíóú ü Ñ ñ — ✓');
   });
 }
+
+test('requireStr identifica errores esperados de validación', () => {
+  assert.throws(
+    () => requireStr({}, 'studentName'),
+    (error: unknown) => {
+      assert.equal(isRequestValidationError(error), true);
+      assert.equal(error instanceof RequestValidationError ? error.field : null, 'studentName');
+      return true;
+    },
+  );
+});

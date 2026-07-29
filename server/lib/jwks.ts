@@ -14,7 +14,7 @@ export interface JwkKey {
   e?: string;
 }
 
-export interface JwksResponse {
+interface JwksResponse {
   keys: JwkKey[];
 }
 
@@ -108,7 +108,10 @@ function fetchJwksFromServer(supabaseUrl: string): Promise<JwkKey[]> {
   });
 }
 
-export async function getJwksKeys(supabaseUrl: string): Promise<JwkKey[]> {
+type JwksFetcher = (supabaseUrl: string) => Promise<JwkKey[]>;
+let activeJwksFetcher: JwksFetcher = fetchJwksFromServer;
+
+async function getJwksKeys(supabaseUrl: string): Promise<JwkKey[]> {
   const entry = getOrCreateCacheEntry(supabaseUrl);
   const now = Date.now();
 
@@ -120,7 +123,7 @@ export async function getJwksKeys(supabaseUrl: string): Promise<JwkKey[]> {
     return entry.fetchPromise;
   }
 
-  entry.fetchPromise = fetchJwksFromServer(supabaseUrl)
+  entry.fetchPromise = activeJwksFetcher(supabaseUrl)
     .then((keys) => {
       entry.keys = keys;
       entry.timestamp = Date.now();
@@ -169,6 +172,11 @@ export function __setJwksTestKeys(supabaseUrl: string, keys: JwkKey[]): void {
   entry.keys = keys;
   entry.timestamp = Date.now();
   entry.fetchPromise = null;
+}
+
+/** @internal Only for testing */
+export function __setJwksTestFetcher(fetcher: JwksFetcher | null): void {
+  activeJwksFetcher = fetcher ?? fetchJwksFromServer;
 }
 
 /** @internal Only for testing */

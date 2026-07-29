@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { Eye, EyeOff, X } from 'lucide-react';
 import type { Annotation } from '@/src/types';
 import { maskName, maskRut } from '@/src/lib/anotacionesUtils';
@@ -21,6 +21,7 @@ import HistoryTab from './AnotacionesStudentDetailModal/HistoryTab';
 import CartasTab from './AnotacionesStudentDetailModal/CartasTab';
 import EditAnnotationsTab from './AnotacionesStudentDetailModal/EditAnnotationsTab';
 import { useDisciplinaryData } from './AnotacionesStudentDetailModal/hooks/useDisciplinaryData';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/src/shared/ui/Dialog';
 
 const Skeleton = memo(function Skeleton({ className = '' }: { className?: string }) {
   return <div className={`animate-pulse rounded-xl bg-neutral-200 ${className}`} />;
@@ -55,8 +56,6 @@ export default function AnotacionesStudentDetailModal({
     source: 'pdf' | 'supabase';
   } | null>(null);
   const disciplinaryData = useDisciplinaryData(student.id);
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const hasOpened = useRef(false);
 
   const fallbackCounts = useMemo(() => {
     if (annotations.length === 0) {
@@ -82,13 +81,6 @@ export default function AnotacionesStudentDetailModal({
     disciplinaryData.annotations.length > 0 ? disciplinaryData.annotations : annotations;
   const stage = getDisciplinaryStage(counts.negativas);
   const stageStyle = STAGE_STYLE[stage.key];
-
-  useEffect(() => {
-    if (!hasOpened.current && dialogRef.current) {
-      dialogRef.current.showModal();
-      hasOpened.current = true;
-    }
-  }, []);
 
   useEffect(() => {
     setActiveTab(initialTab);
@@ -180,14 +172,15 @@ export default function AnotacionesStudentDetailModal({
   };
 
   return (
-    <dialog
-      ref={dialogRef}
-      onClose={onClose}
-      className="fixed inset-0 z-50 max-h-full max-w-full bg-transparent p-0 backdrop:bg-black/50 backdrop:backdrop-blur-sm open:flex open:items-center open:justify-center"
-      style={{ border: 'none' }}
-      aria-label={`Ficha disciplinaria de ${student.full_name}`}
-    >
-      <div className="relative my-4 mx-4 w-full max-w-6xl animate-scale-in rounded-xl bg-white shadow-2xl">
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        hideClose
+        className="max-h-[calc(100vh-2rem)] max-w-6xl overflow-hidden rounded-xl p-0"
+      >
+        <DialogTitle className="sr-only">Ficha disciplinaria de {student.full_name}</DialogTitle>
+        <DialogDescription className="sr-only">
+          Revisión del estado, anotaciones, cartas e historial disciplinario del estudiante.
+        </DialogDescription>
         <div className="border-b border-neutral-100 px-4 py-4 sm:px-6">
           <div className="flex items-center justify-between gap-4">
             <div className="flex min-w-0 items-center gap-3">
@@ -255,7 +248,7 @@ export default function AnotacionesStudentDetailModal({
         </div>
 
         <div className="h-[70vh] overflow-y-auto p-4 sm:p-6">{renderTabContent()}</div>
-      </div>
-    </dialog>
+      </DialogContent>
+    </Dialog>
   );
 }

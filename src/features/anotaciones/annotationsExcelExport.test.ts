@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, expect, it } from 'vitest';
+import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
 import writeExcelFile from 'write-excel-file/node';
 import {
   ANNOTATIONS_EXCEL_COLUMNS,
@@ -72,19 +73,19 @@ describe('annotationsExcelExport', () => {
       },
     ];
 
-    expect(getStudentsForAnnotationExport(sinCartaStudents, [], 'sin_carta')).toEqual([
+    assert.deepEqual(getStudentsForAnnotationExport(sinCartaStudents, [], 'sin_carta'), [
       sinCartaStudents[1],
       sinCartaStudents[2],
     ]);
   });
 
   it('selecciona estudiantes según el tipo de carta', () => {
-    expect(getStudentsForAnnotationExport(students, [students[0]], 'visible')).toEqual([
+    assert.deepEqual(getStudentsForAnnotationExport(students, [students[0]], 'visible'), [
       students[0],
     ]);
-    expect(getStudentsForAnnotationExport(students, [], 'amonestacion')).toEqual([students[0]]);
-    expect(getStudentsForAnnotationExport(students, [], 'compromiso')).toEqual([students[1]]);
-    expect(getStudentsForAnnotationExport(students, [], 'derivacion')).toEqual([students[2]]);
+    assert.deepEqual(getStudentsForAnnotationExport(students, [], 'amonestacion'), [students[0]]);
+    assert.deepEqual(getStudentsForAnnotationExport(students, [], 'compromiso'), [students[1]]);
+    assert.deepEqual(getStudentsForAnnotationExport(students, [], 'derivacion'), [students[2]]);
   });
 
   it('exporta como Derivación una carta procesada aunque el conteo permanezca en 14', () => {
@@ -96,30 +97,27 @@ describe('annotationsExcelExport', () => {
       effective_letter_type: 'Ficha de Derivación',
     };
 
-    expect(getStudentsForAnnotationExport([processedDerivation], [], 'derivacion')).toEqual([
+    assert.deepEqual(getStudentsForAnnotationExport([processedDerivation], [], 'derivacion'), [
       processedDerivation,
     ]);
-    expect(
-      buildAnnotationExportRows(
-        [processedDerivation],
-        { 'student-derivation': ['Procesada'] },
-        false,
-      )[0],
-    ).toMatchObject({
-      measure: 'Derivación a Convivencia Escolar',
-      documentStatus: 'Procesada',
-    });
+    const [row] = buildAnnotationExportRows(
+      [processedDerivation],
+      { 'student-derivation': ['Procesada'] },
+      false,
+    );
+    assert.equal(row.measure, 'Derivación a Convivencia Escolar');
+    assert.equal(row.documentStatus, 'Procesada');
   });
 
   it('respeta el modo privacidad y conserva valores numéricos y fechas', () => {
     const [row] = buildAnnotationExportRows([students[0]], { 'student-1': ['Vigente'] }, true);
 
-    expect(row.student).not.toBe(students[0].full_name);
-    expect(row.rut).toBe('12.345.***-*');
-    expect(row.negatives).toBe(7);
-    expect(row.lastRecord).toBeInstanceOf(Date);
-    expect(row.measure).toBe('Amonestación Escrita');
-    expect(row.documentStatus).toBe('Vigente');
+    assert.notEqual(row.student, students[0].full_name);
+    assert.equal(row.rut, '12.345.***-*');
+    assert.equal(row.negatives, 7);
+    assert.ok(row.lastRecord instanceof Date);
+    assert.equal(row.measure, 'Amonestación Escrita');
+    assert.equal(row.documentStatus, 'Vigente');
   });
 
   it('produce un libro XLSX válido con cabecera y filas', async () => {
@@ -135,12 +133,14 @@ describe('annotationsExcelExport', () => {
       { fontFamily: 'Aptos', fontSize: 10 },
     ).toBuffer();
 
-    expect(buffer.subarray(0, 2).toString()).toBe('PK');
-    expect(sheetData).toHaveLength(6);
-    expect(buildAnnotationExportFileName('all', new Date(2026, 6, 27))).toBe(
+    assert.equal(buffer.subarray(0, 2).toString(), 'PK');
+    assert.equal(sheetData.length, 6);
+    assert.equal(
+      buildAnnotationExportFileName('all', new Date(2026, 6, 27)),
       'anotaciones_lista-completa_2026-07-27.xlsx',
     );
-    expect(buildAnnotationExportFileName('sin_carta', new Date(2026, 6, 27))).toBe(
+    assert.equal(
+      buildAnnotationExportFileName('sin_carta', new Date(2026, 6, 27)),
       'anotaciones_sin_carta_2026-07-27.xlsx',
     );
   });

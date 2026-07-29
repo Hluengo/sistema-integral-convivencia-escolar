@@ -1,6 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { describe, expect, it } from 'vitest';
+import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
 import { type ReviewAnnotation, updateReviewAnnotationText } from './reviewAnnotationUtils';
 
 const annotations: ReviewAnnotation[] = [
@@ -30,20 +31,20 @@ describe('updateReviewAnnotationText', () => {
   it('actualiza solamente la anotación seleccionada', () => {
     const result = updateReviewAnnotationText(annotations, 1, '  Texto corregido  ');
 
-    expect(result[0]?.raw_text).toBe('Texto corregido');
-    expect(result[1]).toEqual(annotations[1]);
+    assert.equal(result[0]?.raw_text, 'Texto corregido');
+    assert.deepEqual(result[1], annotations[1]);
   });
 
   it('invalida el texto normalizado para que el backend lo regenere', () => {
     const result = updateReviewAnnotationText(annotations, 1, 'Texto corregido');
 
-    expect(result[0]?.normalized_text).toBeUndefined();
+    assert.equal(result[0]?.normalized_text, undefined);
   });
 
   it('no muta el arreglo original', () => {
     updateReviewAnnotationText(annotations, 1, 'Texto corregido');
 
-    expect(annotations[0]?.raw_text).toBe('Texto original');
-    expect(annotations[0]?.normalized_text).toBe('texto original');
+    assert.equal(annotations[0]?.raw_text, 'Texto original');
+    assert.equal(annotations[0]?.normalized_text, 'texto original');
   });
 });

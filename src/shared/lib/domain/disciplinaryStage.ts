@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-export type DisciplinaryStageKey = 'none' | 'amonestacion' | 'compromiso_conductual' | 'derivacion';
+type DisciplinaryStageKey = 'none' | 'amonestacion' | 'compromiso_conductual' | 'derivacion';
 
 export type LetterDocType = 'amonestacion' | 'compromiso_conductual' | 'derivacion';
 
@@ -37,7 +37,7 @@ export interface StudentCartaTableState {
   workflowStatus: 'pending' | 'completed' | 'none';
 }
 
-export const DISCIPLINARY_STAGES: DisciplinaryStage[] = [
+const DISCIPLINARY_STAGES: DisciplinaryStage[] = [
   { key: 'none', label: 'Sin medida activa', min: 0, max: 4, color: 'neutral' },
   { key: 'amonestacion', label: 'Amonestación Escrita', min: 5, max: 9, color: 'yellow' },
   {

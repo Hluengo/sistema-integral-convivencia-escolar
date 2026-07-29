@@ -146,7 +146,7 @@ git commit -m "refactor: unifica stores en shared/lib"
 - **Colores**: Brand colors definidos en `src/index.css` con `@theme`
 - **Iconos**: Lucide React icons
 - **Responsive**: Mobile-first, sidebar colapsable
-- **Accesibilidad**: WCAG 2.1 AA (verificado con @axe-core/playwright)
+- **Accesibilidad**: WCAG 2.1 AA, con reglas ESLint y pruebas de regresión de componentes
 
 ## License Headers
 

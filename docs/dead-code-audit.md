@@ -28,8 +28,8 @@ Fecha: 2026-07-23
 - Imports no usados retirados en App, timeline, server routes, anotaciones, docgen, dashboard, documentos, students, header y legalCompliance.
 - Variables locales y tipos duplicados no usados retirados en docgen y hooks relacionados.
 - Parametros no usados de mocks renombrados con prefijo _ para conservar contratos.
-- Tests unitarios agregados para sanitizacion en server/lib/validators.test.ts y conectados al script 
-pm run test.
+- Tests unitarios agregados para sanitizacion en server/lib/validators.test.ts y conectados al script
+  pm run test.
 - Regex de sanitizacion convertida a `RegExp` construida por `String.fromCharCode` para evitar `no-control-regex` sin cambiar comportamiento.
 - Scripts debug E2E conservados como herramientas manuales, con import dinamico compatible con ESLint.
 - Directiva ESLint obsoleta retirada de `useCausasPersistence`.
@@ -82,7 +82,7 @@ Ninguna. Las candidatas se conservaron por uso actual, configuracion activa o in
 ## Elementos Nivel B conservados
 
 - Dependencias frontend instaladas pero no suficientemente probadas como muertas.
-- Rutas y scripts debug (`e2e/debug.js`, `e2e/debug.cjs`, rutas debug server) por posible uso manual.
+- La ruta de diagnóstico autenticada se conserva; los scripts E2E ad hoc y sus URLs obsoletas fueron retirados.
 - Wrappers `src/components/**` que reexportan `src/features/**` por compatibilidad de imports.
 
 ## Elementos Nivel C conservados
@@ -96,4 +96,3 @@ Ninguna. Las candidatas se conservaron por uso actual, configuracion activa o in
 - Revisar accesibilidad de controles reportados por ESLint con prueba visual.
 - Revisar `manualChunks` con visualizer antes de tocar bundle inicial.
 - Confirmar uso real de dependencias candidatas con Knip o estadisticas de build en una tarea separada.
-

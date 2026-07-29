@@ -33,7 +33,7 @@ export const TITLE_MAP: Record<DocType, string> = {
   derivacion: 'Derivación a Convivencia Escolar',
 };
 
-export const DEFAULT_COMMITMENTS = [
+const DEFAULT_COMMITMENTS = [
   'Establecimiento de objetivos de mejora conductual claros, observables y medibles, orientados al cese de las conductas que originan anotaciones negativas y al fortalecimiento de conductas positivas; ejecución de un seguimiento periódico, con evaluación formal del cumplimiento de dichos objetivos; y notificación explícita al estudiante y a su apoderado de que la inobservancia o el incumplimiento reiterado de estos acuerdos configurará una escalada directa a falta muy grave, con la consecuente aplicación de las medidas estipuladas en el Reglamento Interno de Convivencia Escolar (RICE).',
 ];
 

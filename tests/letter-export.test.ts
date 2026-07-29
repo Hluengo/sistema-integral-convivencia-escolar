@@ -1,7 +1,7 @@
 /**
  * @license SPDX-License-Identifier: Apache-2.0
  *
- * Playwright E2E tests for Letter Folio Document export system.
+ * Playwright E2E tests for Letter document export system.
  * Tests visual fidelity, PDF download, print, and overflow detection.
  */
 
@@ -9,7 +9,7 @@ import { test, expect } from '@playwright/test';
 
 const LETTER_TEST_URL = '/letter-test.html';
 
-test.describe('Letter Folio Document', () => {
+test.describe('Documento tamaño Carta', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(LETTER_TEST_URL);
     await page.waitForLoadState('networkidle');
@@ -24,7 +24,7 @@ test.describe('Letter Folio Document', () => {
     await expect(studentName).toHaveText('Juan Perez Gonzalez');
   });
 
-  test('2. Mantiene dimensiones Folio en viewport de escritorio', async ({ page }) => {
+  test('2. Mantiene dimensiones Carta en viewport de escritorio', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     const letterDocument = page.locator('#document-preview-a4');
     const box = await letterDocument.boundingBox();
@@ -36,7 +36,7 @@ test.describe('Letter Folio Document', () => {
     }
   });
 
-  test('3. Mantiene dimensiones Folio en viewport estrecho (movil)', async ({ page }) => {
+  test('3. Mantiene dimensiones Carta en viewport estrecho (móvil)', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     const letterDocument = page.locator('#document-preview-a4');
     const box = await letterDocument.boundingBox();
@@ -147,22 +147,22 @@ test.describe('Letter Folio Document', () => {
     await expect(date).toHaveText('23/07/2026');
   });
 
-  test('16. Dimensiones Folio - altura 330mm', async ({ page }) => {
+  test('16. Dimensiones Carta - altura 279mm', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 1200 });
     const letterDocument = page.locator('#document-preview-a4');
     const box = await letterDocument.boundingBox();
     expect(box).not.toBeNull();
     if (box) {
-      const expectedHeightMm = 330;
+      const expectedHeightMm = 279;
       const expectedHeightPx = (expectedHeightMm / 25.4) * 96;
       expect(box.height).toBeCloseTo(expectedHeightPx, 0);
     }
   });
 
-  test('17. Overflow warning menciona Oficio 216x330mm', async ({ page }) => {
+  test('17. Overflow warning menciona Carta 216x279mm', async ({ page }) => {
     const overflowWarning = page.locator('#overflow-warning');
     const text = await overflowWarning.textContent();
     expect(text).toContain('216');
-    expect(text).toContain('330');
+    expect(text).toContain('279');
   });
 });

@@ -88,6 +88,7 @@ function fetchJwksFromServer(supabaseUrl) {
     req.end();
   });
 }
+var activeJwksFetcher = fetchJwksFromServer;
 async function getJwksKeys(supabaseUrl) {
   const entry = getOrCreateCacheEntry(supabaseUrl);
   const now = Date.now();
@@ -97,7 +98,7 @@ async function getJwksKeys(supabaseUrl) {
   if (entry.fetchPromise) {
     return entry.fetchPromise;
   }
-  entry.fetchPromise = fetchJwksFromServer(supabaseUrl).then((keys) => {
+  entry.fetchPromise = activeJwksFetcher(supabaseUrl).then((keys) => {
     entry.keys = keys;
     entry.timestamp = Date.now();
     entry.fetchPromise = null;
@@ -298,7 +299,7 @@ function verifyViaSupabaseApi(token) {
     req.end();
   });
 }
-async function verifyJwtSignature(token, secret) {
+async function verifyJwtSignature(token, secret, verifyRemote = verifyViaSupabaseApi) {
   const parts = token.split(".");
   if (parts.length !== 3) return null;
   let header;
@@ -324,7 +325,7 @@ async function verifyJwtSignature(token, secret) {
   }
   const hmacResult = await verifyJwtViaHmac(token, secret);
   if (hmacResult) return hmacResult;
-  return verifyViaSupabaseApi(token);
+  return verifyRemote(token);
 }
 var defaultProfileFetcher = async ({ supabaseUrl, anonKey, token, userId }, httpsImpl) => {
   const hostname = new URL(supabaseUrl).hostname;
@@ -408,7 +409,7 @@ async function injectTenantContext(req, token, profileFetcher = defaultProfileFe
     return false;
   }
 }
-function createRequireAuth(profileFetcher) {
+function createRequireAuth(profileFetcher, verifyRemote) {
   return async function requireAuth2(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith("Bearer ")) {
@@ -421,7 +422,11 @@ function createRequireAuth(profileFetcher) {
       return;
     }
     try {
-      const payload = await verifyJwtSignature(token, process.env.SUPABASE_JWT_SECRET ?? "");
+      const payload = await verifyJwtSignature(
+        token,
+        process.env.SUPABASE_JWT_SECRET ?? "",
+        verifyRemote
+      );
       if (!payload) {
         res.status(401).json({ error: "Token JWT inv\xE1lido o expirado." });
         return;
@@ -444,9 +449,22 @@ function createRequireAuth(profileFetcher) {
 }
 var requireAuth = createRequireAuth();
 
-// server/api/validators/sanitizers.ts
+// server/lib/validators.ts
 var MAX_STR = 1e4;
-var CONTROL_CHARS = new RegExp(`[${String.fromCharCode(0)}-${String.fromCharCode(31)}${String.fromCharCode(127)}-${String.fromCharCode(159)}]`, "g");
+var CONTROL_CHARS = new RegExp(
+  `[${String.fromCharCode(0)}-${String.fromCharCode(31)}${String.fromCharCode(127)}-${String.fromCharCode(159)}]`,
+  "g"
+);
+var RequestValidationError = class extends Error {
+  constructor(message, field) {
+    super(message);
+    this.field = field;
+    this.name = "RequestValidationError";
+  }
+};
+function isRequestValidationError(error) {
+  return error instanceof RequestValidationError;
+}
 var sanitize = (s) => {
   if (typeof s !== "string") {
     return "";
@@ -456,7 +474,7 @@ var sanitize = (s) => {
 var requireStr = (obj, key, max = 200) => {
   const v = sanitize(obj[key]);
   if (!v) {
-    throw new Error(`Campo requerido faltante: ${key}`);
+    throw new RequestValidationError(`Campo requerido faltante: ${key}`, key);
   }
   return v.slice(0, max);
 };
@@ -829,9 +847,12 @@ Utiliza un tono sumamente profesional, corporativo, t\xE9cnico e institucional (
     const responseText = await callGroq([{ role: "user", content: systemPrompt }]);
     res.json({ success: true, report: responseText });
   } catch (error) {
+    if (isRequestValidationError(error)) {
+      res.status(400).json({ error: error.message });
+      return;
+    }
     console.error("Error al auditar debido proceso:", error);
-    const status = error.message?.startsWith("Campo requerido") ? 400 : 500;
-    res.status(status).json({ error: "Error interno del servidor en auditor\xEDa." });
+    res.status(500).json({ error: "Error interno del servidor en auditor\xEDa." });
   }
 });
 var audit_default = router3;
@@ -984,9 +1005,12 @@ DATOS: C\xF3digo: ${id}, Estudiante: ${sanitizeForAI(studentName)} (Curso: ${cou
     ]);
     res.json({ success: true, document: responseText });
   } catch (error) {
+    if (isRequestValidationError(error)) {
+      res.status(400).json({ error: error.message });
+      return;
+    }
     console.error("Error al generar borrador de documento:", error);
-    const status = error.message?.startsWith("Campo requerido") ? 400 : 500;
-    res.status(status).json({ error: "Error interno del servidor al redactar documento." });
+    res.status(500).json({ error: "Error interno del servidor al redactar documento." });
   }
 });
 var draft_default = router4;
@@ -2282,7 +2306,7 @@ function getSupabaseConfig() {
     return null;
   }
 }
-function requireMembership(params) {
+function requireMembership(params, checkAccess = checkMembershipViaApi) {
   return async (req, res, next) => {
     const authReq = req;
     if (!authReq.user?.sub) {
@@ -2317,7 +2341,7 @@ function requireMembership(params) {
     }
     try {
       logServer("membership_check", `${mode} mode for ${params.applicationCode}`);
-      const hasAccess = await checkMembershipViaApi(config.hostname, config.anonKey, token, params);
+      const hasAccess = await checkAccess(config.hostname, config.anonKey, token, params);
       if (hasAccess) {
         next();
         return;

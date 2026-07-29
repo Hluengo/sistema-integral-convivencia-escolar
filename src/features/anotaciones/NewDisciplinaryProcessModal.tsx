@@ -11,6 +11,7 @@ import {
   Loader2,
   X,
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import type { Student } from './NewDisciplinaryProcessModal/constants';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '@/src/stores/authStore';
@@ -30,6 +31,7 @@ import ReviewStep, {
   type ReviewAnnotationType,
 } from './NewDisciplinaryProcessModal/ReviewStep';
 import { updateReviewAnnotationText } from './NewDisciplinaryProcessModal/reviewAnnotationUtils';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/src/shared/ui/Dialog';
 
 type FlowStep =
   'upload' | 'student_resolution' | 'duplicate_check' | 'classification' | 'review' | 'success';
@@ -177,18 +179,22 @@ export default function NewDisciplinaryProcessModal({
   const [annotations, setAnnotations] = useState<ReviewAnnotation[]>([]);
   const [suggestedType, setSuggestedType] = useState<string | null>(null);
   const [classification, setClassification] = useState('');
-  const [rules, setRules] = useState<DisciplinaryRule[]>([]);
   const [createdProcess, setCreatedProcess] = useState<{ id: string; number: string } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const uploadedFileRef = useRef<UploadedDisciplinaryFile | null>(null);
   const idempotencyKeyRef = useRef<string | null>(null);
   if (idempotencyKeyRef.current === null) idempotencyKeyRef.current = crypto.randomUUID();
 
-  useEffect(() => {
-    fetchDisciplinaryRules()
-      .then(setRules)
-      .catch(() => setRules([]));
-  }, []);
+  const {
+    data: rules = [],
+    isError: rulesLoadFailed,
+    refetch: refetchRules,
+  } = useQuery<DisciplinaryRule[]>({
+    queryKey: ['disciplinary-rules'],
+    queryFn: fetchDisciplinaryRules,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
 
   useEffect(() => {
     uploadedFileRef.current = uploadedFile;
@@ -517,8 +523,12 @@ export default function NewDisciplinaryProcessModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="mx-4 max-h-[90vh] w-full max-w-2xl animate-scale-in overflow-y-auto rounded-2xl bg-white shadow-2xl">
+    <Dialog open onOpenChange={(open) => !open && void closeSafely()}>
+      <DialogContent hideClose className="max-h-[90vh] max-w-2xl overflow-y-auto p-0">
+        <DialogTitle className="sr-only">Nuevo Proceso Disciplinario</DialogTitle>
+        <DialogDescription className="sr-only">
+          Cargue, revise y confirme las anotaciones disciplinarias detectadas en un PDF.
+        </DialogDescription>
         <div className="sticky top-0 z-10 border-neutral-100 border-b bg-white p-4">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-bold text-lg text-neutral-800">Nuevo Proceso Disciplinario</h2>
@@ -582,13 +592,33 @@ export default function NewDisciplinaryProcessModal({
             />
           )}
           {step === 'classification' && (
-            <ClassificationStep
-              value={classification}
-              onChange={setClassification}
-              summary={summary}
-              options={ruleOptions.length > 0 ? ruleOptions : undefined}
-              suggestedType={suggestedType}
-            />
+            <>
+              {rulesLoadFailed && (
+                <div
+                  role="alert"
+                  className="mb-4 flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <span>
+                    No se pudieron cargar las reglas institucionales. Se muestran las opciones
+                    predeterminadas.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => void refetchRules()}
+                    className="shrink-0 rounded-lg border border-amber-300 bg-white px-3 py-1.5 font-semibold text-amber-900 hover:bg-amber-100"
+                  >
+                    Reintentar
+                  </button>
+                </div>
+              )}
+              <ClassificationStep
+                value={classification}
+                onChange={setClassification}
+                summary={summary}
+                options={ruleOptions.length > 0 ? ruleOptions : undefined}
+                suggestedType={suggestedType}
+              />
+            </>
           )}
           {step === 'duplicate_check' && (
             <div className="space-y-4">
@@ -733,7 +763,7 @@ export default function NewDisciplinaryProcessModal({
             </button>
           </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

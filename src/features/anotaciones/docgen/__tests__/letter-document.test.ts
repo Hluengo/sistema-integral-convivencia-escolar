@@ -2,9 +2,8 @@
 
 import { describe, it } from 'node:test';
 import { equal, ok } from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { execSync } from 'node:child_process';
 import { DEFAULT_LETTER_CONTENT } from '../DocumentPreview/docTypes';
 import {
   getCartaProcessingBlockReason,
@@ -54,21 +53,15 @@ describe('letter-document — Formato Carta (216x279mm)', () => {
 });
 
 describe('Servicios eliminados — sin dependencias obsoletas', () => {
-  async function checkNoImports(pkg: string): Promise<void> {
-    try {
-      await import(pkg);
-    } catch {
-      return;
-    }
-    const files = globImportRefs(pkg);
+  function checkNoImports(pkg: string): void {
+    const files = findImportRefs(pkg);
     equal(files.length, 0, `${pkg} aun se importa en: ${files.join(', ')}`);
   }
 
-  it('pdf-lib NO debe importarse en el proyecto', async () => checkNoImports('pdf-lib'));
-  it('html-to-image NO debe importarse en el proyecto', async () =>
-    checkNoImports('html-to-image'));
-  it('file-saver NO debe importarse en el proyecto', async () => checkNoImports('file-saver'));
-  it('docx NO debe importarse en el proyecto', async () => checkNoImports('docx'));
+  it('pdf-lib NO debe importarse en el proyecto', () => checkNoImports('pdf-lib'));
+  it('html-to-image NO debe importarse en el proyecto', () => checkNoImports('html-to-image'));
+  it('file-saver NO debe importarse en el proyecto', () => checkNoImports('file-saver'));
+  it('docx NO debe importarse en el proyecto', () => checkNoImports('docx'));
 });
 
 describe('DocumentPreview — acciones del trámite', () => {
@@ -228,7 +221,7 @@ describe('Cierre de cartas — validación de etapa registrada', () => {
       'utf-8',
     );
 
-    ok(!cartasTab.includes("createCartaEvent("));
+    ok(!cartasTab.includes('createCartaEvent('));
     ok(!cartasTab.includes("'created'"));
     ok(historyTab.includes("event.event_type !== 'created'"));
     ok(historyTab.includes("event.event_type !== 'suggested'"));
@@ -409,14 +402,27 @@ describe('Carta de compromiso — texto institucional', () => {
   });
 });
 
-function globImportRefs(pkg: string): string[] {
-  try {
-    const result = execSync(
-      `rg --no-heading -l "from ['\\"]${pkg}['\\"]" "${srcDir}" --include "*.ts" --include "*.tsx" 2>NUL`,
-      { encoding: 'utf-8', cwd: srcDir },
-    ).trim();
-    return result ? result.split('\n').filter(Boolean) : [];
-  } catch {
-    return [];
+function findImportRefs(pkg: string): string[] {
+  const importPattern = new RegExp(
+    String.raw`(?:from\s+|import\s*\(|require\s*\()\s*['"]${pkg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"]`,
+  );
+  const references: string[] = [];
+
+  function visit(directory: string): void {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const path = resolve(directory, entry.name);
+      if (entry.isDirectory()) {
+        visit(path);
+        continue;
+      }
+      if (!entry.name.endsWith('.ts') && !entry.name.endsWith('.tsx')) continue;
+      if (importPattern.test(readFileSync(path, 'utf-8'))) references.push(path);
+    }
   }
+
+  for (const directory of ['src', 'server', 'api', 'scripts', 'tests']) {
+    visit(resolve(srcDir, directory));
+  }
+
+  return references;
 }

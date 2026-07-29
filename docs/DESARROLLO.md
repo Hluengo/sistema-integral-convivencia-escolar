@@ -18,9 +18,8 @@ cp .env.example .env
 | `npm run dev` | Servidor Express + Vite HMR (puerto 3001) |
 | `npm run build` | Build cliente (Vite) + servidor (esbuild) → `dist/` |
 | `npm run typecheck` | TypeScript strict type check |
-| `npm run test` | Tests unitarios (57 tests, node:test) |
+| `npm run test` | Suite unitaria con `node:test` |
 | `npm run test:e2e` | E2E Playwright |
-| `npm run doctor` | React Doctor static analysis |
 
 ## Variables de Entorno
 

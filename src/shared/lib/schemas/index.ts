@@ -7,27 +7,6 @@ import { EstadoCausa } from '../types';
 // Zod probes `new Function`, which Chrome reports as a blocked eval attempt.
 z.config({ jitless: true });
 
-export const CourseSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  position: z.number(),
-  level: z.enum(['BASICA', 'MEDIA']),
-  created_at: z.string(),
-});
-
-export const StudentSchema = z.object({
-  id: z.string(),
-  full_name: z.string(),
-  course_id: z.string(),
-  rut: z.string(),
-  created_at: z.string(),
-});
-
-export const StudentWithCourseSchema = StudentSchema.extend({
-  course_name: z.string(),
-  course_level: z.enum(['BASICA', 'MEDIA']).nullable(),
-});
-
 export const BitacoraEntrySchema = z.object({
   id: z.string(),
   fecha: z.string(),
@@ -51,17 +30,9 @@ export const ChecklistItemSchema = z.object({
   documentoUrl: z.string().optional(),
 });
 
-export const EstadoCausaEnum = z.enum(Object.values(EstadoCausa));
+const EstadoCausaEnum = z.enum(Object.values(EstadoCausa));
 
-export const TipoInfraccionEnum = z.enum(['Leve', 'Grave', 'Muy Grave', 'Gravísima']);
-
-export const FaseProcedimentalSchema = z.enum([
-  'Recepción',
-  'Investigación',
-  'Resolución',
-  'Apelación',
-  'Seguimiento',
-]);
+const TipoInfraccionEnum = z.enum(['Leve', 'Grave', 'Muy Grave', 'Gravísima']);
 
 export const CausaSchema = z.object({
   id: z.string(),
@@ -100,90 +71,3 @@ export const CausaSchema = z.object({
   tipoNEE: z.string().optional(),
   sancionesNEEDesactivadas: z.boolean().optional(),
 });
-
-export const StatisticsSchema = z.object({
-  total: z.number(),
-  porFase: z.record(FaseProcedimentalSchema, z.number()),
-  porGravedad: z.record(TipoInfraccionEnum, z.number()),
-  conPlazoCritico: z.number(),
-  aulaSeguraActivas: z.number(),
-});
-
-export const UserRoleSchema = z.enum([
-  'convivencia_escolar',
-  'director_rector',
-  'mediador',
-  'docente',
-]);
-
-export const DisciplinaryStatusSchema = z.enum(['Verde', 'Amarillo', 'Naranja', 'Rojo']);
-
-export const AnotacionStudentSchema = z.object({
-  id: z.string(),
-  full_name: z.string(),
-  course_id: z.string(),
-  teacher_id: z.string(),
-  status: z.string(),
-  tenant_id: z.string().optional(),
-  annotations_count: z.number(),
-  positive_annotations_count: z.number(),
-  last_annotation_date: z.string().optional(),
-  disciplinary_status: DisciplinaryStatusSchema,
-  rut: z.string().optional(),
-  course_name: z.string().optional(),
-});
-
-export const AnnotationSchema = z.object({
-  id: z.string(),
-  student_id: z.string(),
-  text: z.string(),
-  date: z.string(),
-  severity: TipoInfraccionEnum,
-  registered_by: z.string(),
-  type: z.enum(['Positiva', 'Negativa', 'Información']),
-  pdf_file_path: z.string().nullable().optional(),
-});
-
-export const CartaDisciplinariaSchema = z.object({
-  id: z.string(),
-  student_id: z.string(),
-  letter_type: z.enum([
-    'Amonestación Escrita',
-    'Carta de Compromiso Conductual',
-    'Ficha de Derivación',
-  ]),
-  emission_date: z.string(),
-  status: z.enum(['Vigente', 'Cumplida', 'Incumplida', 'Anulada']),
-  emitted_by: z.string(),
-  supervisor_name: z.string().optional(),
-  apoderado_name: z.string(),
-  annotations_count: z.number(),
-  origin: z.enum(['platform', 'physical']).optional(),
-  school_year: z.number().int().optional(),
-  student_name: z.string(),
-  course: z.string(),
-  regulation_basis: z.string(),
-  observations: z.string().optional(),
-  created_at: z.string(),
-});
-
-export const EtapaDisciplinariaSchema = z.object({
-  id: z.string(),
-  student_id: z.string(),
-  step_number: z.number(),
-  stage_name: z.string(),
-  responsible: z.string(),
-  transition_date: z.string(),
-  comment: z.string().optional(),
-  created_at: z.string(),
-});
-
-export type CourseType = z.infer<typeof CourseSchema>;
-export type StudentType = z.infer<typeof StudentSchema>;
-export type StudentWithCourseType = z.infer<typeof StudentWithCourseSchema>;
-export type CausaType = z.infer<typeof CausaSchema>;
-export type BitacoraEntryType = z.infer<typeof BitacoraEntrySchema>;
-export type ChecklistItemType = z.infer<typeof ChecklistItemSchema>;
-export type AnotacionStudentType = z.infer<typeof AnotacionStudentSchema>;
-export type AnnotationType = z.infer<typeof AnnotationSchema>;
-export type StatisticsType = z.infer<typeof StatisticsSchema>;

@@ -7,15 +7,10 @@ import {
   useState,
 } from 'react';
 import type { Causa } from '@/src/types';
-import {
-  createCausa,
-  fetchCausas,
-  saveBitacora,
-  saveChecklist,
-  updateCausa,
-} from '@/src/services/cases';
+import { fetchCausas, saveBitacora, saveChecklist, updateCausa } from '@/src/services/cases';
+import { persistExistingCausa } from './causaPersistence';
 
-export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 interface UseCausasPersistenceArgs {
   causas: Causa[];
@@ -35,6 +30,7 @@ export function useCausasPersistence({
   const [loadError, setLoadError] = useState<string | null>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const saveIdleTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const loadRetryTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const isLoadingCausasRef = useRef(false);
   const saveGenerationRef = useRef(0);
   const dataInitializedRef = useRef(false);
@@ -46,6 +42,9 @@ export function useCausasPersistence({
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
+      if (loadRetryTimeoutRef.current) {
+        clearTimeout(loadRetryTimeoutRef.current);
+      }
     };
   }, []);
 
@@ -71,7 +70,10 @@ export function useCausasPersistence({
         if (!isMountedRef.current) return;
 
         if (retryCount < 2 && isAuthenticated) {
-          setTimeout(() => loadCausas(retryCount + 1), 750 * (retryCount + 1));
+          loadRetryTimeoutRef.current = setTimeout(
+            () => loadCausas(retryCount + 1),
+            750 * (retryCount + 1),
+          );
         } else {
           setLoadError('Error al cargar los expedientes. Verifique su conexión.');
         }
@@ -79,7 +81,7 @@ export function useCausasPersistence({
         isLoadingCausasRef.current = false;
       }
     },
-    [isAuthenticated, setCausas, setSelectedCausaId]
+    [isAuthenticated, setCausas, setSelectedCausaId],
   );
 
   useEffect(() => {
@@ -151,27 +153,13 @@ export function useCausasPersistence({
         const causasToSave = causas.filter((c) => idsToSave.has(c.id));
 
         const results = await Promise.all(
-          causasToSave.map(async (causa) => {
-            const originalId = causa.id;
-            const success = await updateCausa(causa);
-            let effectiveId = originalId;
-            if (!success) {
-              const createdId = await createCausa(causa);
-              if (!createdId) {
-                console.error(`Failed to save causa ${originalId}`);
-                return false;
-              }
-              effectiveId = createdId;
-              setCausas((prev) =>
-                prev.map((c) => (c.id === originalId ? { ...c, id: createdId } : c))
-              );
-            }
-            const [bitacoraSaved, checklistSaved] = await Promise.all([
-              saveBitacora(effectiveId, causa.bitacora),
-              saveChecklist(effectiveId, causa.checklistDebidoProceso),
-            ]);
-            return bitacoraSaved && checklistSaved;
-          })
+          causasToSave.map((causa) =>
+            persistExistingCausa(causa, {
+              updateCausa,
+              saveBitacora,
+              saveChecklist,
+            }),
+          ),
         );
 
         if (!isMountedRef.current) {
@@ -209,7 +197,7 @@ export function useCausasPersistence({
         saveIdleTimeoutRef.current = undefined;
       }
     };
-  }, [causas, setSaveStatus, setCausas, isAuthenticated]);
+  }, [causas, setSaveStatus, isAuthenticated]);
 
   return { loadError, retryLoad: () => loadCausas() };
 }

@@ -67,55 +67,6 @@ export async function fetchDocumentAnalyses(studentId: string): Promise<Document
   return (data || []) as DocumentAnalysis[];
 }
 
-export async function saveDocumentAnalysis(params: {
-  studentId: string;
-  fileName?: string;
-  negativas: number;
-  positivas: number;
-  informativas: number;
-}): Promise<boolean> {
-  const tenantId = useAuthStore.getState().tenantId;
-  const { error } = await supabase.from('document_analyses').insert({
-    student_id: params.studentId,
-    file_name: params.fileName || null,
-    negativas: params.negativas,
-    positivas: params.positivas,
-    informativas: params.informativas,
-    tenant_id: tenantId,
-  });
-
-  if (error) {
-    console.error('Error saving document analysis:', error);
-    return false;
-  }
-  return true;
-}
-
-export async function saveAnnotation(annotation: {
-  student_id: string;
-  observation: string;
-  severity: string;
-  type: string;
-  registered_by: string;
-}): Promise<boolean> {
-  const tenantId = useAuthStore.getState().tenantId;
-  const { error } = await supabase.from('inspectorate_records').insert({
-    student_id: annotation.student_id,
-    date_time: new Date().toISOString(),
-    observation: annotation.observation,
-    severity: annotation.severity,
-    type: annotation.type,
-    registered_by: annotation.registered_by,
-    tenant_id: tenantId,
-  });
-
-  if (error) {
-    console.error('Error saving annotation:', error);
-    return false;
-  }
-  return true;
-}
-
 export async function updateAnnotation(input: UpdateAnnotationInput): Promise<Annotation> {
   const tenantId = useAuthStore.getState().tenantId;
   if (!tenantId) {
@@ -163,7 +114,7 @@ interface RpcStudentSummary {
 
 function addAnnotationToStats(
   stats: Record<string, AnnotationCountStats>,
-  annotation: { student_id: string; type: string; date_time: string | null }
+  annotation: { student_id: string; type: string; date_time: string | null },
 ) {
   const studentStats = stats[annotation.student_id] || {
     negativas: 0,
@@ -199,7 +150,7 @@ async function fetchAnnotationStatsByStudent(): Promise<Record<string, Annotatio
   for (const annotation of data || []) {
     addAnnotationToStats(
       stats,
-      annotation as { student_id: string; type: string; date_time: string | null }
+      annotation as { student_id: string; type: string; date_time: string | null },
     );
   }
   return stats;
@@ -245,7 +196,7 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStud
 
   console.warn(
     'RPC get_student_annotation_summary no disponible, usando fallback:',
-    rpcError?.message
+    rpcError?.message,
   );
 
   const { data: students, error: studentsError } = await supabase
@@ -305,9 +256,7 @@ export async function fetchAnnotationStageCounts(): Promise<AnnotationStageCount
     const { data, error } = await supabase.rpc('get_annotation_stage_counts');
     if (error || !data) return fallback();
 
-    return parseAnnotationStageRows(
-      data as Array<{ stage: string; count: number | string }>,
-    );
+    return parseAnnotationStageRows(data as Array<{ stage: string; count: number | string }>);
   } catch {
     return fallback();
   }

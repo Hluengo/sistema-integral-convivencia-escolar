@@ -105,10 +105,13 @@ describe('Pilot route — GET /pilot/membership-check', () => {
     });
     const res = createMockRes();
     let called = false;
-    await requireMembership({
-      applicationCode: 'convivencia',
-      allowedRoles: ['direccion', 'convivencia'],
-    })(req, res, () => {
+    await requireMembership(
+      {
+        applicationCode: 'convivencia',
+        allowedRoles: ['direccion', 'convivencia'],
+      },
+      async () => false,
+    )(req, res, () => {
       called = true;
     });
     assert.equal(called, true);

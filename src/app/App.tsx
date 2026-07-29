@@ -101,7 +101,7 @@ export default function App() {
   const { data: students = [], isLoading: isLoadingStudents } = useStudentsQuery(selectedCourseId);
   const newEstCurso = courses.find((c) => c.id === selectedCourseId)?.name ?? '';
 
-  useCausasPersistence({
+  const { loadError, retryLoad } = useCausasPersistence({
     causas,
     setCausas,
     setSelectedCausaId,
@@ -293,6 +293,21 @@ export default function App() {
                 onNotificationClick={handleSelectCausaFromDashboard}
               />
             </Suspense>
+            {loadError && (
+              <div
+                role="alert"
+                className="mx-4 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 sm:mx-6"
+              >
+                <span>{loadError}</span>
+                <button
+                  type="button"
+                  onClick={retryLoad}
+                  className="rounded-lg bg-red-700 px-3 py-1.5 font-semibold text-white transition-colors hover:bg-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700"
+                >
+                  Reintentar
+                </button>
+              </div>
+            )}
             <Suspense fallback={<MainContentSkeleton />}>
               <MainContent
                 currentView={currentView}

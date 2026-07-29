@@ -12,7 +12,7 @@ export interface AnnotationStageCounts {
   derivacionCount: number;
 }
 
-export const EMPTY_ANNOTATION_STAGE_COUNTS: AnnotationStageCounts = {
+const EMPTY_ANNOTATION_STAGE_COUNTS: AnnotationStageCounts = {
   sinCartaCount: 0,
   amonestacionCount: 0,
   compromisoCount: 0,

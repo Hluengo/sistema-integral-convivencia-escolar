@@ -17,14 +17,3 @@ export interface MembershipResult {
   status: MembershipStatus;
   applicationRole: string | null;
 }
-
-export interface MembershipState {
-  membershipStatus: MembershipStatus;
-  membershipAuthMode: MembershipAuthMode;
-  applicationCode: string | null;
-  appRole: string | null;
-  membership: AppMembership | null;
-  membershipError: string | null;
-  membershipLoaded: boolean;
-  legacyFallbackUsed: boolean;
-}

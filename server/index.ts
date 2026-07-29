@@ -11,15 +11,15 @@ import cors from 'cors';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
 
-import auditRoutes from './routes/audit';
-import draftRoutes from './routes/draft';
-import improveRoutes from './routes/improve';
-import advisorRoutes from './routes/advisor';
-import templatesRoutes from './routes/templates';
-import parseRoutes from './routes/parse';
-import processDisciplinaryPdfRoutes from './routes/processDisciplinaryPdf';
-import debugRoutes from './routes/debug';
-import usageRoutes from './routes/usage';
+import auditRoutes from './api/routes/audit';
+import draftRoutes from './api/routes/draft';
+import improveRoutes from './api/routes/improve';
+import advisorRoutes from './api/routes/advisor';
+import templatesRoutes from './api/routes/templates';
+import parseRoutes from './api/routes/parse';
+import processDisciplinaryPdfRoutes from './api/routes/processDisciplinaryPdf';
+import debugRoutes from './api/routes/debug';
+import usageRoutes from './api/routes/usage';
 import pilotRoutes from './routes/pilot';
 
 dotenv.config();

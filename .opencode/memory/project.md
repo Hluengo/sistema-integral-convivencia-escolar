@@ -64,7 +64,7 @@ src/
 | `server/index.ts`                                  | Desarrollo        | tsx runtime          | `npm run dev`   |
 | `api/index.js` (generado de `server/api/index.ts`) | Producción Vercel | esbuild bundle (ESM) | `npm run build` |
 
-**Regla crítica:** Al modificar rutas API o lógica de servidor, actualizar **ambos** archivos (`server/routes/` y `server/api/routes/`). Las implementaciones serverless usan `https` module en vez de `fetch` para Node 18 compat.
+**Regla crítica:** Implementar cada ruta API una sola vez en `server/api/routes/` y registrarla en ambos entry points. Las implementaciones serverless usan `https` module en vez de `fetch` para Node 18 compat.
 
 ### 2.3 Patrón de State Management
 
@@ -696,7 +696,7 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 
 ### 13.2 Al Modificar Backend
 
-1. Actualizar AMBOS entry points (`server/routes/` y `server/api/routes/`)
+1. Implementar la ruta en `server/api/routes/` y registrarla en ambos entry points
 2. No exponer service_role key al cliente
 3. Rate limit endpoints AI (10 req/min/IP)
 4. Sanitizar input con `sanitizeForAI()` antes de enviar a LLM

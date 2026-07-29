@@ -9,7 +9,12 @@ export interface MembershipConfig {
 }
 
 function readEnvBoolean(key: string, fallback: boolean): boolean {
-  const raw = import.meta.env[key];
+  const viteEnv = import.meta.env as Record<string, string | boolean | undefined> | undefined;
+  const nodeEnv =
+    typeof process !== 'undefined'
+      ? (process.env as Record<string, string | undefined>)
+      : undefined;
+  const raw = viteEnv?.[key] ?? nodeEnv?.[key];
   if (raw === undefined || raw === null || raw === '') return fallback;
   return raw === 'true';
 }
@@ -40,5 +45,8 @@ export function getAllowedRoles(applicationCode: string): readonly string[] {
 }
 
 export function isDev(): boolean {
-  return import.meta.env.DEV === true;
+  return (
+    import.meta.env?.DEV === true ||
+    (typeof process !== 'undefined' && process.env.NODE_ENV === 'development')
+  );
 }

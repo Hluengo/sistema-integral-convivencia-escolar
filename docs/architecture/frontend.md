@@ -38,7 +38,6 @@
             │   │   ├── <AnotacionesStudentDetailModal> (lazy)
             │   │   └── <NewDisciplinaryProcessModal> (lazy)
             │   │       ├── UploadAnalyzeStep
-            │   │       ├── CourseSelectStep
             │   │       ├── StudentSelectStep
             │   │       ├── ClassificationStep
             │   │       └── ReviewStep
@@ -59,12 +58,12 @@
 
 ## State Management
 
-| Store | Ubicación | Estado | Persistencia |
-|-------|-----------|--------|-------------|
-| `authStore` | `shared/lib/stores/authStore.ts` | user, tenantId, authLoading | Supabase onAuthStateChange |
-| `causasStore` | `shared/lib/stores/causasStore.ts` | causas[], selectedCausaId, saveStatus | Auto-save debounced 2s |
-| `uiStore` | `shared/lib/stores/uiStore.ts` | currentView, sidebarCollapsed, privacyMode | — |
-| `toastStore` | `shared/lib/stores/toastStore.ts` | toasts[] | — |
+| Store         | Ubicación                          | Estado                                     | Persistencia               |
+| ------------- | ---------------------------------- | ------------------------------------------ | -------------------------- |
+| `authStore`   | `shared/lib/stores/authStore.ts`   | user, tenantId, authLoading                | Supabase onAuthStateChange |
+| `causasStore` | `shared/lib/stores/causasStore.ts` | causas[], selectedCausaId, saveStatus      | Auto-save debounced 2s     |
+| `uiStore`     | `shared/lib/stores/uiStore.ts`     | currentView, sidebarCollapsed, privacyMode | —                          |
+| `toastStore`  | `shared/lib/stores/toastStore.ts`  | toasts[]                                   | —                          |
 
 ## Lazy Loading Strategy
 

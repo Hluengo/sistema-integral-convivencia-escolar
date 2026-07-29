@@ -2,7 +2,7 @@
 
 import { supabase } from '../lib/supabase';
 import type { AppMembership, MembershipResult } from '../types/membership';
-import { getMembershipConfig, getMembershipAuthMode } from '../lib/membershipConfig';
+import { getMembershipConfig, getMembershipAuthMode, isDev } from '../lib/membershipConfig';
 import type { MembershipAuthMode } from '../types/membership';
 
 const MAX_RETRIES = 2;
@@ -24,7 +24,7 @@ async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 }
 
 function logDev(event: string, detail?: string) {
-  if (import.meta.env.DEV) {
+  if (isDev()) {
     const msg = `[membership] ${event}${detail ? `: ${detail}` : ''}`;
     console.log(msg);
   }
@@ -149,10 +149,6 @@ export async function getMyMembership(applicationCode: string): Promise<Membersh
 export function invalidateMembershipCache(): void {
   cachedResult = null;
   cachedKey = null;
-}
-
-export function isMembershipsEnabled(): boolean {
-  return getMembershipConfig().enabled;
 }
 
 export function getMembershipMode(): MembershipAuthMode {

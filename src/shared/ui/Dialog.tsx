@@ -8,9 +8,7 @@ import { forwardRef, type ComponentPropsWithoutRef, type ElementRef } from 'reac
 import { X } from 'lucide-react';
 
 const Dialog = DialogPrimitive.Root;
-const DialogTrigger = DialogPrimitive.Trigger;
 const DialogPortal = DialogPrimitive.Portal;
-const DialogClose = DialogPrimitive.Close;
 
 const DialogOverlay = forwardRef<
   ElementRef<typeof DialogPrimitive.Overlay>,
@@ -48,7 +46,7 @@ const DialogContent = forwardRef<ElementRef<typeof DialogPrimitive.Content>, Dia
         )}
       </DialogPrimitive.Content>
     </DialogPortal>
-  )
+  ),
 );
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
@@ -86,15 +84,4 @@ const DialogFooter = ({ className = '', ...props }: ComponentPropsWithoutRef<'di
 );
 DialogFooter.displayName = 'DialogFooter';
 
-export {
-  Dialog,
-  DialogPortal,
-  DialogOverlay,
-  DialogClose,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogDescription,
-};
+export { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription };

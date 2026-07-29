@@ -8,7 +8,6 @@ import { forwardRef, type ComponentPropsWithoutRef, type ElementRef } from 'reac
 import { AlertTriangle } from 'lucide-react';
 
 const AlertDialog = AlertDialogPrimitive.Root;
-const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
 
 const AlertDialogPortal = AlertDialogPrimitive.Portal;
 
@@ -47,7 +46,9 @@ const AlertDialogHeader = ({ className = '', ...props }: ComponentPropsWithoutRe
 AlertDialogHeader.displayName = 'AlertDialogHeader';
 
 const AlertDialogIcon = ({ className = '' }: { className?: string }) => (
-  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 ${className}`}>
+  <div
+    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 ${className}`}
+  >
     <AlertTriangle className="h-5 w-5 text-red-500" />
   </div>
 );
@@ -112,9 +113,6 @@ AlertDialogAction.displayName = AlertDialogPrimitive.Action.displayName;
 
 export {
   AlertDialog,
-  AlertDialogPortal,
-  AlertDialogOverlay,
-  AlertDialogTrigger,
   AlertDialogContent,
   AlertDialogHeader,
   AlertDialogIcon,

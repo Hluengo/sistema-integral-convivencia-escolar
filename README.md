@@ -172,10 +172,9 @@ Variables opcionales:
 | `npm run start` | Iniciar servidor de producción desde `dist/server.cjs` |
 | `npm run lint` | TypeScript check + ESLint |
 | `npm run typecheck` | Verificación estricta de tipos (`tsc --noEmit`) |
-| `npm run test` | Tests unitarios (node:test, ~57 tests) |
-| `npm run test:vitest` | Tests con Vitest |
+| `npm run test` | Tests unitarios con el runner nativo de Node |
+| `npm run test:coverage` | Tests unitarios con cobertura nativa de Node |
 | `npm run test:e2e` | Tests end-to-end con Playwright |
-| `npm run doctor` | Análisis estático con React Doctor |
 | `npm run format` | Formatear código con Prettier |
 | `npm run security-audit` | Auditoría de dependencias (`npm audit`) |
 | `npm run ci` | Lint + test + build:web + security audit |
@@ -191,7 +190,7 @@ El proyecto incluye tests unitarios con **node:test** y tests E2E con **Playwrig
 npm run test
 
 # Tests con Vitest
-npm run test:vitest
+npm run test
 
 # Tests E2E
 npm run test:e2e

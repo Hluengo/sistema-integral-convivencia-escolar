@@ -73,5 +73,3 @@ export default function LetterPreviewViewport({
     </div>
   );
 }
-
-export { LETTER_WIDTH_MM };

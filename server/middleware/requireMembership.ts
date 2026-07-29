@@ -11,6 +11,13 @@ export interface MembershipCheckParams {
   allowedRoles?: readonly string[];
 }
 
+export type MembershipAccessChecker = (
+  hostname: string,
+  anonKey: string,
+  token: string,
+  params: MembershipCheckParams,
+) => Promise<boolean>;
+
 function getMembershipMode(): MembershipAuthMode {
   const enabled = process.env.VITE_APP_MEMBERSHIPS_ENABLED === 'true';
   const enforced = process.env.VITE_APP_MEMBERSHIPS_ENFORCED === 'true';
@@ -86,7 +93,10 @@ function getSupabaseConfig(): { hostname: string; anonKey: string } | null {
   }
 }
 
-export function requireMembership(params: MembershipCheckParams) {
+export function requireMembership(
+  params: MembershipCheckParams,
+  checkAccess: MembershipAccessChecker = checkMembershipViaApi,
+) {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const authReq = req as AuthenticatedRequest;
 
@@ -128,7 +138,7 @@ export function requireMembership(params: MembershipCheckParams) {
 
     try {
       logServer('membership_check', `${mode} mode for ${params.applicationCode}`);
-      const hasAccess = await checkMembershipViaApi(config.hostname, config.anonKey, token, params);
+      const hasAccess = await checkAccess(config.hostname, config.anonKey, token, params);
 
       if (hasAccess) {
         next();

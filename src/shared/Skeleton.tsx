@@ -8,7 +8,7 @@ interface SkeletonProps {
   count?: number;
 }
 
-export function Skeleton({ className = '', count = 1 }: SkeletonProps) {
+function Skeleton({ className = '', count = 1 }: SkeletonProps) {
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (
@@ -76,31 +76,6 @@ export function ChatMessageSkeleton() {
   );
 }
 
-export function TimelineSkeleton() {
-  return (
-    <div role="status" aria-label="Cargando timeline" className="animate-pulse space-y-4 p-4">
-      <div className="flex gap-2">
-        <Skeleton className="h-8 w-20 rounded-lg" />
-        <Skeleton className="h-8 w-20 rounded-lg" />
-        <Skeleton className="h-8 w-20 rounded-lg" />
-      </div>
-      <Skeleton className="h-4 w-48" />
-      <div className="space-y-3">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={'sk-' + i} className="flex items-center gap-3">
-            <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
-            <div className="flex-1 space-y-1.5">
-              <Skeleton className="h-3.5 w-3/4" />
-              <Skeleton className="h-3 w-1/2" />
-            </div>
-          </div>
-        ))}
-      </div>
-      <span className="sr-only">Cargando...</span>
-    </div>
-  );
-}
-
 export function TableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
     <div role="status" aria-label="Cargando tabla" className="animate-pulse space-y-3">
@@ -119,34 +94,6 @@ export function TableSkeleton({ rows = 5 }: { rows?: number }) {
           <Skeleton className="h-6 w-6 rounded-full" />
         </div>
       ))}
-      <span className="sr-only">Cargando...</span>
-    </div>
-  );
-}
-
-export function FormSkeleton() {
-  return (
-    <div role="status" aria-label="Cargando formulario" className="animate-pulse space-y-4">
-      <div className="space-y-1.5">
-        <Skeleton className="h-3 w-16" />
-        <Skeleton className="h-10 w-full rounded-lg" />
-      </div>
-      <div className="space-y-1.5">
-        <Skeleton className="h-3 w-20" />
-        <Skeleton className="h-10 w-full rounded-lg" />
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <Skeleton className="h-3 w-14" />
-          <Skeleton className="h-10 w-full rounded-lg" />
-        </div>
-        <div className="space-y-1.5">
-          <Skeleton className="h-3 w-12" />
-          <Skeleton className="h-10 w-full rounded-lg" />
-        </div>
-      </div>
-      <Skeleton className="h-20 w-full rounded-lg" />
-      <Skeleton className="h-10 w-32 rounded-lg" />
       <span className="sr-only">Cargando...</span>
     </div>
   );

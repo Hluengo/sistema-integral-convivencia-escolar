@@ -31,6 +31,9 @@ export default defineConfig(() => {
           manualChunks(id) {
             if (!id.includes('node_modules')) return;
             if (id.includes('/write-excel-file/')) return 'excel';
+            if (id.includes('/posthog-js/')) return 'telemetry-posthog';
+            if (id.includes('/@sentry/')) return 'telemetry-sentry';
+            if (id.includes('/web-vitals/')) return 'telemetry-vitals';
             if (
               id.includes('/react/') ||
               id.includes('/react-dom/') ||

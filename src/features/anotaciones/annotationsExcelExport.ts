@@ -97,7 +97,7 @@ export function getStudentsForAnnotationExport(
   return students.filter((student) => matchesAnnotationFilter(student, scope));
 }
 
-export function getAnnotationExportLabel(scope: AnnotationExportScope): string {
+function getAnnotationExportLabel(scope: AnnotationExportScope): string {
   return ANNOTATION_EXPORT_OPTIONS.find((option) => option.scope === scope)?.label ?? 'Anotaciones';
 }
 

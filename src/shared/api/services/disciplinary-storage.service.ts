@@ -2,7 +2,7 @@
 
 import { supabase } from '../lib/supabase';
 
-export const DISCIPLINARY_BUCKET = 'disciplinary-processes';
+const DISCIPLINARY_BUCKET = 'disciplinary-processes';
 export const MAX_DISCIPLINARY_PDF_BYTES = 10 * 1024 * 1024;
 
 export interface UploadedDisciplinaryFile {
@@ -50,7 +50,7 @@ export async function uploadDisciplinaryFile(
   file: File,
   tenantId: string,
   studentId?: string | null,
-  processId?: string | null
+  processId?: string | null,
 ): Promise<UploadedDisciplinaryFile | null> {
   const validationError = validateDisciplinaryPdf(file);
   if (validationError) throw new Error(validationError);
@@ -83,18 +83,6 @@ export async function uploadDisciplinaryFile(
   };
 }
 
-export async function getDisciplinaryFileUrl(filePath: string): Promise<string | null> {
-  const { data, error } = await supabase.storage
-    .from(DISCIPLINARY_BUCKET)
-    .createSignedUrl(filePath, 3600);
-
-  if (error || !data) {
-    console.error('Error creating signed URL:', error);
-    return null;
-  }
-
-  return data.signedUrl;
-}
 export async function deleteDisciplinaryFile(filePath: string): Promise<void> {
   const { error } = await supabase.storage.from(DISCIPLINARY_BUCKET).remove([filePath]);
 

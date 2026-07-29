@@ -1,9 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import * as Sentry from '@sentry/react';
-import { captureEvent, identifyUser, resetUser, PostHog } from './posthog';
-import { captureException as sentryCaptureException, addBreadcrumb } from './sentry';
 import type { User } from '@supabase/supabase-js';
+import { loadTelemetry } from './telemetry';
 
 export type AnalyticsEvent =
   | 'screen_viewed'
@@ -43,28 +41,17 @@ function toPostHog<E extends AnalyticsEvent>(
   return payload as PostHogProperties;
 }
 
-export function track<E extends AnalyticsEvent>(
-  event: E,
-  payload: AnalyticsPayload[E],
-): void {
+export function track<E extends AnalyticsEvent>(event: E, payload: AnalyticsPayload[E]): void {
   const phProperties = toPostHog(event, payload);
 
-  captureEvent(event, phProperties);
-
-  addBreadcrumb({
-    category: 'analytics',
-    message: event,
-    data: phProperties,
-    level: 'info',
-  });
-}
-
-export function trackError(error: unknown, context?: Record<string, unknown>): void {
-  sentryCaptureException(error, context);
-
-  track('error_caught', {
-    errorMessage: error instanceof Error ? error.message : String(error),
-    component: context?.component as string | undefined,
+  void loadTelemetry().then(({ posthog, sentry }) => {
+    posthog.captureEvent(event, phProperties);
+    sentry.addBreadcrumb({
+      category: 'analytics',
+      message: event,
+      data: phProperties,
+      level: 'info',
+    });
   });
 }
 
@@ -75,33 +62,19 @@ export function identifyAnalyticsUser(user: User): void {
     name: user.user_metadata?.full_name ?? user.email,
   };
 
-  identifyUser(user.id, traits);
-
-  Sentry.setUser({
-    id: user.id,
-    email: user.email ?? undefined,
-    username: user.email ?? undefined,
+  void loadTelemetry().then(({ posthog, sentry }) => {
+    posthog.identifyUser(user.id, traits);
+    sentry.setUserContext({
+      id: user.id,
+      email: user.email ?? undefined,
+      role: traits.role,
+    });
   });
 }
 
 export function resetAnalyticsUser(): void {
-  resetUser();
-  Sentry.setUser(null);
-}
-
-export function setAnalyticsUserProperties(properties: Record<string, unknown>): void {
-  if (PostHog) {
-    PostHog.people?.set(properties);
-  }
-}
-
-export function getFeatureFlag(key: string): boolean | string | undefined {
-  return PostHog?.getFeatureFlag(key);
-}
-
-export function onFeatureFlags(callback: (flags: string[]) => void): () => void {
-  if (PostHog) {
-    return PostHog.onFeatureFlags(callback);
-  }
-  return () => {};
+  void loadTelemetry().then(({ posthog, sentry }) => {
+    posthog.resetUser();
+    sentry.setUserContext(null);
+  });
 }

@@ -2,4 +2,3 @@
 
 export { MembershipLoading } from './MembershipLoading';
 export { MembershipAccessDenied } from './MembershipAccessDenied';
-export { MembershipFallbackWarning } from './MembershipFallbackWarning';

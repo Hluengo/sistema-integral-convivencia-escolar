@@ -23,6 +23,7 @@ import {
 } from '@/src/shared/lib/domain/disciplinaryStage';
 import { formatDate, type StudentInfo } from './constants';
 import PhysicalCartaRegistrationCard from './PhysicalCartaRegistrationCard';
+import TextInputDialog from '@/src/shared/ui/TextInputDialog';
 
 const AnotacionesDocumentGenerator = lazy(() => import('../AnotacionesDocumentGenerator'));
 
@@ -32,6 +33,10 @@ interface PendingCartaSuggestion {
   docType: LetterDocType;
   negativeCount: number;
   source: 'pdf' | 'supabase';
+}
+
+interface PendingManualProcess {
+  contentSnapshot: Record<string, unknown>;
 }
 
 interface CartasTabProps {
@@ -102,6 +107,10 @@ export default function CartasTab({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [messageTone, setMessageTone] = useState<FeedbackTone>('info');
+  const [pendingManualProcess, setPendingManualProcess] = useState<PendingManualProcess | null>(
+    null,
+  );
+  const [isAnnulDialogOpen, setIsAnnulDialogOpen] = useState(false);
 
   const refreshAfterChange = async () => {
     await onRefresh();
@@ -193,22 +202,26 @@ export default function CartasTab({
       );
       return;
     }
-    const note = window
-      .prompt(
-        'Observación de cierre del trámite. Describa qué se realizó y cuándo. Ejemplo: “Carta impresa y entregada al apoderado el 28-07-2026”. Este texto no cambia el tipo de carta.',
-      )
-      ?.trim();
-    if (!note) return;
+    setPendingManualProcess({ contentSnapshot });
+  };
+
+  const confirmManualProcess = async (note: string) => {
+    if (!pendingManualProcess) return;
+    const { contentSnapshot } = pendingManualProcess;
+    setPendingManualProcess(null);
     await runCartaAction(
       (carta) => markCartaProcessedManually(carta.id, note, contentSnapshot),
       'Carta marcada como procesada.',
     );
   };
 
-  const handleAnnul = async () => {
+  const handleAnnul = () => {
     if (!activeCarta) return;
-    const reason = window.prompt('Motivo de anulación')?.trim();
-    if (!reason) return;
+    setIsAnnulDialogOpen(true);
+  };
+
+  const confirmAnnul = async (reason: string) => {
+    setIsAnnulDialogOpen(false);
     await runCartaAction((carta) => annulCarta(carta.id, reason), 'Carta anulada.');
   };
 
@@ -311,7 +324,7 @@ export default function CartasTab({
           </button>
           <button
             type="button"
-            onClick={() => void handleAnnul()}
+            onClick={handleAnnul}
             disabled={!activeCarta || busy}
             className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
           >
@@ -368,6 +381,29 @@ export default function CartasTab({
           </Suspense>
         </section>
       )}
+
+      <TextInputDialog
+        open={pendingManualProcess !== null}
+        title="Confirmar procesamiento de carta"
+        description="Registre qué se realizó y cuándo. Este texto no cambia el tipo de carta."
+        label="Observación de cierre"
+        placeholder="Ej.: Carta impresa y entregada al apoderado el 28-07-2026."
+        confirmLabel="Marcar como procesada"
+        onCancel={() => setPendingManualProcess(null)}
+        onConfirm={(note) => void confirmManualProcess(note)}
+      />
+
+      <TextInputDialog
+        open={isAnnulDialogOpen}
+        title="Anular carta"
+        description="La carta permanecerá en el historial con estado anulado y no se considerará vigente."
+        label="Motivo de anulación"
+        placeholder="Describa por qué se anula esta carta."
+        confirmLabel="Anular carta"
+        destructive
+        onCancel={() => setIsAnnulDialogOpen(false)}
+        onConfirm={(reason) => void confirmAnnul(reason)}
+      />
     </div>
   );
 }

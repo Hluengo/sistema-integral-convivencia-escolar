@@ -77,7 +77,6 @@ graph TD
     useDisciplinaryData --> supabase.from.etapas_disciplinarias
 
     NewDisciplinaryProcessModal --> UploadAnalyzeStep
-    NewDisciplinaryProcessModal --> CourseSelectStep
     NewDisciplinaryProcessModal --> StudentSelectStep
     NewDisciplinaryProcessModal --> ClassificationStep
     NewDisciplinaryProcessModal --> ReviewStep

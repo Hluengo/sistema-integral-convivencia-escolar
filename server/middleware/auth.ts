@@ -13,8 +13,6 @@ export interface JwtPayload {
   app_metadata?: Record<string, unknown>;
 }
 
-export type JwtAppMetadata = Record<string, unknown>;
-
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const VALID_ROLES: readonly ProfileRole[] = [
@@ -113,7 +111,13 @@ function verifyViaSupabaseApi(token: string): Promise<JwtPayload | null> {
   });
 }
 
-async function verifyJwtSignature(token: string, secret: string): Promise<JwtPayload | null> {
+export type RemoteTokenVerifier = (token: string) => Promise<JwtPayload | null>;
+
+async function verifyJwtSignature(
+  token: string,
+  secret: string,
+  verifyRemote: RemoteTokenVerifier = verifyViaSupabaseApi,
+): Promise<JwtPayload | null> {
   const parts = token.split('.');
   if (parts.length !== 3) return null;
 
@@ -146,10 +150,10 @@ async function verifyJwtSignature(token: string, secret: string): Promise<JwtPay
   // Symmetric or unknown → HMAC legacy or Supabase API
   const hmacResult = await verifyJwtViaHmac(token, secret);
   if (hmacResult) return hmacResult;
-  return verifyViaSupabaseApi(token);
+  return verifyRemote(token);
 }
 
-export interface ProfileLookupResult {
+interface ProfileLookupResult {
   tenantId: string;
   profileRole: ProfileRole;
 }
@@ -218,7 +222,7 @@ const defaultProfileFetcher: ProfileFetcher = async (
   };
 };
 
-export async function injectTenantContext(
+async function injectTenantContext(
   req: AuthenticatedRequest,
   token: string,
   profileFetcher: ProfileFetcher = defaultProfileFetcher,
@@ -265,7 +269,10 @@ export async function injectTenantContext(
   }
 }
 
-export function createRequireAuth(profileFetcher?: ProfileFetcher) {
+export function createRequireAuth(
+  profileFetcher?: ProfileFetcher,
+  verifyRemote?: RemoteTokenVerifier,
+) {
   return async function requireAuth(
     req: Request,
     res: Response,
@@ -283,7 +290,11 @@ export function createRequireAuth(profileFetcher?: ProfileFetcher) {
     }
 
     try {
-      const payload = await verifyJwtSignature(token, process.env.SUPABASE_JWT_SECRET ?? '');
+      const payload = await verifyJwtSignature(
+        token,
+        process.env.SUPABASE_JWT_SECRET ?? '',
+        verifyRemote,
+      );
       if (!payload) {
         res.status(401).json({ error: 'Token JWT inválido o expirado.' });
         return;

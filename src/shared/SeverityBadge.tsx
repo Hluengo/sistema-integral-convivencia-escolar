@@ -2,8 +2,6 @@ import { memo } from 'react';
 import { getSeverityColor } from '../lib/severityUtils';
 import type { SeverityLevel } from '../lib/severityUtils';
 
-export type { SeverityLevel } from '../lib/severityUtils';
-
 interface SeverityBadgeProps {
   level: SeverityLevel;
   size?: 'sm' | 'md' | 'lg';
@@ -22,7 +20,11 @@ const DOT_SIZE = {
   lg: 'h-2 w-2',
 };
 
-export default memo(function SeverityBadge({ level, size = 'md', showDot = true }: SeverityBadgeProps) {
+export default memo(function SeverityBadge({
+  level,
+  size = 'md',
+  showDot = true,
+}: SeverityBadgeProps) {
   const colors = getSeverityColor(level);
   const sizeClass = SIZE_CLASSES[size];
   const dotSize = DOT_SIZE[size];

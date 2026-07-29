@@ -28,7 +28,7 @@ export interface DetectedAnnotation {
   parser_version: string;
 }
 
-export interface StudentCandidate {
+interface StudentCandidate {
   id: string;
   full_name: string;
   rut: string | null;
@@ -38,7 +38,14 @@ export interface StudentCandidate {
   match_status: StudentMatchStatus;
 }
 
-export interface DuplicateFileInfo {
+interface StudentRow {
+  id: string;
+  full_name: string;
+  rut: string | null;
+  course_id: string | null;
+}
+
+interface DuplicateFileInfo {
   process_id: string;
   process_number: string;
   student_id: string | null;
@@ -260,7 +267,7 @@ interface PdfJsWorkerModule {
   WorkerMessageHandler: unknown;
 }
 
-export function getSupabaseAdmin(authToken?: string): SupabaseClient {
+function getSupabaseAdmin(authToken?: string): SupabaseClient {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
   const serviceKey =
     process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? '';
@@ -595,7 +602,7 @@ function buildNameTokenQuery(parts: string[]): string {
 }
 async function enrichStudentRows(
   supabase: SupabaseClient,
-  rows: Array<{ id: string; full_name: string; rut: string | null; course_id: string | null }>,
+  rows: StudentRow[],
   confidence: number,
   status: StudentMatchStatus,
 ): Promise<StudentCandidate[]> {
@@ -698,8 +705,7 @@ async function findStudentCandidates(
   }
 
   const detectedPartSet = new Set(detectedParts);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const scored: { student: any; score: number }[] = [];
+  const scored: Array<{ student: StudentRow; score: number }> = [];
   for (const student of tenantStudents ?? []) {
     const studentParts = new Set(getNameParts(student.full_name));
     const overlap = [...detectedPartSet].filter((part) => studentParts.has(part)).length;

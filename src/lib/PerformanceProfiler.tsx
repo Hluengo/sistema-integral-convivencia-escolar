@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { Profiler, type ReactNode } from 'react';
-import { captureEvent } from './posthog';
+import { loadTelemetry } from './telemetry';
 
 const MIN_INTERVAL_MS = 5000;
 const lastReport = new Map<string, number>();
@@ -19,23 +19,19 @@ function onRender(
   if (now - last < MIN_INTERVAL_MS) return;
   lastReport.set(id, now);
 
-  captureEvent('react_render', {
-    component_id: id,
-    phase,
-    actual_duration_ms: Math.round(actualDuration),
-    base_duration_ms: Math.round(baseDuration),
-    start_time: startTime,
-    commit_time: commitTime,
+  void loadTelemetry().then(({ posthog }) => {
+    posthog.captureEvent('react_render', {
+      component_id: id,
+      phase,
+      actual_duration_ms: Math.round(actualDuration),
+      base_duration_ms: Math.round(baseDuration),
+      start_time: startTime,
+      commit_time: commitTime,
+    });
   });
 }
 
-export default function PerformanceProfiler({
-  id,
-  children,
-}: {
-  id: string;
-  children: ReactNode;
-}) {
+export default function PerformanceProfiler({ id, children }: { id: string; children: ReactNode }) {
   return (
     <Profiler id={id} onRender={onRender}>
       {children}

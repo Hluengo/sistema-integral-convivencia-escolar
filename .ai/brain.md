@@ -9,15 +9,15 @@ App SaaS multi-tenant para gestión de convivencia escolar chilena. React 19 + V
 
 ## Stack Rápido
 
-| Capa | Stack | Tests |
-|------|-------|-------|
-| Frontend | React 19, TypeScript 5.8, Vite 6, Tailwind 4 | `npm run test` (22) |
-| State | Zustand 5 + React Query 5 | `npm run lint` (0 errors) |
-| Backend Dev | Express 4 + tsx | `npm run build:web` (~27s) |
-| Backend Prod | Vercel Serverless (esbuild) | `npm run test:e2e` |
-| Database | Supabase PostgreSQL 17 | 16 tablas, RLS multi-tenant |
-| Documentos | docx (Word) + pdfjs-dist (PDF) | 3 templates DOCX |
-| AI | OpenRouter (llama-3.1-8b-instruct) | 4 endpoints AI |
+| Capa         | Stack                                        | Tests                       |
+| ------------ | -------------------------------------------- | --------------------------- |
+| Frontend     | React 19, TypeScript 5.8, Vite 6, Tailwind 4 | `npm run test` (22)         |
+| State        | Zustand 5 + React Query 5                    | `npm run lint` (0 errors)   |
+| Backend Dev  | Express 4 + tsx                              | `npm run build:web` (~27s)  |
+| Backend Prod | Vercel Serverless (esbuild)                  | `npm run test:e2e`          |
+| Database     | Supabase PostgreSQL 17                       | 16 tablas, RLS multi-tenant |
+| Documentos   | docx (Word) + pdfjs-dist (PDF)               | 3 templates DOCX            |
+| AI           | OpenRouter (llama-3.1-8b-instruct)           | 4 endpoints AI              |
 
 ## Comandos Esenciales
 
@@ -42,7 +42,7 @@ Este proyecto maneja **datos de estudiantes (NNA)**. Las prioridades inmutables 
 
 - No modificar migraciones existentes
 - No duplicar componentes/hooks (buscar en shared/ primero)
-- No modificar solo un server entry point (actualizar ambos: server/routes/ + server/api/routes/)
+- No duplicar rutas: usar `server/api/routes/` como implementación canónica y registrarlas en ambos entry points
 - No exponer service_role key al cliente
 
 ## Documentación Relacionada

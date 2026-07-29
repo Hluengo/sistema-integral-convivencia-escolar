@@ -39,7 +39,7 @@ export function normalizeDocumentPath(value: string): string | null {
 export async function uploadDocument(
   causaId: string,
   file: File,
-  prefix: string = 'documentos'
+  prefix: string = 'documentos',
 ): Promise<string> {
   const extension = file.name.split('.').pop()?.toLowerCase() || '';
   if (!ALLOWED_DOCUMENT_EXTENSIONS.has(extension)) {
@@ -65,7 +65,7 @@ export async function uploadDocument(
   return filePath;
 }
 
-export async function getDocumentSignedUrl(pathOrLegacyUrl: string): Promise<string | null> {
+async function getDocumentSignedUrl(pathOrLegacyUrl: string): Promise<string | null> {
   const filePath = normalizeDocumentPath(pathOrLegacyUrl);
   if (!filePath) return null;
   const { data, error } = await supabase.storage
