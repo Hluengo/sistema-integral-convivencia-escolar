@@ -210,8 +210,18 @@ describe('Cierre de cartas — validación de etapa registrada', () => {
     const cartasTab = readFileSync(cartasTabPath, 'utf-8');
 
     ok(generator.includes('onMarkProcessed(contentSnapshot, docType)'));
+    ok(cartasTab.includes('selectedDocType'));
+    ok(cartasTab.includes('ensureCarta(requestedDocType)'));
+    ok(cartasTab.includes('selectedDocType,'));
     ok(cartasTab.includes('Este texto no cambia el tipo de carta.'));
     ok(cartasTab.includes('Confirme primero la anotación número 15'));
+  });
+
+  it('reinicia el generador cuando cambia la etapa o la carta activa', () => {
+    const cartasTab = readFileSync(cartasTabPath, 'utf-8');
+
+    ok(cartasTab.includes("key={`${student.id}:${activeDocType}:${activeCarta?.id ?? 'new'}`}"));
+    ok(cartasTab.includes('processingFeedback='));
   });
 
   it('abrir el generador no registra una carta en el historial', () => {

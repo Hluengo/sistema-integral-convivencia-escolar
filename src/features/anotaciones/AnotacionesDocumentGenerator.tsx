@@ -52,6 +52,10 @@ interface AnotacionesDocumentGeneratorProps {
     docType: DocType
   ) => void | Promise<void>;
   isProcessing: boolean;
+  processingFeedback?: {
+    text: string;
+    tone: 'info' | 'success' | 'error';
+  } | null;
 }
 
 export default function AnotacionesDocumentGenerator({
@@ -66,6 +70,7 @@ export default function AnotacionesDocumentGenerator({
   initialContentSnapshot,
   onMarkProcessed,
   isProcessing,
+  processingFeedback,
 }: AnotacionesDocumentGeneratorProps) {
   const initialDocTypeApplied = useRef(false);
   const initialSnapshotApplied = useRef(false);
@@ -340,6 +345,7 @@ export default function AnotacionesDocumentGenerator({
         onPrint={handlePrintDoc}
         onMarkProcessed={() => void onMarkProcessed(contentSnapshot, docType)}
         isProcessing={isProcessing}
+        processingFeedback={processingFeedback}
         onOverflowChange={handleOverflowChange}
       />
     </div>

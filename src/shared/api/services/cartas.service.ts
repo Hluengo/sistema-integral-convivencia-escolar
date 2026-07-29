@@ -279,12 +279,14 @@ export async function markCartaProcessedManually(
   contentSnapshot?: Record<string, unknown>,
 ): Promise<boolean> {
   if (contentSnapshot) {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('cartas_disciplinarias')
       .update({ content_snapshot: contentSnapshot })
-      .eq('id', cartaId);
+      .eq('id', cartaId)
+      .select('id')
+      .maybeSingle();
 
-    if (error) {
+    if (error || !data) {
       console.error('Error saving final carta content:', error);
       return false;
     }

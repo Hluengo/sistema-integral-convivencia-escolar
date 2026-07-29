@@ -37,6 +37,7 @@ interface PendingCartaSuggestion {
 
 interface PendingManualProcess {
   contentSnapshot: Record<string, unknown>;
+  selectedDocType: LetterDocType;
 }
 
 interface CartasTabProps {
@@ -116,9 +117,29 @@ export default function CartasTab({
     await onRefresh();
   };
 
-  const ensureCarta = async (): Promise<CartaDisciplinaria | null> => {
-    if (activeCarta) return activeCarta;
-    if (!activeLetterType || !activeDocType) return null;
+  const ensureCarta = async (
+    requestedDocType: LetterDocType | null = activeDocType,
+  ): Promise<CartaDisciplinaria | null> => {
+    const requestedLetterType = mapDocTypeToLetterType(requestedDocType);
+    if (!requestedLetterType || !requestedDocType) return null;
+
+    if (
+      localCarta &&
+      localCarta.status !== 'Anulada' &&
+      localCarta.origin !== 'physical' &&
+      localCarta.letter_type === requestedLetterType
+    ) {
+      return localCarta;
+    }
+
+    const existingCarta = cartas.find(
+      (carta) =>
+        carta.status !== 'Anulada' &&
+        carta.origin !== 'physical' &&
+        carta.letter_type === requestedLetterType,
+    );
+    if (existingCarta) return existingCarta;
+
     const created = await createPendingCartaForStudent({
       student: {
         id: student.id,
@@ -126,7 +147,7 @@ export default function CartasTab({
         course_id: student.course_id,
         course_name: student.course_name,
       },
-      letterType: activeLetterType,
+      letterType: requestedLetterType,
       negativeCount,
       source,
     });
@@ -137,10 +158,11 @@ export default function CartasTab({
   const runCartaAction = async (
     action: (carta: CartaDisciplinaria) => Promise<boolean>,
     successText: string,
+    requestedDocType: LetterDocType | null = activeDocType,
   ) => {
     setBusy(true);
     setMessage(null);
-    const carta = await ensureCarta();
+    const carta = await ensureCarta(requestedDocType);
     if (!carta) {
       setBusy(false);
       setMessageTone('error');
@@ -179,6 +201,7 @@ export default function CartasTab({
     contentSnapshot: Record<string, unknown>,
     selectedDocType: LetterDocType,
   ) => {
+    setMessage(null);
     const blockReason = getCartaProcessingBlockReason(
       selectedDocType,
       activeDocType,
@@ -202,16 +225,17 @@ export default function CartasTab({
       );
       return;
     }
-    setPendingManualProcess({ contentSnapshot });
+    setPendingManualProcess({ contentSnapshot, selectedDocType });
   };
 
   const confirmManualProcess = async (note: string) => {
     if (!pendingManualProcess) return;
-    const { contentSnapshot } = pendingManualProcess;
+    const { contentSnapshot, selectedDocType } = pendingManualProcess;
     setPendingManualProcess(null);
     await runCartaAction(
       (carta) => markCartaProcessedManually(carta.id, note, contentSnapshot),
       'Carta marcada como procesada.',
+      selectedDocType,
     );
   };
 
@@ -361,6 +385,7 @@ export default function CartasTab({
             }
           >
             <AnotacionesDocumentGenerator
+              key={`${student.id}:${activeDocType}:${activeCarta?.id ?? 'new'}`}
               student={{
                 id: student.id,
                 full_name: student.full_name,
@@ -377,6 +402,9 @@ export default function CartasTab({
               }
               onMarkProcessed={handleManualProcess}
               isProcessing={busy}
+              processingFeedback={
+                message ? { text: message, tone: messageTone } : null
+              }
             />
           </Suspense>
         </section>

@@ -23,6 +23,10 @@ interface DocumentPreviewProps {
   onPrint: () => void;
   onMarkProcessed: () => void;
   isProcessing: boolean;
+  processingFeedback?: {
+    text: string;
+    tone: 'info' | 'success' | 'error';
+  } | null;
   onOverflowChange?: (hasOverflow: boolean) => void;
 }
 
@@ -43,6 +47,7 @@ const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(functio
     onPrint,
     onMarkProcessed,
     isProcessing,
+    processingFeedback,
     onOverflowChange,
   },
   ref
@@ -71,6 +76,20 @@ const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(functio
             {isProcessing ? 'Procesando…' : 'Marcar como procesada'}
           </button>
         </div>
+        {processingFeedback && (
+          <p
+            role={processingFeedback.tone === 'error' ? 'alert' : 'status'}
+            className={`mt-3 rounded-lg px-3 py-2 text-sm font-medium ${
+              processingFeedback.tone === 'error'
+                ? 'bg-red-50 text-red-700'
+                : processingFeedback.tone === 'success'
+                  ? 'bg-emerald-50 text-emerald-700'
+                  : 'bg-blue-50 text-blue-700'
+            }`}
+          >
+            {processingFeedback.text}
+          </p>
+        )}
       </div>
 
       <LetterPreviewViewport onOverflowChange={onOverflowChange}>
