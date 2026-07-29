@@ -1,6 +1,6 @@
 # STAFF ENGINEER MEMORY — Sistema Integral de Convivencia Escolar
 
-> **Versión:** 1.2 | **Estado:** Producción | **Última actualización:** 2026-07-26
+> **Versión:** 1.3 | **Estado:** Producción | **Última actualización:** 2026-07-29
 
 ---
 
@@ -1108,3 +1108,13 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - El fallback del cliente pagina explícitamente `inspectorate_records` y solo se ejecuta si el RPC no está disponible.
 - Al analizar una actualización se comparan el último PDF confirmado y el PDF nuevo por categoría; la diferencia se presenta como variación porque la confirmación todavía puede omitir duplicados.
 - Las fechas civiles se muestran sin conversión UTC y los timestamps se presentan con la zona IANA `America/Santiago`, respetando automáticamente horario de invierno y verano.
+
+### Historial manual y KPI de Anotaciones (2026-07-29)
+
+- La pestaña Historial de la ficha individual admite entradas manuales con título y descripción.
+- `student_history_entries` es multi-tenant, conserva `created_by` y es append-only para usuarios autenticados: permite lectura e inserción, no actualización ni eliminación.
+- Una entrada manual documenta entrevistas, acuerdos o seguimientos, pero no altera anotaciones, cartas ni etapas disciplinarias.
+- `get_annotation_stage_counts()` entrega `total_count`, `pending_count` y `processed_count` para Sin Carta, Amonestación, Compromiso y Derivación.
+- La etapa efectiva es el máximo entre el tramo de anotaciones negativas y la carta completada de mayor nivel del año escolar vigente.
+- Una etapa se considera procesada solo cuando su carta efectiva vigente tiene evidencia de registro, impresión, procesamiento manual u origen físico; si el conteo exige una etapa superior, esta queda pendiente.
+- El año escolar y las fechas operativas se resuelven con la zona IANA `America/Santiago`.

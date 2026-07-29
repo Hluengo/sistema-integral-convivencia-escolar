@@ -265,7 +265,14 @@ export async function fetchAnnotationStageCounts(): Promise<AnnotationStageCount
     const { data, error } = await supabase.rpc('get_annotation_stage_counts');
     if (error || !data) return fallback();
 
-    return parseAnnotationStageRows(data as Array<{ stage: string; count: number | string }>);
+    return parseAnnotationStageRows(
+      data as Array<{
+        stage: string;
+        total_count: number | string;
+        pending_count: number | string;
+        processed_count: number | string;
+      }>,
+    );
   } catch {
     return fallback();
   }

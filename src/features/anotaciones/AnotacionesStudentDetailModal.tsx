@@ -156,6 +156,7 @@ export default function AnotacionesStudentDetailModal({
       case 'historial':
         return (
           <HistoryTab
+            studentId={student.id}
             cartas={disciplinaryData.cartas}
             documentAnalyses={disciplinaryData.documentAnalyses}
             etapas={disciplinaryData.etapas}

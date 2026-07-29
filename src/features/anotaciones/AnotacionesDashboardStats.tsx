@@ -1,19 +1,74 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import type { ComponentType } from 'react';
 import { AlertTriangle, BarChart3, FileQuestion, FileText, FileWarning } from 'lucide-react';
-import MetricCard from '../../components/MetricCard';
+import type {
+  AnnotationStageBreakdown,
+  AnnotationStageCounts,
+} from '../../shared/lib/domain/annotationStageCounts';
 
 interface AnotacionesDashboardStatsProps {
-  sinCartaCount: number;
-  amonestacionCount: number;
-  compromisoCount: number;
-  derivacionCount: number;
+  counts: AnnotationStageCounts;
 }
 
-export default function AnotacionesDashboardStats({
-  sinCartaCount,
-  amonestacionCount,
-  compromisoCount,
-  derivacionCount,
-}: AnotacionesDashboardStatsProps) {
+interface AnnotationStageCardProps {
+  label: string;
+  threshold: string;
+  counts: AnnotationStageBreakdown;
+  icon: ComponentType<{ className?: string }>;
+  iconBg: string;
+  iconColor: string;
+  accentColor: string;
+}
+
+function AnnotationStageCard({
+  label,
+  threshold,
+  counts,
+  icon: Icon,
+  iconBg,
+  iconColor,
+  accentColor,
+}: AnnotationStageCardProps) {
+  return (
+    <article className="card relative overflow-hidden p-5">
+      <div
+        className="absolute top-0 right-3 left-3 h-[3px] rounded-full"
+        style={{ backgroundColor: accentColor }}
+      />
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h4 className="font-semibold text-neutral-700 text-sm">{label}</h4>
+          <p className="mt-0.5 text-neutral-400 text-xs">{threshold}</p>
+        </div>
+        <div className={`rounded-xl p-2.5 ${iconBg}`}>
+          <Icon className={`h-5 w-5 ${iconColor}`} />
+        </div>
+      </div>
+      <div className="mt-4 flex items-end justify-between gap-3">
+        <div>
+          <p className="font-bold text-3xl text-neutral-900 tabular-nums">{counts.total}</p>
+          <p className="font-medium text-neutral-400 text-xs">Total</p>
+        </div>
+        <dl className="grid min-w-32 grid-cols-2 gap-2 text-center">
+          <div className="rounded-lg bg-amber-50 px-2 py-1.5">
+            <dt className="text-amber-700 text-[10px] uppercase tracking-wide">Pendientes</dt>
+            <dd className="font-bold text-amber-800 text-lg tabular-nums">{counts.pending}</dd>
+          </div>
+          <div className="rounded-lg bg-emerald-50 px-2 py-1.5">
+            <dt className="text-[10px] text-emerald-700 uppercase tracking-wide">Procesadas</dt>
+            <dd className="font-bold text-emerald-800 text-lg tabular-nums">{counts.processed}</dd>
+          </div>
+        </dl>
+      </div>
+    </article>
+  );
+}
+
+export default function AnotacionesDashboardStats({ counts }: AnotacionesDashboardStatsProps) {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
@@ -25,37 +80,37 @@ export default function AnotacionesDashboardStats({
         </h3>
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
+        <AnnotationStageCard
           label="Sin Carta"
-          value={sinCartaCount}
-          sublabel="1-4 anotaciones negativas"
+          counts={counts.sinCarta}
+          threshold="1-4 anotaciones negativas"
           icon={FileQuestion}
           iconBg="bg-slate-50"
           iconColor="text-slate-600"
           accentColor="#64748b"
         />
-        <MetricCard
+        <AnnotationStageCard
           label="Carta de Amonestación"
-          value={amonestacionCount}
-          sublabel="5-9 anotaciones negativas"
+          counts={counts.amonestacion}
+          threshold="5-9 anotaciones negativas"
           icon={FileText}
           iconBg="bg-yellow-50"
           iconColor="text-yellow-600"
           accentColor="#eab308"
         />
-        <MetricCard
+        <AnnotationStageCard
           label="Carta de Compromiso"
-          value={compromisoCount}
-          sublabel="10-14 anotaciones negativas"
+          counts={counts.compromiso}
+          threshold="10-14 anotaciones negativas"
           icon={FileWarning}
           iconBg="bg-orange-50"
           iconColor="text-orange-600"
           accentColor="#f97316"
         />
-        <MetricCard
+        <AnnotationStageCard
           label="Derivación a Convivencia"
-          value={derivacionCount}
-          sublabel="15+ anotaciones negativas"
+          counts={counts.derivacion}
+          threshold="15+ anotaciones negativas"
           icon={AlertTriangle}
           iconBg="bg-red-50"
           iconColor="text-red-600"
@@ -65,4 +120,3 @@ export default function AnotacionesDashboardStats({
     </div>
   );
 }
-

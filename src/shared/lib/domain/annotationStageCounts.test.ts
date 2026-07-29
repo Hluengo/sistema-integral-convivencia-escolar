@@ -14,27 +14,38 @@ describe('annotationStageCounts', () => {
     );
 
     assert.deepEqual(counts, {
-      sinCartaCount: 2,
-      amonestacionCount: 2,
-      compromisoCount: 2,
-      derivacionCount: 1,
+      sinCarta: { total: 2, pending: 2, processed: 0 },
+      amonestacion: { total: 2, pending: 2, processed: 0 },
+      compromiso: { total: 2, pending: 2, processed: 0 },
+      derivacion: { total: 1, pending: 1, processed: 0 },
     });
   });
 
-  it('interpreta la etapa verde de la RPC como Sin Carta', () => {
+  it('interpreta el desglose pendiente y procesado de la RPC', () => {
     assert.deepEqual(
       parseAnnotationStageRows([
-        { stage: 'verde', count: '3' },
-        { stage: 'amonestacion', count: 2 },
-        { stage: 'compromiso', count: 1 },
-        { stage: 'derivacion', count: 4 },
+        { stage: 'sin_carta', total_count: '3', pending_count: 3, processed_count: 0 },
+        { stage: 'amonestacion', total_count: 2, pending_count: 1, processed_count: 1 },
+        { stage: 'compromiso', total_count: 1, pending_count: 1, processed_count: 0 },
+        { stage: 'derivacion', total_count: 9, pending_count: 1, processed_count: 8 },
       ]),
       {
-        sinCartaCount: 3,
-        amonestacionCount: 2,
-        compromisoCount: 1,
-        derivacionCount: 4,
+        sinCarta: { total: 3, pending: 3, processed: 0 },
+        amonestacion: { total: 2, pending: 1, processed: 1 },
+        compromiso: { total: 1, pending: 1, processed: 0 },
+        derivacion: { total: 9, pending: 1, processed: 8 },
       },
     );
+  });
+
+  it('clasifica como procesada una carta completada del tramo efectivo', () => {
+    const counts = countAnnotationStages([
+      { annotations_count: 6, effective_letter_type: 'Amonestación Escrita' },
+      { annotations_count: 16, effective_letter_type: 'Carta de Compromiso Conductual' },
+      { annotations_count: 3, effective_letter_type: 'Ficha de Derivación' },
+    ]);
+
+    assert.deepEqual(counts.amonestacion, { total: 1, pending: 0, processed: 1 });
+    assert.deepEqual(counts.derivacion, { total: 2, pending: 1, processed: 1 });
   });
 });

@@ -3,52 +3,96 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { getDisciplinaryStage } from './disciplinaryStage';
+import {
+  getEffectiveDisciplinaryStage,
+  mapLetterTypeToDocType,
+  type LetterType,
+} from './disciplinaryStage';
 
-export interface AnnotationStageCounts {
-  sinCartaCount: number;
-  amonestacionCount: number;
-  compromisoCount: number;
-  derivacionCount: number;
+export interface AnnotationStageBreakdown {
+  total: number;
+  pending: number;
+  processed: number;
 }
 
-const EMPTY_ANNOTATION_STAGE_COUNTS: AnnotationStageCounts = {
-  sinCartaCount: 0,
-  amonestacionCount: 0,
-  compromisoCount: 0,
-  derivacionCount: 0,
-};
+export interface AnnotationStageCounts {
+  sinCarta: AnnotationStageBreakdown;
+  amonestacion: AnnotationStageBreakdown;
+  compromiso: AnnotationStageBreakdown;
+  derivacion: AnnotationStageBreakdown;
+}
 
-export function countAnnotationStages(
-  students: Array<{ annotations_count: number }>,
-): AnnotationStageCounts {
-  const result = { ...EMPTY_ANNOTATION_STAGE_COUNTS };
+export function createEmptyAnnotationStageCounts(): AnnotationStageCounts {
+  return {
+    sinCarta: { total: 0, pending: 0, processed: 0 },
+    amonestacion: { total: 0, pending: 0, processed: 0 },
+    compromiso: { total: 0, pending: 0, processed: 0 },
+    derivacion: { total: 0, pending: 0, processed: 0 },
+  };
+}
+
+interface AnnotationStageStudent {
+  annotations_count: number;
+  effective_letter_type?: LetterType | null;
+}
+
+export function countAnnotationStages(students: AnnotationStageStudent[]): AnnotationStageCounts {
+  const result = createEmptyAnnotationStageCounts();
 
   for (const student of students) {
     const negativeCount = Math.max(0, Number(student.annotations_count) || 0);
-    if (negativeCount === 0) continue;
+    if (negativeCount === 0 && !student.effective_letter_type) continue;
 
-    const stage = getDisciplinaryStage(negativeCount).key;
-    if (stage === 'none') result.sinCartaCount += 1;
-    else if (stage === 'amonestacion') result.amonestacionCount += 1;
-    else if (stage === 'compromiso_conductual') result.compromisoCount += 1;
-    else if (stage === 'derivacion') result.derivacionCount += 1;
+    const stage = getEffectiveDisciplinaryStage(negativeCount, student.effective_letter_type).key;
+    const completedStage = mapLetterTypeToDocType(student.effective_letter_type);
+    const isProcessed = stage !== 'none' && completedStage === stage;
+    const bucket =
+      stage === 'derivacion'
+        ? result.derivacion
+        : stage === 'compromiso_conductual'
+          ? result.compromiso
+          : stage === 'amonestacion'
+            ? result.amonestacion
+            : result.sinCarta;
+
+    bucket.total += 1;
+    if (isProcessed) bucket.processed += 1;
+    else bucket.pending += 1;
   }
 
   return result;
 }
 
 export function parseAnnotationStageRows(
-  rows: Array<{ stage: string; count: number | string }>,
+  rows: Array<{
+    stage: string;
+    count?: number | string;
+    total_count?: number | string;
+    pending_count?: number | string;
+    processed_count?: number | string;
+  }>,
 ): AnnotationStageCounts {
-  const result = { ...EMPTY_ANNOTATION_STAGE_COUNTS };
+  const result = createEmptyAnnotationStageCounts();
 
   for (const row of rows) {
-    const count = Number(row.count) || 0;
-    if (row.stage === 'verde' || row.stage === 'sin_carta') result.sinCartaCount = count;
-    else if (row.stage === 'amonestacion') result.amonestacionCount = count;
-    else if (row.stage === 'compromiso') result.compromisoCount = count;
-    else if (row.stage === 'derivacion') result.derivacionCount = count;
+    const total = Number(row.total_count ?? row.count) || 0;
+    const processed = Number(row.processed_count) || 0;
+    const pending = row.pending_count === undefined ? total - processed : Number(row.pending_count);
+    const bucket =
+      row.stage === 'derivacion'
+        ? result.derivacion
+        : row.stage === 'compromiso'
+          ? result.compromiso
+          : row.stage === 'amonestacion'
+            ? result.amonestacion
+            : row.stage === 'verde' || row.stage === 'sin_carta'
+              ? result.sinCarta
+              : null;
+
+    if (!bucket) continue;
+    bucket.total = total;
+    bucket.pending = Math.max(0, pending || 0);
+    bucket.processed = processed;
   }
 
   return result;
