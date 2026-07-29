@@ -252,7 +252,7 @@ export default function CartasTab({
     : activeCarta?.origin === 'physical'
       ? 'constancia física'
       : 'conteo Supabase';
-  const canCreate = Boolean(suggestedDocType && activeLetterType);
+  const canAct = Boolean(activeDocType && activeLetterType);
   const realized = workflowStatus === 'completed';
 
   return (
@@ -334,7 +334,7 @@ export default function CartasTab({
           <button
             type="button"
             onClick={() => void handleCreate()}
-            disabled={!canCreate || busy}
+            disabled={!canAct || busy}
             className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
           >
             <FileText className="h-4 w-4" />
