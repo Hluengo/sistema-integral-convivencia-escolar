@@ -10,6 +10,7 @@ import {
   getEffectiveDisciplinaryStage,
   getHighestPriorityLetterType,
   getNextLetterAfterPhysicalCarta,
+  getOutstandingLetterType,
   getPhysicalCartaBaselineType,
   resolveStudentCartaTableState,
 } from '../../../../shared/lib/domain/disciplinaryStage';
@@ -189,12 +190,10 @@ describe('Cierre de cartas — validación de etapa registrada', () => {
     equal(getCartaProcessingBlockReason('derivacion', 'derivacion', 15), null);
   });
 
-  it('permite derivación bajo 15 cuando existe Compromiso físico del año', () => {
+  it('no adelanta la derivación por existir un Compromiso físico', () => {
     equal(
-      getCartaProcessingBlockReason('derivacion', 'derivacion', 8, {
-        allowDerivacionFromPhysicalCompromiso: true,
-      }),
-      null,
+      getCartaProcessingBlockReason('derivacion', 'derivacion', 8),
+      'derivacion_requires_15_registered',
     );
   });
 
@@ -282,6 +281,25 @@ describe('Constancias físicas — progresión anual', () => {
   it('la progresión física prevalece sobre una sugerencia inferior por conteo', () => {
     equal(
       getHighestPriorityLetterType('amonestacion', 'derivacion', 'compromiso_conductual'),
+      'derivacion',
+    );
+  });
+
+  it('una constancia física coincidente deja la etapa procesada sin duplicarla', () => {
+    equal(getOutstandingLetterType('Amonestación Escrita', 'amonestacion'), null);
+    equal(
+      getOutstandingLetterType('Carta de Compromiso Conductual', 'compromiso_conductual'),
+      null,
+    );
+  });
+
+  it('solo sugiere una etapa superior cuando el conteo anual la exige', () => {
+    equal(
+      getOutstandingLetterType('Amonestación Escrita', 'compromiso_conductual'),
+      'compromiso_conductual',
+    );
+    equal(
+      getOutstandingLetterType('Carta de Compromiso Conductual', 'derivacion'),
       'derivacion',
     );
   });
