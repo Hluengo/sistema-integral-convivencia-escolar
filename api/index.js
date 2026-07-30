@@ -2004,8 +2004,45 @@ function sourceScore(source, terms) {
 ${source.text}`.toLocaleLowerCase('es-CL');
   return terms.reduce((score, term) => {
     const matches = haystack.match(new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'));
-    return score + Math.min(matches?.length ?? 0, 12);
+    const count = matches?.length ?? 0;
+    return score + (count ? 100 : 0) + Math.min(count, 12);
   }, 0);
+}
+function relevantExcerpt(text, terms, maxChars) {
+  if (text.length <= maxChars) return text;
+  const normalized = text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('es-CL');
+  const anchorPositions = terms
+    .flatMap((term) => {
+      const positions = [];
+      let index = normalized.indexOf(term);
+      while (index >= 0 && positions.length < 3) {
+        positions.push(index);
+        index = normalized.indexOf(term, index + term.length);
+      }
+      return positions;
+    })
+    .sort((left, right) => left - right);
+  if (!anchorPositions.length) return text.slice(0, maxChars);
+  const excerpts = [];
+  const headerLength = Math.min(2e3, Math.floor(maxChars * 0.18));
+  excerpts.push(text.slice(0, headerLength));
+  const remaining = maxChars - headerLength;
+  const anchors = [...new Set(anchorPositions)].slice(0, 6);
+  const excerptLength = Math.max(900, Math.floor(remaining / anchors.length) - 32);
+  for (const anchor of anchors) {
+    const start = Math.max(0, anchor - Math.floor(excerptLength * 0.28));
+    const end = Math.min(text.length, start + excerptLength);
+    const excerpt = text.slice(start, end);
+    if (!excerpts.some((value) => value.includes(excerpt))) {
+      excerpts.push(`[\u2026]
+${excerpt}
+[\u2026]`);
+    }
+  }
+  return excerpts.join('\n\n').slice(0, maxChars);
 }
 async function getRelevantLegalSources(query, maxChars = 9e4) {
   const sources = await loadAuthorizedLegalSources();
@@ -2021,8 +2058,9 @@ async function getRelevantLegalSources(query, maxChars = 9e4) {
   const output = [];
   const charsPerSource = Math.max(1e3, Math.floor(maxChars / candidates.length) - 120);
   for (const { source } of candidates) {
+    const excerpt = relevantExcerpt(source.text, terms, charsPerSource);
     const content = `### ${source.name}
-${source.text.slice(0, charsPerSource)}`;
+${excerpt}`;
     output.push(content);
   }
   if (!output.length) throw new Error('No hay fuentes jur\xEDdicas disponibles en docs/leyes.');

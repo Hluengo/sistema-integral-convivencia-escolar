@@ -98,8 +98,52 @@ function sourceScore(source: LegalSource, terms: string[]): number {
   const haystack = `${source.name}\n${source.text}`.toLocaleLowerCase('es-CL');
   return terms.reduce((score, term) => {
     const matches = haystack.match(new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'));
-    return score + Math.min(matches?.length ?? 0, 12);
+    const count = matches?.length ?? 0;
+    // Primero se privilegia cubrir varios términos concretos de la consulta.
+    // Así una fuente breve y especializada (p. ej. una resolución anual) no
+    // queda desplazada por una ley extensa que repite vocabulario genérico.
+    return score + (count ? 100 : 0) + Math.min(count, 12);
   }, 0);
+}
+
+function relevantExcerpt(text: string, terms: string[], maxChars: number): string {
+  if (text.length <= maxChars) return text;
+
+  const normalized = text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('es-CL');
+  const anchorPositions = terms
+    .flatMap((term) => {
+      const positions: number[] = [];
+      let index = normalized.indexOf(term);
+      while (index >= 0 && positions.length < 3) {
+        positions.push(index);
+        index = normalized.indexOf(term, index + term.length);
+      }
+      return positions;
+    })
+    .sort((left, right) => left - right);
+
+  if (!anchorPositions.length) return text.slice(0, maxChars);
+
+  const excerpts: string[] = [];
+  const headerLength = Math.min(2_000, Math.floor(maxChars * 0.18));
+  excerpts.push(text.slice(0, headerLength));
+  const remaining = maxChars - headerLength;
+  const anchors = [...new Set(anchorPositions)].slice(0, 6);
+  const excerptLength = Math.max(900, Math.floor(remaining / anchors.length) - 32);
+
+  for (const anchor of anchors) {
+    const start = Math.max(0, anchor - Math.floor(excerptLength * 0.28));
+    const end = Math.min(text.length, start + excerptLength);
+    const excerpt = text.slice(start, end);
+    if (!excerpts.some((value) => value.includes(excerpt))) {
+      excerpts.push(`[…]\n${excerpt}\n[…]`);
+    }
+  }
+
+  return excerpts.join('\n\n').slice(0, maxChars);
 }
 
 /**
@@ -124,7 +168,8 @@ export async function getRelevantLegalSources(query: string, maxChars = 90_000):
   const charsPerSource = Math.max(1_000, Math.floor(maxChars / candidates.length) - 120);
 
   for (const { source } of candidates) {
-    const content = `### ${source.name}\n${source.text.slice(0, charsPerSource)}`;
+    const excerpt = relevantExcerpt(source.text, terms, charsPerSource);
+    const content = `### ${source.name}\n${excerpt}`;
     output.push(content);
   }
 
