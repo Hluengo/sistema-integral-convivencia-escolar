@@ -10,6 +10,19 @@ const featureDir = dirname(fileURLToPath(import.meta.url));
 const read = (relativePath: string) => readFileSync(resolve(featureDir, relativePath), 'utf-8');
 
 describe('Listado de causas activas', () => {
+  it('incorpora búsqueda y filtro de curso antes de las fases', () => {
+    const view = read('MainContent/CausasView.tsx');
+    const searchPosition = view.indexOf('id="search-active-causes"');
+    const coursePosition = view.indexOf('id="active-causes-course-filter"');
+    const phasePosition = view.indexOf('aria-label="Filtro por fase"');
+
+    assert.ok(searchPosition > 0);
+    assert.ok(coursePosition > searchPosition);
+    assert.ok(phasePosition > coursePosition);
+    assert.match(view, /Buscar estudiante, RUT o curso\.\.\./);
+    assert.match(view, /Todos los cursos/);
+  });
+
   it('presenta las fases como pestañas compactas sobre la gestión de expedientes', () => {
     const view = read('MainContent/CausasView.tsx');
     const tabsPosition = view.indexOf('aria-label="Filtro por fase"');

@@ -3,24 +3,38 @@
  */
 
 export const maskName = (name: string, privacyMode: boolean): string => {
-  if (!privacyMode) { return name; }
+  if (!privacyMode) {
+    return name;
+  }
   const parts = name.split(' ');
   return parts
     .map((part, index) => {
-      if (index === 0) { return part.charAt(0) + '•'.repeat(Math.max(2, part.length - 1)); }
-      if (index === 2) { return part.charAt(0) + '•'.repeat(Math.max(2, part.length - 1)); }
+      if (index === 0) {
+        return part.charAt(0) + '•'.repeat(Math.max(2, part.length - 1));
+      }
+      if (index === 2) {
+        return part.charAt(0) + '•'.repeat(Math.max(2, part.length - 1));
+      }
       return `${part.charAt(0)}.`;
     })
     .join(' ');
 };
 
 export const maskRut = (rut?: string, privacyMode = true): string => {
-  if (!rut) { return 'N/A'; }
-  if (!privacyMode) { return rut; }
+  if (!rut) {
+    return 'N/A';
+  }
+  if (!privacyMode) {
+    return rut;
+  }
   const parts = rut.split('-');
-  if (parts.length < 2) { return '**.***.***-*'; }
+  if (parts.length < 2) {
+    return '**.***.***-*';
+  }
   const mainParts = parts[0].split('.');
-  if (mainParts.length < 3) { return '**.***.***-*'; }
+  if (mainParts.length < 3) {
+    return '**.***.***-*';
+  }
   return `${mainParts[0]}.${mainParts[1]}.***-*`;
 };
 
@@ -37,29 +51,31 @@ export const getSemaphoricStyle = (count: number): SemaphoricStyle => {
       badge: 'bg-emerald-50 text-emerald-700 border-emerald-200',
       dot: 'bg-emerald-500',
       text: 'text-emerald-700 font-semibold',
-      rowBg: 'hover:bg-slate-50/50'
+      rowBg: 'hover:bg-slate-50/50',
     };
-  }if (count < 10) {
+  }
+  if (count < 10) {
     return {
       badge: 'bg-yellow-50 text-yellow-800 border-yellow-200',
       dot: 'bg-yellow-500',
       text: 'text-yellow-700 font-semibold',
-      rowBg: 'hover:bg-yellow-50/20 bg-yellow-50/5'
+      rowBg: 'hover:bg-yellow-50/20 bg-yellow-50/5',
     };
-  }if (count < 15) {
+  }
+  if (count < 15) {
     return {
       badge: 'bg-orange-50 text-orange-800 border-orange-200',
       dot: 'bg-orange-500',
       text: 'text-orange-700 font-semibold',
-      rowBg: 'hover:bg-orange-50/20 bg-orange-50/5'
+      rowBg: 'hover:bg-orange-50/20 bg-orange-50/5',
     };
   }
-    return {
-      badge: 'bg-rose-50 text-rose-800 border-rose-200',
-      dot: 'bg-rose-500',
-      text: 'text-rose-700 font-extrabold',
-      rowBg: 'hover:bg-rose-50/20 bg-rose-50/5'
-    };
+  return {
+    badge: 'bg-rose-50 text-rose-800 border-rose-200',
+    dot: 'bg-rose-500',
+    text: 'text-rose-700 font-extrabold',
+    rowBg: 'hover:bg-rose-50/20 bg-rose-50/5',
+  };
 };
 
 export const TEACHERS_BY_COURSE: Record<string, string> = {
@@ -91,8 +107,9 @@ export const TEACHERS_BY_COURSE: Record<string, string> = {
 
 export const getCurrentDateStr = (): string => {
   return new Date().toLocaleDateString('es-CL', {
+    timeZone: 'America/Santiago',
     day: 'numeric',
     month: 'long',
-    year: 'numeric'
+    year: 'numeric',
   });
 };

@@ -198,6 +198,13 @@ export default function App() {
     [user, setShowLoginModal, setSelectedCausaId, setCurrentView, setMobileShowDetail],
   );
 
+  const handleViewAllNotifications = useCallback(() => {
+    setSelectedFaseFilter('Todas');
+    setSelectedCausaId('');
+    setMobileShowDetail(false);
+    setCurrentView('causas');
+  }, [setCurrentView, setMobileShowDetail, setSelectedCausaId, setSelectedFaseFilter]);
+
   const handleOpenCreateForm = useCallback(() => {
     if (!requireAuth()) return;
     dispatchForm({ type: 'OPEN' });
@@ -285,12 +292,11 @@ export default function App() {
                 privacyMode={privacyMode}
                 setPrivacyMode={setPrivacyMode}
                 saveStatus={saveStatus}
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
                 currentView={currentView}
                 causas={causas}
                 user={user}
                 onNotificationClick={handleSelectCausaFromDashboard}
+                onViewAllNotifications={handleViewAllNotifications}
               />
             </Suspense>
             {loadError && (
@@ -317,10 +323,11 @@ export default function App() {
                 selectedCausa={selectedCausa ?? undefined}
                 selectedFaseFilter={selectedFaseFilter}
                 setSelectedFaseFilter={setSelectedFaseFilter}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
                 privacyMode={privacyMode}
                 mobileShowDetail={mobileShowDetail}
                 setMobileShowDetail={setMobileShowDetail}
-                aulaSeguraCausas={causas.filter((c) => c.comprometeAulaSegura)}
                 filteredCausas={filteredCausas}
                 showCreateForm={showCreateForm}
                 dispatchForm={dispatchForm}

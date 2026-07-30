@@ -4,8 +4,8 @@
  */
 
 import type React from 'react';
-import { Suspense, lazy, useCallback } from 'react';
-import { BookOpen, Scale } from 'lucide-react';
+import { Suspense, lazy, useCallback, useMemo, useState } from 'react';
+import { BookOpen, ChevronDown, GraduationCap, Scale, Search } from 'lucide-react';
 import EmptyState from '../../../components/EmptyState';
 import { CausaCardSkeleton } from '../../../components/Skeleton';
 import { type Causa, EstadoCausa, type FaseProcedimental } from '../../../types';
@@ -31,12 +31,13 @@ interface CausasViewProps {
   selectedCausa: Causa | undefined;
   selectedFaseFilter: FaseProcedimental | 'Todas';
   setSelectedFaseFilter: (fase: FaseProcedimental | 'Todas') => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
   setSelectedCausaId: (id: string) => void;
   privacyMode: boolean;
   mobileShowDetail: boolean;
   setMobileShowDetail: (v: boolean) => void;
   filteredCausas: Causa[];
-  aulaSeguraCausas: Causa[];
   showCreateForm: boolean;
   dispatchForm: React.Dispatch<FormAction>;
   handleReopenCausa: (causa: Causa) => void;
@@ -50,11 +51,12 @@ export default function CausasView({
   selectedCausa,
   selectedFaseFilter,
   setSelectedFaseFilter,
+  searchQuery,
+  setSearchQuery,
   privacyMode,
   mobileShowDetail,
   setMobileShowDetail,
   filteredCausas,
-  aulaSeguraCausas,
   showCreateForm,
   dispatchForm,
   handleReopenCausa,
@@ -62,6 +64,23 @@ export default function CausasView({
   handleOpenCreateForm,
   setSelectedCausaId,
 }: CausasViewProps) {
+  const [selectedCourse, setSelectedCourse] = useState('');
+  const courseOptions = useMemo(
+    () =>
+      [...new Set(causas.map((causa) => causa.estudianteCurso).filter(Boolean))].sort(
+        (left, right) => left.localeCompare(right, 'es-CL', { numeric: true, sensitivity: 'base' }),
+      ),
+    [causas],
+  );
+  const visibleCausas = useMemo(
+    () =>
+      selectedCourse
+        ? filteredCausas.filter((causa) => causa.estudianteCurso === selectedCourse)
+        : filteredCausas,
+    [filteredCausas, selectedCourse],
+  );
+  const visibleAulaSeguraCount = visibleCausas.filter((causa) => causa.comprometeAulaSegura).length;
+
   const handleSelectCausa = useCallback(
     (cause: Causa) => {
       handleSelectCausaFromDashboard(cause.id);
@@ -84,11 +103,11 @@ export default function CausasView({
             </p>
             <h2 className="font-bold text-2xl tracking-tight sm:text-3xl">Causas Activas</h2>
             <p className="mt-2 text-blue-100/80 text-sm">
-              {filteredCausas.length} expediente{filteredCausas.length !== 1 ? 's' : ''} activo
-              {filteredCausas.length !== 1 ? 's' : ''}
-              {aulaSeguraCausas.length > 0 && (
+              {visibleCausas.length} expediente{visibleCausas.length !== 1 ? 's' : ''} activo
+              {visibleCausas.length !== 1 ? 's' : ''}
+              {visibleAulaSeguraCount > 0 && (
                 <span className="ml-2 inline-flex items-center gap-1 rounded-lg bg-red-500/30 px-2 py-0.5 font-semibold text-red-100 text-xs">
-                  {aulaSeguraCausas.length} Aula Segura
+                  {visibleAulaSeguraCount} Aula Segura
                 </span>
               )}
             </p>
@@ -102,6 +121,52 @@ export default function CausasView({
             <BookOpen className="h-4 w-4" aria-hidden="true" />
             Nueva Causa
           </button>
+        </div>
+      </div>
+
+      {/* Search and course filter — matching Anotaciones */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search
+            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400"
+            aria-hidden="true"
+          />
+          <input
+            type="search"
+            id="search-active-causes"
+            placeholder="Buscar estudiante, RUT o curso..."
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            aria-label="Buscar expedientes"
+            className="w-full rounded-xl border border-neutral-200/60 bg-neutral-100 py-2 pr-4 pl-10 font-medium text-neutral-800 text-sm transition-colors placeholder:text-neutral-400 hover:border-neutral-300 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+          />
+        </div>
+        <div className="relative sm:w-72">
+          <GraduationCap
+            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400"
+            aria-hidden="true"
+          />
+          <select
+            id="active-causes-course-filter"
+            value={selectedCourse}
+            onChange={(event) => {
+              setSelectedCourse(event.target.value);
+              setSelectedCausaId('');
+            }}
+            aria-label="Filtrar expedientes por curso"
+            className="w-full appearance-none rounded-xl border border-neutral-200/60 bg-neutral-100 py-2 pr-9 pl-10 font-medium text-neutral-800 text-sm transition-colors hover:border-neutral-300 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+          >
+            <option value="">Todos los cursos</option>
+            {courseOptions.map((course) => (
+              <option key={course} value={course}>
+                {course}
+              </option>
+            ))}
+          </select>
+          <ChevronDown
+            className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-neutral-400"
+            aria-hidden="true"
+          />
         </div>
       </div>
 
@@ -184,15 +249,15 @@ export default function CausasView({
           <div className="flex items-baseline gap-2 px-1">
             <h3 className="font-bold text-neutral-900 text-sm">Expedientes</h3>
             <span className="font-medium text-neutral-400 text-xs">
-              {filteredCausas.length} resultados
+              {visibleCausas.length} resultados
             </span>
           </div>
 
           {/* Directory scroll panel */}
           <div className="max-h-[600px] space-y-3 overflow-y-auto pr-1">
-            {filteredCausas.length > 0 ? (
+            {visibleCausas.length > 0 ? (
               <Suspense fallback={<ViewFallback />}>
-                {filteredCausas.map((c) => (
+                {visibleCausas.map((c) => (
                   <CausaCard
                     key={c.id}
                     causa={c}
@@ -253,7 +318,7 @@ export default function CausasView({
       </div>
 
       {/* VIEW 3: CLOSED CASES */}
-      {selectedCausaId === '' && filteredCausas.length === 0 && (
+      {selectedCausaId === '' && visibleCausas.length === 0 && (
         <div className="flex-1">
           <ClosedCases
             causas={causas}

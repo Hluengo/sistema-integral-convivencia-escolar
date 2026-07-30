@@ -3,6 +3,7 @@
 import { createHash } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { nowDateOnly } from '../../src/lib/dateUtils';
 
 type AnnotationType = 'negative' | 'positive' | 'information';
 type StudentMatchStatus =
@@ -903,7 +904,7 @@ async function syncConfirmedProcessToLegacyViews(
         student_id: input.studentId,
         tenant_id: input.tenantId,
         letter_type: documentType,
-        emission_date: new Date().toISOString().split('T')[0],
+        emission_date: nowDateOnly(),
         status: 'Vigente',
         emitted_by: 'Convivencia Escolar',
         supervisor_name: null,

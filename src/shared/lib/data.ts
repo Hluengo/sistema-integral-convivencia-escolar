@@ -4,12 +4,13 @@
  */
 
 import { type Causa, EstadoCausa, type ChecklistItem, type Statistics } from './types';
+import { toDateOnly } from '../../lib/dateUtils';
 
 // Helper to calculate relative dates from current time
 const relativeDate = (daysAgo: number): string => {
   const date = new Date();
-  date.setDate(date.getDate() - daysAgo);
-  return date.toISOString().split('T')[0];
+  date.setUTCDate(date.getUTCDate() - daysAgo);
+  return toDateOnly(date);
 };
 
 const _relativeDateTime = (daysAgo: number, timeStr: string): string => {

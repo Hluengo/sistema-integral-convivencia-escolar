@@ -22,6 +22,7 @@ import {
   physicalCartaRegistrationSchema,
   type PhysicalCartaRegistrationInput,
 } from '../../lib/schemas/physicalCarta';
+import { nowDateOnly } from '../../../lib/dateUtils';
 
 type CartaStatus = CartaDisciplinaria['status'];
 export type CartaWorkflowStatus = 'pending' | 'completed' | 'annulled';
@@ -394,7 +395,7 @@ export async function createPendingCartaForStudent(params: {
   sourceAnalysisId?: string | null;
 }): Promise<CartaDisciplinaria | null> {
   const tenantId = useAuthStore.getState().tenantId;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = nowDateOnly();
   const sourceLabel =
     params.source === 'pdf'
       ? 'del PDF'
