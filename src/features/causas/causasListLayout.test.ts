@@ -68,6 +68,7 @@ describe('Listado de causas activas', () => {
     const modal = read('CausaDetailModal.tsx');
     const tabs = read('../timeline/TimelineTabs.tsx');
     const summary = read('../timeline/ResumenTab.tsx');
+    const route = read('../timeline/RutaExpedienteTab.tsx');
     const panels = read('../timeline/TimelineTabPanels.tsx');
     const operationalSummary = read('causaOperationalSummary.ts');
 
@@ -76,17 +77,20 @@ describe('Listado de causas activas', () => {
     assert.match(modal, /onOpenChange/);
     assert.match(modal, /<DetailModalContent/);
     assert.match(tabs, /Resumen/);
+    assert.match(tabs, /Ruta del expediente/);
     assert.match(tabs, /Historial/);
     assert.match(tabs, /Asistente legal/);
     assert.doesNotMatch(tabs, /Recepción/);
     for (const phase of ['Recepción', 'Investigación', 'Resolución', 'Apelación', 'Seguimiento']) {
       assert.match(operationalSummary, new RegExp(phase));
     }
-    assert.match(summary, /onSelectPhase/);
-    assert.match(summary, /Trabajar.*hitos/);
-    assert.match(summary, /aria-controls="phase-workspace"/);
+    assert.doesNotMatch(summary, /Ruta del expediente/);
+    assert.match(route, /onSelectPhase/);
+    assert.match(route, /Trabajar.*hitos/);
+    assert.match(route, /aria-controls="phase-workspace"/);
+    assert.match(panels, /activeTab === 'ruta'/);
     assert.match(panels, /selectedPhase \? \(/);
-    assert.match(panels, /Volver al resumen/);
+    assert.match(panels, /Volver a la ruta/);
     assert.match(panels, /onSelectPhase\(null\)/);
     assert.match(panels, /<ProcesoTab/);
     assert.match(panels, /id="phase-workspace"/);
@@ -133,13 +137,13 @@ describe('Listado de causas activas', () => {
   });
 
   it('muestra la ruta, plazo, próximo hito y actividad sin nuevas fuentes de datos', () => {
-    const summary = read('../timeline/ResumenTab.tsx');
+    const route = read('../timeline/RutaExpedienteTab.tsx');
     const operationalSummary = read('causaOperationalSummary.ts');
 
-    assert.match(summary, /Ruta del expediente/);
-    assert.match(summary, /Próximo hito/);
-    assert.match(summary, /Actividad registrada/);
-    assert.match(summary, /Plazo:/);
+    assert.match(route, /Ruta del expediente/);
+    assert.match(route, /Próximo hito/);
+    assert.match(route, /Actividad registrada/);
+    assert.match(route, /Plazo:/);
     assert.match(operationalSummary, /causa\.checklistDebidoProceso/);
     assert.match(operationalSummary, /causa\.bitacora/);
   });
