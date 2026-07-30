@@ -9,11 +9,10 @@ import {
   getSuggestedLetterType,
   mapDocTypeToLetterType,
 } from '@/src/shared/lib/domain/disciplinaryStage';
-import { formatDate, STAGE_STYLE, type StudentInfo } from './constants';
+import { formatDate, STAGE_STYLE } from './constants';
 import { getCartaWorkflowLabel } from '@/src/services/cartas.service';
 
 interface StudentSummaryTabProps {
-  student: StudentInfo;
   counts: { negativas: number; positivas: number; informativas: number };
   currentCarta: CartaDisciplinaria | null;
   lastAnalysis: DocumentAnalysis | null;
@@ -24,7 +23,8 @@ interface StudentSummaryTabProps {
 function getActionText(negativeCount: number, currentCarta: CartaDisciplinaria | null): string {
   const suggested = getSuggestedLetterType(negativeCount, currentCarta?.letter_type);
   if (!suggested) {
-    if (negativeCount < 5) return 'Mantener seguimiento regular. No corresponde emitir carta disciplinaria.';
+    if (negativeCount < 5)
+      return 'Mantener seguimiento regular. No corresponde emitir carta disciplinaria.';
     return 'Mantener la carta vigente y seguimiento del estudiante.';
   }
   const letterType = mapDocTypeToLetterType(suggested);
@@ -33,7 +33,6 @@ function getActionText(negativeCount: number, currentCarta: CartaDisciplinaria |
 }
 
 export default function StudentSummaryTab({
-  student,
   counts,
   currentCarta,
   lastAnalysis,
@@ -53,14 +52,15 @@ export default function StudentSummaryTab({
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
-              Ficha Disciplinaria del Estudiante
+              Resumen de anotaciones
             </p>
-            <h3 className="mt-1 text-xl font-bold text-neutral-900">{student.full_name}</h3>
             <p className="mt-1 text-sm text-neutral-500">
-              {student.course_name || student.course_id || 'Sin curso'}{student.rut ? ` · ${student.rut}` : ''}
+              Registros disciplinarios del estudiante seleccionado.
             </p>
           </div>
-          <span className={`inline-flex w-fit items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${style.bg} ${style.text}`}>
+          <span
+            className={`inline-flex w-fit items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${style.bg} ${style.text}`}
+          >
             <Shield className="h-4 w-4" />
             {stage.label}
           </span>
@@ -88,7 +88,10 @@ export default function StudentSummaryTab({
           <h4 className="text-sm font-bold text-neutral-900">Progreso disciplinario</h4>
         </div>
         <div className="h-3 overflow-hidden rounded-full bg-neutral-100">
-          <div className="h-full rounded-full bg-brand-600 transition-[width]" style={{ width: `${progress.percent}%` }} />
+          <div
+            className="h-full rounded-full bg-brand-600 transition-[width]"
+            style={{ width: `${progress.percent}%` }}
+          />
         </div>
         <div className="mt-2 flex justify-between text-xs text-neutral-500">
           <span>{counts.negativas} negativas</span>
@@ -117,7 +120,11 @@ export default function StudentSummaryTab({
             <p className="text-sm text-neutral-500">No hay carta vigente registrada en Supabase.</p>
           )}
           {onGoToCartasTab && (
-            <button type="button" onClick={onGoToCartasTab} className="mt-4 inline-flex items-center gap-2 rounded-lg border border-brand-200 px-3 py-2 text-xs font-semibold text-brand-700 hover:bg-brand-50">
+            <button
+              type="button"
+              onClick={onGoToCartasTab}
+              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-brand-200 px-3 py-2 text-xs font-semibold text-brand-700 hover:bg-brand-50"
+            >
               Ir a Carta <ArrowRight className="h-3.5 w-3.5" />
             </button>
           )}
@@ -130,7 +137,9 @@ export default function StudentSummaryTab({
           </div>
           {lastAnalysis ? (
             <div className="space-y-1 text-sm text-neutral-600">
-              <p className="font-semibold text-neutral-900">{lastAnalysis.file_name || 'Documento sin nombre'}</p>
+              <p className="font-semibold text-neutral-900">
+                {lastAnalysis.file_name || 'Documento sin nombre'}
+              </p>
               <p>{formatDate(lastAnalysis.analyzed_at)}</p>
               <p>
                 {lastAnalysis.negativas} negativas · {lastAnalysis.positivas} positivas ·{' '}
@@ -138,10 +147,16 @@ export default function StudentSummaryTab({
               </p>
             </div>
           ) : (
-            <p className="text-sm text-neutral-500">No hay análisis PDF registrado para este estudiante.</p>
+            <p className="text-sm text-neutral-500">
+              No hay análisis PDF registrado para este estudiante.
+            </p>
           )}
           {onGoToRevisionTab && (
-            <button type="button" onClick={onGoToRevisionTab} className="mt-4 inline-flex items-center gap-2 rounded-lg border border-indigo-200 px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50">
+            <button
+              type="button"
+              onClick={onGoToRevisionTab}
+              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-indigo-200 px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50"
+            >
               Revisar nuevo PDF <ArrowRight className="h-3.5 w-3.5" />
             </button>
           )}
@@ -149,8 +164,12 @@ export default function StudentSummaryTab({
       </div>
 
       <section className="rounded-xl border border-brand-200 bg-brand-50 p-5 shadow-xs">
-        <p className="text-xs font-semibold uppercase tracking-wider text-brand-700">Siguiente acción sugerida</p>
-        <p className="mt-2 text-sm font-semibold text-brand-900">{getActionText(counts.negativas, currentCarta)}</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-brand-700">
+          Siguiente acción sugerida
+        </p>
+        <p className="mt-2 text-sm font-semibold text-brand-900">
+          {getActionText(counts.negativas, currentCarta)}
+        </p>
         {suggestedLetterType && (
           <p className="mt-1 text-xs text-brand-700">Documento sugerido: {suggestedLetterType}</p>
         )}

@@ -111,7 +111,6 @@ export default function AnotacionesStudentDetailModal({
       case 'estado':
         return (
           <StudentSummaryTab
-            student={student}
             counts={counts}
             currentCarta={disciplinaryData.currentCarta}
             lastAnalysis={disciplinaryData.lastAnalysis}

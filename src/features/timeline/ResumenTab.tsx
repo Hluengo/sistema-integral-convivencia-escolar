@@ -18,17 +18,37 @@ export default function ResumenTab({ causa, breaches }: ResumenTabProps) {
     <div className="space-y-5">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: 'Estado actual', value: getCausaStatus(causa), Icon: CheckCircle2 },
-          { label: 'Fase actual', value: getCausaPhase(causa), Icon: FileText },
-          { label: 'Plazo de cierre', value: deadline.text, Icon: CalendarClock },
+          {
+            label: 'Estado actual',
+            value: getCausaStatus(causa),
+            Icon: CheckCircle2,
+            cardClass: 'border-violet-100 bg-violet-50',
+            iconClass: 'text-violet-600',
+          },
+          {
+            label: 'Fase actual',
+            value: getCausaPhase(causa),
+            Icon: FileText,
+            cardClass: 'border-sky-100 bg-sky-50',
+            iconClass: 'text-sky-600',
+          },
+          {
+            label: 'Plazo de cierre',
+            value: deadline.text,
+            Icon: CalendarClock,
+            cardClass: 'border-amber-100 bg-amber-50',
+            iconClass: 'text-amber-700',
+          },
           {
             label: 'Hitos registrados',
             value: `${completed} de ${causa.checklistDebidoProceso.length}`,
             Icon: UserRound,
+            cardClass: 'border-emerald-100 bg-emerald-50',
+            iconClass: 'text-emerald-600',
           },
-        ].map(({ label, value, Icon }) => (
-          <div key={label} className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-            <Icon className="mb-2 size-5 text-brand-600" aria-hidden="true" />
+        ].map(({ label, value, Icon, cardClass, iconClass }) => (
+          <div key={label} className={`rounded-xl border p-4 ${cardClass}`}>
+            <Icon className={`mb-2 size-5 ${iconClass}`} aria-hidden="true" />
             <p className="text-neutral-500 text-xs">{label}</p>
             <p className="mt-1 font-semibold text-neutral-900 text-sm">{value}</p>
           </div>

@@ -113,6 +113,15 @@ describe('Listado de causas activas', () => {
     assert.match(process, /item\.fechaCompletado/);
   });
 
+  it('usa color contextual suave en las tarjetas de resumen del expediente', () => {
+    const summary = read('../timeline/ResumenTab.tsx');
+
+    assert.match(summary, /bg-violet-50/);
+    assert.match(summary, /bg-sky-50/);
+    assert.match(summary, /bg-amber-50/);
+    assert.match(summary, /bg-emerald-50/);
+  });
+
   it('no selecciona automáticamente la primera causa al cargar el listado', () => {
     const app = read('../../app/App.tsx');
     assert.match(app, /setSelectedCausaId\(''\)/);
