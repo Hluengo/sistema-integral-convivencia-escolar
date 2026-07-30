@@ -63,6 +63,7 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
           course: causa.estudianteCurso,
           infractionType: causa.tipoInfraccion,
           isAulaSegura: causa.comprometeAulaSegura,
+          bitacora: causa.bitacora,
           checkedItems: causa.checklistDebidoProceso.map((item) => ({
             label: item.label,
             completado: item.completado,

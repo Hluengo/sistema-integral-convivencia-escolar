@@ -1918,6 +1918,118 @@ var improve_default = router;
 
 // server/api/routes/advisor.ts
 import { Router as Router2 } from 'express';
+
+// server/api/services/legalSources.ts
+import { readdir, readFile } from 'node:fs/promises';
+import path from 'node:path';
+var LEGAL_SOURCES_DIRECTORY = path.join(process.cwd(), 'docs', 'leyes');
+var cachedSources = null;
+var STOP_WORDS = /* @__PURE__ */ new Set([
+  'ante',
+  'bajo',
+  'cada',
+  'como',
+  'con',
+  'contra',
+  'cual',
+  'cuales',
+  'cuando',
+  'debe',
+  'desde',
+  'donde',
+  'entre',
+  'esta',
+  'este',
+  'estos',
+  'haber',
+  'hasta',
+  'legal',
+  'leyes',
+  'para',
+  'pero',
+  'por',
+  'que',
+  'segun',
+  'sobre',
+  'solo',
+  'sus',
+  'todo',
+  'una',
+  'unos',
+  'uso',
+  'y',
+]);
+async function listMarkdownFiles(directory) {
+  const entries = await readdir(directory, { withFileTypes: true });
+  const nested = await Promise.all(
+    entries.map(async (entry) => {
+      const entryPath = path.join(directory, entry.name);
+      if (entry.isDirectory()) return listMarkdownFiles(entryPath);
+      return entry.isFile() && entry.name.toLowerCase().endsWith('.md') ? [entryPath] : [];
+    }),
+  );
+  return nested.flat().sort((left, right) => left.localeCompare(right, 'es-CL'));
+}
+async function loadAuthorizedLegalSources() {
+  if (!cachedSources) {
+    cachedSources = (async () => {
+      const files = await listMarkdownFiles(LEGAL_SOURCES_DIRECTORY);
+      const contents = await Promise.all(
+        files.map(async (file) => ({
+          name: path.relative(LEGAL_SOURCES_DIRECTORY, file),
+          text: await readFile(file, 'utf8'),
+        })),
+      );
+      if (!contents.length)
+        throw new Error('No hay fuentes jur\xEDdicas disponibles en docs/leyes.');
+      return contents;
+    })();
+  }
+  return cachedSources;
+}
+function searchTerms(value) {
+  return [
+    ...new Set(
+      value
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLocaleLowerCase('es-CL')
+        .match(/[a-z0-9]{3,}/g)
+        ?.filter((term) => !STOP_WORDS.has(term)) ?? [],
+    ),
+  ].slice(0, 30);
+}
+function sourceScore(source, terms) {
+  const haystack = `${source.name}
+${source.text}`.toLocaleLowerCase('es-CL');
+  return terms.reduce((score, term) => {
+    const matches = haystack.match(new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'));
+    return score + Math.min(matches?.length ?? 0, 12);
+  }, 0);
+}
+async function getRelevantLegalSources(query, maxChars = 9e4) {
+  const sources = await loadAuthorizedLegalSources();
+  const terms = searchTerms(query);
+  const selected = [...sources]
+    .map((source) => ({ source, score: sourceScore(source, terms) }))
+    .sort(
+      (left, right) =>
+        right.score - left.score || left.source.name.localeCompare(right.source.name, 'es-CL'),
+    );
+  const relevant = selected.filter(({ score }) => score > 0);
+  const candidates = (relevant.length ? relevant : selected).slice(0, 6);
+  const output = [];
+  const charsPerSource = Math.max(1e3, Math.floor(maxChars / candidates.length) - 120);
+  for (const { source } of candidates) {
+    const content = `### ${source.name}
+${source.text.slice(0, charsPerSource)}`;
+    output.push(content);
+  }
+  if (!output.length) throw new Error('No hay fuentes jur\xEDdicas disponibles en docs/leyes.');
+  return output.join('\n\n');
+}
+
+// server/api/routes/advisor.ts
 var router2 = Router2();
 router2.post('/advisor-chat', requireAuth, async (req, res) => {
   try {
@@ -1936,12 +2048,20 @@ router2.post('/advisor-chat', requireAuth, async (req, res) => {
       res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
       return;
     }
-    const systemInstruction = `Act\xFAas como un Abogado Senior y Experto Legal de la Superintendencia de Educaci\xF3n de Chile, experto en fiscalizaciones aplicadas a establecimientos escolares chilenos. Tu dominio de especialidad abarca:
-- Circular N\xB0 482 de la Superintendencia de Educaci\xF3n y la Ley N\xB0 21809, que norman reglamentos internos de convivencia escolar (RIE), debida proporcionalidad, medidas de resguardo inmediatas de NNA, gradualidad y plan de acompa\xF1amiento.
-- Ley Aula Segura (Ley N\xB0 21.128 que regula los casos de expulsi\xF3n, suspensi\xF3n provisoria inmediata y plazos fatales).
-- Reglamento Interno de Convivencia Escolar (RICE / RIE) y las formalidades indispensables de proporcionalidad, gradualidad y acompa\xF1amiento formativo.
+    const legalSources = await getRelevantLegalSources(message);
+    const systemInstruction = `Eres el Consultor Legal de Convivencia Escolar de un establecimiento chileno.
 
-Tus respuestas deben estar redactadas en espa\xF1ol formal de Chile, alineadas con el rigor burocr\xE1tico y legal que evitar\xE1 cargos, multas pecuniarias o recursos judiciales contra el colegio. Cita art\xEDculos cuando corresponda y explica paso a paso c\xF3mo resguardar el "Debido Proceso Escolar" y la integridad mediante medidas de resguardo. Proporciona respuestas muy estructuradas, did\xE1cticas y extremadamente precisas.`;
+Responde \xFAnicamente desde las FUENTES JUR\xCDDICAS AUTORIZADAS incluidas abajo. Estas fuentes pueden contener normativa educacional, derechos de ni\xF1os, ni\xF1as y adolescentes, circulares, resoluciones de la Superintendencia y reglamentos o protocolos institucionales vigentes que el establecimiento haya versionado.
+
+REGLAS:
+- No uses conocimiento jur\xEDdico externo ni presentes como vigente una norma que no aparezca en las fuentes autorizadas.
+- Cita el nombre del archivo y, cuando est\xE9 disponible, art\xEDculo, secci\xF3n o numeral. Si el corpus no permite responder o verificar vigencia, dilo expresamente y solicita incorporar la fuente oficial correspondiente a docs/leyes.
+- Distingue entre norma jur\xEDdica, instrucci\xF3n administrativa, reglamento/protocolo institucional y recomendaci\xF3n preventiva.
+- No inventes plazos, sanciones, art\xEDculos, obligaciones ni hechos. No sustituyas la revisi\xF3n profesional de un caso concreto.
+- Redacta en espa\xF1ol formal de Chile, con estructura clara, tono neutral y enfoque de derechos, convivencia escolar y debido proceso.
+
+FUENTES JUR\xCDDICAS AUTORIZADAS:
+${legalSources}`;
     const userId = req.user?.sub || 'anonymous';
     const cacheKey = getCacheKey('advisor-chat', {
       userId,
@@ -1983,31 +2103,60 @@ router3.post('/audit-due-process', requireAuth, async (req, res) => {
     const infractionType = requireStr(body, 'infractionType', 50);
     const isAulaSegura = Boolean(body.isAulaSegura);
     const checkedItems = optArr(body, 'checkedItems');
+    const bitacora = optArr(body, 'bitacora');
     const observations = optStr(body, 'observations', 5e3);
     const ip = req.ip || req.connection?.remoteAddress || 'unknown';
     if (!(await checkRateLimitAsync(ip))) {
       res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
       return;
     }
-    const systemPrompt = `Eres un Abogado Experto Legal en Educaci\xF3n Chilena y Fiscalizador de la Superintendencia de Educaci\xF3n, especializado en la Circular N\xB0 482 y Ley N\xB0 21809 de la Superintendencia de Educaci\xF3n (reglamentaci\xF3n de convivencia escolar, debido proceso y medidas de resguardo de NNA) y en la Ley de Aula Segura (Ley 21.128).
-Tu misi\xF3n es auditar un caso de convivencia escolar de un colegio chileno para asegurar su indemnidad jur\xEDdica frente a un posible reclamo o recurso ante la Supereduc o tribunales. Exige siempre el cumplimiento del Debido Proceso (etapas: Recepci\xF3n \u2192 Comunicaci\xF3n/Notificaci\xF3n \u2192 Investigaci\xF3n \u2192 Resoluci\xF3n Fundada \u2192 Reconsideraci\xF3n/Apelaci\xF3n) y la adopci\xF3n prioritaria de Medidas de Resguardo Inmediatas para salvaguardar la integridad de los menores involucrados.
+    const safeHistory = bitacora
+      .map((entry) => ({
+        title: sanitizeForAI(entry.titulo).slice(0, 200),
+        date: sanitizeForAI(entry.fecha).slice(0, 50),
+        type: sanitizeForAI(entry.tipo).slice(0, 80),
+        description: sanitizeForAI(entry.descripcion).slice(0, 2e3),
+      }))
+      .slice(0, 100);
+    const legalSources = await getRelevantLegalSources(
+      `debido proceso norma previa comunicaci\xF3n hechos indagaci\xF3n descargos resoluci\xF3n fundada proporcionalidad reconsideraci\xF3n ${infractionType}`,
+    );
+    const systemPrompt = `Eres un auditor documental de debido proceso en convivencia escolar chilena.
 
-Analiza rigurosamente los siguientes detalles:
-- C\xF3digo de causa: ${id}
-- Tipo de Infracci\xF3n: ${infractionType} (bajo Reglamento Interno de Convivencia Escolar / RIE)
-- Enfoque de Ley de Aula Segura: ${isAulaSegura ? 'S\xED (Sometido a Ley Aula Segura - Suspensi\xF3n provisoria, plazo fatal de 10 d\xEDas h\xE1biles de resoluci\xF3n)' : 'No (Procedimiento ordinario seg\xFAn RIE, Circular 482 y Ley 21809)'}
-- Checklists de Medidas de Resguardo Inmediatas Adoptadas (Circular 482 / Ley 21809):
-${JSON.stringify(checkedItems, null, 2)}
-- Observaciones:
-"${sanitizeForAI(observations)}"
+Tu funci\xF3n es verificar la coherencia entre los hitos efectivamente registrados en este expediente y siete garant\xEDas del debido proceso. No calificas la responsabilidad del estudiante, no propones sanciones, no estimas multas y no agregas exigencias que no se desprendan de las fuentes autorizadas.
 
-Escribe un an\xE1lisis de auditor\xEDa en formato de informe t\xE9cnico formal en Markdown que incluya:
-1. **\xCDndice o Sem\xE1foro Jur\xEDdico de Cumplimiento**: Porcentaje estimado de validez procesal actual (e.g. 70% / Riesgo Medio).
-2. **Diagn\xF3stico del Proceso y Medidas de Resguardo**: An\xE1lisis puntual del cumplimiento de las etapas del RIE y la suficiencia de las medidas de resguardo inmediatas de protecci\xF3n aplicadas al NNA.
-3. **Brechas y Omisiones Cr\xEDticas (Riesgo Legal ante Supereduc)**: Qu\xE9 falta, qu\xE9 se omiti\xF3 (por ejemplo, si falta dupla psicosocial o plan pedag\xF3gico para casos graves) y qu\xE9 multas arriesga el colegio (e.g., multas UTM al sostenedor por faltas al debido proceso o abandono de medidas de resguardo).
-4. **Instrucciones Remediales**: Pasos obligatorios urgentes de resguardo y tramitaci\xF3n para sanear el caso, junto con los plazos reglamentarios vigentes.
+FUENTES JUR\xCDDICAS AUTORIZADAS:
+${legalSources}
 
-Utiliza un tono sumamente profesional, corporativo, t\xE9cnico e institucional (el "vibe" SaaS legal de alto nivel chileno).`;
+EXPEDIENTE CITADO:
+- C\xF3digo: ${sanitizeForAI(id)}
+- Materia registrada: ${sanitizeForAI(infractionType)}
+- Referencia de procedimiento especial informada por el expediente: ${isAulaSegura ? 'S\xED' : 'No'}
+- Checklist registrado: ${JSON.stringify(checkedItems, null, 2)}
+- Hitos registrados: ${JSON.stringify(safeHistory, null, 2)}
+- Observaciones: ${sanitizeForAI(observations)}
+
+Eval\xFAa exclusivamente estas garant\xEDas:
+1. Existencia de una norma previa.
+2. Comunicaci\xF3n de los hechos.
+3. Indagaci\xF3n.
+4. Oportunidad de presentar descargos.
+5. Resoluci\xF3n fundada.
+6. Proporcionalidad.
+7. Derecho a solicitar reconsideraci\xF3n.
+
+Para cada garant\xEDa usa solo uno de estos estados: **Acreditado**, **Pendiente** o **No verificable con el expediente disponible**. No infieras que est\xE1 cumplida solo por el nombre de una fase o de un checklist; identifica el hito o documento que la respalda.
+
+Devuelve Markdown con esta estructura exacta:
+# Auditor\xEDa de debido proceso
+## Matriz de garant\xEDas
+Una tabla con: Garant\xEDa | Estado | Evidencia registrada | Brecha o acci\xF3n documental pendiente.
+## Secuencia de hitos
+Explica brevemente si el orden documentado es coherente y qu\xE9 antecedente falta registrar, si corresponde.
+## Fuentes consideradas
+Lista solo los archivos y secciones de las fuentes autorizadas que efectivamente utilizaste.
+
+No cites normas externas, no inventes plazos y no agregues explicaciones fuera de esta estructura.`;
     const responseText = await callGroq([{ role: 'user', content: systemPrompt }]);
     res.json({ success: true, report: responseText });
   } catch (error) {
@@ -2069,45 +2218,6 @@ async function callGeminiLegalDraft(systemInstruction, dossier) {
   const text = collectText(candidates).join('\n').trim();
   if (!text) throw new Error('Gemini no devolvi\xF3 contenido de texto.');
   return text;
-}
-
-// server/api/services/legalSources.ts
-import { readdir, readFile } from 'node:fs/promises';
-import path from 'node:path';
-var LEGAL_SOURCES_DIRECTORY = path.join(process.cwd(), 'docs', 'leyes');
-var cachedSources = null;
-async function listMarkdownFiles(directory) {
-  const entries = await readdir(directory, { withFileTypes: true });
-  const nested = await Promise.all(
-    entries.map(async (entry) => {
-      const entryPath = path.join(directory, entry.name);
-      if (entry.isDirectory()) return listMarkdownFiles(entryPath);
-      return entry.isFile() && entry.name.toLowerCase().endsWith('.md') ? [entryPath] : [];
-    }),
-  );
-  return nested.flat().sort((left, right) => left.localeCompare(right, 'es-CL'));
-}
-function getAuthorizedLegalSources() {
-  if (!cachedSources) {
-    cachedSources = (async () => {
-      const files = await listMarkdownFiles(LEGAL_SOURCES_DIRECTORY);
-      const contents = await Promise.all(
-        files.map(async (file) => ({
-          name: path.relative(LEGAL_SOURCES_DIRECTORY, file),
-          text: await readFile(file, 'utf8'),
-        })),
-      );
-      if (!contents.length)
-        throw new Error('No hay fuentes jur\xEDdicas disponibles en docs/leyes.');
-      return contents
-        .map(
-          ({ name, text }) => `### ${name}
-${text}`,
-        )
-        .join('\n\n');
-    })();
-  }
-  return cachedSources;
 }
 
 // server/api/services/caseDocuments.ts
@@ -2380,7 +2490,9 @@ router4.post('/draft-document', requireAuth, async (req, res) => {
       ...safeChecklist.map((item) => item.documentPath || item.document),
     ].filter(Boolean);
     const [legalSources, extractedDocuments] = await Promise.all([
-      getAuthorizedLegalSources(),
+      getRelevantLegalSources(
+        `${DOCUMENT_TITLES[docType]} ${infractionType} convivencia escolar debido proceso reglamento interno medidas disciplinarias apelaci\xF3n`,
+      ),
       extractCaseDocuments(documentValues, authReq),
     ]);
     const dossier = `

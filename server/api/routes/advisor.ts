@@ -6,6 +6,7 @@ import { sanitizeForAI } from '../validators/sanitizers.js';
 import { checkRateLimitAsync } from '../services/rateLimit.js';
 import { getCacheKey, getFromCache, setCache } from '../services/cache.js';
 import { callGroq } from '../services/groq.js';
+import { getRelevantLegalSources } from '../services/legalSources.js';
 
 const router = Router();
 
@@ -24,19 +25,25 @@ router.post('/advisor-chat', requireAuth, async (req, res) => {
     }
 
     const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-    if (!await checkRateLimitAsync(ip)) {
-      res
-        .status(429)
-        .json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
+    if (!(await checkRateLimitAsync(ip))) {
+      res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
       return;
     }
 
-    const systemInstruction = `Actúas como un Abogado Senior y Experto Legal de la Superintendencia de Educación de Chile, experto en fiscalizaciones aplicadas a establecimientos escolares chilenos. Tu dominio de especialidad abarca:
-- Circular N° 482 de la Superintendencia de Educación y la Ley N° 21809, que norman reglamentos internos de convivencia escolar (RIE), debida proporcionalidad, medidas de resguardo inmediatas de NNA, gradualidad y plan de acompañamiento.
-- Ley Aula Segura (Ley N° 21.128 que regula los casos de expulsión, suspensión provisoria inmediata y plazos fatales).
-- Reglamento Interno de Convivencia Escolar (RICE / RIE) y las formalidades indispensables de proporcionalidad, gradualidad y acompañamiento formativo.
+    const legalSources = await getRelevantLegalSources(message);
+    const systemInstruction = `Eres el Consultor Legal de Convivencia Escolar de un establecimiento chileno.
 
-Tus respuestas deben estar redactadas en español formal de Chile, alineadas con el rigor burocrático y legal que evitará cargos, multas pecuniarias o recursos judiciales contra el colegio. Cita artículos cuando corresponda y explica paso a paso cómo resguardar el "Debido Proceso Escolar" y la integridad mediante medidas de resguardo. Proporciona respuestas muy estructuradas, didácticas y extremadamente precisas.`;
+Responde únicamente desde las FUENTES JURÍDICAS AUTORIZADAS incluidas abajo. Estas fuentes pueden contener normativa educacional, derechos de niños, niñas y adolescentes, circulares, resoluciones de la Superintendencia y reglamentos o protocolos institucionales vigentes que el establecimiento haya versionado.
+
+REGLAS:
+- No uses conocimiento jurídico externo ni presentes como vigente una norma que no aparezca en las fuentes autorizadas.
+- Cita el nombre del archivo y, cuando esté disponible, artículo, sección o numeral. Si el corpus no permite responder o verificar vigencia, dilo expresamente y solicita incorporar la fuente oficial correspondiente a docs/leyes.
+- Distingue entre norma jurídica, instrucción administrativa, reglamento/protocolo institucional y recomendación preventiva.
+- No inventes plazos, sanciones, artículos, obligaciones ni hechos. No sustituyas la revisión profesional de un caso concreto.
+- Redacta en español formal de Chile, con estructura clara, tono neutral y enfoque de derechos, convivencia escolar y debido proceso.
+
+FUENTES JURÍDICAS AUTORIZADAS:
+${legalSources}`;
 
     const userId = (req as unknown as { user?: { sub?: string } }).user?.sub || 'anonymous';
     const cacheKey = getCacheKey('advisor-chat', {

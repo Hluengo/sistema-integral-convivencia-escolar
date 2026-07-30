@@ -13,7 +13,7 @@ import {
 } from '../validators/sanitizers.js';
 import { checkRateLimitAsync } from '../services/rateLimit.js';
 import { callGeminiLegalDraft } from '../services/gemini.js';
-import { getAuthorizedLegalSources } from '../services/legalSources.js';
+import { getRelevantLegalSources } from '../services/legalSources.js';
 import { extractCaseDocuments } from '../services/caseDocuments.js';
 import { httpsGet } from '../lib/https.js';
 
@@ -158,7 +158,9 @@ router.post('/draft-document', requireAuth, async (req, res) => {
       ...safeChecklist.map((item) => item.documentPath || item.document),
     ].filter(Boolean);
     const [legalSources, extractedDocuments] = await Promise.all([
-      getAuthorizedLegalSources(),
+      getRelevantLegalSources(
+        `${DOCUMENT_TITLES[docType]} ${infractionType} convivencia escolar debido proceso reglamento interno medidas disciplinarias apelación`,
+      ),
       extractCaseDocuments(documentValues, authReq),
     ]);
     const dossier = `

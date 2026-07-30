@@ -11,6 +11,7 @@ import {
 } from '../validators/sanitizers.js';
 import { checkRateLimitAsync } from '../services/rateLimit.js';
 import { callGroq } from '../services/groq.js';
+import { getRelevantLegalSources } from '../services/legalSources.js';
 
 const router = Router();
 
@@ -21,6 +22,7 @@ router.post('/audit-due-process', requireAuth, async (req, res) => {
     const infractionType = requireStr(body, 'infractionType', 50);
     const isAulaSegura = Boolean(body.isAulaSegura);
     const checkedItems = optArr(body, 'checkedItems');
+    const bitacora = optArr(body, 'bitacora');
     const observations = optStr(body, 'observations', 5000);
 
     const ip = req.ip || req.connection?.remoteAddress || 'unknown';
@@ -29,25 +31,54 @@ router.post('/audit-due-process', requireAuth, async (req, res) => {
       return;
     }
 
-    const systemPrompt = `Eres un Abogado Experto Legal en Educación Chilena y Fiscalizador de la Superintendencia de Educación, especializado en la Circular N° 482 y Ley N° 21809 de la Superintendencia de Educación (reglamentación de convivencia escolar, debido proceso y medidas de resguardo de NNA) y en la Ley de Aula Segura (Ley 21.128).
-Tu misión es auditar un caso de convivencia escolar de un colegio chileno para asegurar su indemnidad jurídica frente a un posible reclamo o recurso ante la Supereduc o tribunales. Exige siempre el cumplimiento del Debido Proceso (etapas: Recepción → Comunicación/Notificación → Investigación → Resolución Fundada → Reconsideración/Apelación) y la adopción prioritaria de Medidas de Resguardo Inmediatas para salvaguardar la integridad de los menores involucrados.
+    const safeHistory = (bitacora as Array<Record<string, unknown>>)
+      .map((entry) => ({
+        title: sanitizeForAI(entry.titulo).slice(0, 200),
+        date: sanitizeForAI(entry.fecha).slice(0, 50),
+        type: sanitizeForAI(entry.tipo).slice(0, 80),
+        description: sanitizeForAI(entry.descripcion).slice(0, 2_000),
+      }))
+      .slice(0, 100);
+    const legalSources = await getRelevantLegalSources(
+      `debido proceso norma previa comunicación hechos indagación descargos resolución fundada proporcionalidad reconsideración ${infractionType}`,
+    );
 
-Analiza rigurosamente los siguientes detalles:
-- Código de causa: ${id}
-- Tipo de Infracción: ${infractionType} (bajo Reglamento Interno de Convivencia Escolar / RIE)
-- Enfoque de Ley de Aula Segura: ${isAulaSegura ? 'Sí (Sometido a Ley Aula Segura - Suspensión provisoria, plazo fatal de 10 días hábiles de resolución)' : 'No (Procedimiento ordinario según RIE, Circular 482 y Ley 21809)'}
-- Checklists de Medidas de Resguardo Inmediatas Adoptadas (Circular 482 / Ley 21809):
-${JSON.stringify(checkedItems, null, 2)}
-- Observaciones:
-"${sanitizeForAI(observations)}"
+    const systemPrompt = `Eres un auditor documental de debido proceso en convivencia escolar chilena.
 
-Escribe un análisis de auditoría en formato de informe técnico formal en Markdown que incluya:
-1. **Índice o Semáforo Jurídico de Cumplimiento**: Porcentaje estimado de validez procesal actual (e.g. 70% / Riesgo Medio).
-2. **Diagnóstico del Proceso y Medidas de Resguardo**: Análisis puntual del cumplimiento de las etapas del RIE y la suficiencia de las medidas de resguardo inmediatas de protección aplicadas al NNA.
-3. **Brechas y Omisiones Críticas (Riesgo Legal ante Supereduc)**: Qué falta, qué se omitió (por ejemplo, si falta dupla psicosocial o plan pedagógico para casos graves) y qué multas arriesga el colegio (e.g., multas UTM al sostenedor por faltas al debido proceso o abandono de medidas de resguardo).
-4. **Instrucciones Remediales**: Pasos obligatorios urgentes de resguardo y tramitación para sanear el caso, junto con los plazos reglamentarios vigentes.
+Tu función es verificar la coherencia entre los hitos efectivamente registrados en este expediente y siete garantías del debido proceso. No calificas la responsabilidad del estudiante, no propones sanciones, no estimas multas y no agregas exigencias que no se desprendan de las fuentes autorizadas.
 
-Utiliza un tono sumamente profesional, corporativo, técnico e institucional (el "vibe" SaaS legal de alto nivel chileno).`;
+FUENTES JURÍDICAS AUTORIZADAS:
+${legalSources}
+
+EXPEDIENTE CITADO:
+- Código: ${sanitizeForAI(id)}
+- Materia registrada: ${sanitizeForAI(infractionType)}
+- Referencia de procedimiento especial informada por el expediente: ${isAulaSegura ? 'Sí' : 'No'}
+- Checklist registrado: ${JSON.stringify(checkedItems, null, 2)}
+- Hitos registrados: ${JSON.stringify(safeHistory, null, 2)}
+- Observaciones: ${sanitizeForAI(observations)}
+
+Evalúa exclusivamente estas garantías:
+1. Existencia de una norma previa.
+2. Comunicación de los hechos.
+3. Indagación.
+4. Oportunidad de presentar descargos.
+5. Resolución fundada.
+6. Proporcionalidad.
+7. Derecho a solicitar reconsideración.
+
+Para cada garantía usa solo uno de estos estados: **Acreditado**, **Pendiente** o **No verificable con el expediente disponible**. No infieras que está cumplida solo por el nombre de una fase o de un checklist; identifica el hito o documento que la respalda.
+
+Devuelve Markdown con esta estructura exacta:
+# Auditoría de debido proceso
+## Matriz de garantías
+Una tabla con: Garantía | Estado | Evidencia registrada | Brecha o acción documental pendiente.
+## Secuencia de hitos
+Explica brevemente si el orden documentado es coherente y qué antecedente falta registrar, si corresponde.
+## Fuentes consideradas
+Lista solo los archivos y secciones de las fuentes autorizadas que efectivamente utilizaste.
+
+No cites normas externas, no inventes plazos y no agregues explicaciones fuera de esta estructura.`;
 
     const responseText = await callGroq([{ role: 'user', content: systemPrompt }]);
     res.json({ success: true, report: responseText });
