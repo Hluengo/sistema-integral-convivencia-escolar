@@ -7,10 +7,16 @@ import InteractiveTimeline from '../../components/InteractiveTimeline';
 interface CausaDetailModalProps {
   causa: Causa | undefined;
   privacyMode: boolean;
+  isLoading: boolean;
   onClose: () => void;
 }
 
-export default function CausaDetailModal({ causa, privacyMode, onClose }: CausaDetailModalProps) {
+export default function CausaDetailModal({
+  causa,
+  privacyMode,
+  isLoading,
+  onClose,
+}: CausaDetailModalProps) {
   return (
     <Dialog open={Boolean(causa)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
@@ -24,7 +30,14 @@ export default function CausaDetailModal({ causa, privacyMode, onClose }: CausaD
         <DialogDescription className="sr-only">
           Gestión completa del debido proceso, sus hitos, bitácora y asistencia legal.
         </DialogDescription>
-        {causa && (
+        {causa && isLoading && (
+          <div className="flex flex-1 items-center justify-center p-6" role="status">
+            <p className="font-medium text-neutral-500 text-sm">
+              Cargando antecedentes del expediente…
+            </p>
+          </div>
+        )}
+        {causa && !isLoading && (
           <InteractiveTimeline
             key={causa.id}
             causa={causa}

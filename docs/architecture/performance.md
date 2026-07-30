@@ -6,19 +6,19 @@
 
 El build de producción divide el código en 11 chunks:
 
-| Chunk | Contenido | Tamaño Aprox. |
-|-------|-----------|---------------|
-| `vendor` | React, scheduler, radix, tanstack, zustand, etc. | 671 KB |
-| `pdf` | pdf-lib, pdfjs-dist | 850 KB |
-| `docx` | docx library | 343 KB |
-| `supabase` | @supabase/supabase-js | 205 KB |
-| `index` | App shell y shared | 292 KB |
-| `anotaciones` | Módulo de anotaciones | 50 KB |
-| `new-process` | Wizard nuevo proceso | 23 KB |
-| `causas` | Gestión de casos | 18 KB |
-| `docs` | Documentos | 12 KB |
-| `ai-advisor` | Asesor AI | 9 KB |
-| `timeline` | Timeline de caso | 2 KB |
+| Chunk         | Contenido                                        | Tamaño Aprox. |
+| ------------- | ------------------------------------------------ | ------------- |
+| `vendor`      | React, scheduler, radix, tanstack, zustand, etc. | 671 KB        |
+| `pdf`         | pdf-lib, pdfjs-dist                              | 850 KB        |
+| `docx`        | docx library                                     | 343 KB        |
+| `supabase`    | @supabase/supabase-js                            | 205 KB        |
+| `index`       | App shell y shared                               | 292 KB        |
+| `anotaciones` | Módulo de anotaciones                            | 50 KB         |
+| `new-process` | Wizard nuevo proceso                             | 23 KB         |
+| `causas`      | Gestión de casos                                 | 18 KB         |
+| `docs`        | Documentos                                       | 12 KB         |
+| `ai-advisor`  | Asesor AI                                        | 9 KB          |
+| `timeline`    | Timeline de caso                                 | 2 KB          |
 
 ### Circular Chunk Warnings
 
@@ -27,6 +27,7 @@ El build emite warnings de chunks circulares debido a la configuración de `manu
 ## Lazy Loading
 
 7+ componentes cargados con `React.lazy()` + `<Suspense>`:
+
 - Sidebar, Header, MainContent
 - LoginPage, NewCausaModal, ShortcutsModal, OnboardingTour
 - InteractiveTimeline, EditCausaModal
@@ -36,14 +37,22 @@ El build emite warnings de chunks circulares debido a la configuración de `manu
 ## Cache Strategy
 
 ### Server-side
+
 - **In-memory cache**: 5-min TTL, max 100 entries
 - **Endpoints**: advisor-chat, improve-text
 - **Key**: SHA256 del request payload
 
 ### Client-side (React Query)
+
 - **Courses**: staleTime 30 min, cacheTime infinita
 - **Students**: staleTime 10 min, cacheTime infinita
 - **No refetch on window focus** (configuración global)
+
+### Expedientes y Supabase
+
+- **Listado liviano**: `fetchCausas()` obtiene solo los metadatos necesarios para la tabla y las métricas.
+- **Detalle bajo demanda**: `fetchCausaDetails(causaId)` obtiene historial y checklist únicamente al gestionar ese expediente; el resultado queda en el store durante la sesión.
+- **Autoguardado diferencial**: al editar, se compara el estado previo con el actual. Se actualiza solamente la entidad afectada y los ítems creados, modificados o eliminados; no se reescriben colecciones completas.
 
 ## Performance Monitoring
 
@@ -54,13 +63,13 @@ El build emite warnings de chunks circulares debido a la configuración de `manu
 
 ## Bundle Size
 
-| Métrica | Valor |
-|---------|-------|
-| Total dist | ~5 MB |
-| Módulos transformados | ~3,792 |
-| Build time | ~27s |
-| JS total (gzip) | ~800 KB |
-| CSS total (gzip) | ~15 KB |
+| Métrica               | Valor   |
+| --------------------- | ------- |
+| Total dist            | ~5 MB   |
+| Módulos transformados | ~3,792  |
+| Build time            | ~27s    |
+| JS total (gzip)       | ~800 KB |
+| CSS total (gzip)      | ~15 KB  |
 
 ## Known Optimizations
 

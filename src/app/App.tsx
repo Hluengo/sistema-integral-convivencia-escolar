@@ -101,9 +101,10 @@ export default function App() {
   const { data: students = [], isLoading: isLoadingStudents } = useStudentsQuery(selectedCourseId);
   const newEstCurso = courses.find((c) => c.id === selectedCourseId)?.name ?? '';
 
-  const { loadError, retryLoad } = useCausasPersistence({
+  const { loadError, retryLoad, isCausaDetailLoading } = useCausasPersistence({
     causas,
     setCausas,
+    selectedCausaId,
     setSelectedCausaId,
     setSaveStatus,
     isAuthenticated,
@@ -321,6 +322,7 @@ export default function App() {
                 selectedCausaId={selectedCausaId}
                 setSelectedCausaId={setSelectedCausaId}
                 selectedCausa={selectedCausa ?? undefined}
+                isCausaDetailLoading={isCausaDetailLoading}
                 selectedFaseFilter={selectedFaseFilter}
                 setSelectedFaseFilter={setSelectedFaseFilter}
                 searchQuery={searchQuery}

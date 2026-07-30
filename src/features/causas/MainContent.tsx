@@ -65,6 +65,7 @@ interface MainContentProps {
   selectedCausaId: string;
   setSelectedCausaId: (id: string) => void;
   selectedCausa: Causa | undefined;
+  isCausaDetailLoading: boolean;
   selectedFaseFilter: FaseProcedimental | 'Todas';
   setSelectedFaseFilter: (f: FaseProcedimental | 'Todas') => void;
   searchQuery: string;
@@ -86,6 +87,7 @@ export default function MainContent({
   selectedCausaId,
   setSelectedCausaId,
   selectedCausa,
+  isCausaDetailLoading,
   selectedFaseFilter,
   setSelectedFaseFilter,
   searchQuery,
@@ -135,6 +137,7 @@ export default function MainContent({
           selectedCausaId={selectedCausaId}
           setSelectedCausaId={setSelectedCausaId}
           selectedCausa={selectedCausa}
+          isCausaDetailLoading={isCausaDetailLoading}
           selectedFaseFilter={selectedFaseFilter}
           setSelectedFaseFilter={setSelectedFaseFilter}
           searchQuery={searchQuery}

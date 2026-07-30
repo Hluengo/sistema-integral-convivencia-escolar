@@ -4,19 +4,19 @@ Los servicios encapsulan toda la comunicación con Supabase (base de datos, auth
 
 ## Data Services (`src/shared/api/services/`)
 
-| Servicio | Archivo | Métodos Clave |
-|----------|---------|--------------|
-| `auth.service.ts` | `signInWithEmail`, `signOut`, `onAuthStateChange` | Auth |
-| `causas.service.ts` | `fetchCausas`, `createCausa`, `updateCausa`, `deleteCausa` | CRUD casos |
-| `bitacora.service.ts` | `fetchBitacora`, `saveBitacora`, `addBitacoraEntry` | Historial |
-| `checklist.service.ts` | `saveChecklist` | Checklist |
-| `annotations.service.ts` | `fetchAnnotations`, `saveAnnotation`, `fetchStudentsWithAnnotationCounts`, `fetchAnnotationStageCounts`, `fetchDocumentAnalyses`, `saveDocumentAnalysis` | Anotaciones |
-| `courses.service.ts` | `fetchCourses`, `fetchStudentsByCourse`, `fetchStudentsWithCourses` | Cursos |
-| `cartas.service.ts` | `fetchCartas` | Cartas |
-| `etapas.service.ts` | `fetchEtapas` | Etapas |
-| `storage.service.ts` | `uploadDocument`, `listDocuments`, `deleteDocument` | Storage legacy |
-| `disciplinary-storage.service.ts` | `validateDisciplinaryPdf`, `uploadDisciplinaryFile`, `getDisciplinaryFileUrl`, `deleteDisciplinaryFile` | Storage PDF |
-| `disciplinary-rules.service.ts` | `fetchDisciplinaryRules` | Reglas |
+| Servicio                          | Archivo                                                                                                                                                  | Métodos Clave                       |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| `auth.service.ts`                 | `signInWithEmail`, `signOut`, `onAuthStateChange`                                                                                                        | Auth                                |
+| `causas.service.ts`               | `fetchCausas`, `fetchCausaDetails`, `createCausa`, `updateCausa`, `deleteCausa`                                                                          | Listado y detalle diferido de casos |
+| `bitacora.service.ts`             | `fetchBitacora`, `saveBitacora`, `addBitacoraEntry`                                                                                                      | Historial                           |
+| `checklist.service.ts`            | `saveChecklist`                                                                                                                                          | Checklist                           |
+| `annotations.service.ts`          | `fetchAnnotations`, `saveAnnotation`, `fetchStudentsWithAnnotationCounts`, `fetchAnnotationStageCounts`, `fetchDocumentAnalyses`, `saveDocumentAnalysis` | Anotaciones                         |
+| `courses.service.ts`              | `fetchCourses`, `fetchStudentsByCourse`, `fetchStudentsWithCourses`                                                                                      | Cursos                              |
+| `cartas.service.ts`               | `fetchCartas`                                                                                                                                            | Cartas                              |
+| `etapas.service.ts`               | `fetchEtapas`                                                                                                                                            | Etapas                              |
+| `storage.service.ts`              | `uploadDocument`, `listDocuments`, `deleteDocument`                                                                                                      | Storage legacy                      |
+| `disciplinary-storage.service.ts` | `validateDisciplinaryPdf`, `uploadDisciplinaryFile`, `getDisciplinaryFileUrl`, `deleteDisciplinaryFile`                                                  | Storage PDF                         |
+| `disciplinary-rules.service.ts`   | `fetchDisciplinaryRules`                                                                                                                                 | Reglas                              |
 
 ## Servicios de API Externa (desde frontend)
 
@@ -27,6 +27,7 @@ Los servicios encapsulan toda la comunicación con Supabase (base de datos, auth
 ## Data Mappers (`src/shared/lib/mappers.ts`)
 
 Convierten filas de Supabase (snake_case) a tipos TypeScript (camelCase):
+
 - `mapInspectorateToAnnotation()` — InspectorateRecord → Annotation
 - `mapCauseRowToCarta()` — DB row → CartaDisciplinaria
 - `mapStageRowToEtapa()` — DB row → EtapaDisciplinaria
@@ -34,6 +35,7 @@ Convierten filas de Supabase (snake_case) a tipos TypeScript (camelCase):
 ## Zod Schemas (`src/shared/lib/schemas/index.ts`)
 
 Validación runtime para todos los tipos del dominio:
+
 - `CausaSchema`, `BitacoraEntrySchema`, `ChecklistItemSchema`
 - `AnnotationSchema`, `AnotacionStudentSchema`
 - `CartaDisciplinariaSchema`, `EtapaDisciplinariaSchema`

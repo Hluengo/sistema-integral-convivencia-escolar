@@ -5,6 +5,8 @@ import { describe, it } from 'node:test';
 import { createDraftCausa } from '@/src/lib/causaFactory';
 import { persistExistingCausa, type ExistingCausaPersistenceOperations } from './causaPersistence';
 
+const allChanges = { causa: true, bitacora: true, checklist: true } as const;
+
 function createCausaFixture() {
   return createDraftCausa({
     counter: 1,
@@ -36,7 +38,8 @@ describe('persistExistingCausa', () => {
       },
     };
 
-    assert.equal(await persistExistingCausa(createCausaFixture(), operations), false);
+    const causa = createCausaFixture();
+    assert.equal(await persistExistingCausa(causa, causa, allChanges, operations), false);
     assert.deepEqual(calls, ['update']);
   });
 
@@ -57,7 +60,8 @@ describe('persistExistingCausa', () => {
       },
     };
 
-    assert.equal(await persistExistingCausa(createCausaFixture(), operations), true);
+    const causa = createCausaFixture();
+    assert.equal(await persistExistingCausa(causa, causa, allChanges, operations), true);
     assert.equal(calls[0], 'update');
     assert.deepEqual(new Set(calls.slice(1)), new Set(['bitacora', 'checklist']));
   });
@@ -69,6 +73,37 @@ describe('persistExistingCausa', () => {
       saveChecklist: async () => true,
     };
 
-    assert.equal(await persistExistingCausa(createCausaFixture(), operations), false);
+    const causa = createCausaFixture();
+    assert.equal(await persistExistingCausa(causa, causa, allChanges, operations), false);
+  });
+
+  it('persiste solo la colección que cambió', async () => {
+    const calls: string[] = [];
+    const operations: ExistingCausaPersistenceOperations = {
+      updateCausa: async () => {
+        calls.push('causa');
+        return true;
+      },
+      saveBitacora: async () => {
+        calls.push('bitacora');
+        return true;
+      },
+      saveChecklist: async () => {
+        calls.push('checklist');
+        return true;
+      },
+    };
+    const causa = createCausaFixture();
+
+    assert.equal(
+      await persistExistingCausa(
+        causa,
+        causa,
+        { causa: false, bitacora: true, checklist: false },
+        operations,
+      ),
+      true,
+    );
+    assert.deepEqual(calls, ['bitacora']);
   });
 });

@@ -131,20 +131,30 @@ export async function fetchCausas(limit = DEFAULT_PAGE_SIZE): Promise<Causa[]> {
     else console.error(`Invalid causa ${row.id}:`, parsed.error.flatten());
   }
 
-  const ids = causas.map((causa) => causa.id);
-  if (ids.length === 0) return causas;
+  return causas;
+}
 
+/**
+ * Carga los antecedentes de un único expediente al abrirlo.
+ *
+ * El listado solo necesita los metadatos de la causa. Mantener bitácora y
+ * checklist fuera de esa consulta evita transferir antecedentes sensibles de
+ * expedientes que la persona usuaria no ha solicitado revisar.
+ */
+export async function fetchCausaDetails(
+  causaId: string,
+): Promise<Pick<Causa, 'bitacora' | 'checklistDebidoProceso'>> {
   const [checklistResult, bitacoraResult] = await Promise.all([
     supabase
       .from('checklist_items')
       .select(
         'id,causa_id,label,descripcion,completado,fecha_completado,requerido_por,registrado_por,observaciones,documento_nombre,documento_url',
       )
-      .in('causa_id', ids),
+      .eq('causa_id', causaId),
     supabase
       .from('bitacora_entries')
       .select('id,causa_id,fecha,tipo,titulo,descripcion,participantes,documento_adjunto')
-      .in('causa_id', ids)
+      .eq('causa_id', causaId)
       .order('fecha', { ascending: false }),
   ]);
 
@@ -152,41 +162,17 @@ export async function fetchCausas(limit = DEFAULT_PAGE_SIZE): Promise<Causa[]> {
     console.error('Error fetching checklist items:', checklistResult.error);
   if (bitacoraResult.error) console.error('Error fetching bitacora entries:', bitacoraResult.error);
 
-  const checklistByCausa = new Map<string, ChecklistItem[]>();
-  const checklistMapped = ((checklistResult.data || []) as SupabaseChecklistRow[]).map((row) => ({
-    causaId: row.causa_id,
-    item: mapChecklistRow(row),
-  }));
-  for (const { causaId, item } of checklistMapped) {
-    if (!item) continue;
-    const current = checklistByCausa.get(causaId) || [];
-    current.push(item);
-    checklistByCausa.set(causaId, current);
-  }
+  const checklist = ((checklistResult.data || []) as SupabaseChecklistRow[])
+    .map(mapChecklistRow)
+    .filter((item): item is ChecklistItem => item !== null);
+  const bitacora = ((bitacoraResult.data || []) as SupabaseBitacoraRow[])
+    .map(mapBitacoraRow)
+    .filter((entry): entry is BitacoraEntry => entry !== null);
 
-  const bitacoraByCausa = new Map<string, BitacoraEntry[]>();
-  const bitacoraMapped = ((bitacoraResult.data || []) as SupabaseBitacoraRow[]).map((row) => ({
-    causaId: row.causa_id,
-    entry: mapBitacoraRow(row),
-  }));
-  for (const { causaId, entry } of bitacoraMapped) {
-    if (!entry) continue;
-    const current = bitacoraByCausa.get(causaId) || [];
-    current.push(entry);
-    bitacoraByCausa.set(causaId, current);
-  }
-
-  return causas.map((causa) => {
-    const bitacora = bitacoraByCausa.get(causa.id) || [];
-    return {
-      ...causa,
-      bitacora,
-      checklistDebidoProceso: reconcileChecklistFromBitacora(
-        checklistByCausa.get(causa.id) || [],
-        bitacora,
-      ),
-    };
-  });
+  return {
+    bitacora,
+    checklistDebidoProceso: reconcileChecklistFromBitacora(checklist, bitacora),
+  };
 }
 
 async function resolveUniqueCausaId(preferred: string): Promise<string> {

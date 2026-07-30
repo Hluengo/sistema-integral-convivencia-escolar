@@ -9,14 +9,15 @@ import { toDateTimeLocalValue, toIsoDateTime } from './annotationEditUtils';
 
 describe('annotationEditUtils', () => {
   it('convierte una fecha ISO a un valor datetime-local válido', () => {
-    assert.match(
-      toDateTimeLocalValue('2026-07-27T15:45:00.000Z'),
-      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/,
-    );
+    assert.equal(toDateTimeLocalValue('2026-07-27T16:45:00.000Z'), '2026-07-27T12:45');
   });
 
   it('convierte el valor local a ISO', () => {
-    assert.match(toIsoDateTime('2026-07-27T12:45'), /^2026-07-27T\d{2}:45:00\.000Z$/);
+    assert.equal(toIsoDateTime('2026-07-27T12:45'), '2026-07-27T16:45:00.000Z');
+  });
+
+  it('considera el horario de verano chileno', () => {
+    assert.equal(toIsoDateTime('2026-12-10T00:30'), '2026-12-10T03:30:00.000Z');
   });
 
   it('rechaza una fecha inválida', () => {

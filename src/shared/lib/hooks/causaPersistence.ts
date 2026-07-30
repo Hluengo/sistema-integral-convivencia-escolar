@@ -2,10 +2,24 @@
 
 import type { Causa } from '@/src/types';
 
+export interface CausaPersistenceChanges {
+  causa: boolean;
+  bitacora: boolean;
+  checklist: boolean;
+}
+
 export interface ExistingCausaPersistenceOperations {
   updateCausa: (causa: Causa) => Promise<boolean>;
-  saveBitacora: (causaId: string, entries: Causa['bitacora']) => Promise<boolean>;
-  saveChecklist: (causaId: string, checklist: Causa['checklistDebidoProceso']) => Promise<boolean>;
+  saveBitacora: (
+    causaId: string,
+    entries: Causa['bitacora'],
+    previousEntries: Causa['bitacora'],
+  ) => Promise<boolean>;
+  saveChecklist: (
+    causaId: string,
+    checklist: Causa['checklistDebidoProceso'],
+    previousChecklist: Causa['checklistDebidoProceso'],
+  ) => Promise<boolean>;
 }
 
 /**
@@ -16,15 +30,29 @@ export interface ExistingCausaPersistenceOperations {
  */
 export async function persistExistingCausa(
   causa: Causa,
+  previousCausa: Causa,
+  changes: CausaPersistenceChanges,
   operations: ExistingCausaPersistenceOperations,
 ): Promise<boolean> {
-  const updated = await operations.updateCausa(causa);
-  if (!updated) return false;
+  if (changes.causa) {
+    const updated = await operations.updateCausa(causa);
+    if (!updated) return false;
+  }
 
-  const [bitacoraSaved, checklistSaved] = await Promise.all([
-    operations.saveBitacora(causa.id, causa.bitacora),
-    operations.saveChecklist(causa.id, causa.checklistDebidoProceso),
-  ]);
+  const relatedWrites: Promise<boolean>[] = [];
+  if (changes.bitacora) {
+    relatedWrites.push(operations.saveBitacora(causa.id, causa.bitacora, previousCausa.bitacora));
+  }
+  if (changes.checklist) {
+    relatedWrites.push(
+      operations.saveChecklist(
+        causa.id,
+        causa.checklistDebidoProceso,
+        previousCausa.checklistDebidoProceso,
+      ),
+    );
+  }
 
-  return bitacoraSaved && checklistSaved;
+  const relatedResults = await Promise.all(relatedWrites);
+  return relatedResults.every(Boolean);
 }

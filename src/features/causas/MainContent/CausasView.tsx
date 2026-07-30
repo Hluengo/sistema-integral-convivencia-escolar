@@ -29,6 +29,7 @@ interface CausasViewProps {
   causas: Causa[];
   selectedCausaId: string;
   selectedCausa: Causa | undefined;
+  isCausaDetailLoading: boolean;
   selectedFaseFilter: FaseProcedimental | 'Todas';
   setSelectedFaseFilter: (fase: FaseProcedimental | 'Todas') => void;
   searchQuery: string;
@@ -49,6 +50,7 @@ export default function CausasView({
   causas,
   selectedCausaId,
   selectedCausa,
+  isCausaDetailLoading,
   selectedFaseFilter,
   setSelectedFaseFilter,
   searchQuery,
@@ -225,6 +227,7 @@ export default function CausasView({
         <CausaDetailModal
           causa={selectedCausa}
           privacyMode={privacyMode}
+          isLoading={isCausaDetailLoading}
           onClose={() => setSelectedCausaId('')}
         />
       </Suspense>
