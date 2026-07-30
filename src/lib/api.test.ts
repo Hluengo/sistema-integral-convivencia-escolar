@@ -36,6 +36,7 @@ describe('API endpoints', () => {
   let server: http.Server;
   let baseUrl: string;
   let VALID_TOKEN: string;
+  let requestSequence = 1;
 
   before(async () => {
     // The base64-encoded secret used for JWT verification
@@ -88,7 +89,13 @@ describe('API endpoints', () => {
         url,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...headers },
+          // El middleware limita por IP antes de autenticar. Una IP aislada por
+          // caso evita que estos tests de validación se contaminen entre sí.
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Forwarded-For': `127.0.0.${requestSequence++}`,
+            ...headers,
+          },
         },
         (res) => {
           let chunks = '';

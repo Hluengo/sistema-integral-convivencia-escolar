@@ -5,7 +5,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { sanitizeForAI } from '../validators/sanitizers.js';
 import { checkRateLimitAsync } from '../services/rateLimit.js';
 import { getCacheKey, getFromCache, setCache } from '../services/cache.js';
-import { callGroq } from '../services/groq.js';
+import { callGroq, callTextImprovementFallback } from '../services/groq.js';
 import {
   buildTextImprovementRequest,
   isTextImprovementRefusal,
@@ -53,31 +53,46 @@ router.post('/improve-text', requireAuth, async (req, res) => {
       context && context in IMPROVEMENT_CONTEXTS
         ? IMPROVEMENT_CONTEXTS[context as keyof typeof IMPROVEMENT_CONTEXTS]
         : undefined;
-    let improved = await callGroq(
-      [
-        {
-          role: 'user',
-          content: buildTextImprovementRequest(userContent, contextInstruction),
-        },
-      ],
-      TEXT_IMPROVEMENT_SYSTEM_PROMPT,
-    );
-    if (isTextImprovementRefusal(improved)) {
-      improved = await callGroq(
-        [
-          {
-            role: 'user',
-            content: buildTextImprovementRequest(userContent, contextInstruction, true),
-          },
-        ],
-        TEXT_IMPROVEMENT_SYSTEM_PROMPT,
-      );
+    const request = [
+      {
+        role: 'user',
+        content: buildTextImprovementRequest(userContent, contextInstruction),
+      },
+    ];
+    let improved: string;
+    try {
+      improved = await callGroq(request, TEXT_IMPROVEMENT_SYSTEM_PROMPT);
+    } catch {
+      improved = await callTextImprovementFallback(request, TEXT_IMPROVEMENT_SYSTEM_PROMPT);
     }
     if (isTextImprovementRefusal(improved)) {
-      res.status(422).json({
-        error: 'La IA no pudo mejorar este texto. El contenido original se mantuvo sin cambios.',
-      });
-      return;
+      const retryRequest = [
+        {
+          role: 'user',
+          content: buildTextImprovementRequest(userContent, contextInstruction, true),
+        },
+      ];
+      try {
+        improved = await callGroq(retryRequest, TEXT_IMPROVEMENT_SYSTEM_PROMPT);
+      } catch {
+        improved = await callTextImprovementFallback(retryRequest, TEXT_IMPROVEMENT_SYSTEM_PROMPT);
+      }
+    }
+    if (isTextImprovementRefusal(improved)) {
+      try {
+        improved = await callTextImprovementFallback(request, TEXT_IMPROVEMENT_SYSTEM_PROMPT);
+      } catch {
+        res.status(422).json({
+          error: 'La IA no pudo mejorar este texto. El contenido original se mantuvo sin cambios.',
+        });
+        return;
+      }
+      if (isTextImprovementRefusal(improved)) {
+        res.status(422).json({
+          error: 'La IA no pudo mejorar este texto. El contenido original se mantuvo sin cambios.',
+        });
+        return;
+      }
     }
     setCache(cacheKey, improved);
     res.json({ success: true, improved });

@@ -371,7 +371,7 @@ function toIsoDate(date: string | undefined): string | null {
   return `${year}-${month}-${day}`;
 }
 
-async function extractPdfPages(buffer: Uint8Array): Promise<string[]> {
+export async function extractPdfPages(buffer: Uint8Array): Promise<string[]> {
   ensurePdfJsNodePolyfills();
   const workerModule =
     (await import('pdfjs-dist/legacy/build/pdf.worker.mjs')) as PdfJsWorkerModule;

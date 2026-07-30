@@ -57,11 +57,11 @@ interface TimelineContextValue {
   fatherName: string;
   setFatherName: React.Dispatch<React.SetStateAction<string>>;
   draftedDocument: string;
+  setDraftedDocument: React.Dispatch<React.SetStateAction<string>>;
+  draftError: string | null;
   isDrafting: boolean;
-  copyFeedback: boolean;
   handleRunAudit: () => Promise<void>;
   handleDraftDocument: () => Promise<void>;
-  handleCopyToClipboard: () => void;
 }
 
 export const TimelineContext = createContext<TimelineContextValue | null>(null);

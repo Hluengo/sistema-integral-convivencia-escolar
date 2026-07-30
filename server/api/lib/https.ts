@@ -61,6 +61,36 @@ export function httpsGet(
   });
 }
 
+export function httpsGetBuffer(
+  hostname: string,
+  pathname: string,
+  headers?: Record<string, string>,
+  maxBytes = 10 * 1024 * 1024,
+): Promise<{ status: number; body: Buffer }> {
+  return new Promise((resolve, reject) => {
+    const req = https.request(
+      { hostname, path: pathname, method: 'GET', headers: headers || {} },
+      (res) => {
+        const chunks: Buffer[] = [];
+        let size = 0;
+        res.on('data', (chunk: Buffer) => {
+          size += chunk.length;
+          if (size > maxBytes) {
+            req.destroy(new Error('La descarga excede el tamaño máximo permitido.'));
+            return;
+          }
+          chunks.push(chunk);
+        });
+        res.on('end', () =>
+          resolve({ status: res.statusCode ?? 500, body: Buffer.concat(chunks) }),
+        );
+      },
+    );
+    req.on('error', reject);
+    req.end();
+  });
+}
+
 export function httpsPatch(
   hostname: string,
   pathname: string,

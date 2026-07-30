@@ -16,8 +16,8 @@ interface Template {
 }
 
 const DOC_TYPE_LABELS: Record<string, string> = {
-  notificacion_apertura: 'Notificación de Apertura',
-  citacion_entrevista: 'Citación a Entrevista',
+  notificacion_apertura: 'Notificación de Apertura de Indagación',
+  citacion_entrevista: 'Citación para entrega de notificación',
   informe_cierre_indagacion: 'Informe de Cierre',
   informe_concluyente: 'Informe Concluyente',
 };
@@ -34,7 +34,13 @@ export default function TemplateEditor({ onBack }: { onBack: () => void }) {
 
   const fetchTemplates = useCallback(async () => {
     try {
-      const res = await fetch('/api/document-templates/admin');
+      const { supabase } = await import('../lib/supabase');
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const res = await fetch('/api/document-templates/admin', {
+        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+      });
       if (res.status === 401) {
         setSaveError('Sesión no válida. Inicie sesión nuevamente.');
         return;
@@ -71,14 +77,18 @@ export default function TemplateEditor({ onBack }: { onBack: () => void }) {
   };
 
   const handleSave = async () => {
-    if (!selectedId || saving) { return; }
+    if (!selectedId || saving) {
+      return;
+    }
     setSaving(selectedId);
     setSaveSuccess(null);
     setSaveError(null);
 
     try {
       const { supabase } = await import('../lib/supabase');
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const token = session?.access_token;
 
       const res = await fetch('/api/document-templates', {
@@ -93,8 +103,8 @@ export default function TemplateEditor({ onBack }: { onBack: () => void }) {
       const result = await res.json();
       if (result.success) {
         setSaveSuccess(selectedId);
-        setTemplates(prev =>
-          prev.map(t => t.id === selectedId ? { ...t, system_prompt: editPrompt } : t)
+        setTemplates((prev) =>
+          prev.map((t) => (t.id === selectedId ? { ...t, system_prompt: editPrompt } : t)),
         );
         saveSuccessTimer.current = setTimeout(() => setSaveSuccess(null), 2000);
       } else {
@@ -132,13 +142,15 @@ export default function TemplateEditor({ onBack }: { onBack: () => void }) {
           <FileText className="h-4 w-4 text-brand-600" />
           <h3 className="font-semibold text-neutral-900 text-xs">Plantillas de Documentos</h3>
         </div>
-        <span className="ml-auto text-[9px] text-neutral-400">Edite los prompts usados por la IA</span>
+        <span className="ml-auto text-[9px] text-neutral-400">
+          Edite los prompts usados por la IA
+        </span>
       </div>
 
       <div className="flex min-h-0 flex-1">
         {/* Sidebar - template list */}
         <div className="w-48 shrink-0 overflow-y-auto border-neutral-200/60 border-r bg-neutral-50">
-          {templates.map(tpl => (
+          {templates.map((tpl) => (
             <button
               type="button"
               key={tpl.id}
@@ -160,7 +172,7 @@ export default function TemplateEditor({ onBack }: { onBack: () => void }) {
             <>
               <div className="flex items-center justify-between border-neutral-100 border-b bg-white px-4 py-2">
                 <span className="font-medium text-[10px] text-neutral-500">
-                  {templates.find(t => t.id === selectedId)?.label || selectedId}
+                  {templates.find((t) => t.id === selectedId)?.label || selectedId}
                 </span>
                 <div className="flex items-center gap-2">
                   {saveSuccess === selectedId && (

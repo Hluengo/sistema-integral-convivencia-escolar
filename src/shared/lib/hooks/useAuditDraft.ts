@@ -14,7 +14,9 @@ interface UseAuditDraftArgs {
 async function getAuthHeaders(): Promise<Record<string, string>> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session?.access_token) {
       headers.Authorization = `Bearer ${session.access_token}`;
     }
@@ -29,20 +31,22 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
   const [auditReport, setAuditReport] = useState<string>('');
   const [isAuditing, setIsAuditing] = useState<boolean>(false);
 
-  const [selectedDocType, setSelectedDocType] = useState<'notificacion_apertura' | 'citacion_entrevista' | 'informe_cierre_indagacion' | 'informe_concluyente'>('notificacion_apertura');
+  const [selectedDocType, setSelectedDocType] = useState<
+    | 'notificacion_apertura'
+    | 'citacion_entrevista'
+    | 'informe_cierre_indagacion'
+    | 'informe_concluyente'
+  >('notificacion_apertura');
   const [fatherName, setFatherName] = useState<string>('');
   const [draftedDocument, setDraftedDocument] = useState<string>('');
+  const [draftError, setDraftError] = useState<string | null>(null);
   const [isDrafting, setIsDrafting] = useState<boolean>(false);
-  const [copyFeedback, setCopyFeedback] = useState<boolean>(false);
-
   const isMountedRef = useRef(true);
-  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
-      if (copyTimeoutRef.current) { clearTimeout(copyTimeoutRef.current); }
     };
   }, []);
 
@@ -60,25 +64,35 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
           course: causa.estudianteCurso,
           infractionType: causa.tipoInfraccion,
           isAulaSegura: causa.comprometeAulaSegura,
-          checkedItems: causa.checklistDebidoProceso.map(item => ({ label: item.label, completado: item.completado })),
+          checkedItems: causa.checklistDebidoProceso.map((item) => ({
+            label: item.label,
+            completado: item.completado,
+          })),
           observations: causa.observaciones,
         }),
       });
       const data = await response.json();
-      if (!isMountedRef.current) { return; }
+      if (!isMountedRef.current) {
+        return;
+      }
       setAuditReport(data.success ? data.report : `**Error de Auditoría:** ${data.error}`);
     } catch (error: unknown) {
-      if (!isMountedRef.current) { return; }
+      if (!isMountedRef.current) {
+        return;
+      }
       const msg = error instanceof Error ? error.message : 'Error desconocido';
       setAuditReport(`**Error al comunicar con el servidor:** ${msg}`);
     } finally {
-      if (isMountedRef.current) { setIsAuditing(false); }
+      if (isMountedRef.current) {
+        setIsAuditing(false);
+      }
     }
   };
 
   const handleDraftDocument = async () => {
     setIsDrafting(true);
     setDraftedDocument('');
+    setDraftError(null);
     try {
       const headers = await getAuthHeaders();
       const response = await fetch('/api/draft-document', {
@@ -89,7 +103,7 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
           id: causa.id,
           studentName: causa.estudianteNombre,
           course: causa.estudianteCurso,
-          fatherName: fatherName || 'Apoderado Legal / Tutor',
+          fatherName,
           managerName: causa.responsable,
           infractionType: causa.tipoInfraccion,
           observations: causa.observaciones,
@@ -106,39 +120,38 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
         }),
       });
       const data = await response.json();
-      if (!isMountedRef.current) { return; }
-      setDraftedDocument(data.success ? data.document : `**Error de Redacción:** ${data.error}`);
+      if (!isMountedRef.current) {
+        return;
+      }
+      if (data.success) setDraftedDocument(data.document);
+      else setDraftError(data.error || 'No fue posible generar el borrador.');
     } catch (error: unknown) {
-      if (!isMountedRef.current) { return; }
+      if (!isMountedRef.current) {
+        return;
+      }
       const msg = error instanceof Error ? error.message : 'Error desconocido';
-      setDraftedDocument(`**Error de conexión:** ${msg}`);
+      setDraftError(`Error de conexión: ${msg}`);
     } finally {
-      if (isMountedRef.current) { setIsDrafting(false); }
-    }
-  };
-
-  const handleCopyToClipboard = async () => {
-    if (!navigator.clipboard) { return; }
-    try {
-      await navigator.clipboard.writeText(draftedDocument);
-      setCopyFeedback(true);
-      if (copyTimeoutRef.current) { clearTimeout(copyTimeoutRef.current); }
-      copyTimeoutRef.current = setTimeout(() => {
-        setCopyFeedback(false);
-      }, 2000);
-    } catch (err) {
-      console.warn('Clipboard no disponible (permiso denegado):', err);
+      if (isMountedRef.current) {
+        setIsDrafting(false);
+      }
     }
   };
 
   return {
-    aiSubTab, setAiSubTab,
-    auditReport, isAuditing,
-    selectedDocType, setSelectedDocType,
-    fatherName, setFatherName,
-    draftedDocument, isDrafting, copyFeedback,
+    aiSubTab,
+    setAiSubTab,
+    auditReport,
+    isAuditing,
+    selectedDocType,
+    setSelectedDocType,
+    fatherName,
+    setFatherName,
+    draftedDocument,
+    setDraftedDocument,
+    draftError,
+    isDrafting,
     handleRunAudit,
     handleDraftDocument,
-    handleCopyToClipboard,
   };
 }

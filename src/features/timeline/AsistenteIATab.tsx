@@ -8,7 +8,11 @@ import AuditPanel from './AuditPanel';
 import DraftPanel from './DraftPanel';
 
 type AiSubTab = 'auditoria' | 'borradores';
-type DocType = 'notificacion_apertura' | 'citacion_entrevista' | 'informe_cierre_indagacion' | 'informe_concluyente';
+type DocType =
+  | 'notificacion_apertura'
+  | 'citacion_entrevista'
+  | 'informe_cierre_indagacion'
+  | 'informe_concluyente';
 
 type MarkdownRenderer = ({ text }: { text: string }) => React.ReactElement;
 
@@ -22,11 +26,14 @@ interface AsistenteIATabProps {
   fatherName: string;
   setFatherName: React.Dispatch<React.SetStateAction<string>>;
   draftedDocument: string;
+  draftError: string | null;
   isDrafting: boolean;
-  copyFeedback: boolean;
+  setDraftedDocument: React.Dispatch<React.SetStateAction<string>>;
   handleRunAudit: () => Promise<void>;
   handleDraftDocument: () => Promise<void>;
-  handleCopyToClipboard: () => void;
+  studentName: string;
+  course: string;
+  caseId: string;
   CustomMarkdownRenderer: MarkdownRenderer;
 }
 
@@ -40,17 +47,24 @@ export default function AsistenteIATab({
   fatherName,
   setFatherName,
   draftedDocument,
+  draftError,
   isDrafting,
-  copyFeedback,
+  setDraftedDocument,
   handleRunAudit,
   handleDraftDocument,
-  handleCopyToClipboard,
-  CustomMarkdownRenderer
+  studentName,
+  course,
+  caseId,
+  CustomMarkdownRenderer,
 }: AsistenteIATabProps) {
   return (
     <div className="space-y-4">
       {/* Sub-tabs */}
-      <div className="flex gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50 p-1" role="tablist" aria-label="Herramientas de IA">
+      <div
+        className="flex gap-1.5 rounded-lg border border-neutral-200 bg-neutral-50 p-1"
+        role="tablist"
+        aria-label="Herramientas de IA"
+      >
         <button
           type="button"
           onClick={() => setAiSubTab('auditoria')}
@@ -93,10 +107,13 @@ export default function AsistenteIATab({
           fatherName={fatherName}
           setFatherName={setFatherName}
           draftedDocument={draftedDocument}
+          draftError={draftError}
           isDrafting={isDrafting}
-          copyFeedback={copyFeedback}
+          setDraftedDocument={setDraftedDocument}
           handleDraftDocument={handleDraftDocument}
-          handleCopyToClipboard={handleCopyToClipboard}
+          studentName={studentName}
+          course={course}
+          caseId={caseId}
           CustomMarkdownRenderer={CustomMarkdownRenderer}
         />
       )}

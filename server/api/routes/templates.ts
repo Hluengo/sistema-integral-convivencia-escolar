@@ -5,8 +5,8 @@ import { requireAuth } from '../middleware/auth.js';
 import { requireTenant } from '../middleware/requireTenant.js';
 import { requireRole } from '../middleware/requireRole.js';
 import { sanitize } from '../validators/sanitizers.js';
-import { isValidUuid } from '../../middleware/auth.js';
 import { httpsGet, httpsPatch } from '../lib/https.js';
+import type { AuthenticatedRequest } from '../../types.js';
 
 const router = Router();
 const TEMPLATE_SELECT_PUBLIC = 'id,doc_type,label,updated_at';
@@ -24,15 +24,22 @@ function getServiceRoleKey(): string {
   return process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? '';
 }
 
-router.get('/document-templates', requireAuth, requireTenant, async (_req, res) => {
+function authHeaders(req: AuthenticatedRequest): Record<string, string> {
+  const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? '';
+  return { apikey: anonKey, Authorization: `Bearer ${req.authToken}` };
+}
+
+function isTemplateId(value: string): boolean {
+  return /^tpl_[a-z0-9_]{3,100}$/i.test(value);
+}
+
+router.get('/document-templates', requireAuth, requireTenant, async (req, res) => {
   try {
+    const authReq = req as AuthenticatedRequest;
     const data = await httpsGet(
       getSupabaseHostname(),
       `/rest/v1/document_templates?select=${TEMPLATE_SELECT_PUBLIC}&order=doc_type`,
-      {
-        apikey: process.env.VITE_SUPABASE_ANON_KEY ?? '',
-        Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY ?? ''}`,
-      },
+      authHeaders(authReq),
     );
     res.json(data);
   } catch {
@@ -45,15 +52,13 @@ router.get(
   requireAuth,
   requireTenant,
   requireRole(['admin', 'direccion']),
-  async (_req, res) => {
+  async (req, res) => {
     try {
+      const authReq = req as AuthenticatedRequest;
       const data = await httpsGet(
         getSupabaseHostname(),
         `/rest/v1/document_templates?select=${TEMPLATE_SELECT_ADMIN}&order=doc_type`,
-        {
-          apikey: process.env.VITE_SUPABASE_ANON_KEY ?? '',
-          Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY ?? ''}`,
-        },
+        authHeaders(authReq),
       );
       res.json(data);
     } catch {
@@ -74,8 +79,8 @@ router.put(
       return;
     }
 
-    if (!isValidUuid(id)) {
-      res.status(400).json({ error: 'El id debe ser un UUID válido.' });
+    if (!isTemplateId(id)) {
+      res.status(400).json({ error: 'El id de plantilla no es válido.' });
       return;
     }
 
@@ -92,11 +97,16 @@ router.put(
     }
 
     try {
+      const authReq = req as AuthenticatedRequest;
       const serviceRoleKey = getServiceRoleKey();
+      if (!serviceRoleKey || !authReq.tenantId) {
+        res.status(503).json({ error: 'Servicio de plantillas no configurado.' });
+        return;
+      }
       const sanitized = sanitize(system_prompt).slice(0, 20000);
-      await httpsPatch(
+      const updated = await httpsPatch(
         getSupabaseHostname(),
-        `/rest/v1/document_templates?id=eq.${id}`,
+        `/rest/v1/document_templates?id=eq.${encodeURIComponent(id)}&tenant_id=eq.${authReq.tenantId}`,
         {
           system_prompt: sanitized,
           updated_at: new Date().toISOString(),
@@ -104,9 +114,18 @@ router.put(
         {
           apikey: serviceRoleKey,
           Authorization: `Bearer ${serviceRoleKey}`,
-          Prefer: 'return=minimal',
+          Prefer: 'return=representation',
         },
       );
+      if (
+        updated.status < 200 ||
+        updated.status >= 300 ||
+        !Array.isArray(updated.body) ||
+        updated.body.length !== 1
+      ) {
+        res.status(404).json({ error: 'Plantilla no encontrada para el establecimiento actual.' });
+        return;
+      }
       res.json({ success: true });
     } catch (error) {
       console.error('Error updating template:', error);

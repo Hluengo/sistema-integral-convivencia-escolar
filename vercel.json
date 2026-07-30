@@ -4,7 +4,7 @@
   "functions": {
     "api/index.js": {
       "maxDuration": 30,
-      "includeFiles": "node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs"
+      "includeFiles": ["node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs", "docs/leyes/**/*.md"]
     }
   },
   "headers": [

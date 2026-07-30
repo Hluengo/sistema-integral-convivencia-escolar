@@ -138,11 +138,14 @@ export default function TimelineTabPanels({
           fatherName={ctx.fatherName}
           setFatherName={ctx.setFatherName}
           draftedDocument={ctx.draftedDocument}
+          setDraftedDocument={ctx.setDraftedDocument}
+          draftError={ctx.draftError}
           isDrafting={ctx.isDrafting}
-          copyFeedback={ctx.copyFeedback}
           handleRunAudit={ctx.handleRunAudit}
           handleDraftDocument={ctx.handleDraftDocument}
-          handleCopyToClipboard={ctx.handleCopyToClipboard}
+          studentName={causa.estudianteNombre}
+          course={causa.estudianteCurso}
+          caseId={causa.id}
           CustomMarkdownRenderer={CustomMarkdownRenderer}
         />
       )}
