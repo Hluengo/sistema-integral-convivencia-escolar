@@ -47,6 +47,14 @@ describe('Modales disciplinarios accesibles', () => {
     ok(!content.includes('window.alert'));
   });
 
+  it('evita duplicar el estado de carta dentro de la pestaña Carta', () => {
+    const content = source('AnotacionesStudentDetailModal/CartasTab.tsx');
+
+    ok(!content.includes('Estado de carta'));
+    ok(content.includes('Acciones principales'));
+    ok(content.includes('<PhysicalCartaRegistrationCard'));
+  });
+
   it('los diálogos de atajos e impresión usan la primitiva compartida', () => {
     const shortcuts = source('../../components/ShortcutsModal.tsx');
     const printHint = source('docgen/components/PrintHintDialog.tsx');

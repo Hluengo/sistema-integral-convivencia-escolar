@@ -7,9 +7,7 @@ import { TEACHERS_BY_COURSE } from '@/src/lib/anotacionesUtils';
 import {
   annulCarta,
   createPendingCartaForStudent,
-  getCartaWorkflowLabel,
   markCartaProcessedManually,
-  resolveCartaWorkflowStatus,
 } from '@/src/services/cartas.service';
 import {
   getCartaProcessingBlockReason,
@@ -22,7 +20,7 @@ import {
   resolveStudentCartaTableState,
   type LetterDocType,
 } from '@/src/shared/lib/domain/disciplinaryStage';
-import { formatDate, type StudentInfo } from './constants';
+import type { StudentInfo } from './constants';
 import PhysicalCartaRegistrationCard from './PhysicalCartaRegistrationCard';
 import TextInputDialog from '@/src/shared/ui/TextInputDialog';
 
@@ -96,7 +94,6 @@ export default function CartasTab({
   const [localCarta, setLocalCarta] = useState<CartaDisciplinaria | null>(null);
   const activeCarta =
     localCarta ?? matchingCarta ?? (!suggestedDocType ? platformCurrentCarta : null);
-  const workflowStatus = resolveCartaWorkflowStatus(activeCarta);
   const [showGenerator, setShowGenerator] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -238,18 +235,7 @@ export default function CartasTab({
     await runCartaAction((carta) => annulCarta(carta.id, reason), 'Carta anulada.');
   };
 
-  const statusLabel = activeCarta
-    ? getCartaWorkflowLabel(activeCarta)
-    : activeLetterType
-      ? 'Carta sugerida'
-      : 'Sin carta requerida';
-  const originLabel = pendingSuggestion
-    ? 'nuevo PDF'
-    : activeCarta?.origin === 'physical'
-      ? 'constancia física'
-      : 'conteo Supabase';
   const canAct = Boolean(activeDocType && activeLetterType);
-  const realized = workflowStatus === 'completed';
 
   return (
     <div className="space-y-5">
@@ -260,47 +246,6 @@ export default function CartasTab({
         negativeCount={counts.negativas}
         onRegistered={onRefresh}
       />
-
-      <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
-        <div className="mb-4 flex items-center gap-2">
-          <FileText className="h-4 w-4 text-brand-600" />
-          <h3 className="text-sm font-bold text-neutral-900">Estado de carta</h3>
-        </div>
-        {activeLetterType ? (
-          <div className="grid grid-cols-1 gap-3 text-sm lg:grid-cols-2">
-            <div className="rounded-lg bg-neutral-50 p-3">
-              <p className="text-xs font-semibold text-neutral-400">Tipo de carta</p>
-              <p className="mt-1 font-bold text-neutral-900">{activeLetterType}</p>
-            </div>
-            <div className="rounded-lg bg-neutral-50 p-3">
-              <p className="text-xs font-semibold text-neutral-400">Estado del trámite</p>
-              <p className="mt-1 font-bold text-neutral-900">{statusLabel}</p>
-            </div>
-            <div className="rounded-lg bg-neutral-50 p-3">
-              <p className="text-xs font-semibold text-neutral-400">Motivo</p>
-              <p className="mt-1 font-bold text-neutral-900">
-                {activeCarta?.origin === 'physical' && realized
-                  ? `Constancia física coincidente con la etapa de ${counts.negativas} negativas`
-                  : `${negativeCount} negativas detectadas`}
-              </p>
-            </div>
-            <div className="rounded-lg bg-neutral-50 p-3">
-              <p className="text-xs font-semibold text-neutral-400">Origen de la sugerencia</p>
-              <p className="mt-1 font-bold text-neutral-900">{originLabel}</p>
-            </div>
-          </div>
-        ) : (
-          <div className="rounded-lg bg-neutral-50 p-4 text-sm text-neutral-600">
-            No hay carta requerida.
-          </div>
-        )}
-        {activeCarta && (
-          <p className="mt-3 text-xs text-neutral-500">
-            Registro Supabase: {formatDate(activeCarta.created_at)} · {activeCarta.status}
-            {realized ? ' · trámite validado' : ' · trámite pendiente de validación'}
-          </p>
-        )}
-      </section>
 
       <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
         <div className="mb-4 flex items-center justify-between gap-3">
