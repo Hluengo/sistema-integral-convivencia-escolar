@@ -67,10 +67,20 @@ export default function TimelineTabPanels({
               <button
                 type="button"
                 onClick={() => onSelectPhase(null)}
-                className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium text-slate-700 text-sm transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                className="group inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-brand-200 bg-brand-50 px-3.5 py-2 font-semibold text-brand-800 text-sm shadow-xs transition hover:border-brand-300 hover:bg-brand-100 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
               >
-                <ArrowLeft className="size-4" aria-hidden="true" />
-                Volver a la ruta
+                <span
+                  className="flex size-6 items-center justify-center rounded-full bg-brand-600 text-white transition group-hover:-translate-x-0.5"
+                  aria-hidden="true"
+                >
+                  <ArrowLeft className="size-3.5" />
+                </span>
+                <span className="flex flex-col items-start leading-tight">
+                  <span>Volver a la ruta</span>
+                  <span className="mt-0.5 font-medium text-[10px] text-brand-700">
+                    Ver las 5 fases
+                  </span>
+                </span>
               </button>
             </header>
             <ProcesoTab
