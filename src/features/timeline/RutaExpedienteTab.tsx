@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { CircleCheck, Files, ListChecks, MoveRight } from 'lucide-react';
+import { ArrowRight, CircleCheck, Files, ListChecks, MoveRight } from 'lucide-react';
 import type { Causa, FaseProcedimental } from '../../types';
 import { getCausaDeadline } from '../causas/causaPresentation';
 import { getCausaOperationalSummary } from '../causas/causaOperationalSummary';
@@ -80,14 +80,27 @@ export default function RutaExpedienteTab({
                   </span>
                   <span className="hidden h-px flex-1 bg-slate-200 sm:block" aria-hidden="true" />
                 </div>
-                <p
-                  className={`mt-2 truncate font-semibold text-[10px] sm:text-xs ${
-                    isSelected || isCurrentPhase ? 'text-slate-900' : 'text-slate-500'
-                  }`}
-                  title={phase.phase}
-                >
-                  {phase.phase}
-                </p>
+                <div className="mt-2 flex items-center justify-between gap-1">
+                  <p
+                    className={`truncate font-semibold text-[10px] sm:text-xs ${
+                      isSelected || isCurrentPhase ? 'text-slate-900' : 'text-slate-500'
+                    }`}
+                    title={phase.phase}
+                  >
+                    {phase.phase}
+                  </p>
+                  <span
+                    className={`flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 font-bold text-[8px] transition-colors ${
+                      isSelected
+                        ? 'bg-brand-600 text-white'
+                        : 'bg-brand-50 text-brand-700 group-hover:bg-brand-100'
+                    }`}
+                    aria-hidden="true"
+                  >
+                    <span className="hidden sm:inline">Abrir</span>
+                    <ArrowRight className="size-3" />
+                  </span>
+                </div>
                 <div className="mt-1 h-1 overflow-hidden rounded-full bg-slate-200">
                   <span
                     className={`block h-full rounded-full ${

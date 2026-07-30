@@ -110,6 +110,7 @@ export default function ProcessChecklist({
                   }`}
                   aria-expanded={isExpanded}
                   aria-controls={`section-${section.id}`}
+                  aria-label={`${isExpanded ? 'Ocultar' : 'Abrir'} hitos de ${section.title}`}
                 >
                   <div className="flex min-w-0 items-center gap-2">
                     <span
@@ -135,18 +136,28 @@ export default function ProcessChecklist({
                       %
                     </span>
                   </div>
-                  <span
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors ${
-                      isExpanded
-                        ? 'border-brand-600 bg-brand-600 text-white'
-                        : 'border-neutral-300 bg-white text-neutral-400 hover:border-brand-400 hover:text-brand-600'
-                    }`}
-                  >
-                    {isExpanded ? (
-                      <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
-                    ) : (
-                      <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
-                    )}
+                  <span className="flex shrink-0 items-center gap-1.5">
+                    <span
+                      className={`hidden rounded-full px-2 py-1 font-bold text-[9px] sm:inline ${
+                        isExpanded ? 'bg-brand-100 text-brand-800' : 'bg-brand-600 text-white'
+                      }`}
+                    >
+                      {isExpanded ? 'Ocultar hitos' : 'Abrir hitos'}
+                    </span>
+                    <span
+                      className={`flex h-8 w-8 items-center justify-center rounded-full border shadow-xs transition-all ${
+                        isExpanded
+                          ? 'border-brand-600 bg-brand-600 text-white'
+                          : 'border-brand-500 bg-brand-50 text-brand-700 hover:scale-105 hover:bg-brand-600 hover:text-white'
+                      }`}
+                      aria-hidden="true"
+                    >
+                      {isExpanded ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </span>
                   </span>
                 </button>
 

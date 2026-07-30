@@ -16,13 +16,7 @@ export function useChecklistRegistration({
   currentRole,
   privacyMode,
 }: UseChecklistRegistrationArgs) {
-  const [expandedStages, setExpandedStages] = useState<Record<string, boolean>>({
-    recepcion: true,
-    investigacion: true,
-    resolucion: false,
-    impugnacion: false,
-    seguimiento: false,
-  });
+  const [expandedStages, setExpandedStages] = useState<Record<string, boolean>>({});
   const [registeringItemId, setRegisteringItemId] = useState<string | null>(null);
   const [regName, setRegName] = useState<string>('');
   const [regObservations, setRegObservations] = useState<string>('');

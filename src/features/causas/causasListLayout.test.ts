@@ -121,10 +121,14 @@ describe('Listado de causas activas', () => {
   it('mantiene la bitácora y checklist como fuentes del detalle', () => {
     const panels = read('../timeline/TimelineTabPanels.tsx');
     const process = read('../timeline/ProcessChecklist.tsx');
+    const checklistRegistration = read('../../shared/lib/hooks/useChecklistRegistration.ts');
     assert.match(panels, /<BitacoraTab/);
     assert.match(process, /causa\.checklistDebidoProceso\.filter/);
     assert.match(process, /item\.registradoPor/);
     assert.match(process, /item\.fechaCompletado/);
+    assert.match(process, /Abrir hitos/);
+    assert.doesNotMatch(checklistRegistration, /recepcion: true/);
+    assert.doesNotMatch(checklistRegistration, /investigacion: true/);
   });
 
   it('usa color contextual suave en las tarjetas de resumen del expediente', () => {
