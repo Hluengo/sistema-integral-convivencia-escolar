@@ -32,7 +32,11 @@ export default function AiAdvisor() {
   ]);
   const [inputMessage, setInputMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { improveText: improveChatText, isImproving: isImprovingChat } = useTextImprovement();
+  const {
+    improveText: improveChatText,
+    isImproving: isImprovingChat,
+    error: improveChatError,
+  } = useTextImprovement();
   const messagesRef = useRef(messages);
   useEffect(() => {
     messagesRef.current = messages;
@@ -42,8 +46,9 @@ export default function AiAdvisor() {
 
   // Auto-scroll to bottom only when new messages are added (not on initial mount)
   useEffect(() => {
-    if (messages.length <= 1) { return; // skip initial greeting mount
-}
+    if (messages.length <= 1) {
+      return; // skip initial greeting mount
+    }
     scrollContainerRef.current?.scrollTo({
       top: scrollContainerRef.current.scrollHeight,
       behavior: 'smooth',
@@ -52,11 +57,15 @@ export default function AiAdvisor() {
 
   const handleImproveChat = async () => {
     const improved = await improveChatText(inputMessage);
-    if (improved) { setInputMessage(improved); }
+    if (improved) {
+      setInputMessage(improved);
+    }
   };
 
   const handleSendMessage = async (textToSend: string) => {
-    if (!textToSend.trim() || isLoading) { return; }
+    if (!textToSend.trim() || isLoading) {
+      return;
+    }
 
     const userMsg = textToSend.trim();
     setInputMessage('');
@@ -304,6 +313,11 @@ export default function AiAdvisor() {
             <Send className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
         </form>
+        {improveChatError && (
+          <p role="alert" className="mt-2 text-red-600 text-xs">
+            {improveChatError}
+          </p>
+        )}
         <div className="mt-2 text-left font-mono text-[10px] text-neutral-400">
           Las respuestas son referenciales. Consulte siempre el RIE de su sostenedor y la normativa
           vigente.

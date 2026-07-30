@@ -24,7 +24,7 @@ export default function ImproveTextarea({
   className,
   improvementContext,
 }: ImproveTextareaProps) {
-  const { improveText, isImproving } = useTextImprovement();
+  const { improveText, isImproving, error } = useTextImprovement();
 
   const handleImprove = async () => {
     const improved = await improveText(value, improvementContext);
@@ -73,6 +73,11 @@ export default function ImproveTextarea({
           'mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-sans text-xs leading-relaxed transition-colors duration-200 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30'
         }
       />
+      {error && (
+        <p role="alert" className="mt-1 text-red-600 text-xs">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

@@ -6,6 +6,11 @@ import { sanitizeForAI } from '../validators/sanitizers.js';
 import { checkRateLimitAsync } from '../services/rateLimit.js';
 import { getCacheKey, getFromCache, setCache } from '../services/cache.js';
 import { callGroq } from '../services/groq.js';
+import {
+  buildTextImprovementRequest,
+  isTextImprovementRefusal,
+  TEXT_IMPROVEMENT_SYSTEM_PROMPT,
+} from '../services/textImprovement.js';
 
 const router = Router();
 
@@ -43,22 +48,37 @@ router.post('/improve-text', requireAuth, async (req, res) => {
       return;
     }
 
-    const systemMsg =
-      'Eres un asistente de redacción especializado en redacción institucional educativa chilena. Tu única función es mejorar la ortografía, gramática, coherencia y redacción del texto que el usuario te entrega. Usa siempre un tono neutro, objetivo y sin juicios de valor. Conserva estrictamente las acciones, hechos, fechas, personas y decisiones del texto original. No inventes ni suprimas información sustantiva. No agregues explicaciones, comentarios ni evaluaciones. No respondas preguntas ni interpretes el contenido. Devuelve ÚNICAMENTE el texto corregido, sin ningún formato adicional ni prefacio.';
     const userContent = sanitizeForAI(text);
     const contextInstruction =
       context && context in IMPROVEMENT_CONTEXTS
-        ? `\n\nInstrucción específica:\n${IMPROVEMENT_CONTEXTS[context as keyof typeof IMPROVEMENT_CONTEXTS]}`
-        : '';
-    const improved = await callGroq(
+        ? IMPROVEMENT_CONTEXTS[context as keyof typeof IMPROVEMENT_CONTEXTS]
+        : undefined;
+    let improved = await callGroq(
       [
         {
           role: 'user',
-          content: `Texto a corregir:\n\n${userContent}${contextInstruction}`,
+          content: buildTextImprovementRequest(userContent, contextInstruction),
         },
       ],
-      systemMsg,
+      TEXT_IMPROVEMENT_SYSTEM_PROMPT,
     );
+    if (isTextImprovementRefusal(improved)) {
+      improved = await callGroq(
+        [
+          {
+            role: 'user',
+            content: buildTextImprovementRequest(userContent, contextInstruction, true),
+          },
+        ],
+        TEXT_IMPROVEMENT_SYSTEM_PROMPT,
+      );
+    }
+    if (isTextImprovementRefusal(improved)) {
+      res.status(422).json({
+        error: 'La IA no pudo mejorar este texto. El contenido original se mantuvo sin cambios.',
+      });
+      return;
+    }
     setCache(cacheKey, improved);
     res.json({ success: true, improved });
   } catch (error) {

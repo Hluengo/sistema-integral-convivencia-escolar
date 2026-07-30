@@ -12,20 +12,33 @@ interface ImproveInputProps {
 }
 
 export default function ImproveInput({
-  id, value, onChange, label, placeholder, required, className,
+  id,
+  value,
+  onChange,
+  label,
+  placeholder,
+  required,
+  className,
 }: ImproveInputProps) {
-  const { improveText, isImproving } = useTextImprovement();
+  const { improveText, isImproving, error } = useTextImprovement();
 
   const handleImprove = async () => {
     const improved = await improveText(value);
-    if (improved) { onChange(improved); }
+    if (improved) {
+      onChange(improved);
+    }
   };
 
   return (
     <div>
       {label && (
         <div className="flex items-center justify-between">
-          <label htmlFor={id} className="block font-semibold text-[9px] text-neutral-400 uppercase tracking-wide">{label}</label>
+          <label
+            htmlFor={id}
+            className="block font-semibold text-[9px] text-neutral-400 uppercase tracking-wide"
+          >
+            {label}
+          </label>
           <button
             type="button"
             onClick={handleImprove}
@@ -51,8 +64,16 @@ export default function ImproveInput({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={className || "mt-1.5 w-full rounded-lg border border-neutral-200 bg-neutral-50 p-2.5 text-xs transition-colors focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30"}
+        className={
+          className ||
+          'mt-1.5 w-full rounded-lg border border-neutral-200 bg-neutral-50 p-2.5 text-xs transition-colors focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30'
+        }
       />
+      {error && (
+        <p role="alert" className="mt-1 text-red-600 text-xs">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
