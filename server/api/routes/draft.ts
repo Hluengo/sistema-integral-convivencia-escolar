@@ -247,6 +247,13 @@ ${legalSources}
         });
         return;
       }
+      if (message.includes('Gemini error: 404')) {
+        res.status(503).json({
+          error:
+            'El modelo configurado de Gemini no está disponible. Revise LEGAL_DRAFT_MODEL en Vercel.',
+        });
+        return;
+      }
       throw error;
     }
 

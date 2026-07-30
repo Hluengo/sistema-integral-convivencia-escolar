@@ -2,7 +2,9 @@
 
 import { httpsPost } from '../lib/https.js';
 
-const GEMINI_MODEL = process.env.LEGAL_DRAFT_MODEL || 'gemini-2.5-flash';
+// El alias oficial sigue la versión Flash disponible y evita dejar el flujo
+// detenido cuando Google retira un identificador estable para cuentas nuevas.
+const GEMINI_MODEL = process.env.LEGAL_DRAFT_MODEL || 'gemini-flash-latest';
 
 function getApiKey(): string {
   const key = process.env.GEMINI_API_KEY;

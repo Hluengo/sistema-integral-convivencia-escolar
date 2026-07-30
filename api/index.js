@@ -2025,7 +2025,7 @@ var audit_default = router3;
 import { Router as Router4 } from 'express';
 
 // server/api/services/gemini.ts
-var GEMINI_MODEL = process.env.LEGAL_DRAFT_MODEL || 'gemini-2.5-flash';
+var GEMINI_MODEL = process.env.LEGAL_DRAFT_MODEL || 'gemini-flash-latest';
 function getApiKey2() {
   const key = process.env.GEMINI_API_KEY;
   if (!key) {
@@ -2462,12 +2462,17 @@ ${docType === 'citacion_entrevista' ? getTemplateFallback(docType) : templatePro
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error al contactar Gemini.';
       if (message.includes('GEMINI_API_KEY no configurada')) {
-        res
-          .status(503)
-          .json({
-            error:
-              'La redacci\xF3n de documentos a\xFAn no est\xE1 configurada. Configure GEMINI_API_KEY en Vercel.',
-          });
+        res.status(503).json({
+          error:
+            'La redacci\xF3n de documentos a\xFAn no est\xE1 configurada. Configure GEMINI_API_KEY en Vercel.',
+        });
+        return;
+      }
+      if (message.includes('Gemini error: 404')) {
+        res.status(503).json({
+          error:
+            'El modelo configurado de Gemini no est\xE1 disponible. Revise LEGAL_DRAFT_MODEL en Vercel.',
+        });
         return;
       }
       throw error;
