@@ -105,6 +105,35 @@ export default function CausasView({
         </div>
       </div>
 
+      {/* Fase filter tabs — full-width, matching Anotaciones */}
+      <div
+        className="inline-flex flex-wrap gap-1 rounded-xl bg-neutral-100 p-1"
+        role="tablist"
+        aria-label="Filtro por fase"
+      >
+        {(
+          ['Todas', 'Recepción', 'Investigación', 'Resolución', 'Apelación', 'Seguimiento'] as const
+        ).map((fase) => (
+          <button
+            key={fase}
+            type="button"
+            onClick={() => {
+              setSelectedFaseFilter(fase);
+              setSelectedCausaId('');
+            }}
+            role="tab"
+            aria-selected={selectedFaseFilter === fase}
+            className={`rounded-lg px-3.5 py-1.5 font-semibold text-sm transition-colors duration-150 ${
+              selectedFaseFilter === fase
+                ? 'bg-white text-neutral-900 shadow-sm'
+                : 'text-neutral-500 hover:text-neutral-700'
+            }`}
+          >
+            {fase}
+          </button>
+        ))}
+      </div>
+
       {/* Mobile tab switcher */}
       {selectedCausa && selectedCausa.estadoActual !== EstadoCausa.CAUSA_CERRADA && (
         <div
@@ -152,49 +181,11 @@ export default function CausasView({
               : 'block'
           }`}
         >
-          <div className="space-y-3">
-            <div className="flex items-baseline gap-2 px-1">
-              <h3 className="font-bold text-neutral-900 text-sm">Expedientes</h3>
-              <span className="font-medium text-neutral-400 text-xs">
-                {filteredCausas.length} resultados
-              </span>
-            </div>
-
-            {/* Fase filter tabs */}
-            <div
-              className="inline-flex max-w-full flex-wrap gap-1 rounded-xl bg-neutral-100 p-1"
-              role="tablist"
-              aria-label="Filtro por fase"
-            >
-              {(
-                [
-                  'Todas',
-                  'Recepción',
-                  'Investigación',
-                  'Resolución',
-                  'Apelación',
-                  'Seguimiento',
-                ] as const
-              ).map((fase) => (
-                <button
-                  key={fase}
-                  type="button"
-                  onClick={() => {
-                    setSelectedFaseFilter(fase);
-                    setSelectedCausaId('');
-                  }}
-                  role="tab"
-                  aria-selected={selectedFaseFilter === fase}
-                  className={`cursor-pointer rounded-lg px-3.5 py-1.5 font-semibold text-sm transition-colors duration-150 ${
-                    selectedFaseFilter === fase
-                      ? 'bg-white text-neutral-900 shadow-sm'
-                      : 'text-neutral-500 hover:text-neutral-700'
-                  }`}
-                >
-                  {fase}
-                </button>
-              ))}
-            </div>
+          <div className="flex items-baseline gap-2 px-1">
+            <h3 className="font-bold text-neutral-900 text-sm">Expedientes</h3>
+            <span className="font-medium text-neutral-400 text-xs">
+              {filteredCausas.length} resultados
+            </span>
           </div>
 
           {/* Directory scroll panel */}
