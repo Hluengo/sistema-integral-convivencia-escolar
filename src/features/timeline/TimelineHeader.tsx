@@ -7,6 +7,7 @@ import type { Causa, UserRole } from '../../types';
 import { AlertTriangle, CalendarClock, LockKeyhole, Pencil, Trash2, X } from 'lucide-react';
 import { getCausaDeadline, getCausaStatus } from '../causas/causaPresentation';
 import { formatChileDate } from '../../shared/lib/dateTime';
+import { DetailModalHeader } from '../../shared/ui/DetailModal';
 
 interface TimelineHeaderProps {
   causa: Causa;
@@ -39,39 +40,32 @@ export default function TimelineHeader({
 
   return (
     <>
-      <header className="border-neutral-100 border-b px-4 py-4 sm:px-6">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50">
-              <span className="font-bold text-brand-600 text-sm">
-                {displayName.charAt(0).toUpperCase()}
-              </span>
-            </div>
-            <div className="min-w-0">
-              <h2 className="truncate font-bold text-base text-neutral-900">{displayName}</h2>
-              <div className="mt-0.5 flex flex-wrap items-center gap-2 text-neutral-500 text-xs">
-                <span>{causa.estudianteCurso || 'Sin curso'}</span>
-                <span className="font-mono">{causa.id}</span>
-                <span
-                  className={`inline-flex items-center rounded-full px-2 py-0.5 font-bold ${
-                    causa.comprometeAulaSegura
-                      ? 'bg-red-100 text-red-700'
-                      : 'bg-amber-100 text-amber-700'
-                  }`}
-                >
-                  {causa.comprometeAulaSegura ? 'Aula Segura' : causa.tipoInfraccion}
-                </span>
-                <span>{getCausaStatus(causa)}</span>
-                <span className="inline-flex items-center gap-1">
-                  <CalendarClock className="size-3.5" aria-hidden="true" />
-                  {deadline.text}
-                </span>
-                <span>Apertura: {formatChileDate(causa.fechaApertura)}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex shrink-0 items-center gap-1">
+      <DetailModalHeader
+        avatarInitial={displayName.charAt(0).toUpperCase()}
+        title={displayName}
+        metadata={
+          <>
+            <span>{causa.estudianteCurso || 'Sin curso'}</span>
+            <span className="font-mono">{causa.id}</span>
+            <span
+              className={`inline-flex items-center rounded-full px-2 py-0.5 font-bold ${
+                causa.comprometeAulaSegura
+                  ? 'bg-red-100 text-red-700'
+                  : 'bg-amber-100 text-amber-700'
+              }`}
+            >
+              {causa.comprometeAulaSegura ? 'Aula Segura' : causa.tipoInfraccion}
+            </span>
+            <span>{getCausaStatus(causa)}</span>
+            <span className="inline-flex items-center gap-1">
+              <CalendarClock className="size-3.5" aria-hidden="true" />
+              {deadline.text}
+            </span>
+            <span>Apertura: {formatChileDate(causa.fechaApertura)}</span>
+          </>
+        }
+        actions={
+          <>
             {canEdit && (
               <>
                 <button
@@ -124,9 +118,9 @@ export default function TimelineHeader({
                 <X className="size-5" aria-hidden="true" />
               </button>
             )}
-          </div>
-        </div>
-      </header>
+          </>
+        }
+      />
 
       {breaches.length > 0 && (
         <div

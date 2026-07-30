@@ -11,10 +11,16 @@ const source = (relativePath: string) => readFileSync(resolve(featureDir, relati
 describe('Modales disciplinarios accesibles', () => {
   it('la ficha individual usa el diálogo compartido y no un fondo nativo transparente', () => {
     const content = source('AnotacionesStudentDetailModal.tsx');
+    const detailModal = source('../../shared/ui/DetailModal.tsx');
 
     ok(content.includes('<Dialog open'));
     ok(content.includes('<DialogTitle'));
     ok(content.includes('<DialogDescription'));
+    ok(content.includes('<DetailModalContent'));
+    ok(content.includes('<DetailModalHeader'));
+    ok(content.includes('<DetailModalTabs'));
+    ok(detailModal.includes('h-[min(92vh,900px)]'));
+    ok(detailModal.includes('flex-1 min-h-0 overflow-y-auto'));
     ok(!content.includes('<dialog'));
     ok(!content.includes('bg-transparent'));
   });

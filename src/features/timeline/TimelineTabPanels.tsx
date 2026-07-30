@@ -11,6 +11,7 @@ import AsistenteIATab from './AsistenteIATab';
 import ResumenTab from './ResumenTab';
 import { useTimelineContext } from '../../context/useTimelineContext';
 import { PHASE_TAB_TO_NAME, type TimelineTab } from './timelineTabs';
+import { DetailModalBody } from '../../shared/ui/DetailModal';
 
 interface TimelineTabPanelsProps {
   activeTab: TimelineTab;
@@ -31,7 +32,7 @@ export default function TimelineTabPanels({
   const selectedPhase = PHASE_TAB_TO_NAME[activeTab];
 
   return (
-    <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-5">
+    <DetailModalBody className="space-y-4">
       {activeTab === 'resumen' && <ResumenTab causa={causa} breaches={breaches} />}
 
       {selectedPhase && (
@@ -101,6 +102,6 @@ export default function TimelineTabPanels({
           CustomMarkdownRenderer={CustomMarkdownRenderer}
         />
       )}
-    </div>
+    </DetailModalBody>
   );
 }

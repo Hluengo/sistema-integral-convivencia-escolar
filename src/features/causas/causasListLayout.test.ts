@@ -71,6 +71,7 @@ describe('Listado de causas activas', () => {
     assert.match(view, /<CausaDetailModal/);
     assert.match(modal, /<Dialog open=/);
     assert.match(modal, /onOpenChange/);
+    assert.match(modal, /<DetailModalContent/);
     for (const phase of ['Recepción', 'Investigación', 'Resolución', 'Apelación', 'Seguimiento']) {
       assert.match(tabs, new RegExp(phase));
     }

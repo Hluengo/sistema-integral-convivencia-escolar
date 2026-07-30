@@ -21,7 +21,14 @@ import HistoryTab from './AnotacionesStudentDetailModal/HistoryTab';
 import CartasTab from './AnotacionesStudentDetailModal/CartasTab';
 import EditAnnotationsTab from './AnotacionesStudentDetailModal/EditAnnotationsTab';
 import { useDisciplinaryData } from './AnotacionesStudentDetailModal/hooks/useDisciplinaryData';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/src/shared/ui/Dialog';
+import { Dialog, DialogDescription, DialogTitle } from '@/src/shared/ui/Dialog';
+import {
+  DetailModalBody,
+  DetailModalContent,
+  DetailModalHeader,
+  DetailModalTabs,
+  type DetailModalTab,
+} from '@/src/shared/ui/DetailModal';
 
 const Skeleton = memo(function Skeleton({ className = '' }: { className?: string }) {
   return <div className={`animate-pulse rounded-xl bg-neutral-200 ${className}`} />;
@@ -174,39 +181,28 @@ export default function AnotacionesStudentDetailModal({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent
-        hideClose
-        className="max-h-[calc(100vh-2rem)] max-w-6xl overflow-hidden rounded-xl p-0"
-      >
+      <DetailModalContent ariaLabel={`Ficha disciplinaria de ${student.full_name}`}>
         <DialogTitle className="sr-only">Ficha disciplinaria de {student.full_name}</DialogTitle>
         <DialogDescription className="sr-only">
           Revisión del estado, anotaciones, cartas e historial disciplinario del estudiante.
         </DialogDescription>
-        <div className="border-b border-neutral-100 px-4 py-4 sm:px-6">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50">
-                <span className="text-sm font-bold text-brand-600">
-                  {student.full_name.charAt(0)}
-                </span>
-              </div>
-              <div className="min-w-0">
-                <h2 className="truncate text-base font-bold text-neutral-900">
-                  {privacyMode ? maskName(student.full_name, privacyMode) : student.full_name}
-                </h2>
-                <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
-                  <span>{student.course_name || student.course_id || 'Sin curso'}</span>
-                  {student.rut && <span>{maskRut(student.rut, privacyMode)}</span>}
-                  <span
-                    className={`inline-flex items-center rounded-full px-2 py-0.5 font-bold ${stageStyle.bg} ${stageStyle.text}`}
-                  >
-                    {stage.label}
-                  </span>
-                  <span>{counts.negativas} negativas</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
+        <DetailModalHeader
+          avatarInitial={student.full_name.charAt(0).toUpperCase()}
+          title={privacyMode ? maskName(student.full_name, privacyMode) : student.full_name}
+          metadata={
+            <>
+              <span>{student.course_name || student.course_id || 'Sin curso'}</span>
+              {student.rut && <span>{maskRut(student.rut, privacyMode)}</span>}
+              <span
+                className={`inline-flex items-center rounded-full px-2 py-0.5 font-bold ${stageStyle.bg} ${stageStyle.text}`}
+              >
+                {stage.label}
+              </span>
+              <span>{counts.negativas} negativas</span>
+            </>
+          }
+          actions={
+            <>
               <button
                 type="button"
                 aria-label={privacyMode ? 'Desactivar privacidad' : 'Activar privacidad'}
@@ -224,32 +220,21 @@ export default function AnotacionesStudentDetailModal({
               >
                 <X className="h-5 w-5" />
               </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white px-4 pb-2 sm:px-6">
-          <div className="flex gap-1 overflow-x-auto rounded-xl bg-neutral-100/60 p-1">
-            {(Object.keys(TAB_ICONS) as ActiveTab[]).map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => setActiveTab(tab)}
-                className={`flex min-w-fit flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                  activeTab === tab
-                    ? 'bg-white text-brand-700 shadow-sm'
-                    : 'text-neutral-500 hover:bg-white/50 hover:text-neutral-700'
-                }`}
-              >
-                {TAB_ICONS[tab]}
-                {TAB_LABELS[tab]}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="h-[70vh] overflow-y-auto p-4 sm:p-6">{renderTabContent()}</div>
-      </DialogContent>
+            </>
+          }
+        />
+        <DetailModalTabs
+          activeTab={activeTab}
+          ariaLabel="Secciones de la ficha disciplinaria"
+          onChange={setActiveTab}
+          tabs={(Object.keys(TAB_ICONS) as ActiveTab[]).map((tab): DetailModalTab<ActiveTab> => ({
+            id: tab,
+            label: TAB_LABELS[tab],
+            icon: TAB_ICONS[tab],
+          }))}
+        />
+        <DetailModalBody>{renderTabContent()}</DetailModalBody>
+      </DetailModalContent>
     </Dialog>
   );
 }

@@ -1,6 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../../shared/ui/Dialog';
+import { Dialog, DialogDescription, DialogTitle } from '../../shared/ui/Dialog';
+import { DetailModalContent } from '../../shared/ui/DetailModal';
 import type { Causa } from '../../types';
 import InteractiveTimeline from '../../components/InteractiveTimeline';
 
@@ -19,10 +20,8 @@ export default function CausaDetailModal({
 }: CausaDetailModalProps) {
   return (
     <Dialog open={Boolean(causa)} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent
-        hideClose
-        className="flex h-[min(92vh,900px)] max-h-[92vh] w-[min(96vw,1280px)] max-w-none flex-col overflow-hidden p-0"
-        aria-label={causa ? `Gestión del expediente ${causa.id}` : 'Gestión del expediente'}
+      <DetailModalContent
+        ariaLabel={causa ? `Gestión del expediente ${causa.id}` : 'Gestión del expediente'}
       >
         <DialogTitle className="sr-only">
           {causa ? `Expediente ${causa.id}` : 'Expediente'}
@@ -45,7 +44,7 @@ export default function CausaDetailModal({
             onClose={onClose}
           />
         )}
-      </DialogContent>
+      </DetailModalContent>
     </Dialog>
   );
 }
