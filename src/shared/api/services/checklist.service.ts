@@ -3,6 +3,7 @@
 import { supabase } from '../lib/supabase';
 import type { ChecklistItem } from '../../../types';
 import { useAuthStore } from '../../../stores/authStore';
+import { CHECKLIST_CONFLICT_TARGET } from './checklistConflict';
 import { normalizeDocumentPath } from './storage.service';
 
 export async function saveChecklist(causaId: string, items: ChecklistItem[]): Promise<boolean> {
@@ -31,7 +32,7 @@ export async function saveChecklist(causaId: string, items: ChecklistItem[]): Pr
 
   const { error: upsertError } = await supabase
     .from('checklist_items')
-    .upsert(rows, { onConflict: 'id' });
+    .upsert(rows, { onConflict: CHECKLIST_CONFLICT_TARGET });
 
   if (upsertError) {
     console.error('Error upserting checklist items:', upsertError.message || upsertError);
