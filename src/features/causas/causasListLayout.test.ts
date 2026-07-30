@@ -63,13 +63,14 @@ describe('Listado de causas activas', () => {
     assert.match(table, /Gestionar expediente/);
   });
 
-  it('abre un modal accesible y mueve el trabajo de fases a la ruta del expediente', () => {
+  it('abre un modal accesible, mueve el trabajo de fases a la ruta y centraliza el asistente legal', () => {
     const view = read('MainContent/CausasView.tsx');
     const modal = read('CausaDetailModal.tsx');
     const tabs = read('../timeline/TimelineTabs.tsx');
     const summary = read('../timeline/ResumenTab.tsx');
     const route = read('../timeline/RutaExpedienteTab.tsx');
     const panels = read('../timeline/TimelineTabPanels.tsx');
+    const advisor = read('MainContent/AdvisorView.tsx');
     const operationalSummary = read('causaOperationalSummary.ts');
 
     assert.match(view, /<CausaDetailModal/);
@@ -79,7 +80,12 @@ describe('Listado de causas activas', () => {
     assert.match(tabs, /Resumen/);
     assert.match(tabs, /Ruta del expediente/);
     assert.match(tabs, /Historial/);
-    assert.match(tabs, /Asistente legal/);
+    assert.doesNotMatch(tabs, /Asistente legal/);
+    assert.match(advisor, /Consulta legal/);
+    assert.match(advisor, /Redacción documentos/);
+    assert.match(advisor, /Plantillas/);
+    assert.match(advisor, /Auditoría legal/);
+    assert.match(advisor, /legal-case-selector/);
     assert.doesNotMatch(tabs, /Recepción/);
     for (const phase of ['Recepción', 'Investigación', 'Resolución', 'Apelación', 'Seguimiento']) {
       assert.match(operationalSummary, new RegExp(phase));
@@ -172,5 +178,18 @@ describe('Listado de causas activas', () => {
     const app = read('../../app/App.tsx');
     assert.match(app, /setSelectedCausaId\(''\)/);
     assert.doesNotMatch(app, /setSelectedCausaId\(causasQuery\.data\[0\]/);
+  });
+
+  it('mantiene el borrador contextual y simplifica su edición antes de imprimir', () => {
+    const workspace = read('MainContent/CaseLegalWorkspace.tsx');
+    const draft = read('../timeline/DraftPanel.tsx');
+
+    assert.match(workspace, /useAuditDraft\(\{ causa \}\)/);
+    assert.match(workspace, /<DraftPanel/);
+    assert.match(workspace, /<AuditPanel/);
+    assert.match(draft, /requiresResponsible/);
+    assert.match(draft, /selectedDocType === 'notificacion_apertura'/);
+    assert.match(draft, /<details/);
+    assert.match(draft, /Ver vista previa para impresión Oficio/);
   });
 });

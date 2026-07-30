@@ -36,32 +36,6 @@ interface TimelineContextValue {
   handleRemoveDocument: (itemId: string, fileName?: string) => Promise<void>;
 
   createManualLog: (input: ManualBitacoraEntryInput) => Promise<void>;
-
-  aiSubTab: 'auditoria' | 'borradores';
-  setAiSubTab: React.Dispatch<React.SetStateAction<'auditoria' | 'borradores'>>;
-  auditReport: string;
-  isAuditing: boolean;
-  selectedDocType:
-    | 'notificacion_apertura'
-    | 'citacion_entrevista'
-    | 'informe_cierre_indagacion'
-    | 'informe_concluyente';
-  setSelectedDocType: React.Dispatch<
-    React.SetStateAction<
-      | 'notificacion_apertura'
-      | 'citacion_entrevista'
-      | 'informe_cierre_indagacion'
-      | 'informe_concluyente'
-    >
-  >;
-  fatherName: string;
-  setFatherName: React.Dispatch<React.SetStateAction<string>>;
-  draftedDocument: string;
-  setDraftedDocument: React.Dispatch<React.SetStateAction<string>>;
-  draftError: string | null;
-  isDrafting: boolean;
-  handleRunAudit: () => Promise<void>;
-  handleDraftDocument: () => Promise<void>;
 }
 
 export const TimelineContext = createContext<TimelineContextValue | null>(null);

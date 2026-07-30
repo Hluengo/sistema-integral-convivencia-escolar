@@ -158,7 +158,14 @@ export default function MainContent({
       {currentView === 'informes' && (
         <ErrorBoundary>
           <Suspense fallback={<AdvisorFallback />}>
-            <AdvisorView />
+            <AdvisorView
+              causas={causas}
+              selectedCausa={selectedCausa}
+              selectedCausaId={selectedCausaId}
+              isCausaDetailLoading={isCausaDetailLoading}
+              privacyMode={privacyMode}
+              onSelectCausa={setSelectedCausaId}
+            />
           </Suspense>
         </ErrorBoundary>
       )}

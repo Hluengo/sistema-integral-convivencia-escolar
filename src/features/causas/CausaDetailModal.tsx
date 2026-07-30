@@ -27,7 +27,7 @@ export default function CausaDetailModal({
           {causa ? `Expediente ${causa.id}` : 'Expediente'}
         </DialogTitle>
         <DialogDescription className="sr-only">
-          Gestión completa del debido proceso, sus hitos, bitácora y asistencia legal.
+          Gestión completa del debido proceso, sus hitos, documentos y bitácora.
         </DialogDescription>
         {causa && isLoading && (
           <div className="flex flex-1 items-center justify-center p-6" role="status">

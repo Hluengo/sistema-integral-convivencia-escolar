@@ -3,12 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
 import { ArrowLeft, ListChecks } from 'lucide-react';
 import type { Causa, FaseProcedimental } from '../../types';
 import ProcesoTab from './ProcesoTab';
 import BitacoraTab from './BitacoraTab';
-import AsistenteIATab from './AsistenteIATab';
 import ResumenTab from './ResumenTab';
 import RutaExpedienteTab from './RutaExpedienteTab';
 import { useTimelineContext } from '../../context/useTimelineContext';
@@ -19,7 +17,6 @@ interface TimelineTabPanelsProps {
   activeTab: TimelineTab;
   causa: Causa;
   currentFase: string;
-  CustomMarkdownRenderer: ({ text }: { text: string }) => React.ReactElement;
   breaches: string[];
   selectedPhase: FaseProcedimental | null;
   onSelectPhase: (phase: FaseProcedimental | null) => void;
@@ -29,7 +26,6 @@ export default function TimelineTabPanels({
   activeTab,
   causa,
   currentFase,
-  CustomMarkdownRenderer,
   breaches,
   selectedPhase,
   onSelectPhase,
@@ -124,29 +120,6 @@ export default function TimelineTabPanels({
           causa={causa}
           currentRole={ctx.currentRole}
           onCreateManualEntry={ctx.createManualLog}
-        />
-      )}
-
-      {activeTab === 'asistente_ia' && (
-        <AsistenteIATab
-          aiSubTab={ctx.aiSubTab}
-          setAiSubTab={ctx.setAiSubTab}
-          auditReport={ctx.auditReport}
-          isAuditing={ctx.isAuditing}
-          selectedDocType={ctx.selectedDocType}
-          setSelectedDocType={ctx.setSelectedDocType}
-          fatherName={ctx.fatherName}
-          setFatherName={ctx.setFatherName}
-          draftedDocument={ctx.draftedDocument}
-          setDraftedDocument={ctx.setDraftedDocument}
-          draftError={ctx.draftError}
-          isDrafting={ctx.isDrafting}
-          handleRunAudit={ctx.handleRunAudit}
-          handleDraftDocument={ctx.handleDraftDocument}
-          studentName={causa.estudianteNombre}
-          course={causa.estudianteCurso}
-          caseId={causa.id}
-          CustomMarkdownRenderer={CustomMarkdownRenderer}
         />
       )}
     </DetailModalBody>

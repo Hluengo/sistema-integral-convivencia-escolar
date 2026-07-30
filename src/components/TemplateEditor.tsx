@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Save, Loader2, CheckCircle, AlertCircle, FileText, ArrowLeft } from 'lucide-react';
+import { Save, Loader2, CheckCircle, AlertCircle, FileText } from 'lucide-react';
 import { TextBlockSkeleton } from './Skeleton';
 
 interface Template {
@@ -22,7 +22,7 @@ const DOC_TYPE_LABELS: Record<string, string> = {
   informe_concluyente: 'Informe Concluyente',
 };
 
-export default function TemplateEditor({ onBack }: { onBack: () => void }) {
+export default function TemplateEditor() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
@@ -128,23 +128,18 @@ export default function TemplateEditor({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header */}
-      <div className="flex items-center gap-3 border-neutral-200/60 border-b bg-white px-4 py-3">
-        <button
-          type="button"
-          onClick={onBack}
-          className="rounded-lg p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700"
-          aria-label="Volver al asesor"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
-        <div className="flex items-center gap-2">
-          <FileText className="h-4 w-4 text-brand-600" />
-          <h3 className="font-semibold text-neutral-900 text-xs">Plantillas de Documentos</h3>
-        </div>
-        <span className="ml-auto text-[9px] text-neutral-400">
-          Edite los prompts usados por la IA
+      <div className="flex items-start gap-3 border-neutral-200/60 border-b bg-white px-4 py-3">
+        <span className="rounded-lg bg-brand-50 p-2 text-brand-700" aria-hidden="true">
+          <FileText className="h-4 w-4" />
         </span>
+        <div className="flex items-center gap-2">
+          <div>
+            <h3 className="font-semibold text-neutral-900 text-sm">Administración de plantillas</h3>
+            <p className="mt-0.5 text-[10px] text-neutral-500">
+              Solo perfiles autorizados pueden modificar los prompts para futuras generaciones.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="flex min-h-0 flex-1">

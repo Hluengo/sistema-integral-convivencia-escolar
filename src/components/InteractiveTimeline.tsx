@@ -13,7 +13,6 @@ import { useTimelineController } from '@/src/hooks/useTimelineController';
 import { TimelineProvider } from '@/src/context/TimelineContext';
 import { useAppContext } from '@/src/context/useAppContext';
 import ConfirmDialog from './ConfirmDialog';
-import MarkdownRenderer from './InteractiveTimeline/MarkdownRenderer';
 import { useBreaches } from './InteractiveTimeline/hooks/useBreaches';
 import type { TimelineTab } from '../features/timeline/timelineTabs';
 import ForceCloseCausaDialog from '../features/causas/ForceCloseCausaDialog';
@@ -118,7 +117,6 @@ export default function InteractiveTimeline({
           activeTab={activeTab}
           causa={causa}
           currentFase={currentFase}
-          CustomMarkdownRenderer={MarkdownRenderer}
           breaches={breaches}
           selectedPhase={selectedPhase}
           onSelectPhase={setSelectedPhase}

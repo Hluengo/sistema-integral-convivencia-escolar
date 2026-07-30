@@ -3,7 +3,7 @@
 import type React from 'react';
 import { forwardRef, useMemo, useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
-import { FileText, RefreshCw, FileSignature, Printer, PencilLine } from 'lucide-react';
+import { Eye, FileText, RefreshCw, FileSignature, Printer, PencilLine } from 'lucide-react';
 import { LOGO_URL } from '@/src/lib/logoBase64';
 import { LetterInstitutionalHeader } from '@/src/features/anotaciones/docgen/DocumentPreview/SharedComponents';
 import './official-document.css';
@@ -57,6 +57,8 @@ export default function DraftPanel({
 }: DraftPanelProps) {
   const printRef = useRef<HTMLDivElement>(null);
   const documentTitle = DOCUMENT_TITLES[selectedDocType];
+  const requiresResponsible =
+    selectedDocType === 'notificacion_apertura' || selectedDocType === 'citacion_entrevista';
   const date = useMemo(
     () =>
       new Intl.DateTimeFormat('es-CL', { dateStyle: 'long', timeZone: 'America/Santiago' }).format(
@@ -105,24 +107,26 @@ export default function DraftPanel({
         </select>
       </div>
 
-      <div>
-        <label
-          htmlFor="father-name"
-          className="block font-semibold text-[10px] uppercase tracking-wider text-neutral-500"
-        >
-          Nombre del apoderado/a o adulto responsable
-        </label>
-        <input
-          id="father-name"
-          aria-label="Nombre del apoderado o adulto responsable"
-          type="text"
-          spellCheck={false}
-          value={fatherName}
-          onChange={(event) => setFatherName(event.target.value)}
-          placeholder="Ej. Juan Pérez González"
-          className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-2.5 font-medium text-xs text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-        />
-      </div>
+      {requiresResponsible && (
+        <div>
+          <label
+            htmlFor="father-name"
+            className="block font-semibold text-[10px] uppercase tracking-wider text-neutral-500"
+          >
+            Nombre del apoderado/a o adulto responsable
+          </label>
+          <input
+            id="father-name"
+            aria-label="Nombre del apoderado o adulto responsable"
+            type="text"
+            spellCheck={false}
+            value={fatherName}
+            onChange={(event) => setFatherName(event.target.value)}
+            placeholder="Ej. Juan Pérez González"
+            className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-2.5 font-medium text-xs text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+          />
+        </div>
+      )}
 
       <button
         type="button"
@@ -167,22 +171,25 @@ export default function DraftPanel({
             spellCheck={false}
           />
 
-          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-slate-100 p-3">
-            <p className="mb-2 font-semibold text-[10px] uppercase tracking-wide text-slate-500">
-              Vista previa para impresión Oficio
-            </p>
-            <div className="origin-top-left scale-[0.42]" style={{ width: '238%' }}>
-              <OfficialDraftDocument
-                title={documentTitle}
-                studentName={studentName}
-                course={course}
-                caseId={caseId}
-                date={date}
-                text={draftedDocument}
-                CustomMarkdownRenderer={CustomMarkdownRenderer}
-              />
+          <details className="overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+            <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 font-semibold text-[11px] text-slate-700 marker:hidden">
+              <Eye className="size-4 text-brand-600" aria-hidden="true" />
+              Ver vista previa para impresión Oficio
+            </summary>
+            <div className="overflow-x-auto border-slate-200 border-t p-3">
+              <div className="origin-top-left scale-[0.42]" style={{ width: '238%' }}>
+                <OfficialDraftDocument
+                  title={documentTitle}
+                  studentName={studentName}
+                  course={course}
+                  caseId={caseId}
+                  date={date}
+                  text={draftedDocument}
+                  CustomMarkdownRenderer={CustomMarkdownRenderer}
+                />
+              </div>
             </div>
-          </div>
+          </details>
 
           <OfficialDraftDocument
             ref={printRef}

@@ -27,7 +27,6 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
 }
 
 export function useAuditDraft({ causa }: UseAuditDraftArgs) {
-  const [aiSubTab, setAiSubTab] = useState<'auditoria' | 'borradores'>('auditoria');
   const [auditReport, setAuditReport] = useState<string>('');
   const [isAuditing, setIsAuditing] = useState<boolean>(false);
 
@@ -103,7 +102,10 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
           id: causa.id,
           studentName: causa.estudianteNombre,
           course: causa.estudianteCurso,
-          fatherName,
+          fatherName:
+            selectedDocType === 'notificacion_apertura' || selectedDocType === 'citacion_entrevista'
+              ? fatherName
+              : '',
           managerName: causa.responsable,
           infractionType: causa.tipoInfraccion,
           observations: causa.observaciones,
@@ -139,8 +141,6 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
   };
 
   return {
-    aiSubTab,
-    setAiSubTab,
     auditReport,
     isAuditing,
     selectedDocType,
