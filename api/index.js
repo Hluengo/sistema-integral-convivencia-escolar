@@ -2284,7 +2284,18 @@ function isDocType(value) {
 }
 function getTemplateFallback(docType) {
   if (docType === 'citacion_entrevista') {
-    return `Redacta una citaci\xF3n institucional para entregar la Notificaci\xF3n de Apertura de Indagaci\xF3n de Convivencia Escolar. No es una citaci\xF3n de descargos. Solicita contactar y concurrir al establecimiento dentro de las pr\xF3ximas 24 horas desde la recepci\xF3n de la citaci\xF3n; si la disponibilidad horaria lo impide, solicita coordinar la entrevista a la brevedad posible. No fijes un d\xEDa u hora obligatorios. Incluye prop\xF3sito, canal de coordinaci\xF3n, car\xE1cter informativo del acto y constancia de recepci\xF3n si corresponde.`;
+    return `Redacta una citaci\xF3n breve, clara y respetuosa para la ENTREGA de la Notificaci\xF3n de Apertura de Indagaci\xF3n de Convivencia Escolar. No es una citaci\xF3n de descargos ni una entrevista de investigaci\xF3n.
+
+Usa esta estructura, sin crear secciones adicionales:
+1. Saludo: "Estimado(a) Sr./Sra. [apoderado/a]".
+2. Solicitud de asistencia presencial, obligatoria y urgente, emitida desde la Coordinaci\xF3n de Ciclo correspondiente. Si el curso permite identificar ciclo secundario, usa "Coordinaci\xF3n de Ciclo Secundario".
+3. Explica que el \xFAnico prop\xF3sito es notificar formalmente el "Informe de Apertura de Indagaci\xF3n de Convivencia Escolar" en que se encuentra involucrado/a el/la estudiante. Menciona las disposiciones y protocolos del Reglamento de Convivencia Escolar 2026, sin agregar normas, art\xEDculos ni calificaciones de responsabilidad.
+4. Solicita concurrir dentro de las pr\xF3ximas 24 horas por razones de resguardo y debido proceso.
+5. Ofrece dos alternativas editables de atenci\xF3n: 08:00 a 12:00 horas y 14:40 a 16:30 horas, ambas para una fecha dentro de las pr\xF3ximas 24 horas. Solo escribe fecha, d\xEDa o "ma\xF1ana" si ese dato viene expresamente en el dossier; de lo contrario, usa el marcador "[d\xEDa y fecha dentro de las pr\xF3ximas 24 horas]". No inventes una fecha concreta.
+6. Pide confirmar a la brevedad por correo o a trav\xE9s de Secretar\xEDa del Ciclo. Indica que, si ninguna alternativa es posible, se debe acordar de inmediato un d\xEDa y horario que permita efectuar la notificaci\xF3n.
+7. Despedida breve y bloque de firma institucional.
+
+No relates hechos del expediente, antecedentes, medidas, pruebas, sanciones ni conclusiones. El resultado debe poder editarse antes de imprimir.`;
   }
   return `Redacta el documento respetando todos los apartados que la plantilla exija y usando solamente los antecedentes del dossier.`;
 }
