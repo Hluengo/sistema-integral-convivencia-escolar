@@ -8,6 +8,7 @@ import { FileUp, LockKeyhole } from 'lucide-react';
 import type { Causa } from '../../types';
 import { uploadDocument } from '../../shared/api/services/storage.service';
 import Button from '../../shared/ui/Button';
+import ImproveTextarea from '../../shared/ImproveTextarea';
 import {
   Dialog,
   DialogContent,
@@ -121,24 +122,17 @@ export default function ForceCloseCausaDialog({
               />
             </div>
 
-            <div>
-              <label
-                htmlFor="force-close-reason"
-                className="mb-1.5 block font-semibold text-neutral-700 text-sm"
-              >
-                Motivo y fundamento
-              </label>
-              <textarea
-                id="force-close-reason"
-                aria-label="Motivo y fundamento"
-                value={motivo}
-                onChange={(event) => setMotivo(event.target.value)}
-                rows={6}
-                className="w-full resize-y rounded-xl border border-neutral-200 px-3 py-2.5 text-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
-                placeholder="Describa los antecedentes y la conclusión que justifican el cierre."
-                required
-              />
-            </div>
+            <ImproveTextarea
+              id="force-close-reason"
+              label="Motivo y fundamento"
+              value={motivo}
+              onChange={setMotivo}
+              rows={6}
+              improvementContext="cierre_causa"
+              className="mt-1.5 w-full resize-y rounded-xl border border-neutral-200 px-3 py-2.5 text-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+              placeholder="Describa los antecedentes y la conclusión que justifican el cierre."
+              required
+            />
 
             <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-50 p-4 transition hover:border-brand-300 hover:bg-brand-50/30">
               <label

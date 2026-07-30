@@ -1,5 +1,5 @@
 import { Sparkles, Loader2 } from 'lucide-react';
-import { useTextImprovement } from '../hooks/useTextImprovement';
+import { useTextImprovement, type TextImprovementContext } from '../hooks/useTextImprovement';
 
 interface ImproveTextareaProps {
   id: string;
@@ -10,23 +10,39 @@ interface ImproveTextareaProps {
   rows?: number;
   required?: boolean;
   className?: string;
+  improvementContext?: TextImprovementContext;
 }
 
 export default function ImproveTextarea({
-  id, value, onChange, label, placeholder, rows = 3, required, className,
+  id,
+  value,
+  onChange,
+  label,
+  placeholder,
+  rows = 3,
+  required,
+  className,
+  improvementContext,
 }: ImproveTextareaProps) {
   const { improveText, isImproving } = useTextImprovement();
 
   const handleImprove = async () => {
-    const improved = await improveText(value);
-    if (improved) { onChange(improved); }
+    const improved = await improveText(value, improvementContext);
+    if (improved) {
+      onChange(improved);
+    }
   };
 
   return (
     <div>
       {label && (
         <div className="flex items-center justify-between">
-          <label htmlFor={id} className="block font-semibold text-neutral-500 text-xs uppercase tracking-wide">{label}</label>
+          <label
+            htmlFor={id}
+            className="block font-semibold text-neutral-500 text-xs uppercase tracking-wide"
+          >
+            {label}
+          </label>
           <button
             type="button"
             onClick={handleImprove}
@@ -52,7 +68,10 @@ export default function ImproveTextarea({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={className || "mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-sans text-xs leading-relaxed transition-colors duration-200 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30"}
+        className={
+          className ||
+          'mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-sans text-xs leading-relaxed transition-colors duration-200 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30'
+        }
       />
     </div>
   );
