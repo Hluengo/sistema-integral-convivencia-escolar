@@ -16,6 +16,7 @@ import ConfirmDialog from './ConfirmDialog';
 import MarkdownRenderer from './InteractiveTimeline/MarkdownRenderer';
 import { useBreaches } from './InteractiveTimeline/hooks/useBreaches';
 import type { TimelineTab } from '../features/timeline/timelineTabs';
+import ForceCloseCausaDialog from '../features/causas/ForceCloseCausaDialog';
 
 const EditCausaModal = lazy(() => import('./EditCausaModal'));
 
@@ -53,6 +54,7 @@ export default function InteractiveTimeline({
   const [activeTab, setActiveTab] = useState<TimelineTab>('resumen');
   const [showEdit, setShowEdit] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [showForceClose, setShowForceClose] = useState(false);
 
   const timelineValue = useTimelineController({ causa, onUpdateCausa, currentRole, privacyMode });
   const currentFase = getFaseForEstado(causa.estadoActual);
@@ -67,6 +69,7 @@ export default function InteractiveTimeline({
           privacyMode={privacyMode}
           onEditClick={() => setShowEdit(true)}
           onDeleteClick={() => setShowConfirmDelete(true)}
+          onForceCloseClick={() => setShowForceClose(true)}
           isSidebarCollapsed={isSidebarCollapsed}
           setIsSidebarCollapsed={setIsSidebarCollapsed}
           isTimelineCollapsed={isTimelineCollapsed}
@@ -83,6 +86,15 @@ export default function InteractiveTimeline({
             setShowConfirmDelete(false);
           }}
           onCancel={() => setShowConfirmDelete(false)}
+        />
+        <ForceCloseCausaDialog
+          causa={causa}
+          open={showForceClose}
+          onOpenChange={setShowForceClose}
+          onConfirm={(updated) => {
+            onUpdateCausa(updated);
+            onClose?.();
+          }}
         />
         {showEdit && (
           <Suspense fallback={null}>

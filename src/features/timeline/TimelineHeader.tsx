@@ -4,7 +4,7 @@
  */
 
 import type { Causa, UserRole } from '../../types';
-import { AlertTriangle, CalendarClock, Pencil, Trash2, X } from 'lucide-react';
+import { AlertTriangle, CalendarClock, LockKeyhole, Pencil, Trash2, X } from 'lucide-react';
 import { getCausaDeadline, getCausaStatus } from '../causas/causaPresentation';
 import { formatChileDate } from '../../shared/lib/dateTime';
 
@@ -14,6 +14,7 @@ interface TimelineHeaderProps {
   privacyMode: boolean;
   onEditClick: () => void;
   onDeleteClick: () => void;
+  onForceCloseClick: () => void;
   onClose?: () => void;
   isSidebarCollapsed?: boolean;
   setIsSidebarCollapsed?: (collapsed: boolean) => void;
@@ -28,6 +29,7 @@ export default function TimelineHeader({
   privacyMode,
   onEditClick,
   onDeleteClick,
+  onForceCloseClick,
   onClose,
   breaches,
 }: TimelineHeaderProps) {
@@ -72,6 +74,25 @@ export default function TimelineHeader({
           <div className="flex shrink-0 items-center gap-1">
             {canEdit && (
               <>
+                <button
+                  type="button"
+                  onClick={onForceCloseClick}
+                  className="hidden items-center gap-1.5 rounded-lg px-3 py-2 font-semibold text-red-600 text-xs transition-colors hover:bg-red-50 sm:inline-flex"
+                  title="Cerrar causa con fundamento"
+                  aria-label="Cerrar causa con fundamento"
+                >
+                  <LockKeyhole className="size-4" aria-hidden="true" />
+                  Cerrar causa
+                </button>
+                <button
+                  type="button"
+                  onClick={onForceCloseClick}
+                  className="rounded-lg p-2 text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 sm:hidden"
+                  title="Cerrar causa con fundamento"
+                  aria-label="Cerrar causa con fundamento"
+                >
+                  <LockKeyhole className="size-5" aria-hidden="true" />
+                </button>
                 <button
                   type="button"
                   onClick={onEditClick}
