@@ -1649,7 +1649,7 @@ function setCache(key, value) {
 
 // server/api/lib/https.ts
 import https3 from 'node:https';
-function httpsPost(hostname, pathname, body, headers) {
+function httpsPost(hostname, pathname, body, headers, timeoutMs = 2e4) {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify(body);
     const opts = {
@@ -1670,6 +1670,9 @@ function httpsPost(hostname, pathname, body, headers) {
       });
     });
     req.on('error', reject);
+    req.setTimeout(timeoutMs, () =>
+      req.destroy(new Error(`La solicitud a ${hostname} excedi\xF3 el tiempo m\xE1ximo.`)),
+    );
     req.write(data);
     req.end();
   });
@@ -1697,7 +1700,7 @@ function httpsGet(hostname, pathname, headers) {
     req.end();
   });
 }
-function httpsGetBuffer(hostname, pathname, headers, maxBytes = 10 * 1024 * 1024) {
+function httpsGetBuffer(hostname, pathname, headers, maxBytes = 10 * 1024 * 1024, timeoutMs = 6e3) {
   return new Promise((resolve, reject) => {
     const req = https3.request(
       { hostname, path: pathname, method: 'GET', headers: headers || {} },
@@ -1718,6 +1721,9 @@ function httpsGetBuffer(hostname, pathname, headers, maxBytes = 10 * 1024 * 1024
       },
     );
     req.on('error', reject);
+    req.setTimeout(timeoutMs, () =>
+      req.destroy(new Error(`La descarga desde ${hostname} excedi\xF3 el tiempo m\xE1ximo.`)),
+    );
     req.end();
   });
 }
@@ -2069,6 +2075,29 @@ ${excerpt}`;
 
 // server/api/routes/advisor.ts
 var router2 = Router2();
+var MAX_ADVISOR_MESSAGE_LENGTH = 8e3;
+var MAX_HISTORY_MESSAGES = 8;
+var MAX_HISTORY_MESSAGE_LENGTH = 4e3;
+var MAX_HISTORY_TOTAL_LENGTH = 16e3;
+function normalizeHistory(value) {
+  if (value === void 0) return [];
+  if (!Array.isArray(value) || value.length > MAX_HISTORY_MESSAGES) return null;
+  let totalLength = 0;
+  const normalized = [];
+  for (const item of value) {
+    if (!item || typeof item !== 'object') return null;
+    const record = item;
+    if (typeof record.content !== 'string' || record.content.length > MAX_HISTORY_MESSAGE_LENGTH) {
+      return null;
+    }
+    const content = sanitizeForAI(record.content).trim();
+    if (!content) return null;
+    totalLength += content.length;
+    if (totalLength > MAX_HISTORY_TOTAL_LENGTH) return null;
+    normalized.push({ role: record.role === 'user' ? 'user' : 'assistant', content });
+  }
+  return normalized;
+}
 router2.post('/advisor-chat', requireAuth, async (req, res) => {
   try {
     const { message, history } = req.body;
@@ -2076,9 +2105,15 @@ router2.post('/advisor-chat', requireAuth, async (req, res) => {
       res.status(400).json({ error: 'Campo requerido: message' });
       return;
     }
-    const MAX_ADVISOR_MESSAGE_LENGTH = 8e3;
     if (message.length > MAX_ADVISOR_MESSAGE_LENGTH) {
       res.status(400).json({ error: 'El mensaje supera el m\xE1ximo permitido.' });
+      return;
+    }
+    const normalizedHistory = normalizeHistory(history);
+    if (!normalizedHistory) {
+      res.status(400).json({
+        error: 'El historial de consulta no es v\xE1lido o supera el m\xE1ximo permitido.',
+      });
       return;
     }
     const ip = req.ip || req.connection?.remoteAddress || 'unknown';
@@ -2104,22 +2139,14 @@ ${legalSources}`;
     const cacheKey = getCacheKey('advisor-chat', {
       userId,
       message,
-      historyCount: history?.length || 0,
+      history: normalizedHistory,
     });
     const cached = getFromCache(cacheKey);
     if (cached) {
       res.json({ success: true, reply: cached, cached: true });
       return;
     }
-    const messages = [];
-    if (history && Array.isArray(history)) {
-      history.forEach((h) => {
-        messages.push({
-          role: h.role === 'user' ? 'user' : 'assistant',
-          content: sanitizeForAI(h.content),
-        });
-      });
-    }
+    const messages = [...normalizedHistory];
     messages.push({ role: 'user', content: sanitizeForAI(message) });
     const reply = await callGroq(messages, systemInstruction);
     setCache(cacheKey, reply);
@@ -2247,6 +2274,7 @@ async function callGeminiLegalDraft(systemInstruction, dossier) {
       },
     },
     { 'x-goog-api-key': getApiKey2() },
+    18e3,
   );
   if (response.status < 200 || response.status >= 300) {
     throw new Error(`Gemini error: ${response.status} ${JSON.stringify(response.body)}`);
@@ -2355,14 +2383,25 @@ async function extractPdfText(buffer) {
   );
   return (await extractPdfPages2(new Uint8Array(buffer))).join('\n\n');
 }
-async function extractCaseDocuments(documentValues, authReq) {
+async function extractCaseDocuments(documentValues, authReq, options = {}) {
+  const maxDocuments = options.maxDocuments ?? MAX_DOCUMENTS;
+  const maxCharsPerDocument =
+    options.maxExtractedCharsPerDocument ?? MAX_EXTRACTED_CHARS_PER_DOCUMENT;
+  const deadlineAt = Date.now() + (options.deadlineMs ?? 8e3);
   const uniquePaths = [
     ...new Set(documentValues.map(normalizeStoragePath).filter((value) => Boolean(value))),
-  ].slice(0, MAX_DOCUMENTS);
+  ].slice(0, maxDocuments);
   const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? '';
-  let remaining = MAX_EXTRACTED_CHARS_TOTAL;
+  let remaining = options.maxExtractedCharsTotal ?? MAX_EXTRACTED_CHARS_TOTAL;
   const results = [];
   for (const storagePath of uniquePaths) {
+    if (Date.now() >= deadlineAt) {
+      results.push({
+        name: 'Antecedentes restantes',
+        reason: 'La extracci\xF3n se limit\xF3 para proteger el tiempo de respuesta.',
+      });
+      break;
+    }
     const name = fileName(storagePath);
     const extension = name.split('.').at(-1)?.toLowerCase();
     if (extension !== 'pdf' && extension !== 'docx') {
@@ -2373,10 +2412,13 @@ async function extractCaseDocuments(documentValues, authReq) {
       continue;
     }
     try {
-      const downloaded = await httpsGetBuffer(getSupabaseHostname(), storagePathname(storagePath), {
-        apikey: anonKey,
-        Authorization: `Bearer ${authReq.authToken}`,
-      });
+      const downloaded = await httpsGetBuffer(
+        getSupabaseHostname(),
+        storagePathname(storagePath),
+        { apikey: anonKey, Authorization: `Bearer ${authReq.authToken}` },
+        10 * 1024 * 1024,
+        Math.max(1e3, Math.min(5e3, deadlineAt - Date.now())),
+      );
       if (downloaded.status < 200 || downloaded.status >= 300) {
         results.push({ name, reason: 'Archivo no disponible con los permisos actuales.' });
         continue;
@@ -2388,7 +2430,7 @@ async function extractCaseDocuments(documentValues, authReq) {
       const text = rawText
         .replaceAll(String.fromCharCode(0), '')
         .trim()
-        .slice(0, Math.min(MAX_EXTRACTED_CHARS_PER_DOCUMENT, remaining));
+        .slice(0, Math.min(maxCharsPerDocument, remaining));
       remaining -= text.length;
       results.push(
         text ? { name, text } : { name, reason: 'El archivo no contiene texto extra\xEDble.' },
@@ -2421,6 +2463,40 @@ var DOCUMENT_SIGNERS = {
   citacion_entrevista: 'Inspector/a y/o Coordinador/a de Ciclo',
   informe_cierre_indagacion: 'Equipo Encargado de Indagaci\xF3n',
   informe_concluyente: 'Equipo de Convivencia Escolar',
+};
+var DRAFT_CONTEXT_LIMITS = {
+  notificacion_apertura: {
+    legalSourceChars: 18e3,
+    historyEntries: 12,
+    checklistItems: 12,
+    measures: 12,
+    documents: { maxDocuments: 2, maxExtractedCharsPerDocument: 6e3, maxExtractedCharsTotal: 1e4 },
+  },
+  citacion_entrevista: {
+    legalSourceChars: 8e3,
+    historyEntries: 4,
+    checklistItems: 4,
+    measures: 4,
+    documents: { maxDocuments: 0, maxExtractedCharsPerDocument: 0, maxExtractedCharsTotal: 0 },
+  },
+  informe_cierre_indagacion: {
+    legalSourceChars: 36e3,
+    historyEntries: 32,
+    checklistItems: 30,
+    measures: 25,
+    documents: {
+      maxDocuments: 4,
+      maxExtractedCharsPerDocument: 12e3,
+      maxExtractedCharsTotal: 32e3,
+    },
+  },
+  informe_concluyente: {
+    legalSourceChars: 44e3,
+    historyEntries: 40,
+    checklistItems: 35,
+    measures: 30,
+    documents: { maxDocuments: 4, maxExtractedCharsPerDocument: 14e3, maxExtractedCharsTotal: 4e4 },
+  },
 };
 function getSupabaseHostname2() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
@@ -2477,6 +2553,7 @@ router4.post('/draft-document', requireAuth, async (req, res) => {
       return;
     }
     const docType = docTypeValue;
+    const contextLimits = DRAFT_CONTEXT_LIMITS[docType];
     const id = requireStr(body, 'id', 100);
     const studentName = requireStr(body, 'studentName', 200);
     const course = optStr(body, 'course', 100);
@@ -2497,7 +2574,7 @@ router4.post('/draft-document', requireAuth, async (req, res) => {
     }
     const safeMeasures = medidasEjecutadas
       .map((value) => sanitize(value).slice(0, 500))
-      .slice(0, 50);
+      .slice(0, contextLimits.measures);
     const safeHistory = bitacora
       .map((entry) => ({
         title: sanitize(entry.titulo).slice(0, 200),
@@ -2509,7 +2586,7 @@ router4.post('/draft-document', requireAuth, async (req, res) => {
           : [],
         document: sanitize(entry.documentoAdjunto).slice(0, 200),
       }))
-      .slice(0, 100);
+      .slice(0, contextLimits.historyEntries);
     const safeChecklist = checklist
       .map((item) => ({
         label: sanitize(item.label).slice(0, 300),
@@ -2521,7 +2598,7 @@ router4.post('/draft-document', requireAuth, async (req, res) => {
         document: sanitize(item.documentoNombre).slice(0, 200),
         documentPath: sanitize(item.documentoUrl).slice(0, 500),
       }))
-      .slice(0, 100);
+      .slice(0, contextLimits.checklistItems);
     const authReq = req;
     const documentValues = [
       ...safeHistory.map((entry) => entry.document),
@@ -2530,8 +2607,12 @@ router4.post('/draft-document', requireAuth, async (req, res) => {
     const [legalSources, extractedDocuments] = await Promise.all([
       getRelevantLegalSources(
         `${DOCUMENT_TITLES[docType]} ${infractionType} convivencia escolar debido proceso reglamento interno medidas disciplinarias apelaci\xF3n`,
+        contextLimits.legalSourceChars,
       ),
-      extractCaseDocuments(documentValues, authReq),
+      extractCaseDocuments(documentValues, authReq, {
+        ...contextLimits.documents,
+        deadlineMs: 8e3,
+      }),
     ]);
     const dossier = `
 # DOSSIER DEL EXPEDIENTE \u2014 DOCUMENTO CITADO
@@ -2996,26 +3077,62 @@ var processDisciplinaryPdf_default = router8;
 
 // server/api/routes/usage.ts
 import { Router as Router9 } from 'express';
+
+// server/middleware/rateLimit.ts
+var DEFAULT_WINDOW_SEC = 60;
+async function rateLimit(req, res, next) {
+  const authReq = req;
+  const key = authReq.user?.sub ?? req.ip ?? 'unknown';
+  const allowed = await checkRateLimitAsync(key);
+  if (!allowed) {
+    res.status(429).json({
+      error: 'Demasiadas solicitudes. Intente nuevamente en un minuto.',
+      retryAfter: DEFAULT_WINDOW_SEC,
+    });
+    return;
+  }
+  next();
+}
+
+// server/api/routes/usage.ts
 var router9 = Router9();
-router9.post('/usage/events', requireAuth, async (req, res) => {
+var EVENT_NAME_RE = /^[a-z][a-z0-9_]{1,79}$/;
+var MAX_PROPERTIES_BYTES = 4e3;
+function hasSafeProperties(value) {
+  if (value === void 0) return true;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  try {
+    return Buffer.byteLength(JSON.stringify(value), 'utf8') <= MAX_PROPERTIES_BYTES;
+  } catch {
+    return false;
+  }
+}
+router9.post('/usage/events', requireAuth, requireTenant, rateLimit, async (req, res) => {
   try {
     const { eventName, properties } = req.body;
-    if (!eventName || typeof eventName !== 'string') {
-      res.status(400).json({ error: 'Campo requerido: eventName (string)' });
+    if (!eventName || typeof eventName !== 'string' || !EVENT_NAME_RE.test(eventName)) {
+      res
+        .status(400)
+        .json({ error: 'eventName debe usar formato snake_case y tener hasta 80 caracteres.' });
+      return;
+    }
+    if (!hasSafeProperties(properties)) {
+      res.status(400).json({ error: 'properties debe ser un objeto JSON de hasta 4 KB.' });
       return;
     }
     const { createClient: createClient2 } = await import('@supabase/supabase-js');
     const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
-    const supabaseKey =
-      process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? '';
-    if (!supabaseUrl || !supabaseKey) {
+    const anonKey =
+      process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
+    if (!supabaseUrl || !anonKey) {
       res.status(500).json({ error: 'Supabase no configurado' });
       return;
     }
-    const supabase = createClient2(supabaseUrl, supabaseKey, {
-      auth: { persistSession: false },
-    });
     const authReq = req;
+    const supabase = createClient2(supabaseUrl, anonKey, {
+      auth: { persistSession: false },
+      global: { headers: { Authorization: `Bearer ${authReq.authToken}` } },
+    });
     await supabase.from('usage_events').insert({
       event_name: eventName,
       user_id: authReq.user?.sub ?? null,
@@ -3040,14 +3157,15 @@ router9.get(
       const until = req.query.until ?? void 0;
       const { createClient: createClient2 } = await import('@supabase/supabase-js');
       const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
-      const supabaseKey =
-        process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? '';
-      if (!supabaseUrl || !supabaseKey) {
+      const anonKey =
+        process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
+      if (!supabaseUrl || !anonKey) {
         res.status(500).json({ error: 'Supabase no configurado' });
         return;
       }
-      const supabase = createClient2(supabaseUrl, supabaseKey, {
+      const supabase = createClient2(supabaseUrl, anonKey, {
         auth: { persistSession: false },
+        global: { headers: { Authorization: `Bearer ${authReq.authToken}` } },
       });
       const params = {};
       if (since) params.since = since;
@@ -3253,22 +3371,6 @@ var errorHandler = (err, _req, res, _next) => {
   const message = isDev && err instanceof Error ? err.message : 'Error interno del servidor.';
   res.status(500).json({ error: message });
 };
-
-// server/middleware/rateLimit.ts
-var DEFAULT_WINDOW_SEC = 60;
-async function rateLimit(req, res, next) {
-  const authReq = req;
-  const key = authReq.user?.sub ?? req.ip ?? 'unknown';
-  const allowed = await checkRateLimitAsync(key);
-  if (!allowed) {
-    res.status(429).json({
-      error: 'Demasiadas solicitudes. Intente nuevamente en un minuto.',
-      retryAfter: DEFAULT_WINDOW_SEC,
-    });
-    return;
-  }
-  next();
-}
 
 // server/api/index.ts
 var __filename = fileURLToPath(import.meta.url);

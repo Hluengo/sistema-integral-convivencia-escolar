@@ -1,7 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useQuery } from '@tanstack/react-query';
-import { fetchCausaDetails, fetchCausas } from '../../api/services/causas.service';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { fetchCausaDetails, fetchCausasPage } from '../../api/services/causas.service';
 import { track } from '../../../lib/analytics';
 import { useAuthStore } from '../stores/authStore';
 import { causasQueryKeys } from '../queries/causasQueryKeys';
@@ -9,6 +10,7 @@ import { causasQueryKeys } from '../queries/causasQueryKeys';
 const CAUSAS_LIST_STALE_TIME_MS = 60_000;
 const CAUSA_DETAILS_STALE_TIME_MS = 5 * 60_000;
 const CAUSAS_CACHE_TIME_MS = 30 * 60_000;
+const CAUSAS_PAGE_SIZE = 50;
 
 function trackCausasQuery(scope: 'list' | 'detail', startedAt: number, resultCount: number): void {
   track('causas_query_completed', {
@@ -22,18 +24,27 @@ export function useCausasQuery() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const tenantId = useAuthStore((state) => state.tenantId);
 
-  return useQuery({
+  const query = useInfiniteQuery({
     queryKey: causasQueryKeys.list(tenantId ?? ''),
-    queryFn: async () => {
+    queryFn: async ({ pageParam }) => {
       const startedAt = performance.now();
-      const causas = await fetchCausas();
-      trackCausasQuery('list', startedAt, causas.length);
-      return causas;
+      const page = await fetchCausasPage(pageParam, CAUSAS_PAGE_SIZE);
+      trackCausasQuery('list', startedAt, page.causas.length);
+      return page;
     },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => lastPage.nextOffset,
     enabled: isAuthenticated && Boolean(tenantId),
     staleTime: CAUSAS_LIST_STALE_TIME_MS,
     gcTime: CAUSAS_CACHE_TIME_MS,
   });
+
+  const causas = useMemo(() => query.data?.pages.flatMap((page) => page.causas), [query.data]);
+
+  return {
+    ...query,
+    data: causas,
+  };
 }
 
 export function useCausaDetailsQuery(causaId: string) {

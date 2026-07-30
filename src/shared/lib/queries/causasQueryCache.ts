@@ -1,10 +1,13 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
+import type { InfiniteData } from '@tanstack/react-query';
 import { queryClient } from '../../../lib/queryClient';
 import type { Causa } from '../../../types';
 import { causasQueryKeys } from './causasQueryKeys';
+import type { CausasPage } from '../../api/services/causas.service';
 
 type CausaDetails = Pick<Causa, 'bitacora' | 'checklistDebidoProceso'>;
+type CausasListData = InfiniteData<CausasPage, number>;
 
 function toListCausa(causa: Causa): Causa {
   return {
@@ -38,15 +41,33 @@ export function mergeCausasList(current: Causa[], freshList: Causa[]): Causa[] {
 }
 
 export function addCausaToCache(tenantId: string, causa: Causa): void {
-  queryClient.setQueryData<Causa[]>(causasQueryKeys.list(tenantId), (cached) => {
+  queryClient.setQueryData<CausasListData>(causasQueryKeys.list(tenantId), (cached) => {
     if (!cached) return cached;
-    return [toListCausa(causa), ...cached.filter((item) => item.id !== causa.id)];
+    return {
+      ...cached,
+      pages: cached.pages.map((page, index) =>
+        index === 0
+          ? {
+              ...page,
+              causas: [toListCausa(causa), ...page.causas.filter((item) => item.id !== causa.id)],
+            }
+          : { ...page, causas: page.causas.filter((item) => item.id !== causa.id) },
+      ),
+    };
   });
 }
 
 export function removeCausaFromCache(tenantId: string, causaId: string): void {
-  queryClient.setQueryData<Causa[]>(causasQueryKeys.list(tenantId), (cached) =>
-    cached ? cached.filter((causa) => causa.id !== causaId) : cached,
+  queryClient.setQueryData<CausasListData>(causasQueryKeys.list(tenantId), (cached) =>
+    cached
+      ? {
+          ...cached,
+          pages: cached.pages.map((page) => ({
+            ...page,
+            causas: page.causas.filter((causa) => causa.id !== causaId),
+          })),
+        }
+      : cached,
   );
   queryClient.removeQueries({ queryKey: causasQueryKeys.details(tenantId, causaId), exact: true });
 }
@@ -55,12 +76,18 @@ export function removeCausaFromCache(tenantId: string, causaId: string): void {
 export function syncPersistedCausasToCache(tenantId: string, causas: Causa[]): void {
   const causasById = new Map(causas.map((causa) => [causa.id, causa]));
 
-  queryClient.setQueryData<Causa[]>(causasQueryKeys.list(tenantId), (cached) =>
+  queryClient.setQueryData<CausasListData>(causasQueryKeys.list(tenantId), (cached) =>
     cached
-      ? cached.map((cachedCausa) => {
-          const persistedCausa = causasById.get(cachedCausa.id);
-          return persistedCausa ? toListCausa(persistedCausa) : cachedCausa;
-        })
+      ? {
+          ...cached,
+          pages: cached.pages.map((page) => ({
+            ...page,
+            causas: page.causas.map((cachedCausa) => {
+              const persistedCausa = causasById.get(cachedCausa.id);
+              return persistedCausa ? toListCausa(persistedCausa) : cachedCausa;
+            }),
+          })),
+        }
       : cached,
   );
 

@@ -1,42 +1,58 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { Router } from 'express';
-import type { Request } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { requireTenant } from '../middleware/requireTenant.js';
 import { requireRole } from '../middleware/requireRole.js';
+import { rateLimit } from '../../middleware/rateLimit.js';
+import type { AuthenticatedRequest } from '../../types.js';
 
-interface JwtPayload {
-  sub?: string;
-  email?: string;
-  role?: string;
-}
-
-type AuthRequest = Request & { user: JwtPayload; tenantId?: string; profileRole?: string };
+type AuthRequest = AuthenticatedRequest;
 
 const router = Router();
 
-router.post('/usage/events', requireAuth, async (req, res) => {
+const EVENT_NAME_RE = /^[a-z][a-z0-9_]{1,79}$/;
+const MAX_PROPERTIES_BYTES = 4_000;
+
+function hasSafeProperties(value: unknown): value is Record<string, unknown> {
+  if (value === undefined) return true;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  try {
+    return Buffer.byteLength(JSON.stringify(value), 'utf8') <= MAX_PROPERTIES_BYTES;
+  } catch {
+    return false;
+  }
+}
+
+router.post('/usage/events', requireAuth, requireTenant, rateLimit, async (req, res) => {
   try {
     const { eventName, properties } = req.body;
-    if (!eventName || typeof eventName !== 'string') {
-      res.status(400).json({ error: 'Campo requerido: eventName (string)' });
+    if (!eventName || typeof eventName !== 'string' || !EVENT_NAME_RE.test(eventName)) {
+      res
+        .status(400)
+        .json({ error: 'eventName debe usar formato snake_case y tener hasta 80 caracteres.' });
+      return;
+    }
+    if (!hasSafeProperties(properties)) {
+      res.status(400).json({ error: 'properties debe ser un objeto JSON de hasta 4 KB.' });
       return;
     }
 
     const { createClient } = await import('@supabase/supabase-js');
     const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? '';
-    if (!supabaseUrl || !supabaseKey) {
+    const anonKey =
+      process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
+    if (!supabaseUrl || !anonKey) {
       res.status(500).json({ error: 'Supabase no configurado' });
       return;
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: { persistSession: false },
-    });
-
     const authReq = req as AuthRequest;
+
+    const supabase = createClient(supabaseUrl, anonKey, {
+      auth: { persistSession: false },
+      global: { headers: { Authorization: `Bearer ${authReq.authToken}` } },
+    });
 
     await supabase.from('usage_events').insert({
       event_name: eventName,
@@ -65,24 +81,23 @@ router.get(
 
       const { createClient } = await import('@supabase/supabase-js');
       const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
-      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? '';
-      if (!supabaseUrl || !supabaseKey) {
+      const anonKey =
+        process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
+      if (!supabaseUrl || !anonKey) {
         res.status(500).json({ error: 'Supabase no configurado' });
         return;
       }
 
-      const supabase = createClient(supabaseUrl, supabaseKey, {
+      const supabase = createClient(supabaseUrl, anonKey, {
         auth: { persistSession: false },
+        global: { headers: { Authorization: `Bearer ${authReq.authToken}` } },
       });
 
       const params: Record<string, string> = {};
       if (since) params.since = since;
       if (until) params.until = until;
 
-      const { data: eventStats, error: eventError } = await supabase.rpc(
-        'get_usage_stats',
-        params,
-      );
+      const { data: eventStats, error: eventError } = await supabase.rpc('get_usage_stats', params);
 
       if (eventError) {
         console.error('Error fetching usage stats:', eventError);
@@ -107,7 +122,7 @@ router.get(
       console.error('Error fetching usage stats:', error);
       res.status(500).json({ error: 'Error interno al obtener estadísticas.' });
     }
-  }
+  },
 );
 
 export default router;

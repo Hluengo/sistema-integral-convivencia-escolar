@@ -50,6 +50,7 @@ export async function callGeminiLegalDraft(
       },
     },
     { 'x-goog-api-key': getApiKey() },
+    18_000,
   );
 
   if (response.status < 200 || response.status >= 300) {

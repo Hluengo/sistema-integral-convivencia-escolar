@@ -28,7 +28,7 @@ function createCausa(overrides: Partial<Causa> = {}): Causa {
 
 describe('causasQueryCache', () => {
   it('separa la caché de causas por tenant y por detalle', () => {
-    assert.deepEqual(causasQueryKeys.list('tenant-a'), ['causas', 'tenant-a', 'list']);
+    assert.deepEqual(causasQueryKeys.list('tenant-a'), ['causas', 'tenant-a', 'list', 'cursor']);
     assert.deepEqual(causasQueryKeys.details('tenant-a', 'DC-2026-001'), [
       'causas',
       'tenant-a',

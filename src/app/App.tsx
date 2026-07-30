@@ -195,6 +195,10 @@ export default function App() {
     }
     void causasQuery.refetch();
   }, [causaDetailsQuery, causasQuery, selectedCausaForDetail]);
+  const loadMoreCausas = useCallback(() => {
+    if (!causasQuery.hasNextPage || causasQuery.isFetchingNextPage) return;
+    void causasQuery.fetchNextPage();
+  }, [causasQuery]);
   const isCausaDetailLoading = causaDetailsQuery.isLoading;
 
   const handleViewChange = useCallback(
@@ -418,6 +422,9 @@ export default function App() {
                 mobileShowDetail={mobileShowDetail}
                 setMobileShowDetail={setMobileShowDetail}
                 filteredCausas={filteredCausas}
+                hasMoreCausas={Boolean(causasQuery.hasNextPage)}
+                isLoadingMoreCausas={causasQuery.isFetchingNextPage}
+                onLoadMoreCausas={loadMoreCausas}
                 showCreateForm={showCreateForm}
                 dispatchForm={dispatchForm}
                 handleReopenCausa={handleReopenCausa}

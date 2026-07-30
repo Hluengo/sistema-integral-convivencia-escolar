@@ -160,6 +160,18 @@ describe('API endpoints', () => {
       );
       assert.equal(res.status, 400);
     });
+
+    it('rejects an oversized or malformed conversation history before calling the model', async () => {
+      const res = await post(
+        '/api/advisor-chat',
+        {
+          message: '¿Qué antecedente falta?',
+          history: Array.from({ length: 9 }, () => ({ role: 'user', content: 'Consulta' })),
+        },
+        { Authorization: `Bearer ${VALID_TOKEN}` },
+      );
+      assert.equal(res.status, 400);
+    });
   });
 
   describe('POST /api/audit-due-process', () => {

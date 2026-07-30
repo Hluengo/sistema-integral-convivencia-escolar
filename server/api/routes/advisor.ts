@@ -10,6 +10,34 @@ import { getRelevantLegalSources } from '../services/legalSources.js';
 
 const router = Router();
 
+const MAX_ADVISOR_MESSAGE_LENGTH = 8_000;
+const MAX_HISTORY_MESSAGES = 8;
+const MAX_HISTORY_MESSAGE_LENGTH = 4_000;
+const MAX_HISTORY_TOTAL_LENGTH = 16_000;
+
+type AdvisorMessage = { role: 'user' | 'assistant'; content: string };
+
+function normalizeHistory(value: unknown): AdvisorMessage[] | null {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > MAX_HISTORY_MESSAGES) return null;
+
+  let totalLength = 0;
+  const normalized: AdvisorMessage[] = [];
+  for (const item of value) {
+    if (!item || typeof item !== 'object') return null;
+    const record = item as { role?: unknown; content?: unknown };
+    if (typeof record.content !== 'string' || record.content.length > MAX_HISTORY_MESSAGE_LENGTH) {
+      return null;
+    }
+    const content = sanitizeForAI(record.content).trim();
+    if (!content) return null;
+    totalLength += content.length;
+    if (totalLength > MAX_HISTORY_TOTAL_LENGTH) return null;
+    normalized.push({ role: record.role === 'user' ? 'user' : 'assistant', content });
+  }
+  return normalized;
+}
+
 router.post('/advisor-chat', requireAuth, async (req, res) => {
   try {
     const { message, history } = req.body;
@@ -18,9 +46,15 @@ router.post('/advisor-chat', requireAuth, async (req, res) => {
       return;
     }
 
-    const MAX_ADVISOR_MESSAGE_LENGTH = 8_000;
     if (message.length > MAX_ADVISOR_MESSAGE_LENGTH) {
       res.status(400).json({ error: 'El mensaje supera el máximo permitido.' });
+      return;
+    }
+    const normalizedHistory = normalizeHistory(history);
+    if (!normalizedHistory) {
+      res.status(400).json({
+        error: 'El historial de consulta no es válido o supera el máximo permitido.',
+      });
       return;
     }
 
@@ -49,7 +83,7 @@ ${legalSources}`;
     const cacheKey = getCacheKey('advisor-chat', {
       userId,
       message,
-      historyCount: (history as Array<unknown>)?.length || 0,
+      history: normalizedHistory,
     });
     const cached = getFromCache(cacheKey);
     if (cached) {
@@ -57,15 +91,7 @@ ${legalSources}`;
       return;
     }
 
-    const messages: Array<{ role: string; content: string }> = [];
-    if (history && Array.isArray(history)) {
-      (history as Array<{ role: string; content: string }>).forEach((h) => {
-        messages.push({
-          role: h.role === 'user' ? 'user' : 'assistant',
-          content: sanitizeForAI(h.content),
-        });
-      });
-    }
+    const messages: Array<{ role: string; content: string }> = [...normalizedHistory];
     messages.push({ role: 'user', content: sanitizeForAI(message) });
     const reply = await callGroq(messages, systemInstruction);
     setCache(cacheKey, reply);

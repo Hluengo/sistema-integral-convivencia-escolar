@@ -26,7 +26,7 @@
     "test:e2e:ui": "playwright test --ui",
     "knip": "knip",
     "security-audit": "npm audit --omit=dev",
-    "security:secrets": "npx gitleaks detect --source . --verbose",
+    "security:secrets": "gitleaks detect --source . --verbose",
     "pre-push": "npm run lint && npm run test && npm run build:web && npm run security-audit"
   },
   "knip": {

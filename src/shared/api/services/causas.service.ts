@@ -92,23 +92,14 @@ function mapBitacoraRow(row: SupabaseBitacoraRow): BitacoraEntry | null {
 
 const DEFAULT_PAGE_SIZE = 100;
 
-export async function fetchCausas(limit = DEFAULT_PAGE_SIZE): Promise<Causa[]> {
-  let causaQuery = supabase
-    .from('causas')
-    .select(
-      'id,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas',
-    )
-    .order('fecha_ultima_actualizacion', { ascending: false });
+export interface CausasPage {
+  causas: Causa[];
+  nextOffset?: number;
+}
 
-  if (limit > 0) causaQuery = causaQuery.limit(limit);
-  const { data, error } = await causaQuery;
-  if (error || !data) {
-    console.error('Error fetching causas:', error);
-    throw error || new Error('No se recibieron causas desde Supabase.');
-  }
-
+function mapCausaRows(rows: SupabaseCausaRow[]): Causa[] {
   const causas: Causa[] = [];
-  for (const row of data as SupabaseCausaRow[]) {
+  for (const row of rows) {
     const parsed = CausaSchema.safeParse({
       id: row.id,
       estudianteNombre: row.estudiante_nombre,
@@ -130,8 +121,49 @@ export async function fetchCausas(limit = DEFAULT_PAGE_SIZE): Promise<Causa[]> {
     if (parsed.success) causas.push(parsed.data);
     else console.error(`Invalid causa ${row.id}:`, parsed.error.flatten());
   }
-
   return causas;
+}
+
+/** Carga páginas pequeñas y ordenadas para evitar transferir expedientes no solicitados. */
+export async function fetchCausasPage(offset = 0, pageSize = 50): Promise<CausasPage> {
+  const requestedSize = Math.min(Math.max(pageSize, 1), DEFAULT_PAGE_SIZE);
+  const { data, error } = await supabase
+    .from('causas')
+    .select(
+      'id,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas',
+    )
+    .order('fecha_ultima_actualizacion', { ascending: false })
+    .range(offset, offset + requestedSize);
+
+  if (error || !data) {
+    console.error('Error fetching causas page:', error);
+    throw error || new Error('No se recibieron causas desde Supabase.');
+  }
+
+  const rows = data as SupabaseCausaRow[];
+  const hasNextPage = rows.length > requestedSize;
+  return {
+    causas: mapCausaRows(rows.slice(0, requestedSize)),
+    nextOffset: hasNextPage ? offset + requestedSize : undefined,
+  };
+}
+
+export async function fetchCausas(limit = DEFAULT_PAGE_SIZE): Promise<Causa[]> {
+  let causaQuery = supabase
+    .from('causas')
+    .select(
+      'id,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas',
+    )
+    .order('fecha_ultima_actualizacion', { ascending: false });
+
+  if (limit > 0) causaQuery = causaQuery.limit(limit);
+  const { data, error } = await causaQuery;
+  if (error || !data) {
+    console.error('Error fetching causas:', error);
+    throw error || new Error('No se recibieron causas desde Supabase.');
+  }
+
+  return mapCausaRows(data as SupabaseCausaRow[]);
 }
 
 /**

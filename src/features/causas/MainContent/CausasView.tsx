@@ -39,6 +39,9 @@ interface CausasViewProps {
   mobileShowDetail: boolean;
   setMobileShowDetail: (v: boolean) => void;
   filteredCausas: Causa[];
+  hasMoreCausas: boolean;
+  isLoadingMoreCausas: boolean;
+  onLoadMoreCausas: () => void;
   showCreateForm: boolean;
   dispatchForm: React.Dispatch<FormAction>;
   handleReopenCausa: (causa: Causa) => void;
@@ -57,6 +60,9 @@ export default function CausasView({
   setSearchQuery,
   privacyMode,
   filteredCausas,
+  hasMoreCausas,
+  isLoadingMoreCausas,
+  onLoadMoreCausas,
   showCreateForm,
   dispatchForm,
   handleReopenCausa,
@@ -201,25 +207,57 @@ export default function CausasView({
 
       {/* Table follows the same hierarchy as Anotaciones. */}
       {visibleCausas.length > 0 ? (
-        <Suspense fallback={<ViewFallback />}>
-          <CausasTable
-            causas={visibleCausas}
-            privacyMode={privacyMode}
-            onSelectCausa={handleSelectCausa}
-          />
-        </Suspense>
+        <div className="space-y-3">
+          <Suspense fallback={<ViewFallback />}>
+            <CausasTable
+              causas={visibleCausas}
+              privacyMode={privacyMode}
+              onSelectCausa={handleSelectCausa}
+            />
+          </Suspense>
+          {hasMoreCausas && (
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={onLoadMoreCausas}
+                disabled={isLoadingMoreCausas}
+                className="inline-flex min-h-10 items-center justify-center rounded-xl border border-brand-200 bg-white px-4 py-2 font-semibold text-brand-700 text-sm shadow-sm transition-colors hover:bg-brand-50 disabled:cursor-wait disabled:opacity-60"
+              >
+                {isLoadingMoreCausas ? 'Cargando expedientes…' : 'Cargar más expedientes'}
+              </button>
+            </div>
+          )}
+        </div>
       ) : (
-        <div className="card p-8">
-          <EmptyState
-            icon={Scale}
-            title="Ningún expediente coincide"
-            description="Intente con otros filtros o cree un nuevo expediente."
-            action={
-              causas.length === 0
-                ? { label: 'Crear primera causa', onClick: handleOpenCreateForm }
-                : undefined
-            }
-          />
+        <div className="space-y-3">
+          <div className="card p-8">
+            <EmptyState
+              icon={Scale}
+              title="Ningún expediente coincide"
+              description={
+                hasMoreCausas
+                  ? 'Puede cargar más expedientes o intentar con otros filtros.'
+                  : 'Intente con otros filtros o cree un nuevo expediente.'
+              }
+              action={
+                causas.length === 0
+                  ? { label: 'Crear primera causa', onClick: handleOpenCreateForm }
+                  : undefined
+              }
+            />
+          </div>
+          {hasMoreCausas && (
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={onLoadMoreCausas}
+                disabled={isLoadingMoreCausas}
+                className="inline-flex min-h-10 items-center justify-center rounded-xl border border-brand-200 bg-white px-4 py-2 font-semibold text-brand-700 text-sm shadow-sm transition-colors hover:bg-brand-50 disabled:cursor-wait disabled:opacity-60"
+              >
+                {isLoadingMoreCausas ? 'Cargando expedientes…' : 'Cargar más expedientes'}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

@@ -112,21 +112,40 @@ export interface CaseDocumentExtract {
   reason?: string;
 }
 
+export interface CaseDocumentExtractionOptions {
+  maxDocuments?: number;
+  maxExtractedCharsPerDocument?: number;
+  maxExtractedCharsTotal?: number;
+  deadlineMs?: number;
+}
+
 /** Extrae solo PDF y DOCX vinculados explícitamente al expediente solicitado. */
 export async function extractCaseDocuments(
   documentValues: string[],
   authReq: AuthenticatedRequest,
+  options: CaseDocumentExtractionOptions = {},
 ): Promise<CaseDocumentExtract[]> {
+  const maxDocuments = options.maxDocuments ?? MAX_DOCUMENTS;
+  const maxCharsPerDocument =
+    options.maxExtractedCharsPerDocument ?? MAX_EXTRACTED_CHARS_PER_DOCUMENT;
+  const deadlineAt = Date.now() + (options.deadlineMs ?? 8_000);
   const uniquePaths = [
     ...new Set(
       documentValues.map(normalizeStoragePath).filter((value): value is string => Boolean(value)),
     ),
-  ].slice(0, MAX_DOCUMENTS);
+  ].slice(0, maxDocuments);
   const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? '';
-  let remaining = MAX_EXTRACTED_CHARS_TOTAL;
+  let remaining = options.maxExtractedCharsTotal ?? MAX_EXTRACTED_CHARS_TOTAL;
   const results: CaseDocumentExtract[] = [];
 
   for (const storagePath of uniquePaths) {
+    if (Date.now() >= deadlineAt) {
+      results.push({
+        name: 'Antecedentes restantes',
+        reason: 'La extracción se limitó para proteger el tiempo de respuesta.',
+      });
+      break;
+    }
     const name = fileName(storagePath);
     const extension = name.split('.').at(-1)?.toLowerCase();
     if (extension !== 'pdf' && extension !== 'docx') {
@@ -137,10 +156,13 @@ export async function extractCaseDocuments(
       continue;
     }
     try {
-      const downloaded = await httpsGetBuffer(getSupabaseHostname(), storagePathname(storagePath), {
-        apikey: anonKey,
-        Authorization: `Bearer ${authReq.authToken}`,
-      });
+      const downloaded = await httpsGetBuffer(
+        getSupabaseHostname(),
+        storagePathname(storagePath),
+        { apikey: anonKey, Authorization: `Bearer ${authReq.authToken}` },
+        10 * 1024 * 1024,
+        Math.max(1_000, Math.min(5_000, deadlineAt - Date.now())),
+      );
       if (downloaded.status < 200 || downloaded.status >= 300) {
         results.push({ name, reason: 'Archivo no disponible con los permisos actuales.' });
         continue;
@@ -152,7 +174,7 @@ export async function extractCaseDocuments(
       const text = rawText
         .replaceAll(String.fromCharCode(0), '')
         .trim()
-        .slice(0, Math.min(MAX_EXTRACTED_CHARS_PER_DOCUMENT, remaining));
+        .slice(0, Math.min(maxCharsPerDocument, remaining));
       remaining -= text.length;
       results.push(
         text ? { name, text } : { name, reason: 'El archivo no contiene texto extraíble.' },

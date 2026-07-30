@@ -74,6 +74,9 @@ interface MainContentProps {
   mobileShowDetail: boolean;
   setMobileShowDetail: (v: boolean) => void;
   filteredCausas: Causa[];
+  hasMoreCausas: boolean;
+  isLoadingMoreCausas: boolean;
+  onLoadMoreCausas: () => void;
   showCreateForm: boolean;
   dispatchForm: React.Dispatch<FormAction>;
   handleReopenCausa: (causa: Causa) => void;
@@ -96,6 +99,9 @@ export default function MainContent({
   mobileShowDetail,
   setMobileShowDetail,
   filteredCausas,
+  hasMoreCausas,
+  isLoadingMoreCausas,
+  onLoadMoreCausas,
   showCreateForm,
   dispatchForm,
   handleReopenCausa,
@@ -146,6 +152,9 @@ export default function MainContent({
           mobileShowDetail={mobileShowDetail}
           setMobileShowDetail={setMobileShowDetail}
           filteredCausas={filteredCausas}
+          hasMoreCausas={hasMoreCausas}
+          isLoadingMoreCausas={isLoadingMoreCausas}
+          onLoadMoreCausas={onLoadMoreCausas}
           showCreateForm={showCreateForm}
           dispatchForm={dispatchForm}
           handleReopenCausa={handleReopenCausa}

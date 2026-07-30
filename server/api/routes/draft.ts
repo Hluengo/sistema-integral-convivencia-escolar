@@ -42,6 +42,62 @@ const DOCUMENT_SIGNERS: Record<DocType, string> = {
   informe_concluyente: 'Equipo de Convivencia Escolar',
 };
 
+const DRAFT_CONTEXT_LIMITS: Record<
+  DocType,
+  {
+    legalSourceChars: number;
+    historyEntries: number;
+    checklistItems: number;
+    measures: number;
+    documents: {
+      maxDocuments: number;
+      maxExtractedCharsPerDocument: number;
+      maxExtractedCharsTotal: number;
+    };
+  }
+> = {
+  notificacion_apertura: {
+    legalSourceChars: 18_000,
+    historyEntries: 12,
+    checklistItems: 12,
+    measures: 12,
+    documents: {
+      maxDocuments: 2,
+      maxExtractedCharsPerDocument: 6_000,
+      maxExtractedCharsTotal: 10_000,
+    },
+  },
+  citacion_entrevista: {
+    legalSourceChars: 8_000,
+    historyEntries: 4,
+    checklistItems: 4,
+    measures: 4,
+    documents: { maxDocuments: 0, maxExtractedCharsPerDocument: 0, maxExtractedCharsTotal: 0 },
+  },
+  informe_cierre_indagacion: {
+    legalSourceChars: 36_000,
+    historyEntries: 32,
+    checklistItems: 30,
+    measures: 25,
+    documents: {
+      maxDocuments: 4,
+      maxExtractedCharsPerDocument: 12_000,
+      maxExtractedCharsTotal: 32_000,
+    },
+  },
+  informe_concluyente: {
+    legalSourceChars: 44_000,
+    historyEntries: 40,
+    checklistItems: 35,
+    measures: 30,
+    documents: {
+      maxDocuments: 4,
+      maxExtractedCharsPerDocument: 14_000,
+      maxExtractedCharsTotal: 40_000,
+    },
+  },
+};
+
 function getSupabaseHostname(): string {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   if (!supabaseUrl || !URL.canParse(supabaseUrl)) throw new Error('Supabase no configurado');
@@ -102,6 +158,7 @@ router.post('/draft-document', requireAuth, async (req, res) => {
       return;
     }
     const docType = docTypeValue;
+    const contextLimits = DRAFT_CONTEXT_LIMITS[docType];
     const id = requireStr(body, 'id', 100);
     const studentName = requireStr(body, 'studentName', 200);
     const course = optStr(body, 'course', 100);
@@ -124,7 +181,7 @@ router.post('/draft-document', requireAuth, async (req, res) => {
 
     const safeMeasures = (medidasEjecutadas as string[])
       .map((value) => sanitize(value).slice(0, 500))
-      .slice(0, 50);
+      .slice(0, contextLimits.measures);
     const safeHistory = (bitacora as Array<Record<string, unknown>>)
       .map((entry) => ({
         title: sanitize(entry.titulo).slice(0, 200),
@@ -138,7 +195,7 @@ router.post('/draft-document', requireAuth, async (req, res) => {
           : [],
         document: sanitize(entry.documentoAdjunto).slice(0, 200),
       }))
-      .slice(0, 100);
+      .slice(0, contextLimits.historyEntries);
     const safeChecklist = (checklist as Array<Record<string, unknown>>)
       .map((item) => ({
         label: sanitize(item.label).slice(0, 300),
@@ -150,7 +207,7 @@ router.post('/draft-document', requireAuth, async (req, res) => {
         document: sanitize(item.documentoNombre).slice(0, 200),
         documentPath: sanitize(item.documentoUrl).slice(0, 500),
       }))
-      .slice(0, 100);
+      .slice(0, contextLimits.checklistItems);
 
     const authReq = req as AuthenticatedRequest;
     const documentValues = [
@@ -160,8 +217,12 @@ router.post('/draft-document', requireAuth, async (req, res) => {
     const [legalSources, extractedDocuments] = await Promise.all([
       getRelevantLegalSources(
         `${DOCUMENT_TITLES[docType]} ${infractionType} convivencia escolar debido proceso reglamento interno medidas disciplinarias apelación`,
+        contextLimits.legalSourceChars,
       ),
-      extractCaseDocuments(documentValues, authReq),
+      extractCaseDocuments(documentValues, authReq, {
+        ...contextLimits.documents,
+        deadlineMs: 8_000,
+      }),
     ]);
     const dossier = `
 # DOSSIER DEL EXPEDIENTE — DOCUMENTO CITADO

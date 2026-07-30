@@ -7,6 +7,7 @@ export function httpsPost(
   pathname: string,
   body: unknown,
   headers?: Record<string, string>,
+  timeoutMs = 20_000,
 ): Promise<{ status: number; body: unknown }> {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify(body);
@@ -28,6 +29,9 @@ export function httpsPost(
       });
     });
     req.on('error', reject);
+    req.setTimeout(timeoutMs, () =>
+      req.destroy(new Error(`La solicitud a ${hostname} excedió el tiempo máximo.`)),
+    );
     req.write(data);
     req.end();
   });
@@ -66,6 +70,7 @@ export function httpsGetBuffer(
   pathname: string,
   headers?: Record<string, string>,
   maxBytes = 10 * 1024 * 1024,
+  timeoutMs = 6_000,
 ): Promise<{ status: number; body: Buffer }> {
   return new Promise((resolve, reject) => {
     const req = https.request(
@@ -87,6 +92,9 @@ export function httpsGetBuffer(
       },
     );
     req.on('error', reject);
+    req.setTimeout(timeoutMs, () =>
+      req.destroy(new Error(`La descarga desde ${hostname} excedió el tiempo máximo.`)),
+    );
     req.end();
   });
 }

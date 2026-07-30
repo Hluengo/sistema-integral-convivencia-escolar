@@ -2,6 +2,6 @@
 
 export const causasQueryKeys = {
   root: ['causas'] as const,
-  list: (tenantId: string) => ['causas', tenantId, 'list'] as const,
+  list: (tenantId: string) => ['causas', tenantId, 'list', 'cursor'] as const,
   details: (tenantId: string, causaId: string) => ['causas', tenantId, 'details', causaId] as const,
 };
