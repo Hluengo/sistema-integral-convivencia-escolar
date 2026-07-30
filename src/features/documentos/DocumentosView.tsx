@@ -14,16 +14,13 @@ import {
 } from 'lucide-react';
 import { useUIStore } from '@/src/shared/lib/stores/uiStore';
 import { useCausasStore } from '@/src/shared/lib/stores/causasStore';
-import {
-  fetchStudentsWithAnnotationCounts,
-  fetchAnnotations,
-} from '@/src/services/annotations.service';
+import { fetchStudentsWithAnnotationCounts, fetchAnnotations } from '@/src/services/annotations.service';
 import { fetchCausas } from '@/src/services/cases';
 import type { AnotacionStudent, Annotation, Causa } from '@/src/shared/lib/types';
 import { getSemaphoricStyle, TEACHERS_BY_COURSE } from '@/src/lib/anotacionesUtils';
 
 const AnotacionesStudentDetailModal = lazy(
-  () => import('@/src/features/anotaciones/AnotacionesStudentDetailModal'),
+  () => import('@/src/features/anotaciones/AnotacionesStudentDetailModal')
 );
 
 type DocFiltro = 'todos' | 'causas' | 'anotaciones';
@@ -72,18 +69,12 @@ function getFaseForEstado(estadoActual: string): string {
   ) {
     return 'Resolución';
   }
-  if (estadoActual.includes('Apelación') || estadoActual.includes('Ejecutoriada'))
-    return 'Apelación';
-  if (estadoActual.includes('Seguimiento') || estadoActual.includes('Cerrada'))
-    return 'Seguimiento';
+  if (estadoActual.includes('Apelación') || estadoActual.includes('Ejecutoriada')) return 'Apelación';
+  if (estadoActual.includes('Seguimiento') || estadoActual.includes('Cerrada')) return 'Seguimiento';
   return 'Investigación';
 }
 
-function formatAnnotationSummary(
-  negativeCount: number,
-  positiveCount: number,
-  informativeCount: number,
-): string {
+function formatAnnotationSummary(negativeCount: number, positiveCount: number, informativeCount: number): string {
   const totalCount = negativeCount + positiveCount + informativeCount;
   const infoLabel = informativeCount === 1 ? 'informativa' : 'informativas';
   return `${totalCount} anotaciones (${negativeCount} negativas / ${positiveCount} positivas / ${informativeCount} ${infoLabel})`;
@@ -171,8 +162,8 @@ export default function DocumentosView() {
 
         setHubItems(
           [...causaItems, ...studentItems].sort(
-            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-          ),
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+          )
         );
       } catch {
         if (!cancelled) {
@@ -216,7 +207,7 @@ export default function DocumentosView() {
           (item.course && item.course.toLowerCase().includes(q)) ||
           item.description.toLowerCase().includes(q) ||
           item.status.toLowerCase().includes(q) ||
-          (item.type === 'causa' && (item.sourceRecord as Causa).id.toLowerCase().includes(q)),
+          (item.type === 'causa' && (item.sourceRecord as Causa).id.toLowerCase().includes(q))
       );
     }
     return result;
@@ -228,7 +219,7 @@ export default function DocumentosView() {
       causas: hubItems.filter((d) => d.type === 'causa').length,
       anotaciones: hubItems.filter((d) => d.type === 'student').length,
     }),
-    [hubItems],
+    [hubItems]
   );
 
   const selectedStudentAnnotations = useMemo(() => {
@@ -265,8 +256,8 @@ export default function DocumentosView() {
               informative_annotations_count: 0,
               disciplinary_status: 'Verde',
             }
-          : student,
-      ),
+          : student
+      )
     );
   };
 
@@ -310,17 +301,13 @@ export default function DocumentosView() {
                 type="button"
                 onClick={() => setFiltro(tab.key)}
                 className={`inline-flex items-center gap-2 rounded-lg px-3.5 py-1.5 font-semibold text-sm transition-colors duration-150 ${
-                  isActive
-                    ? 'bg-white text-neutral-900 shadow-sm'
-                    : 'text-neutral-500 hover:text-neutral-700'
+                  isActive ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500 hover:text-neutral-700'
                 }`}
               >
                 {tab.label}
                 <span
                   className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums ${
-                    isActive
-                      ? 'bg-neutral-100 text-neutral-600'
-                      : 'bg-neutral-200/60 text-neutral-500'
+                    isActive ? 'bg-neutral-100 text-neutral-600' : 'bg-neutral-200/60 text-neutral-500'
                   }`}
                 >
                   {count}
@@ -334,10 +321,7 @@ export default function DocumentosView() {
       {cargando ? (
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div
-              key={`skel-${i}`}
-              className="flex animate-pulse items-center gap-4 rounded-xl border border-neutral-200/60 bg-white p-5"
-            >
+            <div key={`skel-${i}`} className="flex animate-pulse items-center gap-4 rounded-xl border border-neutral-200/60 bg-white p-5">
               <div className="h-10 w-10 shrink-0 rounded-xl bg-neutral-200" />
               <div className="min-w-0 flex-1 space-y-2">
                 <div className="h-4 w-48 rounded bg-neutral-200" />
@@ -352,9 +336,7 @@ export default function DocumentosView() {
           <ScrollText className="mx-auto mb-4 h-12 w-12 text-neutral-300" />
           <h3 className="font-semibold text-neutral-700 text-sm">No se encontraron documentos</h3>
           <p className="mt-1 text-neutral-400 text-xs">
-            {busqueda
-              ? 'No hay documentos que coincidan con la búsqueda.'
-              : 'No hay documentos registrados en el sistema.'}
+            {busqueda ? 'No hay documentos que coincidan con la búsqueda.' : 'No hay documentos registrados en el sistema.'}
           </p>
         </div>
       ) : (
@@ -365,9 +347,7 @@ export default function DocumentosView() {
             const fase = isCausa ? getFaseForEstado(item.status) : '';
             const studentRecord = isStudent ? (item.sourceRecord as AnotacionStudent) : null;
             const negCount = studentRecord ? Number(studentRecord.annotations_count) || 0 : 0;
-            const semStyle = studentRecord
-              ? getSemaphoricStyle(negCount)
-              : { badge: '', dot: '', text: '' };
+            const semStyle = studentRecord ? getSemaphoricStyle(negCount) : { badge: '', dot: '', text: '' };
             return (
               <button
                 key={item.id}
@@ -375,28 +355,18 @@ export default function DocumentosView() {
                 onClick={() => handleDocClick(item)}
                 className="flex w-full items-center gap-4 rounded-xl border border-neutral-200/80 bg-white p-5 text-left shadow-xs transition-colors transition-shadow hover:border-brand-200 hover:shadow-md"
               >
-                <div
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isCausa ? 'bg-brand-50' : 'bg-violet-50'}`}
-                >
-                  {isCausa ? (
-                    <Scale className="h-5 w-5 text-brand-600" />
-                  ) : (
-                    <User className="h-5 w-5 text-violet-600" />
-                  )}
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isCausa ? 'bg-brand-50' : 'bg-violet-50'}`}>
+                  {isCausa ? <Scale className="h-5 w-5 text-brand-600" /> : <User className="h-5 w-5 text-violet-600" />}
                 </div>
 
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-baseline gap-2">
                     <h3 className="font-bold text-neutral-900 text-sm truncate">{item.title}</h3>
-                    <span
-                      className={`shrink-0 rounded-full px-2 py-0.5 font-semibold text-[10px] ${isCausa ? 'bg-brand-100 text-brand-700' : 'bg-violet-100 text-violet-700'}`}
-                    >
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 font-semibold text-[10px] ${isCausa ? 'bg-brand-100 text-brand-700' : 'bg-violet-100 text-violet-700'}`}>
                       {isCausa ? 'Causa' : 'Anotaciones'}
                     </span>
                     {isStudent && semStyle.dot && (
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold text-[10px] ${semStyle.badge}`}
-                      >
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold text-[10px] ${semStyle.badge}`}>
                         <Circle className={`h-1.5 w-1.5 fill-current${semStyle.dot}`} />
                         {STATUS_LABEL[item.status] || item.status}
                       </span>
@@ -406,15 +376,11 @@ export default function DocumentosView() {
                     {item.course && <span className="text-neutral-400">{item.course}</span>}
                     <span className="text-neutral-400">{formatLastRecordLabel(item.date)}</span>
                   </div>
-                  {item.description && (
-                    <p className="mt-1 text-neutral-500 text-xs">{item.description}</p>
-                  )}
+                  {item.description && <p className="mt-1 text-neutral-500 text-xs">{item.description}</p>}
                   {isCausa && (
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       {fase && FASE_BADGE[fase] && (
-                        <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-semibold text-[10px] ${FASE_BADGE[fase]}`}
-                        >
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 font-semibold text-[10px] ${FASE_BADGE[fase]}`}>
                           {fase}
                         </span>
                       )}
@@ -449,13 +415,7 @@ export default function DocumentosView() {
       )}
 
       {selectedStudent && (
-        <Suspense
-          fallback={
-            <div className="py-10 text-center text-sm text-neutral-500">
-              Cargando ficha disciplinaria...
-            </div>
-          }
-        >
+        <Suspense fallback={<div className="py-10 text-center text-sm text-neutral-500">Cargando ficha disciplinaria...</div>}>
           <AnotacionesStudentDetailModal
             student={selectedStudent}
             annotations={selectedStudentAnnotations}
