@@ -63,23 +63,30 @@ describe('Listado de causas activas', () => {
     assert.match(table, /Gestionar expediente/);
   });
 
-  it('abre un modal accesible y expone las cinco fases como pestañas', () => {
+  it('abre un modal accesible y mueve el trabajo de fases a la ruta del expediente', () => {
     const view = read('MainContent/CausasView.tsx');
     const modal = read('CausaDetailModal.tsx');
     const tabs = read('../timeline/TimelineTabs.tsx');
+    const summary = read('../timeline/ResumenTab.tsx');
+    const panels = read('../timeline/TimelineTabPanels.tsx');
+    const operationalSummary = read('causaOperationalSummary.ts');
 
     assert.match(view, /<CausaDetailModal/);
     assert.match(modal, /<Dialog open=/);
     assert.match(modal, /onOpenChange/);
     assert.match(modal, /<DetailModalContent/);
-    for (const phase of ['Recepción', 'Investigación', 'Resolución', 'Apelación', 'Seguimiento']) {
-      assert.match(tabs, new RegExp(phase));
-    }
     assert.match(tabs, /Resumen/);
     assert.match(tabs, /Historial/);
     assert.match(tabs, /Asistente legal/);
-    assert.match(tabs, /getPhaseProgress/);
-    assert.match(tabs, /bg-emerald-500/);
+    assert.doesNotMatch(tabs, /Recepción/);
+    for (const phase of ['Recepción', 'Investigación', 'Resolución', 'Apelación', 'Seguimiento']) {
+      assert.match(operationalSummary, new RegExp(phase));
+    }
+    assert.match(summary, /onSelectPhase/);
+    assert.match(summary, /Trabajar.*hitos/);
+    assert.match(summary, /aria-controls="phase-workspace"/);
+    assert.match(panels, /<ProcesoTab/);
+    assert.match(panels, /id="phase-workspace"/);
   });
 
   it('calcula días civiles usando la fecha chilena incluso cerca de UTC', () => {
@@ -132,6 +139,22 @@ describe('Listado de causas activas', () => {
     assert.match(summary, /Plazo:/);
     assert.match(operationalSummary, /causa\.checklistDebidoProceso/);
     assert.match(operationalSummary, /causa\.bitacora/);
+  });
+
+  it('alinea el historial de causas con el registro manual y las tarjetas de anotaciones', () => {
+    const causesHistory = read('../timeline/BitacoraTab.tsx');
+    const annotationHistoryForm = read(
+      '../anotaciones/AnotacionesStudentDetailModal/ManualHistoryEntryForm.tsx',
+    );
+    const sharedHistoryForm = read('../../shared/ui/HistoryEntryForm.tsx');
+
+    assert.match(causesHistory, /HistoryEntryForm/);
+    assert.match(causesHistory, /Detalles del registro/);
+    assert.match(causesHistory, /rounded-xl border border-neutral-200 bg-white p-4 shadow-xs/);
+    assert.match(causesHistory, /NotebookPen/);
+    assert.match(annotationHistoryForm, /HistoryEntryForm/);
+    assert.match(sharedHistoryForm, /Nueva entrada en el historial/);
+    assert.match(sharedHistoryForm, /Registrar entrada manual/);
   });
 
   it('no selecciona automáticamente la primera causa al cargar el listado', () => {

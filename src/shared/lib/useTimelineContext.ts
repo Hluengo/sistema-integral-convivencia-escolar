@@ -1,7 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { createContext, useContext } from 'react';
-import type { Causa, UserRole, BitacoraEntry, ChecklistItem } from '../../types';
+import type { Causa, ChecklistItem, UserRole } from '../../types';
+import type { ManualBitacoraEntryInput } from './hooks/useBitacoraLog';
 
 interface TimelineContextValue {
   causa: Causa;
@@ -34,17 +35,7 @@ interface TimelineContextValue {
   handleAttachDocument: (itemId: string, file: File | null) => Promise<void>;
   handleRemoveDocument: (itemId: string, fileName?: string) => Promise<void>;
 
-  showLogForm: boolean;
-  setShowLogForm: React.Dispatch<React.SetStateAction<boolean>>;
-  logType: BitacoraEntry['tipo'];
-  setLogType: React.Dispatch<React.SetStateAction<BitacoraEntry['tipo']>>;
-  logTitle: string;
-  setLogTitle: React.Dispatch<React.SetStateAction<string>>;
-  logDesc: string;
-  setLogDesc: React.Dispatch<React.SetStateAction<string>>;
-  logParticipantes: string;
-  setLogParticipantes: React.Dispatch<React.SetStateAction<string>>;
-  handleAddNewLog: (e: React.FormEvent) => void;
+  createManualLog: (input: ManualBitacoraEntryInput) => Promise<void>;
 
   aiSubTab: 'auditoria' | 'borradores';
   setAiSubTab: React.Dispatch<React.SetStateAction<'auditoria' | 'borradores'>>;

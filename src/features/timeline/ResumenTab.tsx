@@ -11,7 +11,7 @@ import {
   MoveRight,
   UserRound,
 } from 'lucide-react';
-import type { Causa } from '../../types';
+import type { Causa, FaseProcedimental } from '../../types';
 import { getCausaDeadline, getCausaPhase, getCausaStatus } from '../causas/causaPresentation';
 import { formatChileDate } from '../../shared/lib/dateTime';
 import { getCausaOperationalSummary } from '../causas/causaOperationalSummary';
@@ -19,9 +19,16 @@ import { getCausaOperationalSummary } from '../causas/causaOperationalSummary';
 interface ResumenTabProps {
   causa: Causa;
   breaches: string[];
+  selectedPhase: FaseProcedimental | null;
+  onSelectPhase: (phase: FaseProcedimental | null) => void;
 }
 
-export default function ResumenTab({ causa, breaches }: ResumenTabProps) {
+export default function ResumenTab({
+  causa,
+  breaches,
+  selectedPhase,
+  onSelectPhase,
+}: ResumenTabProps) {
   const deadline = getCausaDeadline(causa);
   const completed = causa.checklistDebidoProceso.filter((item) => item.completado).length;
   const summary = getCausaOperationalSummary(causa);
@@ -64,44 +71,54 @@ export default function ResumenTab({ causa, breaches }: ResumenTabProps) {
               phase.total > 0 ? Math.round((phase.completed / phase.total) * 100) : 0;
             const isCurrentPhase = phase.phase === summary.currentPhase;
             const isComplete = phase.total > 0 && phase.completed === phase.total;
+            const isSelected = phase.phase === selectedPhase;
 
             return (
               <li key={phase.phase} className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className={`flex size-5 shrink-0 items-center justify-center rounded-full font-bold text-[10px] ${
-                      isComplete
-                        ? 'bg-emerald-600 text-white'
-                        : isCurrentPhase
-                          ? 'bg-slate-800 text-white ring-4 ring-slate-200'
-                          : 'bg-slate-200 text-slate-600'
-                    }`}
-                    aria-hidden="true"
-                  >
-                    {isComplete ? <CircleCheck className="size-3" /> : index + 1}
-                  </span>
-                  <span className="hidden h-px flex-1 bg-slate-200 sm:block" aria-hidden="true" />
-                </div>
-                <p
-                  className={`mt-2 truncate font-semibold text-[10px] sm:text-xs ${
-                    isCurrentPhase ? 'text-slate-900' : 'text-slate-500'
-                  }`}
-                  title={phase.phase}
+                <button
+                  type="button"
+                  onClick={() => onSelectPhase(isSelected ? null : phase.phase)}
+                  aria-expanded={isSelected}
+                  aria-controls="phase-workspace"
+                  className="group w-full rounded-lg text-left outline-none transition focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                  aria-label={`${isSelected ? 'Cerrar' : 'Trabajar'} hitos de ${phase.phase}`}
                 >
-                  {phase.phase}
-                </p>
-                <div className="mt-1 h-1 overflow-hidden rounded-full bg-slate-200">
-                  <span
-                    className={`block h-full rounded-full ${
-                      isComplete
-                        ? 'bg-emerald-500'
-                        : isCurrentPhase
-                          ? 'bg-slate-700'
-                          : 'bg-slate-400'
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={`flex size-5 shrink-0 items-center justify-center rounded-full font-bold text-[10px] ${
+                        isComplete
+                          ? 'bg-emerald-600 text-white'
+                          : isSelected || isCurrentPhase
+                            ? 'bg-slate-800 text-white ring-4 ring-slate-200'
+                            : 'bg-slate-200 text-slate-600'
+                      }`}
+                      aria-hidden="true"
+                    >
+                      {isComplete ? <CircleCheck className="size-3" /> : index + 1}
+                    </span>
+                    <span className="hidden h-px flex-1 bg-slate-200 sm:block" aria-hidden="true" />
+                  </div>
+                  <p
+                    className={`mt-2 truncate font-semibold text-[10px] sm:text-xs ${
+                      isSelected || isCurrentPhase ? 'text-slate-900' : 'text-slate-500'
                     }`}
-                    style={{ width: `${percentage}%` }}
-                  />
-                </div>
+                    title={phase.phase}
+                  >
+                    {phase.phase}
+                  </p>
+                  <div className="mt-1 h-1 overflow-hidden rounded-full bg-slate-200">
+                    <span
+                      className={`block h-full rounded-full ${
+                        isComplete
+                          ? 'bg-emerald-500'
+                          : isSelected || isCurrentPhase
+                            ? 'bg-slate-700'
+                            : 'bg-slate-400'
+                      }`}
+                      style={{ width: `${percentage}%` }}
+                    />
+                  </div>
+                </button>
               </li>
             );
           })}

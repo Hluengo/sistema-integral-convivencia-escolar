@@ -4,7 +4,7 @@
  */
 
 import { Suspense, lazy, useState } from 'react';
-import type { Causa, UserRole } from '@/src/types';
+import type { Causa, FaseProcedimental, UserRole } from '@/src/types';
 import { getFaseForEstado } from '@/src/data';
 import TimelineHeader from './InteractiveTimeline/TimelineHeader';
 import TimelineTabs from './InteractiveTimeline/TimelineTabs';
@@ -52,6 +52,7 @@ export default function InteractiveTimeline({
   const privacyMode = propPrivacy ?? ctx.privacyMode;
 
   const [activeTab, setActiveTab] = useState<TimelineTab>('resumen');
+  const [selectedPhase, setSelectedPhase] = useState<FaseProcedimental | null>(null);
   const [showEdit, setShowEdit] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [showForceClose, setShowForceClose] = useState(false);
@@ -119,6 +120,8 @@ export default function InteractiveTimeline({
           currentFase={currentFase}
           CustomMarkdownRenderer={MarkdownRenderer}
           breaches={breaches}
+          selectedPhase={selectedPhase}
+          onSelectPhase={setSelectedPhase}
         />
       </div>
     </TimelineProvider>

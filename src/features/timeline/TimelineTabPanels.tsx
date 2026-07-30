@@ -4,13 +4,13 @@
  */
 
 import type React from 'react';
-import type { Causa } from '../../types';
+import type { Causa, FaseProcedimental } from '../../types';
 import ProcesoTab from './ProcesoTab';
 import BitacoraTab from './BitacoraTab';
 import AsistenteIATab from './AsistenteIATab';
 import ResumenTab from './ResumenTab';
 import { useTimelineContext } from '../../context/useTimelineContext';
-import { PHASE_TAB_TO_NAME, type TimelineTab } from './timelineTabs';
+import type { TimelineTab } from './timelineTabs';
 import { DetailModalBody } from '../../shared/ui/DetailModal';
 
 interface TimelineTabPanelsProps {
@@ -19,6 +19,8 @@ interface TimelineTabPanelsProps {
   currentFase: string;
   CustomMarkdownRenderer: ({ text }: { text: string }) => React.ReactElement;
   breaches: string[];
+  selectedPhase: FaseProcedimental | null;
+  onSelectPhase: (phase: FaseProcedimental | null) => void;
 }
 
 export default function TimelineTabPanels({
@@ -27,59 +29,60 @@ export default function TimelineTabPanels({
   currentFase,
   CustomMarkdownRenderer,
   breaches,
+  selectedPhase,
+  onSelectPhase,
 }: TimelineTabPanelsProps) {
   const ctx = useTimelineContext();
-  const selectedPhase = PHASE_TAB_TO_NAME[activeTab];
 
   return (
     <DetailModalBody className="space-y-4">
-      {activeTab === 'resumen' && <ResumenTab causa={causa} breaches={breaches} />}
-
-      {selectedPhase && (
-        <ProcesoTab
-          causa={causa}
-          currentRole={ctx.currentRole}
-          currentFase={currentFase}
-          expandedStages={ctx.expandedStages}
-          setExpandedStages={ctx.setExpandedStages}
-          registeringItemId={ctx.registeringItemId}
-          setRegisteringItemId={ctx.setRegisteringItemId}
-          regName={ctx.regName}
-          setRegName={ctx.setRegName}
-          regObservations={ctx.regObservations}
-          setRegObservations={ctx.setRegObservations}
-          regFileName={ctx.regFileName}
-          setRegFileName={ctx.setRegFileName}
-          handleStartRegister={ctx.handleStartRegister}
-          handleFileChange={ctx.handleFileChange}
-          handleSaveRegistration={ctx.handleSaveRegistration}
-          handleResetRegistration={ctx.handleResetRegistration}
-          regFile={ctx.regFile}
-          isSavingRegistration={ctx.isSavingRegistration}
-          registrationError={ctx.registrationError}
-          documentError={ctx.documentError}
-          handleAttachDocument={ctx.handleAttachDocument}
-          handleRemoveDocument={ctx.handleRemoveDocument}
-          documents={ctx.documents}
-          selectedPhase={selectedPhase}
-        />
+      {activeTab === 'resumen' && (
+        <>
+          <ResumenTab
+            causa={causa}
+            breaches={breaches}
+            selectedPhase={selectedPhase}
+            onSelectPhase={onSelectPhase}
+          />
+          {selectedPhase && (
+            <section id="phase-workspace" aria-label={`Hitos de ${selectedPhase}`}>
+              <ProcesoTab
+                causa={causa}
+                currentRole={ctx.currentRole}
+                currentFase={currentFase}
+                expandedStages={ctx.expandedStages}
+                setExpandedStages={ctx.setExpandedStages}
+                registeringItemId={ctx.registeringItemId}
+                setRegisteringItemId={ctx.setRegisteringItemId}
+                regName={ctx.regName}
+                setRegName={ctx.setRegName}
+                regObservations={ctx.regObservations}
+                setRegObservations={ctx.setRegObservations}
+                regFileName={ctx.regFileName}
+                setRegFileName={ctx.setRegFileName}
+                handleStartRegister={ctx.handleStartRegister}
+                handleFileChange={ctx.handleFileChange}
+                handleSaveRegistration={ctx.handleSaveRegistration}
+                handleResetRegistration={ctx.handleResetRegistration}
+                regFile={ctx.regFile}
+                isSavingRegistration={ctx.isSavingRegistration}
+                registrationError={ctx.registrationError}
+                documentError={ctx.documentError}
+                handleAttachDocument={ctx.handleAttachDocument}
+                handleRemoveDocument={ctx.handleRemoveDocument}
+                documents={ctx.documents}
+                selectedPhase={selectedPhase}
+              />
+            </section>
+          )}
+        </>
       )}
 
       {activeTab === 'bitacora' && (
         <BitacoraTab
           causa={causa}
           currentRole={ctx.currentRole}
-          showLogForm={ctx.showLogForm}
-          setShowLogForm={ctx.setShowLogForm}
-          logType={ctx.logType}
-          setLogType={ctx.setLogType}
-          logParticipantes={ctx.logParticipantes}
-          setLogParticipantes={ctx.setLogParticipantes}
-          logTitle={ctx.logTitle}
-          setLogTitle={ctx.setLogTitle}
-          logDesc={ctx.logDesc}
-          setLogDesc={ctx.setLogDesc}
-          handleAddNewLog={ctx.handleAddNewLog}
+          onCreateManualEntry={ctx.createManualLog}
         />
       )}
 

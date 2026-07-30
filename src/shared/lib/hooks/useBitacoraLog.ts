@@ -1,4 +1,5 @@
-import { useState } from 'react';
+/** @license SPDX-License-Identifier: Apache-2.0 */
+
 import type { Causa, BitacoraEntry } from '../../../types';
 import { nowDateOnly, nowIso } from '../../../lib/dateUtils';
 
@@ -7,27 +8,38 @@ interface UseBitacoraLogArgs {
   onUpdateCausa: (updated: Causa) => void;
 }
 
+export interface ManualBitacoraEntryInput {
+  title: string;
+  description: string;
+  type: BitacoraEntry['tipo'];
+  participants: string;
+}
+
 export function useBitacoraLog({ causa, onUpdateCausa }: UseBitacoraLogArgs) {
-  const [showLogForm, setShowLogForm] = useState<boolean>(false);
-  const [logType, setLogType] = useState<BitacoraEntry['tipo']>('Entrevista');
-  const [logTitle, setLogTitle] = useState<string>('');
-  const [logDesc, setLogDesc] = useState<string>('');
-  const [logParticipantes, setLogParticipantes] = useState<string>('');
+  const createManualLog = async ({
+    title,
+    description,
+    type,
+    participants: participantText,
+  }: ManualBitacoraEntryInput): Promise<void> => {
+    const normalizedTitle = title.trim();
+    const normalizedDescription = description.trim();
+    if (!normalizedTitle || !normalizedDescription) return;
 
-  const handleAddNewLog = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!logTitle || !logDesc) { return; }
-
-    const participants = logParticipantes
-      ? logParticipantes.split(',').map(value => value.trim())
-      : ['No especificados'];
+    const parsedParticipants = participantText.trim()
+      ? participantText
+          .split(',')
+          .map((value) => value.trim())
+          .filter(Boolean)
+      : [];
+    const participants = parsedParticipants.length > 0 ? parsedParticipants : ['No especificados'];
 
     const newEntry: BitacoraEntry = {
       id: `b_custom_${crypto.randomUUID()}`,
       fecha: nowIso(),
-      tipo: logType,
-      titulo: logTitle,
-      descripcion: logDesc,
+      tipo: type,
+      titulo: normalizedTitle,
+      descripcion: normalizedDescription,
       participantes: participants,
     };
 
@@ -36,19 +48,9 @@ export function useBitacoraLog({ causa, onUpdateCausa }: UseBitacoraLogArgs) {
       bitacora: [newEntry, ...causa.bitacora],
       fechaUltimaActualizacion: nowDateOnly(),
     });
-
-    setLogTitle('');
-    setLogDesc('');
-    setLogParticipantes('');
-    setShowLogForm(false);
   };
 
   return {
-    showLogForm, setShowLogForm,
-    logType, setLogType,
-    logTitle, setLogTitle,
-    logDesc, setLogDesc,
-    logParticipantes, setLogParticipantes,
-    handleAddNewLog,
+    createManualLog,
   };
 }
