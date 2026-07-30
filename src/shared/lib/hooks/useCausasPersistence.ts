@@ -64,7 +64,9 @@ export function useCausasPersistence({
           newMap.set(c.id, JSON.stringify(c));
         }
         prevCausasMapRef.current = newMap;
-        setSelectedCausaId(loaded[0]?.id || '');
+        // La carga inicial debe mostrar el listado. Una causa solo se selecciona
+        // mediante una acción explícita del usuario (tabla, dashboard o documentos).
+        setSelectedCausaId('');
       } catch (error) {
         console.error('Error loading causas:', error);
         if (!isMountedRef.current) return;

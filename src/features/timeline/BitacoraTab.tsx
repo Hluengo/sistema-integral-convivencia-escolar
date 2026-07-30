@@ -47,7 +47,7 @@ export default function BitacoraTab({
       <div className="flex items-center justify-between">
         <h3 className="flex items-center gap-2 font-semibold text-neutral-700 text-xs uppercase tracking-wider">
           <FileText className="h-4 w-4 text-brand-500" aria-hidden="true" />
-          Bitácora del expediente
+          Historial del expediente
         </h3>
         {currentRole !== 'docente' && (
           <button

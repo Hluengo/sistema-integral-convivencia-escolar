@@ -14,6 +14,7 @@ export default function CausaDetailModal({ causa, privacyMode, onClose }: CausaD
   return (
     <Dialog open={Boolean(causa)} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
+        hideClose
         className="flex h-[min(92vh,900px)] max-h-[92vh] w-[min(96vw,1280px)] max-w-none flex-col overflow-hidden p-0"
         aria-label={causa ? `Gestión del expediente ${causa.id}` : 'Gestión del expediente'}
       >
@@ -23,7 +24,14 @@ export default function CausaDetailModal({ causa, privacyMode, onClose }: CausaD
         <DialogDescription className="sr-only">
           Gestión completa del debido proceso, sus hitos, bitácora y asistencia legal.
         </DialogDescription>
-        {causa && <InteractiveTimeline key={causa.id} causa={causa} privacyMode={privacyMode} />}
+        {causa && (
+          <InteractiveTimeline
+            key={causa.id}
+            causa={causa}
+            privacyMode={privacyMode}
+            onClose={onClose}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

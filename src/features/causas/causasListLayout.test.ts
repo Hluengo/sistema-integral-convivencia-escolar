@@ -75,8 +75,10 @@ describe('Listado de causas activas', () => {
       assert.match(tabs, new RegExp(phase));
     }
     assert.match(tabs, /Resumen/);
-    assert.match(tabs, /Bitácora/);
+    assert.match(tabs, /Historial/);
     assert.match(tabs, /Asistente legal/);
+    assert.match(tabs, /getPhaseProgress/);
+    assert.match(tabs, /bg-emerald-500/);
   });
 
   it('calcula días civiles usando la fecha chilena incluso cerca de UTC', () => {
@@ -108,5 +110,11 @@ describe('Listado de causas activas', () => {
     assert.match(process, /causa\.checklistDebidoProceso\.filter/);
     assert.match(process, /item\.registradoPor/);
     assert.match(process, /item\.fechaCompletado/);
+  });
+
+  it('no selecciona automáticamente la primera causa al cargar el listado', () => {
+    const persistence = read('../../shared/lib/hooks/useCausasPersistence.ts');
+    assert.match(persistence, /setSelectedCausaId\(''\)/);
+    assert.doesNotMatch(persistence, /setSelectedCausaId\(loaded\[0\]/);
   });
 });

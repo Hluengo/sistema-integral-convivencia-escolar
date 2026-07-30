@@ -29,6 +29,7 @@ interface InteractiveTimelineProps {
   setIsSidebarCollapsed?: (collapsed: boolean) => void;
   isTimelineCollapsed?: boolean;
   setIsTimelineCollapsed?: (collapsed: boolean) => void;
+  onClose?: () => void;
 }
 
 export default function InteractiveTimeline({
@@ -41,6 +42,7 @@ export default function InteractiveTimeline({
   setIsSidebarCollapsed,
   isTimelineCollapsed = false,
   setIsTimelineCollapsed,
+  onClose,
 }: InteractiveTimelineProps) {
   const ctx = useAppContext();
   const onUpdateCausa = propOnUpdate ?? ctx.handleUpdateCausa;
@@ -70,6 +72,7 @@ export default function InteractiveTimeline({
           isTimelineCollapsed={isTimelineCollapsed}
           setIsTimelineCollapsed={setIsTimelineCollapsed}
           breaches={breaches}
+          onClose={onClose}
         />
         <ConfirmDialog
           open={showConfirmDelete}
@@ -97,11 +100,7 @@ export default function InteractiveTimeline({
             />
           </Suspense>
         )}
-        <TimelineTabs
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          bitacoraCount={causa.bitacora.length}
-        />
+        <TimelineTabs activeTab={activeTab} setActiveTab={setActiveTab} causa={causa} />
         <TimelineTabPanels
           activeTab={activeTab}
           causa={causa}
