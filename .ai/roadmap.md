@@ -71,6 +71,7 @@
 
 ### Frontend
 
+- [x] Caché React Query de causas y detalles aislada por tenant, con actualización selectiva tras mutaciones
 - [ ] React Router para deep linking (navegación por URL)
 - [ ] Refactor de `components/` legacy → eliminar duplicación
 - [ ] Skeleton loading para todas las vistas lazy

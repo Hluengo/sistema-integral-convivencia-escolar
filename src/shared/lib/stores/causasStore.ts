@@ -7,7 +7,9 @@ import { EstadoCausa } from '../../../types';
 import { createCausa, deleteCausa } from '../../../services/cases/causas.service';
 import { createDraftCausa } from '../../../lib/causaFactory';
 import { nowDateOnly } from '../../../lib/dateUtils';
+import { useAuthStore } from './authStore';
 import { useToastStore } from './toastStore';
+import { addCausaToCache, removeCausaFromCache } from '../queries/causasQueryCache';
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
@@ -81,10 +83,13 @@ export const useCausasStore = create<CausasState>((set, get) => ({
     });
     const result = await createCausa(newObj);
     if (result) {
+      const createdCausa = { ...newObj, id: result };
       set((prev) => ({
-        causas: [{ ...newObj, id: result }, ...prev.causas],
+        causas: [createdCausa, ...prev.causas],
         selectedCausaId: result,
       }));
+      const tenantId = useAuthStore.getState().tenantId;
+      if (tenantId) addCausaToCache(tenantId, createdCausa);
       useToastStore.getState().addToast('success', `Caso ${result} creado exitosamente`);
     } else {
       useToastStore.getState().addToast('error', 'Error al crear el caso');
@@ -99,6 +104,8 @@ export const useCausasStore = create<CausasState>((set, get) => ({
       useToastStore.getState().addToast('error', 'Error al eliminar el caso');
       return;
     }
+    const tenantId = useAuthStore.getState().tenantId;
+    if (tenantId) removeCausaFromCache(tenantId, id);
     set((state) => {
       const nextCausas = state.causas.filter((c) => c.id !== id);
       return {

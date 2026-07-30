@@ -14,5 +14,6 @@
 
 - Server: in-memory 5min TTL, max 100 entries (advisor-chat, improve-text)
 - Client: React Query (courses 30min, students 10min)
-- Causas: el listado carga solo metadatos; checklist e historial se solicitan una vez al abrir cada expediente.
+- Causas: React Query mantiene el listado y cada detalle en cachés separadas por tenant; checklist e historial se solicitan una vez al abrir cada expediente.
 - Autoguardado: persiste únicamente el bloque que cambió (expediente, historial o checklist) y solo los ítems modificados.
+- La caché se actualiza después de guardar o crear/eliminar una causa, sin refetch global.

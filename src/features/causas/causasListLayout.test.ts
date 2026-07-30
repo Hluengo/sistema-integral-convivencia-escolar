@@ -113,8 +113,8 @@ describe('Listado de causas activas', () => {
   });
 
   it('no selecciona automáticamente la primera causa al cargar el listado', () => {
-    const persistence = read('../../shared/lib/hooks/useCausasPersistence.ts');
-    assert.match(persistence, /setSelectedCausaId\(''\)/);
-    assert.doesNotMatch(persistence, /setSelectedCausaId\(loaded\[0\]/);
+    const app = read('../../app/App.tsx');
+    assert.match(app, /setSelectedCausaId\(''\)/);
+    assert.doesNotMatch(app, /setSelectedCausaId\(causasQuery\.data\[0\]/);
   });
 });

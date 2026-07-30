@@ -53,6 +53,13 @@ El build emite warnings de chunks circulares debido a la configuración de `manu
 - **Listado liviano**: `fetchCausas()` obtiene solo los metadatos necesarios para la tabla y las métricas.
 - **Detalle bajo demanda**: `fetchCausaDetails(causaId)` obtiene historial y checklist únicamente al gestionar ese expediente; el resultado queda en el store durante la sesión.
 - **Autoguardado diferencial**: al editar, se compara el estado previo con el actual. Se actualiza solamente la entidad afectada y los ítems creados, modificados o eliminados; no se reescriben colecciones completas.
+- **Caché aislada por tenant**: las claves de React Query incluyen `tenant_id`, impidiendo reutilizar metadatos o antecedentes entre establecimientos durante una misma sesión.
+- **Invalidación selectiva sin reconsulta**: una escritura exitosa actualiza sólo el expediente y detalle cacheados; al eliminar, se descarta exclusivamente la entrada de esa causa.
+- **Telemetría agregada**: se registran duración, ámbito (listado o detalle) y cantidad de registros, sin IDs, nombres, RUT ni contenido del expediente.
+
+### Próxima etapa: paginación respaldada por índices
+
+La paginación por cursor no se activa todavía porque requiere medir el volumen real y agregar mediante migración los índices que respalden el orden y filtros usados. Se mantiene el límite actual para no alterar búsqueda, conteos ni filtros de los expedientes activos sin esa verificación.
 
 ## Performance Monitoring
 

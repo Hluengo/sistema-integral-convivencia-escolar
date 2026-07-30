@@ -52,3 +52,7 @@ Components/Hooks
               ├── Auth (signInWithPassword, signOut, onAuthStateChange)
               └── Storage (upload, download, list, remove)
 ```
+
+## Caché de Expedientes
+
+`useCausasQuery` concentra las lecturas de expedientes en React Query. Sus claves separan listado y detalle, e incluyen el tenant. `causasQueryCache` actualiza la caché después de una mutación exitosa para evitar consultas globales adicionales.

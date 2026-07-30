@@ -74,8 +74,9 @@ Zustand (authStore, causasStore, uiStore, toastStore)
   ├── Acciones síncronas (setCausas, setSelectedCausaId)
   └── Side effects on init (authStore subscribe onAuthStateChange)
 
-TanStack React Query (courses, students queries)
-  └── Fetching + caching (staleTime: 30min courses, 10min students)
+TanStack React Query (courses, students, causas queries)
+  └── Fetching + caching (courses 30min, students 10min, causas list 1min, detalle 5min)
+  └── Causas separa caché de listado y detalle por tenant; las mutaciones actualizan sólo la entrada afectada
 
 useReducer (useNewCausaForm form state)
   └── Estado local del formulario wizard

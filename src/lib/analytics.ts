@@ -15,7 +15,8 @@ export type AnalyticsEvent =
   | 'user_logged_in'
   | 'user_logged_out'
   | 'error_caught'
-  | 'feature_used';
+  | 'feature_used'
+  | 'causas_query_completed';
 
 export interface AnalyticsPayload {
   screen_viewed: { screen: string };
@@ -30,6 +31,11 @@ export interface AnalyticsPayload {
   user_logged_out: Record<string, never>;
   error_caught: { errorMessage: string; component?: string };
   feature_used: { feature: string };
+  causas_query_completed: {
+    scope: 'list' | 'detail';
+    durationMs: number;
+    resultCount: number;
+  };
 }
 
 type PostHogProperties = Record<string, unknown>;

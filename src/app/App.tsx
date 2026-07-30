@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { Suspense, lazy, useCallback, useMemo, useRef } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef } from 'react';
 import { signOut } from '../services/auth.service';
 import { useAuthStore } from '../stores/authStore';
 import { useCausasStore } from '../stores/causasStore';
@@ -10,7 +10,14 @@ import { useNewCausaForm } from '../hooks/useNewCausaForm';
 import { useCoursesQuery } from '../hooks/useCoursesQuery';
 import { useStudentsQuery } from '../hooks/useStudentsQuery';
 import { useCausasPersistence } from '../hooks/useCausasPersistence';
+import { useCausaDetailsQuery, useCausasQuery } from '../shared/lib/hooks/useCausasQuery';
+import {
+  mergeCausasList,
+  syncPersistedCausasToCache,
+} from '../shared/lib/queries/causasQueryCache';
+import { causasQueryKeys } from '../shared/lib/queries/causasQueryKeys';
 import { useMemberships } from '../shared/api/hooks/useMemberships';
+import { queryClient } from '../lib/queryClient';
 import { ToastProvider } from '../components/Toast';
 import { MainContentSkeleton } from '../components/Skeleton';
 import { AppProvider } from '../context/AppContext';
@@ -33,6 +40,7 @@ export default function App() {
   const showLoginModal = useAuthStore((s) => s.showLoginModal);
   const setShowLoginModal = useAuthStore((s) => s.setShowLoginModal);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const tenantId = useAuthStore((s) => s.tenantId);
 
   const membership = useMemberships('convivencia');
 
@@ -101,14 +109,90 @@ export default function App() {
   const { data: students = [], isLoading: isLoadingStudents } = useStudentsQuery(selectedCourseId);
   const newEstCurso = courses.find((c) => c.id === selectedCourseId)?.name ?? '';
 
-  const { loadError, retryLoad, isCausaDetailLoading } = useCausasPersistence({
+  const causasQuery = useCausasQuery();
+  const selectedCausaForDetail =
+    isAuthenticated && causas.some((causa) => causa.id === selectedCausaId) ? selectedCausaId : '';
+  const causaDetailsQuery = useCausaDetailsQuery(selectedCausaForDetail);
+  const hasInitializedCausasRef = useRef(false);
+  const lastCausasQueryDataRef = useRef<typeof causasQuery.data>(undefined);
+  const lastDetailsQueryDataRef = useRef<typeof causaDetailsQuery.data>(undefined);
+
+  const handlePersistedCausas = useCallback(
+    (persistedCausas: typeof causas) => {
+      if (tenantId) syncPersistedCausasToCache(tenantId, persistedCausas);
+    },
+    [tenantId],
+  );
+
+  const { markCausasHydrated, markCausaHydrated } = useCausasPersistence({
     causas,
-    setCausas,
-    selectedCausaId,
-    setSelectedCausaId,
     setSaveStatus,
     isAuthenticated,
+    onPersisted: handlePersistedCausas,
   });
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      lastCausasQueryDataRef.current = undefined;
+      lastDetailsQueryDataRef.current = undefined;
+      hasInitializedCausasRef.current = false;
+      setCausas([]);
+      setSelectedCausaId('');
+      queryClient.removeQueries({ queryKey: causasQueryKeys.root });
+      return;
+    }
+
+    if (!causasQuery.data || lastCausasQueryDataRef.current === causasQuery.data) return;
+
+    const hydratedCausas = mergeCausasList(causas, causasQuery.data);
+    markCausasHydrated(hydratedCausas);
+    lastCausasQueryDataRef.current = causasQuery.data;
+    setCausas(hydratedCausas);
+    if (!hasInitializedCausasRef.current) {
+      // La carga inicial siempre presenta la tabla: no abre expedientes por defecto.
+      setSelectedCausaId('');
+      hasInitializedCausasRef.current = true;
+    }
+  }, [
+    causas,
+    causasQuery.data,
+    isAuthenticated,
+    markCausasHydrated,
+    setCausas,
+    setSelectedCausaId,
+  ]);
+
+  useEffect(() => {
+    if (!selectedCausaForDetail || !causaDetailsQuery.data) return;
+    if (lastDetailsQueryDataRef.current === causaDetailsQuery.data) return;
+
+    const currentCausa = causas.find((causa) => causa.id === selectedCausaForDetail);
+    if (!currentCausa) return;
+
+    const hydratedCausa = { ...currentCausa, ...causaDetailsQuery.data };
+    markCausaHydrated(hydratedCausa);
+    lastDetailsQueryDataRef.current = causaDetailsQuery.data;
+    setCausas((current) =>
+      current.map((causa) => (causa.id === hydratedCausa.id ? hydratedCausa : causa)),
+    );
+  }, [causaDetailsQuery.data, causas, markCausaHydrated, selectedCausaForDetail, setCausas]);
+
+  const loadError = useMemo(() => {
+    const error = causasQuery.error ?? causaDetailsQuery.error;
+    if (!error) return null;
+    return selectedCausaForDetail
+      ? 'Error al cargar los antecedentes del expediente.'
+      : 'Error al cargar los expedientes. Verifique su conexión.';
+  }, [causaDetailsQuery.error, causasQuery.error, selectedCausaForDetail]);
+
+  const retryLoad = useCallback(() => {
+    if (selectedCausaForDetail && causaDetailsQuery.error) {
+      void causaDetailsQuery.refetch();
+      return;
+    }
+    void causasQuery.refetch();
+  }, [causaDetailsQuery, causasQuery, selectedCausaForDetail]);
+  const isCausaDetailLoading = causaDetailsQuery.isLoading;
 
   const handleViewChange = useCallback(
     (view: typeof currentView) => {
