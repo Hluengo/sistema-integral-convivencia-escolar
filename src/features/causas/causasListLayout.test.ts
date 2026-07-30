@@ -122,6 +122,18 @@ describe('Listado de causas activas', () => {
     assert.match(summary, /bg-emerald-50/);
   });
 
+  it('muestra la ruta, plazo, próximo hito y actividad sin nuevas fuentes de datos', () => {
+    const summary = read('../timeline/ResumenTab.tsx');
+    const operationalSummary = read('causaOperationalSummary.ts');
+
+    assert.match(summary, /Ruta del expediente/);
+    assert.match(summary, /Próximo hito/);
+    assert.match(summary, /Actividad registrada/);
+    assert.match(summary, /Plazo:/);
+    assert.match(operationalSummary, /causa\.checklistDebidoProceso/);
+    assert.match(operationalSummary, /causa\.bitacora/);
+  });
+
   it('no selecciona automáticamente la primera causa al cargar el listado', () => {
     const app = read('../../app/App.tsx');
     assert.match(app, /setSelectedCausaId\(''\)/);
