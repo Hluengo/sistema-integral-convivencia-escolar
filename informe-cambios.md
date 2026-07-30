@@ -13,12 +13,13 @@ Se ejecutó un plan de 4 puntos para eliminar código muerto, consolidar la arqu
 
 | Comando             | Resultado                                                                             |
 | ------------------- | ------------------------------------------------------------------------------------- |
-| `typecheck`         | ✅ **0 errores en `server/`** (26 preexistentes en `src/`)                            |
-| `npm test` (server) | ✅ **88 tests, 88 pasan**                                                             |
-| `lint:code`         | ✅ **0 errores en mis archivos** (20 preexistentes en `.agents/` y `CausasTable.tsx`) |
+| `typecheck`         | ✅ **0 errores** (resuelto `npm install` para `write-excel-file`)                     |
+| `npm test`          | ✅ **253 tests, 253 pasan**                                                           |
+| `lint:code`         | ✅ **0 errores** (limpiado `CausasTable.tsx` y archivos propios)                      |
 | `git diff --check`  | ✅ Sin errores de whitespace (solo warnings CRLF Windows)                             |
-| `build:web`         | ⚠️ Falla preexistente: `write-excel-file` no instalado (CR-02)                        |
-| `security-audit`    | ⚠️ Bloqueado por configuración npm local                                              |
+| `build:web`         | ✅ **Build exitoso**                                                                  |
+| `security-audit`    | ⚠️ Bloqueado por configuración npm local (`--allow-scripts` requerido)                |
+| **Vercel deploy**   | ✅ **READY** (`state: success`) — https://sistema-integral-convivencia-escolar-gctihiheo.vercel.app |
 
 ---
 
@@ -148,8 +149,8 @@ En producción, si no están configuradas, se emite `console.warn` estructurado 
 | `rateLimit.test.ts` (service)                       | 7      | ✅              |
 | `pilot.test.ts`                                     | 5      | ✅              |
 | `templates.test.ts`                                 | 2      | ✅              |
-| Tests pre-existentes (auth, jwks, validators, etc.) | 60     | ✅              |
-| **Total server**                                    | **88** | **✅ 88 pasan** |
+| Tests pre-existentes (auth, jwks, validators, etc.) | 225    | ✅              |
+| **Total**                                           | **253**| **✅ 253 pasan** |
 
 ---
 
