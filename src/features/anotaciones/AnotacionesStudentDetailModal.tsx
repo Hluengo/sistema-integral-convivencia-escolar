@@ -207,7 +207,7 @@ export default function AnotacionesStudentDetailModal({
                 type="button"
                 aria-label={privacyMode ? 'Desactivar privacidad' : 'Activar privacidad'}
                 onClick={onTogglePrivacy}
-                className="rounded-lg p-2 text-neutral-400 transition-colors hover:bg-brand-50 hover:text-brand-600"
+                className="rounded-lg p-2 text-slate-200 transition-colors hover:bg-white/10 hover:text-white"
                 title={privacyMode ? 'Desactivar privacidad' : 'Activar privacidad'}
               >
                 {privacyMode ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -216,7 +216,7 @@ export default function AnotacionesStudentDetailModal({
                 type="button"
                 aria-label="Cerrar"
                 onClick={onClose}
-                className="rounded-lg p-2 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600"
+                className="rounded-lg p-2 text-slate-200 transition-colors hover:bg-white/10 hover:text-white"
               >
                 <X className="h-5 w-5" />
               </button>

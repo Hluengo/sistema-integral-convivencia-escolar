@@ -21,6 +21,7 @@ describe('Modales disciplinarios accesibles', () => {
     ok(content.includes('<DetailModalTabs'));
     ok(detailModal.includes('h-[min(92vh,900px)]'));
     ok(detailModal.includes('flex-1 min-h-0 overflow-y-auto'));
+    ok(detailModal.includes('bg-gradient-to-br from-slate-700 via-slate-700 to-slate-900'));
     ok(!content.includes('<dialog'));
     ok(!content.includes('bg-transparent'));
   });
