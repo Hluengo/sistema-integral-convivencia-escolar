@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { memo, useEffect, useMemo, useState } from 'react';
-import { Eye, EyeOff, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import type { Annotation } from '@/src/types';
 import { maskName, maskRut } from '@/src/lib/anotacionesUtils';
 import {
@@ -42,7 +42,6 @@ interface AnotacionesStudentDetailModalProps {
   onClose: () => void;
   onClearAnnotations: (studentId: string) => void;
   onDataChanged?: () => void | Promise<void>;
-  onTogglePrivacy?: () => void;
   teachers?: Record<string, string>;
 }
 
@@ -53,7 +52,6 @@ export default function AnotacionesStudentDetailModal({
   initialTab = 'estado',
   onClose,
   onDataChanged,
-  onTogglePrivacy,
   teachers,
 }: AnotacionesStudentDetailModalProps) {
   const [activeTab, setActiveTab] = useState<ActiveTab>(initialTab);
@@ -203,15 +201,6 @@ export default function AnotacionesStudentDetailModal({
           }
           actions={
             <>
-              <button
-                type="button"
-                aria-label={privacyMode ? 'Desactivar privacidad' : 'Activar privacidad'}
-                onClick={onTogglePrivacy}
-                className="rounded-lg p-2 text-slate-200 transition-colors hover:bg-white/10 hover:text-white"
-                title={privacyMode ? 'Desactivar privacidad' : 'Activar privacidad'}
-              >
-                {privacyMode ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-              </button>
               <button
                 type="button"
                 aria-label="Cerrar"

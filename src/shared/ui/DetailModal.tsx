@@ -60,7 +60,7 @@ export function DetailModalHeader({
   actions,
 }: DetailModalHeaderProps) {
   return (
-    <header className="relative overflow-hidden border-slate-600/70 border-b bg-gradient-to-br from-slate-700 via-slate-700 to-slate-900 px-4 py-4 sm:px-6">
+    <header className="relative mb-3 overflow-hidden border-slate-600/70 border-b bg-gradient-to-br from-slate-700 via-slate-700 to-slate-900 px-4 py-4 sm:mb-4 sm:px-6">
       <div
         className="pointer-events-none absolute inset-0 opacity-30 [background-image:linear-gradient(90deg,rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.045)_1px,transparent_1px)] [background-size:56px_56px]"
         aria-hidden="true"

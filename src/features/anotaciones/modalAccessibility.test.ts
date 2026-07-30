@@ -22,6 +22,9 @@ describe('Modales disciplinarios accesibles', () => {
     ok(detailModal.includes('h-[min(92vh,900px)]'));
     ok(detailModal.includes('flex-1 min-h-0 overflow-y-auto'));
     ok(detailModal.includes('bg-gradient-to-br from-slate-700 via-slate-700 to-slate-900'));
+    ok(detailModal.includes('mb-3'));
+    ok(!content.includes('onTogglePrivacy'));
+    ok(!content.includes('EyeOff'));
     ok(!content.includes('<dialog'));
     ok(!content.includes('bg-transparent'));
   });
