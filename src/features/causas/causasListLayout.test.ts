@@ -85,6 +85,9 @@ describe('Listado de causas activas', () => {
     assert.match(summary, /onSelectPhase/);
     assert.match(summary, /Trabajar.*hitos/);
     assert.match(summary, /aria-controls="phase-workspace"/);
+    assert.match(panels, /selectedPhase \? \(/);
+    assert.match(panels, /Volver al resumen/);
+    assert.match(panels, /onSelectPhase\(null\)/);
     assert.match(panels, /<ProcesoTab/);
     assert.match(panels, /id="phase-workspace"/);
   });

@@ -4,6 +4,7 @@
  */
 
 import type React from 'react';
+import { ArrowLeft, ListChecks } from 'lucide-react';
 import type { Causa, FaseProcedimental } from '../../types';
 import ProcesoTab from './ProcesoTab';
 import BitacoraTab from './BitacoraTab';
@@ -36,47 +37,75 @@ export default function TimelineTabPanels({
 
   return (
     <DetailModalBody className="space-y-4">
-      {activeTab === 'resumen' && (
-        <>
+      {activeTab === 'resumen' &&
+        (selectedPhase ? (
+          <section
+            id="phase-workspace"
+            aria-labelledby="phase-workspace-title"
+            className="space-y-4"
+          >
+            <header className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-start gap-3">
+                <span className="rounded-lg bg-brand-100 p-2 text-brand-700" aria-hidden="true">
+                  <ListChecks className="size-5" />
+                </span>
+                <div>
+                  <p className="font-semibold text-[11px] text-slate-500 uppercase tracking-wide">
+                    Fase de trabajo
+                  </p>
+                  <h3 id="phase-workspace-title" className="font-semibold text-neutral-900 text-lg">
+                    {selectedPhase}
+                  </h3>
+                  <p className="mt-0.5 text-neutral-600 text-sm">
+                    Registra y consulta los hitos, antecedentes y documentos de esta fase.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => onSelectPhase(null)}
+                className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium text-slate-700 text-sm transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+              >
+                <ArrowLeft className="size-4" aria-hidden="true" />
+                Volver al resumen
+              </button>
+            </header>
+            <ProcesoTab
+              causa={causa}
+              currentRole={ctx.currentRole}
+              currentFase={currentFase}
+              expandedStages={ctx.expandedStages}
+              setExpandedStages={ctx.setExpandedStages}
+              registeringItemId={ctx.registeringItemId}
+              setRegisteringItemId={ctx.setRegisteringItemId}
+              regName={ctx.regName}
+              setRegName={ctx.setRegName}
+              regObservations={ctx.regObservations}
+              setRegObservations={ctx.setRegObservations}
+              regFileName={ctx.regFileName}
+              setRegFileName={ctx.setRegFileName}
+              handleStartRegister={ctx.handleStartRegister}
+              handleFileChange={ctx.handleFileChange}
+              handleSaveRegistration={ctx.handleSaveRegistration}
+              handleResetRegistration={ctx.handleResetRegistration}
+              regFile={ctx.regFile}
+              isSavingRegistration={ctx.isSavingRegistration}
+              registrationError={ctx.registrationError}
+              documentError={ctx.documentError}
+              handleAttachDocument={ctx.handleAttachDocument}
+              handleRemoveDocument={ctx.handleRemoveDocument}
+              documents={ctx.documents}
+              selectedPhase={selectedPhase}
+            />
+          </section>
+        ) : (
           <ResumenTab
             causa={causa}
             breaches={breaches}
             selectedPhase={selectedPhase}
             onSelectPhase={onSelectPhase}
           />
-          {selectedPhase && (
-            <section id="phase-workspace" aria-label={`Hitos de ${selectedPhase}`}>
-              <ProcesoTab
-                causa={causa}
-                currentRole={ctx.currentRole}
-                currentFase={currentFase}
-                expandedStages={ctx.expandedStages}
-                setExpandedStages={ctx.setExpandedStages}
-                registeringItemId={ctx.registeringItemId}
-                setRegisteringItemId={ctx.setRegisteringItemId}
-                regName={ctx.regName}
-                setRegName={ctx.setRegName}
-                regObservations={ctx.regObservations}
-                setRegObservations={ctx.setRegObservations}
-                regFileName={ctx.regFileName}
-                setRegFileName={ctx.setRegFileName}
-                handleStartRegister={ctx.handleStartRegister}
-                handleFileChange={ctx.handleFileChange}
-                handleSaveRegistration={ctx.handleSaveRegistration}
-                handleResetRegistration={ctx.handleResetRegistration}
-                regFile={ctx.regFile}
-                isSavingRegistration={ctx.isSavingRegistration}
-                registrationError={ctx.registrationError}
-                documentError={ctx.documentError}
-                handleAttachDocument={ctx.handleAttachDocument}
-                handleRemoveDocument={ctx.handleRemoveDocument}
-                documents={ctx.documents}
-                selectedPhase={selectedPhase}
-              />
-            </section>
-          )}
-        </>
-      )}
+        ))}
 
       {activeTab === 'bitacora' && (
         <BitacoraTab
