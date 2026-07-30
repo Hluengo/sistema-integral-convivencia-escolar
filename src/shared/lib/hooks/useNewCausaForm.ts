@@ -6,7 +6,7 @@
 import { useReducer } from 'react';
 import type { Causa } from '../../../types';
 
-export interface FormState {
+interface FormState {
   showCreateForm: boolean;
   newEstNombre: string;
   selectedCourseId: string;
@@ -22,7 +22,11 @@ export type FormAction =
   | { type: 'CLOSE' }
   | { type: 'SET_COURSE'; courseId: string }
   | { type: 'SET_STUDENT'; nombre: string; rut: string }
-  | { type: 'SET_FIELD'; field: keyof Omit<FormState, 'showCreateForm' | 'selectedCourseId'>; value: string | boolean }
+  | {
+      type: 'SET_FIELD';
+      field: keyof Omit<FormState, 'showCreateForm' | 'selectedCourseId'>;
+      value: string | boolean;
+    }
   | { type: 'RESET' };
 
 const FORM_INITIAL: FormState = {
@@ -38,8 +42,10 @@ const FORM_INITIAL: FormState = {
 
 function formReducer(state: FormState, action: FormAction): FormState {
   switch (action.type) {
-    case 'OPEN':  return { ...state, showCreateForm: true };
-    case 'CLOSE': return { ...state, showCreateForm: false };
+    case 'OPEN':
+      return { ...state, showCreateForm: true };
+    case 'CLOSE':
+      return { ...state, showCreateForm: false };
     case 'SET_COURSE':
       return { ...state, selectedCourseId: action.courseId, newEstNombre: '', newEstRut: '' };
     case 'SET_STUDENT':

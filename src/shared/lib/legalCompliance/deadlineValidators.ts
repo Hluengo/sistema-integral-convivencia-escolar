@@ -1,15 +1,16 @@
 import type { Causa } from '@/src/types';
+import { calcularDiasHabiles, agregarDiasHabiles } from './dateUtils';
 import {
-  calcularDiasHabiles,
-  agregarDiasHabiles,
-} from './dateUtils';
-import { calcularFechaLimiteInvestigacion, calcularFechaLimiteNotificacionSuperintendencia } from './deadlineCalculators';
+  calcularFechaLimiteInvestigacion,
+  calcularFechaLimiteNotificacionSuperintendencia,
+} from './deadlineCalculators';
 import {
   MAX_PLAZO_INVESTIGACION_DIAS,
   MAX_PLAZO_SUSPENSION_DIAS,
   DIAS_ALERTA_PLAZO_CRITICO,
 } from './constants';
 import type { ResultadoPlazo } from './types';
+import { nowDateOnly } from '../../../lib/dateUtils';
 
 /**
  * Verifica el estado del plazo de investigación
@@ -26,7 +27,7 @@ export function verificarPlazoInvestigacion(causa: Causa): ResultadoPlazo {
   }
 
   const fechaLimite = calcularFechaLimiteInvestigacion(causa.fechaApertura);
-  const hoy = new Date().toISOString().split('T')[0];
+  const hoy = nowDateOnly();
   const diasTranscurridos = calcularDiasHabiles(causa.fechaApertura, hoy);
   const diasRestantes = MAX_PLAZO_INVESTIGACION_DIAS - diasTranscurridos;
 
@@ -75,7 +76,7 @@ export function verificarPlazoSuspension(causa: Causa): ResultadoPlazo {
 
   const duracion = causa.duracionSuspensionDias || 0;
   const fechaLimite = agregarDiasHabiles(causa.fechaInicioSuspension, duracion);
-  const hoy = new Date().toISOString().split('T')[0];
+  const hoy = nowDateOnly();
   const diasTranscurridos = calcularDiasHabiles(causa.fechaInicioSuspension, hoy);
   const diasRestantes = duracion - diasTranscurridos;
 
@@ -134,9 +135,9 @@ export function verificarPlazoNotificacionSuperintendencia(causa: Causa): Result
 
   if (!causa.fechaNotificacionSuperintendencia) {
     // Calcular desde la última actualización si no hay fecha de notificación
-    const fechaReferencia = causa.fechaUltimaActualizacion || new Date().toISOString().split('T')[0];
+    const fechaReferencia = causa.fechaUltimaActualizacion || nowDateOnly();
     const fechaLimite = calcularFechaLimiteNotificacionSuperintendencia(fechaReferencia);
-    const hoy = new Date().toISOString().split('T')[0];
+    const hoy = nowDateOnly();
     const diasTranscurridos = calcularDiasHabiles(fechaReferencia, hoy);
     const diasRestantes = 5 - diasTranscurridos;
 
@@ -146,7 +147,8 @@ export function verificarPlazoNotificacionSuperintendencia(causa: Causa): Result
         diasRestantes: 0,
         diasTranscurridos,
         fechaLimite,
-        mensaje: 'PLAZO VENCIDO: No se ha notificado a Superintendencia dentro de los 5 días hábiles',
+        mensaje:
+          'PLAZO VENCIDO: No se ha notificado a Superintendencia dentro de los 5 días hábiles',
       };
     }
 

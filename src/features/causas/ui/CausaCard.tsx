@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { memo } from 'react';
-import type { Causa, } from '../../../types';
-import { getFaseForEstado, FASES_LIST, getPhaseProgress } from '../../../data';
-import { Shield, User, UserCheck, ChevronRight, FileCheck, Check } from 'lucide-react';
+import { memo } from 'react';
+import type { Causa } from '../../../types';
+import { getFaseForEstado } from '../../../data';
+import { Shield, User, UserCheck, ChevronRight, FileCheck } from 'lucide-react';
 import SeverityBadge from '../../../components/SeverityBadge';
 import { LeftSeverityBar, FaseBadge, PlazoBar } from '../../../components/CausaCardHelpers';
 
@@ -86,55 +86,15 @@ export default memo(function CausaCard({
           {causa.observaciones}
         </p>
 
-        <ul className="flex items-center gap-0" aria-label="Progreso de fases">
-          {FASES_LIST.map((f, i) => {
-            const { total, completed } = getPhaseProgress(causa.checklistDebidoProceso, f.name);
-            const isComplete = total > 0 && completed === total;
-            const isCurrent = getFaseForEstado(causa.estadoActual) === f.name;
-            const isLast = i === FASES_LIST.length - 1;
-
-            return (
-              <React.Fragment key={f.name}>
-                <li className="flex flex-col items-center">
-                  <div
-                    className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors ${
-                      isComplete
-                        ? 'bg-brand-600 text-white'
-                        : isCurrent
-                          ? 'border-2 border-brand-600 bg-brand-100 text-brand-700'
-                          : 'border-2 border-neutral-200 bg-white text-neutral-400'
-                    }`}
-                  >
-                    {isComplete ? (
-                      <Check className="h-3.5 w-3.5" aria-hidden="true" />
-                    ) : (
-                      <span className="font-bold text-[10px]">{i + 1}</span>
-                    )}
-                  </div>
-                  <span className="mt-1 hidden whitespace-nowrap text-[10px] text-neutral-400 sm:block">
-                    {f.name}
-                  </span>
-                </li>
-                {!isLast && (
-                  <div
-                    className={`h-0.5 flex-1 ${isComplete ? 'bg-brand-400' : 'bg-neutral-200'}`}
-                    aria-hidden="true"
-                  />
-                )}
-              </React.Fragment>
-            );
-          })}
-        </ul>
-
         <PlazoBar causa={causa} />
 
-        <div className="flex items-center justify-between border-neutral-100 border-t pt-2">
+        <div className="space-y-3 border-neutral-100 border-t pt-3">
           <span className="flex items-center gap-1.5 font-medium text-neutral-500 text-xs">
             <FileCheck className="h-3.5 w-3.5 text-leve-600" aria-hidden="true" />
             Debido proceso {completedCount}/{totalCount}
           </span>
-          <span className="inline-flex items-center gap-1 font-semibold text-brand-600 text-xs transition-colors">
-            Gestionar
+          <span className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 font-semibold text-sm text-white shadow-sm transition-colors hover:bg-brand-700">
+            Gestionar expediente
             <ChevronRight className="h-3 w-3" aria-hidden="true" />
           </span>
         </div>

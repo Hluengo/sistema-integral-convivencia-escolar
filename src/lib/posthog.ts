@@ -9,7 +9,7 @@ let initialized = false;
 
 export function initPostHog() {
   if (initialized) return;
-  
+
   if (POSTHOG_KEY && POSTHOG_HOST) {
     posthog.init(POSTHOG_KEY, {
       api_host: POSTHOG_HOST,
@@ -51,5 +51,3 @@ export function setUserProperties(properties: Record<string, unknown>) {
     posthog.people.set(properties);
   }
 }
-
-export const PostHog = posthog;

@@ -1,18 +1,20 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
-import {defineConfig} from 'vite';
-import {visualizer} from 'rollup-plugin-visualizer';
+import { defineConfig } from 'vite';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 const plugins = [react(), tailwindcss()];
 
 if (process.env.ANALYZE === 'true') {
-  plugins.push(visualizer({
-    filename: 'dist/stats.html',
-    open: true,
-    gzipSize: true,
-    brotliSize: true,
-  }) as never);
+  plugins.push(
+    visualizer({
+      filename: 'dist/stats.html',
+      open: true,
+      gzipSize: true,
+      brotliSize: true,
+    }) as never,
+  );
 }
 
 export default defineConfig(() => {
@@ -25,51 +27,29 @@ export default defineConfig(() => {
     },
     build: {
       target: 'es2020',
-      // Keep all React-related and generic node_modules in one vendor chunk.
-      // Splitting React/scheduler into a separate chunk creates circular
-      // dependencies that break at runtime ("Cannot set properties of undefined").
       chunkSizeWarningLimit: 700,
       rollupOptions: {
         output: {
           manualChunks(id) {
-            // Feature chunks first (app code)
-            if (!id.includes('node_modules')) {
-              if (id.includes('Anotaciones')) {
-                return 'anotaciones';
-              }
-              if (id.includes('NewDisciplinaryProcessModal')) {
-                return 'new-process';
-              }
-              if (id.includes('AiAdvisor') || id.includes('AdvisorMessage')) {
-                return 'ai-advisor';
-              }
-              if (id.includes('InteractiveTimeline')) {
-                return 'timeline';
-              }
-              if (
-                id.includes('CausaCard') ||
-                id.includes('EditCausaModal') ||
-                id.includes('NewCausaModal')
-              ) {
-                return 'causas';
-              }
-              if (id.includes('TemplateEditor') || id.includes('ClosedCases')) {
-                return 'docs';
-              }
-              return 'index';
+            if (!id.includes('node_modules')) return;
+            if (id.includes('/write-excel-file/')) return 'excel';
+            if (id.includes('/posthog-js/')) return 'telemetry-posthog';
+            if (id.includes('/@sentry/')) return 'telemetry-sentry';
+            if (id.includes('/web-vitals/')) return 'telemetry-vitals';
+            if (
+              id.includes('/react/') ||
+              id.includes('/react-dom/') ||
+              id.includes('/scheduler/')
+            ) {
+              return 'react';
             }
-            // Only split out the biggest vendor deps to keep chunks reasonable.
-            // Everything else (React, scheduler, radix, tanstack, zustand, etc.)
-            // stays together in vendor to avoid cross-chunk circular deps.
-            if (id.includes('pdf-lib') || id.includes('pdfjs-dist')) {
-              return 'pdf';
+            if (id.includes('/@supabase/')) return 'supabase';
+            if (id.includes('/@radix-ui/')) return 'radix';
+            if (id.includes('/@tanstack/')) return 'tanstack';
+            if (id.includes('/pdf-lib/') || id.includes('/pdfjs-dist/') || id.includes('/docx/')) {
+              return 'documents';
             }
-            if (id.includes('docx')) {
-              return 'docx';
-            }
-            if (id.includes('@supabase')) {
-              return 'supabase';
-            }
+            if (id.includes('/date-fns/')) return 'date';
             return 'vendor';
           },
         },

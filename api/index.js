@@ -95,6 +95,7 @@ function fetchJwksFromServer(supabaseUrl) {
     req.end();
   });
 }
+var activeJwksFetcher = fetchJwksFromServer;
 async function getJwksKeys(supabaseUrl) {
   const entry = getOrCreateCacheEntry(supabaseUrl);
   const now = Date.now();
@@ -104,7 +105,7 @@ async function getJwksKeys(supabaseUrl) {
   if (entry.fetchPromise) {
     return entry.fetchPromise;
   }
-  entry.fetchPromise = fetchJwksFromServer(supabaseUrl)
+  entry.fetchPromise = activeJwksFetcher(supabaseUrl)
     .then((keys) => {
       entry.keys = keys;
       entry.timestamp = Date.now();
@@ -306,7 +307,7 @@ function verifyViaSupabaseApi(token) {
     req.end();
   });
 }
-async function verifyJwtSignature(token, secret) {
+async function verifyJwtSignature(token, secret, verifyRemote = verifyViaSupabaseApi) {
   const parts = token.split('.');
   if (parts.length !== 3) return null;
   let header;
@@ -332,7 +333,7 @@ async function verifyJwtSignature(token, secret) {
   }
   const hmacResult = await verifyJwtViaHmac(token, secret);
   if (hmacResult) return hmacResult;
-  return verifyViaSupabaseApi(token);
+  return verifyRemote(token);
 }
 var defaultProfileFetcher = async ({ supabaseUrl, anonKey, token, userId }, httpsImpl) => {
   const hostname = new URL(supabaseUrl).hostname;
@@ -416,7 +417,7 @@ async function injectTenantContext(req, token, profileFetcher = defaultProfileFe
     return false;
   }
 }
-function createRequireAuth(profileFetcher) {
+function createRequireAuth(profileFetcher, verifyRemote) {
   return async function requireAuth2(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) {
@@ -429,7 +430,11 @@ function createRequireAuth(profileFetcher) {
       return;
     }
     try {
-      const payload = await verifyJwtSignature(token, process.env.SUPABASE_JWT_SECRET ?? '');
+      const payload = await verifyJwtSignature(
+        token,
+        process.env.SUPABASE_JWT_SECRET ?? '',
+        verifyRemote,
+      );
       if (!payload) {
         res.status(401).json({ error: 'Token JWT inv\xE1lido o expirado.' });
         return;
@@ -453,12 +458,22 @@ function createRequireAuth(profileFetcher) {
 }
 var requireAuth = createRequireAuth();
 
-// server/api/validators/sanitizers.ts
+// server/lib/validators.ts
 var MAX_STR = 1e4;
 var CONTROL_CHARS = new RegExp(
   `[${String.fromCharCode(0)}-${String.fromCharCode(31)}${String.fromCharCode(127)}-${String.fromCharCode(159)}]`,
   'g',
 );
+var RequestValidationError = class extends Error {
+  constructor(message, field) {
+    super(message);
+    this.field = field;
+    this.name = 'RequestValidationError';
+  }
+};
+function isRequestValidationError(error) {
+  return error instanceof RequestValidationError;
+}
 var sanitize = (s) => {
   if (typeof s !== 'string') {
     return '';
@@ -468,7 +483,7 @@ var sanitize = (s) => {
 var requireStr = (obj, key, max = 200) => {
   const v = sanitize(obj[key]);
   if (!v) {
-    throw new Error(`Campo requerido faltante: ${key}`);
+    throw new RequestValidationError(`Campo requerido faltante: ${key}`, key);
   }
   return v.slice(0, max);
 };
@@ -854,9 +869,12 @@ Utiliza un tono sumamente profesional, corporativo, t\xE9cnico e institucional (
     const responseText = await callGroq([{ role: 'user', content: systemPrompt }]);
     res.json({ success: true, report: responseText });
   } catch (error) {
+    if (isRequestValidationError(error)) {
+      res.status(400).json({ error: error.message });
+      return;
+    }
     console.error('Error al auditar debido proceso:', error);
-    const status = error.message?.startsWith('Campo requerido') ? 400 : 500;
-    res.status(status).json({ error: 'Error interno del servidor en auditor\xEDa.' });
+    res.status(500).json({ error: 'Error interno del servidor en auditor\xEDa.' });
   }
 });
 var audit_default = router3;
@@ -1029,9 +1047,12 @@ DATOS: C\xF3digo: ${id}, Estudiante: ${sanitizeForAI(studentName)} (Curso: ${cou
     ]);
     res.json({ success: true, document: responseText });
   } catch (error) {
+    if (isRequestValidationError(error)) {
+      res.status(400).json({ error: error.message });
+      return;
+    }
     console.error('Error al generar borrador de documento:', error);
-    const status = error.message?.startsWith('Campo requerido') ? 400 : 500;
-    res.status(status).json({ error: 'Error interno del servidor al redactar documento.' });
+    res.status(500).json({ error: 'Error interno del servidor al redactar documento.' });
   }
 });
 var draft_default = router4;
@@ -1746,6 +1767,30 @@ function annotationTypeToLegacy(type) {
   if (type === 'information') return 'Informaci\xF3n';
   return 'Negativa';
 }
+function annotationDateKey(value) {
+  return value?.slice(0, 10) || '';
+}
+function annotationIdentityKey(type, date, text) {
+  return `${normalizeText(type || '')}|${annotationDateKey(date)}|${normalizeText(text || '')}`;
+}
+function selectNewAnnotationsForLegacySync(annotations, existingRecords) {
+  const existingCounts = /* @__PURE__ */ new Map();
+  for (const record of existingRecords) {
+    const key = annotationIdentityKey(record.type, record.date_time, record.observation);
+    existingCounts.set(key, (existingCounts.get(key) || 0) + 1);
+  }
+  return annotations.filter((annotation) => {
+    const key = annotationIdentityKey(
+      annotationTypeToLegacy(annotation.type),
+      annotation.detected_date,
+      annotation.raw_text,
+    );
+    const remainingMatches = existingCounts.get(key) || 0;
+    if (remainingMatches === 0) return true;
+    existingCounts.set(key, remainingMatches - 1);
+    return false;
+  });
+}
 function severityForAnnotation(type) {
   return type === 'negative' ? 'Leve' : 'Leve';
 }
@@ -1773,15 +1818,34 @@ async function syncConfirmedProcessToLegacyViews(
   summary,
   student,
 ) {
-  const { data: existingRecords } = await supabase
+  const { data: existingRecords, error: existingRecordsError } = await supabase
     .from('inspectorate_records')
-    .select('id')
+    .select('type,date_time,observation')
     .eq('tenant_id', input.tenantId)
-    .eq('student_id', input.studentId)
-    .eq('pdf_file_path', input.storagePath)
-    .limit(1);
-  if (!existingRecords || existingRecords.length === 0) {
-    const legacyRecords = input.annotations.map((annotation) => ({
+    .eq('student_id', input.studentId);
+  if (existingRecordsError) {
+    throw new Error('Error al comparar las anotaciones existentes del estudiante');
+  }
+  const newAnnotations = selectNewAnnotationsForLegacySync(
+    input.annotations,
+    existingRecords || [],
+  );
+  const insertedSummary = summarizeAnnotations(
+    newAnnotations.map((annotation, index) => ({
+      raw_text: annotation.raw_text,
+      normalized_text: annotation.normalized_text ?? normalizeText(annotation.raw_text),
+      type: annotation.type,
+      page_number: annotation.page_number ?? null,
+      sequence_number: annotation.sequence_number || index + 1,
+      detected_date: annotation.detected_date ?? null,
+      detected_teacher: annotation.detected_teacher ?? null,
+      classification_method: 'regex',
+      confidence: annotation.confidence ?? 0.8,
+      parser_version: PARSER_VERSION,
+    })),
+  );
+  if (newAnnotations.length > 0) {
+    const legacyRecords = newAnnotations.map((annotation) => ({
       student_id: input.studentId,
       tenant_id: input.tenantId,
       date_time: annotation.detected_date
@@ -1863,6 +1927,7 @@ async function syncConfirmedProcessToLegacyViews(
       if (error) throw new Error('Error al registrar la etapa disciplinaria sugerida');
     }
   }
+  return insertedSummary;
 }
 async function getSuggestedLetter(supabase, tenantId, summary) {
   const { data, error } = await supabase.rpc('get_suggested_letter_type', {
@@ -1873,6 +1938,36 @@ async function getSuggestedLetter(supabase, tenantId, summary) {
   });
   if (error || !data) return 'none';
   return String(data);
+}
+async function findDuplicateFileByHash(supabase, tenantId, fileHash) {
+  const { data: duplicateFile, error: duplicateFileError } = await supabase
+    .from('disciplinary_process_files')
+    .select('process_id,student_id,uploaded_at')
+    .eq('tenant_id', tenantId)
+    .eq('file_hash', fileHash)
+    .order('uploaded_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (duplicateFileError) {
+    throw new Error('No fue posible comprobar si el PDF ya estaba registrado');
+  }
+  if (!duplicateFile) return null;
+  const processId = String(duplicateFile.process_id);
+  const { data: process2, error: processError } = await supabase
+    .from('disciplinary_processes')
+    .select('process_number')
+    .eq('tenant_id', tenantId)
+    .eq('id', processId)
+    .maybeSingle();
+  if (processError) {
+    throw new Error('No fue posible recuperar el proceso asociado al PDF existente');
+  }
+  return {
+    process_id: processId,
+    process_number: String(process2?.process_number ?? 'Sin n\xFAmero'),
+    student_id: duplicateFile.student_id ?? null,
+    uploaded_at: String(duplicateFile.uploaded_at),
+  };
 }
 async function analyzeDisciplinaryPdf(input) {
   const supabase = getSupabaseAdmin(input.authToken);
@@ -1900,10 +1995,15 @@ async function analyzeDisciplinaryPdf(input) {
   const detectedCourse = extractCourse(textContent);
   const annotations = normalizeText(textContent).length < 20 ? [] : parseAnnotationsByPage(pages);
   const summary = summarizeAnnotations(annotations);
-  const [recommendedLetterType, studentMatch] = await Promise.all([
+  const [recommendedLetterType, studentMatch, duplicateFile] = await Promise.all([
     getSuggestedLetter(supabase, input.tenantId, summary),
     findStudentCandidates(supabase, input.tenantId, detectedStudentName, detectedCourse),
+    findDuplicateFileByHash(supabase, input.tenantId, fileHash),
   ]);
+  if (duplicateFile)
+    warnings.push(
+      `Este mismo PDF ya est\xE1 registrado en el proceso ${duplicateFile.process_number}.`,
+    );
   if (!detectedStudentName) warnings.push('No se pudo detectar un nombre de estudiante en el PDF.');
   if (annotations.length === 0 && normalizeText(textContent).length >= 20)
     warnings.push('No se detectaron anotaciones clasificables en el documento.');
@@ -1934,11 +2034,12 @@ async function analyzeDisciplinaryPdf(input) {
       file_hash: fileHash,
       parser_version: PARSER_VERSION,
     })
-    .select('id')
+    .select('id,analyzed_at')
     .maybeSingle();
   return {
     success: true,
     analysis_id: analysisRow?.id ?? null,
+    analyzed_at: analysisRow?.analyzed_at ?? /* @__PURE__ */ new Date().toISOString(),
     file_id: null,
     process_id: null,
     detected_student_name: detectedStudentName,
@@ -1960,6 +2061,7 @@ async function analyzeDisciplinaryPdf(input) {
     processing_status: processingStatus,
     mode: studentMatch.selectedStudentId ? 'preview' : 'student_pending',
     file_hash: fileHash,
+    duplicate_file: duplicateFile,
     parser_version: PARSER_VERSION,
   };
 }
@@ -2000,7 +2102,7 @@ async function confirmDisciplinaryProcess(input) {
       const nested = existing.disciplinary_processes;
       const existingProcessId = existing.process_id;
       const existingProcessNumber = nested?.process_number ?? '';
-      await syncConfirmedProcessToLegacyViews(
+      const insertedAnnotations2 = await syncConfirmedProcessToLegacyViews(
         supabase,
         input,
         existingProcessId,
@@ -2012,8 +2114,15 @@ async function confirmDisciplinaryProcess(input) {
         success: true,
         processId: existingProcessId,
         processNumber: existingProcessNumber,
+        insertedAnnotations: insertedAnnotations2,
       };
     }
+  }
+  const duplicateFile = await findDuplicateFileByHash(supabase, input.tenantId, input.fileHash);
+  if (duplicateFile) {
+    throw new Error(
+      `Este PDF ya fue registrado en el proceso ${duplicateFile.process_number}. No se cre\xF3 un duplicado.`,
+    );
   }
   const { data: processNumber, error: numberError } = await supabase.rpc(
     'generate_process_number',
@@ -2085,7 +2194,7 @@ async function confirmDisciplinaryProcess(input) {
       .insert(confirmedAnnotations);
     if (annotationsError) throw new Error('Error al guardar las anotaciones detectadas');
   }
-  await syncConfirmedProcessToLegacyViews(
+  const insertedAnnotations = await syncConfirmedProcessToLegacyViews(
     supabase,
     input,
     processId,
@@ -2110,6 +2219,7 @@ async function confirmDisciplinaryProcess(input) {
     success: true,
     processId,
     processNumber: String(processRow.process_number),
+    insertedAnnotations,
   };
 }
 
@@ -2146,6 +2256,9 @@ function getProcessErrorResponse(error) {
       status: 404,
       message: 'No fue posible encontrar o leer el PDF privado subido.',
     };
+  }
+  if (message.includes('Este PDF ya fue registrado')) {
+    return { status: 409, message };
   }
   return { status: 500, message };
 }
@@ -2210,15 +2323,12 @@ router8.post('/process-disciplinary-pdf/confirm', requireTenant, async (req, res
     });
     res.json(result);
   } catch (error) {
+    const response = getProcessErrorResponse(error);
     console.error(
       'Error confirming disciplinary process:',
       error instanceof Error ? error.message : error,
     );
-    res
-      .status(500)
-      .json({
-        error: error instanceof Error ? error.message : 'Error interno al confirmar el proceso',
-      });
+    res.status(response.status).json({ error: response.message });
   }
 });
 var processDisciplinaryPdf_default = router8;
@@ -2389,7 +2499,7 @@ function getSupabaseConfig() {
     return null;
   }
 }
-function requireMembership(params) {
+function requireMembership(params, checkAccess = checkMembershipViaApi) {
   return async (req, res, next) => {
     const authReq = req;
     if (!authReq.user?.sub) {
@@ -2424,7 +2534,7 @@ function requireMembership(params) {
     }
     try {
       logServer('membership_check', `${mode} mode for ${params.applicationCode}`);
-      const hasAccess = await checkMembershipViaApi(config.hostname, config.anonKey, token, params);
+      const hasAccess = await checkAccess(config.hostname, config.anonKey, token, params);
       if (hasAccess) {
         next();
         return;
@@ -2506,6 +2616,9 @@ app.use(
   }),
 );
 app.use(express.json({ limit: '100kb' }));
+app.get('/api/health', (_req, res) => {
+  res.json({ ok: true });
+});
 app.use('/api', improve_default);
 app.use('/api', advisor_default);
 app.use('/api', audit_default);

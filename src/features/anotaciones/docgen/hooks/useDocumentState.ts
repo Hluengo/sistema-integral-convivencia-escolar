@@ -14,13 +14,12 @@ export function useDocumentState() {
   const [compromisoStatus, setCompromisoStatus] = useState('pendiente');
   const [customCommitments, setCustomCommitments] = useState<string[]>([]);
   const [letterContent, setLetterContentState] = useState<LetterContent>(
-    DEFAULT_LETTER_CONTENT.amonestacion
+    DEFAULT_LETTER_CONTENT.amonestacion,
   );
   const [letterContentTouched, setLetterContentTouched] = useState(false);
   const [authorizedBypass, setAuthorizedBypass] = useState(false);
   const [authorizedDuplicate, setAuthorizedDuplicate] = useState(false);
   const [bypassProgressLock, setBypassProgressLock] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false);
 
   const setLetterContent = useCallback((next: LetterContent) => {
     setLetterContentState(next);
@@ -36,7 +35,7 @@ export function useDocumentState() {
     (nextDocType: DocType) => {
       if (!letterContentTouched) setLetterContentState(DEFAULT_LETTER_CONTENT[nextDocType]);
     },
-    [letterContentTouched]
+    [letterContentTouched],
   );
 
   const resetLetterContent = useCallback(
@@ -44,7 +43,7 @@ export function useDocumentState() {
       setLetterContentState(DEFAULT_LETTER_CONTENT[nextDocType]);
       setLetterContentTouched(false);
     },
-    [docType]
+    [docType],
   );
 
   const handleAddCustomCommitment = useCallback((text: string) => {
@@ -55,10 +54,6 @@ export function useDocumentState() {
 
   const handleRemoveCustomCommitment = useCallback((index: number) => {
     setCustomCommitments((prev) => prev.filter((_, i) => i !== index));
-  }, []);
-
-  const handleRegisterCommitment = useCallback(() => {
-    // This will be overridden by the component with actual logic
   }, []);
 
   return {
@@ -87,10 +82,7 @@ export function useDocumentState() {
     setAuthorizedDuplicate,
     bypassProgressLock,
     setBypassProgressLock,
-    isRegistering,
-    setIsRegistering,
     handleAddCustomCommitment,
     handleRemoveCustomCommitment,
-    handleRegisterCommitment,
   };
 }

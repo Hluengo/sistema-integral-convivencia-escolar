@@ -10,25 +10,25 @@ import type {
   DocumentAnalysis,
   EtapaDisciplinaria,
 } from '../../../types';
-import {
-  mapCauseRowToCarta,
-  mapInspectorateToAnnotation,
-  mapStageRowToEtapa,
-} from '../../../lib/mappers';
+import { mapCauseRowToCarta, mapStageRowToEtapa } from '../../../lib/mappers';
 import { fetchAnnotations, fetchDocumentAnalyses } from './annotations.service';
 import { useAuthStore } from '../../../stores/authStore';
-import type { LetterType } from '../../lib/domain/disciplinaryStage';
+import {
+  resolveStudentCartaTableState,
+  type LetterType,
+  type StudentCartaTableState,
+} from '../../lib/domain/disciplinaryStage';
+import {
+  physicalCartaRegistrationSchema,
+  type PhysicalCartaRegistrationInput,
+} from '../../lib/schemas/physicalCarta';
+import { nowDateOnly } from '../../../lib/dateUtils';
 
-export type CartaStatus = CartaDisciplinaria['status'];
+type CartaStatus = CartaDisciplinaria['status'];
 export type CartaWorkflowStatus = 'pending' | 'completed' | 'annulled';
 
-export type CartaEventType =
-  | 'suggested'
-  | 'created'
-  | 'registered'
-  | 'printed'
-  | 'processed_manually'
-  | 'annulled';
+type CartaEventType =
+  'suggested' | 'created' | 'registered' | 'printed' | 'processed_manually' | 'annulled';
 
 export interface CartaEvent {
   id: string;
@@ -112,7 +112,7 @@ export interface StudentDisciplinarySnapshot {
 }
 
 const CARTA_SELECT =
-  'id,student_id,letter_type,emission_date,status,emitted_by,supervisor_name,apoderado_name,annotations_count,student_name,course,regulation_basis,observations,created_at,content_snapshot';
+  'id,student_id,letter_type,emission_date,status,emitted_by,supervisor_name,apoderado_name,annotations_count,origin,school_year,student_name,course,regulation_basis,observations,created_at,content_snapshot';
 const CARTA_EVENT_SELECT =
   'id,carta_id,student_id,event_type,event_detail,created_by,created_at,metadata';
 const COMPLETION_EVENTS: CartaEventType[] = ['registered', 'printed', 'processed_manually'];
@@ -144,11 +144,17 @@ function hydrateCartaWorkflow(carta: CartaDisciplinaria, events: CartaEvent[]): 
 }
 
 export function resolveCartaWorkflowStatus(
-  carta: CartaDisciplinaria | null | undefined
+  carta: CartaDisciplinaria | null | undefined,
 ): CartaWorkflowStatus | 'none' {
   if (!carta) return 'none';
   if (carta.status === 'Anulada' || carta.annulled_at) return 'annulled';
-  if (carta.printed_at || carta.registered_at || carta.processed_manually_at) {
+  if (
+    carta.origin === 'physical' ||
+    carta.workflow_status === 'completed' ||
+    carta.printed_at ||
+    carta.registered_at ||
+    carta.processed_manually_at
+  ) {
     return 'completed';
   }
   return 'pending';
@@ -162,11 +168,57 @@ export function getCartaWorkflowLabel(carta: CartaDisciplinaria | null | undefin
   return carta?.suggested_at ? 'Carta sugerida' : 'Carta pendiente';
 }
 
-export async function fetchCartas(studentId: string): Promise<CartaDisciplinaria[]> {
-  return fetchCartasByStudent(studentId);
+export async function fetchCartaTableStates(): Promise<Record<string, StudentCartaTableState>> {
+  const { data: cartasData, error: cartasError } = await supabase
+    .from('cartas_disciplinarias')
+    .select(CARTA_SELECT)
+    .order('emission_date', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (cartasError) {
+    console.error('Error fetching carta table states:', cartasError);
+    return {};
+  }
+
+  const cartas = (cartasData || []).map(mapCauseRowToCarta);
+  if (cartas.length === 0) return {};
+
+  const { data: eventsData, error: eventsError } = await supabase
+    .from('carta_events')
+    .select(CARTA_EVENT_SELECT)
+    .in(
+      'carta_id',
+      cartas.map((carta) => carta.id),
+    )
+    .order('created_at', { ascending: false });
+
+  if (eventsError) {
+    console.error('Error fetching carta events for table:', eventsError);
+  }
+
+  const events = (eventsData || []) as CartaEvent[];
+  const cartasByStudent = new Map<string, CartaDisciplinaria[]>();
+  for (const carta of cartas) {
+    const hydrated = hydrateCartaWorkflow(carta, events);
+    const current = cartasByStudent.get(carta.student_id) || [];
+    current.push(hydrated);
+    cartasByStudent.set(carta.student_id, current);
+  }
+
+  const schoolYear = Number(
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Santiago',
+      year: 'numeric',
+    }).format(new Date()),
+  );
+  const states: Record<string, StudentCartaTableState> = {};
+  for (const [studentId, studentCartas] of cartasByStudent) {
+    states[studentId] = resolveStudentCartaTableState(studentCartas, schoolYear);
+  }
+  return states;
 }
 
-export async function fetchCartasByStudent(studentId: string): Promise<CartaDisciplinaria[]> {
+async function fetchCartasByStudent(studentId: string): Promise<CartaDisciplinaria[]> {
   const { data, error } = await supabase
     .from('cartas_disciplinarias')
     .select(CARTA_SELECT)
@@ -184,15 +236,8 @@ export async function fetchCartasByStudent(studentId: string): Promise<CartaDisc
   return cartas.map((carta) => hydrateCartaWorkflow(carta, cartaEvents));
 }
 
-export async function fetchCurrentCartaByStudent(
-  studentId: string
-): Promise<CartaDisciplinaria | null> {
-  const cartas = await fetchCartasByStudent(studentId);
-  return cartas.find((carta) => carta.status !== 'Anulada') || null;
-}
-
 async function fetchCartaForEvent(
-  cartaId: string
+  cartaId: string,
 ): Promise<{ student_id: string; tenant_id?: string | null } | null> {
   const { data, error } = await supabase
     .from('cartas_disciplinarias')
@@ -207,11 +252,11 @@ async function fetchCartaForEvent(
   return data as { student_id: string; tenant_id?: string | null };
 }
 
-export async function createCartaEvent(
+async function createCartaEvent(
   cartaId: string,
   eventType: CartaEventType,
   detail?: string,
-  metadata: Record<string, unknown> = {}
+  metadata: Record<string, unknown> = {},
 ): Promise<boolean> {
   const carta = await fetchCartaForEvent(cartaId);
   if (!carta) return false;
@@ -235,22 +280,36 @@ export async function createCartaEvent(
   return true;
 }
 
-export async function markCartaPrinted(cartaId: string): Promise<boolean> {
-  return createCartaEvent(cartaId, 'printed', 'Carta impresa desde ficha disciplinaria');
-}
+export async function markCartaProcessedManually(
+  cartaId: string,
+  note: string,
+  contentSnapshot?: Record<string, unknown>,
+): Promise<boolean> {
+  if (contentSnapshot) {
+    const { data, error } = await supabase
+      .from('cartas_disciplinarias')
+      .update({ content_snapshot: contentSnapshot })
+      .eq('id', cartaId)
+      .select('id')
+      .maybeSingle();
 
-export async function markCartaProcessedManually(cartaId: string, note: string): Promise<boolean> {
+    if (error || !data) {
+      console.error('Error saving final carta content:', error);
+      return false;
+    }
+  }
+
   return createCartaEvent(
     cartaId,
     'processed_manually',
-    note || 'Trámite marcado como procesado manualmente'
+    note || 'Trámite marcado como procesado manualmente',
   );
 }
 
-export async function updateCartaStatus(
+async function updateCartaStatus(
   cartaId: string,
   status: CartaStatus,
-  reason?: string
+  reason?: string,
 ): Promise<boolean> {
   const { data: current } = await supabase
     .from('cartas_disciplinarias')
@@ -282,16 +341,67 @@ export async function annulCarta(cartaId: string, reason: string): Promise<boole
   return createCartaEvent(cartaId, 'annulled', reason || 'Anulación administrativa');
 }
 
+export interface PhysicalCartaRegistrationResult {
+  ok: boolean;
+  cartaId?: string;
+  message: string;
+}
+
+export async function registerPhysicalCartaForStudent(
+  input: PhysicalCartaRegistrationInput,
+): Promise<PhysicalCartaRegistrationResult> {
+  const parsed = physicalCartaRegistrationSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: parsed.error.issues[0]?.message || 'Los datos de la carta física no son válidos.',
+    };
+  }
+
+  const { data, error } = await supabase.rpc('register_physical_carta', {
+    p_student_id: parsed.data.studentId,
+    p_letter_type: parsed.data.letterType,
+    p_emission_date: parsed.data.emissionDate,
+    p_observations: parsed.data.observations || null,
+  });
+
+  if (error) {
+    console.error('Error registering physical carta:', error);
+    if (error.code === '23505') {
+      return {
+        ok: false,
+        message: 'Esta carta física ya está registrada para el mismo año.',
+      };
+    }
+    return {
+      ok: false,
+      message: 'No fue posible registrar la carta física. Inténtelo nuevamente.',
+    };
+  }
+
+  return {
+    ok: true,
+    cartaId: typeof data === 'string' ? data : undefined,
+    message: 'Carta física registrada sin modificar el conteo de anotaciones.',
+  };
+}
+
 export async function createPendingCartaForStudent(params: {
   student: { id: string; full_name: string; course_id: string; course_name?: string | null };
   letterType: LetterType;
   negativeCount: number;
-  source: 'supabase' | 'pdf';
+  source: 'supabase' | 'pdf' | 'physical';
   sourceProcessId?: string | null;
   sourceAnalysisId?: string | null;
 }): Promise<CartaDisciplinaria | null> {
   const tenantId = useAuthStore.getState().tenantId;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = nowDateOnly();
+  const sourceLabel =
+    params.source === 'pdf'
+      ? 'del PDF'
+      : params.source === 'physical'
+        ? 'de una carta física existente'
+        : 'de Supabase';
   const { data, error } = await supabase
     .from('cartas_disciplinarias')
     .insert({
@@ -307,7 +417,7 @@ export async function createPendingCartaForStudent(params: {
       student_name: params.student.full_name,
       course: params.student.course_name || params.student.course_id,
       regulation_basis: 'RICE 2026 - Fundación Educacional Colegio Carmela Romero de Espinosa',
-      observations: `Carta pendiente sugerida por conteo ${params.source === 'pdf' ? 'del PDF' : 'de Supabase'}.`,
+      observations: `Carta pendiente sugerida por progresión ${sourceLabel}.`,
     })
     .select(CARTA_SELECT)
     .single();
@@ -318,17 +428,12 @@ export async function createPendingCartaForStudent(params: {
   }
 
   const carta = mapCauseRowToCarta(data);
-  await createCartaEvent(
-    carta.id,
-    'suggested',
-    `Carta sugerida por conteo ${params.source === 'pdf' ? 'del PDF' : 'de Supabase'}`,
-    {
-      source: params.source,
-      negativeCount: params.negativeCount,
-      sourceProcessId: params.sourceProcessId || null,
-      sourceAnalysisId: params.sourceAnalysisId || null,
-    }
-  );
+  await createCartaEvent(carta.id, 'suggested', `Carta sugerida por progresión ${sourceLabel}`, {
+    source: params.source,
+    negativeCount: params.negativeCount,
+    sourceProcessId: params.sourceProcessId || null,
+    sourceAnalysisId: params.sourceAnalysisId || null,
+  });
   return hydrateCartaWorkflow(carta, await fetchCartaEventsByStudent(params.student.id));
 }
 
@@ -350,7 +455,7 @@ async function fetchProcessesByStudent(studentId: string): Promise<DisciplinaryP
   const { data, error } = await supabase
     .from('disciplinary_processes')
     .select(
-      'id,student_id,process_number,status,created_at,updated_at,suggested_letter_type,final_letter_type,total_negativas,total_positivas,total_informativas,is_completed,completed_at'
+      'id,student_id,process_number,status,created_at,updated_at,suggested_letter_type,final_letter_type,total_negativas,total_positivas,total_informativas,is_completed,completed_at',
     )
     .eq('student_id', studentId)
     .order('created_at', { ascending: false });
@@ -366,7 +471,7 @@ async function fetchFilesByStudent(studentId: string): Promise<DisciplinaryFileR
   const { data, error } = await supabase
     .from('disciplinary_process_files')
     .select(
-      'id,process_id,student_id,file_name,original_file_name,storage_path,bucket,uploaded_at,processing_status'
+      'id,process_id,student_id,file_name,original_file_name,storage_path,bucket,uploaded_at,processing_status',
     )
     .eq('student_id', studentId)
     .order('uploaded_at', { ascending: false });
@@ -378,7 +483,7 @@ async function fetchFilesByStudent(studentId: string): Promise<DisciplinaryFileR
   return (data || []) as DisciplinaryFileRecord[];
 }
 
-export async function fetchCartaEventsByStudent(studentId: string): Promise<CartaEvent[]> {
+async function fetchCartaEventsByStudent(studentId: string): Promise<CartaEvent[]> {
   const { data, error } = await supabase
     .from('carta_events')
     .select(CARTA_EVENT_SELECT)
@@ -410,12 +515,12 @@ async function fetchLetterOutputEventsByStudent(studentId: string): Promise<Lett
 }
 
 async function fetchDetectedAnnotationsByStudent(
-  studentId: string
+  studentId: string,
 ): Promise<DetectedAnnotationRecord[]> {
   const { data, error } = await supabase
     .from('disciplinary_annotations_detected')
     .select(
-      'id,process_id,student_id,annotation_type,annotation_text,raw_text,annotation_date,detected_at'
+      'id,process_id,student_id,annotation_type,annotation_text,raw_text,annotation_date,detected_at',
     )
     .eq('student_id', studentId)
     .order('detected_at', { ascending: false })
@@ -429,7 +534,7 @@ async function fetchDetectedAnnotationsByStudent(
 }
 
 export async function fetchStudentDisciplinarySnapshot(
-  studentId: string
+  studentId: string,
 ): Promise<StudentDisciplinarySnapshot> {
   const [
     annotations,
@@ -460,7 +565,7 @@ export async function fetchStudentDisciplinarySnapshot(
       if (annotation.type === 'Información') acc.informativas += 1;
       return acc;
     },
-    { negativas: 0, positivas: 0, informativas: 0 }
+    { negativas: 0, positivas: 0, informativas: 0 },
   );
 
   const cartas = rawCartas.map((carta) => hydrateCartaWorkflow(carta, cartaEvents));
@@ -479,28 +584,4 @@ export async function fetchStudentDisciplinarySnapshot(
     counts,
     lastAnalysis: documentAnalyses[0] || null,
   };
-}
-
-export async function refreshStudentDetailData(
-  studentId: string
-): Promise<StudentDisciplinarySnapshot> {
-  return fetchStudentDisciplinarySnapshot(studentId);
-}
-
-export async function fetchCartaAnnotations(carta: CartaDisciplinaria): Promise<Annotation[]> {
-  const { data, error } = await supabase
-    .from('inspectorate_records')
-    .select(
-      'id,student_id,date_time,observation,severity,type,registered_by,created_at,created_by,pdf_file_path'
-    )
-    .eq('student_id', carta.student_id)
-    .eq('type', 'Negativa')
-    .order('date_time', { ascending: false })
-    .limit(Math.max(1, Number(carta.annotations_count) || 20));
-
-  if (error) {
-    console.error('Error fetching carta annotations:', error);
-    return [];
-  }
-  return (data || []).map(mapInspectorateToAnnotation);
 }

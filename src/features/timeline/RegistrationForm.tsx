@@ -19,7 +19,8 @@ interface RegistrationFormProps {
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onCancel: () => void;
   onSubmit: () => void;
-  isUploadingDocument: boolean;
+  isSaving: boolean;
+  errorMessage: string | null;
 }
 
 export default function RegistrationForm({
@@ -33,7 +34,8 @@ export default function RegistrationForm({
   handleFileChange,
   onCancel,
   onSubmit,
-  isUploadingDocument,
+  isSaving,
+  errorMessage,
 }: RegistrationFormProps) {
   return (
     <div className="mt-2 space-y-3 rounded border border-info-200 bg-white p-3 text-left">
@@ -45,26 +47,35 @@ export default function RegistrationForm({
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div>
-          <label htmlFor={`reg-name-${item.id}`} className="block font-semibold text-[9px] text-neutral-400 uppercase">
+          <label
+            htmlFor={`reg-name-${item.id}`}
+            className="block font-semibold text-[9px] text-neutral-400 uppercase"
+          >
             Responsable:
           </label>
-<input
-  id={`reg-name-${item.id}`}
-  type="text"
-  spellCheck={false}
-  className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-medium text-neutral-800 text-xs placeholder-neutral-400 transition-colors focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-  value={regName}
-  onChange={(e) => setRegName(e.target.value)}
-  aria-label="Nombre del responsable"
-/>
+          <input
+            id={`reg-name-${item.id}`}
+            type="text"
+            spellCheck={false}
+            className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-medium text-neutral-800 text-xs placeholder-neutral-400 transition-colors focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+            value={regName}
+            onChange={(e) => setRegName(e.target.value)}
+            aria-label="Nombre del responsable"
+          />
         </div>
 
         <div>
-          <span id={`reg-file-label-${item.id}`} className="block font-semibold text-[9px] text-neutral-400 uppercase">
+          <span
+            id={`reg-file-label-${item.id}`}
+            className="block font-semibold text-[9px] text-neutral-400 uppercase"
+          >
             Documento de respaldo:
           </span>
           <div className="relative mt-1 flex items-center justify-center rounded-lg border-2 border-neutral-300 border-dashed bg-neutral-50/50 px-2 py-1.5 transition-colors hover:bg-neutral-50">
-            <label htmlFor={`reg-file-${item.id}`} className="flex cursor-pointer items-center gap-1.5 font-medium text-[11px] text-neutral-500">
+            <label
+              htmlFor={`reg-file-${item.id}`}
+              className="flex cursor-pointer items-center gap-1.5 font-medium text-[11px] text-neutral-500"
+            >
               <Upload className="h-3.5 w-3.5 text-neutral-400" aria-hidden="true" />
               {regFileName || 'Seleccionar archivo...'}
               <input
@@ -92,10 +103,20 @@ export default function RegistrationForm({
         />
       </div>
 
+      {errorMessage && (
+        <p
+          role="alert"
+          className="rounded-lg border border-danger-200 bg-danger-50 p-2 text-[10px] text-danger-700"
+        >
+          {errorMessage}
+        </p>
+      )}
+
       <div className="flex justify-end gap-2 pt-1">
         <button
           type="button"
           onClick={onCancel}
+          disabled={isSaving}
           className="rounded-lg px-3 py-1.5 font-medium text-[11px] text-neutral-500 transition-colors hover:bg-neutral-50"
         >
           Cancelar
@@ -103,14 +124,18 @@ export default function RegistrationForm({
         <button
           type="button"
           onClick={onSubmit}
-          disabled={isUploadingDocument}
+          disabled={isSaving}
           className="flex items-center gap-1 rounded-lg bg-brand-600 px-4 py-1.5 font-medium text-[11px] text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isUploadingDocument ? (
+          {isSaving ? (
             <>Subiendo...</>
           ) : (
             <>
-              {regFile ? <Upload className="h-3.5 w-3.5" aria-hidden="true" /> : <Check className="h-3.5 w-3.5" aria-hidden="true" />}
+              {regFile ? (
+                <Upload className="h-3.5 w-3.5" aria-hidden="true" />
+              ) : (
+                <Check className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
               {regFile ? 'Adjuntar y registrar' : 'Confirmar registro'}
             </>
           )}

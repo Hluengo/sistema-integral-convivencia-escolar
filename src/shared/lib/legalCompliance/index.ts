@@ -18,6 +18,3 @@ export * from './deadlineCalculators';
 
 // Validadores de plazos
 export * from './deadlineValidators';
-
-// Validadores de conformidad legal
-export * from './conformityValidators';

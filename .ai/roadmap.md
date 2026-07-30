@@ -79,7 +79,7 @@
 
 ### Arquitectura
 
-- [ ] Unificar server entry points (server/routes/ + server/api/routes/)
+- [x] Unificar rutas de los server entry points (`server/api/routes/` canónico)
 - [ ] Migrar a Edge Functions de Supabase (reemplazar Express)
 - [ ] Implementar React Server Components (si aplica)
 

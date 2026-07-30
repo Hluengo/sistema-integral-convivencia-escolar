@@ -3,9 +3,9 @@
 import { supabase } from '../lib/supabase';
 import type { BitacoraEntry, Causa, ChecklistItem } from '../../../types';
 import { BitacoraEntrySchema, CausaSchema, ChecklistItemSchema } from '../../../schemas';
-import { getBaseChecklist } from '../../../data';
 import { useAuthStore } from '../../../stores/authStore';
-import { getDocumentSignedUrl } from './storage.service';
+import { normalizeDocumentPath } from './storage.service';
+import { reconcileChecklistFromBitacora } from '../../lib/domain/checklistReconciliation';
 
 interface SupabaseCausaRow {
   id: string;
@@ -49,10 +49,8 @@ interface SupabaseBitacoraRow {
   documento_adjunto: string | null;
 }
 
-async function mapChecklistRow(row: SupabaseChecklistRow): Promise<ChecklistItem | null> {
-  const documentoUrl = row.documento_url
-    ? await getDocumentSignedUrl(row.documento_url)
-    : undefined;
+function mapChecklistRow(row: SupabaseChecklistRow): ChecklistItem | null {
+  const documentoUrl = row.documento_url ? normalizeDocumentPath(row.documento_url) : undefined;
   const parsed = ChecklistItemSchema.safeParse({
     id: row.id,
     label: row.label,
@@ -72,9 +70,9 @@ async function mapChecklistRow(row: SupabaseChecklistRow): Promise<ChecklistItem
   return parsed.data;
 }
 
-async function mapBitacoraRow(row: SupabaseBitacoraRow): Promise<BitacoraEntry | null> {
+function mapBitacoraRow(row: SupabaseBitacoraRow): BitacoraEntry | null {
   const documentoAdjunto = row.documento_adjunto
-    ? await getDocumentSignedUrl(row.documento_adjunto)
+    ? normalizeDocumentPath(row.documento_adjunto)
     : undefined;
   const parsed = BitacoraEntrySchema.safeParse({
     id: row.id,
@@ -97,7 +95,9 @@ const DEFAULT_PAGE_SIZE = 100;
 export async function fetchCausas(limit = DEFAULT_PAGE_SIZE): Promise<Causa[]> {
   let causaQuery = supabase
     .from('causas')
-    .select('id,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas')
+    .select(
+      'id,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas',
+    )
     .order('fecha_ultima_actualizacion', { ascending: false });
 
   if (limit > 0) causaQuery = causaQuery.limit(limit);
@@ -137,7 +137,9 @@ export async function fetchCausas(limit = DEFAULT_PAGE_SIZE): Promise<Causa[]> {
   const [checklistResult, bitacoraResult] = await Promise.all([
     supabase
       .from('checklist_items')
-      .select('id,causa_id,label,descripcion,completado,fecha_completado,requerido_por,registrado_por,observaciones,documento_nombre,documento_url')
+      .select(
+        'id,causa_id,label,descripcion,completado,fecha_completado,requerido_por,registrado_por,observaciones,documento_nombre,documento_url',
+      )
       .in('causa_id', ids),
     supabase
       .from('bitacora_entries')
@@ -146,16 +148,15 @@ export async function fetchCausas(limit = DEFAULT_PAGE_SIZE): Promise<Causa[]> {
       .order('fecha', { ascending: false }),
   ]);
 
-  if (checklistResult.error) console.error('Error fetching checklist items:', checklistResult.error);
+  if (checklistResult.error)
+    console.error('Error fetching checklist items:', checklistResult.error);
   if (bitacoraResult.error) console.error('Error fetching bitacora entries:', bitacoraResult.error);
 
   const checklistByCausa = new Map<string, ChecklistItem[]>();
-  const checklistMapped = await Promise.all(
-    ((checklistResult.data || []) as SupabaseChecklistRow[]).map(async (row) => ({
-      causaId: row.causa_id,
-      item: await mapChecklistRow(row),
-    }))
-  );
+  const checklistMapped = ((checklistResult.data || []) as SupabaseChecklistRow[]).map((row) => ({
+    causaId: row.causa_id,
+    item: mapChecklistRow(row),
+  }));
   for (const { causaId, item } of checklistMapped) {
     if (!item) continue;
     const current = checklistByCausa.get(causaId) || [];
@@ -164,12 +165,10 @@ export async function fetchCausas(limit = DEFAULT_PAGE_SIZE): Promise<Causa[]> {
   }
 
   const bitacoraByCausa = new Map<string, BitacoraEntry[]>();
-  const bitacoraMapped = await Promise.all(
-    ((bitacoraResult.data || []) as SupabaseBitacoraRow[]).map(async (row) => ({
-      causaId: row.causa_id,
-      entry: await mapBitacoraRow(row),
-    }))
-  );
+  const bitacoraMapped = ((bitacoraResult.data || []) as SupabaseBitacoraRow[]).map((row) => ({
+    causaId: row.causa_id,
+    entry: mapBitacoraRow(row),
+  }));
   for (const { causaId, entry } of bitacoraMapped) {
     if (!entry) continue;
     const current = bitacoraByCausa.get(causaId) || [];
@@ -177,16 +176,25 @@ export async function fetchCausas(limit = DEFAULT_PAGE_SIZE): Promise<Causa[]> {
     bitacoraByCausa.set(causaId, current);
   }
 
-  return causas.map((causa) => ({
-    ...causa,
-    bitacora: bitacoraByCausa.get(causa.id) || [],
-    checklistDebidoProceso: checklistByCausa.get(causa.id) || getBaseChecklist(),
-  }));
+  return causas.map((causa) => {
+    const bitacora = bitacoraByCausa.get(causa.id) || [];
+    return {
+      ...causa,
+      bitacora,
+      checklistDebidoProceso: reconcileChecklistFromBitacora(
+        checklistByCausa.get(causa.id) || [],
+        bitacora,
+      ),
+    };
+  });
 }
 
 async function resolveUniqueCausaId(preferred: string): Promise<string> {
   const { data: existing, error: checkError } = await supabase
-    .from('causas').select('id').eq('id', preferred).maybeSingle();
+    .from('causas')
+    .select('id')
+    .eq('id', preferred)
+    .maybeSingle();
   if (!checkError && !existing) return preferred;
   const { data: all } = await supabase.from('causas').select('id');
   const year = new Date().getFullYear();

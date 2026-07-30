@@ -8,8 +8,14 @@ import {
   fetchAnnotations,
   fetchStudentsWithAnnotationCounts,
 } from '../../services/annotations.service';
+import { fetchCartaTableStates } from '../../services/cartas.service';
+import {
+  getEffectiveDisciplinaryStage,
+  getStudentCartaWorkflowLabel,
+} from '../../shared/lib/domain/disciplinaryStage';
 import AnotacionesStudentTable from './AnotacionesStudentTable';
 import { AnnotationsSkeleton } from '../../components/Skeleton';
+import type { ActiveTab } from './AnotacionesStudentDetailModal/constants';
 
 const AnotacionesStudentDetailModal = lazy(() => import('./AnotacionesStudentDetailModal'));
 const NewDisciplinaryProcessModal = lazy(() => import('./NewDisciplinaryProcessModal'));
@@ -18,11 +24,43 @@ interface AnotacionesViewProps {
   privacyMode: boolean;
 }
 
+async function fetchAnotacionesTableData(): Promise<{
+  students: AnotacionStudent[];
+  cartaStatuses: Record<string, string[]>;
+}> {
+  const [fetchedStudents, cartaStates] = await Promise.all([
+    fetchStudentsWithAnnotationCounts(),
+    fetchCartaTableStates(),
+  ]);
+  const cartaStatuses: Record<string, string[]> = {};
+  const students = (fetchedStudents ?? []).map((student) => {
+    const cartaState = cartaStates[student.id];
+    const completedLetterType = cartaState?.completedLetterType ?? null;
+    const stage = getEffectiveDisciplinaryStage(student.annotations_count, completedLetterType);
+    const cartaStatus = getStudentCartaWorkflowLabel(student.annotations_count, cartaState);
+    if (cartaStatus) cartaStatuses[student.id] = [cartaStatus];
+    return {
+      ...student,
+      effective_letter_type: completedLetterType,
+      disciplinary_status:
+        stage.key === 'derivacion'
+          ? ('Rojo' as const)
+          : stage.key === 'compromiso_conductual'
+            ? ('Naranja' as const)
+            : stage.key === 'amonestacion'
+              ? ('Amarillo' as const)
+              : ('Verde' as const),
+    };
+  });
+  return { students, cartaStatuses };
+}
+
 export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
   const [students, setStudents] = useState<AnotacionStudent[]>([]);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [selectedStudent, setSelectedStudent] = useState<AnotacionStudent | null>(null);
+  const [detailInitialTab, setDetailInitialTab] = useState<ActiveTab>('estado');
   const [isNewProcessModalOpen, setIsNewProcessModalOpen] = useState<boolean>(false);
   const [activeFilter, setActiveFilter] = useState<string>('con_registro');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -33,27 +71,32 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
     setIsLoading(true);
     setDbError(null);
     try {
-      const fetchedStudents = await fetchStudentsWithAnnotationCounts();
-      setStudents(fetchedStudents ?? []);
-      const { data: cartasData } = await supabase
-        .from('cartas_disciplinarias')
-        .select('student_id, status');
-      const map: Record<string, string[]> = {};
-      const seen = new Set<string>();
-      for (const c of cartasData ?? []) {
-        const key = `${c.student_id}:${c.status}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        if (!map[c.student_id]) map[c.student_id] = [];
-        map[c.student_id].push(c.status);
-      }
-      setCartaStatuses(map);
+      const tableData = await fetchAnotacionesTableData();
+      setStudents(tableData.students);
+      setCartaStatuses(tableData.cartaStatuses);
     } catch (error: unknown) {
       console.error('Error cargando datos desde Supabase:', error);
       setDbError(error instanceof Error ? error.message : 'Error de conexión con la base de datos');
       setStudents([]);
     } finally {
       setIsLoading(false);
+    }
+  }, []);
+
+  const refreshStudentTable = useCallback(async () => {
+    try {
+      const tableData = await fetchAnotacionesTableData();
+      const nextStudents = tableData.students;
+      setStudents(nextStudents);
+      setCartaStatuses(tableData.cartaStatuses);
+      setSelectedStudent((current) =>
+        current ? nextStudents.find((student) => student.id === current.id) || current : null,
+      );
+    } catch (error: unknown) {
+      console.error('Error actualizando la tabla de anotaciones:', error);
+      setDbError(
+        error instanceof Error ? error.message : 'Error al actualizar la tabla de anotaciones',
+      );
     }
   }, []);
 
@@ -107,7 +150,7 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
         setDbError(error instanceof Error ? error.message : 'Error al limpiar anotaciones');
       }
     },
-    [loadData, selectedStudent, students]
+    [loadData, selectedStudent, students],
   );
 
   if (isLoading) {
@@ -164,7 +207,14 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
       <AnotacionesStudentTable
         students={students}
         privacyMode={privacyMode}
-        onSelectStudent={(s) => setSelectedStudent(s)}
+        onSelectStudent={(student) => {
+          setDetailInitialTab('estado');
+          setSelectedStudent(student);
+        }}
+        onEditAnnotations={(student) => {
+          setDetailInitialTab('editar_anotaciones');
+          setSelectedStudent(student);
+        }}
         activeFilter={activeFilter}
         setActiveFilter={setActiveFilter}
         searchQuery={searchQuery}
@@ -179,8 +229,10 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
           student={selectedStudent}
           annotations={annotations.filter((a) => a.student_id === selectedStudent.id)}
           privacyMode={privacyMode}
+          initialTab={detailInitialTab}
           onClose={() => setSelectedStudent(null)}
           onClearAnnotations={() => handleClearAnnotations(selectedStudent.id)}
+          onDataChanged={refreshStudentTable}
         />
       )}
 
@@ -191,6 +243,13 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
           onClose={() => setIsNewProcessModalOpen(false)}
           currentUserEmail=""
           onProcessCreated={loadData}
+          onOpenExistingStudent={(studentId) => {
+            const student = students.find((candidate) => candidate.id === studentId);
+            if (!student) return;
+            setIsNewProcessModalOpen(false);
+            setDetailInitialTab('historial');
+            setSelectedStudent(student);
+          }}
         />
       )}
     </div>

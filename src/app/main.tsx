@@ -5,17 +5,11 @@ import { createRoot } from 'react-dom/client';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '../lib/queryClient';
 import ErrorBoundary from '../components/ErrorBoundary';
-import { initSentry } from '../lib/sentry';
-import { initPostHog } from '../lib/posthog';
-import { reportWebVitals } from '../lib/webVitals';
+import { initializeTelemetry } from '../lib/telemetry';
 import PerformanceProfiler from '../lib/PerformanceProfiler';
 import AuthAnalytics from './AuthAnalytics';
 import App from './App';
 import '../index.css';
-
-initSentry();
-initPostHog();
-reportWebVitals();
 
 const rootEl = document.getElementById('root');
 if (!rootEl) {
@@ -31,5 +25,7 @@ createRoot(rootEl).render(
         </PerformanceProfiler>
       </ErrorBoundary>
     </QueryClientProvider>
-  </StrictMode>
+  </StrictMode>,
 );
+
+initializeTelemetry();

@@ -21,6 +21,8 @@ interface TimelineContextValue {
   regFileName: string;
   setRegFileName: React.Dispatch<React.SetStateAction<string>>;
   regFile: File | null;
+  isSavingRegistration: boolean;
+  registrationError: string | null;
   handleStartRegister: (item: ChecklistItem) => void;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSaveRegistration: (itemId: string) => Promise<void>;
@@ -48,8 +50,19 @@ interface TimelineContextValue {
   setAiSubTab: React.Dispatch<React.SetStateAction<'auditoria' | 'borradores'>>;
   auditReport: string;
   isAuditing: boolean;
-  selectedDocType: 'notificacion_apertura' | 'citacion_entrevista' | 'informe_cierre_indagacion' | 'informe_concluyente';
-  setSelectedDocType: React.Dispatch<React.SetStateAction<'notificacion_apertura' | 'citacion_entrevista' | 'informe_cierre_indagacion' | 'informe_concluyente'>>;
+  selectedDocType:
+    | 'notificacion_apertura'
+    | 'citacion_entrevista'
+    | 'informe_cierre_indagacion'
+    | 'informe_concluyente';
+  setSelectedDocType: React.Dispatch<
+    React.SetStateAction<
+      | 'notificacion_apertura'
+      | 'citacion_entrevista'
+      | 'informe_cierre_indagacion'
+      | 'informe_concluyente'
+    >
+  >;
   fatherName: string;
   setFatherName: React.Dispatch<React.SetStateAction<string>>;
   draftedDocument: string;
@@ -64,6 +77,8 @@ export const TimelineContext = createContext<TimelineContextValue | null>(null);
 
 export function useTimelineContext() {
   const ctx = useContext(TimelineContext);
-  if (!ctx) { throw new Error('useTimelineContext debe usarse dentro de TimelineProvider'); }
+  if (!ctx) {
+    throw new Error('useTimelineContext debe usarse dentro de TimelineProvider');
+  }
   return ctx;
 }

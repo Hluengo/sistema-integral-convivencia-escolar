@@ -8,6 +8,8 @@ import type { Causa, BitacoraEntry, UserRole } from '../../types';
 import { FileText, Plus, Send, Calendar, File, Download } from 'lucide-react';
 import ImproveInput from '../../components/ImproveInput';
 import ImproveTextarea from '../../components/ImproveTextarea';
+import { openDocument } from '../../shared/api/services/storage.service';
+import { formatChileDateTime } from '../../shared/lib/dateTime';
 
 interface BitacoraTabProps {
   causa: Causa;
@@ -38,7 +40,7 @@ export default function BitacoraTab({
   setLogTitle,
   logDesc,
   setLogDesc,
-  handleAddNewLog
+  handleAddNewLog,
 }: BitacoraTabProps) {
   return (
     <div className="space-y-4">
@@ -62,13 +64,24 @@ export default function BitacoraTab({
 
       {/* New Log Form */}
       {showLogForm && (
-        <form onSubmit={handleAddNewLog} aria-label="Nuevo registro en bitácora" className="animate-slide-up space-y-3 rounded-lg border border-brand-200 bg-white p-4 text-left">
+        <form
+          onSubmit={handleAddNewLog}
+          aria-label="Nuevo registro en bitácora"
+          className="animate-slide-up space-y-3 rounded-lg border border-brand-200 bg-white p-4 text-left"
+        >
           <div className="flex items-center justify-between border-neutral-100 border-b pb-2">
-            <h4 className="font-semibold text-[11px] text-neutral-800">Nuevo registro en bitácora</h4>
+            <h4 className="font-semibold text-[11px] text-neutral-800">
+              Nuevo registro en bitácora
+            </h4>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
-              <label htmlFor="log-type" className="mb-1 block font-semibold text-[9px] text-neutral-400 uppercase">Tipo</label>
+              <label
+                htmlFor="log-type"
+                className="mb-1 block font-semibold text-[9px] text-neutral-400 uppercase"
+              >
+                Tipo
+              </label>
               <select
                 id="log-type"
                 value={logType}
@@ -84,40 +97,46 @@ export default function BitacoraTab({
               </select>
             </div>
             <div>
-              <label htmlFor="log-participantes" className="mb-1 block font-semibold text-[9px] text-neutral-400 uppercase">Participantes</label>
-<input
-  id="log-participantes" aria-label="Participantes"
-  type="text"
-  spellCheck={false}
-  value={logParticipantes}
-  onChange={(e) => setLogParticipantes(e.target.value)}
-  placeholder="Separados por comas"
-  className="w-full rounded-lg border border-neutral-300 bg-white p-2 font-medium text-neutral-700 text-xs placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-/>
+              <label
+                htmlFor="log-participantes"
+                className="mb-1 block font-semibold text-[9px] text-neutral-400 uppercase"
+              >
+                Participantes
+              </label>
+              <input
+                id="log-participantes"
+                aria-label="Participantes"
+                type="text"
+                spellCheck={false}
+                value={logParticipantes}
+                onChange={(e) => setLogParticipantes(e.target.value)}
+                placeholder="Separados por comas"
+                className="w-full rounded-lg border border-neutral-300 bg-white p-2 font-medium text-neutral-700 text-xs placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+              />
             </div>
           </div>
           <div>
             <ImproveInput
-            id="log-title"
-            label="Título"
-            placeholder="Describa el evento brevemente"
-            value={logTitle}
-            onChange={setLogTitle}
-            required
-            className="w-full rounded-lg border border-neutral-300 bg-white p-2 font-medium text-neutral-700 text-xs placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-          />
+              id="log-title"
+              label="Título"
+              placeholder="Describa el evento brevemente"
+              value={logTitle}
+              onChange={setLogTitle}
+              required
+              className="w-full rounded-lg border border-neutral-300 bg-white p-2 font-medium text-neutral-700 text-xs placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+            />
           </div>
           <div>
             <ImproveTextarea
-            id="log-desc"
-            label="Descripción"
-            placeholder="Relato detallado del hecho procesal..."
-            value={logDesc}
-            onChange={setLogDesc}
-            required
-            rows={2}
-            className="w-full rounded-lg border border-neutral-300 bg-white p-2 font-medium text-neutral-700 text-xs placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-          />
+              id="log-desc"
+              label="Descripción"
+              placeholder="Relato detallado del hecho procesal..."
+              value={logDesc}
+              onChange={setLogDesc}
+              required
+              rows={2}
+              className="w-full rounded-lg border border-neutral-300 bg-white p-2 font-medium text-neutral-700 text-xs placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+            />
           </div>
           <div className="flex justify-end gap-2">
             <button
@@ -142,28 +161,35 @@ export default function BitacoraTab({
         {causa.bitacora.length > 0 ? (
           causa.bitacora.map((entry, _idx) => {
             const tipoColors: Record<string, string> = {
-              'Entrevista': 'bg-info-100 text-info-700',
-              'Evidencia': 'bg-amber-100 text-amber-700',
-              'Notificación': 'bg-purple-100 text-purple-700',
-              'Mediación': 'bg-success-100 text-success-700',
-              'Resolución': 'bg-brand-100 text-brand-700',
-              'Otro': 'bg-neutral-100 text-neutral-700',
+              Entrevista: 'bg-info-100 text-info-700',
+              Evidencia: 'bg-amber-100 text-amber-700',
+              Notificación: 'bg-purple-100 text-purple-700',
+              Mediación: 'bg-success-100 text-success-700',
+              Resolución: 'bg-brand-100 text-brand-700',
+              Otro: 'bg-neutral-100 text-neutral-700',
             };
             return (
-              <div key={entry.id} className="rounded-lg border border-neutral-200/80 bg-white p-4 text-left transition-colors hover:border-neutral-300">
+              <div
+                key={entry.id}
+                className="rounded-lg border border-neutral-200/80 bg-white p-4 text-left transition-colors hover:border-neutral-300"
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <h4 className="font-semibold text-neutral-900 text-xs">{entry.titulo}</h4>
-                      <span className={`rounded px-1.5 py-0.5 font-semibold text-[8px] ${tipoColors[entry.tipo] || tipoColors.Otro}`}>
+                      <span
+                        className={`rounded px-1.5 py-0.5 font-semibold text-[8px] ${tipoColors[entry.tipo] || tipoColors.Otro}`}
+                      >
                         {entry.tipo}
                       </span>
                     </div>
-                    <p className="mt-1 text-[10px] text-neutral-500 leading-relaxed">{entry.descripcion}</p>
+                    <p className="mt-1 text-[10px] text-neutral-500 leading-relaxed">
+                      {entry.descripcion}
+                    </p>
                     <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-neutral-400">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" aria-hidden="true" />
-                        {new Date(entry.fecha).toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        {formatChileDateTime(entry.fecha)}
                       </span>
                       <span>•</span>
                       <span>{entry.participantes.join(', ')}</span>
@@ -171,16 +197,17 @@ export default function BitacoraTab({
                     {entry.documentoAdjunto && (
                       <div className="mt-2 flex items-center gap-1.5 rounded border border-info-200 bg-info-50 px-2 py-1 text-[10px]">
                         <File className="h-3 w-3 shrink-0 text-info-500" aria-hidden="true" />
-                        <span className="truncate font-medium text-info-700">Documento adjunto</span>
-                        <a
-                          href={entry.documentoAdjunto}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <span className="truncate font-medium text-info-700">
+                          Documento adjunto
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => void openDocument(entry.documentoAdjunto!)}
                           className="ml-auto flex shrink-0 items-center gap-0.5 font-semibold text-info-600 hover:underline"
                           aria-label="Ver documento adjunto"
                         >
                           <Download className="h-3 w-3" aria-hidden="true" /> Ver
-                        </a>
+                        </button>
                       </div>
                     )}
                   </div>

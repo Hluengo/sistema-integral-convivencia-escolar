@@ -10,7 +10,7 @@ import CompromisoContent from './DocumentPreview/CompromisoContent';
 import DerivacionContent from './DocumentPreview/DerivacionContent';
 import './letter-document.css';
 
-export interface LetterA4DocumentProps {
+interface LetterA4DocumentProps {
   id?: string;
   docType: DocType;
   currentName: string;
@@ -45,7 +45,7 @@ const LetterA4Document = forwardRef<HTMLDivElement, LetterA4DocumentProps>(
       letterContent,
       className = '',
     },
-    ref
+    ref,
   ) {
     const title = TITLE_MAP[docType] ?? 'Documento Disciplinario';
     const sharedProps = {
@@ -72,7 +72,7 @@ const LetterA4Document = forwardRef<HTMLDivElement, LetterA4DocumentProps>(
         {docType === 'derivacion' && <DerivacionContent {...sharedProps} />}
       </div>
     );
-  }
+  },
 );
 
 export default LetterA4Document;

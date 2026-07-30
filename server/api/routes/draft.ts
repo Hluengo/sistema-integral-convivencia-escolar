@@ -2,7 +2,14 @@
 
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
-import { sanitizeForAI, requireStr, optStr, optArr, sanitize } from '../validators/sanitizers.js';
+import {
+  isRequestValidationError,
+  sanitizeForAI,
+  requireStr,
+  optStr,
+  optArr,
+  sanitize,
+} from '../validators/sanitizers.js';
 import { checkRateLimitAsync } from '../services/rateLimit.js';
 import { callGroq } from '../services/groq.js';
 import { httpsGet } from '../lib/https.js';
@@ -39,7 +46,7 @@ router.post('/draft-document', requireAuth, async (req, res) => {
     const checklist = optArr(body, 'checklist');
 
     const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-    if (!await checkRateLimitAsync(ip)) {
+    if (!(await checkRateLimitAsync(ip))) {
       res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
       return;
     }
@@ -181,9 +188,12 @@ DATOS: Código: ${id}, Estudiante: ${sanitizeForAI(studentName)} (Curso: ${cours
     ]);
     res.json({ success: true, document: responseText });
   } catch (error) {
+    if (isRequestValidationError(error)) {
+      res.status(400).json({ error: error.message });
+      return;
+    }
     console.error('Error al generar borrador de documento:', error);
-    const status = (error as Error).message?.startsWith('Campo requerido') ? 400 : 500;
-    res.status(status).json({ error: 'Error interno del servidor al redactar documento.' });
+    res.status(500).json({ error: 'Error interno del servidor al redactar documento.' });
   }
 });
 

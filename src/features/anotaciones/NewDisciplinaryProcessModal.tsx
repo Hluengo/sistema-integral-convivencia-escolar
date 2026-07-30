@@ -1,12 +1,24 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, Check, X, Loader2 } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  FileWarning,
+  History,
+  Loader2,
+  X,
+} from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import type { Student } from './NewDisciplinaryProcessModal/constants';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '@/src/stores/authStore';
 import type { AnnotationSummary } from '@/src/shared/lib/types';
+import type { DocumentAnalysis } from '@/src/shared/lib/types';
 import { fetchDisciplinaryRules } from '@/src/shared/api/services/disciplinary-rules.service';
+import { fetchDocumentAnalyses } from '@/src/shared/api/services/annotations.service';
 import type { DisciplinaryRule } from '@/src/shared/api/services/disciplinary-rules.service';
 import {
   deleteDisciplinaryFile,
@@ -20,8 +32,12 @@ import ReviewStep, {
   type ReviewAnnotation,
   type ReviewAnnotationType,
 } from './NewDisciplinaryProcessModal/ReviewStep';
+import { updateReviewAnnotationText } from './NewDisciplinaryProcessModal/reviewAnnotationUtils';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/src/shared/ui/Dialog';
+import PdfAnalysisComparison from './NewDisciplinaryProcessModal/PdfAnalysisComparison';
 
-type FlowStep = 'upload' | 'student_resolution' | 'classification' | 'review' | 'success';
+type FlowStep =
+  'upload' | 'student_resolution' | 'duplicate_check' | 'classification' | 'review' | 'success';
 type ProcessingState =
   | 'idle'
   | 'validating'
@@ -53,6 +69,7 @@ interface StudentCandidate {
 interface AnalysisResponse {
   success: true;
   analysis_id: string | null;
+  analyzed_at: string;
   file_id: string | null;
   selected_student_id: string | null;
   detected_student_name: string | null;
@@ -64,6 +81,12 @@ interface AnalysisResponse {
   warnings: string[];
   processing_status: string;
   file_hash: string;
+  duplicate_file: {
+    process_id: string;
+    process_number: string;
+    student_id: string | null;
+    uploaded_at: string;
+  } | null;
 }
 
 interface NewDisciplinaryProcessModalProps {
@@ -71,11 +94,13 @@ interface NewDisciplinaryProcessModalProps {
   onClose: () => void;
   currentUserEmail: string;
   onProcessCreated?: (result?: ProcessResult) => void | Promise<void>;
+  onOpenExistingStudent?: (studentId: string) => void;
 }
 
 const STEP_LABELS: Record<FlowStep, string> = {
   upload: 'Documento',
   student_resolution: 'Estudiante',
+  duplicate_check: 'Verificación',
   classification: 'Carta',
   review: 'Revisión',
   success: 'Éxito',
@@ -84,6 +109,7 @@ const STEP_LABELS: Record<FlowStep, string> = {
 const STEP_ORDER: FlowStep[] = [
   'upload',
   'student_resolution',
+  'duplicate_check',
   'classification',
   'review',
   'success',
@@ -97,7 +123,7 @@ function summaryFromAnnotations(annotations: ReviewAnnotation[]): AnnotationSumm
       if (annotation.type === 'information') acc.informativas += 1;
       return acc;
     },
-    { negativas: 0, positivas: 0, informativas: 0 }
+    { negativas: 0, positivas: 0, informativas: 0 },
   );
 }
 
@@ -142,6 +168,7 @@ export default function NewDisciplinaryProcessModal({
   onClose,
   currentUserEmail: _currentUserEmail,
   onProcessCreated,
+  onOpenExistingStudent,
 }: NewDisciplinaryProcessModalProps) {
   const [step, setStep] = useState<FlowStep>('upload');
   const [status, setStatus] = useState<ProcessingState>('idle');
@@ -151,23 +178,28 @@ export default function NewDisciplinaryProcessModal({
   const [file, setFile] = useState<File | null>(null);
   const [uploadedFile, setUploadedFile] = useState<UploadedDisciplinaryFile | null>(null);
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
+  const [previousAnalysis, setPreviousAnalysis] = useState<DocumentAnalysis | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [summary, setSummary] = useState<AnnotationSummary | null>(null);
   const [annotations, setAnnotations] = useState<ReviewAnnotation[]>([]);
   const [suggestedType, setSuggestedType] = useState<string | null>(null);
   const [classification, setClassification] = useState('');
-  const [rules, setRules] = useState<DisciplinaryRule[]>([]);
   const [createdProcess, setCreatedProcess] = useState<{ id: string; number: string } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const uploadedFileRef = useRef<UploadedDisciplinaryFile | null>(null);
   const idempotencyKeyRef = useRef<string | null>(null);
   if (idempotencyKeyRef.current === null) idempotencyKeyRef.current = crypto.randomUUID();
 
-  useEffect(() => {
-    fetchDisciplinaryRules()
-      .then(setRules)
-      .catch(() => setRules([]));
-  }, []);
+  const {
+    data: rules = [],
+    isError: rulesLoadFailed,
+    refetch: refetchRules,
+  } = useQuery<DisciplinaryRule[]>({
+    queryKey: ['disciplinary-rules'],
+    queryFn: fetchDisciplinaryRules,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
 
   useEffect(() => {
     uploadedFileRef.current = uploadedFile;
@@ -207,6 +239,7 @@ export default function NewDisciplinaryProcessModal({
     setFile(null);
     setUploadedFile(null);
     setAnalysis(null);
+    setPreviousAnalysis(null);
     setAnalysisError(null);
     setSummary(null);
     setAnnotations([]);
@@ -230,6 +263,33 @@ export default function NewDisciplinaryProcessModal({
     status === 'processing' ||
     status === 'confirming';
   const currentStepIndex = STEP_ORDER.indexOf(step);
+  const duplicateFile = analysis?.duplicate_file ?? null;
+  const existingStudentId = duplicateFile?.student_id ?? selectedStudent?.id ?? null;
+  const existingAnnotationCount = Number(selectedStudent?.annotations_count ?? 0);
+  const hasExistingStudentRecord = existingAnnotationCount > 0;
+
+  const loadPreviousAnalysis = async (studentId: string, currentAnalysisId: string | null) => {
+    const analyses = await fetchDocumentAnalyses(studentId);
+    const candidates = analyses.filter((item) => item.id !== currentAnalysisId);
+    setPreviousAnalysis(
+      candidates.find((item) => item.status === 'confirmed') ?? candidates[0] ?? null,
+    );
+  };
+
+  const continueAfterDuplicateWarning = () => {
+    if (duplicateFile) return;
+    setStep('classification');
+    setStatus('review');
+  };
+
+  const openExistingStudent = async () => {
+    if (!existingStudentId || !onOpenExistingStudent) return;
+    const studentId = existingStudentId;
+    await cleanupUploadedDraft();
+    resetDraftState();
+    onClose();
+    onOpenExistingStudent(studentId);
+  };
 
   const handleAnalyze = async () => {
     if (!file) return;
@@ -245,6 +305,7 @@ export default function NewDisciplinaryProcessModal({
     setStatus('validating');
     setAnalysisError(null);
     setAnalysis(null);
+    setPreviousAnalysis(null);
     setSummary(null);
     setAnnotations([]);
     setSelectedStudent(null);
@@ -289,11 +350,11 @@ export default function NewDisciplinaryProcessModal({
       setClassification(
         data.recommended_letter_type && data.recommended_letter_type !== 'none'
           ? data.recommended_letter_type
-          : 'none'
+          : 'none',
       );
 
       const candidates = (data.student_candidates || []).map((candidate) =>
-        matchLocalStudent(students, candidate)
+        matchLocalStudent(students, candidate),
       );
       setStudentCandidates(candidates);
 
@@ -305,8 +366,13 @@ export default function NewDisciplinaryProcessModal({
 
       if (selected) {
         setSelectedStudent(selected);
+        await loadPreviousAnalysis(selected.id, data.analysis_id);
         setCourse(selected.course_name || selected.course_id || data.detected_course || null);
-        setStep('classification');
+        setStep(
+          data.duplicate_file || Number(selected.annotations_count ?? 0) > 0
+            ? 'duplicate_check'
+            : 'classification',
+        );
         setStatus('review');
       } else {
         setCourse(data.detected_course || null);
@@ -327,10 +393,14 @@ export default function NewDisciplinaryProcessModal({
 
   const handleAnnotationTypeChange = (sequenceNumber: number, type: ReviewAnnotationType) => {
     const next = annotations.map((annotation) =>
-      annotation.sequence_number === sequenceNumber ? { ...annotation, type } : annotation
+      annotation.sequence_number === sequenceNumber ? { ...annotation, type } : annotation,
     );
     setAnnotations(next);
     setSummary(summaryFromAnnotations(next));
+  };
+
+  const handleAnnotationTextChange = (sequenceNumber: number, text: string) => {
+    setAnnotations((current) => updateReviewAnnotationText(current, sequenceNumber, text));
   };
 
   const handleConfirm = async () => {
@@ -397,8 +467,16 @@ export default function NewDisciplinaryProcessModal({
     if (step === 'student_resolution') {
       if (selectedStudent) {
         setCourse(selectedStudent.course_name || selectedStudent.course_id || course);
-        setStep('classification');
+        setStep(
+          duplicateFile || Number(selectedStudent.annotations_count ?? 0) > 0
+            ? 'duplicate_check'
+            : 'classification',
+        );
       }
+      return;
+    }
+    if (step === 'duplicate_check') {
+      continueAfterDuplicateWarning();
       return;
     }
     if (step === 'classification') {
@@ -421,6 +499,15 @@ export default function NewDisciplinaryProcessModal({
     if (step === 'student_resolution') {
       await cleanupUploadedDraft();
       resetDraftState();
+      return;
+    }
+    if (step === 'duplicate_check') {
+      if (analysis?.selected_student_id) {
+        await cleanupUploadedDraft();
+        resetDraftState();
+      } else {
+        setStep('student_resolution');
+      }
       return;
     }
     if (step === 'classification') {
@@ -452,8 +539,12 @@ export default function NewDisciplinaryProcessModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="mx-4 max-h-[90vh] w-full max-w-2xl animate-scale-in overflow-y-auto rounded-2xl bg-white shadow-2xl">
+    <Dialog open onOpenChange={(open) => !open && void closeSafely()}>
+      <DialogContent hideClose className="max-h-[90vh] max-w-2xl overflow-y-auto p-0">
+        <DialogTitle className="sr-only">Nuevo Proceso Disciplinario</DialogTitle>
+        <DialogDescription className="sr-only">
+          Cargue, revise y confirme las anotaciones disciplinarias detectadas en un PDF.
+        </DialogDescription>
         <div className="sticky top-0 z-10 border-neutral-100 border-b bg-white p-4">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-bold text-lg text-neutral-800">Nuevo Proceso Disciplinario</h2>
@@ -494,6 +585,7 @@ export default function NewDisciplinaryProcessModal({
                 setFile(nextFile);
                 setUploadedFile(null);
                 setAnalysis(null);
+                setPreviousAnalysis(null);
                 setSummary(null);
                 setAnnotations([]);
                 setAnalysisError(null);
@@ -507,7 +599,10 @@ export default function NewDisciplinaryProcessModal({
               students={availableStudents}
               course={null}
               selectedId={selectedStudent?.id ?? null}
-              onSelect={setSelectedStudent}
+              onSelect={(student) => {
+                setSelectedStudent(student);
+                void loadPreviousAnalysis(student.id, analysis?.analysis_id ?? null);
+              }}
               title="Confirmar estudiante"
               helperText={
                 analysis?.detected_student_name
@@ -517,13 +612,122 @@ export default function NewDisciplinaryProcessModal({
             />
           )}
           {step === 'classification' && (
-            <ClassificationStep
-              value={classification}
-              onChange={setClassification}
-              summary={summary}
-              options={ruleOptions.length > 0 ? ruleOptions : undefined}
-              suggestedType={suggestedType}
-            />
+            <>
+              {rulesLoadFailed && (
+                <div
+                  role="alert"
+                  className="mb-4 flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <span>
+                    No se pudieron cargar las reglas institucionales. Se muestran las opciones
+                    predeterminadas.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => void refetchRules()}
+                    className="shrink-0 rounded-lg border border-amber-300 bg-white px-3 py-1.5 font-semibold text-amber-900 hover:bg-amber-100"
+                  >
+                    Reintentar
+                  </button>
+                </div>
+              )}
+              <ClassificationStep
+                value={classification}
+                onChange={setClassification}
+                summary={summary}
+                options={ruleOptions.length > 0 ? ruleOptions : undefined}
+                suggestedType={suggestedType}
+              />
+            </>
+          )}
+          {step === 'duplicate_check' && (
+            <div className="space-y-4">
+              <div
+                className={`rounded-2xl border p-5 ${
+                  duplicateFile ? 'border-rose-200 bg-rose-50' : 'border-amber-200 bg-amber-50'
+                }`}
+                role="alert"
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className={`rounded-xl p-2 ${
+                      duplicateFile ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'
+                    }`}
+                  >
+                    {duplicateFile ? (
+                      <FileWarning className="h-5 w-5" />
+                    ) : (
+                      <AlertTriangle className="h-5 w-5" />
+                    )}
+                  </div>
+                  <div className="min-w-0 space-y-2">
+                    <h3
+                      className={`font-semibold ${
+                        duplicateFile ? 'text-rose-900' : 'text-amber-900'
+                      }`}
+                    >
+                      {duplicateFile
+                        ? 'Este mismo PDF ya fue registrado'
+                        : 'El estudiante ya tiene anotaciones registradas'}
+                    </h3>
+                    <p
+                      className={`text-sm leading-relaxed ${
+                        duplicateFile ? 'text-rose-800' : 'text-amber-800'
+                      }`}
+                    >
+                      {duplicateFile
+                        ? `El contenido coincide con el proceso ${duplicateFile.process_number}. Para proteger el historial, no se puede registrar nuevamente.`
+                        : `${selectedStudent?.full_name ?? 'El estudiante'} ya tiene ${existingAnnotationCount} anotación${existingAnnotationCount === 1 ? '' : 'es'}. Puedes revisar el historial o continuar si este PDF contiene información nueva.`}
+                    </p>
+                    {!duplicateFile && (
+                      <p className="text-amber-700 text-xs">
+                        Al continuar, el sistema conservará el PDF como un nuevo respaldo y omitirá
+                        las anotaciones que ya existan.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {!duplicateFile && previousAnalysis && summary && (
+                <PdfAnalysisComparison
+                  previous={previousAnalysis}
+                  current={summary}
+                  currentFileName={file?.name ?? 'PDF nuevo'}
+                  currentAnalyzedAt={analysis?.analyzed_at}
+                />
+              )}
+
+              <div className="flex flex-col gap-2 sm:flex-row">
+                {onOpenExistingStudent && existingStudentId && (
+                  <button
+                    type="button"
+                    onClick={() => void openExistingStudent()}
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-neutral-300 bg-white px-4 py-2.5 font-medium text-neutral-700 text-sm hover:bg-neutral-50"
+                  >
+                    <History className="h-4 w-4" />
+                    Abrir registro existente
+                  </button>
+                )}
+                {!duplicateFile && hasExistingStudentRecord && (
+                  <button
+                    type="button"
+                    onClick={continueAfterDuplicateWarning}
+                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 font-medium text-sm text-white hover:bg-indigo-700"
+                  >
+                    Subir PDF como actualización
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => void goBack()}
+                  className="inline-flex items-center justify-center rounded-xl px-4 py-2.5 font-medium text-neutral-600 text-sm hover:bg-neutral-100"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
           )}
           {step === 'review' && (
             <ReviewStep
@@ -535,6 +739,7 @@ export default function NewDisciplinaryProcessModal({
               annotations={annotations}
               warnings={analysis?.warnings ?? []}
               onAnnotationTypeChange={handleAnnotationTypeChange}
+              onAnnotationTextChange={handleAnnotationTextChange}
             />
           )}
           {step === 'success' && (
@@ -560,28 +765,34 @@ export default function NewDisciplinaryProcessModal({
           )}
         </div>
 
-        <div className="flex justify-between border-neutral-100 border-t p-4">
-          <button
-            type="button"
-            onClick={step === 'success' ? onClose : () => void goBack()}
-            disabled={(step === 'upload' && !isBusy) || status === 'confirming'}
-            className="flex items-center gap-1.5 rounded-xl px-4 py-2 font-medium text-neutral-600 text-sm hover:bg-neutral-100 disabled:opacity-30"
-          >
-            <ArrowLeft className="h-4 w-4" />{' '}
-            {isBusy && status !== 'confirming' ? 'Cancelar' : 'Anterior'}
-          </button>
-          <button
-            type="button"
-            onClick={step === 'success' ? onClose : goNext}
-            disabled={step !== 'success' && !canNext()}
-            className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-5 py-2 font-medium text-sm text-white hover:bg-indigo-700 disabled:opacity-40"
-          >
-            {status === 'confirming' && <Loader2 className="h-4 w-4 animate-spin" />}
-            {step === 'review' ? 'Confirmar proceso' : step === 'success' ? 'Cerrar' : 'Siguiente'}
-            {step !== 'review' && step !== 'success' && <ArrowRight className="h-4 w-4" />}
-          </button>
-        </div>
-      </div>
-    </div>
+        {step !== 'duplicate_check' && (
+          <div className="flex justify-between border-neutral-100 border-t p-4">
+            <button
+              type="button"
+              onClick={step === 'success' ? onClose : () => void goBack()}
+              disabled={(step === 'upload' && !isBusy) || status === 'confirming'}
+              className="flex items-center gap-1.5 rounded-xl px-4 py-2 font-medium text-neutral-600 text-sm hover:bg-neutral-100 disabled:opacity-30"
+            >
+              <ArrowLeft className="h-4 w-4" />{' '}
+              {isBusy && status !== 'confirming' ? 'Cancelar' : 'Anterior'}
+            </button>
+            <button
+              type="button"
+              onClick={step === 'success' ? onClose : goNext}
+              disabled={step !== 'success' && !canNext()}
+              className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-5 py-2 font-medium text-sm text-white hover:bg-indigo-700 disabled:opacity-40"
+            >
+              {status === 'confirming' && <Loader2 className="h-4 w-4 animate-spin" />}
+              {step === 'review'
+                ? 'Confirmar proceso'
+                : step === 'success'
+                  ? 'Cerrar'
+                  : 'Siguiente'}
+              {step !== 'review' && step !== 'success' && <ArrowRight className="h-4 w-4" />}
+            </button>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }

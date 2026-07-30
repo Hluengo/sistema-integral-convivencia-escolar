@@ -38,7 +38,7 @@ function getRedisClient() {
   if (!url || !token) {
     if (process.env.NODE_ENV === 'production') {
       console.warn(
-        '[rate-limit] UPSTASH_REDIS_REST_URL no configurado. Rate limit en memoria (inútil en serverless).'
+        '[rate-limit] UPSTASH_REDIS_REST_URL no configurado. Rate limit en memoria (inútil en serverless).',
       );
     }
     return null;
@@ -49,7 +49,7 @@ function getRedisClient() {
       const res = await fetch(`${url}/incr/${encodeURIComponent(key)}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = await res.json() as { result?: number };
+      const data = (await res.json()) as { result?: number };
       return data.result ?? 0;
     },
     async pexpire(key: string, ms: number) {
@@ -102,4 +102,15 @@ export function checkRateLimit(ip: string): boolean {
   }
   record.count++;
   return true;
+}
+
+export function getRemainingInWindow(ip: string): number {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+  if (!record || now > record.resetAt) return RATE_LIMIT;
+  return Math.max(0, RATE_LIMIT - record.count);
+}
+
+export function isRedisConfigured(): boolean {
+  return !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
 }

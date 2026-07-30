@@ -28,14 +28,19 @@ export function useChecklistRegistration({
   const [regObservations, setRegObservations] = useState<string>('');
   const [regFileName, setRegFileName] = useState<string>('');
   const [regFile, setRegFile] = useState<File | null>(null);
+  const [isSavingRegistration, setIsSavingRegistration] = useState(false);
+  const [registrationError, setRegistrationError] = useState<string | null>(null);
 
   const getResponsableName = () => {
     const r = causa.responsable;
-    if (!r) { return 'Esteban Valenzuela'; }
+    if (!r) {
+      return 'Esteban Valenzuela';
+    }
     return r.split(' (')[0] || 'Esteban Valenzuela';
   };
 
   const handleStartRegister = (item: ChecklistItem) => {
+    setRegistrationError(null);
     setRegisteringItemId(item.id);
     setRegName(item.registradoPor || getResponsableName());
     setRegObservations(item.observaciones || '');
@@ -44,68 +49,88 @@ export function useChecklistRegistration({
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
+    setRegistrationError(null);
     setRegFile(file);
     setRegFileName(file ? file.name : '');
   };
 
   const handleSaveRegistration = async (itemId: string) => {
-    if (currentRole === 'docente') { return; }
-
-    const targetItem = causa.checklistDebidoProceso.find(item => item.id === itemId);
-    const itemLabel = targetItem ? targetItem.label : 'Paso de Debido Proceso';
-
-    const newLog: BitacoraEntry = {
-      id: `b_step_${crypto.randomUUID()}`,
-      fecha: nowIso(),
-      tipo: 'Notificación',
-      titulo: `Registro de Hito: ${itemLabel}`,
-      descripcion: `Se ha registrado formalmente la finalización de la etapa/acción "${itemLabel}". Responsable: ${regName || 'Esteban Valenzuela'}. Observaciones: ${regObservations}`,
-      participantes: [regName || 'Esteban Valenzuela', privacyMode ? causa.nnaProtectedName : causa.estudianteNombre],
-    };
-
-    let documentoUrl: string | undefined ;
-    let documentoNombre: string | undefined ;
-
-    if (regFile) {
-      const publicUrl = await uploadDocument(causa.id, regFile);
-      if (publicUrl) {
-        documentoUrl = publicUrl;
-        documentoNombre = regFile.name;
-        newLog.documentoAdjunto = publicUrl;
-      }
+    if (currentRole === 'docente' || isSavingRegistration) {
+      return;
     }
+    setIsSavingRegistration(true);
+    setRegistrationError(null);
 
-    const updatedChecklist = causa.checklistDebidoProceso.map(item => {
-      if (item.id !== itemId) { return item; }
-      return {
-        ...item,
-        completado: true,
-        fechaCompletado: item.fechaCompletado || nowDateOnly(),
-        registradoPor: regName || 'Esteban Valenzuela',
-        observaciones: regObservations,
-        documentoNombre,
-        documentoUrl,
+    try {
+      const targetItem = causa.checklistDebidoProceso.find((item) => item.id === itemId);
+      const itemLabel = targetItem ? targetItem.label : 'Paso de Debido Proceso';
+
+      const newLog: BitacoraEntry = {
+        id: `b_step_${crypto.randomUUID()}`,
+        fecha: nowIso(),
+        tipo: 'Notificación',
+        titulo: `Registro de Hito: ${itemLabel}`,
+        descripcion: `Se ha registrado formalmente la finalización de la etapa/acción "${itemLabel}". Responsable: ${regName || 'Esteban Valenzuela'}. Observaciones: ${regObservations}`,
+        participantes: [
+          regName || 'Esteban Valenzuela',
+          privacyMode ? causa.nnaProtectedName : causa.estudianteNombre,
+        ],
       };
-    });
 
-    onUpdateCausa({
-      ...causa,
-      checklistDebidoProceso: updatedChecklist,
-      bitacora: [newLog, ...causa.bitacora],
-      fechaUltimaActualizacion: nowDateOnly(),
-    });
+      let documentoUrl: string | undefined;
+      let documentoNombre: string | undefined;
 
-    setRegisteringItemId(null);
-    setRegName('');
-    setRegObservations('');
-    setRegFileName('');
-    setRegFile(null);
+      if (regFile) {
+        const documentPath = await uploadDocument(causa.id, regFile);
+        documentoUrl = documentPath;
+        documentoNombre = regFile.name;
+        newLog.documentoAdjunto = documentPath;
+      }
+
+      const updatedChecklist = causa.checklistDebidoProceso.map((item) => {
+        if (item.id !== itemId) {
+          return item;
+        }
+        return {
+          ...item,
+          completado: true,
+          fechaCompletado: item.fechaCompletado || nowDateOnly(),
+          registradoPor: regName || 'Esteban Valenzuela',
+          observaciones: regObservations,
+          documentoNombre,
+          documentoUrl,
+        };
+      });
+
+      onUpdateCausa({
+        ...causa,
+        checklistDebidoProceso: updatedChecklist,
+        bitacora: [newLog, ...causa.bitacora],
+        fechaUltimaActualizacion: nowDateOnly(),
+      });
+
+      setRegisteringItemId(null);
+      setRegName('');
+      setRegObservations('');
+      setRegFileName('');
+      setRegFile(null);
+    } catch (error) {
+      setRegistrationError(
+        error instanceof Error
+          ? error.message
+          : 'No fue posible registrar el hito con su documento.',
+      );
+    } finally {
+      setIsSavingRegistration(false);
+    }
   };
 
   const handleResetRegistration = (itemId: string) => {
-    if (currentRole === 'docente') { return; }
+    if (currentRole === 'docente') {
+      return;
+    }
 
-    const targetItem = causa.checklistDebidoProceso.find(item => item.id === itemId);
+    const targetItem = causa.checklistDebidoProceso.find((item) => item.id === itemId);
     const itemLabel = targetItem ? targetItem.label : 'Paso de Debido Proceso';
 
     const newLog: BitacoraEntry = {
@@ -117,8 +142,10 @@ export function useChecklistRegistration({
       participantes: [getResponsableName()],
     };
 
-    const updatedChecklist = causa.checklistDebidoProceso.map(item => {
-      if (item.id !== itemId) { return item; }
+    const updatedChecklist = causa.checklistDebidoProceso.map((item) => {
+      if (item.id !== itemId) {
+        return item;
+      }
       return {
         ...item,
         completado: false,
@@ -139,12 +166,19 @@ export function useChecklistRegistration({
   };
 
   return {
-    expandedStages, setExpandedStages,
-    registeringItemId, setRegisteringItemId,
-    regName, setRegName,
-    regObservations, setRegObservations,
-    regFileName, setRegFileName,
+    expandedStages,
+    setExpandedStages,
+    registeringItemId,
+    setRegisteringItemId,
+    regName,
+    setRegName,
+    regObservations,
+    setRegObservations,
+    regFileName,
+    setRegFileName,
     regFile,
+    isSavingRegistration,
+    registrationError,
     handleFileChange,
     handleStartRegister,
     handleSaveRegistration,

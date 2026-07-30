@@ -9,6 +9,7 @@ import { CheckSquare, ChevronUp, ChevronDown, File, Download, Trash, Plus } from
 import { PROCESS_SECTIONS } from './processSections';
 import RegistrationForm from './RegistrationForm';
 import AttachedDocuments from './AttachedDocuments';
+import { openDocument } from '../../shared/api/services/storage.service';
 
 interface ProcessChecklistProps {
   causa: Causa;
@@ -29,7 +30,8 @@ interface ProcessChecklistProps {
   handleSaveRegistration: (itemId: string) => void;
   handleResetRegistration: (itemId: string) => void;
   regFile: File | null;
-  isUploadingDocument: boolean;
+  isSavingRegistration: boolean;
+  registrationError: string | null;
   documentError: string | null;
   handleAttachDocument: (itemId: string, file: File | null) => Promise<void>;
   handleRemoveDocument: (itemId: string, fileName?: string) => Promise<void>;
@@ -55,7 +57,8 @@ export default function ProcessChecklist({
   handleSaveRegistration,
   handleResetRegistration,
   regFile,
-  isUploadingDocument,
+  isSavingRegistration,
+  registrationError,
   documentError,
   handleAttachDocument: _handleAttachDocument,
   handleRemoveDocument,
@@ -79,7 +82,7 @@ export default function ProcessChecklist({
       <div className="max-h-[500px] space-y-2 overflow-y-auto pr-1">
         {PROCESS_SECTIONS.map((section) => {
           const sectionItems = causa.checklistDebidoProceso.filter((item) =>
-            item.id.startsWith(section.prefix)
+            item.id.startsWith(section.prefix),
           );
           const completedCount = sectionItems.filter((item) => item.completado).length;
           const isExpanded = expandedStages[section.id];
@@ -214,15 +217,14 @@ export default function ProcessChecklist({
                                   />
                                   <span className="truncate">{item.documentoNombre}</span>
                                 </span>
-                                <a
-                                  href={item.documentoUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
+                                <button
+                                  type="button"
+                                  onClick={() => void openDocument(item.documentoUrl!)}
                                   className="flex shrink-0 items-center gap-0.5 pl-2 font-semibold text-[9px] text-info-600 hover:underline"
                                   aria-label={`Ver documento ${item.documentoNombre}`}
                                 >
                                   <Download className="h-3 w-3" aria-hidden="true" /> Ver
-                                </a>
+                                </button>
                               </div>
                             )}
 
@@ -272,7 +274,8 @@ export default function ProcessChecklist({
                                 onSubmit={() => {
                                   handleSaveRegistration(item.id);
                                 }}
-                                isUploadingDocument={isUploadingDocument}
+                                isSaving={isSavingRegistration}
+                                errorMessage={registrationError}
                               />
                             )}
                           </div>

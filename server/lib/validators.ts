@@ -4,7 +4,24 @@
  */
 
 const MAX_STR = 10000;
-const CONTROL_CHARS = new RegExp(`[${String.fromCharCode(0)}-${String.fromCharCode(31)}${String.fromCharCode(127)}-${String.fromCharCode(159)}]`, 'g');
+const CONTROL_CHARS = new RegExp(
+  `[${String.fromCharCode(0)}-${String.fromCharCode(31)}${String.fromCharCode(127)}-${String.fromCharCode(159)}]`,
+  'g',
+);
+
+export class RequestValidationError extends Error {
+  constructor(
+    message: string,
+    public readonly field: string,
+  ) {
+    super(message);
+    this.name = 'RequestValidationError';
+  }
+}
+
+export function isRequestValidationError(error: unknown): error is RequestValidationError {
+  return error instanceof RequestValidationError;
+}
 
 export const sanitize = (s: unknown): string => {
   if (typeof s !== 'string') {
@@ -16,7 +33,7 @@ export const sanitize = (s: unknown): string => {
 export const requireStr = (obj: Record<string, unknown>, key: string, max = 200): string => {
   const v = sanitize(obj[key]);
   if (!v) {
-    throw new Error(`Campo requerido faltante: ${key}`);
+    throw new RequestValidationError(`Campo requerido faltante: ${key}`, key);
   }
   return v.slice(0, max);
 };
@@ -31,20 +48,18 @@ export function sanitizeForAI(text: unknown): string {
   if (!text || typeof text !== 'string') {
     return '';
   }
-  return (
-    text
-      .replace(/\[INST\]|\[\/INST\]|<<SYS>>|<<\/SYS>>/gi, '')
-      .replace(/<\|im_start\|>|<\|im_end\|>/gi, '')
-      .replace(/<\|system\|>|<\|user\|>|<\|assistant\|>/gi, '')
-      .replace(
-        /^(ignore|olvida|disregard|anula).{0,50}(instrucciones|instructions|reglas|rules|sistema|system)/gim,
-        ''
-      )
-      .replace(
-        /(eres|you are|act as|actúa como|actuá como).{0,30}(un|a|el|la|un(a)?\s+abogado|lawyer|juez|judge)/gim,
-        ''
-      )
-      .replace(/\n{3,}/g, '\n\n')
-      .slice(0, MAX_STR)
-  );
+  return text
+    .replace(/\[INST\]|\[\/INST\]|<<SYS>>|<<\/SYS>>/gi, '')
+    .replace(/<\|im_start\|>|<\|im_end\|>/gi, '')
+    .replace(/<\|system\|>|<\|user\|>|<\|assistant\|>/gi, '')
+    .replace(
+      /^(ignore|olvida|disregard|anula).{0,50}(instrucciones|instructions|reglas|rules|sistema|system)/gim,
+      '',
+    )
+    .replace(
+      /(eres|you are|act as|actúa como|actuá como).{0,30}(un|a|el|la|un(a)?\s+abogado|lawyer|juez|judge)/gim,
+      '',
+    )
+    .replace(/\n{3,}/g, '\n\n')
+    .slice(0, MAX_STR);
 }

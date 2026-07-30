@@ -29,7 +29,8 @@ interface ProcesoTabProps {
   handleSaveRegistration: (itemId: string) => void;
   handleResetRegistration: (itemId: string) => void;
   regFile: File | null;
-  isUploadingDocument: boolean;
+  isSavingRegistration: boolean;
+  registrationError: string | null;
   documentError: string | null;
   handleAttachDocument: (itemId: string, file: File | null) => Promise<void>;
   handleRemoveDocument: (itemId: string, fileName?: string) => Promise<void>;
@@ -55,7 +56,8 @@ export default function ProcesoTab({
   handleSaveRegistration,
   handleResetRegistration,
   regFile,
-  isUploadingDocument,
+  isSavingRegistration,
+  registrationError,
   documentError,
   handleAttachDocument,
   handleRemoveDocument,
@@ -172,7 +174,8 @@ export default function ProcesoTab({
         handleSaveRegistration={handleSaveRegistration}
         handleResetRegistration={handleResetRegistration}
         regFile={regFile}
-        isUploadingDocument={isUploadingDocument}
+        isSavingRegistration={isSavingRegistration}
+        registrationError={registrationError}
         documentError={documentError}
         handleAttachDocument={handleAttachDocument}
         handleRemoveDocument={handleRemoveDocument}

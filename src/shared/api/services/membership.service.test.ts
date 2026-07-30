@@ -1,7 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { describe, it, before, after } from 'node:test';
+import { after, before, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { getMembershipAuthMode, getMembershipConfig } from '../lib/membershipConfig';
 
 const originalEnv = process.env;
 before(() => {
@@ -11,38 +12,34 @@ after(() => {
   process.env = originalEnv;
 });
 
-describe('membership.service (flag disabled)', () => {
-  it('returns not_available when MEMBERSHIPS_ENABLED is false', async () => {
-    const { getMyMembership, isMembershipsEnabled } = await import('./membership.service');
-    assert.equal(isMembershipsEnabled(), false);
-
-    const result = await getMyMembership('convivencia');
-    assert.equal(result.status, 'not_available');
-    assert.equal(result.applicationRole, null);
-    assert.deepEqual(result.memberships, []);
+describe('membership configuration', () => {
+  it('mantiene el modo legacy desactivado por defecto', () => {
+    assert.deepEqual(getMembershipConfig(), {
+      enabled: false,
+      enforced: false,
+      allowLegacyFallback: true,
+    });
+    assert.equal(getMembershipAuthMode(), 'legacy');
   });
 
-  it('isMembershipsEnabled returns false by default', async () => {
-    const { isMembershipsEnabled } = await import('./membership.service');
-    assert.equal(isMembershipsEnabled(), false);
-  });
-});
-
-describe('membership.service (flag enabled)', () => {
-  before(() => {
+  it('activa el modo transición sin exigir un RPC real', () => {
     process.env.VITE_APP_MEMBERSHIPS_ENABLED = 'true';
-  });
-  after(() => {
-    process.env.VITE_APP_MEMBERSHIPS_ENABLED = 'false';
+    process.env.VITE_APP_MEMBERSHIPS_ENFORCED = 'false';
+
+    assert.deepEqual(getMembershipConfig(), {
+      enabled: true,
+      enforced: false,
+      allowLegacyFallback: true,
+    });
+    assert.equal(getMembershipAuthMode(), 'transition');
   });
 
-  it('handles error status gracefully', async () => {
-    const { getMyMembership } = await import('./membership.service');
+  it('activa el modo forzado solo cuando no existe fallback legacy', () => {
     process.env.VITE_APP_MEMBERSHIPS_ENABLED = 'true';
-    const result = await getMyMembership('convivencia');
-    assert.ok(
-      ['active', 'inactive', 'no_membership', 'not_available', 'error'].includes(result.status),
-    );
+    process.env.VITE_APP_MEMBERSHIPS_ENFORCED = 'true';
+    process.env.VITE_APP_MEMBERSHIPS_ALLOW_LEGACY_FALLBACK = 'false';
+
+    assert.equal(getMembershipAuthMode(), 'enforced');
   });
 });
 

@@ -34,6 +34,10 @@ app.use(
 );
 app.use(express.json({ limit: '100kb' }));
 
+app.get('/api/health', (_req, res) => {
+  res.json({ ok: true });
+});
+
 import improveRoutes from './routes/improve.js';
 import advisorRoutes from './routes/advisor.js';
 import auditRoutes from './routes/audit.js';
@@ -43,18 +47,26 @@ import templatesRoutes from './routes/templates.js';
 import parseRoutes from './routes/parse.js';
 import processDisciplinaryPdfRoutes from './routes/processDisciplinaryPdf.js';
 import usageRoutes from './routes/usage.js';
-import pilotRoutes from '../routes/pilot.js';
+import pilotRoutes from './routes/pilot.js';
+import { errorHandler } from '../middleware/errorHandler.js';
+import { rateLimit } from '../middleware/rateLimit.js';
 
-app.use('/api', improveRoutes);
-app.use('/api', advisorRoutes);
-app.use('/api', auditRoutes);
-app.use('/api', draftRoutes);
+// API routes — rate limited (AI y análisis)
+app.use('/api', rateLimit, improveRoutes);
+app.use('/api', rateLimit, advisorRoutes);
+app.use('/api', rateLimit, auditRoutes);
+app.use('/api', rateLimit, draftRoutes);
+app.use('/api', rateLimit, parseRoutes);
+app.use('/api', rateLimit, processDisciplinaryPdfRoutes);
+
+// API routes — sin rate limit (lectura, utilidades)
 app.use('/api', debugRoutes);
 app.use('/api', templatesRoutes);
-app.use('/api', parseRoutes);
-app.use('/api', processDisciplinaryPdfRoutes);
 app.use('/api', usageRoutes);
 app.use('/api', pilotRoutes);
+
+// Global error handler — must be registered AFTER all routes
+app.use(errorHandler);
 
 const distPath = path.join(__dirname, '..', 'dist');
 app.use(express.static(distPath));

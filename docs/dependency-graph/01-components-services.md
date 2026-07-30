@@ -77,7 +77,6 @@ graph TD
     useDisciplinaryData --> supabase.from.etapas_disciplinarias
 
     NewDisciplinaryProcessModal --> UploadAnalyzeStep
-    NewDisciplinaryProcessModal --> CourseSelectStep
     NewDisciplinaryProcessModal --> StudentSelectStep
     NewDisciplinaryProcessModal --> ClassificationStep
     NewDisciplinaryProcessModal --> ReviewStep
@@ -110,7 +109,9 @@ graph TD
     docxBuilder --> docx.helpers.annotations
 
     useDocumentExport --> fileSaver.saveAs
-    useDocumentRegistry --> supabase.from.cartas_disciplinarias
+    CartasTab --> cartasService.markCartaProcessedManually
+    cartasService.markCartaProcessedManually --> supabase.from.cartas_disciplinarias
+    cartasService.markCartaProcessedManually --> supabase.from.carta_events
 ```
 
 ## 5. AI Advisor

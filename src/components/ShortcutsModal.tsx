@@ -3,17 +3,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/src/shared/ui/Dialog';
+
 export default function ShortcutsModal({ onClose }: { onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <button
-        type="button"
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-        aria-label="Cerrar atajos de teclado"
-        onClick={onClose}
-      />
-      <div className="relative w-full max-w-sm animate-scale-in rounded-2xl bg-white p-6 shadow-xl">
-        <h3 className="mb-4 font-semibold text-base text-neutral-900">Atajos de teclado</h3>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader className="block">
+          <DialogTitle>Atajos de teclado</DialogTitle>
+          <DialogDescription className="sr-only">
+            Lista de combinaciones disponibles en la aplicación.
+          </DialogDescription>
+        </DialogHeader>
         <ul className="space-y-2 text-neutral-600 text-sm">
           <li className="flex justify-between">
             <span>Nueva causa</span>
@@ -32,14 +40,16 @@ export default function ShortcutsModal({ onClose }: { onClose: () => void }) {
             <kbd className="rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-xs">Ctrl+K</kbd>
           </li>
         </ul>
-        <button
-          type="button"
-          onClick={onClose}
-          className="mt-6 w-full cursor-pointer rounded-xl bg-brand-600 px-4 py-2 font-medium text-sm text-white transition-colors hover:bg-brand-700"
-        >
-          Cerrar
-        </button>
-      </div>
-    </div>
+        <DialogFooter>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full cursor-pointer rounded-xl bg-brand-600 px-4 py-2 font-medium text-sm text-white transition-colors hover:bg-brand-700"
+          >
+            Cerrar
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

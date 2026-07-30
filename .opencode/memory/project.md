@@ -1,6 +1,6 @@
 # STAFF ENGINEER MEMORY — Sistema Integral de Convivencia Escolar
 
-> **Versión:** 1.2 | **Estado:** Producción | **Última actualización:** 2026-07-26
+> **Versión:** 1.3 | **Estado:** Producción | **Última actualización:** 2026-07-29
 
 ---
 
@@ -64,7 +64,7 @@ src/
 | `server/index.ts`                                  | Desarrollo        | tsx runtime          | `npm run dev`   |
 | `api/index.js` (generado de `server/api/index.ts`) | Producción Vercel | esbuild bundle (ESM) | `npm run build` |
 
-**Regla crítica:** Al modificar rutas API o lógica de servidor, actualizar **ambos** archivos (`server/routes/` y `server/api/routes/`). Las implementaciones serverless usan `https` module en vez de `fetch` para Node 18 compat.
+**Regla crítica:** Implementar cada ruta API una sola vez en `server/api/routes/` y registrarla en ambos entry points. Las implementaciones serverless usan `https` module en vez de `fetch` para Node 18 compat.
 
 ### 2.3 Patrón de State Management
 
@@ -696,7 +696,7 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 
 ### 13.2 Al Modificar Backend
 
-1. Actualizar AMBOS entry points (`server/routes/` y `server/api/routes/`)
+1. Implementar la ruta en `server/api/routes/` y registrarla en ambos entry points
 2. No exponer service_role key al cliente
 3. Rate limit endpoints AI (10 req/min/IP)
 4. Sanitizar input con `sanitizeForAI()` antes de enviar a LLM
@@ -1082,3 +1082,39 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - `docs/shared-supabase/13-staff-membership-decision.md`: Staff membership decision
 - `docs/shared-supabase/14-phase-3-transition-enforcement.md`: Phase 3 report
 - `.ai/roadmap.md`: Fase 3 marcada como completada
+
+### Constancias físicas de cartas disciplinarias (2026-07-28)
+
+- La pestaña Carta de la ficha individual registra Amonestación o Compromiso ya emitidos en papel.
+- `cartas_disciplinarias.origin` distingue `platform` y `physical`; `school_year` limita el efecto al año de la carta.
+- `register_physical_carta` es un RPC `SECURITY INVOKER` exclusivo de `authenticated`, con aislamiento por `current_tenant_id()`.
+- La constancia usa `annotations_count = 0`: no crea ni altera anotaciones y no abre el generador.
+- Progresión anual: Amonestación física habilita Compromiso; Compromiso físico habilita Derivación.
+
+### Estado efectivo de cartas en Anotaciones (2026-07-28)
+
+- La tabla, sus filtros y la exportación combinan el tramo de anotaciones con la carta realizada de mayor nivel del año vigente.
+- Una Derivación `processed_manually` prevalece sobre el tramo numérico; el conteo de anotaciones no se modifica.
+- `status = Vigente` conserva su significado administrativo. La UI obtiene `Pendiente` o `Procesada` desde `carta_events`.
+- Al procesar o registrar una carta desde la ficha individual se recargan tanto el modal como la tabla principal.
+- Abrir o reabrir el generador no inserta eventos en el historial.
+- Los eventos preliminares históricos `created` y `suggested` se conservan en Supabase, pero no se muestran.
+- Las cartas pendientes no generan entradas sintéticas; aparecen en el historial al procesarse, registrarse, imprimirse mediante el flujo histórico o anularse.
+
+### Resumen y comparación de actualizaciones PDF (2026-07-29)
+
+- `get_student_annotation_summary()` es la fuente canónica de los conteos de la tabla de Anotaciones; agrega negativas, positivas e informativas dentro de PostgreSQL sin depender del límite de filas de PostgREST.
+- `last_annotation_date` corresponde a la fecha de la anotación más reciente de cualquier tipo, no a la fecha de carga del PDF.
+- El fallback del cliente pagina explícitamente `inspectorate_records` y solo se ejecuta si el RPC no está disponible.
+- Al analizar una actualización se comparan el último PDF confirmado y el PDF nuevo por categoría; la diferencia se presenta como variación porque la confirmación todavía puede omitir duplicados.
+- Las fechas civiles se muestran sin conversión UTC y los timestamps se presentan con la zona IANA `America/Santiago`, respetando automáticamente horario de invierno y verano.
+
+### Historial manual y KPI de Anotaciones (2026-07-29)
+
+- La pestaña Historial de la ficha individual admite entradas manuales con título y descripción.
+- `student_history_entries` es multi-tenant, conserva `created_by` y es append-only para usuarios autenticados: permite lectura e inserción, no actualización ni eliminación.
+- Una entrada manual documenta entrevistas, acuerdos o seguimientos, pero no altera anotaciones, cartas ni etapas disciplinarias.
+- `get_annotation_stage_counts()` entrega `total_count`, `pending_count` y `processed_count` para Sin Carta, Amonestación, Compromiso y Derivación.
+- La etapa efectiva es el máximo entre el tramo de anotaciones negativas y la carta completada de mayor nivel del año escolar vigente.
+- Una etapa se considera procesada solo cuando su carta efectiva vigente tiene evidencia de registro, impresión, procesamiento manual u origen físico; si el conteo exige una etapa superior, esta queda pendiente.
+- El año escolar y las fechas operativas se resuelven con la zona IANA `America/Santiago`.

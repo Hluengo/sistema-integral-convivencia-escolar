@@ -13,27 +13,26 @@ cp .env.example .env
 
 ## Comandos
 
-| Comando | Descripción |
-|---------|-------------|
-| `npm run dev` | Servidor Express + Vite HMR (puerto 3001) |
-| `npm run build` | Build cliente (Vite) + servidor (esbuild) → `dist/` |
-| `npm run typecheck` | TypeScript strict type check |
-| `npm run test` | Tests unitarios (57 tests, node:test) |
-| `npm run test:e2e` | E2E Playwright |
-| `npm run doctor` | React Doctor static analysis |
+| Comando             | Descripción                                         |
+| ------------------- | --------------------------------------------------- |
+| `npm run dev`       | Servidor Express + Vite HMR (puerto 3001)           |
+| `npm run build`     | Build cliente (Vite) + servidor (esbuild) → `dist/` |
+| `npm run typecheck` | TypeScript strict type check                        |
+| `npm run test`      | Suite unitaria con `node:test`                      |
+| `npm run test:e2e`  | E2E Playwright                                      |
 
 ## Variables de Entorno
 
-| Variable | Propósito |
-|----------|-----------|
-| `VITE_SUPABASE_URL` | URL del proyecto Supabase |
-| `VITE_SUPABASE_ANON_KEY` | Anon key pública de Supabase |
-| `SUPABASE_JWT_SECRET` | Para verificar JWT en API routes |
-| `SUPABASE_SERVICE_ROLE_KEY` | Admin key para operaciones servidor |
-| `GROQ_API_KEY` | API key de Groq (IA) |
-| `VITE_ALLOW_LOCAL_DEMO` | Demo sin login (solo desarrollo) |
-| `VITE_SENTRY_DSN` | Error tracking |
-| `VITE_POSTHOG_KEY` / `VITE_POSTHOG_HOST` | Analytics |
+| Variable                                 | Propósito                           |
+| ---------------------------------------- | ----------------------------------- |
+| `VITE_SUPABASE_URL`                      | URL del proyecto Supabase           |
+| `VITE_SUPABASE_ANON_KEY`                 | Anon key pública de Supabase        |
+| `SUPABASE_JWT_SECRET`                    | Para verificar JWT en API routes    |
+| `SUPABASE_SERVICE_ROLE_KEY`              | Admin key para operaciones servidor |
+| `GROQ_API_KEY`                           | API key de Groq (IA)                |
+| `VITE_ALLOW_LOCAL_DEMO`                  | Demo sin login (solo desarrollo)    |
+| `VITE_SENTRY_DSN`                        | Error tracking                      |
+| `VITE_POSTHOG_KEY` / `VITE_POSTHOG_HOST` | Analytics                           |
 
 ## Arquitectura General
 

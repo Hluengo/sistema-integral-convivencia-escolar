@@ -5,6 +5,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { requireTenant } from '../middleware/requireTenant.js';
 import { requireRole } from '../middleware/requireRole.js';
 import { sanitize } from '../validators/sanitizers.js';
+import { isValidUuid } from '../../middleware/auth.js';
 import { httpsGet, httpsPatch } from '../lib/https.js';
 
 const router = Router();
@@ -31,7 +32,7 @@ router.get('/document-templates', requireAuth, requireTenant, async (_req, res) 
       {
         apikey: process.env.VITE_SUPABASE_ANON_KEY ?? '',
         Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY ?? ''}`,
-      }
+      },
     );
     res.json(data);
   } catch {
@@ -52,13 +53,13 @@ router.get(
         {
           apikey: process.env.VITE_SUPABASE_ANON_KEY ?? '',
           Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY ?? ''}`,
-        }
+        },
       );
       res.json(data);
     } catch {
       res.status(500).json({ error: 'Error al obtener plantillas.' });
     }
-  }
+  },
 );
 
 router.put(
@@ -73,13 +74,20 @@ router.put(
       return;
     }
 
+    if (!isValidUuid(id)) {
+      res.status(400).json({ error: 'El id debe ser un UUID válido.' });
+      return;
+    }
+
     if (typeof system_prompt !== 'string' || system_prompt.trim().length === 0) {
       res.status(400).json({ error: 'El system_prompt no puede estar vacío.' });
       return;
     }
 
     if (system_prompt.length > 20000) {
-      res.status(400).json({ error: 'El system_prompt excede el máximo permitido (20000 caracteres).' });
+      res
+        .status(400)
+        .json({ error: 'El system_prompt excede el máximo permitido (20000 caracteres).' });
       return;
     }
 
@@ -97,14 +105,14 @@ router.put(
           apikey: serviceRoleKey,
           Authorization: `Bearer ${serviceRoleKey}`,
           Prefer: 'return=minimal',
-        }
+        },
       );
       res.json({ success: true });
     } catch (error) {
       console.error('Error updating template:', error);
       res.status(500).json({ error: 'Error al actualizar plantilla.' });
     }
-  }
+  },
 );
 
 export default router;

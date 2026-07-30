@@ -18,24 +18,24 @@ const processData = (input: any): any => { ... };
 
 ## File Naming
 
-| Tipo | Convención | Ejemplo |
-|------|-----------|---------|
-| Componentes React | PascalCase.tsx | `Button.tsx`, `CausaCard.tsx` |
-| Hooks | camelCase con `use` prefix | `useAuth.ts`, `useCausasQuery.ts` |
-| Servicios | kebab-case.service.ts | `auth.service.ts`, `causas.service.ts` |
-| Stores | camelCase.store.ts | `authStore.ts`, `causasStore.ts` |
-| Test files | `*.test.ts` (co-located) | `mappers.test.ts` |
-| Types/Interfaces | PascalCase | `Causa`, `BitacoraEntry` |
-| Funciones puras | camelCase | `calculateStatus()`, `mapRowToCausa()` |
+| Tipo              | Convención                 | Ejemplo                                |
+| ----------------- | -------------------------- | -------------------------------------- |
+| Componentes React | PascalCase.tsx             | `Button.tsx`, `CausaCard.tsx`          |
+| Hooks             | camelCase con `use` prefix | `useAuth.ts`, `useCausasQuery.ts`      |
+| Servicios         | kebab-case.service.ts      | `auth.service.ts`, `causas.service.ts` |
+| Stores            | camelCase.store.ts         | `authStore.ts`, `causasStore.ts`       |
+| Test files        | `*.test.ts` (co-located)   | `mappers.test.ts`                      |
+| Types/Interfaces  | PascalCase                 | `Causa`, `BitacoraEntry`               |
+| Funciones puras   | camelCase                  | `calculateStatus()`, `mapRowToCausa()` |
 
 ## Database Naming
 
-| Contexto | Convención | Ejemplo |
-|----------|-----------|---------|
-| Columnas SQL | snake_case | `estudiante_curso`, `tenant_id` |
-| TypeScript | camelCase (mappers) | `estudianteCurso`, `tenantId` |
-| Migraciones | timestamp_descripcion.sql | `20260716100000_add_inspectorate.sql` |
-| Tablas | plural snake_case | `causas`, `bitacora_entries` |
+| Contexto     | Convención                | Ejemplo                               |
+| ------------ | ------------------------- | ------------------------------------- |
+| Columnas SQL | snake_case                | `estudiante_curso`, `tenant_id`       |
+| TypeScript   | camelCase (mappers)       | `estudianteCurso`, `tenantId`         |
+| Migraciones  | timestamp_descripcion.sql | `20260716100000_add_inspectorate.sql` |
+| Tablas       | plural snake_case         | `causas`, `bitacora_entries`          |
 
 ## Import Order
 
@@ -102,10 +102,7 @@ export const useStore = create<StoreState & StoreActions>((set) => ({
 import { supabase } from '@/shared/api/lib/supabase';
 
 export async function fetchItems(tenantId: string): Promise<Item[]> {
-  const { data, error } = await supabase
-    .from('items')
-    .select('*')
-    .eq('tenant_id', tenantId);
+  const { data, error } = await supabase.from('items').select('*').eq('tenant_id', tenantId);
 
   if (error) throw error;
   return data.map(mapRowToItem);
@@ -146,7 +143,7 @@ git commit -m "refactor: unifica stores en shared/lib"
 - **Colores**: Brand colors definidos en `src/index.css` con `@theme`
 - **Iconos**: Lucide React icons
 - **Responsive**: Mobile-first, sidebar colapsable
-- **Accesibilidad**: WCAG 2.1 AA (verificado con @axe-core/playwright)
+- **Accesibilidad**: WCAG 2.1 AA, con reglas ESLint y pruebas de regresión de componentes
 
 ## License Headers
 

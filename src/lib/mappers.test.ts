@@ -2,11 +2,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  mapInspectorateToAnnotation,
-  mapCauseRowToCarta,
-  mapStageRowToEtapa,
-} from './mappers';
+import { mapInspectorateToAnnotation, mapCauseRowToCarta, mapStageRowToEtapa } from './mappers';
 
 describe('mapInspectorateToAnnotation', () => {
   const row = {
@@ -61,6 +57,8 @@ describe('mapCauseRowToCarta', () => {
     assert.equal(result.id, 'causa-1');
     assert.equal(result.status, 'Vigente');
     assert.equal(result.apoderado_name, 'María González');
+    assert.equal(result.origin, 'platform');
+    assert.equal(result.school_year, 2026);
   });
 });
 

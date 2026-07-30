@@ -1,6 +1,5 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { FileText } from 'lucide-react';
 import type { Annotation } from '../../../types';
 import type { LetterContent } from './DocumentPreview/docTypes';
 
@@ -21,8 +20,6 @@ interface DocumentFormProps {
   onToggleAnnotation: (id: string) => void;
   negativeCount: number;
   annotations: Annotation[];
-  onRegisterCommitment: () => void;
-  isRegistering: boolean;
 }
 
 const TEXT_FIELDS: Array<{ key: keyof LetterContent; label: string; rows: number }> = [
@@ -48,8 +45,6 @@ export default function DocumentForm({
   onLetterContentChange,
   onResetLetterContent,
   negativeCount,
-  onRegisterCommitment,
-  isRegistering,
 }: DocumentFormProps) {
   const showAdvanced = docType === 'compromiso_conductual' || docType === 'derivacion';
 
@@ -170,18 +165,6 @@ export default function DocumentForm({
           ))}
         </div>
       </section>
-
-      <div className="border-t border-neutral-200 pt-4">
-        <button
-          type="button"
-          onClick={onRegisterCommitment}
-          disabled={isRegistering}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-2.5 font-medium text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <FileText className="h-5 w-5" />
-          {isRegistering ? 'Registrando...' : 'Registrar y Emitir Carta'}
-        </button>
-      </div>
     </div>
   );
 }

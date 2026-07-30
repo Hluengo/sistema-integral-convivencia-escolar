@@ -10,26 +10,22 @@ import DocumentPreview from './docgen/DocumentPreview';
 import DocumentWarnings from './docgen/DocumentWarnings';
 import { useDocumentState } from './docgen/hooks/useDocumentState';
 import { useSelectedAnnotations } from './docgen/hooks/useSelectedAnnotations';
-import { useDocumentRegistry } from './docgen/hooks/useDocumentRegistry';
-import { useRegisterCommitment } from './docgen/hooks/useRegisterCommitment';
 import GeneratorHeader from './docgen/components/GeneratorHeader';
 import ExportError from './docgen/components/ExportError';
-import EmissionConfirmDialog from './docgen/components/EmissionConfirmDialog';
 import PrintHintDialog from './docgen/components/PrintHintDialog';
-import RecentlyEmitted from './docgen/components/RecentlyEmitted';
 import { TITLE_MAP, type DocType, type LetterContent } from './docgen/DocumentPreview/docTypes';
 
 function isLetterContent(value: unknown): value is LetterContent {
   if (!value || typeof value !== 'object') return false;
   const candidate = value as Record<keyof LetterContent, unknown>;
   return ['motivo', 'descripcion', 'medida', 'acuerdos', 'cierre', 'observaciones'].every(
-    (field) => typeof candidate[field as keyof LetterContent] === 'string'
+    (field) => typeof candidate[field as keyof LetterContent] === 'string',
   );
 }
 
 function getSnapshotString(
   snapshot: Record<string, unknown> | null | undefined,
-  key: string
+  key: string,
 ): string | null {
   const value = snapshot?.[key];
   return typeof value === 'string' ? value : null;
@@ -47,13 +43,19 @@ interface AnotacionesDocumentGeneratorProps {
   privacyMode: boolean;
   teachers: Record<string, string>;
   initialDocType?: string;
-  existingCartaId?: string;
   negativeCount?: number;
   sourceAnalysisId?: string | null;
   sourceProcessId?: string | null;
   initialContentSnapshot?: Record<string, unknown> | null;
-  onLetterAction?: () => void | Promise<void>;
-  onRegistered?: () => void | Promise<void>;
+  onMarkProcessed: (
+    contentSnapshot: Record<string, unknown>,
+    docType: DocType,
+  ) => void | Promise<void>;
+  isProcessing: boolean;
+  processingFeedback?: {
+    text: string;
+    tone: 'info' | 'success' | 'error';
+  } | null;
 }
 
 export default function AnotacionesDocumentGenerator({
@@ -62,13 +64,13 @@ export default function AnotacionesDocumentGenerator({
   privacyMode: _privacyMode,
   teachers,
   initialDocType,
-  existingCartaId,
   negativeCount: providedNegativeCount,
   sourceAnalysisId,
   sourceProcessId,
   initialContentSnapshot,
-  onLetterAction,
-  onRegistered,
+  onMarkProcessed,
+  isProcessing,
+  processingFeedback,
 }: AnotacionesDocumentGeneratorProps) {
   const initialDocTypeApplied = useRef(false);
   const initialSnapshotApplied = useRef(false);
@@ -78,8 +80,6 @@ export default function AnotacionesDocumentGenerator({
 
   const documentState = useDocumentState();
   const selectedAnnotations = useSelectedAnnotations(annotations);
-  const documentRegistry = useDocumentRegistry();
-  const registerCommitment = useRegisterCommitment();
   const previewRef = useRef<HTMLDivElement>(null);
   const { docType, setDocType } = documentState;
 
@@ -98,13 +98,13 @@ export default function AnotacionesDocumentGenerator({
       documentState.setLetterContent(initialContentSnapshot.letterContent);
     }
     documentState.setApoderadoName(
-      getSnapshotString(initialContentSnapshot, 'apoderadoName') || ''
+      getSnapshotString(initialContentSnapshot, 'apoderadoName') || '',
     );
     documentState.setInspectorName(
-      getSnapshotString(initialContentSnapshot, 'inspectorName') || ''
+      getSnapshotString(initialContentSnapshot, 'inspectorName') || '',
     );
     documentState.setCoordinatorName(
-      getSnapshotString(initialContentSnapshot, 'coordinatorName') || ''
+      getSnapshotString(initialContentSnapshot, 'coordinatorName') || '',
     );
     documentState.setEmittedBy(getSnapshotString(initialContentSnapshot, 'emittedBy') || '');
     initialSnapshotApplied.current = true;
@@ -138,9 +138,7 @@ export default function AnotacionesDocumentGenerator({
   }, []);
 
   const [exportError, setExportError] = useState<string | null>(null);
-  const [registrationMessage, setRegistrationMessage] = useState<string | null>(null);
-  const [registrationError, setRegistrationError] = useState<string | null>(null);
-  const [showEmissionConfirm, setShowEmissionConfirm] = useState(false);
+  const [printMessage, setPrintMessage] = useState<string | null>(null);
   const [showPrintHint, setShowPrintHint] = useState(false);
   const [hasOverflow, setHasOverflow] = useState(false);
 
@@ -185,62 +183,19 @@ export default function AnotacionesDocumentGenerator({
       student.id,
       student.rut,
       title,
-    ]
+    ],
   );
-
-  const handleRegisterCommitment = registerCommitment.handleRegisterCommitment;
-
-  const registerCarta = (afterSuccess?: () => void) => {
-    handleRegisterCommitment({
-      student,
-      docType,
-      negativeCount,
-      apoderadoName: documentState.apoderadoName,
-      coordinatorName: documentState.coordinatorName,
-      emittedBy: documentState.emittedBy,
-      compromisoStatus: 'Vigente',
-      teachers,
-      existingCartaId,
-      contentSnapshot,
-      onSuccess: (entry) => {
-        documentRegistry.addEntry(entry);
-        setRegistrationMessage(
-          'Carta registrada correctamente. La plantilla permanece disponible para imprimir.'
-        );
-        void (async () => {
-          try {
-            await onRegistered?.();
-          } catch {
-            setRegistrationError(
-              'La carta se registro, pero no se pudo actualizar el estado de la ficha.'
-            );
-          }
-        })();
-        afterSuccess?.();
-      },
-      onError: setRegistrationError,
-      setIsRegistering: documentState.setIsRegistering,
-    });
-  };
-
-  const handleEmitAfterExport = () => {
-    registerCarta();
-    setShowEmissionConfirm(false);
-  };
-
-  const handleRegisterCommitmentWrapper = () => {
-    registerCarta();
-  };
 
   const printFileName = useMemo(
     () => `Carta_${docType}_${student.full_name.replace(/\s+/g, '_')}_${dateStr}`,
-    [docType, student.full_name, dateStr]
+    [docType, student.full_name, dateStr],
   );
 
   const handleAfterPrint = useCallback(() => {
-    void onLetterAction?.();
-    setShowEmissionConfirm(true);
-  }, [onLetterAction]);
+    setPrintMessage(
+      'Impresión finalizada. Haga clic en “Marcar como procesada” para confirmar el trámite y registrarlo en el historial.',
+    );
+  }, []);
 
   const handlePrintError = useCallback((_location: 'onBeforePrint' | 'print', error: Error) => {
     setExportError(`Error al imprimir: ${error.message}`);
@@ -295,20 +250,12 @@ export default function AnotacionesDocumentGenerator({
     <div className="space-y-6">
       <ExportError message={exportError} onClose={() => setExportError(null)} />
 
-      {registrationMessage && (
+      {printMessage && (
         <div
           role="status"
-          className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"
+          className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
         >
-          {registrationMessage}
-        </div>
-      )}
-      {registrationError && (
-        <div
-          role="alert"
-          className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"
-        >
-          {registrationError}
+          {printMessage}
         </div>
       )}
 
@@ -321,12 +268,6 @@ export default function AnotacionesDocumentGenerator({
           version de varias paginas antes de imprimir.
         </div>
       )}
-
-      <EmissionConfirmDialog
-        isOpen={showEmissionConfirm}
-        onConfirm={handleEmitAfterExport}
-        onCancel={() => setShowEmissionConfirm(false)}
-      />
 
       <PrintHintDialog
         isOpen={showPrintHint}
@@ -383,8 +324,6 @@ export default function AnotacionesDocumentGenerator({
             onToggleAnnotation={selectedAnnotations.toggleAnnotation}
             negativeCount={negativeCount}
             annotations={annotations}
-            onRegisterCommitment={handleRegisterCommitmentWrapper}
-            isRegistering={documentState.isRegistering}
           />
         </div>
       </div>
@@ -404,12 +343,11 @@ export default function AnotacionesDocumentGenerator({
         selectedAnnsObjects={selectedAnnsObjects}
         letterContent={documentState.letterContent}
         onPrint={handlePrintDoc}
+        onMarkProcessed={() => void onMarkProcessed(contentSnapshot, docType)}
+        isProcessing={isProcessing}
+        processingFeedback={processingFeedback}
         onOverflowChange={handleOverflowChange}
       />
-
-      <div className="mx-auto w-full max-w-[216mm]">
-        <RecentlyEmitted emittedList={documentRegistry.emittedList} />
-      </div>
     </div>
   );
 }

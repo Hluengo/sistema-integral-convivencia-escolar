@@ -1,21 +1,12 @@
-# Comando: supabase-check
+Revisa conexion Supabase, tablas relevantes, errores y RLS sin modificar datos.
 
-## Descripción
-Verifica el estado de la base de datos Supabase.
+Pasos:
 
-## Uso
-Cuando haya problemas de conexión o se necesite verificar schema.
+1. Verificar conexion a Supabase
+2. Listar tablas principales (causas, profiles, anotaciones, etc.)
+3. Revisar RLS policies de tablas con datos sensibles
+4. Revisar buckets de Storage y sus politicas
+5. Revisar logs de errores recientes
+6. Reportar hallazgos sin modificar nada
 
-## Flujo
-1. Verificar variables de entorno de Supabase
-2. Probar conexión con cliente Supabase
-3. Verificar tablas existentes
-4. Verificar RLS policies
-5. Verificar storage buckets
-6. Reportar estado
-
-## Salida
-- Estado de conexión
-- Lista de tablas y su estado
-- Errores encontrados
-- Recomendaciones
+Solo lectura. No ejecutar UPDATE, DELETE, ALTER, DROP ni cambios de RLS.

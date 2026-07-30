@@ -40,11 +40,7 @@ export enum EstadoCausa {
 }
 
 export type FaseProcedimental =
-  | 'Recepción'
-  | 'Investigación'
-  | 'Resolución'
-  | 'Apelación'
-  | 'Seguimiento';
+  'Recepción' | 'Investigación' | 'Resolución' | 'Apelación' | 'Seguimiento';
 
 export interface BitacoraEntry {
   id: string;
@@ -151,6 +147,7 @@ export interface AnotacionStudent {
   informative_annotations_count?: number;
   last_annotation_date?: string;
   disciplinary_status: DisciplinaryStatus;
+  effective_letter_type?: CartaDisciplinaria['letter_type'] | null;
   rut?: string;
   course_name?: string;
   ai_analysis?: AnnotationSummary;
@@ -183,6 +180,7 @@ export interface DocumentAnalysis {
   analyzed_at: string;
   tenant_id: string;
   created_at: string;
+  status?: string;
 }
 
 export interface CartaDisciplinaria {
@@ -195,6 +193,8 @@ export interface CartaDisciplinaria {
   supervisor_name?: string;
   apoderado_name: string;
   annotations_count: number;
+  origin?: 'platform' | 'physical';
+  school_year?: number;
   student_name: string;
   course: string;
   regulation_basis: string;

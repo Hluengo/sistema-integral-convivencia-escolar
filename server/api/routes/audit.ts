@@ -2,7 +2,13 @@
 
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
-import { sanitizeForAI, requireStr, optStr, optArr } from '../validators/sanitizers.js';
+import {
+  isRequestValidationError,
+  sanitizeForAI,
+  requireStr,
+  optStr,
+  optArr,
+} from '../validators/sanitizers.js';
 import { checkRateLimitAsync } from '../services/rateLimit.js';
 import { callGroq } from '../services/groq.js';
 
@@ -18,7 +24,7 @@ router.post('/audit-due-process', requireAuth, async (req, res) => {
     const observations = optStr(body, 'observations', 5000);
 
     const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-    if (!await checkRateLimitAsync(ip)) {
+    if (!(await checkRateLimitAsync(ip))) {
       res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
       return;
     }
@@ -46,9 +52,12 @@ Utiliza un tono sumamente profesional, corporativo, técnico e institucional (el
     const responseText = await callGroq([{ role: 'user', content: systemPrompt }]);
     res.json({ success: true, report: responseText });
   } catch (error) {
+    if (isRequestValidationError(error)) {
+      res.status(400).json({ error: error.message });
+      return;
+    }
     console.error('Error al auditar debido proceso:', error);
-    const status = (error as Error).message?.startsWith('Campo requerido') ? 400 : 500;
-    res.status(status).json({ error: 'Error interno del servidor en auditoría.' });
+    res.status(500).json({ error: 'Error interno del servidor en auditoría.' });
   }
 });
 

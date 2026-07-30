@@ -3,13 +3,11 @@
 import { createHash } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { nowDateOnly } from '../../src/lib/dateUtils';
 
 type AnnotationType = 'negative' | 'positive' | 'information';
 type StudentMatchStatus =
-  | 'exact_match'
-  | 'unique_normalized_match'
-  | 'multiple_candidates'
-  | 'no_match';
+  'exact_match' | 'unique_normalized_match' | 'multiple_candidates' | 'no_match';
 type ProcessingStatus = 'completed' | 'student_resolution' | 'ocr_required' | 'error';
 
 export interface AnnotationSummary {
@@ -31,7 +29,7 @@ export interface DetectedAnnotation {
   parser_version: string;
 }
 
-export interface StudentCandidate {
+interface StudentCandidate {
   id: string;
   full_name: string;
   rut: string | null;
@@ -41,9 +39,24 @@ export interface StudentCandidate {
   match_status: StudentMatchStatus;
 }
 
+interface StudentRow {
+  id: string;
+  full_name: string;
+  rut: string | null;
+  course_id: string | null;
+}
+
+interface DuplicateFileInfo {
+  process_id: string;
+  process_number: string;
+  student_id: string | null;
+  uploaded_at: string;
+}
+
 export interface AnalysisResult {
   success: true;
   analysis_id: string | null;
+  analyzed_at: string;
   file_id: string | null;
   process_id: null;
   detected_student_name: string | null;
@@ -65,6 +78,7 @@ export interface AnalysisResult {
   processing_status: ProcessingStatus;
   mode: 'preview' | 'student_pending';
   file_hash: string;
+  duplicate_file: DuplicateFileInfo | null;
   parser_version: string;
 }
 
@@ -85,6 +99,12 @@ interface ConfirmAnnotationInput {
   detected_date?: string | null;
   detected_teacher?: string | null;
   confidence?: number;
+}
+
+interface ExistingLegacyAnnotation {
+  type: string | null;
+  date_time: string | null;
+  observation: string | null;
 }
 
 interface ConfirmInput {
@@ -170,7 +190,7 @@ class NodeDomMatrixPolyfill {
   scale(scaleX = 1, scaleY = scaleX): NodeDomMatrixPolyfill {
     return new NodeDomMatrixPolyfill([this.a, this.b, this.c, this.d, this.e, this.f]).scaleSelf(
       scaleX,
-      scaleY
+      scaleY,
     );
   }
 
@@ -249,7 +269,7 @@ interface PdfJsWorkerModule {
   WorkerMessageHandler: unknown;
 }
 
-export function getSupabaseAdmin(authToken?: string): SupabaseClient {
+function getSupabaseAdmin(authToken?: string): SupabaseClient {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
   const serviceKey =
     process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? '';
@@ -280,7 +300,7 @@ function normalizeText(value: string): string {
 
 function isDateRangeLine(value: string): boolean {
   return /\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b\s*(?:a|-|hasta)\s*\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b/i.test(
-    value
+    value,
   );
 }
 
@@ -293,10 +313,10 @@ function normalizeCourseLabel(value: string): string | null {
     .trim()
     .toUpperCase();
   const letterBeforeCycle = normalized.match(
-    /\b(\d{1,2})\s*(?:°\s*)?([A-Z])\s*(MEDIO|BASICO|BASICA)\b/
+    /\b(\d{1,2})\s*(?:°\s*)?([A-Z])\s*(MEDIO|BASICO|BASICA)\b/,
   );
   const cycleBeforeLetter = normalized.match(
-    /\b(\d{1,2})\s*(?:°\s*)?(MEDIO|BASICO|BASICA)\s*([A-Z])\b/
+    /\b(\d{1,2})\s*(?:°\s*)?(MEDIO|BASICO|BASICA)\s*([A-Z])\b/,
   );
   const level = Number(letterBeforeCycle?.[1] ?? cycleBeforeLetter?.[1]);
   const letter = letterBeforeCycle?.[2] ?? cycleBeforeLetter?.[3];
@@ -353,9 +373,8 @@ function toIsoDate(date: string | undefined): string | null {
 
 async function extractPdfPages(buffer: Uint8Array): Promise<string[]> {
   ensurePdfJsNodePolyfills();
-  const workerModule = (await import(
-    'pdfjs-dist/legacy/build/pdf.worker.mjs'
-  )) as PdfJsWorkerModule;
+  const workerModule =
+    (await import('pdfjs-dist/legacy/build/pdf.worker.mjs')) as PdfJsWorkerModule;
   (globalThis as Record<string, unknown>).pdfjsWorker = {
     WorkerMessageHandler: workerModule.WorkerMessageHandler,
   };
@@ -377,7 +396,7 @@ async function extractPdfPages(buffer: Uint8Array): Promise<string[]> {
         .replace(/[^\S\n]+/g, ' ')
         .replace(/\s*\n\s*/g, '\n')
         .trim();
-    }
+    },
   );
 
   const resolvedPages = await Promise.all(pagePromises);
@@ -407,19 +426,19 @@ function extractCourse(text: string): string | null {
 
   const normalizedText = text.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const courseMatch = normalizedText.match(
-    /\b(?:\d{1,2}\s*(?:°\s*)?[A-Z]\s*(?:MEDIO|BASICO|BASICA)|\d{1,2}\s*(?:°\s*)?(?:MEDIO|BASICO|BASICA)\s*[A-Z])\b/i
+    /\b(?:\d{1,2}\s*(?:°\s*)?[A-Z]\s*(?:MEDIO|BASICO|BASICA)|\d{1,2}\s*(?:°\s*)?(?:MEDIO|BASICO|BASICA)\s*[A-Z])\b/i,
   );
   return courseMatch?.[0] ? normalizeCourseLabel(courseMatch[0]) : null;
 }
 
 function extractStudentName(text: string): string | null {
   const labelled = text.match(
-    /(?:estudiante|alumno|nombre(?: completo)?)\s*[:-]\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ'-]+(?:\s+[A-ZÁÉÍÓÚÑa-záéíóúñ'-]+){1,5})/i
+    /(?:estudiante|alumno|nombre(?: completo)?)\s*[:-]\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ'-]+(?:\s+[A-ZÁÉÍÓÚÑa-záéíóúñ'-]+){1,5})/i,
   );
   if (labelled?.[1]) return labelled[1].trim();
 
   const fichaMatch = text.match(
-    /([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ'-]+(?:\s+[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ'-]+){2,6})\s+FICHA\s+PERSONAL\s+DE\s+CONVIVENCIA\s+ESCOLAR/i
+    /([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ'-]+(?:\s+[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ'-]+){2,6})\s+FICHA\s+PERSONAL\s+DE\s+CONVIVENCIA\s+ESCOLAR/i,
   );
   if (fichaMatch?.[1]) return titleCaseFromUpper(fichaMatch[1].trim());
 
@@ -429,7 +448,7 @@ function extractStudentName(text: string): string | null {
     .filter((line) => line.startsWith('## '))
     .map((line) => line.slice(3).trim())
     .filter(
-      (line) => line.length > 1 && !/^(fundaci[oó]n|saber|ficha|rango|curso|fecha)/i.test(line)
+      (line) => line.length > 1 && !/^(fundaci[oó]n|saber|ficha|rango|curso|fecha)/i.test(line),
     );
 
   if (headingLines.length >= 3)
@@ -570,7 +589,7 @@ function summarizeAnnotations(annotations: DetectedAnnotation[]): AnnotationSumm
       if (annotation.type === 'information') acc.informativas += 1;
       return acc;
     },
-    { negativas: 0, positivas: 0, informativas: 0 }
+    { negativas: 0, positivas: 0, informativas: 0 },
   );
 }
 
@@ -585,9 +604,9 @@ function buildNameTokenQuery(parts: string[]): string {
 }
 async function enrichStudentRows(
   supabase: SupabaseClient,
-  rows: Array<{ id: string; full_name: string; rut: string | null; course_id: string | null }>,
+  rows: StudentRow[],
   confidence: number,
-  status: StudentMatchStatus
+  status: StudentMatchStatus,
 ): Promise<StudentCandidate[]> {
   if (rows.length === 0) return [];
   const courseIds = [...new Set(rows.flatMap((row) => (row.course_id ? [row.course_id] : [])))];
@@ -595,7 +614,7 @@ async function enrichStudentRows(
     ? await supabase.from('courses').select('id, name').in('id', courseIds)
     : { data: [] };
   const courseMap = new Map(
-    (courses ?? []).map((course: { id: string; name: string }) => [course.id, course.name])
+    (courses ?? []).map((course: { id: string; name: string }) => [course.id, course.name]),
   );
 
   return rows.map((row) => ({
@@ -613,7 +632,7 @@ async function findStudentCandidates(
   supabase: SupabaseClient,
   tenantId: string,
   detectedName: string | null,
-  detectedCourse: string | null
+  detectedCourse: string | null,
 ): Promise<{
   candidates: StudentCandidate[];
   selectedStudentId: string | null;
@@ -635,7 +654,7 @@ async function findStudentCandidates(
     (courseRows ?? []).map((course: { id: string; name: string }) => [
       course.id,
       courseMatchKey(course.name),
-    ])
+    ]),
   );
 
   const { data: exactRows } = await supabase
@@ -650,7 +669,7 @@ async function findStudentCandidates(
       supabase,
       exactRows,
       0.99,
-      exactRows.length === 1 ? 'exact_match' : 'multiple_candidates'
+      exactRows.length === 1 ? 'exact_match' : 'multiple_candidates',
     );
     return {
       candidates,
@@ -671,14 +690,14 @@ async function findStudentCandidates(
     : await tokenCandidatesQuery;
 
   const normalizedMatches = (tenantStudents ?? []).filter(
-    (student) => normalizeText(student.full_name) === normalizedDetected
+    (student) => normalizeText(student.full_name) === normalizedDetected,
   );
   if (normalizedMatches.length > 0) {
     const candidates = await enrichStudentRows(
       supabase,
       normalizedMatches,
       0.94,
-      normalizedMatches.length === 1 ? 'unique_normalized_match' : 'multiple_candidates'
+      normalizedMatches.length === 1 ? 'unique_normalized_match' : 'multiple_candidates',
     );
     return {
       candidates,
@@ -688,8 +707,7 @@ async function findStudentCandidates(
   }
 
   const detectedPartSet = new Set(detectedParts);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const scored: { student: any; score: number }[] = [];
+  const scored: Array<{ student: StudentRow; score: number }> = [];
   for (const student of tenantStudents ?? []) {
     const studentParts = new Set(getNameParts(student.full_name));
     const overlap = [...detectedPartSet].filter((part) => studentParts.has(part)).length;
@@ -726,7 +744,7 @@ async function findStudentCandidates(
     supabase,
     approximate.map((item) => item.student),
     approximate[0]?.score ?? 0,
-    approximate.length > 0 ? 'multiple_candidates' : 'no_match'
+    approximate.length > 0 ? 'multiple_candidates' : 'no_match',
   );
 
   return {
@@ -741,12 +759,48 @@ function annotationTypeToLegacy(type: AnnotationType): 'Negativa' | 'Positiva' |
   return 'Negativa';
 }
 
+function annotationDateKey(value: string | null | undefined): string {
+  return value?.slice(0, 10) || '';
+}
+
+function annotationIdentityKey(
+  type: string | null | undefined,
+  date: string | null | undefined,
+  text: string | null | undefined,
+): string {
+  return `${normalizeText(type || '')}|${annotationDateKey(date)}|${normalizeText(text || '')}`;
+}
+
+export function selectNewAnnotationsForLegacySync(
+  annotations: ConfirmAnnotationInput[],
+  existingRecords: ExistingLegacyAnnotation[],
+): ConfirmAnnotationInput[] {
+  const existingCounts = new Map<string, number>();
+
+  for (const record of existingRecords) {
+    const key = annotationIdentityKey(record.type, record.date_time, record.observation);
+    existingCounts.set(key, (existingCounts.get(key) || 0) + 1);
+  }
+
+  return annotations.filter((annotation) => {
+    const key = annotationIdentityKey(
+      annotationTypeToLegacy(annotation.type),
+      annotation.detected_date,
+      annotation.raw_text,
+    );
+    const remainingMatches = existingCounts.get(key) || 0;
+    if (remainingMatches === 0) return true;
+    existingCounts.set(key, remainingMatches - 1);
+    return false;
+  });
+}
+
 function severityForAnnotation(type: AnnotationType): 'Leve' | 'Grave' | 'Muy Grave' | 'Gravísima' {
   return type === 'negative' ? 'Leve' : 'Leve';
 }
 
 function suggestedLetterToDocumentType(
-  suggestedLetterType: string | null | undefined
+  suggestedLetterType: string | null | undefined,
 ): 'Amonestación Escrita' | 'Carta de Compromiso Conductual' | 'Ficha de Derivación' | null {
   if (suggestedLetterType === 'amonestacion') return 'Amonestación Escrita';
   if (suggestedLetterType === 'compromiso' || suggestedLetterType === 'compromiso_conductual') {
@@ -771,18 +825,39 @@ async function syncConfirmedProcessToLegacyViews(
   processId: string,
   processNumber: string,
   summary: AnnotationSummary,
-  student: { id: string; full_name?: string | null; course_id?: string | null }
-): Promise<void> {
-  const { data: existingRecords } = await supabase
+  student: { id: string; full_name?: string | null; course_id?: string | null },
+): Promise<AnnotationSummary> {
+  const { data: existingRecords, error: existingRecordsError } = await supabase
     .from('inspectorate_records')
-    .select('id')
+    .select('type,date_time,observation')
     .eq('tenant_id', input.tenantId)
-    .eq('student_id', input.studentId)
-    .eq('pdf_file_path', input.storagePath)
-    .limit(1);
+    .eq('student_id', input.studentId);
 
-  if (!existingRecords || existingRecords.length === 0) {
-    const legacyRecords = input.annotations.map((annotation) => ({
+  if (existingRecordsError) {
+    throw new Error('Error al comparar las anotaciones existentes del estudiante');
+  }
+
+  const newAnnotations = selectNewAnnotationsForLegacySync(
+    input.annotations,
+    (existingRecords || []) as ExistingLegacyAnnotation[],
+  );
+  const insertedSummary = summarizeAnnotations(
+    newAnnotations.map((annotation, index) => ({
+      raw_text: annotation.raw_text,
+      normalized_text: annotation.normalized_text ?? normalizeText(annotation.raw_text),
+      type: annotation.type,
+      page_number: annotation.page_number ?? null,
+      sequence_number: annotation.sequence_number || index + 1,
+      detected_date: annotation.detected_date ?? null,
+      detected_teacher: annotation.detected_teacher ?? null,
+      classification_method: 'regex',
+      confidence: annotation.confidence ?? 0.8,
+      parser_version: PARSER_VERSION,
+    })),
+  );
+
+  if (newAnnotations.length > 0) {
+    const legacyRecords = newAnnotations.map((annotation) => ({
       student_id: input.studentId,
       tenant_id: input.tenantId,
       date_time: annotation.detected_date
@@ -829,7 +904,7 @@ async function syncConfirmedProcessToLegacyViews(
         student_id: input.studentId,
         tenant_id: input.tenantId,
         letter_type: documentType,
-        emission_date: new Date().toISOString().split('T')[0],
+        emission_date: nowDateOnly(),
         status: 'Vigente',
         emitted_by: 'Convivencia Escolar',
         supervisor_name: null,
@@ -870,11 +945,13 @@ async function syncConfirmedProcessToLegacyViews(
       if (error) throw new Error('Error al registrar la etapa disciplinaria sugerida');
     }
   }
+
+  return insertedSummary;
 }
 async function getSuggestedLetter(
   supabase: SupabaseClient,
   tenantId: string,
-  summary: AnnotationSummary
+  summary: AnnotationSummary,
 ): Promise<string> {
   const { data, error } = await supabase.rpc('get_suggested_letter_type', {
     p_negativas: summary.negativas,
@@ -885,6 +962,47 @@ async function getSuggestedLetter(
 
   if (error || !data) return 'none';
   return String(data);
+}
+
+async function findDuplicateFileByHash(
+  supabase: SupabaseClient,
+  tenantId: string,
+  fileHash: string,
+): Promise<DuplicateFileInfo | null> {
+  const { data: duplicateFile, error: duplicateFileError } = await supabase
+    .from('disciplinary_process_files')
+    .select('process_id,student_id,uploaded_at')
+    .eq('tenant_id', tenantId)
+    .eq('file_hash', fileHash)
+    .order('uploaded_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (duplicateFileError) {
+    throw new Error('No fue posible comprobar si el PDF ya estaba registrado');
+  }
+  if (!duplicateFile) return null;
+
+  const processId = String((duplicateFile as { process_id: string }).process_id);
+  const { data: process, error: processError } = await supabase
+    .from('disciplinary_processes')
+    .select('process_number')
+    .eq('tenant_id', tenantId)
+    .eq('id', processId)
+    .maybeSingle();
+
+  if (processError) {
+    throw new Error('No fue posible recuperar el proceso asociado al PDF existente');
+  }
+
+  return {
+    process_id: processId,
+    process_number: String(
+      (process as { process_number?: string } | null)?.process_number ?? 'Sin número',
+    ),
+    student_id: (duplicateFile as { student_id?: string | null }).student_id ?? null,
+    uploaded_at: String((duplicateFile as { uploaded_at: string }).uploaded_at),
+  };
 }
 
 export async function analyzeDisciplinaryPdf(input: AnalyzeInput): Promise<AnalysisResult> {
@@ -918,11 +1036,16 @@ export async function analyzeDisciplinaryPdf(input: AnalyzeInput): Promise<Analy
   const detectedCourse = extractCourse(textContent);
   const annotations = normalizeText(textContent).length < 20 ? [] : parseAnnotationsByPage(pages);
   const summary = summarizeAnnotations(annotations);
-  const [recommendedLetterType, studentMatch] = await Promise.all([
+  const [recommendedLetterType, studentMatch, duplicateFile] = await Promise.all([
     getSuggestedLetter(supabase, input.tenantId, summary),
     findStudentCandidates(supabase, input.tenantId, detectedStudentName, detectedCourse),
+    findDuplicateFileByHash(supabase, input.tenantId, fileHash),
   ]);
 
+  if (duplicateFile)
+    warnings.push(
+      `Este mismo PDF ya está registrado en el proceso ${duplicateFile.process_number}.`,
+    );
   if (!detectedStudentName) warnings.push('No se pudo detectar un nombre de estudiante en el PDF.');
   if (annotations.length === 0 && normalizeText(textContent).length >= 20)
     warnings.push('No se detectaron anotaciones clasificables en el documento.');
@@ -955,12 +1078,14 @@ export async function analyzeDisciplinaryPdf(input: AnalyzeInput): Promise<Analy
       file_hash: fileHash,
       parser_version: PARSER_VERSION,
     })
-    .select('id')
+    .select('id,analyzed_at')
     .maybeSingle();
 
   return {
     success: true,
     analysis_id: (analysisRow as { id?: string } | null)?.id ?? null,
+    analyzed_at:
+      (analysisRow as { analyzed_at?: string } | null)?.analyzed_at ?? new Date().toISOString(),
     file_id: null,
     process_id: null,
     detected_student_name: detectedStudentName,
@@ -982,13 +1107,17 @@ export async function analyzeDisciplinaryPdf(input: AnalyzeInput): Promise<Analy
     processing_status: processingStatus,
     mode: studentMatch.selectedStudentId ? 'preview' : 'student_pending',
     file_hash: fileHash,
+    duplicate_file: duplicateFile,
     parser_version: PARSER_VERSION,
   };
 }
 
-export async function confirmDisciplinaryProcess(
-  input: ConfirmInput
-): Promise<{ success: true; processId: string; processNumber: string }> {
+export async function confirmDisciplinaryProcess(input: ConfirmInput): Promise<{
+  success: true;
+  processId: string;
+  processNumber: string;
+  insertedAnnotations: AnnotationSummary;
+}> {
   const supabase = getSupabaseAdmin(input.authToken);
   assertStoragePathAllowed(input.bucket, input.storagePath, input.tenantId);
 
@@ -1015,7 +1144,7 @@ export async function confirmDisciplinaryProcess(
       classification_method: 'regex',
       confidence: annotation.confidence ?? 0.8,
       parser_version: PARSER_VERSION,
-    }))
+    })),
   );
 
   if (input.idempotencyKey) {
@@ -1030,27 +1159,35 @@ export async function confirmDisciplinaryProcess(
         .disciplinary_processes;
       const existingProcessId = (existing as { process_id: string }).process_id;
       const existingProcessNumber = nested?.process_number ?? '';
-      await syncConfirmedProcessToLegacyViews(
+      const insertedAnnotations = await syncConfirmedProcessToLegacyViews(
         supabase,
         input,
         existingProcessId,
         existingProcessNumber,
         summary,
-        student as { id: string; full_name?: string | null; course_id?: string | null }
+        student as { id: string; full_name?: string | null; course_id?: string | null },
       );
       return {
         success: true,
         processId: existingProcessId,
         processNumber: existingProcessNumber,
+        insertedAnnotations,
       };
     }
+  }
+
+  const duplicateFile = await findDuplicateFileByHash(supabase, input.tenantId, input.fileHash);
+  if (duplicateFile) {
+    throw new Error(
+      `Este PDF ya fue registrado en el proceso ${duplicateFile.process_number}. No se creó un duplicado.`,
+    );
   }
 
   const { data: processNumber, error: numberError } = await supabase.rpc(
     'generate_process_number',
     {
       p_tenant_id: input.tenantId,
-    }
+    },
   );
   if (numberError || !processNumber) throw new Error('Error al generar número de proceso');
 
@@ -1122,13 +1259,13 @@ export async function confirmDisciplinaryProcess(
     if (annotationsError) throw new Error('Error al guardar las anotaciones detectadas');
   }
 
-  await syncConfirmedProcessToLegacyViews(
+  const insertedAnnotations = await syncConfirmedProcessToLegacyViews(
     supabase,
     input,
     processId,
     String((processRow as { process_number: string }).process_number),
     summary,
-    student as { id: string; full_name?: string | null; course_id?: string | null }
+    student as { id: string; full_name?: string | null; course_id?: string | null },
   );
   await supabase.from('document_analyses').insert({
     student_id: input.studentId,
@@ -1148,5 +1285,6 @@ export async function confirmDisciplinaryProcess(
     success: true,
     processId,
     processNumber: String((processRow as { process_number: string }).process_number),
+    insertedAnnotations,
   };
 }

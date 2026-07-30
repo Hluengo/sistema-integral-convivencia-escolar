@@ -1,6 +1,7 @@
 # Resumen del Proyecto — Debido Proceso
 
 ## Estado Actual
+
 - **Versión**: 1.0
 - **Estado**: Producción
 - **Tests**: 22/22 ✅ (node:test)
@@ -11,6 +12,7 @@
 ## Funcionalidades Implementadas
 
 ### Core
+
 - [x] Gestión de casos de convivencia (5 fases, 39 estados)
 - [x] Wizard de nuevo caso disciplinario
 - [x] Timeline de bitácora con checklist de debido proceso
@@ -22,12 +24,14 @@
 - [x] Dashboard con KPIs y métricas
 
 ### Documentos
+
 - [x] Generación DOCX (amonestación, compromiso, derivación)
 - [x] Vista previa de documentos
 - [x] Registro de cartas en base de datos
 - [x] AI drafts (notificación, citación, informes)
 
 ### Legal
+
 - [x] Cumplimiento Circular 482 (2018)
 - [x] Cumplimiento Ley 21.809 (2026)
 - [x] Cálculo de plazos legales
@@ -36,6 +40,7 @@
 - [x] Protocolos: acoso, violencia, drogas, suicidio
 
 ### AI
+
 - [x] Asesor legal con OpenRouter (llama-3.1-8b-instruct)
 - [x] Auditoría automática de procesos
 - [x] Draft de documentos legales
@@ -44,6 +49,7 @@
 - [x] Sanitización anti-prompt injection
 
 ### Seguridad
+
 - [x] JWT verification (HMAC + API fallback)
 - [x] requireAuth middleware
 - [x] RLS policies en 16 tablas + storage
@@ -56,6 +62,7 @@
 - [x] Input sanitization
 
 ### UI/UX
+
 - [x] Dashboard profesional con KPIs
 - [x] Sidebar colapsable responsive
 - [x] Modo privacidad (datos de NNA)
@@ -68,6 +75,7 @@
 - [x] Accesibilidad WCAG 2.1 AA
 
 ### Integraciones
+
 - [x] Supabase Auth (email/password)
 - [x] Supabase Storage (3 buckets)
 - [x] Supabase Database (PostgreSQL 17)
@@ -78,6 +86,7 @@
 - [x] React Doctor (static analysis)
 
 ## OpenCode Ecosystem
+
 - **Agentes**: 14 especializados (deploy, db, reviewer, test, legal, analytics, pie, utp, convivencia, frontend-designer, react-architect, supabase-architect, security-reviewer, qa-tester)
 - **MCP Servers**: 9 (memory, sequential-thinking, codebase-memory, supabase, context7, filesystem, git, github, playwright)
 - **Skills**: 29 (core, documentos, educación, legal, DB, DevOps, investigación, automatización, calidad)
@@ -89,8 +98,9 @@
 - **Docs**: 5 guías + 7 legales + 9 architecture
 
 ## Próximos Pasos
+
 1. Unificar runners de test (tsx → vitest)
 2. React Router para deep linking
 3. E2E tests con Playwright
-4. Refactor de dual server entry points
+4. Medir cobertura y ampliar pruebas de regresión
 5. CI/CD con GitHub Actions

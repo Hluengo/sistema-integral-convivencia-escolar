@@ -10,7 +10,13 @@ import type { SidebarView } from '../../components/Sidebar';
 import type { FormAction } from '../../hooks/useNewCausaForm';
 import CausasView from './MainContent/CausasView';
 import ErrorBoundary from '../../components/ErrorBoundary';
-import { DashboardMetricSkeleton, CausaCardSkeleton, AnnotationsSkeleton, TableSkeleton, ChatMessageSkeleton } from '../../components/Skeleton';
+import {
+  DashboardMetricSkeleton,
+  CausaCardSkeleton,
+  AnnotationsSkeleton,
+  TableSkeleton,
+  ChatMessageSkeleton,
+} from '../../components/Skeleton';
 
 const DashboardStats = lazy(() => import('../../components/DashboardStats'));
 const StudentsPanel = lazy(() => import('../../features/students/StudentsPanel'));
@@ -61,10 +67,11 @@ interface MainContentProps {
   selectedCausa: Causa | undefined;
   selectedFaseFilter: FaseProcedimental | 'Todas';
   setSelectedFaseFilter: (f: FaseProcedimental | 'Todas') => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
   privacyMode: boolean;
   mobileShowDetail: boolean;
   setMobileShowDetail: (v: boolean) => void;
-  aulaSeguraCausas: Causa[];
   filteredCausas: Causa[];
   showCreateForm: boolean;
   dispatchForm: React.Dispatch<FormAction>;
@@ -81,10 +88,11 @@ export default function MainContent({
   selectedCausa,
   selectedFaseFilter,
   setSelectedFaseFilter,
+  searchQuery,
+  setSearchQuery,
   privacyMode,
   mobileShowDetail,
   setMobileShowDetail,
-  aulaSeguraCausas,
   filteredCausas,
   showCreateForm,
   dispatchForm,
@@ -94,7 +102,7 @@ export default function MainContent({
 }: MainContentProps) {
   const handleFaseSelect = useCallback(
     (fase: FaseProcedimental | 'Todas') => setSelectedFaseFilter(fase),
-    [setSelectedFaseFilter]
+    [setSelectedFaseFilter],
   );
 
   return (
@@ -115,10 +123,7 @@ export default function MainContent({
       {currentView === 'dashboard' && (
         <ErrorBoundary>
           <Suspense fallback={<DashboardFallback />}>
-            <DashboardStats
-              causas={causas}
-              onFaseSelect={handleFaseSelect}
-            />
+            <DashboardStats causas={causas} onFaseSelect={handleFaseSelect} />
           </Suspense>
         </ErrorBoundary>
       )}
@@ -132,11 +137,12 @@ export default function MainContent({
           selectedCausa={selectedCausa}
           selectedFaseFilter={selectedFaseFilter}
           setSelectedFaseFilter={setSelectedFaseFilter}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
           privacyMode={privacyMode}
           mobileShowDetail={mobileShowDetail}
           setMobileShowDetail={setMobileShowDetail}
           filteredCausas={filteredCausas}
-          aulaSeguraCausas={aulaSeguraCausas}
           showCreateForm={showCreateForm}
           dispatchForm={dispatchForm}
           handleReopenCausa={handleReopenCausa}

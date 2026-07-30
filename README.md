@@ -59,22 +59,22 @@ Diseñado como **SaaS multi-tenant**, aísla los datos de cada establecimiento e
 
 ## Stack tecnológico
 
-| Capa | Tecnología | Versión |
-|------|-----------|---------|
-| Frontend | React + TypeScript | 19.0.1 / 5.8.2 |
-| Build | Vite | 6.4.3 |
-| CSS | Tailwind CSS v4 | 4.1.14 |
-| Estado global | Zustand | 5.0.14 |
-| Server state | TanStack React Query | 5.101.2 |
-| Formularios | react-hook-form + Zod | 7.82.0 / 4.4.3 |
-| Backend dev | Express + tsx | 4.21.2 |
-| Backend prod | Vercel Serverless (esbuild) | — |
-| Base de datos | Supabase PostgreSQL | 17.6.1 |
-| Autenticación | Supabase Auth | — |
-| IA | OpenRouter (Llama 3.1) | — |
-| Documentos | docx / pdfjs-dist | — |
-| Monitoring | Sentry + PostHog | — |
-| Tests | node:test + Playwright | — |
+| Capa          | Tecnología                  | Versión        |
+| ------------- | --------------------------- | -------------- |
+| Frontend      | React + TypeScript          | 19.0.1 / 5.8.2 |
+| Build         | Vite                        | 6.4.3          |
+| CSS           | Tailwind CSS v4             | 4.1.14         |
+| Estado global | Zustand                     | 5.0.14         |
+| Server state  | TanStack React Query        | 5.101.2        |
+| Formularios   | react-hook-form + Zod       | 7.82.0 / 4.4.3 |
+| Backend dev   | Express + tsx               | 4.21.2         |
+| Backend prod  | Vercel Serverless (esbuild) | —              |
+| Base de datos | Supabase PostgreSQL         | 17.6.1         |
+| Autenticación | Supabase Auth               | —              |
+| IA            | OpenRouter (Llama 3.1)      | —              |
+| Documentos    | docx / pdfjs-dist           | —              |
+| Monitoring    | Sentry + PostHog            | —              |
+| Tests         | node:test + Playwright      | —              |
 
 ---
 
@@ -141,21 +141,21 @@ La aplicación estará disponible en:
 
 Las siguientes variables son **obligatorias** para el funcionamiento local:
 
-| Variable | Descripción |
-|----------|-------------|
-| `VITE_SUPABASE_URL` | URL del proyecto Supabase |
-| `VITE_SUPABASE_ANON_KEY` | Anon key pública de Supabase |
-| `SUPABASE_JWT_SECRET` | JWT secret para verificación de tokens en API routes |
+| Variable                    | Descripción                                             |
+| --------------------------- | ------------------------------------------------------- |
+| `VITE_SUPABASE_URL`         | URL del proyecto Supabase                               |
+| `VITE_SUPABASE_ANON_KEY`    | Anon key pública de Supabase                            |
+| `SUPABASE_JWT_SECRET`       | JWT secret para verificación de tokens en API routes    |
 | `SUPABASE_SERVICE_ROLE_KEY` | Admin key para operaciones privilegiadas desde servidor |
-| `OPENROUTER_API_KEY` | API key de OpenRouter (IA) |
+| `OPENROUTER_API_KEY`        | API key de OpenRouter (IA)                              |
 
 Variables opcionales:
 
-| Variable | Descripción |
-|----------|-------------|
-| `VITE_ALLOW_LOCAL_DEMO` | Demo sin login (solo desarrollo) |
-| `VITE_SENTRY_DSN` | Error tracking |
-| `VITE_POSTHOG_KEY` / `VITE_POSTHOG_HOST` | Analytics |
+| Variable                                              | Descripción                             |
+| ----------------------------------------------------- | --------------------------------------- |
+| `VITE_ALLOW_LOCAL_DEMO`                               | Demo sin login (solo desarrollo)        |
+| `VITE_SENTRY_DSN`                                     | Error tracking                          |
+| `VITE_POSTHOG_KEY` / `VITE_POSTHOG_HOST`              | Analytics                               |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Rate limiting persistente en serverless |
 
 > 🔒 **Nunca commitear** `.env.local` ni `.env.production`. Ver `docs/CONSTITUTION.md`.
@@ -164,21 +164,20 @@ Variables opcionales:
 
 ## Comandos disponibles
 
-| Comando | Descripción |
-|---------|-------------|
-| `npm run dev` | Servidor Express + Vite HMR (puertos 3001 / 3002) |
-| `npm run build` | Build completo: cliente Vite + servidor esbuild |
-| `npm run build:web` | Build solo del cliente |
-| `npm run start` | Iniciar servidor de producción desde `dist/server.cjs` |
-| `npm run lint` | TypeScript check + ESLint |
-| `npm run typecheck` | Verificación estricta de tipos (`tsc --noEmit`) |
-| `npm run test` | Tests unitarios (node:test, ~57 tests) |
-| `npm run test:vitest` | Tests con Vitest |
-| `npm run test:e2e` | Tests end-to-end con Playwright |
-| `npm run doctor` | Análisis estático con React Doctor |
-| `npm run format` | Formatear código con Prettier |
-| `npm run security-audit` | Auditoría de dependencias (`npm audit`) |
-| `npm run ci` | Lint + test + build:web + security audit |
+| Comando                  | Descripción                                            |
+| ------------------------ | ------------------------------------------------------ |
+| `npm run dev`            | Servidor Express + Vite HMR (puertos 3001 / 3002)      |
+| `npm run build`          | Build completo: cliente Vite + servidor esbuild        |
+| `npm run build:web`      | Build solo del cliente                                 |
+| `npm run start`          | Iniciar servidor de producción desde `dist/server.cjs` |
+| `npm run lint`           | TypeScript check + ESLint                              |
+| `npm run typecheck`      | Verificación estricta de tipos (`tsc --noEmit`)        |
+| `npm run test`           | Tests unitarios con el runner nativo de Node           |
+| `npm run test:coverage`  | Tests unitarios con cobertura nativa de Node           |
+| `npm run test:e2e`       | Tests end-to-end con Playwright                        |
+| `npm run format`         | Formatear código con Prettier                          |
+| `npm run security-audit` | Auditoría de dependencias (`npm audit`)                |
+| `npm run ci`             | Lint + test + build:web + security audit               |
 
 ---
 
@@ -191,7 +190,7 @@ El proyecto incluye tests unitarios con **node:test** y tests E2E con **Playwrig
 npm run test
 
 # Tests con Vitest
-npm run test:vitest
+npm run test
 
 # Tests E2E
 npm run test:e2e
@@ -260,18 +259,21 @@ Consulta las reglas inmutables en `docs/CONSTITUTION.md` y la revisión de segur
 ## Roadmap
 
 ### Corto plazo (1-3 meses)
+
 - Unificación de test runners (Vitest)
 - CI/CD con GitHub Actions
 - React Router para deep linking
 - Refactor de componentes legacy
 
 ### Mediano plazo (3-6 meses)
+
 - Unificación de server entry points
 - Edge Functions de Supabase
 - Dashboard analítico avanzado
 - Notificaciones en tiempo real
 
 ### Largo plazo (6-12 meses)
+
 - Módulo PIE
 - Módulo UTP
 - Portal de apoderados

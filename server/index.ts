@@ -11,16 +11,18 @@ import cors from 'cors';
 import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
 
-import auditRoutes from './routes/audit';
-import draftRoutes from './routes/draft';
-import improveRoutes from './routes/improve';
-import advisorRoutes from './routes/advisor';
-import templatesRoutes from './routes/templates';
-import parseRoutes from './routes/parse';
-import processDisciplinaryPdfRoutes from './routes/processDisciplinaryPdf';
-import debugRoutes from './routes/debug';
-import usageRoutes from './routes/usage';
-import pilotRoutes from './routes/pilot';
+import auditRoutes from './api/routes/audit';
+import draftRoutes from './api/routes/draft';
+import improveRoutes from './api/routes/improve';
+import advisorRoutes from './api/routes/advisor';
+import templatesRoutes from './api/routes/templates';
+import parseRoutes from './api/routes/parse';
+import processDisciplinaryPdfRoutes from './api/routes/processDisciplinaryPdf';
+import debugRoutes from './api/routes/debug';
+import usageRoutes from './api/routes/usage';
+import pilotRoutes from './api/routes/pilot';
+import { errorHandler } from './middleware/errorHandler';
+import { rateLimit } from './middleware/rateLimit';
 
 dotenv.config();
 dotenv.config({ path: '.env.local' });
@@ -51,17 +53,26 @@ app.use(
 );
 app.use(express.json({ limit: '100kb' }));
 
-// API routes
-app.use('/api', auditRoutes);
-app.use('/api', draftRoutes);
-app.use('/api', improveRoutes);
-app.use('/api', advisorRoutes);
+app.get('/api/health', (_req, res) => {
+  res.json({ ok: true });
+});
+
+// API routes — rate limited (AI y análisis)
+app.use('/api', rateLimit, auditRoutes);
+app.use('/api', rateLimit, draftRoutes);
+app.use('/api', rateLimit, improveRoutes);
+app.use('/api', rateLimit, advisorRoutes);
+app.use('/api', rateLimit, parseRoutes);
+app.use('/api', rateLimit, processDisciplinaryPdfRoutes);
+
+// API routes — sin rate limit (lectura, utilidades)
 app.use('/api', templatesRoutes);
-app.use('/api', parseRoutes);
-app.use('/api', processDisciplinaryPdfRoutes);
 app.use('/api', debugRoutes);
 app.use('/api', usageRoutes);
 app.use('/api', pilotRoutes);
+
+// Global error handler — must be registered AFTER all routes
+app.use(errorHandler);
 
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {

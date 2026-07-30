@@ -1,6 +1,15 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { CheckCircle2, FileSearch, FileText, History, ScrollText, Upload } from 'lucide-react';
+import {
+  CheckCircle2,
+  FileSearch,
+  FileText,
+  History,
+  Loader2,
+  NotebookPen,
+  ScrollText,
+  Upload,
+} from 'lucide-react';
 import type {
   CartaDisciplinaria,
   DocumentAnalysis,
@@ -15,6 +24,8 @@ import type {
 } from '@/src/services/cartas.service';
 import { resolveCartaWorkflowStatus } from '@/src/services/cartas.service';
 import { formatDate } from './constants';
+import { useStudentHistoryEntries } from '@/src/shared/lib/hooks/useStudentHistoryEntries';
+import ManualHistoryEntryForm from './ManualHistoryEntryForm';
 
 interface TimelineItem {
   id: string;
@@ -26,6 +37,7 @@ interface TimelineItem {
 }
 
 interface HistoryTabProps {
+  studentId: string;
   cartas: CartaDisciplinaria[];
   documentAnalyses: DocumentAnalysis[];
   etapas: EtapaDisciplinaria[];
@@ -61,10 +73,15 @@ function describeCartaEvent(event: CartaEvent, carta?: CartaDisciplinaria): Time
     };
   }
   if (event.event_type === 'registered') {
+    const isPhysical = event.metadata?.origin === 'physical';
     return {
       ...base,
-      title: `Carta registrada: ${letterType}`,
-      description: event.event_detail || 'Registro en Supabase confirmado.',
+      title: `${isPhysical ? 'Carta física registrada' : 'Carta registrada'}: ${letterType}`,
+      description:
+        event.event_detail ||
+        (isPhysical
+          ? 'Constancia registrada sin modificar anotaciones.'
+          : 'Registro en Supabase confirmado.'),
       tone: 'bg-emerald-50 text-emerald-700',
     };
   }
@@ -76,23 +93,16 @@ function describeCartaEvent(event: CartaEvent, carta?: CartaDisciplinaria): Time
       tone: 'bg-neutral-100 text-neutral-600',
     };
   }
-  if (event.event_type === 'created') {
-    return {
-      ...base,
-      title: `Carta creada: ${letterType}`,
-      description: 'Documento abierto en generador. Estado: pendiente.',
-      tone: 'bg-amber-50 text-amber-700',
-    };
-  }
   return {
     ...base,
-    title: `Carta sugerida: ${letterType}`,
-    description: 'Estado: pendiente.',
-    tone: 'bg-amber-50 text-amber-700',
+    title: `Evento de carta: ${letterType}`,
+    description: event.event_detail || 'Sin detalle registrado.',
+    tone: 'bg-neutral-100 text-neutral-600',
   };
 }
 
 export default function HistoryTab({
+  studentId,
   cartas,
   documentAnalyses,
   etapas,
@@ -102,8 +112,12 @@ export default function HistoryTab({
   letterOutputEvents,
   cartaEvents,
 }: HistoryTabProps) {
+  const manualHistory = useStudentHistoryEntries(studentId);
   const cartasById = new Map(cartas.map((carta) => [carta.id, carta]));
-  const cartasWithEvents = new Set(cartaEvents.map((event) => event.carta_id));
+  const relevantCartaEvents = cartaEvents.filter(
+    (event) => event.event_type !== 'created' && event.event_type !== 'suggested',
+  );
+  const cartasWithEvents = new Set(relevantCartaEvents.map((event) => event.carta_id));
   const syntheticCartaItems = cartas.reduce<TimelineItem[]>((items, carta) => {
     if (cartasWithEvents.has(carta.id)) return items;
     const status = resolveCartaWorkflowStatus(carta);
@@ -129,18 +143,18 @@ export default function HistoryTab({
       });
       return items;
     }
-    items.push({
-      id: `carta-${carta.id}`,
-      date: carta.created_at || carta.emission_date,
-      icon: <FileText className="h-4 w-4" />,
-      title: `Carta sugerida: ${carta.letter_type}`,
-      description: 'Estado: pendiente.',
-      tone: 'bg-amber-50 text-amber-700',
-    });
     return items;
   }, []);
 
   const items: TimelineItem[] = [
+    ...manualHistory.entries.map((entry) => ({
+      id: `manual-${entry.id}`,
+      date: entry.created_at,
+      icon: <NotebookPen className="h-4 w-4" />,
+      title: entry.title,
+      description: entry.description,
+      tone: 'bg-amber-50 text-amber-700',
+    })),
     ...files.map((file) => ({
       id: `file-${file.id}`,
       date: file.uploaded_at,
@@ -173,7 +187,9 @@ export default function HistoryTab({
       description: annotation.annotation_text || annotation.raw_text || 'Sin texto registrado',
       tone: 'bg-neutral-50 text-neutral-700',
     })),
-    ...cartaEvents.map((event) => describeCartaEvent(event, cartasById.get(event.carta_id))),
+    ...relevantCartaEvents.map((event) =>
+      describeCartaEvent(event, cartasById.get(event.carta_id)),
+    ),
     ...letterOutputEvents.map((event) => ({
       id: `letter-output-${event.id}`,
       date: event.created_at,
@@ -193,38 +209,59 @@ export default function HistoryTab({
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  if (items.length === 0) {
-    return (
-      <div className="rounded-xl border border-neutral-200 bg-white p-8 text-center shadow-xs">
-        <History className="mx-auto mb-3 h-12 w-12 text-neutral-300" />
-        <p className="text-sm text-neutral-500">
-          No hay eventos disciplinarios registrados para este estudiante.
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-3">
-      {items.map((item) => (
-        <article
-          key={item.id}
-          className="flex gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-xs"
-        >
-          <div
-            className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${item.tone}`}
-          >
-            {item.icon}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="text-sm font-bold text-neutral-900">{item.title}</h3>
-              <span className="text-xs text-neutral-400">{formatDate(item.date)}</span>
-            </div>
-            <p className="mt-1 line-clamp-3 text-sm text-neutral-600">{item.description}</p>
-          </div>
-        </article>
-      ))}
+    <div className="space-y-4">
+      <ManualHistoryEntryForm
+        studentId={studentId}
+        isSaving={manualHistory.isCreating}
+        error={manualHistory.createError}
+        onSave={manualHistory.createEntry}
+        onResetError={manualHistory.resetCreateError}
+      />
+
+      {manualHistory.loadError && (
+        <p role="alert" className="rounded-xl bg-rose-50 px-4 py-3 text-rose-700 text-sm">
+          {manualHistory.loadError}
+        </p>
+      )}
+
+      {manualHistory.isLoading && items.length === 0 ? (
+        <div className="flex items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white p-8 text-neutral-500 text-sm">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Cargando historial...
+        </div>
+      ) : items.length === 0 ? (
+        <div className="rounded-xl border border-neutral-200 bg-white p-8 text-center shadow-xs">
+          <History className="mx-auto mb-3 h-12 w-12 text-neutral-300" />
+          <p className="text-sm text-neutral-500">
+            No hay eventos disciplinarios registrados para este estudiante.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {items.map((item) => (
+            <article
+              key={item.id}
+              className="flex gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-xs"
+            >
+              <div
+                className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${item.tone}`}
+              >
+                {item.icon}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-sm font-bold text-neutral-900">{item.title}</h3>
+                  <span className="text-xs text-neutral-400">{formatDate(item.date)}</span>
+                </div>
+                <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-600">
+                  {item.description}
+                </p>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

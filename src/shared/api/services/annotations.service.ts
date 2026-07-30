@@ -4,6 +4,11 @@
  */
 
 import { supabase } from '../lib/supabase';
+import {
+  countAnnotationStages,
+  parseAnnotationStageRows,
+  type AnnotationStageCounts,
+} from '../../lib/domain/annotationStageCounts';
 import type { Annotation, AnotacionStudent, DocumentAnalysis } from '../../../types';
 import { mapInspectorateToAnnotation } from '../../../lib/mappers';
 import { calculateDisciplinaryStatus } from '../../../domain/disciplinaryStatus';
@@ -12,13 +17,21 @@ import { useAuthStore } from '../../../stores/authStore';
 const ANNOTATION_COLUMNS =
   'id,student_id,date_time,observation,severity,type,registered_by,created_at,created_by,pdf_file_path';
 const DOCUMENT_ANALYSIS_COLUMNS =
-  'id,student_id,file_name,negativas,positivas,informativas,analyzed_at,tenant_id,created_at';
+  'id,student_id,file_name,negativas,positivas,informativas,analyzed_at,tenant_id,created_at,status';
 
 interface AnnotationCountStats {
   negativas: number;
   positivas: number;
   informativas: number;
   lastDate?: string;
+}
+
+export interface UpdateAnnotationInput {
+  id: string;
+  text: string;
+  date: string;
+  severity: Annotation['severity'];
+  type: Annotation['type'];
 }
 
 export async function fetchAnnotations(studentId?: string): Promise<Annotation[]> {
@@ -54,53 +67,35 @@ export async function fetchDocumentAnalyses(studentId: string): Promise<Document
   return (data || []) as DocumentAnalysis[];
 }
 
-export async function saveDocumentAnalysis(params: {
-  studentId: string;
-  fileName?: string;
-  negativas: number;
-  positivas: number;
-  informativas: number;
-}): Promise<boolean> {
+export async function updateAnnotation(input: UpdateAnnotationInput): Promise<Annotation> {
   const tenantId = useAuthStore.getState().tenantId;
-  const { error } = await supabase.from('document_analyses').insert({
-    student_id: params.studentId,
-    file_name: params.fileName || null,
-    negativas: params.negativas,
-    positivas: params.positivas,
-    informativas: params.informativas,
-    tenant_id: tenantId,
-  });
+  if (!tenantId) {
+    throw new Error('No se pudo identificar el establecimiento de la sesión actual.');
+  }
+
+  const observation = input.text.trim();
+  if (!observation) {
+    throw new Error('La anotación no puede quedar vacía.');
+  }
+
+  const { data, error } = await supabase
+    .from('inspectorate_records')
+    .update({
+      observation,
+      date_time: input.date,
+      severity: input.severity,
+      type: input.type,
+    })
+    .eq('id', input.id)
+    .eq('tenant_id', tenantId)
+    .select(ANNOTATION_COLUMNS)
+    .single();
 
   if (error) {
-    console.error('Error saving document analysis:', error);
-    return false;
+    throw new Error(`No se pudo actualizar la anotación: ${error.message}`);
   }
-  return true;
-}
 
-export async function saveAnnotation(annotation: {
-  student_id: string;
-  observation: string;
-  severity: string;
-  type: string;
-  registered_by: string;
-}): Promise<boolean> {
-  const tenantId = useAuthStore.getState().tenantId;
-  const { error } = await supabase.from('inspectorate_records').insert({
-    student_id: annotation.student_id,
-    date_time: new Date().toISOString(),
-    observation: annotation.observation,
-    severity: annotation.severity,
-    type: annotation.type,
-    registered_by: annotation.registered_by,
-    tenant_id: tenantId,
-  });
-
-  if (error) {
-    console.error('Error saving annotation:', error);
-    return false;
-  }
-  return true;
+  return mapInspectorateToAnnotation(data);
 }
 
 interface RpcStudentSummary {
@@ -119,7 +114,7 @@ interface RpcStudentSummary {
 
 function addAnnotationToStats(
   stats: Record<string, AnnotationCountStats>,
-  annotation: { student_id: string; type: string; date_time: string | null }
+  annotation: { student_id: string; type: string; date_time: string | null },
 ) {
   const studentStats = stats[annotation.student_id] || {
     negativas: 0,
@@ -142,39 +137,44 @@ function addAnnotationToStats(
 }
 
 async function fetchAnnotationStatsByStudent(): Promise<Record<string, AnnotationCountStats>> {
-  const { data, error } = await supabase
-    .from('inspectorate_records')
-    .select('student_id,type,date_time');
-
-  if (error) {
-    console.error('Error fetching annotation stats:', error);
-    return {};
-  }
-
+  const pageSize = 1000;
+  let offset = 0;
   const stats: Record<string, AnnotationCountStats> = {};
-  for (const annotation of data || []) {
-    addAnnotationToStats(
-      stats,
-      annotation as { student_id: string; type: string; date_time: string | null }
-    );
+
+  while (true) {
+    const { data, error } = await supabase
+      .from('inspectorate_records')
+      .select('id,student_id,type,date_time')
+      .order('id', { ascending: true })
+      .range(offset, offset + pageSize - 1);
+
+    if (error) {
+      console.error('Error fetching annotation stats:', error);
+      return {};
+    }
+
+    for (const annotation of data || []) {
+      addAnnotationToStats(
+        stats,
+        annotation as { student_id: string; type: string; date_time: string | null },
+      );
+    }
+
+    if (!data || data.length < pageSize) break;
+    offset += pageSize;
   }
+
   return stats;
 }
 
 export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStudent[]> {
-  const [summaryResult, statsByStudent] = await Promise.all([
-    supabase.rpc('get_student_annotation_summary'),
-    fetchAnnotationStatsByStudent(),
-  ]);
-  const { data: rpcData, error: rpcError } = summaryResult;
+  const { data: rpcData, error: rpcError } = await supabase.rpc('get_student_annotation_summary');
 
   if (!rpcError && rpcData) {
     return (rpcData as RpcStudentSummary[]).map((row) => {
-      const stats = statsByStudent[row.id];
-      const negativeCount = stats?.negativas ?? Number(row.annotations_count || 0);
-      const positiveCount = stats?.positivas ?? Number(row.positive_annotations_count || 0);
-      const informativeCount =
-        stats?.informativas ?? Number(row.informative_annotations_count || 0);
+      const negativeCount = Number(row.annotations_count || 0);
+      const positiveCount = Number(row.positive_annotations_count || 0);
+      const informativeCount = Number(row.informative_annotations_count || 0);
       return {
         id: row.id,
         full_name: row.full_name,
@@ -184,7 +184,7 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStud
         annotations_count: negativeCount,
         positive_annotations_count: positiveCount,
         informative_annotations_count: informativeCount,
-        last_annotation_date: stats?.lastDate || row.last_annotation_date || undefined,
+        last_annotation_date: row.last_annotation_date || undefined,
         disciplinary_status: calculateDisciplinaryStatus(negativeCount),
         rut: row.rut || '',
         course_name: row.course_name || 'Sin curso',
@@ -201,13 +201,17 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStud
 
   console.warn(
     'RPC get_student_annotation_summary no disponible, usando fallback:',
-    rpcError?.message
+    rpcError?.message,
   );
 
-  const { data: students, error: studentsError } = await supabase
-    .from('students')
-    .select('id,full_name,course_id,teacher_id,status,rut,ai_analysis,courses(name, level)')
-    .order('full_name', { ascending: true });
+  const [studentsResult, statsByStudent] = await Promise.all([
+    supabase
+      .from('students')
+      .select('id,full_name,course_id,teacher_id,status,rut,ai_analysis,courses(name, level)')
+      .order('full_name', { ascending: true }),
+    fetchAnnotationStatsByStudent(),
+  ]);
+  const { data: students, error: studentsError } = studentsResult;
 
   if (!students) {
     console.error('Error fetching students:', studentsError);
@@ -248,37 +252,27 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStud
 }
 
 /**
- * Lightweight RPC: only returns 3 counts for dashboard KPIs.
+ * Lightweight RPC: returns the annotation stage counts for dashboard KPIs.
  * Falls back to counting from fetchStudentsWithAnnotationCounts if RPC unavailable.
  */
-export async function fetchAnnotationStageCounts(): Promise<{
-  amonestacionCount: number;
-  compromisoCount: number;
-  derivacionCount: number;
-}> {
+export async function fetchAnnotationStageCounts(): Promise<AnnotationStageCounts> {
   const fallback = async () => {
     const students = await fetchStudentsWithAnnotationCounts();
-    return {
-      amonestacionCount: students.filter(
-        (s) => s.annotations_count >= 5 && s.annotations_count < 10
-      ).length,
-      compromisoCount: students.filter((s) => s.annotations_count >= 10 && s.annotations_count < 15)
-        .length,
-      derivacionCount: students.filter((s) => s.annotations_count >= 15).length,
-    };
+    return countAnnotationStages(students);
   };
 
   try {
     const { data, error } = await supabase.rpc('get_annotation_stage_counts');
     if (error || !data) return fallback();
 
-    const result = { amonestacionCount: 0, compromisoCount: 0, derivacionCount: 0 };
-    for (const row of data as Array<{ stage: string; count: number }>) {
-      if (row.stage === 'amonestacion') result.amonestacionCount = Number(row.count);
-      else if (row.stage === 'compromiso') result.compromisoCount = Number(row.count);
-      else if (row.stage === 'derivacion') result.derivacionCount = Number(row.count);
-    }
-    return result;
+    return parseAnnotationStageRows(
+      data as Array<{
+        stage: string;
+        total_count: number | string;
+        pending_count: number | string;
+        processed_count: number | string;
+      }>,
+    );
   } catch {
     return fallback();
   }

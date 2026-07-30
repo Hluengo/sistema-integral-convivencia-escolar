@@ -48,6 +48,7 @@ function createJwt(payload: Record<string, unknown>, secret: string): string {
 }
 
 const TEST_JWT_SECRET = 'test-secret-32-bytes-long-for-tests-';
+const rejectRemoteToken = async () => null;
 
 function createMockProfileFetcher(
   result: {
@@ -86,7 +87,7 @@ describe('createRequireAuth', () => {
     const req = createMockReq();
     const res = createMockRes();
     let called = false;
-    await createRequireAuth()(req, res, () => {
+    await createRequireAuth(undefined, rejectRemoteToken)(req, res, () => {
       called = true;
     });
     assert.equal(res._status, 401);
@@ -98,7 +99,7 @@ describe('createRequireAuth', () => {
     const req = createMockReq({ headers: { authorization: 'Bearer short' } });
     const res = createMockRes();
     let called = false;
-    await createRequireAuth()(req, res, () => {
+    await createRequireAuth(undefined, rejectRemoteToken)(req, res, () => {
       called = true;
     });
     assert.equal(res._status, 401);
@@ -111,7 +112,7 @@ describe('createRequireAuth', () => {
     const req = createMockReq({ headers: { authorization: `Bearer ${token}` } });
     const res = createMockRes();
     let called = false;
-    await createRequireAuth()(req, res, () => {
+    await createRequireAuth(undefined, rejectRemoteToken)(req, res, () => {
       called = true;
     });
     assert.equal(res._status, 401);
@@ -127,7 +128,7 @@ describe('createRequireAuth', () => {
     const req = createMockReq({ headers: { authorization: `Bearer ${token}` } });
     const res = createMockRes();
     let called = false;
-    await createRequireAuth()(req, res, () => {
+    await createRequireAuth(undefined, rejectRemoteToken)(req, res, () => {
       called = true;
     });
     assert.equal(res._status, 401);
@@ -143,7 +144,7 @@ describe('createRequireAuth', () => {
     const req = createMockReq({ headers: { authorization: `Bearer ${token}` } });
     const res = createMockRes();
     let called = false;
-    await createRequireAuth(createMockProfileFetcher(null))(req, res, () => {
+    await createRequireAuth(createMockProfileFetcher(null), rejectRemoteToken)(req, res, () => {
       called = true;
     });
     assert.equal(res._status, 403);
@@ -164,7 +165,7 @@ describe('createRequireAuth', () => {
     const res = createMockRes();
     let called = false;
     const fetcher = createMockProfileFetcher({ tenantId: 'not-a-uuid', profileRole: 'admin' });
-    await createRequireAuth(fetcher)(req, res, () => {
+    await createRequireAuth(fetcher, rejectRemoteToken)(req, res, () => {
       called = true;
     });
     assert.equal(res._status, 403);
@@ -184,7 +185,7 @@ describe('createRequireAuth', () => {
       tenantId: '00000000-0000-0000-0000-000000000001',
       profileRole: 'admin',
     });
-    await createRequireAuth(fetcher)(req, res, () => {
+    await createRequireAuth(fetcher, rejectRemoteToken)(req, res, () => {
       called = true;
     });
     assert.equal(called, true);
@@ -209,7 +210,7 @@ describe('createRequireAuth', () => {
       tenantId: '00000000-0000-0000-0000-000000000001',
       profileRole: 'admin',
     });
-    await createRequireAuth(fetcher)(req, res, () => {
+    await createRequireAuth(fetcher, rejectRemoteToken)(req, res, () => {
       called = true;
     });
     assert.equal(called, true);

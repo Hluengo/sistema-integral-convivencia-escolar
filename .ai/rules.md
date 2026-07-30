@@ -22,6 +22,7 @@
 ## Específico por Área
 
 ### Frontend
+
 - React Query para fetching, no useEffect
 - Zustand para estado global (separado por dominio)
 - No prop drilling > 2 niveles
@@ -31,12 +32,14 @@
 - Lucide para iconos
 
 ### Backend
-- Actualizar AMBOS entry points (server/routes/ + server/api/routes/)
+
+- Implementar cada ruta una sola vez en `server/api/routes/` y registrarla en ambos entry points
 - Sanitizar input AI con sanitizeForAI()
 - Rate limit endpoints (10 req/min/IP)
 - Usar https module (no fetch) en Vercel serverless
 
 ### Base de Datos
+
 - Migraciones con timestamp prefix
 - UUIDs como PKs
 - tenant_id NOT NULL en tablas multi-tenant

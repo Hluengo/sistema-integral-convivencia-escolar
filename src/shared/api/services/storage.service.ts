@@ -7,6 +7,12 @@ import { supabase } from '../lib/supabase';
 
 const STORAGE_BUCKET = 'documentos_convivencia';
 const SIGNED_URL_TTL_SECONDS = 3600;
+const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
+const ALLOWED_DOCUMENT_EXTENSIONS = new Set(['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png']);
+
+function isMissingStorageObject(error: { message?: string } | null): boolean {
+  return error?.message === 'Object not found';
+}
 
 export function normalizeDocumentPath(value: string): string | null {
   const trimmed = value.trim();
@@ -33,8 +39,19 @@ export function normalizeDocumentPath(value: string): string | null {
 export async function uploadDocument(
   causaId: string,
   file: File,
-  prefix: string = 'documentos'
-): Promise<string | null> {
+  prefix: string = 'documentos',
+): Promise<string> {
+  const extension = file.name.split('.').pop()?.toLowerCase() || '';
+  if (!ALLOWED_DOCUMENT_EXTENSIONS.has(extension)) {
+    throw new Error('Formato no permitido. Use PDF, DOC, DOCX, JPG o PNG.');
+  }
+  if (file.size === 0) {
+    throw new Error('El documento está vacío.');
+  }
+  if (file.size > MAX_DOCUMENT_BYTES) {
+    throw new Error('El documento supera el tamaño máximo de 10 MB.');
+  }
+
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, '_');
   const filePath = `${causaId}/${prefix}/${Date.now()}_${safeName}`;
   const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(filePath, file, {
@@ -43,19 +60,23 @@ export async function uploadDocument(
   });
   if (error) {
     console.error('Error uploading document:', error);
-    return null;
+    throw new Error('No fue posible subir el documento al almacenamiento privado.');
   }
-  return getDocumentSignedUrl(filePath);
+  return filePath;
 }
 
-export async function getDocumentSignedUrl(pathOrLegacyUrl: string): Promise<string | null> {
+async function getDocumentSignedUrl(pathOrLegacyUrl: string): Promise<string | null> {
   const filePath = normalizeDocumentPath(pathOrLegacyUrl);
   if (!filePath) return null;
   const { data, error } = await supabase.storage
     .from(STORAGE_BUCKET)
     .createSignedUrl(filePath, SIGNED_URL_TTL_SECONDS);
   if (error || !data?.signedUrl) {
-    console.error('Error creating signed document URL:', error);
+    // Historical rows can survive a migration without their backing Storage
+    // bytes. Treat those as unavailable; keep reporting unexpected failures.
+    if (!isMissingStorageObject(error)) {
+      console.error('Error creating signed document URL:', error);
+    }
     return null;
   }
   return data.signedUrl;
@@ -80,14 +101,9 @@ export async function listDocuments(causaId: string): Promise<{ name: string; ur
     console.error('Error listing documents:', error);
     return [];
   }
-  const results = await Promise.all(
-    data.filter((item) => item.name && item.id).map(async (item) => {
-      const path = `${folder}/${item.name}`;
-      const url = await getDocumentSignedUrl(path);
-      return url ? { name: item.name, url } : null;
-    })
-  );
-  return results.filter((item): item is { name: string; url: string } => item !== null);
+  return data
+    .filter((item) => item.name && item.id)
+    .map((item) => ({ name: item.name, url: `${folder}/${item.name}` }));
 }
 
 export async function deleteDocument(pathOrLegacyUrl: string): Promise<boolean> {

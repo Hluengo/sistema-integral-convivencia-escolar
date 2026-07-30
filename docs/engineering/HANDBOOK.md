@@ -10,22 +10,22 @@
 
 ### 1.1 Stack
 
-| Capa | Tecnología | Versión | Propósito |
-|------|-----------|---------|-----------|
-| Runtime | Node.js | 22+ | Requerido por pdfjs-dist |
-| Frontend | React + TypeScript | 19.0.1 / 5.8.2 | UI |
-| Build | Vite | 6.4.3 | Dev server + bundler |
-| CSS | Tailwind CSS v4 | 4.1.14 | Estilos utility-first |
-| State | Zustand | 5.0.14 | Estado global |
-| Data Fetching | TanStack React Query | 5.101.2 | Server state cache |
-| Forms | react-hook-form + Zod | 7.82.0 / 4.4.3 | Formularios + validación |
-| Backend Dev | Express + tsx | 4.21.2 / 4.21.0 | Servidor desarrollo |
-| Backend Prod | Vercel Serverless | esbuild bundle | Producción |
-| Database | Supabase PostgreSQL | 17.6.1 | Datos |
-| Auth | Supabase Auth | — | Autenticación |
-| AI | OpenRouter | llama-3.1-8b-instruct | Asistencia legal |
-| Docs | docx (Word) + pdfjs-dist (PDF) | 9.7.1 / 6.1.200 | Documentos |
-| Monitoring | Sentry + PostHog | 10.66.0 / 1.404.1 | Errores + analytics |
+| Capa          | Tecnología                     | Versión               | Propósito                |
+| ------------- | ------------------------------ | --------------------- | ------------------------ |
+| Runtime       | Node.js                        | 22+                   | Requerido por pdfjs-dist |
+| Frontend      | React + TypeScript             | 19.0.1 / 5.8.2        | UI                       |
+| Build         | Vite                           | 6.4.3                 | Dev server + bundler     |
+| CSS           | Tailwind CSS v4                | 4.1.14                | Estilos utility-first    |
+| State         | Zustand                        | 5.0.14                | Estado global            |
+| Data Fetching | TanStack React Query           | 5.101.2               | Server state cache       |
+| Forms         | react-hook-form + Zod          | 7.82.0 / 4.4.3        | Formularios + validación |
+| Backend Dev   | Express + tsx                  | 4.21.2 / 4.21.0       | Servidor desarrollo      |
+| Backend Prod  | Vercel Serverless              | esbuild bundle        | Producción               |
+| Database      | Supabase PostgreSQL            | 17.6.1                | Datos                    |
+| Auth          | Supabase Auth                  | —                     | Autenticación            |
+| AI            | OpenRouter                     | llama-3.1-8b-instruct | Asistencia legal         |
+| Docs          | docx (Word) + pdfjs-dist (PDF) | 9.7.1 / 6.1.200       | Documentos               |
+| Monitoring    | Sentry + PostHog               | 10.66.0 / 1.404.1     | Errores + analytics      |
 
 ### 1.2 FSD Structure
 
@@ -57,27 +57,27 @@ src/
 └── lib/              # Re-exports from shared/
 ```
 
-### 1.3 Dual Server Entry Points
+### 1.3 Entry Points Compartidos
 
-| Entry | File | Bundle | Dev | Prod |
-|-------|------|--------|-----|------|
-| Dev | `server/index.ts` | tsx runtime | ✅ | ❌ |
-| Vercel | `server/api/index.ts` → `api/index.js` | esbuild ESM | ❌ | ✅ |
+| Entry  | File                                   | Bundle      | Dev | Prod |
+| ------ | -------------------------------------- | ----------- | --- | ---- |
+| Dev    | `server/index.ts`                      | tsx runtime | ✅  | ❌   |
+| Vercel | `server/api/index.ts` → `api/index.js` | esbuild ESM | ❌  | ✅   |
 
-**Regla:** Siempre mantener sincronizados ambos entry points. Si agregas una ruta, créala en `server/routes/` y su gemela en `server/api/routes/`.
+**Regla:** Cada ruta se implementa una sola vez en `server/api/routes/` y se registra en ambos entry points. `server/routes/pilot.ts` es la única ruta específica del servidor de desarrollo.
 
 ### 1.4 State-driven Routing
 
 No hay React Router. La navegación usa `uiStore.currentView` de tipo `SidebarView`:
 
-| View | Component | Ruta (no real) |
-|------|-----------|----------------|
-| `dashboard` | `<DashboardStats>` | State: 'dashboard' |
-| `causas` | `<CausasView>` | State: 'causas' |
-| `informes` | `<AdvisorView>` | State: 'informes' |
-| `alumnos` | `<StudentsPanel>` | State: 'alumnos' |
+| View          | Component           | Ruta (no real)       |
+| ------------- | ------------------- | -------------------- |
+| `dashboard`   | `<DashboardStats>`  | State: 'dashboard'   |
+| `causas`      | `<CausasView>`      | State: 'causas'      |
+| `informes`    | `<AdvisorView>`     | State: 'informes'    |
+| `alumnos`     | `<StudentsPanel>`   | State: 'alumnos'     |
 | `anotaciones` | `<AnotacionesView>` | State: 'anotaciones' |
-| `documentos` | `<DocumentosView>` | State: 'documentos' |
+| `documentos`  | `<DocumentosView>`  | State: 'documentos'  |
 
 ---
 
@@ -155,13 +155,13 @@ export function Example({ title, onAction }: ExampleProps) {
 
 ### 3.4 Estado
 
-| Tipo | Solución | Cuándo |
-|------|----------|--------|
-| Estado global | Zustand | Múltiples componentes, diferentes vistas |
-| Server state | React Query | Datos de Supabase |
-| Form state | useReducer / react-hook-form | Formularios wizard |
-| UI state | useState | Estado local de un componente |
-| Context | React Context | Subárbol específico (TimelineProvider) |
+| Tipo          | Solución                     | Cuándo                                   |
+| ------------- | ---------------------------- | ---------------------------------------- |
+| Estado global | Zustand                      | Múltiples componentes, diferentes vistas |
+| Server state  | React Query                  | Datos de Supabase                        |
+| Form state    | useReducer / react-hook-form | Formularios wizard                       |
+| UI state      | useState                     | Estado local de un componente            |
+| Context       | React Context                | Subárbol específico (TimelineProvider)   |
 
 ### 3.5 Performance
 
@@ -193,12 +193,12 @@ function Parent() {
 ```typescript
 // Client-side (browser)
 const supabase = createClient(url, anonKey, {
-  auth: { persistSession: true, autoRefreshToken: true }
+  auth: { persistSession: true, autoRefreshToken: true },
 });
 
 // Server-side (admin)
 const supabase = createClient(url, serviceRoleKey, {
-  auth: { persistSession: false }
+  auth: { persistSession: false },
 });
 ```
 
@@ -210,7 +210,7 @@ import { supabase } from '@/shared/api/lib/supabase';
 export async function fetchItems(tenantId: string): Promise<Item[]> {
   const { data, error } = await supabase
     .from('items')
-    .select('col1, col2, col3')  // Nunca SELECT *
+    .select('col1, col2, col3') // Nunca SELECT *
     .eq('tenant_id', tenantId);
 
   if (error) throw error;
@@ -250,13 +250,13 @@ CREATE POLICY "table_tenant_delete" ON public.table
 
 ### 5.1 Convenciones
 
-| Elemento | Convención | Ejemplo |
-|----------|-----------|---------|
-| Tablas | plural snake_case | `bitacora_entries`, `cartas_disciplinarias` |
-| Columnas | snake_case | `tenant_id`, `estudiante_curso` |
-| PKs | UUID | `id UUID PRIMARY KEY DEFAULT gen_random_uuid()` |
-| FKs | `{tabla}_id` | `causa_id`, `student_id` |
-| Índices | `idx_{tabla}_{columna}` | `idx_bitacora_causa_fecha` |
+| Elemento | Convención              | Ejemplo                                         |
+| -------- | ----------------------- | ----------------------------------------------- |
+| Tablas   | plural snake_case       | `bitacora_entries`, `cartas_disciplinarias`     |
+| Columnas | snake_case              | `tenant_id`, `estudiante_curso`                 |
+| PKs      | UUID                    | `id UUID PRIMARY KEY DEFAULT gen_random_uuid()` |
+| FKs      | `{tabla}_id`            | `causa_id`, `student_id`                        |
+| Índices  | `idx_{tabla}_{columna}` | `idx_bitacora_causa_fecha`                      |
 
 ### 5.2 Patrón de Tabla Multi-tenant
 
@@ -353,11 +353,11 @@ sanitizeForAI(input):
 
 ### 7.1 Stack
 
-| Tipo | Framework | Ejecución |
-|------|-----------|-----------|
-| Unit | `node:test` + `node:assert/strict` | `npm run test` |
-| Vitest | Vitest + `@vitest/coverage-v8` | `npm run test:vitest` |
-| E2E | Playwright | `npm run test:e2e` |
+| Tipo   | Framework                          | Ejecución             |
+| ------ | ---------------------------------- | --------------------- |
+| Unit   | `node:test` + `node:assert/strict` | `npm run test`        |
+| Vitest | Vitest + `@vitest/coverage-v8`     | `npm run test:vitest` |
+| E2E    | Playwright                         | `npm run test:e2e`    |
 
 ### 7.2 Patrón de Test
 
@@ -393,7 +393,7 @@ describe('functionName', () => {
 
 - **Idioma**: Español chileno en toda la UI
 - **Responsive**: Mobile-first, sidebar colapsable
-- **Accesible**: WCAG 2.1 AA (verificado con @axe-core/playwright)
+- **Accesible**: WCAG 2.1 AA, con reglas ESLint y pruebas de regresión de componentes
 - **Consistente**: Mismo sistema de diseño en toda la app
 
 ### 8.2 Componentes UI
@@ -442,16 +442,20 @@ docs/
 # ADR-0001: [Título]
 
 ## Contexto
+
 ¿Qué problema estamos resolviendo?
 
 ## Decisión
+
 ¿Qué elegimos y por qué?
 
 ## Alternativas Consideradas
+
 - Alternativa A: pro/contra
 - Alternativa B: pro/contra
 
 ## Consecuencias
+
 - Positivas: ...
 - Negativas: ...
 ```
@@ -505,6 +509,7 @@ Ejemplos:
 ### 11.1 Versionado
 
 Usamos [SemVer](https://semver.org/):
+
 - **MAJOR**: Cambio incompatible en API o DB
 - **MINOR**: Nueva funcionalidad backward-compatible
 - **PATCH**: Bug fixes backward-compatible
@@ -551,14 +556,14 @@ Capa 5: Service role (bypass RLS, solo server-side)
 
 ### 12.2 Roles
 
-| Rol | Permisos |
-|-----|----------|
-| admin | CRUD completo |
-| direccion | CRUD sin delete destructivo |
-| convivencia | CRUD causas, anotaciones, estudiantes |
-| inspectoria | CRUD inspectorate_records |
-| profesor_jefe | Su curso |
-| teacher | Lectura básica |
+| Rol           | Permisos                              |
+| ------------- | ------------------------------------- |
+| admin         | CRUD completo                         |
+| direccion     | CRUD sin delete destructivo           |
+| convivencia   | CRUD causas, anotaciones, estudiantes |
+| inspectoria   | CRUD inspectorate_records             |
+| profesor_jefe | Su curso                              |
+| teacher       | Lectura básica                        |
 
 ---
 
@@ -634,13 +639,13 @@ src/shared/lib/docx/
 
 ### 15.2 AI Drafts
 
-| Tipo | Origen del Prompt |
-|------|------------------|
-| notificacion_apertura | Hardcoded en route |
-| citacion_entrevista | Hardcoded en route |
+| Tipo                      | Origen del Prompt     |
+| ------------------------- | --------------------- |
+| notificacion_apertura     | Hardcoded en route    |
+| citacion_entrevista       | Hardcoded en route    |
 | informe_cierre_indagacion | DB document_templates |
-| informe_concluyente | DB document_templates |
+| informe_concluyente       | DB document_templates |
 
 ---
 
-*Aprobado por: Staff Engineer — 2026-07-23*
+_Aprobado por: Staff Engineer — 2026-07-23_
