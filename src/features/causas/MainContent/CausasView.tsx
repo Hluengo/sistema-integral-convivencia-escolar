@@ -66,7 +66,7 @@ export default function CausasView({
     (cause: Causa) => {
       handleSelectCausaFromDashboard(cause.id);
     },
-    [handleSelectCausaFromDashboard]
+    [handleSelectCausaFromDashboard],
   );
 
   return (
@@ -152,25 +152,20 @@ export default function CausasView({
               : 'block'
           }`}
         >
-          <div className="card relative space-y-4 p-5">
-            <div
-              className="absolute top-0 right-4 left-4 h-[3px] rounded-full bg-brand-600"
-              aria-hidden="true"
-            />
-            <div className="flex items-center gap-2.5">
-              <div className="rounded-lg bg-brand-50 p-2">
-                <BookOpen className="h-4 w-4 text-brand-600" aria-hidden="true" />
-              </div>
-              <div className="flex items-baseline gap-2">
-                <h3 className="font-bold text-neutral-900 text-sm">Expedientes</h3>
-                <span className="font-medium text-neutral-400 text-xs">
-                  {filteredCausas.length} resultados
-                </span>
-              </div>
+          <div className="space-y-3">
+            <div className="flex items-baseline gap-2 px-1">
+              <h3 className="font-bold text-neutral-900 text-sm">Expedientes</h3>
+              <span className="font-medium text-neutral-400 text-xs">
+                {filteredCausas.length} resultados
+              </span>
             </div>
 
-            {/* Fase filter pills */}
-            <div className="mt-4 flex flex-wrap gap-2" role="tablist" aria-label="Filtro por fase">
+            {/* Fase filter tabs */}
+            <div
+              className="inline-flex max-w-full flex-wrap gap-1 rounded-xl bg-neutral-100 p-1"
+              role="tablist"
+              aria-label="Filtro por fase"
+            >
               {(
                 [
                   'Todas',
@@ -190,12 +185,10 @@ export default function CausasView({
                   }}
                   role="tab"
                   aria-selected={selectedFaseFilter === fase}
-                  className={`cursor-pointer rounded-xl border px-3 py-2 font-semibold text-xs transition-colors duration-200 ${
+                  className={`cursor-pointer rounded-lg px-3.5 py-1.5 font-semibold text-sm transition-colors duration-150 ${
                     selectedFaseFilter === fase
-                      ? fase === 'Todas'
-                        ? 'border-neutral-900 bg-neutral-900 text-white shadow-sm'
-                        : 'border-brand-600 bg-brand-600 text-white shadow-brand-600/20 shadow-sm'
-                      : 'border-neutral-200 bg-white text-neutral-600 hover:border-neutral-300 hover:bg-neutral-50 hover:text-neutral-800'
+                      ? 'bg-white text-neutral-900 shadow-sm'
+                      : 'text-neutral-500 hover:text-neutral-700'
                   }`}
                 >
                   {fase}
