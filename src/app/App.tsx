@@ -136,8 +136,10 @@ export default function App() {
       lastCausasQueryDataRef.current = undefined;
       lastDetailsQueryDataRef.current = undefined;
       hasInitializedCausasRef.current = false;
-      setCausas([]);
-      setSelectedCausaId('');
+      // Evita un ciclo de render: [] es una nueva referencia en cada efecto.
+      // Solo limpiamos Zustand si hay información efectivamente cargada.
+      if (causas.length > 0) setCausas([]);
+      if (selectedCausaId) setSelectedCausaId('');
       queryClient.removeQueries({ queryKey: causasQueryKeys.root });
       return;
     }
@@ -158,6 +160,7 @@ export default function App() {
     causasQuery.data,
     isAuthenticated,
     markCausasHydrated,
+    selectedCausaId,
     setCausas,
     setSelectedCausaId,
   ]);

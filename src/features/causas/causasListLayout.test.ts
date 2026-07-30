@@ -180,6 +180,13 @@ describe('Listado de causas activas', () => {
     assert.doesNotMatch(app, /setSelectedCausaId\(causasQuery\.data\[0\]/);
   });
 
+  it('no reinicia Zustand en bucle mientras la sesión aún no está autenticada', () => {
+    const app = read('../../app/App.tsx');
+
+    assert.match(app, /if \(causas\.length > 0\) setCausas\(\[\]\);/);
+    assert.match(app, /if \(selectedCausaId\) setSelectedCausaId\(''\);/);
+  });
+
   it('mantiene el borrador contextual y simplifica su edición antes de imprimir', () => {
     const workspace = read('MainContent/CaseLegalWorkspace.tsx');
     const draft = read('../timeline/DraftPanel.tsx');
