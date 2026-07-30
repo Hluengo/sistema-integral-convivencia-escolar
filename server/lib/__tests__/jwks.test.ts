@@ -3,7 +3,13 @@
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import { describe, it, before, after, beforeEach } from 'node:test';
-import { verifyJwtWithJwks, clearJwksCache, __setJwksTestKeys, __getCacheEntry } from '../jwks';
+import {
+  verifyJwtWithJwks,
+  clearJwksCache,
+  __setJwksTestFetcher,
+  __setJwksTestKeys,
+  __getCacheEntry,
+} from '../jwks';
 import type { JwkKey } from '../jwks';
 
 const SUPABASE_URL = 'https://jjzwwhnofiepvliugowr.supabase.co';
@@ -89,10 +95,12 @@ describe('verifyJwtWithJwks — security & positive tests', () => {
   beforeEach(() => {
     keypair = generateTestKeypair();
     clearJwksCache();
+    __setJwksTestFetcher(async () => []);
   });
 
   after(() => {
     clearJwksCache();
+    __setJwksTestFetcher(null);
   });
 
   it('1. positive ES256 — verifies payload with real EC P-256 keypair', async () => {
