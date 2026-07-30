@@ -15,6 +15,7 @@ import { useAppContext } from '@/src/context/useAppContext';
 import ConfirmDialog from './ConfirmDialog';
 import MarkdownRenderer from './InteractiveTimeline/MarkdownRenderer';
 import { useBreaches } from './InteractiveTimeline/hooks/useBreaches';
+import type { TimelineTab } from '../features/timeline/timelineTabs';
 
 const EditCausaModal = lazy(() => import('./EditCausaModal'));
 
@@ -47,7 +48,7 @@ export default function InteractiveTimeline({
   const currentRole = propRole ?? ctx.currentRole;
   const privacyMode = propPrivacy ?? ctx.privacyMode;
 
-  const [activeTab, setActiveTab] = useState<'proceso' | 'bitacora' | 'asistente_ia'>('proceso');
+  const [activeTab, setActiveTab] = useState<TimelineTab>('resumen');
   const [showEdit, setShowEdit] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
@@ -57,7 +58,7 @@ export default function InteractiveTimeline({
 
   return (
     <TimelineProvider value={timelineValue}>
-      <div className="card flex h-full animate-flash flex-col overflow-hidden shadow-md">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-white">
         <TimelineHeader
           causa={causa}
           currentRole={currentRole}
@@ -96,8 +97,18 @@ export default function InteractiveTimeline({
             />
           </Suspense>
         )}
-        <TimelineTabs activeTab={activeTab} setActiveTab={setActiveTab} bitacoraCount={causa.bitacora.length} />
-        <TimelineTabPanels activeTab={activeTab} causa={causa} currentFase={currentFase} CustomMarkdownRenderer={MarkdownRenderer} />
+        <TimelineTabs
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          bitacoraCount={causa.bitacora.length}
+        />
+        <TimelineTabPanels
+          activeTab={activeTab}
+          causa={causa}
+          currentFase={currentFase}
+          CustomMarkdownRenderer={MarkdownRenderer}
+          breaches={breaches}
+        />
       </div>
     </TimelineProvider>
   );

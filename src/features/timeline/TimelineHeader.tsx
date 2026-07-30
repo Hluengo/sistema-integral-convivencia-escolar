@@ -13,6 +13,7 @@ import {
   Pencil,
   Trash2,
 } from 'lucide-react';
+import { getCausaDeadline, getCausaStatus } from '../causas/causaPresentation';
 
 interface TimelineHeaderProps {
   causa: Causa;
@@ -40,6 +41,7 @@ export default function TimelineHeader({
   breaches,
 }: TimelineHeaderProps) {
   const canEdit = currentRole !== 'docente';
+  const deadline = getCausaDeadline(causa);
 
   return (
     <>
@@ -161,7 +163,34 @@ export default function TimelineHeader({
                   {causa.responsable.split(' (')[0]}
                 </strong>
               </span>
+              <span className="text-white/30" aria-hidden="true">
+                •
+              </span>
+              <span>
+                Estado:{' '}
+                <strong className="font-semibold text-white">{getCausaStatus(causa)}</strong>
+              </span>
+              <span className="text-white/30" aria-hidden="true">
+                •
+              </span>
+              <span>
+                Cierre:{' '}
+                <strong
+                  className={
+                    deadline.tone === 'overdue'
+                      ? 'font-semibold text-red-200'
+                      : deadline.tone === 'warning'
+                        ? 'font-semibold text-amber-200'
+                        : 'font-semibold text-white'
+                  }
+                >
+                  {deadline.text}
+                </strong>
+              </span>
             </div>
+            <p className="max-w-4xl truncate text-blue-100/70 text-xs" title={causa.observaciones}>
+              {causa.observaciones || 'Sin resumen del hecho registrado.'}
+            </p>
           </div>
         </div>
       </div>

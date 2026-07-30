@@ -8,11 +8,11 @@ import { Suspense, lazy, useCallback, useMemo, useState } from 'react';
 import { BookOpen, ChevronDown, GraduationCap, Scale, Search } from 'lucide-react';
 import EmptyState from '../../../components/EmptyState';
 import { CausaCardSkeleton } from '../../../components/Skeleton';
-import { type Causa, EstadoCausa, type FaseProcedimental } from '../../../types';
+import { type Causa, type FaseProcedimental } from '../../../types';
 import type { FormAction } from '../../../hooks/useNewCausaForm';
 
-const CausaCard = lazy(() => import('../../../components/CausaCard'));
-const InteractiveTimeline = lazy(() => import('../../../components/InteractiveTimeline'));
+const CausasTable = lazy(() => import('../CausasTable'));
+const CausaDetailModal = lazy(() => import('../CausaDetailModal'));
 const ClosedCases = lazy(() => import('../../../components/ClosedCases'));
 
 function ViewFallback() {
@@ -54,8 +54,6 @@ export default function CausasView({
   searchQuery,
   setSearchQuery,
   privacyMode,
-  mobileShowDetail,
-  setMobileShowDetail,
   filteredCausas,
   showCreateForm,
   dispatchForm,
@@ -199,123 +197,37 @@ export default function CausasView({
         ))}
       </div>
 
-      {/* Mobile tab switcher */}
-      {selectedCausa && selectedCausa.estadoActual !== EstadoCausa.CAUSA_CERRADA && (
-        <div
-          className="flex gap-2 rounded-xl bg-neutral-100 p-1 lg:hidden"
-          role="tablist"
-          aria-label="Vista móvil"
-        >
-          <button
-            type="button"
-            role="tab"
-            aria-selected={!mobileShowDetail}
-            onClick={() => setMobileShowDetail(false)}
-            className={`flex-1 rounded-lg py-2 font-semibold text-xs transition-colors ${
-              !mobileShowDetail
-                ? 'bg-white text-neutral-800 shadow-sm'
-                : 'text-neutral-500 hover:text-neutral-700'
-            }`}
-          >
-            Lista
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={mobileShowDetail}
-            onClick={() => setMobileShowDetail(true)}
-            className={`flex-1 rounded-lg py-2 font-semibold text-xs transition-colors ${
-              mobileShowDetail
-                ? 'bg-brand-600 text-white shadow-sm'
-                : 'text-neutral-500 hover:text-neutral-700'
-            }`}
-          >
-            Detalle
-          </button>
+      {/* Table follows the same hierarchy as Anotaciones. */}
+      {visibleCausas.length > 0 ? (
+        <Suspense fallback={<ViewFallback />}>
+          <CausasTable
+            causas={visibleCausas}
+            privacyMode={privacyMode}
+            onSelectCausa={handleSelectCausa}
+          />
+        </Suspense>
+      ) : (
+        <div className="card p-8">
+          <EmptyState
+            icon={Scale}
+            title="Ningún expediente coincide"
+            description="Intente con otros filtros o cree un nuevo expediente."
+            action={
+              causas.length === 0
+                ? { label: 'Crear primera causa', onClick: handleOpenCreateForm }
+                : undefined
+            }
+          />
         </div>
       )}
 
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
-        {/* Left column */}
-        <div
-          className={`space-y-4 transition-colors duration-300 lg:col-span-5 ${
-            mobileShowDetail &&
-            selectedCausa &&
-            selectedCausa.estadoActual !== EstadoCausa.CAUSA_CERRADA
-              ? 'hidden lg:block'
-              : 'block'
-          }`}
-        >
-          <div className="flex items-baseline gap-2 px-1">
-            <h3 className="font-bold text-neutral-900 text-sm">Expedientes</h3>
-            <span className="font-medium text-neutral-400 text-xs">
-              {visibleCausas.length} resultados
-            </span>
-          </div>
-
-          {/* Directory scroll panel */}
-          <div className="max-h-[600px] space-y-3 overflow-y-auto pr-1">
-            {visibleCausas.length > 0 ? (
-              <Suspense fallback={<ViewFallback />}>
-                {visibleCausas.map((c) => (
-                  <CausaCard
-                    key={c.id}
-                    causa={c}
-                    privacyMode={privacyMode}
-                    onSelect={handleSelectCausa}
-                    isSelected={c.id === selectedCausaId}
-                  />
-                ))}
-              </Suspense>
-            ) : (
-              <div className="card p-8">
-                <EmptyState
-                  icon={Scale}
-                  title="Ningún expediente coincide"
-                  description="Intente con otros filtros o cree un nuevo expediente."
-                  action={
-                    causas.length === 0
-                      ? { label: 'Crear primera causa', onClick: handleOpenCreateForm }
-                      : undefined
-                  }
-                />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right Column */}
-        <div
-          className={`h-full transition-colors duration-300 lg:col-span-7 ${
-            mobileShowDetail &&
-            selectedCausa &&
-            selectedCausa.estadoActual !== EstadoCausa.CAUSA_CERRADA
-              ? 'block'
-              : 'hidden lg:block'
-          }`}
-        >
-          {selectedCausa && selectedCausa.estadoActual !== EstadoCausa.CAUSA_CERRADA ? (
-            <Suspense fallback={<ViewFallback />}>
-              <InteractiveTimeline
-                key={selectedCausa.id}
-                causa={selectedCausa}
-                isSidebarCollapsed={false}
-                setIsSidebarCollapsed={undefined}
-                isTimelineCollapsed={false}
-                setIsTimelineCollapsed={undefined}
-              />
-            </Suspense>
-          ) : (
-            <div className="card p-8">
-              <EmptyState
-                icon={BookOpen}
-                title="Seleccione un expediente activo"
-                description="Elija una causa de la lista para ver su timeline y gestionar el debido proceso"
-              />
-            </div>
-          )}
-        </div>
-      </div>
+      <Suspense fallback={null}>
+        <CausaDetailModal
+          causa={selectedCausa}
+          privacyMode={privacyMode}
+          onClose={() => setSelectedCausaId('')}
+        />
+      </Suspense>
 
       {/* VIEW 3: CLOSED CASES */}
       {selectedCausaId === '' && visibleCausas.length === 0 && (

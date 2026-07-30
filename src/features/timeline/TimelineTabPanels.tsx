@@ -8,13 +8,16 @@ import type { Causa } from '../../types';
 import ProcesoTab from './ProcesoTab';
 import BitacoraTab from './BitacoraTab';
 import AsistenteIATab from './AsistenteIATab';
+import ResumenTab from './ResumenTab';
 import { useTimelineContext } from '../../context/useTimelineContext';
+import { PHASE_TAB_TO_NAME, type TimelineTab } from './timelineTabs';
 
 interface TimelineTabPanelsProps {
-  activeTab: 'proceso' | 'bitacora' | 'asistente_ia';
+  activeTab: TimelineTab;
   causa: Causa;
   currentFase: string;
   CustomMarkdownRenderer: ({ text }: { text: string }) => React.ReactElement;
+  breaches: string[];
 }
 
 export default function TimelineTabPanels({
@@ -22,12 +25,16 @@ export default function TimelineTabPanels({
   causa,
   currentFase,
   CustomMarkdownRenderer,
+  breaches,
 }: TimelineTabPanelsProps) {
   const ctx = useTimelineContext();
+  const selectedPhase = PHASE_TAB_TO_NAME[activeTab];
 
   return (
     <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-5">
-      {activeTab === 'proceso' && (
+      {activeTab === 'resumen' && <ResumenTab causa={causa} breaches={breaches} />}
+
+      {selectedPhase && (
         <ProcesoTab
           causa={causa}
           currentRole={ctx.currentRole}
@@ -53,6 +60,7 @@ export default function TimelineTabPanels({
           handleAttachDocument={ctx.handleAttachDocument}
           handleRemoveDocument={ctx.handleRemoveDocument}
           documents={ctx.documents}
+          selectedPhase={selectedPhase}
         />
       )}
 
