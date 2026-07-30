@@ -4,7 +4,15 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Save, Loader2, CheckCircle, AlertCircle, FileText } from 'lucide-react';
+import {
+  Save,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
+  FileText,
+  LockKeyhole,
+  RefreshCw,
+} from 'lucide-react';
 import { TextBlockSkeleton } from './Skeleton';
 
 interface Template {
@@ -25,14 +33,18 @@ const DOC_TYPE_LABELS: Record<string, string> = {
 export default function TemplateEditor() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editPrompt, setEditPrompt] = useState('');
   const saveSuccessTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const selectedIdRef = useRef<string | null>(null);
 
   const fetchTemplates = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
     try {
       const { supabase } = await import('../lib/supabase');
       const {
@@ -42,27 +54,33 @@ export default function TemplateEditor() {
         headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
       });
       if (res.status === 401) {
-        setSaveError('Sesión no válida. Inicie sesión nuevamente.');
+        setLoadError('Sesión no válida. Inicie sesión nuevamente.');
         return;
       }
       if (res.status === 403) {
-        setSaveError('No tiene permisos para administrar plantillas.');
+        setLoadError('Esta sección está disponible solo para Dirección y Administración.');
+        return;
+      }
+      if (!res.ok) {
+        setLoadError('No fue posible cargar las plantillas institucionales.');
         return;
       }
       const data = await res.json();
       if (Array.isArray(data)) {
         setTemplates(data);
-        if (!selectedId && data.length > 0) {
-          setSelectedId(data[0].id);
-          setEditPrompt(data[0].system_prompt);
-        }
+        const selected = data.find((template) => template.id === selectedIdRef.current) ?? data[0];
+        selectedIdRef.current = selected?.id ?? null;
+        setSelectedId(selected?.id ?? null);
+        setEditPrompt(selected?.system_prompt ?? '');
+      } else {
+        setLoadError('La respuesta de plantillas no tiene un formato válido.');
       }
     } catch {
-      setSaveError('Error al cargar plantillas.');
+      setLoadError('Error de conexión al cargar las plantillas.');
     } finally {
       setLoading(false);
     }
-  }, [selectedId]);
+  }, []);
 
   useEffect(() => {
     fetchTemplates();
@@ -70,6 +88,7 @@ export default function TemplateEditor() {
   }, [fetchTemplates]);
 
   const handleSelect = (tpl: Template) => {
+    selectedIdRef.current = tpl.id;
     setSelectedId(tpl.id);
     setEditPrompt(tpl.system_prompt);
     setSaveSuccess(null);
@@ -117,30 +136,78 @@ export default function TemplateEditor() {
     }
   };
 
+  const header = (
+    <div className="flex items-start gap-3 border-neutral-200/60 border-b bg-white px-4 py-3 sm:px-5">
+      <span className="rounded-lg bg-brand-50 p-2 text-brand-700" aria-hidden="true">
+        <FileText className="h-4 w-4" />
+      </span>
+      <div>
+        <h3 className="font-semibold text-neutral-900 text-sm">Plantillas institucionales</h3>
+        <p className="mt-0.5 text-[10px] text-neutral-500">
+          Administración de instrucciones para futuras generaciones de documentos.
+        </p>
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 py-12">
-        <Loader2 className="h-5 w-5 animate-spin text-brand-600" />
-        <TextBlockSkeleton lines={2} />
+      <div className="min-h-[280px] bg-white">
+        {header}
+        <div className="flex flex-col items-center justify-center gap-4 px-4 py-16">
+          <Loader2 className="h-5 w-5 animate-spin text-brand-600" />
+          <TextBlockSkeleton lines={2} />
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-[280px] bg-white">
+        {header}
+        <div className="flex flex-col items-center justify-center px-5 py-14 text-center">
+          <span className="rounded-xl bg-amber-50 p-3 text-amber-700" aria-hidden="true">
+            <LockKeyhole className="size-5" />
+          </span>
+          <h4 className="mt-3 font-semibold text-neutral-900 text-sm">Acceso a plantillas</h4>
+          <p className="mt-1 max-w-md text-neutral-500 text-sm">{loadError}</p>
+          {loadError.includes('conexión') || loadError.includes('cargar las plantillas') ? (
+            <button
+              type="button"
+              onClick={() => void fetchTemplates()}
+              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 font-semibold text-neutral-700 text-xs hover:bg-neutral-50"
+            >
+              <RefreshCw className="size-3.5" aria-hidden="true" />
+              Reintentar
+            </button>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
+
+  if (templates.length === 0) {
+    return (
+      <div className="min-h-[280px] bg-white">
+        {header}
+        <div className="px-5 py-14 text-center">
+          <FileText className="mx-auto size-6 text-neutral-300" aria-hidden="true" />
+          <h4 className="mt-3 font-semibold text-neutral-900 text-sm">
+            No hay plantillas institucionales disponibles
+          </h4>
+          <p className="mx-auto mt-1 max-w-md text-neutral-500 text-sm">
+            Un perfil autorizado debe cargar las cuatro plantillas iniciales para habilitar su
+            edición.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-start gap-3 border-neutral-200/60 border-b bg-white px-4 py-3">
-        <span className="rounded-lg bg-brand-50 p-2 text-brand-700" aria-hidden="true">
-          <FileText className="h-4 w-4" />
-        </span>
-        <div className="flex items-center gap-2">
-          <div>
-            <h3 className="font-semibold text-neutral-900 text-sm">Administración de plantillas</h3>
-            <p className="mt-0.5 text-[10px] text-neutral-500">
-              Solo perfiles autorizados pueden modificar los prompts para futuras generaciones.
-            </p>
-          </div>
-        </div>
-      </div>
+    <div className="flex min-h-[440px] flex-col bg-white">
+      {header}
 
       <div className="flex min-h-0 flex-1">
         {/* Sidebar - template list */}
@@ -198,7 +265,7 @@ export default function TemplateEditor() {
               <textarea
                 value={editPrompt}
                 onChange={(e) => setEditPrompt(e.target.value)}
-                className="w-full flex-1 resize-none bg-white p-4 font-mono text-[11px] text-neutral-800 leading-relaxed focus:outline-none focus:ring-2 focus:ring-brand-200"
+                className="min-h-[330px] w-full flex-1 resize-none bg-white p-4 font-mono text-[11px] text-neutral-800 leading-relaxed focus:outline-none focus:ring-2 focus:ring-brand-200"
                 spellCheck={false}
                 aria-label="Contenido del prompt"
               />

@@ -2313,7 +2313,8 @@ REGLAS INNEGOCIABLES:
 - No incluyas RBD. No uses "investigaci\xF3n" como denominaci\xF3n del procedimiento: usa "indagaci\xF3n".
 - Incorpora el derecho de apelaci\xF3n o instancia de revisi\xF3n cuando corresponda, sin presentar al Rector como firmante ordinario.
 - El documento debe terminar con el bloque de firma: ${DOCUMENT_SIGNERS[docType]}.
-- Devuelve Markdown estructurado con un t\xEDtulo principal y subt\xEDtulos para cada apartado de la plantilla. No agregues explicaciones fuera del documento.
+- El sistema agrega membrete, t\xEDtulo, folio, fecha, estudiante y curso. No los repitas en el cuerpo.
+- Devuelve solo el cuerpo en Markdown estructurado: comienza directamente con el primer apartado y usa subt\xEDtulos. No agregues explicaciones fuera del documento.
 `;
 }
 function stringifyList(values, empty) {
@@ -2467,7 +2468,7 @@ ${legalSources}
         `${documentPolicy(docType)}
 
 PLANTILLA INSTITUCIONAL:
-${docType === 'citacion_entrevista' ? getTemplateFallback(docType) : templatePrompt || getTemplateFallback(docType)}`,
+${templatePrompt || getTemplateFallback(docType)}`,
         dossier,
       );
     } catch (error) {

@@ -84,7 +84,8 @@ REGLAS INNEGOCIABLES:
 - No incluyas RBD. No uses "investigación" como denominación del procedimiento: usa "indagación".
 - Incorpora el derecho de apelación o instancia de revisión cuando corresponda, sin presentar al Rector como firmante ordinario.
 - El documento debe terminar con el bloque de firma: ${DOCUMENT_SIGNERS[docType]}.
-- Devuelve Markdown estructurado con un título principal y subtítulos para cada apartado de la plantilla. No agregues explicaciones fuera del documento.
+- El sistema agrega membrete, título, folio, fecha, estudiante y curso. No los repitas en el cuerpo.
+- Devuelve solo el cuerpo en Markdown estructurado: comienza directamente con el primer apartado y usa subtítulos. No agregues explicaciones fuera del documento.
 `;
 }
 
@@ -246,7 +247,7 @@ ${legalSources}
     let document: string;
     try {
       document = await callGeminiLegalDraft(
-        `${documentPolicy(docType)}\n\nPLANTILLA INSTITUCIONAL:\n${docType === 'citacion_entrevista' ? getTemplateFallback(docType) : templatePrompt || getTemplateFallback(docType)}`,
+        `${documentPolicy(docType)}\n\nPLANTILLA INSTITUCIONAL:\n${templatePrompt || getTemplateFallback(docType)}`,
         dossier,
       );
     } catch (error) {

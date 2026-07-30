@@ -192,4 +192,25 @@ describe('Listado de causas activas', () => {
     assert.match(draft, /<details/);
     assert.match(draft, /Ver vista previa para impresión Oficio/);
   });
+
+  it('mantiene Plantillas como administración clara, con estados de acceso y sin recargas repetidas', () => {
+    const advisor = read('MainContent/AdvisorView.tsx');
+    const templates = read('../../components/TemplateEditor.tsx');
+
+    assert.doesNotMatch(advisor, /Asistente de convivencia escolar/);
+    assert.match(advisor, /hitos, checklist, adjuntos y fuentes jurídicas/);
+    assert.match(templates, /Plantillas institucionales/);
+    assert.match(templates, /solo para Dirección y Administración/);
+    assert.match(templates, /No hay plantillas institucionales disponibles/);
+    assert.match(templates, /min-h-\[440px\]/);
+    assert.match(templates, /selectedIdRef/);
+    assert.match(templates, /\}, \[\]\);/);
+  });
+
+  it('deja el membrete y los metadatos al formato de impresión, no al cuerpo generado', () => {
+    const draftRoute = read('../../../server/api/routes/draft.ts');
+
+    assert.match(draftRoute, /No los repitas en el cuerpo/);
+    assert.match(draftRoute, /templatePrompt \|\| getTemplateFallback\(docType\)/);
+  });
 });

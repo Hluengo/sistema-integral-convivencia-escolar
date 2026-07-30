@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { FileSignature, FileText, Gavel, MessageSquare, ShieldCheck, Sparkles } from 'lucide-react';
+import { FileSignature, FileText, Gavel, MessageSquare, ShieldCheck } from 'lucide-react';
 import type { Causa } from '../../../types';
 import AiAdvisor from '../../../components/AiAdvisor';
 import TemplateEditor from '../../../components/TemplateEditor';
@@ -68,21 +68,6 @@ export default function AdvisorView({
         </div>
       </div>
 
-      {/* Alcance */}
-      <div className="flex items-start gap-3 rounded-xl border border-brand-100 bg-brand-50/50 p-3.5 text-left sm:p-4">
-        <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
-        <div>
-          <h4 className="font-semibold text-[11px] text-neutral-900 uppercase tracking-wide">
-            Asistente de convivencia escolar
-          </h4>
-          <p className="mt-0.5 text-[10px] text-neutral-600 leading-relaxed">
-            Las consultas son generales. La redacción y auditoría utilizan únicamente los
-            antecedentes del expediente seleccionado, sus hitos, checklist, adjuntos y fuentes
-            jurídicas autorizadas.
-          </p>
-        </div>
-      </div>
-
       <div
         className="flex gap-1 overflow-x-auto rounded-xl bg-neutral-100 p-1"
         role="tablist"
@@ -133,7 +118,9 @@ export default function AdvisorView({
             ))}
           </select>
           <p className="mt-2 text-neutral-500 text-xs">
-            La selección carga los antecedentes una vez y los conserva en caché durante la sesión.
+            Esta herramienta usa únicamente los hitos, checklist, adjuntos y fuentes jurídicas
+            autorizadas del expediente. Los antecedentes se cargan una vez y se conservan en caché
+            durante la sesión.
           </p>
         </section>
       )}
