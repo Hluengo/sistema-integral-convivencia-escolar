@@ -112,13 +112,6 @@ interface RpcStudentSummary {
   ai_analysis: Record<string, number> | null;
 }
 
-export interface AnnotationStudentsPage {
-  students: AnotacionStudent[];
-  nextOffset?: number;
-}
-
-const MAX_ANNOTATION_STUDENTS_PAGE_SIZE = 100;
-
 function mapAnnotationSummaryRows(rows: RpcStudentSummary[]): AnotacionStudent[] {
   return rows.map((row) => {
     const negativeCount = Number(row.annotations_count || 0);
@@ -260,33 +253,6 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStud
         : undefined,
     };
   });
-}
-
-/**
- * Carga la tabla de anotaciones en bloques pequeños. El RPC ya encapsula los
- * totales por estudiante y la RLS del tenant; aplicar `range` evita transferir
- * la nómina completa antes de que la persona usuaria la solicite.
- */
-export async function fetchStudentsWithAnnotationCountsPage(
-  offset = 0,
-  pageSize = 25,
-): Promise<AnnotationStudentsPage> {
-  const requestedSize = Math.min(Math.max(pageSize, 1), MAX_ANNOTATION_STUDENTS_PAGE_SIZE);
-  const { data, error } = await supabase
-    .rpc('get_student_annotation_summary')
-    .range(offset, offset + requestedSize);
-
-  if (error || !data) {
-    console.error('Error fetching paginated annotation students:', error);
-    throw error || new Error('No se recibieron estudiantes desde Supabase.');
-  }
-
-  const rows = data as RpcStudentSummary[];
-  const hasNextPage = rows.length > requestedSize;
-  return {
-    students: mapAnnotationSummaryRows(rows.slice(0, requestedSize)),
-    nextOffset: hasNextPage ? offset + requestedSize : undefined,
-  };
 }
 
 /**

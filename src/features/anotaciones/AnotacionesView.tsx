@@ -6,7 +6,6 @@ import type { Annotation, AnotacionStudent } from '../../types';
 import { supabase } from '../../lib/supabase';
 import {
   fetchAnnotations,
-  fetchStudentsWithAnnotationCountsPage,
   fetchStudentsWithAnnotationCounts,
 } from '../../services/annotations.service';
 import { fetchCartaTableStates } from '../../services/cartas.service';
@@ -25,23 +24,14 @@ interface AnotacionesViewProps {
   privacyMode: boolean;
 }
 
-const ANNOTATIONS_PAGE_SIZE = 25;
-
-async function fetchAnotacionesTableData(
-  offset = 0,
-  loadAll = false,
-): Promise<{
+async function fetchAnotacionesTableData(): Promise<{
   students: AnotacionStudent[];
   cartaStatuses: Record<string, string[]>;
-  nextOffset?: number;
 }> {
-  const studentPage = loadAll
-    ? undefined
-    : await fetchStudentsWithAnnotationCountsPage(offset, ANNOTATIONS_PAGE_SIZE);
-  const fetchedStudents = studentPage
-    ? studentPage.students
-    : await fetchStudentsWithAnnotationCounts();
-  const cartaStates = await fetchCartaTableStates(fetchedStudents.map((student) => student.id));
+  const [fetchedStudents, cartaStates] = await Promise.all([
+    fetchStudentsWithAnnotationCounts(),
+    fetchCartaTableStates(),
+  ]);
   const cartaStatuses: Record<string, string[]> = {};
   const students = (fetchedStudents ?? []).map((student) => {
     const cartaState = cartaStates[student.id];
@@ -62,7 +52,7 @@ async function fetchAnotacionesTableData(
               : ('Verde' as const),
     };
   });
-  return { students, cartaStatuses, nextOffset: studentPage?.nextOffset };
+  return { students, cartaStatuses };
 }
 
 export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
@@ -76,18 +66,14 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [dbError, setDbError] = useState<string | null>(null);
   const [cartaStatuses, setCartaStatuses] = useState<Record<string, string[]>>({});
-  const [nextStudentOffset, setNextStudentOffset] = useState<number | undefined>(undefined);
-  const [isLoadingMoreStudents, setIsLoadingMoreStudents] = useState(false);
-  const hasMoreStudents = nextStudentOffset !== undefined;
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
     setDbError(null);
     try {
-      const tableData = await fetchAnotacionesTableData(0, activeFilter !== 'con_registro');
+      const tableData = await fetchAnotacionesTableData();
       setStudents(tableData.students);
       setCartaStatuses(tableData.cartaStatuses);
-      setNextStudentOffset(tableData.nextOffset);
     } catch (error: unknown) {
       console.error('Error cargando datos desde Supabase:', error);
       setDbError(error instanceof Error ? error.message : 'Error de conexión con la base de datos');
@@ -95,43 +81,14 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [activeFilter]);
-
-  const loadMoreStudents = useCallback(async () => {
-    if (nextStudentOffset === undefined || isLoadingMoreStudents) return;
-
-    setIsLoadingMoreStudents(true);
-    setDbError(null);
-    try {
-      const tableData = await fetchAnotacionesTableData(nextStudentOffset);
-      setStudents((current) => {
-        const knownStudentIds = new Set(current.map((student) => student.id));
-        return [
-          ...current,
-          ...tableData.students.filter((student) => !knownStudentIds.has(student.id)),
-        ];
-      });
-      setCartaStatuses((current) => ({ ...current, ...tableData.cartaStatuses }));
-      setNextStudentOffset(tableData.nextOffset);
-    } catch (error: unknown) {
-      console.error('Error cargando más estudiantes:', error);
-      setDbError(
-        error instanceof Error
-          ? error.message
-          : 'Error al cargar más estudiantes desde la base de datos',
-      );
-    } finally {
-      setIsLoadingMoreStudents(false);
-    }
-  }, [isLoadingMoreStudents, nextStudentOffset]);
+  }, []);
 
   const refreshStudentTable = useCallback(async () => {
     try {
-      const tableData = await fetchAnotacionesTableData(0, activeFilter !== 'con_registro');
+      const tableData = await fetchAnotacionesTableData();
       const nextStudents = tableData.students;
       setStudents(nextStudents);
       setCartaStatuses(tableData.cartaStatuses);
-      setNextStudentOffset(tableData.nextOffset);
       setSelectedStudent((current) =>
         current ? nextStudents.find((student) => student.id === current.id) || current : null,
       );
@@ -141,7 +98,7 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
         error instanceof Error ? error.message : 'Error al actualizar la tabla de anotaciones',
       );
     }
-  }, [activeFilter]);
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -264,9 +221,6 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
         setSearchQuery={setSearchQuery}
         isLoading={isLoading}
         cartaStatuses={cartaStatuses}
-        hasMoreStudents={hasMoreStudents}
-        isLoadingMoreStudents={isLoadingMoreStudents}
-        onLoadMoreStudents={loadMoreStudents}
       />
 
       {/* Student Detail Modal */}

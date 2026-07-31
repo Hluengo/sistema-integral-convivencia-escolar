@@ -79,9 +79,6 @@ interface AnotacionesStudentTableProps {
   setSearchQuery: (query: string) => void;
   isLoading: boolean;
   cartaStatuses?: Record<string, string[]>;
-  hasMoreStudents: boolean;
-  isLoadingMoreStudents: boolean;
-  onLoadMoreStudents: () => void;
 }
 
 const FILTER_TABS = [
@@ -131,9 +128,6 @@ export default memo(function AnotacionesStudentTable({
   setSearchQuery,
   isLoading,
   cartaStatuses = {},
-  hasMoreStudents,
-  isLoadingMoreStudents,
-  onLoadMoreStudents,
 }: AnotacionesStudentTableProps) {
   const [selectedCourseId, setSelectedCourseId] = useState('');
   const courseOptions = useMemo(() => {
@@ -464,25 +458,11 @@ export default memo(function AnotacionesStudentTable({
         </div>
       </div>
 
-      {hasMoreStudents && (
-        <div className="flex justify-center">
-          <button
-            type="button"
-            onClick={onLoadMoreStudents}
-            disabled={isLoadingMoreStudents}
-            className="inline-flex min-h-10 items-center justify-center rounded-xl border border-brand-200 bg-white px-4 py-2 font-semibold text-brand-700 text-sm shadow-sm transition-colors hover:bg-brand-50 disabled:cursor-wait disabled:opacity-60"
-          >
-            {isLoadingMoreStudents ? 'Cargando estudiantes…' : 'Cargar más estudiantes'}
-          </button>
-        </div>
-      )}
-
       {/* Footer: Pagination info and color legend */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-neutral-500 text-sm">
           Mostrando <span className="font-medium text-neutral-700">{filteredStudents.length}</span>{' '}
           de <span className="font-medium text-neutral-700">{students.length}</span> estudiantes
-          {hasMoreStudents ? ' cargados' : ''}
         </p>
 
         <div className="flex flex-wrap items-center gap-3">
