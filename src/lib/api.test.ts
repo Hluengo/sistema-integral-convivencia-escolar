@@ -89,8 +89,8 @@ describe('API endpoints', () => {
         url,
         {
           method: 'POST',
-          // El middleware limita por IP antes de autenticar. Una IP aislada por
-          // caso evita que estos tests de validación se contaminen entre sí.
+          // El rate limit se aplica después de autenticar y se identifica por
+          // usuario. Se conserva una IP aislada por caso para probar el fallback.
           headers: {
             'Content-Type': 'application/json',
             'X-Forwarded-For': `127.0.0.${requestSequence++}`,
@@ -272,6 +272,40 @@ describe('API endpoints', () => {
         },
       );
       assert.equal(res.status, 401);
+    });
+
+    it('autentica antes de limitar y no consume la cuota dos veces', async () => {
+      const sharedIp = '127.0.0.250';
+      for (let i = 0; i < 11; i++) {
+        const unauthenticated = await post(
+          '/api/improve-text',
+          { text: 'test' },
+          {
+            'X-Forwarded-For': sharedIp,
+          },
+        );
+        assert.equal(unauthenticated.status, 401);
+      }
+
+      const rateLimitToken = await createTestJwt(
+        {
+          sub: '00000000-0000-0000-0000-000000000003',
+          exp: Math.floor(Date.now() / 1000) + 3600,
+          app_metadata: {
+            tenant_id: '00000000-0000-0000-0000-000000000001',
+            role: 'admin',
+          },
+        },
+        process.env.SUPABASE_JWT_SECRET ?? '',
+      );
+      const headers = { Authorization: `Bearer ${rateLimitToken}`, 'X-Forwarded-For': sharedIp };
+      for (let i = 0; i < 10; i++) {
+        const authenticated = await post('/api/improve-text', { text: '' }, headers);
+        assert.equal(authenticated.status, 400);
+      }
+
+      const blocked = await post('/api/improve-text', { text: '' }, headers);
+      assert.equal(blocked.status, 429);
     });
   });
 });

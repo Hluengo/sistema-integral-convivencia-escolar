@@ -22,7 +22,6 @@ import debugRoutes from './api/routes/debug';
 import usageRoutes from './api/routes/usage';
 import pilotRoutes from './api/routes/pilot';
 import { errorHandler } from './middleware/errorHandler';
-import { rateLimit } from './middleware/rateLimit';
 
 dotenv.config();
 dotenv.config({ path: '.env.local' });
@@ -57,13 +56,13 @@ app.get('/api/health', (_req, res) => {
   res.json({ ok: true });
 });
 
-// API routes — rate limited (AI y análisis)
-app.use('/api', rateLimit, auditRoutes);
-app.use('/api', rateLimit, draftRoutes);
-app.use('/api', rateLimit, improveRoutes);
-app.use('/api', rateLimit, advisorRoutes);
-app.use('/api', rateLimit, parseRoutes);
-app.use('/api', rateLimit, processDisciplinaryPdfRoutes);
+// API routes — cada módulo aplica su propio rate limit después de autenticar.
+app.use('/api', auditRoutes);
+app.use('/api', draftRoutes);
+app.use('/api', improveRoutes);
+app.use('/api', advisorRoutes);
+app.use('/api', parseRoutes);
+app.use('/api', processDisciplinaryPdfRoutes);
 
 // API routes — sin rate limit (lectura, utilidades)
 app.use('/api', templatesRoutes);

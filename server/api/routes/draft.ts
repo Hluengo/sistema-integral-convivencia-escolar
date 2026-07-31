@@ -11,11 +11,11 @@ import {
   optArr,
   sanitize,
 } from '../validators/sanitizers.js';
-import { checkRateLimitAsync } from '../services/rateLimit.js';
 import { callGeminiLegalDraft } from '../services/gemini.js';
 import { getRelevantLegalSources } from '../services/legalSources.js';
 import { extractCaseDocuments } from '../services/caseDocuments.js';
 import { httpsGet } from '../lib/https.js';
+import { rateLimit } from '../../middleware/rateLimit.js';
 
 const router = Router();
 
@@ -149,7 +149,7 @@ function stringifyList(values: string[], empty: string): string {
   return values.length ? values.map((value) => `- ${value}`).join('\n') : empty;
 }
 
-router.post('/draft-document', requireAuth, async (req, res) => {
+router.post('/draft-document', requireAuth, rateLimit, async (req, res) => {
   try {
     const body = req.body as Record<string, unknown>;
     const docTypeValue = requireStr(body, 'docType', 50);
@@ -172,12 +172,6 @@ router.post('/draft-document', requireAuth, async (req, res) => {
     const medidasEjecutadas = optArr(body, 'medidasEjecutadas');
     const bitacora = optArr(body, 'bitacora');
     const checklist = optArr(body, 'checklist');
-
-    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-    if (!(await checkRateLimitAsync(ip))) {
-      res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
-      return;
-    }
 
     const safeMeasures = (medidasEjecutadas as string[])
       .map((value) => sanitize(value).slice(0, 500))

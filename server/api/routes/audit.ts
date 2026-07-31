@@ -9,13 +9,13 @@ import {
   optStr,
   optArr,
 } from '../validators/sanitizers.js';
-import { checkRateLimitAsync } from '../services/rateLimit.js';
 import { callGroq } from '../services/groq.js';
 import { getRelevantLegalSources } from '../services/legalSources.js';
+import { rateLimit } from '../../middleware/rateLimit.js';
 
 const router = Router();
 
-router.post('/audit-due-process', requireAuth, async (req, res) => {
+router.post('/audit-due-process', requireAuth, rateLimit, async (req, res) => {
   try {
     const body = req.body as Record<string, unknown>;
     const id = requireStr(body, 'id', 50);
@@ -24,12 +24,6 @@ router.post('/audit-due-process', requireAuth, async (req, res) => {
     const checkedItems = optArr(body, 'checkedItems');
     const bitacora = optArr(body, 'bitacora');
     const observations = optStr(body, 'observations', 5000);
-
-    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-    if (!(await checkRateLimitAsync(ip))) {
-      res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
-      return;
-    }
 
     const safeHistory = (bitacora as Array<Record<string, unknown>>)
       .map((entry) => ({

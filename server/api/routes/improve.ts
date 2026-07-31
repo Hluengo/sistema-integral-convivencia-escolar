@@ -3,9 +3,9 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { sanitizeForAI } from '../validators/sanitizers.js';
-import { checkRateLimitAsync } from '../services/rateLimit.js';
 import { getCacheKey, getFromCache, setCache } from '../services/cache.js';
 import { callGroq, callTextImprovementFallback } from '../services/groq.js';
+import { rateLimit } from '../../middleware/rateLimit.js';
 import {
   buildTextImprovementRequest,
   isTextImprovementRefusal,
@@ -19,7 +19,7 @@ const IMPROVEMENT_CONTEXTS = {
     'Redacta el texto como fundamento institucional de un cierre anticipado de causa. Ordena con claridad los antecedentes aportados, el resultado de la investigación y la razón por la que no corresponde continuar. Conserva estrictamente los hechos, acciones, fechas, personas y conclusión entregados por el usuario. No inventes antecedentes, pruebas, citas normativas, responsabilidades ni sanciones, y no cambies la decisión descrita.',
 } as const;
 
-router.post('/improve-text', requireAuth, async (req, res) => {
+router.post('/improve-text', requireAuth, rateLimit, async (req, res) => {
   try {
     const { text, context } = req.body;
     if (!text || typeof text !== 'string' || text.trim().length === 0) {
@@ -32,12 +32,6 @@ router.post('/improve-text', requireAuth, async (req, res) => {
     }
     if (context !== undefined && !(context in IMPROVEMENT_CONTEXTS)) {
       res.status(400).json({ error: 'Contexto de mejora no válido.' });
-      return;
-    }
-
-    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-    if (!(await checkRateLimitAsync(ip))) {
-      res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
       return;
     }
 

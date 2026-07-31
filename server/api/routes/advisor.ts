@@ -3,10 +3,10 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { sanitizeForAI } from '../validators/sanitizers.js';
-import { checkRateLimitAsync } from '../services/rateLimit.js';
 import { getCacheKey, getFromCache, setCache } from '../services/cache.js';
 import { callGroq } from '../services/groq.js';
 import { getRelevantLegalSources } from '../services/legalSources.js';
+import { rateLimit } from '../../middleware/rateLimit.js';
 
 const router = Router();
 
@@ -38,7 +38,7 @@ function normalizeHistory(value: unknown): AdvisorMessage[] | null {
   return normalized;
 }
 
-router.post('/advisor-chat', requireAuth, async (req, res) => {
+router.post('/advisor-chat', requireAuth, rateLimit, async (req, res) => {
   try {
     const { message, history } = req.body;
     if (!message || typeof message !== 'string' || !message.trim()) {
@@ -55,12 +55,6 @@ router.post('/advisor-chat', requireAuth, async (req, res) => {
       res.status(400).json({
         error: 'El historial de consulta no es válido o supera el máximo permitido.',
       });
-      return;
-    }
-
-    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-    if (!(await checkRateLimitAsync(ip))) {
-      res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
       return;
     }
 

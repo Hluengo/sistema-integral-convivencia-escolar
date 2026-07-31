@@ -1,13 +1,13 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { Router } from 'express';
-import { checkRateLimitAsync } from '../services/rateLimit.js';
 import { requireAuth } from '../middleware/auth.js';
+import { rateLimit } from '../../middleware/rateLimit.js';
 
 const router = Router();
 const MAX_TEXT_CONTENT_LENGTH = 80_000;
 
-router.post('/parse-annotations', requireAuth, async (req, res) => {
+router.post('/parse-annotations', requireAuth, rateLimit, async (req, res) => {
   try {
     const { textContent } = req.body as {
       textContent?: string;
@@ -21,12 +21,6 @@ router.post('/parse-annotations', requireAuth, async (req, res) => {
     }
     if (textContent.length > MAX_TEXT_CONTENT_LENGTH) {
       res.status(413).json({ error: 'El texto excede el tamaño máximo permitido.' });
-      return;
-    }
-
-    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-    if (!await checkRateLimitAsync(ip)) {
-      res.status(429).json({ error: 'Límite de solicitudes alcanzado. Intente en un minuto.' });
       return;
     }
 

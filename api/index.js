@@ -1540,86 +1540,6 @@ function sanitizeForAI(text) {
     .slice(0, MAX_STR);
 }
 
-// server/api/services/rateLimit.ts
-var RATE_LIMIT = 10;
-var RATE_WINDOW = 60 * 1e3;
-var MAX_ENTRIES = 1e4;
-var PRUNE_THRESHOLD = 5e3;
-var insertsSincePrune = 0;
-var rateLimitMap = /* @__PURE__ */ new Map();
-function prune() {
-  const now = Date.now();
-  for (const [key, val] of rateLimitMap) {
-    if (now > val.resetAt) rateLimitMap.delete(key);
-  }
-}
-var redisClient = null;
-function getRedisClient() {
-  if (redisClient) return redisClient;
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-  if (!url || !token) {
-    if (process.env.NODE_ENV === 'production') {
-      console.warn(
-        '[rate-limit] UPSTASH_REDIS_REST_URL no configurado. Rate limit en memoria (in\xFAtil en serverless).',
-      );
-    }
-    return null;
-  }
-  redisClient = {
-    async incr(key) {
-      const res = await fetch(`${url}/incr/${encodeURIComponent(key)}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      return data.result ?? 0;
-    },
-    async pexpire(key, ms) {
-      await fetch(`${url}/pexpire/${encodeURIComponent(key)}/${ms}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-    },
-  };
-  return redisClient;
-}
-async function checkRateLimitAsync(ip) {
-  const redis = getRedisClient();
-  if (!redis) {
-    return checkRateLimit(ip);
-  }
-  try {
-    const key = `rl:${ip}`;
-    const count = await redis.incr(key);
-    if (count === 1) {
-      await redis.pexpire(key, RATE_WINDOW);
-    }
-    return count <= RATE_LIMIT;
-  } catch {
-    return checkRateLimit(ip);
-  }
-}
-function checkRateLimit(ip) {
-  const now = Date.now();
-  const record = rateLimitMap.get(ip);
-  if (!record || now > record.resetAt) {
-    if (rateLimitMap.size >= MAX_ENTRIES) {
-      prune();
-    }
-    insertsSincePrune++;
-    if (insertsSincePrune >= PRUNE_THRESHOLD) {
-      prune();
-      insertsSincePrune = 0;
-    }
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
-    return true;
-  }
-  if (record.count >= RATE_LIMIT) {
-    return false;
-  }
-  record.count++;
-  return true;
-}
-
 // server/api/services/cache.ts
 import crypto2 from 'node:crypto';
 var CACHE_TTL = 5 * 60 * 1e3;
@@ -1803,6 +1723,102 @@ async function callTextImprovementFallback(messages, systemInstruction) {
     : new Error('No fue posible usar un modelo de respaldo.');
 }
 
+// server/api/services/rateLimit.ts
+var RATE_LIMIT = 10;
+var RATE_WINDOW = 60 * 1e3;
+var MAX_ENTRIES = 1e4;
+var PRUNE_THRESHOLD = 5e3;
+var insertsSincePrune = 0;
+var rateLimitMap = /* @__PURE__ */ new Map();
+function prune() {
+  const now = Date.now();
+  for (const [key, val] of rateLimitMap) {
+    if (now > val.resetAt) rateLimitMap.delete(key);
+  }
+}
+var redisClient = null;
+function getRedisClient() {
+  if (redisClient) return redisClient;
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) {
+    if (process.env.NODE_ENV === 'production') {
+      console.warn(
+        '[rate-limit] UPSTASH_REDIS_REST_URL no configurado. Rate limit en memoria (in\xFAtil en serverless).',
+      );
+    }
+    return null;
+  }
+  redisClient = {
+    async incr(key) {
+      const res = await fetch(`${url}/incr/${encodeURIComponent(key)}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      return data.result ?? 0;
+    },
+    async pexpire(key, ms) {
+      await fetch(`${url}/pexpire/${encodeURIComponent(key)}/${ms}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    },
+  };
+  return redisClient;
+}
+async function checkRateLimitAsync(ip) {
+  const redis = getRedisClient();
+  if (!redis) {
+    return checkRateLimit(ip);
+  }
+  try {
+    const key = `rl:${ip}`;
+    const count = await redis.incr(key);
+    if (count === 1) {
+      await redis.pexpire(key, RATE_WINDOW);
+    }
+    return count <= RATE_LIMIT;
+  } catch {
+    return checkRateLimit(ip);
+  }
+}
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+  if (!record || now > record.resetAt) {
+    if (rateLimitMap.size >= MAX_ENTRIES) {
+      prune();
+    }
+    insertsSincePrune++;
+    if (insertsSincePrune >= PRUNE_THRESHOLD) {
+      prune();
+      insertsSincePrune = 0;
+    }
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
+    return true;
+  }
+  if (record.count >= RATE_LIMIT) {
+    return false;
+  }
+  record.count++;
+  return true;
+}
+
+// server/middleware/rateLimit.ts
+var DEFAULT_WINDOW_SEC = 60;
+async function rateLimit(req, res, next) {
+  const authReq = req;
+  const key = authReq.user?.sub ?? req.ip ?? 'unknown';
+  const allowed = await checkRateLimitAsync(key);
+  if (!allowed) {
+    res.status(429).json({
+      error: 'Demasiadas solicitudes. Intente nuevamente en un minuto.',
+      retryAfter: DEFAULT_WINDOW_SEC,
+    });
+    return;
+  }
+  next();
+}
+
 // server/api/services/textImprovement.ts
 var REFUSAL_PATTERNS = [
   /\bno puedo (?:cumplir|ayudar|realizar|asistir)\b/i,
@@ -1843,7 +1859,7 @@ var IMPROVEMENT_CONTEXTS = {
   cierre_causa:
     'Redacta el texto como fundamento institucional de un cierre anticipado de causa. Ordena con claridad los antecedentes aportados, el resultado de la investigaci\xF3n y la raz\xF3n por la que no corresponde continuar. Conserva estrictamente los hechos, acciones, fechas, personas y conclusi\xF3n entregados por el usuario. No inventes antecedentes, pruebas, citas normativas, responsabilidades ni sanciones, y no cambies la decisi\xF3n descrita.',
 };
-router.post('/improve-text', requireAuth, async (req, res) => {
+router.post('/improve-text', requireAuth, rateLimit, async (req, res) => {
   try {
     const { text, context } = req.body;
     if (!text || typeof text !== 'string' || text.trim().length === 0) {
@@ -1856,11 +1872,6 @@ router.post('/improve-text', requireAuth, async (req, res) => {
     }
     if (context !== void 0 && !(context in IMPROVEMENT_CONTEXTS)) {
       res.status(400).json({ error: 'Contexto de mejora no v\xE1lido.' });
-      return;
-    }
-    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-    if (!(await checkRateLimitAsync(ip))) {
-      res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
       return;
     }
     const cacheKey = getCacheKey('improve-text', { text, context });
@@ -2098,7 +2109,7 @@ function normalizeHistory(value) {
   }
   return normalized;
 }
-router2.post('/advisor-chat', requireAuth, async (req, res) => {
+router2.post('/advisor-chat', requireAuth, rateLimit, async (req, res) => {
   try {
     const { message, history } = req.body;
     if (!message || typeof message !== 'string' || !message.trim()) {
@@ -2114,11 +2125,6 @@ router2.post('/advisor-chat', requireAuth, async (req, res) => {
       res.status(400).json({
         error: 'El historial de consulta no es v\xE1lido o supera el m\xE1ximo permitido.',
       });
-      return;
-    }
-    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-    if (!(await checkRateLimitAsync(ip))) {
-      res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
       return;
     }
     const legalSources = await getRelevantLegalSources(message);
@@ -2161,7 +2167,7 @@ var advisor_default = router2;
 // server/api/routes/audit.ts
 import { Router as Router3 } from 'express';
 var router3 = Router3();
-router3.post('/audit-due-process', requireAuth, async (req, res) => {
+router3.post('/audit-due-process', requireAuth, rateLimit, async (req, res) => {
   try {
     const body = req.body;
     const id = requireStr(body, 'id', 50);
@@ -2170,11 +2176,6 @@ router3.post('/audit-due-process', requireAuth, async (req, res) => {
     const checkedItems = optArr(body, 'checkedItems');
     const bitacora = optArr(body, 'bitacora');
     const observations = optStr(body, 'observations', 5e3);
-    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-    if (!(await checkRateLimitAsync(ip))) {
-      res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
-      return;
-    }
     const safeHistory = bitacora
       .map((entry) => ({
         title: sanitizeForAI(entry.titulo).slice(0, 200),
@@ -2470,7 +2471,11 @@ var DRAFT_CONTEXT_LIMITS = {
     historyEntries: 12,
     checklistItems: 12,
     measures: 12,
-    documents: { maxDocuments: 2, maxExtractedCharsPerDocument: 6e3, maxExtractedCharsTotal: 1e4 },
+    documents: {
+      maxDocuments: 2,
+      maxExtractedCharsPerDocument: 6e3,
+      maxExtractedCharsTotal: 1e4,
+    },
   },
   citacion_entrevista: {
     legalSourceChars: 8e3,
@@ -2495,7 +2500,11 @@ var DRAFT_CONTEXT_LIMITS = {
     historyEntries: 40,
     checklistItems: 35,
     measures: 30,
-    documents: { maxDocuments: 4, maxExtractedCharsPerDocument: 14e3, maxExtractedCharsTotal: 4e4 },
+    documents: {
+      maxDocuments: 4,
+      maxExtractedCharsPerDocument: 14e3,
+      maxExtractedCharsTotal: 4e4,
+    },
   },
 };
 function getSupabaseHostname2() {
@@ -2544,7 +2553,7 @@ REGLAS INNEGOCIABLES:
 function stringifyList(values, empty) {
   return values.length ? values.map((value) => `- ${value}`).join('\n') : empty;
 }
-router4.post('/draft-document', requireAuth, async (req, res) => {
+router4.post('/draft-document', requireAuth, rateLimit, async (req, res) => {
   try {
     const body = req.body;
     const docTypeValue = requireStr(body, 'docType', 50);
@@ -2567,11 +2576,6 @@ router4.post('/draft-document', requireAuth, async (req, res) => {
     const medidasEjecutadas = optArr(body, 'medidasEjecutadas');
     const bitacora = optArr(body, 'bitacora');
     const checklist = optArr(body, 'checklist');
-    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-    if (!(await checkRateLimitAsync(ip))) {
-      res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
-      return;
-    }
     const safeMeasures = medidasEjecutadas
       .map((value) => sanitize(value).slice(0, 500))
       .slice(0, contextLimits.measures);
@@ -2913,7 +2917,7 @@ var templates_default = router6;
 import { Router as Router7 } from 'express';
 var router7 = Router7();
 var MAX_TEXT_CONTENT_LENGTH = 8e4;
-router7.post('/parse-annotations', requireAuth, async (req, res) => {
+router7.post('/parse-annotations', requireAuth, rateLimit, async (req, res) => {
   try {
     const { textContent } = req.body;
     if (!textContent || !textContent.trim()) {
@@ -2922,11 +2926,6 @@ router7.post('/parse-annotations', requireAuth, async (req, res) => {
     }
     if (textContent.length > MAX_TEXT_CONTENT_LENGTH) {
       res.status(413).json({ error: 'El texto excede el tama\xF1o m\xE1ximo permitido.' });
-      return;
-    }
-    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-    if (!(await checkRateLimitAsync(ip))) {
-      res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
       return;
     }
     const lines = textContent
@@ -2968,10 +2967,7 @@ import { Router as Router8 } from 'express';
 init_disciplinaryPdfAnalysis();
 var router8 = Router8();
 router8.use(requireAuth);
-async function assertRateLimit(req) {
-  const ip = req.ip || req.connection?.remoteAddress || 'unknown';
-  return checkRateLimitAsync(ip);
-}
+router8.use(rateLimit);
 function getBearerToken(req) {
   const authHeader = req.headers.authorization;
   return authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : void 0;
@@ -3006,10 +3002,6 @@ function getProcessErrorResponse(error) {
 }
 router8.post('/process-disciplinary-pdf', requireTenant, async (req, res) => {
   try {
-    if (!(await assertRateLimit(req))) {
-      res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
-      return;
-    }
     const body = req.body;
     const authReq = req;
     const tenantId = authReq.tenantId;
@@ -3036,10 +3028,6 @@ router8.post('/process-disciplinary-pdf', requireTenant, async (req, res) => {
 });
 router8.post('/process-disciplinary-pdf/confirm', requireTenant, async (req, res) => {
   try {
-    if (!(await assertRateLimit(req))) {
-      res.status(429).json({ error: 'L\xEDmite de solicitudes alcanzado. Intente en un minuto.' });
-      return;
-    }
     const body = req.body;
     const authReq = req;
     const tenantId = authReq.tenantId;
@@ -3077,24 +3065,6 @@ var processDisciplinaryPdf_default = router8;
 
 // server/api/routes/usage.ts
 import { Router as Router9 } from 'express';
-
-// server/middleware/rateLimit.ts
-var DEFAULT_WINDOW_SEC = 60;
-async function rateLimit(req, res, next) {
-  const authReq = req;
-  const key = authReq.user?.sub ?? req.ip ?? 'unknown';
-  const allowed = await checkRateLimitAsync(key);
-  if (!allowed) {
-    res.status(429).json({
-      error: 'Demasiadas solicitudes. Intente nuevamente en un minuto.',
-      retryAfter: DEFAULT_WINDOW_SEC,
-    });
-    return;
-  }
-  next();
-}
-
-// server/api/routes/usage.ts
 var router9 = Router9();
 var EVENT_NAME_RE = /^[a-z][a-z0-9_]{1,79}$/;
 var MAX_PROPERTIES_BYTES = 4e3;
@@ -3400,12 +3370,12 @@ app.use(express.json({ limit: '100kb' }));
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true });
 });
-app.use('/api', rateLimit, improve_default);
-app.use('/api', rateLimit, advisor_default);
-app.use('/api', rateLimit, audit_default);
-app.use('/api', rateLimit, draft_default);
-app.use('/api', rateLimit, parse_default);
-app.use('/api', rateLimit, processDisciplinaryPdf_default);
+app.use('/api', improve_default);
+app.use('/api', advisor_default);
+app.use('/api', audit_default);
+app.use('/api', draft_default);
+app.use('/api', parse_default);
+app.use('/api', processDisciplinaryPdf_default);
 app.use('/api', debug_default);
 app.use('/api', templates_default);
 app.use('/api', usage_default);
