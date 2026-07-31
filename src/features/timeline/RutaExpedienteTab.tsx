@@ -19,9 +19,9 @@ export default function RutaExpedienteTab({
   const deadline = getCausaDeadline(causa);
   const summary = getCausaOperationalSummary(causa);
   const deadlineClass = {
-    normal: 'border-emerald-200 bg-emerald-50 text-emerald-800',
-    warning: 'border-amber-200 bg-amber-50 text-amber-800',
-    overdue: 'border-red-200 bg-red-50 text-red-800',
+    normal: 'border-leve-200 bg-leve-50 text-leve-700',
+    warning: 'border-grave-200 bg-grave-50 text-grave-700',
+    overdue: 'border-gravisima-200 bg-gravisima-50 text-gravisima-700',
   }[deadline.tone];
 
   return (
@@ -69,7 +69,7 @@ export default function RutaExpedienteTab({
                   <span
                     className={`flex size-5 shrink-0 items-center justify-center rounded-full font-bold text-[10px] ${
                       isComplete
-                        ? 'bg-emerald-600 text-white'
+                        ? 'bg-leve-600 text-white'
                         : isSelected || isCurrentPhase
                           ? 'bg-slate-800 text-white ring-4 ring-slate-200'
                           : 'bg-slate-200 text-slate-600'
@@ -105,7 +105,7 @@ export default function RutaExpedienteTab({
                   <span
                     className={`block h-full rounded-full ${
                       isComplete
-                        ? 'bg-emerald-500'
+                        ? 'bg-leve-500'
                         : isSelected || isCurrentPhase
                           ? 'bg-slate-700'
                           : 'bg-slate-400'
@@ -153,8 +153,8 @@ export default function RutaExpedienteTab({
           )}
         </div>
 
-        <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 p-3">
-          <p className="flex items-center gap-1.5 font-semibold text-emerald-700 text-[11px] uppercase tracking-wide">
+        <div className="rounded-lg border border-leve-100 bg-leve-50/70 p-3">
+          <p className="flex items-center gap-1.5 font-semibold text-leve-700 text-[11px] uppercase tracking-wide">
             <Files className="size-3.5" aria-hidden="true" />
             Actividad registrada
           </p>

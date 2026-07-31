@@ -22,21 +22,25 @@ export interface StudentInfo {
 export type ActiveTab = 'estado' | 'editar_anotaciones' | 'revisar_pdf' | 'cartas' | 'historial';
 
 export const SEVERITY_BADGE: Record<string, { bg: string; text: string; dot: string }> = {
-  Leve: { bg: 'bg-yellow-50', text: 'text-yellow-800', dot: 'bg-yellow-500' },
-  Grave: { bg: 'bg-orange-50', text: 'text-orange-800', dot: 'bg-orange-500' },
-  'Muy Grave': { bg: 'bg-red-50', text: 'text-red-800', dot: 'bg-red-500' },
-  Gravísima: { bg: 'bg-rose-50', text: 'text-rose-800', dot: 'bg-rose-600' },
+  Leve: { bg: 'bg-leve-50', text: 'text-leve-700', dot: 'bg-leve-500' },
+  Grave: { bg: 'bg-grave-50', text: 'text-grave-700', dot: 'bg-grave-500' },
+  'Muy Grave': { bg: 'bg-muygrave-50', text: 'text-muygrave-700', dot: 'bg-muygrave-500' },
+  Gravísima: { bg: 'bg-gravisima-50', text: 'text-gravisima-700', dot: 'bg-gravisima-500' },
 };
 
 export const STAGE_STYLE: Record<string, { bg: string; text: string; border: string }> = {
   none: { bg: 'bg-neutral-100', text: 'text-neutral-700', border: 'border-neutral-200' },
-  amonestacion: { bg: 'bg-yellow-100', text: 'text-yellow-800', border: 'border-yellow-200' },
+  amonestacion: { bg: 'bg-grave-100', text: 'text-grave-700', border: 'border-grave-200' },
   compromiso_conductual: {
-    bg: 'bg-orange-100',
-    text: 'text-orange-800',
-    border: 'border-orange-200',
+    bg: 'bg-muygrave-100',
+    text: 'text-muygrave-700',
+    border: 'border-muygrave-200',
   },
-  derivacion: { bg: 'bg-rose-100', text: 'text-rose-800', border: 'border-rose-200' },
+  derivacion: {
+    bg: 'bg-gravisima-100',
+    text: 'text-gravisima-700',
+    border: 'border-gravisima-200',
+  },
 };
 
 export const TAB_ICONS: Record<ActiveTab, React.ReactNode> = {

@@ -1673,46 +1673,38 @@ function httpsPatch(hostname, pathname, body, headers) {
   });
 }
 
-// server/api/services/groq.ts
+// server/api/services/openrouter.ts
 var AI_MODEL = process.env.TEXT_AI_MODEL || 'meta-llama/llama-3.1-8b-instruct';
 var TEXT_FALLBACK_MODELS = ['google/gemma-4-31b-it:free', 'deepseek/deepseek-v4-flash:free'];
 function getApiKey() {
   const key = process.env.OPENROUTER_API_KEY;
-  if (!key) {
-    throw new Error('OPENROUTER_API_KEY no configurada');
-  }
+  if (!key) throw new Error('OPENROUTER_API_KEY no configurada');
   return key;
 }
-async function callGroq(messages, systemInstruction, model = AI_MODEL) {
-  const apiKey = getApiKey();
+async function callOpenRouter(messages, systemInstruction, model = AI_MODEL) {
   const body = {
     model,
     max_tokens: 2e3,
     temperature: 0,
-    messages: [],
+    messages: systemInstruction
+      ? [{ role: 'system', content: systemInstruction }, ...messages]
+      : messages,
   };
-  if (systemInstruction) {
-    body.messages.push({ role: 'system', content: systemInstruction });
-  }
-  body.messages.push(...messages);
   const res = await httpsPost('openrouter.ai', '/api/v1/chat/completions', body, {
-    Authorization: `Bearer ${apiKey}`,
+    Authorization: `Bearer ${getApiKey()}`,
     'HTTP-Referer': 'http://localhost:3001',
     'X-Title': 'Sistema Integral Convivencia Escolar',
   });
-  if (res.status !== 200) {
+  if (res.status !== 200)
     throw new Error(`OpenRouter error: ${res.status} ${JSON.stringify(res.body)}`);
-  }
-  const resBody = res.body;
-  const choices = resBody?.choices;
-  const content = choices?.[0]?.message?.content;
-  return content || '';
+  const choices = res.body?.choices;
+  return choices?.[0]?.message?.content || '';
 }
 async function callTextImprovementFallback(messages, systemInstruction) {
   let lastError;
   for (const model of TEXT_FALLBACK_MODELS) {
     try {
-      const text = await callGroq(messages, systemInstruction, model);
+      const text = await callOpenRouter(messages, systemInstruction, model);
       if (text.trim()) return text;
     } catch (error) {
       lastError = error;
@@ -1819,6 +1811,159 @@ async function rateLimit(req, res, next) {
   next();
 }
 
+// server/middleware/requireMembership.ts
+import https4 from 'node:https';
+var CONVIVENCIA_MEMBERSHIP_ROLES = [
+  'admin',
+  'direccion',
+  'convivencia',
+  'inspectoria',
+  'profesor_jefe',
+  'teacher',
+  'inspector',
+  'user',
+  'staff',
+];
+var CONVIVENCIA_MEMBERSHIP = {
+  applicationCode: 'convivencia',
+  allowedRoles: CONVIVENCIA_MEMBERSHIP_ROLES,
+};
+function getMembershipMode() {
+  const enabled = process.env.VITE_APP_MEMBERSHIPS_ENABLED === 'true';
+  const enforced = process.env.VITE_APP_MEMBERSHIPS_ENFORCED === 'true';
+  if (!enabled) return 'legacy';
+  if (enforced) return 'enforced';
+  return 'transition';
+}
+function logServer(event, detail) {
+  if (process.env.NODE_ENV !== 'production') {
+    const msg = `[membership-server] ${event}${detail ? `: ${detail}` : ''}`;
+    console.log(msg);
+  }
+}
+async function checkMembershipViaApi(hostname, anonKey, token, params) {
+  return new Promise((resolve) => {
+    const body = JSON.stringify({
+      p_application_code: params.applicationCode,
+      p_roles: params.allowedRoles ? [...params.allowedRoles] : null,
+    });
+    const req = https4.request(
+      {
+        hostname,
+        path: '/rest/v1/rpc/has_app_access',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(body),
+          apikey: anonKey,
+          Authorization: `Bearer ${token}`,
+        },
+      },
+      (res) => {
+        let data = '';
+        res.on('data', (chunk) => {
+          data += chunk;
+        });
+        res.on('end', () => {
+          if (res.statusCode === 200) {
+            resolve(data === 'true');
+          } else {
+            resolve(false);
+          }
+        });
+      },
+    );
+    req.on('error', () => resolve(false));
+    req.setTimeout(5e3, () => {
+      req.destroy();
+      resolve(false);
+    });
+    req.write(body);
+    req.end();
+  });
+}
+function getSupabaseConfig() {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL;
+  const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  if (!supabaseUrl || !anonKey) return null;
+  try {
+    return { hostname: new URL(supabaseUrl).hostname, anonKey };
+  } catch {
+    return null;
+  }
+}
+function requireMembership(params, checkAccess = checkMembershipViaApi) {
+  return async (req, res, next) => {
+    const authReq = req;
+    if (!authReq.user?.sub) {
+      res.status(401).json({ error: 'Autenticaci\xF3n requerida.' });
+      return;
+    }
+    if (!authReq.tenantId) {
+      res.status(403).json({ error: 'No fue posible determinar el establecimiento autenticado.' });
+      return;
+    }
+    const mode = getMembershipMode();
+    if (mode === 'legacy') {
+      logServer('legacy_mode', 'using profile role');
+      if (params.allowedRoles && authReq.profileRole) {
+        if (!params.allowedRoles.includes(authReq.profileRole)) {
+          res.status(403).json({ error: 'No tiene permisos para realizar esta acci\xF3n.' });
+          return;
+        }
+      }
+      next();
+      return;
+    }
+    const config = getSupabaseConfig();
+    if (!config) {
+      res.status(500).json({ error: 'Error de configuraci\xF3n del servidor.' });
+      return;
+    }
+    const token = authReq.authToken;
+    if (!token) {
+      res.status(401).json({ error: 'Token de autenticaci\xF3n requerido.' });
+      return;
+    }
+    try {
+      logServer('membership_check', `${mode} mode for ${params.applicationCode}`);
+      const hasAccess = await checkAccess(config.hostname, config.anonKey, token, params);
+      if (hasAccess) {
+        next();
+        return;
+      }
+      if (mode === 'transition') {
+        logServer('transition_fallback', 'membership denied, trying profile role');
+        if (params.allowedRoles && authReq.profileRole) {
+          if (params.allowedRoles.includes(authReq.profileRole)) {
+            logServer('transition_fallback_success', authReq.profileRole);
+            next();
+            return;
+          }
+        }
+        logServer('transition_fallback_denied', 'no matching role');
+      }
+      res.status(403).json({ error: 'No tiene una membres\xEDa activa para esta aplicaci\xF3n.' });
+    } catch (err) {
+      if (mode === 'transition') {
+        logServer(
+          'transition_fallback',
+          `membership check failed: ${err instanceof Error ? err.message : 'unknown'}, trying profile role`,
+        );
+        if (params.allowedRoles && authReq.profileRole) {
+          if (params.allowedRoles.includes(authReq.profileRole)) {
+            logServer('transition_fallback_success', authReq.profileRole);
+            next();
+            return;
+          }
+        }
+        logServer('transition_fallback_denied', 'no matching role after error');
+      }
+      res.status(500).json({ error: 'Error al verificar membres\xEDa.' });
+    }
+  };
+}
+
 // server/api/services/textImprovement.ts
 var REFUSAL_PATTERNS = [
   /\bno puedo (?:cumplir|ayudar|realizar|asistir)\b/i,
@@ -1859,78 +2004,89 @@ var IMPROVEMENT_CONTEXTS = {
   cierre_causa:
     'Redacta el texto como fundamento institucional de un cierre anticipado de causa. Ordena con claridad los antecedentes aportados, el resultado de la investigaci\xF3n y la raz\xF3n por la que no corresponde continuar. Conserva estrictamente los hechos, acciones, fechas, personas y conclusi\xF3n entregados por el usuario. No inventes antecedentes, pruebas, citas normativas, responsabilidades ni sanciones, y no cambies la decisi\xF3n descrita.',
 };
-router.post('/improve-text', requireAuth, rateLimit, async (req, res) => {
-  try {
-    const { text, context } = req.body;
-    if (!text || typeof text !== 'string' || text.trim().length === 0) {
-      res.status(400).json({ error: 'Campo requerido: text' });
-      return;
-    }
-    if (text.length > 5e3) {
-      res.status(400).json({ error: 'El texto no puede exceder 5000 caracteres.' });
-      return;
-    }
-    if (context !== void 0 && !(context in IMPROVEMENT_CONTEXTS)) {
-      res.status(400).json({ error: 'Contexto de mejora no v\xE1lido.' });
-      return;
-    }
-    const cacheKey = getCacheKey('improve-text', { text, context });
-    const cached = getFromCache(cacheKey);
-    if (cached) {
-      res.json({ success: true, improved: cached, cached: true });
-      return;
-    }
-    const userContent = sanitizeForAI(text);
-    const contextInstruction =
-      context && context in IMPROVEMENT_CONTEXTS ? IMPROVEMENT_CONTEXTS[context] : void 0;
-    const request = [
-      {
-        role: 'user',
-        content: buildTextImprovementRequest(userContent, contextInstruction),
-      },
-    ];
-    let improved;
+router.post(
+  '/improve-text',
+  requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
+  rateLimit,
+  async (req, res) => {
     try {
-      improved = await callGroq(request, TEXT_IMPROVEMENT_SYSTEM_PROMPT);
-    } catch {
-      improved = await callTextImprovementFallback(request, TEXT_IMPROVEMENT_SYSTEM_PROMPT);
-    }
-    if (isTextImprovementRefusal(improved)) {
-      const retryRequest = [
+      const { text, context } = req.body;
+      if (!text || typeof text !== 'string' || text.trim().length === 0) {
+        res.status(400).json({ error: 'Campo requerido: text' });
+        return;
+      }
+      if (text.length > 5e3) {
+        res.status(400).json({ error: 'El texto no puede exceder 5000 caracteres.' });
+        return;
+      }
+      if (context !== void 0 && !(context in IMPROVEMENT_CONTEXTS)) {
+        res.status(400).json({ error: 'Contexto de mejora no v\xE1lido.' });
+        return;
+      }
+      const cacheKey = getCacheKey('improve-text', { text, context });
+      const cached = getFromCache(cacheKey);
+      if (cached) {
+        res.json({ success: true, improved: cached, cached: true });
+        return;
+      }
+      const userContent = sanitizeForAI(text);
+      const contextInstruction =
+        context && context in IMPROVEMENT_CONTEXTS ? IMPROVEMENT_CONTEXTS[context] : void 0;
+      const request = [
         {
           role: 'user',
-          content: buildTextImprovementRequest(userContent, contextInstruction, true),
+          content: buildTextImprovementRequest(userContent, contextInstruction),
         },
       ];
+      let improved;
       try {
-        improved = await callGroq(retryRequest, TEXT_IMPROVEMENT_SYSTEM_PROMPT);
+        improved = await callOpenRouter(request, TEXT_IMPROVEMENT_SYSTEM_PROMPT);
       } catch {
-        improved = await callTextImprovementFallback(retryRequest, TEXT_IMPROVEMENT_SYSTEM_PROMPT);
-      }
-    }
-    if (isTextImprovementRefusal(improved)) {
-      try {
         improved = await callTextImprovementFallback(request, TEXT_IMPROVEMENT_SYSTEM_PROMPT);
-      } catch {
-        res.status(422).json({
-          error: 'La IA no pudo mejorar este texto. El contenido original se mantuvo sin cambios.',
-        });
-        return;
       }
       if (isTextImprovementRefusal(improved)) {
-        res.status(422).json({
-          error: 'La IA no pudo mejorar este texto. El contenido original se mantuvo sin cambios.',
-        });
-        return;
+        const retryRequest = [
+          {
+            role: 'user',
+            content: buildTextImprovementRequest(userContent, contextInstruction, true),
+          },
+        ];
+        try {
+          improved = await callOpenRouter(retryRequest, TEXT_IMPROVEMENT_SYSTEM_PROMPT);
+        } catch {
+          improved = await callTextImprovementFallback(
+            retryRequest,
+            TEXT_IMPROVEMENT_SYSTEM_PROMPT,
+          );
+        }
       }
+      if (isTextImprovementRefusal(improved)) {
+        try {
+          improved = await callTextImprovementFallback(request, TEXT_IMPROVEMENT_SYSTEM_PROMPT);
+        } catch {
+          res.status(422).json({
+            error:
+              'La IA no pudo mejorar este texto. El contenido original se mantuvo sin cambios.',
+          });
+          return;
+        }
+        if (isTextImprovementRefusal(improved)) {
+          res.status(422).json({
+            error:
+              'La IA no pudo mejorar este texto. El contenido original se mantuvo sin cambios.',
+          });
+          return;
+        }
+      }
+      setCache(cacheKey, improved);
+      res.json({ success: true, improved });
+    } catch (error) {
+      console.error('Error al mejorar texto:', error);
+      res.status(500).json({ error: 'Error interno del servidor al mejorar texto.' });
     }
-    setCache(cacheKey, improved);
-    res.json({ success: true, improved });
-  } catch (error) {
-    console.error('Error al mejorar texto:', error);
-    res.status(500).json({ error: 'Error interno del servidor al mejorar texto.' });
-  }
-});
+  },
+);
 var improve_default = router;
 
 // server/api/routes/advisor.ts
@@ -2109,26 +2265,31 @@ function normalizeHistory(value) {
   }
   return normalized;
 }
-router2.post('/advisor-chat', requireAuth, rateLimit, async (req, res) => {
-  try {
-    const { message, history } = req.body;
-    if (!message || typeof message !== 'string' || !message.trim()) {
-      res.status(400).json({ error: 'Campo requerido: message' });
-      return;
-    }
-    if (message.length > MAX_ADVISOR_MESSAGE_LENGTH) {
-      res.status(400).json({ error: 'El mensaje supera el m\xE1ximo permitido.' });
-      return;
-    }
-    const normalizedHistory = normalizeHistory(history);
-    if (!normalizedHistory) {
-      res.status(400).json({
-        error: 'El historial de consulta no es v\xE1lido o supera el m\xE1ximo permitido.',
-      });
-      return;
-    }
-    const legalSources = await getRelevantLegalSources(message);
-    const systemInstruction = `Eres el Consultor Legal de Convivencia Escolar de un establecimiento chileno.
+router2.post(
+  '/advisor-chat',
+  requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
+  rateLimit,
+  async (req, res) => {
+    try {
+      const { message, history } = req.body;
+      if (!message || typeof message !== 'string' || !message.trim()) {
+        res.status(400).json({ error: 'Campo requerido: message' });
+        return;
+      }
+      if (message.length > MAX_ADVISOR_MESSAGE_LENGTH) {
+        res.status(400).json({ error: 'El mensaje supera el m\xE1ximo permitido.' });
+        return;
+      }
+      const normalizedHistory = normalizeHistory(history);
+      if (!normalizedHistory) {
+        res.status(400).json({
+          error: 'El historial de consulta no es v\xE1lido o supera el m\xE1ximo permitido.',
+        });
+        return;
+      }
+      const legalSources = await getRelevantLegalSources(message);
+      const systemInstruction = `Eres el Consultor Legal de Convivencia Escolar de un establecimiento chileno.
 
 Responde \xFAnicamente desde las FUENTES JUR\xCDDICAS AUTORIZADAS incluidas abajo. Estas fuentes pueden contener normativa educacional, derechos de ni\xF1os, ni\xF1as y adolescentes, circulares, resoluciones de la Superintendencia y reglamentos o protocolos institucionales vigentes que el establecimiento haya versionado.
 
@@ -2141,53 +2302,59 @@ REGLAS:
 
 FUENTES JUR\xCDDICAS AUTORIZADAS:
 ${legalSources}`;
-    const userId = req.user?.sub || 'anonymous';
-    const cacheKey = getCacheKey('advisor-chat', {
-      userId,
-      message,
-      history: normalizedHistory,
-    });
-    const cached = getFromCache(cacheKey);
-    if (cached) {
-      res.json({ success: true, reply: cached, cached: true });
-      return;
+      const userId = req.user?.sub || 'anonymous';
+      const cacheKey = getCacheKey('advisor-chat', {
+        userId,
+        message,
+        history: normalizedHistory,
+      });
+      const cached = getFromCache(cacheKey);
+      if (cached) {
+        res.json({ success: true, reply: cached, cached: true });
+        return;
+      }
+      const messages = [...normalizedHistory];
+      messages.push({ role: 'user', content: sanitizeForAI(message) });
+      const reply = await callOpenRouter(messages, systemInstruction);
+      setCache(cacheKey, reply);
+      res.json({ success: true, reply });
+    } catch (error) {
+      console.error('Error en el Chat de Consultor\xEDa:', error.message || error);
+      res.status(500).json({ error: 'Error interno del servidor.' });
     }
-    const messages = [...normalizedHistory];
-    messages.push({ role: 'user', content: sanitizeForAI(message) });
-    const reply = await callGroq(messages, systemInstruction);
-    setCache(cacheKey, reply);
-    res.json({ success: true, reply });
-  } catch (error) {
-    console.error('Error en el Chat de Consultor\xEDa:', error.message || error);
-    res.status(500).json({ error: 'Error interno del servidor.' });
-  }
-});
+  },
+);
 var advisor_default = router2;
 
 // server/api/routes/audit.ts
 import { Router as Router3 } from 'express';
 var router3 = Router3();
-router3.post('/audit-due-process', requireAuth, rateLimit, async (req, res) => {
-  try {
-    const body = req.body;
-    const id = requireStr(body, 'id', 50);
-    const infractionType = requireStr(body, 'infractionType', 50);
-    const isAulaSegura = Boolean(body.isAulaSegura);
-    const checkedItems = optArr(body, 'checkedItems');
-    const bitacora = optArr(body, 'bitacora');
-    const observations = optStr(body, 'observations', 5e3);
-    const safeHistory = bitacora
-      .map((entry) => ({
-        title: sanitizeForAI(entry.titulo).slice(0, 200),
-        date: sanitizeForAI(entry.fecha).slice(0, 50),
-        type: sanitizeForAI(entry.tipo).slice(0, 80),
-        description: sanitizeForAI(entry.descripcion).slice(0, 2e3),
-      }))
-      .slice(0, 100);
-    const legalSources = await getRelevantLegalSources(
-      `debido proceso norma previa comunicaci\xF3n hechos indagaci\xF3n descargos resoluci\xF3n fundada proporcionalidad reconsideraci\xF3n ${infractionType}`,
-    );
-    const systemPrompt = `Eres un auditor documental de debido proceso en convivencia escolar chilena.
+router3.post(
+  '/audit-due-process',
+  requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
+  rateLimit,
+  async (req, res) => {
+    try {
+      const body = req.body;
+      const id = requireStr(body, 'id', 50);
+      const infractionType = requireStr(body, 'infractionType', 50);
+      const isAulaSegura = Boolean(body.isAulaSegura);
+      const checkedItems = optArr(body, 'checkedItems');
+      const bitacora = optArr(body, 'bitacora');
+      const observations = optStr(body, 'observations', 5e3);
+      const safeHistory = bitacora
+        .map((entry) => ({
+          title: sanitizeForAI(entry.titulo).slice(0, 200),
+          date: sanitizeForAI(entry.fecha).slice(0, 50),
+          type: sanitizeForAI(entry.tipo).slice(0, 80),
+          description: sanitizeForAI(entry.descripcion).slice(0, 2e3),
+        }))
+        .slice(0, 100);
+      const legalSources = await getRelevantLegalSources(
+        `debido proceso norma previa comunicaci\xF3n hechos indagaci\xF3n descargos resoluci\xF3n fundada proporcionalidad reconsideraci\xF3n ${infractionType}`,
+      );
+      const systemPrompt = `Eres un auditor documental de debido proceso en convivencia escolar chilena.
 
 Tu funci\xF3n es verificar la coherencia entre los hitos efectivamente registrados en este expediente y siete garant\xEDas del debido proceso. No calificas la responsabilidad del estudiante, no propones sanciones, no estimas multas y no agregas exigencias que no se desprendan de las fuentes autorizadas.
 
@@ -2223,17 +2390,18 @@ Explica brevemente si el orden documentado es coherente y qu\xE9 antecedente fal
 Lista solo los archivos y secciones de las fuentes autorizadas que efectivamente utilizaste.
 
 No cites normas externas, no inventes plazos y no agregues explicaciones fuera de esta estructura.`;
-    const responseText = await callGroq([{ role: 'user', content: systemPrompt }]);
-    res.json({ success: true, report: responseText });
-  } catch (error) {
-    if (isRequestValidationError(error)) {
-      res.status(400).json({ error: error.message });
-      return;
+      const responseText = await callOpenRouter([{ role: 'user', content: systemPrompt }]);
+      res.json({ success: true, report: responseText });
+    } catch (error) {
+      if (isRequestValidationError(error)) {
+        res.status(400).json({ error: error.message });
+        return;
+      }
+      console.error('Error al auditar debido proceso:', error);
+      res.status(500).json({ error: 'Error interno del servidor en auditor\xEDa.' });
     }
-    console.error('Error al auditar debido proceso:', error);
-    res.status(500).json({ error: 'Error interno del servidor en auditor\xEDa.' });
-  }
-});
+  },
+);
 var audit_default = router3;
 
 // server/api/routes/draft.ts
@@ -2553,72 +2721,77 @@ REGLAS INNEGOCIABLES:
 function stringifyList(values, empty) {
   return values.length ? values.map((value) => `- ${value}`).join('\n') : empty;
 }
-router4.post('/draft-document', requireAuth, rateLimit, async (req, res) => {
-  try {
-    const body = req.body;
-    const docTypeValue = requireStr(body, 'docType', 50);
-    if (!isDocType(docTypeValue)) {
-      res.status(400).json({ error: 'Tipo de documento no v\xE1lido.' });
-      return;
-    }
-    const docType = docTypeValue;
-    const contextLimits = DRAFT_CONTEXT_LIMITS[docType];
-    const id = requireStr(body, 'id', 100);
-    const studentName = requireStr(body, 'studentName', 200);
-    const course = optStr(body, 'course', 100);
-    const fatherName = optStr(body, 'fatherName', 200);
-    const managerName = optStr(body, 'managerName', 200);
-    const infractionType = optStr(body, 'infractionType', 100);
-    const observations = optStr(body, 'observations', 5e3);
-    const fechaApertura = optStr(body, 'fechaApertura', 50);
-    const estadoActual = optStr(body, 'estadoActual', 80);
-    const fechaUltimaActualizacion = optStr(body, 'fechaUltimaActualizacion', 50);
-    const medidasEjecutadas = optArr(body, 'medidasEjecutadas');
-    const bitacora = optArr(body, 'bitacora');
-    const checklist = optArr(body, 'checklist');
-    const safeMeasures = medidasEjecutadas
-      .map((value) => sanitize(value).slice(0, 500))
-      .slice(0, contextLimits.measures);
-    const safeHistory = bitacora
-      .map((entry) => ({
-        title: sanitize(entry.titulo).slice(0, 200),
-        date: sanitize(entry.fecha).slice(0, 50),
-        type: sanitize(entry.tipo).slice(0, 80),
-        description: sanitize(entry.descripcion).slice(0, 2500),
-        people: Array.isArray(entry.participantes)
-          ? entry.participantes.map((value) => sanitize(value).slice(0, 100)).slice(0, 20)
-          : [],
-        document: sanitize(entry.documentoAdjunto).slice(0, 200),
-      }))
-      .slice(0, contextLimits.historyEntries);
-    const safeChecklist = checklist
-      .map((item) => ({
-        label: sanitize(item.label).slice(0, 300),
-        complete: Boolean(item.completado),
-        description: sanitize(item.descripcion).slice(0, 1e3),
-        by: sanitize(item.registradoPor).slice(0, 200),
-        date: sanitize(item.fechaCompletado).slice(0, 50),
-        notes: sanitize(item.observaciones).slice(0, 1e3),
-        document: sanitize(item.documentoNombre).slice(0, 200),
-        documentPath: sanitize(item.documentoUrl).slice(0, 500),
-      }))
-      .slice(0, contextLimits.checklistItems);
-    const authReq = req;
-    const documentValues = [
-      ...safeHistory.map((entry) => entry.document),
-      ...safeChecklist.map((item) => item.documentPath || item.document),
-    ].filter(Boolean);
-    const [legalSources, extractedDocuments] = await Promise.all([
-      getRelevantLegalSources(
-        `${DOCUMENT_TITLES[docType]} ${infractionType} convivencia escolar debido proceso reglamento interno medidas disciplinarias apelaci\xF3n`,
-        contextLimits.legalSourceChars,
-      ),
-      extractCaseDocuments(documentValues, authReq, {
-        ...contextLimits.documents,
-        deadlineMs: 8e3,
-      }),
-    ]);
-    const dossier = `
+router4.post(
+  '/draft-document',
+  requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
+  rateLimit,
+  async (req, res) => {
+    try {
+      const body = req.body;
+      const docTypeValue = requireStr(body, 'docType', 50);
+      if (!isDocType(docTypeValue)) {
+        res.status(400).json({ error: 'Tipo de documento no v\xE1lido.' });
+        return;
+      }
+      const docType = docTypeValue;
+      const contextLimits = DRAFT_CONTEXT_LIMITS[docType];
+      const id = requireStr(body, 'id', 100);
+      const studentName = requireStr(body, 'studentName', 200);
+      const course = optStr(body, 'course', 100);
+      const fatherName = optStr(body, 'fatherName', 200);
+      const managerName = optStr(body, 'managerName', 200);
+      const infractionType = optStr(body, 'infractionType', 100);
+      const observations = optStr(body, 'observations', 5e3);
+      const fechaApertura = optStr(body, 'fechaApertura', 50);
+      const estadoActual = optStr(body, 'estadoActual', 80);
+      const fechaUltimaActualizacion = optStr(body, 'fechaUltimaActualizacion', 50);
+      const medidasEjecutadas = optArr(body, 'medidasEjecutadas');
+      const bitacora = optArr(body, 'bitacora');
+      const checklist = optArr(body, 'checklist');
+      const safeMeasures = medidasEjecutadas
+        .map((value) => sanitize(value).slice(0, 500))
+        .slice(0, contextLimits.measures);
+      const safeHistory = bitacora
+        .map((entry) => ({
+          title: sanitize(entry.titulo).slice(0, 200),
+          date: sanitize(entry.fecha).slice(0, 50),
+          type: sanitize(entry.tipo).slice(0, 80),
+          description: sanitize(entry.descripcion).slice(0, 2500),
+          people: Array.isArray(entry.participantes)
+            ? entry.participantes.map((value) => sanitize(value).slice(0, 100)).slice(0, 20)
+            : [],
+          document: sanitize(entry.documentoAdjunto).slice(0, 200),
+        }))
+        .slice(0, contextLimits.historyEntries);
+      const safeChecklist = checklist
+        .map((item) => ({
+          label: sanitize(item.label).slice(0, 300),
+          complete: Boolean(item.completado),
+          description: sanitize(item.descripcion).slice(0, 1e3),
+          by: sanitize(item.registradoPor).slice(0, 200),
+          date: sanitize(item.fechaCompletado).slice(0, 50),
+          notes: sanitize(item.observaciones).slice(0, 1e3),
+          document: sanitize(item.documentoNombre).slice(0, 200),
+          documentPath: sanitize(item.documentoUrl).slice(0, 500),
+        }))
+        .slice(0, contextLimits.checklistItems);
+      const authReq = req;
+      const documentValues = [
+        ...safeHistory.map((entry) => entry.document),
+        ...safeChecklist.map((item) => item.documentPath || item.document),
+      ].filter(Boolean);
+      const [legalSources, extractedDocuments] = await Promise.all([
+        getRelevantLegalSources(
+          `${DOCUMENT_TITLES[docType]} ${infractionType} convivencia escolar debido proceso reglamento interno medidas disciplinarias apelaci\xF3n`,
+          contextLimits.legalSourceChars,
+        ),
+        extractCaseDocuments(documentValues, authReq, {
+          ...contextLimits.documents,
+          deadlineMs: 8e3,
+        }),
+      ]);
+      const dossier = `
 # DOSSIER DEL EXPEDIENTE \u2014 DOCUMENTO CITADO
 
 ## Datos generales
@@ -2687,71 +2860,77 @@ ${document2.text ? document2.text : `Estado de extracci\xF3n: ${document2.reason
 ## FUENTES AUTORIZADAS
 ${legalSources}
 `;
-    let templatePrompt = null;
-    try {
-      const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? '';
-      const templates = await httpsGet(
-        getSupabaseHostname2(),
-        `/rest/v1/document_templates?doc_type=eq.${docType}&tenant_id=eq.${authReq.tenantId}&select=system_prompt&limit=1`,
-        { apikey: anonKey, Authorization: `Bearer ${authReq.authToken}` },
-      );
-      templatePrompt = templates[0]?.system_prompt?.trim() || null;
-    } catch {}
-    let document;
-    try {
-      document = await callGeminiLegalDraft(
-        `${documentPolicy(docType)}
+      let templatePrompt = null;
+      try {
+        const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? '';
+        const templates = await httpsGet(
+          getSupabaseHostname2(),
+          `/rest/v1/document_templates?doc_type=eq.${docType}&tenant_id=eq.${authReq.tenantId}&select=system_prompt&limit=1`,
+          { apikey: anonKey, Authorization: `Bearer ${authReq.authToken}` },
+        );
+        templatePrompt = templates[0]?.system_prompt?.trim() || null;
+      } catch {}
+      let document;
+      try {
+        document = await callGeminiLegalDraft(
+          `${documentPolicy(docType)}
 
 PLANTILLA INSTITUCIONAL:
 ${templatePrompt || getTemplateFallback(docType)}`,
-        dossier,
-      );
+          dossier,
+        );
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Error al contactar Gemini.';
+        if (message.includes('GEMINI_API_KEY no configurada')) {
+          res.status(503).json({
+            error:
+              'La redacci\xF3n de documentos a\xFAn no est\xE1 configurada. Configure GEMINI_API_KEY en Vercel.',
+          });
+          return;
+        }
+        if (message.includes('Gemini error: 404')) {
+          res.status(503).json({
+            error:
+              'El modelo configurado de Gemini no est\xE1 disponible. Revise LEGAL_DRAFT_MODEL en Vercel.',
+          });
+          return;
+        }
+        throw error;
+      }
+      res.json({
+        success: true,
+        document,
+        title: DOCUMENT_TITLES[docType],
+        signer: DOCUMENT_SIGNERS[docType],
+        consideredDocuments: extractedDocuments.map((document2) => document2.name),
+      });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error al contactar Gemini.';
-      if (message.includes('GEMINI_API_KEY no configurada')) {
-        res.status(503).json({
-          error:
-            'La redacci\xF3n de documentos a\xFAn no est\xE1 configurada. Configure GEMINI_API_KEY en Vercel.',
-        });
+      if (isRequestValidationError(error)) {
+        res.status(400).json({ error: error.message });
         return;
       }
-      if (message.includes('Gemini error: 404')) {
-        res.status(503).json({
-          error:
-            'El modelo configurado de Gemini no est\xE1 disponible. Revise LEGAL_DRAFT_MODEL en Vercel.',
-        });
-        return;
-      }
-      throw error;
+      console.error('Error al generar borrador de documento:', error);
+      res.status(500).json({ error: 'Error interno del servidor al redactar documento.' });
     }
-    res.json({
-      success: true,
-      document,
-      title: DOCUMENT_TITLES[docType],
-      signer: DOCUMENT_SIGNERS[docType],
-      consideredDocuments: extractedDocuments.map((document2) => document2.name),
-    });
-  } catch (error) {
-    if (isRequestValidationError(error)) {
-      res.status(400).json({ error: error.message });
-      return;
-    }
-    console.error('Error al generar borrador de documento:', error);
-    res.status(500).json({ error: 'Error interno del servidor al redactar documento.' });
-  }
-});
+  },
+);
 var draft_default = router4;
 
 // server/api/routes/debug.ts
 import { Router as Router5 } from 'express';
 var router5 = Router5();
-router5.get('/auth-debug', requireAuth, async (_req, res) => {
-  if (process.env.NODE_ENV === 'production') {
-    res.status(404).json({ error: 'No encontrado.' });
-    return;
-  }
-  res.json({ authenticated: true });
-});
+router5.get(
+  '/auth-debug',
+  requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
+  async (_req, res) => {
+    if (process.env.NODE_ENV === 'production') {
+      res.status(404).json({ error: 'No encontrado.' });
+      return;
+    }
+    res.json({ authenticated: true });
+  },
+);
 var debug_default = router5;
 
 // server/api/routes/templates.ts
@@ -2798,6 +2977,7 @@ function requireRole(allowedRoles) {
 
 // server/api/routes/templates.ts
 var router6 = Router6();
+router6.use(requireAuth, requireMembership(CONVIVENCIA_MEMBERSHIP));
 var TEMPLATE_SELECT_PUBLIC = 'id,doc_type,label,updated_at';
 var TEMPLATE_SELECT_ADMIN = 'id,doc_type,label,system_prompt,updated_at';
 function getSupabaseHostname3() {
@@ -2817,7 +2997,7 @@ function authHeaders(req) {
 function isTemplateId(value) {
   return /^tpl_[a-z0-9_]{3,100}$/i.test(value);
 }
-router6.get('/document-templates', requireAuth, requireTenant, async (req, res) => {
+router6.get('/document-templates', requireTenant, async (req, res) => {
   try {
     const authReq = req;
     const data = await httpsGet(
@@ -2832,7 +3012,6 @@ router6.get('/document-templates', requireAuth, requireTenant, async (req, res) 
 });
 router6.get(
   '/document-templates/admin',
-  requireAuth,
   requireTenant,
   requireRole(['admin', 'direccion']),
   async (req, res) => {
@@ -2851,7 +3030,6 @@ router6.get(
 );
 router6.put(
   '/document-templates',
-  requireAuth,
   requireTenant,
   requireRole(['admin', 'direccion']),
   async (req, res) => {
@@ -2917,49 +3095,55 @@ var templates_default = router6;
 import { Router as Router7 } from 'express';
 var router7 = Router7();
 var MAX_TEXT_CONTENT_LENGTH = 8e4;
-router7.post('/parse-annotations', requireAuth, rateLimit, async (req, res) => {
-  try {
-    const { textContent } = req.body;
-    if (!textContent || !textContent.trim()) {
-      res.status(400).json({ error: 'No se recibi\xF3 el texto extra\xEDdo del PDF.' });
-      return;
-    }
-    if (textContent.length > MAX_TEXT_CONTENT_LENGTH) {
-      res.status(413).json({ error: 'El texto excede el tama\xF1o m\xE1ximo permitido.' });
-      return;
-    }
-    const lines = textContent
-      .split('\n')
-      .filter((l) => !l.trim().startsWith('![') && !l.includes('data:image'));
-    const blocks = [];
-    let current = [];
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed) continue;
-      if (/^\d{2}\/\d{2}\/\d{4}/.test(trimmed)) {
-        if (current.length > 0) blocks.push(current.join('\n'));
-        current = [line];
-      } else if (current.length > 0) {
-        current.push(line);
+router7.post(
+  '/parse-annotations',
+  requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
+  rateLimit,
+  async (req, res) => {
+    try {
+      const { textContent } = req.body;
+      if (!textContent || !textContent.trim()) {
+        res.status(400).json({ error: 'No se recibi\xF3 el texto extra\xEDdo del PDF.' });
+        return;
       }
-    }
-    if (current.length > 0) blocks.push(current.join('\n'));
-    const summary = { negativas: 0, positivas: 0, informativas: 0 };
-    for (const block of blocks) {
-      const m = block.match(/Tipo:\s*(Negativa|Positiva|Informaci[oó]n)/i);
-      if (m) {
-        const t = m[1].toLowerCase();
-        if (t.startsWith('neg')) summary.negativas++;
-        else if (t.startsWith('pos')) summary.positivas++;
-        else summary.informativas++;
+      if (textContent.length > MAX_TEXT_CONTENT_LENGTH) {
+        res.status(413).json({ error: 'El texto excede el tama\xF1o m\xE1ximo permitido.' });
+        return;
       }
+      const lines = textContent
+        .split('\n')
+        .filter((l) => !l.trim().startsWith('![') && !l.includes('data:image'));
+      const blocks = [];
+      let current = [];
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        if (/^\d{2}\/\d{2}\/\d{4}/.test(trimmed)) {
+          if (current.length > 0) blocks.push(current.join('\n'));
+          current = [line];
+        } else if (current.length > 0) {
+          current.push(line);
+        }
+      }
+      if (current.length > 0) blocks.push(current.join('\n'));
+      const summary = { negativas: 0, positivas: 0, informativas: 0 };
+      for (const block of blocks) {
+        const m = block.match(/Tipo:\s*(Negativa|Positiva|Informaci[oó]n)/i);
+        if (m) {
+          const t = m[1].toLowerCase();
+          if (t.startsWith('neg')) summary.negativas++;
+          else if (t.startsWith('pos')) summary.positivas++;
+          else summary.informativas++;
+        }
+      }
+      res.json({ success: true, summary });
+    } catch (error) {
+      console.error('Error al analizar documento:', error);
+      res.status(500).json({ error: 'Error interno al procesar el archivo.' });
     }
-    res.json({ success: true, summary });
-  } catch (error) {
-    console.error('Error al analizar documento:', error);
-    res.status(500).json({ error: 'Error interno al procesar el archivo.' });
-  }
-});
+  },
+);
 var parse_default = router7;
 
 // server/api/routes/processDisciplinaryPdf.ts
@@ -2967,6 +3151,7 @@ import { Router as Router8 } from 'express';
 init_disciplinaryPdfAnalysis();
 var router8 = Router8();
 router8.use(requireAuth);
+router8.use(requireMembership(CONVIVENCIA_MEMBERSHIP));
 router8.use(rateLimit);
 function getBearerToken(req) {
   const authHeader = req.headers.authorization;
@@ -3077,47 +3262,55 @@ function hasSafeProperties(value) {
     return false;
   }
 }
-router9.post('/usage/events', requireAuth, requireTenant, rateLimit, async (req, res) => {
-  try {
-    const { eventName, properties } = req.body;
-    if (!eventName || typeof eventName !== 'string' || !EVENT_NAME_RE.test(eventName)) {
-      res
-        .status(400)
-        .json({ error: 'eventName debe usar formato snake_case y tener hasta 80 caracteres.' });
-      return;
+router9.post(
+  '/usage/events',
+  requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
+  requireTenant,
+  rateLimit,
+  async (req, res) => {
+    try {
+      const { eventName, properties } = req.body;
+      if (!eventName || typeof eventName !== 'string' || !EVENT_NAME_RE.test(eventName)) {
+        res
+          .status(400)
+          .json({ error: 'eventName debe usar formato snake_case y tener hasta 80 caracteres.' });
+        return;
+      }
+      if (!hasSafeProperties(properties)) {
+        res.status(400).json({ error: 'properties debe ser un objeto JSON de hasta 4 KB.' });
+        return;
+      }
+      const { createClient: createClient2 } = await import('@supabase/supabase-js');
+      const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
+      const anonKey =
+        process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
+      if (!supabaseUrl || !anonKey) {
+        res.status(500).json({ error: 'Supabase no configurado' });
+        return;
+      }
+      const authReq = req;
+      const supabase = createClient2(supabaseUrl, anonKey, {
+        auth: { persistSession: false },
+        global: { headers: { Authorization: `Bearer ${authReq.authToken}` } },
+      });
+      await supabase.from('usage_events').insert({
+        event_name: eventName,
+        user_id: authReq.user?.sub ?? null,
+        tenant_id: authReq.tenantId ?? null,
+        properties: properties ?? {},
+      });
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error logging usage event:', error);
+      res.status(500).json({ error: 'Error interno al registrar evento.' });
     }
-    if (!hasSafeProperties(properties)) {
-      res.status(400).json({ error: 'properties debe ser un objeto JSON de hasta 4 KB.' });
-      return;
-    }
-    const { createClient: createClient2 } = await import('@supabase/supabase-js');
-    const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
-    const anonKey =
-      process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
-    if (!supabaseUrl || !anonKey) {
-      res.status(500).json({ error: 'Supabase no configurado' });
-      return;
-    }
-    const authReq = req;
-    const supabase = createClient2(supabaseUrl, anonKey, {
-      auth: { persistSession: false },
-      global: { headers: { Authorization: `Bearer ${authReq.authToken}` } },
-    });
-    await supabase.from('usage_events').insert({
-      event_name: eventName,
-      user_id: authReq.user?.sub ?? null,
-      tenant_id: authReq.tenantId ?? null,
-      properties: properties ?? {},
-    });
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error logging usage event:', error);
-    res.status(500).json({ error: 'Error interno al registrar evento.' });
-  }
-});
+  },
+);
 router9.get(
   '/usage/stats',
   requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
   requireTenant,
   requireRole(['admin', 'direccion']),
   async (req, res) => {
@@ -3167,155 +3360,12 @@ var usage_default = router9;
 
 // server/api/routes/pilot.ts
 import { Router as Router10 } from 'express';
-
-// server/middleware/requireMembership.ts
-import https4 from 'node:https';
-function getMembershipMode() {
-  const enabled = process.env.VITE_APP_MEMBERSHIPS_ENABLED === 'true';
-  const enforced = process.env.VITE_APP_MEMBERSHIPS_ENFORCED === 'true';
-  if (!enabled) return 'legacy';
-  if (enforced) return 'enforced';
-  return 'transition';
-}
-function logServer(event, detail) {
-  if (process.env.NODE_ENV !== 'production') {
-    const msg = `[membership-server] ${event}${detail ? `: ${detail}` : ''}`;
-    console.log(msg);
-  }
-}
-async function checkMembershipViaApi(hostname, anonKey, token, params) {
-  return new Promise((resolve) => {
-    const body = JSON.stringify({
-      p_application_code: params.applicationCode,
-      p_roles: params.allowedRoles ? [...params.allowedRoles] : null,
-    });
-    const req = https4.request(
-      {
-        hostname,
-        path: '/rest/v1/rpc/has_app_access',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(body),
-          apikey: anonKey,
-          Authorization: `Bearer ${token}`,
-        },
-      },
-      (res) => {
-        let data = '';
-        res.on('data', (chunk) => {
-          data += chunk;
-        });
-        res.on('end', () => {
-          if (res.statusCode === 200) {
-            resolve(data === 'true');
-          } else {
-            resolve(false);
-          }
-        });
-      },
-    );
-    req.on('error', () => resolve(false));
-    req.setTimeout(5e3, () => {
-      req.destroy();
-      resolve(false);
-    });
-    req.write(body);
-    req.end();
-  });
-}
-function getSupabaseConfig() {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  if (!supabaseUrl || !anonKey) return null;
-  try {
-    return { hostname: new URL(supabaseUrl).hostname, anonKey };
-  } catch {
-    return null;
-  }
-}
-function requireMembership(params, checkAccess = checkMembershipViaApi) {
-  return async (req, res, next) => {
-    const authReq = req;
-    if (!authReq.user?.sub) {
-      res.status(401).json({ error: 'Autenticaci\xF3n requerida.' });
-      return;
-    }
-    if (!authReq.tenantId) {
-      res.status(403).json({ error: 'No fue posible determinar el establecimiento autenticado.' });
-      return;
-    }
-    const mode = getMembershipMode();
-    if (mode === 'legacy') {
-      logServer('legacy_mode', 'using profile role');
-      if (params.allowedRoles && authReq.profileRole) {
-        if (!params.allowedRoles.includes(authReq.profileRole)) {
-          res.status(403).json({ error: 'No tiene permisos para realizar esta acci\xF3n.' });
-          return;
-        }
-      }
-      next();
-      return;
-    }
-    const config = getSupabaseConfig();
-    if (!config) {
-      res.status(500).json({ error: 'Error de configuraci\xF3n del servidor.' });
-      return;
-    }
-    const token = authReq.authToken;
-    if (!token) {
-      res.status(401).json({ error: 'Token de autenticaci\xF3n requerido.' });
-      return;
-    }
-    try {
-      logServer('membership_check', `${mode} mode for ${params.applicationCode}`);
-      const hasAccess = await checkAccess(config.hostname, config.anonKey, token, params);
-      if (hasAccess) {
-        next();
-        return;
-      }
-      if (mode === 'transition') {
-        logServer('transition_fallback', 'membership denied, trying profile role');
-        if (params.allowedRoles && authReq.profileRole) {
-          if (params.allowedRoles.includes(authReq.profileRole)) {
-            logServer('transition_fallback_success', authReq.profileRole);
-            next();
-            return;
-          }
-        }
-        logServer('transition_fallback_denied', 'no matching role');
-      }
-      res.status(403).json({ error: 'No tiene una membres\xEDa activa para esta aplicaci\xF3n.' });
-    } catch (err) {
-      if (mode === 'transition') {
-        logServer(
-          'transition_fallback',
-          `membership check failed: ${err instanceof Error ? err.message : 'unknown'}, trying profile role`,
-        );
-        if (params.allowedRoles && authReq.profileRole) {
-          if (params.allowedRoles.includes(authReq.profileRole)) {
-            logServer('transition_fallback_success', authReq.profileRole);
-            next();
-            return;
-          }
-        }
-        logServer('transition_fallback_denied', 'no matching role after error');
-      }
-      res.status(500).json({ error: 'Error al verificar membres\xEDa.' });
-    }
-  };
-}
-
-// server/api/routes/pilot.ts
 var router10 = Router10();
 router10.get(
   '/pilot/membership-check',
   requireAuth,
   requireTenant,
-  requireMembership({
-    applicationCode: 'convivencia',
-    allowedRoles: ['direccion', 'convivencia'],
-  }),
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
   async (_req, res) => {
     res.json({
       status: 'ok',

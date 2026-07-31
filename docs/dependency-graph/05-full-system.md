@@ -12,7 +12,6 @@ graph TD
         CausasView
         Timeline
         AnotacionesView
-        DocumentosView
         StudentsPanel
         AdvisorView
     end

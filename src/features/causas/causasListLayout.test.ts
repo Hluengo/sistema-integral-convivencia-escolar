@@ -142,8 +142,8 @@ describe('Listado de causas activas', () => {
 
     assert.match(summary, /bg-violet-50/);
     assert.match(summary, /bg-sky-50/);
-    assert.match(summary, /bg-amber-50/);
-    assert.match(summary, /bg-emerald-50/);
+    assert.match(summary, /bg-grave-50/);
+    assert.match(summary, /bg-leve-50/);
   });
 
   it('muestra la ruta, plazo, próximo hito y actividad sin nuevas fuentes de datos', () => {

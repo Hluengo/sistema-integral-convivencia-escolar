@@ -22,7 +22,9 @@ export default function GeneratorHeader({
           Emisión de cartas de amonestación, compromiso conductual y derivación.
         </p>
       </div>
-      <div className={`flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2 font-semibold text-xs ${negativeCount >= 10 ? 'bg-rose-50 border-rose-200 text-rose-800' : 'bg-yellow-50 border-yellow-200 text-yellow-800'}`}>
+      <div
+        className={`flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2 font-semibold text-xs ${negativeCount >= 10 ? 'bg-gravisima-50 border-gravisima-200 text-gravisima-700' : 'bg-grave-50 border-grave-200 text-grave-700'}`}
+      >
         <AlertTriangle className="h-4 w-4 shrink-0" />
         <span>
           {negativeCount >= 10

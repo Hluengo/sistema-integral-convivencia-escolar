@@ -6,6 +6,7 @@
 import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { Send, RefreshCw, Bot, User, BookOpen, Sparkles, Gavel, Loader2 } from 'lucide-react';
+import Button from '@/src/shared/ui/Button';
 import MessageContent from './AdvisorMessage';
 import { useTextImprovement } from '../../hooks/useTextImprovement';
 import { supabase } from '../../shared/api/lib/supabase';
@@ -304,17 +305,18 @@ export default function AiAdvisor() {
               )}
             </button>
           </div>
-          <button
+          <Button
             type="submit"
+            variant="custom"
             disabled={isLoading || !inputMessage.trim()}
-            className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-neutral-900 px-4 py-2.5 font-semibold text-white text-xs transition-colors hover:scale-[1.02] hover:bg-neutral-800 active:scale-95 disabled:bg-neutral-300 disabled:opacity-50"
+            className="shrink-0 rounded-lg bg-neutral-900 px-4 py-2.5 text-xs text-white hover:scale-[1.02] hover:bg-neutral-800 active:scale-95 disabled:bg-neutral-300 disabled:opacity-50"
           >
             <span className="hidden sm:inline">Enviar</span>
             <Send className="h-3.5 w-3.5" aria-hidden="true" />
-          </button>
+          </Button>
         </form>
         {improveChatError && (
-          <p role="alert" className="mt-2 text-red-600 text-xs">
+          <p role="alert" className="mt-2 text-gravisima-600 text-xs">
             {improveChatError}
           </p>
         )}

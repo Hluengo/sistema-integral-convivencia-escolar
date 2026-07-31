@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { AlertTriangle, Check, Pencil, X } from 'lucide-react';
 import { CLASSIFICATION_OPTIONS } from './constants';
 import type { AnnotationSummary } from '@/src/shared/lib/types';
+import Button from '@/src/shared/ui/Button';
 
 export type { ReviewAnnotation, ReviewAnnotationType } from './reviewAnnotationUtils';
 import type { ReviewAnnotation, ReviewAnnotationType } from './reviewAnnotationUtils';
@@ -110,7 +111,7 @@ export default function ReviewStep({
       </div>
 
       {warnings.length > 0 && (
-        <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-800 text-sm">
+        <div className="space-y-2 rounded-xl border border-grave-200 bg-grave-50 p-4 text-grave-700 text-sm">
           <p className="flex items-center gap-2 font-semibold">
             <AlertTriangle className="h-4 w-4" /> Advertencias del análisis
           </p>
@@ -184,27 +185,28 @@ export default function ReviewStep({
                       aria-invalid={Boolean(editError)}
                     />
                     {editError && (
-                      <p className="text-red-600 text-xs" role="alert">
+                      <p className="text-gravisima-600 text-xs" role="alert">
                         {editError}
                       </p>
                     )}
                     <div className="flex justify-end gap-2">
-                      <button
-                        type="button"
+                      <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={cancelEditing}
-                        className="inline-flex items-center gap-1 rounded-lg border border-neutral-300 px-2.5 py-1.5 font-medium text-neutral-600 text-xs hover:bg-neutral-50"
+                        className="rounded-lg px-2.5 py-1.5 text-xs font-medium"
                       >
                         <X className="h-3.5 w-3.5" aria-hidden="true" />
                         Cancelar
-                      </button>
-                      <button
-                        type="button"
+                      </Button>
+                      <Button
+                        size="sm"
                         onClick={() => saveEditedText(annotation.sequence_number)}
-                        className="inline-flex items-center gap-1 rounded-lg bg-brand-600 px-2.5 py-1.5 font-medium text-white text-xs hover:bg-brand-700"
+                        className="rounded-lg px-2.5 py-1.5 text-xs font-medium"
                       >
                         <Check className="h-3.5 w-3.5" aria-hidden="true" />
                         Guardar
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 ) : (
@@ -226,11 +228,11 @@ export default function ReviewStep({
       )}
 
       {summary && summary.negativas > 0 && (
-        <div className="rounded-xl border border-red-100 bg-red-50 p-4">
-          <p className="font-semibold text-red-700 text-xs uppercase tracking-wider">
+        <div className="rounded-xl border border-gravisima-100 bg-gravisima-50 p-4">
+          <p className="font-semibold text-gravisima-700 text-xs uppercase tracking-wider">
             Motivo de la sugerencia
           </p>
-          <p className="mt-1 text-red-600 text-sm">
+          <p className="mt-1 text-gravisima-600 text-sm">
             Se detectaron {summary.negativas} anotaciones negativas. La carta sugerida se obtiene
             desde las reglas configuradas en base de datos.
           </p>

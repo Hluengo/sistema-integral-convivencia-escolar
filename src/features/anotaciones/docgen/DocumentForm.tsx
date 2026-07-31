@@ -2,6 +2,7 @@
 
 import type { Annotation } from '../../../types';
 import type { LetterContent } from './DocumentPreview/docTypes';
+import Button from '@/src/shared/ui/Button';
 
 interface DocumentFormProps {
   docType: string;
@@ -136,13 +137,14 @@ export default function DocumentForm({
               Estos textos actualizan la plantilla en vivo.
             </p>
           </div>
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={onResetLetterContent}
-            className="rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-semibold text-neutral-600 hover:bg-neutral-50"
+            className="rounded-lg px-3 py-1.5 text-xs font-semibold"
           >
             Restaurar texto base
-          </button>
+          </Button>
         </div>
         <div className="space-y-4">
           {TEXT_FIELDS.map((field) => (

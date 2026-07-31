@@ -29,9 +29,9 @@ interface BitacoraTabProps {
 
 const ENTRY_STYLE: Record<BitacoraEntry['tipo'], { tone: string; Icon: typeof History }> = {
   Entrevista: { tone: 'bg-info-50 text-info-700', Icon: NotebookPen },
-  Evidencia: { tone: 'bg-amber-50 text-amber-700', Icon: FileText },
+  Evidencia: { tone: 'bg-grave-50 text-grave-700', Icon: FileText },
   Notificación: { tone: 'bg-purple-50 text-purple-700', Icon: Bell },
-  Mediación: { tone: 'bg-emerald-50 text-emerald-700', Icon: Handshake },
+  Mediación: { tone: 'bg-leve-50 text-leve-700', Icon: Handshake },
   Resolución: { tone: 'bg-brand-50 text-brand-700', Icon: Scale },
   Otro: { tone: 'bg-neutral-100 text-neutral-700', Icon: History },
 };

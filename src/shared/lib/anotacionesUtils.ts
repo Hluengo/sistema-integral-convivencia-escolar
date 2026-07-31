@@ -48,33 +48,33 @@ export interface SemaphoricStyle {
 export const getSemaphoricStyle = (count: number): SemaphoricStyle => {
   if (count < 5) {
     return {
-      badge: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      dot: 'bg-emerald-500',
-      text: 'text-emerald-700 font-semibold',
+      badge: 'bg-leve-50 text-leve-700 border-leve-200',
+      dot: 'bg-leve-500',
+      text: 'text-leve-700 font-semibold',
       rowBg: 'hover:bg-slate-50/50',
     };
   }
   if (count < 10) {
     return {
-      badge: 'bg-yellow-50 text-yellow-800 border-yellow-200',
-      dot: 'bg-yellow-500',
-      text: 'text-yellow-700 font-semibold',
-      rowBg: 'hover:bg-yellow-50/20 bg-yellow-50/5',
+      badge: 'bg-grave-50 text-grave-700 border-grave-200',
+      dot: 'bg-grave-500',
+      text: 'text-grave-700 font-semibold',
+      rowBg: 'hover:bg-grave-50/20 bg-grave-50/5',
     };
   }
   if (count < 15) {
     return {
-      badge: 'bg-orange-50 text-orange-800 border-orange-200',
-      dot: 'bg-orange-500',
-      text: 'text-orange-700 font-semibold',
-      rowBg: 'hover:bg-orange-50/20 bg-orange-50/5',
+      badge: 'bg-muygrave-50 text-muygrave-700 border-muygrave-200',
+      dot: 'bg-muygrave-500',
+      text: 'text-muygrave-700 font-semibold',
+      rowBg: 'hover:bg-muygrave-50/20 bg-muygrave-50/5',
     };
   }
   return {
-    badge: 'bg-rose-50 text-rose-800 border-rose-200',
-    dot: 'bg-rose-500',
-    text: 'text-rose-700 font-extrabold',
-    rowBg: 'hover:bg-rose-50/20 bg-rose-50/5',
+    badge: 'bg-gravisima-50 text-gravisima-700 border-gravisima-200',
+    dot: 'bg-gravisima-500',
+    text: 'text-gravisima-700 font-extrabold',
+    rowBg: 'hover:bg-gravisima-50/20 bg-gravisima-50/5',
   };
 };
 

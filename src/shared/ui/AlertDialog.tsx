@@ -47,9 +47,9 @@ AlertDialogHeader.displayName = 'AlertDialogHeader';
 
 const AlertDialogIcon = ({ className = '' }: { className?: string }) => (
   <div
-    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 ${className}`}
+    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gravisima-50 ${className}`}
   >
-    <AlertTriangle className="h-5 w-5 text-red-500" />
+    <AlertTriangle className="h-5 w-5 text-gravisima-500" />
   </div>
 );
 AlertDialogIcon.displayName = 'AlertDialogIcon';
@@ -103,7 +103,7 @@ const AlertDialogAction = forwardRef<
 >(({ className = '', children, ...props }, ref) => (
   <AlertDialogPrimitive.Action
     ref={ref}
-    className={`cursor-pointer rounded-xl bg-red-500 px-4 py-2 font-medium text-sm text-white transition-colors hover:bg-red-600 ${className}`}
+    className={`cursor-pointer rounded-xl bg-gravisima-600 px-4 py-2 font-medium text-sm text-white transition-colors hover:bg-gravisima-700 ${className}`}
     {...props}
   >
     {children}

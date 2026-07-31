@@ -6,30 +6,30 @@ El proyecto NO usa React Router ni ningún router de cliente. La navegación se 
 
 ## Views
 
-| View ID | Componente Renderizado | Feature |
-|---------|----------------------|---------|
-| `dashboard` | `<DashboardStats>` | Dashboard con KPIs |
-| `causas` | `<CausasView>` + `<InteractiveTimeline>` | Gestión de casos |
-| `informes` | `<AdvisorView>` | Asesoría AI + Plantillas |
-| `alumnos` | `<StudentsPanel>` | Directorio de estudiantes |
-| `anotaciones` | `<AnotacionesView>` | Sistema de anotaciones |
-| `documentos` | `<DocumentosView>` | Centro de documentos |
+| View ID       | Componente Renderizado                   | Feature                   |
+| ------------- | ---------------------------------------- | ------------------------- |
+| `dashboard`   | `<DashboardStats>`                       | Dashboard con KPIs        |
+| `causas`      | `<CausasView>` + `<InteractiveTimeline>` | Gestión de casos          |
+| `informes`    | `<AdvisorView>`                          | Asesoría AI + Plantillas  |
+| `alumnos`     | `<StudentsPanel>`                        | Directorio de estudiantes |
+| `anotaciones` | `<AnotacionesView>`                      | Sistema de anotaciones    |
 
 ## Modals (sin ruta, controlados por estado)
 
-| Modal | Trigger | Store/State |
-|-------|---------|-------------|
-| `LoginPage` | No autenticado / botón login | `authStore.showLoginModal` |
-| `NewCausaModal` | Botón "Nuevo Caso" (tecla N) | `useNewCausaForm` useReducer |
-| `EditCausaModal` | Click en "Editar" en timeline | Local state en InteractiveTimeline |
-| `ShortcutsModal` | Tecla `?` | `uiStore.showShortcuts` |
-| `NewDisciplinaryProcessModal` | Botón "Nuevo Proceso" en Anotaciones | Local state en AnotacionesView |
-| `AnotacionesStudentDetailModal` | Click en estudiante en tabla | Local state en AnotacionesView |
-| `OnboardingTour` | Primera visita | Feature flag |
+| Modal                           | Trigger                              | Store/State                        |
+| ------------------------------- | ------------------------------------ | ---------------------------------- |
+| `LoginPage`                     | No autenticado / botón login         | `authStore.showLoginModal`         |
+| `NewCausaModal`                 | Botón "Nuevo Caso" (tecla N)         | `useNewCausaForm` useReducer       |
+| `EditCausaModal`                | Click en "Editar" en timeline        | Local state en InteractiveTimeline |
+| `ShortcutsModal`                | Tecla `?`                            | `uiStore.showShortcuts`            |
+| `NewDisciplinaryProcessModal`   | Botón "Nuevo Proceso" en Anotaciones | Local state en AnotacionesView     |
+| `AnotacionesStudentDetailModal` | Click en estudiante en tabla         | Local state en AnotacionesView     |
+| `OnboardingTour`                | Primera visita                       | Feature flag                       |
 
 ## Sidebar Navigation
 
 La `Sidebar` contiene:
+
 - Logo del establecimiento
 - Items de navegación (icono + label)
 - Colapso (toggle)

@@ -131,12 +131,12 @@ export const FASES_LIST: {
   border: string;
 }[] = [
   { name: 'Recepción', color: 'text-blue-700', bg: 'bg-blue-50', border: 'border-blue-200' },
-  { name: 'Investigación', color: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' },
+  { name: 'Investigación', color: 'text-grave-700', bg: 'bg-grave-50', border: 'border-grave-200' },
   {
     name: 'Resolución',
-    color: 'text-emerald-700',
-    bg: 'bg-emerald-50',
-    border: 'border-emerald-200',
+    color: 'text-leve-700',
+    bg: 'bg-leve-50',
+    border: 'border-leve-200',
   },
   { name: 'Apelación', color: 'text-indigo-700', bg: 'bg-indigo-50', border: 'border-indigo-200' },
   { name: 'Seguimiento', color: 'text-slate-700', bg: 'bg-slate-50', border: 'border-slate-200' },

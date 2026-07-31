@@ -6,6 +6,7 @@ import { requireTenant } from '../middleware/requireTenant.js';
 import { requireRole } from '../middleware/requireRole.js';
 import { rateLimit } from '../../middleware/rateLimit.js';
 import type { AuthenticatedRequest } from '../../types.js';
+import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../middleware/requireMembership.js';
 
 type AuthRequest = AuthenticatedRequest;
 
@@ -24,53 +25,61 @@ function hasSafeProperties(value: unknown): value is Record<string, unknown> {
   }
 }
 
-router.post('/usage/events', requireAuth, requireTenant, rateLimit, async (req, res) => {
-  try {
-    const { eventName, properties } = req.body;
-    if (!eventName || typeof eventName !== 'string' || !EVENT_NAME_RE.test(eventName)) {
-      res
-        .status(400)
-        .json({ error: 'eventName debe usar formato snake_case y tener hasta 80 caracteres.' });
-      return;
+router.post(
+  '/usage/events',
+  requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
+  requireTenant,
+  rateLimit,
+  async (req, res) => {
+    try {
+      const { eventName, properties } = req.body;
+      if (!eventName || typeof eventName !== 'string' || !EVENT_NAME_RE.test(eventName)) {
+        res
+          .status(400)
+          .json({ error: 'eventName debe usar formato snake_case y tener hasta 80 caracteres.' });
+        return;
+      }
+      if (!hasSafeProperties(properties)) {
+        res.status(400).json({ error: 'properties debe ser un objeto JSON de hasta 4 KB.' });
+        return;
+      }
+
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
+      const anonKey =
+        process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
+      if (!supabaseUrl || !anonKey) {
+        res.status(500).json({ error: 'Supabase no configurado' });
+        return;
+      }
+
+      const authReq = req as AuthRequest;
+
+      const supabase = createClient(supabaseUrl, anonKey, {
+        auth: { persistSession: false },
+        global: { headers: { Authorization: `Bearer ${authReq.authToken}` } },
+      });
+
+      await supabase.from('usage_events').insert({
+        event_name: eventName,
+        user_id: authReq.user?.sub ?? null,
+        tenant_id: authReq.tenantId ?? null,
+        properties: properties ?? {},
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error logging usage event:', error);
+      res.status(500).json({ error: 'Error interno al registrar evento.' });
     }
-    if (!hasSafeProperties(properties)) {
-      res.status(400).json({ error: 'properties debe ser un objeto JSON de hasta 4 KB.' });
-      return;
-    }
-
-    const { createClient } = await import('@supabase/supabase-js');
-    const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
-    const anonKey =
-      process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
-    if (!supabaseUrl || !anonKey) {
-      res.status(500).json({ error: 'Supabase no configurado' });
-      return;
-    }
-
-    const authReq = req as AuthRequest;
-
-    const supabase = createClient(supabaseUrl, anonKey, {
-      auth: { persistSession: false },
-      global: { headers: { Authorization: `Bearer ${authReq.authToken}` } },
-    });
-
-    await supabase.from('usage_events').insert({
-      event_name: eventName,
-      user_id: authReq.user?.sub ?? null,
-      tenant_id: authReq.tenantId ?? null,
-      properties: properties ?? {},
-    });
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error logging usage event:', error);
-    res.status(500).json({ error: 'Error interno al registrar evento.' });
-  }
-});
+  },
+);
 
 router.get(
   '/usage/stats',
   requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
   requireTenant,
   requireRole(['admin', 'direccion']),
   async (req, res) => {

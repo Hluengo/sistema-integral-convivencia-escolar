@@ -6,6 +6,7 @@ import { useReactToPrint } from 'react-to-print';
 import { Eye, FileText, RefreshCw, FileSignature, Printer, PencilLine } from 'lucide-react';
 import { LOGO_URL } from '@/src/lib/logoBase64';
 import { LetterInstitutionalHeader } from '@/src/features/anotaciones/docgen/DocumentPreview/SharedComponents';
+import Button from '@/src/shared/ui/Button';
 import './official-document.css';
 
 type DocType =
@@ -128,11 +129,12 @@ export default function DraftPanel({
         </div>
       )}
 
-      <button
+      <Button
         type="button"
         onClick={handleDraftDocument}
         disabled={isDrafting}
-        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 font-semibold text-xs text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-brand-400"
+        fullWidth
+        className="rounded-lg px-4 py-2.5 text-xs"
       >
         {isDrafting ? (
           <>
@@ -144,12 +146,12 @@ export default function DraftPanel({
             <FileSignature className="h-4 w-4" aria-hidden="true" /> Generar borrador legal
           </>
         )}
-      </button>
+      </Button>
 
       {draftError && (
         <p
           role="alert"
-          className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700"
+          className="rounded-lg border border-gravisima-200 bg-gravisima-50 px-3 py-2 text-xs text-gravisima-700"
         >
           {draftError}
         </p>

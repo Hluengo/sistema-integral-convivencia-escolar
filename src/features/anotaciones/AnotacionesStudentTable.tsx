@@ -42,18 +42,18 @@ interface StudentRowData extends AnnotationExportStudent {
 }
 
 const DISC_STATUS: Record<string, { text: string; bg: string }> = {
-  Verde: { text: 'Sin medida activa', bg: 'bg-emerald-100 text-emerald-800' },
-  Amarillo: { text: 'Amonestación Escrita', bg: 'bg-yellow-100 text-yellow-800' },
-  Naranja: { text: 'Carta de Compromiso Conductual', bg: 'bg-orange-100 text-orange-800' },
-  Rojo: { text: 'Derivación a Convivencia Escolar', bg: 'bg-rose-100 text-rose-800' },
+  Verde: { text: 'Sin medida activa', bg: 'bg-leve-100 text-leve-700' },
+  Amarillo: { text: 'Amonestación Escrita', bg: 'bg-grave-100 text-grave-700' },
+  Naranja: { text: 'Carta de Compromiso Conductual', bg: 'bg-muygrave-100 text-muygrave-700' },
+  Rojo: { text: 'Derivación a Convivencia Escolar', bg: 'bg-gravisima-100 text-gravisima-700' },
 };
 
 const CARD_STATUS_BADGE: Record<string, { bg: string; textClass: string }> = {
-  Vigente: { bg: 'bg-emerald-100', textClass: 'text-emerald-800' },
+  Vigente: { bg: 'bg-leve-100', textClass: 'text-leve-700' },
   Procesada: { bg: 'bg-blue-100', textClass: 'text-blue-800' },
-  Pendiente: { bg: 'bg-amber-100', textClass: 'text-amber-800' },
+  Pendiente: { bg: 'bg-grave-100', textClass: 'text-grave-700' },
   Cumplida: { bg: 'bg-blue-100', textClass: 'text-blue-800' },
-  Incumplida: { bg: 'bg-red-100', textClass: 'text-red-800' },
+  Incumplida: { bg: 'bg-gravisima-100', textClass: 'text-gravisima-700' },
   Anulada: { bg: 'bg-neutral-100', textClass: 'text-neutral-500' },
 };
 
@@ -217,7 +217,7 @@ export default memo(function AnotacionesStudentTable({
           />
         </div>
         <details ref={exportMenuRef} className="group relative shrink-0">
-          <summary className="inline-flex w-full cursor-pointer list-none items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 font-semibold text-emerald-800 text-sm transition-colors hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 sm:w-auto">
+          <summary className="inline-flex w-full cursor-pointer list-none items-center justify-center gap-2 rounded-xl border border-leve-200 bg-leve-50 px-4 py-2 font-semibold text-leve-700 text-sm transition-colors hover:bg-leve-100 focus:outline-none focus:ring-2 focus:ring-leve-500/30 sm:w-auto">
             <Download className="size-4" aria-hidden="true" />
             {isExporting ? 'Generando Excel…' : 'Exportar Excel'}
             <ChevronDown
@@ -238,7 +238,7 @@ export default memo(function AnotacionesStudentTable({
                   type="button"
                   onClick={() => void handleExport(option.scope)}
                   disabled={isExporting || count === 0}
-                  className="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-neutral-700 text-sm transition-colors hover:bg-emerald-50 hover:text-emerald-800 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-neutral-700 text-sm transition-colors hover:bg-leve-50 hover:text-leve-700 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <span className="flex items-center gap-2">
                     <FileSpreadsheet className="size-4 shrink-0" aria-hidden="true" />
@@ -255,7 +255,7 @@ export default memo(function AnotacionesStudentTable({
       </div>
 
       {exportError && (
-        <p className="text-red-600 text-sm" role="alert">
+        <p className="text-gravisima-600 text-sm" role="alert">
           {exportError}
         </p>
       )}
@@ -354,7 +354,7 @@ export default memo(function AnotacionesStudentTable({
                       }}
                       tabIndex={0}
                       role="button"
-                      aria-label={`Ver detalle de ${student.full_name}`}
+                      aria-label={`Ver detalle de ${maskName(student.full_name, privacyMode)}`}
                       className={`cursor-pointer transition-colors ${style.rowBg}`}
                     >
                       <td className="whitespace-nowrap px-4 py-3 font-medium text-neutral-900 text-sm">
@@ -368,7 +368,7 @@ export default memo(function AnotacionesStudentTable({
                             }}
                             onKeyDown={(event) => event.stopPropagation()}
                             className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-brand-50 hover:text-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-                            aria-label={`Editar anotaciones de ${student.full_name}`}
+                            aria-label={`Editar anotaciones de ${maskName(student.full_name, privacyMode)}`}
                             title="Editar anotaciones"
                           >
                             <Pencil className="size-3.5" aria-hidden="true" />
@@ -379,7 +379,7 @@ export default memo(function AnotacionesStudentTable({
                         {student.course_name || '—'}
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-center text-neutral-600 text-sm">
-                        <span className="inline-flex items-center justify-center rounded-full bg-emerald-50 px-2.5 py-0.5 font-semibold text-emerald-700 text-xs">
+                        <span className="inline-flex items-center justify-center rounded-full bg-leve-50 px-2.5 py-0.5 font-semibold text-leve-700 text-xs">
                           {Number(student.positive_annotations_count) || 0}
                         </span>
                         {student.ai_analysis && student.ai_analysis.positivas > 0 && (
@@ -468,15 +468,15 @@ export default memo(function AnotacionesStudentTable({
         <div className="flex flex-wrap items-center gap-3">
           <span className="font-medium text-neutral-500 text-xs">Leyenda:</span>
           <span className="inline-flex items-center gap-1 text-neutral-600 text-xs">
-            <span className="inline-block size-2.5 rounded-full bg-yellow-500" />
+            <span className="inline-block size-2.5 rounded-full bg-grave-500" />
             Amonestación (5–9)
           </span>
           <span className="inline-flex items-center gap-1 text-neutral-600 text-xs">
-            <span className="inline-block size-2.5 rounded-full bg-orange-500" />
+            <span className="inline-block size-2.5 rounded-full bg-muygrave-500" />
             Compromiso (10–14)
           </span>
           <span className="inline-flex items-center gap-1 text-neutral-600 text-xs">
-            <span className="inline-block size-2.5 rounded-full bg-rose-500" />
+            <span className="inline-block size-2.5 rounded-full bg-gravisima-500" />
             Derivación (15+)
           </span>
         </div>

@@ -34,10 +34,10 @@ describe('membership configuration', () => {
     assert.equal(getMembershipAuthMode(), 'transition');
   });
 
-  it('activa el modo forzado solo cuando no existe fallback legacy', () => {
+  it('activa el modo forzado cuando enforced está habilitado', () => {
     process.env.VITE_APP_MEMBERSHIPS_ENABLED = 'true';
     process.env.VITE_APP_MEMBERSHIPS_ENFORCED = 'true';
-    process.env.VITE_APP_MEMBERSHIPS_ALLOW_LEGACY_FALLBACK = 'false';
+    process.env.VITE_APP_MEMBERSHIPS_ALLOW_LEGACY_FALLBACK = 'true';
 
     assert.equal(getMembershipAuthMode(), 'enforced');
   });

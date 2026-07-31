@@ -11,20 +11,13 @@ import {
 } from '@/src/shared/lib/domain/disciplinaryStage';
 import { usePhysicalCartaRegistration } from '@/src/shared/lib/hooks/usePhysicalCartaRegistration';
 import { formatDate } from './constants';
+import { getCurrentSchoolYear, getYearFromDateOnly, nowDateOnly } from '@/src/lib/dateUtils';
+import Button from '@/src/shared/ui/Button';
 
 const PHYSICAL_LETTER_TYPES: Array<Exclude<LetterType, 'Ficha de Derivación'>> = [
   'Amonestación Escrita',
   'Carta de Compromiso Conductual',
 ];
-
-function getTodayInChile(): string {
-  return new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Santiago',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(new Date());
-}
 
 interface PhysicalCartaRegistrationCardProps {
   studentId: string;
@@ -39,11 +32,10 @@ export default function PhysicalCartaRegistrationCard({
   negativeCount,
   onRegistered,
 }: PhysicalCartaRegistrationCardProps) {
-  const today = getTodayInChile();
-  const schoolYear = Number(today.slice(0, 4));
+  const today = nowDateOnly();
+  const schoolYear = getCurrentSchoolYear();
   const physicalCartas = cartas.filter((carta) => {
-    const cartaYear =
-      carta.school_year ?? new Date(`${carta.emission_date}T00:00:00`).getFullYear();
+    const cartaYear = carta.school_year ?? getYearFromDateOnly(carta.emission_date);
     return carta.origin === 'physical' && carta.status !== 'Anulada' && cartaYear === schoolYear;
   });
   const physicalBaselineType = getPhysicalCartaBaselineType(cartas, schoolYear);
@@ -108,14 +100,14 @@ export default function PhysicalCartaRegistrationCard({
             </p>
           </div>
         </div>
-        <button
-          type="button"
+        <Button
+          variant="custom"
           onClick={() => {
             setShowForm((visible) => !visible);
             setMessage(null);
           }}
           disabled={allPhysicalTypesRegistered}
-          className="inline-flex items-center gap-2 rounded-lg border border-sky-300 bg-white px-3 py-2 text-xs font-bold text-sky-800 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-lg border border-sky-300 bg-white px-3 py-2 text-xs font-bold text-sky-800 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
           {allPhysicalTypesRegistered
@@ -123,7 +115,7 @@ export default function PhysicalCartaRegistrationCard({
             : showForm
               ? 'Cancelar'
               : 'Registrar carta física'}
-        </button>
+        </Button>
       </div>
 
       {physicalCartas.length > 0 && (
@@ -205,13 +197,14 @@ export default function PhysicalCartaRegistrationCard({
             />
           </label>
           <div className="md:col-span-2">
-            <button
+            <Button
               type="submit"
+              variant="custom"
               disabled={isRegistering || registeredTypes.has(letterType)}
               className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-bold text-white hover:bg-sky-800 disabled:opacity-50"
             >
               {isRegistering ? 'Guardando...' : 'Guardar constancia'}
-            </button>
+            </Button>
           </div>
         </form>
       )}
@@ -219,7 +212,7 @@ export default function PhysicalCartaRegistrationCard({
       {message && (
         <p
           role={hasError ? 'alert' : 'status'}
-          className={`mt-3 text-xs font-semibold ${hasError ? 'text-red-700' : 'text-emerald-700'}`}
+          className={`mt-3 text-xs font-semibold ${hasError ? 'text-gravisima-700' : 'text-leve-700'}`}
         >
           {message}
         </p>

@@ -8,7 +8,7 @@ npm install
 
 # Configurar variables de entorno
 cp .env.example .env
-# Editar .env con credenciales reales de Supabase y Groq
+# Editar .env con credenciales reales de Supabase, OpenRouter y Gemini
 ```
 
 ## Comandos
@@ -29,7 +29,8 @@ cp .env.example .env
 | `VITE_SUPABASE_ANON_KEY`                 | Anon key pública de Supabase        |
 | `SUPABASE_JWT_SECRET`                    | Para verificar JWT en API routes    |
 | `SUPABASE_SERVICE_ROLE_KEY`              | Admin key para operaciones servidor |
-| `GROQ_API_KEY`                           | API key de Groq (IA)                |
+| `OPENROUTER_API_KEY`                     | Mejora de textos y asistencia breve |
+| `GEMINI_API_KEY`                         | Informes y documentos               |
 | `VITE_ALLOW_LOCAL_DEMO`                  | Demo sin login (solo desarrollo)    |
 | `VITE_SENTRY_DSN`                        | Error tracking                      |
 | `VITE_POSTHOG_KEY` / `VITE_POSTHOG_HOST` | Analytics                           |

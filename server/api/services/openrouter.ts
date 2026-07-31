@@ -10,45 +10,33 @@ const TEXT_FALLBACK_MODELS = [
 
 function getApiKey(): string {
   const key = process.env.OPENROUTER_API_KEY;
-  if (!key) {
-    throw new Error('OPENROUTER_API_KEY no configurada');
-  }
+  if (!key) throw new Error('OPENROUTER_API_KEY no configurada');
   return key;
 }
 
-export async function callGroq(
+export async function callOpenRouter(
   messages: Array<{ role: string; content: string }>,
   systemInstruction?: string,
   model = AI_MODEL,
 ): Promise<string> {
-  const apiKey = getApiKey();
-  const body: {
-    model: string;
-    max_tokens: number;
-    temperature: number;
-    messages: Array<{ role: string; content: string }>;
-  } = {
+  const body = {
     model,
     max_tokens: 2000,
     temperature: 0,
-    messages: [],
+    messages: systemInstruction
+      ? [{ role: 'system', content: systemInstruction }, ...messages]
+      : messages,
   };
-  if (systemInstruction) {
-    body.messages.push({ role: 'system', content: systemInstruction });
-  }
-  body.messages.push(...messages);
   const res = await httpsPost('openrouter.ai', '/api/v1/chat/completions', body, {
-    Authorization: `Bearer ${apiKey}`,
+    Authorization: `Bearer ${getApiKey()}`,
     'HTTP-Referer': 'http://localhost:3001',
     'X-Title': 'Sistema Integral Convivencia Escolar',
   });
-  if (res.status !== 200) {
+  if (res.status !== 200)
     throw new Error(`OpenRouter error: ${res.status} ${JSON.stringify(res.body)}`);
-  }
-  const resBody = res.body as Record<string, unknown>;
-  const choices = resBody?.choices as Array<Record<string, unknown>> | undefined;
-  const content = (choices?.[0]?.message as Record<string, unknown>)?.content as string | undefined;
-  return content || '';
+  const choices = (res.body as Record<string, unknown>)?.choices as
+    Array<Record<string, unknown>> | undefined;
+  return ((choices?.[0]?.message as Record<string, unknown>)?.content as string | undefined) || '';
 }
 
 /** Respaldo para transformaciones editoriales breves; no se usa para informes oficiales. */
@@ -59,7 +47,7 @@ export async function callTextImprovementFallback(
   let lastError: unknown;
   for (const model of TEXT_FALLBACK_MODELS) {
     try {
-      const text = await callGroq(messages, systemInstruction, model);
+      const text = await callOpenRouter(messages, systemInstruction, model);
       if (text.trim()) return text;
     } catch (error) {
       lastError = error;

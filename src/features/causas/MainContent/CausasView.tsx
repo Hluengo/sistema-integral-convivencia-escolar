@@ -10,6 +10,7 @@ import EmptyState from '../../../components/EmptyState';
 import { CausaCardSkeleton } from '../../../components/Skeleton';
 import { type Causa, type FaseProcedimental } from '../../../types';
 import type { FormAction } from '../../../hooks/useNewCausaForm';
+import Button from '@/src/shared/ui/Button';
 
 const CausasTable = lazy(() => import('../CausasTable'));
 const CausaDetailModal = lazy(() => import('../CausaDetailModal'));
@@ -112,21 +113,21 @@ export default function CausasView({
               {visibleCausas.length} expediente{visibleCausas.length !== 1 ? 's' : ''} activo
               {visibleCausas.length !== 1 ? 's' : ''}
               {visibleAulaSeguraCount > 0 && (
-                <span className="ml-2 inline-flex items-center gap-1 rounded-lg bg-red-500/30 px-2 py-0.5 font-semibold text-red-100 text-xs">
+                <span className="ml-2 inline-flex items-center gap-1 rounded-lg bg-gravisima-500/30 px-2 py-0.5 font-semibold text-gravisima-100 text-xs">
                   {visibleAulaSeguraCount} Aula Segura
                 </span>
               )}
             </p>
           </div>
-          <button
-            type="button"
+          <Button
+            variant="custom"
             onClick={() => dispatchForm({ type: showCreateForm ? 'CLOSE' : 'OPEN' })}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-secondary-500 px-5 py-3 font-semibold text-white shadow-md shadow-secondary-500/30 transition-colors hover:bg-secondary-600 active:scale-[0.97]"
+            className="shrink-0 rounded-xl bg-secondary-500 px-5 py-3 text-white shadow-md shadow-secondary-500/30 hover:bg-secondary-600 active:scale-[0.97]"
             aria-label="Crear nueva causa"
           >
             <BookOpen className="h-4 w-4" aria-hidden="true" />
             Nueva Causa
-          </button>
+          </Button>
         </div>
       </div>
 

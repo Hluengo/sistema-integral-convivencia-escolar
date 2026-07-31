@@ -75,7 +75,7 @@ export default function ForceCloseCausaDialog({
         <DialogHeader className="pr-10">
           <div>
             <DialogTitle className="flex items-center gap-2">
-              <LockKeyhole className="size-5 text-red-600" aria-hidden="true" />
+              <LockKeyhole className="size-5 text-gravisima-600" aria-hidden="true" />
               Cerrar causa con fundamento
             </DialogTitle>
             <DialogDescription className="mt-1">
@@ -159,7 +159,10 @@ export default function ForceCloseCausaDialog({
             </div>
 
             {error && (
-              <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-red-700 text-sm">
+              <p
+                role="alert"
+                className="rounded-lg bg-gravisima-50 px-3 py-2 text-gravisima-700 text-sm"
+              >
                 {error}
               </p>
             )}

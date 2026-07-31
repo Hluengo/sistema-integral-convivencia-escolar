@@ -6,5 +6,4 @@ export const VIEW_TITLES: Record<SidebarView, { title: string; subtitle: string 
   alumnos: { title: 'Estudiantes', subtitle: 'Gestión de estudiantes' },
   informes: { title: 'Asistente Legal', subtitle: 'Asistente y reportes' },
   anotaciones: { title: 'Gestión de Anotaciones', subtitle: 'Documentos y hojas de vida' },
-  documentos: { title: 'Registros', subtitle: 'Hub de expedientes y documentos oficiales' },
 };

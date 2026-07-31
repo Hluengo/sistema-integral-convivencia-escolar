@@ -67,7 +67,7 @@ Implementar cada ruta API una sola vez en `server/api/routes/` y registrarla en 
 
 **Multi-tenant:** Tabla `tenants`, columna `tenant_id` en 10 tablas, RLS por tenant + rol. JWT claim `app_metadata.tenant_id` para RLS rápido. Trigger `sync_tenant_to_jwt()` en profiles.
 
-**AI provider:** Groq API (`llama-3.3-70b-versatile`). Env: `GROQ_API_KEY`.
+**AI providers:** OpenRouter for text improvement/adaptation and Gemini for reports and document drafts. Env: `OPENROUTER_API_KEY`, `GEMINI_API_KEY`.
 
 **Auth:** Supabase Auth (email/password). Dashboard público (read-only); CRUD requiere login. Rol desde `profiles.role`.
 

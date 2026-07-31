@@ -4,6 +4,7 @@ import { memo, useEffect, useMemo, useState } from 'react';
 import { X } from 'lucide-react';
 import type { Annotation } from '@/src/types';
 import { maskName, maskRut } from '@/src/lib/anotacionesUtils';
+import { getCurrentSchoolYear, getYearInChile } from '@/src/lib/dateUtils';
 import {
   getDisciplinaryStage,
   type LetterDocType,
@@ -40,7 +41,6 @@ interface AnotacionesStudentDetailModalProps {
   privacyMode: boolean;
   initialTab?: ActiveTab;
   onClose: () => void;
-  onClearAnnotations: (studentId: string) => void;
   onDataChanged?: () => void | Promise<void>;
   teachers?: Record<string, string>;
 }
@@ -63,6 +63,7 @@ export default function AnotacionesStudentDetailModal({
   const disciplinaryData = useDisciplinaryData(student.id);
 
   const fallbackCounts = useMemo(() => {
+    const schoolYear = getCurrentSchoolYear();
     if (annotations.length === 0) {
       return {
         negativas: Number(student.annotations_count) || 0,
@@ -72,6 +73,7 @@ export default function AnotacionesStudentDetailModal({
     }
     return annotations.reduce(
       (acc, annotation) => {
+        if (getYearInChile(annotation.date) !== schoolYear) return acc;
         if (annotation.type === 'Negativa') acc.negativas += 1;
         if (annotation.type === 'Positiva') acc.positivas += 1;
         if (annotation.type === 'Información') acc.informativas += 1;
@@ -178,8 +180,12 @@ export default function AnotacionesStudentDetailModal({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DetailModalContent ariaLabel={`Ficha disciplinaria de ${student.full_name}`}>
-        <DialogTitle className="sr-only">Ficha disciplinaria de {student.full_name}</DialogTitle>
+      <DetailModalContent
+        ariaLabel={`Ficha disciplinaria de ${maskName(student.full_name, privacyMode)}`}
+      >
+        <DialogTitle className="sr-only">
+          Ficha disciplinaria de {maskName(student.full_name, privacyMode)}
+        </DialogTitle>
         <DialogDescription className="sr-only">
           Revisión del estado, anotaciones, cartas e historial disciplinario del estudiante.
         </DialogDescription>

@@ -86,7 +86,7 @@ export function SidebarAulaSeguraAlert({
     return (
       <div className="mt-4 flex justify-center">
         <div
-          className="h-2 w-2 animate-pulse rounded-full bg-red-400 ring-2 ring-red-400/30"
+          className="h-2 w-2 animate-pulse rounded-full bg-gravisima-500 ring-2 ring-gravisima-500/30"
           aria-hidden="true"
           title={`${count} alerta${count !== 1 ? 's' : ''} de Aula Segura`}
         />
@@ -95,15 +95,15 @@ export function SidebarAulaSeguraAlert({
   }
 
   return (
-    <div className="mx-3 mt-4 flex items-center gap-2.5 rounded-xl border border-red-400/30 bg-red-500/20 px-3.5 py-3">
-      <div className="shrink-0 rounded-lg bg-red-500/20 p-1.5">
-        <AlertTriangle className="h-3.5 w-3.5 text-red-300" aria-hidden="true" />
+    <div className="mx-3 mt-4 flex items-center gap-2.5 rounded-xl border border-gravisima-500/30 bg-gravisima-500/20 px-3.5 py-3">
+      <div className="shrink-0 rounded-lg bg-gravisima-500/20 p-1.5">
+        <AlertTriangle className="h-3.5 w-3.5 text-gravisima-200" aria-hidden="true" />
       </div>
       <div className="min-w-0">
-        <p className="font-bold text-red-200 text-xs leading-tight">
+        <p className="font-bold text-gravisima-200 text-xs leading-tight">
           {count} alerta{count !== 1 ? 's' : ''} crítica{count !== 1 ? 's' : ''}
         </p>
-        <p className="mt-0.5 font-medium text-[10px] text-red-300/70 leading-tight">
+        <p className="mt-0.5 font-medium text-[10px] text-gravisima-200/70 leading-tight">
           Ley Aula Segura · Acción urgente
         </p>
       </div>

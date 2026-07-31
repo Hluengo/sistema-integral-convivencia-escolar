@@ -23,6 +23,7 @@ import {
 import type { StudentInfo } from './constants';
 import PhysicalCartaRegistrationCard from './PhysicalCartaRegistrationCard';
 import TextInputDialog from '@/src/shared/ui/TextInputDialog';
+import Button from '@/src/shared/ui/Button';
 
 const AnotacionesDocumentGenerator = lazy(() => import('../AnotacionesDocumentGenerator'));
 
@@ -261,9 +262,9 @@ export default function CartasTab({
               role={messageTone === 'error' ? 'alert' : 'status'}
               className={`rounded-full px-3 py-1 text-xs font-bold ${
                 messageTone === 'error'
-                  ? 'bg-red-50 text-red-700'
+                  ? 'bg-gravisima-50 text-gravisima-700'
                   : messageTone === 'success'
-                    ? 'bg-emerald-50 text-emerald-700'
+                    ? 'bg-leve-50 text-leve-700'
                     : 'bg-blue-50 text-blue-700'
               }`}
             >
@@ -272,24 +273,23 @@ export default function CartasTab({
           )}
         </div>
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
+          <Button
             onClick={() => void handleCreate()}
             disabled={!canAct || busy}
-            className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
+            className="rounded-xl px-4 py-2"
           >
             <FileText className="h-4 w-4" />
             Crear carta
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="danger"
             onClick={handleAnnul}
             disabled={!activeCarta || busy}
-            className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+            className="rounded-xl border border-gravisima-200 bg-white px-4 py-2 text-gravisima-700 hover:bg-gravisima-50 hover:text-gravisima-700"
           >
             <Ban className="h-4 w-4" />
             Anular
-          </button>
+          </Button>
         </div>
       </section>
 

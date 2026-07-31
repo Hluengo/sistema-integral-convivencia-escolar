@@ -5,6 +5,7 @@
 
 import type React from 'react';
 import { Sparkles, RefreshCw, FileSignature } from 'lucide-react';
+import Button from '@/src/shared/ui/Button';
 
 type MarkdownRenderer = ({ text }: { text: string }) => React.ReactElement;
 
@@ -36,11 +37,12 @@ export default function AuditPanel({
         </div>
       </div>
 
-      <button
+      <Button
         type="button"
-        onClick={handleRunAudit}
+        onClick={() => void handleRunAudit()}
         disabled={isAuditing}
-        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 font-semibold text-white text-xs transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-brand-400"
+        fullWidth
+        className="rounded-lg px-4 py-2.5 text-xs"
       >
         {isAuditing ? (
           <>
@@ -52,7 +54,7 @@ export default function AuditPanel({
             <FileSignature className="h-4 w-4" aria-hidden="true" /> Ejecutar auditoría legal
           </>
         )}
-      </button>
+      </Button>
 
       {auditReport && (
         <div className="max-h-[500px] overflow-y-auto rounded-lg border border-neutral-200 bg-white p-4">

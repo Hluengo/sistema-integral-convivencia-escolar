@@ -10,11 +10,11 @@ El estado global se distribuye en 4 stores especializadas (Zustand).
 
 ```typescript
 interface AuthState {
-  user: User | null;           // Supabase User
-  tenantId: string | null;     // UUID del tenant activo
-  authLoading: boolean;        // Loading state inicial
-  showLoginModal: boolean;     // Control del modal login
-  isAuthenticated: boolean;    // Computado de user !== null
+  user: User | null; // Supabase User
+  tenantId: string | null; // UUID del tenant activo
+  authLoading: boolean; // Loading state inicial
+  showLoginModal: boolean; // Control del modal login
+  isAuthenticated: boolean; // Computado de user !== null
 }
 
 interface AuthActions {
@@ -53,6 +53,7 @@ interface CausasActions {
 ```
 
 **Selectors** (funciones puras):
+
 - `selectActiveCausas(state)` — Excluye cerradas
 - `selectClosedCausas(state)` — Solo cerradas
 - `selectAulaSeguraCausas(state)` — Activas con comprometeAulaSegura
@@ -65,13 +66,12 @@ interface CausasActions {
 
 ```typescript
 interface UIState {
-  currentView: SidebarView;       // dashboard | causas | informes | alumnos | anotaciones | documentos
+  currentView: SidebarView; // dashboard | causas | informes | alumnos | anotaciones
   isSidebarCollapsed: boolean;
   mobileShowDetail: boolean;
   privacyMode: boolean;
   showShortcuts: boolean;
   currentRole: UserRole;
-  selectedStudentForDocs: string | null;
 }
 
 interface UIActions {
@@ -80,7 +80,6 @@ interface UIActions {
   setMobileShowDetail: (v: boolean) => void;
   setPrivacyMode: (v: boolean) => void;
   setShowShortcuts: (v: boolean | ((prev: boolean) => boolean)) => void;
-  setSelectedStudentForDocs: (id: string | null) => void;
 }
 ```
 

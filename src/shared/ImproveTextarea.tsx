@@ -1,5 +1,6 @@
 import { Sparkles, Loader2 } from 'lucide-react';
 import { useTextImprovement, type TextImprovementContext } from '../hooks/useTextImprovement';
+import Button from './ui/Button';
 
 interface ImproveTextareaProps {
   id: string;
@@ -43,12 +44,13 @@ export default function ImproveTextarea({
           >
             {label}
           </label>
-          <button
-            type="button"
+          <Button
+            variant="custom"
+            size="sm"
             onClick={handleImprove}
             disabled={isImproving || !value.trim()}
             title="Mejorar redacción con IA"
-            className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-brand-200 bg-brand-50 px-2 py-1 font-semibold text-[10px] text-brand-700 transition-colors hover:border-brand-300 hover:bg-brand-100 disabled:cursor-not-allowed disabled:opacity-50"
+            className="shrink-0 rounded-lg border border-brand-200 bg-brand-50 px-2 py-1 text-[10px] font-semibold text-brand-700 hover:border-brand-300 hover:bg-brand-100"
           >
             {isImproving ? (
               <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
@@ -56,7 +58,7 @@ export default function ImproveTextarea({
               <Sparkles className="h-3 w-3" aria-hidden="true" />
             )}
             Mejorar
-          </button>
+          </Button>
         </div>
       )}
       <textarea
@@ -74,7 +76,7 @@ export default function ImproveTextarea({
         }
       />
       {error && (
-        <p role="alert" className="mt-1 text-red-600 text-xs">
+        <p role="alert" className="mt-1 text-gravisima-600 text-xs">
           {error}
         </p>
       )}

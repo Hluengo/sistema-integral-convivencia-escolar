@@ -11,6 +11,7 @@ import { useCoursesQuery } from '../hooks/useCoursesQuery';
 import { useStudentsQuery } from '../hooks/useStudentsQuery';
 import { useCausasPersistence } from '../hooks/useCausasPersistence';
 import { useCausaDetailsQuery, useCausasQuery } from '../shared/lib/hooks/useCausasQuery';
+import Button from '../shared/ui/Button';
 import {
   mergeCausasList,
   syncPersistedCausasToCache,
@@ -394,16 +395,12 @@ export default function App() {
             {loadError && (
               <div
                 role="alert"
-                className="mx-4 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 sm:mx-6"
+                className="mx-4 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gravisima-200 bg-gravisima-50 px-4 py-3 text-sm text-gravisima-700 sm:mx-6"
               >
                 <span>{loadError}</span>
-                <button
-                  type="button"
-                  onClick={retryLoad}
-                  className="rounded-lg bg-red-700 px-3 py-1.5 font-semibold text-white transition-colors hover:bg-red-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700"
-                >
+                <Button variant="danger" onClick={retryLoad} className="rounded-lg px-3 py-1.5">
                   Reintentar
-                </button>
+                </Button>
               </div>
             )}
             <Suspense fallback={<MainContentSkeleton />}>

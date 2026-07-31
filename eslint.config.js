@@ -79,6 +79,7 @@ export default tseslint.config(
       'api/index.js',
       'supabase/.temp/**',
       'Free-Models-IA/**',
+      '.agents/**',
     ],
   },
   js.configs.recommended,
@@ -130,5 +131,5 @@ export default tseslint.config(
     rules: {
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     },
-  }
+  },
 );

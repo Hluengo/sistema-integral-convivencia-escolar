@@ -37,7 +37,6 @@ src/
 │   ├── causas/       # Case management + timeline
 │   ├── dashboard/    # KPIs and statistics
 │   ├── estudiantes/  # Student directory
-│   ├── documentos/   # Document hub
 │   └── timeline/     # Interactive case timeline
 ├── widgets/          # Header, Sidebar
 ├── shared/           # Reusable code
@@ -77,7 +76,6 @@ No hay React Router. La navegación usa `uiStore.currentView` de tipo `SidebarVi
 | `informes`    | `<AdvisorView>`     | State: 'informes'    |
 | `alumnos`     | `<StudentsPanel>`   | State: 'alumnos'     |
 | `anotaciones` | `<AnotacionesView>` | State: 'anotaciones' |
-| `documentos`  | `<DocumentosView>`  | State: 'documentos'  |
 
 ---
 
@@ -587,7 +585,7 @@ Capa 5: Service role (bypass RLS, solo server-side)
 default-src 'self'
 script-src 'self' 'unsafe-inline' 'unsafe-eval'
 style-src 'self' 'unsafe-inline' fonts.googleapis.com
-connect-src 'self' openrouter.ai api.groq.com *.supabase.co wss://*.supabase.co
+connect-src 'self' openrouter.ai *.supabase.co wss://*.supabase.co
 img-src 'self' *.supabase.co data: blob:
 font-src 'self' fonts.gstatic.com data:
 ```

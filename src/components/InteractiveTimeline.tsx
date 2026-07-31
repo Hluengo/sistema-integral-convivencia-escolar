@@ -14,7 +14,7 @@ import { TimelineProvider } from '@/src/context/TimelineContext';
 import { useAppContext } from '@/src/context/useAppContext';
 import ConfirmDialog from './ConfirmDialog';
 import { useBreaches } from './InteractiveTimeline/hooks/useBreaches';
-import type { TimelineTab } from '../features/timeline/timelineTabs';
+import type { TimelineTab } from '../features/timeline/timelineTabs.types';
 import ForceCloseCausaDialog from '../features/causas/ForceCloseCausaDialog';
 
 const EditCausaModal = lazy(() => import('./EditCausaModal'));

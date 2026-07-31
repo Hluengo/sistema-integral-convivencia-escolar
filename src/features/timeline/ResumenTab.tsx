@@ -36,15 +36,15 @@ export default function ResumenTab({ causa, breaches }: ResumenTabProps) {
             label: 'Plazo de cierre',
             value: deadline.text,
             Icon: CalendarClock,
-            cardClass: 'border-amber-100 bg-amber-50',
-            iconClass: 'text-amber-700',
+            cardClass: 'border-grave-100 bg-grave-50',
+            iconClass: 'text-grave-700',
           },
           {
             label: 'Hitos registrados',
             value: `${completed} de ${causa.checklistDebidoProceso.length}`,
             Icon: UserRound,
-            cardClass: 'border-emerald-100 bg-emerald-50',
-            iconClass: 'text-emerald-600',
+            cardClass: 'border-leve-100 bg-leve-50',
+            iconClass: 'text-leve-600',
           },
         ].map(({ label, value, Icon, cardClass, iconClass }) => (
           <div key={label} className={`rounded-xl border p-4 ${cardClass}`}>

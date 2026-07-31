@@ -17,7 +17,7 @@ App SaaS multi-tenant para gestión de convivencia escolar chilena. React 19 + V
 | Backend Prod | Vercel Serverless (esbuild)                  | `npm run test:e2e`          |
 | Database     | Supabase PostgreSQL 17                       | 16 tablas, RLS multi-tenant |
 | Documentos   | docx (Word) + pdfjs-dist (PDF)               | 3 templates DOCX            |
-| AI           | OpenRouter (llama-3.1-8b-instruct)           | 4 endpoints AI              |
+| AI           | OpenRouter (text) + Gemini (reports/drafts)  | AI endpoints                |
 
 ## Comandos Esenciales
 

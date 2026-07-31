@@ -22,7 +22,8 @@ import {
   physicalCartaRegistrationSchema,
   type PhysicalCartaRegistrationInput,
 } from '../../lib/schemas/physicalCarta';
-import { nowDateOnly } from '../../../lib/dateUtils';
+import { getCurrentSchoolYear, getYearInChile, nowDateOnly } from '../../../lib/dateUtils';
+import type { CourseCartaRankingItem } from '../../lib/domain/courseCartaRanking';
 
 type CartaStatus = CartaDisciplinaria['status'];
 export type CartaWorkflowStatus = 'pending' | 'completed' | 'annulled';
@@ -205,12 +206,7 @@ export async function fetchCartaTableStates(): Promise<Record<string, StudentCar
     cartasByStudent.set(carta.student_id, current);
   }
 
-  const schoolYear = Number(
-    new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'America/Santiago',
-      year: 'numeric',
-    }).format(new Date()),
-  );
+  const schoolYear = getCurrentSchoolYear();
   const states: Record<string, StudentCartaTableState> = {};
   for (const [studentId, studentCartas] of cartasByStudent) {
     states[studentId] = resolveStudentCartaTableState(studentCartas, schoolYear);
@@ -558,8 +554,10 @@ export async function fetchStudentDisciplinarySnapshot(
     fetchCartaEventsByStudent(studentId),
   ]);
 
+  const schoolYear = getCurrentSchoolYear();
   const counts = annotations.reduce(
     (acc, annotation) => {
+      if (getYearInChile(annotation.date) !== schoolYear) return acc;
       if (annotation.type === 'Negativa') acc.negativas += 1;
       if (annotation.type === 'Positiva') acc.positivas += 1;
       if (annotation.type === 'Información') acc.informativas += 1;
@@ -584,4 +582,28 @@ export async function fetchStudentDisciplinarySnapshot(
     counts,
     lastAnalysis: documentAnalyses[0] || null,
   };
+}
+
+/**
+ * RPC: returns the top 5 courses with the most disciplinary letters (cartas).
+ * Falls back to aggregating from cartas_disciplinarias if RPC unavailable.
+ */
+export async function fetchCourseCartaRanking(): Promise<CourseCartaRankingItem[]> {
+  try {
+    const { data, error } = await supabase.rpc('get_course_carta_ranking');
+    if (error || !data) throw error ?? new Error('No data returned from RPC');
+
+    return (data as Array<Record<string, number | string>>).map((row) => ({
+      course_name: String(row.course_name || 'Sin curso'),
+      amonestacion_count: Number(row.amonestacion_count) || 0,
+      compromiso_count: Number(row.compromiso_count) || 0,
+      derivacion_count: Number(row.derivacion_count) || 0,
+      total_count: Number(row.total_count) || 0,
+    }));
+  } catch (err) {
+    const rpcError =
+      err instanceof Error ? err : new Error('RPC de ranking de cursos no disponible.');
+    console.error('RPC get_course_carta_ranking no disponible:', rpcError.message);
+    throw rpcError;
+  }
 }

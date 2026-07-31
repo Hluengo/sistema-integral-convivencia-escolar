@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, lazy } from 'react';
 import { Shield, Plus } from 'lucide-react';
 import type { Annotation, AnotacionStudent } from '../../types';
-import { supabase } from '../../lib/supabase';
 import {
   fetchAnnotations,
   fetchStudentsWithAnnotationCounts,
@@ -16,6 +15,7 @@ import {
 import AnotacionesStudentTable from './AnotacionesStudentTable';
 import { AnnotationsSkeleton } from '../../components/Skeleton';
 import type { ActiveTab } from './AnotacionesStudentDetailModal/constants';
+import Button from '@/src/shared/ui/Button';
 
 const AnotacionesStudentDetailModal = lazy(() => import('./AnotacionesStudentDetailModal'));
 const NewDisciplinaryProcessModal = lazy(() => import('./NewDisciplinaryProcessModal'));
@@ -121,38 +121,6 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
     };
   }, [selectedStudent?.id, selectedStudent]);
 
-  const handleClearAnnotations = useCallback(
-    async (studentId: string) => {
-      try {
-        const { error } = await supabase
-          .from('inspectorate_records')
-          .delete()
-          .eq('student_id', studentId);
-        if (error) {
-          throw error;
-        }
-        const { error: updateErr } = await supabase
-          .from('document_analyses')
-          .delete()
-          .eq('student_id', studentId);
-        if (updateErr) {
-          console.error('Error limpiando document_analyses:', updateErr);
-        }
-        await loadData();
-        if (selectedStudent && selectedStudent.id === studentId) {
-          const fresh = students.find((s) => s.id === studentId);
-          if (fresh) {
-            setSelectedStudent(fresh);
-          }
-        }
-      } catch (error: unknown) {
-        console.error('Error limpiando anotaciones:', error);
-        setDbError(error instanceof Error ? error.message : 'Error al limpiar anotaciones');
-      }
-    },
-    [loadData, selectedStudent, students],
-  );
-
   if (isLoading) {
     return <AnnotationsSkeleton />;
   }
@@ -175,23 +143,23 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
               Registro de anotaciones disciplinarias de estudiantes
             </p>
           </div>
-          <button
-            type="button"
+          <Button
+            variant="custom"
             onClick={() => setIsNewProcessModalOpen(true)}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-secondary-500 px-5 py-3 font-semibold text-white shadow-md shadow-secondary-500/30 transition-colors hover:bg-secondary-600 active:scale-[0.97]"
+            className="shrink-0 rounded-xl bg-secondary-500 px-5 py-3 text-white shadow-md shadow-secondary-500/30 hover:bg-secondary-600 active:scale-[0.97]"
             aria-label="Crear nuevo proceso"
           >
             <Plus className="h-4 w-4" />
             Nuevo Proceso
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* DB Error Alert */}
       {dbError && (
-        <div className="flex items-start gap-3 rounded-xl border border-rose-200 bg-red-50 p-4 shadow-sm">
+        <div className="flex items-start gap-3 rounded-xl border border-gravisima-200 bg-gravisima-50 p-4 shadow-sm">
           <Shield className="mt-0.5 h-5 w-5 shrink-0 text-gravisima-500" />
-          <div className="space-y-1 text-gravisima-800 text-xs">
+          <div className="space-y-1 text-gravisima-700 text-xs">
             <p className="font-bold">Protección de Datos de NNA</p>
             <p className="leading-relaxed">
               No se pudo conectar con la base de datos. Los datos mostrados corresponden a
@@ -231,7 +199,6 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
           privacyMode={privacyMode}
           initialTab={detailInitialTab}
           onClose={() => setSelectedStudent(null)}
-          onClearAnnotations={() => handleClearAnnotations(selectedStudent.id)}
           onDataChanged={refreshStudentTable}
         />
       )}

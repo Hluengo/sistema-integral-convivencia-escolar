@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/src/shared/ui/Dialog';
+import Button from '@/src/shared/ui/Button';
 
 export default function ShortcutsModal({ onClose }: { onClose: () => void }) {
   return (
@@ -41,13 +42,9 @@ export default function ShortcutsModal({ onClose }: { onClose: () => void }) {
           </li>
         </ul>
         <DialogFooter>
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-full cursor-pointer rounded-xl bg-brand-600 px-4 py-2 font-medium text-sm text-white transition-colors hover:bg-brand-700"
-          >
+          <Button fullWidth onClick={onClose} className="rounded-xl px-4 py-2 font-medium">
             Cerrar
-          </button>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

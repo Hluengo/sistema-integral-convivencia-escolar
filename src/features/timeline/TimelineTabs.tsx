@@ -6,7 +6,7 @@
 import type React from 'react';
 import { FileSearch, History, Route } from 'lucide-react';
 import type { Causa } from '../../types';
-import type { TimelineTab } from './timelineTabs';
+import type { TimelineTab } from './timelineTabs.types';
 import { DetailModalTabs, type DetailModalTab } from '../../shared/ui/DetailModal';
 
 interface TimelineTabsProps {

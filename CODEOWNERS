@@ -4,7 +4,6 @@ src/features/causas/ @frontend-designer @legal
 src/features/timeline/ @frontend-designer @legal
 src/features/dashboard/ @frontend-designer @analytics
 src/features/students/ @frontend-designer @pie
-src/features/documentos/ @frontend-designer @legal
 src/features/ai-advisor/ @frontend-designer @legal
 src/features/command-palette/ @frontend-designer
 src/features/onboarding/ @frontend-designer

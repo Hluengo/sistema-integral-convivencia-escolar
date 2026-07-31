@@ -8,6 +8,7 @@ import { Check, Pencil, X } from 'lucide-react';
 import type { Annotation } from '@/src/shared/lib/types';
 import { updateAnnotation } from '@/src/services/annotations.service';
 import { formatDate, SEVERITY_BADGE } from './constants';
+import Button from '@/src/shared/ui/Button';
 import { toDateTimeLocalValue, toIsoDateTime } from './annotationEditUtils';
 
 interface EditAnnotationsTabProps {
@@ -109,13 +110,13 @@ export default function EditAnnotationsTab({ annotations, onSaved }: EditAnnotat
 
       <div aria-live="polite">
         {successMessage && (
-          <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800 text-sm">
+          <p className="rounded-lg border border-leve-200 bg-leve-50 px-4 py-3 text-leve-700 text-sm">
             {successMessage}
           </p>
         )}
         {error && (
           <p
-            className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-800 text-sm"
+            className="rounded-lg border border-gravisima-200 bg-gravisima-50 px-4 py-3 text-gravisima-700 text-sm"
             role="alert"
           >
             {error}
@@ -227,24 +228,23 @@ export default function EditAnnotationsTab({ annotations, onSaved }: EditAnnotat
                   </div>
 
                   <div className="flex justify-end gap-2">
-                    <button
-                      type="button"
+                    <Button
+                      variant="secondary"
                       onClick={cancelEditing}
                       disabled={isSaving}
-                      className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-3 py-2 font-semibold text-neutral-600 text-sm hover:bg-neutral-50 disabled:opacity-50"
+                      className="rounded-lg px-3 py-2"
                     >
                       <X className="size-4" aria-hidden="true" />
                       Cancelar
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
                       onClick={() => void saveChanges(annotation)}
                       disabled={isSaving}
-                      className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-3 py-2 font-semibold text-sm text-white hover:bg-brand-700 disabled:cursor-wait disabled:opacity-60"
+                      className="rounded-lg px-3 py-2 disabled:cursor-wait disabled:opacity-60"
                     >
                       <Check className="size-4" aria-hidden="true" />
                       {isSaving ? 'Guardando…' : 'Guardar cambios'}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ) : (

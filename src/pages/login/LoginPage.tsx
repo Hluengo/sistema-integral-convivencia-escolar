@@ -5,7 +5,7 @@
 
 import type React from 'react';
 import { useRef, useState } from 'react';
-import { AlertCircle, CheckCircle2, Eye, EyeOff, Loader2, Scale } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Eye, EyeOff, Scale } from 'lucide-react';
 import {
   requestPasswordReset,
   signInWithEmail,
@@ -14,6 +14,7 @@ import {
 } from '../../services/auth.service';
 import { useAppContext } from '../../context/useAppContext';
 import { Dialog, DialogContent } from '../../components/ui/Dialog';
+import Button from '../../shared/ui/Button';
 
 interface LoginPageProps {
   onClose?: () => void;
@@ -174,7 +175,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
           {error && (
             <div
               role="alert"
-              className="mb-5 flex items-start gap-3 rounded-xl border border-red-100 bg-red-50 p-3.5 text-red-600 text-sm"
+              className="mb-5 flex items-start gap-3 rounded-xl border border-gravisima-200 bg-gravisima-50 p-3.5 text-gravisima-700 text-sm"
             >
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>{error}</span>
@@ -183,7 +184,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
           {notice && (
             <div
               role="status"
-              className="mb-5 flex items-start gap-3 rounded-xl border border-emerald-100 bg-emerald-50 p-3.5 text-emerald-700 text-sm"
+              className="mb-5 flex items-start gap-3 rounded-xl border border-leve-200 bg-leve-50 p-3.5 text-leve-700 text-sm"
             >
               <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
               <span>{notice}</span>
@@ -346,31 +347,27 @@ function PrimaryButton({
   loadingLabel: string;
 }) {
   return (
-    <button
+    <Button
       type="submit"
+      fullWidth
+      isLoading={loading}
       disabled={loading}
-      className="mt-2 flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3 font-semibold text-sm text-white shadow-sm transition-colors duration-200 hover:bg-brand-700 hover:shadow-md disabled:cursor-not-allowed disabled:bg-brand-400"
+      className="mt-2 rounded-xl px-4 py-3"
     >
-      {loading ? (
-        <>
-          <Loader2 className="h-4 w-4 animate-spin" />
-          {loadingLabel}
-        </>
-      ) : (
-        label
-      )}
-    </button>
+      {loading ? loadingLabel : label}
+    </Button>
   );
 }
 
 function BackButton({ onClick }: { onClick: () => void }) {
   return (
-    <button
-      type="button"
+    <Button
+      variant="ghost"
+      fullWidth
       onClick={onClick}
-      className="w-full rounded-xl px-4 py-2 font-medium text-brand-600 text-sm hover:bg-brand-50"
+      className="rounded-xl px-4 py-2 font-medium text-brand-600 hover:bg-brand-50 hover:text-brand-700"
     >
       Volver al inicio de sesión
-    </button>
+    </Button>
   );
 }

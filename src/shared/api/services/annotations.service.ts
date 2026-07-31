@@ -5,10 +5,13 @@
 
 import { supabase } from '../lib/supabase';
 import {
-  countAnnotationStages,
   parseAnnotationStageRows,
   type AnnotationStageCounts,
 } from '../../lib/domain/annotationStageCounts';
+import type {
+  StudentAnnotationRankingItem,
+  TeacherAnnotationRankingItem,
+} from '../../lib/domain/annotationRankings';
 import type { Annotation, AnotacionStudent, DocumentAnalysis } from '../../../types';
 import { mapInspectorateToAnnotation } from '../../../lib/mappers';
 import { calculateDisciplinaryStatus } from '../../../domain/disciplinaryStatus';
@@ -18,13 +21,6 @@ const ANNOTATION_COLUMNS =
   'id,student_id,date_time,observation,severity,type,registered_by,created_at,created_by,pdf_file_path';
 const DOCUMENT_ANALYSIS_COLUMNS =
   'id,student_id,file_name,negativas,positivas,informativas,analyzed_at,tenant_id,created_at,status';
-
-interface AnnotationCountStats {
-  negativas: number;
-  positivas: number;
-  informativas: number;
-  lastDate?: string;
-}
 
 export interface UpdateAnnotationInput {
   id: string;
@@ -141,143 +137,81 @@ function mapAnnotationSummaryRows(rows: RpcStudentSummary[]): AnotacionStudent[]
   });
 }
 
-function addAnnotationToStats(
-  stats: Record<string, AnnotationCountStats>,
-  annotation: { student_id: string; type: string; date_time: string | null },
-) {
-  const studentStats = stats[annotation.student_id] || {
-    negativas: 0,
-    positivas: 0,
-    informativas: 0,
-    lastDate: undefined,
-  };
-
-  if (annotation.type === 'Negativa') studentStats.negativas += 1;
-  if (annotation.type === 'Positiva') studentStats.positivas += 1;
-  if (annotation.type === 'Información') studentStats.informativas += 1;
-
-  if (annotation.date_time) {
-    const current = studentStats.lastDate ? new Date(studentStats.lastDate).getTime() : 0;
-    const next = new Date(annotation.date_time).getTime();
-    if (next > current) studentStats.lastDate = annotation.date_time;
-  }
-
-  stats[annotation.student_id] = studentStats;
-}
-
-async function fetchAnnotationStatsByStudent(): Promise<Record<string, AnnotationCountStats>> {
-  const pageSize = 1000;
-  let offset = 0;
-  const stats: Record<string, AnnotationCountStats> = {};
-
-  while (true) {
-    const { data, error } = await supabase
-      .from('inspectorate_records')
-      .select('id,student_id,type,date_time')
-      .order('id', { ascending: true })
-      .range(offset, offset + pageSize - 1);
-
-    if (error) {
-      console.error('Error fetching annotation stats:', error);
-      return {};
-    }
-
-    for (const annotation of data || []) {
-      addAnnotationToStats(
-        stats,
-        annotation as { student_id: string; type: string; date_time: string | null },
-      );
-    }
-
-    if (!data || data.length < pageSize) break;
-    offset += pageSize;
-  }
-
-  return stats;
-}
-
 export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStudent[]> {
   const { data: rpcData, error: rpcError } = await supabase.rpc('get_student_annotation_summary');
 
-  if (!rpcError && rpcData) {
-    return mapAnnotationSummaryRows(rpcData as RpcStudentSummary[]);
+  if (rpcError || !rpcData) {
+    const error = rpcError ?? new Error('La RPC get_student_annotation_summary no devolvió datos.');
+    console.error('RPC get_student_annotation_summary no disponible:', error.message);
+    throw error;
   }
 
-  console.warn(
-    'RPC get_student_annotation_summary no disponible, usando fallback:',
-    rpcError?.message,
-  );
-
-  const [studentsResult, statsByStudent] = await Promise.all([
-    supabase
-      .from('students')
-      .select('id,full_name,course_id,teacher_id,status,rut,ai_analysis,courses(name, level)')
-      .order('full_name', { ascending: true }),
-    fetchAnnotationStatsByStudent(),
-  ]);
-  const { data: students, error: studentsError } = studentsResult;
-
-  if (!students) {
-    console.error('Error fetching students:', studentsError);
-    return [];
-  }
-
-  return students.map((s: Record<string, unknown>) => {
-    const stats = statsByStudent[s.id as string] || {
-      negativas: 0,
-      positivas: 0,
-      informativas: 0,
-      lastDate: undefined,
-    };
-    const courses = s.courses as { name: string; level: string } | null;
-    const rawAi = s.ai_analysis as Record<string, number> | null;
-    return {
-      id: s.id as string,
-      full_name: s.full_name as string,
-      course_id: s.course_id as string,
-      teacher_id: (s.teacher_id as string) || '',
-      status: (s.status as string) || 'Activo',
-      annotations_count: stats.negativas,
-      positive_annotations_count: stats.positivas,
-      informative_annotations_count: stats.informativas,
-      last_annotation_date: stats.lastDate,
-      disciplinary_status: calculateDisciplinaryStatus(stats.negativas),
-      rut: (s.rut as string) || '',
-      course_name: courses?.name ?? 'Sin curso',
-      ai_analysis: rawAi
-        ? {
-            negativas: Number(rawAi.negativas) || 0,
-            positivas: Number(rawAi.positivas) || 0,
-            informativas: Number(rawAi.informativas) || 0,
-          }
-        : undefined,
-    };
-  });
+  return mapAnnotationSummaryRows(rpcData as RpcStudentSummary[]);
 }
 
 /**
  * Lightweight RPC: returns the annotation stage counts for dashboard KPIs.
- * Falls back to counting from fetchStudentsWithAnnotationCounts if RPC unavailable.
+ * No usa fallback: los KPIs deben reflejar exclusivamente la fuente agregada
+ * y tenant-scoped de PostgreSQL.
  */
 export async function fetchAnnotationStageCounts(): Promise<AnnotationStageCounts> {
-  const fallback = async () => {
-    const students = await fetchStudentsWithAnnotationCounts();
-    return countAnnotationStages(students);
-  };
+  const { data, error } = await supabase.rpc('get_annotation_stage_counts');
+  if (error || !data) {
+    const rpcError = error ?? new Error('La RPC get_annotation_stage_counts no devolvió datos.');
+    console.error('RPC get_annotation_stage_counts no disponible:', rpcError.message);
+    throw rpcError;
+  }
 
+  return parseAnnotationStageRows(
+    data as Array<{
+      stage: string;
+      total_count: number | string;
+      pending_count: number | string;
+      processed_count: number | string;
+    }>,
+  );
+}
+
+/**
+ * RPC: returns the top 5 teachers with the most negative annotations.
+ * No usa fallback: una falla debe ser visible para no mezclar años o fuentes.
+ */
+export async function fetchTeacherAnnotationRanking(): Promise<TeacherAnnotationRankingItem[]> {
   try {
-    const { data, error } = await supabase.rpc('get_annotation_stage_counts');
-    if (error || !data) return fallback();
+    const { data, error } = await supabase.rpc('get_teacher_annotation_ranking');
+    if (error || !data) throw error ?? new Error('No data returned from RPC');
 
-    return parseAnnotationStageRows(
-      data as Array<{
-        stage: string;
-        total_count: number | string;
-        pending_count: number | string;
-        processed_count: number | string;
-      }>,
-    );
-  } catch {
-    return fallback();
+    return (data as Array<Record<string, number | string>>).map((row) => ({
+      teacher_name: String(row.teacher_name || 'Sin profesor'),
+      negative_count: Number(row.negative_count) || 0,
+    }));
+  } catch (err) {
+    const rpcError =
+      err instanceof Error ? err : new Error('RPC de ranking docente no disponible.');
+    console.error('RPC get_teacher_annotation_ranking no disponible:', rpcError.message);
+    throw rpcError;
+  }
+}
+
+/**
+ * RPC: returns the top 5 students with the most negative annotations.
+ * No usa fallback: una falla debe ser visible para no mezclar años o fuentes.
+ */
+export async function fetchStudentAnnotationRanking(): Promise<StudentAnnotationRankingItem[]> {
+  try {
+    const { data, error } = await supabase.rpc('get_student_annotation_ranking');
+    if (error || !data) throw error ?? new Error('No data returned from RPC');
+
+    return (data as Array<Record<string, unknown>>).map((row) => ({
+      student_id: String(row.student_id || ''),
+      student_name: String(row.student_name || 'Sin nombre'),
+      course_name: String(row.course_name || 'Sin curso'),
+      negative_count: Number(row.negative_count) || 0,
+    }));
+  } catch (err) {
+    const rpcError =
+      err instanceof Error ? err : new Error('RPC de ranking estudiantil no disponible.');
+    console.error('RPC get_student_annotation_ranking no disponible:', rpcError.message);
+    throw rpcError;
   }
 }

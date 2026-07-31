@@ -107,7 +107,7 @@ Para más detalles, revisa:
 
 - **Node.js 22** (ver `.nvmrc`)
 - Cuenta en **Supabase**
-- API key de **OpenRouter** o **Groq**
+- API key de **OpenRouter** y **Gemini**
 - (Opcional) Cuenta en **Vercel** para deploy
 
 ---
@@ -148,6 +148,7 @@ Las siguientes variables son **obligatorias** para el funcionamiento local:
 | `SUPABASE_JWT_SECRET`       | JWT secret para verificación de tokens en API routes    |
 | `SUPABASE_SERVICE_ROLE_KEY` | Admin key para operaciones privilegiadas desde servidor |
 | `OPENROUTER_API_KEY`        | API key de OpenRouter (IA)                              |
+| `GEMINI_API_KEY`            | API key de Gemini para informes y documentos            |
 
 Variables opcionales:
 
@@ -220,7 +221,7 @@ Configurar en el dashboard de Vercel las variables de entorno requeridas:
 - `SUPABASE_JWT_SECRET`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `OPENROUTER_API_KEY`
-- `GROQ_API_KEY`
+- `GEMINI_API_KEY`
 
 ### Supabase Migrations
 

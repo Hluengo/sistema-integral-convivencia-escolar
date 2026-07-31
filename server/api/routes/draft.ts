@@ -16,6 +16,7 @@ import { getRelevantLegalSources } from '../services/legalSources.js';
 import { extractCaseDocuments } from '../services/caseDocuments.js';
 import { httpsGet } from '../lib/https.js';
 import { rateLimit } from '../../middleware/rateLimit.js';
+import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../middleware/requireMembership.js';
 
 const router = Router();
 
@@ -149,76 +150,81 @@ function stringifyList(values: string[], empty: string): string {
   return values.length ? values.map((value) => `- ${value}`).join('\n') : empty;
 }
 
-router.post('/draft-document', requireAuth, rateLimit, async (req, res) => {
-  try {
-    const body = req.body as Record<string, unknown>;
-    const docTypeValue = requireStr(body, 'docType', 50);
-    if (!isDocType(docTypeValue)) {
-      res.status(400).json({ error: 'Tipo de documento no válido.' });
-      return;
-    }
-    const docType = docTypeValue;
-    const contextLimits = DRAFT_CONTEXT_LIMITS[docType];
-    const id = requireStr(body, 'id', 100);
-    const studentName = requireStr(body, 'studentName', 200);
-    const course = optStr(body, 'course', 100);
-    const fatherName = optStr(body, 'fatherName', 200);
-    const managerName = optStr(body, 'managerName', 200);
-    const infractionType = optStr(body, 'infractionType', 100);
-    const observations = optStr(body, 'observations', 5000);
-    const fechaApertura = optStr(body, 'fechaApertura', 50);
-    const estadoActual = optStr(body, 'estadoActual', 80);
-    const fechaUltimaActualizacion = optStr(body, 'fechaUltimaActualizacion', 50);
-    const medidasEjecutadas = optArr(body, 'medidasEjecutadas');
-    const bitacora = optArr(body, 'bitacora');
-    const checklist = optArr(body, 'checklist');
+router.post(
+  '/draft-document',
+  requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
+  rateLimit,
+  async (req, res) => {
+    try {
+      const body = req.body as Record<string, unknown>;
+      const docTypeValue = requireStr(body, 'docType', 50);
+      if (!isDocType(docTypeValue)) {
+        res.status(400).json({ error: 'Tipo de documento no válido.' });
+        return;
+      }
+      const docType = docTypeValue;
+      const contextLimits = DRAFT_CONTEXT_LIMITS[docType];
+      const id = requireStr(body, 'id', 100);
+      const studentName = requireStr(body, 'studentName', 200);
+      const course = optStr(body, 'course', 100);
+      const fatherName = optStr(body, 'fatherName', 200);
+      const managerName = optStr(body, 'managerName', 200);
+      const infractionType = optStr(body, 'infractionType', 100);
+      const observations = optStr(body, 'observations', 5000);
+      const fechaApertura = optStr(body, 'fechaApertura', 50);
+      const estadoActual = optStr(body, 'estadoActual', 80);
+      const fechaUltimaActualizacion = optStr(body, 'fechaUltimaActualizacion', 50);
+      const medidasEjecutadas = optArr(body, 'medidasEjecutadas');
+      const bitacora = optArr(body, 'bitacora');
+      const checklist = optArr(body, 'checklist');
 
-    const safeMeasures = (medidasEjecutadas as string[])
-      .map((value) => sanitize(value).slice(0, 500))
-      .slice(0, contextLimits.measures);
-    const safeHistory = (bitacora as Array<Record<string, unknown>>)
-      .map((entry) => ({
-        title: sanitize(entry.titulo).slice(0, 200),
-        date: sanitize(entry.fecha).slice(0, 50),
-        type: sanitize(entry.tipo).slice(0, 80),
-        description: sanitize(entry.descripcion).slice(0, 2500),
-        people: Array.isArray(entry.participantes)
-          ? (entry.participantes as string[])
-              .map((value) => sanitize(value).slice(0, 100))
-              .slice(0, 20)
-          : [],
-        document: sanitize(entry.documentoAdjunto).slice(0, 200),
-      }))
-      .slice(0, contextLimits.historyEntries);
-    const safeChecklist = (checklist as Array<Record<string, unknown>>)
-      .map((item) => ({
-        label: sanitize(item.label).slice(0, 300),
-        complete: Boolean(item.completado),
-        description: sanitize(item.descripcion).slice(0, 1000),
-        by: sanitize(item.registradoPor).slice(0, 200),
-        date: sanitize(item.fechaCompletado).slice(0, 50),
-        notes: sanitize(item.observaciones).slice(0, 1000),
-        document: sanitize(item.documentoNombre).slice(0, 200),
-        documentPath: sanitize(item.documentoUrl).slice(0, 500),
-      }))
-      .slice(0, contextLimits.checklistItems);
+      const safeMeasures = (medidasEjecutadas as string[])
+        .map((value) => sanitize(value).slice(0, 500))
+        .slice(0, contextLimits.measures);
+      const safeHistory = (bitacora as Array<Record<string, unknown>>)
+        .map((entry) => ({
+          title: sanitize(entry.titulo).slice(0, 200),
+          date: sanitize(entry.fecha).slice(0, 50),
+          type: sanitize(entry.tipo).slice(0, 80),
+          description: sanitize(entry.descripcion).slice(0, 2500),
+          people: Array.isArray(entry.participantes)
+            ? (entry.participantes as string[])
+                .map((value) => sanitize(value).slice(0, 100))
+                .slice(0, 20)
+            : [],
+          document: sanitize(entry.documentoAdjunto).slice(0, 200),
+        }))
+        .slice(0, contextLimits.historyEntries);
+      const safeChecklist = (checklist as Array<Record<string, unknown>>)
+        .map((item) => ({
+          label: sanitize(item.label).slice(0, 300),
+          complete: Boolean(item.completado),
+          description: sanitize(item.descripcion).slice(0, 1000),
+          by: sanitize(item.registradoPor).slice(0, 200),
+          date: sanitize(item.fechaCompletado).slice(0, 50),
+          notes: sanitize(item.observaciones).slice(0, 1000),
+          document: sanitize(item.documentoNombre).slice(0, 200),
+          documentPath: sanitize(item.documentoUrl).slice(0, 500),
+        }))
+        .slice(0, contextLimits.checklistItems);
 
-    const authReq = req as AuthenticatedRequest;
-    const documentValues = [
-      ...safeHistory.map((entry) => entry.document),
-      ...safeChecklist.map((item) => item.documentPath || item.document),
-    ].filter(Boolean);
-    const [legalSources, extractedDocuments] = await Promise.all([
-      getRelevantLegalSources(
-        `${DOCUMENT_TITLES[docType]} ${infractionType} convivencia escolar debido proceso reglamento interno medidas disciplinarias apelación`,
-        contextLimits.legalSourceChars,
-      ),
-      extractCaseDocuments(documentValues, authReq, {
-        ...contextLimits.documents,
-        deadlineMs: 8_000,
-      }),
-    ]);
-    const dossier = `
+      const authReq = req as AuthenticatedRequest;
+      const documentValues = [
+        ...safeHistory.map((entry) => entry.document),
+        ...safeChecklist.map((item) => item.documentPath || item.document),
+      ].filter(Boolean);
+      const [legalSources, extractedDocuments] = await Promise.all([
+        getRelevantLegalSources(
+          `${DOCUMENT_TITLES[docType]} ${infractionType} convivencia escolar debido proceso reglamento interno medidas disciplinarias apelación`,
+          contextLimits.legalSourceChars,
+        ),
+        extractCaseDocuments(documentValues, authReq, {
+          ...contextLimits.documents,
+          deadlineMs: 8_000,
+        }),
+      ]);
+      const dossier = `
 # DOSSIER DEL EXPEDIENTE — DOCUMENTO CITADO
 
 ## Datos generales
@@ -288,59 +294,60 @@ ${document.text ? document.text : `Estado de extracción: ${document.reason}`}`,
 ${legalSources}
 `;
 
-    let templatePrompt: string | null = null;
-    try {
-      const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? '';
-      const templates = (await httpsGet(
-        getSupabaseHostname(),
-        `/rest/v1/document_templates?doc_type=eq.${docType}&tenant_id=eq.${authReq.tenantId}&select=system_prompt&limit=1`,
-        { apikey: anonKey, Authorization: `Bearer ${authReq.authToken}` },
-      )) as Array<{ system_prompt?: string }>;
-      templatePrompt = templates[0]?.system_prompt?.trim() || null;
-    } catch {
-      // La generación conserva una plantilla local mínima si una plantilla no está disponible.
-    }
+      let templatePrompt: string | null = null;
+      try {
+        const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? '';
+        const templates = (await httpsGet(
+          getSupabaseHostname(),
+          `/rest/v1/document_templates?doc_type=eq.${docType}&tenant_id=eq.${authReq.tenantId}&select=system_prompt&limit=1`,
+          { apikey: anonKey, Authorization: `Bearer ${authReq.authToken}` },
+        )) as Array<{ system_prompt?: string }>;
+        templatePrompt = templates[0]?.system_prompt?.trim() || null;
+      } catch {
+        // La generación conserva una plantilla local mínima si una plantilla no está disponible.
+      }
 
-    let document: string;
-    try {
-      document = await callGeminiLegalDraft(
-        `${documentPolicy(docType)}\n\nPLANTILLA INSTITUCIONAL:\n${templatePrompt || getTemplateFallback(docType)}`,
-        dossier,
-      );
+      let document: string;
+      try {
+        document = await callGeminiLegalDraft(
+          `${documentPolicy(docType)}\n\nPLANTILLA INSTITUCIONAL:\n${templatePrompt || getTemplateFallback(docType)}`,
+          dossier,
+        );
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Error al contactar Gemini.';
+        if (message.includes('GEMINI_API_KEY no configurada')) {
+          res.status(503).json({
+            error:
+              'La redacción de documentos aún no está configurada. Configure GEMINI_API_KEY en Vercel.',
+          });
+          return;
+        }
+        if (message.includes('Gemini error: 404')) {
+          res.status(503).json({
+            error:
+              'El modelo configurado de Gemini no está disponible. Revise LEGAL_DRAFT_MODEL en Vercel.',
+          });
+          return;
+        }
+        throw error;
+      }
+
+      res.json({
+        success: true,
+        document,
+        title: DOCUMENT_TITLES[docType],
+        signer: DOCUMENT_SIGNERS[docType],
+        consideredDocuments: extractedDocuments.map((document) => document.name),
+      });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Error al contactar Gemini.';
-      if (message.includes('GEMINI_API_KEY no configurada')) {
-        res.status(503).json({
-          error:
-            'La redacción de documentos aún no está configurada. Configure GEMINI_API_KEY en Vercel.',
-        });
+      if (isRequestValidationError(error)) {
+        res.status(400).json({ error: error.message });
         return;
       }
-      if (message.includes('Gemini error: 404')) {
-        res.status(503).json({
-          error:
-            'El modelo configurado de Gemini no está disponible. Revise LEGAL_DRAFT_MODEL en Vercel.',
-        });
-        return;
-      }
-      throw error;
+      console.error('Error al generar borrador de documento:', error);
+      res.status(500).json({ error: 'Error interno del servidor al redactar documento.' });
     }
-
-    res.json({
-      success: true,
-      document,
-      title: DOCUMENT_TITLES[docType],
-      signer: DOCUMENT_SIGNERS[docType],
-      consideredDocuments: extractedDocuments.map((document) => document.name),
-    });
-  } catch (error) {
-    if (isRequestValidationError(error)) {
-      res.status(400).json({ error: error.message });
-      return;
-    }
-    console.error('Error al generar borrador de documento:', error);
-    res.status(500).json({ error: 'Error interno del servidor al redactar documento.' });
-  }
-});
+  },
+);
 
 export default router;

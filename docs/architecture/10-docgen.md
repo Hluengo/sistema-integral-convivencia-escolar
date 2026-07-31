@@ -19,7 +19,7 @@ Pipeline: Upload → extract (pdfjs-dist) → parse (regex) → match → sugges
 
 El modal individual de Anotaciones funciona como ficha operativa, no como biblioteca documental. Sus pestañas son: Estado, Revisar PDF, Carta e Historial.
 
-Flujo principal: Revisar PDF -> confirmar análisis -> Ir a Carta -> Crear -> Editar -> Imprimir -> Marcar como procesada. La pestaña Carta solo gestiona la carta sugerida o pendiente del estudiante; DocumentosView mantiene la biblioteca/documentación amplia.
+Flujo principal: Revisar PDF -> confirmar análisis -> Ir a Carta -> Crear -> Editar -> Imprimir -> Marcar como procesada. La ficha disciplinaria de Anotaciones concentra la gestión de cartas y documentos asociados al estudiante.
 
 Antes de cerrar el trámite, el tipo visible en el generador se valida contra la etapa calculada con las anotaciones ya registradas. Una derivación no puede marcarse como procesada con menos de 15 negativas confirmadas; la observación de cierre documenta lo realizado, pero nunca cambia el tipo de carta.
 

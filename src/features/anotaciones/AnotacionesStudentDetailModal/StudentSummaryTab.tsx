@@ -11,6 +11,7 @@ import {
 } from '@/src/shared/lib/domain/disciplinaryStage';
 import { formatDate, STAGE_STYLE } from './constants';
 import { getCartaWorkflowLabel } from '@/src/services/cartas.service';
+import Button from '@/src/shared/ui/Button';
 
 interface StudentSummaryTabProps {
   counts: { negativas: number; positivas: number; informativas: number };
@@ -67,13 +68,13 @@ export default function StudentSummaryTab({
         </div>
 
         <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-red-100 bg-red-50 p-4">
-            <p className="text-2xl font-black text-red-700">{counts.negativas}</p>
-            <p className="text-xs font-semibold text-red-600">Negativas registradas</p>
+          <div className="rounded-lg border border-gravisima-100 bg-gravisima-50 p-4">
+            <p className="text-2xl font-black text-gravisima-700">{counts.negativas}</p>
+            <p className="text-xs font-semibold text-gravisima-600">Negativas registradas</p>
           </div>
-          <div className="rounded-lg border border-emerald-100 bg-emerald-50 p-4">
-            <p className="text-2xl font-black text-emerald-700">{counts.positivas}</p>
-            <p className="text-xs font-semibold text-emerald-600">Positivas</p>
+          <div className="rounded-lg border border-leve-100 bg-leve-50 p-4">
+            <p className="text-2xl font-black text-leve-700">{counts.positivas}</p>
+            <p className="text-xs font-semibold text-leve-600">Positivas</p>
           </div>
           <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
             <p className="text-2xl font-black text-blue-700">{counts.informativas}</p>
@@ -120,13 +121,13 @@ export default function StudentSummaryTab({
             <p className="text-sm text-neutral-500">No hay carta vigente registrada en Supabase.</p>
           )}
           {onGoToCartasTab && (
-            <button
-              type="button"
+            <Button
+              variant="custom"
               onClick={onGoToCartasTab}
-              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-brand-200 px-3 py-2 text-xs font-semibold text-brand-700 hover:bg-brand-50"
+              className="mt-4 rounded-lg border border-brand-200 px-3 py-2 text-xs font-semibold text-brand-700 hover:bg-brand-50"
             >
               Ir a Carta <ArrowRight className="h-3.5 w-3.5" />
-            </button>
+            </Button>
           )}
         </section>
 
@@ -152,13 +153,13 @@ export default function StudentSummaryTab({
             </p>
           )}
           {onGoToRevisionTab && (
-            <button
-              type="button"
+            <Button
+              variant="custom"
               onClick={onGoToRevisionTab}
-              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-indigo-200 px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50"
+              className="mt-4 rounded-lg border border-indigo-200 px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50"
             >
               Revisar nuevo PDF <ArrowRight className="h-3.5 w-3.5" />
-            </button>
+            </Button>
           )}
         </section>
       </div>

@@ -61,7 +61,7 @@ function describeCartaEvent(event: CartaEvent, carta?: CartaDisciplinaria): Time
       ...base,
       title: `Carta emitida: ${letterType}`,
       description: 'Medio de validación: impresión.',
-      tone: 'bg-emerald-50 text-emerald-700',
+      tone: 'bg-leve-50 text-leve-700',
     };
   }
   if (event.event_type === 'processed_manually') {
@@ -69,7 +69,7 @@ function describeCartaEvent(event: CartaEvent, carta?: CartaDisciplinaria): Time
       ...base,
       title: `Carta procesada manualmente: ${letterType}`,
       description: `Observación: ${event.event_detail || 'Sin observación.'}`,
-      tone: 'bg-emerald-50 text-emerald-700',
+      tone: 'bg-leve-50 text-leve-700',
     };
   }
   if (event.event_type === 'registered') {
@@ -82,7 +82,7 @@ function describeCartaEvent(event: CartaEvent, carta?: CartaDisciplinaria): Time
         (isPhysical
           ? 'Constancia registrada sin modificar anotaciones.'
           : 'Registro en Supabase confirmado.'),
-      tone: 'bg-emerald-50 text-emerald-700',
+      tone: 'bg-leve-50 text-leve-700',
     };
   }
   if (event.event_type === 'annulled') {
@@ -128,7 +128,7 @@ export default function HistoryTab({
         icon: <FileText className="h-4 w-4" />,
         title: `Carta realizada: ${carta.letter_type}`,
         description: 'Medio de validación registrado en la carta.',
-        tone: 'bg-emerald-50 text-emerald-700',
+        tone: 'bg-leve-50 text-leve-700',
       });
       return items;
     }
@@ -153,7 +153,7 @@ export default function HistoryTab({
       icon: <NotebookPen className="h-4 w-4" />,
       title: entry.title,
       description: entry.description,
-      tone: 'bg-amber-50 text-amber-700',
+      tone: 'bg-grave-50 text-grave-700',
     })),
     ...files.map((file) => ({
       id: `file-${file.id}`,
@@ -177,7 +177,7 @@ export default function HistoryTab({
       icon: <CheckCircle2 className="h-4 w-4" />,
       title: process.is_completed ? 'Actualización PDF confirmada' : 'Proceso PDF creado',
       description: `${process.process_number} · ${process.total_negativas} negativas · sugerencia: ${process.final_letter_type || process.suggested_letter_type || 'sin carta'}`,
-      tone: 'bg-emerald-50 text-emerald-700',
+      tone: 'bg-leve-50 text-leve-700',
     })),
     ...detectedAnnotations.slice(0, 25).map((annotation) => ({
       id: `detected-${annotation.id}`,
@@ -220,7 +220,7 @@ export default function HistoryTab({
       />
 
       {manualHistory.loadError && (
-        <p role="alert" className="rounded-xl bg-rose-50 px-4 py-3 text-rose-700 text-sm">
+        <p role="alert" className="rounded-xl bg-gravisima-50 px-4 py-3 text-gravisima-700 text-sm">
           {manualHistory.loadError}
         </p>
       )}

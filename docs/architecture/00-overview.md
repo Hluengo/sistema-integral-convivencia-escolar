@@ -43,22 +43,22 @@
 
 ## Architecture Stack
 
-| Capa | Tecnología | Archivo |
-|------|-----------|---------|
-| Frontend | React 19 + Vite 6 + Tailwind 4 | [01-frontend.md](./01-frontend.md) |
-| Backend | Express 4 / Vercel Serverless | [02-backend.md](./02-backend.md) |
-| Database | Supabase PostgreSQL 17 | [03-database.md](./03-database.md) |
-| Storage | Supabase Storage | [04-storage.md](./04-storage.md) |
-| Auth | Supabase Auth + JWT | [05-auth.md](./05-auth.md) |
-| Permissions | RLS + Roles | [06-permissions.md](./06-permissions.md) |
-| State | Zustand + React Query | [07-state.md](./07-state.md) |
-| Services | Supabase SDK + API | [08-services.md](./08-services.md) |
-| Components | React Component Tree | [09-components.md](./09-components.md) |
-| DocGen | DOCX + PDF | [10-docgen.md](./10-docgen.md) |
-| PDF Analysis | pdfjs-dist + regex | [11-pdf-analysis.md](./11-pdf-analysis.md) |
-| Performance | Chunks, cache, lazy | [12-performance.md](./12-performance.md) |
-| Security | JWT, CSP, RLS, Privacy | [13-security.md](./13-security.md) |
-| Roadmap | Próximos pasos | [14-roadmap.md](./14-roadmap.md) |
+| Capa         | Tecnología                     | Archivo                                    |
+| ------------ | ------------------------------ | ------------------------------------------ |
+| Frontend     | React 19 + Vite 6 + Tailwind 4 | [01-frontend.md](./01-frontend.md)         |
+| Backend      | Express 4 / Vercel Serverless  | [02-backend.md](./02-backend.md)           |
+| Database     | Supabase PostgreSQL 17         | [03-database.md](./03-database.md)         |
+| Storage      | Supabase Storage               | [04-storage.md](./04-storage.md)           |
+| Auth         | Supabase Auth + JWT            | [05-auth.md](./05-auth.md)                 |
+| Permissions  | RLS + Roles                    | [06-permissions.md](./06-permissions.md)   |
+| State        | Zustand + React Query          | [07-state.md](./07-state.md)               |
+| Services     | Supabase SDK + API             | [08-services.md](./08-services.md)         |
+| Components   | React Component Tree           | [09-components.md](./09-components.md)     |
+| DocGen       | DOCX + PDF                     | [10-docgen.md](./10-docgen.md)             |
+| PDF Analysis | pdfjs-dist + regex             | [11-pdf-analysis.md](./11-pdf-analysis.md) |
+| Performance  | Chunks, cache, lazy            | [12-performance.md](./12-performance.md)   |
+| Security     | JWT, CSP, RLS, Privacy         | [13-security.md](./13-security.md)         |
+| Roadmap      | Próximos pasos                 | [14-roadmap.md](./14-roadmap.md)           |
 
 ## Navigation Map
 
@@ -71,8 +71,7 @@ App shell (Sidebar + Header + MainContent)
 │   └── AsistenteIATab → Auditoría + Draft AI
 ├── Informes       → Asesor AI + Editor de plantillas
 ├── Alumnos        → Directorio de estudiantes por curso
-├── Anotaciones    → Tabla estudiantes + Detail modal + Proceso PDF
-└── Documentos     → Generador de documentos unificado
+└── Anotaciones    → Tabla estudiantes + ficha disciplinaria, proceso PDF y generación de cartas
 ```
 
 ## Data Flow (Simplificado)

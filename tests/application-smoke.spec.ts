@@ -24,13 +24,4 @@ test.describe('Aplicación pública', () => {
     await expect(page.getByRole('alert')).toContainText(/credenciales|correo|contraseña/i);
     await expect(page.getByRole('alert')).not.toContainText(/\[object Object\]|\{\}/);
   });
-
-  test('permite buscar sin bloquear la interfaz', async ({ page }) => {
-    await page.goto('/');
-    const searchInput = page.getByPlaceholder(/buscar/i).first();
-
-    await expect(searchInput).toBeVisible();
-    await searchInput.fill('estudiante');
-    await expect(searchInput).toHaveValue('estudiante');
-  });
 });
