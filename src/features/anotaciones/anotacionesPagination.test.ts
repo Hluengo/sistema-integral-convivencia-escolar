@@ -33,4 +33,11 @@ describe('Listado paginado de anotaciones', () => {
     ok(table.includes('Cargar más estudiantes'));
     ok(table.includes('disabled={isLoadingMoreStudents}'));
   });
+
+  it('mantiene las pestañas disciplinarias con su carga completa', () => {
+    const view = readFileSync(viewPath, 'utf-8');
+
+    ok(view.includes("activeFilter !== 'con_registro'"));
+    ok(view.includes('fetchStudentsWithAnnotationCounts()'));
+  });
 });
