@@ -19,23 +19,27 @@ npx vercel --prod
 
 Agregar en Vercel Dashboard > Project Settings > Environment Variables:
 
-| Variable | Valor |
-|----------|-------|
-| `VITE_SUPABASE_URL` | URL del proyecto Supabase |
-| `VITE_SUPABASE_ANON_KEY` | Anon key pública |
-| `SUPABASE_JWT_SECRET` | JWT secret de Supabase |
-| `SUPABASE_SERVICE_ROLE_KEY` | Service role key |
-| `GROQ_API_KEY` | Groq API key |
-| `VITE_SENTRY_DSN` | (opcional) Error tracking |
-| `VITE_POSTHOG_KEY` / `VITE_POSTHOG_HOST` | (opcional) Analytics |
+| Variable                                 | Valor                                                               |
+| ---------------------------------------- | ------------------------------------------------------------------- |
+| `VITE_SUPABASE_URL`                      | URL del proyecto Supabase                                           |
+| `VITE_SUPABASE_ANON_KEY`                 | Anon key pública                                                    |
+| `SUPABASE_JWT_SECRET`                    | JWT secret de Supabase                                              |
+| `SUPABASE_SERVICE_ROLE_KEY`              | Service role key                                                    |
+| `OPENROUTER_API_KEY`                     | OpenRouter API key para mejora y asistencia                         |
+| `GEMINI_API_KEY`                         | Gemini API key para informes y documentos                           |
+| `VITE_APP_MEMBERSHIPS_ENABLED`           | Activa la verificación de membresías                                |
+| `VITE_APP_MEMBERSHIPS_ENFORCED`          | Rechaza acceso sin membresía activa; habilitar después del backfill |
+| `VITE_SENTRY_DSN`                        | (opcional) Error tracking                                           |
+| `VITE_POSTHOG_KEY` / `VITE_POSTHOG_HOST` | (opcional) Analytics                                                |
 
 ### Pre-deploy Checklist
 
 1. `npm run build`
 2. `npm run typecheck` — 0 errores
-3. `npm run test` — 57 tests, 0 fallos
-4. Verificar que migraciones SQL están aplicadas en producción
-5. Verificar RLS policies activas
+3. `npm run test` — todas las pruebas, 0 fallos
+4. Aplicar migraciones SQL antes de desplegar el frontend/serverless
+5. Si se activa `VITE_APP_MEMBERSHIPS_ENFORCED`, verificar primero el backfill de membresías
+6. Verificar RLS policies activas
 
 ## Supabase Migrations
 

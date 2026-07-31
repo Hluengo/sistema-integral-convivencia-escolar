@@ -10,7 +10,7 @@ import BitacoraTab from './BitacoraTab';
 import ResumenTab from './ResumenTab';
 import RutaExpedienteTab from './RutaExpedienteTab';
 import { useTimelineContext } from '../../context/useTimelineContext';
-import type { TimelineTab } from './timelineTabs';
+import type { TimelineTab } from './timelineTabs.types';
 import { DetailModalBody } from '../../shared/ui/DetailModal';
 
 interface TimelineTabPanelsProps {

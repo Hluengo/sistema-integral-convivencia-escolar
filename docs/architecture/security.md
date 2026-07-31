@@ -21,13 +21,13 @@ requireAuth middleware:
 
 ```typescript
 interface JwtPayload {
-  sub: string;              // user_id
+  sub: string; // user_id
   email: string;
-  role: string;             // authenticated
+  role: string; // authenticated
   exp: number;
   app_metadata: {
     provider: string;
-    tenant_id?: string;     // Sincronizado por trigger
+    tenant_id?: string; // Sincronizado por trigger
   };
   user_metadata: {
     // Datos del usuario
@@ -47,13 +47,13 @@ Donde `current_tenant_id()` lee del JWT (fast path) con fallback a DB query.
 
 ## Roles y Permisos
 
-| Operación | admin | direccion | convivencia | inspectoria | profesor_jefe | teacher |
-|-----------|-------|-----------|-------------|-------------|---------------|---------|
-| Ver datos tenant | ✅ | ✅ | ✅ | ✅ | ✅ (su curso) | ✅ (básico) |
-| CREAR causas | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| EDITAR causas | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| ELIMINAR causas | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Gestionar estudiantes | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
+| Operación             | admin | direccion | convivencia | inspectoria | profesor_jefe | teacher     |
+| --------------------- | ----- | --------- | ----------- | ----------- | ------------- | ----------- |
+| Ver datos tenant      | ✅    | ✅        | ✅          | ✅          | ✅ (su curso) | ✅ (básico) |
+| CREAR causas          | ✅    | ✅        | ✅          | ✅          | ✅            | ❌          |
+| EDITAR causas         | ✅    | ✅        | ✅          | ✅          | ✅            | ❌          |
+| ELIMINAR causas       | ✅    | ✅        | ❌          | ❌          | ❌            | ❌          |
+| Gestionar estudiantes | ✅    | ✅        | ✅          | ✅          | ❌            | ❌          |
 
 ## Privacy Mode
 
@@ -69,7 +69,7 @@ Content-Security-Policy:
   default-src 'self'
   script-src 'self' 'unsafe-inline' 'unsafe-eval'
   style-src 'self' 'unsafe-inline' fonts.googleapis.com
-  connect-src 'self' openrouter.ai api.groq.com *.supabase.co wss://*.supabase.co
+  connect-src 'self' openrouter.ai *.supabase.co wss://*.supabase.co
   img-src 'self' *.supabase.co data: blob:
   font-src 'self' fonts.gstatic.com data:
 

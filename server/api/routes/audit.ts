@@ -9,35 +9,41 @@ import {
   optStr,
   optArr,
 } from '../validators/sanitizers.js';
-import { callGroq } from '../services/groq.js';
+import { callOpenRouter } from '../services/openrouter.js';
 import { getRelevantLegalSources } from '../services/legalSources.js';
 import { rateLimit } from '../../middleware/rateLimit.js';
+import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../middleware/requireMembership.js';
 
 const router = Router();
 
-router.post('/audit-due-process', requireAuth, rateLimit, async (req, res) => {
-  try {
-    const body = req.body as Record<string, unknown>;
-    const id = requireStr(body, 'id', 50);
-    const infractionType = requireStr(body, 'infractionType', 50);
-    const isAulaSegura = Boolean(body.isAulaSegura);
-    const checkedItems = optArr(body, 'checkedItems');
-    const bitacora = optArr(body, 'bitacora');
-    const observations = optStr(body, 'observations', 5000);
+router.post(
+  '/audit-due-process',
+  requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
+  rateLimit,
+  async (req, res) => {
+    try {
+      const body = req.body as Record<string, unknown>;
+      const id = requireStr(body, 'id', 50);
+      const infractionType = requireStr(body, 'infractionType', 50);
+      const isAulaSegura = Boolean(body.isAulaSegura);
+      const checkedItems = optArr(body, 'checkedItems');
+      const bitacora = optArr(body, 'bitacora');
+      const observations = optStr(body, 'observations', 5000);
 
-    const safeHistory = (bitacora as Array<Record<string, unknown>>)
-      .map((entry) => ({
-        title: sanitizeForAI(entry.titulo).slice(0, 200),
-        date: sanitizeForAI(entry.fecha).slice(0, 50),
-        type: sanitizeForAI(entry.tipo).slice(0, 80),
-        description: sanitizeForAI(entry.descripcion).slice(0, 2_000),
-      }))
-      .slice(0, 100);
-    const legalSources = await getRelevantLegalSources(
-      `debido proceso norma previa comunicación hechos indagación descargos resolución fundada proporcionalidad reconsideración ${infractionType}`,
-    );
+      const safeHistory = (bitacora as Array<Record<string, unknown>>)
+        .map((entry) => ({
+          title: sanitizeForAI(entry.titulo).slice(0, 200),
+          date: sanitizeForAI(entry.fecha).slice(0, 50),
+          type: sanitizeForAI(entry.tipo).slice(0, 80),
+          description: sanitizeForAI(entry.descripcion).slice(0, 2_000),
+        }))
+        .slice(0, 100);
+      const legalSources = await getRelevantLegalSources(
+        `debido proceso norma previa comunicación hechos indagación descargos resolución fundada proporcionalidad reconsideración ${infractionType}`,
+      );
 
-    const systemPrompt = `Eres un auditor documental de debido proceso en convivencia escolar chilena.
+      const systemPrompt = `Eres un auditor documental de debido proceso en convivencia escolar chilena.
 
 Tu función es verificar la coherencia entre los hitos efectivamente registrados en este expediente y siete garantías del debido proceso. No calificas la responsabilidad del estudiante, no propones sanciones, no estimas multas y no agregas exigencias que no se desprendan de las fuentes autorizadas.
 
@@ -74,16 +80,17 @@ Lista solo los archivos y secciones de las fuentes autorizadas que efectivamente
 
 No cites normas externas, no inventes plazos y no agregues explicaciones fuera de esta estructura.`;
 
-    const responseText = await callGroq([{ role: 'user', content: systemPrompt }]);
-    res.json({ success: true, report: responseText });
-  } catch (error) {
-    if (isRequestValidationError(error)) {
-      res.status(400).json({ error: error.message });
-      return;
+      const responseText = await callOpenRouter([{ role: 'user', content: systemPrompt }]);
+      res.json({ success: true, report: responseText });
+    } catch (error) {
+      if (isRequestValidationError(error)) {
+        res.status(400).json({ error: error.message });
+        return;
+      }
+      console.error('Error al auditar debido proceso:', error);
+      res.status(500).json({ error: 'Error interno del servidor en auditoría.' });
     }
-    console.error('Error al auditar debido proceso:', error);
-    res.status(500).json({ error: 'Error interno del servidor en auditoría.' });
-  }
-});
+  },
+);
 
 export default router;

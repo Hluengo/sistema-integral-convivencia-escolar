@@ -41,8 +41,6 @@
             │   │       ├── StudentSelectStep
             │   │       ├── ClassificationStep
             │   │       └── ReviewStep
-            │   └── documentos → <DocumentosView>
-            │       └── <AnotacionesDocumentGenerator> (lazy)
             └── Modals (todos lazy)
                 ├── <LoginPage>
                 ├── <NewCausaModal>

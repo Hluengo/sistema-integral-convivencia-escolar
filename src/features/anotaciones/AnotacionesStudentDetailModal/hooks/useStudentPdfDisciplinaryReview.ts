@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/src/lib/supabase';
 import { useAuthStore } from '@/src/stores/authStore';
+import { useInvalidateDashboardQueries } from '@/src/shared/lib/hooks/useInvalidateDashboardQueries';
 import type { AnnotationSummary } from '@/src/shared/lib/types';
 import {
   deleteDisciplinaryFile,
@@ -101,9 +102,11 @@ export function useStudentPdfDisciplinaryReview({
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const invalidateDashboard = useInvalidateDashboardQueries();
   const idempotencyKeyRef = useRef<string | null>(null);
   if (idempotencyKeyRef.current === null) idempotencyKeyRef.current = crypto.randomUUID();
   const abortRef = useRef<AbortController | null>(null);
+  const analysisRunRef = useRef(0);
 
   const cleanupDraft = useCallback(async () => {
     abortRef.current?.abort();
@@ -172,6 +175,8 @@ export function useStudentPdfDisciplinaryReview({
 
   const analyzeFile = useCallback(
     async (nextFile: File) => {
+      const runId = analysisRunRef.current + 1;
+      analysisRunRef.current = runId;
       const tenantId = useAuthStore.getState().tenantId;
       if (!tenantId) {
         setErrorMessage('No se pudo resolver el establecimiento activo del usuario.');
@@ -180,6 +185,7 @@ export function useStudentPdfDisciplinaryReview({
       }
 
       await cleanupDraft();
+      if (analysisRunRef.current !== runId) return;
       const controller = new AbortController();
       abortRef.current = controller;
       setFile(nextFile);
@@ -192,6 +198,10 @@ export function useStudentPdfDisciplinaryReview({
 
       try {
         const uploaded = await uploadDisciplinaryFile(nextFile, tenantId, studentId);
+        if (analysisRunRef.current !== runId || controller.signal.aborted) {
+          if (uploaded?.storagePath) await deleteDisciplinaryFile(uploaded.storagePath);
+          return;
+        }
         setUploadedFile(uploaded);
         if (!uploaded) throw new Error('No fue posible subir el PDF.');
 
@@ -220,6 +230,7 @@ export function useStudentPdfDisciplinaryReview({
           throw new Error(errorData?.error || `Error del servidor (${response.status})`);
         }
 
+        if (analysisRunRef.current !== runId || controller.signal.aborted) return;
         const data = (await response.json()) as AnalysisResponse;
         setAnalysis(data);
         setAnnotations(data.annotations || []);
@@ -227,6 +238,7 @@ export function useStudentPdfDisciplinaryReview({
         setStatus('ready');
         setStatusMessage('Análisis listo para revisión. Nada se ha confirmado todavía.');
       } catch (error) {
+        if (analysisRunRef.current !== runId) return;
         if ((error as Error)?.name === 'AbortError') {
           setErrorMessage('Análisis cancelado.');
         } else {
@@ -235,7 +247,7 @@ export function useStudentPdfDisciplinaryReview({
         setStatus('error');
         setStatusMessage('Error al procesar el PDF.');
       } finally {
-        abortRef.current = null;
+        if (analysisRunRef.current === runId) abortRef.current = null;
       }
     },
     [cleanupDraft, studentId],
@@ -315,7 +327,7 @@ export function useStudentPdfDisciplinaryReview({
           : `Actualización confirmada. Se agregaron ${insertedTotal} anotación${insertedTotal === 1 ? '' : 'es'} nueva${insertedTotal === 1 ? '' : 's'}.`,
       );
       setUploadedFile(null);
-      await onConfirmed?.();
+      await Promise.all([onConfirmed?.(), invalidateDashboard()]);
       return true;
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Error al confirmar actualización.');
@@ -323,7 +335,17 @@ export function useStudentPdfDisciplinaryReview({
       setStatusMessage('Error al confirmar.');
       return false;
     }
-  }, [analysis, annotations, comparison, file, onConfirmed, studentId, summary, uploadedFile]);
+  }, [
+    analysis,
+    annotations,
+    comparison,
+    file,
+    invalidateDashboard,
+    onConfirmed,
+    studentId,
+    summary,
+    uploadedFile,
+  ]);
 
   const handleDrop = useCallback(
     async (event: React.DragEvent) => {

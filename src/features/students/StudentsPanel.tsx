@@ -4,9 +4,25 @@
  */
 
 import { useEffect, useReducer, useMemo, useState, useCallback } from 'react';
-import { Users, Search, GraduationCap, AlertCircle, BookOpen, ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
-import { fetchCourses, fetchStudentsWithCourses, type Course, type StudentWithCourse } from '../../services/courses.service';
+import {
+  Users,
+  Search,
+  GraduationCap,
+  AlertCircle,
+  BookOpen,
+  ChevronDown,
+  ChevronUp,
+  ChevronsUpDown,
+} from 'lucide-react';
+import Button from '@/src/shared/ui/Button';
+import {
+  fetchCourses,
+  fetchStudentsWithCourses,
+  type Course,
+  type StudentWithCourse,
+} from '../../services/courses.service';
 import { TableSkeleton } from '../../components/Skeleton';
+import { maskName } from '../../lib/anotacionesUtils';
 
 interface StudentsPanelProps {
   privacyMode: boolean;
@@ -72,7 +88,10 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
         ]);
         dispatch({ type: 'LOAD_SUCCESS', courses: coursesData, students: studentsData });
       } catch {
-        dispatch({ type: 'LOAD_ERROR', error: 'No se pudieron cargar los estudiantes. Verifique la conexión con Supabase.' });
+        dispatch({
+          type: 'LOAD_ERROR',
+          error: 'No se pudieron cargar los estudiantes. Verifique la conexión con Supabase.',
+        });
       }
     }
     load();
@@ -80,7 +99,9 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
 
   const filteredStudents = useMemo(() => {
     return students.filter((s) => {
-      if (selectedCourseId !== 'all' && s.course_id !== selectedCourseId) { return false; }
+      if (selectedCourseId !== 'all' && s.course_id !== selectedCourseId) {
+        return false;
+      }
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         return (
@@ -93,13 +114,13 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
     });
   }, [students, selectedCourseId, searchQuery]);
 
-  const basicCourses = useMemo(() => courses.filter(c => c.level === 'BASICA'), [courses]);
-  const mediaCourses = useMemo(() => courses.filter(c => c.level === 'MEDIA'), [courses]);
+  const basicCourses = useMemo(() => courses.filter((c) => c.level === 'BASICA'), [courses]);
+  const mediaCourses = useMemo(() => courses.filter((c) => c.level === 'MEDIA'), [courses]);
 
   const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set());
 
   const groupedByCourse = useMemo(() => {
-    const courseById = new Map(courses.map(c => [c.id, c]));
+    const courseById = new Map(courses.map((c) => [c.id, c]));
     const groups = new Map<string, { course: Course | null; students: StudentWithCourse[] }>();
     for (const student of filteredStudents) {
       const key = student.course_id;
@@ -140,7 +161,9 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
     setExpandedCourses(new Set());
   }, []);
 
-  const allExpanded = groupedByCourse.length > 0 && groupedByCourse.every((g) => expandedCourses.has(g.course?.id ?? ''));
+  const allExpanded =
+    groupedByCourse.length > 0 &&
+    groupedByCourse.every((g) => expandedCourses.has(g.course?.id ?? ''));
 
   const todayLabel = new Date().toLocaleDateString('es-CL', {
     weekday: 'long',
@@ -168,11 +191,15 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
           <div className="flex shrink-0 items-center gap-3">
             <div className="rounded-xl bg-white/15 px-4 py-3 text-center ring-1 ring-white/20 backdrop-blur-sm">
               <p className="font-bold text-2xl tabular-nums">{students.length}</p>
-              <p className="font-semibold text-[10px] text-blue-200/80 uppercase tracking-wider">Total</p>
+              <p className="font-semibold text-[10px] text-blue-200/80 uppercase tracking-wider">
+                Total
+              </p>
             </div>
             <div className="rounded-xl bg-white/15 px-4 py-3 text-center ring-1 ring-white/20 backdrop-blur-sm">
               <p className="font-bold text-2xl tabular-nums">{courses.length}</p>
-              <p className="font-semibold text-[10px] text-blue-200/80 uppercase tracking-wider">Cursos</p>
+              <p className="font-semibold text-[10px] text-blue-200/80 uppercase tracking-wider">
+                Cursos
+              </p>
             </div>
           </div>
         </div>
@@ -182,16 +209,19 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
       <div className="card p-5">
         <div className="flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
-            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-neutral-400" aria-hidden="true" />
-<input
-  type="text"
-  spellCheck={false}
-  value={searchQuery}
-  onChange={(e) => dispatch({ type: 'SET_SEARCH', query: e.target.value })}
-  placeholder="Buscar por nombre, RUN o curso..."
-  className="w-full rounded-xl border border-neutral-200/60 bg-neutral-50 py-2.5 pr-4 pl-10 font-medium text-neutral-800 text-sm transition-colors placeholder:text-neutral-400 hover:border-neutral-300 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-  aria-label="Buscar estudiantes"
-/>
+            <Search
+              className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-neutral-400"
+              aria-hidden="true"
+            />
+            <input
+              type="text"
+              spellCheck={false}
+              value={searchQuery}
+              onChange={(e) => dispatch({ type: 'SET_SEARCH', query: e.target.value })}
+              placeholder="Buscar por nombre, RUN o curso..."
+              className="w-full rounded-xl border border-neutral-200/60 bg-neutral-50 py-2.5 pr-4 pl-10 font-medium text-neutral-800 text-sm transition-colors placeholder:text-neutral-400 hover:border-neutral-300 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              aria-label="Buscar estudiantes"
+            />
           </div>
           <select
             value={selectedCourseId}
@@ -203,28 +233,32 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
             {basicCourses.length > 0 && (
               <optgroup label="Enseñanza Básica">
                 {basicCourses.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
                 ))}
               </optgroup>
             )}
             {mediaCourses.length > 0 && (
               <optgroup label="Enseñanza Media">
                 {mediaCourses.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
                 ))}
               </optgroup>
             )}
           </select>
           {groupedByCourse.length > 0 && (
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               aria-label={allExpanded ? 'Colapsar todos los cursos' : 'Expandir todos los cursos'}
               onClick={allExpanded ? collapseAll : expandAll}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-neutral-200 bg-white px-3.5 py-2.5 font-medium text-neutral-600 text-xs transition-colors hover:bg-neutral-50 hover:text-neutral-800"
+              className="rounded-xl px-3.5 py-2.5 text-xs"
             >
               <ChevronsUpDown className="h-3.5 w-3.5" />
               {allExpanded ? 'Colapsar todos' : 'Expandir todos'}
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -236,7 +270,7 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
         <div className="card flex items-start gap-3 border-gravisima-200 bg-gravisima-50 p-8">
           <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-gravisima-600" aria-hidden="true" />
           <div>
-            <p className="font-semibold text-gravisima-800 text-sm">Error de conexión</p>
+            <p className="font-semibold text-gravisima-700 text-sm">Error de conexión</p>
             <p className="mt-1 text-gravisima-700 text-xs">{error}</p>
           </div>
         </div>
@@ -256,87 +290,110 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
             const courseId = course?.id ?? `unknown-${gi}`;
             const isExpanded = expandedCourses.has(courseId);
             return (
-            <div key={courseId} className="card overflow-hidden">
-              <button
-                type="button"
-                aria-label={`Alternar curso ${course?.name ?? 'sin nombre'}`}
-                onClick={() => toggleCourse(courseId)}
-                className="relative w-full border-neutral-100 border-b bg-neutral-50/50 px-5 py-4 text-left transition-colors hover:bg-neutral-100/80"
-              >
-                <div
-                  className="absolute top-0 right-4 left-4 h-[3px] rounded-full bg-brand-600"
-                  aria-hidden="true"
-                />
-                <div className="flex items-center gap-3">
-                  <div className="rounded-lg bg-brand-50 p-2">
-                    <GraduationCap className="h-4 w-4 text-brand-600" aria-hidden="true" />
+              <div key={courseId} className="card overflow-hidden">
+                <button
+                  type="button"
+                  aria-label={`Alternar curso ${course?.name ?? 'sin nombre'}`}
+                  onClick={() => toggleCourse(courseId)}
+                  className="relative w-full border-neutral-100 border-b bg-neutral-50/50 px-5 py-4 text-left transition-colors hover:bg-neutral-100/80"
+                >
+                  <div
+                    className="absolute top-0 right-4 left-4 h-[3px] rounded-full bg-brand-600"
+                    aria-hidden="true"
+                  />
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-brand-50 p-2">
+                      <GraduationCap className="h-4 w-4 text-brand-600" aria-hidden="true" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-neutral-900 text-sm">
+                        {course?.name ?? 'Sin curso asignado'}
+                      </h3>
+                      <p className="font-medium text-[11px] text-neutral-400">
+                        {course?.level === 'BASICA'
+                          ? 'Enseñanza Básica'
+                          : course?.level === 'MEDIA'
+                            ? 'Enseñanza Media'
+                            : 'Sin nivel'}
+                        {' · '}
+                        {courseStudents.length} estudiante{courseStudents.length !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                    <div className="shrink-0 rounded-lg bg-neutral-200 p-1">
+                      {isExpanded ? (
+                        <ChevronUp className="h-4 w-4 text-neutral-600" aria-hidden="true" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-neutral-600" aria-hidden="true" />
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-neutral-900 text-sm">
-                      {course?.name ?? 'Sin curso asignado'}
-                    </h3>
-                    <p className="font-medium text-[11px] text-neutral-400">
-                      {course?.level === 'BASICA' ? 'Enseñanza Básica' : course?.level === 'MEDIA' ? 'Enseñanza Media' : 'Sin nivel'}
-                      {' · '}{courseStudents.length} estudiante{courseStudents.length !== 1 ? 's' : ''}
-                    </p>
-                  </div>
-                  <div className="shrink-0 rounded-lg bg-neutral-200 p-1">
-                    {isExpanded ? (
-                      <ChevronUp className="h-4 w-4 text-neutral-600" aria-hidden="true" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-neutral-600" aria-hidden="true" />
-                    )}
-                  </div>
-                </div>
-              </button>
+                </button>
 
-              {isExpanded && (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-neutral-100 border-b">
-                      <th className="px-5 py-3 font-semibold text-[10px] text-neutral-400 uppercase tracking-wider">Nombre</th>
-                      <th className="px-5 py-3 font-semibold text-[10px] text-neutral-400 uppercase tracking-wider">RUN</th>
-                      <th className="hidden px-5 py-3 font-semibold text-[10px] text-neutral-400 uppercase tracking-wider sm:table-cell">Curso</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {courseStudents.map((student) => (
-                      <tr
-                        key={student.id}
-                        aria-label={`Estudiante ${student.full_name}`}
-                        className="border-neutral-50 border-b transition-colors last:border-b-0 hover:bg-neutral-50/80"
-                      >
-                        <td className="px-5 py-3" aria-label={`Nombre ${student.full_name}`}>
-                          <div className="flex items-center gap-2.5">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-brand-100 to-brand-200 font-bold text-[10px] text-brand-700">
-                              {student.full_name.split(' ').filter((w) => w.length > 2).slice(0, 2).map((w) => w[0]).join('')}
-                            </div>
-                            <span className="font-semibold text-neutral-900 text-sm">
-                              {privacyMode
-                                ? student.full_name.split(' ').filter((w) => w.length > 2).map((w) => `${w[0]}.`).join(' ')
-                                : student.full_name}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-5 py-3" aria-label={`Nombre ${student.full_name}`}>
-                          <span className="font-medium font-mono text-neutral-600 text-xs">
-                            {privacyMode ? 'XX.XXX.XXX-X' : student.rut}
-                          </span>
-                        </td>
-                        <td className="hidden px-5 py-3 sm:table-cell">
-                          <span className="inline-flex items-center gap-1 rounded-md border border-neutral-200/60 bg-neutral-50 px-2 py-0.5 font-medium text-[11px] text-neutral-500">
-                            <BookOpen className="h-3 w-3" aria-hidden="true" />
-                            {student.course_name}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                {isExpanded && (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="border-neutral-100 border-b">
+                          <th className="px-5 py-3 font-semibold text-[10px] text-neutral-400 uppercase tracking-wider">
+                            Nombre
+                          </th>
+                          <th className="px-5 py-3 font-semibold text-[10px] text-neutral-400 uppercase tracking-wider">
+                            RUN
+                          </th>
+                          <th className="hidden px-5 py-3 font-semibold text-[10px] text-neutral-400 uppercase tracking-wider sm:table-cell">
+                            Curso
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {courseStudents.map((student) => (
+                          <tr
+                            key={student.id}
+                            aria-label={`Estudiante ${maskName(student.full_name, privacyMode)}`}
+                            className="border-neutral-50 border-b transition-colors last:border-b-0 hover:bg-neutral-50/80"
+                          >
+                            <td
+                              className="px-5 py-3"
+                              aria-label={`Nombre ${maskName(student.full_name, privacyMode)}`}
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-brand-100 to-brand-200 font-bold text-[10px] text-brand-700">
+                                  {student.full_name
+                                    .split(' ')
+                                    .filter((w) => w.length > 2)
+                                    .slice(0, 2)
+                                    .map((w) => w[0])
+                                    .join('')}
+                                </div>
+                                <span className="font-semibold text-neutral-900 text-sm">
+                                  {privacyMode
+                                    ? student.full_name
+                                        .split(' ')
+                                        .filter((w) => w.length > 2)
+                                        .map((w) => `${w[0]}.`)
+                                        .join(' ')
+                                    : student.full_name}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-5 py-3">
+                              <span className="font-medium font-mono text-neutral-600 text-xs">
+                                {privacyMode ? 'XX.XXX.XXX-X' : student.rut}
+                              </span>
+                            </td>
+                            <td className="hidden px-5 py-3 sm:table-cell">
+                              <span className="inline-flex items-center gap-1 rounded-md border border-neutral-200/60 bg-neutral-50 px-2 py-0.5 font-medium text-[11px] text-neutral-500">
+                                <BookOpen className="h-3 w-3" aria-hidden="true" />
+                                {student.course_name}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
-              )}
-            </div>
             );
           })}
         </div>

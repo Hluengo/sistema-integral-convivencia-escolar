@@ -253,7 +253,7 @@ export default function AnotacionesDocumentGenerator({
       {printMessage && (
         <div
           role="status"
-          className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
+          className="rounded-xl border border-grave-200 bg-grave-50 p-4 text-sm text-grave-700"
         >
           {printMessage}
         </div>
@@ -262,7 +262,7 @@ export default function AnotacionesDocumentGenerator({
       {hasOverflow && (
         <div
           role="alert"
-          className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
+          className="rounded-xl border border-grave-200 bg-grave-50 p-4 text-sm text-grave-700"
         >
           El contenido supera una pagina Carta (216 x 279 mm). Reduzca el texto o utilice una
           version de varias paginas antes de imprimir.

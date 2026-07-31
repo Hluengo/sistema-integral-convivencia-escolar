@@ -73,13 +73,13 @@ export default function ClassificationStep({
             <p className="font-medium text-neutral-700 text-sm">Resultado del Análisis</p>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-center">
-              <p className="font-bold text-2xl text-red-700">{summary.negativas}</p>
-              <p className="mt-1 font-medium text-red-600 text-xs">Negativas</p>
+            <div className="rounded-xl border border-gravisima-200 bg-gravisima-50 p-4 text-center">
+              <p className="font-bold text-2xl text-gravisima-700">{summary.negativas}</p>
+              <p className="mt-1 font-medium text-gravisima-600 text-xs">Negativas</p>
             </div>
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
-              <p className="font-bold text-2xl text-emerald-700">{summary.positivas}</p>
-              <p className="mt-1 font-medium text-emerald-600 text-xs">Positivas</p>
+            <div className="rounded-xl border border-leve-200 bg-leve-50 p-4 text-center">
+              <p className="font-bold text-2xl text-leve-700">{summary.positivas}</p>
+              <p className="mt-1 font-medium text-leve-600 text-xs">Positivas</p>
             </div>
             <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-center">
               <p className="font-bold text-2xl text-blue-700">{summary.informativas}</p>
@@ -87,8 +87,8 @@ export default function ClassificationStep({
             </div>
           </div>
           {suggestedType && suggestedType !== 'none' && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-center">
-              <p className="font-medium text-amber-700 text-xs">
+            <div className="rounded-xl border border-grave-200 bg-grave-50 p-3 text-center">
+              <p className="font-medium text-grave-700 text-xs">
                 Sugerido: {LEGEND[suggestedType]?.label || suggestedType}
               </p>
             </div>

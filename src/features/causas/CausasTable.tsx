@@ -12,10 +12,10 @@ interface CausasTableProps {
 }
 
 const severityClasses: Record<TipoInfraccion, string> = {
-  Leve: 'bg-emerald-100 text-emerald-800',
-  Grave: 'bg-amber-100 text-amber-800',
-  'Muy Grave': 'bg-rose-100 text-rose-800',
-  Gravísima: 'bg-red-100 text-red-800',
+  Leve: 'bg-leve-100 text-leve-700',
+  Grave: 'bg-grave-100 text-grave-700',
+  'Muy Grave': 'bg-muygrave-100 text-muygrave-700',
+  Gravísima: 'bg-gravisima-100 text-gravisima-700',
 };
 
 function StudentName({ causa, privacyMode }: { causa: Causa; privacyMode: boolean }) {
@@ -35,9 +35,9 @@ function Deadline({ causa }: { causa: Causa }) {
   const deadline = getCausaDeadline(causa);
   const tone =
     deadline.tone === 'overdue'
-      ? 'bg-red-50 text-red-700 ring-red-200'
+      ? 'bg-gravisima-50 text-gravisima-700 ring-gravisima-200'
       : deadline.tone === 'warning'
-        ? 'bg-amber-50 text-amber-700 ring-amber-200'
+        ? 'bg-grave-50 text-grave-700 ring-grave-200'
         : 'bg-neutral-50 text-neutral-600 ring-neutral-200';
   return (
     <span
@@ -81,7 +81,7 @@ export default memo(function CausasTable({ causas, privacyMode, onSelectCausa }:
                 {getCausaPhase(causa)}
               </span>
               <Deadline causa={causa} />
-              <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-medium text-emerald-800 text-xs">
+              <span className="rounded-full bg-leve-100 px-2 py-0.5 font-medium text-leve-700 text-xs">
                 {getCausaStatus(causa)}
               </span>
             </div>
@@ -152,7 +152,7 @@ export default memo(function CausasTable({ causas, privacyMode, onSelectCausa }:
                   <Deadline causa={causa} />
                 </td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm">
-                  <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 font-medium text-emerald-800 text-xs">
+                  <span className="rounded-full bg-leve-100 px-2.5 py-0.5 font-medium text-leve-700 text-xs">
                     {getCausaStatus(causa)}
                   </span>
                 </td>

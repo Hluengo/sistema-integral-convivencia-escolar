@@ -39,12 +39,12 @@ export const CLASSIFICATION_OPTIONS = [
 export function statusStyle(status?: string): string {
   switch (status) {
     case 'Verde':
-      return 'bg-emerald-100 text-emerald-700';
+      return 'bg-leve-100 text-leve-700';
     case 'Amarillo':
-      return 'bg-yellow-100 text-yellow-700';
+      return 'bg-grave-100 text-grave-700';
     case 'Naranja':
-      return 'bg-orange-100 text-orange-700';
+      return 'bg-muygrave-100 text-muygrave-700';
     default:
-      return 'bg-rose-100 text-rose-700';
+      return 'bg-gravisima-100 text-gravisima-700';
   }
 }

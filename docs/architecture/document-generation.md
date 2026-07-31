@@ -76,10 +76,6 @@ AnotacionesView
       ├── DocumentWarnings → Alertas de debido proceso
       └── Imprimir → volver a la aplicación → Marcar como procesada
 
-DocumentosView
-  └── DocumentosView (unified hub)
-      ├── Causas: cartas existentes
-      └── Anotaciones: generador de documentos
 ```
 
 La impresión no completa el trámite por sí sola. **Marcar como procesada** guarda el

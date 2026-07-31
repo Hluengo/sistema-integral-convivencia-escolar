@@ -47,7 +47,7 @@ Auto-save: useCausasPersistence → debounce 2s → Supabase
 
 ```
 uiStore.currentView → MainContent renderiza:
-  dashboard | causas | informes | alumnos | anotaciones | documentos
+  dashboard | causas | informes | alumnos | anotaciones
 
 Modals (sin ruta): LoginPage, NewCausaModal, EditCausaModal, ShortcutsModal,
   NewDisciplinaryProcessModal, AnotacionesStudentDetailModal, OnboardingTour

@@ -1,6 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import type { Annotation, CartaDisciplinaria, EtapaDisciplinaria } from '../../types';
+import { getYearFromDateOnly } from '../../lib/dateUtils';
 
 export interface InspectorateRecord {
   id: string;
@@ -68,7 +69,7 @@ export function mapCauseRowToCarta(row: CauseRow): CartaDisciplinaria {
     apoderado_name: row.apoderado_name,
     annotations_count: row.annotations_count,
     origin: row.origin === 'physical' ? 'physical' : 'platform',
-    school_year: row.school_year ?? new Date(`${row.emission_date}T00:00:00`).getFullYear(),
+    school_year: row.school_year ?? getYearFromDateOnly(row.emission_date),
     student_name: row.student_name,
     course: row.course,
     regulation_basis: row.regulation_basis,

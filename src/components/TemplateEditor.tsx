@@ -14,6 +14,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { TextBlockSkeleton } from './Skeleton';
+import Button from '../shared/ui/Button';
 
 interface Template {
   id: string;
@@ -167,20 +168,20 @@ export default function TemplateEditor() {
       <div className="min-h-[280px] bg-white">
         {header}
         <div className="flex flex-col items-center justify-center px-5 py-14 text-center">
-          <span className="rounded-xl bg-amber-50 p-3 text-amber-700" aria-hidden="true">
+          <span className="rounded-xl bg-grave-50 p-3 text-grave-700" aria-hidden="true">
             <LockKeyhole className="size-5" />
           </span>
           <h4 className="mt-3 font-semibold text-neutral-900 text-sm">Acceso a plantillas</h4>
           <p className="mt-1 max-w-md text-neutral-500 text-sm">{loadError}</p>
           {loadError.includes('conexión') || loadError.includes('cargar las plantillas') ? (
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               onClick={() => void fetchTemplates()}
-              className="mt-4 inline-flex items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 font-semibold text-neutral-700 text-xs hover:bg-neutral-50"
+              className="mt-4 rounded-lg px-3 py-2 text-xs"
             >
               <RefreshCw className="size-3.5" aria-hidden="true" />
               Reintentar
-            </button>
+            </Button>
           ) : null}
         </div>
       </div>
@@ -238,20 +239,20 @@ export default function TemplateEditor() {
                 </span>
                 <div className="flex items-center gap-2">
                   {saveSuccess === selectedId && (
-                    <span className="flex animate-fade-in items-center gap-1 font-medium text-[9px] text-green-600">
+                    <span className="flex animate-fade-in items-center gap-1 font-medium text-[9px] text-leve-600">
                       <CheckCircle className="h-3 w-3" /> Guardado
                     </span>
                   )}
                   {saveError && (
-                    <span className="flex items-center gap-1 font-medium text-[9px] text-red-600">
+                    <span className="flex items-center gap-1 font-medium text-[9px] text-gravisima-600">
                       <AlertCircle className="h-3 w-3" /> {saveError}
                     </span>
                   )}
-                  <button
-                    type="button"
+                  <Button
+                    size="sm"
                     onClick={handleSave}
                     disabled={saving !== null}
-                    className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 font-semibold text-[10px] text-white transition-colors hover:bg-brand-700 disabled:bg-neutral-300"
+                    className="rounded-lg px-3 py-1.5 text-[10px] disabled:bg-neutral-300"
                   >
                     {saving === selectedId ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
@@ -259,7 +260,7 @@ export default function TemplateEditor() {
                       <Save className="h-3 w-3" />
                     )}
                     Guardar
-                  </button>
+                  </Button>
                 </div>
               </div>
               <textarea

@@ -2,7 +2,10 @@
  * @license SPDX-License-Identifier: Apache-2.0
  *
  * Playwright E2E tests for Letter document export system.
- * Tests visual fidelity, PDF download, print, and overflow detection.
+ * Tests visual fidelity, impresion nativa, and overflow detection.
+ * Nota: PDF/Word download tests removidos por decision arquitectonica
+ * (ver src/features/anotaciones/docgen/__tests__/letter-document.test.ts:
+ * las dependencias pdf-lib, html-to-image, file-saver, docx estan prohibidas).
  */
 
 import { test, expect } from '@playwright/test';
@@ -90,13 +93,12 @@ test.describe('Documento tamaño Carta', () => {
     expect(box).not.toBeNull();
   });
 
-  test('9. Botones de accion visibles', async ({ page }) => {
+  test('9. Boton Imprimir visible (solo impresion nativa, sin PDF/Word por decision arquitectonica)', async ({
+    page,
+  }) => {
     const printBtn = page.locator('#btn-print');
-    const pdfBtn = page.locator('#btn-pdf');
-    const wordBtn = page.locator('#btn-word');
     await expect(printBtn).toBeVisible();
-    await expect(pdfBtn).toBeVisible();
-    await expect(wordBtn).toBeVisible();
+    await expect(printBtn).toHaveText('Imprimir');
   });
 
   test('10. Deteccion de contenido excedido', async ({ page }) => {
@@ -105,27 +107,12 @@ test.describe('Documento tamaño Carta', () => {
     expect(isHidden).toBe(true);
   });
 
-  test('11. Descarga PDF - boton dispara accion y genera archivo real', async ({ page }) => {
-    const downloadPromise = page.waitForEvent('download', { timeout: 30000 });
-    const pdfBtn = page.locator('#btn-pdf');
-    await pdfBtn.click();
-    const download = await downloadPromise;
-    expect(download.suggestedFilename()).toContain('.pdf');
-    const path = await download.path();
-    expect(path).toBeTruthy();
-    if (path) {
-      const fs = await import('fs');
-      const stat = fs.statSync(path);
-      expect(stat.size).toBeGreaterThan(100_000);
-    }
-  });
-
-  test('12. Impresion - boton dispara accion', async ({ page }) => {
+  test('11. Accion de impresion disponible (solo impresion nativa)', async ({ page }) => {
     const printBtn = page.locator('#btn-print');
     await expect(printBtn).toBeEnabled();
   });
 
-  test('13. Snapshot visual de la plantilla', async ({ page }) => {
+  test('12. Snapshot visual de la plantilla', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     const letterDocument = page.locator('#document-preview-a4');
     await expect(letterDocument).toHaveScreenshot('letter-amonestacion.png', {

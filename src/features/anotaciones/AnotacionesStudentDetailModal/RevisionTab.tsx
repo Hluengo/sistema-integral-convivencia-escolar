@@ -8,6 +8,7 @@ import {
   type LetterDocType,
 } from '@/src/shared/lib/domain/disciplinaryStage';
 import type { ReviewAnnotationType } from '../NewDisciplinaryProcessModal/ReviewStep';
+import Button from '@/src/shared/ui/Button';
 import ReviewStep from '../NewDisciplinaryProcessModal/ReviewStep';
 import { formatDate, type StudentInfo } from './constants';
 import { useStudentPdfDisciplinaryReview } from './hooks/useStudentPdfDisciplinaryReview';
@@ -159,14 +160,14 @@ export default function RevisionTab({
       )}
 
       {review.errorMessage && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="rounded-xl border border-gravisima-200 bg-gravisima-50 p-4 text-sm text-gravisima-700">
           <div className="flex items-start gap-2">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
             <span>{review.errorMessage}</span>
             <button
               type="button"
               onClick={() => review.setErrorMessage(null)}
-              className="ml-auto text-red-500 hover:text-red-700"
+              className="ml-auto text-gravisima-500 hover:text-gravisima-700"
               aria-label="Cerrar error"
             >
               <X className="h-4 w-4" />
@@ -196,15 +197,15 @@ export default function RevisionTab({
                 {review.comparison.registeredNegativeCount}
               </p>
             </div>
-            <div className="rounded-lg border border-red-100 bg-red-50 p-3">
-              <p className="text-xs text-red-500">Negativas en PDF</p>
-              <p className="text-xl font-black text-red-700">
+            <div className="rounded-lg border border-gravisima-100 bg-gravisima-50 p-3">
+              <p className="text-xs text-gravisima-500">Negativas en PDF</p>
+              <p className="text-xl font-black text-gravisima-700">
                 {review.comparison.detectedNegativeCount}
               </p>
             </div>
-            <div className="rounded-lg border border-amber-100 bg-amber-50 p-3">
-              <p className="text-xs text-amber-600">Diferencia</p>
-              <p className="text-xl font-black text-amber-700">
+            <div className="rounded-lg border border-grave-100 bg-grave-50 p-3">
+              <p className="text-xs text-grave-600">Diferencia</p>
+              <p className="text-xl font-black text-grave-700">
                 {review.comparison.difference >= 0 ? '+' : ''}
                 {review.comparison.difference}
               </p>
@@ -237,7 +238,7 @@ export default function RevisionTab({
           </div>
 
           {review.comparison.conflictMessage && (
-            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div className="mt-4 rounded-lg border border-gravisima-200 bg-gravisima-50 p-3 text-sm text-gravisima-700">
               {review.comparison.conflictMessage}
             </div>
           )}
@@ -282,15 +283,14 @@ export default function RevisionTab({
             Confirmar actualización
           </button>
           {canGoToCarta && review.comparison?.suggestedDocType && (
-            <button
-              type="button"
+            <Button
               onClick={() => void handleGoToCarta()}
               disabled={review.isBusy}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
+              className="rounded-xl px-5 py-2"
             >
               Ir a Carta: {mapDocTypeToLetterType(review.comparison.suggestedDocType)}
               <ArrowRight className="h-4 w-4" />
-            </button>
+            </Button>
           )}
         </div>
       )}

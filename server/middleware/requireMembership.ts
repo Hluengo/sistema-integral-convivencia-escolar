@@ -6,6 +6,25 @@ import https from 'node:https';
 
 export type MembershipAuthMode = 'legacy' | 'transition' | 'enforced';
 
+/** Roles that may enter the convivencia application. Endpoint-level permissions
+ * remain enforced separately by requireRole where an operation is restricted. */
+export const CONVIVENCIA_MEMBERSHIP_ROLES = [
+  'admin',
+  'direccion',
+  'convivencia',
+  'inspectoria',
+  'profesor_jefe',
+  'teacher',
+  'inspector',
+  'user',
+  'staff',
+] as const;
+
+export const CONVIVENCIA_MEMBERSHIP = {
+  applicationCode: 'convivencia',
+  allowedRoles: CONVIVENCIA_MEMBERSHIP_ROLES,
+} as const;
+
 export interface MembershipCheckParams {
   applicationCode: string;
   allowedRoles?: readonly string[];

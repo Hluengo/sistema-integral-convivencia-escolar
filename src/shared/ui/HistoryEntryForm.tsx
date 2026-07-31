@@ -1,7 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useState, type FormEvent, type ReactNode } from 'react';
-import { Loader2, NotebookPen, Plus, X } from 'lucide-react';
+import { NotebookPen, Plus, X } from 'lucide-react';
+import Button from './Button';
 
 export interface HistoryEntryFormInput {
   title: string;
@@ -54,17 +55,18 @@ export default function HistoryEntryForm({
 
   if (!isOpen) {
     return (
-      <button
-        type="button"
+      <Button
+        variant="custom"
+        fullWidth
         onClick={() => {
           onResetError();
           setIsOpen(true);
         }}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-brand-300 bg-brand-50/60 px-4 py-3 font-semibold text-brand-700 text-sm transition-colors hover:border-brand-400 hover:bg-brand-50"
+        className="rounded-xl border border-dashed border-brand-300 bg-brand-50/60 text-brand-700 hover:border-brand-400 hover:bg-brand-50"
       >
         <Plus className="h-4 w-4" aria-hidden="true" />
         Registrar entrada manual
-      </button>
+      </Button>
     );
   }
 
@@ -140,28 +142,18 @@ export default function HistoryEntryForm({
       {additionalFields}
 
       {error && (
-        <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-rose-700 text-sm">
+        <p role="alert" className="rounded-lg bg-gravisima-50 px-3 py-2 text-gravisima-700 text-sm">
           {error}
         </p>
       )}
 
       <div className="flex justify-end gap-2">
-        <button
-          type="button"
-          onClick={closeForm}
-          disabled={isSaving}
-          className="rounded-xl px-4 py-2 font-medium text-neutral-600 text-sm hover:bg-white disabled:opacity-40"
-        >
+        <Button variant="ghost" onClick={closeForm} disabled={isSaving}>
           Cancelar
-        </button>
-        <button
-          type="submit"
-          disabled={!canSave}
-          className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2 font-semibold text-sm text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {isSaving && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+        </Button>
+        <Button type="submit" disabled={!canSave} isLoading={isSaving}>
           Guardar en historial
-        </button>
+        </Button>
       </div>
     </form>
   );

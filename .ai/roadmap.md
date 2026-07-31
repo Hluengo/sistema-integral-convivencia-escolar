@@ -53,6 +53,16 @@
 - [x] Docs: staff membership decision, phase 3 report
 - [ ] Enforcement: profiles.role sigue como fallback (pendiente staff membership)
 
+### Auditoría técnica y hardening ✅ Cerrada (2026-07-31)
+
+- [x] Privacidad accesible: nombres enmascarados en etiquetas ARIA y títulos de diálogo
+- [x] Storage RLS alineado para roles `convivencia` y `direccion`
+- [x] Conteos disciplinarios acotados al año escolar vigente
+- [x] Rankings normalizados y estables por año escolar
+- [x] Utilidades de fecha chilena consolidadas
+- [x] Migraciones correctivas aplicadas en Supabase remoto
+- [x] Validación local: lint, 295 tests y build de producción
+
 ## Corto Plazo (1-3 meses)
 
 ### Testing

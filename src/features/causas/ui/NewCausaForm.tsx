@@ -9,6 +9,7 @@ import type { Course, Student } from '../../../services/courses.service';
 import type { Causa } from '../../../types';
 import RiceConductSelect from '../NewCausaForm/RiceConductSelect';
 import ImproveTextarea from '../../../components/ImproveTextarea';
+import Button from '../../../shared/ui/Button';
 
 interface NewCausaFormProps {
   newEstNombre: string;
@@ -92,7 +93,8 @@ export default function NewCausaForm({
             Curso del estudiante
           </label>
           <select
-            id="create-course" aria-label="Curso del estudiante"
+            id="create-course"
+            aria-label="Curso del estudiante"
             value={selectedCourseId}
             onChange={(e) => onCourseChange(e.target.value)}
             className="mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-medium text-neutral-700 transition-colors duration-200 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30"
@@ -156,7 +158,8 @@ export default function NewCausaForm({
                 </div>
               ) : students.length > 0 ? (
                 <select
-                  id="create-student" aria-label="Estudiante"
+                  id="create-student"
+                  aria-label="Estudiante"
                   value={students.find((s) => s.full_name === newEstNombre)?.id || ''}
                   onChange={(e) => onStudentSelect(e.target.value)}
                   className="mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-medium text-neutral-700 transition-colors duration-200 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30"
@@ -169,9 +172,9 @@ export default function NewCausaForm({
                   ))}
                 </select>
               ) : (
-                <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5">
-                  <AlertCircle className="h-3.5 w-3.5 shrink-0 text-amber-600" aria-hidden="true" />
-                  <span className="text-amber-800 text-xs">No hay estudiantes en este curso</span>
+                <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-grave-200 bg-grave-50 p-2.5">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0 text-grave-600" aria-hidden="true" />
+                  <span className="text-grave-700 text-xs">No hay estudiantes en este curso</span>
                 </div>
               )}
             </>
@@ -192,7 +195,8 @@ export default function NewCausaForm({
             RUN / RUT:
           </label>
           <input
-            id="create-rut" aria-label="RUN o RUT"
+            id="create-rut"
+            aria-label="RUN o RUT"
             type="text"
             required
             spellCheck={false}
@@ -224,7 +228,8 @@ export default function NewCausaForm({
               Gravedad:
             </label>
             <select
-              id="create-gravedad" aria-label="Gravedad"
+              id="create-gravedad"
+              aria-label="Gravedad"
               value={newInfTipo}
               onChange={(e) => setNewInfTipo(e.target.value as Causa['tipoInfraccion'])}
               className="mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-medium text-neutral-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
@@ -238,7 +243,8 @@ export default function NewCausaForm({
           <div className="flex flex-col justify-end">
             <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-2.5 font-medium text-neutral-700 transition hover:bg-neutral-100/60">
               <input
-                id="create-aula-segura" aria-label="Afecta Aula Segura"
+                id="create-aula-segura"
+                aria-label="Afecta Aula Segura"
                 name="create-aula-segura"
                 type="checkbox"
                 checked={newAulaSegura}
@@ -268,7 +274,8 @@ export default function NewCausaForm({
             Fiscalizador a cargo:
           </label>
           <input
-            id="create-responsable" aria-label="Fiscalizador a cargo"
+            id="create-responsable"
+            aria-label="Fiscalizador a cargo"
             type="text"
             required
             spellCheck={false}
@@ -279,7 +286,7 @@ export default function NewCausaForm({
         </div>
 
         {newInfTipo === 'Gravísima' && newAulaSegura && (
-          <div className="rounded-lg border border-gravisima-200 bg-gravisima-50 p-3 font-medium font-sans text-gravisima-800 text-xs leading-normal">
+          <div className="rounded-lg border border-gravisima-200 bg-gravisima-50 p-3 font-medium font-sans text-gravisima-700 text-xs leading-normal">
             ⚠️ <strong>Ley Aula Segura activa:</strong> Recuerde citar formalmente a la
             Superintendencia en un lapso de 24 horas y resolver en no más de 10 días hábiles de
             suspensión preventiva.
@@ -287,19 +294,15 @@ export default function NewCausaForm({
         )}
 
         <div className="flex items-center justify-end gap-2 border-neutral-100 border-t pt-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="cursor-pointer rounded-lg px-3 py-1.5 font-medium text-neutral-500 transition-colors hover:bg-neutral-50"
-          >
+          <Button variant="ghost" onClick={onClose}>
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
-            className="flex cursor-pointer items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 font-semibold text-white shadow-brand-600/20 shadow-sm transition-colors hover:scale-[1.02] hover:bg-brand-700 active:scale-95"
+            className="rounded-xl px-5 py-2.5 hover:scale-[1.02] active:scale-95"
           >
             <FileText className="h-4 w-4" aria-hidden="true" /> Registrar Expediente
-          </button>
+          </Button>
         </div>
       </form>
     </div>

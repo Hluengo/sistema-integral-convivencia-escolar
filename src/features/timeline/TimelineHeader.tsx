@@ -50,8 +50,8 @@ export default function TimelineHeader({
             <span
               className={`inline-flex items-center rounded-full px-2 py-0.5 font-bold ${
                 causa.comprometeAulaSegura
-                  ? 'bg-red-100 text-red-700'
-                  : 'bg-amber-100 text-amber-700'
+                  ? 'bg-gravisima-100 text-gravisima-700'
+                  : 'bg-grave-100 text-grave-700'
               }`}
             >
               {causa.comprometeAulaSegura ? 'Aula Segura' : causa.tipoInfraccion}
@@ -71,7 +71,7 @@ export default function TimelineHeader({
                 <button
                   type="button"
                   onClick={onForceCloseClick}
-                  className="hidden items-center gap-1.5 rounded-lg px-3 py-2 font-semibold text-red-100 text-xs transition-colors hover:bg-red-500/20 hover:text-white sm:inline-flex"
+                  className="hidden items-center gap-1.5 rounded-lg px-3 py-2 font-semibold text-gravisima-100 text-xs transition-colors hover:bg-gravisima-500/20 hover:text-white sm:inline-flex"
                   title="Cerrar causa con fundamento"
                   aria-label="Cerrar causa con fundamento"
                 >
@@ -81,7 +81,7 @@ export default function TimelineHeader({
                 <button
                   type="button"
                   onClick={onForceCloseClick}
-                  className="rounded-lg p-2 text-red-100 transition-colors hover:bg-red-500/20 hover:text-white sm:hidden"
+                  className="rounded-lg p-2 text-gravisima-100 transition-colors hover:bg-gravisima-500/20 hover:text-white sm:hidden"
                   title="Cerrar causa con fundamento"
                   aria-label="Cerrar causa con fundamento"
                 >
@@ -99,7 +99,7 @@ export default function TimelineHeader({
                 <button
                   type="button"
                   onClick={onDeleteClick}
-                  className="rounded-lg p-2 text-slate-200 transition-colors hover:bg-red-500/20 hover:text-red-100"
+                  className="rounded-lg p-2 text-slate-200 transition-colors hover:bg-gravisima-500/20 hover:text-gravisima-100"
                   title="Eliminar expediente"
                   aria-label="Eliminar expediente"
                 >

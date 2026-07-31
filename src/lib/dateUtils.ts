@@ -1,3 +1,5 @@
+/** @license SPDX-License-Identifier: Apache-2.0 */
+
 export const CHILE_TIME_ZONE = 'America/Santiago';
 
 export const toDateOnly = (date: Date): string => {
@@ -15,6 +17,26 @@ export const toIsoWithoutMilliseconds = (date: Date): string =>
   date.toISOString().replace('.000Z', 'Z');
 
 export const nowDateOnly = (): string => toDateOnly(new Date());
+
+/**
+ * Parses a date-only string (YYYY-MM-DD) at UTC noon so that calendar
+ * components (getFullYear, getMonth, getDate) never shift under local
+ * America/Santiago DST. Returns NaN if the input is not a valid date.
+ */
+export const parseDateOnlyAtNoonUtc = (value: string): Date => new Date(`${value}T12:00:00Z`);
+
+/** Safe calendar year for a date-only string using the UTC-noon parse. */
+export const getYearFromDateOnly = (value: string): number => {
+  const parsed = parseDateOnlyAtNoonUtc(value);
+  return Number.isNaN(parsed.getTime()) ? NaN : parsed.getUTCFullYear();
+};
+
+/** Current school year (calendar year in America/Santiago). */
+export const getCurrentSchoolYear = (): number => Number(toDateOnly(new Date()).slice(0, 4));
+
+/** Calendar year of a timestamp/date string in America/Santiago. */
+export const getYearInChile = (value: string | Date): number =>
+  Number(toDateOnly(value instanceof Date ? value : new Date(value)).slice(0, 4));
 
 export const nowIso = (): string => toIsoWithoutMilliseconds(new Date());
 

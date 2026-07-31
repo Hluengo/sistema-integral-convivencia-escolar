@@ -5,6 +5,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { requireTenant } from '../middleware/requireTenant.js';
 import type { AuthenticatedRequest } from '../types';
 import { rateLimit } from '../../middleware/rateLimit.js';
+import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../middleware/requireMembership.js';
 import {
   analyzeDisciplinaryPdf,
   confirmDisciplinaryProcess,
@@ -12,6 +13,7 @@ import {
 
 const router = Router();
 router.use(requireAuth);
+router.use(requireMembership(CONVIVENCIA_MEMBERSHIP));
 router.use(rateLimit);
 
 interface AuthedRequestBody {

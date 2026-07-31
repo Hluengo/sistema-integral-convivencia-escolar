@@ -3,7 +3,11 @@
 import { useState, useCallback, useRef } from 'react';
 import { Upload, FileText, Loader2, AlertTriangle, Star } from 'lucide-react';
 import type { AnnotationSummary } from '@/src/shared/lib/types';
-import { MAX_DISCIPLINARY_PDF_BYTES, validateDisciplinaryPdf } from '@/src/shared/api/services/disciplinary-storage.service';
+import {
+  MAX_DISCIPLINARY_PDF_BYTES,
+  validateDisciplinaryPdf,
+} from '@/src/shared/api/services/disciplinary-storage.service';
+import Button from '@/src/shared/ui/Button';
 
 interface UploadAnalyzeStepProps {
   file: File | null;
@@ -41,7 +45,7 @@ export default function UploadAnalyzeStep({
       setLocalError(validationError);
       onFileChange(validationError ? null : candidate);
     },
-    [onFileChange]
+    [onFileChange],
   );
 
   const onDrop = useCallback(
@@ -50,7 +54,7 @@ export default function UploadAnalyzeStep({
       setDrag(false);
       selectFile(e.dataTransfer.files[0]);
     },
-    [selectFile]
+    [selectFile],
   );
 
   const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,7 +71,8 @@ export default function UploadAnalyzeStep({
           <Upload className="h-4 w-4 text-indigo-600" /> Subir hoja de vida en PDF
         </p>
         <p className="text-neutral-500 text-xs">
-          Archivo privado, máximo {formatBytes(MAX_DISCIPLINARY_PDF_BYTES)}. El análisis se ejecuta en backend.
+          Archivo privado, máximo {formatBytes(MAX_DISCIPLINARY_PDF_BYTES)}. El análisis se ejecuta
+          en backend.
         </p>
       </div>
 
@@ -86,7 +91,14 @@ export default function UploadAnalyzeStep({
           drag ? 'border-indigo-500 bg-indigo-50' : 'border-neutral-300 hover:border-neutral-400'
         }`}
       >
-        <input ref={fileRef} type="file" accept="application/pdf,.pdf" aria-label="Seleccionar PDF" onChange={onPick} className="hidden" />
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/pdf,.pdf"
+          aria-label="Seleccionar PDF"
+          onChange={onPick}
+          className="hidden"
+        />
         <div className="flex flex-col items-center gap-2">
           <Upload className="h-8 w-8 text-neutral-400" />
           <p className="text-neutral-500 text-sm">Arrastra un PDF o haz clic para seleccionar</p>
@@ -99,19 +111,24 @@ export default function UploadAnalyzeStep({
       </button>
 
       {file && (
-        <button
-          type="button"
+        <Button
+          variant="custom"
+          fullWidth
           onClick={onAnalyze}
           disabled={isAnalyzing}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 font-medium text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
+          className="rounded-xl bg-indigo-600 py-2.5 font-medium text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
         >
-          {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+          {isAnalyzing ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <FileText className="h-4 w-4" />
+          )}
           {isAnalyzing ? statusLabel || 'Analizando...' : 'Analizar PDF'}
-        </button>
+        </Button>
       )}
 
       {visibleError && (
-        <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-700 text-sm">
+        <div className="flex items-start gap-2 rounded-xl border border-gravisima-200 bg-gravisima-50 p-4 text-gravisima-700 text-sm">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <span>{visibleError}</span>
         </div>
@@ -123,20 +140,22 @@ export default function UploadAnalyzeStep({
             <Star className="h-4 w-4 text-indigo-600" /> Resultado del análisis
           </p>
           <div className="grid grid-cols-3 gap-3">
-            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-center">
-              <p className="font-bold text-2xl text-red-700">{summary.negativas}</p>
-              <p className="mt-1 font-medium text-red-600 text-xs">Negativas</p>
+            <div className="rounded-xl border border-gravisima-200 bg-gravisima-50 p-4 text-center">
+              <p className="font-bold text-2xl text-gravisima-700">{summary.negativas}</p>
+              <p className="mt-1 font-medium text-gravisima-600 text-xs">Negativas</p>
             </div>
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
-              <p className="font-bold text-2xl text-emerald-700">{summary.positivas}</p>
-              <p className="mt-1 font-medium text-emerald-600 text-xs">Positivas</p>
+            <div className="rounded-xl border border-leve-200 bg-leve-50 p-4 text-center">
+              <p className="font-bold text-2xl text-leve-700">{summary.positivas}</p>
+              <p className="mt-1 font-medium text-leve-600 text-xs">Positivas</p>
             </div>
             <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-center">
               <p className="font-bold text-2xl text-blue-700">{summary.informativas}</p>
               <p className="mt-1 font-medium text-blue-600 text-xs">Informativas</p>
             </div>
           </div>
-          <p className="text-center font-medium text-neutral-500 text-xs">Total: {total} anotaciones detectadas</p>
+          <p className="text-center font-medium text-neutral-500 text-xs">
+            Total: {total} anotaciones detectadas
+          </p>
         </div>
       )}
     </div>

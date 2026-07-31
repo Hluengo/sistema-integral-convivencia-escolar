@@ -7,6 +7,7 @@ import type React from 'react';
 import type { ChecklistItem } from '../../types';
 import { Upload, Check } from 'lucide-react';
 import ImproveTextarea from '../../components/ImproveTextarea';
+import Button from '../../shared/ui/Button';
 
 interface RegistrationFormProps {
   item: ChecklistItem;
@@ -113,20 +114,10 @@ export default function RegistrationForm({
       )}
 
       <div className="flex justify-end gap-2 pt-1">
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={isSaving}
-          className="rounded-lg px-3 py-1.5 font-medium text-[11px] text-neutral-500 transition-colors hover:bg-neutral-50"
-        >
+        <Button variant="ghost" size="sm" onClick={onCancel} disabled={isSaving}>
           Cancelar
-        </button>
-        <button
-          type="button"
-          onClick={onSubmit}
-          disabled={isSaving}
-          className="flex items-center gap-1 rounded-lg bg-brand-600 px-4 py-1.5 font-medium text-[11px] text-white transition-colors hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
-        >
+        </Button>
+        <Button size="sm" onClick={onSubmit} disabled={isSaving}>
           {isSaving ? (
             <>Subiendo...</>
           ) : (
@@ -139,7 +130,7 @@ export default function RegistrationForm({
               {regFile ? 'Adjuntar y registrar' : 'Confirmar registro'}
             </>
           )}
-        </button>
+        </Button>
       </div>
     </div>
   );

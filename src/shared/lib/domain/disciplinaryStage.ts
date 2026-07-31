@@ -1,5 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
+import { getYearFromDateOnly } from '@/src/lib/dateUtils';
+
 type DisciplinaryStageKey = 'none' | 'amonestacion' | 'compromiso_conductual' | 'derivacion';
 
 export type LetterDocType = 'amonestacion' | 'compromiso_conductual' | 'derivacion';
@@ -128,8 +130,7 @@ export function getPhysicalCartaBaselineType(
   const currentYearPhysicalTypes = new Set(
     cartas
       .filter((carta) => {
-        const cartaYear =
-          carta.school_year ?? new Date(`${carta.emission_date}T00:00:00`).getFullYear();
+        const cartaYear = carta.school_year ?? getYearFromDateOnly(carta.emission_date);
         return (
           carta.origin === 'physical' && carta.status !== 'Anulada' && cartaYear === schoolYear
         );
@@ -171,7 +172,7 @@ export function getOutstandingLetterType(
 }
 
 function getCartaYear(carta: CartaTableCandidate): number {
-  return carta.school_year ?? new Date(`${carta.emission_date}T00:00:00`).getFullYear();
+  return carta.school_year ?? getYearFromDateOnly(carta.emission_date);
 }
 
 function isCompletedCarta(carta: CartaTableCandidate): boolean {

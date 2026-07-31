@@ -4,9 +4,10 @@ import { Router } from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { sanitizeForAI } from '../validators/sanitizers.js';
 import { getCacheKey, getFromCache, setCache } from '../services/cache.js';
-import { callGroq } from '../services/groq.js';
+import { callOpenRouter } from '../services/openrouter.js';
 import { getRelevantLegalSources } from '../services/legalSources.js';
 import { rateLimit } from '../../middleware/rateLimit.js';
+import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../middleware/requireMembership.js';
 
 const router = Router();
 
@@ -38,28 +39,33 @@ function normalizeHistory(value: unknown): AdvisorMessage[] | null {
   return normalized;
 }
 
-router.post('/advisor-chat', requireAuth, rateLimit, async (req, res) => {
-  try {
-    const { message, history } = req.body;
-    if (!message || typeof message !== 'string' || !message.trim()) {
-      res.status(400).json({ error: 'Campo requerido: message' });
-      return;
-    }
+router.post(
+  '/advisor-chat',
+  requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
+  rateLimit,
+  async (req, res) => {
+    try {
+      const { message, history } = req.body;
+      if (!message || typeof message !== 'string' || !message.trim()) {
+        res.status(400).json({ error: 'Campo requerido: message' });
+        return;
+      }
 
-    if (message.length > MAX_ADVISOR_MESSAGE_LENGTH) {
-      res.status(400).json({ error: 'El mensaje supera el máximo permitido.' });
-      return;
-    }
-    const normalizedHistory = normalizeHistory(history);
-    if (!normalizedHistory) {
-      res.status(400).json({
-        error: 'El historial de consulta no es válido o supera el máximo permitido.',
-      });
-      return;
-    }
+      if (message.length > MAX_ADVISOR_MESSAGE_LENGTH) {
+        res.status(400).json({ error: 'El mensaje supera el máximo permitido.' });
+        return;
+      }
+      const normalizedHistory = normalizeHistory(history);
+      if (!normalizedHistory) {
+        res.status(400).json({
+          error: 'El historial de consulta no es válido o supera el máximo permitido.',
+        });
+        return;
+      }
 
-    const legalSources = await getRelevantLegalSources(message);
-    const systemInstruction = `Eres el Consultor Legal de Convivencia Escolar de un establecimiento chileno.
+      const legalSources = await getRelevantLegalSources(message);
+      const systemInstruction = `Eres el Consultor Legal de Convivencia Escolar de un establecimiento chileno.
 
 Responde únicamente desde las FUENTES JURÍDICAS AUTORIZADAS incluidas abajo. Estas fuentes pueden contener normativa educacional, derechos de niños, niñas y adolescentes, circulares, resoluciones de la Superintendencia y reglamentos o protocolos institucionales vigentes que el establecimiento haya versionado.
 
@@ -73,27 +79,28 @@ REGLAS:
 FUENTES JURÍDICAS AUTORIZADAS:
 ${legalSources}`;
 
-    const userId = (req as unknown as { user?: { sub?: string } }).user?.sub || 'anonymous';
-    const cacheKey = getCacheKey('advisor-chat', {
-      userId,
-      message,
-      history: normalizedHistory,
-    });
-    const cached = getFromCache(cacheKey);
-    if (cached) {
-      res.json({ success: true, reply: cached, cached: true });
-      return;
-    }
+      const userId = (req as unknown as { user?: { sub?: string } }).user?.sub || 'anonymous';
+      const cacheKey = getCacheKey('advisor-chat', {
+        userId,
+        message,
+        history: normalizedHistory,
+      });
+      const cached = getFromCache(cacheKey);
+      if (cached) {
+        res.json({ success: true, reply: cached, cached: true });
+        return;
+      }
 
-    const messages: Array<{ role: string; content: string }> = [...normalizedHistory];
-    messages.push({ role: 'user', content: sanitizeForAI(message) });
-    const reply = await callGroq(messages, systemInstruction);
-    setCache(cacheKey, reply);
-    res.json({ success: true, reply });
-  } catch (error) {
-    console.error('Error en el Chat de Consultoría:', (error as Error).message || error);
-    res.status(500).json({ error: 'Error interno del servidor.' });
-  }
-});
+      const messages: Array<{ role: string; content: string }> = [...normalizedHistory];
+      messages.push({ role: 'user', content: sanitizeForAI(message) });
+      const reply = await callOpenRouter(messages, systemInstruction);
+      setCache(cacheKey, reply);
+      res.json({ success: true, reply });
+    } catch (error) {
+      console.error('Error en el Chat de Consultoría:', (error as Error).message || error);
+      res.status(500).json({ error: 'Error interno del servidor.' });
+    }
+  },
+);
 
 export default router;

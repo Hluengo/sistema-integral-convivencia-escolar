@@ -7,8 +7,10 @@ import { requireRole } from '../middleware/requireRole.js';
 import { sanitize } from '../validators/sanitizers.js';
 import { httpsGet, httpsPatch } from '../lib/https.js';
 import type { AuthenticatedRequest } from '../../types.js';
+import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../middleware/requireMembership.js';
 
 const router = Router();
+router.use(requireAuth, requireMembership(CONVIVENCIA_MEMBERSHIP));
 const TEMPLATE_SELECT_PUBLIC = 'id,doc_type,label,updated_at';
 const TEMPLATE_SELECT_ADMIN = 'id,doc_type,label,system_prompt,updated_at';
 
@@ -33,7 +35,7 @@ function isTemplateId(value: string): boolean {
   return /^tpl_[a-z0-9_]{3,100}$/i.test(value);
 }
 
-router.get('/document-templates', requireAuth, requireTenant, async (req, res) => {
+router.get('/document-templates', requireTenant, async (req, res) => {
   try {
     const authReq = req as AuthenticatedRequest;
     const data = await httpsGet(
@@ -49,7 +51,6 @@ router.get('/document-templates', requireAuth, requireTenant, async (req, res) =
 
 router.get(
   '/document-templates/admin',
-  requireAuth,
   requireTenant,
   requireRole(['admin', 'direccion']),
   async (req, res) => {
@@ -69,7 +70,6 @@ router.get(
 
 router.put(
   '/document-templates',
-  requireAuth,
   requireTenant,
   requireRole(['admin', 'direccion']),
   async (req, res) => {

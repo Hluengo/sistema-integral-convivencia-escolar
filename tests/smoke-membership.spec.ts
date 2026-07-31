@@ -16,7 +16,7 @@ test.describe('Convivencia - Phase 3 Membership Enforcement', () => {
     page.on('request', (req) => {
       const url = req.url();
       if (
-        !url.endsWith('.ts') &&
+        req.resourceType() === 'fetch' &&
         (url.includes('membership') || url.includes('current_user_memberships'))
       ) {
         rpcRequests.push(url);

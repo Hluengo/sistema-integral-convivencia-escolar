@@ -11,7 +11,6 @@ import {
   Users,
   FileBarChart,
   ClipboardList,
-  FileText,
   ChevronLeft,
   ChevronRight,
   Menu,
@@ -20,7 +19,7 @@ import {
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { SidebarUserMenu, SidebarAulaSeguraAlert } from './SidebarUserMenu';
 
-export type SidebarView = 'dashboard' | 'causas' | 'alumnos' | 'informes' | 'anotaciones' | 'documentos';
+export type SidebarView = 'dashboard' | 'causas' | 'alumnos' | 'informes' | 'anotaciones';
 
 interface SidebarProps {
   currentView: SidebarView;
@@ -54,7 +53,6 @@ const NAV_ITEMS: {
   badgeKey?: 'activeCount';
 }[] = [
   { id: 'dashboard', label: 'Dashboard', Icon: LayoutDashboard },
-  { id: 'documentos', label: 'Registros', Icon: FileText },
   { id: 'causas', label: 'Causas', Icon: Scale, badgeKey: 'activeCount' },
   { id: 'anotaciones', label: 'Anotaciones', Icon: ClipboardList },
   { id: 'informes', label: 'Asistente Legal', Icon: FileBarChart },
@@ -93,7 +91,13 @@ function SidebarContent({
         )}
       </div>
 
-      <SidebarUserMenu user={user} isCollapsed={isCollapsed} mobile={mobile} onLogin={onLogin} onLogout={onLogout} />
+      <SidebarUserMenu
+        user={user}
+        isCollapsed={isCollapsed}
+        mobile={mobile}
+        onLogin={onLogin}
+        onLogout={onLogout}
+      />
 
       <SidebarAulaSeguraAlert count={aulaSeguraCount} isCollapsed={isCollapsed} mobile={mobile} />
 
@@ -143,7 +147,7 @@ function SidebarContent({
                   {badge !== undefined && badge > 0 && (
                     <span
                       className={`rounded-full px-1.5 py-0.5 font-bold text-[10px] tabular-nums ${
-                        isActive ? 'bg-white/25 text-white' : 'bg-orange-500 text-white'
+                        isActive ? 'bg-white/25 text-white' : 'bg-muygrave-500 text-white'
                       }`}
                     >
                       {badge}
@@ -185,7 +189,7 @@ export default memo(function Sidebar({
     };
     document.addEventListener('keydown', handleEscape);
     const firstFocusable = mobileSidebarRef.current?.querySelector<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
     firstFocusable?.focus();
     return () => document.removeEventListener('keydown', handleEscape);

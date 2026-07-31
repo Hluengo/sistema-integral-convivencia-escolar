@@ -24,6 +24,8 @@ react-doctor-report.json
 supabase/.temp
 .playwright-mcp/
 test-artifacts/
+test-results/
+playwright-report/
 screenshots/
 evidencias/
 datos-reales/

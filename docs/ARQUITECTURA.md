@@ -6,7 +6,7 @@
 - **Backend local:** Express + Vite middleware (`server.ts`)
 - **API producción:** Vercel Serverless (`api/index.js`)
 - **DB/Auth:** Supabase PostgreSQL + Auth + RLS + JWT claims
-- **IA:** Groq (modelo `llama-3.3-70b-versatile`) para mejora de textos y asesoría
+- **IA:** OpenRouter para mejora de textos y asesoría breve; Gemini para informes y documentos
 
 ## Estructura FSD (Feature-Sliced Design)
 
@@ -39,16 +39,19 @@ src/
 ## Multi-Tenant
 
 ### Esquema
+
 - Tabla `tenants` con `id UUID`, `name`, `slug`
 - Columna `tenant_id` en 10 tablas: `profiles`, `causas`, `bitacora_entries`, `checklist_items`, `cartas_disciplinarias`, `etapas_disciplinarias`, `inspectorate_records`, `document_templates`, `students`, `courses`
 - JWT claim `app_metadata.tenant_id` para RLS rápido (sin subquery)
 
 ### RLS
+
 - `current_tenant_id()`: lee tenant_id del JWT primero, fallback a `profiles`
 - `current_app_role()`: obtiene rol del usuario desde `profiles`
 - Políticas tenant-aware en todas las tablas con DELETE restringido a admin/dirección
 
 ### App
+
 - `useAuthStore.tenantId`: se carga al autenticar desde `profiles`
 - Servicios inyectan `tenant_id` en INSERT vía `useAuthStore.getState().tenantId`
 - API middleware inyecta `req.tenantId` en `api/index.js`

@@ -5,6 +5,7 @@ export type MembershipAuthMode = 'legacy' | 'transition' | 'enforced' | 'invalid
 export interface MembershipConfig {
   enabled: boolean;
   enforced: boolean;
+  /** Deprecated compatibility flag; the server treats enforced as fail-closed. */
   allowLegacyFallback: boolean;
 }
 
@@ -29,14 +30,23 @@ export function getMembershipConfig(): MembershipConfig {
 export function getMembershipAuthMode(): MembershipAuthMode {
   const config = getMembershipConfig();
   if (!config.enabled) return 'legacy';
-  if (config.enforced && !config.allowLegacyFallback) return 'enforced';
+  if (config.enforced) return 'enforced';
   if (config.enabled && !config.enforced) return 'transition';
-  if (config.enforced && config.allowLegacyFallback) return 'transition';
   return 'invalid';
 }
 
 const APP_ROLE_RULES: Record<string, readonly string[]> = {
-  convivencia: ['direccion', 'convivencia'],
+  convivencia: [
+    'admin',
+    'direccion',
+    'convivencia',
+    'inspectoria',
+    'profesor_jefe',
+    'teacher',
+    'inspector',
+    'user',
+    'staff',
+  ],
   inasistencias: ['teacher'],
 };
 

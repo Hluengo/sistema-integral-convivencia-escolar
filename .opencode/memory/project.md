@@ -99,7 +99,6 @@ La navegación **NO usa React Router**. Se maneja con una variable `currentView`
 | `informes`    | `<AdvisorView>` (AI Legal + Templates)   | `features/causas/MainContent` |
 | `alumnos`     | `<StudentsPanel>`                        | `features/students`           |
 | `anotaciones` | `<AnotacionesView>`                      | `features/anotaciones`        |
-| `documentos`  | `<DocumentosView>`                       | `features/documentos`         |
 
 **Modals controlados por estado** (sin rutas): `LoginPage`, `NewCausaModal`, `EditCausaModal`, `ShortcutsModal`, `NewDisciplinaryProcessModal`, `AnotacionesStudentDetailModal`.
 
@@ -111,7 +110,7 @@ Componentes lazy (React.lazy + Suspense):
 - `LoginPage`, `NewCausaModal`, `ShortcutsModal`, `OnboardingTour`
 - `InteractiveTimeline`, `EditCausaModal` (dentro de CausasView)
 - `AnotacionesStudentDetailModal`, `NewDisciplinaryProcessModal` (dentro de AnotacionesView)
-- `AnotacionesDocumentGenerator` (dentro de DocumentosView)
+- `AnotacionesDocumentGenerator` (lazy dentro de `CartasTab.tsx`)
 
 ---
 
@@ -406,7 +405,6 @@ Rate Limiting: 10 req/min/IP por endpoint (in-memory Map)
             │   ├── informes → <AdvisorView>
             │   ├── alumnos → <StudentsPanel>
             │   ├── anotaciones → <AnotacionesView> (con modals lazy)
-            │   └── documentos → <DocumentosView>
             └── Modals: LoginPage, NewCausaModal, ShortcutsModal, OnboardingTour (todos lazy)
           </AppProvider>
         </ToastProvider>
@@ -1119,3 +1117,11 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - La etapa efectiva es el máximo entre el tramo de anotaciones negativas y la carta completada de mayor nivel del año escolar vigente.
 - Una etapa se considera procesada solo cuando su carta efectiva vigente tiene evidencia de registro, impresión, procesamiento manual u origen físico; si el conteo exige una etapa superior, esta queda pendiente.
 - El año escolar y las fechas operativas se resuelven con la zona IANA `America/Santiago`.
+
+### Correcciones de auditoría técnica aplicadas (2026-07-31)
+
+- Las migraciones `20260731000020`, `20260731000030`, `20260731180716`, `20260731190539` y `20260731191230` ya fueron aplicadas en Supabase remoto.
+- Storage autoriza los roles `convivencia` y `direccion` para los buckets disciplinarios, respetando tenant y membresía activa.
+- Conteos, etapas y rankings usan el año escolar vigente en `America/Santiago`; los rankings normalizan claves de docentes/cursos y no mezclan fuentes de fallback.
+- El cliente no usa fallback paginado para KPIs/rankings cuando falla la RPC: expone el error para evitar datos inconsistentes.
+- La auditoría técnica quedó validada localmente con lint, 295 tests y build de producción exitosos.

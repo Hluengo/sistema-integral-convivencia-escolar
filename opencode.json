@@ -25,7 +25,7 @@
       "command": ["npx", "-y", "@supabase/mcp-server-supabase"],
       "env": {
         "SUPABASE_SERVICE_ROLE_KEY": "${SUPABASE_SERVICE_ROLE_KEY}",
-        "SUPABASE_URL": "https://jjzwwhnofiepvliugowr.supabase.co"
+        "SUPABASE_URL": "https://mjhbcqwtjzgvqssfiore.supabase.co"
       },
       "enabled": true,
       "description": "Acceso directo a Supabase para consultas, migraciones y administración de la base de datos"

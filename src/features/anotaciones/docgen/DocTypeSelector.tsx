@@ -37,7 +37,9 @@ export default function DocTypeSelector({
   negativeCount,
 }: DocTypeSelectorProps) {
   const isEnabled = (id: string) => {
-    if (id === 'compromiso_conductual') { return hasTenOrMore; }
+    if (id === 'compromiso_conductual') {
+      return hasTenOrMore;
+    }
     return true;
   };
 
@@ -56,10 +58,10 @@ export default function DocTypeSelector({
               onClick={() => enabled && onDocTypeChange(id)}
               disabled={!enabled}
               className={`relative flex flex-col items-center gap-2 rounded-lg border-2 p-4 text-left transition-colors ${
-                  isActive
-                    ? 'border-brand-500 bg-blue-50 ring-2 ring-blue-200'
-                    : 'border-neutral-200 bg-white hover:border-neutral-300'
-                }
+                isActive
+                  ? 'border-brand-500 bg-blue-50 ring-2 ring-blue-200'
+                  : 'border-neutral-200 bg-white hover:border-neutral-300'
+              }
                 ${!enabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
               `}
             >
@@ -80,7 +82,7 @@ export default function DocTypeSelector({
                 </span>
               </div>
               {!enabled && id === 'compromiso_conductual' && (
-                <span className="font-medium text-amber-600 text-xs">
+                <span className="font-medium text-grave-600 text-xs">
                   Faltan {10 - negativeCount} anotaciones
                 </span>
               )}

@@ -6,6 +6,7 @@ import {
   type PhysicalCartaRegistrationResult,
 } from '@/src/services/cartas.service';
 import type { PhysicalCartaRegistrationInput } from '@/src/shared/lib/schemas/physicalCarta';
+import { useInvalidateDashboardQueries } from '@/src/shared/lib/hooks/useInvalidateDashboardQueries';
 
 interface UsePhysicalCartaRegistrationOptions {
   onRegistered: () => void | Promise<void>;
@@ -22,19 +23,22 @@ export function usePhysicalCartaRegistration({
   onRegistered,
 }: UsePhysicalCartaRegistrationOptions): UsePhysicalCartaRegistrationResult {
   const [isRegistering, setIsRegistering] = useState(false);
+  const invalidateDashboard = useInvalidateDashboardQueries();
 
   const registerPhysicalCarta = useCallback(
     async (input: PhysicalCartaRegistrationInput) => {
       setIsRegistering(true);
       try {
         const result = await registerPhysicalCartaForStudent(input);
-        if (result.ok) await onRegistered();
+        if (result.ok) {
+          await Promise.all([onRegistered(), invalidateDashboard()]);
+        }
         return result;
       } finally {
         setIsRegistering(false);
       }
     },
-    [onRegistered],
+    [onRegistered, invalidateDashboard],
   );
 
   return { isRegistering, registerPhysicalCarta };

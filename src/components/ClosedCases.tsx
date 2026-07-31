@@ -5,10 +5,18 @@
 
 import { memo, useMemo, useState } from 'react';
 import { type Causa, EstadoCausa } from '../types';
-import { 
-  Search, Archive, Clock, UserCheck, RotateCcw, CalendarDays, CheckCircle2,
-  FileText, BarChart3, 
+import {
+  Search,
+  Archive,
+  Clock,
+  UserCheck,
+  RotateCcw,
+  CalendarDays,
+  CheckCircle2,
+  FileText,
+  BarChart3,
 } from 'lucide-react';
+import Button from '../shared/ui/Button';
 
 interface ClosedCasesProps {
   causas: Causa[];
@@ -17,35 +25,41 @@ interface ClosedCasesProps {
   onSelectCausa: (causa: Causa) => void;
 }
 
-function ClosedCases({ 
-  causas, 
-  privacyMode, 
-  onReopenCausa,
-  onSelectCausa 
-}: ClosedCasesProps) {
+function ClosedCases({ causas, privacyMode, onReopenCausa, onSelectCausa }: ClosedCasesProps) {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<'fecha' | 'nombre'>('fecha');
 
   const closedCausas = useMemo(
-    () => causas.filter(c => c.estadoActual === EstadoCausa.CAUSA_CERRADA),
-    [causas]
+    () => causas.filter((c) => c.estadoActual === EstadoCausa.CAUSA_CERRADA),
+    [causas],
   );
 
-  const filteredCausas = useMemo(() => closedCausas.filter(c => {
-    if (!searchQuery.trim()) { return true; }
-    const query = searchQuery.toLowerCase();
-    return (
-      c.estudianteNombre.toLowerCase().includes(query) ||
-      c.nnaProtectedName.toLowerCase().includes(query) ||
-      c.id.toLowerCase().includes(query) ||
-      c.estudianteCurso.toLowerCase().includes(query)
-    );
-  }).sort((a, b) => {
-    if (sortBy === 'fecha') {
-      return new Date(b.fechaUltimaActualizacion).getTime() - new Date(a.fechaUltimaActualizacion).getTime();
-    }
-    return a.estudianteNombre.localeCompare(b.estudianteNombre);
-  }), [closedCausas, searchQuery, sortBy]);
+  const filteredCausas = useMemo(
+    () =>
+      closedCausas
+        .filter((c) => {
+          if (!searchQuery.trim()) {
+            return true;
+          }
+          const query = searchQuery.toLowerCase();
+          return (
+            c.estudianteNombre.toLowerCase().includes(query) ||
+            c.nnaProtectedName.toLowerCase().includes(query) ||
+            c.id.toLowerCase().includes(query) ||
+            c.estudianteCurso.toLowerCase().includes(query)
+          );
+        })
+        .sort((a, b) => {
+          if (sortBy === 'fecha') {
+            return (
+              new Date(b.fechaUltimaActualizacion).getTime() -
+              new Date(a.fechaUltimaActualizacion).getTime()
+            );
+          }
+          return a.estudianteNombre.localeCompare(b.estudianteNombre);
+        }),
+    [closedCausas, searchQuery, sortBy],
+  );
 
   if (closedCausas.length === 0) {
     return (
@@ -71,10 +85,11 @@ function ClosedCases({
             Casos Cerrados
           </h2>
           <p className="mt-0.5 text-[11px] text-neutral-500">
-            {closedCausas.length} expediente{closedCausas.length !== 1 ? 's' : ''} finalizado{closedCausas.length !== 1 ? 's' : ''}
+            {closedCausas.length} expediente{closedCausas.length !== 1 ? 's' : ''} finalizado
+            {closedCausas.length !== 1 ? 's' : ''}
           </p>
         </div>
-        
+
         <div className="flex items-center gap-2">
           {/* Stats mini-card */}
           <div className="hidden items-center gap-3 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-[10px] sm:flex">
@@ -88,11 +103,13 @@ function ClosedCases({
               <span className="font-semibold text-neutral-700">
                 {closedCausas.reduce((acc, c) => {
                   const days = Math.round(
-                    (new Date(c.fechaUltimaActualizacion).getTime() - new Date(c.fechaApertura).getTime()) 
-                    / (1000 * 60 * 60 * 24)
+                    (new Date(c.fechaUltimaActualizacion).getTime() -
+                      new Date(c.fechaApertura).getTime()) /
+                      (1000 * 60 * 60 * 24),
                   );
                   return acc + days;
-                }, 0)}d total
+                }, 0)}
+                d total
               </span>
             </div>
           </div>
@@ -112,16 +129,19 @@ function ClosedCases({
 
       {/* Search */}
       <div className="relative w-full sm:max-w-md">
-        <Search className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" aria-hidden="true" />
-<input
-  type="text"
-  spellCheck={false}
-  value={searchQuery}
-  onChange={(e) => setSearchQuery(e.target.value)}
-  placeholder="Buscar en casos cerrados..."
-  className="w-full bg-white py-2 pr-4 pl-9 font-medium text-neutral-800 text-xs placeholder-neutral-400 focus:outline-none"
-  aria-label="Buscar casos cerrados"
-/>
+        <Search
+          className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400"
+          aria-hidden="true"
+        />
+        <input
+          type="text"
+          spellCheck={false}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Buscar en casos cerrados..."
+          className="w-full bg-white py-2 pr-4 pl-9 font-medium text-neutral-800 text-xs placeholder-neutral-400 focus:outline-none"
+          aria-label="Buscar casos cerrados"
+        />
       </div>
 
       {/* List of closed cases */}
@@ -129,10 +149,11 @@ function ClosedCases({
         {filteredCausas.length > 0 ? (
           filteredCausas.map((causa) => {
             const duration = Math.round(
-              (new Date(causa.fechaUltimaActualizacion).getTime() - new Date(causa.fechaApertura).getTime()) 
-              / (1000 * 60 * 60 * 24)
+              (new Date(causa.fechaUltimaActualizacion).getTime() -
+                new Date(causa.fechaApertura).getTime()) /
+                (1000 * 60 * 60 * 24),
             );
-            const completedCount = causa.checklistDebidoProceso.filter(c => c.completado).length;
+            const completedCount = causa.checklistDebidoProceso.filter((c) => c.completado).length;
             const totalCount = causa.checklistDebidoProceso.length;
 
             return (
@@ -152,12 +173,17 @@ function ClosedCases({
                           <CheckCircle2 className="h-2.5 w-2.5" aria-hidden="true" />
                           Cerrado
                         </span>
-                        <span className={`rounded px-1.5 py-0.5 font-bold text-[8px] ${
-                          causa.tipoInfraccion === 'Gravísima' ? 'bg-red-100 text-red-800' :
-                          causa.tipoInfraccion === 'Muy Grave' ? 'bg-purple-100 text-purple-800' :
-                          causa.tipoInfraccion === 'Grave' ? 'bg-amber-100 text-amber-800' :
-                          'bg-blue-100 text-blue-800'
-                        }`}>
+                        <span
+                          className={`rounded px-1.5 py-0.5 font-bold text-[8px] ${
+                            causa.tipoInfraccion === 'Gravísima'
+                              ? 'bg-gravisima-100 text-gravisima-700'
+                              : causa.tipoInfraccion === 'Muy Grave'
+                                ? 'bg-purple-100 text-purple-800'
+                                : causa.tipoInfraccion === 'Grave'
+                                  ? 'bg-grave-100 text-grave-700'
+                                  : 'bg-blue-100 text-blue-800'
+                          }`}
+                        >
                           {causa.tipoInfraccion}
                         </span>
                       </div>
@@ -195,12 +221,16 @@ function ClosedCases({
                         <div className="max-w-xs flex-1">
                           <div className="mb-1 flex items-center justify-between text-[9px] text-neutral-400">
                             <span>Debido proceso</span>
-                            <span className="font-semibold text-neutral-600">{completedCount}/{totalCount}</span>
+                            <span className="font-semibold text-neutral-600">
+                              {completedCount}/{totalCount}
+                            </span>
                           </div>
-<div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-100">
-                            <div 
-                              className="h-full rounded-full bg-success-500" 
-                              style={{ width: `${totalCount > 0 ? (completedCount / totalCount) * 100 : 0}%` }}
+                          <div className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-100">
+                            <div
+                              className="h-full rounded-full bg-success-500"
+                              style={{
+                                width: `${totalCount > 0 ? (completedCount / totalCount) * 100 : 0}%`,
+                              }}
                             />
                           </div>
                         </div>
@@ -214,24 +244,25 @@ function ClosedCases({
 
                     {/* Action buttons */}
                     <div className="flex shrink-0 flex-col gap-2">
-                      <button
-                        type="button"
+                      <Button
+                        size="sm"
                         onClick={() => onSelectCausa(causa)}
-                        className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 font-semibold text-[10px] text-white transition-colors hover:bg-brand-700"
+                        className="rounded-lg px-3 py-1.5 text-[10px]"
                         title="Ver detalle del caso"
                       >
                         <FileText className="h-3 w-3" aria-hidden="true" />
                         <span>Ver</span>
-                      </button>
-                      <button
-                        type="button"
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="custom"
                         onClick={() => onReopenCausa(causa)}
-                        className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 font-semibold text-[10px] text-amber-700 transition-colors hover:bg-amber-100"
+                        className="rounded-lg border border-grave-200 bg-grave-50 px-3 py-1.5 text-[10px] text-grave-700 hover:bg-grave-100"
                         title="Reabrir caso"
                       >
                         <RotateCcw className="h-3 w-3" aria-hidden="true" />
                         <span>Reabrir</span>
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -241,7 +272,9 @@ function ClosedCases({
         ) : (
           <div className="rounded-xl border border-neutral-200 bg-white p-8 text-center">
             <Search className="mx-auto mb-2 h-8 w-8 text-neutral-300" />
-            <p className="font-medium text-neutral-500 text-xs">No se encontraron casos cerrados con ese criterio.</p>
+            <p className="font-medium text-neutral-500 text-xs">
+              No se encontraron casos cerrados con ese criterio.
+            </p>
           </div>
         )}
       </div>

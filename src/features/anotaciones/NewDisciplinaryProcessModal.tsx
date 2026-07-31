@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import type { Student } from './NewDisciplinaryProcessModal/constants';
+import { useInvalidateDashboardQueries } from '@/src/shared/lib/hooks/useInvalidateDashboardQueries';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '@/src/stores/authStore';
 import type { AnnotationSummary } from '@/src/shared/lib/types';
@@ -35,6 +36,7 @@ import ReviewStep, {
 import { updateReviewAnnotationText } from './NewDisciplinaryProcessModal/reviewAnnotationUtils';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/src/shared/ui/Dialog';
 import PdfAnalysisComparison from './NewDisciplinaryProcessModal/PdfAnalysisComparison';
+import Button from '@/src/shared/ui/Button';
 
 type FlowStep =
   'upload' | 'student_resolution' | 'duplicate_check' | 'classification' | 'review' | 'success';
@@ -170,6 +172,7 @@ export default function NewDisciplinaryProcessModal({
   onProcessCreated,
   onOpenExistingStudent,
 }: NewDisciplinaryProcessModalProps) {
+  const invalidateDashboard = useInvalidateDashboardQueries();
   const [step, setStep] = useState<FlowStep>('upload');
   const [status, setStatus] = useState<ProcessingState>('idle');
   const [course, setCourse] = useState<string | null>(null);
@@ -456,6 +459,7 @@ export default function NewDisciplinaryProcessModal({
         processNumber: data.processNumber,
         summary: summary ?? undefined,
       });
+      await invalidateDashboard();
       onClose();
     } catch (error) {
       setAnalysisError(error instanceof Error ? error.message : 'Error al confirmar el proceso.');
@@ -616,19 +620,19 @@ export default function NewDisciplinaryProcessModal({
               {rulesLoadFailed && (
                 <div
                   role="alert"
-                  className="mb-4 flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between"
+                  className="mb-4 flex flex-col gap-3 rounded-xl border border-grave-200 bg-grave-50 p-3 text-sm text-grave-700 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <span>
                     No se pudieron cargar las reglas institucionales. Se muestran las opciones
                     predeterminadas.
                   </span>
-                  <button
-                    type="button"
+                  <Button
+                    variant="custom"
                     onClick={() => void refetchRules()}
-                    className="shrink-0 rounded-lg border border-amber-300 bg-white px-3 py-1.5 font-semibold text-amber-900 hover:bg-amber-100"
+                    className="shrink-0 rounded-lg border border-grave-200 bg-white px-3 py-1.5 font-semibold text-grave-700 hover:bg-grave-100"
                   >
                     Reintentar
-                  </button>
+                  </Button>
                 </div>
               )}
               <ClassificationStep
@@ -644,14 +648,18 @@ export default function NewDisciplinaryProcessModal({
             <div className="space-y-4">
               <div
                 className={`rounded-2xl border p-5 ${
-                  duplicateFile ? 'border-rose-200 bg-rose-50' : 'border-amber-200 bg-amber-50'
+                  duplicateFile
+                    ? 'border-gravisima-200 bg-gravisima-50'
+                    : 'border-grave-200 bg-grave-50'
                 }`}
                 role="alert"
               >
                 <div className="flex items-start gap-3">
                   <div
                     className={`rounded-xl p-2 ${
-                      duplicateFile ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'
+                      duplicateFile
+                        ? 'bg-gravisima-100 text-gravisima-700'
+                        : 'bg-grave-100 text-grave-700'
                     }`}
                   >
                     {duplicateFile ? (
@@ -663,7 +671,7 @@ export default function NewDisciplinaryProcessModal({
                   <div className="min-w-0 space-y-2">
                     <h3
                       className={`font-semibold ${
-                        duplicateFile ? 'text-rose-900' : 'text-amber-900'
+                        duplicateFile ? 'text-gravisima-700' : 'text-grave-700'
                       }`}
                     >
                       {duplicateFile
@@ -672,7 +680,7 @@ export default function NewDisciplinaryProcessModal({
                     </h3>
                     <p
                       className={`text-sm leading-relaxed ${
-                        duplicateFile ? 'text-rose-800' : 'text-amber-800'
+                        duplicateFile ? 'text-gravisima-700' : 'text-grave-700'
                       }`}
                     >
                       {duplicateFile
@@ -680,7 +688,7 @@ export default function NewDisciplinaryProcessModal({
                         : `${selectedStudent?.full_name ?? 'El estudiante'} ya tiene ${existingAnnotationCount} anotación${existingAnnotationCount === 1 ? '' : 'es'}. Puedes revisar el historial o continuar si este PDF contiene información nueva.`}
                     </p>
                     {!duplicateFile && (
-                      <p className="text-amber-700 text-xs">
+                      <p className="text-grave-700 text-xs">
                         Al continuar, el sistema conservará el PDF como un nuevo respaldo y omitirá
                         las anotaciones que ya existan.
                       </p>
@@ -700,32 +708,32 @@ export default function NewDisciplinaryProcessModal({
 
               <div className="flex flex-col gap-2 sm:flex-row">
                 {onOpenExistingStudent && existingStudentId && (
-                  <button
-                    type="button"
+                  <Button
+                    variant="secondary"
                     onClick={() => void openExistingStudent()}
-                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-neutral-300 bg-white px-4 py-2.5 font-medium text-neutral-700 text-sm hover:bg-neutral-50"
+                    className="flex-1 rounded-xl px-4 py-2.5 font-medium"
                   >
                     <History className="h-4 w-4" />
                     Abrir registro existente
-                  </button>
+                  </Button>
                 )}
                 {!duplicateFile && hasExistingStudentRecord && (
-                  <button
-                    type="button"
+                  <Button
+                    variant="custom"
                     onClick={continueAfterDuplicateWarning}
-                    className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 font-medium text-sm text-white hover:bg-indigo-700"
+                    className="flex-1 rounded-xl bg-indigo-600 px-4 py-2.5 font-medium text-sm text-white hover:bg-indigo-700"
                   >
                     Subir PDF como actualización
                     <ArrowRight className="h-4 w-4" />
-                  </button>
+                  </Button>
                 )}
-                <button
-                  type="button"
+                <Button
+                  variant="ghost"
                   onClick={() => void goBack()}
-                  className="inline-flex items-center justify-center rounded-xl px-4 py-2.5 font-medium text-neutral-600 text-sm hover:bg-neutral-100"
+                  className="rounded-xl px-4 py-2.5 font-medium"
                 >
                   Cancelar
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -744,8 +752,8 @@ export default function NewDisciplinaryProcessModal({
           )}
           {step === 'success' && (
             <div className="space-y-4 py-8 text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-                <Check className="h-6 w-6 text-emerald-700" />
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-leve-100">
+                <Check className="h-6 w-6 text-leve-700" />
               </div>
               <div>
                 <p className="font-semibold text-neutral-800">Proceso creado correctamente</p>
@@ -759,7 +767,7 @@ export default function NewDisciplinaryProcessModal({
           )}
 
           {analysisError && step !== 'upload' && (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-rose-700 text-sm">
+            <div className="rounded-xl border border-gravisima-200 bg-gravisima-50 p-3 text-gravisima-700 text-sm">
               {analysisError}
             </div>
           )}
@@ -767,20 +775,20 @@ export default function NewDisciplinaryProcessModal({
 
         {step !== 'duplicate_check' && (
           <div className="flex justify-between border-neutral-100 border-t p-4">
-            <button
-              type="button"
+            <Button
+              variant="ghost"
               onClick={step === 'success' ? onClose : () => void goBack()}
               disabled={(step === 'upload' && !isBusy) || status === 'confirming'}
-              className="flex items-center gap-1.5 rounded-xl px-4 py-2 font-medium text-neutral-600 text-sm hover:bg-neutral-100 disabled:opacity-30"
+              className="rounded-xl px-4 py-2 font-medium"
             >
               <ArrowLeft className="h-4 w-4" />{' '}
               {isBusy && status !== 'confirming' ? 'Cancelar' : 'Anterior'}
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="custom"
               onClick={step === 'success' ? onClose : goNext}
               disabled={step !== 'success' && !canNext()}
-              className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-5 py-2 font-medium text-sm text-white hover:bg-indigo-700 disabled:opacity-40"
+              className="rounded-xl bg-indigo-600 px-5 py-2 font-medium text-sm text-white hover:bg-indigo-700 disabled:opacity-40"
             >
               {status === 'confirming' && <Loader2 className="h-4 w-4 animate-spin" />}
               {step === 'review'
@@ -789,7 +797,7 @@ export default function NewDisciplinaryProcessModal({
                   ? 'Cerrar'
                   : 'Siguiente'}
               {step !== 'review' && step !== 'success' && <ArrowRight className="h-4 w-4" />}
-            </button>
+            </Button>
           </div>
         )}
       </DialogContent>

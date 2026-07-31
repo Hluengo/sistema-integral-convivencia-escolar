@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/src/shared/ui/Dialog';
+import Button from '@/src/shared/ui/Button';
 
 interface PrintHintDialogProps {
   isOpen: boolean;
@@ -61,15 +62,15 @@ export default function PrintHintDialog({ isOpen, onConfirm, onCancel }: PrintHi
             </li>
           </ul>
 
-          <div className="flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-amber-800">
-            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-amber-600" />
+          <div className="flex items-start gap-2 rounded-xl bg-grave-50 p-3 text-grave-700">
+            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-grave-600" />
             <span className="text-xs">
               No seleccione papel Legal (8.5 x 14 in) ni A4 (210 x 297 mm). El documento esta
               dimensionado para Carta de 216 x 279 mm (Letter).
             </span>
           </div>
-          <div className="flex items-start gap-2 rounded-xl bg-emerald-50 p-3 text-emerald-800">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+          <div className="flex items-start gap-2 rounded-xl bg-leve-50 p-3 text-leve-700">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-leve-600" />
             <span className="text-xs">
               Después de imprimir, regrese a la aplicación y haga clic en “Marcar como procesada”
               para confirmar el trámite y registrarlo en el historial.
@@ -78,21 +79,21 @@ export default function PrintHintDialog({ isOpen, onConfirm, onCancel }: PrintHi
         </div>
 
         <DialogFooter>
-          <button
-            type="button"
+          <Button
+            variant="ghost"
             onClick={onCancel}
-            className="rounded-xl bg-white px-4 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100"
+            className="rounded-xl bg-white px-4 py-2 font-medium"
           >
             Cancelar
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="custom"
             onClick={onConfirm}
-            className="inline-flex items-center gap-2 rounded-xl bg-neutral-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-800"
+            className="rounded-xl bg-neutral-700 px-4 py-2 font-medium text-white hover:bg-neutral-800"
           >
             <Printer className="h-4 w-4" />
             Imprimir
-          </button>
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

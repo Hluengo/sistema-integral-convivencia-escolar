@@ -21,6 +21,11 @@ import SeverityBadge from '../../components/SeverityBadge';
 import AnotacionesDashboardStats from '../anotaciones/AnotacionesDashboardStats';
 import EmptyState from '../../components/EmptyState';
 import { fetchAnnotationStageCounts } from '../../services/annotations.service';
+import { fetchCourseCartaRanking } from '../../services/cartas.service';
+import {
+  fetchStudentAnnotationRanking,
+  fetchTeacherAnnotationRanking,
+} from '../../services/annotations.service';
 import {
   fetchPublicDashboardKpis,
   type PublicDashboardKpis,
@@ -150,11 +155,35 @@ export default function DashboardStats({ causas, onFaseSelect }: DashboardStatsP
     staleTime: 0,
     refetchOnMount: 'always',
   });
+  const courseCartaRankingQuery = useQuery({
+    queryKey: ['course-carta-ranking', tenantId],
+    queryFn: fetchCourseCartaRanking,
+    enabled: isAuthenticated && Boolean(tenantId),
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
+  const teacherAnnotationRankingQuery = useQuery({
+    queryKey: ['teacher-annotation-ranking', tenantId],
+    queryFn: fetchTeacherAnnotationRanking,
+    enabled: isAuthenticated && Boolean(tenantId),
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
+  const studentAnnotationRankingQuery = useQuery({
+    queryKey: ['student-annotation-ranking', tenantId],
+    queryFn: fetchStudentAnnotationRanking,
+    enabled: isAuthenticated && Boolean(tenantId),
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
   const publicKpis = publicKpisQuery.data as PublicDashboardKpis | undefined;
   const loading = isAuthenticated
     ? !tenantId || annotationKpisQuery.isLoading
     : publicKpisQuery.isLoading;
   const kpiError = isAuthenticated ? annotationKpisQuery.isError : publicKpisQuery.isError;
+  const cartaRankingError = isAuthenticated ? courseCartaRankingQuery.error : null;
+  const teacherRankingError = isAuthenticated ? teacherAnnotationRankingQuery.error : null;
+  const studentRankingError = isAuthenticated ? studentAnnotationRankingQuery.error : null;
 
   if (loading) return <DashboardSkeleton />;
 
@@ -209,7 +238,7 @@ export default function DashboardStats({ causas, onFaseSelect }: DashboardStatsP
           icon={Activity}
           iconBg="bg-brand-50"
           iconColor="text-brand-600"
-          accentColor="#1d4ed8"
+          accentColor="#475569"
           onClick={() => onFaseSelect('Todas')}
         />
         <MetricCard
@@ -272,9 +301,20 @@ export default function DashboardStats({ causas, onFaseSelect }: DashboardStatsP
             </p>
           </div>
         </div>
-      ) : (
-        <AnotacionesDashboardStats counts={annotations} />
-      )}
+      ) : null}
+
+      <AnotacionesDashboardStats
+        counts={annotations}
+        courseCartaRanking={courseCartaRankingQuery.data ?? []}
+        courseCartaRankingLoading={courseCartaRankingQuery.isLoading}
+        courseCartaRankingError={cartaRankingError}
+        teacherAnnotationRanking={teacherAnnotationRankingQuery.data ?? []}
+        teacherAnnotationRankingLoading={teacherAnnotationRankingQuery.isLoading}
+        teacherAnnotationRankingError={teacherRankingError}
+        studentAnnotationRanking={studentAnnotationRankingQuery.data ?? []}
+        studentAnnotationRankingLoading={studentAnnotationRankingQuery.isLoading}
+        studentAnnotationRankingError={studentRankingError}
+      />
     </section>
   );
 }

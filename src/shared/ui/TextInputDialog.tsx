@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from './Dialog';
+import Button from './Button';
 
 interface TextInputDialogProps {
   open: boolean;
@@ -71,22 +72,16 @@ export default function TextInputDialog({
           </label>
 
           <DialogFooter>
-            <button
-              type="button"
-              onClick={onCancel}
-              className="rounded-xl bg-neutral-100 px-4 py-2 text-sm font-semibold text-neutral-700 transition hover:bg-neutral-200"
-            >
+            <Button variant="secondary" onClick={onCancel}>
               Cancelar
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              variant={destructive ? 'danger' : 'primary'}
               disabled={!value.trim()}
-              className={`rounded-xl px-4 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-50 ${
-                destructive ? 'bg-red-600 hover:bg-red-700' : 'bg-brand-600 hover:bg-brand-700'
-              }`}
             >
               {confirmLabel}
-            </button>
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

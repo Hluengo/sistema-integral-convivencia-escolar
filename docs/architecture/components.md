@@ -62,10 +62,6 @@
   - `ReviewStep.tsx` — Revisar y confirmar
 - `AnotacionesDocumentGenerator.tsx` — Generador de documentos
 
-### Documentos
-
-- `DocumentosView.tsx` — Centro de documentos
-
 ### AI
 
 - `AiAdvisor.tsx` — Chat con asesor legal AI
