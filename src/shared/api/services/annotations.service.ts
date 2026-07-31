@@ -112,6 +112,42 @@ interface RpcStudentSummary {
   ai_analysis: Record<string, number> | null;
 }
 
+export interface AnnotationStudentsPage {
+  students: AnotacionStudent[];
+  nextOffset?: number;
+}
+
+const MAX_ANNOTATION_STUDENTS_PAGE_SIZE = 100;
+
+function mapAnnotationSummaryRows(rows: RpcStudentSummary[]): AnotacionStudent[] {
+  return rows.map((row) => {
+    const negativeCount = Number(row.annotations_count || 0);
+    const positiveCount = Number(row.positive_annotations_count || 0);
+    const informativeCount = Number(row.informative_annotations_count || 0);
+    return {
+      id: row.id,
+      full_name: row.full_name,
+      course_id: row.course_id,
+      teacher_id: '',
+      status: 'Activo',
+      annotations_count: negativeCount,
+      positive_annotations_count: positiveCount,
+      informative_annotations_count: informativeCount,
+      last_annotation_date: row.last_annotation_date || undefined,
+      disciplinary_status: calculateDisciplinaryStatus(negativeCount),
+      rut: row.rut || '',
+      course_name: row.course_name || 'Sin curso',
+      ai_analysis: row.ai_analysis
+        ? {
+            negativas: Number(row.ai_analysis.negativas) || 0,
+            positivas: Number(row.ai_analysis.positivas) || 0,
+            informativas: Number(row.ai_analysis.informativas) || 0,
+          }
+        : undefined,
+    };
+  });
+}
+
 function addAnnotationToStats(
   stats: Record<string, AnnotationCountStats>,
   annotation: { student_id: string; type: string; date_time: string | null },
@@ -171,32 +207,7 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStud
   const { data: rpcData, error: rpcError } = await supabase.rpc('get_student_annotation_summary');
 
   if (!rpcError && rpcData) {
-    return (rpcData as RpcStudentSummary[]).map((row) => {
-      const negativeCount = Number(row.annotations_count || 0);
-      const positiveCount = Number(row.positive_annotations_count || 0);
-      const informativeCount = Number(row.informative_annotations_count || 0);
-      return {
-        id: row.id,
-        full_name: row.full_name,
-        course_id: row.course_id,
-        teacher_id: '',
-        status: 'Activo',
-        annotations_count: negativeCount,
-        positive_annotations_count: positiveCount,
-        informative_annotations_count: informativeCount,
-        last_annotation_date: row.last_annotation_date || undefined,
-        disciplinary_status: calculateDisciplinaryStatus(negativeCount),
-        rut: row.rut || '',
-        course_name: row.course_name || 'Sin curso',
-        ai_analysis: row.ai_analysis
-          ? {
-              negativas: Number(row.ai_analysis.negativas) || 0,
-              positivas: Number(row.ai_analysis.positivas) || 0,
-              informativas: Number(row.ai_analysis.informativas) || 0,
-            }
-          : undefined,
-      };
-    });
+    return mapAnnotationSummaryRows(rpcData as RpcStudentSummary[]);
   }
 
   console.warn(
@@ -249,6 +260,33 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStud
         : undefined,
     };
   });
+}
+
+/**
+ * Carga la tabla de anotaciones en bloques pequeños. El RPC ya encapsula los
+ * totales por estudiante y la RLS del tenant; aplicar `range` evita transferir
+ * la nómina completa antes de que la persona usuaria la solicite.
+ */
+export async function fetchStudentsWithAnnotationCountsPage(
+  offset = 0,
+  pageSize = 25,
+): Promise<AnnotationStudentsPage> {
+  const requestedSize = Math.min(Math.max(pageSize, 1), MAX_ANNOTATION_STUDENTS_PAGE_SIZE);
+  const { data, error } = await supabase
+    .rpc('get_student_annotation_summary')
+    .range(offset, offset + requestedSize);
+
+  if (error || !data) {
+    console.error('Error fetching paginated annotation students:', error);
+    throw error || new Error('No se recibieron estudiantes desde Supabase.');
+  }
+
+  const rows = data as RpcStudentSummary[];
+  const hasNextPage = rows.length > requestedSize;
+  return {
+    students: mapAnnotationSummaryRows(rows.slice(0, requestedSize)),
+    nextOffset: hasNextPage ? offset + requestedSize : undefined,
+  };
 }
 
 /**

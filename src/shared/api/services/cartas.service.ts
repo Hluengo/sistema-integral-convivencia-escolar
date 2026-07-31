@@ -168,12 +168,19 @@ export function getCartaWorkflowLabel(carta: CartaDisciplinaria | null | undefin
   return carta?.suggested_at ? 'Carta sugerida' : 'Carta pendiente';
 }
 
-export async function fetchCartaTableStates(): Promise<Record<string, StudentCartaTableState>> {
-  const { data: cartasData, error: cartasError } = await supabase
+export async function fetchCartaTableStates(
+  studentIds?: string[],
+): Promise<Record<string, StudentCartaTableState>> {
+  if (studentIds?.length === 0) return {};
+
+  let cartasQuery = supabase
     .from('cartas_disciplinarias')
     .select(CARTA_SELECT)
     .order('emission_date', { ascending: false })
     .order('created_at', { ascending: false });
+
+  if (studentIds) cartasQuery = cartasQuery.in('student_id', studentIds);
+  const { data: cartasData, error: cartasError } = await cartasQuery;
 
   if (cartasError) {
     console.error('Error fetching carta table states:', cartasError);
