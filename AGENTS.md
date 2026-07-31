@@ -5,12 +5,9 @@
 Antes de cualquier tarea, leer en este orden:
 
 1. **`docs/CONSTITUTION.md`** — 23 reglas inmutables del proyecto
-2. **`.ai/brain.md`** — Staff Engineer memory (entry point)
-3. **`.ai/rules.md`** — 16 "always do" reglas por área
-4. **`.ai/anti-patterns.md`** — 25 "never do" reglas
-5. **`.opencode/memory/project.md`** — Memoria del proyecto
-6. **`docs/architecture/`** — Documentación específica del módulo afectado
-7. **`docs/reviews/security-review.md`** o **`performance-review.md`** si aplica
+2. **`.opencode/memory/project.md`** — Memoria del proyecto
+3. **`docs/architecture/`** — Arquitectura específica del módulo afectado
+4. **`docs/reviews/security-review.md`** o **`performance-review.md`** si aplica
 
 Usar contexto progresivo: base → dominio → módulo → implementación.
 
@@ -36,9 +33,8 @@ Flujo multi-área: planner analiza → especialista implementa → qa valida →
 2. **Solo** actualizar documentos afectados
 3. Crear ADR únicamente si hubo decisión arquitectónica real
 4. Actualizar `.opencode/memory/project.md` cuando cambie conocimiento estable
-5. Actualizar `.ai/roadmap.md` cuando cambie estado de funcionalidad
-6. No actualizar por cambios triviales
-7. Evitar duplicación y documentación contradictoria
+5. No actualizar por cambios triviales
+6. Evitar duplicación y documentación contradictoria
 
 ## Comandos del Proyecto
 
@@ -116,7 +112,7 @@ Implementar cada ruta API una sola vez en `server/api/routes/` y registrarla en 
 - **Cuándo usar:** Cambios en componentes UI, estilos, diseño visual, rendimiento frontend
 - **Herramientas:** read, edit, write, grep, glob
 - **Archivos puede modificar:** `src/` (frontend), excepto stores de alto riesgo
-- **Lectura obligatoria:** .ai/brain.md, .ai/architecture.md, .ai/rules.md, docs/CONSTITUTION.md
+- **Lectura obligatoria:** .opencode/memory/project.md, docs/CONSTITUTION.md y la arquitectura aplicable
 - **Estilo:** Componentes limpios, FSD, móvil-first, accesibilidad WCAG AA
 
 ### @backend
@@ -196,10 +192,10 @@ Implementar cada ruta API una sola vez en `server/api/routes/` y registrarla en 
 ### @documentation
 
 - **Rol:** Documentador técnico / Staff memory synchronizer
-- **Objetivo:** Mantener memoria sincronizada con código real; actualizar ADR, roadmap, .ai/
+- **Objetivo:** Mantener memoria sincronizada con código real; actualizar ADR, roadmap y `.opencode/memory/`
 - **Cuándo usar:** Después de cambios de arquitectura, API, modelo de datos, flujo, patrón, convención
 - **Herramientas:** read, edit, write, glob, grep
-- **Archivos puede modificar:** `docs/`, `README.md`, `AGENTS.md`, `.ai/`, `.opencode/memory/`
+- **Archivos puede modificar:** `docs/`, `README.md`, `AGENTS.md`, `.opencode/memory/`
 - **Estilo:** Claro, conciso, con ejemplos, en español chileno, sin especulación
 
 ### @devops

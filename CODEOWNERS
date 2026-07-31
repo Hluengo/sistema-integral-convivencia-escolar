@@ -42,7 +42,6 @@ docs/reviews/ @security-reviewer @qa-tester
 .opencode/memory/ @documentation
 .opencode/rules/ @documentation
 .opencode/skills/ @documentation
-.ai/ @documentation
 
 # Configuration
 opencode.json @documentation
