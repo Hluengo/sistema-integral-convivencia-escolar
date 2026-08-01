@@ -52,5 +52,15 @@ jobs:
           VITE_SUPABASE_ANON_KEY: public-anon-key-for-ci
           VITE_ALLOW_LOCAL_DEMO: 'true'
 
+      - name: Bundle budget
+        run: npm run check:bundle
+
+      - name: Lighthouse CI
+        run: npm run lighthouse:ci
+        env:
+          VITE_SUPABASE_URL: https://example.supabase.co
+          VITE_SUPABASE_ANON_KEY: public-anon-key-for-ci
+          VITE_ALLOW_LOCAL_DEMO: 'true'
+
       - name: Security audit
         run: npm audit --omit=dev

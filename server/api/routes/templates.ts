@@ -10,7 +10,8 @@ import type { AuthenticatedRequest } from '../../types.js';
 import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../middleware/requireMembership.js';
 
 const router = Router();
-router.use(requireAuth, requireMembership(CONVIVENCIA_MEMBERSHIP));
+// Guard acotado al prefijo propio para no interceptar otras rutas /api/*.
+router.use('/document-templates', requireAuth, requireMembership(CONVIVENCIA_MEMBERSHIP));
 const TEMPLATE_SELECT_PUBLIC = 'id,doc_type,label,updated_at';
 const TEMPLATE_SELECT_ADMIN = 'id,doc_type,label,system_prompt,updated_at';
 
@@ -27,7 +28,8 @@ function getServiceRoleKey(): string {
 }
 
 function authHeaders(req: AuthenticatedRequest): Record<string, string> {
-  const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? '';
+  const anonKey =
+    process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
   return { apikey: anonKey, Authorization: `Bearer ${req.authToken}` };
 }
 
@@ -52,7 +54,7 @@ router.get('/document-templates', requireTenant, async (req, res) => {
 router.get(
   '/document-templates/admin',
   requireTenant,
-  requireRole(['admin', 'direccion']),
+  requireRole(['superadmin', 'admin', 'direccion']),
   async (req, res) => {
     try {
       const authReq = req as AuthenticatedRequest;
@@ -71,7 +73,7 @@ router.get(
 router.put(
   '/document-templates',
   requireTenant,
-  requireRole(['admin', 'direccion']),
+  requireRole(['superadmin', 'admin', 'direccion']),
   async (req, res) => {
     const { id, system_prompt } = req.body as { id?: string; system_prompt?: string };
     if (!id || !system_prompt) {

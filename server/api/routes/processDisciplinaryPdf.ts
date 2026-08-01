@@ -12,9 +12,13 @@ import {
 } from '../../lib/disciplinaryPdfAnalysis';
 
 const router = Router();
-router.use(requireAuth);
-router.use(requireMembership(CONVIVENCIA_MEMBERSHIP));
-router.use(rateLimit);
+// Guard acotado al prefijo propio para no interceptar otras rutas /api/*.
+router.use(
+  '/process-disciplinary-pdf',
+  requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
+  rateLimit,
+);
 
 interface AuthedRequestBody {
   bucket?: string;

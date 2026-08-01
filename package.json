@@ -23,6 +23,10 @@
     "check": "npm run lint && npm run lint:code && npm run test && npm run build:web",
     "test:coverage": "node --experimental-test-coverage --import tsx --test \"src/**/*.test.ts\" \"server/**/*.test.ts\"",
     "test:e2e": "playwright test",
+    "test:multitenant": "node scripts/validate-multitenant.mjs",
+    "test:roles": "node scripts/validate-production-roles.mjs",
+    "check:bundle": "node scripts/check-bundle.mjs",
+    "lighthouse:ci": "lhci autorun --config=lighthouserc.cjs",
     "test:e2e:ui": "playwright test --ui",
     "knip": "knip",
     "security-audit": "npm audit --omit=dev",
@@ -63,6 +67,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
+    "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.61.1",
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",

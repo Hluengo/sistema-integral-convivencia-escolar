@@ -1029,6 +1029,186 @@ var init_disciplinaryPdfAnalysis = __esm({
   },
 });
 
+// server/api/services/excelImport.ts
+var excelImport_exports = {};
+__export(excelImport_exports, {
+  normalizeLevel: () => normalizeLevel,
+  normalizeRut: () => normalizeRut,
+  parseImportWorkbook: () => parseImportWorkbook,
+  runImport: () => runImport,
+});
+import { randomUUID } from 'node:crypto';
+import readXlsxFile from 'read-excel-file/node';
+function normalizeLevel(value) {
+  if (typeof value === 'string') {
+    let key = value.trim().toLowerCase();
+    key = key.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    key = key.replace(/[^a-z]/g, '');
+    return NORMALIZED_LEVELS[key] ?? 'BASICA';
+  }
+  return 'BASICA';
+}
+function normalizeText2(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+function normalizeRut(value) {
+  if (!value) return '';
+  const raw = typeof value === 'number' ? String(value) : String(value).trim();
+  const cleaned = raw.replace(/[^0-9kK-]/g, '').toUpperCase();
+  return cleaned.replace(/^-+/, '').replace(/-{2,}/g, '-');
+}
+function toRow(value) {
+  return Array.isArray(value) ? value : [];
+}
+function headerIndex(row, candidates) {
+  return row.findIndex(
+    (cell) => typeof cell === 'string' && candidates.some((c) => cell.trim().toLowerCase() === c),
+  );
+}
+async function parseImportWorkbook(buffer, defaultLevel = 'BASICA') {
+  const warnings = [];
+  const sheets = await readXlsxFile(buffer);
+  const findSheet = (candidates) =>
+    sheets.find((sheet) => candidates.includes(sheet.sheet.trim().toLowerCase())) ?? null;
+  const coursesSheet = findSheet(['cursos', 'courses']);
+  const studentsSheet = findSheet(['estudiantes', 'students', 'alumnos']);
+  const courses = [];
+  const students = [];
+  if (coursesSheet) {
+    const rows = coursesSheet.data;
+    const header = rows[0] ?? [];
+    const iName = headerIndex(header, ['name', 'nombre', 'curso']);
+    const iLevel = headerIndex(header, ['level', 'nivel']);
+    const iPos = headerIndex(header, ['position', 'posicion', 'orden']);
+    for (let r = 1; r < rows.length; r += 1) {
+      const row = toRow(rows[r]);
+      const name = normalizeText2(row[iName] ?? row[0]);
+      if (!name) continue;
+      const level = iLevel >= 0 ? normalizeLevel(row[iLevel]) : defaultLevel;
+      const posRaw = iPos >= 0 ? row[iPos] : null;
+      const position = typeof posRaw === 'number' ? posRaw : null;
+      courses.push({ name, level, position });
+    }
+  }
+  if (studentsSheet) {
+    const rows = studentsSheet.data;
+    const header = rows[0] ?? [];
+    const iName = headerIndex(header, ['full_name', 'nombre', 'nombre completo', 'full name']);
+    const iRut = headerIndex(header, ['rut', 'run']);
+    const iCourse = headerIndex(header, ['curso', 'course', 'course_id']);
+    for (let r = 1; r < rows.length; r += 1) {
+      const row = toRow(rows[r]);
+      const full_name = normalizeText2(row[iName] ?? row[0]);
+      if (!full_name) continue;
+      const rut = iRut >= 0 ? normalizeRut(row[iRut]) : '';
+      const course_name = iCourse >= 0 ? normalizeText2(row[iCourse]) : '';
+      students.push({ full_name, rut, course_name });
+    }
+    if (courses.length === 0) {
+      const byName = /* @__PURE__ */ new Map();
+      let pos = 0;
+      for (const student of students) {
+        const key = student.course_name.toLowerCase();
+        if (!key || byName.has(key)) continue;
+        pos += 1;
+        byName.set(key, { name: student.course_name, level: defaultLevel, position: pos });
+      }
+      courses.push(...byName.values());
+    }
+  } else {
+    warnings.push('No se encontr\xF3 la hoja "Estudiantes".');
+  }
+  return { courses, students, warnings };
+}
+async function runImport(client, tenantId, parsed) {
+  const errors = [];
+  let coursesInserted = 0;
+  let studentsInserted = 0;
+  let duplicates = 0;
+  const courseMap = /* @__PURE__ */ new Map();
+  const { data: existingCourses, error: cErr } = await client
+    .from('courses')
+    .select('id,name')
+    .eq('tenant_id', tenantId);
+  if (cErr) throw cErr;
+  for (const c of existingCourses ?? []) {
+    courseMap.set(c.name.toLowerCase(), c.id);
+  }
+  const coursesToInsert = [];
+  const seenCourseNames = /* @__PURE__ */ new Set();
+  for (const course of parsed.courses) {
+    const key = course.name.toLowerCase();
+    if (courseMap.has(key) || !seenCourseNames.add(key)) continue;
+    const id = randomUUID();
+    coursesToInsert.push({
+      id,
+      name: course.name,
+      level: course.level,
+      position: course.position,
+      tenant_id: tenantId,
+    });
+    courseMap.set(key, id);
+  }
+  if (coursesToInsert.length > 0) {
+    const { error: insErr } = await client.from('courses').insert(coursesToInsert);
+    if (insErr) throw insErr;
+    coursesInserted = coursesToInsert.length;
+  }
+  const seenRuts = /* @__PURE__ */ new Set();
+  const { data: existingStudents, error: sErr } = await client
+    .from('students')
+    .select('rut')
+    .eq('tenant_id', tenantId)
+    .not('rut', 'is', '');
+  if (sErr) throw sErr;
+  for (const s of existingStudents ?? []) {
+    const rut = s.rut;
+    if (rut) seenRuts.add(rut);
+  }
+  const studentsToInsert = [];
+  for (const student of parsed.students) {
+    if (student.rut && seenRuts.has(student.rut)) {
+      duplicates += 1;
+      continue;
+    }
+    const course_id = student.course_name
+      ? (courseMap.get(student.course_name.toLowerCase()) ?? null)
+      : null;
+    if (student.course_name && !course_id) {
+      errors.push(
+        `Estudiante "${student.full_name}" referencia curso "${student.course_name}" no encontrado.`,
+      );
+      continue;
+    }
+    if (student.rut) seenRuts.add(student.rut);
+    studentsToInsert.push({
+      id: randomUUID(),
+      full_name: student.full_name,
+      rut: student.rut,
+      course_id,
+      tenant_id: tenantId,
+    });
+  }
+  if (studentsToInsert.length > 0) {
+    const { error: insErr } = await client.from('students').insert(studentsToInsert);
+    if (insErr) throw insErr;
+    studentsInserted = studentsToInsert.length;
+  }
+  return { coursesInserted, studentsInserted, duplicates, errors };
+}
+var NORMALIZED_LEVELS;
+var init_excelImport = __esm({
+  'server/api/services/excelImport.ts'() {
+    'use strict';
+    NORMALIZED_LEVELS = {
+      basica: 'BASICA',
+      basico: 'BASICA',
+      media: 'MEDIA',
+      medio: 'MEDIA',
+    };
+  },
+});
+
 // server/api/index.ts
 import compression from 'compression';
 import helmet from 'helmet';
@@ -1254,6 +1434,7 @@ async function verifyJwtWithJwks(token, supabaseUrl) {
 // server/middleware/auth.ts
 var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 var VALID_ROLES = [
+  'superadmin',
   'admin',
   'direccion',
   'convivencia',
@@ -1372,7 +1553,7 @@ var defaultProfileFetcher = async ({ supabaseUrl, anonKey, token, userId }, http
     const r = httpsImpl.request(
       {
         hostname,
-        path: `/rest/v1/profiles?user_id=eq.${encodeURIComponent(userId)}&select=tenant_id,role&limit=1`,
+        path: `/rest/v1/profiles?user_id=eq.${encodeURIComponent(userId)}&select=tenant_id,role,is_active&limit=1`,
         method: 'GET',
         headers: { apikey: anonKey, Authorization: `Bearer ${token}` },
       },
@@ -1411,6 +1592,7 @@ var defaultProfileFetcher = async ({ supabaseUrl, anonKey, token, userId }, http
   return {
     tenantId: profile.tenant_id,
     profileRole: profile.role,
+    isActive: profile.is_active !== false,
   };
 };
 async function injectTenantContext(req, token, profileFetcher = defaultProfileFetcher) {
@@ -1434,7 +1616,7 @@ async function injectTenantContext(req, token, profileFetcher = defaultProfileFe
     if (!result) {
       return false;
     }
-    if (!isValidUuid(result.tenantId) || !result.profileRole) {
+    if (!isValidUuid(result.tenantId) || !result.profileRole || result.isActive === false) {
       return false;
     }
     req.tenantId = result.tenantId;
@@ -1814,6 +1996,7 @@ async function rateLimit(req, res, next) {
 // server/middleware/requireMembership.ts
 import https4 from 'node:https';
 var CONVIVENCIA_MEMBERSHIP_ROLES = [
+  'superadmin',
   'admin',
   'direccion',
   'convivencia',
@@ -2151,11 +2334,18 @@ async function loadAuthorizedLegalSources() {
         files.map(async (file) => ({
           name: path.relative(LEGAL_SOURCES_DIRECTORY, file),
           text: await readFile(file, 'utf8'),
+          normalizedText: '',
         })),
       );
       if (!contents.length)
         throw new Error('No hay fuentes jur\xEDdicas disponibles en docs/leyes.');
-      return contents;
+      return contents.map((source) => ({
+        ...source,
+        normalizedText: source.text
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLocaleLowerCase('es-CL'),
+      }));
     })();
   }
   return cachedSources;
@@ -2174,7 +2364,7 @@ function searchTerms(value) {
 }
 function sourceScore(source, terms) {
   const haystack = `${source.name}
-${source.text}`.toLocaleLowerCase('es-CL');
+${source.normalizedText}`;
   return terms.reduce((score, term) => {
     const matches = haystack.match(new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'));
     const count = matches?.length ?? 0;
@@ -2977,7 +3167,7 @@ function requireRole(allowedRoles) {
 
 // server/api/routes/templates.ts
 var router6 = Router6();
-router6.use(requireAuth, requireMembership(CONVIVENCIA_MEMBERSHIP));
+router6.use('/document-templates', requireAuth, requireMembership(CONVIVENCIA_MEMBERSHIP));
 var TEMPLATE_SELECT_PUBLIC = 'id,doc_type,label,updated_at';
 var TEMPLATE_SELECT_ADMIN = 'id,doc_type,label,system_prompt,updated_at';
 function getSupabaseHostname3() {
@@ -2991,7 +3181,8 @@ function getServiceRoleKey() {
   return process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? '';
 }
 function authHeaders(req) {
-  const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? '';
+  const anonKey =
+    process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
   return { apikey: anonKey, Authorization: `Bearer ${req.authToken}` };
 }
 function isTemplateId(value) {
@@ -3013,7 +3204,7 @@ router6.get('/document-templates', requireTenant, async (req, res) => {
 router6.get(
   '/document-templates/admin',
   requireTenant,
-  requireRole(['admin', 'direccion']),
+  requireRole(['superadmin', 'admin', 'direccion']),
   async (req, res) => {
     try {
       const authReq = req;
@@ -3031,7 +3222,7 @@ router6.get(
 router6.put(
   '/document-templates',
   requireTenant,
-  requireRole(['admin', 'direccion']),
+  requireRole(['superadmin', 'admin', 'direccion']),
   async (req, res) => {
     const { id, system_prompt } = req.body;
     if (!id || !system_prompt) {
@@ -3150,9 +3341,12 @@ var parse_default = router7;
 import { Router as Router8 } from 'express';
 init_disciplinaryPdfAnalysis();
 var router8 = Router8();
-router8.use(requireAuth);
-router8.use(requireMembership(CONVIVENCIA_MEMBERSHIP));
-router8.use(rateLimit);
+router8.use(
+  '/process-disciplinary-pdf',
+  requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
+  rateLimit,
+);
 function getBearerToken(req) {
   const authHeader = req.headers.authorization;
   return authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : void 0;
@@ -3281,7 +3475,7 @@ router9.post(
         res.status(400).json({ error: 'properties debe ser un objeto JSON de hasta 4 KB.' });
         return;
       }
-      const { createClient: createClient2 } = await import('@supabase/supabase-js');
+      const { createClient: createClient5 } = await import('@supabase/supabase-js');
       const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
       const anonKey =
         process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
@@ -3290,7 +3484,7 @@ router9.post(
         return;
       }
       const authReq = req;
-      const supabase = createClient2(supabaseUrl, anonKey, {
+      const supabase = createClient5(supabaseUrl, anonKey, {
         auth: { persistSession: false },
         global: { headers: { Authorization: `Bearer ${authReq.authToken}` } },
       });
@@ -3312,13 +3506,13 @@ router9.get(
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
   requireTenant,
-  requireRole(['admin', 'direccion']),
+  requireRole(['superadmin', 'admin', 'direccion']),
   async (req, res) => {
     try {
       const authReq = req;
       const since = authReq.query.since ?? void 0;
       const until = req.query.until ?? void 0;
-      const { createClient: createClient2 } = await import('@supabase/supabase-js');
+      const { createClient: createClient5 } = await import('@supabase/supabase-js');
       const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
       const anonKey =
         process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
@@ -3326,7 +3520,7 @@ router9.get(
         res.status(500).json({ error: 'Supabase no configurado' });
         return;
       }
-      const supabase = createClient2(supabaseUrl, anonKey, {
+      const supabase = createClient5(supabaseUrl, anonKey, {
         auth: { persistSession: false },
         global: { headers: { Authorization: `Bearer ${authReq.authToken}` } },
       });
@@ -3375,6 +3569,1174 @@ router10.get(
   },
 );
 var pilot_default = router10;
+
+// server/api/routes/admin.ts
+import { Router as Router11 } from 'express';
+import multer from 'multer';
+import { createClient as createClient2 } from '@supabase/supabase-js';
+var router11 = Router11();
+var ownUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
+var ADMIN_ROLES = ['superadmin', 'admin', 'direccion'];
+var APPLICATION_CODE = 'convivencia';
+var VALID_ROLES2 = [
+  'admin',
+  'direccion',
+  'convivencia',
+  'inspectoria',
+  'profesor_jefe',
+  'teacher',
+  'inspector',
+  'user',
+  'staff',
+];
+var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function getAdminClient() {
+  const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+  if (!url || !key) throw new Error('Supabase administrativo no configurado.');
+  return createClient2(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },
+  });
+}
+function getRequest(req) {
+  return req;
+}
+function isRole(value) {
+  return typeof value === 'string' && VALID_ROLES2.includes(value);
+}
+async function assertFreshAdmin(client, request) {
+  if (!request.user?.sub || !request.tenantId)
+    throw new Error('Contexto administrativo inv\xE1lido.');
+  const { data, error } = await client
+    .from('profiles')
+    .select('user_id,tenant_id,email,full_name,role,course_ids,is_active,updated_at')
+    .eq('user_id', request.user.sub)
+    .eq('tenant_id', request.tenantId)
+    .maybeSingle();
+  if (error || !data) throw new Error('No fue posible validar al administrador.');
+  const profile = data;
+  if (!profile.is_active || !ADMIN_ROLES.includes(profile.role)) {
+    throw new Error('La cuenta no tiene permisos administrativos activos.');
+  }
+  return profile;
+}
+async function recordAudit(client, request, action, entityId, previousValues, newValues) {
+  const { error } = await client.from('audit_events').insert({
+    tenant_id: request.tenantId,
+    actor_user_id: request.user?.sub,
+    action,
+    entity_type: 'membership',
+    entity_id: entityId,
+    previous_values: previousValues,
+    new_values: newValues,
+  });
+  if (error) throw error;
+}
+async function listAuthUsers(client) {
+  const result = await client.auth.admin.listUsers({ page: 1, perPage: 1e3 });
+  if (result.error) throw result.error;
+  return new Map(result.data.users.map((user) => [user.id, user]));
+}
+router11.use('/admin', requireAuth, requireTenant, requireRole(ADMIN_ROLES));
+router11.get('/admin/members', async (req, res) => {
+  try {
+    const request = getRequest(req);
+    const client = getAdminClient();
+    await assertFreshAdmin(client, request);
+    const [profilesResult, membershipsResult, invitationsResult, auditResult, users] =
+      await Promise.all([
+        client
+          .from('profiles')
+          .select('user_id,tenant_id,email,full_name,role,course_ids,is_active,updated_at')
+          .eq('tenant_id', request.tenantId)
+          .order('full_name', { ascending: true }),
+        client
+          .from('app_memberships')
+          .select('user_id,role,is_active,application_code')
+          .eq('tenant_id', request.tenantId)
+          .eq('application_code', APPLICATION_CODE),
+        client
+          .from('membership_invitations')
+          .select(
+            'id,tenant_id,email,role,application_code,auth_user_id,invited_by,status,created_at,updated_at,last_sent_at,cancelled_at,accepted_at',
+          )
+          .eq('tenant_id', request.tenantId)
+          .order('created_at', { ascending: false }),
+        client
+          .from('audit_events')
+          .select(
+            'id,actor_user_id,action,entity_type,entity_id,previous_values,new_values,occurred_at',
+          )
+          .eq('tenant_id', request.tenantId)
+          .eq('entity_type', 'membership')
+          .order('occurred_at', { ascending: false })
+          .limit(200),
+        listAuthUsers(client),
+      ]);
+    if (profilesResult.error) throw profilesResult.error;
+    if (membershipsResult.error) throw membershipsResult.error;
+    if (invitationsResult.error) throw invitationsResult.error;
+    if (auditResult.error) throw auditResult.error;
+    const profiles = profilesResult.data ?? [];
+    const memberships = membershipsResult.data ?? [];
+    const membershipByUser = new Map(
+      memberships.map((membership) => [membership.user_id, membership]),
+    );
+    const invitations = invitationsResult.data ?? [];
+    const audits = auditResult.data ?? [];
+    const actorEmails = new Map(profiles.map((profile) => [profile.user_id, profile.email ?? '']));
+    const currentInvitations = invitations.map((invitation) => {
+      const user = invitation.auth_user_id ? users.get(invitation.auth_user_id) : void 0;
+      if (invitation.status === 'pending' && user?.confirmed_at) {
+        return { ...invitation, status: 'accepted', accepted_at: user.confirmed_at };
+      }
+      return invitation;
+    });
+    res.json({
+      members: profiles.map((profile) => {
+        const membership = membershipByUser.get(profile.user_id);
+        const user = users.get(profile.user_id);
+        return {
+          ...profile,
+          membershipRole: membership?.role ?? profile.role,
+          membershipActive: membership?.is_active ?? profile.is_active,
+          confirmed: Boolean(user?.confirmed_at),
+          lastSignInAt: user?.last_sign_in_at ?? null,
+        };
+      }),
+      invitations: currentInvitations,
+      history: audits.map((audit2) => ({
+        ...audit2,
+        actorEmail: actorEmails.get(audit2.actor_user_id) ?? null,
+      })),
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Error al cargar la administraci\xF3n.';
+    res.status(message.includes('permisos') ? 403 : 500).json({ error: message });
+  }
+});
+router11.patch('/admin/members/:userId', async (req, res) => {
+  try {
+    const request = getRequest(req);
+    const client = getAdminClient();
+    await assertFreshAdmin(client, request);
+    const userId = req.params.userId;
+    const role = req.body?.role;
+    const accessEnabled = req.body?.accessEnabled;
+    if (!userId || !isRole(role) || typeof accessEnabled !== 'boolean') {
+      res.status(400).json({ error: 'userId, role y accessEnabled son obligatorios.' });
+      return;
+    }
+    const { data: targetData, error: targetError } = await client
+      .from('profiles')
+      .select('user_id,tenant_id,email,full_name,role,course_ids,is_active,updated_at')
+      .eq('user_id', userId)
+      .eq('tenant_id', request.tenantId)
+      .maybeSingle();
+    if (targetError) throw targetError;
+    if (!targetData) {
+      res.status(404).json({ error: 'Usuario no encontrado en este establecimiento.' });
+      return;
+    }
+    const target = targetData;
+    if (target.role === 'admin' && (!accessEnabled || role !== 'admin')) {
+      const { count, error: countError } = await client
+        .from('profiles')
+        .select('user_id', { count: 'exact', head: true })
+        .eq('tenant_id', request.tenantId)
+        .eq('role', 'admin')
+        .eq('is_active', true)
+        .neq('user_id', userId);
+      if (countError) throw countError;
+      if ((count ?? 0) < 1) {
+        res
+          .status(409)
+          .json({ error: 'No puede dejar al establecimiento sin un administrador activo.' });
+        return;
+      }
+    }
+    const { error: profileError } = await client
+      .from('profiles')
+      .update({
+        role,
+        is_active: accessEnabled,
+        updated_at: /* @__PURE__ */ new Date().toISOString(),
+      })
+      .eq('user_id', userId)
+      .eq('tenant_id', request.tenantId);
+    if (profileError) throw profileError;
+    const { error: membershipError } = await client.from('app_memberships').upsert(
+      {
+        tenant_id: request.tenantId,
+        user_id: userId,
+        application_code: APPLICATION_CODE,
+        role,
+        is_active: accessEnabled,
+      },
+      { onConflict: 'tenant_id,user_id,application_code' },
+    );
+    if (membershipError) throw membershipError;
+    await recordAudit(
+      client,
+      request,
+      'member_updated',
+      userId,
+      {
+        role: target.role,
+        is_active: target.is_active,
+      },
+      { role, is_active: accessEnabled },
+    );
+    res.json({ success: true });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'No fue posible actualizar al usuario.';
+    res.status(message.includes('administrador') ? 409 : 500).json({ error: message });
+  }
+});
+router11.post('/admin/invitations', async (req, res) => {
+  try {
+    const request = getRequest(req);
+    const client = getAdminClient();
+    await assertFreshAdmin(client, request);
+    const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+    const role = req.body?.role;
+    if (!EMAIL_RE.test(email) || !isRole(role)) {
+      res.status(400).json({ error: 'Ingrese un correo v\xE1lido y un rol existente.' });
+      return;
+    }
+    const { data: existingProfile, error: profileError } = await client
+      .from('profiles')
+      .select('user_id,email')
+      .eq('tenant_id', request.tenantId)
+      .ilike('email', email)
+      .maybeSingle();
+    if (profileError) throw profileError;
+    if (existingProfile) {
+      res.status(409).json({ error: 'Ese correo ya pertenece a un usuario del establecimiento.' });
+      return;
+    }
+    const { data: existingInvitation, error: invitationError } = await client
+      .from('membership_invitations')
+      .select('id')
+      .eq('tenant_id', request.tenantId)
+      .eq('email', email)
+      .eq('status', 'pending')
+      .maybeSingle();
+    if (invitationError) throw invitationError;
+    if (existingInvitation) {
+      res.status(409).json({ error: 'Ya existe una invitaci\xF3n pendiente para ese correo.' });
+      return;
+    }
+    const invitation = await client.auth.admin.inviteUserByEmail(email, {
+      data: { tenant_id: request.tenantId, role },
+    });
+    if (invitation.error || !invitation.data.user)
+      throw invitation.error ?? new Error('No se cre\xF3 el usuario invitado.');
+    const invitedUser = invitation.data.user;
+    const { data: invitationRow, error: insertError } = await client
+      .from('membership_invitations')
+      .insert({
+        tenant_id: request.tenantId,
+        email,
+        role,
+        application_code: APPLICATION_CODE,
+        auth_user_id: invitedUser.id,
+        invited_by: request.user?.sub,
+      })
+      .select('id,email,role,status,created_at,last_sent_at')
+      .single();
+    if (insertError) throw insertError;
+    await client
+      .from('profiles')
+      .update({ role, is_active: true })
+      .eq('user_id', invitedUser.id)
+      .eq('tenant_id', request.tenantId);
+    await client.from('app_memberships').upsert(
+      {
+        tenant_id: request.tenantId,
+        user_id: invitedUser.id,
+        application_code: APPLICATION_CODE,
+        role,
+        is_active: true,
+      },
+      { onConflict: 'tenant_id,user_id,application_code' },
+    );
+    await recordAudit(client, request, 'invitation_created', invitedUser.id, null, { email, role });
+    res.status(201).json({ invitation: invitationRow });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'No fue posible enviar la invitaci\xF3n.';
+    res.status(500).json({ error: message });
+  }
+});
+router11.post('/admin/invitations/:invitationId/resend', async (req, res) => {
+  try {
+    const request = getRequest(req);
+    const client = getAdminClient();
+    await assertFreshAdmin(client, request);
+    const { data, error } = await client
+      .from('membership_invitations')
+      .select('id,tenant_id,email,role,auth_user_id,status')
+      .eq('id', req.params.invitationId)
+      .eq('tenant_id', request.tenantId)
+      .maybeSingle();
+    if (error) throw error;
+    const invitation = data;
+    if (!invitation || invitation.status !== 'pending') {
+      res.status(404).json({ error: 'Invitaci\xF3n pendiente no encontrada.' });
+      return;
+    }
+    const resend = await client.auth.admin.inviteUserByEmail(invitation.email, {
+      data: { tenant_id: request.tenantId, role: invitation.role },
+    });
+    if (resend.error) throw resend.error;
+    const now = /* @__PURE__ */ new Date().toISOString();
+    await client
+      .from('membership_invitations')
+      .update({ last_sent_at: now, updated_at: now })
+      .eq('id', invitation.id)
+      .eq('tenant_id', request.tenantId);
+    await recordAudit(
+      client,
+      request,
+      'invitation_resent',
+      invitation.auth_user_id ?? invitation.id,
+      null,
+      { email: invitation.email },
+    );
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'No fue posible reenviar la invitaci\xF3n.',
+    });
+  }
+});
+router11.post('/admin/invitations/:invitationId/cancel', async (req, res) => {
+  try {
+    const request = getRequest(req);
+    const client = getAdminClient();
+    await assertFreshAdmin(client, request);
+    const { data, error } = await client
+      .from('membership_invitations')
+      .select('id,email,role,auth_user_id,status')
+      .eq('id', req.params.invitationId)
+      .eq('tenant_id', request.tenantId)
+      .maybeSingle();
+    if (error) throw error;
+    const invitation = data;
+    if (!invitation || invitation.status !== 'pending') {
+      res.status(404).json({ error: 'Invitaci\xF3n pendiente no encontrada.' });
+      return;
+    }
+    const now = /* @__PURE__ */ new Date().toISOString();
+    const { error: updateError } = await client
+      .from('membership_invitations')
+      .update({ status: 'cancelled', cancelled_at: now, updated_at: now })
+      .eq('id', invitation.id)
+      .eq('tenant_id', request.tenantId);
+    if (updateError) throw updateError;
+    if (invitation.auth_user_id) {
+      await client
+        .from('profiles')
+        .update({ is_active: false, updated_at: now })
+        .eq('user_id', invitation.auth_user_id)
+        .eq('tenant_id', request.tenantId);
+      await client
+        .from('app_memberships')
+        .update({ is_active: false, updated_at: now })
+        .eq('user_id', invitation.auth_user_id)
+        .eq('tenant_id', request.tenantId)
+        .eq('application_code', APPLICATION_CODE);
+    }
+    await recordAudit(
+      client,
+      request,
+      'invitation_cancelled',
+      invitation.auth_user_id ?? invitation.id,
+      { email: invitation.email, role: invitation.role },
+      null,
+    );
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'No fue posible cancelar la invitaci\xF3n.',
+    });
+  }
+});
+router11.post('/admin/import', ownUpload.single('file'), async (req, res) => {
+  try {
+    const request = getRequest(req);
+    const client = getAdminClient();
+    await assertFreshAdmin(client, request);
+    if (!request.tenantId) throw new Error('No fue posible determinar el establecimiento.');
+    if (!req.file?.buffer) {
+      res.status(400).json({ error: 'Adjunte un archivo .xlsx v\xE1lido.' });
+      return;
+    }
+    const defaultLevel = req.body?.defaultLevel === 'MEDIA' ? 'MEDIA' : 'BASICA';
+    const { parseImportWorkbook: parseImportWorkbook2, runImport: runImport2 } =
+      await Promise.resolve().then(() => (init_excelImport(), excelImport_exports));
+    const parsed = await parseImportWorkbook2(req.file.buffer, defaultLevel);
+    const result = await runImport2(client, request.tenantId, parsed);
+    await recordAudit(client, request, 'tenant_base_imported', request.tenantId, null, {
+      courses: result.coursesInserted,
+      students: result.studentsInserted,
+    });
+    res.json(result);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'No fue posible importar la base.';
+    res.status(message.includes('permisos') ? 403 : 500).json({ error: message });
+  }
+});
+var admin_default = router11;
+
+// server/api/routes/platform.ts
+import { Router as Router12 } from 'express';
+import multer2 from 'multer';
+import { randomUUID as randomUUID2 } from 'node:crypto';
+import { createClient as createClient3 } from '@supabase/supabase-js';
+
+// server/middleware/requireSuperAdmin.ts
+function requireSuperAdmin(req, res, next) {
+  const authReq = req;
+  if (!authReq.user?.sub) {
+    res.status(401).json({ error: 'Autenticaci\xF3n requerida.' });
+    return;
+  }
+  const role = authReq.profileRole;
+  if (!role) {
+    res.status(403).json({ error: 'No fue posible determinar el rol del usuario.' });
+    return;
+  }
+  if (role !== 'superadmin') {
+    res.status(403).json({ error: 'Acceso restringido a superadministradores.' });
+    return;
+  }
+  next();
+}
+
+// server/api/routes/platform.ts
+var router12 = Router12();
+var upload = multer2({ storage: multer2.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+var DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000001';
+var APPLICATION_CODE2 = 'convivencia';
+var EMAIL_RE2 = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function getRequest2(req) {
+  return req;
+}
+function getAdminClient2() {
+  const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+  if (!url || !key) throw new Error('Supabase administrativo no configurado.');
+  return createClient3(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },
+  });
+}
+function slugify(name) {
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+async function generateUniqueSlug(client, base) {
+  const slug = slugify(base) || 'colegio';
+  const { data } = await client.from('tenants').select('slug').ilike('slug', `${slug}%`);
+  const existing = new Set((data ?? []).map((row) => row.slug));
+  if (!existing.has(slug)) return slug;
+  let n = 2;
+  while (existing.has(`${slug}-${n}`)) n += 1;
+  return `${slug}-${n}`;
+}
+async function assertFreshSuperAdmin(client, request) {
+  if (!request.user?.sub) throw new Error('Contexto de plataforma inv\xE1lido.');
+  const { data, error } = await client
+    .from('profiles')
+    .select('user_id,role,is_active,tenant_id')
+    .eq('user_id', request.user.sub)
+    .maybeSingle();
+  if (error || !data) throw new Error('No fue posible validar al superadministrador.');
+  const profile = data;
+  if (!profile.is_active || profile.role !== 'superadmin') {
+    throw new Error('La cuenta no tiene permisos de superadministrador activos.');
+  }
+}
+async function copyDefaultTemplates(client, tenantId) {
+  const { data, error } = await client
+    .from('document_templates')
+    .select('id,doc_type,label,system_prompt')
+    .eq('tenant_id', DEFAULT_TENANT_ID);
+  if (error) throw error;
+  const templates = data ?? [];
+  if (templates.length === 0) return;
+  const copies = templates.map((tpl) => ({
+    id: randomUUID2(),
+    doc_type: tpl.doc_type,
+    label: tpl.label,
+    system_prompt: tpl.system_prompt,
+    tenant_id: tenantId,
+  }));
+  const { error: insertError } = await client
+    .from('document_templates')
+    .upsert(copies, { onConflict: 'tenant_id,doc_type' });
+  if (insertError) throw insertError;
+}
+async function recordAudit2(client, tenantId, actorUserId, action, entityId, newValues) {
+  const { error } = await client.from('audit_events').insert({
+    tenant_id: tenantId,
+    actor_user_id: actorUserId,
+    action,
+    entity_type: 'tenant',
+    entity_id: entityId,
+    previous_values: null,
+    new_values: newValues,
+  });
+  if (error) throw error;
+}
+router12.use('/platform', requireAuth, requireSuperAdmin);
+router12.get('/platform/tenants', async (req, res) => {
+  try {
+    const request = getRequest2(req);
+    const client = getAdminClient2();
+    await assertFreshSuperAdmin(client, request);
+    const { data, error } = await client
+      .from('tenants')
+      .select('id,name,slug,created_at')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    const tenants = data ?? [];
+    const withCounts = await Promise.all(
+      tenants.map(async (tenant) => {
+        const { count, error: countError } = await client
+          .from('profiles')
+          .select('user_id', { count: 'exact', head: true })
+          .eq('tenant_id', tenant.id);
+        return { ...tenant, user_count: countError ? 0 : (count ?? 0) };
+      }),
+    );
+    res.json({ tenants: withCounts });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'No fue posible cargar los colegios.';
+    res.status(message.includes('superadministrador') ? 403 : 500).json({ error: message });
+  }
+});
+router12.post('/platform/tenants', async (req, res) => {
+  let client = null;
+  let createdTenantId = null;
+  let createdAuthUserId = null;
+  try {
+    const request = getRequest2(req);
+    client = getAdminClient2();
+    await assertFreshSuperAdmin(client, request);
+    const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
+    const adminEmail =
+      typeof req.body?.adminEmail === 'string' ? req.body.adminEmail.trim().toLowerCase() : '';
+    const providedSlug = typeof req.body?.slug === 'string' ? req.body.slug.trim() : '';
+    if (!name || !EMAIL_RE2.test(adminEmail)) {
+      res.status(400).json({ error: 'Ingrese un nombre v\xE1lido y un correo de administrador.' });
+      return;
+    }
+    const tenantId = randomUUID2();
+    createdTenantId = tenantId;
+    const slug = providedSlug
+      ? slugify(providedSlug) || slugify(name)
+      : await generateUniqueSlug(client, name);
+    const { error: tenantError } = await client
+      .from('tenants')
+      .insert({ id: tenantId, name, slug });
+    if (tenantError) throw tenantError;
+    const { error: settingsError } = await client.from('institution_settings').insert({
+      tenant_id: tenantId,
+      official_name: name,
+      education_levels: [],
+    });
+    if (settingsError) throw settingsError;
+    const invitation = await client.auth.admin.inviteUserByEmail(adminEmail, {
+      data: { tenant_id: tenantId, role: 'admin' },
+    });
+    if (invitation.error || !invitation.data.user) {
+      throw invitation.error ?? new Error('No se cre\xF3 el usuario administrador invitado.');
+    }
+    const adminUser = invitation.data.user;
+    createdAuthUserId = adminUser.id;
+    const { error: profileError } = await client
+      .from('profiles')
+      .update({
+        role: 'admin',
+        is_active: true,
+        updated_at: /* @__PURE__ */ new Date().toISOString(),
+      })
+      .eq('user_id', adminUser.id)
+      .eq('tenant_id', tenantId);
+    if (profileError) throw profileError;
+    const { error: membershipError } = await client.from('app_memberships').upsert(
+      {
+        tenant_id: tenantId,
+        user_id: adminUser.id,
+        application_code: APPLICATION_CODE2,
+        role: 'admin',
+        is_active: true,
+      },
+      { onConflict: 'tenant_id,user_id,application_code' },
+    );
+    if (membershipError) throw membershipError;
+    await copyDefaultTemplates(client, tenantId);
+    await recordAudit2(client, tenantId, request.user?.sub, 'tenant_provisioned', tenantId, {
+      name,
+      slug,
+      admin_email: adminEmail,
+    });
+    res.status(201).json({
+      tenant: { id: tenantId, name, slug },
+      invitation: { email: adminEmail, status: 'pending' },
+    });
+  } catch (error) {
+    if (client) {
+      if (createdAuthUserId) {
+        await client.auth.admin.deleteUser(createdAuthUserId).catch(() => void 0);
+      }
+      if (createdTenantId) {
+        try {
+          await client.from('tenants').delete().eq('id', createdTenantId);
+        } catch {}
+      }
+    }
+    const message = error instanceof Error ? error.message : '';
+    const isSuperAdminError = message.includes('superadministrador');
+    const isRateLimit = /rate limit|too many requests|email rate/i.test(message);
+    const responseMessage = isRateLimit
+      ? 'Supabase limit\xF3 temporalmente el env\xEDo de invitaciones. Espere unos minutos antes de reintentar.'
+      : isSuperAdminError
+        ? message
+        : 'No fue posible crear el colegio. No se guardaron datos incompletos.';
+    res.status(isSuperAdminError ? 403 : isRateLimit ? 429 : 500).json({ error: responseMessage });
+  }
+});
+router12.post('/platform/tenants/:id/invite', async (req, res) => {
+  try {
+    const request = getRequest2(req);
+    const client = getAdminClient2();
+    await assertFreshSuperAdmin(client, request);
+    const tenantId = req.params.id;
+    const { data, error } = await client
+      .from('profiles')
+      .select('user_id,email')
+      .eq('tenant_id', tenantId)
+      .eq('role', 'admin')
+      .maybeSingle();
+    if (error) throw error;
+    const admin = data;
+    if (!admin?.email) {
+      res.status(404).json({ error: 'No se encontr\xF3 un administrador para este colegio.' });
+      return;
+    }
+    const resend = await client.auth.admin.inviteUserByEmail(admin.email, {
+      data: { tenant_id: tenantId, role: 'admin' },
+    });
+    if (resend.error) throw resend.error;
+    await recordAudit2(
+      client,
+      tenantId,
+      request.user?.sub,
+      'tenant_admin_reinvited',
+      admin.user_id,
+      {
+        email: admin.email,
+      },
+    );
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'No fue posible reenviar la invitaci\xF3n.',
+    });
+  }
+});
+router12.post('/platform/tenants/:id/import', upload.single('file'), async (req, res) => {
+  try {
+    const request = getRequest2(req);
+    const client = getAdminClient2();
+    await assertFreshSuperAdmin(client, request);
+    const tenantId = req.params.id;
+    if (!req.file?.buffer) {
+      res.status(400).json({ error: 'Adjunte un archivo .xlsx v\xE1lido.' });
+      return;
+    }
+    const defaultLevel = req.body?.defaultLevel === 'MEDIA' ? 'MEDIA' : 'BASICA';
+    const { parseImportWorkbook: parseImportWorkbook2, runImport: runImport2 } =
+      await Promise.resolve().then(() => (init_excelImport(), excelImport_exports));
+    const parsed = await parseImportWorkbook2(req.file.buffer, defaultLevel);
+    const result = await runImport2(client, tenantId, parsed);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({
+      error: error instanceof Error ? error.message : 'No fue posible importar la base.',
+    });
+  }
+});
+var platform_default = router12;
+
+// server/api/routes/institution.ts
+import { Router as Router13 } from 'express';
+import multer3 from 'multer';
+import { createClient as createClient4 } from '@supabase/supabase-js';
+var router13 = Router13();
+var upload2 = multer3({ storage: multer3.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } });
+var ADMIN_ROLES2 = ['superadmin', 'admin', 'direccion'];
+var CONTENT_LIMIT = 2e5;
+var MIME_EXTENSIONS = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/svg+xml': 'svg',
+};
+var INSTITUTION_SETTINGS_COLUMNS =
+  'tenant_id,official_name,institution_rut,address,commune,region,phone,institutional_email,proprietor,director_name,education_levels,logo_path,updated_at,updated_by';
+var RULE_VERSION_COLUMNS =
+  'id,tenant_id,title,version,content,status,effective_at,created_at,updated_at,created_by,published_by';
+function getRequest3(req) {
+  return req;
+}
+function getAdminClient3() {
+  const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+  if (!url || !key) throw new Error('Supabase administrativo no configurado.');
+  return createClient4(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },
+  });
+}
+function cleanText(value, max = 500) {
+  if (value === null || value === void 0) return null;
+  if (typeof value !== 'string') return null;
+  const text = value.trim();
+  return text ? text.slice(0, max) : null;
+}
+function parseLevels(value) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item) => typeof item === 'string')
+    .map((item) => item.trim().toUpperCase())
+    .filter(Boolean)
+    .slice(0, 20);
+}
+async function getSignedLogoUrl(client, path3) {
+  if (!path3) return null;
+  const { data } = await client.storage.from('institution-assets').createSignedUrl(path3, 3600);
+  return data?.signedUrl ?? null;
+}
+async function loadSettings(client, tenantId) {
+  const { data, error } = await client
+    .from('institution_settings')
+    .select(INSTITUTION_SETTINGS_COLUMNS)
+    .eq('tenant_id', tenantId)
+    .maybeSingle();
+  if (error) throw error;
+  if (data) {
+    return { ...data, logo_url: await getSignedLogoUrl(client, data.logo_path) };
+  }
+  const tenant = await client.from('tenants').select('name').eq('id', tenantId).single();
+  if (tenant.error) throw tenant.error;
+  return {
+    tenant_id: tenantId,
+    official_name: tenant.data.name,
+    institution_rut: null,
+    address: null,
+    commune: null,
+    region: null,
+    phone: null,
+    institutional_email: null,
+    proprietor: null,
+    director_name: null,
+    education_levels: [],
+    logo_path: null,
+    logo_url: null,
+    updated_at: /* @__PURE__ */ new Date().toISOString(),
+    updated_by: null,
+  };
+}
+async function audit(client, tenantId, actorUserId, action, entityId, previousValues, newValues) {
+  const { error } = await client.from('audit_events').insert({
+    tenant_id: tenantId,
+    actor_user_id: actorUserId,
+    action,
+    entity_type: 'institution',
+    entity_id: entityId,
+    previous_values: previousValues,
+    new_values: newValues,
+  });
+  if (error) throw error;
+}
+async function assertTargetTenant(client, tenantId) {
+  const { data, error } = await client
+    .from('tenants')
+    .select('id')
+    .eq('id', tenantId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error('Colegio no encontrado.');
+}
+async function getTenantFromRequest(client, request, targetTenantId) {
+  if (targetTenantId) {
+    if (request.profileRole !== 'superadmin')
+      throw new Error('Solo el superadministrador puede cambiar de colegio.');
+    await assertTargetTenant(client, targetTenantId);
+    return targetTenantId;
+  }
+  if (!request.tenantId) throw new Error('No fue posible determinar el colegio.');
+  return request.tenantId;
+}
+async function updateSettings(client, tenantId, actorUserId, body) {
+  const previous = await loadSettings(client, tenantId);
+  const officialName =
+    cleanText(body.official_name ?? body.officialName, 200) ?? previous.official_name;
+  if (!officialName) throw new Error('El nombre oficial es obligatorio.');
+  const values = {
+    tenant_id: tenantId,
+    official_name: officialName,
+    institution_rut: cleanText(body.institution_rut ?? body.institutionRut, 30),
+    address: cleanText(body.address, 250),
+    commune: cleanText(body.commune, 100),
+    region: cleanText(body.region, 100),
+    phone: cleanText(body.phone, 40),
+    institutional_email: cleanText(body.institutional_email ?? body.institutionalEmail, 180),
+    proprietor: cleanText(body.proprietor, 200),
+    director_name: cleanText(body.director_name ?? body.directorName, 200),
+    education_levels: parseLevels(body.education_levels ?? body.educationLevels),
+    updated_by: actorUserId ?? null,
+  };
+  const { error } = await client
+    .from('institution_settings')
+    .upsert(values, { onConflict: 'tenant_id' });
+  if (error) throw error;
+  await audit(
+    client,
+    tenantId,
+    actorUserId,
+    'institution_settings_updated',
+    tenantId,
+    previous,
+    values,
+  );
+  return loadSettings(client, tenantId);
+}
+async function listRules(client, tenantId) {
+  const { data, error } = await client
+    .from('institution_rule_versions')
+    .select(RULE_VERSION_COLUMNS)
+    .eq('tenant_id', tenantId)
+    .order('updated_at', { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+async function createRule(client, tenantId, actorUserId, body) {
+  const title = cleanText(body.title, 200);
+  const version = cleanText(body.version, 50);
+  const content = typeof body.content === 'string' ? body.content.trim() : '';
+  if (!title || !version || !content)
+    throw new Error('T\xEDtulo, versi\xF3n y contenido son obligatorios.');
+  if (content.length > CONTENT_LIMIT)
+    throw new Error('El reglamento supera el l\xEDmite permitido.');
+  const { data, error } = await client
+    .from('institution_rule_versions')
+    .insert({ tenant_id: tenantId, title, version, content, created_by: actorUserId ?? null })
+    .select(RULE_VERSION_COLUMNS)
+    .single();
+  if (error) throw error;
+  await audit(client, tenantId, actorUserId, 'institution_rule_created', data.id, null, data);
+  return data;
+}
+async function publishRule(client, tenantId, ruleId, actorUserId) {
+  const selected = await client
+    .from('institution_rule_versions')
+    .select(RULE_VERSION_COLUMNS)
+    .eq('id', ruleId)
+    .eq('tenant_id', tenantId)
+    .maybeSingle();
+  if (selected.error) throw selected.error;
+  if (!selected.data) throw new Error('Versi\xF3n de reglamento no encontrada.');
+  const archived = await client
+    .from('institution_rule_versions')
+    .update({ status: 'archived' })
+    .eq('tenant_id', tenantId)
+    .eq('status', 'active');
+  if (archived.error) throw archived.error;
+  const now = /* @__PURE__ */ new Date().toISOString();
+  const active = await client
+    .from('institution_rule_versions')
+    .update({ status: 'active', effective_at: now, published_by: actorUserId ?? null })
+    .eq('id', ruleId)
+    .eq('tenant_id', tenantId)
+    .select(RULE_VERSION_COLUMNS)
+    .single();
+  if (active.error) throw active.error;
+  await audit(
+    client,
+    tenantId,
+    actorUserId,
+    'institution_rule_published',
+    ruleId,
+    selected.data,
+    active.data,
+  );
+  return active.data;
+}
+async function uploadLogo(client, tenantId, actorUserId, file) {
+  const extension = MIME_EXTENSIONS[file.mimetype];
+  if (!extension) throw new Error('El logo debe ser PNG, JPG o SVG.');
+  const current = await loadSettings(client, tenantId);
+  const path3 = `${tenantId}/logo.${extension}`;
+  const uploadResult = await client.storage.from('institution-assets').upload(path3, file.buffer, {
+    contentType: file.mimetype,
+    upsert: true,
+  });
+  if (uploadResult.error) throw uploadResult.error;
+  const { error } = await client
+    .from('institution_settings')
+    .upsert(
+      {
+        tenant_id: tenantId,
+        official_name: current.official_name,
+        logo_path: path3,
+        updated_by: actorUserId ?? null,
+      },
+      { onConflict: 'tenant_id' },
+    );
+  if (error) throw error;
+  await audit(
+    client,
+    tenantId,
+    actorUserId,
+    'institution_logo_updated',
+    tenantId,
+    { logo_path: current.logo_path },
+    { logo_path: path3 },
+  );
+  return loadSettings(client, tenantId);
+}
+async function sendError(res, error) {
+  const message =
+    error instanceof Error ? error.message : 'No fue posible actualizar la configuraci\xF3n.';
+  res.status(message.includes('Solo el superadministrador') ? 403 : 500).json({ error: message });
+}
+router13.use('/admin/institution', requireAuth, requireTenant, requireRole(ADMIN_ROLES2));
+router13.use('/admin/rules', requireAuth, requireTenant, requireRole(ADMIN_ROLES2));
+router13.get('/onboarding/status', requireAuth, requireTenant, async (req, res) => {
+  try {
+    const request = getRequest3(req);
+    const client = getAdminClient3();
+    const tenantId = request.tenantId;
+    if (!tenantId) throw new Error('No fue posible determinar el colegio.');
+    const [settings, courses, templates, members, rules] = await Promise.all([
+      client
+        .from('institution_settings')
+        .select('tenant_id')
+        .eq('tenant_id', tenantId)
+        .maybeSingle(),
+      client.from('courses').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
+      client
+        .from('document_templates')
+        .select('id', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId),
+      client
+        .from('profiles')
+        .select('user_id', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId),
+      client
+        .from('institution_rule_versions')
+        .select('id', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId)
+        .eq('status', 'active'),
+    ]);
+    const queryError = [settings, courses, templates, members, rules].find(
+      (result) => result.error,
+    )?.error;
+    if (queryError) throw queryError;
+    res.json({
+      profile: Boolean(settings.data),
+      courses: (courses.count ?? 0) > 0,
+      templates: (templates.count ?? 0) > 0,
+      members: (members.count ?? 0) > 1,
+      rules: (rules.count ?? 0) > 0,
+    });
+  } catch (error) {
+    await sendError(res, error);
+  }
+});
+router13.get('/admin/institution', async (req, res) => {
+  try {
+    const request = getRequest3(req);
+    const client = getAdminClient3();
+    const tenantId = await getTenantFromRequest(client, request);
+    res.json(await loadSettings(client, tenantId));
+  } catch (error) {
+    await sendError(res, error);
+  }
+});
+router13.patch('/admin/institution', async (req, res) => {
+  try {
+    const request = getRequest3(req);
+    const client = getAdminClient3();
+    const tenantId = await getTenantFromRequest(client, request);
+    res.json(await updateSettings(client, tenantId, request.user?.sub, req.body ?? {}));
+  } catch (error) {
+    await sendError(res, error);
+  }
+});
+router13.post('/admin/institution/logo', upload2.single('logo'), async (req, res) => {
+  try {
+    const request = getRequest3(req);
+    const client = getAdminClient3();
+    const tenantId = await getTenantFromRequest(client, request);
+    if (!req.file) throw new Error('Seleccione un archivo de logo.');
+    res.json(await uploadLogo(client, tenantId, request.user?.sub, req.file));
+  } catch (error) {
+    await sendError(res, error);
+  }
+});
+router13.get('/admin/rules', async (req, res) => {
+  try {
+    const request = getRequest3(req);
+    const client = getAdminClient3();
+    const tenantId = await getTenantFromRequest(client, request);
+    res.json({ rules: await listRules(client, tenantId) });
+  } catch (error) {
+    await sendError(res, error);
+  }
+});
+router13.post('/admin/rules', async (req, res) => {
+  try {
+    const request = getRequest3(req);
+    const client = getAdminClient3();
+    const tenantId = await getTenantFromRequest(client, request);
+    res.status(201).json(await createRule(client, tenantId, request.user?.sub, req.body ?? {}));
+  } catch (error) {
+    await sendError(res, error);
+  }
+});
+router13.patch('/admin/rules/:id', async (req, res) => {
+  try {
+    const request = getRequest3(req);
+    const client = getAdminClient3();
+    const tenantId = await getTenantFromRequest(client, request);
+    const updates = {
+      title: cleanText(req.body?.title, 200),
+      version: cleanText(req.body?.version, 50),
+      content:
+        typeof req.body?.content === 'string'
+          ? req.body.content.trim().slice(0, CONTENT_LIMIT)
+          : void 0,
+    };
+    const { data, error } = await client
+      .from('institution_rule_versions')
+      .update(updates)
+      .eq('id', req.params.id)
+      .eq('tenant_id', tenantId)
+      .select(RULE_VERSION_COLUMNS)
+      .single();
+    if (error) throw error;
+    await audit(
+      client,
+      tenantId,
+      request.user?.sub,
+      'institution_rule_updated',
+      req.params.id,
+      null,
+      data,
+    );
+    res.json(data);
+  } catch (error) {
+    await sendError(res, error);
+  }
+});
+router13.post('/admin/rules/:id/publish', async (req, res) => {
+  try {
+    const request = getRequest3(req);
+    const client = getAdminClient3();
+    const tenantId = await getTenantFromRequest(client, request);
+    res.json(await publishRule(client, tenantId, req.params.id, request.user?.sub));
+  } catch (error) {
+    await sendError(res, error);
+  }
+});
+router13.use('/platform/tenants/:tenantId/institution', requireAuth, requireSuperAdmin);
+router13.use('/platform/tenants/:tenantId/rules', requireAuth, requireSuperAdmin);
+router13.get('/platform/tenants/:tenantId/institution', async (req, res) => {
+  try {
+    const client = getAdminClient3();
+    const tenantId = req.params.tenantId;
+    await assertTargetTenant(client, tenantId);
+    res.json(await loadSettings(client, tenantId));
+  } catch (error) {
+    await sendError(res, error);
+  }
+});
+router13.patch('/platform/tenants/:tenantId/institution', async (req, res) => {
+  try {
+    const request = getRequest3(req);
+    const client = getAdminClient3();
+    const tenantId = req.params.tenantId;
+    await assertTargetTenant(client, tenantId);
+    res.json(await updateSettings(client, tenantId, request.user?.sub, req.body ?? {}));
+  } catch (error) {
+    await sendError(res, error);
+  }
+});
+router13.post(
+  '/platform/tenants/:tenantId/institution/logo',
+  upload2.single('logo'),
+  async (req, res) => {
+    try {
+      const request = getRequest3(req);
+      const client = getAdminClient3();
+      const tenantId = req.params.tenantId;
+      await assertTargetTenant(client, tenantId);
+      if (!req.file) throw new Error('Seleccione un archivo de logo.');
+      res.json(await uploadLogo(client, tenantId, request.user?.sub, req.file));
+    } catch (error) {
+      await sendError(res, error);
+    }
+  },
+);
+router13.get('/platform/tenants/:tenantId/rules', async (req, res) => {
+  try {
+    const client = getAdminClient3();
+    const tenantId = req.params.tenantId;
+    await assertTargetTenant(client, tenantId);
+    res.json({ rules: await listRules(client, tenantId) });
+  } catch (error) {
+    await sendError(res, error);
+  }
+});
+router13.post('/platform/tenants/:tenantId/rules', async (req, res) => {
+  try {
+    const request = getRequest3(req);
+    const client = getAdminClient3();
+    const tenantId = req.params.tenantId;
+    await assertTargetTenant(client, tenantId);
+    res.status(201).json(await createRule(client, tenantId, request.user?.sub, req.body ?? {}));
+  } catch (error) {
+    await sendError(res, error);
+  }
+});
+router13.post('/platform/tenants/:tenantId/rules/:id/publish', async (req, res) => {
+  try {
+    const request = getRequest3(req);
+    const client = getAdminClient3();
+    const tenantId = req.params.tenantId;
+    await assertTargetTenant(client, tenantId);
+    res.json(await publishRule(client, tenantId, req.params.id, request.user?.sub));
+  } catch (error) {
+    await sendError(res, error);
+  }
+});
+var institution_default = router13;
 
 // server/middleware/errorHandler.ts
 var errorHandler = (err, _req, res, _next) => {
@@ -3430,6 +4792,9 @@ app.use('/api', debug_default);
 app.use('/api', templates_default);
 app.use('/api', usage_default);
 app.use('/api', pilot_default);
+app.use('/api', admin_default);
+app.use('/api', platform_default);
+app.use('/api', institution_default);
 app.use(errorHandler);
 var distPath = path2.join(__dirname, '..', 'dist');
 app.use(express.static(distPath));

@@ -2,7 +2,6 @@
 
 import { forwardRef } from 'react';
 import type { Annotation } from '@/src/shared/lib/types';
-import { LOGO_URL } from '@/src/lib/logoBase64';
 import { TITLE_MAP, type DocType, type LetterContent } from './DocumentPreview/docTypes';
 import { LetterInstitutionalHeader, LetterTitle } from './DocumentPreview/SharedComponents';
 import AmonestacionContent from './DocumentPreview/AmonestacionContent';
@@ -25,6 +24,8 @@ interface LetterA4DocumentProps {
   selectedAnnsObjects: Annotation[];
   letterContent: LetterContent;
   className?: string;
+  logoSrc?: string | null;
+  institutionName?: string | null;
 }
 
 const LetterA4Document = forwardRef<HTMLDivElement, LetterA4DocumentProps>(
@@ -44,6 +45,8 @@ const LetterA4Document = forwardRef<HTMLDivElement, LetterA4DocumentProps>(
       selectedAnnsObjects,
       letterContent,
       className = '',
+      logoSrc,
+      institutionName,
     },
     ref,
   ) {
@@ -64,7 +67,11 @@ const LetterA4Document = forwardRef<HTMLDivElement, LetterA4DocumentProps>(
 
     return (
       <div ref={ref} id={id} className={`letter-document ${className}`}>
-        <LetterInstitutionalHeader year="2026" logoSrc={LOGO_URL} />
+        <LetterInstitutionalHeader
+          year="2026"
+          logoSrc={logoSrc ?? undefined}
+          institutionName={institutionName ?? undefined}
+        />
         <LetterTitle>{title}</LetterTitle>
 
         {docType === 'amonestacion' && <AmonestacionContent {...sharedProps} />}

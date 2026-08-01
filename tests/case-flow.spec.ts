@@ -19,6 +19,9 @@ test.describe('Flujo de expedientes', () => {
   });
 
   test('abre el formulario de un expediente sin modificar datos', async ({ page }) => {
+    const sidebar = page.getByRole('complementary', { name: 'Barra de navegación principal' });
+    await sidebar.getByRole('button', { name: /causas/i }).click();
+
     await page
       .getByRole('button', { name: /crear nueva causa|nueva causa/i })
       .first()

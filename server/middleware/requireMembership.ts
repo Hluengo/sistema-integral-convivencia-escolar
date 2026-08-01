@@ -9,6 +9,7 @@ export type MembershipAuthMode = 'legacy' | 'transition' | 'enforced';
 /** Roles that may enter the convivencia application. Endpoint-level permissions
  * remain enforced separately by requireRole where an operation is restricted. */
 export const CONVIVENCIA_MEMBERSHIP_ROLES = [
+  'superadmin',
   'admin',
   'direccion',
   'convivencia',

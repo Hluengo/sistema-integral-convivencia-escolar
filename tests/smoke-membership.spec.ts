@@ -6,6 +6,8 @@ const STAFF_EMAIL = process.env.E2E_STAFF_EMAIL ?? 'usuario@colegio.cl';
 const STAFF_PASSWORD = process.env.E2E_STAFF_PASSWORD ?? '123456';
 
 test.describe('Convivencia - Phase 3 Membership Enforcement', () => {
+  test.describe.configure({ mode: 'serial' });
+
   test('legacy mode: login/logout with flag=false (no membership check)', async ({ page }) => {
     const errors: string[] = [];
     const rpcRequests: string[] = [];

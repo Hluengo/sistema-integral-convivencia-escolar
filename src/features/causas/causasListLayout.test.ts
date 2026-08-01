@@ -211,7 +211,8 @@ describe('Listado de causas activas', () => {
     assert.match(templates, /No hay plantillas institucionales disponibles/);
     assert.match(templates, /min-h-\[440px\]/);
     assert.match(templates, /selectedIdRef/);
-    assert.match(templates, /\}, \[\]\);/);
+    assert.match(templates, /useQuery/);
+    assert.match(templates, /queryKey: \['document-templates', tenantId\]/);
   });
 
   it('deja el membrete y los metadatos al formato de impresión, no al cuerpo generado', () => {

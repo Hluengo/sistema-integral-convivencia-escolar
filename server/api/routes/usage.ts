@@ -81,7 +81,7 @@ router.get(
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
   requireTenant,
-  requireRole(['admin', 'direccion']),
+  requireRole(['superadmin', 'admin', 'direccion']),
   async (req, res) => {
     try {
       const authReq = req as AuthRequest;

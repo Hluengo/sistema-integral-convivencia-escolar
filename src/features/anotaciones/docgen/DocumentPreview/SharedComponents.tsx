@@ -34,9 +34,11 @@ export function Section({
 export function LetterInstitutionalHeader({
   year = '2026',
   logoSrc,
+  institutionName,
 }: {
   year?: string;
   logoSrc?: string;
+  institutionName?: string;
 }) {
   return (
     <div className="letter-header">
@@ -50,7 +52,7 @@ export function LetterInstitutionalHeader({
       />
       <div className="letter-header-text">
         <span className="letter-header-institution">
-          Fundación Educacional Colegio Carmela Romero de Espinosa
+          {institutionName || 'Fundación Educacional Colegio Carmela Romero de Espinosa'}
         </span>
         <span className="letter-header-department">DIRECCIÓN DE CONVIVENCIA ESCOLAR</span>
         <span className="letter-header-year">Año {year}</span>

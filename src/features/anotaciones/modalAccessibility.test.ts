@@ -33,7 +33,7 @@ describe('Modales disciplinarios accesibles', () => {
     const content = source('NewDisciplinaryProcessModal.tsx');
 
     ok(content.includes('<Dialog open'));
-    ok(content.includes("queryKey: ['disciplinary-rules']"));
+    ok(content.includes("queryKey: ['disciplinary-rules', tenantId]"));
     ok(content.includes('rulesLoadFailed'));
     ok(content.includes('Reintentar'));
     ok(!content.includes('.catch(() => setRules([]))'));

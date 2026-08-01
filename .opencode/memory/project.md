@@ -1,8 +1,12 @@
 # STAFF ENGINEER MEMORY — Sistema Integral de Convivencia Escolar
 
-> **Versión:** 1.3 | **Estado:** Producción | **Última actualización:** 2026-07-29
+> **Versión:** 1.4 | **Estado:** Producción | **Última actualización:** 2026-08-01
 
 ---
+
+### 2.0 Configuración institucional y operación multi-tenant
+
+La plataforma permite que el superadministrador gestione múltiples colegios sin pagos dentro de la aplicación. Cada tenant tiene `institution_settings` y `institution_rule_versions`, creados por la migración incremental `20260801100000_add_institutional_configuration.sql`. El bucket privado `institution-assets` almacena logos por tenant mediante URLs firmadas. El panel de administración gestiona el propio tenant; el panel global permite al superadministrador operar cualquier tenant. La validación automatizada usa `npm run test:multitenant` y `npm run test:roles`.
 
 ## 1. VISIÓN GENERAL
 
@@ -1170,4 +1174,69 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - `server/api/routes/platform.ts` orquesta el aprovisionamiento en Node (NO existe RPC Postgres): insert tenant → `inviteUserByEmail` con `raw_user_meta_data.tenant_id` → update profile + `app_memberships` (upsert `onConflict`) → copia `document_templates` del tenant default con ids nuevos → `audit_events` (requiere `actor_user_id` explícito con service role). Incluye `POST /platform/tenants/:id/import` (multer memoryStorage, 5MB).
 - `server/api/services/excelImport.ts` parsea `.xlsx` (hojas «Cursos» y «Estudiantes»; deriva cursos si solo hay «Estudiantes»), normaliza nivel (BÁSICA/MEDIA), RUT (`normalizeRut` limpia guiones líderes) y deduplica por RUT en `runImport`; `POST /admin/import` reutiliza el flujo para el tenant actual. Tests: `excelImport.test.ts` con fixture real vía `write-excel-file/node` (302 tests pasando).
 - Frontend: `PlatformView.tsx` (tabs Colegios/Importar base/Plan y límites, sin Stripe), `platform.service.ts`, `SidebarView` incluye `'platform'`, guard en `App.tsx` (`canAccessPlatform = effectiveAdminRole === 'superadmin'`), `VIEW_TITLES` con entrada `platform`, `MainContent` lazy-carga `PlatformView`. `AdminView` añadió pestaña `import` (Upload/Download + `importOwnTenantBase`).
-- Verificación módulo: typecheck ✅, lint ✅, 302 tests ✅, `build:web` ✅, `git diff --check` sin errores. Pendiente: E2E (no hay `E2E_BASE_URL` en este entorno) y validación manual de los snippets RLS (`supabase/validation/platform-superadmin-rls-tests.sql`).
+- Verificación módulo: typecheck ✅, lint ✅, 302 tests ✅, `build:web` ✅, `git diff --check` sin errores. E2E configurado y ejecutándose (ver entrada E2E abajo). Pendiente: validación manual de los snippets RLS (`supabase/validation/platform-superadmin-rls-tests.sql`).
+
+### E2E (Playwright) — configuración y estado (2026-07-31)
+
+- `playwright.config.ts` carga `.env.local` vía `dotenv`; `E2E_BASE_URL` por defecto `http://localhost:3001` y `webServer` levanta `npm run dev` solo si no hay servidor corriendo (`reuseExistingServer: true`).
+- Variables E2E documentadas en `.env.example` y activas en `.env.local`: `E2E_BASE_URL`, `E2E_STAFF_EMAIL=usuario@colegio.cl`, `E2E_STAFF_PASSWORD=123456` (credenciales válidas contra el Supabase remoto), `E2E_SUPERADMIN_EMAIL`/`E2E_SUPERADMIN_PASSWORD` (comentadas).
+- `tests/platform.spec.ts` (nuevo): verifica que la vista Plataforma no está disponible para anónimos; los tests de superadmin se omiten sin `E2E_SUPERADMIN_*`.
+- `tests/case-flow.spec.ts`: corregido — navega a la vista Causas antes de buscar el botón "Nueva Causa" (el login aterriza en Dashboard).
+- Estado: `npm run test:e2e` → 24 passed, 2 skipped (superadmin sin credenciales); typecheck y lint ✅.
+- Migración `20260801000000_create_superadmin_role.sql` aplicada manualmente al Supabase remoto por el usuario (SQL Editor del dashboard; la CLI local daba 403 en el management API y no hay `SUPABASE_DB_PASSWORD`). Verificado: `superusuario@colegio.cl` con `role='superadmin'` y constraint que acepta `superadmin`.
+- Credenciales E2E activas en `.env.local`: `E2E_STAFF_EMAIL=usuario@colegio.cl`/`E2E_STAFF_PASSWORD=123456` y `E2E_SUPERADMIN_EMAIL=superusuario@colegio.cl`/`E2E_SUPERADMIN_PASSWORD=12345678`.
+- Estado final: `npm run test:e2e` → **26 passed, 0 skipped** (incluye los 3 de plataforma). `tests/platform.spec.ts` usa timeout 15s tras la carga lazy de `PlatformView` para evitar carreras.
+
+### Fase E — Fix acceso superadmin a Plataforma (2026-07-31)
+
+- **Causa raíz del 403 de `GET /api/platform/tenants`:** tres routers pre-Fase E usan `router.use(...)` SIN path y se montan ANTES de `platformRoutes` en `server/index.ts` (líneas 67→74→75), interceptando TODAS las rutas `/api/*`:
+  - `server/api/routes/processDisciplinaryPdf.ts:16` → `requireMembership(CONVIVENCIA_MEMBERSHIP)` (bloquea roles no-convivencia).
+  - `server/api/routes/templates.ts:13` → `requireAuth + requireMembership(...)`.
+  - `server/api/routes/admin.ts:138` → `requireAuth + requireTenant + requireRole(ADMIN_ROLES)` con `ADMIN_ROLES=['admin','direccion']` (rechazaba a superadmin con "No tiene permisos para realizar esta acción." antes de llegar a plataforma).
+- **Contexto de cuentas (verificado en Supabase):** solo 4 perfiles; `superusuario@colegio.cl` es la ÚNICA cuenta con `role='superadmin'` (backfill idempotente de `20260801000000_create_superadmin_role.sql`; no hay otra vía de provisión). Su membresía `convivencia` quedó `is_active=false` porque el trigger `sync_convivencia_membership_from_profile` (20260731190539) desactiva membresías de roles no listados y no contempla `superadmin`. Distinción conceptual: "superusuario" = cuenta seed del tenant default; "super administrador" = el mismo rol de plataforma que ejerce esa cuenta; NO existe un perfil ni membresía distinta que provisionar.
+- **Solución elegida (Opción 1 completada; cambios mínimos de datos de rol, no estructurales):** añadir `'superadmin'` a `CONVIVENCIA_MEMBERSHIP_ROLES` en `server/middleware/requireMembership.ts` (ya aplicada antes) y a `ADMIN_ROLES` en `server/api/routes/admin.ts:16` → `['superadmin', 'admin', 'direccion']`. Con esto el superadmin atraviesa los tres interceptores y llega a `platformRoutes` → `requireSuperAdmin` → `GET /platform/tenants` responde OK.
+- **Verificación final:** `npx playwright test` → **26 passed, 0 skipped**; `npm run typecheck` ✅; `npm run lint:code` ✅; `npm run test` → 302 passed ✅; `git diff --check` limpio; diff mínimo (solo las líneas de roles; normalizado con `npx prettier --write`).
+- **Deuda pendiente (opcional, no bloqueante):** los tres `router.use` sin path en routers pre-Fase E deberían acotarse con path (p.ej. `router.use('/admin', ...)`) para que sus guards solo apliquen a sus propias rutas; hoy dependen de las listas de roles para no interceptar rutas ajenas.
+
+### Fase E — Fix deuda: guards acotados a prefijo + bundle serverless regenerado (2026-07-31)
+
+- **Deuda saldada:** los cuatro `router.use(...)` SIN path ahora llevan prefijo propio, de modo que sus guards solo aplican a sus propias rutas y ya no interceptan `GET /api/platform/tenants` ni otras rutas ajenas:
+  - `server/api/routes/processDisciplinaryPdf.ts` → `router.use('/process-disciplinary-pdf', requireAuth, requireMembership(CONVIVENCIA_MEMBERSHIP), rateLimit)`
+  - `server/api/routes/templates.ts` → `router.use('/document-templates', requireAuth, requireMembership(CONVIVENCIA_MEMBERSHIP))`
+  - `server/api/routes/admin.ts` → `router.use('/admin', requireAuth, requireTenant, requireRole(ADMIN_ROLES))`
+  - `server/api/routes/platform.ts` → `router.use('/platform', requireAuth, requireSuperAdmin)`
+- **Bundle serverless regenerado (`api/index.js`):** el commit de Fase E (`7cddd53`) agregó `admin.ts` y `platform.ts` a `server/api/index.ts`, pero el bundle commiteado quedó atrasado (último bundle en `5eac15e`) y NO exponía `POST /admin/*` ni `/api/platform/*` en producción. Con `npm run build` se regeneró: ahora monta `admin_default` y `platform_default` en `api/index.js` (líneas ~3893-3894).
+- **Verificación:** `npm run typecheck` ✅; `npm run lint:code` ✅; `npm run test` → 302 passed ✅; `npm run build` ✅ (Vite + `dist/server.cjs` + `api/index.js`). E2E ya validado previamente (26 passed, 0 skipped).
+
+### Estado remoto Supabase — revisión CLI (2026-08-01)
+
+- Proyecto remoto `GestionConvivencia` (`mjhbcqwtjzgvqssfiore`) está vinculado y `ACTIVE_HEALTHY`, PostgreSQL 17.6.1.
+- El remoto tiene 1 tenant (`Default School`), 4 usuarios Auth confirmados, 4 perfiles activos y 6 membresías.
+- `superusuario@colegio.cl` ya existe, está confirmado, activo y tiene `profiles.role = 'superadmin'`. No requiere crear otra cuenta ni cambiar contraseña.
+- Su membresía `convivencia` está inconsistente: `role = 'admin'` e `is_active = false`. En modo transición funciona por fallback, pero fallaría con enforcement estricto.
+- Existen remotamente `audit_events`, `membership_invitations`, `notifications` y `report_history`, actualmente sin registros.
+- El historial remoto de migraciones no coincide con el conjunto local: hay migraciones locales no registradas remotamente y migraciones remotas no presentes localmente. No ejecutar `supabase db push` hasta reconciliar el ledger.
+- Nueva migración local pendiente de aplicación controlada: `supabase/migrations/20260801010000_activate_superadmin_convivencia_membership.sql`; sus comprobaciones de solo lectura están en `supabase/validation/superadmin-membership-tests.sql`.
+
+### Realtime y rendimiento — 2026-08-01
+
+- `usePersistentNotifications` conserva Supabase persistente como fuente de verdad y admite invalidación por Realtime de forma opt-in mediante `VITE_NOTIFICATIONS_REALTIME=true`.
+- La migración forward-only `20260801120000_enable_notifications_realtime.sql` prepara la publicación de `notifications`; no está aplicada remotamente por el bloqueo HTTP 403 del CLI.
+- Lighthouse CI quedó configurado en `lighthouserc.cjs` y se incorpora al workflow; la medición local observó FCP aproximado de 3,4 s y LCP de 5,0 s, pero Windows falló al limpiar la carpeta temporal con `EPERM`.
+- E2E de plataforma e institucionalidad: 27 pruebas pasan contra producción; no se modificaron datos institucionales.
+
+### Reconciliación del ledger Supabase — 2026-08-01
+
+- El ledger remoto fue verificado en SQL Editor: contiene 12 versiones, incluido `00000` como baseline remoto.
+- Las versiones `20260727181206`, `20260729191822`, `20260729215646`, `20260729215812`, `20260729215837` y `20260731191230` tienen archivos históricos identificables en `supabase/migrations-legacy/`.
+- Las versiones `20260727175043`, `20260728185201`, `20260728202937`, `20260731003251` y `20260731003405` no tienen archivo local; se conservan como historial externo y no deben inventarse.
+- Se verificaron completamente los efectos de `20260801090000`, `20260801100000` y `20260801120000`, y se registraron esas tres versiones en `supabase_migrations.schema_migrations` mediante `supabase/operations/register-verified-migrations.sql` sin reejecutar DDL.
+- La reconciliación funcional del ledger está cerrada. El CLI aún devuelve HTTP 403 al inicializar el login role, por lo que no se usa `db push` ni `migration repair` automático.
+
+### Auditoría de código y frontend — 2026-08-01
+
+- Se detectó y corrigió un riesgo de aislamiento en caché React Query: cursos, estudiantes, administración, reportes, configuración institucional, documentos y reglas disciplinarias ahora incluyen `tenantId` en sus `queryKey` y esperan el contexto tenant antes de consultar.
+- La auditoría estática no encontró `SELECT *` en los módulos revisados, exposición de `service_role` al cliente, `eval`, `dangerouslySetInnerHTML` ni rutas sin prefijo que vuelvan a interceptar endpoints ajenos.
+- La referencia visual `PageHero` está aplicada en Administración, Plataforma y Centro de reportes; los formularios institucionales tienen etiquetas/aria-labels y estados de error/reintento.
+- Validación posterior: lint, typecheck, 309 tests, build, bundle, security audit, 27 E2E, multi-tenant, roles y health pasan.
+- Deuda no bloqueante: `src/components/TemplateEditor.tsx` conserva un flujo legacy de carga con `useEffect` y estado local; no presenta un hallazgo de seguridad, pero puede migrarse a React Query en una iteración de limpieza separada.

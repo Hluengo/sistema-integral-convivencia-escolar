@@ -5,6 +5,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Building2, Download, RefreshCw, ShieldCheck, Upload, Users } from 'lucide-react';
 import Button from '../../shared/ui/Button';
 import SummaryCard from '../../shared/ui/SummaryCard';
+import PageHero from '../../shared/ui/PageHero';
+import PlatformInstitutionPanel from './PlatformInstitutionPanel';
 import { formatChileDateTime } from '../../shared/lib/dateTime';
 import {
   fetchPlatformTenants,
@@ -14,10 +16,11 @@ import {
   type PlatformTenant,
 } from '../../shared/api/services/platform.service';
 
-type PlatformTab = 'colegios' | 'importar' | 'plan';
+type PlatformTab = 'colegios' | 'institucional' | 'importar' | 'plan';
 
 const tabs: Array<{ id: PlatformTab; label: string; icon: typeof Users }> = [
   { id: 'colegios', label: 'Colegios', icon: Building2 },
+  { id: 'institucional', label: 'Configuración institucional', icon: Building2 },
   { id: 'importar', label: 'Importar base', icon: Upload },
   { id: 'plan', label: 'Plan y límites', icon: ShieldCheck },
 ];
@@ -115,24 +118,16 @@ export default function PlatformView() {
 
   return (
     <div className="animate-fade-in space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="font-semibold text-brand-700 text-xs uppercase tracking-[0.16em]">
-            Plataforma
-          </p>
-          <h2 className="mt-1 font-bold text-2xl text-neutral-900 tracking-tight sm:text-3xl">
-            Gestión de colegios
-          </h2>
-          <p className="mt-2 max-w-2xl text-neutral-500 text-sm">
-            Crea establecimientos, invita administradores y carga la base inicial de cursos y
-            estudiantes.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 rounded-xl border border-brand-100 bg-brand-50 px-3 py-2 text-brand-800 text-xs">
-          <ShieldCheck className="size-4" aria-hidden="true" /> Acceso restringido a
-          superadministrador
-        </div>
-      </div>
+      <PageHero
+        eyebrow="Plataforma · Superadministración"
+        title="Gestión de colegios"
+        description="Crea establecimientos, invita administradores y carga cursos y estudiantes."
+        action={
+          <div className="flex items-center gap-2 rounded-xl bg-white/15 px-3 py-2 text-blue-50 text-xs ring-1 ring-white/20 backdrop-blur-sm">
+            <ShieldCheck className="size-4" aria-hidden="true" /> Acceso superadministrador
+          </div>
+        }
+      />
 
       <div className="flex gap-1 overflow-x-auto rounded-2xl border border-neutral-200/70 bg-white p-1 shadow-sm">
         {tabs.map(({ id, label, icon: Icon }) => (
@@ -388,6 +383,10 @@ export default function PlatformView() {
             </Button>
           </section>
         </div>
+      )}
+
+      {activeTab === 'institucional' && !tenantsQuery.isError && (
+        <PlatformInstitutionPanel tenants={tenants} />
       )}
 
       {activeTab === 'plan' && (

@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Save,
   Loader2,
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react';
 import { TextBlockSkeleton } from './Skeleton';
 import Button from '../shared/ui/Button';
+import { useAuthStore } from '../shared/lib/stores/authStore';
 
 interface Template {
   id: string;
@@ -31,10 +33,29 @@ const DOC_TYPE_LABELS: Record<string, string> = {
   informe_concluyente: 'Informe Concluyente',
 };
 
+async function fetchTemplates(): Promise<Template[]> {
+  const { supabase } = await import('../lib/supabase');
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const res = await fetch('/api/document-templates/admin', {
+    headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+  });
+  if (res.status === 401) throw new Error('Sesión no válida. Inicie sesión nuevamente.');
+  if (res.status === 403) {
+    throw new Error('Esta sección está disponible solo para Dirección y Administración.');
+  }
+  if (!res.ok) throw new Error('No fue posible cargar las plantillas institucionales.');
+  const data: unknown = await res.json();
+  if (!Array.isArray(data))
+    throw new Error('La respuesta de plantillas no tiene un formato válido.');
+  return data as Template[];
+}
+
 export default function TemplateEditor() {
+  const tenantId = useAuthStore((state) => state.tenantId);
+  const queryClient = useQueryClient();
   const [templates, setTemplates] = useState<Template[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -43,50 +64,27 @@ export default function TemplateEditor() {
   const saveSuccessTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const selectedIdRef = useRef<string | null>(null);
 
-  const fetchTemplates = useCallback(async () => {
-    setLoading(true);
-    setLoadError(null);
-    try {
-      const { supabase } = await import('../lib/supabase');
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const res = await fetch('/api/document-templates/admin', {
-        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
-      });
-      if (res.status === 401) {
-        setLoadError('Sesión no válida. Inicie sesión nuevamente.');
-        return;
-      }
-      if (res.status === 403) {
-        setLoadError('Esta sección está disponible solo para Dirección y Administración.');
-        return;
-      }
-      if (!res.ok) {
-        setLoadError('No fue posible cargar las plantillas institucionales.');
-        return;
-      }
-      const data = await res.json();
-      if (Array.isArray(data)) {
-        setTemplates(data);
-        const selected = data.find((template) => template.id === selectedIdRef.current) ?? data[0];
-        selectedIdRef.current = selected?.id ?? null;
-        setSelectedId(selected?.id ?? null);
-        setEditPrompt(selected?.system_prompt ?? '');
-      } else {
-        setLoadError('La respuesta de plantillas no tiene un formato válido.');
-      }
-    } catch {
-      setLoadError('Error de conexión al cargar las plantillas.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const templatesQuery = useQuery({
+    queryKey: ['document-templates', tenantId],
+    queryFn: fetchTemplates,
+    enabled: Boolean(tenantId),
+    staleTime: 5 * 60 * 1000,
+  });
 
   useEffect(() => {
-    fetchTemplates();
+    if (!templatesQuery.data) return;
+    setTemplates(templatesQuery.data);
+    const selected =
+      templatesQuery.data.find((template) => template.id === selectedIdRef.current) ??
+      templatesQuery.data[0];
+    selectedIdRef.current = selected?.id ?? null;
+    setSelectedId(selected?.id ?? null);
+    setEditPrompt(selected?.system_prompt ?? '');
     return () => clearTimeout(saveSuccessTimer.current);
-  }, [fetchTemplates]);
+  }, [templatesQuery.data]);
+
+  const loading = templatesQuery.isLoading;
+  const loadError = templatesQuery.error instanceof Error ? templatesQuery.error.message : null;
 
   const handleSelect = (tpl: Template) => {
     selectedIdRef.current = tpl.id;
@@ -123,6 +121,11 @@ export default function TemplateEditor() {
       const result = await res.json();
       if (result.success) {
         setSaveSuccess(selectedId);
+        queryClient.setQueryData<Template[]>(['document-templates', tenantId], (current) =>
+          current?.map((template) =>
+            template.id === selectedId ? { ...template, system_prompt: editPrompt } : template,
+          ),
+        );
         setTemplates((prev) =>
           prev.map((t) => (t.id === selectedId ? { ...t, system_prompt: editPrompt } : t)),
         );
@@ -176,7 +179,7 @@ export default function TemplateEditor() {
           {loadError.includes('conexión') || loadError.includes('cargar las plantillas') ? (
             <Button
               variant="secondary"
-              onClick={() => void fetchTemplates()}
+              onClick={() => void templatesQuery.refetch()}
               className="mt-4 rounded-lg px-3 py-2 text-xs"
             >
               <RefreshCw className="size-3.5" aria-hidden="true" />

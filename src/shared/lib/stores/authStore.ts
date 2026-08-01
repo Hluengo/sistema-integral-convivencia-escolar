@@ -19,7 +19,9 @@ interface AuthState {
   authLoading: boolean;
   showLoginModal: boolean;
   isAuthenticated: boolean;
+  sessionExpired: boolean;
   setShowLoginModal: (v: boolean) => void;
+  clearSessionExpired: () => void;
   setUser: (user: User | null) => void;
   setAuthLoading: (v: boolean) => void;
 
@@ -64,6 +66,7 @@ async function loadTenantProfile(
 
 export const useAuthStore = create<AuthState>((set) => {
   const AUTH_TIMEOUT_MS = 8000;
+  let hadAuthenticatedSession = false;
 
   const timeoutId = setTimeout(() => {
     set({ authLoading: false });
@@ -76,6 +79,9 @@ export const useAuthStore = create<AuthState>((set) => {
   subscribeAuth((event, session) => {
     clearTimeout(timeoutId);
     const user = session?.user ?? null;
+    const sessionEndedUnexpectedly = event === 'SIGNED_OUT' && hadAuthenticatedSession;
+    if (user) hadAuthenticatedSession = true;
+    if (event === 'SIGNED_OUT') hadAuthenticatedSession = false;
 
     if (event === 'PASSWORD_RECOVERY' && typeof window !== 'undefined') {
       window.sessionStorage.setItem('supabase-password-recovery', 'true');
@@ -88,6 +94,8 @@ export const useAuthStore = create<AuthState>((set) => {
       profileRole: null,
       authLoading: false,
       isAuthenticated: Boolean(session?.access_token && user),
+      ...(user ? { sessionExpired: false } : {}),
+      ...(sessionEndedUnexpectedly ? { sessionExpired: true, showLoginModal: true } : {}),
       ...(user === null
         ? {
             membershipStatus: 'not_available' as MembershipStatus,
@@ -123,6 +131,7 @@ export const useAuthStore = create<AuthState>((set) => {
     authLoading: true,
     showLoginModal: false,
     isAuthenticated: false,
+    sessionExpired: false,
 
     membershipStatus: 'not_available' as MembershipStatus,
     membershipAuthMode: getMembershipAuthMode(),
@@ -178,6 +187,10 @@ export const useAuthStore = create<AuthState>((set) => {
     },
 
     setShowLoginModal: (v) => set({ showLoginModal: v }),
+    clearSessionExpired: () => {
+      hadAuthenticatedSession = false;
+      set({ sessionExpired: false });
+    },
     setUser: (user) => set({ user, isAuthenticated: !!user }),
     setAuthLoading: (v) => set({ authLoading: v }),
   };

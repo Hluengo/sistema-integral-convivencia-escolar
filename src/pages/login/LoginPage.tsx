@@ -4,7 +4,7 @@
  */
 
 import type React from 'react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AlertCircle, CheckCircle2, Eye, EyeOff, Scale } from 'lucide-react';
 import {
   requestPasswordReset,
@@ -13,6 +13,7 @@ import {
   updatePassword,
 } from '../../services/auth.service';
 import { useAppContext } from '../../context/useAppContext';
+import { useAuthStore } from '../../stores/authStore';
 import { Dialog, DialogContent } from '../../components/ui/Dialog';
 import Button from '../../shared/ui/Button';
 
@@ -37,7 +38,16 @@ export default function LoginPage({ onClose }: LoginPageProps) {
   const [notice, setNotice] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { setShowLoginModal } = useAppContext();
+  const sessionExpired = useAuthStore((state) => state.sessionExpired);
+  const clearSessionExpired = useAuthStore((state) => state.clearSessionExpired);
   const emailRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (sessionExpired) {
+      setNotice('La sesión expiró. Inicie sesión nuevamente para continuar.');
+      clearSessionExpired();
+    }
+  }, [clearSessionExpired, sessionExpired]);
 
   const resetMessages = () => {
     setError(null);
@@ -121,6 +131,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
       if (typeof window !== 'undefined') {
         window.sessionStorage.removeItem('supabase-password-recovery');
       }
+      clearSessionExpired();
       await signOut();
       setPassword('');
       setPasswordConfirmation('');

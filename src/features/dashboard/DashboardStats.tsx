@@ -35,12 +35,18 @@ import {
   createEmptyAnnotationStageCounts,
   type AnnotationStageCounts,
 } from '../../shared/lib/domain/annotationStageCounts';
+import OnboardingChecklist from '../onboarding/OnboardingChecklist';
+import type { SidebarView } from '../../components/Sidebar';
+import { fetchOnboardingStatus } from '../../shared/api/services/institution.service';
 
 const DASHBOARD_STALE_TIME_MS = 30_000;
 
 interface DashboardStatsProps {
   causas: Causa[];
   onFaseSelect: (fase: FaseProcedimental | 'Todas') => void;
+  onboardingEnabled?: boolean;
+  coursesCount?: number;
+  onNavigate?: (view: SidebarView) => void;
 }
 
 const SEVERITY_CONFIG: Record<TipoInfraccion, { label: string; dot: string }> = {
@@ -123,10 +129,17 @@ function DashboardSkeleton() {
   );
 }
 
-export default function DashboardStats({ causas, onFaseSelect }: DashboardStatsProps) {
+export default function DashboardStats({
+  causas,
+  onFaseSelect,
+  onboardingEnabled = false,
+  coursesCount = 0,
+  onNavigate,
+}: DashboardStatsProps) {
   const authenticatedStats = getStats(causas);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const tenantId = useAuthStore((state) => state.tenantId);
+  const userId = useAuthStore((state) => state.user?.id ?? null);
 
   const authenticatedCauseCounts = useMemo(() => {
     const active = causas.filter(
@@ -177,6 +190,12 @@ export default function DashboardStats({ causas, onFaseSelect }: DashboardStatsP
     enabled: isAuthenticated && Boolean(tenantId),
     staleTime: DASHBOARD_STALE_TIME_MS,
     refetchOnMount: true,
+  });
+  const onboardingStatusQuery = useQuery({
+    queryKey: ['onboarding-status', tenantId],
+    queryFn: fetchOnboardingStatus,
+    enabled: isAuthenticated && Boolean(tenantId),
+    staleTime: DASHBOARD_STALE_TIME_MS,
   });
   const publicKpis = publicKpisQuery.data as PublicDashboardKpis | undefined;
   const loading = isAuthenticated
@@ -232,6 +251,15 @@ export default function DashboardStats({ causas, onFaseSelect }: DashboardStatsP
 
   return (
     <section aria-label="Panel de control" className="animate-fade-in space-y-6">
+      {onboardingEnabled && tenantId && userId && onNavigate ? (
+        <OnboardingChecklist
+          tenantId={tenantId}
+          userId={userId}
+          coursesCount={coursesCount}
+          readiness={onboardingStatusQuery.data}
+          onNavigate={onNavigate}
+        />
+      ) : null}
       <div className="stagger-children grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           label="Causas Activas"

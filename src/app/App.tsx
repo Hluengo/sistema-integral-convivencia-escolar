@@ -39,6 +39,7 @@ export default function App() {
   const authLoading = useAuthStore((s) => s.authLoading);
   const showLoginModal = useAuthStore((s) => s.showLoginModal);
   const setShowLoginModal = useAuthStore((s) => s.setShowLoginModal);
+  const clearSessionExpired = useAuthStore((s) => s.clearSessionExpired);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const tenantId = useAuthStore((s) => s.tenantId);
   const appRole = useAuthStore((s) => s.appRole);
@@ -46,11 +47,24 @@ export default function App() {
 
   const membership = useMemberships('convivencia');
   const effectiveAdminRole = appRole ?? profileRole;
-  const canAccessAdmin = effectiveAdminRole === 'admin' || effectiveAdminRole === 'direccion';
-  const canAccessReports = ['admin', 'direccion', 'convivencia', 'inspectoria'].includes(
-    effectiveAdminRole ?? '',
-  );
+  const canAccessAdmin =
+    effectiveAdminRole === 'admin' ||
+    effectiveAdminRole === 'direccion' ||
+    effectiveAdminRole === 'superadmin';
+  const canAccessReports = [
+    'admin',
+    'direccion',
+    'convivencia',
+    'inspectoria',
+    'superadmin',
+  ].includes(effectiveAdminRole ?? '');
   const canAccessPlatform = effectiveAdminRole === 'superadmin';
+  const onboardingEnabled =
+    isAuthenticated &&
+    Boolean(tenantId && user?.id) &&
+    (effectiveAdminRole === 'admin' ||
+      effectiveAdminRole === 'direccion' ||
+      effectiveAdminRole === 'superadmin');
 
   const causas = useCausasStore((s) => s.causas);
   const selectedCausaId = useCausasStore((s) => s.selectedCausaId);
@@ -98,6 +112,11 @@ export default function App() {
   const setPrivacyMode = useUIStore((s) => s.setPrivacyMode);
   const showShortcuts = useUIStore((s) => s.showShortcuts);
   const setShowShortcuts = useUIStore((s) => s.setShowShortcuts);
+
+  const handleLogout = useCallback(() => {
+    clearSessionExpired();
+    void signOut();
+  }, [clearSessionExpired]);
 
   const isTimelineCollapsedRef = useRef(false);
 
@@ -386,7 +405,7 @@ export default function App() {
               aulaSeguraCount={causas.filter((c) => c.comprometeAulaSegura).length}
               user={user}
               onLogin={() => setShowLoginModal(true)}
-              onLogout={() => signOut()}
+              onLogout={handleLogout}
               canAccessAdmin={canAccessAdmin}
               canAccessReports={canAccessReports}
               canAccessPlatform={canAccessPlatform}
@@ -440,6 +459,9 @@ export default function App() {
                 handleReopenCausa={handleReopenCausa}
                 handleSelectCausaFromDashboard={handleSelectCausaFromDashboard}
                 handleOpenCreateForm={handleOpenCreateForm}
+                onboardingEnabled={onboardingEnabled}
+                coursesCount={courses.length}
+                onNavigate={handleViewChange}
               />
             </Suspense>
             <footer className="mt-auto space-y-1.5 border-neutral-200/60 border-t bg-white py-5 text-center text-[10px] text-neutral-400 sm:py-6">

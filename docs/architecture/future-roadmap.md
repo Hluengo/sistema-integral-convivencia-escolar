@@ -6,14 +6,14 @@
 
 - [x] Unificar tests unitarios en Node Test Runner
 - [ ] Agregar tests faltantes (`riceMeasures`, stores, hooks)
-- [ ] E2E tests con Playwright para flujos críticos
+- [x] E2E tests con Playwright para flujos críticos
 - [ ] Alcanzar >30% cobertura
 
 ### Infraestructura
 
-- [ ] CI/CD con GitHub Actions (lint + test + build)
+- [x] CI/CD con GitHub Actions (lint + test + build)
 - [ ] Husky pre-push (ya configurado)
-- [ ] Lighthouse CI para performance budget
+- [x] Lighthouse CI para performance budget (configurado; requiere runner CI para evitar limitación EPERM local de Windows)
 
 ### Frontend
 
@@ -33,7 +33,7 @@
 
 - [ ] Dashboard analítico avanzado (gráficos, tendencias)
 - [ ] Exportación de reportes en Excel
-- [ ] Notificaciones en tiempo real (Realtime Supabase)
+- [x] Notificaciones en tiempo real (Realtime Supabase, opt-in)
 - [ ] Modo offline con IndexedDB
 
 ### Base de Datos

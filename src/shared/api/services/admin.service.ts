@@ -15,12 +15,13 @@ export const ADMIN_ROLES = [
 ] as const;
 
 export type AdminRole = (typeof ADMIN_ROLES)[number];
+export type AdminMemberRole = AdminRole | 'superadmin';
 
 export interface TenantProfileSummary {
   user_id: string;
   email: string | null;
   full_name: string | null;
-  role: AdminRole;
+  role: AdminMemberRole;
   course_ids: string[] | null;
   updated_at: string | null;
 }
@@ -28,7 +29,7 @@ export interface TenantProfileSummary {
 export interface AdminMember extends TenantProfileSummary {
   tenant_id: string;
   is_active: boolean;
-  membershipRole: AdminRole;
+  membershipRole: AdminMemberRole;
   membershipActive: boolean;
   confirmed: boolean;
   lastSignInAt: string | null;
@@ -69,7 +70,7 @@ export interface AdminMembersData {
 }
 
 export interface UsageStatsSummary {
-  events: Array<{ event_name: string; event_count: number }>;
+  events: Array<{ event_name: string; total_count: number }>;
   dailyActiveUsers: Array<{ day: string; active_users: number }>;
 }
 

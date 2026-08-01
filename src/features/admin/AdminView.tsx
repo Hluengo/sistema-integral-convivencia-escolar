@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   BarChart3,
   BookOpen,
+  Building2,
   Download,
   FileText,
   Mail,
@@ -15,8 +16,11 @@ import {
 } from 'lucide-react';
 import TemplateEditor from '../../components/TemplateEditor';
 import ErrorBoundary from '../../components/ErrorBoundary';
+import InstitutionSettingsPanel from './InstitutionSettingsPanel';
 import Button from '../../shared/ui/Button';
 import SummaryCard from '../../shared/ui/SummaryCard';
+import PageHero from '../../shared/ui/PageHero';
+import { useAuthStore } from '../../shared/lib/stores/authStore';
 import { useCoursesQuery } from '../../hooks/useCoursesQuery';
 import {
   ADMIN_ROLES,
@@ -28,19 +32,22 @@ import {
   resendAdminInvitation,
   updateAdminMember,
   type AdminMember,
+  type AdminMemberRole,
   type AdminRole,
 } from '../../shared/api/services/admin.service';
 
-type AdminTab = 'overview' | 'users' | 'templates' | 'import';
+type AdminTab = 'overview' | 'users' | 'institution' | 'templates' | 'import';
 
 const tabs: Array<{ id: AdminTab; label: string; icon: typeof Users }> = [
   { id: 'overview', label: 'Resumen', icon: BarChart3 },
   { id: 'users', label: 'Usuarios y acceso', icon: Users },
+  { id: 'institution', label: 'Perfil y reglamento', icon: Building2 },
   { id: 'templates', label: 'Plantillas', icon: FileText },
   { id: 'import', label: 'Importar base', icon: Upload },
 ];
 
-const roleLabels: Record<AdminRole, string> = {
+const roleLabels: Record<AdminMemberRole, string> = {
+  superadmin: 'Superadministrador',
   admin: 'Administrador',
   direccion: 'Dirección',
   convivencia: 'Convivencia escolar',
@@ -74,19 +81,21 @@ export default function AdminView() {
   const [importLevel, setImportLevel] = useState<'BASICA' | 'MEDIA'>('BASICA');
   const [importResult, setImportResult] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const tenantId = useAuthStore((state) => state.tenantId);
   const membersQuery = useQuery({
-    queryKey: ['admin', 'members'],
+    queryKey: ['admin', 'members', tenantId],
     queryFn: fetchAdminMembers,
-    enabled: activeTab === 'overview' || activeTab === 'users',
+    enabled: Boolean(tenantId) && (activeTab === 'overview' || activeTab === 'users'),
   });
   const usageQuery = useQuery({
-    queryKey: ['admin', 'usage'],
+    queryKey: ['admin', 'usage', tenantId],
     queryFn: fetchUsageStats,
-    enabled: activeTab === 'overview',
+    enabled: Boolean(tenantId) && activeTab === 'overview',
   });
   const { data: courses = [], isLoading: coursesLoading } = useCoursesQuery();
   const refresh = () => void membersQuery.refetch();
-  const invalidate = () => void queryClient.invalidateQueries({ queryKey: ['admin', 'members'] });
+  const invalidate = () =>
+    void queryClient.invalidateQueries({ queryKey: ['admin', 'members', tenantId] });
 
   const inviteMutation = useMutation({
     mutationFn: () => inviteAdminMember(email, role),
@@ -124,7 +133,7 @@ export default function AdminView() {
 
   const members = useMemo(() => membersQuery.data?.members ?? [], [membersQuery.data?.members]);
   const roleCounts = useMemo(() => {
-    const counts = new Map<AdminRole, number>();
+    const counts = new Map<AdminMemberRole, number>();
     for (const member of members) counts.set(member.role, (counts.get(member.role) ?? 0) + 1);
     return [...counts.entries()].sort((a, b) => b[1] - a[1]);
   }, [members]);
@@ -143,7 +152,7 @@ export default function AdminView() {
           (data.errors.length > 0 ? ` Advertencias: ${data.errors.length}.` : ''),
       );
       setImportFile(null);
-      void queryClient.invalidateQueries({ queryKey: ['courses'] });
+      void queryClient.invalidateQueries({ queryKey: ['courses', tenantId] });
     },
     onError: (error: unknown) =>
       setImportResult(error instanceof Error ? error.message : 'No fue posible importar la base.'),
@@ -157,22 +166,16 @@ export default function AdminView() {
 
   return (
     <div className="animate-fade-in space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="font-semibold text-brand-700 text-xs uppercase tracking-[0.16em]">
-            Administración
-          </p>
-          <h2 className="mt-1 font-bold text-2xl text-neutral-900 tracking-tight sm:text-3xl">
-            Centro del establecimiento
-          </h2>
-          <p className="mt-2 max-w-2xl text-neutral-500 text-sm">
-            Gestiona personas, roles, invitaciones y recursos institucionales del tenant.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 rounded-xl border border-brand-100 bg-brand-50 px-3 py-2 text-brand-800 text-xs">
-          <ShieldCheck className="size-4" aria-hidden="true" /> Acceso administrativo protegido
-        </div>
-      </div>
+      <PageHero
+        eyebrow="Administración · Colegio"
+        title="Centro del establecimiento"
+        description="Gestiona personas, roles, invitaciones y recursos institucionales del colegio."
+        action={
+          <div className="flex items-center gap-2 rounded-xl bg-white/15 px-3 py-2 text-blue-50 text-xs ring-1 ring-white/20 backdrop-blur-sm">
+            <ShieldCheck className="size-4" aria-hidden="true" /> Acceso protegido
+          </div>
+        }
+      />
 
       <div className="flex gap-1 overflow-x-auto rounded-2xl border border-neutral-200/70 bg-white p-1 shadow-sm">
         {tabs.map(({ id, label, icon: Icon }) => (
@@ -188,7 +191,9 @@ export default function AdminView() {
         ))}
       </div>
 
-      {activeTab !== 'templates' && membersQuery.isError ? <AdminError onRetry={refresh} /> : null}
+      {activeTab !== 'templates' && activeTab !== 'institution' && membersQuery.isError ? (
+        <AdminError onRetry={refresh} />
+      ) : null}
       {operationError ? (
         <AdminError message={operationError} onRetry={() => setOperationError(null)} />
       ) : null}
@@ -214,7 +219,7 @@ export default function AdminView() {
                   ? '—'
                   : String(
                       usageQuery.data?.events.reduce(
-                        (total, event) => total + event.event_count,
+                        (total, event) => total + event.total_count,
                         0,
                       ) ?? 0,
                     )
@@ -424,6 +429,8 @@ export default function AdminView() {
         </ErrorBoundary>
       )}
 
+      {activeTab === 'institution' && <InstitutionSettingsPanel />}
+
       {activeTab === 'import' && (
         <div className="space-y-5">
           <section className="card p-5 sm:p-6">
@@ -523,7 +530,8 @@ function MemberRow({
   disabled: boolean;
   onSave: (values: { role: AdminRole; accessEnabled: boolean }) => void;
 }) {
-  const [selectedRole, setSelectedRole] = useState<AdminRole>(member.role);
+  const isPlatformAdmin = member.role === 'superadmin';
+  const [selectedRole, setSelectedRole] = useState<AdminMemberRole>(member.role);
   const [enabled, setEnabled] = useState(member.is_active && member.membershipActive);
   const changed =
     selectedRole !== member.role || enabled !== (member.is_active && member.membershipActive);
@@ -538,8 +546,10 @@ function MemberRow({
           aria-label={`Rol de ${member.email ?? member.user_id}`}
           value={selectedRole}
           onChange={(event) => setSelectedRole(event.target.value as AdminRole)}
+          disabled={isPlatformAdmin || disabled}
           className="rounded-lg border border-neutral-200 bg-white px-2.5 py-2 text-xs"
         >
+          {isPlatformAdmin ? <option value="superadmin">Superadministrador</option> : null}
           <option value="admin">Administrador</option>
           {ADMIN_ROLES.filter((item) => item !== 'admin').map((item) => (
             <option key={item} value={item}>
@@ -552,7 +562,7 @@ function MemberRow({
         <button
           type="button"
           aria-label={`${enabled ? 'Desactivar' : 'Activar'} acceso de ${member.email ?? member.user_id}`}
-          disabled={disabled}
+          disabled={disabled || isPlatformAdmin}
           onClick={() => setEnabled((value) => !value)}
           className={`rounded-full px-3 py-1.5 font-semibold text-xs ${enabled ? 'bg-leve-100 text-leve-800' : 'bg-neutral-100 text-neutral-500'}`}
         >
@@ -569,11 +579,14 @@ function MemberRow({
       </td>
       <td className="px-5 py-3 text-right">
         <Button
-          disabled={!changed || disabled}
-          onClick={() => onSave({ role: selectedRole, accessEnabled: enabled })}
+          disabled={!changed || disabled || isPlatformAdmin || selectedRole === 'superadmin'}
+          onClick={() => {
+            if (selectedRole !== 'superadmin')
+              onSave({ role: selectedRole, accessEnabled: enabled });
+          }}
           className="rounded-lg px-3 py-2 text-xs"
         >
-          Guardar
+          {isPlatformAdmin ? 'Gestionar en plataforma' : 'Guardar'}
         </Button>
       </td>
     </tr>

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../stores/authStore';
+import { supabase } from '../../api/lib/supabase';
 import {
   fetchPersistedNotifications,
   markAllNotificationsRead,
@@ -80,6 +81,29 @@ export function useNotifications(causas: Causa[]): NotificationCenter {
     enabled: Boolean(userId && tenantId),
     staleTime: 30_000,
   });
+  const realtimeEnabled = import.meta.env.VITE_NOTIFICATIONS_REALTIME === 'true';
+
+  useEffect(() => {
+    if (!realtimeEnabled || !userId || !tenantId) return;
+    const queryKey = ['notifications', tenantId, userId];
+    const channel = supabase
+      .channel(`notifications:${tenantId}:${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userId}`,
+        },
+        () => void queryClient.invalidateQueries({ queryKey }),
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [queryClient, realtimeEnabled, tenantId, userId]);
 
   useEffect(() => {
     if (!userId || !tenantId || persistedQuery.isLoading) return;

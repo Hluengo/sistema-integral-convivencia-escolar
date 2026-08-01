@@ -173,6 +173,7 @@ export default function NewDisciplinaryProcessModal({
   onOpenExistingStudent,
 }: NewDisciplinaryProcessModalProps) {
   const invalidateDashboard = useInvalidateDashboardQueries();
+  const tenantId = useAuthStore((state) => state.tenantId);
   const [step, setStep] = useState<FlowStep>('upload');
   const [status, setStatus] = useState<ProcessingState>('idle');
   const [course, setCourse] = useState<string | null>(null);
@@ -198,8 +199,9 @@ export default function NewDisciplinaryProcessModal({
     isError: rulesLoadFailed,
     refetch: refetchRules,
   } = useQuery<DisciplinaryRule[]>({
-    queryKey: ['disciplinary-rules'],
+    queryKey: ['disciplinary-rules', tenantId],
     queryFn: fetchDisciplinaryRules,
+    enabled: Boolean(tenantId),
     staleTime: 5 * 60 * 1000,
     retry: 1,
   });

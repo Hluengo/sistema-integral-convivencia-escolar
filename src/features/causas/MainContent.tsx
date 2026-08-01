@@ -8,6 +8,8 @@ import { useCallback, Suspense, lazy } from 'react';
 import type { Causa, FaseProcedimental } from '../../types';
 import type { SidebarView } from '../../components/Sidebar';
 import type { FormAction } from '../../hooks/useNewCausaForm';
+import { ChevronRight } from 'lucide-react';
+import { VIEW_TITLES } from '../../components/Header/constants';
 import CausasView from './MainContent/CausasView';
 import ErrorBoundary from '../../components/ErrorBoundary';
 import {
@@ -84,6 +86,9 @@ interface MainContentProps {
   handleReopenCausa: (causa: Causa) => void;
   handleSelectCausaFromDashboard: (causaId: string) => void;
   handleOpenCreateForm: () => void;
+  onboardingEnabled: boolean;
+  coursesCount: number;
+  onNavigate: (view: SidebarView) => void;
 }
 
 export default function MainContent({
@@ -109,6 +114,9 @@ export default function MainContent({
   handleReopenCausa,
   handleSelectCausaFromDashboard,
   handleOpenCreateForm,
+  onboardingEnabled,
+  coursesCount,
+  onNavigate,
 }: MainContentProps) {
   const handleFaseSelect = useCallback(
     (fase: FaseProcedimental | 'Todas') => setSelectedFaseFilter(fase),
@@ -131,11 +139,37 @@ export default function MainContent({
         {currentView === 'admin' && 'Vista: Administración'}
         {currentView === 'platform' && 'Vista: Plataforma'}
       </div>
+      <nav
+        aria-label="Migas de pan"
+        className="mb-5 flex items-center gap-1.5 text-xs text-neutral-500"
+      >
+        {currentView !== 'dashboard' ? (
+          <>
+            <button
+              type="button"
+              onClick={() => onNavigate('dashboard')}
+              className="rounded-md px-1.5 py-1 font-semibold transition-colors hover:bg-white hover:text-brand-700"
+            >
+              Inicio
+            </button>
+            <ChevronRight className="size-3.5 text-neutral-300" aria-hidden="true" />
+          </>
+        ) : null}
+        <span aria-current="page" className="px-1.5 py-1 font-medium text-neutral-700">
+          {VIEW_TITLES[currentView].title}
+        </span>
+      </nav>
       {/* VIEW 1: DASHBOARD - Fully redesigned */}
       {currentView === 'dashboard' && (
         <ErrorBoundary>
           <Suspense fallback={<DashboardFallback />}>
-            <DashboardStats causas={causas} onFaseSelect={handleFaseSelect} />
+            <DashboardStats
+              causas={causas}
+              onFaseSelect={handleFaseSelect}
+              onboardingEnabled={onboardingEnabled}
+              coursesCount={coursesCount}
+              onNavigate={onNavigate}
+            />
           </Suspense>
         </ErrorBoundary>
       )}

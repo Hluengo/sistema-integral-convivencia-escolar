@@ -1,12 +1,15 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { forwardRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { CheckCircle2, Printer } from 'lucide-react';
 import type { Annotation } from '../../../types';
 import type { DocType, LetterContent } from './DocumentPreview/docTypes';
 import LetterA4Document from './LetterA4Document';
 import LetterPreviewViewport from './LetterPreviewViewport';
 import Button from '@/src/shared/ui/Button';
+import { fetchInstitutionSettings } from '@/src/shared/api/services/institution.service';
+import { useAuthStore } from '@/src/shared/lib/stores/authStore';
 
 interface DocumentPreviewProps {
   docType: DocType;
@@ -53,6 +56,13 @@ const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(functio
   },
   ref,
 ) {
+  const tenantId = useAuthStore((state) => state.tenantId);
+  const institutionQuery = useQuery({
+    queryKey: ['institution-settings', tenantId, 'document-preview'],
+    queryFn: fetchInstitutionSettings,
+    enabled: Boolean(tenantId),
+    staleTime: 300_000,
+  });
   return (
     <div className="space-y-4">
       <div className="mx-auto w-full max-w-[216mm] rounded-xl border border-neutral-200 bg-white p-4 shadow-xs">
@@ -109,6 +119,8 @@ const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(functio
           negativeCount={negativeCount}
           selectedAnnsObjects={selectedAnnsObjects}
           letterContent={letterContent}
+          logoSrc={institutionQuery.data?.logo_url}
+          institutionName={institutionQuery.data?.official_name}
         />
       </LetterPreviewViewport>
     </div>

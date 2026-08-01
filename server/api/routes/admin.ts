@@ -13,7 +13,7 @@ const ownUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
 });
-const ADMIN_ROLES: readonly ProfileRole[] = ['admin', 'direccion'];
+const ADMIN_ROLES: readonly ProfileRole[] = ['superadmin', 'admin', 'direccion'];
 const APPLICATION_CODE = 'convivencia';
 const VALID_ROLES: readonly ProfileRole[] = [
   'admin',
@@ -135,7 +135,8 @@ async function listAuthUsers(client: SupabaseClient): Promise<Map<string, User>>
   return new Map(result.data.users.map((user) => [user.id, user]));
 }
 
-router.use(requireAuth, requireTenant, requireRole(ADMIN_ROLES));
+// Guard acotado al prefijo propio para no interceptar otras rutas /api/*.
+router.use('/admin', requireAuth, requireTenant, requireRole(ADMIN_ROLES));
 
 router.get('/admin/members', async (req, res) => {
   try {

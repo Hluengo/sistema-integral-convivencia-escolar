@@ -96,7 +96,9 @@ async function copyDefaultTemplates(client: SupabaseClient, tenantId: string): P
     system_prompt: tpl.system_prompt,
     tenant_id: tenantId,
   }));
-  const { error: insertError } = await client.from('document_templates').insert(copies);
+  const { error: insertError } = await client
+    .from('document_templates')
+    .upsert(copies, { onConflict: 'tenant_id,doc_type' });
   if (insertError) throw insertError;
 }
 
@@ -120,7 +122,8 @@ async function recordAudit(
   if (error) throw error;
 }
 
-router.use(requireAuth, requireSuperAdmin);
+// Guard acotado al prefijo propio para no interceptar otras rutas /api/*.
+router.use('/platform', requireAuth, requireSuperAdmin);
 
 // ============================================================
 // GET /api/platform/tenants — listado de colegios
@@ -156,9 +159,12 @@ router.get('/platform/tenants', async (req, res) => {
 // POST /api/platform/tenants — alta de colegio + admin + plantillas
 // ============================================================
 router.post('/platform/tenants', async (req, res) => {
+  let client: SupabaseClient | null = null;
+  let createdTenantId: string | null = null;
+  let createdAuthUserId: string | null = null;
   try {
     const request = getRequest(req);
-    const client = getAdminClient();
+    client = getAdminClient();
     await assertFreshSuperAdmin(client, request);
     const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
     const adminEmail =
@@ -170,6 +176,7 @@ router.post('/platform/tenants', async (req, res) => {
     }
 
     const tenantId = randomUUID();
+    createdTenantId = tenantId;
     const slug = providedSlug
       ? slugify(providedSlug) || slugify(name)
       : await generateUniqueSlug(client, name);
@@ -179,6 +186,13 @@ router.post('/platform/tenants', async (req, res) => {
       .insert({ id: tenantId, name, slug });
     if (tenantError) throw tenantError;
 
+    const { error: settingsError } = await client.from('institution_settings').insert({
+      tenant_id: tenantId,
+      official_name: name,
+      education_levels: [],
+    });
+    if (settingsError) throw settingsError;
+
     const invitation = await client.auth.admin.inviteUserByEmail(adminEmail, {
       data: { tenant_id: tenantId, role: 'admin' },
     });
@@ -186,13 +200,16 @@ router.post('/platform/tenants', async (req, res) => {
       throw invitation.error ?? new Error('No se creó el usuario administrador invitado.');
     }
     const adminUser = invitation.data.user;
+    createdAuthUserId = adminUser.id;
 
-    await client
+    const { error: profileError } = await client
       .from('profiles')
       .update({ role: 'admin', is_active: true, updated_at: new Date().toISOString() })
       .eq('user_id', adminUser.id)
       .eq('tenant_id', tenantId);
-    await client.from('app_memberships').upsert(
+    if (profileError) throw profileError;
+
+    const { error: membershipError } = await client.from('app_memberships').upsert(
       {
         tenant_id: tenantId,
         user_id: adminUser.id,
@@ -202,6 +219,7 @@ router.post('/platform/tenants', async (req, res) => {
       },
       { onConflict: 'tenant_id,user_id,application_code' },
     );
+    if (membershipError) throw membershipError;
 
     await copyDefaultTemplates(client, tenantId);
 
@@ -216,8 +234,27 @@ router.post('/platform/tenants', async (req, res) => {
       invitation: { email: adminEmail, status: 'pending' },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'No fue posible crear el colegio.';
-    res.status(message.includes('superadministrador') ? 403 : 500).json({ error: message });
+    if (client) {
+      if (createdAuthUserId) {
+        await client.auth.admin.deleteUser(createdAuthUserId).catch(() => undefined);
+      }
+      if (createdTenantId) {
+        try {
+          await client.from('tenants').delete().eq('id', createdTenantId);
+        } catch {
+          // La limpieza es compensatoria; conservar el error original para la respuesta.
+        }
+      }
+    }
+    const message = error instanceof Error ? error.message : '';
+    const isSuperAdminError = message.includes('superadministrador');
+    const isRateLimit = /rate limit|too many requests|email rate/i.test(message);
+    const responseMessage = isRateLimit
+      ? 'Supabase limitó temporalmente el envío de invitaciones. Espere unos minutos antes de reintentar.'
+      : isSuperAdminError
+        ? message
+        : 'No fue posible crear el colegio. No se guardaron datos incompletos.';
+    res.status(isSuperAdminError ? 403 : isRateLimit ? 429 : 500).json({ error: responseMessage });
   }
 });
 

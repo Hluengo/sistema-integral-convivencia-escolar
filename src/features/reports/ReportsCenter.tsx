@@ -6,7 +6,9 @@ import { Download, FileBarChart, History, RefreshCw } from 'lucide-react';
 import type { Causa } from '../../types';
 import Button from '../../shared/ui/Button';
 import SummaryCard from '../../shared/ui/SummaryCard';
+import PageHero from '../../shared/ui/PageHero';
 import { formatChileDateTime } from '../../shared/lib/dateTime';
+import { useAuthStore } from '../../shared/lib/stores/authStore';
 import { fetchUsageStats } from '../../shared/api/services/admin.service';
 import {
   createReportHistory,
@@ -29,10 +31,16 @@ const SELECT_CLASS =
 export default function ReportsCenter({ causas }: { causas: Causa[] }) {
   const [filters, setFilters] = useState<ReportFilters>(EMPTY_FILTERS);
   const queryClient = useQueryClient();
-  const history = useQuery({ queryKey: ['reports', 'history'], queryFn: fetchReportHistory });
+  const tenantId = useAuthStore((state) => state.tenantId);
+  const history = useQuery({
+    queryKey: ['reports', 'history', tenantId],
+    queryFn: fetchReportHistory,
+    enabled: Boolean(tenantId),
+  });
   const usage = useQuery({
-    queryKey: ['reports', 'usage'],
+    queryKey: ['reports', 'usage', tenantId],
     queryFn: fetchUsageStats,
+    enabled: Boolean(tenantId),
     retry: false,
   });
   const filtered = useMemo(() => filterReportCausas(causas, filters), [causas, filters]);
@@ -74,34 +82,29 @@ export default function ReportsCenter({ causas }: { causas: Causa[] }) {
         fileName,
       });
     },
-    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['reports', 'history'] }),
+    onSuccess: () =>
+      void queryClient.invalidateQueries({ queryKey: ['reports', 'history', tenantId] }),
   });
   const setFilter = (key: keyof ReportFilters, value: string) =>
     setFilters((current) => ({ ...current, [key]: value }));
 
   return (
     <div className="animate-fade-in space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="font-semibold text-brand-700 text-xs uppercase tracking-[0.16em]">
-            Reportes
-          </p>
-          <h2 className="mt-1 font-bold text-2xl text-neutral-900 tracking-tight sm:text-3xl">
-            Centro de reportes
-          </h2>
-          <p className="mt-2 max-w-2xl text-neutral-500 text-sm">
-            Dashboard, expedientes y métricas con filtros auditables.
-          </p>
-        </div>
-        <Button
-          onClick={() => exportMutation.mutate()}
-          disabled={exportMutation.isPending}
-          className="rounded-xl px-4 py-2.5 text-sm"
-        >
-          <Download className="size-4" aria-hidden="true" />{' '}
-          {exportMutation.isPending ? 'Generando…' : 'Exportar Excel'}
-        </Button>
-      </div>
+      <PageHero
+        eyebrow="Reportes · Gestión institucional"
+        title="Centro de reportes"
+        description="Dashboard, expedientes y métricas con filtros auditables."
+        action={
+          <Button
+            onClick={() => exportMutation.mutate()}
+            disabled={exportMutation.isPending}
+            className="rounded-xl bg-secondary-500 px-4 py-2.5 text-sm shadow-md shadow-secondary-500/30 hover:bg-secondary-600"
+          >
+            <Download className="size-4" aria-hidden="true" />{' '}
+            {exportMutation.isPending ? 'Generando…' : 'Exportar Excel'}
+          </Button>
+        }
+      />
 
       <div className="grid grid-cols-1 gap-3 rounded-2xl border border-neutral-200/70 bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-5">
         <select
@@ -193,7 +196,7 @@ export default function ReportsCenter({ causas }: { causas: Causa[] }) {
                 key={event.event_name}
                 className="rounded-full bg-neutral-100 px-3 py-1.5 font-semibold text-neutral-700 text-xs"
               >
-                {event.event_name}: <strong>{event.event_count}</strong>
+                {event.event_name}: <strong>{event.total_count}</strong>
               </span>
             ))}
           </div>
