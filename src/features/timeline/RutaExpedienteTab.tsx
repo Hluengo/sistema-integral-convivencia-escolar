@@ -1,5 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
+import { memo } from 'react';
 import { ArrowRight, CircleCheck, Files, ListChecks, MoveRight } from 'lucide-react';
 import type { Causa, FaseProcedimental } from '../../types';
 import { getCausaDeadline } from '../causas/causaPresentation';
@@ -11,7 +12,7 @@ interface RutaExpedienteTabProps {
   onSelectPhase: (phase: FaseProcedimental | null) => void;
 }
 
-export default function RutaExpedienteTab({
+export default memo(function RutaExpedienteTab({
   causa,
   selectedPhase,
   onSelectPhase,
@@ -176,4 +177,4 @@ export default function RutaExpedienteTab({
       </div>
     </section>
   );
-}
+});

@@ -40,7 +40,7 @@ export default memo(function MetricCard({
   return (
     <Comp
       {...interactionProps}
-      className={`group relative rounded-xl border border-neutral-200/80 bg-white p-5 shadow-md transition-colors duration-300 ${
+      className={`group relative rounded-2xl border border-neutral-200/80 bg-white/95 p-5 shadow-card transition-[transform,box-shadow,border-color] duration-300 ${
         onClick
           ? 'cursor-pointer hover:-translate-y-1 hover:border-neutral-300 hover:shadow-lg active:scale-[0.99]'
           : 'hover:-translate-y-0.5 hover:shadow-lg'

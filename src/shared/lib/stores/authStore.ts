@@ -15,6 +15,7 @@ import { getMembershipAuthMode, isDev } from '../../api/lib/membershipConfig';
 interface AuthState {
   user: User | null;
   tenantId: string | null;
+  profileRole: string | null;
   authLoading: boolean;
   showLoginModal: boolean;
   isAuthenticated: boolean;
@@ -46,17 +47,19 @@ function logDev(event: string, detail?: string) {
   }
 }
 
-async function loadTenantId(userId: string): Promise<string | null> {
+async function loadTenantProfile(
+  userId: string,
+): Promise<{ tenantId: string | null; role: string | null }> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('tenant_id')
+    .select('tenant_id,role')
     .eq('user_id', userId)
     .maybeSingle();
   if (error) {
     console.error('Error loading tenant profile:', error);
-    return null;
+    return { tenantId: null, role: null };
   }
-  return data?.tenant_id ?? null;
+  return { tenantId: data?.tenant_id ?? null, role: data?.role ?? null };
 }
 
 export const useAuthStore = create<AuthState>((set) => {
@@ -82,6 +85,7 @@ export const useAuthStore = create<AuthState>((set) => {
       user,
       ...(event === 'PASSWORD_RECOVERY' ? { showLoginModal: true } : {}),
       tenantId: user ? null : null,
+      profileRole: null,
       authLoading: false,
       isAuthenticated: Boolean(session?.access_token && user),
       ...(user === null
@@ -101,8 +105,12 @@ export const useAuthStore = create<AuthState>((set) => {
 
     if (user) {
       queueMicrotask(() => {
-        void loadTenantId(user.id).then((tenantId) => {
-          set((state) => (state.user?.id === user.id ? { tenantId } : state));
+        void loadTenantProfile(user.id).then((profile) => {
+          set((state) =>
+            state.user?.id === user.id
+              ? { tenantId: profile.tenantId, profileRole: profile.role }
+              : state,
+          );
         });
       });
     }
@@ -111,6 +119,7 @@ export const useAuthStore = create<AuthState>((set) => {
   return {
     user: null,
     tenantId: null,
+    profileRole: null,
     authLoading: true,
     showLoginModal: false,
     isAuthenticated: false,

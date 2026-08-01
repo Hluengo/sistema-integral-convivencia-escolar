@@ -8,6 +8,7 @@ import type { Request } from 'express';
  * NO confundir con UserRole de la interfaz (convivencia_escolar, director_rector, etc.).
  */
 export type ProfileRole =
+  | 'superadmin'
   | 'admin'
   | 'direccion'
   | 'convivencia'

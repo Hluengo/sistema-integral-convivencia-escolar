@@ -1125,3 +1125,49 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - Conteos, etapas y rankings usan el año escolar vigente en `America/Santiago`; los rankings normalizan claves de docentes/cursos y no mezclan fuentes de fallback.
 - El cliente no usa fallback paginado para KPIs/rankings cuando falla la RPC: expone el error para evitar datos inconsistentes.
 - La auditoría técnica quedó validada localmente con lint, 295 tests y build de producción exitosos.
+
+### Optimizaciones de rendimiento aplicadas (2026-07-31)
+
+- `useAppContext` y `useMemberships` usan selectores parciales de Zustand; las listas derivadas de causas se memoizan por referencia del arreglo.
+- KPIs y rankings del dashboard usan `staleTime` de 30 segundos y conservan invalidación selectiva tras escrituras.
+- Sentry, PostHog y Web Vitals se inicializan dos segundos después del primer render.
+- Las pestañas Resumen, Ruta y Bitácora del timeline usan `React.memo` sin alterar el flujo de autoguardado.
+- Las fuentes jurídicas normalizan su texto una sola vez por instancia para reducir CPU al puntuar consultas AI.
+
+### Auditoría técnica inmutable (2026-07-31)
+
+- `public.audit_events` es un registro técnico append-only, separado de `audit-due-process`, que continúa siendo una auditoría asistida por IA.
+- La tabla conserva tenant, usuario responsable, acción, entidad, identificador, valores anteriores/nuevos y fecha; tiene índices por tenant, usuario, entidad y fecha.
+- RLS permite lectura e inserción solo a usuarios autenticados con rol operativo dentro de su tenant; no hay privilegios de UPDATE/DELETE y un trigger rechaza mutaciones incluso privilegiadas.
+- La migración local es `supabase/migrations/20260731200000_create_immutable_audit_events.sql`; sus comprobaciones están en `supabase/validation/audit-events-security-tests.sql`.
+
+### Fase B — Gestión de miembros (2026-07-31)
+
+- La administración de usuarios usa `profiles` y `app_memberships`; `profiles.is_active` y `app_memberships.is_active` se actualizan juntos para activar o desactivar acceso.
+- Las invitaciones se registran en `membership_invitations` y se envían mediante Auth Admin exclusivamente desde el servidor; reenvío y cancelación quedan disponibles para `admin` y `direccion`.
+- Los cambios administrativos se registran en `audit_events`; el backend valida nuevamente el rol y tenant con service role y nunca expone la clave secreta al cliente.
+- No se permite degradar ni desactivar al último administrador activo. Validaciones SQL: `supabase/validation/phase-b-membership-security-tests.sql`.
+
+### Fase C — Centro de notificaciones persistido (2026-07-31)
+
+- `public.notifications` conserva notificaciones por usuario y tenant con estado de lectura, historial, filtros por vencimiento y enlace a entidad.
+- `sync_notification()` actualiza alertas derivadas por `notification_key` sin resetear `read_at`; RLS limita lectura/escritura al usuario y tenant actuales.
+- `useNotifications` mantiene la lógica pura de generación separada de `usePersistentNotifications`, evitando dependencias Supabase en tests unitarios.
+- El dropdown ofrece activas, sin leer e historial; Realtime queda deliberadamente fuera hasta validar la versión persistida.
+
+### Fase D — Centro de reportes (2026-07-31)
+
+- `public.report_history` conserva quién generó cada reporte, fecha, filtros, estado, cantidad de filas y nombre de archivo; es independiente de `audit_events` y `audit-due-process`.
+- El Centro de reportes reutiliza `Causa[]`, filtros operativos y `write-excel-file`; el historial no duplica datos personales de estudiantes.
+- RLS limita el historial al tenant actual y a roles `admin`, `direccion`, `convivencia` e `inspectoria`; no se permite borrar reportes.
+- La migración pendiente es `supabase/migrations/20260731230000_create_report_history.sql`. El modelo de estado (`queued`, `processing`, `completed`, `failed`) deja preparado el procesamiento asíncrono para exportaciones pesadas sin inventar un worker en esta fase.
+
+### Fase E — Multi-tenant de plataforma + refactor visual ReportsCenter (2026-07-31)
+
+- Refactor visual: `SummaryCard` extraído a `src/shared/ui/SummaryCard.tsx` y reutilizado en `AdminView` y `PlatformView`; `ReportsCenter.tsx` unifica su lenguaje visual (eyebrow/H2/badge/tabs/pills `rounded-full`/tabla `divide-y divide-neutral-100`) con el patrón de `AdminView`, usando `formatChileDateTime` (timezone `America/Santiago`). Comportamiento intacto.
+- Rol `superadmin`: migración `supabase/migrations/20260801000000_create_superadmin_role.sql` amplía `profiles_role_check`, backfill idempotente de `superusuario@colegio.cl` y policies RLS para lectura transversal de tenants/profiles. El correo NO se hardcodea en middleware: la identificación es solo por rol.
+- `requireSuperAdmin` (`server/middleware/requireSuperAdmin.ts` + reexport en `server/api/middleware/`) es middleware Node cross-tenant; `requireAuth` inyecta `tenantId + profileRole`. `VALID_ROLES` incluye `superadmin` para el JWT fast-path.
+- `server/api/routes/platform.ts` orquesta el aprovisionamiento en Node (NO existe RPC Postgres): insert tenant → `inviteUserByEmail` con `raw_user_meta_data.tenant_id` → update profile + `app_memberships` (upsert `onConflict`) → copia `document_templates` del tenant default con ids nuevos → `audit_events` (requiere `actor_user_id` explícito con service role). Incluye `POST /platform/tenants/:id/import` (multer memoryStorage, 5MB).
+- `server/api/services/excelImport.ts` parsea `.xlsx` (hojas «Cursos» y «Estudiantes»; deriva cursos si solo hay «Estudiantes»), normaliza nivel (BÁSICA/MEDIA), RUT (`normalizeRut` limpia guiones líderes) y deduplica por RUT en `runImport`; `POST /admin/import` reutiliza el flujo para el tenant actual. Tests: `excelImport.test.ts` con fixture real vía `write-excel-file/node` (302 tests pasando).
+- Frontend: `PlatformView.tsx` (tabs Colegios/Importar base/Plan y límites, sin Stripe), `platform.service.ts`, `SidebarView` incluye `'platform'`, guard en `App.tsx` (`canAccessPlatform = effectiveAdminRole === 'superadmin'`), `VIEW_TITLES` con entrada `platform`, `MainContent` lazy-carga `PlatformView`. `AdminView` añadió pestaña `import` (Upload/Download + `importOwnTenantBase`).
+- Verificación módulo: typecheck ✅, lint ✅, 302 tests ✅, `build:web` ✅, `git diff --check` sin errores. Pendiente: E2E (no hay `E2E_BASE_URL` en este entorno) y validación manual de los snippets RLS (`supabase/validation/platform-superadmin-rls-tests.sql`).

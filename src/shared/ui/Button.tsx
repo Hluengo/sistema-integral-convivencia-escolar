@@ -50,7 +50,7 @@ export default function Button({
     <button
       type={type}
       disabled={disabled || isLoading}
-      className={`inline-flex items-center justify-center rounded-lg font-semibold transition-colors duration-150 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 ${fullWidth ? 'w-full' : ''} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+      className={`inline-flex items-center justify-center rounded-lg font-semibold shadow-xs transition-[color,background-color,border-color,box-shadow,transform] duration-150 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50 ${fullWidth ? 'w-full' : ''} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
       {...props}
     >
       {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}

@@ -48,6 +48,8 @@ import parseRoutes from './routes/parse.js';
 import processDisciplinaryPdfRoutes from './routes/processDisciplinaryPdf.js';
 import usageRoutes from './routes/usage.js';
 import pilotRoutes from './routes/pilot.js';
+import adminRoutes from './routes/admin.js';
+import platformRoutes from './routes/platform.js';
 import { errorHandler } from '../middleware/errorHandler.js';
 
 // API routes — cada módulo aplica su propio rate limit después de autenticar.
@@ -63,6 +65,8 @@ app.use('/api', debugRoutes);
 app.use('/api', templatesRoutes);
 app.use('/api', usageRoutes);
 app.use('/api', pilotRoutes);
+app.use('/api', adminRoutes);
+app.use('/api', platformRoutes);
 
 // Global error handler — must be registered AFTER all routes
 app.use(errorHandler);

@@ -21,6 +21,8 @@ import processDisciplinaryPdfRoutes from './api/routes/processDisciplinaryPdf';
 import debugRoutes from './api/routes/debug';
 import usageRoutes from './api/routes/usage';
 import pilotRoutes from './api/routes/pilot';
+import adminRoutes from './api/routes/admin';
+import platformRoutes from './api/routes/platform';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -69,6 +71,8 @@ app.use('/api', templatesRoutes);
 app.use('/api', debugRoutes);
 app.use('/api', usageRoutes);
 app.use('/api', pilotRoutes);
+app.use('/api', adminRoutes);
+app.use('/api', platformRoutes);
 
 // Global error handler — must be registered AFTER all routes
 app.use(errorHandler);

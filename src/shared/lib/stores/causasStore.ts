@@ -137,15 +137,15 @@ export const useCausasStore = create<CausasState>((set, get) => ({
 }));
 
 // Selectors (derived data — pure functions)
-export function selectActiveCausas(state: CausasState) {
+export function selectActiveCausas(state: Pick<CausasState, 'causas'>) {
   return state.causas.filter((c) => c.estadoActual !== EstadoCausa.CAUSA_CERRADA);
 }
 
-export function selectClosedCausas(state: CausasState) {
+export function selectClosedCausas(state: Pick<CausasState, 'causas'>) {
   return state.causas.filter((c) => c.estadoActual === EstadoCausa.CAUSA_CERRADA);
 }
 
-export function selectAulaSeguraCausas(state: CausasState) {
+export function selectAulaSeguraCausas(state: Pick<CausasState, 'causas'>) {
   return state.causas.filter(
     (c) => c.comprometeAulaSegura && c.estadoActual !== EstadoCausa.CAUSA_CERRADA,
   );

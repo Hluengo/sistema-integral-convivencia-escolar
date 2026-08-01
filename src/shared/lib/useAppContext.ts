@@ -1,7 +1,13 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
+import { useMemo } from 'react';
 import { useAuthStore } from './stores/authStore';
-import { useCausasStore, selectActiveCausas, selectClosedCausas, selectAulaSeguraCausas } from './stores/causasStore';
+import {
+  useCausasStore,
+  selectActiveCausas,
+  selectClosedCausas,
+  selectAulaSeguraCausas,
+} from './stores/causasStore';
 import { useUIStore } from './stores/uiStore';
 import type { User } from '@supabase/supabase-js';
 import type { Causa, UserRole } from '../../types';
@@ -32,35 +38,59 @@ export interface AppContextValue {
 }
 
 export function useAppContext(): AppContextValue {
-  const { user, isAuthenticated, setShowLoginModal } = useAuthStore();
-  const causasState = useCausasStore();
-  const uiState = useUIStore();
+  const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const setShowLoginModal = useAuthStore((state) => state.setShowLoginModal);
+
+  const causas = useCausasStore((state) => state.causas);
+  const selectedCausaId = useCausasStore((state) => state.selectedCausaId);
+  const setSelectedCausaId = useCausasStore((state) => state.setSelectedCausaId);
+  const saveStatus = useCausasStore((state) => state.saveStatus);
+  const handleUpdateCausa = useCausasStore((state) => state.handleUpdateCausa);
+  const handleDeleteCausa = useCausasStore((state) => state.handleDeleteCausa);
+
+  const currentRole = useUIStore((state) => state.currentRole);
+  const privacyMode = useUIStore((state) => state.privacyMode);
+  const setPrivacyMode = useUIStore((state) => state.setPrivacyMode);
+  const currentView = useUIStore((state) => state.currentView);
+  const setCurrentView = useUIStore((state) => state.setCurrentView);
+  const mobileShowDetail = useUIStore((state) => state.mobileShowDetail);
+  const setMobileShowDetail = useUIStore((state) => state.setMobileShowDetail);
+
+  const { activeCausas, closedCausas, aulaSeguraCausas } = useMemo(() => {
+    const state = { causas };
+    return {
+      activeCausas: selectActiveCausas(state),
+      closedCausas: selectClosedCausas(state),
+      aulaSeguraCausas: selectAulaSeguraCausas(state),
+    };
+  }, [causas]);
 
   return {
     user,
     isAuthenticated,
-    causas: causasState.causas,
-    selectedCausaId: causasState.selectedCausaId,
-    setSelectedCausaId: causasState.setSelectedCausaId,
-    currentRole: uiState.currentRole,
-    privacyMode: uiState.privacyMode,
-    setPrivacyMode: uiState.setPrivacyMode,
-    currentView: uiState.currentView,
-    setCurrentView: uiState.setCurrentView,
-    handleUpdateCausa: causasState.handleUpdateCausa,
-    handleDeleteCausa: (id) => causasState.handleDeleteCausa(id, () => true),
+    causas,
+    selectedCausaId,
+    setSelectedCausaId,
+    currentRole,
+    privacyMode,
+    setPrivacyMode,
+    currentView,
+    setCurrentView,
+    handleUpdateCausa,
+    handleDeleteCausa: (id) => handleDeleteCausa(id, () => true),
     handleSelectCausaFromDashboard: (causaId) => {
-      uiState.setCurrentView('causas');
-      causasState.setSelectedCausaId(causaId);
-      uiState.setMobileShowDetail(true);
+      setCurrentView('causas');
+      setSelectedCausaId(causaId);
+      setMobileShowDetail(true);
     },
-    handleOpenCreateForm: () => uiState.setCurrentView('causas'),
-    mobileShowDetail: uiState.mobileShowDetail,
-    setMobileShowDetail: uiState.setMobileShowDetail,
-    saveStatus: causasState.saveStatus,
-    activeCausas: selectActiveCausas(causasState),
-    closedCausas: selectClosedCausas(causasState),
-    aulaSeguraCausas: selectAulaSeguraCausas(causasState),
+    handleOpenCreateForm: () => setCurrentView('causas'),
+    mobileShowDetail,
+    setMobileShowDetail,
+    saveStatus,
+    activeCausas,
+    closedCausas,
+    aulaSeguraCausas,
     setShowLoginModal,
   };
 }

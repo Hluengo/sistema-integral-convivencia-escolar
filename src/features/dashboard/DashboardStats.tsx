@@ -36,6 +36,8 @@ import {
   type AnnotationStageCounts,
 } from '../../shared/lib/domain/annotationStageCounts';
 
+const DASHBOARD_STALE_TIME_MS = 30_000;
+
 interface DashboardStatsProps {
   causas: Causa[];
   onFaseSelect: (fase: FaseProcedimental | 'Todas') => void;
@@ -152,29 +154,29 @@ export default function DashboardStats({ causas, onFaseSelect }: DashboardStatsP
     queryKey: ['annotation-stage-kpis', tenantId],
     queryFn: fetchAnnotationStageCounts,
     enabled: isAuthenticated && Boolean(tenantId),
-    staleTime: 0,
-    refetchOnMount: 'always',
+    staleTime: DASHBOARD_STALE_TIME_MS,
+    refetchOnMount: true,
   });
   const courseCartaRankingQuery = useQuery({
     queryKey: ['course-carta-ranking', tenantId],
     queryFn: fetchCourseCartaRanking,
     enabled: isAuthenticated && Boolean(tenantId),
-    staleTime: 0,
-    refetchOnMount: 'always',
+    staleTime: DASHBOARD_STALE_TIME_MS,
+    refetchOnMount: true,
   });
   const teacherAnnotationRankingQuery = useQuery({
     queryKey: ['teacher-annotation-ranking', tenantId],
     queryFn: fetchTeacherAnnotationRanking,
     enabled: isAuthenticated && Boolean(tenantId),
-    staleTime: 0,
-    refetchOnMount: 'always',
+    staleTime: DASHBOARD_STALE_TIME_MS,
+    refetchOnMount: true,
   });
   const studentAnnotationRankingQuery = useQuery({
     queryKey: ['student-annotation-ranking', tenantId],
     queryFn: fetchStudentAnnotationRanking,
     enabled: isAuthenticated && Boolean(tenantId),
-    staleTime: 0,
-    refetchOnMount: 'always',
+    staleTime: DASHBOARD_STALE_TIME_MS,
+    refetchOnMount: true,
   });
   const publicKpis = publicKpisQuery.data as PublicDashboardKpis | undefined;
   const loading = isAuthenticated

@@ -17,22 +17,20 @@ function logDev(event: string, detail?: string) {
 }
 
 export function useMemberships(applicationCode: string) {
-  const {
-    user,
-    tenantId,
-    membershipStatus,
-    membershipAuthMode,
-    appRole,
-    membershipError,
-    membershipLoaded,
-    membershipLoading,
-    legacyFallbackUsed,
-    setMembership,
-    setMembershipLoading,
-    setMembershipError,
-    clearMembership,
-    setLegacyFallbackUsed,
-  } = useAuthStore();
+  const user = useAuthStore((state) => state.user);
+  const tenantId = useAuthStore((state) => state.tenantId);
+  const membershipStatus = useAuthStore((state) => state.membershipStatus);
+  const membershipAuthMode = useAuthStore((state) => state.membershipAuthMode);
+  const appRole = useAuthStore((state) => state.appRole);
+  const membershipError = useAuthStore((state) => state.membershipError);
+  const membershipLoaded = useAuthStore((state) => state.membershipLoaded);
+  const membershipLoading = useAuthStore((state) => state.membershipLoading);
+  const legacyFallbackUsed = useAuthStore((state) => state.legacyFallbackUsed);
+  const setMembership = useAuthStore((state) => state.setMembership);
+  const setMembershipLoading = useAuthStore((state) => state.setMembershipLoading);
+  const setMembershipError = useAuthStore((state) => state.setMembershipError);
+  const clearMembership = useAuthStore((state) => state.clearMembership);
+  const setLegacyFallbackUsed = useAuthStore((state) => state.setLegacyFallbackUsed);
   const fetchedRef = useRef(false);
   const lastUserIdRef = useRef<string | null>(null);
 

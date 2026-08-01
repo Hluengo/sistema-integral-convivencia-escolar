@@ -16,6 +16,7 @@ export interface JwtPayload {
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const VALID_ROLES: readonly ProfileRole[] = [
+  'superadmin',
   'admin',
   'direccion',
   'convivencia',
@@ -156,6 +157,7 @@ async function verifyJwtSignature(
 interface ProfileLookupResult {
   tenantId: string;
   profileRole: ProfileRole;
+  isActive?: boolean;
 }
 
 export type ProfileFetcher = (
@@ -177,7 +179,7 @@ const defaultProfileFetcher: ProfileFetcher = async (
     const r = httpsImpl.request(
       {
         hostname,
-        path: `/rest/v1/profiles?user_id=eq.${encodeURIComponent(userId)}&select=tenant_id,role&limit=1`,
+        path: `/rest/v1/profiles?user_id=eq.${encodeURIComponent(userId)}&select=tenant_id,role,is_active&limit=1`,
         method: 'GET',
         headers: { apikey: anonKey, Authorization: `Bearer ${token}` },
       },
@@ -208,7 +210,7 @@ const defaultProfileFetcher: ProfileFetcher = async (
     return null;
   }
 
-  const profile = data[0] as { tenant_id?: string; role?: string };
+  const profile = data[0] as { tenant_id?: string; role?: string; is_active?: boolean };
   if (!profile.tenant_id || !isValidUuid(profile.tenant_id)) {
     return null;
   }
@@ -219,6 +221,7 @@ const defaultProfileFetcher: ProfileFetcher = async (
   return {
     tenantId: profile.tenant_id,
     profileRole: profile.role as ProfileRole,
+    isActive: profile.is_active !== false,
   };
 };
 
@@ -254,7 +257,7 @@ async function injectTenantContext(
     if (!result) {
       return false;
     }
-    if (!isValidUuid(result.tenantId) || !result.profileRole) {
+    if (!isValidUuid(result.tenantId) || !result.profileRole || result.isActive === false) {
       return false;
     }
     req.tenantId = result.tenantId;

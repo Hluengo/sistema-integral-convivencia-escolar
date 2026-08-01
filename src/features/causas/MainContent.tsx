@@ -22,6 +22,9 @@ const DashboardStats = lazy(() => import('../../components/DashboardStats'));
 const StudentsPanel = lazy(() => import('../../features/students/StudentsPanel'));
 const AdvisorView = lazy(() => import('./MainContent/AdvisorView'));
 const AnotacionesView = lazy(() => import('../../features/anotaciones/AnotacionesView'));
+const AdminView = lazy(() => import('../../features/admin/AdminView'));
+const ReportsCenter = lazy(() => import('../../features/reports/ReportsCenter'));
+const PlatformView = lazy(() => import('../../features/platform/PlatformView'));
 
 function DashboardFallback() {
   return (
@@ -122,8 +125,11 @@ export default function MainContent({
         {currentView === 'dashboard' && 'Vista: Panel de control'}
         {currentView === 'causas' && 'Vista: Expedientes'}
         {currentView === 'informes' && 'Vista: Informes y asesor legal'}
+        {currentView === 'reportes' && 'Vista: Centro de reportes'}
         {currentView === 'alumnos' && 'Vista: Alumnos'}
         {currentView === 'anotaciones' && 'Vista: Gesti\u00f3n de Anotaciones'}
+        {currentView === 'admin' && 'Vista: Administración'}
+        {currentView === 'platform' && 'Vista: Plataforma'}
       </div>
       {/* VIEW 1: DASHBOARD - Fully redesigned */}
       {currentView === 'dashboard' && (
@@ -191,6 +197,30 @@ export default function MainContent({
         <ErrorBoundary>
           <Suspense fallback={<AnotacionesFallback />}>
             <AnotacionesView privacyMode={privacyMode} />
+          </Suspense>
+        </ErrorBoundary>
+      )}
+
+      {currentView === 'reportes' && (
+        <ErrorBoundary>
+          <Suspense fallback={<DashboardFallback />}>
+            <ReportsCenter causas={causas} />
+          </Suspense>
+        </ErrorBoundary>
+      )}
+
+      {currentView === 'admin' && (
+        <ErrorBoundary>
+          <Suspense fallback={<DashboardFallback />}>
+            <AdminView />
+          </Suspense>
+        </ErrorBoundary>
+      )}
+
+      {currentView === 'platform' && (
+        <ErrorBoundary>
+          <Suspense fallback={<DashboardFallback />}>
+            <PlatformView />
           </Suspense>
         </ErrorBoundary>
       )}

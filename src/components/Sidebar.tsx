@@ -11,6 +11,8 @@ import {
   Users,
   FileBarChart,
   ClipboardList,
+  Settings,
+  Building2,
   ChevronLeft,
   ChevronRight,
   Menu,
@@ -19,7 +21,15 @@ import {
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { SidebarUserMenu, SidebarAulaSeguraAlert } from './SidebarUserMenu';
 
-export type SidebarView = 'dashboard' | 'causas' | 'alumnos' | 'informes' | 'anotaciones';
+export type SidebarView =
+  | 'dashboard'
+  | 'causas'
+  | 'alumnos'
+  | 'informes'
+  | 'reportes'
+  | 'anotaciones'
+  | 'admin'
+  | 'platform';
 
 interface SidebarProps {
   currentView: SidebarView;
@@ -31,6 +41,9 @@ interface SidebarProps {
   user: SupabaseUser | null;
   onLogin?: () => void;
   onLogout?: () => void;
+  canAccessAdmin: boolean;
+  canAccessReports: boolean;
+  canAccessPlatform: boolean;
 }
 
 interface SidebarContentProps {
@@ -44,14 +57,19 @@ interface SidebarContentProps {
   user: SupabaseUser | null;
   onLogin?: () => void;
   onLogout?: () => void;
+  canAccessAdmin: boolean;
+  canAccessReports: boolean;
+  canAccessPlatform: boolean;
 }
 
-const NAV_ITEMS: {
+interface NavItem {
   id: SidebarView;
   label: string;
   Icon: React.ElementType;
   badgeKey?: 'activeCount';
-}[] = [
+}
+
+const NAV_ITEMS: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', Icon: LayoutDashboard },
   { id: 'causas', label: 'Causas', Icon: Scale, badgeKey: 'activeCount' },
   { id: 'anotaciones', label: 'Anotaciones', Icon: ClipboardList },
@@ -70,7 +88,22 @@ function SidebarContent({
   user,
   onLogin,
   onLogout,
+  canAccessAdmin,
+  canAccessReports,
+  canAccessPlatform,
 }: SidebarContentProps) {
+  const navigationItems: NavItem[] = [
+    ...NAV_ITEMS,
+    ...(canAccessReports
+      ? [{ id: 'reportes' as SidebarView, label: 'Centro de reportes', Icon: FileBarChart }]
+      : []),
+    ...(canAccessAdmin
+      ? [{ id: 'admin' as SidebarView, label: 'Administración', Icon: Settings }]
+      : []),
+    ...(canAccessPlatform
+      ? [{ id: 'platform' as SidebarView, label: 'Plataforma', Icon: Building2 }]
+      : []),
+  ];
   return (
     <div className="flex h-full flex-col">
       <div
@@ -113,51 +146,55 @@ function SidebarContent({
         className={`flex-1 ${isCollapsed && !mobile ? 'px-2 py-4' : 'px-3'} space-y-1`}
         aria-label="Secciones principales"
       >
-        {NAV_ITEMS.filter((item) => user || item.id === 'dashboard').map((item) => {
-          const isActive = currentView === item.id;
-          const badge = item.badgeKey === 'activeCount' ? activeCount : undefined;
-          const Icon = item.Icon;
+        {navigationItems
+          .filter((item) => user || item.id === 'dashboard')
+          .map((item) => {
+            const isActive = currentView === item.id;
+            const badge = item.badgeKey === 'activeCount' ? activeCount : undefined;
+            const Icon = item.Icon;
 
-          return (
-            <button
-              type="button"
-              key={item.id}
-              onClick={() => {
-                onViewChange(item.id);
-                onNavigate?.();
-              }}
-              className={`flex w-full cursor-pointer select-none items-center gap-3 rounded-lg font-medium text-[13px] transition-colors duration-150 ${isCollapsed && !mobile ? 'justify-center px-0 py-3' : 'px-3.5 py-2.5'}
+            return (
+              <button
+                type="button"
+                key={item.id}
+                onClick={() => {
+                  onViewChange(item.id);
+                  onNavigate?.();
+                }}
+                className={`flex w-full cursor-pointer select-none items-center gap-3 rounded-xl font-medium text-[13px] transition-[color,background-color,box-shadow,transform] duration-150 ${isCollapsed && !mobile ? 'justify-center px-0 py-3' : 'px-3.5 py-2.5'}
                 ${
                   isActive
-                    ? 'bg-white/15 font-semibold text-white'
+                    ? 'bg-white/15 font-semibold text-white shadow-sm shadow-black/10'
                     : 'text-neutral-400 hover:bg-white/8 hover:text-white/90'
                 }`}
-              style={isActive && !isCollapsed ? { boxShadow: 'inset 3px 0 0 0 white' } : undefined}
-              aria-current={isActive ? 'page' : undefined}
-              title={isCollapsed && !mobile ? item.label : undefined}
-            >
-              <span
-                className={`shrink-0 transition-colors ${isActive ? 'text-white' : 'text-neutral-400'}`}
+                style={
+                  isActive && !isCollapsed ? { boxShadow: 'inset 3px 0 0 0 white' } : undefined
+                }
+                aria-current={isActive ? 'page' : undefined}
+                title={isCollapsed && !mobile ? item.label : undefined}
               >
-                <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
-              </span>
-              {(!isCollapsed || mobile) && (
-                <>
-                  <span className="flex-1 truncate text-left">{item.label}</span>
-                  {badge !== undefined && badge > 0 && (
-                    <span
-                      className={`rounded-full px-1.5 py-0.5 font-bold text-[10px] tabular-nums ${
-                        isActive ? 'bg-white/25 text-white' : 'bg-muygrave-500 text-white'
-                      }`}
-                    >
-                      {badge}
-                    </span>
-                  )}
-                </>
-              )}
-            </button>
-          );
-        })}
+                <span
+                  className={`shrink-0 transition-colors ${isActive ? 'text-white' : 'text-neutral-400'}`}
+                >
+                  <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+                </span>
+                {(!isCollapsed || mobile) && (
+                  <>
+                    <span className="flex-1 truncate text-left">{item.label}</span>
+                    {badge !== undefined && badge > 0 && (
+                      <span
+                        className={`rounded-full px-1.5 py-0.5 font-bold text-[10px] tabular-nums ${
+                          isActive ? 'bg-white/25 text-white' : 'bg-muygrave-500 text-white'
+                        }`}
+                      >
+                        {badge}
+                      </span>
+                    )}
+                  </>
+                )}
+              </button>
+            );
+          })}
       </nav>
     </div>
   );
@@ -173,6 +210,9 @@ export default memo(function Sidebar({
   user,
   onLogin,
   onLogout,
+  canAccessAdmin,
+  canAccessReports,
+  canAccessPlatform,
 }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const mobileSidebarRef = useRef<HTMLDivElement>(null);
@@ -204,6 +244,9 @@ export default memo(function Sidebar({
     user,
     onLogin,
     onLogout,
+    canAccessAdmin,
+    canAccessReports,
+    canAccessPlatform,
   };
 
   return (

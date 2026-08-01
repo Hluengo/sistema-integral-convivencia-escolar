@@ -46,7 +46,18 @@ El build emite warnings de chunks circulares debido a la configuración de `manu
 
 - **Courses**: staleTime 30 min, cacheTime infinita
 - **Students**: staleTime 10 min, cacheTime infinita
+- **Dashboard KPIs y rankings**: staleTime 30 s; las escrituras siguen invalidando las cuatro consultas de forma selectiva.
 - **No refetch on window focus** (configuración global)
+
+### Renderizado y telemetría
+
+- Los consumidores de Zustand usan selectores parciales; los datos derivados de causas se recalculan solo cuando cambia el arreglo de causas.
+- Sentry, PostHog y Web Vitals se inicializan 2 s después del primer render para no competir con la carga inicial.
+- Las pestañas Resumen, Ruta y Bitácora del timeline usan `React.memo` sin modificar sus contratos.
+
+### Fuentes legales
+
+- Las fuentes jurídicas se normalizan una sola vez por instancia del servidor y luego se reutilizan para puntuar consultas AI.
 
 ### Expedientes y Supabase
 

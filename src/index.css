@@ -1,12 +1,12 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap");
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import 'tailwindcss';
 
 @theme {
   /* Typography */
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: "Inter", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
   /* ===== PRIMARY: Slate (harmoniza con el sidebar from-neutral-800 to-neutral-950) ===== */
   --color-brand-50: #f8fafc;
@@ -135,7 +135,9 @@
 
 /* ===== BASE STYLES ===== */
 body {
-  background-color: var(--color-neutral-50);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(249, 115, 22, 0.035), transparent 28rem),
+    var(--color-neutral-50);
   color: var(--color-neutral-800);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -189,7 +191,7 @@ a {
 
 /* Card base with hover lift */
 .card {
-  background: white;
+  background: rgba(255, 255, 255, 0.96);
   border-radius: var(--radius-xl);
   border: 1px solid var(--color-neutral-200);
   box-shadow: var(--shadow-card);
@@ -199,9 +201,24 @@ a {
     border-color 0.25s var(--ease-out-expo);
 }
 .card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   box-shadow: var(--shadow-card-hover);
   border-color: var(--color-neutral-300);
+}
+
+/* Shared visual surface for dense application areas. */
+.surface-muted {
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.92), rgba(241, 245, 249, 0.72));
+  border: 1px solid rgba(203, 213, 225, 0.72);
+}
+
+/* Keep keyboard focus prominent without changing component behavior. */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.18);
 }
 
 /* Glassmorphism */
@@ -399,7 +416,7 @@ a {
   }
   button,
   a,
-  [role="button"] {
+  [role='button'] {
     border-width: 1px;
   }
   .skeleton {
@@ -414,7 +431,7 @@ a {
   }
   button,
   a,
-  [role="button"] {
+  [role='button'] {
     border: 1px solid ButtonText;
     forced-color-adjust: none;
   }

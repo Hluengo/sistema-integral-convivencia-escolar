@@ -1,5 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
+import { memo } from 'react';
 import { AlertTriangle, CalendarClock, CheckCircle2, FileText, UserRound } from 'lucide-react';
 import type { Causa } from '../../types';
 import { getCausaDeadline, getCausaPhase, getCausaStatus } from '../causas/causaPresentation';
@@ -10,7 +11,7 @@ interface ResumenTabProps {
   breaches: string[];
 }
 
-export default function ResumenTab({ causa, breaches }: ResumenTabProps) {
+export default memo(function ResumenTab({ causa, breaches }: ResumenTabProps) {
   const deadline = getCausaDeadline(causa);
   const completed = causa.checklistDebidoProceso.filter((item) => item.completado).length;
 
@@ -97,4 +98,4 @@ export default function ResumenTab({ causa, breaches }: ResumenTabProps) {
       )}
     </div>
   );
-}
+});

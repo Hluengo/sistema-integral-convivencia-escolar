@@ -33,7 +33,6 @@ const CommandPalette = lazy(() => import('../components/CommandPalette'));
 const NewCausaModal = lazy(() => import('../components/NewCausaModal'));
 const ShortcutsModal = lazy(() => import('../components/ShortcutsModal'));
 const LoginPage = lazy(() => import('../components/LoginPage'));
-const OnboardingTour = lazy(() => import('../components/Onboarding/OnboardingTour'));
 
 export default function App() {
   const user = useAuthStore((s) => s.user);
@@ -42,8 +41,16 @@ export default function App() {
   const setShowLoginModal = useAuthStore((s) => s.setShowLoginModal);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const tenantId = useAuthStore((s) => s.tenantId);
+  const appRole = useAuthStore((s) => s.appRole);
+  const profileRole = useAuthStore((s) => s.profileRole);
 
   const membership = useMemberships('convivencia');
+  const effectiveAdminRole = appRole ?? profileRole;
+  const canAccessAdmin = effectiveAdminRole === 'admin' || effectiveAdminRole === 'direccion';
+  const canAccessReports = ['admin', 'direccion', 'convivencia', 'inspectoria'].includes(
+    effectiveAdminRole ?? '',
+  );
+  const canAccessPlatform = effectiveAdminRole === 'superadmin';
 
   const causas = useCausasStore((s) => s.causas);
   const selectedCausaId = useCausasStore((s) => s.selectedCausaId);
@@ -208,10 +215,13 @@ export default function App() {
         setShowLoginModal(true);
         return;
       }
+      if (view === 'admin' && !canAccessAdmin) return;
+      if (view === 'reportes' && !canAccessReports) return;
+      if (view === 'platform' && !canAccessPlatform) return;
       setCurrentView(view);
       isTimelineCollapsedRef.current = false;
     },
-    [user, setShowLoginModal, setCurrentView],
+    [canAccessAdmin, canAccessReports, canAccessPlatform, user, setShowLoginModal, setCurrentView],
   );
 
   const handleStudentSelect = useCallback(
@@ -377,6 +387,9 @@ export default function App() {
               user={user}
               onLogin={() => setShowLoginModal(true)}
               onLogout={() => signOut()}
+              canAccessAdmin={canAccessAdmin}
+              canAccessReports={canAccessReports}
+              canAccessPlatform={canAccessPlatform}
             />
           </Suspense>
           <div className="flex min-w-0 flex-1 flex-col">
@@ -496,9 +509,6 @@ export default function App() {
               <LoginPage onClose={() => setShowLoginModal(false)} />
             </Suspense>
           )}
-          <Suspense fallback={null}>
-            <OnboardingTour />
-          </Suspense>
         </div>
       </AppProvider>
     </ToastProvider>

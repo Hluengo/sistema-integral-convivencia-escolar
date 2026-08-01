@@ -4,7 +4,7 @@
  */
 
 import { memo } from 'react';
-import { useNotifications } from '@/src/hooks/useNotifications';
+import { useNotifications } from '@/src/shared/lib/hooks/usePersistentNotifications';
 import type { Causa } from '@/src/types';
 import HeaderActions from '../../components/Header/HeaderActions';
 import PageTitle from '../../components/Header/PageTitle';
@@ -32,13 +32,13 @@ export default memo(function Header({
   onNotificationClick,
   onViewAllNotifications,
 }: HeaderProps) {
-  const NOTIFICATIONS = useNotifications(causas);
+  const notificationCenter = useNotifications(causas);
 
   return (
-    <header className="glass sticky top-0 z-30">
+    <header className="glass sticky top-0 z-30 shadow-[0_1px_0_rgba(148,163,184,0.12)]">
       <div className="absolute top-0 right-0 left-0 h-[3px] bg-linear-to-r from-brand-700 via-brand-600 to-secondary-500" />
 
-      <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-[68px] max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         {/* Left: Mobile brand + Page title */}
         <div className="flex min-w-0 flex-1 items-center gap-4 pl-10 lg:pl-0">
           {/* Mobile brand */}
@@ -58,7 +58,10 @@ export default memo(function Header({
           setPrivacyMode={setPrivacyMode}
           saveStatus={saveStatus}
           user={user}
-          notifications={NOTIFICATIONS}
+          notifications={notificationCenter.notifications}
+          notificationsLoading={notificationCenter.isLoading}
+          onMarkNotificationRead={notificationCenter.markRead}
+          onMarkAllNotificationsRead={notificationCenter.markAllRead}
           onNotificationClick={onNotificationClick}
           onViewAll={onViewAllNotifications}
         />

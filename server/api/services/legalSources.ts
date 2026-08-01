@@ -7,6 +7,7 @@ const LEGAL_SOURCES_DIRECTORY = path.join(process.cwd(), 'docs', 'leyes');
 interface LegalSource {
   name: string;
   text: string;
+  normalizedText: string;
 }
 
 let cachedSources: Promise<LegalSource[]> | null = null;
@@ -72,10 +73,17 @@ async function loadAuthorizedLegalSources(): Promise<LegalSource[]> {
         files.map(async (file) => ({
           name: path.relative(LEGAL_SOURCES_DIRECTORY, file),
           text: await readFile(file, 'utf8'),
+          normalizedText: '',
         })),
       );
       if (!contents.length) throw new Error('No hay fuentes jurídicas disponibles en docs/leyes.');
-      return contents;
+      return contents.map((source) => ({
+        ...source,
+        normalizedText: source.text
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLocaleLowerCase('es-CL'),
+      }));
     })();
   }
   return cachedSources;
@@ -95,7 +103,7 @@ function searchTerms(value: string): string[] {
 }
 
 function sourceScore(source: LegalSource, terms: string[]): number {
-  const haystack = `${source.name}\n${source.text}`.toLocaleLowerCase('es-CL');
+  const haystack = `${source.name}\n${source.normalizedText}`;
   return terms.reduce((score, term) => {
     const matches = haystack.match(new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'));
     const count = matches?.length ?? 0;

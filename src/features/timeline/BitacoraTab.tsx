@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import type { Causa, BitacoraEntry, UserRole } from '../../types';
 import {
   Bell,
@@ -36,7 +36,11 @@ const ENTRY_STYLE: Record<BitacoraEntry['tipo'], { tone: string; Icon: typeof Hi
   Otro: { tone: 'bg-neutral-100 text-neutral-700', Icon: History },
 };
 
-export default function BitacoraTab({ causa, currentRole, onCreateManualEntry }: BitacoraTabProps) {
+export default memo(function BitacoraTab({
+  causa,
+  currentRole,
+  onCreateManualEntry,
+}: BitacoraTabProps) {
   const [logType, setLogType] = useState<BitacoraEntry['tipo']>('Entrevista');
   const [participants, setParticipants] = useState('');
   const entries = [...causa.bitacora].sort(
@@ -166,4 +170,4 @@ export default function BitacoraTab({ causa, currentRole, onCreateManualEntry }:
       )}
     </div>
   );
-}
+});
