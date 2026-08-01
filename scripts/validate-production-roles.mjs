@@ -35,45 +35,45 @@ async function createUser(role) {
     throw created.error ?? new Error('No se creó usuario QA.');
   const userId = created.data.user.id;
   users.push(userId);
-  const profile = await admin
-    .from('profiles')
-    .upsert(
-      {
-        user_id: userId,
-        tenant_id: tenantId,
-        email,
-        full_name: `QA ${role}`,
-        role,
-        is_active: true,
-        course_ids: [],
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: 'user_id' },
-    );
+  const profile = await admin.from('profiles').upsert(
+    {
+      user_id: userId,
+      tenant_id: tenantId,
+      email,
+      full_name: `QA ${role}`,
+      role,
+      is_active: true,
+      course_ids: [],
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'user_id' },
+  );
   if (profile.error) throw profile.error;
-  const membership = await admin
-    .from('app_memberships')
-    .upsert(
-      {
-        tenant_id: tenantId,
-        user_id: userId,
-        application_code: 'convivencia',
-        role,
-        is_active: true,
-      },
-      { onConflict: 'tenant_id,user_id,application_code' },
-    );
+  const membership = await admin.from('app_memberships').upsert(
+    {
+      tenant_id: tenantId,
+      user_id: userId,
+      application_code: 'convivencia',
+      role,
+      is_active: true,
+    },
+    { onConflict: 'tenant_id,user_id,application_code' },
+  );
   if (membership.error) throw membership.error;
   return email;
 }
 
-async function request(email, path) {
+async function getAccessToken(email) {
   const client = createClient(url, key, { auth: { persistSession: false } });
   const session = await client.auth.signInWithPassword({ email, password });
   if (session.error || !session.data.session)
     throw session.error ?? new Error('No se obtuvo sesión.');
+  return session.data.session.access_token;
+}
+
+async function request(accessToken, path) {
   const response = await fetch(`${base}${path}`, {
-    headers: { Authorization: `Bearer ${session.data.session.access_token}` },
+    headers: { Authorization: `Bearer ${accessToken}` },
   });
   return response.status;
 }
@@ -83,15 +83,20 @@ try {
     admin: { admin: 200, institution: 200, onboarding: 200 },
     direccion: { admin: 200, institution: 200, onboarding: 200 },
     convivencia: { admin: 403, institution: 403, onboarding: 200 },
+    inspectoria: { admin: 403, institution: 403, onboarding: 200 },
+    profesor_jefe: { admin: 403, institution: 403, onboarding: 200 },
     teacher: { admin: 403, institution: 403, onboarding: 200 },
+    inspector: { admin: 403, institution: 403, onboarding: 200 },
     user: { admin: 403, institution: 403, onboarding: 200 },
+    staff: { admin: 403, institution: 403, onboarding: 200 },
   };
   const results = {};
   for (const [role, statuses] of Object.entries(expected)) {
     const email = await createUser(role);
-    const adminStatus = await request(email, '/api/admin/members');
-    const institutionStatus = await request(email, '/api/admin/institution');
-    const onboardingStatus = await request(email, '/api/onboarding/status');
+    const accessToken = await getAccessToken(email);
+    const adminStatus = await request(accessToken, '/api/admin/members');
+    const institutionStatus = await request(accessToken, '/api/admin/institution');
+    const onboardingStatus = await request(accessToken, '/api/onboarding/status');
     if (
       adminStatus !== statuses.admin ||
       institutionStatus !== statuses.institution ||

@@ -26,6 +26,7 @@ supabase/.temp
 test-artifacts/
 test-results/
 playwright-report/
+.lighthouseci/
 screenshots/
 evidencias/
 datos-reales/

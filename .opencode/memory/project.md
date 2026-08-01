@@ -1240,3 +1240,12 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - La referencia visual `PageHero` está aplicada en Administración, Plataforma y Centro de reportes; los formularios institucionales tienen etiquetas/aria-labels y estados de error/reintento.
 - Validación posterior: lint, typecheck, 309 tests, build, bundle, security audit, 27 E2E, multi-tenant, roles y health pasan.
 - Deuda no bloqueante: `src/components/TemplateEditor.tsx` conserva un flujo legacy de carga con `useEffect` y estado local; no presenta un hallazgo de seguridad, pero puede migrarse a React Query en una iteración de limpieza separada.
+
+### Auditoría integral previa a push — 2026-08-01
+
+- `tests/responsive-shell.spec.ts` verifica el shell público en escritorio (1440px) y móvil (390px), incluyendo ausencia de overflow horizontal; la suite de producción quedó en 29 pruebas aprobadas.
+- `scripts/validate-production-roles.mjs` valida los nueve roles del modelo: `admin`, `direccion`, `convivencia`, `inspectoria`, `profesor_jefe`, `teacher`, `inspector`, `user` y `staff`. Reutiliza un token por rol para no provocar rate limits innecesarios en Supabase Auth.
+- Las rutas de invitaciones administrativas responden `429` cuando Supabase informa límites temporales de correo; los casos normales y de validación mantienen sus respuestas existentes.
+- La telemetría se difiere a `requestIdleCallback` (con timeout de 8 segundos) o a un timeout equivalente, para no competir con el primer render.
+- Validaciones remotas: E2E 29/29, roles 9/9, aislamiento multi-tenant y auditoría append-only aprobados; lint, 309 tests, build, bundle y `npm audit --omit=dev` sin errores.
+- Lighthouse CI conserva una advertencia de rendimiento observada en Windows y, en ejecuciones posteriores, un bloqueo ambiental de Chrome por `EPERM`/procesos residuales al limpiar temporales. No se modificaron umbrales para ocultar el problema.

@@ -28,6 +28,10 @@ const VALID_ROLES: readonly ProfileRole[] = [
 ];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function invitationErrorStatus(message: string): number {
+  return /rate limit|too many requests|email rate/i.test(message) ? 429 : 500;
+}
+
 interface ProfileRow {
   user_id: string;
   tenant_id: string;
@@ -369,7 +373,7 @@ router.post('/admin/invitations', async (req, res) => {
     res.status(201).json({ invitation: invitationRow });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'No fue posible enviar la invitación.';
-    res.status(500).json({ error: message });
+    res.status(invitationErrorStatus(message)).json({ error: message });
   }
 });
 
@@ -413,8 +417,10 @@ router.post('/admin/invitations/:invitationId/resend', async (req, res) => {
     );
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({
-      error: error instanceof Error ? error.message : 'No fue posible reenviar la invitación.',
+    const message =
+      error instanceof Error ? error.message : 'No fue posible reenviar la invitación.';
+    res.status(invitationErrorStatus(message)).json({
+      error: message,
     });
   }
 });

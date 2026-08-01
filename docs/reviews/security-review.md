@@ -8,13 +8,13 @@
 
 ## Resumen Ejecutivo
 
-| Severidad | Count | Acción |
-|-----------|-------|--------|
-| CRITICAL | 0 | ✅ Sin hallazgos críticos |
-| HIGH | 5 | Requiere corrección en este sprint |
-| MEDIUM | 8 | Planificar para próximo sprint |
-| LOW | 5 | Backlog |
-| INFORMATIONAL | 7 | Monitorear |
+| Severidad     | Count | Acción                             |
+| ------------- | ----- | ---------------------------------- |
+| CRITICAL      | 0     | ✅ Sin hallazgos críticos          |
+| HIGH          | 5     | Requiere corrección en este sprint |
+| MEDIUM        | 8     | Planificar para próximo sprint     |
+| LOW           | 5     | Backlog                            |
+| INFORMATIONAL | 7     | Monitorear                         |
 
 ---
 
@@ -57,6 +57,7 @@ El `ROW_NUMBER() OVER (PARTITION BY ...)` en la misma migración (líneas 34-47)
 **Impacto:** Cualquier origen puede hacer peticiones a la API en desarrollo local. En Vercel, aunque la plataforma bloquea por defecto orígenes no coincidentes, no hay control explícito sobre qué orígenes están permitidos.
 **Probabilidad:** ALTA — el CORS permisivo de Vercel por defecto permite `*` para respuestas simples.
 **Recomendación:** Agregar `cors` middleware con lista blanca de orígenes:
+
 ```ts
 import cors from 'cors';
 const ALLOWED_ORIGINS = [
@@ -66,6 +67,7 @@ const ALLOWED_ORIGINS = [
 ];
 app.use(cors({ origin: ALLOWED_ORIGINS, credentials: true }));
 ```
+
 **Esfuerzo:** 15 minutos
 **Prioridad:** ALTA
 **Corregible localmente:** Sí
@@ -78,9 +80,11 @@ app.use(cors({ origin: ALLOWED_ORIGINS, credentials: true }));
 **Impacto:** Cualquier persona con el URL de la API puede: (1) verificar la longitud del JWT secret, (2) probar tokens arbitrarios, (3) obtener información sobre la configuración de autenticación. Esto facilita ataques de fuerza bruta contra JWT.
 **Probabilidad:** MEDIA — requiere conocer la URL exacta del endpoint.
 **Recomendación:** Agregar `requireAuth` middleware a la ruta debug, o limitarla a IPs internas:
+
 ```ts
 router.get('/auth-debug', requireAuth, handler);
 ```
+
 **Esfuerzo:** 5 minutos
 **Prioridad:** ALTA
 **Corregible localmente:** Sí
@@ -92,9 +96,11 @@ router.get('/auth-debug', requireAuth, handler);
 **Impacto:** Cualquier persona puede leer las plantillas de documentos, incluyendo prompts del sistema con instrucciones de IA que podrían revelar lógica interna del negocio.
 **Probabilidad:** ALTA — endpoint público.
 **Recomendación:** Agregar `requireAuth` al GET de templates, o al menos rate limiting:
+
 ```ts
 router.get('/', requireAuth, getTemplates);
 ```
+
 **Esfuerzo:** 5 minutos
 **Prioridad:** ALTA
 **Corregible localmente:** Sí
@@ -103,6 +109,7 @@ router.get('/', requireAuth, getTemplates);
 
 **Ubicación:** `src/shared/lib/stores/authStore.ts:26-30`
 **Evidencia:**
+
 ```ts
 export const useAuthStore = create<AuthState>((set) => {
   const timeoutId = setTimeout(() => { set({ authLoading: false }); }, AUTH_TIMEOUT_MS);
@@ -113,14 +120,17 @@ export const useAuthStore = create<AuthState>((set) => {
   return { ... };
 });
 ```
+
 La función `subscribeAuth` (de `auth.service.ts`) registra un callback en `supabase.auth.onAuthStateChange()` pero el store nunca devuelve una función de cleanup para desuscribirse. Cada recreación del store (hot reload en desarrollo) registra un nuevo listener sin eliminar el anterior.
 **Impacto:** Acumulación de listeners en desarrollo. En producción, el listener persiste por toda la vida de la SPA, pero si el store se recrea (p.ej., error boundary recovery), se duplica.
 **Probabilidad:** BAJA en producción, ALTA en desarrollo (hot reload).
 **Recomendación:** Agregar return de cleanup en el store:
+
 ```ts
 const { data: { subscription } } = supabase.auth.onAuthStateChange(...);
 return () => subscription?.unsubscribe();
 ```
+
 **Esfuerzo:** 10 minutos
 **Prioridad:** ALTA
 **Corregible localmente:** Sí
@@ -148,6 +158,7 @@ return () => subscription?.unsubscribe();
 **Impacto:** Potencial OOM si hay muchas IPs únicas (10+ requests cada una).
 **Probabilidad:** BAJA (requiere ~100k IPs distintas).
 **Recomendación:** Agregar poda periódica o límite de entradas:
+
 ```ts
 if (rateLimitMap.size > 10000) {
   const now = Date.now();
@@ -156,6 +167,7 @@ if (rateLimitMap.size > 10000) {
   }
 }
 ```
+
 **Esfuerzo:** 10 minutos
 **Prioridad:** MEDIA
 **Corregible localmente:** Sí
@@ -164,9 +176,11 @@ if (rateLimitMap.size > 10000) {
 
 **Ubicación:** `vercel.json:39`
 **Evidencia:**
+
 ```json
 "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; ..."
 ```
+
 **Impacto:** Permite ejecución de scripts inline arbitrarios. Si hay un XSS, no hay defensa por CSP.
 **Probabilidad:** BAJA (React escapa por defecto), pero si hay algún `dangerouslySetInnerHTML` (revisar MarkdownRenderer), el CSP no protege.
 **Recomendación:** Evaluar si `'unsafe-eval'` puede eliminarse (React 19 no lo requiere en producción). `'unsafe-inline'` es necesario para bundles Vite.
@@ -280,6 +294,7 @@ if (rateLimitMap.size > 10000) {
 
 **Ubicación:** `opencode.json:27`
 **Evidencia:**
+
 ```json
 "supabase": {
   "env": {
@@ -288,6 +303,7 @@ if (rateLimitMap.size > 10000) {
   }
 }
 ```
+
 **Impacto:** Si el MCP server de Supabase es comprometido, un atacante podría usar el service role.
 **Probabilidad:** MUY BAJA (el MCP es local).
 **Recomendación:** Es aceptable localmente. En CI/CD, considerar usar un token con menos privilegios.
@@ -309,53 +325,70 @@ if (rateLimitMap.size > 10000) {
 ## INFORMATIONAL
 
 ### I-01: 22 migraciones — historial creciente, mantener disciplina
+
 **Recomendación:** Nunca modificar migraciones existentes. Siempre crear nuevas.
 
 ### I-02: 11 variables de entorno — documentar cada una en README
+
 **Recomendación:** Agregar tabla en README con propósito, origen y si es requerida.
 
 ### I-03: npm audit reporta 11 vulnerabilidades (8 high, 3 moderate)
+
 **Recomendación:** Revisar si afectan al proyecto. Ejecutar `npm audit --omit=dev`.
 
 ### I-04: Sin Supabase Edge Functions — toda la lógica está en Express/Vercel
+
 **Nota:** Beneficioso para simplicidad. Monitorear si el serverless timeout (30s) es suficiente para PDF processing.
 
 ### I-05: PostHog analytics configurado — revisar que no exponga datos de NNA
+
 **Recomendación:** Verificar que PostHog no capture PII ni datos de estudiantes.
 
 ### I-06: Privacy mode implementado en UI — buena práctica
+
 **Nota:** Ocultar datos de NNA en interfaz. Verificar que se aplique consistentemente en todas las vistas.
 
 ### I-07: Sin HTTPS redirección explícita — Vercel la maneja por defecto
+
 **Nota:** En producción, Vercel redirige HTTP→HTTPS automáticamente.
 
 ---
 
 ## Quick Wins Corregidos
 
-| ID | Cambio | Archivo | Riesgo |
-|----|--------|---------|--------|
-| H-02 | Agregar `requireAuth` a `/api/auth-debug` | `server/api/routes/debug.ts` | Ninguno — es un endpoint solo de diagnóstico |
-| H-03 | Agregar `requireAuth` a `GET /api/document-templates` | `server/api/routes/templates.ts` | Bajo — los templates no requieren acceso público |
-| M-01 | Límite de 10000 entradas en rate limiter Map | `server/lib/rateLimit.ts`, `server/api/services/rateLimit.ts` | Ninguno — solo memory safety |
-| M-03 | Agregar `trust proxy` en ambos entry points | `server/index.ts`, `server/api/index.ts` | Bajo — necesario para rate limiting correcto detrás de proxy |
-| L-01 | Agregar `compression` en `server/api/index.ts` | `server/api/index.ts` | Muy bajo — solo performance |
-| M-05 | Reducir body limit a 100KB (500KB para PDF) | `server/index.ts`, `server/api/index.ts` | Bajo — verificar que ninguna request exceda 100KB |
+| ID   | Cambio                                                | Archivo                                                       | Riesgo                                                       |
+| ---- | ----------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------ |
+| H-02 | Agregar `requireAuth` a `/api/auth-debug`             | `server/api/routes/debug.ts`                                  | Ninguno — es un endpoint solo de diagnóstico                 |
+| H-03 | Agregar `requireAuth` a `GET /api/document-templates` | `server/api/routes/templates.ts`                              | Bajo — los templates no requieren acceso público             |
+| M-01 | Límite de 10000 entradas en rate limiter Map          | `server/lib/rateLimit.ts`, `server/api/services/rateLimit.ts` | Ninguno — solo memory safety                                 |
+| M-03 | Agregar `trust proxy` en ambos entry points           | `server/index.ts`, `server/api/index.ts`                      | Bajo — necesario para rate limiting correcto detrás de proxy |
+| L-01 | Agregar `compression` en `server/api/index.ts`        | `server/api/index.ts`                                         | Muy bajo — solo performance                                  |
+| M-05 | Reducir body limit a 100KB (500KB para PDF)           | `server/index.ts`, `server/api/index.ts`                      | Bajo — verificar que ninguna request exceda 100KB            |
 
 ---
 
 ## Resumen de Acciones
 
-| Prioridad | Acción | Archivos | Esfuerzo |
-|-----------|--------|----------|----------|
-| 🔴 CRITICAL | Corregir typo en índice duplicado en migración | `supabase/migrations/202607251100_fix_disciplinary_rules_and_derivation.sql` | 5 min |
-| 🟠 HIGH | Agregar CORS middleware | `server/api/index.ts`, `server/index.ts` | 15 min |
-| 🟠 HIGH | Proteger `/api/auth-debug` con auth | `server/api/routes/debug.ts` | 5 min |
-| 🟠 HIGH | Proteger `GET /api/document-templates` con auth | `server/api/routes/templates.ts` | 5 min |
-| 🟠 HIGH | Limpiar subscription de authStore | `src/shared/lib/stores/authStore.ts` | 10 min |
-| 🟠 HIGH | Agregar logging en `injectTenantContext` | `server/middleware/auth.ts` | 10 min |
-| 🟡 MEDIUM | Agregar `trust proxy` | `server/index.ts`, `server/api/index.ts` | 5 min |
-| 🟡 MEDIUM | Limitar rate limiter Map | `server/lib/rateLimit.ts`, `server/api/services/rateLimit.ts` | 10 min |
-| 🟡 MEDIUM | Reducir body limit | `server/index.ts`, `server/api/index.ts` | 10 min |
-| 🟢 LOW | Agregar compression en API entry | `server/api/index.ts` | 5 min |
-| ⚪ INFO | Generar database.types.ts | `src/lib/database.types.ts` | 15 min |
+| Prioridad   | Acción                                          | Archivos                                                                     | Esfuerzo |
+| ----------- | ----------------------------------------------- | ---------------------------------------------------------------------------- | -------- |
+| 🔴 CRITICAL | Corregir typo en índice duplicado en migración  | `supabase/migrations/202607251100_fix_disciplinary_rules_and_derivation.sql` | 5 min    |
+| 🟠 HIGH     | Agregar CORS middleware                         | `server/api/index.ts`, `server/index.ts`                                     | 15 min   |
+| 🟠 HIGH     | Proteger `/api/auth-debug` con auth             | `server/api/routes/debug.ts`                                                 | 5 min    |
+| 🟠 HIGH     | Proteger `GET /api/document-templates` con auth | `server/api/routes/templates.ts`                                             | 5 min    |
+| 🟠 HIGH     | Limpiar subscription de authStore               | `src/shared/lib/stores/authStore.ts`                                         | 10 min   |
+| 🟠 HIGH     | Agregar logging en `injectTenantContext`        | `server/middleware/auth.ts`                                                  | 10 min   |
+| 🟡 MEDIUM   | Agregar `trust proxy`                           | `server/index.ts`, `server/api/index.ts`                                     | 5 min    |
+| 🟡 MEDIUM   | Limitar rate limiter Map                        | `server/lib/rateLimit.ts`, `server/api/services/rateLimit.ts`                | 10 min   |
+| 🟡 MEDIUM   | Reducir body limit                              | `server/index.ts`, `server/api/index.ts`                                     | 10 min   |
+| 🟢 LOW      | Agregar compression en API entry                | `server/api/index.ts`                                                        | 5 min    |
+| ⚪ INFO     | Generar database.types.ts                       | `src/lib/database.types.ts`                                                  | 15 min   |
+
+---
+
+## Validación integral posterior — 2026-08-01
+
+- El aislamiento multi-tenant remoto fue aprobado para Colegio Carmela Romero de Espinosa y Colegio San Jose, incluyendo cursos, plantillas, configuración, reglamento y auditoría append-only.
+- La matriz de producción validó los nueve roles existentes: solo `admin` y `direccion` acceden a administración/configuración; los roles operativos restantes reciben `403` en esas rutas y conservan acceso al onboarding permitido.
+- No se detectó exposición de `service_role` al cliente, `eval`, `dangerouslySetInnerHTML`, consultas `SELECT *` en los módulos auditados ni guards de router sin prefijo en las rutas revisadas.
+- `npm audit --omit=dev` terminó con 0 vulnerabilidades. Los scripts locales de cambio de contraseña permanecen sin seguimiento y fuera del commit.
+- La API de invitaciones mantiene aislamiento por tenant, protección del último administrador, auditoría de cambios y ahora distingue límites temporales de correo con HTTP 429.

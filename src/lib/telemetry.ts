@@ -22,7 +22,15 @@ export function loadTelemetry(): Promise<TelemetryModules> {
 }
 
 export function initializeTelemetry(): void {
-  void Promise.all([loadTelemetry(), import('./webVitals')]).then(([, webVitals]) => {
-    webVitals.reportWebVitals();
-  });
+  const start = () => {
+    void Promise.all([loadTelemetry(), import('./webVitals')]).then(([, webVitals]) => {
+      webVitals.reportWebVitals();
+    });
+  };
+
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(start, { timeout: 8_000 });
+  } else {
+    globalThis.setTimeout(start, 8_000);
+  }
 }

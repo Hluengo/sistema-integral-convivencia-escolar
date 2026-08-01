@@ -3593,6 +3593,9 @@ var VALID_ROLES2 = [
   'staff',
 ];
 var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function invitationErrorStatus(message) {
+  return /rate limit|too many requests|email rate/i.test(message) ? 429 : 500;
+}
 function getAdminClient() {
   const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
@@ -3871,7 +3874,7 @@ router11.post('/admin/invitations', async (req, res) => {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : 'No fue posible enviar la invitaci\xF3n.';
-    res.status(500).json({ error: message });
+    res.status(invitationErrorStatus(message)).json({ error: message });
   }
 });
 router11.post('/admin/invitations/:invitationId/resend', async (req, res) => {
@@ -3911,8 +3914,10 @@ router11.post('/admin/invitations/:invitationId/resend', async (req, res) => {
     );
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({
-      error: error instanceof Error ? error.message : 'No fue posible reenviar la invitaci\xF3n.',
+    const message =
+      error instanceof Error ? error.message : 'No fue posible reenviar la invitaci\xF3n.';
+    res.status(invitationErrorStatus(message)).json({
+      error: message,
     });
   }
 });
@@ -4339,7 +4344,10 @@ async function loadSettings(client, tenantId) {
     .maybeSingle();
   if (error) throw error;
   if (data) {
-    return { ...data, logo_url: await getSignedLogoUrl(client, data.logo_path) };
+    return {
+      ...data,
+      logo_url: await getSignedLogoUrl(client, data.logo_path),
+    };
   }
   const tenant = await client.from('tenants').select('name').eq('id', tenantId).single();
   if (tenant.error) throw tenant.error;
@@ -4497,17 +4505,15 @@ async function uploadLogo(client, tenantId, actorUserId, file) {
     upsert: true,
   });
   if (uploadResult.error) throw uploadResult.error;
-  const { error } = await client
-    .from('institution_settings')
-    .upsert(
-      {
-        tenant_id: tenantId,
-        official_name: current.official_name,
-        logo_path: path3,
-        updated_by: actorUserId ?? null,
-      },
-      { onConflict: 'tenant_id' },
-    );
+  const { error } = await client.from('institution_settings').upsert(
+    {
+      tenant_id: tenantId,
+      official_name: current.official_name,
+      logo_path: path3,
+      updated_by: actorUserId ?? null,
+    },
+    { onConflict: 'tenant_id' },
+  );
   if (error) throw error;
   await audit(
     client,
