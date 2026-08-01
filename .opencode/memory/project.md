@@ -1256,3 +1256,10 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - `src/app/App.tsx` muestra un fallback de carga accesible mientras Supabase Auth resuelve la sesión y conserva el cierre de la bienvenida durante la pestaña mediante `sessionStorage` (`gestion-casos-welcome-seen`). La acción de inicio de sesión reutiliza el modal de autenticación existente.
 - La suite E2E cubre la bienvenida y el acceso al login, además de adaptar los flujos existentes para descartarla explícitamente; la prueba responsive mantiene cobertura de escritorio y móvil.
 - El dominio actual de Vercel debe conservarse como alias productivo. El alias adicional `gestiondecasos.vercel.app` se configura después del despliegue si Vercel confirma disponibilidad y permisos sobre ese subdominio.
+
+### Selector global de colegio para superadmin — 2026-08-01
+
+- `PlatformView` mantiene un `selectedTenantId` local y explícito para el superadmin; no modifica el `tenant_id` del JWT ni el contexto de usuarios normales.
+- El selector `Colegio para administrar` se comparte entre las pestañas de Plataforma, Configuración institucional e Importar base. La interfaz muestra el colegio activo y exige selección antes de cargar o importar información.
+- La configuración institucional usa rutas `/api/platform/tenants/:tenantId/...` protegidas por `requireSuperAdmin`; la importación Excel se dirige al mismo tenant seleccionado.
+- La navegación completa de expedientes y el gestor de documentos institucionales todavía requieren una etapa posterior; este cambio cubre el contexto seguro de administración global y evita seleccionar tenants distintos en cada pestaña.

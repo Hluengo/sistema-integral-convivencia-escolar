@@ -14,6 +14,16 @@ export interface PlatformTenantSummary {
   tenants: PlatformTenant[];
 }
 
+export interface PlatformTenantSummaryDetails {
+  tenant_id: string;
+  users: number;
+  courses: number;
+  students: number;
+  cases: number;
+  templates: number;
+  institution_documents: number;
+}
+
 export interface ProvisionTenantInput {
   name: string;
   adminEmail: string;
@@ -66,6 +76,14 @@ export async function provisionTenant(input: ProvisionTenantInput): Promise<Prov
     method: 'POST',
     body: JSON.stringify(input),
   });
+}
+
+export async function fetchPlatformTenantSummary(
+  tenantId: string,
+): Promise<PlatformTenantSummaryDetails> {
+  return platformRequest<PlatformTenantSummaryDetails>(
+    `/api/platform/tenants/${encodeURIComponent(tenantId)}/summary`,
+  );
 }
 
 export async function resendTenantAdminInvitation(tenantId: string): Promise<void> {

@@ -13,17 +13,16 @@ import {
   uploadPlatformInstitutionLogo,
   type InstitutionSettings,
 } from '../../shared/api/services/institution.service';
-import type { PlatformTenant } from '../../shared/api/services/platform.service';
 
 const inputClass =
   'w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100';
 
 interface Props {
-  tenants: PlatformTenant[];
+  selectedTenantId: string;
 }
 
-export default function PlatformInstitutionPanel({ tenants }: Props) {
-  const [tenantId, setTenantId] = useState(tenants[0]?.id ?? '');
+export default function PlatformInstitutionPanel({ selectedTenantId }: Props) {
+  const tenantId = selectedTenantId;
   const [form, setForm] = useState<Partial<InstitutionSettings>>({});
   const [rule, setRule] = useState({
     title: 'Reglamento Interno de Convivencia Escolar',
@@ -33,8 +32,9 @@ export default function PlatformInstitutionPanel({ tenants }: Props) {
   const [message, setMessage] = useState<string | null>(null);
   const queryClient = useQueryClient();
   useEffect(() => {
-    if (!tenantId && tenants[0]) setTenantId(tenants[0].id);
-  }, [tenantId, tenants]);
+    setForm({});
+    setMessage(null);
+  }, [tenantId]);
   const settingsQuery = useQuery({
     queryKey: ['platform-institution', tenantId],
     queryFn: () => fetchPlatformInstitutionSettings(tenantId),
@@ -99,25 +99,9 @@ export default function PlatformInstitutionPanel({ tenants }: Props) {
             </p>
           </div>
         </div>
-        <label className="mt-5 block space-y-1.5 text-xs font-semibold text-neutral-700">
-          Colegio seleccionado
-          <select
-            aria-label="Colegio seleccionado"
-            className={inputClass}
-            value={tenantId}
-            onChange={(event) => {
-              setTenantId(event.target.value);
-              setForm({});
-            }}
-          >
-            <option value="">Seleccione un colegio</option>
-            {tenants.map((tenant) => (
-              <option key={tenant.id} value={tenant.id}>
-                {tenant.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <p className="mt-5 rounded-xl bg-neutral-50 px-4 py-3 text-neutral-600 text-sm">
+          Seleccione el colegio que desea administrar en el selector superior.
+        </p>
       </section>
       {tenantId ? (
         <>

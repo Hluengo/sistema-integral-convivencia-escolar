@@ -1,26 +1,29 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Building2, Download, RefreshCw, ShieldCheck, Upload, Users } from 'lucide-react';
+import { Building2, Download, FileText, RefreshCw, ShieldCheck, Upload, Users } from 'lucide-react';
 import Button from '../../shared/ui/Button';
 import SummaryCard from '../../shared/ui/SummaryCard';
 import PageHero from '../../shared/ui/PageHero';
 import PlatformInstitutionPanel from './PlatformInstitutionPanel';
+import PlatformInstitutionDocuments from './PlatformInstitutionDocuments';
 import { formatChileDateTime } from '../../shared/lib/dateTime';
 import {
   fetchPlatformTenants,
+  fetchPlatformTenantSummary,
   importTenantBase,
   provisionTenant,
   resendTenantAdminInvitation,
   type PlatformTenant,
 } from '../../shared/api/services/platform.service';
 
-type PlatformTab = 'colegios' | 'institucional' | 'importar' | 'plan';
+type PlatformTab = 'colegios' | 'institucional' | 'documentos' | 'importar' | 'plan';
 
 const tabs: Array<{ id: PlatformTab; label: string; icon: typeof Users }> = [
   { id: 'colegios', label: 'Colegios', icon: Building2 },
   { id: 'institucional', label: 'Configuración institucional', icon: Building2 },
+  { id: 'documentos', label: 'Documentos', icon: FileText },
   { id: 'importar', label: 'Importar base', icon: Upload },
   { id: 'plan', label: 'Plan y límites', icon: ShieldCheck },
 ];
@@ -49,7 +52,7 @@ export default function PlatformView() {
   const [name, setName] = useState('');
   const [adminEmail, setAdminEmail] = useState('');
   const [slug, setSlug] = useState('');
-  const [importTenantId, setImportTenantId] = useState('');
+  const [selectedTenantId, setSelectedTenantId] = useState('');
   const [importFile, setImportFile] = useState<File | null>(null);
   const [importLevel, setImportLevel] = useState<'BASICA' | 'MEDIA'>('BASICA');
   const [importResult, setImportResult] = useState<string | null>(null);
@@ -62,7 +65,20 @@ export default function PlatformView() {
   });
 
   const tenants = useMemo(() => tenantsQuery.data?.tenants ?? [], [tenantsQuery.data]);
+  const selectedTenant = useMemo(
+    () => tenants.find((tenant) => tenant.id === selectedTenantId) ?? null,
+    [selectedTenantId, tenants],
+  );
+  useEffect(() => {
+    if (selectedTenantId && !selectedTenant) setSelectedTenantId('');
+  }, [selectedTenant, selectedTenantId]);
   const refresh = () => void queryClient.invalidateQueries({ queryKey: ['platform', 'tenants'] });
+  const summaryQuery = useQuery({
+    queryKey: ['platform', 'tenant-summary', selectedTenantId],
+    queryFn: () => fetchPlatformTenantSummary(selectedTenantId),
+    enabled: Boolean(selectedTenantId),
+    retry: false,
+  });
 
   const createMutation = useMutation({
     mutationFn: () =>
@@ -94,9 +110,9 @@ export default function PlatformView() {
 
   const importMutation = useMutation({
     mutationFn: async () => {
-      if (!importFile || !importTenantId)
+      if (!importFile || !selectedTenantId)
         throw new Error('Seleccione un colegio y un archivo .xlsx.');
-      return importTenantBase(importTenantId, importFile, importLevel);
+      return importTenantBase(selectedTenantId, importFile, importLevel);
     },
     onSuccess: (data) => {
       setImportResult(
@@ -128,6 +144,67 @@ export default function PlatformView() {
           </div>
         }
       />
+
+      <section className="card flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+        <div>
+          <p className="font-bold text-neutral-900 text-sm">Colegio que está administrando</p>
+          <p className="mt-1 text-neutral-500 text-xs">
+            La selección se usa para importar bases y editar su configuración institucional.
+          </p>
+        </div>
+        <label className="w-full space-y-1.5 text-xs font-semibold text-neutral-700 sm:max-w-sm">
+          Colegio seleccionado
+          <select
+            aria-label="Colegio para administrar"
+            className={`${SELECT_CLASS} w-full`}
+            value={selectedTenantId}
+            onChange={(event) => setSelectedTenantId(event.target.value)}
+          >
+            <option value="">Seleccione un colegio</option>
+            {tenants.map((tenant) => (
+              <option key={tenant.id} value={tenant.id}>
+                {tenant.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      </section>
+
+      {selectedTenant ? (
+        <>
+          <div className="flex items-center gap-2 rounded-xl border border-brand-100 bg-brand-50 px-4 py-3 text-brand-800 text-sm">
+            <Building2 className="size-4 shrink-0" aria-hidden="true" />
+            <span>
+              Administrando <strong>{selectedTenant.name}</strong>
+            </span>
+          </div>
+          <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {[
+              ['Usuarios', summaryQuery.data?.users],
+              ['Cursos', summaryQuery.data?.courses],
+              ['Estudiantes', summaryQuery.data?.students],
+              ['Expedientes', summaryQuery.data?.cases],
+              ['Plantillas', summaryQuery.data?.templates],
+              ['Documentos', summaryQuery.data?.institution_documents],
+            ].map(([label, value]) => (
+              <div key={label} className="card p-4">
+                <p className="text-neutral-500 text-xs">{label}</p>
+                <p className="mt-2 font-bold text-neutral-900 text-2xl">
+                  {summaryQuery.isLoading ? '—' : String(value ?? 0)}
+                </p>
+              </div>
+            ))}
+          </section>
+          {summaryQuery.isError ? (
+            <p
+              role="alert"
+              className="rounded-xl bg-gravisima-50 px-4 py-3 text-gravisima-700 text-sm"
+            >
+              No fue posible cargar el resumen operativo de este colegio.
+            </p>
+          ) : null}
+        </>
+      ) : null}
 
       <div className="flex gap-1 overflow-x-auto rounded-2xl border border-neutral-200/70 bg-white p-1 shadow-sm">
         {tabs.map(({ id, label, icon: Icon }) => (
@@ -307,19 +384,9 @@ export default function PlatformView() {
                 importMutation.mutate();
               }}
             >
-              <select
-                aria-label="Colegio destino"
-                value={importTenantId}
-                onChange={(event) => setImportTenantId(event.target.value)}
-                className={SELECT_CLASS}
-              >
-                <option value="">Seleccione un colegio</option>
-                {tenants.map((tenant) => (
-                  <option key={tenant.id} value={tenant.id}>
-                    {tenant.name}
-                  </option>
-                ))}
-              </select>
+              <div className="rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-brand-800 text-sm">
+                {selectedTenant ? selectedTenant.name : 'Seleccione un colegio arriba'}
+              </div>
               <select
                 aria-label="Nivel por defecto"
                 value={importLevel}
@@ -338,7 +405,7 @@ export default function PlatformView() {
               />
               <Button
                 type="submit"
-                disabled={isBusy || !importFile || !importTenantId}
+                disabled={isBusy || !importFile || !selectedTenantId}
                 className="rounded-xl px-4 py-2.5 text-sm sm:col-span-3 sm:self-end"
               >
                 <Upload className="size-4" aria-hidden="true" /> Subir base
@@ -386,7 +453,11 @@ export default function PlatformView() {
       )}
 
       {activeTab === 'institucional' && !tenantsQuery.isError && (
-        <PlatformInstitutionPanel tenants={tenants} />
+        <PlatformInstitutionPanel selectedTenantId={selectedTenantId} />
+      )}
+
+      {activeTab === 'documentos' && !tenantsQuery.isError && (
+        <PlatformInstitutionDocuments tenantId={selectedTenantId} />
       )}
 
       {activeTab === 'plan' && (

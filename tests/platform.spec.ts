@@ -41,6 +41,7 @@ test.describe('Plataforma superadmin', () => {
       const sidebar = page.getByRole('complementary', { name: 'Barra de navegación principal' });
       await sidebar.getByRole('button', { name: 'Plataforma' }).click();
 
+      await expect(page.getByLabel('Colegio para administrar')).toBeVisible();
       await expect(page.getByRole('heading', { name: 'Gestión de colegios' })).toBeVisible({
         timeout: 15_000,
       });
@@ -75,7 +76,7 @@ test.describe('Plataforma superadmin', () => {
       ).toBeVisible({
         timeout: 15_000,
       });
-      await expect(page.getByLabel('Colegio seleccionado')).toBeVisible();
+      await page.getByLabel('Colegio para administrar').selectOption({ index: 1 });
       await expect(page.getByLabel('Nombre oficial')).toBeVisible();
     });
   });

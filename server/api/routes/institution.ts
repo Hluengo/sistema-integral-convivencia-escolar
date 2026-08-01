@@ -1,6 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { Router, type Request, type Response } from 'express';
+import { randomUUID } from 'node:crypto';
 import multer from 'multer';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { requireAuth } from '../middleware/auth.js';
@@ -11,9 +12,23 @@ import type { AuthenticatedRequest, ProfileRole } from '../../types.js';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } });
+const documentUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 },
+});
 const ADMIN_ROLES: readonly ProfileRole[] = ['superadmin', 'admin', 'direccion'];
 const CONTENT_LIMIT = 200_000;
 const MIME_EXTENSIONS: Record<string, string> = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/svg+xml': 'svg',
+};
+const DOCUMENT_MIME_EXTENSIONS: Record<string, string> = {
+  'application/pdf': 'pdf',
+  'application/msword': 'doc',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+  'text/plain': 'txt',
   'image/png': 'png',
   'image/jpeg': 'jpg',
   'image/svg+xml': 'svg',
@@ -22,6 +37,8 @@ const INSTITUTION_SETTINGS_COLUMNS =
   'tenant_id,official_name,institution_rut,address,commune,region,phone,institutional_email,proprietor,director_name,education_levels,logo_path,updated_at,updated_by';
 const RULE_VERSION_COLUMNS =
   'id,tenant_id,title,version,content,status,effective_at,created_at,updated_at,created_by,published_by';
+const INSTITUTION_DOCUMENT_COLUMNS =
+  'id,tenant_id,title,category,original_name,storage_path,mime_type,size_bytes,status,uploaded_at,archived_at,uploaded_by,archived_by';
 
 interface InstitutionSettings {
   tenant_id: string;
@@ -53,6 +70,23 @@ interface RuleVersion {
   updated_at: string;
   created_by: string | null;
   published_by: string | null;
+}
+
+interface InstitutionDocument {
+  id: string;
+  tenant_id: string;
+  title: string;
+  category: string;
+  original_name: string;
+  storage_path: string;
+  mime_type: string;
+  size_bytes: number;
+  status: 'active' | 'archived';
+  uploaded_at: string;
+  archived_at: string | null;
+  uploaded_by: string | null;
+  archived_by: string | null;
+  download_url?: string | null;
 }
 
 function getRequest(req: Request): AuthenticatedRequest {
@@ -91,6 +125,80 @@ async function getSignedLogoUrl(
   if (!path) return null;
   const { data } = await client.storage.from('institution-assets').createSignedUrl(path, 3600);
   return data?.signedUrl ?? null;
+}
+
+async function withDocumentUrl(
+  client: SupabaseClient,
+  document: InstitutionDocument,
+): Promise<InstitutionDocument> {
+  const { data } = await client.storage
+    .from('institution-assets')
+    .createSignedUrl(document.storage_path, 3600);
+  return { ...document, download_url: data?.signedUrl ?? null };
+}
+
+function safeDocumentName(name: string): string {
+  const cleaned = name
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9._-]/g, '_');
+  return cleaned.slice(-120) || 'documento';
+}
+
+async function listDocuments(
+  client: SupabaseClient,
+  tenantId: string,
+): Promise<InstitutionDocument[]> {
+  const { data, error } = await client
+    .from('institution_documents')
+    .select(INSTITUTION_DOCUMENT_COLUMNS)
+    .eq('tenant_id', tenantId)
+    .order('uploaded_at', { ascending: false });
+  if (error) throw error;
+  return Promise.all(
+    (data ?? []).map((item) => withDocumentUrl(client, item as InstitutionDocument)),
+  );
+}
+
+async function createDocument(
+  client: SupabaseClient,
+  tenantId: string,
+  actorUserId: string | undefined,
+  file: Express.Multer.File,
+  body: Record<string, unknown>,
+): Promise<InstitutionDocument> {
+  const extension = DOCUMENT_MIME_EXTENSIONS[file.mimetype];
+  if (!extension) throw new Error('Tipo de documento no permitido.');
+  const title = cleanText(body.title, 200) ?? file.originalname.slice(0, 200);
+  const category = cleanText(body.category, 50) ?? 'otro';
+  const storagePath = `${tenantId}/documents/${randomUUID()}-${safeDocumentName(file.originalname)}`;
+  const uploadResult = await client.storage
+    .from('institution-assets')
+    .upload(storagePath, file.buffer, {
+      contentType: file.mimetype,
+      upsert: false,
+    });
+  if (uploadResult.error) throw uploadResult.error;
+  const { data, error } = await client
+    .from('institution_documents')
+    .insert({
+      tenant_id: tenantId,
+      title,
+      category,
+      original_name: file.originalname.slice(0, 255),
+      storage_path: storagePath,
+      mime_type: file.mimetype,
+      size_bytes: file.size,
+      uploaded_by: actorUserId ?? null,
+    })
+    .select(INSTITUTION_DOCUMENT_COLUMNS)
+    .single();
+  if (error) {
+    await client.storage.from('institution-assets').remove([storagePath]);
+    throw error;
+  }
+  await audit(client, tenantId, actorUserId, 'institution_document_uploaded', data.id, null, data);
+  return withDocumentUrl(client, data as InstitutionDocument);
 }
 
 async function loadSettings(
@@ -555,6 +663,79 @@ router.post('/platform/tenants/:tenantId/rules/:id/publish', async (req, res) =>
     const tenantId = req.params.tenantId;
     await assertTargetTenant(client, tenantId);
     res.json(await publishRule(client, tenantId, req.params.id, request.user?.sub));
+  } catch (error) {
+    await sendError(res, error);
+  }
+});
+
+router.use('/platform/tenants/:tenantId/documents', requireAuth, requireSuperAdmin);
+
+router.get('/platform/tenants/:tenantId/documents', async (req, res) => {
+  try {
+    const client = getAdminClient();
+    const tenantId = req.params.tenantId;
+    await assertTargetTenant(client, tenantId);
+    res.json({ documents: await listDocuments(client, tenantId) });
+  } catch (error) {
+    await sendError(res, error);
+  }
+});
+
+router.post(
+  '/platform/tenants/:tenantId/documents',
+  documentUpload.single('document'),
+  async (req, res) => {
+    try {
+      const request = getRequest(req);
+      const client = getAdminClient();
+      const tenantId = req.params.tenantId;
+      await assertTargetTenant(client, tenantId);
+      if (!req.file) {
+        res.status(400).json({ error: 'Seleccione un documento.' });
+        return;
+      }
+      res
+        .status(201)
+        .json(await createDocument(client, tenantId, request.user?.sub, req.file, req.body ?? {}));
+    } catch (error) {
+      await sendError(res, error);
+    }
+  },
+);
+
+router.post('/platform/tenants/:tenantId/documents/:id/archive', async (req, res) => {
+  try {
+    const request = getRequest(req);
+    const client = getAdminClient();
+    const tenantId = req.params.tenantId;
+    await assertTargetTenant(client, tenantId);
+    const { data, error } = await client
+      .from('institution_documents')
+      .update({
+        status: 'archived',
+        archived_at: new Date().toISOString(),
+        archived_by: request.user?.sub ?? null,
+      })
+      .eq('id', req.params.id)
+      .eq('tenant_id', tenantId)
+      .eq('status', 'active')
+      .select(INSTITUTION_DOCUMENT_COLUMNS)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) {
+      res.status(404).json({ error: 'Documento activo no encontrado.' });
+      return;
+    }
+    await audit(
+      client,
+      tenantId,
+      request.user?.sub,
+      'institution_document_archived',
+      req.params.id,
+      { status: 'active' },
+      data,
+    );
+    res.json(await withDocumentUrl(client, data as InstitutionDocument));
   } catch (error) {
     await sendError(res, error);
   }

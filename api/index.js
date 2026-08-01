@@ -4134,6 +4134,60 @@ router12.get('/platform/tenants', async (req, res) => {
     res.status(message.includes('superadministrador') ? 403 : 500).json({ error: message });
   }
 });
+router12.get('/platform/tenants/:id/summary', async (req, res) => {
+  try {
+    const request = getRequest2(req);
+    const client = getAdminClient2();
+    await assertFreshSuperAdmin(client, request);
+    const tenantId = req.params.id;
+    const tenant = await client.from('tenants').select('id').eq('id', tenantId).maybeSingle();
+    if (tenant.error) throw tenant.error;
+    if (!tenant.data) {
+      res.status(404).json({ error: 'Colegio no encontrado.' });
+      return;
+    }
+    const [users, courses, students, cases, templates, documents] = await Promise.all([
+      client
+        .from('profiles')
+        .select('user_id', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId),
+      client.from('courses').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
+      client
+        .from('students')
+        .select('id', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId),
+      client.from('causas').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
+      client
+        .from('document_templates')
+        .select('id', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId),
+      client
+        .from('institution_documents')
+        .select('id', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId)
+        .eq('status', 'active'),
+    ]);
+    const failed = [users, courses, students, cases, templates, documents].find(
+      (result) => result.error,
+    );
+    if (failed?.error) throw failed.error;
+    const summary = {
+      tenant_id: tenantId,
+      users: users.count ?? 0,
+      courses: courses.count ?? 0,
+      students: students.count ?? 0,
+      cases: cases.count ?? 0,
+      templates: templates.count ?? 0,
+      institution_documents: documents.count ?? 0,
+    };
+    res.json(summary);
+  } catch (error) {
+    res.status(500).json({
+      error:
+        error instanceof Error ? error.message : 'No fue posible cargar el resumen del colegio.',
+    });
+  }
+});
 router12.post('/platform/tenants', async (req, res) => {
   let client = null;
   let createdTenantId = null;
@@ -4291,13 +4345,28 @@ var platform_default = router12;
 
 // server/api/routes/institution.ts
 import { Router as Router13 } from 'express';
+import { randomUUID as randomUUID3 } from 'node:crypto';
 import multer3 from 'multer';
 import { createClient as createClient4 } from '@supabase/supabase-js';
 var router13 = Router13();
 var upload2 = multer3({ storage: multer3.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } });
+var documentUpload = multer3({
+  storage: multer3.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 },
+});
 var ADMIN_ROLES2 = ['superadmin', 'admin', 'direccion'];
 var CONTENT_LIMIT = 2e5;
 var MIME_EXTENSIONS = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/svg+xml': 'svg',
+};
+var DOCUMENT_MIME_EXTENSIONS = {
+  'application/pdf': 'pdf',
+  'application/msword': 'doc',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+  'text/plain': 'txt',
   'image/png': 'png',
   'image/jpeg': 'jpg',
   'image/svg+xml': 'svg',
@@ -4306,6 +4375,8 @@ var INSTITUTION_SETTINGS_COLUMNS =
   'tenant_id,official_name,institution_rut,address,commune,region,phone,institutional_email,proprietor,director_name,education_levels,logo_path,updated_at,updated_by';
 var RULE_VERSION_COLUMNS =
   'id,tenant_id,title,version,content,status,effective_at,created_at,updated_at,created_by,published_by';
+var INSTITUTION_DOCUMENT_COLUMNS =
+  'id,tenant_id,title,category,original_name,storage_path,mime_type,size_bytes,status,uploaded_at,archived_at,uploaded_by,archived_by';
 function getRequest3(req) {
   return req;
 }
@@ -4335,6 +4406,62 @@ async function getSignedLogoUrl(client, path3) {
   if (!path3) return null;
   const { data } = await client.storage.from('institution-assets').createSignedUrl(path3, 3600);
   return data?.signedUrl ?? null;
+}
+async function withDocumentUrl(client, document) {
+  const { data } = await client.storage
+    .from('institution-assets')
+    .createSignedUrl(document.storage_path, 3600);
+  return { ...document, download_url: data?.signedUrl ?? null };
+}
+function safeDocumentName(name) {
+  const cleaned = name
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9._-]/g, '_');
+  return cleaned.slice(-120) || 'documento';
+}
+async function listDocuments(client, tenantId) {
+  const { data, error } = await client
+    .from('institution_documents')
+    .select(INSTITUTION_DOCUMENT_COLUMNS)
+    .eq('tenant_id', tenantId)
+    .order('uploaded_at', { ascending: false });
+  if (error) throw error;
+  return Promise.all((data ?? []).map((item) => withDocumentUrl(client, item)));
+}
+async function createDocument(client, tenantId, actorUserId, file, body) {
+  const extension = DOCUMENT_MIME_EXTENSIONS[file.mimetype];
+  if (!extension) throw new Error('Tipo de documento no permitido.');
+  const title = cleanText(body.title, 200) ?? file.originalname.slice(0, 200);
+  const category = cleanText(body.category, 50) ?? 'otro';
+  const storagePath = `${tenantId}/documents/${randomUUID3()}-${safeDocumentName(file.originalname)}`;
+  const uploadResult = await client.storage
+    .from('institution-assets')
+    .upload(storagePath, file.buffer, {
+      contentType: file.mimetype,
+      upsert: false,
+    });
+  if (uploadResult.error) throw uploadResult.error;
+  const { data, error } = await client
+    .from('institution_documents')
+    .insert({
+      tenant_id: tenantId,
+      title,
+      category,
+      original_name: file.originalname.slice(0, 255),
+      storage_path: storagePath,
+      mime_type: file.mimetype,
+      size_bytes: file.size,
+      uploaded_by: actorUserId ?? null,
+    })
+    .select(INSTITUTION_DOCUMENT_COLUMNS)
+    .single();
+  if (error) {
+    await client.storage.from('institution-assets').remove([storagePath]);
+    throw error;
+  }
+  await audit(client, tenantId, actorUserId, 'institution_document_uploaded', data.id, null, data);
+  return withDocumentUrl(client, data);
 }
 async function loadSettings(client, tenantId) {
   const { data, error } = await client
@@ -4738,6 +4865,75 @@ router13.post('/platform/tenants/:tenantId/rules/:id/publish', async (req, res) 
     const tenantId = req.params.tenantId;
     await assertTargetTenant(client, tenantId);
     res.json(await publishRule(client, tenantId, req.params.id, request.user?.sub));
+  } catch (error) {
+    await sendError(res, error);
+  }
+});
+router13.use('/platform/tenants/:tenantId/documents', requireAuth, requireSuperAdmin);
+router13.get('/platform/tenants/:tenantId/documents', async (req, res) => {
+  try {
+    const client = getAdminClient3();
+    const tenantId = req.params.tenantId;
+    await assertTargetTenant(client, tenantId);
+    res.json({ documents: await listDocuments(client, tenantId) });
+  } catch (error) {
+    await sendError(res, error);
+  }
+});
+router13.post(
+  '/platform/tenants/:tenantId/documents',
+  documentUpload.single('document'),
+  async (req, res) => {
+    try {
+      const request = getRequest3(req);
+      const client = getAdminClient3();
+      const tenantId = req.params.tenantId;
+      await assertTargetTenant(client, tenantId);
+      if (!req.file) {
+        res.status(400).json({ error: 'Seleccione un documento.' });
+        return;
+      }
+      res
+        .status(201)
+        .json(await createDocument(client, tenantId, request.user?.sub, req.file, req.body ?? {}));
+    } catch (error) {
+      await sendError(res, error);
+    }
+  },
+);
+router13.post('/platform/tenants/:tenantId/documents/:id/archive', async (req, res) => {
+  try {
+    const request = getRequest3(req);
+    const client = getAdminClient3();
+    const tenantId = req.params.tenantId;
+    await assertTargetTenant(client, tenantId);
+    const { data, error } = await client
+      .from('institution_documents')
+      .update({
+        status: 'archived',
+        archived_at: /* @__PURE__ */ new Date().toISOString(),
+        archived_by: request.user?.sub ?? null,
+      })
+      .eq('id', req.params.id)
+      .eq('tenant_id', tenantId)
+      .eq('status', 'active')
+      .select(INSTITUTION_DOCUMENT_COLUMNS)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) {
+      res.status(404).json({ error: 'Documento activo no encontrado.' });
+      return;
+    }
+    await audit(
+      client,
+      tenantId,
+      request.user?.sub,
+      'institution_document_archived',
+      req.params.id,
+      { status: 'active' },
+      data,
+    );
+    res.json(await withDocumentUrl(client, data));
   } catch (error) {
     await sendError(res, error);
   }

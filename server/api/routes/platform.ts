@@ -29,6 +29,16 @@ interface TemplateRow {
   system_prompt: string;
 }
 
+interface TenantSummary {
+  tenant_id: string;
+  users: number;
+  courses: number;
+  students: number;
+  cases: number;
+  templates: number;
+  institution_documents: number;
+}
+
 function getRequest(req: Request): AuthenticatedRequest {
   return req as AuthenticatedRequest;
 }
@@ -152,6 +162,61 @@ router.get('/platform/tenants', async (req, res) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'No fue posible cargar los colegios.';
     res.status(message.includes('superadministrador') ? 403 : 500).json({ error: message });
+  }
+});
+
+router.get('/platform/tenants/:id/summary', async (req, res) => {
+  try {
+    const request = getRequest(req);
+    const client = getAdminClient();
+    await assertFreshSuperAdmin(client, request);
+    const tenantId = req.params.id;
+    const tenant = await client.from('tenants').select('id').eq('id', tenantId).maybeSingle();
+    if (tenant.error) throw tenant.error;
+    if (!tenant.data) {
+      res.status(404).json({ error: 'Colegio no encontrado.' });
+      return;
+    }
+    const [users, courses, students, cases, templates, documents] = await Promise.all([
+      client
+        .from('profiles')
+        .select('user_id', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId),
+      client.from('courses').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
+      client
+        .from('students')
+        .select('id', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId),
+      client.from('causas').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
+      client
+        .from('document_templates')
+        .select('id', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId),
+      client
+        .from('institution_documents')
+        .select('id', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId)
+        .eq('status', 'active'),
+    ]);
+    const failed = [users, courses, students, cases, templates, documents].find(
+      (result) => result.error,
+    );
+    if (failed?.error) throw failed.error;
+    const summary: TenantSummary = {
+      tenant_id: tenantId,
+      users: users.count ?? 0,
+      courses: courses.count ?? 0,
+      students: students.count ?? 0,
+      cases: cases.count ?? 0,
+      templates: templates.count ?? 0,
+      institution_documents: documents.count ?? 0,
+    };
+    res.json(summary);
+  } catch (error) {
+    res.status(500).json({
+      error:
+        error instanceof Error ? error.message : 'No fue posible cargar el resumen del colegio.',
+    });
   }
 });
 

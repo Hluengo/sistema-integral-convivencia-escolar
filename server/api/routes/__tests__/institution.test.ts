@@ -50,6 +50,11 @@ describe('configuración institucional', () => {
       route,
       /router\.use\('\/platform\/tenants\/:tenantId\/institution', requireAuth, requireSuperAdmin\)/,
     );
+    assert.match(
+      route,
+      /router\.use\('\/platform\/tenants\/:tenantId\/documents', requireAuth, requireSuperAdmin\)/,
+    );
+    assert.match(route, /institution_documents/);
     assert.match(route, /\.eq\('tenant_id', tenantId\)/);
     assert.match(route, /\.eq\('tenant_id', tenantId\)[\s\S]*\.eq\('status', 'active'\)/);
   });
