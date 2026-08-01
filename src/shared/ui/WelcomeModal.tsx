@@ -23,13 +23,10 @@ const features = [
 export default function WelcomeModal({ open, onClose, onLogin }: WelcomeModalProps) {
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
-      <DialogContent className="max-w-[520px] overflow-hidden p-0">
+      <DialogContent className="max-w-2xl overflow-hidden p-0">
         <div className="h-2 w-full bg-linear-to-r from-brand-500 via-brand-600 to-brand-800" />
         <div className="p-6 sm:p-8">
           <DialogHeader className="mb-6 block text-center">
-            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br from-brand-500 to-brand-800 shadow-lg shadow-brand-700/20">
-              <img src="/logo.svg" alt="" className="h-10 w-auto invert" />
-            </div>
             <DialogTitle className="text-2xl sm:text-3xl">
               Bienvenido a Gestión de Casos
             </DialogTitle>
