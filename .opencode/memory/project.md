@@ -1249,3 +1249,10 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - La telemetría se difiere a `requestIdleCallback` (con timeout de 8 segundos) o a un timeout equivalente, para no competir con el primer render.
 - Validaciones remotas: E2E 29/29, roles 9/9, aislamiento multi-tenant y auditoría append-only aprobados; lint, 309 tests, build, bundle y `npm audit --omit=dev` sin errores.
 - Lighthouse CI conserva una advertencia de rendimiento observada en Windows y, en ejecuciones posteriores, un bloqueo ambiental de Chrome por `EPERM`/procesos residuales al limpiar temporales. No se modificaron umbrales para ocultar el problema.
+
+### Bienvenida pública y acceso a Gestión de Casos — 2026-08-01
+
+- La vista anónima ya no queda en blanco: `src/shared/ui/WelcomeModal.tsx` presenta el propósito de Gestión de Casos, debido proceso, resguardo de información y acciones para continuar sin sesión o iniciar sesión.
+- `src/app/App.tsx` muestra un fallback de carga accesible mientras Supabase Auth resuelve la sesión y conserva el cierre de la bienvenida durante la pestaña mediante `sessionStorage` (`gestion-casos-welcome-seen`). La acción de inicio de sesión reutiliza el modal de autenticación existente.
+- La suite E2E cubre la bienvenida y el acceso al login, además de adaptar los flujos existentes para descartarla explícitamente; la prueba responsive mantiene cobertura de escritorio y móvil.
+- El dominio actual de Vercel debe conservarse como alias productivo. El alias adicional `gestiondecasos.vercel.app` se configura después del despliegue si Vercel confirma disponibilidad y permisos sobre ese subdominio.

@@ -2,11 +2,13 @@
 
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { dismissWelcome } from './helpers';
 
 const superadminEmail = process.env.E2E_SUPERADMIN_EMAIL;
 const superadminPassword = process.env.E2E_SUPERADMIN_PASSWORD;
 
 async function login(page: Page, email: string, password: string) {
+  await dismissWelcome(page);
   const sidebar = page.getByRole('complementary', { name: 'Barra de navegación principal' });
   await sidebar.getByRole('button', { name: 'Iniciar sesión' }).click();
   await page.locator('#login-email').fill(email);
@@ -18,6 +20,7 @@ async function login(page: Page, email: string, password: string) {
 test.describe('Plataforma superadmin', () => {
   test('la vista de plataforma no está disponible para visitantes anónimos', async ({ page }) => {
     await page.goto('/');
+    await dismissWelcome(page);
 
     const sidebar = page.getByRole('complementary', { name: 'Barra de navegación principal' });
     await expect(sidebar).toBeVisible({ timeout: 15_000 });

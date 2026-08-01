@@ -9,6 +9,9 @@ test.describe('Shell responsive público', () => {
   ]) {
     test(`no genera overflow horizontal en ${viewport.name}`, async ({ page }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      await page.addInitScript(() =>
+        window.sessionStorage.setItem('gestion-casos-welcome-seen', 'true'),
+      );
       await page.goto('/');
       if (viewport.width < 768) {
         await expect(page.getByRole('button', { name: 'Abrir menú' })).toBeVisible({

@@ -1,6 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { expect, test } from '@playwright/test';
+import { dismissWelcome } from './helpers';
 
 const staffEmail = process.env.E2E_STAFF_EMAIL;
 const staffPassword = process.env.E2E_STAFF_PASSWORD;
@@ -10,6 +11,7 @@ test.describe('Flujo de expedientes', () => {
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
+    await dismissWelcome(page);
     const sidebar = page.getByRole('complementary', { name: 'Barra de navegación principal' });
     await sidebar.getByRole('button', { name: 'Iniciar sesión' }).click();
     await page.locator('#login-email').fill(staffEmail ?? '');

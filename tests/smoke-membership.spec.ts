@@ -1,6 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { test, expect } from '@playwright/test';
+import { dismissWelcome } from './helpers';
 
 const STAFF_EMAIL = process.env.E2E_STAFF_EMAIL ?? 'usuario@colegio.cl';
 const STAFF_PASSWORD = process.env.E2E_STAFF_PASSWORD ?? '123456';
@@ -26,6 +27,7 @@ test.describe('Convivencia - Phase 3 Membership Enforcement', () => {
     });
 
     await page.goto('/');
+    await dismissWelcome(page);
 
     const sidebar = page.getByRole('complementary', { name: 'Barra de navegación principal' });
     await expect(sidebar).toBeVisible({ timeout: 15000 });
@@ -65,6 +67,7 @@ test.describe('Convivencia - Phase 3 Membership Enforcement', () => {
     });
 
     await page.goto('/');
+    await dismissWelcome(page);
 
     const sidebar = page.getByRole('complementary', { name: 'Barra de navegación principal' });
     await expect(sidebar).toBeVisible({ timeout: 15000 });
@@ -89,6 +92,7 @@ test.describe('Convivencia - Phase 3 Membership Enforcement', () => {
 
   test('enforced mode: AccessDenied screen when no membership', async ({ page }) => {
     await page.goto('/');
+    await dismissWelcome(page);
 
     const sidebar = page.getByRole('complementary', { name: 'Barra de navegación principal' });
     await expect(sidebar).toBeVisible({ timeout: 15000 });
@@ -114,6 +118,7 @@ test.describe('Convivencia - Phase 3 Membership Enforcement', () => {
 
   test('logout clears session and returns to login', async ({ page }) => {
     await page.goto('/');
+    await dismissWelcome(page);
 
     const sidebar = page.getByRole('complementary', { name: 'Barra de navegación principal' });
     await expect(sidebar).toBeVisible({ timeout: 15000 });

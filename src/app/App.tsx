@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { Suspense, lazy, useCallback, useEffect, useMemo, useRef } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { signOut } from '../services/auth.service';
 import { useAuthStore } from '../stores/authStore';
 import { useCausasStore } from '../stores/causasStore';
@@ -25,6 +25,27 @@ import { AppProvider } from '../context/AppContext';
 import { getFaseForEstado } from '../data';
 import { EstadoCausa } from '../types';
 import { MembershipLoading, MembershipAccessDenied } from '../shared/ui';
+import WelcomeModal from '../shared/ui/WelcomeModal';
+
+const WELCOME_SEEN_KEY = 'gestion-casos-welcome-seen';
+
+function AppLoadingFallback() {
+  return (
+    <div className="flex min-h-dvh items-center justify-center bg-neutral-100 px-6">
+      <div className="text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-neutral-900 shadow-lg">
+          <img src="/logo.svg" alt="Escudo Veritas" className="h-10 w-auto invert" />
+        </div>
+        <p className="mt-5 font-bold text-neutral-900 text-lg">Gestión de Casos</p>
+        <p className="mt-1 text-neutral-500 text-sm">Preparando su espacio de trabajo…</p>
+        <div className="mx-auto mt-5 h-1.5 w-32 overflow-hidden rounded-full bg-neutral-200">
+          <div className="h-full w-1/2 animate-pulse rounded-full bg-brand-600" />
+        </div>
+        <span className="sr-only">Cargando aplicación</span>
+      </div>
+    </div>
+  );
+}
 
 const Header = lazy(() => import('../components/Header'));
 const Sidebar = lazy(() => import('../components/Sidebar'));
@@ -44,6 +65,7 @@ export default function App() {
   const tenantId = useAuthStore((s) => s.tenantId);
   const appRole = useAuthStore((s) => s.appRole);
   const profileRole = useAuthStore((s) => s.profileRole);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   const membership = useMemberships('convivencia');
   const effectiveAdminRole = appRole ?? profileRole;
@@ -112,6 +134,25 @@ export default function App() {
   const setPrivacyMode = useUIStore((s) => s.setPrivacyMode);
   const showShortcuts = useUIStore((s) => s.showShortcuts);
   const setShowShortcuts = useUIStore((s) => s.setShowShortcuts);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (user) {
+      setShowWelcome(false);
+      return;
+    }
+    setShowWelcome(window.sessionStorage.getItem(WELCOME_SEEN_KEY) !== 'true');
+  }, [authLoading, user]);
+
+  const dismissWelcome = useCallback(() => {
+    window.sessionStorage.setItem(WELCOME_SEEN_KEY, 'true');
+    setShowWelcome(false);
+  }, []);
+
+  const loginFromWelcome = useCallback(() => {
+    dismissWelcome();
+    setShowLoginModal(true);
+  }, [dismissWelcome, setShowLoginModal]);
 
   const handleLogout = useCallback(() => {
     clearSessionExpired();
@@ -345,14 +386,7 @@ export default function App() {
   });
 
   if (authLoading) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center bg-neutral-100">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-brand-600 border-r-transparent border-solid" />
-          <p className="mt-3 text-neutral-500 text-xs">Cargando...</p>
-        </div>
-      </div>
-    );
+    return <AppLoadingFallback />;
   }
 
   if (user && !membership.loaded && membership.authMode !== 'legacy') {
@@ -530,6 +564,9 @@ export default function App() {
             <Suspense fallback={null}>
               <LoginPage onClose={() => setShowLoginModal(false)} />
             </Suspense>
+          )}
+          {!user && !showLoginModal && (
+            <WelcomeModal open={showWelcome} onClose={dismissWelcome} onLogin={loginFromWelcome} />
           )}
         </div>
       </AppProvider>
