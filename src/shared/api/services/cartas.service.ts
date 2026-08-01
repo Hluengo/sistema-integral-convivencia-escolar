@@ -24,6 +24,7 @@ import {
 } from '../../lib/schemas/physicalCarta';
 import { getCurrentSchoolYear, getYearInChile, nowDateOnly } from '../../../lib/dateUtils';
 import type { CourseCartaRankingItem } from '../../lib/domain/courseCartaRanking';
+import { withSupabaseReadRetry } from '../lib/supabaseRetry';
 
 type CartaStatus = CartaDisciplinaria['status'];
 export type CartaWorkflowStatus = 'pending' | 'completed' | 'annulled';
@@ -170,11 +171,13 @@ export function getCartaWorkflowLabel(carta: CartaDisciplinaria | null | undefin
 }
 
 export async function fetchCartaTableStates(): Promise<Record<string, StudentCartaTableState>> {
-  const { data: cartasData, error: cartasError } = await supabase
-    .from('cartas_disciplinarias')
-    .select(CARTA_SELECT)
-    .order('emission_date', { ascending: false })
-    .order('created_at', { ascending: false });
+  const { data: cartasData, error: cartasError } = await withSupabaseReadRetry(() =>
+    supabase
+      .from('cartas_disciplinarias')
+      .select(CARTA_SELECT)
+      .order('emission_date', { ascending: false })
+      .order('created_at', { ascending: false }),
+  );
 
   if (cartasError) {
     console.error('Error fetching carta table states:', cartasError);
@@ -184,14 +187,16 @@ export async function fetchCartaTableStates(): Promise<Record<string, StudentCar
   const cartas = (cartasData || []).map(mapCauseRowToCarta);
   if (cartas.length === 0) return {};
 
-  const { data: eventsData, error: eventsError } = await supabase
-    .from('carta_events')
-    .select(CARTA_EVENT_SELECT)
-    .in(
-      'carta_id',
-      cartas.map((carta) => carta.id),
-    )
-    .order('created_at', { ascending: false });
+  const { data: eventsData, error: eventsError } = await withSupabaseReadRetry(() =>
+    supabase
+      .from('carta_events')
+      .select(CARTA_EVENT_SELECT)
+      .in(
+        'carta_id',
+        cartas.map((carta) => carta.id),
+      )
+      .order('created_at', { ascending: false }),
+  );
 
   if (eventsError) {
     console.error('Error fetching carta events for table:', eventsError);

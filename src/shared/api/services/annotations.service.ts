@@ -16,6 +16,7 @@ import type { Annotation, AnotacionStudent, DocumentAnalysis } from '../../../ty
 import { mapInspectorateToAnnotation } from '../../../lib/mappers';
 import { calculateDisciplinaryStatus } from '../../../domain/disciplinaryStatus';
 import { useAuthStore } from '../../../stores/authStore';
+import { withSupabaseReadRetry } from '../lib/supabaseRetry';
 
 const ANNOTATION_COLUMNS =
   'id,student_id,date_time,observation,severity,type,registered_by,created_at,created_by,pdf_file_path';
@@ -138,7 +139,9 @@ function mapAnnotationSummaryRows(rows: RpcStudentSummary[]): AnotacionStudent[]
 }
 
 export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStudent[]> {
-  const { data: rpcData, error: rpcError } = await supabase.rpc('get_student_annotation_summary');
+  const { data: rpcData, error: rpcError } = await withSupabaseReadRetry(() =>
+    supabase.rpc('get_student_annotation_summary'),
+  );
 
   if (rpcError || !rpcData) {
     const error = rpcError ?? new Error('La RPC get_student_annotation_summary no devolvió datos.');
