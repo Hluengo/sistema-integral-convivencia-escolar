@@ -3,7 +3,7 @@
 module.exports = {
   ci: {
     collect: {
-      startServerCommand: 'set PORT=3011&& node scripts/serve-dist.mjs',
+      startServerCommand: 'node scripts/serve-dist.mjs --port=3011',
       startServerReadyPattern: 'Static dist server running at',
       url: ['http://localhost:3011/'],
       numberOfRuns: 1,

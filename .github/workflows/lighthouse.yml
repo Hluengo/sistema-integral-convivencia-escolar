@@ -30,22 +30,12 @@ jobs:
           VITE_SUPABASE_ANON_KEY: public-anon-key-for-ci
           VITE_ALLOW_LOCAL_DEMO: 'true'
 
-      - name: Start preview server
-        run: npx vite preview --port 4173 &
-        env:
-          DISABLE_HMR: 'true'
-
-      - name: Wait for server
-        run: npx wait-on http://localhost:4173
-
       - name: Run Lighthouse CI
-        run: npx lhci autorun
-        env:
-          LHCI_BASE_URL: http://localhost:4173
+        run: npm run lighthouse:ci
 
       - name: Upload reports
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: lhci-reports
-          path: lhci-reports/
+          path: .lighthouseci/

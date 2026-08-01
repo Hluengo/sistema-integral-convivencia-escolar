@@ -6,7 +6,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'dist');
-const port = Number.parseInt(process.env.PORT ?? '3001', 10);
+const cliPort = process.argv.find((argument) => argument.startsWith('--port='))?.split('=')[1];
+const port = Number.parseInt(cliPort ?? process.env.PORT ?? '3001', 10);
 
 if (!existsSync(root)) throw new Error('No existe dist/. Ejecute npm run build:web antes.');
 
