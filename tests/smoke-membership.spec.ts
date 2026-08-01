@@ -82,7 +82,7 @@ test.describe('Convivencia - Phase 3 Membership Enforcement', () => {
 
     await expect(sidebar.getByText(STAFF_EMAIL)).toBeVisible({ timeout: 15000 });
 
-    await sidebar.getByRole('button', { name: 'Expedientes' }).click();
+    await sidebar.getByRole('button', { name: 'Causas' }).click();
     await expect(page.getByText('Vista: Expedientes')).toBeVisible({ timeout: 5000 });
 
     await page.getByRole('button', { name: 'Cerrar sesión' }).click();
