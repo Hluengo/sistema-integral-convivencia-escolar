@@ -79,5 +79,54 @@ test.describe('Plataforma superadmin', () => {
       await page.getByLabel('Colegio para administrar').selectOption({ index: 1 });
       await expect(page.getByLabel('Nombre oficial')).toBeVisible();
     });
+
+    test('el selector mantiene el contexto del colegio en documentos e importación', async ({
+      page,
+    }) => {
+      await page.goto('/');
+      await login(page, superadminEmail ?? '', superadminPassword ?? '');
+
+      const sidebar = page.getByRole('complementary', { name: 'Barra de navegación principal' });
+      await sidebar.getByRole('button', { name: 'Plataforma' }).click();
+
+      const tenantSelector = page.getByLabel('Colegio para administrar');
+      await expect(tenantSelector.locator('option')).not.toHaveCount(1, { timeout: 15_000 });
+      const selectedTenantName =
+        (await tenantSelector.locator('option').nth(1).textContent())?.trim() ?? '';
+      expect(selectedTenantName).not.toBe('');
+      await tenantSelector.selectOption({ index: 1 });
+
+      await expect(page.getByText(`Administrando ${selectedTenantName}`)).toBeVisible({
+        timeout: 15_000,
+      });
+
+      await page.getByRole('button', { name: 'Documentos' }).click();
+      await expect(page.getByRole('heading', { name: 'Documentos institucionales' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Archivos del colegio' })).toBeVisible();
+
+      await page.getByRole('button', { name: 'Importar base' }).click();
+      await expect(
+        page.getByRole('heading', { name: 'Importar cursos y estudiantes' }),
+      ).toBeVisible();
+      await expect(page.getByText(selectedTenantName)).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Subir base' })).toBeDisabled();
+    });
+
+    test('documentos e importación solicitan seleccionar un colegio', async ({ page }) => {
+      await page.goto('/');
+      await login(page, superadminEmail ?? '', superadminPassword ?? '');
+
+      const sidebar = page.getByRole('complementary', { name: 'Barra de navegación principal' });
+      await sidebar.getByRole('button', { name: 'Plataforma' }).click();
+
+      await page.getByRole('button', { name: 'Documentos' }).click();
+      await expect(
+        page.getByText('Seleccione un colegio para administrar sus documentos institucionales.'),
+      ).toBeVisible();
+
+      await page.getByRole('button', { name: 'Importar base' }).click();
+      await expect(page.getByText('Seleccione un colegio arriba')).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Subir base' })).toBeDisabled();
+    });
   });
 });
