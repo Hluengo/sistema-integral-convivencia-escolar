@@ -156,8 +156,20 @@ export default function App() {
 
   const handleLogout = useCallback(() => {
     clearSessionExpired();
+    setCurrentView('dashboard');
+    setSelectedCausaId('');
+    setMobileShowDetail(false);
+    setShowLoginModal(false);
+    setShowShortcuts(false);
     void signOut();
-  }, [clearSessionExpired]);
+  }, [
+    clearSessionExpired,
+    setCurrentView,
+    setSelectedCausaId,
+    setMobileShowDetail,
+    setShowLoginModal,
+    setShowShortcuts,
+  ]);
 
   const isTimelineCollapsedRef = useRef(false);
 
@@ -204,6 +216,8 @@ export default function App() {
       lastCausasQueryDataRef.current = undefined;
       lastDetailsQueryDataRef.current = undefined;
       hasInitializedCausasRef.current = false;
+      setCurrentView('dashboard');
+      setMobileShowDetail(false);
       // Evita un ciclo de render: [] es una nueva referencia en cada efecto.
       // Solo limpiamos Zustand si hay información efectivamente cargada.
       if (causas.length > 0) setCausas([]);
@@ -231,6 +245,8 @@ export default function App() {
     selectedCausaId,
     setCausas,
     setSelectedCausaId,
+    setCurrentView,
+    setMobileShowDetail,
   ]);
 
   useEffect(() => {

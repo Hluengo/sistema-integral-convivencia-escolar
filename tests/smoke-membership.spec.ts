@@ -82,12 +82,16 @@ test.describe('Convivencia - Phase 3 Membership Enforcement', () => {
 
     await expect(sidebar.getByText(STAFF_EMAIL)).toBeVisible({ timeout: 15000 });
 
+    await sidebar.getByRole('button', { name: 'Expedientes' }).click();
+    await expect(page.getByText('Vista: Expedientes')).toBeVisible({ timeout: 5000 });
+
     await page.getByRole('button', { name: 'Cerrar sesión' }).click();
     await page.waitForTimeout(3000);
 
     await expect(sidebar.getByRole('button', { name: 'Iniciar sesión' })).toBeVisible({
       timeout: 10000,
     });
+    await expect(page.getByText('Vista: Panel de control')).toBeVisible({ timeout: 10000 });
   });
 
   test('enforced mode: AccessDenied screen when no membership', async ({ page }) => {
