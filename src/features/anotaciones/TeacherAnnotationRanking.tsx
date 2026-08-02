@@ -5,26 +5,21 @@
 
 import { Users } from 'lucide-react';
 import type { TeacherAnnotationRankingItem } from '../../shared/lib/domain/annotationRankings';
-import RankingCard, { type RankingCardItem } from './RankingCard';
+import RankingCard from './RankingCard';
+import { toTeacherCardItems } from './annotationRankingCardItems';
 
 interface TeacherAnnotationRankingProps {
   ranking: TeacherAnnotationRankingItem[];
   isLoading?: boolean;
   error?: Error | null;
-}
-
-function toCardItems(ranking: TeacherAnnotationRankingItem[]): RankingCardItem[] {
-  return ranking.map((item) => ({
-    key: item.teacher_name,
-    label: item.teacher_name,
-    count: item.negative_count,
-  }));
+  privacyMode?: boolean;
 }
 
 export default function TeacherAnnotationRanking({
   ranking,
   isLoading,
   error,
+  privacyMode = false,
 }: TeacherAnnotationRankingProps) {
   return (
     <RankingCard
@@ -35,7 +30,7 @@ export default function TeacherAnnotationRanking({
       errorMessage="No se pudo cargar el ranking de docentes."
       isLoading={isLoading}
       error={error}
-      items={toCardItems(ranking)}
+      items={toTeacherCardItems(ranking, privacyMode)}
       barColorClass="bg-grave-500"
     />
   );

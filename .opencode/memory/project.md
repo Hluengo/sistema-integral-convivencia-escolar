@@ -598,6 +598,9 @@ Fallback: Supabase REST API /auth/v1/user
 - Estado global en `uiStore.privacyMode`
 - Oculta RUTs, nombres completos
 - Toggle en Header (UserAvatar)
+- **Prop drilling obligatorio:** `privacyMode` se pasa desde `App.tsx` hacia abajo por props (patrón usado en `CausasView`, `AnotacionesView`, `StudentsPanel`). Cualquier vista nueva del dashboard o tabla con nombres de NNA/docentes debe recibirla y aplicar `maskName`/`maskRut` de `shared/lib/anotacionesUtils.ts`.
+- **Rankings del dashboard (P-01, resuelto 2026-08-02):** los rankings de docentes/estudiantes mostraron nombres reales con privacidad activada. Se corrigió pasando `privacyMode` desde `MainContent` → `DashboardStats` → `AnotacionesDashboardStats` → rankings, y el mapeo a items vive en `features/anotaciones/annotationRankingCardItems.ts` (`toTeacherCardItems`/`toStudentCardItems`). El curso en el sublabel no se enmascara (no es dato personal). Si se agregan nuevas tarjetas de ranking, deben usar ese helper.
+- Los RPCs de Supabase (`get_student_annotation_ranking`, `get_teacher_annotation_ranking`) devuelven nombres reales; **no hay enmascarado server-side** — la protección es responsabilidad del cliente.
 
 ### 10.4 Security Headers (vercel.json)
 

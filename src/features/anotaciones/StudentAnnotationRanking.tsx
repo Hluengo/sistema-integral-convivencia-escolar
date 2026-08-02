@@ -5,27 +5,21 @@
 
 import { UserRound } from 'lucide-react';
 import type { StudentAnnotationRankingItem } from '../../shared/lib/domain/annotationRankings';
-import RankingCard, { type RankingCardItem } from './RankingCard';
+import RankingCard from './RankingCard';
+import { toStudentCardItems } from './annotationRankingCardItems';
 
 interface StudentAnnotationRankingProps {
   ranking: StudentAnnotationRankingItem[];
   isLoading?: boolean;
   error?: Error | null;
-}
-
-function toCardItems(ranking: StudentAnnotationRankingItem[]): RankingCardItem[] {
-  return ranking.map((item) => ({
-    key: item.student_id,
-    label: item.student_name,
-    sublabel: item.course_name,
-    count: item.negative_count,
-  }));
+  privacyMode?: boolean;
 }
 
 export default function StudentAnnotationRanking({
   ranking,
   isLoading,
   error,
+  privacyMode = false,
 }: StudentAnnotationRankingProps) {
   return (
     <RankingCard
@@ -36,7 +30,7 @@ export default function StudentAnnotationRanking({
       errorMessage="No se pudo cargar el ranking de estudiantes."
       isLoading={isLoading}
       error={error}
-      items={toCardItems(ranking)}
+      items={toStudentCardItems(ranking, privacyMode)}
       barColorClass="bg-blue-500"
     />
   );

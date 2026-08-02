@@ -52,6 +52,7 @@ interface DashboardStatsProps {
   onboardingEnabled?: boolean;
   coursesCount?: number;
   onNavigate?: (view: SidebarView) => void;
+  privacyMode?: boolean;
 }
 
 const SEVERITY_CONFIG: Record<TipoInfraccion, { label: string; dot: string }> = {
@@ -140,6 +141,7 @@ export default function DashboardStats({
   onboardingEnabled = false,
   coursesCount = 0,
   onNavigate,
+  privacyMode = false,
 }: DashboardStatsProps) {
   const authenticatedStats = getStats(causas);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -349,6 +351,7 @@ export default function DashboardStats({
         studentAnnotationRanking={studentAnnotationRankingQuery.data ?? []}
         studentAnnotationRankingLoading={studentAnnotationRankingQuery.isLoading}
         studentAnnotationRankingError={studentRankingError}
+        privacyMode={privacyMode}
       />
     </section>
   );

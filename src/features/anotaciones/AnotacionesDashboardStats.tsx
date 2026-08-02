@@ -27,6 +27,7 @@ interface AnotacionesDashboardStatsProps {
   studentAnnotationRanking?: StudentAnnotationRankingItem[];
   studentAnnotationRankingLoading?: boolean;
   studentAnnotationRankingError?: Error | null;
+  privacyMode?: boolean;
 }
 
 interface AnnotationStageCardProps {
@@ -94,6 +95,7 @@ export default function AnotacionesDashboardStats({
   studentAnnotationRanking = [],
   studentAnnotationRankingLoading,
   studentAnnotationRankingError,
+  privacyMode = false,
 }: AnotacionesDashboardStatsProps) {
   return (
     <div className="space-y-6">
@@ -156,11 +158,13 @@ export default function AnotacionesDashboardStats({
           ranking={teacherAnnotationRanking}
           isLoading={teacherAnnotationRankingLoading}
           error={teacherAnnotationRankingError}
+          privacyMode={privacyMode}
         />
         <StudentAnnotationRanking
           ranking={studentAnnotationRanking}
           isLoading={studentAnnotationRankingLoading}
           error={studentAnnotationRankingError}
+          privacyMode={privacyMode}
         />
       </div>
     </div>

@@ -169,6 +169,7 @@ export default function MainContent({
               onboardingEnabled={onboardingEnabled}
               coursesCount={coursesCount}
               onNavigate={onNavigate}
+              privacyMode={privacyMode}
             />
           </Suspense>
         </ErrorBoundary>
