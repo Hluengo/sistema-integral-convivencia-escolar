@@ -50,6 +50,10 @@ const compatibilityBarrels: Array<{ file: string; exportStatement: string }> = [
     exportStatement:
       "export { SidebarAulaSeguraAlert, SidebarUserMenu } from '../widgets/sidebar/SidebarUserMenu';",
   },
+  {
+    file: 'ShortcutsModal.tsx',
+    exportStatement: "export { default } from '../shared/ui/ShortcutsModal';",
+  },
   { file: 'Toast.tsx', exportStatement: "export { ToastProvider } from '../shared/ui/Toast';" },
   {
     file: join('InteractiveTimeline', 'TimelineHeader.tsx'),
@@ -101,6 +105,16 @@ describe('components legacy compatibility layer', () => {
 
     assert.ok(
       appContent.includes("const Sidebar = lazy(() => import('../widgets/sidebar/Sidebar'));"),
+    );
+  });
+
+  it('la app consume ShortcutsModal desde shared/ui', async () => {
+    const appContent = await readFile(join(srcDir, 'app', 'App.tsx'), 'utf8');
+
+    assert.ok(
+      appContent.includes(
+        "const ShortcutsModal = lazy(() => import('../shared/ui/ShortcutsModal'));",
+      ),
     );
   });
 });

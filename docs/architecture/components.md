@@ -2,14 +2,15 @@
 
 ## Shared UI Components (`src/shared/ui/`)
 
-| Componente      | Archivo             | Propósito                        |
-| --------------- | ------------------- | -------------------------------- |
-| `Button`        | `Button.tsx`        | Botón reutilizable con variantes |
-| `Dialog`        | `Dialog.tsx`        | Modal dialog con overlay         |
-| `AlertDialog`   | `AlertDialog.tsx`   | Diálogo de confirmación          |
-| `ErrorBoundary` | `ErrorBoundary.tsx` | Límite de error con retry        |
-| `MetricCard`    | `MetricCard.tsx`    | Tarjeta KPI reutilizable         |
-| `ToastProvider` | `Toast.tsx`         | Sistema global de notificaciones |
+| Componente       | Archivo              | Propósito                        |
+| ---------------- | -------------------- | -------------------------------- |
+| `Button`         | `Button.tsx`         | Botón reutilizable con variantes |
+| `Dialog`         | `Dialog.tsx`         | Modal dialog con overlay         |
+| `AlertDialog`    | `AlertDialog.tsx`    | Diálogo de confirmación          |
+| `ErrorBoundary`  | `ErrorBoundary.tsx`  | Límite de error con retry        |
+| `MetricCard`     | `MetricCard.tsx`     | Tarjeta KPI reutilizable         |
+| `ShortcutsModal` | `ShortcutsModal.tsx` | Modal de atajos de teclado       |
+| `ToastProvider`  | `Toast.tsx`          | Sistema global de notificaciones |
 
 ## Shared Components (`src/shared/`)
 
@@ -80,9 +81,9 @@
 
 `src/components/` conserva compatibilidad con imports históricos, pero los componentes canónicos deben vivir en `features/`, `widgets/` o `shared/ui/`.
 
-- Barrels protegidos por `src/components/legacyCompatibility.test.ts`: `AiAdvisor`, `CommandPalette`, `DashboardStats`, `EditCausaModal`, `ErrorBoundary`, `Header`, `LoginPage`, `MainContent`, `MetricCard`, `NewCausaModal`, `Sidebar`, `SidebarUserMenu`, `Toast`, `InteractiveTimeline/TimelineHeader`, `InteractiveTimeline/TimelineTabPanels`, `InteractiveTimeline/TimelineTabs`, `InteractiveTimeline/hooks/useBreaches`.
-- Componentes reales aún pendientes de migración gradual: `ClosedCases`, `InteractiveTimeline`, `ShortcutsModal`, `TemplateEditor` y subcomponentes de `Header`.
-- `MetricCard`, `ErrorBoundary` y `ToastProvider` ya fueron movidos a `src/shared/ui/`; `Sidebar` y `SidebarUserMenu` viven en `src/widgets/sidebar/`. Sus archivos bajo `src/components/` quedan sólo como re-export de compatibilidad.
+- Barrels protegidos por `src/components/legacyCompatibility.test.ts`: `AiAdvisor`, `CommandPalette`, `DashboardStats`, `EditCausaModal`, `ErrorBoundary`, `Header`, `LoginPage`, `MainContent`, `MetricCard`, `NewCausaModal`, `Sidebar`, `SidebarUserMenu`, `ShortcutsModal`, `Toast`, `InteractiveTimeline/TimelineHeader`, `InteractiveTimeline/TimelineTabPanels`, `InteractiveTimeline/TimelineTabs`, `InteractiveTimeline/hooks/useBreaches`.
+- Componentes reales aún pendientes de migración gradual: `ClosedCases`, `InteractiveTimeline`, `TemplateEditor` y subcomponentes de `Header`.
+- `MetricCard`, `ErrorBoundary`, `ShortcutsModal` y `ToastProvider` ya fueron movidos a `src/shared/ui/`; `Sidebar` y `SidebarUserMenu` viven en `src/widgets/sidebar/`. Sus archivos bajo `src/components/` quedan sólo como re-export de compatibilidad.
 
 ## Patterns
 

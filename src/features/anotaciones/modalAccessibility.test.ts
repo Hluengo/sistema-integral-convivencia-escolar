@@ -56,7 +56,7 @@ describe('Modales disciplinarios accesibles', () => {
   });
 
   it('los diálogos de atajos e impresión usan la primitiva compartida', () => {
-    const shortcuts = source('../../components/ShortcutsModal.tsx');
+    const shortcuts = source('../../shared/ui/ShortcutsModal.tsx');
     const printHint = source('docgen/components/PrintHintDialog.tsx');
 
     ok(shortcuts.includes('<Dialog open'));
