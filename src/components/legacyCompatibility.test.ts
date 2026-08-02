@@ -36,6 +36,10 @@ const compatibilityBarrels: Array<{ file: string; exportStatement: string }> = [
   },
   { file: 'Header.tsx', exportStatement: "export { default } from '../widgets/header/Header';" },
   {
+    file: 'InteractiveTimeline.tsx',
+    exportStatement: "export { default } from '../features/timeline/InteractiveTimeline';",
+  },
+  {
     file: join('Header', 'HeaderActions.tsx'),
     exportStatement: "export { default } from '../../widgets/header/HeaderActions';",
   },
@@ -190,6 +194,15 @@ describe('components legacy compatibility layer', () => {
     assert.ok(
       advisorView.includes("import TemplateEditor from '../../document-templates/TemplateEditor';"),
     );
+  });
+
+  it('CausaDetailModal consume InteractiveTimeline desde features/timeline', async () => {
+    const modal = await readFile(
+      join(srcDir, 'features', 'causas', 'CausaDetailModal.tsx'),
+      'utf8',
+    );
+
+    assert.ok(modal.includes("import InteractiveTimeline from '../timeline/InteractiveTimeline';"));
   });
 
   it('la app consume ShortcutsModal desde shared/ui', async () => {

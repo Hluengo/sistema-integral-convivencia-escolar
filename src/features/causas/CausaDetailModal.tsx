@@ -3,7 +3,7 @@
 import { Dialog, DialogDescription, DialogTitle } from '../../shared/ui/Dialog';
 import { DetailModalContent } from '../../shared/ui/DetailModal';
 import type { Causa } from '../../shared/lib/types';
-import InteractiveTimeline from '../../components/InteractiveTimeline';
+import InteractiveTimeline from '../timeline/InteractiveTimeline';
 
 interface CausaDetailModalProps {
   causa: Causa | undefined;

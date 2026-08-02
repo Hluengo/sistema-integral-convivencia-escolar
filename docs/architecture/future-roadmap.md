@@ -22,10 +22,9 @@
 ### Frontend
 
 - [ ] Integrar React Router para deep linking
-- [ ] Refactor `components/` legacy → eliminar duplicación
+- [x] Refactor `components/` legacy → eliminar duplicación
 
-> 🟡 **En progreso:** se consolidaron capas legacy y se colapsaron barrels hacia `shared` (`191b9c4`); se eliminó código muerto/duplicado (`b466eb4`). Resta auditar componentes huérfanos en `components/`.
-> ✅ Auditoría 2026-08-02: `src/components/` contiene 30 archivos; 28 son barrels de compatibilidad protegidos por `src/components/legacyCompatibility.test.ts`, 1 es componente real pendiente y 1 es el test de compatibilidad. `MetricCard`, `ErrorBoundary`, `ToastProvider` y `ShortcutsModal` viven en `src/shared/ui/`; `ClosedCases` vive en `src/features/causas/`; `TemplateEditor` vive en `src/features/document-templates/`; `Header` y sus subcomponentes viven en `src/widgets/header/`; `Sidebar` y `SidebarUserMenu` viven en `src/widgets/sidebar/`. Próximo paso recomendado: planificar la migración completa de `InteractiveTimeline`.
+> ✅ Cerrado 2026-08-02: `src/components/` contiene 30 archivos; 29 son barrels de compatibilidad protegidos por `src/components/legacyCompatibility.test.ts` y 1 es el test de compatibilidad. Ya no quedan componentes reales en la capa legacy. `MetricCard`, `ErrorBoundary`, `ToastProvider` y `ShortcutsModal` viven en `src/shared/ui/`; `ClosedCases` vive en `src/features/causas/`; `TemplateEditor` vive en `src/features/document-templates/`; `InteractiveTimeline` vive en `src/features/timeline/`; `Header` y sus subcomponentes viven en `src/widgets/header/`; `Sidebar` y `SidebarUserMenu` viven en `src/widgets/sidebar/`.
 
 - [ ] Agregar skeletons para todas las vistas lazy
 

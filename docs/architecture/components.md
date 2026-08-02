@@ -85,10 +85,9 @@
 
 `src/components/` conserva compatibilidad con imports históricos, pero los componentes canónicos deben vivir en `features/`, `widgets/` o `shared/ui/`.
 
-- `src/components/` contiene 30 archivos: 28 barrels protegidos por `src/components/legacyCompatibility.test.ts`, 1 componente real pendiente y el test de compatibilidad.
-- Barrels protegidos: `AiAdvisor`, `ClosedCases`, `CommandPalette`, `DashboardStats`, `EditCausaModal`, `ErrorBoundary`, `Header`, `Header/HeaderActions`, `Header/NotificationsDropdown`, `Header/PageTitle`, `Header/PrivacyToggle`, `Header/SaveStatus`, `Header/UserAvatar`, `Header/constants`, `Header/hooks/useEscapeClose`, `LoginPage`, `MainContent`, `MetricCard`, `NewCausaModal`, `Sidebar`, `SidebarUserMenu`, `ShortcutsModal`, `TemplateEditor`, `Toast`, `InteractiveTimeline/TimelineHeader`, `InteractiveTimeline/TimelineTabPanels`, `InteractiveTimeline/TimelineTabs`, `InteractiveTimeline/hooks/useBreaches`.
-- Componente real aún pendiente de migración gradual: `InteractiveTimeline`.
-- `MetricCard`, `ErrorBoundary`, `ShortcutsModal` y `ToastProvider` ya fueron movidos a `src/shared/ui/`; `Header` y sus subcomponentes viven en `src/widgets/header/`; `Sidebar` y `SidebarUserMenu` viven en `src/widgets/sidebar/`. Sus archivos bajo `src/components/` quedan sólo como re-export de compatibilidad.
+- `src/components/` contiene 30 archivos: 29 barrels protegidos por `src/components/legacyCompatibility.test.ts` y el test de compatibilidad. Ya no quedan componentes reales en la capa legacy.
+- Barrels protegidos: `AiAdvisor`, `ClosedCases`, `CommandPalette`, `DashboardStats`, `EditCausaModal`, `ErrorBoundary`, `Header`, `Header/HeaderActions`, `Header/NotificationsDropdown`, `Header/PageTitle`, `Header/PrivacyToggle`, `Header/SaveStatus`, `Header/UserAvatar`, `Header/constants`, `Header/hooks/useEscapeClose`, `InteractiveTimeline`, `LoginPage`, `MainContent`, `MetricCard`, `NewCausaModal`, `Sidebar`, `SidebarUserMenu`, `ShortcutsModal`, `TemplateEditor`, `Toast`, `InteractiveTimeline/TimelineHeader`, `InteractiveTimeline/TimelineTabPanels`, `InteractiveTimeline/TimelineTabs`, `InteractiveTimeline/hooks/useBreaches`.
+- `MetricCard`, `ErrorBoundary`, `ShortcutsModal` y `ToastProvider` ya fueron movidos a `src/shared/ui/`; `Header` y sus subcomponentes viven en `src/widgets/header/`; `Sidebar` y `SidebarUserMenu` viven en `src/widgets/sidebar/`; `ClosedCases` vive en `src/features/causas/`; `TemplateEditor` vive en `src/features/document-templates/`; `InteractiveTimeline` y sus piezas viven en `src/features/timeline/`. Sus archivos bajo `src/components/` quedan sólo como re-export de compatibilidad.
 
 ## Patterns
 

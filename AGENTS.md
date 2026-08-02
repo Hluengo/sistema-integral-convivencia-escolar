@@ -71,7 +71,7 @@ Implementar cada ruta API una sola vez en `server/api/routes/` y registrarla en 
 
 **Almacenamiento local:** Zustand stores (authStore, causasStore, uiStore, toastStore) para estado de sesión, casos, navegación/preferencias y notificaciones.
 
-**Tests:** `node:test` + `node:assert/strict`. 362 tests. Ejecutar siempre antes de commit.
+**Tests:** `node:test` + `node:assert/strict`. 364 tests. Ejecutar siempre antes de commit.
 
 **Convenciones:**
 
