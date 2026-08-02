@@ -34,7 +34,13 @@
     "pre-push": "npm run lint && npm run test && npm run build:web && npm run security-audit"
   },
   "knip": {
-    "ignore": []
+    "ignore": [
+      "lighthouserc.cjs",
+      "scripts/serve-dist.mjs"
+    ],
+    "ignoreBinaries": [
+      "gitleaks"
+    ]
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.19",
