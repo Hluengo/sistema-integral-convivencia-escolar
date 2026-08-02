@@ -7,7 +7,7 @@ import type React from 'react';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Search, FileText, LayoutDashboard, Users, MessageSquare } from 'lucide-react';
 import type { Causa } from '../../shared/lib/types';
-import type { SidebarView } from '../../components/Sidebar';
+import type { SidebarView } from '../../widgets/sidebar/Sidebar';
 import { Dialog, DialogContent } from '../../shared/ui/Dialog';
 
 interface CommandPaletteProps {

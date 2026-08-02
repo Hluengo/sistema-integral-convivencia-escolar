@@ -48,7 +48,7 @@ function AppLoadingFallback() {
 }
 
 const Header = lazy(() => import('../components/Header'));
-const Sidebar = lazy(() => import('../components/Sidebar'));
+const Sidebar = lazy(() => import('../widgets/sidebar/Sidebar'));
 const MainContent = lazy(() => import('../components/MainContent'));
 const CommandPalette = lazy(() => import('../components/CommandPalette'));
 const NewCausaModal = lazy(() => import('../components/NewCausaModal'));

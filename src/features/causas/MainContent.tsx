@@ -6,7 +6,7 @@
 import type React from 'react';
 import { useCallback, Suspense, lazy } from 'react';
 import type { Causa, FaseProcedimental } from '../../shared/lib/types';
-import type { SidebarView } from '../../components/Sidebar';
+import type { SidebarView } from '../../widgets/sidebar/Sidebar';
 import type { FormAction } from '../../shared/lib/hooks/useNewCausaForm';
 import { ChevronRight } from 'lucide-react';
 import { VIEW_TITLES } from '../../components/Header/constants';

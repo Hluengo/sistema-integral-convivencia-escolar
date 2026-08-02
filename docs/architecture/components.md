@@ -23,10 +23,12 @@
 
 ## Widgets (`src/widgets/`)
 
-| Widget      | Archivo                | Propósito                  |
-| ----------- | ---------------------- | -------------------------- |
-| `Header`    | `header/Header.tsx`    | Header sticky con acciones |
-| `SearchBar` | `header/SearchBar.tsx` | Búsqueda global            |
+| Widget            | Archivo                       | Propósito                        |
+| ----------------- | ----------------------------- | -------------------------------- |
+| `Header`          | `header/Header.tsx`           | Header sticky con acciones       |
+| `SearchBar`       | `header/SearchBar.tsx`        | Búsqueda global                  |
+| `Sidebar`         | `sidebar/Sidebar.tsx`         | Navegación lateral del app shell |
+| `SidebarUserMenu` | `sidebar/SidebarUserMenu.tsx` | Estado de sesión dentro del menú |
 
 ## Page Components (`src/features/`)
 
@@ -72,16 +74,15 @@
 
 ### Layout
 
-- `Sidebar.tsx` — Navegación lateral
 - `MainContent.tsx` — Contenedor principal (switch de vistas)
 
 ## Legacy Compatibility Layer (`src/components/`)
 
 `src/components/` conserva compatibilidad con imports históricos, pero los componentes canónicos deben vivir en `features/`, `widgets/` o `shared/ui/`.
 
-- Barrels protegidos por `src/components/legacyCompatibility.test.ts`: `AiAdvisor`, `CommandPalette`, `DashboardStats`, `EditCausaModal`, `ErrorBoundary`, `Header`, `LoginPage`, `MainContent`, `MetricCard`, `NewCausaModal`, `Toast`, `InteractiveTimeline/TimelineHeader`, `InteractiveTimeline/TimelineTabPanels`, `InteractiveTimeline/TimelineTabs`, `InteractiveTimeline/hooks/useBreaches`.
-- Componentes reales aún pendientes de migración gradual: `ClosedCases`, `InteractiveTimeline`, `ShortcutsModal`, `Sidebar`, `SidebarUserMenu`, `TemplateEditor` y subcomponentes de `Header`.
-- `MetricCard`, `ErrorBoundary` y `ToastProvider` ya fueron movidos a `src/shared/ui/`; sus archivos bajo `src/components/` quedan sólo como re-export de compatibilidad.
+- Barrels protegidos por `src/components/legacyCompatibility.test.ts`: `AiAdvisor`, `CommandPalette`, `DashboardStats`, `EditCausaModal`, `ErrorBoundary`, `Header`, `LoginPage`, `MainContent`, `MetricCard`, `NewCausaModal`, `Sidebar`, `SidebarUserMenu`, `Toast`, `InteractiveTimeline/TimelineHeader`, `InteractiveTimeline/TimelineTabPanels`, `InteractiveTimeline/TimelineTabs`, `InteractiveTimeline/hooks/useBreaches`.
+- Componentes reales aún pendientes de migración gradual: `ClosedCases`, `InteractiveTimeline`, `ShortcutsModal`, `TemplateEditor` y subcomponentes de `Header`.
+- `MetricCard`, `ErrorBoundary` y `ToastProvider` ya fueron movidos a `src/shared/ui/`; `Sidebar` y `SidebarUserMenu` viven en `src/widgets/sidebar/`. Sus archivos bajo `src/components/` quedan sólo como re-export de compatibilidad.
 
 ## Patterns
 

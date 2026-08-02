@@ -25,7 +25,7 @@
 - [ ] Refactor `components/` legacy → eliminar duplicación
 
 > 🟡 **En progreso:** se consolidaron capas legacy y se colapsaron barrels hacia `shared` (`191b9c4`); se eliminó código muerto/duplicado (`b466eb4`). Resta auditar componentes huérfanos en `components/`.
-> ✅ Auditoría 2026-08-02: `src/components/` contiene 27 archivos; 15 son barrels de compatibilidad protegidos por `src/components/legacyCompatibility.test.ts`. `MetricCard`, `ErrorBoundary` y `ToastProvider` se movieron a `src/shared/ui/` y sus archivos en `src/components/` quedaron como re-export. Próximo paso: migrar componentes reales de layout (`Sidebar`, `SidebarUserMenu`) a `widgets` o `shared/ui` según corresponda.
+> ✅ Auditoría 2026-08-02: `src/components/` contiene 27 archivos; 17 son barrels de compatibilidad protegidos por `src/components/legacyCompatibility.test.ts`. `MetricCard`, `ErrorBoundary` y `ToastProvider` se movieron a `src/shared/ui/`; `Sidebar` y `SidebarUserMenu` se movieron a `src/widgets/sidebar/`. Sus archivos en `src/components/` quedaron como re-export. Próximo paso recomendado: migrar `ShortcutsModal` a `shared/ui` y separar `Header` subcomponents hacia `src/widgets/header/` para seguir reduciendo `components/`.
 
 - [ ] Agregar skeletons para todas las vistas lazy
 

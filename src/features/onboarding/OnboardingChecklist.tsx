@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { ArrowRight, CheckCircle2, Circle, ListChecks, X } from 'lucide-react';
-import type { SidebarView } from '../../components/Sidebar';
+import type { SidebarView } from '../../widgets/sidebar/Sidebar';
 import Button from '../../shared/ui/Button';
 import {
   getOnboardingStorageKey,

@@ -41,6 +41,15 @@ const compatibilityBarrels: Array<{ file: string; exportStatement: string }> = [
     file: 'NewCausaModal.tsx',
     exportStatement: "export { default } from '../features/causas/ui/NewCausaModal';",
   },
+  {
+    file: 'Sidebar.tsx',
+    exportStatement: "export { default } from '../widgets/sidebar/Sidebar';",
+  },
+  {
+    file: 'SidebarUserMenu.tsx',
+    exportStatement:
+      "export { SidebarAulaSeguraAlert, SidebarUserMenu } from '../widgets/sidebar/SidebarUserMenu';",
+  },
   { file: 'Toast.tsx', exportStatement: "export { ToastProvider } from '../shared/ui/Toast';" },
   {
     file: join('InteractiveTimeline', 'TimelineHeader.tsx'),
@@ -85,5 +94,13 @@ describe('components legacy compatibility layer', () => {
 
     assert.ok(appContent.includes("import { ToastProvider } from '../shared/ui/Toast';"));
     assert.ok(mainContent.includes("import ErrorBoundary from '../shared/ui/ErrorBoundary';"));
+  });
+
+  it('la app consume Sidebar desde widgets/sidebar', async () => {
+    const appContent = await readFile(join(srcDir, 'app', 'App.tsx'), 'utf8');
+
+    assert.ok(
+      appContent.includes("const Sidebar = lazy(() => import('../widgets/sidebar/Sidebar'));"),
+    );
   });
 });

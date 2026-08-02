@@ -41,7 +41,7 @@ import {
   type AnnotationStageCounts,
 } from '../../shared/lib/domain/annotationStageCounts';
 import OnboardingChecklist from '../onboarding/OnboardingChecklist';
-import type { SidebarView } from '../../components/Sidebar';
+import type { SidebarView } from '../../widgets/sidebar/Sidebar';
 import { fetchOnboardingStatus } from '../../shared/api/services/institution.service';
 
 const DASHBOARD_STALE_TIME_MS = 30_000;

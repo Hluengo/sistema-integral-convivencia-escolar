@@ -111,7 +111,7 @@ graph TB
     subgraph Cliente["Cliente React (FSD)"]
         A[app / routing / providers]
         F[features - causas, anotaciones, documentos]
-        W[widgets - header, timeline]
+        W[widgets - header, sidebar]
         S[shared - stores, hooks, servicios, schemas]
     end
 
@@ -181,7 +181,7 @@ Para más detalles, revisa:
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ⚙️ **CI**         | [![CI](https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/ci.yml?branch=master&label=CI)](https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/ci.yml)                                 |
 | 🚦 **Lighthouse** | [![Lighthouse](https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/lighthouse.yml?branch=master&label=Lighthouse)](https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/lighthouse.yml) |
-| ✅ **Tests**      | 343 tests · 77 suites                                                                                                                                                                                                                                               |
+| ✅ **Tests**      | 346 tests · 77 suites                                                                                                                                                                                                                                               |
 | 📈 **Cobertura**  | ~56% líneas                                                                                                                                                                                                                                                         |
 | 🔐 **Seguridad**  | `npm audit` 0 vulnerabilidades                                                                                                                                                                                                                                      |
 

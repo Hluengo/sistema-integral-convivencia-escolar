@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { create } from 'zustand';
-import type { SidebarView } from '../../../components/Sidebar';
+import type { SidebarView } from '../../../widgets/sidebar/Sidebar';
 import type { UserRole } from '../types';
 
 interface UIState {

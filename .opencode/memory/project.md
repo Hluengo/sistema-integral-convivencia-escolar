@@ -1,6 +1,6 @@
 # STAFF ENGINEER MEMORY — Sistema Integral de Convivencia Escolar
 
-> **Versión:** 1.4 | **Estado:** Producción | **Última actualización:** 2026-08-01
+> **Versión:** 1.4 | **Estado:** Producción | **Última actualización:** 2026-08-02
 
 ---
 
@@ -1300,5 +1300,5 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - `StudentsPanel` ya no hace fetching remoto dentro de `useEffect`; reutiliza `useCoursesQuery` y el nuevo `useStudentsWithCoursesQuery`, con claves por `tenantId` y estado local solo para filtros/expansión.
 - `authStore` conserva el patrón de no consultar Supabase dentro de `onAuthStateChange`, pero ahora expone limpieza explícita de la suscripción y del timeout de inicialización; se ejecuta en HMR y en tests para evitar listeners o timers duplicados.
 - `supabase.ts` acepta fallback a `process.env` cuando corre fuera de Vite, lo que permite importar servicios/stores en tests Node con env dummy sin cambiar el bundle del cliente.
-- Cobertura base agregada para `authStore`, `uiStore`, `toastStore` y acciones/selectores síncronos de `causasStore`; la suite local queda en 343 tests / 77 suites.
-- Auditoría legacy de `src/components/`: 27 archivos actuales, 15 barrels de compatibilidad protegidos por `src/components/legacyCompatibility.test.ts`. `MetricCard`, `ErrorBoundary` y `ToastProvider` viven ahora en `src/shared/ui/`; sus archivos bajo `src/components/` sólo reexportan para compatibilidad.
+- Cobertura base agregada para `authStore`, `uiStore`, `toastStore` y acciones/selectores síncronos de `causasStore`; la suite local queda en 346 tests / 77 suites.
+- Auditoría legacy de `src/components/`: 27 archivos actuales, 17 barrels de compatibilidad protegidos por `src/components/legacyCompatibility.test.ts`. `MetricCard`, `ErrorBoundary` y `ToastProvider` viven ahora en `src/shared/ui/`; `Sidebar` y `SidebarUserMenu` viven en `src/widgets/sidebar/`. Sus archivos bajo `src/components/` sólo reexportan para compatibilidad.
