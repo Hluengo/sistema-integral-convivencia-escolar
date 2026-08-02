@@ -7,11 +7,11 @@
 ### Testing
 
 - [x] Unificar tests unitarios en Node Test Runner
-- [ ] Agregar tests faltantes (`riceMeasures`, stores, hooks)
+- [x] Agregar cobertura base faltante de stores/hooks vigentes
 - [x] E2E tests con Playwright para flujos críticos (`tests/*.spec.ts`)
 - [x] Alcanzar >30% cobertura — **55.89% líneas / 74.16% statements** al 2026-08-02
 
-> 🟡 **Parcial:** hooks ya tienen tests (`causaPersistence`, `useNotifications`). Siguen sin cobertura los **stores** (`uiStore`, `authStore`, `causasStore`, `gearStore`) y `riceMeasures`. Meta siguiente: >60% líneas.
+> ✅ `authStore`, `uiStore`, `toastStore` y selectores/acciones síncronas de `causasStore` tienen cobertura base desde el 2026-08-02; hooks críticos (`causaPersistence`, `useNotifications`) ya estaban cubiertos. `gearStore` y `riceMeasures` fueron reconciliados como referencias documentales obsoletas: no existen símbolos vigentes en `src/`. Meta siguiente: >60% líneas.
 
 ### Infraestructura
 
@@ -25,10 +25,15 @@
 - [ ] Refactor `components/` legacy → eliminar duplicación
 
 > 🟡 **En progreso:** se consolidaron capas legacy y se colapsaron barrels hacia `shared` (`191b9c4`); se eliminó código muerto/duplicado (`b466eb4`). Resta auditar componentes huérfanos en `components/`.
+> ✅ Auditoría 2026-08-02: `src/components/` contiene 27 archivos; 13 son barrels de compatibilidad protegidos por `src/components/legacyCompatibility.test.ts`. `MetricCard` se movió a `src/shared/ui/MetricCard.tsx` y `src/components/MetricCard.tsx` quedó como re-export. Próximo paso: migrar componentes reales de layout (`Toast`, `ErrorBoundary`, `Sidebar`) a `shared/ui` o `widgets` según corresponda.
 
 - [ ] Agregar skeletons para todas las vistas lazy
 
 > 🟡 **En progreso:** existen fallbacks en `MainContent` (Dashboard/Anotaciones/Students/Advisor), `DashboardStats`, `AnotacionesView`, `StudentsPanel`, `RankingCard`. Falta verificar cobertura completa en todas las rutas lazy.
+
+- [x] Eliminar fetching remoto con `useEffect` en `StudentsPanel`
+
+> ✅ `StudentsPanel` usa `useCoursesQuery` y `useStudentsWithCoursesQuery`; mantiene filtros locales con reducer y conserva caché aislada por tenant.
 
 ## Mediano Plazo (3-6 meses)
 

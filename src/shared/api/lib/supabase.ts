@@ -5,9 +5,14 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const nodeEnv = typeof process !== 'undefined' ? process.env : {};
+const viteEnv = import.meta.env ?? {};
+const supabaseUrl = viteEnv.VITE_SUPABASE_URL ?? nodeEnv.VITE_SUPABASE_URL;
 const supabaseAnonKey =
-  import.meta.env.VITE_SUPABASE_ANON_KEY ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  viteEnv.VITE_SUPABASE_ANON_KEY ??
+  viteEnv.VITE_SUPABASE_PUBLISHABLE_KEY ??
+  nodeEnv.VITE_SUPABASE_ANON_KEY ??
+  nodeEnv.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(

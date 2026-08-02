@@ -21,7 +21,7 @@ import {
   AlertCircle,
   Inbox,
 } from 'lucide-react';
-import MetricCard from '../../components/MetricCard';
+import MetricCard from '../../shared/ui/MetricCard';
 import SeverityBadge from '../../shared/SeverityBadge';
 import AnotacionesDashboardStats from '../anotaciones/AnotacionesDashboardStats';
 import EmptyState from '../../shared/EmptyState';

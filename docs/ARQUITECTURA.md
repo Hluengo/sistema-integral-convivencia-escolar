@@ -27,7 +27,7 @@ src/
 │   │   ├── domain/          # Lógica de dominio (disciplinaryStatus)
 │   │   ├── hooks/           # Hooks React (useCausasPersistence, useStudentFilters)
 │   │   ├── schemas/         # Validación Zod
-│   │   ├── stores/          # Zustand stores (authStore, causasStore, gearStore)
+│   │   ├── stores/          # Zustand stores (authStore, causasStore, uiStore, toastStore)
 │   │   └── types.ts         # Tipos compartidos
 │   └── ui/                  # Componentes UI base (Button, Dialog, Skeleton)
 ├── components/              # Componentes legacy con barrels

@@ -677,12 +677,11 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 
 | Ítem                                        | Impacto                                                                                   | Prioridad |
 | ------------------------------------------- | ----------------------------------------------------------------------------------------- | --------- |
-| `components/` legacy layer                  | Quedan ~19 componentes legacy de UI (mayoría vivos en features/widgets); sin barrels ya   | Media     |
+| `components/` legacy layer                  | Quedan 14 componentes reales por migrar; 13 barrels están protegidos por test             | Media     |
 | No React Router                             | URL no refleja estado, no deep linking                                                    | Media     |
 | ManualChunks circular warnings              | Build warnings, posible mejor chunking                                                    | Baja      |
 | Dual server routes (server/ + api/)         | Duplicación, riesgo de drift                                                              | Alta      |
 | Docker no disponible localmente             | No se puede ejecutar `supabase db reset` ni migraciones locales                           | Media     |
-| No hay test de riceMeasures                 | Missing test file en package.json                                                         | Baja      |
 | test:vitest y test corren en paralelo       | Dos test runners                                                                          | Baja      |
 | `carta_events.tenant_id` nullable           | RLS policy SELECT usa `tenant_id = current_tenant_id()`; filas con NULL quedan invisibles | Baja      |
 | `carta_events.student_id` / `carta_id` TEXT | Inconsistente con `students.id` y `cartas_disciplinarias.id` (UUID)                       | Baja      |
@@ -1295,3 +1294,11 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - `OnboardingChecklist` oculta realmente el panel al pulsar la X: el estado persistido `dismissed` se acompaña de `expanded=false`.
 - `App.tsx` resuelve permisos usando el rol de mayor privilegio entre `profileRole` y `appRole`; esto evita que una membresía acotada sobrescriba el rol `superadmin` y haga aparecer/desaparecer Administración, Centro de reportes o Plataforma.
 - `AnotacionesView` usa React Query con claves por `tenantId`: estudiantes, estados de cartas y detalle de anotaciones tienen caché separada. La tabla puede renderizar al llegar el resumen de estudiantes sin esperar la consulta global de cartas/eventos.
+
+### Limpieza React Query y stores — 2026-08-02
+
+- `StudentsPanel` ya no hace fetching remoto dentro de `useEffect`; reutiliza `useCoursesQuery` y el nuevo `useStudentsWithCoursesQuery`, con claves por `tenantId` y estado local solo para filtros/expansión.
+- `authStore` conserva el patrón de no consultar Supabase dentro de `onAuthStateChange`, pero ahora expone limpieza explícita de la suscripción y del timeout de inicialización; se ejecuta en HMR y en tests para evitar listeners o timers duplicados.
+- `supabase.ts` acepta fallback a `process.env` cuando corre fuera de Vite, lo que permite importar servicios/stores en tests Node con env dummy sin cambiar el bundle del cliente.
+- Cobertura base agregada para `authStore`, `uiStore`, `toastStore` y acciones/selectores síncronos de `causasStore`; la suite local queda en 340 tests / 77 suites.
+- Auditoría legacy de `src/components/`: 27 archivos actuales, 13 barrels de compatibilidad protegidos por `src/components/legacyCompatibility.test.ts`. `MetricCard` vive ahora en `src/shared/ui/MetricCard.tsx` y `src/components/MetricCard.tsx` sólo reexporta para compatibilidad.

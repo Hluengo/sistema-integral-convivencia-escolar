@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useEffect, useReducer, useMemo, useState, useCallback } from 'react';
+import { useReducer, useMemo, useState, useCallback } from 'react';
 import {
   Users,
   Search,
@@ -15,14 +15,14 @@ import {
   ChevronsUpDown,
 } from 'lucide-react';
 import Button from '@/src/shared/ui/Button';
-import {
-  fetchCourses,
-  fetchStudentsWithCourses,
-  type Course,
-  type StudentWithCourse,
-} from '../../shared/api/services/courses.service';
+import type { Course, StudentWithCourse } from '../../shared/api/services/courses.service';
 import { TableSkeleton } from '../../shared/Skeleton';
 import { maskName } from '../../shared/lib/anotacionesUtils';
+import { useCoursesQuery } from '../../shared/lib/hooks/useCoursesQuery';
+import { useStudentsWithCoursesQuery } from '../../shared/lib/hooks/useStudentsQuery';
+
+const EMPTY_COURSES: Course[] = [];
+const EMPTY_STUDENTS: StudentWithCourse[] = [];
 
 interface StudentsPanelProps {
   privacyMode: boolean;
@@ -31,38 +31,20 @@ interface StudentsPanelProps {
 // ── useReducer state & actions ────────────────────────────────────────────────
 
 interface StudentsPanelState {
-  courses: Course[];
-  students: StudentWithCourse[];
-  isLoading: boolean;
-  error: string | null;
   searchQuery: string;
   selectedCourseId: string;
 }
 
 type StudentsPanelAction =
-  | { type: 'LOAD_START' }
-  | { type: 'LOAD_SUCCESS'; courses: Course[]; students: StudentWithCourse[] }
-  | { type: 'LOAD_ERROR'; error: string }
-  | { type: 'SET_SEARCH'; query: string }
-  | { type: 'SET_COURSE'; courseId: string };
+  { type: 'SET_SEARCH'; query: string } | { type: 'SET_COURSE'; courseId: string };
 
 const initialState: StudentsPanelState = {
-  courses: [],
-  students: [],
-  isLoading: true,
-  error: null,
   searchQuery: '',
   selectedCourseId: 'all',
 };
 
 function reducer(state: StudentsPanelState, action: StudentsPanelAction): StudentsPanelState {
   switch (action.type) {
-    case 'LOAD_START':
-      return { ...state, isLoading: true, error: null };
-    case 'LOAD_SUCCESS':
-      return { ...state, isLoading: false, courses: action.courses, students: action.students };
-    case 'LOAD_ERROR':
-      return { ...state, isLoading: false, error: action.error };
     case 'SET_SEARCH':
       return { ...state, searchQuery: action.query };
     case 'SET_COURSE':
@@ -76,26 +58,16 @@ function reducer(state: StudentsPanelState, action: StudentsPanelAction): Studen
 
 export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
   const [state, dispatch] = useReducer(reducer, initialState);
-  const { courses, students, isLoading, error, searchQuery, selectedCourseId } = state;
-
-  useEffect(() => {
-    async function load() {
-      dispatch({ type: 'LOAD_START' });
-      try {
-        const [coursesData, studentsData] = await Promise.all([
-          fetchCourses(),
-          fetchStudentsWithCourses(),
-        ]);
-        dispatch({ type: 'LOAD_SUCCESS', courses: coursesData, students: studentsData });
-      } catch {
-        dispatch({
-          type: 'LOAD_ERROR',
-          error: 'No se pudieron cargar los estudiantes. Verifique la conexión con Supabase.',
-        });
-      }
-    }
-    load();
-  }, []);
+  const { searchQuery, selectedCourseId } = state;
+  const coursesQuery = useCoursesQuery();
+  const studentsQuery = useStudentsWithCoursesQuery();
+  const courses = coursesQuery.data ?? EMPTY_COURSES;
+  const students = studentsQuery.data ?? EMPTY_STUDENTS;
+  const isLoading = coursesQuery.isLoading || studentsQuery.isLoading;
+  const error =
+    coursesQuery.isError || studentsQuery.isError
+      ? 'No se pudieron cargar los estudiantes. Verifique la conexión con Supabase.'
+      : null;
 
   const filteredStudents = useMemo(() => {
     return students.filter((s) => {

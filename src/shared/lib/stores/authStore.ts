@@ -49,6 +49,18 @@ function logDev(event: string, detail?: string) {
   }
 }
 
+let authSubscription: ReturnType<typeof subscribeAuth> | null = null;
+let authTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+export function disposeAuthStoreSubscription() {
+  authSubscription?.data.subscription.unsubscribe();
+  authSubscription = null;
+  if (authTimeoutId) {
+    clearTimeout(authTimeoutId);
+    authTimeoutId = null;
+  }
+}
+
 async function loadTenantProfile(
   userId: string,
 ): Promise<{ tenantId: string | null; role: string | null }> {
@@ -68,16 +80,21 @@ export const useAuthStore = create<AuthState>((set) => {
   const AUTH_TIMEOUT_MS = 8000;
   let hadAuthenticatedSession = false;
 
-  const timeoutId = setTimeout(() => {
+  authTimeoutId = setTimeout(() => {
     set({ authLoading: false });
+    authTimeoutId = null;
   }, AUTH_TIMEOUT_MS);
 
   // Do not await Supabase queries inside onAuthStateChange. Supabase holds an
   // internal auth lock while invoking this callback; using the same client
   // before the callback returns can leave subsequent REST requests without a
   // usable session and produce repeated 401 responses.
-  subscribeAuth((event, session) => {
-    clearTimeout(timeoutId);
+  disposeAuthStoreSubscription();
+  authSubscription = subscribeAuth((event, session) => {
+    if (authTimeoutId) {
+      clearTimeout(authTimeoutId);
+      authTimeoutId = null;
+    }
     const user = session?.user ?? null;
     const sessionEndedUnexpectedly = event === 'SIGNED_OUT' && hadAuthenticatedSession;
     if (user) hadAuthenticatedSession = true;
@@ -123,6 +140,12 @@ export const useAuthStore = create<AuthState>((set) => {
       });
     }
   });
+
+  if (import.meta.hot) {
+    import.meta.hot.dispose(() => {
+      disposeAuthStoreSubscription();
+    });
+  }
 
   return {
     user: null,
