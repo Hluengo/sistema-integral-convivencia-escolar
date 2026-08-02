@@ -1,11 +1,11 @@
 import { useState, useCallback, useMemo } from 'react';
-import type { Annotation } from '@/src/types';
+import type { Annotation } from '@/src/shared/lib/types';
 export function useSelectedAnnotations(annotations: Annotation[]) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const selectedAnnsObjects = useMemo(
     () => annotations.filter((a) => selectedIds.has(a.id)),
-    [annotations, selectedIds]
+    [annotations, selectedIds],
   );
 
   const toggleAnnotation = useCallback((id: string) => {

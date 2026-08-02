@@ -1,8 +1,10 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { type Dispatch, type SetStateAction, useCallback, useEffect, useRef } from 'react';
-import type { Causa } from '@/src/types';
-import { saveBitacora, saveChecklist, updateCausa } from '@/src/services/cases';
+import type { Causa } from '@/src/shared/lib/types';
+import { saveBitacora } from '@/src/shared/api/services/bitacora.service';
+import { saveChecklist } from '@/src/shared/api/services/checklist.service';
+import { updateCausa } from '@/src/shared/api/services/causas.service';
 import { persistExistingCausa, type CausaPersistenceChanges } from './causaPersistence';
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';

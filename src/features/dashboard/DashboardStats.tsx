@@ -5,8 +5,13 @@
 
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { type Causa, type TipoInfraccion, type FaseProcedimental, EstadoCausa } from '../../types';
-import { getStats, getFaseForEstado } from '../../data';
+import {
+  type Causa,
+  type TipoInfraccion,
+  type FaseProcedimental,
+  EstadoCausa,
+} from '../../shared/lib/types';
+import { getStats, getFaseForEstado } from '../../shared/lib/data';
 import {
   Activity,
   FileSearch,
@@ -17,20 +22,20 @@ import {
   Inbox,
 } from 'lucide-react';
 import MetricCard from '../../components/MetricCard';
-import SeverityBadge from '../../components/SeverityBadge';
+import SeverityBadge from '../../shared/SeverityBadge';
 import AnotacionesDashboardStats from '../anotaciones/AnotacionesDashboardStats';
-import EmptyState from '../../components/EmptyState';
-import { fetchAnnotationStageCounts } from '../../services/annotations.service';
-import { fetchCourseCartaRanking } from '../../services/cartas.service';
+import EmptyState from '../../shared/EmptyState';
+import { fetchAnnotationStageCounts } from '../../shared/api/services/annotations.service';
+import { fetchCourseCartaRanking } from '../../shared/api/services/cartas.service';
 import {
   fetchStudentAnnotationRanking,
   fetchTeacherAnnotationRanking,
-} from '../../services/annotations.service';
+} from '../../shared/api/services/annotations.service';
 import {
   fetchPublicDashboardKpis,
   type PublicDashboardKpis,
 } from '../../shared/api/services/public-dashboard.service';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '../../shared/lib/stores/authStore';
 import {
   createEmptyAnnotationStageCounts,
   type AnnotationStageCounts,

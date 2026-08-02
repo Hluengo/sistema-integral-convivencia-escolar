@@ -8,7 +8,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, RefreshCw, Bot, User, BookOpen, Sparkles, Gavel, Loader2 } from 'lucide-react';
 import Button from '@/src/shared/ui/Button';
 import MessageContent from './AdvisorMessage';
-import { useTextImprovement } from '../../hooks/useTextImprovement';
+import { useTextImprovement } from '../../shared/lib/hooks/useTextImprovement';
 import { supabase } from '../../shared/api/lib/supabase';
 
 interface Message {

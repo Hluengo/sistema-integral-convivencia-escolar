@@ -1,8 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { supabase } from '../lib/supabase';
-import type { ChecklistItem } from '../../../types';
-import { useAuthStore } from '../../../stores/authStore';
+import type { ChecklistItem } from '../../lib/types';
+import { useAuthStore } from '../../lib/stores/authStore';
 import { CHECKLIST_CONFLICT_TARGET } from './checklistConflict';
 import { normalizeDocumentPath } from './storage.service';
 

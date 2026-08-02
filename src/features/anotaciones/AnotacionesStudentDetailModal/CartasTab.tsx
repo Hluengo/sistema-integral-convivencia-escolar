@@ -3,12 +3,12 @@
 import { lazy, Suspense, useState } from 'react';
 import { Ban, FileText, XCircle } from 'lucide-react';
 import type { Annotation, CartaDisciplinaria } from '@/src/shared/lib/types';
-import { TEACHERS_BY_COURSE } from '@/src/lib/anotacionesUtils';
+import { TEACHERS_BY_COURSE } from '@/src/shared/lib/anotacionesUtils';
 import {
   annulCarta,
   createPendingCartaForStudent,
   markCartaProcessedManually,
-} from '@/src/services/cartas.service';
+} from '@/src/shared/api/services/cartas.service';
 import {
   getCartaProcessingBlockReason,
   getHighestPriorityLetterType,

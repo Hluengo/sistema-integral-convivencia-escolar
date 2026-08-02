@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { getPhaseProgress } from '../../data';
-import type { Causa, ChecklistItem, FaseProcedimental } from '../../types';
+import { getPhaseProgress } from '../../shared/lib/data';
+import type { Causa, ChecklistItem, FaseProcedimental } from '../../shared/lib/types';
 import { getCausaPhase, getCausaStatus } from './causaPresentation';
 
 const CAUSA_PHASES: FaseProcedimental[] = [

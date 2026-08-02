@@ -4,9 +4,9 @@
  */
 
 import { Router } from 'express';
-import { requireAuth } from '../middleware/auth.js';
-import { requireTenant } from '../middleware/requireTenant.js';
-import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../middleware/requireMembership.js';
+import { requireAuth } from '../../middleware/auth.js';
+import { requireTenant } from '../../middleware/requireTenant.js';
+import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../../middleware/requireMembership.js';
 
 const router = Router();
 

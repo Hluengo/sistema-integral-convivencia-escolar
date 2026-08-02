@@ -1,12 +1,12 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { Router } from 'express';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth } from '../../middleware/auth.js';
 import { sanitizeForAI } from '../validators/sanitizers.js';
 import { getCacheKey, getFromCache, setCache } from '../services/cache.js';
 import { callOpenRouter, callTextImprovementFallback } from '../services/openrouter.js';
 import { rateLimit } from '../../middleware/rateLimit.js';
-import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../middleware/requireMembership.js';
+import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../../middleware/requireMembership.js';
 import {
   buildTextImprovementRequest,
   isTextImprovementRefusal,

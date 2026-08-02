@@ -4,7 +4,7 @@
  */
 
 import { memo, useMemo, useState } from 'react';
-import { type Causa, EstadoCausa } from '../types';
+import { type Causa, EstadoCausa } from '../shared/lib/types';
 import {
   Search,
   Archive,

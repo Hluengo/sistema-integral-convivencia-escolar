@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import type { SheetData } from 'write-excel-file/browser';
-import type { Causa } from '../../types';
+import type { Causa } from '../../shared/lib/types';
 import type { ReportFilters } from '../../shared/api/services/reports.service';
 
 export function filterReportCausas(causas: Causa[], filters: ReportFilters): Causa[] {
@@ -18,6 +18,18 @@ export function filterReportCausas(causas: Causa[], filters: ReportFilters): Cau
       opened <= to
     );
   });
+}
+
+function buildReportRows(causas: Causa[]): Array<Array<string | number>> {
+  return causas.map((causa) => [
+    causa.id,
+    causa.estudianteCurso,
+    causa.estadoActual,
+    causa.responsable,
+    causa.tipoInfraccion,
+    causa.fechaApertura,
+    causa.fechaUltimaActualizacion,
+  ]);
 }
 
 export function buildReportSheet(causas: Causa[], generatedAt: Date): SheetData {

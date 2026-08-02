@@ -1,15 +1,15 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { signOut } from '../services/auth.service';
-import { useAuthStore } from '../stores/authStore';
-import { useCausasStore } from '../stores/causasStore';
-import { useUIStore } from '../stores/uiStore';
-import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
-import { useNewCausaForm } from '../hooks/useNewCausaForm';
-import { useCoursesQuery } from '../hooks/useCoursesQuery';
-import { useStudentsQuery } from '../hooks/useStudentsQuery';
-import { useCausasPersistence } from '../hooks/useCausasPersistence';
+import { signOut } from '../shared/api/services/auth.service';
+import { useAuthStore } from '../shared/lib/stores/authStore';
+import { useCausasStore } from '../shared/lib/stores/causasStore';
+import { useUIStore } from '../shared/lib/stores/uiStore';
+import { useKeyboardShortcuts } from '../shared/lib/hooks/useKeyboardShortcuts';
+import { useNewCausaForm } from '../shared/lib/hooks/useNewCausaForm';
+import { useCoursesQuery } from '../shared/lib/hooks/useCoursesQuery';
+import { useStudentsQuery } from '../shared/lib/hooks/useStudentsQuery';
+import { useCausasPersistence } from '../shared/lib/hooks/useCausasPersistence';
 import { useCausaDetailsQuery, useCausasQuery } from '../shared/lib/hooks/useCausasQuery';
 import Button from '../shared/ui/Button';
 import {
@@ -20,10 +20,10 @@ import { causasQueryKeys } from '../shared/lib/queries/causasQueryKeys';
 import { useMemberships } from '../shared/api/hooks/useMemberships';
 import { queryClient } from '../lib/queryClient';
 import { ToastProvider } from '../components/Toast';
-import { MainContentSkeleton } from '../components/Skeleton';
-import { AppProvider } from '../context/AppContext';
-import { getFaseForEstado } from '../data';
-import { EstadoCausa } from '../types';
+import { MainContentSkeleton } from '../shared/Skeleton';
+import { AppProvider } from '../shared/lib/AppContext';
+import { getFaseForEstado } from '../shared/lib/data';
+import { EstadoCausa } from '../shared/lib/types';
 import { MembershipLoading, MembershipAccessDenied } from '../shared/ui';
 import WelcomeModal from '../shared/ui/WelcomeModal';
 

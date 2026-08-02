@@ -14,8 +14,8 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import type { Student } from './NewDisciplinaryProcessModal/constants';
 import { useInvalidateDashboardQueries } from '@/src/shared/lib/hooks/useInvalidateDashboardQueries';
-import { supabase } from '../../lib/supabase';
-import { useAuthStore } from '@/src/stores/authStore';
+import { supabase } from '../../shared/api/lib/supabase';
+import { useAuthStore } from '@/src/shared/lib/stores/authStore';
 import type { AnnotationSummary } from '@/src/shared/lib/types';
 import type { DocumentAnalysis } from '@/src/shared/lib/types';
 import { fetchDisciplinaryRules } from '@/src/shared/api/services/disciplinary-rules.service';

@@ -4,9 +4,9 @@
  */
 
 import type React from 'react';
-import type { ChecklistItem } from '../../types';
+import type { ChecklistItem } from '../../shared/lib/types';
 import { Upload, Check } from 'lucide-react';
-import ImproveTextarea from '../../components/ImproveTextarea';
+import ImproveTextarea from '../../shared/ImproveTextarea';
 import Button from '../../shared/ui/Button';
 
 interface RegistrationFormProps {

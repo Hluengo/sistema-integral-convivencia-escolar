@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import type { Annotation } from '../../../../types';
+import type { Annotation } from '../../../../shared/lib/types';
 
 export type DocType = 'amonestacion' | 'compromiso_conductual' | 'derivacion';
 

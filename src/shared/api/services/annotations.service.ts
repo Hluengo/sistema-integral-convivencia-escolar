@@ -12,10 +12,10 @@ import type {
   StudentAnnotationRankingItem,
   TeacherAnnotationRankingItem,
 } from '../../lib/domain/annotationRankings';
-import type { Annotation, AnotacionStudent, DocumentAnalysis } from '../../../types';
-import { mapInspectorateToAnnotation } from '../../../lib/mappers';
-import { calculateDisciplinaryStatus } from '../../../domain/disciplinaryStatus';
-import { useAuthStore } from '../../../stores/authStore';
+import type { Annotation, AnotacionStudent, DocumentAnalysis } from '../../lib/types';
+import { mapInspectorateToAnnotation } from '../../lib/mappers';
+import { calculateDisciplinaryStatus } from '../../lib/domain/disciplinaryStatus';
+import { useAuthStore } from '../../lib/stores/authStore';
 import { withSupabaseReadRetry } from '../lib/supabaseRetry';
 
 const ANNOTATION_COLUMNS =

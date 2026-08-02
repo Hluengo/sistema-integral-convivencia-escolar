@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-const CHILE_TIME_ZONE = 'America/Santiago';
+export const CHILE_TIME_ZONE = 'America/Santiago';
 
 export const toDateOnly = (date: Date): string => {
   const parts = new Intl.DateTimeFormat('en-US', {

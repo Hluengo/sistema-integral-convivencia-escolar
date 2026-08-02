@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { FileSignature, FileText, Gavel, MessageSquare, ShieldCheck } from 'lucide-react';
-import type { Causa } from '../../../types';
+import type { Causa } from '../../../shared/lib/types';
 import AiAdvisor from '../../../components/AiAdvisor';
 import TemplateEditor from '../../../components/TemplateEditor';
 import CaseLegalWorkspace, { type CaseLegalTool } from './CaseLegalWorkspace';

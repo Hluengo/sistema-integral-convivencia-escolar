@@ -11,8 +11,8 @@ import {
   Pencil,
   Search,
 } from 'lucide-react';
-import { maskName, getSemaphoricStyle } from '../../lib/anotacionesUtils';
-import type { DisciplinaryStatus } from '../../types';
+import { maskName, getSemaphoricStyle } from '../../shared/lib/anotacionesUtils';
+import type { DisciplinaryStatus } from '../../shared/lib/types';
 import {
   ANNOTATION_EXPORT_OPTIONS,
   downloadAnnotationsExcel,

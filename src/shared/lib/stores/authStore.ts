@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import type { User } from '@supabase/supabase-js';
-import { onAuthStateChange as subscribeAuth } from '../../../services/auth.service';
+import { onAuthStateChange as subscribeAuth } from '../../api/services/auth.service';
 import { supabase } from '../../api/lib/supabase';
 import type {
   MembershipResult,

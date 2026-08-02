@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { getYearFromDateOnly } from '@/src/lib/dateUtils';
+import { getYearFromDateOnly } from '@/src/shared/lib/dateUtils';
 
 type DisciplinaryStageKey = 'none' | 'amonestacion' | 'compromiso_conductual' | 'derivacion';
 

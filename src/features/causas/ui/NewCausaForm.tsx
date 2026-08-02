@@ -5,10 +5,10 @@
 
 import type React from 'react';
 import { Scale, AlertCircle, FileText, Loader2, Users } from 'lucide-react';
-import type { Course, Student } from '../../../services/courses.service';
-import type { Causa } from '../../../types';
+import type { Course, Student } from '../../../shared/api/services/courses.service';
+import type { Causa } from '../../../shared/lib/types';
 import RiceConductSelect from '../NewCausaForm/RiceConductSelect';
-import ImproveTextarea from '../../../components/ImproveTextarea';
+import ImproveTextarea from '../../../shared/ImproveTextarea';
 import Button from '../../../shared/ui/Button';
 
 interface NewCausaFormProps {

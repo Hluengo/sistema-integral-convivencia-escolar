@@ -4,15 +4,15 @@
  */
 
 import { Suspense, lazy, useState } from 'react';
-import type { Causa, FaseProcedimental, UserRole } from '@/src/types';
-import { getFaseForEstado } from '@/src/data';
+import type { Causa, FaseProcedimental, UserRole } from '@/src/shared/lib/types';
+import { getFaseForEstado } from '@/src/shared/lib/data';
 import TimelineHeader from './InteractiveTimeline/TimelineHeader';
 import TimelineTabs from './InteractiveTimeline/TimelineTabs';
 import TimelineTabPanels from './InteractiveTimeline/TimelineTabPanels';
-import { useTimelineController } from '@/src/hooks/useTimelineController';
-import { TimelineProvider } from '@/src/context/TimelineContext';
-import { useAppContext } from '@/src/context/useAppContext';
-import ConfirmDialog from './ConfirmDialog';
+import { useTimelineController } from '@/src/shared/lib/hooks/useTimelineController';
+import { TimelineProvider } from '@/src/shared/lib/TimelineContext';
+import { useAppContext } from '@/src/shared/lib/useAppContext';
+import ConfirmDialog from '../shared/ConfirmDialog';
 import { useBreaches } from './InteractiveTimeline/hooks/useBreaches';
 import type { TimelineTab } from '../features/timeline/timelineTabs.types';
 import ForceCloseCausaDialog from '../features/causas/ForceCloseCausaDialog';

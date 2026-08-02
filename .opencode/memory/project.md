@@ -674,7 +674,7 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 
 | Ítem                                        | Impacto                                                                                   | Prioridad |
 | ------------------------------------------- | ----------------------------------------------------------------------------------------- | --------- |
-| `components/` legacy layer                  | Duplicación con `features/` y `shared/`                                                   | Media     |
+| `components/` legacy layer                  | Quedan ~19 componentes legacy de UI (mayoría vivos en features/widgets); sin barrels ya   | Media     |
 | No React Router                             | URL no refleja estado, no deep linking                                                    | Media     |
 | ManualChunks circular warnings              | Build warnings, posible mejor chunking                                                    | Baja      |
 | Dual server routes (server/ + api/)         | Duplicación, riesgo de drift                                                              | Alta      |
@@ -732,6 +732,29 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 6. ✅ Preservar license headers
 7. ✅ Mantener español chileno en UI y docs
 8. ✅ Si un cambio toca API, actualizar dev + serverless
+
+### 13.6 Saneamiento de código — Fase 1 y 2 ✅ (2026-08-02)
+
+**Fase 1 (commit `b466eb4`)** — código muerto detectado por knip:
+
+- Eliminados 9 archivos sin consumidores: `components/CausaCard.tsx`, `CausaCardHelpers.tsx`, `features/causas/ui/CausaCard.tsx`, `Header/SearchBar.tsx`, `widgets/header/SearchBar.tsx`, `InteractiveTimeline/MarkdownRenderer.tsx`, `hooks/useNotifications.ts`, `components/ImproveInput.tsx`, `scripts/serve-dist.mjs`.
+- Exports muertos backend/frontend removidos (platformUpload, fetchTenantProfiles, FASES_LIST, PHASE_SHORT, buildReportRows, etc.).
+- devDep `agent-browser` removida; knip `ignore: []`.
+
+**Fase 2 (commit `2a60fc5`)** — consolidación de capas legacy:
+
+- Colapsados 5 barrels de `server/api/middleware/` hacia el canonical `server/middleware/` (auth, requireMembership, requireRole, requireSuperAdmin, requireTenant); las rutas ahora importan `../../middleware/*`.
+- `src/lib/dateUtils.ts` unificado a `src/shared/lib/dateUtils.ts`; `CHILE_TIME_ZONE` centralizado (antes duplicada en `shared/lib/dateTime.ts`).
+- Eliminados 39 barrels de re-export legacy (components/ui/_, context/_, hooks/_, stores/_, services/_, domain/_, schemas/index, lib/*) + 2 barrels raíz `src/data.ts` y `src/types.ts`; ~150 consumidores migrados a imports directos de `src/shared/`.
+- Directorios legacy vacíos eliminados: `src/hooks`, `src/context`, `src/stores`, `src/services`, `src/domain`, `src/schemas`, `src/components/ui`, `src/lib/legalCompliance`.
+- Bug heredado corregido: `reportUtils.ts` usaba `buildReportRows` (eliminado en Fase 1) → restaurado como función local.
+- `api/index.js` regenerado con el build (refleja barrels eliminados).
+
+**Reglas para migración de barrels legacy:**
+
+- Los imports deben usar la ruta resuelta correcta (alias `@/` o relativa) hacia el canonical en `src/shared/`.
+- Verificar siempre con `npx tsc --noEmit` tras cada lote (los tests `.test.ts` también pueden importar barrels).
+- knip solo reporta falsos positivos conocidos: `lighthouserc.cjs` (script `lighthouse:ci`) y binario `gitleaks` (script `security:secrets`).
 
 ---
 

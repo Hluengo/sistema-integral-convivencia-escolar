@@ -1,5 +1,5 @@
 import { Sparkles, Loader2 } from 'lucide-react';
-import { useTextImprovement, type TextImprovementContext } from '../hooks/useTextImprovement';
+import { useTextImprovement, type TextImprovementContext } from './lib/hooks/useTextImprovement';
 import Button from './ui/Button';
 
 interface ImproveTextareaProps {

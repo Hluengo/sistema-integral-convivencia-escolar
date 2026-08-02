@@ -5,9 +5,9 @@
 
 import type React from 'react';
 import { useCallback, Suspense, lazy } from 'react';
-import type { Causa, FaseProcedimental } from '../../types';
+import type { Causa, FaseProcedimental } from '../../shared/lib/types';
 import type { SidebarView } from '../../components/Sidebar';
-import type { FormAction } from '../../hooks/useNewCausaForm';
+import type { FormAction } from '../../shared/lib/hooks/useNewCausaForm';
 import { ChevronRight } from 'lucide-react';
 import { VIEW_TITLES } from '../../components/Header/constants';
 import CausasView from './MainContent/CausasView';
@@ -18,7 +18,7 @@ import {
   AnnotationsSkeleton,
   TableSkeleton,
   ChatMessageSkeleton,
-} from '../../components/Skeleton';
+} from '../../shared/Skeleton';
 
 const DashboardStats = lazy(() => import('../../components/DashboardStats'));
 const StudentsPanel = lazy(() => import('../../features/students/StudentsPanel'));

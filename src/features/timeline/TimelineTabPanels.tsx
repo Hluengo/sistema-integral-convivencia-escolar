@@ -4,12 +4,12 @@
  */
 
 import { ArrowLeft, ListChecks } from 'lucide-react';
-import type { Causa, FaseProcedimental } from '../../types';
+import type { Causa, FaseProcedimental } from '../../shared/lib/types';
 import ProcesoTab from './ProcesoTab';
 import BitacoraTab from './BitacoraTab';
 import ResumenTab from './ResumenTab';
 import RutaExpedienteTab from './RutaExpedienteTab';
-import { useTimelineContext } from '../../context/useTimelineContext';
+import { useTimelineContext } from '../../shared/lib/useTimelineContext';
 import type { TimelineTab } from './timelineTabs.types';
 import { DetailModalBody } from '../../shared/ui/DetailModal';
 

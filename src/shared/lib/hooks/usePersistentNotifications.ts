@@ -12,7 +12,7 @@ import {
   type PersistedNotification,
 } from '../../api/services/notifications.service';
 import { buildNotifications, type Notification } from './useNotifications';
-import type { Causa } from '../../../types';
+import type { Causa } from '../types';
 
 export interface NotificationCenter {
   notifications: Notification[];

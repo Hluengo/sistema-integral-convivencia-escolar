@@ -1,8 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { supabase } from '../lib/supabase';
-import type { BitacoraEntry } from '../../../types';
-import { useAuthStore } from '../../../stores/authStore';
+import type { BitacoraEntry } from '../../lib/types';
+import { useAuthStore } from '../../lib/stores/authStore';
 import { normalizeDocumentPath } from './storage.service';
 
 function entriesAreEqual(left: BitacoraEntry, right: BitacoraEntry): boolean {

@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { identifyAnalyticsUser, resetAnalyticsUser } from '../lib/analytics';
-import { useAuthStore } from '../stores/authStore';
+import { useAuthStore } from '../shared/lib/stores/authStore';
 
 export default function AuthAnalytics() {
   const user = useAuthStore((s) => s.user);

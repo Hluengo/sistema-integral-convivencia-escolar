@@ -1,8 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import type { Causa } from '../../../types';
-import { EstadoCausa } from '../../../types';
-import { remainingProcedureDays, daysElapsedCeil } from '../../../lib/dateUtils';
+import type { Causa } from '../types';
+import { EstadoCausa } from '../types';
+import { remainingProcedureDays, daysElapsedCeil } from '../../../shared/lib/dateUtils';
 
 export interface Notification {
   id: string;

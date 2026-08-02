@@ -4,8 +4,8 @@
  */
 
 import type React from 'react';
-import type { Causa, ChecklistItem, FaseProcedimental, UserRole } from '../../types';
-import { MAPPED_STATES } from '../../data';
+import type { Causa, ChecklistItem, FaseProcedimental, UserRole } from '../../shared/lib/types';
+import { MAPPED_STATES } from '../../shared/lib/data';
 import { ShieldCheck } from 'lucide-react';
 import ProcessChecklist from './ProcessChecklist';
 

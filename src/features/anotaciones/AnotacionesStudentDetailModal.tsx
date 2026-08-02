@@ -2,9 +2,9 @@
 
 import { memo, useEffect, useMemo, useState } from 'react';
 import { X } from 'lucide-react';
-import type { Annotation } from '@/src/types';
-import { maskName, maskRut } from '@/src/lib/anotacionesUtils';
-import { getCurrentSchoolYear, getYearInChile } from '@/src/lib/dateUtils';
+import type { Annotation } from '@/src/shared/lib/types';
+import { maskName, maskRut } from '@/src/shared/lib/anotacionesUtils';
+import { getCurrentSchoolYear, getYearInChile } from '@/src/shared/lib/dateUtils';
 import {
   getDisciplinaryStage,
   type LetterDocType,

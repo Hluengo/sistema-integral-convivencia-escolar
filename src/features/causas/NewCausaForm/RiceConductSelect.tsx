@@ -1,6 +1,6 @@
 import { BookOpen } from 'lucide-react';
 import { REGLAMENTO_CONDUCTAS } from '../../../reglamentoData';
-import type { Causa } from '../../../types';
+import type { Causa } from '../../../shared/lib/types';
 
 interface RiceConductSelectProps {
   setNewInfTipo: (value: Causa['tipoInfraccion']) => void;

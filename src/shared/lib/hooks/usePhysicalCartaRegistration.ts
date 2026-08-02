@@ -4,7 +4,7 @@ import { useCallback, useState } from 'react';
 import {
   registerPhysicalCartaForStudent,
   type PhysicalCartaRegistrationResult,
-} from '@/src/services/cartas.service';
+} from '@/src/shared/api/services/cartas.service';
 import type { PhysicalCartaRegistrationInput } from '@/src/shared/lib/schemas/physicalCarta';
 import { useInvalidateDashboardQueries } from '@/src/shared/lib/hooks/useInvalidateDashboardQueries';
 

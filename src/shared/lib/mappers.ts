@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import type { Annotation, CartaDisciplinaria, EtapaDisciplinaria } from '../../types';
-import { getYearFromDateOnly } from '../../lib/dateUtils';
+import type { Annotation, CartaDisciplinaria, EtapaDisciplinaria } from './types';
+import { getYearFromDateOnly } from '../../shared/lib/dateUtils';
 
 export interface InspectorateRecord {
   id: string;

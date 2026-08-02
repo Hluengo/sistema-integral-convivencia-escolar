@@ -1,8 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { getFaseForEstado } from '../../data';
-import { remainingProcedureDays } from '../../lib/dateUtils';
-import { EstadoCausa, type Causa, type FaseProcedimental } from '../../types';
+import { getFaseForEstado } from '../../shared/lib/data';
+import { remainingProcedureDays } from '../../shared/lib/dateUtils';
+import { EstadoCausa, type Causa, type FaseProcedimental } from '../../shared/lib/types';
 
 export interface DeadlinePresentation {
   remainingDays: number;

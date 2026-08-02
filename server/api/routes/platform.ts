@@ -4,8 +4,8 @@ import { Router, type Request } from 'express';
 import multer from 'multer';
 import { randomUUID } from 'node:crypto';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { requireAuth } from '../middleware/auth.js';
-import { requireSuperAdmin } from '../middleware/requireSuperAdmin.js';
+import { requireAuth } from '../../middleware/auth.js';
+import { requireSuperAdmin } from '../../middleware/requireSuperAdmin.js';
 import type { AuthenticatedRequest } from '../../types.js';
 
 const router = Router();

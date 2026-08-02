@@ -10,7 +10,7 @@ import {
   mapDocTypeToLetterType,
 } from '@/src/shared/lib/domain/disciplinaryStage';
 import { formatDate, STAGE_STYLE } from './constants';
-import { getCartaWorkflowLabel } from '@/src/services/cartas.service';
+import { getCartaWorkflowLabel } from '@/src/shared/api/services/cartas.service';
 import Button from '@/src/shared/ui/Button';
 
 interface StudentSummaryTabProps {

@@ -21,7 +21,7 @@ import Button from '../../shared/ui/Button';
 import SummaryCard from '../../shared/ui/SummaryCard';
 import PageHero from '../../shared/ui/PageHero';
 import { useAuthStore } from '../../shared/lib/stores/authStore';
-import { useCoursesQuery } from '../../hooks/useCoursesQuery';
+import { useCoursesQuery } from '../../shared/lib/hooks/useCoursesQuery';
 import {
   ADMIN_ROLES,
   cancelAdminInvitation,

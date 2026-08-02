@@ -14,7 +14,7 @@ import {
   LockKeyhole,
   RefreshCw,
 } from 'lucide-react';
-import { TextBlockSkeleton } from './Skeleton';
+import { TextBlockSkeleton } from '../shared/Skeleton';
 import Button from '../shared/ui/Button';
 import { useAuthStore } from '../shared/lib/stores/authStore';
 
@@ -34,7 +34,7 @@ const DOC_TYPE_LABELS: Record<string, string> = {
 };
 
 async function fetchTemplates(): Promise<Template[]> {
-  const { supabase } = await import('../lib/supabase');
+  const { supabase } = await import('../shared/api/lib/supabase');
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -103,7 +103,7 @@ export default function TemplateEditor() {
     setSaveError(null);
 
     try {
-      const { supabase } = await import('../lib/supabase');
+      const { supabase } = await import('../shared/api/lib/supabase');
       const {
         data: { session },
       } = await supabase.auth.getSession();

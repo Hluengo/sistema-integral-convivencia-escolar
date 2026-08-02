@@ -4,7 +4,7 @@
  */
 
 import type React from 'react';
-import type { Causa, ChecklistItem, FaseProcedimental, UserRole } from '../../types';
+import type { Causa, ChecklistItem, FaseProcedimental, UserRole } from '../../shared/lib/types';
 import { CheckSquare, ChevronUp, ChevronDown, File, Download, Trash, Plus } from 'lucide-react';
 import { PROCESS_SECTIONS } from './processSections';
 import RegistrationForm from './RegistrationForm';

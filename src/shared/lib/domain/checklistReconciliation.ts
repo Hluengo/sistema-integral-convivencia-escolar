@@ -2,7 +2,7 @@
 
 import { getBaseChecklist } from '../data';
 import type { BitacoraEntry, ChecklistItem } from '../types';
-import { toDateOnly } from '../../../lib/dateUtils';
+import { toDateOnly } from '../../../shared/lib/dateUtils';
 
 const REGISTRATION_PREFIX = 'Registro de Hito: ';
 const RESET_PREFIX = 'Invalidador Hito: ';

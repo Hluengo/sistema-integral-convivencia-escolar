@@ -1,13 +1,15 @@
-import { getBaseChecklist } from '../data';
-import { type Causa, EstadoCausa } from '../types';
-import { nowDateOnly, nowIso } from './dateUtils';
+import { getBaseChecklist } from '../shared/lib/data';
+import { type Causa, EstadoCausa } from '../shared/lib/types';
+import { nowDateOnly, nowIso } from '../shared/lib/dateUtils';
 
 export function generateInitials(fullName: string): string {
-  if (!fullName) { return 'N. N.'; }
+  if (!fullName) {
+    return 'N. N.';
+  }
   return fullName
     .split(' ')
-    .filter(word => word.length >= 2)
-    .map(word => `${word[0].toUpperCase()}.`)
+    .filter((word) => word.length >= 2)
+    .map((word) => `${word[0].toUpperCase()}.`)
     .join(' ');
 }
 
@@ -58,7 +60,8 @@ export function createDraftCausa({
         fecha: nowIso(),
         tipo: 'Otro',
         titulo: 'Apertura formal de Causa de Convivencia',
-        descripcion: 'Se inicia formalmente la tramitación del expediente de disciplina de conformidad con el Reglamento Interno (RIE) del colegio.',
+        descripcion:
+          'Se inicia formalmente la tramitación del expediente de disciplina de conformidad con el Reglamento Interno (RIE) del colegio.',
         participantes: [responsable ? responsable.split(' (')[0] : 'Esteban Valenzuela'],
       },
     ],

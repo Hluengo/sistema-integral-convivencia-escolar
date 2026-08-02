@@ -10,7 +10,7 @@ import {
 } from './stores/causasStore';
 import { useUIStore } from './stores/uiStore';
 import type { User } from '@supabase/supabase-js';
-import type { Causa, UserRole } from '../../types';
+import type { Causa, UserRole } from './types';
 import type { SidebarView } from '../../components/Sidebar';
 
 export interface AppContextValue {

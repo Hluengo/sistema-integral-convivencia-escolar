@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { CHILE_TIME_ZONE } from '../../../shared/lib/dateTime';
+import { CHILE_TIME_ZONE } from '../../../shared/lib/dateUtils';
 
 type CivilDateTime = {
   day: number;

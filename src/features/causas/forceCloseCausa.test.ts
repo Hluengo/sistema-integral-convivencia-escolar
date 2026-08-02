@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { createDraftCausa } from '../../lib/causaFactory';
-import { EstadoCausa } from '../../types';
+import { EstadoCausa } from '../../shared/lib/types';
 import { buildForceClosedCausa } from './forceCloseCausa';
 
 describe('buildForceClosedCausa', () => {

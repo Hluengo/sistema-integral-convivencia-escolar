@@ -4,7 +4,7 @@
  */
 
 import type { SheetData } from 'write-excel-file/browser';
-import { maskName, maskRut } from '../../lib/anotacionesUtils';
+import { maskName, maskRut } from '../../shared/lib/anotacionesUtils';
 import {
   getEffectiveDisciplinaryStage,
   type LetterType,

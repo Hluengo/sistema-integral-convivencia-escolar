@@ -2,7 +2,7 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { EstadoCausa, type Causa } from '../../../types';
+import { EstadoCausa, type Causa } from '../../../shared/lib/types';
 import { buildNotifications } from './useNotifications';
 
 const baseCausa = (): Causa => ({

@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { createContext, useContext } from 'react';
-import type { Causa, ChecklistItem, UserRole } from '../../types';
+import type { Causa, ChecklistItem, UserRole } from './types';
 import type { ManualBitacoraEntryInput } from './hooks/useBitacoraLog';
 
 interface TimelineContextValue {

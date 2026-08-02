@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { BitacoraEntry, Causa } from '../../types';
-import { EstadoCausa } from '../../types';
-import { nowDateOnly, nowIso } from '../../lib/dateUtils';
+import type { BitacoraEntry, Causa } from '../../shared/lib/types';
+import { EstadoCausa } from '../../shared/lib/types';
+import { nowDateOnly, nowIso } from '../../shared/lib/dateUtils';
 
 export interface ForceCloseCausaInput {
   responsable: string;

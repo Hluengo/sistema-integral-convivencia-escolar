@@ -5,10 +5,10 @@
 
 import { useState, type FormEvent } from 'react';
 import { Scale, AlertCircle, FileText, Shield } from 'lucide-react';
-import { type Causa, EstadoCausa, type TipoInfraccion } from '@/src/types';
-import { nowDateOnly } from '@/src/lib/dateUtils';
-import ImproveTextarea from '@/src/components/ImproveTextarea';
-import { Dialog, DialogContent } from '@/src/components/ui/Dialog';
+import { type Causa, EstadoCausa, type TipoInfraccion } from '@/src/shared/lib/types';
+import { nowDateOnly } from '@/src/shared/lib/dateUtils';
+import ImproveTextarea from '@/src/shared/ImproveTextarea';
+import { Dialog, DialogContent } from '@/src/shared/ui/Dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogIcon,
   AlertDialogTitle,
-} from '@/src/components/ui/AlertDialog';
+} from '@/src/shared/ui/AlertDialog';
 import Button from '@/src/shared/ui/Button';
 
 const INFRACCIONES: TipoInfraccion[] = ['Leve', 'Grave', 'Muy Grave', 'Gravísima'];

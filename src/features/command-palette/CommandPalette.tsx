@@ -5,16 +5,10 @@
 
 import type React from 'react';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import {
-  Search,
-  FileText,
-  LayoutDashboard,
-  Users,
-  MessageSquare,
-} from 'lucide-react';
-import type { Causa } from '../../types';
+import { Search, FileText, LayoutDashboard, Users, MessageSquare } from 'lucide-react';
+import type { Causa } from '../../shared/lib/types';
 import type { SidebarView } from '../../components/Sidebar';
-import { Dialog, DialogContent } from '../../components/ui/Dialog';
+import { Dialog, DialogContent } from '../../shared/ui/Dialog';
 
 interface CommandPaletteProps {
   causas: Causa[];
@@ -89,17 +83,19 @@ export default function CommandPalette({ causas, onNavigate, onSelectCausa }: Co
         category: 'Expedientes',
       })),
     ],
-    [causas, onNavigate, onSelectCausa]
+    [causas, onNavigate, onSelectCausa],
   );
 
   const filtered = useMemo(() => {
-    if (!query.trim()) { return items; }
+    if (!query.trim()) {
+      return items;
+    }
     const q = query.toLowerCase();
     return items.filter(
       (item) =>
         item.label.toLowerCase().includes(q) ||
         item.description?.toLowerCase().includes(q) ||
-        item.category.toLowerCase().includes(q)
+        item.category.toLowerCase().includes(q),
     );
   }, [items, query]);
 
@@ -122,7 +118,9 @@ export default function CommandPalette({ causas, onNavigate, onSelectCausa }: Co
       setSelectedIndex(0);
       focusTimerRef.current = setTimeout(() => inputRef.current?.focus(), 50);
       return () => {
-        if (focusTimerRef.current) { clearTimeout(focusTimerRef.current); }
+        if (focusTimerRef.current) {
+          clearTimeout(focusTimerRef.current);
+        }
       };
     }
   }, [isOpen]);
@@ -150,7 +148,7 @@ export default function CommandPalette({ causas, onNavigate, onSelectCausa }: Co
         filtered[clampedIndex].action();
       }
     },
-    [filtered, clampedIndex]
+    [filtered, clampedIndex],
   );
 
   const activeDescendantId = filtered[clampedIndex]
@@ -158,7 +156,12 @@ export default function CommandPalette({ causas, onNavigate, onSelectCausa }: Co
     : undefined;
 
   return (
-    <Dialog open={isOpen} onOpenChange={(o) => { if (!o) setIsOpen(false); }}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(o) => {
+        if (!o) setIsOpen(false);
+      }}
+    >
       <DialogContent
         className="max-w-lg p-0 gap-0 overflow-hidden rounded-2xl"
         onOpenAutoFocus={(e) => e.preventDefault()}

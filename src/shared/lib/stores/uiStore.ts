@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import type { SidebarView } from '../../../components/Sidebar';
-import type { UserRole } from '../../../types';
+import type { UserRole } from '../types';
 
 interface UIState {
   currentView: SidebarView;

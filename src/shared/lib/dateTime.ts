@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-export const CHILE_TIME_ZONE = 'America/Santiago';
+import { CHILE_TIME_ZONE } from './dateUtils';
 
 const DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 

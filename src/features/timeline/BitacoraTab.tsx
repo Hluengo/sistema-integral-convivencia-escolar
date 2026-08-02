@@ -4,7 +4,7 @@
  */
 
 import { memo, useState } from 'react';
-import type { Causa, BitacoraEntry, UserRole } from '../../types';
+import type { Causa, BitacoraEntry, UserRole } from '../../shared/lib/types';
 import {
   Bell,
   Calendar,

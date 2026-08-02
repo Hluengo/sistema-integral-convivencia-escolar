@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import type { Causa } from '@/src/types';
+import type { Causa } from '@/src/shared/lib/types';
 
 export interface CausaPersistenceChanges {
   causa: boolean;

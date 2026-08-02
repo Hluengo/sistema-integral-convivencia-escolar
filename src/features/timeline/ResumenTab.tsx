@@ -2,7 +2,7 @@
 
 import { memo } from 'react';
 import { AlertTriangle, CalendarClock, CheckCircle2, FileText, UserRound } from 'lucide-react';
-import type { Causa } from '../../types';
+import type { Causa } from '../../shared/lib/types';
 import { getCausaDeadline, getCausaPhase, getCausaStatus } from '../causas/causaPresentation';
 import { formatChileDate } from '../../shared/lib/dateTime';
 

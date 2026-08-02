@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { Router } from 'express';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth } from '../../middleware/auth.js';
 import {
   isRequestValidationError,
   sanitizeForAI,
@@ -12,7 +12,7 @@ import {
 import { callOpenRouter } from '../services/openrouter.js';
 import { getRelevantLegalSources } from '../services/legalSources.js';
 import { rateLimit } from '../../middleware/rateLimit.js';
-import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../middleware/requireMembership.js';
+import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../../middleware/requireMembership.js';
 
 const router = Router();
 

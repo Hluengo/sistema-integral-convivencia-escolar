@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import type { Causa, BitacoraEntry, UserRole } from '../../../types';
-import { nowDateOnly, nowIso } from '../../../lib/dateUtils';
-import { uploadDocument, listDocuments, deleteDocument } from '../../../services/storage.service';
+import type { Causa, BitacoraEntry, UserRole } from '../types';
+import { nowDateOnly, nowIso } from '../../../shared/lib/dateUtils';
+import { uploadDocument, listDocuments, deleteDocument } from '../../api/services/storage.service';
 
 interface UseDocumentManagerArgs {
   causa: Causa;
@@ -24,7 +24,9 @@ export function useDocumentManager({
 
   const getResponsableName = () => {
     const r = causa.responsable;
-    if (!r) { return 'Esteban Valenzuela'; }
+    if (!r) {
+      return 'Esteban Valenzuela';
+    }
     return r.split(' (')[0] || 'Esteban Valenzuela';
   };
 
@@ -35,7 +37,9 @@ export function useDocumentManager({
   };
 
   const handleAttachDocument = async (itemId: string, file: File | null) => {
-    if (!file || currentRole === 'docente') { return; }
+    if (!file || currentRole === 'docente') {
+      return;
+    }
     setIsUploadingDocument(true);
     setDocumentError(null);
     try {
@@ -46,8 +50,10 @@ export function useDocumentManager({
         return;
       }
 
-      const updatedChecklist = causa.checklistDebidoProceso.map(item => {
-        if (item.id !== itemId) { return item; }
+      const updatedChecklist = causa.checklistDebidoProceso.map((item) => {
+        if (item.id !== itemId) {
+          return item;
+        }
         return {
           ...item,
           documentoNombre: file.name,
@@ -61,7 +67,10 @@ export function useDocumentManager({
         tipo: 'Evidencia',
         titulo: `Documento adjunto: ${file.name}`,
         descripcion: `Se adjuntó el documento "${file.name}" al hito procesal.`,
-        participantes: [regName || getResponsableName(), privacyMode ? causa.nnaProtectedName : causa.estudianteNombre],
+        participantes: [
+          regName || getResponsableName(),
+          privacyMode ? causa.nnaProtectedName : causa.estudianteNombre,
+        ],
       };
 
       onUpdateCausa({
@@ -80,11 +89,15 @@ export function useDocumentManager({
   };
 
   const handleRemoveDocument = async (itemId: string, fileName?: string) => {
-    if (currentRole === 'docente') { return; }
+    if (currentRole === 'docente') {
+      return;
+    }
     setDocumentError(null);
 
-    const updatedChecklist = causa.checklistDebidoProceso.map(item => {
-      if (item.id !== itemId) { return item; }
+    const updatedChecklist = causa.checklistDebidoProceso.map((item) => {
+      if (item.id !== itemId) {
+        return item;
+      }
       return {
         ...item,
         documentoNombre: undefined,

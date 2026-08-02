@@ -1,13 +1,13 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { Router } from 'express';
-import { requireAuth } from '../middleware/auth.js';
-import { requireTenant } from '../middleware/requireTenant.js';
-import { requireRole } from '../middleware/requireRole.js';
+import { requireAuth } from '../../middleware/auth.js';
+import { requireTenant } from '../../middleware/requireTenant.js';
+import { requireRole } from '../../middleware/requireRole.js';
 import { sanitize } from '../validators/sanitizers.js';
 import { httpsGet, httpsPatch } from '../lib/https.js';
 import type { AuthenticatedRequest } from '../../types.js';
-import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../middleware/requireMembership.js';
+import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../../middleware/requireMembership.js';
 
 const router = Router();
 // Guard acotado al prefijo propio para no interceptar otras rutas /api/*.

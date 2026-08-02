@@ -4,7 +4,7 @@
  */
 
 import { type Causa, EstadoCausa, type ChecklistItem, type Statistics } from './types';
-import { toDateOnly } from '../../lib/dateUtils';
+import { toDateOnly } from '../../shared/lib/dateUtils';
 
 // Helper to calculate relative dates from current time
 const relativeDate = (daysAgo: number): string => {

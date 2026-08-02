@@ -11,7 +11,7 @@ import {
 } from '@/src/shared/lib/domain/disciplinaryStage';
 import { usePhysicalCartaRegistration } from '@/src/shared/lib/hooks/usePhysicalCartaRegistration';
 import { formatDate } from './constants';
-import { getCurrentSchoolYear, getYearFromDateOnly, nowDateOnly } from '@/src/lib/dateUtils';
+import { getCurrentSchoolYear, getYearFromDateOnly, nowDateOnly } from '@/src/shared/lib/dateUtils';
 import Button from '@/src/shared/ui/Button';
 
 const PHYSICAL_LETTER_TYPES: Array<Exclude<LetterType, 'Ficha de Derivación'>> = [

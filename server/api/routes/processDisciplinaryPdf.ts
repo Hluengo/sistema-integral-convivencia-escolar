@@ -1,11 +1,11 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { Router } from 'express';
-import { requireAuth } from '../middleware/auth.js';
-import { requireTenant } from '../middleware/requireTenant.js';
+import { requireAuth } from '../../middleware/auth.js';
+import { requireTenant } from '../../middleware/requireTenant.js';
 import type { AuthenticatedRequest } from '../types';
 import { rateLimit } from '../../middleware/rateLimit.js';
-import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../middleware/requireMembership.js';
+import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../../middleware/requireMembership.js';
 import {
   analyzeDisciplinaryPdf,
   confirmDisciplinaryProcess,

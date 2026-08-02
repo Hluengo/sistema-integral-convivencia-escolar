@@ -1,8 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { supabase } from '@/src/lib/supabase';
-import { useAuthStore } from '@/src/stores/authStore';
+import { supabase } from '@/src/shared/api/lib/supabase';
+import { useAuthStore } from '@/src/shared/lib/stores/authStore';
 import { useInvalidateDashboardQueries } from '@/src/shared/lib/hooks/useInvalidateDashboardQueries';
 import type { AnnotationSummary } from '@/src/shared/lib/types';
 import {

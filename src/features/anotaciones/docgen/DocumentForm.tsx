@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import type { Annotation } from '../../../types';
+import type { Annotation } from '../../../shared/lib/types';
 import type { LetterContent } from './DocumentPreview/docTypes';
 import Button from '@/src/shared/ui/Button';
 

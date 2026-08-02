@@ -11,10 +11,10 @@ import {
   signInWithEmail,
   signOut,
   updatePassword,
-} from '../../services/auth.service';
-import { useAppContext } from '../../context/useAppContext';
-import { useAuthStore } from '../../stores/authStore';
-import { Dialog, DialogContent } from '../../components/ui/Dialog';
+} from '../../shared/api/services/auth.service';
+import { useAppContext } from '../../shared/lib/useAppContext';
+import { useAuthStore } from '../../shared/lib/stores/authStore';
+import { Dialog, DialogContent } from '../../shared/ui/Dialog';
 import Button from '../../shared/ui/Button';
 
 interface LoginPageProps {

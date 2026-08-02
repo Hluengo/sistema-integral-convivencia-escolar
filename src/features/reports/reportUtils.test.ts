@@ -2,7 +2,7 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { EstadoCausa, type Causa } from '../../types';
+import { EstadoCausa, type Causa } from '../../shared/lib/types';
 import { filterReportCausas } from './reportUtils';
 
 const causa = (overrides: Partial<Causa> = {}): Causa => ({

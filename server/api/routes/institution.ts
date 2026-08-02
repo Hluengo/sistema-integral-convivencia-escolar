@@ -4,10 +4,10 @@ import { Router, type Request, type Response } from 'express';
 import { randomUUID } from 'node:crypto';
 import multer from 'multer';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { requireAuth } from '../middleware/auth.js';
-import { requireTenant } from '../middleware/requireTenant.js';
-import { requireRole } from '../middleware/requireRole.js';
-import { requireSuperAdmin } from '../middleware/requireSuperAdmin.js';
+import { requireAuth } from '../../middleware/auth.js';
+import { requireTenant } from '../../middleware/requireTenant.js';
+import { requireRole } from '../../middleware/requireRole.js';
+import { requireSuperAdmin } from '../../middleware/requireSuperAdmin.js';
 import type { AuthenticatedRequest, ProfileRole } from '../../types.js';
 
 const router = Router();

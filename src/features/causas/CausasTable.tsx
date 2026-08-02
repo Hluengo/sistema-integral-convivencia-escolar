@@ -2,7 +2,7 @@
 
 import { memo } from 'react';
 import { ChevronRight, Clock, Shield } from 'lucide-react';
-import type { Causa, TipoInfraccion } from '../../types';
+import type { Causa, TipoInfraccion } from '../../shared/lib/types';
 import { getCausaDeadline, getCausaPhase, getCausaStatus } from './causaPresentation';
 
 interface CausasTableProps {

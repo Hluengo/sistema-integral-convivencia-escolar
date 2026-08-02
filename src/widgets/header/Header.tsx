@@ -5,7 +5,7 @@
 
 import { memo } from 'react';
 import { useNotifications } from '@/src/shared/lib/hooks/usePersistentNotifications';
-import type { Causa } from '@/src/types';
+import type { Causa } from '@/src/shared/lib/types';
 import HeaderActions from '../../components/Header/HeaderActions';
 import PageTitle from '../../components/Header/PageTitle';
 

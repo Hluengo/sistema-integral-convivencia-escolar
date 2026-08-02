@@ -3,7 +3,7 @@
 import { forwardRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CheckCircle2, Printer } from 'lucide-react';
-import type { Annotation } from '../../../types';
+import type { Annotation } from '../../../shared/lib/types';
 import type { DocType, LetterContent } from './DocumentPreview/docTypes';
 import LetterA4Document from './LetterA4Document';
 import LetterPreviewViewport from './LetterPreviewViewport';

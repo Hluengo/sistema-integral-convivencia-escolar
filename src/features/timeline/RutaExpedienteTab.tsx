@@ -2,7 +2,7 @@
 
 import { memo } from 'react';
 import { ArrowRight, CircleCheck, Files, ListChecks, MoveRight } from 'lucide-react';
-import type { Causa, FaseProcedimental } from '../../types';
+import type { Causa, FaseProcedimental } from '../../shared/lib/types';
 import { getCausaDeadline } from '../causas/causaPresentation';
 import { getCausaOperationalSummary } from '../causas/causaOperationalSummary';
 

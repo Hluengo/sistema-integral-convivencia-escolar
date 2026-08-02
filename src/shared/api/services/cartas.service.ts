@@ -9,10 +9,10 @@ import type {
   CartaDisciplinaria,
   DocumentAnalysis,
   EtapaDisciplinaria,
-} from '../../../types';
-import { mapCauseRowToCarta, mapStageRowToEtapa } from '../../../lib/mappers';
+} from '../../lib/types';
+import { mapCauseRowToCarta, mapStageRowToEtapa } from '../../lib/mappers';
 import { fetchAnnotations, fetchDocumentAnalyses } from './annotations.service';
-import { useAuthStore } from '../../../stores/authStore';
+import { useAuthStore } from '../../lib/stores/authStore';
 import {
   resolveStudentCartaTableState,
   type LetterType,
@@ -22,7 +22,7 @@ import {
   physicalCartaRegistrationSchema,
   type PhysicalCartaRegistrationInput,
 } from '../../lib/schemas/physicalCarta';
-import { getCurrentSchoolYear, getYearInChile, nowDateOnly } from '../../../lib/dateUtils';
+import { getCurrentSchoolYear, getYearInChile, nowDateOnly } from '../../../shared/lib/dateUtils';
 import type { CourseCartaRankingItem } from '../../lib/domain/courseCartaRanking';
 import { withSupabaseReadRetry } from '../lib/supabaseRetry';
 

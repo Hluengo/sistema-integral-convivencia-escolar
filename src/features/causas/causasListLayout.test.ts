@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { EstadoCausa, type Causa } from '../../types';
+import { EstadoCausa, type Causa } from '../../shared/lib/types';
 import { getCausaDeadline } from './causaPresentation';
 
 const featureDir = dirname(fileURLToPath(import.meta.url));

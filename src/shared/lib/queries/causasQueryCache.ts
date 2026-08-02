@@ -2,7 +2,7 @@
 
 import type { InfiniteData } from '@tanstack/react-query';
 import { queryClient } from '../../../lib/queryClient';
-import type { Causa } from '../../../types';
+import type { Causa } from '../types';
 import { causasQueryKeys } from './causasQueryKeys';
 import type { CausasPage } from '../../api/services/causas.service';
 

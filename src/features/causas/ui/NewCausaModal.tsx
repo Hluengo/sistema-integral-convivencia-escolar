@@ -4,10 +4,10 @@
  */
 
 import type React from 'react';
-import type { Course, Student } from '../../../services/courses.service';
-import type { Causa } from '../../../types';
+import type { Course, Student } from '../../../shared/api/services/courses.service';
+import type { Causa } from '../../../shared/lib/types';
 import NewCausaForm from './NewCausaForm';
-import { Dialog, DialogContent } from '../../../components/ui/Dialog';
+import { Dialog, DialogContent } from '../../../shared/ui/Dialog';
 
 interface NewCausaModalProps {
   newEstNombre: string;
@@ -38,9 +38,17 @@ export default function NewCausaModal(props: NewCausaModalProps) {
   const { onClose } = props;
 
   return (
-    <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
+    <Dialog
+      open
+      onOpenChange={(o) => {
+        if (!o) onClose();
+      }}
+    >
       <DialogContent hideClose className="max-w-[40rem] max-h-[90vh] overflow-y-auto p-0">
-        <div className="absolute top-0 right-4 left-4 h-[3px] rounded-full bg-secondary-500" aria-hidden="true" />
+        <div
+          className="absolute top-0 right-4 left-4 h-[3px] rounded-full bg-secondary-500"
+          aria-hidden="true"
+        />
         <NewCausaForm
           newEstNombre={props.newEstNombre}
           setNewEstNombre={props.setNewEstNombre}

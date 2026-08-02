@@ -1,4 +1,4 @@
-import type { Causa } from '@/src/types';
+import type { Causa } from '@/src/shared/lib/types';
 import { calcularDiasHabiles, agregarDiasHabiles } from './dateUtils';
 import {
   calcularFechaLimiteInvestigacion,
@@ -10,7 +10,7 @@ import {
   DIAS_ALERTA_PLAZO_CRITICO,
 } from './constants';
 import type { ResultadoPlazo } from './types';
-import { nowDateOnly } from '../../../lib/dateUtils';
+import { nowDateOnly } from '../../../shared/lib/dateUtils';
 
 /**
  * Verifica el estado del plazo de investigación

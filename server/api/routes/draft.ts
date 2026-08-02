@@ -2,7 +2,7 @@
 
 import { Router } from 'express';
 import type { AuthenticatedRequest } from '../../types.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth } from '../../middleware/auth.js';
 import {
   isRequestValidationError,
   sanitizeForAI,
@@ -16,7 +16,7 @@ import { getRelevantLegalSources } from '../services/legalSources.js';
 import { extractCaseDocuments } from '../services/caseDocuments.js';
 import { httpsGet } from '../lib/https.js';
 import { rateLimit } from '../../middleware/rateLimit.js';
-import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../middleware/requireMembership.js';
+import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../../middleware/requireMembership.js';
 
 const router = Router();
 

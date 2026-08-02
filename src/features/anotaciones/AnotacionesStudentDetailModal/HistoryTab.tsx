@@ -21,8 +21,8 @@ import type {
   DisciplinaryFileRecord,
   DisciplinaryProcessRecord,
   LetterOutputEvent,
-} from '@/src/services/cartas.service';
-import { resolveCartaWorkflowStatus } from '@/src/services/cartas.service';
+} from '@/src/shared/api/services/cartas.service';
+import { resolveCartaWorkflowStatus } from '@/src/shared/api/services/cartas.service';
 import { formatDate } from './constants';
 import { useStudentHistoryEntries } from '@/src/shared/lib/hooks/useStudentHistoryEntries';
 import ManualHistoryEntryForm from './ManualHistoryEntryForm';

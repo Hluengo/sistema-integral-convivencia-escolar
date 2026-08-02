@@ -20,9 +20,9 @@ import {
   fetchStudentsWithCourses,
   type Course,
   type StudentWithCourse,
-} from '../../services/courses.service';
-import { TableSkeleton } from '../../components/Skeleton';
-import { maskName } from '../../lib/anotacionesUtils';
+} from '../../shared/api/services/courses.service';
+import { TableSkeleton } from '../../shared/Skeleton';
+import { maskName } from '../../shared/lib/anotacionesUtils';
 
 interface StudentsPanelProps {
   privacyMode: boolean;

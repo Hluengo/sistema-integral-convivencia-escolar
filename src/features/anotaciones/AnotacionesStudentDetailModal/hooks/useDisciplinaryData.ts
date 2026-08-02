@@ -5,7 +5,7 @@ import type { CartaDisciplinaria } from '@/src/shared/lib/types';
 import {
   fetchStudentDisciplinarySnapshot,
   type StudentDisciplinarySnapshot,
-} from '@/src/services/cartas.service';
+} from '@/src/shared/api/services/cartas.service';
 
 const EMPTY_SNAPSHOT: StudentDisciplinarySnapshot = {
   annotations: [],

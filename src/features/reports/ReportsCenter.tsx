@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Download, FileBarChart, History, RefreshCw } from 'lucide-react';
-import type { Causa } from '../../types';
+import type { Causa } from '../../shared/lib/types';
 import Button from '../../shared/ui/Button';
 import SummaryCard from '../../shared/ui/SummaryCard';
 import PageHero from '../../shared/ui/PageHero';
@@ -15,7 +15,7 @@ import {
   fetchReportHistory,
   type ReportFilters,
 } from '../../shared/api/services/reports.service';
-import { getStats } from '../../data';
+import { getStats } from '../../shared/lib/data';
 import { buildReportFileName, buildReportSheet, filterReportCausas } from './reportUtils';
 
 const EMPTY_FILTERS: ReportFilters = {

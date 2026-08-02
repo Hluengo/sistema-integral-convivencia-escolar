@@ -3,7 +3,7 @@
 import { createHash } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { nowDateOnly } from '../../src/lib/dateUtils';
+import { nowDateOnly } from '../../src/shared/lib/dateUtils';
 
 type AnnotationType = 'negative' | 'positive' | 'information';
 type StudentMatchStatus =

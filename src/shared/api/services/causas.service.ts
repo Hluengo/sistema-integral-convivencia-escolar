@@ -1,9 +1,9 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { supabase } from '../lib/supabase';
-import type { BitacoraEntry, Causa, ChecklistItem } from '../../../types';
-import { BitacoraEntrySchema, CausaSchema, ChecklistItemSchema } from '../../../schemas';
-import { useAuthStore } from '../../../stores/authStore';
+import type { BitacoraEntry, Causa, ChecklistItem } from '../../lib/types';
+import { BitacoraEntrySchema, CausaSchema, ChecklistItemSchema } from '../../lib/schemas';
+import { useAuthStore } from '../../lib/stores/authStore';
 import { normalizeDocumentPath } from './storage.service';
 import { reconcileChecklistFromBitacora } from '../../lib/domain/checklistReconciliation';
 

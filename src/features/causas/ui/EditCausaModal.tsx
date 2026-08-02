@@ -4,8 +4,8 @@
  */
 
 import { useState } from 'react';
-import type { Causa } from '@/src/types';
-import { Dialog, DialogContent } from '../../../components/ui/Dialog';
+import type { Causa } from '@/src/shared/lib/types';
+import { Dialog, DialogContent } from '../../../shared/ui/Dialog';
 import EditCausaModalForm from '../EditCausaModal/EditCausaModalForm';
 
 interface EditCausaModalProps {

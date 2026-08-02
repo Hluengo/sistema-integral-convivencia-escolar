@@ -2,11 +2,11 @@
 
 import type { Dispatch, SetStateAction } from 'react';
 import { create } from 'zustand';
-import type { Causa, FaseProcedimental } from '../../../types';
-import { EstadoCausa } from '../../../types';
-import { createCausa, deleteCausa } from '../../../services/cases/causas.service';
+import type { Causa, FaseProcedimental } from '../types';
+import { EstadoCausa } from '../types';
+import { createCausa, deleteCausa } from '../../api/services/causas.service';
 import { createDraftCausa } from '../../../lib/causaFactory';
-import { nowDateOnly } from '../../../lib/dateUtils';
+import { nowDateOnly } from '../../../shared/lib/dateUtils';
 import { useAuthStore } from './authStore';
 import { useToastStore } from './toastStore';
 import { addCausaToCache, removeCausaFromCache } from '../queries/causasQueryCache';

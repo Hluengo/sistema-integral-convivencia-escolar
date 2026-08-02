@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { createDraftCausa, formatSequentialCaseId, generateInitials } from './causaFactory';
-import { EstadoCausa } from '../types';
+import { EstadoCausa } from '../shared/lib/types';
 
 describe('causaFactory', () => {
   it('formats sequential case ids with padding', () => {

@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useQuery } from '@tanstack/react-query';
-import { fetchStudentsByCourse } from '../../../services/courses.service';
+import { fetchStudentsByCourse } from '../../api/services/courses.service';
 import { useAuthStore } from '../stores/authStore';
 
 export function useStudentsQuery(courseId: string) {

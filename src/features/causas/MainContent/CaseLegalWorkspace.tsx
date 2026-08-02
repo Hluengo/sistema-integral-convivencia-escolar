@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { FileSignature, ShieldCheck } from 'lucide-react';
-import type { Causa } from '../../../types';
+import type { Causa } from '../../../shared/lib/types';
 import MarkdownRenderer from '../../timeline/MarkdownRenderer';
 import AuditPanel from '../../timeline/AuditPanel';
 import DraftPanel from '../../timeline/DraftPanel';

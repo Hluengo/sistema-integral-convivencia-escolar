@@ -1,9 +1,9 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { Router } from 'express';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth } from '../../middleware/auth.js';
 import { rateLimit } from '../../middleware/rateLimit.js';
-import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../middleware/requireMembership.js';
+import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../../middleware/requireMembership.js';
 
 const router = Router();
 const MAX_TEXT_CONTENT_LENGTH = 80_000;

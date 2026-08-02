@@ -4,7 +4,7 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import type { Causa } from '../../../types';
+import type { Causa } from '../types';
 import { supabase } from '../../api/lib/supabase';
 
 interface UseAuditDraftArgs {

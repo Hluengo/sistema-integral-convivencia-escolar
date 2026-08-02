@@ -1,6 +1,6 @@
 import { memo } from 'react';
-import { getSeverityColor } from '../lib/severityUtils';
-import type { SeverityLevel } from '../lib/severityUtils';
+import { getSeverityColor } from './lib/severityUtils';
+import type { SeverityLevel } from './lib/severityUtils';
 
 interface SeverityBadgeProps {
   level: SeverityLevel;

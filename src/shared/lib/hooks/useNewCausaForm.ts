@@ -4,7 +4,7 @@
  */
 
 import { useReducer } from 'react';
-import type { Causa } from '../../../types';
+import type { Causa } from '../types';
 
 interface FormState {
   showCreateForm: boolean;

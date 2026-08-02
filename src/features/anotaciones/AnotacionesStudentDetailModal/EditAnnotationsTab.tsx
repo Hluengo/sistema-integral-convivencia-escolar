@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { Check, Pencil, X } from 'lucide-react';
 import type { Annotation } from '@/src/shared/lib/types';
-import { updateAnnotation } from '@/src/services/annotations.service';
+import { updateAnnotation } from '@/src/shared/api/services/annotations.service';
 import { formatDate, SEVERITY_BADGE } from './constants';
 import Button from '@/src/shared/ui/Button';
 import { toDateTimeLocalValue, toIsoDateTime } from './annotationEditUtils';

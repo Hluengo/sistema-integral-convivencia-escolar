@@ -5,7 +5,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { FileUp, LockKeyhole } from 'lucide-react';
-import type { Causa } from '../../types';
+import type { Causa } from '../../shared/lib/types';
 import { uploadDocument } from '../../shared/api/services/storage.service';
 import Button from '../../shared/ui/Button';
 import ImproveTextarea from '../../shared/ImproveTextarea';

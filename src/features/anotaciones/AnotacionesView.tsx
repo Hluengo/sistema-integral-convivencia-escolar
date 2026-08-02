@@ -3,18 +3,18 @@
 import { useState, useCallback, lazy, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Shield, Plus } from 'lucide-react';
-import type { Annotation, AnotacionStudent } from '../../types';
+import type { Annotation, AnotacionStudent } from '../../shared/lib/types';
 import {
   fetchAnnotations,
   fetchStudentsWithAnnotationCounts,
-} from '../../services/annotations.service';
-import { fetchCartaTableStates } from '../../services/cartas.service';
+} from '../../shared/api/services/annotations.service';
+import { fetchCartaTableStates } from '../../shared/api/services/cartas.service';
 import { getStudentCartaWorkflowLabel } from '../../shared/lib/domain/disciplinaryStage';
 import AnotacionesStudentTable from './AnotacionesStudentTable';
-import { AnnotationsSkeleton } from '../../components/Skeleton';
+import { AnnotationsSkeleton } from '../../shared/Skeleton';
 import type { ActiveTab } from './AnotacionesStudentDetailModal/constants';
 import Button from '@/src/shared/ui/Button';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore } from '../../shared/lib/stores/authStore';
 
 const AnotacionesStudentDetailModal = lazy(() => import('./AnotacionesStudentDetailModal'));
 const NewDisciplinaryProcessModal = lazy(() => import('./NewDisciplinaryProcessModal'));

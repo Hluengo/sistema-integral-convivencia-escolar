@@ -6,10 +6,10 @@
 import type React from 'react';
 import { Suspense, lazy, useCallback, useMemo, useState } from 'react';
 import { BookOpen, ChevronDown, GraduationCap, Scale, Search } from 'lucide-react';
-import EmptyState from '../../../components/EmptyState';
-import { CausaCardSkeleton } from '../../../components/Skeleton';
-import { type Causa, type FaseProcedimental } from '../../../types';
-import type { FormAction } from '../../../hooks/useNewCausaForm';
+import EmptyState from '../../../shared/EmptyState';
+import { CausaCardSkeleton } from '../../../shared/Skeleton';
+import { type Causa, type FaseProcedimental } from '../../../shared/lib/types';
+import type { FormAction } from '../../../shared/lib/hooks/useNewCausaForm';
 import Button from '@/src/shared/ui/Button';
 
 const CausasTable = lazy(() => import('../CausasTable'));

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { Causa, UserRole } from '../../types';
+import type { Causa, UserRole } from '../../shared/lib/types';
 import { AlertTriangle, CalendarClock, LockKeyhole, Pencil, Trash2, X } from 'lucide-react';
 import { getCausaDeadline, getCausaStatus } from '../causas/causaPresentation';
 import { formatChileDate } from '../../shared/lib/dateTime';

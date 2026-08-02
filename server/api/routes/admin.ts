@@ -3,9 +3,9 @@
 import { Router, type Request } from 'express';
 import multer from 'multer';
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
-import { requireAuth } from '../middleware/auth.js';
-import { requireRole } from '../middleware/requireRole.js';
-import { requireTenant } from '../middleware/requireTenant.js';
+import { requireAuth } from '../../middleware/auth.js';
+import { requireRole } from '../../middleware/requireRole.js';
+import { requireTenant } from '../../middleware/requireTenant.js';
 import type { AuthenticatedRequest, ProfileRole } from '../../types.js';
 
 const router = Router();

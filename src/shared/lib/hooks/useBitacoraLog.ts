@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import type { Causa, BitacoraEntry } from '../../../types';
-import { nowDateOnly, nowIso } from '../../../lib/dateUtils';
+import type { Causa, BitacoraEntry } from '../types';
+import { nowDateOnly, nowIso } from '../../../shared/lib/dateUtils';
 
 interface UseBitacoraLogArgs {
   causa: Causa;
