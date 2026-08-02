@@ -19,6 +19,10 @@ const compatibilityBarrels: Array<{ file: string; exportStatement: string }> = [
     exportStatement: "export { default } from '../features/command-palette/CommandPalette';",
   },
   {
+    file: 'ClosedCases.tsx',
+    exportStatement: "export { default } from '../features/causas/ClosedCases';",
+  },
+  {
     file: 'DashboardStats.tsx',
     exportStatement: "export { default } from '../features/dashboard/DashboardStats';",
   },
@@ -158,6 +162,15 @@ describe('components legacy compatibility layer', () => {
     assert.ok(
       mainContent.includes("import { VIEW_TITLES } from '../../widgets/header/constants';"),
     );
+  });
+
+  it('CausasView consume ClosedCases desde features/causas', async () => {
+    const causasView = await readFile(
+      join(srcDir, 'features', 'causas', 'MainContent', 'CausasView.tsx'),
+      'utf8',
+    );
+
+    assert.ok(causasView.includes("const ClosedCases = lazy(() => import('../ClosedCases'));"));
   });
 
   it('la app consume ShortcutsModal desde shared/ui', async () => {

@@ -14,7 +14,7 @@ import Button from '@/src/shared/ui/Button';
 
 const CausasTable = lazy(() => import('../CausasTable'));
 const CausaDetailModal = lazy(() => import('../CausaDetailModal'));
-const ClosedCases = lazy(() => import('../../../components/ClosedCases'));
+const ClosedCases = lazy(() => import('../ClosedCases'));
 
 function ViewFallback() {
   return (

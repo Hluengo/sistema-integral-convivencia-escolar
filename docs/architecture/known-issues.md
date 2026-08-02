@@ -17,7 +17,7 @@
 
 - **No React Router**: Estado de navegación no persiste en URL, no hay deep linking
 - **Dual entry points**: Se mantienen por entorno, pero comparten las mismas rutas canónicas
-- **Legacy `components/`**: 30 archivos actuales; 26 son barrels de compatibilidad, 3 son componentes reales pendientes y 1 es el test de compatibilidad
+- **Legacy `components/`**: 30 archivos actuales; 27 son barrels de compatibilidad, 2 son componentes reales pendientes y 1 es el test de compatibilidad
 - **Circular chunks**: Warnings en build por manualChunks
 
 ### Testing
