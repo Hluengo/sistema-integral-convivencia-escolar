@@ -31,6 +31,39 @@ const compatibilityBarrels: Array<{ file: string; exportStatement: string }> = [
     exportStatement: "export { default } from '../shared/ui/ErrorBoundary';",
   },
   { file: 'Header.tsx', exportStatement: "export { default } from '../widgets/header/Header';" },
+  {
+    file: join('Header', 'HeaderActions.tsx'),
+    exportStatement: "export { default } from '../../widgets/header/HeaderActions';",
+  },
+  {
+    file: join('Header', 'NotificationsDropdown.tsx'),
+    exportStatement: "export { default } from '../../widgets/header/NotificationsDropdown';",
+  },
+  {
+    file: join('Header', 'PageTitle.tsx'),
+    exportStatement: "export { default } from '../../widgets/header/PageTitle';",
+  },
+  {
+    file: join('Header', 'PrivacyToggle.tsx'),
+    exportStatement: "export { default } from '../../widgets/header/PrivacyToggle';",
+  },
+  {
+    file: join('Header', 'SaveStatus.tsx'),
+    exportStatement: "export { default } from '../../widgets/header/SaveStatus';",
+  },
+  {
+    file: join('Header', 'UserAvatar.tsx'),
+    exportStatement: "export { default } from '../../widgets/header/UserAvatar';",
+  },
+  {
+    file: join('Header', 'constants.ts'),
+    exportStatement: "export { VIEW_TITLES } from '../../widgets/header/constants';",
+  },
+  {
+    file: join('Header', 'hooks', 'useEscapeClose.ts'),
+    exportStatement:
+      "export { useEscapeClose } from '../../../widgets/header/hooks/useEscapeClose';",
+  },
   { file: 'LoginPage.tsx', exportStatement: "export { default } from '../pages/login/LoginPage';" },
   {
     file: 'MainContent.tsx',
@@ -105,6 +138,25 @@ describe('components legacy compatibility layer', () => {
 
     assert.ok(
       appContent.includes("const Sidebar = lazy(() => import('../widgets/sidebar/Sidebar'));"),
+    );
+  });
+
+  it('la app consume Header desde widgets/header', async () => {
+    const appContent = await readFile(join(srcDir, 'app', 'App.tsx'), 'utf8');
+
+    assert.ok(
+      appContent.includes("const Header = lazy(() => import('../widgets/header/Header'));"),
+    );
+  });
+
+  it('MainContent consume los títulos de vista desde widgets/header', async () => {
+    const mainContent = await readFile(
+      join(srcDir, 'features', 'causas', 'MainContent.tsx'),
+      'utf8',
+    );
+
+    assert.ok(
+      mainContent.includes("import { VIEW_TITLES } from '../../widgets/header/constants';"),
     );
   });
 

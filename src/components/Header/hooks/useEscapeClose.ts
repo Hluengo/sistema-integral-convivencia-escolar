@@ -1,15 +1,3 @@
-import { useEffect } from 'react';
+/** @license SPDX-License-Identifier: Apache-2.0 */
 
-export function useEscapeClose(isOpen: boolean, onClose: () => void) {
-  useEffect(() => {
-    if (!isOpen) return;
-    function handleEscape(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-      }
-    }
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose]);
-}
+export { useEscapeClose } from '../../../widgets/header/hooks/useEscapeClose';

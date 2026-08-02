@@ -9,7 +9,7 @@ import type { Causa, FaseProcedimental } from '../../shared/lib/types';
 import type { SidebarView } from '../../widgets/sidebar/Sidebar';
 import type { FormAction } from '../../shared/lib/hooks/useNewCausaForm';
 import { ChevronRight } from 'lucide-react';
-import { VIEW_TITLES } from '../../components/Header/constants';
+import { VIEW_TITLES } from '../../widgets/header/constants';
 import CausasView from './MainContent/CausasView';
 import ErrorBoundary from '../../shared/ui/ErrorBoundary';
 import {

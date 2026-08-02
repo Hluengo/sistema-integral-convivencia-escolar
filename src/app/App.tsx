@@ -47,7 +47,7 @@ function AppLoadingFallback() {
   );
 }
 
-const Header = lazy(() => import('../components/Header'));
+const Header = lazy(() => import('../widgets/header/Header'));
 const Sidebar = lazy(() => import('../widgets/sidebar/Sidebar'));
 const MainContent = lazy(() => import('../components/MainContent'));
 const CommandPalette = lazy(() => import('../components/CommandPalette'));
