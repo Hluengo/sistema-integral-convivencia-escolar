@@ -26,7 +26,7 @@ async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
 function logDev(event: string, detail?: string) {
   if (isDev()) {
     const msg = `[membership] ${event}${detail ? `: ${detail}` : ''}`;
-    console.log(msg);
+    console.debug(msg);
   }
 }
 

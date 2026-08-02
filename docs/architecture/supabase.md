@@ -2,19 +2,20 @@
 
 ## Auth
 
-| Configuración | Valor |
-|--------------|-------|
-| Tipo | Email/Password |
-| Signup habilitado | ✅ |
-| Confirmación email | ❌ |
-| JWT expiry | 3600s (1 hr) |
-| Refresh token rotation | ✅ |
-| Min password length | 6 |
-| OAuth providers | Ninguno |
+| Configuración          | Valor          |
+| ---------------------- | -------------- |
+| Tipo                   | Email/Password |
+| Signup habilitado      | ✅             |
+| Confirmación email     | ❌             |
+| JWT expiry             | 3600s (1 hr)   |
+| Refresh token rotation | ✅             |
+| Min password length    | 6              |
+| OAuth providers        | Ninguno        |
 
 ## RLS (Row Level Security)
 
 ### Patrón General
+
 Todas las tablas de datos siguen el mismo patrón:
 
 ```sql
@@ -59,14 +60,15 @@ $$;
 ```
 
 ### JWT Fast Path
+
 El trigger `sync_tenant_to_jwt()` en `profiles` escribe `tenant_id` en `auth.users.raw_app_meta_data` después de INSERT o UPDATE de `tenant_id`. Esto permite que RLS lea el tenant desde el JWT sin subquery adicional.
 
 ## Storage
 
-| Bucket | Público | Max Size | MIME Types |
-|--------|---------|----------|------------|
-| `anotaciones` | No | 10 MB | PDF, MD, TXT |
-| `disciplinary-processes` | No | 10 MB | PDF |
+| Bucket                   | Público | Max Size | MIME Types   |
+| ------------------------ | ------- | -------- | ------------ |
+| `anotaciones`            | No      | 10 MB    | PDF, MD, TXT |
+| `disciplinary-processes` | No      | 10 MB    | PDF          |
 
 Los buckets usan path pattern `{tenant_id}/...` para isolation RLS.
 
@@ -78,9 +80,9 @@ Nunca modificar migraciones existentes — siempre crear nuevas.
 
 ## Env Vars Requeridas
 
-| Variable | Propósito |
-|----------|-----------|
-| `VITE_SUPABASE_URL` | URL del proyecto Supabase |
-| `VITE_SUPABASE_ANON_KEY` | Anon key (cliente) |
-| `SUPABASE_JWT_SECRET` | JWT secret (server middleware) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Service role key (server admin) |
+| Variable                        | Propósito                       |
+| ------------------------------- | ------------------------------- |
+| `VITE_SUPABASE_URL`             | URL del proyecto Supabase       |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Publishable key (cliente)       |
+| `SUPABASE_JWT_SECRET`           | JWT secret (server middleware)  |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Service role key (server admin) |

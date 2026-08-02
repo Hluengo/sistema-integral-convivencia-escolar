@@ -12,7 +12,7 @@ import { getAllowedRoles, isDev } from '../lib/membershipConfig';
 function logDev(event: string, detail?: string) {
   if (isDev()) {
     const msg = `[useMemberships] ${event}${detail ? `: ${detail}` : ''}`;
-    console.log(msg);
+    console.debug(msg);
   }
 }
 

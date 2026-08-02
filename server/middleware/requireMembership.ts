@@ -50,7 +50,7 @@ function getMembershipMode(): MembershipAuthMode {
 function logServer(event: string, detail?: string) {
   if (process.env.NODE_ENV !== 'production') {
     const msg = `[membership-server] ${event}${detail ? `: ${detail}` : ''}`;
-    console.log(msg);
+    console.debug(msg);
   }
 }
 

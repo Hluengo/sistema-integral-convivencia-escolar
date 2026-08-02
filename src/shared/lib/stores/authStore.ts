@@ -45,7 +45,7 @@ interface AuthState {
 function logDev(event: string, detail?: string) {
   if (isDev()) {
     const msg = `[membership-store] ${event}${detail ? `: ${detail}` : ''}`;
-    console.log(msg);
+    console.debug(msg);
   }
 }
 

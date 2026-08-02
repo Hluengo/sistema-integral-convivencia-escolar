@@ -141,14 +141,14 @@ La aplicación estará disponible en:
 
 Las siguientes variables son **obligatorias** para el funcionamiento local:
 
-| Variable                    | Descripción                                             |
-| --------------------------- | ------------------------------------------------------- |
-| `VITE_SUPABASE_URL`         | URL del proyecto Supabase                               |
-| `VITE_SUPABASE_ANON_KEY`    | Anon key pública de Supabase                            |
-| `SUPABASE_JWT_SECRET`       | JWT secret para verificación de tokens en API routes    |
-| `SUPABASE_SERVICE_ROLE_KEY` | Admin key para operaciones privilegiadas desde servidor |
-| `OPENROUTER_API_KEY`        | API key de OpenRouter (IA)                              |
-| `GEMINI_API_KEY`            | API key de Gemini para informes y documentos            |
+| Variable                        | Descripción                                             |
+| ------------------------------- | ------------------------------------------------------- |
+| `VITE_SUPABASE_URL`             | URL del proyecto Supabase                               |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Publishable key pública de Supabase                     |
+| `SUPABASE_JWT_SECRET`           | JWT secret para verificación de tokens en API routes    |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Admin key para operaciones privilegiadas desde servidor |
+| `OPENROUTER_API_KEY`            | API key de OpenRouter (IA)                              |
+| `GEMINI_API_KEY`                | API key de Gemini para informes y documentos            |
 
 Variables opcionales:
 
@@ -217,7 +217,7 @@ npx vercel --prod # Producción
 Configurar en el dashboard de Vercel las variables de entorno requeridas:
 
 - `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
 - `SUPABASE_JWT_SECRET`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `OPENROUTER_API_KEY`
