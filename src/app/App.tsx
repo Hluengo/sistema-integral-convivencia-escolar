@@ -68,7 +68,24 @@ export default function App() {
   const [showWelcome, setShowWelcome] = useState(false);
 
   const membership = useMemberships('convivencia');
-  const effectiveAdminRole = appRole ?? profileRole;
+  // The membership role may be a scoped application role (for example, an
+  // admin membership for a superadmin account). Use the most privileged role
+  // available so loading membership data cannot hide platform navigation.
+  const effectiveAdminRole = [profileRole, appRole].sort((left, right) => {
+    const priority: Record<string, number> = {
+      superadmin: 7,
+      admin: 6,
+      direccion: 5,
+      convivencia: 4,
+      inspectoria: 3,
+      inspector: 2,
+      profesor_jefe: 1,
+      teacher: 1,
+      staff: 1,
+      user: 0,
+    };
+    return (priority[right ?? ''] ?? -1) - (priority[left ?? ''] ?? -1);
+  })[0];
   const canAccessAdmin =
     effectiveAdminRole === 'admin' ||
     effectiveAdminRole === 'direccion' ||
@@ -427,7 +444,7 @@ export default function App() {
   return (
     <ToastProvider>
       <AppProvider>
-        <div className="flex min-h-dvh bg-neutral-100 font-sans text-neutral-800 antialiased">
+        <div className="flex min-h-dvh overflow-x-clip bg-neutral-100 font-sans text-neutral-800 antialiased">
           <a
             href="#main-content"
             className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:rounded-lg focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-white focus:shadow-lg focus:outline-none"

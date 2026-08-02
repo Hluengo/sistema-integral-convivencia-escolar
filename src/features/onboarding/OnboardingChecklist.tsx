@@ -104,7 +104,10 @@ export default function OnboardingChecklist({
         </div>
         <button
           type="button"
-          onClick={() => updateState({ ...state, dismissed: true })}
+          onClick={() => {
+            updateState({ ...state, dismissed: true });
+            setExpanded(false);
+          }}
           className="self-end rounded-lg p-1.5 text-neutral-400 transition-colors hover:bg-white hover:text-neutral-700 sm:self-start"
           aria-label="Ocultar inicio guiado"
         >

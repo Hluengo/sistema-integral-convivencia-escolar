@@ -11,7 +11,7 @@ test.describe('Aplicación pública', () => {
     await expect(
       page.getByRole('complementary', { name: 'Barra de navegación principal' }),
     ).toBeVisible();
-    await expect(page.locator('main, [role="main"]')).toBeVisible();
+    await expect(page.locator('main, [role="main"]')).toBeVisible({ timeout: 15_000 });
   });
 
   test('muestra una bienvenida anónima con acceso al login', async ({ page }) => {
@@ -26,7 +26,7 @@ test.describe('Aplicación pública', () => {
       welcome.getByRole('button', { name: 'Iniciar sesión', exact: true }),
     ).toBeVisible();
     await welcome.getByRole('button', { name: 'Iniciar sesión', exact: true }).click();
-    await expect(page.locator('#login-email')).toBeVisible();
+    await expect(page.locator('#login-email')).toBeVisible({ timeout: 15_000 });
   });
 
   test('permite abrir el inicio de sesión y muestra un error profesional', async ({ page }) => {

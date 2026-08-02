@@ -1263,3 +1263,9 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - El selector `Colegio para administrar` se comparte entre las pestañas de Plataforma, Configuración institucional e Importar base. La interfaz muestra el colegio activo y exige selección antes de cargar o importar información.
 - La configuración institucional usa rutas `/api/platform/tenants/:tenantId/...` protegidas por `requireSuperAdmin`; la importación Excel se dirige al mismo tenant seleccionado.
 - La navegación completa de expedientes y el gestor de documentos institucionales todavía requieren una etapa posterior; este cambio cubre el contexto seguro de administración global y evita seleccionar tenants distintos en cada pestaña.
+
+### Estabilidad de navegación y carga de Anotaciones — 2026-08-01
+
+- `OnboardingChecklist` oculta realmente el panel al pulsar la X: el estado persistido `dismissed` se acompaña de `expanded=false`.
+- `App.tsx` resuelve permisos usando el rol de mayor privilegio entre `profileRole` y `appRole`; esto evita que una membresía acotada sobrescriba el rol `superadmin` y haga aparecer/desaparecer Administración, Centro de reportes o Plataforma.
+- `AnotacionesView` usa React Query con claves por `tenantId`: estudiantes, estados de cartas y detalle de anotaciones tienen caché separada. La tabla puede renderizar al llegar el resumen de estudiantes sin esperar la consulta global de cartas/eventos.

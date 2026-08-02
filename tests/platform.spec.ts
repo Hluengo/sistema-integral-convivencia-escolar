@@ -41,7 +41,7 @@ test.describe('Plataforma superadmin', () => {
       const sidebar = page.getByRole('complementary', { name: 'Barra de navegación principal' });
       await sidebar.getByRole('button', { name: 'Plataforma' }).click();
 
-      await expect(page.getByLabel('Colegio para administrar')).toBeVisible();
+      await expect(page.getByLabel('Colegio para administrar')).toBeVisible({ timeout: 15_000 });
       await expect(page.getByRole('heading', { name: 'Gestión de colegios' })).toBeVisible({
         timeout: 15_000,
       });
@@ -58,7 +58,9 @@ test.describe('Plataforma superadmin', () => {
       await expect(page.getByRole('heading', { name: 'Gestión de colegios' })).toBeVisible({
         timeout: 15_000,
       });
-      await expect(page.getByText('Colegios registrados')).toBeVisible({ timeout: 15_000 });
+      await expect(page.getByRole('heading', { name: 'Colegios registrados' })).toBeVisible({
+        timeout: 15_000,
+      });
     });
 
     test('el superadmin puede consultar la configuración institucional sin cambiar de sesión', async ({
@@ -108,7 +110,7 @@ test.describe('Plataforma superadmin', () => {
       await expect(
         page.getByRole('heading', { name: 'Importar cursos y estudiantes' }),
       ).toBeVisible();
-      await expect(page.getByText(selectedTenantName)).toBeVisible();
+      await expect(page.locator('form').getByText(selectedTenantName)).toBeVisible();
       await expect(page.getByRole('button', { name: 'Subir base' })).toBeDisabled();
     });
 

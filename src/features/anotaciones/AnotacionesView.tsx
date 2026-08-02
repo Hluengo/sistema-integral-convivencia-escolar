@@ -1,6 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useState, useEffect, useCallback, lazy } from 'react';
+import { useState, useCallback, lazy, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Shield, Plus } from 'lucide-react';
 import type { Annotation, AnotacionStudent } from '../../types';
 import {
@@ -8,14 +9,12 @@ import {
   fetchStudentsWithAnnotationCounts,
 } from '../../services/annotations.service';
 import { fetchCartaTableStates } from '../../services/cartas.service';
-import {
-  getEffectiveDisciplinaryStage,
-  getStudentCartaWorkflowLabel,
-} from '../../shared/lib/domain/disciplinaryStage';
+import { getStudentCartaWorkflowLabel } from '../../shared/lib/domain/disciplinaryStage';
 import AnotacionesStudentTable from './AnotacionesStudentTable';
 import { AnnotationsSkeleton } from '../../components/Skeleton';
 import type { ActiveTab } from './AnotacionesStudentDetailModal/constants';
 import Button from '@/src/shared/ui/Button';
+import { useAuthStore } from '../../stores/authStore';
 
 const AnotacionesStudentDetailModal = lazy(() => import('./AnotacionesStudentDetailModal'));
 const NewDisciplinaryProcessModal = lazy(() => import('./NewDisciplinaryProcessModal'));
@@ -24,102 +23,53 @@ interface AnotacionesViewProps {
   privacyMode: boolean;
 }
 
-async function fetchAnotacionesTableData(): Promise<{
-  students: AnotacionStudent[];
-  cartaStatuses: Record<string, string[]>;
-}> {
-  const [fetchedStudents, cartaStates] = await Promise.all([
-    fetchStudentsWithAnnotationCounts(),
-    fetchCartaTableStates(),
-  ]);
-  const cartaStatuses: Record<string, string[]> = {};
-  const students = (fetchedStudents ?? []).map((student) => {
-    const cartaState = cartaStates[student.id];
-    const completedLetterType = cartaState?.completedLetterType ?? null;
-    const stage = getEffectiveDisciplinaryStage(student.annotations_count, completedLetterType);
-    const cartaStatus = getStudentCartaWorkflowLabel(student.annotations_count, cartaState);
-    if (cartaStatus) cartaStatuses[student.id] = [cartaStatus];
-    return {
-      ...student,
-      effective_letter_type: completedLetterType,
-      disciplinary_status:
-        stage.key === 'derivacion'
-          ? ('Rojo' as const)
-          : stage.key === 'compromiso_conductual'
-            ? ('Naranja' as const)
-            : stage.key === 'amonestacion'
-              ? ('Amarillo' as const)
-              : ('Verde' as const),
-    };
-  });
-  return { students, cartaStatuses };
-}
-
 export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
-  const [students, setStudents] = useState<AnotacionStudent[]>([]);
-  const [annotations, setAnnotations] = useState<Annotation[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const tenantId = useAuthStore((state) => state.tenantId);
+  const queryClient = useQueryClient();
   const [selectedStudent, setSelectedStudent] = useState<AnotacionStudent | null>(null);
   const [detailInitialTab, setDetailInitialTab] = useState<ActiveTab>('estado');
   const [isNewProcessModalOpen, setIsNewProcessModalOpen] = useState<boolean>(false);
   const [activeFilter, setActiveFilter] = useState<string>('con_registro');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [dbError, setDbError] = useState<string | null>(null);
-  const [cartaStatuses, setCartaStatuses] = useState<Record<string, string[]>>({});
-
+  const studentsQuery = useQuery({
+    queryKey: ['anotaciones', 'students', tenantId],
+    queryFn: fetchStudentsWithAnnotationCounts,
+    enabled: Boolean(tenantId),
+    staleTime: 1000 * 60 * 5,
+  });
+  const cartaStatesQuery = useQuery({
+    queryKey: ['anotaciones', 'carta-states', tenantId],
+    queryFn: fetchCartaTableStates,
+    enabled: Boolean(tenantId),
+    staleTime: 1000 * 60 * 5,
+  });
+  const students = useMemo(() => studentsQuery.data ?? [], [studentsQuery.data]);
+  const cartaStatuses = useMemo(() => {
+    const statuses: Record<string, string[]> = {};
+    for (const student of students) {
+      const cartaStatus = getStudentCartaWorkflowLabel(
+        student.annotations_count,
+        cartaStatesQuery.data?.[student.id],
+      );
+      if (cartaStatus) statuses[student.id] = [cartaStatus];
+    }
+    return statuses;
+  }, [cartaStatesQuery.data, students]);
+  const annotationsQuery = useQuery({
+    queryKey: ['anotaciones', 'student', tenantId, selectedStudent?.id],
+    queryFn: () => fetchAnnotations(selectedStudent?.id),
+    enabled: Boolean(tenantId && selectedStudent?.id),
+    staleTime: 1000 * 60 * 5,
+  });
+  const isLoading = studentsQuery.isLoading;
+  const dbError = studentsQuery.error instanceof Error ? studentsQuery.error.message : null;
   const loadData = useCallback(async () => {
-    setIsLoading(true);
-    setDbError(null);
-    try {
-      const tableData = await fetchAnotacionesTableData();
-      setStudents(tableData.students);
-      setCartaStatuses(tableData.cartaStatuses);
-    } catch (error: unknown) {
-      console.error('Error cargando datos desde Supabase:', error);
-      setDbError(error instanceof Error ? error.message : 'Error de conexión con la base de datos');
-      setStudents([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const refreshStudentTable = useCallback(async () => {
-    try {
-      const tableData = await fetchAnotacionesTableData();
-      const nextStudents = tableData.students;
-      setStudents(nextStudents);
-      setCartaStatuses(tableData.cartaStatuses);
-      setSelectedStudent((current) =>
-        current ? nextStudents.find((student) => student.id === current.id) || current : null,
-      );
-    } catch (error: unknown) {
-      console.error('Error actualizando la tabla de anotaciones:', error);
-      setDbError(
-        error instanceof Error ? error.message : 'Error al actualizar la tabla de anotaciones',
-      );
-    }
-  }, []);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  useEffect(() => {
-    if (!selectedStudent) {
-      setAnnotations([]);
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      const anns = await fetchAnnotations(selectedStudent.id);
-      if (!cancelled) {
-        setAnnotations(anns ?? []);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedStudent?.id, selectedStudent]);
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['anotaciones', 'students', tenantId] }),
+      queryClient.invalidateQueries({ queryKey: ['anotaciones', 'carta-states', tenantId] }),
+    ]);
+  }, [queryClient, tenantId]);
+  const refreshStudentTable = loadData;
 
   if (isLoading) {
     return <AnnotationsSkeleton />;
@@ -195,7 +145,9 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
       {selectedStudent && (
         <AnotacionesStudentDetailModal
           student={selectedStudent}
-          annotations={annotations.filter((a) => a.student_id === selectedStudent.id)}
+          annotations={(annotationsQuery.data ?? []).filter(
+            (annotation: Annotation) => annotation.student_id === selectedStudent.id,
+          )}
           privacyMode={privacyMode}
           initialTab={detailInitialTab}
           onClose={() => setSelectedStudent(null)}
