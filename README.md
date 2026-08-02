@@ -1,43 +1,48 @@
 <div align="center">
-  <img src="./public/logo.svg" alt="Sistema Integral de Convivencia Escolar" width="120" />
+
+  <img src="./public/logo.svg" alt="Sistema Integral de Convivencia Escolar" width="140" />
+
   <h1>Sistema Integral de Convivencia Escolar</h1>
+
   <p><strong>Plataforma SaaS multi-tenant para la gestión integral del debido proceso disciplinario en establecimientos educacionales chilenos.</strong></p>
 
+  <!-- Badges dinámicos -->
   <p>
-    <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white" alt="React 19" />
-    <img src="https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white" alt="TypeScript 5.8" />
-    <img src="https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white" alt="Vite 6" />
-    <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind CSS 4" />
-    <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?logo=supabase&logoColor=white" alt="Supabase" />
-    <img src="https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white" alt="Express 4" />
-    <img src="https://img.shields.io/badge/License-Apache%202.0-green.svg" alt="Apache 2.0" />
+    <a href="https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/ci.yml">
+      <img src="https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/ci.yml?branch=master&label=CI&style=for-the-badge" alt="CI" />
+    </a>
+    <a href="https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/lighthouse.yml">
+      <img src="https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/lighthouse.yml?branch=master&label=Lighthouse&style=for-the-badge" alt="Lighthouse" />
+    </a>
+    <a href="https://github.com/Hluengo/sistema-integral-convivencia-escolar/blob/main/LICENSE">
+      <img src="https://img.shields.io/github/license/Hluengo/sistema-integral-convivencia-escolar?style=for-the-badge" alt="Licencia" />
+    </a>
   </p>
+  <p>
+    <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=white" alt="React 19" />
+    <img src="https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat&logo=typescript&logoColor=white" alt="TypeScript 5.8" />
+    <img src="https://img.shields.io/badge/Vite-6-646CFF?style=flat&logo=vite&logoColor=white" alt="Vite 6" />
+    <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=flat&logo=tailwindcss&logoColor=white" alt="Tailwind CSS 4" />
+    <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=flat&logo=supabase&logoColor=white" alt="Supabase" />
+    <img src="https://img.shields.io/badge/Express-4-000000?style=flat&logo=express&logoColor=white" alt="Express 4" />
+    <img src="https://img.shields.io/badge/Zustand-5-orange?style=flat" alt="Zustand 5" />
+    <img src="https://img.shields.io/badge/Node-22-339933?style=flat&logo=node.js&logoColor=white" alt="Node 22" />
+  </p>
+  <p>
+    <a href="https://gestiondecasos.vercel.app">🌐 Ver demo</a> ·
+    <a href="#caracteristicas">✨ Características</a> ·
+    <a href="#capturas">📸 Capturas</a> ·
+    <a href="#arquitectura">🏗️ Arquitectura</a> ·
+    <a href="#instalacion">🚀 Instalación</a>
+  </p>
+
 </div>
 
 ---
 
-## Tabla de contenidos
+## 📌 Descripción
 
-- [Descripción](#descripción)
-- [Características principales](#características-principales)
-- [Stack tecnológico](#stack-tecnológico)
-- [Arquitectura](#arquitectura)
-- [Requisitos previos](#requisitos-previos)
-- [Instalación local](#instalación-local)
-- [Variables de entorno](#variables-de-entorno)
-- [Comandos disponibles](#comandos-disponibles)
-- [Testing](#testing)
-- [Deploy](#deploy)
-- [Seguridad y cumplimiento](#seguridad-y-cumplimiento)
-- [Roadmap](#roadmap)
-- [Contribución](#contribución)
-- [Licencia](#licencia)
-
----
-
-## Descripción
-
-El **Sistema Integral de Convivencia Escolar** centraliza el trabajo de equipos de convivencia, inspectoría, dirección y administración escolar. Apoya el debido proceso disciplinario en el contexto de la **Circular 482 (2018)** y la **Ley 21.809 (2026)**. La revisión jurídica y las decisiones institucionales siguen siendo responsabilidad del establecimiento.
+El **Sistema Integral de Convivencia Escolar** centraliza el trabajo de equipos de convivencia, inspectoría, dirección y administración escolar. Apoya el **debido proceso disciplinario** en el contexto de la **Circular 482 (2018)** y la **Ley 21.809 (2026)**. La revisión jurídica y las decisiones institucionales siguen siendo responsabilidad del establecimiento.
 
 Permite registrar anotaciones, clasificar conductas mediante el sistema **RICE** (Leve, Grave, Muy Grave, Gravísima), gestionar expedientes con bitácora y checklist, analizar PDFs disciplinarios, generar cartas y documentos institucionales, y recibir asistencia editorial mediante inteligencia artificial.
 
@@ -45,25 +50,146 @@ Diseñado como **SaaS multi-tenant**, aísla los datos de cada establecimiento e
 
 ---
 
-## Características principales
+## 🛡️ Módulo de Seguridad y Cumplimiento
 
-- **Gestión de casos disciplinarios** con 39 estados organizados en 5 fases: Recepción, Investigación, Resolución, Apelación y Seguimiento.
-- **Anotaciones RICE** con clasificación de severidad, filtros, ficha individual, adjuntos PDF y análisis automatizado.
-- **Análisis de PDFs disciplinarios** con extracción de texto, detección de anotaciones, coincidencia con estudiantes y sugerencia de etapa/carta.
-- **Bitácora y checklist de debido proceso** para garantizar el cumplimiento legal en cada etapa.
-- **Cartas disciplinarias** (amonestación, compromiso y derivación) con editor, impresión, trazabilidad y registro de cartas físicas previas.
-- **Asistencia legal y redacción documental con IA** vía OpenRouter y Gemini, usando plantillas y antecedentes del expediente.
-- **Multi-tenant** con aislamiento de datos por establecimiento mediante `tenant_id` + RLS.
-- **Roles y permisos** (`admin`, `direccion`, `convivencia`, `inspectoria`, `profesor_jefe`, `teacher`, `inspector`, `staff` y `superadmin`).
-- **Administración institucional** de miembros, invitaciones, cursos, estudiantes e importación Excel.
-- **Configuración institucional** de datos del establecimiento, logotipo, reglamento y documentos.
-- **Plataforma multi-colegio** para superadministradores, con selección explícita del establecimiento.
-- **Dashboard y centro de reportes** de convivencia escolar.
-- **Interfaz responsive, con modo privacidad y navegación accesible**, en español chileno.
+Este proyecto maneja **datos de estudiantes (NNA)**, por lo que la seguridad es prioridad absoluta:
+
+- **RLS policies** multi-tenant por rol y establecimiento.
+- **JWT verification** en todas las rutas API sensibles.
+- **Anonimización de datos personales** antes de enviar a APIs de IA.
+- **Sanitización de inputs** de usuario para prevenir XSS e inyección de prompts.
+- **Service role key nunca expuesta al cliente**.
+- **UUIDs obligatorios** para estudiantes y causas.
+- Cumplimiento normativo con **Circular 482** y **Ley 21.809**.
+- **Modo privacidad** integrado que enmascara nombres y RUT en toda la interfaz.
+
+> 🔍 Consulta [`docs/architecture/security.md`](docs/architecture/security.md), las reglas inmutables en [`docs/CONSTITUTION.md`](docs/CONSTITUTION.md) y la revisión de seguridad en [`docs/reviews/security-review.md`](docs/reviews/security-review.md). La seguridad técnica no reemplaza las obligaciones institucionales de resguardo, revisión jurídica y gestión de accesos.
 
 ---
 
-## Stack tecnológico
+## ✨ Características
+
+| Área                    | Funcionalidad                                                                                                                             |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| 📋 **Expedientes**      | Gestión de casos disciplinarios con **39 estados** organizados en 5 fases: Recepción, Investigación, Resolución, Apelación y Seguimiento. |
+| 📝 **Anotaciones RICE** | Clasificación de severidad, filtros, ficha individual, adjuntos PDF y análisis automatizado.                                              |
+| 📄 **Análisis de PDFs** | Extracción de texto, detección de anotaciones, coincidencia con estudiantes y sugerencia de etapa/carta.                                  |
+| ✅ **Debido proceso**   | Bitácora y checklist legal para garantizar el cumplimiento normativo en cada etapa.                                                       |
+| ✉️ **Cartas**           | Amonestación, compromiso y derivación con editor, impresión, trazabilidad y registro de cartas físicas.                                   |
+| 🤖 **Asistencia IA**    | OpenRouter (texto) y Gemini (informes/borradores) usando plantillas y antecedentes del expediente.                                        |
+| 🏢 **Multi-tenant**     | Aislamiento de datos por establecimiento mediante `tenant_id` + RLS.                                                                      |
+| 👥 **Roles**            | `admin`, `direccion`, `convivencia`, `inspectoria`, `profesor_jefe`, `teacher`, `inspector`, `staff` y `superadmin`.                      |
+| 📊 **Reportes**         | Dashboard ejecutivo, centro de reportes, exportación Excel y métricas auditables.                                                         |
+| 📚 **Administración**   | Miembros, invitaciones, cursos, estudiantes, importación Excel y configuración institucional.                                             |
+| 🌐 **Multi-colegio**    | Plataforma para superadministradores con selección explícita del establecimiento.                                                         |
+| 📱 **Accesible**        | Interfaz responsive, modo privacidad y navegación accesible en español chileno.                                                           |
+
+---
+
+## 📸 Capturas
+
+> Las capturas fueron tomadas con el **modo privacidad activado** para proteger los datos de estudiantes (NNA).
+
+|             Dashboard ejecutivo              |          Causas y expedientes          |
+| :------------------------------------------: | :------------------------------------: |
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Causas](docs/screenshots/causas.png) |
+
+|                 Anotaciones RICE                 |             Centro de reportes             |
+| :----------------------------------------------: | :----------------------------------------: |
+| ![Anotaciones](docs/screenshots/anotaciones.png) | ![Reportes](docs/screenshots/reportes.png) |
+
+|                     Asistente Legal                      |
+| :------------------------------------------------------: |
+| ![Asistente Legal](docs/screenshots/asistente-legal.png) |
+
+---
+
+## 🏗️ Arquitectura
+
+```mermaid
+graph TB
+    subgraph Cliente["Cliente React (FSD)"]
+        A[app / routing / providers]
+        F[features - causas, anotaciones, documentos]
+        W[widgets - header, timeline]
+        S[shared - stores, hooks, servicios, schemas]
+    end
+
+    subgraph Servidor["Servidor Node/Express"]
+        R[server/api/routes - rutas REST]
+        M[server/middleware - auth, roles, tenant]
+    end
+
+    subgraph Vercel["Deploy Vercel"]
+        API[api/index.js - serverless bundle]
+    end
+
+    subgraph Supabase["Supabase PostgreSQL"]
+        DB[(base de datos multi-tenant)]
+        AUTH[Auth JWT]
+        RLS[RLS policies por tenant + rol]
+    end
+
+    A --> F
+    F --> W
+    W --> S
+    Cliente -->|HTTPS JSON| R
+    R --> M
+    R --> API
+    API --> Supabase
+    M --> AUTH
+    DB --> RLS
+
+    classDef client fill:#61DAFB,stroke:#282c34,color:#282c34;
+    classDef server fill:#000000,stroke:#666,color:#fff;
+    classDef infra fill:#3ECF8E,stroke:#1f2937,color:#fff;
+    class A,F,W,S client;
+    class R,M,API server;
+    class DB,AUTH,RLS infra;
+```
+
+### Dual entry point
+
+| Entry                 | Uso                                                  |
+| --------------------- | ---------------------------------------------------- |
+| `server/index.ts`     | Servidor de desarrollo local con Express + Vite HMR. |
+| `server/api/index.ts` | Entrada serverless de Vercel para producción.        |
+
+`api/index.js` es un artefacto generado por `npm run build`; las rutas se implementan una sola vez en `server/api/routes/`.
+
+> ⚠️ Al modificar rutas API, actualizar **ambos entry points**.
+
+### Estructura Feature-Sliced Design (FSD)
+
+- `app/` — Inicialización, routing y providers.
+- `features/` — Funcionalidades completas (causas, anotaciones, documentos).
+- `widgets/` — Widgets reutilizables.
+- `shared/` — Stores, hooks, servicios, schemas Zod y tipos.
+- `components/` — Componentes legacy con barrels de retrocompatibilidad.
+
+Para más detalles, revisa:
+
+- [`docs/architecture/project-overview.md`](docs/architecture/project-overview.md)
+- [`docs/CONSTITUTION.md`](docs/CONSTITUTION.md)
+- [`docs/engineering/HANDBOOK.md`](docs/engineering/HANDBOOK.md)
+
+---
+
+## 📊 Informes de calidad
+
+| Métrica           | Valor                                                                                                                                                                                                                                                               |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ⚙️ **CI**         | [![CI](https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/ci.yml?branch=master&label=CI)](https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/ci.yml)                                 |
+| 🚦 **Lighthouse** | [![Lighthouse](https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/lighthouse.yml?branch=master&label=Lighthouse)](https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/lighthouse.yml) |
+| ✅ **Tests**      | 309 tests · 70 suites                                                                                                                                                                                                                                               |
+| 📈 **Cobertura**  | ~56% líneas                                                                                                                                                                                                                                                         |
+| 🔐 **Seguridad**  | `npm audit` 0 vulnerabilidades                                                                                                                                                                                                                                      |
+
+> Los badges de CI y Lighthouse se actualizan automáticamente con cada push. Los informes de Lighthouse se generan en `.lighthouseci/`.
+
+---
+
+## 🧱 Stack tecnológico
 
 | Capa          | Tecnología                  | Versión        |
 | ------------- | --------------------------- | -------------- |
@@ -84,43 +210,16 @@ Diseñado como **SaaS multi-tenant**, aísla los datos de cada establecimiento e
 
 ---
 
-## Arquitectura
+## 🚀 Instalación
 
-El proyecto sigue una arquitectura moderna con dos entry points de servidor:
-
-- **`server/index.ts`** — Servidor de desarrollo local con Express + Vite HMR.
-- **`server/api/index.ts`** — Entrada serverless de Vercel para producción.
-
-`api/index.js` es un artefacto generado por `npm run build`; las rutas se implementan una sola vez en `server/api/routes/`.
-
-> ⚠️ Al modificar rutas API, actualizar **ambos entry points**.
-
-El cliente está organizado bajo **Feature-Sliced Design (FSD)**:
-
-- `app/` — Inicialización, routing y providers.
-- `features/` — Funcionalidades completas (causas, anotaciones, documentos).
-- `widgets/` — Widgets reutilizables.
-- `shared/` — Stores, hooks, servicios, schemas Zod y tipos.
-- `components/` — Componentes legacy con barrels de retrocompatibilidad.
-
-Para más detalles, revisa:
-
-- `docs/architecture/project-overview.md`
-- `docs/CONSTITUTION.md`
-- `docs/engineering/HANDBOOK.md`
-
----
-
-## Requisitos previos
+### Requisitos previos
 
 - **Node.js 22** (ver `.nvmrc`)
 - Cuenta en **Supabase**
 - API key de **OpenRouter** y **Gemini**
 - (Opcional) Cuenta en **Vercel** para deploy
 
----
-
-## Instalación local
+### Pasos
 
 ```bash
 # 1. Clonar el repositorio
@@ -140,11 +239,12 @@ npm run dev
 
 La aplicación queda disponible en `http://localhost:3001`. Vite utiliza el puerto `3002` para HMR. El servidor expone `GET /api/health` para comprobar disponibilidad.
 
----
-
-## Variables de entorno
+### Variables de entorno
 
 Usa `.env.example` como plantilla. Las variables dependen de las funciones habilitadas:
+
+<details>
+<summary><strong>Ver tabla de variables de entorno</strong></summary>
 
 | Variable                                                         | Descripción                                      |
 | ---------------------------------------------------------------- | ------------------------------------------------ |
@@ -165,13 +265,15 @@ Usa `.env.example` como plantilla. Las variables dependen de las funciones habil
 | `VITE_APP_MEMBERSHIPS_ENABLED` / `VITE_APP_MEMBERSHIPS_ENFORCED` | Control de membresías                            |
 | `E2E_BASE_URL`, `E2E_STAFF_*`, `E2E_SUPERADMIN_*`                | Configuración de Playwright                      |
 
+</details>
+
 > 🔒 **Nunca commitear** `.env.local` ni `.env.production`. Ver `docs/CONSTITUTION.md`.
 
 Las claves `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `OPENROUTER_API_KEY` y `GEMINI_API_KEY` no deben llegar al bundle del navegador.
 
 ---
 
-## Comandos disponibles
+## 🛠️ Comandos
 
 | Comando                  | Descripción                                            |
 | ------------------------ | ------------------------------------------------------ |
@@ -190,7 +292,7 @@ Las claves `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `OPENROUTER_API_K
 
 ---
 
-## Testing
+## 🧪 Testing
 
 El proyecto incluye tests unitarios con **node:test** y tests E2E con **Playwright**.
 
@@ -209,7 +311,7 @@ npm run test:coverage
 
 ---
 
-## Deploy
+## ☁️ Deploy
 
 ### Vercel
 
@@ -238,35 +340,25 @@ Aplicar con Supabase CLI:
 supabase db push
 ```
 
-Más detalles en `docs/DEPLOY.md`.
+Más detalles en [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
 ---
 
-## Seguridad y cumplimiento
+## 🗺️ Roadmap
 
-Este proyecto maneja **datos de estudiantes (NNA)**, por lo que la seguridad es prioridad absoluta:
+El roadmap vivo está en [`docs/architecture/future-roadmap.md`](docs/architecture/future-roadmap.md). Entre los pendientes se encuentran:
 
-- **RLS policies** multi-tenant por rol y establecimiento.
-- **JWT verification** en todas las rutas API sensibles.
-- **Anonimización de datos personales** antes de enviar a APIs de IA.
-- **Sanitización de inputs** de usuario para prevenir XSS e inyección de prompts.
-- **Service role key nunca expuesta al cliente**.
-- **UUIDs obligatorios** para estudiantes y causas.
-- Cumplimiento normativo con **Circular 482** y **Ley 21.809**.
-
-Consulta [`docs/architecture/security.md`](docs/architecture/security.md), las reglas inmutables en [`docs/CONSTITUTION.md`](docs/CONSTITUTION.md) y la revisión de seguridad en [`docs/reviews/security-review.md`](docs/reviews/security-review.md). La seguridad técnica no reemplaza las obligaciones institucionales de resguardo, revisión jurídica y gestión de accesos.
+- React Router / deep linking
+- Mayor cobertura de tests
+- Exportación avanzada de reportes
+- Modo offline
+- Futuros módulos PIE, UTP y portal de apoderados
 
 ---
 
-## Roadmap
+## 🤝 Contribución
 
-El roadmap vivo está en [`docs/architecture/future-roadmap.md`](docs/architecture/future-roadmap.md). Entre los pendientes se encuentran React Router/deep linking, mayor cobertura de tests, exportación avanzada de reportes, modo offline y futuros módulos PIE, UTP y portal de apoderados.
-
----
-
-## Contribución
-
-1. Lee `docs/CONSTITUTION.md` y `docs/engineering/HANDBOOK.md`.
+1. Lee [`docs/CONSTITUTION.md`](docs/CONSTITUTION.md) y [`docs/engineering/HANDBOOK.md`](docs/engineering/HANDBOOK.md).
 2. Crea una rama desde `main`.
 3. Escribe código siguiendo las convenciones del proyecto (TypeScript estricto, UI en español chileno, tests co-located).
 4. Ejecuta `npm run lint && npm run test && npm run build:web` antes de enviar tu PR.
@@ -274,7 +366,7 @@ El roadmap vivo está en [`docs/architecture/future-roadmap.md`](docs/architectu
 
 ---
 
-## Licencia
+## 📄 Licencia
 
 ```text
 SPDX-License-Identifier: Apache-2.0
@@ -286,4 +378,8 @@ Este proyecto está licenciado bajo la **Apache License 2.0**.
 
 <div align="center">
   <p><em>Construido para proteger el debido proceso y mejorar la convivencia escolar en Chile.</em></p>
+  <p>
+    <a href="https://github.com/Hluengo/sistema-integral-convivencia-escolar/issues">Reportar un problema</a> ·
+    <a href="https://github.com/Hluengo/sistema-integral-convivencia-escolar/discussions">Discusiones</a>
+  </p>
 </div>
