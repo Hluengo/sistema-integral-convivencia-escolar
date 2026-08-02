@@ -25,7 +25,7 @@
 - [ ] Refactor `components/` legacy → eliminar duplicación
 
 > 🟡 **En progreso:** se consolidaron capas legacy y se colapsaron barrels hacia `shared` (`191b9c4`); se eliminó código muerto/duplicado (`b466eb4`). Resta auditar componentes huérfanos en `components/`.
-> ✅ Auditoría 2026-08-02: `src/components/` contiene 30 archivos; 27 son barrels de compatibilidad protegidos por `src/components/legacyCompatibility.test.ts`, 2 son componentes reales pendientes y 1 es el test de compatibilidad. `MetricCard`, `ErrorBoundary`, `ToastProvider` y `ShortcutsModal` viven en `src/shared/ui/`; `ClosedCases` vive en `src/features/causas/`; `Header` y sus subcomponentes viven en `src/widgets/header/`; `Sidebar` y `SidebarUserMenu` viven en `src/widgets/sidebar/`. Próximo paso recomendado: abordar `TemplateEditor` y luego planificar la migración de `InteractiveTimeline`.
+> ✅ Auditoría 2026-08-02: `src/components/` contiene 30 archivos; 28 son barrels de compatibilidad protegidos por `src/components/legacyCompatibility.test.ts`, 1 es componente real pendiente y 1 es el test de compatibilidad. `MetricCard`, `ErrorBoundary`, `ToastProvider` y `ShortcutsModal` viven en `src/shared/ui/`; `ClosedCases` vive en `src/features/causas/`; `TemplateEditor` vive en `src/features/document-templates/`; `Header` y sus subcomponentes viven en `src/widgets/header/`; `Sidebar` y `SidebarUserMenu` viven en `src/widgets/sidebar/`. Próximo paso recomendado: planificar la migración completa de `InteractiveTimeline`.
 
 - [ ] Agregar skeletons para todas las vistas lazy
 

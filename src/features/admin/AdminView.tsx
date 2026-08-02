@@ -14,7 +14,7 @@ import {
   Upload,
   Users,
 } from 'lucide-react';
-import TemplateEditor from '../../components/TemplateEditor';
+import TemplateEditor from '../document-templates/TemplateEditor';
 import ErrorBoundary from '../../shared/ui/ErrorBoundary';
 import InstitutionSettingsPanel from './InstitutionSettingsPanel';
 import Button from '../../shared/ui/Button';

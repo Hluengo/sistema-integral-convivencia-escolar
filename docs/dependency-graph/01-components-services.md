@@ -122,7 +122,9 @@ graph TD
     AdvisorView --> TemplateEditor
     AiAdvisor --> AdvisorMessage
     AiAdvisor --> fetch./api/advisor-chat
-    TemplateEditor --> supabase.from.document_templates
+    TemplateEditor --> documentTemplates.service
+    documentTemplates.service --> fetch./api/document-templates
+    fetch./api/document-templates --> supabase.from.document_templates
 ```
 
 ## 6. Students Panel

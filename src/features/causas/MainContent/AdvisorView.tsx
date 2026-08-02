@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { FileSignature, FileText, Gavel, MessageSquare, ShieldCheck } from 'lucide-react';
 import type { Causa } from '../../../shared/lib/types';
 import AiAdvisor from '../../../components/AiAdvisor';
-import TemplateEditor from '../../../components/TemplateEditor';
+import TemplateEditor from '../../document-templates/TemplateEditor';
 import CaseLegalWorkspace, { type CaseLegalTool } from './CaseLegalWorkspace';
 
 type LegalTab = 'consulta' | 'redaccion' | 'plantillas' | 'auditoria';

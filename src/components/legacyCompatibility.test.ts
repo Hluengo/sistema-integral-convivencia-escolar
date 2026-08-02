@@ -91,6 +91,10 @@ const compatibilityBarrels: Array<{ file: string; exportStatement: string }> = [
     file: 'ShortcutsModal.tsx',
     exportStatement: "export { default } from '../shared/ui/ShortcutsModal';",
   },
+  {
+    file: 'TemplateEditor.tsx',
+    exportStatement: "export { default } from '../features/document-templates/TemplateEditor';",
+  },
   { file: 'Toast.tsx', exportStatement: "export { ToastProvider } from '../shared/ui/Toast';" },
   {
     file: join('InteractiveTimeline', 'TimelineHeader.tsx'),
@@ -171,6 +175,21 @@ describe('components legacy compatibility layer', () => {
     );
 
     assert.ok(causasView.includes("const ClosedCases = lazy(() => import('../ClosedCases'));"));
+  });
+
+  it('las vistas consumen TemplateEditor desde features/document-templates', async () => {
+    const adminView = await readFile(join(srcDir, 'features', 'admin', 'AdminView.tsx'), 'utf8');
+    const advisorView = await readFile(
+      join(srcDir, 'features', 'causas', 'MainContent', 'AdvisorView.tsx'),
+      'utf8',
+    );
+
+    assert.ok(
+      adminView.includes("import TemplateEditor from '../document-templates/TemplateEditor';"),
+    );
+    assert.ok(
+      advisorView.includes("import TemplateEditor from '../../document-templates/TemplateEditor';"),
+    );
   });
 
   it('la app consume ShortcutsModal desde shared/ui', async () => {

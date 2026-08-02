@@ -202,17 +202,20 @@ describe('Listado de causas activas', () => {
 
   it('mantiene Plantillas como administración clara, con estados de acceso y sin recargas repetidas', () => {
     const advisor = read('MainContent/AdvisorView.tsx');
-    const templates = read('../../components/TemplateEditor.tsx');
+    const templates = read('../document-templates/TemplateEditor.tsx');
+    const templatesService = read('../../shared/api/services/documentTemplates.service.ts');
 
     assert.doesNotMatch(advisor, /Asistente de convivencia escolar/);
     assert.match(advisor, /hitos, checklist, adjuntos y fuentes jurídicas/);
     assert.match(templates, /Plantillas institucionales/);
-    assert.match(templates, /solo para Dirección y Administración/);
     assert.match(templates, /No hay plantillas institucionales disponibles/);
     assert.match(templates, /min-h-\[440px\]/);
     assert.match(templates, /selectedIdRef/);
     assert.match(templates, /useQuery/);
     assert.match(templates, /queryKey: \['document-templates', tenantId\]/);
+    assert.match(templates, /fetchAdminDocumentTemplates/);
+    assert.match(templatesService, /solo para Dirección y Administración/);
+    assert.match(templatesService, /updateDocumentTemplate/);
   });
 
   it('deja el membrete y los metadatos al formato de impresión, no al cuerpo generado', () => {
