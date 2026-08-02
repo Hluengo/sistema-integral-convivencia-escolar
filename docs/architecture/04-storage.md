@@ -1,15 +1,10 @@
 # 04 — Storage
 
-> **Referencia detallada:** `docs/architecture/storage.md`
+Esta sección cubre buckets de Supabase Storage, convenciones de rutas,
+RLS en storage y signed URLs.
 
-## Buckets
+La arquitectura vigente de almacenamiento está documentada en
+[Storage](storage.md).
 
-| Bucket | Uso | Privado | Max Size | MIME |
-|--------|-----|---------|----------|------|
-| `anotaciones` | Documentos de anotaciones | ✅ | 10 MB | PDF, MD, TXT |
-| `disciplinary-processes` | PDFs de procesos disciplinarios | ✅ | 10 MB | PDF |
-| `documentos_convivencia` (legacy) | Documentos varios | ✅ | — | — |
-
-## Path Conventions
-- `anotaciones`: `{tenant_id}/{filename}`
-- `disciplinary-processes`: `{tenant_id}/{student_id}/{process_id}/{stored_name}`
+Este archivo funciona únicamente como índice numerado; el documento
+detallado es la fuente de verdad.

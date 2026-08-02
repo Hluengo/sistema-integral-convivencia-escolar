@@ -1205,7 +1205,7 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
   - `server/api/routes/templates.ts` → `router.use('/document-templates', requireAuth, requireMembership(CONVIVENCIA_MEMBERSHIP))`
   - `server/api/routes/admin.ts` → `router.use('/admin', requireAuth, requireTenant, requireRole(ADMIN_ROLES))`
   - `server/api/routes/platform.ts` → `router.use('/platform', requireAuth, requireSuperAdmin)`
-- **Bundle serverless regenerado (`api/index.js`):** el commit de Fase E (`7cddd53`) agregó `admin.ts` y `platform.ts` a `server/api/index.ts`, pero el bundle commiteado quedó atrasado (último bundle en `5eac15e`) y NO exponía `POST /admin/*` ni `/api/platform/*` en producción. Con `npm run build` se regeneró: ahora monta `admin_default` y `platform_default` en `api/index.js` (líneas ~3893-3894).
+- **Bundle serverless regenerado (`api/index.js`):** el commit de Fase E (`7cddd53`) agregó `admin.ts` y `platform.ts` a `server/api/index.ts`, pero el bundle versionado en ese entonces quedó atrasado (último bundle en `5eac15e`) y NO exponía `POST /admin/*` ni `/api/platform/*` en producción. Con `npm run build` se regeneró: ahora monta `admin_default` y `platform_default` en `api/index.js` (líneas ~3893-3894). **Nota (2026-08-01):** `api/index.js` ya no se trackea en Git; es un artefacto generado que `npm run build` regenera y Vercel consume desde el working tree.
 - **Verificación:** `npm run typecheck` ✅; `npm run lint:code` ✅; `npm run test` → 302 passed ✅; `npm run build` ✅ (Vite + `dist/server.cjs` + `api/index.js`). E2E ya validado previamente (26 passed, 0 skipped).
 
 ### Estado remoto Supabase — revisión CLI (2026-08-01)

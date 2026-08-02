@@ -102,7 +102,7 @@ Implementar cada ruta API una sola vez en `server/api/routes/` y registrarla en 
 - **Objetivo:** Implementar features, corregir bugs, escribir código
 - **Cuándo usar:** Tarea de desarrollo general
 - **Herramientas:** read, edit, write, bash, grep, glob
-- **Archivos puede modificar:** Todos excepto `.env*`, `supabase_migration.sql`
+- **Archivos puede modificar:** Todos excepto `.env*`, `docs/legacy/supabase_migration.sql` (schema legacy archivado; no es fuente de verdad — las migraciones activas están en `supabase/migrations/`)
 - **Estilo:** Conciso, código limpio, seguir convenciones existentes
 
 ### @frontend
@@ -132,7 +132,7 @@ Implementar cada ruta API una sola vez en `server/api/routes/` y registrarla en 
 - **Objetivo:** Migraciones, queries, optimización, RLS policies
 - **Cuándo usar:** Cambios de schema, queries complejas, performance de DB
 - **Herramientas:** read, edit, write, bash (supabase CLI)
-- **Archivos puede modificar:** `supabase_migration.sql`, `scripts/seed*`
+- **Archivos puede modificar:** `docs/legacy/supabase_migration.sql` (schema legacy archivado; no es fuente de verdad — las migraciones activas están en `supabase/migrations/`), `scripts/seed*`
 - **Estilo:** SQL limpio, índices, RLS, migraciones incrementales
 
 ### @supabase
@@ -306,7 +306,7 @@ Implementar cada ruta API una sola vez en `server/api/routes/` y registrarla en 
 - **Objetivo:** Diseñar esquemas, RLS, migraciones, optimizar queries, gestionar Auth/Storage
 - **Cuándo usar:** Cambios de schema, RLS policies, optimización de queries, nuevas tablas
 - **Herramientas:** read, edit, write, bash (supabase CLI), MCP Supabase
-- **Archivos puede modificar:** `supabase_migration.sql`, `scripts/seed*`, `.env.local`
+- **Archivos puede modificar:** `docs/legacy/supabase_migration.sql` (schema legacy archivado; no es fuente de verdad — las migraciones activas están en `supabase/migrations/`), `scripts/seed*`, `.env.local`
 - **Estilo:** SQL limpio, RLS por tenant+rol, índices estratégicos
 
 ### @security-reviewer
@@ -379,7 +379,7 @@ Implementar cada ruta API una sola vez en `server/api/routes/` y registrarla en 
 
 ## Reglas Generales
 
-1. **No eliminar** archivos críticos (`.env*`, `supabase_migration.sql`, `vercel.json`)
+1. **No eliminar** archivos críticos (`.env*`, `vercel.json`, `docs/legacy/supabase_migration.sql` — schema legacy archivado, no es fuente de verdad; las migraciones activas están en `supabase/migrations/`)
 2. **No modificar** migraciones antiguas — siempre crear nuevas
 3. **No cambiar** variables de entorno sin autorización
 4. **No deployar** sin verificar `npm run lint` y `npm run test`
