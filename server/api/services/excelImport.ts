@@ -4,13 +4,13 @@ import { randomUUID } from 'node:crypto';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import readXlsxFile, { type CellValue } from 'read-excel-file/node';
 
-export interface ImportCourseRow {
+interface ImportCourseRow {
   name: string;
   level: 'BASICA' | 'MEDIA';
   position: number | null;
 }
 
-export interface ImportStudentRow {
+interface ImportStudentRow {
   full_name: string;
   rut: string;
   course_name: string;

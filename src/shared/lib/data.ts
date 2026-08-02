@@ -124,24 +124,6 @@ export const MAPPED_STATES: Record<
   },
 };
 
-export const FASES_LIST: {
-  name: 'Recepción' | 'Investigación' | 'Resolución' | 'Apelación' | 'Seguimiento';
-  color: string;
-  bg: string;
-  border: string;
-}[] = [
-  { name: 'Recepción', color: 'text-blue-700', bg: 'bg-blue-50', border: 'border-blue-200' },
-  { name: 'Investigación', color: 'text-grave-700', bg: 'bg-grave-50', border: 'border-grave-200' },
-  {
-    name: 'Resolución',
-    color: 'text-leve-700',
-    bg: 'bg-leve-50',
-    border: 'border-leve-200',
-  },
-  { name: 'Apelación', color: 'text-indigo-700', bg: 'bg-indigo-50', border: 'border-indigo-200' },
-  { name: 'Seguimiento', color: 'text-slate-700', bg: 'bg-slate-50', border: 'border-slate-200' },
-];
-
 export const getFaseForEstado = (estado: EstadoCausa) => {
   return MAPPED_STATES[estado]?.fase || 'Recepción';
 };
@@ -456,14 +438,6 @@ const PHASE_PREFIXES: Record<string, string> = {
   Resolución: 'chk_res',
   Apelación: 'chk_imp',
   Seguimiento: 'chk_seg',
-};
-
-export const PHASE_SHORT: Record<string, string> = {
-  Recepción: 'Recep.',
-  Investigación: 'Invest.',
-  Resolución: 'Resoluc.',
-  Apelación: 'Apel.',
-  Seguimiento: 'Seguim.',
 };
 
 export function getPhaseProgress(checklist: Causa['checklistDebidoProceso'], phaseName: string) {

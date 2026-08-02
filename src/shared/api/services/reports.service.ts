@@ -3,7 +3,7 @@
 import { supabase } from '../lib/supabase';
 
 export type ReportType = 'expedientes' | 'anotaciones' | 'uso' | 'auditoria';
-export type ReportStatus = 'queued' | 'processing' | 'completed' | 'failed';
+type ReportStatus = 'queued' | 'processing' | 'completed' | 'failed';
 
 export interface ReportFilters {
   course: string;

@@ -3,7 +3,7 @@
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
-export const DASHBOARD_ANNOTATION_QUERY_KEYS = [
+const DASHBOARD_ANNOTATION_QUERY_KEYS = [
   'annotation-stage-kpis',
   'course-carta-ranking',
   'teacher-annotation-ranking',

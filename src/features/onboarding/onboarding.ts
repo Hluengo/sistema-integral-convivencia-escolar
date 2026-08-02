@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-export const ONBOARDING_STORAGE_PREFIX = 'onboarding_completed_v1';
+const ONBOARDING_STORAGE_PREFIX = 'onboarding_completed_v1';
 
 export type OnboardingStepId = 'profile' | 'courses' | 'templates' | 'members' | 'rules';
 

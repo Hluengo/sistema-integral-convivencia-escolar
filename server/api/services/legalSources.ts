@@ -184,8 +184,3 @@ export async function getRelevantLegalSources(query: string, maxChars = 90_000):
   if (!output.length) throw new Error('No hay fuentes jurídicas disponibles en docs/leyes.');
   return output.join('\n\n');
 }
-
-export async function getAuthorizedLegalSources(): Promise<string> {
-  const sources = await loadAuthorizedLegalSources();
-  return sources.map(({ name, text }) => `### ${name}\n${text}`).join('\n\n');
-}

@@ -113,15 +113,6 @@ export const createInstitutionRule = (
     body: JSON.stringify(values),
   });
 
-export const updateInstitutionRule = (
-  id: string,
-  values: Partial<Pick<InstitutionRuleVersion, 'title' | 'version' | 'content'>>,
-) =>
-  request<InstitutionRuleVersion>(`/api/admin/rules/${encodeURIComponent(id)}`, {
-    method: 'PATCH',
-    body: JSON.stringify(values),
-  });
-
 export const publishInstitutionRule = (id: string) =>
   request<InstitutionRuleVersion>(`/api/admin/rules/${encodeURIComponent(id)}/publish`, {
     method: 'POST',

@@ -17,7 +17,7 @@ export const ADMIN_ROLES = [
 export type AdminRole = (typeof ADMIN_ROLES)[number];
 export type AdminMemberRole = AdminRole | 'superadmin';
 
-export interface TenantProfileSummary {
+interface TenantProfileSummary {
   user_id: string;
   email: string | null;
   full_name: string | null;
@@ -35,7 +35,7 @@ export interface AdminMember extends TenantProfileSummary {
   lastSignInAt: string | null;
 }
 
-export interface MembershipInvitation {
+interface MembershipInvitation {
   id: string;
   tenant_id: string;
   email: string;
@@ -51,7 +51,7 @@ export interface MembershipInvitation {
   accepted_at: string | null;
 }
 
-export interface MembershipAuditEvent {
+interface MembershipAuditEvent {
   id: string;
   actor_user_id: string;
   actorEmail: string | null;
@@ -72,16 +72,6 @@ export interface AdminMembersData {
 export interface UsageStatsSummary {
   events: Array<{ event_name: string; total_count: number }>;
   dailyActiveUsers: Array<{ day: string; active_users: number }>;
-}
-
-export async function fetchTenantProfiles(): Promise<TenantProfileSummary[]> {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('user_id,email,full_name,role,course_ids,updated_at')
-    .order('full_name', { ascending: true });
-
-  if (error) throw error;
-  return (data ?? []) as TenantProfileSummary[];
 }
 
 async function adminRequest<T>(path: string, init?: RequestInit): Promise<T> {

@@ -3,8 +3,4 @@
 // Re-export the canonical membership middleware so server/api and server/index.ts
 // share a single source of truth. The canonical implementation lives in
 // server/middleware/requireMembership.ts and is bundled into api/index.js by esbuild.
-export {
-  CONVIVENCIA_MEMBERSHIP,
-  CONVIVENCIA_MEMBERSHIP_ROLES,
-  requireMembership,
-} from '../../middleware/requireMembership.js';
+export { CONVIVENCIA_MEMBERSHIP, requireMembership } from '../../middleware/requireMembership.js';

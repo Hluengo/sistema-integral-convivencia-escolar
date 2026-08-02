@@ -391,7 +391,4 @@ router.post('/platform/tenants/:id/import', upload.single('file'), async (req, r
   }
 });
 
-// Reexporto el parser para reutilizarlo en el endpoint de import del tenant.
-export { upload as platformUpload };
-
 export default router;

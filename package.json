@@ -34,9 +34,7 @@
     "pre-push": "npm run lint && npm run test && npm run build:web && npm run security-audit"
   },
   "knip": {
-    "ignore": [
-      "server/api/index.ts"
-    ]
+    "ignore": []
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.19",
@@ -76,7 +74,6 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.0.4",
-    "agent-browser": "^0.33.1",
     "esbuild": "^0.25.0",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",

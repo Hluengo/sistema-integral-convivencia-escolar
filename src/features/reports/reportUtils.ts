@@ -20,18 +20,6 @@ export function filterReportCausas(causas: Causa[], filters: ReportFilters): Cau
   });
 }
 
-export function buildReportRows(causas: Causa[]): Array<Array<string | number>> {
-  return causas.map((causa) => [
-    causa.id,
-    causa.estudianteCurso,
-    causa.estadoActual,
-    causa.responsable,
-    causa.tipoInfraccion,
-    causa.fechaApertura,
-    causa.fechaUltimaActualizacion,
-  ]);
-}
-
 export function buildReportSheet(causas: Causa[], generatedAt: Date): SheetData {
   const headerStyle = {
     backgroundColor: '#1E3A5F',

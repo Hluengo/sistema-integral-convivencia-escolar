@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-export const CHILE_TIME_ZONE = 'America/Santiago';
+const CHILE_TIME_ZONE = 'America/Santiago';
 
 export const toDateOnly = (date: Date): string => {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -23,7 +23,7 @@ export const nowDateOnly = (): string => toDateOnly(new Date());
  * components (getFullYear, getMonth, getDate) never shift under local
  * America/Santiago DST. Returns NaN if the input is not a valid date.
  */
-export const parseDateOnlyAtNoonUtc = (value: string): Date => new Date(`${value}T12:00:00Z`);
+const parseDateOnlyAtNoonUtc = (value: string): Date => new Date(`${value}T12:00:00Z`);
 
 /** Safe calendar year for a date-only string using the UTC-noon parse. */
 export const getYearFromDateOnly = (value: string): number => {

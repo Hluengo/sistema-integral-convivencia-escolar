@@ -4,7 +4,7 @@ import { useState, type FormEvent, type ReactNode } from 'react';
 import { NotebookPen, Plus, X } from 'lucide-react';
 import Button from './Button';
 
-export interface HistoryEntryFormInput {
+interface HistoryEntryFormInput {
   title: string;
   description: string;
 }

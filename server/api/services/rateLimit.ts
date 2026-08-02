@@ -103,14 +103,3 @@ export function checkRateLimit(ip: string): boolean {
   record.count++;
   return true;
 }
-
-export function getRemainingInWindow(ip: string): number {
-  const now = Date.now();
-  const record = rateLimitMap.get(ip);
-  if (!record || now > record.resetAt) return RATE_LIMIT;
-  return Math.max(0, RATE_LIMIT - record.count);
-}
-
-export function isRedisConfigured(): boolean {
-  return !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
-}

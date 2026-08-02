@@ -148,24 +148,6 @@ export async function fetchCausasPage(offset = 0, pageSize = 50): Promise<Causas
   };
 }
 
-export async function fetchCausas(limit = DEFAULT_PAGE_SIZE): Promise<Causa[]> {
-  let causaQuery = supabase
-    .from('causas')
-    .select(
-      'id,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas',
-    )
-    .order('fecha_ultima_actualizacion', { ascending: false });
-
-  if (limit > 0) causaQuery = causaQuery.limit(limit);
-  const { data, error } = await causaQuery;
-  if (error || !data) {
-    console.error('Error fetching causas:', error);
-    throw error || new Error('No se recibieron causas desde Supabase.');
-  }
-
-  return mapCausaRows(data as SupabaseCausaRow[]);
-}
-
 /**
  * Carga los antecedentes de un único expediente al abrirlo.
  *

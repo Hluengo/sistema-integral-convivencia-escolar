@@ -2021,7 +2021,7 @@ function getMembershipMode() {
 function logServer(event, detail) {
   if (process.env.NODE_ENV !== 'production') {
     const msg = `[membership-server] ${event}${detail ? `: ${detail}` : ''}`;
-    console.log(msg);
+    console.debug(msg);
   }
 }
 async function checkMembershipViaApi(hostname, anonKey, token, params) {

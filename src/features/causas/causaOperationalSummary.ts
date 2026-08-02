@@ -4,7 +4,7 @@ import { getPhaseProgress } from '../../data';
 import type { Causa, ChecklistItem, FaseProcedimental } from '../../types';
 import { getCausaPhase, getCausaStatus } from './causaPresentation';
 
-export const CAUSA_PHASES: FaseProcedimental[] = [
+const CAUSA_PHASES: FaseProcedimental[] = [
   'Recepción',
   'Investigación',
   'Resolución',
