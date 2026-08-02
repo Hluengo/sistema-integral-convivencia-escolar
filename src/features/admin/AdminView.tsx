@@ -15,7 +15,7 @@ import {
   Users,
 } from 'lucide-react';
 import TemplateEditor from '../../components/TemplateEditor';
-import ErrorBoundary from '../../components/ErrorBoundary';
+import ErrorBoundary from '../../shared/ui/ErrorBoundary';
 import InstitutionSettingsPanel from './InstitutionSettingsPanel';
 import Button from '../../shared/ui/Button';
 import SummaryCard from '../../shared/ui/SummaryCard';

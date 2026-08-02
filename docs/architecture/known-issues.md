@@ -7,7 +7,7 @@
 | Vercel 500 en PDF upload                       | Alta      | ✅ Fixed    | Worker pdfjs-dist no incluido. Solución: includeFiles en vercel.json                    |
 | JWT ES256 verification                         | Media     | ⚡ Mitigado | HMAC + API fallback implementado                                                        |
 | CSP bloquea fonts                              | Baja      | ⚡ Mitigado | Google Fonts añadido a CSP                                                              |
-| `components/` legacy duplicado                 | Media     | ⚡ Mitigado | 13 barrels protegidos por test; quedan componentes reales por mover gradualmente        |
+| `components/` legacy duplicado                 | Media     | ⚡ Mitigado | 15 barrels protegidos por test; quedan componentes reales por mover gradualmente        |
 | Dual server routes                             | Alta      | ✅ Resuelto | Una implementación canónica en `server/api/routes/`, compartida por desarrollo y Vercel |
 | `inspectorate_records.student_id` TEXT vs UUID | Media     | ✅ Resuelto | Verificado como UUID con FK a `students(id)`; los casts `::text` restantes son legacy   |
 
@@ -17,7 +17,7 @@
 
 - **No React Router**: Estado de navegación no persiste en URL, no hay deep linking
 - **Dual entry points**: Se mantienen por entorno, pero comparten las mismas rutas canónicas
-- **Legacy `components/`**: 27 archivos actuales; 13 son barrels de compatibilidad y el resto son componentes reales pendientes de migración gradual
+- **Legacy `components/`**: 27 archivos actuales; 15 son barrels de compatibilidad y el resto son componentes reales pendientes de migración gradual
 - **Circular chunks**: Warnings en build por manualChunks
 
 ### Testing

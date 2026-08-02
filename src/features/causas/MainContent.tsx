@@ -11,7 +11,7 @@ import type { FormAction } from '../../shared/lib/hooks/useNewCausaForm';
 import { ChevronRight } from 'lucide-react';
 import { VIEW_TITLES } from '../../components/Header/constants';
 import CausasView from './MainContent/CausasView';
-import ErrorBoundary from '../../components/ErrorBoundary';
+import ErrorBoundary from '../../shared/ui/ErrorBoundary';
 import {
   DashboardMetricSkeleton,
   CausaCardSkeleton,

@@ -2,3 +2,5 @@
 
 export { MembershipLoading } from './MembershipLoading';
 export { MembershipAccessDenied } from './MembershipAccessDenied';
+export { default as ErrorBoundary } from './ErrorBoundary';
+export { ToastProvider } from './Toast';

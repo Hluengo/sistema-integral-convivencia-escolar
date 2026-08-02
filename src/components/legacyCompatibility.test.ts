@@ -26,6 +26,10 @@ const compatibilityBarrels: Array<{ file: string; exportStatement: string }> = [
     file: 'EditCausaModal.tsx',
     exportStatement: "export { default } from '../features/causas/ui/EditCausaModal';",
   },
+  {
+    file: 'ErrorBoundary.tsx',
+    exportStatement: "export { default } from '../shared/ui/ErrorBoundary';",
+  },
   { file: 'Header.tsx', exportStatement: "export { default } from '../widgets/header/Header';" },
   { file: 'LoginPage.tsx', exportStatement: "export { default } from '../pages/login/LoginPage';" },
   {
@@ -37,6 +41,7 @@ const compatibilityBarrels: Array<{ file: string; exportStatement: string }> = [
     file: 'NewCausaModal.tsx',
     exportStatement: "export { default } from '../features/causas/ui/NewCausaModal';",
   },
+  { file: 'Toast.tsx', exportStatement: "export { ToastProvider } from '../shared/ui/Toast';" },
   {
     file: join('InteractiveTimeline', 'TimelineHeader.tsx'),
     exportStatement: "export { default } from '../../features/timeline/TimelineHeader';",
@@ -72,5 +77,13 @@ describe('components legacy compatibility layer', () => {
     );
 
     assert.ok(content.includes("import MetricCard from '../../shared/ui/MetricCard';"));
+  });
+
+  it('la app consume Toast y ErrorBoundary desde shared/ui', async () => {
+    const appContent = await readFile(join(srcDir, 'app', 'App.tsx'), 'utf8');
+    const mainContent = await readFile(join(srcDir, 'app', 'main.tsx'), 'utf8');
+
+    assert.ok(appContent.includes("import { ToastProvider } from '../shared/ui/Toast';"));
+    assert.ok(mainContent.includes("import ErrorBoundary from '../shared/ui/ErrorBoundary';"));
   });
 });
