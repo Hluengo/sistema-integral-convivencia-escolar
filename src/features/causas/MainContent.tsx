@@ -18,6 +18,9 @@ import {
   AnnotationsSkeleton,
   TableSkeleton,
   ChatMessageSkeleton,
+  ManagementViewSkeleton,
+  ReportsViewSkeleton,
+  PlatformViewSkeleton,
 } from '../../shared/Skeleton';
 
 const DashboardStats = lazy(() => import('../../components/DashboardStats'));
@@ -238,7 +241,7 @@ export default function MainContent({
 
       {currentView === 'reportes' && (
         <ErrorBoundary>
-          <Suspense fallback={<DashboardFallback />}>
+          <Suspense fallback={<ReportsViewSkeleton />}>
             <ReportsCenter causas={causas} />
           </Suspense>
         </ErrorBoundary>
@@ -246,7 +249,7 @@ export default function MainContent({
 
       {currentView === 'admin' && (
         <ErrorBoundary>
-          <Suspense fallback={<DashboardFallback />}>
+          <Suspense fallback={<ManagementViewSkeleton />}>
             <AdminView />
           </Suspense>
         </ErrorBoundary>
@@ -254,7 +257,7 @@ export default function MainContent({
 
       {currentView === 'platform' && (
         <ErrorBoundary>
-          <Suspense fallback={<DashboardFallback />}>
+          <Suspense fallback={<PlatformViewSkeleton />}>
             <PlatformView />
           </Suspense>
         </ErrorBoundary>

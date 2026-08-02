@@ -1,0 +1,68 @@
+/** @license SPDX-License-Identifier: Apache-2.0 */
+
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { readdir, readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+const srcDir = join(process.cwd(), 'src');
+
+async function readTsxFiles(dir: string): Promise<Array<{ path: string; content: string }>> {
+  const entries = await readdir(dir, { withFileTypes: true });
+  const files = await Promise.all(
+    entries.map(async (entry) => {
+      const path = join(dir, entry.name);
+      if (entry.isDirectory()) return readTsxFiles(path);
+      if (!entry.isFile() || !entry.name.endsWith('.tsx')) return [];
+      return [{ path, content: await readFile(path, 'utf8') }];
+    }),
+  );
+  return files.flat();
+}
+
+describe('lazy loading fallbacks', () => {
+  it('evita fallbacks vacíos en boundaries lazy de app y features', async () => {
+    const files = await readTsxFiles(srcDir);
+    const offenders = files
+      .filter(
+        (file) =>
+          file.path.includes(`${join('src', 'app')}`) ||
+          file.path.includes(`${join('src', 'features')}`),
+      )
+      .filter((file) => file.content.includes('fallback={null}'))
+      .map((file) => file.path.replace(process.cwd(), '.'));
+
+    assert.deepEqual(offenders, []);
+  });
+
+  it('mantiene skeletons específicos para vistas y modales lazy críticos', async () => {
+    const app = await readFile(join(srcDir, 'app', 'App.tsx'), 'utf8');
+    const mainContent = await readFile(
+      join(srcDir, 'features', 'causas', 'MainContent.tsx'),
+      'utf8',
+    );
+    const causasView = await readFile(
+      join(srcDir, 'features', 'causas', 'MainContent', 'CausasView.tsx'),
+      'utf8',
+    );
+    const anotacionesView = await readFile(
+      join(srcDir, 'features', 'anotaciones', 'AnotacionesView.tsx'),
+      'utf8',
+    );
+    const cartasTab = await readFile(
+      join(srcDir, 'features', 'anotaciones', 'AnotacionesStudentDetailModal', 'CartasTab.tsx'),
+      'utf8',
+    );
+
+    assert.ok(app.includes('fallback={<SidebarSkeleton />}'));
+    assert.ok(app.includes('fallback={<HeaderSkeleton />}'));
+    assert.ok(app.includes('fallback={<ModalSkeleton />}'));
+    assert.ok(mainContent.includes('fallback={<ReportsViewSkeleton />}'));
+    assert.ok(mainContent.includes('fallback={<ManagementViewSkeleton />}'));
+    assert.ok(mainContent.includes('fallback={<PlatformViewSkeleton />}'));
+    assert.ok(causasView.includes('fallback={<DetailModalSkeleton />}'));
+    assert.ok(causasView.includes('fallback={<ClosedCasesSkeleton />}'));
+    assert.ok(anotacionesView.includes('fallback={<ModalSkeleton />}'));
+    assert.ok(cartasTab.includes('fallback={<DocumentGeneratorSkeleton />}'));
+  });
+});

@@ -7,7 +7,11 @@ import type React from 'react';
 import { Suspense, lazy, useCallback, useMemo, useState } from 'react';
 import { BookOpen, ChevronDown, GraduationCap, Scale, Search } from 'lucide-react';
 import EmptyState from '../../../shared/EmptyState';
-import { CausaCardSkeleton } from '../../../shared/Skeleton';
+import {
+  CausaCardSkeleton,
+  ClosedCasesSkeleton,
+  DetailModalSkeleton,
+} from '../../../shared/Skeleton';
 import { type Causa, type FaseProcedimental } from '../../../shared/lib/types';
 import type { FormAction } from '../../../shared/lib/hooks/useNewCausaForm';
 import Button from '@/src/shared/ui/Button';
@@ -262,7 +266,7 @@ export default function CausasView({
         </div>
       )}
 
-      <Suspense fallback={null}>
+      <Suspense fallback={<DetailModalSkeleton />}>
         <CausaDetailModal
           causa={selectedCausa}
           privacyMode={privacyMode}
@@ -274,14 +278,16 @@ export default function CausasView({
       {/* VIEW 3: CLOSED CASES */}
       {selectedCausaId === '' && visibleCausas.length === 0 && (
         <div className="flex-1">
-          <ClosedCases
-            causas={causas}
-            privacyMode={privacyMode}
-            onReopenCausa={handleReopenCausa}
-            onSelectCausa={(causa) => {
-              handleSelectCausaFromDashboard(causa.id);
-            }}
-          />
+          <Suspense fallback={<ClosedCasesSkeleton />}>
+            <ClosedCases
+              causas={causas}
+              privacyMode={privacyMode}
+              onReopenCausa={handleReopenCausa}
+              onSelectCausa={(causa) => {
+                handleSelectCausaFromDashboard(causa.id);
+              }}
+            />
+          </Suspense>
         </div>
       )}
     </div>

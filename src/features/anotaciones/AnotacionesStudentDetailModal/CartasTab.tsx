@@ -24,6 +24,7 @@ import type { StudentInfo } from './constants';
 import PhysicalCartaRegistrationCard from './PhysicalCartaRegistrationCard';
 import TextInputDialog from '@/src/shared/ui/TextInputDialog';
 import Button from '@/src/shared/ui/Button';
+import { DocumentGeneratorSkeleton } from '@/src/shared/Skeleton';
 
 const AnotacionesDocumentGenerator = lazy(() => import('../AnotacionesDocumentGenerator'));
 
@@ -312,13 +313,7 @@ export default function CartasTab({
               <XCircle className="h-5 w-5" />
             </button>
           </div>
-          <Suspense
-            fallback={
-              <div className="py-10 text-center text-sm text-neutral-500">
-                Cargando generador...
-              </div>
-            }
-          >
+          <Suspense fallback={<DocumentGeneratorSkeleton />}>
             <AnotacionesDocumentGenerator
               key={`${student.id}:${activeDocType}:${activeCarta?.id ?? 'new'}`}
               student={{

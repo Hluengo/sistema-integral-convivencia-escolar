@@ -67,7 +67,7 @@
 
 - **Siempre lazy**: Componentes de página (vistas) y modals grandes
 - **Nunca lazy**: Componentes shared (Button, Dialog) y providers
-- **Suspense boundaries**: Cada vista tiene su propio `<Suspense>` con skeleton específico
+- **Suspense boundaries**: Cada vista y modal lazy visible tiene su propio `<Suspense>` con skeleton específico; `src/app/lazyFallbacks.test.ts` evita volver a `fallback={null}` en `src/app` y `src/features`.
 
 ## Conventions
 

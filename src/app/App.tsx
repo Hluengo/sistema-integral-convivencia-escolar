@@ -20,7 +20,13 @@ import { causasQueryKeys } from '../shared/lib/queries/causasQueryKeys';
 import { useMemberships } from '../shared/api/hooks/useMemberships';
 import { queryClient } from '../lib/queryClient';
 import { ToastProvider } from '../shared/ui/Toast';
-import { MainContentSkeleton } from '../shared/Skeleton';
+import {
+  CommandPaletteSkeleton,
+  HeaderSkeleton,
+  MainContentSkeleton,
+  ModalSkeleton,
+  SidebarSkeleton,
+} from '../shared/Skeleton';
 import { AppProvider } from '../shared/lib/AppContext';
 import { getFaseForEstado } from '../shared/lib/data';
 import { EstadoCausa } from '../shared/lib/types';
@@ -451,18 +457,14 @@ export default function App() {
           >
             Saltar al contenido principal
           </a>
-          <Suspense fallback={null}>
+          <Suspense fallback={<CommandPaletteSkeleton />}>
             <CommandPalette
               causas={causas}
               onNavigate={handleViewChange}
               onSelectCausa={setSelectedCausaId}
             />
           </Suspense>
-          <Suspense
-            fallback={
-              <div className="hidden h-dvh w-[68px] flex-col bg-linear-to-b from-neutral-800 to-neutral-950 shadow-xl lg:flex" />
-            }
-          >
+          <Suspense fallback={<SidebarSkeleton />}>
             <Sidebar
               currentView={currentView}
               onViewChange={handleViewChange}
@@ -479,7 +481,7 @@ export default function App() {
             />
           </Suspense>
           <div className="flex min-w-0 flex-1 flex-col">
-            <Suspense fallback={<div className="h-16 border-neutral-200/60 border-b bg-white" />}>
+            <Suspense fallback={<HeaderSkeleton />}>
               <Header
                 privacyMode={privacyMode}
                 setPrivacyMode={setPrivacyMode}
@@ -547,7 +549,7 @@ export default function App() {
             </footer>
           </div>
           {showCreateForm && (
-            <Suspense fallback={null}>
+            <Suspense fallback={<ModalSkeleton />}>
               <NewCausaModal
                 newEstNombre={newEstNombre}
                 setNewEstNombre={(v: string) =>
@@ -589,12 +591,12 @@ export default function App() {
             </Suspense>
           )}
           {showShortcuts && (
-            <Suspense fallback={null}>
+            <Suspense fallback={<ModalSkeleton />}>
               <ShortcutsModal onClose={() => setShowShortcuts(false)} />
             </Suspense>
           )}
           {showLoginModal && (
-            <Suspense fallback={null}>
+            <Suspense fallback={<ModalSkeleton />}>
               <LoginPage onClose={() => setShowLoginModal(false)} />
             </Suspense>
           )}

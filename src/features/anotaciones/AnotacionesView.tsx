@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useState, useCallback, lazy, useMemo } from 'react';
+import { useState, useCallback, lazy, useMemo, Suspense } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Shield, Plus } from 'lucide-react';
 import type { Annotation, AnotacionStudent } from '../../shared/lib/types';
@@ -11,7 +11,7 @@ import {
 import { fetchCartaTableStates } from '../../shared/api/services/cartas.service';
 import { getStudentCartaWorkflowLabel } from '../../shared/lib/domain/disciplinaryStage';
 import AnotacionesStudentTable from './AnotacionesStudentTable';
-import { AnnotationsSkeleton } from '../../shared/Skeleton';
+import { AnnotationsSkeleton, ModalSkeleton } from '../../shared/Skeleton';
 import type { ActiveTab } from './AnotacionesStudentDetailModal/constants';
 import Button from '@/src/shared/ui/Button';
 import { useAuthStore } from '../../shared/lib/stores/authStore';
@@ -143,33 +143,37 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
 
       {/* Student Detail Modal */}
       {selectedStudent && (
-        <AnotacionesStudentDetailModal
-          student={selectedStudent}
-          annotations={(annotationsQuery.data ?? []).filter(
-            (annotation: Annotation) => annotation.student_id === selectedStudent.id,
-          )}
-          privacyMode={privacyMode}
-          initialTab={detailInitialTab}
-          onClose={() => setSelectedStudent(null)}
-          onDataChanged={refreshStudentTable}
-        />
+        <Suspense fallback={<ModalSkeleton />}>
+          <AnotacionesStudentDetailModal
+            student={selectedStudent}
+            annotations={(annotationsQuery.data ?? []).filter(
+              (annotation: Annotation) => annotation.student_id === selectedStudent.id,
+            )}
+            privacyMode={privacyMode}
+            initialTab={detailInitialTab}
+            onClose={() => setSelectedStudent(null)}
+            onDataChanged={refreshStudentTable}
+          />
+        </Suspense>
       )}
 
       {/* New Process Modal */}
       {isNewProcessModalOpen && (
-        <NewDisciplinaryProcessModal
-          students={students}
-          onClose={() => setIsNewProcessModalOpen(false)}
-          currentUserEmail=""
-          onProcessCreated={loadData}
-          onOpenExistingStudent={(studentId) => {
-            const student = students.find((candidate) => candidate.id === studentId);
-            if (!student) return;
-            setIsNewProcessModalOpen(false);
-            setDetailInitialTab('historial');
-            setSelectedStudent(student);
-          }}
-        />
+        <Suspense fallback={<ModalSkeleton />}>
+          <NewDisciplinaryProcessModal
+            students={students}
+            onClose={() => setIsNewProcessModalOpen(false)}
+            currentUserEmail=""
+            onProcessCreated={loadData}
+            onOpenExistingStudent={(studentId) => {
+              const student = students.find((candidate) => candidate.id === studentId);
+              if (!student) return;
+              setIsNewProcessModalOpen(false);
+              setDetailInitialTab('historial');
+              setSelectedStudent(student);
+            }}
+          />
+        </Suspense>
       )}
     </div>
   );

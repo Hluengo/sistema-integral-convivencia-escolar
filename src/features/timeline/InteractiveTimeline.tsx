@@ -16,6 +16,7 @@ import ConfirmDialog from '../../shared/ConfirmDialog';
 import { useBreaches } from './hooks/useBreaches';
 import type { TimelineTab } from './timelineTabs.types';
 import ForceCloseCausaDialog from '../causas/ForceCloseCausaDialog';
+import { TimelineEditSkeleton } from '../../shared/Skeleton';
 
 const EditCausaModal = lazy(() => import('../causas/ui/EditCausaModal'));
 
@@ -97,7 +98,7 @@ export default function InteractiveTimeline({
           }}
         />
         {showEdit && (
-          <Suspense fallback={null}>
+          <Suspense fallback={<TimelineEditSkeleton />}>
             <EditCausaModal
               causa={causa}
               onClose={() => setShowEdit(false)}

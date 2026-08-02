@@ -14,13 +14,13 @@
 
 ## Shared Components (`src/shared/`)
 
-| Componente        | Archivo               | Propósito                       |
-| ----------------- | --------------------- | ------------------------------- |
-| `EmptyState`      | `EmptyState.tsx`      | Placeholder para estados vacíos |
-| `Skeleton`        | `Skeleton.tsx`        | Loading skeletons               |
-| `SeverityBadge`   | `SeverityBadge.tsx`   | Badge de severidad con color    |
-| `ImproveTextarea` | `ImproveTextarea.tsx` | Textarea con botón de mejora AI |
-| `ConfirmDialog`   | `ConfirmDialog.tsx`   | Confirmación reutilizable       |
+| Componente        | Archivo               | Propósito                                            |
+| ----------------- | --------------------- | ---------------------------------------------------- |
+| `EmptyState`      | `EmptyState.tsx`      | Placeholder para estados vacíos                      |
+| `Skeleton`        | `Skeleton.tsx`        | Loading skeletons de vistas, shell, modales y tablas |
+| `SeverityBadge`   | `SeverityBadge.tsx`   | Badge de severidad con color                         |
+| `ImproveTextarea` | `ImproveTextarea.tsx` | Textarea con botón de mejora AI                      |
+| `ConfirmDialog`   | `ConfirmDialog.tsx`   | Confirmación reutilizable                            |
 
 ## Widgets (`src/widgets/`)
 

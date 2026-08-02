@@ -26,9 +26,9 @@
 
 > ✅ Cerrado 2026-08-02: `src/components/` contiene 30 archivos; 29 son barrels de compatibilidad protegidos por `src/components/legacyCompatibility.test.ts` y 1 es el test de compatibilidad. Ya no quedan componentes reales en la capa legacy. `MetricCard`, `ErrorBoundary`, `ToastProvider` y `ShortcutsModal` viven en `src/shared/ui/`; `ClosedCases` vive en `src/features/causas/`; `TemplateEditor` vive en `src/features/document-templates/`; `InteractiveTimeline` vive en `src/features/timeline/`; `Header` y sus subcomponentes viven en `src/widgets/header/`; `Sidebar` y `SidebarUserMenu` viven en `src/widgets/sidebar/`.
 
-- [ ] Agregar skeletons para todas las vistas lazy
+- [x] Agregar skeletons para todas las vistas lazy
 
-> 🟡 **En progreso:** existen fallbacks en `MainContent` (Dashboard/Anotaciones/Students/Advisor), `DashboardStats`, `AnotacionesView`, `StudentsPanel`, `RankingCard`. Falta verificar cobertura completa en todas las rutas lazy.
+> ✅ Cerrado 2026-08-02: las vistas lazy tienen fallbacks específicos para dashboard, estudiantes, anotaciones, asesor, administración, reportes y plataforma. Los modales lazy críticos usan skeleton modal (`NewCausaModal`, `LoginPage`, `ShortcutsModal`, ficha de expediente, ficha de estudiante, nuevo proceso disciplinario, edición de causa) y el generador de cartas usa un skeleton estructural. `src/app/lazyFallbacks.test.ts` bloquea `fallback={null}` en `src/app` y `src/features`.
 
 - [x] Eliminar fetching remoto con `useEffect` en `StudentsPanel`
 
@@ -99,6 +99,6 @@
 ### UX
 
 - [ ] WCAG 2.1 AA certificado
-- [ ] Skeleton loading en todas las vistas
+- [x] Skeleton loading en todas las vistas
 - [ ] Animaciones de transición fluidas
 - [ ] Feedback visual en todas las acciones
