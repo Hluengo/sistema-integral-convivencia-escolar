@@ -26,11 +26,7 @@ export default function ViewLoader({ view, compact = false }: ViewLoaderProps) {
   }, [view, phrases.length]);
 
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      className={`flex flex-col items-center justify-center text-center ${padding}`}
-    >
+    <div className={`flex flex-col items-center justify-center text-center ${padding}`}>
       <div
         className={`relative mx-auto flex items-center justify-center overflow-hidden bg-neutral-900 shadow-lg ${logoSize}`}
       >
@@ -45,7 +41,11 @@ export default function ViewLoader({ view, compact = false }: ViewLoaderProps) {
           aria-hidden="true"
         />
       </div>
-      <p key={index} className="animate-fade-in mt-5 text-sm font-medium text-neutral-500">
+      <p
+        key={index}
+        className="animate-fade-in mt-5 text-sm font-medium text-neutral-500"
+        aria-hidden="true"
+      >
         {phrases[index]}
       </p>
       <div
@@ -54,7 +54,9 @@ export default function ViewLoader({ view, compact = false }: ViewLoaderProps) {
       >
         <div className="animate-progress-sweep h-full w-[42%] rounded-full bg-brand-600" />
       </div>
-      <span className="sr-only">Cargando</span>
+      <span className="sr-only" role="status" aria-live="polite">
+        Cargando vista
+      </span>
     </div>
   );
 }

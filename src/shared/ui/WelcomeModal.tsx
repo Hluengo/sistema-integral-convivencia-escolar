@@ -30,7 +30,7 @@ export default function WelcomeModal({ open, onClose, onLogin }: WelcomeModalPro
             <DialogTitle className="text-2xl sm:text-3xl">
               Bienvenido a Gestión de Casos
             </DialogTitle>
-            <DialogDescription className="mx-auto mt-2 max-w-md leading-relaxed">
+            <DialogDescription className="mx-auto mt-2 max-w-md text-neutral-700 leading-relaxed">
               Una plataforma para organizar la convivencia escolar, documentar cada actuación y
               resguardar el debido proceso.
             </DialogDescription>
@@ -38,13 +38,10 @@ export default function WelcomeModal({ open, onClose, onLogin }: WelcomeModalPro
 
           <div className="grid gap-3 sm:grid-cols-3">
             {features.map(({ icon: Icon, label, text }) => (
-              <div
-                key={label}
-                className="rounded-2xl border border-neutral-200/80 bg-neutral-50 p-4"
-              >
-                <Icon className="mb-3 size-5 text-brand-700" aria-hidden="true" />
-                <p className="font-semibold text-neutral-800 text-sm">{label}</p>
-                <p className="mt-1 text-neutral-500 text-xs leading-relaxed">{text}</p>
+              <div key={label} className="rounded-2xl border border-neutral-200/80 bg-white p-4">
+                <Icon className="mb-3 size-5 text-brand-800" aria-hidden="true" />
+                <p className="font-semibold text-neutral-900 text-sm">{label}</p>
+                <p className="mt-1 text-neutral-700 text-xs leading-relaxed">{text}</p>
               </div>
             ))}
           </div>

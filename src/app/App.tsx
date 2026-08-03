@@ -534,7 +534,7 @@ export default function App() {
                 </span>
                 <span className="hidden sm:inline">Fiscalización &amp; Debido Proceso 2026</span>
               </div>
-              <p className="mx-auto max-w-lg px-4 font-mono text-[9px] text-neutral-400 leading-relaxed">
+              <p className="mx-auto max-w-lg px-4 font-mono text-[9px] text-neutral-600 leading-relaxed">
                 Circular N° 482 · Ley 21809 · Resguardo de NNA en todo el territorio nacional
               </p>
             </footer>
