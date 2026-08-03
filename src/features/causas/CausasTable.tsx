@@ -25,7 +25,7 @@ function StudentName({ causa, privacyMode }: { causa: Causa; privacyMode: boolea
         {privacyMode ? causa.nnaProtectedName : causa.estudianteNombre}
       </span>
       {!privacyMode && causa.runEstudiante && (
-        <span className="font-mono text-neutral-400 text-xs">{causa.runEstudiante}</span>
+        <span className="font-mono text-neutral-600 text-xs">{causa.runEstudiante}</span>
       )}
     </>
   );
@@ -64,7 +64,7 @@ export default memo(function CausasTable({ causas, privacyMode, onSelectCausa }:
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 flex-col">
                 <StudentName causa={causa} privacyMode={privacyMode} />
-                <span className="text-neutral-500 text-xs">
+                <span className="text-neutral-600 text-xs">
                   {causa.estudianteCurso || 'Sin curso'}
                 </span>
               </div>

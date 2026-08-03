@@ -10,11 +10,11 @@ import type { SidebarView } from '../../widgets/sidebar/Sidebar';
 import type { FormAction } from '../../shared/lib/hooks/useNewCausaForm';
 import { ChevronRight } from 'lucide-react';
 import { VIEW_TITLES } from '../../widgets/header/constants';
-import CausasView from './MainContent/CausasView';
 import ErrorBoundary from '../../shared/ui/ErrorBoundary';
 import ViewLoader from '../../shared/ui/ViewLoader';
 
 const DashboardStats = lazy(() => import('../../components/DashboardStats'));
+const CausasView = lazy(() => import('./MainContent/CausasView'));
 const StudentsPanel = lazy(() => import('../../features/students/StudentsPanel'));
 const AdvisorView = lazy(() => import('./MainContent/AdvisorView'));
 const AnotacionesView = lazy(() => import('../../features/anotaciones/AnotacionesView'));
@@ -100,14 +100,14 @@ export default function MainContent({
       </div>
       <nav
         aria-label="Migas de pan"
-        className="mb-5 flex items-center gap-1.5 text-xs text-neutral-500"
+        className="mb-5 flex items-center gap-1.5 text-xs text-neutral-600"
       >
         {currentView !== 'dashboard' ? (
           <>
             <button
               type="button"
               onClick={() => onNavigate('dashboard')}
-              className="rounded-md px-1.5 py-1 font-semibold transition-colors hover:bg-white hover:text-brand-700"
+              className="rounded-md px-1.5 py-1 font-semibold text-neutral-700 transition-colors hover:bg-white hover:text-brand-700"
             >
               Inicio
             </button>
@@ -136,29 +136,33 @@ export default function MainContent({
 
       {/* VIEW 2: CAUSAS (Active Cases workspace) */}
       {currentView === 'causas' && (
-        <CausasView
-          causas={causas}
-          selectedCausaId={selectedCausaId}
-          setSelectedCausaId={setSelectedCausaId}
-          selectedCausa={selectedCausa}
-          isCausaDetailLoading={isCausaDetailLoading}
-          selectedFaseFilter={selectedFaseFilter}
-          setSelectedFaseFilter={setSelectedFaseFilter}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          privacyMode={privacyMode}
-          mobileShowDetail={mobileShowDetail}
-          setMobileShowDetail={setMobileShowDetail}
-          filteredCausas={filteredCausas}
-          hasMoreCausas={hasMoreCausas}
-          isLoadingMoreCausas={isLoadingMoreCausas}
-          onLoadMoreCausas={onLoadMoreCausas}
-          showCreateForm={showCreateForm}
-          dispatchForm={dispatchForm}
-          handleReopenCausa={handleReopenCausa}
-          handleSelectCausaFromDashboard={handleSelectCausaFromDashboard}
-          handleOpenCreateForm={handleOpenCreateForm}
-        />
+        <ErrorBoundary>
+          <Suspense fallback={<ViewLoader view={currentView} />}>
+            <CausasView
+              causas={causas}
+              selectedCausaId={selectedCausaId}
+              setSelectedCausaId={setSelectedCausaId}
+              selectedCausa={selectedCausa}
+              isCausaDetailLoading={isCausaDetailLoading}
+              selectedFaseFilter={selectedFaseFilter}
+              setSelectedFaseFilter={setSelectedFaseFilter}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              privacyMode={privacyMode}
+              mobileShowDetail={mobileShowDetail}
+              setMobileShowDetail={setMobileShowDetail}
+              filteredCausas={filteredCausas}
+              hasMoreCausas={hasMoreCausas}
+              isLoadingMoreCausas={isLoadingMoreCausas}
+              onLoadMoreCausas={onLoadMoreCausas}
+              showCreateForm={showCreateForm}
+              dispatchForm={dispatchForm}
+              handleReopenCausa={handleReopenCausa}
+              handleSelectCausaFromDashboard={handleSelectCausaFromDashboard}
+              handleOpenCreateForm={handleOpenCreateForm}
+            />
+          </Suspense>
+        </ErrorBoundary>
       )}
 
       {/* VIEW 4: AI ADVISOR */}

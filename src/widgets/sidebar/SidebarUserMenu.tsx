@@ -58,7 +58,7 @@ export function SidebarUserMenu({
         {(!isCollapsed || mobile) && (
           <div className="min-w-0 flex-1">
             <p className="truncate font-semibold text-white text-xs">{user.email}</p>
-            <p className="text-[10px] text-neutral-500">Conectado</p>
+            <p className="text-[10px] text-neutral-300">Conectado</p>
           </div>
         )}
         <button

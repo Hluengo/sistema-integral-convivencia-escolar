@@ -35,7 +35,7 @@ describe('lazy loading fallbacks', () => {
     assert.deepEqual(offenders, []);
   });
 
-  it('mantiene skeletons específicos para vistas y modales lazy críticos', async () => {
+  it('mantiene loaders específicos para vistas y modales lazy críticos', async () => {
     const app = await readFile(join(srcDir, 'app', 'App.tsx'), 'utf8');
     const mainContent = await readFile(
       join(srcDir, 'features', 'causas', 'MainContent.tsx'),
@@ -67,8 +67,12 @@ describe('lazy loading fallbacks', () => {
       viewLoaderFallbacks >= 7,
       `Se esperaban al menos 7 fallbacks ViewLoader en MainContent, hay ${viewLoaderFallbacks}`,
     );
+    assert.ok(
+      mainContent.includes("const CausasView = lazy(() => import('./MainContent/CausasView'))"),
+    );
+    assert.ok(!causasView.includes('CausaCardSkeleton'));
+    assert.ok(causasView.includes('fallback={<ViewLoader view="causas" compact />}'));
     assert.ok(causasView.includes('fallback={<DetailModalSkeleton />}'));
-    assert.ok(causasView.includes('fallback={<ClosedCasesSkeleton />}'));
     assert.ok(anotacionesView.includes('fallback={<ModalSkeleton />}'));
     assert.ok(cartasTab.includes('fallback={<DocumentGeneratorSkeleton />}'));
   });

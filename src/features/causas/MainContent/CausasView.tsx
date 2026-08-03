@@ -7,28 +7,15 @@ import type React from 'react';
 import { Suspense, lazy, useCallback, useMemo, useState } from 'react';
 import { BookOpen, ChevronDown, GraduationCap, Scale, Search } from 'lucide-react';
 import EmptyState from '../../../shared/EmptyState';
-import {
-  CausaCardSkeleton,
-  ClosedCasesSkeleton,
-  DetailModalSkeleton,
-} from '../../../shared/Skeleton';
+import { DetailModalSkeleton } from '../../../shared/Skeleton';
+import ViewLoader from '../../../shared/ui/ViewLoader';
 import { type Causa, type FaseProcedimental } from '../../../shared/lib/types';
 import type { FormAction } from '../../../shared/lib/hooks/useNewCausaForm';
 import Button from '@/src/shared/ui/Button';
+import CausasTable from '../CausasTable';
 
-const CausasTable = lazy(() => import('../CausasTable'));
 const CausaDetailModal = lazy(() => import('../CausaDetailModal'));
 const ClosedCases = lazy(() => import('../ClosedCases'));
-
-function ViewFallback() {
-  return (
-    <div className="animate-pulse space-y-3 p-2">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <CausaCardSkeleton key={'sk-' + i} />
-      ))}
-    </div>
-  );
-}
 
 interface CausasViewProps {
   causas: Causa[];
@@ -202,7 +189,7 @@ export default function CausasView({
             className={`rounded-lg px-3.5 py-1.5 font-semibold text-sm transition-colors duration-150 ${
               selectedFaseFilter === fase
                 ? 'bg-white text-neutral-900 shadow-sm'
-                : 'text-neutral-500 hover:text-neutral-700'
+                : 'text-neutral-600 hover:text-neutral-800'
             }`}
           >
             {fase}
@@ -213,13 +200,11 @@ export default function CausasView({
       {/* Table follows the same hierarchy as Anotaciones. */}
       {visibleCausas.length > 0 ? (
         <div className="space-y-3">
-          <Suspense fallback={<ViewFallback />}>
-            <CausasTable
-              causas={visibleCausas}
-              privacyMode={privacyMode}
-              onSelectCausa={handleSelectCausa}
-            />
-          </Suspense>
+          <CausasTable
+            causas={visibleCausas}
+            privacyMode={privacyMode}
+            onSelectCausa={handleSelectCausa}
+          />
           {hasMoreCausas && (
             <div className="flex justify-center">
               <button
@@ -278,7 +263,7 @@ export default function CausasView({
       {/* VIEW 3: CLOSED CASES */}
       {selectedCausaId === '' && visibleCausas.length === 0 && (
         <div className="flex-1">
-          <Suspense fallback={<ClosedCasesSkeleton />}>
+          <Suspense fallback={<ViewLoader view="causas" compact />}>
             <ClosedCases
               causas={causas}
               privacyMode={privacyMode}
