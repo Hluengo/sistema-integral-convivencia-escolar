@@ -22,11 +22,11 @@
 
 ### Testing
 
-- **Cobertura global**: medición activa con `npm run test:coverage`; umbral mínimo 60% líneas y estado verificado 85.54% al 2026-08-02.
+- **Cobertura global**: medición activa con `npm run test:coverage`; umbral mínimo 60% líneas y estado verificado 85.61% al 2026-08-02.
 
 ### Database
 
-- **Sin seed data**: `supabase/seed.sql` está vacío
+- **Seed local**: cerrado; `supabase/seed.sql` carga datos demo idempotentes para desarrollo local.
 - **Bucket legacy**: `documentos_convivencia` creado externamente (no en migraciones)
 
 ### Frontend

@@ -9,7 +9,7 @@
 - [x] Unificar tests unitarios en Node Test Runner
 - [x] Agregar cobertura base faltante de stores/hooks vigentes
 - [x] E2E tests con Playwright para flujos críticos (`tests/*.spec.ts`)
-- [x] Alcanzar >60% cobertura — **85.54% líneas / 85.55% ramas / 84.71% funciones** al 2026-08-02
+- [x] Alcanzar >60% cobertura — **85.61% líneas / 85.59% ramas / 84.74% funciones** al 2026-08-02
 
 > ✅ `authStore`, `uiStore`, `toastStore` y selectores/acciones síncronas de `causasStore` tienen cobertura base desde el 2026-08-02; hooks críticos (`causaPersistence`, `useNotifications`) ya estaban cubiertos. `gearStore` y `riceMeasures` fueron reconciliados como referencias documentales obsoletas: no existen símbolos vigentes en `src/`. `npm run test:coverage` excluye `api/index.js` porque es bundle generado desde `server/api/index.ts` para Vercel y ahora falla si las líneas bajan de 60%.
 
@@ -58,9 +58,9 @@
 
 > ✅ Verificado: `inspectorate_records.student_id` ya es `uuid` (baseline línea 1900) y las FKs apuntan a `students(id)`. Los casts `::text` restantes en RPCs son comparaciones legacy, no columnas TEXT.
 
-- [ ] Seed data completo para desarrollo local
+- [x] Seed data completo para desarrollo local
 
-> 🟡 **Parcial:** solo existe `scripts/seed-templates.sql`.
+> ✅ Cerrado 2026-08-02: `supabase/seed.sql` carga datos demo idempotentes para tenant, usuarios Auth/perfiles, membresías, cursos, estudiantes, anotaciones, expedientes, bitácora, checklist, cartas, reglas disciplinarias, plantillas, análisis PDF, historial de estudiante, reportes, notificaciones, invitaciones y configuración/documentos institucionales. `src/shared/lib/seedData.test.ts` bloquea regresiones de cobertura del seed. La CLI actual no tiene subcomando `supabase db seed`; el seed corre con `supabase db reset` según `supabase/config.toml`.
 
 - [ ] Agregar índices compuestos faltantes
 

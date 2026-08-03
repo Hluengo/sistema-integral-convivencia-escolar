@@ -181,8 +181,8 @@ Para más detalles, revisa:
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ⚙️ **CI**         | [![CI](https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/ci.yml?branch=master&label=CI)](https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/ci.yml)                                 |
 | 🚦 **Lighthouse** | [![Lighthouse](https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/lighthouse.yml?branch=master&label=Lighthouse)](https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/lighthouse.yml) |
-| ✅ **Tests**      | 366 tests · 78 suites                                                                                                                                                                                                                                               |
-| 📈 **Cobertura**  | 85.54% líneas (`npm run test:coverage`, excluye el bundle generado `api/index.js`)                                                                                                                                                                                  |
+| ✅ **Tests**      | 368 tests · 78 suites                                                                                                                                                                                                                                               |
+| 📈 **Cobertura**  | 85.61% líneas (`npm run test:coverage`, excluye el bundle generado `api/index.js`)                                                                                                                                                                                  |
 | 🔐 **Seguridad**  | `npm audit` 0 vulnerabilidades                                                                                                                                                                                                                                      |
 
 > Los badges de CI y Lighthouse se actualizan automáticamente con cada push. Los informes de Lighthouse se generan en `.lighthouseci/`.
@@ -339,6 +339,8 @@ Aplicar con Supabase CLI:
 ```bash
 supabase db push
 ```
+
+El seed local vive en [`supabase/seed.sql`](supabase/seed.sql) y se ejecuta automáticamente durante `supabase db reset`. Incluye usuarios demo, cursos, estudiantes, anotaciones, expedientes, cartas, reportes, notificaciones y configuración institucional.
 
 Más detalles en [`docs/DEPLOY.md`](docs/DEPLOY.md).
 

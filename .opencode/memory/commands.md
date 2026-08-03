@@ -45,7 +45,7 @@ supabase status          # Estado de la conexión
 supabase db diff         # Diff de migraciones
 supabase migration new nombre  # Nueva migración
 supabase db push         # Aplicar migraciones
-supabase db seed         # Seed data
+supabase db reset --local --sql-paths ./seed.sql  # Reset local ejecutando seed.sql
 ```
 
 ## Vercel
@@ -61,6 +61,6 @@ vercel inspect           # Información de deploy
 ```bash
 # RLS test helper
 supabase db test
-# Ejecutar seed desde proyecto linkeado
+# Ejecutar seed contra una base explicita
 psql "$SUPABASE_CONNECTION_STRING" -f supabase/seed.sql
 ```
