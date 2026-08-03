@@ -9,7 +9,7 @@
 - [x] Unificar tests unitarios en Node Test Runner
 - [x] Agregar cobertura base faltante de stores/hooks vigentes
 - [x] E2E tests con Playwright para flujos críticos (`tests/*.spec.ts`)
-- [x] Alcanzar >60% cobertura — **85.61% líneas / 85.59% ramas / 84.74% funciones** al 2026-08-02
+- [x] Alcanzar >60% cobertura — **85.66% líneas / 85.57% ramas / 84.77% funciones** al 2026-08-03
 
 > ✅ `authStore`, `uiStore`, `toastStore` y selectores/acciones síncronas de `causasStore` tienen cobertura base desde el 2026-08-02; hooks críticos (`causaPersistence`, `useNotifications`) ya estaban cubiertos. `gearStore` y `riceMeasures` fueron reconciliados como referencias documentales obsoletas: no existen símbolos vigentes en `src/`. `npm run test:coverage` excluye `api/index.js` porque es bundle generado desde `server/api/index.ts` para Vercel y ahora falla si las líneas bajan de 60%.
 
@@ -62,9 +62,9 @@
 
 > ✅ Cerrado 2026-08-02: `supabase/seed.sql` carga datos demo idempotentes para tenant, usuarios Auth/perfiles, membresías, cursos, estudiantes, anotaciones, expedientes, bitácora, checklist, cartas, reglas disciplinarias, plantillas, análisis PDF, historial de estudiante, reportes, notificaciones, invitaciones y configuración/documentos institucionales. `src/shared/lib/seedData.test.ts` bloquea regresiones de cobertura del seed. La CLI actual no tiene subcomando `supabase db seed`; el seed corre con `supabase db reset` según `supabase/config.toml`.
 
-- [ ] Agregar índices compuestos faltantes
+- [x] Agregar índices compuestos faltantes
 
-> 🟡 **En progreso:** ya existen varios compuestos clave (`audit_events_tenant_occurred_at_idx`, `idx_inspectorate_student_date`, `idx_app_memberships_tenant_user_active`, `idx_bitacora_causa_fecha`). Pendiente auditar el resto según queries frecuentes.
+> ✅ Cerrado 2026-08-03: `supabase/migrations/20260803003719_add_query_pattern_indexes.sql` agrega índices idempotentes para los patrones de lectura frecuentes: cursos/estudiantes ordenados por tenant, deduplicación de RUT en importaciones, anotaciones por fecha/tipo, cartas y eventos por estudiante/carta, historial de etapas, PDFs disciplinarios por hash o estudiante, anotaciones detectadas, documentos/reglamentos institucionales y eventos de salida de cartas. `src/shared/lib/databaseIndexes.test.ts` bloquea regresiones en la migración.
 
 ## Largo Plazo (6-12 meses)
 
