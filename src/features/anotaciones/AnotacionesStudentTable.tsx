@@ -50,6 +50,7 @@ const DISC_STATUS: Record<string, { text: string; bg: string }> = {
 
 const CARD_STATUS_BADGE: Record<string, { bg: string; textClass: string }> = {
   Vigente: { bg: 'bg-leve-100', textClass: 'text-leve-700' },
+  Archivada: { bg: 'bg-leve-100', textClass: 'text-leve-800' },
   Procesada: { bg: 'bg-blue-100', textClass: 'text-blue-800' },
   Pendiente: { bg: 'bg-grave-100', textClass: 'text-grave-700' },
   Cumplida: { bg: 'bg-blue-100', textClass: 'text-blue-800' },
@@ -429,6 +430,8 @@ export default memo(function AnotacionesStudentTable({
                           const sorted = [...statuses].sort((a, b) => {
                             if (a === 'Pendiente') return -1;
                             if (b === 'Pendiente') return 1;
+                            if (a === 'Procesada' && b === 'Archivada') return -1;
+                            if (a === 'Archivada' && b === 'Procesada') return 1;
                             return 0;
                           });
                           return (

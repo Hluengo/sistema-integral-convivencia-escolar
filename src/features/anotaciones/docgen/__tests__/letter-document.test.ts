@@ -244,7 +244,18 @@ describe('Cierre de cartas — validación de etapa registrada', () => {
 
     ok(table.includes('{s}'));
     ok(table.includes('badge.textClass'));
+    ok(table.includes('Archivada'));
     ok(!table.includes('{badge.text}'));
+  });
+
+  it('muestra acciones visibles para anular y archivar cartas', () => {
+    const cartasTab = readFileSync(cartasTabPath, 'utf-8');
+
+    ok(cartasTab.includes('Anular'));
+    ok(cartasTab.includes('Archivar'));
+    ok(cartasTab.includes('Archivar carta'));
+    ok(cartasTab.includes('bg-gravisima-50'));
+    ok(cartasTab.includes('bg-leve-50'));
   });
 });
 
@@ -403,6 +414,55 @@ describe('Estado efectivo de cartas en la tabla', () => {
     equal(cartaState.currentLetterType, 'Ficha de Derivación');
     equal(cartaState.workflowStatus, 'pending');
     equal(cartaState.completedLetterType, 'Carta de Compromiso Conductual');
+  });
+
+  it('muestra Archivada cuando la carta vigente ya fue firmada y archivada', () => {
+    const cartaState = resolveStudentCartaTableState(
+      [
+        {
+          letter_type: 'Amonestación Escrita',
+          emission_date: '2026-08-03',
+          origin: 'platform',
+          school_year: 2026,
+          status: 'Vigente',
+          workflow_status: 'archived',
+          processed_manually_at: '2026-08-03T14:00:00.000Z',
+          archived_at: '2026-08-03T15:00:00.000Z',
+        },
+      ],
+      2026,
+    );
+
+    equal(cartaState.workflowStatus, 'archived');
+    equal(getStudentCartaWorkflowLabel(5, cartaState), 'Archivada');
+  });
+
+  it('mantiene Pendiente si existe una etapa superior aunque haya una carta inferior archivada', () => {
+    const cartaState = resolveStudentCartaTableState(
+      [
+        {
+          letter_type: 'Amonestación Escrita',
+          emission_date: '2026-07-20',
+          origin: 'platform',
+          school_year: 2026,
+          status: 'Vigente',
+          workflow_status: 'archived',
+          archived_at: '2026-07-21T15:00:00.000Z',
+        },
+        {
+          letter_type: 'Carta de Compromiso Conductual',
+          emission_date: '2026-08-03',
+          origin: 'platform',
+          school_year: 2026,
+          status: 'Vigente',
+          workflow_status: 'pending',
+        },
+      ],
+      2026,
+    );
+
+    equal(cartaState.workflowStatus, 'pending');
+    equal(getStudentCartaWorkflowLabel(10, cartaState), 'Pendiente');
   });
 });
 

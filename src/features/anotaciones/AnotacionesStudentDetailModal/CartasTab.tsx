@@ -1,13 +1,15 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { lazy, Suspense, useState } from 'react';
-import { Ban, FileText, XCircle } from 'lucide-react';
+import { Archive, Ban, FileText, XCircle } from 'lucide-react';
 import type { Annotation, CartaDisciplinaria } from '@/src/shared/lib/types';
 import { TEACHERS_BY_COURSE } from '@/src/shared/lib/anotacionesUtils';
 import {
+  archiveCarta,
   annulCarta,
   createPendingCartaForStudent,
   markCartaProcessedManually,
+  resolveCartaWorkflowStatus,
 } from '@/src/shared/api/services/cartas.service';
 import {
   getCartaProcessingBlockReason,
@@ -104,6 +106,7 @@ export default function CartasTab({
     null,
   );
   const [isAnnulDialogOpen, setIsAnnulDialogOpen] = useState(false);
+  const [isArchiveDialogOpen, setIsArchiveDialogOpen] = useState(false);
 
   const refreshAfterChange = async () => {
     await onRefresh();
@@ -232,12 +235,26 @@ export default function CartasTab({
     setIsAnnulDialogOpen(true);
   };
 
+  const handleArchive = () => {
+    if (!activeCarta) return;
+    setIsArchiveDialogOpen(true);
+  };
+
   const confirmAnnul = async (reason: string) => {
     setIsAnnulDialogOpen(false);
     await runCartaAction((carta) => annulCarta(carta.id, reason), 'Carta anulada.');
   };
 
+  const confirmArchive = async (note: string) => {
+    setIsArchiveDialogOpen(false);
+    await runCartaAction((carta) => archiveCarta(carta.id, note), 'Carta archivada.');
+  };
+
   const canAct = Boolean(activeDocType && activeLetterType);
+  const canArchive =
+    Boolean(activeCarta) &&
+    activeCarta?.origin !== 'physical' &&
+    resolveCartaWorkflowStatus(activeCarta) === 'completed';
 
   return (
     <div className="space-y-5">
@@ -283,13 +300,22 @@ export default function CartasTab({
             Crear carta
           </Button>
           <Button
-            variant="danger"
+            variant="custom"
             onClick={handleAnnul}
             disabled={!activeCarta || busy}
-            className="rounded-xl border border-gravisima-200 bg-white px-4 py-2 text-gravisima-700 hover:bg-gravisima-50 hover:text-gravisima-700"
+            className="rounded-xl border border-gravisima-300 bg-gravisima-50 px-4 py-2 text-gravisima-700 shadow-sm hover:bg-gravisima-100 hover:text-gravisima-800 disabled:bg-neutral-50 disabled:text-neutral-400"
           >
             <Ban className="h-4 w-4" />
             Anular
+          </Button>
+          <Button
+            variant="custom"
+            onClick={handleArchive}
+            disabled={!canArchive || busy}
+            className="rounded-xl border border-leve-300 bg-leve-50 px-4 py-2 text-leve-800 shadow-sm hover:bg-leve-100 hover:text-leve-900 disabled:bg-neutral-50 disabled:text-neutral-400"
+          >
+            <Archive className="h-4 w-4" />
+            Archivar
           </Button>
         </div>
       </section>
@@ -359,6 +385,17 @@ export default function CartasTab({
         destructive
         onCancel={() => setIsAnnulDialogOpen(false)}
         onConfirm={(reason) => void confirmAnnul(reason)}
+      />
+
+      <TextInputDialog
+        open={isArchiveDialogOpen}
+        title="Archivar carta"
+        description="Confirme que la carta fue impresa, revisada en entrevista con apoderado/a, firmada y archivada en expediente físico."
+        label="Observación de archivo"
+        placeholder="Ej.: Carta firmada por apoderado/a el 03-08-2026 y archivada en hoja de vida."
+        confirmLabel="Archivar carta"
+        onCancel={() => setIsArchiveDialogOpen(false)}
+        onConfirm={(note) => void confirmArchive(note)}
       />
     </div>
   );

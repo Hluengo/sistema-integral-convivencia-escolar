@@ -72,6 +72,14 @@ function describeCartaEvent(event: CartaEvent, carta?: CartaDisciplinaria): Time
       tone: 'bg-leve-50 text-leve-700',
     };
   }
+  if (event.event_type === 'archived') {
+    return {
+      ...base,
+      title: `Carta archivada: ${letterType}`,
+      description: event.event_detail || 'Carta firmada y archivada en expediente físico.',
+      tone: 'bg-leve-50 text-leve-700',
+    };
+  }
   if (event.event_type === 'registered') {
     const isPhysical = event.metadata?.origin === 'physical';
     return {
@@ -121,6 +129,17 @@ export default function HistoryTab({
   const syntheticCartaItems = cartas.reduce<TimelineItem[]>((items, carta) => {
     if (cartasWithEvents.has(carta.id)) return items;
     const status = resolveCartaWorkflowStatus(carta);
+    if (status === 'archived') {
+      items.push({
+        id: `carta-${carta.id}`,
+        date: carta.archived_at || carta.created_at || carta.emission_date,
+        icon: <FileText className="h-4 w-4" />,
+        title: `Carta archivada: ${carta.letter_type}`,
+        description: carta.archived_note || 'Carta firmada y archivada en expediente físico.',
+        tone: 'bg-leve-50 text-leve-700',
+      });
+      return items;
+    }
     if (status === 'completed') {
       items.push({
         id: `carta-${carta.id}`,

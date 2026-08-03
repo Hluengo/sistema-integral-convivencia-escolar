@@ -166,7 +166,7 @@ Tenant (Establecimiento Educacional)
   │
   ├── CartaEvents
   │   ├── carta_id, student_id, event_type, event_detail
-  │   ├── event_type: suggested|created|registered|printed|downloaded_pdf|downloaded_word|processed_manually|annulled
+  │   ├── event_type: suggested|created|registered|printed|downloaded_pdf|downloaded_word|processed_manually|archived|annulled
   │   └── tenant_id
   │
   ├── EtapasDisciplinarias
@@ -1123,7 +1123,8 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 
 - La tabla, sus filtros y la exportación combinan el tramo de anotaciones con la carta realizada de mayor nivel del año vigente.
 - Una Derivación `processed_manually` prevalece sobre el tramo numérico; el conteo de anotaciones no se modifica.
-- `status = Vigente` conserva su significado administrativo. La UI obtiene `Pendiente` o `Procesada` desde `carta_events`.
+- `status = Vigente` conserva su significado administrativo. La UI obtiene `Pendiente`, `Procesada` o `Archivada` desde `carta_events`.
+- `archived` registra el cierre físico posterior a la entrevista: carta procesada, firmada por apoderado/a y archivada en expediente físico.
 - Al procesar o registrar una carta desde la ficha individual se recargan tanto el modal como la tabla principal.
 - Abrir o reabrir el generador no inserta eventos en el historial.
 - Los eventos preliminares históricos `created` y `suggested` se conservan en Supabase, pero no se muestran.

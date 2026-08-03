@@ -27,16 +27,17 @@ export interface CartaTableCandidate {
   origin?: string;
   school_year?: number;
   status: string;
-  workflow_status?: 'pending' | 'completed' | 'annulled';
+  workflow_status?: 'pending' | 'completed' | 'archived' | 'annulled';
   registered_at?: string | null;
   printed_at?: string | null;
   processed_manually_at?: string | null;
+  archived_at?: string | null;
 }
 
 export interface StudentCartaTableState {
   completedLetterType: LetterType | null;
   currentLetterType: LetterType | null;
-  workflowStatus: 'pending' | 'completed' | 'none';
+  workflowStatus: 'pending' | 'completed' | 'archived' | 'none';
 }
 
 const DISCIPLINARY_STAGES: DisciplinaryStage[] = [
@@ -178,8 +179,11 @@ function getCartaYear(carta: CartaTableCandidate): number {
 function isCompletedCarta(carta: CartaTableCandidate): boolean {
   return (
     carta.origin === 'physical' ||
+    carta.workflow_status === 'archived' ||
     carta.workflow_status === 'completed' ||
-    Boolean(carta.registered_at || carta.printed_at || carta.processed_manually_at)
+    Boolean(
+      carta.registered_at || carta.printed_at || carta.processed_manually_at || carta.archived_at,
+    )
   );
 }
 
@@ -224,9 +228,11 @@ export function resolveStudentCartaTableState(
       ? mapDocTypeToLetterType(mapLetterTypeToDocType(currentCarta.letter_type))
       : null,
     workflowStatus: currentCarta
-      ? isCompletedCarta(currentCarta)
-        ? 'completed'
-        : 'pending'
+      ? currentCarta.workflow_status === 'archived' || currentCarta.archived_at
+        ? 'archived'
+        : isCompletedCarta(currentCarta)
+          ? 'completed'
+          : 'pending'
       : 'none',
   };
 }
@@ -246,13 +252,21 @@ export function getEffectiveDisciplinaryStage(
 export function getStudentCartaWorkflowLabel(
   negativeCount: number,
   state: StudentCartaTableState | null | undefined,
-): 'Procesada' | 'Pendiente' | null {
+): 'Archivada' | 'Procesada' | 'Pendiente' | null {
   if (!state) return null;
 
   const effectiveStage = getEffectiveDisciplinaryStage(negativeCount, state.completedLetterType);
   const completedStage = mapLetterTypeToDocType(state.completedLetterType);
+  if (
+    state.workflowStatus === 'archived' &&
+    completedStage &&
+    completedStage === effectiveStage.key
+  ) {
+    return 'Archivada';
+  }
   if (completedStage && completedStage === effectiveStage.key) return 'Procesada';
   if (state.workflowStatus === 'pending') return 'Pendiente';
+  if (state.workflowStatus === 'archived') return 'Archivada';
   if (state.workflowStatus === 'completed') return 'Procesada';
   return null;
 }

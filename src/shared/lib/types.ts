@@ -200,13 +200,15 @@ export interface CartaDisciplinaria {
   regulation_basis: string;
   observations?: string;
   created_at: string;
-  workflow_status?: 'pending' | 'completed' | 'annulled';
+  workflow_status?: 'pending' | 'completed' | 'archived' | 'annulled';
   suggested_at?: string | null;
   created_event_at?: string | null;
   registered_at?: string | null;
   printed_at?: string | null;
   processed_manually_at?: string | null;
   processed_note?: string | null;
+  archived_at?: string | null;
+  archived_note?: string | null;
   annulled_at?: string | null;
   annulled_reason?: string | null;
   source_analysis_id?: string | null;

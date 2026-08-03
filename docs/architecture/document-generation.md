@@ -74,13 +74,18 @@ AnotacionesView
       ├── DocumentForm → Datos del documento
       ├── DocumentPreview → Vista previa (DOCX mock)
       ├── DocumentWarnings → Alertas de debido proceso
-      └── Imprimir → volver a la aplicación → Marcar como procesada
+      └── Imprimir → volver a la aplicación → Marcar como procesada → Archivar
 
 ```
 
 La impresión no completa el trámite por sí sola. **Marcar como procesada** guarda el
 `content_snapshot` final y agrega el evento `processed_manually` a `carta_events`. Los eventos
 históricos `registered` y `printed` se conservan para compatibilidad.
+
+Después de la entrevista con apoderado/a, la carta procesada puede marcarse como **Archivada**.
+Este hito agrega el evento `archived` a `carta_events` y registra que el documento fue firmado y
+archivado en el expediente físico. No cambia `cartas_disciplinarias.status`, porque ese campo sigue
+representando vigencia administrativa (`Vigente`, `Cumplida`, `Incumplida`, `Anulada`).
 
 Abrir el generador no registra una carta en el historial. Las cartas pendientes permanecen
 disponibles para editar o imprimir, pero solo se incorporan al historial al ser procesadas,
@@ -104,5 +109,6 @@ El estado visible de un estudiante combina dos fuentes:
 La segunda prevalece cuando representa una etapa superior. Una Ficha de Derivación marcada
 como procesada aparece en Estado, en el filtro Derivación y en las exportaciones, aunque el
 conteo permanezca bajo 15 por existir un Compromiso físico habilitante. El estado documental
-se presenta como `Pendiente` o `Procesada` a partir de `carta_events`; `status = Vigente`
-continúa representando la vigencia administrativa de la carta y no el cierre del trámite.
+se presenta como `Pendiente`, `Procesada` o `Archivada` a partir de `carta_events`;
+`status = Vigente` continúa representando la vigencia administrativa de la carta y no el cierre del
+trámite.

@@ -27,10 +27,18 @@ import type { CourseCartaRankingItem } from '../../lib/domain/courseCartaRanking
 import { withSupabaseReadRetry } from '../lib/supabaseRetry';
 
 type CartaStatus = CartaDisciplinaria['status'];
-export type CartaWorkflowStatus = 'pending' | 'completed' | 'annulled';
+export type CartaWorkflowStatus = 'pending' | 'completed' | 'archived' | 'annulled';
 
 type CartaEventType =
-  'suggested' | 'created' | 'registered' | 'printed' | 'processed_manually' | 'annulled';
+  | 'suggested'
+  | 'created'
+  | 'registered'
+  | 'printed'
+  | 'downloaded_pdf'
+  | 'downloaded_word'
+  | 'processed_manually'
+  | 'archived'
+  | 'annulled';
 
 export interface CartaEvent {
   id: string;
@@ -117,7 +125,12 @@ const CARTA_SELECT =
   'id,student_id,letter_type,emission_date,status,emitted_by,supervisor_name,apoderado_name,annotations_count,origin,school_year,student_name,course,regulation_basis,observations,created_at,content_snapshot';
 const CARTA_EVENT_SELECT =
   'id,carta_id,student_id,event_type,event_detail,created_by,created_at,metadata';
-const COMPLETION_EVENTS: CartaEventType[] = ['registered', 'printed', 'processed_manually'];
+const COMPLETION_EVENTS: CartaEventType[] = [
+  'registered',
+  'printed',
+  'processed_manually',
+  'archived',
+];
 
 function latestEvent(events: CartaEvent[], type: CartaEventType): CartaEvent | undefined {
   return events.find((event) => event.event_type === type);
@@ -128,18 +141,27 @@ function hydrateCartaWorkflow(carta: CartaDisciplinaria, events: CartaEvent[]): 
     .filter((event) => event.carta_id === carta.id)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   const annulled = latestEvent(cartaEvents, 'annulled');
+  const archived = latestEvent(cartaEvents, 'archived');
   const processed = latestEvent(cartaEvents, 'processed_manually');
   const completed = COMPLETION_EVENTS.some((type) => latestEvent(cartaEvents, type));
   return {
     ...carta,
     workflow_status:
-      carta.status === 'Anulada' || annulled ? 'annulled' : completed ? 'completed' : 'pending',
+      carta.status === 'Anulada' || annulled
+        ? 'annulled'
+        : archived
+          ? 'archived'
+          : completed
+            ? 'completed'
+            : 'pending',
     suggested_at: latestEvent(cartaEvents, 'suggested')?.created_at ?? null,
     created_event_at: latestEvent(cartaEvents, 'created')?.created_at ?? null,
     registered_at: latestEvent(cartaEvents, 'registered')?.created_at ?? null,
     printed_at: latestEvent(cartaEvents, 'printed')?.created_at ?? null,
     processed_manually_at: processed?.created_at ?? null,
     processed_note: processed?.event_detail ?? null,
+    archived_at: archived?.created_at ?? null,
+    archived_note: archived?.event_detail ?? null,
     annulled_at: annulled?.created_at ?? null,
     annulled_reason: annulled?.event_detail ?? null,
   };
@@ -150,6 +172,7 @@ export function resolveCartaWorkflowStatus(
 ): CartaWorkflowStatus | 'none' {
   if (!carta) return 'none';
   if (carta.status === 'Anulada' || carta.annulled_at) return 'annulled';
+  if (carta.workflow_status === 'archived' || carta.archived_at) return 'archived';
   if (
     carta.origin === 'physical' ||
     carta.workflow_status === 'completed' ||
@@ -165,6 +188,7 @@ export function resolveCartaWorkflowStatus(
 export function getCartaWorkflowLabel(carta: CartaDisciplinaria | null | undefined): string {
   const status = resolveCartaWorkflowStatus(carta);
   if (status === 'none') return 'Sin carta requerida';
+  if (status === 'archived') return 'Carta archivada';
   if (status === 'completed') return 'Carta realizada';
   if (status === 'annulled') return 'Carta anulada';
   return carta?.suggested_at ? 'Carta sugerida' : 'Carta pendiente';
@@ -304,6 +328,14 @@ export async function markCartaProcessedManually(
     cartaId,
     'processed_manually',
     note || 'Trámite marcado como procesado manualmente',
+  );
+}
+
+export async function archiveCarta(cartaId: string, note: string): Promise<boolean> {
+  return createCartaEvent(
+    cartaId,
+    'archived',
+    note || 'Carta firmada por apoderado/a y archivada en expediente físico',
   );
 }
 
