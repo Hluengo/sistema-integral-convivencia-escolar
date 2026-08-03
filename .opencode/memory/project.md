@@ -1151,7 +1151,7 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 ### Correcciones de auditoría técnica aplicadas (2026-07-31)
 
 - Las migraciones `20260731000020`, `20260731000030`, `20260731180716`, `20260731190539` y `20260731191230` ya fueron aplicadas en Supabase remoto.
-- Storage autoriza los roles `convivencia` y `direccion` para los buckets disciplinarios, respetando tenant y membresía activa.
+- Storage en `disciplinary-processes` autoriza los mismos roles activos de `CONVIVENCIA_MEMBERSHIP` (`superadmin`, `admin`, `direccion`, `convivencia`, `inspectoria`, `profesor_jefe`, `teacher`, `inspector`, `user`, `staff`) mediante `app_memberships`, respetando tenant por carpeta. La ruta temporal del modal de PDF usa `{tenant_id}/pending-student/draft/...`.
 - Conteos, etapas y rankings usan el año escolar vigente en `America/Santiago`; los rankings normalizan claves de docentes/cursos y no mezclan fuentes de fallback.
 - El cliente no usa fallback paginado para KPIs/rankings cuando falla la RPC: expone el error para evitar datos inconsistentes.
 - La auditoría técnica quedó validada localmente con lint, 295 tests y build de producción exitosos.

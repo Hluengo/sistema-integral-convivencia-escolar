@@ -2,25 +2,29 @@
 
 ## Buckets
 
-| Bucket | Propósito | Visibilidad | Path Pattern |
-|--------|-----------|-------------|--------------|
-| `anotaciones` | Documentos de anotaciones | Privado | `{tenant_id}/...` |
-| `disciplinary-processes` | PDFs de procesos disciplinarios | Privado | `{tenant_id}/{student_id}/{process_id}/{stored_name}` |
-| `documentos_convivencia` (legacy) | Documentos varios | Privado | `{causa_id}/...` |
+| Bucket                            | Propósito                       | Visibilidad | Path Pattern                                          |
+| --------------------------------- | ------------------------------- | ----------- | ----------------------------------------------------- |
+| `anotaciones`                     | Documentos de anotaciones       | Privado     | `{tenant_id}/...`                                     |
+| `disciplinary-processes`          | PDFs de procesos disciplinarios | Privado     | `{tenant_id}/{student_id}/{process_id}/{stored_name}` |
+| `documentos_convivencia` (legacy) | Documentos varios               | Privado     | `{causa_id}/...`                                      |
 
 ## Path Conventions
 
 ### `anotaciones`
-````
+
+```
 {tenant_id}/{archivo_nombre}.pdf
-````
+```
 
 ### `disciplinary-processes`
-````
+
+```
 {tenant_id}/{student_id}/{process_id}/{timestamp}_{hash}.pdf
-````
+{tenant_id}/pending-student/draft/{stored_name}.pdf
+```
 
 ### `documentos_convivencia` (legacy)
+
 ```
 {causa_id}/{prefix}_{archivo_nombre}
 ```
@@ -40,6 +44,12 @@ USING (
   )
 );
 ```
+
+Para `disciplinary-processes`, las políticas `SELECT`, `INSERT`, `UPDATE` y
+`DELETE` validan membresía activa en `app_memberships` para la aplicación
+`convivencia`, con los mismos roles aceptados por `CONVIVENCIA_MEMBERSHIP` en
+el middleware. Esto permite que cuentas operativas como `staff` suban PDFs al
+modal de revisión sin romper el aislamiento por carpeta `{tenant_id}/...`.
 
 ## Signed URLs
 
