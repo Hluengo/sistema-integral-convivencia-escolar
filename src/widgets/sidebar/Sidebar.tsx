@@ -271,7 +271,7 @@ export default memo(function Sidebar({
 
       <div
         ref={mobileSidebarRef}
-        className={`fixed inset-y-0 left-0 z-50 w-[280px] bg-linear-to-b from-neutral-900 to-neutral-950 shadow-2xl shadow-neutral-950/50 transition-transform duration-300 ease-out-expo lg:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 w-[280px] bg-neutral-950 shadow-2xl shadow-neutral-950/50 transition-transform duration-300 ease-out-expo lg:hidden ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -287,7 +287,7 @@ export default memo(function Sidebar({
       </div>
 
       <aside
-        className={`relative hidden shrink-0 flex-col bg-linear-to-b from-neutral-900 to-neutral-950 shadow-2xl shadow-neutral-950/30 transition-colors duration-300 ease-out-expo lg:flex ${
+        className={`relative hidden shrink-0 flex-col bg-neutral-950 shadow-2xl shadow-neutral-950/30 transition-colors duration-300 ease-out-expo lg:flex ${
           isCollapsed ? 'w-[68px]' : 'w-[240px]'
         }`}
         aria-label="Barra de navegación principal"
