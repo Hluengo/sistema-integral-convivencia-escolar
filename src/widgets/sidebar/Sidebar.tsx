@@ -117,7 +117,7 @@ function SidebarContent({
             <h1 className="font-bold text-[17px] text-white leading-tight tracking-tight">
               Gestión de Casos
             </h1>
-            <p className="mt-0.5 font-semibold text-[10px] text-neutral-400 uppercase leading-tight tracking-[0.12em]">
+            <p className="mt-0.5 font-semibold text-[10px] text-neutral-300 uppercase leading-tight tracking-[0.12em]">
               Convivencia Escolar
             </p>
           </div>
@@ -136,7 +136,7 @@ function SidebarContent({
 
       {(!isCollapsed || mobile) && (
         <div className="px-5 pt-5 pb-2">
-          <span className="font-bold text-[10px] text-neutral-500 uppercase tracking-[0.15em]">
+          <span className="font-bold text-[10px] text-neutral-300 uppercase tracking-[0.15em]">
             Navegación
           </span>
         </div>
@@ -165,7 +165,7 @@ function SidebarContent({
                 ${
                   isActive
                     ? 'bg-white/15 font-semibold text-white shadow-sm shadow-black/10'
-                    : 'text-neutral-400 hover:bg-white/8 hover:text-white/90'
+                    : 'text-neutral-300 hover:bg-white/8 hover:text-white'
                 }`}
                 style={
                   isActive && !isCollapsed ? { boxShadow: 'inset 3px 0 0 0 white' } : undefined
@@ -174,7 +174,7 @@ function SidebarContent({
                 title={isCollapsed && !mobile ? item.label : undefined}
               >
                 <span
-                  className={`shrink-0 transition-colors ${isActive ? 'text-white' : 'text-neutral-400'}`}
+                  className={`shrink-0 transition-colors ${isActive ? 'text-white' : 'text-neutral-300'}`}
                 >
                   <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
                 </span>
