@@ -61,7 +61,7 @@ export default function EmptyState({
       <div className={`mb-5 flex items-center justify-center bg-neutral-100 ${styles.iconBox}`}>
         <Icon className={`text-neutral-400 ${styles.iconSize}`} />
       </div>
-      <h3 className={`mb-1.5 font-semibold text-neutral-800 ${styles.titleSize}`}>{title}</h3>
+      <h2 className={`mb-1.5 font-semibold text-neutral-800 ${styles.titleSize}`}>{title}</h2>
       {description && (
         <p className={`mb-6 max-w-sm text-neutral-700 ${styles.descSize}`}>{description}</p>
       )}
