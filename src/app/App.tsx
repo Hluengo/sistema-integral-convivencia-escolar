@@ -32,23 +32,14 @@ import { getFaseForEstado } from '../shared/lib/data';
 import { EstadoCausa } from '../shared/lib/types';
 import { MembershipLoading, MembershipAccessDenied } from '../shared/ui';
 import WelcomeModal from '../shared/ui/WelcomeModal';
+import ViewLoader from '../shared/ui/ViewLoader';
 
 const WELCOME_SEEN_KEY = 'gestion-casos-welcome-seen';
 
 function AppLoadingFallback() {
   return (
     <div className="flex min-h-dvh items-center justify-center bg-neutral-100 px-6">
-      <div className="text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-neutral-900 shadow-lg">
-          <img src="/logo.svg" alt="Escudo Veritas" className="h-10 w-auto invert" />
-        </div>
-        <p className="mt-5 font-bold text-neutral-900 text-lg">Gestión de Casos</p>
-        <p className="mt-1 text-neutral-500 text-sm">Preparando su espacio de trabajo…</p>
-        <div className="mx-auto mt-5 h-1.5 w-32 overflow-hidden rounded-full bg-neutral-200">
-          <div className="h-full w-1/2 animate-pulse rounded-full bg-brand-600" />
-        </div>
-        <span className="sr-only">Cargando aplicación</span>
-      </div>
+      <ViewLoader view="boot" />
     </div>
   );
 }

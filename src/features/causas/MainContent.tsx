@@ -12,16 +12,7 @@ import { ChevronRight } from 'lucide-react';
 import { VIEW_TITLES } from '../../widgets/header/constants';
 import CausasView from './MainContent/CausasView';
 import ErrorBoundary from '../../shared/ui/ErrorBoundary';
-import {
-  DashboardMetricSkeleton,
-  CausaCardSkeleton,
-  AnnotationsSkeleton,
-  TableSkeleton,
-  ChatMessageSkeleton,
-  ManagementViewSkeleton,
-  ReportsViewSkeleton,
-  PlatformViewSkeleton,
-} from '../../shared/Skeleton';
+import ViewLoader from '../../shared/ui/ViewLoader';
 
 const DashboardStats = lazy(() => import('../../components/DashboardStats'));
 const StudentsPanel = lazy(() => import('../../features/students/StudentsPanel'));
@@ -30,41 +21,6 @@ const AnotacionesView = lazy(() => import('../../features/anotaciones/Anotacione
 const AdminView = lazy(() => import('../../features/admin/AdminView'));
 const ReportsCenter = lazy(() => import('../../features/reports/ReportsCenter'));
 const PlatformView = lazy(() => import('../../features/platform/PlatformView'));
-
-function DashboardFallback() {
-  return (
-    <div className="animate-fade-in space-y-6 p-6">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <DashboardMetricSkeleton key={'metric-' + i} />
-        ))}
-      </div>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <CausaCardSkeleton key={'card-' + i} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function AnotacionesFallback() {
-  return <AnnotationsSkeleton />;
-}
-
-function StudentsFallback() {
-  return <TableSkeleton rows={8} />;
-}
-
-function AdvisorFallback() {
-  return (
-    <div className="space-y-4 p-6">
-      <ChatMessageSkeleton />
-      <ChatMessageSkeleton />
-      <ChatMessageSkeleton />
-    </div>
-  );
-}
 
 interface MainContentProps {
   currentView: SidebarView;
@@ -165,7 +121,7 @@ export default function MainContent({
       {/* VIEW 1: DASHBOARD - Fully redesigned */}
       {currentView === 'dashboard' && (
         <ErrorBoundary>
-          <Suspense fallback={<DashboardFallback />}>
+          <Suspense fallback={<ViewLoader view={currentView} />}>
             <DashboardStats
               causas={causas}
               onFaseSelect={handleFaseSelect}
@@ -208,7 +164,7 @@ export default function MainContent({
       {/* VIEW 4: AI ADVISOR */}
       {currentView === 'informes' && (
         <ErrorBoundary>
-          <Suspense fallback={<AdvisorFallback />}>
+          <Suspense fallback={<ViewLoader view={currentView} />}>
             <AdvisorView
               causas={causas}
               selectedCausa={selectedCausa}
@@ -224,7 +180,7 @@ export default function MainContent({
       {/* VIEW 5: ALUMNOS */}
       {currentView === 'alumnos' && (
         <ErrorBoundary>
-          <Suspense fallback={<StudentsFallback />}>
+          <Suspense fallback={<ViewLoader view={currentView} />}>
             <StudentsPanel privacyMode={privacyMode} />
           </Suspense>
         </ErrorBoundary>
@@ -233,7 +189,7 @@ export default function MainContent({
       {/* VIEW 6: ANOTACIONES */}
       {currentView === 'anotaciones' && (
         <ErrorBoundary>
-          <Suspense fallback={<AnotacionesFallback />}>
+          <Suspense fallback={<ViewLoader view={currentView} />}>
             <AnotacionesView privacyMode={privacyMode} />
           </Suspense>
         </ErrorBoundary>
@@ -241,7 +197,7 @@ export default function MainContent({
 
       {currentView === 'reportes' && (
         <ErrorBoundary>
-          <Suspense fallback={<ReportsViewSkeleton />}>
+          <Suspense fallback={<ViewLoader view={currentView} />}>
             <ReportsCenter causas={causas} />
           </Suspense>
         </ErrorBoundary>
@@ -249,7 +205,7 @@ export default function MainContent({
 
       {currentView === 'admin' && (
         <ErrorBoundary>
-          <Suspense fallback={<ManagementViewSkeleton />}>
+          <Suspense fallback={<ViewLoader view={currentView} />}>
             <AdminView />
           </Suspense>
         </ErrorBoundary>
@@ -257,7 +213,7 @@ export default function MainContent({
 
       {currentView === 'platform' && (
         <ErrorBoundary>
-          <Suspense fallback={<PlatformViewSkeleton />}>
+          <Suspense fallback={<ViewLoader view={currentView} />}>
             <PlatformView />
           </Suspense>
         </ErrorBoundary>

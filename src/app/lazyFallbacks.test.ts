@@ -57,9 +57,16 @@ describe('lazy loading fallbacks', () => {
     assert.ok(app.includes('fallback={<SidebarSkeleton />}'));
     assert.ok(app.includes('fallback={<HeaderSkeleton />}'));
     assert.ok(app.includes('fallback={<ModalSkeleton />}'));
-    assert.ok(mainContent.includes('fallback={<ReportsViewSkeleton />}'));
-    assert.ok(mainContent.includes('fallback={<ManagementViewSkeleton />}'));
-    assert.ok(mainContent.includes('fallback={<PlatformViewSkeleton />}'));
+    // Las vistas lazy de MainContent usan ViewLoader con frases contextuales en vez de skeletons.
+    assert.ok(!mainContent.includes('ReportsViewSkeleton'));
+    assert.ok(!mainContent.includes('ManagementViewSkeleton'));
+    assert.ok(!mainContent.includes('PlatformViewSkeleton'));
+    const viewLoaderFallbacks =
+      mainContent.split('fallback={<ViewLoader view={currentView} />}').length - 1;
+    assert.ok(
+      viewLoaderFallbacks >= 7,
+      `Se esperaban al menos 7 fallbacks ViewLoader en MainContent, hay ${viewLoaderFallbacks}`,
+    );
     assert.ok(causasView.includes('fallback={<DetailModalSkeleton />}'));
     assert.ok(causasView.includes('fallback={<ClosedCasesSkeleton />}'));
     assert.ok(anotacionesView.includes('fallback={<ModalSkeleton />}'));
