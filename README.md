@@ -182,7 +182,7 @@ Para más detalles, revisa:
 | ⚙️ **CI**         | [![CI](https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/ci.yml?branch=master&label=CI)](https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/ci.yml)                                 |
 | 🚦 **Lighthouse** | [![Lighthouse](https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/lighthouse.yml?branch=master&label=Lighthouse)](https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/lighthouse.yml) |
 | ✅ **Tests**      | 366 tests · 78 suites                                                                                                                                                                                                                                               |
-| 📈 **Cobertura**  | ~56% líneas                                                                                                                                                                                                                                                         |
+| 📈 **Cobertura**  | 85.54% líneas (`npm run test:coverage`, excluye el bundle generado `api/index.js`)                                                                                                                                                                                  |
 | 🔐 **Seguridad**  | `npm audit` 0 vulnerabilidades                                                                                                                                                                                                                                      |
 
 > Los badges de CI y Lighthouse se actualizan automáticamente con cada push. Los informes de Lighthouse se generan en `.lighthouseci/`.
@@ -275,20 +275,20 @@ Las claves `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `OPENROUTER_API_K
 
 ## 🛠️ Comandos
 
-| Comando                  | Descripción                                            |
-| ------------------------ | ------------------------------------------------------ |
-| `npm run dev`            | Servidor Express + Vite HMR (puertos 3001 / 3002)      |
-| `npm run build`          | Build completo: cliente Vite + servidor esbuild        |
-| `npm run build:web`      | Build solo del cliente                                 |
-| `npm run start`          | Iniciar servidor de producción desde `dist/server.cjs` |
-| `npm run lint`           | TypeScript check + ESLint                              |
-| `npm run typecheck`      | Verificación estricta de tipos (`tsc --noEmit`)        |
-| `npm run test`           | Tests unitarios con el runner nativo de Node           |
-| `npm run test:coverage`  | Tests unitarios con cobertura nativa de Node           |
-| `npm run test:e2e`       | Tests end-to-end con Playwright                        |
-| `npm run format`         | Formatear código con Prettier                          |
-| `npm run security-audit` | Auditoría de dependencias (`npm audit`)                |
-| `npm run ci`             | Lint + test + build:web + security audit               |
+| Comando                  | Descripción                                                                |
+| ------------------------ | -------------------------------------------------------------------------- |
+| `npm run dev`            | Servidor Express + Vite HMR (puertos 3001 / 3002)                          |
+| `npm run build`          | Build completo: cliente Vite + servidor esbuild                            |
+| `npm run build:web`      | Build solo del cliente                                                     |
+| `npm run start`          | Iniciar servidor de producción desde `dist/server.cjs`                     |
+| `npm run lint`           | TypeScript check + ESLint                                                  |
+| `npm run typecheck`      | Verificación estricta de tipos (`tsc --noEmit`)                            |
+| `npm run test`           | Tests unitarios con el runner nativo de Node                               |
+| `npm run test:coverage`  | Tests unitarios con cobertura nativa de Node y umbral mínimo de 60% líneas |
+| `npm run test:e2e`       | Tests end-to-end con Playwright                                            |
+| `npm run format`         | Formatear código con Prettier                                              |
+| `npm run security-audit` | Auditoría de dependencias (`npm audit`)                                    |
+| `npm run ci`             | Lint + test + build:web + security audit                                   |
 
 ---
 
@@ -349,7 +349,7 @@ Más detalles en [`docs/DEPLOY.md`](docs/DEPLOY.md).
 El roadmap vivo está en [`docs/architecture/future-roadmap.md`](docs/architecture/future-roadmap.md). Entre los pendientes se encuentran:
 
 - React Router / deep linking
-- Mayor cobertura de tests
+- Dashboard analítico avanzado
 - Exportación avanzada de reportes
 - Modo offline
 - Futuros módulos PIE, UTP y portal de apoderados

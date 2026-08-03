@@ -21,7 +21,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "npm run lint && npm run lint:code && npm run test && npm run build:web",
-    "test:coverage": "node --experimental-test-coverage --import tsx --test \"src/**/*.test.ts\" \"server/**/*.test.ts\"",
+    "test:coverage": "node --experimental-test-coverage --test-coverage-exclude=api/index.js --test-coverage-lines=60 --import tsx --test \"src/**/*.test.ts\" \"server/**/*.test.ts\"",
     "test:e2e": "playwright test",
     "test:multitenant": "node scripts/validate-multitenant.mjs",
     "test:roles": "node scripts/validate-production-roles.mjs",

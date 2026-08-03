@@ -22,7 +22,7 @@
 
 ### Testing
 
-- **Cobertura incompleta**: Los flujos principales tienen pruebas unitarias y E2E, pero falta medir cobertura global
+- **Cobertura global**: medición activa con `npm run test:coverage`; umbral mínimo 60% líneas y estado verificado 85.54% al 2026-08-02.
 
 ### Database
 

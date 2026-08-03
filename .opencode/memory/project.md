@@ -647,7 +647,7 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 
 - Unit: `node:test` + `node:assert/strict`
 - E2E: Playwright
-- Coverage: Vitest + @vitest/coverage-v8
+- Coverage: `node --experimental-test-coverage` con umbral mínimo de 60% líneas; excluye `api/index.js` por ser bundle generado para Vercel
 - Tests alongside source files (`*.test.ts`)
 
 ### 11.5 Git/Commits
@@ -1303,3 +1303,4 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - Cobertura base agregada para `authStore`, `uiStore`, `toastStore` y acciones/selectores síncronos de `causasStore`; la suite local queda en 366 tests / 78 suites.
 - Auditoría legacy de `src/components/`: 30 archivos actuales; 29 son barrels de compatibilidad protegidos por `src/components/legacyCompatibility.test.ts` y 1 es el test de compatibilidad. Ya no quedan componentes reales en esa capa. `MetricCard`, `ErrorBoundary`, `ToastProvider` y `ShortcutsModal` viven ahora en `src/shared/ui/`; `ClosedCases` vive en `src/features/causas/`; `TemplateEditor` vive en `src/features/document-templates/`; `InteractiveTimeline` vive en `src/features/timeline/`; `Header` y sus subcomponentes viven en `src/widgets/header/`; `Sidebar` y `SidebarUserMenu` viven en `src/widgets/sidebar/`. Sus archivos bajo `src/components/` sólo reexportan para compatibilidad.
 - Skeletons lazy cerrados: `src/shared/Skeleton.tsx` centraliza fallbacks para shell, vistas administrativas/reportes/plataforma, detalle de expediente, modales y generador de cartas. `src/app/lazyFallbacks.test.ts` evita `fallback={null}` en `src/app` y `src/features`; suite local verificada en 366 tests / 78 suites.
+- Cobertura >60% cerrada: `npm run test:coverage` mide 85.54% líneas / 85.55% ramas / 84.71% funciones, excluye sólo `api/index.js` por ser artefacto generado y falla con `--test-coverage-lines=60`.

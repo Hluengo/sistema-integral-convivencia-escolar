@@ -9,9 +9,9 @@
 - [x] Unificar tests unitarios en Node Test Runner
 - [x] Agregar cobertura base faltante de stores/hooks vigentes
 - [x] E2E tests con Playwright para flujos críticos (`tests/*.spec.ts`)
-- [x] Alcanzar >30% cobertura — **55.89% líneas / 74.16% statements** al 2026-08-02
+- [x] Alcanzar >60% cobertura — **85.54% líneas / 85.55% ramas / 84.71% funciones** al 2026-08-02
 
-> ✅ `authStore`, `uiStore`, `toastStore` y selectores/acciones síncronas de `causasStore` tienen cobertura base desde el 2026-08-02; hooks críticos (`causaPersistence`, `useNotifications`) ya estaban cubiertos. `gearStore` y `riceMeasures` fueron reconciliados como referencias documentales obsoletas: no existen símbolos vigentes en `src/`. Meta siguiente: >60% líneas.
+> ✅ `authStore`, `uiStore`, `toastStore` y selectores/acciones síncronas de `causasStore` tienen cobertura base desde el 2026-08-02; hooks críticos (`causaPersistence`, `useNotifications`) ya estaban cubiertos. `gearStore` y `riceMeasures` fueron reconciliados como referencias documentales obsoletas: no existen símbolos vigentes en `src/`. `npm run test:coverage` excluye `api/index.js` porque es bundle generado desde `server/api/index.ts` para Vercel y ahora falla si las líneas bajan de 60%.
 
 ### Infraestructura
 
