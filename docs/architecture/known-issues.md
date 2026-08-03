@@ -27,7 +27,7 @@
 ### Database
 
 - **Seed local**: cerrado; `supabase/seed.sql` carga datos demo idempotentes para desarrollo local.
-- **Índices compuestos**: cerrado para los patrones actuales; `20260803003719_add_query_pattern_indexes.sql` cubre lecturas tenant-scoped frecuentes y queda pendiente medir uso real cuando Supabase Inspect vuelva a estar disponible.
+- **Índices compuestos**: cerrado para los patrones actuales; `20260803004959_add_query_pattern_indexes.sql` cubre lecturas tenant-scoped frecuentes y queda pendiente medir uso real cuando Supabase Inspect vuelva a estar disponible.
 - **Bucket legacy**: `documentos_convivencia` creado externamente (no en migraciones)
 
 ### Frontend

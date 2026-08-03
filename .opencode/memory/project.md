@@ -1,6 +1,6 @@
 # STAFF ENGINEER MEMORY — Sistema Integral de Convivencia Escolar
 
-> **Versión:** 1.4 | **Estado:** Producción | **Última actualización:** 2026-08-02
+> **Versión:** 1.4 | **Estado:** Producción | **Última actualización:** 2026-08-03
 
 ---
 
@@ -1305,4 +1305,5 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - Skeletons lazy cerrados: `src/shared/Skeleton.tsx` centraliza fallbacks para shell, vistas administrativas/reportes/plataforma, detalle de expediente, modales y generador de cartas. `src/app/lazyFallbacks.test.ts` evita `fallback={null}` en `src/app` y `src/features`; suite local verificada en 370 tests / 78 suites.
 - Cobertura >60% cerrada: `npm run test:coverage` mide 85.66% líneas / 85.57% ramas / 84.77% funciones, excluye sólo `api/index.js` por ser artefacto generado y falla con `--test-coverage-lines=60`.
 - Seed local completo cerrado: `supabase/seed.sql` carga tenant demo, usuarios Auth/perfiles, membresías, cursos, estudiantes, anotaciones por tramo disciplinario, expedientes, bitácora, checklist, cartas, reglas, plantillas, proceso/analisis PDF, historial, reportes, notificaciones, invitaciones y configuración/documentos institucionales. La CLI actual no expone `supabase db seed`; el flujo documentado es `supabase db reset` con `[db.seed].sql_paths`.
-- Índices compuestos faltantes cerrados: `supabase/migrations/20260803003719_add_query_pattern_indexes.sql` agrega 16 índices `IF NOT EXISTS` para patrones tenant-scoped frecuentes en cursos, estudiantes, anotaciones, cartas/eventos, etapas, procesos PDF, documentos institucionales y eventos de cartas. `src/shared/lib/databaseIndexes.test.ts` protege la migración. Supabase Inspect remoto sigue bloqueado por 403 del Management API, por lo que la verificación de uso real queda para cuando se recupere ese acceso.
+- Índices compuestos faltantes cerrados: `supabase/migrations/20260803004959_add_query_pattern_indexes.sql` agrega 16 índices `IF NOT EXISTS` para patrones tenant-scoped frecuentes en cursos, estudiantes, anotaciones, cartas/eventos, etapas, procesos PDF, documentos institucionales y eventos de cartas. `src/shared/lib/databaseIndexes.test.ts` protege la migración. La migración fue aplicada remotamente como `20260803004959 add_query_pattern_indexes` y se verificó en `pg_indexes` con 16/16 índices creados.
+- Dashboard analítico avanzado iniciado: `src/features/dashboard/dashboardTrends.ts` deriva, desde el listado de causas ya cargado, aperturas y cierres de los últimos seis meses, variación del trimestre actual contra el anterior, porcentaje de causas de alta gravedad y tasa de cierre. `DashboardTrendsPanel.tsx` muestra el gráfico sin exponer nombres/RUT; `dashboardTrends.test.ts` cubre agrupación mensual y variación. Siguiente paso: mover tendencias históricas a una RPC/consulta agregada cuando el volumen real justifique paginación o análisis multi-año.

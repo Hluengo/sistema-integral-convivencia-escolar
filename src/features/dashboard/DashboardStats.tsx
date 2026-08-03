@@ -25,6 +25,7 @@ import MetricCard from '../../shared/ui/MetricCard';
 import SeverityBadge from '../../shared/SeverityBadge';
 import AnotacionesDashboardStats from '../anotaciones/AnotacionesDashboardStats';
 import EmptyState from '../../shared/EmptyState';
+import DashboardTrendsPanel from './DashboardTrendsPanel';
 import { fetchAnnotationStageCounts } from '../../shared/api/services/annotations.service';
 import { fetchCourseCartaRanking } from '../../shared/api/services/cartas.service';
 import {
@@ -339,6 +340,8 @@ export default function DashboardStats({
           </div>
         </div>
       ) : null}
+
+      {isAuthenticated ? <DashboardTrendsPanel causas={causas} /> : null}
 
       <AnotacionesDashboardStats
         counts={annotations}

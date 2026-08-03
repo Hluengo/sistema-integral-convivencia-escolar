@@ -67,7 +67,7 @@ El build emite warnings de chunks circulares debido a la configuración de `manu
 - **Caché aislada por tenant**: las claves de React Query incluyen `tenant_id`, impidiendo reutilizar metadatos o antecedentes entre establecimientos durante una misma sesión.
 - **Invalidación selectiva sin reconsulta**: una escritura exitosa actualiza sólo el expediente y detalle cacheados; al eliminar, se descarta exclusivamente la entrada de esa causa.
 - **Telemetría agregada**: se registran duración, ámbito (listado o detalle) y cantidad de registros, sin IDs, nombres, RUT ni contenido del expediente.
-- **Índices por patrón de consulta**: la migración `20260803003719_add_query_pattern_indexes.sql` agrega compuestos para lecturas frecuentes por tenant, estudiante, fecha, estado y ordenamiento, incluyendo importación Excel, anotaciones, cartas, procesos PDF y documentos institucionales.
+- **Índices por patrón de consulta**: la migración `20260803004959_add_query_pattern_indexes.sql` agrega compuestos para lecturas frecuentes por tenant, estudiante, fecha, estado y ordenamiento, incluyendo importación Excel, anotaciones, cartas, procesos PDF y documentos institucionales.
 
 ### Próxima etapa: paginación respaldada por índices
 

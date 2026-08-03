@@ -1,6 +1,6 @@
 # Future Roadmap
 
-> **Última verificación:** 2026-08-02 | Se contrastó cada ítem contra el código y la base de datos reales.
+> **Última verificación:** 2026-08-03 | Se contrastó cada ítem contra el código y la base de datos reales.
 
 ## Corto Plazo (1-3 meses)
 
@@ -46,7 +46,7 @@
 
 - [ ] Dashboard analítico avanzado (gráficos, tendencias)
 
-> 🟡 **Parcial:** el dashboard ya muestra KPIs, distribución por gravedad y rankings. Faltan gráficos históricos y tendencias.
+> 🟡 **Parcial:** el dashboard ya muestra KPIs, distribución por gravedad, rankings y un primer panel de tendencias de expedientes con aperturas/cierres de los últimos seis meses, variación trimestral, porcentaje de alta gravedad y tasa de cierre. Falta una fuente agregada histórica desde PostgreSQL/RPC para escalar el análisis sin depender del listado de causas cargado en cliente.
 
 - [x] Exportación de reportes en Excel — `ReportsCenter` usa `write-excel-file`; `annotationsExcelExport.ts`; importación en `server/api/services/excelImport.ts`
 - [x] Notificaciones en tiempo real (Realtime Supabase, opt-in)
@@ -64,7 +64,7 @@
 
 - [x] Agregar índices compuestos faltantes
 
-> ✅ Cerrado 2026-08-03: `supabase/migrations/20260803003719_add_query_pattern_indexes.sql` agrega índices idempotentes para los patrones de lectura frecuentes: cursos/estudiantes ordenados por tenant, deduplicación de RUT en importaciones, anotaciones por fecha/tipo, cartas y eventos por estudiante/carta, historial de etapas, PDFs disciplinarios por hash o estudiante, anotaciones detectadas, documentos/reglamentos institucionales y eventos de salida de cartas. `src/shared/lib/databaseIndexes.test.ts` bloquea regresiones en la migración.
+> ✅ Cerrado 2026-08-03: `supabase/migrations/20260803004959_add_query_pattern_indexes.sql` agrega índices idempotentes para los patrones de lectura frecuentes: cursos/estudiantes ordenados por tenant, deduplicación de RUT en importaciones, anotaciones por fecha/tipo, cartas y eventos por estudiante/carta, historial de etapas, PDFs disciplinarios por hash o estudiante, anotaciones detectadas, documentos/reglamentos institucionales y eventos de salida de cartas. `src/shared/lib/databaseIndexes.test.ts` bloquea regresiones en la migración.
 
 ## Largo Plazo (6-12 meses)
 
