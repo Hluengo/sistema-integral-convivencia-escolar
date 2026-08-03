@@ -90,7 +90,7 @@ test('buildDashboardTrendSummary agrega anotaciones anuales por mes', () => {
     { dateTime: '2027-01-02T12:00:00Z', type: 'Negativa', severity: 'Gravísima' },
   ];
 
-  const summary = buildDashboardTrendSummary([], annotations, new Date('2026-08-15T12:00:00Z'));
+  const summary = buildDashboardTrendSummary([], annotations, new Date('2026-12-15T12:00:00Z'));
 
   assert.equal(summary.annotationTotal, 3);
   assert.equal(summary.negativeAnnotationTotal, 2);
@@ -119,6 +119,57 @@ test('buildDashboardTrendSummary compara segundo semestre escolar contra el prim
   assert.equal(summary.currentOpened, 1);
   assert.equal(summary.openedDelta, -3);
   assert.equal(summary.busiestMonthTotal, 1);
+});
+
+test('buildDashboardTrendSummary marca mes actual y meses futuros del ciclo escolar', () => {
+  const summary = buildDashboardTrendSummary(
+    [
+      makeCausa({ id: 'observed', fechaApertura: '2026-03-01' }),
+      makeCausa({ id: 'future', fechaApertura: '2026-09-01' }),
+    ],
+    [{ dateTime: '2026-10-01T12:00:00Z', type: 'Negativa', severity: 'Muy Grave' }],
+    new Date('2026-08-15T12:00:00Z'),
+  );
+
+  assert.equal(summary.points[5].key, '2026-08');
+  assert.equal(summary.points[5].isCurrentMonth, true);
+  assert.equal(summary.points[5].isObserved, true);
+  assert.equal(summary.points[6].key, '2026-09');
+  assert.equal(summary.points[6].isObserved, false);
+  assert.equal(summary.observedMonthCount, 6);
+  assert.equal(summary.openedTotal, 1);
+  assert.equal(summary.annotationTotal, 0);
+});
+
+test('buildDashboardTrendSummary calcula brecha, cierre y porcentajes por mes observado', () => {
+  const summary = buildDashboardTrendSummary(
+    [
+      makeCausa({
+        id: 'closed',
+        fechaApertura: '2026-03-01',
+        fechaUltimaActualizacion: '2026-03-20',
+        estadoActual: EstadoCausa.CAUSA_CERRADA,
+      }),
+      makeCausa({ id: 'open', fechaApertura: '2026-03-12' }),
+    ],
+    [
+      { dateTime: '2026-03-02T12:00:00Z', type: 'Negativa', severity: 'Grave' },
+      { dateTime: '2026-03-03T12:00:00Z', type: 'Negativa', severity: 'Muy Grave' },
+      { dateTime: '2026-03-04T12:00:00Z', type: 'Positiva', severity: 'Leve' },
+    ],
+    new Date('2026-08-15T12:00:00Z'),
+  );
+
+  const march = summary.points[0];
+  assert.equal(march.netLoad, 1);
+  assert.equal(march.closureRate, 50);
+  assert.equal(march.negativeAnnotationShare, 67);
+  assert.equal(march.highSeverityAnnotationShare, 33);
+  assert.equal(summary.openedTotal, 2);
+  assert.equal(summary.closedTotal, 1);
+  assert.equal(summary.netLoadTotal, 1);
+  assert.equal(summary.negativeAnnotationShare, 67);
+  assert.equal(summary.riskMonthLabel, 'mar');
 });
 
 test('getDashboardSchoolYear usa el ciclo escolar marzo-diciembre', () => {
