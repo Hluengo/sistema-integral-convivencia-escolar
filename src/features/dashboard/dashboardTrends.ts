@@ -3,10 +3,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { EstadoCausa, type Causa, type TipoInfraccion } from '../../shared/lib/types';
+import {
+  EstadoCausa,
+  type Annotation,
+  type Causa,
+  type TipoInfraccion,
+} from '../../shared/lib/types';
 
-const MONTHS_TO_SHOW = 6;
+const SCHOOL_YEAR_START_MONTH_INDEX = 2;
+const SCHOOL_YEAR_END_MONTH_INDEX = 11;
+const SCHOOL_YEAR_MONTHS = SCHOOL_YEAR_END_MONTH_INDEX - SCHOOL_YEAR_START_MONTH_INDEX + 1;
 const HIGH_SEVERITY_TYPES = new Set<TipoInfraccion>(['Muy Grave', 'Gravísima']);
+const NEGATIVE_ANNOTATION_TYPE: Annotation['type'] = 'Negativa';
+
+export interface AnnotationTrendRecord {
+  dateTime: string;
+  severity: TipoInfraccion;
+  type: Annotation['type'];
+}
 
 export interface DashboardTrendPoint {
   key: string;
@@ -14,9 +28,13 @@ export interface DashboardTrendPoint {
   opened: number;
   closed: number;
   highSeverity: number;
+  annotations: number;
+  negativeAnnotations: number;
+  highSeverityAnnotations: number;
 }
 
 export interface DashboardTrendSummary {
+  schoolYear: number;
   points: DashboardTrendPoint[];
   currentOpened: number;
   previousOpened: number;
@@ -25,6 +43,11 @@ export interface DashboardTrendSummary {
   closureRate: number;
   busiestMonthLabel: string;
   busiestMonthTotal: number;
+  annotationTotal: number;
+  negativeAnnotationTotal: number;
+  highSeverityAnnotationTotal: number;
+  busiestAnnotationMonthLabel: string;
+  busiestAnnotationMonthTotal: number;
 }
 
 function parseDate(value: string | undefined): Date | null {
@@ -54,6 +77,12 @@ function addUtcMonths(date: Date, months: number): Date {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + months, 1));
 }
 
+export function getDashboardSchoolYear(referenceDate = new Date()): number {
+  return referenceDate.getUTCMonth() < SCHOOL_YEAR_START_MONTH_INDEX
+    ? referenceDate.getUTCFullYear() - 1
+    : referenceDate.getUTCFullYear();
+}
+
 function isClosed(causa: Causa): boolean {
   return (
     causa.estadoActual === EstadoCausa.CAUSA_CERRADA ||
@@ -61,25 +90,16 @@ function isClosed(causa: Causa): boolean {
   );
 }
 
-function resolveReferenceDate(causas: Causa[], explicitReferenceDate?: Date): Date {
-  if (explicitReferenceDate) return explicitReferenceDate;
-
-  const newestTimestamp = causas.reduce((newest, causa) => {
-    const openedAt = parseDate(causa.fechaApertura)?.getTime() ?? 0;
-    const updatedAt = parseDate(causa.fechaUltimaActualizacion)?.getTime() ?? 0;
-    return Math.max(newest, openedAt, updatedAt);
-  }, 0);
-
-  return newestTimestamp > 0 ? new Date(newestTimestamp) : new Date();
-}
-
 export function buildDashboardTrendSummary(
   causas: Causa[],
+  annotations: AnnotationTrendRecord[] = [],
   referenceDate?: Date,
 ): DashboardTrendSummary {
-  const lastMonth = startOfUtcMonth(resolveReferenceDate(causas, referenceDate));
-  const firstMonth = addUtcMonths(lastMonth, -(MONTHS_TO_SHOW - 1));
-  const points = Array.from({ length: MONTHS_TO_SHOW }, (_, index) => {
+  const schoolYear = getDashboardSchoolYear(referenceDate);
+  const firstMonth = startOfUtcMonth(
+    new Date(Date.UTC(schoolYear, SCHOOL_YEAR_START_MONTH_INDEX, 1)),
+  );
+  const points = Array.from({ length: SCHOOL_YEAR_MONTHS }, (_, index) => {
     const date = addUtcMonths(firstMonth, index);
     return {
       key: monthKey(date),
@@ -87,6 +107,9 @@ export function buildDashboardTrendSummary(
       opened: 0,
       closed: 0,
       highSeverity: 0,
+      annotations: 0,
+      negativeAnnotations: 0,
+      highSeverityAnnotations: 0,
     };
   });
   const pointsByKey = new Map(points.map((point) => [point.key, point]));
@@ -112,18 +135,43 @@ export function buildDashboardTrendSummary(
     }
   }
 
-  const currentWindow = points.slice(-3);
-  const previousWindow = points.slice(0, 3);
+  for (const annotation of annotations) {
+    const registeredAt = parseDate(annotation.dateTime);
+    if (!registeredAt) continue;
+    const point = pointsByKey.get(monthKey(registeredAt));
+    if (!point) continue;
+
+    point.annotations += 1;
+    if (annotation.type === NEGATIVE_ANNOTATION_TYPE) {
+      point.negativeAnnotations += 1;
+    }
+    if (HIGH_SEVERITY_TYPES.has(annotation.severity)) {
+      point.highSeverityAnnotations += 1;
+    }
+  }
+
+  const currentWindow = points.slice(5);
+  const previousWindow = points.slice(0, 5);
   const currentOpened = currentWindow.reduce((sum, point) => sum + point.opened, 0);
   const previousOpened = previousWindow.reduce((sum, point) => sum + point.opened, 0);
   const openedTotal = points.reduce((sum, point) => sum + point.opened, 0);
   const closedTotal = points.reduce((sum, point) => sum + point.closed, 0);
   const highSeverityTotal = points.reduce((sum, point) => sum + point.highSeverity, 0);
+  const annotationTotal = points.reduce((sum, point) => sum + point.annotations, 0);
+  const negativeAnnotationTotal = points.reduce((sum, point) => sum + point.negativeAnnotations, 0);
+  const highSeverityAnnotationTotal = points.reduce(
+    (sum, point) => sum + point.highSeverityAnnotations,
+    0,
+  );
   const busiestMonth = points.reduce((currentBusiest, point) =>
     point.opened > currentBusiest.opened ? point : currentBusiest,
   );
+  const busiestAnnotationMonth = points.reduce((currentBusiest, point) =>
+    point.annotations > currentBusiest.annotations ? point : currentBusiest,
+  );
 
   return {
+    schoolYear,
     points,
     currentOpened,
     previousOpened,
@@ -132,5 +180,10 @@ export function buildDashboardTrendSummary(
     closureRate: openedTotal > 0 ? Math.round((closedTotal / openedTotal) * 100) : 0,
     busiestMonthLabel: busiestMonth.label,
     busiestMonthTotal: busiestMonth.opened,
+    annotationTotal,
+    negativeAnnotationTotal,
+    highSeverityAnnotationTotal,
+    busiestAnnotationMonthLabel: busiestAnnotationMonth.label,
+    busiestAnnotationMonthTotal: busiestAnnotationMonth.annotations,
   };
 }

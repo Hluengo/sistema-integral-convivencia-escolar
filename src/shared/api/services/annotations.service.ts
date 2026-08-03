@@ -12,7 +12,12 @@ import type {
   StudentAnnotationRankingItem,
   TeacherAnnotationRankingItem,
 } from '../../lib/domain/annotationRankings';
-import type { Annotation, AnotacionStudent, DocumentAnalysis } from '../../lib/types';
+import type {
+  Annotation,
+  AnotacionStudent,
+  DocumentAnalysis,
+  TipoInfraccion,
+} from '../../lib/types';
 import { mapInspectorateToAnnotation } from '../../lib/mappers';
 import { calculateDisciplinaryStatus } from '../../lib/domain/disciplinaryStatus';
 import { useAuthStore } from '../../lib/stores/authStore';
@@ -20,8 +25,21 @@ import { withSupabaseReadRetry } from '../lib/supabaseRetry';
 
 const ANNOTATION_COLUMNS =
   'id,student_id,date_time,observation,severity,type,registered_by,created_at,created_by,pdf_file_path';
+const ANNUAL_ANNOTATION_TREND_COLUMNS = 'date_time,severity,type';
 const DOCUMENT_ANALYSIS_COLUMNS =
   'id,student_id,file_name,negativas,positivas,informativas,analyzed_at,tenant_id,created_at,status';
+
+interface AnnualAnnotationTrendRow {
+  date_time: string;
+  severity: TipoInfraccion;
+  type: Annotation['type'];
+}
+
+export interface AnnualAnnotationTrendRecord {
+  dateTime: string;
+  severity: TipoInfraccion;
+  type: Annotation['type'];
+}
 
 export interface UpdateAnnotationInput {
   id: string;
@@ -93,6 +111,41 @@ export async function updateAnnotation(input: UpdateAnnotationInput): Promise<An
   }
 
   return mapInspectorateToAnnotation(data);
+}
+
+export async function fetchAnnualAnnotationTrends(
+  schoolYear: number,
+): Promise<AnnualAnnotationTrendRecord[]> {
+  const tenantId = useAuthStore.getState().tenantId;
+  if (!tenantId) {
+    throw new Error('No se pudo identificar el establecimiento de la sesión actual.');
+  }
+  if (!Number.isInteger(schoolYear) || schoolYear < 2000) {
+    throw new Error('El año escolar solicitado no es válido.');
+  }
+
+  const rangeStart = `${schoolYear}-03-01T00:00:00.000Z`;
+  const rangeEnd = `${schoolYear + 1}-01-01T00:00:00.000Z`;
+  const { data, error } = await withSupabaseReadRetry(() =>
+    supabase
+      .from('inspectorate_records')
+      .select(ANNUAL_ANNOTATION_TREND_COLUMNS)
+      .eq('tenant_id', tenantId)
+      .gte('date_time', rangeStart)
+      .lt('date_time', rangeEnd)
+      .order('date_time', { ascending: true }),
+  );
+
+  if (error) {
+    console.error('Error fetching annual annotation trends:', error);
+    throw new Error(`No se pudieron cargar las tendencias de anotaciones: ${error.message}`);
+  }
+
+  return ((data ?? []) as AnnualAnnotationTrendRow[]).map((row) => ({
+    dateTime: row.date_time,
+    severity: row.severity,
+    type: row.type,
+  }));
 }
 
 interface RpcStudentSummary {

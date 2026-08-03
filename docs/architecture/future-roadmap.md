@@ -46,7 +46,7 @@
 
 - [ ] Dashboard analítico avanzado (gráficos, tendencias)
 
-> 🟡 **Parcial:** el dashboard ya muestra KPIs, distribución por gravedad, rankings y un primer panel de tendencias de expedientes con aperturas/cierres de los últimos seis meses, variación trimestral, porcentaje de alta gravedad y tasa de cierre. Falta una fuente agregada histórica desde PostgreSQL/RPC para escalar el análisis sin depender del listado de causas cargado en cliente.
+> 🟡 **Parcial:** el dashboard ya muestra KPIs, distribución por gravedad, rankings y un panel de tendencias del año escolar vigente (marzo-diciembre) con aperturas/cierres de expedientes y anotaciones agregadas por mes. La lectura de anotaciones usa una consulta tenant-scoped con columnas mínimas (`date_time`, `severity`, `type`) y excluye nombres, RUT, estudiante, docente y texto de observación. Falta mover estas tendencias a una RPC agregada cuando el volumen real justifique paginación o análisis multi-año.
 
 - [x] Exportación de reportes en Excel — `ReportsCenter` usa `write-excel-file`; `annotationsExcelExport.ts`; importación en `server/api/services/excelImport.ts`
 - [x] Notificaciones en tiempo real (Realtime Supabase, opt-in)

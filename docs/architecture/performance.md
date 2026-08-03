@@ -46,7 +46,7 @@ El build emite warnings de chunks circulares debido a la configuración de `manu
 
 - **Courses**: staleTime 30 min, cacheTime infinita
 - **Students**: staleTime 10 min, cacheTime infinita
-- **Dashboard KPIs y rankings**: staleTime 30 s; las escrituras siguen invalidando las cuatro consultas de forma selectiva.
+- **Dashboard KPIs, rankings y tendencias**: staleTime 30 s; las escrituras siguen invalidando las consultas de forma selectiva. El panel histórico usa el ciclo escolar marzo-diciembre y la consulta de anotaciones sólo lee `date_time`, `severity` y `type` con filtro por `tenant_id`.
 - **No refetch on window focus** (configuración global)
 
 ### Renderizado y telemetría

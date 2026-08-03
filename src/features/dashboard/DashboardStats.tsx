@@ -26,12 +26,13 @@ import SeverityBadge from '../../shared/SeverityBadge';
 import AnotacionesDashboardStats from '../anotaciones/AnotacionesDashboardStats';
 import EmptyState from '../../shared/EmptyState';
 import DashboardTrendsPanel from './DashboardTrendsPanel';
-import { fetchAnnotationStageCounts } from '../../shared/api/services/annotations.service';
-import { fetchCourseCartaRanking } from '../../shared/api/services/cartas.service';
 import {
+  fetchAnnualAnnotationTrends,
+  fetchAnnotationStageCounts,
   fetchStudentAnnotationRanking,
   fetchTeacherAnnotationRanking,
 } from '../../shared/api/services/annotations.service';
+import { fetchCourseCartaRanking } from '../../shared/api/services/cartas.service';
 import {
   fetchPublicDashboardKpis,
   type PublicDashboardKpis,
@@ -44,6 +45,7 @@ import {
 import OnboardingChecklist from '../onboarding/OnboardingChecklist';
 import type { SidebarView } from '../../widgets/sidebar/Sidebar';
 import { fetchOnboardingStatus } from '../../shared/api/services/institution.service';
+import { getDashboardSchoolYear } from './dashboardTrends';
 
 const DASHBOARD_STALE_TIME_MS = 30_000;
 
@@ -148,6 +150,7 @@ export default function DashboardStats({
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const tenantId = useAuthStore((state) => state.tenantId);
   const userId = useAuthStore((state) => state.user?.id ?? null);
+  const dashboardSchoolYear = useMemo(() => getDashboardSchoolYear(), []);
 
   const authenticatedCauseCounts = useMemo(() => {
     const active = causas.filter(
@@ -195,6 +198,13 @@ export default function DashboardStats({
   const studentAnnotationRankingQuery = useQuery({
     queryKey: ['student-annotation-ranking', tenantId],
     queryFn: fetchStudentAnnotationRanking,
+    enabled: isAuthenticated && Boolean(tenantId),
+    staleTime: DASHBOARD_STALE_TIME_MS,
+    refetchOnMount: true,
+  });
+  const annualAnnotationTrendsQuery = useQuery({
+    queryKey: ['annual-annotation-trends', tenantId, dashboardSchoolYear],
+    queryFn: () => fetchAnnualAnnotationTrends(dashboardSchoolYear),
     enabled: isAuthenticated && Boolean(tenantId),
     staleTime: DASHBOARD_STALE_TIME_MS,
     refetchOnMount: true,
@@ -341,7 +351,14 @@ export default function DashboardStats({
         </div>
       ) : null}
 
-      {isAuthenticated ? <DashboardTrendsPanel causas={causas} /> : null}
+      {isAuthenticated ? (
+        <DashboardTrendsPanel
+          causas={causas}
+          annotationTrends={annualAnnotationTrendsQuery.data ?? []}
+          annotationTrendLoading={annualAnnotationTrendsQuery.isLoading}
+          annotationTrendError={annualAnnotationTrendsQuery.error}
+        />
+      ) : null}
 
       <AnotacionesDashboardStats
         counts={annotations}
