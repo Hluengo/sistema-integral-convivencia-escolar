@@ -32,6 +32,7 @@ export default function StudentAnnotationRanking({
       error={error}
       items={toStudentCardItems(ranking, privacyMode)}
       barColorClass="bg-blue-500"
+      headerBadge="Top 12"
     />
   );
 }

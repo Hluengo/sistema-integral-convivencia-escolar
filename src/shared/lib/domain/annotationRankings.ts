@@ -74,7 +74,7 @@ export interface StudentAnnotationCount {
  */
 export function aggregateStudentAnnotationRanking(
   students: StudentAnnotationCount[],
-  limit = 5,
+  limit = 12,
 ): StudentAnnotationRankingItem[] {
   return students
     .filter((student) => student.annotations_count > 0)

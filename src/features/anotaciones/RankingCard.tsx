@@ -23,6 +23,7 @@ interface RankingCardProps {
   error?: Error | null;
   items: RankingCardItem[];
   barColorClass: string;
+  headerBadge?: string;
 }
 
 function BarSkeleton() {
@@ -48,21 +49,29 @@ export default function RankingCard({
   error,
   items,
   barColorClass,
+  headerBadge,
 }: RankingCardProps) {
   const maxCount = items.length > 0 ? Math.max(...items.map((item) => item.count)) : 0;
 
   return (
     <article className="card p-5" aria-labelledby={titleId}>
-      <div className="mb-4 flex items-center gap-2">
-        <div className="rounded-lg bg-neutral-100 p-1.5">
-          <Icon className="h-3.5 w-3.5 text-neutral-500" aria-hidden="true" />
+      <div className="mb-4 flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="rounded-lg bg-neutral-100 p-1.5">
+            <Icon className="h-3.5 w-3.5 text-neutral-500" aria-hidden="true" />
+          </div>
+          <h3
+            id={titleId}
+            className="font-semibold text-neutral-500 text-xs uppercase tracking-[0.06em]"
+          >
+            {title}
+          </h3>
         </div>
-        <h3
-          id={titleId}
-          className="font-semibold text-neutral-500 text-xs uppercase tracking-[0.06em]"
-        >
-          {title}
-        </h3>
+        {headerBadge ? (
+          <span className="shrink-0 rounded-full bg-neutral-100 px-2 py-1 font-semibold text-neutral-500 text-[10px] uppercase tracking-wide">
+            {headerBadge}
+          </span>
+        ) : null}
       </div>
 
       {isLoading ? (

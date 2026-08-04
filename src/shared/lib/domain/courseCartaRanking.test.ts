@@ -8,7 +8,7 @@ import { describe, it } from 'node:test';
 import { aggregateCourseCartaRanking } from './courseCartaRanking';
 
 describe('aggregateCourseCartaRanking', () => {
-  it('devuelve ranking de cursos por total de cartas, limitado a 5', () => {
+  it('devuelve ranking de cursos por total de cartas, limitado a 5 cuando se solicita', () => {
     const cartas = [
       { course_name: '7° Básico A', letter_type: 'Amonestación Escrita', status: 'Vigente' },
       { course_name: '7° Básico A', letter_type: 'Amonestación Escrita', status: 'Vigente' },
@@ -34,7 +34,7 @@ describe('aggregateCourseCartaRanking', () => {
       { course_name: '4° Medio E', letter_type: 'Ficha de Derivación', status: 'Vigente' },
     ];
 
-    const ranking = aggregateCourseCartaRanking(cartas);
+    const ranking = aggregateCourseCartaRanking(cartas, 5);
 
     assert.deepEqual(ranking, [
       {
@@ -73,6 +73,18 @@ describe('aggregateCourseCartaRanking', () => {
         total_count: 1,
       },
     ]);
+  });
+
+  it('devuelve hasta 12 cursos por defecto', () => {
+    const ranking = aggregateCourseCartaRanking(
+      Array.from({ length: 13 }, (_, index) => ({
+        course_name: `${index + 1}° Básico A`,
+        letter_type: 'Amonestación Escrita',
+        status: 'Vigente',
+      })),
+    );
+
+    assert.equal(ranking.length, 12);
   });
 
   it('ignora cartas anuladas', () => {

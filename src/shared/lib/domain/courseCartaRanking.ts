@@ -33,7 +33,7 @@ const LETTER_TYPE_MAP: Record<
  */
 export function aggregateCourseCartaRanking(
   cartas: CourseCartaCount[],
-  limit = 5,
+  limit = 12,
 ): CourseCartaRankingItem[] {
   const countsByCourse = new Map<string, CourseCartaRankingItem>();
 

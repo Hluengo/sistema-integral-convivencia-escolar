@@ -127,7 +127,7 @@ describe('aggregateStudentAnnotationRanking', () => {
       { id: '6', full_name: 'Franco', course_name: '4° Medio D', annotations_count: 17 },
     ];
 
-    const ranking = aggregateStudentAnnotationRanking(students);
+    const ranking = aggregateStudentAnnotationRanking(students, 5);
 
     assert.deepEqual(ranking, [
       {
@@ -161,6 +161,19 @@ describe('aggregateStudentAnnotationRanking', () => {
         negative_count: 18,
       },
     ]);
+  });
+
+  it('devuelve hasta 12 estudiantes por defecto', () => {
+    const ranking = aggregateStudentAnnotationRanking(
+      Array.from({ length: 13 }, (_, index) => ({
+        id: String(index + 1),
+        full_name: `Estudiante ${index + 1}`,
+        course_name: '7° Básico A',
+        annotations_count: index + 1,
+      })),
+    );
+
+    assert.equal(ranking.length, 12);
   });
 
   it('excluye estudiantes sin anotaciones', () => {

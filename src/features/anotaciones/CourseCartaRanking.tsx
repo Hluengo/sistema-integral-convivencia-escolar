@@ -72,6 +72,7 @@ export default function CourseCartaRanking({ ranking, isLoading, error }: Course
       error={error}
       items={toCardItems(ranking)}
       barColorClass="bg-gravisima-500"
+      headerBadge="Top 12"
     />
   );
 }
