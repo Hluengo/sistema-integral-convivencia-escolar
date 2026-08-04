@@ -8,8 +8,20 @@ import { toTeacherCardItems } from './annotationRankingCardItems';
 
 describe('toTeacherCardItems (ranking de docentes)', () => {
   const ranking = [
-    { teacher_name: 'JUANA PÉREZ GONZÁLEZ', negative_count: 3 },
-    { teacher_name: 'PEDRO SOTO', negative_count: 1 },
+    {
+      teacher_name: 'JUANA PÉREZ GONZÁLEZ',
+      negative_count: 3,
+      positive_count: 2,
+      informative_count: 1,
+      total_count: 6,
+    },
+    {
+      teacher_name: 'PEDRO SOTO',
+      negative_count: 1,
+      positive_count: 0,
+      informative_count: 2,
+      total_count: 3,
+    },
   ];
 
   it('conserva los nombres cuando privacyMode está desactivado', () => {
@@ -17,6 +29,7 @@ describe('toTeacherCardItems (ranking de docentes)', () => {
 
     assert.equal(items[0].label, 'JUANA PÉREZ GONZÁLEZ');
     assert.equal(items[0].count, 3);
+    assert.equal(Array.isArray(items[0].badges), true);
     assert.equal(items[1].label, 'PEDRO SOTO');
   });
 

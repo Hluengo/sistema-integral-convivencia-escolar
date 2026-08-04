@@ -240,6 +240,9 @@ export async function fetchTeacherAnnotationRanking(): Promise<TeacherAnnotation
     return (data as Array<Record<string, number | string>>).map((row) => ({
       teacher_name: String(row.teacher_name || 'Sin profesor'),
       negative_count: Number(row.negative_count) || 0,
+      positive_count: Number(row.positive_count) || 0,
+      informative_count: Number(row.informative_count) || 0,
+      total_count: Number(row.total_count) || 0,
     }));
   } catch (err) {
     const rpcError =

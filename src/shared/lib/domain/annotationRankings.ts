@@ -6,6 +6,9 @@
 export interface TeacherAnnotationRankingItem {
   teacher_name: string;
   negative_count: number;
+  positive_count: number;
+  informative_count: number;
+  total_count: number;
 }
 
 export interface StudentAnnotationRankingItem {
@@ -32,15 +35,20 @@ export function aggregateTeacherAnnotationRanking(
   const counts = new Map<string, TeacherAnnotationRankingItem>();
 
   for (const annotation of annotations) {
-    if (annotation.annotation_type !== 'Negativa') continue;
     const teacherName = annotation.teacher_name?.trim() || 'Sin profesor';
     const key = teacherName.toLowerCase();
     const existing = counts.get(key) ?? {
       teacher_name: teacherName,
       negative_count: 0,
+      positive_count: 0,
+      informative_count: 0,
+      total_count: 0,
     };
 
-    existing.negative_count += 1;
+    existing.total_count += 1;
+    if (annotation.annotation_type === 'Negativa') existing.negative_count += 1;
+    if (annotation.annotation_type === 'Positiva') existing.positive_count += 1;
+    if (annotation.annotation_type === 'Información') existing.informative_count += 1;
 
     counts.set(key, existing);
   }

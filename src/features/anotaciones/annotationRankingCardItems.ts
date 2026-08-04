@@ -6,6 +6,7 @@ import type {
   StudentAnnotationRankingItem,
   TeacherAnnotationRankingItem,
 } from '../../shared/lib/domain/annotationRankings';
+import { createElement } from 'react';
 import { maskName } from '../../shared/lib/anotacionesUtils';
 import type { RankingCardItem } from './RankingCard';
 
@@ -21,6 +22,28 @@ export function toTeacherCardItems(
     key: item.teacher_name,
     label: maskName(item.teacher_name, privacyMode),
     count: item.negative_count,
+    badges: [
+      createElement(
+        'span',
+        { key: 'negative', className: 'rounded bg-grave-50 px-1.5 py-0.5 text-grave-700' },
+        `Neg. ${item.negative_count}`,
+      ),
+      createElement(
+        'span',
+        { key: 'positive', className: 'rounded bg-leve-50 px-1.5 py-0.5 text-leve-700' },
+        `Pos. ${item.positive_count}`,
+      ),
+      createElement(
+        'span',
+        { key: 'informative', className: 'rounded bg-sky-50 px-1.5 py-0.5 text-sky-700' },
+        `Inf. ${item.informative_count}`,
+      ),
+      createElement(
+        'span',
+        { key: 'total', className: 'rounded bg-neutral-100 px-1.5 py-0.5 text-neutral-600' },
+        `Total ${item.total_count}`,
+      ),
+    ],
   }));
 }
 

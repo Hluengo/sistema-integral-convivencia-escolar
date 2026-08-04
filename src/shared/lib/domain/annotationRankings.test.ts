@@ -28,11 +28,41 @@ describe('aggregateTeacherAnnotationRanking', () => {
     const ranking = aggregateTeacherAnnotationRanking(annotations);
 
     assert.deepEqual(ranking, [
-      { teacher_name: 'C', negative_count: 3 },
-      { teacher_name: 'A', negative_count: 2 },
-      { teacher_name: 'B', negative_count: 1 },
-      { teacher_name: 'D', negative_count: 1 },
-      { teacher_name: 'E', negative_count: 1 },
+      {
+        teacher_name: 'C',
+        negative_count: 3,
+        positive_count: 0,
+        informative_count: 0,
+        total_count: 3,
+      },
+      {
+        teacher_name: 'A',
+        negative_count: 2,
+        positive_count: 0,
+        informative_count: 0,
+        total_count: 2,
+      },
+      {
+        teacher_name: 'B',
+        negative_count: 1,
+        positive_count: 1,
+        informative_count: 0,
+        total_count: 2,
+      },
+      {
+        teacher_name: 'D',
+        negative_count: 1,
+        positive_count: 0,
+        informative_count: 0,
+        total_count: 1,
+      },
+      {
+        teacher_name: 'E',
+        negative_count: 1,
+        positive_count: 0,
+        informative_count: 0,
+        total_count: 1,
+      },
     ]);
   });
 
@@ -53,7 +83,15 @@ describe('aggregateTeacherAnnotationRanking', () => {
       { teacher_name: 'A', annotation_type: 'Información' },
     ]);
 
-    assert.deepEqual(ranking, [{ teacher_name: 'A', negative_count: 2 }]);
+    assert.deepEqual(ranking, [
+      {
+        teacher_name: 'A',
+        negative_count: 2,
+        positive_count: 1,
+        informative_count: 1,
+        total_count: 4,
+      },
+    ]);
   });
 
   it('agrupa docentes sin nombre como Sin profesor', () => {
@@ -62,7 +100,15 @@ describe('aggregateTeacherAnnotationRanking', () => {
       { teacher_name: '  ', annotation_type: 'Negativa' },
     ]);
 
-    assert.deepEqual(ranking, [{ teacher_name: 'Sin profesor', negative_count: 2 }]);
+    assert.deepEqual(ranking, [
+      {
+        teacher_name: 'Sin profesor',
+        negative_count: 2,
+        positive_count: 0,
+        informative_count: 0,
+        total_count: 2,
+      },
+    ]);
   });
 
   it('devuelve arreglo vacío cuando no hay anotaciones', () => {
