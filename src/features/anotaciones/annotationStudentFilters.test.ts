@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   getAnnotationRange,
+  matchesCartaStatusFilter,
   matchesAnnotationFilter,
   matchesCourseFilter,
   WITHOUT_COURSE_FILTER,
@@ -76,5 +77,14 @@ describe('annotationStudentFilters', () => {
   it('permite identificar estudiantes sin curso asignado', () => {
     assert.equal(matchesCourseFilter({ course_id: '' }, WITHOUT_COURSE_FILTER), true);
     assert.equal(matchesCourseFilter({ course_id: 'curso-3a' }, WITHOUT_COURSE_FILTER), false);
+  });
+
+  it('filtra estudiantes por estado de carta', () => {
+    const student = { cartaStatuses: ['Procesada'] };
+
+    assert.equal(matchesCartaStatusFilter(student, ''), true);
+    assert.equal(matchesCartaStatusFilter(student, 'Procesada'), true);
+    assert.equal(matchesCartaStatusFilter(student, 'Pendiente'), false);
+    assert.equal(matchesCartaStatusFilter({ cartaStatuses: undefined }, 'Archivada'), false);
   });
 });

@@ -17,6 +17,10 @@ interface CourseFilterStudent {
   course_id?: string | null;
 }
 
+interface CartaStatusFilterStudent {
+  cartaStatuses?: string[] | null;
+}
+
 export const WITHOUT_COURSE_FILTER = '__without_course__';
 
 export function getAnnotationRange(filter: string): [number, number] | null {
@@ -59,4 +63,12 @@ export function matchesCourseFilter(
   if (!selectedCourseId) return true;
   if (selectedCourseId === WITHOUT_COURSE_FILTER) return !student.course_id;
   return student.course_id === selectedCourseId;
+}
+
+export function matchesCartaStatusFilter(
+  student: CartaStatusFilterStudent,
+  selectedStatus: string,
+): boolean {
+  if (!selectedStatus) return true;
+  return student.cartaStatuses?.includes(selectedStatus) ?? false;
 }

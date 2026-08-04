@@ -7,6 +7,7 @@ import {
   ChevronDown,
   Download,
   FileSpreadsheet,
+  FileCheck2,
   GraduationCap,
   Pencil,
   Search,
@@ -26,6 +27,7 @@ import {
 } from '../../shared/lib/domain/disciplinaryStage';
 import {
   matchesAnnotationFilter,
+  matchesCartaStatusFilter,
   matchesCourseFilter,
   WITHOUT_COURSE_FILTER,
 } from './annotationStudentFilters';
@@ -99,11 +101,16 @@ function filterStudents(
   activeFilter: string,
   searchQuery: string,
   selectedCourseId: string,
+  selectedCartaStatus: string,
+  cartaStatuses: Record<string, string[]>,
 ) {
   let filtered = students;
 
   filtered = filtered.filter((student) => matchesAnnotationFilter(student, activeFilter));
   filtered = filtered.filter((student) => matchesCourseFilter(student, selectedCourseId));
+  filtered = filtered.filter((student) =>
+    matchesCartaStatusFilter({ cartaStatuses: cartaStatuses[student.id] }, selectedCartaStatus),
+  );
 
   if (searchQuery.trim()) {
     const q = searchQuery.trim().toLowerCase();
@@ -131,6 +138,7 @@ export default memo(function AnotacionesStudentTable({
   cartaStatuses = {},
 }: AnotacionesStudentTableProps) {
   const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [selectedCartaStatus, setSelectedCartaStatus] = useState('');
   const courseOptions = useMemo(() => {
     const courses = new Map<string, string>();
     for (const student of students) {
@@ -147,7 +155,14 @@ export default memo(function AnotacionesStudentTable({
         }),
       );
   }, [students]);
-  const filteredStudents = filterStudents(students, activeFilter, searchQuery, selectedCourseId);
+  const filteredStudents = filterStudents(
+    students,
+    activeFilter,
+    searchQuery,
+    selectedCourseId,
+    selectedCartaStatus,
+    cartaStatuses,
+  );
   const exportMenuRef = useRef<HTMLDetailsElement>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -211,6 +226,28 @@ export default memo(function AnotacionesStudentTable({
                 {course.label}
               </option>
             ))}
+          </select>
+          <ChevronDown
+            className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-neutral-400"
+            aria-hidden="true"
+          />
+        </div>
+        <div className="relative sm:w-44">
+          <FileCheck2
+            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400"
+            aria-hidden="true"
+          />
+          <select
+            id="annotation-carta-status-filter"
+            value={selectedCartaStatus}
+            onChange={(event) => setSelectedCartaStatus(event.target.value)}
+            aria-label="Filtrar estudiantes por estado de carta"
+            className="w-full appearance-none rounded-xl border border-neutral-200/60 bg-neutral-100 py-2 pr-9 pl-10 font-medium text-neutral-800 text-sm transition-colors hover:border-neutral-300 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+          >
+            <option value="">Todos los estados</option>
+            <option value="Procesada">Procesada</option>
+            <option value="Pendiente">Pendiente</option>
+            <option value="Archivada">Archivada</option>
           </select>
           <ChevronDown
             className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-neutral-400"
