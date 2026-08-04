@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { forwardRef } from 'react';
+import { forwardRef, useCallback, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CheckCircle2, Printer } from 'lucide-react';
 import type { Annotation } from '../../../shared/lib/types';
@@ -61,8 +61,16 @@ const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(functio
     queryKey: ['institution-settings', tenantId, 'document-preview'],
     queryFn: fetchInstitutionSettings,
     enabled: Boolean(tenantId),
-    staleTime: 300_000,
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
+  const { refetch: refetchInstitution } = institutionQuery;
+  const logoRetryRef = useRef(false);
+  const handleLogoError = useCallback(() => {
+    if (logoRetryRef.current) return;
+    logoRetryRef.current = true;
+    void refetchInstitution();
+  }, [refetchInstitution]);
   return (
     <div className="space-y-4">
       <div className="mx-auto w-full max-w-[216mm] rounded-xl border border-neutral-200 bg-white p-4 shadow-xs">
@@ -121,6 +129,7 @@ const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(functio
           letterContent={letterContent}
           logoSrc={institutionQuery.data?.logo_url}
           institutionName={institutionQuery.data?.official_name}
+          onLogoError={handleLogoError}
         />
       </LetterPreviewViewport>
     </div>

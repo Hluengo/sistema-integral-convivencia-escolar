@@ -26,6 +26,7 @@ interface LetterA4DocumentProps {
   className?: string;
   logoSrc?: string | null;
   institutionName?: string | null;
+  onLogoError?: () => void;
 }
 
 const LetterA4Document = forwardRef<HTMLDivElement, LetterA4DocumentProps>(
@@ -47,6 +48,7 @@ const LetterA4Document = forwardRef<HTMLDivElement, LetterA4DocumentProps>(
       className = '',
       logoSrc,
       institutionName,
+      onLogoError,
     },
     ref,
   ) {
@@ -71,6 +73,7 @@ const LetterA4Document = forwardRef<HTMLDivElement, LetterA4DocumentProps>(
           year="2026"
           logoSrc={logoSrc ?? undefined}
           institutionName={institutionName ?? undefined}
+          onLogoError={onLogoError}
         />
         <LetterTitle>{title}</LetterTitle>
 

@@ -35,13 +35,16 @@ export function LetterInstitutionalHeader({
   year = '2026',
   logoSrc,
   institutionName,
+  onLogoError,
 }: {
   year?: string;
   logoSrc?: string;
   institutionName?: string;
+  onLogoError?: () => void;
 }) {
   return (
     <div className="letter-header">
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
       <img
         src={
           logoSrc ||
@@ -49,6 +52,7 @@ export function LetterInstitutionalHeader({
         }
         alt="Logo Colegio"
         className="letter-header-logo"
+        onError={onLogoError}
       />
       <div className="letter-header-text">
         <span className="letter-header-institution">
