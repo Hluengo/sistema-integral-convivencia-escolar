@@ -11,7 +11,6 @@ import {
   CalendarClock,
   ClipboardList,
   Gauge,
-  ShieldAlert,
   TrendingUp,
 } from 'lucide-react';
 import type { Causa } from '../../shared/lib/types';
@@ -21,7 +20,7 @@ import {
   type DashboardTrendPoint,
 } from './dashboardTrends';
 
-type TrendMode = 'cases' | 'annotations' | 'risk';
+type TrendMode = 'cases' | 'annotations';
 
 interface DashboardTrendsPanelProps {
   causas: Causa[];
@@ -43,31 +42,18 @@ const TREND_MODE_OPTIONS: Array<{
 }> = [
   { id: 'cases', label: 'Expedientes', icon: Activity },
   { id: 'annotations', label: 'Anotaciones', icon: ClipboardList },
-  { id: 'risk', label: 'Riesgo', icon: ShieldAlert },
 ];
 
 const MODE_HELPER_TEXT: Record<TrendMode, string> = {
   cases: 'Aperturas, cierres y brecha mensual.',
-  annotations: 'Total de anotaciones, negativas y alta gravedad.',
-  risk: 'Concentración de señales críticas del ciclo.',
+  annotations: 'Comparación mensual entre anotaciones positivas y negativas.',
 };
 
 function getSeriesForPoint(point: DashboardTrendPoint, mode: TrendMode): TrendSeriesItem[] {
   if (mode === 'annotations') {
     return [
       { label: 'Total', value: point.annotations, className: 'bg-neutral-400' },
-      { label: 'Negativas', value: point.negativeAnnotations, className: 'bg-grave-500' },
-      {
-        label: 'Alta gravedad',
-        value: point.highSeverityAnnotations,
-        className: 'bg-gravisima-500',
-      },
-    ];
-  }
-
-  if (mode === 'risk') {
-    return [
-      { label: 'Casos graves', value: point.highSeverity, className: 'bg-muygrave-500' },
+      { label: 'Positivas', value: point.positiveAnnotations, className: 'bg-leve-500' },
       { label: 'Negativas', value: point.negativeAnnotations, className: 'bg-grave-500' },
       {
         label: 'Alta gravedad',
@@ -94,6 +80,7 @@ function getModeTotals(points: DashboardTrendPoint[], mode: TrendMode): TrendSer
         netLoad: acc.netLoad + point.netLoad,
         highSeverity: acc.highSeverity + point.highSeverity,
         annotations: acc.annotations + point.annotations,
+        positiveAnnotations: acc.positiveAnnotations + point.positiveAnnotations,
         negativeAnnotations: acc.negativeAnnotations + point.negativeAnnotations,
         highSeverityAnnotations: acc.highSeverityAnnotations + point.highSeverityAnnotations,
       }),
@@ -106,8 +93,10 @@ function getModeTotals(points: DashboardTrendPoint[], mode: TrendMode): TrendSer
         closureRate: 0,
         highSeverity: 0,
         annotations: 0,
+        positiveAnnotations: 0,
         negativeAnnotations: 0,
         highSeverityAnnotations: 0,
+        positiveAnnotationShare: 0,
         negativeAnnotationShare: 0,
         highSeverityAnnotationShare: 0,
         isObserved: true,
@@ -214,16 +203,16 @@ function MonthlySummaryRows({ points, mode }: { points: DashboardTrendPoint[]; m
           mode === 'cases'
             ? `${point.opened} apert. · ${point.closed} cierres`
             : mode === 'annotations'
-              ? `${point.annotations} total · ${point.negativeAnnotations} neg.`
-              : `${point.negativeAnnotations + point.highSeverityAnnotations + point.highSeverity} señales`;
+              ? `${point.annotations} total · ${point.positiveAnnotations} pos. · ${point.negativeAnnotations} neg.`
+              : '';
         const secondary =
           mode === 'cases'
             ? point.netLoad > 0
               ? `Brecha ${point.netLoad}`
               : 'Sin brecha'
             : mode === 'annotations'
-              ? `${point.negativeAnnotationShare}% negativas`
-              : `${point.highSeverityAnnotations} alta gravedad`;
+              ? `${point.positiveAnnotationShare}% positivas · ${point.negativeAnnotationShare}% negativas`
+              : '';
 
         return (
           <div
@@ -320,17 +309,21 @@ export default function DashboardTrendsPanel({
         />
         <SummaryMetric
           icon={ClipboardList}
-          label="Negativas"
-          value={annotationTrendLoading ? '...' : summary.negativeAnnotationTotal}
-          helper={`${summary.negativeAnnotationShare}% de anotaciones`}
-          tone="grave"
+          label="Anotaciones"
+          value={annotationTrendLoading ? '...' : summary.annotationTotal}
+          helper={`${summary.positiveAnnotationShare}% positivas · ${summary.negativeAnnotationShare}% negativas`}
+          tone="neutral"
         />
         <SummaryMetric
-          icon={ShieldAlert}
-          label="Alta gravedad"
-          value={annotationTrendLoading ? '...' : summary.highSeverityAnnotationTotal}
-          helper={`${summary.highSeverityAnnotationShare}% de anotaciones`}
-          tone="neutral"
+          icon={ClipboardList}
+          label="Distribución"
+          value={
+            annotationTrendLoading
+              ? '...'
+              : `${summary.positiveAnnotationShare}/${summary.negativeAnnotationShare}%`
+          }
+          helper="positivas / negativas"
+          tone="leve"
         />
       </div>
 
@@ -339,10 +332,6 @@ export default function DashboardTrendsPanel({
           <div className="min-w-0">
             <p className="font-semibold text-brand-900 text-sm">{summary.primaryInsight}</p>
             <p className="mt-1 text-brand-800 text-xs">{summary.secondaryInsight}</p>
-          </div>
-          <div className="shrink-0 text-brand-800 text-xs">
-            Mes de mayor riesgo:{' '}
-            <span className="font-semibold capitalize">{summary.riskMonthLabel}</span>
           </div>
         </div>
       </div>
@@ -434,9 +423,11 @@ export default function DashboardTrendsPanel({
             <th>Tasa de cierre</th>
             <th>Alta gravedad</th>
             <th>Anotaciones</th>
+            <th>Anotaciones positivas</th>
             <th>Anotaciones negativas</th>
             <th>Anotaciones de alta gravedad</th>
             <th>Porcentaje negativas</th>
+            <th>Porcentaje positivas</th>
           </tr>
         </thead>
         <tbody>
@@ -450,9 +441,11 @@ export default function DashboardTrendsPanel({
               <td>{point.closureRate}%</td>
               <td>{point.highSeverity}</td>
               <td>{point.annotations}</td>
+              <td>{point.positiveAnnotations}</td>
               <td>{point.negativeAnnotations}</td>
               <td>{point.highSeverityAnnotations}</td>
               <td>{point.negativeAnnotationShare}%</td>
+              <td>{point.positiveAnnotationShare}%</td>
             </tr>
           ))}
         </tbody>

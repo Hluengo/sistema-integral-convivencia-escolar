@@ -169,6 +169,9 @@ test('buildDashboardTrendSummary calcula brecha, cierre y porcentajes por mes ob
   assert.equal(summary.closedTotal, 1);
   assert.equal(summary.netLoadTotal, 1);
   assert.equal(summary.negativeAnnotationShare, 67);
+  assert.equal(summary.positiveAnnotationShare, 33);
+  assert.equal(march.positiveAnnotations, 1);
+  assert.equal(march.positiveAnnotationShare, 33);
   assert.equal(summary.riskMonthLabel, 'mar');
 });
 

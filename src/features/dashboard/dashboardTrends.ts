@@ -31,8 +31,10 @@ export interface DashboardTrendPoint {
   closureRate: number;
   highSeverity: number;
   annotations: number;
+  positiveAnnotations: number;
   negativeAnnotations: number;
   highSeverityAnnotations: number;
+  positiveAnnotationShare: number;
   negativeAnnotationShare: number;
   highSeverityAnnotationShare: number;
   isObserved: boolean;
@@ -55,9 +57,11 @@ export interface DashboardTrendSummary {
   busiestMonthLabel: string;
   busiestMonthTotal: number;
   annotationTotal: number;
+  positiveAnnotationTotal: number;
   negativeAnnotationTotal: number;
   highSeverityAnnotationTotal: number;
   negativeAnnotationShare: number;
+  positiveAnnotationShare: number;
   highSeverityAnnotationShare: number;
   busiestAnnotationMonthLabel: string;
   busiestAnnotationMonthTotal: number;
@@ -139,8 +143,10 @@ export function buildDashboardTrendSummary(
       closureRate: 0,
       highSeverity: 0,
       annotations: 0,
+      positiveAnnotations: 0,
       negativeAnnotations: 0,
       highSeverityAnnotations: 0,
+      positiveAnnotationShare: 0,
       negativeAnnotationShare: 0,
       highSeverityAnnotationShare: 0,
       isObserved: date <= startOfUtcMonth(reference),
@@ -179,6 +185,8 @@ export function buildDashboardTrendSummary(
     point.annotations += 1;
     if (annotation.type === NEGATIVE_ANNOTATION_TYPE) {
       point.negativeAnnotations += 1;
+    } else if (annotation.type === 'Positiva') {
+      point.positiveAnnotations += 1;
     }
     if (HIGH_SEVERITY_TYPES.has(annotation.severity)) {
       point.highSeverityAnnotations += 1;
@@ -189,6 +197,7 @@ export function buildDashboardTrendSummary(
     point.netLoad = point.opened - point.closed;
     point.closureRate = percentage(point.closed, point.opened);
     point.negativeAnnotationShare = percentage(point.negativeAnnotations, point.annotations);
+    point.positiveAnnotationShare = percentage(point.positiveAnnotations, point.annotations);
     point.highSeverityAnnotationShare = percentage(
       point.highSeverityAnnotations,
       point.annotations,
@@ -207,6 +216,10 @@ export function buildDashboardTrendSummary(
   const annotationTotal = observedPoints.reduce((sum, point) => sum + point.annotations, 0);
   const negativeAnnotationTotal = observedPoints.reduce(
     (sum, point) => sum + point.negativeAnnotations,
+    0,
+  );
+  const positiveAnnotationTotal = observedPoints.reduce(
+    (sum, point) => sum + point.positiveAnnotations,
     0,
   );
   const highSeverityAnnotationTotal = observedPoints.reduce(
@@ -257,9 +270,11 @@ export function buildDashboardTrendSummary(
     busiestMonthLabel: busiestMonth.label,
     busiestMonthTotal: busiestMonth.opened,
     annotationTotal,
+    positiveAnnotationTotal,
     negativeAnnotationTotal,
     highSeverityAnnotationTotal,
     negativeAnnotationShare: percentage(negativeAnnotationTotal, annotationTotal),
+    positiveAnnotationShare: percentage(positiveAnnotationTotal, annotationTotal),
     highSeverityAnnotationShare: percentage(highSeverityAnnotationTotal, annotationTotal),
     busiestAnnotationMonthLabel: busiestAnnotationMonth.label,
     busiestAnnotationMonthTotal: busiestAnnotationMonth.annotations,
