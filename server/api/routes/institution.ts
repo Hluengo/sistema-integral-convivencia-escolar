@@ -238,6 +238,18 @@ async function loadSettings(
   };
 }
 
+async function loadDocumentSettings(
+  client: SupabaseClient,
+  tenantId: string,
+): Promise<Pick<InstitutionSettings, 'tenant_id' | 'official_name' | 'logo_url'>> {
+  const settings = await loadSettings(client, tenantId);
+  return {
+    tenant_id: settings.tenant_id,
+    official_name: settings.official_name,
+    logo_url: settings.logo_url ?? null,
+  };
+}
+
 async function audit(
   client: SupabaseClient,
   tenantId: string,
@@ -440,7 +452,18 @@ async function sendError(res: Response, error: unknown): Promise<void> {
   res.status(message.includes('Solo el superadministrador') ? 403 : 500).json({ error: message });
 }
 
-// Administración del propio tenant.
+// Lectura mínima para documentos generados por usuarios autenticados del tenant.
+router.get('/institution/settings', requireAuth, requireTenant, async (req, res) => {
+  try {
+    const request = getRequest(req);
+    const client = getAdminClient();
+    const tenantId = await getTenantFromRequest(client, request);
+    res.json(await loadDocumentSettings(client, tenantId));
+  } catch (error) {
+    await sendError(res, error);
+  }
+});
+
 router.use('/admin/institution', requireAuth, requireTenant, requireRole(ADMIN_ROLES));
 router.use('/admin/rules', requireAuth, requireTenant, requireRole(ADMIN_ROLES));
 router.get('/onboarding/status', requireAuth, requireTenant, async (req, res) => {

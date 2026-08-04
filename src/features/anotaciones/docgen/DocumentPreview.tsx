@@ -8,7 +8,7 @@ import type { DocType, LetterContent } from './DocumentPreview/docTypes';
 import LetterA4Document from './LetterA4Document';
 import LetterPreviewViewport from './LetterPreviewViewport';
 import Button from '@/src/shared/ui/Button';
-import { fetchInstitutionSettings } from '@/src/shared/api/services/institution.service';
+import { fetchInstitutionDocumentSettings } from '@/src/shared/api/services/institution.service';
 import { useAuthStore } from '@/src/shared/lib/stores/authStore';
 
 interface DocumentPreviewProps {
@@ -59,7 +59,7 @@ const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(functio
   const tenantId = useAuthStore((state) => state.tenantId);
   const institutionQuery = useQuery({
     queryKey: ['institution-settings', tenantId, 'document-preview'],
-    queryFn: fetchInstitutionSettings,
+    queryFn: fetchInstitutionDocumentSettings,
     enabled: Boolean(tenantId),
     staleTime: 0,
     refetchOnMount: 'always',

@@ -44,6 +44,11 @@ describe('configuración institucional', () => {
     const route = readFileSync(resolve(projectRoot, 'server/api/routes/institution.ts'), 'utf8');
     assert.match(
       route,
+      /router\.get\('\/institution\/settings', requireAuth, requireTenant, async/,
+    );
+    assert.match(route, /loadDocumentSettings\(client, tenantId\)/);
+    assert.match(
+      route,
       /router\.use\('\/admin\/institution', requireAuth, requireTenant, requireRole\(ADMIN_ROLES\)\)/,
     );
     assert.match(

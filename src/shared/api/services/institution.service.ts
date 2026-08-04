@@ -20,6 +20,12 @@ export interface InstitutionSettings {
   updated_by: string | null;
 }
 
+export interface InstitutionDocumentSettings {
+  tenant_id: string;
+  official_name: string;
+  logo_url: string | null;
+}
+
 export interface InstitutionRuleVersion {
   id: string;
   tenant_id: string;
@@ -77,6 +83,9 @@ export const fetchOnboardingStatus = () => request<OnboardingStatus>('/api/onboa
 
 export const fetchInstitutionSettings = () =>
   request<InstitutionSettings>('/api/admin/institution');
+
+export const fetchInstitutionDocumentSettings = () =>
+  request<InstitutionDocumentSettings>('/api/institution/settings');
 
 export const updateInstitutionSettings = (values: Partial<InstitutionSettings>) =>
   request<InstitutionSettings>('/api/admin/institution', {
