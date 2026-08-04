@@ -69,20 +69,55 @@ Este proyecto maneja **datos de estudiantes (NNA)**, por lo que la seguridad es 
 
 ## ✨ Características
 
-| Área                    | Funcionalidad                                                                                                                             |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| 📋 **Expedientes**      | Gestión de casos disciplinarios con **39 estados** organizados en 5 fases: Recepción, Investigación, Resolución, Apelación y Seguimiento. |
-| 📝 **Anotaciones RICE** | Clasificación de severidad, filtros, ficha individual, adjuntos PDF y análisis automatizado.                                              |
-| 📄 **Análisis de PDFs** | Extracción de texto, detección de anotaciones, coincidencia con estudiantes y sugerencia de etapa/carta.                                  |
-| ✅ **Debido proceso**   | Bitácora y checklist legal para garantizar el cumplimiento normativo en cada etapa.                                                       |
-| ✉️ **Cartas**           | Amonestación, compromiso y derivación con editor, impresión, trazabilidad y registro de cartas físicas.                                   |
-| 🤖 **Asistencia IA**    | OpenRouter (texto) y Gemini (informes/borradores) usando plantillas y antecedentes del expediente.                                        |
-| 🏢 **Multi-tenant**     | Aislamiento de datos por establecimiento mediante `tenant_id` + RLS.                                                                      |
-| 👥 **Roles**            | `admin`, `direccion`, `convivencia`, `inspectoria`, `profesor_jefe`, `teacher`, `inspector`, `staff` y `superadmin`.                      |
-| 📊 **Reportes**         | Dashboard ejecutivo, centro de reportes, exportación Excel y métricas auditables.                                                         |
-| 📚 **Administración**   | Miembros, invitaciones, cursos, estudiantes, importación Excel y configuración institucional.                                             |
-| 🌐 **Multi-colegio**    | Plataforma para superadministradores con selección explícita del establecimiento.                                                         |
-| 📱 **Accesible**        | Interfaz responsive, modo privacidad y navegación accesible en español chileno.                                                           |
+| Área                    | Funcionalidad                                                                                                                                |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| 📋 **Expedientes**      | Gestión de casos disciplinarios con **39 estados** organizados en 5 fases: Recepción, Investigación, Resolución, Apelación y Seguimiento.    |
+| 📝 **Anotaciones RICE** | Clasificación de severidad, filtros, ficha individual, adjuntos PDF y análisis automatizado.                                                 |
+| 📄 **Análisis de PDFs** | Extracción de texto, detección de anotaciones, coincidencia con estudiantes y sugerencia de etapa/carta.                                     |
+| ✅ **Debido proceso**   | Bitácora y checklist legal para garantizar el cumplimiento normativo en cada etapa.                                                          |
+| ✉️ **Cartas**           | Amonestación, compromiso y derivación con editor, impresión, trazabilidad, registro físico y estados `Pendiente`, `Procesada` y `Archivada`. |
+| 🤖 **Asistencia IA**    | OpenRouter (texto) y Gemini (informes/borradores) usando plantillas y antecedentes del expediente.                                           |
+| 🏢 **Multi-tenant**     | Aislamiento de datos por establecimiento mediante `tenant_id` + RLS.                                                                         |
+| 👥 **Roles**            | `admin`, `direccion`, `convivencia`, `inspectoria`, `profesor_jefe`, `teacher`, `inspector`, `staff` y `superadmin`.                         |
+| 📊 **Reportes**         | Dashboard ejecutivo, centro de reportes, exportación Excel, métricas auditables y tendencias del ciclo escolar marzo-diciembre.              |
+| 📚 **Administración**   | Miembros, invitaciones, cursos, estudiantes, importación Excel, configuración institucional y logo para documentos.                          |
+| 🌐 **Multi-colegio**    | Plataforma para superadministradores con selección explícita del establecimiento.                                                            |
+| 📱 **Accesible**        | Interfaz responsive, modo privacidad y navegación accesible en español chileno.                                                              |
+
+---
+
+## ✅ Cambios implementados recientemente
+
+### Cartas y seguimiento
+
+- Se incorporó el estado **Archivada** para cartas cuya entrega fue procesada y firmada por el apoderado.
+- El archivado se ejecuta desde la línea de la carta y conserva la trazabilidad del proceso.
+- La vista de cartas incluye filtros por curso y estado (`Todos`, `Pendiente`, `Procesada`, `Archivada`).
+- Se ajustó la búsqueda para dejar espacio suficiente al selector de estado y mostrar completo el texto del filtro.
+- Se mantiene el registro de cartas físicas sin convertirlo en una anotación digital adicional.
+
+### Dashboard y análisis
+
+- Las tendencias históricas respetan el ciclo escolar **marzo-diciembre**, con renovación anual.
+- La vista mensual muestra la proporción entre anotaciones positivas y negativas.
+- El panorama de docentes prioriza el conocimiento del total de anotaciones y desglosa negativas, positivas, informativas y total; el ranking se ordena por negativas.
+- Los rankings de cursos con más cartas y estudiantes con más anotaciones negativas muestran hasta 12 resultados.
+- Se retiró la vista de riesgo del dashboard para concentrar la lectura en anotaciones y acciones concretas.
+
+### Documentos, PDFs y configuración institucional
+
+- Los PDFs de procesos disciplinarios se almacenan en buckets privados con permisos por tenant y rol.
+- Las cuentas operativas, incluyendo `staff`, pueden subir y revisar PDFs cuando su rol lo permite.
+- Los logos institucionales se cargan desde administración y se sirven mediante URLs firmadas de corta duración.
+- La generación de cartas usa una lectura institucional limitada al nombre oficial y logo, sin exigir privilegios administrativos.
+- Se corrigió el acceso del generador de cartas para usuarios `staff`, evitando el `403` del endpoint administrativo.
+
+### Experiencia de uso y calidad
+
+- Se incorporaron loaders animados por vista y para el arranque de la aplicación, con frases contextuales, barra indeterminada y soporte para `prefers-reduced-motion`.
+- Se mejoraron contraste, accesibilidad y estados de carga del shell y las vistas lazy.
+- Se agregaron índices compuestos para los patrones frecuentes de lectura por tenant, estudiante, fecha, estado y ordenamiento.
+- La suite actual valida 385 pruebas en 78 suites y la auditoría de dependencias no reporta vulnerabilidades.
 
 ---
 
@@ -181,7 +216,7 @@ Para más detalles, revisa:
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ⚙️ **CI**         | [![CI](https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/ci.yml?branch=master&label=CI)](https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/ci.yml)                                 |
 | 🚦 **Lighthouse** | [![Lighthouse](https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/lighthouse.yml?branch=master&label=Lighthouse)](https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/lighthouse.yml) |
-| ✅ **Tests**      | 370 tests · 78 suites                                                                                                                                                                                                                                               |
+| ✅ **Tests**      | 385 tests · 78 suites                                                                                                                                                                                                                                               |
 | 📈 **Cobertura**  | 85.66% líneas (`npm run test:coverage`, excluye el bundle generado `api/index.js`)                                                                                                                                                                                  |
 | 🔐 **Seguridad**  | `npm audit` 0 vulnerabilidades                                                                                                                                                                                                                                      |
 
@@ -343,6 +378,8 @@ supabase db push
 El seed local vive en [`supabase/seed.sql`](supabase/seed.sql) y se ejecuta automáticamente durante `supabase db reset`. Incluye usuarios demo, cursos, estudiantes, anotaciones, expedientes, cartas, reportes, notificaciones y configuración institucional.
 
 La migración `20260803003719_add_query_pattern_indexes.sql` agrega índices compuestos para los patrones de lectura frecuentes por tenant, estudiante, fecha y ordenamiento.
+
+El bucket privado `institution-assets` contiene logos y documentos institucionales. El servidor genera URLs firmadas con expiración; nunca se exponen URLs públicas ni credenciales de servicio al navegador. Las rutas de lectura institucional para documentos validan autenticación y `tenant_id`, mientras que la edición y carga de configuración permanecen restringidas a roles administrativos.
 
 Más detalles en [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
