@@ -196,7 +196,7 @@ export default memo(function AnotacionesStudentTable({
     <div className="space-y-4">
       {/* Search */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1">
+        <div className="relative w-full sm:max-w-md sm:flex-1">
           <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400" />
           <input
             type="text"
