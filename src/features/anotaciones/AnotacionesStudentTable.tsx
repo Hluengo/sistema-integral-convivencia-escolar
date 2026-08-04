@@ -232,7 +232,7 @@ export default memo(function AnotacionesStudentTable({
             aria-hidden="true"
           />
         </div>
-        <div className="relative sm:w-44">
+        <div className="relative sm:w-52">
           <FileCheck2
             className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400"
             aria-hidden="true"
