@@ -1984,29 +1984,66 @@ var TEXT_IMPROVEMENT_AI_MODEL =
   process.env.TEXT_AI_MODEL ||
   'google/gemma-4-31b-it:free';
 var TEXT_FALLBACK_MODELS = ['deepseek/deepseek-v4-flash:free', 'meta-llama/llama-3.1-8b-instruct'];
+var LEGAL_DRAFT_OPENROUTER_MODELS = [
+  process.env.LEGAL_DRAFT_OPENROUTER_MODEL ||
+    process.env.TEXT_IMPROVEMENT_AI_MODEL ||
+    'google/gemma-4-31b-it:free',
+  'deepseek/deepseek-v4-flash:free',
+  'meta-llama/llama-3.1-8b-instruct',
+];
 function getApiKey() {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) throw new Error('OPENROUTER_API_KEY no configurada');
   return key;
 }
-async function callOpenRouter(messages, systemInstruction, model = AI_MODEL) {
+async function callOpenRouter(messages, systemInstruction, model = AI_MODEL, options = {}) {
   const body = {
     model,
-    max_tokens: 2e3,
-    temperature: 0,
+    max_tokens: options.maxTokens ?? 2e3,
+    temperature: options.temperature ?? 0,
     messages: systemInstruction
       ? [{ role: 'system', content: systemInstruction }, ...messages]
       : messages,
   };
-  const res = await httpsPost('openrouter.ai', '/api/v1/chat/completions', body, {
-    Authorization: `Bearer ${getApiKey()}`,
-    'HTTP-Referer': 'http://localhost:3001',
-    'X-Title': 'Sistema Integral Convivencia Escolar',
-  });
+  const res = await httpsPost(
+    'openrouter.ai',
+    '/api/v1/chat/completions',
+    body,
+    {
+      Authorization: `Bearer ${getApiKey()}`,
+      'HTTP-Referer': 'http://localhost:3001',
+      'X-Title': 'Sistema Integral Convivencia Escolar',
+    },
+    options.timeoutMs,
+  );
   if (res.status !== 200)
     throw new Error(`OpenRouter error: ${res.status} ${JSON.stringify(res.body)}`);
   const choices = res.body?.choices;
   return choices?.[0]?.message?.content || '';
+}
+async function callOpenRouterLegalDraft(systemInstruction, dossier, options = {}) {
+  let lastError;
+  const models = [...new Set(LEGAL_DRAFT_OPENROUTER_MODELS)];
+  for (const model of models) {
+    try {
+      const text = await callOpenRouter(
+        [{ role: 'user', content: dossier }],
+        systemInstruction,
+        model,
+        {
+          maxTokens: options.maxTokens ?? 5e3,
+          temperature: options.temperature ?? 0.2,
+          timeoutMs: options.timeoutMs ?? 35e3,
+        },
+      );
+      if (text.trim()) return text;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error('No fue posible usar un modelo de respaldo para el documento.');
 }
 async function callTextImprovementFallback(messages, systemInstruction, excludedModels = []) {
   let lastError;
@@ -3117,6 +3154,16 @@ function isGeminiTimeout(message) {
     message.includes('generativelanguage.googleapis.com') && message.includes('tiempo m\xE1ximo')
   );
 }
+function canFallbackLegalDraftToOpenRouter(message) {
+  return (
+    message.includes('GEMINI_API_KEY no configurada') ||
+    message.includes('Gemini error: 400') ||
+    message.includes('Gemini error: 403') ||
+    message.includes('Gemini error: 404') ||
+    message.includes('Gemini no devolvi\xF3 contenido de texto') ||
+    isGeminiTimeout(message)
+  );
+}
 router4.post(
   '/draft-document',
   requireAuth,
@@ -3282,43 +3329,45 @@ ${legalSources}
         templatePrompt = templates[0]?.system_prompt?.trim() || null;
       } catch {}
       let document;
-      try {
-        document = await callGeminiLegalDraft(
-          `${documentPolicy(docType)}
+      let provider = 'Gemini';
+      const systemInstruction = `${documentPolicy(docType)}
 
 PLANTILLA INSTITUCIONAL:
-${templatePrompt || getTemplateFallback(docType)}`,
-          dossier,
-          contextLimits.generation,
-        );
+${templatePrompt || getTemplateFallback(docType)}`;
+      try {
+        document = await callGeminiLegalDraft(systemInstruction, dossier, contextLimits.generation);
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Error al contactar Gemini.';
-        if (message.includes('GEMINI_API_KEY no configurada')) {
-          res.status(503).json({
-            error:
-              'La redacci\xF3n de documentos a\xFAn no est\xE1 configurada. Configure GEMINI_API_KEY en Vercel.',
-          });
-          return;
+        if (canFallbackLegalDraftToOpenRouter(message)) {
+          try {
+            document = await callOpenRouterLegalDraft(systemInstruction, dossier, {
+              maxTokens: contextLimits.generation.maxOutputTokens,
+              timeoutMs: contextLimits.generation.timeoutMs,
+            });
+            provider = 'OpenRouter';
+          } catch (fallbackError) {
+            const fallbackMessage =
+              fallbackError instanceof Error
+                ? fallbackError.message
+                : 'Error al contactar el modelo de respaldo.';
+            console.error('Error al generar borrador con respaldo OpenRouter:', fallbackError);
+            res.status(isGeminiTimeout(message) ? 504 : 503).json({
+              error:
+                'No fue posible redactar el documento con Gemini ni con el modelo de respaldo. Revise GEMINI_API_KEY y OPENROUTER_API_KEY en Vercel.',
+              detail: fallbackMessage.includes('OPENROUTER_API_KEY')
+                ? 'OPENROUTER_API_KEY no est\xE1 configurada.'
+                : void 0,
+            });
+            return;
+          }
+        } else {
+          throw error;
         }
-        if (message.includes('Gemini error: 404')) {
-          res.status(503).json({
-            error:
-              'El modelo configurado de Gemini no est\xE1 disponible. Revise LEGAL_DRAFT_MODEL en Vercel.',
-          });
-          return;
-        }
-        if (isGeminiTimeout(message)) {
-          res.status(504).json({
-            error:
-              'Gemini tard\xF3 demasiado en redactar el documento. Intente nuevamente; si el expediente tiene muchos antecedentes o adjuntos, genere primero una notificaci\xF3n o citaci\xF3n y luego el informe.',
-          });
-          return;
-        }
-        throw error;
       }
       res.json({
         success: true,
         document,
+        provider,
         title: DOCUMENT_TITLES[docType],
         signer: DOCUMENT_SIGNERS[docType],
         consideredDocuments: extractedDocuments.map((document2) => document2.name),

@@ -13,6 +13,7 @@ import {
   sanitize,
 } from '../validators/sanitizers.js';
 import { callGeminiLegalDraft } from '../services/gemini.js';
+import { callOpenRouterLegalDraft } from '../services/openrouter.js';
 import { getRelevantLegalSources } from '../services/legalSources.js';
 import { extractCaseDocuments } from '../services/caseDocuments.js';
 import { httpsGet } from '../lib/https.js';
@@ -157,6 +158,17 @@ function stringifyList(values: string[], empty: string): string {
 
 export function isGeminiTimeout(message: string): boolean {
   return message.includes('generativelanguage.googleapis.com') && message.includes('tiempo máximo');
+}
+
+export function canFallbackLegalDraftToOpenRouter(message: string): boolean {
+  return (
+    message.includes('GEMINI_API_KEY no configurada') ||
+    message.includes('Gemini error: 400') ||
+    message.includes('Gemini error: 403') ||
+    message.includes('Gemini error: 404') ||
+    message.includes('Gemini no devolvió contenido de texto') ||
+    isGeminiTimeout(message)
+  );
 }
 
 router.post(
@@ -337,41 +349,43 @@ ${legalSources}
       }
 
       let document: string;
+      let provider = 'Gemini';
+      const systemInstruction = `${documentPolicy(docType)}\n\nPLANTILLA INSTITUCIONAL:\n${templatePrompt || getTemplateFallback(docType)}`;
       try {
-        document = await callGeminiLegalDraft(
-          `${documentPolicy(docType)}\n\nPLANTILLA INSTITUCIONAL:\n${templatePrompt || getTemplateFallback(docType)}`,
-          dossier,
-          contextLimits.generation,
-        );
+        document = await callGeminiLegalDraft(systemInstruction, dossier, contextLimits.generation);
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Error al contactar Gemini.';
-        if (message.includes('GEMINI_API_KEY no configurada')) {
-          res.status(503).json({
-            error:
-              'La redacción de documentos aún no está configurada. Configure GEMINI_API_KEY en Vercel.',
-          });
-          return;
+        if (canFallbackLegalDraftToOpenRouter(message)) {
+          try {
+            document = await callOpenRouterLegalDraft(systemInstruction, dossier, {
+              maxTokens: contextLimits.generation.maxOutputTokens,
+              timeoutMs: contextLimits.generation.timeoutMs,
+            });
+            provider = 'OpenRouter';
+          } catch (fallbackError) {
+            const fallbackMessage =
+              fallbackError instanceof Error
+                ? fallbackError.message
+                : 'Error al contactar el modelo de respaldo.';
+            console.error('Error al generar borrador con respaldo OpenRouter:', fallbackError);
+            res.status(isGeminiTimeout(message) ? 504 : 503).json({
+              error:
+                'No fue posible redactar el documento con Gemini ni con el modelo de respaldo. Revise GEMINI_API_KEY y OPENROUTER_API_KEY en Vercel.',
+              detail: fallbackMessage.includes('OPENROUTER_API_KEY')
+                ? 'OPENROUTER_API_KEY no está configurada.'
+                : undefined,
+            });
+            return;
+          }
+        } else {
+          throw error;
         }
-        if (message.includes('Gemini error: 404')) {
-          res.status(503).json({
-            error:
-              'El modelo configurado de Gemini no está disponible. Revise LEGAL_DRAFT_MODEL en Vercel.',
-          });
-          return;
-        }
-        if (isGeminiTimeout(message)) {
-          res.status(504).json({
-            error:
-              'Gemini tardó demasiado en redactar el documento. Intente nuevamente; si el expediente tiene muchos antecedentes o adjuntos, genere primero una notificación o citación y luego el informe.',
-          });
-          return;
-        }
-        throw error;
       }
 
       res.json({
         success: true,
         document,
+        provider,
         title: DOCUMENT_TITLES[docType],
         signer: DOCUMENT_SIGNERS[docType],
         consideredDocuments: extractedDocuments.map((document) => document.name),

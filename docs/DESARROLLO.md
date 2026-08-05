@@ -34,6 +34,7 @@ cp .env.example .env
 | `TEXT_AI_MODEL`                          | Modelo OpenRouter general o fallback global (opcional) |
 | `GEMINI_API_KEY`                         | Informes y documentos                                  |
 | `LEGAL_DRAFT_MODEL`                      | Modelo Gemini para borradores legales (opcional)       |
+| `LEGAL_DRAFT_OPENROUTER_MODEL`           | Modelo OpenRouter de respaldo para borradores legales  |
 | `VITE_ALLOW_LOCAL_DEMO`                  | Demo sin login (solo desarrollo)                       |
 | `VITE_SENTRY_DSN`                        | Error tracking                                         |
 | `VITE_POSTHOG_KEY` / `VITE_POSTHOG_HOST` | Analytics                                              |

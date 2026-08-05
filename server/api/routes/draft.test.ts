@@ -2,7 +2,7 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { DRAFT_CONTEXT_LIMITS, isGeminiTimeout } from './draft';
+import { canFallbackLegalDraftToOpenRouter, DRAFT_CONTEXT_LIMITS, isGeminiTimeout } from './draft';
 
 describe('draft document route configuration', () => {
   it('usa contexto liviano para notificaciones de apertura', () => {
@@ -19,5 +19,19 @@ describe('draft document route configuration', () => {
       true,
     );
     assert.equal(isGeminiTimeout('Gemini error: 404 model not found'), false);
+  });
+
+  it('activa respaldo OpenRouter para fallas recuperables de Gemini', () => {
+    assert.equal(canFallbackLegalDraftToOpenRouter('GEMINI_API_KEY no configurada'), true);
+    assert.equal(canFallbackLegalDraftToOpenRouter('Gemini error: 400 API key not valid'), true);
+    assert.equal(canFallbackLegalDraftToOpenRouter('Gemini error: 403 permission denied'), true);
+    assert.equal(canFallbackLegalDraftToOpenRouter('Gemini error: 404 model not found'), true);
+    assert.equal(
+      canFallbackLegalDraftToOpenRouter(
+        'La solicitud a generativelanguage.googleapis.com excedió el tiempo máximo.',
+      ),
+      true,
+    );
+    assert.equal(canFallbackLegalDraftToOpenRouter('Error SQL inesperado'), false);
   });
 });
