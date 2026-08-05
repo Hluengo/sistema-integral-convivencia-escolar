@@ -339,6 +339,7 @@ export default function NewCausaForm({
                 value={field.value}
                 onChange={field.onChange}
                 required
+                improvementContext="relato_causa"
                 ariaDescribedBy={errors.newObs ? 'create-obs-error' : undefined}
                 ariaInvalid={!!errors.newObs}
                 className={

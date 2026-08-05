@@ -10,6 +10,8 @@ interface ImproveTextareaProps {
   placeholder?: string;
   rows?: number;
   required?: boolean;
+  disabled?: boolean;
+  maxLength?: number;
   className?: string;
   ariaDescribedBy?: string;
   ariaInvalid?: boolean;
@@ -24,6 +26,8 @@ export default function ImproveTextarea({
   placeholder,
   rows = 3,
   required,
+  disabled,
+  maxLength,
   className,
   ariaDescribedBy,
   ariaInvalid,
@@ -52,7 +56,7 @@ export default function ImproveTextarea({
             variant="custom"
             size="sm"
             onClick={handleImprove}
-            disabled={isImproving || !value.trim()}
+            disabled={disabled || isImproving || !value.trim()}
             title="Mejorar redacción con IA"
             className="shrink-0 rounded-lg border border-brand-200 bg-brand-50 px-2 py-1 text-[10px] font-semibold text-brand-700 hover:border-brand-300 hover:bg-brand-100"
           >
@@ -70,6 +74,8 @@ export default function ImproveTextarea({
         aria-label={label || placeholder || id}
         rows={rows}
         required={required}
+        disabled={disabled}
+        maxLength={maxLength}
         aria-describedby={ariaDescribedBy}
         aria-invalid={ariaInvalid}
         spellCheck={true}

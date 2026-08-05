@@ -1,7 +1,13 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '../../api/lib/supabase';
 
-export type TextImprovementContext = 'cierre_causa';
+export type TextImprovementContext =
+  'relato_causa' | 'observaciones_causa' | 'hito_observacion' | 'bitacora_manual' | 'cierre_causa';
+
+interface TextImprovementResponse {
+  improved?: unknown;
+  warning?: unknown;
+}
 
 export function useTextImprovement() {
   const [isImproving, setIsImproving] = useState(false);
@@ -34,8 +40,11 @@ export function useTextImprovement() {
           const err = await response.json().catch(() => ({ error: 'Error de redacción' }));
           throw new Error(err.error || 'Error al mejorar el texto');
         }
-        const data = await response.json();
-        return data.improved;
+        const data = (await response.json()) as TextImprovementResponse;
+        if (typeof data.warning === 'string') {
+          setError(data.warning);
+        }
+        return typeof data.improved === 'string' ? data.improved : null;
       } catch (e) {
         const msg = e instanceof Error ? e.message : 'Error al mejorar el texto';
         setError(msg);

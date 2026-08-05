@@ -2,7 +2,9 @@
 
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { NotebookPen, Plus, X } from 'lucide-react';
+import ImproveTextarea from '../ImproveTextarea';
 import Button from './Button';
+import type { TextImprovementContext } from '../lib/hooks/useTextImprovement';
 
 interface HistoryEntryFormInput {
   title: string;
@@ -18,6 +20,7 @@ interface HistoryEntryFormProps {
   onResetError: () => void;
   onClose?: () => void;
   additionalFields?: ReactNode;
+  improvementContext?: TextImprovementContext;
 }
 
 export default function HistoryEntryForm({
@@ -29,6 +32,7 @@ export default function HistoryEntryForm({
   onResetError,
   onClose,
   additionalFields,
+  improvementContext,
 }: HistoryEntryFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState('');
@@ -119,21 +123,19 @@ export default function HistoryEntryForm({
       </div>
 
       <div>
-        <div className="mb-1.5 flex items-center justify-between gap-3">
-          <label htmlFor={descriptionId} className="font-semibold text-neutral-700 text-sm">
-            Descripción
-          </label>
+        <div className="mb-1.5 flex justify-end">
           <span className="text-neutral-400 text-xs">{description.length}/2.000</span>
         </div>
-        <textarea
+        <ImproveTextarea
           id={descriptionId}
-          aria-label="Descripción de la entrada"
+          label="Descripción"
           value={description}
-          onChange={(event) => setDescription(event.target.value)}
-          maxLength={2000}
+          onChange={setDescription}
           rows={4}
           required
           disabled={isSaving}
+          maxLength={2000}
+          improvementContext={improvementContext}
           placeholder="Describe el hecho, acuerdo, entrevista o seguimiento realizado."
           className="w-full resize-y rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-neutral-900 text-sm outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
         />

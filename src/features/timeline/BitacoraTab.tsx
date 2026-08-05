@@ -64,6 +64,7 @@ export default memo(function BitacoraTab({
           isSaving={isSavingManualEntry}
           error={manualEntryError}
           helperText="No modifica etapas ni elimina antecedentes del expediente."
+          improvementContext="bitacora_manual"
           onSave={async ({ title, description }) => {
             await onCreateManualEntry({
               title,

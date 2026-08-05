@@ -38,7 +38,8 @@ Inyecta `req.user` con payload decodificado y `req.tenantId` del contexto.
 ## AI Integration
 
 - **Proveedor**: OpenRouter (env: `OPENROUTER_API_KEY`)
-- **Modelo**: `meta-llama/llama-3.1-8b-instruct`
+- **Modelo general**: `meta-llama/llama-3.1-8b-instruct`
+- **Modelo mejora de textos**: `google/gemma-4-31b-it:free` por defecto, configurable con `TEXT_IMPROVEMENT_AI_MODEL` o `TEXT_AI_MODEL`
 - **Temperatura**: 0 (determinista)
 - **Max tokens**: 2000
 - **Rate limit**: 10 req/min/IP por endpoint

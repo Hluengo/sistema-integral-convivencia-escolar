@@ -23,17 +23,19 @@ cp .env.example .env
 
 ## Variables de Entorno
 
-| Variable                                 | Propósito                           |
-| ---------------------------------------- | ----------------------------------- |
-| `VITE_SUPABASE_URL`                      | URL del proyecto Supabase           |
-| `VITE_SUPABASE_ANON_KEY`                 | Anon key pública de Supabase        |
-| `SUPABASE_JWT_SECRET`                    | Para verificar JWT en API routes    |
-| `SUPABASE_SERVICE_ROLE_KEY`              | Admin key para operaciones servidor |
-| `OPENROUTER_API_KEY`                     | Mejora de textos y asistencia breve |
-| `GEMINI_API_KEY`                         | Informes y documentos               |
-| `VITE_ALLOW_LOCAL_DEMO`                  | Demo sin login (solo desarrollo)    |
-| `VITE_SENTRY_DSN`                        | Error tracking                      |
-| `VITE_POSTHOG_KEY` / `VITE_POSTHOG_HOST` | Analytics                           |
+| Variable                                 | Propósito                                              |
+| ---------------------------------------- | ------------------------------------------------------ |
+| `VITE_SUPABASE_URL`                      | URL del proyecto Supabase                              |
+| `VITE_SUPABASE_ANON_KEY`                 | Anon key pública de Supabase                           |
+| `SUPABASE_JWT_SECRET`                    | Para verificar JWT en API routes                       |
+| `SUPABASE_SERVICE_ROLE_KEY`              | Admin key para operaciones servidor                    |
+| `OPENROUTER_API_KEY`                     | Mejora de textos y asistencia breve                    |
+| `TEXT_IMPROVEMENT_AI_MODEL`              | Modelo OpenRouter para mejorar textos (opcional)       |
+| `TEXT_AI_MODEL`                          | Modelo OpenRouter general o fallback global (opcional) |
+| `GEMINI_API_KEY`                         | Informes y documentos                                  |
+| `VITE_ALLOW_LOCAL_DEMO`                  | Demo sin login (solo desarrollo)                       |
+| `VITE_SENTRY_DSN`                        | Error tracking                                         |
+| `VITE_POSTHOG_KEY` / `VITE_POSTHOG_HOST` | Analytics                                              |
 
 ## Arquitectura General
 

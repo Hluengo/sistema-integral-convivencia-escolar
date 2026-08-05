@@ -3,9 +3,13 @@
 import { httpsPost } from '../lib/https.js';
 
 const AI_MODEL = process.env.TEXT_AI_MODEL || 'meta-llama/llama-3.1-8b-instruct';
+export const TEXT_IMPROVEMENT_AI_MODEL =
+  process.env.TEXT_IMPROVEMENT_AI_MODEL ||
+  process.env.TEXT_AI_MODEL ||
+  'google/gemma-4-31b-it:free';
 const TEXT_FALLBACK_MODELS = [
-  'google/gemma-4-31b-it:free',
   'deepseek/deepseek-v4-flash:free',
+  'meta-llama/llama-3.1-8b-instruct',
 ] as const;
 
 function getApiKey(): string {
@@ -43,9 +47,11 @@ export async function callOpenRouter(
 export async function callTextImprovementFallback(
   messages: Array<{ role: string; content: string }>,
   systemInstruction?: string,
+  excludedModels: readonly string[] = [],
 ): Promise<string> {
   let lastError: unknown;
-  for (const model of TEXT_FALLBACK_MODELS) {
+  const models = TEXT_FALLBACK_MODELS.filter((model) => !excludedModels.includes(model));
+  for (const model of models) {
     try {
       const text = await callOpenRouter(messages, systemInstruction, model);
       if (text.trim()) return text;

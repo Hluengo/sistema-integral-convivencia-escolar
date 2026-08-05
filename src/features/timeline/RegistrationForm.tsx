@@ -103,6 +103,7 @@ export default function RegistrationForm({
           placeholder="Detalle de la actuación procesal..."
           value={regObservations}
           onChange={(v) => setRegObservations(v)}
+          improvementContext="hito_observacion"
           rows={2}
           className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-medium text-neutral-800 text-xs placeholder-neutral-400 transition-colors focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
         />

@@ -297,6 +297,7 @@ export default function EditCausaModalForm({
                 label="Observaciones"
                 value={field.value}
                 onChange={field.onChange}
+                improvementContext="observaciones_causa"
                 className={fieldClass}
                 rows={3}
                 placeholder="Descripción de los hechos, contexto, etc."

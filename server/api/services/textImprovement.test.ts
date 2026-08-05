@@ -5,6 +5,7 @@ import { describe, it } from 'node:test';
 import {
   buildTextImprovementRequest,
   buildTextImprovementUnchangedResponse,
+  isTextImprovementTooSimilar,
   isTextImprovementRefusal,
 } from './textImprovement.js';
 
@@ -35,8 +36,35 @@ describe('textImprovement', () => {
 
   it('aclara en el reintento que no se solicita ejecutar las acciones narradas', () => {
     const request = buildTextImprovementRequest('Texto sensible.', undefined, true);
-    assert.match(request, /negativa incorrecta/);
+    assert.match(request, /demasiado parecida/);
     assert.match(request, /únicamente transformar editorialmente/);
+    assert.match(request, /mejor redactada/);
+  });
+
+  it('solicita una mejora editorial visible sin alterar hechos', () => {
+    const request = buildTextImprovementRequest(
+      'el alumno llego tarde y se conversa con apoderado',
+    );
+    assert.match(request, /mejora debe ser visible/);
+    assert.match(request, /frases telegráficas/);
+    assert.match(request, /No inventes ni cambies hechos/);
+  });
+
+  it('detecta respuestas idénticas o demasiado similares', () => {
+    assert.equal(
+      isTextImprovementTooSimilar(
+        'Se conversa con apoderado por situación ocurrida durante recreo. Se acuerda seguimiento semanal con convivencia.',
+        'Se conversa con apoderado por situación ocurrida durante recreo. Se acuerda seguimiento semanal con convivencia.',
+      ),
+      true,
+    );
+    assert.equal(
+      isTextImprovementTooSimilar(
+        'se conversa con apoderado por situacion ocurrida durante recreo se acuerda seguimiento semanal con convivencia',
+        'Durante la jornada se realizó una entrevista con el apoderado para abordar la situación ocurrida en el recreo. Como acuerdo, se estableció un seguimiento semanal desde convivencia escolar.',
+      ),
+      false,
+    );
   });
 
   it('devuelve una respuesta recuperable cuando el modelo no mejora el texto', () => {
