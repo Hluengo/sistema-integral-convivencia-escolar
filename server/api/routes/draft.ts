@@ -45,6 +45,10 @@ const DOCUMENT_SIGNERS: Record<DocType, string> = {
   informe_concluyente: 'Equipo de Convivencia Escolar',
 };
 
+const VERCEL_FUNCTION_BUDGET_MS = 29_000;
+const RESPONSE_GUARD_MS = 1_500;
+const MIN_GENERATION_TIMEOUT_MS = 4_000;
+
 export const DRAFT_CONTEXT_LIMITS: Record<
   DocType,
   {
@@ -69,7 +73,7 @@ export const DRAFT_CONTEXT_LIMITS: Record<
     checklistItems: 8,
     measures: 8,
     documents: { maxDocuments: 0, maxExtractedCharsPerDocument: 0, maxExtractedCharsTotal: 0 },
-    generation: { maxOutputTokens: 1800, timeoutMs: 28_000 },
+    generation: { maxOutputTokens: 1400, timeoutMs: 12_000 },
   },
   citacion_entrevista: {
     legalSourceChars: 4_000,
@@ -77,7 +81,7 @@ export const DRAFT_CONTEXT_LIMITS: Record<
     checklistItems: 4,
     measures: 4,
     documents: { maxDocuments: 0, maxExtractedCharsPerDocument: 0, maxExtractedCharsTotal: 0 },
-    generation: { maxOutputTokens: 1200, timeoutMs: 24_000 },
+    generation: { maxOutputTokens: 1000, timeoutMs: 10_000 },
   },
   informe_cierre_indagacion: {
     legalSourceChars: 28_000,
@@ -89,7 +93,7 @@ export const DRAFT_CONTEXT_LIMITS: Record<
       maxExtractedCharsPerDocument: 12_000,
       maxExtractedCharsTotal: 32_000,
     },
-    generation: { maxOutputTokens: 7000, timeoutMs: 45_000 },
+    generation: { maxOutputTokens: 5000, timeoutMs: 18_000 },
   },
   informe_concluyente: {
     legalSourceChars: 32_000,
@@ -101,7 +105,7 @@ export const DRAFT_CONTEXT_LIMITS: Record<
       maxExtractedCharsPerDocument: 14_000,
       maxExtractedCharsTotal: 40_000,
     },
-    generation: { maxOutputTokens: 8000, timeoutMs: 50_000 },
+    generation: { maxOutputTokens: 6000, timeoutMs: 18_000 },
   },
 };
 
@@ -171,12 +175,26 @@ export function canFallbackLegalDraftToOpenRouter(message: string): boolean {
   );
 }
 
+export function getRemainingDraftBudgetMs(startedAt: number, now = Date.now()): number {
+  return Math.max(0, VERCEL_FUNCTION_BUDGET_MS - (now - startedAt));
+}
+
+export function getBoundedDraftTimeoutMs(
+  requestedTimeoutMs: number,
+  startedAt: number,
+  now = Date.now(),
+): number {
+  const usableBudgetMs = getRemainingDraftBudgetMs(startedAt, now) - RESPONSE_GUARD_MS;
+  return Math.max(0, Math.min(requestedTimeoutMs, usableBudgetMs));
+}
+
 router.post(
   '/draft-document',
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
   rateLimit,
   async (req, res) => {
+    const startedAt = Date.now();
     try {
       const body = req.body as Record<string, unknown>;
       const docTypeValue = requireStr(body, 'docType', 50);
@@ -352,14 +370,39 @@ ${legalSources}
       let provider = 'Gemini';
       const systemInstruction = `${documentPolicy(docType)}\n\nPLANTILLA INSTITUCIONAL:\n${templatePrompt || getTemplateFallback(docType)}`;
       try {
-        document = await callGeminiLegalDraft(systemInstruction, dossier, contextLimits.generation);
+        const geminiTimeoutMs = getBoundedDraftTimeoutMs(
+          contextLimits.generation.timeoutMs,
+          startedAt,
+        );
+        if (geminiTimeoutMs < MIN_GENERATION_TIMEOUT_MS) {
+          res.status(504).json({
+            error:
+              'No quedó tiempo suficiente para redactar el documento antes del límite de producción. Intente nuevamente.',
+          });
+          return;
+        }
+        document = await callGeminiLegalDraft(systemInstruction, dossier, {
+          ...contextLimits.generation,
+          timeoutMs: geminiTimeoutMs,
+        });
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Error al contactar Gemini.';
         if (canFallbackLegalDraftToOpenRouter(message)) {
           try {
+            const fallbackTimeoutMs = getBoundedDraftTimeoutMs(
+              contextLimits.generation.timeoutMs,
+              startedAt,
+            );
+            if (fallbackTimeoutMs < MIN_GENERATION_TIMEOUT_MS) {
+              res.status(504).json({
+                error:
+                  'Gemini tardó más de lo esperado y no quedó tiempo suficiente para usar el modelo de respaldo. Intente nuevamente.',
+              });
+              return;
+            }
             document = await callOpenRouterLegalDraft(systemInstruction, dossier, {
               maxTokens: contextLimits.generation.maxOutputTokens,
-              timeoutMs: contextLimits.generation.timeoutMs,
+              timeoutMs: fallbackTimeoutMs,
             });
             provider = 'OpenRouter';
           } catch (fallbackError) {

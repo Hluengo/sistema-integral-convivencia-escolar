@@ -3061,6 +3061,9 @@ var DOCUMENT_SIGNERS = {
   informe_cierre_indagacion: 'Equipo Encargado de Indagaci\xF3n',
   informe_concluyente: 'Equipo de Convivencia Escolar',
 };
+var VERCEL_FUNCTION_BUDGET_MS = 29e3;
+var RESPONSE_GUARD_MS = 1500;
+var MIN_GENERATION_TIMEOUT_MS = 4e3;
 var DRAFT_CONTEXT_LIMITS = {
   notificacion_apertura: {
     legalSourceChars: 6e3,
@@ -3068,7 +3071,7 @@ var DRAFT_CONTEXT_LIMITS = {
     checklistItems: 8,
     measures: 8,
     documents: { maxDocuments: 0, maxExtractedCharsPerDocument: 0, maxExtractedCharsTotal: 0 },
-    generation: { maxOutputTokens: 1800, timeoutMs: 28e3 },
+    generation: { maxOutputTokens: 1400, timeoutMs: 12e3 },
   },
   citacion_entrevista: {
     legalSourceChars: 4e3,
@@ -3076,7 +3079,7 @@ var DRAFT_CONTEXT_LIMITS = {
     checklistItems: 4,
     measures: 4,
     documents: { maxDocuments: 0, maxExtractedCharsPerDocument: 0, maxExtractedCharsTotal: 0 },
-    generation: { maxOutputTokens: 1200, timeoutMs: 24e3 },
+    generation: { maxOutputTokens: 1e3, timeoutMs: 1e4 },
   },
   informe_cierre_indagacion: {
     legalSourceChars: 28e3,
@@ -3088,7 +3091,7 @@ var DRAFT_CONTEXT_LIMITS = {
       maxExtractedCharsPerDocument: 12e3,
       maxExtractedCharsTotal: 32e3,
     },
-    generation: { maxOutputTokens: 7e3, timeoutMs: 45e3 },
+    generation: { maxOutputTokens: 5e3, timeoutMs: 18e3 },
   },
   informe_concluyente: {
     legalSourceChars: 32e3,
@@ -3100,7 +3103,7 @@ var DRAFT_CONTEXT_LIMITS = {
       maxExtractedCharsPerDocument: 14e3,
       maxExtractedCharsTotal: 4e4,
     },
-    generation: { maxOutputTokens: 8e3, timeoutMs: 5e4 },
+    generation: { maxOutputTokens: 6e3, timeoutMs: 18e3 },
   },
 };
 function getSupabaseHostname2() {
@@ -3164,12 +3167,20 @@ function canFallbackLegalDraftToOpenRouter(message) {
     isGeminiTimeout(message)
   );
 }
+function getRemainingDraftBudgetMs(startedAt, now = Date.now()) {
+  return Math.max(0, VERCEL_FUNCTION_BUDGET_MS - (now - startedAt));
+}
+function getBoundedDraftTimeoutMs(requestedTimeoutMs, startedAt, now = Date.now()) {
+  const usableBudgetMs = getRemainingDraftBudgetMs(startedAt, now) - RESPONSE_GUARD_MS;
+  return Math.max(0, Math.min(requestedTimeoutMs, usableBudgetMs));
+}
 router4.post(
   '/draft-document',
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
   rateLimit,
   async (req, res) => {
+    const startedAt = Date.now();
     try {
       const body = req.body;
       const docTypeValue = requireStr(body, 'docType', 50);
@@ -3335,14 +3346,39 @@ ${legalSources}
 PLANTILLA INSTITUCIONAL:
 ${templatePrompt || getTemplateFallback(docType)}`;
       try {
-        document = await callGeminiLegalDraft(systemInstruction, dossier, contextLimits.generation);
+        const geminiTimeoutMs = getBoundedDraftTimeoutMs(
+          contextLimits.generation.timeoutMs,
+          startedAt,
+        );
+        if (geminiTimeoutMs < MIN_GENERATION_TIMEOUT_MS) {
+          res.status(504).json({
+            error:
+              'No qued\xF3 tiempo suficiente para redactar el documento antes del l\xEDmite de producci\xF3n. Intente nuevamente.',
+          });
+          return;
+        }
+        document = await callGeminiLegalDraft(systemInstruction, dossier, {
+          ...contextLimits.generation,
+          timeoutMs: geminiTimeoutMs,
+        });
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Error al contactar Gemini.';
         if (canFallbackLegalDraftToOpenRouter(message)) {
           try {
+            const fallbackTimeoutMs = getBoundedDraftTimeoutMs(
+              contextLimits.generation.timeoutMs,
+              startedAt,
+            );
+            if (fallbackTimeoutMs < MIN_GENERATION_TIMEOUT_MS) {
+              res.status(504).json({
+                error:
+                  'Gemini tard\xF3 m\xE1s de lo esperado y no qued\xF3 tiempo suficiente para usar el modelo de respaldo. Intente nuevamente.',
+              });
+              return;
+            }
             document = await callOpenRouterLegalDraft(systemInstruction, dossier, {
               maxTokens: contextLimits.generation.maxOutputTokens,
-              timeoutMs: contextLimits.generation.timeoutMs,
+              timeoutMs: fallbackTimeoutMs,
             });
             provider = 'OpenRouter';
           } catch (fallbackError) {

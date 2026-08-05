@@ -2,7 +2,13 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { canFallbackLegalDraftToOpenRouter, DRAFT_CONTEXT_LIMITS, isGeminiTimeout } from './draft';
+import {
+  canFallbackLegalDraftToOpenRouter,
+  DRAFT_CONTEXT_LIMITS,
+  getBoundedDraftTimeoutMs,
+  getRemainingDraftBudgetMs,
+  isGeminiTimeout,
+} from './draft';
 
 describe('draft document route configuration', () => {
   it('usa contexto liviano para notificaciones de apertura', () => {
@@ -10,7 +16,8 @@ describe('draft document route configuration', () => {
 
     assert.equal(limits.documents.maxDocuments, 0);
     assert.equal(limits.legalSourceChars <= 6_000, true);
-    assert.equal(limits.generation.maxOutputTokens <= 1_800, true);
+    assert.equal(limits.generation.maxOutputTokens <= 1_400, true);
+    assert.equal(limits.generation.timeoutMs <= 12_000, true);
   });
 
   it('clasifica timeouts de Gemini para responder sin 500 genérico', () => {
@@ -33,5 +40,14 @@ describe('draft document route configuration', () => {
       true,
     );
     assert.equal(canFallbackLegalDraftToOpenRouter('Error SQL inesperado'), false);
+  });
+
+  it('reserva margen antes del timeout de Vercel', () => {
+    const startedAt = 1_000;
+
+    assert.equal(getRemainingDraftBudgetMs(startedAt, 1_000), 29_000);
+    assert.equal(getBoundedDraftTimeoutMs(12_000, startedAt, 1_000), 12_000);
+    assert.equal(getBoundedDraftTimeoutMs(20_000, startedAt, 27_000), 1_500);
+    assert.equal(getBoundedDraftTimeoutMs(20_000, startedAt, 30_000), 0);
   });
 });
