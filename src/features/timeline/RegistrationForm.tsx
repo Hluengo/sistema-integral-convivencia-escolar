@@ -11,6 +11,7 @@ import Button from '../../shared/ui/Button';
 
 interface RegistrationFormProps {
   item: ChecklistItem;
+  mode?: 'register' | 'edit';
   regName: string;
   setRegName: React.Dispatch<React.SetStateAction<string>>;
   regFileName: string;
@@ -26,6 +27,7 @@ interface RegistrationFormProps {
 
 export default function RegistrationForm({
   item,
+  mode = 'register',
   regName,
   setRegName,
   regFileName,
@@ -38,11 +40,13 @@ export default function RegistrationForm({
   isSaving,
   errorMessage,
 }: RegistrationFormProps) {
+  const isEditing = mode === 'edit';
+
   return (
     <div className="mt-2 space-y-3 rounded border border-info-200 bg-white p-3 text-left">
       <div className="flex items-center justify-between border-neutral-100 border-b pb-1.5">
         <span className="font-semibold text-[10px] text-info-700 uppercase tracking-wide">
-          Registro oficial
+          {isEditing ? 'Rectificación oficial' : 'Registro oficial'}
         </span>
       </div>
 
@@ -127,7 +131,13 @@ export default function RegistrationForm({
               ) : (
                 <Check className="h-3.5 w-3.5" aria-hidden="true" />
               )}
-              {regFile ? 'Adjuntar y registrar' : 'Confirmar registro'}
+              {isEditing
+                ? regFile
+                  ? 'Adjuntar y rectificar'
+                  : 'Guardar rectificación'
+                : regFile
+                  ? 'Adjuntar y registrar'
+                  : 'Confirmar registro'}
             </>
           )}
         </Button>

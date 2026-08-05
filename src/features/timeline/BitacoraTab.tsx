@@ -15,6 +15,7 @@ import {
   History,
   NotebookPen,
   Scale,
+  Upload,
 } from 'lucide-react';
 import { openDocument } from '../../shared/api/services/storage.service';
 import { formatChileDateTime } from '../../shared/lib/dateTime';
@@ -25,6 +26,9 @@ interface BitacoraTabProps {
   causa: Causa;
   currentRole: UserRole;
   onCreateManualEntry: (input: ManualBitacoraEntryInput) => Promise<void>;
+  isSavingManualEntry: boolean;
+  manualEntryError: string | null;
+  onResetManualEntryError: () => void;
 }
 
 const ENTRY_STYLE: Record<BitacoraEntry['tipo'], { tone: string; Icon: typeof History }> = {
@@ -40,9 +44,14 @@ export default memo(function BitacoraTab({
   causa,
   currentRole,
   onCreateManualEntry,
+  isSavingManualEntry,
+  manualEntryError,
+  onResetManualEntryError,
 }: BitacoraTabProps) {
   const [logType, setLogType] = useState<BitacoraEntry['tipo']>('Entrevista');
   const [participants, setParticipants] = useState('');
+  const [manualFile, setManualFile] = useState<File | null>(null);
+  const [manualFileName, setManualFileName] = useState('');
   const entries = [...causa.bitacora].sort(
     (first, second) => new Date(second.fecha).getTime() - new Date(first.fecha).getTime(),
   );
@@ -52,21 +61,31 @@ export default memo(function BitacoraTab({
       {currentRole !== 'docente' && (
         <HistoryEntryForm
           idPrefix="causa-history"
-          isSaving={false}
-          error={null}
+          isSaving={isSavingManualEntry}
+          error={manualEntryError}
           helperText="No modifica etapas ni elimina antecedentes del expediente."
           onSave={async ({ title, description }) => {
-            await onCreateManualEntry({ title, description, type: logType, participants });
+            await onCreateManualEntry({
+              title,
+              description,
+              type: logType,
+              participants,
+              documentFile: manualFile,
+            });
             setParticipants('');
             setLogType('Entrevista');
+            setManualFile(null);
+            setManualFileName('');
           }}
-          onResetError={() => undefined}
+          onResetError={onResetManualEntryError}
           onClose={() => {
             setParticipants('');
             setLogType('Entrevista');
+            setManualFile(null);
+            setManualFileName('');
           }}
           additionalFields={
-            <details className="rounded-xl border border-neutral-200 bg-white px-3 py-2.5">
+            <details open className="rounded-xl border border-neutral-200 bg-white px-3 py-2.5">
               <summary className="cursor-pointer font-semibold text-neutral-700 text-sm">
                 Detalles del registro
               </summary>
@@ -99,6 +118,29 @@ export default memo(function BitacoraTab({
                     placeholder="Separados por comas"
                     className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-neutral-900 text-sm outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20"
                   />
+                </label>
+                <label className="space-y-1.5 sm:col-span-2">
+                  <span className="block font-semibold text-neutral-700 text-sm">
+                    Documento de respaldo
+                  </span>
+                  <span className="flex cursor-pointer items-center gap-2 rounded-xl border-2 border-dashed border-neutral-300 bg-neutral-50 px-3 py-2.5 text-neutral-600 text-sm transition hover:border-brand-300 hover:bg-brand-50/40">
+                    <Upload className="h-4 w-4 text-brand-600" aria-hidden="true" />
+                    <span className="truncate">
+                      {manualFileName || 'Seleccionar PDF, Word o imagen'}
+                    </span>
+                    <input
+                      aria-label="Documento de respaldo"
+                      type="file"
+                      className="sr-only"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0] ?? null;
+                        setManualFile(file);
+                        setManualFileName(file?.name ?? '');
+                        onResetManualEntryError();
+                      }}
+                    />
+                  </span>
                 </label>
               </div>
             </details>

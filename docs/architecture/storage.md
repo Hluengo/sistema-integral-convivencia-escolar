@@ -26,7 +26,7 @@
 ### `documentos_convivencia` (legacy)
 
 ```
-{causa_id}/{prefix}_{archivo_nombre}
+{causa_id}/documentos/{timestamp}_{archivo_nombre}
 ```
 
 ## RLS en Storage
@@ -50,6 +50,14 @@ Para `disciplinary-processes`, las políticas `SELECT`, `INSERT`, `UPDATE` y
 `convivencia`, con los mismos roles aceptados por `CONVIVENCIA_MEMBERSHIP` en
 el middleware. Esto permite que cuentas operativas como `staff` suban PDFs al
 modal de revisión sin romper el aislamiento por carpeta `{tenant_id}/...`.
+
+Para `documentos_convivencia`, las políticas `SELECT`, `INSERT` y `DELETE`
+validan que la primera carpeta sea el `causa.id`, que la segunda carpeta sea
+`documentos`, y que el usuario tenga una membresía activa de la aplicación
+`convivencia` en el tenant dueño de esa causa. La lista de roles aceptados se
+mantiene alineada con `CONVIVENCIA_MEMBERSHIP`, incluyendo `staff`, porque el
+modal de causas permite registrar hitos y bitácora manual desde cuentas
+operativas.
 
 ## Signed URLs
 

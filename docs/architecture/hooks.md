@@ -20,14 +20,14 @@
 
 ## Timeline Hooks
 
-| Hook                         | Archivo                                  | Propósito                          |
-| ---------------------------- | ---------------------------------------- | ---------------------------------- |
-| `useTimelineController()`    | `hooks/useTimelineController.ts`         | Compone sub-hooks del timeline     |
-| `useChecklistRegistration()` | `hooks/useChecklistRegistration.ts`      | Registro de items checklist        |
-| `useDocumentManager()`       | `hooks/useDocumentManager.ts`            | Subir/listar/remover documentos    |
-| `useBitacoraLog()`           | `hooks/useBitacoraLog.ts`                | Gestión de entradas de bitácora    |
-| `useAuditDraft()`            | `hooks/useAuditDraft.ts`                 | AI audit + draft de documentos     |
-| `useBreaches()`              | `features/timeline/hooks/useBreaches.ts` | Cómputo de plazos legales vencidos |
+| Hook                         | Archivo                                  | Propósito                                          |
+| ---------------------------- | ---------------------------------------- | -------------------------------------------------- |
+| `useTimelineController()`    | `hooks/useTimelineController.ts`         | Compone sub-hooks del timeline                     |
+| `useChecklistRegistration()` | `hooks/useChecklistRegistration.ts`      | Registro y rectificación de hitos checklist        |
+| `useDocumentManager()`       | `hooks/useDocumentManager.ts`            | Subir/listar/remover documentos                    |
+| `useBitacoraLog()`           | `hooks/useBitacoraLog.ts`                | Entradas manuales de bitácora con adjunto opcional |
+| `useAuditDraft()`            | `hooks/useAuditDraft.ts`                 | AI audit + draft de documentos                     |
+| `useBreaches()`              | `features/timeline/hooks/useBreaches.ts` | Cómputo de plazos legales vencidos                 |
 
 ## Document Generation Hooks
 

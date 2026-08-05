@@ -245,7 +245,14 @@ export default function ProcessChecklist({
                               )}
 
                               {currentRole !== 'docente' && (
-                                <div className="flex justify-end pt-1">
+                                <div className="flex justify-end gap-2 pt-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleStartRegister(item)}
+                                    className="flex items-center gap-1 font-semibold text-[10px] text-info-600 transition-colors hover:text-info-700"
+                                  >
+                                    <Plus className="h-3 w-3" aria-hidden="true" /> Editar registro
+                                  </button>
                                   <button
                                     type="button"
                                     onClick={() => handleResetRegistration(item.id)}
@@ -256,6 +263,26 @@ export default function ProcessChecklist({
                                 </div>
                               )}
                             </div>
+                          )}
+
+                          {item.completado && isSelected && (
+                            <RegistrationForm
+                              item={item}
+                              mode="edit"
+                              regName={regName}
+                              setRegName={setRegName}
+                              regFileName={regFileName}
+                              regObservations={regObservations}
+                              setRegObservations={setRegObservations}
+                              regFile={regFile}
+                              handleFileChange={handleFileChange}
+                              onCancel={() => setRegisteringItemId(null)}
+                              onSubmit={() => {
+                                handleSaveRegistration(item.id);
+                              }}
+                              isSaving={isSavingRegistration}
+                              errorMessage={registrationError}
+                            />
                           )}
 
                           {/* Incomplete State */}

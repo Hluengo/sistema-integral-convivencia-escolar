@@ -120,6 +120,9 @@ export default function TimelineTabPanels({
           causa={causa}
           currentRole={ctx.currentRole}
           onCreateManualEntry={ctx.createManualLog}
+          isSavingManualEntry={ctx.isCreatingManualLog}
+          manualEntryError={ctx.manualLogError}
+          onResetManualEntryError={ctx.resetManualLogError}
         />
       )}
     </DetailModalBody>

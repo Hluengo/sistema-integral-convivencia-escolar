@@ -36,6 +36,9 @@ interface TimelineContextValue {
   handleRemoveDocument: (itemId: string, fileName?: string) => Promise<void>;
 
   createManualLog: (input: ManualBitacoraEntryInput) => Promise<void>;
+  isCreatingManualLog: boolean;
+  manualLogError: string | null;
+  resetManualLogError: () => void;
 }
 
 export const TimelineContext = createContext<TimelineContextValue | null>(null);

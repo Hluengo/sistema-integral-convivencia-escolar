@@ -58,21 +58,23 @@ export function useChecklistRegistration({
     try {
       const targetItem = causa.checklistDebidoProceso.find((item) => item.id === itemId);
       const itemLabel = targetItem ? targetItem.label : 'Paso de Debido Proceso';
+      const isRectification = targetItem?.completado === true;
+      const responsable = regName || 'Esteban Valenzuela';
+      const trimmedObservations = regObservations.trim();
 
       const newLog: BitacoraEntry = {
-        id: `b_step_${crypto.randomUUID()}`,
+        id: `${isRectification ? 'b_step_edit' : 'b_step'}_${crypto.randomUUID()}`,
         fecha: nowIso(),
-        tipo: 'Notificación',
-        titulo: `Registro de Hito: ${itemLabel}`,
-        descripcion: `Se ha registrado formalmente la finalización de la etapa/acción "${itemLabel}". Responsable: ${regName || 'Esteban Valenzuela'}. Observaciones: ${regObservations}`,
-        participantes: [
-          regName || 'Esteban Valenzuela',
-          privacyMode ? causa.nnaProtectedName : causa.estudianteNombre,
-        ],
+        tipo: isRectification ? 'Otro' : 'Notificación',
+        titulo: `${isRectification ? 'Rectificación de Hito' : 'Registro de Hito'}: ${itemLabel}`,
+        descripcion: isRectification
+          ? `Se rectificó el registro del hito "${itemLabel}". Responsable: ${responsable}. Observaciones actualizadas: ${trimmedObservations || 'Sin observaciones.'}`
+          : `Se ha registrado formalmente la finalización de la etapa/acción "${itemLabel}". Responsable: ${responsable}. Observaciones: ${trimmedObservations || 'Sin observaciones.'}`,
+        participantes: [responsable, privacyMode ? causa.nnaProtectedName : causa.estudianteNombre],
       };
 
-      let documentoUrl: string | undefined;
-      let documentoNombre: string | undefined;
+      let documentoUrl = targetItem?.documentoUrl;
+      let documentoNombre = targetItem?.documentoNombre;
 
       if (regFile) {
         const documentPath = await uploadDocument(causa.id, regFile);
@@ -89,8 +91,8 @@ export function useChecklistRegistration({
           ...item,
           completado: true,
           fechaCompletado: item.fechaCompletado || nowDateOnly(),
-          registradoPor: regName || 'Esteban Valenzuela',
-          observaciones: regObservations,
+          registradoPor: responsable,
+          observaciones: trimmedObservations,
           documentoNombre,
           documentoUrl,
         };
