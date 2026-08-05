@@ -25,10 +25,9 @@ Agregar en Vercel Dashboard > Project Settings > Environment Variables:
 | `VITE_SUPABASE_ANON_KEY`                 | Anon key pública                                                    |
 | `SUPABASE_JWT_SECRET`                    | JWT secret de Supabase                                              |
 | `SUPABASE_SERVICE_ROLE_KEY`              | Service role key                                                    |
-| `OPENROUTER_API_KEY`                     | OpenRouter API key para mejora y asistencia                         |
-| `GEMINI_API_KEY`                         | Gemini API key para informes y documentos                           |
+| `OPENROUTER_API_KEY`                     | OpenRouter API key para mejora de textos breves y asesoría breve    |
+| `GEMINI_API_KEY`                         | Gemini API key pospago para informes, auditorías y documentos       |
 | `LEGAL_DRAFT_MODEL`                      | Modelo Gemini para borradores legales (opcional)                    |
-| `LEGAL_DRAFT_OPENROUTER_MODEL`           | Modelo OpenRouter de respaldo para borradores legales (opcional)    |
 | `VITE_APP_MEMBERSHIPS_ENABLED`           | Activa la verificación de membresías                                |
 | `VITE_APP_MEMBERSHIPS_ENFORCED`          | Rechaza acceso sin membresía activa; habilitar después del backfill |
 | `VITE_SENTRY_DSN`                        | (opcional) Error tracking                                           |

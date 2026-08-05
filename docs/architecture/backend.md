@@ -37,10 +37,10 @@ Inyecta `req.user` con payload decodificado y `req.tenantId` del contexto.
 
 ## AI Integration
 
-- **Proveedor**: OpenRouter (env: `OPENROUTER_API_KEY`)
-- **Modelo general**: `meta-llama/llama-3.1-8b-instruct`
-- **Modelo mejora de textos**: `google/gemma-4-31b-it:free` por defecto, configurable con `TEXT_IMPROVEMENT_AI_MODEL` o `TEXT_AI_MODEL`
-- **Modelo borradores legales**: Gemini `gemini-2.5-flash` por defecto, configurable con `LEGAL_DRAFT_MODEL`; si Gemini no está disponible, usa OpenRouter como respaldo con `LEGAL_DRAFT_OPENROUTER_MODEL`
+- **OpenRouter** (`OPENROUTER_API_KEY`): mejora de textos breves y asesoría legal breve.
+- **Modelo mejora de textos**: `google/gemma-4-31b-it:free` por defecto, configurable con `TEXT_IMPROVEMENT_AI_MODEL` o `TEXT_AI_MODEL`.
+- **Gemini pospago** (`GEMINI_API_KEY`): informes, auditorías de debido proceso y borradores/documentos oficiales complejos.
+- **Modelo documentos e informes**: Gemini `gemini-2.5-flash` por defecto, configurable con `LEGAL_DRAFT_MODEL`. No hay respaldo OpenRouter para estos flujos; si Gemini falla, el endpoint responde un error explícito de Gemini.
 - **Temperatura**: 0 (determinista)
 - **Max tokens**: 2000
 - **Rate limit**: 10 req/min/IP por endpoint

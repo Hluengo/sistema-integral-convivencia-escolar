@@ -28,13 +28,9 @@ function collectText(value: unknown): string[] {
   return Object.values(record).flatMap(collectText);
 }
 
-/**
- * Genera documentos oficiales en una solicitud independiente. El dossier no
- * se reutiliza como conversación dentro de la aplicación.
- */
-export async function callGeminiLegalDraft(
+export async function callGeminiComplexGeneration(
   systemInstruction: string,
-  dossier: string,
+  userContent: string,
   options: GeminiLegalDraftOptions = {},
 ): Promise<string> {
   const maxOutputTokens = options.maxOutputTokens ?? 6000;
@@ -49,7 +45,7 @@ export async function callGeminiLegalDraft(
       contents: [
         {
           role: 'user',
-          parts: [{ text: dossier }],
+          parts: [{ text: userContent }],
         },
       ],
       generationConfig: {
@@ -70,4 +66,16 @@ export async function callGeminiLegalDraft(
   const text = collectText(candidates).join('\n').trim();
   if (!text) throw new Error('Gemini no devolvió contenido de texto.');
   return text;
+}
+
+/**
+ * Genera documentos oficiales en una solicitud independiente. El dossier no
+ * se reutiliza como conversación dentro de la aplicación.
+ */
+export async function callGeminiLegalDraft(
+  systemInstruction: string,
+  dossier: string,
+  options: GeminiLegalDraftOptions = {},
+): Promise<string> {
+  return callGeminiComplexGeneration(systemInstruction, dossier, options);
 }

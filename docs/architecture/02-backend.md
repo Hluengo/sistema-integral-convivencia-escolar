@@ -16,4 +16,4 @@ JWT verification (HMAC + API fallback) + tenant context injection
 
 ## AI Integration
 
-OpenRouter (meta-llama/llama-3.1-8b-instruct) is used for short text assistance. Gemini is used for reports and document drafts.
+OpenRouter is used for short text improvement and brief legal assistance. Gemini is used for due-process audits, reports, and official document drafts; complex document/report endpoints do not fall back to OpenRouter.

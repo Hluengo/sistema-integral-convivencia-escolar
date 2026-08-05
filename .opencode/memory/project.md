@@ -28,7 +28,7 @@ Sistema SaaS multi-tenant para gestión integral de convivencia escolar en estab
 | Backend (prod) | Vercel Serverless                                 | esbuild bundle           |
 | Database       | Supabase PostgreSQL                               | 17.6.1                   |
 | Auth           | Supabase Auth (email/password)                    | —                        |
-| AI             | OpenRouter (meta-llama/llama-3.1-8b-instruct)     | —                        |
+| AI             | OpenRouter textos breves + Gemini informes/docs   | —                        |
 | Documentos     | docx (Word), pdf-lib + pdfjs-dist (PDF)           | 9.7.1 / 1.17.1 / 6.1.200 |
 | Monitoring     | Sentry Browser + PostHog                          | 10.66.0 / 1.404.1        |
 | Tests          | node:test + node:assert/strict + Playwright       | —                        |
@@ -343,8 +343,8 @@ Trigger de JWT sync: sync_tenant_to_jwt() en profiles
 | Método | Ruta                                    | Auth | Rate-Limit | AI              | DB Tables                                        |
 | ------ | --------------------------------------- | ---- | ---------- | --------------- | ------------------------------------------------ |
 | POST   | `/api/advisor-chat`                     | ✅   | 10/min     | ✅ (OpenRouter) | —                                                |
-| POST   | `/api/audit-due-process`                | ✅   | 10/min     | ✅ (OpenRouter) | —                                                |
-| POST   | `/api/draft-document`                   | ✅   | 10/min     | ✅ (OpenRouter) | `document_templates`                             |
+| POST   | `/api/audit-due-process`                | ✅   | 10/min     | ✅ (Gemini)     | —                                                |
+| POST   | `/api/draft-document`                   | ✅   | 10/min     | ✅ (Gemini)     | `document_templates`                             |
 | POST   | `/api/improve-text`                     | ✅   | 10/min     | ✅ (OpenRouter) | —                                                |
 | POST   | `/api/parse-annotations`                | ❌   | 10/min     | ❌ (regex)      | —                                                |
 | POST   | `/api/process-disciplinary-pdf`         | ✅   | 10/min     | ❌              | `document_analyses`, `students`                  |
@@ -369,11 +369,14 @@ Trigger de JWT sync: sync_tenant_to_jwt() en profiles
 
 **Regla crítica:** `server/api/middleware/auth.ts` re-exporta el middleware canónico de `server/middleware/auth.ts` para evitar drift. El constructor `createRequireAuth({ profileFetcher })` permite inyectar un fetcher de perfiles en tests.
 
-### 5.3 AI Integration (OpenRouter)
+### 5.3 AI Integration (OpenRouter + Gemini)
 
 ```
-Proveedor: OpenRouter → meta-llama/llama-3.1-8b-instruct
+OpenRouter: mejora de textos breves y asesoría legal breve
 API Key: OPENROUTER_API_KEY (env)
+Gemini pospago: auditorías de debido proceso, informes y borradores/documentos oficiales
+API Key: GEMINI_API_KEY (env)
+Modelo documentos/informes: LEGAL_DRAFT_MODEL opcional, por defecto gemini-2.5-flash
 Temperatura: 0 (determinista)
 Max tokens: 2000
 
@@ -388,6 +391,10 @@ Caching (in-memory):
   └── Máximo 100 entries en cache
 
 Rate Limiting: 10 req/min/IP por endpoint (in-memory Map)
+
+Regla de proveedores:
+  ├── OpenRouter no se usa como respaldo para informes ni documentos oficiales
+  └── Si Gemini falla en esos flujos, el endpoint responde error explícito de Gemini
 ```
 
 ---

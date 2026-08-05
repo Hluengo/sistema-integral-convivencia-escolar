@@ -9,7 +9,7 @@ import {
   optStr,
   optArr,
 } from '../validators/sanitizers.js';
-import { callOpenRouter } from '../services/openrouter.js';
+import { callGeminiComplexGeneration } from '../services/gemini.js';
 import { getRelevantLegalSources } from '../services/legalSources.js';
 import { rateLimit } from '../../middleware/rateLimit.js';
 import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../../middleware/requireMembership.js';
@@ -47,11 +47,13 @@ router.post(
         `debido proceso norma previa comunicación hechos indagación descargos resolución fundada proporcionalidad reconsideración ${infractionType}`,
       );
 
-      const systemPrompt = `Eres un auditor documental de debido proceso en convivencia escolar chilena.
+      const systemInstruction = `Eres un auditor documental de debido proceso en convivencia escolar chilena.
 
-Tu función es verificar la coherencia entre los hitos efectivamente registrados en este expediente y siete garantías del debido proceso. No calificas la responsabilidad del estudiante, no propones sanciones, no estimas multas y no agregas exigencias que no se desprendan de las fuentes autorizadas.
+Tu función es verificar la coherencia entre los hitos efectivamente registrados en un expediente y siete garantías del debido proceso. No calificas la responsabilidad del estudiante, no propones sanciones, no estimas multas y no agregas exigencias que no se desprendan de las fuentes autorizadas.
 
-FUENTES JURÍDICAS AUTORIZADAS:
+Usa solo el expediente citado y las fuentes jurídicas autorizadas incluidas por el sistema. Redacta en español formal de Chile, con tono técnico, neutral y verificable.`;
+
+      const auditDossier = `FUENTES JURÍDICAS AUTORIZADAS:
 ${legalSources}
 
 EXPEDIENTE CITADO:
@@ -84,15 +86,29 @@ Lista solo los archivos y secciones de las fuentes autorizadas que efectivamente
 
 No cites normas externas, no inventes plazos y no agregues explicaciones fuera de esta estructura.`;
 
-      const responseText = await callOpenRouter([{ role: 'user', content: systemPrompt }]);
-      res.json({ success: true, report: responseText });
+      const responseText = await callGeminiComplexGeneration(systemInstruction, auditDossier, {
+        maxOutputTokens: 3_200,
+        timeoutMs: 18_000,
+      });
+      res.json({ success: true, report: responseText, provider: 'Gemini' });
     } catch (error) {
       if (isRequestValidationError(error)) {
         res.status(400).json({ error: error.message });
         return;
       }
       console.error('Error al auditar debido proceso:', error);
-      res.status(500).json({ error: 'Error interno del servidor en auditoría.' });
+      const message = error instanceof Error ? error.message : 'Error al contactar Gemini.';
+      const status =
+        message.includes('generativelanguage.googleapis.com') && message.includes('tiempo máximo')
+          ? 504
+          : 503;
+      res.status(status).json({
+        error:
+          status === 504
+            ? 'Gemini tardó más de lo esperado al generar la auditoría. Intente nuevamente.'
+            : 'Gemini no está disponible para generar la auditoría. Revise GEMINI_API_KEY y LEGAL_DRAFT_MODEL en Vercel.',
+        provider: 'Gemini',
+      });
     }
   },
 );

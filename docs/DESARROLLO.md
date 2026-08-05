@@ -29,12 +29,11 @@ cp .env.example .env
 | `VITE_SUPABASE_ANON_KEY`                 | Anon key pública de Supabase                           |
 | `SUPABASE_JWT_SECRET`                    | Para verificar JWT en API routes                       |
 | `SUPABASE_SERVICE_ROLE_KEY`              | Admin key para operaciones servidor                    |
-| `OPENROUTER_API_KEY`                     | Mejora de textos y asistencia breve                    |
+| `OPENROUTER_API_KEY`                     | Mejora de textos breves y asistencia breve             |
 | `TEXT_IMPROVEMENT_AI_MODEL`              | Modelo OpenRouter para mejorar textos (opcional)       |
 | `TEXT_AI_MODEL`                          | Modelo OpenRouter general o fallback global (opcional) |
-| `GEMINI_API_KEY`                         | Informes y documentos                                  |
+| `GEMINI_API_KEY`                         | Gemini pospago para informes, auditorías y documentos  |
 | `LEGAL_DRAFT_MODEL`                      | Modelo Gemini para borradores legales (opcional)       |
-| `LEGAL_DRAFT_OPENROUTER_MODEL`           | Modelo OpenRouter de respaldo para borradores legales  |
 | `VITE_ALLOW_LOCAL_DEMO`                  | Demo sin login (solo desarrollo)                       |
 | `VITE_SENTRY_DSN`                        | Error tracking                                         |
 | `VITE_POSTHOG_KEY` / `VITE_POSTHOG_HOST` | Analytics                                              |

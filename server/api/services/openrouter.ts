@@ -11,13 +11,6 @@ const TEXT_FALLBACK_MODELS = [
   'deepseek/deepseek-v4-flash:free',
   'meta-llama/llama-3.1-8b-instruct',
 ] as const;
-const LEGAL_DRAFT_OPENROUTER_MODELS = [
-  process.env.LEGAL_DRAFT_OPENROUTER_MODEL ||
-    process.env.TEXT_IMPROVEMENT_AI_MODEL ||
-    'google/gemma-4-31b-it:free',
-  'deepseek/deepseek-v4-flash:free',
-  'meta-llama/llama-3.1-8b-instruct',
-] as const;
 
 interface OpenRouterOptions {
   maxTokens?: number;
@@ -61,36 +54,6 @@ export async function callOpenRouter(
   const choices = (res.body as Record<string, unknown>)?.choices as
     Array<Record<string, unknown>> | undefined;
   return ((choices?.[0]?.message as Record<string, unknown>)?.content as string | undefined) || '';
-}
-
-/** Respaldo para borradores legales cuando Gemini no está disponible en producción. */
-export async function callOpenRouterLegalDraft(
-  systemInstruction: string,
-  dossier: string,
-  options: OpenRouterOptions = {},
-): Promise<string> {
-  let lastError: unknown;
-  const models = [...new Set(LEGAL_DRAFT_OPENROUTER_MODELS)];
-  for (const model of models) {
-    try {
-      const text = await callOpenRouter(
-        [{ role: 'user', content: dossier }],
-        systemInstruction,
-        model,
-        {
-          maxTokens: options.maxTokens ?? 5000,
-          temperature: options.temperature ?? 0.2,
-          timeoutMs: options.timeoutMs ?? 35_000,
-        },
-      );
-      if (text.trim()) return text;
-    } catch (error) {
-      lastError = error;
-    }
-  }
-  throw lastError instanceof Error
-    ? lastError
-    : new Error('No fue posible usar un modelo de respaldo para el documento.');
 }
 
 /** Respaldo para transformaciones editoriales breves; no se usa para informes oficiales. */

@@ -13,7 +13,6 @@ import {
   sanitize,
 } from '../validators/sanitizers.js';
 import { callGeminiLegalDraft } from '../services/gemini.js';
-import { callOpenRouterLegalDraft } from '../services/openrouter.js';
 import { getRelevantLegalSources } from '../services/legalSources.js';
 import { extractCaseDocuments } from '../services/caseDocuments.js';
 import { httpsGet } from '../lib/https.js';
@@ -164,7 +163,7 @@ export function isGeminiTimeout(message: string): boolean {
   return message.includes('generativelanguage.googleapis.com') && message.includes('tiempo máximo');
 }
 
-export function canFallbackLegalDraftToOpenRouter(message: string): boolean {
+export function isRecoverableGeminiDraftError(message: string): boolean {
   return (
     message.includes('GEMINI_API_KEY no configurada') ||
     message.includes('Gemini error: 400') ||
@@ -173,6 +172,17 @@ export function canFallbackLegalDraftToOpenRouter(message: string): boolean {
     message.includes('Gemini no devolvió contenido de texto') ||
     isGeminiTimeout(message)
   );
+}
+
+export function getGeminiDraftErrorStatus(message: string): number {
+  return isGeminiTimeout(message) ? 504 : 503;
+}
+
+export function getGeminiDraftErrorMessage(message: string): string {
+  if (isGeminiTimeout(message)) {
+    return 'Gemini tardó más de lo esperado al redactar el documento. Intente nuevamente.';
+  }
+  return 'Gemini no está disponible para redactar el documento. Revise GEMINI_API_KEY y LEGAL_DRAFT_MODEL en Vercel.';
 }
 
 export function getRemainingDraftBudgetMs(startedAt: number, now = Date.now()): number {
@@ -367,7 +377,7 @@ ${legalSources}
       }
 
       let document: string;
-      let provider = 'Gemini';
+      const provider = 'Gemini';
       const systemInstruction = `${documentPolicy(docType)}\n\nPLANTILLA INSTITUCIONAL:\n${templatePrompt || getTemplateFallback(docType)}`;
       try {
         const geminiTimeoutMs = getBoundedDraftTimeoutMs(
@@ -387,42 +397,14 @@ ${legalSources}
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Error al contactar Gemini.';
-        if (canFallbackLegalDraftToOpenRouter(message)) {
-          try {
-            const fallbackTimeoutMs = getBoundedDraftTimeoutMs(
-              contextLimits.generation.timeoutMs,
-              startedAt,
-            );
-            if (fallbackTimeoutMs < MIN_GENERATION_TIMEOUT_MS) {
-              res.status(504).json({
-                error:
-                  'Gemini tardó más de lo esperado y no quedó tiempo suficiente para usar el modelo de respaldo. Intente nuevamente.',
-              });
-              return;
-            }
-            document = await callOpenRouterLegalDraft(systemInstruction, dossier, {
-              maxTokens: contextLimits.generation.maxOutputTokens,
-              timeoutMs: fallbackTimeoutMs,
-            });
-            provider = 'OpenRouter';
-          } catch (fallbackError) {
-            const fallbackMessage =
-              fallbackError instanceof Error
-                ? fallbackError.message
-                : 'Error al contactar el modelo de respaldo.';
-            console.error('Error al generar borrador con respaldo OpenRouter:', fallbackError);
-            res.status(isGeminiTimeout(message) ? 504 : 503).json({
-              error:
-                'No fue posible redactar el documento con Gemini ni con el modelo de respaldo. Revise GEMINI_API_KEY y OPENROUTER_API_KEY en Vercel.',
-              detail: fallbackMessage.includes('OPENROUTER_API_KEY')
-                ? 'OPENROUTER_API_KEY no está configurada.'
-                : undefined,
-            });
-            return;
-          }
-        } else {
+        if (!isRecoverableGeminiDraftError(message)) {
           throw error;
         }
+        res.status(getGeminiDraftErrorStatus(message)).json({
+          error: getGeminiDraftErrorMessage(message),
+          provider: 'Gemini',
+        });
+        return;
       }
 
       res.json({

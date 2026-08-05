@@ -3,10 +3,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
-  canFallbackLegalDraftToOpenRouter,
   DRAFT_CONTEXT_LIMITS,
+  getGeminiDraftErrorMessage,
+  getGeminiDraftErrorStatus,
   getBoundedDraftTimeoutMs,
   getRemainingDraftBudgetMs,
+  isRecoverableGeminiDraftError,
   isGeminiTimeout,
 } from './draft';
 
@@ -28,18 +30,32 @@ describe('draft document route configuration', () => {
     assert.equal(isGeminiTimeout('Gemini error: 404 model not found'), false);
   });
 
-  it('activa respaldo OpenRouter para fallas recuperables de Gemini', () => {
-    assert.equal(canFallbackLegalDraftToOpenRouter('GEMINI_API_KEY no configurada'), true);
-    assert.equal(canFallbackLegalDraftToOpenRouter('Gemini error: 400 API key not valid'), true);
-    assert.equal(canFallbackLegalDraftToOpenRouter('Gemini error: 403 permission denied'), true);
-    assert.equal(canFallbackLegalDraftToOpenRouter('Gemini error: 404 model not found'), true);
+  it('clasifica fallas recuperables de Gemini sin usar otro proveedor', () => {
+    assert.equal(isRecoverableGeminiDraftError('GEMINI_API_KEY no configurada'), true);
+    assert.equal(isRecoverableGeminiDraftError('Gemini error: 400 API key not valid'), true);
+    assert.equal(isRecoverableGeminiDraftError('Gemini error: 403 permission denied'), true);
+    assert.equal(isRecoverableGeminiDraftError('Gemini error: 404 model not found'), true);
     assert.equal(
-      canFallbackLegalDraftToOpenRouter(
+      isRecoverableGeminiDraftError(
         'La solicitud a generativelanguage.googleapis.com excedió el tiempo máximo.',
       ),
       true,
     );
-    assert.equal(canFallbackLegalDraftToOpenRouter('Error SQL inesperado'), false);
+    assert.equal(isRecoverableGeminiDraftError('Error SQL inesperado'), false);
+  });
+
+  it('responde errores explícitos de Gemini para documentos oficiales', () => {
+    assert.equal(
+      getGeminiDraftErrorStatus(
+        'La solicitud a generativelanguage.googleapis.com excedió el tiempo máximo.',
+      ),
+      504,
+    );
+    assert.equal(getGeminiDraftErrorStatus('Gemini error: 403 permission denied'), 503);
+    assert.match(
+      getGeminiDraftErrorMessage('Gemini error: 403 permission denied'),
+      /GEMINI_API_KEY y LEGAL_DRAFT_MODEL/,
+    );
   });
 
   it('reserva margen antes del timeout de Vercel', () => {

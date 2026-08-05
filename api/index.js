@@ -1984,13 +1984,6 @@ var TEXT_IMPROVEMENT_AI_MODEL =
   process.env.TEXT_AI_MODEL ||
   'google/gemma-4-31b-it:free';
 var TEXT_FALLBACK_MODELS = ['deepseek/deepseek-v4-flash:free', 'meta-llama/llama-3.1-8b-instruct'];
-var LEGAL_DRAFT_OPENROUTER_MODELS = [
-  process.env.LEGAL_DRAFT_OPENROUTER_MODEL ||
-    process.env.TEXT_IMPROVEMENT_AI_MODEL ||
-    'google/gemma-4-31b-it:free',
-  'deepseek/deepseek-v4-flash:free',
-  'meta-llama/llama-3.1-8b-instruct',
-];
 function getApiKey() {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) throw new Error('OPENROUTER_API_KEY no configurada');
@@ -2020,30 +2013,6 @@ async function callOpenRouter(messages, systemInstruction, model = AI_MODEL, opt
     throw new Error(`OpenRouter error: ${res.status} ${JSON.stringify(res.body)}`);
   const choices = res.body?.choices;
   return choices?.[0]?.message?.content || '';
-}
-async function callOpenRouterLegalDraft(systemInstruction, dossier, options = {}) {
-  let lastError;
-  const models = [...new Set(LEGAL_DRAFT_OPENROUTER_MODELS)];
-  for (const model of models) {
-    try {
-      const text = await callOpenRouter(
-        [{ role: 'user', content: dossier }],
-        systemInstruction,
-        model,
-        {
-          maxTokens: options.maxTokens ?? 5e3,
-          temperature: options.temperature ?? 0.2,
-          timeoutMs: options.timeoutMs ?? 35e3,
-        },
-      );
-      if (text.trim()) return text;
-    } catch (error) {
-      lastError = error;
-    }
-  }
-  throw lastError instanceof Error
-    ? lastError
-    : new Error('No fue posible usar un modelo de respaldo para el documento.');
 }
 async function callTextImprovementFallback(messages, systemInstruction, excludedModels = []) {
   let lastError;
@@ -2753,6 +2722,61 @@ var advisor_default = router2;
 
 // server/api/routes/audit.ts
 import { Router as Router3 } from 'express';
+
+// server/api/services/gemini.ts
+var GEMINI_MODEL = process.env.LEGAL_DRAFT_MODEL || 'gemini-2.5-flash';
+function getApiKey2() {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) {
+    throw new Error('GEMINI_API_KEY no configurada');
+  }
+  return key;
+}
+function collectText(value) {
+  if (Array.isArray(value)) return value.flatMap(collectText);
+  if (!value || typeof value !== 'object') return [];
+  const record = value;
+  if (typeof record.text === 'string') return [record.text];
+  return Object.values(record).flatMap(collectText);
+}
+async function callGeminiComplexGeneration(systemInstruction, userContent, options = {}) {
+  const maxOutputTokens = options.maxOutputTokens ?? 6e3;
+  const timeoutMs = options.timeoutMs ?? 25e3;
+  const response = await httpsPost(
+    'generativelanguage.googleapis.com',
+    `/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent`,
+    {
+      systemInstruction: {
+        parts: [{ text: systemInstruction }],
+      },
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: userContent }],
+        },
+      ],
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens,
+      },
+    },
+    { 'x-goog-api-key': getApiKey2() },
+    timeoutMs,
+  );
+  if (response.status < 200 || response.status >= 300) {
+    throw new Error(`Gemini error: ${response.status} ${JSON.stringify(response.body)}`);
+  }
+  const body = response.body;
+  const candidates = Array.isArray(body.candidates) ? body.candidates : [];
+  const text = collectText(candidates).join('\n').trim();
+  if (!text) throw new Error('Gemini no devolvi\xF3 contenido de texto.');
+  return text;
+}
+async function callGeminiLegalDraft(systemInstruction, dossier, options = {}) {
+  return callGeminiComplexGeneration(systemInstruction, dossier, options);
+}
+
+// server/api/routes/audit.ts
 var router3 = Router3();
 router3.post(
   '/audit-due-process',
@@ -2780,11 +2804,12 @@ router3.post(
       const legalSources = await getRelevantLegalSources(
         `debido proceso norma previa comunicaci\xF3n hechos indagaci\xF3n descargos resoluci\xF3n fundada proporcionalidad reconsideraci\xF3n ${infractionType}`,
       );
-      const systemPrompt = `Eres un auditor documental de debido proceso en convivencia escolar chilena.
+      const systemInstruction = `Eres un auditor documental de debido proceso en convivencia escolar chilena.
 
-Tu funci\xF3n es verificar la coherencia entre los hitos efectivamente registrados en este expediente y siete garant\xEDas del debido proceso. No calificas la responsabilidad del estudiante, no propones sanciones, no estimas multas y no agregas exigencias que no se desprendan de las fuentes autorizadas.
+Tu funci\xF3n es verificar la coherencia entre los hitos efectivamente registrados en un expediente y siete garant\xEDas del debido proceso. No calificas la responsabilidad del estudiante, no propones sanciones, no estimas multas y no agregas exigencias que no se desprendan de las fuentes autorizadas.
 
-FUENTES JUR\xCDDICAS AUTORIZADAS:
+Usa solo el expediente citado y las fuentes jur\xEDdicas autorizadas incluidas por el sistema. Redacta en espa\xF1ol formal de Chile, con tono t\xE9cnico, neutral y verificable.`;
+      const auditDossier = `FUENTES JUR\xCDDICAS AUTORIZADAS:
 ${legalSources}
 
 EXPEDIENTE CITADO:
@@ -2816,15 +2841,30 @@ Explica brevemente si el orden documentado es coherente y qu\xE9 antecedente fal
 Lista solo los archivos y secciones de las fuentes autorizadas que efectivamente utilizaste.
 
 No cites normas externas, no inventes plazos y no agregues explicaciones fuera de esta estructura.`;
-      const responseText = await callOpenRouter([{ role: 'user', content: systemPrompt }]);
-      res.json({ success: true, report: responseText });
+      const responseText = await callGeminiComplexGeneration(systemInstruction, auditDossier, {
+        maxOutputTokens: 3200,
+        timeoutMs: 18e3,
+      });
+      res.json({ success: true, report: responseText, provider: 'Gemini' });
     } catch (error) {
       if (isRequestValidationError(error)) {
         res.status(400).json({ error: error.message });
         return;
       }
       console.error('Error al auditar debido proceso:', error);
-      res.status(500).json({ error: 'Error interno del servidor en auditor\xEDa.' });
+      const message = error instanceof Error ? error.message : 'Error al contactar Gemini.';
+      const status =
+        message.includes('generativelanguage.googleapis.com') &&
+        message.includes('tiempo m\xE1ximo')
+          ? 504
+          : 503;
+      res.status(status).json({
+        error:
+          status === 504
+            ? 'Gemini tard\xF3 m\xE1s de lo esperado al generar la auditor\xEDa. Intente nuevamente.'
+            : 'Gemini no est\xE1 disponible para generar la auditor\xEDa. Revise GEMINI_API_KEY y LEGAL_DRAFT_MODEL en Vercel.',
+        provider: 'Gemini',
+      });
     }
   },
 );
@@ -2832,56 +2872,6 @@ var audit_default = router3;
 
 // server/api/routes/draft.ts
 import { Router as Router4 } from 'express';
-
-// server/api/services/gemini.ts
-var GEMINI_MODEL = process.env.LEGAL_DRAFT_MODEL || 'gemini-2.5-flash';
-function getApiKey2() {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) {
-    throw new Error('GEMINI_API_KEY no configurada');
-  }
-  return key;
-}
-function collectText(value) {
-  if (Array.isArray(value)) return value.flatMap(collectText);
-  if (!value || typeof value !== 'object') return [];
-  const record = value;
-  if (typeof record.text === 'string') return [record.text];
-  return Object.values(record).flatMap(collectText);
-}
-async function callGeminiLegalDraft(systemInstruction, dossier, options = {}) {
-  const maxOutputTokens = options.maxOutputTokens ?? 6e3;
-  const timeoutMs = options.timeoutMs ?? 25e3;
-  const response = await httpsPost(
-    'generativelanguage.googleapis.com',
-    `/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent`,
-    {
-      systemInstruction: {
-        parts: [{ text: systemInstruction }],
-      },
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: dossier }],
-        },
-      ],
-      generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens,
-      },
-    },
-    { 'x-goog-api-key': getApiKey2() },
-    timeoutMs,
-  );
-  if (response.status < 200 || response.status >= 300) {
-    throw new Error(`Gemini error: ${response.status} ${JSON.stringify(response.body)}`);
-  }
-  const body = response.body;
-  const candidates = Array.isArray(body.candidates) ? body.candidates : [];
-  const text = collectText(candidates).join('\n').trim();
-  if (!text) throw new Error('Gemini no devolvi\xF3 contenido de texto.');
-  return text;
-}
 
 // server/api/services/caseDocuments.ts
 import { inflateRawSync } from 'node:zlib';
@@ -3157,7 +3147,7 @@ function isGeminiTimeout(message) {
     message.includes('generativelanguage.googleapis.com') && message.includes('tiempo m\xE1ximo')
   );
 }
-function canFallbackLegalDraftToOpenRouter(message) {
+function isRecoverableGeminiDraftError(message) {
   return (
     message.includes('GEMINI_API_KEY no configurada') ||
     message.includes('Gemini error: 400') ||
@@ -3166,6 +3156,15 @@ function canFallbackLegalDraftToOpenRouter(message) {
     message.includes('Gemini no devolvi\xF3 contenido de texto') ||
     isGeminiTimeout(message)
   );
+}
+function getGeminiDraftErrorStatus(message) {
+  return isGeminiTimeout(message) ? 504 : 503;
+}
+function getGeminiDraftErrorMessage(message) {
+  if (isGeminiTimeout(message)) {
+    return 'Gemini tard\xF3 m\xE1s de lo esperado al redactar el documento. Intente nuevamente.';
+  }
+  return 'Gemini no est\xE1 disponible para redactar el documento. Revise GEMINI_API_KEY y LEGAL_DRAFT_MODEL en Vercel.';
 }
 function getRemainingDraftBudgetMs(startedAt, now = Date.now()) {
   return Math.max(0, VERCEL_FUNCTION_BUDGET_MS - (now - startedAt));
@@ -3340,7 +3339,7 @@ ${legalSources}
         templatePrompt = templates[0]?.system_prompt?.trim() || null;
       } catch {}
       let document;
-      let provider = 'Gemini';
+      const provider = 'Gemini';
       const systemInstruction = `${documentPolicy(docType)}
 
 PLANTILLA INSTITUCIONAL:
@@ -3363,42 +3362,14 @@ ${templatePrompt || getTemplateFallback(docType)}`;
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Error al contactar Gemini.';
-        if (canFallbackLegalDraftToOpenRouter(message)) {
-          try {
-            const fallbackTimeoutMs = getBoundedDraftTimeoutMs(
-              contextLimits.generation.timeoutMs,
-              startedAt,
-            );
-            if (fallbackTimeoutMs < MIN_GENERATION_TIMEOUT_MS) {
-              res.status(504).json({
-                error:
-                  'Gemini tard\xF3 m\xE1s de lo esperado y no qued\xF3 tiempo suficiente para usar el modelo de respaldo. Intente nuevamente.',
-              });
-              return;
-            }
-            document = await callOpenRouterLegalDraft(systemInstruction, dossier, {
-              maxTokens: contextLimits.generation.maxOutputTokens,
-              timeoutMs: fallbackTimeoutMs,
-            });
-            provider = 'OpenRouter';
-          } catch (fallbackError) {
-            const fallbackMessage =
-              fallbackError instanceof Error
-                ? fallbackError.message
-                : 'Error al contactar el modelo de respaldo.';
-            console.error('Error al generar borrador con respaldo OpenRouter:', fallbackError);
-            res.status(isGeminiTimeout(message) ? 504 : 503).json({
-              error:
-                'No fue posible redactar el documento con Gemini ni con el modelo de respaldo. Revise GEMINI_API_KEY y OPENROUTER_API_KEY en Vercel.',
-              detail: fallbackMessage.includes('OPENROUTER_API_KEY')
-                ? 'OPENROUTER_API_KEY no est\xE1 configurada.'
-                : void 0,
-            });
-            return;
-          }
-        } else {
+        if (!isRecoverableGeminiDraftError(message)) {
           throw error;
         }
+        res.status(getGeminiDraftErrorStatus(message)).json({
+          error: getGeminiDraftErrorMessage(message),
+          provider: 'Gemini',
+        });
+        return;
       }
       res.json({
         success: true,
