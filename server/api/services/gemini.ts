@@ -2,9 +2,14 @@
 
 import { httpsPost } from '../lib/https.js';
 
-// El alias oficial sigue la versión Flash disponible y evita dejar el flujo
-// detenido cuando Google retira un identificador estable para cuentas nuevas.
-const GEMINI_MODEL = process.env.LEGAL_DRAFT_MODEL || 'gemini-flash-latest';
+// Usar un identificador estable evita cambios de latencia/comportamiento propios
+// del alias "latest" en un flujo legal sensible.
+const GEMINI_MODEL = process.env.LEGAL_DRAFT_MODEL || 'gemini-2.5-flash';
+
+interface GeminiLegalDraftOptions {
+  maxOutputTokens?: number;
+  timeoutMs?: number;
+}
 
 function getApiKey(): string {
   const key = process.env.GEMINI_API_KEY;
@@ -30,7 +35,10 @@ function collectText(value: unknown): string[] {
 export async function callGeminiLegalDraft(
   systemInstruction: string,
   dossier: string,
+  options: GeminiLegalDraftOptions = {},
 ): Promise<string> {
+  const maxOutputTokens = options.maxOutputTokens ?? 6000;
+  const timeoutMs = options.timeoutMs ?? 25_000;
   const response = await httpsPost(
     'generativelanguage.googleapis.com',
     `/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent`,
@@ -46,11 +54,11 @@ export async function callGeminiLegalDraft(
       ],
       generationConfig: {
         temperature: 0.2,
-        maxOutputTokens: 12000,
+        maxOutputTokens,
       },
     },
     { 'x-goog-api-key': getApiKey() },
-    18_000,
+    timeoutMs,
   );
 
   if (response.status < 200 || response.status >= 300) {

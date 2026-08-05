@@ -33,6 +33,7 @@ cp .env.example .env
 | `TEXT_IMPROVEMENT_AI_MODEL`              | Modelo OpenRouter para mejorar textos (opcional)       |
 | `TEXT_AI_MODEL`                          | Modelo OpenRouter general o fallback global (opcional) |
 | `GEMINI_API_KEY`                         | Informes y documentos                                  |
+| `LEGAL_DRAFT_MODEL`                      | Modelo Gemini para borradores legales (opcional)       |
 | `VITE_ALLOW_LOCAL_DEMO`                  | Demo sin login (solo desarrollo)                       |
 | `VITE_SENTRY_DSN`                        | Error tracking                                         |
 | `VITE_POSTHOG_KEY` / `VITE_POSTHOG_HOST` | Analytics                                              |

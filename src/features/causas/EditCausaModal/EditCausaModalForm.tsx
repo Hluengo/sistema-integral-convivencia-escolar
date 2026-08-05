@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import type { FieldErrors, Resolver } from 'react-hook-form';
-import { Scale, AlertCircle, FileText, Shield } from 'lucide-react';
+import { Scale, AlertCircle, FileText, Shield, Trash2 } from 'lucide-react';
 import { type Causa, EstadoCausa, type TipoInfraccion } from '@/src/shared/lib/types';
 import { nowDateOnly } from '@/src/shared/lib/dateUtils';
 import ImproveTextarea from '@/src/shared/ImproveTextarea';
@@ -471,11 +471,13 @@ export default function EditCausaModalForm({
 
         <div className="flex items-center justify-end gap-3 border-t border-neutral-100 pt-4">
           <Button
-            variant="danger"
+            variant="custom"
             onClick={() => setShowDeleteConfirm(true)}
-            className="bg-transparent text-gravisima-600 shadow-none hover:bg-gravisima-50 hover:text-gravisima-700"
+            className="border border-gravisima-200 bg-white text-gravisima-700 shadow-none hover:bg-gravisima-50 hover:text-gravisima-800"
+            aria-label={`Eliminar expediente ${causa.id}`}
           >
-            Eliminar Expediente
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
+            Eliminar expediente
           </Button>
           <Button variant="secondary" onClick={onClose}>
             Cancelar

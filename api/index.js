@@ -2797,7 +2797,7 @@ var audit_default = router3;
 import { Router as Router4 } from 'express';
 
 // server/api/services/gemini.ts
-var GEMINI_MODEL = process.env.LEGAL_DRAFT_MODEL || 'gemini-flash-latest';
+var GEMINI_MODEL = process.env.LEGAL_DRAFT_MODEL || 'gemini-2.5-flash';
 function getApiKey2() {
   const key = process.env.GEMINI_API_KEY;
   if (!key) {
@@ -2812,7 +2812,9 @@ function collectText(value) {
   if (typeof record.text === 'string') return [record.text];
   return Object.values(record).flatMap(collectText);
 }
-async function callGeminiLegalDraft(systemInstruction, dossier) {
+async function callGeminiLegalDraft(systemInstruction, dossier, options = {}) {
+  const maxOutputTokens = options.maxOutputTokens ?? 6e3;
+  const timeoutMs = options.timeoutMs ?? 25e3;
   const response = await httpsPost(
     'generativelanguage.googleapis.com',
     `/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent`,
@@ -2828,11 +2830,11 @@ async function callGeminiLegalDraft(systemInstruction, dossier) {
       ],
       generationConfig: {
         temperature: 0.2,
-        maxOutputTokens: 12e3,
+        maxOutputTokens,
       },
     },
     { 'x-goog-api-key': getApiKey2() },
-    18e3,
+    timeoutMs,
   );
   if (response.status < 200 || response.status >= 300) {
     throw new Error(`Gemini error: ${response.status} ${JSON.stringify(response.body)}`);
@@ -3024,25 +3026,23 @@ var DOCUMENT_SIGNERS = {
 };
 var DRAFT_CONTEXT_LIMITS = {
   notificacion_apertura: {
-    legalSourceChars: 18e3,
-    historyEntries: 12,
-    checklistItems: 12,
-    measures: 12,
-    documents: {
-      maxDocuments: 2,
-      maxExtractedCharsPerDocument: 6e3,
-      maxExtractedCharsTotal: 1e4,
-    },
+    legalSourceChars: 6e3,
+    historyEntries: 8,
+    checklistItems: 8,
+    measures: 8,
+    documents: { maxDocuments: 0, maxExtractedCharsPerDocument: 0, maxExtractedCharsTotal: 0 },
+    generation: { maxOutputTokens: 1800, timeoutMs: 28e3 },
   },
   citacion_entrevista: {
-    legalSourceChars: 8e3,
+    legalSourceChars: 4e3,
     historyEntries: 4,
     checklistItems: 4,
     measures: 4,
     documents: { maxDocuments: 0, maxExtractedCharsPerDocument: 0, maxExtractedCharsTotal: 0 },
+    generation: { maxOutputTokens: 1200, timeoutMs: 24e3 },
   },
   informe_cierre_indagacion: {
-    legalSourceChars: 36e3,
+    legalSourceChars: 28e3,
     historyEntries: 32,
     checklistItems: 30,
     measures: 25,
@@ -3051,9 +3051,10 @@ var DRAFT_CONTEXT_LIMITS = {
       maxExtractedCharsPerDocument: 12e3,
       maxExtractedCharsTotal: 32e3,
     },
+    generation: { maxOutputTokens: 7e3, timeoutMs: 45e3 },
   },
   informe_concluyente: {
-    legalSourceChars: 44e3,
+    legalSourceChars: 32e3,
     historyEntries: 40,
     checklistItems: 35,
     measures: 30,
@@ -3062,6 +3063,7 @@ var DRAFT_CONTEXT_LIMITS = {
       maxExtractedCharsPerDocument: 14e3,
       maxExtractedCharsTotal: 4e4,
     },
+    generation: { maxOutputTokens: 8e3, timeoutMs: 5e4 },
   },
 };
 function getSupabaseHostname2() {
@@ -3109,6 +3111,11 @@ REGLAS INNEGOCIABLES:
 }
 function stringifyList(values, empty) {
   return values.length ? values.map((value) => `- ${value}`).join('\n') : empty;
+}
+function isGeminiTimeout(message) {
+  return (
+    message.includes('generativelanguage.googleapis.com') && message.includes('tiempo m\xE1ximo')
+  );
 }
 router4.post(
   '/draft-document',
@@ -3282,6 +3289,7 @@ ${legalSources}
 PLANTILLA INSTITUCIONAL:
 ${templatePrompt || getTemplateFallback(docType)}`,
           dossier,
+          contextLimits.generation,
         );
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Error al contactar Gemini.';
@@ -3296,6 +3304,13 @@ ${templatePrompt || getTemplateFallback(docType)}`,
           res.status(503).json({
             error:
               'El modelo configurado de Gemini no est\xE1 disponible. Revise LEGAL_DRAFT_MODEL en Vercel.',
+          });
+          return;
+        }
+        if (isGeminiTimeout(message)) {
+          res.status(504).json({
+            error:
+              'Gemini tard\xF3 demasiado en redactar el documento. Intente nuevamente; si el expediente tiene muchos antecedentes o adjuntos, genere primero una notificaci\xF3n o citaci\xF3n y luego el informe.',
           });
           return;
         }

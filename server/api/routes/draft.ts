@@ -44,7 +44,7 @@ const DOCUMENT_SIGNERS: Record<DocType, string> = {
   informe_concluyente: 'Equipo de Convivencia Escolar',
 };
 
-const DRAFT_CONTEXT_LIMITS: Record<
+export const DRAFT_CONTEXT_LIMITS: Record<
   DocType,
   {
     legalSourceChars: number;
@@ -56,28 +56,30 @@ const DRAFT_CONTEXT_LIMITS: Record<
       maxExtractedCharsPerDocument: number;
       maxExtractedCharsTotal: number;
     };
+    generation: {
+      maxOutputTokens: number;
+      timeoutMs: number;
+    };
   }
 > = {
   notificacion_apertura: {
-    legalSourceChars: 18_000,
-    historyEntries: 12,
-    checklistItems: 12,
-    measures: 12,
-    documents: {
-      maxDocuments: 2,
-      maxExtractedCharsPerDocument: 6_000,
-      maxExtractedCharsTotal: 10_000,
-    },
+    legalSourceChars: 6_000,
+    historyEntries: 8,
+    checklistItems: 8,
+    measures: 8,
+    documents: { maxDocuments: 0, maxExtractedCharsPerDocument: 0, maxExtractedCharsTotal: 0 },
+    generation: { maxOutputTokens: 1800, timeoutMs: 28_000 },
   },
   citacion_entrevista: {
-    legalSourceChars: 8_000,
+    legalSourceChars: 4_000,
     historyEntries: 4,
     checklistItems: 4,
     measures: 4,
     documents: { maxDocuments: 0, maxExtractedCharsPerDocument: 0, maxExtractedCharsTotal: 0 },
+    generation: { maxOutputTokens: 1200, timeoutMs: 24_000 },
   },
   informe_cierre_indagacion: {
-    legalSourceChars: 36_000,
+    legalSourceChars: 28_000,
     historyEntries: 32,
     checklistItems: 30,
     measures: 25,
@@ -86,9 +88,10 @@ const DRAFT_CONTEXT_LIMITS: Record<
       maxExtractedCharsPerDocument: 12_000,
       maxExtractedCharsTotal: 32_000,
     },
+    generation: { maxOutputTokens: 7000, timeoutMs: 45_000 },
   },
   informe_concluyente: {
-    legalSourceChars: 44_000,
+    legalSourceChars: 32_000,
     historyEntries: 40,
     checklistItems: 35,
     measures: 30,
@@ -97,6 +100,7 @@ const DRAFT_CONTEXT_LIMITS: Record<
       maxExtractedCharsPerDocument: 14_000,
       maxExtractedCharsTotal: 40_000,
     },
+    generation: { maxOutputTokens: 8000, timeoutMs: 50_000 },
   },
 };
 
@@ -149,6 +153,10 @@ REGLAS INNEGOCIABLES:
 
 function stringifyList(values: string[], empty: string): string {
   return values.length ? values.map((value) => `- ${value}`).join('\n') : empty;
+}
+
+export function isGeminiTimeout(message: string): boolean {
+  return message.includes('generativelanguage.googleapis.com') && message.includes('tiempo máximo');
 }
 
 router.post(
@@ -333,6 +341,7 @@ ${legalSources}
         document = await callGeminiLegalDraft(
           `${documentPolicy(docType)}\n\nPLANTILLA INSTITUCIONAL:\n${templatePrompt || getTemplateFallback(docType)}`,
           dossier,
+          contextLimits.generation,
         );
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Error al contactar Gemini.';
@@ -347,6 +356,13 @@ ${legalSources}
           res.status(503).json({
             error:
               'El modelo configurado de Gemini no está disponible. Revise LEGAL_DRAFT_MODEL en Vercel.',
+          });
+          return;
+        }
+        if (isGeminiTimeout(message)) {
+          res.status(504).json({
+            error:
+              'Gemini tardó demasiado en redactar el documento. Intente nuevamente; si el expediente tiene muchos antecedentes o adjuntos, genere primero una notificación o citación y luego el informe.',
           });
           return;
         }
