@@ -2282,6 +2282,16 @@ function isTextImprovementRefusal(value) {
   if (!normalized) return true;
   return REFUSAL_PATTERNS.some((pattern) => pattern.test(normalized));
 }
+var TEXT_IMPROVEMENT_UNCHANGED_WARNING =
+  'La IA no pudo mejorar este texto. El contenido original se mantuvo sin cambios.';
+function buildTextImprovementUnchangedResponse(originalText) {
+  return {
+    success: true,
+    improved: originalText,
+    unchanged: true,
+    warning: TEXT_IMPROVEMENT_UNCHANGED_WARNING,
+  };
+}
 function buildTextImprovementRequest(text, contextInstruction, isRetry = false) {
   const task = contextInstruction
     ? `Criterio editorial espec\xEDfico:
@@ -2370,17 +2380,11 @@ router.post(
         try {
           improved = await callTextImprovementFallback(request, TEXT_IMPROVEMENT_SYSTEM_PROMPT);
         } catch {
-          res.status(422).json({
-            error:
-              'La IA no pudo mejorar este texto. El contenido original se mantuvo sin cambios.',
-          });
+          res.json(buildTextImprovementUnchangedResponse(text));
           return;
         }
         if (isTextImprovementRefusal(improved)) {
-          res.status(422).json({
-            error:
-              'La IA no pudo mejorar este texto. El contenido original se mantuvo sin cambios.',
-          });
+          res.json(buildTextImprovementUnchangedResponse(text));
           return;
         }
       }

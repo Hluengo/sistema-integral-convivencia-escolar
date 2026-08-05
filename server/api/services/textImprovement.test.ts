@@ -2,7 +2,11 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { buildTextImprovementRequest, isTextImprovementRefusal } from './textImprovement.js';
+import {
+  buildTextImprovementRequest,
+  buildTextImprovementUnchangedResponse,
+  isTextImprovementRefusal,
+} from './textImprovement.js';
 
 describe('textImprovement', () => {
   it('detecta negativas del modelo en español e inglés', () => {
@@ -33,5 +37,16 @@ describe('textImprovement', () => {
     const request = buildTextImprovementRequest('Texto sensible.', undefined, true);
     assert.match(request, /negativa incorrecta/);
     assert.match(request, /únicamente transformar editorialmente/);
+  });
+
+  it('devuelve una respuesta recuperable cuando el modelo no mejora el texto', () => {
+    const response = buildTextImprovementUnchangedResponse('Texto original.');
+
+    assert.deepEqual(response, {
+      success: true,
+      improved: 'Texto original.',
+      unchanged: true,
+      warning: 'La IA no pudo mejorar este texto. El contenido original se mantuvo sin cambios.',
+    });
   });
 });

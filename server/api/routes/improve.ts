@@ -8,6 +8,7 @@ import { callOpenRouter, callTextImprovementFallback } from '../services/openrou
 import { rateLimit } from '../../middleware/rateLimit.js';
 import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../../middleware/requireMembership.js';
 import {
+  buildTextImprovementUnchangedResponse,
   buildTextImprovementRequest,
   isTextImprovementRefusal,
   TEXT_IMPROVEMENT_SYSTEM_PROMPT,
@@ -84,17 +85,11 @@ router.post(
         try {
           improved = await callTextImprovementFallback(request, TEXT_IMPROVEMENT_SYSTEM_PROMPT);
         } catch {
-          res.status(422).json({
-            error:
-              'La IA no pudo mejorar este texto. El contenido original se mantuvo sin cambios.',
-          });
+          res.json(buildTextImprovementUnchangedResponse(text));
           return;
         }
         if (isTextImprovementRefusal(improved)) {
-          res.status(422).json({
-            error:
-              'La IA no pudo mejorar este texto. El contenido original se mantuvo sin cambios.',
-          });
+          res.json(buildTextImprovementUnchangedResponse(text));
           return;
         }
       }

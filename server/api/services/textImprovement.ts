@@ -14,6 +14,27 @@ export function isTextImprovementRefusal(value: string): boolean {
   return REFUSAL_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
+export const TEXT_IMPROVEMENT_UNCHANGED_WARNING =
+  'La IA no pudo mejorar este texto. El contenido original se mantuvo sin cambios.';
+
+export interface TextImprovementUnchangedResponse {
+  success: true;
+  improved: string;
+  unchanged: true;
+  warning: string;
+}
+
+export function buildTextImprovementUnchangedResponse(
+  originalText: string,
+): TextImprovementUnchangedResponse {
+  return {
+    success: true,
+    improved: originalText,
+    unchanged: true,
+    warning: TEXT_IMPROVEMENT_UNCHANGED_WARNING,
+  };
+}
+
 export function buildTextImprovementRequest(
   text: string,
   contextInstruction?: string,
