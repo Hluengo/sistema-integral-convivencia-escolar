@@ -53,13 +53,50 @@ export function sanitizeForAI(text: unknown): string {
     .replace(/<\|im_start\|>|<\|im_end\|>/gi, '')
     .replace(/<\|system\|>|<\|user\|>|<\|assistant\|>/gi, '')
     .replace(
-      /^(ignore|olvida|disregard|anula).{0,50}(instrucciones|instructions|reglas|rules|sistema|system)/gim,
+      /^(ignore|ignora|olvida|disregard|anula).{0,50}(instrucciones|instructions|reglas|rules|sistema|system)/gim,
       '',
     )
     .replace(
       /(eres|you are|act as|actúa como|actuá como).{0,30}(un|a|el|la|un(a)?\s+abogado|lawyer|juez|judge)/gim,
       '',
     )
+    .replace(/\n{3,}/g, '\n\n')
+    .slice(0, MAX_STR);
+}
+
+const EMAIL_RE = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
+const CHILEAN_RUT_RE = /\b(?:\d{1,2}\.?\d{3}\.?\d{3}-?[\dkK]|\d{7,8}-[\dkK])\b/g;
+const CHILEAN_PHONE_RE = /(?:\+?56\s*)?(?:9\s*)?\b\d{4}\s*\d{4}\b/g;
+const LABELLED_NAME_RE =
+  /\b(estudiante|alumno|alumna|apoderado|apoderada|madre|padre)\s+([A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+(?:\s+[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+){1,4})/g;
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function uniqueKnownValues(values: readonly unknown[]): string[] {
+  return [
+    ...new Set(
+      values
+        .filter((value): value is string => typeof value === 'string')
+        .map((value) => value.trim())
+        .filter((value) => value.length >= 3),
+    ),
+  ].sort((a, b) => b.length - a.length);
+}
+
+export function redactSensitiveForAI(text: unknown, knownValues: readonly unknown[] = []): string {
+  let redacted = sanitizeForAI(text);
+
+  for (const value of uniqueKnownValues(knownValues)) {
+    redacted = redacted.replace(new RegExp(escapeRegExp(value), 'gi'), '[dato personal]');
+  }
+
+  return redacted
+    .replace(EMAIL_RE, '[correo]')
+    .replace(CHILEAN_RUT_RE, '[RUT]')
+    .replace(CHILEAN_PHONE_RE, '[teléfono]')
+    .replace(LABELLED_NAME_RE, '$1 [nombre]')
     .replace(/\n{3,}/g, '\n\n')
     .slice(0, MAX_STR);
 }

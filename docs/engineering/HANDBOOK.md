@@ -18,7 +18,7 @@
 | CSS           | Tailwind CSS v4                | 4.1.14                | Estilos utility-first    |
 | State         | Zustand                        | 5.0.14                | Estado global            |
 | Data Fetching | TanStack React Query           | 5.101.2               | Server state cache       |
-| Forms         | react-hook-form + Zod          | 7.82.0 / 4.4.3        | Formularios + validación |
+| Forms         | react-hook-form + Zod          | 7.84.0 / 4.4.3        | Formularios + validación |
 | Backend Dev   | Express + tsx                  | 4.21.2 / 4.21.0       | Servidor desarrollo      |
 | Backend Prod  | Vercel Serverless              | esbuild bundle        | Producción               |
 | Database      | Supabase PostgreSQL            | 17.6.1                | Datos                    |
@@ -65,17 +65,21 @@ src/
 
 **Regla:** Cada ruta se implementa una sola vez en `server/api/routes/` y se registra en ambos entry points. `server/routes/pilot.ts` es la única ruta específica del servidor de desarrollo.
 
-### 1.4 State-driven Routing
+### 1.4 URL Routing Bridge
 
-No hay React Router. La navegación usa `uiStore.currentView` de tipo `SidebarView`:
+La navegación usa un bridge propio entre `window.history` y `uiStore.currentView` de tipo `SidebarView`. `src/app/routing.ts` define el mapa canónico y `useUrlRouting.ts` sincroniza cambios de URL, botones atrás/adelante y selección de expediente:
 
-| View          | Component           | Ruta (no real)       |
-| ------------- | ------------------- | -------------------- |
-| `dashboard`   | `<DashboardStats>`  | State: 'dashboard'   |
-| `causas`      | `<CausasView>`      | State: 'causas'      |
-| `informes`    | `<AdvisorView>`     | State: 'informes'    |
-| `alumnos`     | `<StudentsPanel>`   | State: 'alumnos'     |
-| `anotaciones` | `<AnotacionesView>` | State: 'anotaciones' |
+| View          | Component           | Ruta               |
+| ------------- | ------------------- | ------------------ |
+| `dashboard`   | `<DashboardStats>`  | `/`                |
+| `causas`      | `<CausasView>`      | `/expedientes`     |
+| `causas`      | `<CausasView>`      | `/expedientes/:id` |
+| `informes`    | `<AdvisorView>`     | `/informes`        |
+| `alumnos`     | `<StudentsPanel>`   | `/alumnos`         |
+| `anotaciones` | `<AnotacionesView>` | `/anotaciones`     |
+| `reportes`    | `<ReportsCenter>`   | `/reportes`        |
+| `admin`       | `<AdminView>`       | `/admin`           |
+| `platform`    | `<PlatformView>`    | `/plataforma`      |
 
 ---
 
@@ -153,13 +157,13 @@ export function Example({ title, onAction }: ExampleProps) {
 
 ### 3.4 Estado
 
-| Tipo          | Solución                     | Cuándo                                   |
-| ------------- | ---------------------------- | ---------------------------------------- |
-| Estado global | Zustand                      | Múltiples componentes, diferentes vistas |
-| Server state  | React Query                  | Datos de Supabase                        |
-| Form state    | useReducer / react-hook-form | Formularios wizard                       |
-| UI state      | useState                     | Estado local de un componente            |
-| Context       | React Context                | Subárbol específico (TimelineProvider)   |
+| Tipo          | Solución              | Cuándo                                   |
+| ------------- | --------------------- | ---------------------------------------- |
+| Estado global | Zustand               | Múltiples componentes, diferentes vistas |
+| Server state  | React Query           | Datos de Supabase                        |
+| Form state    | react-hook-form + Zod | Formularios nuevos o migrados            |
+| UI state      | useState              | Estado local de un componente            |
+| Context       | React Context         | Subárbol específico (TimelineProvider)   |
 
 ### 3.5 Performance
 
@@ -356,6 +360,7 @@ sanitizeForAI(input):
 | Unit   | `node:test` + `node:assert/strict` | `npm run test`        |
 | Vitest | Vitest + `@vitest/coverage-v8`     | `npm run test:vitest` |
 | E2E    | Playwright                         | `npm run test:e2e`    |
+| A11y   | Playwright + axe                   | `npm run test:a11y`   |
 
 ### 7.2 Patrón de Test
 

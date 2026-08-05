@@ -127,6 +127,9 @@ interface ConfirmInput {
 const PARSER_VERSION = 'disciplinary-pdf-parser-v1';
 const PDF_BUCKET = 'disciplinary-processes';
 const MAX_PDF_BYTES = 10 * 1024 * 1024;
+const MAX_PDF_PAGES = 80;
+const MAX_CONFIRMED_ANNOTATIONS = 300;
+const MAX_CONFIRMED_ANNOTATION_TEXT = 4_000;
 
 type NodeDomMatrixInit = [number, number, number, number, number, number] | number[] | undefined;
 
@@ -384,23 +387,23 @@ export async function extractPdfPages(buffer: Uint8Array): Promise<string[]> {
     useWorkerFetch: false,
     isEvalSupported: false,
   }).promise;
+  if (pdf.numPages > MAX_PDF_PAGES) {
+    throw new Error(`El PDF tiene demasiadas páginas. Máximo permitido: ${MAX_PDF_PAGES}.`);
+  }
   const pages: string[] = [];
 
-  const pagePromises = Array.from({ length: pdf.numPages }, (_, i) => i + 1).map(
-    async (pageNumber) => {
-      const page = await pdf.getPage(pageNumber);
-      const content = await page.getTextContent();
-      return content.items
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+    const page = await pdf.getPage(pageNumber);
+    const content = await page.getTextContent();
+    pages.push(
+      content.items
         .map((item) => (item.str ?? '') + (item.hasEOL ? '\n' : ' '))
         .join('')
         .replace(/[^\S\n]+/g, ' ')
         .replace(/\s*\n\s*/g, '\n')
-        .trim();
-    },
-  );
-
-  const resolvedPages = await Promise.all(pagePromises);
-  pages.push(...resolvedPages);
+        .trim(),
+    );
+  }
 
   return pages;
 }
@@ -591,6 +594,75 @@ function summarizeAnnotations(annotations: DetectedAnnotation[]): AnnotationSumm
     },
     { negativas: 0, positivas: 0, informativas: 0 },
   );
+}
+
+function isAnnotationType(value: unknown): value is AnnotationType {
+  return value === 'negative' || value === 'positive' || value === 'information';
+}
+
+function sanitizeConfirmedAnnotationText(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  return value
+    .replaceAll(String.fromCharCode(0), '')
+    .trim()
+    .slice(0, MAX_CONFIRMED_ANNOTATION_TEXT);
+}
+
+function sanitizeIsoDate(value: unknown, fallback: string | null): string | null {
+  if (typeof value !== 'string') return fallback;
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : fallback;
+}
+
+function prepareConfirmedAnnotations(
+  annotations: ConfirmAnnotationInput[],
+  parsedAnnotations: DetectedAnnotation[],
+): ConfirmAnnotationInput[] {
+  if (annotations.length > MAX_CONFIRMED_ANNOTATIONS) {
+    throw new Error('Las anotaciones confirmadas superan el máximo permitido.');
+  }
+
+  const parsedBySequence = new Map(
+    parsedAnnotations.map((annotation) => [annotation.sequence_number, annotation]),
+  );
+
+  return annotations.map((annotation, index) => {
+    if (!isAnnotationType(annotation.type)) {
+      throw new Error('Las anotaciones confirmadas contienen una clasificación no válida.');
+    }
+
+    const sequenceNumber = Number(annotation.sequence_number || index + 1);
+    const parsed = parsedBySequence.get(sequenceNumber);
+    if (!parsed) {
+      throw new Error('Las anotaciones confirmadas no corresponden al PDF analizado.');
+    }
+
+    const rawText = sanitizeConfirmedAnnotationText(annotation.raw_text);
+    if (!rawText) {
+      throw new Error('Las anotaciones confirmadas contienen texto vacío.');
+    }
+
+    const confidence = Number(annotation.confidence ?? parsed.confidence);
+
+    return {
+      raw_text: rawText,
+      normalized_text: normalizeText(rawText),
+      type: annotation.type,
+      page_number: parsed.page_number,
+      sequence_number: parsed.sequence_number,
+      detected_date: sanitizeIsoDate(annotation.detected_date, parsed.detected_date),
+      detected_teacher: sanitizeConfirmedAnnotationText(
+        annotation.detected_teacher ?? parsed.detected_teacher ?? '',
+      ).slice(0, 100),
+      confidence: Number.isFinite(confidence) ? Math.max(0, Math.min(1, confidence)) : 0.8,
+    };
+  });
+}
+
+export function prepareConfirmedAnnotationsForTest(
+  annotations: ConfirmAnnotationInput[],
+  parsedAnnotations: DetectedAnnotation[],
+): ConfirmAnnotationInput[] {
+  return prepareConfirmedAnnotations(annotations, parsedAnnotations);
 }
 
 function getNameParts(value: string): string[] {
@@ -1005,8 +1077,17 @@ async function findDuplicateFileByHash(
   };
 }
 
-export async function analyzeDisciplinaryPdf(input: AnalyzeInput): Promise<AnalysisResult> {
-  const supabase = getSupabaseAdmin(input.authToken);
+async function loadAndParsePdf(
+  supabase: SupabaseClient,
+  input: Pick<AnalyzeInput, 'bucket' | 'storagePath' | 'fileName' | 'tenantId'>,
+): Promise<{
+  bytes: Uint8Array;
+  fileHash: string;
+  pages: string[];
+  textContent: string;
+  annotations: DetectedAnnotation[];
+  summary: AnnotationSummary;
+}> {
   assertStoragePathAllowed(input.bucket, input.storagePath, input.tenantId);
 
   const { data: fileBlob, error: downloadError } = await supabase.storage
@@ -1026,6 +1107,37 @@ export async function analyzeDisciplinaryPdf(input: AnalyzeInput): Promise<Analy
   const fileHash = createHash('sha256').update(bytes).digest('hex');
   const pages = await extractPdfPages(bytes);
   const textContent = pages.join('\n');
+  const annotations = normalizeText(textContent).length < 20 ? [] : parseAnnotationsByPage(pages);
+  const summary = summarizeAnnotations(annotations);
+
+  return { bytes, fileHash, pages, textContent, annotations, summary };
+}
+
+async function assertAnalysisMatchesFile(
+  supabase: SupabaseClient,
+  tenantId: string,
+  analysisId: string | null | undefined,
+  fileHash: string,
+): Promise<void> {
+  if (!analysisId) return;
+
+  const { data, error } = await supabase
+    .from('document_analyses')
+    .select('id,file_hash,status')
+    .eq('id', analysisId)
+    .eq('tenant_id', tenantId)
+    .maybeSingle();
+
+  if (error) throw new Error('No fue posible validar el análisis previo del PDF');
+  if (!data) throw new Error('El análisis informado no corresponde al establecimiento activo');
+  if ((data as { file_hash?: string | null }).file_hash !== fileHash) {
+    throw new Error('El análisis informado no coincide con el PDF confirmado');
+  }
+}
+
+export async function analyzeDisciplinaryPdf(input: AnalyzeInput): Promise<AnalysisResult> {
+  const supabase = getSupabaseAdmin(input.authToken);
+  const { fileHash, textContent, annotations, summary } = await loadAndParsePdf(supabase, input);
   const warnings: string[] = [];
 
   if (normalizeText(textContent).length < 20) {
@@ -1034,8 +1146,6 @@ export async function analyzeDisciplinaryPdf(input: AnalyzeInput): Promise<Analy
 
   const detectedStudentName = extractStudentName(textContent);
   const detectedCourse = extractCourse(textContent);
-  const annotations = normalizeText(textContent).length < 20 ? [] : parseAnnotationsByPage(pages);
-  const summary = summarizeAnnotations(annotations);
   const [recommendedLetterType, studentMatch, duplicateFile] = await Promise.all([
     getSuggestedLetter(supabase, input.tenantId, summary),
     findStudentCandidates(supabase, input.tenantId, detectedStudentName, detectedCourse),
@@ -1119,13 +1229,22 @@ export async function confirmDisciplinaryProcess(input: ConfirmInput): Promise<{
   insertedAnnotations: AnnotationSummary;
 }> {
   const supabase = getSupabaseAdmin(input.authToken);
-  assertStoragePathAllowed(input.bucket, input.storagePath, input.tenantId);
+  const parsedPdf = await loadAndParsePdf(supabase, input);
+  if (input.fileHash && input.fileHash !== parsedPdf.fileHash) {
+    throw new Error('El hash informado no coincide con el PDF confirmado');
+  }
+  await assertAnalysisMatchesFile(supabase, input.tenantId, input.analysisId, parsedPdf.fileHash);
+  const confirmedInput: ConfirmInput = {
+    ...input,
+    fileHash: parsedPdf.fileHash,
+    annotations: prepareConfirmedAnnotations(input.annotations, parsedPdf.annotations),
+  };
 
   const { data: student, error: studentError } = await supabase
     .from('students')
     .select('id, tenant_id, full_name, course_id')
-    .eq('id', input.studentId)
-    .eq('tenant_id', input.tenantId)
+    .eq('id', confirmedInput.studentId)
+    .eq('tenant_id', confirmedInput.tenantId)
     .maybeSingle();
 
   if (studentError || !student) {
@@ -1133,7 +1252,7 @@ export async function confirmDisciplinaryProcess(input: ConfirmInput): Promise<{
   }
 
   const summary = summarizeAnnotations(
-    input.annotations.map((annotation, index) => ({
+    confirmedInput.annotations.map((annotation, index) => ({
       raw_text: annotation.raw_text,
       normalized_text: annotation.normalized_text ?? normalizeText(annotation.raw_text),
       type: annotation.type,
@@ -1151,8 +1270,8 @@ export async function confirmDisciplinaryProcess(input: ConfirmInput): Promise<{
     const { data: existing } = await supabase
       .from('disciplinary_process_files')
       .select('process_id, disciplinary_processes(process_number)')
-      .eq('tenant_id', input.tenantId)
-      .eq('storage_path', input.storagePath)
+      .eq('tenant_id', confirmedInput.tenantId)
+      .eq('storage_path', confirmedInput.storagePath)
       .maybeSingle();
     if (existing && (existing as { process_id?: string }).process_id) {
       const nested = (existing as { disciplinary_processes?: { process_number?: string } })
@@ -1161,7 +1280,7 @@ export async function confirmDisciplinaryProcess(input: ConfirmInput): Promise<{
       const existingProcessNumber = nested?.process_number ?? '';
       const insertedAnnotations = await syncConfirmedProcessToLegacyViews(
         supabase,
-        input,
+        confirmedInput,
         existingProcessId,
         existingProcessNumber,
         summary,
@@ -1176,7 +1295,11 @@ export async function confirmDisciplinaryProcess(input: ConfirmInput): Promise<{
     }
   }
 
-  const duplicateFile = await findDuplicateFileByHash(supabase, input.tenantId, input.fileHash);
+  const duplicateFile = await findDuplicateFileByHash(
+    supabase,
+    confirmedInput.tenantId,
+    confirmedInput.fileHash,
+  );
   if (duplicateFile) {
     throw new Error(
       `Este PDF ya fue registrado en el proceso ${duplicateFile.process_number}. No se creó un duplicado.`,
@@ -1186,7 +1309,7 @@ export async function confirmDisciplinaryProcess(input: ConfirmInput): Promise<{
   const { data: processNumber, error: numberError } = await supabase.rpc(
     'generate_process_number',
     {
-      p_tenant_id: input.tenantId,
+      p_tenant_id: confirmedInput.tenantId,
     },
   );
   if (numberError || !processNumber) throw new Error('Error al generar número de proceso');
@@ -1194,11 +1317,11 @@ export async function confirmDisciplinaryProcess(input: ConfirmInput): Promise<{
   const { data: processRow, error: processError } = await supabase
     .from('disciplinary_processes')
     .insert({
-      student_id: input.studentId,
+      student_id: confirmedInput.studentId,
       process_number: processNumber,
       status: 'draft',
-      tenant_id: input.tenantId,
-      suggested_letter_type: input.suggestedLetterType || 'none',
+      tenant_id: confirmedInput.tenantId,
+      suggested_letter_type: confirmedInput.suggestedLetterType || 'none',
       total_negativas: summary.negativas,
       total_positivas: summary.positivas,
       total_informativas: summary.informativas,
@@ -1210,9 +1333,9 @@ export async function confirmDisciplinaryProcess(input: ConfirmInput): Promise<{
   if (processError || !processRow) throw new Error('Error al crear proceso disciplinario');
 
   const processId = (processRow as { id: string }).id;
-  const confirmedAnnotations = input.annotations.map((annotation, index) => ({
+  const confirmedAnnotations = confirmedInput.annotations.map((annotation, index) => ({
     process_id: processId,
-    student_id: input.studentId,
+    student_id: confirmedInput.studentId,
     annotation_type:
       annotation.type === 'negative'
         ? 'Negativa'
@@ -1232,23 +1355,23 @@ export async function confirmDisciplinaryProcess(input: ConfirmInput): Promise<{
     confidence: annotation.confidence ?? 0.8,
     parser_version: PARSER_VERSION,
     confirmed_annotation_type: annotation.type,
-    tenant_id: input.tenantId,
+    tenant_id: confirmedInput.tenantId,
   }));
 
   const { error: fileError } = await supabase.from('disciplinary_process_files').insert({
     process_id: processId,
-    file_name: input.fileName,
-    storage_path: input.storagePath,
-    file_size: input.fileSize ?? 0,
-    mime_type: input.mimeType ?? 'application/pdf',
-    file_hash: input.fileHash,
-    bucket: input.bucket,
-    original_file_name: input.fileName,
-    stored_file_name: input.storagePath.split('/').pop() || input.fileName,
+    file_name: confirmedInput.fileName,
+    storage_path: confirmedInput.storagePath,
+    file_size: confirmedInput.fileSize ?? 0,
+    mime_type: confirmedInput.mimeType ?? 'application/pdf',
+    file_hash: confirmedInput.fileHash,
+    bucket: confirmedInput.bucket,
+    original_file_name: confirmedInput.fileName,
+    stored_file_name: confirmedInput.storagePath.split('/').pop() || confirmedInput.fileName,
     processing_status: 'confirmed',
     analysis_version: PARSER_VERSION,
-    student_id: input.studentId,
-    tenant_id: input.tenantId,
+    student_id: confirmedInput.studentId,
+    tenant_id: confirmedInput.tenantId,
   });
   if (fileError) throw new Error('Error al vincular el PDF al proceso');
 
@@ -1261,22 +1384,22 @@ export async function confirmDisciplinaryProcess(input: ConfirmInput): Promise<{
 
   const insertedAnnotations = await syncConfirmedProcessToLegacyViews(
     supabase,
-    input,
+    confirmedInput,
     processId,
     String((processRow as { process_number: string }).process_number),
     summary,
     student as { id: string; full_name?: string | null; course_id?: string | null },
   );
   await supabase.from('document_analyses').insert({
-    student_id: input.studentId,
-    file_name: input.fileName,
+    student_id: confirmedInput.studentId,
+    file_name: confirmedInput.fileName,
     negativas: summary.negativas,
     positivas: summary.positivas,
     informativas: summary.informativas,
-    tenant_id: input.tenantId,
+    tenant_id: confirmedInput.tenantId,
     status: 'confirmed',
     process_id: processId,
-    file_hash: input.fileHash,
+    file_hash: confirmedInput.fileHash,
     parser_version: PARSER_VERSION,
     confirmed_at: new Date().toISOString(),
   });

@@ -23,14 +23,14 @@ Sistema SaaS multi-tenant para gestión integral de convivencia escolar en estab
 | CSS            | Tailwind CSS v4                                   | 4.1.14                   |
 | State          | Zustand                                           | 5.0.14                   |
 | Queries        | TanStack React Query                              | 5.101.2                  |
-| Forms          | react-hook-form + Zod                             | 7.82.0 / 4.4.3           |
+| Forms          | react-hook-form + Zod                             | 7.84.0 / 4.4.3           |
 | Backend (dev)  | Express + tsx                                     | 4.21.2 / 4.21.0          |
 | Backend (prod) | Vercel Serverless                                 | esbuild bundle           |
 | Database       | Supabase PostgreSQL                               | 17.6.1                   |
 | Auth           | Supabase Auth (email/password)                    | —                        |
 | AI             | OpenRouter (meta-llama/llama-3.1-8b-instruct)     | —                        |
 | Documentos     | docx (Word), pdf-lib + pdfjs-dist (PDF)           | 9.7.1 / 1.17.1 / 6.1.200 |
-| Monitoring     | Sentry + PostHog                                  | 10.66.0 / 1.404.1        |
+| Monitoring     | Sentry Browser + PostHog                          | 10.66.0 / 1.404.1        |
 | Tests          | node:test + node:assert/strict + Playwright       | —                        |
 | Lint/Format    | TypeScript (tsc), ESLint 9, Prettier 3, Biome 2.5 | —                        |
 
@@ -58,7 +58,7 @@ src/
 ├── pages/            # LoginPage
 ├── types/            # Declaration files (.d.ts)
 ├── domain/           # Pure domain logic (disciplinaryStatus)
-└── App.tsx           # Root component (state-driven router)
+└── App.tsx           # Root shell coordinator with URL routing bridge
 ```
 
 ### 2.2 Dual Server Entry Points
@@ -82,29 +82,33 @@ TanStack React Query (courses, students, causas queries)
   └── Fetching + caching (courses 30min, students 10min, causas list 1min, detalle 5min)
   └── Causas separa caché de listado y detalle por tenant; las mutaciones actualizan sólo la entrada afectada
 
-useReducer (useNewCausaForm form state)
-  └── Estado local del formulario wizard
+react-hook-form + Zod (useNewCausaForm)
+  └── Estado local y validación runtime del formulario de nuevo expediente
 
 React Context (AppProvider, TimelineProvider)
   └── Composición de stores/hooks para subárboles
 
 Auto-save pipeline (useCausasPersistence)
-  └── Debounce 2s → updateCausa + saveBitacora + saveChecklist
+  └── Debounce 2s → updateCausa + RPC snapshots de bitácora/checklist
 ```
 
-### 2.4 State-driven Routing (No React Router)
+### 2.4 URL History Routing Bridge
 
-La navegación **NO usa React Router**. Se maneja con una variable `currentView` (tipo `SidebarView`) en `uiStore`. El componente `MainContent` renderiza condicionalmente según el valor:
+La navegación usa un bridge propio entre `window.history` y `uiStore.currentView` (tipo `SidebarView`). `src/app/routing.ts` define rutas canónicas, `src/app/hooks/useUrlRouting.ts` sincroniza la URL con `uiStore` y `causasStore.selectedCausaId`, y `MainContent` conserva renderizado condicional mientras no exista un router declarativo que pase `npm run security-audit`.
 
-| View          | Component                                | Feature Module                |
-| ------------- | ---------------------------------------- | ----------------------------- |
-| `dashboard`   | `<DashboardStats>`                       | `features/dashboard`          |
-| `causas`      | `<CausasView>` + `<InteractiveTimeline>` | `features/causas`             |
-| `informes`    | `<AdvisorView>` (AI Legal + Templates)   | `features/causas/MainContent` |
-| `alumnos`     | `<StudentsPanel>`                        | `features/students`           |
-| `anotaciones` | `<AnotacionesView>`                      | `features/anotaciones`        |
+| View          | Ruta               | Component                                | Feature Module                |
+| ------------- | ------------------ | ---------------------------------------- | ----------------------------- |
+| `dashboard`   | `/`                | `<DashboardStats>`                       | `features/dashboard`          |
+| `causas`      | `/expedientes`     | `<CausasView>` + `<InteractiveTimeline>` | `features/causas`             |
+| `causas`      | `/expedientes/:id` | `<CausasView>` con detalle seleccionado  | `features/causas`             |
+| `informes`    | `/informes`        | `<AdvisorView>` (AI Legal + Templates)   | `features/causas/MainContent` |
+| `alumnos`     | `/alumnos`         | `<StudentsPanel>`                        | `features/students`           |
+| `anotaciones` | `/anotaciones`     | `<AnotacionesView>`                      | `features/anotaciones`        |
+| `reportes`    | `/reportes`        | `<ReportsCenter>`                        | `features/reports`            |
+| `admin`       | `/admin`           | `<AdminView>`                            | `features/admin`              |
+| `platform`    | `/plataforma`      | `<PlatformView>`                         | `features/platform`           |
 
-**Modals controlados por estado** (sin rutas): `LoginPage`, `NewCausaModal`, `EditCausaModal`, `ShortcutsModal`, `NewDisciplinaryProcessModal`, `AnotacionesStudentDetailModal`.
+**Modals:** `/login` abre `LoginPage`. `NewCausaModal`, `EditCausaModal`, `ShortcutsModal`, `NewDisciplinaryProcessModal` y `AnotacionesStudentDetailModal` siguen controlados por estado.
 
 ### 2.5 Lazy Loading
 
@@ -442,8 +446,8 @@ Rate Limiting: 10 req/min/IP por endpoint (in-memory Map)
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `auth.service.ts`                 | signInWithEmail, signOut, onAuthStateChange                                                                                                                                                            |
 | `causas.service.ts`               | fetchCausas, createCausa, updateCausa, deleteCausa                                                                                                                                                     |
-| `bitacora.service.ts`             | fetchBitacora, saveBitacora (delete all + re-insert), addBitacoraEntry                                                                                                                                 |
-| `checklist.service.ts`            | saveChecklist (delete all + re-insert)                                                                                                                                                                 |
+| `bitacora.service.ts`             | saveBitacora vía `save_bitacora_snapshot` + buildBitacoraSnapshotDelta                                                                                                                                 |
+| `checklist.service.ts`            | saveChecklist vía `save_checklist_snapshot` + buildChecklistSnapshotDelta                                                                                                                              |
 | `annotations.service.ts`          | fetchAnnotations, fetchDocumentAnalyses, saveAnnotation, fetchStudentsWithAnnotationCounts                                                                                                             |
 | `courses.service.ts`              | fetchCourses, fetchStudentsByCourse, fetchStudentsWithCourses                                                                                                                                          |
 | `cartas.service.ts`               | fetchCartas, fetchStudentDisciplinarySnapshot, createCartaEvent, markCartaPrinted, markCartaDownloadedPdf, markCartaDownloadedWord, markCartaProcessedManually, annulCarta, resolveCartaWorkflowStatus |
@@ -463,7 +467,7 @@ Rate Limiting: 10 req/min/IP por endpoint (in-memory Map)
 ```
 1. Auth validation → requireAuth
 2. Download PDF from Supabase Storage (disciplinary-processes bucket)
-3. Validate PDF header (%PDF-), size ≤ 10MB
+3. Validate PDF header (%PDF-), size ≤ 10MB, pages ≤ 80
 4. SHA-256 hash
 5. Text extraction via pdfjs-dist (legacy/build/pdf.mjs)
    ├── Polyfills: DOMMatrix, ImageData, Path2D
@@ -487,11 +491,14 @@ Rate Limiting: 10 req/min/IP por endpoint (in-memory Map)
 **Step 2: `POST /api/process-disciplinary-pdf/confirm`** (Finalize)
 
 ```
-1. Auth + validation
-2. Idempotency check (storagePath + tenantId)
-3. Student verification (belongs to tenant)
-4. Generate process number via RPC (DP-YYYY-NNNN)
-5. Insert: disciplinary_processes (draft) + files + annotations + analyses
+1. Auth + tenant + role validation (`superadmin`, `admin`, `direccion`, `convivencia`, `inspectoria`, `profesor_jefe`)
+2. Re-download PDF, recompute SHA-256 and validate request hash
+3. Validate `analysisId` belongs to tenant and matches the actual file hash
+4. Re-parse PDF and accept only confirmed annotations present in parser output
+5. Idempotency check (storagePath + tenantId)
+6. Student verification (belongs to tenant)
+7. Generate process number via RPC (DP-YYYY-NNNN)
+8. Insert: disciplinary_processes (draft) + files + annotations + analyses
 ```
 
 ### 7.2 Known Issues
@@ -598,7 +605,7 @@ Fallback: Supabase REST API /auth/v1/user
 - Estado global en `uiStore.privacyMode`
 - Oculta RUTs, nombres completos
 - Toggle en Header (UserAvatar)
-- **Prop drilling obligatorio:** `privacyMode` se pasa desde `App.tsx` hacia abajo por props (patrón usado en `CausasView`, `AnotacionesView`, `StudentsPanel`). Cualquier vista nueva del dashboard o tabla con nombres de NNA/docentes debe recibirla y aplicar `maskName`/`maskRut` de `shared/lib/anotacionesUtils.ts`.
+- **Consumo de privacidad:** `privacyMode` vive en `uiStore`; las vistas lo leen con selectores Zustand cuando corresponde. Cualquier vista nueva del dashboard o tabla con nombres de NNA/docentes debe aplicar `maskName`/`maskRut` de `shared/lib/anotacionesUtils.ts` o reutilizar helpers ya enmascarados.
 - **Rankings del dashboard (P-01, resuelto 2026-08-02):** los rankings de docentes/estudiantes mostraron nombres reales con privacidad activada. Se corrigió pasando `privacyMode` desde `MainContent` → `DashboardStats` → `AnotacionesDashboardStats` → rankings, y el mapeo a items vive en `features/anotaciones/annotationRankingCardItems.ts` (`toTeacherCardItems`/`toStudentCardItems`). El curso en el sublabel no se enmascara (no es dato personal). Si se agregan nuevas tarjetas de ranking, deben usar ese helper.
 - Los RPCs de Supabase (`get_student_annotation_ranking`, `get_teacher_annotation_ranking`) devuelven nombres reales; **no hay enmascarado server-side** — la protección es responsabilidad del cliente.
 
@@ -675,16 +682,16 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 
 ### 12.2 Deuda Técnica
 
-| Ítem                                        | Impacto                                                                                   | Prioridad |
-| ------------------------------------------- | ----------------------------------------------------------------------------------------- | --------- |
-| `components/` legacy layer                  | Quedan 14 componentes reales por migrar; 13 barrels están protegidos por test             | Media     |
-| No React Router                             | URL no refleja estado, no deep linking                                                    | Media     |
-| ManualChunks circular warnings              | Build warnings, posible mejor chunking                                                    | Baja      |
-| Dual server routes (server/ + api/)         | Duplicación, riesgo de drift                                                              | Alta      |
-| Docker no disponible localmente             | No se puede ejecutar `supabase db reset` ni migraciones locales                           | Media     |
-| test:vitest y test corren en paralelo       | Dos test runners                                                                          | Baja      |
-| `carta_events.tenant_id` nullable           | RLS policy SELECT usa `tenant_id = current_tenant_id()`; filas con NULL quedan invisibles | Baja      |
-| `carta_events.student_id` / `carta_id` TEXT | Inconsistente con `students.id` y `cartas_disciplinarias.id` (UUID)                       | Baja      |
+| Ítem                                        | Impacto                                                                                             | Prioridad |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------- | --------- |
+| `components/` legacy layer                  | Quedan 14 componentes reales por migrar; 13 barrels están protegidos por test                       | Media     |
+| Routing declarativo pendiente               | Bridge `History API` resuelve URL/deep links básicos; `MainContent` aún renderiza por condicionales | Media     |
+| ManualChunks circular warnings              | Build warnings, posible mejor chunking                                                              | Baja      |
+| Dual server routes (server/ + api/)         | Duplicación, riesgo de drift                                                                        | Alta      |
+| Docker no disponible localmente             | No se puede ejecutar `supabase db reset` ni migraciones locales                                     | Media     |
+| test:vitest y test corren en paralelo       | Dos test runners                                                                                    | Baja      |
+| `carta_events.tenant_id` nullable           | RLS policy SELECT usa `tenant_id = current_tenant_id()`; filas con NULL quedan invisibles           | Baja      |
+| `carta_events.student_id` / `carta_id` TEXT | Inconsistente con `students.id` y `cartas_disciplinarias.id` (UUID)                                 | Baja      |
 
 ---
 
@@ -704,7 +711,7 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 1. Implementar la ruta en `server/api/routes/` y registrarla en ambos entry points
 2. No exponer service_role key al cliente
 3. Rate limit endpoints AI (10 req/min/IP)
-4. Sanitizar input con `sanitizeForAI()` antes de enviar a LLM
+4. Sanitizar input con `sanitizeForAI()` y anonimizar PII con `redactSensitiveForAI()` antes de enviar a LLM
 5. Usar `http` module (no `fetch`) en Vercel serverless
 
 ### 13.3 Al Modificar Base de Datos
@@ -1160,7 +1167,7 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 
 - `useAppContext` y `useMemberships` usan selectores parciales de Zustand; las listas derivadas de causas se memoizan por referencia del arreglo.
 - KPIs y rankings del dashboard usan `staleTime` de 30 segundos y conservan invalidación selectiva tras escrituras.
-- Sentry, PostHog y Web Vitals se inicializan dos segundos después del primer render.
+- Sentry Browser, PostHog y Web Vitals se inicializan dos segundos después del primer render. Sentry no configura Session Replay; `webVitals` recibe adaptadores desde `loadTelemetry()` y no importa Sentry/PostHog de forma estática.
 - Las pestañas Resumen, Ruta y Bitácora del timeline usan `React.memo` sin alterar el flujo de autoguardado.
 - Las fuentes jurídicas normalizan su texto una sola vez por instancia para reducir CPU al puntuar consultas AI.
 
@@ -1308,3 +1315,14 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - Seed local completo cerrado: `supabase/seed.sql` carga tenant demo, usuarios Auth/perfiles, membresías, cursos, estudiantes, anotaciones por tramo disciplinario, expedientes, bitácora, checklist, cartas, reglas, plantillas, proceso/analisis PDF, historial, reportes, notificaciones, invitaciones y configuración/documentos institucionales. La CLI actual no expone `supabase db seed`; el flujo documentado es `supabase db reset` con `[db.seed].sql_paths`.
 - Índices compuestos faltantes cerrados: `supabase/migrations/20260803004959_add_query_pattern_indexes.sql` agrega 16 índices `IF NOT EXISTS` para patrones tenant-scoped frecuentes en cursos, estudiantes, anotaciones, cartas/eventos, etapas, procesos PDF, documentos institucionales y eventos de cartas. `src/shared/lib/databaseIndexes.test.ts` protege la migración. La migración fue aplicada remotamente como `20260803004959 add_query_pattern_indexes` y se verificó en `pg_indexes` con 16/16 índices creados.
 - Dashboard analítico avanzado iniciado: `src/features/dashboard/dashboardTrends.ts` usa el ciclo escolar vigente marzo-diciembre para aperturas/cierres de expedientes y anotaciones agregadas. Las anotaciones se leen con `fetchAnnualAnnotationTrends(schoolYear)` desde `inspectorate_records`, filtradas por `tenant_id` y con columnas mínimas (`date_time`, `severity`, `type`), sin nombres, RUT, estudiantes, docentes ni texto de observación. `DashboardTrendsPanel.tsx` muestra el gráfico anual y `dashboardTrends.test.ts` cubre ciclo marzo-diciembre, cambio de año escolar en enero/febrero y agregación de anotaciones. Siguiente paso: mover tendencias históricas a una RPC/consulta agregada cuando el volumen real justifique paginación o análisis multi-año.
+
+### Frontend shell y telemetría — 2026-08-04
+
+- Telemetría: Sentry usa `@sentry/browser` sin Session Replay; `webVitals` recibe adaptadores desde `loadTelemetry()` y no importa Sentry/PostHog de forma estática. `src/index.css` ya no usa `@import` de Google Fonts; `index.html` mantiene la carga externa única con `display=swap`.
+- Shell React: `App.tsx` queda como coordinador de 261 líneas. La hidratación/filtrado de expedientes vive en `src/app/hooks/useCausaWorkspace.ts`; permisos en `useRoleGates.ts`; navegación protegida en `useAppNavigation.ts`; routing URL en `useUrlRouting.ts`; bienvenida en `useWelcomeGate.ts`; atajos en `useAppShortcuts.ts`; nueva causa en `useNewCausaModalController.tsx`.
+- Prop drilling: `MainContent` recibe 6 props agrupadas mediante `CausaWorkspaceViewModel`, `CreateCausaActions` y `MainNavigationActions`; `CausasView` recibe esos view-models y lee `privacyMode`, `selectedFaseFilter` y `searchQuery` directamente desde Zustand.
+- Routing: bridge propio con `window.history`; `src/app/routing.ts` y `useUrlRouting.ts` sincronizan URL ↔ `uiStore`, incluyendo `/login` y `/expedientes/:causaId`. `react-router-dom` fue retirado porque `npm run security-audit` falló por advisory alto en `react-router`; conversión a rutas declarativas queda pendiente hasta tener una opción segura.
+- Persistencia de antecedentes: `saveBitacora()` y `saveChecklist()` calculan deltas cliente-side, pero la escritura se aplica con RPCs `security invoker` (`save_bitacora_snapshot`, `save_checklist_snapshot`) en una transacción PostgreSQL por colección. Las funciones resuelven `current_tenant_id()` y no aceptan `tenant_id` del cliente.
+- Formularios: `react-hook-form@7.84.0` quedó instalado. `NewCausaModal` usa `useNewCausaForm()` con resolver Zod local (`newCausaFormSchema`); `EditCausaModalForm` y `LoginPage` usan schemas compartidos (`editCausaFormSchema`, `loginFormSchema`, `passwordResetRequestSchema`, `passwordUpdateFormSchema`). Los errores inline usan `aria-describedby` y tests unitarios cubren los schemas.
+- Gráficos: `TrendChart`, `MonthlyBars` y `LegendPill` viven en `src/shared/ui/charts/`. `DashboardTrendsPanel` y `ReportsCenter` reutilizan el contrato `TrendChartPoint`/`ChartSeriesItem`.
+- Accesibilidad: `npm run test:a11y` ejecuta `@axe-core/playwright` sobre dashboard público y login. El workflow de CI usa `PLAYWRIGHT_USE_WEBSERVER=true` para levantar el servidor Playwright en CI. El skeleton del dashboard usa `role="status"` y los textos de loader/login cumplen contraste AA básico.

@@ -3,88 +3,66 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
 import { Suspense, lazy, useCallback, useMemo, useState } from 'react';
 import { BookOpen, ChevronDown, GraduationCap, Scale, Search } from 'lucide-react';
 import EmptyState from '../../../shared/EmptyState';
 import { DetailModalSkeleton } from '../../../shared/Skeleton';
 import ViewLoader from '../../../shared/ui/ViewLoader';
-import { type Causa, type FaseProcedimental } from '../../../shared/lib/types';
-import type { FormAction } from '../../../shared/lib/hooks/useNewCausaForm';
+import type { Causa } from '../../../shared/lib/types';
+import { useCausasStore } from '../../../shared/lib/stores/causasStore';
+import { useUIStore } from '../../../shared/lib/stores/uiStore';
 import Button from '@/src/shared/ui/Button';
 import CausasTable from '../CausasTable';
+import type {
+  CausaWorkspaceViewModel,
+  CreateCausaActions,
+  MainNavigationActions,
+} from './viewContracts';
 
 const CausaDetailModal = lazy(() => import('../CausaDetailModal'));
 const ClosedCases = lazy(() => import('../ClosedCases'));
 
 interface CausasViewProps {
-  causas: Causa[];
-  selectedCausaId: string;
-  selectedCausa: Causa | undefined;
-  isCausaDetailLoading: boolean;
-  selectedFaseFilter: FaseProcedimental | 'Todas';
-  setSelectedFaseFilter: (fase: FaseProcedimental | 'Todas') => void;
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  setSelectedCausaId: (id: string) => void;
-  privacyMode: boolean;
-  mobileShowDetail: boolean;
-  setMobileShowDetail: (v: boolean) => void;
-  filteredCausas: Causa[];
-  hasMoreCausas: boolean;
-  isLoadingMoreCausas: boolean;
-  onLoadMoreCausas: () => void;
-  showCreateForm: boolean;
-  dispatchForm: React.Dispatch<FormAction>;
-  handleReopenCausa: (causa: Causa) => void;
-  handleSelectCausaFromDashboard: (causaId: string) => void;
-  handleOpenCreateForm: () => void;
+  workspace: CausaWorkspaceViewModel;
+  createCausa: CreateCausaActions;
+  navigation: MainNavigationActions;
 }
 
-export default function CausasView({
-  causas,
-  selectedCausaId,
-  selectedCausa,
-  isCausaDetailLoading,
-  selectedFaseFilter,
-  setSelectedFaseFilter,
-  searchQuery,
-  setSearchQuery,
-  privacyMode,
-  filteredCausas,
-  hasMoreCausas,
-  isLoadingMoreCausas,
-  onLoadMoreCausas,
-  showCreateForm,
-  dispatchForm,
-  handleReopenCausa,
-  handleSelectCausaFromDashboard,
-  handleOpenCreateForm,
-  setSelectedCausaId,
-}: CausasViewProps) {
+export default function CausasView({ workspace, createCausa, navigation }: CausasViewProps) {
+  const { onNavigate, onSelectCausaFromDashboard } = navigation;
+  const { setSelectedCausaId } = workspace;
+  const selectedFaseFilter = useCausasStore((state) => state.selectedFaseFilter);
+  const setSelectedFaseFilter = useCausasStore((state) => state.setSelectedFaseFilter);
+  const searchQuery = useCausasStore((state) => state.searchQuery);
+  const setSearchQuery = useCausasStore((state) => state.setSearchQuery);
+  const privacyMode = useUIStore((state) => state.privacyMode);
   const [selectedCourse, setSelectedCourse] = useState('');
   const courseOptions = useMemo(
     () =>
-      [...new Set(causas.map((causa) => causa.estudianteCurso).filter(Boolean))].sort(
+      [...new Set(workspace.causas.map((causa) => causa.estudianteCurso).filter(Boolean))].sort(
         (left, right) => left.localeCompare(right, 'es-CL', { numeric: true, sensitivity: 'base' }),
       ),
-    [causas],
+    [workspace.causas],
   );
   const visibleCausas = useMemo(
     () =>
       selectedCourse
-        ? filteredCausas.filter((causa) => causa.estudianteCurso === selectedCourse)
-        : filteredCausas,
-    [filteredCausas, selectedCourse],
+        ? workspace.filteredCausas.filter((causa) => causa.estudianteCurso === selectedCourse)
+        : workspace.filteredCausas,
+    [workspace.filteredCausas, selectedCourse],
   );
   const visibleAulaSeguraCount = visibleCausas.filter((causa) => causa.comprometeAulaSegura).length;
 
   const handleSelectCausa = useCallback(
     (cause: Causa) => {
-      handleSelectCausaFromDashboard(cause.id);
+      onSelectCausaFromDashboard(cause.id);
     },
-    [handleSelectCausaFromDashboard],
+    [onSelectCausaFromDashboard],
   );
+  const clearSelectedCausa = useCallback(() => {
+    setSelectedCausaId('');
+    onNavigate('causas');
+  }, [onNavigate, setSelectedCausaId]);
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -112,7 +90,7 @@ export default function CausasView({
           </div>
           <Button
             variant="custom"
-            onClick={() => dispatchForm({ type: showCreateForm ? 'CLOSE' : 'OPEN' })}
+            onClick={createCausa.onToggle}
             className="shrink-0 rounded-xl bg-secondary-500 px-5 py-3 text-white shadow-md shadow-secondary-500/30 hover:bg-secondary-600 active:scale-[0.97]"
             aria-label="Crear nueva causa"
           >
@@ -149,7 +127,7 @@ export default function CausasView({
             value={selectedCourse}
             onChange={(event) => {
               setSelectedCourse(event.target.value);
-              setSelectedCausaId('');
+              clearSelectedCausa();
             }}
             aria-label="Filtrar expedientes por curso"
             className="w-full appearance-none rounded-xl border border-neutral-200/60 bg-neutral-100 py-2 pr-9 pl-10 font-medium text-neutral-800 text-sm transition-colors hover:border-neutral-300 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
@@ -182,7 +160,7 @@ export default function CausasView({
             type="button"
             onClick={() => {
               setSelectedFaseFilter(fase);
-              setSelectedCausaId('');
+              clearSelectedCausa();
             }}
             role="tab"
             aria-selected={selectedFaseFilter === fase}
@@ -205,15 +183,15 @@ export default function CausasView({
             privacyMode={privacyMode}
             onSelectCausa={handleSelectCausa}
           />
-          {hasMoreCausas && (
+          {workspace.hasMoreCausas && (
             <div className="flex justify-center">
               <button
                 type="button"
-                onClick={onLoadMoreCausas}
-                disabled={isLoadingMoreCausas}
+                onClick={workspace.onLoadMoreCausas}
+                disabled={workspace.isLoadingMoreCausas}
                 className="inline-flex min-h-10 items-center justify-center rounded-xl border border-brand-200 bg-white px-4 py-2 font-semibold text-brand-700 text-sm shadow-sm transition-colors hover:bg-brand-50 disabled:cursor-wait disabled:opacity-60"
               >
-                {isLoadingMoreCausas ? 'Cargando expedientes…' : 'Cargar más expedientes'}
+                {workspace.isLoadingMoreCausas ? 'Cargando expedientes…' : 'Cargar más expedientes'}
               </button>
             </div>
           )}
@@ -225,26 +203,26 @@ export default function CausasView({
               icon={Scale}
               title="Ningún expediente coincide"
               description={
-                hasMoreCausas
+                workspace.hasMoreCausas
                   ? 'Puede cargar más expedientes o intentar con otros filtros.'
                   : 'Intente con otros filtros o cree un nuevo expediente.'
               }
               action={
-                causas.length === 0
-                  ? { label: 'Crear primera causa', onClick: handleOpenCreateForm }
+                workspace.causas.length === 0
+                  ? { label: 'Crear primera causa', onClick: createCausa.onOpen }
                   : undefined
               }
             />
           </div>
-          {hasMoreCausas && (
+          {workspace.hasMoreCausas && (
             <div className="flex justify-center">
               <button
                 type="button"
-                onClick={onLoadMoreCausas}
-                disabled={isLoadingMoreCausas}
+                onClick={workspace.onLoadMoreCausas}
+                disabled={workspace.isLoadingMoreCausas}
                 className="inline-flex min-h-10 items-center justify-center rounded-xl border border-brand-200 bg-white px-4 py-2 font-semibold text-brand-700 text-sm shadow-sm transition-colors hover:bg-brand-50 disabled:cursor-wait disabled:opacity-60"
               >
-                {isLoadingMoreCausas ? 'Cargando expedientes…' : 'Cargar más expedientes'}
+                {workspace.isLoadingMoreCausas ? 'Cargando expedientes…' : 'Cargar más expedientes'}
               </button>
             </div>
           )}
@@ -253,23 +231,23 @@ export default function CausasView({
 
       <Suspense fallback={<DetailModalSkeleton />}>
         <CausaDetailModal
-          causa={selectedCausa}
+          causa={workspace.selectedCausa ?? undefined}
           privacyMode={privacyMode}
-          isLoading={isCausaDetailLoading}
-          onClose={() => setSelectedCausaId('')}
+          isLoading={workspace.isCausaDetailLoading}
+          onClose={clearSelectedCausa}
         />
       </Suspense>
 
       {/* VIEW 3: CLOSED CASES */}
-      {selectedCausaId === '' && visibleCausas.length === 0 && (
+      {workspace.selectedCausaId === '' && visibleCausas.length === 0 && (
         <div className="flex-1">
           <Suspense fallback={<ViewLoader view="causas" compact />}>
             <ClosedCases
-              causas={causas}
+              causas={workspace.causas}
               privacyMode={privacyMode}
-              onReopenCausa={handleReopenCausa}
+              onReopenCausa={navigation.onReopenCausa}
               onSelectCausa={(causa) => {
-                handleSelectCausaFromDashboard(causa.id);
+                navigation.onSelectCausaFromDashboard(causa.id);
               }}
             />
           </Suspense>

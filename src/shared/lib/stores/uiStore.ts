@@ -16,6 +16,7 @@ interface UIState {
   setIsSidebarCollapsed: (v: boolean) => void;
   setMobileShowDetail: (v: boolean) => void;
   setPrivacyMode: (v: boolean) => void;
+  togglePrivacyMode: () => void;
   setShowShortcuts: (v: boolean | ((prev: boolean) => boolean)) => void;
 }
 
@@ -31,6 +32,7 @@ export const useUIStore = create<UIState>((set) => ({
   setIsSidebarCollapsed: (v) => set({ isSidebarCollapsed: v }),
   setMobileShowDetail: (v) => set({ mobileShowDetail: v }),
   setPrivacyMode: (v) => set({ privacyMode: v }),
+  togglePrivacyMode: () => set((state) => ({ privacyMode: !state.privacyMode })),
   setShowShortcuts: (v) =>
     set((state) => ({
       showShortcuts:

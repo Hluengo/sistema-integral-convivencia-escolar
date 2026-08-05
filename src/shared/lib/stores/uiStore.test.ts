@@ -29,4 +29,12 @@ describe('uiStore', () => {
     useUIStore.getState().setShowShortcuts((current) => !current);
     assert.equal(useUIStore.getState().showShortcuts, false);
   });
+
+  it('alterna el modo privacidad de forma atomica', () => {
+    useUIStore.getState().togglePrivacyMode();
+    assert.equal(useUIStore.getState().privacyMode, true);
+
+    useUIStore.getState().togglePrivacyMode();
+    assert.equal(useUIStore.getState().privacyMode, false);
+  });
 });

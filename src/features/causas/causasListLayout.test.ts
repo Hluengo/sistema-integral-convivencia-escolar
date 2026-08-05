@@ -175,16 +175,16 @@ describe('Listado de causas activas', () => {
   });
 
   it('no selecciona automáticamente la primera causa al cargar el listado', () => {
-    const app = read('../../app/App.tsx');
-    assert.match(app, /setSelectedCausaId\(''\)/);
-    assert.doesNotMatch(app, /setSelectedCausaId\(causasQuery\.data\[0\]/);
+    const workspace = read('../../app/hooks/useCausaWorkspace.ts');
+    assert.match(workspace, /setSelectedCausaId\(''\)/);
+    assert.doesNotMatch(workspace, /setSelectedCausaId\(causasQuery\.data\[0\]/);
   });
 
   it('no reinicia Zustand en bucle mientras la sesión aún no está autenticada', () => {
-    const app = read('../../app/App.tsx');
+    const workspace = read('../../app/hooks/useCausaWorkspace.ts');
 
-    assert.match(app, /if \(causas\.length > 0\) setCausas\(\[\]\);/);
-    assert.match(app, /if \(selectedCausaId\) setSelectedCausaId\(''\);/);
+    assert.match(workspace, /if \(causas\.length > 0\) setCausas\(\[\]\);/);
+    assert.match(workspace, /if \(selectedCausaId\) setSelectedCausaId\(''\);/);
   });
 
   it('mantiene el borrador contextual y simplifica su edición antes de imprimir', () => {

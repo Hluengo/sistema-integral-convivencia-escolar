@@ -37,7 +37,7 @@ docx/
 ```
 PDF upload → Supabase Storage → POST /api/process-disciplinary-pdf
   ├── Download PDF
-  ├── Validate (%PDF-, ≤10MB)
+  ├── Validate (%PDF-, ≤10MB, ≤80 páginas)
   ├── SHA-256 hash
   ├── Text extraction (pdfjs-dist)
   ├── Metadata extraction (regex):
@@ -55,6 +55,8 @@ PDF upload → Supabase Storage → POST /api/process-disciplinary-pdf
   ├── Letter suggestion (RPC get_suggested_letter_type)
   └── Persist to document_analyses
 ```
+
+La confirmación del proceso (`/api/process-disciplinary-pdf/confirm`) no confía en el payload del cliente: exige rol operativo, re-descarga el PDF, recalcula el hash, valida que el `analysisId` pertenezca al tenant y al archivo, y solo persiste anotaciones confirmadas que existan en la salida del parser.
 
 ## AI Drafted Documents (Server-side)
 

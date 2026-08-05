@@ -73,18 +73,20 @@ disciplinary_processes ─── disciplinary_process_files (process_id)
 
 ## RPCs (Funciones Store)
 
-| Función                                | Propósito                     |
-| -------------------------------------- | ----------------------------- |
-| `current_app_role()`                   | Rol del usuario actual        |
-| `is_staff()`                           | Check staff-level role        |
-| `current_tenant_id()`                  | Tenant actual (JWT fast path) |
-| `get_student_annotation_summary()`     | Dashboard summary             |
-| `get_annotation_stage_counts()`        | Conteo por etapa              |
-| `get_usage_stats(since, until)`        | Stats de uso                  |
-| `get_daily_active_users(since, until)` | DAU                           |
-| `get_latest_analysis(p_student_id)`    | Último análisis PDF           |
-| `generate_process_number(p_tenant_id)` | Número DP-YYYY-NNNN           |
-| `get_suggested_letter_type(...)`       | Sugerencia de carta           |
+| Función                                | Propósito                                      |
+| -------------------------------------- | ---------------------------------------------- |
+| `current_app_role()`                   | Rol del usuario actual                         |
+| `is_staff()`                           | Check staff-level role                         |
+| `current_tenant_id()`                  | Tenant actual (JWT fast path)                  |
+| `get_student_annotation_summary()`     | Dashboard summary                              |
+| `get_annotation_stage_counts()`        | Conteo por etapa                               |
+| `get_usage_stats(since, until)`        | Stats de uso                                   |
+| `get_daily_active_users(since, until)` | DAU                                            |
+| `get_latest_analysis(p_student_id)`    | Último análisis PDF                            |
+| `generate_process_number(p_tenant_id)` | Número DP-YYYY-NNNN                            |
+| `get_suggested_letter_type(...)`       | Sugerencia de carta                            |
+| `save_bitacora_snapshot(...)`          | Upsert + delete atómico de bitácora por causa  |
+| `save_checklist_snapshot(...)`         | Upsert + delete atómico de checklist por causa |
 
 ## API administrativa institucional
 

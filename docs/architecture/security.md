@@ -83,6 +83,7 @@ Permissions-Policy: camera=(), microphone=(), geolocation=()
 ## AI Security
 
 - **Sanitización de input**: Elimina patrones de prompt injection antes de enviar a LLM
+- **Redacción de PII**: RUT, correo, teléfono, nombres rotulados y valores personales conocidos se anonimizan con `redactSensitiveForAI()` antes de enviar prompts a OpenRouter/Gemini.
 - **Human confirmation**: Resultados AI requieren confirmación humana antes de ser vinculantes
 - **No datos sensibles**: No enviar RUTs ni datos personales de NNA a AI sin anonimizar
 - **Rate limiting**: 10 req/min/IP para endpoints AI
@@ -94,6 +95,7 @@ Permissions-Policy: camera=(), microphone=(), geolocation=()
 - Signed URLs con expiración (1 hora)
 - RLS en storage.objects por tenant folder
 - Validación de tipo de archivo y tamaño (10 MB max)
+- Confirmación de PDF disciplinario re-descarga el archivo privado, recalcula hash, valida `analysisId` del tenant y restringe roles operativos antes de persistir procesos.
 
 ## Secretos
 

@@ -118,7 +118,12 @@ function SeverityCard({
 
 function DashboardSkeleton() {
   return (
-    <div className="space-y-6" aria-label="Cargando indicadores del dashboard">
+    <div
+      className="space-y-6"
+      role="status"
+      aria-label="Cargando indicadores del dashboard"
+      aria-live="polite"
+    >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[0, 1, 2, 3].map((item) => (
           <div key={item} className="card h-28 animate-pulse bg-neutral-100" />
@@ -134,6 +139,7 @@ function DashboardSkeleton() {
           <div key={item} className="card h-28 animate-pulse bg-neutral-100" />
         ))}
       </div>
+      <span className="sr-only">Cargando indicadores del dashboard</span>
     </div>
   );
 }

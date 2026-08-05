@@ -36,6 +36,7 @@ describe('API endpoints', () => {
   let server: http.Server;
   let baseUrl: string;
   let VALID_TOKEN: string;
+  let BASIC_ROLE_TOKEN: string;
   let requestSequence = 1;
 
   before(async () => {
@@ -55,6 +56,17 @@ describe('API endpoints', () => {
         app_metadata: {
           tenant_id: '00000000-0000-0000-0000-000000000001',
           role: 'admin',
+        },
+      },
+      b64Secret,
+    );
+    BASIC_ROLE_TOKEN = await createTestJwt(
+      {
+        sub: '00000000-0000-0000-0000-000000000004',
+        exp: Math.floor(Date.now() / 1000) + 3600,
+        app_metadata: {
+          tenant_id: '00000000-0000-0000-0000-000000000001',
+          role: 'teacher',
         },
       },
       b64Secret,
@@ -233,6 +245,27 @@ describe('API endpoints', () => {
         },
       );
       assert.equal(res.status, 400);
+    });
+  });
+
+  describe('POST /api/process-disciplinary-pdf/confirm', () => {
+    it('rejects basic roles before confirming disciplinary records', async () => {
+      const res = await post(
+        '/api/process-disciplinary-pdf/confirm',
+        {
+          bucket: 'disciplinary-processes',
+          storagePath: '00000000-0000-0000-0000-000000000001/student/process/anotaciones.pdf',
+          fileName: 'anotaciones.pdf',
+          fileHash: 'hash',
+          studentId: '00000000-0000-0000-0000-000000000010',
+          annotations: [],
+        },
+        {
+          Authorization: `Bearer ${BASIC_ROLE_TOKEN}`,
+        },
+      );
+
+      assert.equal(res.status, 403);
     });
   });
 

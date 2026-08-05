@@ -3,36 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useReducer } from 'react';
-import type { Causa } from '../types';
+import { useCallback, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import type { FieldErrors, Resolver } from 'react-hook-form';
+import { newCausaFormSchema, type NewCausaFormValues } from '../schemas/newCausaForm';
 
-interface FormState {
-  showCreateForm: boolean;
-  newEstNombre: string;
-  selectedCourseId: string;
-  newEstRut: string;
-  newInfTipo: Causa['tipoInfraccion'];
-  newAulaSegura: boolean;
-  newObs: string;
-  newResponsable: string;
-}
-
-export type FormAction =
-  | { type: 'OPEN' }
-  | { type: 'CLOSE' }
-  | { type: 'SET_COURSE'; courseId: string }
-  | { type: 'SET_STUDENT'; nombre: string; rut: string }
-  | {
-      type: 'SET_FIELD';
-      field: keyof Omit<FormState, 'showCreateForm' | 'selectedCourseId'>;
-      value: string | boolean;
-    }
-  | { type: 'RESET' };
-
-const FORM_INITIAL: FormState = {
-  showCreateForm: false,
-  newEstNombre: '',
+export const NEW_CAUSA_FORM_DEFAULTS: NewCausaFormValues = {
   selectedCourseId: '',
+  selectedStudentId: '',
+  newEstNombre: '',
   newEstRut: '',
   newInfTipo: 'Grave',
   newAulaSegura: false,
@@ -40,26 +19,84 @@ const FORM_INITIAL: FormState = {
   newResponsable: 'Esteban Valenzuela (Encargado de Convivencia)',
 };
 
-function formReducer(state: FormState, action: FormAction): FormState {
-  switch (action.type) {
-    case 'OPEN':
-      return { ...state, showCreateForm: true };
-    case 'CLOSE':
-      return { ...state, showCreateForm: false };
-    case 'SET_COURSE':
-      return { ...state, selectedCourseId: action.courseId, newEstNombre: '', newEstRut: '' };
-    case 'SET_STUDENT':
-      return { ...state, newEstNombre: action.nombre, newEstRut: action.rut };
-    case 'SET_FIELD':
-      return { ...state, [action.field]: action.value };
-    case 'RESET':
-      return { ...FORM_INITIAL, showCreateForm: false };
-    default:
-      return state;
-  }
+const NEW_CAUSA_FORM_FIELDS = Object.keys(NEW_CAUSA_FORM_DEFAULTS) as Array<
+  keyof NewCausaFormValues
+>;
+
+function isNewCausaFormField(field: unknown): field is keyof NewCausaFormValues {
+  return (
+    typeof field === 'string' && NEW_CAUSA_FORM_FIELDS.includes(field as keyof NewCausaFormValues)
+  );
 }
 
+export const newCausaFormResolver: Resolver<NewCausaFormValues> = async (values) => {
+  const result = newCausaFormSchema.safeParse(values);
+  if (result.success) {
+    return { values: result.data, errors: {} };
+  }
+
+  const errors: FieldErrors<NewCausaFormValues> = {};
+  for (const issue of result.error.issues) {
+    const [field] = issue.path;
+    if (isNewCausaFormField(field) && !errors[field]) {
+      errors[field] = {
+        type: issue.code,
+        message: issue.message,
+      };
+    }
+  }
+
+  return { values: {}, errors };
+};
+
 export function useNewCausaForm() {
-  const [formState, dispatchForm] = useReducer(formReducer, FORM_INITIAL);
-  return { formState, dispatchForm };
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const form = useForm<NewCausaFormValues>({
+    defaultValues: NEW_CAUSA_FORM_DEFAULTS,
+    mode: 'onChange',
+    resolver: newCausaFormResolver,
+  });
+  const { reset, setValue } = form;
+
+  const openCreateForm = useCallback(() => {
+    setShowCreateForm(true);
+  }, []);
+
+  const closeCreateForm = useCallback(() => {
+    setShowCreateForm(false);
+  }, []);
+
+  const resetCreateForm = useCallback(() => {
+    reset(NEW_CAUSA_FORM_DEFAULTS);
+    setShowCreateForm(false);
+  }, [reset]);
+
+  const setCourse = useCallback(
+    (courseId: string) => {
+      setValue('selectedCourseId', courseId, { shouldDirty: true, shouldValidate: true });
+      setValue('selectedStudentId', '', { shouldDirty: true });
+      setValue('newEstNombre', '', { shouldDirty: true, shouldValidate: true });
+      setValue('newEstRut', '', { shouldDirty: true, shouldValidate: true });
+    },
+    [setValue],
+  );
+
+  const setStudent = useCallback(
+    (studentId: string, nombre: string, rut: string) => {
+      setValue('selectedStudentId', studentId, { shouldDirty: true, shouldValidate: true });
+      setValue('newEstNombre', nombre, { shouldDirty: true, shouldValidate: true });
+      setValue('newEstRut', rut, { shouldDirty: true, shouldValidate: true });
+    },
+    [setValue],
+  );
+
+  return {
+    form,
+    showCreateForm,
+    openCreateForm,
+    closeCreateForm,
+    resetCreateForm,
+    setCourse,
+    setStudent,
+  };
 }

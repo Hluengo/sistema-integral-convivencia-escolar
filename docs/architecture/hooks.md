@@ -9,14 +9,14 @@
 
 ## App-Level Hooks
 
-| Hook                     | Archivo                         | Propósito                                |
-| ------------------------ | ------------------------------- | ---------------------------------------- |
-| `useNewCausaForm()`      | `hooks/useNewCausaForm.ts`      | useReducer para wizard de nuevo caso     |
-| `useCausasPersistence()` | `hooks/useCausasPersistence.ts` | Carga inicial + auto-save debounced (2s) |
-| `useKeyboardShortcuts()` | `hooks/useKeyboardShortcuts.ts` | Atajos de teclado globales               |
-| `useNotifications()`     | `hooks/useNotifications.ts`     | Notificaciones desde causas              |
-| `useAppContext()`        | `lib/useAppContext.ts`          | Facade que combina todos los stores      |
-| `useTextImprovement()`   | `hooks/useTextImprovement.ts`   | Llama a `/api/improve-text`              |
+| Hook                     | Archivo                         | Propósito                                 |
+| ------------------------ | ------------------------------- | ----------------------------------------- |
+| `useNewCausaForm()`      | `hooks/useNewCausaForm.ts`      | RHF + Zod para wizard de nuevo expediente |
+| `useCausasPersistence()` | `hooks/useCausasPersistence.ts` | Carga inicial + auto-save debounced (2s)  |
+| `useKeyboardShortcuts()` | `hooks/useKeyboardShortcuts.ts` | Atajos de teclado globales                |
+| `useNotifications()`     | `hooks/useNotifications.ts`     | Notificaciones desde causas               |
+| `useAppContext()`        | `lib/useAppContext.ts`          | Facade que combina todos los stores       |
+| `useTextImprovement()`   | `hooks/useTextImprovement.ts`   | Llama a `/api/improve-text`               |
 
 ## Timeline Hooks
 

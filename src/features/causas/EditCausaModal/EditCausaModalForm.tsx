@@ -3,12 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import type { FieldErrors, Resolver } from 'react-hook-form';
 import { Scale, AlertCircle, FileText, Shield } from 'lucide-react';
 import { type Causa, EstadoCausa, type TipoInfraccion } from '@/src/shared/lib/types';
 import { nowDateOnly } from '@/src/shared/lib/dateUtils';
 import ImproveTextarea from '@/src/shared/ImproveTextarea';
-import { Dialog, DialogContent } from '@/src/shared/ui/Dialog';
+import {
+  editCausaFormSchema,
+  type EditCausaFormValues,
+} from '@/src/shared/lib/schemas/editCausaForm';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,16 +28,100 @@ import {
 import Button from '@/src/shared/ui/Button';
 
 const INFRACCIONES: TipoInfraccion[] = ['Leve', 'Grave', 'Muy Grave', 'Gravísima'];
+const EDIT_CAUSA_FIELDS = [
+  'estudianteNombre',
+  'estudianteCurso',
+  'runEstudiante',
+  'tipoInfraccion',
+  'responsable',
+  'estadoActual',
+  'observaciones',
+  'comprometeAulaSegura',
+  'esDenunciaConfidencial',
+  'identidadReservada',
+  'fechaInicioInvestigacion',
+  'fechaInicioSuspension',
+  'duracionSuspensionDias',
+  'monitoreoPedagogico',
+  'requiereNotificacionSuperintendencia',
+  'fechaNotificacionSuperintendencia',
+  'estudianteTieneNEE',
+  'tipoNEE',
+] as const satisfies Array<keyof EditCausaFormValues>;
+
+const fieldClass =
+  'w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-50 font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:bg-white transition-colors text-xs';
+const fieldErrorClass =
+  'w-full mt-1.5 border border-grave-300 rounded-lg p-2.5 bg-grave-50 font-medium text-grave-900 focus:outline-none focus:ring-2 focus:ring-grave-500/30 focus:border-grave-500 focus:bg-white transition-colors text-xs';
+const labelClass = 'block text-[9px] font-semibold text-neutral-400 uppercase tracking-wide';
+const selectClass =
+  'w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-50 font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:bg-white transition-colors text-xs appearance-none';
+const selectErrorClass =
+  'w-full mt-1.5 border border-grave-300 rounded-lg p-2.5 bg-grave-50 font-medium text-grave-900 focus:outline-none focus:ring-2 focus:ring-grave-500/30 focus:border-grave-500 focus:bg-white transition-colors text-xs appearance-none';
 
 function toInitials(name: string): string {
-  if (!name) {
-    return '';
-  }
+  if (!name) return '';
   return name
     .split(' ')
-    .filter((w) => w.length >= 2)
-    .map((w) => `${w[0].toUpperCase()}.`)
+    .filter((word) => word.length >= 2)
+    .map((word) => `${word[0].toUpperCase()}.`)
     .join(' ');
+}
+
+function isEditCausaField(field: unknown): field is keyof EditCausaFormValues {
+  return (
+    typeof field === 'string' && EDIT_CAUSA_FIELDS.includes(field as keyof EditCausaFormValues)
+  );
+}
+
+const editCausaResolver: Resolver<EditCausaFormValues> = async (values) => {
+  const result = editCausaFormSchema.safeParse(values);
+  if (result.success) {
+    return { values: result.data, errors: {} };
+  }
+
+  const errors: FieldErrors<EditCausaFormValues> = {};
+  for (const issue of result.error.issues) {
+    const [field] = issue.path;
+    if (isEditCausaField(field) && !errors[field]) {
+      errors[field] = { type: issue.code, message: issue.message };
+    }
+  }
+
+  return { values: {}, errors };
+};
+
+function buildDefaultValues(causa: Causa): EditCausaFormValues {
+  return {
+    estudianteNombre: causa.estudianteNombre,
+    estudianteCurso: causa.estudianteCurso,
+    runEstudiante: causa.runEstudiante,
+    tipoInfraccion: causa.tipoInfraccion,
+    responsable: causa.responsable,
+    estadoActual: causa.estadoActual,
+    observaciones: causa.observaciones,
+    comprometeAulaSegura: causa.comprometeAulaSegura,
+    esDenunciaConfidencial: causa.esDenunciaConfidencial || false,
+    identidadReservada: causa.identidadReservada || false,
+    fechaInicioInvestigacion: causa.fechaInicioInvestigacion || '',
+    fechaInicioSuspension: causa.fechaInicioSuspension || '',
+    duracionSuspensionDias: causa.duracionSuspensionDias || 0,
+    monitoreoPedagogico: causa.monitoreoPedagogico || false,
+    requiereNotificacionSuperintendencia: causa.requiereNotificacionSuperintendencia || false,
+    fechaNotificacionSuperintendencia: causa.fechaNotificacionSuperintendencia || '',
+    estudianteTieneNEE: causa.estudianteTieneNEE || false,
+    tipoNEE: causa.tipoNEE || '',
+  };
+}
+
+function FieldError({ id, message }: { id: string; message?: string }) {
+  if (!message) return null;
+
+  return (
+    <p id={id} role="alert" className="mt-1 text-grave-700 text-xs">
+      {message}
+    </p>
+  );
 }
 
 interface EditCausaModalFormProps {
@@ -48,392 +137,351 @@ export default function EditCausaModalForm({
   onDelete,
   onClose,
 }: EditCausaModalFormProps) {
-  const [estudianteNombre, setEstudianteNombre] = useState(causa.estudianteNombre);
-  const [estudianteCurso, setEstudianteCurso] = useState(causa.estudianteCurso);
-  const [runEstudiante, setRunEstudiante] = useState(causa.runEstudiante);
-  const [tipoInfraccion, setTipoInfraccion] = useState<TipoInfraccion>(causa.tipoInfraccion);
-  const [responsable, setResponsable] = useState(causa.responsable);
-  const [estadoActual, setEstadoActual] = useState<EstadoCausa>(causa.estadoActual);
-  const [observaciones, setObservaciones] = useState(causa.observaciones);
-  const [aulaSegura, setAulaSegura] = useState(causa.comprometeAulaSegura);
-
-  const [esDenunciaConfidencial, setEsDenunciaConfidencial] = useState(
-    causa.esDenunciaConfidencial || false,
-  );
-  const [identidadReservada, setIdentidadReservada] = useState(causa.identidadReservada || false);
-  const [fechaInicioInvestigacion, setFechaInicioInvestigacion] = useState(
-    causa.fechaInicioInvestigacion || '',
-  );
-  const [fechaInicioSuspension, setFechaInicioSuspension] = useState(
-    causa.fechaInicioSuspension || '',
-  );
-  const [duracionSuspensionDias, setDuracionSuspensionDias] = useState(
-    causa.duracionSuspensionDias || 0,
-  );
-  const [monitoreoPedagogico, setMonitoreoPedagogico] = useState(
-    causa.monitoreoPedagogico || false,
-  );
-  const [requiereNotificacionSuperintendencia, setRequiereNotificacionSuperintendencia] = useState(
-    causa.requiereNotificacionSuperintendencia || false,
-  );
-  const [fechaNotificacionSuperintendencia, setFechaNotificacionSuperintendencia] = useState(
-    causa.fechaNotificacionSuperintendencia || '',
-  );
-  const [estudianteTieneNEE, setEstudianteTieneNEE] = useState(causa.estudianteTieneNEE || false);
-  const [tipoNEE, setTipoNEE] = useState(causa.tipoNEE || '');
-
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const {
+    control,
+    register,
+    watch,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<EditCausaFormValues>({
+    defaultValues: buildDefaultValues(causa),
+    mode: 'onChange',
+    resolver: editCausaResolver,
+  });
+  const estudianteTieneNEE = watch('estudianteTieneNEE');
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (!Object.values(EstadoCausa).includes(estadoActual)) {
-      return;
-    }
+  const submitUpdatedCausa = handleSubmit((values) => {
     onSave({
       ...causa,
-      estudianteNombre,
-      nnaProtectedName: toInitials(estudianteNombre) || causa.nnaProtectedName,
-      estudianteCurso,
-      runEstudiante,
-      tipoInfraccion,
-      comprometeAulaSegura: aulaSegura,
-      responsable,
-      estadoActual,
-      observaciones,
+      estudianteNombre: values.estudianteNombre,
+      nnaProtectedName: toInitials(values.estudianteNombre) || causa.nnaProtectedName,
+      estudianteCurso: values.estudianteCurso,
+      runEstudiante: values.runEstudiante,
+      tipoInfraccion: values.tipoInfraccion,
+      comprometeAulaSegura: values.comprometeAulaSegura,
+      responsable: values.responsable,
+      estadoActual: values.estadoActual,
+      observaciones: values.observaciones,
       fechaUltimaActualizacion: nowDateOnly(),
-      esDenunciaConfidencial,
-      identidadReservada,
-      fechaInicioInvestigacion: fechaInicioInvestigacion || undefined,
-      fechaInicioSuspension: fechaInicioSuspension || undefined,
-      duracionSuspensionDias: duracionSuspensionDias || undefined,
-      monitoreoPedagogico,
-      requiereNotificacionSuperintendencia,
-      fechaNotificacionSuperintendencia: fechaNotificacionSuperintendencia || undefined,
-      estudianteTieneNEE,
-      tipoNEE: tipoNEE || undefined,
+      esDenunciaConfidencial: values.esDenunciaConfidencial,
+      identidadReservada: values.identidadReservada,
+      fechaInicioInvestigacion: values.fechaInicioInvestigacion || undefined,
+      fechaInicioSuspension: values.fechaInicioSuspension || undefined,
+      duracionSuspensionDias: values.duracionSuspensionDias || undefined,
+      monitoreoPedagogico: values.monitoreoPedagogico,
+      requiereNotificacionSuperintendencia: values.requiereNotificacionSuperintendencia,
+      fechaNotificacionSuperintendencia: values.fechaNotificacionSuperintendencia || undefined,
+      estudianteTieneNEE: values.estudianteTieneNEE,
+      tipoNEE: values.tipoNEE || undefined,
     });
-  };
-
-  const fieldClass =
-    'w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-50 font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:bg-white transition-colors text-xs';
-  const labelClass = 'block text-[9px] font-semibold text-neutral-400 uppercase tracking-wide';
-  const selectClass =
-    'w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-50 font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:bg-white transition-colors text-xs appearance-none';
+  });
 
   return (
     <>
-      <Dialog
-        open
-        onOpenChange={(o) => {
-          if (!o) onClose();
-        }}
-      >
-        <DialogContent hideClose className="max-w-2xl max-h-[90vh] overflow-y-auto p-0">
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50">
-                <Scale className="h-5 w-5 text-brand-600" />
-              </div>
-              <div>
-                <h2 className="font-bold text-neutral-900 text-lg">Editar Expediente</h2>
-                <p className="text-neutral-500 text-xs">Expediente: {causa.id}</p>
-              </div>
-            </div>
+      <form onSubmit={submitUpdatedCausa} noValidate className="space-y-6 p-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50">
+            <Scale className="h-5 w-5 text-brand-600" aria-hidden="true" />
+          </div>
+          <div>
+            <h2 className="font-bold text-lg text-neutral-900">Editar Expediente</h2>
+            <p className="text-neutral-500 text-xs">Expediente: {causa.id}</p>
+          </div>
+        </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <label htmlFor="edit-estudiante" className={labelClass}>
-                  Estudiante
-                </label>
-                <input
-                  id="edit-estudiante"
-                  aria-label="Estudiante"
-                  value={estudianteNombre}
-                  onChange={(e) => setEstudianteNombre(e.target.value)}
-                  className={fieldClass}
-                  placeholder="Nombre completo"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="edit-curso" className={labelClass}>
-                  Curso
-                </label>
-                <input
-                  id="edit-curso"
-                  aria-label="Curso"
-                  value={estudianteCurso}
-                  onChange={(e) => setEstudianteCurso(e.target.value)}
-                  className={fieldClass}
-                  placeholder="Ej: 7° Básico A"
-                />
-              </div>
-              <div>
-                <label htmlFor="edit-run" className={labelClass}>
-                  RUN
-                </label>
-                <input
-                  id="edit-run"
-                  aria-label="RUN"
-                  value={runEstudiante}
-                  onChange={(e) => setRunEstudiante(e.target.value)}
-                  className={fieldClass}
-                  placeholder="12.345.678-9"
-                />
-              </div>
-              <div>
-                <label htmlFor="edit-tipo-infraccion" className={labelClass}>
-                  Tipo Infracción
-                </label>
-                <select
-                  id="edit-tipo-infraccion"
-                  aria-label="Tipo de infracción"
-                  value={tipoInfraccion}
-                  onChange={(e) => setTipoInfraccion(e.target.value as TipoInfraccion)}
-                  className={selectClass}
-                  required
-                >
-                  {INFRACCIONES.map((i) => (
-                    <option key={i} value={i}>
-                      {i}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="edit-responsable" className={labelClass}>
-                  Encargado / Responsable
-                </label>
-                <input
-                  id="edit-responsable"
-                  aria-label="Encargado o responsable"
-                  value={responsable}
-                  onChange={(e) => setResponsable(e.target.value)}
-                  className={fieldClass}
-                  placeholder="Nombre del inspector/a"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="edit-estado" className={labelClass}>
-                  Estado Actual
-                </label>
-                <select
-                  id="edit-estado"
-                  aria-label="Estado actual"
-                  value={estadoActual}
-                  onChange={(e) => setEstadoActual(e.target.value as EstadoCausa)}
-                  className={selectClass}
-                  required
-                >
-                  {Object.values(EstadoCausa).map((e) => (
-                    <option key={e} value={e}>
-                      {e}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <label htmlFor="edit-estudiante" className={labelClass}>
+              Estudiante
+            </label>
+            <input
+              id="edit-estudiante"
+              aria-label="Estudiante"
+              aria-invalid={!!errors.estudianteNombre}
+              aria-describedby={errors.estudianteNombre ? 'edit-estudiante-error' : undefined}
+              className={errors.estudianteNombre ? fieldErrorClass : fieldClass}
+              placeholder="Nombre completo"
+              {...register('estudianteNombre')}
+            />
+            <FieldError id="edit-estudiante-error" message={errors.estudianteNombre?.message} />
+          </div>
+          <div>
+            <label htmlFor="edit-curso" className={labelClass}>
+              Curso
+            </label>
+            <input
+              id="edit-curso"
+              aria-label="Curso"
+              className={fieldClass}
+              placeholder="Ej: 7 Basico A"
+              {...register('estudianteCurso')}
+            />
+          </div>
+          <div>
+            <label htmlFor="edit-run" className={labelClass}>
+              RUN
+            </label>
+            <input
+              id="edit-run"
+              aria-label="RUN"
+              aria-invalid={!!errors.runEstudiante}
+              aria-describedby={errors.runEstudiante ? 'edit-run-error' : undefined}
+              className={errors.runEstudiante ? fieldErrorClass : fieldClass}
+              placeholder="12.345.678-9"
+              {...register('runEstudiante')}
+            />
+            <FieldError id="edit-run-error" message={errors.runEstudiante?.message} />
+          </div>
+          <div>
+            <label htmlFor="edit-tipo-infraccion" className={labelClass}>
+              Tipo Infracción
+            </label>
+            <select
+              id="edit-tipo-infraccion"
+              aria-label="Tipo de infracción"
+              className={selectClass}
+              {...register('tipoInfraccion')}
+            >
+              {INFRACCIONES.map((infraccion) => (
+                <option key={infraccion} value={infraccion}>
+                  {infraccion}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label htmlFor="edit-responsable" className={labelClass}>
+              Encargado / Responsable
+            </label>
+            <input
+              id="edit-responsable"
+              aria-label="Encargado o responsable"
+              aria-invalid={!!errors.responsable}
+              aria-describedby={errors.responsable ? 'edit-responsable-error' : undefined}
+              className={errors.responsable ? fieldErrorClass : fieldClass}
+              placeholder="Nombre del inspector/a"
+              {...register('responsable')}
+            />
+            <FieldError id="edit-responsable-error" message={errors.responsable?.message} />
+          </div>
+          <div>
+            <label htmlFor="edit-estado" className={labelClass}>
+              Estado Actual
+            </label>
+            <select
+              id="edit-estado"
+              aria-label="Estado actual"
+              aria-invalid={!!errors.estadoActual}
+              aria-describedby={errors.estadoActual ? 'edit-estado-error' : undefined}
+              className={errors.estadoActual ? selectErrorClass : selectClass}
+              {...register('estadoActual')}
+            >
+              {Object.values(EstadoCausa).map((estado) => (
+                <option key={estado} value={estado}>
+                  {estado}
+                </option>
+              ))}
+            </select>
+            <FieldError id="edit-estado-error" message={errors.estadoActual?.message} />
+          </div>
+        </div>
 
-            <div>
-              <label htmlFor="edit-obs" className={labelClass}>
-                Observaciones
-              </label>
+        <div>
+          <Controller
+            control={control}
+            name="observaciones"
+            render={({ field }) => (
               <ImproveTextarea
                 id="edit-obs"
-                value={observaciones}
-                onChange={setObservaciones}
+                label="Observaciones"
+                value={field.value}
+                onChange={field.onChange}
                 className={fieldClass}
                 rows={3}
                 placeholder="Descripción de los hechos, contexto, etc."
               />
-            </div>
+            )}
+          />
+        </div>
 
-            <div className="border-t border-neutral-100 pt-4">
-              <div className="flex items-center gap-2 text-sm font-semibold text-brand-700">
-                <AlertCircle className="h-4 w-4" />
-                Aula Segura / Ley 21.128
-              </div>
-              <div className="mt-3 grid gap-3 md:grid-cols-2">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    aria-label="Compromete Aula Segura"
-                    checked={aulaSegura}
-                    onChange={(e) => setAulaSegura(e.target.checked)}
-                    className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
-                  />
-                  <span className="text-sm text-neutral-700">Compromete Aula Segura</span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    aria-label="Denuncia confidencial"
-                    checked={esDenunciaConfidencial}
-                    onChange={(e) => setEsDenunciaConfidencial(e.target.checked)}
-                    className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
-                  />
-                  <span className="text-sm text-neutral-700">Denuncia Confidencial</span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    aria-label="Identidad reservada"
-                    checked={identidadReservada}
-                    onChange={(e) => setIdentidadReservada(e.target.checked)}
-                    className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
-                  />
-                  <span className="text-sm text-neutral-700">Identidad Reservada</span>
-                </label>
-              </div>
-            </div>
+        <div className="border-t border-neutral-100 pt-4">
+          <div className="flex items-center gap-2 font-semibold text-brand-700 text-sm">
+            <AlertCircle className="h-4 w-4" aria-hidden="true" />
+            Aula Segura / Ley 21.128
+          </div>
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                aria-label="Compromete Aula Segura"
+                className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
+                {...register('comprometeAulaSegura')}
+              />
+              <span className="text-neutral-700 text-sm">Compromete Aula Segura</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                aria-label="Denuncia confidencial"
+                className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
+                {...register('esDenunciaConfidencial')}
+              />
+              <span className="text-neutral-700 text-sm">Denuncia Confidencial</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                aria-label="Identidad reservada"
+                className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
+                {...register('identidadReservada')}
+              />
+              <span className="text-neutral-700 text-sm">Identidad Reservada</span>
+            </label>
+          </div>
+        </div>
 
-            <div className="border-t border-neutral-100 pt-4">
-              <div className="flex items-center gap-2 text-sm font-semibold text-brand-700">
-                <FileText className="h-4 w-4" />
-                Plazos y Suspensión
-              </div>
-              <div className="mt-3 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                <div>
-                  <label htmlFor="edit-inicio-investigacion" className={labelClass}>
-                    Inicio Investigación
-                  </label>
-                  <input
-                    id="edit-inicio-investigacion"
-                    aria-label="Inicio investigación"
-                    type="date"
-                    value={fechaInicioInvestigacion}
-                    onChange={(e) => setFechaInicioInvestigacion(e.target.value)}
-                    className={fieldClass}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="edit-inicio-suspension" className={labelClass}>
-                    Inicio Suspensión
-                  </label>
-                  <input
-                    id="edit-inicio-suspension"
-                    aria-label="Inicio suspensión"
-                    type="date"
-                    value={fechaInicioSuspension}
-                    onChange={(e) => setFechaInicioSuspension(e.target.value)}
-                    className={fieldClass}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="edit-dias-suspension" className={labelClass}>
-                    Días Suspensión
-                  </label>
-                  <input
-                    id="edit-dias-suspension"
-                    aria-label="Días de suspensión"
-                    type="number"
-                    min="0"
-                    max="15"
-                    value={duracionSuspensionDias}
-                    onChange={(e) => {
-                      const v = Number(e.target.value);
-                      if (!Number.isNaN(v)) setDuracionSuspensionDias(v);
-                    }}
-                    className={fieldClass}
-                  />
-                </div>
-                <label className="flex items-center gap-2 md:col-span-2">
-                  <input
-                    type="checkbox"
-                    aria-label="Monitoreo pedagógico obligatorio"
-                    checked={monitoreoPedagogico}
-                    onChange={(e) => setMonitoreoPedagogico(e.target.checked)}
-                    className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
-                  />
-                  <span className="text-sm text-neutral-700">Monitoreo Pedagógico Obligatorio</span>
-                </label>
-              </div>
+        <div className="border-t border-neutral-100 pt-4">
+          <div className="flex items-center gap-2 font-semibold text-brand-700 text-sm">
+            <FileText className="h-4 w-4" aria-hidden="true" />
+            Plazos y Suspensión
+          </div>
+          <div className="mt-3 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <label htmlFor="edit-inicio-investigacion" className={labelClass}>
+                Inicio Investigación
+              </label>
+              <input
+                id="edit-inicio-investigacion"
+                aria-label="Inicio investigación"
+                type="date"
+                className={fieldClass}
+                {...register('fechaInicioInvestigacion')}
+              />
             </div>
+            <div>
+              <label htmlFor="edit-inicio-suspension" className={labelClass}>
+                Inicio Suspensión
+              </label>
+              <input
+                id="edit-inicio-suspension"
+                aria-label="Inicio suspensión"
+                type="date"
+                className={fieldClass}
+                {...register('fechaInicioSuspension')}
+              />
+            </div>
+            <div>
+              <label htmlFor="edit-dias-suspension" className={labelClass}>
+                Días Suspensión
+              </label>
+              <input
+                id="edit-dias-suspension"
+                aria-label="Días de suspensión"
+                type="number"
+                min="0"
+                max="15"
+                aria-invalid={!!errors.duracionSuspensionDias}
+                aria-describedby={
+                  errors.duracionSuspensionDias ? 'edit-dias-suspension-error' : undefined
+                }
+                className={errors.duracionSuspensionDias ? fieldErrorClass : fieldClass}
+                {...register('duracionSuspensionDias', { valueAsNumber: true })}
+              />
+              <FieldError
+                id="edit-dias-suspension-error"
+                message={errors.duracionSuspensionDias?.message}
+              />
+            </div>
+            <label className="flex items-center gap-2 md:col-span-2">
+              <input
+                type="checkbox"
+                aria-label="Monitoreo pedagógico obligatorio"
+                className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
+                {...register('monitoreoPedagogico')}
+              />
+              <span className="text-neutral-700 text-sm">Monitoreo Pedagógico Obligatorio</span>
+            </label>
+          </div>
+        </div>
 
-            <div className="border-t border-neutral-100 pt-4">
-              <div className="flex items-center gap-2 text-sm font-semibold text-brand-700">
-                <Shield className="h-4 w-4" />
-                Notificación Superintendencia
-              </div>
-              <div className="mt-3 grid gap-3 md:grid-cols-2">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    aria-label="Requiere notificación a Superintendencia"
-                    checked={requiereNotificacionSuperintendencia}
-                    onChange={(e) => setRequiereNotificacionSuperintendencia(e.target.checked)}
-                    className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
-                  />
-                  <span className="text-sm text-neutral-700">
-                    Requiere Notificación a Superintendencia
-                  </span>
-                </label>
-                <div>
-                  <label htmlFor="edit-fecha-notificacion" className={labelClass}>
-                    Fecha Notificación
-                  </label>
-                  <input
-                    id="edit-fecha-notificacion"
-                    aria-label="Fecha de notificación"
-                    type="date"
-                    value={fechaNotificacionSuperintendencia}
-                    onChange={(e) => setFechaNotificacionSuperintendencia(e.target.value)}
-                    className={fieldClass}
-                  />
-                </div>
-              </div>
+        <div className="border-t border-neutral-100 pt-4">
+          <div className="flex items-center gap-2 font-semibold text-brand-700 text-sm">
+            <Shield className="h-4 w-4" aria-hidden="true" />
+            Notificación Superintendencia
+          </div>
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                aria-label="Requiere notificación a Superintendencia"
+                className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
+                {...register('requiereNotificacionSuperintendencia')}
+              />
+              <span className="text-neutral-700 text-sm">
+                Requiere Notificación a Superintendencia
+              </span>
+            </label>
+            <div>
+              <label htmlFor="edit-fecha-notificacion" className={labelClass}>
+                Fecha Notificación
+              </label>
+              <input
+                id="edit-fecha-notificacion"
+                aria-label="Fecha de notificación"
+                type="date"
+                className={fieldClass}
+                {...register('fechaNotificacionSuperintendencia')}
+              />
             </div>
+          </div>
+        </div>
 
-            <div className="border-t border-neutral-100 pt-4">
-              <div className="flex items-center gap-2 text-sm font-semibold text-brand-700">
-                <AlertCircle className="h-4 w-4" />
-                NEE / Discapacidad
-              </div>
-              <div className="mt-3 grid gap-3 md:grid-cols-2">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    aria-label="Estudiante con NEE"
-                    checked={estudianteTieneNEE}
-                    onChange={(e) => setEstudianteTieneNEE(e.target.checked)}
-                    className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
-                  />
-                  <span className="text-sm text-neutral-700">Estudiante con NEE</span>
-                </label>
-                <div>
-                  <label htmlFor="edit-tipo-nee" className={labelClass}>
-                    Tipo NEE
-                  </label>
-                  <input
-                    id="edit-tipo-nee"
-                    aria-label="Tipo NEE"
-                    value={tipoNEE}
-                    onChange={(e) => setTipoNEE(e.target.value)}
-                    className={fieldClass}
-                    placeholder="TEA, TDAH, Disc. Intelectual, etc."
-                    disabled={!estudianteTieneNEE}
-                  />
-                </div>
-              </div>
+        <div className="border-t border-neutral-100 pt-4">
+          <div className="flex items-center gap-2 font-semibold text-brand-700 text-sm">
+            <AlertCircle className="h-4 w-4" aria-hidden="true" />
+            NEE / Discapacidad
+          </div>
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                aria-label="Estudiante con NEE"
+                className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
+                {...register('estudianteTieneNEE')}
+              />
+              <span className="text-neutral-700 text-sm">Estudiante con NEE</span>
+            </label>
+            <div>
+              <label htmlFor="edit-tipo-nee" className={labelClass}>
+                Tipo NEE
+              </label>
+              <input
+                id="edit-tipo-nee"
+                aria-label="Tipo NEE"
+                className={fieldClass}
+                placeholder="TEA, TDAH, Disc. Intelectual, etc."
+                disabled={!estudianteTieneNEE}
+                {...register('tipoNEE')}
+              />
             </div>
+          </div>
+        </div>
 
-            <div className="border-t border-neutral-100 pt-4 flex items-center justify-end gap-3">
-              <Button
-                variant="danger"
-                onClick={() => setShowDeleteConfirm(true)}
-                className="bg-transparent text-gravisima-600 shadow-none hover:bg-gravisima-50 hover:text-gravisima-700"
-              >
-                Eliminar Expediente
-              </Button>
-              <Button variant="secondary" onClick={onClose}>
-                Cancelar
-              </Button>
-              <Button type="submit">Guardar Cambios</Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+        <div className="flex items-center justify-end gap-3 border-t border-neutral-100 pt-4">
+          <Button
+            variant="danger"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="bg-transparent text-gravisima-600 shadow-none hover:bg-gravisima-50 hover:text-gravisima-700"
+          >
+            Eliminar Expediente
+          </Button>
+          <Button variant="secondary" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button type="submit">Guardar Cambios</Button>
+        </div>
+      </form>
 
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>

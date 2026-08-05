@@ -4,6 +4,7 @@ import { defineConfig, devices } from '@playwright/test';
 dotenv.config({ path: '.env.local' });
 
 const baseURL = process.env.E2E_BASE_URL || 'http://localhost:3001';
+const shouldStartWebServer = process.env.PLAYWRIGHT_USE_WEBSERVER === 'true' || !process.env.CI;
 
 export default defineConfig({
   testDir: './tests',
@@ -23,12 +24,12 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: process.env.CI
-    ? undefined
-    : {
+  webServer: shouldStartWebServer
+    ? {
         command: 'npm run dev',
         url: baseURL,
         reuseExistingServer: true,
         timeout: 120 * 1000,
-      },
+      }
+    : undefined,
 });

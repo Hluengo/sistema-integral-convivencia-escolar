@@ -39,13 +39,20 @@ graph LR
         usage_events
     end
 
+    subgraph Supabase RPCs
+        save_bitacora_snapshot
+        save_checklist_snapshot
+    end
+
     causasService --> causas
     causasService --> bitacora_entries
     causasService --> checklist_items
 
-    bitacoraService --> bitacora_entries
+    bitacoraService --> save_bitacora_snapshot
+    save_bitacora_snapshot --> bitacora_entries
 
-    checklistService --> checklist_items
+    checklistService --> save_checklist_snapshot
+    save_checklist_snapshot --> checklist_items
 
     annotationsService --> inspectorate_records
     annotationsService --> document_analyses
@@ -67,18 +74,19 @@ graph LR
 
 ## Read/Write Matrix
 
-| Service | Tablas que Lee | Tablas que Escribe |
-|---------|---------------|-------------------|
-| causasService | causas, bitacora_entries, checklist_items | causas, bitacora_entries, checklist_items |
-| bitacoraService | bitacora_entries | bitacora_entries |
-| checklistService | checklist_items | checklist_items |
-| annotationsService | inspectorate_records, students, courses | inspectorate_records, document_analyses |
-| coursesService | courses, students | — |
-| cartasService | cartas_disciplinarias | — |
-| etapasService | etapas_disciplinarias | — |
-| disciplinaryRules | disciplinary_rules | — |
-| authService | profiles | — |
-```
+| Service            | Tablas que Lee                            | Tablas que Escribe                            |
+| ------------------ | ----------------------------------------- | --------------------------------------------- |
+| causasService      | causas, bitacora_entries, checklist_items | causas, bitacora_entries, checklist_items     |
+| bitacoraService    | —                                         | bitacora_entries vía `save_bitacora_snapshot` |
+| checklistService   | —                                         | checklist_items vía `save_checklist_snapshot` |
+| annotationsService | inspectorate_records, students, courses   | inspectorate_records, document_analyses       |
+| coursesService     | courses, students                         | —                                             |
+| cartasService      | cartas_disciplinarias                     | —                                             |
+| etapasService      | etapas_disciplinarias                     | —                                             |
+| disciplinaryRules  | disciplinary_rules                        | —                                             |
+| authService        | profiles                                  | —                                             |
+
+````
 
 ## Supabase RPCs
 
@@ -91,6 +99,8 @@ graph LR
         generate_process_number
         current_tenant_id
         current_app_role
+        save_bitacora_snapshot
+        save_checklist_snapshot
     end
 
     subgraph Tables
@@ -115,4 +125,8 @@ graph LR
 
     current_tenant_id --> profiles
     current_app_role --> profiles
-```
+    save_bitacora_snapshot --> causas
+    save_bitacora_snapshot --> bitacora_entries
+    save_checklist_snapshot --> causas
+    save_checklist_snapshot --> checklist_items
+````

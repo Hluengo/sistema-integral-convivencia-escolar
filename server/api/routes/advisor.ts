@@ -2,7 +2,7 @@
 
 import { Router } from 'express';
 import { requireAuth } from '../../middleware/auth.js';
-import { sanitizeForAI } from '../validators/sanitizers.js';
+import { redactSensitiveForAI } from '../validators/sanitizers.js';
 import { getCacheKey, getFromCache, setCache } from '../services/cache.js';
 import { callOpenRouter } from '../services/openrouter.js';
 import { getRelevantLegalSources } from '../services/legalSources.js';
@@ -30,7 +30,7 @@ function normalizeHistory(value: unknown): AdvisorMessage[] | null {
     if (typeof record.content !== 'string' || record.content.length > MAX_HISTORY_MESSAGE_LENGTH) {
       return null;
     }
-    const content = sanitizeForAI(record.content).trim();
+    const content = redactSensitiveForAI(record.content).trim();
     if (!content) return null;
     totalLength += content.length;
     if (totalLength > MAX_HISTORY_TOTAL_LENGTH) return null;
@@ -64,7 +64,8 @@ router.post(
         return;
       }
 
-      const legalSources = await getRelevantLegalSources(message);
+      const safeMessage = redactSensitiveForAI(message);
+      const legalSources = await getRelevantLegalSources(safeMessage);
       const systemInstruction = `Eres el Consultor Legal de Convivencia Escolar de un establecimiento chileno.
 
 Responde únicamente desde las FUENTES JURÍDICAS AUTORIZADAS incluidas abajo. Estas fuentes pueden contener normativa educacional, derechos de niños, niñas y adolescentes, circulares, resoluciones de la Superintendencia y reglamentos o protocolos institucionales vigentes que el establecimiento haya versionado.
@@ -82,7 +83,7 @@ ${legalSources}`;
       const userId = (req as unknown as { user?: { sub?: string } }).user?.sub || 'anonymous';
       const cacheKey = getCacheKey('advisor-chat', {
         userId,
-        message,
+        message: safeMessage,
         history: normalizedHistory,
       });
       const cached = getFromCache(cacheKey);
@@ -92,7 +93,7 @@ ${legalSources}`;
       }
 
       const messages: Array<{ role: string; content: string }> = [...normalizedHistory];
-      messages.push({ role: 'user', content: sanitizeForAI(message) });
+      messages.push({ role: 'user', content: safeMessage });
       const reply = await callOpenRouter(messages, systemInstruction);
       setCache(cacheKey, reply);
       res.json({ success: true, reply });

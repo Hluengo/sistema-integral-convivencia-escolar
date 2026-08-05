@@ -2,7 +2,7 @@
 
 import { Router } from 'express';
 import { requireAuth } from '../../middleware/auth.js';
-import { sanitizeForAI } from '../validators/sanitizers.js';
+import { redactSensitiveForAI } from '../validators/sanitizers.js';
 import { getCacheKey, getFromCache, setCache } from '../services/cache.js';
 import { callOpenRouter, callTextImprovementFallback } from '../services/openrouter.js';
 import { rateLimit } from '../../middleware/rateLimit.js';
@@ -41,14 +41,13 @@ router.post(
         return;
       }
 
-      const cacheKey = getCacheKey('improve-text', { text, context });
+      const userContent = redactSensitiveForAI(text);
+      const cacheKey = getCacheKey('improve-text', { text: userContent, context });
       const cached = getFromCache(cacheKey);
       if (cached) {
         res.json({ success: true, improved: cached, cached: true });
         return;
       }
-
-      const userContent = sanitizeForAI(text);
       const contextInstruction =
         context && context in IMPROVEMENT_CONTEXTS
           ? IMPROVEMENT_CONTEXTS[context as keyof typeof IMPROVEMENT_CONTEXTS]

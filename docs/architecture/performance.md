@@ -52,7 +52,7 @@ El build emite warnings de chunks circulares debido a la configuración de `manu
 ### Renderizado y telemetría
 
 - Los consumidores de Zustand usan selectores parciales; los datos derivados de causas se recalculan solo cuando cambia el arreglo de causas.
-- Sentry, PostHog y Web Vitals se inicializan 2 s después del primer render para no competir con la carga inicial.
+- Sentry, PostHog y Web Vitals se inicializan 2 s después del primer render para no competir con la carga inicial. Sentry usa `@sentry/browser` sin Session Replay; Web Vitals recibe adaptadores desde `loadTelemetry()` y no importa Sentry/PostHog de forma estática.
 - Las pestañas Resumen, Ruta y Bitácora del timeline usan `React.memo` sin modificar sus contratos.
 
 ### Fuentes legales
@@ -75,7 +75,7 @@ La paginación por cursor no se activa todavía porque requiere medir el volumen
 
 ## Performance Monitoring
 
-- **Sentry**: Error tracking + performance traces
+- **Sentry**: Error tracking + performance traces sin Session Replay
 - **PostHog**: Analytics + feature flags
 - **Web Vitals**: Reportados a analytics
 - **React Doctor**: Static analysis de buenas prácticas React
@@ -85,8 +85,8 @@ La paginación por cursor no se activa todavía porque requiere medir el volumen
 | Métrica               | Valor   |
 | --------------------- | ------- |
 | Total dist            | ~5 MB   |
-| Módulos transformados | ~3,792  |
-| Build time            | ~27s    |
+| Módulos transformados | ~3,452  |
+| Build time            | ~16s    |
 | JS total (gzip)       | ~800 KB |
 | CSS total (gzip)      | ~15 KB  |
 

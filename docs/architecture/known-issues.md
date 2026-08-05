@@ -15,7 +15,7 @@
 
 ### Arquitectura
 
-- **No React Router**: Estado de navegación no persiste en URL, no hay deep linking
+- **Routing declarativo pendiente**: El bridge `History API` ya permite URL y deep linking básico; `MainContent` mantiene renderizado condicional mientras no exista router compatible con el gate de seguridad.
 - **Dual entry points**: Se mantienen por entorno, pero comparten las mismas rutas canónicas
 - **Legacy `components/`**: cerrado como deuda de duplicación; 30 archivos actuales, 29 barrels de compatibilidad y 1 test, sin componentes reales en esa capa
 - **Circular chunks**: Warnings en build por manualChunks
@@ -32,7 +32,8 @@
 
 ### Frontend
 
-- **No React Router**: Routing state-driven limita UX
+- **Routing declarativo pendiente**: Falta migrar los condicionales de `MainContent` a rutas declarativas y agregar E2E autenticado para `/expedientes/:causaId`.
+- **WCAG 2.1 AA certificado pendiente**: existe gate automatizado básico con `npm run test:a11y` para dashboard público y login, pero falta auditoría manual completa y ampliar cobertura a tablas densas/modales secundarios.
 - **Sin SSR/SSG**: Toda la app es CSR
 - **Sin PWA**: No hay service worker ni offline support
 

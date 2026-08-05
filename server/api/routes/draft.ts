@@ -5,6 +5,7 @@ import type { AuthenticatedRequest } from '../../types.js';
 import { requireAuth } from '../../middleware/auth.js';
 import {
   isRequestValidationError,
+  redactSensitiveForAI,
   sanitizeForAI,
   requireStr,
   optStr,
@@ -178,19 +179,39 @@ router.post(
       const medidasEjecutadas = optArr(body, 'medidasEjecutadas');
       const bitacora = optArr(body, 'bitacora');
       const checklist = optArr(body, 'checklist');
+      const knownSensitiveValues = [
+        studentName,
+        fatherName,
+        managerName,
+        ...bitacora.flatMap((entry) =>
+          entry &&
+          typeof entry === 'object' &&
+          Array.isArray((entry as Record<string, unknown>).participantes)
+            ? ((entry as Record<string, unknown>).participantes as unknown[])
+            : [],
+        ),
+        ...checklist.flatMap((item) =>
+          item && typeof item === 'object'
+            ? [
+                (item as Record<string, unknown>).registradoPor,
+                (item as Record<string, unknown>).observaciones,
+              ]
+            : [],
+        ),
+      ];
 
       const safeMeasures = (medidasEjecutadas as string[])
-        .map((value) => sanitize(value).slice(0, 500))
+        .map((value) => redactSensitiveForAI(value, knownSensitiveValues).slice(0, 500))
         .slice(0, contextLimits.measures);
       const safeHistory = (bitacora as Array<Record<string, unknown>>)
         .map((entry) => ({
-          title: sanitize(entry.titulo).slice(0, 200),
-          date: sanitize(entry.fecha).slice(0, 50),
-          type: sanitize(entry.tipo).slice(0, 80),
-          description: sanitize(entry.descripcion).slice(0, 2500),
+          title: redactSensitiveForAI(entry.titulo, knownSensitiveValues).slice(0, 200),
+          date: redactSensitiveForAI(entry.fecha, knownSensitiveValues).slice(0, 50),
+          type: redactSensitiveForAI(entry.tipo, knownSensitiveValues).slice(0, 80),
+          description: redactSensitiveForAI(entry.descripcion, knownSensitiveValues).slice(0, 2500),
           people: Array.isArray(entry.participantes)
             ? (entry.participantes as string[])
-                .map((value) => sanitize(value).slice(0, 100))
+                .map((value) => redactSensitiveForAI(value, knownSensitiveValues).slice(0, 100))
                 .slice(0, 20)
             : [],
           document: sanitize(entry.documentoAdjunto).slice(0, 200),
@@ -198,12 +219,12 @@ router.post(
         .slice(0, contextLimits.historyEntries);
       const safeChecklist = (checklist as Array<Record<string, unknown>>)
         .map((item) => ({
-          label: sanitize(item.label).slice(0, 300),
+          label: redactSensitiveForAI(item.label, knownSensitiveValues).slice(0, 300),
           complete: Boolean(item.completado),
-          description: sanitize(item.descripcion).slice(0, 1000),
-          by: sanitize(item.registradoPor).slice(0, 200),
-          date: sanitize(item.fechaCompletado).slice(0, 50),
-          notes: sanitize(item.observaciones).slice(0, 1000),
+          description: redactSensitiveForAI(item.descripcion, knownSensitiveValues).slice(0, 1000),
+          by: redactSensitiveForAI(item.registradoPor, knownSensitiveValues).slice(0, 200),
+          date: redactSensitiveForAI(item.fechaCompletado, knownSensitiveValues).slice(0, 50),
+          notes: redactSensitiveForAI(item.observaciones, knownSensitiveValues).slice(0, 1000),
           document: sanitize(item.documentoNombre).slice(0, 200),
           documentPath: sanitize(item.documentoUrl).slice(0, 500),
         }))
@@ -229,15 +250,15 @@ router.post(
 
 ## Datos generales
 - Código de causa: ${sanitizeForAI(id)}
-- Estudiante: ${sanitizeForAI(studentName)}
+- Estudiante: ${redactSensitiveForAI(studentName, knownSensitiveValues)}
 - Curso: ${sanitizeForAI(course) || 'No registrado'}
-- Apoderado/a o adulto responsable: ${sanitizeForAI(fatherName) || 'No registrado'}
-- Responsable actual: ${sanitizeForAI(managerName) || 'No registrado'}
+- Apoderado/a o adulto responsable: ${redactSensitiveForAI(fatherName, knownSensitiveValues) || 'No registrado'}
+- Responsable actual: ${redactSensitiveForAI(managerName, knownSensitiveValues) || 'No registrado'}
 - Fecha de apertura: ${sanitizeForAI(fechaApertura) || 'No registrada'}
 - Estado actual: ${sanitizeForAI(estadoActual) || 'No registrado'}
 - Última actualización: ${sanitizeForAI(fechaUltimaActualizacion) || 'No registrada'}
-- Materia o conducta registrada: ${sanitizeForAI(infractionType) || 'No registrada'}
-- Observaciones iniciales: ${sanitizeForAI(observations) || 'Sin observaciones registradas'}
+- Materia o conducta registrada: ${redactSensitiveForAI(infractionType, knownSensitiveValues) || 'No registrada'}
+- Observaciones iniciales: ${redactSensitiveForAI(observations, knownSensitiveValues) || 'Sin observaciones registradas'}
 
 ## Medidas y actuaciones registradas
 ${stringifyList(safeMeasures, 'No se registran medidas ejecutadas.')}
@@ -284,7 +305,7 @@ ${
         .map(
           (document) => `
 ### ${document.name}
-${document.text ? document.text : `Estado de extracción: ${document.reason}`}`,
+${document.text ? redactSensitiveForAI(document.text, knownSensitiveValues) : `Estado de extracción: ${document.reason}`}`,
         )
         .join('\n')
     : 'No hay documentos asociados identificados en historial o checklist.'

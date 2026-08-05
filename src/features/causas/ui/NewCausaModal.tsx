@@ -4,32 +4,20 @@
  */
 
 import type React from 'react';
+import type { UseFormReturn } from 'react-hook-form';
 import type { Course, Student } from '../../../shared/api/services/courses.service';
-import type { Causa } from '../../../shared/lib/types';
+import type { NewCausaFormValues } from '../../../shared/lib/schemas/newCausaForm';
 import NewCausaForm from './NewCausaForm';
 import { Dialog, DialogContent } from '../../../shared/ui/Dialog';
 
 interface NewCausaModalProps {
-  newEstNombre: string;
-  setNewEstNombre: (v: string) => void;
-  newEstRut: string;
-  setNewEstRut: (v: string) => void;
-  newEstCurso: string;
-  newInfTipo: Causa['tipoInfraccion'];
-  setNewInfTipo: (v: Causa['tipoInfraccion']) => void;
-  newAulaSegura: boolean;
-  setNewAulaSegura: (v: boolean) => void;
-  newObs: string;
-  setNewObs: (v: string) => void;
-  newResponsable: string;
-  setNewResponsable: (v: string) => void;
-  selectedCourseId: string;
+  form: UseFormReturn<NewCausaFormValues>;
   courses: Course[];
   students: Student[];
   isLoadingCourses: boolean;
   isLoadingStudents: boolean;
   onClose: () => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: React.FormEventHandler<HTMLFormElement>;
   onCourseChange: (courseId: string) => void;
   onStudentSelect: (studentId: string) => void;
 }
@@ -50,19 +38,7 @@ export default function NewCausaModal(props: NewCausaModalProps) {
           aria-hidden="true"
         />
         <NewCausaForm
-          newEstNombre={props.newEstNombre}
-          setNewEstNombre={props.setNewEstNombre}
-          newEstRut={props.newEstRut}
-          setNewEstRut={props.setNewEstRut}
-          newInfTipo={props.newInfTipo}
-          setNewInfTipo={props.setNewInfTipo}
-          newAulaSegura={props.newAulaSegura}
-          setNewAulaSegura={props.setNewAulaSegura}
-          newObs={props.newObs}
-          setNewObs={props.setNewObs}
-          newResponsable={props.newResponsable}
-          setNewResponsable={props.setNewResponsable}
-          selectedCourseId={props.selectedCourseId}
+          form={props.form}
           courses={props.courses}
           students={props.students}
           isLoadingCourses={props.isLoadingCourses}

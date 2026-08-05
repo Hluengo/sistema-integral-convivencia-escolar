@@ -43,7 +43,7 @@ export default function ViewLoader({ view, compact = false }: ViewLoaderProps) {
       </div>
       <p
         key={index}
-        className="animate-fade-in mt-5 text-sm font-medium text-neutral-500"
+        className="animate-fade-in mt-5 text-sm font-medium text-neutral-700"
         aria-hidden="true"
       >
         {phrases[index]}

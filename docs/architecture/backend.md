@@ -2,29 +2,29 @@
 
 ## Dual Entry Points
 
-| Entry | Archivo | Uso | Bundle |
-|-------|---------|-----|--------|
-| Dev Server | `server/index.ts` | Desarrollo local | tsx runtime |
-| Vercel Handler | `server/api/index.ts` → `api/index.js` | Producción | esbuild ESM |
+| Entry          | Archivo                                | Uso              | Bundle      |
+| -------------- | -------------------------------------- | ---------------- | ----------- |
+| Dev Server     | `server/index.ts`                      | Desarrollo local | tsx runtime |
+| Vercel Handler | `server/api/index.ts` → `api/index.js` | Producción       | esbuild ESM |
 
 **Regla crítica**: Al modificar rutas, middleware o lógica, actualizar AMBOS.
 
 ## API Endpoints
 
-| Método | Ruta | Auth | AI | Propósito |
-|--------|------|------|----|-----------|
-| POST | `/api/advisor-chat` | ✅ | ✅ | Chat asesoría legal AI |
-| POST | `/api/audit-due-process` | ✅ | ✅ | Auditoría de debido proceso |
-| POST | `/api/draft-document` | ✅ | ✅ | Draft de documento legal |
-| POST | `/api/improve-text` | ✅ | ✅ | Mejora de texto institucional |
-| POST | `/api/parse-annotations` | ❌ | ❌ | Parseo de anotaciones (regex) |
-| POST | `/api/process-disciplinary-pdf` | ✅ | ❌ | Análisis de PDF disciplinario |
-| POST | `/api/process-disciplinary-pdf/confirm` | ✅ | ❌ | Confirmación de proceso |
-| GET | `/api/document-templates` | ❌ | ❌ | Obtener plantillas |
-| PUT | `/api/document-templates` | ✅ | ❌ | Actualizar plantilla |
-| POST | `/api/usage/events` | ✅ | ❌ | Registrar evento de uso |
-| GET | `/api/usage/stats` | ✅ | ❌ | Estadísticas de uso |
-| GET | `/api/auth-debug` | ❌ | ❌ | Debug JWT |
+| Método | Ruta                                    | Auth     | AI  | Propósito                     |
+| ------ | --------------------------------------- | -------- | --- | ----------------------------- |
+| POST   | `/api/advisor-chat`                     | ✅       | ✅  | Chat asesoría legal AI        |
+| POST   | `/api/audit-due-process`                | ✅       | ✅  | Auditoría de debido proceso   |
+| POST   | `/api/draft-document`                   | ✅       | ✅  | Draft de documento legal      |
+| POST   | `/api/improve-text`                     | ✅       | ✅  | Mejora de texto institucional |
+| POST   | `/api/parse-annotations`                | ❌       | ❌  | Parseo de anotaciones (regex) |
+| POST   | `/api/process-disciplinary-pdf`         | ✅       | ❌  | Análisis de PDF disciplinario |
+| POST   | `/api/process-disciplinary-pdf/confirm` | ✅ + rol | ❌  | Confirmación de proceso       |
+| GET    | `/api/document-templates`               | ❌       | ❌  | Obtener plantillas            |
+| PUT    | `/api/document-templates`               | ✅       | ❌  | Actualizar plantilla          |
+| POST   | `/api/usage/events`                     | ✅       | ❌  | Registrar evento de uso       |
+| GET    | `/api/usage/stats`                      | ✅       | ❌  | Estadísticas de uso           |
+| GET    | `/api/auth-debug`                       | ❌       | ❌  | Debug JWT                     |
 
 ## Auth Middleware
 
@@ -43,6 +43,7 @@ Inyecta `req.user` con payload decodificado y `req.tenantId` del contexto.
 - **Max tokens**: 2000
 - **Rate limit**: 10 req/min/IP por endpoint
 - **Cache**: advisor-chat e improve-text (5min TTL, in-memory)
+- **Privacidad**: texto enviado a OpenRouter/Gemini pasa por `redactSensitiveForAI()` para remover RUT, correo, teléfono y valores personales conocidos antes de construir prompts o llaves de caché.
 
 ## Middleware Stack
 

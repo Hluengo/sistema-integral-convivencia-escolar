@@ -1,24 +1,10 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { signOut } from '../shared/api/services/auth.service';
+import { Suspense, useCallback } from 'react';
 import { useAuthStore } from '../shared/lib/stores/authStore';
 import { useCausasStore } from '../shared/lib/stores/causasStore';
 import { useUIStore } from '../shared/lib/stores/uiStore';
-import { useKeyboardShortcuts } from '../shared/lib/hooks/useKeyboardShortcuts';
-import { useNewCausaForm } from '../shared/lib/hooks/useNewCausaForm';
-import { useCoursesQuery } from '../shared/lib/hooks/useCoursesQuery';
-import { useStudentsQuery } from '../shared/lib/hooks/useStudentsQuery';
-import { useCausasPersistence } from '../shared/lib/hooks/useCausasPersistence';
-import { useCausaDetailsQuery, useCausasQuery } from '../shared/lib/hooks/useCausasQuery';
-import Button from '../shared/ui/Button';
-import {
-  mergeCausasList,
-  syncPersistedCausasToCache,
-} from '../shared/lib/queries/causasQueryCache';
-import { causasQueryKeys } from '../shared/lib/queries/causasQueryKeys';
 import { useMemberships } from '../shared/api/hooks/useMemberships';
-import { queryClient } from '../lib/queryClient';
 import { ToastProvider } from '../shared/ui/Toast';
 import {
   CommandPaletteSkeleton,
@@ -28,29 +14,20 @@ import {
   SidebarSkeleton,
 } from '../shared/Skeleton';
 import { AppProvider } from '../shared/lib/AppContext';
-import { getFaseForEstado } from '../shared/lib/data';
-import { EstadoCausa } from '../shared/lib/types';
 import { MembershipLoading, MembershipAccessDenied } from '../shared/ui';
 import WelcomeModal from '../shared/ui/WelcomeModal';
-import ViewLoader from '../shared/ui/ViewLoader';
-
-const WELCOME_SEEN_KEY = 'gestion-casos-welcome-seen';
-
-function AppLoadingFallback() {
-  return (
-    <div className="flex min-h-dvh items-center justify-center bg-neutral-100 px-6">
-      <ViewLoader view="boot" />
-    </div>
-  );
-}
-
-const Header = lazy(() => import('../widgets/header/Header'));
-const Sidebar = lazy(() => import('../widgets/sidebar/Sidebar'));
-const MainContent = lazy(() => import('../components/MainContent'));
-const CommandPalette = lazy(() => import('../components/CommandPalette'));
-const NewCausaModal = lazy(() => import('../components/NewCausaModal'));
-const ShortcutsModal = lazy(() => import('../shared/ui/ShortcutsModal'));
-const LoginPage = lazy(() => import('../components/LoginPage'));
+import AppFooter from './components/AppFooter';
+import AppLoadingFallback from './components/AppLoadingFallback';
+import AppLoadError from './components/AppLoadError';
+import SkipToContent from './components/SkipToContent';
+import { useAppNavigation } from './hooks/useAppNavigation';
+import { useAppShortcuts } from './hooks/useAppShortcuts';
+import { useCausaWorkspace } from './hooks/useCausaWorkspace';
+import { useNewCausaModalController } from './hooks/useNewCausaModalController';
+import { useRoleGates } from './hooks/useRoleGates';
+import { useUrlRouting } from './hooks/useUrlRouting';
+import { useWelcomeGate } from './hooks/useWelcomeGate';
+import * as Lazy from './lazyAppComponents';
 
 export default function App() {
   const user = useAuthStore((s) => s.user);
@@ -62,362 +39,116 @@ export default function App() {
   const tenantId = useAuthStore((s) => s.tenantId);
   const appRole = useAuthStore((s) => s.appRole);
   const profileRole = useAuthStore((s) => s.profileRole);
-  const [showWelcome, setShowWelcome] = useState(false);
 
   const membership = useMemberships('convivencia');
-  // The membership role may be a scoped application role (for example, an
-  // admin membership for a superadmin account). Use the most privileged role
-  // available so loading membership data cannot hide platform navigation.
-  const effectiveAdminRole = [profileRole, appRole].sort((left, right) => {
-    const priority: Record<string, number> = {
-      superadmin: 7,
-      admin: 6,
-      direccion: 5,
-      convivencia: 4,
-      inspectoria: 3,
-      inspector: 2,
-      profesor_jefe: 1,
-      teacher: 1,
-      staff: 1,
-      user: 0,
-    };
-    return (priority[right ?? ''] ?? -1) - (priority[left ?? ''] ?? -1);
-  })[0];
-  const canAccessAdmin =
-    effectiveAdminRole === 'admin' ||
-    effectiveAdminRole === 'direccion' ||
-    effectiveAdminRole === 'superadmin';
-  const canAccessReports = [
-    'admin',
-    'direccion',
-    'convivencia',
-    'inspectoria',
-    'superadmin',
-  ].includes(effectiveAdminRole ?? '');
-  const canAccessPlatform = effectiveAdminRole === 'superadmin';
-  const onboardingEnabled =
-    isAuthenticated &&
-    Boolean(tenantId && user?.id) &&
-    (effectiveAdminRole === 'admin' ||
-      effectiveAdminRole === 'direccion' ||
-      effectiveAdminRole === 'superadmin');
-
-  const causas = useCausasStore((s) => s.causas);
-  const selectedCausaId = useCausasStore((s) => s.selectedCausaId);
-  const setSelectedCausaId = useCausasStore((s) => s.setSelectedCausaId);
   const saveStatus = useCausasStore((s) => s.saveStatus);
-  const setSaveStatus = useCausasStore((s) => s.setSaveStatus);
-  const selectedFaseFilter = useCausasStore((s) => s.selectedFaseFilter);
   const setSelectedFaseFilter = useCausasStore((s) => s.setSelectedFaseFilter);
-  const searchQuery = useCausasStore((s) => s.searchQuery);
-  const setSearchQuery = useCausasStore((s) => s.setSearchQuery);
-  const setCausas = useCausasStore((s) => s.setCausas);
-  const handleCreateCausaAction = useCausasStore((s) => s.handleCreateCausa);
   const handleReopenCausaAction = useCausasStore((s) => s.handleReopenCausa);
-  const selectedCausa = useMemo(
-    () => causas.find((c) => c.id === selectedCausaId) || null,
-    [causas, selectedCausaId],
-  );
-  const filteredCausas = useMemo(() => {
-    const trimmedQuery = searchQuery.trim().toLowerCase();
-    return causas.filter((c) => {
-      if (c.estadoActual === EstadoCausa.CAUSA_CERRADA) return false;
-      if (
-        selectedFaseFilter !== 'Todas' &&
-        getFaseForEstado(c.estadoActual) !== selectedFaseFilter
-      ) {
-        return false;
-      }
-      if (!trimmedQuery) return true;
-      return (
-        c.estudianteNombre.toLowerCase().includes(trimmedQuery) ||
-        c.nnaProtectedName.toLowerCase().includes(trimmedQuery) ||
-        c.id.toLowerCase().includes(trimmedQuery) ||
-        c.estudianteCurso.toLowerCase().includes(trimmedQuery)
-      );
-    });
-  }, [causas, selectedFaseFilter, searchQuery]);
 
   const currentView = useUIStore((s) => s.currentView);
   const setCurrentView = useUIStore((s) => s.setCurrentView);
   const isSidebarCollapsed = useUIStore((s) => s.isSidebarCollapsed);
   const setIsSidebarCollapsed = useUIStore((s) => s.setIsSidebarCollapsed);
-  const mobileShowDetail = useUIStore((s) => s.mobileShowDetail);
   const setMobileShowDetail = useUIStore((s) => s.setMobileShowDetail);
   const privacyMode = useUIStore((s) => s.privacyMode);
-  const setPrivacyMode = useUIStore((s) => s.setPrivacyMode);
+  const togglePrivacyMode = useUIStore((s) => s.togglePrivacyMode);
   const showShortcuts = useUIStore((s) => s.showShortcuts);
   const setShowShortcuts = useUIStore((s) => s.setShowShortcuts);
 
-  useEffect(() => {
-    if (authLoading) return;
-    if (user) {
-      setShowWelcome(false);
-      return;
-    }
-    setShowWelcome(window.sessionStorage.getItem(WELCOME_SEEN_KEY) !== 'true');
-  }, [authLoading, user]);
-
-  const dismissWelcome = useCallback(() => {
-    window.sessionStorage.setItem(WELCOME_SEEN_KEY, 'true');
-    setShowWelcome(false);
-  }, []);
-
-  const loginFromWelcome = useCallback(() => {
-    dismissWelcome();
-    setShowLoginModal(true);
-  }, [dismissWelcome, setShowLoginModal]);
-
-  const handleLogout = useCallback(() => {
-    clearSessionExpired();
-    setCurrentView('dashboard');
-    setSelectedCausaId('');
-    setMobileShowDetail(false);
-    setShowLoginModal(false);
-    setShowShortcuts(false);
-    void signOut();
-  }, [
-    clearSessionExpired,
+  const { canAccessAdmin, canAccessReports, canAccessPlatform, onboardingEnabled } = useRoleGates({
+    isAuthenticated,
+    tenantId,
+    userId: user?.id,
+    profileRole,
+    appRole,
+  });
+  const { showWelcome, dismissWelcome, loginFromWelcome } = useWelcomeGate({
+    authLoading,
+    user,
+    setShowLoginModal,
+  });
+  const {
+    causas,
+    selectedCausaId,
+    setSelectedCausaId,
+    selectedCausa,
+    filteredCausas,
+    loadError,
+    retryLoad,
+    hasMoreCausas,
+    isLoadingMoreCausas,
+    loadMoreCausas,
+    isCausaDetailLoading,
+  } = useCausaWorkspace({
+    isAuthenticated,
+    tenantId,
+    setCurrentView,
+    setMobileShowDetail,
+  });
+  const { navigateToView, navigateToCausa, navigateHome, closeLoginModal } = useUrlRouting({
+    user,
+    currentView,
+    selectedCausaId,
+    canAccessAdmin,
+    canAccessReports,
+    canAccessPlatform,
     setCurrentView,
     setSelectedCausaId,
-    setMobileShowDetail,
     setShowLoginModal,
-    setShowShortcuts,
-  ]);
-
-  const isTimelineCollapsedRef = useRef(false);
-
-  const { formState, dispatchForm } = useNewCausaForm();
-  const {
-    showCreateForm,
-    newEstNombre,
-    selectedCourseId,
-    newEstRut,
-    newInfTipo,
-    newAulaSegura,
-    newObs,
-    newResponsable,
-  } = formState;
-
-  const { data: courses = [], isLoading: isLoadingCourses } = useCoursesQuery();
-  const { data: students = [], isLoading: isLoadingStudents } = useStudentsQuery(selectedCourseId);
-  const newEstCurso = courses.find((c) => c.id === selectedCourseId)?.name ?? '';
-
-  const causasQuery = useCausasQuery();
-  const selectedCausaForDetail =
-    isAuthenticated && causas.some((causa) => causa.id === selectedCausaId) ? selectedCausaId : '';
-  const causaDetailsQuery = useCausaDetailsQuery(selectedCausaForDetail);
-  const hasInitializedCausasRef = useRef(false);
-  const lastCausasQueryDataRef = useRef<typeof causasQuery.data>(undefined);
-  const lastDetailsQueryDataRef = useRef<typeof causaDetailsQuery.data>(undefined);
-
-  const handlePersistedCausas = useCallback(
-    (persistedCausas: typeof causas) => {
-      if (tenantId) syncPersistedCausasToCache(tenantId, persistedCausas);
-    },
-    [tenantId],
-  );
-
-  const { markCausasHydrated, markCausaHydrated } = useCausasPersistence({
-    causas,
-    setSaveStatus,
-    isAuthenticated,
-    onPersisted: handlePersistedCausas,
   });
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      lastCausasQueryDataRef.current = undefined;
-      lastDetailsQueryDataRef.current = undefined;
-      hasInitializedCausasRef.current = false;
-      setCurrentView('dashboard');
-      setMobileShowDetail(false);
-      // Evita un ciclo de render: [] es una nueva referencia en cada efecto.
-      // Solo limpiamos Zustand si hay información efectivamente cargada.
-      if (causas.length > 0) setCausas([]);
-      if (selectedCausaId) setSelectedCausaId('');
-      queryClient.removeQueries({ queryKey: causasQueryKeys.root });
-      return;
-    }
-
-    if (!causasQuery.data || lastCausasQueryDataRef.current === causasQuery.data) return;
-
-    const hydratedCausas = mergeCausasList(causas, causasQuery.data);
-    markCausasHydrated(hydratedCausas);
-    lastCausasQueryDataRef.current = causasQuery.data;
-    setCausas(hydratedCausas);
-    if (!hasInitializedCausasRef.current) {
-      // La carga inicial siempre presenta la tabla: no abre expedientes por defecto.
-      setSelectedCausaId('');
-      hasInitializedCausasRef.current = true;
-    }
-  }, [
-    causas,
-    causasQuery.data,
-    isAuthenticated,
-    markCausasHydrated,
-    selectedCausaId,
-    setCausas,
-    setSelectedCausaId,
+  const {
+    requireAuth,
+    handleLogout,
+    handleViewChange,
+    handleReopenCausa,
+    handleSelectCausaFromDashboard,
+    handleViewAllNotifications,
+  } = useAppNavigation({
+    user,
+    canAccessAdmin,
+    canAccessReports,
+    canAccessPlatform,
+    clearSessionExpired,
+    setShowLoginModal,
     setCurrentView,
+    setSelectedCausaId,
     setMobileShowDetail,
-  ]);
+    setShowShortcuts,
+    setSelectedFaseFilter,
+    handleReopenCausaAction,
+    navigateToView,
+    navigateToCausa,
+    navigateHome,
+  });
 
-  useEffect(() => {
-    if (!selectedCausaForDetail || !causaDetailsQuery.data) return;
-    if (lastDetailsQueryDataRef.current === causaDetailsQuery.data) return;
+  const showCausasView = useCallback(() => {
+    navigateToView('causas');
+  }, [navigateToView]);
+  const {
+    showCreateForm,
+    openCreateForm,
+    closeCreateForm,
+    toggleCreateForm,
+    coursesCount,
+    modal: newCausaModal,
+  } = useNewCausaModalController({
+    requireAuth,
+    onOpened: showCausasView,
+    onCreated: showCausasView,
+  });
 
-    const currentCausa = causas.find((causa) => causa.id === selectedCausaForDetail);
-    if (!currentCausa) return;
-
-    const hydratedCausa = { ...currentCausa, ...causaDetailsQuery.data };
-    markCausaHydrated(hydratedCausa);
-    lastDetailsQueryDataRef.current = causaDetailsQuery.data;
-    setCausas((current) =>
-      current.map((causa) => (causa.id === hydratedCausa.id ? hydratedCausa : causa)),
-    );
-  }, [causaDetailsQuery.data, causas, markCausaHydrated, selectedCausaForDetail, setCausas]);
-
-  const loadError = useMemo(() => {
-    const error = causasQuery.error ?? causaDetailsQuery.error;
-    if (!error) return null;
-    return selectedCausaForDetail
-      ? 'Error al cargar los antecedentes del expediente.'
-      : 'Error al cargar los expedientes. Verifique su conexión.';
-  }, [causaDetailsQuery.error, causasQuery.error, selectedCausaForDetail]);
-
-  const retryLoad = useCallback(() => {
-    if (selectedCausaForDetail && causaDetailsQuery.error) {
-      void causaDetailsQuery.refetch();
-      return;
-    }
-    void causasQuery.refetch();
-  }, [causaDetailsQuery, causasQuery, selectedCausaForDetail]);
-  const loadMoreCausas = useCallback(() => {
-    if (!causasQuery.hasNextPage || causasQuery.isFetchingNextPage) return;
-    void causasQuery.fetchNextPage();
-  }, [causasQuery]);
-  const isCausaDetailLoading = causaDetailsQuery.isLoading;
-
-  const handleViewChange = useCallback(
-    (view: typeof currentView) => {
-      if (view !== 'dashboard' && !user) {
-        setShowLoginModal(true);
-        return;
-      }
-      if (view === 'admin' && !canAccessAdmin) return;
-      if (view === 'reportes' && !canAccessReports) return;
-      if (view === 'platform' && !canAccessPlatform) return;
-      setCurrentView(view);
-      isTimelineCollapsedRef.current = false;
-    },
-    [canAccessAdmin, canAccessReports, canAccessPlatform, user, setShowLoginModal, setCurrentView],
-  );
-
-  const handleStudentSelect = useCallback(
-    (studentId: string) => {
-      if (!studentId) {
-        dispatchForm({ type: 'SET_STUDENT', nombre: '', rut: '' });
-        return;
-      }
-      const student = students.find((s) => s.id === studentId);
-      if (student)
-        dispatchForm({ type: 'SET_STUDENT', nombre: student.full_name, rut: student.rut });
-    },
-    [students, dispatchForm],
-  );
-
-  const handleCreateCausa = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!newEstNombre || !newEstRut) return;
-      const result = await handleCreateCausaAction({
-        newEstNombre,
-        newEstRut,
-        newEstCurso,
-        newInfTipo,
-        newAulaSegura,
-        newObs,
-        newResponsable,
-      });
-      if (result) {
-        dispatchForm({ type: 'RESET' });
-        setCurrentView('causas');
-      }
-    },
-    [
-      newEstNombre,
-      newEstRut,
-      newEstCurso,
-      newInfTipo,
-      newAulaSegura,
-      newObs,
-      newResponsable,
-      dispatchForm,
-      handleCreateCausaAction,
-      setCurrentView,
-    ],
-  );
-
-  const requireAuth = useCallback(() => {
-    if (!user) {
-      setShowLoginModal(true);
-      return false;
-    }
-    return true;
-  }, [user, setShowLoginModal]);
-
-  const handleReopenCausa = useCallback(
-    (causa: typeof selectedCausa) => {
-      if (!causa) return;
-      handleReopenCausaAction(causa);
-      setCurrentView('causas');
-      isTimelineCollapsedRef.current = false;
-    },
-    [handleReopenCausaAction, setCurrentView],
-  );
-
-  const handleSelectCausaFromDashboard = useCallback(
-    (causaId: string) => {
-      if (!user) {
-        setShowLoginModal(true);
-        return;
-      }
-      setSelectedCausaId(causaId);
-      setCurrentView('causas');
-      setMobileShowDetail(true);
-      isTimelineCollapsedRef.current = false;
-    },
-    [user, setShowLoginModal, setSelectedCausaId, setCurrentView, setMobileShowDetail],
-  );
-
-  const handleViewAllNotifications = useCallback(() => {
-    setSelectedFaseFilter('Todas');
-    setSelectedCausaId('');
-    setMobileShowDetail(false);
-    setCurrentView('causas');
-  }, [setCurrentView, setMobileShowDetail, setSelectedCausaId, setSelectedFaseFilter]);
-
-  const handleOpenCreateForm = useCallback(() => {
-    if (!requireAuth()) return;
-    dispatchForm({ type: 'OPEN' });
-    setCurrentView('causas');
-  }, [dispatchForm, requireAuth, setCurrentView]);
-
-  useKeyboardShortcuts({
-    onNewCausa: handleOpenCreateForm,
-    onToggleShortcuts: () => setShowShortcuts((p) => !p),
-    onCloseCreateForm: () => dispatchForm({ type: 'CLOSE' }),
-    onCloseLoginModal: () => setShowLoginModal(false),
-    onCloseShortcuts: () => setShowShortcuts(false),
+  useAppShortcuts({
+    openCreateForm,
+    closeCreateForm,
+    closeLoginModal,
+    setShowShortcuts,
     showCreateForm,
     showLoginModal,
     showShortcuts,
   });
 
-  if (authLoading) {
-    return <AppLoadingFallback />;
-  }
+  if (authLoading) return <AppLoadingFallback />;
 
   if (user && !membership.loaded && membership.authMode !== 'legacy') {
     return (
@@ -442,21 +173,16 @@ export default function App() {
     <ToastProvider>
       <AppProvider>
         <div className="flex min-h-dvh overflow-x-clip bg-neutral-100 font-sans text-neutral-800 antialiased">
-          <a
-            href="#main-content"
-            className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:rounded-lg focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-white focus:shadow-lg focus:outline-none"
-          >
-            Saltar al contenido principal
-          </a>
+          <SkipToContent />
           <Suspense fallback={<CommandPaletteSkeleton />}>
-            <CommandPalette
+            <Lazy.CommandPalette
               causas={causas}
               onNavigate={handleViewChange}
-              onSelectCausa={setSelectedCausaId}
+              onSelectCausa={handleSelectCausaFromDashboard}
             />
           </Suspense>
           <Suspense fallback={<SidebarSkeleton />}>
-            <Sidebar
+            <Lazy.Sidebar
               currentView={currentView}
               onViewChange={handleViewChange}
               isCollapsed={isSidebarCollapsed}
@@ -473,9 +199,9 @@ export default function App() {
           </Suspense>
           <div className="flex min-w-0 flex-1 flex-col">
             <Suspense fallback={<HeaderSkeleton />}>
-              <Header
+              <Lazy.Header
                 privacyMode={privacyMode}
-                setPrivacyMode={setPrivacyMode}
+                onTogglePrivacyMode={togglePrivacyMode}
                 saveStatus={saveStatus}
                 currentView={currentView}
                 causas={causas}
@@ -484,111 +210,45 @@ export default function App() {
                 onViewAllNotifications={handleViewAllNotifications}
               />
             </Suspense>
-            {loadError && (
-              <div
-                role="alert"
-                className="mx-4 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gravisima-200 bg-gravisima-50 px-4 py-3 text-sm text-gravisima-700 sm:mx-6"
-              >
-                <span>{loadError}</span>
-                <Button variant="danger" onClick={retryLoad} className="rounded-lg px-3 py-1.5">
-                  Reintentar
-                </Button>
-              </div>
-            )}
+            {loadError && <AppLoadError message={loadError} onRetry={retryLoad} />}
             <Suspense fallback={<MainContentSkeleton />}>
-              <MainContent
+              <Lazy.MainContent
                 currentView={currentView}
-                causas={causas}
-                selectedCausaId={selectedCausaId}
-                setSelectedCausaId={setSelectedCausaId}
-                selectedCausa={selectedCausa ?? undefined}
-                isCausaDetailLoading={isCausaDetailLoading}
-                selectedFaseFilter={selectedFaseFilter}
-                setSelectedFaseFilter={setSelectedFaseFilter}
-                searchQuery={searchQuery}
-                setSearchQuery={setSearchQuery}
-                privacyMode={privacyMode}
-                mobileShowDetail={mobileShowDetail}
-                setMobileShowDetail={setMobileShowDetail}
-                filteredCausas={filteredCausas}
-                hasMoreCausas={Boolean(causasQuery.hasNextPage)}
-                isLoadingMoreCausas={causasQuery.isFetchingNextPage}
-                onLoadMoreCausas={loadMoreCausas}
-                showCreateForm={showCreateForm}
-                dispatchForm={dispatchForm}
-                handleReopenCausa={handleReopenCausa}
-                handleSelectCausaFromDashboard={handleSelectCausaFromDashboard}
-                handleOpenCreateForm={handleOpenCreateForm}
+                causaWorkspace={{
+                  causas,
+                  selectedCausaId,
+                  setSelectedCausaId,
+                  selectedCausa,
+                  isCausaDetailLoading,
+                  filteredCausas,
+                  hasMoreCausas,
+                  isLoadingMoreCausas,
+                  onLoadMoreCausas: loadMoreCausas,
+                }}
+                createCausa={{
+                  onOpen: openCreateForm,
+                  onToggle: toggleCreateForm,
+                }}
+                navigation={{
+                  onNavigate: handleViewChange,
+                  onReopenCausa: handleReopenCausa,
+                  onSelectCausaFromDashboard: handleSelectCausaFromDashboard,
+                }}
                 onboardingEnabled={onboardingEnabled}
-                coursesCount={courses.length}
-                onNavigate={handleViewChange}
+                coursesCount={coursesCount}
               />
             </Suspense>
-            <footer className="mt-auto space-y-1.5 border-neutral-200/60 border-t bg-white py-5 text-center text-[10px] text-neutral-400 sm:py-6">
-              <div className="flex flex-wrap items-center justify-center gap-2 px-4 font-medium text-neutral-500">
-                <span className="font-semibold text-brand-700">Gestión de Casos</span>
-                <span aria-hidden="true">·</span>
-                <span>Convivencia Escolar</span>
-                <span className="hidden sm:inline" aria-hidden="true">
-                  ·
-                </span>
-                <span className="hidden sm:inline">Fiscalización &amp; Debido Proceso 2026</span>
-              </div>
-              <p className="mx-auto max-w-lg px-4 font-mono text-[9px] text-neutral-600 leading-relaxed">
-                Circular N° 482 · Ley 21809 · Resguardo de NNA en todo el territorio nacional
-              </p>
-            </footer>
+            <AppFooter />
           </div>
-          {showCreateForm && (
-            <Suspense fallback={<ModalSkeleton />}>
-              <NewCausaModal
-                newEstNombre={newEstNombre}
-                setNewEstNombre={(v: string) =>
-                  dispatchForm({ type: 'SET_FIELD', field: 'newEstNombre', value: v })
-                }
-                newEstRut={newEstRut}
-                setNewEstRut={(v: string) =>
-                  dispatchForm({ type: 'SET_FIELD', field: 'newEstRut', value: v })
-                }
-                newEstCurso={newEstCurso}
-                newInfTipo={newInfTipo}
-                setNewInfTipo={(v: typeof newInfTipo) =>
-                  dispatchForm({ type: 'SET_FIELD', field: 'newInfTipo', value: v })
-                }
-                newAulaSegura={newAulaSegura}
-                setNewAulaSegura={(v: boolean) =>
-                  dispatchForm({ type: 'SET_FIELD', field: 'newAulaSegura', value: v })
-                }
-                newObs={newObs}
-                setNewObs={(v: string) =>
-                  dispatchForm({ type: 'SET_FIELD', field: 'newObs', value: v })
-                }
-                newResponsable={newResponsable}
-                setNewResponsable={(v: string) =>
-                  dispatchForm({ type: 'SET_FIELD', field: 'newResponsable', value: v })
-                }
-                selectedCourseId={selectedCourseId}
-                courses={courses}
-                students={students}
-                isLoadingCourses={isLoadingCourses}
-                isLoadingStudents={isLoadingStudents}
-                onClose={() => dispatchForm({ type: 'CLOSE' })}
-                onSubmit={handleCreateCausa}
-                onCourseChange={(courseId: string) =>
-                  dispatchForm({ type: 'SET_COURSE', courseId })
-                }
-                onStudentSelect={handleStudentSelect}
-              />
-            </Suspense>
-          )}
+          {newCausaModal}
           {showShortcuts && (
             <Suspense fallback={<ModalSkeleton />}>
-              <ShortcutsModal onClose={() => setShowShortcuts(false)} />
+              <Lazy.ShortcutsModal onClose={() => setShowShortcuts(false)} />
             </Suspense>
           )}
           {showLoginModal && (
             <Suspense fallback={<ModalSkeleton />}>
-              <LoginPage onClose={() => setShowLoginModal(false)} />
+              <Lazy.LoginPage onClose={closeLoginModal} />
             </Suspense>
           )}
           {!user && !showLoginModal && (

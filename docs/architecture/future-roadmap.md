@@ -21,7 +21,8 @@
 
 ### Frontend
 
-- [ ] Integrar React Router para deep linking
+- [x] Agregar bridge URL ↔ estado para deep linking básico
+- [ ] Evaluar router declarativo solo cuando pase `npm run security-audit`
 - [x] Refactor `components/` legacy → eliminar duplicación
 
 > ✅ Cerrado 2026-08-02: `src/components/` contiene 30 archivos; 29 son barrels de compatibilidad protegidos por `src/components/legacyCompatibility.test.ts` y 1 es el test de compatibilidad. Ya no quedan componentes reales en la capa legacy. `MetricCard`, `ErrorBoundary`, `ToastProvider` y `ShortcutsModal` viven en `src/shared/ui/`; `ClosedCases` vive en `src/features/causas/`; `TemplateEditor` vive en `src/features/document-templates/`; `InteractiveTimeline` vive en `src/features/timeline/`; `Header` y sus subcomponentes viven en `src/widgets/header/`; `Sidebar` y `SidebarUserMenu` viven en `src/widgets/sidebar/`.
@@ -34,6 +35,10 @@
 
 > ✅ `StudentsPanel` usa `useCoursesQuery` y `useStudentsWithCoursesQuery`; mantiene filtros locales con reducer y conserva caché aislada por tenant.
 
+- [x] Adoptar `react-hook-form` incrementalmente
+
+> ✅ Cerrado 2026-08-04: `react-hook-form@7.84.0` está instalado. `NewCausaModal`, `EditCausaModalForm` y `LoginPage` usan RHF + Zod con errores inline accesibles y schemas compartidos en `src/shared/lib/schemas/`.
+
 ## Mediano Plazo (3-6 meses)
 
 ### Arquitectura
@@ -44,9 +49,9 @@
 
 ### Features
 
-- [ ] Dashboard analítico avanzado (gráficos, tendencias)
+- [x] Dashboard analítico avanzado (gráficos, tendencias)
 
-> 🟡 **Parcial:** el dashboard ya muestra KPIs, distribución por gravedad, rankings y un panel de tendencias del año escolar vigente (marzo-diciembre) con aperturas/cierres de expedientes y anotaciones agregadas por mes. La lectura de anotaciones usa una consulta tenant-scoped con columnas mínimas (`date_time`, `severity`, `type`) y excluye nombres, RUT, estudiante, docente y texto de observación. Falta mover estas tendencias a una RPC agregada cuando el volumen real justifique paginación o análisis multi-año.
+> ✅ **Cerrado base 2026-08-04:** el dashboard muestra KPIs, distribución por gravedad, rankings y tendencias del año escolar vigente (marzo-diciembre) con aperturas/cierres de expedientes y anotaciones agregadas por mes. `TrendChart` se extrajo a `src/shared/ui/charts/` y se reutiliza en `ReportsCenter` para la distribución mensual por gravedad. La lectura de anotaciones usa una consulta tenant-scoped con columnas mínimas (`date_time`, `severity`, `type`) y excluye nombres, RUT, estudiante, docente y texto de observación. Queda como optimización futura mover tendencias históricas a una RPC agregada cuando el volumen real justifique paginación o análisis multi-año.
 
 - [x] Exportación de reportes en Excel — `ReportsCenter` usa `write-excel-file`; `annotationsExcelExport.ts`; importación en `server/api/services/excelImport.ts`
 - [x] Notificaciones en tiempo real (Realtime Supabase, opt-in)
@@ -99,6 +104,7 @@
 ### UX
 
 - [ ] WCAG 2.1 AA certificado
+- [x] Gate axe básico en CI
 - [x] Skeleton loading en todas las vistas
 - [ ] Animaciones de transición fluidas
 - [ ] Feedback visual en todas las acciones

@@ -14,7 +14,7 @@
     <a href="https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/lighthouse.yml">
       <img src="https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/lighthouse.yml?branch=master&label=Lighthouse&style=for-the-badge" alt="Lighthouse" />
     </a>
-    <a href="https://github.com/Hluengo/sistema-integral-convivencia-escolar/blob/main/LICENSE">
+    <a href="https://github.com/Hluengo/sistema-integral-convivencia-escolar/blob/master/LICENSE">
       <img src="https://img.shields.io/github/license/Hluengo/sistema-integral-convivencia-escolar?style=for-the-badge" alt="Licencia" />
     </a>
   </p>
@@ -44,7 +44,7 @@
 
 El **Sistema Integral de Convivencia Escolar** centraliza el trabajo de equipos de convivencia, inspectoría, dirección y administración escolar. Apoya el **debido proceso disciplinario** en el contexto de la **Circular 482 (2018)** y la **Ley 21.809 (2026)**. La revisión jurídica y las decisiones institucionales siguen siendo responsabilidad del establecimiento.
 
-Permite registrar anotaciones, clasificar conductas mediante el sistema **RICE** (Leve, Grave, Muy Grave, Gravísima), gestionar expedientes con bitácora y checklist, analizar PDFs disciplinarios, generar cartas y documentos institucionales, y recibir asistencia editorial mediante inteligencia artificial.
+Permite registrar anotaciones, clasificar conductas mediante el sistema **RICE** (Leve, Grave, Muy Grave, Gravísima), gestionar expedientes con bitácora y checklist, analizar PDFs disciplinarios, imprimir cartas institucionales trazables, archivar constancias físicas y recibir asistencia editorial mediante inteligencia artificial.
 
 Diseñado como **SaaS multi-tenant**, aísla los datos de cada establecimiento educacional mediante **RLS policies** y autenticación JWT con Supabase Auth.
 
@@ -88,36 +88,34 @@ Este proyecto maneja **datos de estudiantes (NNA)**, por lo que la seguridad es 
 
 ## ✅ Cambios implementados recientemente
 
-### Cartas y seguimiento
+### Frontend, navegación y privacidad
 
-- Se incorporó el estado **Archivada** para cartas cuya entrega fue procesada y firmada por el apoderado.
-- El archivado se ejecuta desde la línea de la carta y conserva la trazabilidad del proceso.
-- La vista de cartas incluye filtros por curso y estado (`Todos`, `Pendiente`, `Procesada`, `Archivada`).
-- Se ajustó la búsqueda para dejar espacio suficiente al selector de estado y mostrar completo el texto del filtro.
-- Se mantiene el registro de cartas físicas sin convertirlo en una anotación digital adicional.
+- `App.tsx` actúa como coordinador del shell y delega carga de expedientes, permisos, URL routing, bienvenida, atajos y modal de nueva causa a hooks especializados en `src/app/hooks/`.
+- La navegación usa un bridge propio de `window.history` con rutas canónicas (`/`, `/expedientes`, `/expedientes/:id`, `/anotaciones`, `/alumnos`, `/informes`, `/reportes`, `/admin`, `/plataforma`, `/login`).
+- El modo privacidad se alterna desde una acción atómica de Zustand y enmascara nombres/RUN visibles; en Anotaciones también reduce PII en etiquetas accesibles.
+- El sidebar móvil cerrado no queda montado en el árbol accesible, evitando controles duplicados para lectores de pantalla.
 
-### Dashboard y análisis
+### Persistencia, formularios y documentos
+
+- La bitácora y el checklist se guardan mediante RPCs PostgreSQL atómicas (`save_bitacora_snapshot`, `save_checklist_snapshot`) con `security invoker` y tenant resuelto en base de datos.
+- `NewCausaModal`, `EditCausaModalForm` y `LoginPage` usan `react-hook-form` + Zod con errores inline accesibles.
+- Las cartas se trabajan como documentos HTML imprimibles con `react-to-print`, snapshot de contenido y trazabilidad manual; `docx` y `pdf-lib` ya no forman parte del bundle.
+- El análisis de PDFs disciplinarios usa `pdfjs-dist` en servidor y valida hash, pertenencia a tenant y anotaciones confirmadas antes de persistir.
+
+### Dashboard, reportes y configuración institucional
 
 - Las tendencias históricas respetan el ciclo escolar **marzo-diciembre**, con renovación anual.
-- La vista mensual muestra la proporción entre anotaciones positivas y negativas.
-- El panorama de docentes prioriza el conocimiento del total de anotaciones y desglosa negativas, positivas, informativas y total; el ranking se ordena por negativas.
 - Los rankings de cursos con más cartas y estudiantes con más anotaciones negativas muestran hasta 12 resultados.
-- Se retiró la vista de riesgo del dashboard para concentrar la lectura en anotaciones y acciones concretas.
-
-### Documentos, PDFs y configuración institucional
-
-- Los PDFs de procesos disciplinarios se almacenan en buckets privados con permisos por tenant y rol.
-- Las cuentas operativas, incluyendo `staff`, pueden subir y revisar PDFs cuando su rol lo permite.
+- `TrendChart`, `MonthlyBars` y `LegendPill` viven en `src/shared/ui/charts/` y se reutilizan en Dashboard y Centro de reportes.
 - Los logos institucionales se cargan desde administración y se sirven mediante URLs firmadas de corta duración.
-- La generación de cartas usa una lectura institucional limitada al nombre oficial y logo, sin exigir privilegios administrativos.
-- Se corrigió el acceso del generador de cartas para usuarios `staff`, evitando el `403` del endpoint administrativo.
+- La vista Plataforma permite al superadministrador seleccionar explícitamente el colegio a administrar sin modificar el `tenant_id` del JWT.
 
 ### Experiencia de uso y calidad
 
 - Se incorporaron loaders animados por vista y para el arranque de la aplicación, con frases contextuales, barra indeterminada y soporte para `prefers-reduced-motion`.
-- Se mejoraron contraste, accesibilidad y estados de carga del shell y las vistas lazy.
+- Se mejoraron contraste, accesibilidad y estados de carga del shell, login y vistas lazy.
 - Se agregaron índices compuestos para los patrones frecuentes de lectura por tenant, estudiante, fecha, estado y ordenamiento.
-- La suite actual valida 385 pruebas en 78 suites y la auditoría de dependencias no reporta vulnerabilidades.
+- La suite actual valida **412 pruebas unitarias en 83 suites**, E2E de navegación/privacidad, auditoría axe pública y auditoría de dependencias sin vulnerabilidades.
 
 ---
 
@@ -216,9 +214,10 @@ Para más detalles, revisa:
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ⚙️ **CI**         | [![CI](https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/ci.yml?branch=master&label=CI)](https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/ci.yml)                                 |
 | 🚦 **Lighthouse** | [![Lighthouse](https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/lighthouse.yml?branch=master&label=Lighthouse)](https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/lighthouse.yml) |
-| ✅ **Tests**      | 385 tests · 78 suites                                                                                                                                                                                                                                               |
+| ✅ **Tests**      | 412 tests · 83 suites                                                                                                                                                                                                                                               |
 | 📈 **Cobertura**  | 85.66% líneas (`npm run test:coverage`, excluye el bundle generado `api/index.js`)                                                                                                                                                                                  |
-| 🔐 **Seguridad**  | `npm audit` 0 vulnerabilidades                                                                                                                                                                                                                                      |
+| ♿ **A11y**       | `npm run test:a11y` sobre dashboard público y login                                                                                                                                                                                                                 |
+| 🔐 **Seguridad**  | `npm audit --omit=dev` 0 vulnerabilidades                                                                                                                                                                                                                           |
 
 > Los badges de CI y Lighthouse se actualizan automáticamente con cada push. Los informes de Lighthouse se generan en `.lighthouseci/`.
 
@@ -226,22 +225,22 @@ Para más detalles, revisa:
 
 ## 🧱 Stack tecnológico
 
-| Capa          | Tecnología                  | Versión        |
-| ------------- | --------------------------- | -------------- |
-| Frontend      | React + TypeScript          | 19.0.1 / 5.8.2 |
-| Build         | Vite                        | 6.4.3          |
-| CSS           | Tailwind CSS v4             | 4.1.14         |
-| Estado global | Zustand                     | 5.0.14         |
-| Server state  | TanStack React Query        | 5.101.2        |
-| Formularios   | react-hook-form + Zod       | 7.82.0 / 4.4.3 |
-| Backend dev   | Express + tsx               | 4.21.2         |
-| Backend prod  | Vercel Serverless (esbuild) | —              |
-| Base de datos | Supabase PostgreSQL         | 17.6.1         |
-| Autenticación | Supabase Auth               | —              |
-| IA            | OpenRouter + Gemini         | —              |
-| Documentos    | docx / pdfjs-dist           | —              |
-| Monitoring    | Sentry + PostHog            | —              |
-| Tests         | node:test + Playwright      | —              |
+| Capa          | Tecnología                  | Versión         |
+| ------------- | --------------------------- | --------------- |
+| Frontend      | React + TypeScript          | 19.0.1 / 5.8.2  |
+| Build         | Vite                        | 6.4.3           |
+| CSS           | Tailwind CSS v4             | 4.1.14          |
+| Estado global | Zustand                     | 5.0.14          |
+| Server state  | TanStack React Query        | 5.101.2         |
+| Formularios   | react-hook-form + Zod       | 7.84.0 / 4.4.3  |
+| Backend dev   | Express + tsx               | 4.21.2          |
+| Backend prod  | Vercel Serverless (esbuild) | —               |
+| Base de datos | Supabase PostgreSQL         | 17.6.1          |
+| Autenticación | Supabase Auth               | —               |
+| IA            | OpenRouter + Gemini         | —               |
+| Documentos    | react-to-print / pdfjs-dist | 3.3.0 / 6.1.200 |
+| Monitoring    | Sentry + PostHog            | —               |
+| Tests         | node:test + Playwright      | —               |
 
 ---
 
@@ -342,7 +341,7 @@ npm run test:e2e
 npm run test:coverage
 ```
 
-> Antes de commitear, ejecutar siempre: `npm run lint && npm run test && npm run build:web`.
+> Antes de commitear, ejecutar siempre `npm run lint && npm run test && npm run build && npm run security-audit`. Si el cambio es solo frontend y no toca API, `npm run build:web` puede usarse como validación adicional más rápida, pero `api/index.js` sigue versionado para Vercel y debe regenerarse cuando cambian rutas serverless.
 
 ---
 
@@ -372,12 +371,14 @@ Las migraciones activas se encuentran en `supabase/migrations/`. No modifiques m
 Aplicar con Supabase CLI:
 
 ```bash
-supabase db push
+supabase db push --linked
 ```
 
 El seed local vive en [`supabase/seed.sql`](supabase/seed.sql) y se ejecuta automáticamente durante `supabase db reset`. Incluye usuarios demo, cursos, estudiantes, anotaciones, expedientes, cartas, reportes, notificaciones y configuración institucional.
 
-La migración `20260803003719_add_query_pattern_indexes.sql` agrega índices compuestos para los patrones de lectura frecuentes por tenant, estudiante, fecha y ordenamiento.
+La migración `20260803004959_add_query_pattern_indexes.sql` agrega índices compuestos para los patrones de lectura frecuentes por tenant, estudiante, fecha y ordenamiento.
+
+La migración `20260805011211_atomic_causa_related_snapshots.sql` registra las RPCs `save_bitacora_snapshot` y `save_checklist_snapshot`, aplicadas remotamente en Supabase como `20260805011211 atomic_causa_related_snapshots`. Ambas son `security invoker`, resuelven tenant en PostgreSQL y exponen `EXECUTE` solo a `authenticated` y `service_role`.
 
 El bucket privado `institution-assets` contiene logos y documentos institucionales. El servidor genera URLs firmadas con expiración; nunca se exponen URLs públicas ni credenciales de servicio al navegador. Las rutas de lectura institucional para documentos validan autenticación y `tenant_id`, mientras que la edición y carga de configuración permanecen restringidas a roles administrativos.
 
@@ -389,8 +390,8 @@ Más detalles en [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
 El roadmap vivo está en [`docs/architecture/future-roadmap.md`](docs/architecture/future-roadmap.md). Entre los pendientes se encuentran:
 
-- React Router / deep linking
-- Dashboard analítico avanzado
+- Evaluar router declarativo cuando una versión disponible pase `npm run security-audit`
+- Paginación de expedientes respaldada por índices y medición real de volumen
 - Exportación avanzada de reportes
 - Modo offline
 - Futuros módulos PIE, UTP y portal de apoderados
@@ -400,9 +401,9 @@ El roadmap vivo está en [`docs/architecture/future-roadmap.md`](docs/architectu
 ## 🤝 Contribución
 
 1. Lee [`docs/CONSTITUTION.md`](docs/CONSTITUTION.md) y [`docs/engineering/HANDBOOK.md`](docs/engineering/HANDBOOK.md).
-2. Crea una rama desde `main`.
+2. Crea una rama desde `master`.
 3. Escribe código siguiendo las convenciones del proyecto (TypeScript estricto, UI en español chileno, tests co-located).
-4. Ejecuta `npm run lint && npm run test && npm run build:web` antes de enviar tu PR.
+4. Ejecuta `npm run lint && npm run test && npm run build && npm run security-audit` antes de enviar tu PR.
 5. Describe tu cambio en español con un mensaje de commit claro.
 
 ---

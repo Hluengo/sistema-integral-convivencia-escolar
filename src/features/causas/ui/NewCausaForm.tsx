@@ -4,51 +4,49 @@
  */
 
 import type React from 'react';
+import { Controller, useWatch } from 'react-hook-form';
+import type { UseFormReturn } from 'react-hook-form';
 import { Scale, AlertCircle, FileText, Loader2, Users } from 'lucide-react';
 import type { Course, Student } from '../../../shared/api/services/courses.service';
+import type { NewCausaFormValues } from '../../../shared/lib/schemas/newCausaForm';
 import type { Causa } from '../../../shared/lib/types';
 import RiceConductSelect from '../NewCausaForm/RiceConductSelect';
 import ImproveTextarea from '../../../shared/ImproveTextarea';
 import Button from '../../../shared/ui/Button';
 
 interface NewCausaFormProps {
-  newEstNombre: string;
-  setNewEstNombre: (v: string) => void;
-  newEstRut: string;
-  setNewEstRut: (v: string) => void;
-  newInfTipo: Causa['tipoInfraccion'];
-  setNewInfTipo: (v: Causa['tipoInfraccion']) => void;
-  newAulaSegura: boolean;
-  setNewAulaSegura: (v: boolean) => void;
-  newObs: string;
-  setNewObs: (v: string) => void;
-  newResponsable: string;
-  setNewResponsable: (v: string) => void;
-  selectedCourseId: string;
+  form: UseFormReturn<NewCausaFormValues>;
   courses: Course[];
   students: Student[];
   isLoadingCourses: boolean;
   isLoadingStudents: boolean;
   onClose: () => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: React.FormEventHandler<HTMLFormElement>;
   onCourseChange: (courseId: string) => void;
   onStudentSelect: (studentId: string) => void;
 }
 
+const inputClassName =
+  'mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-medium text-neutral-700 transition-colors duration-200 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30';
+const inputErrorClassName =
+  'mt-1.5 w-full rounded-xl border border-grave-300 bg-grave-50 p-3 font-medium text-grave-900 transition-colors duration-200 focus:border-grave-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-grave-500/30';
+const readOnlyClassName =
+  'mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-100 p-3 font-medium text-neutral-600 text-xs transition-colors duration-200 focus:outline-none';
+
+function FieldError({ id, message }: { id: string; message?: string }) {
+  if (!message) {
+    return null;
+  }
+
+  return (
+    <p id={id} role="alert" className="mt-1 text-grave-700 text-xs">
+      {message}
+    </p>
+  );
+}
+
 export default function NewCausaForm({
-  newEstNombre,
-  setNewEstNombre: _setNewEstNombre,
-  newEstRut,
-  setNewEstRut,
-  newInfTipo,
-  setNewInfTipo,
-  newAulaSegura,
-  setNewAulaSegura,
-  newObs,
-  setNewObs,
-  newResponsable,
-  setNewResponsable,
-  selectedCourseId,
+  form,
   courses,
   students,
   isLoadingCourses,
@@ -58,12 +56,24 @@ export default function NewCausaForm({
   onCourseChange,
   onStudentSelect,
 }: NewCausaFormProps) {
-  const basicCourses = courses.filter((c) => c.level === 'BASICA');
-  const mediaCourses = courses.filter((c) => c.level === 'MEDIA');
+  const {
+    register,
+    setValue,
+    control,
+    formState: { errors, isSubmitting },
+  } = form;
+  const selectedCourseId = useWatch({ control, name: 'selectedCourseId' }) ?? '';
+  const selectedStudentId = useWatch({ control, name: 'selectedStudentId' }) ?? '';
+  const newEstRut = useWatch({ control, name: 'newEstRut' }) ?? '';
+  const newInfTipo = useWatch({ control, name: 'newInfTipo' });
+  const newAulaSegura = useWatch({ control, name: 'newAulaSegura' });
+  const newObs = useWatch({ control, name: 'newObs' }) ?? '';
+  const manualStudentEntry = !!selectedCourseId && !isLoadingStudents && students.length === 0;
+  const basicCourses = courses.filter((course) => course.level === 'BASICA');
+  const mediaCourses = courses.filter((course) => course.level === 'MEDIA');
 
   return (
     <div className="space-y-4 p-6">
-      {/* Header */}
       <div className="flex items-center justify-between border-neutral-100 border-b pb-4">
         <div className="flex items-center gap-2.5">
           <div className="rounded-lg bg-brand-50 p-2">
@@ -79,12 +89,11 @@ export default function NewCausaForm({
           onClick={onClose}
           className="cursor-pointer rounded-xl bg-neutral-50 px-3 py-1.5 font-medium text-neutral-500 text-xs transition-colors hover:bg-neutral-100 hover:text-neutral-700"
         >
-          ✕ Cerrar
+          Cerrar
         </button>
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-4 text-left text-neutral-800 text-sm">
-        {/* Course selector */}
+      <form onSubmit={onSubmit} noValidate className="space-y-4 text-left text-neutral-800 text-sm">
         <div>
           <label
             htmlFor="create-course"
@@ -95,10 +104,11 @@ export default function NewCausaForm({
           <select
             id="create-course"
             aria-label="Curso del estudiante"
+            aria-invalid={!!errors.selectedCourseId}
+            aria-describedby={errors.selectedCourseId ? 'create-course-error' : undefined}
             value={selectedCourseId}
-            onChange={(e) => onCourseChange(e.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-medium text-neutral-700 transition-colors duration-200 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-            required
+            onChange={(event) => onCourseChange(event.target.value)}
+            className={errors.selectedCourseId ? inputErrorClassName : inputClassName}
           >
             <option value="">-- Seleccionar curso --</option>
             {isLoadingCourses ? (
@@ -112,9 +122,13 @@ export default function NewCausaForm({
                     label="Enseñanza Básica"
                     className="bg-white font-semibold text-blue-700"
                   >
-                    {basicCourses.map((c) => (
-                      <option key={c.id} value={c.id} className="font-normal text-neutral-800">
-                        {c.name}
+                    {basicCourses.map((course) => (
+                      <option
+                        key={course.id}
+                        value={course.id}
+                        className="font-normal text-neutral-800"
+                      >
+                        {course.name}
                       </option>
                     ))}
                   </optgroup>
@@ -124,9 +138,13 @@ export default function NewCausaForm({
                     label="Enseñanza Media"
                     className="bg-white font-semibold text-purple-700"
                   >
-                    {mediaCourses.map((c) => (
-                      <option key={c.id} value={c.id} className="font-normal text-neutral-800">
-                        {c.name}
+                    {mediaCourses.map((course) => (
+                      <option
+                        key={course.id}
+                        value={course.id}
+                        className="font-normal text-neutral-800"
+                      >
+                        {course.name}
                       </option>
                     ))}
                   </optgroup>
@@ -139,9 +157,9 @@ export default function NewCausaForm({
               </>
             )}
           </select>
+          <FieldError id="create-course-error" message={errors.selectedCourseId?.message} />
         </div>
 
-        {/* Student selector */}
         <div>
           {selectedCourseId ? (
             <>
@@ -160,62 +178,105 @@ export default function NewCausaForm({
                 <select
                   id="create-student"
                   aria-label="Estudiante"
-                  value={students.find((s) => s.full_name === newEstNombre)?.id || ''}
-                  onChange={(e) => onStudentSelect(e.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-medium text-neutral-700 transition-colors duration-200 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                  value={selectedStudentId}
+                  onChange={(event) => onStudentSelect(event.target.value)}
+                  className={errors.newEstNombre ? inputErrorClassName : inputClassName}
+                  aria-invalid={!!errors.newEstNombre}
+                  aria-describedby={errors.newEstNombre ? 'create-student-error' : undefined}
                 >
                   <option value="">-- Seleccionar estudiante --</option>
-                  {students.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.full_name}
+                  {students.map((student) => (
+                    <option key={student.id} value={student.id}>
+                      {student.full_name}
                     </option>
                   ))}
                 </select>
               ) : (
                 <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-grave-200 bg-grave-50 p-2.5">
                   <AlertCircle className="h-3.5 w-3.5 shrink-0 text-grave-600" aria-hidden="true" />
-                  <span className="text-grave-700 text-xs">No hay estudiantes en este curso</span>
+                  <span className="text-grave-700 text-xs">
+                    No hay estudiantes en este curso. Ingrese los datos manualmente.
+                  </span>
                 </div>
               )}
+              <FieldError id="create-student-error" message={errors.newEstNombre?.message} />
             </>
           ) : (
-            <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-2.5">
-              <Users className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden="true" />
-              <span className="text-neutral-500 text-xs">Seleccione un curso primero</span>
-            </div>
+            <>
+              <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-2.5">
+                <Users className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden="true" />
+                <span className="text-neutral-500 text-xs">Seleccione un curso primero</span>
+              </div>
+              <FieldError id="create-student-error" message={errors.newEstNombre?.message} />
+            </>
           )}
         </div>
 
-        {/* RUT */}
+        {manualStudentEntry && (
+          <div>
+            <label
+              htmlFor="create-student-name"
+              className="block font-semibold text-neutral-500 text-xs uppercase tracking-wide"
+            >
+              Nombre del estudiante
+            </label>
+            <input
+              id="create-student-name"
+              aria-label="Nombre del estudiante"
+              aria-invalid={!!errors.newEstNombre}
+              aria-describedby={errors.newEstNombre ? 'create-student-name-error' : undefined}
+              type="text"
+              spellCheck
+              {...register('newEstNombre')}
+              className={errors.newEstNombre ? inputErrorClassName : inputClassName}
+            />
+            <FieldError id="create-student-name-error" message={errors.newEstNombre?.message} />
+          </div>
+        )}
+
         <div>
           <label
             htmlFor="create-rut"
             className="block font-semibold text-neutral-500 text-xs uppercase tracking-wide"
           >
-            RUN / RUT:
+            RUN / RUT
           </label>
           <input
             id="create-rut"
             aria-label="RUN o RUT"
+            aria-invalid={!!errors.newEstRut}
+            aria-describedby={errors.newEstRut ? 'create-rut-error' : undefined}
             type="text"
-            required
             spellCheck={false}
-            value={newEstRut}
-            onChange={(e) => setNewEstRut(e.target.value)}
-            readOnly={!!selectedCourseId && students.length > 0}
+            readOnly={!selectedCourseId || (!!selectedCourseId && students.length > 0)}
+            aria-disabled={!selectedCourseId}
             placeholder={
-              selectedCourseId && students.length === 0
-                ? 'Ingrese RUN manualmente (sin estudiantes en el curso)'
+              manualStudentEntry
+                ? 'Ingrese RUN manualmente'
                 : 'Se auto-completa al seleccionar estudiante'
             }
-            className="mt-1.5 w-full cursor-not-allowed rounded-xl border border-neutral-200 bg-neutral-100 p-3 font-medium text-neutral-600 text-xs transition-colors duration-200 focus:outline-none"
+            {...register('newEstRut')}
+            className={
+              errors.newEstRut
+                ? inputErrorClassName
+                : selectedCourseId && students.length === 0
+                  ? inputClassName
+                  : readOnlyClassName
+            }
           />
+          <FieldError id="create-rut-error" message={errors.newEstRut?.message} />
         </div>
 
         <RiceConductSelect
-          setNewInfTipo={setNewInfTipo}
-          setNewAulaSegura={setNewAulaSegura}
-          setNewObs={setNewObs}
+          setNewInfTipo={(value) =>
+            setValue('newInfTipo', value, { shouldDirty: true, shouldValidate: true })
+          }
+          setNewAulaSegura={(value) =>
+            setValue('newAulaSegura', value, { shouldDirty: true, shouldValidate: true })
+          }
+          setNewObs={(value) =>
+            setValue('newObs', value, { shouldDirty: true, shouldValidate: true })
+          }
           currentObs={newObs}
         />
 
@@ -225,14 +286,19 @@ export default function NewCausaForm({
               htmlFor="create-gravedad"
               className="block font-semibold text-neutral-500 text-xs uppercase tracking-wide"
             >
-              Gravedad:
+              Gravedad
             </label>
             <select
               id="create-gravedad"
               aria-label="Gravedad"
               value={newInfTipo}
-              onChange={(e) => setNewInfTipo(e.target.value as Causa['tipoInfraccion'])}
-              className="mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-medium text-neutral-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+              onChange={(event) =>
+                setValue('newInfTipo', event.target.value as Causa['tipoInfraccion'], {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
+              className={inputClassName}
             >
               <option value="Leve">Falta Leve</option>
               <option value="Grave">Falta Grave</option>
@@ -248,7 +314,12 @@ export default function NewCausaForm({
                 name="create-aula-segura"
                 type="checkbox"
                 checked={newAulaSegura}
-                onChange={(e) => setNewAulaSegura(e.target.checked)}
+                onChange={(event) =>
+                  setValue('newAulaSegura', event.target.checked, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
                 className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
               />
               <span className="text-xs">Afecta Aula Segura</span>
@@ -256,14 +327,29 @@ export default function NewCausaForm({
           </div>
         </div>
 
-        <ImproveTextarea
-          id="create-obs"
-          label="Relato de los Hechos:"
-          placeholder="Relate minuciosamente los hechos ocurridos..."
-          value={newObs}
-          onChange={setNewObs}
-          required
-          className="mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-sans text-xs leading-relaxed transition-colors duration-200 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+        <Controller
+          control={control}
+          name="newObs"
+          render={({ field }) => (
+            <div>
+              <ImproveTextarea
+                id="create-obs"
+                label="Relato de los hechos"
+                placeholder="Relate minuciosamente los hechos ocurridos..."
+                value={field.value}
+                onChange={field.onChange}
+                required
+                ariaDescribedBy={errors.newObs ? 'create-obs-error' : undefined}
+                ariaInvalid={!!errors.newObs}
+                className={
+                  errors.newObs
+                    ? 'mt-1.5 w-full rounded-xl border border-grave-300 bg-grave-50 p-3 font-sans text-xs leading-relaxed transition-colors duration-200 focus:border-grave-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-grave-500/30'
+                    : 'mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-sans text-xs leading-relaxed transition-colors duration-200 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30'
+                }
+              />
+              <FieldError id="create-obs-error" message={errors.newObs?.message} />
+            </div>
+          )}
         />
 
         <div>
@@ -271,39 +357,47 @@ export default function NewCausaForm({
             htmlFor="create-responsable"
             className="block font-semibold text-neutral-500 text-xs uppercase tracking-wide"
           >
-            Fiscalizador a cargo:
+            Fiscalizador a cargo
           </label>
           <input
             id="create-responsable"
             aria-label="Fiscalizador a cargo"
             type="text"
-            required
             spellCheck={false}
-            value={newResponsable}
-            onChange={(e) => setNewResponsable(e.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-100 p-3 font-bold text-neutral-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+            aria-invalid={!!errors.newResponsable}
+            aria-describedby={errors.newResponsable ? 'create-responsable-error' : undefined}
+            {...register('newResponsable')}
+            className={errors.newResponsable ? inputErrorClassName : inputClassName}
           />
+          <FieldError id="create-responsable-error" message={errors.newResponsable?.message} />
         </div>
 
         {newInfTipo === 'Gravísima' && newAulaSegura && (
           <div className="rounded-lg border border-gravisima-200 bg-gravisima-50 p-3 font-medium font-sans text-gravisima-700 text-xs leading-normal">
-            ⚠️ <strong>Ley Aula Segura activa:</strong> Recuerde citar formalmente a la
+            <strong>Ley Aula Segura activa:</strong> recuerde citar formalmente a la
             Superintendencia en un lapso de 24 horas y resolver en no más de 10 días hábiles de
             suspensión preventiva.
           </div>
         )}
 
         <div className="flex items-center justify-end gap-2 border-neutral-100 border-t pt-2">
-          <Button variant="ghost" onClick={onClose}>
+          <Button type="button" variant="ghost" onClick={onClose}>
             Cancelar
           </Button>
           <Button
             type="submit"
+            disabled={isSubmitting}
             className="rounded-xl px-5 py-2.5 hover:scale-[1.02] active:scale-95"
           >
-            <FileText className="h-4 w-4" aria-hidden="true" /> Registrar Expediente
+            {isSubmitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <FileText className="h-4 w-4" aria-hidden="true" />
+            )}
+            Registrar Expediente
           </Button>
         </div>
+        <input type="hidden" value={newEstRut} readOnly aria-hidden="true" />
       </form>
     </div>
   );

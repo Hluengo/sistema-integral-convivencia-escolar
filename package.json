@@ -23,6 +23,7 @@
     "check": "npm run lint && npm run lint:code && npm run test && npm run build:web",
     "test:coverage": "node --experimental-test-coverage --test-coverage-exclude=api/index.js --test-coverage-lines=60 --import tsx --test \"src/**/*.test.ts\" \"server/**/*.test.ts\"",
     "test:e2e": "playwright test",
+    "test:a11y": "playwright test tests/accessibility.spec.ts --workers=1",
     "test:multitenant": "node scripts/validate-multitenant.mjs",
     "test:roles": "node scripts/validate-production-roles.mjs",
     "check:bundle": "node scripts/check-bundle.mjs",
@@ -46,7 +47,6 @@
     "@radix-ui/react-alert-dialog": "^1.1.19",
     "@radix-ui/react-dialog": "^1.1.19",
     "@sentry/browser": "^10.66.0",
-    "@sentry/react": "^10.66.0",
     "@supabase/supabase-js": "^2.110.3",
     "@tailwindcss/vite": "^4.1.14",
     "@tanstack/react-query": "^5.101.2",
@@ -62,6 +62,7 @@
     "posthog-js": "^1.404.1",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
+    "react-hook-form": "7.84.0",
     "react-to-print": "^3.3.0",
     "read-excel-file": "^9.3.5",
     "web-vitals": "^5.3.0",
@@ -70,6 +71,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.12.1",
     "@eslint/js": "^9.39.5",
     "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.61.1",

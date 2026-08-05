@@ -269,22 +269,23 @@ export default memo(function Sidebar({
         />
       )}
 
-      <div
-        ref={mobileSidebarRef}
-        className={`fixed inset-y-0 left-0 z-50 w-[280px] bg-neutral-950 shadow-2xl shadow-neutral-950/50 transition-transform duration-300 ease-out-expo lg:hidden ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <button
-          type="button"
-          onClick={() => setMobileOpen(false)}
-          className="absolute top-4 right-4 rounded-lg p-1.5 text-white/40 transition-colors hover:bg-white/10 hover:text-white"
-          aria-label="Cerrar menú"
+      {mobileOpen && (
+        <div
+          ref={mobileSidebarRef}
+          className="fixed inset-y-0 left-0 z-50 w-[280px] translate-x-0 bg-neutral-950 shadow-2xl shadow-neutral-950/50 transition-transform duration-300 ease-out-expo lg:hidden"
+          aria-label="Menú móvil"
         >
-          <X className="h-4 w-4" />
-        </button>
-        <SidebarContent {...contentProps} mobile onNavigate={() => setMobileOpen(false)} />
-      </div>
+          <button
+            type="button"
+            onClick={() => setMobileOpen(false)}
+            className="absolute top-4 right-4 rounded-lg p-1.5 text-white/40 transition-colors hover:bg-white/10 hover:text-white"
+            aria-label="Cerrar menú"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <SidebarContent {...contentProps} mobile onNavigate={() => setMobileOpen(false)} />
+        </div>
+      )}
 
       <aside
         className={`relative hidden shrink-0 flex-col bg-neutral-950 shadow-2xl shadow-neutral-950/30 transition-colors duration-300 ease-out-expo lg:flex ${

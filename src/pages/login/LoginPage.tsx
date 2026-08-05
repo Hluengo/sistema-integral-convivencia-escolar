@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import type { UseFormRegisterReturn } from 'react-hook-form';
 import { AlertCircle, CheckCircle2, Eye, EyeOff, Scale } from 'lucide-react';
 import {
   requestPasswordReset,
@@ -12,6 +13,12 @@ import {
   signOut,
   updatePassword,
 } from '../../shared/api/services/auth.service';
+import {
+  type LoginFormValues,
+  loginFormSchema,
+  passwordResetRequestSchema,
+  passwordUpdateFormSchema,
+} from '../../shared/lib/schemas/loginForm';
 import { useAppContext } from '../../shared/lib/useAppContext';
 import { useAuthStore } from '../../shared/lib/stores/authStore';
 import { Dialog, DialogContent } from '../../shared/ui/Dialog';
@@ -23,6 +30,14 @@ interface LoginPageProps {
 
 type AuthMode = 'login' | 'request-reset' | 'update-password';
 
+type LoginFormField = keyof LoginFormValues;
+
+const LOGIN_FIELD_NAMES: LoginFormField[] = ['email', 'password', 'passwordConfirmation'];
+
+function isLoginFormField(field: unknown): field is LoginFormField {
+  return typeof field === 'string' && LOGIN_FIELD_NAMES.includes(field as LoginFormField);
+}
+
 export default function LoginPage({ onClose }: LoginPageProps) {
   const [mode, setMode] = useState<AuthMode>(() =>
     typeof window !== 'undefined' &&
@@ -30,9 +45,6 @@ export default function LoginPage({ onClose }: LoginPageProps) {
       ? 'update-password'
       : 'login',
   );
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordConfirmation, setPasswordConfirmation] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -41,6 +53,22 @@ export default function LoginPage({ onClose }: LoginPageProps) {
   const sessionExpired = useAuthStore((state) => state.sessionExpired);
   const clearSessionExpired = useAuthStore((state) => state.clearSessionExpired);
   const emailRef = useRef<HTMLInputElement>(null);
+  const {
+    register,
+    setError: setFieldError,
+    clearErrors,
+    resetField,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
+    defaultValues: {
+      email: '',
+      password: '',
+      passwordConfirmation: '',
+    },
+    mode: 'onChange',
+  });
+  const emailRegistration = register('email');
 
   useEffect(() => {
     if (sessionExpired) {
@@ -52,25 +80,37 @@ export default function LoginPage({ onClose }: LoginPageProps) {
   const resetMessages = () => {
     setError(null);
     setNotice(null);
+    clearErrors();
   };
 
   const changeMode = (nextMode: AuthMode) => {
     resetMessages();
-    setPassword('');
-    setPasswordConfirmation('');
+    resetField('password');
+    resetField('passwordConfirmation');
     setMode(nextMode);
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim() || !password.trim()) {
-      setError('Ingrese email y contraseña.');
+  const applyValidationIssues = (issues: Array<{ path: PropertyKey[]; message: string }>) => {
+    for (const issue of issues) {
+      const [field] = issue.path;
+      if (isLoginFormField(field)) {
+        setFieldError(field, { type: 'validate', message: issue.message });
+      }
+    }
+  };
+
+  const handleLogin = handleSubmit(async (values) => {
+    const parsed = loginFormSchema.safeParse(values);
+    if (!parsed.success) {
+      applyValidationIssues(parsed.error.issues);
+      setError('Revise los datos de inicio de sesión.');
       return;
     }
 
     setIsLoading(true);
     resetMessages();
     try {
+      const { email, password } = parsed.data;
       const { error: authError } = await signInWithEmail(email.trim(), password);
       if (authError) {
         setError(
@@ -84,19 +124,20 @@ export default function LoginPage({ onClose }: LoginPageProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  });
 
-  const handleResetRequest = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) {
-      setError('Ingrese su correo electrónico.');
+  const handleResetRequest = handleSubmit(async (values) => {
+    const parsed = passwordResetRequestSchema.safeParse(values);
+    if (!parsed.success) {
+      applyValidationIssues(parsed.error.issues);
+      setError('Ingrese un correo electrónico válido.');
       return;
     }
 
     setIsLoading(true);
     resetMessages();
     try {
-      const { error: authError } = await requestPasswordReset(email.trim());
+      const { error: authError } = await requestPasswordReset(parsed.data.email.trim());
       if (authError) {
         setError(authError.message);
         return;
@@ -107,23 +148,20 @@ export default function LoginPage({ onClose }: LoginPageProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  });
 
-  const handlePasswordUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres.');
-      return;
-    }
-    if (password !== passwordConfirmation) {
-      setError('Las contraseñas no coinciden.');
+  const handlePasswordUpdate = handleSubmit(async (values) => {
+    const parsed = passwordUpdateFormSchema.safeParse(values);
+    if (!parsed.success) {
+      applyValidationIssues(parsed.error.issues);
+      setError('Revise la nueva contraseña.');
       return;
     }
 
     setIsLoading(true);
     resetMessages();
     try {
-      const { error: authError } = await updatePassword(password);
+      const { error: authError } = await updatePassword(parsed.data.password);
       if (authError) {
         setError(authError.message);
         return;
@@ -133,14 +171,14 @@ export default function LoginPage({ onClose }: LoginPageProps) {
       }
       clearSessionExpired();
       await signOut();
-      setPassword('');
-      setPasswordConfirmation('');
+      resetField('password');
+      resetField('passwordConfirmation');
       setMode('login');
       setNotice('Contraseña actualizada. Ya puede iniciar sesión.');
     } finally {
       setIsLoading(false);
     }
-  };
+  });
 
   const title =
     mode === 'login'
@@ -211,17 +249,23 @@ export default function LoginPage({ onClose }: LoginPageProps) {
                 Correo electrónico
               </label>
               <input
-                ref={emailRef}
                 id="login-email"
                 aria-label="Correo electrónico"
+                aria-invalid={!!errors.email}
+                aria-describedby={errors.email ? 'login-email-error' : undefined}
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
                 placeholder="usuario@colegio.cl"
                 autoComplete="email"
-                required
                 className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-neutral-900 text-sm placeholder-neutral-400 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/15"
+                name={emailRegistration.name}
+                onBlur={emailRegistration.onBlur}
+                onChange={emailRegistration.onChange}
+                ref={(element) => {
+                  emailRegistration.ref(element);
+                  emailRef.current = element;
+                }}
               />
+              <FieldError id="login-email-error" message={errors.email?.message} />
             </div>
           )}
 
@@ -230,8 +274,8 @@ export default function LoginPage({ onClose }: LoginPageProps) {
               <PasswordInput
                 id="login-password"
                 label="Contraseña"
-                value={password}
-                onChange={setPassword}
+                registration={register('password')}
+                error={errors.password?.message}
                 visible={showPassword}
                 onToggle={() => setShowPassword((value) => !value)}
                 autoComplete="current-password"
@@ -263,8 +307,8 @@ export default function LoginPage({ onClose }: LoginPageProps) {
               <PasswordInput
                 id="new-password"
                 label="Nueva contraseña"
-                value={password}
-                onChange={setPassword}
+                registration={register('password')}
+                error={errors.password?.message}
                 visible={showPassword}
                 onToggle={() => setShowPassword((value) => !value)}
                 autoComplete="new-password"
@@ -272,8 +316,8 @@ export default function LoginPage({ onClose }: LoginPageProps) {
               <PasswordInput
                 id="confirm-password"
                 label="Confirmar contraseña"
-                value={passwordConfirmation}
-                onChange={setPasswordConfirmation}
+                registration={register('passwordConfirmation')}
+                error={errors.passwordConfirmation?.message}
                 visible={showPassword}
                 onToggle={() => setShowPassword((value) => !value)}
                 autoComplete="new-password"
@@ -288,7 +332,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
         </div>
 
         <div className="border-t border-neutral-100 bg-neutral-50 px-8 py-4">
-          <p className="text-center text-neutral-400 text-xs">
+          <p className="text-center text-neutral-600 text-xs">
             Debido Proceso · Sistema de convivencia escolar
           </p>
         </div>
@@ -297,23 +341,35 @@ export default function LoginPage({ onClose }: LoginPageProps) {
   );
 }
 
+function FieldError({ id, message }: { id: string; message?: string }) {
+  if (!message) {
+    return null;
+  }
+
+  return (
+    <p id={id} role="alert" className="mt-1.5 text-gravisima-700 text-xs">
+      {message}
+    </p>
+  );
+}
+
 interface PasswordInputProps {
   id: string;
   label: string;
-  value: string;
+  registration: UseFormRegisterReturn;
+  error?: string;
   visible: boolean;
   autoComplete: string;
-  onChange: (value: string) => void;
   onToggle: () => void;
 }
 
 function PasswordInput({
   id,
   label,
-  value,
+  registration,
+  error,
   visible,
   autoComplete,
-  onChange,
   onToggle,
 }: PasswordInputProps) {
   return (
@@ -325,14 +381,13 @@ function PasswordInput({
         <input
           id={id}
           aria-label={label}
+          aria-invalid={!!error}
+          aria-describedby={error ? `${id}-error` : undefined}
           type={visible ? 'text' : 'password'}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
           placeholder="••••••••"
           autoComplete={autoComplete}
-          required
-          minLength={6}
           className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 pr-11 text-neutral-900 text-sm placeholder-neutral-400 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/15"
+          {...registration}
         />
         <button
           type="button"
@@ -344,6 +399,7 @@ function PasswordInput({
           {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </button>
       </div>
+      <FieldError id={`${id}-error`} message={error} />
     </div>
   );
 }

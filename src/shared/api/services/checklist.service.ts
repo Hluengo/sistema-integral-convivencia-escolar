@@ -2,20 +2,29 @@
 
 import { supabase } from '../lib/supabase';
 import type { ChecklistItem } from '../../lib/types';
-import { useAuthStore } from '../../lib/stores/authStore';
-import { CHECKLIST_CONFLICT_TARGET } from './checklistConflict';
 import { normalizeDocumentPath } from './storage.service';
 
 function itemsAreEqual(left: ChecklistItem, right: ChecklistItem): boolean {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
-export async function saveChecklist(
-  causaId: string,
+interface ChecklistSnapshotRow {
+  id: string;
+  label: string;
+  descripcion: string;
+  completado: boolean;
+  fecha_completado: string | null;
+  requerido_por: ChecklistItem['requeridoPor'];
+  registrado_por: string | null;
+  observaciones: string | null;
+  documento_nombre: string | null;
+  documento_url: string | null;
+}
+
+export function buildChecklistSnapshotDelta(
   items: ChecklistItem[],
   previousItems: ChecklistItem[] = [],
-): Promise<boolean> {
-  const tenantId = useAuthStore.getState().tenantId;
+): { rows: ChecklistSnapshotRow[]; removedIds: string[] } {
   const previousById = new Map(previousItems.map((item) => [item.id, item]));
   const rows = items
     .filter((item) => {
@@ -24,8 +33,6 @@ export async function saveChecklist(
     })
     .map((item) => ({
       id: item.id,
-      causa_id: causaId,
-      tenant_id: tenantId,
       label: item.label,
       descripcion: item.descripcion,
       completado: item.completado,
@@ -37,30 +44,29 @@ export async function saveChecklist(
       documento_url: item.documentoUrl ? normalizeDocumentPath(item.documentoUrl) : null,
     }));
 
-  if (rows.length > 0) {
-    const { error: upsertError } = await supabase
-      .from('checklist_items')
-      .upsert(rows, { onConflict: CHECKLIST_CONFLICT_TARGET });
-
-    if (upsertError) {
-      console.error('Error upserting checklist items:', upsertError.message || upsertError);
-      return false;
-    }
-  }
-
   const activeIds = new Set(items.map((item) => item.id));
   const removedIds = previousItems.filter((item) => !activeIds.has(item.id)).map((item) => item.id);
 
-  if (removedIds.length === 0) return true;
+  return { rows, removedIds };
+}
 
-  const { error: cleanupError } = await supabase
-    .from('checklist_items')
-    .delete()
-    .eq('causa_id', causaId)
-    .in('id', removedIds);
+export async function saveChecklist(
+  causaId: string,
+  items: ChecklistItem[],
+  previousItems: ChecklistItem[] = [],
+): Promise<boolean> {
+  const { rows, removedIds } = buildChecklistSnapshotDelta(items, previousItems);
 
-  if (cleanupError) {
-    console.error('Error cleaning obsolete checklist items:', cleanupError);
+  if (rows.length === 0 && removedIds.length === 0) return true;
+
+  const { error } = await supabase.rpc('save_checklist_snapshot', {
+    p_causa_id: causaId,
+    p_items: rows,
+    p_removed_item_ids: removedIds,
+  });
+
+  if (error) {
+    console.error('Error saving checklist snapshot:', error.message || error);
     return false;
   }
 

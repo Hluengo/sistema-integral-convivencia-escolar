@@ -367,7 +367,7 @@ export default memo(function AnotacionesStudentTable({
                   </td>
                 </tr>
               ) : (
-                filteredStudents.map((student) => {
+                filteredStudents.map((student, index) => {
                   const effectiveNeg = getEffectiveNegCount(student);
                   const effectiveStage = getEffectiveDisciplinaryStage(
                     effectiveNeg,
@@ -379,6 +379,7 @@ export default memo(function AnotacionesStudentTable({
                     student.effective_letter_type,
                   );
                   const negativeCount = student.annotations_count || 0;
+                  const studentLabel = privacyMode ? `estudiante ${index + 1}` : student.full_name;
 
                   return (
                     <tr
@@ -392,7 +393,7 @@ export default memo(function AnotacionesStudentTable({
                       }}
                       tabIndex={0}
                       role="button"
-                      aria-label={`Ver detalle de ${maskName(student.full_name, privacyMode)}`}
+                      aria-label={`Ver detalle de ${studentLabel}`}
                       className={`cursor-pointer transition-colors ${style.rowBg}`}
                     >
                       <td className="whitespace-nowrap px-4 py-3 font-medium text-neutral-900 text-sm">
@@ -406,7 +407,7 @@ export default memo(function AnotacionesStudentTable({
                             }}
                             onKeyDown={(event) => event.stopPropagation()}
                             className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-brand-50 hover:text-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-                            aria-label={`Editar anotaciones de ${maskName(student.full_name, privacyMode)}`}
+                            aria-label={`Editar anotaciones de ${studentLabel}`}
                             title="Editar anotaciones"
                           >
                             <Pencil className="size-3.5" aria-hidden="true" />

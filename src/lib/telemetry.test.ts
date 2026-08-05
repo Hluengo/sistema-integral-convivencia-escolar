@@ -13,14 +13,34 @@ describe('Telemetría y CSP', () => {
     const main = read('src/app/main.tsx');
     const telemetry = read('src/lib/telemetry.ts');
     const analytics = read('src/lib/analytics.ts');
+    const webVitals = read('src/lib/webVitals.ts');
 
     ok(main.includes('initializeTelemetry()'));
     ok(!main.includes("from '../lib/sentry'"));
     ok(!main.includes("from '../lib/posthog'"));
     ok(telemetry.includes("import('./posthog')"));
     ok(telemetry.includes("import('./sentry')"));
+    ok(!read('src/lib/sentry.ts').includes("from '@sentry/react'"));
     ok(!analytics.includes("from '@sentry/react'"));
     ok(!analytics.includes("from './posthog'"));
+    ok(!webVitals.includes("from '@sentry/react'"));
+    ok(!webVitals.includes("from './posthog'"));
+  });
+
+  it('mantiene Sentry sin Session Replay', () => {
+    const sentry = read('src/lib/sentry.ts');
+
+    ok(!sentry.includes('replaysOnErrorSampleRate'));
+    ok(!sentry.includes('replaysSessionSampleRate'));
+  });
+
+  it('evita importar Google Fonts desde CSS', () => {
+    const css = read('src/index.css');
+    const html = read('index.html');
+
+    ok(!css.includes('fonts.googleapis.com'));
+    ok(html.includes('fonts.googleapis.com'));
+    ok(html.includes('JetBrains+Mono'));
   });
 
   it('mantiene una CSP coherente entre HTML y Vercel sin unsafe-eval', () => {

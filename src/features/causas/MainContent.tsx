@@ -3,15 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
 import { useCallback, Suspense, lazy } from 'react';
-import type { Causa, FaseProcedimental } from '../../shared/lib/types';
+import type { FaseProcedimental } from '../../shared/lib/types';
 import type { SidebarView } from '../../widgets/sidebar/Sidebar';
-import type { FormAction } from '../../shared/lib/hooks/useNewCausaForm';
 import { ChevronRight } from 'lucide-react';
 import { VIEW_TITLES } from '../../widgets/header/constants';
 import ErrorBoundary from '../../shared/ui/ErrorBoundary';
 import ViewLoader from '../../shared/ui/ViewLoader';
+import { useCausasStore } from '../../shared/lib/stores/causasStore';
+import { useUIStore } from '../../shared/lib/stores/uiStore';
+import type {
+  CausaWorkspaceViewModel,
+  CreateCausaActions,
+  MainNavigationActions,
+} from './MainContent/viewContracts';
 
 const DashboardStats = lazy(() => import('../../components/DashboardStats'));
 const CausasView = lazy(() => import('./MainContent/CausasView'));
@@ -24,59 +29,23 @@ const PlatformView = lazy(() => import('../../features/platform/PlatformView'));
 
 interface MainContentProps {
   currentView: SidebarView;
-  causas: Causa[];
-  selectedCausaId: string;
-  setSelectedCausaId: (id: string) => void;
-  selectedCausa: Causa | undefined;
-  isCausaDetailLoading: boolean;
-  selectedFaseFilter: FaseProcedimental | 'Todas';
-  setSelectedFaseFilter: (f: FaseProcedimental | 'Todas') => void;
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  privacyMode: boolean;
-  mobileShowDetail: boolean;
-  setMobileShowDetail: (v: boolean) => void;
-  filteredCausas: Causa[];
-  hasMoreCausas: boolean;
-  isLoadingMoreCausas: boolean;
-  onLoadMoreCausas: () => void;
-  showCreateForm: boolean;
-  dispatchForm: React.Dispatch<FormAction>;
-  handleReopenCausa: (causa: Causa) => void;
-  handleSelectCausaFromDashboard: (causaId: string) => void;
-  handleOpenCreateForm: () => void;
+  causaWorkspace: CausaWorkspaceViewModel;
+  createCausa: CreateCausaActions;
+  navigation: MainNavigationActions;
   onboardingEnabled: boolean;
   coursesCount: number;
-  onNavigate: (view: SidebarView) => void;
 }
 
 export default function MainContent({
   currentView,
-  causas,
-  selectedCausaId,
-  setSelectedCausaId,
-  selectedCausa,
-  isCausaDetailLoading,
-  selectedFaseFilter,
-  setSelectedFaseFilter,
-  searchQuery,
-  setSearchQuery,
-  privacyMode,
-  mobileShowDetail,
-  setMobileShowDetail,
-  filteredCausas,
-  hasMoreCausas,
-  isLoadingMoreCausas,
-  onLoadMoreCausas,
-  showCreateForm,
-  dispatchForm,
-  handleReopenCausa,
-  handleSelectCausaFromDashboard,
-  handleOpenCreateForm,
+  causaWorkspace,
+  createCausa,
+  navigation,
   onboardingEnabled,
   coursesCount,
-  onNavigate,
 }: MainContentProps) {
+  const privacyMode = useUIStore((state) => state.privacyMode);
+  const setSelectedFaseFilter = useCausasStore((state) => state.setSelectedFaseFilter);
   const handleFaseSelect = useCallback(
     (fase: FaseProcedimental | 'Todas') => setSelectedFaseFilter(fase),
     [setSelectedFaseFilter],
@@ -106,7 +75,7 @@ export default function MainContent({
           <>
             <button
               type="button"
-              onClick={() => onNavigate('dashboard')}
+              onClick={() => navigation.onNavigate('dashboard')}
               className="rounded-md px-1.5 py-1 font-semibold text-neutral-700 transition-colors hover:bg-white hover:text-brand-700"
             >
               Inicio
@@ -123,11 +92,11 @@ export default function MainContent({
         <ErrorBoundary>
           <Suspense fallback={<ViewLoader view={currentView} />}>
             <DashboardStats
-              causas={causas}
+              causas={causaWorkspace.causas}
               onFaseSelect={handleFaseSelect}
               onboardingEnabled={onboardingEnabled}
               coursesCount={coursesCount}
-              onNavigate={onNavigate}
+              onNavigate={navigation.onNavigate}
               privacyMode={privacyMode}
             />
           </Suspense>
@@ -139,27 +108,9 @@ export default function MainContent({
         <ErrorBoundary>
           <Suspense fallback={<ViewLoader view={currentView} />}>
             <CausasView
-              causas={causas}
-              selectedCausaId={selectedCausaId}
-              setSelectedCausaId={setSelectedCausaId}
-              selectedCausa={selectedCausa}
-              isCausaDetailLoading={isCausaDetailLoading}
-              selectedFaseFilter={selectedFaseFilter}
-              setSelectedFaseFilter={setSelectedFaseFilter}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-              privacyMode={privacyMode}
-              mobileShowDetail={mobileShowDetail}
-              setMobileShowDetail={setMobileShowDetail}
-              filteredCausas={filteredCausas}
-              hasMoreCausas={hasMoreCausas}
-              isLoadingMoreCausas={isLoadingMoreCausas}
-              onLoadMoreCausas={onLoadMoreCausas}
-              showCreateForm={showCreateForm}
-              dispatchForm={dispatchForm}
-              handleReopenCausa={handleReopenCausa}
-              handleSelectCausaFromDashboard={handleSelectCausaFromDashboard}
-              handleOpenCreateForm={handleOpenCreateForm}
+              workspace={causaWorkspace}
+              createCausa={createCausa}
+              navigation={navigation}
             />
           </Suspense>
         </ErrorBoundary>
@@ -170,12 +121,12 @@ export default function MainContent({
         <ErrorBoundary>
           <Suspense fallback={<ViewLoader view={currentView} />}>
             <AdvisorView
-              causas={causas}
-              selectedCausa={selectedCausa}
-              selectedCausaId={selectedCausaId}
-              isCausaDetailLoading={isCausaDetailLoading}
+              causas={causaWorkspace.causas}
+              selectedCausa={causaWorkspace.selectedCausa ?? undefined}
+              selectedCausaId={causaWorkspace.selectedCausaId}
+              isCausaDetailLoading={causaWorkspace.isCausaDetailLoading}
               privacyMode={privacyMode}
-              onSelectCausa={setSelectedCausaId}
+              onSelectCausa={causaWorkspace.setSelectedCausaId}
             />
           </Suspense>
         </ErrorBoundary>
@@ -202,7 +153,7 @@ export default function MainContent({
       {currentView === 'reportes' && (
         <ErrorBoundary>
           <Suspense fallback={<ViewLoader view={currentView} />}>
-            <ReportsCenter causas={causas} />
+            <ReportsCenter causas={causaWorkspace.causas} />
           </Suspense>
         </ErrorBoundary>
       )}

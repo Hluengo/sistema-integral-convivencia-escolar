@@ -8,7 +8,7 @@ import type { Notification } from '../../shared/lib/hooks/useNotifications';
 
 interface HeaderActionsProps {
   privacyMode: boolean;
-  setPrivacyMode: (val: boolean) => void;
+  onTogglePrivacyMode: () => void;
   saveStatus?: 'idle' | 'saving' | 'saved' | 'error';
   user?: { email?: string } | null;
   notifications: Notification[];
@@ -23,7 +23,7 @@ const EMPTY_NOTIFICATIONS: never[] = [];
 
 export default function HeaderActions({
   privacyMode,
-  setPrivacyMode,
+  onTogglePrivacyMode,
   saveStatus = 'idle',
   user = null,
   notifications = EMPTY_NOTIFICATIONS,
@@ -44,7 +44,7 @@ export default function HeaderActions({
         onViewAll={onViewAll}
       />
 
-      <PrivacyToggle privacyMode={privacyMode} onToggle={() => setPrivacyMode(!privacyMode)} />
+      <PrivacyToggle privacyMode={privacyMode} onToggle={onTogglePrivacyMode} />
 
       <SaveStatus status={saveStatus} />
 

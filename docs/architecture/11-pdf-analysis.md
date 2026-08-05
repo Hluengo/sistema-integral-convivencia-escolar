@@ -13,7 +13,7 @@ Client uploads PDF → Supabase Storage (disciplinary-processes bucket)
   ├── 1. requireAuth (JWT verification)
   ├── 2. Rate limit check (10 req/min/IP)
   ├── 3. Download PDF from Storage
-  ├── 4. Validate: header %PDF-, size ≤ 10MB
+  ├── 4. Validate: header %PDF-, size ≤ 10MB, pages ≤ 80
   ├── 5. SHA-256 hash
   ├── 6. Text extraction (pdfjs-dist)
   │     ├── Polyfills: DOMMatrix, ImageData, Path2D
@@ -37,11 +37,15 @@ Client uploads PDF → Supabase Storage (disciplinary-processes bucket)
 ### Step 2: Confirm (POST /api/process-disciplinary-pdf/confirm)
 
 ```
-  ├── 1. requireAuth + validation
-  ├── 2. Idempotency check (storagePath + tenantId)
-  ├── 3. Student belongs to tenant
-  ├── 4. Generate process number via RPC (DP-YYYY-NNNN)
-  └── 5. Insert:
+  ├── 1. requireAuth + requireTenant + requireRole
+  │     └── superadmin, admin, direccion, convivencia, inspectoria, profesor_jefe
+  ├── 2. Re-download PDF from Storage and recompute SHA-256
+  ├── 3. Validate request hash and analysisId against the actual file hash
+  ├── 4. Re-parse PDF and accept only confirmed annotations present in parser output
+  ├── 5. Idempotency check (storagePath + tenantId)
+  ├── 6. Student belongs to tenant
+  ├── 7. Generate process number via RPC (DP-YYYY-NNNN)
+  └── 8. Insert:
         ├── disciplinary_processes (status: 'draft')
         ├── disciplinary_process_files
         ├── disciplinary_annotations_detected
@@ -50,8 +54,8 @@ Client uploads PDF → Supabase Storage (disciplinary-processes bucket)
 
 ## Known Issues
 
-| Issue | Status |
-|-------|--------|
-| Vercel 500: pdf.worker.mjs not included | ✅ Fixed (vercel.json includeFiles) |
-| Node polyfills required (pdfjs-dom) | ⚡ Mitigated (as unknown as typeof) |
-| StudentId TEXT vs UUID in inspectorate_records | ❌ Open |
+| Issue                                          | Status                              |
+| ---------------------------------------------- | ----------------------------------- |
+| Vercel 500: pdf.worker.mjs not included        | ✅ Fixed (vercel.json includeFiles) |
+| Node polyfills required (pdfjs-dom)            | ⚡ Mitigated (as unknown as typeof) |
+| StudentId TEXT vs UUID in inspectorate_records | ❌ Open                             |

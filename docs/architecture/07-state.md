@@ -16,8 +16,8 @@
 └──────────────────┬──────────────────────────────────┘
                    │
 ┌──────────────────▼──────────────────────────────────┐
-│              useReducer (Local Form)                 │
-│  useNewCausaForm | useDocumentState                  │
+│              Local Form State                         │
+│  react-hook-form (useNewCausaForm) | useDocumentState │
 └──────────────────┬──────────────────────────────────┘
                    │
 ┌──────────────────▼──────────────────────────────────┐
@@ -29,6 +29,7 @@
 ## Zustand Stores
 
 ### authStore
+
 ```
 State:
   user: User | null
@@ -43,6 +44,7 @@ Side effect: subscribe onAuthStateChange on init
 ```
 
 ### causasStore
+
 ```
 State:
   causas: Causa[]
@@ -57,6 +59,7 @@ Actions:
 ```
 
 ### uiStore
+
 ```
 State:
   currentView: SidebarView
@@ -70,6 +73,7 @@ Actions:
 ```
 
 ### toastStore
+
 ```
 State:
   toasts: ToastItem[]
@@ -87,7 +91,7 @@ const queryClient = new QueryClient({
     queries: {
       retry: 2,
       refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000,  // 5 min default
+      staleTime: 5 * 60 * 1000, // 5 min default
     },
   },
 });
@@ -99,7 +103,9 @@ const queryClient = new QueryClient({
 User edits causa → causasStore.setCausas()
   → useCausasPersistence detects change
   → Debounce 2s
-  → updateCausa() + saveBitacora() + saveChecklist()
+  → updateCausa()
+  → saveBitacora() / saveChecklist()
+      → RPC security invoker: upsert + delete en una transacción por colección
   → saveStatus = 'saved'
   → If error → saveStatus = 'error' + toast
 ```

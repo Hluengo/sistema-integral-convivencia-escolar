@@ -3,7 +3,9 @@
 import { Router } from 'express';
 import { requireAuth } from '../../middleware/auth.js';
 import { requireTenant } from '../../middleware/requireTenant.js';
+import { requireRole } from '../../middleware/requireRole.js';
 import type { AuthenticatedRequest } from '../types';
+import type { ProfileRole } from '../../types';
 import { rateLimit } from '../../middleware/rateLimit.js';
 import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../../middleware/requireMembership.js';
 import {
@@ -12,6 +14,14 @@ import {
 } from '../../lib/disciplinaryPdfAnalysis';
 
 const router = Router();
+const PDF_CONFIRM_ROLES: readonly ProfileRole[] = [
+  'superadmin',
+  'admin',
+  'direccion',
+  'convivencia',
+  'inspectoria',
+  'profesor_jefe',
+];
 // Guard acotado al prefijo propio para no interceptar otras rutas /api/*.
 router.use(
   '/process-disciplinary-pdf',
@@ -64,7 +74,11 @@ function getProcessErrorResponse(error: unknown): { status: number; message: str
     message.includes('Ruta de archivo no válida') ||
     message.includes('El archivo no pertenece') ||
     message.includes('El PDF excede') ||
-    message.includes('PDF válido')
+    message.includes('PDF válido') ||
+    message.includes('demasiadas páginas') ||
+    message.includes('no coincide') ||
+    message.includes('no corresponde') ||
+    message.includes('anotaciones confirmadas')
   ) {
     return { status: 400, message };
   }
@@ -110,41 +124,56 @@ router.post('/process-disciplinary-pdf', requireTenant, async (req, res) => {
   }
 });
 
-router.post('/process-disciplinary-pdf/confirm', requireTenant, async (req, res) => {
-  try {
-    const body = req.body as AuthedRequestBody;
-    const authReq = req as AuthenticatedRequest;
-    const tenantId = authReq.tenantId!;
-    if (!body.bucket || !body.storagePath || !body.fileName || !body.fileHash || !body.studentId) {
-      res.status(400).json({ error: 'Faltan parámetros requeridos para confirmar el proceso' });
-      return;
-    }
+router.post(
+  '/process-disciplinary-pdf/confirm',
+  requireTenant,
+  requireRole(PDF_CONFIRM_ROLES),
+  async (req, res) => {
+    try {
+      const body = req.body as AuthedRequestBody;
+      const authReq = req as AuthenticatedRequest;
+      const tenantId = authReq.tenantId!;
+      if (
+        !body.bucket ||
+        !body.storagePath ||
+        !body.fileName ||
+        !body.fileHash ||
+        !body.studentId
+      ) {
+        res.status(400).json({ error: 'Faltan parámetros requeridos para confirmar el proceso' });
+        return;
+      }
+      if (body.annotations !== undefined && !Array.isArray(body.annotations)) {
+        res.status(400).json({ error: 'Las anotaciones confirmadas no tienen un formato válido.' });
+        return;
+      }
 
-    const result = await confirmDisciplinaryProcess({
-      analysisId: body.analysisId,
-      fileId: body.fileId,
-      bucket: body.bucket,
-      storagePath: body.storagePath,
-      fileName: body.fileName,
-      fileHash: body.fileHash,
-      fileSize: body.fileSize,
-      mimeType: body.mimeType,
-      tenantId,
-      studentId: body.studentId,
-      suggestedLetterType: body.suggestedLetterType || 'none',
-      annotations: body.annotations ?? [],
-      idempotencyKey: body.idempotencyKey,
-      authToken: getBearerToken(req),
-    });
-    res.json(result);
-  } catch (error) {
-    const response = getProcessErrorResponse(error);
-    console.error(
-      'Error confirming disciplinary process:',
-      error instanceof Error ? error.message : error,
-    );
-    res.status(response.status).json({ error: response.message });
-  }
-});
+      const result = await confirmDisciplinaryProcess({
+        analysisId: body.analysisId,
+        fileId: body.fileId,
+        bucket: body.bucket,
+        storagePath: body.storagePath,
+        fileName: body.fileName,
+        fileHash: body.fileHash,
+        fileSize: body.fileSize,
+        mimeType: body.mimeType,
+        tenantId,
+        studentId: body.studentId,
+        suggestedLetterType: body.suggestedLetterType || 'none',
+        annotations: body.annotations ?? [],
+        idempotencyKey: body.idempotencyKey,
+        authToken: getBearerToken(req),
+      });
+      res.json(result);
+    } catch (error) {
+      const response = getProcessErrorResponse(error);
+      console.error(
+        'Error confirming disciplinary process:',
+        error instanceof Error ? error.message : error,
+      );
+      res.status(response.status).json({ error: response.message });
+    }
+  },
+);
 
 export default router;

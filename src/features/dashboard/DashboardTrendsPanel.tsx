@@ -14,6 +14,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import type { Causa } from '../../shared/lib/types';
+import { TrendChart, type ChartSeriesItem, type TrendChartPoint } from '../../shared/ui/charts';
 import {
   buildDashboardTrendSummary,
   type AnnotationTrendRecord,
@@ -27,12 +28,6 @@ interface DashboardTrendsPanelProps {
   annotationTrends?: AnnotationTrendRecord[];
   annotationTrendLoading?: boolean;
   annotationTrendError?: Error | null;
-}
-
-interface TrendSeriesItem {
-  label: string;
-  value: number;
-  className: string;
 }
 
 const TREND_MODE_OPTIONS: Array<{
@@ -49,7 +44,7 @@ const MODE_HELPER_TEXT: Record<TrendMode, string> = {
   annotations: 'Comparación mensual entre anotaciones positivas y negativas.',
 };
 
-function getSeriesForPoint(point: DashboardTrendPoint, mode: TrendMode): TrendSeriesItem[] {
+function getSeriesForPoint(point: DashboardTrendPoint, mode: TrendMode): ChartSeriesItem[] {
   if (mode === 'annotations') {
     return [
       { label: 'Total', value: point.annotations, className: 'bg-neutral-400' },
@@ -70,7 +65,7 @@ function getSeriesForPoint(point: DashboardTrendPoint, mode: TrendMode): TrendSe
   ];
 }
 
-function getModeTotals(points: DashboardTrendPoint[], mode: TrendMode): TrendSeriesItem[] {
+function getModeTotals(points: DashboardTrendPoint[], mode: TrendMode): ChartSeriesItem[] {
   return getSeriesForPoint(
     points.reduce(
       (acc, point) => ({
@@ -104,60 +99,6 @@ function getModeTotals(points: DashboardTrendPoint[], mode: TrendMode): TrendSer
       },
     ),
     mode,
-  );
-}
-
-function MiniBarChart({ points, mode }: { points: DashboardTrendPoint[]; mode: TrendMode }) {
-  const maxValue = Math.max(
-    1,
-    ...points.flatMap((point) => getSeriesForPoint(point, mode).map((s) => s.value)),
-  );
-
-  return (
-    <div
-      className="grid h-52 min-w-[36rem] items-end gap-2 sm:min-w-0"
-      style={{ gridTemplateColumns: `repeat(${points.length}, minmax(0, 1fr))` }}
-      aria-hidden="true"
-    >
-      {points.map((point) => {
-        const series = getSeriesForPoint(point, mode);
-
-        return (
-          <div
-            key={point.key}
-            className={`flex h-full min-w-0 flex-col justify-end gap-2 ${point.isObserved ? '' : 'opacity-35'}`}
-          >
-            <div className="flex h-40 items-end justify-center gap-1">
-              {series.map((item) => {
-                const height =
-                  item.value > 0 ? Math.max(7, Math.round((item.value / maxValue) * 152)) : 3;
-                return (
-                  <div
-                    key={item.label}
-                    className={`w-2.5 rounded-t-sm ${item.className}`}
-                    style={{ height: `${height}px` }}
-                  />
-                );
-              })}
-            </div>
-            <div className="space-y-0.5 text-center">
-              <span
-                className={`block truncate font-medium text-[11px] ${
-                  point.isCurrentMonth ? 'text-neutral-800' : 'text-neutral-400'
-                }`}
-              >
-                {point.label}
-              </span>
-              {point.isCurrentMonth ? (
-                <span className="mx-auto block h-1.5 w-1.5 rounded-full bg-brand-600" />
-              ) : (
-                <span className="block h-1.5" />
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
   );
 }
 
@@ -195,48 +136,6 @@ function SummaryMetric({
   );
 }
 
-function MonthlySummaryRows({ points, mode }: { points: DashboardTrendPoint[]; mode: TrendMode }) {
-  return (
-    <div className="space-y-2">
-      {points.map((point) => {
-        const primary =
-          mode === 'cases'
-            ? `${point.opened} apert. · ${point.closed} cierres`
-            : mode === 'annotations'
-              ? `${point.annotations} total · ${point.positiveAnnotations} pos. · ${point.negativeAnnotations} neg.`
-              : '';
-        const secondary =
-          mode === 'cases'
-            ? point.netLoad > 0
-              ? `Brecha ${point.netLoad}`
-              : 'Sin brecha'
-            : mode === 'annotations'
-              ? `${point.positiveAnnotationShare}% positivas · ${point.negativeAnnotationShare}% negativas`
-              : '';
-
-        return (
-          <div
-            key={point.key}
-            className={`grid grid-cols-[3.25rem_minmax(0,1fr)_auto] items-center gap-3 rounded-lg px-2 py-1.5 text-xs ${
-              point.isCurrentMonth
-                ? 'bg-brand-50 text-brand-800'
-                : point.isObserved
-                  ? 'bg-white text-neutral-700'
-                  : 'bg-neutral-100 text-neutral-400'
-            }`}
-          >
-            <span className="font-semibold capitalize">{point.label}</span>
-            <span className="min-w-0 truncate">{point.isObserved ? primary : 'Mes pendiente'}</span>
-            <span className="font-medium tabular-nums">
-              {point.isObserved ? secondary : 'Pend.'}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 export default function DashboardTrendsPanel({
   causas,
   annotationTrends = [],
@@ -250,6 +149,23 @@ export default function DashboardTrendsPanel({
   );
   const observedPoints = summary.points.filter((point) => point.isObserved);
   const activeModeTotals = getModeTotals(observedPoints, mode);
+  const chartPoints: TrendChartPoint[] = summary.points.map((point) => ({
+    key: point.key,
+    label: point.label,
+    series: getSeriesForPoint(point, mode),
+    primary:
+      mode === 'cases'
+        ? `${point.opened} apert. · ${point.closed} cierres`
+        : `${point.annotations} total · ${point.positiveAnnotations} pos. · ${point.negativeAnnotations} neg.`,
+    secondary:
+      mode === 'cases'
+        ? point.netLoad > 0
+          ? `Brecha ${point.netLoad}`
+          : 'Sin brecha'
+        : `${point.positiveAnnotationShare}% positivas · ${point.negativeAnnotationShare}% negativas`,
+    isObserved: point.isObserved,
+    isCurrent: point.isCurrentMonth,
+  }));
   const hasData = summary.points.some(
     (point) => point.opened > 0 || point.closed > 0 || point.annotations > 0,
   );
@@ -368,37 +284,15 @@ export default function DashboardTrendsPanel({
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white px-4 py-3">
-          <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-neutral-500 text-xs">
-            {activeModeTotals.map((item) => (
-              <span key={item.label} className="inline-flex items-center gap-1.5">
-                <span className={`h-2.5 w-2.5 rounded-sm ${item.className}`} aria-hidden="true" />
-                {item.label}
-              </span>
-            ))}
-            <span className="inline-flex items-center gap-1.5 text-neutral-400">
-              <span className="h-2.5 w-2.5 rounded-full bg-brand-600" aria-hidden="true" />
-              Mes actual
-            </span>
-          </div>
-          <MiniBarChart points={summary.points} mode={mode} />
-        </div>
-
-        <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="font-semibold text-neutral-700 text-sm">Resumen mensual</p>
-              <p className="mt-1 text-neutral-500 text-xs">Meses futuros se muestran pendientes.</p>
-            </div>
-            <span className="rounded-full bg-white px-2 py-1 font-semibold text-neutral-500 text-[10px] uppercase tracking-wide">
-              {TREND_MODE_OPTIONS.find((option) => option.id === mode)?.label}
-            </span>
-          </div>
-          <div className="mt-4">
-            <MonthlySummaryRows points={summary.points} mode={mode} />
-          </div>
-        </div>
+      <div className="mt-4">
+        <TrendChart
+          points={chartPoints}
+          legend={activeModeTotals}
+          title="Resumen mensual"
+          description="Meses futuros se muestran pendientes."
+          badge={TREND_MODE_OPTIONS.find((option) => option.id === mode)?.label ?? 'Vista'}
+          activeLabel="Mes actual"
+        />
       </div>
 
       {annotationTrendError ? (

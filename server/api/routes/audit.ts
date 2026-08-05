@@ -4,7 +4,7 @@ import { Router } from 'express';
 import { requireAuth } from '../../middleware/auth.js';
 import {
   isRequestValidationError,
-  sanitizeForAI,
+  redactSensitiveForAI,
   requireStr,
   optStr,
   optArr,
@@ -30,13 +30,17 @@ router.post(
       const checkedItems = optArr(body, 'checkedItems');
       const bitacora = optArr(body, 'bitacora');
       const observations = optStr(body, 'observations', 5000);
+      const knownSensitiveValues = [id, infractionType, observations];
 
       const safeHistory = (bitacora as Array<Record<string, unknown>>)
         .map((entry) => ({
-          title: sanitizeForAI(entry.titulo).slice(0, 200),
-          date: sanitizeForAI(entry.fecha).slice(0, 50),
-          type: sanitizeForAI(entry.tipo).slice(0, 80),
-          description: sanitizeForAI(entry.descripcion).slice(0, 2_000),
+          title: redactSensitiveForAI(entry.titulo, knownSensitiveValues).slice(0, 200),
+          date: redactSensitiveForAI(entry.fecha, knownSensitiveValues).slice(0, 50),
+          type: redactSensitiveForAI(entry.tipo, knownSensitiveValues).slice(0, 80),
+          description: redactSensitiveForAI(entry.descripcion, knownSensitiveValues).slice(
+            0,
+            2_000,
+          ),
         }))
         .slice(0, 100);
       const legalSources = await getRelevantLegalSources(
@@ -51,12 +55,12 @@ FUENTES JURÍDICAS AUTORIZADAS:
 ${legalSources}
 
 EXPEDIENTE CITADO:
-- Código: ${sanitizeForAI(id)}
-- Materia registrada: ${sanitizeForAI(infractionType)}
+- Código: ${redactSensitiveForAI(id, knownSensitiveValues)}
+- Materia registrada: ${redactSensitiveForAI(infractionType, knownSensitiveValues)}
 - Referencia de procedimiento especial informada por el expediente: ${isAulaSegura ? 'Sí' : 'No'}
-- Checklist registrado: ${JSON.stringify(checkedItems, null, 2)}
+- Checklist registrado: ${redactSensitiveForAI(JSON.stringify(checkedItems, null, 2), knownSensitiveValues)}
 - Hitos registrados: ${JSON.stringify(safeHistory, null, 2)}
-- Observaciones: ${sanitizeForAI(observations)}
+- Observaciones: ${redactSensitiveForAI(observations, knownSensitiveValues)}
 
 Evalúa exclusivamente estas garantías:
 1. Existencia de una norma previa.

@@ -146,18 +146,22 @@ describe('components legacy compatibility layer', () => {
   });
 
   it('la app consume Sidebar desde widgets/sidebar', async () => {
-    const appContent = await readFile(join(srcDir, 'app', 'App.tsx'), 'utf8');
+    const lazyComponents = await readFile(join(srcDir, 'app', 'lazyAppComponents.ts'), 'utf8');
 
     assert.ok(
-      appContent.includes("const Sidebar = lazy(() => import('../widgets/sidebar/Sidebar'));"),
+      lazyComponents.includes(
+        "export const Sidebar = lazy(() => import('../widgets/sidebar/Sidebar'));",
+      ),
     );
   });
 
   it('la app consume Header desde widgets/header', async () => {
-    const appContent = await readFile(join(srcDir, 'app', 'App.tsx'), 'utf8');
+    const lazyComponents = await readFile(join(srcDir, 'app', 'lazyAppComponents.ts'), 'utf8');
 
     assert.ok(
-      appContent.includes("const Header = lazy(() => import('../widgets/header/Header'));"),
+      lazyComponents.includes(
+        "export const Header = lazy(() => import('../widgets/header/Header'));",
+      ),
     );
   });
 
@@ -206,11 +210,11 @@ describe('components legacy compatibility layer', () => {
   });
 
   it('la app consume ShortcutsModal desde shared/ui', async () => {
-    const appContent = await readFile(join(srcDir, 'app', 'App.tsx'), 'utf8');
+    const lazyComponents = await readFile(join(srcDir, 'app', 'lazyAppComponents.ts'), 'utf8');
 
     assert.ok(
-      appContent.includes(
-        "const ShortcutsModal = lazy(() => import('../shared/ui/ShortcutsModal'));",
+      lazyComponents.includes(
+        "export const ShortcutsModal = lazy(() => import('../shared/ui/ShortcutsModal'));",
       ),
     );
   });

@@ -36,6 +36,7 @@ __export(disciplinaryPdfAnalysis_exports, {
   extractDisciplinaryMetadataForTest: () => extractDisciplinaryMetadataForTest,
   extractPdfPages: () => extractPdfPages,
   parseDisciplinaryTextPagesForTest: () => parseDisciplinaryTextPagesForTest,
+  prepareConfirmedAnnotationsForTest: () => prepareConfirmedAnnotationsForTest,
   selectNewAnnotationsForLegacySync: () => selectNewAnnotationsForLegacySync,
 });
 import { createHash } from 'node:crypto';
@@ -146,21 +147,22 @@ async function extractPdfPages(buffer) {
     useWorkerFetch: false,
     isEvalSupported: false,
   }).promise;
+  if (pdf.numPages > MAX_PDF_PAGES) {
+    throw new Error(`El PDF tiene demasiadas p\xE1ginas. M\xE1ximo permitido: ${MAX_PDF_PAGES}.`);
+  }
   const pages = [];
-  const pagePromises = Array.from({ length: pdf.numPages }, (_, i) => i + 1).map(
-    async (pageNumber) => {
-      const page = await pdf.getPage(pageNumber);
-      const content = await page.getTextContent();
-      return content.items
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+    const page = await pdf.getPage(pageNumber);
+    const content = await page.getTextContent();
+    pages.push(
+      content.items
         .map((item) => (item.str ?? '') + (item.hasEOL ? '\n' : ' '))
         .join('')
         .replace(/[^\S\n]+/g, ' ')
         .replace(/\s*\n\s*/g, '\n')
-        .trim();
-    },
-  );
-  const resolvedPages = await Promise.all(pagePromises);
-  pages.push(...resolvedPages);
+        .trim(),
+    );
+  }
   return pages;
 }
 function extractCourse(text) {
@@ -319,6 +321,58 @@ function summarizeAnnotations(annotations) {
     },
     { negativas: 0, positivas: 0, informativas: 0 },
   );
+}
+function isAnnotationType(value) {
+  return value === 'negative' || value === 'positive' || value === 'information';
+}
+function sanitizeConfirmedAnnotationText(value) {
+  if (typeof value !== 'string') return '';
+  return value
+    .replaceAll(String.fromCharCode(0), '')
+    .trim()
+    .slice(0, MAX_CONFIRMED_ANNOTATION_TEXT);
+}
+function sanitizeIsoDate(value, fallback) {
+  if (typeof value !== 'string') return fallback;
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : fallback;
+}
+function prepareConfirmedAnnotations(annotations, parsedAnnotations) {
+  if (annotations.length > MAX_CONFIRMED_ANNOTATIONS) {
+    throw new Error('Las anotaciones confirmadas superan el m\xE1ximo permitido.');
+  }
+  const parsedBySequence = new Map(
+    parsedAnnotations.map((annotation) => [annotation.sequence_number, annotation]),
+  );
+  return annotations.map((annotation, index) => {
+    if (!isAnnotationType(annotation.type)) {
+      throw new Error('Las anotaciones confirmadas contienen una clasificaci\xF3n no v\xE1lida.');
+    }
+    const sequenceNumber = Number(annotation.sequence_number || index + 1);
+    const parsed = parsedBySequence.get(sequenceNumber);
+    if (!parsed) {
+      throw new Error('Las anotaciones confirmadas no corresponden al PDF analizado.');
+    }
+    const rawText = sanitizeConfirmedAnnotationText(annotation.raw_text);
+    if (!rawText) {
+      throw new Error('Las anotaciones confirmadas contienen texto vac\xEDo.');
+    }
+    const confidence = Number(annotation.confidence ?? parsed.confidence);
+    return {
+      raw_text: rawText,
+      normalized_text: normalizeText(rawText),
+      type: annotation.type,
+      page_number: parsed.page_number,
+      sequence_number: parsed.sequence_number,
+      detected_date: sanitizeIsoDate(annotation.detected_date, parsed.detected_date),
+      detected_teacher: sanitizeConfirmedAnnotationText(
+        annotation.detected_teacher ?? parsed.detected_teacher ?? '',
+      ).slice(0, 100),
+      confidence: Number.isFinite(confidence) ? Math.max(0, Math.min(1, confidence)) : 0.8,
+    };
+  });
+}
+function prepareConfirmedAnnotationsForTest(annotations, parsedAnnotations) {
+  return prepareConfirmedAnnotations(annotations, parsedAnnotations);
 }
 function getNameParts(value) {
   return normalizeText(value)
@@ -655,8 +709,7 @@ async function findDuplicateFileByHash(supabase, tenantId, fileHash) {
     uploaded_at: String(duplicateFile.uploaded_at),
   };
 }
-async function analyzeDisciplinaryPdf(input) {
-  const supabase = getSupabaseAdmin(input.authToken);
+async function loadAndParsePdf(supabase, input) {
   assertStoragePathAllowed(input.bucket, input.storagePath, input.tenantId);
   const { data: fileBlob, error: downloadError } = await supabase.storage
     .from(input.bucket)
@@ -673,14 +726,33 @@ async function analyzeDisciplinaryPdf(input) {
   const fileHash = createHash('sha256').update(bytes).digest('hex');
   const pages = await extractPdfPages(bytes);
   const textContent = pages.join('\n');
+  const annotations = normalizeText(textContent).length < 20 ? [] : parseAnnotationsByPage(pages);
+  const summary = summarizeAnnotations(annotations);
+  return { bytes, fileHash, pages, textContent, annotations, summary };
+}
+async function assertAnalysisMatchesFile(supabase, tenantId, analysisId, fileHash) {
+  if (!analysisId) return;
+  const { data, error } = await supabase
+    .from('document_analyses')
+    .select('id,file_hash,status')
+    .eq('id', analysisId)
+    .eq('tenant_id', tenantId)
+    .maybeSingle();
+  if (error) throw new Error('No fue posible validar el an\xE1lisis previo del PDF');
+  if (!data) throw new Error('El an\xE1lisis informado no corresponde al establecimiento activo');
+  if (data.file_hash !== fileHash) {
+    throw new Error('El an\xE1lisis informado no coincide con el PDF confirmado');
+  }
+}
+async function analyzeDisciplinaryPdf(input) {
+  const supabase = getSupabaseAdmin(input.authToken);
+  const { fileHash, textContent, annotations, summary } = await loadAndParsePdf(supabase, input);
   const warnings = [];
   if (normalizeText(textContent).length < 20) {
     warnings.push('El PDF no contiene texto seleccionable suficiente. Puede requerir OCR.');
   }
   const detectedStudentName = extractStudentName(textContent);
   const detectedCourse = extractCourse(textContent);
-  const annotations = normalizeText(textContent).length < 20 ? [] : parseAnnotationsByPage(pages);
-  const summary = summarizeAnnotations(annotations);
   const [recommendedLetterType, studentMatch, duplicateFile] = await Promise.all([
     getSuggestedLetter(supabase, input.tenantId, summary),
     findStudentCandidates(supabase, input.tenantId, detectedStudentName, detectedCourse),
@@ -753,18 +825,27 @@ async function analyzeDisciplinaryPdf(input) {
 }
 async function confirmDisciplinaryProcess(input) {
   const supabase = getSupabaseAdmin(input.authToken);
-  assertStoragePathAllowed(input.bucket, input.storagePath, input.tenantId);
+  const parsedPdf = await loadAndParsePdf(supabase, input);
+  if (input.fileHash && input.fileHash !== parsedPdf.fileHash) {
+    throw new Error('El hash informado no coincide con el PDF confirmado');
+  }
+  await assertAnalysisMatchesFile(supabase, input.tenantId, input.analysisId, parsedPdf.fileHash);
+  const confirmedInput = {
+    ...input,
+    fileHash: parsedPdf.fileHash,
+    annotations: prepareConfirmedAnnotations(input.annotations, parsedPdf.annotations),
+  };
   const { data: student, error: studentError } = await supabase
     .from('students')
     .select('id, tenant_id, full_name, course_id')
-    .eq('id', input.studentId)
-    .eq('tenant_id', input.tenantId)
+    .eq('id', confirmedInput.studentId)
+    .eq('tenant_id', confirmedInput.tenantId)
     .maybeSingle();
   if (studentError || !student) {
     throw new Error('El estudiante seleccionado no pertenece al establecimiento activo');
   }
   const summary = summarizeAnnotations(
-    input.annotations.map((annotation, index) => ({
+    confirmedInput.annotations.map((annotation, index) => ({
       raw_text: annotation.raw_text,
       normalized_text: annotation.normalized_text ?? normalizeText(annotation.raw_text),
       type: annotation.type,
@@ -781,8 +862,8 @@ async function confirmDisciplinaryProcess(input) {
     const { data: existing } = await supabase
       .from('disciplinary_process_files')
       .select('process_id, disciplinary_processes(process_number)')
-      .eq('tenant_id', input.tenantId)
-      .eq('storage_path', input.storagePath)
+      .eq('tenant_id', confirmedInput.tenantId)
+      .eq('storage_path', confirmedInput.storagePath)
       .maybeSingle();
     if (existing && existing.process_id) {
       const nested = existing.disciplinary_processes;
@@ -790,7 +871,7 @@ async function confirmDisciplinaryProcess(input) {
       const existingProcessNumber = nested?.process_number ?? '';
       const insertedAnnotations2 = await syncConfirmedProcessToLegacyViews(
         supabase,
-        input,
+        confirmedInput,
         existingProcessId,
         existingProcessNumber,
         summary,
@@ -804,7 +885,11 @@ async function confirmDisciplinaryProcess(input) {
       };
     }
   }
-  const duplicateFile = await findDuplicateFileByHash(supabase, input.tenantId, input.fileHash);
+  const duplicateFile = await findDuplicateFileByHash(
+    supabase,
+    confirmedInput.tenantId,
+    confirmedInput.fileHash,
+  );
   if (duplicateFile) {
     throw new Error(
       `Este PDF ya fue registrado en el proceso ${duplicateFile.process_number}. No se cre\xF3 un duplicado.`,
@@ -813,18 +898,18 @@ async function confirmDisciplinaryProcess(input) {
   const { data: processNumber, error: numberError } = await supabase.rpc(
     'generate_process_number',
     {
-      p_tenant_id: input.tenantId,
+      p_tenant_id: confirmedInput.tenantId,
     },
   );
   if (numberError || !processNumber) throw new Error('Error al generar n\xFAmero de proceso');
   const { data: processRow, error: processError } = await supabase
     .from('disciplinary_processes')
     .insert({
-      student_id: input.studentId,
+      student_id: confirmedInput.studentId,
       process_number: processNumber,
       status: 'draft',
-      tenant_id: input.tenantId,
-      suggested_letter_type: input.suggestedLetterType || 'none',
+      tenant_id: confirmedInput.tenantId,
+      suggested_letter_type: confirmedInput.suggestedLetterType || 'none',
       total_negativas: summary.negativas,
       total_positivas: summary.positivas,
       total_informativas: summary.informativas,
@@ -834,9 +919,9 @@ async function confirmDisciplinaryProcess(input) {
     .single();
   if (processError || !processRow) throw new Error('Error al crear proceso disciplinario');
   const processId = processRow.id;
-  const confirmedAnnotations = input.annotations.map((annotation, index) => ({
+  const confirmedAnnotations = confirmedInput.annotations.map((annotation, index) => ({
     process_id: processId,
-    student_id: input.studentId,
+    student_id: confirmedInput.studentId,
     annotation_type:
       annotation.type === 'negative'
         ? 'Negativa'
@@ -856,22 +941,22 @@ async function confirmDisciplinaryProcess(input) {
     confidence: annotation.confidence ?? 0.8,
     parser_version: PARSER_VERSION,
     confirmed_annotation_type: annotation.type,
-    tenant_id: input.tenantId,
+    tenant_id: confirmedInput.tenantId,
   }));
   const { error: fileError } = await supabase.from('disciplinary_process_files').insert({
     process_id: processId,
-    file_name: input.fileName,
-    storage_path: input.storagePath,
-    file_size: input.fileSize ?? 0,
-    mime_type: input.mimeType ?? 'application/pdf',
-    file_hash: input.fileHash,
-    bucket: input.bucket,
-    original_file_name: input.fileName,
-    stored_file_name: input.storagePath.split('/').pop() || input.fileName,
+    file_name: confirmedInput.fileName,
+    storage_path: confirmedInput.storagePath,
+    file_size: confirmedInput.fileSize ?? 0,
+    mime_type: confirmedInput.mimeType ?? 'application/pdf',
+    file_hash: confirmedInput.fileHash,
+    bucket: confirmedInput.bucket,
+    original_file_name: confirmedInput.fileName,
+    stored_file_name: confirmedInput.storagePath.split('/').pop() || confirmedInput.fileName,
     processing_status: 'confirmed',
     analysis_version: PARSER_VERSION,
-    student_id: input.studentId,
-    tenant_id: input.tenantId,
+    student_id: confirmedInput.studentId,
+    tenant_id: confirmedInput.tenantId,
   });
   if (fileError) throw new Error('Error al vincular el PDF al proceso');
   if (confirmedAnnotations.length > 0) {
@@ -882,22 +967,22 @@ async function confirmDisciplinaryProcess(input) {
   }
   const insertedAnnotations = await syncConfirmedProcessToLegacyViews(
     supabase,
-    input,
+    confirmedInput,
     processId,
     String(processRow.process_number),
     summary,
     student,
   );
   await supabase.from('document_analyses').insert({
-    student_id: input.studentId,
-    file_name: input.fileName,
+    student_id: confirmedInput.studentId,
+    file_name: confirmedInput.fileName,
     negativas: summary.negativas,
     positivas: summary.positivas,
     informativas: summary.informativas,
-    tenant_id: input.tenantId,
+    tenant_id: confirmedInput.tenantId,
     status: 'confirmed',
     process_id: processId,
-    file_hash: input.fileHash,
+    file_hash: confirmedInput.fileHash,
     parser_version: PARSER_VERSION,
     confirmed_at: /* @__PURE__ */ new Date().toISOString(),
   });
@@ -911,6 +996,9 @@ async function confirmDisciplinaryProcess(input) {
 var PARSER_VERSION,
   PDF_BUCKET,
   MAX_PDF_BYTES,
+  MAX_PDF_PAGES,
+  MAX_CONFIRMED_ANNOTATIONS,
+  MAX_CONFIRMED_ANNOTATION_TEXT,
   NodeDomMatrixPolyfill,
   NodeImageDataPolyfill,
   NodePath2DPolyfill;
@@ -921,6 +1009,9 @@ var init_disciplinaryPdfAnalysis = __esm({
     PARSER_VERSION = 'disciplinary-pdf-parser-v1';
     PDF_BUCKET = 'disciplinary-processes';
     MAX_PDF_BYTES = 10 * 1024 * 1024;
+    MAX_PDF_PAGES = 80;
+    MAX_CONFIRMED_ANNOTATIONS = 300;
+    MAX_CONFIRMED_ANNOTATION_TEXT = 4e3;
     NodeDomMatrixPolyfill = class _NodeDomMatrixPolyfill {
       constructor(init) {
         this.a = 1;
@@ -1711,13 +1802,44 @@ function sanitizeForAI(text) {
     .replace(/<\|im_start\|>|<\|im_end\|>/gi, '')
     .replace(/<\|system\|>|<\|user\|>|<\|assistant\|>/gi, '')
     .replace(
-      /^(ignore|olvida|disregard|anula).{0,50}(instrucciones|instructions|reglas|rules|sistema|system)/gim,
+      /^(ignore|ignora|olvida|disregard|anula).{0,50}(instrucciones|instructions|reglas|rules|sistema|system)/gim,
       '',
     )
     .replace(
       /(eres|you are|act as|actúa como|actuá como).{0,30}(un|a|el|la|un(a)?\s+abogado|lawyer|juez|judge)/gim,
       '',
     )
+    .replace(/\n{3,}/g, '\n\n')
+    .slice(0, MAX_STR);
+}
+var EMAIL_RE = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
+var CHILEAN_RUT_RE = /\b(?:\d{1,2}\.?\d{3}\.?\d{3}-?[\dkK]|\d{7,8}-[\dkK])\b/g;
+var CHILEAN_PHONE_RE = /(?:\+?56\s*)?(?:9\s*)?\b\d{4}\s*\d{4}\b/g;
+var LABELLED_NAME_RE =
+  /\b(estudiante|alumno|alumna|apoderado|apoderada|madre|padre)\s+([A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+(?:\s+[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+){1,4})/g;
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+function uniqueKnownValues(values) {
+  return [
+    ...new Set(
+      values
+        .filter((value) => typeof value === 'string')
+        .map((value) => value.trim())
+        .filter((value) => value.length >= 3),
+    ),
+  ].sort((a, b) => b.length - a.length);
+}
+function redactSensitiveForAI(text, knownValues = []) {
+  let redacted = sanitizeForAI(text);
+  for (const value of uniqueKnownValues(knownValues)) {
+    redacted = redacted.replace(new RegExp(escapeRegExp(value), 'gi'), '[dato personal]');
+  }
+  return redacted
+    .replace(EMAIL_RE, '[correo]')
+    .replace(CHILEAN_RUT_RE, '[RUT]')
+    .replace(CHILEAN_PHONE_RE, '[tel\xE9fono]')
+    .replace(LABELLED_NAME_RE, '$1 [nombre]')
     .replace(/\n{3,}/g, '\n\n')
     .slice(0, MAX_STR);
 }
@@ -2207,13 +2329,13 @@ router.post(
         res.status(400).json({ error: 'Contexto de mejora no v\xE1lido.' });
         return;
       }
-      const cacheKey = getCacheKey('improve-text', { text, context });
+      const userContent = redactSensitiveForAI(text);
+      const cacheKey = getCacheKey('improve-text', { text: userContent, context });
       const cached = getFromCache(cacheKey);
       if (cached) {
         res.json({ success: true, improved: cached, cached: true });
         return;
       }
-      const userContent = sanitizeForAI(text);
       const contextInstruction =
         context && context in IMPROVEMENT_CONTEXTS ? IMPROVEMENT_CONTEXTS[context] : void 0;
       const request = [
@@ -2447,7 +2569,7 @@ function normalizeHistory(value) {
     if (typeof record.content !== 'string' || record.content.length > MAX_HISTORY_MESSAGE_LENGTH) {
       return null;
     }
-    const content = sanitizeForAI(record.content).trim();
+    const content = redactSensitiveForAI(record.content).trim();
     if (!content) return null;
     totalLength += content.length;
     if (totalLength > MAX_HISTORY_TOTAL_LENGTH) return null;
@@ -2478,7 +2600,8 @@ router2.post(
         });
         return;
       }
-      const legalSources = await getRelevantLegalSources(message);
+      const safeMessage = redactSensitiveForAI(message);
+      const legalSources = await getRelevantLegalSources(safeMessage);
       const systemInstruction = `Eres el Consultor Legal de Convivencia Escolar de un establecimiento chileno.
 
 Responde \xFAnicamente desde las FUENTES JUR\xCDDICAS AUTORIZADAS incluidas abajo. Estas fuentes pueden contener normativa educacional, derechos de ni\xF1os, ni\xF1as y adolescentes, circulares, resoluciones de la Superintendencia y reglamentos o protocolos institucionales vigentes que el establecimiento haya versionado.
@@ -2495,7 +2618,7 @@ ${legalSources}`;
       const userId = req.user?.sub || 'anonymous';
       const cacheKey = getCacheKey('advisor-chat', {
         userId,
-        message,
+        message: safeMessage,
         history: normalizedHistory,
       });
       const cached = getFromCache(cacheKey);
@@ -2504,7 +2627,7 @@ ${legalSources}`;
         return;
       }
       const messages = [...normalizedHistory];
-      messages.push({ role: 'user', content: sanitizeForAI(message) });
+      messages.push({ role: 'user', content: safeMessage });
       const reply = await callOpenRouter(messages, systemInstruction);
       setCache(cacheKey, reply);
       res.json({ success: true, reply });
@@ -2533,12 +2656,13 @@ router3.post(
       const checkedItems = optArr(body, 'checkedItems');
       const bitacora = optArr(body, 'bitacora');
       const observations = optStr(body, 'observations', 5e3);
+      const knownSensitiveValues = [id, infractionType, observations];
       const safeHistory = bitacora
         .map((entry) => ({
-          title: sanitizeForAI(entry.titulo).slice(0, 200),
-          date: sanitizeForAI(entry.fecha).slice(0, 50),
-          type: sanitizeForAI(entry.tipo).slice(0, 80),
-          description: sanitizeForAI(entry.descripcion).slice(0, 2e3),
+          title: redactSensitiveForAI(entry.titulo, knownSensitiveValues).slice(0, 200),
+          date: redactSensitiveForAI(entry.fecha, knownSensitiveValues).slice(0, 50),
+          type: redactSensitiveForAI(entry.tipo, knownSensitiveValues).slice(0, 80),
+          description: redactSensitiveForAI(entry.descripcion, knownSensitiveValues).slice(0, 2e3),
         }))
         .slice(0, 100);
       const legalSources = await getRelevantLegalSources(
@@ -2552,12 +2676,12 @@ FUENTES JUR\xCDDICAS AUTORIZADAS:
 ${legalSources}
 
 EXPEDIENTE CITADO:
-- C\xF3digo: ${sanitizeForAI(id)}
-- Materia registrada: ${sanitizeForAI(infractionType)}
+- C\xF3digo: ${redactSensitiveForAI(id, knownSensitiveValues)}
+- Materia registrada: ${redactSensitiveForAI(infractionType, knownSensitiveValues)}
 - Referencia de procedimiento especial informada por el expediente: ${isAulaSegura ? 'S\xED' : 'No'}
-- Checklist registrado: ${JSON.stringify(checkedItems, null, 2)}
+- Checklist registrado: ${redactSensitiveForAI(JSON.stringify(checkedItems, null, 2), knownSensitiveValues)}
 - Hitos registrados: ${JSON.stringify(safeHistory, null, 2)}
-- Observaciones: ${sanitizeForAI(observations)}
+- Observaciones: ${redactSensitiveForAI(observations, knownSensitiveValues)}
 
 Eval\xFAa exclusivamente estas garant\xEDas:
 1. Existencia de una norma previa.
@@ -2939,29 +3063,44 @@ router4.post(
       const medidasEjecutadas = optArr(body, 'medidasEjecutadas');
       const bitacora = optArr(body, 'bitacora');
       const checklist = optArr(body, 'checklist');
+      const knownSensitiveValues = [
+        studentName,
+        fatherName,
+        managerName,
+        ...bitacora.flatMap((entry) =>
+          entry && typeof entry === 'object' && Array.isArray(entry.participantes)
+            ? entry.participantes
+            : [],
+        ),
+        ...checklist.flatMap((item) =>
+          item && typeof item === 'object' ? [item.registradoPor, item.observaciones] : [],
+        ),
+      ];
       const safeMeasures = medidasEjecutadas
-        .map((value) => sanitize(value).slice(0, 500))
+        .map((value) => redactSensitiveForAI(value, knownSensitiveValues).slice(0, 500))
         .slice(0, contextLimits.measures);
       const safeHistory = bitacora
         .map((entry) => ({
-          title: sanitize(entry.titulo).slice(0, 200),
-          date: sanitize(entry.fecha).slice(0, 50),
-          type: sanitize(entry.tipo).slice(0, 80),
-          description: sanitize(entry.descripcion).slice(0, 2500),
+          title: redactSensitiveForAI(entry.titulo, knownSensitiveValues).slice(0, 200),
+          date: redactSensitiveForAI(entry.fecha, knownSensitiveValues).slice(0, 50),
+          type: redactSensitiveForAI(entry.tipo, knownSensitiveValues).slice(0, 80),
+          description: redactSensitiveForAI(entry.descripcion, knownSensitiveValues).slice(0, 2500),
           people: Array.isArray(entry.participantes)
-            ? entry.participantes.map((value) => sanitize(value).slice(0, 100)).slice(0, 20)
+            ? entry.participantes
+                .map((value) => redactSensitiveForAI(value, knownSensitiveValues).slice(0, 100))
+                .slice(0, 20)
             : [],
           document: sanitize(entry.documentoAdjunto).slice(0, 200),
         }))
         .slice(0, contextLimits.historyEntries);
       const safeChecklist = checklist
         .map((item) => ({
-          label: sanitize(item.label).slice(0, 300),
+          label: redactSensitiveForAI(item.label, knownSensitiveValues).slice(0, 300),
           complete: Boolean(item.completado),
-          description: sanitize(item.descripcion).slice(0, 1e3),
-          by: sanitize(item.registradoPor).slice(0, 200),
-          date: sanitize(item.fechaCompletado).slice(0, 50),
-          notes: sanitize(item.observaciones).slice(0, 1e3),
+          description: redactSensitiveForAI(item.descripcion, knownSensitiveValues).slice(0, 1e3),
+          by: redactSensitiveForAI(item.registradoPor, knownSensitiveValues).slice(0, 200),
+          date: redactSensitiveForAI(item.fechaCompletado, knownSensitiveValues).slice(0, 50),
+          notes: redactSensitiveForAI(item.observaciones, knownSensitiveValues).slice(0, 1e3),
           document: sanitize(item.documentoNombre).slice(0, 200),
           documentPath: sanitize(item.documentoUrl).slice(0, 500),
         }))
@@ -2986,15 +3125,15 @@ router4.post(
 
 ## Datos generales
 - C\xF3digo de causa: ${sanitizeForAI(id)}
-- Estudiante: ${sanitizeForAI(studentName)}
+- Estudiante: ${redactSensitiveForAI(studentName, knownSensitiveValues)}
 - Curso: ${sanitizeForAI(course) || 'No registrado'}
-- Apoderado/a o adulto responsable: ${sanitizeForAI(fatherName) || 'No registrado'}
-- Responsable actual: ${sanitizeForAI(managerName) || 'No registrado'}
+- Apoderado/a o adulto responsable: ${redactSensitiveForAI(fatherName, knownSensitiveValues) || 'No registrado'}
+- Responsable actual: ${redactSensitiveForAI(managerName, knownSensitiveValues) || 'No registrado'}
 - Fecha de apertura: ${sanitizeForAI(fechaApertura) || 'No registrada'}
 - Estado actual: ${sanitizeForAI(estadoActual) || 'No registrado'}
 - \xDAltima actualizaci\xF3n: ${sanitizeForAI(fechaUltimaActualizacion) || 'No registrada'}
-- Materia o conducta registrada: ${sanitizeForAI(infractionType) || 'No registrada'}
-- Observaciones iniciales: ${sanitizeForAI(observations) || 'Sin observaciones registradas'}
+- Materia o conducta registrada: ${redactSensitiveForAI(infractionType, knownSensitiveValues) || 'No registrada'}
+- Observaciones iniciales: ${redactSensitiveForAI(observations, knownSensitiveValues) || 'Sin observaciones registradas'}
 
 ## Medidas y actuaciones registradas
 ${stringifyList(safeMeasures, 'No se registran medidas ejecutadas.')}
@@ -3041,7 +3180,7 @@ ${
         .map(
           (document2) => `
 ### ${document2.name}
-${document2.text ? document2.text : `Estado de extracci\xF3n: ${document2.reason}`}`,
+${document2.text ? redactSensitiveForAI(document2.text, knownSensitiveValues) : `Estado de extracci\xF3n: ${document2.reason}`}`,
         )
         .join('\n')
     : 'No hay documentos asociados identificados en historial o checklist.'
@@ -3341,6 +3480,14 @@ var parse_default = router7;
 import { Router as Router8 } from 'express';
 init_disciplinaryPdfAnalysis();
 var router8 = Router8();
+var PDF_CONFIRM_ROLES = [
+  'superadmin',
+  'admin',
+  'direccion',
+  'convivencia',
+  'inspectoria',
+  'profesor_jefe',
+];
 router8.use(
   '/process-disciplinary-pdf',
   requireAuth,
@@ -3364,7 +3511,11 @@ function getProcessErrorResponse(error) {
     message.includes('Ruta de archivo no v\xE1lida') ||
     message.includes('El archivo no pertenece') ||
     message.includes('El PDF excede') ||
-    message.includes('PDF v\xE1lido')
+    message.includes('PDF v\xE1lido') ||
+    message.includes('demasiadas p\xE1ginas') ||
+    message.includes('no coincide') ||
+    message.includes('no corresponde') ||
+    message.includes('anotaciones confirmadas')
   ) {
     return { status: 400, message };
   }
@@ -3405,41 +3556,60 @@ router8.post('/process-disciplinary-pdf', requireTenant, async (req, res) => {
     res.status(response.status).json({ error: response.message });
   }
 });
-router8.post('/process-disciplinary-pdf/confirm', requireTenant, async (req, res) => {
-  try {
-    const body = req.body;
-    const authReq = req;
-    const tenantId = authReq.tenantId;
-    if (!body.bucket || !body.storagePath || !body.fileName || !body.fileHash || !body.studentId) {
-      res.status(400).json({ error: 'Faltan par\xE1metros requeridos para confirmar el proceso' });
-      return;
+router8.post(
+  '/process-disciplinary-pdf/confirm',
+  requireTenant,
+  requireRole(PDF_CONFIRM_ROLES),
+  async (req, res) => {
+    try {
+      const body = req.body;
+      const authReq = req;
+      const tenantId = authReq.tenantId;
+      if (
+        !body.bucket ||
+        !body.storagePath ||
+        !body.fileName ||
+        !body.fileHash ||
+        !body.studentId
+      ) {
+        res
+          .status(400)
+          .json({ error: 'Faltan par\xE1metros requeridos para confirmar el proceso' });
+        return;
+      }
+      if (body.annotations !== void 0 && !Array.isArray(body.annotations)) {
+        res
+          .status(400)
+          .json({ error: 'Las anotaciones confirmadas no tienen un formato v\xE1lido.' });
+        return;
+      }
+      const result = await confirmDisciplinaryProcess({
+        analysisId: body.analysisId,
+        fileId: body.fileId,
+        bucket: body.bucket,
+        storagePath: body.storagePath,
+        fileName: body.fileName,
+        fileHash: body.fileHash,
+        fileSize: body.fileSize,
+        mimeType: body.mimeType,
+        tenantId,
+        studentId: body.studentId,
+        suggestedLetterType: body.suggestedLetterType || 'none',
+        annotations: body.annotations ?? [],
+        idempotencyKey: body.idempotencyKey,
+        authToken: getBearerToken(req),
+      });
+      res.json(result);
+    } catch (error) {
+      const response = getProcessErrorResponse(error);
+      console.error(
+        'Error confirming disciplinary process:',
+        error instanceof Error ? error.message : error,
+      );
+      res.status(response.status).json({ error: response.message });
     }
-    const result = await confirmDisciplinaryProcess({
-      analysisId: body.analysisId,
-      fileId: body.fileId,
-      bucket: body.bucket,
-      storagePath: body.storagePath,
-      fileName: body.fileName,
-      fileHash: body.fileHash,
-      fileSize: body.fileSize,
-      mimeType: body.mimeType,
-      tenantId,
-      studentId: body.studentId,
-      suggestedLetterType: body.suggestedLetterType || 'none',
-      annotations: body.annotations ?? [],
-      idempotencyKey: body.idempotencyKey,
-      authToken: getBearerToken(req),
-    });
-    res.json(result);
-  } catch (error) {
-    const response = getProcessErrorResponse(error);
-    console.error(
-      'Error confirming disciplinary process:',
-      error instanceof Error ? error.message : error,
-    );
-    res.status(response.status).json({ error: response.message });
-  }
-});
+  },
+);
 var processDisciplinaryPdf_default = router8;
 
 // server/api/routes/usage.ts
@@ -3592,7 +3762,7 @@ var VALID_ROLES2 = [
   'user',
   'staff',
 ];
-var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+var EMAIL_RE2 = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 function invitationErrorStatus(message) {
   return /rate limit|too many requests|email rate/i.test(message) ? 429 : 500;
 }
@@ -3808,7 +3978,7 @@ router11.post('/admin/invitations', async (req, res) => {
     await assertFreshAdmin(client, request);
     const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
     const role = req.body?.role;
-    if (!EMAIL_RE.test(email) || !isRole(role)) {
+    if (!EMAIL_RE2.test(email) || !isRole(role)) {
       res.status(400).json({ error: 'Ingrese un correo v\xE1lido y un rol existente.' });
       return;
     }
@@ -4030,7 +4200,7 @@ var router12 = Router12();
 var upload = multer2({ storage: multer2.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 var DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000001';
 var APPLICATION_CODE2 = 'convivencia';
-var EMAIL_RE2 = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+var EMAIL_RE3 = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 function getRequest2(req) {
   return req;
 }
@@ -4200,7 +4370,7 @@ router12.post('/platform/tenants', async (req, res) => {
     const adminEmail =
       typeof req.body?.adminEmail === 'string' ? req.body.adminEmail.trim().toLowerCase() : '';
     const providedSlug = typeof req.body?.slug === 'string' ? req.body.slug.trim() : '';
-    if (!name || !EMAIL_RE2.test(adminEmail)) {
+    if (!name || !EMAIL_RE3.test(adminEmail)) {
       res.status(400).json({ error: 'Ingrese un nombre v\xE1lido y un correo de administrador.' });
       return;
     }

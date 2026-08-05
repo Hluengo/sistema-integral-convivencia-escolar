@@ -11,6 +11,8 @@ interface ImproveTextareaProps {
   rows?: number;
   required?: boolean;
   className?: string;
+  ariaDescribedBy?: string;
+  ariaInvalid?: boolean;
   improvementContext?: TextImprovementContext;
 }
 
@@ -23,6 +25,8 @@ export default function ImproveTextarea({
   rows = 3,
   required,
   className,
+  ariaDescribedBy,
+  ariaInvalid,
   improvementContext,
 }: ImproveTextareaProps) {
   const { improveText, isImproving, error } = useTextImprovement();
@@ -66,6 +70,8 @@ export default function ImproveTextarea({
         aria-label={label || placeholder || id}
         rows={rows}
         required={required}
+        aria-describedby={ariaDescribedBy}
+        aria-invalid={ariaInvalid}
         spellCheck={true}
         placeholder={placeholder}
         value={value}

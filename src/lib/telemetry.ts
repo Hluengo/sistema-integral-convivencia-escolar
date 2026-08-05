@@ -23,8 +23,12 @@ export function loadTelemetry(): Promise<TelemetryModules> {
 
 export function initializeTelemetry(): void {
   const start = () => {
-    void Promise.all([loadTelemetry(), import('./webVitals')]).then(([, webVitals]) => {
-      webVitals.reportWebVitals();
+    void Promise.all([loadTelemetry(), import('./webVitals')]).then(([telemetry, webVitals]) => {
+      webVitals.reportWebVitals({
+        captureEvent: telemetry.posthog.captureEvent,
+        addBreadcrumb: telemetry.sentry.addBreadcrumb,
+        captureMessage: telemetry.sentry.captureMessage,
+      });
     });
   };
 

@@ -5,6 +5,7 @@ export {
   optArr,
   optStr,
   requireStr,
+  redactSensitiveForAI,
   sanitize,
   sanitizeForAI,
 } from '../../lib/validators';

@@ -8,8 +8,8 @@ Los servicios encapsulan toda la comunicación con Supabase (base de datos, auth
 | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
 | `auth.service.ts`                 | `signInWithEmail`, `signOut`, `onAuthStateChange`                                                                                                        | Auth                                |
 | `causas.service.ts`               | `fetchCausas`, `fetchCausaDetails`, `createCausa`, `updateCausa`, `deleteCausa`                                                                          | Listado y detalle diferido de casos |
-| `bitacora.service.ts`             | `fetchBitacora`, `saveBitacora`, `addBitacoraEntry`                                                                                                      | Historial                           |
-| `checklist.service.ts`            | `saveChecklist`                                                                                                                                          | Checklist                           |
+| `bitacora.service.ts`             | `saveBitacora`, `buildBitacoraSnapshotDelta`                                                                                                             | Historial vía RPC transaccional     |
+| `checklist.service.ts`            | `saveChecklist`, `buildChecklistSnapshotDelta`                                                                                                           | Checklist vía RPC transaccional     |
 | `annotations.service.ts`          | `fetchAnnotations`, `saveAnnotation`, `fetchStudentsWithAnnotationCounts`, `fetchAnnotationStageCounts`, `fetchDocumentAnalyses`, `saveDocumentAnalysis` | Anotaciones                         |
 | `courses.service.ts`              | `fetchCourses`, `fetchStudentsByCourse`, `fetchStudentsWithCourses`                                                                                      | Cursos                              |
 | `cartas.service.ts`               | `fetchCartas`                                                                                                                                            | Cartas                              |
@@ -56,3 +56,7 @@ Components/Hooks
 ## Caché de Expedientes
 
 `useCausasQuery` concentra las lecturas de expedientes en React Query. Sus claves separan listado y detalle, e incluyen el tenant. `causasQueryCache` actualiza la caché después de una mutación exitosa para evitar consultas globales adicionales.
+
+## Persistencia de Antecedentes
+
+`saveBitacora()` y `saveChecklist()` ya no ejecutan `upsert` y `delete` por separado desde el cliente. Cada servicio calcula el delta local y llama una RPC `security invoker` (`save_bitacora_snapshot` / `save_checklist_snapshot`) que aplica filas cambiadas e IDs removidos dentro de una única transacción PostgreSQL, usando el tenant resuelto por RLS.

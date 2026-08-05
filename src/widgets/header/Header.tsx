@@ -13,7 +13,7 @@ const MOBILE_BRAND = '/veritas2.webp';
 
 interface HeaderProps {
   privacyMode: boolean;
-  setPrivacyMode: (val: boolean) => void;
+  onTogglePrivacyMode: () => void;
   saveStatus?: 'idle' | 'saving' | 'saved' | 'error';
   currentView?: string;
   causas: Causa[];
@@ -24,7 +24,7 @@ interface HeaderProps {
 
 export default memo(function Header({
   privacyMode,
-  setPrivacyMode,
+  onTogglePrivacyMode,
   saveStatus = 'idle',
   currentView = 'dashboard',
   causas,
@@ -55,7 +55,7 @@ export default memo(function Header({
         {/* Right: Actions */}
         <HeaderActions
           privacyMode={privacyMode}
-          setPrivacyMode={setPrivacyMode}
+          onTogglePrivacyMode={onTogglePrivacyMode}
           saveStatus={saveStatus}
           user={user}
           notifications={notificationCenter.notifications}

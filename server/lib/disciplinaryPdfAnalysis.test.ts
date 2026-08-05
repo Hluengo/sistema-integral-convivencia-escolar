@@ -5,6 +5,7 @@ import { test } from 'node:test';
 import {
   extractDisciplinaryMetadataForTest,
   parseDisciplinaryTextPagesForTest,
+  prepareConfirmedAnnotationsForTest,
   selectNewAnnotationsForLegacySync,
 } from './disciplinaryPdfAnalysis';
 
@@ -161,4 +162,48 @@ test('PDF update uses multiset comparison for genuinely repeated annotations', (
 
   assert.equal(result.length, 1);
   assert.equal(result[0]?.sequence_number, 2);
+});
+
+test('PDF confirm accepts only annotations detected in the parsed PDF', () => {
+  const parsed = parseDisciplinaryTextPagesForTest([
+    '01/03/2026 Tipo: Negativa Profesor: Ana Lopez Interrumpe la clase.',
+  ]);
+
+  const prepared = prepareConfirmedAnnotationsForTest(
+    [
+      {
+        raw_text: 'Interrumpe la clase con edición revisada.',
+        type: 'negative',
+        sequence_number: 1,
+        detected_date: '2026-03-01',
+      },
+    ],
+    parsed.annotations,
+  );
+
+  assert.equal(prepared.length, 1);
+  assert.equal(prepared[0]?.sequence_number, 1);
+  assert.equal(prepared[0]?.page_number, 1);
+  assert.equal(prepared[0]?.normalized_text, 'interrumpe la clase con edicion revisada');
+});
+
+test('PDF confirm rejects fabricated annotation sequence numbers', () => {
+  const parsed = parseDisciplinaryTextPagesForTest([
+    '01/03/2026 Tipo: Negativa Profesor: Ana Lopez Interrumpe la clase.',
+  ]);
+
+  assert.throws(
+    () =>
+      prepareConfirmedAnnotationsForTest(
+        [
+          {
+            raw_text: 'Registro no detectado por el parser.',
+            type: 'negative',
+            sequence_number: 99,
+          },
+        ],
+        parsed.annotations,
+      ),
+    /no corresponden al PDF analizado/,
+  );
 });

@@ -3,10 +3,11 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Download, FileBarChart, History, RefreshCw } from 'lucide-react';
-import type { Causa } from '../../shared/lib/types';
+import type { Causa, TipoInfraccion } from '../../shared/lib/types';
 import Button from '../../shared/ui/Button';
 import SummaryCard from '../../shared/ui/SummaryCard';
 import PageHero from '../../shared/ui/PageHero';
+import { TrendChart, type ChartSeriesItem, type TrendChartPoint } from '../../shared/ui/charts';
 import { formatChileDateTime } from '../../shared/lib/dateTime';
 import { useAuthStore } from '../../shared/lib/stores/authStore';
 import { fetchUsageStats } from '../../shared/api/services/admin.service';
@@ -27,6 +28,39 @@ const EMPTY_FILTERS: ReportFilters = {
 };
 const SELECT_CLASS =
   'rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm text-neutral-700 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100';
+const SEVERITY_ORDER: TipoInfraccion[] = ['Leve', 'Grave', 'Muy Grave', 'Gravísima'];
+const SEVERITY_COLORS: Record<TipoInfraccion, string> = {
+  Leve: 'bg-leve-500',
+  Grave: 'bg-grave-500',
+  'Muy Grave': 'bg-muygrave-500',
+  Gravísima: 'bg-gravisima-500',
+};
+
+function buildSeverityTrendPoints(causas: Causa[]): TrendChartPoint[] {
+  const total = Math.max(1, causas.length);
+  const counts = new Map<TipoInfraccion, number>(SEVERITY_ORDER.map((severity) => [severity, 0]));
+  for (const causa of causas) {
+    counts.set(causa.tipoInfraccion, (counts.get(causa.tipoInfraccion) ?? 0) + 1);
+  }
+
+  return SEVERITY_ORDER.map((severity) => {
+    const value = counts.get(severity) ?? 0;
+    const share = Math.round((value / total) * 100);
+    return {
+      key: severity,
+      label: severity,
+      series: [{ label: severity, value, className: SEVERITY_COLORS[severity] }],
+      primary: `${value} expediente${value === 1 ? '' : 's'}`,
+      secondary: `${share}%`,
+      isObserved: true,
+      isCurrent: value > 0,
+    };
+  });
+}
+
+function buildSeverityLegend(points: TrendChartPoint[]): ChartSeriesItem[] {
+  return points.map((point) => point.series[0]).filter((item) => item.value > 0);
+}
 
 export default function ReportsCenter({ causas }: { causas: Causa[] }) {
   const [filters, setFilters] = useState<ReportFilters>(EMPTY_FILTERS);
@@ -45,6 +79,11 @@ export default function ReportsCenter({ causas }: { causas: Causa[] }) {
   });
   const filtered = useMemo(() => filterReportCausas(causas, filters), [causas, filters]);
   const dashboardStats = useMemo(() => getStats(filtered), [filtered]);
+  const severityTrendPoints = useMemo(() => buildSeverityTrendPoints(filtered), [filtered]);
+  const severityLegend = useMemo(
+    () => buildSeverityLegend(severityTrendPoints),
+    [severityTrendPoints],
+  );
   const dueProcessPending = filtered.reduce(
     (total, causa) =>
       total + causa.checklistDebidoProceso.filter((item) => !item.completado).length,
@@ -183,6 +222,31 @@ export default function ReportsCenter({ causas }: { causas: Causa[] }) {
           value={String(dueProcessPending)}
         />
       </div>
+
+      {filtered.length > 0 ? (
+        <section className="card p-5 sm:p-6" aria-labelledby="reports-severity-title">
+          <div className="mb-4">
+            <h3 id="reports-severity-title" className="font-bold text-neutral-900">
+              Distribución por gravedad
+            </h3>
+            <p className="mt-1 text-neutral-500 text-xs">
+              Vista compacta sobre los expedientes que coinciden con los filtros activos.
+            </p>
+          </div>
+          <TrendChart
+            points={severityTrendPoints}
+            legend={
+              severityLegend.length > 0
+                ? severityLegend
+                : severityTrendPoints.map((point) => point.series[0])
+            }
+            title="Resumen filtrado"
+            description="Cada barra representa una gravedad RICE."
+            badge="Gravedad"
+            activeLabel="Presente"
+          />
+        </section>
+      ) : null}
 
       {usage.data ? (
         <section className="card p-5 sm:p-6">
