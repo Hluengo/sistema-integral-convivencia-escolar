@@ -16,23 +16,23 @@ Sistema SaaS multi-tenant para gestión integral de convivencia escolar en estab
 
 ### Stack Tecnológico
 
-| Capa           | Tecnología                                        | Versión                  |
-| -------------- | ------------------------------------------------- | ------------------------ |
-| Frontend       | React + TypeScript                                | 19.0.1 / 5.8.2           |
-| Build          | Vite                                              | 6.4.3                    |
-| CSS            | Tailwind CSS v4                                   | 4.1.14                   |
-| State          | Zustand                                           | 5.0.14                   |
-| Queries        | TanStack React Query                              | 5.101.2                  |
-| Forms          | react-hook-form + Zod                             | 7.84.0 / 4.4.3           |
-| Backend (dev)  | Express + tsx                                     | 4.21.2 / 4.21.0          |
-| Backend (prod) | Vercel Serverless                                 | esbuild bundle           |
-| Database       | Supabase PostgreSQL                               | 17.6.1                   |
-| Auth           | Supabase Auth (email/password)                    | —                        |
-| AI             | OpenRouter textos breves + Gemini informes/docs   | —                        |
-| Documentos     | docx (Word), pdf-lib + pdfjs-dist (PDF)           | 9.7.1 / 1.17.1 / 6.1.200 |
-| Monitoring     | Sentry Browser + PostHog                          | 10.66.0 / 1.404.1        |
-| Tests          | node:test + node:assert/strict + Playwright       | —                        |
-| Lint/Format    | TypeScript (tsc), ESLint 9, Prettier 3, Biome 2.5 | —                        |
+| Capa           | Tecnología                                          | Versión                  |
+| -------------- | --------------------------------------------------- | ------------------------ |
+| Frontend       | React + TypeScript                                  | 19.0.1 / 5.8.2           |
+| Build          | Vite                                                | 6.4.3                    |
+| CSS            | Tailwind CSS v4                                     | 4.1.14                   |
+| State          | Zustand                                             | 5.0.14                   |
+| Queries        | TanStack React Query                                | 5.101.2                  |
+| Forms          | react-hook-form + Zod                               | 7.84.0 / 4.4.3           |
+| Backend (dev)  | Express + tsx                                       | 4.21.2 / 4.21.0          |
+| Backend (prod) | Vercel Serverless                                   | esbuild bundle           |
+| Database       | Supabase PostgreSQL                                 | 17.6.1                   |
+| Auth           | Supabase Auth (email/password)                      | —                        |
+| AI             | OpenRouter textos breves + Gemini 3.6 informes/docs | —                        |
+| Documentos     | docx (Word), pdf-lib + pdfjs-dist (PDF)             | 9.7.1 / 1.17.1 / 6.1.200 |
+| Monitoring     | Sentry Browser + PostHog                            | 10.66.0 / 1.404.1        |
+| Tests          | node:test + node:assert/strict + Playwright         | —                        |
+| Lint/Format    | TypeScript (tsc), ESLint 9, Prettier 3, Biome 2.5   | —                        |
 
 ---
 
@@ -376,8 +376,8 @@ OpenRouter: mejora de textos breves y asesoría legal breve
 API Key: OPENROUTER_API_KEY (env)
 Gemini pospago: auditorías de debido proceso, informes y borradores/documentos oficiales
 API Key: GEMINI_API_KEY (env)
-Modelo documentos/informes: LEGAL_DRAFT_MODEL opcional, por defecto gemini-2.5-flash
-Temperatura: 0 (determinista)
+Modelo documentos/informes: LEGAL_DRAFT_MODEL opcional, por defecto gemini-3.6-flash
+Generación Gemini: sin sampling params deprecated (temperature/top_p/top_k)
 Max tokens: 2000
 
 Sanitización de input:

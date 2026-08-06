@@ -2724,7 +2724,7 @@ var advisor_default = router2;
 import { Router as Router3 } from 'express';
 
 // server/api/services/gemini.ts
-var GEMINI_MODEL = process.env.LEGAL_DRAFT_MODEL || 'gemini-2.5-flash';
+var GEMINI_MODEL = process.env.LEGAL_DRAFT_MODEL || 'gemini-3.6-flash';
 function getApiKey2() {
   const key = process.env.GEMINI_API_KEY;
   if (!key) {
@@ -2756,7 +2756,6 @@ async function callGeminiComplexGeneration(systemInstruction, userContent, optio
         },
       ],
       generationConfig: {
-        temperature: 0.2,
         maxOutputTokens,
       },
     },
