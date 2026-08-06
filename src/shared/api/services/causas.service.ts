@@ -149,16 +149,24 @@ export async function fetchCausasPage(offset = 0, pageSize = 50): Promise<Causas
 }
 
 /**
- * Carga los antecedentes de un único expediente al abrirlo.
+ * Carga los antecedentes de un único expediente al abrirlo, incluyendo los
+ * metadatos de la causa. Permite abrir un expediente por su id aunque aún no
+ * figure en la lista cargada (por ejemplo, un deep-link a una causa que quedó
+ * más allá de la primera página del listado).
  *
  * El listado solo necesita los metadatos de la causa. Mantener bitácora y
  * checklist fuera de esa consulta evita transferir antecedentes sensibles de
  * expedientes que la persona usuaria no ha solicitado revisar.
  */
-export async function fetchCausaDetails(
-  causaId: string,
-): Promise<Pick<Causa, 'bitacora' | 'checklistDebidoProceso'>> {
-  const [checklistResult, bitacoraResult] = await Promise.all([
+export async function fetchCausaDetails(causaId: string): Promise<Causa> {
+  const [causaResult, checklistResult, bitacoraResult] = await Promise.all([
+    supabase
+      .from('causas')
+      .select(
+        'id,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas',
+      )
+      .eq('id', causaId)
+      .maybeSingle(),
     supabase
       .from('checklist_items')
       .select(
@@ -172,9 +180,18 @@ export async function fetchCausaDetails(
       .order('fecha', { ascending: false }),
   ]);
 
+  if (causaResult.error) {
+    console.error('Error fetching causa details:', causaResult.error);
+    throw causaResult.error;
+  }
   if (checklistResult.error)
     console.error('Error fetching checklist items:', checklistResult.error);
   if (bitacoraResult.error) console.error('Error fetching bitacora entries:', bitacoraResult.error);
+
+  const [base] = mapCausaRows(causaResult.data ? [causaResult.data] : []);
+  if (!base) {
+    throw new Error('No se encontró el expediente solicitado.');
+  }
 
   const checklist = ((checklistResult.data || []) as SupabaseChecklistRow[])
     .map(mapChecklistRow)
@@ -184,6 +201,7 @@ export async function fetchCausaDetails(
     .filter((entry): entry is BitacoraEntry => entry !== null);
 
   return {
+    ...base,
     bitacora,
     checklistDebidoProceso: reconcileChecklistFromBitacora(checklist, bitacora),
   };

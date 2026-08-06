@@ -10,6 +10,7 @@ import { PROCESS_SECTIONS } from './processSections';
 import RegistrationForm from './RegistrationForm';
 import AttachedDocuments from './AttachedDocuments';
 import { openDocument } from '../../shared/api/services/storage.service';
+import CausaNotificationPanel from '../causas/notificacionDocgen/CausaNotificationPanel';
 
 interface ProcessChecklistProps {
   causa: Causa;
@@ -286,7 +287,7 @@ export default function ProcessChecklist({
                           )}
 
                           {/* Incomplete State */}
-                          {!item.completado && (
+                          {!item.completado && item.id !== 'chk_rec_3' && (
                             <div className="mt-2.5">
                               {!isSelected ? (
                                 currentRole !== 'docente' && (
@@ -321,6 +322,13 @@ export default function ProcessChecklist({
                                   errorMessage={registrationError}
                                 />
                               )}
+                            </div>
+                          )}
+
+                          {/* Notificación de Inicio de Indagación (solo chk_rec_3) */}
+                          {item.id === 'chk_rec_3' && (
+                            <div className="mt-2.5 rounded-lg border border-brand-200 bg-brand-50/40 p-3">
+                              <CausaNotificationPanel causa={causa} />
                             </div>
                           )}
                         </div>

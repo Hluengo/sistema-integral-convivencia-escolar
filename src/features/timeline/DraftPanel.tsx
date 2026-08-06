@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import type React from 'react';
-import { forwardRef, useMemo, useRef } from 'react';
+import { forwardRef, useEffect, useMemo, useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Eye, FileText, RefreshCw, FileSignature, Printer, PencilLine } from 'lucide-react';
 import { LOGO_URL } from '@/src/lib/logoBase64';
@@ -24,6 +24,17 @@ const DOCUMENT_TITLES: Record<DocType, string> = {
   informe_cierre_indagacion: 'Informe de Cierre de Indagación',
   informe_concluyente: 'Informe Concluyente y Resolución',
 };
+
+/**
+ * Opciones de redacción asistida: la Notificación de Inicio de Indagación se
+ * emite desde el hito chk_rec_3 del checklist de Recepción (sin IA), por lo
+ * que no aparece aquí.
+ */
+const DOC_TYPE_OPTIONS: { value: Exclude<DocType, 'notificacion_apertura'>; label: string }[] = [
+  { value: 'citacion_entrevista', label: 'Citación para entrega de notificación' },
+  { value: 'informe_cierre_indagacion', label: 'Informe de Cierre de Indagación' },
+  { value: 'informe_concluyente', label: 'Informe Concluyente y Resolución' },
+];
 
 interface DraftPanelProps {
   selectedDocType: DocType;
@@ -60,6 +71,16 @@ export default function DraftPanel({
   const documentTitle = DOCUMENT_TITLES[selectedDocType];
   const requiresResponsible =
     selectedDocType === 'notificacion_apertura' || selectedDocType === 'citacion_entrevista';
+
+  // La Notificación de Inicio de Indagación ya no se redacta con asistencia:
+  // se emite desde el hito chk_rec_3 del checklist de Recepción. Si el estado
+  // del padre quedó en esa opción (valor por defecto histórico), se deriva a
+  // la citación para entrega, que es el documento complementario natural.
+  useEffect(() => {
+    if (selectedDocType === 'notificacion_apertura') {
+      setSelectedDocType('citacion_entrevista');
+    }
+  }, [selectedDocType, setSelectedDocType]);
   const date = useMemo(
     () =>
       new Intl.DateTimeFormat('es-CL', { dateStyle: 'long', timeZone: 'America/Santiago' }).format(
@@ -89,6 +110,15 @@ export default function DraftPanel({
       </div>
 
       <div className="space-y-2">
+        <div className="flex items-start gap-2 rounded-lg border border-brand-200 bg-brand-50 p-2.5 text-left">
+          <FileText className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
+          <p className="text-[10px] leading-relaxed text-neutral-600">
+            La <strong>Notificación de Inicio de Indagación</strong> se genera desde el hito del
+            checklist de Recepción del expediente (sin IA), con su propia plantilla e impresión hoja
+            Carta.
+          </p>
+        </div>
+
         <label
           htmlFor="doc-type"
           className="block font-semibold text-[10px] uppercase tracking-wider text-neutral-500"
@@ -101,10 +131,11 @@ export default function DraftPanel({
           onChange={(event) => setSelectedDocType(event.target.value as DocType)}
           className="w-full rounded-lg border border-neutral-300 bg-white p-2.5 font-medium text-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
         >
-          <option value="notificacion_apertura">Notificación de Apertura de Indagación</option>
-          <option value="citacion_entrevista">Citación para entrega de notificación</option>
-          <option value="informe_cierre_indagacion">Informe de Cierre de Indagación</option>
-          <option value="informe_concluyente">Informe Concluyente y Resolución</option>
+          {DOC_TYPE_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
         </select>
       </div>
 

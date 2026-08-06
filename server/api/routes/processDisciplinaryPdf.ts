@@ -100,7 +100,11 @@ router.post('/process-disciplinary-pdf', requireTenant, async (req, res) => {
   try {
     const body = req.body as AuthedRequestBody;
     const authReq = req as AuthenticatedRequest;
-    const tenantId = authReq.tenantId!;
+    const tenantId = authReq.tenantId;
+    if (!tenantId) {
+      res.status(500).json({ error: 'Tenant no resuelto para analizar el PDF' });
+      return;
+    }
     if (!body.bucket || !body.storagePath || !body.fileName) {
       res.status(400).json({ error: 'Faltan parámetros requeridos para analizar el PDF' });
       return;
@@ -135,7 +139,11 @@ router.post(
     try {
       const body = req.body as AuthedRequestBody;
       const authReq = req as AuthenticatedRequest;
-      const tenantId = authReq.tenantId!;
+      const tenantId = authReq.tenantId;
+      if (!tenantId) {
+        res.status(500).json({ error: 'Tenant no resuelto para confirmar el proceso' });
+        return;
+      }
       if (
         !body.bucket ||
         !body.storagePath ||

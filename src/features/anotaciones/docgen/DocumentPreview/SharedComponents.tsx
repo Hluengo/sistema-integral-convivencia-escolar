@@ -35,11 +35,13 @@ export function LetterInstitutionalHeader({
   year = '2026',
   logoSrc,
   institutionName,
+  department = 'DIRECCIÓN DE CONVIVENCIA ESCOLAR',
   onLogoError,
 }: {
   year?: string;
   logoSrc?: string;
   institutionName?: string;
+  department?: string;
   onLogoError?: () => void;
 }) {
   return (
@@ -58,7 +60,7 @@ export function LetterInstitutionalHeader({
         <span className="letter-header-institution">
           {institutionName || 'Fundación Educacional Colegio Carmela Romero de Espinosa'}
         </span>
-        <span className="letter-header-department">DIRECCIÓN DE CONVIVENCIA ESCOLAR</span>
+        <span className="letter-header-department">{department}</span>
         <span className="letter-header-year">Año {year}</span>
       </div>
     </div>
@@ -85,11 +87,18 @@ export function LetterMetadataGrid({ items }: { items: LetterMetadataItem[] }) {
   );
 }
 
-export function LetterSignatureGrid({ signatures }: { signatures: LetterSignature[] }) {
+export function LetterSignatureGrid({
+  signatures,
+  title = 'Firmas',
+}: {
+  signatures: LetterSignature[];
+  /** Título del bloque; pase `null` para omitirlo (documentos de hoja única). */
+  title?: string | null;
+}) {
   const cols = Math.min(Math.max(signatures.length, 1), 4);
   return (
     <div className="letter-signatures">
-      <p className="letter-signatures-title">Firmas</p>
+      {title !== null && <p className="letter-signatures-title">{title}</p>}
       <div
         className="letter-signature-grid"
         style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}

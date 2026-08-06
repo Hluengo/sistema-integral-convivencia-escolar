@@ -2,6 +2,7 @@
 
 import { Dialog, DialogDescription, DialogTitle } from '../../shared/ui/Dialog';
 import { DetailModalContent } from '../../shared/ui/DetailModal';
+import ViewLoader from '../../shared/ui/ViewLoader';
 import type { Causa } from '../../shared/lib/types';
 import InteractiveTimeline from '../timeline/InteractiveTimeline';
 
@@ -29,13 +30,7 @@ export default function CausaDetailModal({
         <DialogDescription className="sr-only">
           Gestión completa del debido proceso, sus hitos, documentos y bitácora.
         </DialogDescription>
-        {causa && isLoading && (
-          <div className="flex flex-1 items-center justify-center p-6" role="status">
-            <p className="font-medium text-neutral-500 text-sm">
-              Cargando antecedentes del expediente…
-            </p>
-          </div>
-        )}
+        {causa && isLoading && <ViewLoader view="causas" compact />}
         {causa && !isLoading && (
           <InteractiveTimeline
             key={causa.id}

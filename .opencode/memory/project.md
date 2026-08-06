@@ -1,6 +1,6 @@
 # STAFF ENGINEER MEMORY — Sistema Integral de Convivencia Escolar
 
-> **Versión:** 1.4 | **Estado:** Producción | **Última actualización:** 2026-08-03
+> **Versión:** 1.5 | **Estado:** Producción | **Última actualización:** 2026-08-06
 
 ---
 
@@ -260,26 +260,27 @@ Rojo (15+ negativas)
 
 ### 4.1 Esquema Completo (16 tablas del sistema)
 
-| Tabla                               | Propósito                         | RLS | FK Clave                                                |
-| ----------------------------------- | --------------------------------- | --- | ------------------------------------------------------- |
-| `tenants`                           | Establecimientos educacionales    | ✅  | —                                                       |
-| `profiles`                          | Usuarios del sistema              | ✅  | `auth.users(id)`, `tenants(id)`                         |
-| `students`                          | Estudiantes                       | ✅  | `courses(id)`, `tenants(id)`                            |
-| `courses`                           | Cursos                            | ✅  | `tenants(id)`                                           |
-| `causas`                            | Casos disciplinarios              | ✅  | `students(id)`, `tenants(id)`                           |
-| `bitacora_entries`                  | Historial de casos                | ✅  | `causas(id)`, `tenants(id)`                             |
-| `checklist_items`                   | Checklist debido proceso          | ✅  | `causas(id)`, `tenants(id)`                             |
-| `inspectorate_records`              | Anotaciones de inspectoría        | ✅  | `students(id)`, `tenants(id)`                           |
-| `cartas_disciplinarias`             | Cartas emitidas                   | ✅  | `students(id)`, `tenants(id)`                           |
-| `etapas_disciplinarias`             | Etapas del proceso                | ✅  | `students(id)`, `tenants(id)`                           |
-| `document_templates`                | Prompts AI personalizados         | ✅  | `tenants(id)`                                           |
-| `document_analyses`                 | Resultados análisis PDF           | ✅  | `students(id)`, `tenants(id)`                           |
-| `disciplinary_processes`            | Procesos desde PDF                | ✅  | `students(id)`, `tenants(id)`                           |
-| `disciplinary_process_files`        | Archivos PDF adjuntos             | ✅  | `processes(id)`, `tenants(id)`                          |
-| `disciplinary_annotations_detected` | Anotaciones parseadas de PDF      | ✅  | `processes(id)`, `students(id)`, `tenants(id)`          |
-| `disciplinary_rules`                | Reglas de sugerencia de cartas    | ✅  | `tenants(id)`                                           |
-| `usage_events`                      | Eventos de uso del sistema        | ✅  | `auth.users(id)`                                        |
-| `carta_events`                      | Trazabilidad de trámite de cartas | ✅  | `cartas_disciplinarias.id`, `students.id`, `tenants.id` |
+| Tabla                               | Propósito                                                | RLS | FK Clave                                                |
+| ----------------------------------- | -------------------------------------------------------- | --- | ------------------------------------------------------- |
+| `tenants`                           | Establecimientos educacionales                           | ✅  | —                                                       |
+| `profiles`                          | Usuarios del sistema                                     | ✅  | `auth.users(id)`, `tenants(id)`                         |
+| `students`                          | Estudiantes                                              | ✅  | `courses(id)`, `tenants(id)`                            |
+| `courses`                           | Cursos                                                   | ✅  | `tenants(id)`                                           |
+| `causas`                            | Casos disciplinarios                                     | ✅  | `students(id)`, `tenants(id)`                           |
+| `bitacora_entries`                  | Historial de casos                                       | ✅  | `causas(id)`, `tenants(id)`                             |
+| `checklist_items`                   | Checklist debido proceso                                 | ✅  | `causas(id)`, `tenants(id)`                             |
+| `inspectorate_records`              | Anotaciones de inspectoría                               | ✅  | `students(id)`, `tenants(id)`                           |
+| `cartas_disciplinarias`             | Cartas emitidas                                          | ✅  | `students(id)`, `tenants(id)`                           |
+| `etapas_disciplinarias`             | Etapas del proceso                                       | ✅  | `students(id)`, `tenants(id)`                           |
+| `document_templates`                | Prompts AI personalizados                                | ✅  | `tenants(id)`                                           |
+| `document_analyses`                 | Resultados análisis PDF                                  | ✅  | `students(id)`, `tenants(id)`                           |
+| `disciplinary_processes`            | Procesos desde PDF                                       | ✅  | `students(id)`, `tenants(id)`                           |
+| `disciplinary_process_files`        | Archivos PDF adjuntos                                    | ✅  | `processes(id)`, `tenants(id)`                          |
+| `disciplinary_annotations_detected` | Anotaciones parseadas de PDF                             | ✅  | `processes(id)`, `students(id)`, `tenants(id)`          |
+| `disciplinary_rules`                | Reglas de sugerencia de cartas                           | ✅  | `tenants(id)`                                           |
+| `usage_events`                      | Eventos de uso del sistema                               | ✅  | `auth.users(id)`                                        |
+| `carta_events`                      | Trazabilidad de trámite de cartas                        | ✅  | `cartas_disciplinarias.id`, `students.id`, `tenants.id` |
+| `causa_documents`                   | Documentos oficiales de causa (snapshot de trazabilidad) | ✅  | `causas(id)`, `tenants(id)`                             |
 
 ### 4.2 Reproducibilidad de Migraciones
 
@@ -321,18 +322,19 @@ Trigger de JWT sync: sync_tenant_to_jwt() en profiles
 
 ### 4.4 RPCs (Funciones)
 
-| RPC                                    | Retorna | Propósito                                        |
-| -------------------------------------- | ------- | ------------------------------------------------ |
-| `current_app_role()`                   | TEXT    | Rol del usuario actual                           |
-| `is_staff()`                           | BOOLEAN | Check staff-level role                           |
-| `current_tenant_id()`                  | UUID    | Tenant actual (JWT fast path)                    |
-| `get_student_annotation_summary()`     | TABLE   | Dashboard: students + annotation counts + status |
-| `get_annotation_stage_counts()`        | TABLE   | Conteo de estudiantes por etapa disciplinaria    |
-| `get_usage_stats(since, until)`        | TABLE   | Stats de uso agregadas                           |
-| `get_daily_active_users(since, until)` | TABLE   | DAU por día                                      |
-| `get_latest_analysis(p_student_id)`    | TABLE   | Último análisis PDF por estudiante               |
-| `generate_process_number(p_tenant_id)` | TEXT    | Genera DP-YYYY-NNNN                              |
-| `get_suggested_letter_type(...)`       | TEXT    | Sugiere tipo de carta según reglas               |
+| RPC                                                 | Retorna | Propósito                                                                                                |
+| --------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------- |
+| `current_app_role()`                                | TEXT    | Rol del usuario actual                                                                                   |
+| `is_staff()`                                        | BOOLEAN | Check staff-level role                                                                                   |
+| `current_tenant_id()`                               | UUID    | Tenant actual (JWT fast path)                                                                            |
+| `get_student_annotation_summary()`                  | TABLE   | Dashboard: students + annotation counts + status                                                         |
+| `get_annotation_stage_counts()`                     | TABLE   | Conteo de estudiantes por etapa disciplinaria                                                            |
+| `get_usage_stats(since, until)`                     | TABLE   | Stats de uso agregadas                                                                                   |
+| `get_daily_active_users(since, until)`              | TABLE   | DAU por día                                                                                              |
+| `get_latest_analysis(p_student_id)`                 | TABLE   | Último análisis PDF por estudiante                                                                       |
+| `generate_process_number(p_tenant_id)`              | TEXT    | Genera DP-YYYY-NNNN                                                                                      |
+| `get_suggested_letter_type(...)`                    | TEXT    | Sugiere tipo de carta según reglas                                                                       |
+| `mark_causa_document_notified(pid, snap, chk, bit)` | VOID    | Marca notificación notificada: documento + hito `chk_rec_3` + bitácora en 1 transacción (tenant por RLS) |
 
 ---
 
@@ -440,10 +442,10 @@ Regla de proveedores:
 
 ### 6.3 React Query
 
-| Query Key                | Hook               | Stale Time | Enabled      |
-| ------------------------ | ------------------ | ---------- | ------------ |
-| `['courses']`            | `useCoursesQuery`  | 30 min     | Siempre      |
-| `['students', courseId]` | `useStudentsQuery` | 10 min     | `!!courseId` |
+| Query Key                | Hook               | Stale Time | Enabled                         |
+| ------------------------ | ------------------ | ---------- | ------------------------------- |
+| `['courses']`            | `useCoursesQuery`  | 30 min     | Siempre                         |
+| `['students', courseId]` | `useStudentsQuery` | 10 min     | `!!courseId && isAuthenticated` |
 
 **No hay useMutation** — las mutaciones se hacen directamente a servicios Supabase desde los stores y hooks.
 
@@ -462,6 +464,7 @@ Regla de proveedores:
 | `storage.service.ts`              | uploadDocument, listDocuments, deleteDocument (bucket: documentos_convivencia)                                                                                                                         |
 | `disciplinary-storage.service.ts` | validateDisciplinaryPdf, uploadDisciplinaryFile, getDisciplinaryFileUrl, deleteDisciplinaryFile                                                                                                        |
 | `disciplinary-rules.service.ts`   | fetchDisciplinaryRules                                                                                                                                                                                 |
+| `causaDocuments.service.ts`       | createPendingCausaDocument, fetchCausaDocuments, saveCausaDocumentSnapshot, markCausaDocumentNotified (RPC), annulCausaDocument                                                                        |
 
 ---
 
@@ -577,9 +580,10 @@ Vía cliente (download offline):
 
 ### 9.3 AI Drafted Documents (4 tipos)
 
+> **Nota:** La **Notificación de Inicio de Indagación** ya NO se redacta con asistencia AI. Se emite desde el hito `chk_rec_3` del checklist de Recepción, con su propia plantilla hoja Carta (`notificacionDocgen`, sin IA) y trazabilidad por snapshot en `causa_documents`. `notificacion_apertura` permanece solo como valor legacy del union de tipos; la UI la deriva a `citacion_entrevista`.
+
 | Tipo                        | System Prompt                     |
 | --------------------------- | --------------------------------- |
-| `notificacion_apertura`     | "Eres un asistente experto..."    |
 | `citacion_entrevista`       | "Eres un experto..."              |
 | `informe_cierre_indagacion` | Prompt en DB (document_templates) |
 | `informe_concluyente`       | Prompt en DB (document_templates) |
@@ -1333,3 +1337,13 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - Formularios: `react-hook-form@7.84.0` quedó instalado. `NewCausaModal` usa `useNewCausaForm()` con resolver Zod local (`newCausaFormSchema`); `EditCausaModalForm` y `LoginPage` usan schemas compartidos (`editCausaFormSchema`, `loginFormSchema`, `passwordResetRequestSchema`, `passwordUpdateFormSchema`). Los errores inline usan `aria-describedby` y tests unitarios cubren los schemas.
 - Gráficos: `TrendChart`, `MonthlyBars` y `LegendPill` viven en `src/shared/ui/charts/`. `DashboardTrendsPanel` y `ReportsCenter` reutilizan el contrato `TrendChartPoint`/`ChartSeriesItem`.
 - Accesibilidad: `npm run test:a11y` ejecuta `@axe-core/playwright` sobre dashboard público y login. El workflow de CI usa `PLAYWRIGHT_USE_WEBSERVER=true` para levantar el servidor Playwright en CI. El skeleton del dashboard usa `role="status"` y los textos de loader/login cumplen contraste AA básico.
+
+### Notificación de Inicio de Indagación (documento de causa) — 2026-08-06
+
+- Feature "Notificación de Inicio de Indagación" como documento oficial de causa, hoja Carta (216x279mm), **sin IA**: plantilla fija editable de 9 secciones numeradas, vista previa con validación de desbordamiento, impresión y anulación. Aislada del flujo de cartas disciplinarias y del DraftPanel/Gemini.
+- Migración `20260806090000_add_causa_documents_notificacion_inicio_indagacion.sql`: tabla `causa_documents` (snapshot jsonb de trazabilidad, estados `Pendiente/Notificada/Anulada`, tenant por RLS + índice compuesto) y RPC transaccional `mark_causa_document_notified` que en una sola transacción actualiza el documento, completa el hito `chk_rec_3` e inserta la entrada de bitácora tipo `Notificación`. La PK de `checklist_items` es `(id, causa_id)`, por lo que el `ON CONFLICT (id, causa_id)` del RPC es válido.
+- Integración UI: `ProcessChecklist.tsx` renderiza `CausaNotificationPanel` en el hito `chk_rec_3` (solo Recepción); reemplaza el registro genérico de hitos para ese hito. `docente` solo puede leer (aviso).
+- `DraftPanel` retiró `notificacion_apertura` del selector visible (permanece en el union de tipos para compatibilidad legacy); un `useEffect` deriva ese valor a `citacion_entrevista`.
+- Robustez/seguridad anexa al diff: `isValidUuid` en `admin.ts` (membership PATCH), guard de `tenantId` en `processDisciplinaryPdf.ts`, `AbortController` + rollback optimista en `useAuditDraft`/`useDocumentManager`, deep-link a expedientes más allá de la primera página en `useCausaWorkspace`/`fetchCausaDetails`, y `useStudentsQuery` gateado por `isAuthenticated`.
+- Tests: `src/features/causas/notificacionDocgen/notificacionDocgen.test.ts` (unit) + `tests/notificacion-docgen.spec.ts` (E2E, se omite sin credenciales E2E). Suite completa: 448 tests verdes; lint + typecheck + build verdes.
+- **Pendiente de registro:** el E2E requiere credenciales staff para ejecutarse; el trabajo quedó persistido en el branch `allow-staff-disciplinary-process`.

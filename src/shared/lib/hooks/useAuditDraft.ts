@@ -41,11 +41,16 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
   const [draftError, setDraftError] = useState<string | null>(null);
   const [isDrafting, setIsDrafting] = useState<boolean>(false);
   const isMountedRef = useRef(true);
+  const auditAbortRef = useRef<AbortController | null>(null);
+  const draftAbortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
+      // Cancela las peticiones en vuelo si el componente se desmonta.
+      auditAbortRef.current?.abort();
+      draftAbortRef.current?.abort();
     };
   }, []);
 
@@ -54,9 +59,13 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
     setAuditReport('');
     try {
       const headers = await getAuthHeaders();
+      auditAbortRef.current?.abort();
+      const controller = new AbortController();
+      auditAbortRef.current = controller;
       const response = await fetch('/api/audit-due-process', {
         method: 'POST',
         headers,
+        signal: controller.signal,
         body: JSON.stringify({
           id: causa.id,
           studentName: causa.estudianteNombre,
@@ -95,9 +104,13 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
     setDraftError(null);
     try {
       const headers = await getAuthHeaders();
+      draftAbortRef.current?.abort();
+      const controller = new AbortController();
+      draftAbortRef.current = controller;
       const response = await fetch('/api/draft-document', {
         method: 'POST',
         headers,
+        signal: controller.signal,
         body: JSON.stringify({
           docType: selectedDocType,
           id: causa.id,

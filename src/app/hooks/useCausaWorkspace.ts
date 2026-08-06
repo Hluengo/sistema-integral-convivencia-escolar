@@ -35,8 +35,10 @@ export function useCausaWorkspace({
   const setCausas = useCausasStore((s) => s.setCausas);
 
   const causasQuery = useCausasQuery();
-  const selectedCausaForDetail =
-    isAuthenticated && causas.some((causa) => causa.id === selectedCausaId) ? selectedCausaId : '';
+  // El detalle se habilita con el id directamente (deep-link a causas que aún
+  // no están en la lista cargada); antes se exigía que la causa existiera en
+  // la primera página del listado, dejando el expediente inaccesible.
+  const selectedCausaForDetail = isAuthenticated && selectedCausaId ? selectedCausaId : '';
   const causaDetailsQuery = useCausaDetailsQuery(selectedCausaForDetail);
   const hasInitializedCausasRef = useRef(false);
   const lastCausasQueryDataRef = useRef<typeof causasQuery.data>(undefined);
@@ -123,16 +125,17 @@ export function useCausaWorkspace({
     if (!selectedCausaForDetail || !causaDetailsQuery.data) return;
     if (lastDetailsQueryDataRef.current === causaDetailsQuery.data) return;
 
-    const currentCausa = causas.find((causa) => causa.id === selectedCausaForDetail);
-    if (!currentCausa) return;
-
-    const hydratedCausa = { ...currentCausa, ...causaDetailsQuery.data };
+    const hydratedCausa = causaDetailsQuery.data;
     markCausaHydrated(hydratedCausa);
     lastDetailsQueryDataRef.current = causaDetailsQuery.data;
-    setCausas((current) =>
-      current.map((causa) => (causa.id === hydratedCausa.id ? hydratedCausa : causa)),
-    );
-  }, [causaDetailsQuery.data, causas, markCausaHydrated, selectedCausaForDetail, setCausas]);
+    setCausas((current) => {
+      const exists = current.some((causa) => causa.id === hydratedCausa.id);
+      // Deep-link a una causa que aún no está en la lista cargada: se inserta
+      // para que el modal y las vistas puedan abrirla sin esperar el listado.
+      if (!exists) return [hydratedCausa, ...current];
+      return current.map((causa) => (causa.id === hydratedCausa.id ? hydratedCausa : causa));
+    });
+  }, [causaDetailsQuery.data, markCausaHydrated, selectedCausaForDetail, setCausas]);
 
   const loadError = useMemo(() => {
     const error = causasQuery.error ?? causaDetailsQuery.error;
@@ -167,5 +170,6 @@ export function useCausaWorkspace({
     isLoadingMoreCausas: causasQuery.isFetchingNextPage,
     loadMoreCausas,
     isCausaDetailLoading: causaDetailsQuery.isLoading,
+    isCausasLoading: causasQuery.isLoading,
   };
 }

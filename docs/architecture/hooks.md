@@ -2,10 +2,10 @@
 
 ## React Query Hooks
 
-| Hook                         | Query Key                | Stale Time | Descripción                                     |
-| ---------------------------- | ------------------------ | ---------- | ----------------------------------------------- |
-| `useCoursesQuery()`          | `['courses']`            | 30 min     | Obtiene todos los cursos                        |
-| `useStudentsQuery(courseId)` | `['students', courseId]` | 10 min     | Estudiantes por curso (solo si courseId ≠ null) |
+| Hook                         | Query Key                | Stale Time | Descripción                                                           |
+| ---------------------------- | ------------------------ | ---------- | --------------------------------------------------------------------- |
+| `useCoursesQuery()`          | `['courses']`            | 30 min     | Obtiene todos los cursos                                              |
+| `useStudentsQuery(courseId)` | `['students', courseId]` | 10 min     | Estudiantes por curso (solo si courseId ≠ null y usuario autenticado) |
 
 ## App-Level Hooks
 

@@ -121,7 +121,9 @@ export function useNotifications(causas: Causa[]): NotificationCenter {
       ),
     )
       .then(() => queryClient.invalidateQueries({ queryKey: ['notifications', tenantId, userId] }))
-      .catch(() => undefined);
+      .catch((error: unknown) => {
+        console.warn('Error al sincronizar notificaciones persistentes:', error);
+      });
   }, [currentNotifications, persistedQuery.isLoading, queryClient, tenantId, userId]);
 
   const persisted = persistedQuery.data ?? [];

@@ -4,6 +4,7 @@ import { Router, type Request } from 'express';
 import multer from 'multer';
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
 import { requireAuth } from '../../middleware/auth.js';
+import { isValidUuid } from '../../middleware/auth.js';
 import { requireRole } from '../../middleware/requireRole.js';
 import { requireTenant } from '../../middleware/requireTenant.js';
 import type { AuthenticatedRequest, ProfileRole } from '../../types.js';
@@ -230,7 +231,7 @@ router.patch('/admin/members/:userId', async (req, res) => {
     const userId = req.params.userId;
     const role = req.body?.role;
     const accessEnabled = req.body?.accessEnabled;
-    if (!userId || !isRole(role) || typeof accessEnabled !== 'boolean') {
+    if (!userId || !isValidUuid(userId) || !isRole(role) || typeof accessEnabled !== 'boolean') {
       res.status(400).json({ error: 'userId, role y accessEnabled son obligatorios.' });
       return;
     }
@@ -382,6 +383,10 @@ router.post('/admin/invitations/:invitationId/resend', async (req, res) => {
     const request = getRequest(req);
     const client = getAdminClient();
     await assertFreshAdmin(client, request);
+    if (!req.params.invitationId || !isValidUuid(req.params.invitationId)) {
+      res.status(400).json({ error: 'Identificador de invitación inválido.' });
+      return;
+    }
     const { data, error } = await client
       .from('membership_invitations')
       .select('id,tenant_id,email,role,auth_user_id,status')
@@ -430,6 +435,10 @@ router.post('/admin/invitations/:invitationId/cancel', async (req, res) => {
     const request = getRequest(req);
     const client = getAdminClient();
     await assertFreshAdmin(client, request);
+    if (!req.params.invitationId || !isValidUuid(req.params.invitationId)) {
+      res.status(400).json({ error: 'Identificador de invitación inválido.' });
+      return;
+    }
     const { data, error } = await client
       .from('membership_invitations')
       .select('id,email,role,auth_user_id,status')

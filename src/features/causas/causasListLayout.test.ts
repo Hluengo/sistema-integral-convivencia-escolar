@@ -200,6 +200,15 @@ describe('Listado de causas activas', () => {
     assert.match(draft, /Ver vista previa para impresión Oficio/);
   });
 
+  it('redirige la redacción de la notificación de apertura al checklist de Recepción', () => {
+    const draft = read('../timeline/DraftPanel.tsx');
+
+    assert.match(draft, /DOC_TYPE_OPTIONS/);
+    assert.match(draft, /setSelectedDocType\('citacion_entrevista'\)/);
+    assert.match(draft, /hito chk_rec_3 del checklist de Recepción/);
+    assert.doesNotMatch(draft, /<option value="notificacion_apertura">/);
+  });
+
   it('mantiene Plantillas como administración clara, con estados de acceso y sin recargas repetidas', () => {
     const advisor = read('MainContent/AdvisorView.tsx');
     const templates = read('../document-templates/TemplateEditor.tsx');

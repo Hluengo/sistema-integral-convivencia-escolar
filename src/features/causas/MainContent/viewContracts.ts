@@ -9,6 +9,8 @@ export interface CausaWorkspaceViewModel {
   setSelectedCausaId: (id: string) => void;
   selectedCausa: Causa | null;
   isCausaDetailLoading: boolean;
+  /** true mientras la primera página de la lista de expedientes se carga. */
+  isCausasLoading: boolean;
   filteredCausas: Causa[];
   hasMoreCausas: boolean;
   isLoadingMoreCausas: boolean;

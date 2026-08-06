@@ -79,6 +79,7 @@ export default function App() {
     isLoadingMoreCausas,
     loadMoreCausas,
     isCausaDetailLoading,
+    isCausasLoading,
   } = useCausaWorkspace({
     isAuthenticated,
     tenantId,
@@ -220,6 +221,7 @@ export default function App() {
                   setSelectedCausaId,
                   selectedCausa,
                   isCausaDetailLoading,
+                  isCausasLoading,
                   filteredCausas,
                   hasMoreCausas,
                   isLoadingMoreCausas,

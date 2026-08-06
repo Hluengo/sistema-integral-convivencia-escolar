@@ -24,16 +24,23 @@ export function useDocumentManager({
 
   const getResponsableName = () => {
     const r = causa.responsable;
-    if (!r) {
-      return 'Esteban Valenzuela';
-    }
-    return r.split(' (')[0] || 'Esteban Valenzuela';
+    const fromResponsable = r ? r.split(' (')[0] : '';
+    // Evita nombres por defecto que no existen en el sistema: si no hay
+    // responsable registrado se usa el nombre de quien registra o un rol
+    // institucional genérico, nunca una persona inventada.
+    return fromResponsable || regName || 'Equipo de Convivencia Escolar';
   };
 
   const refreshDocuments = async () => {
     setDocumentError(null);
-    const list = await listDocuments(causa.id);
-    setDocuments(list);
+    try {
+      const list = await listDocuments(causa.id);
+      setDocuments(list);
+    } catch (error: unknown) {
+      setDocumentError(
+        error instanceof Error ? error.message : 'Error al listar los documentos adjuntos.',
+      );
+    }
   };
 
   const handleAttachDocument = async (itemId: string, file: File | null) => {
@@ -94,6 +101,7 @@ export function useDocumentManager({
     }
     setDocumentError(null);
 
+    const previousCausa = causa;
     const updatedChecklist = causa.checklistDebidoProceso.map((item) => {
       if (item.id !== itemId) {
         return item;
@@ -111,9 +119,10 @@ export function useDocumentManager({
       tipo: 'Otro',
       titulo: 'Documento eliminado',
       descripcion: 'Se eliminó el documento adjunto del hito procesal.',
-      participantes: [getResponsableName()],
+      participantes: [regName || getResponsableName()],
     };
 
+    // Mutación optimista: se refleja de inmediato en la UI.
     onUpdateCausa({
       ...causa,
       checklistDebidoProceso: updatedChecklist,
@@ -121,10 +130,20 @@ export function useDocumentManager({
       fechaUltimaActualizacion: nowDateOnly(),
     });
 
-    if (fileName) {
-      await deleteDocument(`${causa.id}/documentos/${fileName}`);
+    try {
+      if (fileName) {
+        await deleteDocument(`${causa.id}/documentos/${fileName}`);
+      }
+      await refreshDocuments();
+    } catch (error: unknown) {
+      // Rollback de la mutación optimista para no dejar la UI divergente
+      // del almacenamiento (el archivo sigue existiendo si falló la baja).
+      onUpdateCausa(previousCausa);
+      setDocumentError(
+        error instanceof Error ? error.message : 'Error al eliminar el documento adjunto.',
+      );
+      await refreshDocuments();
     }
-    await refreshDocuments();
   };
 
   return {

@@ -21,7 +21,7 @@ interface UIState {
 }
 
 export const useUIStore = create<UIState>((set) => ({
-  currentView: 'dashboard',
+  currentView: initialViewFromPathname(),
   isSidebarCollapsed: false,
   mobileShowDetail: false,
   privacyMode: false,
@@ -39,3 +39,21 @@ export const useUIStore = create<UIState>((set) => ({
         typeof v === 'function' ? (v as (prev: boolean) => boolean)(state.showShortcuts) : v,
     })),
 }));
+
+/**
+ * Vista inicial derivada del pathname: evita que al deep-linkear
+ * `/expedientes/:id` se pinte un frame del dashboard con su loader antes de
+ * que el enrutador aplique la intención de la URL.
+ */
+function initialViewFromPathname(): SidebarView {
+  if (typeof window === 'undefined') return 'dashboard';
+  const { pathname } = window.location;
+  if (pathname.startsWith('/expedientes')) return 'causas';
+  if (pathname.startsWith('/anotaciones')) return 'anotaciones';
+  if (pathname.startsWith('/alumnos')) return 'alumnos';
+  if (pathname.startsWith('/informes')) return 'informes';
+  if (pathname.startsWith('/reportes')) return 'reportes';
+  if (pathname.startsWith('/admin')) return 'admin';
+  if (pathname.startsWith('/plataforma')) return 'platform';
+  return 'dashboard';
+}

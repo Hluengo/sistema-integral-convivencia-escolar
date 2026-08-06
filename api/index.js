@@ -3681,6 +3681,10 @@ router8.post('/process-disciplinary-pdf', requireTenant, async (req, res) => {
     const body = req.body;
     const authReq = req;
     const tenantId = authReq.tenantId;
+    if (!tenantId) {
+      res.status(500).json({ error: 'Tenant no resuelto para analizar el PDF' });
+      return;
+    }
     if (!body.bucket || !body.storagePath || !body.fileName) {
       res.status(400).json({ error: 'Faltan par\xE1metros requeridos para analizar el PDF' });
       return;
@@ -3714,6 +3718,10 @@ router8.post(
       const body = req.body;
       const authReq = req;
       const tenantId = authReq.tenantId;
+      if (!tenantId) {
+        res.status(500).json({ error: 'Tenant no resuelto para confirmar el proceso' });
+        return;
+      }
       if (
         !body.bucket ||
         !body.storagePath ||
@@ -4049,7 +4057,7 @@ router11.patch('/admin/members/:userId', async (req, res) => {
     const userId = req.params.userId;
     const role = req.body?.role;
     const accessEnabled = req.body?.accessEnabled;
-    if (!userId || !isRole(role) || typeof accessEnabled !== 'boolean') {
+    if (!userId || !isValidUuid(userId) || !isRole(role) || typeof accessEnabled !== 'boolean') {
       res.status(400).json({ error: 'userId, role y accessEnabled son obligatorios.' });
       return;
     }
@@ -4201,6 +4209,10 @@ router11.post('/admin/invitations/:invitationId/resend', async (req, res) => {
     const request = getRequest(req);
     const client = getAdminClient();
     await assertFreshAdmin(client, request);
+    if (!req.params.invitationId || !isValidUuid(req.params.invitationId)) {
+      res.status(400).json({ error: 'Identificador de invitaci\xF3n inv\xE1lido.' });
+      return;
+    }
     const { data, error } = await client
       .from('membership_invitations')
       .select('id,tenant_id,email,role,auth_user_id,status')
@@ -4245,6 +4257,10 @@ router11.post('/admin/invitations/:invitationId/cancel', async (req, res) => {
     const request = getRequest(req);
     const client = getAdminClient();
     await assertFreshAdmin(client, request);
+    if (!req.params.invitationId || !isValidUuid(req.params.invitationId)) {
+      res.status(400).json({ error: 'Identificador de invitaci\xF3n inv\xE1lido.' });
+      return;
+    }
     const { data, error } = await client
       .from('membership_invitations')
       .select('id,email,role,auth_user_id,status')

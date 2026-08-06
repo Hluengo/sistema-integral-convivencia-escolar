@@ -176,7 +176,9 @@ export default function CausasView({ workspace, createCausa, navigation }: Causa
       </div>
 
       {/* Table follows the same hierarchy as Anotaciones. */}
-      {visibleCausas.length > 0 ? (
+      {workspace.isCausasLoading ? (
+        <ViewLoader view="causas" compact />
+      ) : visibleCausas.length > 0 ? (
         <div className="space-y-3">
           <CausasTable
             causas={visibleCausas}
@@ -239,20 +241,22 @@ export default function CausasView({ workspace, createCausa, navigation }: Causa
       </Suspense>
 
       {/* VIEW 3: CLOSED CASES */}
-      {workspace.selectedCausaId === '' && visibleCausas.length === 0 && (
-        <div className="flex-1">
-          <Suspense fallback={<ViewLoader view="causas" compact />}>
-            <ClosedCases
-              causas={workspace.causas}
-              privacyMode={privacyMode}
-              onReopenCausa={navigation.onReopenCausa}
-              onSelectCausa={(causa) => {
-                navigation.onSelectCausaFromDashboard(causa.id);
-              }}
-            />
-          </Suspense>
-        </div>
-      )}
+      {!workspace.isCausasLoading &&
+        workspace.selectedCausaId === '' &&
+        visibleCausas.length === 0 && (
+          <div className="flex-1">
+            <Suspense fallback={<ViewLoader view="causas" compact />}>
+              <ClosedCases
+                causas={workspace.causas}
+                privacyMode={privacyMode}
+                onReopenCausa={navigation.onReopenCausa}
+                onSelectCausa={(causa) => {
+                  navigation.onSelectCausaFromDashboard(causa.id);
+                }}
+              />
+            </Suspense>
+          </div>
+        )}
     </div>
   );
 }

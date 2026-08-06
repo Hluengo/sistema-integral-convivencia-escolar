@@ -23,6 +23,7 @@ const MIME_EXTENSIONS: Record<string, string> = {
   'image/jpeg': 'jpg',
   'image/svg+xml': 'svg',
 };
+
 const DOCUMENT_MIME_EXTENSIONS: Record<string, string> = {
   'application/pdf': 'pdf',
   'application/msword': 'doc',

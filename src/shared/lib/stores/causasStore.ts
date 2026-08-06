@@ -67,10 +67,13 @@ export const useCausasStore = create<CausasState>((set, get) => ({
 
   handleCreateCausa: async (params) => {
     const state = get();
-    const nextCounter =
-      state.causas.length > 0
-        ? Math.max(...state.causas.map((c) => Number.parseInt(c.id.split('-')[2], 10) || 0)) + 1
-        : 1;
+    // Reduce en lugar de Math.max(...spread): evita exceder el límite de
+    // argumentos de una función con listas muy grandes de expedientes.
+    const maxCounter = state.causas.reduce((max, causa) => {
+      const n = Number.parseInt(causa.id.split('-')[2], 10) || 0;
+      return n > max ? n : max;
+    }, 0);
+    const nextCounter = state.causas.length > 0 ? maxCounter + 1 : 1;
     const newObj = createDraftCausa({
       counter: nextCounter,
       estudianteNombre: params.newEstNombre,
