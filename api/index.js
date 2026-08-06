@@ -3632,6 +3632,7 @@ var PDF_CONFIRM_ROLES = [
   'convivencia',
   'inspectoria',
   'profesor_jefe',
+  'staff',
 ];
 router8.use(
   '/process-disciplinary-pdf',
