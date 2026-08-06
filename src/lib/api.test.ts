@@ -66,7 +66,10 @@ describe('API endpoints', () => {
         exp: Math.floor(Date.now() / 1000) + 3600,
         app_metadata: {
           tenant_id: '00000000-0000-0000-0000-000000000001',
-          role: 'teacher',
+          // Rol básico sin permiso para confirmar el proceso disciplinario.
+          // 'teacher'/'inspector' ya NO son rechazados (autorizados vía
+          // PDF_CONFIRM_ROLES), por lo que se usa 'user' para la aserción 403.
+          role: 'user',
         },
       },
       b64Secret,
