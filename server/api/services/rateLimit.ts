@@ -3,24 +3,27 @@
 /**
  * Rate limiter con soporte para Upstash Redis en producción.
  *
- * En desarrollo usa un Map en memoria.
+ * En desarrollo usa un Map en memoria (token-bucket).
  * En producción, si UPSTASH_REDIS_REST_URL está configurado,
  * usa Upstash Redis para rate limiting persistente entre instancias.
  *
  * Si no hay Redis configurado, emite warning y usa memoria como fallback.
  */
 
-const RATE_LIMIT = 10;
-const RATE_WINDOW = 60 * 1000;
+const RATE_LIMIT = 10; // capacity (tokens)
+const RATE_WINDOW = 60 * 1000; // ms to fully refill the bucket
 const MAX_ENTRIES = 10000;
 const PRUNE_THRESHOLD = 5000;
 let insertsSincePrune = 0;
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+// Token bucket in-memory: store tokens and last refill timestamp
+const bucketMap = new Map<string, { tokens: number; lastRefill: number; capacity: number }>();
 
 function prune() {
   const now = Date.now();
-  for (const [key, val] of rateLimitMap) {
-    if (now > val.resetAt) rateLimitMap.delete(key);
+  for (const [key, val] of bucketMap) {
+    // if bucket hasn't been used for 2 * RATE_WINDOW, delete it
+    if (now - val.lastRefill > RATE_WINDOW * 2) bucketMap.delete(key);
   }
 }
 
@@ -62,6 +65,9 @@ function getRedisClient() {
   return redisClient;
 }
 
+// Refill rate per ms for token bucket
+const REFILL_RATE_PER_MS = RATE_LIMIT / RATE_WINDOW;
+
 export async function checkRateLimitAsync(
   ip: string,
 ): Promise<{ allowed: boolean; limit: number; remaining: number; resetAt: number }> {
@@ -71,6 +77,7 @@ export async function checkRateLimitAsync(
   }
 
   try {
+    // Keep existing Redis simple fixed-window behavior for consistency across instances.
     const key = `rl:${ip}`;
     const count = await redis.incr(key);
 
@@ -94,32 +101,41 @@ export function checkRateLimit(ip: string): {
   resetAt: number;
 } {
   const now = Date.now();
-  const record = rateLimitMap.get(ip);
-  if (!record || now > record.resetAt) {
-    if (rateLimitMap.size >= MAX_ENTRIES) {
-      prune();
-    }
+  let bucket = bucketMap.get(ip);
+
+  if (!bucket) {
+    // initialize full bucket but consume one token for the current request
+    bucket = { tokens: RATE_LIMIT - 1, lastRefill: now, capacity: RATE_LIMIT };
+    if (bucketMap.size >= MAX_ENTRIES) prune();
     insertsSincePrune++;
     if (insertsSincePrune >= PRUNE_THRESHOLD) {
       prune();
       insertsSincePrune = 0;
     }
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
+    bucketMap.set(ip, bucket);
     return {
       allowed: true,
       limit: RATE_LIMIT,
-      remaining: RATE_LIMIT - 1,
+      remaining: bucket.tokens,
       resetAt: now + RATE_WINDOW,
     };
   }
-  if (record.count >= RATE_LIMIT) {
-    return { allowed: false, limit: RATE_LIMIT, remaining: 0, resetAt: record.resetAt };
+
+  // refill based on elapsed time since lastRefill
+  const elapsed = now - bucket.lastRefill;
+  if (elapsed > 0) {
+    const refill = elapsed * REFILL_RATE_PER_MS;
+    bucket.tokens = Math.min(bucket.capacity, bucket.tokens + refill);
+    bucket.lastRefill = now;
   }
-  record.count++;
-  return {
-    allowed: true,
-    limit: RATE_LIMIT,
-    remaining: RATE_LIMIT - record.count,
-    resetAt: record.resetAt,
-  };
+
+  if (bucket.tokens >= 1) {
+    bucket.tokens -= 1;
+    const remaining = Math.floor(bucket.tokens);
+    return { allowed: true, limit: RATE_LIMIT, remaining, resetAt: now + RATE_WINDOW };
+  }
+
+  // compute resetAt as when tokens will reach 1 again
+  const msUntilOneToken = Math.ceil((1 - bucket.tokens) / REFILL_RATE_PER_MS);
+  return { allowed: false, limit: RATE_LIMIT, remaining: 0, resetAt: now + msUntilOneToken };
 }
