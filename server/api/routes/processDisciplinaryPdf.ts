@@ -20,6 +20,8 @@ const PDF_CONFIRM_ROLES: readonly ProfileRole[] = [
   'convivencia',
   'inspectoria',
   'profesor_jefe',
+  'teacher',
+  'inspector',
   'staff',
 ];
 // Guard acotado al prefijo propio para no interceptar otras rutas /api/*.
