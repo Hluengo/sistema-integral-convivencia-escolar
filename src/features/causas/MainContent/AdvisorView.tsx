@@ -1,3 +1,5 @@
+/** @license SPDX-License-Identifier: Apache-2.0 */
+
 import { useMemo, useState } from 'react';
 import { FileSignature, FileText, Gavel, MessageSquare, ShieldCheck } from 'lucide-react';
 import type { Causa } from '../../../shared/lib/types';

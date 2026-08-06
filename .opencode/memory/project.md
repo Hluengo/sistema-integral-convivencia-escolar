@@ -16,23 +16,23 @@ Sistema SaaS multi-tenant para gestión integral de convivencia escolar en estab
 
 ### Stack Tecnológico
 
-| Capa           | Tecnología                                          | Versión                  |
-| -------------- | --------------------------------------------------- | ------------------------ |
-| Frontend       | React + TypeScript                                  | 19.0.1 / 5.8.2           |
-| Build          | Vite                                                | 6.4.3                    |
-| CSS            | Tailwind CSS v4                                     | 4.1.14                   |
-| State          | Zustand                                             | 5.0.14                   |
-| Queries        | TanStack React Query                                | 5.101.2                  |
-| Forms          | react-hook-form + Zod                               | 7.84.0 / 4.4.3           |
-| Backend (dev)  | Express + tsx                                       | 4.21.2 / 4.21.0          |
-| Backend (prod) | Vercel Serverless                                   | esbuild bundle           |
-| Database       | Supabase PostgreSQL                                 | 17.6.1                   |
-| Auth           | Supabase Auth (email/password)                      | —                        |
-| AI             | OpenRouter textos breves + Gemini 3.6 informes/docs | —                        |
-| Documentos     | docx (Word), pdf-lib + pdfjs-dist (PDF)             | 9.7.1 / 1.17.1 / 6.1.200 |
-| Monitoring     | Sentry Browser + PostHog                            | 10.66.0 / 1.404.1        |
-| Tests          | node:test + node:assert/strict + Playwright         | —                        |
-| Lint/Format    | TypeScript (tsc), ESLint 9, Prettier 3, Biome 2.5   | —                        |
+| Capa           | Tecnología                                          | Versión           |
+| -------------- | --------------------------------------------------- | ----------------- |
+| Frontend       | React + TypeScript                                  | 19.0.1 / 5.8.2    |
+| Build          | Vite                                                | 6.4.3             |
+| CSS            | Tailwind CSS v4                                     | 4.1.14            |
+| State          | Zustand                                             | 5.0.14            |
+| Queries        | TanStack React Query                                | 5.101.2           |
+| Forms          | react-hook-form + Zod                               | 7.84.0 / 4.4.3    |
+| Backend (dev)  | Express + tsx                                       | 4.21.2 / 4.21.0   |
+| Backend (prod) | Vercel Serverless                                   | esbuild bundle    |
+| Database       | Supabase PostgreSQL                                 | 17.6.1            |
+| Auth           | Supabase Auth (email/password)                      | —                 |
+| AI             | OpenRouter textos breves + Gemini 3.6 informes/docs | —                 |
+| Documentos     | react-to-print (HTML imprimible) + pdfjs-dist (PDF) | 3.3.0 / 6.1.200   |
+| Monitoring     | Sentry Browser + PostHog                            | 10.66.0 / 1.404.1 |
+| Tests          | node:test + node:assert/strict + Playwright         | —                 |
+| Lint/Format    | TypeScript (tsc), ESLint 9, Prettier 3, Biome 2.5   | —                 |
 
 ---
 
@@ -47,7 +47,7 @@ src/
 ├── widgets/          # Composit widgets (Header, Sidebar)
 ├── shared/           # Shared code (api, lib, ui, hooks, stores, schemas)
 │   ├── api/services/ # Supabase data services (canonical)
-│   ├── lib/          # Utils, mappers, docx, legalCompliance, domain, hooks
+│   ├── lib/          # Utils, mappers, legalCompliance, domain, hooks
 │   ├── ui/           # Shared UI components (Button, Dialog, AlertDialog)
 │   └── stores/       # Zustand stores (authStore, causasStore, uiStore, toastStore)
 ├── components/       # Legacy layer (barrel re-exports for backward compat)
@@ -451,20 +451,19 @@ Regla de proveedores:
 
 ### 6.4 Servicios (shared/api/services/)
 
-| Servicio                          | Métodos Clave                                                                                                                                                                                          |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `auth.service.ts`                 | signInWithEmail, signOut, onAuthStateChange                                                                                                                                                            |
-| `causas.service.ts`               | fetchCausas, createCausa, updateCausa, deleteCausa                                                                                                                                                     |
-| `bitacora.service.ts`             | saveBitacora vía `save_bitacora_snapshot` + buildBitacoraSnapshotDelta                                                                                                                                 |
-| `checklist.service.ts`            | saveChecklist vía `save_checklist_snapshot` + buildChecklistSnapshotDelta                                                                                                                              |
-| `annotations.service.ts`          | fetchAnnotations, fetchDocumentAnalyses, saveAnnotation, fetchStudentsWithAnnotationCounts                                                                                                             |
-| `courses.service.ts`              | fetchCourses, fetchStudentsByCourse, fetchStudentsWithCourses                                                                                                                                          |
-| `cartas.service.ts`               | fetchCartas, fetchStudentDisciplinarySnapshot, createCartaEvent, markCartaPrinted, markCartaDownloadedPdf, markCartaDownloadedWord, markCartaProcessedManually, annulCarta, resolveCartaWorkflowStatus |
-| `etapas.service.ts`               | fetchEtapas                                                                                                                                                                                            |
-| `storage.service.ts`              | uploadDocument, listDocuments, deleteDocument (bucket: documentos_convivencia)                                                                                                                         |
-| `disciplinary-storage.service.ts` | validateDisciplinaryPdf, uploadDisciplinaryFile, getDisciplinaryFileUrl, deleteDisciplinaryFile                                                                                                        |
-| `disciplinary-rules.service.ts`   | fetchDisciplinaryRules                                                                                                                                                                                 |
-| `causaDocuments.service.ts`       | createPendingCausaDocument, fetchCausaDocuments, saveCausaDocumentSnapshot, markCausaDocumentNotified (RPC), annulCausaDocument                                                                        |
+| Servicio                          | Métodos Clave                                                                                                                                                                                                                          |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `auth.service.ts`                 | signInWithEmail, signOut, onAuthStateChange                                                                                                                                                                                            |
+| `causas.service.ts`               | fetchCausas, createCausa, updateCausa, deleteCausa                                                                                                                                                                                     |
+| `bitacora.service.ts`             | saveBitacora vía `save_bitacora_snapshot` + buildBitacoraSnapshotDelta                                                                                                                                                                 |
+| `checklist.service.ts`            | saveChecklist vía `save_checklist_snapshot` + buildChecklistSnapshotDelta                                                                                                                                                              |
+| `annotations.service.ts`          | fetchAnnotations, fetchDocumentAnalyses, saveAnnotation, fetchStudentsWithAnnotationCounts                                                                                                                                             |
+| `courses.service.ts`              | fetchCourses, fetchStudentsByCourse, fetchStudentsWithCourses                                                                                                                                                                          |
+| `cartas.service.ts`               | fetchCartas, fetchStudentDisciplinarySnapshot (incluye etapas disciplinarias), createCartaEvent, markCartaPrinted, markCartaDownloadedPdf, markCartaDownloadedWord, markCartaProcessedManually, annulCarta, resolveCartaWorkflowStatus |
+| `storage.service.ts`              | uploadDocument, listDocuments, deleteDocument (bucket: documentos_convivencia)                                                                                                                                                         |
+| `disciplinary-storage.service.ts` | validateDisciplinaryPdf, uploadDisciplinaryFile, getDisciplinaryFileUrl, deleteDisciplinaryFile                                                                                                                                        |
+| `disciplinary-rules.service.ts`   | fetchDisciplinaryRules                                                                                                                                                                                                                 |
+| `causaDocuments.service.ts`       | createPendingCausaDocument, fetchCausaDocuments, saveCausaDocumentSnapshot, markCausaDocumentNotified (RPC), annulCausaDocument                                                                                                        |
 
 ---
 
@@ -549,23 +548,14 @@ Capa 5 — Server-side: service_role key bypasses RLS (uso controlado)
 
 ## 9. DOCUMENT GENERATION
 
-### 9.1 DOCX (Word)
+### 9.1 Cartas institucionales (HTML imprimible + react-to-print)
 
 ```
-src/shared/lib/docx/
-├── builder.ts        → Construye documento completo
-├── types.ts          → BuildDocxParams interface
-├── constants.ts      → Constantes de documento
-├── templates/        → Plantillas específicas
-│   ├── amonestacion.ts  → Carta de amonestación
-│   ├── compromiso.ts    → Carta de compromiso conductual
-│   └── derivacion.ts    → Carta de derivación
-├── helpers/
-│   ├── paragraphs.ts → Párrafos reutilizables
-│   ├── tables.ts     → Tablas
-│   ├── signature.ts  → Bloques de firma
-│   └── annotations.ts → Formateo de anotaciones
-└── index.ts          → Entry point
+Generación de cartas como documentos HTML con react-to-print:
+- Cartas de amonestación, compromiso y derivación viven en docgen por feature.
+- Snapshot de contenido en `carta_snapshots` para trazabilidad.
+- Los templates con IA se resuelven con Gemini (document_templates en DB).
+- `docx` y `pdf-lib` ya NO forman parte del bundle (removidos).
 ```
 
 ### 9.2 PDF (Analysis)
@@ -573,9 +563,6 @@ src/shared/lib/docx/
 ```
 Vía servidor:
   pdfjs-dist → Text extraction → Regex parsing → Student matching
-
-Vía cliente (download offline):
-  pdf-lib → Download Carta PDF (en AnotacionesDocumentGenerator)
 ```
 
 ### 9.3 AI Drafted Documents (4 tipos)
@@ -1322,7 +1309,7 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - Cobertura base agregada para `authStore`, `uiStore`, `toastStore` y acciones/selectores síncronos de `causasStore`; la suite local queda en 370 tests / 78 suites.
 - Auditoría legacy de `src/components/`: 30 archivos actuales; 29 son barrels de compatibilidad protegidos por `src/components/legacyCompatibility.test.ts` y 1 es el test de compatibilidad. Ya no quedan componentes reales en esa capa. `MetricCard`, `ErrorBoundary`, `ToastProvider` y `ShortcutsModal` viven ahora en `src/shared/ui/`; `ClosedCases` vive en `src/features/causas/`; `TemplateEditor` vive en `src/features/document-templates/`; `InteractiveTimeline` vive en `src/features/timeline/`; `Header` y sus subcomponentes viven en `src/widgets/header/`; `Sidebar` y `SidebarUserMenu` viven en `src/widgets/sidebar/`. Sus archivos bajo `src/components/` sólo reexportan para compatibilidad.
 - Skeletons lazy cerrados: `src/shared/Skeleton.tsx` centraliza fallbacks para shell, vistas administrativas/reportes/plataforma, detalle de expediente, modales y generador de cartas. `src/app/lazyFallbacks.test.ts` evita `fallback={null}` en `src/app` y `src/features`; suite local verificada en 370 tests / 78 suites.
-- Cobertura >60% cerrada: `npm run test:coverage` mide 85.66% líneas / 85.57% ramas / 84.77% funciones, excluye sólo `api/index.js` por ser artefacto generado y falla con `--test-coverage-lines=60`.
+- Cobertura >60% cerrada: `npm run test:coverage` mide 85.69% líneas / 83.90% ramas / 86.37% funciones, excluye sólo `api/index.js` por ser artefacto generado y falla con `--test-coverage-lines=80` (umbral subido desde 60 en 2026-08-06).
 - Seed local completo cerrado: `supabase/seed.sql` carga tenant demo, usuarios Auth/perfiles, membresías, cursos, estudiantes, anotaciones por tramo disciplinario, expedientes, bitácora, checklist, cartas, reglas, plantillas, proceso/analisis PDF, historial, reportes, notificaciones, invitaciones y configuración/documentos institucionales. La CLI actual no expone `supabase db seed`; el flujo documentado es `supabase db reset` con `[db.seed].sql_paths`.
 - Índices compuestos faltantes cerrados: `supabase/migrations/20260803004959_add_query_pattern_indexes.sql` agrega 16 índices `IF NOT EXISTS` para patrones tenant-scoped frecuentes en cursos, estudiantes, anotaciones, cartas/eventos, etapas, procesos PDF, documentos institucionales y eventos de cartas. `src/shared/lib/databaseIndexes.test.ts` protege la migración. La migración fue aplicada remotamente como `20260803004959 add_query_pattern_indexes` y se verificó en `pg_indexes` con 16/16 índices creados.
 - Dashboard analítico avanzado iniciado: `src/features/dashboard/dashboardTrends.ts` usa el ciclo escolar vigente marzo-diciembre para aperturas/cierres de expedientes y anotaciones agregadas. Las anotaciones se leen con `fetchAnnualAnnotationTrends(schoolYear)` desde `inspectorate_records`, filtradas por `tenant_id` y con columnas mínimas (`date_time`, `severity`, `type`), sin nombres, RUT, estudiantes, docentes ni texto de observación. `DashboardTrendsPanel.tsx` muestra el gráfico anual y `dashboardTrends.test.ts` cubre ciclo marzo-diciembre, cambio de año escolar en enero/febrero y agregación de anotaciones. Siguiente paso: mover tendencias históricas a una RPC/consulta agregada cuando el volumen real justifique paginación o análisis multi-año.
@@ -1345,5 +1332,24 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - Integración UI: `ProcessChecklist.tsx` renderiza `CausaNotificationPanel` en el hito `chk_rec_3` (solo Recepción); reemplaza el registro genérico de hitos para ese hito. `docente` solo puede leer (aviso).
 - `DraftPanel` retiró `notificacion_apertura` del selector visible (permanece en el union de tipos para compatibilidad legacy); un `useEffect` deriva ese valor a `citacion_entrevista`.
 - Robustez/seguridad anexa al diff: `isValidUuid` en `admin.ts` (membership PATCH), guard de `tenantId` en `processDisciplinaryPdf.ts`, `AbortController` + rollback optimista en `useAuditDraft`/`useDocumentManager`, deep-link a expedientes más allá de la primera página en `useCausaWorkspace`/`fetchCausaDetails`, y `useStudentsQuery` gateado por `isAuthenticated`.
-- Tests: `src/features/causas/notificacionDocgen/notificacionDocgen.test.ts` (unit) + `tests/notificacion-docgen.spec.ts` (E2E, se omite sin credenciales E2E). Suite completa: 448 tests verdes; lint + typecheck + build verdes.
+- Tests: `src/features/causas/notificacionDocgen/notificacionDocgen.test.ts` (unit) + `tests/notificacion-docgen.spec.ts` (E2E, se omite sin credenciales E2E). Suite completa: 512 tests verdes (109 suites); lint + typecheck + build verdes.
 - **Pendiente de registro:** el E2E requiere credenciales staff para ejecutarse; el trabajo quedó persistido en el branch `allow-staff-disciplinary-process`.
+
+### Auditoría integral + fixes — 2026-08-06
+
+- Informe completo en `docs/reviews/audit-integral-20260806.md`: baseline (lint ✅, 449 tests/89 suites, build ✅, `npm audit` 0 vulnerabilidades), 0 CRÍTICO · 8 ALTO · 16 MEDIO · 14 BAJO.
+- **QC-01**: `causaDocuments.service.ts` corrige `.select()` con columnas explícitas (evita `SELECT *` → rompe API de Supabase).
+- **SEC-01/02**: migración `20260806093000_revoke_anon_table_access.sql` — `REVOKE ALL ON ALL TABLES IN SCHEMA public FROM anon` + revoca acceso a funciones internas (`app_role()`, `current_app_role()`, `current_tenant_id()`, `clean_old_logs()`, `count_affected_tests()`). Las RPC públicas `get_public_dashboard_kpis`/`teacher_get_public_*` son `SECURITY DEFINER` y quedan intactas.
+- **QC-06**: headers SPDX agregados a 7 archivos que los tenían en falta.
+- **QC-08**: removido `import React` de `markdownUtils.tsx`.
+- **PERF-10**: logo móvil `veritas2.webp` (404) reemplazado por `public/veritas.png` copiado desde `src/assets/veritas.png`.
+- **QA-11**: umbral de cobertura subido de 60 a 80 en `package.json` (`--test-coverage-lines=80`).
+- **QA-01**: nuevos tests `cartas.service.test.ts` (14 tests: `resolveCartaWorkflowStatus`, `getCartaWorkflowLabel`, `registerPhysicalCartaForStudent`, `fetchCourseCartaRanking`, `fetchCartaTableStates`) y `annotations.service.test.ts` (21 tests: fetch/update/trends/RPCs). Patrón: `MockQueryBuilder` encadenable + mutación de `supabase.from`/`supabase.rpc` + `useAuthStore.setState` (patrón de `bitacora.service.test.ts`).
+- **QA-02**: timeline sin tests — extraída lógica pura `computeBreaches(causa)` de `useBreaches.ts` (el hook ahora es un `useMemo(() => computeBreaches(causa), [causa])`); tests `useBreaches.test.ts` (15 tests de brechas Circular 482/Ley 21809: resguardo, socioemocional, Aula Segura, plazos vencidos, confidencialidad, monitoreo) y `processSections.test.ts` (4 tests de las 5 fases).
+- **QA-03**: `auth.service.test.ts` (9 tests) mockeando `supabase.auth` — `signInWithEmail`, `requestPasswordReset` (con/sin `window`), `updatePassword`, `signOut` (scope local), `onAuthStateChange`.
+- **DOC-01**: README y memoria actualizados — 512 tests/109 suites, cobertura 85.69%/83.90%/86.37%, umbral 80; eliminadas referencias a `docx`, `pdf-lib` y `etapas.service.ts` (ya no existen; documentos con react-to-print y etapas dentro de `cartas.service.ts`).
+- **QA-01 (continuación, ronda 2)**: nuevos tests para 6 servicios Supabase que estaban en 0%: `reports.service.test.ts` (5), `causas.service.test.ts` (14), `courses.service.test.ts` (7), `admin.service.test.ts` (12), `institution.service.test.ts` (18), `causaDocuments.service.test.ts` (10). Para `admin.service` e `institution.service` (endpoints fetch) el patrón es mockear `supabase.auth.getSession()` + `globalThis.fetch` + `Object.defineProperty(response, 'json', ...)`.
+- **QA-01 (ronda 2) — hallazgos**: `reconcileChecklistFromBitacora` de `causas.service.ts` expande a la checklist base completa confirmada (`getBaseChecklist()`); en tests buscar por id (`chk_rec_1`), no por `length === 1`. `admin.service.ts` define `interface FetchMockOptions` y usa `afterEach` solo si hay teardown; ambos provocan `no-unused-vars` si se importan sin usar.
+- **Verificación final ronda 2 (2026-08-06)**: `npm run lint` ✅, `npm run test` ✅ **578 tests / 136 suites / 0 fail**, `npm run test:coverage` ✅ **87.67% líneas / 83.31% ramas / 88.72% funciones** (umbral 80). README y memoria actualizados a estos conteos. Quedan sin tests (cobertura <80% objetivo): `student-history.service.ts`, `notifications.service.ts`, `documentTemplates.service.ts`, `platform.service.ts`, `public-dashboard.service.ts`, `storage.service.ts`, `disciplinary-rules.service.ts`, `disciplinary-storage.service.ts`.
+- **QA-01 (ronda 3, cierre 2026-08-06)**: tests para los 8 servicios restantes — `disciplinary-rules.service.test.ts` (3), `disciplinary-storage.service.test.ts` (11, con `File` nativo y mock de `supabase.storage.from`), `documentTemplates.service.test.ts` (8, con fetch mock + `isDocumentTemplate`), `notifications.service.test.ts` (9, incl. RPC `sync_notification` con parámetros snake_case), `platform.service.test.ts` (7, con fetch mock y FormData), `public-dashboard.service.test.ts` (4, RPC `get_public_dashboard_kpis` y mapeo camelCase/strings), `storage.service.test.ts` (15, con mock de `window` para `openDocument`), `student-history.service.test.ts` (6, con validación Zod de UUID). Cobertura de servicios: 6 de 8 al 100% (resto ≥97%).
+- **Verificación final ronda 3 (2026-08-06)**: `npm run lint` ✅, `npm run test` ✅ **645 tests / 159 suites / 0 fail**, `npm run test:coverage` ✅ **88.70% líneas / 83.08% ramas / 89.89% funciones**. README y memoria actualizados a estos conteos. Todos los servicios de `src/shared/api/services/` quedan con cobertura ≥62% (cartas.service.ts el menor, por complejidad de RPCs).

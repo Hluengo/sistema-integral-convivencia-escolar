@@ -1,3 +1,5 @@
+/** @license SPDX-License-Identifier: Apache-2.0 */
+
 import { useState, useCallback } from 'react';
 import {
   DEFAULT_LETTER_CONTENT,

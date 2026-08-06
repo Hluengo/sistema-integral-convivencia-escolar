@@ -9,7 +9,7 @@ import type { Causa } from '@/src/shared/lib/types';
 import HeaderActions from './HeaderActions';
 import PageTitle from './PageTitle';
 
-const MOBILE_BRAND = '/veritas2.webp';
+const MOBILE_BRAND = '/veritas.png';
 
 interface HeaderProps {
   privacyMode: boolean;

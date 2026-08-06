@@ -49,7 +49,9 @@ export async function createPendingCausaDocument(
       course: snapshot.expediente.course || '',
       emission_date: snapshot.emissionDate,
     })
-    .select()
+    .select(
+      'id, causa_id, doc_type, status, content_snapshot, created_by, emitted_by, student_name, apoderado_name, course, emission_date, notified_at, tenant_id, created_at, updated_at',
+    )
     .single();
 
   if (error) {
