@@ -45,3 +45,6 @@ supabase_schema_actual_remoto.sql
 .env*
 
 Free-Models-IA/
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+

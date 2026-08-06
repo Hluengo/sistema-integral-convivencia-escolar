@@ -3632,6 +3632,8 @@ var PDF_CONFIRM_ROLES = [
   'convivencia',
   'inspectoria',
   'profesor_jefe',
+  'teacher',
+  'inspector',
   'staff',
 ];
 router8.use(
