@@ -23,7 +23,9 @@ export async function updatePassword(password: string) {
 }
 
 export async function signOut() {
-  const { error } = await supabase.auth.signOut();
+  // El cierre normal solo debe eliminar la sesión de este navegador. El
+  // alcance global depende de una llamada remota que puede fallar por red.
+  const { error } = await supabase.auth.signOut({ scope: 'local' });
   return { error };
 }
 
