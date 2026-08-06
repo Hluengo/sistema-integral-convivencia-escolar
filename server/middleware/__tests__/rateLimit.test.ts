@@ -24,8 +24,9 @@ function mockReq(overrides?: Partial<Request>): Request {
 }
 
 function mockRes(): Response & { state: MockState } {
-  const state: MockState = {};
-  const res = {
+  const state: MockState & { headers?: Record<string, string> } = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const res: any = {
     statusCode: 200,
     status(this: { statusCode: number } & Record<string, unknown>, code: number) {
       this.statusCode = code;
@@ -36,9 +37,18 @@ function mockRes(): Response & { state: MockState } {
       state.body = data;
       return this;
     },
-  } as unknown as Response;
-  Object.defineProperty(res, 'state', { get: () => state });
-  return res as unknown as Response & { state: MockState };
+    setHeader(
+      this: { state: MockState & { headers?: Record<string, string> } },
+      name: string,
+      value: string,
+    ) {
+      if (!state.headers) state.headers = {};
+      state.headers[name] = String(value);
+    },
+  };
+  const resCast = res as unknown as Response;
+  Object.defineProperty(resCast, 'state', { get: () => state });
+  return resCast as unknown as Response & { state: MockState };
 }
 
 describe('rateLimit middleware', () => {

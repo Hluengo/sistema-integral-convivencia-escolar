@@ -7,13 +7,13 @@ import { checkRateLimit, checkRateLimitAsync } from './rateLimit.js';
 describe('checkRateLimit (sync)', () => {
   it('allows first request', () => {
     const result = checkRateLimit('test-ip-1');
-    assert.equal(result, true);
+    assert.equal(result.allowed, true);
   });
 
   it('allows up to 10 requests per minute', () => {
     for (let i = 0; i < 10; i++) {
       const result = checkRateLimit('test-ip-limit');
-      assert.equal(result, true);
+      assert.equal(result.allowed, true);
     }
   });
 
@@ -22,20 +22,20 @@ describe('checkRateLimit (sync)', () => {
       checkRateLimit('test-ip-block');
     }
     const result = checkRateLimit('test-ip-block');
-    assert.equal(result, false);
+    assert.equal(result.allowed, false);
   });
 });
 
 describe('checkRateLimitAsync', () => {
   it('allows first request', async () => {
     const result = await checkRateLimitAsync('test-async-1');
-    assert.equal(result, true);
+    assert.equal(result.allowed, true);
   });
 
   it('allows up to 10 requests per minute', async () => {
     for (let i = 0; i < 10; i++) {
       const result = await checkRateLimitAsync('test-async-limit');
-      assert.equal(result, true);
+      assert.equal(result.allowed, true);
     }
   });
 
@@ -44,11 +44,11 @@ describe('checkRateLimitAsync', () => {
       await checkRateLimitAsync('test-async-block');
     }
     const result = await checkRateLimitAsync('test-async-block');
-    assert.equal(result, false);
+    assert.equal(result.allowed, false);
   });
 
   it('falls back to sync when no Redis configured', async () => {
     const result = await checkRateLimitAsync('test-async-fallback');
-    assert.equal(typeof result, 'boolean');
+    assert.equal(typeof result.allowed, 'boolean');
   });
 });

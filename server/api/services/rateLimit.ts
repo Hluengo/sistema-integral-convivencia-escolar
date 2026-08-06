@@ -62,7 +62,9 @@ function getRedisClient() {
   return redisClient;
 }
 
-export async function checkRateLimitAsync(ip: string): Promise<boolean> {
+export async function checkRateLimitAsync(
+  ip: string,
+): Promise<{ allowed: boolean; limit: number; remaining: number; resetAt: number }> {
   const redis = getRedisClient();
   if (!redis) {
     return checkRateLimit(ip);
@@ -76,13 +78,21 @@ export async function checkRateLimitAsync(ip: string): Promise<boolean> {
       await redis.pexpire(key, RATE_WINDOW);
     }
 
-    return count <= RATE_LIMIT;
+    const allowed = count <= RATE_LIMIT;
+    const remaining = Math.max(0, RATE_LIMIT - count);
+    const resetAt = Date.now() + RATE_WINDOW;
+    return { allowed, limit: RATE_LIMIT, remaining, resetAt };
   } catch {
     return checkRateLimit(ip);
   }
 }
 
-export function checkRateLimit(ip: string): boolean {
+export function checkRateLimit(ip: string): {
+  allowed: boolean;
+  limit: number;
+  remaining: number;
+  resetAt: number;
+} {
   const now = Date.now();
   const record = rateLimitMap.get(ip);
   if (!record || now > record.resetAt) {
@@ -95,11 +105,21 @@ export function checkRateLimit(ip: string): boolean {
       insertsSincePrune = 0;
     }
     rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
-    return true;
+    return {
+      allowed: true,
+      limit: RATE_LIMIT,
+      remaining: RATE_LIMIT - 1,
+      resetAt: now + RATE_WINDOW,
+    };
   }
   if (record.count >= RATE_LIMIT) {
-    return false;
+    return { allowed: false, limit: RATE_LIMIT, remaining: 0, resetAt: record.resetAt };
   }
   record.count++;
-  return true;
+  return {
+    allowed: true,
+    limit: RATE_LIMIT,
+    remaining: RATE_LIMIT - record.count,
+    resetAt: record.resetAt,
+  };
 }

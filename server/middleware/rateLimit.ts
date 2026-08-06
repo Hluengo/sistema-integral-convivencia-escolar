@@ -7,8 +7,6 @@ import type { Request, Response, NextFunction } from 'express';
 import type { AuthenticatedRequest } from '../types';
 import { checkRateLimitAsync } from '../api/services/rateLimit.js';
 
-const DEFAULT_WINDOW_SEC = 60;
-
 /**
  * Express middleware de rate limit.
  *
@@ -21,12 +19,19 @@ const DEFAULT_WINDOW_SEC = 60;
 export async function rateLimit(req: Request, res: Response, next: NextFunction): Promise<void> {
   const authReq = req as AuthenticatedRequest;
   const key = authReq.user?.sub ?? req.ip ?? 'unknown';
-  const allowed = await checkRateLimitAsync(key);
+  const info = await checkRateLimitAsync(key);
 
-  if (!allowed) {
+  // Standard rate limit headers
+  res.setHeader('X-RateLimit-Limit', String(info.limit));
+  res.setHeader('X-RateLimit-Remaining', String(info.remaining));
+  res.setHeader('X-RateLimit-Reset', String(Math.ceil(info.resetAt / 1000)));
+
+  if (!info.allowed) {
+    const retryAfterSec = Math.max(1, Math.ceil((info.resetAt - Date.now()) / 1000));
+    res.setHeader('Retry-After', String(retryAfterSec));
     res.status(429).json({
-      error: 'Demasiadas solicitudes. Intente nuevamente en un minuto.',
-      retryAfter: DEFAULT_WINDOW_SEC,
+      error: 'Demasiadas solicitudes. Intente nuevamente más tarde.',
+      retryAfter: retryAfterSec,
     });
     return;
   }
