@@ -20,7 +20,6 @@ const PDF_CONFIRM_ROLES: readonly ProfileRole[] = [
   'convivencia',
   'inspectoria',
   'profesor_jefe',
-  'teacher',
   'inspector',
   'staff',
 ];
