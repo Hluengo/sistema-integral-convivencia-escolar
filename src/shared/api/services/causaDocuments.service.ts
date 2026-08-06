@@ -63,7 +63,9 @@ export async function createPendingCausaDocument(
 export async function fetchCausaDocuments(causaId: string): Promise<CausaDocumentRow[]> {
   const { data, error } = await supabase
     .from('causa_documents')
-    .select('*')
+    .select(
+      'id, causa_id, doc_type, status, content_snapshot, created_by, emitted_by, student_name, apoderado_name, course, emission_date, notified_at, tenant_id, created_at, updated_at',
+    )
     .eq('causa_id', causaId)
     .order('created_at', { ascending: false });
 

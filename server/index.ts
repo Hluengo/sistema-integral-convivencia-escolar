@@ -79,6 +79,23 @@ app.use('/api', institutionRoutes);
 // Global error handler — must be registered AFTER all routes
 app.use(errorHandler);
 
+function ensureJwtConfig() {
+  // Fail-fast in production if no legacy JWT secret and no Supabase URL for JWKS.
+  if (process.env.NODE_ENV === 'production') {
+    const hasLegacy = Boolean(
+      process.env.SUPABASE_JWT_SECRET && process.env.SUPABASE_JWT_SECRET.length > 0,
+    );
+    const hasSupabase = Boolean(
+      process.env.VITE_SUPABASE_URL && process.env.VITE_SUPABASE_URL.length > 0,
+    );
+    if (!hasLegacy && !hasSupabase) {
+      throw new Error(
+        'Missing SUPABASE_JWT_SECRET and VITE_SUPABASE_URL (no JWKS). Aborting startup to avoid running with degraded JWT verification.',
+      );
+    }
+  }
+}
+
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
@@ -99,4 +116,5 @@ async function startServer() {
   });
 }
 
+ensureJwtConfig();
 startServer();

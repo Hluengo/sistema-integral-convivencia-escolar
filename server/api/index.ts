@@ -15,6 +15,24 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
   .map((o) => o.trim())
   .filter(Boolean);
 
+function ensureJwtConfig() {
+  if (process.env.NODE_ENV === 'production') {
+    const hasLegacy = Boolean(
+      process.env.SUPABASE_JWT_SECRET && process.env.SUPABASE_JWT_SECRET.length > 0,
+    );
+    const hasSupabase = Boolean(
+      process.env.VITE_SUPABASE_URL && process.env.VITE_SUPABASE_URL.length > 0,
+    );
+    if (!hasLegacy && !hasSupabase) {
+      throw new Error(
+        'Missing SUPABASE_JWT_SECRET and VITE_SUPABASE_URL (no JWKS). Aborting startup to avoid running with degraded JWT verification.',
+      );
+    }
+  }
+}
+
+ensureJwtConfig();
+
 const app = express();
 app.set('trust proxy', 1);
 app.use(compression());
