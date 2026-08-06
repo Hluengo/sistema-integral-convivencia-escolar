@@ -17,10 +17,7 @@ const PRUNE_THRESHOLD = 5000;
 let insertsSincePrune = 0;
 
 // Token bucket in-memory: store tokens and last refill timestamp
-const bucketMap = new Map<
-  string,
-  { tokens: number; lastRefill: number; capacity: number }
->();
+const bucketMap = new Map<string, { tokens: number; lastRefill: number; capacity: number }>();
 
 function prune() {
   const now = Date.now();
@@ -78,7 +75,11 @@ function getRedisClient() {
         const res = await fetch(`${url}/eval`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ script, keys: [key], args: [String(capacity), String(refillRatePerMs), String(now), String(RATE_WINDOW)] }),
+          body: JSON.stringify({
+            script,
+            keys: [key],
+            args: [String(capacity), String(refillRatePerMs), String(now), String(RATE_WINDOW)],
+          }),
         });
         const data = await res.json();
         // Upstash commonly returns { result: [...] }
@@ -86,11 +87,11 @@ function getRedisClient() {
         if (Array.isArray(arr)) {
           const allowed = Boolean(arr[0]);
           const remaining = Number(arr[2] ?? 0);
-          const resetAt = Number(arr[3] ?? (now + RATE_WINDOW));
+          const resetAt = Number(arr[3] ?? now + RATE_WINDOW);
           return { allowed, remaining, resetAt };
         }
         return null;
-      } catch (e) {
+      } catch {
         return null;
       }
     },
@@ -117,7 +118,12 @@ export async function checkRateLimitAsync(
     // Prefer atomic token-bucket in Redis when available
     const tokenRes = await redis.tokenBucket?.(key, RATE_LIMIT, REFILL_RATE_PER_MS, now);
     if (tokenRes) {
-      return { allowed: tokenRes.allowed, limit: RATE_LIMIT, remaining: tokenRes.remaining, resetAt: tokenRes.resetAt };
+      return {
+        allowed: tokenRes.allowed,
+        limit: RATE_LIMIT,
+        remaining: tokenRes.remaining,
+        resetAt: tokenRes.resetAt,
+      };
     }
 
     // Fallback to simple fixed-window increment
@@ -155,7 +161,12 @@ export function checkRateLimit(ip: string): {
       insertsSincePrune = 0;
     }
     bucketMap.set(ip, bucket);
-    return { allowed: true, limit: RATE_LIMIT, remaining: bucket.tokens, resetAt: now + RATE_WINDOW };
+    return {
+      allowed: true,
+      limit: RATE_LIMIT,
+      remaining: bucket.tokens,
+      resetAt: now + RATE_WINDOW,
+    };
   }
 
   // refill based on elapsed time since lastRefill
