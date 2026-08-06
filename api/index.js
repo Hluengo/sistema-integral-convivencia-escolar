@@ -3705,7 +3705,10 @@ router8.post('/process-disciplinary-pdf', requireTenant, async (req, res) => {
 router8.post(
   '/process-disciplinary-pdf/confirm',
   requireTenant,
-  requireRole(PDF_CONFIRM_ROLES),
+  requireMembership({
+    applicationCode: CONVIVENCIA_MEMBERSHIP.applicationCode,
+    allowedRoles: PDF_CONFIRM_ROLES,
+  }),
   async (req, res) => {
     try {
       const body = req.body;

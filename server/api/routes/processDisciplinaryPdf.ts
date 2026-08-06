@@ -3,7 +3,6 @@
 import { Router } from 'express';
 import { requireAuth } from '../../middleware/auth.js';
 import { requireTenant } from '../../middleware/requireTenant.js';
-import { requireRole } from '../../middleware/requireRole.js';
 import type { AuthenticatedRequest } from '../types';
 import type { ProfileRole } from '../../types';
 import { rateLimit } from '../../middleware/rateLimit.js';
@@ -128,7 +127,10 @@ router.post('/process-disciplinary-pdf', requireTenant, async (req, res) => {
 router.post(
   '/process-disciplinary-pdf/confirm',
   requireTenant,
-  requireRole(PDF_CONFIRM_ROLES),
+  requireMembership({
+    applicationCode: CONVIVENCIA_MEMBERSHIP.applicationCode,
+    allowedRoles: PDF_CONFIRM_ROLES,
+  }),
   async (req, res) => {
     try {
       const body = req.body as AuthedRequestBody;
