@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { Star } from 'lucide-react';
-import type { AnnotationSummary } from '@/src/shared/lib/types';
+import type { AnnotationSummary } from '@/shared/lib/types';
 
 interface ClassificationOption {
   value: string;

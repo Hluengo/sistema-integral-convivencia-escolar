@@ -1,3 +1,4 @@
+/** @license SPDX-License-Identifier: Apache-2.0 */
 import { AlertTriangle } from 'lucide-react';
 import { BoldText } from '@/src/lib/markdownUtils';
 

@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import type { BitacoraEntry, Causa, ChecklistItem } from '@/src/shared/lib/types';
-import { nowDateOnly, nowIso } from '@/src/shared/lib/dateUtils';
+import type { BitacoraEntry, Causa, ChecklistItem } from '@/shared/lib/types';
+import { nowDateOnly, nowIso } from '@/shared/lib/dateUtils';
 import { DEFAULT_NOTIFICATION_CONTENT, NOTIFICACION_TITLE } from './defaultContent';
 import {
   CAUSA_DOCUMENT_TYPE,

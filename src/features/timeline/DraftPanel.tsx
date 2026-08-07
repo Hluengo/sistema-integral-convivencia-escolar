@@ -6,7 +6,7 @@ import { useReactToPrint } from 'react-to-print';
 import { Eye, FileText, RefreshCw, FileSignature, Printer, PencilLine } from 'lucide-react';
 import { LOGO_URL } from '@/src/lib/logoBase64';
 import { LetterInstitutionalHeader } from '@/src/features/anotaciones/docgen/DocumentPreview/SharedComponents';
-import Button from '@/src/shared/ui/Button';
+import Button from '@/shared/ui/Button';
 import './official-document.css';
 
 type DocType =

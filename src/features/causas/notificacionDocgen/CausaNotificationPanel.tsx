@@ -1,8 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { Causa } from '@/src/shared/lib/types';
-import { useTimelineContext } from '@/src/shared/lib/useTimelineContext';
+import type { Causa } from '@/shared/lib/types';
+import { useTimelineContext } from '@/shared/lib/useTimelineContext';
 import {
   annulCausaDocument,
   createPendingCausaDocument,
@@ -10,8 +10,8 @@ import {
   markCausaDocumentNotified,
   saveCausaDocumentSnapshot,
   type CausaDocumentRow,
-} from '@/src/shared/api/services/causaDocuments.service';
-import { nowDateOnly } from '@/src/shared/lib/dateUtils';
+} from '@/shared/api/services/causaDocuments.service';
+import { nowDateOnly } from '@/shared/lib/dateUtils';
 import {
   buildNotificacionBitacoraEntry,
   buildNotificacionHito,

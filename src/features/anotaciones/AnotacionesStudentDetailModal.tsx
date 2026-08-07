@@ -2,13 +2,10 @@
 
 import { memo, useEffect, useMemo, useState } from 'react';
 import { X } from 'lucide-react';
-import type { Annotation } from '@/src/shared/lib/types';
-import { maskName, maskRut } from '@/src/shared/lib/anotacionesUtils';
-import { getCurrentSchoolYear, getYearInChile } from '@/src/shared/lib/dateUtils';
-import {
-  getDisciplinaryStage,
-  type LetterDocType,
-} from '@/src/shared/lib/domain/disciplinaryStage';
+import type { Annotation } from '@/shared/lib/types';
+import { maskName, maskRut } from '@/shared/lib/anotacionesUtils';
+import { getCurrentSchoolYear, getYearInChile } from '@/shared/lib/dateUtils';
+import { getDisciplinaryStage, type LetterDocType } from '@/shared/lib/domain/disciplinaryStage';
 import {
   STAGE_STYLE,
   TAB_ICONS,
@@ -22,14 +19,14 @@ import HistoryTab from './AnotacionesStudentDetailModal/HistoryTab';
 import CartasTab from './AnotacionesStudentDetailModal/CartasTab';
 import EditAnnotationsTab from './AnotacionesStudentDetailModal/EditAnnotationsTab';
 import { useDisciplinaryData } from './AnotacionesStudentDetailModal/hooks/useDisciplinaryData';
-import { Dialog, DialogDescription, DialogTitle } from '@/src/shared/ui/Dialog';
+import { Dialog, DialogDescription, DialogTitle } from '@/shared/ui/Dialog';
 import {
   DetailModalBody,
   DetailModalContent,
   DetailModalHeader,
   DetailModalTabs,
   type DetailModalTab,
-} from '@/src/shared/ui/DetailModal';
+} from '@/shared/ui/DetailModal';
 
 const Skeleton = memo(function Skeleton({ className = '' }: { className?: string }) {
   return <div className={`animate-pulse rounded-xl bg-neutral-200 ${className}`} />;

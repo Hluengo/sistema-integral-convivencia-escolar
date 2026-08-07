@@ -195,12 +195,20 @@ export function getCartaWorkflowLabel(carta: CartaDisciplinaria | null | undefin
 }
 
 export async function fetchCartaTableStates(): Promise<Record<string, StudentCartaTableState>> {
+  // PERF-03: el estado de tabla solo considera el ciclo escolar en curso
+  // (marzo-diciembre), lo que además acota el volumen de cartas leídas.
+  const schoolYear = getCurrentSchoolYear();
+  const rangeStart = `${schoolYear}-03-01T00:00:00.000Z`;
+  const rangeEnd = `${schoolYear + 1}-01-01T00:00:00.000Z`;
   const { data: cartasData, error: cartasError } = await withSupabaseReadRetry(() =>
     supabase
       .from('cartas_disciplinarias')
       .select(CARTA_SELECT)
+      .gte('emission_date', rangeStart)
+      .lt('emission_date', rangeEnd)
       .order('emission_date', { ascending: false })
-      .order('created_at', { ascending: false }),
+      .order('created_at', { ascending: false })
+      .limit(500),
   );
 
   if (cartasError) {
@@ -235,7 +243,6 @@ export async function fetchCartaTableStates(): Promise<Record<string, StudentCar
     cartasByStudent.set(carta.student_id, current);
   }
 
-  const schoolYear = getCurrentSchoolYear();
   const states: Record<string, StudentCartaTableState> = {};
   for (const [studentId, studentCartas] of cartasByStudent) {
     states[studentId] = resolveStudentCartaTableState(studentCartas, schoolYear);

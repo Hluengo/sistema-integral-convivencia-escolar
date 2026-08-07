@@ -124,6 +124,49 @@ export async function fetchAnnualAnnotationTrends(
     throw new Error('El año escolar solicitado no es válido.');
   }
 
+  // PERF-04: la RPC agregada devuelve celdas mensuales disjuntas (mar-dic) en
+  // una sola query. Si la migración aún no está aplicada (RPC inexistente),
+  // se degrada a la lectura previa de inspectorate_records.
+  const { data: trendData, error: rpcError } = await withSupabaseReadRetry(() =>
+    supabase.rpc('get_annual_annotation_trend', { p_year: schoolYear }),
+  );
+  const rows = trendData as Array<{
+    month_key: number;
+    total_count: number;
+    negative_count: number;
+    negative_high_count: number;
+    positive_count: number;
+    positive_high_count: number;
+    other_count: number;
+    other_high_count: number;
+  }> | null;
+  if (!rpcError && Array.isArray(rows) && rows.length > 0) {
+    // Reconstruye registros sintéticos por celda mensual disjunta: el
+    // dashboard suma por severidad/tipo, por lo que cada subgrupo (high y
+    // no-high) se emite por separado sin duplicar el total.
+    return rows.flatMap((row) => {
+      const dateTime = `${schoolYear}-${String(row.month_key).padStart(2, '0')}-15T12:00:00.000Z`;
+      const emit = (
+        type: Annotation['type'],
+        severity: TipoInfraccion,
+        count: number,
+      ): AnnualAnnotationTrendRecord[] =>
+        Array.from({ length: Math.max(0, Number(count) || 0) }, () => ({
+          dateTime,
+          type,
+          severity,
+        }));
+      return [
+        ...emit('Negativa', 'Muy Grave', row.negative_high_count),
+        ...emit('Negativa', 'Grave', Number(row.negative_count) - Number(row.negative_high_count)),
+        ...emit('Positiva', 'Muy Grave', row.positive_high_count),
+        ...emit('Positiva', 'Grave', Number(row.positive_count) - Number(row.positive_high_count)),
+        ...emit('Información', 'Muy Grave', row.other_high_count),
+        ...emit('Información', 'Grave', Number(row.other_count) - Number(row.other_high_count)),
+      ];
+    });
+  }
+
   const rangeStart = `${schoolYear}-03-01T00:00:00.000Z`;
   const rangeEnd = `${schoolYear + 1}-01-01T00:00:00.000Z`;
   const { data, error } = await withSupabaseReadRetry(() =>

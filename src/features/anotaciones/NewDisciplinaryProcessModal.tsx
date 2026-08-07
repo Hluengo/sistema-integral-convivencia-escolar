@@ -13,19 +13,19 @@ import {
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import type { Student } from './NewDisciplinaryProcessModal/constants';
-import { useInvalidateDashboardQueries } from '@/src/shared/lib/hooks/useInvalidateDashboardQueries';
+import { useInvalidateDashboardQueries } from '@/shared/lib/hooks/useInvalidateDashboardQueries';
 import { supabase } from '../../shared/api/lib/supabase';
-import { useAuthStore } from '@/src/shared/lib/stores/authStore';
-import type { AnnotationSummary } from '@/src/shared/lib/types';
-import type { DocumentAnalysis } from '@/src/shared/lib/types';
-import { fetchDisciplinaryRules } from '@/src/shared/api/services/disciplinary-rules.service';
-import { fetchDocumentAnalyses } from '@/src/shared/api/services/annotations.service';
-import type { DisciplinaryRule } from '@/src/shared/api/services/disciplinary-rules.service';
+import { useAuthStore } from '@/shared/lib/stores/authStore';
+import type { AnnotationSummary } from '@/shared/lib/types';
+import type { DocumentAnalysis } from '@/shared/lib/types';
+import { fetchDisciplinaryRules } from '@/shared/api/services/disciplinary-rules.service';
+import { fetchDocumentAnalyses } from '@/shared/api/services/annotations.service';
+import type { DisciplinaryRule } from '@/shared/api/services/disciplinary-rules.service';
 import {
   deleteDisciplinaryFile,
   type UploadedDisciplinaryFile,
   uploadDisciplinaryFile,
-} from '@/src/shared/api/services/disciplinary-storage.service';
+} from '@/shared/api/services/disciplinary-storage.service';
 import StudentSelectStep from './NewDisciplinaryProcessModal/StudentSelectStep';
 import UploadAnalyzeStep from './NewDisciplinaryProcessModal/UploadAnalyzeStep';
 import ClassificationStep from './NewDisciplinaryProcessModal/ClassificationStep';
@@ -34,9 +34,9 @@ import ReviewStep, {
   type ReviewAnnotationType,
 } from './NewDisciplinaryProcessModal/ReviewStep';
 import { updateReviewAnnotationText } from './NewDisciplinaryProcessModal/reviewAnnotationUtils';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/src/shared/ui/Dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/shared/ui/Dialog';
 import PdfAnalysisComparison from './NewDisciplinaryProcessModal/PdfAnalysisComparison';
-import Button from '@/src/shared/ui/Button';
+import Button from '@/shared/ui/Button';
 
 type FlowStep =
   'upload' | 'student_resolution' | 'duplicate_check' | 'classification' | 'review' | 'success';

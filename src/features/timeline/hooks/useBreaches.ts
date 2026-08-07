@@ -1,8 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useMemo } from 'react';
-import { type Causa, EstadoCausa } from '@/src/shared/lib/types';
-import { getFaseForEstado } from '@/src/shared/lib/data';
+import { type Causa, EstadoCausa } from '@/shared/lib/types';
+import { getFaseForEstado } from '@/shared/lib/data';
 import {
   verificarPlazoInvestigacion,
   verificarPlazoSuspension,
@@ -10,7 +10,7 @@ import {
   MAX_PLAZO_INVESTIGACION_DIAS,
   MAX_PLAZO_SUSPENSION_DIAS,
   MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS,
-} from '@/src/shared/lib/legalCompliance';
+} from '@/shared/lib/legalCompliance';
 
 /**
  * Lógica pura de detección de brechas de debido proceso (Circular 482 / Ley 21809).

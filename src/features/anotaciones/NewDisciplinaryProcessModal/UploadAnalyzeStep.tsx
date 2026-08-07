@@ -2,12 +2,12 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { Upload, FileText, Loader2, AlertTriangle, Star } from 'lucide-react';
-import type { AnnotationSummary } from '@/src/shared/lib/types';
+import type { AnnotationSummary } from '@/shared/lib/types';
 import {
   MAX_DISCIPLINARY_PDF_BYTES,
   validateDisciplinaryPdf,
-} from '@/src/shared/api/services/disciplinary-storage.service';
-import Button from '@/src/shared/ui/Button';
+} from '@/shared/api/services/disciplinary-storage.service';
+import Button from '@/shared/ui/Button';
 
 interface UploadAnalyzeStepProps {
   file: File | null;

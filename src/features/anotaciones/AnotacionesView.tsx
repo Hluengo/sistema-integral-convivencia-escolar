@@ -13,7 +13,7 @@ import { getStudentCartaWorkflowLabel } from '../../shared/lib/domain/disciplina
 import AnotacionesStudentTable from './AnotacionesStudentTable';
 import { AnnotationsSkeleton, ModalSkeleton } from '../../shared/Skeleton';
 import type { ActiveTab } from './AnotacionesStudentDetailModal/constants';
-import Button from '@/src/shared/ui/Button';
+import Button from '@/shared/ui/Button';
 import { useAuthStore } from '../../shared/lib/stores/authStore';
 
 const AnotacionesStudentDetailModal = lazy(() => import('./AnotacionesStudentDetailModal'));

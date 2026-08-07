@@ -4,9 +4,9 @@ import { useCallback, useState } from 'react';
 import {
   registerPhysicalCartaForStudent,
   type PhysicalCartaRegistrationResult,
-} from '@/src/shared/api/services/cartas.service';
-import type { PhysicalCartaRegistrationInput } from '@/src/shared/lib/schemas/physicalCarta';
-import { useInvalidateDashboardQueries } from '@/src/shared/lib/hooks/useInvalidateDashboardQueries';
+} from '@/shared/api/services/cartas.service';
+import type { PhysicalCartaRegistrationInput } from '@/shared/lib/schemas/physicalCarta';
+import { useInvalidateDashboardQueries } from '@/shared/lib/hooks/useInvalidateDashboardQueries';
 
 interface UsePhysicalCartaRegistrationOptions {
   onRegistered: () => void | Promise<void>;

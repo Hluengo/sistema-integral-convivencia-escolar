@@ -22,12 +22,13 @@ export default defineConfig(() => {
     plugins,
     resolve: {
       alias: {
+        '@/shared': path.resolve(__dirname, 'src/shared'),
         '@': path.resolve(__dirname, '.'),
       },
     },
     build: {
       target: 'es2020',
-      chunkSizeWarningLimit: 700,
+      chunkSizeWarningLimit: 550,
       rollupOptions: {
         output: {
           manualChunks(id) {
@@ -46,9 +47,6 @@ export default defineConfig(() => {
             if (id.includes('/@supabase/')) return 'supabase';
             if (id.includes('/@radix-ui/')) return 'radix';
             if (id.includes('/@tanstack/')) return 'tanstack';
-            if (id.includes('/pdf-lib/') || id.includes('/pdfjs-dist/') || id.includes('/docx/')) {
-              return 'documents';
-            }
             if (id.includes('/date-fns/')) return 'date';
             return 'vendor';
           },

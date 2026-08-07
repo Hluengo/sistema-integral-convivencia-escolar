@@ -1,3 +1,4 @@
+/** @license SPDX-License-Identifier: Apache-2.0 */
 import { BookOpen } from 'lucide-react';
 import { REGLAMENTO_CONDUCTAS } from '../../../reglamentoData';
 import type { Causa } from '../../../shared/lib/types';

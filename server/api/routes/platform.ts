@@ -149,15 +149,31 @@ router.get('/platform/tenants', async (req, res) => {
       .order('created_at', { ascending: false });
     if (error) throw error;
     const tenants = (data ?? []) as unknown as TenantRow[];
-    const withCounts = await Promise.all(
-      tenants.map(async (tenant) => {
-        const { count, error: countError } = await client
-          .from('profiles')
-          .select('user_id', { count: 'exact', head: true })
-          .eq('tenant_id', tenant.id);
-        return { ...tenant, user_count: countError ? 0 : (count ?? 0) };
-      }),
+
+    // PERF-02: cuenta usuarios por tenant con una sola RPC agregada (GROUP BY
+    // tenant_id) en lugar de una query por colegio (N+1). Si la migración aún
+    // no está aplicada (RPC inexistente), se degrada al conteo individual.
+    const { data: countsData, error: countsError } = await client.rpc('get_tenant_user_counts');
+    const rpcAvailable = !countsError && Array.isArray(countsData);
+    const rpcCounts = new Map(
+      (Array.isArray(countsData) ? countsData : []).map(
+        (row: { tenant_id: string; user_count: number }) => [
+          row.tenant_id,
+          Number(row.user_count) || 0,
+        ],
+      ),
     );
+    const withCounts = rpcAvailable
+      ? tenants.map((tenant) => ({ ...tenant, user_count: rpcCounts.get(tenant.id) ?? 0 }))
+      : await Promise.all(
+          tenants.map(async (tenant) => {
+            const { count, error: countError } = await client
+              .from('profiles')
+              .select('user_id', { count: 'exact', head: true })
+              .eq('tenant_id', tenant.id);
+            return { ...tenant, user_count: countError ? 0 : (count ?? 0) };
+          }),
+        );
     res.json({ tenants: withCounts });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'No fue posible cargar los colegios.';

@@ -1,3 +1,4 @@
+/** @license SPDX-License-Identifier: Apache-2.0 */
 import { Sparkles, Loader2 } from 'lucide-react';
 import { useTextImprovement, type TextImprovementContext } from './lib/hooks/useTextImprovement';
 import Button from './ui/Button';

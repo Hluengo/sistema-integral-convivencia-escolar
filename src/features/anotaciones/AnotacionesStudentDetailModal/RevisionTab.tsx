@@ -2,13 +2,10 @@
 
 import { useCallback, useRef } from 'react';
 import { AlertTriangle, ArrowRight, CheckCircle2, FileText, RefreshCw, X } from 'lucide-react';
-import type { CartaDisciplinaria } from '@/src/shared/lib/types';
-import {
-  mapDocTypeToLetterType,
-  type LetterDocType,
-} from '@/src/shared/lib/domain/disciplinaryStage';
+import type { CartaDisciplinaria } from '@/shared/lib/types';
+import { mapDocTypeToLetterType, type LetterDocType } from '@/shared/lib/domain/disciplinaryStage';
 import type { ReviewAnnotationType } from '../NewDisciplinaryProcessModal/ReviewStep';
-import Button from '@/src/shared/ui/Button';
+import Button from '@/shared/ui/Button';
 import ReviewStep from '../NewDisciplinaryProcessModal/ReviewStep';
 import { formatDate, type StudentInfo } from './constants';
 import { useStudentPdfDisciplinaryReview } from './hooks/useStudentPdfDisciplinaryReview';

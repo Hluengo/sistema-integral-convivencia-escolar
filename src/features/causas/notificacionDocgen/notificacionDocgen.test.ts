@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { EstadoCausa, type Causa } from '@/src/shared/lib/types';
+import { EstadoCausa, type Causa } from '@/shared/lib/types';
 import {
   DEFAULT_NOTIFICATION_CONTENT,
   NOTIFICACION_TITLE,

@@ -10,21 +10,17 @@ import {
   ScrollText,
   Upload,
 } from 'lucide-react';
-import type {
-  CartaDisciplinaria,
-  DocumentAnalysis,
-  EtapaDisciplinaria,
-} from '@/src/shared/lib/types';
+import type { CartaDisciplinaria, DocumentAnalysis, EtapaDisciplinaria } from '@/shared/lib/types';
 import type {
   CartaEvent,
   DetectedAnnotationRecord,
   DisciplinaryFileRecord,
   DisciplinaryProcessRecord,
   LetterOutputEvent,
-} from '@/src/shared/api/services/cartas.service';
-import { resolveCartaWorkflowStatus } from '@/src/shared/api/services/cartas.service';
+} from '@/shared/api/services/cartas.service';
+import { resolveCartaWorkflowStatus } from '@/shared/api/services/cartas.service';
 import { formatDate } from './constants';
-import { useStudentHistoryEntries } from '@/src/shared/lib/hooks/useStudentHistoryEntries';
+import { useStudentHistoryEntries } from '@/shared/lib/hooks/useStudentHistoryEntries';
 import ManualHistoryEntryForm from './ManualHistoryEntryForm';
 
 interface TimelineItem {

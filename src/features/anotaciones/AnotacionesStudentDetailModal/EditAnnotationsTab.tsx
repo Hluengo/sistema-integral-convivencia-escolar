@@ -5,10 +5,10 @@
 
 import { useState } from 'react';
 import { Check, Pencil, X } from 'lucide-react';
-import type { Annotation } from '@/src/shared/lib/types';
-import { updateAnnotation } from '@/src/shared/api/services/annotations.service';
+import type { Annotation } from '@/shared/lib/types';
+import { updateAnnotation } from '@/shared/api/services/annotations.service';
 import { formatDate, SEVERITY_BADGE } from './constants';
-import Button from '@/src/shared/ui/Button';
+import Button from '@/shared/ui/Button';
 import { toDateTimeLocalValue, toIsoDateTime } from './annotationEditUtils';
 
 interface EditAnnotationsTabProps {

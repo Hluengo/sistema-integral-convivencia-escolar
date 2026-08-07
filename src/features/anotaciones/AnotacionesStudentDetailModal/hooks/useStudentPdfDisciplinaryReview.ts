@@ -1,21 +1,21 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { supabase } from '@/src/shared/api/lib/supabase';
-import { useAuthStore } from '@/src/shared/lib/stores/authStore';
-import { useInvalidateDashboardQueries } from '@/src/shared/lib/hooks/useInvalidateDashboardQueries';
-import type { AnnotationSummary } from '@/src/shared/lib/types';
+import { supabase } from '@/shared/api/lib/supabase';
+import { useAuthStore } from '@/shared/lib/stores/authStore';
+import { useInvalidateDashboardQueries } from '@/shared/lib/hooks/useInvalidateDashboardQueries';
+import type { AnnotationSummary } from '@/shared/lib/types';
 import {
   deleteDisciplinaryFile,
   type UploadedDisciplinaryFile,
   uploadDisciplinaryFile,
-} from '@/src/shared/api/services/disciplinary-storage.service';
+} from '@/shared/api/services/disciplinary-storage.service';
 import {
   getSuggestedLetterType,
   mapDocTypeToLetterType,
   mapLetterTypeToDocType,
   type LetterDocType,
-} from '@/src/shared/lib/domain/disciplinaryStage';
+} from '@/shared/lib/domain/disciplinaryStage';
 import type {
   ReviewAnnotation,
   ReviewAnnotationType,

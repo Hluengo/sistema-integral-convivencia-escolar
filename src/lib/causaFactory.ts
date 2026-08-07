@@ -1,3 +1,4 @@
+/** @license SPDX-License-Identifier: Apache-2.0 */
 import { getBaseChecklist } from '../shared/lib/data';
 import { type Causa, EstadoCausa } from '../shared/lib/types';
 import { nowDateOnly, nowIso } from '../shared/lib/dateUtils';

@@ -1,17 +1,17 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { ArrowRight, FileText, Gauge, Shield, Sparkles } from 'lucide-react';
-import type { CartaDisciplinaria, DocumentAnalysis } from '@/src/shared/lib/types';
+import type { CartaDisciplinaria, DocumentAnalysis } from '@/shared/lib/types';
 import {
   getDisciplinaryStage,
   getNextThreshold,
   getStageProgress,
   getSuggestedLetterType,
   mapDocTypeToLetterType,
-} from '@/src/shared/lib/domain/disciplinaryStage';
+} from '@/shared/lib/domain/disciplinaryStage';
 import { formatDate, STAGE_STYLE } from './constants';
-import { getCartaWorkflowLabel } from '@/src/shared/api/services/cartas.service';
-import Button from '@/src/shared/ui/Button';
+import { getCartaWorkflowLabel } from '@/shared/api/services/cartas.service';
+import Button from '@/shared/ui/Button';
 
 interface StudentSummaryTabProps {
   counts: { negativas: number; positivas: number; informativas: number };

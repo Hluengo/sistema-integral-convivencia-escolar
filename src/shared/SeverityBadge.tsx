@@ -1,3 +1,4 @@
+/** @license SPDX-License-Identifier: Apache-2.0 */
 import { memo } from 'react';
 import { getSeverityColor } from './lib/severityUtils';
 import type { SeverityLevel } from './lib/severityUtils';

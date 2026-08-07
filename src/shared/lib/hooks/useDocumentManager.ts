@@ -1,3 +1,4 @@
+/** @license SPDX-License-Identifier: Apache-2.0 */
 import { useState } from 'react';
 import type { Causa, BitacoraEntry, UserRole } from '../types';
 import { nowDateOnly, nowIso } from '../../../shared/lib/dateUtils';

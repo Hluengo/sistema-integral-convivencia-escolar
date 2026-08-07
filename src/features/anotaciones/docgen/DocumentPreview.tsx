@@ -7,9 +7,9 @@ import type { Annotation } from '../../../shared/lib/types';
 import type { DocType, LetterContent } from './DocumentPreview/docTypes';
 import LetterA4Document from './LetterA4Document';
 import LetterPreviewViewport from './LetterPreviewViewport';
-import Button from '@/src/shared/ui/Button';
-import { fetchInstitutionDocumentSettings } from '@/src/shared/api/services/institution.service';
-import { useAuthStore } from '@/src/shared/lib/stores/authStore';
+import Button from '@/shared/ui/Button';
+import { fetchInstitutionDocumentSettings } from '@/shared/api/services/institution.service';
+import { useAuthStore } from '@/shared/lib/stores/authStore';
 
 interface DocumentPreviewProps {
   docType: DocType;

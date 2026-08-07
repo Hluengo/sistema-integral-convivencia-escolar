@@ -8,8 +8,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/src/shared/ui/Dialog';
-import Button from '@/src/shared/ui/Button';
+} from '@/shared/ui/Dialog';
+import Button from '@/shared/ui/Button';
 
 interface PrintHintDialogProps {
   isOpen: boolean;

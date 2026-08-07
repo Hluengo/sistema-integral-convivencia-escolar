@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import HistoryEntryForm from '@/src/shared/ui/HistoryEntryForm';
+import HistoryEntryForm from '@/shared/ui/HistoryEntryForm';
 
 interface ManualHistoryEntryFormProps {
   studentId: string;

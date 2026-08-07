@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
-import type { Annotation } from '@/src/shared/lib/types';
-import { getCurrentDateStr, getSemaphoricStyle } from '@/src/shared/lib/anotacionesUtils';
+import type { Annotation } from '@/shared/lib/types';
+import { getCurrentDateStr, getSemaphoricStyle } from '@/shared/lib/anotacionesUtils';
 import DocTypeSelector from './docgen/DocTypeSelector';
 import DocumentForm from './docgen/DocumentForm';
 import DocumentPreview from './docgen/DocumentPreview';

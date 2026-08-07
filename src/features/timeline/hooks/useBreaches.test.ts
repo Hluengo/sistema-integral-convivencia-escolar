@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { computeBreaches } from './useBreaches';
-import type { Causa, ChecklistItem, EstadoCausa, TipoInfraccion } from '@/src/shared/lib/types';
+import type { Causa, ChecklistItem, EstadoCausa, TipoInfraccion } from '@/shared/lib/types';
 
 function makeChecklist(overrides: Array<{ id: string; completado: boolean }>): ChecklistItem[] {
   return overrides.map((o) => ({

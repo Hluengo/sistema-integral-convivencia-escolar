@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useState, useCallback, useMemo } from 'react';
-import type { Annotation } from '@/src/shared/lib/types';
+import type { Annotation } from '@/shared/lib/types';
 export function useSelectedAnnotations(annotations: Annotation[]) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 

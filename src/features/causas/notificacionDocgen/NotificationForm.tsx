@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import Button from '@/src/shared/ui/Button';
+import Button from '@/shared/ui/Button';
 import { NOTIFICATION_SECTIONS } from './defaultContent';
 import type { NotificationContent } from './types';
 

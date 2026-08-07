@@ -5,7 +5,7 @@
 
 import type React from 'react';
 import { Sparkles, RefreshCw, FileSignature } from 'lucide-react';
-import Button from '@/src/shared/ui/Button';
+import Button from '@/shared/ui/Button';
 
 type MarkdownRenderer = ({ text }: { text: string }) => React.ReactElement;
 

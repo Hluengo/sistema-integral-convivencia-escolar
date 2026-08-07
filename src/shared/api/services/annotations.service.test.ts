@@ -310,6 +310,91 @@ describe('fetchAnnualAnnotationTrends', () => {
       /db down/,
     );
   });
+
+  it('usa la RPC agregada cuando está disponible', async () => {
+    const result = await withSupabaseMocks({
+      rpc: async (fn) => {
+        assert.equal(fn, 'get_annual_annotation_trend');
+        return {
+          data: [
+            {
+              month_key: 3,
+              total_count: 6,
+              negative_count: 4,
+              negative_high_count: 1,
+              positive_count: 1,
+              positive_high_count: 0,
+              other_count: 1,
+              other_high_count: 1,
+            },
+            {
+              month_key: 4,
+              total_count: 2,
+              negative_count: 2,
+              negative_high_count: 2,
+              positive_count: 0,
+              positive_high_count: 0,
+              other_count: 0,
+              other_high_count: 0,
+            },
+          ],
+          error: null,
+        };
+      },
+      fn: async () => {
+        const { fetchAnnualAnnotationTrends } = await import('./annotations.service');
+        return fetchAnnualAnnotationTrends(2026);
+      },
+    });
+    const trend = result as Array<{ dateTime: string; type: string; severity: string }>;
+    assert.equal(trend.length, 8);
+    // Marzo: 4 negativas (1 Muy Grave + 3 Grave), 1 positiva Grave, 1 Información Muy Grave.
+    assert.equal(trend[0].dateTime, '2026-03-15T12:00:00.000Z');
+    assert.deepEqual(
+      trend.filter(
+        (row) =>
+          row.dateTime === '2026-03-15T12:00:00.000Z' &&
+          row.type === 'Negativa' &&
+          row.severity === 'Muy Grave',
+      ),
+      [{ dateTime: '2026-03-15T12:00:00.000Z', type: 'Negativa', severity: 'Muy Grave' }],
+    );
+    assert.equal(
+      trend.filter((row) => row.type === 'Negativa' && row.severity === 'Grave').length,
+      3,
+    );
+    // Abril: 2 negativas Muy Grave.
+    assert.equal(trend.filter((row) => row.dateTime === '2026-04-15T12:00:00.000Z').length, 2);
+  });
+
+  it('degrada a la lectura previa cuando la RPC no existe', async () => {
+    const rows = [{ date_time: '2026-05-10T10:00:00.000Z', severity: 'Grave', type: 'Negativa' }];
+    const result = await withSupabaseMocks({
+      rpc: async () => ({ data: null, error: { message: 'rpc not found' } as Error }),
+      from: () => ({ data: rows, error: null }),
+      fn: async () => {
+        const { fetchAnnualAnnotationTrends } = await import('./annotations.service');
+        return fetchAnnualAnnotationTrends(2026);
+      },
+    });
+    const trend = result as Array<{ dateTime: string; severity: string }>;
+    assert.equal(trend[0].dateTime, '2026-05-10T10:00:00.000Z');
+    assert.equal(trend[0].severity, 'Grave');
+  });
+
+  it('propaga errores de la RPC cuando el fallback también falla', async () => {
+    await assert.rejects(
+      withSupabaseMocks({
+        rpc: async () => ({ data: null, error: { message: 'rpc down' } as Error }),
+        from: () => ({ data: null, error: new Error('db down') }),
+        fn: async () => {
+          const { fetchAnnualAnnotationTrends } = await import('./annotations.service');
+          return fetchAnnualAnnotationTrends(2026);
+        },
+      }),
+      /db down/,
+    );
+  });
 });
 
 describe('fetchStudentsWithAnnotationCounts', () => {

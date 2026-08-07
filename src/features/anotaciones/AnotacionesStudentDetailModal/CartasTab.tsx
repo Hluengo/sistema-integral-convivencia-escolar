@@ -2,15 +2,15 @@
 
 import { lazy, Suspense, useState } from 'react';
 import { Archive, Ban, FileText, XCircle } from 'lucide-react';
-import type { Annotation, CartaDisciplinaria } from '@/src/shared/lib/types';
-import { TEACHERS_BY_COURSE } from '@/src/shared/lib/anotacionesUtils';
+import type { Annotation, CartaDisciplinaria } from '@/shared/lib/types';
+import { TEACHERS_BY_COURSE } from '@/shared/lib/anotacionesUtils';
 import {
   archiveCarta,
   annulCarta,
   createPendingCartaForStudent,
   markCartaProcessedManually,
   resolveCartaWorkflowStatus,
-} from '@/src/shared/api/services/cartas.service';
+} from '@/shared/api/services/cartas.service';
 import {
   getCartaProcessingBlockReason,
   getHighestPriorityLetterType,
@@ -21,12 +21,12 @@ import {
   mapLetterTypeToDocType,
   resolveStudentCartaTableState,
   type LetterDocType,
-} from '@/src/shared/lib/domain/disciplinaryStage';
+} from '@/shared/lib/domain/disciplinaryStage';
 import type { StudentInfo } from './constants';
 import PhysicalCartaRegistrationCard from './PhysicalCartaRegistrationCard';
-import TextInputDialog from '@/src/shared/ui/TextInputDialog';
-import Button from '@/src/shared/ui/Button';
-import { DocumentGeneratorSkeleton } from '@/src/shared/Skeleton';
+import TextInputDialog from '@/shared/ui/TextInputDialog';
+import Button from '@/shared/ui/Button';
+import { DocumentGeneratorSkeleton } from '@/shared/Skeleton';
 
 const AnotacionesDocumentGenerator = lazy(() => import('../AnotacionesDocumentGenerator'));
 

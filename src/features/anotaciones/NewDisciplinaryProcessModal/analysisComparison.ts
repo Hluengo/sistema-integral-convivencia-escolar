@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import type { AnnotationSummary } from '@/src/shared/lib/types';
+import type { AnnotationSummary } from '@/shared/lib/types';
 
 export function getAnalysisVariation(
   previous: AnnotationSummary,

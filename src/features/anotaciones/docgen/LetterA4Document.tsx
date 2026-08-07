@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { forwardRef } from 'react';
-import type { Annotation } from '@/src/shared/lib/types';
+import type { Annotation } from '@/shared/lib/types';
 import { TITLE_MAP, type DocType, type LetterContent } from './DocumentPreview/docTypes';
 import { LetterInstitutionalHeader, LetterTitle } from './DocumentPreview/SharedComponents';
 import AmonestacionContent from './DocumentPreview/AmonestacionContent';

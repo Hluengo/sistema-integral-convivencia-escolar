@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { AlertTriangle, Check, Pencil, X } from 'lucide-react';
 import { CLASSIFICATION_OPTIONS } from './constants';
-import type { AnnotationSummary } from '@/src/shared/lib/types';
-import Button from '@/src/shared/ui/Button';
+import type { AnnotationSummary } from '@/shared/lib/types';
+import Button from '@/shared/ui/Button';
 
 export type { ReviewAnnotation, ReviewAnnotationType } from './reviewAnnotationUtils';
 import type { ReviewAnnotation, ReviewAnnotationType } from './reviewAnnotationUtils';

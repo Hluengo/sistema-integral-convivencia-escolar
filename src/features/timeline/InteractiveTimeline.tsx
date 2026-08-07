@@ -4,14 +4,14 @@
  */
 
 import { Suspense, lazy, useState } from 'react';
-import type { Causa, FaseProcedimental, UserRole } from '@/src/shared/lib/types';
-import { getFaseForEstado } from '@/src/shared/lib/data';
+import type { Causa, FaseProcedimental, UserRole } from '@/shared/lib/types';
+import { getFaseForEstado } from '@/shared/lib/data';
 import TimelineHeader from './TimelineHeader';
 import TimelineTabs from './TimelineTabs';
 import TimelineTabPanels from './TimelineTabPanels';
-import { useTimelineController } from '@/src/shared/lib/hooks/useTimelineController';
-import { TimelineProvider } from '@/src/shared/lib/TimelineContext';
-import { useAppContext } from '@/src/shared/lib/useAppContext';
+import { useTimelineController } from '@/shared/lib/hooks/useTimelineController';
+import { TimelineProvider } from '@/shared/lib/TimelineContext';
+import { useAppContext } from '@/shared/lib/useAppContext';
 import ConfirmDialog from '../../shared/ConfirmDialog';
 import { useBreaches } from './hooks/useBreaches';
 import type { TimelineTab } from './timelineTabs.types';

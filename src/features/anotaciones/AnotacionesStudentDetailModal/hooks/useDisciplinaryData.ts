@@ -3,11 +3,11 @@
 import { useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { queryClient } from '@/src/lib/queryClient';
-import type { CartaDisciplinaria } from '@/src/shared/lib/types';
+import type { CartaDisciplinaria } from '@/shared/lib/types';
 import {
   fetchStudentDisciplinarySnapshot,
   type StudentDisciplinarySnapshot,
-} from '@/src/shared/api/services/cartas.service';
+} from '@/shared/api/services/cartas.service';
 
 const EMPTY_SNAPSHOT: StudentDisciplinarySnapshot = {
   annotations: [],

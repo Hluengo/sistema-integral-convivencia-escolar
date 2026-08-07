@@ -2,17 +2,17 @@
 
 import { useState } from 'react';
 import { ClipboardCheck, Plus, X } from 'lucide-react';
-import type { CartaDisciplinaria } from '@/src/shared/lib/types';
+import type { CartaDisciplinaria } from '@/shared/lib/types';
 import {
   getPhysicalCartaBaselineType,
   getSuggestedLetterType,
   mapDocTypeToLetterType,
   type LetterType,
-} from '@/src/shared/lib/domain/disciplinaryStage';
-import { usePhysicalCartaRegistration } from '@/src/shared/lib/hooks/usePhysicalCartaRegistration';
+} from '@/shared/lib/domain/disciplinaryStage';
+import { usePhysicalCartaRegistration } from '@/shared/lib/hooks/usePhysicalCartaRegistration';
 import { formatDate } from './constants';
-import { getCurrentSchoolYear, getYearFromDateOnly, nowDateOnly } from '@/src/shared/lib/dateUtils';
-import Button from '@/src/shared/ui/Button';
+import { getCurrentSchoolYear, getYearFromDateOnly, nowDateOnly } from '@/shared/lib/dateUtils';
+import Button from '@/shared/ui/Button';
 
 const PHYSICAL_LETTER_TYPES: Array<Exclude<LetterType, 'Ficha de Derivación'>> = [
   'Amonestación Escrita',

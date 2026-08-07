@@ -26,6 +26,12 @@ class MockQueryBuilder<T> {
   eq(_column: string, _value: unknown) {
     return this;
   }
+  gte(_column: string, _value: unknown) {
+    return this;
+  }
+  lt(_column: string, _value: unknown) {
+    return this;
+  }
   in(_column: string, _values: unknown[]) {
     return this;
   }

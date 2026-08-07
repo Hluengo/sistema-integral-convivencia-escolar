@@ -11,7 +11,7 @@ import ViewLoader from '../../../shared/ui/ViewLoader';
 import type { Causa } from '../../../shared/lib/types';
 import { useCausasStore } from '../../../shared/lib/stores/causasStore';
 import { useUIStore } from '../../../shared/lib/stores/uiStore';
-import Button from '@/src/shared/ui/Button';
+import Button from '@/shared/ui/Button';
 import CausasTable from '../CausasTable';
 import type {
   CausaWorkspaceViewModel,

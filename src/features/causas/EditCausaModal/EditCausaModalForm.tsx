@@ -7,13 +7,10 @@ import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import type { FieldErrors, Resolver } from 'react-hook-form';
 import { Scale, AlertCircle, FileText, Shield, Trash2 } from 'lucide-react';
-import { type Causa, EstadoCausa, type TipoInfraccion } from '@/src/shared/lib/types';
-import { nowDateOnly } from '@/src/shared/lib/dateUtils';
-import ImproveTextarea from '@/src/shared/ImproveTextarea';
-import {
-  editCausaFormSchema,
-  type EditCausaFormValues,
-} from '@/src/shared/lib/schemas/editCausaForm';
+import { type Causa, EstadoCausa, type TipoInfraccion } from '@/shared/lib/types';
+import { nowDateOnly } from '@/shared/lib/dateUtils';
+import ImproveTextarea from '@/shared/ImproveTextarea';
+import { editCausaFormSchema, type EditCausaFormValues } from '@/shared/lib/schemas/editCausaForm';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,8 +21,8 @@ import {
   AlertDialogHeader,
   AlertDialogIcon,
   AlertDialogTitle,
-} from '@/src/shared/ui/AlertDialog';
-import Button from '@/src/shared/ui/Button';
+} from '@/shared/ui/AlertDialog';
+import Button from '@/shared/ui/Button';
 
 const INFRACCIONES: TipoInfraccion[] = ['Leve', 'Grave', 'Muy Grave', 'Gravísima'];
 const EDIT_CAUSA_FIELDS = [

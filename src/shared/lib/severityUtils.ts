@@ -1,3 +1,4 @@
+/** @license SPDX-License-Identifier: Apache-2.0 */
 /**
  * Severity colour helpers — kept separate from component files
  * so Fast Refresh can work cleanly on SeverityBadge.tsx.
@@ -13,13 +14,13 @@ export interface SeverityColors {
 }
 
 const SEVERITY_COLOR_MAP: Record<SeverityLevel, SeverityColors> = {
-  'Leve': {
+  Leve: {
     bg: 'bg-leve-50',
     text: 'text-leve-700',
     border: 'border-leve-200',
     dot: 'bg-leve-500',
   },
-  'Grave': {
+  Grave: {
     bg: 'bg-grave-50',
     text: 'text-grave-700',
     border: 'border-grave-200',
@@ -31,7 +32,7 @@ const SEVERITY_COLOR_MAP: Record<SeverityLevel, SeverityColors> = {
     border: 'border-muygrave-200',
     dot: 'bg-muygrave-500',
   },
-  'Gravísima': {
+  Gravísima: {
     bg: 'bg-gravisima-50',
     text: 'text-gravisima-700',
     border: 'border-gravisima-200',

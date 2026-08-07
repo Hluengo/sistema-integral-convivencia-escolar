@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import type { AnnotationSummary, DocumentAnalysis } from '@/src/shared/lib/types';
-import { formatChileDateTime } from '@/src/shared/lib/dateTime';
+import type { AnnotationSummary, DocumentAnalysis } from '@/shared/lib/types';
+import { formatChileDateTime } from '@/shared/lib/dateTime';
 import { getAnalysisVariation } from './analysisComparison';
 
 interface PdfAnalysisComparisonProps {

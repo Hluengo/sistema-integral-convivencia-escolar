@@ -115,7 +115,15 @@ Este proyecto maneja **datos de estudiantes (NNA)**, por lo que la seguridad es 
 - Se incorporaron loaders animados por vista y para el arranque de la aplicación, con frases contextuales, barra indeterminada y soporte para `prefers-reduced-motion`.
 - Se mejoraron contraste, accesibilidad y estados de carga del shell, login y vistas lazy.
 - Se agregaron índices compuestos para los patrones frecuentes de lectura por tenant, estudiante, fecha, estado y ordenamiento.
-- La suite actual valida **684 pruebas unitarias en 159 suites**, E2E de navegación/privacidad, auditoría axe pública y auditoría de dependencias sin vulnerabilidades.
+- La suite actual valida **719 pruebas unitarias en 159 suites**, E2E de navegación/privacidad, auditoría axe pública y auditoría de dependencias sin vulnerabilidades.
+
+### Auditoría integral 2026-08-06 (pendientes MEDIO)
+
+- La tendencia anual de anotaciones usa la RPC `get_annual_annotation_trend(p_year)` con celdas mensuales disjuntas y ventana marzo-diciembre, con fallback a la lectura previa si la migración no está aplicada.
+- El listado de la plataforma multi-colegio cuenta usuarios por tenant con la RPC agregada `get_tenant_user_counts()` en una sola query (elimina el N+1), degradando al conteo individual si la RPC no existe.
+- `carta_events.tenant_id` ahora es `NOT NULL` con backfill desde `cartas_disciplinarias` y `students`; se eliminan los eventos huérfanos sin carta ni estudiante.
+- Los imports se unificaron al alias `@/shared/...` (nuevo mapeo `@/shared/*` en tsconfig y Vite) y se agregaron license headers SPDX a los archivos que faltaban.
+- El tracing de Sentry se desactiva en desarrollo (evita ~518 KB de bundle) y el chunk obsoleto `documents` se eliminó de `manualChunks`.
 
 ---
 
@@ -214,8 +222,8 @@ Para más detalles, revisa:
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ⚙️ **CI**         | [![CI](https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/ci.yml?branch=master&label=CI)](https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/ci.yml)                                 |
 | 🚦 **Lighthouse** | [![Lighthouse](https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/lighthouse.yml?branch=master&label=Lighthouse)](https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/lighthouse.yml) |
-| ✅ **Tests**      | 684 tests · 159 suites                                                                                                                                                                                                                                              |
-| 📈 **Cobertura**  | 92.81% líneas / 81.32% ramas / 91.80% funciones (`npm run test:coverage`, excluye el bundle generado `api/index.js`)                                                                                                                                                |
+| ✅ **Tests**      | 719 tests · 159 suites                                                                                                                                                                                                                                              |
+| 📈 **Cobertura**  | 92.64% líneas / 81.87% ramas / 91.85% funciones (`npm run test:coverage`, excluye el bundle generado `api/index.js`)                                                                                                                                                |
 | ♿ **A11y**       | `npm run test:a11y` sobre dashboard público y login                                                                                                                                                                                                                 |
 | 🔐 **Seguridad**  | `npm audit --omit=dev` 0 vulnerabilidades                                                                                                                                                                                                                           |
 
@@ -379,6 +387,8 @@ El seed local vive en [`supabase/seed.sql`](supabase/seed.sql) y se ejecuta auto
 La migración `20260803004959_add_query_pattern_indexes.sql` agrega índices compuestos para los patrones de lectura frecuentes por tenant, estudiante, fecha y ordenamiento.
 
 La migración `20260805011211_atomic_causa_related_snapshots.sql` registra las RPCs `save_bitacora_snapshot` y `save_checklist_snapshot`, aplicadas remotamente en Supabase como `20260805011211 atomic_causa_related_snapshots`. Ambas son `security invoker`, resuelven tenant en PostgreSQL y exponen `EXECUTE` solo a `authenticated` y `service_role`.
+
+Las migraciones `20260806120000_add_annual_annotation_trend_rpc.sql` (agregación mensual de anotaciones en una sola query), `20260806123000_add_tenant_user_counts_rpc.sql` (conteo de usuarios por tenant en una query agregada) y `20260806124000_enforce_carta_events_tenant.sql` (backfill y `NOT NULL` de `carta_events.tenant_id`) se aplicaron con `supabase db push` el 2026-08-06. La reparación del historial (`supabase migration repair`) alineó las migraciones remotas aplicadas vía Management API con el directorio local, y `20260806130000_revoke_app_role_public_execute.sql` cierra el acceso de `anon` a `app_role()` vía el grant default de PUBLIC (SEC-02).
 
 El bucket privado `institution-assets` contiene logos y documentos institucionales. El servidor genera URLs firmadas con expiración; nunca se exponen URLs públicas ni credenciales de servicio al navegador. Las rutas de lectura institucional para documentos validan autenticación y `tenant_id`, mientras que la edición y carga de configuración permanecen restringidas a roles administrativos.
 

@@ -14,7 +14,7 @@ import {
   ChevronUp,
   ChevronsUpDown,
 } from 'lucide-react';
-import Button from '@/src/shared/ui/Button';
+import Button from '@/shared/ui/Button';
 import type { Course, StudentWithCourse } from '../../shared/api/services/courses.service';
 import { TableSkeleton } from '../../shared/Skeleton';
 import { maskName } from '../../shared/lib/anotacionesUtils';

@@ -3632,7 +3632,6 @@ var PDF_CONFIRM_ROLES = [
   'convivencia',
   'inspectoria',
   'profesor_jefe',
-  'teacher',
   'inspector',
   'staff',
 ];
@@ -4456,15 +4455,25 @@ router12.get('/platform/tenants', async (req, res) => {
       .order('created_at', { ascending: false });
     if (error) throw error;
     const tenants = data ?? [];
-    const withCounts = await Promise.all(
-      tenants.map(async (tenant) => {
-        const { count, error: countError } = await client
-          .from('profiles')
-          .select('user_id', { count: 'exact', head: true })
-          .eq('tenant_id', tenant.id);
-        return { ...tenant, user_count: countError ? 0 : (count ?? 0) };
-      }),
+    const { data: countsData, error: countsError } = await client.rpc('get_tenant_user_counts');
+    const rpcAvailable = !countsError && Array.isArray(countsData);
+    const rpcCounts = new Map(
+      (Array.isArray(countsData) ? countsData : []).map((row) => [
+        row.tenant_id,
+        Number(row.user_count) || 0,
+      ]),
     );
+    const withCounts = rpcAvailable
+      ? tenants.map((tenant) => ({ ...tenant, user_count: rpcCounts.get(tenant.id) ?? 0 }))
+      : await Promise.all(
+          tenants.map(async (tenant) => {
+            const { count, error: countError } = await client
+              .from('profiles')
+              .select('user_id', { count: 'exact', head: true })
+              .eq('tenant_id', tenant.id);
+            return { ...tenant, user_count: countError ? 0 : (count ?? 0) };
+          }),
+        );
     res.json({ tenants: withCounts });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'No fue posible cargar los colegios.';
@@ -5318,6 +5327,22 @@ var allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
   .split(',')
   .map((o) => o.trim())
   .filter(Boolean);
+function ensureJwtConfig() {
+  if (process.env.NODE_ENV === 'production') {
+    const hasLegacy = Boolean(
+      process.env.SUPABASE_JWT_SECRET && process.env.SUPABASE_JWT_SECRET.length > 0,
+    );
+    const hasSupabase = Boolean(
+      process.env.VITE_SUPABASE_URL && process.env.VITE_SUPABASE_URL.length > 0,
+    );
+    if (!hasLegacy && !hasSupabase) {
+      throw new Error(
+        'Missing SUPABASE_JWT_SECRET and VITE_SUPABASE_URL (no JWKS). Aborting startup to avoid running with degraded JWT verification.',
+      );
+    }
+  }
+}
+ensureJwtConfig();
 var app = express();
 app.set('trust proxy', 1);
 app.use(compression());

@@ -4,7 +4,7 @@
  */
 
 import { FileText, RefreshCw, History, Pencil, ScrollText } from 'lucide-react';
-import { formatChileDateTime } from '@/src/shared/lib/dateTime';
+import { formatChileDateTime } from '@/shared/lib/dateTime';
 
 export interface StudentInfo {
   id: string;
