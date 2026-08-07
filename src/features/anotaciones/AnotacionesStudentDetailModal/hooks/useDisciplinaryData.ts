@@ -1,6 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { queryClient } from '@/src/lib/queryClient';
 import type { CartaDisciplinaria } from '@/src/shared/lib/types';
 import {
   fetchStudentDisciplinarySnapshot,
@@ -22,6 +24,8 @@ const EMPTY_SNAPSHOT: StudentDisciplinarySnapshot = {
   lastAnalysis: null,
 };
 
+const SNAPSHOT_QUERY_KEY = 'disciplinary-snapshot';
+
 interface DisciplinaryDataResult extends StudentDisciplinarySnapshot {
   isDataLoading: boolean;
   refresh: () => Promise<void>;
@@ -29,42 +33,19 @@ interface DisciplinaryDataResult extends StudentDisciplinarySnapshot {
 }
 
 export function useDisciplinaryData(studentId: string): DisciplinaryDataResult {
-  const [isDataLoading, setIsDataLoading] = useState(true);
-  const [snapshot, setSnapshot] = useState<StudentDisciplinarySnapshot>(EMPTY_SNAPSHOT);
+  const query = useQuery({
+    queryKey: [SNAPSHOT_QUERY_KEY, studentId],
+    queryFn: () => fetchStudentDisciplinarySnapshot(studentId),
+    enabled: Boolean(studentId),
+    staleTime: 5 * 60 * 1000,
+  });
 
   const refresh = useCallback(async () => {
     if (!studentId) return;
-    setIsDataLoading(true);
-    try {
-      setSnapshot(await fetchStudentDisciplinarySnapshot(studentId));
-    } catch (error) {
-      console.error('Error loading disciplinary snapshot:', error);
-      setSnapshot(EMPTY_SNAPSHOT);
-    } finally {
-      setIsDataLoading(false);
-    }
+    await queryClient.refetchQueries({ queryKey: [SNAPSHOT_QUERY_KEY, studentId] });
   }, [studentId]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function loadData() {
-      if (!studentId) return;
-      setIsDataLoading(true);
-      try {
-        const nextSnapshot = await fetchStudentDisciplinarySnapshot(studentId);
-        if (!cancelled) setSnapshot(nextSnapshot);
-      } catch (error) {
-        console.error('Error loading disciplinary snapshot:', error);
-        if (!cancelled) setSnapshot(EMPTY_SNAPSHOT);
-      } finally {
-        if (!cancelled) setIsDataLoading(false);
-      }
-    }
-    void loadData();
-    return () => {
-      cancelled = true;
-    };
-  }, [studentId]);
+  const snapshot = query.data ?? EMPTY_SNAPSHOT;
 
-  return { isDataLoading, refresh, ...snapshot };
+  return { isDataLoading: query.isPending, refresh, ...snapshot };
 }

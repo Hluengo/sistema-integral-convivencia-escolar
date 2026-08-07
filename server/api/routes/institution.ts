@@ -297,6 +297,8 @@ async function getTenantFromRequest(
   return request.tenantId;
 }
 
+export { getTenantFromRequest };
+
 async function updateSettings(
   client: SupabaseClient,
   tenantId: string,

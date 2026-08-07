@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { supabase } from '../lib/supabase';
-import { useAuthStore } from '@/src/shared/lib/stores/authStore';
+import { getSessionTenantId } from '../lib/sessionContext';
 
 export interface DisciplinaryRule {
   id: string;
@@ -20,7 +20,7 @@ export interface DisciplinaryRule {
 }
 
 export async function fetchDisciplinaryRules(): Promise<DisciplinaryRule[]> {
-  const tenantId = useAuthStore.getState().tenantId;
+  const tenantId = getSessionTenantId();
   if (!tenantId) return [];
 
   const { data, error } = await supabase

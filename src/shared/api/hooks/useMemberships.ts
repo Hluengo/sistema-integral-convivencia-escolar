@@ -1,6 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../../lib/stores/authStore';
 import {
   getMyMembership,
@@ -31,12 +32,17 @@ export function useMemberships(applicationCode: string) {
   const setMembershipError = useAuthStore((state) => state.setMembershipError);
   const clearMembership = useAuthStore((state) => state.clearMembership);
   const setLegacyFallbackUsed = useAuthStore((state) => state.setLegacyFallbackUsed);
-  const fetchedRef = useRef(false);
-  const lastUserIdRef = useRef<string | null>(null);
+
+  const mode = getMembershipMode();
+  const shouldFetch = mode !== 'legacy' && Boolean(user && tenantId);
+
+  // Cuando cambia el usuario, la caché interna del servicio debe invalidarse
+  // para que el próximo fetch no reutilice datos de una sesión anterior.
+  useEffect(() => {
+    if (user?.id) invalidateMembershipCache();
+  }, [user?.id]);
 
   useEffect(() => {
-    const mode = getMembershipMode();
-
     if (mode === 'legacy') {
       logDev('legacy_mode_skip');
       clearMembership();
@@ -45,56 +51,63 @@ export function useMemberships(applicationCode: string) {
     }
 
     if (!user || !tenantId) {
-      if (fetchedRef.current) {
+      if (membershipLoaded) {
         logDev('session_cleared');
-        fetchedRef.current = false;
-        lastUserIdRef.current = null;
         clearMembership();
       }
       return;
     }
+  }, [mode, user, tenantId, membershipLoaded, clearMembership, setLegacyFallbackUsed]);
 
-    if (lastUserIdRef.current !== user.id) {
-      logDev('user_changed', 'resetting');
-      fetchedRef.current = false;
-      invalidateMembershipCache();
+  const membershipQuery = useQuery({
+    queryKey: ['membership', applicationCode, user?.id ?? 'anonymous'],
+    queryFn: () => getMyMembership(applicationCode),
+    enabled: shouldFetch,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  useEffect(() => {
+    if (!shouldFetch) return;
+
+    if (membershipQuery.isPending) {
+      setMembershipLoading(true);
+      return;
     }
 
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
-    lastUserIdRef.current = user.id;
+    setMembershipLoading(false);
 
-    setMembershipLoading(true);
+    if (membershipQuery.isError) {
+      logDev('membership_load_error', String(membershipQuery.error));
+      setMembershipError('Error al verificar membresía');
+      return;
+    }
 
-    getMyMembership(applicationCode)
-      .then((result) => {
-        setMembership(result, applicationCode);
+    const result = membershipQuery.data;
+    if (!result) return;
 
-        if (result.status === 'no_membership' && mode === 'transition') {
-          const allowedRoles = getAllowedRoles(applicationCode);
-          if (allowedRoles.length > 0) {
-            logDev('fallback_check', `checking ${allowedRoles.join(',')}`);
-          }
-          setLegacyFallbackUsed(true);
-        }
-      })
-      .catch((err) => {
-        logDev('membership_load_error', err instanceof Error ? err.message : String(err));
-        setMembershipError('Error al verificar membresía');
-      });
+    setMembership(result, applicationCode);
+
+    if (result.status === 'no_membership' && mode === 'transition') {
+      const allowedRoles = getAllowedRoles(applicationCode);
+      if (allowedRoles.length > 0) {
+        logDev('fallback_check', `checking ${allowedRoles.join(',')}`);
+      }
+      setLegacyFallbackUsed(true);
+    }
   }, [
-    user,
-    user?.id,
-    tenantId,
+    shouldFetch,
+    membershipQuery.isPending,
+    membershipQuery.isError,
+    membershipQuery.error,
+    membershipQuery.data,
+    mode,
     applicationCode,
     setMembership,
     setMembershipLoading,
     setMembershipError,
-    clearMembership,
     setLegacyFallbackUsed,
   ]);
 
-  const mode = getMembershipMode();
   const hasAccess =
     mode === 'legacy' ||
     membershipStatus === 'active' ||

@@ -20,7 +20,7 @@ import type {
 } from '../../lib/types';
 import { mapInspectorateToAnnotation } from '../../lib/mappers';
 import { calculateDisciplinaryStatus } from '../../lib/domain/disciplinaryStatus';
-import { useAuthStore } from '../../lib/stores/authStore';
+import { getSessionTenantId } from '../lib/sessionContext';
 import { withSupabaseReadRetry } from '../lib/supabaseRetry';
 
 const ANNOTATION_COLUMNS =
@@ -83,7 +83,7 @@ export async function fetchDocumentAnalyses(studentId: string): Promise<Document
 }
 
 export async function updateAnnotation(input: UpdateAnnotationInput): Promise<Annotation> {
-  const tenantId = useAuthStore.getState().tenantId;
+  const tenantId = getSessionTenantId();
   if (!tenantId) {
     throw new Error('No se pudo identificar el establecimiento de la sesión actual.');
   }
@@ -116,7 +116,7 @@ export async function updateAnnotation(input: UpdateAnnotationInput): Promise<An
 export async function fetchAnnualAnnotationTrends(
   schoolYear: number,
 ): Promise<AnnualAnnotationTrendRecord[]> {
-  const tenantId = useAuthStore.getState().tenantId;
+  const tenantId = getSessionTenantId();
   if (!tenantId) {
     throw new Error('No se pudo identificar el establecimiento de la sesión actual.');
   }

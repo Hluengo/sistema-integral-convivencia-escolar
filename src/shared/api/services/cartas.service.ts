@@ -12,7 +12,7 @@ import type {
 } from '../../lib/types';
 import { mapCauseRowToCarta, mapStageRowToEtapa } from '../../lib/mappers';
 import { fetchAnnotations, fetchDocumentAnalyses } from './annotations.service';
-import { useAuthStore } from '../../lib/stores/authStore';
+import { getSessionTenantId, getSessionUserId, getSessionUserEmail } from '../lib/sessionContext';
 import {
   resolveStudentCartaTableState,
   type LetterType,
@@ -286,15 +286,16 @@ async function createCartaEvent(
   const carta = await fetchCartaForEvent(cartaId);
   if (!carta) return false;
 
-  const tenantId = carta.tenant_id || useAuthStore.getState().tenantId;
-  const user = useAuthStore.getState().user;
+  const tenantId = carta.tenant_id || getSessionTenantId();
+  const userId = getSessionUserId();
+  const userEmail = getSessionUserEmail();
   const { error } = await supabase.from('carta_events').insert({
     carta_id: cartaId,
     student_id: carta.student_id,
     tenant_id: tenantId,
     event_type: eventType,
     event_detail: detail || null,
-    created_by: user?.email || user?.id || null,
+    created_by: userEmail || userId || null,
     metadata,
   });
 
@@ -427,7 +428,7 @@ export async function createPendingCartaForStudent(params: {
   sourceProcessId?: string | null;
   sourceAnalysisId?: string | null;
 }): Promise<CartaDisciplinaria | null> {
-  const tenantId = useAuthStore.getState().tenantId;
+  const tenantId = getSessionTenantId();
   const today = nowDateOnly();
   const sourceLabel =
     params.source === 'pdf'
