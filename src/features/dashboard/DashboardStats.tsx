@@ -47,7 +47,7 @@ import type { SidebarView } from '../../widgets/sidebar/Sidebar';
 import { fetchOnboardingStatus } from '../../shared/api/services/institution.service';
 import { getDashboardSchoolYear } from './dashboardTrends';
 
-const DASHBOARD_STALE_TIME_MS = 30_000;
+const DASHBOARD_STALE_TIME_MS = 300_000;
 
 interface DashboardStatsProps {
   causas: Causa[];
@@ -210,7 +210,10 @@ export default function DashboardStats({
   });
   const annualAnnotationTrendsQuery = useQuery({
     queryKey: ['annual-annotation-trends', tenantId, dashboardSchoolYear],
-    queryFn: () => fetchAnnualAnnotationTrends(dashboardSchoolYear),
+    queryFn: () => {
+      if (!tenantId) return Promise.resolve([]);
+      return fetchAnnualAnnotationTrends(dashboardSchoolYear, tenantId);
+    },
     enabled: isAuthenticated && Boolean(tenantId),
     staleTime: DASHBOARD_STALE_TIME_MS,
     refetchOnMount: true,

@@ -75,7 +75,7 @@ export default memo(function MetricCard({
         </span>
         {trend && (
           <span
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold text-[11px] ${
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold text-11px ${
               trend.positive ? 'bg-leve-50 text-leve-700' : 'bg-gravisima-50 text-gravisima-700'
             }`}
           >

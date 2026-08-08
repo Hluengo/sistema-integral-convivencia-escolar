@@ -432,7 +432,7 @@ export const getStats = (causas: Causa[]): Statistics => {
   return stats;
 };
 
-const PHASE_PREFIXES: Record<string, string> = {
+const PHASE_PREFIXES: Readonly<Record<string, string>> = {
   Recepción: 'chk_rec',
   Investigación: 'chk_inv',
   Resolución: 'chk_res',

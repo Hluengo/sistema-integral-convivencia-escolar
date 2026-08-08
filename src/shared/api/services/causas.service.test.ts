@@ -282,7 +282,7 @@ describe('createCausa', () => {
           ...(makeCausaRow() as unknown as Causa),
           estadoActual: 'Recepción de Denuncia' as Causa['estadoActual'],
         };
-        return createCausa(causa);
+        return createCausa(causa, 'tenant-1');
       },
     );
     assert.equal(result, 'DC-2026-001');
@@ -306,7 +306,7 @@ describe('createCausa', () => {
           ...(makeCausaRow({ id: 'DC-2026-003' }) as unknown as Causa),
           estadoActual: 'Recepción de Denuncia' as Causa['estadoActual'],
         };
-        return createCausa(causa);
+        return createCausa(causa, 'tenant-1');
       },
     );
     assert.equal(result, `DC-${new Date().getFullYear()}-004`);
@@ -329,7 +329,7 @@ describe('createCausa', () => {
           ...(makeCausaRow() as unknown as Causa),
           estadoActual: 'Recepción de Denuncia' as Causa['estadoActual'],
         };
-        return createCausa(causa);
+        return createCausa(causa, 'tenant-1');
       },
     );
     assert.equal(result, false);

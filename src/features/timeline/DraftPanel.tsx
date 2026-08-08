@@ -99,10 +99,10 @@ export default function DraftPanel({
       <div className="flex items-start gap-2.5 rounded-lg border border-brand-200 bg-brand-50 p-3 text-left">
         <FileText className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
         <div>
-          <h4 className="font-semibold text-[11px] text-neutral-900">
+          <h4 className="font-semibold text-11px text-neutral-900">
             Redacción de documentos oficiales
           </h4>
-          <p className="mt-0.5 text-[10px] leading-relaxed text-neutral-500">
+          <p className="mt-0.5 text-10px leading-relaxed text-neutral-500">
             Gemini prepara un borrador desde los antecedentes registrados. Revise y edite el
             documento antes de imprimirlo.
           </p>
@@ -112,7 +112,7 @@ export default function DraftPanel({
       <div className="space-y-2">
         <div className="flex items-start gap-2 rounded-lg border border-brand-200 bg-brand-50 p-2.5 text-left">
           <FileText className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
-          <p className="text-[10px] leading-relaxed text-neutral-600">
+          <p className="text-10px leading-relaxed text-neutral-600">
             La <strong>Notificación de Inicio de Indagación</strong> se genera desde el hito del
             checklist de Recepción del expediente (sin IA), con su propia plantilla e impresión hoja
             Carta.
@@ -121,7 +121,7 @@ export default function DraftPanel({
 
         <label
           htmlFor="doc-type"
-          className="block font-semibold text-[10px] uppercase tracking-wider text-neutral-500"
+          className="block font-semibold text-10px uppercase tracking-wider text-neutral-500"
         >
           Tipo de documento
         </label>
@@ -143,7 +143,7 @@ export default function DraftPanel({
         <div>
           <label
             htmlFor="father-name"
-            className="block font-semibold text-[10px] uppercase tracking-wider text-neutral-500"
+            className="block font-semibold text-10px uppercase tracking-wider text-neutral-500"
           >
             Nombre del apoderado/a o adulto responsable
           </label>
@@ -204,12 +204,12 @@ export default function DraftPanel({
             spellCheck={false}
           />
 
-          <details className="overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
-            <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 font-semibold text-[11px] text-slate-700 marker:hidden">
+          <details className="overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100">
+            <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 font-semibold text-11px text-neutral-700 marker:hidden">
               <Eye className="size-4 text-brand-600" aria-hidden="true" />
               Ver vista previa para impresión Oficio
             </summary>
-            <div className="overflow-x-auto border-slate-200 border-t p-3">
+            <div className="overflow-x-auto border-neutral-200 border-t p-3">
               <div className="origin-top-left scale-[0.42]" style={{ width: '238%' }}>
                 <OfficialDraftDocument
                   title={documentTitle}
@@ -238,7 +238,7 @@ export default function DraftPanel({
           <button
             type="button"
             onClick={() => printDocument()}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-slate-800 px-4 py-2.5 font-semibold text-xs text-white transition-colors hover:bg-slate-900"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-800 px-4 py-2.5 font-semibold text-xs text-white transition-colors hover:bg-brand-900"
           >
             <Printer className="h-4 w-4" aria-hidden="true" /> Imprimir en formato Oficio
           </button>

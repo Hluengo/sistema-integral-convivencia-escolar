@@ -172,16 +172,19 @@ describe('updateAnnotation', () => {
   it('rechaza sin tenant en la sesión', async () => {
     await assert.rejects(
       withSupabaseMocks({
-        tenantId: null,
+        tenantId: 'tenant-1',
         fn: async () => {
           const { updateAnnotation } = await import('./annotations.service');
-          return updateAnnotation({
-            id: 'ann-1',
-            text: 'Nueva observación',
-            date: '2026-08-02',
-            severity: 'Grave',
-            type: 'Negativa',
-          });
+          return updateAnnotation(
+            {
+              id: 'ann-1',
+              text: 'Nueva observación',
+              date: '2026-08-02',
+              severity: 'Grave',
+              type: 'Negativa',
+            },
+            null,
+          );
         },
       }),
       /No se pudo identificar el establecimiento/,
@@ -193,13 +196,16 @@ describe('updateAnnotation', () => {
       withSupabaseMocks({
         fn: async () => {
           const { updateAnnotation } = await import('./annotations.service');
-          return updateAnnotation({
-            id: 'ann-1',
-            text: '   ',
-            date: '2026-08-02',
-            severity: 'Grave',
-            type: 'Negativa',
-          });
+          return updateAnnotation(
+            {
+              id: 'ann-1',
+              text: '   ',
+              date: '2026-08-02',
+              severity: 'Grave',
+              type: 'Negativa',
+            },
+            'tenant-1',
+          );
         },
       }),
       /no puede quedar vacía/,
@@ -214,13 +220,16 @@ describe('updateAnnotation', () => {
       }),
       fn: async () => {
         const { updateAnnotation } = await import('./annotations.service');
-        return updateAnnotation({
-          id: 'ann-1',
-          text: 'Observación actualizada.',
-          date: '2026-08-02',
-          severity: 'Grave',
-          type: 'Negativa',
-        });
+        return updateAnnotation(
+          {
+            id: 'ann-1',
+            text: 'Observación actualizada.',
+            date: '2026-08-02',
+            severity: 'Grave',
+            type: 'Negativa',
+          },
+          'tenant-1',
+        );
       },
     });
     assert.equal((result as Annotation).text, 'Observación actualizada.');
@@ -232,13 +241,16 @@ describe('updateAnnotation', () => {
         from: () => ({ data: null, error: new Error('constraint violated') }),
         fn: async () => {
           const { updateAnnotation } = await import('./annotations.service');
-          return updateAnnotation({
-            id: 'ann-1',
-            text: 'Observación',
-            date: '2026-08-02',
-            severity: 'Grave',
-            type: 'Negativa',
-          });
+          return updateAnnotation(
+            {
+              id: 'ann-1',
+              text: 'Observación',
+              date: '2026-08-02',
+              severity: 'Grave',
+              type: 'Negativa',
+            },
+            'tenant-1',
+          );
         },
       }),
       /constraint violated/,
@@ -250,10 +262,10 @@ describe('fetchAnnualAnnotationTrends', () => {
   it('rechaza sin tenant', async () => {
     await assert.rejects(
       withSupabaseMocks({
-        tenantId: null,
+        tenantId: 'tenant-1',
         fn: async () => {
           const { fetchAnnualAnnotationTrends } = await import('./annotations.service');
-          return fetchAnnualAnnotationTrends(2026);
+          return fetchAnnualAnnotationTrends(2026, null);
         },
       }),
       /No se pudo identificar el establecimiento/,
@@ -265,7 +277,7 @@ describe('fetchAnnualAnnotationTrends', () => {
       withSupabaseMocks({
         fn: async () => {
           const { fetchAnnualAnnotationTrends } = await import('./annotations.service');
-          return fetchAnnualAnnotationTrends(1999);
+          return fetchAnnualAnnotationTrends(1999, 'tenant-1');
         },
       }),
       /año escolar/,
@@ -274,7 +286,7 @@ describe('fetchAnnualAnnotationTrends', () => {
       withSupabaseMocks({
         fn: async () => {
           const { fetchAnnualAnnotationTrends } = await import('./annotations.service');
-          return fetchAnnualAnnotationTrends(2026.5);
+          return fetchAnnualAnnotationTrends(2026.5, 'tenant-1');
         },
       }),
       /año escolar/,
@@ -290,7 +302,7 @@ describe('fetchAnnualAnnotationTrends', () => {
       from: () => ({ data: rows, error: null }),
       fn: async () => {
         const { fetchAnnualAnnotationTrends } = await import('./annotations.service');
-        return fetchAnnualAnnotationTrends(2026);
+        return fetchAnnualAnnotationTrends(2026, 'tenant-1');
       },
     });
     const trend = result as Array<{ dateTime: string; severity: string }>;
@@ -304,7 +316,7 @@ describe('fetchAnnualAnnotationTrends', () => {
         from: () => ({ data: null, error: new Error('db down') }),
         fn: async () => {
           const { fetchAnnualAnnotationTrends } = await import('./annotations.service');
-          return fetchAnnualAnnotationTrends(2026);
+          return fetchAnnualAnnotationTrends(2026, 'tenant-1');
         },
       }),
       /db down/,
@@ -343,7 +355,7 @@ describe('fetchAnnualAnnotationTrends', () => {
       },
       fn: async () => {
         const { fetchAnnualAnnotationTrends } = await import('./annotations.service');
-        return fetchAnnualAnnotationTrends(2026);
+        return fetchAnnualAnnotationTrends(2026, 'tenant-1');
       },
     });
     const trend = result as Array<{ dateTime: string; type: string; severity: string }>;
@@ -367,6 +379,40 @@ describe('fetchAnnualAnnotationTrends', () => {
     assert.equal(trend.filter((row) => row.dateTime === '2026-04-15T12:00:00.000Z').length, 2);
   });
 
+  it('reconstruye fechas cuando la RPC entrega month_key como "YYYY-MM"', async () => {
+    const result = await withSupabaseMocks({
+      rpc: async (fn) => {
+        assert.equal(fn, 'get_annual_annotation_trend');
+        return {
+          data: [
+            {
+              month_key: '2026-03',
+              total_count: 2,
+              negative_count: 1,
+              negative_high_count: 1,
+              positive_count: 1,
+              positive_high_count: 0,
+              other_count: 0,
+              other_high_count: 0,
+            },
+          ],
+          error: null,
+        };
+      },
+      fn: async () => {
+        const { fetchAnnualAnnotationTrends } = await import('./annotations.service');
+        return fetchAnnualAnnotationTrends(2026, 'tenant-1');
+      },
+    });
+    const trend = result as Array<{ dateTime: string; type: string; severity: string }>;
+    assert.equal(trend.length, 2);
+    assert.ok(trend.every((row) => row.dateTime === '2026-03-15T12:00:00.000Z'));
+    assert.deepEqual(
+      trend.filter((row) => row.type === 'Negativa' && row.severity === 'Muy Grave'),
+      [{ dateTime: '2026-03-15T12:00:00.000Z', type: 'Negativa', severity: 'Muy Grave' }],
+    );
+  });
+
   it('degrada a la lectura previa cuando la RPC no existe', async () => {
     const rows = [{ date_time: '2026-05-10T10:00:00.000Z', severity: 'Grave', type: 'Negativa' }];
     const result = await withSupabaseMocks({
@@ -374,7 +420,7 @@ describe('fetchAnnualAnnotationTrends', () => {
       from: () => ({ data: rows, error: null }),
       fn: async () => {
         const { fetchAnnualAnnotationTrends } = await import('./annotations.service');
-        return fetchAnnualAnnotationTrends(2026);
+        return fetchAnnualAnnotationTrends(2026, 'tenant-1');
       },
     });
     const trend = result as Array<{ dateTime: string; severity: string }>;
@@ -389,7 +435,7 @@ describe('fetchAnnualAnnotationTrends', () => {
         from: () => ({ data: null, error: new Error('db down') }),
         fn: async () => {
           const { fetchAnnualAnnotationTrends } = await import('./annotations.service');
-          return fetchAnnualAnnotationTrends(2026);
+          return fetchAnnualAnnotationTrends(2026, 'tenant-1');
         },
       }),
       /db down/,

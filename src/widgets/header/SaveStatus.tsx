@@ -33,7 +33,7 @@ export default function SaveStatus({ status }: SaveStatusProps) {
 
   return (
     <div
-      className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 font-semibold text-[11px] transition-colors ${COLORS[status]}`}
+      className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 font-semibold text-11px transition-colors ${COLORS[status]}`}
     >
       <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
       <span>{LABELS[status]}</span>

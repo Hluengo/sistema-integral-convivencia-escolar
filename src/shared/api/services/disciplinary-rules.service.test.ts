@@ -89,7 +89,7 @@ describe('fetchDisciplinaryRules', () => {
       },
       fn: async () => {
         const { fetchDisciplinaryRules } = await import('./disciplinary-rules.service');
-        return fetchDisciplinaryRules();
+        return fetchDisciplinaryRules('tenant-1');
       },
     });
     assert.equal(capturedTable, 'disciplinary_rules');
@@ -104,7 +104,7 @@ describe('fetchDisciplinaryRules', () => {
       resultForTable: () => ({ data: [], error: null }),
       fn: async () => {
         const { fetchDisciplinaryRules } = await import('./disciplinary-rules.service');
-        return fetchDisciplinaryRules();
+        return fetchDisciplinaryRules(null);
       },
     });
     assert.deepEqual(result, []);
@@ -116,7 +116,7 @@ describe('fetchDisciplinaryRules', () => {
       resultForTable: () => ({ data: null, error: new Error('boom') }),
       fn: async () => {
         const { fetchDisciplinaryRules } = await import('./disciplinary-rules.service');
-        return fetchDisciplinaryRules();
+        return fetchDisciplinaryRules('tenant-1');
       },
     });
     assert.deepEqual(result, []);

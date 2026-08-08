@@ -1,10 +1,30 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import { visualizer } from 'rollup-plugin-visualizer';
 
-const plugins = [react(), tailwindcss()];
+/**
+ * Plugin dev-only: permite el WebSocket de HMR de Vite (puerto 3002) y el
+ * servidor Express (3001) en desarrollo. El meta CSP de `index.html` (que
+ * también se sirve en producción) solo permite `connect-src 'self'` más
+ * Supabase/PostHog/Sentry, por lo que el navegador bloqueaba el hot reload.
+ * `apply: 'serve'` evita que esta relajación llegue al build de producción.
+ */
+function devCspHmrPlugin(): Plugin {
+  return {
+    name: 'dev-csp-hmr',
+    apply: 'serve',
+    transformIndexHtml(html) {
+      return html.replace(
+        "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.posthog.com https://*.ingest.us.sentry.io",
+        "connect-src 'self' ws://localhost:3002 ws://localhost:3001 https://*.supabase.co wss://*.supabase.co https://*.posthog.com https://*.ingest.us.sentry.io",
+      );
+    },
+  };
+}
+
+const plugins = [react(), tailwindcss(), devCspHmrPlugin()];
 
 if (process.env.ANALYZE === 'true') {
   plugins.push(

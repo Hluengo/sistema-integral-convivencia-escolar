@@ -207,7 +207,7 @@ export default function AnotacionesStudentDetailModal({
                 type="button"
                 aria-label="Cerrar"
                 onClick={onClose}
-                className="rounded-lg p-2 text-slate-200 transition-colors hover:bg-white/10 hover:text-white"
+                className="rounded-lg p-2 text-neutral-200 transition-colors hover:bg-white/10 hover:text-white"
               >
                 <X className="h-5 w-5" />
               </button>

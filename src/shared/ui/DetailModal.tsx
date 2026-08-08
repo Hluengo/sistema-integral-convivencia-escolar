@@ -60,7 +60,7 @@ export function DetailModalHeader({
   actions,
 }: DetailModalHeaderProps) {
   return (
-    <header className="relative mb-3 overflow-hidden border-slate-600/70 border-b bg-gradient-to-br from-slate-700 via-slate-700 to-slate-900 px-4 py-4 sm:mb-4 sm:px-6">
+    <header className="relative mb-3 overflow-hidden border-neutral-600/70 border-b bg-gradient-to-br from-neutral-700 via-neutral-700 to-neutral-900 px-4 py-4 sm:mb-4 sm:px-6">
       <div
         className="pointer-events-none absolute inset-0 opacity-30 [background-image:linear-gradient(90deg,rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.045)_1px,transparent_1px)] [background-size:56px_56px]"
         aria-hidden="true"
@@ -68,11 +68,11 @@ export function DetailModalHeader({
       <div className="relative flex items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/10">
-            <span className="font-bold text-slate-100 text-sm">{avatarInitial}</span>
+            <span className="font-bold text-neutral-100 text-sm">{avatarInitial}</span>
           </div>
           <div className="min-w-0">
             <h2 className="truncate font-bold text-base text-white">{title}</h2>
-            <div className="mt-0.5 flex flex-wrap items-center gap-2 text-slate-200 text-xs">
+            <div className="mt-0.5 flex flex-wrap items-center gap-2 text-neutral-200 text-xs">
               {metadata}
             </div>
           </div>

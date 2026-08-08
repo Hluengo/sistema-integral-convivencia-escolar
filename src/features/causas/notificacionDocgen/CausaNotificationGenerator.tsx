@@ -193,7 +193,7 @@ export default function CausaNotificationGenerator({
             </p>
           </div>
           {documentStatus && (
-            <span className="rounded-full bg-neutral-100 px-2.5 py-1 font-semibold text-[10px] text-neutral-600">
+            <span className="rounded-full bg-neutral-100 px-2.5 py-1 font-semibold text-10px text-neutral-600">
               Estado: {documentStatus}
             </span>
           )}

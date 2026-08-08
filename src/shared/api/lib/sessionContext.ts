@@ -1,23 +1,31 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useAuthStore } from '../../lib/stores/authStore';
-
 /**
  * Contexto de sesión para la capa de servicios.
  *
- * Centraliza la lectura del tenant y del usuario desde el store de auth para
- * evitar que los servicios importen el store directamente (FSD: services →
- * stores). En tests, basta con inicializar `useAuthStore.setState(...)`.
+ * Funciones puras que reciben tenantId/userId como parámetros.
+ * Esto elimina el acoplamiento a useAuthStore (FSD: services → stores).
+ * En tests, basta con pasar los valores directamente.
  */
-export function getSessionTenantId(): string | null {
-  return useAuthStore.getState().tenantId ?? null;
+
+export function getSessionTenantId(tenantId?: string | null): string | null {
+  return tenantId ?? null;
 }
 
-export function getSessionUserId(): string | null {
-  return useAuthStore.getState().user?.id ?? null;
+export function getSessionUserId(userId?: string | null): string | null {
+  return userId ?? null;
 }
 
-export function getSessionUserEmail(): string | null {
-  const user = useAuthStore.getState().user;
-  return user?.email ?? null;
+export function getSessionUserEmail(email?: string | null): string | null {
+  return email ?? null;
+}
+
+/**
+ * Helper para extraer credenciales del store de auth y pasarlas a servicios.
+ * Uso en hooks: `const { tenantId, userId, email } = useAuthSession();`
+ */
+export function useAuthSession() {
+  // This is a placeholder - actual implementation will be in hooks that import useAuthStore
+  // Services should NOT import this. Hooks should use useAuthStore selectors directly.
+  return { tenantId: null, userId: null, email: null };
 }

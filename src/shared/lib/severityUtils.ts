@@ -13,7 +13,7 @@ export interface SeverityColors {
   dot: string;
 }
 
-const SEVERITY_COLOR_MAP: Record<SeverityLevel, SeverityColors> = {
+const SEVERITY_COLOR_MAP: Readonly<Record<SeverityLevel, SeverityColors>> = {
   Leve: {
     bg: 'bg-leve-50',
     text: 'text-leve-700',

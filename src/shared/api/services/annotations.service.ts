@@ -20,7 +20,6 @@ import type {
 } from '../../lib/types';
 import { mapInspectorateToAnnotation } from '../../lib/mappers';
 import { calculateDisciplinaryStatus } from '../../lib/domain/disciplinaryStatus';
-import { getSessionTenantId } from '../lib/sessionContext';
 import { withSupabaseReadRetry } from '../lib/supabaseRetry';
 
 const ANNOTATION_COLUMNS =
@@ -82,8 +81,10 @@ export async function fetchDocumentAnalyses(studentId: string): Promise<Document
   return (data || []) as DocumentAnalysis[];
 }
 
-export async function updateAnnotation(input: UpdateAnnotationInput): Promise<Annotation> {
-  const tenantId = getSessionTenantId();
+export async function updateAnnotation(
+  input: UpdateAnnotationInput,
+  tenantId: string | null,
+): Promise<Annotation> {
   if (!tenantId) {
     throw new Error('No se pudo identificar el establecimiento de la sesión actual.');
   }
@@ -115,8 +116,8 @@ export async function updateAnnotation(input: UpdateAnnotationInput): Promise<An
 
 export async function fetchAnnualAnnotationTrends(
   schoolYear: number,
+  tenantId: string | null,
 ): Promise<AnnualAnnotationTrendRecord[]> {
-  const tenantId = getSessionTenantId();
   if (!tenantId) {
     throw new Error('No se pudo identificar el establecimiento de la sesión actual.');
   }
@@ -131,7 +132,7 @@ export async function fetchAnnualAnnotationTrends(
     supabase.rpc('get_annual_annotation_trend', { p_year: schoolYear }),
   );
   const rows = trendData as Array<{
-    month_key: number;
+    month_key: number | string;
     total_count: number;
     negative_count: number;
     negative_high_count: number;
@@ -145,7 +146,16 @@ export async function fetchAnnualAnnotationTrends(
     // dashboard suma por severidad/tipo, por lo que cada subgrupo (high y
     // no-high) se emite por separado sin duplicar el total.
     return rows.flatMap((row) => {
-      const dateTime = `${schoolYear}-${String(row.month_key).padStart(2, '0')}-15T12:00:00.000Z`;
+      // La RPC `get_annual_annotation_trend` devuelve month_key como texto
+      // 'YYYY-MM' (formato real de la migración); por compatibilidad también
+      // aceptamos un mes numérico. Derivamos año y mes desde la clave para
+      // evitar fechas inválidas (bug que aplanaba las anotaciones del panel).
+      const key = String(row.month_key);
+      const dashIndex = key.indexOf('-');
+      const isFullKey = dashIndex !== -1;
+      const year = isFullKey ? Number(key.slice(0, dashIndex)) : schoolYear;
+      const month = isFullKey ? Number(key.slice(dashIndex + 1)) : Number(key);
+      const dateTime = `${year}-${String(month).padStart(2, '0')}-15T12:00:00.000Z`;
       const emit = (
         type: Annotation['type'],
         severity: TipoInfraccion,

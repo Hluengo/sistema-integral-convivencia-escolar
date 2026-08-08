@@ -167,9 +167,7 @@ export default memo(function BitacoraTab({
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="text-sm font-bold text-neutral-900">{entry.titulo}</h3>
-                      <span
-                        className={`rounded-full px-2 py-0.5 font-semibold text-[10px] ${tone}`}
-                      >
+                      <span className={`rounded-full px-2 py-0.5 font-semibold text-10px ${tone}`}>
                         {entry.tipo}
                       </span>
                     </div>
@@ -190,7 +188,9 @@ export default memo(function BitacoraTab({
                       <span className="truncate font-medium text-info-700">Documento adjunto</span>
                       <button
                         type="button"
-                        onClick={() => void openDocument(entry.documentoAdjunto!)}
+                        onClick={() => {
+                          if (entry.documentoAdjunto) void openDocument(entry.documentoAdjunto);
+                        }}
                         className="ml-auto flex shrink-0 items-center gap-1 font-semibold text-info-600 hover:underline"
                         aria-label="Ver documento adjunto"
                       >

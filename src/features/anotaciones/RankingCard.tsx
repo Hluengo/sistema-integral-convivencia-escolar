@@ -68,7 +68,7 @@ export default function RankingCard({
           </h3>
         </div>
         {headerBadge ? (
-          <span className="shrink-0 rounded-full bg-neutral-100 px-2 py-1 font-semibold text-neutral-500 text-[10px] uppercase tracking-wide">
+          <span className="shrink-0 rounded-full bg-neutral-100 px-2 py-1 font-semibold text-neutral-500 text-10px uppercase tracking-wide">
             {headerBadge}
           </span>
         ) : null}
@@ -96,7 +96,7 @@ export default function RankingCard({
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex min-w-0 items-center gap-2">
                     <span
-                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-neutral-100 font-semibold text-neutral-500 text-[10px]"
+                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-neutral-100 font-semibold text-neutral-500 text-10px"
                       aria-hidden="true"
                     >
                       {position}

@@ -84,7 +84,7 @@ export const useCausasStore = create<CausasState>((set, get) => ({
       observaciones: params.newObs,
       responsable: params.newResponsable,
     });
-    const result = await createCausa(newObj);
+    const result = await createCausa(newObj, useAuthStore.getState().tenantId);
     if (result) {
       const createdCausa = { ...newObj, id: result };
       set((prev) => ({

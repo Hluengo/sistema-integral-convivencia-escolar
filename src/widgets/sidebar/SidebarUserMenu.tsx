@@ -30,7 +30,7 @@ export function SidebarUserMenu({
         <button
           type="button"
           onClick={onLogin}
-          className={`flex w-full cursor-pointer select-none items-center gap-2.5 rounded-xl font-semibold text-[12px] transition-colors ${
+          className={`flex w-full cursor-pointer select-none items-center gap-2.5 rounded-xl font-semibold text-12px transition-colors ${
             isCollapsed && !mobile
               ? 'justify-center bg-brand-500 px-0 py-2.5 text-white hover:bg-brand-600'
               : 'bg-brand-500 px-3.5 py-2.5 text-white shadow-brand-500/20 shadow-lg hover:bg-brand-600'
@@ -58,7 +58,7 @@ export function SidebarUserMenu({
         {(!isCollapsed || mobile) && (
           <div className="min-w-0 flex-1">
             <p className="truncate font-semibold text-white text-xs">{user.email}</p>
-            <p className="text-[10px] text-neutral-300">Conectado</p>
+            <p className="text-10px text-neutral-300">Conectado</p>
           </div>
         )}
         <button
@@ -103,7 +103,7 @@ export function SidebarAulaSeguraAlert({
         <p className="font-bold text-gravisima-200 text-xs leading-tight">
           {count} alerta{count !== 1 ? 's' : ''} crítica{count !== 1 ? 's' : ''}
         </p>
-        <p className="mt-0.5 font-medium text-[10px] text-gravisima-200/70 leading-tight">
+        <p className="mt-0.5 font-medium text-10px text-gravisima-200/70 leading-tight">
           Ley Aula Segura · Acción urgente
         </p>
       </div>

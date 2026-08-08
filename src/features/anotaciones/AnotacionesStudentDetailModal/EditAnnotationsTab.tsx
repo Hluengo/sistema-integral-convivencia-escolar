@@ -10,6 +10,7 @@ import { updateAnnotation } from '@/shared/api/services/annotations.service';
 import { formatDate, SEVERITY_BADGE } from './constants';
 import Button from '@/shared/ui/Button';
 import { toDateTimeLocalValue, toIsoDateTime } from './annotationEditUtils';
+import { useAuthStore } from '@/shared/lib/stores/authStore';
 
 interface EditAnnotationsTabProps {
   annotations: Annotation[];
@@ -36,6 +37,7 @@ function createEditForm(annotation: Annotation): EditForm {
 }
 
 export default function EditAnnotationsTab({ annotations, onSaved }: EditAnnotationsTabProps) {
+  const tenantId = useAuthStore((state) => state.tenantId);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<EditForm | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -66,13 +68,16 @@ export default function EditAnnotationsTab({ annotations, onSaved }: EditAnnotat
     setError(null);
     setSuccessMessage(null);
     try {
-      await updateAnnotation({
-        id: annotation.id,
-        text: form.text,
-        date: toIsoDateTime(form.date),
-        severity: form.severity,
-        type: form.type,
-      });
+      await updateAnnotation(
+        {
+          id: annotation.id,
+          text: form.text,
+          date: toIsoDateTime(form.date),
+          severity: form.severity,
+          type: form.type,
+        },
+        tenantId!,
+      );
       await onSaved();
       setEditingId(null);
       setForm(null);

@@ -3,7 +3,6 @@
 import { supabase } from '../lib/supabase';
 import type { BitacoraEntry, Causa, ChecklistItem } from '../../lib/types';
 import { BitacoraEntrySchema, CausaSchema, ChecklistItemSchema } from '../../lib/schemas';
-import { getSessionTenantId } from '../lib/sessionContext';
 import { normalizeDocumentPath } from './storage.service';
 import { reconcileChecklistFromBitacora } from '../../lib/domain/checklistReconciliation';
 
@@ -224,9 +223,8 @@ async function resolveUniqueCausaId(preferred: string): Promise<string> {
   return `DC-${year}-${String(max + 1).padStart(3, '0')}`;
 }
 
-export async function createCausa(causa: Causa): Promise<string | false> {
+export async function createCausa(causa: Causa, tenantId: string | null): Promise<string | false> {
   const causaId = await resolveUniqueCausaId(causa.id);
-  const tenantId = getSessionTenantId();
   const { error } = await supabase.from('causas').insert({
     id: causaId,
     tenant_id: tenantId,

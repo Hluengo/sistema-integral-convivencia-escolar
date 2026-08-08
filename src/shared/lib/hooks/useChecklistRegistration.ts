@@ -1,5 +1,5 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { Causa, ChecklistItem, BitacoraEntry, UserRole } from '../types';
 import { nowDateOnly, nowIso } from '../../../shared/lib/dateUtils';
 import { uploadDocument } from '../../api/services/storage.service';
@@ -26,63 +26,137 @@ export function useChecklistRegistration({
   const [isSavingRegistration, setIsSavingRegistration] = useState(false);
   const [registrationError, setRegistrationError] = useState<string | null>(null);
 
-  const getResponsableName = () => {
+  const getResponsableName = useCallback(() => {
     const r = causa.responsable;
     if (!r) {
       return 'Esteban Valenzuela';
     }
     return r.split(' (')[0] || 'Esteban Valenzuela';
-  };
+  }, [causa.responsable]);
 
-  const handleStartRegister = (item: ChecklistItem) => {
-    setRegistrationError(null);
-    setRegisteringItemId(item.id);
-    setRegName(item.registradoPor || getResponsableName());
-    setRegObservations(item.observaciones || '');
-    setRegFileName(item.documentoNombre || '');
-  };
+  const handleStartRegister = useCallback(
+    (item: ChecklistItem) => {
+      setRegistrationError(null);
+      setRegisteringItemId(item.id);
+      setRegName(item.registradoPor || getResponsableName());
+      setRegObservations(item.observaciones || '');
+      setRegFileName(item.documentoNombre || '');
+    },
+    [getResponsableName],
+  );
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
     setRegistrationError(null);
     setRegFile(file);
     setRegFileName(file ? file.name : '');
-  };
+  }, []);
 
-  const handleSaveRegistration = async (itemId: string) => {
-    if (currentRole === 'docente' || isSavingRegistration) {
-      return;
-    }
-    setIsSavingRegistration(true);
-    setRegistrationError(null);
+  const handleSaveRegistration = useCallback(
+    async (itemId: string) => {
+      if (currentRole === 'docente' || isSavingRegistration) {
+        return;
+      }
+      setIsSavingRegistration(true);
+      setRegistrationError(null);
 
-    try {
+      try {
+        const targetItem = causa.checklistDebidoProceso.find((item) => item.id === itemId);
+        const itemLabel = targetItem ? targetItem.label : 'Paso de Debido Proceso';
+        const isRectification = targetItem?.completado === true;
+        const responsable = regName || 'Esteban Valenzuela';
+        const trimmedObservations = regObservations.trim();
+
+        const newLog: BitacoraEntry = {
+          id: `${isRectification ? 'b_step_edit' : 'b_step'}_${crypto.randomUUID()}`,
+          fecha: nowIso(),
+          tipo: isRectification ? 'Otro' : 'Notificación',
+          titulo: `${isRectification ? 'Rectificación de Hito' : 'Registro de Hito'}: ${itemLabel}`,
+          descripcion: isRectification
+            ? `Se rectificó el registro del hito "${itemLabel}". Responsable: ${responsable}. Observaciones actualizadas: ${trimmedObservations || 'Sin observaciones.'}`
+            : `Se ha registrado formalmente la finalización de la etapa/acción "${itemLabel}". Responsable: ${responsable}. Observaciones: ${trimmedObservations || 'Sin observaciones.'}`,
+          participantes: [
+            responsable,
+            privacyMode ? causa.nnaProtectedName : causa.estudianteNombre,
+          ],
+        };
+
+        let documentoUrl = targetItem?.documentoUrl;
+        let documentoNombre = targetItem?.documentoNombre;
+
+        if (regFile) {
+          const documentPath = await uploadDocument(causa.id, regFile);
+          documentoUrl = documentPath;
+          documentoNombre = regFile.name;
+          newLog.documentoAdjunto = documentPath;
+        }
+
+        const updatedChecklist = causa.checklistDebidoProceso.map((item) => {
+          if (item.id !== itemId) {
+            return item;
+          }
+          return {
+            ...item,
+            completado: true,
+            fechaCompletado: item.fechaCompletado || nowDateOnly(),
+            registradoPor: responsable,
+            observaciones: trimmedObservations,
+            documentoNombre,
+            documentoUrl,
+          };
+        });
+
+        onUpdateCausa({
+          ...causa,
+          checklistDebidoProceso: updatedChecklist,
+          bitacora: [newLog, ...causa.bitacora],
+          fechaUltimaActualizacion: nowDateOnly(),
+        });
+
+        setRegisteringItemId(null);
+        setRegName('');
+        setRegObservations('');
+        setRegFileName('');
+        setRegFile(null);
+      } catch (error) {
+        setRegistrationError(
+          error instanceof Error
+            ? error.message
+            : 'No fue posible registrar el hito con su documento.',
+        );
+      } finally {
+        setIsSavingRegistration(false);
+      }
+    },
+    [
+      causa,
+      currentRole,
+      isSavingRegistration,
+      onUpdateCausa,
+      privacyMode,
+      regFile,
+      regName,
+      regObservations,
+    ],
+  );
+
+  const handleResetRegistration = useCallback(
+    (itemId: string) => {
+      if (currentRole === 'docente') {
+        return;
+      }
+
       const targetItem = causa.checklistDebidoProceso.find((item) => item.id === itemId);
       const itemLabel = targetItem ? targetItem.label : 'Paso de Debido Proceso';
-      const isRectification = targetItem?.completado === true;
-      const responsable = regName || 'Esteban Valenzuela';
-      const trimmedObservations = regObservations.trim();
 
       const newLog: BitacoraEntry = {
-        id: `${isRectification ? 'b_step_edit' : 'b_step'}_${crypto.randomUUID()}`,
+        id: `b_step_reset_${crypto.randomUUID()}`,
         fecha: nowIso(),
-        tipo: isRectification ? 'Otro' : 'Notificación',
-        titulo: `${isRectification ? 'Rectificación de Hito' : 'Registro de Hito'}: ${itemLabel}`,
-        descripcion: isRectification
-          ? `Se rectificó el registro del hito "${itemLabel}". Responsable: ${responsable}. Observaciones actualizadas: ${trimmedObservations || 'Sin observaciones.'}`
-          : `Se ha registrado formalmente la finalización de la etapa/acción "${itemLabel}". Responsable: ${responsable}. Observaciones: ${trimmedObservations || 'Sin observaciones.'}`,
-        participantes: [responsable, privacyMode ? causa.nnaProtectedName : causa.estudianteNombre],
+        tipo: 'Otro',
+        titulo: `Invalidador Hito: ${itemLabel}`,
+        descripcion: `Se ha anulado e invalidado formalmente el registro del hito "${itemLabel}". Se requiere volver a registrar este hito para la validez legal y resguardo normativo.`,
+        participantes: [getResponsableName()],
       };
-
-      let documentoUrl = targetItem?.documentoUrl;
-      let documentoNombre = targetItem?.documentoNombre;
-
-      if (regFile) {
-        const documentPath = await uploadDocument(causa.id, regFile);
-        documentoUrl = documentPath;
-        documentoNombre = regFile.name;
-        newLog.documentoAdjunto = documentPath;
-      }
 
       const updatedChecklist = causa.checklistDebidoProceso.map((item) => {
         if (item.id !== itemId) {
@@ -90,12 +164,12 @@ export function useChecklistRegistration({
         }
         return {
           ...item,
-          completado: true,
-          fechaCompletado: item.fechaCompletado || nowDateOnly(),
-          registradoPor: responsable,
-          observaciones: trimmedObservations,
-          documentoNombre,
-          documentoUrl,
+          completado: false,
+          fechaCompletado: undefined,
+          registradoPor: undefined,
+          observaciones: undefined,
+          documentoNombre: undefined,
+          documentoUrl: undefined,
         };
       });
 
@@ -105,62 +179,9 @@ export function useChecklistRegistration({
         bitacora: [newLog, ...causa.bitacora],
         fechaUltimaActualizacion: nowDateOnly(),
       });
-
-      setRegisteringItemId(null);
-      setRegName('');
-      setRegObservations('');
-      setRegFileName('');
-      setRegFile(null);
-    } catch (error) {
-      setRegistrationError(
-        error instanceof Error
-          ? error.message
-          : 'No fue posible registrar el hito con su documento.',
-      );
-    } finally {
-      setIsSavingRegistration(false);
-    }
-  };
-
-  const handleResetRegistration = (itemId: string) => {
-    if (currentRole === 'docente') {
-      return;
-    }
-
-    const targetItem = causa.checklistDebidoProceso.find((item) => item.id === itemId);
-    const itemLabel = targetItem ? targetItem.label : 'Paso de Debido Proceso';
-
-    const newLog: BitacoraEntry = {
-      id: `b_step_reset_${crypto.randomUUID()}`,
-      fecha: nowIso(),
-      tipo: 'Otro',
-      titulo: `Invalidador Hito: ${itemLabel}`,
-      descripcion: `Se ha anulado e invalidado formalmente el registro del hito "${itemLabel}". Se requiere volver a registrar este hito para la validez legal y resguardo normativo.`,
-      participantes: [getResponsableName()],
-    };
-
-    const updatedChecklist = causa.checklistDebidoProceso.map((item) => {
-      if (item.id !== itemId) {
-        return item;
-      }
-      return {
-        ...item,
-        completado: false,
-        fechaCompletado: undefined,
-        registradoPor: undefined,
-        observaciones: undefined,
-        documentoNombre: undefined,
-        documentoUrl: undefined,
-      };
-    });
-
-    onUpdateCausa({
-      ...causa,
-      checklistDebidoProceso: updatedChecklist,
-      bitacora: [newLog, ...causa.bitacora],
-      fechaUltimaActualizacion: nowDateOnly(),
-    });
-  };
+    },
+    [causa, currentRole, getResponsableName, onUpdateCausa],
+  );
 
   return {
     expandedStages,

@@ -151,27 +151,34 @@ export function parseCausaDocumentSnapshot(
   value: Record<string, unknown> | null | undefined,
 ): CausaDocumentSnapshot | null {
   if (!value || typeof value !== 'object') return null;
-  const content = (value as Record<string, unknown>).content;
-  const expediente = (value as Record<string, unknown>).expediente;
+  const content = value.content;
+  const expediente = value.expediente;
   if (!isNotificationContent(content)) return null;
-  const candidate = value as unknown as CausaDocumentSnapshot;
   if (
-    candidate.templateVersion !== NOTIFICACION_TEMPLATE_VERSION ||
-    candidate.docType !== CAUSA_DOCUMENT_TYPE ||
+    value.templateVersion !== NOTIFICACION_TEMPLATE_VERSION ||
+    value.docType !== CAUSA_DOCUMENT_TYPE ||
     !expediente ||
     typeof expediente !== 'object'
   ) {
     return null;
   }
   return {
-    ...candidate,
+    templateVersion: NOTIFICACION_TEMPLATE_VERSION,
+    docType: CAUSA_DOCUMENT_TYPE,
+    title: readOptionalString(value, 'title', ''),
     content,
     expediente: expediente as NotificacionExpedienteData,
-    apoderadoName: candidate.apoderadoName || '',
-    emittedBy: candidate.emittedBy || '',
-    emissionDate: candidate.emissionDate || '',
-    emittedAt: candidate.emittedAt || '',
+    studentName: readOptionalString(value, 'studentName', ''),
+    apoderadoName: readOptionalString(value, 'apoderadoName', ''),
+    emittedBy: readOptionalString(value, 'emittedBy', ''),
+    emissionDate: readOptionalString(value, 'emissionDate', ''),
+    emittedAt: readOptionalString(value, 'emittedAt', ''),
   };
+}
+
+function readOptionalString(value: Record<string, unknown>, key: string, fallback: string): string {
+  const raw = value[key];
+  return typeof raw === 'string' ? raw : fallback;
 }
 
 /**

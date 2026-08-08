@@ -2,50 +2,44 @@
   "$schema": "https://opencode.ai/config.json",
   "model": "openai/gpt-4o",
   "small_model": "openai/gpt-4o-mini",
-  "instructions": ["AGENTS.md", "README.md"],
+  "instructions": ["AGENTS.md", "README.md", ".opencode/rules/*.md"],
 
   "mcp": {
     "memory": {
       "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-memory"],
+      "command": ["mcp-server-memory"],
       "enabled": true
     },
     "sequential-thinking": {
       "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "command": ["mcp-server-sequential-thinking"],
       "enabled": true
     },
     "codebase-memory": {
       "type": "local",
-      "command": ["npx", "-y", "codebase-memory-mcp"],
+      "command": ["codebase-memory-mcp"],
       "enabled": true
     },
     "supabase": {
       "type": "local",
-      "command": ["npx", "-y", "@supabase/mcp-server-supabase"],
-      "env": {
-        "SUPABASE_SERVICE_ROLE_KEY": "${SUPABASE_SERVICE_ROLE_KEY}",
-        "SUPABASE_URL": "https://mjhbcqwtjzgvqssfiore.supabase.co"
+      "command": ["mcp-server-supabase"],
+      "environment": {
+        "SUPABASE_ACCESS_TOKEN": "{env:SUPABASE_ACCESS_TOKEN}"
       },
-      "enabled": true,
-      "description": "Acceso directo a Supabase para consultas, migraciones y administración de la base de datos"
+      "enabled": true
     },
     "context7": {
       "type": "local",
-      "command": ["npx", "-y", "@upstash/context7-mcp"],
-      "enabled": true,
-      "description": "Documentación actualizada de librerías (React, Tailwind, Supabase, etc.)"
+      "command": ["context7-mcp"],
+      "enabled": true
     },
     "filesystem": {
       "type": "local",
       "command": [
-        "npx",
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
+        "mcp-server-filesystem",
         "C:\\Users\\heae2\\sistema-integral-convivencia-escolar"
       ],
-      "enabled": true,
-      "description": "Acceso directo al sistema de archivos del proyecto"
+      "enabled": true
     },
     "git": {
       "type": "local",
@@ -56,23 +50,20 @@
         "--repository",
         "C:\\Users\\heae2\\sistema-integral-convivencia-escolar"
       ],
-      "enabled": false,
-      "description": "Operaciones Git (deshabilitado - usar bash o GitHub MCP)"
+      "enabled": false
     },
     "github": {
       "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      "command": ["mcp-server-github"],
+      "environment": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "{env:GITHUB_PERSONAL_ACCESS_TOKEN}"
       },
-      "enabled": true,
-      "description": "GitHub API: issues, PRs, repos, code search"
+      "enabled": true
     },
     "playwright": {
       "type": "local",
-      "command": ["npx", "-y", "@playwright/mcp@latest"],
-      "enabled": true,
-      "description": "Navegación web y testing E2E con Playwright"
+      "command": ["playwright-mcp"],
+      "enabled": true
     }
   },
 
@@ -113,7 +104,9 @@
     }
   },
 
-  "plugin": [],
+  "experimental": {
+    "mcp_timeout": 60000
+  },
 
   "agent": {
     "deploy": {

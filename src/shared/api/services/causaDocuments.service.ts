@@ -13,6 +13,16 @@ import {
 
 export { buildBitacoraEntryPayload, buildChecklistItemPayload };
 
+/**
+ * Convierte un snapshot tipado a un objeto JSON plano seguro para persistir.
+ * Evita las dobles aserciones `as unknown as Record<string, unknown>` al
+ * serializar: cualquier valor no serializable (funciones, ciclos) falla en
+ * runtime antes de llegar a la base de datos.
+ */
+export function toJsonSnapshot(snapshot: CausaDocumentSnapshot): Record<string, unknown> {
+  return JSON.parse(JSON.stringify(snapshot)) as Record<string, unknown>;
+}
+
 export interface CausaDocumentRow {
   id: string;
   causa_id: string;
@@ -41,7 +51,7 @@ export async function createPendingCausaDocument(
     .insert({
       causa_id: causa.id,
       doc_type: snapshot.docType,
-      content_snapshot: snapshot as unknown as Record<string, unknown>,
+      content_snapshot: toJsonSnapshot(snapshot),
       created_by: snapshot.emittedBy,
       emitted_by: snapshot.emittedBy,
       student_name: snapshot.studentName,
@@ -86,7 +96,7 @@ export async function saveCausaDocumentSnapshot(
   const { error } = await supabase
     .from('causa_documents')
     .update({
-      content_snapshot: snapshot as unknown as Record<string, unknown>,
+      content_snapshot: toJsonSnapshot(snapshot),
       emitted_by: snapshot.emittedBy,
     })
     .eq('id', documentId)
@@ -112,7 +122,7 @@ export async function markCausaDocumentNotified(
 ): Promise<{ ok: boolean; error: string | null }> {
   const { error } = await supabase.rpc('mark_causa_document_notified', {
     p_document_id: documentId,
-    p_snapshot: snapshot as unknown as Record<string, unknown>,
+    p_snapshot: toJsonSnapshot(snapshot),
     p_checklist_item: buildChecklistItemPayload(checklistItem),
     p_bitacora_entry: buildBitacoraEntryPayload(bitacoraEntry),
   });

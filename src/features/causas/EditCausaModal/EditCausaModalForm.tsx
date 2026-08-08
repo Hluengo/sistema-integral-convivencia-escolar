@@ -50,7 +50,7 @@ const fieldClass =
   'w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-50 font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:bg-white transition-colors text-xs';
 const fieldErrorClass =
   'w-full mt-1.5 border border-grave-300 rounded-lg p-2.5 bg-grave-50 font-medium text-grave-900 focus:outline-none focus:ring-2 focus:ring-grave-500/30 focus:border-grave-500 focus:bg-white transition-colors text-xs';
-const labelClass = 'block text-[9px] font-semibold text-neutral-400 uppercase tracking-wide';
+const labelClass = 'block text-9px font-semibold text-neutral-400 uppercase tracking-wide';
 const selectClass =
   'w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-50 font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:bg-white transition-colors text-xs appearance-none';
 const selectErrorClass =

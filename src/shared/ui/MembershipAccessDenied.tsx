@@ -23,12 +23,12 @@ export function MembershipAccessDenied({
   }, [retrying]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-neutral-50 p-4">
       <div className="max-w-md w-full text-center space-y-4">
         <div className="text-gravisima-600 text-sm font-medium">
           No tiene acceso a esta aplicación
         </div>
-        <p className="text-gray-600 text-sm">
+        <p className="text-neutral-600 text-sm">
           {membershipError ?? 'Su cuenta no tiene una membresía activa para esta aplicación.'}
         </p>
         {authMode === 'enforced' && (
@@ -46,7 +46,7 @@ export function MembershipAccessDenied({
             variant="custom"
             onClick={() => setRetrying(true)}
             disabled={retrying}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-md bg-brand-600 px-4 py-2 text-sm text-white hover:bg-brand-700 disabled:opacity-50"
           >
             {retrying ? 'Reintentando...' : 'Reintentar'}
           </Button>
@@ -56,7 +56,7 @@ export function MembershipAccessDenied({
               localStorage.clear();
               window.location.href = '/';
             }}
-            className="rounded-md bg-gray-200 px-4 py-2 text-sm text-gray-700 hover:bg-gray-300"
+            className="rounded-md bg-neutral-200 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-300"
           >
             Cerrar sesión
           </Button>

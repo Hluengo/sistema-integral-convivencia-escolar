@@ -71,11 +71,11 @@ function AnnotationStageCard({
         </div>
         <dl className="grid min-w-32 grid-cols-2 gap-2 text-center">
           <div className="rounded-lg bg-grave-50 px-2 py-1.5">
-            <dt className="text-grave-700 text-[10px] uppercase tracking-wide">Pendientes</dt>
+            <dt className="text-grave-700 text-10px uppercase tracking-wide">Pendientes</dt>
             <dd className="font-bold text-grave-700 text-lg tabular-nums">{counts.pending}</dd>
           </div>
           <div className="rounded-lg bg-leve-50 px-2 py-1.5">
-            <dt className="text-[10px] text-leve-700 uppercase tracking-wide">Procesadas</dt>
+            <dt className="text-10px text-leve-700 uppercase tracking-wide">Procesadas</dt>
             <dd className="font-bold text-leve-700 text-lg tabular-nums">{counts.processed}</dd>
           </div>
         </dl>
@@ -114,8 +114,8 @@ export default function AnotacionesDashboardStats({
             counts={counts.sinCarta}
             threshold="1-4 anotaciones negativas"
             icon={FileQuestion}
-            iconBg="bg-slate-50"
-            iconColor="text-slate-600"
+            iconBg="bg-neutral-50"
+            iconColor="text-neutral-600"
             accentColor="#64748b"
           />
           <AnnotationStageCard

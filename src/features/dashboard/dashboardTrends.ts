@@ -98,6 +98,25 @@ function addUtcMonths(date: Date, months: number): Date {
   return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + months, 1));
 }
 
+function chileParts(date: Date): { year: number; month: number } {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Santiago',
+    year: 'numeric',
+    month: 'numeric',
+  });
+  const parts = formatter.formatToParts(date);
+  const yearPart = parts.find((part) => part.type === 'year')?.value;
+  const monthPart = parts.find((part) => part.type === 'month')?.value;
+  return {
+    year: yearPart ? Number(yearPart) : date.getUTCFullYear(),
+    month: monthPart ? Number(monthPart) : date.getUTCMonth() + 1,
+  };
+}
+
+function monthKeyFor(year: number, month: number): string {
+  return `${year}-${String(month).padStart(2, '0')}`;
+}
+
 function percentage(part: number, total: number): number {
   return total > 0 ? Math.round((part / total) * 100) : 0;
 }
@@ -108,9 +127,11 @@ function formatMonthName(label: string): string {
 }
 
 export function getDashboardSchoolYear(referenceDate = new Date()): number {
-  return referenceDate.getUTCMonth() < SCHOOL_YEAR_START_MONTH_INDEX
-    ? referenceDate.getUTCFullYear() - 1
-    : referenceDate.getUTCFullYear();
+  const { year, month } = chileParts(referenceDate);
+  // Ciclo escolar marzo-diciembre (marzo = mes 3): antes de marzo el mes
+  // pertenece al año escolar anterior. Se resuelve en la zona horaria de
+  // Chile (America/Santiago) para ser consistente con las RPC del backend.
+  return month < SCHOOL_YEAR_START_MONTH_INDEX + 1 ? year - 1 : year;
 }
 
 function isClosed(causa: Causa): boolean {
@@ -127,7 +148,8 @@ export function buildDashboardTrendSummary(
 ): DashboardTrendSummary {
   const reference = referenceDate ?? new Date();
   const schoolYear = getDashboardSchoolYear(reference);
-  const currentMonthKey = monthKey(reference);
+  const { year: referenceYear, month: referenceMonth } = chileParts(reference);
+  const currentMonthKey = monthKeyFor(referenceYear, referenceMonth);
   const firstMonth = startOfUtcMonth(
     new Date(Date.UTC(schoolYear, SCHOOL_YEAR_START_MONTH_INDEX, 1)),
   );
@@ -149,7 +171,7 @@ export function buildDashboardTrendSummary(
       positiveAnnotationShare: 0,
       negativeAnnotationShare: 0,
       highSeverityAnnotationShare: 0,
-      isObserved: date <= startOfUtcMonth(reference),
+      isObserved: key <= currentMonthKey,
       isCurrentMonth: key === currentMonthKey,
     };
   });

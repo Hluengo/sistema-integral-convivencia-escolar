@@ -43,13 +43,13 @@ export default function TimelineTabPanels({
             aria-labelledby="phase-workspace-title"
             className="space-y-4"
           >
-            <header className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <header className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex min-w-0 items-start gap-3">
                 <span className="rounded-lg bg-brand-100 p-2 text-brand-700" aria-hidden="true">
                   <ListChecks className="size-5" />
                 </span>
                 <div>
-                  <p className="font-semibold text-[11px] text-slate-500 uppercase tracking-wide">
+                  <p className="font-semibold text-11px text-neutral-500 uppercase tracking-wide">
                     Fase de trabajo
                   </p>
                   <h3 id="phase-workspace-title" className="font-semibold text-neutral-900 text-lg">
@@ -73,7 +73,7 @@ export default function TimelineTabPanels({
                 </span>
                 <span className="flex flex-col items-start leading-tight">
                   <span>Volver a la ruta</span>
-                  <span className="mt-0.5 font-medium text-[10px] text-brand-700">
+                  <span className="mt-0.5 font-medium text-10px text-brand-700">
                     Ver las 5 fases
                   </span>
                 </span>

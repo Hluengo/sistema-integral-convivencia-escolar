@@ -11,6 +11,7 @@ import {
   CalendarClock,
   ClipboardList,
   Gauge,
+  ShieldAlert,
   TrendingUp,
 } from 'lucide-react';
 import type { Causa } from '../../shared/lib/types';
@@ -128,7 +129,7 @@ function SummaryMetric({
         <span className={`rounded-md p-1.5 ${toneClasses[tone]}`}>
           <Icon className="h-3.5 w-3.5" aria-hidden="true" />
         </span>
-        <span className="font-semibold text-[10px] uppercase tracking-wide">{label}</span>
+        <span className="font-semibold text-10px uppercase tracking-wide">{label}</span>
       </div>
       <p className="mt-2 font-bold text-2xl text-neutral-900 tabular-nums">{value}</p>
       <p className="mt-0.5 text-neutral-500 text-xs">{helper}</p>
@@ -231,15 +232,11 @@ export default function DashboardTrendsPanel({
           tone="neutral"
         />
         <SummaryMetric
-          icon={ClipboardList}
-          label="Distribución"
-          value={
-            annotationTrendLoading
-              ? '...'
-              : `${summary.positiveAnnotationShare}/${summary.negativeAnnotationShare}%`
-          }
-          helper="positivas / negativas"
-          tone="leve"
+          icon={ShieldAlert}
+          label="Alta gravedad"
+          value={annotationTrendLoading ? '...' : summary.highSeverityAnnotationTotal}
+          helper={`${summary.highSeverityAnnotationShare}% de las anotaciones`}
+          tone="grave"
         />
       </div>
 

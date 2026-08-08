@@ -26,7 +26,7 @@ function LetterBadge({
 
   return (
     <span
-      className={`inline-flex items-center rounded-full px-1.5 py-0.5 font-semibold text-[10px] ${colorClass}`}
+      className={`inline-flex items-center rounded-full px-1.5 py-0.5 font-semibold text-10px ${colorClass}`}
     >
       {count} {label}
     </span>

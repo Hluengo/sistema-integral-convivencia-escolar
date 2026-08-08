@@ -126,25 +126,27 @@ export function useNotifications(causas: Causa[]): NotificationCenter {
       });
   }, [currentNotifications, persistedQuery.isLoading, queryClient, tenantId, userId]);
 
-  const persisted = persistedQuery.data ?? [];
-  const persistedByKey = new Map(
-    persisted.map((notification) => [notification.notification_key, notification]),
-  );
-  const mergedCurrent = currentNotifications.map((notification) => {
-    const saved = persistedByKey.get(notification.notificationKey ?? notification.id);
-    return saved
-      ? { ...notification, ...persistedToNotification(saved), urgent: notification.urgent }
-      : notification;
-  });
-  const currentKeys = new Set(
-    mergedCurrent.map((notification) => notification.notificationKey ?? notification.id),
-  );
-  const history = persisted
-    .filter((notification) => !currentKeys.has(notification.notification_key))
-    .map(persistedToNotification);
-  const notifications = [...mergedCurrent, ...history].sort(
-    (left, right) => Number(right.urgent) - Number(left.urgent),
-  );
+  const notifications = useMemo(() => {
+    const persisted = persistedQuery.data ?? [];
+    const persistedByKey = new Map(
+      persisted.map((notification) => [notification.notification_key, notification]),
+    );
+    const mergedCurrent = currentNotifications.map((notification) => {
+      const saved = persistedByKey.get(notification.notificationKey ?? notification.id);
+      return saved
+        ? { ...notification, ...persistedToNotification(saved), urgent: notification.urgent }
+        : notification;
+    });
+    const currentKeys = new Set(
+      mergedCurrent.map((notification) => notification.notificationKey ?? notification.id),
+    );
+    const history = persisted
+      .filter((notification) => !currentKeys.has(notification.notification_key))
+      .map(persistedToNotification);
+    return [...mergedCurrent, ...history].sort(
+      (left, right) => Number(right.urgent) - Number(left.urgent),
+    );
+  }, [currentNotifications, persistedQuery.data]);
 
   const readMutation = useMutation({
     mutationFn: async ({ notification, read }: { notification: Notification; read: boolean }) => {

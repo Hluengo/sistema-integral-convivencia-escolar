@@ -75,7 +75,7 @@ export default function ProcessChecklist({
             <CheckSquare className="h-4 w-4 text-success-600" aria-hidden="true" /> Registro de
             hitos procesales
           </h3>
-          <p className="mt-0.5 font-sans text-[9px] text-neutral-400 leading-tight">
+          <p className="mt-0.5 font-sans text-9px text-neutral-400 leading-tight">
             Preserve la trazabilidad del debido proceso
           </p>
         </div>
@@ -120,7 +120,7 @@ export default function ProcessChecklist({
                       {section.title}
                     </span>
                     <span
-                      className={`shrink-0 rounded-full px-1.5 py-0.5 font-semibold text-[8px] ${
+                      className={`shrink-0 rounded-full px-1.5 py-0.5 font-semibold text-8px ${
                         completedCount === sectionItems.length
                           ? 'bg-success-100 text-success-700'
                           : completedCount > 0
@@ -130,7 +130,7 @@ export default function ProcessChecklist({
                     >
                       {completedCount}/{sectionItems.length}
                     </span>
-                    <span className="shrink-0 font-mono text-[8px] text-brand-600 tabular-nums">
+                    <span className="shrink-0 font-mono text-8px text-brand-600 tabular-nums">
                       {sectionItems.length > 0
                         ? Math.round((completedCount / sectionItems.length) * 100)
                         : 0}
@@ -139,7 +139,7 @@ export default function ProcessChecklist({
                   </div>
                   <span className="flex shrink-0 items-center gap-1.5">
                     <span
-                      className={`hidden rounded-full px-2 py-1 font-bold text-[9px] sm:inline ${
+                      className={`hidden rounded-full px-2 py-1 font-bold text-9px sm:inline ${
                         isExpanded ? 'bg-brand-100 text-brand-800' : 'bg-brand-600 text-white'
                       }`}
                     >
@@ -186,7 +186,7 @@ export default function ProcessChecklist({
                             <div className="flex min-w-0 items-start gap-2.5">
                               <div className="mt-0.5 shrink-0">
                                 {item.completado ? (
-                                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-success-600 font-bold text-[10px] text-white">
+                                  <span className="flex h-4 w-4 items-center justify-center rounded-full bg-success-600 font-bold text-10px text-white">
                                     ✓
                                   </span>
                                 ) : (
@@ -197,20 +197,20 @@ export default function ProcessChecklist({
                                 <h4 className="font-semibold text-neutral-900 text-xs leading-tight">
                                   {item.label}
                                 </h4>
-                                <p className="mt-0.5 text-[10px] text-neutral-500 leading-snug">
+                                <p className="mt-0.5 text-10px text-neutral-500 leading-snug">
                                   {item.descripcion}
                                 </p>
                               </div>
                             </div>
 
-                            <span className="shrink-0 rounded bg-brand-100 px-1.5 py-0.5 font-semibold text-[8px] text-brand-700">
+                            <span className="shrink-0 rounded bg-brand-100 px-1.5 py-0.5 font-semibold text-8px text-brand-700">
                               {item.requeridoPor}
                             </span>
                           </div>
 
                           {/* Completed Metadata */}
                           {item.completado && (
-                            <div className="mt-2 space-y-1.5 rounded border border-success-200/70 bg-white p-2.5 font-sans text-[11px]">
+                            <div className="mt-2 space-y-1.5 rounded border border-success-200/70 bg-white p-2.5 font-sans text-11px">
                               <div className="flex flex-wrap items-center justify-between gap-1 border-neutral-100 border-b pb-1 text-neutral-400">
                                 <span>
                                   Registrado por:{' '}
@@ -221,12 +221,12 @@ export default function ProcessChecklist({
                                 <span className="font-mono">Fecha: {item.fechaCompletado}</span>
                               </div>
                               {item.observaciones && (
-                                <p className="border-success-500/50 border-l-2 pl-1.5 text-[11px] text-neutral-600 italic leading-relaxed">
+                                <p className="border-success-500/50 border-l-2 pl-1.5 text-11px text-neutral-600 italic leading-relaxed">
                                   "{item.observaciones}"
                                 </p>
                               )}
                               {item.documentoNombre && item.documentoUrl && (
-                                <div className="flex items-center justify-between rounded border border-neutral-200 bg-neutral-50 px-2 py-1 text-[11px]">
+                                <div className="flex items-center justify-between rounded border border-neutral-200 bg-neutral-50 px-2 py-1 text-11px">
                                   <span className="flex items-center gap-1 truncate text-neutral-600">
                                     <File
                                       className="h-3 w-3 shrink-0 text-info-500"
@@ -236,8 +236,10 @@ export default function ProcessChecklist({
                                   </span>
                                   <button
                                     type="button"
-                                    onClick={() => void openDocument(item.documentoUrl!)}
-                                    className="flex shrink-0 items-center gap-0.5 pl-2 font-semibold text-[9px] text-info-600 hover:underline"
+                                    onClick={() => {
+                                      if (item.documentoUrl) void openDocument(item.documentoUrl);
+                                    }}
+                                    className="flex shrink-0 items-center gap-0.5 pl-2 font-semibold text-9px text-info-600 hover:underline"
                                     aria-label={`Ver documento ${item.documentoNombre}`}
                                   >
                                     <Download className="h-3 w-3" aria-hidden="true" /> Ver
@@ -250,14 +252,14 @@ export default function ProcessChecklist({
                                   <button
                                     type="button"
                                     onClick={() => handleStartRegister(item)}
-                                    className="flex items-center gap-1 font-semibold text-[10px] text-info-600 transition-colors hover:text-info-700"
+                                    className="flex items-center gap-1 font-semibold text-10px text-info-600 transition-colors hover:text-info-700"
                                   >
                                     <Plus className="h-3 w-3" aria-hidden="true" /> Editar registro
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() => handleResetRegistration(item.id)}
-                                    className="flex items-center gap-1 font-semibold text-[10px] text-danger-600 transition-colors hover:text-danger-700"
+                                    className="flex items-center gap-1 font-semibold text-10px text-danger-600 transition-colors hover:text-danger-700"
                                   >
                                     <Trash className="h-3 w-3" aria-hidden="true" /> Anular registro
                                   </button>
@@ -294,7 +296,7 @@ export default function ProcessChecklist({
                                   <button
                                     type="button"
                                     onClick={() => handleStartRegister(item)}
-                                    className="flex cursor-pointer items-center gap-1.5 rounded border border-neutral-300 bg-white px-2.5 py-1 font-medium text-[11px] text-neutral-700 transition-colors hover:bg-neutral-50"
+                                    className="flex cursor-pointer items-center gap-1.5 rounded border border-neutral-300 bg-white px-2.5 py-1 font-medium text-11px text-neutral-700 transition-colors hover:bg-neutral-50"
                                   >
                                     <Plus
                                       className="h-3.5 w-3.5 text-success-600"

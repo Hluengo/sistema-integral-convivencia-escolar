@@ -42,12 +42,12 @@ export default function TeacherAnnotationRanking({
             </p>
           </div>
         </div>
-        <span className="shrink-0 rounded-full bg-neutral-100 px-2 py-1 font-semibold text-neutral-500 text-[10px] uppercase tracking-wide">
+        <span className="shrink-0 rounded-full bg-neutral-100 px-2 py-1 font-semibold text-neutral-500 text-10px uppercase tracking-wide">
           Top 5
         </span>
       </div>
 
-      <div className="mb-4 flex flex-wrap gap-x-3 gap-y-1.5 text-[11px] text-neutral-500">
+      <div className="mb-4 flex flex-wrap gap-x-3 gap-y-1.5 text-11px text-neutral-500">
         <LegendDot color="bg-grave-500" label="Negativas" />
         <LegendDot color="bg-leve-500" label="Positivas" />
         <LegendDot color="bg-sky-500" label="Informativas" />
@@ -105,13 +105,11 @@ export default function TeacherAnnotationRanking({
                     <p className="font-bold text-neutral-900 text-lg leading-none tabular-nums">
                       {total}
                     </p>
-                    <p className="mt-1 text-neutral-400 text-[10px] uppercase tracking-wide">
-                      total
-                    </p>
+                    <p className="mt-1 text-neutral-400 text-10px uppercase tracking-wide">total</p>
                   </div>
                 </div>
 
-                <div className="mt-2 flex items-center justify-between gap-2 text-[11px]">
+                <div className="mt-2 flex items-center justify-between gap-2 text-11px">
                   <span className="font-medium text-grave-700">
                     {item.negative_count} negativas
                   </span>
@@ -138,7 +136,7 @@ export default function TeacherAnnotationRanking({
                   />
                 </div>
 
-                <div className="mt-2 grid grid-cols-4 gap-1 text-center text-[10px] tabular-nums">
+                <div className="mt-2 grid grid-cols-4 gap-1 text-center text-10px tabular-nums">
                   <Count
                     label="Neg."
                     value={item.negative_count}

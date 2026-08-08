@@ -171,7 +171,7 @@ export default function AdminView() {
         title="Centro del establecimiento"
         description="Gestiona personas, roles, invitaciones y recursos institucionales del colegio."
         action={
-          <div className="flex items-center gap-2 rounded-xl bg-white/15 px-3 py-2 text-blue-50 text-xs ring-1 ring-white/20 backdrop-blur-sm">
+          <div className="flex items-center gap-2 rounded-xl bg-white/15 px-3 py-2 text-brand-50 text-xs ring-1 ring-white/20 backdrop-blur-sm">
             <ShieldCheck className="size-4" aria-hidden="true" /> Acceso protegido
           </div>
         }
@@ -569,7 +569,7 @@ function MemberRow({
           {enabled ? 'Activo' : 'Desactivado'}
         </button>
         {!member.confirmed ? (
-          <span className="ml-2 rounded-full bg-amber-100 px-2 py-1 text-amber-800 text-[11px]">
+          <span className="ml-2 rounded-full bg-grave-100 px-2 py-1 text-grave-700 text-11px">
             Invitado
           </span>
         ) : null}

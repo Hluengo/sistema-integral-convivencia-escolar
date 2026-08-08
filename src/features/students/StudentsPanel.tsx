@@ -163,13 +163,13 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
           <div className="flex shrink-0 items-center gap-3">
             <div className="rounded-xl bg-white/15 px-4 py-3 text-center ring-1 ring-white/20 backdrop-blur-sm">
               <p className="font-bold text-2xl tabular-nums">{students.length}</p>
-              <p className="font-semibold text-[10px] text-blue-200/80 uppercase tracking-wider">
+              <p className="font-semibold text-10px text-blue-200/80 uppercase tracking-wider">
                 Total
               </p>
             </div>
             <div className="rounded-xl bg-white/15 px-4 py-3 text-center ring-1 ring-white/20 backdrop-blur-sm">
               <p className="font-bold text-2xl tabular-nums">{courses.length}</p>
-              <p className="font-semibold text-[10px] text-blue-200/80 uppercase tracking-wider">
+              <p className="font-semibold text-10px text-blue-200/80 uppercase tracking-wider">
                 Cursos
               </p>
             </div>
@@ -281,7 +281,7 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
                       <h3 className="font-bold text-neutral-900 text-sm">
                         {course?.name ?? 'Sin curso asignado'}
                       </h3>
-                      <p className="font-medium text-[11px] text-neutral-400">
+                      <p className="font-medium text-11px text-neutral-400">
                         {course?.level === 'BASICA'
                           ? 'Enseñanza Básica'
                           : course?.level === 'MEDIA'
@@ -306,13 +306,13 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
                     <table className="w-full text-left">
                       <thead>
                         <tr className="border-neutral-100 border-b">
-                          <th className="px-5 py-3 font-semibold text-[10px] text-neutral-400 uppercase tracking-wider">
+                          <th className="px-5 py-3 font-semibold text-10px text-neutral-400 uppercase tracking-wider">
                             Nombre
                           </th>
-                          <th className="px-5 py-3 font-semibold text-[10px] text-neutral-400 uppercase tracking-wider">
+                          <th className="px-5 py-3 font-semibold text-10px text-neutral-400 uppercase tracking-wider">
                             RUN
                           </th>
-                          <th className="hidden px-5 py-3 font-semibold text-[10px] text-neutral-400 uppercase tracking-wider sm:table-cell">
+                          <th className="hidden px-5 py-3 font-semibold text-10px text-neutral-400 uppercase tracking-wider sm:table-cell">
                             Curso
                           </th>
                         </tr>
@@ -329,7 +329,7 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
                               aria-label={`Nombre ${maskName(student.full_name, privacyMode)}`}
                             >
                               <div className="flex items-center gap-2.5">
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-brand-100 to-brand-200 font-bold text-[10px] text-brand-700">
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-brand-100 to-brand-200 font-bold text-10px text-brand-700">
                                   {student.full_name
                                     .split(' ')
                                     .filter((w) => w.length > 2)
@@ -354,7 +354,7 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
                               </span>
                             </td>
                             <td className="hidden px-5 py-3 sm:table-cell">
-                              <span className="inline-flex items-center gap-1 rounded-md border border-neutral-200/60 bg-neutral-50 px-2 py-0.5 font-medium text-[11px] text-neutral-500">
+                              <span className="inline-flex items-center gap-1 rounded-md border border-neutral-200/60 bg-neutral-50 px-2 py-0.5 font-medium text-11px text-neutral-500">
                                 <BookOpen className="h-3 w-3" aria-hidden="true" />
                                 {student.course_name}
                               </span>

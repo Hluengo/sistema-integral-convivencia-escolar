@@ -73,7 +73,7 @@ export default function ProcesoTab({
         </div>
         <div className="min-w-0 space-y-1">
           <div className="flex items-center gap-2">
-            <span className="font-mono font-semibold text-[9px] text-info-600 uppercase tracking-wider">
+            <span className="font-mono font-semibold text-9px text-info-600 uppercase tracking-wider">
               Estado de la causa
             </span>
             <span
@@ -82,7 +82,7 @@ export default function ProcesoTab({
             />
           </div>
           <h4 className="font-bold font-sans text-neutral-900 text-xs">{causa.estadoActual}</h4>
-          <p className="text-[10px] text-neutral-500 leading-snug">
+          <p className="text-10px text-neutral-500 leading-snug">
             {MAPPED_STATES[causa.estadoActual]?.desc || 'Sin descripción técnica registrada.'}
           </p>
         </div>

@@ -14,7 +14,7 @@ export default function UserAvatar({ user }: UserAvatarProps) {
         title={user.email}
       >
         {user.email.charAt(0).toUpperCase()}
-        <div className="pointer-events-none absolute top-full left-1/2 z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-neutral-900 px-2 py-1 font-medium text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">
+        <div className="pointer-events-none absolute top-full left-1/2 z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-neutral-900 px-2 py-1 font-medium text-10px text-white opacity-0 transition-opacity group-hover:opacity-100">
           {user.email}
         </div>
       </div>

@@ -59,7 +59,7 @@ export default function ImproveTextarea({
             onClick={handleImprove}
             disabled={disabled || isImproving || !value.trim()}
             title="Mejorar redacción con IA"
-            className="shrink-0 rounded-lg border border-brand-200 bg-brand-50 px-2 py-1 text-[10px] font-semibold text-brand-700 hover:border-brand-300 hover:bg-brand-100"
+            className="shrink-0 rounded-lg border border-brand-200 bg-brand-50 px-2 py-1 text-10px font-semibold text-brand-700 hover:border-brand-300 hover:bg-brand-100"
           >
             {isImproving ? (
               <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />

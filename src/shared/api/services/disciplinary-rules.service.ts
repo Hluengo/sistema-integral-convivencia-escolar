@@ -1,7 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { supabase } from '../lib/supabase';
-import { getSessionTenantId } from '../lib/sessionContext';
 
 export interface DisciplinaryRule {
   id: string;
@@ -19,8 +18,7 @@ export interface DisciplinaryRule {
   is_active: boolean;
 }
 
-export async function fetchDisciplinaryRules(): Promise<DisciplinaryRule[]> {
-  const tenantId = getSessionTenantId();
+export async function fetchDisciplinaryRules(tenantId: string | null): Promise<DisciplinaryRule[]> {
   if (!tenantId) return [];
 
   const { data, error } = await supabase

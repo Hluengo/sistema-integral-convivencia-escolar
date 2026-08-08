@@ -9,6 +9,7 @@ import {
   fetchCausaDocuments,
   markCausaDocumentNotified,
   saveCausaDocumentSnapshot,
+  toJsonSnapshot,
   type CausaDocumentRow,
 } from '@/shared/api/services/causaDocuments.service';
 import { nowDateOnly } from '@/shared/lib/dateUtils';
@@ -152,7 +153,7 @@ export default function CausaNotificationPanel({ causa }: CausaNotificationPanel
               ? {
                   ...doc,
                   status: 'Notificada',
-                  content_snapshot: snapshot as unknown as Record<string, unknown>,
+                  content_snapshot: toJsonSnapshot(snapshot),
                   notified_at: new Date().toISOString(),
                 }
               : doc,

@@ -72,7 +72,7 @@ export default function NotificationsDropdown({
       >
         <Bell className="h-4 w-4" aria-hidden="true" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-gravisima-600 px-1 font-bold text-[9px] text-white ring-2 ring-white">
+          <span className="absolute -top-0.5 -right-0.5 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-gravisima-600 px-1 font-bold text-9px text-white ring-2 ring-white">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -179,7 +179,7 @@ function FilterButton({
       role="tab"
       aria-selected={active}
       onClick={onClick}
-      className={`flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 font-semibold text-[11px] ${active ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500 hover:text-neutral-800'}`}
+      className={`flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 font-semibold text-11px ${active ? 'bg-white text-neutral-900 shadow-sm' : 'text-neutral-500 hover:text-neutral-800'}`}
     >
       {children}
     </button>
@@ -208,7 +208,7 @@ function NotificationItem({
         />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="font-semibold text-[12px] text-neutral-900">{notification.title}</p>
+        <p className="font-semibold text-12px text-neutral-900">{notification.title}</p>
         <p className="mt-0.5 text-neutral-500 text-xs">{notification.description}</p>
         <span className="mt-1 block text-neutral-400 text-xs">{notification.time}</span>
       </div>

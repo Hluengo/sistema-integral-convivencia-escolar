@@ -28,9 +28,9 @@ export default memo(function RutaExpedienteTab({
   return (
     <section
       aria-labelledby="expediente-operativo-title"
-      className="overflow-hidden rounded-xl border border-slate-200 bg-linear-to-br from-slate-50 via-white to-sky-50"
+      className="overflow-hidden rounded-xl border border-neutral-200 bg-linear-to-br from-neutral-50 via-white to-sky-50"
     >
-      <div className="border-slate-200 border-b px-4 py-3 sm:px-5">
+      <div className="border-neutral-200 border-b px-4 py-3 sm:px-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h3 id="expediente-operativo-title" className="font-semibold text-neutral-900 text-sm">
@@ -68,30 +68,30 @@ export default memo(function RutaExpedienteTab({
               >
                 <div className="flex items-center gap-1.5">
                   <span
-                    className={`flex size-5 shrink-0 items-center justify-center rounded-full font-bold text-[10px] ${
+                    className={`flex size-5 shrink-0 items-center justify-center rounded-full font-bold text-10px ${
                       isComplete
                         ? 'bg-leve-600 text-white'
                         : isSelected || isCurrentPhase
-                          ? 'bg-slate-800 text-white ring-4 ring-slate-200'
-                          : 'bg-slate-200 text-slate-600'
+                          ? 'bg-neutral-800 text-white ring-4 ring-neutral-200'
+                          : 'bg-neutral-200 text-neutral-600'
                     }`}
                     aria-hidden="true"
                   >
                     {isComplete ? <CircleCheck className="size-3" /> : index + 1}
                   </span>
-                  <span className="hidden h-px flex-1 bg-slate-200 sm:block" aria-hidden="true" />
+                  <span className="hidden h-px flex-1 bg-neutral-200 sm:block" aria-hidden="true" />
                 </div>
                 <div className="mt-2 flex items-center justify-between gap-1">
                   <p
-                    className={`truncate font-semibold text-[10px] sm:text-xs ${
-                      isSelected || isCurrentPhase ? 'text-slate-900' : 'text-slate-500'
+                    className={`truncate font-semibold text-10px sm:text-xs ${
+                      isSelected || isCurrentPhase ? 'text-neutral-900' : 'text-neutral-500'
                     }`}
                     title={phase.phase}
                   >
                     {phase.phase}
                   </p>
                   <span
-                    className={`flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 font-bold text-[8px] transition-colors ${
+                    className={`flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 font-bold text-8px transition-colors ${
                       isSelected
                         ? 'bg-brand-600 text-white'
                         : 'bg-brand-50 text-brand-700 group-hover:bg-brand-100'
@@ -102,14 +102,14 @@ export default memo(function RutaExpedienteTab({
                     <ArrowRight className="size-3" />
                   </span>
                 </div>
-                <div className="mt-1 h-1 overflow-hidden rounded-full bg-slate-200">
+                <div className="mt-1 h-1 overflow-hidden rounded-full bg-neutral-200">
                   <span
                     className={`block h-full rounded-full ${
                       isComplete
                         ? 'bg-leve-500'
                         : isSelected || isCurrentPhase
-                          ? 'bg-slate-700'
-                          : 'bg-slate-400'
+                          ? 'bg-neutral-700'
+                          : 'bg-neutral-400'
                     }`}
                     style={{ width: `${percentage}%` }}
                   />
@@ -120,9 +120,9 @@ export default memo(function RutaExpedienteTab({
         })}
       </ol>
 
-      <div className="grid gap-3 border-slate-200 border-t bg-white/70 p-4 sm:grid-cols-3 sm:p-5">
-        <div className="rounded-lg border border-slate-200 bg-white p-3">
-          <p className="flex items-center gap-1.5 font-semibold text-slate-600 text-[11px] uppercase tracking-wide">
+      <div className="grid gap-3 border-neutral-200 border-t bg-white/70 p-4 sm:grid-cols-3 sm:p-5">
+        <div className="rounded-lg border border-neutral-200 bg-white p-3">
+          <p className="flex items-center gap-1.5 font-semibold text-neutral-600 text-11px uppercase tracking-wide">
             <ListChecks className="size-3.5" aria-hidden="true" />
             Fase actual
           </p>
@@ -134,7 +134,7 @@ export default memo(function RutaExpedienteTab({
         </div>
 
         <div className="rounded-lg border border-sky-100 bg-sky-50/70 p-3">
-          <p className="flex items-center gap-1.5 font-semibold text-sky-700 text-[11px] uppercase tracking-wide">
+          <p className="flex items-center gap-1.5 font-semibold text-sky-700 text-11px uppercase tracking-wide">
             <MoveRight className="size-3.5" aria-hidden="true" />
             Próximo hito
           </p>
@@ -155,7 +155,7 @@ export default memo(function RutaExpedienteTab({
         </div>
 
         <div className="rounded-lg border border-leve-100 bg-leve-50/70 p-3">
-          <p className="flex items-center gap-1.5 font-semibold text-leve-700 text-[11px] uppercase tracking-wide">
+          <p className="flex items-center gap-1.5 font-semibold text-leve-700 text-11px uppercase tracking-wide">
             <Files className="size-3.5" aria-hidden="true" />
             Actividad registrada
           </p>

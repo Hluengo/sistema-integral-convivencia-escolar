@@ -200,7 +200,7 @@ export default function NewDisciplinaryProcessModal({
     refetch: refetchRules,
   } = useQuery<DisciplinaryRule[]>({
     queryKey: ['disciplinary-rules', tenantId],
-    queryFn: fetchDisciplinaryRules,
+    queryFn: () => fetchDisciplinaryRules(tenantId),
     enabled: Boolean(tenantId),
     staleTime: 5 * 60 * 1000,
     retry: 1,
@@ -570,7 +570,7 @@ export default function NewDisciplinaryProcessModal({
                 <div
                   className={`h-1 w-full rounded-full ${index <= currentStepIndex ? 'bg-indigo-500' : 'bg-neutral-200'}`}
                 />
-                <span className="font-medium text-[10px] text-neutral-500">
+                <span className="font-medium text-10px text-neutral-500">
                   {STEP_LABELS[labelStep]}
                 </span>
               </div>

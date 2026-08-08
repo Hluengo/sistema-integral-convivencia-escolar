@@ -66,6 +66,8 @@ export default function CartasTab({
   onRefresh,
 }: CartasTabProps) {
   const tenantId = useAuthStore((state) => state.tenantId);
+  const sessionUser = useAuthStore((state) => state.user);
+  const actor = sessionUser ? { userId: sessionUser.id, email: sessionUser.email ?? null } : null;
   const schoolYear = Number(
     new Intl.DateTimeFormat('en-CA', {
       timeZone: 'America/Santiago',
@@ -227,7 +229,7 @@ export default function CartasTab({
     const { contentSnapshot, selectedDocType } = pendingManualProcess;
     setPendingManualProcess(null);
     await runCartaAction(
-      (carta) => markCartaProcessedManually(carta.id, note, contentSnapshot),
+      (carta) => markCartaProcessedManually(carta.id, note, contentSnapshot, actor),
       'Carta marcada como procesada.',
       selectedDocType,
     );
@@ -245,12 +247,12 @@ export default function CartasTab({
 
   const confirmAnnul = async (reason: string) => {
     setIsAnnulDialogOpen(false);
-    await runCartaAction((carta) => annulCarta(carta.id, reason), 'Carta anulada.');
+    await runCartaAction((carta) => annulCarta(carta.id, reason, actor), 'Carta anulada.');
   };
 
   const confirmArchive = async (note: string) => {
     setIsArchiveDialogOpen(false);
-    await runCartaAction((carta) => archiveCarta(carta.id, note), 'Carta archivada.');
+    await runCartaAction((carta) => archiveCarta(carta.id, note, actor), 'Carta archivada.');
   };
 
   const canAct = Boolean(activeDocType && activeLetterType);

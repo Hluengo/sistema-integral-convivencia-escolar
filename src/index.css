@@ -6,6 +6,15 @@
   --font-display: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
+  /* Font-size scale (text-8px..text-17px) */
+  --text-8px: 8px;
+  --text-9px: 9px;
+  --text-10px: 10px;
+  --text-11px: 11px;
+  --text-12px: 12px;
+  --text-13px: 13px;
+  --text-17px: 17px;
+
   /* ===== PRIMARY: Slate (harmoniza con el sidebar from-neutral-800 to-neutral-950) ===== */
   --color-brand-50: #f8fafc;
   --color-brand-100: #f1f5f9;

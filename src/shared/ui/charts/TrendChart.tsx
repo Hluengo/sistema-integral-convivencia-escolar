@@ -59,7 +59,7 @@ export function MonthlyBars({ points }: { points: TrendChartPoint[] }) {
           </div>
           <div className="space-y-0.5 text-center">
             <span
-              className={`block truncate font-medium text-[11px] ${
+              className={`block truncate font-medium text-11px ${
                 point.isCurrent ? 'text-neutral-800' : 'text-neutral-400'
               }`}
             >
@@ -113,7 +113,7 @@ export function TrendChart({
             <p className="font-semibold text-neutral-700 text-sm">{title}</p>
             <p className="mt-1 text-neutral-500 text-xs">{description}</p>
           </div>
-          <span className="rounded-full bg-white px-2 py-1 font-semibold text-[10px] text-neutral-500 uppercase tracking-wide">
+          <span className="rounded-full bg-white px-2 py-1 font-semibold text-10px text-neutral-500 uppercase tracking-wide">
             {badge}
           </span>
         </div>

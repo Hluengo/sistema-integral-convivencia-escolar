@@ -124,7 +124,7 @@ const CARTA_SELECT =
   'id,student_id,letter_type,emission_date,status,emitted_by,supervisor_name,apoderado_name,annotations_count,origin,school_year,student_name,course,regulation_basis,observations,created_at,content_snapshot';
 const CARTA_EVENT_SELECT =
   'id,carta_id,student_id,event_type,event_detail,created_by,created_at,metadata';
-const COMPLETION_EVENTS: CartaEventType[] = [
+const COMPLETION_EVENTS: readonly CartaEventType[] = [
   'registered',
   'printed',
   'processed_manually',

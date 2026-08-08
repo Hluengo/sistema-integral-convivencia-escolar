@@ -188,7 +188,7 @@ export default function CommandPalette({ causas, onNavigate, onSelectCausa }: Co
             aria-controls="cmd-listbox"
             aria-activedescendant={activeDescendantId}
           />
-          <kbd className="hidden items-center gap-0.5 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] text-neutral-400 sm:inline-flex">
+          <kbd className="hidden items-center gap-0.5 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-10px text-neutral-400 sm:inline-flex">
             ESC
           </kbd>
         </div>
@@ -227,10 +227,10 @@ export default function CommandPalette({ causas, onNavigate, onSelectCausa }: Co
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium text-sm">{item.label}</p>
                   {item.description && (
-                    <p className="truncate text-[11px] text-neutral-500">{item.description}</p>
+                    <p className="truncate text-11px text-neutral-500">{item.description}</p>
                   )}
                 </div>
-                <span className="shrink-0 font-medium text-[10px] text-neutral-400">
+                <span className="shrink-0 font-medium text-10px text-neutral-400">
                   {item.category}
                 </span>
               </button>
@@ -238,7 +238,7 @@ export default function CommandPalette({ causas, onNavigate, onSelectCausa }: Co
           )}
         </div>
 
-        <div className="flex items-center gap-4 border-t border-neutral-100 px-4 py-2 text-[10px] text-neutral-400">
+        <div className="flex items-center gap-4 border-t border-neutral-100 px-4 py-2 text-10px text-neutral-400">
           <span className="flex items-center gap-1">
             <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1 py-0.5 font-mono">
               ↑↓

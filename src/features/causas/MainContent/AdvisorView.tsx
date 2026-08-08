@@ -101,7 +101,7 @@ export default function AdvisorView({
         >
           <label
             htmlFor="legal-case-selector"
-            className="mb-1.5 block font-semibold text-[10px] text-neutral-500 uppercase tracking-wide"
+            className="mb-1.5 block font-semibold text-10px text-neutral-500 uppercase tracking-wide"
           >
             Expediente para {tab === 'redaccion' ? 'redactar' : 'auditar'}
           </label>

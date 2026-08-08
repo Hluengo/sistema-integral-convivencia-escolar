@@ -1,6 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { supabase } from '../lib/supabase';
+import { toTypedRows } from '../lib/supabaseRows';
 
 export interface PersistedNotification {
   id: string;
@@ -42,7 +43,7 @@ export async function fetchPersistedNotifications(): Promise<PersistedNotificati
     .order('created_at', { ascending: false })
     .limit(200);
   if (error) throw error;
-  return (data ?? []) as unknown as PersistedNotification[];
+  return toTypedRows<PersistedNotification>(data);
 }
 
 export async function syncNotification(input: NotificationSyncInput): Promise<string> {

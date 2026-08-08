@@ -114,10 +114,10 @@ function SidebarContent({
         </div>
         {(!isCollapsed || mobile) && (
           <div className="min-w-0">
-            <h1 className="font-bold text-[17px] text-white leading-tight tracking-tight">
+            <h1 className="font-bold text-17px text-white leading-tight tracking-tight">
               Gestión de Casos
             </h1>
-            <p className="mt-0.5 font-semibold text-[10px] text-neutral-300 uppercase leading-tight tracking-[0.12em]">
+            <p className="mt-0.5 font-semibold text-10px text-neutral-300 uppercase leading-tight tracking-[0.12em]">
               Convivencia Escolar
             </p>
           </div>
@@ -136,7 +136,7 @@ function SidebarContent({
 
       {(!isCollapsed || mobile) && (
         <div className="px-5 pt-5 pb-2">
-          <span className="font-bold text-[10px] text-neutral-300 uppercase tracking-[0.15em]">
+          <span className="font-bold text-10px text-neutral-300 uppercase tracking-[0.15em]">
             Navegación
           </span>
         </div>
@@ -161,7 +161,7 @@ function SidebarContent({
                   onViewChange(item.id);
                   onNavigate?.();
                 }}
-                className={`flex w-full cursor-pointer select-none items-center gap-3 rounded-xl font-medium text-[13px] transition-[color,background-color,box-shadow,transform] duration-150 ${isCollapsed && !mobile ? 'justify-center px-0 py-3' : 'px-3.5 py-2.5'}
+                className={`flex w-full cursor-pointer select-none items-center gap-3 rounded-xl font-medium text-13px transition-[color,background-color,box-shadow,transform] duration-150 ${isCollapsed && !mobile ? 'justify-center px-0 py-3' : 'px-3.5 py-2.5'}
                 ${
                   isActive
                     ? 'bg-white/15 font-semibold text-white shadow-sm shadow-black/10'
@@ -183,7 +183,7 @@ function SidebarContent({
                     <span className="flex-1 truncate text-left">{item.label}</span>
                     {badge !== undefined && badge > 0 && (
                       <span
-                        className={`rounded-full px-1.5 py-0.5 font-bold text-[10px] tabular-nums ${
+                        className={`rounded-full px-1.5 py-0.5 font-bold text-10px tabular-nums ${
                           isActive ? 'bg-white/25 text-white' : 'bg-muygrave-500 text-white'
                         }`}
                       >

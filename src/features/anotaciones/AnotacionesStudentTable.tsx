@@ -53,9 +53,9 @@ const DISC_STATUS: Record<string, { text: string; bg: string }> = {
 const CARD_STATUS_BADGE: Record<string, { bg: string; textClass: string }> = {
   Vigente: { bg: 'bg-leve-100', textClass: 'text-leve-700' },
   Archivada: { bg: 'bg-leve-100', textClass: 'text-leve-800' },
-  Procesada: { bg: 'bg-blue-100', textClass: 'text-blue-800' },
+  Procesada: { bg: 'bg-brand-100', textClass: 'text-brand-800' },
   Pendiente: { bg: 'bg-grave-100', textClass: 'text-grave-700' },
-  Cumplida: { bg: 'bg-blue-100', textClass: 'text-blue-800' },
+  Cumplida: { bg: 'bg-brand-100', textClass: 'text-brand-800' },
   Incumplida: { bg: 'bg-gravisima-100', textClass: 'text-gravisima-700' },
   Anulada: { bg: 'bg-neutral-100', textClass: 'text-neutral-500' },
 };
@@ -422,7 +422,7 @@ export default memo(function AnotacionesStudentTable({
                           {Number(student.positive_annotations_count) || 0}
                         </span>
                         {student.ai_analysis && student.ai_analysis.positivas > 0 && (
-                          <span className="ml-1 inline-flex items-center rounded-full bg-indigo-50 px-1.5 py-0.5 font-semibold text-[10px] text-indigo-500">
+                          <span className="ml-1 inline-flex items-center rounded-full bg-brand-50 px-1.5 py-0.5 font-semibold text-10px text-brand-500">
                             +{student.ai_analysis.positivas}
                           </span>
                         )}
@@ -435,7 +435,7 @@ export default memo(function AnotacionesStudentTable({
                         </span>
                         {student.ai_analysis && student.ai_analysis.negativas > negativeCount && (
                           <span
-                            className="ml-1 inline-flex items-center rounded-full bg-indigo-50 px-1.5 py-0.5 font-semibold text-[10px] text-indigo-600"
+                            className="ml-1 inline-flex items-center rounded-full bg-brand-50 px-1.5 py-0.5 font-semibold text-10px text-brand-600"
                             title={`${negativeCount} registradas + ${student.ai_analysis.negativas} IA`}
                           >
                             IA
@@ -480,7 +480,7 @@ export default memo(function AnotacionesStudentTable({
                                 return (
                                   <span
                                     key={s}
-                                    className={`inline-flex items-center rounded-full px-2 py-0.5 font-medium text-[10px] ${badge.bg} ${badge.textClass}`}
+                                    className={`inline-flex items-center rounded-full px-2 py-0.5 font-medium text-10px ${badge.bg} ${badge.textClass}`}
                                   >
                                     {s}
                                   </span>

@@ -29,7 +29,7 @@ export default function StudentSelectStep({
     ? filtered.filter(
         (s) =>
           s.full_name.toLowerCase().includes(search.toLowerCase()) ||
-          (s.rut && s.rut.includes(search))
+          (s.rut && s.rut.includes(search)),
       )
     : filtered;
 
@@ -86,7 +86,7 @@ export default function StudentSelectStep({
               </div>
               {s.disciplinary_status && (
                 <span
-                  className={`ml-2 shrink-0 rounded-full px-2.5 py-1 font-bold text-[10px] ${statusStyle(s.disciplinary_status)}`}
+                  className={`ml-2 shrink-0 rounded-full px-2.5 py-1 font-bold text-10px ${statusStyle(s.disciplinary_status)}`}
                 >
                   {s.disciplinary_status}
                 </span>

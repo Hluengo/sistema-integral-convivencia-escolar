@@ -40,7 +40,7 @@ export interface StudentCartaTableState {
   workflowStatus: 'pending' | 'completed' | 'archived' | 'none';
 }
 
-const DISCIPLINARY_STAGES: DisciplinaryStage[] = [
+const DISCIPLINARY_STAGES: readonly DisciplinaryStage[] = [
   { key: 'none', label: 'Sin medida activa', min: 0, max: 4, color: 'neutral' },
   { key: 'amonestacion', label: 'Amonestación Escrita', min: 5, max: 9, color: 'yellow' },
   {
@@ -59,7 +59,7 @@ const DISCIPLINARY_STAGES: DisciplinaryStage[] = [
   },
 ];
 
-const STAGE_RANK: Record<DisciplinaryStageKey, number> = {
+const STAGE_RANK: Readonly<Record<DisciplinaryStageKey, number>> = {
   none: 0,
   amonestacion: 1,
   compromiso_conductual: 2,

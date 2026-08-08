@@ -90,7 +90,7 @@ export default function TimelineHeader({
                 <button
                   type="button"
                   onClick={onEditClick}
-                  className="rounded-lg p-2 text-slate-200 transition-colors hover:bg-white/10 hover:text-white"
+                  className="rounded-lg p-2 text-neutral-200 transition-colors hover:bg-white/10 hover:text-white"
                   title="Editar expediente"
                   aria-label="Editar expediente"
                 >
@@ -99,7 +99,7 @@ export default function TimelineHeader({
                 <button
                   type="button"
                   onClick={onDeleteClick}
-                  className="rounded-lg p-2 text-slate-200 transition-colors hover:bg-gravisima-500/20 hover:text-gravisima-100"
+                  className="rounded-lg p-2 text-neutral-200 transition-colors hover:bg-gravisima-500/20 hover:text-gravisima-100"
                   title="Eliminar expediente"
                   aria-label="Eliminar expediente"
                 >
@@ -111,7 +111,7 @@ export default function TimelineHeader({
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg p-2 text-slate-200 transition-colors hover:bg-white/10 hover:text-white"
+                className="rounded-lg p-2 text-neutral-200 transition-colors hover:bg-white/10 hover:text-white"
                 title="Cerrar"
                 aria-label="Cerrar"
               >

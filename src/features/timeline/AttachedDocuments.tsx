@@ -19,7 +19,7 @@ export default function AttachedDocuments({
 }: AttachedDocumentsProps) {
   return (
     <div className="card space-y-2 p-4">
-      <h4 className="flex items-center gap-1.5 font-semibold text-[11px] text-neutral-900">
+      <h4 className="flex items-center gap-1.5 font-semibold text-11px text-neutral-900">
         <FolderOpen className="h-4 w-4 text-brand-600" aria-hidden="true" />
         Documentos adjuntos del expediente
       </h4>
@@ -30,21 +30,21 @@ export default function AttachedDocuments({
             className="flex items-center justify-between gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2"
           >
             <div className="min-w-0">
-              <p className="truncate font-medium text-[11px] text-neutral-800">{doc.name}</p>
-              <p className="truncate text-[9px] text-neutral-500">{doc.url}</p>
+              <p className="truncate font-medium text-11px text-neutral-800">{doc.name}</p>
+              <p className="truncate text-9px text-neutral-500">{doc.url}</p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <button
                 type="button"
                 onClick={() => void openDocument(doc.url)}
-                className="font-semibold text-[10px] text-brand-700 hover:underline"
+                className="font-semibold text-10px text-brand-700 hover:underline"
               >
                 Abrir
               </button>
               <button
                 type="button"
                 onClick={() => onRemoveDocument(doc.itemId ?? '', doc.name)}
-                className="font-semibold text-[10px] text-danger-600 hover:underline"
+                className="font-semibold text-10px text-danger-600 hover:underline"
               >
                 Eliminar
               </button>
@@ -52,7 +52,7 @@ export default function AttachedDocuments({
           </div>
         ))}
       </div>
-      {documentError && <p className="text-[10px] text-danger-600">{documentError}</p>}
+      {documentError && <p className="text-10px text-danger-600">{documentError}</p>}
     </div>
   );
 }

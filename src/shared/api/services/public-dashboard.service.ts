@@ -32,7 +32,7 @@ interface PublicDashboardRpcRow {
   derivacion_count: number | string;
 }
 
-const EMPTY_PUBLIC_KPIS: PublicDashboardKpis = {
+const EMPTY_PUBLIC_KPIS: Readonly<PublicDashboardKpis> = {
   totalCauses: 0,
   activeCauses: 0,
   investigationCauses: 0,
