@@ -349,7 +349,7 @@ VALUES
   ('CHK-DEMO-003', 'CAUSA-DEMO-001', 'Informe de cierre', 'Emitir informe tecnico de cierre de indagacion.', false, null, 'Circular 482', null, 'Pendiente para validar notificaciones y plazos.', '00000000-0000-4000-8000-000000000001'),
   ('CHK-DEMO-004', 'CAUSA-DEMO-002', 'Citación apoderado', 'Coordinar entrevista y compromisos.', true, '2026-05-18', 'RICE', 'Convivencia Demo Local', 'Cita realizada.', '00000000-0000-4000-8000-000000000001'),
   ('CHK-DEMO-005', 'CAUSA-DEMO-003', 'Cierre formal', 'Registrar resolucion y cierre.', true, '2026-06-18', 'RICE', 'Direccion Demo Local', 'Caso cerrado.', '00000000-0000-4000-8000-000000000001')
-ON CONFLICT (id) DO UPDATE SET
+ON CONFLICT (id, causa_id) DO UPDATE SET
   label = EXCLUDED.label,
   descripcion = EXCLUDED.descripcion,
   completado = EXCLUDED.completado,
