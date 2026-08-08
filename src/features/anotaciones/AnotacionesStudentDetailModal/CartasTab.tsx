@@ -27,6 +27,7 @@ import PhysicalCartaRegistrationCard from './PhysicalCartaRegistrationCard';
 import TextInputDialog from '@/shared/ui/TextInputDialog';
 import Button from '@/shared/ui/Button';
 import { DocumentGeneratorSkeleton } from '@/shared/Skeleton';
+import { useAuthStore } from '@/shared/lib/stores/authStore';
 
 const AnotacionesDocumentGenerator = lazy(() => import('../AnotacionesDocumentGenerator'));
 
@@ -64,6 +65,7 @@ export default function CartasTab({
   teachers = TEACHERS_BY_COURSE,
   onRefresh,
 }: CartasTabProps) {
+  const tenantId = useAuthStore((state) => state.tenantId);
   const schoolYear = Number(
     new Intl.DateTimeFormat('en-CA', {
       timeZone: 'America/Santiago',
@@ -145,6 +147,7 @@ export default function CartasTab({
       letterType: requestedLetterType,
       negativeCount,
       source,
+      tenantId: tenantId ?? null,
     });
     if (created) setLocalCarta(created);
     return created;
