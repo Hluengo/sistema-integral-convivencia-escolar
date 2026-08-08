@@ -12,7 +12,6 @@ import type {
 } from '../../lib/types';
 import { mapCauseRowToCarta, mapStageRowToEtapa } from '../../lib/mappers';
 import { fetchAnnotations, fetchDocumentAnalyses } from './annotations.service';
-import { getSessionTenantId, getSessionUserId, getSessionUserEmail } from '../lib/sessionContext';
 import {
   resolveStudentCartaTableState,
   type LetterType,
@@ -289,20 +288,21 @@ async function createCartaEvent(
   eventType: CartaEventType,
   detail?: string,
   metadata: Record<string, unknown> = {},
+  actor?: { userId?: string | null; email?: string | null } | null,
 ): Promise<boolean> {
   const carta = await fetchCartaForEvent(cartaId);
   if (!carta) return false;
 
-  const tenantId = carta.tenant_id || getSessionTenantId();
-  const userId = getSessionUserId();
-  const userEmail = getSessionUserEmail();
+  // DB-02 garantiza tenant_id NOT NULL con backfill en cartas_disciplinarias.
+  const tenantId = carta.tenant_id || null;
+  const createdBy = actor?.email || actor?.userId || null;
   const { error } = await supabase.from('carta_events').insert({
     carta_id: cartaId,
     student_id: carta.student_id,
     tenant_id: tenantId,
     event_type: eventType,
     event_detail: detail || null,
-    created_by: userEmail || userId || null,
+    created_by: createdBy,
     metadata,
   });
 
@@ -317,6 +317,7 @@ export async function markCartaProcessedManually(
   cartaId: string,
   note: string,
   contentSnapshot?: Record<string, unknown>,
+  actor?: { userId?: string | null; email?: string | null } | null,
 ): Promise<boolean> {
   if (contentSnapshot) {
     const { data, error } = await supabase
@@ -336,14 +337,22 @@ export async function markCartaProcessedManually(
     cartaId,
     'processed_manually',
     note || 'Trámite marcado como procesado manualmente',
+    {},
+    actor,
   );
 }
 
-export async function archiveCarta(cartaId: string, note: string): Promise<boolean> {
+export async function archiveCarta(
+  cartaId: string,
+  note: string,
+  actor?: { userId?: string | null; email?: string | null } | null,
+): Promise<boolean> {
   return createCartaEvent(
     cartaId,
     'archived',
     note || 'Carta firmada por apoderado/a y archivada en expediente físico',
+    {},
+    actor,
   );
 }
 
@@ -376,10 +385,14 @@ async function updateCartaStatus(
   return true;
 }
 
-export async function annulCarta(cartaId: string, reason: string): Promise<boolean> {
+export async function annulCarta(
+  cartaId: string,
+  reason: string,
+  actor?: { userId?: string | null; email?: string | null } | null,
+): Promise<boolean> {
   const ok = await updateCartaStatus(cartaId, 'Anulada', reason || 'Anulación administrativa');
   if (!ok) return false;
-  return createCartaEvent(cartaId, 'annulled', reason || 'Anulación administrativa');
+  return createCartaEvent(cartaId, 'annulled', reason || 'Anulación administrativa', {}, actor);
 }
 
 export interface PhysicalCartaRegistrationResult {
@@ -434,8 +447,8 @@ export async function createPendingCartaForStudent(params: {
   source: 'supabase' | 'pdf' | 'physical';
   sourceProcessId?: string | null;
   sourceAnalysisId?: string | null;
+  tenantId: string | null;
 }): Promise<CartaDisciplinaria | null> {
-  const tenantId = getSessionTenantId();
   const today = nowDateOnly();
   const sourceLabel =
     params.source === 'pdf'
@@ -447,7 +460,7 @@ export async function createPendingCartaForStudent(params: {
     .from('cartas_disciplinarias')
     .insert({
       student_id: params.student.id,
-      tenant_id: tenantId,
+      tenant_id: params.tenantId,
       letter_type: params.letterType,
       emission_date: today,
       status: 'Vigente',
