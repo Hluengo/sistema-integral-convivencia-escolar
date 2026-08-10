@@ -13,7 +13,10 @@ Pipeline: Upload → extract (pdfjs-dist) → parse (regex) → match → sugges
 
 ## AI Drafts
 
-4 tipos: notificacion_apertura, citacion_entrevista, informe_cierre_indagacion, informe_concluyente
+Tipos activos: informe_cierre_indagacion, informe_concluyente.
+
+La Notificación de Inicio de Indagación se emite desde `chk_rec_3` en Recepción, sin IA. La vista
+legal limita la redacción asistida a informes.
 
 ## Ficha disciplinaria individual
 

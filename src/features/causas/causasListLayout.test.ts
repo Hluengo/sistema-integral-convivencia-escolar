@@ -202,8 +202,8 @@ describe('Listado de causas activas', () => {
     assert.match(workspace, /useAuditDraft\(\{ causa \}\)/);
     assert.match(workspace, /<DraftPanel/);
     assert.match(workspace, /<AuditPanel/);
-    assert.match(draft, /requiresResponsible/);
-    assert.match(draft, /selectedDocType === 'notificacion_apertura'/);
+    assert.match(draft, /informe_cierre_indagacion/);
+    assert.match(draft, /informe_concluyente/);
     assert.match(draft, /<details/);
     assert.match(draft, /Ver vista previa para impresión Oficio/);
   });
@@ -212,9 +212,9 @@ describe('Listado de causas activas', () => {
     const draft = read('../timeline/DraftPanel.tsx');
 
     assert.match(draft, /DOC_TYPE_OPTIONS/);
-    assert.match(draft, /setSelectedDocType\('citacion_entrevista'\)/);
     assert.match(draft, /hito chk_rec_3 del checklist de Recepción/);
-    assert.doesNotMatch(draft, /<option value="notificacion_apertura">/);
+    assert.match(draft, /informe_cierre_indagacion/);
+    assert.match(draft, /informe_concluyente/);
   });
 
   it('mantiene Plantillas como administración clara, con estados de acceso y sin recargas repetidas', () => {
@@ -230,6 +230,8 @@ describe('Listado de causas activas', () => {
     assert.match(templates, /selectedIdRef/);
     assert.match(templates, /useQuery/);
     assert.match(templates, /queryKey: \['document-templates', tenantId\]/);
+    assert.match(templates, /TEMPLATE_ADMIN_ROLES/);
+    assert.match(templates, /ACTIVE_TEMPLATE_DOC_TYPES/);
     assert.match(templates, /fetchAdminDocumentTemplates/);
     assert.match(templatesService, /solo para Dirección y Administración/);
     assert.match(templatesService, /updateDocumentTemplate/);
@@ -239,6 +241,6 @@ describe('Listado de causas activas', () => {
     const draftRoute = read('../../../server/api/routes/draft.ts');
 
     assert.match(draftRoute, /No los repitas en el cuerpo/);
-    assert.match(draftRoute, /templatePrompt \|\| getTemplateFallback\(docType\)/);
+    assert.match(draftRoute, /templatePrompt \|\| getTemplateFallback\(\)/);
   });
 });

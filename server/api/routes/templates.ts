@@ -14,6 +14,7 @@ const router = Router();
 router.use('/document-templates', requireAuth, requireMembership(CONVIVENCIA_MEMBERSHIP));
 const TEMPLATE_SELECT_PUBLIC = 'id,doc_type,label,updated_at';
 const TEMPLATE_SELECT_ADMIN = 'id,doc_type,label,system_prompt,updated_at';
+const ACTIVE_TEMPLATE_FILTER = 'doc_type=in.(informe_cierre_indagacion,informe_concluyente)';
 
 function getSupabaseHostname(): string {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
@@ -42,7 +43,7 @@ router.get('/document-templates', requireTenant, async (req, res) => {
     const authReq = req as AuthenticatedRequest;
     const data = await httpsGet(
       getSupabaseHostname(),
-      `/rest/v1/document_templates?select=${TEMPLATE_SELECT_PUBLIC}&order=doc_type`,
+      `/rest/v1/document_templates?${ACTIVE_TEMPLATE_FILTER}&select=${TEMPLATE_SELECT_PUBLIC}&order=doc_type`,
       authHeaders(authReq),
     );
     res.json(data);
@@ -60,7 +61,7 @@ router.get(
       const authReq = req as AuthenticatedRequest;
       const data = await httpsGet(
         getSupabaseHostname(),
-        `/rest/v1/document_templates?select=${TEMPLATE_SELECT_ADMIN}&order=doc_type`,
+        `/rest/v1/document_templates?${ACTIVE_TEMPLATE_FILTER}&select=${TEMPLATE_SELECT_ADMIN}&order=doc_type`,
         authHeaders(authReq),
       );
       res.json(data);

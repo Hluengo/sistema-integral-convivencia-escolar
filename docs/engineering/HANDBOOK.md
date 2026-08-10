@@ -644,10 +644,11 @@ src/shared/lib/docx/
 
 | Tipo                      | Origen del Prompt     |
 | ------------------------- | --------------------- |
-| notificacion_apertura     | Hardcoded en route    |
-| citacion_entrevista       | Hardcoded en route    |
 | informe_cierre_indagacion | DB document_templates |
 | informe_concluyente       | DB document_templates |
+
+La Notificación de Inicio de Indagación se emite desde `chk_rec_3` en Recepción, sin IA. La vista
+legal limita la redacción asistida a informes.
 
 ---
 

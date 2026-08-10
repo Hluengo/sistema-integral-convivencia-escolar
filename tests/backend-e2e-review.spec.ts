@@ -66,7 +66,7 @@ test.describe('Revisión E2E backend', () => {
       {
         path: '/api/draft-document',
         data: {
-          docType: 'notificacion_apertura',
+          docType: 'informe_cierre_indagacion',
           id: 'DC-2026-001',
           studentName: 'Estudiante de prueba',
         },

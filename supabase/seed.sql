@@ -487,8 +487,6 @@ WHERE NOT EXISTS (
 
 INSERT INTO public.document_templates (id, doc_type, label, system_prompt, tenant_id)
 VALUES
-  ('tpl_demo_notificacion_apertura', 'notificacion_apertura', 'Notificacion de Apertura de Indagacion', 'Redacta una notificacion formal de apertura de indagacion, con hechos objetivos, medidas de resguardo, derecho a descargos y cierre institucional.', '00000000-0000-4000-8000-000000000001'),
-  ('tpl_demo_citacion_entrevista', 'citacion_entrevista', 'Citacion a Entrevista de Descargos', 'Redacta una citacion clara y respetuosa para entrevista de descargos, indicando fecha, proposito, confidencialidad y enfoque formativo.', '00000000-0000-4000-8000-000000000001'),
   ('tpl_demo_informe_cierre', 'informe_cierre_indagacion', 'Informe de Cierre de Indagacion', 'Elabora un informe tecnico de cierre con antecedentes, hechos acreditados, descargos, analisis de proporcionalidad y medidas propuestas.', '00000000-0000-4000-8000-000000000001'),
   ('tpl_demo_informe_concluyente', 'informe_concluyente', 'Informe Concluyente', 'Elabora un informe concluyente disciplinario y formativo con matriz de evidencia, debido proceso, resolucion fundada y plan de seguimiento.', '00000000-0000-4000-8000-000000000001')
 ON CONFLICT (tenant_id, doc_type) DO UPDATE SET

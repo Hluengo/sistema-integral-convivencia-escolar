@@ -62,10 +62,11 @@ La confirmación del proceso (`/api/process-disciplinary-pdf/confirm`) no confí
 
 | Documento                   | System Prompt Origin          |
 | --------------------------- | ----------------------------- |
-| `notificacion_apertura`     | Hardcoded en route            |
-| `citacion_entrevista`       | Hardcoded en route            |
 | `informe_cierre_indagacion` | DB table `document_templates` |
 | `informe_concluyente`       | DB table `document_templates` |
+
+La Notificación de Inicio de Indagación se emite desde el hito `chk_rec_3` de Recepción, sin IA.
+La redacción asistida legal queda limitada a informes.
 
 ## Document Flow (Frontend)
 

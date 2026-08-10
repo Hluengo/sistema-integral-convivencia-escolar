@@ -96,9 +96,7 @@ test.describe('Notificación de Inicio de Indagación (E2E)', () => {
     await expect(letter.getByText('Firmas', { exact: true })).toHaveCount(0);
   });
 
-  test('el DraftPanel ya no ofrece la notificación de apertura en redacción asistida', async ({
-    page,
-  }) => {
+  test('el DraftPanel solo ofrece informes en redacción asistida', async ({ page }) => {
     const sidebar = page.getByRole('complementary', { name: 'Barra de navegación principal' });
     await sidebar.getByRole('button', { name: /asistente legal/i }).click();
 
@@ -114,9 +112,10 @@ test.describe('Notificación de Inicio de Indagación (E2E)', () => {
     const docTypeSelect = page.locator('#doc-type');
     await expect(docTypeSelect).toBeVisible({ timeout: 15_000 });
 
-    // La notificación de apertura ya no es una opción de redacción asistida.
-    await expect(docTypeSelect.locator('option[value="notificacion_apertura"]')).toHaveCount(0);
-    await expect(docTypeSelect.locator('option[value="citacion_entrevista"]')).toHaveCount(1);
+    // La redacción asistida queda limitada a informes.
+    await expect(docTypeSelect.locator('option')).toHaveCount(2);
+    await expect(docTypeSelect.locator('option[value="informe_cierre_indagacion"]')).toHaveCount(1);
+    await expect(docTypeSelect.locator('option[value="informe_concluyente"]')).toHaveCount(1);
 
     // El aviso dirige la notificación al checklist de Recepción.
     await expect(

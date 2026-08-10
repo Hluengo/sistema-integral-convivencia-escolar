@@ -21,25 +21,15 @@ import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../../middleware/requ
 
 const router = Router();
 
-const DOC_TYPES = [
-  'notificacion_apertura',
-  'citacion_entrevista',
-  'informe_cierre_indagacion',
-  'informe_concluyente',
-] as const;
+const DOC_TYPES = ['informe_cierre_indagacion', 'informe_concluyente'] as const;
 type DocType = (typeof DOC_TYPES)[number];
 
 const DOCUMENT_TITLES: Record<DocType, string> = {
-  notificacion_apertura: 'Notificación de Apertura de Indagación de Convivencia Escolar',
-  citacion_entrevista:
-    'Citación para Entrega de la Notificación de Apertura de Indagación de Convivencia Escolar',
   informe_cierre_indagacion: 'Informe de Cierre de Indagación',
   informe_concluyente: 'Informe Concluyente y Resolución',
 };
 
 const DOCUMENT_SIGNERS: Record<DocType, string> = {
-  notificacion_apertura: 'Inspector/a y/o Coordinador/a de Ciclo',
-  citacion_entrevista: 'Inspector/a y/o Coordinador/a de Ciclo',
   informe_cierre_indagacion: 'Equipo Encargado de Indagación',
   informe_concluyente: 'Equipo de Convivencia Escolar',
 };
@@ -66,22 +56,6 @@ export const DRAFT_CONTEXT_LIMITS: Record<
     };
   }
 > = {
-  notificacion_apertura: {
-    legalSourceChars: 6_000,
-    historyEntries: 8,
-    checklistItems: 8,
-    measures: 8,
-    documents: { maxDocuments: 0, maxExtractedCharsPerDocument: 0, maxExtractedCharsTotal: 0 },
-    generation: { maxOutputTokens: 1400, timeoutMs: 12_000 },
-  },
-  citacion_entrevista: {
-    legalSourceChars: 4_000,
-    historyEntries: 4,
-    checklistItems: 4,
-    measures: 4,
-    documents: { maxDocuments: 0, maxExtractedCharsPerDocument: 0, maxExtractedCharsTotal: 0 },
-    generation: { maxOutputTokens: 1000, timeoutMs: 10_000 },
-  },
   informe_cierre_indagacion: {
     legalSourceChars: 28_000,
     historyEntries: 32,
@@ -114,25 +88,11 @@ function getSupabaseHostname(): string {
   return new URL(supabaseUrl).hostname;
 }
 
-function isDocType(value: string): value is DocType {
+export function isDocType(value: string): value is DocType {
   return (DOC_TYPES as readonly string[]).includes(value);
 }
 
-function getTemplateFallback(docType: DocType): string {
-  if (docType === 'citacion_entrevista') {
-    return `Redacta una citación breve, clara y respetuosa para la ENTREGA de la Notificación de Apertura de Indagación de Convivencia Escolar. No es una citación de descargos ni una entrevista de investigación.
-
-Usa esta estructura, sin crear secciones adicionales:
-1. Saludo: "Estimado(a) Sr./Sra. [apoderado/a]".
-2. Solicitud de asistencia presencial, obligatoria y urgente, emitida desde la Coordinación de Ciclo correspondiente. Si el curso permite identificar ciclo secundario, usa "Coordinación de Ciclo Secundario".
-3. Explica que el único propósito es notificar formalmente el "Informe de Apertura de Indagación de Convivencia Escolar" en que se encuentra involucrado/a el/la estudiante. Menciona las disposiciones y protocolos del Reglamento de Convivencia Escolar 2026, sin agregar normas, artículos ni calificaciones de responsabilidad.
-4. Solicita concurrir dentro de las próximas 24 horas por razones de resguardo y debido proceso.
-5. Ofrece dos alternativas editables de atención: 08:00 a 12:00 horas y 14:40 a 16:30 horas, ambas para una fecha dentro de las próximas 24 horas. Solo escribe fecha, día o "mañana" si ese dato viene expresamente en el dossier; de lo contrario, usa el marcador "[día y fecha dentro de las próximas 24 horas]". No inventes una fecha concreta.
-6. Pide confirmar a la brevedad por correo o a través de Secretaría del Ciclo. Indica que, si ninguna alternativa es posible, se debe acordar de inmediato un día y horario que permita efectuar la notificación.
-7. Despedida breve y bloque de firma institucional.
-
-No relates hechos del expediente, antecedentes, medidas, pruebas, sanciones ni conclusiones. El resultado debe poder editarse antes de imprimir.`;
-  }
+function getTemplateFallback(): string {
   return `Redacta el documento respetando todos los apartados que la plantilla exija y usando solamente los antecedentes del dossier.`;
 }
 
@@ -378,7 +338,7 @@ ${legalSources}
 
       let document: string;
       const provider = 'Gemini';
-      const systemInstruction = `${documentPolicy(docType)}\n\nPLANTILLA INSTITUCIONAL:\n${templatePrompt || getTemplateFallback(docType)}`;
+      const systemInstruction = `${documentPolicy(docType)}\n\nPLANTILLA INSTITUCIONAL:\n${templatePrompt || getTemplateFallback()}`;
       try {
         const geminiTimeoutMs = getBoundedDraftTimeoutMs(
           contextLimits.generation.timeoutMs,

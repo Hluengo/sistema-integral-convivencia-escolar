@@ -8,18 +8,25 @@ import {
   getGeminiDraftErrorStatus,
   getBoundedDraftTimeoutMs,
   getRemainingDraftBudgetMs,
+  isDocType,
   isRecoverableGeminiDraftError,
   isGeminiTimeout,
 } from './draft';
 
 describe('draft document route configuration', () => {
-  it('usa contexto liviano para notificaciones de apertura', () => {
-    const limits = DRAFT_CONTEXT_LIMITS.notificacion_apertura;
+  it('usa contexto amplio para informes de cierre', () => {
+    const limits = DRAFT_CONTEXT_LIMITS.informe_cierre_indagacion;
 
-    assert.equal(limits.documents.maxDocuments, 0);
-    assert.equal(limits.legalSourceChars <= 6_000, true);
-    assert.equal(limits.generation.maxOutputTokens <= 1_400, true);
-    assert.equal(limits.generation.timeoutMs <= 12_000, true);
+    assert.equal(limits.documents.maxDocuments, 4);
+    assert.equal(limits.legalSourceChars, 28_000);
+    assert.equal(limits.generation.maxOutputTokens, 5_000);
+    assert.equal(limits.generation.timeoutMs, 18_000);
+  });
+
+  it('rechaza documentos no vigentes en redacción asistida', () => {
+    assert.equal(isDocType('documento_legacy'), false);
+    assert.equal(isDocType('informe_cierre_indagacion'), true);
+    assert.equal(isDocType('informe_concluyente'), true);
   });
 
   it('clasifica timeouts de Gemini para responder sin 500 genérico', () => {

@@ -578,13 +578,12 @@ Vía servidor:
   pdfjs-dist → Text extraction → Regex parsing → Student matching
 ```
 
-### 9.3 AI Drafted Documents (4 tipos)
+### 9.3 AI Drafted Documents
 
-> **Nota:** La **Notificación de Inicio de Indagación** ya NO se redacta con asistencia AI. Se emite desde el hito `chk_rec_3` del checklist de Recepción, con su propia plantilla hoja Carta (`notificacionDocgen`, sin IA) y trazabilidad por snapshot en `causa_documents`. `notificacion_apertura` permanece solo como valor legacy del union de tipos; la UI la deriva a `citacion_entrevista`.
+> **Nota:** La **Notificación de Inicio de Indagación** ya NO se redacta con asistencia AI. Se emite desde el hito `chk_rec_3` del checklist de Recepción, con su propia plantilla hoja Carta (`notificacionDocgen`, sin IA) y trazabilidad por snapshot en `causa_documents`. La vista legal limita la redacción asistida a informes.
 
 | Tipo                        | System Prompt                     |
 | --------------------------- | --------------------------------- |
-| `citacion_entrevista`       | "Eres un experto..."              |
 | `informe_cierre_indagacion` | Prompt en DB (document_templates) |
 | `informe_concluyente`       | Prompt en DB (document_templates) |
 
@@ -1344,7 +1343,7 @@ Content-Security-Policy: restrictivo (self + supabase + openrouter/groq)
 - Feature "Notificación de Inicio de Indagación" como documento oficial de causa, hoja Carta (216x279mm), **sin IA**: plantilla fija editable de 9 secciones numeradas, vista previa con validación de desbordamiento, impresión y anulación. Aislada del flujo de cartas disciplinarias y del DraftPanel/Gemini.
 - Migración `20260806090000_add_causa_documents_notificacion_inicio_indagacion.sql`: tabla `causa_documents` (snapshot jsonb de trazabilidad, estados `Pendiente/Notificada/Anulada`, tenant por RLS + índice compuesto) y RPC transaccional `mark_causa_document_notified` que en una sola transacción actualiza el documento, completa el hito `chk_rec_3` e inserta la entrada de bitácora tipo `Notificación`. La PK de `checklist_items` es `(id, causa_id)`, por lo que el `ON CONFLICT (id, causa_id)` del RPC es válido.
 - Integración UI: `ProcessChecklist.tsx` renderiza `CausaNotificationPanel` en el hito `chk_rec_3` (solo Recepción); reemplaza el registro genérico de hitos para ese hito. `docente` solo puede leer (aviso).
-- `DraftPanel` retiró `notificacion_apertura` del selector visible (permanece en el union de tipos para compatibilidad legacy); un `useEffect` deriva ese valor a `citacion_entrevista`.
+- `DraftPanel` limita la redacción asistida de la vista legal a informes; la notificación inicial se mantiene en el hito de Recepción sin IA.
 - Robustez/seguridad anexa al diff: `isValidUuid` en `admin.ts` (membership PATCH), guard de `tenantId` en `processDisciplinaryPdf.ts`, `AbortController` + rollback optimista en `useAuditDraft`/`useDocumentManager`, deep-link a expedientes más allá de la primera página en `useCausaWorkspace`/`fetchCausaDetails`, y `useStudentsQuery` gateado por `isAuthenticated`.
 - Tests: `src/features/causas/notificacionDocgen/notificacionDocgen.test.ts` (unit) + `tests/notificacion-docgen.spec.ts` (E2E, se omite sin credenciales E2E). Suite completa al cierre: 719 tests verdes (159 suites); lint + typecheck + build verdes.
 - **Pendiente de registro:** el E2E requiere credenciales staff para ejecutarse; el trabajo quedó persistido en el branch `allow-staff-disciplinary-process`.

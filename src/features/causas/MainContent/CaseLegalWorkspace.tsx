@@ -52,8 +52,6 @@ export default function CaseLegalWorkspace({
         <DraftPanel
           selectedDocType={draft.selectedDocType}
           setSelectedDocType={draft.setSelectedDocType}
-          fatherName={draft.fatherName}
-          setFatherName={draft.setFatherName}
           draftedDocument={draft.draftedDocument}
           draftError={draft.draftError}
           isDrafting={draft.isDrafting}

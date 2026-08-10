@@ -3031,22 +3031,12 @@ async function extractCaseDocuments(documentValues, authReq, options = {}) {
 
 // server/api/routes/draft.ts
 var router4 = Router4();
-var DOC_TYPES = [
-  'notificacion_apertura',
-  'citacion_entrevista',
-  'informe_cierre_indagacion',
-  'informe_concluyente',
-];
+var DOC_TYPES = ['informe_cierre_indagacion', 'informe_concluyente'];
 var DOCUMENT_TITLES = {
-  notificacion_apertura: 'Notificaci\xF3n de Apertura de Indagaci\xF3n de Convivencia Escolar',
-  citacion_entrevista:
-    'Citaci\xF3n para Entrega de la Notificaci\xF3n de Apertura de Indagaci\xF3n de Convivencia Escolar',
   informe_cierre_indagacion: 'Informe de Cierre de Indagaci\xF3n',
   informe_concluyente: 'Informe Concluyente y Resoluci\xF3n',
 };
 var DOCUMENT_SIGNERS = {
-  notificacion_apertura: 'Inspector/a y/o Coordinador/a de Ciclo',
-  citacion_entrevista: 'Inspector/a y/o Coordinador/a de Ciclo',
   informe_cierre_indagacion: 'Equipo Encargado de Indagaci\xF3n',
   informe_concluyente: 'Equipo de Convivencia Escolar',
 };
@@ -3054,22 +3044,6 @@ var VERCEL_FUNCTION_BUDGET_MS = 29e3;
 var RESPONSE_GUARD_MS = 1500;
 var MIN_GENERATION_TIMEOUT_MS = 4e3;
 var DRAFT_CONTEXT_LIMITS = {
-  notificacion_apertura: {
-    legalSourceChars: 6e3,
-    historyEntries: 8,
-    checklistItems: 8,
-    measures: 8,
-    documents: { maxDocuments: 0, maxExtractedCharsPerDocument: 0, maxExtractedCharsTotal: 0 },
-    generation: { maxOutputTokens: 1400, timeoutMs: 12e3 },
-  },
-  citacion_entrevista: {
-    legalSourceChars: 4e3,
-    historyEntries: 4,
-    checklistItems: 4,
-    measures: 4,
-    documents: { maxDocuments: 0, maxExtractedCharsPerDocument: 0, maxExtractedCharsTotal: 0 },
-    generation: { maxOutputTokens: 1e3, timeoutMs: 1e4 },
-  },
   informe_cierre_indagacion: {
     legalSourceChars: 28e3,
     historyEntries: 32,
@@ -3103,21 +3077,7 @@ function getSupabaseHostname2() {
 function isDocType(value) {
   return DOC_TYPES.includes(value);
 }
-function getTemplateFallback(docType) {
-  if (docType === 'citacion_entrevista') {
-    return `Redacta una citaci\xF3n breve, clara y respetuosa para la ENTREGA de la Notificaci\xF3n de Apertura de Indagaci\xF3n de Convivencia Escolar. No es una citaci\xF3n de descargos ni una entrevista de investigaci\xF3n.
-
-Usa esta estructura, sin crear secciones adicionales:
-1. Saludo: "Estimado(a) Sr./Sra. [apoderado/a]".
-2. Solicitud de asistencia presencial, obligatoria y urgente, emitida desde la Coordinaci\xF3n de Ciclo correspondiente. Si el curso permite identificar ciclo secundario, usa "Coordinaci\xF3n de Ciclo Secundario".
-3. Explica que el \xFAnico prop\xF3sito es notificar formalmente el "Informe de Apertura de Indagaci\xF3n de Convivencia Escolar" en que se encuentra involucrado/a el/la estudiante. Menciona las disposiciones y protocolos del Reglamento de Convivencia Escolar 2026, sin agregar normas, art\xEDculos ni calificaciones de responsabilidad.
-4. Solicita concurrir dentro de las pr\xF3ximas 24 horas por razones de resguardo y debido proceso.
-5. Ofrece dos alternativas editables de atenci\xF3n: 08:00 a 12:00 horas y 14:40 a 16:30 horas, ambas para una fecha dentro de las pr\xF3ximas 24 horas. Solo escribe fecha, d\xEDa o "ma\xF1ana" si ese dato viene expresamente en el dossier; de lo contrario, usa el marcador "[d\xEDa y fecha dentro de las pr\xF3ximas 24 horas]". No inventes una fecha concreta.
-6. Pide confirmar a la brevedad por correo o a trav\xE9s de Secretar\xEDa del Ciclo. Indica que, si ninguna alternativa es posible, se debe acordar de inmediato un d\xEDa y horario que permita efectuar la notificaci\xF3n.
-7. Despedida breve y bloque de firma institucional.
-
-No relates hechos del expediente, antecedentes, medidas, pruebas, sanciones ni conclusiones. El resultado debe poder editarse antes de imprimir.`;
-  }
+function getTemplateFallback() {
   return `Redacta el documento respetando todos los apartados que la plantilla exija y usando solamente los antecedentes del dossier.`;
 }
 function documentPolicy(docType) {
@@ -3342,7 +3302,7 @@ ${legalSources}
       const systemInstruction = `${documentPolicy(docType)}
 
 PLANTILLA INSTITUCIONAL:
-${templatePrompt || getTemplateFallback(docType)}`;
+${templatePrompt || getTemplateFallback()}`;
       try {
         const geminiTimeoutMs = getBoundedDraftTimeoutMs(
           contextLimits.generation.timeoutMs,
@@ -3454,6 +3414,7 @@ var router6 = Router6();
 router6.use('/document-templates', requireAuth, requireMembership(CONVIVENCIA_MEMBERSHIP));
 var TEMPLATE_SELECT_PUBLIC = 'id,doc_type,label,updated_at';
 var TEMPLATE_SELECT_ADMIN = 'id,doc_type,label,system_prompt,updated_at';
+var ACTIVE_TEMPLATE_FILTER = 'doc_type=in.(informe_cierre_indagacion,informe_concluyente)';
 function getSupabaseHostname3() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   if (!supabaseUrl || !URL.canParse(supabaseUrl)) {
@@ -3477,7 +3438,7 @@ router6.get('/document-templates', requireTenant, async (req, res) => {
     const authReq = req;
     const data = await httpsGet(
       getSupabaseHostname3(),
-      `/rest/v1/document_templates?select=${TEMPLATE_SELECT_PUBLIC}&order=doc_type`,
+      `/rest/v1/document_templates?${ACTIVE_TEMPLATE_FILTER}&select=${TEMPLATE_SELECT_PUBLIC}&order=doc_type`,
       authHeaders(authReq),
     );
     res.json(data);
@@ -3494,7 +3455,7 @@ router6.get(
       const authReq = req;
       const data = await httpsGet(
         getSupabaseHostname3(),
-        `/rest/v1/document_templates?select=${TEMPLATE_SELECT_ADMIN}&order=doc_type`,
+        `/rest/v1/document_templates?${ACTIVE_TEMPLATE_FILTER}&select=${TEMPLATE_SELECT_ADMIN}&order=doc_type`,
         authHeaders(authReq),
       );
       res.json(data);

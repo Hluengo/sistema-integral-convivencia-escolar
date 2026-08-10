@@ -220,7 +220,7 @@ describe('API endpoints', () => {
 
   describe('POST /api/draft-document', () => {
     it('returns 401 without auth', async () => {
-      const res = await post('/api/draft-document', { docType: 'notificacion_apertura' });
+      const res = await post('/api/draft-document', { docType: 'informe_cierre_indagacion' });
       assert.equal(res.status, 401);
     });
 

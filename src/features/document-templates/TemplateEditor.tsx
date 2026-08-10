@@ -23,15 +23,17 @@ import {
   updateDocumentTemplate,
 } from '../../shared/api/services/documentTemplates.service';
 
+const TEMPLATE_ADMIN_ROLES = new Set(['superadmin', 'admin', 'direccion']);
+const ACTIVE_TEMPLATE_DOC_TYPES = new Set(['informe_cierre_indagacion', 'informe_concluyente']);
+
 const DOC_TYPE_LABELS: Record<string, string> = {
-  notificacion_apertura: 'Notificación de Apertura de Indagación',
-  citacion_entrevista: 'Citación para entrega de notificación',
   informe_cierre_indagacion: 'Informe de Cierre',
   informe_concluyente: 'Informe Concluyente',
 };
 
 export default function TemplateEditor() {
   const tenantId = useAuthStore((state) => state.tenantId);
+  const profileRole = useAuthStore((state) => state.profileRole);
   const queryClient = useQueryClient();
   const [templates, setTemplates] = useState<DocumentTemplate[]>([]);
   const [saving, setSaving] = useState<string | null>(null);
@@ -45,16 +47,22 @@ export default function TemplateEditor() {
   const templatesQuery = useQuery({
     queryKey: ['document-templates', tenantId],
     queryFn: fetchAdminDocumentTemplates,
-    enabled: Boolean(tenantId),
+    enabled: Boolean(tenantId) && TEMPLATE_ADMIN_ROLES.has(profileRole ?? ''),
     staleTime: 5 * 60 * 1000,
+    retry: (failureCount, error) =>
+      !(error instanceof Error && error.message.includes('solo para Dirección')) &&
+      failureCount < 2,
   });
 
   useEffect(() => {
     if (!templatesQuery.data) return;
-    setTemplates(templatesQuery.data);
+    const activeTemplates = templatesQuery.data.filter((template) =>
+      ACTIVE_TEMPLATE_DOC_TYPES.has(template.doc_type),
+    );
+    setTemplates(activeTemplates);
     const selected =
-      templatesQuery.data.find((template) => template.id === selectedIdRef.current) ??
-      templatesQuery.data[0];
+      activeTemplates.find((template) => template.id === selectedIdRef.current) ??
+      activeTemplates[0];
     selectedIdRef.current = selected?.id ?? null;
     setSelectedId(selected?.id ?? null);
     setEditPrompt(selected?.system_prompt ?? '');
@@ -63,6 +71,8 @@ export default function TemplateEditor() {
 
   const loading = templatesQuery.isLoading;
   const loadError = templatesQuery.error instanceof Error ? templatesQuery.error.message : null;
+  const canManageTemplates = TEMPLATE_ADMIN_ROLES.has(profileRole ?? '');
+  const waitingForRole = Boolean(tenantId) && profileRole === null;
 
   const handleSelect = (tpl: DocumentTemplate) => {
     selectedIdRef.current = tpl.id;
@@ -115,6 +125,35 @@ export default function TemplateEditor() {
     </div>
   );
 
+  if (waitingForRole) {
+    return (
+      <div className="min-h-[280px] bg-white">
+        {header}
+        <div className="flex flex-col items-center justify-center gap-4 px-4 py-16">
+          <Loader2 className="h-5 w-5 animate-spin text-brand-600" />
+          <TextBlockSkeleton lines={2} />
+        </div>
+      </div>
+    );
+  }
+
+  if (!canManageTemplates) {
+    return (
+      <div className="min-h-[280px] bg-white">
+        {header}
+        <div className="flex flex-col items-center justify-center px-5 py-14 text-center">
+          <span className="rounded-xl bg-neutral-100 p-3 text-neutral-500" aria-hidden="true">
+            <LockKeyhole className="size-5" />
+          </span>
+          <h4 className="mt-3 font-semibold text-neutral-900 text-sm">Acceso a plantillas</h4>
+          <p className="mt-1 max-w-md text-neutral-500 text-sm">
+            Esta sección está disponible solo para Dirección y Administración.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-[280px] bg-white">
@@ -162,8 +201,7 @@ export default function TemplateEditor() {
             No hay plantillas institucionales disponibles
           </h4>
           <p className="mx-auto mt-1 max-w-md text-neutral-500 text-sm">
-            Un perfil autorizado debe cargar las cuatro plantillas iniciales para habilitar su
-            edición.
+            Un perfil autorizado debe cargar las plantillas de informes para habilitar su edición.
           </p>
         </div>
       </div>

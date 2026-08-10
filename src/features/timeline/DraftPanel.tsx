@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import type React from 'react';
-import { forwardRef, useEffect, useMemo, useRef } from 'react';
+import { forwardRef, useMemo, useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Eye, FileText, RefreshCw, FileSignature, Printer, PencilLine } from 'lucide-react';
 import { LOGO_URL } from '@/src/lib/logoBase64';
@@ -9,29 +9,20 @@ import { LetterInstitutionalHeader } from '@/src/features/anotaciones/docgen/Doc
 import Button from '@/shared/ui/Button';
 import './official-document.css';
 
-type DocType =
-  | 'notificacion_apertura'
-  | 'citacion_entrevista'
-  | 'informe_cierre_indagacion'
-  | 'informe_concluyente';
+type DocType = 'informe_cierre_indagacion' | 'informe_concluyente';
 
 type MarkdownRenderer = ({ text }: { text: string }) => React.ReactElement;
 
 const DOCUMENT_TITLES: Record<DocType, string> = {
-  notificacion_apertura: 'Notificación de Apertura de Indagación de Convivencia Escolar',
-  citacion_entrevista:
-    'Citación para Entrega de la Notificación de Apertura de Indagación de Convivencia Escolar',
   informe_cierre_indagacion: 'Informe de Cierre de Indagación',
   informe_concluyente: 'Informe Concluyente y Resolución',
 };
 
 /**
- * Opciones de redacción asistida: la Notificación de Inicio de Indagación se
- * emite desde el hito chk_rec_3 del checklist de Recepción (sin IA), por lo
- * que no aparece aquí.
+ * Opciones de redacción asistida. La Notificación de Inicio de Indagación se
+ * emite desde el hito chk_rec_3 del checklist de Recepción (sin IA).
  */
-const DOC_TYPE_OPTIONS: { value: Exclude<DocType, 'notificacion_apertura'>; label: string }[] = [
-  { value: 'citacion_entrevista', label: 'Citación para entrega de notificación' },
+const DOC_TYPE_OPTIONS: { value: DocType; label: string }[] = [
   { value: 'informe_cierre_indagacion', label: 'Informe de Cierre de Indagación' },
   { value: 'informe_concluyente', label: 'Informe Concluyente y Resolución' },
 ];
@@ -39,8 +30,6 @@ const DOC_TYPE_OPTIONS: { value: Exclude<DocType, 'notificacion_apertura'>; labe
 interface DraftPanelProps {
   selectedDocType: DocType;
   setSelectedDocType: React.Dispatch<React.SetStateAction<DocType>>;
-  fatherName: string;
-  setFatherName: React.Dispatch<React.SetStateAction<string>>;
   draftedDocument: string;
   setDraftedDocument: React.Dispatch<React.SetStateAction<string>>;
   draftError: string | null;
@@ -55,8 +44,6 @@ interface DraftPanelProps {
 export default function DraftPanel({
   selectedDocType,
   setSelectedDocType,
-  fatherName,
-  setFatherName,
   draftedDocument,
   setDraftedDocument,
   draftError,
@@ -69,18 +56,6 @@ export default function DraftPanel({
 }: DraftPanelProps) {
   const printRef = useRef<HTMLDivElement>(null);
   const documentTitle = DOCUMENT_TITLES[selectedDocType];
-  const requiresResponsible =
-    selectedDocType === 'notificacion_apertura' || selectedDocType === 'citacion_entrevista';
-
-  // La Notificación de Inicio de Indagación ya no se redacta con asistencia:
-  // se emite desde el hito chk_rec_3 del checklist de Recepción. Si el estado
-  // del padre quedó en esa opción (valor por defecto histórico), se deriva a
-  // la citación para entrega, que es el documento complementario natural.
-  useEffect(() => {
-    if (selectedDocType === 'notificacion_apertura') {
-      setSelectedDocType('citacion_entrevista');
-    }
-  }, [selectedDocType, setSelectedDocType]);
   const date = useMemo(
     () =>
       new Intl.DateTimeFormat('es-CL', { dateStyle: 'long', timeZone: 'America/Santiago' }).format(
@@ -138,27 +113,6 @@ export default function DraftPanel({
           ))}
         </select>
       </div>
-
-      {requiresResponsible && (
-        <div>
-          <label
-            htmlFor="father-name"
-            className="block font-semibold text-10px uppercase tracking-wider text-neutral-500"
-          >
-            Nombre del apoderado/a o adulto responsable
-          </label>
-          <input
-            id="father-name"
-            aria-label="Nombre del apoderado o adulto responsable"
-            type="text"
-            spellCheck={false}
-            value={fatherName}
-            onChange={(event) => setFatherName(event.target.value)}
-            placeholder="Ej. Juan Pérez González"
-            className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-2.5 font-medium text-xs text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-          />
-        </div>
-      )}
 
       <Button
         type="button"

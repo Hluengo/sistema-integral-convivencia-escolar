@@ -31,12 +31,8 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
   const [isAuditing, setIsAuditing] = useState<boolean>(false);
 
   const [selectedDocType, setSelectedDocType] = useState<
-    | 'notificacion_apertura'
-    | 'citacion_entrevista'
-    | 'informe_cierre_indagacion'
-    | 'informe_concluyente'
-  >('notificacion_apertura');
-  const [fatherName, setFatherName] = useState<string>('');
+    'informe_cierre_indagacion' | 'informe_concluyente'
+  >('informe_cierre_indagacion');
   const [draftedDocument, setDraftedDocument] = useState<string>('');
   const [draftError, setDraftError] = useState<string | null>(null);
   const [isDrafting, setIsDrafting] = useState<boolean>(false);
@@ -116,10 +112,7 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
           id: causa.id,
           studentName: causa.estudianteNombre,
           course: causa.estudianteCurso,
-          fatherName:
-            selectedDocType === 'notificacion_apertura' || selectedDocType === 'citacion_entrevista'
-              ? fatherName
-              : '',
+          fatherName: '',
           managerName: causa.responsable,
           infractionType: causa.tipoInfraccion,
           observations: causa.observaciones,
@@ -159,8 +152,6 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
     isAuditing,
     selectedDocType,
     setSelectedDocType,
-    fatherName,
-    setFatherName,
     draftedDocument,
     setDraftedDocument,
     draftError,
