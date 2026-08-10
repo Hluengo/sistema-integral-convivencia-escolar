@@ -78,30 +78,41 @@ jobs:
 
   rls-validators:
     runs-on: ubuntu-latest
-    if: ${{ secrets.VITE_SUPABASE_URL != '' && secrets.SUPABASE_SERVICE_ROLE_KEY != '' && secrets.VITE_SUPABASE_PUBLISHABLE_KEY != '' }}
+    env:
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      E2E_BASE_URL: ${{ secrets.E2E_BASE_URL }}
     steps:
+      - name: Check RLS validator secrets
+        id: rls_secrets
+        shell: bash
+        run: |
+          if [[ -n "$VITE_SUPABASE_URL" && -n "$SUPABASE_SERVICE_ROLE_KEY" && -n "$VITE_SUPABASE_PUBLISHABLE_KEY" ]]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "RLS validator secrets are not configured; skipping tenant and role checks."
+          fi
+
       - uses: actions/checkout@v4
+        if: steps.rls_secrets.outputs.available == 'true'
 
       - name: Setup Node
+        if: steps.rls_secrets.outputs.available == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'npm'
 
       - name: Install
+        if: steps.rls_secrets.outputs.available == 'true'
         run: npm ci
 
       - name: Multi-tenant isolation (RLS)
+        if: steps.rls_secrets.outputs.available == 'true'
         run: npm run test:multitenant
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
       - name: Production roles (RLS)
+        if: steps.rls_secrets.outputs.available == 'true'
         run: npm run test:roles
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          E2E_BASE_URL: ${{ secrets.E2E_BASE_URL }}
