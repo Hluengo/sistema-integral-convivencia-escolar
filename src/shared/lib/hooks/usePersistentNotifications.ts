@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../stores/authStore';
 import { supabase } from '../../api/lib/supabase';
@@ -82,6 +82,7 @@ export function useNotifications(causas: Causa[]): NotificationCenter {
     staleTime: 30_000,
   });
   const realtimeEnabled = import.meta.env.VITE_NOTIFICATIONS_REALTIME === 'true';
+  const [realtimeLifecycleKey, setRealtimeLifecycleKey] = useState(0);
 
   useEffect(() => {
     if (!realtimeEnabled || !userId || !tenantId) return;
@@ -100,9 +101,34 @@ export function useNotifications(causas: Causa[]): NotificationCenter {
       )
       .subscribe();
 
-    return () => {
+    let removed = false;
+    const removeRealtimeChannel = () => {
+      if (removed) return;
+      removed = true;
       void supabase.removeChannel(channel);
     };
+
+    window.addEventListener('pagehide', removeRealtimeChannel);
+
+    return () => {
+      window.removeEventListener('pagehide', removeRealtimeChannel);
+      removeRealtimeChannel();
+    };
+  }, [queryClient, realtimeEnabled, realtimeLifecycleKey, tenantId, userId]);
+
+  useEffect(() => {
+    if (!realtimeEnabled) return;
+
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (!event.persisted) return;
+      setRealtimeLifecycleKey((current) => current + 1);
+      if (userId && tenantId) {
+        void queryClient.invalidateQueries({ queryKey: ['notifications', tenantId, userId] });
+      }
+    };
+
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
   }, [queryClient, realtimeEnabled, tenantId, userId]);
 
   useEffect(() => {
