@@ -2,7 +2,9 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import type { BitacoraEntry } from '../types';
+import { getPhaseProgress } from '../data';
+import { EstadoCausa, type BitacoraEntry, type Causa } from '../types';
+import { isMediationActive } from './investigationChecklist';
 import { reconcileChecklistFromBitacora } from './checklistReconciliation';
 
 const entry = (id: string, fecha: string, titulo: string, descripcion: string): BitacoraEntry => ({
@@ -12,6 +14,28 @@ const entry = (id: string, fecha: string, titulo: string, descripcion: string): 
   descripcion,
   tipo: 'Notificación',
   participantes: ['Jimena Chavez'],
+});
+
+const causa = (
+  checklistDebidoProceso: Causa['checklistDebidoProceso'],
+  bitacora: BitacoraEntry[] = [],
+  overrides: Partial<Causa> = {},
+): Causa => ({
+  id: 'DC-2026-014',
+  estudianteNombre: 'Nombre completo',
+  estudianteCurso: '7° Básico A',
+  nnaProtectedName: 'N. C.',
+  runEstudiante: '12.345.678-9',
+  fechaApertura: '2026-07-01',
+  estadoActual: EstadoCausa.EN_PROCESO_INDAGACION,
+  tipoInfraccion: 'Grave',
+  responsable: 'Responsable',
+  comprometeAulaSegura: false,
+  fechaUltimaActualizacion: '2026-07-01',
+  observaciones: 'Resumen',
+  bitacora,
+  checklistDebidoProceso,
+  ...overrides,
 });
 
 describe('reconcileChecklistFromBitacora', () => {
@@ -82,5 +106,47 @@ describe('reconcileChecklistFromBitacora', () => {
     assert.ok(result.length > 1);
     assert.equal(result.find((candidate) => candidate.id === 'chk_rec_1')?.completado, true);
     assert.ok(result.some((candidate) => candidate.id === 'chk_rec_2'));
+  });
+
+  it('no convierte los hitos base de mediación en obligatorios para una causa sin mediación', () => {
+    const result = reconcileChecklistFromBitacora(
+      [],
+      [
+        entry(
+          'b1',
+          '2026-08-10T12:00:00.000Z',
+          'Registro de Hito: En Proceso de Indagación',
+          'Registro. Responsable: Jimena Chavez. Observaciones: Indagación iniciada.',
+        ),
+        entry(
+          'b2',
+          '2026-08-10T13:00:00.000Z',
+          'Registro de Hito: Recopilación de Evidencias en Curso',
+          'Registro. Responsable: Jimena Chavez. Observaciones: Evidencias recopiladas.',
+        ),
+      ],
+    );
+    const progress = getPhaseProgress(result, 'Investigación');
+
+    assert.ok(result.some((candidate) => candidate.id === 'chk_inv_6'));
+    assert.equal(progress.completed, 2);
+    assert.equal(progress.total, 2);
+  });
+
+  it('reconoce una causa legacy con registros históricos de mediación', () => {
+    const mediationEntry: BitacoraEntry = {
+      ...entry(
+        'b-mediacion',
+        '2026-08-10T14:00:00.000Z',
+        'Acuerdos de mediación',
+        'Se registra una sesión restaurativa con compromisos.',
+      ),
+      tipo: 'Mediación',
+    };
+    const result = reconcileChecklistFromBitacora([], [mediationEntry]);
+    const legacy = causa(result, [mediationEntry]);
+
+    assert.equal(isMediationActive(legacy), true);
+    assert.equal(getPhaseProgress(legacy, 'Investigación').total, 5);
   });
 });

@@ -2,6 +2,7 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { getBaseChecklist } from '../../shared/lib/data';
 import { EstadoCausa, type Causa } from '../../shared/lib/types';
 import { getCausaOperationalSummary } from './causaOperationalSummary';
 
@@ -69,6 +70,21 @@ describe('Resumen operativo de causa', () => {
     );
 
     assert.equal(summary.nextChecklistItem, null);
+  });
+
+  it('no sugiere derivar a mediación como obligación cuando la investigación base está completa', () => {
+    const checklist = getBaseChecklist().map((item) =>
+      item.id === 'chk_inv_1' || item.id === 'chk_inv_2'
+        ? { ...item, completado: true, fechaCompletado: '2026-08-10' }
+        : item,
+    );
+    const summary = getCausaOperationalSummary(causa({ checklistDebidoProceso: checklist }));
+
+    assert.equal(summary.currentPhase, 'Investigación');
+    assert.equal(summary.currentPhaseProgress.completed, 2);
+    assert.equal(summary.currentPhaseProgress.total, 2);
+    assert.notEqual(summary.nextChecklistItem?.id, 'chk_inv_3');
+    assert.equal(summary.nextChecklistItem?.id, 'chk_res_1');
   });
 
   it('cuenta documentos y actividad desde antecedentes ya cargados', () => {

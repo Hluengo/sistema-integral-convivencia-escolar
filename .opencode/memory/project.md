@@ -210,9 +210,10 @@ Tenant (Establecimiento Educacional)
 RECEPCIÓN (3 estados)
   └── Denuncia recibida → Verificación preliminar → Apertura formal
 
-INVESTIGACIÓN (6 estados)
-  └── Notificación apertura → Entrevista descargos → Recopilación evidencias
-      → Informe cierre indagación → Análisis jurídico → Vista fiscal
+INVESTIGACIÓN
+  ├── Investigación base → En Proceso de Indagación → Recopilación de Evidencias
+  └── Mediación opcional → Derivación → Desarrollo → Acuerdo O Retorno a Indagación
+      (Mediación permanece dentro de Investigación; no es una sexta fase ni hito obligatorio)
 
 RESOLUCIÓN (6 estados)
   └── Propuesta resolución → Revisión direccion → Notificación resolución

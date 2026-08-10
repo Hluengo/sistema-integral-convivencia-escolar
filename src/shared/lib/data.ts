@@ -5,6 +5,11 @@
 
 import { type Causa, EstadoCausa, type ChecklistItem, type Statistics } from './types';
 import { toDateOnly } from '../../shared/lib/dateUtils';
+import {
+  getApplicableChecklistItems,
+  getInvestigationChecklistProgress,
+  PHASE_PREFIXES,
+} from './domain/investigationChecklist';
 
 // Helper to calculate relative dates from current time
 const relativeDate = (daysAgo: number): string => {
@@ -432,20 +437,26 @@ export const getStats = (causas: Causa[]): Statistics => {
   return stats;
 };
 
-const PHASE_PREFIXES: Readonly<Record<string, string>> = {
-  Recepción: 'chk_rec',
-  Investigación: 'chk_inv',
-  Resolución: 'chk_res',
-  Apelación: 'chk_imp',
-  Seguimiento: 'chk_seg',
-};
-
-export function getPhaseProgress(checklist: Causa['checklistDebidoProceso'], phaseName: string) {
-  const prefix = PHASE_PREFIXES[phaseName];
-  if (!prefix) {
+export function getPhaseProgress(
+  causaOrChecklist: Causa | Causa['checklistDebidoProceso'],
+  phaseName: string,
+) {
+  if (!(phaseName in PHASE_PREFIXES)) {
     return { total: 0, completed: 0 };
   }
-  const items = checklist.filter((item) => item.id.startsWith(prefix));
+
+  const phase = phaseName as keyof typeof PHASE_PREFIXES;
+  if (phase === 'Investigación') {
+    const context = Array.isArray(causaOrChecklist)
+      ? { checklistDebidoProceso: causaOrChecklist }
+      : causaOrChecklist;
+    return getInvestigationChecklistProgress(context);
+  }
+
+  const context = Array.isArray(causaOrChecklist)
+    ? { checklistDebidoProceso: causaOrChecklist }
+    : causaOrChecklist;
+  const items = getApplicableChecklistItems(context, phase);
   const total = items.length;
   const completed = items.filter((item) => item.completado).length;
   return { total, completed };

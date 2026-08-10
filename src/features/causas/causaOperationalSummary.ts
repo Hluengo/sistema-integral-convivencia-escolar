@@ -2,6 +2,10 @@
 
 import { getPhaseProgress } from '../../shared/lib/data';
 import type { Causa, ChecklistItem, FaseProcedimental } from '../../shared/lib/types';
+import {
+  getApplicableChecklistItems,
+  getNextInvestigationChecklistItem,
+} from '../../shared/lib/domain/investigationChecklist';
 import { getCausaPhase, getCausaStatus } from './causaPresentation';
 
 const CAUSA_PHASES: FaseProcedimental[] = [
@@ -31,26 +35,23 @@ export interface CausaOperationalSummary {
 function getNextChecklistItem(causa: Causa, currentPhase: FaseProcedimental): ChecklistItem | null {
   if (getCausaStatus(causa) !== 'Activa') return null;
 
-  const phasePrefix: Record<FaseProcedimental, string> = {
-    Recepción: 'chk_rec',
-    Investigación: 'chk_inv',
-    Resolución: 'chk_res',
-    Apelación: 'chk_imp',
-    Seguimiento: 'chk_seg',
-  };
+  if (currentPhase === 'Investigación') {
+    const nextInvestigationItem = getNextInvestigationChecklistItem(causa);
+    if (nextInvestigationItem) return nextInvestigationItem;
 
-  return (
-    causa.checklistDebidoProceso.find(
-      (item) => item.id.startsWith(phasePrefix[currentPhase]) && !item.completado,
-    ) ?? null
-  );
+    const nextPhase = CAUSA_PHASES[CAUSA_PHASES.indexOf(currentPhase) + 1];
+    if (!nextPhase) return null;
+    return getApplicableChecklistItems(causa, nextPhase).find((item) => !item.completado) ?? null;
+  }
+
+  return getApplicableChecklistItems(causa, currentPhase).find((item) => !item.completado) ?? null;
 }
 
 export function getCausaOperationalSummary(causa: Causa): CausaOperationalSummary {
   const currentPhase = getCausaPhase(causa);
   const phaseProgress = CAUSA_PHASES.map((phase) => ({
     phase,
-    ...getPhaseProgress(causa.checklistDebidoProceso, phase),
+    ...getPhaseProgress(causa, phase),
   }));
   const currentPhaseProgress = phaseProgress.find((progress) => progress.phase === currentPhase);
   const completedHitos = causa.checklistDebidoProceso.filter((item) => item.completado).length;

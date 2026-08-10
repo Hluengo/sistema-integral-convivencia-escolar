@@ -72,6 +72,7 @@ describe('Listado de causas activas', () => {
     const panels = read('../timeline/TimelineTabPanels.tsx');
     const advisor = read('MainContent/AdvisorView.tsx');
     const operationalSummary = read('causaOperationalSummary.ts');
+    const investigationChecklist = read('../timeline/InvestigationChecklist.tsx');
 
     assert.match(view, /<CausaDetailModal/);
     assert.match(modal, /<Dialog open=/);
@@ -100,6 +101,12 @@ describe('Listado de causas activas', () => {
     assert.match(panels, /onSelectPhase\(null\)/);
     assert.match(panels, /<ProcesoTab/);
     assert.match(panels, /id="phase-workspace"/);
+    assert.match(investigationChecklist, /Mediación no requerida/);
+    assert.match(investigationChecklist, /Derivar a mediación/);
+    assert.match(investigationChecklist, /handleStartRegister\(derivationItem\)/);
+    assert.match(investigationChecklist, /model\.mediationActive &&/);
+    assert.match(investigationChecklist, /notRequired={model\.mediationOutcome === 'agreement'}/);
+    assert.match(investigationChecklist, /notRequired={model\.mediationOutcome === 'failed'}/);
   });
 
   it('calcula días civiles usando la fecha chilena incluso cerca de UTC', () => {
@@ -127,11 +134,12 @@ describe('Listado de causas activas', () => {
   it('mantiene la bitácora y checklist como fuentes del detalle', () => {
     const panels = read('../timeline/TimelineTabPanels.tsx');
     const process = read('../timeline/ProcessChecklist.tsx');
+    const checklistItemCard = read('../timeline/ChecklistItemCard.tsx');
     const checklistRegistration = read('../../shared/lib/hooks/useChecklistRegistration.ts');
     assert.match(panels, /<BitacoraTab/);
     assert.match(process, /causa\.checklistDebidoProceso\.filter/);
-    assert.match(process, /item\.registradoPor/);
-    assert.match(process, /item\.fechaCompletado/);
+    assert.match(checklistItemCard, /item\.registradoPor/);
+    assert.match(checklistItemCard, /item\.fechaCompletado/);
     assert.match(process, /Abrir hitos/);
     assert.doesNotMatch(checklistRegistration, /recepcion: true/);
     assert.doesNotMatch(checklistRegistration, /investigacion: true/);
