@@ -6,6 +6,7 @@ import type { Causa } from '../../../shared/lib/types';
 import AiAdvisor from '../../../components/AiAdvisor';
 import TemplateEditor from '../../document-templates/TemplateEditor';
 import CaseLegalWorkspace, { type CaseLegalTool } from './CaseLegalWorkspace';
+import PageHeader from '@/shared/ui/PageHeader';
 
 type LegalTab = 'consulta' | 'redaccion' | 'plantillas' | 'auditoria';
 
@@ -50,25 +51,11 @@ export default function AdvisorView({
 
   return (
     <div className="animate-fade-in space-y-6">
-      {/* Hero header - matches CausasView and StudentsPanel */}
-      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-brand-700 via-brand-600 to-brand-800 p-6 text-white shadow-lg sm:p-8">
-        <div
-          className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-60"
-          aria-hidden="true"
-        />
-        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="mb-1 font-semibold text-blue-200/80 text-xs uppercase tracking-wider">
-              Convivencia Escolar · Herramientas Legales
-            </p>
-            <h2 className="font-bold text-2xl tracking-tight sm:text-3xl">Asistente Legal</h2>
-            <p className="mt-2 text-blue-100/80 text-sm">
-              Consulta normativa, redacta documentos y revisa el debido proceso con un expediente
-              seleccionado.
-            </p>
-          </div>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Convivencia Escolar · Herramientas Legales"
+        title="Asistente legal"
+        description="Consulta normativa, redacta documentos y revisa el debido proceso con un expediente seleccionado."
+      />
 
       <div
         className="flex gap-1 overflow-x-auto rounded-xl bg-neutral-100 p-1"
@@ -101,7 +88,7 @@ export default function AdvisorView({
         >
           <label
             htmlFor="legal-case-selector"
-            className="mb-1.5 block font-semibold text-10px text-neutral-500 uppercase tracking-wide"
+            className="mb-1.5 block font-semibold text-10px text-neutral-500 uppercase"
           >
             Expediente para {tab === 'redaccion' ? 'redactar' : 'auditar'}
           </label>

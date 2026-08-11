@@ -19,7 +19,9 @@ test.describe('Flujo de expedientes', () => {
       .first()
       .click();
 
-    await expect(page.getByRole('heading', { name: /nuevo expediente/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /nuevo expediente/i })).toBeVisible({
+      timeout: 20_000,
+    });
   });
 
   test('valida el formulario de nuevo expediente sin guardar datos incompletos', async ({

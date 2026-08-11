@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { Building2, CheckCircle2, ImageUp, Plus, Save } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Button from '../../shared/ui/Button';
+import Input from '../../shared/ui/Input';
+import Textarea from '../../shared/ui/Textarea';
 import {
   createPlatformInstitutionRule,
   fetchPlatformInstitutionRules,
@@ -13,9 +15,6 @@ import {
   uploadPlatformInstitutionLogo,
   type InstitutionSettings,
 } from '../../shared/api/services/institution.service';
-
-const inputClass =
-  'w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100';
 
 interface Props {
   selectedTenantId: string;
@@ -123,9 +122,8 @@ export default function PlatformInstitutionPanel({ selectedTenantId }: Props) {
               ).map(([key, label]) => (
                 <label key={key} className="space-y-1.5 text-xs font-semibold text-neutral-700">
                   {label}
-                  <input
+                  <Input
                     aria-label={label}
-                    className={inputClass}
                     value={(form[key] as string) ?? ''}
                     onChange={(event) => setField(key, event.target.value)}
                   />
@@ -171,27 +169,25 @@ export default function PlatformInstitutionPanel({ selectedTenantId }: Props) {
                 createRule.mutate();
               }}
             >
-              <input
+              <Input
                 aria-label="Título del reglamento"
-                className={inputClass}
                 value={rule.title}
                 onChange={(event) =>
                   setRule((current) => ({ ...current, title: event.target.value }))
                 }
                 placeholder="Título"
               />
-              <input
+              <Input
                 aria-label="Versión del reglamento"
-                className={inputClass}
                 value={rule.version}
                 onChange={(event) =>
                   setRule((current) => ({ ...current, version: event.target.value }))
                 }
                 placeholder="Versión"
               />
-              <textarea
+              <Textarea
                 aria-label="Contenido del reglamento"
-                className={`${inputClass} min-h-36 sm:col-span-2`}
+                className="min-h-36 sm:col-span-2"
                 value={rule.content}
                 onChange={(event) =>
                   setRule((current) => ({ ...current, content: event.target.value }))

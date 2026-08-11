@@ -4,15 +4,14 @@ import { useState } from 'react';
 import { Archive, FileText, Upload } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Button from '../../shared/ui/Button';
+import Input from '../../shared/ui/Input';
+import Select from '../../shared/ui/Select';
 import { formatChileDateTime } from '../../shared/lib/dateTime';
 import {
   archivePlatformInstitutionDocument,
   fetchPlatformInstitutionDocuments,
   uploadPlatformInstitutionDocument,
 } from '../../shared/api/services/institution.service';
-
-const INPUT_CLASS =
-  'w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100';
 
 const CATEGORIES = [
   ['reglamento', 'Reglamento'],
@@ -88,16 +87,14 @@ export default function PlatformInstitutionDocuments({ tenantId }: Props) {
             upload.mutate();
           }}
         >
-          <input
+          <Input
             aria-label="Título del documento"
-            className={INPUT_CLASS}
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             placeholder="Título del documento"
           />
-          <select
+          <Select
             aria-label="Categoría del documento"
-            className={INPUT_CLASS}
             value={category}
             onChange={(event) => setCategory(event.target.value)}
           >
@@ -106,8 +103,8 @@ export default function PlatformInstitutionDocuments({ tenantId }: Props) {
                 {label}
               </option>
             ))}
-          </select>
-          <input
+          </Select>
+          <Input
             aria-label="Archivo institucional"
             type="file"
             accept=".pdf,.doc,.docx,.xlsx,.txt,.png,.jpg,.jpeg,.svg"

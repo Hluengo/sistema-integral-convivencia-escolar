@@ -18,8 +18,10 @@ import TemplateEditor from '../document-templates/TemplateEditor';
 import ErrorBoundary from '../../shared/ui/ErrorBoundary';
 import InstitutionSettingsPanel from './InstitutionSettingsPanel';
 import Button from '../../shared/ui/Button';
+import Input from '../../shared/ui/Input';
+import PageHeader from '../../shared/ui/PageHeader';
+import Select from '../../shared/ui/Select';
 import SummaryCard from '../../shared/ui/SummaryCard';
-import PageHero from '../../shared/ui/PageHero';
 import { useAuthStore } from '../../shared/lib/stores/authStore';
 import { useCoursesQuery } from '../../shared/lib/hooks/useCoursesQuery';
 import {
@@ -166,12 +168,12 @@ export default function AdminView() {
 
   return (
     <div className="animate-fade-in space-y-6">
-      <PageHero
+      <PageHeader
         eyebrow="Administración · Colegio"
         title="Centro del establecimiento"
         description="Gestiona personas, roles, invitaciones y recursos institucionales del colegio."
         action={
-          <div className="flex items-center gap-2 rounded-xl bg-white/15 px-3 py-2 text-brand-50 text-xs ring-1 ring-white/20 backdrop-blur-sm">
+          <div className="flex items-center gap-2 rounded-md bg-brand-50 px-3 py-2 font-semibold text-brand-700 text-xs ring-1 ring-brand-100">
             <ShieldCheck className="size-4" aria-hidden="true" /> Acceso protegido
           </div>
         }
@@ -270,7 +272,7 @@ export default function AdminView() {
               <label className="sr-only" htmlFor="member-email">
                 Correo electrónico
               </label>
-              <input
+              <Input
                 id="member-email"
                 aria-label="Correo electrónico de la persona invitada"
                 type="email"
@@ -278,23 +280,21 @@ export default function AdminView() {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="persona@establecimiento.cl"
-                className="rounded-xl border border-neutral-200 px-3 py-2.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
               />
               <label className="sr-only" htmlFor="member-role">
                 Rol
               </label>
-              <select
+              <Select
                 id="member-role"
                 value={role}
                 onChange={(event) => setRole(event.target.value as AdminRole)}
-                className="rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
               >
                 {ADMIN_ROLES.map((item) => (
                   <option key={item} value={item}>
                     {roleLabels[item]}
                   </option>
                 ))}
-              </select>
+              </Select>
               <Button type="submit" disabled={isBusy} className="rounded-xl px-4 py-2.5 text-sm">
                 Enviar invitación
               </Button>
@@ -310,7 +310,7 @@ export default function AdminView() {
             </div>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[900px] text-left text-sm">
-                <thead className="bg-neutral-50 text-neutral-500 text-xs uppercase tracking-wide">
+                <thead className="bg-neutral-50 text-neutral-500 text-xs uppercase">
                   <tr>
                     <th className="px-5 py-3">Usuario</th>
                     <th className="px-5 py-3">Rol</th>
@@ -454,16 +454,15 @@ export default function AdminView() {
                 importMutation.mutate();
               }}
             >
-              <select
+              <Select
                 aria-label="Nivel por defecto"
                 value={importLevel}
                 onChange={(event) => setImportLevel(event.target.value as 'BASICA' | 'MEDIA')}
-                className="rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
               >
                 <option value="BASICA">Básica</option>
                 <option value="MEDIA">Media</option>
-              </select>
-              <input
+              </Select>
+              <Input
                 aria-label="Archivo Excel"
                 type="file"
                 accept=".xlsx"
@@ -542,12 +541,12 @@ function MemberRow({
         <div className="text-neutral-500 text-xs">{member.email || 'Sin correo'}</div>
       </td>
       <td className="px-5 py-3">
-        <select
+        <Select
           aria-label={`Rol de ${member.email ?? member.user_id}`}
           value={selectedRole}
           onChange={(event) => setSelectedRole(event.target.value as AdminRole)}
           disabled={isPlatformAdmin || disabled}
-          className="rounded-lg border border-neutral-200 bg-white px-2.5 py-2 text-xs"
+          className="px-2.5 py-2 text-xs"
         >
           {isPlatformAdmin ? <option value="superadmin">Superadministrador</option> : null}
           <option value="admin">Administrador</option>
@@ -556,7 +555,7 @@ function MemberRow({
               {roleLabels[item]}
             </option>
           ))}
-        </select>
+        </Select>
       </td>
       <td className="px-5 py-3">
         <button

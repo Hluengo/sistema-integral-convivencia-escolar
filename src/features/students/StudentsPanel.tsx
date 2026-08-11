@@ -15,6 +15,7 @@ import {
   ChevronsUpDown,
 } from 'lucide-react';
 import Button from '@/shared/ui/Button';
+import PageHeader from '@/shared/ui/PageHeader';
 import type { Course, StudentWithCourse } from '../../shared/api/services/courses.service';
 import { TableSkeleton } from '../../shared/Skeleton';
 import { maskName } from '../../shared/lib/anotacionesUtils';
@@ -146,36 +147,23 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
 
   return (
     <section aria-label="Gestión de alumnos" className="animate-fade-in space-y-6">
-      {/* Hero */}
-      <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-brand-700 via-brand-600 to-brand-800 p-6 text-white shadow-lg sm:p-8">
-        <div
-          className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-60"
-          aria-hidden="true"
-        />
-        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="mb-1 font-semibold text-blue-200/80 text-xs uppercase tracking-wider">
-              Matrícula · Supabase
-            </p>
-            <h2 className="font-bold text-2xl tracking-tight sm:text-3xl">Estudiantes</h2>
-            <p className="mt-2 text-blue-100/80 text-sm capitalize">{todayLabel}</p>
-          </div>
-          <div className="flex shrink-0 items-center gap-3">
-            <div className="rounded-xl bg-white/15 px-4 py-3 text-center ring-1 ring-white/20 backdrop-blur-sm">
-              <p className="font-bold text-2xl tabular-nums">{students.length}</p>
-              <p className="font-semibold text-10px text-blue-200/80 uppercase tracking-wider">
-                Total
-              </p>
+      <PageHeader
+        eyebrow="Matrícula"
+        title="Estudiantes"
+        description={todayLabel}
+        action={
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-2 text-center">
+              <p className="font-bold text-neutral-950 text-xl tabular-nums">{students.length}</p>
+              <p className="font-semibold text-10px text-neutral-500 uppercase">Total</p>
             </div>
-            <div className="rounded-xl bg-white/15 px-4 py-3 text-center ring-1 ring-white/20 backdrop-blur-sm">
-              <p className="font-bold text-2xl tabular-nums">{courses.length}</p>
-              <p className="font-semibold text-10px text-blue-200/80 uppercase tracking-wider">
-                Cursos
-              </p>
+            <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-2 text-center">
+              <p className="font-bold text-neutral-950 text-xl tabular-nums">{courses.length}</p>
+              <p className="font-semibold text-10px text-neutral-500 uppercase">Cursos</p>
             </div>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* Filters */}
       <div className="card p-5">
@@ -306,13 +294,13 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
                     <table className="w-full text-left">
                       <thead>
                         <tr className="border-neutral-100 border-b">
-                          <th className="px-5 py-3 font-semibold text-10px text-neutral-400 uppercase tracking-wider">
+                          <th className="px-5 py-3 font-semibold text-10px text-neutral-400 uppercase">
                             Nombre
                           </th>
-                          <th className="px-5 py-3 font-semibold text-10px text-neutral-400 uppercase tracking-wider">
+                          <th className="px-5 py-3 font-semibold text-10px text-neutral-400 uppercase">
                             RUN
                           </th>
-                          <th className="hidden px-5 py-3 font-semibold text-10px text-neutral-400 uppercase tracking-wider sm:table-cell">
+                          <th className="hidden px-5 py-3 font-semibold text-10px text-neutral-400 uppercase sm:table-cell">
                             Curso
                           </th>
                         </tr>

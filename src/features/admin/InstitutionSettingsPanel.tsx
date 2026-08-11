@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import { Building2, CheckCircle2, ImageUp, Plus, RefreshCw, Save } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Button from '../../shared/ui/Button';
+import Input from '../../shared/ui/Input';
+import Select from '../../shared/ui/Select';
+import Textarea from '../../shared/ui/Textarea';
 import { useAuthStore } from '../../shared/lib/stores/authStore';
 import {
   createInstitutionRule,
@@ -14,9 +17,6 @@ import {
   uploadInstitutionLogo,
   type InstitutionSettings,
 } from '../../shared/api/services/institution.service';
-
-const inputClass =
-  'w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100';
 
 type SettingsForm = Omit<
   InstitutionSettings,
@@ -162,10 +162,9 @@ export default function InstitutionSettingsPanel() {
           ).map(([key, label, type]) => (
             <label key={key} className="space-y-1.5 text-xs font-semibold text-neutral-700">
               {label}
-              <input
+              <Input
                 aria-label={label}
                 type={type}
-                className={inputClass}
                 value={form[key] ?? ''}
                 onChange={(event) =>
                   setForm((current) => ({ ...current, [key]: event.target.value }))
@@ -173,12 +172,16 @@ export default function InstitutionSettingsPanel() {
               />
             </label>
           ))}
-          <label className="space-y-1.5 text-xs font-semibold text-neutral-700 sm:col-span-2">
+          <label
+            htmlFor="institution-education-levels"
+            className="block space-y-1.5 text-xs font-semibold text-neutral-700 sm:col-span-2"
+          >
             Niveles educativos
-            <select
+            <Select
+              id="institution-education-levels"
               aria-label="Niveles educativos"
               multiple
-              className={`${inputClass} min-h-28`}
+              className="min-h-28"
               value={form.education_levels}
               onChange={(event) =>
                 setForm((current) => ({
@@ -194,7 +197,7 @@ export default function InstitutionSettingsPanel() {
               <option value="MEDIA">Educación Media</option>
               <option value="PARVULARIA">Educación Parvularia</option>
               <option value="ADULTOS">Educación de Adultos</option>
-            </select>
+            </Select>
           </label>
           <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
             <Button type="submit" disabled={busy}>
@@ -242,23 +245,21 @@ export default function InstitutionSettingsPanel() {
             ruleMutation.mutate();
           }}
         >
-          <input
+          <Input
             aria-label="Título del reglamento"
-            className={inputClass}
             placeholder="Título del reglamento"
             value={ruleTitle}
             onChange={(event) => setRuleTitle(event.target.value)}
           />
-          <input
+          <Input
             aria-label="Versión del reglamento"
-            className={inputClass}
             placeholder="Versión"
             value={ruleVersion}
             onChange={(event) => setRuleVersion(event.target.value)}
           />
-          <textarea
+          <Textarea
             aria-label="Contenido del reglamento"
-            className={`${inputClass} min-h-40 sm:col-span-2`}
+            className="min-h-40 sm:col-span-2"
             placeholder="Contenido o resumen institucional del reglamento…"
             value={ruleContent}
             onChange={(event) => setRuleContent(event.target.value)}

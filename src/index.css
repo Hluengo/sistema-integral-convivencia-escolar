@@ -15,20 +15,20 @@
   --text-13px: 13px;
   --text-17px: 17px;
 
-  /* ===== PRIMARY: Slate (harmoniza con el sidebar from-neutral-800 to-neutral-950) ===== */
-  --color-brand-50: #f8fafc;
-  --color-brand-100: #f1f5f9;
-  --color-brand-150: #e2e8f0;
-  --color-brand-200: #cbd5e1;
-  --color-brand-300: #b0bccd;
-  --color-brand-400: #94a3b8;
-  --color-brand-500: #64748b;
-  --color-brand-600: #475569;
-  --color-brand-700: #334155;
-  --color-brand-750: #1e293b;
-  --color-brand-800: #1e293b;
-  --color-brand-900: #0f172a;
-  --color-brand-950: #020617;
+  /* ===== PRIMARY: Institutional blue ===== */
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-150: #bfdbfe;
+  --color-brand-200: #93c5fd;
+  --color-brand-300: #60a5fa;
+  --color-brand-400: #3b82f6;
+  --color-brand-500: #2563eb;
+  --color-brand-600: #1d4ed8;
+  --color-brand-700: #1e40af;
+  --color-brand-750: #1e3a8a;
+  --color-brand-800: #1e3a8a;
+  --color-brand-900: #172554;
+  --color-brand-950: #0f172a;
 
   /* ===== SECONDARY: Orange Energy (#F97316) ===== */
   --color-secondary-50: #fff7ed;
@@ -150,7 +150,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
 }
 
 /* Premium text selection */
@@ -196,10 +196,10 @@ a {
   background: var(--color-neutral-300);
 }
 
-/* Card base with hover lift */
+/* Card base */
 .card {
   background: rgba(255, 255, 255, 0.96);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-md);
   border: 1px solid var(--color-neutral-200);
   box-shadow: var(--shadow-card);
   transition:

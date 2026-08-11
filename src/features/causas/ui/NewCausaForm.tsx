@@ -13,6 +13,8 @@ import type { Causa } from '../../../shared/lib/types';
 import RiceConductSelect from '../NewCausaForm/RiceConductSelect';
 import ImproveTextarea from '../../../shared/ImproveTextarea';
 import Button from '../../../shared/ui/Button';
+import Input from '../../../shared/ui/Input';
+import Select from '../../../shared/ui/Select';
 
 interface NewCausaFormProps {
   form: UseFormReturn<NewCausaFormValues>;
@@ -25,13 +27,6 @@ interface NewCausaFormProps {
   onCourseChange: (courseId: string) => void;
   onStudentSelect: (studentId: string) => void;
 }
-
-const inputClassName =
-  'mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-medium text-neutral-700 transition-colors duration-200 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30';
-const inputErrorClassName =
-  'mt-1.5 w-full rounded-xl border border-grave-300 bg-grave-50 p-3 font-medium text-grave-900 transition-colors duration-200 focus:border-grave-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-grave-500/30';
-const readOnlyClassName =
-  'mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-100 p-3 font-medium text-neutral-600 text-xs transition-colors duration-200 focus:outline-none';
 
 function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) {
@@ -97,18 +92,18 @@ export default function NewCausaForm({
         <div>
           <label
             htmlFor="create-course"
-            className="block font-semibold text-neutral-500 text-xs uppercase tracking-wide"
+            className="block font-semibold text-neutral-500 text-xs uppercase"
           >
             Curso del estudiante
           </label>
-          <select
+          <Select
             id="create-course"
             aria-label="Curso del estudiante"
-            aria-invalid={!!errors.selectedCourseId}
+            invalid={!!errors.selectedCourseId}
             aria-describedby={errors.selectedCourseId ? 'create-course-error' : undefined}
             value={selectedCourseId}
             onChange={(event) => onCourseChange(event.target.value)}
-            className={errors.selectedCourseId ? inputErrorClassName : inputClassName}
+            className="mt-1.5 bg-neutral-50 p-3 font-medium"
           >
             <option value="">-- Seleccionar curso --</option>
             {isLoadingCourses ? (
@@ -156,7 +151,7 @@ export default function NewCausaForm({
                 )}
               </>
             )}
-          </select>
+          </Select>
           <FieldError id="create-course-error" message={errors.selectedCourseId?.message} />
         </div>
 
@@ -165,7 +160,7 @@ export default function NewCausaForm({
             <>
               <label
                 htmlFor="create-student"
-                className="block font-semibold text-neutral-500 text-xs uppercase tracking-wide"
+                className="block font-semibold text-neutral-500 text-xs uppercase"
               >
                 Estudiante
               </label>
@@ -175,13 +170,13 @@ export default function NewCausaForm({
                   <span className="text-neutral-500 text-xs">Cargando estudiantes...</span>
                 </div>
               ) : students.length > 0 ? (
-                <select
+                <Select
                   id="create-student"
                   aria-label="Estudiante"
                   value={selectedStudentId}
                   onChange={(event) => onStudentSelect(event.target.value)}
-                  className={errors.newEstNombre ? inputErrorClassName : inputClassName}
-                  aria-invalid={!!errors.newEstNombre}
+                  className="mt-1.5 bg-neutral-50 p-3 font-medium"
+                  invalid={!!errors.newEstNombre}
                   aria-describedby={errors.newEstNombre ? 'create-student-error' : undefined}
                 >
                   <option value="">-- Seleccionar estudiante --</option>
@@ -190,7 +185,7 @@ export default function NewCausaForm({
                       {student.full_name}
                     </option>
                   ))}
-                </select>
+                </Select>
               ) : (
                 <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-grave-200 bg-grave-50 p-2.5">
                   <AlertCircle className="h-3.5 w-3.5 shrink-0 text-grave-600" aria-hidden="true" />
@@ -216,19 +211,19 @@ export default function NewCausaForm({
           <div>
             <label
               htmlFor="create-student-name"
-              className="block font-semibold text-neutral-500 text-xs uppercase tracking-wide"
+              className="block font-semibold text-neutral-500 text-xs uppercase"
             >
               Nombre del estudiante
             </label>
-            <input
+            <Input
               id="create-student-name"
               aria-label="Nombre del estudiante"
-              aria-invalid={!!errors.newEstNombre}
+              invalid={!!errors.newEstNombre}
               aria-describedby={errors.newEstNombre ? 'create-student-name-error' : undefined}
               type="text"
               spellCheck
               {...register('newEstNombre')}
-              className={errors.newEstNombre ? inputErrorClassName : inputClassName}
+              className="mt-1.5 bg-neutral-50 p-3 font-medium"
             />
             <FieldError id="create-student-name-error" message={errors.newEstNombre?.message} />
           </div>
@@ -237,14 +232,14 @@ export default function NewCausaForm({
         <div>
           <label
             htmlFor="create-rut"
-            className="block font-semibold text-neutral-500 text-xs uppercase tracking-wide"
+            className="block font-semibold text-neutral-500 text-xs uppercase"
           >
             RUN / RUT
           </label>
-          <input
+          <Input
             id="create-rut"
             aria-label="RUN o RUT"
-            aria-invalid={!!errors.newEstRut}
+            invalid={!!errors.newEstRut}
             aria-describedby={errors.newEstRut ? 'create-rut-error' : undefined}
             type="text"
             spellCheck={false}
@@ -257,11 +252,9 @@ export default function NewCausaForm({
             }
             {...register('newEstRut')}
             className={
-              errors.newEstRut
-                ? inputErrorClassName
-                : selectedCourseId && students.length === 0
-                  ? inputClassName
-                  : readOnlyClassName
+              selectedCourseId && students.length === 0
+                ? 'mt-1.5 bg-neutral-50 p-3 font-medium'
+                : 'mt-1.5 bg-neutral-100 p-3 font-medium text-neutral-600 text-xs'
             }
           />
           <FieldError id="create-rut-error" message={errors.newEstRut?.message} />
@@ -284,11 +277,11 @@ export default function NewCausaForm({
           <div>
             <label
               htmlFor="create-gravedad"
-              className="block font-semibold text-neutral-500 text-xs uppercase tracking-wide"
+              className="block font-semibold text-neutral-500 text-xs uppercase"
             >
               Gravedad
             </label>
-            <select
+            <Select
               id="create-gravedad"
               aria-label="Gravedad"
               value={newInfTipo}
@@ -298,13 +291,13 @@ export default function NewCausaForm({
                   shouldValidate: true,
                 })
               }
-              className={inputClassName}
+              className="mt-1.5 bg-neutral-50 p-3 font-medium"
             >
               <option value="Leve">Falta Leve</option>
               <option value="Grave">Falta Grave</option>
               <option value="Muy Grave">Falta Muy Grave</option>
               <option value="Gravísima">Falta Gravísima</option>
-            </select>
+            </Select>
           </div>
           <div className="flex flex-col justify-end">
             <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-2.5 font-medium text-neutral-700 transition hover:bg-neutral-100/60">
@@ -356,19 +349,19 @@ export default function NewCausaForm({
         <div>
           <label
             htmlFor="create-responsable"
-            className="block font-semibold text-neutral-500 text-xs uppercase tracking-wide"
+            className="block font-semibold text-neutral-500 text-xs uppercase"
           >
             Fiscalizador a cargo
           </label>
-          <input
+          <Input
             id="create-responsable"
             aria-label="Fiscalizador a cargo"
             type="text"
             spellCheck={false}
-            aria-invalid={!!errors.newResponsable}
+            invalid={!!errors.newResponsable}
             aria-describedby={errors.newResponsable ? 'create-responsable-error' : undefined}
             {...register('newResponsable')}
-            className={errors.newResponsable ? inputErrorClassName : inputClassName}
+            className="mt-1.5 bg-neutral-50 p-3 font-medium"
           />
           <FieldError id="create-responsable-error" message={errors.newResponsable?.message} />
         </div>

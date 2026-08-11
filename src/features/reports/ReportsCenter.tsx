@@ -6,7 +6,9 @@ import { Download, FileBarChart, History, RefreshCw } from 'lucide-react';
 import type { Causa, TipoInfraccion } from '../../shared/lib/types';
 import Button from '../../shared/ui/Button';
 import SummaryCard from '../../shared/ui/SummaryCard';
-import PageHero from '../../shared/ui/PageHero';
+import Input from '../../shared/ui/Input';
+import PageHeader from '../../shared/ui/PageHeader';
+import Select from '../../shared/ui/Select';
 import { TrendChart, type ChartSeriesItem, type TrendChartPoint } from '../../shared/ui/charts';
 import { formatChileDateTime } from '../../shared/lib/dateTime';
 import { useAuthStore } from '../../shared/lib/stores/authStore';
@@ -26,8 +28,6 @@ const EMPTY_FILTERS: ReportFilters = {
   status: '',
   responsible: '',
 };
-const SELECT_CLASS =
-  'rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm text-neutral-700 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100';
 const SEVERITY_ORDER: TipoInfraccion[] = ['Leve', 'Grave', 'Muy Grave', 'Gravísima'];
 const SEVERITY_COLORS: Record<TipoInfraccion, string> = {
   Leve: 'bg-leve-500',
@@ -129,25 +129,20 @@ export default function ReportsCenter({ causas }: { causas: Causa[] }) {
 
   return (
     <div className="animate-fade-in space-y-6">
-      <PageHero
+      <PageHeader
         eyebrow="Reportes · Gestión institucional"
         title="Centro de reportes"
         description="Dashboard, expedientes y métricas con filtros auditables."
         action={
-          <Button
-            onClick={() => exportMutation.mutate()}
-            disabled={exportMutation.isPending}
-            className="rounded-xl bg-secondary-500 px-4 py-2.5 text-sm shadow-md shadow-secondary-500/30 hover:bg-secondary-600"
-          >
+          <Button onClick={() => exportMutation.mutate()} disabled={exportMutation.isPending}>
             <Download className="size-4" aria-hidden="true" />{' '}
             {exportMutation.isPending ? 'Generando…' : 'Exportar Excel'}
           </Button>
         }
       />
 
-      <div className="grid grid-cols-1 gap-3 rounded-2xl border border-neutral-200/70 bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-5">
-        <select
-          className={SELECT_CLASS}
+      <div className="grid grid-cols-1 gap-3 rounded-lg border border-neutral-200/70 bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-5">
+        <Select
           value={filters.course}
           onChange={(event) => setFilter('course', event.target.value)}
           aria-label="Curso"
@@ -156,23 +151,20 @@ export default function ReportsCenter({ causas }: { causas: Causa[] }) {
           {courses.map((course) => (
             <option key={course}>{course}</option>
           ))}
-        </select>
-        <input
-          className={SELECT_CLASS}
+        </Select>
+        <Input
           type="date"
           aria-label="Desde"
           value={filters.fromDate}
           onChange={(event) => setFilter('fromDate', event.target.value)}
         />
-        <input
-          className={SELECT_CLASS}
+        <Input
           type="date"
           aria-label="Hasta"
           value={filters.toDate}
           onChange={(event) => setFilter('toDate', event.target.value)}
         />
-        <select
-          className={SELECT_CLASS}
+        <Select
           value={filters.status}
           onChange={(event) => setFilter('status', event.target.value)}
           aria-label="Estado"
@@ -181,9 +173,8 @@ export default function ReportsCenter({ causas }: { causas: Causa[] }) {
           {[...new Set(causas.map((causa) => causa.estadoActual))].sort().map((status) => (
             <option key={status}>{status}</option>
           ))}
-        </select>
-        <select
-          className={SELECT_CLASS}
+        </Select>
+        <Select
           value={filters.responsible}
           onChange={(event) => setFilter('responsible', event.target.value)}
           aria-label="Responsable"
@@ -192,7 +183,7 @@ export default function ReportsCenter({ causas }: { causas: Causa[] }) {
           {responsibles.map((responsible) => (
             <option key={responsible}>{responsible}</option>
           ))}
-        </select>
+        </Select>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">

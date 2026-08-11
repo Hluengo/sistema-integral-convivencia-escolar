@@ -322,27 +322,27 @@ export default memo(function AnotacionesStudentTable({
           <table className="min-w-full">
             <thead className="border-b border-neutral-200/60 bg-neutral-50">
               <tr aria-label="Estado de carga de estudiantes">
-                <th className="px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider">
+                <th className="px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase">
                   Estudiante
                 </th>
 
-                <th className="hidden px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider md:table-cell">
+                <th className="hidden px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase md:table-cell">
                   Curso
                 </th>
 
-                <th className="px-4 py-3 text-center font-semibold text-neutral-600 text-xs uppercase tracking-wider">
+                <th className="px-4 py-3 text-center font-semibold text-neutral-600 text-xs uppercase">
                   Positivas
                 </th>
-                <th className="px-4 py-3 text-center font-semibold text-neutral-600 text-xs uppercase tracking-wider">
+                <th className="px-4 py-3 text-center font-semibold text-neutral-600 text-xs uppercase">
                   Negativas
                 </th>
-                <th className="hidden px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider lg:table-cell">
+                <th className="hidden px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase lg:table-cell">
                   Último Registro
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider">
+                <th className="px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase">
                   Estado
                 </th>
-                <th className="hidden px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider md:table-cell">
+                <th className="hidden px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase md:table-cell">
                   Estado de cartas
                 </th>
               </tr>
@@ -382,23 +382,17 @@ export default memo(function AnotacionesStudentTable({
                   const studentLabel = privacyMode ? `estudiante ${index + 1}` : student.full_name;
 
                   return (
-                    <tr
-                      key={student.id}
-                      onClick={() => onSelectStudent(student)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          onSelectStudent(student);
-                        }
-                      }}
-                      tabIndex={0}
-                      role="button"
-                      aria-label={`Ver detalle de ${studentLabel}`}
-                      className={`cursor-pointer transition-colors ${style.rowBg}`}
-                    >
+                    <tr key={student.id} className={`transition-colors ${style.rowBg}`}>
                       <td className="whitespace-nowrap px-4 py-3 font-medium text-neutral-900 text-sm">
                         <div className="flex items-center gap-2">
-                          <span>{maskName(student.full_name, privacyMode)}</span>
+                          <button
+                            type="button"
+                            onClick={() => onSelectStudent(student)}
+                            className="rounded-md text-left font-semibold text-neutral-900 transition-colors hover:text-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                            aria-label={`Ver detalle de ${studentLabel}`}
+                          >
+                            {maskName(student.full_name, privacyMode)}
+                          </button>
                           <button
                             type="button"
                             onClick={(event) => {

@@ -5,7 +5,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Building2, Download, FileText, RefreshCw, ShieldCheck, Upload, Users } from 'lucide-react';
 import Button from '../../shared/ui/Button';
 import SummaryCard from '../../shared/ui/SummaryCard';
-import PageHero from '../../shared/ui/PageHero';
+import FormField from '../../shared/ui/FormField';
+import Input from '../../shared/ui/Input';
+import PageHeader from '../../shared/ui/PageHeader';
+import Select from '../../shared/ui/Select';
 import PlatformInstitutionPanel from './PlatformInstitutionPanel';
 import PlatformInstitutionDocuments from './PlatformInstitutionDocuments';
 import { formatChileDateTime } from '../../shared/lib/dateTime';
@@ -27,11 +30,6 @@ const tabs: Array<{ id: PlatformTab; label: string; icon: typeof Users }> = [
   { id: 'importar', label: 'Importar base', icon: Upload },
   { id: 'plan', label: 'Plan y límites', icon: ShieldCheck },
 ];
-
-const SELECT_CLASS =
-  'rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm text-neutral-700 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100';
-const INPUT_CLASS =
-  'rounded-xl border border-neutral-200 px-3 py-2.5 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100';
 
 function PlatformError({ onRetry, message }: { onRetry: () => void; message?: string }) {
   return (
@@ -134,12 +132,12 @@ export default function PlatformView() {
 
   return (
     <div className="animate-fade-in space-y-6">
-      <PageHero
+      <PageHeader
         eyebrow="Plataforma · Superadministración"
         title="Gestión de colegios"
         description="Crea establecimientos, invita administradores y carga cursos y estudiantes."
         action={
-          <div className="flex items-center gap-2 rounded-xl bg-white/15 px-3 py-2 text-blue-50 text-xs ring-1 ring-white/20 backdrop-blur-sm">
+          <div className="flex items-center gap-2 rounded-md bg-brand-50 px-3 py-2 font-semibold text-brand-700 text-xs ring-1 ring-brand-100">
             <ShieldCheck className="size-4" aria-hidden="true" /> Acceso superadministrador
           </div>
         }
@@ -152,11 +150,9 @@ export default function PlatformView() {
             La selección se usa para importar bases y editar su configuración institucional.
           </p>
         </div>
-        <label className="w-full space-y-1.5 text-xs font-semibold text-neutral-700 sm:max-w-sm">
-          Colegio seleccionado
-          <select
+        <FormField label="Colegio seleccionado" className="w-full sm:max-w-sm">
+          <Select
             aria-label="Colegio para administrar"
-            className={`${SELECT_CLASS} w-full`}
             value={selectedTenantId}
             onChange={(event) => setSelectedTenantId(event.target.value)}
           >
@@ -166,8 +162,8 @@ export default function PlatformView() {
                 {tenant.name}
               </option>
             ))}
-          </select>
-        </label>
+          </Select>
+        </FormField>
       </section>
 
       {selectedTenant ? (
@@ -265,31 +261,28 @@ export default function PlatformView() {
                 createMutation.mutate();
               }}
             >
-              <input
+              <Input
                 aria-label="Nombre del colegio"
                 type="text"
                 required
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 placeholder="Nombre del establecimiento"
-                className={INPUT_CLASS}
               />
-              <input
+              <Input
                 aria-label="Correo del administrador"
                 type="email"
                 required
                 value={adminEmail}
                 onChange={(event) => setAdminEmail(event.target.value)}
                 placeholder="admin@establecimiento.cl"
-                className={INPUT_CLASS}
               />
-              <input
+              <Input
                 aria-label="Slug (opcional)"
                 type="text"
                 value={slug}
                 onChange={(event) => setSlug(event.target.value)}
                 placeholder="colegio-san-jose (opcional)"
-                className={INPUT_CLASS}
               />
               <Button
                 type="submit"
@@ -310,7 +303,7 @@ export default function PlatformView() {
             </div>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[760px] text-left text-sm">
-                <thead className="bg-neutral-50 text-neutral-500 text-xs uppercase tracking-wide">
+                <thead className="bg-neutral-50 text-neutral-500 text-xs uppercase">
                   <tr>
                     <th className="px-5 py-3">Nombre</th>
                     <th className="px-5 py-3">Slug</th>
@@ -387,16 +380,15 @@ export default function PlatformView() {
               <div className="rounded-xl border border-brand-100 bg-brand-50 px-3 py-2.5 text-brand-800 text-sm">
                 {selectedTenant ? selectedTenant.name : 'Seleccione un colegio arriba'}
               </div>
-              <select
+              <Select
                 aria-label="Nivel por defecto"
                 value={importLevel}
                 onChange={(event) => setImportLevel(event.target.value as 'BASICA' | 'MEDIA')}
-                className={SELECT_CLASS}
               >
                 <option value="BASICA">Básica</option>
                 <option value="MEDIA">Media</option>
-              </select>
-              <input
+              </Select>
+              <Input
                 aria-label="Archivo Excel"
                 type="file"
                 accept=".xlsx"
