@@ -28,6 +28,7 @@ import TextInputDialog from '@/shared/ui/TextInputDialog';
 import Button from '@/shared/ui/Button';
 import { DocumentGeneratorSkeleton } from '@/shared/Skeleton';
 import { useAuthStore } from '@/shared/lib/stores/authStore';
+import { useInvalidateDashboardQueries } from '@/shared/lib/hooks/useInvalidateDashboardQueries';
 
 const AnotacionesDocumentGenerator = lazy(() => import('../AnotacionesDocumentGenerator'));
 
@@ -67,6 +68,7 @@ export default function CartasTab({
 }: CartasTabProps) {
   const tenantId = useAuthStore((state) => state.tenantId);
   const sessionUser = useAuthStore((state) => state.user);
+  const invalidateDashboard = useInvalidateDashboardQueries();
   const actor = sessionUser ? { userId: sessionUser.id, email: sessionUser.email ?? null } : null;
   const schoolYear = Number(
     new Intl.DateTimeFormat('en-CA', {
@@ -113,7 +115,7 @@ export default function CartasTab({
   const [isArchiveDialogOpen, setIsArchiveDialogOpen] = useState(false);
 
   const refreshAfterChange = async () => {
-    await onRefresh();
+    await Promise.all([onRefresh(), invalidateDashboard()]);
   };
 
   const ensureCarta = async (

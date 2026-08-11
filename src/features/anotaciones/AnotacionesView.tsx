@@ -9,13 +9,13 @@ import {
   fetchStudentsWithAnnotationCounts,
 } from '../../shared/api/services/annotations.service';
 import { fetchCartaTableStates } from '../../shared/api/services/cartas.service';
-import { getStudentCartaWorkflowLabel } from '../../shared/lib/domain/disciplinaryStage';
 import AnotacionesStudentTable from './AnotacionesStudentTable';
 import { AnnotationsSkeleton, ModalSkeleton } from '../../shared/Skeleton';
 import type { ActiveTab } from './AnotacionesStudentDetailModal/constants';
 import Button from '@/shared/ui/Button';
 import PageHeader from '@/shared/ui/PageHeader';
 import { useAuthStore } from '../../shared/lib/stores/authStore';
+import { applyCartaStatesToStudents, buildCartaStatusLabels } from './annotationStudentCartaStates';
 
 const AnotacionesStudentDetailModal = lazy(() => import('./AnotacionesStudentDetailModal'));
 const NewDisciplinaryProcessModal = lazy(() => import('./NewDisciplinaryProcessModal'));
@@ -44,18 +44,15 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
     enabled: Boolean(tenantId),
     staleTime: 1000 * 60 * 5,
   });
-  const students = useMemo(() => studentsQuery.data ?? [], [studentsQuery.data]);
-  const cartaStatuses = useMemo(() => {
-    const statuses: Record<string, string[]> = {};
-    for (const student of students) {
-      const cartaStatus = getStudentCartaWorkflowLabel(
-        student.annotations_count,
-        cartaStatesQuery.data?.[student.id],
-      );
-      if (cartaStatus) statuses[student.id] = [cartaStatus];
-    }
-    return statuses;
-  }, [cartaStatesQuery.data, students]);
+  const rawStudents = useMemo(() => studentsQuery.data ?? [], [studentsQuery.data]);
+  const students = useMemo(
+    () => applyCartaStatesToStudents(rawStudents, cartaStatesQuery.data),
+    [cartaStatesQuery.data, rawStudents],
+  );
+  const cartaStatuses = useMemo(
+    () => buildCartaStatusLabels(students, cartaStatesQuery.data),
+    [cartaStatesQuery.data, students],
+  );
   const annotationsQuery = useQuery({
     queryKey: ['anotaciones', 'student', tenantId, selectedStudent?.id],
     queryFn: () => fetchAnnotations(selectedStudent?.id),
