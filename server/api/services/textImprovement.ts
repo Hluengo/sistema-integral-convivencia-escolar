@@ -47,6 +47,9 @@ export function isTextImprovementTooSimilar(originalText: string, improvedText: 
 export const TEXT_IMPROVEMENT_UNCHANGED_WARNING =
   'La IA no pudo mejorar este texto. El contenido original se mantuvo sin cambios.';
 
+export const TEXT_IMPROVEMENT_TIMEOUT_WARNING =
+  'La IA tardó demasiado en responder. El contenido original se mantuvo sin cambios.';
+
 export interface TextImprovementUnchangedResponse {
   success: true;
   improved: string;
@@ -56,13 +59,24 @@ export interface TextImprovementUnchangedResponse {
 
 export function buildTextImprovementUnchangedResponse(
   originalText: string,
+  warning = TEXT_IMPROVEMENT_UNCHANGED_WARNING,
 ): TextImprovementUnchangedResponse {
   return {
     success: true,
     improved: originalText,
     unchanged: true,
-    warning: TEXT_IMPROVEMENT_UNCHANGED_WARNING,
+    warning,
   };
+}
+
+export function isTextImprovementProviderTimeout(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const message = error.message.toLowerCase();
+  return (
+    message.includes('excedió el tiempo máximo') ||
+    message.includes('timeout') ||
+    message.includes('timed out')
+  );
 }
 
 export function buildTextImprovementRequest(

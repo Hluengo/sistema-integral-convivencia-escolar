@@ -16,6 +16,8 @@ import {
   buildTextImprovementRequest,
   isTextImprovementTooSimilar,
   isTextImprovementRefusal,
+  isTextImprovementProviderTimeout,
+  TEXT_IMPROVEMENT_TIMEOUT_WARNING,
   TEXT_IMPROVEMENT_SYSTEM_PROMPT,
 } from '../services/textImprovement.js';
 
@@ -35,6 +37,46 @@ const IMPROVEMENT_CONTEXTS = {
 } as const;
 
 const TEXT_IMPROVEMENT_PROMPT_VERSION = '2026-08-05-v2';
+const TEXT_IMPROVEMENT_PRIMARY_TIMEOUT_MS = 7_000;
+const TEXT_IMPROVEMENT_FALLBACK_TIMEOUT_MS = 6_000;
+const TEXT_IMPROVEMENT_MAX_TOKENS = 1_200;
+
+async function generateImprovement(
+  request: Array<{ role: string; content: string }>,
+  allowFallback: boolean,
+): Promise<{ text: string | null; timedOut: boolean }> {
+  try {
+    const text = await callOpenRouter(
+      request,
+      TEXT_IMPROVEMENT_SYSTEM_PROMPT,
+      TEXT_IMPROVEMENT_AI_MODEL,
+      { timeoutMs: TEXT_IMPROVEMENT_PRIMARY_TIMEOUT_MS, maxTokens: TEXT_IMPROVEMENT_MAX_TOKENS },
+    );
+    return { text, timedOut: false };
+  } catch (error) {
+    if (isTextImprovementProviderTimeout(error) || !allowFallback) {
+      return { text: null, timedOut: isTextImprovementProviderTimeout(error) };
+    }
+    try {
+      const text = await callTextImprovementFallback(
+        request,
+        TEXT_IMPROVEMENT_SYSTEM_PROMPT,
+        [TEXT_IMPROVEMENT_AI_MODEL],
+        {
+          timeoutMs: TEXT_IMPROVEMENT_FALLBACK_TIMEOUT_MS,
+          maxTokens: TEXT_IMPROVEMENT_MAX_TOKENS,
+          maxModels: 1,
+        },
+      );
+      return { text, timedOut: false };
+    } catch (fallbackError) {
+      return {
+        text: null,
+        timedOut: isTextImprovementProviderTimeout(fallbackError),
+      };
+    }
+  }
+}
 
 router.post(
   '/improve-text',
@@ -79,17 +121,16 @@ router.post(
           content: buildTextImprovementRequest(userContent, contextInstruction),
         },
       ];
-      let improved: string;
-      try {
-        improved = await callOpenRouter(
-          request,
-          TEXT_IMPROVEMENT_SYSTEM_PROMPT,
-          TEXT_IMPROVEMENT_AI_MODEL,
+      let result = await generateImprovement(request, true);
+      let improved = result.text;
+      if (!improved) {
+        res.json(
+          buildTextImprovementUnchangedResponse(
+            text,
+            result.timedOut ? TEXT_IMPROVEMENT_TIMEOUT_WARNING : undefined,
+          ),
         );
-      } catch {
-        improved = await callTextImprovementFallback(request, TEXT_IMPROVEMENT_SYSTEM_PROMPT, [
-          TEXT_IMPROVEMENT_AI_MODEL,
-        ]);
+        return;
       }
       if (
         isTextImprovementRefusal(improved) ||
@@ -101,39 +142,21 @@ router.post(
             content: buildTextImprovementRequest(userContent, contextInstruction, true),
           },
         ];
-        try {
-          improved = await callOpenRouter(
-            retryRequest,
-            TEXT_IMPROVEMENT_SYSTEM_PROMPT,
-            TEXT_IMPROVEMENT_AI_MODEL,
-          );
-        } catch {
-          improved = await callTextImprovementFallback(
-            retryRequest,
-            TEXT_IMPROVEMENT_SYSTEM_PROMPT,
-            [TEXT_IMPROVEMENT_AI_MODEL],
-          );
-        }
+        result = await generateImprovement(retryRequest, false);
+        improved = result.text;
       }
       if (
+        !improved ||
         isTextImprovementRefusal(improved) ||
         isTextImprovementTooSimilar(userContent, improved)
       ) {
-        try {
-          improved = await callTextImprovementFallback(request, TEXT_IMPROVEMENT_SYSTEM_PROMPT, [
-            TEXT_IMPROVEMENT_AI_MODEL,
-          ]);
-        } catch {
-          res.json(buildTextImprovementUnchangedResponse(text));
-          return;
-        }
-        if (
-          isTextImprovementRefusal(improved) ||
-          isTextImprovementTooSimilar(userContent, improved)
-        ) {
-          res.json(buildTextImprovementUnchangedResponse(text));
-          return;
-        }
+        res.json(
+          buildTextImprovementUnchangedResponse(
+            text,
+            result.timedOut ? TEXT_IMPROVEMENT_TIMEOUT_WARNING : undefined,
+          ),
+        );
+        return;
       }
       setCache(cacheKey, improved);
       res.json({

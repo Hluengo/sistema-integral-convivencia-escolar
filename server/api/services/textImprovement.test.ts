@@ -5,8 +5,10 @@ import { describe, it } from 'node:test';
 import {
   buildTextImprovementRequest,
   buildTextImprovementUnchangedResponse,
+  isTextImprovementProviderTimeout,
   isTextImprovementTooSimilar,
   isTextImprovementRefusal,
+  TEXT_IMPROVEMENT_TIMEOUT_WARNING,
 } from './textImprovement.js';
 
 describe('textImprovement', () => {
@@ -76,5 +78,26 @@ describe('textImprovement', () => {
       unchanged: true,
       warning: 'La IA no pudo mejorar este texto. El contenido original se mantuvo sin cambios.',
     });
+  });
+
+  it('clasifica timeouts del proveedor como respuesta recuperable', () => {
+    assert.equal(
+      isTextImprovementProviderTimeout(
+        new Error('La solicitud a openrouter.ai excedió el tiempo máximo.'),
+      ),
+      true,
+    );
+    assert.equal(isTextImprovementProviderTimeout(new Error('OpenRouter error: 500')), false);
+
+    assert.deepEqual(
+      buildTextImprovementUnchangedResponse('Texto original.', TEXT_IMPROVEMENT_TIMEOUT_WARNING),
+      {
+        success: true,
+        improved: 'Texto original.',
+        unchanged: true,
+        warning:
+          'La IA tardó demasiado en responder. El contenido original se mantuvo sin cambios.',
+      },
+    );
   });
 });

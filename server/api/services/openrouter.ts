@@ -16,6 +16,7 @@ interface OpenRouterOptions {
   maxTokens?: number;
   temperature?: number;
   timeoutMs?: number;
+  maxModels?: number;
 }
 
 function getApiKey(): string {
@@ -61,12 +62,16 @@ export async function callTextImprovementFallback(
   messages: Array<{ role: string; content: string }>,
   systemInstruction?: string,
   excludedModels: readonly string[] = [],
+  options: OpenRouterOptions = {},
 ): Promise<string> {
   let lastError: unknown;
-  const models = TEXT_FALLBACK_MODELS.filter((model) => !excludedModels.includes(model));
+  const models = TEXT_FALLBACK_MODELS.filter((model) => !excludedModels.includes(model)).slice(
+    0,
+    options.maxModels ?? TEXT_FALLBACK_MODELS.length,
+  );
   for (const model of models) {
     try {
-      const text = await callOpenRouter(messages, systemInstruction, model);
+      const text = await callOpenRouter(messages, systemInstruction, model, options);
       if (text.trim()) return text;
     } catch (error) {
       lastError = error;

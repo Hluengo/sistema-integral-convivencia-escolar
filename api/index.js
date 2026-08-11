@@ -2014,12 +2014,20 @@ async function callOpenRouter(messages, systemInstruction, model = AI_MODEL, opt
   const choices = res.body?.choices;
   return choices?.[0]?.message?.content || '';
 }
-async function callTextImprovementFallback(messages, systemInstruction, excludedModels = []) {
+async function callTextImprovementFallback(
+  messages,
+  systemInstruction,
+  excludedModels = [],
+  options = {},
+) {
   let lastError;
-  const models = TEXT_FALLBACK_MODELS.filter((model) => !excludedModels.includes(model));
+  const models = TEXT_FALLBACK_MODELS.filter((model) => !excludedModels.includes(model)).slice(
+    0,
+    options.maxModels ?? TEXT_FALLBACK_MODELS.length,
+  );
   for (const model of models) {
     try {
-      const text = await callOpenRouter(messages, systemInstruction, model);
+      const text = await callOpenRouter(messages, systemInstruction, model, options);
       if (text.trim()) return text;
     } catch (error) {
       lastError = error;
@@ -2320,13 +2328,27 @@ function isTextImprovementTooSimilar(originalText, improvedText) {
 }
 var TEXT_IMPROVEMENT_UNCHANGED_WARNING =
   'La IA no pudo mejorar este texto. El contenido original se mantuvo sin cambios.';
-function buildTextImprovementUnchangedResponse(originalText) {
+var TEXT_IMPROVEMENT_TIMEOUT_WARNING =
+  'La IA tard\xF3 demasiado en responder. El contenido original se mantuvo sin cambios.';
+function buildTextImprovementUnchangedResponse(
+  originalText,
+  warning = TEXT_IMPROVEMENT_UNCHANGED_WARNING,
+) {
   return {
     success: true,
     improved: originalText,
     unchanged: true,
-    warning: TEXT_IMPROVEMENT_UNCHANGED_WARNING,
+    warning,
   };
+}
+function isTextImprovementProviderTimeout(error) {
+  if (!(error instanceof Error)) return false;
+  const message = error.message.toLowerCase();
+  return (
+    message.includes('excedi\xF3 el tiempo m\xE1ximo') ||
+    message.includes('timeout') ||
+    message.includes('timed out')
+  );
 }
 function buildTextImprovementRequest(text, contextInstruction, isRetry = false) {
   const task = contextInstruction
@@ -2364,6 +2386,42 @@ var IMPROVEMENT_CONTEXTS = {
     'Redacta el texto como fundamento institucional de un cierre anticipado de causa. Ordena con claridad los antecedentes aportados, el resultado de la investigaci\xF3n y la raz\xF3n por la que no corresponde continuar. Conserva estrictamente los hechos, acciones, fechas, personas y conclusi\xF3n entregados por el usuario. No inventes antecedentes, pruebas, citas normativas, responsabilidades ni sanciones, y no cambies la decisi\xF3n descrita.',
 };
 var TEXT_IMPROVEMENT_PROMPT_VERSION = '2026-08-05-v2';
+var TEXT_IMPROVEMENT_PRIMARY_TIMEOUT_MS = 7e3;
+var TEXT_IMPROVEMENT_FALLBACK_TIMEOUT_MS = 6e3;
+var TEXT_IMPROVEMENT_MAX_TOKENS = 1200;
+async function generateImprovement(request, allowFallback) {
+  try {
+    const text = await callOpenRouter(
+      request,
+      TEXT_IMPROVEMENT_SYSTEM_PROMPT,
+      TEXT_IMPROVEMENT_AI_MODEL,
+      { timeoutMs: TEXT_IMPROVEMENT_PRIMARY_TIMEOUT_MS, maxTokens: TEXT_IMPROVEMENT_MAX_TOKENS },
+    );
+    return { text, timedOut: false };
+  } catch (error) {
+    if (isTextImprovementProviderTimeout(error) || !allowFallback) {
+      return { text: null, timedOut: isTextImprovementProviderTimeout(error) };
+    }
+    try {
+      const text = await callTextImprovementFallback(
+        request,
+        TEXT_IMPROVEMENT_SYSTEM_PROMPT,
+        [TEXT_IMPROVEMENT_AI_MODEL],
+        {
+          timeoutMs: TEXT_IMPROVEMENT_FALLBACK_TIMEOUT_MS,
+          maxTokens: TEXT_IMPROVEMENT_MAX_TOKENS,
+          maxModels: 1,
+        },
+      );
+      return { text, timedOut: false };
+    } catch (fallbackError) {
+      return {
+        text: null,
+        timedOut: isTextImprovementProviderTimeout(fallbackError),
+      };
+    }
+  }
+}
 router.post(
   '/improve-text',
   requireAuth,
@@ -2404,17 +2462,16 @@ router.post(
           content: buildTextImprovementRequest(userContent, contextInstruction),
         },
       ];
-      let improved;
-      try {
-        improved = await callOpenRouter(
-          request,
-          TEXT_IMPROVEMENT_SYSTEM_PROMPT,
-          TEXT_IMPROVEMENT_AI_MODEL,
+      let result = await generateImprovement(request, true);
+      let improved = result.text;
+      if (!improved) {
+        res.json(
+          buildTextImprovementUnchangedResponse(
+            text,
+            result.timedOut ? TEXT_IMPROVEMENT_TIMEOUT_WARNING : void 0,
+          ),
         );
-      } catch {
-        improved = await callTextImprovementFallback(request, TEXT_IMPROVEMENT_SYSTEM_PROMPT, [
-          TEXT_IMPROVEMENT_AI_MODEL,
-        ]);
+        return;
       }
       if (
         isTextImprovementRefusal(improved) ||
@@ -2426,39 +2483,21 @@ router.post(
             content: buildTextImprovementRequest(userContent, contextInstruction, true),
           },
         ];
-        try {
-          improved = await callOpenRouter(
-            retryRequest,
-            TEXT_IMPROVEMENT_SYSTEM_PROMPT,
-            TEXT_IMPROVEMENT_AI_MODEL,
-          );
-        } catch {
-          improved = await callTextImprovementFallback(
-            retryRequest,
-            TEXT_IMPROVEMENT_SYSTEM_PROMPT,
-            [TEXT_IMPROVEMENT_AI_MODEL],
-          );
-        }
+        result = await generateImprovement(retryRequest, false);
+        improved = result.text;
       }
       if (
+        !improved ||
         isTextImprovementRefusal(improved) ||
         isTextImprovementTooSimilar(userContent, improved)
       ) {
-        try {
-          improved = await callTextImprovementFallback(request, TEXT_IMPROVEMENT_SYSTEM_PROMPT, [
-            TEXT_IMPROVEMENT_AI_MODEL,
-          ]);
-        } catch {
-          res.json(buildTextImprovementUnchangedResponse(text));
-          return;
-        }
-        if (
-          isTextImprovementRefusal(improved) ||
-          isTextImprovementTooSimilar(userContent, improved)
-        ) {
-          res.json(buildTextImprovementUnchangedResponse(text));
-          return;
-        }
+        res.json(
+          buildTextImprovementUnchangedResponse(
+            text,
+            result.timedOut ? TEXT_IMPROVEMENT_TIMEOUT_WARNING : void 0,
+          ),
+        );
+        return;
       }
       setCache(cacheKey, improved);
       res.json({

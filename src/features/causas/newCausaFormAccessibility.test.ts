@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { ok } from 'node:assert/strict';
+import { equal, ok } from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, it } from 'node:test';
@@ -17,5 +17,13 @@ describe('Formulario de nuevo expediente accesible', () => {
     ok(!content.includes('window.confirm'));
     ok(!content.includes('window.alert'));
     ok(!content.includes('window.prompt'));
+  });
+
+  it('solo asocia el label de estudiante cuando el select existe', () => {
+    const content = source('ui/NewCausaForm.tsx');
+
+    equal((content.match(/htmlFor="create-student"/g) ?? []).length, 1);
+    equal((content.match(/id="create-student"/g) ?? []).length, 1);
+    ok(content.includes('<p className="block font-semibold text-neutral-500 text-xs uppercase"'));
   });
 });

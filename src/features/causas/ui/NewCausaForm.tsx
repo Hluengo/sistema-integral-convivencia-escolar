@@ -158,41 +158,59 @@ export default function NewCausaForm({
         <div>
           {selectedCourseId ? (
             <>
-              <label
-                htmlFor="create-student"
-                className="block font-semibold text-neutral-500 text-xs uppercase"
-              >
-                Estudiante
-              </label>
               {isLoadingStudents ? (
-                <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-2.5">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-brand-600" aria-hidden="true" />
-                  <span className="text-neutral-500 text-xs">Cargando estudiantes...</span>
-                </div>
+                <>
+                  <p className="block font-semibold text-neutral-500 text-xs uppercase">
+                    Estudiante
+                  </p>
+                  <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-2.5">
+                    <Loader2
+                      className="h-3.5 w-3.5 animate-spin text-brand-600"
+                      aria-hidden="true"
+                    />
+                    <span className="text-neutral-500 text-xs">Cargando estudiantes...</span>
+                  </div>
+                </>
               ) : students.length > 0 ? (
-                <Select
-                  id="create-student"
-                  aria-label="Estudiante"
-                  value={selectedStudentId}
-                  onChange={(event) => onStudentSelect(event.target.value)}
-                  className="mt-1.5 bg-neutral-50 p-3 font-medium"
-                  invalid={!!errors.newEstNombre}
-                  aria-describedby={errors.newEstNombre ? 'create-student-error' : undefined}
-                >
-                  <option value="">-- Seleccionar estudiante --</option>
-                  {students.map((student) => (
-                    <option key={student.id} value={student.id}>
-                      {student.full_name}
-                    </option>
-                  ))}
-                </Select>
+                <>
+                  <label
+                    htmlFor="create-student"
+                    className="block font-semibold text-neutral-500 text-xs uppercase"
+                  >
+                    Estudiante
+                  </label>
+                  <Select
+                    id="create-student"
+                    aria-label="Estudiante"
+                    value={selectedStudentId}
+                    onChange={(event) => onStudentSelect(event.target.value)}
+                    className="mt-1.5 bg-neutral-50 p-3 font-medium"
+                    invalid={!!errors.newEstNombre}
+                    aria-describedby={errors.newEstNombre ? 'create-student-error' : undefined}
+                  >
+                    <option value="">-- Seleccionar estudiante --</option>
+                    {students.map((student) => (
+                      <option key={student.id} value={student.id}>
+                        {student.full_name}
+                      </option>
+                    ))}
+                  </Select>
+                </>
               ) : (
-                <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-grave-200 bg-grave-50 p-2.5">
-                  <AlertCircle className="h-3.5 w-3.5 shrink-0 text-grave-600" aria-hidden="true" />
-                  <span className="text-grave-700 text-xs">
-                    No hay estudiantes en este curso. Ingrese los datos manualmente.
-                  </span>
-                </div>
+                <>
+                  <p className="block font-semibold text-neutral-500 text-xs uppercase">
+                    Estudiante
+                  </p>
+                  <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-grave-200 bg-grave-50 p-2.5">
+                    <AlertCircle
+                      className="h-3.5 w-3.5 shrink-0 text-grave-600"
+                      aria-hidden="true"
+                    />
+                    <span className="text-grave-700 text-xs">
+                      No hay estudiantes en este curso. Ingrese los datos manualmente.
+                    </span>
+                  </div>
+                </>
               )}
               <FieldError id="create-student-error" message={errors.newEstNombre?.message} />
             </>
