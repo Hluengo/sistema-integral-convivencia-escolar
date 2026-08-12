@@ -201,6 +201,21 @@ describe('builders de la notificación', () => {
     );
   });
 
+  it('usa la gravedad estructurada del expediente en la calificación preliminar', () => {
+    const causa = {
+      ...baseCausa(),
+      tipoInfraccion: 'Gravísima',
+      observaciones:
+        'Se registra un hecho de violencia física. Se considera que el hecho constituye una falta grave según el RICE.',
+    } satisfies Causa;
+    const content = buildPrefilledNotificationContent(causa);
+
+    assert.match(content.calificacionFalta, /falta gravísima/);
+    assert.match(content.hallazgoIncidente, /falta gravísima/);
+    assert.doesNotMatch(content.calificacionFalta, /falta grave/i);
+    assert.doesNotMatch(content.hallazgoIncidente, /falta grave/i);
+  });
+
   it('lista antecedentes reales de la bitácora sin inventar hechos', () => {
     const content = buildPrefilledNotificationContent(baseCausa());
     assert.match(content.evidenciaTestimonios, /Registro audiovisual del patio/);

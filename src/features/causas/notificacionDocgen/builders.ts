@@ -42,6 +42,19 @@ export function buildNotificacionExpedienteData(
   };
 }
 
+function toLowerSeverityLabel(tipoInfraccion: Causa['tipoInfraccion']): string {
+  return tipoInfraccion.toLocaleLowerCase('es-CL');
+}
+
+function buildCalificacionFalta(causa: Causa): string {
+  return `De forma preliminar, y sin constituir sanción anticipada, los antecedentes registrados se califican como falta ${toLowerSeverityLabel(causa.tipoInfraccion)}, conforme a la tipificación vigente del RICE.`;
+}
+
+function alignSeverityReferences(text: string, tipoInfraccion: Causa['tipoInfraccion']): string {
+  const severityReference = `falta ${toLowerSeverityLabel(tipoInfraccion)}`;
+  return text.replace(/\bfalta\s+(?:leve|grave|muy\s+grave|grav[ií]sima)\b/gi, severityReference);
+}
+
 /**
  * Registros reales de la bitácora (evidencias, entrevistas, notificaciones)
  * que alimentan la sección de antecedentes. Solo se usa texto que ya existe
@@ -70,7 +83,7 @@ export function buildPrefilledNotificationContent(
   if (savedContent && isNotificationContent(savedContent)) return savedContent;
 
   const antecedentes = listBitacoraAntecedentes(causa.bitacora);
-  const hallazgo = causa.observaciones.trim();
+  const hallazgo = alignSeverityReferences(causa.observaciones.trim(), causa.tipoInfraccion);
 
   return {
     ...DEFAULT_NOTIFICATION_CONTENT,
@@ -79,6 +92,7 @@ export function buildPrefilledNotificationContent(
       antecedentes.length > 0
         ? `Antecedentes registrados en el expediente:\n${antecedentes.join('\n')}`
         : DEFAULT_NOTIFICATION_CONTENT.evidenciaTestimonios,
+    calificacionFalta: buildCalificacionFalta(causa),
   };
 }
 

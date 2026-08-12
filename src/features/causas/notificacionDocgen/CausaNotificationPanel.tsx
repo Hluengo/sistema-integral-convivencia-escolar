@@ -203,6 +203,7 @@ export default function CausaNotificationPanel({ causa }: CausaNotificationPanel
 
   return (
     <CausaNotificationGenerator
+      key={causa.id}
       causa={causa}
       privacyMode={privacyMode}
       initialSnapshot={initialSnapshot}
