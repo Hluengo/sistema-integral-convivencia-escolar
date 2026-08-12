@@ -110,8 +110,9 @@ test.describe('Revisión E2E backend', () => {
 
   test('confirmación PDF bloquea roles básicos antes de tocar Storage', async ({ request }) => {
     test.skip(
-      !process.env.SUPABASE_JWT_SECRET,
-      'Requiere SUPABASE_JWT_SECRET para firmar JWT E2E.',
+      !process.env.SUPABASE_JWT_SECRET ||
+        !/localhost|127\.0\.0\.1/.test(process.env.E2E_BASE_URL ?? ''),
+      'Requiere servidor local con SUPABASE_JWT_SECRET para firmar JWT E2E.',
     );
 
     const token = await createJwt('teacher');
