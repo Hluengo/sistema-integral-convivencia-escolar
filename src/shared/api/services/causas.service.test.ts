@@ -373,10 +373,14 @@ describe('updateCausa', () => {
 });
 
 describe('deleteCausa', () => {
-  it('elimina bitácora, checklist y causa, retornando true', async () => {
+  it('elimina documentos relacionados, bitácora, checklist y causa, retornando true', async () => {
+    const tables: string[] = [];
     const result = await withCausasMocks(
       {
-        resultForTable: () => ({ data: null, error: null }),
+        resultForTable: (table) => {
+          tables.push(table);
+          return { data: null, error: null };
+        },
       },
       async () => {
         const { deleteCausa } = await import('./causas.service');
@@ -384,6 +388,29 @@ describe('deleteCausa', () => {
       },
     );
     assert.equal(result, true);
+    assert.deepEqual(tables, ['bitacora_entries', 'checklist_items', 'causa_documents', 'causas']);
+  });
+
+  it('no intenta eliminar la causa si falla un registro relacionado', async () => {
+    const tables: string[] = [];
+    const result = await withCausasMocks(
+      {
+        resultForTable: (table) => {
+          tables.push(table);
+          return {
+            data: null,
+            error: table === 'causa_documents' ? new Error('delete denied') : null,
+          };
+        },
+      },
+      async () => {
+        const { deleteCausa } = await import('./causas.service');
+        return deleteCausa('DC-2026-001');
+      },
+    );
+
+    assert.equal(result, false);
+    assert.equal(tables.includes('causas'), false);
   });
 
   it('retorna false cuando falla la eliminación de la causa', async () => {

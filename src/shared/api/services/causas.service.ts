@@ -277,10 +277,17 @@ export async function updateCausa(causa: Causa): Promise<boolean> {
 }
 
 export async function deleteCausa(causaId: string): Promise<boolean> {
-  await Promise.all([
+  const relatedDeletes = await Promise.all([
     supabase.from('bitacora_entries').delete().eq('causa_id', causaId),
     supabase.from('checklist_items').delete().eq('causa_id', causaId),
+    supabase.from('causa_documents').delete().eq('causa_id', causaId),
   ]);
+  const relatedError = relatedDeletes.find((result) => result.error)?.error;
+  if (relatedError) {
+    console.error('Error deleting related causa records:', relatedError);
+    return false;
+  }
+
   const { error } = await supabase.from('causas').delete().eq('id', causaId);
   if (error) {
     console.error('Error deleting causa:', error);
