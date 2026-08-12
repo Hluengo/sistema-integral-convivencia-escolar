@@ -102,7 +102,7 @@ export const TEACHERS_BY_COURSE: Record<string, string> = {
   '3° Medio A': 'ANGELO FREIRE CONTRERAS',
   '3° Medio B': 'CAROLINA AGÜERO CÁRDENAS',
   '4° Medio A': 'VICENTE BURGOS ESTRADA',
-  '4° Medio B': 'KEYLA RODRÍGUEZ SANHUEZA',
+  '4° Medio B': 'KEILA RODRÍGUEZ SANHUEZA',
 };
 
 export const getCurrentDateStr = (): string => {
