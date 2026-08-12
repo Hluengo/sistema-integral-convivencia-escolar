@@ -41,21 +41,24 @@ export default function TimelineTabPanels({
           <section
             id="phase-workspace"
             aria-labelledby="phase-workspace-title"
-            className="space-y-4"
+            className="space-y-3"
           >
-            <header className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex min-w-0 items-start gap-3">
-                <span className="rounded-lg bg-brand-100 p-2 text-brand-700" aria-hidden="true">
-                  <ListChecks className="size-5" />
+            <header className="flex flex-col gap-2.5 rounded-lg border border-neutral-200 bg-neutral-50/80 p-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-start gap-2.5">
+                <span className="rounded-lg bg-brand-100 p-1.5 text-brand-700" aria-hidden="true">
+                  <ListChecks className="size-4.5" />
                 </span>
                 <div>
-                  <p className="font-semibold text-11px text-neutral-500 uppercase tracking-wide">
+                  <p className="font-semibold text-10px text-neutral-500 uppercase tracking-wide">
                     Fase de trabajo
                   </p>
-                  <h3 id="phase-workspace-title" className="font-semibold text-neutral-900 text-lg">
+                  <h3
+                    id="phase-workspace-title"
+                    className="font-semibold text-neutral-900 text-base"
+                  >
                     {selectedPhase}
                   </h3>
-                  <p className="mt-0.5 text-neutral-600 text-sm">
+                  <p className="mt-0.5 text-neutral-600 text-xs">
                     Registra y consulta los hitos, antecedentes y documentos de esta fase.
                   </p>
                 </div>
@@ -63,17 +66,17 @@ export default function TimelineTabPanels({
               <button
                 type="button"
                 onClick={() => onSelectPhase(null)}
-                className="group inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-brand-200 bg-brand-50 px-3.5 py-2 font-semibold text-brand-800 text-sm shadow-xs transition hover:border-brand-300 hover:bg-brand-100 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                className="group inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-brand-200 bg-brand-50 px-3 py-1.5 font-semibold text-brand-800 text-xs shadow-xs transition hover:border-brand-300 hover:bg-brand-100 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
               >
                 <span
-                  className="flex size-6 items-center justify-center rounded-full bg-brand-600 text-white transition group-hover:-translate-x-0.5"
+                  className="flex size-5 items-center justify-center rounded-full bg-brand-600 text-white transition group-hover:-translate-x-0.5"
                   aria-hidden="true"
                 >
-                  <ArrowLeft className="size-3.5" />
+                  <ArrowLeft className="size-3" />
                 </span>
                 <span className="flex flex-col items-start leading-tight">
                   <span>Volver a la ruta</span>
-                  <span className="mt-0.5 font-medium text-10px text-brand-700">
+                  <span className="mt-0.5 font-medium text-9px text-brand-700">
                     Ver las 5 fases
                   </span>
                 </span>

@@ -1,9 +1,11 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useState, type FormEvent } from 'react';
-import { CalendarPlus, FileText, Plus, X } from 'lucide-react';
+import { CalendarPlus, Check, FileText, Plus, Upload, X } from 'lucide-react';
 import type { BitacoraEntry, ChecklistItem } from '../../shared/lib/types';
 import { useChecklistProgress } from '../../shared/lib/hooks/useChecklistProgress';
+import ImproveTextarea from '../../shared/ImproveTextarea';
+import Button from '../../shared/ui/Button';
 import {
   DOCUMENT_UPLOAD_ACCEPT,
   DOCUMENT_UPLOAD_HELPER_TEXT,
@@ -79,13 +81,13 @@ export default function ChecklistProgressPanel({
 
   return (
     <section
-      className="mt-3 rounded-lg border border-sky-100 bg-sky-50/40 p-3"
+      className="mt-4 rounded-lg border border-info-200 bg-white p-3"
       aria-label={`Avances de ${item.label}`}
     >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="font-semibold text-sky-900 text-xs">Avances de este hito</p>
-          <p className="mt-0.5 text-10px text-sky-800/80">
+          <p className="font-semibold text-info-800 text-xs">Avances de este hito</p>
+          <p className="mt-0.5 text-10px text-neutral-500">
             {itemEntries.length === 0
               ? 'Aún no hay avances registrados.'
               : `${itemEntries.length} avance${itemEntries.length === 1 ? '' : 's'} registrado${itemEntries.length === 1 ? '' : 's'}.`}
@@ -95,7 +97,7 @@ export default function ChecklistProgressPanel({
           <button
             type="button"
             onClick={() => setIsOpen((current) => !current)}
-            className="inline-flex w-fit items-center gap-1.5 rounded-md border border-sky-200 bg-white px-2.5 py-1.5 font-semibold text-sky-800 text-11px hover:bg-sky-100"
+            className="inline-flex w-fit items-center gap-1.5 rounded border border-info-200 bg-white px-2.5 py-1.5 font-semibold text-info-700 text-11px transition-colors hover:bg-info-50"
           >
             {isOpen ? (
               <X className="size-3.5" aria-hidden="true" />
@@ -110,27 +112,29 @@ export default function ChecklistProgressPanel({
       {isOpen && (
         <form
           onSubmit={handleSubmit}
-          className="mt-3 grid gap-3 rounded-md border border-sky-100 bg-white p-3 sm:grid-cols-2"
+          className="mt-3 grid gap-3 rounded border border-info-200 bg-white p-3 sm:grid-cols-2"
         >
           <label htmlFor={`progress-title-${item.id}`} className="space-y-1.5">
-            <span className="block font-semibold text-neutral-700 text-11px">Título</span>
+            <span className="block font-semibold text-9px text-neutral-700 uppercase">
+              Título del avance:
+            </span>
             <input
               aria-label="Título del avance"
               id={`progress-title-${item.id}`}
               value={title}
               onChange={(event) => setTitle(event.target.value)}
-              className="w-full rounded-md border border-neutral-200 px-2.5 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-medium text-neutral-800 text-xs placeholder-neutral-400 transition-colors focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
               placeholder="Ej. Entrevista con apoderado"
             />
           </label>
           <label htmlFor={`progress-type-${item.id}`} className="space-y-1.5">
-            <span className="block font-semibold text-neutral-700 text-11px">Tipo</span>
+            <span className="block font-semibold text-9px text-neutral-700 uppercase">Tipo:</span>
             <select
               aria-label="Tipo de avance"
               id={`progress-type-${item.id}`}
               value={entryType}
               onChange={(event) => setEntryType(event.target.value as BitacoraEntry['tipo'])}
-              className="w-full rounded-md border border-neutral-200 px-2.5 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-medium text-neutral-800 text-xs transition-colors focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
             >
               {ENTRY_TYPES.map((type) => (
                 <option key={type} value={type}>
@@ -139,20 +143,20 @@ export default function ChecklistProgressPanel({
               ))}
             </select>
           </label>
-          <label htmlFor={`progress-description-${item.id}`} className="space-y-1.5 sm:col-span-2">
-            <span className="block font-semibold text-neutral-700 text-11px">Descripción</span>
-            <textarea
-              aria-label="Descripción del avance"
+          <div className="space-y-1.5 sm:col-span-2">
+            <ImproveTextarea
               id={`progress-description-${item.id}`}
+              label="Descripción / observaciones:"
               value={description}
-              onChange={(event) => setDescription(event.target.value)}
+              onChange={setDescription}
+              improvementContext="hito_observacion"
               rows={3}
-              className="w-full resize-y rounded-md border border-neutral-200 px-2.5 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-medium text-neutral-800 text-xs placeholder-neutral-400 transition-colors focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
               placeholder="Describa lo realizado y sus antecedentes."
             />
-          </label>
+          </div>
           <label htmlFor={`progress-date-${item.id}`} className="space-y-1.5">
-            <span className="flex items-center gap-1 font-semibold text-neutral-700 text-11px">
+            <span className="flex items-center gap-1 font-semibold text-9px text-neutral-700 uppercase">
               <CalendarPlus className="size-3.5" aria-hidden="true" /> Fecha y hora
             </span>
             <input
@@ -161,37 +165,58 @@ export default function ChecklistProgressPanel({
               type="datetime-local"
               value={occurredAt}
               onChange={(event) => setOccurredAt(event.target.value)}
-              className="w-full rounded-md border border-neutral-200 px-2.5 py-2 text-sm"
+              className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-medium text-neutral-800 text-xs transition-colors focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
             />
           </label>
           <label htmlFor={`progress-document-${item.id}`} className="space-y-1.5">
-            <span className="flex items-center gap-1 font-semibold text-neutral-700 text-11px">
+            <span className="flex items-center gap-1 font-semibold text-9px text-neutral-700 uppercase">
               <FileText className="size-3.5" aria-hidden="true" /> Documento
             </span>
-            <input
-              aria-label="Documento del avance"
-              id={`progress-document-${item.id}`}
-              type="file"
-              accept={DOCUMENT_UPLOAD_ACCEPT}
-              onChange={(event) => setDocumentFile(event.target.files?.[0] || null)}
-              className="w-full text-11px"
-            />
-            <span className="block text-9px text-neutral-500">{DOCUMENT_UPLOAD_HELPER_TEXT}</span>
+            <span id={`progress-document-label-${item.id}`} className="sr-only">
+              Documento de respaldo
+            </span>
+            <span className="relative mt-1 flex items-center justify-center rounded-lg border-2 border-neutral-300 border-dashed bg-neutral-50/50 px-2 py-1.5 transition-colors hover:bg-neutral-50">
+              <span className="flex cursor-pointer items-center gap-1.5 font-medium text-11px text-neutral-500">
+                <Upload className="h-3.5 w-3.5 text-neutral-400" aria-hidden="true" />
+                {documentFile?.name || DOCUMENT_UPLOAD_HELPER_TEXT}
+                <input
+                  id={`progress-document-${item.id}`}
+                  type="file"
+                  accept={DOCUMENT_UPLOAD_ACCEPT}
+                  onChange={(event) => setDocumentFile(event.target.files?.[0] || null)}
+                  className="sr-only"
+                  aria-labelledby={`progress-document-label-${item.id}`}
+                />
+              </span>
+            </span>
           </label>
           {(formError || error) && (
-            <p className="sm:col-span-2 rounded-md bg-danger-50 px-2.5 py-2 text-danger-700 text-11px">
+            <p
+              role="alert"
+              className="sm:col-span-2 rounded-lg border border-danger-200 bg-danger-50 px-2.5 py-2 text-danger-700 text-10px"
+            >
               {formError ||
                 (error instanceof Error ? error.message : 'No fue posible cargar los avances.')}
             </p>
           )}
-          <div className="flex justify-end sm:col-span-2">
-            <button
-              type="submit"
+          <div className="flex justify-end gap-2 pt-1 sm:col-span-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsOpen(false)}
               disabled={isCreating}
-              className="rounded-md bg-brand-600 px-3 py-2 font-semibold text-white text-11px disabled:opacity-50"
             >
-              {isCreating ? 'Guardando…' : 'Guardar avance'}
-            </button>
+              Cancelar
+            </Button>
+            <Button size="sm" type="submit" disabled={isCreating}>
+              {isCreating ? (
+                'Guardando...'
+              ) : (
+                <>
+                  <Check className="h-3.5 w-3.5" aria-hidden="true" /> Guardar avance
+                </>
+              )}
+            </Button>
           </div>
         </form>
       )}
@@ -200,23 +225,23 @@ export default function ChecklistProgressPanel({
         <p className="mt-3 text-10px text-neutral-500">Cargando avances…</p>
       ) : (
         itemEntries.length > 0 && (
-          <ol className="mt-3 space-y-2 border-sky-200 border-l pl-3">
+          <ol className="mt-4 space-y-3 border-info-200 border-l pl-4">
             {itemEntries.map((entry) => (
               <li
                 key={entry.id}
-                className="relative rounded-md border border-neutral-200 bg-white p-2.5"
+                className="relative rounded border border-neutral-200 bg-neutral-50/40 p-3"
               >
                 <span
-                  className="absolute -left-[1.15rem] top-3 size-2 rounded-full bg-sky-500"
+                  className="absolute -left-[1.3rem] top-4 size-2 rounded-full bg-info-500"
                   aria-hidden="true"
                 />
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="font-semibold text-neutral-900 text-11px">{entry.title}</p>
-                  <time className="font-mono text-9px text-neutral-500">
+                  <time className="font-mono text-10px text-neutral-500">
                     {new Date(entry.occurredAt).toLocaleString('es-CL')}
                   </time>
                 </div>
-                <p className="mt-1 whitespace-pre-wrap text-neutral-600 text-11px">
+                <p className="mt-2 whitespace-pre-wrap text-neutral-600 text-11px leading-relaxed">
                   {entry.description}
                 </p>
                 {entry.documentName && entry.documentUrl && (

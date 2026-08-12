@@ -191,10 +191,7 @@ export default function ProcessChecklist({
 
                 {/* Section Content */}
                 {isExpanded && (
-                  <div
-                    id={`section-${section.id}`}
-                    className="space-y-2 divide-y divide-neutral-100 p-2"
-                  >
+                  <div id={`section-${section.id}`} className="space-y-4 p-3">
                     {sectionItems.map((item) => (
                       <ChecklistItemCard
                         key={item.id}

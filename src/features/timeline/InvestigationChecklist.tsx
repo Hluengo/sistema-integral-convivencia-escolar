@@ -155,8 +155,8 @@ export default function InvestigationChecklist({
       </button>
 
       {isExpanded && (
-        <div id="section-investigacion" className="space-y-3 p-2">
-          <section className="space-y-2" aria-labelledby="investigation-base-title">
+        <div id="section-investigacion" className="space-y-5 p-3">
+          <section className="space-y-4" aria-labelledby="investigation-base-title">
             <h4
               id="investigation-base-title"
               className="font-semibold text-neutral-700 text-11px uppercase tracking-wide"

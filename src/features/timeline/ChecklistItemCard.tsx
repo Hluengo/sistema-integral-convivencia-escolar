@@ -54,7 +54,7 @@ export default function ChecklistItemCard({
 
   return (
     <div
-      className={`rounded-lg border p-3 text-left transition-colors ${
+      className={`rounded-lg border p-4 text-left transition-colors ${
         notRequired
           ? 'border-neutral-200 bg-neutral-50/50'
           : item.completado
