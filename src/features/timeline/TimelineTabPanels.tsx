@@ -33,7 +33,7 @@ export default function TimelineTabPanels({
   const ctx = useTimelineContext();
 
   return (
-    <DetailModalBody className="space-y-4">
+    <DetailModalBody className="space-y-4 bg-neutral-50/60">
       {activeTab === 'resumen' && <ResumenTab causa={causa} breaches={breaches} />}
 
       {activeTab === 'ruta' &&

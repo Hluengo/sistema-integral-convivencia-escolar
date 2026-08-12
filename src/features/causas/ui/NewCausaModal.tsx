@@ -32,7 +32,10 @@ export default function NewCausaModal(props: NewCausaModalProps) {
         if (!o) onClose();
       }}
     >
-      <DialogContent hideClose className="max-w-[40rem] max-h-[90vh] overflow-y-auto p-0">
+      <DialogContent
+        hideClose
+        className="max-h-[calc(100vh-1rem)] max-w-[40rem] overflow-y-auto p-0 sm:max-h-[90vh]"
+      >
         <div
           className="absolute top-0 right-4 left-4 h-[3px] rounded-full bg-secondary-500"
           aria-hidden="true"

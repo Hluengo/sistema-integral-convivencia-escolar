@@ -28,7 +28,7 @@ export default memo(function RutaExpedienteTab({
   return (
     <section
       aria-labelledby="expediente-operativo-title"
-      className="overflow-hidden rounded-xl border border-neutral-200 bg-linear-to-br from-neutral-50 via-white to-sky-50"
+      className="overflow-hidden rounded-xl border border-neutral-200 bg-white"
     >
       <div className="border-neutral-200 border-b px-4 py-3 sm:px-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -48,7 +48,7 @@ export default memo(function RutaExpedienteTab({
         </div>
       </div>
 
-      <ol className="grid grid-cols-5 gap-1 px-4 py-4 sm:gap-2 sm:px-5">
+      <ol className="grid grid-cols-2 gap-3 px-4 py-4 sm:grid-cols-5 sm:gap-2 sm:px-5">
         {summary.phaseProgress.map((phase, index) => {
           const percentage =
             phase.total > 0 ? Math.round((phase.completed / phase.total) * 100) : 0;
@@ -120,7 +120,7 @@ export default memo(function RutaExpedienteTab({
         })}
       </ol>
 
-      <div className="grid gap-3 border-neutral-200 border-t bg-white/70 p-4 sm:grid-cols-3 sm:p-5">
+      <div className="grid gap-3 border-neutral-200 border-t bg-neutral-50/70 p-4 sm:grid-cols-3 sm:p-5">
         <div className="rounded-lg border border-neutral-200 bg-white p-3">
           <p className="flex items-center gap-1.5 font-semibold text-neutral-600 text-11px uppercase tracking-wide">
             <ListChecks className="size-3.5" aria-hidden="true" />

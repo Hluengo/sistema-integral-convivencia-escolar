@@ -68,13 +68,13 @@ export default function NewCausaForm({
   const mediaCourses = courses.filter((course) => course.level === 'MEDIA');
 
   return (
-    <div className="space-y-4 p-6">
-      <div className="flex items-center justify-between border-neutral-100 border-b pb-4">
-        <div className="flex items-center gap-2.5">
+    <div className="space-y-4 p-4 sm:p-6">
+      <div className="flex items-start justify-between gap-3 border-neutral-100 border-b pb-4">
+        <div className="flex min-w-0 items-center gap-2.5">
           <div className="rounded-lg bg-brand-50 p-2">
             <Scale className="h-4 w-4 text-brand-600" aria-hidden="true" />
           </div>
-          <div>
+          <div className="min-w-0">
             <h4 className="font-bold font-sans text-neutral-900 text-sm">Nuevo Expediente</h4>
             <p className="font-medium text-neutral-400 text-xs">Registro de causa de convivencia</p>
           </div>

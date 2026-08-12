@@ -176,8 +176,8 @@ export default function EditCausaModalForm({
 
   return (
     <>
-      <form onSubmit={submitUpdatedCausa} noValidate className="space-y-6 p-6">
-        <div className="flex items-center gap-3">
+      <form onSubmit={submitUpdatedCausa} noValidate className="space-y-6 p-4 sm:p-6">
+        <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50">
             <Scale className="h-5 w-5 text-brand-600" aria-hidden="true" />
           </div>
@@ -466,7 +466,7 @@ export default function EditCausaModalForm({
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 border-t border-neutral-100 pt-4">
+        <div className="flex flex-col-reverse items-stretch gap-2 border-t border-neutral-100 pt-4 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
           <Button
             variant="custom"
             onClick={() => setShowDeleteConfirm(true)}

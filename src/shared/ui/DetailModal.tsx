@@ -65,7 +65,7 @@ export function DetailModalHeader({
         className="pointer-events-none absolute inset-0 opacity-30 [background-image:linear-gradient(90deg,rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.045)_1px,transparent_1px)] [background-size:56px_56px]"
         aria-hidden="true"
       />
-      <div className="relative flex items-center justify-between gap-4">
+      <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/10">
             <span className="font-bold text-neutral-100 text-sm">{avatarInitial}</span>
@@ -77,7 +77,7 @@ export function DetailModalHeader({
             </div>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-1">{actions}</div>
+        <div className="flex shrink-0 items-center gap-1 self-end sm:self-auto">{actions}</div>
       </div>
     </header>
   );
@@ -103,7 +103,7 @@ export function DetailModalTabs<T extends string>({
             onClick={() => onChange(tab.id)}
             role="tab"
             aria-selected={activeTab === tab.id}
-            className={`relative flex min-w-fit flex-1 flex-col items-stretch justify-center gap-1 overflow-hidden rounded-lg px-3 py-2 font-medium text-xs transition-colors ${
+            className={`relative flex min-w-[10rem] flex-1 flex-col items-stretch justify-center gap-1 overflow-hidden rounded-lg px-3 py-2 font-medium text-xs transition-colors sm:min-w-0 ${
               activeTab === tab.id
                 ? 'bg-white text-brand-700 shadow-sm'
                 : 'text-neutral-500 hover:bg-white/50 hover:text-neutral-700'
