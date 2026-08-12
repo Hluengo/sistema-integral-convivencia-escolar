@@ -296,7 +296,12 @@ export default function AiAdvisor() {
               disabled={isImprovingChat || !inputMessage.trim() || isLoading}
               title="Mejorar redacción con IA"
               aria-label="Mejorar redacción con IA"
-              className="shrink-0 rounded-md p-1.5 text-neutral-400 transition-colors hover:bg-brand-50 hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-30"
+              aria-busy={isImprovingChat}
+              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-brand-50 hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-40 ${
+                isImprovingChat
+                  ? 'animate-pulse bg-brand-50 text-brand-600 ring-2 ring-brand-300/50'
+                  : 'text-neutral-400'
+              }`}
             >
               {isImprovingChat ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />

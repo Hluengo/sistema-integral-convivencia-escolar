@@ -3,11 +3,15 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
+  buildTextImprovementDeadline,
   buildTextImprovementRequest,
   buildTextImprovementUnchangedResponse,
+  getTextImprovementProviderTimeoutMs,
+  getTextImprovementRemainingMs,
   isTextImprovementProviderTimeout,
   isTextImprovementTooSimilar,
   isTextImprovementRefusal,
+  TEXT_IMPROVEMENT_DEADLINE_ERROR_MESSAGE,
   TEXT_IMPROVEMENT_TIMEOUT_WARNING,
 } from './textImprovement.js';
 
@@ -98,6 +102,33 @@ describe('textImprovement', () => {
         warning:
           'La IA tardó demasiado en responder. El contenido original se mantuvo sin cambios.',
       },
+    );
+  });
+
+  it('calcula presupuesto restante con margen antes del timeout serverless', () => {
+    const deadline = buildTextImprovementDeadline(18_000, 1_000);
+
+    assert.equal(deadline, 19_000);
+    assert.equal(getTextImprovementRemainingMs(deadline, 1_500, 10_000), 7_500);
+    assert.equal(
+      getTextImprovementProviderTimeoutMs(deadline, 7_000, {
+        safetyMarginMs: 1_500,
+        minRequiredMs: 1_200,
+        now: 10_000,
+      }),
+      7_000,
+    );
+  });
+
+  it('rechaza nuevas llamadas al proveedor cuando no queda presupuesto útil', () => {
+    assert.throws(
+      () =>
+        getTextImprovementProviderTimeoutMs(10_000, 7_000, {
+          safetyMarginMs: 1_500,
+          minRequiredMs: 1_200,
+          now: 9_000,
+        }),
+      new Error(TEXT_IMPROVEMENT_DEADLINE_ERROR_MESSAGE),
     );
   });
 });

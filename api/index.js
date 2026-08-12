@@ -1876,27 +1876,38 @@ import https3 from 'node:https';
 function httpsPost(hostname, pathname, body, headers, timeoutMs = 2e4) {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify(body);
+    let settled = false;
     const opts = {
       hostname,
       path: pathname,
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...headers },
     };
+    const finish = (callback) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(deadlineTimer);
+      callback();
+    };
     const req = https3.request(opts, (res) => {
       let chunks = '';
       res.on('data', (chunk) => (chunks += chunk));
       res.on('end', () => {
         try {
-          resolve({ status: res.statusCode ?? 500, body: JSON.parse(chunks) });
+          const parsed = JSON.parse(chunks);
+          finish(() => resolve({ status: res.statusCode ?? 500, body: parsed }));
         } catch {
-          reject(new Error(`HTTP ${res.statusCode}: ${chunks}`));
+          finish(() => reject(new Error(`HTTP ${res.statusCode}: ${chunks}`)));
         }
       });
     });
-    req.on('error', reject);
+    req.on('error', (error) => finish(() => reject(error)));
     req.setTimeout(timeoutMs, () =>
       req.destroy(new Error(`La solicitud a ${hostname} excedi\xF3 el tiempo m\xE1ximo.`)),
     );
+    const deadlineTimer = setTimeout(() => {
+      req.destroy(new Error(`La solicitud a ${hostname} excedi\xF3 el tiempo m\xE1ximo.`));
+    }, timeoutMs);
     req.write(data);
     req.end();
   });
@@ -1983,11 +1994,6 @@ var TEXT_IMPROVEMENT_AI_MODEL =
   process.env.TEXT_IMPROVEMENT_AI_MODEL ||
   process.env.TEXT_AI_MODEL ||
   'google/gemma-4-31b-it:free';
-var TEXT_FALLBACK_MODELS = [
-  'openrouter/free',
-  'deepseek/deepseek-v4-flash:free',
-  'meta-llama/llama-3.1-8b-instruct',
-];
 function getApiKey() {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) throw new Error('OPENROUTER_API_KEY no configurada');
@@ -2017,29 +2023,6 @@ async function callOpenRouter(messages, systemInstruction, model = AI_MODEL, opt
     throw new Error(`OpenRouter error: ${res.status} ${JSON.stringify(res.body)}`);
   const choices = res.body?.choices;
   return choices?.[0]?.message?.content || '';
-}
-async function callTextImprovementFallback(
-  messages,
-  systemInstruction,
-  excludedModels = [],
-  options = {},
-) {
-  let lastError;
-  const models = TEXT_FALLBACK_MODELS.filter((model) => !excludedModels.includes(model)).slice(
-    0,
-    options.maxModels ?? TEXT_FALLBACK_MODELS.length,
-  );
-  for (const model of models) {
-    try {
-      const text = await callOpenRouter(messages, systemInstruction, model, options);
-      if (text.trim()) return text;
-    } catch (error) {
-      lastError = error;
-    }
-  }
-  throw lastError instanceof Error
-    ? lastError
-    : new Error('No fue posible usar un modelo de respaldo.');
 }
 
 // server/api/services/gemini.ts
@@ -2414,6 +2397,7 @@ var TEXT_IMPROVEMENT_UNCHANGED_WARNING =
   'La IA no pudo mejorar este texto. El contenido original se mantuvo sin cambios.';
 var TEXT_IMPROVEMENT_TIMEOUT_WARNING =
   'La IA tard\xF3 demasiado en responder. El contenido original se mantuvo sin cambios.';
+var TEXT_IMPROVEMENT_DEADLINE_ERROR_MESSAGE = 'La mejora de texto excedi\xF3 el tiempo m\xE1ximo.';
 function buildTextImprovementUnchangedResponse(
   originalText,
   warning = TEXT_IMPROVEMENT_UNCHANGED_WARNING,
@@ -2433,6 +2417,23 @@ function isTextImprovementProviderTimeout(error) {
     message.includes('timeout') ||
     message.includes('timed out')
   );
+}
+function buildTextImprovementDeadline(durationMs, now = Date.now()) {
+  return now + durationMs;
+}
+function getTextImprovementRemainingMs(deadlineAtMs, safetyMarginMs, now = Date.now()) {
+  return Math.max(0, deadlineAtMs - now - safetyMarginMs);
+}
+function getTextImprovementProviderTimeoutMs(deadlineAtMs, desiredTimeoutMs, options) {
+  const remainingMs = getTextImprovementRemainingMs(
+    deadlineAtMs,
+    options.safetyMarginMs,
+    options.now,
+  );
+  if (remainingMs < options.minRequiredMs) {
+    throw new Error(TEXT_IMPROVEMENT_DEADLINE_ERROR_MESSAGE);
+  }
+  return Math.min(desiredTimeoutMs, remainingMs);
 }
 function buildTextImprovementRequest(text, contextInstruction, isRetry = false) {
   const task = contextInstruction
@@ -2472,23 +2473,45 @@ var IMPROVEMENT_CONTEXTS = {
 var TEXT_IMPROVEMENT_PROMPT_VERSION = '2026-08-05-v2';
 var TEXT_IMPROVEMENT_PRIMARY_TIMEOUT_MS = 7e3;
 var TEXT_IMPROVEMENT_FALLBACK_TIMEOUT_MS = 6e3;
-var TEXT_IMPROVEMENT_FALLBACK_MAX_MODELS = 2;
 var TEXT_IMPROVEMENT_MAX_TOKENS = 1200;
+var TEXT_IMPROVEMENT_REQUEST_TIMEOUT_MS = 18e3;
+var TEXT_IMPROVEMENT_SAFETY_MARGIN_MS = 1500;
+var TEXT_IMPROVEMENT_MIN_PROVIDER_TIMEOUT_MS = 1200;
+var TEXT_IMPROVEMENT_MIN_FALLBACK_BUDGET_MS = 4e3;
 var TEXT_IMPROVEMENT_PRIMARY_PROVIDER =
   process.env.TEXT_IMPROVEMENT_PROVIDER?.toLowerCase() === 'openrouter' ? 'OpenRouter' : 'Gemini';
 function requestToUserContent(request) {
   return request.map((message) => message.content).join('\n\n');
 }
-async function generateGeminiImprovement(request) {
+function getProviderTimeout(deadlineAtMs, desiredTimeoutMs) {
+  return getTextImprovementProviderTimeoutMs(deadlineAtMs, desiredTimeoutMs, {
+    safetyMarginMs: TEXT_IMPROVEMENT_SAFETY_MARGIN_MS,
+    minRequiredMs: TEXT_IMPROVEMENT_MIN_PROVIDER_TIMEOUT_MS,
+  });
+}
+function hasFallbackBudget(deadlineAtMs) {
+  return (
+    getTextImprovementRemainingMs(deadlineAtMs, TEXT_IMPROVEMENT_SAFETY_MARGIN_MS) >=
+    TEXT_IMPROVEMENT_MIN_FALLBACK_BUDGET_MS
+  );
+}
+async function generateGeminiImprovement(request, deadlineAtMs) {
+  const startedAt = Date.now();
   try {
+    const timeoutMs = getProviderTimeout(deadlineAtMs, TEXT_IMPROVEMENT_PRIMARY_TIMEOUT_MS);
     const text = await callGeminiTextImprovement(
       TEXT_IMPROVEMENT_SYSTEM_PROMPT,
       requestToUserContent(request),
       {
-        timeoutMs: TEXT_IMPROVEMENT_PRIMARY_TIMEOUT_MS,
+        timeoutMs,
         maxOutputTokens: TEXT_IMPROVEMENT_MAX_TOKENS,
       },
     );
+    console.info('[improve-text] provider completed', {
+      provider: 'Gemini',
+      model: TEXT_IMPROVEMENT_GEMINI_MODEL,
+      durationMs: Date.now() - startedAt,
+    });
     return {
       text,
       timedOut: false,
@@ -2496,22 +2519,36 @@ async function generateGeminiImprovement(request) {
       model: TEXT_IMPROVEMENT_GEMINI_MODEL,
     };
   } catch (error) {
+    const timedOut = isTextImprovementProviderTimeout(error);
+    console.warn('[improve-text] provider failed', {
+      provider: 'Gemini',
+      model: TEXT_IMPROVEMENT_GEMINI_MODEL,
+      timedOut,
+      durationMs: Date.now() - startedAt,
+    });
     return {
       text: null,
-      timedOut: isTextImprovementProviderTimeout(error),
+      timedOut,
       provider: 'Gemini',
       model: TEXT_IMPROVEMENT_GEMINI_MODEL,
     };
   }
 }
-async function generateOpenRouterImprovement(request, allowFallback) {
+async function generateOpenRouterImprovement(request, deadlineAtMs) {
+  const startedAt = Date.now();
   try {
+    const timeoutMs = getProviderTimeout(deadlineAtMs, TEXT_IMPROVEMENT_FALLBACK_TIMEOUT_MS);
     const text = await callOpenRouter(
       request,
       TEXT_IMPROVEMENT_SYSTEM_PROMPT,
       TEXT_IMPROVEMENT_AI_MODEL,
-      { timeoutMs: TEXT_IMPROVEMENT_PRIMARY_TIMEOUT_MS, maxTokens: TEXT_IMPROVEMENT_MAX_TOKENS },
+      { timeoutMs, maxTokens: TEXT_IMPROVEMENT_MAX_TOKENS },
     );
+    console.info('[improve-text] provider completed', {
+      provider: 'OpenRouter',
+      model: TEXT_IMPROVEMENT_AI_MODEL,
+      durationMs: Date.now() - startedAt,
+    });
     return {
       text,
       timedOut: false,
@@ -2519,52 +2556,34 @@ async function generateOpenRouterImprovement(request, allowFallback) {
       model: TEXT_IMPROVEMENT_AI_MODEL,
     };
   } catch (error) {
-    if (isTextImprovementProviderTimeout(error) || !allowFallback) {
-      return {
-        text: null,
-        timedOut: isTextImprovementProviderTimeout(error),
-        provider: 'OpenRouter',
-        model: TEXT_IMPROVEMENT_AI_MODEL,
-      };
-    }
-    try {
-      const text = await callTextImprovementFallback(
-        request,
-        TEXT_IMPROVEMENT_SYSTEM_PROMPT,
-        [TEXT_IMPROVEMENT_AI_MODEL],
-        {
-          timeoutMs: TEXT_IMPROVEMENT_FALLBACK_TIMEOUT_MS,
-          maxTokens: TEXT_IMPROVEMENT_MAX_TOKENS,
-          maxModels: TEXT_IMPROVEMENT_FALLBACK_MAX_MODELS,
-        },
-      );
-      return {
-        text,
-        timedOut: false,
-        provider: 'OpenRouter',
-        model: null,
-      };
-    } catch (fallbackError) {
-      return {
-        text: null,
-        timedOut: isTextImprovementProviderTimeout(fallbackError),
-        provider: 'OpenRouter',
-        model: null,
-      };
-    }
+    const timedOut = isTextImprovementProviderTimeout(error);
+    console.warn('[improve-text] provider failed', {
+      provider: 'OpenRouter',
+      model: TEXT_IMPROVEMENT_AI_MODEL,
+      timedOut,
+      durationMs: Date.now() - startedAt,
+    });
+    return {
+      text: null,
+      timedOut,
+      provider: 'OpenRouter',
+      model: TEXT_IMPROVEMENT_AI_MODEL,
+    };
   }
 }
-async function generateImprovement(request, allowFallback) {
+async function generateImprovement(request, allowFallback, deadlineAtMs) {
   const primary =
     TEXT_IMPROVEMENT_PRIMARY_PROVIDER === 'Gemini'
-      ? await generateGeminiImprovement(request)
-      : await generateOpenRouterImprovement(request, allowFallback);
+      ? await generateGeminiImprovement(request, deadlineAtMs)
+      : await generateOpenRouterImprovement(request, deadlineAtMs);
   if (primary.text || !allowFallback) return primary;
+  if (primary.timedOut) return primary;
+  if (!hasFallbackBudget(deadlineAtMs)) return { ...primary, timedOut: true };
   const secondary =
     TEXT_IMPROVEMENT_PRIMARY_PROVIDER === 'Gemini'
-      ? await generateOpenRouterImprovement(request, true)
-      : await generateGeminiImprovement(request);
-  return secondary.text ? secondary : primary;
+      ? await generateOpenRouterImprovement(request, deadlineAtMs)
+      : await generateGeminiImprovement(request, deadlineAtMs);
+  return secondary.text || secondary.timedOut ? secondary : primary;
 }
 function isUsableImprovement(originalText, improvedText) {
   return Boolean(
@@ -2573,10 +2592,13 @@ function isUsableImprovement(originalText, improvedText) {
     !isTextImprovementTooSimilar(originalText, improvedText),
   );
 }
-async function generateFallbackImprovement(request) {
+async function generateFallbackImprovement(request, deadlineAtMs) {
+  if (!hasFallbackBudget(deadlineAtMs)) {
+    return { text: null, timedOut: true, provider: null, model: null };
+  }
   return TEXT_IMPROVEMENT_PRIMARY_PROVIDER === 'Gemini'
-    ? generateOpenRouterImprovement(request, true)
-    : generateGeminiImprovement(request);
+    ? generateOpenRouterImprovement(request, deadlineAtMs)
+    : generateGeminiImprovement(request, deadlineAtMs);
 }
 router.post(
   '/improve-text',
@@ -2584,6 +2606,8 @@ router.post(
   requireMembership(CONVIVENCIA_MEMBERSHIP),
   rateLimit,
   async (req, res) => {
+    const startedAt = Date.now();
+    const deadlineAtMs = buildTextImprovementDeadline(TEXT_IMPROVEMENT_REQUEST_TIMEOUT_MS);
     try {
       const { text, context } = req.body;
       if (!text || typeof text !== 'string' || text.trim().length === 0) {
@@ -2598,6 +2622,11 @@ router.post(
         res.status(400).json({ error: 'Contexto de mejora no v\xE1lido.' });
         return;
       }
+      console.info('[improve-text] request started', {
+        context: context || 'default',
+        primaryProvider: TEXT_IMPROVEMENT_PRIMARY_PROVIDER,
+        textLength: text.length,
+      });
       const userContent = redactSensitiveForAI(text);
       const cacheKey = getCacheKey('improve-text', {
         text: userContent,
@@ -2622,9 +2651,13 @@ router.post(
           content: buildTextImprovementRequest(userContent, contextInstruction),
         },
       ];
-      let result = await generateImprovement(request, true);
+      let result = await generateImprovement(request, true, deadlineAtMs);
       let improved = result.text;
       if (!improved) {
+        console.info('[improve-text] returning unchanged', {
+          timedOut: result.timedOut,
+          durationMs: Date.now() - startedAt,
+        });
         res.json(
           buildTextImprovementUnchangedResponse(
             text,
@@ -2643,10 +2676,10 @@ router.post(
             content: buildTextImprovementRequest(userContent, contextInstruction, true),
           },
         ];
-        result = await generateImprovement(retryRequest, false);
+        result = await generateImprovement(retryRequest, false, deadlineAtMs);
         improved = result.text;
         if (!isUsableImprovement(userContent, improved)) {
-          const fallbackResult = await generateFallbackImprovement(retryRequest);
+          const fallbackResult = await generateFallbackImprovement(retryRequest, deadlineAtMs);
           if (fallbackResult.text) {
             result = fallbackResult;
             improved = fallbackResult.text;
@@ -2668,6 +2701,7 @@ router.post(
             TEXT_IMPROVEMENT_PRIMARY_PROVIDER === 'Gemini'
               ? TEXT_IMPROVEMENT_GEMINI_MODEL
               : TEXT_IMPROVEMENT_AI_MODEL,
+          durationMs: Date.now() - startedAt,
         });
         res.json(
           buildTextImprovementUnchangedResponse(
@@ -2678,6 +2712,11 @@ router.post(
         return;
       }
       setCache(cacheKey, improved);
+      console.info('[improve-text] request completed', {
+        provider: result.provider || TEXT_IMPROVEMENT_PRIMARY_PROVIDER,
+        model: result.model,
+        durationMs: Date.now() - startedAt,
+      });
       res.json({
         success: true,
         improved,

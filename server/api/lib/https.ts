@@ -11,27 +11,38 @@ export function httpsPost(
 ): Promise<{ status: number; body: unknown }> {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify(body);
+    let settled = false;
     const opts = {
       hostname,
       path: pathname,
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...headers },
     };
+    const finish = (callback: () => void) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(deadlineTimer);
+      callback();
+    };
     const req = https.request(opts, (res) => {
       let chunks = '';
       res.on('data', (chunk: string) => (chunks += chunk));
       res.on('end', () => {
         try {
-          resolve({ status: res.statusCode ?? 500, body: JSON.parse(chunks) });
+          const parsed = JSON.parse(chunks);
+          finish(() => resolve({ status: res.statusCode ?? 500, body: parsed }));
         } catch {
-          reject(new Error(`HTTP ${res.statusCode}: ${chunks}`));
+          finish(() => reject(new Error(`HTTP ${res.statusCode}: ${chunks}`)));
         }
       });
     });
-    req.on('error', reject);
+    req.on('error', (error) => finish(() => reject(error)));
     req.setTimeout(timeoutMs, () =>
       req.destroy(new Error(`La solicitud a ${hostname} excedió el tiempo máximo.`)),
     );
+    const deadlineTimer = setTimeout(() => {
+      req.destroy(new Error(`La solicitud a ${hostname} excedió el tiempo máximo.`));
+    }, timeoutMs);
     req.write(data);
     req.end();
   });

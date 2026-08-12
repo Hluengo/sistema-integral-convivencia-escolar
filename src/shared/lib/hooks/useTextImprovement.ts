@@ -10,6 +10,10 @@ interface TextImprovementResponse {
   warning?: unknown;
 }
 
+const TEXT_IMPROVEMENT_CLIENT_TIMEOUT_MS = 24_000;
+const TEXT_IMPROVEMENT_TIMEOUT_MESSAGE =
+  'La IA tardó demasiado en responder. El contenido original se mantuvo sin cambios.';
+
 export function useTextImprovement() {
   const [isImproving, setIsImproving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,11 +33,17 @@ export function useTextImprovement() {
         if (session?.access_token) {
           headers.Authorization = `Bearer ${session.access_token}`;
         }
+        const controller = new AbortController();
+        const timeoutId = window.setTimeout(
+          () => controller.abort(),
+          TEXT_IMPROVEMENT_CLIENT_TIMEOUT_MS,
+        );
         const response = await fetch('/api/improve-text', {
           method: 'POST',
           headers,
+          signal: controller.signal,
           body: JSON.stringify({ text, context }),
-        });
+        }).finally(() => window.clearTimeout(timeoutId));
         if (!response.ok) {
           if (response.status === 401) {
             throw new Error('Debe iniciar sesión para usar esta función.');
@@ -47,6 +57,10 @@ export function useTextImprovement() {
         }
         return typeof data.improved === 'string' ? data.improved : null;
       } catch (e) {
+        if (e instanceof DOMException && e.name === 'AbortError') {
+          setError(TEXT_IMPROVEMENT_TIMEOUT_MESSAGE);
+          return null;
+        }
         const msg = e instanceof Error ? e.message : 'Error al mejorar el texto';
         setError(msg);
         return null;

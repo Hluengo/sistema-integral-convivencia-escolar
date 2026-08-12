@@ -59,13 +59,22 @@ export default function ImproveTextarea({
             onClick={handleImprove}
             disabled={disabled || isImproving || !value.trim()}
             title="Mejorar redacción con IA"
+            aria-busy={isImproving}
             className="shrink-0 rounded-lg border border-brand-200 bg-brand-50 px-2 py-1 text-10px font-semibold text-brand-700 hover:border-brand-300 hover:bg-brand-100"
           >
-            {isImproving ? (
-              <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
-            ) : (
-              <Sparkles className="h-3 w-3" aria-hidden="true" />
-            )}
+            <span
+              className={`flex h-5 w-5 items-center justify-center rounded-full transition-colors ${
+                isImproving
+                  ? 'animate-pulse bg-brand-100 text-brand-700 ring-2 ring-brand-300/50'
+                  : 'bg-white/70 text-brand-700'
+              }`}
+            >
+              {isImproving ? (
+                <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />
+              ) : (
+                <Sparkles className="h-3 w-3" aria-hidden="true" />
+              )}
+            </span>
             Mejorar
           </Button>
         </div>

@@ -50,6 +50,9 @@ export const TEXT_IMPROVEMENT_UNCHANGED_WARNING =
 export const TEXT_IMPROVEMENT_TIMEOUT_WARNING =
   'La IA tardó demasiado en responder. El contenido original se mantuvo sin cambios.';
 
+export const TEXT_IMPROVEMENT_DEADLINE_ERROR_MESSAGE =
+  'La mejora de texto excedió el tiempo máximo.';
+
 export interface TextImprovementUnchangedResponse {
   success: true;
   improved: string;
@@ -77,6 +80,34 @@ export function isTextImprovementProviderTimeout(error: unknown): boolean {
     message.includes('timeout') ||
     message.includes('timed out')
   );
+}
+
+export function buildTextImprovementDeadline(durationMs: number, now = Date.now()): number {
+  return now + durationMs;
+}
+
+export function getTextImprovementRemainingMs(
+  deadlineAtMs: number,
+  safetyMarginMs: number,
+  now = Date.now(),
+): number {
+  return Math.max(0, deadlineAtMs - now - safetyMarginMs);
+}
+
+export function getTextImprovementProviderTimeoutMs(
+  deadlineAtMs: number,
+  desiredTimeoutMs: number,
+  options: { safetyMarginMs: number; minRequiredMs: number; now?: number },
+): number {
+  const remainingMs = getTextImprovementRemainingMs(
+    deadlineAtMs,
+    options.safetyMarginMs,
+    options.now,
+  );
+  if (remainingMs < options.minRequiredMs) {
+    throw new Error(TEXT_IMPROVEMENT_DEADLINE_ERROR_MESSAGE);
+  }
+  return Math.min(desiredTimeoutMs, remainingMs);
 }
 
 export function buildTextImprovementRequest(
