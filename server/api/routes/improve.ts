@@ -9,6 +9,7 @@ import {
   callTextImprovementFallback,
   TEXT_IMPROVEMENT_AI_MODEL,
 } from '../services/openrouter.js';
+import { callGeminiTextImprovement, TEXT_IMPROVEMENT_GEMINI_MODEL } from '../services/gemini.js';
 import { rateLimit } from '../../middleware/rateLimit.js';
 import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../../middleware/requireMembership.js';
 import {
@@ -41,11 +42,54 @@ const TEXT_IMPROVEMENT_PRIMARY_TIMEOUT_MS = 7_000;
 const TEXT_IMPROVEMENT_FALLBACK_TIMEOUT_MS = 6_000;
 const TEXT_IMPROVEMENT_FALLBACK_MAX_MODELS = 2;
 const TEXT_IMPROVEMENT_MAX_TOKENS = 1_200;
+const TEXT_IMPROVEMENT_PRIMARY_PROVIDER =
+  process.env.TEXT_IMPROVEMENT_PROVIDER?.toLowerCase() === 'openrouter' ? 'OpenRouter' : 'Gemini';
 
-async function generateImprovement(
+type TextImprovementProvider = 'Gemini' | 'OpenRouter';
+
+interface ImprovementGenerationResult {
+  text: string | null;
+  timedOut: boolean;
+  provider: TextImprovementProvider | null;
+  model: string | null;
+}
+
+function requestToUserContent(request: Array<{ role: string; content: string }>): string {
+  return request.map((message) => message.content).join('\n\n');
+}
+
+async function generateGeminiImprovement(
+  request: Array<{ role: string; content: string }>,
+): Promise<ImprovementGenerationResult> {
+  try {
+    const text = await callGeminiTextImprovement(
+      TEXT_IMPROVEMENT_SYSTEM_PROMPT,
+      requestToUserContent(request),
+      {
+        timeoutMs: TEXT_IMPROVEMENT_PRIMARY_TIMEOUT_MS,
+        maxOutputTokens: TEXT_IMPROVEMENT_MAX_TOKENS,
+      },
+    );
+    return {
+      text,
+      timedOut: false,
+      provider: 'Gemini',
+      model: TEXT_IMPROVEMENT_GEMINI_MODEL,
+    };
+  } catch (error) {
+    return {
+      text: null,
+      timedOut: isTextImprovementProviderTimeout(error),
+      provider: 'Gemini',
+      model: TEXT_IMPROVEMENT_GEMINI_MODEL,
+    };
+  }
+}
+
+async function generateOpenRouterImprovement(
   request: Array<{ role: string; content: string }>,
   allowFallback: boolean,
-): Promise<{ text: string | null; timedOut: boolean }> {
+): Promise<ImprovementGenerationResult> {
   try {
     const text = await callOpenRouter(
       request,
@@ -53,10 +97,20 @@ async function generateImprovement(
       TEXT_IMPROVEMENT_AI_MODEL,
       { timeoutMs: TEXT_IMPROVEMENT_PRIMARY_TIMEOUT_MS, maxTokens: TEXT_IMPROVEMENT_MAX_TOKENS },
     );
-    return { text, timedOut: false };
+    return {
+      text,
+      timedOut: false,
+      provider: 'OpenRouter',
+      model: TEXT_IMPROVEMENT_AI_MODEL,
+    };
   } catch (error) {
     if (isTextImprovementProviderTimeout(error) || !allowFallback) {
-      return { text: null, timedOut: isTextImprovementProviderTimeout(error) };
+      return {
+        text: null,
+        timedOut: isTextImprovementProviderTimeout(error),
+        provider: 'OpenRouter',
+        model: TEXT_IMPROVEMENT_AI_MODEL,
+      };
     }
     try {
       const text = await callTextImprovementFallback(
@@ -69,14 +123,38 @@ async function generateImprovement(
           maxModels: TEXT_IMPROVEMENT_FALLBACK_MAX_MODELS,
         },
       );
-      return { text, timedOut: false };
+      return {
+        text,
+        timedOut: false,
+        provider: 'OpenRouter',
+        model: null,
+      };
     } catch (fallbackError) {
       return {
         text: null,
         timedOut: isTextImprovementProviderTimeout(fallbackError),
+        provider: 'OpenRouter',
+        model: null,
       };
     }
   }
+}
+
+async function generateImprovement(
+  request: Array<{ role: string; content: string }>,
+  allowFallback: boolean,
+): Promise<ImprovementGenerationResult> {
+  const primary =
+    TEXT_IMPROVEMENT_PRIMARY_PROVIDER === 'Gemini'
+      ? await generateGeminiImprovement(request)
+      : await generateOpenRouterImprovement(request, allowFallback);
+  if (primary.text || !allowFallback) return primary;
+
+  const secondary =
+    TEXT_IMPROVEMENT_PRIMARY_PROVIDER === 'Gemini'
+      ? await generateOpenRouterImprovement(request, true)
+      : await generateGeminiImprovement(request);
+  return secondary.text ? secondary : primary;
 }
 
 function isUsableImprovement(originalText: string, improvedText: string | null): boolean {
@@ -89,22 +167,10 @@ function isUsableImprovement(originalText: string, improvedText: string | null):
 
 async function generateFallbackImprovement(
   request: Array<{ role: string; content: string }>,
-): Promise<{ text: string | null; timedOut: boolean }> {
-  try {
-    const text = await callTextImprovementFallback(
-      request,
-      TEXT_IMPROVEMENT_SYSTEM_PROMPT,
-      [TEXT_IMPROVEMENT_AI_MODEL],
-      {
-        timeoutMs: TEXT_IMPROVEMENT_FALLBACK_TIMEOUT_MS,
-        maxTokens: TEXT_IMPROVEMENT_MAX_TOKENS,
-        maxModels: TEXT_IMPROVEMENT_FALLBACK_MAX_MODELS,
-      },
-    );
-    return { text, timedOut: false };
-  } catch (error) {
-    return { text: null, timedOut: isTextImprovementProviderTimeout(error) };
-  }
+): Promise<ImprovementGenerationResult> {
+  return TEXT_IMPROVEMENT_PRIMARY_PROVIDER === 'Gemini'
+    ? generateOpenRouterImprovement(request, true)
+    : generateGeminiImprovement(request);
 }
 
 router.post(
@@ -132,7 +198,11 @@ router.post(
       const cacheKey = getCacheKey('improve-text', {
         text: userContent,
         context,
-        model: TEXT_IMPROVEMENT_AI_MODEL,
+        provider: TEXT_IMPROVEMENT_PRIMARY_PROVIDER,
+        model:
+          TEXT_IMPROVEMENT_PRIMARY_PROVIDER === 'Gemini'
+            ? TEXT_IMPROVEMENT_GEMINI_MODEL
+            : TEXT_IMPROVEMENT_AI_MODEL,
         promptVersion: TEXT_IMPROVEMENT_PROMPT_VERSION,
       });
       const cached = getFromCache(cacheKey);
@@ -191,7 +261,11 @@ router.post(
         console.warn('[improve-text] no usable improvement returned', {
           context: context || 'default',
           timedOut: result.timedOut,
-          primaryModel: TEXT_IMPROVEMENT_AI_MODEL,
+          primaryProvider: TEXT_IMPROVEMENT_PRIMARY_PROVIDER,
+          primaryModel:
+            TEXT_IMPROVEMENT_PRIMARY_PROVIDER === 'Gemini'
+              ? TEXT_IMPROVEMENT_GEMINI_MODEL
+              : TEXT_IMPROVEMENT_AI_MODEL,
         });
         res.json(
           buildTextImprovementUnchangedResponse(
@@ -205,8 +279,8 @@ router.post(
       res.json({
         success: true,
         improved,
-        provider: 'OpenRouter',
-        model: TEXT_IMPROVEMENT_AI_MODEL,
+        provider: result.provider || TEXT_IMPROVEMENT_PRIMARY_PROVIDER,
+        model: result.model,
       });
     } catch (error) {
       console.error('Error al mejorar texto:', error);

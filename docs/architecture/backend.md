@@ -37,9 +37,9 @@ Inyecta `req.user` con payload decodificado y `req.tenantId` del contexto.
 
 ## AI Integration
 
-- **OpenRouter** (`OPENROUTER_API_KEY`): mejora de textos breves y asesoría legal breve.
-- **Modelo mejora de textos**: `google/gemma-4-31b-it:free` por defecto, configurable con `TEXT_IMPROVEMENT_AI_MODEL` o `TEXT_AI_MODEL`.
-- **Gemini pospago** (`GEMINI_API_KEY`): informes, auditorías de debido proceso y borradores/documentos oficiales complejos.
+- **Gemini pospago** (`GEMINI_API_KEY`): mejora de textos breves, informes, auditorías de debido proceso y borradores/documentos oficiales complejos.
+- **Modelo mejora de textos**: configurable con `TEXT_IMPROVEMENT_GEMINI_MODEL`; si no existe, reutiliza `LEGAL_DRAFT_MODEL` y luego `gemini-3.6-flash`. Puede forzarse OpenRouter con `TEXT_IMPROVEMENT_PROVIDER=openrouter`.
+- **OpenRouter** (`OPENROUTER_API_KEY`): respaldo para mejora de textos breves y asesoría legal breve.
 - **Modelo documentos e informes**: Gemini `gemini-3.6-flash` por defecto, configurable con `LEGAL_DRAFT_MODEL`. No hay respaldo OpenRouter para estos flujos; si Gemini falla, el endpoint responde un error explícito de Gemini.
 - **Generación Gemini**: `maxOutputTokens` explícito; no se envían sampling params deprecated (`temperature`, `top_p`, `top_k`) para mantener compatibilidad con Gemini 3.6+.
 - **Max tokens**: 2000

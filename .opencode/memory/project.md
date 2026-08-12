@@ -16,23 +16,23 @@ Sistema SaaS multi-tenant para gestión integral de convivencia escolar en estab
 
 ### Stack Tecnológico
 
-| Capa           | Tecnología                                          | Versión           |
-| -------------- | --------------------------------------------------- | ----------------- |
-| Frontend       | React + TypeScript                                  | 19.0.1 / 5.8.2    |
-| Build          | Vite                                                | 6.4.3             |
-| CSS            | Tailwind CSS v4                                     | 4.1.14            |
-| State          | Zustand                                             | 5.0.14            |
-| Queries        | TanStack React Query                                | 5.101.2           |
-| Forms          | react-hook-form + Zod                               | 7.84.0 / 4.4.3    |
-| Backend (dev)  | Express + tsx                                       | 4.21.2 / 4.21.0   |
-| Backend (prod) | Vercel Serverless                                   | esbuild bundle    |
-| Database       | Supabase PostgreSQL                                 | 17.6.1            |
-| Auth           | Supabase Auth (email/password)                      | —                 |
-| AI             | OpenRouter textos breves + Gemini 3.6 informes/docs | —                 |
-| Documentos     | react-to-print (HTML imprimible) + pdfjs-dist (PDF) | 3.3.0 / 6.1.200   |
-| Monitoring     | Sentry Browser + PostHog                            | 10.66.0 / 1.404.1 |
-| Tests          | node:test + node:assert/strict + Playwright         | —                 |
-| Lint/Format    | TypeScript (tsc), ESLint 9, Prettier 3, Biome 2.5   | —                 |
+| Capa           | Tecnología                                            | Versión           |
+| -------------- | ----------------------------------------------------- | ----------------- |
+| Frontend       | React + TypeScript                                    | 19.0.1 / 5.8.2    |
+| Build          | Vite                                                  | 6.4.3             |
+| CSS            | Tailwind CSS v4                                       | 4.1.14            |
+| State          | Zustand                                               | 5.0.14            |
+| Queries        | TanStack React Query                                  | 5.101.2           |
+| Forms          | react-hook-form + Zod                                 | 7.84.0 / 4.4.3    |
+| Backend (dev)  | Express + tsx                                         | 4.21.2 / 4.21.0   |
+| Backend (prod) | Vercel Serverless                                     | esbuild bundle    |
+| Database       | Supabase PostgreSQL                                   | 17.6.1            |
+| Auth           | Supabase Auth (email/password)                        | —                 |
+| AI             | Gemini 3.6 textos/informes/docs + OpenRouter fallback | —                 |
+| Documentos     | react-to-print (HTML imprimible) + pdfjs-dist (PDF)   | 3.3.0 / 6.1.200   |
+| Monitoring     | Sentry Browser + PostHog                              | 10.66.0 / 1.404.1 |
+| Tests          | node:test + node:assert/strict + Playwright           | —                 |
+| Lint/Format    | TypeScript (tsc), ESLint 9, Prettier 3, Biome 2.5     | —                 |
 
 ---
 
@@ -384,15 +384,16 @@ Trigger de JWT sync: sync_tenant_to_jwt() en profiles
 
 **Regla crítica:** `server/api/middleware/auth.ts` re-exporta el middleware canónico de `server/middleware/auth.ts` para evitar drift. El constructor `createRequireAuth({ profileFetcher })` permite inyectar un fetcher de perfiles en tests.
 
-### 5.3 AI Integration (OpenRouter + Gemini)
+### 5.3 AI Integration (Gemini + OpenRouter)
 
 ```
-OpenRouter: mejora de textos breves y asesoría legal breve
-API Key: OPENROUTER_API_KEY (env)
-Gemini pospago: auditorías de debido proceso, informes y borradores/documentos oficiales
+Gemini pospago: mejora de textos breves, auditorías de debido proceso, informes y borradores/documentos oficiales
 API Key: GEMINI_API_KEY (env)
+Modelo mejora de textos: TEXT_IMPROVEMENT_GEMINI_MODEL opcional, si no existe reutiliza LEGAL_DRAFT_MODEL y luego gemini-3.6-flash
 Modelo documentos/informes: LEGAL_DRAFT_MODEL opcional, por defecto gemini-3.6-flash
 Generación Gemini: sin sampling params deprecated (temperature/top_p/top_k)
+OpenRouter: respaldo de mejora de textos breves y asesoría legal breve
+API Key: OPENROUTER_API_KEY (env)
 Max tokens: 2000
 
 Sanitización de input:

@@ -2042,6 +2042,86 @@ async function callTextImprovementFallback(
     : new Error('No fue posible usar un modelo de respaldo.');
 }
 
+// server/api/services/gemini.ts
+var LEGAL_DRAFT_GEMINI_MODEL = process.env.LEGAL_DRAFT_MODEL || 'gemini-3.6-flash';
+var TEXT_IMPROVEMENT_GEMINI_MODEL =
+  process.env.TEXT_IMPROVEMENT_GEMINI_MODEL || LEGAL_DRAFT_GEMINI_MODEL;
+function getApiKey2() {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) {
+    throw new Error('GEMINI_API_KEY no configurada');
+  }
+  return key;
+}
+function collectText(value) {
+  if (Array.isArray(value)) return value.flatMap(collectText);
+  if (!value || typeof value !== 'object') return [];
+  const record = value;
+  if (typeof record.text === 'string') return [record.text];
+  return Object.values(record).flatMap(collectText);
+}
+async function callGeminiComplexGeneration(systemInstruction, userContent, options = {}) {
+  const maxOutputTokens = options.maxOutputTokens ?? 6e3;
+  const timeoutMs = options.timeoutMs ?? 25e3;
+  return callGeminiGenerateContent(
+    LEGAL_DRAFT_GEMINI_MODEL,
+    systemInstruction,
+    userContent,
+    maxOutputTokens,
+    timeoutMs,
+  );
+}
+async function callGeminiTextImprovement(systemInstruction, userContent, options = {}) {
+  const maxOutputTokens = options.maxOutputTokens ?? 1200;
+  const timeoutMs = options.timeoutMs ?? 7e3;
+  return callGeminiGenerateContent(
+    TEXT_IMPROVEMENT_GEMINI_MODEL,
+    systemInstruction,
+    userContent,
+    maxOutputTokens,
+    timeoutMs,
+  );
+}
+async function callGeminiGenerateContent(
+  model,
+  systemInstruction,
+  userContent,
+  maxOutputTokens,
+  timeoutMs,
+) {
+  const response = await httpsPost(
+    'generativelanguage.googleapis.com',
+    `/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+    {
+      systemInstruction: {
+        parts: [{ text: systemInstruction }],
+      },
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: userContent }],
+        },
+      ],
+      generationConfig: {
+        maxOutputTokens,
+      },
+    },
+    { 'x-goog-api-key': getApiKey2() },
+    timeoutMs,
+  );
+  if (response.status < 200 || response.status >= 300) {
+    throw new Error(`Gemini error: ${response.status} ${JSON.stringify(response.body)}`);
+  }
+  const body = response.body;
+  const candidates = Array.isArray(body.candidates) ? body.candidates : [];
+  const text = collectText(candidates).join('\n').trim();
+  if (!text) throw new Error('Gemini no devolvi\xF3 contenido de texto.');
+  return text;
+}
+async function callGeminiLegalDraft(systemInstruction, dossier, options = {}) {
+  return callGeminiComplexGeneration(systemInstruction, dossier, options);
+}
+
 // server/api/services/rateLimit.ts
 var RATE_LIMIT = 10;
 var RATE_WINDOW = 60 * 1e3;
@@ -2394,7 +2474,37 @@ var TEXT_IMPROVEMENT_PRIMARY_TIMEOUT_MS = 7e3;
 var TEXT_IMPROVEMENT_FALLBACK_TIMEOUT_MS = 6e3;
 var TEXT_IMPROVEMENT_FALLBACK_MAX_MODELS = 2;
 var TEXT_IMPROVEMENT_MAX_TOKENS = 1200;
-async function generateImprovement(request, allowFallback) {
+var TEXT_IMPROVEMENT_PRIMARY_PROVIDER =
+  process.env.TEXT_IMPROVEMENT_PROVIDER?.toLowerCase() === 'openrouter' ? 'OpenRouter' : 'Gemini';
+function requestToUserContent(request) {
+  return request.map((message) => message.content).join('\n\n');
+}
+async function generateGeminiImprovement(request) {
+  try {
+    const text = await callGeminiTextImprovement(
+      TEXT_IMPROVEMENT_SYSTEM_PROMPT,
+      requestToUserContent(request),
+      {
+        timeoutMs: TEXT_IMPROVEMENT_PRIMARY_TIMEOUT_MS,
+        maxOutputTokens: TEXT_IMPROVEMENT_MAX_TOKENS,
+      },
+    );
+    return {
+      text,
+      timedOut: false,
+      provider: 'Gemini',
+      model: TEXT_IMPROVEMENT_GEMINI_MODEL,
+    };
+  } catch (error) {
+    return {
+      text: null,
+      timedOut: isTextImprovementProviderTimeout(error),
+      provider: 'Gemini',
+      model: TEXT_IMPROVEMENT_GEMINI_MODEL,
+    };
+  }
+}
+async function generateOpenRouterImprovement(request, allowFallback) {
   try {
     const text = await callOpenRouter(
       request,
@@ -2402,10 +2512,20 @@ async function generateImprovement(request, allowFallback) {
       TEXT_IMPROVEMENT_AI_MODEL,
       { timeoutMs: TEXT_IMPROVEMENT_PRIMARY_TIMEOUT_MS, maxTokens: TEXT_IMPROVEMENT_MAX_TOKENS },
     );
-    return { text, timedOut: false };
+    return {
+      text,
+      timedOut: false,
+      provider: 'OpenRouter',
+      model: TEXT_IMPROVEMENT_AI_MODEL,
+    };
   } catch (error) {
     if (isTextImprovementProviderTimeout(error) || !allowFallback) {
-      return { text: null, timedOut: isTextImprovementProviderTimeout(error) };
+      return {
+        text: null,
+        timedOut: isTextImprovementProviderTimeout(error),
+        provider: 'OpenRouter',
+        model: TEXT_IMPROVEMENT_AI_MODEL,
+      };
     }
     try {
       const text = await callTextImprovementFallback(
@@ -2418,14 +2538,33 @@ async function generateImprovement(request, allowFallback) {
           maxModels: TEXT_IMPROVEMENT_FALLBACK_MAX_MODELS,
         },
       );
-      return { text, timedOut: false };
+      return {
+        text,
+        timedOut: false,
+        provider: 'OpenRouter',
+        model: null,
+      };
     } catch (fallbackError) {
       return {
         text: null,
         timedOut: isTextImprovementProviderTimeout(fallbackError),
+        provider: 'OpenRouter',
+        model: null,
       };
     }
   }
+}
+async function generateImprovement(request, allowFallback) {
+  const primary =
+    TEXT_IMPROVEMENT_PRIMARY_PROVIDER === 'Gemini'
+      ? await generateGeminiImprovement(request)
+      : await generateOpenRouterImprovement(request, allowFallback);
+  if (primary.text || !allowFallback) return primary;
+  const secondary =
+    TEXT_IMPROVEMENT_PRIMARY_PROVIDER === 'Gemini'
+      ? await generateOpenRouterImprovement(request, true)
+      : await generateGeminiImprovement(request);
+  return secondary.text ? secondary : primary;
 }
 function isUsableImprovement(originalText, improvedText) {
   return Boolean(
@@ -2435,21 +2574,9 @@ function isUsableImprovement(originalText, improvedText) {
   );
 }
 async function generateFallbackImprovement(request) {
-  try {
-    const text = await callTextImprovementFallback(
-      request,
-      TEXT_IMPROVEMENT_SYSTEM_PROMPT,
-      [TEXT_IMPROVEMENT_AI_MODEL],
-      {
-        timeoutMs: TEXT_IMPROVEMENT_FALLBACK_TIMEOUT_MS,
-        maxTokens: TEXT_IMPROVEMENT_MAX_TOKENS,
-        maxModels: TEXT_IMPROVEMENT_FALLBACK_MAX_MODELS,
-      },
-    );
-    return { text, timedOut: false };
-  } catch (error) {
-    return { text: null, timedOut: isTextImprovementProviderTimeout(error) };
-  }
+  return TEXT_IMPROVEMENT_PRIMARY_PROVIDER === 'Gemini'
+    ? generateOpenRouterImprovement(request, true)
+    : generateGeminiImprovement(request);
 }
 router.post(
   '/improve-text',
@@ -2475,7 +2602,11 @@ router.post(
       const cacheKey = getCacheKey('improve-text', {
         text: userContent,
         context,
-        model: TEXT_IMPROVEMENT_AI_MODEL,
+        provider: TEXT_IMPROVEMENT_PRIMARY_PROVIDER,
+        model:
+          TEXT_IMPROVEMENT_PRIMARY_PROVIDER === 'Gemini'
+            ? TEXT_IMPROVEMENT_GEMINI_MODEL
+            : TEXT_IMPROVEMENT_AI_MODEL,
         promptVersion: TEXT_IMPROVEMENT_PROMPT_VERSION,
       });
       const cached = getFromCache(cacheKey);
@@ -2532,7 +2663,11 @@ router.post(
         console.warn('[improve-text] no usable improvement returned', {
           context: context || 'default',
           timedOut: result.timedOut,
-          primaryModel: TEXT_IMPROVEMENT_AI_MODEL,
+          primaryProvider: TEXT_IMPROVEMENT_PRIMARY_PROVIDER,
+          primaryModel:
+            TEXT_IMPROVEMENT_PRIMARY_PROVIDER === 'Gemini'
+              ? TEXT_IMPROVEMENT_GEMINI_MODEL
+              : TEXT_IMPROVEMENT_AI_MODEL,
         });
         res.json(
           buildTextImprovementUnchangedResponse(
@@ -2546,8 +2681,8 @@ router.post(
       res.json({
         success: true,
         improved,
-        provider: 'OpenRouter',
-        model: TEXT_IMPROVEMENT_AI_MODEL,
+        provider: result.provider || TEXT_IMPROVEMENT_PRIMARY_PROVIDER,
+        model: result.model,
       });
     } catch (error) {
       console.error('Error al mejorar texto:', error);
@@ -2804,60 +2939,6 @@ var advisor_default = router2;
 
 // server/api/routes/audit.ts
 import { Router as Router3 } from 'express';
-
-// server/api/services/gemini.ts
-var GEMINI_MODEL = process.env.LEGAL_DRAFT_MODEL || 'gemini-3.6-flash';
-function getApiKey2() {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) {
-    throw new Error('GEMINI_API_KEY no configurada');
-  }
-  return key;
-}
-function collectText(value) {
-  if (Array.isArray(value)) return value.flatMap(collectText);
-  if (!value || typeof value !== 'object') return [];
-  const record = value;
-  if (typeof record.text === 'string') return [record.text];
-  return Object.values(record).flatMap(collectText);
-}
-async function callGeminiComplexGeneration(systemInstruction, userContent, options = {}) {
-  const maxOutputTokens = options.maxOutputTokens ?? 6e3;
-  const timeoutMs = options.timeoutMs ?? 25e3;
-  const response = await httpsPost(
-    'generativelanguage.googleapis.com',
-    `/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent`,
-    {
-      systemInstruction: {
-        parts: [{ text: systemInstruction }],
-      },
-      contents: [
-        {
-          role: 'user',
-          parts: [{ text: userContent }],
-        },
-      ],
-      generationConfig: {
-        maxOutputTokens,
-      },
-    },
-    { 'x-goog-api-key': getApiKey2() },
-    timeoutMs,
-  );
-  if (response.status < 200 || response.status >= 300) {
-    throw new Error(`Gemini error: ${response.status} ${JSON.stringify(response.body)}`);
-  }
-  const body = response.body;
-  const candidates = Array.isArray(body.candidates) ? body.candidates : [];
-  const text = collectText(candidates).join('\n').trim();
-  if (!text) throw new Error('Gemini no devolvi\xF3 contenido de texto.');
-  return text;
-}
-async function callGeminiLegalDraft(systemInstruction, dossier, options = {}) {
-  return callGeminiComplexGeneration(systemInstruction, dossier, options);
-}
-
-// server/api/routes/audit.ts
 var router3 = Router3();
 router3.post(
   '/audit-due-process',

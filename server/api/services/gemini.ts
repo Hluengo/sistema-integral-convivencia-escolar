@@ -4,9 +4,11 @@ import { httpsPost } from '../lib/https.js';
 
 // Usar un identificador estable evita cambios de latencia/comportamiento propios
 // del alias "latest" en un flujo legal sensible.
-const GEMINI_MODEL = process.env.LEGAL_DRAFT_MODEL || 'gemini-3.6-flash';
+const LEGAL_DRAFT_GEMINI_MODEL = process.env.LEGAL_DRAFT_MODEL || 'gemini-3.6-flash';
+export const TEXT_IMPROVEMENT_GEMINI_MODEL =
+  process.env.TEXT_IMPROVEMENT_GEMINI_MODEL || LEGAL_DRAFT_GEMINI_MODEL;
 
-interface GeminiLegalDraftOptions {
+interface GeminiGenerationOptions {
   maxOutputTokens?: number;
   timeoutMs?: number;
 }
@@ -31,13 +33,45 @@ function collectText(value: unknown): string[] {
 export async function callGeminiComplexGeneration(
   systemInstruction: string,
   userContent: string,
-  options: GeminiLegalDraftOptions = {},
+  options: GeminiGenerationOptions = {},
 ): Promise<string> {
   const maxOutputTokens = options.maxOutputTokens ?? 6000;
   const timeoutMs = options.timeoutMs ?? 25_000;
+  return callGeminiGenerateContent(
+    LEGAL_DRAFT_GEMINI_MODEL,
+    systemInstruction,
+    userContent,
+    maxOutputTokens,
+    timeoutMs,
+  );
+}
+
+export async function callGeminiTextImprovement(
+  systemInstruction: string,
+  userContent: string,
+  options: GeminiGenerationOptions = {},
+): Promise<string> {
+  const maxOutputTokens = options.maxOutputTokens ?? 1200;
+  const timeoutMs = options.timeoutMs ?? 7_000;
+  return callGeminiGenerateContent(
+    TEXT_IMPROVEMENT_GEMINI_MODEL,
+    systemInstruction,
+    userContent,
+    maxOutputTokens,
+    timeoutMs,
+  );
+}
+
+async function callGeminiGenerateContent(
+  model: string,
+  systemInstruction: string,
+  userContent: string,
+  maxOutputTokens: number,
+  timeoutMs: number,
+): Promise<string> {
   const response = await httpsPost(
     'generativelanguage.googleapis.com',
-    `/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent`,
+    `/v1beta/models/${encodeURIComponent(model)}:generateContent`,
     {
       systemInstruction: {
         parts: [{ text: systemInstruction }],
@@ -74,7 +108,7 @@ export async function callGeminiComplexGeneration(
 export async function callGeminiLegalDraft(
   systemInstruction: string,
   dossier: string,
-  options: GeminiLegalDraftOptions = {},
+  options: GeminiGenerationOptions = {},
 ): Promise<string> {
   return callGeminiComplexGeneration(systemInstruction, dossier, options);
 }

@@ -29,7 +29,8 @@ await mock.module('../lib/https.js', {
   },
 });
 
-const { callGeminiComplexGeneration, callGeminiLegalDraft } = await import('./gemini.js');
+const { callGeminiComplexGeneration, callGeminiLegalDraft, callGeminiTextImprovement } =
+  await import('./gemini.js');
 
 test('callGeminiComplexGeneration envía el cuerpo con la clave de API correcta', async () => {
   captured = [];
@@ -66,6 +67,35 @@ test('callGeminiComplexGeneration respeta maxOutputTokens y timeoutMs personaliz
   const payload = captured[0]?.body as { generationConfig: { maxOutputTokens: number } };
   assert.equal(payload.generationConfig.maxOutputTokens, 1234);
   assert.equal(captured[0]?.timeoutMs, 42_000);
+  delete process.env.GEMINI_API_KEY;
+});
+
+test('callGeminiTextImprovement usa Gemini con límites breves y sin muestreo deprecado', async () => {
+  captured = [];
+  process.env.GEMINI_API_KEY = 'test-key';
+  nextResponse = () => ({
+    status: 200,
+    body: {
+      candidates: [{ content: { parts: [{ text: 'Texto corregido.' }] } }],
+    },
+  });
+  const result = await callGeminiTextImprovement('Corrige estilo.', 'Texto fuente.');
+
+  assert.equal(result, 'Texto corregido.');
+  assert.match(captured[0]?.pathname ?? '', /models\/gemini-3\.6-flash:generateContent/);
+  assert.equal(captured[0]?.timeoutMs, 7_000);
+  const payload = captured[0]?.body as {
+    systemInstruction: { parts: Array<{ text: string }> };
+    contents: Array<{ role: string; parts: Array<{ text: string }> }>;
+    generationConfig: Record<string, unknown>;
+  };
+  assert.equal(payload.systemInstruction.parts[0]?.text, 'Corrige estilo.');
+  assert.equal(payload.contents[0]?.role, 'user');
+  assert.equal(payload.contents[0]?.parts[0]?.text, 'Texto fuente.');
+  assert.equal(payload.generationConfig.maxOutputTokens, 1200);
+  assert.equal('temperature' in payload.generationConfig, false);
+  assert.equal('topP' in payload.generationConfig, false);
+  assert.equal('topK' in payload.generationConfig, false);
   delete process.env.GEMINI_API_KEY;
 });
 
