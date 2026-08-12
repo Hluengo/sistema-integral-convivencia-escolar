@@ -379,7 +379,7 @@ describe('deleteCausa', () => {
       {
         resultForTable: (table) => {
           tables.push(table);
-          return { data: null, error: null };
+          return { data: table === 'causas' ? [{ id: 'DC-2026-001' }] : null, error: null };
         },
       },
       async () => {
@@ -423,6 +423,23 @@ describe('deleteCausa', () => {
         return deleteCausa('DC-2026-001');
       },
     );
+    assert.equal(result, false);
+  });
+
+  it('retorna false cuando la eliminación de la causa no afecta filas', async () => {
+    const result = await withCausasMocks(
+      {
+        resultForTable: (table) => ({
+          data: table === 'causas' ? [] : null,
+          error: null,
+        }),
+      },
+      async () => {
+        const { deleteCausa } = await import('./causas.service');
+        return deleteCausa('DC-2026-001');
+      },
+    );
+
     assert.equal(result, false);
   });
 });

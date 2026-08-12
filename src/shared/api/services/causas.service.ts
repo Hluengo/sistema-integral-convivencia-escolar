@@ -288,9 +288,17 @@ export async function deleteCausa(causaId: string): Promise<boolean> {
     return false;
   }
 
-  const { error } = await supabase.from('causas').delete().eq('id', causaId);
+  const { data: deletedCausas, error } = await supabase
+    .from('causas')
+    .delete()
+    .eq('id', causaId)
+    .select('id');
   if (error) {
     console.error('Error deleting causa:', error);
+    return false;
+  }
+  if (!deletedCausas || deletedCausas.length !== 1) {
+    console.error('Causa deletion affected no rows:', causaId);
     return false;
   }
   return true;
