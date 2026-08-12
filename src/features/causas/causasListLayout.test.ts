@@ -70,6 +70,7 @@ describe('Listado de causas activas', () => {
     const summary = read('../timeline/ResumenTab.tsx');
     const route = read('../timeline/RutaExpedienteTab.tsx');
     const panels = read('../timeline/TimelineTabPanels.tsx');
+    const processTab = read('../timeline/ProcesoTab.tsx');
     const advisor = read('MainContent/AdvisorView.tsx');
     const operationalSummary = read('causaOperationalSummary.ts');
     const investigationChecklist = read('../timeline/InvestigationChecklist.tsx');
@@ -101,6 +102,9 @@ describe('Listado de causas activas', () => {
     assert.match(panels, /onSelectPhase\(null\)/);
     assert.match(panels, /<ProcesoTab/);
     assert.match(panels, /id="phase-workspace"/);
+    assert.match(panels, /Fase de trabajo/);
+    assert.doesNotMatch(processTab, /Estado de la causa/);
+    assert.doesNotMatch(processTab, /MAPPED_STATES/);
     assert.match(investigationChecklist, /Mediación no requerida/);
     assert.match(investigationChecklist, /Derivar a mediación/);
     assert.match(investigationChecklist, /handleStartRegister\(derivationItem\)/);
