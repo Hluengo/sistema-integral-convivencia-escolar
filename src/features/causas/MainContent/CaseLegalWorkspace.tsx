@@ -11,7 +11,7 @@ export type CaseLegalTool = 'redaccion' | 'auditoria';
 
 interface CaseLegalWorkspaceProps {
   causa: Causa;
-  activeTool: CaseLegalTool | null;
+  activeTool: CaseLegalTool;
   privacyMode: boolean;
 }
 
@@ -21,8 +21,6 @@ export default function CaseLegalWorkspace({
   privacyMode,
 }: CaseLegalWorkspaceProps) {
   const draft = useAuditDraft({ causa });
-
-  if (!activeTool) return null;
 
   return (
     <section className="space-y-4" aria-label="Herramientas legales del expediente seleccionado">

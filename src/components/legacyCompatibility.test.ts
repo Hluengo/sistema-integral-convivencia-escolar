@@ -196,7 +196,9 @@ describe('components legacy compatibility layer', () => {
       adminView.includes("import TemplateEditor from '../document-templates/TemplateEditor';"),
     );
     assert.ok(
-      advisorView.includes("import TemplateEditor from '../../document-templates/TemplateEditor';"),
+      advisorView.includes(
+        "const TemplateEditor = lazy(() => import('../../document-templates/TemplateEditor'));",
+      ),
     );
   });
 

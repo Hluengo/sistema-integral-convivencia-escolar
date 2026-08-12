@@ -1,12 +1,15 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useMemo, useState } from 'react';
+import { Suspense, lazy, useMemo, useState } from 'react';
 import { FileSignature, FileText, Gavel, MessageSquare, ShieldCheck } from 'lucide-react';
 import type { Causa } from '../../../shared/lib/types';
 import AiAdvisor from '../../../components/AiAdvisor';
-import TemplateEditor from '../../document-templates/TemplateEditor';
-import CaseLegalWorkspace, { type CaseLegalTool } from './CaseLegalWorkspace';
+import type { CaseLegalTool } from './CaseLegalWorkspace';
 import PageHeader from '@/shared/ui/PageHeader';
+import ViewLoader from '@/shared/ui/ViewLoader';
+
+const TemplateEditor = lazy(() => import('../../document-templates/TemplateEditor'));
+const CaseLegalWorkspace = lazy(() => import('./CaseLegalWorkspace'));
 
 type LegalTab = 'consulta' | 'redaccion' | 'plantillas' | 'auditoria';
 
@@ -121,7 +124,9 @@ export default function AdvisorView({
           className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-xs"
           aria-label="Administración de plantillas"
         >
-          <TemplateEditor />
+          <Suspense fallback={<ViewLoader view="informes" compact />}>
+            <TemplateEditor />
+          </Suspense>
         </section>
       )}
 
@@ -146,13 +151,15 @@ export default function AdvisorView({
         </div>
       )}
 
-      {selectedCausa && !isCausaDetailLoading && (
-        <CaseLegalWorkspace
-          key={selectedCausa.id}
-          causa={selectedCausa}
-          activeTool={legalTool}
-          privacyMode={privacyMode}
-        />
+      {selectedCausa && !isCausaDetailLoading && legalTool && (
+        <Suspense fallback={<ViewLoader view="informes" compact />}>
+          <CaseLegalWorkspace
+            key={selectedCausa.id}
+            causa={selectedCausa}
+            activeTool={legalTool}
+            privacyMode={privacyMode}
+          />
+        </Suspense>
       )}
     </div>
   );
