@@ -81,7 +81,7 @@ export default function TimelineHeader({
                 <button
                   type="button"
                   onClick={onForceCloseClick}
-                  className="rounded-lg p-2 text-gravisima-100 transition-colors hover:bg-gravisima-500/20 hover:text-white sm:hidden"
+                  className="flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 text-gravisima-100 transition-colors hover:bg-gravisima-500/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-800 sm:hidden"
                   title="Cerrar causa con fundamento"
                   aria-label="Cerrar causa con fundamento"
                 >
@@ -90,7 +90,7 @@ export default function TimelineHeader({
                 <button
                   type="button"
                   onClick={onEditClick}
-                  className="rounded-lg p-2 text-neutral-200 transition-colors hover:bg-white/10 hover:text-white"
+                  className="flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 text-neutral-200 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-800"
                   title="Editar expediente"
                   aria-label="Editar expediente"
                 >
@@ -99,7 +99,7 @@ export default function TimelineHeader({
                 <button
                   type="button"
                   onClick={onDeleteClick}
-                  className="rounded-lg p-2 text-neutral-200 transition-colors hover:bg-gravisima-500/20 hover:text-gravisima-100"
+                  className="flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 text-neutral-200 transition-colors hover:bg-gravisima-500/20 hover:text-gravisima-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-200 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-800"
                   title="Eliminar expediente"
                   aria-label="Eliminar expediente"
                 >
@@ -111,7 +111,7 @@ export default function TimelineHeader({
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-lg p-2 text-neutral-200 transition-colors hover:bg-white/10 hover:text-white"
+                className="flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 text-neutral-200 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-800"
                 title="Cerrar"
                 aria-label="Cerrar"
               >

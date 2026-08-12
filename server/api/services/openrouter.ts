@@ -7,12 +7,7 @@ export const TEXT_IMPROVEMENT_AI_MODEL =
   process.env.TEXT_IMPROVEMENT_AI_MODEL ||
   process.env.TEXT_AI_MODEL ||
   'google/gemma-4-31b-it:free';
-const TEXT_FALLBACK_MODELS = [
-  'openrouter/free',
-  'deepseek/deepseek-v4-flash:free',
-  'meta-llama/llama-3.1-8b-instruct',
-] as const;
-
+// Modelo gratuito documentado como respaldo operativo: openrouter/free.
 interface OpenRouterOptions {
   maxTokens?: number;
   temperature?: number;
@@ -56,29 +51,4 @@ export async function callOpenRouter(
   const choices = (res.body as Record<string, unknown>)?.choices as
     Array<Record<string, unknown>> | undefined;
   return ((choices?.[0]?.message as Record<string, unknown>)?.content as string | undefined) || '';
-}
-
-/** Respaldo para transformaciones editoriales breves; no se usa para informes oficiales. */
-export async function callTextImprovementFallback(
-  messages: Array<{ role: string; content: string }>,
-  systemInstruction?: string,
-  excludedModels: readonly string[] = [],
-  options: OpenRouterOptions = {},
-): Promise<string> {
-  let lastError: unknown;
-  const models = TEXT_FALLBACK_MODELS.filter((model) => !excludedModels.includes(model)).slice(
-    0,
-    options.maxModels ?? TEXT_FALLBACK_MODELS.length,
-  );
-  for (const model of models) {
-    try {
-      const text = await callOpenRouter(messages, systemInstruction, model, options);
-      if (text.trim()) return text;
-    } catch (error) {
-      lastError = error;
-    }
-  }
-  throw lastError instanceof Error
-    ? lastError
-    : new Error('No fue posible usar un modelo de respaldo.');
 }

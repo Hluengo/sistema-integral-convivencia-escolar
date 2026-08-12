@@ -56,10 +56,9 @@ describe('countByStage', () => {
   });
 
   it('counts amonestacion correctly (5-9 annotations)', () => {
-    const students = [
-      { annotations_count: 5 },
-      { annotations_count: 7 },
-    ] as Array<{ annotations_count: number }>;
+    const students = [{ annotations_count: 5 }, { annotations_count: 7 }] as Array<{
+      annotations_count: number;
+    }>;
     const result = countByStage(students);
     assert.equal(result.amonestacion, 2);
     assert.equal(result.compromiso, 0);
@@ -79,10 +78,9 @@ describe('countByStage', () => {
   });
 
   it('counts derivacion correctly (15+ annotations)', () => {
-    const students = [
-      { annotations_count: 15 },
-      { annotations_count: 20 },
-    ] as Array<{ annotations_count: number }>;
+    const students = [{ annotations_count: 15 }, { annotations_count: 20 }] as Array<{
+      annotations_count: number;
+    }>;
     const result = countByStage(students);
     assert.equal(result.amonestacion, 0);
     assert.equal(result.compromiso, 0);

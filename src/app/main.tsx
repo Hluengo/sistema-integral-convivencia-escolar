@@ -30,4 +30,5 @@ createRoot(rootEl).render(
 
 // Telemetry is intentionally deferred so Sentry/PostHog do not compete with
 // the first render and initial Supabase/session work.
-window.setTimeout(() => initializeTelemetry(), 2000);
+// La telemetría no debe competir con el primer render ni con la carga del shell.
+window.setTimeout(() => initializeTelemetry(), 10_000);

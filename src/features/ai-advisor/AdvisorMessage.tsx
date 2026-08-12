@@ -26,14 +26,20 @@ export default function MessageContent({ text }: { text: string }) {
         }
         if (trimmed.startsWith('## ')) {
           return (
-            <h3 key={lineKey} className="mt-3 flex items-center gap-1.5 font-bold text-brand-700 text-xs">
+            <h3
+              key={lineKey}
+              className="mt-3 flex items-center gap-1.5 font-bold text-brand-700 text-xs"
+            >
               {trimmed.substring(3)}
             </h3>
           );
         }
         if (trimmed.startsWith('# ')) {
           return (
-            <h2 key={lineKey} className="mt-4 border-neutral-700 border-l-2 pl-1 font-bold text-neutral-950 text-sm">
+            <h2
+              key={lineKey}
+              className="mt-4 border-neutral-700 border-l-2 pl-1 font-bold text-neutral-950 text-sm"
+            >
               {trimmed.substring(2)}
             </h2>
           );
@@ -50,14 +56,19 @@ export default function MessageContent({ text }: { text: string }) {
         const numMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
         if (numMatch) {
           return (
-            <div key={lineKey} className="ml-3 flex items-start gap-1.5 font-medium text-neutral-600">
+            <div
+              key={lineKey}
+              className="ml-3 flex items-start gap-1.5 font-medium text-neutral-600"
+            >
               <span className="font-bold font-mono text-brand-700">{numMatch[1]}.</span>
               <span>{renderBoldText(numMatch[2])}</span>
             </div>
           );
         }
 
-        if (trimmed === '') { return <div key={lineKey} className="h-1" />; }
+        if (trimmed === '') {
+          return <div key={lineKey} className="h-1" />;
+        }
 
         return (
           <p key={lineKey} className="font-medium text-neutral-700">

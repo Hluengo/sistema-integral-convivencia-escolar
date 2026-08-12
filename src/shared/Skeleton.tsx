@@ -60,22 +60,6 @@ export function DashboardMetricSkeleton() {
   );
 }
 
-export function ChatMessageSkeleton() {
-  return (
-    <div role="status" aria-label="Cargando mensaje" className="animate-pulse flex justify-start">
-      <div className="flex max-w-[70%] items-start gap-2.5">
-        <Skeleton className="h-8 w-8 shrink-0 rounded-lg" />
-        <div className="flex-1 space-y-2">
-          <Skeleton className="h-3 w-16" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-3/4" />
-        </div>
-      </div>
-      <span className="sr-only">Cargando...</span>
-    </div>
-  );
-}
-
 export function TableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
     <div role="status" aria-label="Cargando tabla" className="animate-pulse space-y-3">
@@ -295,96 +279,6 @@ export function DetailModalSkeleton() {
 
 export function TimelineEditSkeleton() {
   return <ModalSkeleton />;
-}
-
-export function ClosedCasesSkeleton() {
-  return (
-    <div role="status" aria-label="Cargando expedientes cerrados" className="space-y-3">
-      <div className="flex items-center justify-between gap-3">
-        <Skeleton className="h-6 w-48" />
-        <Skeleton className="h-9 w-32 rounded-xl" />
-      </div>
-      {Array.from({ length: 3 }).map((_, i) => (
-        <CausaCardSkeleton key={'closed-' + i} />
-      ))}
-      <span className="sr-only">Cargando...</span>
-    </div>
-  );
-}
-
-export function ManagementViewSkeleton() {
-  return (
-    <div role="status" aria-label="Cargando administración" className="animate-pulse space-y-6">
-      <Skeleton className="h-40 w-full rounded-2xl" />
-      <div className="flex gap-2 overflow-hidden rounded-2xl border border-neutral-200/70 bg-white p-1">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={'tab-' + i} className="h-10 w-32 shrink-0 rounded-xl" />
-        ))}
-      </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <DashboardMetricSkeleton key={'summary-' + i} />
-        ))}
-      </div>
-      <div className="card space-y-4 p-5">
-        <Skeleton className="h-5 w-48" />
-        <Skeleton className="h-4 w-80 max-w-full" />
-        <TableSkeleton rows={4} />
-      </div>
-      <span className="sr-only">Cargando...</span>
-    </div>
-  );
-}
-
-export function ReportsViewSkeleton() {
-  return (
-    <div role="status" aria-label="Cargando centro de reportes" className="animate-pulse space-y-6">
-      <Skeleton className="h-40 w-full rounded-2xl" />
-      <div className="grid grid-cols-1 gap-3 rounded-2xl border border-neutral-200/70 bg-white p-4 sm:grid-cols-2 lg:grid-cols-5">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={'filter-' + i} className="h-11 rounded-xl" />
-        ))}
-      </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <DashboardMetricSkeleton key={'metric-' + i} />
-        ))}
-      </div>
-      <div className="card p-5">
-        <TableSkeleton rows={4} />
-      </div>
-      <span className="sr-only">Cargando...</span>
-    </div>
-  );
-}
-
-export function PlatformViewSkeleton() {
-  return (
-    <div role="status" aria-label="Cargando plataforma" className="animate-pulse space-y-6">
-      <Skeleton className="h-40 w-full rounded-2xl" />
-      <div className="card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-2">
-          <Skeleton className="h-4 w-56" />
-          <Skeleton className="h-3 w-80 max-w-full" />
-        </div>
-        <Skeleton className="h-11 w-full rounded-xl sm:max-w-sm" />
-      </div>
-      <div className="flex gap-2 overflow-hidden rounded-2xl border border-neutral-200/70 bg-white p-1">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={'platform-tab-' + i} className="h-10 w-36 shrink-0 rounded-xl" />
-        ))}
-      </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <DashboardMetricSkeleton key={'platform-summary-' + i} />
-        ))}
-      </div>
-      <div className="card p-5">
-        <TableSkeleton rows={4} />
-      </div>
-      <span className="sr-only">Cargando...</span>
-    </div>
-  );
 }
 
 export function DocumentGeneratorSkeleton() {

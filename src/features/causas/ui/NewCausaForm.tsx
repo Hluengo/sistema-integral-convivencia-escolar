@@ -76,13 +76,13 @@ export default function NewCausaForm({
           </div>
           <div className="min-w-0">
             <h4 className="font-bold font-sans text-neutral-900 text-sm">Nuevo Expediente</h4>
-            <p className="font-medium text-neutral-400 text-xs">Registro de causa de convivencia</p>
+            <p className="font-medium text-neutral-600 text-xs">Registro de causa de convivencia</p>
           </div>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="cursor-pointer rounded-xl bg-neutral-50 px-3 py-1.5 font-medium text-neutral-500 text-xs transition-colors hover:bg-neutral-100 hover:text-neutral-700"
+          className="cursor-pointer rounded-xl bg-neutral-50 px-3 py-1.5 font-medium text-neutral-600 text-xs transition-colors hover:bg-neutral-100 hover:text-neutral-700"
         >
           Cerrar
         </button>
@@ -218,7 +218,7 @@ export default function NewCausaForm({
             <>
               <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-2.5">
                 <Users className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden="true" />
-                <span className="text-neutral-500 text-xs">Seleccione un curso primero</span>
+                <span className="text-neutral-600 text-xs">Seleccione un curso primero</span>
               </div>
               <FieldError id="create-student-error" message={errors.newEstNombre?.message} />
             </>

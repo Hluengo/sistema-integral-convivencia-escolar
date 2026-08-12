@@ -10,7 +10,7 @@ test.describe('Aplicación pública', () => {
 
     await expect(
       page.getByRole('complementary', { name: 'Barra de navegación principal' }),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 15_000 });
     await expect(page.locator('main, [role="main"]')).toBeVisible({ timeout: 15_000 });
   });
 

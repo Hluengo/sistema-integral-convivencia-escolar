@@ -14,9 +14,3 @@ export function toTypedRows<T>(rows: unknown): T[] {
   if (!Array.isArray(rows)) return [];
   return rows.filter((row): row is T => typeof row === 'object' && row !== null);
 }
-
-/** Convierte una fila única cruda de Supabase a un valor tipado o null. */
-export function toTypedRow<T>(row: unknown): T | null {
-  if (typeof row !== 'object' || row === null) return null;
-  return row as T;
-}

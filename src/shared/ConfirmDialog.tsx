@@ -24,9 +24,21 @@ interface ConfirmDialogProps {
   onCancel: () => void;
 }
 
-export default function ConfirmDialog({ open, title, description, confirmLabel = 'Eliminar', onConfirm, onCancel }: ConfirmDialogProps) {
+export default function ConfirmDialog({
+  open,
+  title,
+  description,
+  confirmLabel = 'Eliminar',
+  onConfirm,
+  onCancel,
+}: ConfirmDialogProps) {
   return (
-    <AlertDialog open={open} onOpenChange={(o: boolean) => { if (!o) onCancel(); }}>
+    <AlertDialog
+      open={open}
+      onOpenChange={(o: boolean) => {
+        if (!o) onCancel();
+      }}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogIcon />

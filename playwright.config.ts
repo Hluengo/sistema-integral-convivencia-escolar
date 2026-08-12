@@ -8,10 +8,12 @@ const shouldStartWebServer = process.env.PLAYWRIGHT_USE_WEBSERVER === 'true' || 
 
 export default defineConfig({
   testDir: './tests',
-  fullyParallel: true,
+  // Las pruebas autenticadas comparten el tenant de E2E; serializar evita
+  // carreras de sesión y límites de API que falsean resultados de UI.
+  fullyParallel: false,
+  workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
   reporter: process.env.CI ? 'html' : 'list',
   use: {
     baseURL,
@@ -26,10 +28,18 @@ export default defineConfig({
   ],
   webServer: shouldStartWebServer
     ? {
-        command: 'npm run dev',
+        // El servidor de desarrollo puede fallar en Windows cuando esbuild no
+        // puede leer el directorio padre. El bundle de producción evita ese
+        // problema y prueba el mismo shell que se publica.
+        command: 'npm run build && npm run start',
         url: baseURL,
         reuseExistingServer: true,
-        timeout: 120 * 1000,
+        timeout: 180 * 1000,
+        cwd: process.cwd(),
+        env: {
+          ...process.env,
+          NODE_ENV: 'production',
+        },
       }
     : undefined,
 });

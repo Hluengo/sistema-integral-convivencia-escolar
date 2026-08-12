@@ -20,11 +20,6 @@ export function calcularFechaLimiteInvestigacion(fechaApertura: string): string 
 /**
  * Calcula fecha límite de notificación a Superintendencia (5 días hábiles desde resolución)
  */
-export function calcularFechaLimiteNotificacionSuperintendencia(
-  fechaResolucion: string
-): string {
-  return agregarDiasHabiles(
-    fechaResolucion,
-    MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS
-  );
+export function calcularFechaLimiteNotificacionSuperintendencia(fechaResolucion: string): string {
+  return agregarDiasHabiles(fechaResolucion, MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS);
 }

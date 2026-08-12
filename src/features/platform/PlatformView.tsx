@@ -303,7 +303,7 @@ export default function PlatformView() {
             </div>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[760px] text-left text-sm">
-                <thead className="bg-neutral-50 text-neutral-500 text-xs uppercase">
+                <thead className="bg-neutral-50 text-neutral-600 text-xs uppercase">
                   <tr>
                     <th className="px-5 py-3">Nombre</th>
                     <th className="px-5 py-3">Slug</th>

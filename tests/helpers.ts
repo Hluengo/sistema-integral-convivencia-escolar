@@ -17,8 +17,7 @@ export async function dismissWelcome(page: Page) {
         await button.click({ timeout: 15_000 });
       } catch {
         // fallback: DOM click
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await button.evaluate((b: any) => b.click());
+        await button.evaluate((b: HTMLElement) => b.click());
       }
     }
   } catch {

@@ -122,5 +122,12 @@ export function DetailModalTabs<T extends string>({
 }
 
 export function DetailModalBody({ children, className = '' }: DetailModalBodyProps) {
-  return <div className={`flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 ${className}`}>{children}</div>;
+  return (
+    <div
+      tabIndex={0}
+      className={`flex-1 min-h-0 overflow-y-auto p-4 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500 sm:p-5 ${className}`}
+    >
+      {children}
+    </div>
+  );
 }

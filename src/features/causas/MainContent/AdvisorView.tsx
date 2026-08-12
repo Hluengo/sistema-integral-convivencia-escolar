@@ -75,7 +75,7 @@ export default function AdvisorView({
             className={`inline-flex min-w-max flex-1 items-center justify-center gap-2 rounded-lg px-3.5 py-2.5 font-semibold text-xs transition-colors sm:px-4 ${
               tab === id
                 ? 'bg-white text-neutral-900 shadow-sm'
-                : 'text-neutral-500 hover:text-neutral-700'
+                : 'text-neutral-700 hover:text-neutral-900'
             }`}
           >
             <Icon className="size-3.5" aria-hidden="true" />

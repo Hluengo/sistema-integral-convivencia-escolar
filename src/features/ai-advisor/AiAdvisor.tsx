@@ -172,12 +172,12 @@ export default function AiAdvisor() {
             <h3 className="font-sans font-semibold text-neutral-900 text-xs">
               Consultor Legal de Convivencia
             </h3>
-            <p className="mt-0.25 font-medium text-9px text-neutral-500">
+            <p className="mt-0.25 font-medium text-9px text-neutral-600">
               Circular 482 • Ley 21809 • Aula Segura
             </p>
           </div>
         </div>
-        <div className="hidden rounded-md border border-neutral-200/60 bg-neutral-50 px-2 py-1 font-medium text-9px text-neutral-500 sm:block">
+        <div className="hidden rounded-md border border-neutral-200/60 bg-neutral-50 px-2 py-1 font-medium text-9px text-neutral-700 sm:block">
           Vigencia 2025/2026
         </div>
       </div>
@@ -219,7 +219,7 @@ export default function AiAdvisor() {
                       : 'rounded-tr-none border-brand-100 bg-brand-50/70 text-neutral-900 shadow-xs'
                   }`}
                 >
-                  <span className="mb-1 block font-semibold text-8px text-neutral-400 uppercase">
+                  <span className="mb-1 block font-semibold text-8px text-neutral-700 uppercase">
                     {isModel ? 'Asesor Legal' : 'Usted'}
                   </span>
                   <MessageContent text={m.content} />
@@ -241,9 +241,9 @@ export default function AiAdvisor() {
               <div className="shrink-0 rounded-lg bg-neutral-900 p-1.5 text-white">
                 <Bot className="h-3.5 w-3.5" aria-hidden="true" />
               </div>
-              <div className="flex items-center gap-2 rounded-xl rounded-tl-none border border-neutral-200 bg-white p-3 text-neutral-400 text-xs">
+              <div className="flex items-center gap-2 rounded-xl rounded-tl-none border border-neutral-200 bg-white p-3 text-neutral-700 text-xs">
                 <RefreshCw className="h-3 w-3 animate-spin text-brand-600" aria-hidden="true" />
-                <span className="font-medium text-11px text-neutral-500">
+                <span className="font-medium text-11px text-neutral-700">
                   Analizando normativa vigente...
                 </span>
               </div>
@@ -256,8 +256,8 @@ export default function AiAdvisor() {
       {/* Suggested prompts */}
       {messages.length === 1 && !isLoading && (
         <div className="border-neutral-100 border-t bg-white px-4 py-4 text-left">
-          <span className="mb-2.5 block flex items-center gap-1.5 font-semibold text-9px text-neutral-400 uppercase tracking-wider">
-            <BookOpen className="h-3 w-3 text-neutral-400" aria-hidden="true" />
+          <span className="mb-2.5 block flex items-center gap-1.5 font-semibold text-9px text-neutral-700 uppercase tracking-wider">
+            <BookOpen className="h-3 w-3 text-neutral-600" aria-hidden="true" />
             Consultas sugeridas
           </span>
           <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
@@ -325,7 +325,7 @@ export default function AiAdvisor() {
             {improveChatError}
           </p>
         )}
-        <div className="mt-2 text-left font-mono text-10px text-neutral-400">
+        <div className="mt-2 text-left font-mono text-10px text-neutral-600">
           Las respuestas son referenciales. Consulte siempre el RIE de su sostenedor y la normativa
           vigente.
         </div>

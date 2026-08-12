@@ -50,7 +50,7 @@ export default memo(function ResumenTab({ causa, breaches }: ResumenTabProps) {
         ].map(({ label, value, Icon, cardClass, iconClass }) => (
           <div key={label} className={`rounded-xl border p-4 ${cardClass}`}>
             <Icon className={`mb-2 size-5 ${iconClass}`} aria-hidden="true" />
-            <p className="text-neutral-500 text-xs">{label}</p>
+            <p className="text-neutral-600 text-xs">{label}</p>
             <p className="mt-1 font-semibold text-neutral-900 text-sm">{value}</p>
           </div>
         ))}
