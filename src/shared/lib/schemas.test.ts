@@ -2,7 +2,12 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { CausaSchema, ChecklistItemSchema, BitacoraEntrySchema } from './schemas';
+import {
+  CausaSchema,
+  ChecklistItemSchema,
+  BitacoraEntrySchema,
+  ChecklistProgressEntrySchema,
+} from './schemas';
 import { physicalCartaRegistrationSchema } from './schemas/physicalCarta';
 
 describe('CausaSchema', () => {
@@ -199,6 +204,31 @@ describe('BitacoraEntrySchema', () => {
       documentoAdjunto: 'https://supabase.co/storage/v1/...',
     });
     assert.equal(parsed.documentoAdjunto, 'https://supabase.co/storage/v1/...');
+  });
+});
+
+describe('ChecklistProgressEntrySchema', () => {
+  const validProgress = {
+    id: 'progress-1',
+    causaId: 'DC-2026-001',
+    checklistItemId: 'chk_inv_1',
+    title: 'Entrevista con apoderado',
+    description: 'Se revisaron los antecedentes entregados.',
+    entryType: 'Entrevista',
+    occurredAt: '2026-08-12T14:00:00.000Z',
+    createdAt: '2026-08-12T14:01:00.000Z',
+  };
+
+  it('acepta avances vinculados a un hito', () => {
+    const parsed = ChecklistProgressEntrySchema.parse(validProgress);
+    assert.equal(parsed.checklistItemId, 'chk_inv_1');
+    assert.equal(parsed.invalidatedAt, undefined);
+  });
+
+  it('rechaza tipos de avance fuera del contrato de bitácora', () => {
+    assert.throws(() =>
+      ChecklistProgressEntrySchema.parse({ ...validProgress, entryType: 'Reunión' }),
+    );
   });
 });
 

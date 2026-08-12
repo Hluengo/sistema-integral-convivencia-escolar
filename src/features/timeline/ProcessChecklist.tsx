@@ -10,6 +10,7 @@ import { PROCESS_SECTIONS } from './processSections';
 import AttachedDocuments from './AttachedDocuments';
 import ChecklistItemCard from './ChecklistItemCard';
 import InvestigationChecklist from './InvestigationChecklist';
+import CausaNotificationPanel from '../causas/notificacionDocgen/CausaNotificationPanel';
 
 interface ProcessChecklistProps {
   causa: Causa;
@@ -216,6 +217,26 @@ export default function ProcessChecklist({
                         registrationError={registrationError}
                       />
                     ))}
+                    {section.phaseName === 'Recepción' && (
+                      <section
+                        aria-labelledby="notification-workspace-title"
+                        className="mt-3 rounded-xl border border-brand-200 bg-brand-50/30 p-4"
+                      >
+                        <div className="mb-3 border-brand-100 border-b pb-3">
+                          <h4
+                            id="notification-workspace-title"
+                            className="font-semibold text-brand-950 text-sm"
+                          >
+                            Notificación de inicio de indagación
+                          </h4>
+                          <p className="mt-1 text-brand-900/70 text-11px">
+                            Complete, revise y genere el documento desde un espacio independiente
+                            del checklist.
+                          </p>
+                        </div>
+                        <CausaNotificationPanel causa={causa} />
+                      </section>
+                    )}
                   </div>
                 )}
               </div>

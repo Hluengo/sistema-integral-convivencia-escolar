@@ -8,7 +8,6 @@ import { Download, File, Plus, Trash } from 'lucide-react';
 import type { Causa, ChecklistItem, UserRole } from '../../shared/lib/types';
 import { openDocument } from '../../shared/api/services/storage.service';
 import RegistrationForm from './RegistrationForm';
-import CausaNotificationPanel from '../causas/notificacionDocgen/CausaNotificationPanel';
 
 interface ChecklistItemCardProps {
   causa: Causa;
@@ -32,7 +31,6 @@ interface ChecklistItemCardProps {
 }
 
 export default function ChecklistItemCard({
-  causa,
   currentRole,
   item,
   registeringItemId,
@@ -198,12 +196,6 @@ export default function ChecklistItemCard({
               errorMessage={registrationError}
             />
           )}
-        </div>
-      )}
-
-      {item.id === 'chk_rec_3' && (
-        <div className="mt-2.5 rounded-lg border border-brand-200 bg-brand-50/40 p-3">
-          <CausaNotificationPanel causa={causa} />
         </div>
       )}
     </div>

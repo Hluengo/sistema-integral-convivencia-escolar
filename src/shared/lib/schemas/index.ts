@@ -30,6 +30,23 @@ export const ChecklistItemSchema = z.object({
   documentoUrl: z.string().optional(),
 });
 
+export const ChecklistProgressEntrySchema = z.object({
+  id: z.string(),
+  causaId: z.string(),
+  checklistItemId: z.string(),
+  title: z.string().min(1),
+  description: z.string().min(1),
+  entryType: z.enum(['Entrevista', 'Evidencia', 'Notificación', 'Mediación', 'Resolución', 'Otro']),
+  occurredAt: z.string(),
+  documentName: z.string().optional(),
+  documentUrl: z.string().optional(),
+  createdBy: z.string().optional(),
+  createdAt: z.string(),
+  invalidatedAt: z.string().optional(),
+  invalidatedBy: z.string().optional(),
+  invalidationReason: z.string().optional(),
+});
+
 const EstadoCausaEnum = z.enum(Object.values(EstadoCausa));
 
 const TipoInfraccionEnum = z.enum(['Leve', 'Grave', 'Muy Grave', 'Gravísima']);

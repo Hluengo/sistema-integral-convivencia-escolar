@@ -65,6 +65,23 @@ export interface ChecklistItem {
   documentoUrl?: string;
 }
 
+export interface ChecklistProgressEntry {
+  id: string;
+  causaId: string;
+  checklistItemId: string;
+  title: string;
+  description: string;
+  entryType: BitacoraEntry['tipo'];
+  occurredAt: string;
+  documentName?: string;
+  documentUrl?: string;
+  createdBy?: string;
+  createdAt: string;
+  invalidatedAt?: string;
+  invalidatedBy?: string;
+  invalidationReason?: string;
+}
+
 export type TipoInfraccion = 'Leve' | 'Grave' | 'Muy Grave' | 'Gravísima';
 
 export interface Causa {

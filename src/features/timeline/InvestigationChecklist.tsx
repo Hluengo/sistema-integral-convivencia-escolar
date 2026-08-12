@@ -9,6 +9,7 @@ import type { Causa, ChecklistItem, UserRole } from '../../shared/lib/types';
 import { getInvestigationChecklistModel } from '../../shared/lib/domain/investigationChecklist';
 import ChecklistItemCard from './ChecklistItemCard';
 import RegistrationForm from './RegistrationForm';
+import ChecklistProgressPanel from './ChecklistProgressPanel';
 
 interface InvestigationChecklistProps {
   causa: Causa;
@@ -57,6 +58,33 @@ export default function InvestigationChecklist({
   const isExpanded = expandedStages.investigacion;
   const canRegister = currentRole !== 'docente';
   const derivationItem = model.mediationFlowItems.find((item) => item.id === 'chk_inv_3') ?? null;
+  const renderInvestigationItem = (item: ChecklistItem, notRequired = false) => (
+    <div key={item.id}>
+      <ChecklistItemCard
+        causa={causa}
+        currentRole={currentRole}
+        item={item}
+        registeringItemId={registeringItemId}
+        setRegisteringItemId={setRegisteringItemId}
+        regName={regName}
+        setRegName={setRegName}
+        regObservations={regObservations}
+        setRegObservations={setRegObservations}
+        regFileName={regFileName}
+        regFile={regFile}
+        handleStartRegister={handleStartRegister}
+        handleFileChange={handleFileChange}
+        handleSaveRegistration={handleSaveRegistration}
+        handleResetRegistration={handleResetRegistration}
+        isSavingRegistration={isSavingRegistration}
+        registrationError={registrationError}
+        notRequired={notRequired}
+      />
+      {!notRequired && (
+        <ChecklistProgressPanel causaId={causa.id} item={item} canRegister={canRegister} />
+      )}
+    </div>
+  );
 
   return (
     <div
@@ -135,28 +163,7 @@ export default function InvestigationChecklist({
             >
               Investigación
             </h4>
-            {model.baseItems.map((item) => (
-              <ChecklistItemCard
-                key={item.id}
-                causa={causa}
-                currentRole={currentRole}
-                item={item}
-                registeringItemId={registeringItemId}
-                setRegisteringItemId={setRegisteringItemId}
-                regName={regName}
-                setRegName={setRegName}
-                regObservations={regObservations}
-                setRegObservations={setRegObservations}
-                regFileName={regFileName}
-                regFile={regFile}
-                handleStartRegister={handleStartRegister}
-                handleFileChange={handleFileChange}
-                handleSaveRegistration={handleSaveRegistration}
-                handleResetRegistration={handleResetRegistration}
-                isSavingRegistration={isSavingRegistration}
-                registrationError={registrationError}
-              />
-            ))}
+            {model.baseItems.map((item) => renderInvestigationItem(item))}
           </section>
 
           <section
@@ -217,28 +224,7 @@ export default function InvestigationChecklist({
 
             {model.mediationActive && (
               <div className="space-y-2">
-                {model.mediationFlowItems.map((item) => (
-                  <ChecklistItemCard
-                    key={item.id}
-                    causa={causa}
-                    currentRole={currentRole}
-                    item={item}
-                    registeringItemId={registeringItemId}
-                    setRegisteringItemId={setRegisteringItemId}
-                    regName={regName}
-                    setRegName={setRegName}
-                    regObservations={regObservations}
-                    setRegObservations={setRegObservations}
-                    regFileName={regFileName}
-                    regFile={regFile}
-                    handleStartRegister={handleStartRegister}
-                    handleFileChange={handleFileChange}
-                    handleSaveRegistration={handleSaveRegistration}
-                    handleResetRegistration={handleResetRegistration}
-                    isSavingRegistration={isSavingRegistration}
-                    registrationError={registrationError}
-                  />
-                ))}
+                {model.mediationFlowItems.map((item) => renderInvestigationItem(item))}
 
                 <div className="space-y-2 pt-1">
                   <p className="font-semibold text-neutral-700 text-11px uppercase tracking-wide">
