@@ -12,6 +12,7 @@ import { DetailModalHeader } from '../../shared/ui/DetailModal';
 interface TimelineHeaderProps {
   causa: Causa;
   currentRole: UserRole;
+  canDelete: boolean;
   privacyMode: boolean;
   onEditClick: () => void;
   onDeleteClick: () => void;
@@ -27,6 +28,7 @@ interface TimelineHeaderProps {
 export default function TimelineHeader({
   causa,
   currentRole,
+  canDelete,
   privacyMode,
   onEditClick,
   onDeleteClick,
@@ -96,15 +98,17 @@ export default function TimelineHeader({
                 >
                   <Pencil className="size-5" aria-hidden="true" />
                 </button>
-                <button
-                  type="button"
-                  onClick={onDeleteClick}
-                  className="flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 text-neutral-200 transition-colors hover:bg-gravisima-500/20 hover:text-gravisima-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-200 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-800"
-                  title="Eliminar expediente"
-                  aria-label="Eliminar expediente"
-                >
-                  <Trash2 className="size-5" aria-hidden="true" />
-                </button>
+                {canDelete && (
+                  <button
+                    type="button"
+                    onClick={onDeleteClick}
+                    className="flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 text-neutral-200 transition-colors hover:bg-gravisima-500/20 hover:text-gravisima-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-200 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-800"
+                    title="Eliminar expediente"
+                    aria-label="Eliminar expediente"
+                  >
+                    <Trash2 className="size-5" aria-hidden="true" />
+                  </button>
+                )}
               </>
             )}
             {onClose && (

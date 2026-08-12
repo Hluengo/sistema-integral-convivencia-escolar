@@ -25,6 +25,7 @@ interface InteractiveTimelineProps {
   onUpdateCausa?: (updated: Causa) => void;
   onDeleteCausa?: (id: string) => void;
   currentRole?: UserRole;
+  canDeleteCausa?: boolean;
   privacyMode?: boolean;
   isSidebarCollapsed?: boolean;
   setIsSidebarCollapsed?: (collapsed: boolean) => void;
@@ -38,6 +39,7 @@ export default function InteractiveTimeline({
   onUpdateCausa: propOnUpdate,
   onDeleteCausa: propOnDelete,
   currentRole: propRole,
+  canDeleteCausa: propCanDelete,
   privacyMode: propPrivacy,
   isSidebarCollapsed = false,
   setIsSidebarCollapsed,
@@ -49,6 +51,7 @@ export default function InteractiveTimeline({
   const onUpdateCausa = propOnUpdate ?? ctx.handleUpdateCausa;
   const onDeleteCausa = propOnDelete ?? ctx.handleDeleteCausa;
   const currentRole = propRole ?? ctx.currentRole;
+  const canDeleteCausa = propCanDelete ?? ctx.canDeleteCausa;
   const privacyMode = propPrivacy ?? ctx.privacyMode;
 
   const [activeTab, setActiveTab] = useState<TimelineTab>('resumen');
@@ -70,6 +73,7 @@ export default function InteractiveTimeline({
           privacyMode={privacyMode}
           onEditClick={() => setShowEdit(true)}
           onDeleteClick={() => setShowConfirmDelete(true)}
+          canDelete={canDeleteCausa}
           onForceCloseClick={() => setShowForceClose(true)}
           isSidebarCollapsed={isSidebarCollapsed}
           setIsSidebarCollapsed={setIsSidebarCollapsed}

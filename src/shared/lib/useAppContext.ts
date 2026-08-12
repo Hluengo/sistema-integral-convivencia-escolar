@@ -20,6 +20,7 @@ export interface AppContextValue {
   selectedCausaId: string;
   setSelectedCausaId: (id: string) => void;
   currentRole: UserRole;
+  canDeleteCausa: boolean;
   privacyMode: boolean;
   setPrivacyMode: (v: boolean) => void;
   currentView: SidebarView;
@@ -41,6 +42,8 @@ export function useAppContext(): AppContextValue {
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const setShowLoginModal = useAuthStore((state) => state.setShowLoginModal);
+  const profileRole = useAuthStore((state) => state.profileRole);
+  const appRole = useAuthStore((state) => state.appRole);
 
   const causas = useCausasStore((state) => state.causas);
   const selectedCausaId = useCausasStore((state) => state.selectedCausaId);
@@ -73,6 +76,11 @@ export function useAppContext(): AppContextValue {
     selectedCausaId,
     setSelectedCausaId,
     currentRole,
+    canDeleteCausa:
+      profileRole === 'admin' ||
+      profileRole === 'direccion' ||
+      appRole === 'admin' ||
+      appRole === 'direccion',
     privacyMode,
     setPrivacyMode,
     currentView,
