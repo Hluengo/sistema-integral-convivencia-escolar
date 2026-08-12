@@ -8,6 +8,10 @@ import type { ChecklistItem } from '../../shared/lib/types';
 import { Upload, Check } from 'lucide-react';
 import ImproveTextarea from '../../shared/ImproveTextarea';
 import Button from '../../shared/ui/Button';
+import {
+  DOCUMENT_UPLOAD_ACCEPT,
+  DOCUMENT_UPLOAD_PLACEHOLDER,
+} from '../../shared/api/services/storage.service';
 
 interface RegistrationFormProps {
   item: ChecklistItem;
@@ -82,13 +86,13 @@ export default function RegistrationForm({
               className="flex cursor-pointer items-center gap-1.5 font-medium text-11px text-neutral-500"
             >
               <Upload className="h-3.5 w-3.5 text-neutral-400" aria-hidden="true" />
-              {regFileName || 'Seleccionar archivo...'}
+              {regFileName || DOCUMENT_UPLOAD_PLACEHOLDER}
               <input
                 id={`reg-file-${item.id}`}
                 type="file"
                 onChange={handleFileChange}
                 className="sr-only"
-                accept=".pdf,.doc,.docx,.jpg,.png"
+                accept={DOCUMENT_UPLOAD_ACCEPT}
                 aria-labelledby={`reg-file-label-${item.id}`}
               />
             </label>

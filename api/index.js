@@ -1983,7 +1983,11 @@ var TEXT_IMPROVEMENT_AI_MODEL =
   process.env.TEXT_IMPROVEMENT_AI_MODEL ||
   process.env.TEXT_AI_MODEL ||
   'google/gemma-4-31b-it:free';
-var TEXT_FALLBACK_MODELS = ['deepseek/deepseek-v4-flash:free', 'meta-llama/llama-3.1-8b-instruct'];
+var TEXT_FALLBACK_MODELS = [
+  'openrouter/free',
+  'deepseek/deepseek-v4-flash:free',
+  'meta-llama/llama-3.1-8b-instruct',
+];
 function getApiKey() {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) throw new Error('OPENROUTER_API_KEY no configurada');
@@ -2388,6 +2392,7 @@ var IMPROVEMENT_CONTEXTS = {
 var TEXT_IMPROVEMENT_PROMPT_VERSION = '2026-08-05-v2';
 var TEXT_IMPROVEMENT_PRIMARY_TIMEOUT_MS = 7e3;
 var TEXT_IMPROVEMENT_FALLBACK_TIMEOUT_MS = 6e3;
+var TEXT_IMPROVEMENT_FALLBACK_MAX_MODELS = 2;
 var TEXT_IMPROVEMENT_MAX_TOKENS = 1200;
 async function generateImprovement(request, allowFallback) {
   try {
@@ -2410,7 +2415,7 @@ async function generateImprovement(request, allowFallback) {
         {
           timeoutMs: TEXT_IMPROVEMENT_FALLBACK_TIMEOUT_MS,
           maxTokens: TEXT_IMPROVEMENT_MAX_TOKENS,
-          maxModels: 1,
+          maxModels: TEXT_IMPROVEMENT_FALLBACK_MAX_MODELS,
         },
       );
       return { text, timedOut: false };
@@ -2420,6 +2425,30 @@ async function generateImprovement(request, allowFallback) {
         timedOut: isTextImprovementProviderTimeout(fallbackError),
       };
     }
+  }
+}
+function isUsableImprovement(originalText, improvedText) {
+  return Boolean(
+    improvedText &&
+    !isTextImprovementRefusal(improvedText) &&
+    !isTextImprovementTooSimilar(originalText, improvedText),
+  );
+}
+async function generateFallbackImprovement(request) {
+  try {
+    const text = await callTextImprovementFallback(
+      request,
+      TEXT_IMPROVEMENT_SYSTEM_PROMPT,
+      [TEXT_IMPROVEMENT_AI_MODEL],
+      {
+        timeoutMs: TEXT_IMPROVEMENT_FALLBACK_TIMEOUT_MS,
+        maxTokens: TEXT_IMPROVEMENT_MAX_TOKENS,
+        maxModels: TEXT_IMPROVEMENT_FALLBACK_MAX_MODELS,
+      },
+    );
+    return { text, timedOut: false };
+  } catch (error) {
+    return { text: null, timedOut: isTextImprovementProviderTimeout(error) };
   }
 }
 router.post(
@@ -2485,12 +2514,26 @@ router.post(
         ];
         result = await generateImprovement(retryRequest, false);
         improved = result.text;
+        if (!isUsableImprovement(userContent, improved)) {
+          const fallbackResult = await generateFallbackImprovement(retryRequest);
+          if (fallbackResult.text) {
+            result = fallbackResult;
+            improved = fallbackResult.text;
+          } else if (fallbackResult.timedOut) {
+            result = fallbackResult;
+          }
+        }
       }
       if (
         !improved ||
         isTextImprovementRefusal(improved) ||
         isTextImprovementTooSimilar(userContent, improved)
       ) {
+        console.warn('[improve-text] no usable improvement returned', {
+          context: context || 'default',
+          timedOut: result.timedOut,
+          primaryModel: TEXT_IMPROVEMENT_AI_MODEL,
+        });
         res.json(
           buildTextImprovementUnchangedResponse(
             text,

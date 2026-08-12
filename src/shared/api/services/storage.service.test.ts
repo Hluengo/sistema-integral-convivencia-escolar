@@ -119,6 +119,17 @@ describe('normalizeDocumentPath', () => {
 });
 
 describe('uploadDocument', () => {
+  it('expone un contrato único de formatos para formularios de respaldo', async () => {
+    const { DOCUMENT_UPLOAD_ACCEPT, DOCUMENT_UPLOAD_HELPER_TEXT } =
+      await import('./storage.service');
+
+    assert.match(DOCUMENT_UPLOAD_ACCEPT, /\.pdf/);
+    assert.match(DOCUMENT_UPLOAD_ACCEPT, /\.docx/);
+    assert.match(DOCUMENT_UPLOAD_ACCEPT, /\.jpeg/);
+    assert.match(DOCUMENT_UPLOAD_ACCEPT, /\.webp/);
+    assert.match(DOCUMENT_UPLOAD_HELPER_TEXT, /PDF, Word o imagen/);
+  });
+
   it('sube el archivo y devuelve la ruta del bucket', async () => {
     let uploadedPath = '';
     const result = await withStorageMocks({
@@ -136,6 +147,22 @@ describe('uploadDocument', () => {
     });
     assert.ok((result as string).startsWith('causa-1/documentos/'));
     assert.equal(uploadedPath, result);
+  });
+
+  it('acepta imágenes webp como respaldo de hitos o bitácora', async () => {
+    const result = await withStorageMocks({
+      bucketHandler: makeStorage,
+      fn: async () => {
+        const { uploadDocument } = await import('./storage.service');
+        return uploadDocument(
+          'causa-1',
+          makeDocumentFile({ name: 'evidencia.webp', type: 'image/webp' }),
+          'documentos',
+        );
+      },
+    });
+
+    assert.match(result as string, /evidencia\.webp$/);
   });
 
   it('lanza error para formato no permitido', async () => {

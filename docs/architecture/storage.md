@@ -69,3 +69,4 @@ Los archivos se acceden mediante signed URLs con expiración (por defecto 1 hora
 - Solo PDF, MD, TXT (anotaciones)
 - Solo PDF (disciplinary-processes)
 - Validación de header `%PDF-` al subir
+- `documentos_convivencia`: PDF, Word (`.doc`, `.docx`) e imágenes (`.jpg`, `.jpeg`, `.png`, `.webp`) para respaldos de hitos, bitácora y cierre fundado

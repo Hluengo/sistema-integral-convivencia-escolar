@@ -6,7 +6,11 @@
 import { useState, type FormEvent } from 'react';
 import { FileUp, LockKeyhole } from 'lucide-react';
 import type { Causa } from '../../shared/lib/types';
-import { uploadDocument } from '../../shared/api/services/storage.service';
+import {
+  DOCUMENT_UPLOAD_ACCEPT,
+  DOCUMENT_UPLOAD_HELPER_TEXT,
+  uploadDocument,
+} from '../../shared/api/services/storage.service';
 import Button from '../../shared/ui/Button';
 import ImproveTextarea from '../../shared/ImproveTextarea';
 import {
@@ -143,13 +147,13 @@ export default function ForceCloseCausaDialog({
                 Informe ad-hoc (opcional)
               </label>
               <span className="mt-1 block text-neutral-500 text-xs">
-                PDF, DOC, DOCX, JPG o PNG. Máximo 10 MB.
+                {DOCUMENT_UPLOAD_HELPER_TEXT}
               </span>
               <input
                 id="force-close-report"
                 aria-label="Informe ad-hoc"
                 type="file"
-                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                accept={DOCUMENT_UPLOAD_ACCEPT}
                 onChange={(event) => setInforme(event.target.files?.[0] ?? null)}
                 className="mt-3 block w-full text-neutral-600 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-2 file:font-semibold file:text-brand-700 file:text-xs"
               />

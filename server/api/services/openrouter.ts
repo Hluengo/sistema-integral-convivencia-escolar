@@ -8,6 +8,7 @@ export const TEXT_IMPROVEMENT_AI_MODEL =
   process.env.TEXT_AI_MODEL ||
   'google/gemma-4-31b-it:free';
 const TEXT_FALLBACK_MODELS = [
+  'openrouter/free',
   'deepseek/deepseek-v4-flash:free',
   'meta-llama/llama-3.1-8b-instruct',
 ] as const;

@@ -39,6 +39,7 @@ const IMPROVEMENT_CONTEXTS = {
 const TEXT_IMPROVEMENT_PROMPT_VERSION = '2026-08-05-v2';
 const TEXT_IMPROVEMENT_PRIMARY_TIMEOUT_MS = 7_000;
 const TEXT_IMPROVEMENT_FALLBACK_TIMEOUT_MS = 6_000;
+const TEXT_IMPROVEMENT_FALLBACK_MAX_MODELS = 2;
 const TEXT_IMPROVEMENT_MAX_TOKENS = 1_200;
 
 async function generateImprovement(
@@ -65,7 +66,7 @@ async function generateImprovement(
         {
           timeoutMs: TEXT_IMPROVEMENT_FALLBACK_TIMEOUT_MS,
           maxTokens: TEXT_IMPROVEMENT_MAX_TOKENS,
-          maxModels: 1,
+          maxModels: TEXT_IMPROVEMENT_FALLBACK_MAX_MODELS,
         },
       );
       return { text, timedOut: false };
@@ -75,6 +76,34 @@ async function generateImprovement(
         timedOut: isTextImprovementProviderTimeout(fallbackError),
       };
     }
+  }
+}
+
+function isUsableImprovement(originalText: string, improvedText: string | null): boolean {
+  return Boolean(
+    improvedText &&
+    !isTextImprovementRefusal(improvedText) &&
+    !isTextImprovementTooSimilar(originalText, improvedText),
+  );
+}
+
+async function generateFallbackImprovement(
+  request: Array<{ role: string; content: string }>,
+): Promise<{ text: string | null; timedOut: boolean }> {
+  try {
+    const text = await callTextImprovementFallback(
+      request,
+      TEXT_IMPROVEMENT_SYSTEM_PROMPT,
+      [TEXT_IMPROVEMENT_AI_MODEL],
+      {
+        timeoutMs: TEXT_IMPROVEMENT_FALLBACK_TIMEOUT_MS,
+        maxTokens: TEXT_IMPROVEMENT_MAX_TOKENS,
+        maxModels: TEXT_IMPROVEMENT_FALLBACK_MAX_MODELS,
+      },
+    );
+    return { text, timedOut: false };
+  } catch (error) {
+    return { text: null, timedOut: isTextImprovementProviderTimeout(error) };
   }
 }
 
@@ -144,12 +173,26 @@ router.post(
         ];
         result = await generateImprovement(retryRequest, false);
         improved = result.text;
+        if (!isUsableImprovement(userContent, improved)) {
+          const fallbackResult = await generateFallbackImprovement(retryRequest);
+          if (fallbackResult.text) {
+            result = fallbackResult;
+            improved = fallbackResult.text;
+          } else if (fallbackResult.timedOut) {
+            result = fallbackResult;
+          }
+        }
       }
       if (
         !improved ||
         isTextImprovementRefusal(improved) ||
         isTextImprovementTooSimilar(userContent, improved)
       ) {
+        console.warn('[improve-text] no usable improvement returned', {
+          context: context || 'default',
+          timedOut: result.timedOut,
+          primaryModel: TEXT_IMPROVEMENT_AI_MODEL,
+        });
         res.json(
           buildTextImprovementUnchangedResponse(
             text,

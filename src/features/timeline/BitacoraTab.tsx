@@ -17,7 +17,11 @@ import {
   Scale,
   Upload,
 } from 'lucide-react';
-import { openDocument } from '../../shared/api/services/storage.service';
+import {
+  DOCUMENT_UPLOAD_ACCEPT,
+  DOCUMENT_UPLOAD_PLACEHOLDER,
+  openDocument,
+} from '../../shared/api/services/storage.service';
 import { formatChileDateTime } from '../../shared/lib/dateTime';
 import HistoryEntryForm from '../../shared/ui/HistoryEntryForm';
 import type { ManualBitacoraEntryInput } from '../../shared/lib/hooks/useBitacoraLog';
@@ -127,13 +131,13 @@ export default memo(function BitacoraTab({
                   <span className="flex cursor-pointer items-center gap-2 rounded-xl border-2 border-dashed border-neutral-300 bg-neutral-50 px-3 py-2.5 text-neutral-600 text-sm transition hover:border-brand-300 hover:bg-brand-50/40">
                     <Upload className="h-4 w-4 text-brand-600" aria-hidden="true" />
                     <span className="truncate">
-                      {manualFileName || 'Seleccionar PDF, Word o imagen'}
+                      {manualFileName || DOCUMENT_UPLOAD_PLACEHOLDER}
                     </span>
                     <input
                       aria-label="Documento de respaldo"
                       type="file"
                       className="sr-only"
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      accept={DOCUMENT_UPLOAD_ACCEPT}
                       onChange={(event) => {
                         const file = event.target.files?.[0] ?? null;
                         setManualFile(file);
