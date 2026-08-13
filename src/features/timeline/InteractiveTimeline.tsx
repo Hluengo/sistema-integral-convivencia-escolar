@@ -23,7 +23,7 @@ const EditCausaModal = lazy(() => import('../causas/ui/EditCausaModal'));
 interface InteractiveTimelineProps {
   causa: Causa;
   onUpdateCausa?: (updated: Causa) => void;
-  onDeleteCausa?: (id: string) => void;
+  onDeleteCausa?: (id: string) => Promise<boolean>;
   currentRole?: UserRole;
   canDeleteCausa?: boolean;
   privacyMode?: boolean;
@@ -86,9 +86,10 @@ export default function InteractiveTimeline({
           open={showConfirmDelete}
           title="Eliminar expediente"
           description={`¿Eliminar el expediente ${causa.id} de forma permanente? Esta acción no se puede deshacer.`}
-          onConfirm={() => {
-            onDeleteCausa(causa.id);
+          onConfirm={async () => {
+            const deleted = await onDeleteCausa(causa.id);
             setShowConfirmDelete(false);
+            if (deleted) onClose?.();
           }}
           onCancel={() => setShowConfirmDelete(false)}
         />
@@ -110,9 +111,13 @@ export default function InteractiveTimeline({
                 onUpdateCausa(updated);
                 setShowEdit(false);
               }}
-              onDelete={(id) => {
-                onDeleteCausa(id);
-                setShowEdit(false);
+              onDelete={async (id) => {
+                const deleted = await onDeleteCausa(id);
+                if (deleted) {
+                  setShowEdit(false);
+                  onClose?.();
+                }
+                return deleted;
               }}
             />
           </Suspense>

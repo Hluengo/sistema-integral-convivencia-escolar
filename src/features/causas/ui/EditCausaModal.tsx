@@ -12,7 +12,7 @@ interface EditCausaModalProps {
   causa: Causa;
   onClose: () => void;
   onSave: (updated: Causa) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => Promise<boolean>;
 }
 
 export default function EditCausaModal({ causa, onClose, onSave, onDelete }: EditCausaModalProps) {
@@ -28,9 +28,9 @@ export default function EditCausaModal({ causa, onClose, onSave, onDelete }: Edi
     handleClose();
   };
 
-  const handleDelete = (id: string) => {
-    onDelete(id);
-    handleClose();
+  const handleDelete = async (id: string) => {
+    const deleted = await onDelete(id);
+    if (deleted) handleClose();
   };
 
   if (!open) return null;

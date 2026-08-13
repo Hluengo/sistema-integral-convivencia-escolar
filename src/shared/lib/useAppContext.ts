@@ -27,7 +27,7 @@ export interface AppContextValue {
   currentView: SidebarView;
   setCurrentView: (v: SidebarView) => void;
   handleUpdateCausa: (updated: Causa) => void;
-  handleDeleteCausa: (id: string) => void;
+  handleDeleteCausa: (id: string) => Promise<boolean>;
   handleSelectCausaFromDashboard: (causaId: string) => void;
   handleOpenCreateForm: () => void;
   mobileShowDetail: boolean;

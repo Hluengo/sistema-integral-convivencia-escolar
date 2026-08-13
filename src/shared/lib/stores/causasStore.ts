@@ -35,7 +35,7 @@ interface CausasState {
     newObs: string;
     newResponsable: string;
   }) => Promise<string | false>;
-  handleDeleteCausa: (id: string, requireAuth: () => boolean) => Promise<void>;
+  handleDeleteCausa: (id: string, requireAuth: () => boolean) => Promise<boolean>;
   handleUpdateCausa: (updated: Causa) => void;
   handleReopenCausa: (causa: Causa) => void;
 }
@@ -101,11 +101,11 @@ export const useCausasStore = create<CausasState>((set, get) => ({
   },
 
   handleDeleteCausa: async (id, requireAuth) => {
-    if (!requireAuth()) return;
+    if (!requireAuth()) return false;
     const ok = await deleteCausa(id);
     if (!ok) {
       useToastStore.getState().addToast('error', 'Error al eliminar el caso');
-      return;
+      return false;
     }
     const tenantId = useAuthStore.getState().tenantId;
     if (tenantId) removeCausaFromCache(tenantId, id);
@@ -113,11 +113,11 @@ export const useCausasStore = create<CausasState>((set, get) => ({
       const nextCausas = state.causas.filter((c) => c.id !== id);
       return {
         causas: nextCausas,
-        selectedCausaId:
-          state.selectedCausaId === id ? nextCausas[0]?.id || '' : state.selectedCausaId,
+        selectedCausaId: state.selectedCausaId === id ? '' : state.selectedCausaId,
       };
     });
     useToastStore.getState().addToast('success', `Caso ${id} eliminado`);
+    return true;
   },
 
   handleUpdateCausa: (updated) =>
