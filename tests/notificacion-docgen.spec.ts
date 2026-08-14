@@ -94,6 +94,14 @@ test.describe('Notificación de Inicio de Indagación (E2E)', () => {
     await expect(letter.getByText('ENCARGADO DE INDAGACIÓN', { exact: true })).toHaveCount(1);
     await expect(letter.getByText('Encargado de Indagación', { exact: true })).toHaveCount(1);
     await expect(letter.getByText('Firmas', { exact: true })).toHaveCount(0);
+
+    const apoderadoInput = page.getByRole('textbox', {
+      name: 'Nombre del apoderado o adulto responsable',
+    });
+    if (await apoderadoInput.count()) {
+      await apoderadoInput.fill('Claudia Soto');
+      await expect(letter.getByText('Claudia Soto', { exact: true })).toHaveCount(2);
+    }
   });
 
   test('el DraftPanel solo ofrece informes en redacción asistida', async ({ page }) => {

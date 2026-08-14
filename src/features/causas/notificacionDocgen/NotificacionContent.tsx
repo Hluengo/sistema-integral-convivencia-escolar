@@ -87,7 +87,7 @@ const NotificacionContent = forwardRef<HTMLDivElement, NotificacionContentProps>
           title={null}
           signatures={[
             { name: emittedBy, role: 'Encargado de Indagación' },
-            { name: '', role: 'Apoderado/a recibe y firma' },
+            { name: apoderadoName, role: 'Apoderado/a recibe y firma' },
           ]}
         />
       </div>
