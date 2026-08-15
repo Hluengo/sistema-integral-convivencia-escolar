@@ -19,6 +19,7 @@ import type {
   TipoInfraccion,
 } from '../../lib/types';
 import { mapInspectorateToAnnotation } from '../../lib/mappers';
+import type { InspectorateRecord } from '../../lib/mappers';
 import { calculateDisciplinaryStatus } from '../../lib/domain/disciplinaryStatus';
 import { withSupabaseReadRetry } from '../lib/supabaseRetry';
 
@@ -64,7 +65,7 @@ export async function fetchAnnotations(studentId?: string): Promise<Annotation[]
     console.error('Error fetching annotations:', error);
     return [];
   }
-  return (data || []).map(mapInspectorateToAnnotation);
+  return ((data || []) as unknown as InspectorateRecord[]).map(mapInspectorateToAnnotation);
 }
 
 export async function fetchDocumentAnalyses(studentId: string): Promise<DocumentAnalysis[]> {
@@ -111,7 +112,7 @@ export async function updateAnnotation(
     throw new Error(`No se pudo actualizar la anotación: ${error.message}`);
   }
 
-  return mapInspectorateToAnnotation(data);
+  return mapInspectorateToAnnotation(data as unknown as InspectorateRecord);
 }
 
 export async function fetchAnnualAnnotationTrends(
@@ -256,6 +257,37 @@ export async function fetchStudentsWithAnnotationCounts(): Promise<AnotacionStud
   }
 
   return mapAnnotationSummaryRows(rpcData as RpcStudentSummary[]);
+}
+
+export interface AnnotationStudentsPage {
+  students: AnotacionStudent[];
+  totalCount: number;
+}
+
+/** Carga una página sin transferir el resumen completo del tenant. */
+export async function fetchStudentsWithAnnotationCountsPage(
+  limit = 100,
+  offset = 0,
+): Promise<AnnotationStudentsPage> {
+  const { data, error } = await withSupabaseReadRetry(() =>
+    supabase.rpc(
+      'get_student_annotation_summary_page' as never,
+      {
+        p_limit: limit,
+        p_offset: offset,
+      } as never,
+    ),
+  );
+
+  if (error || !data) {
+    throw error ?? new Error('La RPC paginada de anotaciones no devolvió datos.');
+  }
+
+  const rows = data as unknown as Array<RpcStudentSummary & { total_count: number | string }>;
+  return {
+    students: mapAnnotationSummaryRows(rows),
+    totalCount: Number(rows[0]?.total_count ?? 0),
+  };
 }
 
 /**

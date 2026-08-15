@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Button from './Button';
+import { signOut } from '../api/services/auth.service';
 
 interface MembershipAccessDeniedProps {
   authMode: string;
@@ -15,6 +16,7 @@ export function MembershipAccessDenied({
   membershipError,
 }: MembershipAccessDeniedProps) {
   const [retrying, setRetrying] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     if (retrying) {
@@ -53,12 +55,20 @@ export function MembershipAccessDenied({
           <Button
             variant="custom"
             onClick={() => {
-              localStorage.clear();
-              window.location.href = '/';
+              void (async () => {
+                setSigningOut(true);
+                const { error } = await signOut();
+                if (error) {
+                  setSigningOut(false);
+                  return;
+                }
+                window.location.href = '/';
+              })();
             }}
+            disabled={signingOut}
             className="rounded-md bg-neutral-200 px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-300"
           >
-            Cerrar sesión
+            {signingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}
           </Button>
         </div>
       </div>

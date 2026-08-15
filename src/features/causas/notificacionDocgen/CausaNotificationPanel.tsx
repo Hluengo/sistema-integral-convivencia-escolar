@@ -1,6 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { Causa } from '@/shared/lib/types';
 import { useTimelineContext } from '@/shared/lib/useTimelineContext';
 import {
@@ -13,6 +14,7 @@ import {
   type CausaDocumentRow,
 } from '@/shared/api/services/causaDocuments.service';
 import { nowDateOnly } from '@/shared/lib/dateUtils';
+import { useAuthStore } from '@/shared/lib/stores/authStore';
 import {
   buildNotificacionBitacoraEntry,
   buildNotificacionHito,
@@ -36,21 +38,22 @@ interface CausaNotificationPanelProps {
  */
 export default function CausaNotificationPanel({ causa }: CausaNotificationPanelProps) {
   const { privacyMode, currentRole, onUpdateCausa } = useTimelineContext();
+  const tenantId = useAuthStore((state) => state.tenantId);
+  const queryClient = useQueryClient();
+  const documentsQueryKey = useMemo(
+    () => ['causa-documents', tenantId, causa.id] as const,
+    [causa.id, tenantId],
+  );
 
-  const [documents, setDocuments] = useState<CausaDocumentRow[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [feedback, setFeedback] = useState<NotificationFeedback | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    void fetchCausaDocuments(causa.id).then((rows) => {
-      if (cancelled) return;
-      setDocuments(rows);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [causa.id]);
+  const documentsQuery = useQuery({
+    queryKey: documentsQueryKey,
+    queryFn: () => fetchCausaDocuments(causa.id),
+    enabled: Boolean(tenantId && causa.id),
+  });
+  const documents = useMemo(() => documentsQuery.data ?? [], [documentsQuery.data]);
 
   const activeDocument = useMemo(() => {
     const notAnnulled = documents.find((doc) => doc.status !== 'Anulada');
@@ -73,12 +76,15 @@ export default function CausaNotificationPanel({ causa }: CausaNotificationPanel
       if (pending) return pending;
       const created = await createPendingCausaDocument(causa, snapshot);
       if (created) {
-        setDocuments((current) => [created, ...current]);
+        queryClient.setQueryData<CausaDocumentRow[]>(documentsQueryKey, (current = []) => [
+          created,
+          ...current,
+        ]);
         return created;
       }
       return null;
     },
-    [causa, documents],
+    [causa, documents, documentsQueryKey, queryClient],
   );
 
   const handleSaveDraft = useCallback(
@@ -102,6 +108,7 @@ export default function CausaNotificationPanel({ causa }: CausaNotificationPanel
           );
           return;
         }
+        await queryClient.invalidateQueries({ queryKey: documentsQueryKey });
         setFeedbackTone(
           'Borrador guardado. Puede imprimirlo y marcarlo como notificada cuando corresponda.',
           'success',
@@ -110,7 +117,7 @@ export default function CausaNotificationPanel({ causa }: CausaNotificationPanel
         setIsProcessing(false);
       }
     },
-    [ensurePendingDocument, setFeedbackTone],
+    [documentsQueryKey, ensurePendingDocument, queryClient, setFeedbackTone],
   );
 
   const handleMarkNotified = useCallback(
@@ -147,7 +154,7 @@ export default function CausaNotificationPanel({ causa }: CausaNotificationPanel
           fechaUltimaActualizacion: nowDateOnly(),
         });
 
-        setDocuments((current) =>
+        queryClient.setQueryData<CausaDocumentRow[]>(documentsQueryKey, (current = []) =>
           current.map((doc) =>
             doc.id === document.id
               ? {
@@ -167,7 +174,15 @@ export default function CausaNotificationPanel({ causa }: CausaNotificationPanel
         setIsProcessing(false);
       }
     },
-    [causa, ensurePendingDocument, onUpdateCausa, privacyMode, setFeedbackTone],
+    [
+      causa,
+      documentsQueryKey,
+      ensurePendingDocument,
+      onUpdateCausa,
+      privacyMode,
+      queryClient,
+      setFeedbackTone,
+    ],
   );
 
   const handleAnnul = useCallback(async () => {
@@ -183,14 +198,14 @@ export default function CausaNotificationPanel({ causa }: CausaNotificationPanel
         );
         return;
       }
-      setDocuments((current) =>
+      queryClient.setQueryData<CausaDocumentRow[]>(documentsQueryKey, (current = []) =>
         current.map((doc) => (doc.id === activeDocument.id ? { ...doc, status: 'Anulada' } : doc)),
       );
       setFeedbackTone('Notificación anulada. Puede generar una nueva si corresponde.', 'info');
     } finally {
       setIsProcessing(false);
     }
-  }, [activeDocument, setFeedbackTone]);
+  }, [activeDocument, documentsQueryKey, queryClient, setFeedbackTone]);
 
   if (currentRole === 'docente') {
     return (

@@ -1,6 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { supabase } from '../lib/supabase';
+import type { Json } from '../lib/database.types';
 import type { BitacoraEntry, Causa, ChecklistItem } from '../../lib/types';
 import type {
   CausaDocumentSnapshot,
@@ -51,7 +52,7 @@ export async function createPendingCausaDocument(
     .insert({
       causa_id: causa.id,
       doc_type: snapshot.docType,
-      content_snapshot: toJsonSnapshot(snapshot),
+      content_snapshot: toJsonSnapshot(snapshot) as unknown as Json,
       created_by: snapshot.emittedBy,
       emitted_by: snapshot.emittedBy,
       student_name: snapshot.studentName,
@@ -96,7 +97,7 @@ export async function saveCausaDocumentSnapshot(
   const { error } = await supabase
     .from('causa_documents')
     .update({
-      content_snapshot: toJsonSnapshot(snapshot),
+      content_snapshot: toJsonSnapshot(snapshot) as unknown as Json,
       emitted_by: snapshot.emittedBy,
     })
     .eq('id', documentId)
@@ -122,9 +123,9 @@ export async function markCausaDocumentNotified(
 ): Promise<{ ok: boolean; error: string | null }> {
   const { error } = await supabase.rpc('mark_causa_document_notified', {
     p_document_id: documentId,
-    p_snapshot: toJsonSnapshot(snapshot),
-    p_checklist_item: buildChecklistItemPayload(checklistItem),
-    p_bitacora_entry: buildBitacoraEntryPayload(bitacoraEntry),
+    p_snapshot: toJsonSnapshot(snapshot) as unknown as Json,
+    p_checklist_item: buildChecklistItemPayload(checklistItem) as unknown as Json,
+    p_bitacora_entry: buildBitacoraEntryPayload(bitacoraEntry) as unknown as Json,
   });
 
   if (error) {

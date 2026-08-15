@@ -61,12 +61,17 @@ router.post(
         global: { headers: { Authorization: `Bearer ${authReq.authToken}` } },
       });
 
-      await supabase.from('usage_events').insert({
+      const { error: insertError } = await supabase.from('usage_events').insert({
         event_name: eventName,
         user_id: authReq.user?.sub ?? null,
         tenant_id: authReq.tenantId ?? null,
         properties: properties ?? {},
       });
+      if (insertError) {
+        console.error('Error logging usage event:', insertError);
+        res.status(503).json({ error: 'No fue posible registrar el evento.' });
+        return;
+      }
 
       res.json({ success: true });
     } catch (error) {

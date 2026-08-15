@@ -27,6 +27,7 @@ const VALID_ROLES: readonly ProfileRole[] = [
   'user',
   'staff',
 ];
+const FRESH_PROFILE_ROLES: readonly ProfileRole[] = ['superadmin', 'admin', 'direccion'];
 
 export function isValidUuid(value: string): boolean {
   return UUID_RE.test(value);
@@ -240,7 +241,13 @@ async function injectTenantContext(
   const jwtTenantId =
     typeof appMetadata?.tenant_id === 'string' ? appMetadata.tenant_id : undefined;
   const jwtRole = typeof appMetadata?.role === 'string' ? appMetadata.role : undefined;
-  if (jwtTenantId && isValidUuid(jwtTenantId) && jwtRole && isValidRole(jwtRole)) {
+  if (
+    jwtTenantId &&
+    isValidUuid(jwtTenantId) &&
+    jwtRole &&
+    isValidRole(jwtRole) &&
+    !FRESH_PROFILE_ROLES.includes(jwtRole)
+  ) {
     req.tenantId = jwtTenantId;
     req.profileRole = jwtRole;
     return true;

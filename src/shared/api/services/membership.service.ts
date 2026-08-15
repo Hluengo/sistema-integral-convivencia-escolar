@@ -30,7 +30,11 @@ function logDev(event: string, detail?: string) {
   }
 }
 
-export async function getMyMembership(applicationCode: string): Promise<MembershipResult> {
+export async function getMyMembership(
+  applicationCode: string,
+  userId: string | null = null,
+  tenantId: string | null = null,
+): Promise<MembershipResult> {
   const config = getMembershipConfig();
 
   if (!config.enabled) {
@@ -42,7 +46,7 @@ export async function getMyMembership(applicationCode: string): Promise<Membersh
     };
   }
 
-  const cacheKey = `${applicationCode}`;
+  const cacheKey = `${applicationCode}:${userId ?? 'anonymous'}:${tenantId ?? 'no-tenant'}`;
   if (cachedResult && cachedKey === cacheKey) {
     logDev('membership_load_cache_hit');
     return cachedResult;

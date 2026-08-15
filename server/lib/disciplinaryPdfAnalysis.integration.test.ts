@@ -297,6 +297,20 @@ test('confirmDisciplinaryProcess crea el proceso completo', async () => {
     if (table === 'disciplinary_process_files' && calls.includes('insert')) {
       return { data: null, error: null };
     }
+    if (table === 'rpc_confirm_disciplinary_process_atomic') {
+      return {
+        data: [
+          {
+            process_id: 'process-1',
+            process_number: 'PROC-2026-001',
+            inserted_negativas: 1,
+            inserted_positivas: 0,
+            inserted_informativas: 0,
+          },
+        ],
+        error: null,
+      };
+    }
     if (table === 'disciplinary_process_files') return { data: null, error: null };
     if (table.startsWith('rpc_generate_process_number')) {
       return { data: 'PROC-2026-001', error: null };

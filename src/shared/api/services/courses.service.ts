@@ -27,6 +27,11 @@ export interface StudentWithCourse extends Student {
   course_level: Course['level'] | null;
 }
 
+export interface StudentsWithCoursesPage {
+  students: StudentWithCourse[];
+  totalCount: number;
+}
+
 /**
  * Fetch all courses ordered by position
  */
@@ -41,7 +46,12 @@ export async function fetchCourses(): Promise<Course[]> {
     return [];
   }
 
-  return data || [];
+  return (data || []).map((row) => ({
+    ...row,
+    position: row.position ?? 0,
+    level: row.level === 'MEDIA' ? 'MEDIA' : 'BASICA',
+    created_at: row.created_at ?? '',
+  }));
 }
 
 /**
@@ -63,7 +73,12 @@ export async function fetchStudentsByCourse(courseId: string): Promise<Student[]
     return [];
   }
 
-  return data || [];
+  return (data || []).map((row) => ({
+    ...row,
+    course_id: row.course_id ?? '',
+    rut: row.rut ?? '',
+    created_at: row.created_at ?? '',
+  }));
 }
 
 /**
@@ -92,4 +107,35 @@ export async function fetchStudentsWithCourses(): Promise<StudentWithCourse[]> {
       course_level: courses?.level ?? null,
     };
   });
+}
+
+export async function fetchStudentsWithCoursesPage(
+  offset = 0,
+  limit = 200,
+): Promise<StudentsWithCoursesPage> {
+  const { data, count, error } = await supabase
+    .from('students')
+    .select('id,full_name,course_id,rut,created_at,courses(name, level)', { count: 'exact' })
+    .order('full_name', { ascending: true })
+    .range(offset, offset + limit - 1);
+
+  if (error) {
+    console.error('Error fetching paginated students with courses:', error);
+    throw error;
+  }
+
+  const students = (data || []).map((row: Record<string, unknown>) => {
+    const courses = row.courses as { name: string; level: Course['level'] } | null;
+    return {
+      id: row.id as string,
+      full_name: row.full_name as string,
+      course_id: (row.course_id as string | null) ?? '',
+      rut: (row.rut as string | null) ?? '',
+      created_at: (row.created_at as string | null) ?? '',
+      course_name: courses?.name ?? 'Sin curso',
+      course_level: courses?.level ?? null,
+    };
+  });
+
+  return { students, totalCount: count ?? students.length };
 }

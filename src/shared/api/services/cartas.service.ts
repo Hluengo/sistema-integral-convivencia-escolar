@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '../lib/supabase';
+import type { Json } from '../lib/database.types';
 import type {
   Annotation,
   CartaDisciplinaria,
@@ -11,6 +12,7 @@ import type {
   EtapaDisciplinaria,
 } from '../../lib/types';
 import { mapCauseRowToCarta, mapStageRowToEtapa } from '../../lib/mappers';
+import type { CauseRow, StageRow } from '../../lib/mappers';
 import { fetchAnnotations, fetchDocumentAnalyses } from './annotations.service';
 import {
   resolveStudentCartaTableState,
@@ -215,7 +217,7 @@ export async function fetchCartaTableStates(): Promise<Record<string, StudentCar
     return {};
   }
 
-  const cartas = (cartasData || []).map(mapCauseRowToCarta);
+  const cartas = ((cartasData || []) as unknown as CauseRow[]).map(mapCauseRowToCarta);
   if (cartas.length === 0) return {};
 
   const { data: eventsData, error: eventsError } = await withSupabaseReadRetry(() =>
@@ -262,7 +264,7 @@ async function fetchCartasByStudent(studentId: string): Promise<CartaDisciplinar
     return [];
   }
 
-  const cartas = (data || []).map(mapCauseRowToCarta);
+  const cartas = ((data || []) as unknown as CauseRow[]).map(mapCauseRowToCarta);
   const cartaEvents = await fetchCartaEventsByStudent(studentId);
   return cartas.map((carta) => hydrateCartaWorkflow(carta, cartaEvents));
 }
@@ -294,7 +296,8 @@ async function createCartaEvent(
   if (!carta) return false;
 
   // DB-02 garantiza tenant_id NOT NULL con backfill en cartas_disciplinarias.
-  const tenantId = carta.tenant_id || null;
+  const tenantId = carta.tenant_id;
+  if (!tenantId) return false;
   const createdBy = actor?.email || actor?.userId || null;
   const { error } = await supabase.from('carta_events').insert({
     carta_id: cartaId,
@@ -303,7 +306,7 @@ async function createCartaEvent(
     event_type: eventType,
     event_detail: detail || null,
     created_by: createdBy,
-    metadata,
+    metadata: metadata as unknown as Json,
   });
 
   if (error) {
@@ -322,7 +325,7 @@ export async function markCartaProcessedManually(
   if (contentSnapshot) {
     const { data, error } = await supabase
       .from('cartas_disciplinarias')
-      .update({ content_snapshot: contentSnapshot })
+      .update({ content_snapshot: contentSnapshot as unknown as Json })
       .eq('id', cartaId)
       .select('id')
       .maybeSingle();
@@ -416,7 +419,7 @@ export async function registerPhysicalCartaForStudent(
     p_student_id: parsed.data.studentId,
     p_letter_type: parsed.data.letterType,
     p_emission_date: parsed.data.emissionDate,
-    p_observations: parsed.data.observations || null,
+    p_observations: parsed.data.observations || undefined,
   });
 
   if (error) {
@@ -449,6 +452,7 @@ export async function createPendingCartaForStudent(params: {
   sourceAnalysisId?: string | null;
   tenantId: string | null;
 }): Promise<CartaDisciplinaria | null> {
+  if (!params.tenantId) return null;
   const today = nowDateOnly();
   const sourceLabel =
     params.source === 'pdf'
@@ -481,7 +485,7 @@ export async function createPendingCartaForStudent(params: {
     return null;
   }
 
-  const carta = mapCauseRowToCarta(data);
+  const carta = mapCauseRowToCarta(data as unknown as CauseRow);
   await createCartaEvent(carta.id, 'suggested', `Carta sugerida por progresión ${sourceLabel}`, {
     source: params.source,
     negativeCount: params.negativeCount,
@@ -502,7 +506,7 @@ async function fetchEtapasByStudent(studentId: string): Promise<EtapaDisciplinar
     console.error('Error fetching etapas:', error);
     return [];
   }
-  return (data || []).map(mapStageRowToEtapa);
+  return ((data || []) as unknown as StageRow[]).map(mapStageRowToEtapa);
 }
 
 async function fetchProcessesByStudent(studentId: string): Promise<DisciplinaryProcessRecord[]> {

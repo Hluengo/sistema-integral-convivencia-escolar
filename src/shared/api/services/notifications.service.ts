@@ -53,10 +53,10 @@ export async function syncNotification(input: NotificationSyncInput): Promise<st
     p_title: input.title,
     p_description: input.description,
     p_severity: input.severity,
-    p_entity_type: input.entityType,
-    p_entity_id: input.entityId,
-    p_action_url: input.actionUrl,
-    p_expires_at: input.expiresAt,
+    p_entity_type: input.entityType ?? undefined,
+    p_entity_id: input.entityId ?? undefined,
+    p_action_url: input.actionUrl ?? undefined,
+    p_expires_at: input.expiresAt ?? undefined,
   });
   if (error) throw error;
   if (typeof data !== 'string') throw new Error('Respuesta inválida al persistir la notificación.');

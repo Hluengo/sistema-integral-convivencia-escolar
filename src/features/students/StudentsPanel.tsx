@@ -20,7 +20,7 @@ import type { Course, StudentWithCourse } from '../../shared/api/services/course
 import { TableSkeleton } from '../../shared/Skeleton';
 import { maskName } from '../../shared/lib/anotacionesUtils';
 import { useCoursesQuery } from '../../shared/lib/hooks/useCoursesQuery';
-import { useStudentsWithCoursesQuery } from '../../shared/lib/hooks/useStudentsQuery';
+import { usePaginatedStudentsWithCoursesQuery } from '../../shared/lib/hooks/useStudentsQuery';
 
 const EMPTY_COURSES: Course[] = [];
 const EMPTY_STUDENTS: StudentWithCourse[] = [];
@@ -61,9 +61,13 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
   const [state, dispatch] = useReducer(reducer, initialState);
   const { searchQuery, selectedCourseId } = state;
   const coursesQuery = useCoursesQuery();
-  const studentsQuery = useStudentsWithCoursesQuery();
+  const studentsQuery = usePaginatedStudentsWithCoursesQuery();
   const courses = coursesQuery.data ?? EMPTY_COURSES;
-  const students = studentsQuery.data ?? EMPTY_STUDENTS;
+  const students = useMemo(
+    () => studentsQuery.data?.pages.flatMap((page) => page.students) ?? EMPTY_STUDENTS,
+    [studentsQuery.data],
+  );
+  const totalStudents = studentsQuery.data?.pages[0]?.totalCount ?? students.length;
   const isLoading = coursesQuery.isLoading || studentsQuery.isLoading;
   const error =
     coursesQuery.isError || studentsQuery.isError
@@ -154,7 +158,7 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
         action={
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-2 text-center">
-              <p className="font-bold text-neutral-950 text-xl tabular-nums">{students.length}</p>
+              <p className="font-bold text-neutral-950 text-xl tabular-nums">{totalStudents}</p>
               <p className="font-semibold text-10px text-neutral-500 uppercase">Total</p>
             </div>
             <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-2 text-center">
@@ -356,6 +360,17 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
               </div>
             );
           })}
+          {studentsQuery.hasNextPage && (
+            <div className="flex justify-center pt-2">
+              <Button
+                variant="secondary"
+                onClick={() => void studentsQuery.fetchNextPage()}
+                disabled={studentsQuery.isFetchingNextPage}
+              >
+                {studentsQuery.isFetchingNextPage ? 'Cargando…' : 'Cargar más estudiantes'}
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </section>

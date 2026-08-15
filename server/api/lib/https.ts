@@ -8,10 +8,12 @@ export function httpsPost(
   body: unknown,
   headers?: Record<string, string>,
   timeoutMs = 20_000,
+  maxBytes = 2 * 1024 * 1024,
 ): Promise<{ status: number; body: unknown }> {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify(body);
     let settled = false;
+    let size = 0;
     const opts = {
       hostname,
       path: pathname,
@@ -26,7 +28,14 @@ export function httpsPost(
     };
     const req = https.request(opts, (res) => {
       let chunks = '';
-      res.on('data', (chunk: string) => (chunks += chunk));
+      res.on('data', (chunk: string) => {
+        size += Buffer.byteLength(chunk);
+        if (size > maxBytes) {
+          req.destroy(new Error(`La respuesta desde ${hostname} excede el tamaño máximo.`));
+          return;
+        }
+        chunks += chunk;
+      });
       res.on('end', () => {
         try {
           const parsed = JSON.parse(chunks);
@@ -52,8 +61,13 @@ export function httpsGet(
   hostname: string,
   pathname: string,
   headers?: Record<string, string>,
+  timeoutMs = 10_000,
+  maxBytes = 2 * 1024 * 1024,
 ): Promise<unknown> {
   return new Promise((resolve, reject) => {
+    let settled = false;
+    let size = 0;
+    let chunks = '';
     const opts = {
       hostname,
       path: pathname,
@@ -61,17 +75,33 @@ export function httpsGet(
       headers: headers || {},
     };
     const req = https.request(opts, (res) => {
-      let chunks = '';
-      res.on('data', (chunk: string) => (chunks += chunk));
+      res.on('data', (chunk: string) => {
+        size += Buffer.byteLength(chunk);
+        if (size > maxBytes) {
+          req.destroy(new Error(`La respuesta desde ${hostname} excede el tamaño máximo.`));
+          return;
+        }
+        chunks += chunk;
+      });
       res.on('end', () => {
+        if (settled) return;
         try {
+          settled = true;
           resolve(JSON.parse(chunks));
         } catch {
-          reject(new Error(`HTTP ${res.statusCode}: ${chunks}`));
+          settled = true;
+          reject(new Error(`HTTP ${res.statusCode}: respuesta no válida.`));
         }
       });
     });
-    req.on('error', reject);
+    req.on('error', (error) => {
+      if (settled) return;
+      settled = true;
+      reject(error);
+    });
+    req.setTimeout(timeoutMs, () =>
+      req.destroy(new Error(`La solicitud a ${hostname} excedió el tiempo máximo.`)),
+    );
     req.end();
   });
 }
@@ -115,9 +145,11 @@ export function httpsPatch(
   pathname: string,
   body: unknown,
   headers?: Record<string, string>,
+  timeoutMs = 10_000,
 ): Promise<{ status: number; body: unknown }> {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify(body);
+    let settled = false;
     const opts = {
       hostname,
       path: pathname,
@@ -128,14 +160,24 @@ export function httpsPatch(
       let chunks = '';
       res.on('data', (chunk: string) => (chunks += chunk));
       res.on('end', () => {
+        if (settled) return;
         try {
+          settled = true;
           resolve({ status: res.statusCode ?? 500, body: JSON.parse(chunks) });
         } catch {
-          reject(new Error(`HTTP ${res.statusCode}: ${chunks}`));
+          settled = true;
+          reject(new Error(`HTTP ${res.statusCode}: respuesta no válida.`));
         }
       });
     });
-    req.on('error', reject);
+    req.on('error', (error) => {
+      if (settled) return;
+      settled = true;
+      reject(error);
+    });
+    req.setTimeout(timeoutMs, () =>
+      req.destroy(new Error(`La solicitud a ${hostname} excedió el tiempo máximo.`)),
+    );
     req.write(data);
     req.end();
   });

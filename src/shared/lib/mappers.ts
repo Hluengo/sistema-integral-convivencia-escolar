@@ -5,13 +5,13 @@ import { getYearFromDateOnly } from '../../shared/lib/dateUtils';
 
 export interface InspectorateRecord {
   id: string;
-  student_id: string;
+  student_id: string | null;
   date_time: string;
   observation: string;
   severity: string;
   type: string;
-  registered_by: string;
-  created_at: string;
+  registered_by: string | null;
+  created_at: string | null;
   created_by: string | null;
   pdf_file_path?: string | null;
 }
@@ -19,11 +19,11 @@ export interface InspectorateRecord {
 export function mapInspectorateToAnnotation(row: InspectorateRecord): Annotation {
   return {
     id: row.id,
-    student_id: row.student_id,
+    student_id: row.student_id || '',
     text: row.observation,
     date: row.date_time,
     severity: row.severity as Annotation['severity'],
-    registered_by: row.registered_by,
+    registered_by: row.registered_by || '',
     type: (row.type === 'Positiva'
       ? 'Positiva'
       : row.type === 'Información'
@@ -38,7 +38,7 @@ export interface CauseRow {
   student_id: string;
   letter_type: string;
   emission_date: string;
-  status: string;
+  status: string | null;
   emitted_by: string;
   supervisor_name?: string | null;
   apoderado_name: string;
@@ -49,7 +49,7 @@ export interface CauseRow {
   course: string;
   regulation_basis: string;
   observations?: string | null;
-  created_at: string;
+  created_at: string | null;
   content_snapshot?: Record<string, unknown> | null;
 }
 
@@ -63,7 +63,7 @@ export function mapCauseRowToCarta(row: CauseRow): CartaDisciplinaria {
     student_id: row.student_id,
     letter_type: row.letter_type as CartaDisciplinaria['letter_type'],
     emission_date: row.emission_date,
-    status: validStatus(row.status),
+    status: validStatus(row.status || ''),
     emitted_by: row.emitted_by,
     supervisor_name: row.supervisor_name || undefined,
     apoderado_name: row.apoderado_name,
@@ -74,7 +74,7 @@ export function mapCauseRowToCarta(row: CauseRow): CartaDisciplinaria {
     course: row.course,
     regulation_basis: row.regulation_basis,
     observations: row.observations || undefined,
-    created_at: row.created_at,
+    created_at: row.created_at || row.emission_date,
     content_snapshot: row.content_snapshot || null,
   };
 }
@@ -85,9 +85,9 @@ export interface StageRow {
   step_number: number;
   stage_name: string;
   responsible: string;
-  transition_date: string;
+  transition_date: string | null;
   comment?: string | null;
-  created_at: string;
+  created_at: string | null;
 }
 
 export function mapStageRowToEtapa(row: StageRow): EtapaDisciplinaria {
@@ -97,8 +97,8 @@ export function mapStageRowToEtapa(row: StageRow): EtapaDisciplinaria {
     step_number: row.step_number,
     stage_name: row.stage_name,
     responsible: row.responsible,
-    transition_date: row.transition_date,
+    transition_date: row.transition_date || row.created_at || new Date().toISOString(),
     comment: row.comment || undefined,
-    created_at: row.created_at,
+    created_at: row.created_at || row.transition_date || new Date().toISOString(),
   };
 }

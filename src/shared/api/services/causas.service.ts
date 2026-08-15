@@ -16,11 +16,11 @@ interface SupabaseCausaRow {
   estado_actual: string;
   tipo_infraccion: string;
   responsable: string;
-  compromete_aula_segura: boolean;
+  compromete_aula_segura: boolean | null;
   fecha_ultima_actualizacion: string;
-  observaciones: string;
+  observaciones: string | null;
   conducta_rice_id: string | null;
-  medidas_ejecutadas: string[];
+  medidas_ejecutadas: string[] | null;
 }
 
 interface SupabaseChecklistRow {
@@ -109,7 +109,7 @@ function mapCausaRows(rows: SupabaseCausaRow[]): Causa[] {
       estadoActual: row.estado_actual,
       tipoInfraccion: row.tipo_infraccion,
       responsable: row.responsable,
-      comprometeAulaSegura: row.compromete_aula_segura,
+      comprometeAulaSegura: row.compromete_aula_segura ?? false,
       fechaUltimaActualizacion: row.fecha_ultima_actualizacion,
       observaciones: row.observaciones || '',
       conductaRiceId: row.conducta_rice_id || undefined,
@@ -142,7 +142,7 @@ export async function fetchCausasPage(offset = 0, pageSize = 50): Promise<Causas
   const rows = data as SupabaseCausaRow[];
   const hasNextPage = rows.length > requestedSize;
   return {
-    causas: mapCausaRows(rows.slice(0, requestedSize)),
+    causas: mapCausaRows(rows.slice(0, requestedSize) as unknown as SupabaseCausaRow[]),
     nextOffset: hasNextPage ? offset + requestedSize : undefined,
   };
 }
@@ -187,7 +187,9 @@ export async function fetchCausaDetails(causaId: string): Promise<Causa> {
     console.error('Error fetching checklist items:', checklistResult.error);
   if (bitacoraResult.error) console.error('Error fetching bitacora entries:', bitacoraResult.error);
 
-  const [base] = mapCausaRows(causaResult.data ? [causaResult.data] : []);
+  const [base] = mapCausaRows(
+    (causaResult.data ? [causaResult.data] : []) as unknown as SupabaseCausaRow[],
+  );
   if (!base) {
     throw new Error('No se encontró el expediente solicitado.');
   }
@@ -224,6 +226,7 @@ async function resolveUniqueCausaId(preferred: string): Promise<string> {
 }
 
 export async function createCausa(causa: Causa, tenantId: string | null): Promise<string | false> {
+  if (!tenantId) return false;
   const causaId = await resolveUniqueCausaId(causa.id);
   const { error } = await supabase.from('causas').insert({
     id: causaId,

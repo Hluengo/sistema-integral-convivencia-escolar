@@ -20,15 +20,22 @@ test('passwordResetRequestSchema valida solo el correo', () => {
 test('passwordUpdateFormSchema exige confirmación coincidente', () => {
   assert.equal(
     passwordUpdateFormSchema.safeParse({
-      password: '123456',
-      passwordConfirmation: '123456',
+      password: '1234567890',
+      passwordConfirmation: '1234567890',
     }).success,
     true,
   );
   assert.equal(
     passwordUpdateFormSchema.safeParse({
-      password: '123456',
-      passwordConfirmation: '654321',
+      password: '123456789',
+      passwordConfirmation: '123456789',
+    }).success,
+    false,
+  );
+  assert.equal(
+    passwordUpdateFormSchema.safeParse({
+      password: '1234567890',
+      passwordConfirmation: '0987654321',
     }).success,
     false,
   );

@@ -20,13 +20,13 @@ export type AnalyticsEvent =
 
 export interface AnalyticsPayload {
   screen_viewed: { screen: string };
-  causa_created: { studentName?: string; course?: string; type?: string };
+  causa_created: { course?: string; type?: string };
   causa_opened: { causaId: string };
   document_generated: { docType: string; format: 'pdf' | 'docx' };
   chat_message_sent: { role: 'user' | 'assistant'; messageLength: number };
-  annotation_added: { studentId: string; type: string };
+  annotation_added: { type: string };
   annotation_edited: { annotationId: string };
-  search_performed: { query: string; resultsCount: number };
+  search_performed: { resultsCount: number };
   user_logged_in: { method: 'email' | 'google' };
   user_logged_out: Record<string, never>;
   error_caught: { errorMessage: string; component?: string };
@@ -62,19 +62,9 @@ export function track<E extends AnalyticsEvent>(event: E, payload: AnalyticsPayl
 }
 
 export function identifyAnalyticsUser(user: User): void {
-  const traits = {
-    email: user.email,
-    role: user.user_metadata?.role ?? 'unknown',
-    name: user.user_metadata?.full_name ?? user.email,
-  };
-
   void loadTelemetry().then(({ posthog, sentry }) => {
-    posthog.identifyUser(user.id, traits);
-    sentry.setUserContext({
-      id: user.id,
-      email: user.email ?? undefined,
-      role: traits.role,
-    });
+    posthog.identifyUser(user.id);
+    sentry.setUserContext({ id: user.id });
   });
 }
 

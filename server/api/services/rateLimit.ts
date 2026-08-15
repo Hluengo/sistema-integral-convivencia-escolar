@@ -14,6 +14,7 @@ const RATE_LIMIT = 10;
 const RATE_WINDOW = 60 * 1000;
 const MAX_ENTRIES = 10000;
 const PRUNE_THRESHOLD = 5000;
+const REDIS_TIMEOUT_MS = 2000;
 let insertsSincePrune = 0;
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
@@ -44,18 +45,30 @@ function getRedisClient() {
     return null;
   }
 
+  const redisFetch = async (path: string) => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REDIS_TIMEOUT_MS);
+    try {
+      const res = await fetch(`${url}${path}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        signal: controller.signal,
+      });
+      if (!res.ok) throw new Error(`Redis HTTP ${res.status}`);
+      return res;
+    } finally {
+      clearTimeout(timeout);
+    }
+  };
+
   redisClient = {
     async incr(key: string) {
-      const res = await fetch(`${url}/incr/${encodeURIComponent(key)}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await redisFetch(`/incr/${encodeURIComponent(key)}`);
       const data = (await res.json()) as { result?: number };
-      return data.result ?? 0;
+      if (typeof data.result !== 'number') throw new Error('Redis returned an invalid counter');
+      return data.result;
     },
     async pexpire(key: string, ms: number) {
-      await fetch(`${url}/pexpire/${encodeURIComponent(key)}/${ms}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await redisFetch(`/pexpire/${encodeURIComponent(key)}/${ms}`);
     },
   };
 

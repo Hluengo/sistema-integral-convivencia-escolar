@@ -4,6 +4,9 @@ import { z } from 'zod';
 
 const emailSchema = z.email('Ingrese un correo electrónico válido.');
 const passwordSchema = z.string().min(6, 'La contraseña debe tener al menos 6 caracteres.');
+const newPasswordSchema = z
+  .string()
+  .min(10, 'La nueva contraseña debe tener al menos 10 caracteres.');
 
 export const loginFormSchema = z.object({
   email: emailSchema,
@@ -16,8 +19,8 @@ export const passwordResetRequestSchema = z.object({
 
 export const passwordUpdateFormSchema = z
   .object({
-    password: passwordSchema,
-    passwordConfirmation: passwordSchema,
+    password: newPasswordSchema,
+    passwordConfirmation: newPasswordSchema,
   })
   .refine((value) => value.password === value.passwordConfirmation, {
     path: ['passwordConfirmation'],

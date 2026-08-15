@@ -756,90 +756,43 @@ async function confirmDisciplinaryProcess(input) {
       `Este PDF ya fue registrado en el proceso ${duplicateFile.process_number}. No se cre\xF3 un duplicado.`
     );
   }
-  const { data: processNumber, error: numberError } = await supabase.rpc(
-    "generate_process_number",
+  const { data: atomicResult, error: atomicError } = await supabase.rpc(
+    "confirm_disciplinary_process_atomic",
     {
-      p_tenant_id: confirmedInput.tenantId
+      p_tenant_id: confirmedInput.tenantId,
+      p_student_id: confirmedInput.studentId,
+      p_suggested_letter_type: confirmedInput.suggestedLetterType || "none",
+      p_file_name: confirmedInput.fileName,
+      p_storage_path: confirmedInput.storagePath,
+      p_file_size: confirmedInput.fileSize ?? 0,
+      p_mime_type: confirmedInput.mimeType ?? "application/pdf",
+      p_file_hash: confirmedInput.fileHash,
+      p_bucket: confirmedInput.bucket,
+      p_original_file_name: confirmedInput.fileName,
+      p_stored_file_name: confirmedInput.storagePath.split("/").pop() || confirmedInput.fileName,
+      p_analysis_version: PARSER_VERSION,
+      p_annotations: confirmedInput.annotations,
+      p_total_negativas: summary.negativas,
+      p_total_positivas: summary.positivas,
+      p_total_informativas: summary.informativas,
+      p_confirmed_by: confirmedInput.confirmedBy ?? null
     }
   );
-  if (numberError || !processNumber) throw new Error("Error al generar n\xFAmero de proceso");
-  const { data: processRow, error: processError } = await supabase.from("disciplinary_processes").insert({
-    student_id: confirmedInput.studentId,
-    process_number: processNumber,
-    status: "draft",
-    tenant_id: confirmedInput.tenantId,
-    suggested_letter_type: confirmedInput.suggestedLetterType || "none",
-    total_negativas: summary.negativas,
-    total_positivas: summary.positivas,
-    total_informativas: summary.informativas,
-    is_completed: false
-  }).select("id, process_number").single();
-  if (processError || !processRow) throw new Error("Error al crear proceso disciplinario");
-  const processId = processRow.id;
-  const confirmedAnnotations = confirmedInput.annotations.map((annotation, index) => ({
-    process_id: processId,
-    student_id: confirmedInput.studentId,
-    annotation_type: annotation.type === "negative" ? "Negativa" : annotation.type === "positive" ? "Positiva" : "Informaci\xF3n",
-    annotation_text: annotation.raw_text,
-    line_number: annotation.sequence_number || index + 1,
-    annotation_date: annotation.detected_date,
-    teacher_name: annotation.detected_teacher,
-    category: annotation.type,
-    raw_text: annotation.raw_text,
-    normalized_text: annotation.normalized_text ?? normalizeText(annotation.raw_text),
-    page_number: annotation.page_number ?? null,
-    position_in_page: annotation.sequence_number || index + 1,
-    classification_method: "regex",
-    confidence: annotation.confidence ?? 0.8,
-    parser_version: PARSER_VERSION,
-    confirmed_annotation_type: annotation.type,
-    tenant_id: confirmedInput.tenantId
-  }));
-  const { error: fileError } = await supabase.from("disciplinary_process_files").insert({
-    process_id: processId,
-    file_name: confirmedInput.fileName,
-    storage_path: confirmedInput.storagePath,
-    file_size: confirmedInput.fileSize ?? 0,
-    mime_type: confirmedInput.mimeType ?? "application/pdf",
-    file_hash: confirmedInput.fileHash,
-    bucket: confirmedInput.bucket,
-    original_file_name: confirmedInput.fileName,
-    stored_file_name: confirmedInput.storagePath.split("/").pop() || confirmedInput.fileName,
-    processing_status: "confirmed",
-    analysis_version: PARSER_VERSION,
-    student_id: confirmedInput.studentId,
-    tenant_id: confirmedInput.tenantId
-  });
-  if (fileError) throw new Error("Error al vincular el PDF al proceso");
-  if (confirmedAnnotations.length > 0) {
-    const { error: annotationsError } = await supabase.from("disciplinary_annotations_detected").insert(confirmedAnnotations);
-    if (annotationsError) throw new Error("Error al guardar las anotaciones detectadas");
+  if (atomicError || !Array.isArray(atomicResult) || !atomicResult[0]) {
+    throw new Error("Error al confirmar at\xF3micamente el proceso disciplinario");
   }
-  const insertedAnnotations = await syncConfirmedProcessToLegacyViews(
-    supabase,
-    confirmedInput,
-    processId,
-    String(processRow.process_number),
-    summary,
-    student
-  );
-  await supabase.from("document_analyses").insert({
-    student_id: confirmedInput.studentId,
-    file_name: confirmedInput.fileName,
-    negativas: summary.negativas,
-    positivas: summary.positivas,
-    informativas: summary.informativas,
-    tenant_id: confirmedInput.tenantId,
-    status: "confirmed",
-    process_id: processId,
-    file_hash: confirmedInput.fileHash,
-    parser_version: PARSER_VERSION,
-    confirmed_at: (/* @__PURE__ */ new Date()).toISOString()
-  });
+  const atomicRow = atomicResult[0];
+  const processId = atomicRow.process_id;
+  const processNumber = atomicRow.process_number;
+  const insertedAnnotations = {
+    negativas: Number(atomicRow.inserted_negativas) || 0,
+    positivas: Number(atomicRow.inserted_positivas) || 0,
+    informativas: Number(atomicRow.inserted_informativas) || 0
+  };
   return {
     success: true,
     processId,
-    processNumber: String(processRow.process_number),
+    processNumber,
     insertedAnnotations
   };
 }
@@ -1349,6 +1302,7 @@ var VALID_ROLES = [
   "user",
   "staff"
 ];
+var FRESH_PROFILE_ROLES = ["superadmin", "admin", "direccion"];
 function isValidUuid(value) {
   return UUID_RE.test(value);
 }
@@ -1506,7 +1460,7 @@ async function injectTenantContext(req, token, profileFetcher = defaultProfileFe
   const appMetadata = user.app_metadata;
   const jwtTenantId = typeof appMetadata?.tenant_id === "string" ? appMetadata.tenant_id : void 0;
   const jwtRole = typeof appMetadata?.role === "string" ? appMetadata.role : void 0;
-  if (jwtTenantId && isValidUuid(jwtTenantId) && jwtRole && isValidRole(jwtRole)) {
+  if (jwtTenantId && isValidUuid(jwtTenantId) && jwtRole && isValidRole(jwtRole) && !FRESH_PROFILE_ROLES.includes(jwtRole)) {
     req.tenantId = jwtTenantId;
     req.profileRole = jwtRole;
     return true;
@@ -1669,10 +1623,11 @@ function setCache(key, value) {
 
 // server/api/lib/https.ts
 import https3 from "node:https";
-function httpsPost(hostname, pathname, body, headers, timeoutMs = 2e4) {
+function httpsPost(hostname, pathname, body, headers, timeoutMs = 2e4, maxBytes = 2 * 1024 * 1024) {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify(body);
     let settled = false;
+    let size = 0;
     const opts = {
       hostname,
       path: pathname,
@@ -1687,7 +1642,14 @@ function httpsPost(hostname, pathname, body, headers, timeoutMs = 2e4) {
     };
     const req = https3.request(opts, (res) => {
       let chunks = "";
-      res.on("data", (chunk) => chunks += chunk);
+      res.on("data", (chunk) => {
+        size += Buffer.byteLength(chunk);
+        if (size > maxBytes) {
+          req.destroy(new Error(`La respuesta desde ${hostname} excede el tama\xF1o m\xE1ximo.`));
+          return;
+        }
+        chunks += chunk;
+      });
       res.on("end", () => {
         try {
           const parsed = JSON.parse(chunks);
@@ -1709,8 +1671,11 @@ function httpsPost(hostname, pathname, body, headers, timeoutMs = 2e4) {
     req.end();
   });
 }
-function httpsGet(hostname, pathname, headers) {
+function httpsGet(hostname, pathname, headers, timeoutMs = 1e4, maxBytes = 2 * 1024 * 1024) {
   return new Promise((resolve, reject) => {
+    let settled = false;
+    let size = 0;
+    let chunks = "";
     const opts = {
       hostname,
       path: pathname,
@@ -1718,17 +1683,34 @@ function httpsGet(hostname, pathname, headers) {
       headers: headers || {}
     };
     const req = https3.request(opts, (res) => {
-      let chunks = "";
-      res.on("data", (chunk) => chunks += chunk);
+      res.on("data", (chunk) => {
+        size += Buffer.byteLength(chunk);
+        if (size > maxBytes) {
+          req.destroy(new Error(`La respuesta desde ${hostname} excede el tama\xF1o m\xE1ximo.`));
+          return;
+        }
+        chunks += chunk;
+      });
       res.on("end", () => {
+        if (settled) return;
         try {
+          settled = true;
           resolve(JSON.parse(chunks));
         } catch {
-          reject(new Error(`HTTP ${res.statusCode}: ${chunks}`));
+          settled = true;
+          reject(new Error(`HTTP ${res.statusCode}: respuesta no v\xE1lida.`));
         }
       });
     });
-    req.on("error", reject);
+    req.on("error", (error) => {
+      if (settled) return;
+      settled = true;
+      reject(error);
+    });
+    req.setTimeout(
+      timeoutMs,
+      () => req.destroy(new Error(`La solicitud a ${hostname} excedi\xF3 el tiempo m\xE1ximo.`))
+    );
     req.end();
   });
 }
@@ -1761,9 +1743,10 @@ function httpsGetBuffer(hostname, pathname, headers, maxBytes = 10 * 1024 * 1024
     req.end();
   });
 }
-function httpsPatch(hostname, pathname, body, headers) {
+function httpsPatch(hostname, pathname, body, headers, timeoutMs = 1e4) {
   return new Promise((resolve, reject) => {
     const data = JSON.stringify(body);
+    let settled = false;
     const opts = {
       hostname,
       path: pathname,
@@ -1774,14 +1757,25 @@ function httpsPatch(hostname, pathname, body, headers) {
       let chunks = "";
       res.on("data", (chunk) => chunks += chunk);
       res.on("end", () => {
+        if (settled) return;
         try {
+          settled = true;
           resolve({ status: res.statusCode ?? 500, body: JSON.parse(chunks) });
         } catch {
-          reject(new Error(`HTTP ${res.statusCode}: ${chunks}`));
+          settled = true;
+          reject(new Error(`HTTP ${res.statusCode}: respuesta no v\xE1lida.`));
         }
       });
     });
-    req.on("error", reject);
+    req.on("error", (error) => {
+      if (settled) return;
+      settled = true;
+      reject(error);
+    });
+    req.setTimeout(
+      timeoutMs,
+      () => req.destroy(new Error(`La solicitud a ${hostname} excedi\xF3 el tiempo m\xE1ximo.`))
+    );
     req.write(data);
     req.end();
   });
@@ -1897,6 +1891,7 @@ var RATE_LIMIT = 10;
 var RATE_WINDOW = 60 * 1e3;
 var MAX_ENTRIES = 1e4;
 var PRUNE_THRESHOLD = 5e3;
+var REDIS_TIMEOUT_MS = 2e3;
 var insertsSincePrune = 0;
 var rateLimitMap = /* @__PURE__ */ new Map();
 function prune() {
@@ -1918,18 +1913,29 @@ function getRedisClient() {
     }
     return null;
   }
+  const redisFetch = async (path3) => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REDIS_TIMEOUT_MS);
+    try {
+      const res = await fetch(`${url}${path3}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        signal: controller.signal
+      });
+      if (!res.ok) throw new Error(`Redis HTTP ${res.status}`);
+      return res;
+    } finally {
+      clearTimeout(timeout);
+    }
+  };
   redisClient = {
     async incr(key) {
-      const res = await fetch(`${url}/incr/${encodeURIComponent(key)}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await redisFetch(`/incr/${encodeURIComponent(key)}`);
       const data = await res.json();
-      return data.result ?? 0;
+      if (typeof data.result !== "number") throw new Error("Redis returned an invalid counter");
+      return data.result;
     },
     async pexpire(key, ms) {
-      await fetch(`${url}/pexpire/${encodeURIComponent(key)}/${ms}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await redisFetch(`/pexpire/${encodeURIComponent(key)}/${ms}`);
     }
   };
   return redisClient;
@@ -3542,7 +3548,8 @@ router8.post(
         suggestedLetterType: body.suggestedLetterType || "none",
         annotations: body.annotations ?? [],
         idempotencyKey: body.idempotencyKey,
-        authToken: getBearerToken(req)
+        authToken: getBearerToken(req),
+        confirmedBy: authReq.user?.sub
       });
       res.json(result);
     } catch (error) {
@@ -3600,12 +3607,17 @@ router9.post(
         auth: { persistSession: false },
         global: { headers: { Authorization: `Bearer ${authReq.authToken}` } }
       });
-      await supabase.from("usage_events").insert({
+      const { error: insertError } = await supabase.from("usage_events").insert({
         event_name: eventName,
         user_id: authReq.user?.sub ?? null,
         tenant_id: authReq.tenantId ?? null,
         properties: properties ?? {}
       });
+      if (insertError) {
+        console.error("Error logging usage event:", insertError);
+        res.status(503).json({ error: "No fue posible registrar el evento." });
+        return;
+      }
       res.json({ success: true });
     } catch (error) {
       console.error("Error logging usage event:", error);

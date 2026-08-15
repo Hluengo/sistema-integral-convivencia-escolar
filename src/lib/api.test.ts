@@ -55,7 +55,7 @@ describe('API endpoints', () => {
         exp: Math.floor(Date.now() / 1000) + 3600,
         app_metadata: {
           tenant_id: '00000000-0000-0000-0000-000000000001',
-          role: 'admin',
+          role: 'teacher',
         },
       },
       b64Secret,
@@ -329,7 +329,7 @@ describe('API endpoints', () => {
           exp: Math.floor(Date.now() / 1000) + 3600,
           app_metadata: {
             tenant_id: '00000000-0000-0000-0000-000000000001',
-            role: 'admin',
+            role: 'teacher',
           },
         },
         process.env.SUPABASE_JWT_SECRET ?? '',

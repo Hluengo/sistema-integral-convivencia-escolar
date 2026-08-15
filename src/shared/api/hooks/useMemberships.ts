@@ -36,11 +36,11 @@ export function useMemberships(applicationCode: string) {
   const mode = getMembershipMode();
   const shouldFetch = mode !== 'legacy' && Boolean(user && tenantId);
 
-  // Cuando cambia el usuario, la caché interna del servicio debe invalidarse
-  // para que el próximo fetch no reutilice datos de una sesión anterior.
+  // Cuando cambia el usuario o el tenant, la caché interna del servicio debe
+  // invalidarse para que el próximo fetch no reutilice datos de otra sesión.
   useEffect(() => {
-    if (user?.id) invalidateMembershipCache();
-  }, [user?.id]);
+    invalidateMembershipCache();
+  }, [user?.id, tenantId]);
 
   useEffect(() => {
     if (mode === 'legacy') {
@@ -60,8 +60,8 @@ export function useMemberships(applicationCode: string) {
   }, [mode, user, tenantId, membershipLoaded, clearMembership, setLegacyFallbackUsed]);
 
   const membershipQuery = useQuery({
-    queryKey: ['membership', applicationCode, user?.id ?? 'anonymous'],
-    queryFn: () => getMyMembership(applicationCode),
+    queryKey: ['membership', applicationCode, user?.id ?? 'anonymous', tenantId ?? 'no-tenant'],
+    queryFn: () => getMyMembership(applicationCode, user?.id ?? null, tenantId),
     enabled: shouldFetch,
     staleTime: 5 * 60 * 1000,
   });

@@ -122,6 +122,7 @@ interface ConfirmInput {
   annotations: ConfirmAnnotationInput[];
   idempotencyKey?: string;
   authToken?: string;
+  confirmedBy?: string;
 }
 
 const PARSER_VERSION = 'disciplinary-pdf-parser-v1';
@@ -1306,108 +1307,51 @@ export async function confirmDisciplinaryProcess(input: ConfirmInput): Promise<{
     );
   }
 
-  const { data: processNumber, error: numberError } = await supabase.rpc(
-    'generate_process_number',
+  const { data: atomicResult, error: atomicError } = await supabase.rpc(
+    'confirm_disciplinary_process_atomic',
     {
       p_tenant_id: confirmedInput.tenantId,
+      p_student_id: confirmedInput.studentId,
+      p_suggested_letter_type: confirmedInput.suggestedLetterType || 'none',
+      p_file_name: confirmedInput.fileName,
+      p_storage_path: confirmedInput.storagePath,
+      p_file_size: confirmedInput.fileSize ?? 0,
+      p_mime_type: confirmedInput.mimeType ?? 'application/pdf',
+      p_file_hash: confirmedInput.fileHash,
+      p_bucket: confirmedInput.bucket,
+      p_original_file_name: confirmedInput.fileName,
+      p_stored_file_name: confirmedInput.storagePath.split('/').pop() || confirmedInput.fileName,
+      p_analysis_version: PARSER_VERSION,
+      p_annotations: confirmedInput.annotations,
+      p_total_negativas: summary.negativas,
+      p_total_positivas: summary.positivas,
+      p_total_informativas: summary.informativas,
+      p_confirmed_by: confirmedInput.confirmedBy ?? null,
     },
   );
-  if (numberError || !processNumber) throw new Error('Error al generar número de proceso');
-
-  const { data: processRow, error: processError } = await supabase
-    .from('disciplinary_processes')
-    .insert({
-      student_id: confirmedInput.studentId,
-      process_number: processNumber,
-      status: 'draft',
-      tenant_id: confirmedInput.tenantId,
-      suggested_letter_type: confirmedInput.suggestedLetterType || 'none',
-      total_negativas: summary.negativas,
-      total_positivas: summary.positivas,
-      total_informativas: summary.informativas,
-      is_completed: false,
-    })
-    .select('id, process_number')
-    .single();
-
-  if (processError || !processRow) throw new Error('Error al crear proceso disciplinario');
-
-  const processId = (processRow as { id: string }).id;
-  const confirmedAnnotations = confirmedInput.annotations.map((annotation, index) => ({
-    process_id: processId,
-    student_id: confirmedInput.studentId,
-    annotation_type:
-      annotation.type === 'negative'
-        ? 'Negativa'
-        : annotation.type === 'positive'
-          ? 'Positiva'
-          : 'Información',
-    annotation_text: annotation.raw_text,
-    line_number: annotation.sequence_number || index + 1,
-    annotation_date: annotation.detected_date,
-    teacher_name: annotation.detected_teacher,
-    category: annotation.type,
-    raw_text: annotation.raw_text,
-    normalized_text: annotation.normalized_text ?? normalizeText(annotation.raw_text),
-    page_number: annotation.page_number ?? null,
-    position_in_page: annotation.sequence_number || index + 1,
-    classification_method: 'regex',
-    confidence: annotation.confidence ?? 0.8,
-    parser_version: PARSER_VERSION,
-    confirmed_annotation_type: annotation.type,
-    tenant_id: confirmedInput.tenantId,
-  }));
-
-  const { error: fileError } = await supabase.from('disciplinary_process_files').insert({
-    process_id: processId,
-    file_name: confirmedInput.fileName,
-    storage_path: confirmedInput.storagePath,
-    file_size: confirmedInput.fileSize ?? 0,
-    mime_type: confirmedInput.mimeType ?? 'application/pdf',
-    file_hash: confirmedInput.fileHash,
-    bucket: confirmedInput.bucket,
-    original_file_name: confirmedInput.fileName,
-    stored_file_name: confirmedInput.storagePath.split('/').pop() || confirmedInput.fileName,
-    processing_status: 'confirmed',
-    analysis_version: PARSER_VERSION,
-    student_id: confirmedInput.studentId,
-    tenant_id: confirmedInput.tenantId,
-  });
-  if (fileError) throw new Error('Error al vincular el PDF al proceso');
-
-  if (confirmedAnnotations.length > 0) {
-    const { error: annotationsError } = await supabase
-      .from('disciplinary_annotations_detected')
-      .insert(confirmedAnnotations);
-    if (annotationsError) throw new Error('Error al guardar las anotaciones detectadas');
+  if (atomicError || !Array.isArray(atomicResult) || !atomicResult[0]) {
+    throw new Error('Error al confirmar atómicamente el proceso disciplinario');
   }
 
-  const insertedAnnotations = await syncConfirmedProcessToLegacyViews(
-    supabase,
-    confirmedInput,
-    processId,
-    String((processRow as { process_number: string }).process_number),
-    summary,
-    student as { id: string; full_name?: string | null; course_id?: string | null },
-  );
-  await supabase.from('document_analyses').insert({
-    student_id: confirmedInput.studentId,
-    file_name: confirmedInput.fileName,
-    negativas: summary.negativas,
-    positivas: summary.positivas,
-    informativas: summary.informativas,
-    tenant_id: confirmedInput.tenantId,
-    status: 'confirmed',
-    process_id: processId,
-    file_hash: confirmedInput.fileHash,
-    parser_version: PARSER_VERSION,
-    confirmed_at: new Date().toISOString(),
-  });
+  const atomicRow = atomicResult[0] as {
+    process_id: string;
+    process_number: string;
+    inserted_negativas: number;
+    inserted_positivas: number;
+    inserted_informativas: number;
+  };
+  const processId = atomicRow.process_id;
+  const processNumber = atomicRow.process_number;
+  const insertedAnnotations: AnnotationSummary = {
+    negativas: Number(atomicRow.inserted_negativas) || 0,
+    positivas: Number(atomicRow.inserted_positivas) || 0,
+    informativas: Number(atomicRow.inserted_informativas) || 0,
+  };
 
   return {
     success: true,
     processId,
-    processNumber: String((processRow as { process_number: string }).process_number),
+    processNumber,
     insertedAnnotations,
   };
 }

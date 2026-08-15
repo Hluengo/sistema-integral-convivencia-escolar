@@ -178,6 +178,7 @@ export default function App() {
           <Suspense fallback={<CommandPaletteSkeleton />}>
             <Lazy.CommandPalette
               causas={causas}
+              privacyMode={privacyMode}
               onNavigate={handleViewChange}
               onSelectCausa={handleSelectCausaFromDashboard}
             />

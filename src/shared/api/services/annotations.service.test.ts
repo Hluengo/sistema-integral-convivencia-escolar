@@ -477,6 +477,40 @@ describe('fetchStudentsWithAnnotationCounts', () => {
     assert.equal(students[0].course_name, '8° Básico A');
   });
 
+  it('mapea una página y conserva el total remoto', async () => {
+    const result = await withSupabaseMocks({
+      rpc: async (fn, params) => {
+        assert.equal(fn, 'get_student_annotation_summary_page');
+        assert.deepEqual(params, { p_limit: 100, p_offset: 200 });
+        return {
+          data: [
+            {
+              id: 's-201',
+              full_name: 'Estudiante Doscientos Uno',
+              course_id: 'c-1',
+              rut: '11.111.111-1',
+              course_name: '8° Básico A',
+              annotations_count: 1,
+              positive_annotations_count: 0,
+              informative_annotations_count: 0,
+              last_annotation_date: null,
+              disciplinary_status: 'verde',
+              ai_analysis: null,
+              total_count: 808,
+            },
+          ],
+          error: null,
+        };
+      },
+      fn: async () => {
+        const { fetchStudentsWithAnnotationCountsPage } = await import('./annotations.service');
+        return fetchStudentsWithAnnotationCountsPage(100, 200);
+      },
+    });
+    assert.equal((result as { totalCount: number }).totalCount, 808);
+    assert.equal((result as { students: AnotacionStudent[] }).students[0]?.id, 's-201');
+  });
+
   it('propaga la falla de la RPC', async () => {
     await assert.rejects(
       withSupabaseMocks({

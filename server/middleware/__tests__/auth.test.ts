@@ -194,6 +194,36 @@ describe('createRequireAuth', () => {
     assert.equal((req as { authToken?: string }).authToken, token);
   });
 
+  it('does not trust privileged role from stale JWT metadata', async () => {
+    const token = createJwt(
+      {
+        sub: 'user-123',
+        exp: Math.floor(Date.now() / 1000) + 3600,
+        app_metadata: {
+          tenant_id: '00000000-0000-0000-0000-000000000001',
+          role: 'admin',
+        },
+      },
+      TEST_JWT_SECRET,
+    );
+    process.env.SUPABASE_JWT_SECRET = TEST_JWT_SECRET;
+    const req = createMockReq({ headers: { authorization: `Bearer ${token}` } });
+    const res = createMockRes();
+    let fetcherCalled = false;
+    const fetcher = async () => {
+      fetcherCalled = true;
+      return {
+        tenantId: '00000000-0000-0000-0000-000000000001',
+        profileRole: 'teacher' as const,
+      };
+    };
+
+    await createRequireAuth(fetcher, rejectRemoteToken)(req, res, () => {});
+
+    assert.equal(fetcherCalled, true);
+    assert.equal((req as { profileRole?: string }).profileRole, 'teacher');
+  });
+
   it('ignores tenant id sent in request body and uses profile tenant', async () => {
     const token = createJwt(
       { sub: 'user-123', exp: Math.floor(Date.now() / 1000) + 3600 },

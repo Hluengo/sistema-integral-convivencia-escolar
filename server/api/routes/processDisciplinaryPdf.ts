@@ -175,6 +175,7 @@ router.post(
         annotations: body.annotations ?? [],
         idempotencyKey: body.idempotencyKey,
         authToken: getBearerToken(req),
+        confirmedBy: authReq.user?.sub,
       });
       res.json(result);
     } catch (error) {

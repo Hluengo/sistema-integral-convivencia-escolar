@@ -1,6 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { supabase } from '../lib/supabase';
+import type { Json } from '../lib/database.types';
 import type { BitacoraEntry } from '../../lib/types';
 import { normalizeDocumentPath } from './storage.service';
 
@@ -59,8 +60,8 @@ export async function saveBitacora(
 
   const { error } = await supabase.rpc('save_bitacora_snapshot', {
     p_causa_id: causaId,
-    p_entries: rows,
-    p_removed_entry_ids: removedIds,
+    p_entries: rows as unknown as Json,
+    p_removed_entry_ids: removedIds as unknown as Json,
   });
 
   if (error) {

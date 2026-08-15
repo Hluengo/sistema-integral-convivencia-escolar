@@ -1,6 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { supabase } from '../lib/supabase';
+import type { Json } from '../lib/database.types';
 
 export type ReportType = 'expedientes' | 'anotaciones' | 'uso' | 'auditoria';
 type ReportStatus = 'queued' | 'processing' | 'completed' | 'failed';
@@ -52,13 +53,14 @@ export async function createReportHistory(input: {
   rowCount: number;
   fileName: string;
 }): Promise<void> {
+  // La columna tenant_id usa el default current_tenant_id() en PostgreSQL.
   const { error } = await supabase.from('report_history').insert({
     report_type: input.reportType,
-    filters: input.filters,
+    filters: input.filters as unknown as Json,
     row_count: input.rowCount,
     file_name: input.fileName,
     status: 'completed',
     completed_at: new Date().toISOString(),
-  });
+  } as never);
   if (error) throw error;
 }

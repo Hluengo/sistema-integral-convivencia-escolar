@@ -13,7 +13,7 @@ export function initPostHog() {
   if (POSTHOG_KEY && POSTHOG_HOST) {
     posthog.init(POSTHOG_KEY, {
       api_host: POSTHOG_HOST,
-      autocapture: true,
+      autocapture: false,
       capture_pageview: true,
       capture_pageleave: true,
       loaded: (ph) => {

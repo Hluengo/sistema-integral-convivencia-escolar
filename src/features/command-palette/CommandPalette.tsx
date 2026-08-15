@@ -7,16 +7,23 @@ import type React from 'react';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Search, FileText, LayoutDashboard, Users, MessageSquare } from 'lucide-react';
 import type { Causa } from '../../shared/lib/types';
+import { maskName } from '../../shared/lib/anotacionesUtils';
 import type { SidebarView } from '../../widgets/sidebar/Sidebar';
 import { Dialog, DialogContent } from '../../shared/ui/Dialog';
 
 interface CommandPaletteProps {
   causas: Causa[];
+  privacyMode: boolean;
   onNavigate: (view: SidebarView) => void;
   onSelectCausa: (id: string) => void;
 }
 
-export default function CommandPalette({ causas, onNavigate, onSelectCausa }: CommandPaletteProps) {
+export default function CommandPalette({
+  causas,
+  privacyMode,
+  onNavigate,
+  onSelectCausa,
+}: CommandPaletteProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -73,7 +80,7 @@ export default function CommandPalette({ causas, onNavigate, onSelectCausa }: Co
       ...causas.map((c) => ({
         id: `causa-${c.id}`,
         icon: <FileText className="h-4 w-4" aria-hidden="true" />,
-        label: `${c.id} — ${c.estudianteNombre}`,
+        label: `${c.id} — ${maskName(c.estudianteNombre, privacyMode)}`,
         description: `${c.tipoInfraccion} • ${c.estadoActual}`,
         action: () => {
           onNavigate('causas');
@@ -83,7 +90,7 @@ export default function CommandPalette({ causas, onNavigate, onSelectCausa }: Co
         category: 'Expedientes',
       })),
     ],
-    [causas, onNavigate, onSelectCausa],
+    [causas, onNavigate, onSelectCausa, privacyMode],
   );
 
   const filtered = useMemo(() => {
