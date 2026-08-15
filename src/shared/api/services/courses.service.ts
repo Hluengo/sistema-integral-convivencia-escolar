@@ -32,13 +32,29 @@ export interface StudentsWithCoursesPage {
   totalCount: number;
 }
 
+export interface StudentActivitySummary extends StudentWithCourse {
+  cause_count: number;
+  active_cause_count: number;
+  annotation_count: number;
+  negative_annotation_count: number;
+  last_activity_at: string | null;
+}
+
+export interface StudentActivityHistoryPage {
+  students: StudentActivitySummary[];
+  totalCount: number;
+}
+
 /**
  * Fetch all courses ordered by position
  */
-export async function fetchCourses(): Promise<Course[]> {
+export async function fetchCourses(tenantId?: string | null): Promise<Course[]> {
+  if (!tenantId) return [];
+
   const { data, error } = await supabase
     .from('courses')
     .select('id,name,position,level,created_at')
+    .eq('tenant_id', tenantId)
     .order('position', { ascending: true });
 
   if (error) {
@@ -138,4 +154,40 @@ export async function fetchStudentsWithCoursesPage(
   });
 
   return { students, totalCount: count ?? students.length };
+}
+
+export async function fetchStudentActivityHistoryPage(
+  offset = 0,
+  limit = 200,
+): Promise<StudentActivityHistoryPage> {
+  const { data, error } = await supabase.rpc('get_student_activity_history', {
+    p_limit: limit,
+    p_offset: offset,
+  });
+
+  if (error) {
+    console.error('Error fetching student activity history:', error);
+    throw error;
+  }
+
+  const rows = (data ?? []) as Array<Record<string, unknown>>;
+  const students = rows.map((row) => ({
+    id: String(row.student_id),
+    full_name: String(row.full_name ?? ''),
+    course_id: String(row.course_id ?? ''),
+    course_name: String(row.course_name ?? 'Sin curso'),
+    course_level: row.course_level === 'MEDIA' ? 'MEDIA' : 'BASICA',
+    rut: String(row.rut ?? ''),
+    created_at: '',
+    cause_count: Number(row.cause_count) || 0,
+    active_cause_count: Number(row.active_cause_count) || 0,
+    annotation_count: Number(row.annotation_count) || 0,
+    negative_annotation_count: Number(row.negative_annotation_count) || 0,
+    last_activity_at: typeof row.last_activity_at === 'string' ? row.last_activity_at : null,
+  })) as StudentActivitySummary[];
+
+  return {
+    students,
+    totalCount: Number(rows[0]?.total_count) || students.length,
+  };
 }

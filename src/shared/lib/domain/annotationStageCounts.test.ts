@@ -14,10 +14,10 @@ describe('annotationStageCounts', () => {
     );
 
     assert.deepEqual(counts, {
-      sinCarta: { total: 2, pending: 2, processed: 0 },
-      amonestacion: { total: 2, pending: 2, processed: 0 },
-      compromiso: { total: 2, pending: 2, processed: 0 },
-      derivacion: { total: 1, pending: 1, processed: 0 },
+      sinCarta: { total: 2, pending: 2, processed: 0, archived: 0 },
+      amonestacion: { total: 2, pending: 2, processed: 0, archived: 0 },
+      compromiso: { total: 2, pending: 2, processed: 0, archived: 0 },
+      derivacion: { total: 1, pending: 1, processed: 0, archived: 0 },
     });
   });
 
@@ -30,10 +30,10 @@ describe('annotationStageCounts', () => {
         { stage: 'derivacion', total_count: 9, pending_count: 1, processed_count: 8 },
       ]),
       {
-        sinCarta: { total: 3, pending: 3, processed: 0 },
-        amonestacion: { total: 2, pending: 1, processed: 1 },
-        compromiso: { total: 1, pending: 1, processed: 0 },
-        derivacion: { total: 9, pending: 1, processed: 8 },
+        sinCarta: { total: 3, pending: 3, processed: 0, archived: 0 },
+        amonestacion: { total: 2, pending: 1, processed: 1, archived: 0 },
+        compromiso: { total: 1, pending: 1, processed: 0, archived: 0 },
+        derivacion: { total: 9, pending: 1, processed: 8, archived: 0 },
       },
     );
   });
@@ -45,7 +45,19 @@ describe('annotationStageCounts', () => {
       { annotations_count: 3, effective_letter_type: 'Ficha de Derivación' },
     ]);
 
-    assert.deepEqual(counts.amonestacion, { total: 1, pending: 0, processed: 1 });
-    assert.deepEqual(counts.derivacion, { total: 2, pending: 1, processed: 1 });
+    assert.deepEqual(counts.amonestacion, { total: 1, pending: 0, processed: 1, archived: 0 });
+    assert.deepEqual(counts.derivacion, { total: 2, pending: 1, processed: 1, archived: 0 });
+  });
+
+  it('separa una carta archivada de una procesada', () => {
+    const counts = countAnnotationStages([
+      {
+        annotations_count: 6,
+        effective_letter_type: 'Amonestación Escrita',
+        archived_letter_type: 'Amonestación Escrita',
+      },
+    ]);
+
+    assert.deepEqual(counts.amonestacion, { total: 1, pending: 0, processed: 0, archived: 1 });
   });
 });

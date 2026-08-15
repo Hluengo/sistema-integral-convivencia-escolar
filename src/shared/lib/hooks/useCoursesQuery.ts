@@ -11,7 +11,7 @@ export function useCoursesQuery(enabled?: boolean) {
 
   return useQuery({
     queryKey: ['courses', tenantId],
-    queryFn: fetchCourses,
+    queryFn: () => fetchCourses(tenantId),
     enabled: canFetch && Boolean(tenantId),
     staleTime: 1000 * 60 * 30,
   });

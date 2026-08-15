@@ -123,7 +123,21 @@ function percentage(part: number, total: number): number {
 
 function formatMonthName(label: string): string {
   if (!label) return 'Sin mes';
-  return `${label.charAt(0).toUpperCase()}${label.slice(1)}`;
+  const monthNames: Record<string, string> = {
+    ene: 'Enero',
+    feb: 'Febrero',
+    mar: 'Marzo',
+    abr: 'Abril',
+    may: 'Mayo',
+    jun: 'Junio',
+    jul: 'Julio',
+    ago: 'Agosto',
+    sep: 'Septiembre',
+    oct: 'Octubre',
+    nov: 'Noviembre',
+    dic: 'Diciembre',
+  };
+  return monthNames[label.toLowerCase()] ?? `${label.charAt(0).toUpperCase()}${label.slice(1)}`;
 }
 
 export function getDashboardSchoolYear(referenceDate = new Date()): number {

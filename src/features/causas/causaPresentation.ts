@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { getFaseForEstado } from '../../shared/lib/data';
-import { remainingProcedureDays } from '../../shared/lib/dateUtils';
+import { remainingProcedureDays, toDateOnly } from '../../shared/lib/dateUtils';
 import { EstadoCausa, type Causa, type FaseProcedimental } from '../../shared/lib/types';
 
 export interface DeadlinePresentation {
@@ -29,6 +29,18 @@ export function getCausaStatus(causa: Causa): string {
 }
 
 export function getCausaDeadline(causa: Causa, today = new Date()): DeadlinePresentation {
+  if (causa.fechaLimiteInvestigacion) {
+    const deadline = Date.parse(`${causa.fechaLimiteInvestigacion}T12:00:00Z`);
+    if (!Number.isNaN(deadline)) {
+      const todayDate = Date.parse(`${toDateOnly(today)}T12:00:00Z`);
+      const remainingDays = Math.round((deadline - todayDate) / 86_400_000);
+      if (remainingDays < 0) return { remainingDays, text: 'Plazo excedido', tone: 'overdue' };
+      if (remainingDays === 0) return { remainingDays, text: 'Vence hoy', tone: 'warning' };
+      if (remainingDays <= 5)
+        return { remainingDays, text: `${remainingDays} días`, tone: 'warning' };
+      return { remainingDays, text: `${remainingDays} días`, tone: 'normal' };
+    }
+  }
   const maxDays = causa.plazoInvestigacionDias ?? (causa.comprometeAulaSegura ? 10 : 60);
   const startDate = causa.fechaInicioInvestigacion || causa.fechaApertura;
   const remainingDays = remainingProcedureDays(startDate, maxDays, today);

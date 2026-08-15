@@ -97,6 +97,7 @@ export default function MainContent({
               onboardingEnabled={onboardingEnabled}
               coursesCount={coursesCount}
               onNavigate={navigation.onNavigate}
+              onSelectCausa={navigation.onSelectCausaFromDashboard}
               privacyMode={privacyMode}
             />
           </Suspense>

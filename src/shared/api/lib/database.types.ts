@@ -474,6 +474,12 @@ export type Database = {
           fecha_apertura: string;
           fecha_ultima_actualizacion: string;
           id: string;
+          fecha_inicio_investigacion: string | null;
+          fecha_limite_24h: string | null;
+          fecha_limite_cierre: string | null;
+          fecha_limite_investigacion: string | null;
+          plazo_24h: boolean;
+          plazo_investigacion_dias: number | null;
           medidas_ejecutadas: Json | null;
           nna_protected_name: string;
           observaciones: string | null;
@@ -496,6 +502,12 @@ export type Database = {
           fecha_apertura: string;
           fecha_ultima_actualizacion: string;
           id: string;
+          fecha_inicio_investigacion?: string | null;
+          fecha_limite_24h?: string | null;
+          fecha_limite_cierre?: string | null;
+          fecha_limite_investigacion?: string | null;
+          plazo_24h?: boolean;
+          plazo_investigacion_dias?: number | null;
           medidas_ejecutadas?: Json | null;
           nna_protected_name: string;
           observaciones?: string | null;
@@ -518,6 +530,12 @@ export type Database = {
           fecha_apertura?: string;
           fecha_ultima_actualizacion?: string;
           id?: string;
+          fecha_inicio_investigacion?: string | null;
+          fecha_limite_24h?: string | null;
+          fecha_limite_cierre?: string | null;
+          fecha_limite_investigacion?: string | null;
+          plazo_24h?: boolean;
+          plazo_investigacion_dias?: number | null;
           medidas_ejecutadas?: Json | null;
           nna_protected_name?: string;
           observaciones?: string | null;
@@ -2154,6 +2172,7 @@ export type Database = {
       get_annotation_stage_counts: {
         Args: never;
         Returns: {
+          archived_count: number;
           pending_count: number;
           processed_count: number;
           stage: string;
@@ -2200,6 +2219,16 @@ export type Database = {
           positivas: number;
         }[];
       };
+      get_dashboard_deadline_kpis: {
+        Args: never;
+        Returns: {
+          as_of: string;
+          critical_count: number;
+          due_soon_count: number;
+          due_today_count: number;
+          overdue_count: number;
+        }[];
+      };
       get_public_dashboard_kpis: {
         Args: never;
         Returns: {
@@ -2224,6 +2253,23 @@ export type Database = {
           negative_count: number;
           student_id: string;
           student_name: string;
+        }[];
+      };
+      get_student_activity_history: {
+        Args: { p_limit?: number; p_offset?: number };
+        Returns: {
+          active_cause_count: number;
+          annotation_count: number;
+          cause_count: number;
+          course_id: string;
+          course_level: string;
+          course_name: string;
+          full_name: string;
+          last_activity_at: string;
+          negative_annotation_count: number;
+          rut: string;
+          student_id: string;
+          total_count: number;
         }[];
       };
       get_student_annotation_summary: {

@@ -20,6 +20,8 @@ import {
   BarChart3,
   AlertCircle,
   Inbox,
+  ArrowRight,
+  Clock3,
 } from 'lucide-react';
 import MetricCard from '../../shared/ui/MetricCard';
 import SeverityBadge from '../../shared/SeverityBadge';
@@ -46,6 +48,8 @@ import OnboardingChecklist from '../onboarding/OnboardingChecklist';
 import type { SidebarView } from '../../widgets/sidebar/Sidebar';
 import { fetchOnboardingStatus } from '../../shared/api/services/institution.service';
 import { getDashboardSchoolYear } from './dashboardTrends';
+import { getDashboardActions, type DashboardAction } from './dashboardActions';
+import { fetchDashboardDeadlineKpis } from '../../shared/api/services/deadline.service';
 
 const DASHBOARD_STALE_TIME_MS = 300_000;
 
@@ -55,6 +59,7 @@ interface DashboardStatsProps {
   onboardingEnabled?: boolean;
   coursesCount?: number;
   onNavigate?: (view: SidebarView) => void;
+  onSelectCausa?: (causaId: string) => void;
   privacyMode?: boolean;
 }
 
@@ -144,15 +149,90 @@ function DashboardSkeleton() {
   );
 }
 
+function DashboardActionQueue({
+  actions,
+  privacyMode,
+  onOpen,
+}: {
+  actions: DashboardAction[];
+  privacyMode: boolean;
+  onOpen?: (causaId: string) => void;
+}) {
+  if (actions.length === 0) {
+    return (
+      <div className="card flex items-center gap-3 p-4 text-sm text-neutral-600">
+        <Clock3 className="size-4 text-leve-600" aria-hidden="true" />
+        No hay plazos operativos vencidos o próximos a vencer.
+      </div>
+    );
+  }
+
+  return (
+    <section aria-labelledby="dashboard-action-queue-title" className="card p-5">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <h2 id="dashboard-action-queue-title" className="font-semibold text-neutral-900">
+            Acciones prioritarias
+          </h2>
+          <p className="mt-1 text-neutral-500 text-xs">
+            Expedientes que requieren atención por plazo.
+          </p>
+        </div>
+        <span className="rounded-full bg-gravisima-50 px-2.5 py-1 font-bold text-gravisima-700 text-xs">
+          {actions.length}
+        </span>
+      </div>
+      <div className="divide-y divide-neutral-100">
+        {actions.slice(0, 5).map((action) => (
+          <div
+            key={action.causa.id}
+            className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+          >
+            <div className="min-w-0">
+              <p className="truncate font-medium text-neutral-900 text-sm">
+                {privacyMode ? action.causa.nnaProtectedName : action.causa.estudianteNombre}
+              </p>
+              <p className="truncate text-neutral-500 text-xs">
+                {action.causa.id} · {action.causa.estudianteCurso} · {action.causa.responsable}
+              </p>
+            </div>
+            {onOpen ? (
+              <button
+                type="button"
+                onClick={() => onOpen(action.causa.id)}
+                className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1.5 font-semibold text-brand-700 text-xs hover:bg-brand-50"
+                aria-label={`Abrir expediente ${action.causa.id}`}
+              >
+                <span
+                  className={action.urgency === 'overdue' ? 'text-gravisima-700' : 'text-grave-700'}
+                >
+                  {action.label}
+                </span>
+                <ArrowRight className="size-3.5" aria-hidden="true" />
+              </button>
+            ) : (
+              <span className="shrink-0 font-semibold text-gravisima-700 text-xs">
+                {action.label}
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function DashboardStats({
   causas,
   onFaseSelect,
   onboardingEnabled = false,
   coursesCount = 0,
   onNavigate,
+  onSelectCausa,
   privacyMode = false,
 }: DashboardStatsProps) {
   const authenticatedStats = getStats(causas);
+  const dashboardActions = useMemo(() => getDashboardActions(causas), [causas]);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const tenantId = useAuthStore((state) => state.tenantId);
   const userId = useAuthStore((state) => state.user?.id ?? null);
@@ -218,6 +298,13 @@ export default function DashboardStats({
     staleTime: DASHBOARD_STALE_TIME_MS,
     refetchOnMount: true,
   });
+  const deadlineKpisQuery = useQuery({
+    queryKey: ['dashboard-deadline-kpis', tenantId],
+    queryFn: fetchDashboardDeadlineKpis,
+    enabled: isAuthenticated && Boolean(tenantId),
+    staleTime: 60_000,
+    refetchOnMount: true,
+  });
   const onboardingStatusQuery = useQuery({
     queryKey: ['onboarding-status', tenantId],
     queryFn: fetchOnboardingStatus,
@@ -246,7 +333,8 @@ export default function DashboardStats({
     ? authenticatedCauseCounts.resolved
     : (publicKpis?.resolvedCauses ?? 0);
   const critical = isAuthenticated
-    ? authenticatedStats.conPlazoCritico
+    ? (deadlineKpisQuery.data?.criticalCount ??
+      dashboardActions.filter((action) => action.urgency !== 'warning').length)
     : (publicKpis?.criticalAlerts ?? 0);
   const severity = isAuthenticated
     ? authenticatedStats.porGravedad
@@ -256,7 +344,12 @@ export default function DashboardStats({
         'Muy Grave': publicKpis?.muyGraveCount ?? 0,
         Gravísima: publicKpis?.gravisimaCount ?? 0,
       };
-  const asPendingBreakdown = (value: number) => ({ total: value, pending: value, processed: 0 });
+  const asPendingBreakdown = (value: number) => ({
+    total: value,
+    pending: value,
+    processed: 0,
+    archived: 0,
+  });
   const annotations: AnnotationStageCounts = isAuthenticated
     ? (annotationKpisQuery.data ?? createEmptyAnnotationStageCounts())
     : {
@@ -320,7 +413,7 @@ export default function DashboardStats({
         <MetricCard
           label="Alertas Críticas"
           value={critical}
-          sublabel="Plazo fatal próximo"
+          sublabel="Vencidas o ≤ 2 días"
           icon={ShieldAlert}
           iconBg="bg-gravisima-50"
           iconColor="text-gravisima-600"
@@ -358,6 +451,21 @@ export default function DashboardStats({
             </p>
           </div>
         </div>
+      ) : null}
+
+      {isAuthenticated ? (
+        <DashboardActionQueue
+          actions={dashboardActions}
+          privacyMode={privacyMode}
+          onOpen={
+            onSelectCausa
+              ? (causaId) => {
+                  onSelectCausa(causaId);
+                  onNavigate?.('causas');
+                }
+              : undefined
+          }
+        />
       ) : null}
 
       {isAuthenticated ? (

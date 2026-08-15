@@ -66,7 +66,15 @@ export function useNewCausaModalController({
   );
 
   const handleCreateCausa = form.handleSubmit(
-    async ({ newEstNombre, newEstRut, newInfTipo, newAulaSegura, newObs, newResponsable }) => {
+    async ({
+      selectedStudentId,
+      newEstNombre,
+      newEstRut,
+      newInfTipo,
+      newAulaSegura,
+      newObs,
+      newResponsable,
+    }) => {
       if (!newEstCurso) {
         form.setError('selectedCourseId', {
           type: 'validate',
@@ -75,6 +83,7 @@ export function useNewCausaModalController({
         return;
       }
       const result = await handleCreateCausaAction({
+        studentId: selectedStudentId || undefined,
         newEstNombre,
         newEstRut,
         newEstCurso,

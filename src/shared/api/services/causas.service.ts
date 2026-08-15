@@ -8,6 +8,7 @@ import { reconcileChecklistFromBitacora } from '../../lib/domain/checklistReconc
 
 interface SupabaseCausaRow {
   id: string;
+  student_id: string | null;
   estudiante_nombre: string;
   estudiante_curso: string;
   nna_protected_name: string;
@@ -21,6 +22,12 @@ interface SupabaseCausaRow {
   observaciones: string | null;
   conducta_rice_id: string | null;
   medidas_ejecutadas: string[] | null;
+  plazo_24h: boolean | null;
+  fecha_limite_24h: string | null;
+  fecha_inicio_investigacion: string | null;
+  plazo_investigacion_dias: number | null;
+  fecha_limite_investigacion: string | null;
+  fecha_limite_cierre: string | null;
 }
 
 interface SupabaseChecklistRow {
@@ -101,6 +108,7 @@ function mapCausaRows(rows: SupabaseCausaRow[]): Causa[] {
   for (const row of rows) {
     const parsed = CausaSchema.safeParse({
       id: row.id,
+      studentId: row.student_id || undefined,
       estudianteNombre: row.estudiante_nombre,
       estudianteCurso: row.estudiante_curso,
       nnaProtectedName: row.nna_protected_name,
@@ -114,6 +122,12 @@ function mapCausaRows(rows: SupabaseCausaRow[]): Causa[] {
       observaciones: row.observaciones || '',
       conductaRiceId: row.conducta_rice_id || undefined,
       medidasEjecutadas: row.medidas_ejecutadas || [],
+      plazo24h: row.plazo_24h ?? false,
+      fechaLimite24h: row.fecha_limite_24h || undefined,
+      fechaInicioInvestigacion: row.fecha_inicio_investigacion || undefined,
+      plazoInvestigacionDias: row.plazo_investigacion_dias || undefined,
+      fechaLimiteInvestigacion: row.fecha_limite_investigacion || undefined,
+      fechaLimiteCierre: row.fecha_limite_cierre || undefined,
       bitacora: [],
       checklistDebidoProceso: [],
     });
@@ -129,7 +143,7 @@ export async function fetchCausasPage(offset = 0, pageSize = 50): Promise<Causas
   const { data, error } = await supabase
     .from('causas')
     .select(
-      'id,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas',
+      'id,student_id,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas,plazo_24h,fecha_limite_24h,fecha_inicio_investigacion,plazo_investigacion_dias,fecha_limite_investigacion,fecha_limite_cierre',
     )
     .order('fecha_ultima_actualizacion', { ascending: false })
     .range(offset, offset + requestedSize);
@@ -162,7 +176,7 @@ export async function fetchCausaDetails(causaId: string): Promise<Causa> {
     supabase
       .from('causas')
       .select(
-        'id,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas',
+        'id,student_id,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas,plazo_24h,fecha_limite_24h,fecha_inicio_investigacion,plazo_investigacion_dias,fecha_limite_investigacion,fecha_limite_cierre',
       )
       .eq('id', causaId)
       .maybeSingle(),
@@ -231,6 +245,7 @@ export async function createCausa(causa: Causa, tenantId: string | null): Promis
   const { error } = await supabase.from('causas').insert({
     id: causaId,
     tenant_id: tenantId,
+    student_id: causa.studentId || null,
     estudiante_nombre: causa.estudianteNombre,
     estudiante_curso: causa.estudianteCurso,
     nna_protected_name: causa.nnaProtectedName,
@@ -244,6 +259,12 @@ export async function createCausa(causa: Causa, tenantId: string | null): Promis
     observaciones: causa.observaciones,
     conducta_rice_id: causa.conductaRiceId || null,
     medidas_ejecutadas: causa.medidasEjecutadas || [],
+    plazo_24h: causa.plazo24h ?? false,
+    fecha_limite_24h: causa.fechaLimite24h || null,
+    fecha_inicio_investigacion: causa.fechaInicioInvestigacion || null,
+    plazo_investigacion_dias: causa.plazoInvestigacionDias || null,
+    fecha_limite_investigacion: causa.fechaLimiteInvestigacion || null,
+    fecha_limite_cierre: causa.fechaLimiteCierre || null,
   });
   if (error) {
     console.error('Error creating causa:', error);
@@ -256,6 +277,7 @@ export async function updateCausa(causa: Causa): Promise<boolean> {
   const { data, error } = await supabase
     .from('causas')
     .update({
+      ...(causa.studentId ? { student_id: causa.studentId } : {}),
       estudiante_nombre: causa.estudianteNombre,
       estudiante_curso: causa.estudianteCurso,
       nna_protected_name: causa.nnaProtectedName,
@@ -269,6 +291,12 @@ export async function updateCausa(causa: Causa): Promise<boolean> {
       observaciones: causa.observaciones,
       conducta_rice_id: causa.conductaRiceId || null,
       medidas_ejecutadas: causa.medidasEjecutadas || [],
+      plazo_24h: causa.plazo24h ?? false,
+      fecha_limite_24h: causa.fechaLimite24h || null,
+      fecha_inicio_investigacion: causa.fechaInicioInvestigacion || null,
+      plazo_investigacion_dias: causa.plazoInvestigacionDias || null,
+      fecha_limite_investigacion: causa.fechaLimiteInvestigacion || null,
+      fecha_limite_cierre: causa.fechaLimiteCierre || null,
     })
     .eq('id', causa.id)
     .select('id');

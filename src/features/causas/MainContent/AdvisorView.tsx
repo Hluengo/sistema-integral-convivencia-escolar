@@ -70,12 +70,14 @@ export default function AdvisorView({
             key={id}
             type="button"
             role="tab"
+            id={`legal-tab-${id}`}
             aria-selected={tab === id}
+            aria-controls={`legal-panel-${id}`}
             onClick={() => setTab(id)}
-            className={`inline-flex min-w-max flex-1 items-center justify-center gap-2 rounded-lg px-3.5 py-2.5 font-semibold text-xs transition-colors sm:px-4 ${
+            className={`inline-flex min-w-max flex-1 items-center justify-center gap-2 rounded-lg border px-3.5 py-2.5 font-semibold text-xs transition-colors sm:px-4 ${
               tab === id
-                ? 'bg-white text-neutral-900 shadow-sm'
-                : 'text-neutral-700 hover:text-neutral-900'
+                ? 'border-brand-200 bg-white text-brand-800 shadow-sm'
+                : 'border-transparent text-neutral-600 hover:border-neutral-200 hover:bg-white/70 hover:text-neutral-900'
             }`}
           >
             <Icon className="size-3.5" aria-hidden="true" />
@@ -89,12 +91,17 @@ export default function AdvisorView({
           className="rounded-xl border border-neutral-200 bg-white p-4 shadow-xs"
           aria-label="Selección de expediente"
         >
-          <label
-            htmlFor="legal-case-selector"
-            className="mb-1.5 block font-semibold text-10px text-neutral-500 uppercase"
-          >
-            Expediente para {tab === 'redaccion' ? 'redactar' : 'auditar'}
-          </label>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <label
+              htmlFor="legal-case-selector"
+              className="block font-semibold text-10px text-neutral-500 uppercase"
+            >
+              Expediente para {tab === 'redaccion' ? 'redactar' : 'auditar'}
+            </label>
+            <span className="rounded-full bg-brand-50 px-2 py-1 font-semibold text-10px text-brand-700">
+              Contexto de trabajo
+            </span>
+          </div>
           <select
             id="legal-case-selector"
             value={selectedCausaId}
@@ -117,10 +124,17 @@ export default function AdvisorView({
         </section>
       )}
 
-      {tab === 'consulta' && <AiAdvisor />}
+      {tab === 'consulta' && (
+        <div id="legal-panel-consulta" role="tabpanel" aria-labelledby="legal-tab-consulta">
+          <AiAdvisor />
+        </div>
+      )}
 
       {tab === 'plantillas' && (
         <section
+          id="legal-panel-plantillas"
+          role="tabpanel"
+          aria-labelledby="legal-tab-plantillas"
           className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-xs"
           aria-label="Administración de plantillas"
         >
@@ -152,14 +166,20 @@ export default function AdvisorView({
       )}
 
       {selectedCausa && !isCausaDetailLoading && legalTool && (
-        <Suspense fallback={<ViewLoader view="informes" compact />}>
-          <CaseLegalWorkspace
-            key={selectedCausa.id}
-            causa={selectedCausa}
-            activeTool={legalTool}
-            privacyMode={privacyMode}
-          />
-        </Suspense>
+        <div
+          id={`legal-panel-${legalTool}`}
+          role="tabpanel"
+          aria-labelledby={`legal-tab-${legalTool}`}
+        >
+          <Suspense fallback={<ViewLoader view="informes" compact />}>
+            <CaseLegalWorkspace
+              key={selectedCausa.id}
+              causa={selectedCausa}
+              activeTool={legalTool}
+              privacyMode={privacyMode}
+            />
+          </Suspense>
+        </div>
       )}
     </div>
   );

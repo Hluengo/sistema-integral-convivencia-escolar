@@ -159,7 +159,7 @@ export default function AiAdvisor() {
 
   return (
     <section
-      className="flex min-h-[420px] animate-slide-up flex-col overflow-hidden rounded-xl border border-neutral-200/80 bg-white shadow-sm transition-colors"
+      className="flex h-[clamp(520px,72vh,760px)] min-h-0 animate-slide-up flex-col overflow-hidden rounded-xl border border-neutral-200/80 bg-white shadow-sm transition-colors"
       aria-label="Asesor legal de convivencia"
     >
       {/* Advisor header */}
@@ -177,8 +177,15 @@ export default function AiAdvisor() {
             </p>
           </div>
         </div>
-        <div className="hidden rounded-md border border-neutral-200/60 bg-neutral-50 px-2 py-1 font-medium text-9px text-neutral-700 sm:block">
-          Vigencia 2025/2026
+        <div
+          className={`rounded-full border px-2.5 py-1 font-semibold text-9px ${
+            isLoading
+              ? 'border-grave-200 bg-grave-50 text-grave-700'
+              : 'border-leve-200 bg-leve-50 text-leve-700'
+          }`}
+          aria-live="polite"
+        >
+          {isLoading ? 'Analizando normativa' : 'Listo para consultar'}
         </div>
       </div>
 
@@ -188,7 +195,7 @@ export default function AiAdvisor() {
         role="log"
         aria-label="Historial de conversación"
         aria-live="polite"
-        className="flex-1 space-y-3 overflow-y-auto bg-neutral-50 p-4"
+        className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-neutral-50 p-4 sm:p-5"
       >
         {messages.map((m, _idx) => {
           const isModel = m.role === 'model';
@@ -255,7 +262,7 @@ export default function AiAdvisor() {
 
       {/* Suggested prompts */}
       {messages.length === 1 && !isLoading && (
-        <div className="border-neutral-100 border-t bg-white px-4 py-4 text-left">
+        <div className="border-neutral-100 border-t bg-white px-4 py-3 text-left">
           <span className="mb-2.5 block flex items-center gap-1.5 font-semibold text-9px text-neutral-700 uppercase tracking-wider">
             <BookOpen className="h-3 w-3 text-neutral-600" aria-hidden="true" />
             Consultas sugeridas
@@ -266,7 +273,7 @@ export default function AiAdvisor() {
                 key={p}
                 type="button"
                 onClick={() => handleSendMessage(p)}
-                className="rounded-lg border border-neutral-200 bg-neutral-50 p-2.5 text-left font-medium text-11px text-neutral-700 leading-normal transition-colors hover:scale-[1.005] hover:border-brand-200/60 hover:bg-brand-50/40 hover:shadow-xs"
+                className="rounded-lg border border-neutral-200 bg-neutral-50 p-2 text-left font-medium text-10px text-neutral-700 leading-normal transition-colors hover:border-brand-200/60 hover:bg-brand-50/40 hover:shadow-xs sm:p-2.5 sm:text-11px"
               >
                 {p}
               </button>

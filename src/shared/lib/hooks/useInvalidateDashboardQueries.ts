@@ -8,6 +8,9 @@ const DASHBOARD_ANNOTATION_QUERY_KEYS = [
   'course-carta-ranking',
   'teacher-annotation-ranking',
   'student-annotation-ranking',
+  'annual-annotation-trends',
+  'causas',
+  'dashboard-deadline-kpis',
 ] as const;
 
 /**

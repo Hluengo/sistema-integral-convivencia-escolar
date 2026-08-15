@@ -86,7 +86,7 @@ describe('fetchCourses', () => {
       }),
       async () => {
         const { fetchCourses } = await import('./courses.service');
-        return fetchCourses();
+        return fetchCourses('tenant-1');
       },
     );
     const courses = result as Course[];
@@ -99,7 +99,7 @@ describe('fetchCourses', () => {
       () => ({ data: null, error: new Error('boom') }),
       async () => {
         const { fetchCourses } = await import('./courses.service');
-        return fetchCourses();
+        return fetchCourses('tenant-1');
       },
     );
     assert.deepEqual(result, []);

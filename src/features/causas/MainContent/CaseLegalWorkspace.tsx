@@ -24,11 +24,16 @@ export default function CaseLegalWorkspace({
 
   return (
     <section className="space-y-4" aria-label="Herramientas legales del expediente seleccionado">
-      <div className="flex flex-col gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 rounded-xl border border-brand-100 bg-linear-to-r from-brand-50/70 to-white p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <p className="font-semibold text-10px text-neutral-500 uppercase tracking-wide">
-            Expediente de trabajo
-          </p>
+          <div className="mb-1 flex items-center gap-2">
+            <p className="font-semibold text-10px text-neutral-500 uppercase tracking-wide">
+              Expediente de trabajo
+            </p>
+            <span className="rounded-full bg-white/80 px-2 py-0.5 font-semibold text-9px text-brand-700">
+              Seleccionado
+            </span>
+          </div>
           <h3 className="truncate font-semibold text-base text-neutral-900">
             {privacyMode ? causa.nnaProtectedName : causa.estudianteNombre}
           </h3>

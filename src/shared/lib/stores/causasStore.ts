@@ -27,6 +27,7 @@ interface CausasState {
   setSearchQuery: (query: string) => void;
 
   handleCreateCausa: (params: {
+    studentId?: string;
     newEstNombre: string;
     newEstRut: string;
     newEstCurso: string;
@@ -76,6 +77,7 @@ export const useCausasStore = create<CausasState>((set, get) => ({
     const nextCounter = state.causas.length > 0 ? maxCounter + 1 : 1;
     const newObj = createDraftCausa({
       counter: nextCounter,
+      studentId: params.studentId,
       estudianteNombre: params.newEstNombre,
       estudianteCurso: params.newEstCurso,
       runEstudiante: params.newEstRut,

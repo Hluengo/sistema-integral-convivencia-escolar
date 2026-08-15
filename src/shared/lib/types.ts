@@ -86,6 +86,7 @@ export type TipoInfraccion = 'Leve' | 'Grave' | 'Muy Grave' | 'Gravísima';
 
 export interface Causa {
   id: string; // e.g. "DC-2026-014"
+  studentId?: string;
   estudianteNombre: string;
   estudianteCurso: string;
   nnaProtectedName: string; // e.g. "J.P.M."
@@ -113,6 +114,9 @@ export interface Causa {
   fechaInicioInvestigacion?: string;
   plazoInvestigacionDias?: number; // Máximo 60 días (2 meses)
   fechaLimiteInvestigacion?: string;
+  plazo24h?: boolean;
+  fechaLimite24h?: string;
+  fechaLimiteCierre?: string;
 
   // Suspensión (máximo 15 días hábiles)
   fechaInicioSuspension?: string;

@@ -5,6 +5,7 @@ import {
   fetchStudentsByCourse,
   fetchStudentsWithCourses,
   fetchStudentsWithCoursesPage,
+  fetchStudentActivityHistoryPage,
 } from '../../api/services/courses.service';
 import { useAuthStore } from '../stores/authStore';
 
@@ -45,5 +46,22 @@ export function usePaginatedStudentsWithCoursesQuery() {
     },
     enabled: isAuthenticated && Boolean(tenantId),
     staleTime: 1000 * 60 * 10,
+  });
+}
+
+export function usePaginatedStudentActivityHistoryQuery() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const tenantId = useAuthStore((state) => state.tenantId);
+
+  return useInfiniteQuery({
+    queryKey: ['student-activity-history', tenantId],
+    queryFn: ({ pageParam }) => fetchStudentActivityHistoryPage(pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      const loaded = allPages.reduce((total, page) => total + page.students.length, 0);
+      return loaded < lastPage.totalCount ? loaded : undefined;
+    },
+    enabled: isAuthenticated && Boolean(tenantId),
+    staleTime: 1000 * 60 * 5,
   });
 }

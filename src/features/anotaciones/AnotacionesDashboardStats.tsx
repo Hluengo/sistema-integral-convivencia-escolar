@@ -69,14 +69,24 @@ function AnnotationStageCard({
           <p className="font-bold text-3xl text-neutral-900 tabular-nums">{counts.total}</p>
           <p className="font-medium text-neutral-400 text-xs">Total</p>
         </div>
-        <dl className="grid min-w-32 grid-cols-2 gap-2 text-center">
-          <div className="rounded-lg bg-grave-50 px-2 py-1.5">
-            <dt className="text-grave-700 text-10px uppercase tracking-wide">Pendientes</dt>
+        <dl className="grid min-w-0 flex-1 grid-cols-3 gap-1.5 text-center">
+          <div className="min-w-0 rounded-lg bg-grave-50 px-1.5 py-1.5 sm:px-2">
+            <dt className="whitespace-nowrap font-medium text-[9px] text-grave-700 leading-tight tracking-tight sm:text-[10px]">
+              Pendientes
+            </dt>
             <dd className="font-bold text-grave-700 text-lg tabular-nums">{counts.pending}</dd>
           </div>
-          <div className="rounded-lg bg-leve-50 px-2 py-1.5">
-            <dt className="text-10px text-leve-700 uppercase tracking-wide">Procesadas</dt>
+          <div className="min-w-0 rounded-lg bg-leve-50 px-1.5 py-1.5 sm:px-2">
+            <dt className="whitespace-nowrap font-medium text-[9px] text-leve-700 leading-tight tracking-tight sm:text-[10px]">
+              Procesadas
+            </dt>
             <dd className="font-bold text-leve-700 text-lg tabular-nums">{counts.processed}</dd>
+          </div>
+          <div className="min-w-0 rounded-lg bg-neutral-100 px-1.5 py-1.5 sm:px-2">
+            <dt className="whitespace-nowrap font-medium text-[9px] text-neutral-700 leading-tight tracking-tight sm:text-[10px]">
+              Archivadas
+            </dt>
+            <dd className="font-bold text-neutral-700 text-lg tabular-nums">{counts.archived}</dd>
           </div>
         </dl>
       </div>
@@ -146,6 +156,20 @@ export default function AnotacionesDashboardStats({
             accentColor="#ef4444"
           />
         </div>
+        <p className="mt-3 text-neutral-500 text-xs leading-relaxed">
+          <span className="font-semibold text-grave-700">Pendientes:</span> requieren gestionar la
+          carta o derivación.
+          <span className="mx-2 text-neutral-300" aria-hidden="true">
+            ·
+          </span>
+          <span className="font-semibold text-leve-700">Procesadas:</span> carta impresa y
+          disponible para firma.
+          <span className="mx-2 text-neutral-300" aria-hidden="true">
+            ·
+          </span>
+          <span className="font-semibold text-neutral-700">Archivadas:</span> carta firmada por
+          apoderado.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
