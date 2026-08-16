@@ -1,0 +1,69 @@
+# Backend Architecture
+
+## Dual Entry Points
+
+| Entry          | Archivo                                | Uso              | Bundle      |
+| -------------- | -------------------------------------- | ---------------- | ----------- |
+| Dev Server     | `server/index.ts`                      | Desarrollo local | tsx runtime |
+| Vercel Handler | `server/api/index.ts` → `api/index.js` | Producción       | esbuild ESM |
+
+**Regla crítica**: Al modificar rutas, middleware o lógica, actualizar AMBOS.
+
+## API Endpoints
+
+| Método | Ruta                                    | Auth     | AI  | Propósito                     |
+| ------ | --------------------------------------- | -------- | --- | ----------------------------- |
+| POST   | `/api/advisor-chat`                     | ✅       | ✅  | Chat asesoría legal AI        |
+| POST   | `/api/audit-due-process`                | ✅       | ✅  | Auditoría de debido proceso   |
+| POST   | `/api/draft-document`                   | ✅       | ✅  | Draft de documento legal      |
+| POST   | `/api/improve-text`                     | ✅       | ✅  | Mejora de texto institucional |
+| POST   | `/api/parse-annotations`                | ❌       | ❌  | Parseo de anotaciones (regex) |
+| POST   | `/api/process-disciplinary-pdf`         | ✅       | ❌  | Análisis de PDF disciplinario |
+| POST   | `/api/process-disciplinary-pdf/confirm` | ✅ + rol | ❌  | Confirmación de proceso       |
+| GET    | `/api/document-templates`               | ❌       | ❌  | Obtener plantillas            |
+| PUT    | `/api/document-templates`               | ✅       | ❌  | Actualizar plantilla          |
+| POST   | `/api/usage/events`                     | ✅       | ❌  | Registrar evento de uso       |
+| GET    | `/api/usage/stats`                      | ✅       | ❌  | Estadísticas de uso           |
+| GET    | `/api/auth-debug`                       | ❌       | ❌  | Debug JWT                     |
+
+## Auth Middleware
+
+El middleware `requireAuth` implementa verificación JWT en dos etapas:
+
+1. **HMAC-SHA256** (primario): Rápido, sin HTTP calls
+2. **Supabase API** (fallback): Para tokens ES256
+
+Inyecta `req.user` con payload decodificado y `req.tenantId` del contexto.
+
+## AI Integration
+
+- **Gemini pospago** (`GEMINI_API_KEY`): mejora de textos breves, informes, auditorías de debido proceso y borradores/documentos oficiales complejos.
+- **Modelo mejora de textos**: configurable con `TEXT_IMPROVEMENT_GEMINI_MODEL`; si no existe, reutiliza `LEGAL_DRAFT_MODEL` y luego `gemini-3.6-flash`. Puede forzarse OpenRouter con `TEXT_IMPROVEMENT_PROVIDER=openrouter`.
+- **OpenRouter** (`OPENROUTER_API_KEY`): respaldo para mejora de textos breves y asesoría legal breve.
+- **Modelo documentos e informes**: Gemini `gemini-3.6-flash` por defecto, configurable con `LEGAL_DRAFT_MODEL`. No hay respaldo OpenRouter para estos flujos; si Gemini falla, el endpoint responde un error explícito de Gemini.
+- **Generación Gemini**: `maxOutputTokens` explícito; no se envían sampling params deprecated (`temperature`, `top_p`, `top_k`) para mantener compatibilidad con Gemini 3.6+.
+- **Max tokens**: 2000
+- **Rate limit**: 10 req/min/IP por endpoint
+- **Cache**: advisor-chat e improve-text (5min TTL, in-memory)
+- **Privacidad**: texto enviado a OpenRouter/Gemini pasa por `redactSensitiveForAI()` para remover RUT, correo, teléfono y valores personales conocidos antes de construir prompts o llaves de caché.
+
+## Middleware Stack
+
+```
+express.json()
+compression()
+RateLimiter (por IP, 10 req/min)
+Route handlers
+  ├── requireAuth (JWT verification)
+  └── Route-specific logic
+Error handler
+```
+
+## Dependencias Servidor
+
+- `express` 4.21 — Framework HTTP
+- `@supabase/supabase-js` 2.110 — Supabase client (service role)
+- `pdfjs-dist` 6.1.200 — PDF text extraction
+- `compression` — Gzip middleware
+- `dotenv` — Environment variables
+- Node built-ins: crypto, https, path, url

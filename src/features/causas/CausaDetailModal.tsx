@@ -1,0 +1,45 @@
+/** @license SPDX-License-Identifier: Apache-2.0 */
+
+import { Dialog, DialogDescription, DialogTitle } from '../../shared/ui/Dialog';
+import { DetailModalContent } from '../../shared/ui/DetailModal';
+import ViewLoader from '../../shared/ui/ViewLoader';
+import type { Causa } from '../../shared/lib/types';
+import InteractiveTimeline from '../timeline/InteractiveTimeline';
+
+interface CausaDetailModalProps {
+  causa: Causa | undefined;
+  privacyMode: boolean;
+  isLoading: boolean;
+  onClose: () => void;
+}
+
+export default function CausaDetailModal({
+  causa,
+  privacyMode,
+  isLoading,
+  onClose,
+}: CausaDetailModalProps) {
+  return (
+    <Dialog open={Boolean(causa)} onOpenChange={(open) => !open && onClose()}>
+      <DetailModalContent
+        ariaLabel={causa ? `Gestión del expediente ${causa.id}` : 'Gestión del expediente'}
+      >
+        <DialogTitle className="sr-only">
+          {causa ? `Expediente ${causa.id}` : 'Expediente'}
+        </DialogTitle>
+        <DialogDescription className="sr-only">
+          Gestión completa del debido proceso, sus hitos, documentos y bitácora.
+        </DialogDescription>
+        {causa && isLoading && <ViewLoader view="causas" compact />}
+        {causa && !isLoading && (
+          <InteractiveTimeline
+            key={causa.id}
+            causa={causa}
+            privacyMode={privacyMode}
+            onClose={onClose}
+          />
+        )}
+      </DetailModalContent>
+    </Dialog>
+  );
+}

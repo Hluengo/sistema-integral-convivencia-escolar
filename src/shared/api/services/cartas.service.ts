@@ -1,0 +1,671 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { supabase } from '../lib/supabase';
+import type { Json } from '../lib/database.types';
+import type {
+  Annotation,
+  CartaDisciplinaria,
+  DocumentAnalysis,
+  EtapaDisciplinaria,
+} from '../../lib/types';
+import { mapCauseRowToCarta, mapStageRowToEtapa } from '../../lib/mappers';
+import type { CauseRow, StageRow } from '../../lib/mappers';
+import { fetchAnnotations, fetchDocumentAnalyses } from './annotations.service';
+import {
+  resolveStudentCartaTableState,
+  type LetterType,
+  type StudentCartaTableState,
+} from '../../lib/domain/disciplinaryStage';
+import {
+  physicalCartaRegistrationSchema,
+  type PhysicalCartaRegistrationInput,
+} from '../../lib/schemas/physicalCarta';
+import { getCurrentSchoolYear, getYearInChile, nowDateOnly } from '../../../shared/lib/dateUtils';
+import type { CourseCartaRankingItem } from '../../lib/domain/courseCartaRanking';
+import { withSupabaseReadRetry } from '../lib/supabaseRetry';
+
+type CartaStatus = CartaDisciplinaria['status'];
+export type CartaWorkflowStatus = 'pending' | 'completed' | 'archived' | 'annulled';
+
+type CartaEventType =
+  | 'suggested'
+  | 'created'
+  | 'registered'
+  | 'printed'
+  | 'downloaded_pdf'
+  | 'downloaded_word'
+  | 'processed_manually'
+  | 'archived'
+  | 'annulled';
+
+export interface CartaEvent {
+  id: string;
+  carta_id: string;
+  student_id: string;
+  event_type: CartaEventType;
+  event_detail: string | null;
+  created_by: string | null;
+  created_at: string;
+  metadata: Record<string, unknown> | null;
+}
+
+export interface DisciplinaryProcessRecord {
+  id: string;
+  student_id: string;
+  process_number: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  suggested_letter_type: string | null;
+  final_letter_type: string | null;
+  total_negativas: number;
+  total_positivas: number;
+  total_informativas: number;
+  is_completed: boolean;
+  completed_at: string | null;
+}
+
+export interface DisciplinaryFileRecord {
+  id: string;
+  process_id: string;
+  student_id: string | null;
+  file_name: string;
+  original_file_name?: string | null;
+  storage_path: string;
+  bucket?: string | null;
+  uploaded_at: string;
+  processing_status?: string | null;
+}
+
+export interface DetectedAnnotationRecord {
+  id: string;
+  process_id: string;
+  student_id: string;
+  annotation_type: string;
+  annotation_text: string | null;
+  raw_text?: string | null;
+  annotation_date?: string | null;
+  detected_at: string;
+}
+
+export interface LetterOutputEvent {
+  id: string;
+  event_name: 'letter_printed' | 'letter_downloaded';
+  properties: {
+    cartaId?: string;
+    studentId?: string;
+    letterType?: string;
+    status?: string;
+  };
+  created_at: string;
+}
+
+export interface StudentDisciplinarySnapshot {
+  annotations: Annotation[];
+  cartas: CartaDisciplinaria[];
+  currentCarta: CartaDisciplinaria | null;
+  documentAnalyses: DocumentAnalysis[];
+  etapas: EtapaDisciplinaria[];
+  processes: DisciplinaryProcessRecord[];
+  files: DisciplinaryFileRecord[];
+  detectedAnnotations: DetectedAnnotationRecord[];
+  letterOutputEvents: LetterOutputEvent[];
+  cartaEvents: CartaEvent[];
+  counts: {
+    negativas: number;
+    positivas: number;
+    informativas: number;
+  };
+  lastAnalysis: DocumentAnalysis | null;
+}
+
+const CARTA_SELECT =
+  'id,student_id,letter_type,emission_date,status,emitted_by,supervisor_name,apoderado_name,annotations_count,origin,school_year,student_name,course,regulation_basis,observations,created_at,content_snapshot';
+const CARTA_EVENT_SELECT =
+  'id,carta_id,student_id,event_type,event_detail,created_by,created_at,metadata';
+const COMPLETION_EVENTS: readonly CartaEventType[] = [
+  'registered',
+  'printed',
+  'processed_manually',
+  'archived',
+];
+
+function latestEvent(events: CartaEvent[], type: CartaEventType): CartaEvent | undefined {
+  return events.find((event) => event.event_type === type);
+}
+
+function hydrateCartaWorkflow(carta: CartaDisciplinaria, events: CartaEvent[]): CartaDisciplinaria {
+  const cartaEvents = events
+    .filter((event) => event.carta_id === carta.id)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  const annulled = latestEvent(cartaEvents, 'annulled');
+  const archived = latestEvent(cartaEvents, 'archived');
+  const processed = latestEvent(cartaEvents, 'processed_manually');
+  const completed = COMPLETION_EVENTS.some((type) => latestEvent(cartaEvents, type));
+  return {
+    ...carta,
+    workflow_status:
+      carta.status === 'Anulada' || annulled
+        ? 'annulled'
+        : archived
+          ? 'archived'
+          : completed
+            ? 'completed'
+            : 'pending',
+    suggested_at: latestEvent(cartaEvents, 'suggested')?.created_at ?? null,
+    created_event_at: latestEvent(cartaEvents, 'created')?.created_at ?? null,
+    registered_at: latestEvent(cartaEvents, 'registered')?.created_at ?? null,
+    printed_at: latestEvent(cartaEvents, 'printed')?.created_at ?? null,
+    processed_manually_at: processed?.created_at ?? null,
+    processed_note: processed?.event_detail ?? null,
+    archived_at: archived?.created_at ?? null,
+    archived_note: archived?.event_detail ?? null,
+    annulled_at: annulled?.created_at ?? null,
+    annulled_reason: annulled?.event_detail ?? null,
+  };
+}
+
+export function resolveCartaWorkflowStatus(
+  carta: CartaDisciplinaria | null | undefined,
+): CartaWorkflowStatus | 'none' {
+  if (!carta) return 'none';
+  if (carta.status === 'Anulada' || carta.annulled_at) return 'annulled';
+  if (carta.workflow_status === 'archived' || carta.archived_at) return 'archived';
+  if (
+    carta.origin === 'physical' ||
+    carta.workflow_status === 'completed' ||
+    carta.printed_at ||
+    carta.registered_at ||
+    carta.processed_manually_at
+  ) {
+    return 'completed';
+  }
+  return 'pending';
+}
+
+export function getCartaWorkflowLabel(carta: CartaDisciplinaria | null | undefined): string {
+  const status = resolveCartaWorkflowStatus(carta);
+  if (status === 'none') return 'Sin carta requerida';
+  if (status === 'archived') return 'Carta archivada';
+  if (status === 'completed') return 'Carta realizada';
+  if (status === 'annulled') return 'Carta anulada';
+  return carta?.suggested_at ? 'Carta sugerida' : 'Carta pendiente';
+}
+
+export async function fetchCartaTableStates(): Promise<Record<string, StudentCartaTableState>> {
+  // PERF-03: el estado de tabla solo considera el ciclo escolar en curso
+  // (marzo-diciembre), lo que además acota el volumen de cartas leídas.
+  const schoolYear = getCurrentSchoolYear();
+  const rangeStart = `${schoolYear}-03-01T00:00:00.000Z`;
+  const rangeEnd = `${schoolYear + 1}-01-01T00:00:00.000Z`;
+  const { data: cartasData, error: cartasError } = await withSupabaseReadRetry(() =>
+    supabase
+      .from('cartas_disciplinarias')
+      .select(CARTA_SELECT)
+      .gte('emission_date', rangeStart)
+      .lt('emission_date', rangeEnd)
+      .order('emission_date', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(500),
+  );
+
+  if (cartasError) {
+    console.error('Error fetching carta table states:', cartasError);
+    return {};
+  }
+
+  const cartas = ((cartasData || []) as unknown as CauseRow[]).map(mapCauseRowToCarta);
+  if (cartas.length === 0) return {};
+
+  const { data: eventsData, error: eventsError } = await withSupabaseReadRetry(() =>
+    supabase
+      .from('carta_events')
+      .select(CARTA_EVENT_SELECT)
+      .in(
+        'carta_id',
+        cartas.map((carta) => carta.id),
+      )
+      .order('created_at', { ascending: false }),
+  );
+
+  if (eventsError) {
+    console.error('Error fetching carta events for table:', eventsError);
+  }
+
+  const events = (eventsData || []) as CartaEvent[];
+  const cartasByStudent = new Map<string, CartaDisciplinaria[]>();
+  for (const carta of cartas) {
+    const hydrated = hydrateCartaWorkflow(carta, events);
+    const current = cartasByStudent.get(carta.student_id) || [];
+    current.push(hydrated);
+    cartasByStudent.set(carta.student_id, current);
+  }
+
+  const states: Record<string, StudentCartaTableState> = {};
+  for (const [studentId, studentCartas] of cartasByStudent) {
+    states[studentId] = resolveStudentCartaTableState(studentCartas, schoolYear);
+  }
+  return states;
+}
+
+async function fetchCartasByStudent(studentId: string): Promise<CartaDisciplinaria[]> {
+  const { data, error } = await supabase
+    .from('cartas_disciplinarias')
+    .select(CARTA_SELECT)
+    .eq('student_id', studentId)
+    .order('emission_date', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching cartas:', error);
+    return [];
+  }
+
+  const cartas = ((data || []) as unknown as CauseRow[]).map(mapCauseRowToCarta);
+  const cartaEvents = await fetchCartaEventsByStudent(studentId);
+  return cartas.map((carta) => hydrateCartaWorkflow(carta, cartaEvents));
+}
+
+async function fetchCartaForEvent(
+  cartaId: string,
+): Promise<{ student_id: string; tenant_id?: string | null } | null> {
+  const { data, error } = await supabase
+    .from('cartas_disciplinarias')
+    .select('student_id,tenant_id')
+    .eq('id', cartaId)
+    .maybeSingle();
+
+  if (error || !data) {
+    console.error('Error fetching carta for event:', error);
+    return null;
+  }
+  return data as { student_id: string; tenant_id?: string | null };
+}
+
+async function createCartaEvent(
+  cartaId: string,
+  eventType: CartaEventType,
+  detail?: string,
+  metadata: Record<string, unknown> = {},
+  actor?: { userId?: string | null; email?: string | null } | null,
+): Promise<boolean> {
+  const carta = await fetchCartaForEvent(cartaId);
+  if (!carta) return false;
+
+  // DB-02 garantiza tenant_id NOT NULL con backfill en cartas_disciplinarias.
+  const tenantId = carta.tenant_id;
+  if (!tenantId) return false;
+  const createdBy = actor?.email || actor?.userId || null;
+  const { error } = await supabase.from('carta_events').insert({
+    carta_id: cartaId,
+    student_id: carta.student_id,
+    tenant_id: tenantId,
+    event_type: eventType,
+    event_detail: detail || null,
+    created_by: createdBy,
+    metadata: metadata as unknown as Json,
+  });
+
+  if (error) {
+    console.error('Error creating carta event:', error);
+    return false;
+  }
+  return true;
+}
+
+export async function markCartaProcessedManually(
+  cartaId: string,
+  note: string,
+  contentSnapshot?: Record<string, unknown>,
+  actor?: { userId?: string | null; email?: string | null } | null,
+): Promise<boolean> {
+  if (contentSnapshot) {
+    const { data, error } = await supabase
+      .from('cartas_disciplinarias')
+      .update({ content_snapshot: contentSnapshot as unknown as Json })
+      .eq('id', cartaId)
+      .select('id')
+      .maybeSingle();
+
+    if (error || !data) {
+      console.error('Error saving final carta content:', error);
+      return false;
+    }
+  }
+
+  return createCartaEvent(
+    cartaId,
+    'processed_manually',
+    note || 'Trámite marcado como procesado manualmente',
+    {},
+    actor,
+  );
+}
+
+export async function archiveCarta(
+  cartaId: string,
+  note: string,
+  actor?: { userId?: string | null; email?: string | null } | null,
+): Promise<boolean> {
+  return createCartaEvent(
+    cartaId,
+    'archived',
+    note || 'Carta firmada por apoderado/a y archivada en expediente físico',
+    {},
+    actor,
+  );
+}
+
+async function updateCartaStatus(
+  cartaId: string,
+  status: CartaStatus,
+  reason?: string,
+): Promise<boolean> {
+  const { data: current } = await supabase
+    .from('cartas_disciplinarias')
+    .select('observations')
+    .eq('id', cartaId)
+    .maybeSingle();
+
+  const currentObservations = typeof current?.observations === 'string' ? current.observations : '';
+  const reasonText = reason?.trim();
+  const observations = reasonText
+    ? `${currentObservations ? `${currentObservations}\n\n` : ''}Cambio de estado a ${status}: ${reasonText}`
+    : currentObservations || null;
+
+  const { error } = await supabase
+    .from('cartas_disciplinarias')
+    .update({ status, observations })
+    .eq('id', cartaId);
+
+  if (error) {
+    console.error('Error updating carta status:', error);
+    return false;
+  }
+  return true;
+}
+
+export async function annulCarta(
+  cartaId: string,
+  reason: string,
+  actor?: { userId?: string | null; email?: string | null } | null,
+): Promise<boolean> {
+  const ok = await updateCartaStatus(cartaId, 'Anulada', reason || 'Anulación administrativa');
+  if (!ok) return false;
+  return createCartaEvent(cartaId, 'annulled', reason || 'Anulación administrativa', {}, actor);
+}
+
+export interface PhysicalCartaRegistrationResult {
+  ok: boolean;
+  cartaId?: string;
+  message: string;
+}
+
+export async function registerPhysicalCartaForStudent(
+  input: PhysicalCartaRegistrationInput,
+): Promise<PhysicalCartaRegistrationResult> {
+  const parsed = physicalCartaRegistrationSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: parsed.error.issues[0]?.message || 'Los datos de la carta física no son válidos.',
+    };
+  }
+
+  const { data, error } = await supabase.rpc('register_physical_carta', {
+    p_student_id: parsed.data.studentId,
+    p_letter_type: parsed.data.letterType,
+    p_emission_date: parsed.data.emissionDate,
+    p_observations: parsed.data.observations || undefined,
+  });
+
+  if (error) {
+    console.error('Error registering physical carta:', error);
+    if (error.code === '23505') {
+      return {
+        ok: false,
+        message: 'Esta carta física ya está registrada para el mismo año.',
+      };
+    }
+    return {
+      ok: false,
+      message: 'No fue posible registrar la carta física. Inténtelo nuevamente.',
+    };
+  }
+
+  return {
+    ok: true,
+    cartaId: typeof data === 'string' ? data : undefined,
+    message: 'Carta física registrada sin modificar el conteo de anotaciones.',
+  };
+}
+
+export async function createPendingCartaForStudent(params: {
+  student: { id: string; full_name: string; course_id: string; course_name?: string | null };
+  letterType: LetterType;
+  negativeCount: number;
+  source: 'supabase' | 'pdf' | 'physical';
+  sourceProcessId?: string | null;
+  sourceAnalysisId?: string | null;
+  tenantId: string | null;
+}): Promise<CartaDisciplinaria | null> {
+  if (!params.tenantId) return null;
+  const today = nowDateOnly();
+  const sourceLabel =
+    params.source === 'pdf'
+      ? 'del PDF'
+      : params.source === 'physical'
+        ? 'de una carta física existente'
+        : 'de Supabase';
+  const { data, error } = await supabase
+    .from('cartas_disciplinarias')
+    .insert({
+      student_id: params.student.id,
+      tenant_id: params.tenantId,
+      letter_type: params.letterType,
+      emission_date: today,
+      status: 'Vigente',
+      emitted_by: 'Inspectoría',
+      supervisor_name: null,
+      apoderado_name: 'Pendiente',
+      annotations_count: params.negativeCount,
+      student_name: params.student.full_name,
+      course: params.student.course_name || params.student.course_id,
+      regulation_basis: 'RICE 2026 - Fundación Educacional Colegio Carmela Romero de Espinosa',
+      observations: `Carta pendiente sugerida por progresión ${sourceLabel}.`,
+    })
+    .select(CARTA_SELECT)
+    .single();
+
+  if (error || !data) {
+    console.error('Error creating pending carta:', error);
+    return null;
+  }
+
+  const carta = mapCauseRowToCarta(data as unknown as CauseRow);
+  await createCartaEvent(carta.id, 'suggested', `Carta sugerida por progresión ${sourceLabel}`, {
+    source: params.source,
+    negativeCount: params.negativeCount,
+    sourceProcessId: params.sourceProcessId || null,
+    sourceAnalysisId: params.sourceAnalysisId || null,
+  });
+  return hydrateCartaWorkflow(carta, await fetchCartaEventsByStudent(params.student.id));
+}
+
+async function fetchEtapasByStudent(studentId: string): Promise<EtapaDisciplinaria[]> {
+  const { data, error } = await supabase
+    .from('etapas_disciplinarias')
+    .select('id,student_id,step_number,stage_name,responsible,transition_date,comment,created_at')
+    .eq('student_id', studentId)
+    .order('transition_date', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching etapas:', error);
+    return [];
+  }
+  return ((data || []) as unknown as StageRow[]).map(mapStageRowToEtapa);
+}
+
+async function fetchProcessesByStudent(studentId: string): Promise<DisciplinaryProcessRecord[]> {
+  const { data, error } = await supabase
+    .from('disciplinary_processes')
+    .select(
+      'id,student_id,process_number,status,created_at,updated_at,suggested_letter_type,final_letter_type,total_negativas,total_positivas,total_informativas,is_completed,completed_at',
+    )
+    .eq('student_id', studentId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching disciplinary processes:', error);
+    return [];
+  }
+  return (data || []) as DisciplinaryProcessRecord[];
+}
+
+async function fetchFilesByStudent(studentId: string): Promise<DisciplinaryFileRecord[]> {
+  const { data, error } = await supabase
+    .from('disciplinary_process_files')
+    .select(
+      'id,process_id,student_id,file_name,original_file_name,storage_path,bucket,uploaded_at,processing_status',
+    )
+    .eq('student_id', studentId)
+    .order('uploaded_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching disciplinary files:', error);
+    return [];
+  }
+  return (data || []) as DisciplinaryFileRecord[];
+}
+
+async function fetchCartaEventsByStudent(studentId: string): Promise<CartaEvent[]> {
+  const { data, error } = await supabase
+    .from('carta_events')
+    .select(CARTA_EVENT_SELECT)
+    .eq('student_id', studentId)
+    .order('created_at', { ascending: false })
+    .limit(200);
+
+  if (error) {
+    console.error('Error fetching carta events:', error);
+    return [];
+  }
+  return (data || []) as CartaEvent[];
+}
+
+async function fetchLetterOutputEventsByStudent(studentId: string): Promise<LetterOutputEvent[]> {
+  const { data, error } = await supabase
+    .from('usage_events')
+    .select('id,event_name,properties,created_at')
+    .in('event_name', ['letter_printed', 'letter_downloaded'])
+    .eq('properties->>studentId', studentId)
+    .order('created_at', { ascending: false })
+    .limit(100);
+
+  if (error) {
+    console.error('Error fetching letter output events:', error);
+    return [];
+  }
+  return (data || []) as LetterOutputEvent[];
+}
+
+async function fetchDetectedAnnotationsByStudent(
+  studentId: string,
+): Promise<DetectedAnnotationRecord[]> {
+  const { data, error } = await supabase
+    .from('disciplinary_annotations_detected')
+    .select(
+      'id,process_id,student_id,annotation_type,annotation_text,raw_text,annotation_date,detected_at',
+    )
+    .eq('student_id', studentId)
+    .order('detected_at', { ascending: false })
+    .limit(200);
+
+  if (error) {
+    console.error('Error fetching detected annotations:', error);
+    return [];
+  }
+  return (data || []) as DetectedAnnotationRecord[];
+}
+
+export async function fetchStudentDisciplinarySnapshot(
+  studentId: string,
+): Promise<StudentDisciplinarySnapshot> {
+  const [
+    annotations,
+    rawCartas,
+    documentAnalyses,
+    etapas,
+    processes,
+    files,
+    detectedAnnotations,
+    letterOutputEvents,
+    cartaEvents,
+  ] = await Promise.all([
+    fetchAnnotations(studentId),
+    fetchCartasByStudent(studentId),
+    fetchDocumentAnalyses(studentId),
+    fetchEtapasByStudent(studentId),
+    fetchProcessesByStudent(studentId),
+    fetchFilesByStudent(studentId),
+    fetchDetectedAnnotationsByStudent(studentId),
+    fetchLetterOutputEventsByStudent(studentId),
+    fetchCartaEventsByStudent(studentId),
+  ]);
+
+  const schoolYear = getCurrentSchoolYear();
+  const counts = annotations.reduce(
+    (acc, annotation) => {
+      if (getYearInChile(annotation.date) !== schoolYear) return acc;
+      if (annotation.type === 'Negativa') acc.negativas += 1;
+      if (annotation.type === 'Positiva') acc.positivas += 1;
+      if (annotation.type === 'Información') acc.informativas += 1;
+      return acc;
+    },
+    { negativas: 0, positivas: 0, informativas: 0 },
+  );
+
+  const cartas = rawCartas.map((carta) => hydrateCartaWorkflow(carta, cartaEvents));
+
+  return {
+    annotations,
+    cartas,
+    currentCarta: cartas.find((carta) => carta.status !== 'Anulada') || null,
+    documentAnalyses,
+    etapas,
+    processes,
+    files,
+    detectedAnnotations,
+    letterOutputEvents,
+    cartaEvents,
+    counts,
+    lastAnalysis: documentAnalyses[0] || null,
+  };
+}
+
+/**
+ * RPC: returns the top 5 courses with the most disciplinary letters (cartas).
+ * Falls back to aggregating from cartas_disciplinarias if RPC unavailable.
+ */
+export async function fetchCourseCartaRanking(): Promise<CourseCartaRankingItem[]> {
+  try {
+    const { data, error } = await supabase.rpc('get_course_carta_ranking');
+    if (error || !data) throw error ?? new Error('No data returned from RPC');
+
+    return (data as Array<Record<string, number | string>>).map((row) => ({
+      course_name: String(row.course_name || 'Sin curso'),
+      amonestacion_count: Number(row.amonestacion_count) || 0,
+      compromiso_count: Number(row.compromiso_count) || 0,
+      derivacion_count: Number(row.derivacion_count) || 0,
+      total_count: Number(row.total_count) || 0,
+    }));
+  } catch (err) {
+    const rpcError =
+      err instanceof Error ? err : new Error('RPC de ranking de cursos no disponible.');
+    console.error('RPC get_course_carta_ranking no disponible:', rpcError.message);
+    throw rpcError;
+  }
+}

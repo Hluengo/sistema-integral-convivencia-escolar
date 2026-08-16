@@ -1,0 +1,395 @@
+/**
+ * @license SPDX-License-Identifier: Apache-2.0
+ *
+ * Letter Document — Estilos deterministas para cartas disciplinarias Carta (216x279mm).
+ * Este archivo define dimensiones, tipografia y layout del documento oficial.
+ * NO debe contener animaciones, hover, focus ni reglas de la aplicacion.
+ */
+
+/* ============================================================
+   LETTER PAGE — Dimensiones canonicas (216mm x 279mm)
+   ============================================================ */
+
+.letter-document {
+  width: 216mm;
+  min-width: 216mm;
+  height: 279mm;
+  min-height: 279mm;
+  box-sizing: border-box;
+  padding: 15mm;
+  margin: 0;
+  background: white;
+  color: #111827;
+  font-family:
+    'Inter',
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    sans-serif;
+  font-size: 10pt;
+  line-height: 1.5;
+  overflow: hidden;
+  position: relative;
+  break-after: page;
+  page-break-after: always;
+}
+
+/* ============================================================
+   HEADER — Logo + datos institucionales
+   ============================================================ */
+
+.letter-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 10px;
+  margin-bottom: 3mm;
+  border-bottom: 2px solid #d1d5db;
+}
+
+.letter-header-logo {
+  height: 60px;
+  width: auto;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.letter-header-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.letter-header-institution {
+  font-size: 9pt;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #6b7280;
+}
+
+.letter-header-department {
+  margin-top: 2px;
+  font-size: 11pt;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.letter-header-year {
+  font-size: 10pt;
+  color: #6b7280;
+}
+
+/* ============================================================
+   TITLE — Titulo del documento
+   ============================================================ */
+
+.letter-title {
+  margin-bottom: 3mm;
+  text-align: center;
+  font-size: 14pt;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #111827;
+}
+
+/* ============================================================
+   SECTIONS — Contenido numerado
+   ============================================================ */
+
+.letter-section {
+  margin-bottom: 3mm;
+}
+
+.letter-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 2px;
+  margin-bottom: 1.5mm;
+  border-bottom: 2px solid #d1d5db;
+  font-size: 11pt;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.letter-section-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #1f2937;
+  color: white;
+  font-size: 10pt;
+  font-weight: 700;
+}
+
+.letter-section-body {
+  font-size: 9.5pt;
+  line-height: 1.4;
+  text-align: justify;
+  color: #374151;
+}
+
+/* ============================================================
+   DATA ROWS — Campos de datos (legacy)
+   ============================================================ */
+
+.letter-data-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 2px;
+  font-size: 9.5pt;
+  line-height: 1.5;
+}
+
+.letter-data-label {
+  width: 130px;
+  flex-shrink: 0;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.letter-data-value {
+  color: #1f2937;
+}
+
+/* ============================================================
+   METADATA GRID — Antecedentes en dos columnas
+   ============================================================ */
+
+.letter-metadata-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 10mm;
+  row-gap: 1.5mm;
+  margin-top: 1.5mm;
+  margin-bottom: 2.5mm;
+  align-items: start;
+}
+
+.letter-metadata-item {
+  display: grid;
+  grid-template-columns: 36mm minmax(0, 1fr);
+  column-gap: 2mm;
+  min-width: 0;
+  align-items: start;
+  font-size: 8.5pt;
+  line-height: 1.25;
+}
+
+.letter-metadata-item--full {
+  grid-column: 1 / -1;
+}
+
+.letter-metadata-label {
+  font-weight: 600;
+  color: #4b5563;
+  line-height: 1.25;
+}
+
+.letter-metadata-value {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+  color: #1f2937;
+}
+
+.letter-metadata-value::before {
+  content: ':';
+  margin-right: 2px;
+  color: #4b5563;
+}
+
+/* ============================================================
+   SIGNATURES — Bloques de firma
+   ============================================================ */
+
+.letter-signatures {
+  margin-top: 18px;
+  padding-top: 10px;
+  border-top: 1px solid #d1d5db;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.letter-signatures-title {
+  margin-bottom: 14px;
+  text-align: center;
+  font-size: 9pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #374151;
+}
+
+.letter-signature-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 3mm;
+  font-size: 9pt;
+  color: #4b5563;
+}
+
+.letter-signature-item {
+  text-align: center;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  min-width: 0;
+}
+
+.letter-signature-line {
+  margin-top: 20px;
+  padding-top: 4px;
+  border-top: 1px solid #9ca3af;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.letter-signature-role {
+  margin-top: 2px;
+  font-size: 8pt;
+  color: #6b7280;
+}
+
+/* ============================================================
+   LEGAL FRAMEWORK — Marco legal (derivacion)
+   ============================================================ */
+
+.letter-legal-box {
+  margin-top: 14px;
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f9fafb;
+}
+
+.letter-legal-text {
+  font-size: 8pt;
+  line-height: 1.6;
+  color: #6b7280;
+}
+
+/* ============================================================
+   PRINT STYLES
+   ============================================================ */
+
+/* ============================================================
+   COMPACT VARIANT — Notificacion de Inicio de Indagacion
+   Variante de una sola hoja Carta para documentos con 9 secciones.
+   Las cartas institucionales NO usan esta clase y conservan la
+   tipografia estandar definida arriba.
+   ============================================================ */
+
+.letter-document--compact {
+  font-size: 9pt;
+  line-height: 1.4;
+}
+
+.letter-document--compact .letter-header {
+  gap: 10px;
+  padding-bottom: 6px;
+  margin-bottom: 2mm;
+}
+
+.letter-document--compact .letter-header-logo {
+  height: 48px;
+}
+
+.letter-document--compact .letter-title {
+  font-size: 13pt;
+  margin-bottom: 2mm;
+}
+
+.letter-document--compact .letter-metadata-grid {
+  row-gap: 1mm;
+  margin-top: 1mm;
+  margin-bottom: 2mm;
+}
+
+.letter-document--compact .letter-metadata-item {
+  font-size: 8pt;
+  line-height: 1.2;
+}
+
+.letter-document--compact .letter-section {
+  margin-bottom: 2mm;
+}
+
+.letter-document--compact .letter-section-heading {
+  font-size: 10pt;
+  padding-bottom: 1px;
+  margin-bottom: 1mm;
+}
+
+.letter-document--compact .letter-section-number {
+  width: 18px;
+  height: 18px;
+  font-size: 9pt;
+}
+
+.letter-document--compact .letter-section-body {
+  font-size: 9pt;
+  line-height: 1.3;
+}
+
+.letter-document--compact .letter-signatures {
+  margin-top: 12px;
+  padding-top: 8px;
+}
+
+.letter-document--compact .letter-signatures-title {
+  margin-bottom: 10px;
+  font-size: 8.5pt;
+}
+
+.letter-document--compact .letter-signature-grid {
+  font-size: 8.5pt;
+}
+
+.letter-document--compact .letter-signature-line {
+  margin-top: 14px;
+}
+
+.letter-document--compact .letter-signature-role {
+  font-size: 7.5pt;
+}
+
+/* ============================================================
+   PRINT STYLES
+   ============================================================ */
+
+@media print {
+  .letter-document {
+    width: 216mm;
+    min-width: 216mm;
+    height: 279mm;
+    min-height: 279mm;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 15mm;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    width: 216mm;
+    background: white;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+@page {
+  size: 216mm 279mm;
+  margin: 0;
+}

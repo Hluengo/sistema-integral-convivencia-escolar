@@ -1,0 +1,11 @@
+# Generated or externally formatted artifacts
+api/index.js
+dist/
+package-lock.json
+skills-lock.json
+public/letter-test.html
+
+# Legal and operational documents keep their source formatting
+docs/
+.opencode/
+README.md

@@ -1,0 +1,162 @@
+/** @license SPDX-License-Identifier: Apache-2.0 */
+
+import { useState, type FormEvent, type ReactNode } from 'react';
+import { NotebookPen, Plus, X } from 'lucide-react';
+import ImproveTextarea from '../ImproveTextarea';
+import Button from './Button';
+import type { TextImprovementContext } from '../lib/hooks/useTextImprovement';
+
+interface HistoryEntryFormInput {
+  title: string;
+  description: string;
+}
+
+interface HistoryEntryFormProps {
+  idPrefix: string;
+  isSaving: boolean;
+  error: string | null;
+  helperText: string;
+  onSave: (input: HistoryEntryFormInput) => Promise<unknown>;
+  onResetError: () => void;
+  onClose?: () => void;
+  additionalFields?: ReactNode;
+  improvementContext?: TextImprovementContext;
+}
+
+export default function HistoryEntryForm({
+  idPrefix,
+  isSaving,
+  error,
+  helperText,
+  onSave,
+  onResetError,
+  onClose,
+  additionalFields,
+  improvementContext,
+}: HistoryEntryFormProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+
+  const closeForm = () => {
+    if (isSaving) return;
+    setIsOpen(false);
+    setTitle('');
+    setDescription('');
+    onResetError();
+    onClose?.();
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    try {
+      await onSave({ title, description });
+      closeForm();
+    } catch {
+      // El error tipado de la mutación se muestra debajo del formulario.
+    }
+  };
+
+  if (!isOpen) {
+    return (
+      <Button
+        variant="custom"
+        fullWidth
+        onClick={() => {
+          onResetError();
+          setIsOpen(true);
+        }}
+        className="rounded-xl border border-dashed border-brand-300 bg-brand-50/60 text-brand-700 hover:border-brand-400 hover:bg-brand-50"
+      >
+        <Plus className="h-4 w-4" aria-hidden="true" />
+        Registrar entrada manual
+      </Button>
+    );
+  }
+
+  const canSave = title.trim().length >= 3 && description.trim().length >= 3 && !isSaving;
+  const titleId = `${idPrefix}-title`;
+  const descriptionId = `${idPrefix}-description`;
+
+  return (
+    <form
+      onSubmit={(event) => void handleSubmit(event)}
+      className="space-y-4 rounded-xl border border-brand-200 bg-brand-50/50 p-4"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <NotebookPen className="h-5 w-5 text-brand-600" aria-hidden="true" />
+          <div>
+            <h3 className="font-bold text-neutral-900 text-sm">Nueva entrada en el historial</h3>
+            <p className="mt-0.5 text-neutral-500 text-xs">{helperText}</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={closeForm}
+          disabled={isSaving}
+          aria-label="Cerrar formulario"
+          className="rounded-lg p-1.5 text-neutral-400 hover:bg-white hover:text-neutral-700 disabled:opacity-40"
+        >
+          <X className="h-4 w-4" aria-hidden="true" />
+        </button>
+      </div>
+
+      <div>
+        <div className="mb-1.5 flex items-center justify-between gap-3">
+          <label htmlFor={titleId} className="font-semibold text-neutral-700 text-sm">
+            Título
+          </label>
+          <span className="text-neutral-400 text-xs">{title.length}/120</span>
+        </div>
+        <input
+          id={titleId}
+          aria-label="Título de la entrada"
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
+          maxLength={120}
+          required
+          disabled={isSaving}
+          placeholder="Ej.: Entrevista con apoderado"
+          className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-neutral-900 text-sm outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
+        />
+      </div>
+
+      <div>
+        <div className="mb-1.5 flex justify-end">
+          <span className="text-neutral-400 text-xs">{description.length}/2.000</span>
+        </div>
+        <ImproveTextarea
+          id={descriptionId}
+          label="Descripción"
+          value={description}
+          onChange={setDescription}
+          rows={4}
+          required
+          disabled={isSaving}
+          maxLength={2000}
+          improvementContext={improvementContext}
+          placeholder="Describe el hecho, acuerdo, entrevista o seguimiento realizado."
+          className="w-full resize-y rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-neutral-900 text-sm outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
+        />
+      </div>
+
+      {additionalFields}
+
+      {error && (
+        <p role="alert" className="rounded-lg bg-gravisima-50 px-3 py-2 text-gravisima-700 text-sm">
+          {error}
+        </p>
+      )}
+
+      <div className="flex justify-end gap-2">
+        <Button variant="ghost" onClick={closeForm} disabled={isSaving}>
+          Cancelar
+        </Button>
+        <Button type="submit" disabled={!canSave} isLoading={isSaving}>
+          Guardar en historial
+        </Button>
+      </div>
+    </form>
+  );
+}

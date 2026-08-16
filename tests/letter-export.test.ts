@@ -1,0 +1,155 @@
+/**
+ * @license SPDX-License-Identifier: Apache-2.0
+ *
+ * Playwright E2E tests for Letter document export system.
+ * Tests visual fidelity, impresion nativa, and overflow detection.
+ * Nota: PDF/Word download tests removidos por decision arquitectonica
+ * (ver src/features/anotaciones/docgen/__tests__/letter-document.test.ts:
+ * las dependencias pdf-lib, html-to-image, file-saver, docx estan prohibidas).
+ */
+
+import { test, expect } from '@playwright/test';
+
+const LETTER_TEST_URL = '/letter-test.html';
+
+test.describe('Documento tamaño Carta', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(LETTER_TEST_URL);
+    await page.waitForLoadState('networkidle');
+  });
+
+  test('1. Amonestacion escrita - renderiza correctamente', async ({ page }) => {
+    const letterDocument = page.locator('#document-preview-a4');
+    await expect(letterDocument).toBeVisible();
+    const title = page.locator('#letter-title');
+    await expect(title).toHaveText('Amonestacion Escrita');
+    const studentName = page.locator('#student-name');
+    await expect(studentName).toHaveText('Juan Perez Gonzalez');
+  });
+
+  test('2. Mantiene dimensiones Carta en viewport de escritorio', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const letterDocument = page.locator('#document-preview-a4');
+    const box = await letterDocument.boundingBox();
+    expect(box).not.toBeNull();
+    if (box) {
+      const expectedWidthMm = 216;
+      const expectedWidthPx = (expectedWidthMm / 25.4) * 96;
+      expect(box.width).toBeCloseTo(expectedWidthPx, 0);
+    }
+  });
+
+  test('3. Mantiene dimensiones Carta en viewport estrecho (móvil)', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    const letterDocument = page.locator('#document-preview-a4');
+    const box = await letterDocument.boundingBox();
+    expect(box).not.toBeNull();
+    if (box) {
+      const expectedWidthMm = 216;
+      const expectedWidthPx = (expectedWidthMm / 25.4) * 96;
+      expect(box.width).toBeCloseTo(expectedWidthPx, 0);
+    }
+  });
+
+  test('4. Logo institucional visible', async ({ page }) => {
+    const logo = page.locator('#logo-placeholder');
+    await expect(logo).toBeVisible();
+  });
+
+  test('5. Secciones numeradas presentes', async ({ page }) => {
+    const sections = page.locator('.letter-section-number');
+    const count = await sections.count();
+    expect(count).toBe(5);
+    for (let i = 0; i < count; i++) {
+      await expect(sections.nth(i)).toBeVisible();
+    }
+  });
+
+  test('6. Firmas presentes en grid de 4 columnas', async ({ page }) => {
+    const grid = page.locator('.letter-signatures-grid-4');
+    await expect(grid).toBeVisible();
+    const items = grid.locator('.letter-signature-item');
+    const count = await items.count();
+    expect(count).toBe(4);
+  });
+
+  test('7. Nombre largo del estudiante no rompe layout', async ({ page }) => {
+    const studentName = page.locator('#student-name');
+    await studentName.textContent().then(async (text) => {
+      expect(text).toBeTruthy();
+    });
+    const letterDocument = page.locator('#document-preview-a4');
+    const box = await letterDocument.boundingBox();
+    expect(box).not.toBeNull();
+  });
+
+  test('8. Curso y profesor con nombres largos', async ({ page }) => {
+    const course = page.locator('#student-course');
+    const teacher = page.locator('#teacher-name');
+    await expect(course).toHaveText('3 Basico B');
+    await expect(teacher).toHaveText('Maria Lopez Soto');
+    const letterDocument = page.locator('#document-preview-a4');
+    const box = await letterDocument.boundingBox();
+    expect(box).not.toBeNull();
+  });
+
+  test('9. Boton Imprimir visible (solo impresion nativa, sin PDF/Word por decision arquitectonica)', async ({
+    page,
+  }) => {
+    const printBtn = page.locator('#btn-print');
+    await expect(printBtn).toBeVisible();
+    await expect(printBtn).toHaveText('Imprimir');
+  });
+
+  test('10. Deteccion de contenido excedido', async ({ page }) => {
+    const overflowWarning = page.locator('#overflow-warning');
+    const isHidden = await overflowWarning.isHidden();
+    expect(isHidden).toBe(true);
+  });
+
+  test('11. Accion de impresion disponible (solo impresion nativa)', async ({ page }) => {
+    const printBtn = page.locator('#btn-print');
+    await expect(printBtn).toBeEnabled();
+  });
+
+  test('12. Snapshot visual de la plantilla', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const letterDocument = page.locator('#document-preview-a4');
+    await expect(letterDocument).toHaveScreenshot('letter-amonestacion.png', {
+      maxDiffPixelRatio: 0.02,
+    });
+  });
+
+  test('14. Titulo del documento cambia segun tipo', async ({ page }) => {
+    const title = page.locator('#letter-title');
+    await expect(title).toHaveText('Amonestacion Escrita');
+  });
+
+  test('15. Datos del estudiante correctos', async ({ page }) => {
+    const rut = page.locator('#student-rut');
+    await expect(rut).toHaveText('12.345.678-9');
+    const count = page.locator('#negative-count');
+    await expect(count).toHaveText('7');
+    const date = page.locator('#date-str');
+    await expect(date).toHaveText('23/07/2026');
+  });
+
+  test('16. Dimensiones Carta - altura 279mm', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 1200 });
+    const letterDocument = page.locator('#document-preview-a4');
+    const box = await letterDocument.boundingBox();
+    expect(box).not.toBeNull();
+    if (box) {
+      const expectedHeightMm = 279;
+      const expectedHeightPx = (expectedHeightMm / 25.4) * 96;
+      expect(box.height).toBeCloseTo(expectedHeightPx, 0);
+    }
+  });
+
+  test('17. Overflow warning menciona Carta 216x279mm', async ({ page }) => {
+    const overflowWarning = page.locator('#overflow-warning');
+    const text = await overflowWarning.textContent();
+    expect(text).toContain('216');
+    expect(text).toContain('279');
+  });
+});

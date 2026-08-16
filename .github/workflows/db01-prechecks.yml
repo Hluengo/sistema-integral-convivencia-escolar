@@ -1,0 +1,64 @@
+name: DB-01 Prechecks
+
+# Valida los prechecks del swap carta_events → UUID contra la base de staging.
+# NO aplica migraciones: solo lecturas (prechecks abortan si se detecta estado inválido).
+# Se ejecuta manualmente (workflow_dispatch) para no bloquear la CI normal.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  prechecks:
+    runs-on: ubuntu-latest
+    env:
+      STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validar secreto STAGING_DATABASE_URL
+        run: |
+          if [ -z "$STAGING_DATABASE_URL" ]; then
+            echo "::error::El secreto STAGING_DATABASE_URL no está configurado en el repositorio."
+            exit 1
+          fi
+
+      - name: Prechecks estrictos (NULLs en *_uuid)
+        run: |
+          docker run --rm -e DATABASE_URL="$STAGING_DATABASE_URL" postgres:15 \
+            sh -c "psql \"$DATABASE_URL\" -tA -c \"SELECT count(*) FROM public.carta_events WHERE carta_id_uuid IS NULL OR student_id_uuid IS NULL;\""
+        env:
+          DATABASE_URL: ${{ env.STAGING_DATABASE_URL }}
+
+      - name: Prechecks estrictos (cartas huérfanas)
+        run: |
+          docker run --rm -e DATABASE_URL="$STAGING_DATABASE_URL" postgres:15 \
+            sh -c "psql \"$DATABASE_URL\" -tA -c \"SELECT count(*) FROM public.carta_events ce WHERE NOT EXISTS (SELECT 1 FROM public.cartas_disciplinarias c WHERE c.id = ce.carta_id_uuid);\""
+        env:
+          DATABASE_URL: ${{ env.STAGING_DATABASE_URL }}
+
+      - name: Prechecks estrictos (estudiantes huérfanos)
+        run: |
+          docker run --rm -e DATABASE_URL="$STAGING_DATABASE_URL" postgres:15 \
+            sh -c "psql \"$DATABASE_URL\" -tA -c \"SELECT count(*) FROM public.carta_events ce WHERE NOT EXISTS (SELECT 1 FROM public.students s WHERE s.id = ce.student_id_uuid);\""
+        env:
+          DATABASE_URL: ${{ env.STAGING_DATABASE_URL }}
+
+      - name: Fail si algún precheck != 0
+        run: |
+          for q in \
+            "SELECT count(*) FROM public.carta_events WHERE carta_id_uuid IS NULL OR student_id_uuid IS NULL;" \
+            "SELECT count(*) FROM public.carta_events ce WHERE NOT EXISTS (SELECT 1 FROM public.cartas_disciplinarias c WHERE c.id = ce.carta_id_uuid);" \
+            "SELECT count(*) FROM public.carta_events ce WHERE NOT EXISTS (SELECT 1 FROM public.students s WHERE s.id = ce.student_id_uuid);" \
+          ; do
+            result=$(docker run --rm -e DATABASE_URL="$STAGING_DATABASE_URL" postgres:15 \
+              sh -c "psql \"$DATABASE_URL\" -tA -c \"$q\"")
+            echo "Query: $q → $result"
+            [ "$result" = "0" ] || { echo "❌ Precheck falló: se esperaba 0, se obtuvo $result"; exit 1; }
+          done
+          echo "✅ Prechecks DB-01 OK (0 filas en los tres)"
+        env:
+          DATABASE_URL: ${{ env.STAGING_DATABASE_URL }}
+
+      - name: Sin referencias *_uuid en cliente
+        run: |
+          grep -rE "carta_id_uuid|student_id_uuid" src/ server/ && { echo "❌ Referencias *_uuid encontradas"; exit 1; } || echo "✅ Sin referencias *_uuid en src/ y server/"

@@ -1,0 +1,88 @@
+/** @license SPDX-License-Identifier: Apache-2.0 */
+
+import { forwardRef } from 'react';
+import type { Annotation } from '@/shared/lib/types';
+import { TITLE_MAP, type DocType, type LetterContent } from './DocumentPreview/docTypes';
+import { LetterInstitutionalHeader, LetterTitle } from './DocumentPreview/SharedComponents';
+import AmonestacionContent from './DocumentPreview/AmonestacionContent';
+import CompromisoContent from './DocumentPreview/CompromisoContent';
+import DerivacionContent from './DocumentPreview/DerivacionContent';
+import './letter-document.css';
+
+interface LetterA4DocumentProps {
+  id?: string;
+  docType: DocType;
+  currentName: string;
+  currentRut: string;
+  currentCourse: string;
+  currentTeacher: string;
+  coordinatorName: string;
+  inspectorName: string;
+  apoderadoName: string;
+  dateStr: string;
+  negativeCount: number;
+  selectedAnnsObjects: Annotation[];
+  letterContent: LetterContent;
+  className?: string;
+  logoSrc?: string | null;
+  institutionName?: string | null;
+  onLogoError?: () => void;
+}
+
+const LetterA4Document = forwardRef<HTMLDivElement, LetterA4DocumentProps>(
+  function LetterA4Document(
+    {
+      id = 'document-preview-a4',
+      docType,
+      currentName,
+      currentRut,
+      currentCourse,
+      currentTeacher,
+      coordinatorName,
+      inspectorName,
+      apoderadoName,
+      dateStr,
+      negativeCount,
+      selectedAnnsObjects,
+      letterContent,
+      className = '',
+      logoSrc,
+      institutionName,
+      onLogoError,
+    },
+    ref,
+  ) {
+    const title = TITLE_MAP[docType] ?? 'Documento Disciplinario';
+    const sharedProps = {
+      currentName,
+      currentRut,
+      currentCourse,
+      currentTeacher,
+      coordinatorName,
+      inspectorName,
+      apoderadoName,
+      dateStr,
+      negativeCount,
+      selectedAnnsObjects,
+      letterContent,
+    };
+
+    return (
+      <div ref={ref} id={id} className={`letter-document ${className}`}>
+        <LetterInstitutionalHeader
+          year="2026"
+          logoSrc={logoSrc ?? undefined}
+          institutionName={institutionName ?? undefined}
+          onLogoError={onLogoError}
+        />
+        <LetterTitle>{title}</LetterTitle>
+
+        {docType === 'amonestacion' && <AmonestacionContent {...sharedProps} />}
+        {docType === 'compromiso_conductual' && <CompromisoContent {...sharedProps} />}
+        {docType === 'derivacion' && <DerivacionContent {...sharedProps} />}
+      </div>
+    );
+  },
+);
+
+export default LetterA4Document;
