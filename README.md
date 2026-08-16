@@ -115,7 +115,7 @@ Este proyecto maneja **datos de estudiantes (NNA)**, por lo que la seguridad es 
 - Se incorporaron loaders animados por vista y para el arranque de la aplicación, con frases contextuales, barra indeterminada y soporte para `prefers-reduced-motion`.
 - Se mejoraron contraste, accesibilidad y estados de carga del shell, login y vistas lazy.
 - Se agregaron índices compuestos para los patrones frecuentes de lectura por tenant, estudiante, fecha, estado y ordenamiento.
-- La suite actual valida **769 pruebas unitarias en 171 suites**, E2E de navegación/privacidad, auditoría axe pública y auditoría de dependencias sin vulnerabilidades.
+- La suite actual valida **787 pruebas unitarias en 171 suites**, E2E de navegación/privacidad, auditoría axe pública y auditoría de dependencias sin vulnerabilidades.
 
 ### Auditoría integral 2026-08-06 (pendientes MEDIO)
 
@@ -222,8 +222,8 @@ Para más detalles, revisa:
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ⚙️ **CI**         | [![CI](https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/ci.yml?branch=master&label=CI)](https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/ci.yml)                                 |
 | 🚦 **Lighthouse** | [![Lighthouse](https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/lighthouse.yml?branch=master&label=Lighthouse)](https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/lighthouse.yml) |
-| ✅ **Tests**      | 769 tests · 171 suites                                                                                                                                                                                                                                              |
-| 📈 **Cobertura**  | 92.64% líneas / 81.87% ramas / 91.85% funciones (`npm run test:coverage`, excluye el bundle generado `api/index.js`)                                                                                                                                                |
+| ✅ **Tests**      | 787 tests · 171 suites                                                                                                                                                                                                                                              |
+| 📈 **Cobertura**  | 92.20% líneas / 83.12% ramas / 91.82% funciones (`npm run test:coverage`, excluye el bundle generado `api/index.js`)                                                                                                                                                |
 | ♿ **A11y**       | `npm run test:a11y` sobre dashboard público y login                                                                                                                                                                                                                 |
 | 🔐 **Seguridad**  | `npm audit --omit=dev` 0 vulnerabilidades                                                                                                                                                                                                                           |
 
