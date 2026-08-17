@@ -11,6 +11,7 @@ import { formatDate, SEVERITY_BADGE } from './constants';
 import Button from '@/shared/ui/Button';
 import { toDateTimeLocalValue, toIsoDateTime } from './annotationEditUtils';
 import { useAuthStore } from '@/shared/lib/stores/authStore';
+import { formatAnnotationDisplayText } from './annotationDisplay';
 
 interface EditAnnotationsTabProps {
   annotations: Annotation[];
@@ -268,9 +269,14 @@ export default function EditAnnotationsTab({ annotations, onSaved }: EditAnnotat
                         {formatDate(annotation.date)}
                       </span>
                     </div>
-                    <p className="whitespace-pre-wrap text-neutral-800 text-sm leading-relaxed">
-                      {annotation.text}
-                    </p>
+                    <div className="rounded-lg border border-neutral-100 bg-neutral-50 px-3.5 py-3">
+                      <p className="mb-1 font-semibold text-neutral-500 text-[11px] uppercase tracking-wide">
+                        Descripción de la anotación
+                      </p>
+                      <p className="whitespace-pre-wrap text-neutral-800 text-sm leading-relaxed">
+                        {formatAnnotationDisplayText(annotation.text)}
+                      </p>
+                    </div>
                     {annotation.registered_by && (
                       <p className="text-neutral-400 text-xs">
                         Registrada por {annotation.registered_by}
