@@ -32,6 +32,7 @@ interface CausasState {
     newEstRut: string;
     newEstCurso: string;
     newInfTipo: Causa['tipoInfraccion'];
+    conductaRiceId?: string;
     newAulaSegura: boolean;
     newObs: string;
     newResponsable: string;
@@ -82,6 +83,7 @@ export const useCausasStore = create<CausasState>((set, get) => ({
       estudianteCurso: params.newEstCurso,
       runEstudiante: params.newEstRut,
       tipoInfraccion: params.newInfTipo,
+      conductaRiceId: params.conductaRiceId || undefined,
       comprometeAulaSegura: params.newAulaSegura,
       observaciones: params.newObs,
       responsable: params.newResponsable,

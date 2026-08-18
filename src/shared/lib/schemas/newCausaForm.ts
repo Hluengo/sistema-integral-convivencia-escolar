@@ -41,6 +41,7 @@ export const newCausaFormSchema = z.object({
     .transform(normalizeRutInput)
     .pipe(z.string().regex(CHILEAN_RUT_FORMAT_RE, 'Ingrese un RUN chileno válido.')),
   newInfTipo: z.enum(tipoInfraccionValues),
+  conductaRiceId: z.string().optional(),
   newAulaSegura: z.boolean(),
   newObs: z.string().trim().min(10, 'Describa los hechos con al menos 10 caracteres.'),
   newResponsable: z.string().trim().min(3, 'Ingrese el fiscalizador a cargo.'),

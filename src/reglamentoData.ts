@@ -777,3 +777,12 @@ export const REGLAMENTO_CONDUCTAS: ConductaReglamentada[] = [
     responsable: 'Rectoría del Colegio',
   },
 ];
+
+export function getConductaReglamentada(id?: string): ConductaReglamentada | undefined {
+  return id ? REGLAMENTO_CONDUCTAS.find((conducta) => conducta.id === id) : undefined;
+}
+
+export function extractConductaFromObservation(observaciones?: string): string {
+  const match = observaciones?.match(/(?:^|\n)Conducta:\s*(.*?)(?=\n\n\[|$)/s);
+  return match?.[1]?.trim() ?? '';
+}

@@ -18,6 +18,7 @@ import Select from '@/shared/ui/Select';
 
 interface RiceConductSelectProps {
   setNewInfTipo: (value: Causa['tipoInfraccion']) => void;
+  setConductaRiceId: (value: string) => void;
   setNewAulaSegura: (value: boolean) => void;
   setNewObs: (value: string) => void;
   currentObs?: string;
@@ -31,6 +32,7 @@ function buildRiceObservation(matched: RiceConducta): string {
 
 export default function RiceConductSelect({
   setNewInfTipo,
+  setConductaRiceId,
   setNewAulaSegura,
   setNewObs,
   currentObs,
@@ -48,6 +50,7 @@ export default function RiceConductSelect({
   const applyConducta = (conductId: string) => {
     const matched = REGLAMENTO_CONDUCTAS.find((conducta) => conducta.id === conductId);
     if (!matched) {
+      setConductaRiceId('');
       return;
     }
 
@@ -58,6 +61,7 @@ export default function RiceConductSelect({
     }
 
     setNewInfTipo(matched.gravedad);
+    setConductaRiceId(matched.id);
     setNewAulaSegura(matched.gravedad === 'Gravísima');
     setNewObs(buildRiceObservation(matched));
   };
@@ -67,6 +71,7 @@ export default function RiceConductSelect({
     const matched = REGLAMENTO_CONDUCTAS.find((conducta) => conducta.id === pendingConductId);
     if (!matched) return;
     setNewInfTipo(matched.gravedad);
+    setConductaRiceId(matched.id);
     setNewAulaSegura(matched.gravedad === 'Gravísima');
     setNewObs(buildRiceObservation(matched));
     setPendingConductId(null);

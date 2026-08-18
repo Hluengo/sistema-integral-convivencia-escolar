@@ -3,6 +3,7 @@
 import { memo } from 'react';
 import { AlertTriangle, CalendarClock, CheckCircle2, FileText, UserRound } from 'lucide-react';
 import type { Causa } from '../../shared/lib/types';
+import { extractConductaFromObservation, getConductaReglamentada } from '../../reglamentoData';
 import { getCausaDeadline, getCausaPhase, getCausaStatus } from '../causas/causaPresentation';
 import { formatChileDate } from '../../shared/lib/dateTime';
 
@@ -14,6 +15,9 @@ interface ResumenTabProps {
 export default memo(function ResumenTab({ causa, breaches }: ResumenTabProps) {
   const deadline = getCausaDeadline(causa);
   const completed = causa.checklistDebidoProceso.filter((item) => item.completado).length;
+  const conductaDescripcion =
+    getConductaReglamentada(causa.conductaRiceId)?.conducta ||
+    extractConductaFromObservation(causa.observaciones);
 
   return (
     <div className="space-y-5">
@@ -78,11 +82,19 @@ export default memo(function ResumenTab({ causa, breaches }: ResumenTabProps) {
             <dd className="font-medium">{formatChileDate(causa.fechaUltimaActualizacion)}</dd>
           </div>
         </dl>
-        <div className="mt-4 rounded-lg bg-neutral-50 p-3">
-          <p className="font-medium text-neutral-500 text-xs">Descripción de la falta</p>
-          <p className="mt-1 whitespace-pre-wrap text-neutral-700 text-sm">
-            {causa.observaciones || 'Sin descripción de la falta registrada.'}
-          </p>
+        <div className="mt-4 grid gap-3 rounded-lg bg-neutral-50 p-3">
+          <div>
+            <p className="font-medium text-neutral-500 text-xs">Descripción de la falta</p>
+            <p className="mt-1 text-neutral-700 text-sm">
+              {conductaDescripcion || 'No se ha asociado una conducta específica del RICE.'}
+            </p>
+          </div>
+          <div>
+            <p className="font-medium text-neutral-500 text-xs">Relato de los hechos</p>
+            <p className="mt-1 whitespace-pre-wrap text-neutral-700 text-sm">
+              {causa.observaciones || 'Sin relato de los hechos registrado.'}
+            </p>
+          </div>
         </div>
       </section>
 

@@ -1,6 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import type { BitacoraEntry, Causa, ChecklistItem } from '@/shared/lib/types';
+import { extractConductaFromObservation, getConductaReglamentada } from '../../../reglamentoData';
 import { nowDateOnly, nowIso } from '@/shared/lib/dateUtils';
 import { DEFAULT_NOTIFICATION_CONTENT, NOTIFICACION_TITLE } from './defaultContent';
 import {
@@ -47,8 +48,11 @@ function toLowerSeverityLabel(tipoInfraccion: Causa['tipoInfraccion']): string {
 }
 
 function buildCalificacionFalta(causa: Causa): string {
-  const descripcion = alignSeverityReferences(causa.observaciones.trim(), causa.tipoInfraccion);
-  return `Calificación preliminar: falta ${toLowerSeverityLabel(causa.tipoInfraccion)}. Descripción de la conducta: ${descripcion || 'No registrada'}. Esta calificación no constituye una sanción anticipada.`;
+  const descripcion =
+    getConductaReglamentada(causa.conductaRiceId)?.conducta ||
+    extractConductaFromObservation(causa.observaciones);
+  const relato = alignSeverityReferences(causa.observaciones.trim(), causa.tipoInfraccion);
+  return `Calificación preliminar: falta ${toLowerSeverityLabel(causa.tipoInfraccion)}. Conducta tipificada según el RICE: ${descripcion || 'No registrada'}. Relato de los hechos: ${relato || 'No registrado'}. Esta calificación no constituye una sanción anticipada.`;
 }
 
 function alignSeverityReferences(text: string, tipoInfraccion: Causa['tipoInfraccion']): string {

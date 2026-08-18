@@ -279,6 +279,9 @@ export default function NewCausaForm({
         </div>
 
         <RiceConductSelect
+          setConductaRiceId={(value) =>
+            setValue('conductaRiceId', value, { shouldDirty: true, shouldValidate: true })
+          }
           setNewInfTipo={(value) =>
             setValue('newInfTipo', value, { shouldDirty: true, shouldValidate: true })
           }
@@ -303,12 +306,13 @@ export default function NewCausaForm({
               id="create-gravedad"
               aria-label="Gravedad"
               value={newInfTipo}
-              onChange={(event) =>
+              onChange={(event) => {
                 setValue('newInfTipo', event.target.value as Causa['tipoInfraccion'], {
                   shouldDirty: true,
                   shouldValidate: true,
-                })
-              }
+                });
+                setValue('conductaRiceId', '', { shouldDirty: true, shouldValidate: true });
+              }}
               className="mt-1.5 bg-neutral-50 p-3 font-medium"
             >
               <option value="Leve">Falta Leve</option>

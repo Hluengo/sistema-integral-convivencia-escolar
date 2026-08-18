@@ -215,6 +215,21 @@ describe('builders de la notificación', () => {
     assert.doesNotMatch(content.hallazgoIncidente, /falta grave/i);
   });
 
+  it('incorpora la conducta RICE separada del relato en la calificación', () => {
+    const causa = {
+      ...baseCausa(),
+      conductaRiceId: 'G7',
+      observaciones: 'El estudiante se ausentó del aula sin autorización durante el recreo.',
+    } satisfies Causa;
+    const content = buildPrefilledNotificationContent(causa);
+
+    assert.match(
+      content.calificacionFalta,
+      /Ausentarse de clases sin autorización mientras se encuentra en el establecimiento\./,
+    );
+    assert.match(content.calificacionFalta, /Relato de los hechos: El estudiante se ausentó/);
+  });
+
   it('fusiona advertencia y garantías en la sección 7', () => {
     const content = buildPrefilledNotificationContent(baseCausa());
     assert.match(content.garantiasDebidoProceso, /no constituye una sanción anticipada/);

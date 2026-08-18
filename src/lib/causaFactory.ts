@@ -26,6 +26,7 @@ interface CreateDraftCausaArgs {
   estudianteCurso: string;
   runEstudiante: string;
   tipoInfraccion: Causa['tipoInfraccion'];
+  conductaRiceId?: string;
   comprometeAulaSegura: boolean;
   observaciones: string;
   responsable: string;
@@ -38,6 +39,7 @@ export function createDraftCausa({
   estudianteCurso,
   runEstudiante,
   tipoInfraccion,
+  conductaRiceId,
   comprometeAulaSegura,
   observaciones,
   responsable,
@@ -54,6 +56,7 @@ export function createDraftCausa({
     fechaApertura: dateOnly,
     estadoActual: EstadoCausa.DENUNCIA_RECEPCIONADA,
     tipoInfraccion,
+    ...(conductaRiceId ? { conductaRiceId } : {}),
     responsable,
     comprometeAulaSegura,
     fechaUltimaActualizacion: dateOnly,

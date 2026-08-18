@@ -14,6 +14,7 @@ export const NEW_CAUSA_FORM_DEFAULTS: NewCausaFormValues = {
   newEstNombre: '',
   newEstRut: '',
   newInfTipo: 'Grave',
+  conductaRiceId: '',
   newAulaSegura: false,
   newObs: '',
   newResponsable: 'Esteban Valenzuela (Encargado de Convivencia)',
