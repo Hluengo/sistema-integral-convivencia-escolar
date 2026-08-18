@@ -143,7 +143,7 @@ describe('migración causa_documents', () => {
 });
 
 describe('tipos de la notificación', () => {
-  it('define tipo, versión de plantilla y 9 secciones editables', () => {
+  it('define tipo, versión de plantilla y 8 secciones editables', () => {
     assert.equal(CAUSA_DOCUMENT_TYPE, 'notificacion_inicio_indagacion');
     assert.equal(NOTIFICACION_TEMPLATE_VERSION, 'notificacion-inicio-indagacion-v1');
     assert.equal(NOTIFICATION_CONTENT_FIELDS.length, 9);
@@ -159,21 +159,19 @@ describe('tipos de la notificación', () => {
 
   it('la plantilla base está alineada a Circular 482 y al debido proceso', () => {
     assert.equal(NOTIFICACION_TITLE, 'Notificación de Inicio de Indagación');
-    assert.equal(NOTIFICATION_SECTIONS.length, 9);
+    assert.equal(NOTIFICATION_SECTIONS.length, 8);
     assert.match(DEFAULT_NOTIFICATION_CONTENT.fundamentoProcedimiento, /Circular N?°? 482/);
     assert.match(DEFAULT_NOTIFICATION_CONTENT.garantiasDebidoProceso, /derecho a ser escuchado/);
-    assert.match(
-      DEFAULT_NOTIFICATION_CONTENT.advertenciaEspecial,
-      /no constituye una sanción anticipada/,
-    );
+    assert.match(DEFAULT_NOTIFICATION_CONTENT.garantiasDebidoProceso, /no constituye una sanción anticipada/);
   });
 
   it('la plantilla base es concisa para caber en una sola hoja Carta', () => {
     const paragraphs = Object.values(DEFAULT_NOTIFICATION_CONTENT);
     assert.equal(paragraphs.length, 9);
     for (const paragraph of paragraphs) {
+      const maxLength = paragraph === DEFAULT_NOTIFICATION_CONTENT.garantiasDebidoProceso ? 320 : 220;
       assert.ok(
-        paragraph.length <= 220,
+        paragraph.length <= maxLength,
         `el párrafo excede 220 caracteres (${paragraph.length}): ${paragraph.slice(0, 60)}…`,
       );
     }
@@ -211,9 +209,17 @@ describe('builders de la notificación', () => {
     const content = buildPrefilledNotificationContent(causa);
 
     assert.match(content.calificacionFalta, /falta gravísima/);
+    assert.match(content.calificacionFalta, /Se registra un hecho de violencia física/);
     assert.match(content.hallazgoIncidente, /falta gravísima/);
     assert.doesNotMatch(content.calificacionFalta, /falta grave/i);
     assert.doesNotMatch(content.hallazgoIncidente, /falta grave/i);
+  });
+
+  it('fusiona advertencia y garantías en la sección 7', () => {
+    const content = buildPrefilledNotificationContent(baseCausa());
+    assert.match(content.garantiasDebidoProceso, /no constituye una sanción anticipada/);
+    assert.match(content.garantiasDebidoProceso, /derecho a ser escuchado/);
+    assert.equal(NOTIFICATION_SECTIONS[6]?.title, 'Garantías del debido proceso');
   });
 
   it('lista antecedentes reales de la bitácora sin inventar hechos', () => {

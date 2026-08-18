@@ -4,7 +4,7 @@ import type { NotificationContent } from './types';
 
 export const NOTIFICACION_TITLE = 'Notificación de Inicio de Indagación';
 
-/** Títulos de las 9 secciones numeradas del documento. */
+/** Títulos de las 8 secciones numeradas del documento. */
 export const NOTIFICATION_SECTIONS: Array<{ key: keyof NotificationContent; title: string }> = [
   { key: 'fundamentoProcedimiento', title: 'Fundamento del procedimiento' },
   { key: 'hallazgoIncidente', title: 'Hechos que motivan la indagación' },
@@ -12,7 +12,6 @@ export const NOTIFICATION_SECTIONS: Array<{ key: keyof NotificationContent; titl
   { key: 'atenuantesAgravantes', title: 'Circunstancias atenuantes y agravantes' },
   { key: 'calificacionFalta', title: 'Calificación preliminar de la falta' },
   { key: 'medidasEnEvaluacion', title: 'Medidas en evaluación' },
-  { key: 'advertenciaEspecial', title: 'Advertencia especial' },
   { key: 'garantiasDebidoProceso', title: 'Garantías del debido proceso' },
   { key: 'confidencialidad', title: 'Confidencialidad' },
 ];
@@ -38,10 +37,9 @@ export const DEFAULT_NOTIFICATION_CONTENT: NotificationContent = {
     'La calificación definitiva se realizará al concluir el acopio de información, conforme a la tipificación del RICE vigente.',
   medidasEnEvaluacion:
     'Las medidas se evaluarán conforme a los principios de gradualidad, proporcionalidad y enfoque formativo de la normativa vigente.',
-  advertenciaEspecial:
-    'Se advierte que esta indagación no constituye una sanción anticipada; el estudiante conserva su derecho a ser escuchado y a presentar descargos.',
+  advertenciaEspecial: '',
   garantiasDebidoProceso:
-    'Se garantizan: derecho a ser informado, derecho a ser escuchado, derecho a presentar antecedentes y descargos, derecho a conocer los resultados y derecho a solicitar la reconsideración de la decisión final.',
+    'Se advierte que esta indagación no constituye una sanción anticipada; el estudiante conserva su derecho a ser informado, derecho a ser escuchado, derecho a presentar antecedentes y descargos, derecho a conocer los resultados y derecho a solicitar la reconsideración de la decisión final.',
   confidencialidad:
     'Se solicita mantener la confidencialidad de esta notificación y sus antecedentes, en resguardo de la intimidad y honra del estudiante y su familia.',
 };

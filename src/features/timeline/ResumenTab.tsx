@@ -78,9 +78,12 @@ export default memo(function ResumenTab({ causa, breaches }: ResumenTabProps) {
             <dd className="font-medium">{formatChileDate(causa.fechaUltimaActualizacion)}</dd>
           </div>
         </dl>
-        <p className="mt-4 whitespace-pre-wrap rounded-lg bg-neutral-50 p-3 text-neutral-700 text-sm">
-          {causa.observaciones || 'Sin resumen del hecho registrado.'}
-        </p>
+        <div className="mt-4 rounded-lg bg-neutral-50 p-3">
+          <p className="font-medium text-neutral-500 text-xs">Descripción de la falta</p>
+          <p className="mt-1 whitespace-pre-wrap text-neutral-700 text-sm">
+            {causa.observaciones || 'Sin descripción de la falta registrada.'}
+          </p>
+        </div>
       </section>
 
       {breaches.length > 0 && (

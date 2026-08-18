@@ -47,7 +47,8 @@ function toLowerSeverityLabel(tipoInfraccion: Causa['tipoInfraccion']): string {
 }
 
 function buildCalificacionFalta(causa: Causa): string {
-  return `De forma preliminar, y sin constituir sanción anticipada, los antecedentes registrados se califican como falta ${toLowerSeverityLabel(causa.tipoInfraccion)}, conforme a la tipificación vigente del RICE.`;
+  const descripcion = alignSeverityReferences(causa.observaciones.trim(), causa.tipoInfraccion);
+  return `Calificación preliminar: falta ${toLowerSeverityLabel(causa.tipoInfraccion)}. Descripción de la conducta: ${descripcion || 'No registrada'}. Esta calificación no constituye una sanción anticipada.`;
 }
 
 function alignSeverityReferences(text: string, tipoInfraccion: Causa['tipoInfraccion']): string {
@@ -70,6 +71,14 @@ function listBitacoraAntecedentes(bitacora: BitacoraEntry[]): string[] {
     });
 }
 
+function combineDueProcessSections(content: NotificationContent): string {
+  if (!content.advertenciaEspecial.trim()) return content.garantiasDebidoProceso;
+  if (content.garantiasDebidoProceso.includes(content.advertenciaEspecial.trim())) {
+    return content.garantiasDebidoProceso;
+  }
+  return `${content.advertenciaEspecial.trim()} ${content.garantiasDebidoProceso.trim()}`;
+}
+
 /**
  * Texto base precargado: mezcla los datos reales del expediente con la
  * plantilla base. hallazgoIncidente usa las observaciones de la causa y
@@ -80,7 +89,13 @@ export function buildPrefilledNotificationContent(
   causa: Causa,
   savedContent?: NotificationContent | null,
 ): NotificationContent {
-  if (savedContent && isNotificationContent(savedContent)) return savedContent;
+  if (savedContent && isNotificationContent(savedContent)) {
+    return {
+      ...savedContent,
+      calificacionFalta: buildCalificacionFalta(causa),
+      garantiasDebidoProceso: combineDueProcessSections(savedContent),
+    };
+  }
 
   const antecedentes = listBitacoraAntecedentes(causa.bitacora);
   const hallazgo = alignSeverityReferences(causa.observaciones.trim(), causa.tipoInfraccion);
@@ -93,6 +108,7 @@ export function buildPrefilledNotificationContent(
         ? `Antecedentes registrados en el expediente:\n${antecedentes.join('\n')}`
         : DEFAULT_NOTIFICATION_CONTENT.evidenciaTestimonios,
     calificacionFalta: buildCalificacionFalta(causa),
+    garantiasDebidoProceso: combineDueProcessSections(DEFAULT_NOTIFICATION_CONTENT),
   };
 }
 

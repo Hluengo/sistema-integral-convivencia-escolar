@@ -78,7 +78,11 @@ export default function CausaNotificationGenerator({
   useEffect(() => {
     if (initialAppliedRef.current) return;
     if (initialSnapshot) {
-      setContent(initialSnapshot.content);
+      setContent(
+        documentStatus === 'Pendiente'
+          ? buildPrefilledNotificationContent(causa, initialSnapshot.content)
+          : initialSnapshot.content,
+      );
       setApoderadoName(initialSnapshot.apoderadoName);
       setEmittedBy(initialSnapshot.emittedBy);
     }
