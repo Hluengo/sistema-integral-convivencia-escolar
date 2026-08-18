@@ -51,8 +51,7 @@ function buildCalificacionFalta(causa: Causa): string {
   const descripcion =
     getConductaReglamentada(causa.conductaRiceId)?.conducta ||
     extractConductaFromObservation(causa.observaciones);
-  const relato = alignSeverityReferences(causa.observaciones.trim(), causa.tipoInfraccion);
-  return `Calificación preliminar: falta ${toLowerSeverityLabel(causa.tipoInfraccion)}. Conducta tipificada según el RICE: ${descripcion || 'No registrada'}. Relato de los hechos: ${relato || 'No registrado'}. Esta calificación no constituye una sanción anticipada.`;
+  return `Calificación preliminar: falta ${toLowerSeverityLabel(causa.tipoInfraccion)}. Conducta tipificada según el RICE: ${descripcion || 'No registrada'}.`;
 }
 
 function alignSeverityReferences(text: string, tipoInfraccion: Causa['tipoInfraccion']): string {

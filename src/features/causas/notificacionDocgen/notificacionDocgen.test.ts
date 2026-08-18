@@ -209,7 +209,7 @@ describe('builders de la notificación', () => {
     const content = buildPrefilledNotificationContent(causa);
 
     assert.match(content.calificacionFalta, /falta gravísima/);
-    assert.match(content.calificacionFalta, /Se registra un hecho de violencia física/);
+    assert.match(content.hallazgoIncidente, /Se registra un hecho de violencia física/);
     assert.match(content.hallazgoIncidente, /falta gravísima/);
     assert.doesNotMatch(content.calificacionFalta, /falta grave/i);
     assert.doesNotMatch(content.hallazgoIncidente, /falta grave/i);
@@ -227,7 +227,7 @@ describe('builders de la notificación', () => {
       content.calificacionFalta,
       /Ausentarse de clases sin autorización mientras se encuentra en el establecimiento\./,
     );
-    assert.match(content.calificacionFalta, /Relato de los hechos: El estudiante se ausentó/);
+    assert.doesNotMatch(content.calificacionFalta, /Relato de los hechos:/);
   });
 
   it('fusiona advertencia y garantías en la sección 7', () => {
