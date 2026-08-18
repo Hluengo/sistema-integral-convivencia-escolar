@@ -1,10 +1,15 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { describe, it } from 'node:test';
-import { equal, ok } from 'node:assert/strict';
+import { deepEqual, equal, ok } from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { DEFAULT_LETTER_CONTENT } from '../DocumentPreview/docTypes';
+import type { Annotation } from '../../../../shared/lib/types';
+import {
+  buildLetterAnnotationSummary,
+  DEFAULT_LETTER_CONTENT,
+  isLetterAnnotationSummary,
+} from '../DocumentPreview/docTypes';
 import {
   getCartaProcessingBlockReason,
   getEffectiveDisciplinaryStage,
@@ -17,6 +22,28 @@ import {
 } from '../../../../shared/lib/domain/disciplinaryStage';
 
 const srcDir = resolve(import.meta.dirname!, '../../../../..');
+
+describe('Resumen de anotaciones de cartas', () => {
+  const annotations: Annotation[] = [
+    { id: 'neg-1', text: 'Falta negativa', date: '2026-08-01', registered_by: 'Inspectoría', type: 'Negativa', student_id: 'student-1', severity: 'Grave' },
+    { id: 'neg-2', text: 'Otra falta negativa', date: '2026-08-02', registered_by: 'Inspectoría', type: 'Negativa', student_id: 'student-1', severity: 'Grave' },
+    { id: 'pos-1', text: 'Reconocimiento positivo', date: '2026-08-03', registered_by: 'Profesorado', type: 'Positiva', student_id: 'student-1', severity: 'Leve' },
+    { id: 'info-1', text: 'Registro informativo', date: '2026-08-04', registered_by: 'Inspectoría', type: 'Información', student_id: 'student-1', severity: 'Leve' },
+  ];
+
+  it('mantiene solo las negativas seleccionadas y agrega positivas e informativas', () => {
+    const summary = buildLetterAnnotationSummary(annotations, [annotations[1]]);
+
+    deepEqual(summary.negativas.map((item) => item.id), ['neg-2']);
+    deepEqual(summary.positivas.map((item) => item.id), ['pos-1']);
+    deepEqual(summary.informativas.map((item) => item.id), ['info-1']);
+  });
+
+  it('valida snapshots completos para conservar el contenido emitido', () => {
+    ok(isLetterAnnotationSummary({ negativas: [], positivas: [], informativas: [] }));
+    ok(!isLetterAnnotationSummary({ negativas: [], positivas: [] }));
+  });
+});
 
 describe('letter-document — Formato Carta (216x279mm)', () => {
   const cssPath = resolve(import.meta.dirname!, '../letter-document.css');

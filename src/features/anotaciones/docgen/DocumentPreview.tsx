@@ -4,7 +4,11 @@ import { forwardRef, useCallback, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CheckCircle2, Printer } from 'lucide-react';
 import type { Annotation } from '../../../shared/lib/types';
-import type { DocType, LetterContent } from './DocumentPreview/docTypes';
+import type {
+  DocType,
+  LetterAnnotationSummary,
+  LetterContent,
+} from './DocumentPreview/docTypes';
 import LetterA4Document from './LetterA4Document';
 import LetterPreviewViewport from './LetterPreviewViewport';
 import Button from '@/shared/ui/Button';
@@ -23,6 +27,7 @@ interface DocumentPreviewProps {
   dateStr: string;
   negativeCount: number;
   selectedAnnsObjects: Annotation[];
+  annotationSummary: LetterAnnotationSummary;
   letterContent: LetterContent;
   onPrint: () => void;
   onMarkProcessed: () => void;
@@ -47,6 +52,7 @@ const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(functio
     dateStr,
     negativeCount,
     selectedAnnsObjects,
+    annotationSummary,
     letterContent,
     onPrint,
     onMarkProcessed,
@@ -126,6 +132,7 @@ const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(functio
           dateStr={dateStr}
           negativeCount={negativeCount}
           selectedAnnsObjects={selectedAnnsObjects}
+          annotationSummary={annotationSummary}
           letterContent={letterContent}
           logoSrc={institutionQuery.data?.logo_url}
           institutionName={institutionQuery.data?.official_name}

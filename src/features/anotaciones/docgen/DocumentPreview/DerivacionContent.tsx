@@ -12,6 +12,7 @@ export default function DerivacionContent(props: DocContentProps) {
     currentTeacher,
     dateStr,
     negativeCount,
+    annotationSummary,
     letterContent,
   } = props;
 
@@ -44,7 +45,9 @@ export default function DerivacionContent(props: DocContentProps) {
       <Section number={3} title="Descripción / antecedentes">
         <p>{letterContent.descripcion}</p>
         <p style={{ marginTop: '8px' }}>
-          Cantidad de anotaciones negativas consideradas: <strong>{negativeCount}</strong>.
+          Cantidad de anotaciones: negativas <strong>{negativeCount}</strong>, positivas{' '}
+          <strong>{annotationSummary.positivas.length}</strong>, informativas{' '}
+          <strong>{annotationSummary.informativas.length}</strong>.
         </p>
       </Section>
 

@@ -13,7 +13,14 @@ import { useSelectedAnnotations } from './docgen/hooks/useSelectedAnnotations';
 import GeneratorHeader from './docgen/components/GeneratorHeader';
 import ExportError from './docgen/components/ExportError';
 import PrintHintDialog from './docgen/components/PrintHintDialog';
-import { TITLE_MAP, type DocType, type LetterContent } from './docgen/DocumentPreview/docTypes';
+import {
+  buildLetterAnnotationSummary,
+  isLetterAnnotationSummary,
+  TITLE_MAP,
+  type DocType,
+  type LetterContent,
+  type LetterAnnotationSummary,
+} from './docgen/DocumentPreview/docTypes';
 
 function isLetterContent(value: unknown): value is LetterContent {
   if (!value || typeof value !== 'object') return false;
@@ -143,6 +150,12 @@ export default function AnotacionesDocumentGenerator({
   const [hasOverflow, setHasOverflow] = useState(false);
 
   const selectedAnnsObjects = selectedAnnotations.selectedAnnsObjects;
+  const annotationSummary: LetterAnnotationSummary = useMemo(() => {
+    const savedSummary = initialContentSnapshot?.annotationSummary;
+    return isLetterAnnotationSummary(savedSummary)
+      ? savedSummary
+      : buildLetterAnnotationSummary(annotations, selectedAnnsObjects);
+  }, [annotations, initialContentSnapshot?.annotationSummary, selectedAnnsObjects]);
   const dateStr = getCurrentDateStr();
   const title = TITLE_MAP[docType];
 
@@ -152,6 +165,7 @@ export default function AnotacionesDocumentGenerator({
       docType,
       title,
       negativeCount,
+      annotationSummary,
       letterContent: documentState.letterContent,
       student: {
         id: student.id,
@@ -176,6 +190,7 @@ export default function AnotacionesDocumentGenerator({
       documentState.inspectorName,
       documentState.letterContent,
       negativeCount,
+      annotationSummary,
       sourceAnalysisId,
       sourceProcessId,
       student.course_id,
@@ -341,6 +356,7 @@ export default function AnotacionesDocumentGenerator({
         dateStr={dateStr}
         negativeCount={negativeCount}
         selectedAnnsObjects={selectedAnnsObjects}
+        annotationSummary={annotationSummary}
         letterContent={documentState.letterContent}
         onPrint={handlePrintDoc}
         onMarkProcessed={() => void onMarkProcessed(contentSnapshot, docType)}

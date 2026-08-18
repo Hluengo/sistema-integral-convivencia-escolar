@@ -13,6 +13,17 @@ export interface LetterContent {
   observaciones: string;
 }
 
+export type LetterAnnotationRecord = Pick<
+  Annotation,
+  'id' | 'text' | 'date' | 'registered_by' | 'type'
+>;
+
+export interface LetterAnnotationSummary {
+  negativas: LetterAnnotationRecord[];
+  positivas: LetterAnnotationRecord[];
+  informativas: LetterAnnotationRecord[];
+}
+
 export interface DocContentProps {
   currentName: string;
   currentRut: string;
@@ -24,7 +35,47 @@ export interface DocContentProps {
   dateStr: string;
   negativeCount: number;
   selectedAnnsObjects: Annotation[];
+  annotationSummary: LetterAnnotationSummary;
   letterContent: LetterContent;
+}
+
+export function buildLetterAnnotationSummary(
+  annotations: Annotation[],
+  selectedNegativeAnnotations: Annotation[],
+): LetterAnnotationSummary {
+  const toRecord = (annotation: Annotation): LetterAnnotationRecord => ({
+    id: annotation.id,
+    text: annotation.text,
+    date: annotation.date,
+    registered_by: annotation.registered_by,
+    type: annotation.type,
+  });
+
+  return {
+    negativas: selectedNegativeAnnotations.map(toRecord),
+    positivas: annotations.filter((annotation) => annotation.type === 'Positiva').map(toRecord),
+    informativas: annotations
+      .filter((annotation) => annotation.type === 'Información')
+      .map(toRecord),
+  };
+}
+
+export function isLetterAnnotationSummary(value: unknown): value is LetterAnnotationSummary {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Record<string, unknown>;
+  return ['negativas', 'positivas', 'informativas'].every(
+    (key) =>
+      Array.isArray(candidate[key]) &&
+      candidate[key].every(
+        (item) =>
+          item &&
+          typeof item === 'object' &&
+          typeof (item as Record<string, unknown>).id === 'string' &&
+          typeof (item as Record<string, unknown>).text === 'string' &&
+          typeof (item as Record<string, unknown>).date === 'string' &&
+          typeof (item as Record<string, unknown>).registered_by === 'string',
+      ),
+  );
 }
 
 export const TITLE_MAP: Record<DocType, string> = {

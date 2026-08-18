@@ -2,7 +2,12 @@
 
 import { forwardRef } from 'react';
 import type { Annotation } from '@/shared/lib/types';
-import { TITLE_MAP, type DocType, type LetterContent } from './DocumentPreview/docTypes';
+import {
+  TITLE_MAP,
+  type DocType,
+  type LetterAnnotationSummary,
+  type LetterContent,
+} from './DocumentPreview/docTypes';
 import { LetterInstitutionalHeader, LetterTitle } from './DocumentPreview/SharedComponents';
 import AmonestacionContent from './DocumentPreview/AmonestacionContent';
 import CompromisoContent from './DocumentPreview/CompromisoContent';
@@ -22,6 +27,7 @@ interface LetterA4DocumentProps {
   dateStr: string;
   negativeCount: number;
   selectedAnnsObjects: Annotation[];
+  annotationSummary: LetterAnnotationSummary;
   letterContent: LetterContent;
   className?: string;
   logoSrc?: string | null;
@@ -44,6 +50,7 @@ const LetterA4Document = forwardRef<HTMLDivElement, LetterA4DocumentProps>(
       dateStr,
       negativeCount,
       selectedAnnsObjects,
+      annotationSummary,
       letterContent,
       className = '',
       logoSrc,
@@ -64,6 +71,7 @@ const LetterA4Document = forwardRef<HTMLDivElement, LetterA4DocumentProps>(
       dateStr,
       negativeCount,
       selectedAnnsObjects,
+      annotationSummary,
       letterContent,
     };
 
