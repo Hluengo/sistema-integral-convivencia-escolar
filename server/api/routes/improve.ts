@@ -37,11 +37,11 @@ const IMPROVEMENT_CONTEXTS = {
 } as const;
 
 const TEXT_IMPROVEMENT_PROMPT_VERSION = '2026-08-05-v2';
-const TEXT_IMPROVEMENT_PRIMARY_TIMEOUT_MS = 7_000;
-const TEXT_IMPROVEMENT_FALLBACK_TIMEOUT_MS = 6_000;
-const TEXT_IMPROVEMENT_MAX_TOKENS = 1_200;
-const TEXT_IMPROVEMENT_REQUEST_TIMEOUT_MS = 18_000;
-const TEXT_IMPROVEMENT_SAFETY_MARGIN_MS = 1_500;
+const TEXT_IMPROVEMENT_PRIMARY_TIMEOUT_MS = 5_000;
+const TEXT_IMPROVEMENT_FALLBACK_TIMEOUT_MS = 4_000;
+const TEXT_IMPROVEMENT_MAX_TOKENS = 700;
+const TEXT_IMPROVEMENT_REQUEST_TIMEOUT_MS = 7_000;
+const TEXT_IMPROVEMENT_SAFETY_MARGIN_MS = 500;
 const TEXT_IMPROVEMENT_MIN_PROVIDER_TIMEOUT_MS = 1_200;
 const TEXT_IMPROVEMENT_MIN_FALLBACK_BUDGET_MS = 4_000;
 const TEXT_IMPROVEMENT_PRIMARY_PROVIDER =
@@ -186,18 +186,6 @@ export function isUsableImprovement(originalText: string, improvedText: string |
   );
 }
 
-async function generateFallbackImprovement(
-  request: Array<{ role: string; content: string }>,
-  deadlineAtMs: number,
-): Promise<ImprovementGenerationResult> {
-  if (!hasFallbackBudget(deadlineAtMs)) {
-    return { text: null, timedOut: true, provider: null, model: null };
-  }
-  return TEXT_IMPROVEMENT_PRIMARY_PROVIDER === 'Gemini'
-    ? generateOpenRouterImprovement(request, deadlineAtMs)
-    : generateGeminiImprovement(request, deadlineAtMs);
-}
-
 router.post(
   '/improve-text',
   requireAuth,
@@ -252,8 +240,8 @@ router.post(
           content: buildTextImprovementRequest(userContent, contextInstruction),
         },
       ];
-      let result = await generateImprovement(request, true, deadlineAtMs);
-      let improved = result.text;
+      const result = await generateImprovement(request, true, deadlineAtMs);
+      const improved = result.text;
       if (!improved) {
         console.info('[improve-text] returning unchanged', {
           timedOut: result.timedOut,
@@ -267,28 +255,7 @@ router.post(
         );
         return;
       }
-      if (
-        isTextImprovementRefusal(improved) ||
-        isTextImprovementTooSimilar(userContent, improved)
-      ) {
-        const retryRequest = [
-          {
-            role: 'user',
-            content: buildTextImprovementRequest(userContent, contextInstruction, true),
-          },
-        ];
-        result = await generateImprovement(retryRequest, false, deadlineAtMs);
-        improved = result.text;
-        if (!isUsableImprovement(userContent, improved)) {
-          const fallbackResult = await generateFallbackImprovement(retryRequest, deadlineAtMs);
-          if (fallbackResult.text) {
-            result = fallbackResult;
-            improved = fallbackResult.text;
-          } else if (fallbackResult.timedOut) {
-            result = fallbackResult;
-          }
-        }
-      }
+      // ponytail: una sola generación por solicitud; reintentar empeora la latencia.
       if (
         !improved ||
         isTextImprovementRefusal(improved) ||

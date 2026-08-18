@@ -10,7 +10,7 @@ interface TextImprovementResponse {
   warning?: unknown;
 }
 
-const TEXT_IMPROVEMENT_CLIENT_TIMEOUT_MS = 24_000;
+const TEXT_IMPROVEMENT_CLIENT_TIMEOUT_MS = 9_000;
 const TEXT_IMPROVEMENT_TIMEOUT_MESSAGE =
   'La IA tardó demasiado en responder. El contenido original se mantuvo sin cambios.';
 

@@ -25,9 +25,9 @@ describe('AI provider routing', () => {
 
     assert.match(improveRoute, /services\/openrouter/);
     assert.match(openRouterService, /openrouter\/free/);
-    assert.match(improveRoute, /generateFallbackImprovement/);
+    assert.match(improveRoute, /generateImprovement\(request, true, deadlineAtMs\)/);
     assert.doesNotMatch(improveRoute, /callTextImprovementFallback/);
-    assert.match(improveRoute, /TEXT_IMPROVEMENT_REQUEST_TIMEOUT_MS = 18_000/);
+    assert.match(improveRoute, /TEXT_IMPROVEMENT_REQUEST_TIMEOUT_MS = 7_000/);
   });
 
   it('usa Gemini para borradores e informes oficiales', () => {

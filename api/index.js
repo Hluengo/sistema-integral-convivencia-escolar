@@ -2239,11 +2239,11 @@ var IMPROVEMENT_CONTEXTS = {
   cierre_causa: "Redacta el texto como fundamento institucional de un cierre anticipado de causa. Ordena con claridad los antecedentes aportados, el resultado de la investigaci\xF3n y la raz\xF3n por la que no corresponde continuar. Conserva estrictamente los hechos, acciones, fechas, personas y conclusi\xF3n entregados por el usuario. No inventes antecedentes, pruebas, citas normativas, responsabilidades ni sanciones, y no cambies la decisi\xF3n descrita."
 };
 var TEXT_IMPROVEMENT_PROMPT_VERSION = "2026-08-05-v2";
-var TEXT_IMPROVEMENT_PRIMARY_TIMEOUT_MS = 7e3;
-var TEXT_IMPROVEMENT_FALLBACK_TIMEOUT_MS = 6e3;
-var TEXT_IMPROVEMENT_MAX_TOKENS = 1200;
-var TEXT_IMPROVEMENT_REQUEST_TIMEOUT_MS = 18e3;
-var TEXT_IMPROVEMENT_SAFETY_MARGIN_MS = 1500;
+var TEXT_IMPROVEMENT_PRIMARY_TIMEOUT_MS = 5e3;
+var TEXT_IMPROVEMENT_FALLBACK_TIMEOUT_MS = 4e3;
+var TEXT_IMPROVEMENT_MAX_TOKENS = 700;
+var TEXT_IMPROVEMENT_REQUEST_TIMEOUT_MS = 7e3;
+var TEXT_IMPROVEMENT_SAFETY_MARGIN_MS = 500;
 var TEXT_IMPROVEMENT_MIN_PROVIDER_TIMEOUT_MS = 1200;
 var TEXT_IMPROVEMENT_MIN_FALLBACK_BUDGET_MS = 4e3;
 var TEXT_IMPROVEMENT_PRIMARY_PROVIDER = process.env.TEXT_IMPROVEMENT_PROVIDER?.toLowerCase() === "openrouter" ? "OpenRouter" : "Gemini";
@@ -2343,17 +2343,6 @@ async function generateImprovement(request, allowFallback, deadlineAtMs) {
   const secondary = TEXT_IMPROVEMENT_PRIMARY_PROVIDER === "Gemini" ? await generateOpenRouterImprovement(request, deadlineAtMs) : await generateGeminiImprovement(request, deadlineAtMs);
   return secondary.text || secondary.timedOut ? secondary : primary;
 }
-function isUsableImprovement(originalText, improvedText) {
-  return Boolean(
-    improvedText && !isTextImprovementRefusal(improvedText) && !isTextImprovementTooSimilar(originalText, improvedText)
-  );
-}
-async function generateFallbackImprovement(request, deadlineAtMs) {
-  if (!hasFallbackBudget(deadlineAtMs)) {
-    return { text: null, timedOut: true, provider: null, model: null };
-  }
-  return TEXT_IMPROVEMENT_PRIMARY_PROVIDER === "Gemini" ? generateOpenRouterImprovement(request, deadlineAtMs) : generateGeminiImprovement(request, deadlineAtMs);
-}
 router.post(
   "/improve-text",
   requireAuth,
@@ -2401,8 +2390,8 @@ router.post(
           content: buildTextImprovementRequest(userContent, contextInstruction)
         }
       ];
-      let result = await generateImprovement(request, true, deadlineAtMs);
-      let improved = result.text;
+      const result = await generateImprovement(request, true, deadlineAtMs);
+      const improved = result.text;
       if (!improved) {
         console.info("[improve-text] returning unchanged", {
           timedOut: result.timedOut,
@@ -2415,25 +2404,6 @@ router.post(
           )
         );
         return;
-      }
-      if (isTextImprovementRefusal(improved) || isTextImprovementTooSimilar(userContent, improved)) {
-        const retryRequest = [
-          {
-            role: "user",
-            content: buildTextImprovementRequest(userContent, contextInstruction, true)
-          }
-        ];
-        result = await generateImprovement(retryRequest, false, deadlineAtMs);
-        improved = result.text;
-        if (!isUsableImprovement(userContent, improved)) {
-          const fallbackResult = await generateFallbackImprovement(retryRequest, deadlineAtMs);
-          if (fallbackResult.text) {
-            result = fallbackResult;
-            improved = fallbackResult.text;
-          } else if (fallbackResult.timedOut) {
-            result = fallbackResult;
-          }
-        }
       }
       if (!improved || isTextImprovementRefusal(improved) || isTextImprovementTooSimilar(userContent, improved)) {
         console.warn("[improve-text] no usable improvement returned", {
