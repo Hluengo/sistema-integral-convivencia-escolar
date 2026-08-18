@@ -86,7 +86,7 @@ test('verificarPlazoSuspension excede el máximo legal de 15 días', () => {
 
 test('verificarPlazoSuspension cumplido dentro del máximo', () => {
   const causa = makeCausa({
-    fechaInicioSuspension: '2026-08-17', // futuro: aún no vence
+    fechaInicioSuspension: '2099-01-01', // futuro estable: aún no vence
     duracionSuspensionDias: 5,
   });
   const result = verificarPlazoSuspension(causa);
