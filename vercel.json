@@ -42,5 +42,5 @@
       ]
     }
   ],
-  "rewrites": [{ "source": "/(.*)", "destination": "/api" }]
+  "rewrites": [{ "source": "/((?!assets(?:/|$)).*)", "destination": "/api" }]
 }
