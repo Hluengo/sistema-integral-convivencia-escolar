@@ -166,6 +166,6 @@ describe('reconcileChecklistFromBitacora', () => {
     const legacy = causa(result, [mediationEntry]);
 
     assert.equal(isMediationActive(legacy), true);
-    assert.equal(getPhaseProgress(legacy, 'Investigación').total, 5);
+    assert.equal(getPhaseProgress(legacy, 'Investigación').total, 2);
   });
 });

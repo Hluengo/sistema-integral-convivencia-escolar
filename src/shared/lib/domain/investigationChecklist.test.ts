@@ -61,10 +61,25 @@ describe('investigationChecklist domain', () => {
     );
 
     assert.equal(model.mediationActive, true);
+    assert.equal(model.progress.total, 2);
+    assert.equal(model.progress.completed, 0);
+    assert.equal(model.nextItem?.id, 'chk_inv_1');
     assert.equal(
       isMediationActive(causa({ checklistDebidoProceso: completedChecklist(['chk_inv_3']) })),
       true,
     );
+  });
+
+  it('no bloquea el avance cuando la mediación activa deja pendientes sus hitos alternativos', () => {
+    const model = getInvestigationChecklistModel(
+      causa({
+        checklistDebidoProceso: completedChecklist(['chk_inv_1', 'chk_inv_2', 'chk_inv_3']),
+      }),
+    );
+
+    assert.equal(model.mediationActive, true);
+    assert.deepEqual(model.progress, { total: 2, completed: 2 });
+    assert.equal(model.nextItem, null);
   });
 
   it('trata chk_inv_5 como salida con acuerdo y deja chk_inv_6 fuera de lo aplicable', () => {

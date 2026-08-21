@@ -163,21 +163,9 @@ export function getInvestigationChecklistProgress(causa: CausaChecklistContext):
 
   const baseTotal = countExisting(INVESTIGATION_BASE_ITEM_IDS);
   const baseCompleted = countCompleted(INVESTIGATION_BASE_ITEM_IDS);
-  if (!isMediationActive(causa)) {
-    return { total: baseTotal, completed: baseCompleted };
-  }
-
-  const flowTotal = countExisting(MEDIATION_FLOW_ITEM_IDS);
-  const flowCompleted = countCompleted(MEDIATION_FLOW_ITEM_IDS);
-  const hasOutcomeSlot = MEDIATION_OUTCOME_ITEM_IDS.some((id) => byId.has(id));
-  const outcomeCompleted = MEDIATION_OUTCOME_ITEM_IDS.some((id) => byId.get(id)?.completado)
-    ? 1
-    : 0;
-
-  return {
-    total: baseTotal + flowTotal + (hasOutcomeSlot ? 1 : 0),
-    completed: baseCompleted + flowCompleted + outcomeCompleted,
-  };
+  // Mediación es un subflujo alternativo: puede registrarse, pero no bloquea
+  // el avance ni aumenta el total de hitos obligatorios de Investigación.
+  return { total: baseTotal, completed: baseCompleted };
 }
 
 export function getInvestigationChecklistModel(causa: Causa): InvestigationChecklistModel {
@@ -206,24 +194,12 @@ export function getNextInvestigationChecklistItem(
 ): ChecklistItem | null {
   const checklist = causa.checklistDebidoProceso;
   const byId = new Map(checklist.map((item) => [item.id, item]));
-  const requiredIds = isMediationActive(causa)
-    ? [...INVESTIGATION_BASE_ITEM_IDS, ...MEDIATION_FLOW_ITEM_IDS]
-    : [...INVESTIGATION_BASE_ITEM_IDS];
 
-  for (const id of requiredIds) {
+  for (const id of INVESTIGATION_BASE_ITEM_IDS) {
     const item = byId.get(id);
     if (item && !item.completado) return item;
   }
-
-  if (!isMediationActive(causa) || getMediationOutcome(checklist)) {
-    return null;
-  }
-
-  return (
-    MEDIATION_OUTCOME_ITEM_IDS.map((id) => byId.get(id)).find((item): item is ChecklistItem =>
-      Boolean(item && !item.completado),
-    ) ?? null
-  );
+  return null;
 }
 
 export function getApplicableChecklistItems(

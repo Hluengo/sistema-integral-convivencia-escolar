@@ -38,24 +38,24 @@ describe('getPhaseProgress', () => {
     assert.equal(progress.total, 2);
   });
 
-  it('cuenta una sola salida de mediación cuando hay acuerdo', () => {
+  it('no suma la mediación alternativa cuando hay acuerdo', () => {
     const progress = getPhaseProgress(
       causa(['chk_inv_1', 'chk_inv_2', 'chk_inv_3', 'chk_inv_4', 'chk_inv_5']),
       'Investigación',
     );
 
-    assert.equal(progress.completed, 5);
-    assert.equal(progress.total, 5);
+    assert.equal(progress.completed, 2);
+    assert.equal(progress.total, 2);
   });
 
-  it('cuenta una sola salida de mediación cuando fracasa y retorna a investigación', () => {
+  it('no suma la mediación alternativa cuando fracasa y retorna a investigación', () => {
     const progress = getPhaseProgress(
       causa(['chk_inv_1', 'chk_inv_2', 'chk_inv_3', 'chk_inv_4', 'chk_inv_6']),
       'Investigación',
     );
 
-    assert.equal(progress.completed, 5);
-    assert.equal(progress.total, 5);
+    assert.equal(progress.completed, 2);
+    assert.equal(progress.total, 2);
   });
 
   it('cuenta solo actuaciones visibles desde Resolución en adelante', () => {
