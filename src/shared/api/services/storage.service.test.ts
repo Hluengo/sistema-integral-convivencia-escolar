@@ -124,10 +124,28 @@ describe('uploadDocument', () => {
       await import('./storage.service');
 
     assert.match(DOCUMENT_UPLOAD_ACCEPT, /\.pdf/);
+    assert.match(DOCUMENT_UPLOAD_ACCEPT, /\.md/);
+    assert.match(DOCUMENT_UPLOAD_ACCEPT, /text\/markdown/);
     assert.match(DOCUMENT_UPLOAD_ACCEPT, /\.docx/);
     assert.match(DOCUMENT_UPLOAD_ACCEPT, /\.jpeg/);
     assert.match(DOCUMENT_UPLOAD_ACCEPT, /\.webp/);
-    assert.match(DOCUMENT_UPLOAD_HELPER_TEXT, /PDF, Word o imagen/);
+    assert.match(DOCUMENT_UPLOAD_HELPER_TEXT, /PDF, Markdown, Word o imagen/);
+  });
+
+  it('acepta Markdown como respaldo de hitos o bitácora', async () => {
+    const result = await withStorageMocks({
+      bucketHandler: makeStorage,
+      fn: async () => {
+        const { uploadDocument } = await import('./storage.service');
+        return uploadDocument(
+          'causa-1',
+          makeDocumentFile({ name: 'respaldo.md', type: 'text/markdown' }),
+          'documentos',
+        );
+      },
+    });
+
+    assert.match(result as string, /respaldo\.md$/);
   });
 
   it('sube el archivo y devuelve la ruta del bucket', async () => {

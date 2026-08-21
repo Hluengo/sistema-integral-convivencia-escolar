@@ -9,11 +9,21 @@ const STORAGE_BUCKET = 'documentos_convivencia';
 const SIGNED_URL_TTL_SECONDS = 3600;
 const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
 export const DOCUMENT_UPLOAD_ACCEPT =
-  '.pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp';
-export const DOCUMENT_UPLOAD_HELPER_TEXT = 'PDF, Word o imagen (JPG, PNG o WEBP). Máximo 10 MB.';
-export const DOCUMENT_UPLOAD_PLACEHOLDER = 'Seleccionar PDF, Word o imagen';
+  '.pdf,.md,.doc,.docx,.jpg,.jpeg,.png,.webp,application/pdf,text/markdown,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp';
+export const DOCUMENT_UPLOAD_HELPER_TEXT =
+  'PDF, Markdown, Word o imagen (JPG, PNG o WEBP). Máximo 10 MB.';
+export const DOCUMENT_UPLOAD_PLACEHOLDER = 'Seleccionar PDF, Markdown, Word o imagen';
 
-const ALLOWED_DOCUMENT_EXTENSIONS = new Set(['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'webp']);
+const ALLOWED_DOCUMENT_EXTENSIONS = new Set([
+  'pdf',
+  'md',
+  'doc',
+  'docx',
+  'jpg',
+  'jpeg',
+  'png',
+  'webp',
+]);
 
 function isMissingStorageObject(error: { message?: string } | null): boolean {
   return error?.message === 'Object not found';
@@ -48,7 +58,7 @@ export async function uploadDocument(
 ): Promise<string> {
   const extension = file.name.split('.').pop()?.toLowerCase() || '';
   if (!ALLOWED_DOCUMENT_EXTENSIONS.has(extension)) {
-    throw new Error('Formato no permitido. Use PDF, Word o imagen JPG, PNG o WEBP.');
+    throw new Error('Formato no permitido. Use PDF, Markdown, Word o imagen JPG, PNG o WEBP.');
   }
   if (file.size === 0) {
     throw new Error('El documento está vacío.');
