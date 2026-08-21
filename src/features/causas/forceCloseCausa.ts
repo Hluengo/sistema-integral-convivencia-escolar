@@ -42,6 +42,18 @@ export function buildForceClosedCausa(
     ...causa,
     estadoActual: EstadoCausa.CAUSA_CERRADA,
     fechaUltimaActualizacion: options.fechaCivil ?? nowDateOnly(),
+    checklistDebidoProceso: causa.checklistDebidoProceso.map((item) =>
+      item.id === 'chk_seg_4'
+        ? {
+            ...item,
+            completado: true,
+            fechaCompletado: options.fechaCivil ?? nowDateOnly(),
+            registradoPor: responsable,
+            observaciones: motivo,
+            documentoUrl: input.documentoAdjunto ?? item.documentoUrl,
+          }
+        : item,
+    ),
     bitacora: [entry, ...causa.bitacora],
   };
 }

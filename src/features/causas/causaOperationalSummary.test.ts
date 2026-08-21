@@ -84,7 +84,7 @@ describe('Resumen operativo de causa', () => {
     assert.equal(summary.currentPhaseProgress.completed, 2);
     assert.equal(summary.currentPhaseProgress.total, 2);
     assert.notEqual(summary.nextChecklistItem?.id, 'chk_inv_3');
-    assert.equal(summary.nextChecklistItem?.id, 'chk_res_1');
+    assert.equal(summary.nextChecklistItem?.id, 'chk_res_2');
   });
 
   it('cuenta documentos y actividad desde antecedentes ya cargados', () => {
@@ -117,5 +117,31 @@ describe('Resumen operativo de causa', () => {
     assert.equal(summary.completedHitos, 1);
     assert.equal(summary.documentsCount, 2);
     assert.equal(summary.historyCount, 1);
+  });
+
+  it('no cuenta como actividad operativa los estados absorbidos', () => {
+    const summary = getCausaOperationalSummary(
+      causa({
+        checklistDebidoProceso: [
+          {
+            id: 'chk_res_1',
+            label: 'Elaboración histórica',
+            descripcion: 'Estado absorbido',
+            completado: true,
+            requeridoPor: 'Circular 482',
+          },
+          {
+            id: 'chk_res_2',
+            label: 'Informe emitido',
+            descripcion: 'Actuación visible',
+            completado: true,
+            requeridoPor: 'Circular 482',
+          },
+        ],
+        estadoActual: EstadoCausa.INFORME_CONCLUYENTE_ELABORACION,
+      }),
+    );
+
+    assert.equal(summary.completedHitos, 1);
   });
 });

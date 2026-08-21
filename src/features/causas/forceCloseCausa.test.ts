@@ -45,6 +45,10 @@ describe('buildForceClosedCausa', () => {
     );
 
     assert.equal(resultado.estadoActual, EstadoCausa.CAUSA_CERRADA);
+    assert.equal(
+      resultado.checklistDebidoProceso.find((item) => item.id === 'chk_seg_4')?.completado,
+      true,
+    );
     assert.equal(resultado.fechaUltimaActualizacion, '2026-07-30');
     assert.equal(resultado.bitacora.length, 2);
     assert.equal(resultado.bitacora[0].titulo, 'Cierre por accidente acreditado');

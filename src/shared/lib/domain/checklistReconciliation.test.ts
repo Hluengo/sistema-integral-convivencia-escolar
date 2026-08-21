@@ -89,6 +89,25 @@ describe('reconcileChecklistFromBitacora', () => {
     assert.equal(item?.observaciones, 'Notificación corregida.');
   });
 
+  it('reconstruye una rectificación de hito después de recargar', () => {
+    const result = reconcileChecklistFromBitacora(
+      [],
+      [
+        entry(
+          'b1',
+          '2026-08-10T12:00:00.000Z',
+          'Rectificación de Hito: Informe Concluyente Emitido',
+          'Se rectificó el registro. Responsable: Jimena Chavez. Observaciones actualizadas: Resolución notificada correctamente.',
+        ),
+      ],
+    );
+    const item = result.find((candidate) => candidate.id === 'chk_res_6');
+
+    assert.equal(item?.completado, true);
+    assert.equal(item?.registradoPor, 'Jimena Chavez');
+    assert.equal(item?.observaciones, 'Resolución notificada correctamente.');
+  });
+
   it('mantiene todos los hitos base aunque Supabase tenga solo una parte', () => {
     const result = reconcileChecklistFromBitacora(
       [

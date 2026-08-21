@@ -5,9 +5,14 @@ import type { BitacoraEntry, ChecklistItem } from '../types';
 import { toDateOnly } from '../../../shared/lib/dateUtils';
 
 const REGISTRATION_PREFIX = 'Registro de Hito: ';
+const RECTIFICATION_PREFIX = 'Rectificación de Hito: ';
 const RESET_PREFIX = 'Invalidador Hito: ';
 const RESPONSIBLE_MARKER = 'Responsable: ';
 const OBSERVATIONS_MARKER = '. Observaciones: ';
+const LEGACY_LABEL_ALIASES: Record<string, string> = {
+  'En Plazo de Apelación': 'Derecho a Apelación Informado',
+  'Medida en Ejecución': 'Medida o Plan de Acompañamiento Iniciado',
+};
 
 function parseRegistrationDescription(description: string): {
   responsable?: string;
@@ -18,14 +23,30 @@ function parseRegistrationDescription(description: string): {
 
   const valueStart = responsibleStart + RESPONSIBLE_MARKER.length;
   const observationsStart = description.indexOf(OBSERVATIONS_MARKER, valueStart);
+  const rectificationObservationsMarker = '. Observaciones actualizadas: ';
+  const rectificationObservationsStart = description.indexOf(
+    rectificationObservationsMarker,
+    valueStart,
+  );
+  const selectedObservationsStart =
+    observationsStart >= 0 ? observationsStart : rectificationObservationsStart;
   if (observationsStart < 0) {
-    return { responsable: description.slice(valueStart).trim() || undefined };
+    if (rectificationObservationsStart < 0) {
+      return { responsable: description.slice(valueStart).trim() || undefined };
+    }
+    return {
+      responsable: description.slice(valueStart, rectificationObservationsStart).trim() || undefined,
+      observaciones:
+        description
+          .slice(rectificationObservationsStart + rectificationObservationsMarker.length)
+          .trim() || undefined,
+    };
   }
 
   return {
-    responsable: description.slice(valueStart, observationsStart).trim() || undefined,
+    responsable: description.slice(valueStart, selectedObservationsStart).trim() || undefined,
     observaciones:
-      description.slice(observationsStart + OBSERVATIONS_MARKER.length).trim() || undefined,
+      description.slice(selectedObservationsStart + OBSERVATIONS_MARKER.length).trim() || undefined,
   };
 }
 
@@ -59,14 +80,19 @@ export function reconcileChecklistFromBitacora(
   );
 
   for (const entry of orderedEntries) {
-    const isRegistration = entry.titulo.startsWith(REGISTRATION_PREFIX);
+    const isRegistration =
+      entry.titulo.startsWith(REGISTRATION_PREFIX) || entry.titulo.startsWith(RECTIFICATION_PREFIX);
     const isReset = entry.titulo.startsWith(RESET_PREFIX);
     if (!isRegistration && !isReset) continue;
 
     const label = entry.titulo.slice(
-      isRegistration ? REGISTRATION_PREFIX.length : RESET_PREFIX.length,
+      entry.titulo.startsWith(RECTIFICATION_PREFIX)
+        ? RECTIFICATION_PREFIX.length
+        : isRegistration
+          ? REGISTRATION_PREFIX.length
+          : RESET_PREFIX.length,
     );
-    const itemId = idByLabel.get(label);
+    const itemId = idByLabel.get(LEGACY_LABEL_ALIASES[label] ?? label);
     const index = itemId ? indexById.get(itemId) : undefined;
     if (index === undefined) continue;
 

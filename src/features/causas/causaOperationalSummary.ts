@@ -54,7 +54,7 @@ export function getCausaOperationalSummary(causa: Causa): CausaOperationalSummar
     ...getPhaseProgress(causa, phase),
   }));
   const currentPhaseProgress = phaseProgress.find((progress) => progress.phase === currentPhase);
-  const completedHitos = causa.checklistDebidoProceso.filter((item) => item.completado).length;
+  const completedHitos = phaseProgress.reduce((count, progress) => count + progress.completed, 0);
   const documentsCount =
     causa.checklistDebidoProceso.filter((item) => item.documentoNombre).length +
     causa.bitacora.filter((entry) => entry.documentoAdjunto).length;

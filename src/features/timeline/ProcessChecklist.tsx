@@ -11,6 +11,7 @@ import AttachedDocuments from './AttachedDocuments';
 import ChecklistItemCard from './ChecklistItemCard';
 import InvestigationChecklist from './InvestigationChecklist';
 import CausaNotificationPanel from '../causas/notificacionDocgen/CausaNotificationPanel';
+import { getApplicableChecklistItems } from '../../shared/lib/domain/investigationChecklist';
 
 interface ProcessChecklistProps {
   causa: Causa;
@@ -85,9 +86,7 @@ export default function ProcessChecklist({
       <div className="max-h-[500px] space-y-2 overflow-y-auto pr-1">
         {PROCESS_SECTIONS.filter((section) => section.phaseName === selectedPhase).map(
           (section) => {
-            const sectionItems = causa.checklistDebidoProceso.filter((item) =>
-              item.id.startsWith(section.prefix),
-            );
+            const sectionItems = getApplicableChecklistItems(causa, section.phaseName);
             const completedCount = sectionItems.filter((item) => item.completado).length;
             const isExpanded = expandedStages[section.id];
             const isActive = currentFase === section.phaseName;

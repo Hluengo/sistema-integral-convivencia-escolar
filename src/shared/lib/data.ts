@@ -204,7 +204,8 @@ export const getBaseChecklist = (): ChecklistItem[] => [
     requeridoPor: 'Reglamento Interno',
   },
 
-  // 3. Estado de Análisis y Resolución (chk_res_1 a chk_res_6)
+  // 3. Estado de Análisis y Resolución. chk_res_1, chk_res_3 y chk_res_5
+  // se conservan para expedientes históricos, pero no son hitos operativos.
   {
     id: 'chk_res_1',
     label: 'Informe Cierre de Indagación en Elaboración',
@@ -249,12 +250,12 @@ export const getBaseChecklist = (): ChecklistItem[] => [
     requeridoPor: 'Ambas',
   },
 
-  // 4. Estado de Apelación (chk_imp_1 a chk_imp_5)
+  // 4. Estado de Apelación. chk_imp_3 es estado interno de revisión.
   {
     id: 'chk_imp_1',
-    label: 'En Plazo de Apelación',
+    label: 'Derecho a Apelación Informado',
     descripcion:
-      'Se encuentra vigente el periodo reglamentario para presentar recurso de reconsideración.',
+      'Se informa al estudiante y al apoderado el derecho a recurrir y el plazo reglamentario aplicable.',
     completado: false,
     requeridoPor: 'Ley 21809',
   },
@@ -287,11 +288,12 @@ export const getBaseChecklist = (): ChecklistItem[] => [
     requeridoPor: 'Ley 21809',
   },
 
-  // 5. Estado de Seguimiento (chk_seg_1 a chk_seg_4)
+  // 5. Estado de Seguimiento. chk_seg_2 se integra con el plan/medida.
   {
     id: 'chk_seg_1',
-    label: 'Medida en Ejecución',
-    descripcion: 'Se encuentra vigente la aplicación de medidas formativas o disciplinarias.',
+    label: 'Medida o Plan de Acompañamiento Iniciado',
+    descripcion:
+      'Se inicia la aplicación de la medida formativa o disciplinaria y el plan de acompañamiento correspondiente.',
     completado: false,
     requeridoPor: 'Circular 482',
   },

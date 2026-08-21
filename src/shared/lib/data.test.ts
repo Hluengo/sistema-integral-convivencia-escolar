@@ -58,10 +58,27 @@ describe('getPhaseProgress', () => {
     assert.equal(progress.total, 5);
   });
 
-  it('mantiene el cálculo por prefijo para las demás fases', () => {
+  it('cuenta solo actuaciones visibles desde Resolución en adelante', () => {
     const progress = getPhaseProgress(causa(['chk_res_1', 'chk_res_2']), 'Resolución');
 
-    assert.equal(progress.completed, 2);
-    assert.equal(progress.total, 6);
+    assert.equal(progress.completed, 1);
+    assert.equal(progress.total, 3);
+  });
+
+  it('mantiene 4 hitos de apelación y 3 de seguimiento', () => {
+    const checklist = causa([
+      'chk_imp_1',
+      'chk_imp_2',
+      'chk_imp_3',
+      'chk_imp_4',
+      'chk_imp_5',
+      'chk_seg_1',
+      'chk_seg_2',
+      'chk_seg_3',
+      'chk_seg_4',
+    ]);
+
+    assert.equal(getPhaseProgress(checklist, 'Apelación').total, 4);
+    assert.equal(getPhaseProgress(checklist, 'Seguimiento').total, 3);
   });
 });

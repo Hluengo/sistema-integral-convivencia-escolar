@@ -25,6 +25,19 @@ export const PHASE_PREFIXES: Readonly<Record<FaseProcedimental, string>> = {
   Seguimiento: 'chk_seg',
 };
 
+/**
+ * Hitos operativos visibles en la ruta. Los IDs omitidos se conservan para
+ * reconstruir expedientes históricos, pero representan estados transitorios
+ * que no requieren un registro independiente.
+ */
+export const ACTIVE_PHASE_ITEM_IDS: Readonly<Record<FaseProcedimental, readonly string[]>> = {
+  Recepción: ['chk_rec_1', 'chk_rec_2', 'chk_rec_3'],
+  Investigación: INVESTIGATION_ITEM_IDS,
+  Resolución: ['chk_res_2', 'chk_res_4', 'chk_res_6'],
+  Apelación: ['chk_imp_1', 'chk_imp_2', 'chk_imp_4', 'chk_imp_5'],
+  Seguimiento: ['chk_seg_1', 'chk_seg_3', 'chk_seg_4'],
+};
+
 type InvestigationItemId = (typeof INVESTIGATION_ITEM_IDS)[number];
 type MediationOutcome = 'agreement' | 'failed' | null;
 
@@ -221,8 +234,8 @@ export function getApplicableChecklistItems(
     return getApplicableInvestigationItems(causa);
   }
 
-  const prefix = PHASE_PREFIXES[phase];
-  return causa.checklistDebidoProceso.filter((item) => item.id.startsWith(prefix));
+  const activeIds = new Set(ACTIVE_PHASE_ITEM_IDS[phase]);
+  return causa.checklistDebidoProceso.filter((item) => activeIds.has(item.id));
 }
 
 export function getApplicableInvestigationItems(causa: CausaChecklistContext): ChecklistItem[] {

@@ -141,7 +141,7 @@ describe('Listado de causas activas', () => {
     const checklistItemCard = read('../timeline/ChecklistItemCard.tsx');
     const checklistRegistration = read('../../shared/lib/hooks/useChecklistRegistration.ts');
     assert.match(panels, /<BitacoraTab/);
-    assert.match(process, /causa\.checklistDebidoProceso\.filter/);
+    assert.match(process, /getApplicableChecklistItems\(causa, section\.phaseName\)/);
     assert.match(checklistItemCard, /item\.registradoPor/);
     assert.match(checklistItemCard, /item\.fechaCompletado/);
     assert.match(process, /Abrir hitos/);
