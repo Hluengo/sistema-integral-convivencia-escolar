@@ -39,9 +39,7 @@ router.post(
     try {
       const { eventName, properties } = req.body;
       if (!eventName || typeof eventName !== 'string' || !EVENT_NAME_RE.test(eventName)) {
-        res
-          .status(400)
-          .json({ error: 'eventName debe usar formato snake_case y tener hasta 80 caracteres.' });
+        res.status(400).json({ error: 'eventName debe usar formato snake_case y tener hasta 80 caracteres.' });
         return;
       }
       if (!hasSafeProperties(properties)) {
@@ -51,15 +49,13 @@ router.post(
 
       const { createClient } = await import('@supabase/supabase-js');
       const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
-      const anonKey =
-        process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
+      const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
       if (!supabaseUrl || !anonKey) {
         res.status(500).json({ error: 'Supabase no configurado' });
         return;
       }
 
       const authReq = req as AuthRequest;
-
       const supabase = createClient(supabaseUrl, anonKey, {
         auth: { persistSession: false },
         global: { headers: { Authorization: `Bearer ${authReq.authToken}` } },
@@ -93,22 +89,21 @@ router.get(
   requireRole(['superadmin', 'admin', 'direccion']),
   async (req, res) => {
     try {
-      const authReq = req as AuthRequest;
-      const since = (authReq.query.since as string) ?? undefined;
+      const since = (req.query.since as string) ?? undefined;
       const until = (req.query.until as string) ?? undefined;
 
       const { createClient } = await import('@supabase/supabase-js');
       const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
-      const anonKey =
-        process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
-      if (!supabaseUrl || !anonKey) {
-        res.status(500).json({ error: 'Supabase no configurado' });
+      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? '';
+      if (!supabaseUrl || !serviceRoleKey) {
+        res.status(503).json({ error: 'Servicio de estadísticas no configurado.' });
         return;
       }
 
-      const supabase = createClient(supabaseUrl, anonKey, {
-        auth: { persistSession: false },
-        global: { headers: { Authorization: `Bearer ${authReq.authToken}` } },
+      // La autorización ya fue resuelta por requireAuth + membership + tenant + role.
+      // Las RPC de estadísticas están deliberadamente restringidas a service_role.
+      const supabase = createClient(supabaseUrl, serviceRoleKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
       });
 
       const params: Record<string, string> = {};
@@ -116,26 +111,20 @@ router.get(
       if (until) params.until = until;
 
       const { data: eventStats, error: eventError } = await supabase.rpc('get_usage_stats', params);
-
       if (eventError) {
         console.error('Error fetching usage stats:', eventError);
         res.status(500).json({ error: 'Error al obtener estadísticas.' });
         return;
       }
 
-      const { data: dailyActive, error: dailyError } = await supabase.rpc(
-        'get_daily_active_users',
-        params,
-      );
-
+      const { data: dailyActive, error: dailyError } = await supabase.rpc('get_daily_active_users', params);
       if (dailyError) {
         console.error('Error fetching daily active users:', dailyError);
+        res.status(500).json({ error: 'Error al obtener usuarios activos.' });
+        return;
       }
 
-      res.json({
-        events: eventStats ?? [],
-        dailyActiveUsers: dailyActive ?? [],
-      });
+      res.json({ events: eventStats ?? [], dailyActiveUsers: dailyActive ?? [] });
     } catch (error) {
       console.error('Error fetching usage stats:', error);
       res.status(500).json({ error: 'Error interno al obtener estadísticas.' });
