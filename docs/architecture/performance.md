@@ -39,7 +39,7 @@ El build emite warnings de chunks circulares debido a la configuración de `manu
 ### Server-side
 
 - **In-memory cache**: 5-min TTL, max 100 entries
-- **Endpoints**: advisor-chat, improve-text
+- **Endpoints**: advisor-chat
 - **Key**: SHA256 del request payload
 
 ### Client-side (React Query)

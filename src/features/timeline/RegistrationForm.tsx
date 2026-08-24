@@ -6,7 +6,6 @@
 import type React from 'react';
 import type { ChecklistItem } from '../../shared/lib/types';
 import { Upload, Check } from 'lucide-react';
-import ImproveTextarea from '../../shared/ImproveTextarea';
 import Button from '../../shared/ui/Button';
 import {
   DOCUMENT_UPLOAD_ACCEPT,
@@ -101,13 +100,15 @@ export default function RegistrationForm({
       </div>
 
       <div>
-        <ImproveTextarea
+        <label htmlFor={`reg-obs-${item.id}`} className="block font-semibold text-neutral-700 text-xs">
+          Observaciones:
+        </label>
+        <textarea
           id={`reg-obs-${item.id}`}
-          label="Observaciones:"
+          aria-label="Observaciones"
           placeholder="Detalle de la actuación procesal..."
           value={regObservations}
-          onChange={(v) => setRegObservations(v)}
-          improvementContext="hito_observacion"
+          onChange={(event) => setRegObservations(event.target.value)}
           rows={2}
           className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-medium text-neutral-800 text-xs placeholder-neutral-400 transition-colors focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
         />

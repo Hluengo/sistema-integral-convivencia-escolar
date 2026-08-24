@@ -39,6 +39,7 @@ type CartaEventType =
   | 'downloaded_word'
   | 'processed_manually'
   | 'archived'
+  | 'convivencia_interviewed'
   | 'annulled';
 
 export interface CartaEvent {
@@ -271,10 +272,14 @@ async function fetchCartasByStudent(studentId: string): Promise<CartaDisciplinar
 
 async function fetchCartaForEvent(
   cartaId: string,
-): Promise<{ student_id: string; tenant_id?: string | null } | null> {
+): Promise<{
+  student_id: string;
+  tenant_id?: string | null;
+  letter_type?: string | null;
+} | null> {
   const { data, error } = await supabase
     .from('cartas_disciplinarias')
-    .select('student_id,tenant_id')
+    .select('student_id,tenant_id,letter_type')
     .eq('id', cartaId)
     .maybeSingle();
 
@@ -282,7 +287,7 @@ async function fetchCartaForEvent(
     console.error('Error fetching carta for event:', error);
     return null;
   }
-  return data as { student_id: string; tenant_id?: string | null };
+  return data as { student_id: string; tenant_id?: string | null; letter_type?: string | null };
 }
 
 async function createCartaEvent(
@@ -354,6 +359,42 @@ export async function archiveCarta(
     cartaId,
     'archived',
     note || 'Carta firmada por apoderado/a y archivada en expediente físico',
+    {},
+    actor,
+  );
+}
+
+export async function markCartaInterviewed(
+  cartaId: string,
+  note: string,
+  actor?: { userId?: string | null; email?: string | null } | null,
+): Promise<boolean> {
+  const carta = await fetchCartaForEvent(cartaId);
+  if (!carta || carta.letter_type !== 'Ficha de Derivación') return false;
+
+  const { data: archivedEvent, error: archivedError } = await supabase
+    .from('carta_events')
+    .select('id')
+    .eq('carta_id', cartaId)
+    .eq('event_type', 'archived')
+    .limit(1)
+    .maybeSingle();
+  if (archivedError || !archivedEvent) return false;
+
+  const { data: existingEvent, error: existingError } = await supabase
+    .from('carta_events')
+    .select('id')
+    .eq('carta_id', cartaId)
+    .eq('event_type', 'convivencia_interviewed')
+    .limit(1)
+    .maybeSingle();
+  if (existingError) return false;
+  if (existingEvent) return true;
+
+  return createCartaEvent(
+    cartaId,
+    'convivencia_interviewed',
+    note || 'Entrevista con Convivencia Escolar realizada',
     {},
     actor,
   );

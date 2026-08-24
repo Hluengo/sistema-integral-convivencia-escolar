@@ -30,6 +30,6 @@ Sistema SaaS multi-tenant para la gestión integral de convivencia escolar en es
 
 1. **Cumplimiento legal**: Garantizar el debido proceso según Circular 482 (2018) y Ley 21.809 (2026)
 2. **Multi-tenant**: Aislar datos entre establecimientos educacionales
-3. **AI asistida**: Asesoría legal, mejora de textos, drafts de documentos, auditoría de procesos
+3. **AI asistida**: Asesoría legal, drafts de documentos, auditoría de procesos
 4. **Documentos profesionales**: Generación de cartas disciplinarias, informes y resoluciones
 5. **UX moderna**: Interfaz responsive, accesible (WCAG 2.1 AA), con modo privacidad

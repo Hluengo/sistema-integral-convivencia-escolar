@@ -87,7 +87,7 @@ Permissions-Policy: camera=(), microphone=(), geolocation=()
 - **Human confirmation**: Resultados AI requieren confirmación humana antes de ser vinculantes
 - **No datos sensibles**: No enviar RUTs ni datos personales de NNA a AI sin anonimizar
 - **Rate limiting**: 10 req/min/IP para endpoints AI
-- **Caché**: advisor-chat e improve-text cacheados 5 min
+- **Caché**: advisor-chat cacheado 5 min
 
 ## Storage Security
 

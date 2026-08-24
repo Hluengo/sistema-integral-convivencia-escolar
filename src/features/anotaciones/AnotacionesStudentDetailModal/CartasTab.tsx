@@ -1,13 +1,14 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { lazy, Suspense, useState } from 'react';
-import { Archive, Ban, FileText, XCircle } from 'lucide-react';
+import { Archive, Ban, CheckCircle2, FileText, XCircle } from 'lucide-react';
 import type { Annotation, CartaDisciplinaria } from '@/shared/lib/types';
 import { TEACHERS_BY_COURSE } from '@/shared/lib/anotacionesUtils';
 import {
   archiveCarta,
   annulCarta,
   createPendingCartaForStudent,
+  markCartaInterviewed,
   markCartaProcessedManually,
   resolveCartaWorkflowStatus,
 } from '@/shared/api/services/cartas.service';
@@ -54,6 +55,7 @@ interface CartasTabProps {
   privacyMode: boolean;
   teachers?: Record<string, string>;
   onRefresh: () => void | Promise<void>;
+  cartaEvents: Array<{ carta_id: string; event_type: string }>;
 }
 
 export default function CartasTab({
@@ -65,6 +67,7 @@ export default function CartasTab({
   privacyMode,
   teachers = TEACHERS_BY_COURSE,
   onRefresh,
+  cartaEvents,
 }: CartasTabProps) {
   const tenantId = useAuthStore((state) => state.tenantId);
   const sessionUser = useAuthStore((state) => state.user);
@@ -104,6 +107,13 @@ export default function CartasTab({
   const [localCarta, setLocalCarta] = useState<CartaDisciplinaria | null>(null);
   const activeCarta =
     localCarta ?? matchingCarta ?? (!suggestedDocType ? platformCurrentCarta : null);
+  const interviewRecorded = Boolean(
+    activeCarta &&
+      cartaEvents.some(
+        (event) =>
+          event.carta_id === activeCarta.id && event.event_type === 'convivencia_interviewed',
+      ),
+  );
   const [showGenerator, setShowGenerator] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -113,6 +123,7 @@ export default function CartasTab({
   );
   const [isAnnulDialogOpen, setIsAnnulDialogOpen] = useState(false);
   const [isArchiveDialogOpen, setIsArchiveDialogOpen] = useState(false);
+  const [isInterviewDialogOpen, setIsInterviewDialogOpen] = useState(false);
 
   const refreshAfterChange = async () => {
     await Promise.all([onRefresh(), invalidateDashboard()]);
@@ -257,11 +268,23 @@ export default function CartasTab({
     await runCartaAction((carta) => archiveCarta(carta.id, note, actor), 'Carta archivada.');
   };
 
+  const confirmInterview = async (note: string) => {
+    setIsInterviewDialogOpen(false);
+    await runCartaAction(
+      (carta) => markCartaInterviewed(carta.id, note, actor),
+      'Entrevista realizada.',
+    );
+  };
+
   const canAct = Boolean(activeDocType && activeLetterType);
   const canArchive =
     Boolean(activeCarta) &&
     activeCarta?.origin !== 'physical' &&
     resolveCartaWorkflowStatus(activeCarta) === 'completed';
+  const canMarkInterview =
+    activeDocType === 'derivacion' &&
+    resolveCartaWorkflowStatus(activeCarta) === 'archived' &&
+    !interviewRecorded;
 
   return (
     <div className="space-y-5">
@@ -324,6 +347,23 @@ export default function CartasTab({
             <Archive className="h-4 w-4" />
             Archivar
           </Button>
+          {canMarkInterview ? (
+            <Button
+              variant="custom"
+              onClick={() => setIsInterviewDialogOpen(true)}
+              disabled={busy}
+              className="rounded-xl border border-leve-300 bg-leve-50 px-4 py-2 text-leve-800 shadow-sm hover:bg-leve-100 hover:text-leve-900"
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              Marcar entrevista realizada
+            </Button>
+          ) : null}
+          {interviewRecorded ? (
+            <span className="inline-flex items-center gap-1.5 rounded-xl border border-leve-200 bg-leve-50 px-4 py-2 text-xs font-semibold text-leve-800">
+              <CheckCircle2 className="h-4 w-4" />
+              Entrevista realizada
+            </span>
+          ) : null}
         </div>
       </section>
 
@@ -380,6 +420,17 @@ export default function CartasTab({
         confirmLabel="Marcar como procesada"
         onCancel={() => setPendingManualProcess(null)}
         onConfirm={(note) => void confirmManualProcess(note)}
+      />
+
+      <TextInputDialog
+        open={isInterviewDialogOpen}
+        title="Registrar entrevista con Convivencia"
+        description="Confirme que la Ficha de Derivación fue revisada en entrevista por Convivencia Escolar."
+        label="Observación de entrevista"
+        placeholder="Ej.: Entrevista realizada con estudiante y apoderado/a; se acuerda seguimiento."
+        confirmLabel="Marcar entrevista realizada"
+        onCancel={() => setIsInterviewDialogOpen(false)}
+        onConfirm={(note) => void confirmInterview(note)}
       />
 
       <TextInputDialog

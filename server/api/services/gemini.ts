@@ -5,8 +5,6 @@ import { httpsPost } from '../lib/https.js';
 // Usar un identificador estable evita cambios de latencia/comportamiento propios
 // del alias "latest" en un flujo legal sensible.
 const LEGAL_DRAFT_GEMINI_MODEL = process.env.LEGAL_DRAFT_MODEL || 'gemini-3.6-flash';
-export const TEXT_IMPROVEMENT_GEMINI_MODEL =
-  process.env.TEXT_IMPROVEMENT_GEMINI_MODEL || LEGAL_DRAFT_GEMINI_MODEL;
 
 interface GeminiGenerationOptions {
   maxOutputTokens?: number;
@@ -39,22 +37,6 @@ export async function callGeminiComplexGeneration(
   const timeoutMs = options.timeoutMs ?? 25_000;
   return callGeminiGenerateContent(
     LEGAL_DRAFT_GEMINI_MODEL,
-    systemInstruction,
-    userContent,
-    maxOutputTokens,
-    timeoutMs,
-  );
-}
-
-export async function callGeminiTextImprovement(
-  systemInstruction: string,
-  userContent: string,
-  options: GeminiGenerationOptions = {},
-): Promise<string> {
-  const maxOutputTokens = options.maxOutputTokens ?? 1200;
-  const timeoutMs = options.timeoutMs ?? 7_000;
-  return callGeminiGenerateContent(
-    TEXT_IMPROVEMENT_GEMINI_MODEL,
     systemInstruction,
     userContent,
     maxOutputTokens,

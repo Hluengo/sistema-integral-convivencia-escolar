@@ -5,10 +5,9 @@
 
 import type React from 'react';
 import { useState, useRef, useEffect } from 'react';
-import { Send, RefreshCw, Bot, User, BookOpen, Sparkles, Gavel, Loader2 } from 'lucide-react';
+import { Send, RefreshCw, Bot, User, BookOpen, Gavel } from 'lucide-react';
 import Button from '@/shared/ui/Button';
 import MessageContent from './AdvisorMessage';
-import { useTextImprovement } from '../../shared/lib/hooks/useTextImprovement';
 import { supabase } from '../../shared/api/lib/supabase';
 
 interface Message {
@@ -33,11 +32,6 @@ export default function AiAdvisor() {
   ]);
   const [inputMessage, setInputMessage] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const {
-    improveText: improveChatText,
-    isImproving: isImprovingChat,
-    error: improveChatError,
-  } = useTextImprovement();
   const messagesRef = useRef(messages);
   useEffect(() => {
     messagesRef.current = messages;
@@ -55,13 +49,6 @@ export default function AiAdvisor() {
       behavior: 'smooth',
     });
   }, [messages]);
-
-  const handleImproveChat = async () => {
-    const improved = await improveChatText(inputMessage);
-    if (improved) {
-      setInputMessage(improved);
-    }
-  };
 
   const handleSendMessage = async (textToSend: string) => {
     if (!textToSend.trim() || isLoading) {
@@ -297,25 +284,6 @@ export default function AiAdvisor() {
               className="flex-1 bg-transparent py-2.5 font-medium text-neutral-800 text-xs placeholder-neutral-400 focus:outline-none"
               aria-label="Mensaje para el asesor legal"
             />
-            <button
-              type="button"
-              onClick={handleImproveChat}
-              disabled={isImprovingChat || !inputMessage.trim() || isLoading}
-              title="Mejorar redacción con IA"
-              aria-label="Mejorar redacción con IA"
-              aria-busy={isImprovingChat}
-              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-brand-50 hover:text-brand-600 disabled:cursor-not-allowed disabled:opacity-40 ${
-                isImprovingChat
-                  ? 'animate-pulse bg-brand-50 text-brand-600 ring-2 ring-brand-300/50'
-                  : 'text-neutral-400'
-              }`}
-            >
-              {isImprovingChat ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Sparkles className="h-3.5 w-3.5" />
-              )}
-            </button>
           </div>
           <Button
             type="submit"
@@ -327,11 +295,6 @@ export default function AiAdvisor() {
             <Send className="h-3.5 w-3.5" aria-hidden="true" />
           </Button>
         </form>
-        {improveChatError && (
-          <p role="alert" className="mt-2 text-gravisima-600 text-xs">
-            {improveChatError}
-          </p>
-        )}
         <div className="mt-2 text-left font-mono text-10px text-neutral-600">
           Las respuestas son referenciales. Consulte siempre el RIE de su sostenedor y la normativa
           vigente.

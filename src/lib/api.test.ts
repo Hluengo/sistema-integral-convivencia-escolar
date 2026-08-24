@@ -130,35 +130,6 @@ describe('API endpoints', () => {
     });
   }
 
-  describe('POST /api/improve-text', () => {
-    it('returns 401 without auth', async () => {
-      const res = await post('/api/improve-text', { text: 'test' });
-      assert.equal(res.status, 401);
-    });
-
-    it('returns 400 with empty text', async () => {
-      const res = await post(
-        '/api/improve-text',
-        { text: '' },
-        {
-          Authorization: `Bearer ${VALID_TOKEN}`,
-        },
-      );
-      assert.equal(res.status, 400);
-    });
-
-    it('returns 400 with text > 5000 chars', async () => {
-      const res = await post(
-        '/api/improve-text',
-        { text: 'x'.repeat(5001) },
-        {
-          Authorization: `Bearer ${VALID_TOKEN}`,
-        },
-      );
-      assert.equal(res.status, 400);
-    });
-  });
-
   describe('POST /api/advisor-chat', () => {
     it('returns 401 without auth', async () => {
       const res = await post('/api/advisor-chat', { message: 'test' });
@@ -272,76 +243,4 @@ describe('API endpoints', () => {
     });
   });
 
-  describe('Auth middleware', () => {
-    it('rejects expired JWT tokens', async () => {
-      const expiredToken = await createTestJwt(
-        { sub: 'test-user-id', exp: 1 }, // Expired in 1970
-        'test-secret-key-for-unit-tests',
-      );
-      const res = await post(
-        '/api/improve-text',
-        { text: 'test' },
-        {
-          Authorization: `Bearer ${expiredToken}`,
-        },
-      );
-      assert.equal(res.status, 401);
-    });
-
-    it('rejects malformed JWT tokens', async () => {
-      const res = await post(
-        '/api/improve-text',
-        { text: 'test' },
-        {
-          Authorization: 'Bearer not-a-jwt-token',
-        },
-      );
-      assert.equal(res.status, 401);
-    });
-
-    it('rejects JWT with invalid signature', async () => {
-      const res = await post(
-        '/api/improve-text',
-        { text: 'test' },
-        {
-          Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjk5OTk5OTk5OTl9.wrong-signature',
-        },
-      );
-      assert.equal(res.status, 401);
-    });
-
-    it('autentica antes de limitar y no consume la cuota dos veces', async () => {
-      const sharedIp = '127.0.0.250';
-      for (let i = 0; i < 11; i++) {
-        const unauthenticated = await post(
-          '/api/improve-text',
-          { text: 'test' },
-          {
-            'X-Forwarded-For': sharedIp,
-          },
-        );
-        assert.equal(unauthenticated.status, 401);
-      }
-
-      const rateLimitToken = await createTestJwt(
-        {
-          sub: '00000000-0000-0000-0000-000000000003',
-          exp: Math.floor(Date.now() / 1000) + 3600,
-          app_metadata: {
-            tenant_id: '00000000-0000-0000-0000-000000000001',
-            role: 'teacher',
-          },
-        },
-        process.env.SUPABASE_JWT_SECRET ?? '',
-      );
-      const headers = { Authorization: `Bearer ${rateLimitToken}`, 'X-Forwarded-For': sharedIp };
-      for (let i = 0; i < 10; i++) {
-        const authenticated = await post('/api/improve-text', { text: '' }, headers);
-        assert.equal(authenticated.status, 400);
-      }
-
-      const blocked = await post('/api/improve-text', { text: '' }, headers);
-      assert.equal(blocked.status, 429);
-    });
-  });
 });

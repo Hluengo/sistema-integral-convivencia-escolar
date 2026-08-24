@@ -151,6 +151,7 @@ export default function AnotacionesStudentDetailModal({
             pendingSuggestion={pendingCartaSuggestion}
             privacyMode={privacyMode}
             teachers={teachers}
+            cartaEvents={disciplinaryData.cartaEvents}
             onRefresh={async () => {
               await Promise.all([disciplinaryData.refresh(), onDataChanged?.()]);
             }}

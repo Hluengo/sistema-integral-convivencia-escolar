@@ -16,7 +16,6 @@
 | POST   | `/api/advisor-chat`                     | ✅       | ✅  | Chat asesoría legal AI        |
 | POST   | `/api/audit-due-process`                | ✅       | ✅  | Auditoría de debido proceso   |
 | POST   | `/api/draft-document`                   | ✅       | ✅  | Draft de documento legal      |
-| POST   | `/api/improve-text`                     | ✅       | ✅  | Mejora de texto institucional |
 | POST   | `/api/parse-annotations`                | ❌       | ❌  | Parseo de anotaciones (regex) |
 | POST   | `/api/process-disciplinary-pdf`         | ✅       | ❌  | Análisis de PDF disciplinario |
 | POST   | `/api/process-disciplinary-pdf/confirm` | ✅ + rol | ❌  | Confirmación de proceso       |
@@ -37,14 +36,13 @@ Inyecta `req.user` con payload decodificado y `req.tenantId` del contexto.
 
 ## AI Integration
 
-- **Gemini pospago** (`GEMINI_API_KEY`): mejora de textos breves, informes, auditorías de debido proceso y borradores/documentos oficiales complejos.
-- **Modelo mejora de textos**: configurable con `TEXT_IMPROVEMENT_GEMINI_MODEL`; si no existe, reutiliza `LEGAL_DRAFT_MODEL` y luego `gemini-3.6-flash`. Puede forzarse OpenRouter con `TEXT_IMPROVEMENT_PROVIDER=openrouter`.
-- **OpenRouter** (`OPENROUTER_API_KEY`): respaldo para mejora de textos breves y asesoría legal breve.
+- **Gemini pospago** (`GEMINI_API_KEY`): informes, auditorías de debido proceso y borradores/documentos oficiales complejos.
+- **OpenRouter** (`OPENROUTER_API_KEY`): asesoría legal breve.
 - **Modelo documentos e informes**: Gemini `gemini-3.6-flash` por defecto, configurable con `LEGAL_DRAFT_MODEL`. No hay respaldo OpenRouter para estos flujos; si Gemini falla, el endpoint responde un error explícito de Gemini.
 - **Generación Gemini**: `maxOutputTokens` explícito; no se envían sampling params deprecated (`temperature`, `top_p`, `top_k`) para mantener compatibilidad con Gemini 3.6+.
 - **Max tokens**: 2000
 - **Rate limit**: 10 req/min/IP por endpoint
-- **Cache**: advisor-chat e improve-text (5min TTL, in-memory)
+- **Cache**: advisor-chat (5min TTL, in-memory)
 - **Privacidad**: texto enviado a OpenRouter/Gemini pasa por `redactSensitiveForAI()` para remover RUT, correo, teléfono y valores personales conocidos antes de construir prompts o llaves de caché.
 
 ## Middleware Stack

@@ -76,6 +76,14 @@ function describeCartaEvent(event: CartaEvent, carta?: CartaDisciplinaria): Time
       tone: 'bg-leve-50 text-leve-700',
     };
   }
+  if (event.event_type === 'convivencia_interviewed') {
+    return {
+      ...base,
+      title: 'Entrevista con Convivencia realizada',
+      description: event.event_detail || 'Entrevista registrada por Convivencia Escolar.',
+      tone: 'bg-leve-50 text-leve-700',
+    };
+  }
   if (event.event_type === 'registered') {
     const isPhysical = event.metadata?.origin === 'physical';
     return {

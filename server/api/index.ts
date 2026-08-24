@@ -63,7 +63,6 @@ app.get('/api/health', (_req, res) => {
   res.json({ ok: true });
 });
 
-import improveRoutes from './routes/improve.js';
 import advisorRoutes from './routes/advisor.js';
 import auditRoutes from './routes/audit.js';
 import draftRoutes from './routes/draft.js';
@@ -79,7 +78,6 @@ import institutionRoutes from './routes/institution.js';
 import { errorHandler } from '../middleware/errorHandler.js';
 
 // API routes — cada módulo aplica su propio rate limit después de autenticar.
-app.use('/api', improveRoutes);
 app.use('/api', advisorRoutes);
 app.use('/api', auditRoutes);
 app.use('/api', draftRoutes);

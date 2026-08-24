@@ -3,11 +3,6 @@
 import { httpsPost } from '../lib/https.js';
 
 const AI_MODEL = process.env.TEXT_AI_MODEL || 'meta-llama/llama-3.1-8b-instruct';
-export const TEXT_IMPROVEMENT_AI_MODEL =
-  process.env.TEXT_IMPROVEMENT_AI_MODEL ||
-  process.env.TEXT_AI_MODEL ||
-  'google/gemma-4-31b-it:free';
-// Modelo gratuito documentado como respaldo operativo: openrouter/free.
 interface OpenRouterOptions {
   maxTokens?: number;
   temperature?: number;

@@ -13,7 +13,6 @@ import dotenv from 'dotenv';
 
 import auditRoutes from './api/routes/audit';
 import draftRoutes from './api/routes/draft';
-import improveRoutes from './api/routes/improve';
 import advisorRoutes from './api/routes/advisor';
 import templatesRoutes from './api/routes/templates';
 import parseRoutes from './api/routes/parse';
@@ -62,7 +61,6 @@ app.get('/api/health', (_req, res) => {
 // API routes — cada módulo aplica su propio rate limit después de autenticar.
 app.use('/api', auditRoutes);
 app.use('/api', draftRoutes);
-app.use('/api', improveRoutes);
 app.use('/api', advisorRoutes);
 app.use('/api', parseRoutes);
 app.use('/api', processDisciplinaryPdfRoutes);

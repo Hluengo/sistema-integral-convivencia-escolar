@@ -22,7 +22,6 @@ Los servicios encapsulan toda la comunicación con Supabase (base de datos, auth
 
 - `useAuditDraft` → `fetch('/api/audit-due-process')` — Auditoría AI
 - `useAuditDraft` → `fetch('/api/draft-document')` — Draft AI
-- `useTextImprovement` → `fetch('/api/improve-text')` — Mejora de texto
 
 ## Data Mappers (`src/shared/lib/mappers.ts`)
 

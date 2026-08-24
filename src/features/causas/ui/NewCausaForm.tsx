@@ -11,7 +11,6 @@ import type { Course, Student } from '../../../shared/api/services/courses.servi
 import type { NewCausaFormValues } from '../../../shared/lib/schemas/newCausaForm';
 import type { Causa } from '../../../shared/lib/types';
 import RiceConductSelect from '../NewCausaForm/RiceConductSelect';
-import ImproveTextarea from '../../../shared/ImproveTextarea';
 import Button from '../../../shared/ui/Button';
 import Input from '../../../shared/ui/Input';
 import Select from '../../../shared/ui/Select';
@@ -347,16 +346,19 @@ export default function NewCausaForm({
           name="newObs"
           render={({ field }) => (
             <div>
-              <ImproveTextarea
+              <label htmlFor="create-obs" className="block font-semibold text-neutral-500 text-xs uppercase tracking-wide">
+                Relato de los hechos
+              </label>
+              <textarea
                 id="create-obs"
-                label="Relato de los hechos"
+                aria-label="Relato de los hechos"
                 placeholder="Relate minuciosamente los hechos ocurridos..."
                 value={field.value}
                 onChange={field.onChange}
                 required
-                improvementContext="relato_causa"
-                ariaDescribedBy={errors.newObs ? 'create-obs-error' : undefined}
-                ariaInvalid={!!errors.newObs}
+                aria-describedby={errors.newObs ? 'create-obs-error' : undefined}
+                aria-invalid={!!errors.newObs}
+                rows={3}
                 className={
                   errors.newObs
                     ? 'mt-1.5 w-full rounded-xl border border-grave-300 bg-grave-50 p-3 font-sans text-xs leading-relaxed transition-colors duration-200 focus:border-grave-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-grave-500/30'

@@ -9,27 +9,6 @@ function source(path: string): string {
 }
 
 describe('AI provider routing', () => {
-  it('usa Gemini como proveedor principal para mejora de textos breves', () => {
-    const improveRoute = source('server/api/routes/improve.ts');
-    const geminiService = source('server/api/services/gemini.ts');
-
-    assert.match(improveRoute, /services\/gemini/);
-    assert.match(improveRoute, /callGeminiTextImprovement/);
-    assert.match(geminiService, /TEXT_IMPROVEMENT_GEMINI_MODEL/);
-    assert.match(geminiService, /systemInstruction/);
-  });
-
-  it('mantiene OpenRouter como respaldo para mejora de textos breves', () => {
-    const improveRoute = source('server/api/routes/improve.ts');
-    const openRouterService = source('server/api/services/openrouter.ts');
-
-    assert.match(improveRoute, /services\/openrouter/);
-    assert.match(openRouterService, /openrouter\/free/);
-    assert.match(improveRoute, /generateImprovement\(request, true, deadlineAtMs\)/);
-    assert.doesNotMatch(improveRoute, /callTextImprovementFallback/);
-    assert.match(improveRoute, /TEXT_IMPROVEMENT_REQUEST_TIMEOUT_MS = 7_000/);
-  });
-
   it('usa Gemini para borradores e informes oficiales', () => {
     const draftRoute = source('server/api/routes/draft.ts');
     const auditRoute = source('server/api/routes/audit.ts');

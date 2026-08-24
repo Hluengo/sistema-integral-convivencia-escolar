@@ -16,7 +16,6 @@
 | `useKeyboardShortcuts()` | `hooks/useKeyboardShortcuts.ts` | Atajos de teclado globales                |
 | `useNotifications()`     | `hooks/useNotifications.ts`     | Notificaciones desde causas               |
 | `useAppContext()`        | `lib/useAppContext.ts`          | Facade que combina todos los stores       |
-| `useTextImprovement()`   | `hooks/useTextImprovement.ts`   | Llama a `/api/improve-text`               |
 
 ## Timeline Hooks
 

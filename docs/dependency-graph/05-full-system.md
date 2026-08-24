@@ -35,7 +35,6 @@ graph TD
         useDocumentManager
         useAuditDraft
         usePdfProcessing
-        useTextImprovement
     end
 
     %% Layer 4: Services
@@ -97,7 +96,6 @@ graph TD
     usePdfProcessing --> disciplinaryStorage
     usePdfProcessing --> disciplinaryRules
     useAuditDraft --> fetchAPI[fetch /api/*]
-    useTextImprovement --> fetchAPI
 
     %% Connections: Services → Supabase
     causasService --> DB

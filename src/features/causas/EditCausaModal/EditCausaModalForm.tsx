@@ -9,7 +9,6 @@ import type { FieldErrors, Resolver, ResolverResult } from 'react-hook-form';
 import { Scale, AlertCircle, FileText, Shield, Trash2 } from 'lucide-react';
 import { type Causa, EstadoCausa, type TipoInfraccion } from '@/shared/lib/types';
 import { nowDateOnly } from '@/shared/lib/dateUtils';
-import ImproveTextarea from '@/shared/ImproveTextarea';
 import {
   editCausaFormSchema,
   isValidStateTransition,
@@ -307,16 +306,20 @@ export default function EditCausaModalForm({
             control={control}
             name="observaciones"
             render={({ field }) => (
-              <ImproveTextarea
-                id="edit-obs"
-                label="Observaciones"
-                value={field.value}
-                onChange={field.onChange}
-                improvementContext="observaciones_causa"
-                className={fieldClass}
-                rows={3}
-                placeholder="Descripción de los hechos, contexto, etc."
-              />
+              <div>
+                <label htmlFor="edit-obs" className={labelClass}>
+                  Observaciones
+                </label>
+                <textarea
+                  id="edit-obs"
+                  aria-label="Observaciones"
+                  value={field.value}
+                  onChange={field.onChange}
+                  className={fieldClass}
+                  rows={3}
+                  placeholder="Descripción de los hechos, contexto, etc."
+                />
+              </div>
             )}
           />
         </div>

@@ -6,7 +6,7 @@
 - **Backend local:** Express + Vite middleware (`server.ts`)
 - **API producción:** Vercel Serverless (`api/index.js`)
 - **DB/Auth:** Supabase PostgreSQL + Auth + RLS + JWT claims
-- **IA:** Gemini para mejora de textos, informes y documentos; OpenRouter como respaldo de mejora y asesoría breve
+- **IA:** Gemini para informes y documentos; OpenRouter para asesoría legal breve
 
 ## Estructura FSD (Feature-Sliced Design)
 

@@ -158,7 +158,7 @@ Acciones:
 1. Mantener el formulario en tres bloques: estudiante, clasificación y relato.
 2. Mantener el orden actual de selección de curso y estudiante.
 3. Mejorar visualmente los estados de carga y curso sin estudiantes.
-4. Mantener `ImproveTextarea` y su integración de mejora de texto.
+4. Mantener el campo de relato como textarea editable, sin integración de mejora automática.
 5. Mantener la alerta de Aula Segura para `Gravísima`.
 6. Usar el footer fijo solo en móvil si la validación confirma que es usable.
 

@@ -4,7 +4,6 @@ import { useState, type FormEvent } from 'react';
 import { CalendarPlus, Check, FileText, Plus, Upload, X } from 'lucide-react';
 import type { BitacoraEntry, ChecklistItem } from '../../shared/lib/types';
 import { useChecklistProgress } from '../../shared/lib/hooks/useChecklistProgress';
-import ImproveTextarea from '../../shared/ImproveTextarea';
 import Button from '../../shared/ui/Button';
 import {
   DOCUMENT_UPLOAD_ACCEPT,
@@ -144,12 +143,14 @@ export default function ChecklistProgressPanel({
             </select>
           </label>
           <div className="space-y-1.5 sm:col-span-2">
-            <ImproveTextarea
+            <label htmlFor={`progress-description-${item.id}`} className="block font-semibold text-neutral-700 text-xs">
+              Descripción / observaciones:
+            </label>
+            <textarea
               id={`progress-description-${item.id}`}
-              label="Descripción / observaciones:"
+              aria-label="Descripción / observaciones"
               value={description}
-              onChange={setDescription}
-              improvementContext="hito_observacion"
+              onChange={(event) => setDescription(event.target.value)}
               rows={3}
               className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-medium text-neutral-800 text-xs placeholder-neutral-400 transition-colors focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
               placeholder="Describa lo realizado y sus antecedentes."

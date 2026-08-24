@@ -3,7 +3,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { MAX_HISTORY_MESSAGE_LENGTH, MAX_HISTORY_MESSAGES, normalizeHistory } from './advisor';
-import { isUsableImprovement } from './improve';
 import { getBearerToken, getProcessErrorResponse } from './processDisciplinaryPdf';
 import { hasSafeProperties, isValidEventName } from './usage';
 
@@ -59,26 +58,6 @@ test('normalizeHistory acepta historial dentro del total máximo', () => {
     normalizeHistory(history)?.reduce((acc, m) => acc + m.content.length, 0),
     20,
   );
-});
-
-test('isUsableImprovement rechaza respuestas vacías', () => {
-  assert.equal(isUsableImprovement('texto original', null), false);
-  assert.equal(isUsableImprovement('texto original', ''), false);
-});
-
-test('isUsableImprovement rechaza negativas de la IA', () => {
-  assert.equal(isUsableImprovement('texto original', 'No puedo ayudar con esto.'), false);
-});
-
-test('isUsableImprovement rechaza textos sin cambios', () => {
-  assert.equal(isUsableImprovement('mismo texto', 'mismo texto'), false);
-});
-
-test('isUsableImprovement acepta una mejora real', () => {
-  const original = 'La anotación describe el comportamiento observado durante la jornada.';
-  const improved =
-    'El registro describe el comportamiento observado durante toda la jornada escolar, indicando el contexto de la situación.';
-  assert.equal(isUsableImprovement(original, improved), true);
 });
 
 test('isValidEventName valida nombres de eventos', () => {
