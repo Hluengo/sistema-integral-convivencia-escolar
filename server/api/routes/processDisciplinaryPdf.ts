@@ -8,29 +8,15 @@ import type { ProfileRole } from '../../types';
 import { rateLimit } from '../../middleware/rateLimit.js';
 import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../../middleware/requireMembership.js';
 import { clientErrorBody } from '../../middleware/errorHandler.js';
-import {
-  analyzeDisciplinaryPdf,
-  confirmDisciplinaryProcess,
-} from '../../lib/disciplinaryPdfAnalysis';
+import { analyzeDisciplinaryPdf, confirmDisciplinaryProcess } from '../../lib/disciplinaryPdfAnalysis';
 
 const router = Router();
-const PDF_CONFIRM_ROLES: readonly ProfileRole[] = [
-  'superadmin',
-  'admin',
-  'direccion',
-  'convivencia',
-  'inspectoria',
-  'profesor_jefe',
-  'inspector',
-  'staff',
+const PDF_PROCESS_ROLES: readonly ProfileRole[] = [
+  'superadmin', 'admin', 'direccion', 'convivencia', 'inspectoria', 'profesor_jefe', 'inspector', 'staff',
 ];
-// Guard acotado al prefijo propio para no interceptar otras rutas /api/*.
-router.use(
-  '/process-disciplinary-pdf',
-  requireAuth,
-  requireMembership(CONVIVENCIA_MEMBERSHIP),
-  rateLimit,
-);
+
+// Autenticación y rate limit comunes. Los roles se validan explícitamente en cada operación.
+router.use('/process-disciplinary-pdf', requireAuth, rateLimit);
 
 interface AuthedRequestBody {
   bucket?: string;
@@ -57,136 +43,63 @@ interface AuthedRequestBody {
   idempotencyKey?: string;
 }
 
-export function getBearerToken(
-  req: Parameters<Parameters<Router['post']>[1]>[0],
-): string | undefined {
+export function getBearerToken(req: Parameters<Parameters<Router['post']>[1]>[0]): string | undefined {
   const authHeader = req.headers.authorization;
   return authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
 }
 export function getProcessErrorResponse(error: unknown): { status: number; message: string } {
   const message = error instanceof Error ? error.message : 'Error interno al procesar el documento';
-
-  if (message === 'Supabase no configurado') {
-    return {
-      status: 503,
-      message: 'Supabase no está configurado en el servidor para procesar PDFs privados.',
-    };
-  }
-
-  if (
-    message.includes('Bucket de documentos disciplinarios no permitido') ||
-    message.includes('Ruta de archivo no válida') ||
-    message.includes('El archivo no pertenece') ||
-    message.includes('El PDF excede') ||
-    message.includes('PDF válido') ||
-    message.includes('demasiadas páginas') ||
-    message.includes('no coincide') ||
-    message.includes('no corresponde') ||
-    message.includes('anotaciones confirmadas')
-  ) {
-    return { status: 400, message };
-  }
-
-  if (message.includes('No fue posible descargar')) {
-    return {
-      status: 404,
-      message: 'No fue posible encontrar o leer el PDF privado subido.',
-    };
-  }
-
-  if (message.includes('Este PDF ya fue registrado')) {
-    return { status: 409, message };
-  }
-
+  if (message === 'Supabase no configurado') return { status: 503, message: 'Supabase no está configurado en el servidor para procesar PDFs privados.' };
+  if (message.includes('Bucket de documentos disciplinarios no permitido') || message.includes('Ruta de archivo no válida') || message.includes('El archivo no pertenece') || message.includes('El PDF excede') || message.includes('PDF válido') || message.includes('demasiadas páginas') || message.includes('no coincide') || message.includes('no corresponde') || message.includes('anotaciones confirmadas')) return { status: 400, message };
+  if (message.includes('No fue posible descargar')) return { status: 404, message: 'No fue posible encontrar o leer el PDF privado subido.' };
+  if (message.includes('Este PDF ya fue registrado')) return { status: 409, message };
   return { status: 500, message };
 }
-router.post('/process-disciplinary-pdf', requireTenant, async (req, res) => {
-  try {
-    const body = req.body as AuthedRequestBody;
-    const authReq = req as AuthenticatedRequest;
-    const tenantId = authReq.tenantId;
-    if (!tenantId) {
-      res.status(500).json({ error: 'Tenant no resuelto para analizar el PDF' });
-      return;
-    }
-    if (!body.bucket || !body.storagePath || !body.fileName) {
-      res.status(400).json({ error: 'Faltan parámetros requeridos para analizar el PDF' });
-      return;
-    }
-
-    const result = await analyzeDisciplinaryPdf({
-      bucket: body.bucket,
-      storagePath: body.storagePath,
-      fileName: body.fileName,
-      tenantId,
-      authToken: getBearerToken(req),
-    });
-    res.json(result);
-  } catch (error) {
-    const response = getProcessErrorResponse(error);
-    console.error(
-      'Error processing disciplinary PDF:',
-      error instanceof Error ? error.message : error,
-    );
-    res.status(response.status).json(clientErrorBody(response.message, response.status));
-  }
-});
 
 router.post(
-  '/process-disciplinary-pdf/confirm',
+  '/process-disciplinary-pdf',
   requireTenant,
-  requireMembership({
-    applicationCode: CONVIVENCIA_MEMBERSHIP.applicationCode,
-    allowedRoles: PDF_CONFIRM_ROLES,
-  }),
+  requireMembership({ applicationCode: CONVIVENCIA_MEMBERSHIP.applicationCode, allowedRoles: PDF_PROCESS_ROLES }),
   async (req, res) => {
     try {
       const body = req.body as AuthedRequestBody;
       const authReq = req as AuthenticatedRequest;
       const tenantId = authReq.tenantId;
-      if (!tenantId) {
-        res.status(500).json({ error: 'Tenant no resuelto para confirmar el proceso' });
-        return;
-      }
-      if (
-        !body.bucket ||
-        !body.storagePath ||
-        !body.fileName ||
-        !body.fileHash ||
-        !body.studentId
-      ) {
-        res.status(400).json({ error: 'Faltan parámetros requeridos para confirmar el proceso' });
-        return;
-      }
-      if (body.annotations !== undefined && !Array.isArray(body.annotations)) {
-        res.status(400).json({ error: 'Las anotaciones confirmadas no tienen un formato válido.' });
-        return;
-      }
+      if (!tenantId) { res.status(500).json({ error: 'Tenant no resuelto para analizar el PDF' }); return; }
+      if (!body.bucket || !body.storagePath || !body.fileName) { res.status(400).json({ error: 'Faltan parámetros requeridos para analizar el PDF' }); return; }
+      const result = await analyzeDisciplinaryPdf({ bucket: body.bucket, storagePath: body.storagePath, fileName: body.fileName, tenantId, authToken: getBearerToken(req) });
+      res.json(result);
+    } catch (error) {
+      const response = getProcessErrorResponse(error);
+      console.error('Error processing disciplinary PDF:', error instanceof Error ? error.message : error);
+      res.status(response.status).json(clientErrorBody(response.message, response.status));
+    }
+  },
+);
 
+router.post(
+  '/process-disciplinary-pdf/confirm',
+  requireTenant,
+  requireMembership({ applicationCode: CONVIVENCIA_MEMBERSHIP.applicationCode, allowedRoles: PDF_PROCESS_ROLES }),
+  async (req, res) => {
+    try {
+      const body = req.body as AuthedRequestBody;
+      const authReq = req as AuthenticatedRequest;
+      const tenantId = authReq.tenantId;
+      if (!tenantId) { res.status(500).json({ error: 'Tenant no resuelto para confirmar el proceso' }); return; }
+      if (!body.bucket || !body.storagePath || !body.fileName || !body.fileHash || !body.studentId) { res.status(400).json({ error: 'Faltan parámetros requeridos para confirmar el proceso' }); return; }
+      if (body.annotations !== undefined && !Array.isArray(body.annotations)) { res.status(400).json({ error: 'Las anotaciones confirmadas no tienen un formato válido.' }); return; }
       const result = await confirmDisciplinaryProcess({
-        analysisId: body.analysisId,
-        fileId: body.fileId,
-        bucket: body.bucket,
-        storagePath: body.storagePath,
-        fileName: body.fileName,
-        fileHash: body.fileHash,
-        fileSize: body.fileSize,
-        mimeType: body.mimeType,
-        tenantId,
-        studentId: body.studentId,
-        suggestedLetterType: body.suggestedLetterType || 'none',
-        annotations: body.annotations ?? [],
-        idempotencyKey: body.idempotencyKey,
-        authToken: getBearerToken(req),
+        analysisId: body.analysisId, fileId: body.fileId, bucket: body.bucket, storagePath: body.storagePath,
+        fileName: body.fileName, fileHash: body.fileHash, fileSize: body.fileSize, mimeType: body.mimeType,
+        tenantId, studentId: body.studentId, suggestedLetterType: body.suggestedLetterType || 'none',
+        annotations: body.annotations ?? [], idempotencyKey: body.idempotencyKey, authToken: getBearerToken(req),
         confirmedBy: authReq.user?.sub,
       });
       res.json(result);
     } catch (error) {
       const response = getProcessErrorResponse(error);
-      console.error(
-        'Error confirming disciplinary process:',
-        error instanceof Error ? error.message : error,
-      );
+      console.error('Error confirming disciplinary process:', error instanceof Error ? error.message : error);
       res.status(response.status).json(clientErrorBody(response.message, response.status));
     }
   },
