@@ -1,7 +1,12 @@
 var __defProp = Object.defineProperty;
 var __getOwnPropNames = Object.getOwnPropertyNames;
-var __esm = (fn, res) => function __init() {
-  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+var __esm = (fn, res, err) => function __init() {
+  if (err) throw err[0];
+  try {
+    return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+  } catch (e) {
+    throw err = [e], e;
+  }
 };
 var __export = (target, all) => {
   for (var name in all)
@@ -2398,7 +2403,11 @@ router2.post(
   async (req, res) => {
     try {
       const body = req.body;
-      const causaId = optStr(body, "causaId", 100) ?? requireStr(body, "id", 100);
+      const causaId = requireStr(
+        { id: optStr(body, "causaId", 100).trim() || optStr(body, "id", 100).trim() },
+        "id",
+        100
+      );
       const authReq = req;
       const tenantId = authReq.tenantId;
       if (!tenantId) {

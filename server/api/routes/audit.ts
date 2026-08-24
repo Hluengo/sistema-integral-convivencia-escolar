@@ -36,7 +36,11 @@ router.post(
   async (req, res) => {
     try {
       const body = req.body as Record<string, unknown>;
-      const causaId = optStr(body, 'causaId', 100) ?? requireStr(body, 'id', 100);
+      const causaId = requireStr(
+        { id: optStr(body, 'causaId', 100).trim() || optStr(body, 'id', 100).trim() },
+        'id',
+        100,
+      );
       const authReq = req as AuthenticatedRequest;
       const tenantId = authReq.tenantId;
       if (!tenantId) {

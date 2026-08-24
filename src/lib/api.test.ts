@@ -177,10 +177,10 @@ describe('API endpoints', () => {
       assert.equal(res.status, 400);
     });
 
-    it('returns 400 without required infractionType', async () => {
+    it('returns 400 with a blank id', async () => {
       const res = await post(
         '/api/audit-due-process',
-        { id: 'DC-2026-001' },
+        { id: '   ' },
         {
           Authorization: `Bearer ${VALID_TOKEN}`,
         },

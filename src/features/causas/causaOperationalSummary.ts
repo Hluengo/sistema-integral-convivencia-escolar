@@ -27,24 +27,36 @@ export interface CausaOperationalSummary {
   phaseProgress: PhaseProgress[];
   currentPhaseProgress: PhaseProgress;
   nextChecklistItem: ChecklistItem | null;
+  nextChecklistPhase: FaseProcedimental | null;
+  laterActivityPhase: FaseProcedimental | null;
   completedHitos: number;
   documentsCount: number;
   historyCount: number;
 }
 
-function getNextChecklistItem(causa: Causa, currentPhase: FaseProcedimental): ChecklistItem | null {
-  if (getCausaStatus(causa) !== 'Activa') return null;
+function getNextChecklistItem(
+  causa: Causa,
+  currentPhase: FaseProcedimental,
+): { item: ChecklistItem | null; phase: FaseProcedimental | null } {
+  if (getCausaStatus(causa) !== 'Activa') return { item: null, phase: null };
 
   if (currentPhase === 'Investigación') {
     const nextInvestigationItem = getNextInvestigationChecklistItem(causa);
-    if (nextInvestigationItem) return nextInvestigationItem;
-
-    const nextPhase = CAUSA_PHASES[CAUSA_PHASES.indexOf(currentPhase) + 1];
-    if (!nextPhase) return null;
-    return getApplicableChecklistItems(causa, nextPhase).find((item) => !item.completado) ?? null;
+    if (nextInvestigationItem) return { item: nextInvestigationItem, phase: currentPhase };
   }
 
-  return getApplicableChecklistItems(causa, currentPhase).find((item) => !item.completado) ?? null;
+  const currentItem = getApplicableChecklistItems(causa, currentPhase).find(
+    (item) => !item.completado,
+  );
+  if (currentItem) return { item: currentItem, phase: currentPhase };
+
+  const currentIndex = CAUSA_PHASES.indexOf(currentPhase);
+  for (const phase of CAUSA_PHASES.slice(currentIndex + 1)) {
+    const nextItem = getApplicableChecklistItems(causa, phase).find((item) => !item.completado);
+    if (nextItem) return { item: nextItem, phase };
+  }
+
+  return { item: null, phase: null };
 }
 
 export function getCausaOperationalSummary(causa: Causa): CausaOperationalSummary {
@@ -54,6 +66,10 @@ export function getCausaOperationalSummary(causa: Causa): CausaOperationalSummar
     ...getPhaseProgress(causa, phase),
   }));
   const currentPhaseProgress = phaseProgress.find((progress) => progress.phase === currentPhase);
+  const currentIndex = CAUSA_PHASES.indexOf(currentPhase);
+  const nextChecklist = getNextChecklistItem(causa, currentPhase);
+  const laterActivityPhase =
+    phaseProgress.slice(currentIndex + 1).find((progress) => progress.completed > 0)?.phase ?? null;
   const completedHitos = phaseProgress.reduce((count, progress) => count + progress.completed, 0);
   const documentsCount =
     causa.checklistDebidoProceso.filter((item) => item.documentoNombre).length +
@@ -67,7 +83,9 @@ export function getCausaOperationalSummary(causa: Causa): CausaOperationalSummar
       completed: 0,
       total: 0,
     },
-    nextChecklistItem: getNextChecklistItem(causa, currentPhase),
+    nextChecklistItem: nextChecklist.item,
+    nextChecklistPhase: nextChecklist.phase,
+    laterActivityPhase,
     completedHitos,
     documentsCount,
     historyCount: causa.bitacora.length,

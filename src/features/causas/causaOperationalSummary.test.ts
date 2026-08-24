@@ -51,6 +51,7 @@ describe('Resumen operativo de causa', () => {
     assert.equal(summary.currentPhaseProgress.completed, 1);
     assert.equal(summary.currentPhaseProgress.total, 2);
     assert.equal(summary.nextChecklistItem?.label, 'Siguiente hito');
+    assert.equal(summary.nextChecklistPhase, 'Investigación');
   });
 
   it('no propone nuevos hitos para una causa cerrada', () => {
@@ -70,6 +71,7 @@ describe('Resumen operativo de causa', () => {
     );
 
     assert.equal(summary.nextChecklistItem, null);
+    assert.equal(summary.nextChecklistPhase, null);
   });
 
   it('no sugiere derivar a mediación como obligación cuando la investigación base está completa', () => {
@@ -85,6 +87,7 @@ describe('Resumen operativo de causa', () => {
     assert.equal(summary.currentPhaseProgress.total, 2);
     assert.notEqual(summary.nextChecklistItem?.id, 'chk_inv_3');
     assert.equal(summary.nextChecklistItem?.id, 'chk_res_2');
+    assert.equal(summary.nextChecklistPhase, 'Resolución');
   });
 
   it('cuenta documentos y actividad desde antecedentes ya cargados', () => {
@@ -117,6 +120,38 @@ describe('Resumen operativo de causa', () => {
     assert.equal(summary.completedHitos, 1);
     assert.equal(summary.documentsCount, 2);
     assert.equal(summary.historyCount, 1);
+  });
+
+  it('detecta actividad en una fase posterior sin cambiar el estado persistido', () => {
+    const summary = getCausaOperationalSummary(
+      causa({
+        estadoActual: EstadoCausa.DENUNCIA_RECEPCIONADA,
+        checklistDebidoProceso: [
+          ...getBaseChecklist().filter((item) => item.id.startsWith('chk_rec_')).map((item) => ({
+            ...item,
+            completado: true,
+          })),
+          {
+            id: 'chk_inv_1',
+            label: 'Indagación iniciada',
+            descripcion: 'Registrada',
+            completado: true,
+            requeridoPor: 'Circular 482',
+          },
+          {
+            id: 'chk_inv_2',
+            label: 'Indagación pendiente',
+            descripcion: 'Pendiente',
+            completado: false,
+            requeridoPor: 'Ambas',
+          },
+        ],
+      }),
+    );
+
+    assert.equal(summary.currentPhase, 'Recepción');
+    assert.equal(summary.laterActivityPhase, 'Investigación');
+    assert.equal(summary.nextChecklistPhase, 'Investigación');
   });
 
   it('no cuenta como actividad operativa los estados absorbidos', () => {

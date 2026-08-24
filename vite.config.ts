@@ -25,6 +25,7 @@ function devCspHmrPlugin(): Plugin {
 }
 
 const plugins = [react(), tailwindcss(), devCspHmrPlugin()];
+const projectRoot = import.meta.dirname;
 
 if (process.env.ANALYZE === 'true') {
   plugins.push(
@@ -42,8 +43,8 @@ export default defineConfig(() => {
     plugins,
     resolve: {
       alias: {
-        '@/shared': path.resolve(__dirname, 'src/shared'),
-        '@': path.resolve(__dirname, '.'),
+        '@/shared': path.resolve(projectRoot, 'src/shared'),
+        '@': path.resolve(projectRoot, '.'),
       },
     },
     build: {

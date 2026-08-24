@@ -131,12 +131,17 @@ export default memo(function RutaExpedienteTab({
             {summary.currentPhaseProgress.completed} de {summary.currentPhaseProgress.total} hitos
             completados
           </p>
+          {summary.laterActivityPhase ? (
+            <p className="mt-2 rounded-md bg-amber-50 px-2 py-1.5 text-amber-800 text-xs">
+              Hay actividad registrada en {summary.laterActivityPhase}. Revisa el estado actual.
+            </p>
+          ) : null}
         </div>
 
         <div className="rounded-lg border border-sky-100 bg-sky-50/70 p-3">
           <p className="flex items-center gap-1.5 font-semibold text-sky-700 text-11px uppercase tracking-wide">
             <MoveRight className="size-3.5" aria-hidden="true" />
-            Próximo hito
+            Próximo hito{summary.nextChecklistPhase ? ` · ${summary.nextChecklistPhase}` : ''}
           </p>
           {summary.nextChecklistItem ? (
             <>
