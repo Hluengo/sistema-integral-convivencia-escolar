@@ -14,6 +14,13 @@ const migrationSql = readFileSync(
   ),
   'utf8',
 );
+const avancesMigrationSql = readFileSync(
+  resolve(
+    currentDir,
+    '../../../supabase/migrations/20260824193445_allow_avances_convivencia_storage.sql',
+  ),
+  'utf8',
+);
 const middlewareSource = readFileSync(
   resolve(currentDir, '../../../server/middleware/requireMembership.ts'),
   'utf8',
@@ -41,4 +48,17 @@ test('políticas Storage de documentos de convivencia mantienen causa y carpeta 
   assert.match(migrationSql, /where c\.id = \(storage\.foldername\(name\)\)\[1\]/);
   assert.match(migrationSql, /m\.application_code = 'convivencia'/);
   assert.match(migrationSql, /m\.is_active/);
+});
+
+test('políticas Storage de avances permiten la carpeta avances sin abrir el bucket', () => {
+  assert.match(avancesMigrationSql, /bucket_id = 'documentos_convivencia'/);
+  assert.match(avancesMigrationSql, /to authenticated/);
+  assert.match(
+    avancesMigrationSql,
+    /\(storage\.foldername\(name\)\)\[2\] in \('documentos', 'avances'\)/,
+  );
+  assert.match(avancesMigrationSql, /from public\.causas c/);
+  assert.match(avancesMigrationSql, /where c\.id = \(storage\.foldername\(name\)\)\[1\]/);
+  assert.match(avancesMigrationSql, /m\.application_code = 'convivencia'/);
+  assert.match(avancesMigrationSql, /m\.is_active/);
 });
