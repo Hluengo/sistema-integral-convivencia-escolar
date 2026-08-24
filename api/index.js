@@ -40,7 +40,7 @@ __export(disciplinaryPdfAnalysis_exports, {
   selectNewAnnotationsForLegacySync: () => selectNewAnnotationsForLegacySync
 });
 import { createHash } from "node:crypto";
-import { createClient } from "@supabase/supabase-js";
+import { createClient as createClient2 } from "@supabase/supabase-js";
 function ensurePdfJsNodePolyfills() {
   const globals = globalThis;
   globals.DOMMatrix ??= NodeDomMatrixPolyfill;
@@ -56,7 +56,7 @@ function getSupabaseAdmin(authToken) {
     throw new Error("Supabase no configurado");
   }
   const headers = !serviceKey && authToken ? { Authorization: `Bearer ${authToken}` } : void 0;
-  return createClient(supabaseUrl, supabaseKey, {
+  return createClient2(supabaseUrl, supabaseKey, {
     auth: { persistSession: false },
     global: headers ? { headers } : void 0
   });
@@ -2302,6 +2302,21 @@ var advisor_default = router;
 
 // server/api/routes/audit.ts
 import { Router as Router2 } from "express";
+import { createClient } from "@supabase/supabase-js";
+
+// server/middleware/requireTenant.ts
+function requireTenant(req, res, next) {
+  const authReq = req;
+  if (!authReq.user?.sub) {
+    res.status(401).json({ error: "Autenticaci\xF3n requerida." });
+    return;
+  }
+  if (!authReq.tenantId) {
+    res.status(403).json({ error: "No fue posible determinar el establecimiento autenticado." });
+    return;
+  }
+  next();
+}
 
 // server/api/services/gemini.ts
 var LEGAL_DRAFT_GEMINI_MODEL = process.env.LEGAL_DRAFT_MODEL || "gemini-3.6-flash";
@@ -2366,30 +2381,80 @@ async function callGeminiLegalDraft(systemInstruction, dossier, options = {}) {
 
 // server/api/routes/audit.ts
 var router2 = Router2();
+function getAdminClient() {
+  const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+  if (!url || !key) throw new Error("Supabase administrativo no configurado.");
+  return createClient(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false }
+  });
+}
 router2.post(
   "/audit-due-process",
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
+  requireTenant,
   rateLimit,
   async (req, res) => {
     try {
       const body = req.body;
-      const id = requireStr(body, "id", 50);
-      const infractionType = requireStr(body, "infractionType", 50);
-      const isAulaSegura = Boolean(body.isAulaSegura);
-      const checkedItems = optArr(body, "checkedItems");
-      const bitacora = optArr(body, "bitacora");
-      const observations = optStr(body, "observations", 5e3);
-      const knownSensitiveValues = [id, infractionType, observations];
-      const safeHistory = bitacora.map((entry) => ({
+      const causaId = optStr(body, "causaId", 100) ?? requireStr(body, "id", 100);
+      const authReq = req;
+      const tenantId = authReq.tenantId;
+      if (!tenantId) {
+        res.status(403).json({ error: "No fue posible determinar el establecimiento autenticado." });
+        return;
+      }
+      const client = getAdminClient();
+      const [causaResult, checklistResult, historyResult, progressResult] = await Promise.all([
+        client.from("causas").select(
+          "id,tipo_infraccion,compromete_aula_segura,observaciones,estado_actual,fecha_apertura,fecha_inicio_investigacion,fecha_limite_investigacion,fecha_limite_cierre,conducta_rice_id,medidas_ejecutadas"
+        ).eq("id", causaId).eq("tenant_id", tenantId).maybeSingle(),
+        client.from("checklist_items").select(
+          "id,label,descripcion,completado,fecha_completado,requerido_por,registrado_por,observaciones,documento_nombre"
+        ).eq("causa_id", causaId).eq("tenant_id", tenantId).order("created_at", { ascending: true }),
+        client.from("bitacora_entries").select("fecha,tipo,titulo,descripcion,documento_adjunto,created_at").eq("causa_id", causaId).eq("tenant_id", tenantId).order("created_at", { ascending: true }).limit(100),
+        client.from("checklist_progress_entries").select("checklist_item_id,title,description,entry_type,occurred_at,document_name,invalidated_at").eq("causa_id", causaId).eq("tenant_id", tenantId).order("occurred_at", { ascending: true }).limit(150)
+      ]);
+      if (causaResult.error) throw causaResult.error;
+      if (!causaResult.data) {
+        res.status(404).json({ error: "No se encontr\xF3 la causa en el establecimiento actual." });
+        return;
+      }
+      if (checklistResult.error) throw checklistResult.error;
+      if (historyResult.error) throw historyResult.error;
+      if (progressResult.error) throw progressResult.error;
+      const causa = causaResult.data;
+      const infractionType = String(causa.tipo_infraccion ?? "No registrada").slice(0, 100);
+      const observations = String(causa.observaciones ?? "").slice(0, 5e3);
+      const knownSensitiveValues = [causaId, infractionType, observations];
+      const safeChecklist = (checklistResult.data ?? []).slice(0, 100).map((item) => ({
+        id: String(item.id ?? "").slice(0, 100),
+        label: redactSensitiveForAI(item.label, knownSensitiveValues).slice(0, 300),
+        description: redactSensitiveForAI(item.descripcion, knownSensitiveValues).slice(0, 1500),
+        completed: Boolean(item.completado),
+        completedAt: item.fecha_completado ?? null,
+        requiredBy: redactSensitiveForAI(item.requerido_por, knownSensitiveValues).slice(0, 120),
+        registeredBy: redactSensitiveForAI(item.registrado_por, knownSensitiveValues).slice(0, 120),
+        observations: redactSensitiveForAI(item.observaciones, knownSensitiveValues).slice(0, 1500),
+        documentName: redactSensitiveForAI(item.documento_nombre, knownSensitiveValues).slice(0, 250)
+      }));
+      const safeHistory = (historyResult.data ?? []).map((entry) => ({
         title: redactSensitiveForAI(entry.titulo, knownSensitiveValues).slice(0, 200),
         date: redactSensitiveForAI(entry.fecha, knownSensitiveValues).slice(0, 50),
         type: redactSensitiveForAI(entry.tipo, knownSensitiveValues).slice(0, 80),
-        description: redactSensitiveForAI(entry.descripcion, knownSensitiveValues).slice(
-          0,
-          2e3
-        )
-      })).slice(0, 100);
+        description: redactSensitiveForAI(entry.descripcion, knownSensitiveValues).slice(0, 2e3),
+        document: redactSensitiveForAI(entry.documento_adjunto, knownSensitiveValues).slice(0, 250)
+      }));
+      const safeProgress = (progressResult.data ?? []).map((entry) => ({
+        checklistItemId: String(entry.checklist_item_id ?? "").slice(0, 100),
+        title: redactSensitiveForAI(entry.title, knownSensitiveValues).slice(0, 250),
+        description: redactSensitiveForAI(entry.description, knownSensitiveValues).slice(0, 1500),
+        type: redactSensitiveForAI(entry.entry_type, knownSensitiveValues).slice(0, 80),
+        occurredAt: entry.occurred_at ?? null,
+        documentName: redactSensitiveForAI(entry.document_name, knownSensitiveValues).slice(0, 250),
+        invalidated: Boolean(entry.invalidated_at)
+      }));
       const legalSources = await getRelevantLegalSources(
         `debido proceso norma previa comunicaci\xF3n hechos indagaci\xF3n descargos resoluci\xF3n fundada proporcionalidad reconsideraci\xF3n ${infractionType}`
       );
@@ -2397,17 +2462,25 @@ router2.post(
 
 Tu funci\xF3n es verificar la coherencia entre los hitos efectivamente registrados en un expediente y siete garant\xEDas del debido proceso. No calificas la responsabilidad del estudiante, no propones sanciones, no estimas multas y no agregas exigencias que no se desprendan de las fuentes autorizadas.
 
-Usa solo el expediente citado y las fuentes jur\xEDdicas autorizadas incluidas por el sistema. Redacta en espa\xF1ol formal de Chile, con tono t\xE9cnico, neutral y verificable.`;
+Usa solo el expediente persistido y las fuentes jur\xEDdicas autorizadas incluidas por el sistema. Redacta en espa\xF1ol formal de Chile, con tono t\xE9cnico, neutral y verificable.`;
       const auditDossier = `FUENTES JUR\xCDDICAS AUTORIZADAS:
 ${legalSources}
 
-EXPEDIENTE CITADO:
-- C\xF3digo: ${redactSensitiveForAI(id, knownSensitiveValues)}
+EXPEDIENTE PERSISTIDO:
+- C\xF3digo: ${redactSensitiveForAI(causaId, knownSensitiveValues)}
+- Estado actual: ${redactSensitiveForAI(causa.estado_actual, knownSensitiveValues)}
 - Materia registrada: ${redactSensitiveForAI(infractionType, knownSensitiveValues)}
-- Referencia de procedimiento especial informada por el expediente: ${isAulaSegura ? "S\xED" : "No"}
-- Checklist registrado: ${redactSensitiveForAI(JSON.stringify(checkedItems, null, 2), knownSensitiveValues)}
-- Hitos registrados: ${JSON.stringify(safeHistory, null, 2)}
+- Conducta RICE registrada: ${redactSensitiveForAI(causa.conducta_rice_id, knownSensitiveValues)}
+- Referencia de procedimiento especial informada por el expediente: ${causa.compromete_aula_segura ? "S\xED" : "No"}
+- Fecha de apertura: ${causa.fecha_apertura ?? "No registrada"}
+- Inicio de indagaci\xF3n/investigaci\xF3n: ${causa.fecha_inicio_investigacion ?? "No registrado"}
+- Fecha l\xEDmite de indagaci\xF3n/investigaci\xF3n: ${causa.fecha_limite_investigacion ?? "No registrada"}
+- Fecha l\xEDmite de cierre: ${causa.fecha_limite_cierre ?? "No registrada"}
 - Observaciones: ${redactSensitiveForAI(observations, knownSensitiveValues)}
+- Medidas ejecutadas: ${redactSensitiveForAI(JSON.stringify(causa.medidas_ejecutadas ?? [], null, 2), knownSensitiveValues)}
+- Checklist registrado: ${redactSensitiveForAI(JSON.stringify(safeChecklist, null, 2), knownSensitiveValues)}
+- Historial/bit\xE1cora registrado: ${JSON.stringify(safeHistory, null, 2)}
+- Progreso documental del checklist: ${JSON.stringify(safeProgress, null, 2)}
 
 Eval\xFAa exclusivamente estas garant\xEDas:
 1. Existencia de una norma previa.
@@ -2418,7 +2491,7 @@ Eval\xFAa exclusivamente estas garant\xEDas:
 6. Proporcionalidad.
 7. Derecho a solicitar reconsideraci\xF3n.
 
-Para cada garant\xEDa usa solo uno de estos estados: **Acreditado**, **Pendiente** o **No verificable con el expediente disponible**. No infieras que est\xE1 cumplida solo por el nombre de una fase o de un checklist; identifica el hito o documento que la respalda.
+Para cada garant\xEDa usa solo uno de estos estados: **Acreditado**, **Pendiente** o **No verificable con el expediente disponible**. No infieras que est\xE1 cumplida solo por el nombre de una fase o de un checklist; identifica el hito, documento o registro persistido que la respalda. Si un registro fue invalidado, no lo uses como acreditaci\xF3n.
 
 Devuelve Markdown con esta estructura exacta:
 # Auditor\xEDa de debido proceso
@@ -2897,20 +2970,6 @@ var debug_default = router4;
 // server/api/routes/templates.ts
 import { Router as Router5 } from "express";
 
-// server/middleware/requireTenant.ts
-function requireTenant(req, res, next) {
-  const authReq = req;
-  if (!authReq.user?.sub) {
-    res.status(401).json({ error: "Autenticaci\xF3n requerida." });
-    return;
-  }
-  if (!authReq.tenantId) {
-    res.status(403).json({ error: "No fue posible determinar el establecimiento autenticado." });
-    return;
-  }
-  next();
-}
-
 // server/middleware/requireRole.ts
 function requireRole(allowedRoles) {
   return (req, res, next) => {
@@ -3133,7 +3192,7 @@ var errorHandler = (err, _req, res, _next) => {
 // server/api/routes/processDisciplinaryPdf.ts
 init_disciplinaryPdfAnalysis();
 var router7 = Router7();
-var PDF_CONFIRM_ROLES = [
+var PDF_PROCESS_ROLES = [
   "superadmin",
   "admin",
   "direccion",
@@ -3143,75 +3202,49 @@ var PDF_CONFIRM_ROLES = [
   "inspector",
   "staff"
 ];
-router7.use(
-  "/process-disciplinary-pdf",
-  requireAuth,
-  requireMembership(CONVIVENCIA_MEMBERSHIP),
-  rateLimit
-);
+router7.use("/process-disciplinary-pdf", requireAuth, rateLimit);
 function getBearerToken(req) {
   const authHeader = req.headers.authorization;
   return authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : void 0;
 }
 function getProcessErrorResponse(error) {
   const message = error instanceof Error ? error.message : "Error interno al procesar el documento";
-  if (message === "Supabase no configurado") {
-    return {
-      status: 503,
-      message: "Supabase no est\xE1 configurado en el servidor para procesar PDFs privados."
-    };
-  }
-  if (message.includes("Bucket de documentos disciplinarios no permitido") || message.includes("Ruta de archivo no v\xE1lida") || message.includes("El archivo no pertenece") || message.includes("El PDF excede") || message.includes("PDF v\xE1lido") || message.includes("demasiadas p\xE1ginas") || message.includes("no coincide") || message.includes("no corresponde") || message.includes("anotaciones confirmadas")) {
-    return { status: 400, message };
-  }
-  if (message.includes("No fue posible descargar")) {
-    return {
-      status: 404,
-      message: "No fue posible encontrar o leer el PDF privado subido."
-    };
-  }
-  if (message.includes("Este PDF ya fue registrado")) {
-    return { status: 409, message };
-  }
+  if (message === "Supabase no configurado") return { status: 503, message: "Supabase no est\xE1 configurado en el servidor para procesar PDFs privados." };
+  if (message.includes("Bucket de documentos disciplinarios no permitido") || message.includes("Ruta de archivo no v\xE1lida") || message.includes("El archivo no pertenece") || message.includes("El PDF excede") || message.includes("PDF v\xE1lido") || message.includes("demasiadas p\xE1ginas") || message.includes("no coincide") || message.includes("no corresponde") || message.includes("anotaciones confirmadas")) return { status: 400, message };
+  if (message.includes("No fue posible descargar")) return { status: 404, message: "No fue posible encontrar o leer el PDF privado subido." };
+  if (message.includes("Este PDF ya fue registrado")) return { status: 409, message };
   return { status: 500, message };
 }
-router7.post("/process-disciplinary-pdf", requireTenant, async (req, res) => {
-  try {
-    const body = req.body;
-    const authReq = req;
-    const tenantId = authReq.tenantId;
-    if (!tenantId) {
-      res.status(500).json({ error: "Tenant no resuelto para analizar el PDF" });
-      return;
+router7.post(
+  "/process-disciplinary-pdf",
+  requireTenant,
+  requireMembership({ applicationCode: CONVIVENCIA_MEMBERSHIP.applicationCode, allowedRoles: PDF_PROCESS_ROLES }),
+  async (req, res) => {
+    try {
+      const body = req.body;
+      const authReq = req;
+      const tenantId = authReq.tenantId;
+      if (!tenantId) {
+        res.status(500).json({ error: "Tenant no resuelto para analizar el PDF" });
+        return;
+      }
+      if (!body.bucket || !body.storagePath || !body.fileName) {
+        res.status(400).json({ error: "Faltan par\xE1metros requeridos para analizar el PDF" });
+        return;
+      }
+      const result = await analyzeDisciplinaryPdf({ bucket: body.bucket, storagePath: body.storagePath, fileName: body.fileName, tenantId, authToken: getBearerToken(req) });
+      res.json(result);
+    } catch (error) {
+      const response = getProcessErrorResponse(error);
+      console.error("Error processing disciplinary PDF:", error instanceof Error ? error.message : error);
+      res.status(response.status).json(clientErrorBody(response.message, response.status));
     }
-    if (!body.bucket || !body.storagePath || !body.fileName) {
-      res.status(400).json({ error: "Faltan par\xE1metros requeridos para analizar el PDF" });
-      return;
-    }
-    const result = await analyzeDisciplinaryPdf({
-      bucket: body.bucket,
-      storagePath: body.storagePath,
-      fileName: body.fileName,
-      tenantId,
-      authToken: getBearerToken(req)
-    });
-    res.json(result);
-  } catch (error) {
-    const response = getProcessErrorResponse(error);
-    console.error(
-      "Error processing disciplinary PDF:",
-      error instanceof Error ? error.message : error
-    );
-    res.status(response.status).json(clientErrorBody(response.message, response.status));
   }
-});
+);
 router7.post(
   "/process-disciplinary-pdf/confirm",
   requireTenant,
-  requireMembership({
-    applicationCode: CONVIVENCIA_MEMBERSHIP.applicationCode,
-    allowedRoles: PDF_CONFIRM_ROLES
-  }),
+  requireMembership({ applicationCode: CONVIVENCIA_MEMBERSHIP.applicationCode, allowedRoles: PDF_PROCESS_ROLES }),
   async (req, res) => {
     try {
       const body = req.body;
@@ -3249,10 +3282,7 @@ router7.post(
       res.json(result);
     } catch (error) {
       const response = getProcessErrorResponse(error);
-      console.error(
-        "Error confirming disciplinary process:",
-        error instanceof Error ? error.message : error
-      );
+      console.error("Error confirming disciplinary process:", error instanceof Error ? error.message : error);
       res.status(response.status).json(clientErrorBody(response.message, response.status));
     }
   }
@@ -3290,7 +3320,7 @@ router8.post(
         res.status(400).json({ error: "properties debe ser un objeto JSON de hasta 4 KB." });
         return;
       }
-      const { createClient: createClient5 } = await import("@supabase/supabase-js");
+      const { createClient: createClient6 } = await import("@supabase/supabase-js");
       const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
       const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "";
       if (!supabaseUrl || !anonKey) {
@@ -3298,7 +3328,7 @@ router8.post(
         return;
       }
       const authReq = req;
-      const supabase = createClient5(supabaseUrl, anonKey, {
+      const supabase = createClient6(supabaseUrl, anonKey, {
         auth: { persistSession: false },
         global: { headers: { Authorization: `Bearer ${authReq.authToken}` } }
       });
@@ -3328,19 +3358,17 @@ router8.get(
   requireRole(["superadmin", "admin", "direccion"]),
   async (req, res) => {
     try {
-      const authReq = req;
-      const since = authReq.query.since ?? void 0;
+      const since = req.query.since ?? void 0;
       const until = req.query.until ?? void 0;
-      const { createClient: createClient5 } = await import("@supabase/supabase-js");
+      const { createClient: createClient6 } = await import("@supabase/supabase-js");
       const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
-      const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "";
-      if (!supabaseUrl || !anonKey) {
-        res.status(500).json({ error: "Supabase no configurado" });
+      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
+      if (!supabaseUrl || !serviceRoleKey) {
+        res.status(503).json({ error: "Servicio de estad\xEDsticas no configurado." });
         return;
       }
-      const supabase = createClient5(supabaseUrl, anonKey, {
-        auth: { persistSession: false },
-        global: { headers: { Authorization: `Bearer ${authReq.authToken}` } }
+      const supabase = createClient6(supabaseUrl, serviceRoleKey, {
+        auth: { persistSession: false, autoRefreshToken: false }
       });
       const params = {};
       if (since) params.since = since;
@@ -3351,17 +3379,13 @@ router8.get(
         res.status(500).json({ error: "Error al obtener estad\xEDsticas." });
         return;
       }
-      const { data: dailyActive, error: dailyError } = await supabase.rpc(
-        "get_daily_active_users",
-        params
-      );
+      const { data: dailyActive, error: dailyError } = await supabase.rpc("get_daily_active_users", params);
       if (dailyError) {
         console.error("Error fetching daily active users:", dailyError);
+        res.status(500).json({ error: "Error al obtener usuarios activos." });
+        return;
       }
-      res.json({
-        events: eventStats ?? [],
-        dailyActiveUsers: dailyActive ?? []
-      });
+      res.json({ events: eventStats ?? [], dailyActiveUsers: dailyActive ?? [] });
     } catch (error) {
       console.error("Error fetching usage stats:", error);
       res.status(500).json({ error: "Error interno al obtener estad\xEDsticas." });
@@ -3391,7 +3415,7 @@ var pilot_default = router9;
 // server/api/routes/admin.ts
 import { Router as Router10 } from "express";
 import multer from "multer";
-import { createClient as createClient2 } from "@supabase/supabase-js";
+import { createClient as createClient3 } from "@supabase/supabase-js";
 var router10 = Router10();
 var ownUpload = multer({
   storage: multer.memoryStorage(),
@@ -3414,11 +3438,11 @@ var EMAIL_RE2 = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 function invitationErrorStatus(message) {
   return /rate limit|too many requests|email rate/i.test(message) ? 429 : 500;
 }
-function getAdminClient() {
+function getAdminClient2() {
   const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) throw new Error("Supabase administrativo no configurado.");
-  return createClient2(url, key, {
+  return createClient3(url, key, {
     auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false }
   });
 }
@@ -3459,7 +3483,7 @@ router10.use("/admin", requireAuth, requireTenant, requireRole(ADMIN_ROLES));
 router10.get("/admin/members", async (req, res) => {
   try {
     const request = getRequest(req);
-    const client = getAdminClient();
+    const client = getAdminClient2();
     await assertFreshAdmin(client, request);
     const [profilesResult, membershipsResult, invitationsResult, auditResult, users] = await Promise.all([
       client.from("profiles").select("user_id,tenant_id,email,full_name,role,course_ids,is_active,updated_at").eq("tenant_id", request.tenantId).order("full_name", { ascending: true }),
@@ -3518,7 +3542,7 @@ router10.get("/admin/members", async (req, res) => {
 router10.patch("/admin/members/:userId", async (req, res) => {
   try {
     const request = getRequest(req);
-    const client = getAdminClient();
+    const client = getAdminClient2();
     await assertFreshAdmin(client, request);
     const userId = req.params.userId;
     const role = req.body?.role;
@@ -3576,7 +3600,7 @@ router10.patch("/admin/members/:userId", async (req, res) => {
 router10.post("/admin/invitations", async (req, res) => {
   try {
     const request = getRequest(req);
-    const client = getAdminClient();
+    const client = getAdminClient2();
     await assertFreshAdmin(client, request);
     const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
     const role = req.body?.role;
@@ -3632,7 +3656,7 @@ router10.post("/admin/invitations", async (req, res) => {
 router10.post("/admin/invitations/:invitationId/resend", async (req, res) => {
   try {
     const request = getRequest(req);
-    const client = getAdminClient();
+    const client = getAdminClient2();
     await assertFreshAdmin(client, request);
     if (!req.params.invitationId || !isValidUuid(req.params.invitationId)) {
       res.status(400).json({ error: "Identificador de invitaci\xF3n inv\xE1lido." });
@@ -3668,7 +3692,7 @@ router10.post("/admin/invitations/:invitationId/resend", async (req, res) => {
 router10.post("/admin/invitations/:invitationId/cancel", async (req, res) => {
   try {
     const request = getRequest(req);
-    const client = getAdminClient();
+    const client = getAdminClient2();
     await assertFreshAdmin(client, request);
     if (!req.params.invitationId || !isValidUuid(req.params.invitationId)) {
       res.status(400).json({ error: "Identificador de invitaci\xF3n inv\xE1lido." });
@@ -3705,7 +3729,7 @@ router10.post("/admin/invitations/:invitationId/cancel", async (req, res) => {
 router10.post("/admin/import", ownUpload.single("file"), async (req, res) => {
   try {
     const request = getRequest(req);
-    const client = getAdminClient();
+    const client = getAdminClient2();
     await assertFreshAdmin(client, request);
     if (!request.tenantId) throw new Error("No fue posible determinar el establecimiento.");
     if (!req.file?.buffer) {
@@ -3733,7 +3757,7 @@ var admin_default = router10;
 import { Router as Router11 } from "express";
 import multer2 from "multer";
 import { randomUUID as randomUUID2 } from "node:crypto";
-import { createClient as createClient3 } from "@supabase/supabase-js";
+import { createClient as createClient4 } from "@supabase/supabase-js";
 
 // server/middleware/requireSuperAdmin.ts
 function requireSuperAdmin(req, res, next) {
@@ -3763,11 +3787,11 @@ var EMAIL_RE3 = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 function getRequest2(req) {
   return req;
 }
-function getAdminClient2() {
+function getAdminClient3() {
   const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) throw new Error("Supabase administrativo no configurado.");
-  return createClient3(url, key, {
+  return createClient4(url, key, {
     auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false }
   });
 }
@@ -3823,7 +3847,7 @@ router11.use("/platform", requireAuth, requireSuperAdmin);
 router11.get("/platform/tenants", async (req, res) => {
   try {
     const request = getRequest2(req);
-    const client = getAdminClient2();
+    const client = getAdminClient3();
     await assertFreshSuperAdmin(client, request);
     const { data, error } = await client.from("tenants").select("id,name,slug,created_at").order("created_at", { ascending: false });
     if (error) throw error;
@@ -3854,7 +3878,7 @@ router11.get("/platform/tenants", async (req, res) => {
 router11.get("/platform/tenants/:id/summary", async (req, res) => {
   try {
     const request = getRequest2(req);
-    const client = getAdminClient2();
+    const client = getAdminClient3();
     await assertFreshSuperAdmin(client, request);
     const tenantId = req.params.id;
     const tenant = await client.from("tenants").select("id").eq("id", tenantId).maybeSingle();
@@ -3896,7 +3920,7 @@ router11.post("/platform/tenants", async (req, res) => {
   let createdAuthUserId = null;
   try {
     const request = getRequest2(req);
-    client = getAdminClient2();
+    client = getAdminClient3();
     await assertFreshSuperAdmin(client, request);
     const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
     const adminEmail = typeof req.body?.adminEmail === "string" ? req.body.adminEmail.trim().toLowerCase() : "";
@@ -3969,7 +3993,7 @@ router11.post("/platform/tenants", async (req, res) => {
 router11.post("/platform/tenants/:id/invite", async (req, res) => {
   try {
     const request = getRequest2(req);
-    const client = getAdminClient2();
+    const client = getAdminClient3();
     await assertFreshSuperAdmin(client, request);
     const tenantId = req.params.id;
     const { data, error } = await client.from("profiles").select("user_id,email").eq("tenant_id", tenantId).eq("role", "admin").maybeSingle();
@@ -4002,7 +4026,7 @@ router11.post("/platform/tenants/:id/invite", async (req, res) => {
 router11.post("/platform/tenants/:id/import", upload.single("file"), async (req, res) => {
   try {
     const request = getRequest2(req);
-    const client = getAdminClient2();
+    const client = getAdminClient3();
     await assertFreshSuperAdmin(client, request);
     const tenantId = req.params.id;
     if (!req.file?.buffer) {
@@ -4025,7 +4049,7 @@ var platform_default = router11;
 import { Router as Router12 } from "express";
 import { randomUUID as randomUUID3 } from "node:crypto";
 import multer3 from "multer";
-import { createClient as createClient4 } from "@supabase/supabase-js";
+import { createClient as createClient5 } from "@supabase/supabase-js";
 var router12 = Router12();
 var upload2 = multer3({ storage: multer3.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } });
 var documentUpload = multer3({
@@ -4055,11 +4079,11 @@ var INSTITUTION_DOCUMENT_COLUMNS = "id,tenant_id,title,category,original_name,st
 function getRequest3(req) {
   return req;
 }
-function getAdminClient3() {
+function getAdminClient4() {
   const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) throw new Error("Supabase administrativo no configurado.");
-  return createClient4(url, key, {
+  return createClient5(url, key, {
     auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false }
   });
 }
@@ -4292,7 +4316,7 @@ async function sendError(res, error) {
 router12.get("/institution/settings", requireAuth, requireTenant, async (req, res) => {
   try {
     const request = getRequest3(req);
-    const client = getAdminClient3();
+    const client = getAdminClient4();
     const tenantId = await getTenantFromRequest(client, request);
     res.json(await loadDocumentSettings(client, tenantId));
   } catch (error) {
@@ -4304,7 +4328,7 @@ router12.use("/admin/rules", requireAuth, requireTenant, requireRole(ADMIN_ROLES
 router12.get("/onboarding/status", requireAuth, requireTenant, async (req, res) => {
   try {
     const request = getRequest3(req);
-    const client = getAdminClient3();
+    const client = getAdminClient4();
     const tenantId = request.tenantId;
     if (!tenantId) throw new Error("No fue posible determinar el colegio.");
     const [settings, courses, templates, members, rules] = await Promise.all([
@@ -4332,7 +4356,7 @@ router12.get("/onboarding/status", requireAuth, requireTenant, async (req, res) 
 router12.get("/admin/institution", async (req, res) => {
   try {
     const request = getRequest3(req);
-    const client = getAdminClient3();
+    const client = getAdminClient4();
     const tenantId = await getTenantFromRequest(client, request);
     res.json(await loadSettings(client, tenantId));
   } catch (error) {
@@ -4342,7 +4366,7 @@ router12.get("/admin/institution", async (req, res) => {
 router12.patch("/admin/institution", async (req, res) => {
   try {
     const request = getRequest3(req);
-    const client = getAdminClient3();
+    const client = getAdminClient4();
     const tenantId = await getTenantFromRequest(client, request);
     res.json(await updateSettings(client, tenantId, request.user?.sub, req.body ?? {}));
   } catch (error) {
@@ -4352,7 +4376,7 @@ router12.patch("/admin/institution", async (req, res) => {
 router12.post("/admin/institution/logo", upload2.single("logo"), async (req, res) => {
   try {
     const request = getRequest3(req);
-    const client = getAdminClient3();
+    const client = getAdminClient4();
     const tenantId = await getTenantFromRequest(client, request);
     if (!req.file) throw new Error("Seleccione un archivo de logo.");
     res.json(await uploadLogo(client, tenantId, request.user?.sub, req.file));
@@ -4363,7 +4387,7 @@ router12.post("/admin/institution/logo", upload2.single("logo"), async (req, res
 router12.get("/admin/rules", async (req, res) => {
   try {
     const request = getRequest3(req);
-    const client = getAdminClient3();
+    const client = getAdminClient4();
     const tenantId = await getTenantFromRequest(client, request);
     res.json({ rules: await listRules(client, tenantId) });
   } catch (error) {
@@ -4373,7 +4397,7 @@ router12.get("/admin/rules", async (req, res) => {
 router12.post("/admin/rules", async (req, res) => {
   try {
     const request = getRequest3(req);
-    const client = getAdminClient3();
+    const client = getAdminClient4();
     const tenantId = await getTenantFromRequest(client, request);
     res.status(201).json(await createRule(client, tenantId, request.user?.sub, req.body ?? {}));
   } catch (error) {
@@ -4383,7 +4407,7 @@ router12.post("/admin/rules", async (req, res) => {
 router12.patch("/admin/rules/:id", async (req, res) => {
   try {
     const request = getRequest3(req);
-    const client = getAdminClient3();
+    const client = getAdminClient4();
     const tenantId = await getTenantFromRequest(client, request);
     const updates = {
       title: cleanText(req.body?.title, 200),
@@ -4409,7 +4433,7 @@ router12.patch("/admin/rules/:id", async (req, res) => {
 router12.post("/admin/rules/:id/publish", async (req, res) => {
   try {
     const request = getRequest3(req);
-    const client = getAdminClient3();
+    const client = getAdminClient4();
     const tenantId = await getTenantFromRequest(client, request);
     res.json(await publishRule(client, tenantId, req.params.id, request.user?.sub));
   } catch (error) {
@@ -4420,7 +4444,7 @@ router12.use("/platform/tenants/:tenantId/institution", requireAuth, requireSupe
 router12.use("/platform/tenants/:tenantId/rules", requireAuth, requireSuperAdmin);
 router12.get("/platform/tenants/:tenantId/institution", async (req, res) => {
   try {
-    const client = getAdminClient3();
+    const client = getAdminClient4();
     const tenantId = req.params.tenantId;
     await assertTargetTenant(client, tenantId);
     res.json(await loadSettings(client, tenantId));
@@ -4431,7 +4455,7 @@ router12.get("/platform/tenants/:tenantId/institution", async (req, res) => {
 router12.patch("/platform/tenants/:tenantId/institution", async (req, res) => {
   try {
     const request = getRequest3(req);
-    const client = getAdminClient3();
+    const client = getAdminClient4();
     const tenantId = req.params.tenantId;
     await assertTargetTenant(client, tenantId);
     res.json(await updateSettings(client, tenantId, request.user?.sub, req.body ?? {}));
@@ -4445,7 +4469,7 @@ router12.post(
   async (req, res) => {
     try {
       const request = getRequest3(req);
-      const client = getAdminClient3();
+      const client = getAdminClient4();
       const tenantId = req.params.tenantId;
       await assertTargetTenant(client, tenantId);
       if (!req.file) throw new Error("Seleccione un archivo de logo.");
@@ -4457,7 +4481,7 @@ router12.post(
 );
 router12.get("/platform/tenants/:tenantId/rules", async (req, res) => {
   try {
-    const client = getAdminClient3();
+    const client = getAdminClient4();
     const tenantId = req.params.tenantId;
     await assertTargetTenant(client, tenantId);
     res.json({ rules: await listRules(client, tenantId) });
@@ -4468,7 +4492,7 @@ router12.get("/platform/tenants/:tenantId/rules", async (req, res) => {
 router12.post("/platform/tenants/:tenantId/rules", async (req, res) => {
   try {
     const request = getRequest3(req);
-    const client = getAdminClient3();
+    const client = getAdminClient4();
     const tenantId = req.params.tenantId;
     await assertTargetTenant(client, tenantId);
     res.status(201).json(await createRule(client, tenantId, request.user?.sub, req.body ?? {}));
@@ -4479,7 +4503,7 @@ router12.post("/platform/tenants/:tenantId/rules", async (req, res) => {
 router12.post("/platform/tenants/:tenantId/rules/:id/publish", async (req, res) => {
   try {
     const request = getRequest3(req);
-    const client = getAdminClient3();
+    const client = getAdminClient4();
     const tenantId = req.params.tenantId;
     await assertTargetTenant(client, tenantId);
     res.json(await publishRule(client, tenantId, req.params.id, request.user?.sub));
@@ -4490,7 +4514,7 @@ router12.post("/platform/tenants/:tenantId/rules/:id/publish", async (req, res) 
 router12.use("/platform/tenants/:tenantId/documents", requireAuth, requireSuperAdmin);
 router12.get("/platform/tenants/:tenantId/documents", async (req, res) => {
   try {
-    const client = getAdminClient3();
+    const client = getAdminClient4();
     const tenantId = req.params.tenantId;
     await assertTargetTenant(client, tenantId);
     res.json({ documents: await listDocuments(client, tenantId) });
@@ -4504,7 +4528,7 @@ router12.post(
   async (req, res) => {
     try {
       const request = getRequest3(req);
-      const client = getAdminClient3();
+      const client = getAdminClient4();
       const tenantId = req.params.tenantId;
       await assertTargetTenant(client, tenantId);
       if (!req.file) {
@@ -4520,7 +4544,7 @@ router12.post(
 router12.post("/platform/tenants/:tenantId/documents/:id/archive", async (req, res) => {
   try {
     const request = getRequest3(req);
-    const client = getAdminClient3();
+    const client = getAdminClient4();
     const tenantId = req.params.tenantId;
     await assertTargetTenant(client, tenantId);
     const { data, error } = await client.from("institution_documents").update({
