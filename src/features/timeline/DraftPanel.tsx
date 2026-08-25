@@ -3,10 +3,22 @@
 import type React from 'react';
 import { forwardRef, useMemo, useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
-import { Eye, FileText, RefreshCw, FileSignature, Printer, PencilLine } from 'lucide-react';
+import {
+  CheckCircle2,
+  Circle,
+  Eye,
+  FileSearch,
+  FileText,
+  RefreshCw,
+  FileSignature,
+  ListChecks,
+  Printer,
+  PencilLine,
+} from 'lucide-react';
 import { LOGO_URL } from '@/src/lib/logoBase64';
 import { LetterInstitutionalHeader } from '@/src/features/anotaciones/docgen/DocumentPreview/SharedComponents';
 import Button from '@/shared/ui/Button';
+import type { DraftProgress } from '@/shared/lib/hooks/useAuditDraft';
 import './official-document.css';
 
 type DocType = 'informe_cierre_indagacion' | 'informe_concluyente';
@@ -33,6 +45,7 @@ interface DraftPanelProps {
   draftedDocument: string;
   setDraftedDocument: React.Dispatch<React.SetStateAction<string>>;
   draftError: string | null;
+  draftProgress: DraftProgress | null;
   isDrafting: boolean;
   handleDraftDocument: () => Promise<void>;
   studentName: string;
@@ -47,6 +60,7 @@ export default function DraftPanel({
   draftedDocument,
   setDraftedDocument,
   draftError,
+  draftProgress,
   isDrafting,
   handleDraftDocument,
   studentName,
@@ -132,6 +146,60 @@ export default function DraftPanel({
           </>
         )}
       </Button>
+
+      {draftProgress && (
+        <section
+          aria-live="polite"
+          aria-label="Progreso de revisión del informe"
+          className="space-y-3 rounded-xl border border-brand-200 bg-brand-50 p-3 text-left"
+        >
+          <div className="flex items-start gap-2">
+            {isDrafting ? (
+              <RefreshCw className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-brand-600" aria-hidden="true" />
+            ) : draftProgress.phase === 'error' ? (
+              <FileText className="mt-0.5 h-4 w-4 shrink-0 text-gravisima-600" aria-hidden="true" />
+            ) : (
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600" aria-hidden="true" />
+            )}
+            <p className="text-xs font-semibold text-neutral-800">{draftProgress.message}</p>
+          </div>
+
+          {draftProgress.checklist && draftProgress.checklist.length > 0 && (
+            <div className="rounded-lg border border-brand-100 bg-white p-2.5">
+              <div className="mb-2 flex items-center gap-2 text-10px font-semibold uppercase tracking-wider text-neutral-500">
+                <ListChecks className="h-4 w-4 text-brand-600" aria-hidden="true" />
+                Checklist revisado
+              </div>
+              <ul className="space-y-1.5">
+                {draftProgress.checklist.map((item) => (
+                  <li key={item.label} className="flex items-start gap-2 text-10px text-neutral-700">
+                    {item.complete ? (
+                      <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-green-600" aria-hidden="true" />
+                    ) : (
+                      <Circle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden="true" />
+                    )}
+                    <span>{item.label}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {draftProgress.documents && draftProgress.documents.length > 0 && (
+            <div className="rounded-lg border border-brand-100 bg-white p-2.5">
+              <div className="mb-2 flex items-center gap-2 text-10px font-semibold uppercase tracking-wider text-neutral-500">
+                <FileSearch className="h-4 w-4 text-brand-600" aria-hidden="true" />
+                Documentos del expediente
+              </div>
+              <ul className="space-y-1 text-10px text-neutral-700">
+                {draftProgress.documents.map((name) => (
+                  <li key={name} className="truncate">{name}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+      )}
 
       {draftError && (
         <p

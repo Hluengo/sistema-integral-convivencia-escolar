@@ -20,7 +20,7 @@ describe('draft document route configuration', () => {
     assert.equal(limits.documents.maxDocuments, 4);
     assert.equal(limits.legalSourceChars, 28_000);
     assert.equal(limits.generation.maxOutputTokens, 5_000);
-    assert.equal(limits.generation.timeoutMs, 18_000);
+    assert.equal(limits.generation.timeoutMs, 40_000);
   });
 
   it('rechaza documentos no vigentes en redacción asistida', () => {
@@ -68,9 +68,9 @@ describe('draft document route configuration', () => {
   it('reserva margen antes del timeout de Vercel', () => {
     const startedAt = 1_000;
 
-    assert.equal(getRemainingDraftBudgetMs(startedAt, 1_000), 29_000);
+    assert.equal(getRemainingDraftBudgetMs(startedAt, 1_000), 59_000);
     assert.equal(getBoundedDraftTimeoutMs(12_000, startedAt, 1_000), 12_000);
-    assert.equal(getBoundedDraftTimeoutMs(20_000, startedAt, 27_000), 1_500);
-    assert.equal(getBoundedDraftTimeoutMs(20_000, startedAt, 30_000), 0);
+    assert.equal(getBoundedDraftTimeoutMs(20_000, startedAt, 57_000), 1_500);
+    assert.equal(getBoundedDraftTimeoutMs(20_000, startedAt, 60_000), 0);
   });
 });

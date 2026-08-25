@@ -57,6 +57,7 @@ export default function CaseLegalWorkspace({
           setSelectedDocType={draft.setSelectedDocType}
           draftedDocument={draft.draftedDocument}
           draftError={draft.draftError}
+          draftProgress={draft.draftProgress}
           isDrafting={draft.isDrafting}
           setDraftedDocument={draft.setDraftedDocument}
           handleDraftDocument={draft.handleDraftDocument}

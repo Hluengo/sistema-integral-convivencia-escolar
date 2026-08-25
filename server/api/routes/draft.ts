@@ -34,7 +34,7 @@ const DOCUMENT_SIGNERS: Record<DocType, string> = {
   informe_concluyente: 'Equipo de Convivencia Escolar',
 };
 
-const VERCEL_FUNCTION_BUDGET_MS = 29_000;
+const VERCEL_FUNCTION_BUDGET_MS = 59_000;
 const RESPONSE_GUARD_MS = 1_500;
 const MIN_GENERATION_TIMEOUT_MS = 4_000;
 
@@ -66,7 +66,7 @@ export const DRAFT_CONTEXT_LIMITS: Record<
       maxExtractedCharsPerDocument: 12_000,
       maxExtractedCharsTotal: 32_000,
     },
-    generation: { maxOutputTokens: 5000, timeoutMs: 18_000 },
+    generation: { maxOutputTokens: 5000, timeoutMs: 40_000 },
   },
   informe_concluyente: {
     legalSourceChars: 32_000,
@@ -78,7 +78,7 @@ export const DRAFT_CONTEXT_LIMITS: Record<
       maxExtractedCharsPerDocument: 14_000,
       maxExtractedCharsTotal: 40_000,
     },
-    generation: { maxOutputTokens: 6000, timeoutMs: 18_000 },
+    generation: { maxOutputTokens: 6000, timeoutMs: 40_000 },
   },
 };
 
@@ -117,6 +117,15 @@ REGLAS INNEGOCIABLES:
 
 function stringifyList(values: string[], empty: string): string {
   return values.length ? values.map((value) => `- ${value}`).join('\n') : empty;
+}
+
+function displayDocumentName(value: string): string {
+  const lastPart = value.split('/').at(-1) || value;
+  try {
+    return decodeURIComponent(lastPart);
+  } catch {
+    return lastPart;
+  }
 }
 
 export function isGeminiTimeout(message: string): boolean {
@@ -165,6 +174,18 @@ router.post(
   rateLimit,
   async (req, res) => {
     const startedAt = Date.now();
+    let streamStarted = false;
+    const sendStreamEvent = (event: Record<string, unknown>) => {
+      if (!streamStarted) {
+        streamStarted = true;
+        res.status(200);
+        res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-cache, no-transform');
+        res.setHeader('X-Accel-Buffering', 'no');
+        res.flushHeaders();
+      }
+      res.write(`${JSON.stringify(event)}\n`);
+    };
     try {
       const body = req.body as Record<string, unknown>;
       const docTypeValue = requireStr(body, 'docType', 50);
@@ -243,16 +264,76 @@ router.post(
         ...safeHistory.map((entry) => entry.document),
         ...safeChecklist.map((item) => item.documentPath || item.document),
       ].filter(Boolean);
-      const [legalSources, extractedDocuments] = await Promise.all([
+      const checklistProgress = safeChecklist.map((item) => ({
+        label: item.label || 'Ítem sin nombre',
+        complete: item.complete,
+      }));
+      const documentNames = [...new Set(documentValues.map(displayDocumentName))];
+      sendStreamEvent({
+        type: 'progress',
+        phase: 'checklist',
+        message: 'Revisando el checklist de debido proceso.',
+        checklist: checklistProgress,
+      });
+      sendStreamEvent({
+        type: 'progress',
+        phase: 'documents',
+        message: documentNames.length
+          ? `Revisando ${documentNames.length} documento(s) asociado(s).`
+          : 'No hay documentos adjuntos asociados para revisar.',
+        documents: documentNames,
+      });
+      sendStreamEvent({
+        type: 'progress',
+        phase: 'sources',
+        message: 'Revisando fuentes jurídicas autorizadas.',
+      });
+      const [legalSources, extractedDocuments, templatePrompt] = await Promise.all([
         getRelevantLegalSources(
           `${DOCUMENT_TITLES[docType]} ${infractionType} convivencia escolar debido proceso reglamento interno medidas disciplinarias apelación`,
           contextLimits.legalSourceChars,
         ),
         extractCaseDocuments(documentValues, authReq, {
           ...contextLimits.documents,
-          deadlineMs: 8_000,
+          deadlineMs: 20_000,
+          onDocumentStart: ({ name, index, total }) =>
+            sendStreamEvent({
+              type: 'progress',
+              phase: 'document',
+              message: `Revisando documento ${index} de ${total}: ${name}.`,
+              document: { name, index, total },
+            }),
         }),
+        (async () => {
+          try {
+            const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? '';
+            const templates = (await httpsGet(
+              getSupabaseHostname(),
+              `/rest/v1/document_templates?doc_type=eq.${docType}&tenant_id=eq.${authReq.tenantId}&select=system_prompt&limit=1`,
+              { apikey: anonKey, Authorization: `Bearer ${authReq.authToken}` },
+            )) as Array<{ system_prompt?: string }>;
+            return templates[0]?.system_prompt?.trim() || null;
+          } catch {
+            return null;
+          }
+        })(),
       ]);
+      sendStreamEvent({
+        type: 'progress',
+        phase: 'checklist',
+        message: 'Checklist revisado y agregado al dossier.',
+        checklist: checklistProgress,
+      });
+      sendStreamEvent({
+        type: 'progress',
+        phase: 'sources',
+        message: 'Fuentes jurídicas revisadas y agregadas al dossier.',
+      });
+      sendStreamEvent({
+        type: 'progress',
+        phase: 'template',
+        message: 'Aplicando la plantilla institucional del informe.',
+      });
       const dossier = `
 # DOSSIER DEL EXPEDIENTE — DOCUMENTO CITADO
 
@@ -323,19 +404,6 @@ ${document.text ? redactSensitiveForAI(document.text, knownSensitiveValues) : `E
 ${legalSources}
 `;
 
-      let templatePrompt: string | null = null;
-      try {
-        const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? '';
-        const templates = (await httpsGet(
-          getSupabaseHostname(),
-          `/rest/v1/document_templates?doc_type=eq.${docType}&tenant_id=eq.${authReq.tenantId}&select=system_prompt&limit=1`,
-          { apikey: anonKey, Authorization: `Bearer ${authReq.authToken}` },
-        )) as Array<{ system_prompt?: string }>;
-        templatePrompt = templates[0]?.system_prompt?.trim() || null;
-      } catch {
-        // La generación conserva una plantilla local mínima si una plantilla no está disponible.
-      }
-
       let document: string;
       const provider = 'Gemini';
       const systemInstruction = `${documentPolicy(docType)}\n\nPLANTILLA INSTITUCIONAL:\n${templatePrompt || getTemplateFallback()}`;
@@ -345,12 +413,19 @@ ${legalSources}
           startedAt,
         );
         if (geminiTimeoutMs < MIN_GENERATION_TIMEOUT_MS) {
-          res.status(504).json({
+          sendStreamEvent({
+            type: 'error',
             error:
               'No quedó tiempo suficiente para redactar el documento antes del límite de producción. Intente nuevamente.',
           });
+          res.end();
           return;
         }
+        sendStreamEvent({
+          type: 'progress',
+          phase: 'generation',
+          message: 'Antecedentes revisados. Gemini está redactando el informe de cierre.',
+        });
         document = await callGeminiLegalDraft(systemInstruction, dossier, {
           ...contextLimits.generation,
           timeoutMs: geminiTimeoutMs,
@@ -360,14 +435,22 @@ ${legalSources}
         if (!isRecoverableGeminiDraftError(message)) {
           throw error;
         }
-        res.status(getGeminiDraftErrorStatus(message)).json({
+        sendStreamEvent({
+          type: 'error',
           error: getGeminiDraftErrorMessage(message),
           provider: 'Gemini',
         });
+        res.end();
         return;
       }
 
-      res.json({
+      sendStreamEvent({
+        type: 'progress',
+        phase: 'completed',
+        message: 'Informe redactado. Puedes revisarlo y editarlo antes de imprimir.',
+      });
+      sendStreamEvent({
+        type: 'result',
         success: true,
         document,
         provider,
@@ -375,12 +458,23 @@ ${legalSources}
         signer: DOCUMENT_SIGNERS[docType],
         consideredDocuments: extractedDocuments.map((document) => document.name),
       });
+      res.end();
     } catch (error) {
       if (isRequestValidationError(error)) {
+        if (streamStarted) {
+          sendStreamEvent({ type: 'error', error: error.message });
+          res.end();
+          return;
+        }
         res.status(400).json({ error: error.message });
         return;
       }
       console.error('Error al generar borrador de documento:', error);
+      if (streamStarted) {
+        sendStreamEvent({ type: 'error', error: 'Error interno del servidor al redactar documento.' });
+        res.end();
+        return;
+      }
       res.status(500).json({ error: 'Error interno del servidor al redactar documento.' });
     }
   },

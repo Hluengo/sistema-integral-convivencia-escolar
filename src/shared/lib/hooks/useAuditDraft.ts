@@ -11,6 +11,52 @@ interface UseAuditDraftArgs {
   causa: Causa;
 }
 
+export interface DraftProgress {
+  phase:
+    | 'preparing'
+    | 'checklist'
+    | 'documents'
+    | 'document'
+    | 'sources'
+    | 'template'
+    | 'generation'
+    | 'completed'
+    | 'error';
+  message: string;
+  checklist?: Array<{ label: string; complete: boolean }>;
+  documents?: string[];
+  document?: { name: string; index: number; total: number };
+}
+
+async function readDraftResponse(
+  response: Response,
+  onProgress: (progress: DraftProgress) => void,
+): Promise<Record<string, unknown>> {
+  const reader = response.body?.getReader();
+  if (!reader) return (await response.json()) as Record<string, unknown>;
+
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let finalEvent: Record<string, unknown> | null = null;
+  const consume = (line: string) => {
+    if (!line.trim()) return;
+    const event = JSON.parse(line) as Record<string, unknown>;
+    if (event.type === 'progress') onProgress(event as unknown as DraftProgress);
+    else finalEvent = event;
+  };
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    buffer += decoder.decode(value, { stream: !done });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+    lines.forEach(consume);
+    if (done) break;
+  }
+  consume(buffer);
+  return finalEvent ?? { error: 'El servidor no devolvió el resultado del informe.' };
+}
+
 async function getAuthHeaders(): Promise<Record<string, string>> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   try {
@@ -35,6 +81,7 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
   >('informe_cierre_indagacion');
   const [draftedDocument, setDraftedDocument] = useState<string>('');
   const [draftError, setDraftError] = useState<string | null>(null);
+  const [draftProgress, setDraftProgress] = useState<DraftProgress | null>(null);
   const [isDrafting, setIsDrafting] = useState<boolean>(false);
   const isMountedRef = useRef(true);
   const auditAbortRef = useRef<AbortController | null>(null);
@@ -98,6 +145,7 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
     setIsDrafting(true);
     setDraftedDocument('');
     setDraftError(null);
+    setDraftProgress({ phase: 'preparing', message: 'Preparando el dossier del expediente.' });
     try {
       const headers = await getAuthHeaders();
       draftAbortRef.current?.abort();
@@ -128,12 +176,26 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
           fechaUltimaActualizacion: causa.fechaUltimaActualizacion,
         }),
       });
-      const data = await response.json();
+      const data = await readDraftResponse(response, (progress) => {
+        if (isMountedRef.current) {
+          setDraftProgress((current) => (current ? { ...current, ...progress } : progress));
+        }
+      });
       if (!isMountedRef.current) {
         return;
       }
-      if (data.success) setDraftedDocument(data.document);
-      else setDraftError(data.error || 'No fue posible generar el borrador.');
+      if (data.success) {
+        setDraftedDocument(String(data.document ?? ''));
+      } else {
+        const errorMessage = String(data.error ?? 'No fue posible generar el borrador.');
+        setDraftError(errorMessage);
+        setDraftProgress((current) => ({
+          phase: 'error',
+          message: errorMessage,
+          checklist: current?.checklist,
+          documents: current?.documents,
+        }));
+      }
     } catch (error: unknown) {
       if (!isMountedRef.current) {
         return;
@@ -155,6 +217,7 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
     draftedDocument,
     setDraftedDocument,
     draftError,
+    draftProgress,
     isDrafting,
     handleRunAudit,
     handleDraftDocument,

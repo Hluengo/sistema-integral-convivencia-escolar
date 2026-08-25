@@ -117,6 +117,7 @@ export interface CaseDocumentExtractionOptions {
   maxExtractedCharsPerDocument?: number;
   maxExtractedCharsTotal?: number;
   deadlineMs?: number;
+  onDocumentStart?: (progress: { name: string; index: number; total: number }) => void;
 }
 
 /** Extrae solo PDF y DOCX vinculados explícitamente al expediente solicitado. */
@@ -138,7 +139,8 @@ export async function extractCaseDocuments(
   let remaining = options.maxExtractedCharsTotal ?? MAX_EXTRACTED_CHARS_TOTAL;
   const results: CaseDocumentExtract[] = [];
 
-  for (const storagePath of uniquePaths) {
+  for (const [index, storagePath] of uniquePaths.entries()) {
+    options.onDocumentStart?.({ name: fileName(storagePath), index: index + 1, total: uniquePaths.length });
     if (Date.now() >= deadlineAt) {
       results.push({
         name: 'Antecedentes restantes',

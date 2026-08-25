@@ -2631,7 +2631,8 @@ async function extractCaseDocuments(documentValues, authReq, options = {}) {
   const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? "";
   let remaining = options.maxExtractedCharsTotal ?? MAX_EXTRACTED_CHARS_TOTAL;
   const results = [];
-  for (const storagePath of uniquePaths) {
+  for (const [index, storagePath] of uniquePaths.entries()) {
+    options.onDocumentStart?.({ name: fileName(storagePath), index: index + 1, total: uniquePaths.length });
     if (Date.now() >= deadlineAt) {
       results.push({
         name: "Antecedentes restantes",
@@ -2685,7 +2686,7 @@ var DOCUMENT_SIGNERS = {
   informe_cierre_indagacion: "Equipo Encargado de Indagaci\xF3n",
   informe_concluyente: "Equipo de Convivencia Escolar"
 };
-var VERCEL_FUNCTION_BUDGET_MS = 29e3;
+var VERCEL_FUNCTION_BUDGET_MS = 59e3;
 var RESPONSE_GUARD_MS = 1500;
 var MIN_GENERATION_TIMEOUT_MS = 4e3;
 var DRAFT_CONTEXT_LIMITS = {
@@ -2699,7 +2700,7 @@ var DRAFT_CONTEXT_LIMITS = {
       maxExtractedCharsPerDocument: 12e3,
       maxExtractedCharsTotal: 32e3
     },
-    generation: { maxOutputTokens: 5e3, timeoutMs: 18e3 }
+    generation: { maxOutputTokens: 5e3, timeoutMs: 4e4 }
   },
   informe_concluyente: {
     legalSourceChars: 32e3,
@@ -2711,7 +2712,7 @@ var DRAFT_CONTEXT_LIMITS = {
       maxExtractedCharsPerDocument: 14e3,
       maxExtractedCharsTotal: 4e4
     },
-    generation: { maxOutputTokens: 6e3, timeoutMs: 18e3 }
+    generation: { maxOutputTokens: 6e3, timeoutMs: 4e4 }
   }
 };
 function getSupabaseHostname2() {
@@ -2746,14 +2747,19 @@ REGLAS INNEGOCIABLES:
 function stringifyList(values, empty) {
   return values.length ? values.map((value) => `- ${value}`).join("\n") : empty;
 }
+function displayDocumentName(value) {
+  const lastPart = value.split("/").at(-1) || value;
+  try {
+    return decodeURIComponent(lastPart);
+  } catch {
+    return lastPart;
+  }
+}
 function isGeminiTimeout(message) {
   return message.includes("generativelanguage.googleapis.com") && message.includes("tiempo m\xE1ximo");
 }
 function isRecoverableGeminiDraftError(message) {
   return message.includes("GEMINI_API_KEY no configurada") || message.includes("Gemini error: 400") || message.includes("Gemini error: 403") || message.includes("Gemini error: 404") || message.includes("Gemini no devolvi\xF3 contenido de texto") || isGeminiTimeout(message);
-}
-function getGeminiDraftErrorStatus(message) {
-  return isGeminiTimeout(message) ? 504 : 503;
 }
 function getGeminiDraftErrorMessage(message) {
   if (isGeminiTimeout(message)) {
@@ -2775,6 +2781,19 @@ router3.post(
   rateLimit,
   async (req, res) => {
     const startedAt = Date.now();
+    let streamStarted = false;
+    const sendStreamEvent = (event) => {
+      if (!streamStarted) {
+        streamStarted = true;
+        res.status(200);
+        res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
+        res.setHeader("Cache-Control", "no-cache, no-transform");
+        res.setHeader("X-Accel-Buffering", "no");
+        res.flushHeaders();
+      }
+      res.write(`${JSON.stringify(event)}
+`);
+    };
     try {
       const body = req.body;
       const docTypeValue = requireStr(body, "docType", 50);
@@ -2835,16 +2854,73 @@ router3.post(
         ...safeHistory.map((entry) => entry.document),
         ...safeChecklist.map((item) => item.documentPath || item.document)
       ].filter(Boolean);
-      const [legalSources, extractedDocuments] = await Promise.all([
+      const checklistProgress = safeChecklist.map((item) => ({
+        label: item.label || "\xCDtem sin nombre",
+        complete: item.complete
+      }));
+      const documentNames = [...new Set(documentValues.map(displayDocumentName))];
+      sendStreamEvent({
+        type: "progress",
+        phase: "checklist",
+        message: "Revisando el checklist de debido proceso.",
+        checklist: checklistProgress
+      });
+      sendStreamEvent({
+        type: "progress",
+        phase: "documents",
+        message: documentNames.length ? `Revisando ${documentNames.length} documento(s) asociado(s).` : "No hay documentos adjuntos asociados para revisar.",
+        documents: documentNames
+      });
+      sendStreamEvent({
+        type: "progress",
+        phase: "sources",
+        message: "Revisando fuentes jur\xEDdicas autorizadas."
+      });
+      const [legalSources, extractedDocuments, templatePrompt] = await Promise.all([
         getRelevantLegalSources(
           `${DOCUMENT_TITLES[docType]} ${infractionType} convivencia escolar debido proceso reglamento interno medidas disciplinarias apelaci\xF3n`,
           contextLimits.legalSourceChars
         ),
         extractCaseDocuments(documentValues, authReq, {
           ...contextLimits.documents,
-          deadlineMs: 8e3
-        })
+          deadlineMs: 2e4,
+          onDocumentStart: ({ name, index, total }) => sendStreamEvent({
+            type: "progress",
+            phase: "document",
+            message: `Revisando documento ${index} de ${total}: ${name}.`,
+            document: { name, index, total }
+          })
+        }),
+        (async () => {
+          try {
+            const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? "";
+            const templates = await httpsGet(
+              getSupabaseHostname2(),
+              `/rest/v1/document_templates?doc_type=eq.${docType}&tenant_id=eq.${authReq.tenantId}&select=system_prompt&limit=1`,
+              { apikey: anonKey, Authorization: `Bearer ${authReq.authToken}` }
+            );
+            return templates[0]?.system_prompt?.trim() || null;
+          } catch {
+            return null;
+          }
+        })()
       ]);
+      sendStreamEvent({
+        type: "progress",
+        phase: "checklist",
+        message: "Checklist revisado y agregado al dossier.",
+        checklist: checklistProgress
+      });
+      sendStreamEvent({
+        type: "progress",
+        phase: "sources",
+        message: "Fuentes jur\xEDdicas revisadas y agregadas al dossier."
+      });
+      sendStreamEvent({
+        type: "progress",
+        phase: "template",
+        message: "Aplicando la plantilla institucional del informe."
+      });
       const dossier = `
 # DOSSIER DEL EXPEDIENTE \u2014 DOCUMENTO CITADO
 
@@ -2896,17 +2972,6 @@ ${document2.text ? redactSensitiveForAI(document2.text, knownSensitiveValues) : 
 ## FUENTES AUTORIZADAS
 ${legalSources}
 `;
-      let templatePrompt = null;
-      try {
-        const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? "";
-        const templates = await httpsGet(
-          getSupabaseHostname2(),
-          `/rest/v1/document_templates?doc_type=eq.${docType}&tenant_id=eq.${authReq.tenantId}&select=system_prompt&limit=1`,
-          { apikey: anonKey, Authorization: `Bearer ${authReq.authToken}` }
-        );
-        templatePrompt = templates[0]?.system_prompt?.trim() || null;
-      } catch {
-      }
       let document;
       const provider = "Gemini";
       const systemInstruction = `${documentPolicy(docType)}
@@ -2919,11 +2984,18 @@ ${templatePrompt || getTemplateFallback()}`;
           startedAt
         );
         if (geminiTimeoutMs < MIN_GENERATION_TIMEOUT_MS) {
-          res.status(504).json({
+          sendStreamEvent({
+            type: "error",
             error: "No qued\xF3 tiempo suficiente para redactar el documento antes del l\xEDmite de producci\xF3n. Intente nuevamente."
           });
+          res.end();
           return;
         }
+        sendStreamEvent({
+          type: "progress",
+          phase: "generation",
+          message: "Antecedentes revisados. Gemini est\xE1 redactando el informe de cierre."
+        });
         document = await callGeminiLegalDraft(systemInstruction, dossier, {
           ...contextLimits.generation,
           timeoutMs: geminiTimeoutMs
@@ -2933,13 +3005,21 @@ ${templatePrompt || getTemplateFallback()}`;
         if (!isRecoverableGeminiDraftError(message)) {
           throw error;
         }
-        res.status(getGeminiDraftErrorStatus(message)).json({
+        sendStreamEvent({
+          type: "error",
           error: getGeminiDraftErrorMessage(message),
           provider: "Gemini"
         });
+        res.end();
         return;
       }
-      res.json({
+      sendStreamEvent({
+        type: "progress",
+        phase: "completed",
+        message: "Informe redactado. Puedes revisarlo y editarlo antes de imprimir."
+      });
+      sendStreamEvent({
+        type: "result",
         success: true,
         document,
         provider,
@@ -2947,12 +3027,23 @@ ${templatePrompt || getTemplateFallback()}`;
         signer: DOCUMENT_SIGNERS[docType],
         consideredDocuments: extractedDocuments.map((document2) => document2.name)
       });
+      res.end();
     } catch (error) {
       if (isRequestValidationError(error)) {
+        if (streamStarted) {
+          sendStreamEvent({ type: "error", error: error.message });
+          res.end();
+          return;
+        }
         res.status(400).json({ error: error.message });
         return;
       }
       console.error("Error al generar borrador de documento:", error);
+      if (streamStarted) {
+        sendStreamEvent({ type: "error", error: "Error interno del servidor al redactar documento." });
+        res.end();
+        return;
+      }
       res.status(500).json({ error: "Error interno del servidor al redactar documento." });
     }
   }
