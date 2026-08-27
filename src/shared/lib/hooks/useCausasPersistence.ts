@@ -1,6 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { type Dispatch, type SetStateAction, useCallback, useEffect, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import type { Causa } from '@/shared/lib/types';
 import { saveBitacora } from '@/shared/api/services/bitacora.service';
 import { saveChecklist } from '@/shared/api/services/checklist.service';
@@ -28,6 +29,7 @@ export function useCausasPersistence({
   isAuthenticated,
   onPersisted,
 }: UseCausasPersistenceArgs) {
+  const queryClient = useQueryClient();
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const saveIdleTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const saveGenerationRef = useRef(0);
@@ -134,6 +136,11 @@ export function useCausasPersistence({
         }
 
         onPersisted(causasToSave);
+        for (const causa of causasToSave) {
+          if (causa.incidenteId) {
+            void queryClient.invalidateQueries({ queryKey: ['incidente', causa.incidenteId] });
+          }
+        }
         setSaveStatus('saved');
         saveIdleTimeoutRef.current = setTimeout(() => {
           if (isMountedRef.current) {
@@ -157,7 +164,7 @@ export function useCausasPersistence({
         saveIdleTimeoutRef.current = undefined;
       }
     };
-  }, [causas, isAuthenticated, onPersisted, setSaveStatus]);
+  }, [causas, isAuthenticated, onPersisted, queryClient, setSaveStatus]);
 
   return { markCausasHydrated, markCausaHydrated };
 }

@@ -80,6 +80,7 @@ export function useBitacoraLog({ causa, onUpdateCausa }: UseBitacoraLogArgs) {
           documentoAdjunto,
         });
         if (!newEntry) return;
+        newEntry.compartidoGrupal = scope === 'incidente';
 
         onUpdateCausa({
           ...causa,

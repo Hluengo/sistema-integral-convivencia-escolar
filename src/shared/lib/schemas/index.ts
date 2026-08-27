@@ -15,6 +15,7 @@ export const BitacoraEntrySchema = z.object({
   descripcion: z.string(),
   participantes: z.array(z.string()),
   documentoAdjunto: z.string().optional(),
+  compartidoGrupal: z.boolean().optional(),
 });
 
 export const ChecklistItemSchema = z.object({
@@ -33,6 +34,7 @@ export const ChecklistItemSchema = z.object({
 export const ChecklistProgressEntrySchema = z.object({
   id: z.string(),
   causaId: z.string(),
+  incidenteId: z.string().uuid().optional(),
   checklistItemId: z.string(),
   title: z.string().min(1),
   description: z.string().min(1),

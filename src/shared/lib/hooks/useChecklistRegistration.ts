@@ -42,9 +42,16 @@ export function useChecklistRegistration({
       setRegName(item.registradoPor || getResponsableName());
       setRegObservations(item.observaciones || '');
       setRegFileName(item.documentoNombre || '');
-      setDocumentScope('causa');
+      const latestMilestone = causa.bitacora
+        .filter(
+          (entry) =>
+            entry.titulo === `Registro de Hito: ${item.label}` ||
+            entry.titulo === `Rectificación de Hito: ${item.label}`,
+        )
+        .sort((first, second) => second.fecha.localeCompare(first.fecha))[0];
+      setDocumentScope(latestMilestone?.compartidoGrupal && causa.incidenteId ? 'incidente' : 'causa');
     },
-    [getResponsableName],
+    [causa.bitacora, causa.incidenteId, getResponsableName],
   );
 
   const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,6 +88,7 @@ export function useChecklistRegistration({
             responsable,
             privacyMode ? causa.nnaProtectedName : causa.estudianteNombre,
           ],
+          compartidoGrupal: documentScope === 'incidente' && Boolean(causa.incidenteId),
         };
 
         let documentoUrl = targetItem?.documentoUrl;

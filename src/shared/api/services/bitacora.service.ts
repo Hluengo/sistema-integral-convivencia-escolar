@@ -17,6 +17,7 @@ interface BitacoraSnapshotRow {
   descripcion: string;
   participantes: string[];
   documento_adjunto: string | null;
+  compartido_grupal: boolean;
 }
 
 export function buildBitacoraSnapshotDelta(
@@ -39,6 +40,7 @@ export function buildBitacoraSnapshotDelta(
       documento_adjunto: entry.documentoAdjunto
         ? normalizeDocumentPath(entry.documentoAdjunto)
         : null,
+      compartido_grupal: entry.compartidoGrupal ?? false,
     }));
 
   const activeIds = new Set(entries.map((entry) => entry.id));

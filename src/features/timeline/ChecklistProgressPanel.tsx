@@ -39,7 +39,10 @@ export default function ChecklistProgressPanel({
   item,
   canRegister,
 }: ChecklistProgressPanelProps) {
-  const { entries, isLoading, error, createEntry, isCreating } = useChecklistProgress(causaId);
+  const { entries, isLoading, error, createEntry, isCreating } = useChecklistProgress(
+    causaId,
+    incidenteId,
+  );
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -200,7 +203,7 @@ export default function ChecklistProgressPanel({
             <label htmlFor={`progress-share-${item.id}`} className="flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50/50 p-2.5 text-10px text-sky-950 sm:col-span-2">
               <input
                 id={`progress-share-${item.id}`}
-                aria-label="Compartir documento con el incidente grupal"
+                aria-label="Compartir avance con el incidente grupal"
                 type="checkbox"
                 checked={documentScope === 'incidente'}
                 onChange={(event) =>
@@ -209,7 +212,7 @@ export default function ChecklistProgressPanel({
                 className="mt-0.5 h-3.5 w-3.5 rounded border-sky-300 text-brand-600 focus:ring-brand-500"
               />
               <span>
-                Compartir este documento con el incidente grupal y sus expedientes vinculados.
+                Compartir este avance y su documento con el incidente grupal y sus expedientes vinculados.
               </span>
             </label>
           )}

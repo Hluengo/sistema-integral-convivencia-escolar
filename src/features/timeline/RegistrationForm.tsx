@@ -119,19 +119,19 @@ export default function RegistrationForm({
       {causa.incidenteId && (
         <fieldset className="rounded-lg border border-sky-200 bg-sky-50/50 p-2.5">
           <legend className="font-semibold text-9px text-sky-800 uppercase">
-            Visibilidad del documento
+            Visibilidad del hito
           </legend>
           <label htmlFor={`reg-share-${item.id}`} className="mt-1 flex items-start gap-2 text-10px text-sky-950">
             <input
               id={`reg-share-${item.id}`}
-              aria-label="Compartir documento con el incidente grupal"
+              aria-label="Compartir hito con el incidente grupal"
               type="checkbox"
               checked={documentScope === 'incidente'}
               onChange={(event) => setDocumentScope(event.target.checked ? 'incidente' : 'causa')}
               className="mt-0.5 h-3.5 w-3.5 rounded border-sky-300 text-brand-600 focus:ring-brand-500"
             />
             <span>
-              Compartir con el incidente grupal. Será visible en los expedientes vinculados.
+              Compartir este hito y su documento con el incidente grupal y sus expedientes vinculados.
             </span>
           </label>
         </fieldset>

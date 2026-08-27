@@ -8,18 +8,23 @@ import {
   type CreateChecklistProgressInput,
 } from '../../api/services/checklistProgress.service';
 
-export function useChecklistProgress(causaId: string) {
+export function useChecklistProgress(causaId: string, incidenteId?: string) {
   const queryClient = useQueryClient();
-  const queryKey = ['checklist-progress', causaId] as const;
+  const queryKey = ['checklist-progress', causaId, incidenteId ?? null] as const;
   const query = useQuery({
     queryKey,
-    queryFn: () => fetchChecklistProgress(causaId),
+    queryFn: () => fetchChecklistProgress(causaId, incidenteId),
     enabled: Boolean(causaId),
     staleTime: 30_000,
   });
   const createMutation = useMutation({
     mutationFn: (input: CreateChecklistProgressInput) => createChecklistProgress(input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['checklist-progress', causaId] });
+      if (incidenteId) {
+        void queryClient.invalidateQueries({ queryKey: ['incidente', incidenteId] });
+      }
+    },
   });
   const invalidateMutation = useMutation({
     mutationFn: ({ id, reason }: { id: string; reason: string }) =>

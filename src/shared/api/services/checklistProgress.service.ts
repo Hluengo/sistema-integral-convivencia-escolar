@@ -7,6 +7,7 @@ import { normalizeDocumentPath, resolveDocumentOwnerId, uploadDocument } from '.
 
 interface ProgressRow {
   id: string;
+  incidente_id: string | null;
   causa_id: string;
   checklist_item_id: string;
   title: string;
@@ -23,12 +24,13 @@ interface ProgressRow {
 }
 
 const PROGRESS_COLUMNS =
-  'id,causa_id,checklist_item_id,title,description,entry_type,occurred_at,document_name,document_url,created_by,created_at,invalidated_at,invalidated_by,invalidation_reason';
+  'id,causa_id,incidente_id,checklist_item_id,title,description,entry_type,occurred_at,document_name,document_url,created_by,created_at,invalidated_at,invalidated_by,invalidation_reason';
 
 function mapRow(row: ProgressRow): ChecklistProgressEntry | null {
   const parsed = ChecklistProgressEntrySchema.safeParse({
     id: row.id,
     causaId: row.causa_id,
+    incidenteId: row.incidente_id || undefined,
     checklistItemId: row.checklist_item_id,
     title: row.title,
     description: row.description,
@@ -63,14 +65,32 @@ export interface CreateChecklistProgressInput {
   incidenteId?: string;
 }
 
-export async function fetchChecklistProgress(causaId: string): Promise<ChecklistProgressEntry[]> {
-  const { data, error } = await supabase
-    .from('checklist_progress_entries')
-    .select(PROGRESS_COLUMNS)
-    .eq('causa_id', causaId)
-    .order('occurred_at', { ascending: false });
-  if (error) throw error;
-  return ((data || []) as ProgressRow[])
+export async function fetchChecklistProgress(
+  causaId: string,
+  incidenteId?: string,
+): Promise<ChecklistProgressEntry[]> {
+  const queries = [
+    supabase
+      .from('checklist_progress_entries')
+      .select(PROGRESS_COLUMNS)
+      .eq('causa_id', causaId)
+      .order('occurred_at', { ascending: false }),
+  ];
+  if (incidenteId) {
+    queries.push(
+      supabase
+        .from('checklist_progress_entries')
+        .select(PROGRESS_COLUMNS)
+        .eq('incidente_id', incidenteId)
+        .order('occurred_at', { ascending: false }),
+    );
+  }
+  const results = await Promise.all(queries);
+  const rows = results.flatMap(({ data, error }) => {
+    if (error) throw error;
+    return (data || []) as ProgressRow[];
+  });
+  return [...new Map(rows.map((row) => [row.id, row])).values()]
     .map(mapRow)
     .filter((entry): entry is ChecklistProgressEntry => entry !== null);
 }
@@ -87,6 +107,7 @@ export async function createChecklistProgress(
     .from('checklist_progress_entries')
     .insert({
       causa_id: input.causaId,
+      incidente_id: scope === 'incidente' ? input.incidenteId : null,
       checklist_item_id: input.checklistItemId,
       title: input.title.trim(),
       description: input.description.trim(),

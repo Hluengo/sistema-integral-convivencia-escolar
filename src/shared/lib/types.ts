@@ -50,6 +50,7 @@ export interface BitacoraEntry {
   descripcion: string;
   participantes: string[];
   documentoAdjunto?: string;
+  compartidoGrupal?: boolean;
 }
 
 export interface ChecklistItem {
@@ -68,6 +69,7 @@ export interface ChecklistItem {
 export interface ChecklistProgressEntry {
   id: string;
   causaId: string;
+  incidenteId?: string;
   checklistItemId: string;
   title: string;
   description: string;

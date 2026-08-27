@@ -8,6 +8,7 @@ process.env.VITE_SUPABASE_URL ??= 'https://example.supabase.co';
 process.env.VITE_SUPABASE_ANON_KEY ??= 'anon-key-for-unit-tests';
 
 const VALID_CAUSA_ID = '00000000-0000-4000-8000-000000000001';
+const VALID_INCIDENTE_ID = '00000000-0000-4000-8000-000000000002';
 const VALID_ITEM_ID = 'chk_rec_1';
 
 class MockQueryBuilder<T> {
@@ -67,6 +68,10 @@ const migrationPath = resolve(
   dirname(fileURLToPath(import.meta.url)),
   '../../../../supabase/migrations/20260812165845_add_checklist_progress_entries.sql',
 );
+const sharingMigrationPath = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  '../../../../supabase/migrations/20260827184509_share_incident_progress_and_milestones.sql',
+);
 
 describe('checklist_progress_entries migration', () => {
   it('mantiene tenant, FK compuesta, RLS y no expone anon', () => {
@@ -80,6 +85,14 @@ describe('checklist_progress_entries migration', () => {
       /grant select, insert, update, delete on table public\.checklist_progress_entries to authenticated/,
     );
   });
+
+  it('relaciona avances y hitos grupales con el incidente', () => {
+    const migration = readFileSync(sharingMigrationPath, 'utf8');
+    assert.match(migration, /add column if not exists compartido_grupal boolean not null default false/);
+    assert.match(migration, /add column if not exists incidente_id uuid references public\.incidentes\(id\)/);
+    assert.match(migration, /ensure_checklist_progress_incidente_same_tenant/);
+    assert.match(migration, /ensure_bitacora_group_sharing_allowed/);
+  });
 });
 
 describe('checklist progress service', () => {
@@ -89,6 +102,7 @@ describe('checklist progress service', () => {
       {
         data: {
           id: 'progress-1',
+          incidente_id: null,
           causa_id: VALID_CAUSA_ID,
           checklist_item_id: VALID_ITEM_ID,
           title: 'Entrevista con apoderado',
@@ -114,9 +128,12 @@ describe('checklist progress service', () => {
           description: ' Se registra la entrevista y sus acuerdos. ',
           entryType: 'Entrevista',
           occurredAt,
+          documentScope: 'incidente',
+          incidenteId: VALID_INCIDENTE_ID,
         });
         assert.equal(query.insertedRow?.causa_id, VALID_CAUSA_ID);
         assert.equal(query.insertedRow?.checklist_item_id, VALID_ITEM_ID);
+        assert.equal(query.insertedRow?.incidente_id, VALID_INCIDENTE_ID);
         assert.equal(query.insertedRow?.occurred_at, occurredAt);
         return created;
       },
@@ -132,6 +149,7 @@ describe('checklist progress service', () => {
         data: [
           {
             id: 'progress-1',
+            incidente_id: null,
             causa_id: VALID_CAUSA_ID,
             checklist_item_id: VALID_ITEM_ID,
             title: 'Avance válido',

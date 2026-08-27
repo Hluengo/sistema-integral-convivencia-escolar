@@ -24,7 +24,7 @@ describe('saveBitacora', () => {
         descripcion: 'Texto actualizado',
         documentoAdjunto: 'caso/evidencia.pdf',
       }),
-      createBitacoraEntry({ id: 'nueva' }),
+      createBitacoraEntry({ id: 'nueva', compartidoGrupal: true }),
     ];
 
     const delta = buildBitacoraSnapshotDelta(current, previous);
@@ -36,6 +36,7 @@ describe('saveBitacora', () => {
     );
     assert.equal(delta.rows[0].descripcion, 'Texto actualizado');
     assert.equal(delta.rows[0].documento_adjunto, 'caso/evidencia.pdf');
+    assert.equal(delta.rows[1].compartido_grupal, true);
     assert.deepEqual(delta.rows[1].participantes, []);
   });
 

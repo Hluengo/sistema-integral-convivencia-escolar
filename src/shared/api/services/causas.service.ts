@@ -54,6 +54,7 @@ interface SupabaseBitacoraRow {
   descripcion: string;
   participantes: string[] | null;
   documento_adjunto: string | null;
+  compartido_grupal: boolean;
 }
 
 function mapChecklistRow(row: SupabaseChecklistRow): ChecklistItem | null {
@@ -89,6 +90,7 @@ function mapBitacoraRow(row: SupabaseBitacoraRow): BitacoraEntry | null {
     descripcion: row.descripcion,
     participantes: row.participantes || [],
     documentoAdjunto: documentoAdjunto || undefined,
+    compartidoGrupal: row.compartido_grupal,
   });
   if (!parsed.success) {
     console.error(`Invalid bitacora entry ${row.id}:`, parsed.error.flatten());
@@ -190,7 +192,7 @@ export async function fetchCausaDetails(causaId: string): Promise<Causa> {
       .eq('causa_id', causaId),
     supabase
       .from('bitacora_entries')
-      .select('id,causa_id,fecha,tipo,titulo,descripcion,participantes,documento_adjunto')
+      .select('id,causa_id,fecha,tipo,titulo,descripcion,participantes,documento_adjunto,compartido_grupal')
       .eq('causa_id', causaId)
       .order('fecha', { ascending: false }),
   ]);

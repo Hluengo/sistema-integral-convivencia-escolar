@@ -2,6 +2,7 @@
 
 import { supabase } from '../lib/supabase';
 import type { Causa, Incidente } from '../../lib/types';
+import { normalizeDocumentPath } from './storage.service';
 
 const INCIDENTE_COLUMNS =
   'id,tenant_id,fecha_hora,lugar,tipo,descripcion,responsable,created_at,updated_at';
@@ -22,6 +23,18 @@ export interface IncidenteCausaSummary {
   estadoActual: Causa['estadoActual'];
   tipoInfraccion: Causa['tipoInfraccion'];
   fechaUltimaActualizacion: string;
+}
+
+export interface IncidenteSharedActivity {
+  id: string;
+  kind: 'avance' | 'hito';
+  sourceCausaId: string;
+  title: string;
+  description: string;
+  entryType: string;
+  occurredAt: string;
+  documentName?: string;
+  documentUrl?: string;
 }
 
 function mapIncidente(row: Record<string, unknown>): Incidente {
@@ -96,4 +109,63 @@ export async function fetchIncidenteCausas(incidenteId: string): Promise<Inciden
     tipoInfraccion: row.tipo_infraccion as Causa['tipoInfraccion'],
     fechaUltimaActualizacion: String(row.fecha_ultima_actualizacion ?? ''),
   }));
+}
+
+export async function fetchIncidenteSharedActivity(
+  incidenteId: string,
+  causas: IncidenteCausaSummary[],
+): Promise<IncidenteSharedActivity[]> {
+  const causaIds = causas.map((causa) => causa.id);
+  if (causaIds.length === 0) return [];
+
+  const [bitacoraResult, progressResult] = await Promise.all([
+    supabase
+      .from('bitacora_entries')
+      .select('id,causa_id,fecha,tipo,titulo,descripcion,documento_adjunto')
+      .in('causa_id', causaIds)
+      .eq('compartido_grupal', true),
+    supabase
+      .from('checklist_progress_entries')
+      .select(
+        'id,causa_id,title,description,entry_type,occurred_at,document_name,document_url,incidente_id',
+      )
+      .in('causa_id', causaIds)
+      .eq('incidente_id', incidenteId),
+  ]);
+
+  if (bitacoraResult.error) console.error('Error fetching shared milestones:', bitacoraResult.error);
+  if (progressResult.error) console.error('Error fetching shared progress:', progressResult.error);
+
+  const activities: IncidenteSharedActivity[] = [
+    ...((bitacoraResult.data || []) as Array<Record<string, unknown>>).map((row) => ({
+      id: String(row.id),
+      kind: 'hito' as const,
+      sourceCausaId: String(row.causa_id),
+      title: String(row.titulo ?? ''),
+      description: String(row.descripcion ?? ''),
+      entryType: String(row.tipo ?? 'Otro'),
+      occurredAt: String(row.fecha),
+      documentUrl: row.documento_adjunto
+        ? normalizeDocumentPath(String(row.documento_adjunto)) || undefined
+        : undefined,
+    })),
+    ...((progressResult.data || []) as Array<Record<string, unknown>>).map((row) => ({
+      id: String(row.id),
+      kind: 'avance' as const,
+      sourceCausaId: String(row.causa_id),
+      title: String(row.title ?? ''),
+      description: String(row.description ?? ''),
+      entryType: String(row.entry_type ?? 'Otro'),
+      occurredAt: String(row.occurred_at),
+      documentName: row.document_name ? String(row.document_name) : undefined,
+      documentUrl: row.document_url
+        ? normalizeDocumentPath(String(row.document_url)) || undefined
+        : undefined,
+    })),
+  ];
+
+  return activities.sort(
+    (first, second) =>
+      new Date(second.occurredAt).getTime() - new Date(first.occurredAt).getTime(),
+  );
 }

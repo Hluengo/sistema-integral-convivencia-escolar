@@ -58,7 +58,10 @@ export default memo(function BitacoraTab({
   const [manualFile, setManualFile] = useState<File | null>(null);
   const [manualFileName, setManualFileName] = useState('');
   const [documentScope, setDocumentScope] = useState<'causa' | 'incidente'>('causa');
-  const { entries: progressEntries, isLoading: isLoadingProgress } = useChecklistProgress(causa.id);
+  const { entries: progressEntries, isLoading: isLoadingProgress } = useChecklistProgress(
+    causa.id,
+    causa.incidenteId,
+  );
   const checklistLabels = new Map(
     causa.checklistDebidoProceso.map((item) => [item.id, item.label]),
   );
@@ -159,7 +162,7 @@ export default memo(function BitacoraTab({
                   <label htmlFor="manual-log-share" className="flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50/50 p-2.5 text-10px text-sky-950 sm:col-span-2">
                     <input
                       id="manual-log-share"
-                      aria-label="Compartir documento con el incidente grupal"
+                      aria-label="Compartir avance con el incidente grupal"
                       type="checkbox"
                       checked={documentScope === 'incidente'}
                       onChange={(event) =>
@@ -168,7 +171,7 @@ export default memo(function BitacoraTab({
                       className="mt-0.5 h-3.5 w-3.5 rounded border-sky-300 text-brand-600 focus:ring-brand-500"
                     />
                     <span>
-                      Compartir este documento con el incidente grupal y sus expedientes vinculados.
+                      Compartir este avance y su documento con el incidente grupal y sus expedientes vinculados.
                     </span>
                   </label>
                 )}

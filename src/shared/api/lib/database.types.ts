@@ -212,6 +212,7 @@ export type Database = {
           fecha: string;
           id: string;
           participantes: Json | null;
+          compartido_grupal: boolean;
           tenant_id: string;
           tipo: string;
           titulo: string;
@@ -224,6 +225,7 @@ export type Database = {
           fecha: string;
           id: string;
           participantes?: Json | null;
+          compartido_grupal?: boolean;
           tenant_id?: string;
           tipo: string;
           titulo: string;
@@ -236,6 +238,7 @@ export type Database = {
           fecha?: string;
           id?: string;
           participantes?: Json | null;
+          compartido_grupal?: boolean;
           tenant_id?: string;
           tipo?: string;
           titulo?: string;
@@ -691,6 +694,7 @@ export type Database = {
           document_url: string | null;
           entry_type: string;
           id: string;
+          incidente_id: string | null;
           invalidated_at: string | null;
           invalidated_by: string | null;
           invalidation_reason: string | null;
@@ -708,6 +712,7 @@ export type Database = {
           document_url?: string | null;
           entry_type: string;
           id?: string;
+          incidente_id?: string | null;
           invalidated_at?: string | null;
           invalidated_by?: string | null;
           invalidation_reason?: string | null;
@@ -725,6 +730,7 @@ export type Database = {
           document_url?: string | null;
           entry_type?: string;
           id?: string;
+          incidente_id?: string | null;
           invalidated_at?: string | null;
           invalidated_by?: string | null;
           invalidation_reason?: string | null;
@@ -733,6 +739,13 @@ export type Database = {
           title?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: 'checklist_progress_entries_incidente_id_fkey';
+            columns: ['incidente_id'];
+            isOneToOne: false;
+            referencedRelation: 'incidentes';
+            referencedColumns: ['id'];
+          },
           {
             foreignKeyName: 'checklist_progress_entries_causa_fkey';
             columns: ['causa_id'];

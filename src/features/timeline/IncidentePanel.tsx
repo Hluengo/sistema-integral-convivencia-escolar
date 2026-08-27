@@ -1,10 +1,15 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useQuery } from '@tanstack/react-query';
-import { CalendarClock, FileStack, MapPin, Users } from 'lucide-react';
-import { fetchIncidente, fetchIncidenteCausas } from '../../shared/api/services/incidentes.service';
+import { CalendarClock, File, FileStack, MapPin, Users } from 'lucide-react';
+import {
+  fetchIncidente,
+  fetchIncidenteCausas,
+  fetchIncidenteSharedActivity,
+} from '../../shared/api/services/incidentes.service';
 import type { Causa } from '../../shared/lib/types';
 import { formatChileDateTime } from '../../shared/lib/dateTime';
+import { openDocument } from '../../shared/api/services/storage.service';
 
 interface IncidentePanelProps {
   causa: Causa;
@@ -20,7 +25,8 @@ export default function IncidentePanel({ causa, privacyMode }: IncidentePanelPro
         fetchIncidente(incidenteId!),
         fetchIncidenteCausas(incidenteId!),
       ]);
-      return { incidente, causas };
+      const activity = await fetchIncidenteSharedActivity(incidenteId!, causas);
+      return { incidente, causas, activity };
     },
     enabled: Boolean(incidenteId),
     staleTime: 5 * 60_000,
@@ -70,6 +76,42 @@ export default function IncidentePanel({ causa, privacyMode }: IncidentePanelPro
           </span>
         ))}
       </div>
+      {data.activity.length > 0 && (
+        <div className="mt-4 rounded-lg border border-sky-200 bg-white/70 p-3">
+          <h4 className="font-semibold text-sky-950 text-xs">Avances e hitos compartidos</h4>
+          <div className="mt-2 space-y-2">
+            {data.activity.map((activity) => {
+              const source = data.causas.find((linkedCausa) => linkedCausa.id === activity.sourceCausaId);
+              return (
+                <article key={`${activity.kind}-${activity.id}`} className="rounded-lg border border-sky-100 bg-white p-2.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="font-semibold text-neutral-900 text-xs">{activity.title}</p>
+                      <p className="text-10px text-sky-800">
+                        {activity.kind === 'hito' ? 'Hito' : 'Avance'} · {privacyMode ? source?.nnaProtectedName : source?.estudianteNombre}
+                      </p>
+                    </div>
+                    <time className="font-mono text-9px text-neutral-500">
+                      {formatChileDateTime(activity.occurredAt)}
+                    </time>
+                  </div>
+                  <p className="mt-1.5 whitespace-pre-wrap text-neutral-600 text-11px">{activity.description}</p>
+                  {activity.documentUrl && (
+                    <button
+                      type="button"
+                      onClick={() => void openDocument(activity.documentUrl || '')}
+                      className="mt-1.5 inline-flex items-center gap-1 font-semibold text-info-700 text-10px hover:underline"
+                    >
+                      <File className="size-3" aria-hidden="true" />
+                      {activity.documentName || 'Ver documento adjunto'}
+                    </button>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
