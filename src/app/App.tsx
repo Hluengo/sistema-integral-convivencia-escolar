@@ -135,6 +135,7 @@ export default function App() {
     openCreateForm,
     closeCreateForm,
     toggleCreateForm,
+    openGroupForm,
     coursesCount,
     modal: newCausaModal,
   } = useNewCausaModalController({
@@ -235,6 +236,7 @@ export default function App() {
                 createCausa={{
                   onOpen: openCreateForm,
                   onToggle: toggleCreateForm,
+                  onOpenGroup: openGroupForm,
                 }}
                 navigation={{
                   onNavigate: handleViewChange,

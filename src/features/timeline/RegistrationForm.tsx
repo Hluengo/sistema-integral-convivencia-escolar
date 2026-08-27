@@ -11,6 +11,7 @@ import {
   DOCUMENT_UPLOAD_ACCEPT,
   DOCUMENT_UPLOAD_PLACEHOLDER,
 } from '../../shared/api/services/storage.service';
+import { useTimelineContext } from '../../shared/lib/useTimelineContext';
 
 interface RegistrationFormProps {
   item: ChecklistItem;
@@ -44,6 +45,7 @@ export default function RegistrationForm({
   errorMessage,
 }: RegistrationFormProps) {
   const isEditing = mode === 'edit';
+  const { causa, documentScope, setDocumentScope } = useTimelineContext();
 
   return (
     <div className="mt-2 space-y-3 rounded border border-info-200 bg-white p-3 text-left">
@@ -113,6 +115,27 @@ export default function RegistrationForm({
           className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-medium text-neutral-800 text-xs placeholder-neutral-400 transition-colors focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
         />
       </div>
+
+      {causa.incidenteId && (
+        <fieldset className="rounded-lg border border-sky-200 bg-sky-50/50 p-2.5">
+          <legend className="font-semibold text-9px text-sky-800 uppercase">
+            Visibilidad del documento
+          </legend>
+          <label htmlFor={`reg-share-${item.id}`} className="mt-1 flex items-start gap-2 text-10px text-sky-950">
+            <input
+              id={`reg-share-${item.id}`}
+              aria-label="Compartir documento con el incidente grupal"
+              type="checkbox"
+              checked={documentScope === 'incidente'}
+              onChange={(event) => setDocumentScope(event.target.checked ? 'incidente' : 'causa')}
+              className="mt-0.5 h-3.5 w-3.5 rounded border-sky-300 text-brand-600 focus:ring-brand-500"
+            />
+            <span>
+              Compartir con el incidente grupal. Será visible en los expedientes vinculados.
+            </span>
+          </label>
+        </fieldset>
+      )}
 
       {errorMessage && (
         <p

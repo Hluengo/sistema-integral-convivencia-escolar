@@ -81,7 +81,12 @@ export default function InvestigationChecklist({
         notRequired={notRequired}
       />
       {!notRequired && (
-        <ChecklistProgressPanel causaId={causa.id} item={item} canRegister={canRegister} />
+        <ChecklistProgressPanel
+          causaId={causa.id}
+          incidenteId={causa.incidenteId}
+          item={item}
+          canRegister={canRegister}
+        />
       )}
     </div>
   );

@@ -1,9 +1,9 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { supabase } from '../lib/supabase';
-import type { ChecklistProgressEntry, BitacoraEntry } from '../../lib/types';
+import type { ChecklistProgressEntry, BitacoraEntry, DocumentScope } from '../../lib/types';
 import { ChecklistProgressEntrySchema } from '../../lib/schemas';
-import { normalizeDocumentPath, uploadDocument } from './storage.service';
+import { normalizeDocumentPath, resolveDocumentOwnerId, uploadDocument } from './storage.service';
 
 interface ProgressRow {
   id: string;
@@ -59,6 +59,8 @@ export interface CreateChecklistProgressInput {
   entryType: BitacoraEntry['tipo'];
   occurredAt: string;
   documentFile?: File | null;
+  documentScope?: DocumentScope;
+  incidenteId?: string;
 }
 
 export async function fetchChecklistProgress(causaId: string): Promise<ChecklistProgressEntry[]> {
@@ -76,8 +78,10 @@ export async function fetchChecklistProgress(causaId: string): Promise<Checklist
 export async function createChecklistProgress(
   input: CreateChecklistProgressInput,
 ): Promise<ChecklistProgressEntry> {
+  const scope = input.documentScope === 'incidente' && input.incidenteId ? 'incidente' : 'causa';
+  const ownerId = resolveDocumentOwnerId(input.causaId, input.incidenteId, scope);
   const documentUrl = input.documentFile
-    ? await uploadDocument(input.causaId, input.documentFile, 'avances')
+    ? await uploadDocument(ownerId, input.documentFile, scope === 'incidente' ? 'documentos' : 'avances')
     : undefined;
   const { data, error } = await supabase
     .from('checklist_progress_entries')

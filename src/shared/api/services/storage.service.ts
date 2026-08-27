@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '../lib/supabase';
+import type { DocumentScope } from '../../lib/types';
 
 const STORAGE_BUCKET = 'documentos_convivencia';
 const SIGNED_URL_TTL_SECONDS = 3600;
@@ -24,6 +25,14 @@ const ALLOWED_DOCUMENT_EXTENSIONS = new Set([
   'png',
   'webp',
 ]);
+
+export function resolveDocumentOwnerId(
+  causaId: string,
+  incidenteId: string | undefined,
+  scope: DocumentScope = 'causa',
+): string {
+  return scope === 'incidente' && incidenteId ? incidenteId : causaId;
+}
 
 function isMissingStorageObject(error: { message?: string } | null): boolean {
   return error?.message === 'Object not found';
@@ -52,7 +61,7 @@ export function normalizeDocumentPath(value: string): string | null {
 
 /** Upload and return an immediately usable signed URL. Persistence services store only its stable path. */
 export async function uploadDocument(
-  causaId: string,
+  ownerId: string,
   file: File,
   prefix: string = 'documentos',
 ): Promise<string> {
@@ -68,7 +77,7 @@ export async function uploadDocument(
   }
 
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, '_');
-  const filePath = `${causaId}/${prefix}/${Date.now()}_${safeName}`;
+  const filePath = `${ownerId}/${prefix}/${Date.now()}_${safeName}`;
   const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(filePath, file, {
     cacheControl: '3600',
     upsert: false,
@@ -109,8 +118,12 @@ export async function openDocument(pathOrLegacyUrl: string): Promise<boolean> {
   return true;
 }
 
-export async function listDocuments(causaId: string): Promise<{ name: string; url: string }[]> {
-  const folder = `${causaId}/documentos`;
+async function listDocumentFolder(
+  ownerId: string,
+  prefix: string,
+  scope: DocumentScope,
+): Promise<{ name: string; url: string; scope: DocumentScope }[]> {
+  const folder = `${ownerId}/${prefix}`;
   const { data, error } = await supabase.storage.from(STORAGE_BUCKET).list(folder);
   if (error || !data) {
     console.error('Error listing documents:', error);
@@ -118,7 +131,17 @@ export async function listDocuments(causaId: string): Promise<{ name: string; ur
   }
   return data
     .filter((item) => item.name && item.id)
-    .map((item) => ({ name: item.name, url: `${folder}/${item.name}` }));
+    .map((item) => ({ name: item.name, url: `${folder}/${item.name}`, scope }));
+}
+
+export async function listDocuments(
+  causaId: string,
+  incidenteId?: string,
+): Promise<{ name: string; url: string; scope: DocumentScope }[]> {
+  const ownDocuments = await listDocumentFolder(causaId, 'documentos', 'causa');
+  if (!incidenteId) return ownDocuments;
+  const sharedDocuments = await listDocumentFolder(incidenteId, 'documentos', 'incidente');
+  return [...ownDocuments, ...sharedDocuments];
 }
 
 export async function deleteDocument(pathOrLegacyUrl: string): Promise<boolean> {

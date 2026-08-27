@@ -461,6 +461,50 @@ export type Database = {
           },
         ];
       };
+      incidentes: {
+        Row: {
+          id: string;
+          tenant_id: string;
+          fecha_hora: string;
+          lugar: string;
+          tipo: string;
+          descripcion: string;
+          responsable: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          tenant_id?: string;
+          fecha_hora?: string;
+          lugar?: string;
+          tipo?: string;
+          descripcion?: string;
+          responsable?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          tenant_id?: string;
+          fecha_hora?: string;
+          lugar?: string;
+          tipo?: string;
+          descripcion?: string;
+          responsable?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'incidentes_tenant_id_fkey';
+            columns: ['tenant_id'];
+            isOneToOne: false;
+            referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       causas: {
         Row: {
           annotations_count: number | null;
@@ -474,6 +518,7 @@ export type Database = {
           fecha_apertura: string;
           fecha_ultima_actualizacion: string;
           id: string;
+          incidente_id: string | null;
           fecha_inicio_investigacion: string | null;
           fecha_limite_24h: string | null;
           fecha_limite_cierre: string | null;
@@ -502,6 +547,7 @@ export type Database = {
           fecha_apertura: string;
           fecha_ultima_actualizacion: string;
           id: string;
+          incidente_id?: string | null;
           fecha_inicio_investigacion?: string | null;
           fecha_limite_24h?: string | null;
           fecha_limite_cierre?: string | null;
@@ -530,6 +576,7 @@ export type Database = {
           fecha_apertura?: string;
           fecha_ultima_actualizacion?: string;
           id?: string;
+          incidente_id?: string | null;
           fecha_inicio_investigacion?: string | null;
           fecha_limite_24h?: string | null;
           fecha_limite_cierre?: string | null;
@@ -552,6 +599,13 @@ export type Database = {
             columns: ['student_id'];
             isOneToOne: false;
             referencedRelation: 'students';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'causas_incidente_id_fkey';
+            columns: ['incidente_id'];
+            isOneToOne: false;
+            referencedRelation: 'incidentes';
             referencedColumns: ['id'];
           },
           {

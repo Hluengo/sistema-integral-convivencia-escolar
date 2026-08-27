@@ -54,6 +54,7 @@ const TipoInfraccionEnum = z.enum(['Leve', 'Grave', 'Muy Grave', 'Gravísima']);
 export const CausaSchema = z.object({
   id: z.string(),
   studentId: z.string().uuid().optional(),
+  incidenteId: z.string().uuid().optional(),
   estudianteNombre: z.string(),
   estudianteCurso: z.string(),
   nnaProtectedName: z.string(),

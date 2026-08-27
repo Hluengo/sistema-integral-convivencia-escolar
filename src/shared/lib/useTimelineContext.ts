@@ -24,16 +24,18 @@ interface TimelineContextValue {
   regFile: File | null;
   isSavingRegistration: boolean;
   registrationError: string | null;
+  documentScope: 'causa' | 'incidente';
+  setDocumentScope: React.Dispatch<React.SetStateAction<'causa' | 'incidente'>>;
   handleStartRegister: (item: ChecklistItem) => void;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSaveRegistration: (itemId: string) => Promise<void>;
   handleResetRegistration: (itemId: string) => void;
 
-  documents: { name: string; url: string }[];
+  documents: { name: string; url: string; scope: 'causa' | 'incidente' }[];
   isUploadingDocument: boolean;
   documentError: string | null;
   handleAttachDocument: (itemId: string, file: File | null) => Promise<void>;
-  handleRemoveDocument: (itemId: string, fileName?: string) => Promise<void>;
+  handleRemoveDocument: (itemId: string, fileName?: string, filePath?: string) => Promise<void>;
 
   createManualLog: (input: ManualBitacoraEntryInput) => Promise<void>;
   isCreatingManualLog: boolean;

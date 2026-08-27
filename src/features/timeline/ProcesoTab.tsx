@@ -30,8 +30,8 @@ interface ProcesoTabProps {
   registrationError: string | null;
   documentError: string | null;
   handleAttachDocument: (itemId: string, file: File | null) => Promise<void>;
-  handleRemoveDocument: (itemId: string, fileName?: string) => Promise<void>;
-  documents: { name: string; url: string }[];
+  handleRemoveDocument: (itemId: string, fileName?: string, filePath?: string) => Promise<void>;
+  documents: { name: string; url: string; scope: 'causa' | 'incidente' }[];
   selectedPhase: FaseProcedimental;
 }
 

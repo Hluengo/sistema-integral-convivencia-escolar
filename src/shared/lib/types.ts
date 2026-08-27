@@ -87,6 +87,7 @@ export type TipoInfraccion = 'Leve' | 'Grave' | 'Muy Grave' | 'Gravísima';
 export interface Causa {
   id: string; // e.g. "DC-2026-014"
   studentId?: string;
+  incidenteId?: string;
   estudianteNombre: string;
   estudianteCurso: string;
   nnaProtectedName: string; // e.g. "J.P.M."
@@ -139,6 +140,20 @@ export interface Causa {
   tipoNEE?: string;
   sancionesNEEDesactivadas?: boolean;
 }
+
+export interface Incidente {
+  id: string;
+  tenantId: string;
+  fechaHora: string;
+  lugar: string;
+  tipo: string;
+  descripcion: string;
+  responsable: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type DocumentScope = 'causa' | 'incidente';
 
 export interface Statistics {
   total: number;

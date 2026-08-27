@@ -7,9 +7,9 @@ import { FolderOpen } from 'lucide-react';
 import { openDocument } from '../../shared/api/services/storage.service';
 
 interface AttachedDocumentsProps {
-  documents: { name: string; url: string; itemId?: string }[];
+  documents: { name: string; url: string; scope: 'causa' | 'incidente'; itemId?: string }[];
   documentError: string | null;
-  onRemoveDocument: (itemId: string, fileName?: string) => Promise<void>;
+  onRemoveDocument: (itemId: string, fileName?: string, filePath?: string) => Promise<void>;
 }
 
 export default function AttachedDocuments({
@@ -26,12 +26,16 @@ export default function AttachedDocuments({
       <div className="space-y-1.5">
         {documents.map((doc) => (
           <div
-            key={doc.name}
+            key={doc.url}
             className="flex items-center justify-between gap-2 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2"
           >
             <div className="min-w-0">
               <p className="truncate font-medium text-11px text-neutral-800">{doc.name}</p>
-              <p className="truncate text-9px text-neutral-500">{doc.url}</p>
+              <p className="truncate text-9px text-neutral-500">
+                {doc.scope === 'incidente'
+                  ? 'Compartido con el incidente grupal'
+                  : 'Solo este expediente'}
+              </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <button
@@ -43,7 +47,7 @@ export default function AttachedDocuments({
               </button>
               <button
                 type="button"
-                onClick={() => onRemoveDocument(doc.itemId ?? '', doc.name)}
+                onClick={() => onRemoveDocument(doc.itemId ?? '', doc.name, doc.url)}
                 className="font-semibold text-10px text-danger-600 hover:underline"
               >
                 Eliminar

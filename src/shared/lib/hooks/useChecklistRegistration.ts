@@ -1,8 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 import { useCallback, useState } from 'react';
-import type { Causa, ChecklistItem, BitacoraEntry, UserRole } from '../types';
+import type { Causa, ChecklistItem, BitacoraEntry, DocumentScope, UserRole } from '../types';
 import { nowDateOnly, nowIso } from '../../../shared/lib/dateUtils';
-import { uploadDocument } from '../../api/services/storage.service';
+import { resolveDocumentOwnerId, uploadDocument } from '../../api/services/storage.service';
 
 interface UseChecklistRegistrationArgs {
   causa: Causa;
@@ -25,6 +25,7 @@ export function useChecklistRegistration({
   const [regFile, setRegFile] = useState<File | null>(null);
   const [isSavingRegistration, setIsSavingRegistration] = useState(false);
   const [registrationError, setRegistrationError] = useState<string | null>(null);
+  const [documentScope, setDocumentScope] = useState<DocumentScope>('causa');
 
   const getResponsableName = useCallback(() => {
     const r = causa.responsable;
@@ -41,6 +42,7 @@ export function useChecklistRegistration({
       setRegName(item.registradoPor || getResponsableName());
       setRegObservations(item.observaciones || '');
       setRegFileName(item.documentoNombre || '');
+      setDocumentScope('causa');
     },
     [getResponsableName],
   );
@@ -85,7 +87,9 @@ export function useChecklistRegistration({
         let documentoNombre = targetItem?.documentoNombre;
 
         if (regFile) {
-          const documentPath = await uploadDocument(causa.id, regFile);
+          const scope = documentScope === 'incidente' && causa.incidenteId ? 'incidente' : 'causa';
+          const ownerId = resolveDocumentOwnerId(causa.id, causa.incidenteId, scope);
+          const documentPath = await uploadDocument(ownerId, regFile, 'documentos');
           documentoUrl = documentPath;
           documentoNombre = regFile.name;
           newLog.documentoAdjunto = documentPath;
@@ -137,6 +141,7 @@ export function useChecklistRegistration({
       regFile,
       regName,
       regObservations,
+      documentScope,
     ],
   );
 
@@ -195,6 +200,8 @@ export function useChecklistRegistration({
     regFileName,
     setRegFileName,
     regFile,
+    documentScope,
+    setDocumentScope,
     isSavingRegistration,
     registrationError,
     handleFileChange,

@@ -34,7 +34,9 @@ export default function TimelineTabPanels({
 
   return (
     <DetailModalBody className="space-y-4 bg-neutral-50/60">
-      {activeTab === 'resumen' && <ResumenTab causa={causa} breaches={breaches} />}
+      {activeTab === 'resumen' && (
+        <ResumenTab causa={causa} breaches={breaches} privacyMode={ctx.privacyMode} />
+      )}
 
       {activeTab === 'ruta' &&
         (selectedPhase ? (

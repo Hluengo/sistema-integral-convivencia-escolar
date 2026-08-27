@@ -293,6 +293,21 @@ describe('listDocuments', () => {
     });
     assert.deepEqual(result, []);
   });
+
+  it('incluye documentos del incidente como documentos compartidos', async () => {
+    const result = await withStorageMocks({
+      bucketHandler: makeStorage,
+      fn: async () => {
+        const { listDocuments } = await import('./storage.service');
+        return listDocuments('causa-1', 'incident-1');
+      },
+    });
+    const items = result as { name: string; url: string; scope: string }[];
+    assert.equal(items.length, 2);
+    assert.equal(items[0].scope, 'causa');
+    assert.equal(items[1].scope, 'incidente');
+    assert.equal(items[1].url, 'incident-1/documentos/a.pdf');
+  });
 });
 
 describe('deleteDocument', () => {

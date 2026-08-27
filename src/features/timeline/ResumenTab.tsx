@@ -6,13 +6,15 @@ import type { Causa } from '../../shared/lib/types';
 import { extractConductaFromObservation, getConductaReglamentada } from '../../reglamentoData';
 import { getCausaDeadline, getCausaPhase, getCausaStatus } from '../causas/causaPresentation';
 import { formatChileDate } from '../../shared/lib/dateTime';
+import IncidentePanel from './IncidentePanel';
 
 interface ResumenTabProps {
   causa: Causa;
   breaches: string[];
+  privacyMode: boolean;
 }
 
-export default memo(function ResumenTab({ causa, breaches }: ResumenTabProps) {
+export default memo(function ResumenTab({ causa, breaches, privacyMode }: ResumenTabProps) {
   const deadline = getCausaDeadline(causa);
   const completed = causa.checklistDebidoProceso.filter((item) => item.completado).length;
   const conductaDescripcion =
@@ -21,6 +23,7 @@ export default memo(function ResumenTab({ causa, breaches }: ResumenTabProps) {
 
   return (
     <div className="space-y-5">
+      {causa.incidenteId && <IncidentePanel causa={causa} privacyMode={privacyMode} />}
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
           {

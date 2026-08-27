@@ -20,6 +20,7 @@ export interface CausaWorkspaceViewModel {
 export interface CreateCausaActions {
   onOpen: () => void;
   onToggle: () => void;
+  onOpenGroup: () => void;
 }
 
 export interface MainNavigationActions {

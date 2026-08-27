@@ -28,6 +28,7 @@ interface CausasState {
 
   handleCreateCausa: (params: {
     studentId?: string;
+    incidenteId?: string;
     newEstNombre: string;
     newEstRut: string;
     newEstCurso: string;
@@ -79,6 +80,7 @@ export const useCausasStore = create<CausasState>((set, get) => ({
     const newObj = createDraftCausa({
       counter: nextCounter,
       studentId: params.studentId,
+      incidenteId: params.incidenteId,
       estudianteNombre: params.newEstNombre,
       estudianteCurso: params.newEstCurso,
       runEstudiante: params.newEstRut,

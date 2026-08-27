@@ -22,6 +22,7 @@ export function formatSequentialCaseId(counter: number, year = new Date().getFul
 interface CreateDraftCausaArgs {
   counter: number;
   studentId?: string;
+  incidenteId?: string;
   estudianteNombre: string;
   estudianteCurso: string;
   runEstudiante: string;
@@ -35,6 +36,7 @@ interface CreateDraftCausaArgs {
 export function createDraftCausa({
   counter,
   studentId,
+  incidenteId,
   estudianteNombre,
   estudianteCurso,
   runEstudiante,
@@ -49,6 +51,7 @@ export function createDraftCausa({
   return {
     id: formatSequentialCaseId(counter),
     ...(studentId ? { studentId } : {}),
+    ...(incidenteId ? { incidenteId } : {}),
     estudianteNombre,
     estudianteCurso,
     nnaProtectedName: generateInitials(estudianteNombre),

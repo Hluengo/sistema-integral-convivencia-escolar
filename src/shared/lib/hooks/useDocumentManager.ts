@@ -19,7 +19,9 @@ export function useDocumentManager({
   privacyMode,
   regName,
 }: UseDocumentManagerArgs) {
-  const [documents, setDocuments] = useState<{ name: string; url: string }[]>([]);
+  const [documents, setDocuments] = useState<
+    { name: string; url: string; scope: 'causa' | 'incidente' }[]
+  >([]);
   const [isUploadingDocument, setIsUploadingDocument] = useState<boolean>(false);
   const [documentError, setDocumentError] = useState<string | null>(null);
 
@@ -35,14 +37,14 @@ export function useDocumentManager({
   const refreshDocuments = useCallback(async () => {
     setDocumentError(null);
     try {
-      const list = await listDocuments(causa.id);
+      const list = await listDocuments(causa.id, causa.incidenteId);
       setDocuments(list);
     } catch (error: unknown) {
       setDocumentError(
         error instanceof Error ? error.message : 'Error al listar los documentos adjuntos.',
       );
     }
-  }, [causa.id]);
+  }, [causa.id, causa.incidenteId]);
 
   const handleAttachDocument = useCallback(
     async (itemId: string, file: File | null) => {
@@ -102,7 +104,7 @@ export function useDocumentManager({
   );
 
   const handleRemoveDocument = useCallback(
-    async (itemId: string, fileName?: string) => {
+    async (itemId: string, fileName?: string, filePath?: string) => {
       if (currentRole === 'docente') {
         return;
       }
@@ -139,7 +141,7 @@ export function useDocumentManager({
 
       try {
         if (fileName) {
-          await deleteDocument(`${causa.id}/documentos/${fileName}`);
+          await deleteDocument(filePath || `${causa.id}/documentos/${fileName}`);
         }
         await refreshDocuments();
       } catch (error: unknown) {

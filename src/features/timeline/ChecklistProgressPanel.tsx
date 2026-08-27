@@ -13,6 +13,7 @@ import {
 
 interface ChecklistProgressPanelProps {
   causaId: string;
+  incidenteId?: string;
   item: ChecklistItem;
   canRegister: boolean;
 }
@@ -34,6 +35,7 @@ function initialDateTime(): string {
 
 export default function ChecklistProgressPanel({
   causaId,
+  incidenteId,
   item,
   canRegister,
 }: ChecklistProgressPanelProps) {
@@ -45,6 +47,7 @@ export default function ChecklistProgressPanel({
   const [occurredAt, setOccurredAt] = useState(initialDateTime);
   const [documentFile, setDocumentFile] = useState<File | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [documentScope, setDocumentScope] = useState<'causa' | 'incidente'>('causa');
   const itemEntries = entries.filter(
     (entry) => entry.checklistItemId === item.id && !entry.invalidatedAt,
   );
@@ -65,6 +68,8 @@ export default function ChecklistProgressPanel({
         entryType,
         occurredAt: new Date(occurredAt).toISOString(),
         documentFile,
+        documentScope,
+        incidenteId,
       });
       setTitle('');
       setDescription('');
@@ -191,6 +196,23 @@ export default function ChecklistProgressPanel({
               </span>
             </span>
           </label>
+          {incidenteId && (
+            <label htmlFor={`progress-share-${item.id}`} className="flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50/50 p-2.5 text-10px text-sky-950 sm:col-span-2">
+              <input
+                id={`progress-share-${item.id}`}
+                aria-label="Compartir documento con el incidente grupal"
+                type="checkbox"
+                checked={documentScope === 'incidente'}
+                onChange={(event) =>
+                  setDocumentScope(event.target.checked ? 'incidente' : 'causa')
+                }
+                className="mt-0.5 h-3.5 w-3.5 rounded border-sky-300 text-brand-600 focus:ring-brand-500"
+              />
+              <span>
+                Compartir este documento con el incidente grupal y sus expedientes vinculados.
+              </span>
+            </label>
+          )}
           {(formError || error) && (
             <p
               role="alert"

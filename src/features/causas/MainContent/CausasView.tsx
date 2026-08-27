@@ -4,7 +4,7 @@
  */
 
 import { Suspense, lazy, useCallback, useMemo, useState } from 'react';
-import { BookOpen, ChevronDown, GraduationCap, Scale, Search } from 'lucide-react';
+import { BookOpen, ChevronDown, GraduationCap, Scale, Search, Users } from 'lucide-react';
 import EmptyState from '../../../shared/EmptyState';
 import { DetailModalSkeleton } from '../../../shared/Skeleton';
 import ViewLoader from '../../../shared/ui/ViewLoader';
@@ -79,14 +79,21 @@ export default function CausasView({ workspace, createCausa, navigation }: Causa
           ) : null
         }
         action={
-          <Button
-            onClick={createCausa.onToggle}
-            className="shrink-0"
-            aria-label="Crear nueva causa"
-          >
-            <BookOpen className="h-4 w-4" aria-hidden="true" />
-            Nueva Causa
-          </Button>
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button
+              variant="secondary"
+              onClick={createCausa.onOpenGroup}
+              className="shrink-0"
+              aria-label="Crear incidente grupal"
+            >
+              <Users className="h-4 w-4" aria-hidden="true" />
+              Incidente grupal
+            </Button>
+            <Button onClick={createCausa.onToggle} className="shrink-0" aria-label="Crear nueva causa">
+              <BookOpen className="h-4 w-4" aria-hidden="true" />
+              Nueva Causa
+            </Button>
+          </div>
         }
       />
 

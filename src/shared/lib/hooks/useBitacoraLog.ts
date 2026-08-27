@@ -1,9 +1,9 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useCallback, useState } from 'react';
-import type { Causa, BitacoraEntry } from '../types';
+import type { Causa, BitacoraEntry, DocumentScope } from '../types';
 import { nowDateOnly, nowIso } from '../../../shared/lib/dateUtils';
-import { uploadDocument } from '../../api/services/storage.service';
+import { resolveDocumentOwnerId, uploadDocument } from '../../api/services/storage.service';
 
 interface UseBitacoraLogArgs {
   causa: Causa;
@@ -16,6 +16,7 @@ export interface ManualBitacoraEntryInput {
   type: BitacoraEntry['tipo'];
   participants: string;
   documentFile?: File | null;
+  documentScope?: DocumentScope;
 }
 
 export function buildManualBitacoraEntry(input: {
@@ -59,14 +60,17 @@ export function useBitacoraLog({ causa, onUpdateCausa }: UseBitacoraLogArgs) {
       type,
       participants: participantText,
       documentFile,
+      documentScope = 'causa',
     }: ManualBitacoraEntryInput): Promise<void> => {
       if (isCreatingManualLog) return;
       setIsCreatingManualLog(true);
       setManualLogError(null);
 
       try {
+        const scope = documentScope === 'incidente' && causa.incidenteId ? 'incidente' : 'causa';
+        const ownerId = resolveDocumentOwnerId(causa.id, causa.incidenteId, scope);
         const documentoAdjunto = documentFile
-          ? await uploadDocument(causa.id, documentFile, 'documentos')
+          ? await uploadDocument(ownerId, documentFile, 'documentos')
           : undefined;
         const newEntry = buildManualBitacoraEntry({
           title,

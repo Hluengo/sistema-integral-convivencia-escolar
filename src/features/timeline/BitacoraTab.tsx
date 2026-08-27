@@ -57,6 +57,7 @@ export default memo(function BitacoraTab({
   const [participants, setParticipants] = useState('');
   const [manualFile, setManualFile] = useState<File | null>(null);
   const [manualFileName, setManualFileName] = useState('');
+  const [documentScope, setDocumentScope] = useState<'causa' | 'incidente'>('causa');
   const { entries: progressEntries, isLoading: isLoadingProgress } = useChecklistProgress(causa.id);
   const checklistLabels = new Map(
     causa.checklistDebidoProceso.map((item) => [item.id, item.label]),
@@ -80,11 +81,13 @@ export default memo(function BitacoraTab({
               type: logType,
               participants,
               documentFile: manualFile,
+              documentScope,
             });
             setParticipants('');
             setLogType('Entrevista');
             setManualFile(null);
             setManualFileName('');
+            setDocumentScope('causa');
           }}
           onResetError={onResetManualEntryError}
           onClose={() => {
@@ -92,6 +95,7 @@ export default memo(function BitacoraTab({
             setLogType('Entrevista');
             setManualFile(null);
             setManualFileName('');
+            setDocumentScope('causa');
           }}
           additionalFields={
             <details open className="rounded-xl border border-neutral-200 bg-white px-3 py-2.5">
@@ -151,6 +155,23 @@ export default memo(function BitacoraTab({
                     />
                   </span>
                 </label>
+                {causa.incidenteId && (
+                  <label htmlFor="manual-log-share" className="flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50/50 p-2.5 text-10px text-sky-950 sm:col-span-2">
+                    <input
+                      id="manual-log-share"
+                      aria-label="Compartir documento con el incidente grupal"
+                      type="checkbox"
+                      checked={documentScope === 'incidente'}
+                      onChange={(event) =>
+                        setDocumentScope(event.target.checked ? 'incidente' : 'causa')
+                      }
+                      className="mt-0.5 h-3.5 w-3.5 rounded border-sky-300 text-brand-600 focus:ring-brand-500"
+                    />
+                    <span>
+                      Compartir este documento con el incidente grupal y sus expedientes vinculados.
+                    </span>
+                  </label>
+                )}
               </div>
             </details>
           }
