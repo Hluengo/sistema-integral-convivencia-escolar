@@ -7,6 +7,7 @@ import {
   invalidateChecklistProgress,
   type CreateChecklistProgressInput,
 } from '../../api/services/checklistProgress.service';
+import { fetchIncidenteCausas } from '../../api/services/incidentes.service';
 
 export function useChecklistProgress(causaId: string, incidenteId?: string) {
   const queryClient = useQueryClient();
@@ -19,10 +20,21 @@ export function useChecklistProgress(causaId: string, incidenteId?: string) {
   });
   const createMutation = useMutation({
     mutationFn: (input: CreateChecklistProgressInput) => createChecklistProgress(input),
-    onSuccess: () => {
+    onSuccess: async () => {
       void queryClient.invalidateQueries({ queryKey: ['checklist-progress', causaId] });
       if (incidenteId) {
         void queryClient.invalidateQueries({ queryKey: ['incidente', incidenteId] });
+        // Also invalidate all linked causas so they show the newly saved shared entry
+        try {
+          const linkedCausas = await fetchIncidenteCausas(incidenteId);
+          await Promise.all(
+            linkedCausas.map((c) =>
+              queryClient.invalidateQueries({ queryKey: ['checklist-progress', c.id] })
+            ),
+          );
+        } catch (error) {
+          console.error('Error invalidating linked causas:', error);
+        }
       }
     },
   });
