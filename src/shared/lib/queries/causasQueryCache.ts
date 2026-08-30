@@ -6,7 +6,6 @@ import type { Causa } from '../types';
 import { causasQueryKeys } from './causasQueryKeys';
 import type { CausasPage } from '../../api/services/causas.service';
 
-type CausaDetails = Pick<Causa, 'bitacora' | 'checklistDebidoProceso'>;
 type CausasListData = InfiniteData<CausasPage, number>;
 
 function toListCausa(causa: Causa): Causa {
@@ -93,11 +92,8 @@ export function syncPersistedCausasToCache(tenantId: string, causas: Causa[]): v
 
   for (const causa of causas) {
     const key = causasQueryKeys.details(tenantId, causa.id);
-    if (queryClient.getQueryData<CausaDetails>(key)) {
-      queryClient.setQueryData<CausaDetails>(key, {
-        bitacora: causa.bitacora,
-        checklistDebidoProceso: causa.checklistDebidoProceso,
-      });
+    if (queryClient.getQueryData<Causa>(key)) {
+      queryClient.setQueryData<Causa>(key, causa);
     }
   }
 }

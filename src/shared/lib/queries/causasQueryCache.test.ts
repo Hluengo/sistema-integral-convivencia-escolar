@@ -2,8 +2,9 @@
 
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { queryClient } from '../../../lib/queryClient';
 import { EstadoCausa, type Causa } from '../../../shared/lib/types';
-import { mergeCausasList } from './causasQueryCache';
+import { mergeCausasList, syncPersistedCausasToCache } from './causasQueryCache';
 import { causasQueryKeys } from './causasQueryKeys';
 
 function createCausa(overrides: Partial<Causa> = {}): Causa {
@@ -57,5 +58,32 @@ describe('causasQueryCache', () => {
     assert.equal(merged[0].responsable, 'Nueva responsable');
     assert.equal(merged[0].bitacora.length, 1);
     assert.equal(merged[0].bitacora[0].id, 'historial-1');
+  });
+
+  it('conserva los metadatos del detalle al sincronizar un autoguardado', () => {
+    const tenantId = 'tenant-cache-test';
+    const causa = createCausa({
+      estadoActual: EstadoCausa.RESOLUCION_ELABORACION,
+      bitacora: [
+        {
+          id: 'historial-1',
+          fecha: '2026-07-30T12:00:00.000Z',
+          tipo: 'Otro',
+          titulo: 'Antecedente',
+          descripcion: 'Descripción',
+          participantes: [],
+        },
+      ],
+    });
+    const key = causasQueryKeys.details(tenantId, causa.id);
+    queryClient.setQueryData(key, causa);
+
+    syncPersistedCausasToCache(tenantId, [causa]);
+
+    const cached = queryClient.getQueryData<Causa>(key);
+    assert.equal(cached?.estadoActual, EstadoCausa.RESOLUCION_ELABORACION);
+    assert.equal(cached?.estudianteNombre, causa.estudianteNombre);
+    assert.equal(cached?.bitacora[0]?.id, 'historial-1');
+    queryClient.removeQueries({ queryKey: key, exact: true });
   });
 });
