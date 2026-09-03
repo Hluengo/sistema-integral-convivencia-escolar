@@ -9,7 +9,7 @@ import {
   syncPersistedCausasToCache,
 } from '../../shared/lib/queries/causasQueryCache';
 import { causasQueryKeys } from '../../shared/lib/queries/causasQueryKeys';
-import { getFaseForEstado } from '../../shared/lib/data';
+import { getCausaOperationalPhase } from '../../features/causas/causaOperationalSummary';
 import { useCausasStore } from '../../shared/lib/stores/causasStore';
 import { EstadoCausa } from '../../shared/lib/types';
 
@@ -55,7 +55,7 @@ export function useCausaWorkspace({
       if (causa.estadoActual === EstadoCausa.CAUSA_CERRADA) return false;
       if (
         selectedFaseFilter !== 'Todas' &&
-        getFaseForEstado(causa.estadoActual) !== selectedFaseFilter
+        getCausaOperationalPhase(causa) !== selectedFaseFilter
       ) {
         return false;
       }

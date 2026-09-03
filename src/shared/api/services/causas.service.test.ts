@@ -29,6 +29,9 @@ class MockQueryBuilder<T> {
   range(_from: number, _to: number) {
     return this;
   }
+  in(_column: string, _values: unknown[]) {
+    return this;
+  }
   limit(_n: number) {
     return this;
   }
@@ -180,6 +183,33 @@ describe('fetchCausasPage', () => {
     const page = result as { causas: Causa[]; nextOffset?: number };
     assert.equal(page.causas.length, 1);
     assert.equal(page.nextOffset, 1);
+  });
+
+  it('carga el resumen de hitos para que el listado refleje la fase real', async () => {
+    const result = await withCausasMocks(
+      {
+        resultForTable: (table) =>
+          table === 'checklist_items'
+            ? {
+                data: [
+                  makeChecklistRow({
+                    id: 'chk_res_2',
+                    completado: true,
+                    fecha_completado: '2026-08-27',
+                  }),
+                ],
+                error: null,
+              }
+            : { data: [makeCausaRow()], error: null },
+      },
+      async () => {
+        const { fetchCausasPage } = await import('./causas.service');
+        return fetchCausasPage();
+      },
+    );
+    const page = result as { causas: Causa[] };
+    assert.equal(page.causas[0].checklistDebidoProceso[0]?.id, 'chk_res_2');
+    assert.equal(page.causas[0].checklistDebidoProceso[0]?.fechaCompletado, '2026-08-27');
   });
 
   it('propaga el error de lectura', async () => {

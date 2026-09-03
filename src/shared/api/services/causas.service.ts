@@ -45,6 +45,13 @@ interface SupabaseChecklistRow {
   documento_url: string | null;
 }
 
+interface SupabaseChecklistSummaryRow {
+  id: string;
+  causa_id: string;
+  completado: boolean;
+  fecha_completado: string | null;
+}
+
 interface SupabaseBitacoraRow {
   id: string;
   causa_id: string;
@@ -159,8 +166,35 @@ export async function fetchCausasPage(offset = 0, pageSize = 50): Promise<Causas
 
   const rows = data as SupabaseCausaRow[];
   const hasNextPage = rows.length > requestedSize;
+  const causas = mapCausaRows(rows.slice(0, requestedSize) as unknown as SupabaseCausaRow[]);
+  if (causas.length > 0) {
+    const { data: checklistData, error: checklistError } = await supabase
+      .from('checklist_items')
+      .select('id,causa_id,completado,fecha_completado')
+      .in('causa_id', causas.map((causa) => causa.id));
+    if (checklistError) {
+      console.error('Error fetching causa milestone summaries:', checklistError);
+    } else {
+      const checklistByCausa = new Map<string, ChecklistItem[]>();
+      for (const row of (checklistData || []) as SupabaseChecklistSummaryRow[]) {
+        const items = checklistByCausa.get(row.causa_id) || [];
+        items.push({
+          id: row.id,
+          label: '',
+          descripcion: '',
+          completado: row.completado,
+          fechaCompletado: row.fecha_completado || undefined,
+          requeridoPor: 'Circular 482',
+        });
+        checklistByCausa.set(row.causa_id, items);
+      }
+      for (const causa of causas) {
+        causa.checklistDebidoProceso = checklistByCausa.get(causa.id) || [];
+      }
+    }
+  }
   return {
-    causas: mapCausaRows(rows.slice(0, requestedSize) as unknown as SupabaseCausaRow[]),
+    causas,
     nextOffset: hasNextPage ? offset + requestedSize : undefined,
   };
 }
