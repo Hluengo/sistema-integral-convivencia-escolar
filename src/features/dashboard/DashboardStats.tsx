@@ -11,7 +11,8 @@ import {
   type FaseProcedimental,
   EstadoCausa,
 } from '../../shared/lib/types';
-import { getStats, getFaseForEstado } from '../../shared/lib/data';
+import { getStats } from '../../shared/lib/data';
+import { getCausaOperationalPhase } from '../causas/causaOperationalSummary';
 import {
   Activity,
   FileSearch,
@@ -245,7 +246,7 @@ export default function DashboardStats({
         c.estadoActual !== EstadoCausa.RESOLUCION_EJECUTORIADA,
     ).length;
     const investigating = causas.filter(
-      (c) => getFaseForEstado(c.estadoActual) === 'Investigación',
+      (c) => getCausaOperationalPhase(c) === 'Investigación',
     ).length;
     const resolved = causas.filter(
       (c) =>
