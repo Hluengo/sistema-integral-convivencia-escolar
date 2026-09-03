@@ -34,6 +34,10 @@
     "security:secrets": "gitleaks detect --source . --verbose",
     "pre-push": "npm run lint && npm run test && npm run build:web && npm run security-audit"
   },
+  "overrides": {
+    "fflate": "^0.8.3",
+    "qs": "^6.16.0"
+  },
   "knip": {
     "ignore": [
       "src/components/**",
@@ -97,6 +101,7 @@
     "husky": "^9.1.7",
     "knip": "^6.29.0",
     "lint-staged": "^17.1.1",
+    "pptxgenjs": "^4.0.1",
     "prettier": "^3.9.6",
     "rollup-plugin-visualizer": "^7.0.1",
     "tailwindcss": "^4.1.14",
