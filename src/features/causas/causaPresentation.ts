@@ -80,7 +80,7 @@ export function getCausaDeadline(causa: Causa, today = new Date()): DeadlinePres
   const fechaCierreInvestigacion = getInvestigationClosureDate(causa);
   if (
     causa.fechaLimiteInvestigacion &&
-    (!isHighSeverity || causa.plazoInvestigacionDias === defaultMaxDays)
+    !isHighSeverity
   ) {
     if (fechaCierreInvestigacion) {
       const closedPresentation = presentClosedDeadlineDate(
@@ -136,6 +136,9 @@ export function getCausaDeadline(causa: Causa, today = new Date()): DeadlinePres
 export function getCausaDeadlineStages(causa: Causa, today = new Date()): CausaDeadlineStages {
   const maxDays = getMaxPlazoInvestigacionDias(causa.tipoInfraccion, causa.comprometeAulaSegura);
   const startDate = getInvestigationStartDate(causa) || causa.fechaApertura;
+  if (!startDate) {
+    return { cierreIndagacion: getCausaDeadline(causa, today), informeConcluyente: null };
+  }
   if (maxDays !== PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS) {
     return { cierreIndagacion: getCausaDeadline(causa, today), informeConcluyente: null };
   }
@@ -146,13 +149,13 @@ export function getCausaDeadlineStages(causa: Causa, today = new Date()): CausaD
     ? presentClosedDeadlineDate(fechaLimiteCierre, fechaCierre)
     : presentDeadlineDate(fechaLimiteCierre, today);
   const fechaInforme = getConclusiveReportDate(causa);
-  const fechaLimiteInforme = fechaCierre
-    ? calcularFechaLimiteInformeConcluyente(fechaCierre)
-    : undefined;
   const informeConcluyente = fechaCierre
-    ? fechaInforme
-      ? presentClosedDeadlineDate(fechaLimiteInforme, fechaInforme)
-      : presentDeadlineDate(fechaLimiteInforme, today)
+    ? (() => {
+        const fechaLimiteInforme = calcularFechaLimiteInformeConcluyente(fechaCierre);
+        return fechaInforme
+          ? presentClosedDeadlineDate(fechaLimiteInforme, fechaInforme)
+          : presentDeadlineDate(fechaLimiteInforme, today);
+      })()
     : null;
 
   return {

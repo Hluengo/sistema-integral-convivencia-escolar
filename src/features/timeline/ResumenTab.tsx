@@ -4,7 +4,7 @@ import { memo } from 'react';
 import { AlertTriangle, CalendarClock, CheckCircle2, FileText, UserRound } from 'lucide-react';
 import type { Causa } from '../../shared/lib/types';
 import { extractConductaFromObservation, getConductaReglamentada } from '../../reglamentoData';
-import { getCausaDeadline, getCausaStatus } from '../causas/causaPresentation';
+import { getCausaDeadlineStages, getCausaStatus } from '../causas/causaPresentation';
 import { getCausaOperationalPhase } from '../causas/causaOperationalSummary';
 import { formatChileDate } from '../../shared/lib/dateTime';
 import IncidentePanel from './IncidentePanel';
@@ -16,7 +16,7 @@ interface ResumenTabProps {
 }
 
 export default memo(function ResumenTab({ causa, breaches, privacyMode }: ResumenTabProps) {
-  const deadline = getCausaDeadline(causa);
+  const deadlines = getCausaDeadlineStages(causa);
   const completed = causa.checklistDebidoProceso.filter((item) => item.completado).length;
   const conductaDescripcion =
     getConductaReglamentada(causa.conductaRiceId)?.conducta ||
@@ -42,8 +42,15 @@ export default memo(function ResumenTab({ causa, breaches, privacyMode }: Resume
             iconClass: 'text-sky-600',
           },
           {
-            label: 'Plazo de cierre',
-            value: deadline.text,
+            label: 'Plazos procedimentales',
+            value: (
+              <div className="space-y-0.5">
+                <p>Cierre: {deadlines.cierreIndagacion.text}</p>
+                {deadlines.informeConcluyente && (
+                  <p>Concluyente: {deadlines.informeConcluyente.text}</p>
+                )}
+              </div>
+            ),
             Icon: CalendarClock,
             cardClass: 'border-grave-100 bg-grave-50',
             iconClass: 'text-grave-700',
