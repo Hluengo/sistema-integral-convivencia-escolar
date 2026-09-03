@@ -10,6 +10,7 @@ import { nowDateOnly } from '../../../shared/lib/dateUtils';
 import { useAuthStore } from './authStore';
 import { useToastStore } from './toastStore';
 import { addCausaToCache, removeCausaFromCache } from '../queries/causasQueryCache';
+import { invalidateDashboardQueries } from '../hooks/useInvalidateDashboardQueries';
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
@@ -99,6 +100,7 @@ export const useCausasStore = create<CausasState>((set, get) => ({
       }));
       const tenantId = useAuthStore.getState().tenantId;
       if (tenantId) addCausaToCache(tenantId, createdCausa);
+      void invalidateDashboardQueries();
       useToastStore.getState().addToast('success', `Caso ${result} creado exitosamente`);
     } else {
       useToastStore.getState().addToast('error', 'Error al crear el caso');
@@ -115,6 +117,7 @@ export const useCausasStore = create<CausasState>((set, get) => ({
     }
     const tenantId = useAuthStore.getState().tenantId;
     if (tenantId) removeCausaFromCache(tenantId, id);
+    void invalidateDashboardQueries();
     set((state) => {
       const nextCausas = state.causas.filter((c) => c.id !== id);
       return {

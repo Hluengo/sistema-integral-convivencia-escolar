@@ -7,6 +7,7 @@ import { saveBitacora } from '@/shared/api/services/bitacora.service';
 import { saveChecklist } from '@/shared/api/services/checklist.service';
 import { updateCausa } from '@/shared/api/services/causas.service';
 import { persistExistingCausa, type CausaPersistenceChanges } from './causaPersistence';
+import { invalidateDashboardQueries } from './useInvalidateDashboardQueries';
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
@@ -136,6 +137,7 @@ export function useCausasPersistence({
         }
 
         onPersisted(causasToSave);
+        void invalidateDashboardQueries(queryClient);
         for (const causa of causasToSave) {
           if (causa.incidenteId) {
             void queryClient.invalidateQueries({ queryKey: ['incidente', causa.incidenteId] });
