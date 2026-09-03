@@ -3,7 +3,8 @@
 import { memo } from 'react';
 import { ChevronRight, Clock, Shield } from 'lucide-react';
 import type { Causa, TipoInfraccion } from '../../shared/lib/types';
-import { getCausaDeadline, getCausaPhase, getCausaStatus } from './causaPresentation';
+import { getCausaDeadline, getCausaStatus } from './causaPresentation';
+import { getCausaOperationalPhase } from './causaOperationalSummary';
 
 interface CausasTableProps {
   causas: Causa[];
@@ -78,7 +79,7 @@ export default memo(function CausasTable({ causas, privacyMode, onSelectCausa }:
                 {causa.comprometeAulaSegura ? 'Aula Segura' : causa.tipoInfraccion}
               </span>
               <span className="rounded-md bg-neutral-100 px-2 py-1 font-medium text-neutral-700 text-xs">
-                {getCausaPhase(causa)}
+                {getCausaOperationalPhase(causa)}
               </span>
               <Deadline causa={causa} />
               <span className="rounded-full bg-leve-100 px-2 py-0.5 font-medium text-leve-700 text-xs">
@@ -147,7 +148,9 @@ export default memo(function CausasTable({ causas, privacyMode, onSelectCausa }:
                     {causa.comprometeAulaSegura ? 'Aula Segura' : causa.tipoInfraccion}
                   </span>
                 </td>
-                <td className="whitespace-nowrap px-4 py-3 text-sm">{getCausaPhase(causa)}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-sm">
+                  {getCausaOperationalPhase(causa)}
+                </td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm">
                   <Deadline causa={causa} />
                 </td>

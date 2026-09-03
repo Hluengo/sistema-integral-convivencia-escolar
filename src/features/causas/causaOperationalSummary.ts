@@ -59,8 +59,18 @@ function getNextChecklistItem(
   return { item: null, phase: null };
 }
 
+export function getCausaOperationalPhase(causa: Causa): FaseProcedimental {
+  const persistedPhase = getCausaPhase(causa);
+  const persistedIndex = CAUSA_PHASES.indexOf(persistedPhase);
+  const latestActivityIndex = CAUSA_PHASES.reduce((latest, phase, index) => {
+    const progress = getPhaseProgress(causa, phase);
+    return progress.completed > 0 ? index : latest;
+  }, -1);
+  return CAUSA_PHASES[Math.max(persistedIndex, latestActivityIndex)] ?? persistedPhase;
+}
+
 export function getCausaOperationalSummary(causa: Causa): CausaOperationalSummary {
-  const currentPhase = getCausaPhase(causa);
+  const currentPhase = getCausaOperationalPhase(causa);
   const phaseProgress = CAUSA_PHASES.map((phase) => ({
     phase,
     ...getPhaseProgress(causa, phase),

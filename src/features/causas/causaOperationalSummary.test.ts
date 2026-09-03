@@ -122,7 +122,7 @@ describe('Resumen operativo de causa', () => {
     assert.equal(summary.historyCount, 1);
   });
 
-  it('detecta actividad en una fase posterior sin cambiar el estado persistido', () => {
+  it('usa la actividad posterior como fase operativa sin cambiar el estado persistido', () => {
     const summary = getCausaOperationalSummary(
       causa({
         estadoActual: EstadoCausa.DENUNCIA_RECEPCIONADA,
@@ -149,9 +149,29 @@ describe('Resumen operativo de causa', () => {
       }),
     );
 
-    assert.equal(summary.currentPhase, 'Recepción');
-    assert.equal(summary.laterActivityPhase, 'Investigación');
+    assert.equal(summary.currentPhase, 'Investigación');
+    assert.equal(summary.laterActivityPhase, null);
     assert.equal(summary.nextChecklistPhase, 'Investigación');
+  });
+
+  it('muestra Resolución cuando hay hitos de resolución aunque el estado siga en recepción', () => {
+    const summary = getCausaOperationalSummary(
+      causa({
+        estadoActual: EstadoCausa.DENUNCIA_RECEPCIONADA,
+        checklistDebidoProceso: getBaseChecklist().map((item) =>
+          item.id.startsWith('chk_rec_') ||
+          item.id === 'chk_inv_1' ||
+          item.id === 'chk_inv_2' ||
+          item.id === 'chk_res_2'
+            ? { ...item, completado: true }
+            : item,
+        ),
+      }),
+    );
+
+    assert.equal(summary.currentPhase, 'Resolución');
+    assert.equal(summary.currentPhaseProgress.phase, 'Resolución');
+    assert.equal(summary.nextChecklistPhase, 'Resolución');
   });
 
   it('no cuenta como actividad operativa los estados absorbidos', () => {

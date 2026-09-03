@@ -4,7 +4,8 @@ import { memo } from 'react';
 import { AlertTriangle, CalendarClock, CheckCircle2, FileText, UserRound } from 'lucide-react';
 import type { Causa } from '../../shared/lib/types';
 import { extractConductaFromObservation, getConductaReglamentada } from '../../reglamentoData';
-import { getCausaDeadline, getCausaPhase, getCausaStatus } from '../causas/causaPresentation';
+import { getCausaDeadline, getCausaStatus } from '../causas/causaPresentation';
+import { getCausaOperationalPhase } from '../causas/causaOperationalSummary';
 import { formatChileDate } from '../../shared/lib/dateTime';
 import IncidentePanel from './IncidentePanel';
 
@@ -35,7 +36,7 @@ export default memo(function ResumenTab({ causa, breaches, privacyMode }: Resume
           },
           {
             label: 'Fase actual',
-            value: getCausaPhase(causa),
+            value: getCausaOperationalPhase(causa),
             Icon: FileText,
             cardClass: 'border-sky-100 bg-sky-50',
             iconClass: 'text-sky-600',
