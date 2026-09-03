@@ -9,13 +9,19 @@ import {
   MAX_PLAZO_SUSPENSION_DIAS,
   MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS,
   DIAS_ALERTA_PLAZO_CRITICO,
+  PLAZO_INFORME_CONCLUYENTE_DIAS,
+  PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS,
+  PLAZO_TOTAL_ALTA_COMPLEJIDAD_DIAS,
   getMaxPlazoInvestigacionDias,
 } from './constants';
 import type { ResultadoPlazo } from './types';
 import { nowDateOnly, toDateOnly } from '../../../shared/lib/dateUtils';
+import { calcularFechaLimiteInformeConcluyente } from './deadlineCalculators';
 
 const INVESTIGATION_CLOSE_ITEM_ID = 'chk_res_2';
 const INVESTIGATION_CLOSE_LABEL = 'Informe Cierre de Indagación Emitido';
+const CONCLUSIVE_REPORT_ITEM_ID = 'chk_res_6';
+const CONCLUSIVE_REPORT_LABEL = 'Informe Concluyente Emitido';
 
 const normalizeDateOnly = (value?: string): string | undefined => {
   if (!value) return undefined;
@@ -35,6 +41,22 @@ export function getInvestigationClosureDate(
 
   return causa.bitacora
     .filter((entry) => entry.titulo.includes(INVESTIGATION_CLOSE_LABEL))
+    .map((entry) => normalizeDateOnly(entry.fecha))
+    .filter((date): date is string => Boolean(date))
+    .sort()[0];
+}
+
+export function getConclusiveReportDate(
+  causa: Pick<Causa, 'checklistDebidoProceso' | 'bitacora'>,
+): string | undefined {
+  const checklistDate = causa.checklistDebidoProceso.find(
+    (item) => item.id === CONCLUSIVE_REPORT_ITEM_ID && item.completado,
+  )?.fechaCompletado;
+  const normalizedChecklistDate = normalizeDateOnly(checklistDate);
+  if (normalizedChecklistDate) return normalizedChecklistDate;
+
+  return causa.bitacora
+    .filter((entry) => entry.titulo.includes(CONCLUSIVE_REPORT_LABEL))
     .map((entry) => normalizeDateOnly(entry.fecha))
     .filter((date): date is string => Boolean(date))
     .sort()[0];
@@ -107,6 +129,62 @@ export function verificarPlazoInvestigacion(causa: Causa): ResultadoPlazo {
     diasTranscurridos,
     fechaLimite,
     mensaje: `Plazo de investigación: ${diasRestantes} días hábiles restantes`,
+  };
+}
+
+export function verificarPlazoInformeConcluyente(causa: Causa): ResultadoPlazo {
+  if (!causa.fechaApertura) {
+    return {
+      estado: 'no_iniciado', diasRestantes: null, diasTranscurridos: null, fechaLimite: null,
+      mensaje: 'No se ha registrado fecha de apertura',
+    };
+  }
+
+  const maxDias = getMaxPlazoInvestigacionDias(causa.tipoInfraccion, causa.comprometeAulaSegura);
+  if (maxDias !== PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS) {
+    return {
+      estado: 'no_iniciado', diasRestantes: null, diasTranscurridos: null, fechaLimite: null,
+      mensaje: 'No aplica plazo separado para informe concluyente',
+    };
+  }
+
+  const fechaInicio = causa.fechaInicioInvestigacion || causa.fechaApertura;
+  const fechaLimite = calcularFechaLimiteInformeConcluyente(fechaInicio);
+  const fechaCierre = getInvestigationClosureDate(causa);
+  const fechaInforme = getConclusiveReportDate(causa);
+  if (!fechaCierre) {
+    return {
+      estado: 'no_iniciado', diasRestantes: null, diasTranscurridos: null, fechaLimite,
+      mensaje: 'Pendiente informe de cierre de indagación',
+    };
+  }
+
+  const fechaEvaluacion = fechaInforme || nowDateOnly();
+  const diasTranscurridos = calcularDiasHabiles(fechaInicio, fechaEvaluacion);
+  const diasRestantes = PLAZO_TOTAL_ALTA_COMPLEJIDAD_DIAS - diasTranscurridos;
+  if (fechaInforme && fechaInforme <= fechaLimite) {
+    return {
+      estado: 'cumplido', diasRestantes: Math.max(0, diasRestantes), diasTranscurridos, fechaLimite,
+      mensaje: `Informe concluyente emitido dentro de los ${PLAZO_INFORME_CONCLUYENTE_DIAS} días posteriores al cierre`,
+    };
+  }
+  if (diasRestantes <= 0) {
+    return {
+      estado: 'vencido', diasRestantes: 0, diasTranscurridos, fechaLimite,
+      mensaje: fechaInforme
+        ? 'PLAZO VENCIDO: El informe concluyente se emitió fuera del plazo total de 15 días hábiles'
+        : 'PLAZO VENCIDO: Falta emitir el informe concluyente dentro del plazo total de 15 días hábiles',
+    };
+  }
+  if (diasRestantes <= DIAS_ALERTA_PLAZO_CRITICO) {
+    return {
+      estado: 'alerta', diasRestantes, diasTranscurridos, fechaLimite,
+      mensaje: `ALERTA: Quedan ${diasRestantes} días hábiles para emitir el informe concluyente`,
+    };
+  }
+  return {
+    estado: 'cumplido', diasRestantes, diasTranscurridos, fechaLimite,
+    mensaje: `Informe concluyente: ${diasRestantes} días hábiles restantes`,
   };
 }
 

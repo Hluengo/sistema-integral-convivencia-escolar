@@ -8,6 +8,9 @@ import type { TipoInfraccion } from '../types';
 /** Máximo días de investigación para estudiantes (Ley 21809, Art. 16E, letra g) */
 export const MAX_PLAZO_INVESTIGACION_DIAS = 60;
 export const PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS = 10;
+export const PLAZO_INFORME_CONCLUYENTE_DIAS = 5;
+export const PLAZO_TOTAL_ALTA_COMPLEJIDAD_DIAS =
+  PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS + PLAZO_INFORME_CONCLUYENTE_DIAS;
 
 /** Máximo días de suspensión (Ley 21809, Art. 16E, letra j) */
 export const MAX_PLAZO_SUSPENSION_DIAS = 15;

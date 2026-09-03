@@ -3,7 +3,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { EstadoCausa, type Causa } from '../types';
-import { verificarPlazoInvestigacion, verificarPlazoSuspension } from './deadlineValidators';
+import {
+  verificarPlazoInformeConcluyente,
+  verificarPlazoInvestigacion,
+  verificarPlazoSuspension,
+} from './deadlineValidators';
 import {
   calcularFechaLimiteInvestigacion,
   calcularFechaLimiteNotificacionSuperintendencia,
@@ -12,6 +16,8 @@ import { calcularDiasHabiles } from './dateUtils';
 import {
   MAX_PLAZO_INVESTIGACION_DIAS,
   PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS,
+  PLAZO_INFORME_CONCLUYENTE_DIAS,
+  PLAZO_TOTAL_ALTA_COMPLEJIDAD_DIAS,
   MAX_PLAZO_SUSPENSION_DIAS,
   MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS,
   getMaxPlazoInvestigacionDias,
@@ -46,9 +52,20 @@ const cierreIndagacion = (fechaCompletado: string): Causa['checklistDebidoProces
   requeridoPor: 'Reglamento Interno',
 });
 
-test('constantes legales centralizadas: investigación 60/10, suspensión 15, Superintendencia 5', () => {
+const informeConcluyente = (fechaCompletado: string): Causa['checklistDebidoProceso'][number] => ({
+  id: 'chk_res_6',
+  label: 'Informe Concluyente Emitido',
+  descripcion: '',
+  completado: true,
+  fechaCompletado,
+  requeridoPor: 'Reglamento Interno',
+});
+
+test('constantes legales centralizadas: investigación 60/10, concluyente 5, suspensión 15', () => {
   assert.equal(MAX_PLAZO_INVESTIGACION_DIAS, 60);
   assert.equal(PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS, 10);
+  assert.equal(PLAZO_INFORME_CONCLUYENTE_DIAS, 5);
+  assert.equal(PLAZO_TOTAL_ALTA_COMPLEJIDAD_DIAS, 15);
   assert.equal(MAX_PLAZO_SUSPENSION_DIAS, 15);
   assert.equal(MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS, 5);
 });
@@ -111,6 +128,36 @@ test('verificarPlazoInvestigacion evalúa contra el hito de cierre de indagació
   assert.equal(enPlazo.fechaLimite, '2026-08-26');
   assert.equal(fueraPlazo.estado, 'vencido');
   assert.match(fueraPlazo.mensaje, /cerró fuera/);
+});
+
+test('verificarPlazoInformeConcluyente separa los 5 días finales y el total de 15', () => {
+  const enPlazo = verificarPlazoInformeConcluyente(
+    makeCausa({
+      fechaApertura: '2026-08-13',
+      fechaInicioInvestigacion: '2026-08-13',
+      tipoInfraccion: 'Gravísima',
+      checklistDebidoProceso: [
+        cierreIndagacion('2026-08-26'),
+        informeConcluyente('2026-09-02'),
+      ],
+    }),
+  );
+  const fueraPlazo = verificarPlazoInformeConcluyente(
+    makeCausa({
+      fechaApertura: '2026-08-13',
+      fechaInicioInvestigacion: '2026-08-13',
+      tipoInfraccion: 'Gravísima',
+      checklistDebidoProceso: [
+        cierreIndagacion('2026-08-26'),
+        informeConcluyente('2026-09-03'),
+      ],
+    }),
+  );
+
+  assert.equal(enPlazo.estado, 'cumplido');
+  assert.equal(enPlazo.fechaLimite, '2026-09-02');
+  assert.equal(fueraPlazo.estado, 'vencido');
+  assert.match(fueraPlazo.mensaje, /15 días/);
 });
 
 test('verificarPlazoInvestigacion cumplido con fecha reciente', () => {

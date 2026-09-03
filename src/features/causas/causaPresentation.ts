@@ -2,19 +2,31 @@
 
 import { getFaseForEstado } from '../../shared/lib/data';
 import { remainingProcedureDays, toDateOnly } from '../../shared/lib/dateUtils';
-import { calcularFechaLimiteInvestigacion } from '../../shared/lib/legalCompliance/deadlineCalculators';
+import {
+  calcularFechaLimiteCierreIndagacion,
+  calcularFechaLimiteInformeConcluyente,
+  calcularFechaLimiteInvestigacion,
+} from '../../shared/lib/legalCompliance/deadlineCalculators';
 import { agregarDiasHabiles } from '../../shared/lib/legalCompliance/dateUtils';
 import {
   PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS,
   getMaxPlazoInvestigacionDias,
 } from '../../shared/lib/legalCompliance/constants';
-import { getInvestigationClosureDate } from '../../shared/lib/legalCompliance/deadlineValidators';
+import {
+  getConclusiveReportDate,
+  getInvestigationClosureDate,
+} from '../../shared/lib/legalCompliance/deadlineValidators';
 import { EstadoCausa, type Causa, type FaseProcedimental } from '../../shared/lib/types';
 
 export interface DeadlinePresentation {
   remainingDays: number;
   text: string;
   tone: 'normal' | 'warning' | 'overdue';
+}
+
+export interface CausaDeadlineStages {
+  cierreIndagacion: DeadlinePresentation;
+  informeConcluyente: DeadlinePresentation | null;
 }
 
 function presentDeadlineDate(fechaLimite: string, today: Date): DeadlinePresentation | null {
@@ -118,4 +130,30 @@ export function getCausaDeadline(causa: Causa, today = new Date()): DeadlinePres
     return { remainingDays, text: `${remainingDays} días`, tone: 'warning' };
   }
   return { remainingDays, text: `${remainingDays} días`, tone: 'normal' };
+}
+
+export function getCausaDeadlineStages(causa: Causa, today = new Date()): CausaDeadlineStages {
+  const maxDays = getMaxPlazoInvestigacionDias(causa.tipoInfraccion, causa.comprometeAulaSegura);
+  const startDate = causa.fechaInicioInvestigacion || causa.fechaApertura;
+  if (maxDays !== PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS) {
+    return { cierreIndagacion: getCausaDeadline(causa, today), informeConcluyente: null };
+  }
+
+  const fechaCierre = getInvestigationClosureDate(causa);
+  const fechaLimiteCierre = calcularFechaLimiteCierreIndagacion(startDate);
+  const cierreIndagacion = fechaCierre
+    ? presentClosedDeadlineDate(fechaLimiteCierre, fechaCierre)
+    : presentDeadlineDate(fechaLimiteCierre, today);
+  const fechaInforme = getConclusiveReportDate(causa);
+  const fechaLimiteInforme = calcularFechaLimiteInformeConcluyente(startDate);
+  const informeConcluyente = fechaCierre
+    ? fechaInforme
+      ? presentClosedDeadlineDate(fechaLimiteInforme, fechaInforme)
+      : presentDeadlineDate(fechaLimiteInforme, today)
+    : null;
+
+  return {
+    cierreIndagacion: cierreIndagacion || getCausaDeadline(causa, today),
+    informeConcluyente,
+  };
 }

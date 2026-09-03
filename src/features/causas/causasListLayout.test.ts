@@ -6,7 +6,7 @@ import { dirname, resolve } from 'node:path';
 import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { EstadoCausa, type Causa } from '../../shared/lib/types';
-import { getCausaDeadline } from './causaPresentation';
+import { getCausaDeadline, getCausaDeadlineStages } from './causaPresentation';
 
 const featureDir = dirname(fileURLToPath(import.meta.url));
 const read = (relativePath: string) => readFileSync(resolve(featureDir, relativePath), 'utf-8');
@@ -32,6 +32,15 @@ const cause = (overrides: Partial<Causa> = {}): Causa => ({
 const cierreIndagacion = (fechaCompletado: string): Causa['checklistDebidoProceso'][number] => ({
   id: 'chk_res_2',
   label: 'Informe Cierre de Indagación Emitido',
+  descripcion: '',
+  completado: true,
+  fechaCompletado,
+  requeridoPor: 'Reglamento Interno',
+});
+
+const informeConcluyente = (fechaCompletado: string): Causa['checklistDebidoProceso'][number] => ({
+  id: 'chk_res_6',
+  label: 'Informe Concluyente Emitido',
   descripcion: '',
   completado: true,
   fechaCompletado,
@@ -181,6 +190,24 @@ describe('Listado de causas activas', () => {
     assert.equal(enPlazo.tone, 'normal');
     assert.equal(fueraPlazo.text, 'Cerró fuera de plazo');
     assert.equal(fueraPlazo.tone, 'overdue');
+  });
+
+  it('distingue cierre a 10 días e informe concluyente a 15 días totales', () => {
+    const deadlines = getCausaDeadlineStages(
+      cause({
+        fechaApertura: '2026-08-13',
+        fechaInicioInvestigacion: '2026-08-13',
+        tipoInfraccion: 'Gravísima',
+        checklistDebidoProceso: [
+          cierreIndagacion('2026-08-26'),
+          informeConcluyente('2026-09-03'),
+        ],
+      }),
+      new Date('2026-09-03T12:00:00.000Z'),
+    );
+
+    assert.equal(deadlines.cierreIndagacion.text, 'Cerró en plazo');
+    assert.equal(deadlines.informeConcluyente?.text, 'Cerró fuera de plazo');
   });
 
   it('mantiene la bitácora y checklist como fuentes del detalle', () => {

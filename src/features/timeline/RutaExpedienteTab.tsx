@@ -3,7 +3,7 @@
 import { memo } from 'react';
 import { ArrowRight, CircleCheck, Files, ListChecks, MoveRight } from 'lucide-react';
 import type { Causa, FaseProcedimental } from '../../shared/lib/types';
-import { getCausaDeadline } from '../causas/causaPresentation';
+import { getCausaDeadlineStages } from '../causas/causaPresentation';
 import { getCausaOperationalSummary } from '../causas/causaOperationalSummary';
 
 interface RutaExpedienteTabProps {
@@ -17,13 +17,13 @@ export default memo(function RutaExpedienteTab({
   selectedPhase,
   onSelectPhase,
 }: RutaExpedienteTabProps) {
-  const deadline = getCausaDeadline(causa);
+  const deadlines = getCausaDeadlineStages(causa);
   const summary = getCausaOperationalSummary(causa);
-  const deadlineClass = {
+  const deadlineClass = (tone: 'normal' | 'warning' | 'overdue') => ({
     normal: 'border-leve-200 bg-leve-50 text-leve-700',
     warning: 'border-grave-200 bg-grave-50 text-grave-700',
     overdue: 'border-gravisima-200 bg-gravisima-50 text-gravisima-700',
-  }[deadline.tone];
+  })[tone];
 
   return (
     <section
@@ -40,11 +40,16 @@ export default memo(function RutaExpedienteTab({
               Elige una fase para registrar y consultar sus hitos.
             </p>
           </div>
-          <span
-            className={`rounded-full border px-2.5 py-1 font-semibold text-xs ${deadlineClass}`}
-          >
-            Plazo: {deadline.text}
-          </span>
+          <div className="flex flex-wrap justify-end gap-2">
+            <span className={`rounded-full border px-2.5 py-1 font-semibold text-xs ${deadlineClass(deadlines.cierreIndagacion.tone)}`}>
+              Plazo: Cierre: {deadlines.cierreIndagacion.text}
+            </span>
+            {deadlines.informeConcluyente && (
+              <span className={`rounded-full border px-2.5 py-1 font-semibold text-xs ${deadlineClass(deadlines.informeConcluyente.tone)}`}>
+                Concluyente: {deadlines.informeConcluyente.text}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 

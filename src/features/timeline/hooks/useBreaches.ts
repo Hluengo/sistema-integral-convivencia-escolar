@@ -5,6 +5,7 @@ import { type Causa, EstadoCausa } from '@/shared/lib/types';
 import { getFaseForEstado } from '@/shared/lib/data';
 import {
   verificarPlazoInvestigacion,
+  verificarPlazoInformeConcluyente,
   verificarPlazoSuspension,
   verificarPlazoNotificacionSuperintendencia,
   getMaxPlazoInvestigacionDias,
@@ -69,6 +70,13 @@ export function computeBreaches(causa: Causa): string[] {
     );
   } else if (plazoInvestigacion.estado === 'alerta') {
     result.push(`ALERTA LEGAL: ${plazoInvestigacion.mensaje}`);
+  }
+
+  const plazoInformeConcluyente = verificarPlazoInformeConcluyente(causa);
+  if (plazoInformeConcluyente.estado === 'vencido') {
+    result.push(`INCUMPLIMIENTO LEGAL: ${plazoInformeConcluyente.mensaje}.`);
+  } else if (plazoInformeConcluyente.estado === 'alerta') {
+    result.push(`ALERTA LEGAL: ${plazoInformeConcluyente.mensaje}`);
   }
 
   const plazoSuspension = verificarPlazoSuspension(causa);

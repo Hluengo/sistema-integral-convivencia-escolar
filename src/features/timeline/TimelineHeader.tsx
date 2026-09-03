@@ -5,7 +5,7 @@
 
 import type { Causa, UserRole } from '../../shared/lib/types';
 import { AlertTriangle, CalendarClock, LockKeyhole, Pencil, Trash2, X } from 'lucide-react';
-import { getCausaDeadline, getCausaStatus } from '../causas/causaPresentation';
+import { getCausaDeadlineStages, getCausaStatus } from '../causas/causaPresentation';
 import { formatChileDate } from '../../shared/lib/dateTime';
 import { DetailModalHeader } from '../../shared/ui/DetailModal';
 
@@ -37,7 +37,7 @@ export default function TimelineHeader({
   breaches,
 }: TimelineHeaderProps) {
   const canEdit = currentRole !== 'docente';
-  const deadline = getCausaDeadline(causa);
+  const deadlines = getCausaDeadlineStages(causa);
   const displayName = privacyMode ? causa.nnaProtectedName : causa.estudianteNombre;
 
   return (
@@ -61,8 +61,11 @@ export default function TimelineHeader({
             <span>{getCausaStatus(causa)}</span>
             <span className="inline-flex items-center gap-1">
               <CalendarClock className="size-3.5" aria-hidden="true" />
-              {deadline.text}
+              Cierre indagación: {deadlines.cierreIndagacion.text}
             </span>
+            {deadlines.informeConcluyente && (
+              <span>Informe concluyente: {deadlines.informeConcluyente.text}</span>
+            )}
             <span>Apertura: {formatChileDate(causa.fechaApertura)}</span>
           </>
         }
