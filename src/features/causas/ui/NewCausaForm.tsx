@@ -62,6 +62,8 @@ export default function NewCausaForm({
   const newInfTipo = useWatch({ control, name: 'newInfTipo' });
   const newAulaSegura = useWatch({ control, name: 'newAulaSegura' });
   const newObs = useWatch({ control, name: 'newObs' }) ?? '';
+  const hasTenDayInvestigationDeadline =
+    newInfTipo === 'Muy Grave' || newInfTipo === 'Gravísima';
   const manualStudentEntry = !!selectedCourseId && !isLoadingStudents && students.length === 0;
   const basicCourses = courses.filter((course) => course.level === 'BASICA');
   const mediaCourses = courses.filter((course) => course.level === 'MEDIA');
@@ -390,11 +392,10 @@ export default function NewCausaForm({
           <FieldError id="create-responsable-error" message={errors.newResponsable?.message} />
         </div>
 
-        {newInfTipo === 'Gravísima' && newAulaSegura && (
+        {hasTenDayInvestigationDeadline && (
           <div className="rounded-lg border border-gravisima-200 bg-gravisima-50 p-3 font-medium font-sans text-gravisima-700 text-xs leading-normal">
-            <strong>Ley Aula Segura activa:</strong> recuerde citar formalmente a la
-            Superintendencia en un lapso de 24 horas y resolver en no más de 10 días hábiles de
-            suspensión preventiva.
+            <strong>Plazo de indagación:</strong> las faltas Muy Graves y Gravísimas deben tener
+            informe de cierre de indagación dentro de 10 días hábiles.
           </div>
         )}
 

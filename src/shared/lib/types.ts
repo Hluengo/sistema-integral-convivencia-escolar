@@ -98,7 +98,7 @@ export interface Causa {
   estadoActual: EstadoCausa;
   tipoInfraccion: TipoInfraccion;
   responsable: string;
-  comprometeAulaSegura: boolean; // Si activa Aula Segura, los plazos bajan a 10 días hábiles
+  comprometeAulaSegura: boolean;
   fechaUltimaActualizacion: string;
   observaciones: string;
   bitacora: BitacoraEntry[];
@@ -115,7 +115,7 @@ export interface Causa {
 
   // Control de plazos legales
   fechaInicioInvestigacion?: string;
-  plazoInvestigacionDias?: number; // Máximo 60 días (2 meses)
+  plazoInvestigacionDias?: number; // 10 días para Muy Grave/Gravísima; 60 para otras faltas
   fechaLimiteInvestigacion?: string;
   plazo24h?: boolean;
   fechaLimite24h?: string;

@@ -7,7 +7,7 @@ import {
   verificarPlazoInvestigacion,
   verificarPlazoSuspension,
   verificarPlazoNotificacionSuperintendencia,
-  MAX_PLAZO_INVESTIGACION_DIAS,
+  getMaxPlazoInvestigacionDias,
   MAX_PLAZO_SUSPENSION_DIAS,
   MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS,
 } from '@/shared/lib/legalCompliance';
@@ -60,8 +60,12 @@ export function computeBreaches(causa: Causa): string[] {
 
   const plazoInvestigacion = verificarPlazoInvestigacion(causa);
   if (plazoInvestigacion.estado === 'vencido') {
+    const maxPlazoInvestigacionDias = getMaxPlazoInvestigacionDias(
+      causa.tipoInfraccion,
+      causa.comprometeAulaSegura,
+    );
     result.push(
-      `INCUMPLIMIENTO LEGAL: ${plazoInvestigacion.mensaje}. Máximo permitido: ${MAX_PLAZO_INVESTIGACION_DIAS} días hábiles (Ley 21809, Art. 16E, letra g).`,
+      `INCUMPLIMIENTO LEGAL: ${plazoInvestigacion.mensaje}. Máximo permitido: ${maxPlazoInvestigacionDias} días hábiles (Ley 21809, Art. 16E, letra g).`,
     );
   } else if (plazoInvestigacion.estado === 'alerta') {
     result.push(`ALERTA LEGAL: ${plazoInvestigacion.mensaje}`);

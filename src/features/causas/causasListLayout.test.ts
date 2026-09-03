@@ -135,6 +135,19 @@ describe('Listado de causas activas', () => {
     assert.equal(overdue.text, 'Plazo excedido');
   });
 
+  it('cuenta faltas Muy Graves y Gravísimas con 10 días aunque tengan plazo heredado de 60', () => {
+    const deadline = getCausaDeadline(
+      cause({
+        fechaApertura: '2026-07-01',
+        tipoInfraccion: 'Muy Grave',
+        plazoInvestigacionDias: 60,
+        fechaLimiteInvestigacion: '2026-09-22',
+      }),
+      new Date('2026-07-15T12:00:00.000Z'),
+    );
+    assert.equal(deadline.text, 'Plazo excedido');
+  });
+
   it('mantiene la bitácora y checklist como fuentes del detalle', () => {
     const panels = read('../timeline/TimelineTabPanels.tsx');
     const process = read('../timeline/ProcessChecklist.tsx');

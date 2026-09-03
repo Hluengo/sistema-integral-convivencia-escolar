@@ -8,14 +8,23 @@ import { agregarDiasHabiles } from './dateUtils';
 import {
   MAX_PLAZO_INVESTIGACION_DIAS,
   MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS,
+  getMaxPlazoInvestigacionDias,
 } from './constants';
+import type { TipoInfraccion } from '../types';
 
 /**
- * Calcula fecha límite de investigación (60 días hábiles desde apertura)
+ * Calcula fecha límite de investigación desde apertura.
  */
-export function calcularFechaLimiteInvestigacion(fechaApertura: string): string {
+export function calcularFechaLimiteInvestigacion(
+  fechaApertura: string,
+  tipoInfraccion?: TipoInfraccion,
+  comprometeAulaSegura = false,
+): string {
+  const maxDias = tipoInfraccion
+    ? getMaxPlazoInvestigacionDias(tipoInfraccion, comprometeAulaSegura)
+    : MAX_PLAZO_INVESTIGACION_DIAS;
   // La fecha de apertura cuenta como el primer día hábil del plazo.
-  return agregarDiasHabiles(fechaApertura, MAX_PLAZO_INVESTIGACION_DIAS - 1);
+  return agregarDiasHabiles(fechaApertura, maxDias - 1);
 }
 
 /**

@@ -6,10 +6,10 @@ import {
   calcularFechaLimiteNotificacionSuperintendencia,
 } from './deadlineCalculators';
 import {
-  MAX_PLAZO_INVESTIGACION_DIAS,
   MAX_PLAZO_SUSPENSION_DIAS,
   MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS,
   DIAS_ALERTA_PLAZO_CRITICO,
+  getMaxPlazoInvestigacionDias,
 } from './constants';
 import type { ResultadoPlazo } from './types';
 import { nowDateOnly } from '../../../shared/lib/dateUtils';
@@ -28,10 +28,18 @@ export function verificarPlazoInvestigacion(causa: Causa): ResultadoPlazo {
     };
   }
 
-  const fechaLimite = calcularFechaLimiteInvestigacion(causa.fechaApertura);
+  const maxDias = getMaxPlazoInvestigacionDias(
+    causa.tipoInfraccion,
+    causa.comprometeAulaSegura,
+  );
+  const fechaLimite = calcularFechaLimiteInvestigacion(
+    causa.fechaApertura,
+    causa.tipoInfraccion,
+    causa.comprometeAulaSegura,
+  );
   const hoy = nowDateOnly();
   const diasTranscurridos = calcularDiasHabiles(causa.fechaApertura, hoy);
-  const diasRestantes = MAX_PLAZO_INVESTIGACION_DIAS - diasTranscurridos;
+  const diasRestantes = maxDias - diasTranscurridos;
 
   if (diasRestantes <= 0) {
     return {
@@ -39,7 +47,7 @@ export function verificarPlazoInvestigacion(causa: Causa): ResultadoPlazo {
       diasRestantes: 0,
       diasTranscurridos,
       fechaLimite,
-      mensaje: `PLAZO VENCIDO: La investigación ha excedido los ${MAX_PLAZO_INVESTIGACION_DIAS} días hábiles`,
+      mensaje: `PLAZO VENCIDO: La investigación ha excedido los ${maxDias} días hábiles`,
     };
   }
 

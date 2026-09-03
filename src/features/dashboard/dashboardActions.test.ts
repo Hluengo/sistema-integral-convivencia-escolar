@@ -28,7 +28,7 @@ describe('getDashboardActions', () => {
     const actions = getDashboardActions(
       [
         causa({ id: 'overdue', fechaApertura: '2026-05-01' }),
-        causa({ id: 'critical', fechaApertura: '2026-08-07', comprometeAulaSegura: true }),
+        causa({ id: 'critical', fechaApertura: '2026-08-04', comprometeAulaSegura: true }),
         causa({ id: 'closed', estadoActual: EstadoCausa.CAUSA_CERRADA }),
       ],
       new Date('2026-08-15T12:00:00Z'),

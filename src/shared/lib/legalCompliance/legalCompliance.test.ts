@@ -11,8 +11,10 @@ import {
 import { calcularDiasHabiles } from './dateUtils';
 import {
   MAX_PLAZO_INVESTIGACION_DIAS,
+  PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS,
   MAX_PLAZO_SUSPENSION_DIAS,
   MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS,
+  getMaxPlazoInvestigacionDias,
 } from './constants';
 
 function makeCausa(overrides: Partial<Causa> = {}): Causa {
@@ -35,8 +37,9 @@ function makeCausa(overrides: Partial<Causa> = {}): Causa {
   };
 }
 
-test('constantes legales centralizadas: investigación 60, suspensión 15, Superintendencia 5', () => {
+test('constantes legales centralizadas: investigación 60/10, suspensión 15, Superintendencia 5', () => {
   assert.equal(MAX_PLAZO_INVESTIGACION_DIAS, 60);
+  assert.equal(PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS, 10);
   assert.equal(MAX_PLAZO_SUSPENSION_DIAS, 15);
   assert.equal(MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS, 5);
 });
@@ -46,6 +49,14 @@ test('calcularFechaLimiteInvestigacion suma 60 días hábiles desde apertura', (
   // Invariante: entre apertura y límite hay exactamente 60 días hábiles.
   assert.equal(calcularDiasHabiles('2026-08-03', resultado), 60);
   assert.ok(resultado > '2026-08-03');
+});
+
+test('calcularFechaLimiteInvestigacion suma 10 días hábiles para faltas Muy Graves y Gravísimas', () => {
+  for (const tipoInfraccion of ['Muy Grave', 'Gravísima'] as const) {
+    const resultado = calcularFechaLimiteInvestigacion('2026-08-03', tipoInfraccion);
+    assert.equal(getMaxPlazoInvestigacionDias(tipoInfraccion), 10);
+    assert.equal(calcularDiasHabiles('2026-08-03', resultado), 10);
+  }
 });
 
 test('calcularFechaLimiteNotificacionSuperintendencia suma 5 días hábiles desde resolución', () => {
@@ -60,6 +71,13 @@ test('verificarPlazoInvestigacion vencido cuando supera 60 días hábiles', () =
   const result = verificarPlazoInvestigacion(causa);
   assert.equal(result.estado, 'vencido');
   assert.match(result.mensaje, /60/);
+});
+
+test('verificarPlazoInvestigacion usa 10 días hábiles para faltas Muy Graves', () => {
+  const causa = makeCausa({ fechaApertura: '2026-08-03', tipoInfraccion: 'Muy Grave' });
+  const result = verificarPlazoInvestigacion(causa);
+  assert.equal(result.fechaLimite, calcularFechaLimiteInvestigacion('2026-08-03', 'Muy Grave'));
+  assert.match(result.mensaje, /10|Plazo de investigación/);
 });
 
 test('verificarPlazoInvestigacion cumplido con fecha reciente', () => {

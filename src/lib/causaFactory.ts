@@ -1,5 +1,9 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 import { getBaseChecklist } from '../shared/lib/data';
+import {
+  calcularFechaLimiteInvestigacion,
+  getMaxPlazoInvestigacionDias,
+} from '../shared/lib/legalCompliance';
 import { type Causa, EstadoCausa } from '../shared/lib/types';
 import { nowDateOnly, nowIso } from '../shared/lib/dateUtils';
 
@@ -47,6 +51,10 @@ export function createDraftCausa({
   responsable,
 }: CreateDraftCausaArgs): Causa {
   const dateOnly = nowDateOnly();
+  const plazoInvestigacionDias = getMaxPlazoInvestigacionDias(
+    tipoInfraccion,
+    comprometeAulaSegura,
+  );
 
   return {
     id: formatSequentialCaseId(counter),
@@ -63,6 +71,13 @@ export function createDraftCausa({
     responsable,
     comprometeAulaSegura,
     fechaUltimaActualizacion: dateOnly,
+    fechaInicioInvestigacion: dateOnly,
+    plazoInvestigacionDias,
+    fechaLimiteInvestigacion: calcularFechaLimiteInvestigacion(
+      dateOnly,
+      tipoInfraccion,
+      comprometeAulaSegura,
+    ),
     observaciones: observaciones || 'Registro inicial del procedimiento regulado.',
     bitacora: [
       {
