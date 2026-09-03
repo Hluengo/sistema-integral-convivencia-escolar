@@ -14,6 +14,7 @@ import {
 } from '../../shared/lib/legalCompliance/constants';
 import {
   getConclusiveReportDate,
+  getInvestigationStartDate,
   getInvestigationClosureDate,
 } from '../../shared/lib/legalCompliance/deadlineValidators';
 import { EstadoCausa, type Causa, type FaseProcedimental } from '../../shared/lib/types';
@@ -92,7 +93,7 @@ export function getCausaDeadline(causa: Causa, today = new Date()): DeadlinePres
     if (presentation) return presentation;
   }
   if (isHighSeverity) {
-    const startDate = causa.fechaInicioInvestigacion || causa.fechaApertura;
+    const startDate = getInvestigationStartDate(causa) || causa.fechaApertura;
     const fechaLimite = calcularFechaLimiteInvestigacion(
       startDate,
       causa.tipoInfraccion,
@@ -112,7 +113,7 @@ export function getCausaDeadline(causa: Causa, today = new Date()): DeadlinePres
     isHighSeverity
       ? defaultMaxDays
       : (causa.plazoInvestigacionDias ?? defaultMaxDays);
-  const startDate = causa.fechaInicioInvestigacion || causa.fechaApertura;
+  const startDate = getInvestigationStartDate(causa) || causa.fechaApertura;
   if (fechaCierreInvestigacion) {
     const fechaLimite = agregarDiasHabiles(startDate, maxDays - 1);
     const closedPresentation = presentClosedDeadlineDate(fechaLimite, fechaCierreInvestigacion);
@@ -134,7 +135,7 @@ export function getCausaDeadline(causa: Causa, today = new Date()): DeadlinePres
 
 export function getCausaDeadlineStages(causa: Causa, today = new Date()): CausaDeadlineStages {
   const maxDays = getMaxPlazoInvestigacionDias(causa.tipoInfraccion, causa.comprometeAulaSegura);
-  const startDate = causa.fechaInicioInvestigacion || causa.fechaApertura;
+  const startDate = getInvestigationStartDate(causa) || causa.fechaApertura;
   if (maxDays !== PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS) {
     return { cierreIndagacion: getCausaDeadline(causa, today), informeConcluyente: null };
   }

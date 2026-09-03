@@ -20,6 +20,8 @@ import { calcularFechaLimiteInformeConcluyente } from './deadlineCalculators';
 
 const INVESTIGATION_CLOSE_ITEM_ID = 'chk_res_2';
 const INVESTIGATION_CLOSE_LABEL = 'Informe Cierre de Indagación Emitido';
+const INVESTIGATION_START_ITEM_ID = 'chk_rec_3';
+const INVESTIGATION_START_LABEL = 'Notificación de Inicio de Indagación';
 const CONCLUSIVE_REPORT_ITEM_ID = 'chk_res_6';
 const CONCLUSIVE_REPORT_LABEL = 'Informe Concluyente Emitido';
 
@@ -44,6 +46,21 @@ export function getInvestigationClosureDate(
     .map((entry) => normalizeDateOnly(entry.fecha))
     .filter((date): date is string => Boolean(date))
     .sort()[0];
+}
+
+export function getInvestigationStartDate(causa: Causa): string | undefined {
+  const checklistDate = causa.checklistDebidoProceso.find(
+    (item) => item.id === INVESTIGATION_START_ITEM_ID && item.completado,
+  )?.fechaCompletado;
+  const normalizedChecklistDate = normalizeDateOnly(checklistDate);
+  if (normalizedChecklistDate) return normalizedChecklistDate;
+
+  const bitacoraDate = causa.bitacora
+    .filter((entry) => entry.titulo.includes(INVESTIGATION_START_LABEL))
+    .map((entry) => normalizeDateOnly(entry.fecha))
+    .filter((date): date is string => Boolean(date))
+    .sort()[0];
+  return bitacoraDate || causa.fechaInicioInvestigacion || causa.fechaApertura || undefined;
 }
 
 export function getConclusiveReportDate(
@@ -80,7 +97,7 @@ export function verificarPlazoInvestigacion(causa: Causa): ResultadoPlazo {
     causa.tipoInfraccion,
     causa.comprometeAulaSegura,
   );
-  const fechaInicio = causa.fechaInicioInvestigacion || causa.fechaApertura;
+  const fechaInicio = getInvestigationStartDate(causa) || causa.fechaApertura;
   const fechaLimite = calcularFechaLimiteInvestigacion(
     fechaInicio,
     causa.tipoInfraccion,
@@ -148,7 +165,7 @@ export function verificarPlazoInformeConcluyente(causa: Causa): ResultadoPlazo {
     };
   }
 
-  const fechaInicio = causa.fechaInicioInvestigacion || causa.fechaApertura;
+  const fechaInicio = getInvestigationStartDate(causa) || causa.fechaApertura;
   const fechaLimite = calcularFechaLimiteInformeConcluyente(fechaInicio);
   const fechaCierre = getInvestigationClosureDate(causa);
   const fechaInforme = getConclusiveReportDate(causa);

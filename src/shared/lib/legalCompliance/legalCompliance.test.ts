@@ -130,6 +130,31 @@ test('verificarPlazoInvestigacion evalúa contra el hito de cierre de indagació
   assert.match(fueraPlazo.mensaje, /cerró fuera/);
 });
 
+test('prioriza la fecha del hito de inicio sobre una fecha persistida anterior', () => {
+  const result = verificarPlazoInformeConcluyente(
+    makeCausa({
+      fechaApertura: '2026-08-13',
+      fechaInicioInvestigacion: '2026-08-13',
+      tipoInfraccion: 'Gravísima',
+      checklistDebidoProceso: [
+        {
+          id: 'chk_rec_3',
+          label: 'Notificación de Inicio de Indagación',
+          descripcion: '',
+          completado: true,
+          fechaCompletado: '2026-08-14',
+          requeridoPor: 'Circular 482',
+        },
+        cierreIndagacion('2026-08-27'),
+        informeConcluyente('2026-09-03'),
+      ],
+    }),
+  );
+
+  assert.equal(result.estado, 'cumplido');
+  assert.equal(result.fechaLimite, '2026-09-03');
+});
+
 test('verificarPlazoInformeConcluyente separa los 5 días finales y el total de 15', () => {
   const enPlazo = verificarPlazoInformeConcluyente(
     makeCausa({

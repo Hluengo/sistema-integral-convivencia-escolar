@@ -210,6 +210,32 @@ describe('Listado de causas activas', () => {
     assert.equal(deadlines.informeConcluyente?.text, 'Cerró fuera de plazo');
   });
 
+  it('usa el hito de inicio de indagación para no adelantar el plazo', () => {
+    const deadlines = getCausaDeadlineStages(
+      cause({
+        fechaApertura: '2026-08-13',
+        fechaInicioInvestigacion: '2026-08-13',
+        tipoInfraccion: 'Gravísima',
+        checklistDebidoProceso: [
+          {
+            id: 'chk_rec_3',
+            label: 'Notificación de Inicio de Indagación',
+            descripcion: '',
+            completado: true,
+            fechaCompletado: '2026-08-14',
+            requeridoPor: 'Circular 482',
+          },
+          cierreIndagacion('2026-08-27'),
+          informeConcluyente('2026-09-03'),
+        ],
+      }),
+      new Date('2026-09-03T12:00:00.000Z'),
+    );
+
+    assert.equal(deadlines.cierreIndagacion.text, 'Cerró en plazo');
+    assert.equal(deadlines.informeConcluyente?.text, 'Cerró en plazo');
+  });
+
   it('mantiene la bitácora y checklist como fuentes del detalle', () => {
     const panels = read('../timeline/TimelineTabPanels.tsx');
     const process = read('../timeline/ProcessChecklist.tsx');
