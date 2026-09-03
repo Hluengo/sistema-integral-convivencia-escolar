@@ -11,7 +11,6 @@ import {
   DIAS_ALERTA_PLAZO_CRITICO,
   PLAZO_INFORME_CONCLUYENTE_DIAS,
   PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS,
-  PLAZO_TOTAL_ALTA_COMPLEJIDAD_DIAS,
   getMaxPlazoInvestigacionDias,
 } from './constants';
 import type { ResultadoPlazo } from './types';
@@ -165,32 +164,31 @@ export function verificarPlazoInformeConcluyente(causa: Causa): ResultadoPlazo {
     };
   }
 
-  const fechaInicio = getInvestigationStartDate(causa) || causa.fechaApertura;
-  const fechaLimite = calcularFechaLimiteInformeConcluyente(fechaInicio);
   const fechaCierre = getInvestigationClosureDate(causa);
   const fechaInforme = getConclusiveReportDate(causa);
   if (!fechaCierre) {
     return {
-      estado: 'no_iniciado', diasRestantes: null, diasTranscurridos: null, fechaLimite,
+      estado: 'no_iniciado', diasRestantes: null, diasTranscurridos: null, fechaLimite: null,
       mensaje: 'Pendiente informe de cierre de indagación',
     };
   }
 
+  const fechaLimite = calcularFechaLimiteInformeConcluyente(fechaCierre);
   const fechaEvaluacion = fechaInforme || nowDateOnly();
-  const diasTranscurridos = calcularDiasHabiles(fechaInicio, fechaEvaluacion);
-  const diasRestantes = PLAZO_TOTAL_ALTA_COMPLEJIDAD_DIAS - diasTranscurridos;
+  const diasTranscurridos = calcularDiasHabiles(fechaCierre, fechaEvaluacion);
+  const diasRestantes = PLAZO_INFORME_CONCLUYENTE_DIAS - diasTranscurridos;
   if (fechaInforme && fechaInforme <= fechaLimite) {
     return {
       estado: 'cumplido', diasRestantes: Math.max(0, diasRestantes), diasTranscurridos, fechaLimite,
-      mensaje: `Informe concluyente emitido dentro de los ${PLAZO_INFORME_CONCLUYENTE_DIAS} días posteriores al cierre`,
+      mensaje: `Informe concluyente emitido dentro de los ${PLAZO_INFORME_CONCLUYENTE_DIAS} días hábiles posteriores al cierre`,
     };
   }
   if (diasRestantes <= 0) {
     return {
       estado: 'vencido', diasRestantes: 0, diasTranscurridos, fechaLimite,
       mensaje: fechaInforme
-        ? 'PLAZO VENCIDO: El informe concluyente se emitió fuera del plazo total de 15 días hábiles'
-        : 'PLAZO VENCIDO: Falta emitir el informe concluyente dentro del plazo total de 15 días hábiles',
+        ? `PLAZO VENCIDO: El informe concluyente se emitió fuera de los ${PLAZO_INFORME_CONCLUYENTE_DIAS} días hábiles posteriores al cierre`
+        : `PLAZO VENCIDO: Falta emitir el informe concluyente dentro de los ${PLAZO_INFORME_CONCLUYENTE_DIAS} días hábiles posteriores al cierre`,
     };
   }
   if (diasRestantes <= DIAS_ALERTA_PLAZO_CRITICO) {
@@ -201,7 +199,7 @@ export function verificarPlazoInformeConcluyente(causa: Causa): ResultadoPlazo {
   }
   return {
     estado: 'cumplido', diasRestantes, diasTranscurridos, fechaLimite,
-    mensaje: `Informe concluyente: ${diasRestantes} días hábiles restantes`,
+    mensaje: `Informe concluyente: ${diasRestantes} días hábiles restantes desde el cierre`,
   };
 }
 

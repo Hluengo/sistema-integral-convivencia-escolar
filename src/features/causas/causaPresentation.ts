@@ -146,7 +146,9 @@ export function getCausaDeadlineStages(causa: Causa, today = new Date()): CausaD
     ? presentClosedDeadlineDate(fechaLimiteCierre, fechaCierre)
     : presentDeadlineDate(fechaLimiteCierre, today);
   const fechaInforme = getConclusiveReportDate(causa);
-  const fechaLimiteInforme = calcularFechaLimiteInformeConcluyente(startDate);
+  const fechaLimiteInforme = fechaCierre
+    ? calcularFechaLimiteInformeConcluyente(fechaCierre)
+    : undefined;
   const informeConcluyente = fechaCierre
     ? fechaInforme
       ? presentClosedDeadlineDate(fechaLimiteInforme, fechaInforme)

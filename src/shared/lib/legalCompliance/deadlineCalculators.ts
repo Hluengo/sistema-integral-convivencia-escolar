@@ -8,8 +8,8 @@ import { agregarDiasHabiles } from './dateUtils';
 import {
   MAX_PLAZO_INVESTIGACION_DIAS,
   MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS,
+  PLAZO_INFORME_CONCLUYENTE_DIAS,
   PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS,
-  PLAZO_TOTAL_ALTA_COMPLEJIDAD_DIAS,
   getMaxPlazoInvestigacionDias,
 } from './constants';
 import type { TipoInfraccion } from '../types';
@@ -29,8 +29,8 @@ export function calcularFechaLimiteInvestigacion(
   return agregarDiasHabiles(fechaApertura, maxDias - 1);
 }
 
-export function calcularFechaLimiteInformeConcluyente(fechaInicioInvestigacion: string): string {
-  return agregarDiasHabiles(fechaInicioInvestigacion, PLAZO_TOTAL_ALTA_COMPLEJIDAD_DIAS - 1);
+export function calcularFechaLimiteInformeConcluyente(fechaCierreIndagacion: string): string {
+  return agregarDiasHabiles(fechaCierreIndagacion, PLAZO_INFORME_CONCLUYENTE_DIAS);
 }
 
 export function calcularFechaLimiteCierreIndagacion(fechaInicioInvestigacion: string): string {

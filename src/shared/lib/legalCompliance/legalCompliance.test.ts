@@ -182,7 +182,7 @@ test('verificarPlazoInformeConcluyente separa los 5 días finales y el total de 
   assert.equal(enPlazo.estado, 'cumplido');
   assert.equal(enPlazo.fechaLimite, '2026-09-02');
   assert.equal(fueraPlazo.estado, 'vencido');
-  assert.match(fueraPlazo.mensaje, /15 días/);
+  assert.match(fueraPlazo.mensaje, /5 días/);
 });
 
 test('verificarPlazoInvestigacion cumplido con fecha reciente', () => {
