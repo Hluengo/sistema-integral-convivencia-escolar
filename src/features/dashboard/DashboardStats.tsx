@@ -50,7 +50,6 @@ import type { SidebarView } from '../../widgets/sidebar/Sidebar';
 import { fetchOnboardingStatus } from '../../shared/api/services/institution.service';
 import { getDashboardSchoolYear } from './dashboardTrends';
 import { getDashboardActions, type DashboardAction } from './dashboardActions';
-import { fetchDashboardDeadlineKpis } from '../../shared/api/services/deadline.service';
 
 const DASHBOARD_STALE_TIME_MS = 300_000;
 
@@ -299,13 +298,6 @@ export default function DashboardStats({
     staleTime: DASHBOARD_STALE_TIME_MS,
     refetchOnMount: true,
   });
-  const deadlineKpisQuery = useQuery({
-    queryKey: ['dashboard-deadline-kpis', tenantId],
-    queryFn: fetchDashboardDeadlineKpis,
-    enabled: isAuthenticated && Boolean(tenantId),
-    staleTime: 60_000,
-    refetchOnMount: true,
-  });
   const onboardingStatusQuery = useQuery({
     queryKey: ['onboarding-status', tenantId],
     queryFn: fetchOnboardingStatus,
@@ -334,8 +326,7 @@ export default function DashboardStats({
     ? authenticatedCauseCounts.resolved
     : (publicKpis?.resolvedCauses ?? 0);
   const critical = isAuthenticated
-    ? (deadlineKpisQuery.data?.criticalCount ??
-      dashboardActions.filter((action) => action.urgency !== 'warning').length)
+    ? dashboardActions.filter((action) => action.urgency !== 'warning').length
     : (publicKpis?.criticalAlerts ?? 0);
   const severity = isAuthenticated
     ? authenticatedStats.porGravedad
