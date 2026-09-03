@@ -37,6 +37,15 @@ function makeCausa(overrides: Partial<Causa> = {}): Causa {
   };
 }
 
+const cierreIndagacion = (fechaCompletado: string): Causa['checklistDebidoProceso'][number] => ({
+  id: 'chk_res_2',
+  label: 'Informe Cierre de Indagación Emitido',
+  descripcion: '',
+  completado: true,
+  fechaCompletado,
+  requeridoPor: 'Reglamento Interno',
+});
+
 test('constantes legales centralizadas: investigación 60/10, suspensión 15, Superintendencia 5', () => {
   assert.equal(MAX_PLAZO_INVESTIGACION_DIAS, 60);
   assert.equal(PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS, 10);
@@ -78,6 +87,30 @@ test('verificarPlazoInvestigacion usa 10 días hábiles para faltas Muy Graves',
   const result = verificarPlazoInvestigacion(causa);
   assert.equal(result.fechaLimite, calcularFechaLimiteInvestigacion('2026-08-03', 'Muy Grave'));
   assert.match(result.mensaje, /10|Plazo de investigación/);
+});
+
+test('verificarPlazoInvestigacion evalúa contra el hito de cierre de indagación', () => {
+  const enPlazo = verificarPlazoInvestigacion(
+    makeCausa({
+      fechaApertura: '2026-08-13',
+      fechaInicioInvestigacion: '2026-08-13',
+      tipoInfraccion: 'Gravísima',
+      checklistDebidoProceso: [cierreIndagacion('2026-08-26')],
+    }),
+  );
+  const fueraPlazo = verificarPlazoInvestigacion(
+    makeCausa({
+      fechaApertura: '2026-08-13',
+      fechaInicioInvestigacion: '2026-08-13',
+      tipoInfraccion: 'Gravísima',
+      checklistDebidoProceso: [cierreIndagacion('2026-08-27')],
+    }),
+  );
+
+  assert.equal(enPlazo.estado, 'cumplido');
+  assert.equal(enPlazo.fechaLimite, '2026-08-26');
+  assert.equal(fueraPlazo.estado, 'vencido');
+  assert.match(fueraPlazo.mensaje, /cerró fuera/);
 });
 
 test('verificarPlazoInvestigacion cumplido con fecha reciente', () => {

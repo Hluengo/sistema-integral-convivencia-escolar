@@ -29,6 +29,15 @@ const cause = (overrides: Partial<Causa> = {}): Causa => ({
   ...overrides,
 });
 
+const cierreIndagacion = (fechaCompletado: string): Causa['checklistDebidoProceso'][number] => ({
+  id: 'chk_res_2',
+  label: 'Informe Cierre de Indagación Emitido',
+  descripcion: '',
+  completado: true,
+  fechaCompletado,
+  requeridoPor: 'Reglamento Interno',
+});
+
 describe('Listado de causas activas', () => {
   it('mantiene el orden búsqueda/filtros, fases y tabla', () => {
     const view = read('MainContent/CausasView.tsx');
@@ -146,6 +155,32 @@ describe('Listado de causas activas', () => {
       new Date('2026-07-15T12:00:00.000Z'),
     );
     assert.equal(deadline.text, 'Plazo excedido');
+  });
+
+  it('usa el hito de cierre para evaluar si la indagación quedó excedida', () => {
+    const enPlazo = getCausaDeadline(
+      cause({
+        fechaApertura: '2026-08-13',
+        fechaInicioInvestigacion: '2026-08-13',
+        tipoInfraccion: 'Gravísima',
+        checklistDebidoProceso: [cierreIndagacion('2026-08-26')],
+      }),
+      new Date('2026-09-03T12:00:00.000Z'),
+    );
+    const fueraPlazo = getCausaDeadline(
+      cause({
+        fechaApertura: '2026-08-13',
+        fechaInicioInvestigacion: '2026-08-13',
+        tipoInfraccion: 'Gravísima',
+        checklistDebidoProceso: [cierreIndagacion('2026-08-27')],
+      }),
+      new Date('2026-09-03T12:00:00.000Z'),
+    );
+
+    assert.equal(enPlazo.text, 'Cerró en plazo');
+    assert.equal(enPlazo.tone, 'normal');
+    assert.equal(fueraPlazo.text, 'Cerró fuera de plazo');
+    assert.equal(fueraPlazo.tone, 'overdue');
   });
 
   it('mantiene la bitácora y checklist como fuentes del detalle', () => {

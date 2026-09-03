@@ -21,6 +21,7 @@ export function getDashboardActions(causas: Causa[], today = new Date()): Dashbo
     .filter((causa) => !isClosed(causa))
     .map((causa) => {
       const deadline = getCausaDeadline(causa, today);
+      if (deadline.tone === 'normal') return null;
       const urgency: DashboardActionUrgency =
         deadline.remainingDays < 0
           ? 'overdue'
@@ -29,6 +30,7 @@ export function getDashboardActions(causas: Causa[], today = new Date()): Dashbo
             : 'warning';
       return { causa, remainingDays: deadline.remainingDays, label: deadline.text, urgency };
     })
+    .filter((action): action is DashboardAction => Boolean(action))
     .filter((action) => action.urgency !== 'warning' || action.remainingDays <= 5)
     .sort((left, right) => left.remainingDays - right.remainingDays);
 }

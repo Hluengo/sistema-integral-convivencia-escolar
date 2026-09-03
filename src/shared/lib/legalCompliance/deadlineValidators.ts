@@ -12,7 +12,33 @@ import {
   getMaxPlazoInvestigacionDias,
 } from './constants';
 import type { ResultadoPlazo } from './types';
-import { nowDateOnly } from '../../../shared/lib/dateUtils';
+import { nowDateOnly, toDateOnly } from '../../../shared/lib/dateUtils';
+
+const INVESTIGATION_CLOSE_ITEM_ID = 'chk_res_2';
+const INVESTIGATION_CLOSE_LABEL = 'Informe Cierre de Indagación Emitido';
+
+const normalizeDateOnly = (value?: string): string | undefined => {
+  if (!value) return undefined;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? undefined : toDateOnly(parsed);
+};
+
+export function getInvestigationClosureDate(
+  causa: Pick<Causa, 'checklistDebidoProceso' | 'bitacora'>,
+): string | undefined {
+  const checklistDate = causa.checklistDebidoProceso.find(
+    (item) => item.id === INVESTIGATION_CLOSE_ITEM_ID && item.completado,
+  )?.fechaCompletado;
+  const normalizedChecklistDate = normalizeDateOnly(checklistDate);
+  if (normalizedChecklistDate) return normalizedChecklistDate;
+
+  return causa.bitacora
+    .filter((entry) => entry.titulo.includes(INVESTIGATION_CLOSE_LABEL))
+    .map((entry) => normalizeDateOnly(entry.fecha))
+    .filter((date): date is string => Boolean(date))
+    .sort()[0];
+}
 
 /**
  * Verifica el estado del plazo de investigación
@@ -32,14 +58,26 @@ export function verificarPlazoInvestigacion(causa: Causa): ResultadoPlazo {
     causa.tipoInfraccion,
     causa.comprometeAulaSegura,
   );
+  const fechaInicio = causa.fechaInicioInvestigacion || causa.fechaApertura;
   const fechaLimite = calcularFechaLimiteInvestigacion(
-    causa.fechaApertura,
+    fechaInicio,
     causa.tipoInfraccion,
     causa.comprometeAulaSegura,
   );
-  const hoy = nowDateOnly();
-  const diasTranscurridos = calcularDiasHabiles(causa.fechaApertura, hoy);
+  const fechaCierre = getInvestigationClosureDate(causa);
+  const fechaEvaluacion = fechaCierre || nowDateOnly();
+  const diasTranscurridos = calcularDiasHabiles(fechaInicio, fechaEvaluacion);
   const diasRestantes = maxDias - diasTranscurridos;
+
+  if (fechaCierre && fechaCierre <= fechaLimite) {
+    return {
+      estado: 'cumplido',
+      diasRestantes: Math.max(0, diasRestantes),
+      diasTranscurridos,
+      fechaLimite,
+      mensaje: 'Investigación cerrada dentro de plazo',
+    };
+  }
 
   if (diasRestantes <= 0) {
     return {
@@ -47,7 +85,9 @@ export function verificarPlazoInvestigacion(causa: Causa): ResultadoPlazo {
       diasRestantes: 0,
       diasTranscurridos,
       fechaLimite,
-      mensaje: `PLAZO VENCIDO: La investigación ha excedido los ${maxDias} días hábiles`,
+      mensaje: fechaCierre
+        ? `PLAZO VENCIDO: La investigación cerró fuera de los ${maxDias} días hábiles`
+        : `PLAZO VENCIDO: La investigación ha excedido los ${maxDias} días hábiles`,
     };
   }
 
