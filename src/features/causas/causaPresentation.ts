@@ -7,7 +7,10 @@ import {
   calcularFechaLimiteInformeConcluyente,
   calcularFechaLimiteInvestigacion,
 } from '../../shared/lib/legalCompliance/deadlineCalculators';
-import { agregarDiasHabiles, calcularDiasHabiles } from '../../shared/lib/legalCompliance/dateUtils';
+import {
+  agregarDiasHabiles,
+  calcularDiasHabilesDesdeDiaSiguiente,
+} from '../../shared/lib/legalCompliance/dateUtils';
 import {
   PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS,
   PLAZO_INFORME_CONCLUYENTE_DIAS,
@@ -47,7 +50,7 @@ function presentBusinessDeadline(
   maxDays: number,
   today: Date,
 ): DeadlinePresentation {
-  const remainingDays = maxDays - calcularDiasHabiles(startDate, toDateOnly(today));
+  const remainingDays = maxDays - calcularDiasHabilesDesdeDiaSiguiente(startDate, toDateOnly(today));
   if (remainingDays < 0) return { remainingDays, text: 'Plazo excedido', tone: 'overdue' };
   if (remainingDays === 0) return { remainingDays, text: 'Vence hoy', tone: 'warning' };
   if (remainingDays <= 5) return { remainingDays, text: `${remainingDays} días`, tone: 'warning' };
@@ -124,7 +127,7 @@ export function getCausaDeadline(causa: Causa, today = new Date()): DeadlinePres
       : (causa.plazoInvestigacionDias ?? defaultMaxDays);
   const startDate = getInvestigationStartDate(causa) || causa.fechaApertura;
   if (fechaCierreInvestigacion) {
-    const fechaLimite = agregarDiasHabiles(startDate, maxDays - 1);
+    const fechaLimite = agregarDiasHabiles(startDate, maxDays);
     const closedPresentation = presentClosedDeadlineDate(fechaLimite, fechaCierreInvestigacion);
     if (closedPresentation) return closedPresentation;
   }

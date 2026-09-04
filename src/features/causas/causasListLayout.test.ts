@@ -161,7 +161,7 @@ describe('Listado de causas activas', () => {
         plazoInvestigacionDias: 60,
         fechaLimiteInvestigacion: '2026-09-22',
       }),
-      new Date('2026-07-15T12:00:00.000Z'),
+        new Date('2026-07-16T12:00:00.000Z'),
     );
     assert.equal(deadline.text, 'Plazo excedido');
   });
@@ -171,8 +171,8 @@ describe('Listado de causas activas', () => {
       cause({ fechaApertura: '2026-08-27', tipoInfraccion: 'Gravísima' }),
       new Date('2026-09-04T12:00:00.000Z'),
     );
-    assert.equal(deadline.remainingDays, 3);
-    assert.equal(deadline.text, '3 días');
+    assert.equal(deadline.remainingDays, 4);
+    assert.equal(deadline.text, '4 días');
   });
 
   it('usa el hito de cierre para evaluar si la indagación quedó excedida', () => {
@@ -190,7 +190,7 @@ describe('Listado de causas activas', () => {
         fechaApertura: '2026-08-13',
         fechaInicioInvestigacion: '2026-08-13',
         tipoInfraccion: 'Gravísima',
-        checklistDebidoProceso: [cierreIndagacion('2026-08-27')],
+        checklistDebidoProceso: [cierreIndagacion('2026-08-28')],
       }),
       new Date('2026-09-03T12:00:00.000Z'),
     );

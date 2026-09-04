@@ -12,7 +12,7 @@ import {
   calcularFechaLimiteInvestigacion,
   calcularFechaLimiteNotificacionSuperintendencia,
 } from './deadlineCalculators';
-import { calcularDiasHabiles } from './dateUtils';
+import { calcularDiasHabilesDesdeDiaSiguiente } from './dateUtils';
 import {
   MAX_PLAZO_INVESTIGACION_DIAS,
   PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS,
@@ -70,18 +70,17 @@ test('constantes legales centralizadas: investigación 60/10, concluyente 5, sus
   assert.equal(MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS, 5);
 });
 
-test('calcularFechaLimiteInvestigacion suma 60 días hábiles desde apertura', () => {
+test('calcularFechaLimiteInvestigacion suma 60 días hábiles desde el día siguiente', () => {
   const resultado = calcularFechaLimiteInvestigacion('2026-08-03');
-  // Invariante: entre apertura y límite hay exactamente 60 días hábiles.
-  assert.equal(calcularDiasHabiles('2026-08-03', resultado), 60);
+  assert.equal(calcularDiasHabilesDesdeDiaSiguiente('2026-08-03', resultado), 60);
   assert.ok(resultado > '2026-08-03');
 });
 
-test('calcularFechaLimiteInvestigacion suma 10 días hábiles para faltas Muy Graves y Gravísimas', () => {
+test('calcularFechaLimiteInvestigacion suma 10 días hábiles desde el día siguiente', () => {
   for (const tipoInfraccion of ['Muy Grave', 'Gravísima'] as const) {
     const resultado = calcularFechaLimiteInvestigacion('2026-08-03', tipoInfraccion);
     assert.equal(getMaxPlazoInvestigacionDias(tipoInfraccion), 10);
-    assert.equal(calcularDiasHabiles('2026-08-03', resultado), 10);
+    assert.equal(calcularDiasHabilesDesdeDiaSiguiente('2026-08-03', resultado), 10);
   }
 });
 
@@ -120,12 +119,12 @@ test('verificarPlazoInvestigacion evalúa contra el hito de cierre de indagació
       fechaApertura: '2026-08-13',
       fechaInicioInvestigacion: '2026-08-13',
       tipoInfraccion: 'Gravísima',
-      checklistDebidoProceso: [cierreIndagacion('2026-08-27')],
+      checklistDebidoProceso: [cierreIndagacion('2026-08-28')],
     }),
   );
 
   assert.equal(enPlazo.estado, 'cumplido');
-  assert.equal(enPlazo.fechaLimite, '2026-08-26');
+  assert.equal(enPlazo.fechaLimite, '2026-08-27');
   assert.equal(fueraPlazo.estado, 'vencido');
   assert.match(fueraPlazo.mensaje, /cerró fuera/);
 });

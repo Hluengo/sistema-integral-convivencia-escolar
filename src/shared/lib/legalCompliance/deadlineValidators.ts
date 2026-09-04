@@ -1,6 +1,9 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 import type { Causa } from '@/shared/lib/types';
-import { calcularDiasHabiles, agregarDiasHabiles } from './dateUtils';
+import {
+  calcularDiasHabilesDesdeDiaSiguiente,
+  agregarDiasHabiles,
+} from './dateUtils';
 import {
   calcularFechaLimiteInvestigacion,
   calcularFechaLimiteNotificacionSuperintendencia,
@@ -104,7 +107,7 @@ export function verificarPlazoInvestigacion(causa: Causa): ResultadoPlazo {
   );
   const fechaCierre = getInvestigationClosureDate(causa);
   const fechaEvaluacion = fechaCierre || nowDateOnly();
-  const diasTranscurridos = calcularDiasHabiles(fechaInicio, fechaEvaluacion);
+  const diasTranscurridos = calcularDiasHabilesDesdeDiaSiguiente(fechaInicio, fechaEvaluacion);
   const diasRestantes = maxDias - diasTranscurridos;
 
   if (fechaCierre && fechaCierre <= fechaLimite) {
@@ -175,7 +178,7 @@ export function verificarPlazoInformeConcluyente(causa: Causa): ResultadoPlazo {
 
   const fechaLimite = calcularFechaLimiteInformeConcluyente(fechaCierre);
   const fechaEvaluacion = fechaInforme || nowDateOnly();
-  const diasTranscurridos = calcularDiasHabiles(fechaCierre, fechaEvaluacion);
+  const diasTranscurridos = calcularDiasHabilesDesdeDiaSiguiente(fechaCierre, fechaEvaluacion);
   const diasRestantes = PLAZO_INFORME_CONCLUYENTE_DIAS - diasTranscurridos;
   if (fechaInforme && fechaInforme <= fechaLimite) {
     return {
@@ -220,7 +223,7 @@ export function verificarPlazoSuspension(causa: Causa): ResultadoPlazo {
   const duracion = causa.duracionSuspensionDias || 0;
   const fechaLimite = agregarDiasHabiles(causa.fechaInicioSuspension, duracion);
   const hoy = nowDateOnly();
-  const diasTranscurridos = calcularDiasHabiles(causa.fechaInicioSuspension, hoy);
+  const diasTranscurridos = calcularDiasHabilesDesdeDiaSiguiente(causa.fechaInicioSuspension, hoy);
   const diasRestantes = duracion - diasTranscurridos;
 
   if (duracion > MAX_PLAZO_SUSPENSION_DIAS) {
@@ -281,7 +284,7 @@ export function verificarPlazoNotificacionSuperintendencia(causa: Causa): Result
     const fechaReferencia = causa.fechaUltimaActualizacion || nowDateOnly();
     const fechaLimite = calcularFechaLimiteNotificacionSuperintendencia(fechaReferencia);
     const hoy = nowDateOnly();
-    const diasTranscurridos = calcularDiasHabiles(fechaReferencia, hoy);
+    const diasTranscurridos = calcularDiasHabilesDesdeDiaSiguiente(fechaReferencia, hoy);
     const diasRestantes = MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS - diasTranscurridos;
 
     if (diasRestantes <= 0) {

@@ -25,8 +25,7 @@ export function calcularFechaLimiteInvestigacion(
   const maxDias = tipoInfraccion
     ? getMaxPlazoInvestigacionDias(tipoInfraccion, comprometeAulaSegura)
     : MAX_PLAZO_INVESTIGACION_DIAS;
-  // La fecha de apertura cuenta como el primer día hábil del plazo.
-  return agregarDiasHabiles(fechaApertura, maxDias - 1);
+  return agregarDiasHabiles(fechaApertura, maxDias);
 }
 
 export function calcularFechaLimiteInformeConcluyente(fechaCierreIndagacion: string): string {
@@ -34,7 +33,7 @@ export function calcularFechaLimiteInformeConcluyente(fechaCierreIndagacion: str
 }
 
 export function calcularFechaLimiteCierreIndagacion(fechaInicioInvestigacion: string): string {
-  return agregarDiasHabiles(fechaInicioInvestigacion, PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS - 1);
+  return agregarDiasHabiles(fechaInicioInvestigacion, PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS);
 }
 
 /**

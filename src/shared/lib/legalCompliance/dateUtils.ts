@@ -35,6 +35,12 @@ export function calcularDiasHabiles(fechaInicio: string, fechaFin: string): numb
   return dias;
 }
 
+export function calcularDiasHabilesDesdeDiaSiguiente(fechaInicio: string, fechaFin: string): number {
+  const inicio = parseDateOnly(fechaInicio);
+  const iniciaEnDiaHabil = inicio.getDay() !== 0 && inicio.getDay() !== 6;
+  return Math.max(0, calcularDiasHabiles(fechaInicio, fechaFin) - (iniciaEnDiaHabil ? 1 : 0));
+}
+
 /**
  * Agrega días hábiles a una fecha
  */
