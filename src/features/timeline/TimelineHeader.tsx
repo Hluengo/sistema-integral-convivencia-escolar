@@ -61,7 +61,8 @@ export default function TimelineHeader({
             <span>{getCausaStatus(causa)}</span>
             <span className="inline-flex items-center gap-1">
               <CalendarClock className="size-3.5" aria-hidden="true" />
-              Cierre indagación: {deadlines.cierreIndagacion.text}
+              Cierre indagación: {formatChileDate(deadlines.cierreIndagacion.deadlineDate)} (
+              {deadlines.cierreIndagacion.text})
             </span>
             {deadlines.informeConcluyente && (
               <span>Informe concluyente: {deadlines.informeConcluyente.text}</span>

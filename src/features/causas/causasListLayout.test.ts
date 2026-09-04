@@ -173,6 +173,7 @@ describe('Listado de causas activas', () => {
     );
     assert.equal(deadline.remainingDays, 4);
     assert.equal(deadline.text, '4 días');
+    assert.equal(deadline.deadlineDate, '2026-09-10');
   });
 
   it('usa el hito de cierre para evaluar si la indagación quedó excedida', () => {

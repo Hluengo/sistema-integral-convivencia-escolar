@@ -45,7 +45,10 @@ export default memo(function ResumenTab({ causa, breaches, privacyMode }: Resume
             label: 'Plazos procedimentales',
             value: (
               <div className="space-y-0.5">
-                <p>Cierre: {deadlines.cierreIndagacion.text}</p>
+                <p>
+                  Cierre: {formatChileDate(deadlines.cierreIndagacion.deadlineDate)} ·{' '}
+                  {deadlines.cierreIndagacion.text}
+                </p>
                 {deadlines.informeConcluyente && (
                   <p>Concluyente: {deadlines.informeConcluyente.text}</p>
                 )}

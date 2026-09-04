@@ -27,6 +27,7 @@ export interface DeadlinePresentation {
   remainingDays: number;
   text: string;
   tone: 'normal' | 'warning' | 'overdue';
+  deadlineDate: string;
 }
 
 export interface CausaDeadlineStages {
@@ -39,22 +40,23 @@ function presentDeadlineDate(fechaLimite: string, today: Date): DeadlinePresenta
   if (Number.isNaN(deadline)) return null;
   const todayDate = Date.parse(`${toDateOnly(today)}T12:00:00Z`);
   const remainingDays = Math.round((deadline - todayDate) / 86_400_000);
-  if (remainingDays < 0) return { remainingDays, text: 'Plazo excedido', tone: 'overdue' };
-  if (remainingDays === 0) return { remainingDays, text: 'Vence hoy', tone: 'warning' };
-  if (remainingDays <= 5) return { remainingDays, text: `${remainingDays} días`, tone: 'warning' };
-  return { remainingDays, text: `${remainingDays} días`, tone: 'normal' };
+  if (remainingDays < 0) return { remainingDays, text: 'Plazo excedido', tone: 'overdue', deadlineDate: fechaLimite };
+  if (remainingDays === 0) return { remainingDays, text: 'Vence hoy', tone: 'warning', deadlineDate: fechaLimite };
+  if (remainingDays <= 5) return { remainingDays, text: `${remainingDays} días`, tone: 'warning', deadlineDate: fechaLimite };
+  return { remainingDays, text: `${remainingDays} días`, tone: 'normal', deadlineDate: fechaLimite };
 }
 
 function presentBusinessDeadline(
   startDate: string,
   maxDays: number,
   today: Date,
+  deadlineDate: string,
 ): DeadlinePresentation {
   const remainingDays = maxDays - calcularDiasHabilesDesdeDiaSiguiente(startDate, toDateOnly(today));
-  if (remainingDays < 0) return { remainingDays, text: 'Plazo excedido', tone: 'overdue' };
-  if (remainingDays === 0) return { remainingDays, text: 'Vence hoy', tone: 'warning' };
-  if (remainingDays <= 5) return { remainingDays, text: `${remainingDays} días`, tone: 'warning' };
-  return { remainingDays, text: `${remainingDays} días`, tone: 'normal' };
+  if (remainingDays < 0) return { remainingDays, text: 'Plazo excedido', tone: 'overdue', deadlineDate };
+  if (remainingDays === 0) return { remainingDays, text: 'Vence hoy', tone: 'warning', deadlineDate };
+  if (remainingDays <= 5) return { remainingDays, text: `${remainingDays} días`, tone: 'warning', deadlineDate };
+  return { remainingDays, text: `${remainingDays} días`, tone: 'normal', deadlineDate };
 }
 
 function presentClosedDeadlineDate(
@@ -65,8 +67,8 @@ function presentClosedDeadlineDate(
   const closed = Date.parse(`${fechaCierre}T12:00:00Z`);
   if (Number.isNaN(deadline) || Number.isNaN(closed)) return null;
   const remainingDays = Math.round((deadline - closed) / 86_400_000);
-  if (remainingDays < 0) return { remainingDays, text: 'Cerró fuera de plazo', tone: 'overdue' };
-  return { remainingDays, text: 'Cerró en plazo', tone: 'normal' };
+  if (remainingDays < 0) return { remainingDays, text: 'Cerró fuera de plazo', tone: 'overdue', deadlineDate: fechaLimite };
+  return { remainingDays, text: 'Cerró en plazo', tone: 'normal', deadlineDate: fechaLimite };
 }
 
 export function getCausaPhase(causa: Causa): FaseProcedimental {
@@ -119,7 +121,7 @@ export function getCausaDeadline(causa: Causa, today = new Date()): DeadlinePres
       const closedPresentation = presentClosedDeadlineDate(fechaLimite, fechaCierreInvestigacion);
       if (closedPresentation) return closedPresentation;
     }
-    return presentBusinessDeadline(startDate, defaultMaxDays, today);
+    return presentBusinessDeadline(startDate, defaultMaxDays, today, fechaLimite);
   }
   const maxDays =
     isHighSeverity
@@ -132,17 +134,18 @@ export function getCausaDeadline(causa: Causa, today = new Date()): DeadlinePres
     if (closedPresentation) return closedPresentation;
   }
   const remainingDays = remainingProcedureDays(startDate, maxDays, today);
+  const deadlineDate = agregarDiasHabiles(startDate, maxDays);
 
   if (remainingDays < 0) {
-    return { remainingDays, text: 'Plazo excedido', tone: 'overdue' };
+    return { remainingDays, text: 'Plazo excedido', tone: 'overdue', deadlineDate };
   }
   if (remainingDays === 0) {
-    return { remainingDays, text: 'Vence hoy', tone: 'warning' };
+    return { remainingDays, text: 'Vence hoy', tone: 'warning', deadlineDate };
   }
   if (remainingDays <= 5) {
-    return { remainingDays, text: `${remainingDays} días`, tone: 'warning' };
+    return { remainingDays, text: `${remainingDays} días`, tone: 'warning', deadlineDate };
   }
-  return { remainingDays, text: `${remainingDays} días`, tone: 'normal' };
+  return { remainingDays, text: `${remainingDays} días`, tone: 'normal', deadlineDate };
 }
 
 export function getCausaDeadlineStages(causa: Causa, today = new Date()): CausaDeadlineStages {
@@ -159,14 +162,19 @@ export function getCausaDeadlineStages(causa: Causa, today = new Date()): CausaD
   const fechaLimiteCierre = calcularFechaLimiteCierreIndagacion(startDate);
   const cierreIndagacion = fechaCierre
     ? presentClosedDeadlineDate(fechaLimiteCierre, fechaCierre)
-    : presentBusinessDeadline(startDate, maxDays, today);
+    : presentBusinessDeadline(startDate, maxDays, today, fechaLimiteCierre);
   const fechaInforme = getConclusiveReportDate(causa);
   const informeConcluyente = fechaCierre
     ? (() => {
         const fechaLimiteInforme = calcularFechaLimiteInformeConcluyente(fechaCierre);
         return fechaInforme
           ? presentClosedDeadlineDate(fechaLimiteInforme, fechaInforme)
-          : presentBusinessDeadline(fechaCierre, PLAZO_INFORME_CONCLUYENTE_DIAS, today);
+          : presentBusinessDeadline(
+              fechaCierre,
+              PLAZO_INFORME_CONCLUYENTE_DIAS,
+              today,
+              fechaLimiteInforme,
+            );
       })()
     : null;
 

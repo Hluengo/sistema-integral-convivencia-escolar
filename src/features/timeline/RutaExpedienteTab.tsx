@@ -5,6 +5,7 @@ import { ArrowRight, CircleCheck, Files, ListChecks, MoveRight } from 'lucide-re
 import type { Causa, FaseProcedimental } from '../../shared/lib/types';
 import { getCausaDeadlineStages } from '../causas/causaPresentation';
 import { getCausaOperationalSummary } from '../causas/causaOperationalSummary';
+import { formatChileDate } from '../../shared/lib/dateTime';
 
 interface RutaExpedienteTabProps {
   causa: Causa;
@@ -42,7 +43,8 @@ export default memo(function RutaExpedienteTab({
           </div>
           <div className="flex flex-wrap justify-end gap-2">
             <span className={`rounded-full border px-2.5 py-1 font-semibold text-xs ${deadlineClass(deadlines.cierreIndagacion.tone)}`}>
-              Plazo: Cierre: {deadlines.cierreIndagacion.text}
+                Plazo: Cierre: {formatChileDate(deadlines.cierreIndagacion.deadlineDate)} ·{' '}
+                {deadlines.cierreIndagacion.text}
             </span>
             {deadlines.informeConcluyente && (
               <span className={`rounded-full border px-2.5 py-1 font-semibold text-xs ${deadlineClass(deadlines.informeConcluyente.tone)}`}>
