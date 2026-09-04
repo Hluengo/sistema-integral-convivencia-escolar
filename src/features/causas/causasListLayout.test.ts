@@ -166,6 +166,15 @@ describe('Listado de causas activas', () => {
     assert.equal(deadline.text, 'Plazo excedido');
   });
 
+  it('presenta el plazo de alta complejidad en días hábiles', () => {
+    const deadline = getCausaDeadline(
+      cause({ fechaApertura: '2026-08-27', tipoInfraccion: 'Gravísima' }),
+      new Date('2026-09-04T12:00:00.000Z'),
+    );
+    assert.equal(deadline.remainingDays, 3);
+    assert.equal(deadline.text, '3 días');
+  });
+
   it('usa el hito de cierre para evaluar si la indagación quedó excedida', () => {
     const enPlazo = getCausaDeadline(
       cause({
