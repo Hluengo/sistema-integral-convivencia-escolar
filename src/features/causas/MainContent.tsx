@@ -122,12 +122,6 @@ export default function MainContent({
         <ErrorBoundary>
           <Suspense fallback={<ViewLoader view={currentView} />}>
             <AdvisorView
-              causas={causaWorkspace.causas}
-              selectedCausa={causaWorkspace.selectedCausa ?? undefined}
-              selectedCausaId={causaWorkspace.selectedCausaId}
-              isCausaDetailLoading={causaWorkspace.isCausaDetailLoading}
-              privacyMode={privacyMode}
-              onSelectCausa={causaWorkspace.setSelectedCausaId}
             />
           </Suspense>
         </ErrorBoundary>

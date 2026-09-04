@@ -102,10 +102,10 @@ describe('Listado de causas activas', () => {
     assert.match(tabs, /Historial/);
     assert.doesNotMatch(tabs, /Asistente legal/);
     assert.match(advisor, /Consulta legal/);
-    assert.match(advisor, /Redacción documentos/);
-    assert.match(advisor, /Plantillas/);
-    assert.match(advisor, /Auditoría legal/);
-    assert.match(advisor, /legal-case-selector/);
+    assert.doesNotMatch(advisor, /Redacción documentos/);
+    assert.doesNotMatch(advisor, /Plantillas/);
+    assert.doesNotMatch(advisor, /Auditoría legal/);
+    assert.doesNotMatch(advisor, /legal-case-selector/);
     assert.doesNotMatch(tabs, /Recepción/);
     for (const phase of ['Recepción', 'Investigación', 'Resolución', 'Apelación', 'Seguimiento']) {
       assert.match(operationalSummary, new RegExp(phase));
@@ -333,12 +333,9 @@ describe('Listado de causas activas', () => {
   });
 
   it('mantiene Plantillas como administración clara, con estados de acceso y sin recargas repetidas', () => {
-    const advisor = read('MainContent/AdvisorView.tsx');
     const templates = read('../document-templates/TemplateEditor.tsx');
     const templatesService = read('../../shared/api/services/documentTemplates.service.ts');
 
-    assert.doesNotMatch(advisor, /Asistente de convivencia escolar/);
-    assert.match(advisor, /hitos, checklist, adjuntos y fuentes jurídicas/);
     assert.match(templates, /Plantillas institucionales/);
     assert.match(templates, /No hay plantillas institucionales disponibles/);
     assert.match(templates, /min-h-\[440px\]/);
