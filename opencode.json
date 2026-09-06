@@ -1,0 +1,47 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "IDIOMA OBLIGATORIO: responde SIEMPRE en español (es-CL). Todo lo informado — resúmenes, explicaciones, errores, planes, comentarios de código y mensajes de commit — debe estar en español.",
+    "Antes de codificar, lee los archivos relevantes del proyecto (src/, server/, supabase/) y reutiliza patrones existentes (zod, tanstack/react-query, zustand, react-hook-form).",
+    "Ahorro de tokens: respuestas concisas, sin redundancia. Reutiliza skills y memoria antes de pedir contexto. Solo carga los plugins necesarios para la tarea.",
+    "Flujo de trabajo: 1) arquitectura (qué y por qué), 2) implementación (código + tipos + tests), 3) verificación (npm run lint && npm run typecheck).",
+    "Seguridad: nunca expongas secretos. Usa variables $VAR desde .env.local. SUPABASE_SERVICE_ROLE_KEY solo en servidor."
+  ],
+  "mcp": {
+    "sistema-archivos": {
+      "type": "local",
+      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."],
+      "enabled": true
+    },
+    "git": {
+      "type": "local",
+      "command": ["npx", "-y", "mcp-server-git", "--repository", "."],
+      "enabled": true
+    },
+    "supabase": {
+      "type": "remote",
+      "url": "https://mcp.supabase.com/mcp",
+      "enabled": true,
+      "note": "Activa este servidor cuando trabajes con la base de datos. Requiere SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY en .env.local (solo servidor, nunca en frontend)."
+    },
+    "contexto-docs": {
+      "type": "local",
+      "command": ["npx", "-y", "@upstash/context7-mcp", "--api-key", "$CONTEXT7_API_KEY"],
+      "enabled": true,
+      "note": "Documentación actualizada de librerías (React, Vite, Supabase). Requiere CONTEXT7_API_KEY en .env.local."
+    }
+  },
+  "plugin": ["./plugins/index.ts", "@dietrichgebert/ponytail"],
+  "skills": ["./skills/arquitectura-claude", "./skills/optimizacion-tokens", "./skills/react-supabase", "./skills/memoria-contexto"],
+  "agents": {
+    "arquitectura": "./.agents/arquitectura.ts",
+    "implementacion": "./.agents/implementacion.ts",
+    "memoria": "./.agents/memoria.ts"
+  },
+  "memoria": {
+    "directorio": "./.memory",
+    "idioma": "es",
+    "presupuestoTokensPorSesion": 60000,
+    "estrategia": "cachear-patrones-reutilizables + comprimir-prompts + enrutar-modelo-segun-complejidad"
+  }
+}
