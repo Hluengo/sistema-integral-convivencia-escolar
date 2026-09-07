@@ -1,16 +1,25 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { type Dispatch, type SetStateAction, useCallback, useEffect, useRef } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import type { Causa } from '@/shared/lib/types';
-import { saveBitacora } from '@/shared/api/services/bitacora.service';
-import { saveChecklist } from '@/shared/api/services/checklist.service';
-import { updateCausa } from '@/shared/api/services/causas.service';
-import { useAuthStore } from '@/shared/lib/stores/authStore';
-import { persistExistingCausa, type CausaPersistenceChanges } from './causaPersistence';
-import { invalidateDashboardQueries } from './useInvalidateDashboardQueries';
+import {
+  type Dispatch,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useRef,
+} from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import type { Causa } from "@/shared/lib/types";
+import { saveBitacora } from "@/shared/api/services/bitacora.service";
+import { saveChecklist } from "@/shared/api/services/checklist.service";
+import { updateCausa } from "@/shared/api/services/causas.service";
+import { useAuthStore } from "@/shared/lib/stores/authStore";
+import {
+  persistExistingCausa,
+  type CausaPersistenceChanges,
+} from "./causaPersistence";
+import { invalidateDashboardQueries } from "./useInvalidateDashboardQueries";
 
-type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 interface UseCausasPersistenceArgs {
   causas: Causa[];
@@ -32,8 +41,12 @@ export function useCausasPersistence({
   onPersisted,
 }: UseCausasPersistenceArgs) {
   const queryClient = useQueryClient();
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const saveIdleTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  const saveIdleTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
   const saveGenerationRef = useRef(0);
   const isMountedRef = useRef(true);
   const prevCausasMapRef = useRef<Map<string, Causa>>(new Map());
@@ -42,7 +55,9 @@ export function useCausasPersistence({
   >(new Map());
 
   const markCausasHydrated = useCallback((hydratedCausas: Causa[]) => {
-    prevCausasMapRef.current = new Map(hydratedCausas.map((causa) => [causa.id, causa]));
+    prevCausasMapRef.current = new Map(
+      hydratedCausas.map((causa) => [causa.id, causa]),
+    );
   }, []);
 
   const markCausaHydrated = useCallback((hydratedCausa: Causa) => {
@@ -75,7 +90,8 @@ export function useCausasPersistence({
       const changes: CausaPersistenceChanges = prev
         ? {
             causa: serializeCausaCore(prev) !== serializeCausaCore(causa),
-            bitacora: JSON.stringify(prev.bitacora) !== JSON.stringify(causa.bitacora),
+            bitacora:
+              JSON.stringify(prev.bitacora) !== JSON.stringify(causa.bitacora),
             checklist:
               JSON.stringify(prev.checklistDebidoProceso) !==
               JSON.stringify(causa.checklistDebidoProceso),
@@ -91,7 +107,8 @@ export function useCausasPersistence({
       if (changes.causa || changes.bitacora || changes.checklist) {
         const pending = pendingSaveRef.current.get(causa.id);
         pendingSaveRef.current.set(causa.id, {
-          previousCausa: pending?.previousCausa ?? createInitialSnapshot(causa, prev),
+          previousCausa:
+            pending?.previousCausa ?? createInitialSnapshot(causa, prev),
           changes: {
             causa: pending?.changes.causa || changes.causa,
             bitacora: pending?.changes.bitacora || changes.bitacora,
@@ -116,24 +133,32 @@ export function useCausasPersistence({
       pendingSaveRef.current.clear();
       if (pendingSaves.size === 0) return;
 
-      setSaveStatus('saving');
+      setSaveStatus("saving");
       try {
-        const causasToSave = causas.filter((causa) => pendingSaves.has(causa.id));
+        const causasToSave = causas.filter((causa) =>
+          pendingSaves.has(causa.id),
+        );
         const results = await Promise.all(
           causasToSave.map((causa) => {
             const pending = pendingSaves.get(causa.id);
             if (!pending) return true;
-            return persistExistingCausa(causa, pending.previousCausa, pending.changes, {
-              updateCausa: (c) => updateCausa(c, useAuthStore.getState().tenantId),
-              saveBitacora,
-              saveChecklist,
-            });
+            return persistExistingCausa(
+              causa,
+              pending.previousCausa,
+              pending.changes,
+              {
+                updateCausa: (c) =>
+                  updateCausa(c, useAuthStore.getState().tenantId),
+                saveBitacora,
+                saveChecklist,
+              },
+            );
           }),
         );
 
         if (!isMountedRef.current) return;
         if (results.some((result) => !result)) {
-          setSaveStatus('error');
+          setSaveStatus("error");
           return;
         }
 
@@ -141,19 +166,30 @@ export function useCausasPersistence({
         void invalidateDashboardQueries(queryClient);
         for (const causa of causasToSave) {
           if (causa.incidenteId) {
-            void queryClient.invalidateQueries({ queryKey: ['incidente', causa.incidenteId] });
+            void queryClient.invalidateQueries({
+              queryKey: ["incidente", causa.incidenteId],
+            });
+            void queryClient.invalidateQueries({
+              queryKey: [
+                "causas",
+                useAuthStore.getState().tenantId ?? "",
+                "details",
+              ],
+            });
           }
         }
-        setSaveStatus('saved');
+        setSaveStatus("saved");
         saveIdleTimeoutRef.current = setTimeout(() => {
           if (isMountedRef.current) {
-            setSaveStatus((previous) => (previous === 'saved' ? 'idle' : previous));
+            setSaveStatus((previous) =>
+              previous === "saved" ? "idle" : previous,
+            );
           }
         }, 2000);
       } catch (error) {
         if (!isMountedRef.current) return;
-        console.error('Autosave failed:', error);
-        setSaveStatus('error');
+        console.error("Autosave failed:", error);
+        setSaveStatus("error");
       }
     }, 2000);
 
@@ -173,11 +209,18 @@ export function useCausasPersistence({
 }
 
 function serializeCausaCore(causa: Causa): string {
-  const { bitacora: _bitacora, checklistDebidoProceso: _checklist, ...core } = causa;
+  const {
+    bitacora: _bitacora,
+    checklistDebidoProceso: _checklist,
+    ...core
+  } = causa;
   return JSON.stringify(core);
 }
 
-function createInitialSnapshot(causa: Causa, previousCausa: Causa | undefined): Causa {
+function createInitialSnapshot(
+  causa: Causa,
+  previousCausa: Causa | undefined,
+): Causa {
   if (previousCausa) return previousCausa;
   return { ...causa, bitacora: [], checklistDebidoProceso: [] };
 }

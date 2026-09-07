@@ -1,11 +1,11 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
-import type { Causa } from '../../lib/types';
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+import type { Causa } from "../../lib/types";
 
-process.env.VITE_SUPABASE_URL ??= 'https://example.supabase.co';
-process.env.VITE_SUPABASE_ANON_KEY ??= 'anon-key-for-unit-tests';
+process.env.VITE_SUPABASE_URL ??= "https://example.supabase.co";
+process.env.VITE_SUPABASE_ANON_KEY ??= "anon-key-for-unit-tests";
 
 /** Cadena encadenable para mockear `supabase.from(...)` en tests. */
 class MockQueryBuilder<T> {
@@ -71,8 +71,8 @@ async function withCausasMocks(
   fn: () => Promise<unknown>,
 ): Promise<unknown> {
   const [{ supabase }, { useAuthStore }] = await Promise.all([
-    import('../lib/supabase'),
-    import('../../lib/stores/authStore'),
+    import("../lib/supabase"),
+    import("../../lib/stores/authStore"),
   ]);
   const mutable = supabase as unknown as MutableSupabase;
   const originalFrom = mutable.from;
@@ -82,11 +82,13 @@ async function withCausasMocks(
   mutable.from = (table) =>
     new MockQueryBuilder(
       table,
-      (options.resultForTable ?? (() => ({ data: null, error: null })))(table) as never,
+      (options.resultForTable ?? (() => ({ data: null, error: null })))(
+        table,
+      ) as never,
     );
   console.error = () => undefined;
   useAuthStore.setState({
-    tenantId: options.tenantId === undefined ? 'tenant-1' : options.tenantId,
+    tenantId: options.tenantId === undefined ? "tenant-1" : options.tenantId,
   });
 
   try {
@@ -100,18 +102,18 @@ async function withCausasMocks(
 
 function makeCausaRow(overrides: Record<string, unknown> = {}) {
   return {
-    id: 'DC-2026-001',
-    estudiante_nombre: 'Estudiante',
-    estudiante_curso: '8° Básico A',
-    nna_protected_name: 'E.P.',
-    run_estudiante: '23.456.789-K',
-    fecha_apertura: '2026-08-01',
-    estado_actual: 'Recepción de Denuncia',
-    tipo_infraccion: 'Leve',
-    responsable: 'Inspectoría',
+    id: "DC-2026-001",
+    estudiante_nombre: "Estudiante",
+    estudiante_curso: "8° Básico A",
+    nna_protected_name: "E.P.",
+    run_estudiante: "23.456.789-K",
+    fecha_apertura: "2026-08-01",
+    estado_actual: "Recepción de Denuncia",
+    tipo_infraccion: "Leve",
+    responsable: "Inspectoría",
     compromete_aula_segura: false,
-    fecha_ultima_actualizacion: '2026-08-01',
-    observaciones: '',
+    fecha_ultima_actualizacion: "2026-08-01",
+    observaciones: "",
     conducta_rice_id: null,
     medidas_ejecutadas: [],
     ...overrides,
@@ -120,14 +122,14 @@ function makeCausaRow(overrides: Record<string, unknown> = {}) {
 
 function makeChecklistRow(overrides: Record<string, unknown> = {}) {
   return {
-    id: 'chk_rec_1',
-    causa_id: 'DC-2026-001',
-    label: 'Recepción de Denuncia',
-    descripcion: 'Se recibe formalmente el reporte.',
+    id: "chk_rec_1",
+    causa_id: "DC-2026-001",
+    label: "Recepción de Denuncia",
+    descripcion: "Se recibe formalmente el reporte.",
     completado: true,
-    fecha_completado: '2026-08-01',
-    requerido_por: 'Circular 482',
-    registrado_por: 'user-1',
+    fecha_completado: "2026-08-01",
+    requerido_por: "Circular 482",
+    registrado_por: "user-1",
     observaciones: null,
     documento_nombre: null,
     documento_url: null,
@@ -137,46 +139,49 @@ function makeChecklistRow(overrides: Record<string, unknown> = {}) {
 
 function makeBitacoraRow(overrides: Record<string, unknown> = {}) {
   return {
-    id: 'b-1',
-    causa_id: 'DC-2026-001',
-    fecha: '2026-08-01',
-    tipo: 'Entrevista',
-    titulo: 'Entrevista inicial',
-    descripcion: 'Se recoge la versión del estudiante.',
-    participantes: ['user-1'],
+    id: "b-1",
+    causa_id: "DC-2026-001",
+    fecha: "2026-08-01",
+    tipo: "Entrevista",
+    titulo: "Entrevista inicial",
+    descripcion: "Se recoge la versión del estudiante.",
+    participantes: ["user-1"],
     documento_adjunto: null,
     ...overrides,
   };
 }
 
-describe('fetchCausasPage', () => {
-  it('mapea filas y no indica siguiente página cuando no sobran', async () => {
+describe("fetchCausasPage", () => {
+  it("mapea filas y no indica siguiente página cuando no sobran", async () => {
     const result = await withCausasMocks(
       {
         resultForTable: () => ({ data: [makeCausaRow()], error: null }),
       },
       async () => {
-        const { fetchCausasPage } = await import('./causas.service');
+        const { fetchCausasPage } = await import("./causas.service");
         return fetchCausasPage(0, 50);
       },
     );
     const page = result as { causas: Causa[]; nextOffset?: number };
     assert.equal(page.causas.length, 1);
-    assert.equal(page.causas[0].id, 'DC-2026-001');
-    assert.equal(page.causas[0].estudianteNombre, 'Estudiante');
+    assert.equal(page.causas[0].id, "DC-2026-001");
+    assert.equal(page.causas[0].estudianteNombre, "Estudiante");
     assert.equal(page.nextOffset, undefined);
   });
 
-  it('indica siguiente página cuando la consulta devuelve más de lo pedido', async () => {
+  it("indica siguiente página cuando la consulta devuelve más de lo pedido", async () => {
     const result = await withCausasMocks(
       {
         resultForTable: () => ({
-          data: [makeCausaRow({ id: 'DC-2026-001' }), makeCausaRow({ id: 'DC-2026-002' })],
+          data: [
+            makeCausaRow({ id: "DC-2026-001" }),
+            makeCausaRow({ id: "DC-2026-002" }),
+          ],
           error: null,
         }),
       },
       async () => {
-        const { fetchCausasPage } = await import('./causas.service');
+        const { fetchCausasPage } = await import("./causas.service");
         return fetchCausasPage(0, 1);
       },
     );
@@ -185,17 +190,17 @@ describe('fetchCausasPage', () => {
     assert.equal(page.nextOffset, 1);
   });
 
-  it('carga el resumen de hitos para que el listado refleje la fase real', async () => {
+  it("carga el resumen de hitos para que el listado refleje la fase real", async () => {
     const result = await withCausasMocks(
       {
         resultForTable: (table) =>
-          table === 'checklist_items'
+          table === "checklist_items"
             ? {
                 data: [
                   makeChecklistRow({
-                    id: 'chk_res_2',
+                    id: "chk_res_2",
                     completado: true,
-                    fecha_completado: '2026-08-27',
+                    fecha_completado: "2026-08-27",
                   }),
                 ],
                 error: null,
@@ -203,21 +208,24 @@ describe('fetchCausasPage', () => {
             : { data: [makeCausaRow()], error: null },
       },
       async () => {
-        const { fetchCausasPage } = await import('./causas.service');
+        const { fetchCausasPage } = await import("./causas.service");
         return fetchCausasPage();
       },
     );
     const page = result as { causas: Causa[] };
-    assert.equal(page.causas[0].checklistDebidoProceso[0]?.id, 'chk_res_2');
-    assert.equal(page.causas[0].checklistDebidoProceso[0]?.fechaCompletado, '2026-08-27');
+    assert.equal(page.causas[0].checklistDebidoProceso[0]?.id, "chk_res_2");
+    assert.equal(
+      page.causas[0].checklistDebidoProceso[0]?.fechaCompletado,
+      "2026-08-27",
+    );
   });
 
-  it('propaga el error de lectura', async () => {
+  it("propaga el error de lectura", async () => {
     await assert.rejects(
       withCausasMocks(
-        { resultForTable: () => ({ data: null, error: new Error('db down') }) },
+        { resultForTable: () => ({ data: null, error: new Error("db down") }) },
         async () => {
-          const { fetchCausasPage } = await import('./causas.service');
+          const { fetchCausasPage } = await import("./causas.service");
           return fetchCausasPage();
         },
       ),
@@ -225,71 +233,136 @@ describe('fetchCausasPage', () => {
     );
   });
 
-  it('lanza error genérico cuando no hay datos ni error', async () => {
+  it("lanza error genérico cuando no hay datos ni error", async () => {
     await assert.rejects(
-      withCausasMocks({ resultForTable: () => ({ data: null, error: null }) }, async () => {
-        const { fetchCausasPage } = await import('./causas.service');
-        return fetchCausasPage();
-      }),
+      withCausasMocks(
+        { resultForTable: () => ({ data: null, error: null }) },
+        async () => {
+          const { fetchCausasPage } = await import("./causas.service");
+          return fetchCausasPage();
+        },
+      ),
       /No se recibieron causas/,
     );
   });
 });
 
-describe('fetchCausaDetails', () => {
-  it('ensambla causa con checklist y bitácora reconciliados', async () => {
+describe("fetchCausaDetails", () => {
+  it("ensambla causa con checklist y bitácora reconciliados", async () => {
     const result = await withCausasMocks(
       {
         resultForTable: (table) => {
-          if (table === 'causas') return { data: makeCausaRow(), error: null };
-          if (table === 'checklist_items') return { data: [makeChecklistRow()], error: null };
-          if (table === 'bitacora_entries') return { data: [makeBitacoraRow()], error: null };
+          if (table === "causas") return { data: makeCausaRow(), error: null };
+          if (table === "checklist_items")
+            return { data: [makeChecklistRow()], error: null };
+          if (table === "bitacora_entries")
+            return { data: [makeBitacoraRow()], error: null };
           return { data: null, error: null };
         },
       },
       async () => {
-        const { fetchCausaDetails } = await import('./causas.service');
-        return fetchCausaDetails('DC-2026-001');
+        const { fetchCausaDetails } = await import("./causas.service");
+        return fetchCausaDetails("DC-2026-001");
       },
     );
     const causa = result as Causa;
-    assert.equal(causa.id, 'DC-2026-001');
+    assert.equal(causa.id, "DC-2026-001");
     // La reconciliación expande la checklist base completa y aplica lo persistido
     assert.ok(causa.checklistDebidoProceso.length > 0);
-    const recepcion = causa.checklistDebidoProceso.find((c) => c.id === 'chk_rec_1');
-    assert.ok(recepcion, 'chk_rec_1 debe existir en la checklist reconciliada');
+    const recepcion = causa.checklistDebidoProceso.find(
+      (c) => c.id === "chk_rec_1",
+    );
+    assert.ok(recepcion, "chk_rec_1 debe existir en la checklist reconciliada");
     assert.equal(recepcion.completado, true);
-    assert.equal(recepcion.requeridoPor, 'Circular 482');
+    assert.equal(recepcion.requeridoPor, "Circular 482");
     assert.equal(causa.bitacora.length, 1);
   });
 
-  it('lanza error cuando la causa no existe', async () => {
+  it("incluye hitos compartidos por el incidente en el expediente vinculado", async () => {
+    let causasCalls = 0;
+    let bitacoraCalls = 0;
+    const result = await withCausasMocks(
+      {
+        resultForTable: (table) => {
+          if (table === "causas") {
+            causasCalls += 1;
+            return causasCalls === 1
+              ? {
+                  data: makeCausaRow({
+                    incidente_id: "11111111-1111-4111-8111-111111111111",
+                  }),
+                  error: null,
+                }
+              : {
+                  data: [{ id: "DC-2026-001" }, { id: "DC-2026-002" }],
+                  error: null,
+                };
+          }
+          if (table === "bitacora_entries") {
+            bitacoraCalls += 1;
+            return bitacoraCalls === 1
+              ? { data: [], error: null }
+              : {
+                  data: [
+                    makeBitacoraRow({
+                      id: "b-shared",
+                      causa_id: "DC-2026-002",
+                      titulo: "Registro de Hito: Recepción de Denuncia",
+                      descripcion:
+                        "Responsable: Inspectoría. Observaciones: Registro grupal.",
+                      compartido_grupal: true,
+                    }),
+                  ],
+                  error: null,
+                };
+          }
+          return { data: [], error: null };
+        },
+      },
+      async () => {
+        const { fetchCausaDetails } = await import("./causas.service");
+        return fetchCausaDetails("DC-2026-001");
+      },
+    );
+    const causa = result as Causa;
+    assert.equal(
+      causa.bitacora.some((entry) => entry.id === "b-shared"),
+      true,
+    );
+    assert.equal(
+      causa.checklistDebidoProceso.find((item) => item.id === "chk_rec_1")
+        ?.completado,
+      true,
+    );
+  });
+
+  it("lanza error cuando la causa no existe", async () => {
     await assert.rejects(
       withCausasMocks(
         {
           resultForTable: () => ({ data: null, error: null }),
         },
         async () => {
-          const { fetchCausaDetails } = await import('./causas.service');
-          return fetchCausaDetails('DC-9999');
+          const { fetchCausaDetails } = await import("./causas.service");
+          return fetchCausaDetails("DC-9999");
         },
       ),
       /No se encontró el expediente/,
     );
   });
 
-  it('propaga el error de lectura de la causa', async () => {
+  it("propaga el error de lectura de la causa", async () => {
     await assert.rejects(
       withCausasMocks(
         {
           resultForTable: (table) =>
-            table === 'causas'
-              ? { data: null, error: new Error('boom') }
+            table === "causas"
+              ? { data: null, error: new Error("boom") }
               : { data: [], error: null },
         },
         async () => {
-          const { fetchCausaDetails } = await import('./causas.service');
-          return fetchCausaDetails('DC-2026-001');
+          const { fetchCausaDetails } = await import("./causas.service");
+          return fetchCausaDetails("DC-2026-001");
         },
       ),
       /boom/,
@@ -297,110 +370,136 @@ describe('fetchCausaDetails', () => {
   });
 });
 
-describe('createCausa', () => {
-  it('inserta la causa y devuelve el id resuelto', async () => {
+describe("createCausa", () => {
+  it("inserta la causa y devuelve el id resuelto", async () => {
     const result = await withCausasMocks(
       {
         resultForTable: (table) => {
-          if (table === 'causas') return { data: null, error: null };
+          if (table === "causas") return { data: null, error: null };
           return { data: null, error: null };
         },
       },
       async () => {
-        const { createCausa } = await import('./causas.service');
+        const { createCausa } = await import("./causas.service");
         const causa = {
           ...(makeCausaRow() as unknown as Causa),
-          estadoActual: 'Recepción de Denuncia' as Causa['estadoActual'],
+          estadoActual: "Recepción de Denuncia" as Causa["estadoActual"],
         };
-        return createCausa(causa, 'tenant-1');
+        return createCausa(causa, "tenant-1");
       },
     );
-    assert.equal(result, 'DC-2026-001');
+    assert.equal(result, "DC-2026-001");
   });
 
-  it('genera id correlativo cuando el preferido ya existe', async () => {
+  it("genera id correlativo cuando el preferido ya existe", async () => {
     const result = await withCausasMocks(
       {
         resultForTable: (table) => {
-          if (table === 'causas') {
+          if (table === "causas") {
             // La primera consulta (maybeSingle) devuelve el id preferido ocupado,
             // la segunda (todos los id) permite calcular el correlativo.
-            return { data: [{ id: 'DC-2026-003' }], error: null };
+            return { data: [{ id: "DC-2026-003" }], error: null };
           }
           return { data: null, error: null };
         },
       },
       async () => {
-        const { createCausa } = await import('./causas.service');
+        const { createCausa } = await import("./causas.service");
         const causa = {
-          ...(makeCausaRow({ id: 'DC-2026-003' }) as unknown as Causa),
-          estadoActual: 'Recepción de Denuncia' as Causa['estadoActual'],
+          ...(makeCausaRow({ id: "DC-2026-003" }) as unknown as Causa),
+          estadoActual: "Recepción de Denuncia" as Causa["estadoActual"],
         };
-        return createCausa(causa, 'tenant-1');
+        return createCausa(causa, "tenant-1");
       },
     );
     assert.equal(result, `DC-${new Date().getFullYear()}-004`);
   });
 
-  it('retorna false cuando falla la inserción', async () => {
+  it("retorna false cuando falla la inserción", async () => {
     const result = await withCausasMocks(
       {
         resultForTable: (table) => {
-          if (table === 'causas') {
+          if (table === "causas") {
             // maybeSingle retorna null (libre) y la inserción falla con error.
-            return { data: null, error: new Error('insert denied') };
+            return { data: null, error: new Error("insert denied") };
           }
           return { data: null, error: null };
         },
       },
       async () => {
-        const { createCausa } = await import('./causas.service');
+        const { createCausa } = await import("./causas.service");
         const causa = {
           ...(makeCausaRow() as unknown as Causa),
-          estadoActual: 'Recepción de Denuncia' as Causa['estadoActual'],
+          estadoActual: "Recepción de Denuncia" as Causa["estadoActual"],
         };
-        return createCausa(causa, 'tenant-1');
+        return createCausa(causa, "tenant-1");
       },
     );
     assert.equal(result, false);
   });
 });
 
-describe('updateCausa', () => {
-  it('conserva la conducta corregida al guardar y volver a leer la causa', async (t) => {
-    let row = makeCausaRow({ conducta_rice_id: 'anterior', observaciones: 'Relato original' });
-    t.mock.method(MockQueryBuilder.prototype, 'update', function (this: MockQueryBuilder<unknown>, payload: Record<string, unknown>) {
-      row = { ...row, ...payload };
-      this.result = { data: [{ id: row.id }], error: null };
-      return this;
+describe("updateCausa", () => {
+  it("conserva la conducta corregida al guardar y volver a leer la causa", async (t) => {
+    let row = makeCausaRow({
+      conducta_rice_id: "anterior",
+      observaciones: "Relato original",
     });
+    t.mock.method(
+      MockQueryBuilder.prototype,
+      "update",
+      function (
+        this: MockQueryBuilder<unknown>,
+        payload: Record<string, unknown>,
+      ) {
+        row = { ...row, ...payload };
+        this.result = { data: [{ id: row.id }], error: null };
+        return this;
+      },
+    );
     await withCausasMocks(
-      { resultForTable: (table) => ({ data: table === 'causas' ? row : [], error: null }) },
+      {
+        resultForTable: (table) => ({
+          data: table === "causas" ? row : [],
+          error: null,
+        }),
+      },
       async () => {
-        const { fetchCausaDetails, updateCausa } = await import('./causas.service');
-        const { REGLAMENTO_CONDUCTAS } = await import('../../../reglamentoData');
-        const conducta = REGLAMENTO_CONDUCTAS.find((item) => /Abandonar clases/i.test(item.conducta));
+        const { fetchCausaDetails, updateCausa } =
+          await import("./causas.service");
+        const { REGLAMENTO_CONDUCTAS } =
+          await import("../../../reglamentoData");
+        const conducta = REGLAMENTO_CONDUCTAS.find((item) =>
+          /Abandonar clases/i.test(item.conducta),
+        );
         assert.ok(conducta);
         const causa = await fetchCausaDetails(row.id);
-        assert.equal(await updateCausa({ ...causa, conductaRiceId: conducta.id,
-          tipoInfraccion: conducta.gravedad, comprometeAulaSegura: false }), true);
+        assert.equal(
+          await updateCausa({
+            ...causa,
+            conductaRiceId: conducta.id,
+            tipoInfraccion: conducta.gravedad,
+            comprometeAulaSegura: false,
+          }),
+          true,
+        );
         const recargada = await fetchCausaDetails(row.id);
         assert.equal(recargada.conductaRiceId, conducta.id);
-        assert.equal(recargada.tipoInfraccion, 'Muy Grave');
-        assert.equal(recargada.observaciones, 'Relato original');
+        assert.equal(recargada.tipoInfraccion, "Muy Grave");
+        assert.equal(recargada.observaciones, "Relato original");
       },
     );
   });
-  it('retorna true cuando la fila se actualiza', async () => {
+  it("retorna true cuando la fila se actualiza", async () => {
     const result = await withCausasMocks(
       {
-        resultForTable: () => ({ data: [{ id: 'DC-2026-001' }], error: null }),
+        resultForTable: () => ({ data: [{ id: "DC-2026-001" }], error: null }),
       },
       async () => {
-        const { updateCausa } = await import('./causas.service');
+        const { updateCausa } = await import("./causas.service");
         const causa = {
           ...(makeCausaRow() as unknown as Causa),
-          estadoActual: 'Recepción de Denuncia' as Causa['estadoActual'],
+          estadoActual: "Recepción de Denuncia" as Causa["estadoActual"],
         };
         return updateCausa(causa);
       },
@@ -408,16 +507,16 @@ describe('updateCausa', () => {
     assert.equal(result, true);
   });
 
-  it('retorna false cuando no hay filas afectadas', async () => {
+  it("retorna false cuando no hay filas afectadas", async () => {
     const result = await withCausasMocks(
       {
         resultForTable: () => ({ data: [], error: null }),
       },
       async () => {
-        const { updateCausa } = await import('./causas.service');
+        const { updateCausa } = await import("./causas.service");
         const causa = {
           ...(makeCausaRow() as unknown as Causa),
-          estadoActual: 'Recepción de Denuncia' as Causa['estadoActual'],
+          estadoActual: "Recepción de Denuncia" as Causa["estadoActual"],
         };
         return updateCausa(causa);
       },
@@ -426,26 +525,34 @@ describe('updateCausa', () => {
   });
 });
 
-describe('deleteCausa', () => {
-  it('elimina documentos relacionados, bitácora, checklist y causa, retornando true', async () => {
+describe("deleteCausa", () => {
+  it("elimina documentos relacionados, bitácora, checklist y causa, retornando true", async () => {
     const tables: string[] = [];
     const result = await withCausasMocks(
       {
         resultForTable: (table) => {
           tables.push(table);
-          return { data: table === 'causas' ? [{ id: 'DC-2026-001' }] : null, error: null };
+          return {
+            data: table === "causas" ? [{ id: "DC-2026-001" }] : null,
+            error: null,
+          };
         },
       },
       async () => {
-        const { deleteCausa } = await import('./causas.service');
-        return deleteCausa('DC-2026-001');
+        const { deleteCausa } = await import("./causas.service");
+        return deleteCausa("DC-2026-001");
       },
     );
     assert.equal(result, true);
-    assert.deepEqual(tables, ['bitacora_entries', 'checklist_items', 'causa_documents', 'causas']);
+    assert.deepEqual(tables, [
+      "bitacora_entries",
+      "checklist_items",
+      "causa_documents",
+      "causas",
+    ]);
   });
 
-  it('no intenta eliminar la causa si falla un registro relacionado', async () => {
+  it("no intenta eliminar la causa si falla un registro relacionado", async () => {
     const tables: string[] = [];
     const result = await withCausasMocks(
       {
@@ -453,44 +560,48 @@ describe('deleteCausa', () => {
           tables.push(table);
           return {
             data: null,
-            error: table === 'causa_documents' ? new Error('delete denied') : null,
+            error:
+              table === "causa_documents" ? new Error("delete denied") : null,
           };
         },
       },
       async () => {
-        const { deleteCausa } = await import('./causas.service');
-        return deleteCausa('DC-2026-001');
+        const { deleteCausa } = await import("./causas.service");
+        return deleteCausa("DC-2026-001");
       },
     );
 
     assert.equal(result, false);
-    assert.equal(tables.includes('causas'), false);
+    assert.equal(tables.includes("causas"), false);
   });
 
-  it('retorna false cuando falla la eliminación de la causa', async () => {
+  it("retorna false cuando falla la eliminación de la causa", async () => {
     const result = await withCausasMocks(
       {
-        resultForTable: () => ({ data: null, error: new Error('delete denied') }),
+        resultForTable: () => ({
+          data: null,
+          error: new Error("delete denied"),
+        }),
       },
       async () => {
-        const { deleteCausa } = await import('./causas.service');
-        return deleteCausa('DC-2026-001');
+        const { deleteCausa } = await import("./causas.service");
+        return deleteCausa("DC-2026-001");
       },
     );
     assert.equal(result, false);
   });
 
-  it('retorna false cuando la eliminación de la causa no afecta filas', async () => {
+  it("retorna false cuando la eliminación de la causa no afecta filas", async () => {
     const result = await withCausasMocks(
       {
         resultForTable: (table) => ({
-          data: table === 'causas' ? [] : null,
+          data: table === "causas" ? [] : null,
           error: null,
         }),
       },
       async () => {
-        const { deleteCausa } = await import('./causas.service');
-        return deleteCausa('DC-2026-001');
+        const { deleteCausa } = await import("./causas.service");
+        return deleteCausa("DC-2026-001");
       },
     );
 
