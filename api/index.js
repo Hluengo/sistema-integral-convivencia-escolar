@@ -1,13 +1,14 @@
 var __defProp = Object.defineProperty;
 var __getOwnPropNames = Object.getOwnPropertyNames;
-var __esm = (fn, res, err) => function __init() {
-  if (err) throw err[0];
-  try {
-    return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
-  } catch (e) {
-    throw err = [e], e;
-  }
-};
+var __esm = (fn, res, err) =>
+  function __init() {
+    if (err) throw err[0];
+    try {
+      return (fn && (res = (0, fn[__getOwnPropNames(fn)[0]])((fn = 0))), res);
+    } catch (e) {
+      throw ((err = [e]), e);
+    }
+  };
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -24,13 +25,15 @@ var init_dateUtils = __esm({
         timeZone: CHILE_TIME_ZONE,
         year: "numeric",
         month: "2-digit",
-        day: "2-digit"
+        day: "2-digit",
       }).formatToParts(date);
-      const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+      const values = Object.fromEntries(
+        parts.map((part) => [part.type, part.value]),
+      );
       return `${values.year}-${values.month}-${values.day}`;
     };
     nowDateOnly = () => toDateOnly(/* @__PURE__ */ new Date());
-  }
+  },
 });
 
 // server/lib/disciplinaryPdfAnalysis.ts
@@ -42,7 +45,7 @@ __export(disciplinaryPdfAnalysis_exports, {
   extractPdfPages: () => extractPdfPages,
   parseDisciplinaryTextPagesForTest: () => parseDisciplinaryTextPagesForTest,
   prepareConfirmedAnnotationsForTest: () => prepareConfirmedAnnotationsForTest,
-  selectNewAnnotationsForLegacySync: () => selectNewAnnotationsForLegacySync
+  selectNewAnnotationsForLegacySync: () => selectNewAnnotationsForLegacySync,
 });
 import { createHash } from "node:crypto";
 import { createClient as createClient2 } from "@supabase/supabase-js";
@@ -53,34 +56,56 @@ function ensurePdfJsNodePolyfills() {
   globals.Path2D ??= NodePath2DPolyfill;
 }
 function getSupabaseAdmin(authToken) {
-  const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
-  const userScopedKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "";
+  const supabaseUrl =
+    process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
+  const serviceKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ??
+    process.env.SUPABASE_SERVICE_KEY ??
+    "";
+  const userScopedKey =
+    process.env.VITE_SUPABASE_ANON_KEY ??
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
+    "";
   const supabaseKey = serviceKey || userScopedKey;
   if (!supabaseUrl || !supabaseKey) {
     throw new Error("Supabase no configurado");
   }
-  const headers = !serviceKey && authToken ? { Authorization: `Bearer ${authToken}` } : void 0;
+  const headers =
+    !serviceKey && authToken
+      ? { Authorization: `Bearer ${authToken}` }
+      : void 0;
   return createClient2(supabaseUrl, supabaseKey, {
     auth: { persistSession: false },
-    global: headers ? { headers } : void 0
+    global: headers ? { headers } : void 0,
   });
 }
 function normalizeText(value) {
-  return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[.,;:()[\]{}]/g, " ").replace(/\s+/g, " ").trim();
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[.,;:()[\]{}]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 function isDateRangeLine(value) {
   return /\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b\s*(?:a|-|hasta)\s*\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b/i.test(
-    value
+    value,
   );
 }
 function normalizeCourseLabel(value) {
-  const normalized = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/º/g, "\xB0").replace(/\s+/g, " ").trim().toUpperCase();
+  const normalized = value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/º/g, "\xB0")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toUpperCase();
   const letterBeforeCycle = normalized.match(
-    /\b(\d{1,2})\s*(?:°\s*)?([A-Z])\s*(MEDIO|BASICO|BASICA)\b/
+    /\b(\d{1,2})\s*(?:°\s*)?([A-Z])\s*(MEDIO|BASICO|BASICA)\b/,
   );
   const cycleBeforeLetter = normalized.match(
-    /\b(\d{1,2})\s*(?:°\s*)?(MEDIO|BASICO|BASICA)\s*([A-Z])\b/
+    /\b(\d{1,2})\s*(?:°\s*)?(MEDIO|BASICO|BASICA)\s*([A-Z])\b/,
   );
   const level = Number(letterBeforeCycle?.[1] ?? cycleBeforeLetter?.[1]);
   const letter = letterBeforeCycle?.[2] ?? cycleBeforeLetter?.[3];
@@ -94,13 +119,22 @@ function courseMatchKey(value) {
   return normalized ? normalizeText(normalized) : null;
 }
 function titleCaseFromUpper(value) {
-  return value.toLowerCase().split(/\s+/).filter(Boolean).map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
+  return value
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }
 function assertStoragePathAllowed(bucket, storagePath, tenantId) {
   if (bucket !== PDF_BUCKET) {
     throw new Error("Bucket de documentos disciplinarios no permitido");
   }
-  if (!storagePath || storagePath.includes("..") || storagePath.startsWith("/")) {
+  if (
+    !storagePath ||
+    storagePath.includes("..") ||
+    storagePath.startsWith("/")
+  ) {
     throw new Error("Ruta de archivo no v\xE1lida");
   }
   const [tenantSegment] = storagePath.split("/");
@@ -125,76 +159,119 @@ async function extractPdfPages(buffer) {
   ensurePdfJsNodePolyfills();
   const workerModule = await import("pdfjs-dist/legacy/build/pdf.worker.mjs");
   globalThis.pdfjsWorker = {
-    WorkerMessageHandler: workerModule.WorkerMessageHandler
+    WorkerMessageHandler: workerModule.WorkerMessageHandler,
   };
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const pdf = await pdfjs.getDocument({
     data: buffer,
     useWorkerFetch: false,
-    isEvalSupported: false
+    isEvalSupported: false,
   }).promise;
   if (pdf.numPages > MAX_PDF_PAGES) {
-    throw new Error(`El PDF tiene demasiadas p\xE1ginas. M\xE1ximo permitido: ${MAX_PDF_PAGES}.`);
+    throw new Error(
+      `El PDF tiene demasiadas p\xE1ginas. M\xE1ximo permitido: ${MAX_PDF_PAGES}.`,
+    );
   }
   const pages = [];
   for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
     const page = await pdf.getPage(pageNumber);
     const content = await page.getTextContent();
     pages.push(
-      content.items.map((item) => (item.str ?? "") + (item.hasEOL ? "\n" : " ")).join("").replace(/[^\S\n]+/g, " ").replace(/\s*\n\s*/g, "\n").trim()
+      content.items
+        .map((item) => (item.str ?? "") + (item.hasEOL ? "\n" : " "))
+        .join("")
+        .replace(/[^\S\n]+/g, " ")
+        .replace(/\s*\n\s*/g, "\n")
+        .trim(),
     );
   }
   return pages;
 }
 function extractCourse(text) {
-  const lines = text.split("\n").map((line) => line.trim()).filter(Boolean);
+  const lines = text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
     if (!/\bcurso\b/i.test(line)) continue;
     const sameLineValue = line.replace(/^.*\bcurso\b\s*[:-]?\s*/i, "").trim();
-    const candidates = [sameLineValue, lines[index + 1], lines[index + 2], lines[index + 3]];
+    const candidates = [
+      sameLineValue,
+      lines[index + 1],
+      lines[index + 2],
+      lines[index + 3],
+    ];
     for (const candidate of candidates) {
-      if (!candidate || /^rango\s+fechas?/i.test(candidate) || isDateRangeLine(candidate)) continue;
+      if (
+        !candidate ||
+        /^rango\s+fechas?/i.test(candidate) ||
+        isDateRangeLine(candidate)
+      )
+        continue;
       const normalized = normalizeCourseLabel(candidate);
       if (normalized) return normalized;
     }
   }
   const normalizedText = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const courseMatch = normalizedText.match(
-    /\b(?:\d{1,2}\s*(?:°\s*)?[A-Z]\s*(?:MEDIO|BASICO|BASICA)|\d{1,2}\s*(?:°\s*)?(?:MEDIO|BASICO|BASICA)\s*[A-Z])\b/i
+    /\b(?:\d{1,2}\s*(?:°\s*)?[A-Z]\s*(?:MEDIO|BASICO|BASICA)|\d{1,2}\s*(?:°\s*)?(?:MEDIO|BASICO|BASICA)\s*[A-Z])\b/i,
   );
   return courseMatch?.[0] ? normalizeCourseLabel(courseMatch[0]) : null;
 }
 function extractStudentName(text) {
   const labelled = text.match(
-    /(?:estudiante|alumno|nombre(?: completo)?)\s*[:-]\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ'-]+(?:\s+[A-ZÁÉÍÓÚÑa-záéíóúñ'-]+){1,5})/i
+    /(?:estudiante|alumno|nombre(?: completo)?)\s*[:-]\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ'-]+(?:\s+[A-ZÁÉÍÓÚÑa-záéíóúñ'-]+){1,5})/i,
   );
   if (labelled?.[1]) return labelled[1].trim();
   const fichaMatch = text.match(
-    /([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ'-]+(?:\s+[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ'-]+){2,6})\s+FICHA\s+PERSONAL\s+DE\s+CONVIVENCIA\s+ESCOLAR/i
+    /([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ'-]+(?:\s+[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ'-]+){2,6})\s+FICHA\s+PERSONAL\s+DE\s+CONVIVENCIA\s+ESCOLAR/i,
   );
   if (fichaMatch?.[1]) return titleCaseFromUpper(fichaMatch[1].trim());
-  const headingLines = text.split("\n").map((line) => line.trim()).filter((line) => line.startsWith("## ")).map((line) => line.slice(3).trim()).filter(
-    (line) => line.length > 1 && !/^(fundaci[oó]n|saber|ficha|rango|curso|fecha)/i.test(line)
-  );
+  const headingLines = text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith("## "))
+    .map((line) => line.slice(3).trim())
+    .filter(
+      (line) =>
+        line.length > 1 &&
+        !/^(fundaci[oó]n|saber|ficha|rango|curso|fecha)/i.test(line),
+    );
   if (headingLines.length >= 3)
     return `${headingLines[0]} ${headingLines[1]} ${headingLines.slice(2).join(" ")}`;
   if (headingLines.length > 0) return headingLines.join(" ");
-  const uppercaseLine = text.split("\n").map((line) => line.trim()).find((line) => {
-    const normalized = normalizeText(line);
-    const words = normalized.split(" ").filter(Boolean);
-    return words.length >= 3 && words.length <= 6 && line === line.toUpperCase() && !normalized.includes("curso");
-  });
+  const uppercaseLine = text
+    .split("\n")
+    .map((line) => line.trim())
+    .find((line) => {
+      const normalized = normalizeText(line);
+      const words = normalized.split(" ").filter(Boolean);
+      return (
+        words.length >= 3 &&
+        words.length <= 6 &&
+        line === line.toUpperCase() &&
+        !normalized.includes("curso")
+      );
+    });
   return uppercaseLine ? titleCaseFromUpper(uppercaseLine) : null;
 }
 function splitAnnotationBlocks(pageText) {
-  const normalized = pageText.replace(/\s+(?=\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/g, "\n");
-  const lines = normalized.split("\n").map((line) => line.trim()).filter(Boolean);
+  const normalized = pageText.replace(
+    /\s+(?=\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/g,
+    "\n",
+  );
+  const lines = normalized
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
   const blocks = [];
   let current = [];
   let hasDatedRecords = false;
   for (const line of lines) {
-    const startsDatedRecord = /(?:^|\s)(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})\b/.test(line);
+    const startsDatedRecord = /(?:^|\s)(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})\b/.test(
+      line,
+    );
     if (startsDatedRecord) {
       hasDatedRecords = true;
       if (current.length > 0) blocks.push(current.join(" "));
@@ -207,19 +284,25 @@ function splitAnnotationBlocks(pageText) {
   }
   if (current.length > 0) blocks.push(current.join(" "));
   if (hasDatedRecords) return blocks;
-  return lines.filter((line) => /\b(?:tipo|anotaci[oó]n|observaci[oó]n)\s*[:-]/i.test(line));
+  return lines.filter((line) =>
+    /\b(?:tipo|anotaci[oó]n|observaci[oó]n)\s*[:-]/i.test(line),
+  );
 }
 function classifyAnnotation(block) {
   const normalized = normalizeText(block);
-  const typePattern = /(?:tipo|anotacion|observacion)\s*[:-]?\s*(negativa|positiva|informacion|informativa)/;
+  const typePattern =
+    /(?:tipo|anotacion|observacion)\s*[:-]?\s*(negativa|positiva|informacion|informativa)/;
   const typed = normalized.match(typePattern);
   const value = typed?.[1];
   if (value?.startsWith("neg")) return { type: "negative", confidence: 0.95 };
   if (value?.startsWith("pos")) return { type: "positive", confidence: 0.95 };
-  if (value?.startsWith("info")) return { type: "information", confidence: 0.95 };
+  if (value?.startsWith("info"))
+    return { type: "information", confidence: 0.95 };
   if (/\b(reconocimiento|felicitacion|destaca|positiva)\b/.test(normalized))
     return { type: "positive", confidence: 0.7 };
-  if (/\b(negativa|falta|agresion|interrumpe|incumple|atraso)\b/.test(normalized))
+  if (
+    /\b(negativa|falta|agresion|interrumpe|incumple|atraso)\b/.test(normalized)
+  )
     return { type: "negative", confidence: 0.65 };
   if (/\b(informacion|informativa|entrevista|comunicacion)\b/.test(normalized))
     return { type: "information", confidence: 0.65 };
@@ -234,7 +317,9 @@ function parseAnnotationsByPage(pages) {
       const classification = classifyAnnotation(block);
       if (!classification.type) return;
       const dateMatch = block.match(/\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})\b/);
-      const teacherMatch = block.match(/(?:profesor(?:a)?|responsable)\s*[:-]\s*([^|\n]{3,60})/i);
+      const teacherMatch = block.match(
+        /(?:profesor(?:a)?|responsable)\s*[:-]\s*([^|\n]{3,60})/i,
+      );
       const normalizedBlock = normalizeText(block);
       const detectedDate = toIsoDate(dateMatch?.[1]);
       const detectedTeacher = teacherMatch?.[1]?.trim() ?? null;
@@ -242,7 +327,7 @@ function parseAnnotationsByPage(pages) {
         pageIndex + 1,
         classification.type,
         detectedDate ?? "",
-        normalizedBlock
+        normalizedBlock,
       ].join("|");
       if (seenAnnotations.has(dedupeKey)) return;
       seenAnnotations.add(dedupeKey);
@@ -256,7 +341,7 @@ function parseAnnotationsByPage(pages) {
         detected_teacher: detectedTeacher,
         classification_method: "regex",
         confidence: classification.confidence,
-        parser_version: PARSER_VERSION
+        parser_version: PARSER_VERSION,
       });
     });
   });
@@ -269,7 +354,7 @@ function parseDisciplinaryTextPagesForTest(pages) {
 function extractDisciplinaryMetadataForTest(text) {
   return {
     studentName: extractStudentName(text),
-    course: extractCourse(text)
+    course: extractCourse(text),
   };
 }
 function summarizeAnnotations(annotations) {
@@ -280,15 +365,20 @@ function summarizeAnnotations(annotations) {
       if (annotation.type === "information") acc.informativas += 1;
       return acc;
     },
-    { negativas: 0, positivas: 0, informativas: 0 }
+    { negativas: 0, positivas: 0, informativas: 0 },
   );
 }
 function isAnnotationType(value) {
-  return value === "negative" || value === "positive" || value === "information";
+  return (
+    value === "negative" || value === "positive" || value === "information"
+  );
 }
 function sanitizeConfirmedAnnotationText(value) {
   if (typeof value !== "string") return "";
-  return value.replaceAll(String.fromCharCode(0), "").trim().slice(0, MAX_CONFIRMED_ANNOTATION_TEXT);
+  return value
+    .replaceAll(String.fromCharCode(0), "")
+    .trim()
+    .slice(0, MAX_CONFIRMED_ANNOTATION_TEXT);
 }
 function sanitizeIsoDate(value, fallback) {
   if (typeof value !== "string") return fallback;
@@ -296,19 +386,28 @@ function sanitizeIsoDate(value, fallback) {
 }
 function prepareConfirmedAnnotations(annotations, parsedAnnotations) {
   if (annotations.length > MAX_CONFIRMED_ANNOTATIONS) {
-    throw new Error("Las anotaciones confirmadas superan el m\xE1ximo permitido.");
+    throw new Error(
+      "Las anotaciones confirmadas superan el m\xE1ximo permitido.",
+    );
   }
   const parsedBySequence = new Map(
-    parsedAnnotations.map((annotation) => [annotation.sequence_number, annotation])
+    parsedAnnotations.map((annotation) => [
+      annotation.sequence_number,
+      annotation,
+    ]),
   );
   return annotations.map((annotation, index) => {
     if (!isAnnotationType(annotation.type)) {
-      throw new Error("Las anotaciones confirmadas contienen una clasificaci\xF3n no v\xE1lida.");
+      throw new Error(
+        "Las anotaciones confirmadas contienen una clasificaci\xF3n no v\xE1lida.",
+      );
     }
     const sequenceNumber = Number(annotation.sequence_number || index + 1);
     const parsed = parsedBySequence.get(sequenceNumber);
     if (!parsed) {
-      throw new Error("Las anotaciones confirmadas no corresponden al PDF analizado.");
+      throw new Error(
+        "Las anotaciones confirmadas no corresponden al PDF analizado.",
+      );
     }
     const rawText = sanitizeConfirmedAnnotationText(annotation.raw_text);
     if (!rawText) {
@@ -321,11 +420,16 @@ function prepareConfirmedAnnotations(annotations, parsedAnnotations) {
       type: annotation.type,
       page_number: parsed.page_number,
       sequence_number: parsed.sequence_number,
-      detected_date: sanitizeIsoDate(annotation.detected_date, parsed.detected_date),
+      detected_date: sanitizeIsoDate(
+        annotation.detected_date,
+        parsed.detected_date,
+      ),
       detected_teacher: sanitizeConfirmedAnnotationText(
-        annotation.detected_teacher ?? parsed.detected_teacher ?? ""
+        annotation.detected_teacher ?? parsed.detected_teacher ?? "",
       ).slice(0, 100),
-      confidence: Number.isFinite(confidence) ? Math.max(0, Math.min(1, confidence)) : 0.8
+      confidence: Number.isFinite(confidence)
+        ? Math.max(0, Math.min(1, confidence))
+        : 0.8,
     };
   });
 }
@@ -333,82 +437,123 @@ function prepareConfirmedAnnotationsForTest(annotations, parsedAnnotations) {
   return prepareConfirmedAnnotations(annotations, parsedAnnotations);
 }
 function getNameParts(value) {
-  return normalizeText(value).split(" ").filter((part) => part.length >= 3);
+  return normalizeText(value)
+    .split(" ")
+    .filter((part) => part.length >= 3);
 }
 function buildNameTokenQuery(parts) {
-  return [...new Set(parts)].map((part) => `full_name.ilike.%${part}%`).join(",");
+  return [...new Set(parts)]
+    .map((part) => `full_name.ilike.%${part}%`)
+    .join(",");
 }
 async function enrichStudentRows(supabase, rows, confidence, status) {
   if (rows.length === 0) return [];
-  const courseIds = [...new Set(rows.flatMap((row) => row.course_id ? [row.course_id] : []))];
-  const { data: courses } = courseIds.length ? await supabase.from("courses").select("id, name").in("id", courseIds) : { data: [] };
+  const courseIds = [
+    ...new Set(rows.flatMap((row) => (row.course_id ? [row.course_id] : []))),
+  ];
+  const { data: courses } = courseIds.length
+    ? await supabase.from("courses").select("id, name").in("id", courseIds)
+    : { data: [] };
   const courseMap = new Map(
-    (courses ?? []).map((course) => [course.id, course.name])
+    (courses ?? []).map((course) => [course.id, course.name]),
   );
   return rows.map((row) => ({
     id: row.id,
     full_name: row.full_name,
     rut: row.rut,
     course_id: row.course_id,
-    course_name: row.course_id ? courseMap.get(row.course_id) ?? null : null,
+    course_name: row.course_id ? (courseMap.get(row.course_id) ?? null) : null,
     confidence,
-    match_status: status
+    match_status: status,
   }));
 }
-async function findStudentCandidates(supabase, tenantId, detectedName, detectedCourse) {
-  if (!detectedName) return { candidates: [], selectedStudentId: null, status: "no_match" };
+async function findStudentCandidates(
+  supabase,
+  tenantId,
+  detectedName,
+  detectedCourse,
+) {
+  if (!detectedName)
+    return { candidates: [], selectedStudentId: null, status: "no_match" };
   const baseSelect = "id, full_name, rut, course_id";
   const exactName = detectedName.trim();
   const normalizedDetected = normalizeText(detectedName);
   const detectedCourseKey = courseMatchKey(detectedCourse);
-  const { data: courseRows } = await supabase.from("courses").select("id, name").eq("tenant_id", tenantId).limit(200);
+  const { data: courseRows } = await supabase
+    .from("courses")
+    .select("id, name")
+    .eq("tenant_id", tenantId)
+    .limit(200);
   const courseKeyById = new Map(
     (courseRows ?? []).map((course) => [
       course.id,
-      courseMatchKey(course.name)
-    ])
+      courseMatchKey(course.name),
+    ]),
   );
-  const { data: exactRows } = await supabase.from("students").select(baseSelect).eq("tenant_id", tenantId).ilike("full_name", exactName).limit(5);
+  const { data: exactRows } = await supabase
+    .from("students")
+    .select(baseSelect)
+    .eq("tenant_id", tenantId)
+    .ilike("full_name", exactName)
+    .limit(5);
   if (exactRows && exactRows.length > 0) {
     const candidates2 = await enrichStudentRows(
       supabase,
       exactRows,
       0.99,
-      exactRows.length === 1 ? "exact_match" : "multiple_candidates"
+      exactRows.length === 1 ? "exact_match" : "multiple_candidates",
     );
     return {
       candidates: candidates2,
       selectedStudentId: candidates2.length === 1 ? candidates2[0].id : null,
-      status: candidates2.length === 1 ? "exact_match" : "multiple_candidates"
+      status: candidates2.length === 1 ? "exact_match" : "multiple_candidates",
     };
   }
   const detectedParts = getNameParts(detectedName);
   const tokenQuery = buildNameTokenQuery(detectedParts);
-  const tokenCandidatesQuery = supabase.from("students").select(baseSelect).eq("tenant_id", tenantId).limit(1e3);
-  const { data: tenantStudents } = tokenQuery ? await tokenCandidatesQuery.or(tokenQuery) : await tokenCandidatesQuery;
+  const tokenCandidatesQuery = supabase
+    .from("students")
+    .select(baseSelect)
+    .eq("tenant_id", tenantId)
+    .limit(1e3);
+  const { data: tenantStudents } = tokenQuery
+    ? await tokenCandidatesQuery.or(tokenQuery)
+    : await tokenCandidatesQuery;
   const normalizedMatches = (tenantStudents ?? []).filter(
-    (student) => normalizeText(student.full_name) === normalizedDetected
+    (student) => normalizeText(student.full_name) === normalizedDetected,
   );
   if (normalizedMatches.length > 0) {
     const candidates2 = await enrichStudentRows(
       supabase,
       normalizedMatches,
       0.94,
-      normalizedMatches.length === 1 ? "unique_normalized_match" : "multiple_candidates"
+      normalizedMatches.length === 1
+        ? "unique_normalized_match"
+        : "multiple_candidates",
     );
     return {
       candidates: candidates2,
       selectedStudentId: candidates2.length === 1 ? candidates2[0].id : null,
-      status: candidates2.length === 1 ? "unique_normalized_match" : "multiple_candidates"
+      status:
+        candidates2.length === 1
+          ? "unique_normalized_match"
+          : "multiple_candidates",
     };
   }
   const detectedPartSet = new Set(detectedParts);
   const scored = [];
   for (const student of tenantStudents ?? []) {
     const studentParts = new Set(getNameParts(student.full_name));
-    const overlap = [...detectedPartSet].filter((part) => studentParts.has(part)).length;
+    const overlap = [...detectedPartSet].filter((part) =>
+      studentParts.has(part),
+    ).length;
     const denominator = Math.max(detectedPartSet.size, studentParts.size, 1);
-    const courseBoost = detectedCourseKey && student.course_id && courseKeyById.get(student.course_id) === detectedCourseKey ? 0.15 : 0;
+    const courseBoost =
+      detectedCourseKey &&
+      student.course_id &&
+      courseKeyById.get(student.course_id) === detectedCourseKey
+        ? 0.15
+        : 0;
     const score = overlap / denominator + courseBoost;
     if (score >= 0.5) scored.push({ student, score });
   }
@@ -417,23 +562,31 @@ async function findStudentCandidates(supabase, tenantId, detectedName, detectedC
   if (approximate.length === 0 && detectedCourseKey) {
     const courseIds = [];
     for (const course of courseRows ?? []) {
-      if (courseMatchKey(course.name) === detectedCourseKey) courseIds.push(course.id);
+      if (courseMatchKey(course.name) === detectedCourseKey)
+        courseIds.push(course.id);
     }
     if (courseIds.length > 0) {
-      const { data: courseStudents } = await supabase.from("students").select(baseSelect).eq("tenant_id", tenantId).in("course_id", courseIds).limit(50);
-      approximate = (courseStudents ?? []).slice(0, 8).map((student) => ({ student, score: 0.45 }));
+      const { data: courseStudents } = await supabase
+        .from("students")
+        .select(baseSelect)
+        .eq("tenant_id", tenantId)
+        .in("course_id", courseIds)
+        .limit(50);
+      approximate = (courseStudents ?? [])
+        .slice(0, 8)
+        .map((student) => ({ student, score: 0.45 }));
     }
   }
   const candidates = await enrichStudentRows(
     supabase,
     approximate.map((item) => item.student),
     approximate[0]?.score ?? 0,
-    approximate.length > 0 ? "multiple_candidates" : "no_match"
+    approximate.length > 0 ? "multiple_candidates" : "no_match",
   );
   return {
     candidates,
     selectedStudentId: null,
-    status: candidates.length > 0 ? "multiple_candidates" : "no_match"
+    status: candidates.length > 0 ? "multiple_candidates" : "no_match",
   };
 }
 function annotationTypeToLegacy(type) {
@@ -450,14 +603,18 @@ function annotationIdentityKey(type, date, text) {
 function selectNewAnnotationsForLegacySync(annotations, existingRecords) {
   const existingCounts = /* @__PURE__ */ new Map();
   for (const record of existingRecords) {
-    const key = annotationIdentityKey(record.type, record.date_time, record.observation);
+    const key = annotationIdentityKey(
+      record.type,
+      record.date_time,
+      record.observation,
+    );
     existingCounts.set(key, (existingCounts.get(key) || 0) + 1);
   }
   return annotations.filter((annotation) => {
     const key = annotationIdentityKey(
       annotationTypeToLegacy(annotation.type),
       annotation.detected_date,
-      annotation.raw_text
+      annotation.raw_text,
     );
     const remainingMatches = existingCounts.get(key) || 0;
     if (remainingMatches === 0) return true;
@@ -470,7 +627,10 @@ function severityForAnnotation(type) {
 }
 function suggestedLetterToDocumentType(suggestedLetterType) {
   if (suggestedLetterType === "amonestacion") return "Amonestaci\xF3n Escrita";
-  if (suggestedLetterType === "compromiso" || suggestedLetterType === "compromiso_conductual") {
+  if (
+    suggestedLetterType === "compromiso" ||
+    suggestedLetterType === "compromiso_conductual"
+  ) {
     return "Carta de Compromiso Conductual";
   }
   if (suggestedLetterType === "derivacion") return "Ficha de Derivaci\xF3n";
@@ -478,25 +638,42 @@ function suggestedLetterToDocumentType(suggestedLetterType) {
 }
 function suggestedLetterToStageName(suggestedLetterType) {
   if (suggestedLetterType === "amonestacion") return "amonestacion";
-  if (suggestedLetterType === "compromiso" || suggestedLetterType === "compromiso_conductual") {
+  if (
+    suggestedLetterType === "compromiso" ||
+    suggestedLetterType === "compromiso_conductual"
+  ) {
     return "compromiso";
   }
   if (suggestedLetterType === "derivacion") return "derivacion";
   return null;
 }
-async function syncConfirmedProcessToLegacyViews(supabase, input, processId, processNumber, summary, student) {
-  const { data: existingRecords, error: existingRecordsError } = await supabase.from("inspectorate_records").select("type,date_time,observation").eq("tenant_id", input.tenantId).eq("student_id", input.studentId);
+async function syncConfirmedProcessToLegacyViews(
+  supabase,
+  input,
+  processId,
+  processNumber,
+  summary,
+  student,
+) {
+  const { data: existingRecords, error: existingRecordsError } = await supabase
+    .from("inspectorate_records")
+    .select("type,date_time,observation")
+    .eq("tenant_id", input.tenantId)
+    .eq("student_id", input.studentId);
   if (existingRecordsError) {
-    throw new Error("Error al comparar las anotaciones existentes del estudiante");
+    throw new Error(
+      "Error al comparar las anotaciones existentes del estudiante",
+    );
   }
   const newAnnotations = selectNewAnnotationsForLegacySync(
     input.annotations,
-    existingRecords || []
+    existingRecords || [],
   );
   const insertedSummary = summarizeAnnotations(
     newAnnotations.map((annotation, index) => ({
       raw_text: annotation.raw_text,
-      normalized_text: annotation.normalized_text ?? normalizeText(annotation.raw_text),
+      normalized_text:
+        annotation.normalized_text ?? normalizeText(annotation.raw_text),
       type: annotation.type,
       page_number: annotation.page_number ?? null,
       sequence_number: annotation.sequence_number || index + 1,
@@ -504,35 +681,53 @@ async function syncConfirmedProcessToLegacyViews(supabase, input, processId, pro
       detected_teacher: annotation.detected_teacher ?? null,
       classification_method: "regex",
       confidence: annotation.confidence ?? 0.8,
-      parser_version: PARSER_VERSION
-    }))
+      parser_version: PARSER_VERSION,
+    })),
   );
   if (newAnnotations.length > 0) {
     const legacyRecords = newAnnotations.map((annotation) => ({
       student_id: input.studentId,
       tenant_id: input.tenantId,
-      date_time: annotation.detected_date ? `${annotation.detected_date}T12:00:00.000Z` : (/* @__PURE__ */ new Date()).toISOString(),
+      date_time: annotation.detected_date
+        ? `${annotation.detected_date}T12:00:00.000Z`
+        : /* @__PURE__ */ new Date().toISOString(),
       observation: annotation.raw_text,
       severity: severityForAnnotation(annotation.type),
       type: annotationTypeToLegacy(annotation.type),
       registered_by: "PDF Convivencia Escolar",
       created_by: "Sistema PDF",
-      pdf_file_path: input.storagePath
+      pdf_file_path: input.storagePath,
     }));
     if (legacyRecords.length > 0) {
-      const { error } = await supabase.from("inspectorate_records").insert(legacyRecords);
-      if (error) throw new Error("Error al registrar anotaciones en la vista de registros");
+      const { error } = await supabase
+        .from("inspectorate_records")
+        .insert(legacyRecords);
+      if (error)
+        throw new Error(
+          "Error al registrar anotaciones en la vista de registros",
+        );
     }
   }
   const documentType = suggestedLetterToDocumentType(input.suggestedLetterType);
   let courseName = student.course_id || "Sin curso";
   if (student.course_id) {
-    const { data: course } = await supabase.from("courses").select("name").eq("tenant_id", input.tenantId).eq("id", student.course_id).maybeSingle();
+    const { data: course } = await supabase
+      .from("courses")
+      .select("name")
+      .eq("tenant_id", input.tenantId)
+      .eq("id", student.course_id)
+      .maybeSingle();
     courseName = course?.name || courseName;
   }
   const processMarker = `Proceso PDF ${processNumber} (${processId})`;
   if (documentType) {
-    const { data: existingDocument } = await supabase.from("cartas_disciplinarias").select("id").eq("tenant_id", input.tenantId).eq("student_id", input.studentId).ilike("observations", `%${processId}%`).limit(1);
+    const { data: existingDocument } = await supabase
+      .from("cartas_disciplinarias")
+      .select("id")
+      .eq("tenant_id", input.tenantId)
+      .eq("student_id", input.studentId)
+      .ilike("observations", `%${processId}%`)
+      .limit(1);
     if (!existingDocument || existingDocument.length === 0) {
       const { error } = await supabase.from("cartas_disciplinarias").insert({
         student_id: input.studentId,
@@ -546,18 +741,27 @@ async function syncConfirmedProcessToLegacyViews(supabase, input, processId, pro
         annotations_count: summary.negativas,
         student_name: student.full_name || "Estudiante seleccionado",
         course: courseName,
-        regulation_basis: "RICE 2026 - Registro de anotaciones y debido proceso",
+        regulation_basis:
+          "RICE 2026 - Registro de anotaciones y debido proceso",
         observations: `${processMarker}. Documento sugerido autom\xE1ticamente desde PDF confirmado.`,
-        created_by: "Sistema PDF"
+        created_by: "Sistema PDF",
       });
       if (error) throw new Error("Error al registrar el documento sugerido");
     }
   }
   const stageName = suggestedLetterToStageName(input.suggestedLetterType);
   if (stageName) {
-    const { data: existingStage } = await supabase.from("etapas_disciplinarias").select("id").eq("tenant_id", input.tenantId).eq("student_id", input.studentId).eq("stage_name", stageName).ilike("comment", `%${processId}%`).limit(1);
+    const { data: existingStage } = await supabase
+      .from("etapas_disciplinarias")
+      .select("id")
+      .eq("tenant_id", input.tenantId)
+      .eq("student_id", input.studentId)
+      .eq("stage_name", stageName)
+      .ilike("comment", `%${processId}%`)
+      .limit(1);
     if (!existingStage || existingStage.length === 0) {
-      const stepNumber = stageName === "amonestacion" ? 1 : stageName === "compromiso" ? 2 : 3;
+      const stepNumber =
+        stageName === "amonestacion" ? 1 : stageName === "compromiso" ? 2 : 3;
       const { error } = await supabase.from("etapas_disciplinarias").insert({
         student_id: input.studentId,
         tenant_id: input.tenantId,
@@ -565,9 +769,10 @@ async function syncConfirmedProcessToLegacyViews(supabase, input, processId, pro
         stage_name: stageName,
         responsible: "Convivencia Escolar",
         comment: `${processMarker}. Etapa sugerida autom\xE1ticamente desde PDF confirmado.`,
-        created_by: "Sistema PDF"
+        created_by: "Sistema PDF",
       });
-      if (error) throw new Error("Error al registrar la etapa disciplinaria sugerida");
+      if (error)
+        throw new Error("Error al registrar la etapa disciplinaria sugerida");
     }
   }
   return insertedSummary;
@@ -577,103 +782,163 @@ async function getSuggestedLetter(supabase, tenantId, summary) {
     p_negativas: summary.negativas,
     p_positivas: summary.positivas,
     p_informativas: summary.informativas,
-    p_tenant_id: tenantId
+    p_tenant_id: tenantId,
   });
   if (error || !data) return "none";
   return String(data);
 }
 async function findDuplicateFileByHash(supabase, tenantId, fileHash) {
-  const { data: duplicateFile, error: duplicateFileError } = await supabase.from("disciplinary_process_files").select("process_id,student_id,uploaded_at").eq("tenant_id", tenantId).eq("file_hash", fileHash).order("uploaded_at", { ascending: false }).limit(1).maybeSingle();
+  const { data: duplicateFile, error: duplicateFileError } = await supabase
+    .from("disciplinary_process_files")
+    .select("process_id,student_id,uploaded_at")
+    .eq("tenant_id", tenantId)
+    .eq("file_hash", fileHash)
+    .order("uploaded_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
   if (duplicateFileError) {
     throw new Error("No fue posible comprobar si el PDF ya estaba registrado");
   }
   if (!duplicateFile) return null;
   const processId = String(duplicateFile.process_id);
-  const { data: process2, error: processError } = await supabase.from("disciplinary_processes").select("process_number").eq("tenant_id", tenantId).eq("id", processId).maybeSingle();
+  const { data: process2, error: processError } = await supabase
+    .from("disciplinary_processes")
+    .select("process_number")
+    .eq("tenant_id", tenantId)
+    .eq("id", processId)
+    .maybeSingle();
   if (processError) {
-    throw new Error("No fue posible recuperar el proceso asociado al PDF existente");
+    throw new Error(
+      "No fue posible recuperar el proceso asociado al PDF existente",
+    );
   }
   return {
     process_id: processId,
-    process_number: String(
-      process2?.process_number ?? "Sin n\xFAmero"
-    ),
+    process_number: String(process2?.process_number ?? "Sin n\xFAmero"),
     student_id: duplicateFile.student_id ?? null,
-    uploaded_at: String(duplicateFile.uploaded_at)
+    uploaded_at: String(duplicateFile.uploaded_at),
   };
 }
 async function loadAndParsePdf(supabase, input) {
   assertStoragePathAllowed(input.bucket, input.storagePath, input.tenantId);
-  const { data: fileBlob, error: downloadError } = await supabase.storage.from(input.bucket).download(input.storagePath);
+  const { data: fileBlob, error: downloadError } = await supabase.storage
+    .from(input.bucket)
+    .download(input.storagePath);
   if (downloadError || !fileBlob) {
     throw new Error("No fue posible descargar el PDF privado desde Storage");
   }
   const bytes = new Uint8Array(await fileBlob.arrayBuffer());
-  if (bytes.byteLength > MAX_PDF_BYTES) throw new Error("El PDF excede el tama\xF1o m\xE1ximo permitido");
+  if (bytes.byteLength > MAX_PDF_BYTES)
+    throw new Error("El PDF excede el tama\xF1o m\xE1ximo permitido");
   if (!input.fileName.toLowerCase().endsWith(".pdf") || !isPdf(bytes)) {
     throw new Error("El archivo no corresponde a un PDF v\xE1lido");
   }
   const fileHash = createHash("sha256").update(bytes).digest("hex");
   const pages = await extractPdfPages(bytes);
   const textContent = pages.join("\n");
-  const annotations = normalizeText(textContent).length < 20 ? [] : parseAnnotationsByPage(pages);
+  const annotations =
+    normalizeText(textContent).length < 20 ? [] : parseAnnotationsByPage(pages);
   const summary = summarizeAnnotations(annotations);
   return { bytes, fileHash, pages, textContent, annotations, summary };
 }
-async function assertAnalysisMatchesFile(supabase, tenantId, analysisId, fileHash) {
+async function assertAnalysisMatchesFile(
+  supabase,
+  tenantId,
+  analysisId,
+  fileHash,
+) {
   if (!analysisId) return;
-  const { data, error } = await supabase.from("document_analyses").select("id,file_hash,status").eq("id", analysisId).eq("tenant_id", tenantId).maybeSingle();
-  if (error) throw new Error("No fue posible validar el an\xE1lisis previo del PDF");
-  if (!data) throw new Error("El an\xE1lisis informado no corresponde al establecimiento activo");
+  const { data, error } = await supabase
+    .from("document_analyses")
+    .select("id,file_hash,status")
+    .eq("id", analysisId)
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
+  if (error)
+    throw new Error("No fue posible validar el an\xE1lisis previo del PDF");
+  if (!data)
+    throw new Error(
+      "El an\xE1lisis informado no corresponde al establecimiento activo",
+    );
   if (data.file_hash !== fileHash) {
-    throw new Error("El an\xE1lisis informado no coincide con el PDF confirmado");
+    throw new Error(
+      "El an\xE1lisis informado no coincide con el PDF confirmado",
+    );
   }
 }
 async function analyzeDisciplinaryPdf(input) {
   const supabase = getSupabaseAdmin(input.authToken);
-  const { fileHash, textContent, annotations, summary } = await loadAndParsePdf(supabase, input);
+  const { fileHash, textContent, annotations, summary } = await loadAndParsePdf(
+    supabase,
+    input,
+  );
   const warnings = [];
   if (normalizeText(textContent).length < 20) {
-    warnings.push("El PDF no contiene texto seleccionable suficiente. Puede requerir OCR.");
+    warnings.push(
+      "El PDF no contiene texto seleccionable suficiente. Puede requerir OCR.",
+    );
   }
   const detectedStudentName = extractStudentName(textContent);
   const detectedCourse = extractCourse(textContent);
-  const [recommendedLetterType, studentMatch, duplicateFile] = await Promise.all([
-    getSuggestedLetter(supabase, input.tenantId, summary),
-    findStudentCandidates(supabase, input.tenantId, detectedStudentName, detectedCourse),
-    findDuplicateFileByHash(supabase, input.tenantId, fileHash)
-  ]);
+  const [recommendedLetterType, studentMatch, duplicateFile] =
+    await Promise.all([
+      getSuggestedLetter(supabase, input.tenantId, summary),
+      findStudentCandidates(
+        supabase,
+        input.tenantId,
+        detectedStudentName,
+        detectedCourse,
+      ),
+      findDuplicateFileByHash(supabase, input.tenantId, fileHash),
+    ]);
   if (duplicateFile)
     warnings.push(
-      `Este mismo PDF ya est\xE1 registrado en el proceso ${duplicateFile.process_number}.`
+      `Este mismo PDF ya est\xE1 registrado en el proceso ${duplicateFile.process_number}.`,
     );
-  if (!detectedStudentName) warnings.push("No se pudo detectar un nombre de estudiante en el PDF.");
+  if (!detectedStudentName)
+    warnings.push("No se pudo detectar un nombre de estudiante en el PDF.");
   if (annotations.length === 0 && normalizeText(textContent).length >= 20)
-    warnings.push("No se detectaron anotaciones clasificables en el documento.");
+    warnings.push(
+      "No se detectaron anotaciones clasificables en el documento.",
+    );
   if (studentMatch.status === "multiple_candidates")
-    warnings.push("Se requiere confirmar el estudiante porque existen m\xFAltiples candidatos.");
+    warnings.push(
+      "Se requiere confirmar el estudiante porque existen m\xFAltiples candidatos.",
+    );
   if (studentMatch.status === "no_match")
-    warnings.push("Se requiere seleccionar manualmente un estudiante autorizado.");
-  const processingStatus = normalizeText(textContent).length < 20 ? "ocr_required" : studentMatch.selectedStudentId ? "completed" : "student_resolution";
-  const { data: analysisRow } = await supabase.from("document_analyses").insert({
-    student_id: studentMatch.selectedStudentId,
-    file_name: input.fileName,
-    negativas: summary.negativas,
-    positivas: summary.positivas,
-    informativas: summary.informativas,
-    tenant_id: input.tenantId,
-    status: processingStatus,
-    detected_student_name: detectedStudentName,
-    detected_course: detectedCourse,
-    student_match_status: studentMatch.status,
-    warnings,
-    file_hash: fileHash,
-    parser_version: PARSER_VERSION
-  }).select("id,analyzed_at").maybeSingle();
+    warnings.push(
+      "Se requiere seleccionar manualmente un estudiante autorizado.",
+    );
+  const processingStatus =
+    normalizeText(textContent).length < 20
+      ? "ocr_required"
+      : studentMatch.selectedStudentId
+        ? "completed"
+        : "student_resolution";
+  const { data: analysisRow } = await supabase
+    .from("document_analyses")
+    .insert({
+      student_id: studentMatch.selectedStudentId,
+      file_name: input.fileName,
+      negativas: summary.negativas,
+      positivas: summary.positivas,
+      informativas: summary.informativas,
+      tenant_id: input.tenantId,
+      status: processingStatus,
+      detected_student_name: detectedStudentName,
+      detected_course: detectedCourse,
+      student_match_status: studentMatch.status,
+      warnings,
+      file_hash: fileHash,
+      parser_version: PARSER_VERSION,
+    })
+    .select("id,analyzed_at")
+    .maybeSingle();
   return {
     success: true,
     analysis_id: analysisRow?.id ?? null,
-    analyzed_at: analysisRow?.analyzed_at ?? (/* @__PURE__ */ new Date()).toISOString(),
+    analyzed_at:
+      analysisRow?.analyzed_at ?? /* @__PURE__ */ new Date().toISOString(),
     file_id: null,
     process_id: null,
     detected_student_name: detectedStudentName,
@@ -696,7 +961,7 @@ async function analyzeDisciplinaryPdf(input) {
     mode: studentMatch.selectedStudentId ? "preview" : "student_pending",
     file_hash: fileHash,
     duplicate_file: duplicateFile,
-    parser_version: PARSER_VERSION
+    parser_version: PARSER_VERSION,
   };
 }
 async function confirmDisciplinaryProcess(input) {
@@ -705,20 +970,36 @@ async function confirmDisciplinaryProcess(input) {
   if (input.fileHash && input.fileHash !== parsedPdf.fileHash) {
     throw new Error("El hash informado no coincide con el PDF confirmado");
   }
-  await assertAnalysisMatchesFile(supabase, input.tenantId, input.analysisId, parsedPdf.fileHash);
+  await assertAnalysisMatchesFile(
+    supabase,
+    input.tenantId,
+    input.analysisId,
+    parsedPdf.fileHash,
+  );
   const confirmedInput = {
     ...input,
     fileHash: parsedPdf.fileHash,
-    annotations: prepareConfirmedAnnotations(input.annotations, parsedPdf.annotations)
+    annotations: prepareConfirmedAnnotations(
+      input.annotations,
+      parsedPdf.annotations,
+    ),
   };
-  const { data: student, error: studentError } = await supabase.from("students").select("id, tenant_id, full_name, course_id").eq("id", confirmedInput.studentId).eq("tenant_id", confirmedInput.tenantId).maybeSingle();
+  const { data: student, error: studentError } = await supabase
+    .from("students")
+    .select("id, tenant_id, full_name, course_id")
+    .eq("id", confirmedInput.studentId)
+    .eq("tenant_id", confirmedInput.tenantId)
+    .maybeSingle();
   if (studentError || !student) {
-    throw new Error("El estudiante seleccionado no pertenece al establecimiento activo");
+    throw new Error(
+      "El estudiante seleccionado no pertenece al establecimiento activo",
+    );
   }
   const summary = summarizeAnnotations(
     confirmedInput.annotations.map((annotation, index) => ({
       raw_text: annotation.raw_text,
-      normalized_text: annotation.normalized_text ?? normalizeText(annotation.raw_text),
+      normalized_text:
+        annotation.normalized_text ?? normalizeText(annotation.raw_text),
       type: annotation.type,
       page_number: annotation.page_number ?? null,
       sequence_number: annotation.sequence_number || index + 1,
@@ -726,11 +1007,16 @@ async function confirmDisciplinaryProcess(input) {
       detected_teacher: annotation.detected_teacher ?? null,
       classification_method: "regex",
       confidence: annotation.confidence ?? 0.8,
-      parser_version: PARSER_VERSION
-    }))
+      parser_version: PARSER_VERSION,
+    })),
   );
   if (input.idempotencyKey) {
-    const { data: existing } = await supabase.from("disciplinary_process_files").select("process_id, disciplinary_processes(process_number)").eq("tenant_id", confirmedInput.tenantId).eq("storage_path", confirmedInput.storagePath).maybeSingle();
+    const { data: existing } = await supabase
+      .from("disciplinary_process_files")
+      .select("process_id, disciplinary_processes(process_number)")
+      .eq("tenant_id", confirmedInput.tenantId)
+      .eq("storage_path", confirmedInput.storagePath)
+      .maybeSingle();
     if (existing && existing.process_id) {
       const nested = existing.disciplinary_processes;
       const existingProcessId = existing.process_id;
@@ -741,24 +1027,24 @@ async function confirmDisciplinaryProcess(input) {
         existingProcessId,
         existingProcessNumber,
         summary,
-        student
+        student,
       );
       return {
         success: true,
         processId: existingProcessId,
         processNumber: existingProcessNumber,
-        insertedAnnotations: insertedAnnotations2
+        insertedAnnotations: insertedAnnotations2,
       };
     }
   }
   const duplicateFile = await findDuplicateFileByHash(
     supabase,
     confirmedInput.tenantId,
-    confirmedInput.fileHash
+    confirmedInput.fileHash,
   );
   if (duplicateFile) {
     throw new Error(
-      `Este PDF ya fue registrado en el proceso ${duplicateFile.process_number}. No se cre\xF3 un duplicado.`
+      `Este PDF ya fue registrado en el proceso ${duplicateFile.process_number}. No se cre\xF3 un duplicado.`,
     );
   }
   const { data: atomicResult, error: atomicError } = await supabase.rpc(
@@ -774,17 +1060,20 @@ async function confirmDisciplinaryProcess(input) {
       p_file_hash: confirmedInput.fileHash,
       p_bucket: confirmedInput.bucket,
       p_original_file_name: confirmedInput.fileName,
-      p_stored_file_name: confirmedInput.storagePath.split("/").pop() || confirmedInput.fileName,
+      p_stored_file_name:
+        confirmedInput.storagePath.split("/").pop() || confirmedInput.fileName,
       p_analysis_version: PARSER_VERSION,
       p_annotations: confirmedInput.annotations,
       p_total_negativas: summary.negativas,
       p_total_positivas: summary.positivas,
       p_total_informativas: summary.informativas,
-      p_confirmed_by: confirmedInput.confirmedBy ?? null
-    }
+      p_confirmed_by: confirmedInput.confirmedBy ?? null,
+    },
   );
   if (atomicError || !Array.isArray(atomicResult) || !atomicResult[0]) {
-    throw new Error("Error al confirmar at\xF3micamente el proceso disciplinario");
+    throw new Error(
+      "Error al confirmar at\xF3micamente el proceso disciplinario",
+    );
   }
   const atomicRow = atomicResult[0];
   const processId = atomicRow.process_id;
@@ -792,16 +1081,24 @@ async function confirmDisciplinaryProcess(input) {
   const insertedAnnotations = {
     negativas: Number(atomicRow.inserted_negativas) || 0,
     positivas: Number(atomicRow.inserted_positivas) || 0,
-    informativas: Number(atomicRow.inserted_informativas) || 0
+    informativas: Number(atomicRow.inserted_informativas) || 0,
   };
   return {
     success: true,
     processId,
     processNumber,
-    insertedAnnotations
+    insertedAnnotations,
   };
 }
-var PARSER_VERSION, PDF_BUCKET, MAX_PDF_BYTES, MAX_PDF_PAGES, MAX_CONFIRMED_ANNOTATIONS, MAX_CONFIRMED_ANNOTATION_TEXT, NodeDomMatrixPolyfill, NodeImageDataPolyfill, NodePath2DPolyfill;
+var PARSER_VERSION,
+  PDF_BUCKET,
+  MAX_PDF_BYTES,
+  MAX_PDF_PAGES,
+  MAX_CONFIRMED_ANNOTATIONS,
+  MAX_CONFIRMED_ANNOTATION_TEXT,
+  NodeDomMatrixPolyfill,
+  NodeImageDataPolyfill,
+  NodePath2DPolyfill;
 var init_disciplinaryPdfAnalysis = __esm({
   "server/lib/disciplinaryPdfAnalysis.ts"() {
     "use strict";
@@ -840,7 +1137,14 @@ var init_disciplinaryPdfAnalysis = __esm({
         return this;
       }
       preMultiplySelf(other) {
-        const copy = new _NodeDomMatrixPolyfill([other.a, other.b, other.c, other.d, other.e, other.f]);
+        const copy = new _NodeDomMatrixPolyfill([
+          other.a,
+          other.b,
+          other.c,
+          other.d,
+          other.e,
+          other.f,
+        ]);
         copy.multiplySelf(this);
         this.a = copy.a;
         this.b = copy.b;
@@ -857,20 +1161,28 @@ var init_disciplinaryPdfAnalysis = __esm({
           this.c,
           this.d,
           this.e,
-          this.f
+          this.f,
         ]).translateSelf(tx, ty);
       }
       translateSelf(tx = 0, ty = 0) {
-        return this.multiplySelf(new _NodeDomMatrixPolyfill([1, 0, 0, 1, tx, ty]));
-      }
-      scale(scaleX = 1, scaleY = scaleX) {
-        return new _NodeDomMatrixPolyfill([this.a, this.b, this.c, this.d, this.e, this.f]).scaleSelf(
-          scaleX,
-          scaleY
+        return this.multiplySelf(
+          new _NodeDomMatrixPolyfill([1, 0, 0, 1, tx, ty]),
         );
       }
+      scale(scaleX = 1, scaleY = scaleX) {
+        return new _NodeDomMatrixPolyfill([
+          this.a,
+          this.b,
+          this.c,
+          this.d,
+          this.e,
+          this.f,
+        ]).scaleSelf(scaleX, scaleY);
+      }
       scaleSelf(scaleX = 1, scaleY = scaleX) {
-        return this.multiplySelf(new _NodeDomMatrixPolyfill([scaleX, 0, 0, scaleY, 0, 0]));
+        return this.multiplySelf(
+          new _NodeDomMatrixPolyfill([scaleX, 0, 0, scaleY, 0, 0]),
+        );
       }
       invertSelf() {
         const determinant = this.a * this.d - this.b * this.c;
@@ -904,10 +1216,9 @@ var init_disciplinaryPdfAnalysis = __esm({
       }
     };
     NodePath2DPolyfill = class {
-      addPath() {
-      }
+      addPath() {}
     };
-  }
+  },
 });
 
 // server/api/services/excelImport.ts
@@ -916,7 +1227,7 @@ __export(excelImport_exports, {
   normalizeLevel: () => normalizeLevel,
   normalizeRut: () => normalizeRut,
   parseImportWorkbook: () => parseImportWorkbook,
-  runImport: () => runImport
+  runImport: () => runImport,
 });
 import { randomUUID } from "node:crypto";
 import readXlsxFile from "read-excel-file/node";
@@ -943,13 +1254,18 @@ function toRow(value) {
 }
 function headerIndex(row, candidates) {
   return row.findIndex(
-    (cell) => typeof cell === "string" && candidates.some((c) => cell.trim().toLowerCase() === c)
+    (cell) =>
+      typeof cell === "string" &&
+      candidates.some((c) => cell.trim().toLowerCase() === c),
   );
 }
 async function parseImportWorkbook(buffer, defaultLevel = "BASICA") {
   const warnings = [];
   const sheets = await readXlsxFile(buffer);
-  const findSheet = (candidates) => sheets.find((sheet) => candidates.includes(sheet.sheet.trim().toLowerCase())) ?? null;
+  const findSheet = (candidates) =>
+    sheets.find((sheet) =>
+      candidates.includes(sheet.sheet.trim().toLowerCase()),
+    ) ?? null;
   const coursesSheet = findSheet(["cursos", "courses"]);
   const studentsSheet = findSheet(["estudiantes", "students", "alumnos"]);
   const courses = [];
@@ -973,7 +1289,12 @@ async function parseImportWorkbook(buffer, defaultLevel = "BASICA") {
   if (studentsSheet) {
     const rows = studentsSheet.data;
     const header = rows[0] ?? [];
-    const iName = headerIndex(header, ["full_name", "nombre", "nombre completo", "full name"]);
+    const iName = headerIndex(header, [
+      "full_name",
+      "nombre",
+      "nombre completo",
+      "full name",
+    ]);
     const iRut = headerIndex(header, ["rut", "run"]);
     const iCourse = headerIndex(header, ["curso", "course", "course_id"]);
     for (let r = 1; r < rows.length; r += 1) {
@@ -991,7 +1312,11 @@ async function parseImportWorkbook(buffer, defaultLevel = "BASICA") {
         const key = student.course_name.toLowerCase();
         if (!key || byName.has(key)) continue;
         pos += 1;
-        byName.set(key, { name: student.course_name, level: defaultLevel, position: pos });
+        byName.set(key, {
+          name: student.course_name,
+          level: defaultLevel,
+          position: pos,
+        });
       }
       courses.push(...byName.values());
     }
@@ -1006,7 +1331,10 @@ async function runImport(client, tenantId, parsed) {
   let studentsInserted = 0;
   let duplicates = 0;
   const courseMap = /* @__PURE__ */ new Map();
-  const { data: existingCourses, error: cErr } = await client.from("courses").select("id,name").eq("tenant_id", tenantId);
+  const { data: existingCourses, error: cErr } = await client
+    .from("courses")
+    .select("id,name")
+    .eq("tenant_id", tenantId);
   if (cErr) throw cErr;
   for (const c of existingCourses ?? []) {
     courseMap.set(c.name.toLowerCase(), c.id);
@@ -1022,17 +1350,23 @@ async function runImport(client, tenantId, parsed) {
       name: course.name,
       level: course.level,
       position: course.position,
-      tenant_id: tenantId
+      tenant_id: tenantId,
     });
     courseMap.set(key, id);
   }
   if (coursesToInsert.length > 0) {
-    const { error: insErr } = await client.from("courses").insert(coursesToInsert);
+    const { error: insErr } = await client
+      .from("courses")
+      .insert(coursesToInsert);
     if (insErr) throw insErr;
     coursesInserted = coursesToInsert.length;
   }
   const seenRuts = /* @__PURE__ */ new Set();
-  const { data: existingStudents, error: sErr } = await client.from("students").select("rut").eq("tenant_id", tenantId).not("rut", "is", "");
+  const { data: existingStudents, error: sErr } = await client
+    .from("students")
+    .select("rut")
+    .eq("tenant_id", tenantId)
+    .not("rut", "is", "");
   if (sErr) throw sErr;
   for (const s of existingStudents ?? []) {
     const rut = s.rut;
@@ -1044,10 +1378,12 @@ async function runImport(client, tenantId, parsed) {
       duplicates += 1;
       continue;
     }
-    const course_id = student.course_name ? courseMap.get(student.course_name.toLowerCase()) ?? null : null;
+    const course_id = student.course_name
+      ? (courseMap.get(student.course_name.toLowerCase()) ?? null)
+      : null;
     if (student.course_name && !course_id) {
       errors.push(
-        `Estudiante "${student.full_name}" referencia curso "${student.course_name}" no encontrado.`
+        `Estudiante "${student.full_name}" referencia curso "${student.course_name}" no encontrado.`,
       );
       continue;
     }
@@ -1057,11 +1393,13 @@ async function runImport(client, tenantId, parsed) {
       full_name: student.full_name,
       rut: student.rut,
       course_id,
-      tenant_id: tenantId
+      tenant_id: tenantId,
     });
   }
   if (studentsToInsert.length > 0) {
-    const { error: insErr } = await client.from("students").insert(studentsToInsert);
+    const { error: insErr } = await client
+      .from("students")
+      .insert(studentsToInsert);
     if (insErr) throw insErr;
     studentsInserted = studentsToInsert.length;
   }
@@ -1075,9 +1413,9 @@ var init_excelImport = __esm({
       basica: "BASICA",
       basico: "BASICA",
       media: "MEDIA",
-      medio: "MEDIA"
+      medio: "MEDIA",
     };
-  }
+  },
 });
 
 // server/api/index.ts
@@ -1100,7 +1438,14 @@ var cacheByUrl = /* @__PURE__ */ new Map();
 var CACHE_TTL_MS = 3e5;
 var FETCH_TIMEOUT_MS = 5e3;
 var MAX_RESPONSE_BYTES = 102400;
-var ALLOWED_ASYMMETRIC_ALGS = /* @__PURE__ */ new Set(["ES256", "ES384", "ES512", "RS256", "RS384", "RS512"]);
+var ALLOWED_ASYMMETRIC_ALGS = /* @__PURE__ */ new Set([
+  "ES256",
+  "ES384",
+  "ES512",
+  "RS256",
+  "RS384",
+  "RS512",
+]);
 function getOrCreateCacheEntry(supabaseUrl) {
   let entry = cacheByUrl.get(supabaseUrl);
   if (!entry) {
@@ -1131,7 +1476,7 @@ function fetchJwksFromServer(supabaseUrl) {
         path: url.pathname,
         method: "GET",
         headers: { Accept: "application/json" },
-        timeout: FETCH_TIMEOUT_MS
+        timeout: FETCH_TIMEOUT_MS,
       },
       (res) => {
         let data = "";
@@ -1153,14 +1498,16 @@ function fetchJwksFromServer(supabaseUrl) {
             const parsed = JSON.parse(data);
             const keys = (parsed.keys ?? []).filter((k) => k.use === "sig");
             if (keys.length === 0) {
-              return reject(new Error("No signing keys found in JWKS endpoint"));
+              return reject(
+                new Error("No signing keys found in JWKS endpoint"),
+              );
             }
             resolve(keys);
           } catch {
             reject(new Error("Invalid JWKS response"));
           }
         });
-      }
+      },
     );
     req.on("error", reject);
     req.on("timeout", () => {
@@ -1180,18 +1527,20 @@ async function getJwksKeys(supabaseUrl) {
   if (entry.fetchPromise) {
     return entry.fetchPromise;
   }
-  entry.fetchPromise = activeJwksFetcher(supabaseUrl).then((keys) => {
-    entry.keys = keys;
-    entry.timestamp = Date.now();
-    entry.fetchPromise = null;
-    return keys;
-  }).catch((err) => {
-    entry.fetchPromise = null;
-    if (entry.keys.length > 0) {
-      return entry.keys;
-    }
-    throw err;
-  });
+  entry.fetchPromise = activeJwksFetcher(supabaseUrl)
+    .then((keys) => {
+      entry.keys = keys;
+      entry.timestamp = Date.now();
+      entry.fetchPromise = null;
+      return keys;
+    })
+    .catch((err) => {
+      entry.fetchPromise = null;
+      if (entry.keys.length > 0) {
+        return entry.keys;
+      }
+      throw err;
+    });
   return entry.fetchPromise;
 }
 async function refreshJwksOnce(supabaseUrl) {
@@ -1202,7 +1551,7 @@ async function refreshJwksOnce(supabaseUrl) {
 }
 function base64urlToBuffer(b64) {
   const base64 = b64.replace(/-/g, "+").replace(/_/g, "/");
-  const pad = 4 - b64.length % 4;
+  const pad = 4 - (b64.length % 4);
   const padded = pad < 4 ? base64 + "=".repeat(pad) : base64;
   const buf = Buffer.from(padded, "base64");
   const ab = new ArrayBuffer(buf.length);
@@ -1252,17 +1601,22 @@ async function verifyJwtWithJwks(token, supabaseUrl) {
     let cryptoKey;
     let valid;
     if (key.kty === "EC") {
-      const namedCurve = key.crv === "P-256" ? "P-256" : key.crv === "P-384" ? "P-384" : key.crv;
+      const namedCurve =
+        key.crv === "P-256" ? "P-256" : key.crv === "P-384" ? "P-384" : key.crv;
       if (!namedCurve) return null;
       const jwk = { kty: "EC", crv: namedCurve, x: key.x, y: key.y, ext: true };
-      cryptoKey = await crypto.subtle.importKey("jwk", jwk, { name: "ECDSA", namedCurve }, false, [
-        "verify"
-      ]);
+      cryptoKey = await crypto.subtle.importKey(
+        "jwk",
+        jwk,
+        { name: "ECDSA", namedCurve },
+        false,
+        ["verify"],
+      );
       valid = await crypto.subtle.verify(
         { name: "ECDSA", hash: "SHA-256" },
         cryptoKey,
         signature,
-        data
+        data,
       );
     } else if (key.kty === "RSA") {
       const jwk = { kty: "RSA", n: key.n, e: key.e, alg: key.alg, ext: true };
@@ -1271,18 +1625,36 @@ async function verifyJwtWithJwks(token, supabaseUrl) {
         jwk,
         { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
         false,
-        ["verify"]
+        ["verify"],
       );
-      valid = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", cryptoKey, signature, data);
+      valid = await crypto.subtle.verify(
+        "RSASSA-PKCS1-v1_5",
+        cryptoKey,
+        signature,
+        data,
+      );
     } else {
       return null;
     }
     if (!valid) return null;
-    if (payload.exp && typeof payload.exp === "number" && payload.exp * 1e3 < Date.now())
+    if (
+      payload.exp &&
+      typeof payload.exp === "number" &&
+      payload.exp * 1e3 < Date.now()
+    )
       return null;
-    if (payload.nbf && typeof payload.nbf === "number" && payload.nbf * 1e3 > Date.now())
+    if (
+      payload.nbf &&
+      typeof payload.nbf === "number" &&
+      payload.nbf * 1e3 > Date.now()
+    )
       return null;
-    if (!payload.sub || typeof payload.sub !== "string" || payload.sub.length === 0) return null;
+    if (
+      !payload.sub ||
+      typeof payload.sub !== "string" ||
+      payload.sub.length === 0
+    )
+      return null;
     if (payload.iss && typeof payload.iss === "string") {
       const expectedIss = `${supabaseUrl.replace(/\/+$/, "")}/auth/v1`;
       if (payload.iss !== expectedIss) return null;
@@ -1305,7 +1677,7 @@ var VALID_ROLES = [
   "teacher",
   "inspector",
   "user",
-  "staff"
+  "staff",
 ];
 var FRESH_PROFILE_ROLES = ["superadmin", "admin", "direccion"];
 function isValidUuid(value) {
@@ -1325,14 +1697,17 @@ async function verifyJwtViaHmac(token, secret) {
     return null;
   }
   const signature = Buffer.from(parts[2], "base64url");
-  for (const secretBytes of [new TextEncoder().encode(secret), Buffer.from(secret, "base64")]) {
+  for (const secretBytes of [
+    new TextEncoder().encode(secret),
+    Buffer.from(secret, "base64"),
+  ]) {
     try {
       const key = await crypto.subtle.importKey(
         "raw",
         secretBytes,
         { name: "HMAC", hash: "SHA-256" },
         false,
-        ["verify"]
+        ["verify"],
       );
       const data = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
       const valid = await crypto.subtle.verify("HMAC", key, signature, data);
@@ -1340,14 +1715,15 @@ async function verifyJwtViaHmac(token, secret) {
         if (!payload.exp || payload.exp * 1e3 < Date.now()) return null;
         return payload;
       }
-    } catch {
-    }
+    } catch {}
   }
   return null;
 }
 function verifyViaSupabaseApi(token) {
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const anonKey =
+    process.env.VITE_SUPABASE_ANON_KEY ??
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   if (!supabaseUrl || !anonKey || !URL.canParse(supabaseUrl)) {
     return Promise.resolve(null);
   }
@@ -1358,7 +1734,7 @@ function verifyViaSupabaseApi(token) {
         hostname,
         path: "/auth/v1/user",
         method: "GET",
-        headers: { Authorization: `Bearer ${token}`, apikey: anonKey }
+        headers: { Authorization: `Bearer ${token}`, apikey: anonKey },
       },
       (res) => {
         let data = "";
@@ -1374,7 +1750,7 @@ function verifyViaSupabaseApi(token) {
             resolve(null);
           }
         });
-      }
+      },
     );
     req.on("error", () => resolve(null));
     req.setTimeout(5e3, () => {
@@ -1384,7 +1760,11 @@ function verifyViaSupabaseApi(token) {
     req.end();
   });
 }
-async function verifyJwtSignature(token, secret, verifyRemote = verifyViaSupabaseApi) {
+async function verifyJwtSignature(
+  token,
+  secret,
+  verifyRemote = verifyViaSupabaseApi,
+) {
   const parts = token.split(".");
   if (parts.length !== 3) return null;
   let header;
@@ -1412,7 +1792,10 @@ async function verifyJwtSignature(token, secret, verifyRemote = verifyViaSupabas
   if (hmacResult) return hmacResult;
   return verifyRemote(token);
 }
-var defaultProfileFetcher = async ({ supabaseUrl, anonKey, token, userId }, httpsImpl) => {
+var defaultProfileFetcher = async (
+  { supabaseUrl, anonKey, token, userId },
+  httpsImpl,
+) => {
   const hostname = new URL(supabaseUrl).hostname;
   const data = await new Promise((resolve) => {
     const r = httpsImpl.request(
@@ -1420,7 +1803,7 @@ var defaultProfileFetcher = async ({ supabaseUrl, anonKey, token, userId }, http
         hostname,
         path: `/rest/v1/profiles?user_id=eq.${encodeURIComponent(userId)}&select=tenant_id,role,is_active&limit=1`,
         method: "GET",
-        headers: { apikey: anonKey, Authorization: `Bearer ${token}` }
+        headers: { apikey: anonKey, Authorization: `Bearer ${token}` },
       },
       (res2) => {
         let chunks = "";
@@ -1435,7 +1818,7 @@ var defaultProfileFetcher = async ({ supabaseUrl, anonKey, token, userId }, http
             resolve(null);
           }
         });
-      }
+      },
     );
     r.on("error", () => resolve(null));
     r.setTimeout(3e3, () => {
@@ -1457,31 +1840,52 @@ var defaultProfileFetcher = async ({ supabaseUrl, anonKey, token, userId }, http
   return {
     tenantId: profile.tenant_id,
     profileRole: profile.role,
-    isActive: profile.is_active !== false
+    isActive: profile.is_active !== false,
   };
 };
-async function injectTenantContext(req, token, profileFetcher = defaultProfileFetcher) {
+async function injectTenantContext(
+  req,
+  token,
+  profileFetcher = defaultProfileFetcher,
+) {
   const user = req.user;
   if (!user?.sub) return false;
   const appMetadata = user.app_metadata;
-  const jwtTenantId = typeof appMetadata?.tenant_id === "string" ? appMetadata.tenant_id : void 0;
-  const jwtRole = typeof appMetadata?.role === "string" ? appMetadata.role : void 0;
-  if (jwtTenantId && isValidUuid(jwtTenantId) && jwtRole && isValidRole(jwtRole) && !FRESH_PROFILE_ROLES.includes(jwtRole)) {
+  const jwtTenantId =
+    typeof appMetadata?.tenant_id === "string" ? appMetadata.tenant_id : void 0;
+  const jwtRole =
+    typeof appMetadata?.role === "string" ? appMetadata.role : void 0;
+  if (
+    jwtTenantId &&
+    isValidUuid(jwtTenantId) &&
+    jwtRole &&
+    isValidRole(jwtRole) &&
+    !FRESH_PROFILE_ROLES.includes(jwtRole)
+  ) {
     req.tenantId = jwtTenantId;
     req.profileRole = jwtRole;
     return true;
   }
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const anonKey =
+    process.env.VITE_SUPABASE_ANON_KEY ??
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   if (!supabaseUrl || !anonKey || !URL.canParse(supabaseUrl)) {
     return false;
   }
   try {
-    const result = await profileFetcher({ supabaseUrl, anonKey, token, userId: user.sub }, https2);
+    const result = await profileFetcher(
+      { supabaseUrl, anonKey, token, userId: user.sub },
+      https2,
+    );
     if (!result) {
       return false;
     }
-    if (!isValidUuid(result.tenantId) || !result.profileRole || result.isActive === false) {
+    if (
+      !isValidUuid(result.tenantId) ||
+      !result.profileRole ||
+      result.isActive === false
+    ) {
       return false;
     }
     req.tenantId = result.tenantId;
@@ -1490,7 +1894,7 @@ async function injectTenantContext(req, token, profileFetcher = defaultProfileFe
   } catch (err) {
     console.error(
       "[tenant] Failed to inject tenant context:",
-      err instanceof Error ? err.message : err
+      err instanceof Error ? err.message : err,
     );
     return false;
   }
@@ -1511,7 +1915,7 @@ function createRequireAuth(profileFetcher, verifyRemote) {
       const payload = await verifyJwtSignature(
         token,
         process.env.SUPABASE_JWT_SECRET ?? "",
-        verifyRemote
+        verifyRemote,
       );
       if (!payload) {
         res.status(401).json({ error: "Token JWT inv\xE1lido o expirado." });
@@ -1520,10 +1924,15 @@ function createRequireAuth(profileFetcher, verifyRemote) {
       const authReq = req;
       authReq.user = payload;
       authReq.authToken = token;
-      const tenantOk = await injectTenantContext(authReq, token, profileFetcher);
+      const tenantOk = await injectTenantContext(
+        authReq,
+        token,
+        profileFetcher,
+      );
       if (!tenantOk) {
         res.status(403).json({
-          error: "No fue posible determinar el establecimiento autenticado. Verifique que su perfil est\xE9 activo."
+          error:
+            "No fue posible determinar el establecimiento autenticado. Verifique que su perfil est\xE9 activo.",
         });
         return;
       }
@@ -1539,7 +1948,7 @@ var requireAuth = createRequireAuth();
 var MAX_STR = 1e4;
 var CONTROL_CHARS = new RegExp(
   `[${String.fromCharCode(0)}-${String.fromCharCode(31)}${String.fromCharCode(127)}-${String.fromCharCode(159)}]`,
-  "g"
+  "g",
 );
 var RequestValidationError = class extends Error {
   constructor(message, field) {
@@ -1565,39 +1974,58 @@ var requireStr = (obj, key, max = 200) => {
   return v.slice(0, max);
 };
 var optStr = (obj, key, max = MAX_STR) => sanitize(obj[key]).slice(0, max);
-var optArr = (obj, key) => Array.isArray(obj[key]) ? obj[key] : [];
 function sanitizeForAI(text) {
   if (!text || typeof text !== "string") {
     return "";
   }
-  return text.replace(/\[INST\]|\[\/INST\]|<<SYS>>|<<\/SYS>>/gi, "").replace(/<\|im_start\|>|<\|im_end\|>/gi, "").replace(/<\|system\|>|<\|user\|>|<\|assistant\|>/gi, "").replace(
-    /^(ignore|ignora|olvida|disregard|anula).{0,50}(instrucciones|instructions|reglas|rules|sistema|system)/gim,
-    ""
-  ).replace(
-    /(eres|you are|act as|actúa como|actuá como).{0,30}(un|a|el|la|un(a)?\s+abogado|lawyer|juez|judge)/gim,
-    ""
-  ).replace(/\n{3,}/g, "\n\n").slice(0, MAX_STR);
+  return text
+    .replace(/\[INST\]|\[\/INST\]|<<SYS>>|<<\/SYS>>/gi, "")
+    .replace(/<\|im_start\|>|<\|im_end\|>/gi, "")
+    .replace(/<\|system\|>|<\|user\|>|<\|assistant\|>/gi, "")
+    .replace(
+      /^(ignore|ignora|olvida|disregard|anula).{0,50}(instrucciones|instructions|reglas|rules|sistema|system)/gim,
+      "",
+    )
+    .replace(
+      /(eres|you are|act as|actúa como|actuá como).{0,30}(un|a|el|la|un(a)?\s+abogado|lawyer|juez|judge)/gim,
+      "",
+    )
+    .replace(/\n{3,}/g, "\n\n")
+    .slice(0, MAX_STR);
 }
 var EMAIL_RE = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
 var CHILEAN_RUT_RE = /\b(?:\d{1,2}\.?\d{3}\.?\d{3}-?[\dkK]|\d{7,8}-[\dkK])\b/g;
 var CHILEAN_PHONE_RE = /(?:\+?56\s*)?(?:9\s*)?\b\d{4}\s*\d{4}\b/g;
-var LABELLED_NAME_RE = /\b(estudiante|alumno|alumna|apoderado|apoderada|madre|padre)\s+([A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+(?:\s+[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+){1,4})/g;
+var LABELLED_NAME_RE =
+  /\b(estudiante|alumno|alumna|apoderado|apoderada|madre|padre)\s+([A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+(?:\s+[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+){1,4})/g;
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 function uniqueKnownValues(values) {
   return [
     ...new Set(
-      values.filter((value) => typeof value === "string").map((value) => value.trim()).filter((value) => value.length >= 3)
-    )
+      values
+        .filter((value) => typeof value === "string")
+        .map((value) => value.trim())
+        .filter((value) => value.length >= 3),
+    ),
   ].sort((a, b) => b.length - a.length);
 }
 function redactSensitiveForAI(text, knownValues = []) {
   let redacted = sanitizeForAI(text);
   for (const value of uniqueKnownValues(knownValues)) {
-    redacted = redacted.replace(new RegExp(escapeRegExp(value), "gi"), "[dato personal]");
+    redacted = redacted.replace(
+      new RegExp(escapeRegExp(value), "gi"),
+      "[dato personal]",
+    );
   }
-  return redacted.replace(EMAIL_RE, "[correo]").replace(CHILEAN_RUT_RE, "[RUT]").replace(CHILEAN_PHONE_RE, "[tel\xE9fono]").replace(LABELLED_NAME_RE, "$1 [nombre]").replace(/\n{3,}/g, "\n\n").slice(0, MAX_STR);
+  return redacted
+    .replace(EMAIL_RE, "[correo]")
+    .replace(CHILEAN_RUT_RE, "[RUT]")
+    .replace(CHILEAN_PHONE_RE, "[tel\xE9fono]")
+    .replace(LABELLED_NAME_RE, "$1 [nombre]")
+    .replace(/\n{3,}/g, "\n\n")
+    .slice(0, MAX_STR);
 }
 
 // server/api/services/cache.ts
@@ -1628,163 +2056,147 @@ function setCache(key, value) {
 }
 
 // server/api/lib/https.ts
-import https3 from "node:https";
-function httpsPost(hostname, pathname, body, headers, timeoutMs = 2e4, maxBytes = 2 * 1024 * 1024) {
-  return new Promise((resolve, reject) => {
-    const data = JSON.stringify(body);
-    let settled = false;
-    let size = 0;
-    const opts = {
-      hostname,
-      path: pathname,
+async function readCappedText(res, maxBytes, hostname) {
+  const reader = res.body?.getReader();
+  if (!reader) return "";
+  const chunks = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > maxBytes) {
+      await reader.cancel().catch(() => {});
+      throw new Error(
+        `La respuesta desde ${hostname} excede el tama\xF1o m\xE1ximo.`,
+      );
+    }
+    chunks.push(value);
+  }
+  return Buffer.concat(chunks).toString("utf8");
+}
+async function readCappedBuffer(res, maxBytes, onTooLarge) {
+  const reader = res.body?.getReader();
+  if (!reader) return Buffer.alloc(0);
+  const chunks = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > maxBytes) {
+      await reader.cancel().catch(() => {});
+      throw onTooLarge();
+    }
+    chunks.push(value);
+  }
+  return Buffer.concat(chunks);
+}
+function timeoutError(hostname, prefix) {
+  return new Error(`${prefix} a ${hostname} excedi\xF3 el tiempo m\xE1ximo.`);
+}
+async function request(hostname, pathname, init, timeoutMs) {
+  try {
+    return await fetch(`https://${hostname}${pathname}`, {
+      ...init,
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (error) {
+    if (error instanceof Error && error.name === "TimeoutError") {
+      throw timeoutError(hostname, "La solicitud");
+    }
+    throw error;
+  }
+}
+async function httpsPost(
+  hostname,
+  pathname,
+  body,
+  headers,
+  timeoutMs = 2e4,
+  maxBytes = 2 * 1024 * 1024,
+) {
+  const res = await request(
+    hostname,
+    pathname,
+    {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...headers }
-    };
-    const finish = (callback) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(deadlineTimer);
-      callback();
-    };
-    const req = https3.request(opts, (res) => {
-      let chunks = "";
-      res.on("data", (chunk) => {
-        size += Buffer.byteLength(chunk);
-        if (size > maxBytes) {
-          req.destroy(new Error(`La respuesta desde ${hostname} excede el tama\xF1o m\xE1ximo.`));
-          return;
-        }
-        chunks += chunk;
-      });
-      res.on("end", () => {
-        try {
-          const parsed = JSON.parse(chunks);
-          finish(() => resolve({ status: res.statusCode ?? 500, body: parsed }));
-        } catch {
-          finish(() => reject(new Error(`HTTP ${res.statusCode}: ${chunks}`)));
-        }
-      });
-    });
-    req.on("error", (error) => finish(() => reject(error)));
-    req.setTimeout(
-      timeoutMs,
-      () => req.destroy(new Error(`La solicitud a ${hostname} excedi\xF3 el tiempo m\xE1ximo.`))
-    );
-    const deadlineTimer = setTimeout(() => {
-      req.destroy(new Error(`La solicitud a ${hostname} excedi\xF3 el tiempo m\xE1ximo.`));
-    }, timeoutMs);
-    req.write(data);
-    req.end();
-  });
+      headers: { "Content-Type": "application/json", ...headers },
+      body: JSON.stringify(body),
+    },
+    timeoutMs,
+  );
+  const text = await readCappedText(res, maxBytes, hostname);
+  try {
+    return { status: res.status, body: JSON.parse(text) };
+  } catch {
+    throw new Error(`HTTP ${res.status}: ${text}`);
+  }
 }
-function httpsGet(hostname, pathname, headers, timeoutMs = 1e4, maxBytes = 2 * 1024 * 1024) {
-  return new Promise((resolve, reject) => {
-    let settled = false;
-    let size = 0;
-    let chunks = "";
-    const opts = {
-      hostname,
-      path: pathname,
+async function httpsGet(
+  hostname,
+  pathname,
+  headers,
+  timeoutMs = 1e4,
+  maxBytes = 2 * 1024 * 1024,
+) {
+  const res = await request(
+    hostname,
+    pathname,
+    { method: "GET", headers: headers || {} },
+    timeoutMs,
+  );
+  const text = await readCappedText(res, maxBytes, hostname);
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`HTTP ${res.status}: respuesta no v\xE1lida.`);
+  }
+}
+async function httpsGetBuffer(
+  hostname,
+  pathname,
+  headers,
+  maxBytes = 10 * 1024 * 1024,
+  timeoutMs = 6e3,
+) {
+  let res;
+  try {
+    res = await fetch(`https://${hostname}${pathname}`, {
       method: "GET",
-      headers: headers || {}
-    };
-    const req = https3.request(opts, (res) => {
-      res.on("data", (chunk) => {
-        size += Buffer.byteLength(chunk);
-        if (size > maxBytes) {
-          req.destroy(new Error(`La respuesta desde ${hostname} excede el tama\xF1o m\xE1ximo.`));
-          return;
-        }
-        chunks += chunk;
-      });
-      res.on("end", () => {
-        if (settled) return;
-        try {
-          settled = true;
-          resolve(JSON.parse(chunks));
-        } catch {
-          settled = true;
-          reject(new Error(`HTTP ${res.statusCode}: respuesta no v\xE1lida.`));
-        }
-      });
+      headers: headers || {},
+      signal: AbortSignal.timeout(timeoutMs),
     });
-    req.on("error", (error) => {
-      if (settled) return;
-      settled = true;
-      reject(error);
-    });
-    req.setTimeout(
-      timeoutMs,
-      () => req.destroy(new Error(`La solicitud a ${hostname} excedi\xF3 el tiempo m\xE1ximo.`))
-    );
-    req.end();
-  });
+  } catch (error) {
+    if (error instanceof Error && error.name === "TimeoutError") {
+      throw timeoutError(hostname, "La descarga desde");
+    }
+    throw error;
+  }
+  const body = await readCappedBuffer(
+    res,
+    maxBytes,
+    () => new Error("La descarga excede el tama\xF1o m\xE1ximo permitido."),
+  );
+  return { status: res.status, body };
 }
-function httpsGetBuffer(hostname, pathname, headers, maxBytes = 10 * 1024 * 1024, timeoutMs = 6e3) {
-  return new Promise((resolve, reject) => {
-    const req = https3.request(
-      { hostname, path: pathname, method: "GET", headers: headers || {} },
-      (res) => {
-        const chunks = [];
-        let size = 0;
-        res.on("data", (chunk) => {
-          size += chunk.length;
-          if (size > maxBytes) {
-            req.destroy(new Error("La descarga excede el tama\xF1o m\xE1ximo permitido."));
-            return;
-          }
-          chunks.push(chunk);
-        });
-        res.on(
-          "end",
-          () => resolve({ status: res.statusCode ?? 500, body: Buffer.concat(chunks) })
-        );
-      }
-    );
-    req.on("error", reject);
-    req.setTimeout(
-      timeoutMs,
-      () => req.destroy(new Error(`La descarga desde ${hostname} excedi\xF3 el tiempo m\xE1ximo.`))
-    );
-    req.end();
-  });
-}
-function httpsPatch(hostname, pathname, body, headers, timeoutMs = 1e4) {
-  return new Promise((resolve, reject) => {
-    const data = JSON.stringify(body);
-    let settled = false;
-    const opts = {
-      hostname,
-      path: pathname,
+async function httpsPatch(hostname, pathname, body, headers, timeoutMs = 1e4) {
+  const res = await request(
+    hostname,
+    pathname,
+    {
       method: "PATCH",
-      headers: { "Content-Type": "application/json", ...headers }
-    };
-    const req = https3.request(opts, (res) => {
-      let chunks = "";
-      res.on("data", (chunk) => chunks += chunk);
-      res.on("end", () => {
-        if (settled) return;
-        try {
-          settled = true;
-          resolve({ status: res.statusCode ?? 500, body: JSON.parse(chunks) });
-        } catch {
-          settled = true;
-          reject(new Error(`HTTP ${res.statusCode}: respuesta no v\xE1lida.`));
-        }
-      });
-    });
-    req.on("error", (error) => {
-      if (settled) return;
-      settled = true;
-      reject(error);
-    });
-    req.setTimeout(
-      timeoutMs,
-      () => req.destroy(new Error(`La solicitud a ${hostname} excedi\xF3 el tiempo m\xE1ximo.`))
-    );
-    req.write(data);
-    req.end();
-  });
+      headers: { "Content-Type": "application/json", ...headers },
+      body: JSON.stringify(body),
+    },
+    timeoutMs,
+  );
+  const text = await res.text();
+  try {
+    return { status: res.status, body: JSON.parse(text) };
+  } catch {
+    throw new Error(`HTTP ${res.status}: respuesta no v\xE1lida.`);
+  }
 }
 
 // server/api/services/openrouter.ts
@@ -1794,12 +2206,19 @@ function getApiKey() {
   if (!key) throw new Error("OPENROUTER_API_KEY no configurada");
   return key;
 }
-async function callOpenRouter(messages, systemInstruction, model = AI_MODEL, options = {}) {
+async function callOpenRouter(
+  messages,
+  systemInstruction,
+  model = AI_MODEL,
+  options = {},
+) {
   const body = {
     model,
     max_tokens: options.maxTokens ?? 2e3,
     temperature: options.temperature ?? 0,
-    messages: systemInstruction ? [{ role: "system", content: systemInstruction }, ...messages] : messages
+    messages: systemInstruction
+      ? [{ role: "system", content: systemInstruction }, ...messages]
+      : messages,
   };
   const res = await httpsPost(
     "openrouter.ai",
@@ -1808,12 +2227,14 @@ async function callOpenRouter(messages, systemInstruction, model = AI_MODEL, opt
     {
       Authorization: `Bearer ${getApiKey()}`,
       "HTTP-Referer": "http://localhost:3001",
-      "X-Title": "Sistema Integral Convivencia Escolar"
+      "X-Title": "Sistema Integral Convivencia Escolar",
     },
-    options.timeoutMs
+    options.timeoutMs,
   );
   if (res.status !== 200)
-    throw new Error(`OpenRouter error: ${res.status} ${JSON.stringify(res.body)}`);
+    throw new Error(
+      `OpenRouter error: ${res.status} ${JSON.stringify(res.body)}`,
+    );
   const choices = res.body?.choices;
   return choices?.[0]?.message?.content || "";
 }
@@ -1856,7 +2277,7 @@ var STOP_WORDS = /* @__PURE__ */ new Set([
   "una",
   "unos",
   "uso",
-  "y"
+  "y",
 ]);
 async function listMarkdownFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -1864,10 +2285,14 @@ async function listMarkdownFiles(directory) {
     entries.map(async (entry) => {
       const entryPath = path.join(directory, entry.name);
       if (entry.isDirectory()) return listMarkdownFiles(entryPath);
-      return entry.isFile() && entry.name.toLowerCase().endsWith(".md") ? [entryPath] : [];
-    })
+      return entry.isFile() && entry.name.toLowerCase().endsWith(".md")
+        ? [entryPath]
+        : [];
+    }),
   );
-  return nested.flat().sort((left, right) => left.localeCompare(right, "es-CL"));
+  return nested
+    .flat()
+    .sort((left, right) => left.localeCompare(right, "es-CL"));
 }
 async function loadAuthorizedLegalSources() {
   if (!cachedSources) {
@@ -1877,13 +2302,19 @@ async function loadAuthorizedLegalSources() {
         files.map(async (file) => ({
           name: path.relative(LEGAL_SOURCES_DIRECTORY, file),
           text: await readFile(file, "utf8"),
-          normalizedText: ""
-        }))
+          normalizedText: "",
+        })),
       );
-      if (!contents.length) throw new Error("No hay fuentes jur\xEDdicas disponibles en docs/leyes.");
+      if (!contents.length)
+        throw new Error(
+          "No hay fuentes jur\xEDdicas disponibles en docs/leyes.",
+        );
       return contents.map((source) => ({
         ...source,
-        normalizedText: source.text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CL")
+        normalizedText: source.text
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLocaleLowerCase("es-CL"),
       }));
     })();
   }
@@ -1892,38 +2323,62 @@ async function loadAuthorizedLegalSources() {
 function searchTerms(value) {
   return [
     ...new Set(
-      value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CL").match(/[a-z0-9]{3,}/g)?.filter((term) => !STOP_WORDS.has(term)) ?? []
-    )
+      value
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLocaleLowerCase("es-CL")
+        .match(/[a-z0-9]{3,}/g)
+        ?.filter((term) => !STOP_WORDS.has(term)) ?? [],
+    ),
   ].slice(0, 30);
 }
 function sourceScore(source, terms) {
-  const haystack = `${source.name}
+  const normalizedName = source.name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("es-CL");
+  const haystack = `${normalizedName}
 ${source.normalizedText}`;
   return terms.reduce((score, term) => {
-    const matches = haystack.match(new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"));
+    const matches = haystack.match(
+      new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
+    );
     const count = matches?.length ?? 0;
-    return score + (count ? 100 : 0) + Math.min(count, 12);
+    return (
+      score +
+      (count ? 100 : 0) +
+      Math.min(count, 12) +
+      (normalizedName.includes(term) ? 100 : 0)
+    );
   }, 0);
 }
 function relevantExcerpt(text, terms, maxChars) {
   if (text.length <= maxChars) return text;
-  const normalized = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CL");
-  const anchorPositions = terms.flatMap((term) => {
-    const positions = [];
-    let index = normalized.indexOf(term);
-    while (index >= 0 && positions.length < 3) {
-      positions.push(index);
-      index = normalized.indexOf(term, index + term.length);
-    }
-    return positions;
-  }).sort((left, right) => left - right);
+  const normalized = text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("es-CL");
+  const anchorPositions = terms
+    .flatMap((term) => {
+      const positions = [];
+      let index = normalized.indexOf(term);
+      while (index >= 0 && positions.length < 3) {
+        positions.push(index);
+        index = normalized.indexOf(term, index + term.length);
+      }
+      return positions;
+    })
+    .sort((left, right) => left - right);
   if (!anchorPositions.length) return text.slice(0, maxChars);
   const excerpts = [];
   const headerLength = Math.min(2e3, Math.floor(maxChars * 0.18));
   excerpts.push(text.slice(0, headerLength));
   const remaining = maxChars - headerLength;
   const anchors = [...new Set(anchorPositions)].slice(0, 6);
-  const excerptLength = Math.max(900, Math.floor(remaining / anchors.length) - 32);
+  const excerptLength = Math.max(
+    900,
+    Math.floor(remaining / anchors.length) - 32,
+  );
   for (const anchor of anchors) {
     const start = Math.max(0, anchor - Math.floor(excerptLength * 0.28));
     const end = Math.min(text.length, start + excerptLength);
@@ -1939,20 +2394,28 @@ ${excerpt}
 async function getRelevantLegalSources(query, maxChars = 9e4) {
   const sources = await loadAuthorizedLegalSources();
   const terms = searchTerms(query);
-  const selected = [...sources].map((source) => ({ source, score: sourceScore(source, terms) })).sort(
-    (left, right) => right.score - left.score || left.source.name.localeCompare(right.source.name, "es-CL")
-  );
+  const selected = [...sources]
+    .map((source) => ({ source, score: sourceScore(source, terms) }))
+    .sort(
+      (left, right) =>
+        right.score - left.score ||
+        left.source.name.localeCompare(right.source.name, "es-CL"),
+    );
   const relevant = selected.filter(({ score }) => score > 0);
   const candidates = (relevant.length ? relevant : selected).slice(0, 6);
   const output = [];
-  const charsPerSource = Math.max(1e3, Math.floor(maxChars / candidates.length) - 120);
+  const charsPerSource = Math.max(
+    1e3,
+    Math.floor(maxChars / candidates.length) - 120,
+  );
   for (const { source } of candidates) {
     const excerpt = relevantExcerpt(source.text, terms, charsPerSource);
     const content = `### ${source.name}
 ${excerpt}`;
     output.push(content);
   }
-  if (!output.length) throw new Error("No hay fuentes jur\xEDdicas disponibles en docs/leyes.");
+  if (!output.length)
+    throw new Error("No hay fuentes jur\xEDdicas disponibles en docs/leyes.");
   return output.join("\n\n");
 }
 
@@ -1978,7 +2441,7 @@ function getRedisClient() {
   if (!url || !token) {
     if (process.env.NODE_ENV === "production") {
       console.warn(
-        "[rate-limit] UPSTASH_REDIS_REST_URL no configurado. Rate limit en memoria (in\xFAtil en serverless)."
+        "[rate-limit] UPSTASH_REDIS_REST_URL no configurado. Rate limit en memoria (in\xFAtil en serverless).",
       );
     }
     return null;
@@ -1989,7 +2452,7 @@ function getRedisClient() {
     try {
       const res = await fetch(`${url}${path3}`, {
         headers: { Authorization: `Bearer ${token}` },
-        signal: controller.signal
+        signal: controller.signal,
       });
       if (!res.ok) throw new Error(`Redis HTTP ${res.status}`);
       return res;
@@ -2001,12 +2464,13 @@ function getRedisClient() {
     async incr(key) {
       const res = await redisFetch(`/incr/${encodeURIComponent(key)}`);
       const data = await res.json();
-      if (typeof data.result !== "number") throw new Error("Redis returned an invalid counter");
+      if (typeof data.result !== "number")
+        throw new Error("Redis returned an invalid counter");
       return data.result;
     },
     async pexpire(key, ms) {
       await redisFetch(`/pexpire/${encodeURIComponent(key)}/${ms}`);
-    }
+    },
   };
   return redisClient;
 }
@@ -2057,7 +2521,7 @@ async function rateLimit(req, res, next) {
   if (!allowed) {
     res.status(429).json({
       error: "Demasiadas solicitudes. Intente nuevamente en un minuto.",
-      retryAfter: DEFAULT_WINDOW_SEC
+      retryAfter: DEFAULT_WINDOW_SEC,
     });
     return;
   }
@@ -2065,7 +2529,7 @@ async function rateLimit(req, res, next) {
 }
 
 // server/middleware/requireMembership.ts
-import https4 from "node:https";
+import https3 from "node:https";
 var CONVIVENCIA_MEMBERSHIP_ROLES = [
   "superadmin",
   "admin",
@@ -2076,11 +2540,11 @@ var CONVIVENCIA_MEMBERSHIP_ROLES = [
   "teacher",
   "inspector",
   "user",
-  "staff"
+  "staff",
 ];
 var CONVIVENCIA_MEMBERSHIP = {
   applicationCode: "convivencia",
-  allowedRoles: CONVIVENCIA_MEMBERSHIP_ROLES
+  allowedRoles: CONVIVENCIA_MEMBERSHIP_ROLES,
 };
 function getMembershipMode() {
   const enabled = process.env.VITE_APP_MEMBERSHIPS_ENABLED === "true";
@@ -2099,9 +2563,9 @@ async function checkMembershipViaApi(hostname, anonKey, token, params) {
   return new Promise((resolve) => {
     const body = JSON.stringify({
       p_application_code: params.applicationCode,
-      p_roles: params.allowedRoles ? [...params.allowedRoles] : null
+      p_roles: params.allowedRoles ? [...params.allowedRoles] : null,
     });
-    const req = https4.request(
+    const req = https3.request(
       {
         hostname,
         path: "/rest/v1/rpc/has_app_access",
@@ -2110,8 +2574,8 @@ async function checkMembershipViaApi(hostname, anonKey, token, params) {
           "Content-Type": "application/json",
           "Content-Length": Buffer.byteLength(body),
           apikey: anonKey,
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       },
       (res) => {
         let data = "";
@@ -2125,7 +2589,7 @@ async function checkMembershipViaApi(hostname, anonKey, token, params) {
             resolve(false);
           }
         });
-      }
+      },
     );
     req.on("error", () => resolve(false));
     req.setTimeout(5e3, () => {
@@ -2138,7 +2602,9 @@ async function checkMembershipViaApi(hostname, anonKey, token, params) {
 }
 function getSupabaseConfig() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const anonKey =
+    process.env.VITE_SUPABASE_ANON_KEY ??
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   if (!supabaseUrl || !anonKey) return null;
   try {
     return { hostname: new URL(supabaseUrl).hostname, anonKey };
@@ -2154,7 +2620,11 @@ function requireMembership(params, checkAccess = checkMembershipViaApi) {
       return;
     }
     if (!authReq.tenantId) {
-      res.status(403).json({ error: "No fue posible determinar el establecimiento autenticado." });
+      res
+        .status(403)
+        .json({
+          error: "No fue posible determinar el establecimiento autenticado.",
+        });
       return;
     }
     const mode = getMembershipMode();
@@ -2162,7 +2632,9 @@ function requireMembership(params, checkAccess = checkMembershipViaApi) {
       logServer("legacy_mode", "using profile role");
       if (params.allowedRoles && authReq.profileRole) {
         if (!params.allowedRoles.includes(authReq.profileRole)) {
-          res.status(403).json({ error: "No tiene permisos para realizar esta acci\xF3n." });
+          res
+            .status(403)
+            .json({ error: "No tiene permisos para realizar esta acci\xF3n." });
           return;
         }
       }
@@ -2171,7 +2643,9 @@ function requireMembership(params, checkAccess = checkMembershipViaApi) {
     }
     const config = getSupabaseConfig();
     if (!config) {
-      res.status(500).json({ error: "Error de configuraci\xF3n del servidor." });
+      res
+        .status(500)
+        .json({ error: "Error de configuraci\xF3n del servidor." });
       return;
     }
     const token = authReq.authToken;
@@ -2180,14 +2654,25 @@ function requireMembership(params, checkAccess = checkMembershipViaApi) {
       return;
     }
     try {
-      logServer("membership_check", `${mode} mode for ${params.applicationCode}`);
-      const hasAccess = await checkAccess(config.hostname, config.anonKey, token, params);
+      logServer(
+        "membership_check",
+        `${mode} mode for ${params.applicationCode}`,
+      );
+      const hasAccess = await checkAccess(
+        config.hostname,
+        config.anonKey,
+        token,
+        params,
+      );
       if (hasAccess) {
         next();
         return;
       }
       if (mode === "transition") {
-        logServer("transition_fallback", "membership denied, trying profile role");
+        logServer(
+          "transition_fallback",
+          "membership denied, trying profile role",
+        );
         if (params.allowedRoles && authReq.profileRole) {
           if (params.allowedRoles.includes(authReq.profileRole)) {
             logServer("transition_fallback_success", authReq.profileRole);
@@ -2197,12 +2682,16 @@ function requireMembership(params, checkAccess = checkMembershipViaApi) {
         }
         logServer("transition_fallback_denied", "no matching role");
       }
-      res.status(403).json({ error: "No tiene una membres\xEDa activa para esta aplicaci\xF3n." });
+      res
+        .status(403)
+        .json({
+          error: "No tiene una membres\xEDa activa para esta aplicaci\xF3n.",
+        });
     } catch (err) {
       if (mode === "transition") {
         logServer(
           "transition_fallback",
-          `membership check failed: ${err instanceof Error ? err.message : "unknown"}, trying profile role`
+          `membership check failed: ${err instanceof Error ? err.message : "unknown"}, trying profile role`,
         );
         if (params.allowedRoles && authReq.profileRole) {
           if (params.allowedRoles.includes(authReq.profileRole)) {
@@ -2232,14 +2721,20 @@ function normalizeHistory(value) {
   for (const item of value) {
     if (!item || typeof item !== "object") return null;
     const record = item;
-    if (typeof record.content !== "string" || record.content.length > MAX_HISTORY_MESSAGE_LENGTH) {
+    if (
+      typeof record.content !== "string" ||
+      record.content.length > MAX_HISTORY_MESSAGE_LENGTH
+    ) {
       return null;
     }
     const content = redactSensitiveForAI(record.content).trim();
     if (!content) return null;
     totalLength += content.length;
     if (totalLength > MAX_HISTORY_TOTAL_LENGTH) return null;
-    normalized.push({ role: record.role === "user" ? "user" : "assistant", content });
+    normalized.push({
+      role: record.role === "user" ? "user" : "assistant",
+      content,
+    });
   }
   return normalized;
 }
@@ -2256,13 +2751,16 @@ router.post(
         return;
       }
       if (message.length > MAX_ADVISOR_MESSAGE_LENGTH) {
-        res.status(400).json({ error: "El mensaje supera el m\xE1ximo permitido." });
+        res
+          .status(400)
+          .json({ error: "El mensaje supera el m\xE1ximo permitido." });
         return;
       }
       const normalizedHistory = normalizeHistory(history);
       if (!normalizedHistory) {
         res.status(400).json({
-          error: "El historial de consulta no es v\xE1lido o supera el m\xE1ximo permitido."
+          error:
+            "El historial de consulta no es v\xE1lido o supera el m\xE1ximo permitido.",
         });
         return;
       }
@@ -2285,7 +2783,7 @@ ${legalSources}`;
       const cacheKey = getCacheKey("advisor-chat", {
         userId,
         message: safeMessage,
-        history: normalizedHistory
+        history: normalizedHistory,
       });
       const cached = getFromCache(cacheKey);
       if (cached) {
@@ -2298,10 +2796,13 @@ ${legalSources}`;
       setCache(cacheKey, reply);
       res.json({ success: true, reply });
     } catch (error) {
-      console.error("Error en el Chat de Consultor\xEDa:", error.message || error);
+      console.error(
+        "Error en el Chat de Consultor\xEDa:",
+        error.message || error,
+      );
       res.status(500).json({ error: "Error interno del servidor." });
     }
-  }
+  },
 );
 var advisor_default = router;
 
@@ -2317,14 +2818,19 @@ function requireTenant(req, res, next) {
     return;
   }
   if (!authReq.tenantId) {
-    res.status(403).json({ error: "No fue posible determinar el establecimiento autenticado." });
+    res
+      .status(403)
+      .json({
+        error: "No fue posible determinar el establecimiento autenticado.",
+      });
     return;
   }
   next();
 }
 
 // server/api/services/gemini.ts
-var LEGAL_DRAFT_GEMINI_MODEL = process.env.LEGAL_DRAFT_MODEL || "gemini-3.6-flash";
+var LEGAL_DRAFT_GEMINI_MODEL =
+  process.env.LEGAL_DRAFT_MODEL || "gemini-3.6-flash";
 function getApiKey2() {
   const key = process.env.GEMINI_API_KEY;
   if (!key) {
@@ -2339,7 +2845,11 @@ function collectText(value) {
   if (typeof record.text === "string") return [record.text];
   return Object.values(record).flatMap(collectText);
 }
-async function callGeminiComplexGeneration(systemInstruction, userContent, options = {}) {
+async function callGeminiComplexGeneration(
+  systemInstruction,
+  userContent,
+  options = {},
+) {
   const maxOutputTokens = options.maxOutputTokens ?? 6e3;
   const timeoutMs = options.timeoutMs ?? 25e3;
   return callGeminiGenerateContent(
@@ -2347,32 +2857,40 @@ async function callGeminiComplexGeneration(systemInstruction, userContent, optio
     systemInstruction,
     userContent,
     maxOutputTokens,
-    timeoutMs
+    timeoutMs,
   );
 }
-async function callGeminiGenerateContent(model, systemInstruction, userContent, maxOutputTokens, timeoutMs) {
+async function callGeminiGenerateContent(
+  model,
+  systemInstruction,
+  userContent,
+  maxOutputTokens,
+  timeoutMs,
+) {
   const response = await httpsPost(
     "generativelanguage.googleapis.com",
     `/v1beta/models/${encodeURIComponent(model)}:generateContent`,
     {
       systemInstruction: {
-        parts: [{ text: systemInstruction }]
+        parts: [{ text: systemInstruction }],
       },
       contents: [
         {
           role: "user",
-          parts: [{ text: userContent }]
-        }
+          parts: [{ text: userContent }],
+        },
       ],
       generationConfig: {
-        maxOutputTokens
-      }
+        maxOutputTokens,
+      },
     },
     { "x-goog-api-key": getApiKey2() },
-    timeoutMs
+    timeoutMs,
   );
   if (response.status < 200 || response.status >= 300) {
-    throw new Error(`Gemini error: ${response.status} ${JSON.stringify(response.body)}`);
+    throw new Error(
+      `Gemini error: ${response.status} ${JSON.stringify(response.body)}`,
+    );
   }
   const body = response.body;
   const candidates = Array.isArray(body.candidates) ? body.candidates : [];
@@ -2388,10 +2906,15 @@ async function callGeminiLegalDraft(systemInstruction, dossier, options = {}) {
 var router2 = Router2();
 function getAdminClient() {
   const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) throw new Error("Supabase administrativo no configurado.");
   return createClient(url, key, {
-    auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false }
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false,
+    },
   });
 }
 router2.post(
@@ -2404,68 +2927,156 @@ router2.post(
     try {
       const body = req.body;
       const causaId = requireStr(
-        { id: optStr(body, "causaId", 100).trim() || optStr(body, "id", 100).trim() },
+        {
+          id:
+            optStr(body, "causaId", 100).trim() ||
+            optStr(body, "id", 100).trim(),
+        },
         "id",
-        100
+        100,
       );
       const authReq = req;
       const tenantId = authReq.tenantId;
       if (!tenantId) {
-        res.status(403).json({ error: "No fue posible determinar el establecimiento autenticado." });
+        res
+          .status(403)
+          .json({
+            error: "No fue posible determinar el establecimiento autenticado.",
+          });
         return;
       }
       const client = getAdminClient();
-      const [causaResult, checklistResult, historyResult, progressResult] = await Promise.all([
-        client.from("causas").select(
-          "id,tipo_infraccion,compromete_aula_segura,observaciones,estado_actual,fecha_apertura,fecha_inicio_investigacion,fecha_limite_investigacion,fecha_limite_cierre,conducta_rice_id,medidas_ejecutadas"
-        ).eq("id", causaId).eq("tenant_id", tenantId).maybeSingle(),
-        client.from("checklist_items").select(
-          "id,label,descripcion,completado,fecha_completado,requerido_por,registrado_por,observaciones,documento_nombre"
-        ).eq("causa_id", causaId).eq("tenant_id", tenantId).order("created_at", { ascending: true }),
-        client.from("bitacora_entries").select("fecha,tipo,titulo,descripcion,documento_adjunto,created_at").eq("causa_id", causaId).eq("tenant_id", tenantId).order("created_at", { ascending: true }).limit(100),
-        client.from("checklist_progress_entries").select("checklist_item_id,title,description,entry_type,occurred_at,document_name,invalidated_at").eq("causa_id", causaId).eq("tenant_id", tenantId).order("occurred_at", { ascending: true }).limit(150)
-      ]);
+      const [causaResult, checklistResult, historyResult, progressResult] =
+        await Promise.all([
+          client
+            .from("causas")
+            .select(
+              "id,tipo_infraccion,compromete_aula_segura,observaciones,estado_actual,fecha_apertura,fecha_inicio_investigacion,fecha_limite_investigacion,fecha_limite_cierre,conducta_rice_id,medidas_ejecutadas",
+            )
+            .eq("id", causaId)
+            .eq("tenant_id", tenantId)
+            .maybeSingle(),
+          client
+            .from("checklist_items")
+            .select(
+              "id,label,descripcion,completado,fecha_completado,requerido_por,registrado_por,observaciones,documento_nombre",
+            )
+            .eq("causa_id", causaId)
+            .eq("tenant_id", tenantId)
+            .order("created_at", { ascending: true }),
+          client
+            .from("bitacora_entries")
+            .select(
+              "fecha,tipo,titulo,descripcion,documento_adjunto,created_at",
+            )
+            .eq("causa_id", causaId)
+            .eq("tenant_id", tenantId)
+            .order("created_at", { ascending: true })
+            .limit(100),
+          client
+            .from("checklist_progress_entries")
+            .select(
+              "checklist_item_id,title,description,entry_type,occurred_at,document_name,invalidated_at",
+            )
+            .eq("causa_id", causaId)
+            .eq("tenant_id", tenantId)
+            .order("occurred_at", { ascending: true })
+            .limit(150),
+        ]);
       if (causaResult.error) throw causaResult.error;
       if (!causaResult.data) {
-        res.status(404).json({ error: "No se encontr\xF3 la causa en el establecimiento actual." });
+        res
+          .status(404)
+          .json({
+            error: "No se encontr\xF3 la causa en el establecimiento actual.",
+          });
         return;
       }
       if (checklistResult.error) throw checklistResult.error;
       if (historyResult.error) throw historyResult.error;
       if (progressResult.error) throw progressResult.error;
       const causa = causaResult.data;
-      const infractionType = String(causa.tipo_infraccion ?? "No registrada").slice(0, 100);
+      const infractionType = String(
+        causa.tipo_infraccion ?? "No registrada",
+      ).slice(0, 100);
       const observations = String(causa.observaciones ?? "").slice(0, 5e3);
       const knownSensitiveValues = [causaId, infractionType, observations];
-      const safeChecklist = (checklistResult.data ?? []).slice(0, 100).map((item) => ({
-        id: String(item.id ?? "").slice(0, 100),
-        label: redactSensitiveForAI(item.label, knownSensitiveValues).slice(0, 300),
-        description: redactSensitiveForAI(item.descripcion, knownSensitiveValues).slice(0, 1500),
-        completed: Boolean(item.completado),
-        completedAt: item.fecha_completado ?? null,
-        requiredBy: redactSensitiveForAI(item.requerido_por, knownSensitiveValues).slice(0, 120),
-        registeredBy: redactSensitiveForAI(item.registrado_por, knownSensitiveValues).slice(0, 120),
-        observations: redactSensitiveForAI(item.observaciones, knownSensitiveValues).slice(0, 1500),
-        documentName: redactSensitiveForAI(item.documento_nombre, knownSensitiveValues).slice(0, 250)
-      }));
+      const safeChecklist = (checklistResult.data ?? [])
+        .slice(0, 100)
+        .map((item) => ({
+          id: String(item.id ?? "").slice(0, 100),
+          label: redactSensitiveForAI(item.label, knownSensitiveValues).slice(
+            0,
+            300,
+          ),
+          description: redactSensitiveForAI(
+            item.descripcion,
+            knownSensitiveValues,
+          ).slice(0, 1500),
+          completed: Boolean(item.completado),
+          completedAt: item.fecha_completado ?? null,
+          requiredBy: redactSensitiveForAI(
+            item.requerido_por,
+            knownSensitiveValues,
+          ).slice(0, 120),
+          registeredBy: redactSensitiveForAI(
+            item.registrado_por,
+            knownSensitiveValues,
+          ).slice(0, 120),
+          observations: redactSensitiveForAI(
+            item.observaciones,
+            knownSensitiveValues,
+          ).slice(0, 1500),
+          documentName: redactSensitiveForAI(
+            item.documento_nombre,
+            knownSensitiveValues,
+          ).slice(0, 250),
+        }));
       const safeHistory = (historyResult.data ?? []).map((entry) => ({
-        title: redactSensitiveForAI(entry.titulo, knownSensitiveValues).slice(0, 200),
-        date: redactSensitiveForAI(entry.fecha, knownSensitiveValues).slice(0, 50),
-        type: redactSensitiveForAI(entry.tipo, knownSensitiveValues).slice(0, 80),
-        description: redactSensitiveForAI(entry.descripcion, knownSensitiveValues).slice(0, 2e3),
-        document: redactSensitiveForAI(entry.documento_adjunto, knownSensitiveValues).slice(0, 250)
+        title: redactSensitiveForAI(entry.titulo, knownSensitiveValues).slice(
+          0,
+          200,
+        ),
+        date: redactSensitiveForAI(entry.fecha, knownSensitiveValues).slice(
+          0,
+          50,
+        ),
+        type: redactSensitiveForAI(entry.tipo, knownSensitiveValues).slice(
+          0,
+          80,
+        ),
+        description: redactSensitiveForAI(
+          entry.descripcion,
+          knownSensitiveValues,
+        ).slice(0, 2e3),
+        document: redactSensitiveForAI(
+          entry.documento_adjunto,
+          knownSensitiveValues,
+        ).slice(0, 250),
       }));
       const safeProgress = (progressResult.data ?? []).map((entry) => ({
         checklistItemId: String(entry.checklist_item_id ?? "").slice(0, 100),
-        title: redactSensitiveForAI(entry.title, knownSensitiveValues).slice(0, 250),
-        description: redactSensitiveForAI(entry.description, knownSensitiveValues).slice(0, 1500),
-        type: redactSensitiveForAI(entry.entry_type, knownSensitiveValues).slice(0, 80),
+        title: redactSensitiveForAI(entry.title, knownSensitiveValues).slice(
+          0,
+          250,
+        ),
+        description: redactSensitiveForAI(
+          entry.description,
+          knownSensitiveValues,
+        ).slice(0, 1500),
+        type: redactSensitiveForAI(
+          entry.entry_type,
+          knownSensitiveValues,
+        ).slice(0, 80),
         occurredAt: entry.occurred_at ?? null,
-        documentName: redactSensitiveForAI(entry.document_name, knownSensitiveValues).slice(0, 250),
-        invalidated: Boolean(entry.invalidated_at)
+        documentName: redactSensitiveForAI(
+          entry.document_name,
+          knownSensitiveValues,
+        ).slice(0, 250),
+        invalidated: Boolean(entry.invalidated_at),
       }));
       const legalSources = await getRelevantLegalSources(
-        `debido proceso norma previa comunicaci\xF3n hechos indagaci\xF3n descargos resoluci\xF3n fundada proporcionalidad reconsideraci\xF3n ${infractionType}`
+        `debido proceso norma previa comunicaci\xF3n hechos indagaci\xF3n descargos resoluci\xF3n fundada proporcionalidad reconsideraci\xF3n ${infractionType}`,
       );
       const systemInstruction = `Eres un auditor documental de debido proceso en convivencia escolar chilena.
 
@@ -2512,10 +3123,14 @@ Explica brevemente si el orden documentado es coherente y qu\xE9 antecedente fal
 Lista solo los archivos y secciones de las fuentes autorizadas que efectivamente utilizaste.
 
 No cites normas externas, no inventes plazos y no agregues explicaciones fuera de esta estructura.`;
-      const responseText = await callGeminiComplexGeneration(systemInstruction, auditDossier, {
-        maxOutputTokens: 3200,
-        timeoutMs: 18e3
-      });
+      const responseText = await callGeminiComplexGeneration(
+        systemInstruction,
+        auditDossier,
+        {
+          maxOutputTokens: 3200,
+          timeoutMs: 18e3,
+        },
+      );
       res.json({ success: true, report: responseText, provider: "Gemini" });
     } catch (error) {
       if (isRequestValidationError(error)) {
@@ -2523,19 +3138,70 @@ No cites normas externas, no inventes plazos y no agregues explicaciones fuera d
         return;
       }
       console.error("Error al auditar debido proceso:", error);
-      const message = error instanceof Error ? error.message : "Error al contactar Gemini.";
-      const status = message.includes("generativelanguage.googleapis.com") && message.includes("tiempo m\xE1ximo") ? 504 : 503;
+      const message =
+        error instanceof Error ? error.message : "Error al contactar Gemini.";
+      const status =
+        message.includes("generativelanguage.googleapis.com") &&
+        message.includes("tiempo m\xE1ximo")
+          ? 504
+          : 503;
       res.status(status).json({
-        error: status === 504 ? "Gemini tard\xF3 m\xE1s de lo esperado al generar la auditor\xEDa. Intente nuevamente." : "Gemini no est\xE1 disponible para generar la auditor\xEDa. Revise GEMINI_API_KEY y LEGAL_DRAFT_MODEL en Vercel.",
-        provider: "Gemini"
+        error:
+          status === 504
+            ? "Gemini tard\xF3 m\xE1s de lo esperado al generar la auditor\xEDa. Intente nuevamente."
+            : "Gemini no est\xE1 disponible para generar la auditor\xEDa. Revise GEMINI_API_KEY y LEGAL_DRAFT_MODEL en Vercel.",
+        provider: "Gemini",
       });
     }
-  }
+  },
 );
 var audit_default = router2;
 
 // server/api/routes/draft.ts
 import { Router as Router3 } from "express";
+
+// server/api/validators/draftDocument.schema.ts
+import { z } from "zod";
+z.config({ jitless: true });
+var DOC_TYPES = ["informe_cierre_indagacion", "informe_concluyente"];
+var bitacoraEntryInputSchema = z.object({
+  titulo: z.unknown().optional(),
+  fecha: z.unknown().optional(),
+  tipo: z.unknown().optional(),
+  descripcion: z.unknown().optional(),
+  participantes: z.unknown().optional(),
+  documentoAdjunto: z.unknown().optional(),
+});
+var checklistItemInputSchema = z.object({
+  label: z.unknown().optional(),
+  completado: z.unknown().optional(),
+  descripcion: z.unknown().optional(),
+  registradoPor: z.unknown().optional(),
+  fechaCompletado: z.unknown().optional(),
+  observaciones: z.unknown().optional(),
+  documentoNombre: z.unknown().optional(),
+  documentoUrl: z.unknown().optional(),
+});
+var draftDocumentBodySchema = z.object({
+  docType: z.enum(DOC_TYPES, "Tipo de documento no v\xE1lido."),
+  id: z.string().trim().min(1, "Campo requerido faltante: id").max(100),
+  studentName: z
+    .string()
+    .trim()
+    .min(1, "Campo requerido faltante: studentName")
+    .max(200),
+  course: z.string().max(100).optional().default(""),
+  fatherName: z.string().max(200).optional().default(""),
+  managerName: z.string().max(200).optional().default(""),
+  infractionType: z.string().max(100).optional().default(""),
+  observations: z.string().max(5e3).optional().default(""),
+  fechaApertura: z.string().max(50).optional().default(""),
+  estadoActual: z.string().max(80).optional().default(""),
+  fechaUltimaActualizacion: z.string().max(50).optional().default(""),
+  medidasEjecutadas: z.array(z.unknown()).optional().default([]),
+  bitacora: z.array(bitacoraEntryInputSchema).optional().default([]),
+  checklist: z.array(checklistItemInputSchema).optional().default([]),
+});
 
 // server/api/services/caseDocuments.ts
 import { inflateRawSync } from "node:zlib";
@@ -2545,7 +3211,8 @@ var MAX_EXTRACTED_CHARS_PER_DOCUMENT = 3e4;
 var MAX_EXTRACTED_CHARS_TOTAL = 8e4;
 function getSupabaseHostname() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
-  if (!supabaseUrl || !URL.canParse(supabaseUrl)) throw new Error("Supabase no configurado");
+  if (!supabaseUrl || !URL.canParse(supabaseUrl))
+    throw new Error("Supabase no configurado");
   return new URL(supabaseUrl).hostname;
 }
 function normalizeStoragePath(value) {
@@ -2556,7 +3223,9 @@ function normalizeStoragePath(value) {
     const url = new URL(trimmed);
     const marker = `/storage/v1/object/authenticated/${STORAGE_BUCKET}/`;
     const index = url.pathname.indexOf(marker);
-    return index >= 0 ? decodeURIComponent(url.pathname.slice(index + marker.length)) : null;
+    return index >= 0
+      ? decodeURIComponent(url.pathname.slice(index + marker.length))
+      : null;
   } catch {
     return null;
   }
@@ -2569,7 +3238,12 @@ function storagePathname(storagePath) {
   return `/storage/v1/object/authenticated/${STORAGE_BUCKET}/${encodedPath}`;
 }
 function decodeXml(value) {
-  return value.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&apos;/g, "'");
+  return value
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'");
 }
 function extractDocxText(buffer) {
   const endSignature = 101010256;
@@ -2577,13 +3251,18 @@ function extractDocxText(buffer) {
   const localSignature = 67324752;
   const minimumOffset = Math.max(0, buffer.length - 65557);
   let endOffset = -1;
-  for (let offset2 = buffer.length - 22; offset2 >= minimumOffset; offset2 -= 1) {
+  for (
+    let offset2 = buffer.length - 22;
+    offset2 >= minimumOffset;
+    offset2 -= 1
+  ) {
     if (buffer.readUInt32LE(offset2) === endSignature) {
       endOffset = offset2;
       break;
     }
   }
-  if (endOffset < 0) throw new Error("El DOCX no contiene un directorio ZIP v\xE1lido.");
+  if (endOffset < 0)
+    throw new Error("El DOCX no contiene un directorio ZIP v\xE1lido.");
   const directorySize = buffer.readUInt32LE(endOffset + 12);
   const directoryOffset = buffer.readUInt32LE(endOffset + 16);
   const directoryEnd = directoryOffset + directorySize;
@@ -2605,10 +3284,25 @@ function extractDocxText(buffer) {
       const localExtraLength = buffer.readUInt16LE(localOffset + 28);
       const dataStart = localOffset + 30 + localNameLength + localExtraLength;
       const compressed = buffer.subarray(dataStart, dataStart + compressedSize);
-      const xml = compression2 === 8 ? inflateRawSync(compressed) : compression2 === 0 ? compressed : null;
-      if (!xml) throw new Error("El DOCX usa un m\xE9todo de compresi\xF3n no compatible.");
+      const xml =
+        compression2 === 8
+          ? inflateRawSync(compressed)
+          : compression2 === 0
+            ? compressed
+            : null;
+      if (!xml)
+        throw new Error(
+          "El DOCX usa un m\xE9todo de compresi\xF3n no compatible.",
+        );
       return decodeXml(
-        xml.toString("utf8").replace(/<w:tab[^>]*\/>/g, "	").replace(/<w:br[^>]*\/>/g, "\n").replace(/<\/w:p>/g, "\n").replace(/<[^>]+>/g, "").replace(/\n{3,}/g, "\n\n").trim()
+        xml
+          .toString("utf8")
+          .replace(/<w:tab[^>]*\/>/g, "	")
+          .replace(/<w:br[^>]*\/>/g, "\n")
+          .replace(/<\/w:p>/g, "\n")
+          .replace(/<[^>]+>/g, "")
+          .replace(/\n{3,}/g, "\n\n")
+          .trim(),
       );
     }
     offset += 46 + nameLength + extraLength + commentLength;
@@ -2616,27 +3310,37 @@ function extractDocxText(buffer) {
   throw new Error("El DOCX no contiene word/document.xml.");
 }
 async function extractPdfText(buffer) {
-  const { extractPdfPages: extractPdfPages2 } = await Promise.resolve().then(() => (init_disciplinaryPdfAnalysis(), disciplinaryPdfAnalysis_exports));
+  const { extractPdfPages: extractPdfPages2 } = await Promise.resolve().then(
+    () => (init_disciplinaryPdfAnalysis(), disciplinaryPdfAnalysis_exports),
+  );
   return (await extractPdfPages2(new Uint8Array(buffer))).join("\n\n");
 }
 async function extractCaseDocuments(documentValues, authReq, options = {}) {
   const maxDocuments = options.maxDocuments ?? MAX_DOCUMENTS;
-  const maxCharsPerDocument = options.maxExtractedCharsPerDocument ?? MAX_EXTRACTED_CHARS_PER_DOCUMENT;
+  const maxCharsPerDocument =
+    options.maxExtractedCharsPerDocument ?? MAX_EXTRACTED_CHARS_PER_DOCUMENT;
   const deadlineAt = Date.now() + (options.deadlineMs ?? 8e3);
   const uniquePaths = [
     ...new Set(
-      documentValues.map(normalizeStoragePath).filter((value) => Boolean(value))
-    )
+      documentValues
+        .map(normalizeStoragePath)
+        .filter((value) => Boolean(value)),
+    ),
   ].slice(0, maxDocuments);
   const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? "";
   let remaining = options.maxExtractedCharsTotal ?? MAX_EXTRACTED_CHARS_TOTAL;
   const results = [];
   for (const [index, storagePath] of uniquePaths.entries()) {
-    options.onDocumentStart?.({ name: fileName(storagePath), index: index + 1, total: uniquePaths.length });
+    options.onDocumentStart?.({
+      name: fileName(storagePath),
+      index: index + 1,
+      total: uniquePaths.length,
+    });
     if (Date.now() >= deadlineAt) {
       results.push({
         name: "Antecedentes restantes",
-        reason: "La extracci\xF3n se limit\xF3 para proteger el tiempo de respuesta."
+        reason:
+          "La extracci\xF3n se limit\xF3 para proteger el tiempo de respuesta.",
       });
       break;
     }
@@ -2645,7 +3349,8 @@ async function extractCaseDocuments(documentValues, authReq, options = {}) {
     if (extension !== "pdf" && extension !== "docx") {
       results.push({
         name,
-        reason: "Formato identificado, sin extracci\xF3n de texto en esta versi\xF3n."
+        reason:
+          "Formato identificado, sin extracci\xF3n de texto en esta versi\xF3n.",
       });
       continue;
     }
@@ -2655,21 +3360,35 @@ async function extractCaseDocuments(documentValues, authReq, options = {}) {
         storagePathname(storagePath),
         { apikey: anonKey, Authorization: `Bearer ${authReq.authToken}` },
         10 * 1024 * 1024,
-        Math.max(1e3, Math.min(5e3, deadlineAt - Date.now()))
+        Math.max(1e3, Math.min(5e3, deadlineAt - Date.now())),
       );
       if (downloaded.status < 200 || downloaded.status >= 300) {
-        results.push({ name, reason: "Archivo no disponible con los permisos actuales." });
+        results.push({
+          name,
+          reason: "Archivo no disponible con los permisos actuales.",
+        });
         continue;
       }
-      const rawText = extension === "pdf" ? await extractPdfText(downloaded.body) : extractDocxText(downloaded.body);
-      const text = rawText.replaceAll(String.fromCharCode(0), "").trim().slice(0, Math.min(maxCharsPerDocument, remaining));
+      const rawText =
+        extension === "pdf"
+          ? await extractPdfText(downloaded.body)
+          : extractDocxText(downloaded.body);
+      const text = rawText
+        .replaceAll(String.fromCharCode(0), "")
+        .trim()
+        .slice(0, Math.min(maxCharsPerDocument, remaining));
       remaining -= text.length;
       results.push(
-        text ? { name, text } : { name, reason: "El archivo no contiene texto extra\xEDble." }
+        text
+          ? { name, text }
+          : { name, reason: "El archivo no contiene texto extra\xEDble." },
       );
       if (remaining <= 0) break;
     } catch {
-      results.push({ name, reason: "No fue posible extraer texto del archivo." });
+      results.push({
+        name,
+        reason: "No fue posible extraer texto del archivo.",
+      });
     }
   }
   return results;
@@ -2677,14 +3396,13 @@ async function extractCaseDocuments(documentValues, authReq, options = {}) {
 
 // server/api/routes/draft.ts
 var router3 = Router3();
-var DOC_TYPES = ["informe_cierre_indagacion", "informe_concluyente"];
 var DOCUMENT_TITLES = {
   informe_cierre_indagacion: "Informe de Cierre de Indagaci\xF3n",
-  informe_concluyente: "Informe Concluyente y Resoluci\xF3n"
+  informe_concluyente: "Informe Concluyente y Resoluci\xF3n",
 };
 var DOCUMENT_SIGNERS = {
   informe_cierre_indagacion: "Equipo Encargado de Indagaci\xF3n",
-  informe_concluyente: "Equipo de Convivencia Escolar"
+  informe_concluyente: "Equipo de Convivencia Escolar",
 };
 var VERCEL_FUNCTION_BUDGET_MS = 59e3;
 var RESPONSE_GUARD_MS = 1500;
@@ -2698,9 +3416,9 @@ var DRAFT_CONTEXT_LIMITS = {
     documents: {
       maxDocuments: 4,
       maxExtractedCharsPerDocument: 12e3,
-      maxExtractedCharsTotal: 32e3
+      maxExtractedCharsTotal: 32e3,
     },
-    generation: { maxOutputTokens: 5e3, timeoutMs: 4e4 }
+    generation: { maxOutputTokens: 5e3, timeoutMs: 4e4 },
   },
   informe_concluyente: {
     legalSourceChars: 32e3,
@@ -2710,18 +3428,16 @@ var DRAFT_CONTEXT_LIMITS = {
     documents: {
       maxDocuments: 4,
       maxExtractedCharsPerDocument: 14e3,
-      maxExtractedCharsTotal: 4e4
+      maxExtractedCharsTotal: 4e4,
     },
-    generation: { maxOutputTokens: 6e3, timeoutMs: 4e4 }
-  }
+    generation: { maxOutputTokens: 6e3, timeoutMs: 4e4 },
+  },
 };
 function getSupabaseHostname2() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
-  if (!supabaseUrl || !URL.canParse(supabaseUrl)) throw new Error("Supabase no configurado");
+  if (!supabaseUrl || !URL.canParse(supabaseUrl))
+    throw new Error("Supabase no configurado");
   return new URL(supabaseUrl).hostname;
-}
-function isDocType(value) {
-  return DOC_TYPES.includes(value);
 }
 function getTemplateFallback() {
   return `Redacta el documento respetando todos los apartados que la plantilla exija y usando solamente los antecedentes del dossier.`;
@@ -2756,10 +3472,20 @@ function displayDocumentName(value) {
   }
 }
 function isGeminiTimeout(message) {
-  return message.includes("generativelanguage.googleapis.com") && message.includes("tiempo m\xE1ximo");
+  return (
+    message.includes("generativelanguage.googleapis.com") &&
+    message.includes("tiempo m\xE1ximo")
+  );
 }
 function isRecoverableGeminiDraftError(message) {
-  return message.includes("GEMINI_API_KEY no configurada") || message.includes("Gemini error: 400") || message.includes("Gemini error: 403") || message.includes("Gemini error: 404") || message.includes("Gemini no devolvi\xF3 contenido de texto") || isGeminiTimeout(message);
+  return (
+    message.includes("GEMINI_API_KEY no configurada") ||
+    message.includes("Gemini error: 400") ||
+    message.includes("Gemini error: 403") ||
+    message.includes("Gemini error: 404") ||
+    message.includes("Gemini no devolvi\xF3 contenido de texto") ||
+    isGeminiTimeout(message)
+  );
 }
 function getGeminiDraftErrorMessage(message) {
   if (isGeminiTimeout(message)) {
@@ -2770,8 +3496,13 @@ function getGeminiDraftErrorMessage(message) {
 function getRemainingDraftBudgetMs(startedAt, now = Date.now()) {
   return Math.max(0, VERCEL_FUNCTION_BUDGET_MS - (now - startedAt));
 }
-function getBoundedDraftTimeoutMs(requestedTimeoutMs, startedAt, now = Date.now()) {
-  const usableBudgetMs = getRemainingDraftBudgetMs(startedAt, now) - RESPONSE_GUARD_MS;
+function getBoundedDraftTimeoutMs(
+  requestedTimeoutMs,
+  startedAt,
+  now = Date.now(),
+) {
+  const usableBudgetMs =
+    getRemainingDraftBudgetMs(startedAt, now) - RESPONSE_GUARD_MS;
   return Math.max(0, Math.min(requestedTimeoutMs, usableBudgetMs));
 }
 router3.post(
@@ -2795,131 +3526,190 @@ router3.post(
 `);
     };
     try {
-      const body = req.body;
-      const docTypeValue = requireStr(body, "docType", 50);
-      if (!isDocType(docTypeValue)) {
-        res.status(400).json({ error: "Tipo de documento no v\xE1lido." });
+      const parsed = draftDocumentBodySchema.safeParse(req.body);
+      if (!parsed.success) {
+        res
+          .status(400)
+          .json({
+            error: parsed.error.issues[0]?.message ?? "Solicitud no v\xE1lida.",
+          });
         return;
       }
-      const docType = docTypeValue;
+      const docType = parsed.data.docType;
       const contextLimits = DRAFT_CONTEXT_LIMITS[docType];
-      const id = requireStr(body, "id", 100);
-      const studentName = requireStr(body, "studentName", 200);
-      const course = optStr(body, "course", 100);
-      const fatherName = optStr(body, "fatherName", 200);
-      const managerName = optStr(body, "managerName", 200);
-      const infractionType = optStr(body, "infractionType", 100);
-      const observations = optStr(body, "observations", 5e3);
-      const fechaApertura = optStr(body, "fechaApertura", 50);
-      const estadoActual = optStr(body, "estadoActual", 80);
-      const fechaUltimaActualizacion = optStr(body, "fechaUltimaActualizacion", 50);
-      const medidasEjecutadas = optArr(body, "medidasEjecutadas");
-      const bitacora = optArr(body, "bitacora");
-      const checklist = optArr(body, "checklist");
+      const id = parsed.data.id;
+      const studentName = parsed.data.studentName;
+      const course = parsed.data.course;
+      const fatherName = parsed.data.fatherName;
+      const managerName = parsed.data.managerName;
+      const infractionType = parsed.data.infractionType;
+      const observations = parsed.data.observations;
+      const fechaApertura = parsed.data.fechaApertura;
+      const estadoActual = parsed.data.estadoActual;
+      const fechaUltimaActualizacion = parsed.data.fechaUltimaActualizacion;
+      const medidasEjecutadas = parsed.data.medidasEjecutadas;
+      const bitacora = parsed.data.bitacora;
+      const checklist = parsed.data.checklist;
       const knownSensitiveValues = [
         studentName,
         fatherName,
         managerName,
-        ...bitacora.flatMap(
-          (entry) => entry && typeof entry === "object" && Array.isArray(entry.participantes) ? entry.participantes : []
+        ...bitacora.flatMap((entry) =>
+          entry &&
+          typeof entry === "object" &&
+          Array.isArray(entry.participantes)
+            ? entry.participantes
+            : [],
         ),
-        ...checklist.flatMap(
-          (item) => item && typeof item === "object" ? [
-            item.registradoPor,
-            item.observaciones
-          ] : []
-        )
+        ...checklist.flatMap((item) =>
+          item && typeof item === "object"
+            ? [item.registradoPor, item.observaciones]
+            : [],
+        ),
       ];
-      const safeMeasures = medidasEjecutadas.map((value) => redactSensitiveForAI(value, knownSensitiveValues).slice(0, 500)).slice(0, contextLimits.measures);
-      const safeHistory = bitacora.map((entry) => ({
-        title: redactSensitiveForAI(entry.titulo, knownSensitiveValues).slice(0, 200),
-        date: redactSensitiveForAI(entry.fecha, knownSensitiveValues).slice(0, 50),
-        type: redactSensitiveForAI(entry.tipo, knownSensitiveValues).slice(0, 80),
-        description: redactSensitiveForAI(entry.descripcion, knownSensitiveValues).slice(0, 2500),
-        people: Array.isArray(entry.participantes) ? entry.participantes.map((value) => redactSensitiveForAI(value, knownSensitiveValues).slice(0, 100)).slice(0, 20) : [],
-        document: sanitize(entry.documentoAdjunto).slice(0, 200)
-      })).slice(0, contextLimits.historyEntries);
-      const safeChecklist = checklist.map((item) => ({
-        label: redactSensitiveForAI(item.label, knownSensitiveValues).slice(0, 300),
-        complete: Boolean(item.completado),
-        description: redactSensitiveForAI(item.descripcion, knownSensitiveValues).slice(0, 1e3),
-        by: redactSensitiveForAI(item.registradoPor, knownSensitiveValues).slice(0, 200),
-        date: redactSensitiveForAI(item.fechaCompletado, knownSensitiveValues).slice(0, 50),
-        notes: redactSensitiveForAI(item.observaciones, knownSensitiveValues).slice(0, 1e3),
-        document: sanitize(item.documentoNombre).slice(0, 200),
-        documentPath: sanitize(item.documentoUrl).slice(0, 500)
-      })).slice(0, contextLimits.checklistItems);
+      const safeMeasures = medidasEjecutadas
+        .map((value) =>
+          redactSensitiveForAI(value, knownSensitiveValues).slice(0, 500),
+        )
+        .slice(0, contextLimits.measures);
+      const safeHistory = bitacora
+        .map((entry) => ({
+          title: redactSensitiveForAI(entry.titulo, knownSensitiveValues).slice(
+            0,
+            200,
+          ),
+          date: redactSensitiveForAI(entry.fecha, knownSensitiveValues).slice(
+            0,
+            50,
+          ),
+          type: redactSensitiveForAI(entry.tipo, knownSensitiveValues).slice(
+            0,
+            80,
+          ),
+          description: redactSensitiveForAI(
+            entry.descripcion,
+            knownSensitiveValues,
+          ).slice(0, 2500),
+          people: Array.isArray(entry.participantes)
+            ? entry.participantes
+                .map((value) =>
+                  redactSensitiveForAI(value, knownSensitiveValues).slice(
+                    0,
+                    100,
+                  ),
+                )
+                .slice(0, 20)
+            : [],
+          document: sanitize(entry.documentoAdjunto).slice(0, 200),
+        }))
+        .slice(0, contextLimits.historyEntries);
+      const safeChecklist = checklist
+        .map((item) => ({
+          label: redactSensitiveForAI(item.label, knownSensitiveValues).slice(
+            0,
+            300,
+          ),
+          complete: Boolean(item.completado),
+          description: redactSensitiveForAI(
+            item.descripcion,
+            knownSensitiveValues,
+          ).slice(0, 1e3),
+          by: redactSensitiveForAI(
+            item.registradoPor,
+            knownSensitiveValues,
+          ).slice(0, 200),
+          date: redactSensitiveForAI(
+            item.fechaCompletado,
+            knownSensitiveValues,
+          ).slice(0, 50),
+          notes: redactSensitiveForAI(
+            item.observaciones,
+            knownSensitiveValues,
+          ).slice(0, 1e3),
+          document: sanitize(item.documentoNombre).slice(0, 200),
+          documentPath: sanitize(item.documentoUrl).slice(0, 500),
+        }))
+        .slice(0, contextLimits.checklistItems);
       const authReq = req;
       const documentValues = [
         ...safeHistory.map((entry) => entry.document),
-        ...safeChecklist.map((item) => item.documentPath || item.document)
+        ...safeChecklist.map((item) => item.documentPath || item.document),
       ].filter(Boolean);
       const checklistProgress = safeChecklist.map((item) => ({
         label: item.label || "\xCDtem sin nombre",
-        complete: item.complete
+        complete: item.complete,
       }));
-      const documentNames = [...new Set(documentValues.map(displayDocumentName))];
+      const documentNames = [
+        ...new Set(documentValues.map(displayDocumentName)),
+      ];
       sendStreamEvent({
         type: "progress",
         phase: "checklist",
         message: "Revisando el checklist de debido proceso.",
-        checklist: checklistProgress
+        checklist: checklistProgress,
       });
       sendStreamEvent({
         type: "progress",
         phase: "documents",
-        message: documentNames.length ? `Revisando ${documentNames.length} documento(s) asociado(s).` : "No hay documentos adjuntos asociados para revisar.",
-        documents: documentNames
+        message: documentNames.length
+          ? `Revisando ${documentNames.length} documento(s) asociado(s).`
+          : "No hay documentos adjuntos asociados para revisar.",
+        documents: documentNames,
       });
       sendStreamEvent({
         type: "progress",
         phase: "sources",
-        message: "Revisando fuentes jur\xEDdicas autorizadas."
+        message: "Revisando fuentes jur\xEDdicas autorizadas.",
       });
-      const [legalSources, extractedDocuments, templatePrompt] = await Promise.all([
-        getRelevantLegalSources(
-          `${DOCUMENT_TITLES[docType]} ${infractionType} convivencia escolar debido proceso reglamento interno medidas disciplinarias apelaci\xF3n`,
-          contextLimits.legalSourceChars
-        ),
-        extractCaseDocuments(documentValues, authReq, {
-          ...contextLimits.documents,
-          deadlineMs: 2e4,
-          onDocumentStart: ({ name, index, total }) => sendStreamEvent({
-            type: "progress",
-            phase: "document",
-            message: `Revisando documento ${index} de ${total}: ${name}.`,
-            document: { name, index, total }
-          })
-        }),
-        (async () => {
-          try {
-            const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? "";
-            const templates = await httpsGet(
-              getSupabaseHostname2(),
-              `/rest/v1/document_templates?doc_type=eq.${docType}&tenant_id=eq.${authReq.tenantId}&select=system_prompt&limit=1`,
-              { apikey: anonKey, Authorization: `Bearer ${authReq.authToken}` }
-            );
-            return templates[0]?.system_prompt?.trim() || null;
-          } catch {
-            return null;
-          }
-        })()
-      ]);
+      const [legalSources, extractedDocuments, templatePrompt] =
+        await Promise.all([
+          getRelevantLegalSources(
+            `${DOCUMENT_TITLES[docType]} ${infractionType} convivencia escolar debido proceso reglamento interno medidas disciplinarias apelaci\xF3n`,
+            contextLimits.legalSourceChars,
+          ),
+          extractCaseDocuments(documentValues, authReq, {
+            ...contextLimits.documents,
+            deadlineMs: 2e4,
+            onDocumentStart: ({ name, index, total }) =>
+              sendStreamEvent({
+                type: "progress",
+                phase: "document",
+                message: `Revisando documento ${index} de ${total}: ${name}.`,
+                document: { name, index, total },
+              }),
+          }),
+          (async () => {
+            try {
+              const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? "";
+              const templates = await httpsGet(
+                getSupabaseHostname2(),
+                `/rest/v1/document_templates?doc_type=eq.${docType}&tenant_id=eq.${authReq.tenantId}&select=system_prompt&limit=1`,
+                {
+                  apikey: anonKey,
+                  Authorization: `Bearer ${authReq.authToken}`,
+                },
+              );
+              return templates[0]?.system_prompt?.trim() || null;
+            } catch {
+              return null;
+            }
+          })(),
+        ]);
       sendStreamEvent({
         type: "progress",
         phase: "checklist",
         message: "Checklist revisado y agregado al dossier.",
-        checklist: checklistProgress
+        checklist: checklistProgress,
       });
       sendStreamEvent({
         type: "progress",
         phase: "sources",
-        message: "Fuentes jur\xEDdicas revisadas y agregadas al dossier."
+        message: "Fuentes jur\xEDdicas revisadas y agregadas al dossier.",
       });
       sendStreamEvent({
         type: "progress",
         phase: "template",
-        message: "Aplicando la plantilla institucional del informe."
+        message: "Aplicando la plantilla institucional del informe.",
       });
       const dossier = `
 # DOSSIER DEL EXPEDIENTE \u2014 DOCUMENTO CITADO
@@ -2940,34 +3730,52 @@ router3.post(
 ${stringifyList(safeMeasures, "No se registran medidas ejecutadas.")}
 
 ## Historial e hitos registrados
-${safeHistory.length ? safeHistory.map(
-        (entry, index) => `
+${
+  safeHistory.length
+    ? safeHistory
+        .map(
+          (entry, index) => `
 ${index + 1}. ${entry.title || "Registro sin t\xEDtulo"}
    - Fecha: ${entry.date || "No registrada"}
    - Tipo: ${entry.type || "No registrado"}
    - Descripci\xF3n: ${entry.description || "Sin descripci\xF3n"}
    - Participantes: ${entry.people.join(", ") || "No registrados"}
-   - Documento asociado: ${entry.document || "No registrado"}`
-      ).join("\n") : "No hay registros de historial disponibles."}
+   - Documento asociado: ${entry.document || "No registrado"}`,
+        )
+        .join("\n")
+    : "No hay registros de historial disponibles."
+}
 
 ## Checklist y cumplimiento
-${safeChecklist.length ? safeChecklist.map(
-        (item) => `
+${
+  safeChecklist.length
+    ? safeChecklist
+        .map(
+          (item) => `
 - [${item.complete ? "X" : " "}] ${item.label || "\xCDtem sin nombre"}
   - Estado: ${item.complete ? "Completado" : "Pendiente"}
   - Descripci\xF3n: ${item.description || "No registrada"}
   - Registrado por: ${item.by || "No registrado"}
   - Fecha: ${item.date || "No registrada"}
   - Observaciones: ${item.notes || "Sin observaciones"}
-  - Documento asociado: ${item.document || "No registrado"}`
-      ).join("\n") : "No hay checklist disponible."}
+  - Documento asociado: ${item.document || "No registrado"}`,
+        )
+        .join("\n")
+    : "No hay checklist disponible."
+}
 
 ## Documentos asociados conocidos
-${extractedDocuments.length ? extractedDocuments.map(
-        (document2) => `
+${
+  extractedDocuments.length
+    ? extractedDocuments
+        .map(
+          (document2) => `
 ### ${document2.name}
-${document2.text ? redactSensitiveForAI(document2.text, knownSensitiveValues) : `Estado de extracci\xF3n: ${document2.reason}`}`
-      ).join("\n") : "No hay documentos asociados identificados en historial o checklist."}
+${document2.text ? redactSensitiveForAI(document2.text, knownSensitiveValues) : `Estado de extracci\xF3n: ${document2.reason}`}`,
+        )
+        .join("\n")
+    : "No hay documentos asociados identificados en historial o checklist."
+}
 
 ## FUENTES AUTORIZADAS
 ${legalSources}
@@ -2981,12 +3789,13 @@ ${templatePrompt || getTemplateFallback()}`;
       try {
         const geminiTimeoutMs = getBoundedDraftTimeoutMs(
           contextLimits.generation.timeoutMs,
-          startedAt
+          startedAt,
         );
         if (geminiTimeoutMs < MIN_GENERATION_TIMEOUT_MS) {
           sendStreamEvent({
             type: "error",
-            error: "No qued\xF3 tiempo suficiente para redactar el documento antes del l\xEDmite de producci\xF3n. Intente nuevamente."
+            error:
+              "No qued\xF3 tiempo suficiente para redactar el documento antes del l\xEDmite de producci\xF3n. Intente nuevamente.",
           });
           res.end();
           return;
@@ -2994,21 +3803,23 @@ ${templatePrompt || getTemplateFallback()}`;
         sendStreamEvent({
           type: "progress",
           phase: "generation",
-          message: "Antecedentes revisados. Gemini est\xE1 redactando el informe de cierre."
+          message:
+            "Antecedentes revisados. Gemini est\xE1 redactando el informe de cierre.",
         });
         document = await callGeminiLegalDraft(systemInstruction, dossier, {
           ...contextLimits.generation,
-          timeoutMs: geminiTimeoutMs
+          timeoutMs: geminiTimeoutMs,
         });
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Error al contactar Gemini.";
+        const message =
+          error instanceof Error ? error.message : "Error al contactar Gemini.";
         if (!isRecoverableGeminiDraftError(message)) {
           throw error;
         }
         sendStreamEvent({
           type: "error",
           error: getGeminiDraftErrorMessage(message),
-          provider: "Gemini"
+          provider: "Gemini",
         });
         res.end();
         return;
@@ -3016,7 +3827,8 @@ ${templatePrompt || getTemplateFallback()}`;
       sendStreamEvent({
         type: "progress",
         phase: "completed",
-        message: "Informe redactado. Puedes revisarlo y editarlo antes de imprimir."
+        message:
+          "Informe redactado. Puedes revisarlo y editarlo antes de imprimir.",
       });
       sendStreamEvent({
         type: "result",
@@ -3025,7 +3837,9 @@ ${templatePrompt || getTemplateFallback()}`;
         provider,
         title: DOCUMENT_TITLES[docType],
         signer: DOCUMENT_SIGNERS[docType],
-        consideredDocuments: extractedDocuments.map((document2) => document2.name)
+        consideredDocuments: extractedDocuments.map(
+          (document2) => document2.name,
+        ),
       });
       res.end();
     } catch (error) {
@@ -3040,13 +3854,18 @@ ${templatePrompt || getTemplateFallback()}`;
       }
       console.error("Error al generar borrador de documento:", error);
       if (streamStarted) {
-        sendStreamEvent({ type: "error", error: "Error interno del servidor al redactar documento." });
+        sendStreamEvent({
+          type: "error",
+          error: "Error interno del servidor al redactar documento.",
+        });
         res.end();
         return;
       }
-      res.status(500).json({ error: "Error interno del servidor al redactar documento." });
+      res
+        .status(500)
+        .json({ error: "Error interno del servidor al redactar documento." });
     }
-  }
+  },
 );
 var draft_default = router3;
 
@@ -3063,7 +3882,7 @@ router4.get(
       return;
     }
     res.json({ authenticated: true });
-  }
+  },
 );
 var debug_default = router4;
 
@@ -3079,16 +3898,24 @@ function requireRole(allowedRoles) {
       return;
     }
     if (!authReq.tenantId) {
-      res.status(403).json({ error: "No fue posible determinar el establecimiento autenticado." });
+      res
+        .status(403)
+        .json({
+          error: "No fue posible determinar el establecimiento autenticado.",
+        });
       return;
     }
     const role = authReq.profileRole;
     if (!role) {
-      res.status(403).json({ error: "No fue posible determinar el rol del usuario." });
+      res
+        .status(403)
+        .json({ error: "No fue posible determinar el rol del usuario." });
       return;
     }
     if (!allowedRoles.includes(role)) {
-      res.status(403).json({ error: "No tiene permisos para realizar esta acci\xF3n." });
+      res
+        .status(403)
+        .json({ error: "No tiene permisos para realizar esta acci\xF3n." });
       return;
     }
     next();
@@ -3097,10 +3924,15 @@ function requireRole(allowedRoles) {
 
 // server/api/routes/templates.ts
 var router5 = Router5();
-router5.use("/document-templates", requireAuth, requireMembership(CONVIVENCIA_MEMBERSHIP));
+router5.use(
+  "/document-templates",
+  requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
+);
 var TEMPLATE_SELECT_PUBLIC = "id,doc_type,label,updated_at";
 var TEMPLATE_SELECT_ADMIN = "id,doc_type,label,system_prompt,updated_at";
-var ACTIVE_TEMPLATE_FILTER = "doc_type=in.(informe_cierre_indagacion,informe_concluyente)";
+var ACTIVE_TEMPLATE_FILTER =
+  "doc_type=in.(informe_cierre_indagacion,informe_concluyente)";
 function getSupabaseHostname3() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   if (!supabaseUrl || !URL.canParse(supabaseUrl)) {
@@ -3109,10 +3941,17 @@ function getSupabaseHostname3() {
   return new URL(supabaseUrl).hostname;
 }
 function getServiceRoleKey() {
-  return process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
+  return (
+    process.env.SUPABASE_SERVICE_ROLE_KEY ??
+    process.env.SUPABASE_SERVICE_KEY ??
+    ""
+  );
 }
 function authHeaders(req) {
-  const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "";
+  const anonKey =
+    process.env.VITE_SUPABASE_ANON_KEY ??
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
+    "";
   return { apikey: anonKey, Authorization: `Bearer ${req.authToken}` };
 }
 function isTemplateId(value) {
@@ -3124,7 +3963,7 @@ router5.get("/document-templates", requireTenant, async (req, res) => {
     const data = await httpsGet(
       getSupabaseHostname3(),
       `/rest/v1/document_templates?${ACTIVE_TEMPLATE_FILTER}&select=${TEMPLATE_SELECT_PUBLIC}&order=doc_type`,
-      authHeaders(authReq)
+      authHeaders(authReq),
     );
     res.json(data);
   } catch {
@@ -3141,13 +3980,13 @@ router5.get(
       const data = await httpsGet(
         getSupabaseHostname3(),
         `/rest/v1/document_templates?${ACTIVE_TEMPLATE_FILTER}&select=${TEMPLATE_SELECT_ADMIN}&order=doc_type`,
-        authHeaders(authReq)
+        authHeaders(authReq),
       );
       res.json(data);
     } catch {
       res.status(500).json({ error: "Error al obtener plantillas." });
     }
-  }
+  },
 );
 router5.put(
   "/document-templates",
@@ -3164,19 +4003,31 @@ router5.put(
       res.status(400).json({ error: "El id de plantilla no es v\xE1lido." });
       return;
     }
-    if (typeof system_prompt !== "string" || system_prompt.trim().length === 0) {
-      res.status(400).json({ error: "El system_prompt no puede estar vac\xEDo." });
+    if (
+      typeof system_prompt !== "string" ||
+      system_prompt.trim().length === 0
+    ) {
+      res
+        .status(400)
+        .json({ error: "El system_prompt no puede estar vac\xEDo." });
       return;
     }
     if (system_prompt.length > 2e4) {
-      res.status(400).json({ error: "El system_prompt excede el m\xE1ximo permitido (20000 caracteres)." });
+      res
+        .status(400)
+        .json({
+          error:
+            "El system_prompt excede el m\xE1ximo permitido (20000 caracteres).",
+        });
       return;
     }
     try {
       const authReq = req;
       const serviceRoleKey = getServiceRoleKey();
       if (!serviceRoleKey || !authReq.tenantId) {
-        res.status(503).json({ error: "Servicio de plantillas no configurado." });
+        res
+          .status(503)
+          .json({ error: "Servicio de plantillas no configurado." });
         return;
       }
       const sanitized = sanitize(system_prompt).slice(0, 2e4);
@@ -3185,16 +4036,25 @@ router5.put(
         `/rest/v1/document_templates?id=eq.${encodeURIComponent(id)}&tenant_id=eq.${authReq.tenantId}`,
         {
           system_prompt: sanitized,
-          updated_at: (/* @__PURE__ */ new Date()).toISOString()
+          updated_at: /* @__PURE__ */ new Date().toISOString(),
         },
         {
           apikey: serviceRoleKey,
           Authorization: `Bearer ${serviceRoleKey}`,
-          Prefer: "return=representation"
-        }
+          Prefer: "return=representation",
+        },
       );
-      if (updated.status < 200 || updated.status >= 300 || !Array.isArray(updated.body) || updated.body.length !== 1) {
-        res.status(404).json({ error: "Plantilla no encontrada para el establecimiento actual." });
+      if (
+        updated.status < 200 ||
+        updated.status >= 300 ||
+        !Array.isArray(updated.body) ||
+        updated.body.length !== 1
+      ) {
+        res
+          .status(404)
+          .json({
+            error: "Plantilla no encontrada para el establecimiento actual.",
+          });
         return;
       }
       res.json({ success: true });
@@ -3202,7 +4062,7 @@ router5.put(
       console.error("Error updating template:", error);
       res.status(500).json({ error: "Error al actualizar plantilla." });
     }
-  }
+  },
 );
 var templates_default = router5;
 
@@ -3219,14 +4079,20 @@ router6.post(
     try {
       const { textContent } = req.body;
       if (!textContent || !textContent.trim()) {
-        res.status(400).json({ error: "No se recibi\xF3 el texto extra\xEDdo del PDF." });
+        res
+          .status(400)
+          .json({ error: "No se recibi\xF3 el texto extra\xEDdo del PDF." });
         return;
       }
       if (textContent.length > MAX_TEXT_CONTENT_LENGTH) {
-        res.status(413).json({ error: "El texto excede el tama\xF1o m\xE1ximo permitido." });
+        res
+          .status(413)
+          .json({ error: "El texto excede el tama\xF1o m\xE1ximo permitido." });
         return;
       }
-      const lines = textContent.split("\n").filter((l) => !l.trim().startsWith("![") && !l.includes("data:image"));
+      const lines = textContent
+        .split("\n")
+        .filter((l) => !l.trim().startsWith("![") && !l.includes("data:image"));
       const blocks = [];
       let current = [];
       for (const line of lines) {
@@ -3255,7 +4121,7 @@ router6.post(
       console.error("Error al analizar documento:", error);
       res.status(500).json({ error: "Error interno al procesar el archivo." });
     }
-  }
+  },
 );
 var parse_default = router6;
 
@@ -3270,22 +4136,40 @@ function clientErrorBody(message, status) {
   return { error: message };
 }
 var errorHandler = (err, _req, res, _next) => {
-  console.error("[errorHandler]", err instanceof Error ? err.message : String(err));
+  console.error(
+    "[errorHandler]",
+    err instanceof Error ? err.message : String(err),
+  );
   if (isRequestValidationError(err)) {
     res.status(400).json({ error: err.message });
     return;
   }
   if (err instanceof SyntaxError && "body" in err) {
-    res.status(400).json({ error: "JSON malformado en el cuerpo de la solicitud." });
+    res
+      .status(400)
+      .json({ error: "JSON malformado en el cuerpo de la solicitud." });
     return;
   }
-  const tooLarge = typeof err === "object" && err !== null && "type" in err && err.type === "entity.too.large";
-  if (tooLarge || err instanceof Error && "status" in err && err.status === 413) {
-    res.status(413).json({ error: "El archivo o cuerpo de la solicitud excede el tama\xF1o permitido." });
+  const tooLarge =
+    typeof err === "object" &&
+    err !== null &&
+    "type" in err &&
+    err.type === "entity.too.large";
+  if (
+    tooLarge ||
+    (err instanceof Error && "status" in err && err.status === 413)
+  ) {
+    res
+      .status(413)
+      .json({
+        error:
+          "El archivo o cuerpo de la solicitud excede el tama\xF1o permitido.",
+      });
     return;
   }
   const isDev = process.env.NODE_ENV === "development";
-  const message = isDev && err instanceof Error ? err.message : "Error interno del servidor.";
+  const message =
+    isDev && err instanceof Error ? err.message : "Error interno del servidor.";
   res.status(500).json({ error: message });
 };
 
@@ -3300,7 +4184,7 @@ var PDF_PROCESS_ROLES = [
   "inspectoria",
   "profesor_jefe",
   "inspector",
-  "staff"
+  "staff",
 ];
 router7.use("/process-disciplinary-pdf", requireAuth, rateLimit);
 function getBearerToken(req) {
@@ -3308,58 +4192,122 @@ function getBearerToken(req) {
   return authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : void 0;
 }
 function getProcessErrorResponse(error) {
-  const message = error instanceof Error ? error.message : "Error interno al procesar el documento";
-  if (message === "Supabase no configurado") return { status: 503, message: "Supabase no est\xE1 configurado en el servidor para procesar PDFs privados." };
-  if (message.includes("Bucket de documentos disciplinarios no permitido") || message.includes("Ruta de archivo no v\xE1lida") || message.includes("El archivo no pertenece") || message.includes("El PDF excede") || message.includes("PDF v\xE1lido") || message.includes("demasiadas p\xE1ginas") || message.includes("no coincide") || message.includes("no corresponde") || message.includes("anotaciones confirmadas")) return { status: 400, message };
-  if (message.includes("No fue posible descargar")) return { status: 404, message: "No fue posible encontrar o leer el PDF privado subido." };
-  if (message.includes("Este PDF ya fue registrado")) return { status: 409, message };
+  const message =
+    error instanceof Error
+      ? error.message
+      : "Error interno al procesar el documento";
+  if (message === "Supabase no configurado")
+    return {
+      status: 503,
+      message:
+        "Supabase no est\xE1 configurado en el servidor para procesar PDFs privados.",
+    };
+  if (
+    message.includes("Bucket de documentos disciplinarios no permitido") ||
+    message.includes("Ruta de archivo no v\xE1lida") ||
+    message.includes("El archivo no pertenece") ||
+    message.includes("El PDF excede") ||
+    message.includes("PDF v\xE1lido") ||
+    message.includes("demasiadas p\xE1ginas") ||
+    message.includes("no coincide") ||
+    message.includes("no corresponde") ||
+    message.includes("anotaciones confirmadas")
+  )
+    return { status: 400, message };
+  if (message.includes("No fue posible descargar"))
+    return {
+      status: 404,
+      message: "No fue posible encontrar o leer el PDF privado subido.",
+    };
+  if (message.includes("Este PDF ya fue registrado"))
+    return { status: 409, message };
   return { status: 500, message };
 }
 router7.post(
   "/process-disciplinary-pdf",
   requireTenant,
-  requireMembership({ applicationCode: CONVIVENCIA_MEMBERSHIP.applicationCode, allowedRoles: PDF_PROCESS_ROLES }),
+  requireMembership({
+    applicationCode: CONVIVENCIA_MEMBERSHIP.applicationCode,
+    allowedRoles: PDF_PROCESS_ROLES,
+  }),
   async (req, res) => {
     try {
       const body = req.body;
       const authReq = req;
       const tenantId = authReq.tenantId;
       if (!tenantId) {
-        res.status(500).json({ error: "Tenant no resuelto para analizar el PDF" });
+        res
+          .status(500)
+          .json({ error: "Tenant no resuelto para analizar el PDF" });
         return;
       }
       if (!body.bucket || !body.storagePath || !body.fileName) {
-        res.status(400).json({ error: "Faltan par\xE1metros requeridos para analizar el PDF" });
+        res
+          .status(400)
+          .json({
+            error: "Faltan par\xE1metros requeridos para analizar el PDF",
+          });
         return;
       }
-      const result = await analyzeDisciplinaryPdf({ bucket: body.bucket, storagePath: body.storagePath, fileName: body.fileName, tenantId, authToken: getBearerToken(req) });
+      const result = await analyzeDisciplinaryPdf({
+        bucket: body.bucket,
+        storagePath: body.storagePath,
+        fileName: body.fileName,
+        tenantId,
+        authToken: getBearerToken(req),
+      });
       res.json(result);
     } catch (error) {
       const response = getProcessErrorResponse(error);
-      console.error("Error processing disciplinary PDF:", error instanceof Error ? error.message : error);
-      res.status(response.status).json(clientErrorBody(response.message, response.status));
+      console.error(
+        "Error processing disciplinary PDF:",
+        error instanceof Error ? error.message : error,
+      );
+      res
+        .status(response.status)
+        .json(clientErrorBody(response.message, response.status));
     }
-  }
+  },
 );
 router7.post(
   "/process-disciplinary-pdf/confirm",
   requireTenant,
-  requireMembership({ applicationCode: CONVIVENCIA_MEMBERSHIP.applicationCode, allowedRoles: PDF_PROCESS_ROLES }),
+  requireMembership({
+    applicationCode: CONVIVENCIA_MEMBERSHIP.applicationCode,
+    allowedRoles: PDF_PROCESS_ROLES,
+  }),
   async (req, res) => {
     try {
       const body = req.body;
       const authReq = req;
       const tenantId = authReq.tenantId;
       if (!tenantId) {
-        res.status(500).json({ error: "Tenant no resuelto para confirmar el proceso" });
+        res
+          .status(500)
+          .json({ error: "Tenant no resuelto para confirmar el proceso" });
         return;
       }
-      if (!body.bucket || !body.storagePath || !body.fileName || !body.fileHash || !body.studentId) {
-        res.status(400).json({ error: "Faltan par\xE1metros requeridos para confirmar el proceso" });
+      if (
+        !body.bucket ||
+        !body.storagePath ||
+        !body.fileName ||
+        !body.fileHash ||
+        !body.studentId
+      ) {
+        res
+          .status(400)
+          .json({
+            error: "Faltan par\xE1metros requeridos para confirmar el proceso",
+          });
         return;
       }
       if (body.annotations !== void 0 && !Array.isArray(body.annotations)) {
-        res.status(400).json({ error: "Las anotaciones confirmadas no tienen un formato v\xE1lido." });
+        res
+          .status(400)
+          .json({
+            error:
+              "Las anotaciones confirmadas no tienen un formato v\xE1lido.",
+          });
         return;
       }
       const result = await confirmDisciplinaryProcess({
@@ -3377,15 +4325,20 @@ router7.post(
         annotations: body.annotations ?? [],
         idempotencyKey: body.idempotencyKey,
         authToken: getBearerToken(req),
-        confirmedBy: authReq.user?.sub
+        confirmedBy: authReq.user?.sub,
       });
       res.json(result);
     } catch (error) {
       const response = getProcessErrorResponse(error);
-      console.error("Error confirming disciplinary process:", error instanceof Error ? error.message : error);
-      res.status(response.status).json(clientErrorBody(response.message, response.status));
+      console.error(
+        "Error confirming disciplinary process:",
+        error instanceof Error ? error.message : error,
+      );
+      res
+        .status(response.status)
+        .json(clientErrorBody(response.message, response.status));
     }
-  }
+  },
 );
 var processDisciplinaryPdf_default = router7;
 
@@ -3398,7 +4351,9 @@ function hasSafeProperties(value) {
   if (value === void 0) return true;
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   try {
-    return Buffer.byteLength(JSON.stringify(value), "utf8") <= MAX_PROPERTIES_BYTES;
+    return (
+      Buffer.byteLength(JSON.stringify(value), "utf8") <= MAX_PROPERTIES_BYTES
+    );
   } catch {
     return false;
   }
@@ -3412,17 +4367,33 @@ router8.post(
   async (req, res) => {
     try {
       const { eventName, properties } = req.body;
-      if (!eventName || typeof eventName !== "string" || !EVENT_NAME_RE.test(eventName)) {
-        res.status(400).json({ error: "eventName debe usar formato snake_case y tener hasta 80 caracteres." });
+      if (
+        !eventName ||
+        typeof eventName !== "string" ||
+        !EVENT_NAME_RE.test(eventName)
+      ) {
+        res
+          .status(400)
+          .json({
+            error:
+              "eventName debe usar formato snake_case y tener hasta 80 caracteres.",
+          });
         return;
       }
       if (!hasSafeProperties(properties)) {
-        res.status(400).json({ error: "properties debe ser un objeto JSON de hasta 4 KB." });
+        res
+          .status(400)
+          .json({ error: "properties debe ser un objeto JSON de hasta 4 KB." });
         return;
       }
-      const { createClient: createClient6 } = await import("@supabase/supabase-js");
-      const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
-      const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "";
+      const { createClient: createClient6 } =
+        await import("@supabase/supabase-js");
+      const supabaseUrl =
+        process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
+      const anonKey =
+        process.env.VITE_SUPABASE_ANON_KEY ??
+        process.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
+        "";
       if (!supabaseUrl || !anonKey) {
         res.status(500).json({ error: "Supabase no configurado" });
         return;
@@ -3430,14 +4401,16 @@ router8.post(
       const authReq = req;
       const supabase = createClient6(supabaseUrl, anonKey, {
         auth: { persistSession: false },
-        global: { headers: { Authorization: `Bearer ${authReq.authToken}` } }
+        global: { headers: { Authorization: `Bearer ${authReq.authToken}` } },
       });
-      const { error: insertError } = await supabase.from("usage_events").insert({
-        event_name: eventName,
-        user_id: authReq.user?.sub ?? null,
-        tenant_id: authReq.tenantId ?? null,
-        properties: properties ?? {}
-      });
+      const { error: insertError } = await supabase
+        .from("usage_events")
+        .insert({
+          event_name: eventName,
+          user_id: authReq.user?.sub ?? null,
+          tenant_id: authReq.tenantId ?? null,
+          properties: properties ?? {},
+        });
       if (insertError) {
         console.error("Error logging usage event:", insertError);
         res.status(503).json({ error: "No fue posible registrar el evento." });
@@ -3448,7 +4421,7 @@ router8.post(
       console.error("Error logging usage event:", error);
       res.status(500).json({ error: "Error interno al registrar evento." });
     }
-  }
+  },
 );
 router8.get(
   "/usage/stats",
@@ -3460,37 +4433,55 @@ router8.get(
     try {
       const since = req.query.since ?? void 0;
       const until = req.query.until ?? void 0;
-      const { createClient: createClient6 } = await import("@supabase/supabase-js");
-      const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
-      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
+      const { createClient: createClient6 } =
+        await import("@supabase/supabase-js");
+      const supabaseUrl =
+        process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
+      const serviceRoleKey =
+        process.env.SUPABASE_SERVICE_ROLE_KEY ??
+        process.env.SUPABASE_SERVICE_KEY ??
+        "";
       if (!supabaseUrl || !serviceRoleKey) {
-        res.status(503).json({ error: "Servicio de estad\xEDsticas no configurado." });
+        res
+          .status(503)
+          .json({ error: "Servicio de estad\xEDsticas no configurado." });
         return;
       }
       const supabase = createClient6(supabaseUrl, serviceRoleKey, {
-        auth: { persistSession: false, autoRefreshToken: false }
+        auth: { persistSession: false, autoRefreshToken: false },
       });
       const params = {};
       if (since) params.since = since;
       if (until) params.until = until;
-      const { data: eventStats, error: eventError } = await supabase.rpc("get_usage_stats", params);
+      const { data: eventStats, error: eventError } = await supabase.rpc(
+        "get_usage_stats",
+        params,
+      );
       if (eventError) {
         console.error("Error fetching usage stats:", eventError);
         res.status(500).json({ error: "Error al obtener estad\xEDsticas." });
         return;
       }
-      const { data: dailyActive, error: dailyError } = await supabase.rpc("get_daily_active_users", params);
+      const { data: dailyActive, error: dailyError } = await supabase.rpc(
+        "get_daily_active_users",
+        params,
+      );
       if (dailyError) {
         console.error("Error fetching daily active users:", dailyError);
         res.status(500).json({ error: "Error al obtener usuarios activos." });
         return;
       }
-      res.json({ events: eventStats ?? [], dailyActiveUsers: dailyActive ?? [] });
+      res.json({
+        events: eventStats ?? [],
+        dailyActiveUsers: dailyActive ?? [],
+      });
     } catch (error) {
       console.error("Error fetching usage stats:", error);
-      res.status(500).json({ error: "Error interno al obtener estad\xEDsticas." });
+      res
+        .status(500)
+        .json({ error: "Error interno al obtener estad\xEDsticas." });
     }
-  }
+  },
 );
 var usage_default = router8;
 
@@ -3506,9 +4497,9 @@ router9.get(
     res.json({
       status: "ok",
       message: "Acceso autorizado por membres\xEDa.",
-      timestamp: (/* @__PURE__ */ new Date()).toISOString()
+      timestamp: /* @__PURE__ */ new Date().toISOString(),
     });
-  }
+  },
 );
 var pilot_default = router9;
 
@@ -3519,7 +4510,7 @@ import { createClient as createClient3 } from "@supabase/supabase-js";
 var router10 = Router10();
 var ownUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 }
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
 var ADMIN_ROLES = ["superadmin", "admin", "direccion"];
 var APPLICATION_CODE = "convivencia";
@@ -3532,7 +4523,7 @@ var VALID_ROLES2 = [
   "teacher",
   "inspector",
   "user",
-  "staff"
+  "staff",
 ];
 var EMAIL_RE2 = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 function invitationErrorStatus(message) {
@@ -3540,10 +4531,15 @@ function invitationErrorStatus(message) {
 }
 function getAdminClient2() {
   const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) throw new Error("Supabase administrativo no configurado.");
   return createClient3(url, key, {
-    auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false }
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false,
+    },
   });
 }
 function getRequest(req) {
@@ -3552,25 +4548,41 @@ function getRequest(req) {
 function isRole(value) {
   return typeof value === "string" && VALID_ROLES2.includes(value);
 }
-async function assertFreshAdmin(client, request) {
-  if (!request.user?.sub || !request.tenantId) throw new Error("Contexto administrativo inv\xE1lido.");
-  const { data, error } = await client.from("profiles").select("user_id,tenant_id,email,full_name,role,course_ids,is_active,updated_at").eq("user_id", request.user.sub).eq("tenant_id", request.tenantId).maybeSingle();
-  if (error || !data) throw new Error("No fue posible validar al administrador.");
+async function assertFreshAdmin(client, request2) {
+  if (!request2.user?.sub || !request2.tenantId)
+    throw new Error("Contexto administrativo inv\xE1lido.");
+  const { data, error } = await client
+    .from("profiles")
+    .select(
+      "user_id,tenant_id,email,full_name,role,course_ids,is_active,updated_at",
+    )
+    .eq("user_id", request2.user.sub)
+    .eq("tenant_id", request2.tenantId)
+    .maybeSingle();
+  if (error || !data)
+    throw new Error("No fue posible validar al administrador.");
   const profile = data;
   if (!profile.is_active || !ADMIN_ROLES.includes(profile.role)) {
     throw new Error("La cuenta no tiene permisos administrativos activos.");
   }
   return profile;
 }
-async function recordAudit(client, request, action, entityId, previousValues, newValues) {
+async function recordAudit(
+  client,
+  request2,
+  action,
+  entityId,
+  previousValues,
+  newValues,
+) {
   const { error } = await client.from("audit_events").insert({
-    tenant_id: request.tenantId,
-    actor_user_id: request.user?.sub,
+    tenant_id: request2.tenantId,
+    actor_user_id: request2.user?.sub,
     action,
     entity_type: "membership",
     entity_id: entityId,
     previous_values: previousValues,
-    new_values: newValues
+    new_values: newValues,
   });
   if (error) throw error;
 }
@@ -3582,19 +4594,45 @@ async function listAuthUsers(client) {
 router10.use("/admin", requireAuth, requireTenant, requireRole(ADMIN_ROLES));
 router10.get("/admin/members", async (req, res) => {
   try {
-    const request = getRequest(req);
+    const request2 = getRequest(req);
     const client = getAdminClient2();
-    await assertFreshAdmin(client, request);
-    const [profilesResult, membershipsResult, invitationsResult, auditResult, users] = await Promise.all([
-      client.from("profiles").select("user_id,tenant_id,email,full_name,role,course_ids,is_active,updated_at").eq("tenant_id", request.tenantId).order("full_name", { ascending: true }),
-      client.from("app_memberships").select("user_id,role,is_active,application_code").eq("tenant_id", request.tenantId).eq("application_code", APPLICATION_CODE),
-      client.from("membership_invitations").select(
-        "id,tenant_id,email,role,application_code,auth_user_id,invited_by,status,created_at,updated_at,last_sent_at,cancelled_at,accepted_at"
-      ).eq("tenant_id", request.tenantId).order("created_at", { ascending: false }),
-      client.from("audit_events").select(
-        "id,actor_user_id,action,entity_type,entity_id,previous_values,new_values,occurred_at"
-      ).eq("tenant_id", request.tenantId).eq("entity_type", "membership").order("occurred_at", { ascending: false }).limit(200),
-      listAuthUsers(client)
+    await assertFreshAdmin(client, request2);
+    const [
+      profilesResult,
+      membershipsResult,
+      invitationsResult,
+      auditResult,
+      users,
+    ] = await Promise.all([
+      client
+        .from("profiles")
+        .select(
+          "user_id,tenant_id,email,full_name,role,course_ids,is_active,updated_at",
+        )
+        .eq("tenant_id", request2.tenantId)
+        .order("full_name", { ascending: true }),
+      client
+        .from("app_memberships")
+        .select("user_id,role,is_active,application_code")
+        .eq("tenant_id", request2.tenantId)
+        .eq("application_code", APPLICATION_CODE),
+      client
+        .from("membership_invitations")
+        .select(
+          "id,tenant_id,email,role,application_code,auth_user_id,invited_by,status,created_at,updated_at,last_sent_at,cancelled_at,accepted_at",
+        )
+        .eq("tenant_id", request2.tenantId)
+        .order("created_at", { ascending: false }),
+      client
+        .from("audit_events")
+        .select(
+          "id,actor_user_id,action,entity_type,entity_id,previous_values,new_values,occurred_at",
+        )
+        .eq("tenant_id", request2.tenantId)
+        .eq("entity_type", "membership")
+        .order("occurred_at", { ascending: false })
+        .limit(200),
+      listAuthUsers(client),
     ]);
     if (profilesResult.error) throw profilesResult.error;
     if (membershipsResult.error) throw membershipsResult.error;
@@ -3603,15 +4641,23 @@ router10.get("/admin/members", async (req, res) => {
     const profiles = profilesResult.data ?? [];
     const memberships = membershipsResult.data ?? [];
     const membershipByUser = new Map(
-      memberships.map((membership) => [membership.user_id, membership])
+      memberships.map((membership) => [membership.user_id, membership]),
     );
     const invitations = invitationsResult.data ?? [];
     const audits = auditResult.data ?? [];
-    const actorEmails = new Map(profiles.map((profile) => [profile.user_id, profile.email ?? ""]));
+    const actorEmails = new Map(
+      profiles.map((profile) => [profile.user_id, profile.email ?? ""]),
+    );
     const currentInvitations = invitations.map((invitation) => {
-      const user = invitation.auth_user_id ? users.get(invitation.auth_user_id) : void 0;
+      const user = invitation.auth_user_id
+        ? users.get(invitation.auth_user_id)
+        : void 0;
       if (invitation.status === "pending" && user?.confirmed_at) {
-        return { ...invitation, status: "accepted", accepted_at: user.confirmed_at };
+        return {
+          ...invitation,
+          status: "accepted",
+          accepted_at: user.confirmed_at,
+        };
       }
       return invitation;
     });
@@ -3624,145 +4670,239 @@ router10.get("/admin/members", async (req, res) => {
           membershipRole: membership?.role ?? profile.role,
           membershipActive: membership?.is_active ?? profile.is_active,
           confirmed: Boolean(user?.confirmed_at),
-          lastSignInAt: user?.last_sign_in_at ?? null
+          lastSignInAt: user?.last_sign_in_at ?? null,
         };
       }),
       invitations: currentInvitations,
       history: audits.map((audit2) => ({
         ...audit2,
-        actorEmail: actorEmails.get(audit2.actor_user_id) ?? null
-      }))
+        actorEmail: actorEmails.get(audit2.actor_user_id) ?? null,
+      })),
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error al cargar la administraci\uFFFDn.";
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Error al cargar la administraci\uFFFDn.";
     const status = message.includes("permisos") ? 403 : 500;
     res.status(status).json(clientErrorBody(message, status));
   }
 });
 router10.patch("/admin/members/:userId", async (req, res) => {
   try {
-    const request = getRequest(req);
+    const request2 = getRequest(req);
     const client = getAdminClient2();
-    await assertFreshAdmin(client, request);
+    await assertFreshAdmin(client, request2);
     const userId = req.params.userId;
     const role = req.body?.role;
     const accessEnabled = req.body?.accessEnabled;
-    if (!userId || !isValidUuid(userId) || !isRole(role) || typeof accessEnabled !== "boolean") {
-      res.status(400).json({ error: "userId, role y accessEnabled son obligatorios." });
+    if (
+      !userId ||
+      !isValidUuid(userId) ||
+      !isRole(role) ||
+      typeof accessEnabled !== "boolean"
+    ) {
+      res
+        .status(400)
+        .json({ error: "userId, role y accessEnabled son obligatorios." });
       return;
     }
-    const { data: targetData, error: targetError } = await client.from("profiles").select("user_id,tenant_id,email,full_name,role,course_ids,is_active,updated_at").eq("user_id", userId).eq("tenant_id", request.tenantId).maybeSingle();
+    const { data: targetData, error: targetError } = await client
+      .from("profiles")
+      .select(
+        "user_id,tenant_id,email,full_name,role,course_ids,is_active,updated_at",
+      )
+      .eq("user_id", userId)
+      .eq("tenant_id", request2.tenantId)
+      .maybeSingle();
     if (targetError) throw targetError;
     if (!targetData) {
-      res.status(404).json({ error: "Usuario no encontrado en este establecimiento." });
+      res
+        .status(404)
+        .json({ error: "Usuario no encontrado en este establecimiento." });
       return;
     }
     const target = targetData;
     if (target.role === "admin" && (!accessEnabled || role !== "admin")) {
-      const { count, error: countError } = await client.from("profiles").select("user_id", { count: "exact", head: true }).eq("tenant_id", request.tenantId).eq("role", "admin").eq("is_active", true).neq("user_id", userId);
+      const { count, error: countError } = await client
+        .from("profiles")
+        .select("user_id", { count: "exact", head: true })
+        .eq("tenant_id", request2.tenantId)
+        .eq("role", "admin")
+        .eq("is_active", true)
+        .neq("user_id", userId);
       if (countError) throw countError;
       if ((count ?? 0) < 1) {
-        res.status(409).json({ error: "No puede dejar al establecimiento sin un administrador activo." });
+        res
+          .status(409)
+          .json({
+            error:
+              "No puede dejar al establecimiento sin un administrador activo.",
+          });
         return;
       }
     }
-    const { error: profileError } = await client.from("profiles").update({ role, is_active: accessEnabled, updated_at: (/* @__PURE__ */ new Date()).toISOString() }).eq("user_id", userId).eq("tenant_id", request.tenantId);
-    if (profileError) throw profileError;
-    const { error: membershipError } = await client.from("app_memberships").upsert(
-      {
-        tenant_id: request.tenantId,
-        user_id: userId,
-        application_code: APPLICATION_CODE,
+    const { error: profileError } = await client
+      .from("profiles")
+      .update({
         role,
-        is_active: accessEnabled
-      },
-      { onConflict: "tenant_id,user_id,application_code" }
-    );
+        is_active: accessEnabled,
+        updated_at: /* @__PURE__ */ new Date().toISOString(),
+      })
+      .eq("user_id", userId)
+      .eq("tenant_id", request2.tenantId);
+    if (profileError) throw profileError;
+    const { error: membershipError } = await client
+      .from("app_memberships")
+      .upsert(
+        {
+          tenant_id: request2.tenantId,
+          user_id: userId,
+          application_code: APPLICATION_CODE,
+          role,
+          is_active: accessEnabled,
+        },
+        { onConflict: "tenant_id,user_id,application_code" },
+      );
     if (membershipError) throw membershipError;
     await recordAudit(
       client,
-      request,
+      request2,
       "member_updated",
       userId,
       {
         role: target.role,
-        is_active: target.is_active
+        is_active: target.is_active,
       },
-      { role, is_active: accessEnabled }
+      { role, is_active: accessEnabled },
     );
     res.json({ success: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "No fue posible actualizar al usuario.";
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No fue posible actualizar al usuario.";
     const status = message.includes("administrador") ? 409 : 500;
     res.status(status).json(clientErrorBody(message, status));
   }
 });
 router10.post("/admin/invitations", async (req, res) => {
   try {
-    const request = getRequest(req);
+    const request2 = getRequest(req);
     const client = getAdminClient2();
-    await assertFreshAdmin(client, request);
-    const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+    await assertFreshAdmin(client, request2);
+    const email =
+      typeof req.body?.email === "string"
+        ? req.body.email.trim().toLowerCase()
+        : "";
     const role = req.body?.role;
     if (!EMAIL_RE2.test(email) || !isRole(role)) {
-      res.status(400).json({ error: "Ingrese un correo v\xE1lido y un rol existente." });
+      res
+        .status(400)
+        .json({ error: "Ingrese un correo v\xE1lido y un rol existente." });
       return;
     }
-    const { data: existingProfile, error: profileError } = await client.from("profiles").select("user_id,email").eq("tenant_id", request.tenantId).ilike("email", email).maybeSingle();
+    const { data: existingProfile, error: profileError } = await client
+      .from("profiles")
+      .select("user_id,email")
+      .eq("tenant_id", request2.tenantId)
+      .ilike("email", email)
+      .maybeSingle();
     if (profileError) throw profileError;
     if (existingProfile) {
-      res.status(409).json({ error: "Ese correo ya pertenece a un usuario del establecimiento." });
+      res
+        .status(409)
+        .json({
+          error: "Ese correo ya pertenece a un usuario del establecimiento.",
+        });
       return;
     }
-    const { data: existingInvitation, error: invitationError } = await client.from("membership_invitations").select("id").eq("tenant_id", request.tenantId).eq("email", email).eq("status", "pending").maybeSingle();
+    const { data: existingInvitation, error: invitationError } = await client
+      .from("membership_invitations")
+      .select("id")
+      .eq("tenant_id", request2.tenantId)
+      .eq("email", email)
+      .eq("status", "pending")
+      .maybeSingle();
     if (invitationError) throw invitationError;
     if (existingInvitation) {
-      res.status(409).json({ error: "Ya existe una invitaci\xF3n pendiente para ese correo." });
+      res
+        .status(409)
+        .json({
+          error: "Ya existe una invitaci\xF3n pendiente para ese correo.",
+        });
       return;
     }
     const invitation = await client.auth.admin.inviteUserByEmail(email, {
-      data: { tenant_id: request.tenantId, role }
+      data: { tenant_id: request2.tenantId, role },
     });
     if (invitation.error || !invitation.data.user)
       throw invitation.error ?? new Error("No se cre\xF3 el usuario invitado.");
     const invitedUser = invitation.data.user;
-    const { data: invitationRow, error: insertError } = await client.from("membership_invitations").insert({
-      tenant_id: request.tenantId,
-      email,
-      role,
-      application_code: APPLICATION_CODE,
-      auth_user_id: invitedUser.id,
-      invited_by: request.user?.sub
-    }).select("id,email,role,status,created_at,last_sent_at").single();
+    const { data: invitationRow, error: insertError } = await client
+      .from("membership_invitations")
+      .insert({
+        tenant_id: request2.tenantId,
+        email,
+        role,
+        application_code: APPLICATION_CODE,
+        auth_user_id: invitedUser.id,
+        invited_by: request2.user?.sub,
+      })
+      .select("id,email,role,status,created_at,last_sent_at")
+      .single();
     if (insertError) throw insertError;
-    await client.from("profiles").update({ role, is_active: true }).eq("user_id", invitedUser.id).eq("tenant_id", request.tenantId);
+    await client
+      .from("profiles")
+      .update({ role, is_active: true })
+      .eq("user_id", invitedUser.id)
+      .eq("tenant_id", request2.tenantId);
     await client.from("app_memberships").upsert(
       {
-        tenant_id: request.tenantId,
+        tenant_id: request2.tenantId,
         user_id: invitedUser.id,
         application_code: APPLICATION_CODE,
         role,
-        is_active: true
+        is_active: true,
       },
-      { onConflict: "tenant_id,user_id,application_code" }
+      { onConflict: "tenant_id,user_id,application_code" },
     );
-    await recordAudit(client, request, "invitation_created", invitedUser.id, null, { email, role });
+    await recordAudit(
+      client,
+      request2,
+      "invitation_created",
+      invitedUser.id,
+      null,
+      { email, role },
+    );
     res.status(201).json({ invitation: invitationRow });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "No fue posible enviar la invitaci\uFFFDn.";
-    res.status(invitationErrorStatus(message)).json(clientErrorBody(message, invitationErrorStatus(message)));
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No fue posible enviar la invitaci\uFFFDn.";
+    res
+      .status(invitationErrorStatus(message))
+      .json(clientErrorBody(message, invitationErrorStatus(message)));
   }
 });
 router10.post("/admin/invitations/:invitationId/resend", async (req, res) => {
   try {
-    const request = getRequest(req);
+    const request2 = getRequest(req);
     const client = getAdminClient2();
-    await assertFreshAdmin(client, request);
+    await assertFreshAdmin(client, request2);
     if (!req.params.invitationId || !isValidUuid(req.params.invitationId)) {
-      res.status(400).json({ error: "Identificador de invitaci\xF3n inv\xE1lido." });
+      res
+        .status(400)
+        .json({ error: "Identificador de invitaci\xF3n inv\xE1lido." });
       return;
     }
-    const { data, error } = await client.from("membership_invitations").select("id,tenant_id,email,role,auth_user_id,status").eq("id", req.params.invitationId).eq("tenant_id", request.tenantId).maybeSingle();
+    const { data, error } = await client
+      .from("membership_invitations")
+      .select("id,tenant_id,email,role,auth_user_id,status")
+      .eq("id", req.params.invitationId)
+      .eq("tenant_id", request2.tenantId)
+      .maybeSingle();
     if (error) throw error;
     const invitation = data;
     if (!invitation || invitation.status !== "pending") {
@@ -3770,83 +4910,130 @@ router10.post("/admin/invitations/:invitationId/resend", async (req, res) => {
       return;
     }
     const resend = await client.auth.admin.inviteUserByEmail(invitation.email, {
-      data: { tenant_id: request.tenantId, role: invitation.role }
+      data: { tenant_id: request2.tenantId, role: invitation.role },
     });
     if (resend.error) throw resend.error;
-    const now = (/* @__PURE__ */ new Date()).toISOString();
-    await client.from("membership_invitations").update({ last_sent_at: now, updated_at: now }).eq("id", invitation.id).eq("tenant_id", request.tenantId);
+    const now = /* @__PURE__ */ new Date().toISOString();
+    await client
+      .from("membership_invitations")
+      .update({ last_sent_at: now, updated_at: now })
+      .eq("id", invitation.id)
+      .eq("tenant_id", request2.tenantId);
     await recordAudit(
       client,
-      request,
+      request2,
       "invitation_resent",
       invitation.auth_user_id ?? invitation.id,
       null,
-      { email: invitation.email }
+      { email: invitation.email },
     );
     res.json({ success: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "No fue posible reenviar la invitaci\uFFFDn.";
-    res.status(invitationErrorStatus(message)).json(clientErrorBody(message, invitationErrorStatus(message)));
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No fue posible reenviar la invitaci\uFFFDn.";
+    res
+      .status(invitationErrorStatus(message))
+      .json(clientErrorBody(message, invitationErrorStatus(message)));
   }
 });
 router10.post("/admin/invitations/:invitationId/cancel", async (req, res) => {
   try {
-    const request = getRequest(req);
+    const request2 = getRequest(req);
     const client = getAdminClient2();
-    await assertFreshAdmin(client, request);
+    await assertFreshAdmin(client, request2);
     if (!req.params.invitationId || !isValidUuid(req.params.invitationId)) {
-      res.status(400).json({ error: "Identificador de invitaci\xF3n inv\xE1lido." });
+      res
+        .status(400)
+        .json({ error: "Identificador de invitaci\xF3n inv\xE1lido." });
       return;
     }
-    const { data, error } = await client.from("membership_invitations").select("id,email,role,auth_user_id,status").eq("id", req.params.invitationId).eq("tenant_id", request.tenantId).maybeSingle();
+    const { data, error } = await client
+      .from("membership_invitations")
+      .select("id,email,role,auth_user_id,status")
+      .eq("id", req.params.invitationId)
+      .eq("tenant_id", request2.tenantId)
+      .maybeSingle();
     if (error) throw error;
     const invitation = data;
     if (!invitation || invitation.status !== "pending") {
       res.status(404).json({ error: "Invitaci\xF3n pendiente no encontrada." });
       return;
     }
-    const now = (/* @__PURE__ */ new Date()).toISOString();
-    const { error: updateError } = await client.from("membership_invitations").update({ status: "cancelled", cancelled_at: now, updated_at: now }).eq("id", invitation.id).eq("tenant_id", request.tenantId);
+    const now = /* @__PURE__ */ new Date().toISOString();
+    const { error: updateError } = await client
+      .from("membership_invitations")
+      .update({ status: "cancelled", cancelled_at: now, updated_at: now })
+      .eq("id", invitation.id)
+      .eq("tenant_id", request2.tenantId);
     if (updateError) throw updateError;
     if (invitation.auth_user_id) {
-      await client.from("profiles").update({ is_active: false, updated_at: now }).eq("user_id", invitation.auth_user_id).eq("tenant_id", request.tenantId);
-      await client.from("app_memberships").update({ is_active: false, updated_at: now }).eq("user_id", invitation.auth_user_id).eq("tenant_id", request.tenantId).eq("application_code", APPLICATION_CODE);
+      await client
+        .from("profiles")
+        .update({ is_active: false, updated_at: now })
+        .eq("user_id", invitation.auth_user_id)
+        .eq("tenant_id", request2.tenantId);
+      await client
+        .from("app_memberships")
+        .update({ is_active: false, updated_at: now })
+        .eq("user_id", invitation.auth_user_id)
+        .eq("tenant_id", request2.tenantId)
+        .eq("application_code", APPLICATION_CODE);
     }
     await recordAudit(
       client,
-      request,
+      request2,
       "invitation_cancelled",
       invitation.auth_user_id ?? invitation.id,
       { email: invitation.email, role: invitation.role },
-      null
+      null,
     );
     res.json({ success: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "No fue posible cancelar la invitaci\xF3n.";
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No fue posible cancelar la invitaci\xF3n.";
     res.status(500).json(clientErrorBody(message, 500));
   }
 });
 router10.post("/admin/import", ownUpload.single("file"), async (req, res) => {
   try {
-    const request = getRequest(req);
+    const request2 = getRequest(req);
     const client = getAdminClient2();
-    await assertFreshAdmin(client, request);
-    if (!request.tenantId) throw new Error("No fue posible determinar el establecimiento.");
+    await assertFreshAdmin(client, request2);
+    if (!request2.tenantId)
+      throw new Error("No fue posible determinar el establecimiento.");
     if (!req.file?.buffer) {
       res.status(400).json({ error: "Adjunte un archivo .xlsx v\xE1lido." });
       return;
     }
-    const defaultLevel = req.body?.defaultLevel === "MEDIA" ? "MEDIA" : "BASICA";
-    const { parseImportWorkbook: parseImportWorkbook2, runImport: runImport2 } = await Promise.resolve().then(() => (init_excelImport(), excelImport_exports));
+    const defaultLevel =
+      req.body?.defaultLevel === "MEDIA" ? "MEDIA" : "BASICA";
+    const { parseImportWorkbook: parseImportWorkbook2, runImport: runImport2 } =
+      await Promise.resolve().then(
+        () => (init_excelImport(), excelImport_exports),
+      );
     const parsed = await parseImportWorkbook2(req.file.buffer, defaultLevel);
-    const result = await runImport2(client, request.tenantId, parsed);
-    await recordAudit(client, request, "tenant_base_imported", request.tenantId, null, {
-      courses: result.coursesInserted,
-      students: result.studentsInserted
-    });
+    const result = await runImport2(client, request2.tenantId, parsed);
+    await recordAudit(
+      client,
+      request2,
+      "tenant_base_imported",
+      request2.tenantId,
+      null,
+      {
+        courses: result.coursesInserted,
+        students: result.studentsInserted,
+      },
+    );
     res.json(result);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "No fue posible importar la base.";
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No fue posible importar la base.";
     const status = message.includes("permisos") ? 403 : 500;
     res.status(status).json(clientErrorBody(message, status));
   }
@@ -3868,11 +5055,15 @@ function requireSuperAdmin(req, res, next) {
   }
   const role = authReq.profileRole;
   if (!role) {
-    res.status(403).json({ error: "No fue posible determinar el rol del usuario." });
+    res
+      .status(403)
+      .json({ error: "No fue posible determinar el rol del usuario." });
     return;
   }
   if (role !== "superadmin") {
-    res.status(403).json({ error: "Acceso restringido a superadministradores." });
+    res
+      .status(403)
+      .json({ error: "Acceso restringido a superadministradores." });
     return;
   }
   next();
@@ -3880,7 +5071,10 @@ function requireSuperAdmin(req, res, next) {
 
 // server/api/routes/platform.ts
 var router11 = Router11();
-var upload = multer2({ storage: multer2.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+var upload = multer2({
+  storage: multer2.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
 var DEFAULT_TENANT_ID = "00000000-0000-0000-0000-000000000001";
 var APPLICATION_CODE2 = "convivencia";
 var EMAIL_RE3 = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -3889,35 +5083,62 @@ function getRequest2(req) {
 }
 function getAdminClient3() {
   const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) throw new Error("Supabase administrativo no configurado.");
   return createClient4(url, key, {
-    auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false }
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false,
+    },
   });
 }
 function slugify(name) {
-  return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 async function generateUniqueSlug(client, base) {
   const slug = slugify(base) || "colegio";
-  const { data } = await client.from("tenants").select("slug").ilike("slug", `${slug}%`);
+  const { data } = await client
+    .from("tenants")
+    .select("slug")
+    .ilike("slug", `${slug}%`);
   const existing = new Set((data ?? []).map((row) => row.slug));
   if (!existing.has(slug)) return slug;
   let n = 2;
   while (existing.has(`${slug}-${n}`)) n += 1;
   return `${slug}-${n}`;
 }
-async function assertFreshSuperAdmin(client, request) {
-  if (!request.user?.sub) throw new Error("Contexto de plataforma inv\xE1lido.");
-  const { data, error } = await client.from("profiles").select("user_id,role,is_active,tenant_id").eq("user_id", request.user.sub).maybeSingle();
-  if (error || !data) throw new Error("No fue posible validar al superadministrador.");
+async function assertFreshSuperAdmin(client, request2) {
+  if (!request2.user?.sub)
+    throw new Error("Contexto de plataforma inv\xE1lido.");
+  const { data, error } = await client
+    .from("profiles")
+    .select("user_id,role,is_active,tenant_id")
+    .eq("user_id", request2.user.sub)
+    .maybeSingle();
+  if (error || !data)
+    throw new Error("No fue posible validar al superadministrador.");
   const profile = data;
   if (!profile.is_active || profile.role !== "superadmin") {
-    throw new Error("La cuenta no tiene permisos de superadministrador activos.");
+    throw new Error(
+      "La cuenta no tiene permisos de superadministrador activos.",
+    );
   }
 }
 async function copyDefaultTemplates(client, tenantId) {
-  const { data, error } = await client.from("document_templates").select("id,doc_type,label,system_prompt").eq("tenant_id", DEFAULT_TENANT_ID);
+  const { data, error } = await client
+    .from("document_templates")
+    .select("id,doc_type,label,system_prompt")
+    .eq("tenant_id", DEFAULT_TENANT_ID);
   if (error) throw error;
   const templates = data ?? [];
   if (templates.length === 0) return;
@@ -3926,12 +5147,21 @@ async function copyDefaultTemplates(client, tenantId) {
     doc_type: tpl.doc_type,
     label: tpl.label,
     system_prompt: tpl.system_prompt,
-    tenant_id: tenantId
+    tenant_id: tenantId,
   }));
-  const { error: insertError } = await client.from("document_templates").upsert(copies, { onConflict: "tenant_id,doc_type" });
+  const { error: insertError } = await client
+    .from("document_templates")
+    .upsert(copies, { onConflict: "tenant_id,doc_type" });
   if (insertError) throw insertError;
 }
-async function recordAudit2(client, tenantId, actorUserId, action, entityId, newValues) {
+async function recordAudit2(
+  client,
+  tenantId,
+  actorUserId,
+  action,
+  entityId,
+  newValues,
+) {
   const { error } = await client.from("audit_events").insert({
     tenant_id: tenantId,
     actor_user_id: actorUserId,
@@ -3939,64 +5169,102 @@ async function recordAudit2(client, tenantId, actorUserId, action, entityId, new
     entity_type: "tenant",
     entity_id: entityId,
     previous_values: null,
-    new_values: newValues
+    new_values: newValues,
   });
   if (error) throw error;
 }
 router11.use("/platform", requireAuth, requireSuperAdmin);
 router11.get("/platform/tenants", async (req, res) => {
   try {
-    const request = getRequest2(req);
+    const request2 = getRequest2(req);
     const client = getAdminClient3();
-    await assertFreshSuperAdmin(client, request);
-    const { data, error } = await client.from("tenants").select("id,name,slug,created_at").order("created_at", { ascending: false });
+    await assertFreshSuperAdmin(client, request2);
+    const { data, error } = await client
+      .from("tenants")
+      .select("id,name,slug,created_at")
+      .order("created_at", { ascending: false });
     if (error) throw error;
     const tenants = data ?? [];
-    const { data: countsData, error: countsError } = await client.rpc("get_tenant_user_counts");
+    const { data: countsData, error: countsError } = await client.rpc(
+      "get_tenant_user_counts",
+    );
     const rpcAvailable = !countsError && Array.isArray(countsData);
     const rpcCounts = new Map(
-      (Array.isArray(countsData) ? countsData : []).map(
-        (row) => [
-          row.tenant_id,
-          Number(row.user_count) || 0
-        ]
-      )
+      (Array.isArray(countsData) ? countsData : []).map((row) => [
+        row.tenant_id,
+        Number(row.user_count) || 0,
+      ]),
     );
-    const withCounts = rpcAvailable ? tenants.map((tenant) => ({ ...tenant, user_count: rpcCounts.get(tenant.id) ?? 0 })) : await Promise.all(
-      tenants.map(async (tenant) => {
-        const { count, error: countError } = await client.from("profiles").select("user_id", { count: "exact", head: true }).eq("tenant_id", tenant.id);
-        return { ...tenant, user_count: countError ? 0 : count ?? 0 };
-      })
-    );
+    const withCounts = rpcAvailable
+      ? tenants.map((tenant) => ({
+          ...tenant,
+          user_count: rpcCounts.get(tenant.id) ?? 0,
+        }))
+      : await Promise.all(
+          tenants.map(async (tenant) => {
+            const { count, error: countError } = await client
+              .from("profiles")
+              .select("user_id", { count: "exact", head: true })
+              .eq("tenant_id", tenant.id);
+            return { ...tenant, user_count: countError ? 0 : (count ?? 0) };
+          }),
+        );
     res.json({ tenants: withCounts });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "No fue posible cargar los colegios.";
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No fue posible cargar los colegios.";
     const status = message.includes("superadministrador") ? 403 : 500;
     res.status(status).json(clientErrorBody(message, status));
   }
 });
 router11.get("/platform/tenants/:id/summary", async (req, res) => {
   try {
-    const request = getRequest2(req);
+    const request2 = getRequest2(req);
     const client = getAdminClient3();
-    await assertFreshSuperAdmin(client, request);
+    await assertFreshSuperAdmin(client, request2);
     const tenantId = req.params.id;
-    const tenant = await client.from("tenants").select("id").eq("id", tenantId).maybeSingle();
+    const tenant = await client
+      .from("tenants")
+      .select("id")
+      .eq("id", tenantId)
+      .maybeSingle();
     if (tenant.error) throw tenant.error;
     if (!tenant.data) {
       res.status(404).json({ error: "Colegio no encontrado." });
       return;
     }
-    const [users, courses, students, cases, templates, documents] = await Promise.all([
-      client.from("profiles").select("user_id", { count: "exact", head: true }).eq("tenant_id", tenantId),
-      client.from("courses").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId),
-      client.from("students").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId),
-      client.from("causas").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId),
-      client.from("document_templates").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId),
-      client.from("institution_documents").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).eq("status", "active")
-    ]);
+    const [users, courses, students, cases, templates, documents] =
+      await Promise.all([
+        client
+          .from("profiles")
+          .select("user_id", { count: "exact", head: true })
+          .eq("tenant_id", tenantId),
+        client
+          .from("courses")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", tenantId),
+        client
+          .from("students")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", tenantId),
+        client
+          .from("causas")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", tenantId),
+        client
+          .from("document_templates")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", tenantId),
+        client
+          .from("institution_documents")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", tenantId)
+          .eq("status", "active"),
+      ]);
     const failed = [users, courses, students, cases, templates, documents].find(
-      (result) => result.error
+      (result) => result.error,
     );
     if (failed?.error) throw failed.error;
     const summary = {
@@ -4006,11 +5274,14 @@ router11.get("/platform/tenants/:id/summary", async (req, res) => {
       students: students.count ?? 0,
       cases: cases.count ?? 0,
       templates: templates.count ?? 0,
-      institution_documents: documents.count ?? 0
+      institution_documents: documents.count ?? 0,
     };
     res.json(summary);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "No fue posible cargar el resumen del colegio.";
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No fue posible cargar el resumen del colegio.";
     res.status(500).json(clientErrorBody(message, 500));
   }
 });
@@ -4019,130 +5290,198 @@ router11.post("/platform/tenants", async (req, res) => {
   let createdTenantId = null;
   let createdAuthUserId = null;
   try {
-    const request = getRequest2(req);
+    const request2 = getRequest2(req);
     client = getAdminClient3();
-    await assertFreshSuperAdmin(client, request);
+    await assertFreshSuperAdmin(client, request2);
     const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
-    const adminEmail = typeof req.body?.adminEmail === "string" ? req.body.adminEmail.trim().toLowerCase() : "";
-    const providedSlug = typeof req.body?.slug === "string" ? req.body.slug.trim() : "";
+    const adminEmail =
+      typeof req.body?.adminEmail === "string"
+        ? req.body.adminEmail.trim().toLowerCase()
+        : "";
+    const providedSlug =
+      typeof req.body?.slug === "string" ? req.body.slug.trim() : "";
     if (!name || !EMAIL_RE3.test(adminEmail)) {
-      res.status(400).json({ error: "Ingrese un nombre v\xE1lido y un correo de administrador." });
+      res
+        .status(400)
+        .json({
+          error: "Ingrese un nombre v\xE1lido y un correo de administrador.",
+        });
       return;
     }
     const tenantId = randomUUID2();
     createdTenantId = tenantId;
-    const slug = providedSlug ? slugify(providedSlug) || slugify(name) : await generateUniqueSlug(client, name);
-    const { error: tenantError } = await client.from("tenants").insert({ id: tenantId, name, slug });
+    const slug = providedSlug
+      ? slugify(providedSlug) || slugify(name)
+      : await generateUniqueSlug(client, name);
+    const { error: tenantError } = await client
+      .from("tenants")
+      .insert({ id: tenantId, name, slug });
     if (tenantError) throw tenantError;
-    const { error: settingsError } = await client.from("institution_settings").insert({
-      tenant_id: tenantId,
-      official_name: name,
-      education_levels: []
-    });
+    const { error: settingsError } = await client
+      .from("institution_settings")
+      .insert({
+        tenant_id: tenantId,
+        official_name: name,
+        education_levels: [],
+      });
     if (settingsError) throw settingsError;
     const invitation = await client.auth.admin.inviteUserByEmail(adminEmail, {
-      data: { tenant_id: tenantId, role: "admin" }
+      data: { tenant_id: tenantId, role: "admin" },
     });
     if (invitation.error || !invitation.data.user) {
-      throw invitation.error ?? new Error("No se cre\xF3 el usuario administrador invitado.");
+      throw (
+        invitation.error ??
+        new Error("No se cre\xF3 el usuario administrador invitado.")
+      );
     }
     const adminUser = invitation.data.user;
     createdAuthUserId = adminUser.id;
-    const { error: profileError } = await client.from("profiles").update({ role: "admin", is_active: true, updated_at: (/* @__PURE__ */ new Date()).toISOString() }).eq("user_id", adminUser.id).eq("tenant_id", tenantId);
-    if (profileError) throw profileError;
-    const { error: membershipError } = await client.from("app_memberships").upsert(
-      {
-        tenant_id: tenantId,
-        user_id: adminUser.id,
-        application_code: APPLICATION_CODE2,
+    const { error: profileError } = await client
+      .from("profiles")
+      .update({
         role: "admin",
-        is_active: true
-      },
-      { onConflict: "tenant_id,user_id,application_code" }
-    );
+        is_active: true,
+        updated_at: /* @__PURE__ */ new Date().toISOString(),
+      })
+      .eq("user_id", adminUser.id)
+      .eq("tenant_id", tenantId);
+    if (profileError) throw profileError;
+    const { error: membershipError } = await client
+      .from("app_memberships")
+      .upsert(
+        {
+          tenant_id: tenantId,
+          user_id: adminUser.id,
+          application_code: APPLICATION_CODE2,
+          role: "admin",
+          is_active: true,
+        },
+        { onConflict: "tenant_id,user_id,application_code" },
+      );
     if (membershipError) throw membershipError;
     await copyDefaultTemplates(client, tenantId);
-    await recordAudit2(client, tenantId, request.user?.sub, "tenant_provisioned", tenantId, {
-      name,
-      slug,
-      admin_email: adminEmail
-    });
+    await recordAudit2(
+      client,
+      tenantId,
+      request2.user?.sub,
+      "tenant_provisioned",
+      tenantId,
+      {
+        name,
+        slug,
+        admin_email: adminEmail,
+      },
+    );
     res.status(201).json({
       tenant: { id: tenantId, name, slug },
-      invitation: { email: adminEmail, status: "pending" }
+      invitation: { email: adminEmail, status: "pending" },
     });
   } catch (error) {
     if (client) {
       if (createdAuthUserId) {
-        await client.auth.admin.deleteUser(createdAuthUserId).catch(() => void 0);
+        await client.auth.admin
+          .deleteUser(createdAuthUserId)
+          .catch(() => void 0);
       }
       if (createdTenantId) {
         try {
           await client.from("tenants").delete().eq("id", createdTenantId);
-        } catch {
-        }
+        } catch {}
       }
     }
     const message = error instanceof Error ? error.message : "";
     const isSuperAdminError = message.includes("superadministrador");
-    const isRateLimit = /rate limit|too many requests|email rate/i.test(message);
-    const responseMessage = isRateLimit ? "Supabase limit\xF3 temporalmente el env\xEDo de invitaciones. Espere unos minutos antes de reintentar." : isSuperAdminError ? message : "No fue posible crear el colegio. No se guardaron datos incompletos.";
-    res.status(isSuperAdminError ? 403 : isRateLimit ? 429 : 500).json({ error: responseMessage });
+    const isRateLimit = /rate limit|too many requests|email rate/i.test(
+      message,
+    );
+    const responseMessage = isRateLimit
+      ? "Supabase limit\xF3 temporalmente el env\xEDo de invitaciones. Espere unos minutos antes de reintentar."
+      : isSuperAdminError
+        ? message
+        : "No fue posible crear el colegio. No se guardaron datos incompletos.";
+    res
+      .status(isSuperAdminError ? 403 : isRateLimit ? 429 : 500)
+      .json({ error: responseMessage });
   }
 });
 router11.post("/platform/tenants/:id/invite", async (req, res) => {
   try {
-    const request = getRequest2(req);
+    const request2 = getRequest2(req);
     const client = getAdminClient3();
-    await assertFreshSuperAdmin(client, request);
+    await assertFreshSuperAdmin(client, request2);
     const tenantId = req.params.id;
-    const { data, error } = await client.from("profiles").select("user_id,email").eq("tenant_id", tenantId).eq("role", "admin").maybeSingle();
+    const { data, error } = await client
+      .from("profiles")
+      .select("user_id,email")
+      .eq("tenant_id", tenantId)
+      .eq("role", "admin")
+      .maybeSingle();
     if (error) throw error;
     const admin = data;
     if (!admin?.email) {
-      res.status(404).json({ error: "No se encontr\xF3 un administrador para este colegio." });
+      res
+        .status(404)
+        .json({
+          error: "No se encontr\xF3 un administrador para este colegio.",
+        });
       return;
     }
     const resend = await client.auth.admin.inviteUserByEmail(admin.email, {
-      data: { tenant_id: tenantId, role: "admin" }
+      data: { tenant_id: tenantId, role: "admin" },
     });
     if (resend.error) throw resend.error;
     await recordAudit2(
       client,
       tenantId,
-      request.user?.sub,
+      request2.user?.sub,
       "tenant_admin_reinvited",
       admin.user_id,
       {
-        email: admin.email
-      }
+        email: admin.email,
+      },
     );
     res.json({ success: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "No fue posible reenviar la invitaci\xF3n.";
+    const message =
+      error instanceof Error
+        ? error.message
+        : "No fue posible reenviar la invitaci\xF3n.";
     res.status(500).json(clientErrorBody(message, 500));
   }
 });
-router11.post("/platform/tenants/:id/import", upload.single("file"), async (req, res) => {
-  try {
-    const request = getRequest2(req);
-    const client = getAdminClient3();
-    await assertFreshSuperAdmin(client, request);
-    const tenantId = req.params.id;
-    if (!req.file?.buffer) {
-      res.status(400).json({ error: "Adjunte un archivo .xlsx v\xE1lido." });
-      return;
+router11.post(
+  "/platform/tenants/:id/import",
+  upload.single("file"),
+  async (req, res) => {
+    try {
+      const request2 = getRequest2(req);
+      const client = getAdminClient3();
+      await assertFreshSuperAdmin(client, request2);
+      const tenantId = req.params.id;
+      if (!req.file?.buffer) {
+        res.status(400).json({ error: "Adjunte un archivo .xlsx v\xE1lido." });
+        return;
+      }
+      const defaultLevel =
+        req.body?.defaultLevel === "MEDIA" ? "MEDIA" : "BASICA";
+      const {
+        parseImportWorkbook: parseImportWorkbook2,
+        runImport: runImport2,
+      } = await Promise.resolve().then(
+        () => (init_excelImport(), excelImport_exports),
+      );
+      const parsed = await parseImportWorkbook2(req.file.buffer, defaultLevel);
+      const result = await runImport2(client, tenantId, parsed);
+      res.json(result);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "No fue posible importar la base.";
+      res.status(500).json(clientErrorBody(message, 500));
     }
-    const defaultLevel = req.body?.defaultLevel === "MEDIA" ? "MEDIA" : "BASICA";
-    const { parseImportWorkbook: parseImportWorkbook2, runImport: runImport2 } = await Promise.resolve().then(() => (init_excelImport(), excelImport_exports));
-    const parsed = await parseImportWorkbook2(req.file.buffer, defaultLevel);
-    const result = await runImport2(client, tenantId, parsed);
-    res.json(result);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "No fue posible importar la base.";
-    res.status(500).json(clientErrorBody(message, 500));
-  }
-});
+  },
+);
 var platform_default = router11;
 
 // server/api/routes/institution.ts
@@ -4151,40 +5490,52 @@ import { randomUUID as randomUUID3 } from "node:crypto";
 import multer3 from "multer";
 import { createClient as createClient5 } from "@supabase/supabase-js";
 var router12 = Router12();
-var upload2 = multer3({ storage: multer3.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } });
+var upload2 = multer3({
+  storage: multer3.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024 },
+});
 var documentUpload = multer3({
   storage: multer3.memoryStorage(),
-  limits: { fileSize: 20 * 1024 * 1024 }
+  limits: { fileSize: 20 * 1024 * 1024 },
 });
 var ADMIN_ROLES2 = ["superadmin", "admin", "direccion"];
 var CONTENT_LIMIT = 2e5;
 var MIME_EXTENSIONS = {
   "image/png": "png",
   "image/jpeg": "jpg",
-  "image/svg+xml": "svg"
+  "image/svg+xml": "svg",
 };
 var DOCUMENT_MIME_EXTENSIONS = {
   "application/pdf": "pdf",
   "application/msword": "doc",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+    "docx",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
   "text/plain": "txt",
   "image/png": "png",
   "image/jpeg": "jpg",
-  "image/svg+xml": "svg"
+  "image/svg+xml": "svg",
 };
-var INSTITUTION_SETTINGS_COLUMNS = "tenant_id,official_name,institution_rut,address,commune,region,phone,institutional_email,proprietor,director_name,education_levels,logo_path,updated_at,updated_by";
-var RULE_VERSION_COLUMNS = "id,tenant_id,title,version,content,status,effective_at,created_at,updated_at,created_by,published_by";
-var INSTITUTION_DOCUMENT_COLUMNS = "id,tenant_id,title,category,original_name,storage_path,mime_type,size_bytes,status,uploaded_at,archived_at,uploaded_by,archived_by";
+var INSTITUTION_SETTINGS_COLUMNS =
+  "tenant_id,official_name,institution_rut,address,commune,region,phone,institutional_email,proprietor,director_name,education_levels,logo_path,updated_at,updated_by";
+var RULE_VERSION_COLUMNS =
+  "id,tenant_id,title,version,content,status,effective_at,created_at,updated_at,created_by,published_by";
+var INSTITUTION_DOCUMENT_COLUMNS =
+  "id,tenant_id,title,category,original_name,storage_path,mime_type,size_bytes,status,uploaded_at,archived_at,uploaded_by,archived_by";
 function getRequest3(req) {
   return req;
 }
 function getAdminClient4() {
   const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) throw new Error("Supabase administrativo no configurado.");
   return createClient5(url, key, {
-    auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false }
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false,
+    },
   });
 }
 function cleanText(value, max = 500) {
@@ -4195,27 +5546,40 @@ function cleanText(value, max = 500) {
 }
 function parseLevels(value) {
   if (!Array.isArray(value)) return [];
-  return value.filter((item) => typeof item === "string").map((item) => item.trim().toUpperCase()).filter(Boolean).slice(0, 20);
+  return value
+    .filter((item) => typeof item === "string")
+    .map((item) => item.trim().toUpperCase())
+    .filter(Boolean)
+    .slice(0, 20);
 }
 async function getSignedLogoUrl(client, path3) {
   if (!path3) return null;
-  const { data } = await client.storage.from("institution-assets").createSignedUrl(path3, 3600);
+  const { data } = await client.storage
+    .from("institution-assets")
+    .createSignedUrl(path3, 3600);
   return data?.signedUrl ?? null;
 }
 async function withDocumentUrl(client, document) {
-  const { data } = await client.storage.from("institution-assets").createSignedUrl(document.storage_path, 3600);
+  const { data } = await client.storage
+    .from("institution-assets")
+    .createSignedUrl(document.storage_path, 3600);
   return { ...document, download_url: data?.signedUrl ?? null };
 }
 function safeDocumentName(name) {
-  const cleaned = name.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]/g, "_");
+  const cleaned = name
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9._-]/g, "_");
   return cleaned.slice(-120) || "documento";
 }
 async function listDocuments(client, tenantId) {
-  const { data, error } = await client.from("institution_documents").select(INSTITUTION_DOCUMENT_COLUMNS).eq("tenant_id", tenantId).order("uploaded_at", { ascending: false });
+  const { data, error } = await client
+    .from("institution_documents")
+    .select(INSTITUTION_DOCUMENT_COLUMNS)
+    .eq("tenant_id", tenantId)
+    .order("uploaded_at", { ascending: false });
   if (error) throw error;
-  return Promise.all(
-    (data ?? []).map((item) => withDocumentUrl(client, item))
-  );
+  return Promise.all((data ?? []).map((item) => withDocumentUrl(client, item)));
 }
 async function createDocument(client, tenantId, actorUserId, file, body) {
   const extension = DOCUMENT_MIME_EXTENSIONS[file.mimetype];
@@ -4223,38 +5587,60 @@ async function createDocument(client, tenantId, actorUserId, file, body) {
   const title = cleanText(body.title, 200) ?? file.originalname.slice(0, 200);
   const category = cleanText(body.category, 50) ?? "otro";
   const storagePath = `${tenantId}/documents/${randomUUID3()}-${safeDocumentName(file.originalname)}`;
-  const uploadResult = await client.storage.from("institution-assets").upload(storagePath, file.buffer, {
-    contentType: file.mimetype,
-    upsert: false
-  });
+  const uploadResult = await client.storage
+    .from("institution-assets")
+    .upload(storagePath, file.buffer, {
+      contentType: file.mimetype,
+      upsert: false,
+    });
   if (uploadResult.error) throw uploadResult.error;
-  const { data, error } = await client.from("institution_documents").insert({
-    tenant_id: tenantId,
-    title,
-    category,
-    original_name: file.originalname.slice(0, 255),
-    storage_path: storagePath,
-    mime_type: file.mimetype,
-    size_bytes: file.size,
-    uploaded_by: actorUserId ?? null
-  }).select(INSTITUTION_DOCUMENT_COLUMNS).single();
+  const { data, error } = await client
+    .from("institution_documents")
+    .insert({
+      tenant_id: tenantId,
+      title,
+      category,
+      original_name: file.originalname.slice(0, 255),
+      storage_path: storagePath,
+      mime_type: file.mimetype,
+      size_bytes: file.size,
+      uploaded_by: actorUserId ?? null,
+    })
+    .select(INSTITUTION_DOCUMENT_COLUMNS)
+    .single();
   if (error) {
     await client.storage.from("institution-assets").remove([storagePath]);
     throw error;
   }
-  await audit(client, tenantId, actorUserId, "institution_document_uploaded", data.id, null, data);
+  await audit(
+    client,
+    tenantId,
+    actorUserId,
+    "institution_document_uploaded",
+    data.id,
+    null,
+    data,
+  );
   return withDocumentUrl(client, data);
 }
 async function loadSettings(client, tenantId) {
-  const { data, error } = await client.from("institution_settings").select(INSTITUTION_SETTINGS_COLUMNS).eq("tenant_id", tenantId).maybeSingle();
+  const { data, error } = await client
+    .from("institution_settings")
+    .select(INSTITUTION_SETTINGS_COLUMNS)
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
   if (error) throw error;
   if (data) {
     return {
       ...data,
-      logo_url: await getSignedLogoUrl(client, data.logo_path)
+      logo_url: await getSignedLogoUrl(client, data.logo_path),
     };
   }
-  const tenant = await client.from("tenants").select("name").eq("id", tenantId).single();
+  const tenant = await client
+    .from("tenants")
+    .select("name")
+    .eq("id", tenantId)
+    .single();
   if (tenant.error) throw tenant.error;
   return {
     tenant_id: tenantId,
@@ -4270,8 +5656,8 @@ async function loadSettings(client, tenantId) {
     education_levels: [],
     logo_path: null,
     logo_url: null,
-    updated_at: (/* @__PURE__ */ new Date()).toISOString(),
-    updated_by: null
+    updated_at: /* @__PURE__ */ new Date().toISOString(),
+    updated_by: null,
   };
 }
 async function loadDocumentSettings(client, tenantId) {
@@ -4279,10 +5665,18 @@ async function loadDocumentSettings(client, tenantId) {
   return {
     tenant_id: settings.tenant_id,
     official_name: settings.official_name,
-    logo_url: settings.logo_url ?? null
+    logo_url: settings.logo_url ?? null,
   };
 }
-async function audit(client, tenantId, actorUserId, action, entityId, previousValues, newValues) {
+async function audit(
+  client,
+  tenantId,
+  actorUserId,
+  action,
+  entityId,
+  previousValues,
+  newValues,
+) {
   const { error } = await client.from("audit_events").insert({
     tenant_id: tenantId,
     actor_user_id: actorUserId,
@@ -4290,28 +5684,35 @@ async function audit(client, tenantId, actorUserId, action, entityId, previousVa
     entity_type: "institution",
     entity_id: entityId,
     previous_values: previousValues,
-    new_values: newValues
+    new_values: newValues,
   });
   if (error) throw error;
 }
 async function assertTargetTenant(client, tenantId) {
-  const { data, error } = await client.from("tenants").select("id").eq("id", tenantId).maybeSingle();
+  const { data, error } = await client
+    .from("tenants")
+    .select("id")
+    .eq("id", tenantId)
+    .maybeSingle();
   if (error) throw error;
   if (!data) throw new Error("Colegio no encontrado.");
 }
-async function getTenantFromRequest(client, request, targetTenantId) {
+async function getTenantFromRequest(client, request2, targetTenantId) {
   if (targetTenantId) {
-    if (request.profileRole !== "superadmin")
+    if (request2.profileRole !== "superadmin")
       throw new Error("Solo el superadministrador puede cambiar de colegio.");
     await assertTargetTenant(client, targetTenantId);
     return targetTenantId;
   }
-  if (!request.tenantId) throw new Error("No fue posible determinar el colegio.");
-  return request.tenantId;
+  if (!request2.tenantId)
+    throw new Error("No fue posible determinar el colegio.");
+  return request2.tenantId;
 }
 async function updateSettings(client, tenantId, actorUserId, body) {
   const previous = await loadSettings(client, tenantId);
-  const officialName = cleanText(body.official_name ?? body.officialName, 200) ?? previous.official_name;
+  const officialName =
+    cleanText(body.official_name ?? body.officialName, 200) ??
+    previous.official_name;
   if (!officialName) throw new Error("El nombre oficial es obligatorio.");
   const values = {
     tenant_id: tenantId,
@@ -4321,13 +5722,20 @@ async function updateSettings(client, tenantId, actorUserId, body) {
     commune: cleanText(body.commune, 100),
     region: cleanText(body.region, 100),
     phone: cleanText(body.phone, 40),
-    institutional_email: cleanText(body.institutional_email ?? body.institutionalEmail, 180),
+    institutional_email: cleanText(
+      body.institutional_email ?? body.institutionalEmail,
+      180,
+    ),
     proprietor: cleanText(body.proprietor, 200),
     director_name: cleanText(body.director_name ?? body.directorName, 200),
-    education_levels: parseLevels(body.education_levels ?? body.educationLevels),
-    updated_by: actorUserId ?? null
+    education_levels: parseLevels(
+      body.education_levels ?? body.educationLevels,
+    ),
+    updated_by: actorUserId ?? null,
   };
-  const { error } = await client.from("institution_settings").upsert(values, { onConflict: "tenant_id" });
+  const { error } = await client
+    .from("institution_settings")
+    .upsert(values, { onConflict: "tenant_id" });
   if (error) throw error;
   await audit(
     client,
@@ -4336,12 +5744,16 @@ async function updateSettings(client, tenantId, actorUserId, body) {
     "institution_settings_updated",
     tenantId,
     previous,
-    values
+    values,
   );
   return loadSettings(client, tenantId);
 }
 async function listRules(client, tenantId) {
-  const { data, error } = await client.from("institution_rule_versions").select(RULE_VERSION_COLUMNS).eq("tenant_id", tenantId).order("updated_at", { ascending: false });
+  const { data, error } = await client
+    .from("institution_rule_versions")
+    .select(RULE_VERSION_COLUMNS)
+    .eq("tenant_id", tenantId)
+    .order("updated_at", { ascending: false });
   if (error) throw error;
   return data ?? [];
 }
@@ -4351,20 +5763,59 @@ async function createRule(client, tenantId, actorUserId, body) {
   const content = typeof body.content === "string" ? body.content.trim() : "";
   if (!title || !version || !content)
     throw new Error("T\xEDtulo, versi\xF3n y contenido son obligatorios.");
-  if (content.length > CONTENT_LIMIT) throw new Error("El reglamento supera el l\xEDmite permitido.");
-  const { data, error } = await client.from("institution_rule_versions").insert({ tenant_id: tenantId, title, version, content, created_by: actorUserId ?? null }).select(RULE_VERSION_COLUMNS).single();
+  if (content.length > CONTENT_LIMIT)
+    throw new Error("El reglamento supera el l\xEDmite permitido.");
+  const { data, error } = await client
+    .from("institution_rule_versions")
+    .insert({
+      tenant_id: tenantId,
+      title,
+      version,
+      content,
+      created_by: actorUserId ?? null,
+    })
+    .select(RULE_VERSION_COLUMNS)
+    .single();
   if (error) throw error;
-  await audit(client, tenantId, actorUserId, "institution_rule_created", data.id, null, data);
+  await audit(
+    client,
+    tenantId,
+    actorUserId,
+    "institution_rule_created",
+    data.id,
+    null,
+    data,
+  );
   return data;
 }
 async function publishRule(client, tenantId, ruleId, actorUserId) {
-  const selected = await client.from("institution_rule_versions").select(RULE_VERSION_COLUMNS).eq("id", ruleId).eq("tenant_id", tenantId).maybeSingle();
+  const selected = await client
+    .from("institution_rule_versions")
+    .select(RULE_VERSION_COLUMNS)
+    .eq("id", ruleId)
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
   if (selected.error) throw selected.error;
-  if (!selected.data) throw new Error("Versi\xF3n de reglamento no encontrada.");
-  const archived = await client.from("institution_rule_versions").update({ status: "archived" }).eq("tenant_id", tenantId).eq("status", "active");
+  if (!selected.data)
+    throw new Error("Versi\xF3n de reglamento no encontrada.");
+  const archived = await client
+    .from("institution_rule_versions")
+    .update({ status: "archived" })
+    .eq("tenant_id", tenantId)
+    .eq("status", "active");
   if (archived.error) throw archived.error;
-  const now = (/* @__PURE__ */ new Date()).toISOString();
-  const active = await client.from("institution_rule_versions").update({ status: "active", effective_at: now, published_by: actorUserId ?? null }).eq("id", ruleId).eq("tenant_id", tenantId).select(RULE_VERSION_COLUMNS).single();
+  const now = /* @__PURE__ */ new Date().toISOString();
+  const active = await client
+    .from("institution_rule_versions")
+    .update({
+      status: "active",
+      effective_at: now,
+      published_by: actorUserId ?? null,
+    })
+    .eq("id", ruleId)
+    .eq("tenant_id", tenantId)
+    .select(RULE_VERSION_COLUMNS)
+    .single();
   if (active.error) throw active.error;
   await audit(
     client,
@@ -4373,7 +5824,7 @@ async function publishRule(client, tenantId, ruleId, actorUserId) {
     "institution_rule_published",
     ruleId,
     selected.data,
-    active.data
+    active.data,
   );
   return active.data;
 }
@@ -4382,19 +5833,21 @@ async function uploadLogo(client, tenantId, actorUserId, file) {
   if (!extension) throw new Error("El logo debe ser PNG, JPG o SVG.");
   const current = await loadSettings(client, tenantId);
   const path3 = `${tenantId}/logo.${extension}`;
-  const uploadResult = await client.storage.from("institution-assets").upload(path3, file.buffer, {
-    contentType: file.mimetype,
-    upsert: true
-  });
+  const uploadResult = await client.storage
+    .from("institution-assets")
+    .upload(path3, file.buffer, {
+      contentType: file.mimetype,
+      upsert: true,
+    });
   if (uploadResult.error) throw uploadResult.error;
   const { error } = await client.from("institution_settings").upsert(
     {
       tenant_id: tenantId,
       official_name: current.official_name,
       logo_path: path3,
-      updated_by: actorUserId ?? null
+      updated_by: actorUserId ?? null,
     },
-    { onConflict: "tenant_id" }
+    { onConflict: "tenant_id" },
   );
   if (error) throw error;
   await audit(
@@ -4404,60 +5857,100 @@ async function uploadLogo(client, tenantId, actorUserId, file) {
     "institution_logo_updated",
     tenantId,
     { logo_path: current.logo_path },
-    { logo_path: path3 }
+    { logo_path: path3 },
   );
   return loadSettings(client, tenantId);
 }
 async function sendError(res, error) {
-  const message = error instanceof Error ? error.message : "No fue posible actualizar la configuraci\uFFFDn.";
+  const message =
+    error instanceof Error
+      ? error.message
+      : "No fue posible actualizar la configuraci\uFFFDn.";
   const status = message.includes("Solo el superadministrador") ? 403 : 500;
   res.status(status).json(clientErrorBody(message, status));
 }
-router12.get("/institution/settings", requireAuth, requireTenant, async (req, res) => {
-  try {
-    const request = getRequest3(req);
-    const client = getAdminClient4();
-    const tenantId = await getTenantFromRequest(client, request);
-    res.json(await loadDocumentSettings(client, tenantId));
-  } catch (error) {
-    await sendError(res, error);
-  }
-});
-router12.use("/admin/institution", requireAuth, requireTenant, requireRole(ADMIN_ROLES2));
-router12.use("/admin/rules", requireAuth, requireTenant, requireRole(ADMIN_ROLES2));
-router12.get("/onboarding/status", requireAuth, requireTenant, async (req, res) => {
-  try {
-    const request = getRequest3(req);
-    const client = getAdminClient4();
-    const tenantId = request.tenantId;
-    if (!tenantId) throw new Error("No fue posible determinar el colegio.");
-    const [settings, courses, templates, members, rules] = await Promise.all([
-      client.from("institution_settings").select("tenant_id").eq("tenant_id", tenantId).maybeSingle(),
-      client.from("courses").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId),
-      client.from("document_templates").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId),
-      client.from("profiles").select("user_id", { count: "exact", head: true }).eq("tenant_id", tenantId),
-      client.from("institution_rule_versions").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).eq("status", "active")
-    ]);
-    const queryError = [settings, courses, templates, members, rules].find(
-      (result) => result.error
-    )?.error;
-    if (queryError) throw queryError;
-    res.json({
-      profile: Boolean(settings.data),
-      courses: (courses.count ?? 0) > 0,
-      templates: (templates.count ?? 0) > 0,
-      members: (members.count ?? 0) > 1,
-      rules: (rules.count ?? 0) > 0
-    });
-  } catch (error) {
-    await sendError(res, error);
-  }
-});
+router12.get(
+  "/institution/settings",
+  requireAuth,
+  requireTenant,
+  async (req, res) => {
+    try {
+      const request2 = getRequest3(req);
+      const client = getAdminClient4();
+      const tenantId = await getTenantFromRequest(client, request2);
+      res.json(await loadDocumentSettings(client, tenantId));
+    } catch (error) {
+      await sendError(res, error);
+    }
+  },
+);
+router12.use(
+  "/admin/institution",
+  requireAuth,
+  requireTenant,
+  requireRole(ADMIN_ROLES2),
+);
+router12.use(
+  "/admin/rules",
+  requireAuth,
+  requireTenant,
+  requireRole(ADMIN_ROLES2),
+);
+router12.get(
+  "/onboarding/status",
+  requireAuth,
+  requireTenant,
+  async (req, res) => {
+    try {
+      const request2 = getRequest3(req);
+      const client = getAdminClient4();
+      const tenantId = request2.tenantId;
+      if (!tenantId) throw new Error("No fue posible determinar el colegio.");
+      const [settings, courses, templates, members, rules] = await Promise.all([
+        client
+          .from("institution_settings")
+          .select("tenant_id")
+          .eq("tenant_id", tenantId)
+          .maybeSingle(),
+        client
+          .from("courses")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", tenantId),
+        client
+          .from("document_templates")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", tenantId),
+        client
+          .from("profiles")
+          .select("user_id", { count: "exact", head: true })
+          .eq("tenant_id", tenantId),
+        client
+          .from("institution_rule_versions")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", tenantId)
+          .eq("status", "active"),
+      ]);
+      const queryError = [settings, courses, templates, members, rules].find(
+        (result) => result.error,
+      )?.error;
+      if (queryError) throw queryError;
+      res.json({
+        profile: Boolean(settings.data),
+        courses: (courses.count ?? 0) > 0,
+        templates: (templates.count ?? 0) > 0,
+        members: (members.count ?? 0) > 1,
+        rules: (rules.count ?? 0) > 0,
+      });
+    } catch (error) {
+      await sendError(res, error);
+    }
+  },
+);
 router12.get("/admin/institution", async (req, res) => {
   try {
-    const request = getRequest3(req);
+    const request2 = getRequest3(req);
     const client = getAdminClient4();
-    const tenantId = await getTenantFromRequest(client, request);
+    const tenantId = await getTenantFromRequest(client, request2);
     res.json(await loadSettings(client, tenantId));
   } catch (error) {
     await sendError(res, error);
@@ -4465,30 +5958,43 @@ router12.get("/admin/institution", async (req, res) => {
 });
 router12.patch("/admin/institution", async (req, res) => {
   try {
-    const request = getRequest3(req);
+    const request2 = getRequest3(req);
     const client = getAdminClient4();
-    const tenantId = await getTenantFromRequest(client, request);
-    res.json(await updateSettings(client, tenantId, request.user?.sub, req.body ?? {}));
+    const tenantId = await getTenantFromRequest(client, request2);
+    res.json(
+      await updateSettings(
+        client,
+        tenantId,
+        request2.user?.sub,
+        req.body ?? {},
+      ),
+    );
   } catch (error) {
     await sendError(res, error);
   }
 });
-router12.post("/admin/institution/logo", upload2.single("logo"), async (req, res) => {
-  try {
-    const request = getRequest3(req);
-    const client = getAdminClient4();
-    const tenantId = await getTenantFromRequest(client, request);
-    if (!req.file) throw new Error("Seleccione un archivo de logo.");
-    res.json(await uploadLogo(client, tenantId, request.user?.sub, req.file));
-  } catch (error) {
-    await sendError(res, error);
-  }
-});
+router12.post(
+  "/admin/institution/logo",
+  upload2.single("logo"),
+  async (req, res) => {
+    try {
+      const request2 = getRequest3(req);
+      const client = getAdminClient4();
+      const tenantId = await getTenantFromRequest(client, request2);
+      if (!req.file) throw new Error("Seleccione un archivo de logo.");
+      res.json(
+        await uploadLogo(client, tenantId, request2.user?.sub, req.file),
+      );
+    } catch (error) {
+      await sendError(res, error);
+    }
+  },
+);
 router12.get("/admin/rules", async (req, res) => {
   try {
-    const request = getRequest3(req);
+    const request2 = getRequest3(req);
     const client = getAdminClient4();
-    const tenantId = await getTenantFromRequest(client, request);
+    const tenantId = await getTenantFromRequest(client, request2);
     res.json({ rules: await listRules(client, tenantId) });
   } catch (error) {
     await sendError(res, error);
@@ -4496,34 +6002,47 @@ router12.get("/admin/rules", async (req, res) => {
 });
 router12.post("/admin/rules", async (req, res) => {
   try {
-    const request = getRequest3(req);
+    const request2 = getRequest3(req);
     const client = getAdminClient4();
-    const tenantId = await getTenantFromRequest(client, request);
-    res.status(201).json(await createRule(client, tenantId, request.user?.sub, req.body ?? {}));
+    const tenantId = await getTenantFromRequest(client, request2);
+    res
+      .status(201)
+      .json(
+        await createRule(client, tenantId, request2.user?.sub, req.body ?? {}),
+      );
   } catch (error) {
     await sendError(res, error);
   }
 });
 router12.patch("/admin/rules/:id", async (req, res) => {
   try {
-    const request = getRequest3(req);
+    const request2 = getRequest3(req);
     const client = getAdminClient4();
-    const tenantId = await getTenantFromRequest(client, request);
+    const tenantId = await getTenantFromRequest(client, request2);
     const updates = {
       title: cleanText(req.body?.title, 200),
       version: cleanText(req.body?.version, 50),
-      content: typeof req.body?.content === "string" ? req.body.content.trim().slice(0, CONTENT_LIMIT) : void 0
+      content:
+        typeof req.body?.content === "string"
+          ? req.body.content.trim().slice(0, CONTENT_LIMIT)
+          : void 0,
     };
-    const { data, error } = await client.from("institution_rule_versions").update(updates).eq("id", req.params.id).eq("tenant_id", tenantId).select(RULE_VERSION_COLUMNS).single();
+    const { data, error } = await client
+      .from("institution_rule_versions")
+      .update(updates)
+      .eq("id", req.params.id)
+      .eq("tenant_id", tenantId)
+      .select(RULE_VERSION_COLUMNS)
+      .single();
     if (error) throw error;
     await audit(
       client,
       tenantId,
-      request.user?.sub,
+      request2.user?.sub,
       "institution_rule_updated",
       req.params.id,
       null,
-      data
+      data,
     );
     res.json(data);
   } catch (error) {
@@ -4532,16 +6051,26 @@ router12.patch("/admin/rules/:id", async (req, res) => {
 });
 router12.post("/admin/rules/:id/publish", async (req, res) => {
   try {
-    const request = getRequest3(req);
+    const request2 = getRequest3(req);
     const client = getAdminClient4();
-    const tenantId = await getTenantFromRequest(client, request);
-    res.json(await publishRule(client, tenantId, req.params.id, request.user?.sub));
+    const tenantId = await getTenantFromRequest(client, request2);
+    res.json(
+      await publishRule(client, tenantId, req.params.id, request2.user?.sub),
+    );
   } catch (error) {
     await sendError(res, error);
   }
 });
-router12.use("/platform/tenants/:tenantId/institution", requireAuth, requireSuperAdmin);
-router12.use("/platform/tenants/:tenantId/rules", requireAuth, requireSuperAdmin);
+router12.use(
+  "/platform/tenants/:tenantId/institution",
+  requireAuth,
+  requireSuperAdmin,
+);
+router12.use(
+  "/platform/tenants/:tenantId/rules",
+  requireAuth,
+  requireSuperAdmin,
+);
 router12.get("/platform/tenants/:tenantId/institution", async (req, res) => {
   try {
     const client = getAdminClient4();
@@ -4554,11 +6083,18 @@ router12.get("/platform/tenants/:tenantId/institution", async (req, res) => {
 });
 router12.patch("/platform/tenants/:tenantId/institution", async (req, res) => {
   try {
-    const request = getRequest3(req);
+    const request2 = getRequest3(req);
     const client = getAdminClient4();
     const tenantId = req.params.tenantId;
     await assertTargetTenant(client, tenantId);
-    res.json(await updateSettings(client, tenantId, request.user?.sub, req.body ?? {}));
+    res.json(
+      await updateSettings(
+        client,
+        tenantId,
+        request2.user?.sub,
+        req.body ?? {},
+      ),
+    );
   } catch (error) {
     await sendError(res, error);
   }
@@ -4568,16 +6104,18 @@ router12.post(
   upload2.single("logo"),
   async (req, res) => {
     try {
-      const request = getRequest3(req);
+      const request2 = getRequest3(req);
       const client = getAdminClient4();
       const tenantId = req.params.tenantId;
       await assertTargetTenant(client, tenantId);
       if (!req.file) throw new Error("Seleccione un archivo de logo.");
-      res.json(await uploadLogo(client, tenantId, request.user?.sub, req.file));
+      res.json(
+        await uploadLogo(client, tenantId, request2.user?.sub, req.file),
+      );
     } catch (error) {
       await sendError(res, error);
     }
-  }
+  },
 );
 router12.get("/platform/tenants/:tenantId/rules", async (req, res) => {
   try {
@@ -4591,27 +6129,40 @@ router12.get("/platform/tenants/:tenantId/rules", async (req, res) => {
 });
 router12.post("/platform/tenants/:tenantId/rules", async (req, res) => {
   try {
-    const request = getRequest3(req);
+    const request2 = getRequest3(req);
     const client = getAdminClient4();
     const tenantId = req.params.tenantId;
     await assertTargetTenant(client, tenantId);
-    res.status(201).json(await createRule(client, tenantId, request.user?.sub, req.body ?? {}));
+    res
+      .status(201)
+      .json(
+        await createRule(client, tenantId, request2.user?.sub, req.body ?? {}),
+      );
   } catch (error) {
     await sendError(res, error);
   }
 });
-router12.post("/platform/tenants/:tenantId/rules/:id/publish", async (req, res) => {
-  try {
-    const request = getRequest3(req);
-    const client = getAdminClient4();
-    const tenantId = req.params.tenantId;
-    await assertTargetTenant(client, tenantId);
-    res.json(await publishRule(client, tenantId, req.params.id, request.user?.sub));
-  } catch (error) {
-    await sendError(res, error);
-  }
-});
-router12.use("/platform/tenants/:tenantId/documents", requireAuth, requireSuperAdmin);
+router12.post(
+  "/platform/tenants/:tenantId/rules/:id/publish",
+  async (req, res) => {
+    try {
+      const request2 = getRequest3(req);
+      const client = getAdminClient4();
+      const tenantId = req.params.tenantId;
+      await assertTargetTenant(client, tenantId);
+      res.json(
+        await publishRule(client, tenantId, req.params.id, request2.user?.sub),
+      );
+    } catch (error) {
+      await sendError(res, error);
+    }
+  },
+);
+router12.use(
+  "/platform/tenants/:tenantId/documents",
+  requireAuth,
+  requireSuperAdmin,
+);
 router12.get("/platform/tenants/:tenantId/documents", async (req, res) => {
   try {
     const client = getAdminClient4();
@@ -4627,7 +6178,7 @@ router12.post(
   documentUpload.single("document"),
   async (req, res) => {
     try {
-      const request = getRequest3(req);
+      const request2 = getRequest3(req);
       const client = getAdminClient4();
       const tenantId = req.params.tenantId;
       await assertTargetTenant(client, tenantId);
@@ -4635,64 +6186,88 @@ router12.post(
         res.status(400).json({ error: "Seleccione un documento." });
         return;
       }
-      res.status(201).json(await createDocument(client, tenantId, request.user?.sub, req.file, req.body ?? {}));
+      res
+        .status(201)
+        .json(
+          await createDocument(
+            client,
+            tenantId,
+            request2.user?.sub,
+            req.file,
+            req.body ?? {},
+          ),
+        );
     } catch (error) {
       await sendError(res, error);
     }
-  }
+  },
 );
-router12.post("/platform/tenants/:tenantId/documents/:id/archive", async (req, res) => {
-  try {
-    const request = getRequest3(req);
-    const client = getAdminClient4();
-    const tenantId = req.params.tenantId;
-    await assertTargetTenant(client, tenantId);
-    const { data, error } = await client.from("institution_documents").update({
-      status: "archived",
-      archived_at: (/* @__PURE__ */ new Date()).toISOString(),
-      archived_by: request.user?.sub ?? null
-    }).eq("id", req.params.id).eq("tenant_id", tenantId).eq("status", "active").select(INSTITUTION_DOCUMENT_COLUMNS).maybeSingle();
-    if (error) throw error;
-    if (!data) {
-      res.status(404).json({ error: "Documento activo no encontrado." });
-      return;
+router12.post(
+  "/platform/tenants/:tenantId/documents/:id/archive",
+  async (req, res) => {
+    try {
+      const request2 = getRequest3(req);
+      const client = getAdminClient4();
+      const tenantId = req.params.tenantId;
+      await assertTargetTenant(client, tenantId);
+      const { data, error } = await client
+        .from("institution_documents")
+        .update({
+          status: "archived",
+          archived_at: /* @__PURE__ */ new Date().toISOString(),
+          archived_by: request2.user?.sub ?? null,
+        })
+        .eq("id", req.params.id)
+        .eq("tenant_id", tenantId)
+        .eq("status", "active")
+        .select(INSTITUTION_DOCUMENT_COLUMNS)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) {
+        res.status(404).json({ error: "Documento activo no encontrado." });
+        return;
+      }
+      await audit(
+        client,
+        tenantId,
+        request2.user?.sub,
+        "institution_document_archived",
+        req.params.id,
+        { status: "active" },
+        data,
+      );
+      res.json(await withDocumentUrl(client, data));
+    } catch (error) {
+      await sendError(res, error);
     }
-    await audit(
-      client,
-      tenantId,
-      request.user?.sub,
-      "institution_document_archived",
-      req.params.id,
-      { status: "active" },
-      data
-    );
-    res.json(await withDocumentUrl(client, data));
-  } catch (error) {
-    await sendError(res, error);
-  }
-});
+  },
+);
 var institution_default = router12;
 
 // server/api/index.ts
 var __filename = fileURLToPath(import.meta.url);
 var __dirname = path2.dirname(__filename);
-var allowedOrigins = (process.env.ALLOWED_ORIGINS || "").split(",").map((o) => o.trim()).filter(Boolean);
+var allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
 function ensureJwtConfig() {
   if (process.env.NODE_ENV === "production") {
     const hasLegacy = Boolean(
-      process.env.SUPABASE_JWT_SECRET && process.env.SUPABASE_JWT_SECRET.length > 0
+      process.env.SUPABASE_JWT_SECRET &&
+      process.env.SUPABASE_JWT_SECRET.length > 0,
     );
     const hasSupabase = Boolean(
-      process.env.VITE_SUPABASE_URL && process.env.VITE_SUPABASE_URL.length > 0
+      process.env.VITE_SUPABASE_URL && process.env.VITE_SUPABASE_URL.length > 0,
     );
     if (!hasLegacy && !hasSupabase) {
       throw new Error(
-        "Missing SUPABASE_JWT_SECRET and VITE_SUPABASE_URL (no JWKS). Aborting startup to avoid running with degraded JWT verification."
+        "Missing SUPABASE_JWT_SECRET and VITE_SUPABASE_URL (no JWKS). Aborting startup to avoid running with degraded JWT verification.",
       );
     }
     if (!hasLegacy) {
       console.warn(
-        "[jwt] SUPABASE_JWT_SECRET no configurado: verificaci\xF3n HMAC deshabilitada; se usar\xE1 JWKS (ES256) y fallback a Supabase API."
+        "[jwt] SUPABASE_JWT_SECRET no configurado: verificaci\xF3n HMAC deshabilitada; se usar\xE1 JWKS (ES256) y fallback a Supabase API.",
       );
     }
   }
@@ -4704,16 +6279,16 @@ app.use(compression());
 app.use(
   helmet({
     contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false
-  })
+    crossOriginEmbedderPolicy: false,
+  }),
 );
 app.use(
   cors({
     origin: allowedOrigins.length > 0 ? allowedOrigins : false,
     credentials: allowedOrigins.length > 0,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
-  })
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
 );
 app.use(express.json({ limit: "100kb" }));
 app.get("/api/health", (_req, res) => {
@@ -4738,9 +6313,7 @@ app.get("*", (_req, res) => {
   res.sendFile(path2.join(distPath, "index.html"));
 });
 var index_default = app;
-export {
-  index_default as default
-};
+export { index_default as default };
 /** @license SPDX-License-Identifier: Apache-2.0 */
 /**
  * @license

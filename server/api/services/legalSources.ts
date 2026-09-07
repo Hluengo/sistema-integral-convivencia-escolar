@@ -1,9 +1,9 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { readdir, readFile } from 'node:fs/promises';
-import path from 'node:path';
+import { readdir, readFile } from "node:fs/promises";
+import path from "node:path";
 
-const LEGAL_SOURCES_DIRECTORY = path.join(process.cwd(), 'docs', 'leyes');
+const LEGAL_SOURCES_DIRECTORY = path.join(process.cwd(), "docs", "leyes");
 interface LegalSource {
   name: string;
   text: string;
@@ -13,39 +13,39 @@ interface LegalSource {
 let cachedSources: Promise<LegalSource[]> | null = null;
 
 const STOP_WORDS = new Set([
-  'ante',
-  'bajo',
-  'cada',
-  'como',
-  'con',
-  'contra',
-  'cual',
-  'cuales',
-  'cuando',
-  'debe',
-  'desde',
-  'donde',
-  'entre',
-  'esta',
-  'este',
-  'estos',
-  'haber',
-  'hasta',
-  'legal',
-  'leyes',
-  'para',
-  'pero',
-  'por',
-  'que',
-  'segun',
-  'sobre',
-  'solo',
-  'sus',
-  'todo',
-  'una',
-  'unos',
-  'uso',
-  'y',
+  "ante",
+  "bajo",
+  "cada",
+  "como",
+  "con",
+  "contra",
+  "cual",
+  "cuales",
+  "cuando",
+  "debe",
+  "desde",
+  "donde",
+  "entre",
+  "esta",
+  "este",
+  "estos",
+  "haber",
+  "hasta",
+  "legal",
+  "leyes",
+  "para",
+  "pero",
+  "por",
+  "que",
+  "segun",
+  "sobre",
+  "solo",
+  "sus",
+  "todo",
+  "una",
+  "unos",
+  "uso",
+  "y",
 ]);
 
 async function listMarkdownFiles(directory: string): Promise<string[]> {
@@ -54,10 +54,14 @@ async function listMarkdownFiles(directory: string): Promise<string[]> {
     entries.map(async (entry) => {
       const entryPath = path.join(directory, entry.name);
       if (entry.isDirectory()) return listMarkdownFiles(entryPath);
-      return entry.isFile() && entry.name.toLowerCase().endsWith('.md') ? [entryPath] : [];
+      return entry.isFile() && entry.name.toLowerCase().endsWith(".md")
+        ? [entryPath]
+        : [];
     }),
   );
-  return nested.flat().sort((left, right) => left.localeCompare(right, 'es-CL'));
+  return nested
+    .flat()
+    .sort((left, right) => left.localeCompare(right, "es-CL"));
 }
 
 /**
@@ -72,17 +76,18 @@ async function loadAuthorizedLegalSources(): Promise<LegalSource[]> {
       const contents = await Promise.all(
         files.map(async (file) => ({
           name: path.relative(LEGAL_SOURCES_DIRECTORY, file),
-          text: await readFile(file, 'utf8'),
-          normalizedText: '',
+          text: await readFile(file, "utf8"),
+          normalizedText: "",
         })),
       );
-      if (!contents.length) throw new Error('No hay fuentes jurídicas disponibles en docs/leyes.');
+      if (!contents.length)
+        throw new Error("No hay fuentes jurídicas disponibles en docs/leyes.");
       return contents.map((source) => ({
         ...source,
         normalizedText: source.text
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .toLocaleLowerCase('es-CL'),
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLocaleLowerCase("es-CL"),
       }));
     })();
   }
@@ -93,9 +98,9 @@ function searchTerms(value: string): string[] {
   return [
     ...new Set(
       value
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLocaleLowerCase('es-CL')
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLocaleLowerCase("es-CL")
         .match(/[a-z0-9]{3,}/g)
         ?.filter((term) => !STOP_WORDS.has(term)) ?? [],
     ),
@@ -103,24 +108,39 @@ function searchTerms(value: string): string[] {
 }
 
 function sourceScore(source: LegalSource, terms: string[]): number {
-  const haystack = `${source.name}\n${source.normalizedText}`;
+  const normalizedName = source.name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("es-CL");
+  const haystack = `${normalizedName}\n${source.normalizedText}`;
   return terms.reduce((score, term) => {
-    const matches = haystack.match(new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'));
+    const matches = haystack.match(
+      new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
+    );
     const count = matches?.length ?? 0;
     // Primero se privilegia cubrir varios términos concretos de la consulta.
     // Así una fuente breve y especializada (p. ej. una resolución anual) no
     // queda desplazada por una ley extensa que repite vocabulario genérico.
-    return score + (count ? 100 : 0) + Math.min(count, 12);
+    return (
+      score +
+      (count ? 100 : 0) +
+      Math.min(count, 12) +
+      (normalizedName.includes(term) ? 100 : 0)
+    );
   }, 0);
 }
 
-function relevantExcerpt(text: string, terms: string[], maxChars: number): string {
+function relevantExcerpt(
+  text: string,
+  terms: string[],
+  maxChars: number,
+): string {
   if (text.length <= maxChars) return text;
 
   const normalized = text
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLocaleLowerCase('es-CL');
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("es-CL");
   const anchorPositions = terms
     .flatMap((term) => {
       const positions: number[] = [];
@@ -140,7 +160,10 @@ function relevantExcerpt(text: string, terms: string[], maxChars: number): strin
   excerpts.push(text.slice(0, headerLength));
   const remaining = maxChars - headerLength;
   const anchors = [...new Set(anchorPositions)].slice(0, 6);
-  const excerptLength = Math.max(900, Math.floor(remaining / anchors.length) - 32);
+  const excerptLength = Math.max(
+    900,
+    Math.floor(remaining / anchors.length) - 32,
+  );
 
   for (const anchor of anchors) {
     const start = Math.max(0, anchor - Math.floor(excerptLength * 0.28));
@@ -151,7 +174,7 @@ function relevantExcerpt(text: string, terms: string[], maxChars: number): strin
     }
   }
 
-  return excerpts.join('\n\n').slice(0, maxChars);
+  return excerpts.join("\n\n").slice(0, maxChars);
 }
 
 /**
@@ -160,20 +183,27 @@ function relevantExcerpt(text: string, terms: string[], maxChars: number): strin
  * Supabase; así se conserva el criterio de fuentes versionadas sin enviar
  * cientos de miles de caracteres al modelo en cada solicitud.
  */
-export async function getRelevantLegalSources(query: string, maxChars = 90_000): Promise<string> {
+export async function getRelevantLegalSources(
+  query: string,
+  maxChars = 90_000,
+): Promise<string> {
   const sources = await loadAuthorizedLegalSources();
   const terms = searchTerms(query);
   const selected = [...sources]
     .map((source) => ({ source, score: sourceScore(source, terms) }))
     .sort(
       (left, right) =>
-        right.score - left.score || left.source.name.localeCompare(right.source.name, 'es-CL'),
+        right.score - left.score ||
+        left.source.name.localeCompare(right.source.name, "es-CL"),
     );
 
   const relevant = selected.filter(({ score }) => score > 0);
   const candidates = (relevant.length ? relevant : selected).slice(0, 6);
   const output: string[] = [];
-  const charsPerSource = Math.max(1_000, Math.floor(maxChars / candidates.length) - 120);
+  const charsPerSource = Math.max(
+    1_000,
+    Math.floor(maxChars / candidates.length) - 120,
+  );
 
   for (const { source } of candidates) {
     const excerpt = relevantExcerpt(source.text, terms, charsPerSource);
@@ -181,6 +211,7 @@ export async function getRelevantLegalSources(query: string, maxChars = 90_000):
     output.push(content);
   }
 
-  if (!output.length) throw new Error('No hay fuentes jurídicas disponibles en docs/leyes.');
-  return output.join('\n\n');
+  if (!output.length)
+    throw new Error("No hay fuentes jurídicas disponibles en docs/leyes.");
+  return output.join("\n\n");
 }
