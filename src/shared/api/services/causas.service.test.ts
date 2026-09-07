@@ -367,6 +367,30 @@ describe('createCausa', () => {
 });
 
 describe('updateCausa', () => {
+  it('conserva la conducta corregida al guardar y volver a leer la causa', async (t) => {
+    let row = makeCausaRow({ conducta_rice_id: 'anterior', observaciones: 'Relato original' });
+    t.mock.method(MockQueryBuilder.prototype, 'update', function (this: MockQueryBuilder<unknown>, payload: Record<string, unknown>) {
+      row = { ...row, ...payload };
+      this.result = { data: [{ id: row.id }], error: null };
+      return this;
+    });
+    await withCausasMocks(
+      { resultForTable: (table) => ({ data: table === 'causas' ? row : [], error: null }) },
+      async () => {
+        const { fetchCausaDetails, updateCausa } = await import('./causas.service');
+        const { REGLAMENTO_CONDUCTAS } = await import('../../../reglamentoData');
+        const conducta = REGLAMENTO_CONDUCTAS.find((item) => /Abandonar clases/i.test(item.conducta));
+        assert.ok(conducta);
+        const causa = await fetchCausaDetails(row.id);
+        assert.equal(await updateCausa({ ...causa, conductaRiceId: conducta.id,
+          tipoInfraccion: conducta.gravedad, comprometeAulaSegura: false }), true);
+        const recargada = await fetchCausaDetails(row.id);
+        assert.equal(recargada.conductaRiceId, conducta.id);
+        assert.equal(recargada.tipoInfraccion, 'Muy Grave');
+        assert.equal(recargada.observaciones, 'Relato original');
+      },
+    );
+  });
   it('retorna true cuando la fila se actualiza', async () => {
     const result = await withCausasMocks(
       {

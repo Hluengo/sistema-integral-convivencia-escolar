@@ -22,6 +22,8 @@ interface RiceConductSelectProps {
   setNewAulaSegura: (value: boolean) => void;
   setNewObs: (value: string) => void;
   currentObs?: string;
+  value?: string;
+  preserveObservations?: boolean;
 }
 
 type RiceConducta = (typeof REGLAMENTO_CONDUCTAS)[number];
@@ -36,6 +38,8 @@ export default function RiceConductSelect({
   setNewAulaSegura,
   setNewObs,
   currentObs,
+  value,
+  preserveObservations = false,
 }: RiceConductSelectProps) {
   const [pendingConductId, setPendingConductId] = useState<string | null>(null);
   const conductasLeves = REGLAMENTO_CONDUCTAS.filter((conducta) => conducta.gravedad === 'Leve');
@@ -55,7 +59,7 @@ export default function RiceConductSelect({
     }
 
     const hasManualObservation = currentObs && currentObs.trim() !== '';
-    if (hasManualObservation) {
+    if (hasManualObservation && !preserveObservations) {
       setPendingConductId(conductId);
       return;
     }
@@ -63,7 +67,7 @@ export default function RiceConductSelect({
     setNewInfTipo(matched.gravedad);
     setConductaRiceId(matched.id);
     setNewAulaSegura(matched.gravedad === 'Gravísima');
-    setNewObs(buildRiceObservation(matched));
+    if (!preserveObservations) setNewObs(buildRiceObservation(matched));
   };
 
   const confirmReplacement = () => {
@@ -84,13 +88,13 @@ export default function RiceConductSelect({
         className="block flex items-center gap-1.5 font-semibold text-neutral-500 text-xs uppercase"
       >
         <BookOpen className="h-3 w-3 text-brand-600" aria-hidden="true" />
-        Autocompletar desde Reglamento (RICE):
+        {preserveObservations ? 'Descripción de la falta (RICE)' : 'Autocompletar desde Reglamento (RICE):'}
       </label>
       <Select
         id="create-rice"
         onChange={(event) => applyConducta(event.target.value)}
         className="mt-1.5 border-brand-200 bg-brand-50/20 p-3 font-medium text-11px text-brand-900"
-        defaultValue=""
+        {...(value === undefined ? { defaultValue: '' } : { value })}
       >
         <option value="" className="text-neutral-500">
           -- Seleccionar conducta --

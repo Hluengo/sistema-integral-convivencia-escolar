@@ -26,6 +26,7 @@ import {
   AlertDialogTitle,
 } from '@/shared/ui/AlertDialog';
 import Button from '@/shared/ui/Button';
+import RiceConductSelect from '../NewCausaForm/RiceConductSelect';
 
 const INFRACCIONES: TipoInfraccion[] = ['Leve', 'Grave', 'Muy Grave', 'Gravísima'];
 const EDIT_CAUSA_FIELDS = [
@@ -33,6 +34,7 @@ const EDIT_CAUSA_FIELDS = [
   'estudianteCurso',
   'runEstudiante',
   'tipoInfraccion',
+  'conductaRiceId',
   'responsable',
   'estadoActual',
   'observaciones',
@@ -111,6 +113,7 @@ function buildDefaultValues(causa: Causa): EditCausaFormValues {
     estudianteCurso: causa.estudianteCurso,
     runEstudiante: causa.runEstudiante,
     tipoInfraccion: causa.tipoInfraccion,
+    conductaRiceId: causa.conductaRiceId || '',
     responsable: causa.responsable,
     estadoActual: causa.estadoActual,
     observaciones: causa.observaciones,
@@ -155,6 +158,7 @@ export default function EditCausaModalForm({
   const {
     control,
     register,
+    setValue,
     watch,
     handleSubmit,
     formState: { errors },
@@ -173,6 +177,7 @@ export default function EditCausaModalForm({
       estudianteCurso: values.estudianteCurso,
       runEstudiante: values.runEstudiante,
       tipoInfraccion: values.tipoInfraccion,
+      conductaRiceId: values.conductaRiceId || undefined,
       comprometeAulaSegura: values.comprometeAulaSegura,
       responsable: values.responsable,
       estadoActual: values.estadoActual,
@@ -299,6 +304,20 @@ export default function EditCausaModalForm({
             </select>
             <FieldError id="edit-estado-error" message={errors.estadoActual?.message} />
           </div>
+        </div>
+
+        <div>
+          <RiceConductSelect
+            value={watch('conductaRiceId') || ''}
+            preserveObservations
+            setConductaRiceId={(value) => setValue('conductaRiceId', value, { shouldDirty: true })}
+            setNewInfTipo={(value) => setValue('tipoInfraccion', value, { shouldDirty: true })}
+            setNewAulaSegura={(value) => setValue('comprometeAulaSegura', value, { shouldDirty: true })}
+            setNewObs={(value) => setValue('observaciones', value, { shouldDirty: true })}
+          />
+          <p className="mt-1 text-xs text-neutral-500">
+            Seleccionar una conducta actualiza la gravedad y Aula Segura. El relato de los hechos se conserva.
+          </p>
         </div>
 
         <div>

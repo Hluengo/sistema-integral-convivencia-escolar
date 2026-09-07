@@ -46,6 +46,7 @@ export const editCausaFormSchema = z.object({
       message: 'Ingrese un RUN chileno válido.',
     }),
   tipoInfraccion: z.enum(tipoInfraccionValues),
+  conductaRiceId: z.string().optional(),
   responsable: z.string().trim().min(3, 'Ingrese el encargado o responsable.'),
   estadoActual: EstadoCausaEnum,
   observaciones: z.string().trim(),
