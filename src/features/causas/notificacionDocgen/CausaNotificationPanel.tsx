@@ -227,6 +227,9 @@ export default function CausaNotificationPanel({ causa }: CausaNotificationPanel
       feedback={feedback}
       onSaveDraft={handleSaveDraft}
       onMarkNotified={handleMarkNotified}
+      onSaveApoderadoEmail={(email) =>
+        onUpdateCausa({ ...causa, apoderadoEmail: email })
+      }
       onAnnul={handleAnnul}
     />
   );

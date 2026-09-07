@@ -98,6 +98,7 @@ export interface Causa {
   estadoActual: EstadoCausa;
   tipoInfraccion: TipoInfraccion;
   responsable: string;
+  apoderadoEmail?: string;
   comprometeAulaSegura: boolean;
   fechaUltimaActualizacion: string;
   observaciones: string;

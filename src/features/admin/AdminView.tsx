@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import TemplateEditor from '../document-templates/TemplateEditor';
 import ErrorBoundary from '../../shared/ui/ErrorBoundary';
+import { downloadBaseTemplate } from '../../shared/lib/excelExport';
 import InstitutionSettingsPanel from './InstitutionSettingsPanel';
 import Button from '../../shared/ui/Button';
 import Input from '../../shared/ui/Input';
@@ -498,16 +499,8 @@ export default function AdminView() {
             </div>
             <Button
               variant="secondary"
-              onClick={async () => {
-                const { default: writeExcelFile } = await import('write-excel-file/browser');
-                const cursos = [[{ value: 'name' }, { value: 'level' }, { value: 'position' }]];
-                const estudiantes = [
-                  [{ value: 'full_name' }, { value: 'rut' }, { value: 'curso' }],
-                ];
-                await writeExcelFile([
-                  { sheet: 'Cursos', data: cursos },
-                  { sheet: 'Estudiantes', data: estudiantes },
-                ]).toFile('plantilla-base-colegio.xlsx');
+              onClick={() => {
+                void downloadBaseTemplate();
               }}
               className="mt-4 rounded-xl px-4 py-2.5 text-sm"
             >

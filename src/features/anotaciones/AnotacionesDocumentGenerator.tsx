@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useReactToPrint } from 'react-to-print';
+import { CARTA_PAGE_STYLE } from '@/shared/ui/printStyles';
 import type { Annotation } from '@/shared/lib/types';
 import { getCurrentDateStr, getSemaphoricStyle } from '@/shared/lib/anotacionesUtils';
 import DocTypeSelector from './docgen/DocTypeSelector';
@@ -220,29 +221,7 @@ export default function AnotacionesDocumentGenerator({
     contentRef: previewRef,
     documentTitle: printFileName,
     ignoreGlobalStyles: false,
-    pageStyle: `
-      @page {
-        size: 216mm 279mm;
-        margin: 0;
-      }
-      html, body {
-        margin: 0 !important;
-        padding: 0 !important;
-        background: #fff !important;
-        width: 216mm;
-      }
-      body {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-      .letter-document {
-        margin: 0 !important;
-        box-shadow: none !important;
-        border: none !important;
-        border-radius: 0 !important;
-        transform: none !important;
-      }
-    `,
+    pageStyle: CARTA_PAGE_STYLE,
     onAfterPrint: handleAfterPrint,
     onPrintError: handlePrintError,
   });

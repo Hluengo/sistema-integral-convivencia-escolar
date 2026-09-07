@@ -7,11 +7,12 @@ import {
   isRequestValidationError,
   redactSensitiveForAI,
   sanitizeForAI,
-  requireStr,
-  optStr,
-  optArr,
   sanitize,
 } from '../validators/sanitizers.js';
+import {
+  DOC_TYPES as SHARED_DOC_TYPES,
+  draftDocumentBodySchema,
+} from '../validators/draftDocument.schema.js';
 import { callGeminiLegalDraft } from '../services/gemini.js';
 import { getRelevantLegalSources } from '../services/legalSources.js';
 import { extractCaseDocuments } from '../services/caseDocuments.js';
@@ -21,7 +22,7 @@ import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../../middleware/requ
 
 const router = Router();
 
-const DOC_TYPES = ['informe_cierre_indagacion', 'informe_concluyente'] as const;
+const DOC_TYPES = SHARED_DOC_TYPES;
 type DocType = (typeof DOC_TYPES)[number];
 
 const DOCUMENT_TITLES: Record<DocType, string> = {
@@ -187,27 +188,28 @@ router.post(
       res.write(`${JSON.stringify(event)}\n`);
     };
     try {
-      const body = req.body as Record<string, unknown>;
-      const docTypeValue = requireStr(body, 'docType', 50);
-      if (!isDocType(docTypeValue)) {
-        res.status(400).json({ error: 'Tipo de documento no válido.' });
+      const parsed = draftDocumentBodySchema.safeParse(req.body);
+      if (!parsed.success) {
+        res
+          .status(400)
+          .json({ error: parsed.error.issues[0]?.message ?? 'Solicitud no válida.' });
         return;
       }
-      const docType = docTypeValue;
+      const docType = parsed.data.docType;
       const contextLimits = DRAFT_CONTEXT_LIMITS[docType];
-      const id = requireStr(body, 'id', 100);
-      const studentName = requireStr(body, 'studentName', 200);
-      const course = optStr(body, 'course', 100);
-      const fatherName = optStr(body, 'fatherName', 200);
-      const managerName = optStr(body, 'managerName', 200);
-      const infractionType = optStr(body, 'infractionType', 100);
-      const observations = optStr(body, 'observations', 5000);
-      const fechaApertura = optStr(body, 'fechaApertura', 50);
-      const estadoActual = optStr(body, 'estadoActual', 80);
-      const fechaUltimaActualizacion = optStr(body, 'fechaUltimaActualizacion', 50);
-      const medidasEjecutadas = optArr(body, 'medidasEjecutadas');
-      const bitacora = optArr(body, 'bitacora');
-      const checklist = optArr(body, 'checklist');
+      const id = parsed.data.id;
+      const studentName = parsed.data.studentName;
+      const course = parsed.data.course;
+      const fatherName = parsed.data.fatherName;
+      const managerName = parsed.data.managerName;
+      const infractionType = parsed.data.infractionType;
+      const observations = parsed.data.observations;
+      const fechaApertura = parsed.data.fechaApertura;
+      const estadoActual = parsed.data.estadoActual;
+      const fechaUltimaActualizacion = parsed.data.fechaUltimaActualizacion;
+      const medidasEjecutadas = parsed.data.medidasEjecutadas;
+      const bitacora = parsed.data.bitacora;
+      const checklist = parsed.data.checklist;
       const knownSensitiveValues = [
         studentName,
         fatherName,

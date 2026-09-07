@@ -6,6 +6,7 @@ import type { Causa } from '@/shared/lib/types';
 import { saveBitacora } from '@/shared/api/services/bitacora.service';
 import { saveChecklist } from '@/shared/api/services/checklist.service';
 import { updateCausa } from '@/shared/api/services/causas.service';
+import { useAuthStore } from '@/shared/lib/stores/authStore';
 import { persistExistingCausa, type CausaPersistenceChanges } from './causaPersistence';
 import { invalidateDashboardQueries } from './useInvalidateDashboardQueries';
 
@@ -123,7 +124,7 @@ export function useCausasPersistence({
             const pending = pendingSaves.get(causa.id);
             if (!pending) return true;
             return persistExistingCausa(causa, pending.previousCausa, pending.changes, {
-              updateCausa,
+              updateCausa: (c) => updateCausa(c, useAuthStore.getState().tenantId),
               saveBitacora,
               saveChecklist,
             });

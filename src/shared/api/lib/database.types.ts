@@ -532,6 +532,7 @@ export type Database = {
           nna_protected_name: string;
           observaciones: string | null;
           responsable: string;
+          apoderado_email: string | null;
           run_estudiante: string;
           student_id: string | null;
           tenant_id: string;
@@ -561,6 +562,7 @@ export type Database = {
           nna_protected_name: string;
           observaciones?: string | null;
           responsable: string;
+          apoderado_email?: string | null;
           run_estudiante: string;
           student_id?: string | null;
           tenant_id?: string;
@@ -590,6 +592,7 @@ export type Database = {
           nna_protected_name?: string;
           observaciones?: string | null;
           responsable?: string;
+          apoderado_email?: string | null;
           run_estudiante?: string;
           student_id?: string | null;
           tenant_id?: string;

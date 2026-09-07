@@ -1,47 +1,140 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "instructions": [
-    "IDIOMA OBLIGATORIO: responde SIEMPRE en español (es-CL). Todo lo informado — resúmenes, explicaciones, errores, planes, comentarios de código y mensajes de commit — debe estar en español.",
-    "Antes de codificar, lee los archivos relevantes del proyecto (src/, server/, supabase/) y reutiliza patrones existentes (zod, tanstack/react-query, zustand, react-hook-form).",
-    "Ahorro de tokens: respuestas concisas, sin redundancia. Reutiliza skills y memoria antes de pedir contexto. Solo carga los plugins necesarios para la tarea.",
-    "Flujo de trabajo: 1) arquitectura (qué y por qué), 2) implementación (código + tipos + tests), 3) verificación (npm run lint && npm run typecheck).",
-    "Seguridad: nunca expongas secretos. Usa variables $VAR desde .env.local. SUPABASE_SERVICE_ROLE_KEY solo en servidor."
-  ],
-  "mcp": {
-    "sistema-archivos": {
-      "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-filesystem", "."],
-      "enabled": true
-    },
-    "git": {
-      "type": "local",
-      "command": ["npx", "-y", "mcp-server-git", "--repository", "."],
-      "enabled": true
-    },
-    "supabase": {
-      "type": "remote",
-      "url": "https://mcp.supabase.com/mcp",
-      "enabled": true,
-      "note": "Activa este servidor cuando trabajes con la base de datos. Requiere SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY en .env.local (solo servidor, nunca en frontend)."
-    },
-    "contexto-docs": {
-      "type": "local",
-      "command": ["npx", "-y", "@upstash/context7-mcp", "--api-key", "$CONTEXT7_API_KEY"],
-      "enabled": true,
-      "note": "Documentación actualizada de librerías (React, Vite, Supabase). Requiere CONTEXT7_API_KEY en .env.local."
-    }
-  },
-  "plugin": ["./plugins/index.ts", "@dietrichgebert/ponytail"],
-  "skills": ["./skills/arquitectura-claude", "./skills/optimizacion-tokens", "./skills/react-supabase", "./skills/memoria-contexto"],
   "agents": {
     "arquitectura": "./.agents/arquitectura.ts",
     "implementacion": "./.agents/implementacion.ts",
     "memoria": "./.agents/memoria.ts"
   },
+  "instructions": [
+    "IDIOMA OBLIGATORIO: responde SIEMPRE en español (es-CL). Todo lo informado — resúmenes, explicaciones, errores, planes, comentarios de código y mensajes de commit — debe estar en español.",
+    "Antes de codificar, lee los archivos relevantes del proyecto (src/, server/, supabase/) y reutiliza patrones existentes (zod, tanstack/react-query, zustand, react-hook-form).",
+    "Ahorro de tokens: respuestas concisas, sin redundancia. Reutiliza skills y memoria antes de pedir contexto. Solo carga los plugins necesarios para la tarea.",
+    "Flujo de trabajo: 1) arquitectura (qué y por qué), 2) implementación (código + tipos + tests), 3) verificación (npm run lint \u0026\u0026 npm run typecheck).",
+    "Seguridad: nunca expongas secretos. Usa variables $VAR desde .env.local. SUPABASE_SERVICE_ROLE_KEY solo en servidor.",
+    "Presupuesto MCP: máximo 10 servidores habilitados por proyecto (cada server roba ventana de contexto). Deshabilita con enabled:false lo que no uses."
+  ],
+  "mcp": {
+    "contexto-docs": {
+      "command": [
+        "npx",
+        "-y",
+        "@upstash/context7-mcp",
+        "--api-key",
+        "$CONTEXT7_API_KEY"
+      ],
+      "enabled": true,
+      "note": "Documentación actualizada de librerías (React, Vite, Supabase). Requiere CONTEXT7_API_KEY en .env.local.",
+      "type": "local"
+    },
+    "fetch": {
+      "command": [
+        "python",
+        "-m",
+        "mcp_server_fetch"
+      ],
+      "enabled": true,
+      "note": "Fetch genérico web a Markdown. Paquete npm @modelcontextprotocol/server-fetch deprecado (404); usar PyPI mcp-server-fetch ya instalado vía pip.",
+      "type": "local"
+    },
+    "github": {
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "enabled": true,
+      "environment": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "{env:GITHUB_PERSONAL_ACCESS_TOKEN}"
+      },
+      "note": "Server GitHub MCP por npx (sin docker). Usa GITHUB_PERSONAL_ACCESS_TOKEN de .env.local (validado 2026-09-06: login Hluengo, scope repo). El endpoint anterior api.githubcopilot.com/mcp/ devolvía 401 porque exige OAuth Copilot, no PAT clásico. Alternativa oficial con docker: ghcr.io/github/github-mcp-server (requiere Docker Desktop corriendo).",
+      "type": "local"
+    },
+    "gortex": {
+      "command": [
+        "C:\\Users\\heae2\\AppData\\Local\\Programs\\gortex\\gortex.exe",
+        "mcp"
+      ],
+      "enabled": true,
+      "environment": {
+        "GORTEX_INDEX_WORKERS": "2"
+      },
+      "type": "local"
+    },
+    "markitdown": {
+      "command": [
+        "npx",
+        "-y",
+        "markitdown-mcp-npx"
+      ],
+      "enabled": false,
+      "note": "DESHABILITADO (verificado 2026-09-06): upstream sigue roto — PyPI solo publica markitdown-mcp 0.0.1a1 sin __main__ y el wrapper markitdown-mcp-npx falla con 'No module named markitdown_mcp.__main__'. Alternativa que sí funciona: CLI markitdown 0.1.7 vía bash (markitdown archivo.pdf -o salida.md). Re-activar cuando Microsoft publique server estable.",
+      "timeout": 60000,
+      "type": "local"
+    },
+    "playwright": {
+      "command": [
+        "npx",
+        "-y",
+        "@playwright/mcp@latest"
+      ],
+      "enabled": true,
+      "note": "Debug UI navegando (snapshots/a11y). La suite E2E sigue por CLI: npm run test:e2e. Alternativa: chrome-devtools (traces/perf).",
+      "type": "local"
+    },
+    "chrome-devtools": {
+      "command": [
+        "npx",
+        "-y",
+        "chrome-devtools-mcp@latest",
+        "--no-usage-statistics"
+      ],
+      "enabled": false,
+      "note": "DESHABILITADO 2026-09-07 (context-budget): duplica a playwright y cuesta ~8.500 tokens + proceso npx permanente. Reactivar con enabled:true solo para traces/perf puntuales.",
+      "type": "local"
+    },
+    "sistema-archivos": {
+      "command": [
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "."
+      ],
+      "enabled": false,
+      "type": "local"
+    },
+    "supabase": {
+      "enabled": true,
+      "note": "Servidor remoto OAuth. Autentica con: opencode mcp auth supabase (abre el navegador, no usa .env.local).",
+      "type": "remote",
+      "url": "https://mcp.supabase.com/mcp"
+    },
+    "dbx": {
+      "command": [
+        "npx",
+        "-y",
+        "@dbx-app/mcp-server"
+      ],
+      "enabled": false,
+      "note": "DESHABILITADO 2026-09-07 (context-budget): duplica a supabase y cuesta ~8.500 tokens + proceso npx. Reactivar con enabled:true solo si usas DBX desktop.",
+      "type": "local"
+    }
+  },
   "memoria": {
     "directorio": "./.memory",
+    "estrategia": "cachear-patrones-reutilizables + comprimir-prompts + enrutar-modelo-segun-complejidad",
     "idioma": "es",
-    "presupuestoTokensPorSesion": 60000,
-    "estrategia": "cachear-patrones-reutilizables + comprimir-prompts + enrutar-modelo-segun-complejidad"
-  }
+    "presupuestoTokensPorSesion": 60000
+  },
+  "plugin": [
+    "@dietrichgebert/ponytail",
+    "superpowers@git+https://github.com/obra/superpowers.git",
+    "@mohak34/opencode-notifier@latest"
+  ],
+  "skills": [
+    "./skills/arquitectura-claude",
+    "./skills/optimizacion-tokens",
+    "./skills/react-supabase",
+    "./skills/memoria-contexto",
+    "./skills/verificacion"
+  ]
 }

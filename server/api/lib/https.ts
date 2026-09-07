@@ -1,8 +1,69 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import https from 'node:https';
+async function readCappedText(res: Response, maxBytes: number, hostname: string): Promise<string> {
+  const reader = res.body?.getReader();
+  if (!reader) return '';
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > maxBytes) {
+      await reader.cancel().catch(() => {});
+      throw new Error(`La respuesta desde ${hostname} excede el tamaño máximo.`);
+    }
+    chunks.push(value);
+  }
+  return Buffer.concat(chunks).toString('utf8');
+}
 
-export function httpsPost(
+async function readCappedBuffer(
+  res: Response,
+  maxBytes: number,
+  onTooLarge: () => Error,
+): Promise<Buffer> {
+  const reader = res.body?.getReader();
+  if (!reader) return Buffer.alloc(0);
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > maxBytes) {
+      await reader.cancel().catch(() => {});
+      throw onTooLarge();
+    }
+    chunks.push(value);
+  }
+  return Buffer.concat(chunks);
+}
+
+function timeoutError(hostname: string, prefix: string): Error {
+  return new Error(`${prefix} a ${hostname} excedió el tiempo máximo.`);
+}
+
+async function request(
+  hostname: string,
+  pathname: string,
+  init: RequestInit,
+  timeoutMs: number,
+): Promise<Response> {
+  try {
+    return await fetch(`https://${hostname}${pathname}`, {
+      ...init,
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (error) {
+    if (error instanceof Error && error.name === 'TimeoutError') {
+      throw timeoutError(hostname, 'La solicitud');
+    }
+    throw error;
+  }
+}
+
+export async function httpsPost(
   hostname: string,
   pathname: string,
   body: unknown,
@@ -10,175 +71,85 @@ export function httpsPost(
   timeoutMs = 20_000,
   maxBytes = 2 * 1024 * 1024,
 ): Promise<{ status: number; body: unknown }> {
-  return new Promise((resolve, reject) => {
-    const data = JSON.stringify(body);
-    let settled = false;
-    let size = 0;
-    const opts = {
-      hostname,
-      path: pathname,
+  const res = await request(
+    hostname,
+    pathname,
+    {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...headers },
-    };
-    const finish = (callback: () => void) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(deadlineTimer);
-      callback();
-    };
-    const req = https.request(opts, (res) => {
-      let chunks = '';
-      res.on('data', (chunk: string) => {
-        size += Buffer.byteLength(chunk);
-        if (size > maxBytes) {
-          req.destroy(new Error(`La respuesta desde ${hostname} excede el tamaño máximo.`));
-          return;
-        }
-        chunks += chunk;
-      });
-      res.on('end', () => {
-        try {
-          const parsed = JSON.parse(chunks);
-          finish(() => resolve({ status: res.statusCode ?? 500, body: parsed }));
-        } catch {
-          finish(() => reject(new Error(`HTTP ${res.statusCode}: ${chunks}`)));
-        }
-      });
-    });
-    req.on('error', (error) => finish(() => reject(error)));
-    req.setTimeout(timeoutMs, () =>
-      req.destroy(new Error(`La solicitud a ${hostname} excedió el tiempo máximo.`)),
-    );
-    const deadlineTimer = setTimeout(() => {
-      req.destroy(new Error(`La solicitud a ${hostname} excedió el tiempo máximo.`));
-    }, timeoutMs);
-    req.write(data);
-    req.end();
-  });
+      body: JSON.stringify(body),
+    },
+    timeoutMs,
+  );
+  const text = await readCappedText(res, maxBytes, hostname);
+  try {
+    return { status: res.status, body: JSON.parse(text) };
+  } catch {
+    throw new Error(`HTTP ${res.status}: ${text}`);
+  }
 }
 
-export function httpsGet(
+export async function httpsGet(
   hostname: string,
   pathname: string,
   headers?: Record<string, string>,
   timeoutMs = 10_000,
   maxBytes = 2 * 1024 * 1024,
 ): Promise<unknown> {
-  return new Promise((resolve, reject) => {
-    let settled = false;
-    let size = 0;
-    let chunks = '';
-    const opts = {
-      hostname,
-      path: pathname,
-      method: 'GET',
-      headers: headers || {},
-    };
-    const req = https.request(opts, (res) => {
-      res.on('data', (chunk: string) => {
-        size += Buffer.byteLength(chunk);
-        if (size > maxBytes) {
-          req.destroy(new Error(`La respuesta desde ${hostname} excede el tamaño máximo.`));
-          return;
-        }
-        chunks += chunk;
-      });
-      res.on('end', () => {
-        if (settled) return;
-        try {
-          settled = true;
-          resolve(JSON.parse(chunks));
-        } catch {
-          settled = true;
-          reject(new Error(`HTTP ${res.statusCode}: respuesta no válida.`));
-        }
-      });
-    });
-    req.on('error', (error) => {
-      if (settled) return;
-      settled = true;
-      reject(error);
-    });
-    req.setTimeout(timeoutMs, () =>
-      req.destroy(new Error(`La solicitud a ${hostname} excedió el tiempo máximo.`)),
-    );
-    req.end();
-  });
+  const res = await request(hostname, pathname, { method: 'GET', headers: headers || {} }, timeoutMs);
+  const text = await readCappedText(res, maxBytes, hostname);
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`HTTP ${res.status}: respuesta no válida.`);
+  }
 }
 
-export function httpsGetBuffer(
+export async function httpsGetBuffer(
   hostname: string,
   pathname: string,
   headers?: Record<string, string>,
   maxBytes = 10 * 1024 * 1024,
   timeoutMs = 6_000,
 ): Promise<{ status: number; body: Buffer }> {
-  return new Promise((resolve, reject) => {
-    const req = https.request(
-      { hostname, path: pathname, method: 'GET', headers: headers || {} },
-      (res) => {
-        const chunks: Buffer[] = [];
-        let size = 0;
-        res.on('data', (chunk: Buffer) => {
-          size += chunk.length;
-          if (size > maxBytes) {
-            req.destroy(new Error('La descarga excede el tamaño máximo permitido.'));
-            return;
-          }
-          chunks.push(chunk);
-        });
-        res.on('end', () =>
-          resolve({ status: res.statusCode ?? 500, body: Buffer.concat(chunks) }),
-        );
-      },
-    );
-    req.on('error', reject);
-    req.setTimeout(timeoutMs, () =>
-      req.destroy(new Error(`La descarga desde ${hostname} excedió el tiempo máximo.`)),
-    );
-    req.end();
-  });
+  let res: Response;
+  try {
+    res = await fetch(`https://${hostname}${pathname}`, {
+      method: 'GET',
+      headers: headers || {},
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (error) {
+    if (error instanceof Error && error.name === 'TimeoutError') {
+      throw timeoutError(hostname, 'La descarga desde');
+    }
+    throw error;
+  }
+  const body = await readCappedBuffer(res, maxBytes, () => new Error('La descarga excede el tamaño máximo permitido.'));
+  return { status: res.status, body };
 }
 
-export function httpsPatch(
+export async function httpsPatch(
   hostname: string,
   pathname: string,
   body: unknown,
   headers?: Record<string, string>,
   timeoutMs = 10_000,
 ): Promise<{ status: number; body: unknown }> {
-  return new Promise((resolve, reject) => {
-    const data = JSON.stringify(body);
-    let settled = false;
-    const opts = {
-      hostname,
-      path: pathname,
+  const res = await request(
+    hostname,
+    pathname,
+    {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', ...headers },
-    };
-    const req = https.request(opts, (res) => {
-      let chunks = '';
-      res.on('data', (chunk: string) => (chunks += chunk));
-      res.on('end', () => {
-        if (settled) return;
-        try {
-          settled = true;
-          resolve({ status: res.statusCode ?? 500, body: JSON.parse(chunks) });
-        } catch {
-          settled = true;
-          reject(new Error(`HTTP ${res.statusCode}: respuesta no válida.`));
-        }
-      });
-    });
-    req.on('error', (error) => {
-      if (settled) return;
-      settled = true;
-      reject(error);
-    });
-    req.setTimeout(timeoutMs, () =>
-      req.destroy(new Error(`La solicitud a ${hostname} excedió el tiempo máximo.`)),
-    );
-    req.write(data);
-    req.end();
-  });
+      body: JSON.stringify(body),
+    },
+    timeoutMs,
+  );
+  const text = await res.text();
+  try {
+    return { status: res.status, body: JSON.parse(text) };
+  } catch {
+    throw new Error(`HTTP ${res.status}: respuesta no válida.`);
+  }
 }

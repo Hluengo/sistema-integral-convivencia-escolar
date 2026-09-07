@@ -13,6 +13,13 @@ import {
   type NotificationContent,
 } from './types';
 
+const APODERADO_EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,253}\.[^\s@]{2,}$/;
+
+/** Valida el correo del apoderado para el envío de la notificación. */
+export function isValidApoderadoEmail(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length <= 320 && APODERADO_EMAIL_RE.test(value.trim());
+}
+
 /** Firma de la persona que emite la notificación. */
 export function getNotificacionResponsable(causa: Causa): string {
   const responsable = causa.responsable;

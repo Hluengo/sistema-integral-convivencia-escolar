@@ -23,6 +23,7 @@ import pilotRoutes from './api/routes/pilot';
 import adminRoutes from './api/routes/admin';
 import platformRoutes from './api/routes/platform';
 import institutionRoutes from './api/routes/institution';
+import notificacionesRoutes from './api/routes/notificaciones';
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -73,6 +74,7 @@ app.use('/api', pilotRoutes);
 app.use('/api', adminRoutes);
 app.use('/api', platformRoutes);
 app.use('/api', institutionRoutes);
+app.use('/api', notificacionesRoutes);
 
 // Global error handler — must be registered AFTER all routes
 app.use(errorHandler);

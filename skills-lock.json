@@ -1,11 +1,23 @@
 {
   "version": 1,
   "skills": {
+    "archify": {
+      "source": "tt-a1i/archify",
+      "sourceType": "github",
+      "skillPath": "archify/SKILL.md",
+      "computedHash": "b7836a57558d376cbe3fa024ee5d951f53ae9c89298a7c15d7b8d689863448e6"
+    },
     "code-review": {
       "source": "mattpocock/skills",
       "sourceType": "github",
       "skillPath": "skills/engineering/code-review/SKILL.md",
       "computedHash": "b4f17857c85ca60af1df7d0b623dd03c2a48419f6123e714f3d9748ca744a1bf"
+    },
+    "composio": {
+      "source": "ComposioHQ/composio",
+      "sourceType": "github",
+      "skillPath": "skills/composio/SKILL.md",
+      "computedHash": "bee9ab65c1213722b3b935a9148bb8a86725ed81550c556a06af4ae8089def40"
     },
     "diagnosing-bugs": {
       "source": "mattpocock/skills",

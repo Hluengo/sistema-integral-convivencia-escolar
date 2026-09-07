@@ -49,3 +49,7 @@ Free-Models-IA/
 tsconfig.tsbuildinfo
 *.tsbuildinfo
 
+# opencode: caché local (skills duplicados + node_modules anidados revientan glob/grep e índice)
+.opencode/node_modules/
+.opencode/skills/
+

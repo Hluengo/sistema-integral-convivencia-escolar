@@ -65,6 +65,7 @@ export const CausaSchema = z.object({
   estadoActual: EstadoCausaEnum,
   tipoInfraccion: TipoInfraccionEnum,
   responsable: z.string(),
+  apoderadoEmail: z.string().max(320).optional(),
   comprometeAulaSegura: z.boolean(),
   fechaUltimaActualizacion: z.string(),
   observaciones: z.string(),
@@ -92,3 +93,18 @@ export const CausaSchema = z.object({
   tipoNEE: z.string().optional(),
   sancionesNEEDesactivadas: z.boolean().optional(),
 });
+
+// Barril único: todo esquema compartido cliente/servidor se importa desde aquí.
+export { newCausaFormSchema, normalizeRutInput, isChileanRutFormat } from './newCausaForm';
+export type { NewCausaFormValues } from './newCausaForm';
+export { editCausaFormSchema, isValidStateTransition } from './editCausaForm';
+export type { EditCausaFormValues } from './editCausaForm';
+export {
+  loginFormSchema,
+  passwordResetRequestSchema,
+  passwordUpdateFormSchema,
+} from './loginForm';
+export { physicalCartaRegistrationSchema } from './physicalCarta';
+export type { PhysicalCartaRegistrationInput } from './physicalCarta';
+export { studentHistoryEntrySchema } from './studentHistoryEntry';
+export type { StudentHistoryEntryInput } from './studentHistoryEntry';

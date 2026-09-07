@@ -28,7 +28,7 @@ export function useCausasQuery() {
     queryKey: causasQueryKeys.list(tenantId ?? ''),
     queryFn: async ({ pageParam }) => {
       const startedAt = performance.now();
-      const page = await fetchCausasPage(pageParam, CAUSAS_PAGE_SIZE);
+      const page = await fetchCausasPage(pageParam, CAUSAS_PAGE_SIZE, tenantId);
       trackCausasQuery('list', startedAt, page.causas.length);
       return page;
     },
@@ -55,7 +55,7 @@ export function useCausaDetailsQuery(causaId: string) {
     queryKey: causasQueryKeys.details(tenantId ?? '', causaId),
     queryFn: async () => {
       const startedAt = performance.now();
-      const details = await fetchCausaDetails(causaId);
+      const details = await fetchCausaDetails(causaId, tenantId);
       trackCausasQuery(
         'detail',
         startedAt,

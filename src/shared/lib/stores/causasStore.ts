@@ -110,7 +110,7 @@ export const useCausasStore = create<CausasState>((set, get) => ({
 
   handleDeleteCausa: async (id, requireAuth) => {
     if (!requireAuth()) return false;
-    const ok = await deleteCausa(id);
+    const ok = await deleteCausa(id, useAuthStore.getState().tenantId);
     if (!ok) {
       useToastStore.getState().addToast('error', 'Error al eliminar el caso');
       return false;

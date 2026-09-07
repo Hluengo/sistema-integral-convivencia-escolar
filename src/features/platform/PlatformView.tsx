@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Building2, Download, FileText, RefreshCw, ShieldCheck, Upload, Users } from 'lucide-react';
 import Button from '../../shared/ui/Button';
+import { downloadBaseTemplate } from '../../shared/lib/excelExport';
 import SummaryCard from '../../shared/ui/SummaryCard';
 import FormField from '../../shared/ui/FormField';
 import Input from '../../shared/ui/Input';
@@ -425,16 +426,8 @@ export default function PlatformView() {
             </div>
             <Button
               variant="secondary"
-              onClick={async () => {
-                const { default: writeExcelFile } = await import('write-excel-file/browser');
-                const cursos = [[{ value: 'name' }, { value: 'level' }, { value: 'position' }]];
-                const estudiantes = [
-                  [{ value: 'full_name' }, { value: 'rut' }, { value: 'curso' }],
-                ];
-                await writeExcelFile([
-                  { sheet: 'Cursos', data: cursos },
-                  { sheet: 'Estudiantes', data: estudiantes },
-                ]).toFile('plantilla-base-colegio.xlsx');
+              onClick={() => {
+                void downloadBaseTemplate();
               }}
               className="mt-4 rounded-xl px-4 py-2.5 text-sm"
             >

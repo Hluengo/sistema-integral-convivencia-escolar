@@ -3,6 +3,7 @@
 import type React from 'react';
 import { forwardRef, useMemo, useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
+import { OFICIO_PAGE_STYLE } from '@/shared/ui/printStyles';
 import {
   CheckCircle2,
   Circle,
@@ -80,7 +81,7 @@ export default function DraftPanel({
   const printDocument = useReactToPrint({
     contentRef: printRef,
     documentTitle: `${caseId}_${documentTitle}`.replace(/[^a-zA-Z0-9_ -]/g, ''),
-    pageStyle: `@page { size: 216mm 330mm; margin: 0; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }`,
+    pageStyle: OFICIO_PAGE_STYLE,
   });
 
   return (

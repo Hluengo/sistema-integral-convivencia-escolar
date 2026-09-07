@@ -54,6 +54,7 @@
     ]
   },
   "dependencies": {
+    "@composio/core": "^0.18.1",
     "@radix-ui/react-alert-dialog": "^1.1.19",
     "@radix-ui/react-dialog": "^1.1.19",
     "@sentry/browser": "^10.66.0",
@@ -101,7 +102,6 @@
     "husky": "^9.1.7",
     "knip": "^6.29.0",
     "lint-staged": "^17.1.1",
-    "pptxgenjs": "^4.0.1",
     "prettier": "^3.9.6",
     "rollup-plugin-visualizer": "^7.0.1",
     "tailwindcss": "^4.1.14",

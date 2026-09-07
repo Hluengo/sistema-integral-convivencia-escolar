@@ -23,7 +23,9 @@ import {
   NOTIFICATION_CONTENT_FIELDS,
   isNotificationContent,
 } from './types';
-import { buildBitacoraEntryPayload, buildChecklistItemPayload } from './builders';
+import {
+  buildBitacoraEntryPayload, buildChecklistItemPayload } from './builders';
+import { isValidApoderadoEmail } from './builders';
 
 const migration = readFileSync(
   resolve(
@@ -369,5 +371,14 @@ describe('builders de la notificación', () => {
     assert.equal(entryPayload.id, 'b_notif_x');
     assert.ok('documento_adjunto' in entryPayload);
     assert.deepEqual(entryPayload.participantes, ['María González', 'V.R.S.']);
+  });
+});
+
+describe('email del apoderado para envío', () => {
+  it('acepta correos válidos y rechaza inválidos', () => {
+    assert.equal(isValidApoderadoEmail('apoderado@colegio.cl'), true);
+    assert.equal(isValidApoderadoEmail('  Apoderado@Colegio.CL  '), true);
+    assert.equal(isValidApoderadoEmail('no-es-correo'), false);
+    assert.equal(isValidApoderadoEmail(''), false);
   });
 });

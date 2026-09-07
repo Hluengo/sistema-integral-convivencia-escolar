@@ -7,6 +7,8 @@ import type { NotificationContent } from './types';
 interface NotificationFormProps {
   apoderadoName: string;
   onApoderadoNameChange: (value: string) => void;
+  apoderadoEmail: string;
+  onApoderadoEmailChange: (value: string) => void;
   emittedBy: string;
   onEmittedByChange: (value: string) => void;
   content: NotificationContent;
@@ -22,6 +24,8 @@ interface NotificationFormProps {
 export default function NotificationForm({
   apoderadoName,
   onApoderadoNameChange,
+  apoderadoEmail,
+  onApoderadoEmailChange,
   emittedBy,
   onEmittedByChange,
   content,
@@ -45,6 +49,24 @@ export default function NotificationForm({
             value={apoderadoName}
             onChange={(event) => onApoderadoNameChange(event.target.value)}
             placeholder="Ingrese el nombre del apoderado/a"
+            className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor="notificacion-apoderado-email"
+            className="mb-1 block text-sm font-medium text-neutral-700"
+          >
+            Correo del Apoderado/a
+          </label>
+          <input
+            id="notificacion-apoderado-email"
+            aria-label="Correo del apoderado o adulto responsable"
+            type="email"
+            value={apoderadoEmail}
+            onChange={(event) => onApoderadoEmailChange(event.target.value)}
+            placeholder="apoderado@correo.cl"
             className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
           />
         </div>

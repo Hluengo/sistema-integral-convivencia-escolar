@@ -40,15 +40,8 @@ export interface AnalyticsPayload {
 
 type PostHogProperties = Record<string, unknown>;
 
-function toPostHog<E extends AnalyticsEvent>(
-  event: E,
-  payload: AnalyticsPayload[E],
-): PostHogProperties {
-  return payload as PostHogProperties;
-}
-
 export function track<E extends AnalyticsEvent>(event: E, payload: AnalyticsPayload[E]): void {
-  const phProperties = toPostHog(event, payload);
+  const phProperties = payload as PostHogProperties;
 
   void loadTelemetry().then(({ posthog, sentry }) => {
     posthog.captureEvent(event, phProperties);

@@ -18,6 +18,7 @@ interface SupabaseCausaRow {
   estado_actual: string;
   tipo_infraccion: string;
   responsable: string;
+  apoderado_email: string | null;
   compromete_aula_segura: boolean | null;
   fecha_ultima_actualizacion: string;
   observaciones: string | null;
@@ -128,6 +129,7 @@ function mapCausaRows(rows: SupabaseCausaRow[]): Causa[] {
       estadoActual: row.estado_actual,
       tipoInfraccion: row.tipo_infraccion,
       responsable: row.responsable,
+      apoderadoEmail: row.apoderado_email || undefined,
       comprometeAulaSegura: row.compromete_aula_segura ?? false,
       fechaUltimaActualizacion: row.fecha_ultima_actualizacion,
       observaciones: row.observaciones || '',
@@ -149,15 +151,22 @@ function mapCausaRows(rows: SupabaseCausaRow[]): Causa[] {
 }
 
 /** Carga páginas pequeñas y ordenadas para evitar transferir expedientes no solicitados. */
-export async function fetchCausasPage(offset = 0, pageSize = 50): Promise<CausasPage> {
+export async function fetchCausasPage(
+  offset = 0,
+  pageSize = 50,
+  tenantId?: string | null,
+): Promise<CausasPage> {
   const requestedSize = Math.min(Math.max(pageSize, 1), DEFAULT_PAGE_SIZE);
-  const { data, error } = await supabase
+  let query = supabase
     .from('causas')
     .select(
-      'id,student_id,incidente_id,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas,plazo_24h,fecha_limite_24h,fecha_inicio_investigacion,plazo_investigacion_dias,fecha_limite_investigacion,fecha_limite_cierre',
+      'id,student_id,incidente_id,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas,plazo_24h,fecha_limite_24h,fecha_inicio_investigacion,plazo_investigacion_dias,fecha_limite_investigacion,fecha_limite_cierre,apoderado_email',
     )
-    .order('fecha_ultima_actualizacion', { ascending: false })
-    .range(offset, offset + requestedSize);
+    .order('fecha_ultima_actualizacion', { ascending: false });
+  // Defensa en profundidad: RLS ya filtra por tenant, pero el cliente
+  // también debe acotar explícitamente para no mezclar tenants en caché.
+  if (tenantId) query = query.eq('tenant_id', tenantId);
+  const { data, error } = await query.range(offset, offset + requestedSize);
 
   if (error || !data) {
     console.error('Error fetching causas page:', error);
@@ -209,15 +218,16 @@ export async function fetchCausasPage(offset = 0, pageSize = 50): Promise<Causas
  * checklist fuera de esa consulta evita transferir antecedentes sensibles de
  * expedientes que la persona usuaria no ha solicitado revisar.
  */
-export async function fetchCausaDetails(causaId: string): Promise<Causa> {
+export async function fetchCausaDetails(causaId: string, tenantId?: string | null): Promise<Causa> {
+  let causaQuery = supabase
+    .from('causas')
+    .select(
+      'id,student_id,incidente_id,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas,plazo_24h,fecha_limite_24h,fecha_inicio_investigacion,plazo_investigacion_dias,fecha_limite_investigacion,fecha_limite_cierre,apoderado_email',
+    )
+    .eq('id', causaId);
+  if (tenantId) causaQuery = causaQuery.eq('tenant_id', tenantId);
   const [causaResult, checklistResult, bitacoraResult] = await Promise.all([
-    supabase
-      .from('causas')
-      .select(
-        'id,student_id,incidente_id,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas,plazo_24h,fecha_limite_24h,fecha_inicio_investigacion,plazo_investigacion_dias,fecha_limite_investigacion,fecha_limite_cierre',
-      )
-      .eq('id', causaId)
-      .maybeSingle(),
+    causaQuery.maybeSingle(),
     supabase
       .from('checklist_items')
       .select(
@@ -293,6 +303,7 @@ export async function createCausa(causa: Causa, tenantId: string | null): Promis
     estado_actual: causa.estadoActual,
     tipo_infraccion: causa.tipoInfraccion,
     responsable: causa.responsable,
+    apoderado_email: causa.apoderadoEmail || null,
     compromete_aula_segura: causa.comprometeAulaSegura,
     fecha_ultima_actualizacion: causa.fechaUltimaActualizacion,
     observaciones: causa.observaciones,
@@ -312,8 +323,8 @@ export async function createCausa(causa: Causa, tenantId: string | null): Promis
   return causaId;
 }
 
-export async function updateCausa(causa: Causa): Promise<boolean> {
-  const { data, error } = await supabase
+export async function updateCausa(causa: Causa, tenantId?: string | null): Promise<boolean> {
+  let query = supabase
     .from('causas')
     .update({
       ...(causa.studentId ? { student_id: causa.studentId } : {}),
@@ -326,6 +337,7 @@ export async function updateCausa(causa: Causa): Promise<boolean> {
       estado_actual: causa.estadoActual,
       tipo_infraccion: causa.tipoInfraccion,
       responsable: causa.responsable,
+      apoderado_email: causa.apoderadoEmail || null,
       compromete_aula_segura: causa.comprometeAulaSegura,
       fecha_ultima_actualizacion: causa.fechaUltimaActualizacion,
       observaciones: causa.observaciones,
@@ -338,8 +350,9 @@ export async function updateCausa(causa: Causa): Promise<boolean> {
       fecha_limite_investigacion: causa.fechaLimiteInvestigacion || null,
       fecha_limite_cierre: causa.fechaLimiteCierre || null,
     })
-    .eq('id', causa.id)
-    .select('id');
+    .eq('id', causa.id);
+  if (tenantId) query = query.eq('tenant_id', tenantId);
+  const { data, error } = await query.select('id');
   if (error) {
     console.error('Error updating causa:', error);
     return false;
@@ -347,7 +360,21 @@ export async function updateCausa(causa: Causa): Promise<boolean> {
   return Boolean(data?.length);
 }
 
-export async function deleteCausa(causaId: string): Promise<boolean> {
+export async function deleteCausa(causaId: string, tenantId?: string | null): Promise<boolean> {
+  // Verificación previa de pertenencia al tenant: evita borrar hijos
+  // de un expediente de otro colegio aunque el id sea adivinable.
+  if (tenantId) {
+    const { data: owner, error: ownerError } = await supabase
+      .from('causas')
+      .select('id')
+      .eq('id', causaId)
+      .eq('tenant_id', tenantId)
+      .maybeSingle();
+    if (ownerError || !owner) {
+      console.error('Causa no pertenece al tenant o no existe:', causaId);
+      return false;
+    }
+  }
   const relatedDeletes = await Promise.all([
     supabase.from('bitacora_entries').delete().eq('causa_id', causaId),
     supabase.from('checklist_items').delete().eq('causa_id', causaId),
@@ -359,11 +386,9 @@ export async function deleteCausa(causaId: string): Promise<boolean> {
     return false;
   }
 
-  const { data: deletedCausas, error } = await supabase
-    .from('causas')
-    .delete()
-    .eq('id', causaId)
-    .select('id');
+  let deleteQuery = supabase.from('causas').delete().eq('id', causaId);
+  if (tenantId) deleteQuery = deleteQuery.eq('tenant_id', tenantId);
+  const { data: deletedCausas, error } = await deleteQuery.select('id');
   if (error) {
     console.error('Error deleting causa:', error);
     return false;
