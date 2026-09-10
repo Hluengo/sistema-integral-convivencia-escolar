@@ -1,30 +1,41 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useReactToPrint } from 'react-to-print';
-import { CARTA_PAGE_STYLE } from '@/shared/ui/printStyles';
-import { CheckCircle2, FileSignature, Printer, RotateCcw, Send, Trash2 } from 'lucide-react';
-import { supabase } from '@/shared/api/lib/supabase';
-import type { Causa } from '@/shared/lib/types';
-import { getCurrentDateStr } from '@/shared/lib/anotacionesUtils';
-import { useAuthStore } from '@/shared/lib/stores/authStore';
-import { fetchInstitutionDocumentSettings } from '@/shared/api/services/institution.service';
-import Button from '@/shared/ui/Button';
-import LetterPreviewViewport from '@/src/features/anotaciones/docgen/LetterPreviewViewport';
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useReactToPrint } from "react-to-print";
+import { CARTA_PAGE_STYLE } from "@/shared/ui/printStyles";
+import {
+  CheckCircle2,
+  FileSignature,
+  Printer,
+  RotateCcw,
+  Send,
+  Trash2,
+} from "lucide-react";
+import { supabase } from "@/shared/api/lib/supabase";
+import type { Causa } from "@/shared/lib/types";
+import { getCurrentDateStr } from "@/shared/lib/anotacionesUtils";
+import { useAuthStore } from "@/shared/lib/stores/authStore";
+import { fetchInstitutionDocumentSettings } from "@/shared/api/services/institution.service";
+import Button from "@/shared/ui/Button";
+import LetterPreviewViewport from "@/src/features/anotaciones/docgen/LetterPreviewViewport";
 import {
   buildCausaDocumentSnapshot,
   buildPrefilledNotificationContent,
   isValidApoderadoEmail,
-} from './builders';
-import NotificationForm from './NotificationForm';
-import NotificacionContent from './NotificacionContent';
-import { NOTIFICACION_TITLE } from './defaultContent';
-import type { CausaDocumentSnapshot, CausaDocumentStatus, NotificationContent } from './types';
+} from "./builders";
+import NotificationForm from "./NotificationForm";
+import NotificacionContent from "./NotificacionContent";
+import { NOTIFICACION_TITLE } from "./defaultContent";
+import type {
+  CausaDocumentSnapshot,
+  CausaDocumentStatus,
+  NotificationContent,
+} from "./types";
 
 export interface NotificationFeedback {
   text: string;
-  tone: 'info' | 'success' | 'error';
+  tone: "info" | "success" | "error";
 }
 
 interface CausaNotificationGeneratorProps {
@@ -64,11 +75,11 @@ export default function CausaNotificationGenerator({
 }: CausaNotificationGeneratorProps) {
   const tenantId = useAuthStore((state) => state.tenantId);
   const institutionQuery = useQuery({
-    queryKey: ['institution-settings', tenantId, 'notificacion-preview'],
+    queryKey: ["institution-settings", tenantId, "notificacion-preview"],
     queryFn: fetchInstitutionDocumentSettings,
     enabled: Boolean(tenantId),
     staleTime: 0,
-    refetchOnMount: 'always',
+    refetchOnMount: "always",
   });
   const { refetch: refetchInstitution } = institutionQuery;
   const logoRetryRef = useRef(false);
@@ -78,9 +89,11 @@ export default function CausaNotificationGenerator({
     void refetchInstitution();
   }, [refetchInstitution]);
 
-  const [apoderadoName, setApoderadoName] = useState('');
-  const [apoderadoEmail, setApoderadoEmail] = useState(causa.apoderadoEmail ?? '');
-  const [emittedBy, setEmittedBy] = useState('');
+  const [apoderadoName, setApoderadoName] = useState("");
+  const [apoderadoEmail, setApoderadoEmail] = useState(
+    causa.apoderadoEmail ?? "",
+  );
+  const [emittedBy, setEmittedBy] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [content, setContent] = useState<NotificationContent>(() =>
     buildPrefilledNotificationContent(causa),
@@ -91,7 +104,7 @@ export default function CausaNotificationGenerator({
     if (initialAppliedRef.current) return;
     if (initialSnapshot) {
       setContent(
-        documentStatus === 'Pendiente'
+        documentStatus === "Pendiente"
           ? buildPrefilledNotificationContent(causa, initialSnapshot.content)
           : initialSnapshot.content,
       );
@@ -102,12 +115,17 @@ export default function CausaNotificationGenerator({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const updateContent = useCallback((field: keyof NotificationContent, value: string) => {
-    setContent((current) => ({ ...current, [field]: value }));
-  }, []);
+  const updateContent = useCallback(
+    (field: keyof NotificationContent, value: string) => {
+      setContent((current) => ({ ...current, [field]: value }));
+    },
+    [],
+  );
 
   const resetContent = useCallback(() => {
-    setContent(buildPrefilledNotificationContent(causa, initialSnapshot?.content));
+    setContent(
+      buildPrefilledNotificationContent(causa, initialSnapshot?.content),
+    );
   }, [causa, initialSnapshot]);
 
   const previewRef = useRef<HTMLDivElement>(null);
@@ -140,10 +158,10 @@ export default function CausaNotificationGenerator({
     pageStyle: CARTA_PAGE_STYLE,
     onAfterPrint: () => {
       setPrintMessage(
-        'Impresión finalizada. Use “Marcar como notificada” para confirmar la entrega y registrar el hito en el expediente.',
+        "Impresión finalizada. Use “Marcar como notificada” para confirmar la entrega y registrar el hito en el expediente.",
       );
     },
-    onPrintError: (_location: 'onBeforePrint' | 'print', error: Error) => {
+    onPrintError: (_location: "onBeforePrint" | "print", error: Error) => {
       setPrintMessage(`Error al imprimir: ${error.message}`);
     },
   });
@@ -155,18 +173,29 @@ export default function CausaNotificationGenerator({
   const handleSendEmail = useCallback(async () => {
     const to = apoderadoEmail.trim();
     if (!isValidApoderadoEmail(to)) {
-      setPrintMessage('Ingrese un correo de apoderado válido antes de enviar.');
+      setPrintMessage("Ingrese un correo de apoderado válido antes de enviar.");
       return;
     }
     if (hasOverflow) {
       setPrintMessage(
-        'El contenido supera una hoja Carta. Redúzcalo antes de enviar por correo.',
+        "El contenido supera una hoja Carta. Redúzcalo antes de enviar por correo.",
       );
       return;
     }
-    const html = previewRef.current?.innerHTML ?? '';
-    if (!html || new Blob([html]).size > MAX_EMAIL_HTML_BYTES) {
-      setPrintMessage('El documento no pudo prepararse para el envío.');
+    const documentHtml = previewRef.current?.innerHTML ?? "";
+    const html = `${
+      '<div style="font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5; color: #111827; margin-bottom: 24px;">' +
+      "<p>Estimado/a apoderado/a:</p>" +
+      "<p>Junto con saludarle, nos comunicamos con usted para informarle formalmente el inicio de un proceso de indagación respecto de la situación registrada en el expediente. La notificación oficial se incluye a continuación, con el detalle de los hechos y el marco normativo aplicable.</p>" +
+      "<p>Con el propósito de resguardar el debido proceso y asegurar el derecho a ser escuchado y participar activamente en esta instancia formativa, es necesario realizar una entrevista en conjunto.</p>" +
+      "<p>Le solicitamos responder a este correo indicando sus horarios de preferencia durante la semana, para agendar el encuentro de la manera más cómoda para usted.</p>" +
+      "<p>Agradecemos desde ya su valiosa colaboración y compromiso con la formación de su hijo/a.</p>" +
+      "<p>Atentamente,</p>" +
+      "<p><strong>Coordinación de Convivencia Escolar</strong><br/><strong>Colegio Carmela Romero de Espinosa - Madres Dominicas</strong></p>" +
+      "</div>"
+    }${documentHtml}`;
+    if (!documentHtml || new Blob([html]).size > MAX_EMAIL_HTML_BYTES) {
+      setPrintMessage("El documento no pudo prepararse para el envío.");
       return;
     }
     setIsSending(true);
@@ -174,16 +203,16 @@ export default function CausaNotificationGenerator({
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
-      const response = await fetch('/api/notificaciones/documento', {
-        method: 'POST',
+      const response = await fetch("/api/notificaciones/documento", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           causaId: causa.id,
           to,
-          subject: `Notificación de Inicio de Indagación ${causa.id}`,
+          subject: `Notificación de inicio de proceso de indagación y coordinación de entrevista - ${currentSnapshot.studentName}`,
           html,
         }),
       });
@@ -192,15 +221,15 @@ export default function CausaNotificationGenerator({
         error?: string;
       } | null;
       if (!response.ok || !payload?.success) {
-        setPrintMessage(payload?.error ?? 'No fue posible enviar el correo.');
+        setPrintMessage(payload?.error ?? "No fue posible enviar el correo.");
         return;
       }
       await onSaveApoderadoEmail(to);
-      setPrintMessage('Correo enviado. Marcando como notificada…');
+      setPrintMessage("Correo enviado. Marcando como notificada…");
       await onMarkNotified(currentSnapshot);
     } catch (error) {
       setPrintMessage(
-        `Error al enviar: ${error instanceof Error ? error.message : 'desconocido'}`,
+        `Error al enviar: ${error instanceof Error ? error.message : "desconocido"}`,
       );
     } finally {
       setIsSending(false);
@@ -214,7 +243,7 @@ export default function CausaNotificationGenerator({
     onSaveApoderadoEmail,
   ]);
 
-  const canEdit = documentStatus === null || documentStatus === 'Pendiente';
+  const canEdit = documentStatus === null || documentStatus === "Pendiente";
   return (
     <div className="space-y-5">
       {printMessage && (
@@ -231,21 +260,24 @@ export default function CausaNotificationGenerator({
           role="alert"
           className="rounded-xl border border-grave-200 bg-grave-50 p-4 text-sm text-grave-700"
         >
-          El contenido supera una hoja Carta (216 x 279 mm). Reduzca el texto o revise el documento
-          antes de imprimir: el excedente se corta en la impresión.
+          El contenido supera una hoja Carta (216 x 279 mm). Reduzca el texto o
+          revise el documento antes de imprimir: el excedente se corta en la
+          impresión.
         </div>
       )}
 
       <div className="space-y-4 rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h4 className="text-sm font-bold text-neutral-900">{NOTIFICACION_TITLE}</h4>
+            <h4 className="text-sm font-bold text-neutral-900">
+              {NOTIFICACION_TITLE}
+            </h4>
             <p className="mt-0.5 text-xs text-neutral-500">
-              {documentStatus === 'Notificada'
-                ? 'Documento notificado. Puede reimprimir el snapshot guardado.'
-                : documentStatus === 'Anulada'
-                  ? 'Documento anulado. Cree una nueva notificación si corresponde.'
-                  : 'Plantilla editable. Revise los antecedentes del expediente antes de emitir.'}
+              {documentStatus === "Notificada"
+                ? "Documento notificado. Puede reimprimir el snapshot guardado."
+                : documentStatus === "Anulada"
+                  ? "Documento anulado. Cree una nueva notificación si corresponde."
+                  : "Plantilla editable. Revise los antecedentes del expediente antes de emitir."}
             </p>
           </div>
           {documentStatus && (
@@ -257,18 +289,20 @@ export default function CausaNotificationGenerator({
 
         {!canEdit && (
           <div className="rounded-lg border border-info-200 bg-info-50 p-3 text-sm text-info-700">
-            Este documento ya fue {documentStatus === 'Notificada' ? 'notificado' : 'anulado'} y no
-            admite edición. Se muestra el contenido exacto guardado al momento de la emisión.
+            Este documento ya fue{" "}
+            {documentStatus === "Notificada" ? "notificado" : "anulado"} y no
+            admite edición. Se muestra el contenido exacto guardado al momento
+            de la emisión.
           </div>
         )}
 
         {canEdit && (
-            <NotificationForm
-              apoderadoName={apoderadoName}
-              onApoderadoNameChange={setApoderadoName}
-              apoderadoEmail={apoderadoEmail}
-              onApoderadoEmailChange={setApoderadoEmail}
-              emittedBy={emittedBy}
+          <NotificationForm
+            apoderadoName={apoderadoName}
+            onApoderadoNameChange={setApoderadoName}
+            apoderadoEmail={apoderadoEmail}
+            onApoderadoEmailChange={setApoderadoEmail}
+            emittedBy={emittedBy}
             onEmittedByChange={setEmittedBy}
             content={content}
             onContentChange={updateContent}
@@ -309,25 +343,29 @@ export default function CausaNotificationGenerator({
                   className="rounded-xl border border-leve-200 bg-leve-50 px-4 py-2.5 font-medium text-leve-700 shadow-xs hover:bg-leve-100 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <CheckCircle2 className="h-4 w-4" />
-                  {isProcessing ? 'Procesando…' : 'Marcar como notificada'}
+                  {isProcessing ? "Procesando…" : "Marcar como notificada"}
                 </Button>
 
                 <Button
                   variant="custom"
                   onClick={() => void handleSendEmail()}
-                  disabled={isProcessing || isSending || !isValidApoderadoEmail(apoderadoEmail)}
+                  disabled={
+                    isProcessing ||
+                    isSending ||
+                    !isValidApoderadoEmail(apoderadoEmail)
+                  }
                   title={
                     isValidApoderadoEmail(apoderadoEmail)
-                      ? 'Enviar por correo y marcar como notificada'
-                      : 'Ingrese un correo de apoderado válido para enviar'
+                      ? "Enviar por correo y marcar como notificada"
+                      : "Ingrese un correo de apoderado válido para enviar"
                   }
                   className="rounded-xl bg-brand-600 px-4 py-2.5 font-medium text-white shadow-xs hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Send className="h-4 w-4" />
-                  {isSending ? 'Enviando…' : 'Enviar por correo'}
+                  {isSending ? "Enviando…" : "Enviar por correo"}
                 </Button>
 
-                {documentStatus === 'Pendiente' && (
+                {documentStatus === "Pendiente" && (
                   <Button
                     variant="secondary"
                     onClick={() => void onAnnul()}
@@ -340,7 +378,7 @@ export default function CausaNotificationGenerator({
               </>
             )}
 
-            {documentStatus === 'Notificada' && (
+            {documentStatus === "Notificada" && (
               <Button
                 variant="secondary"
                 onClick={() => handlePrint()}
@@ -352,13 +390,13 @@ export default function CausaNotificationGenerator({
           </div>
           {feedback && (
             <p
-              role={feedback.tone === 'error' ? 'alert' : 'status'}
+              role={feedback.tone === "error" ? "alert" : "status"}
               className={`mt-3 rounded-lg px-3 py-2 text-sm font-medium ${
-                feedback.tone === 'error'
-                  ? 'bg-gravisima-50 text-gravisima-700'
-                  : feedback.tone === 'success'
-                    ? 'bg-leve-50 text-leve-700'
-                    : 'bg-blue-50 text-blue-700'
+                feedback.tone === "error"
+                  ? "bg-gravisima-50 text-gravisima-700"
+                  : feedback.tone === "success"
+                    ? "bg-leve-50 text-leve-700"
+                    : "bg-blue-50 text-blue-700"
               }`}
             >
               {feedback.text}
@@ -373,7 +411,7 @@ export default function CausaNotificationGenerator({
             content={content}
             expediente={currentSnapshot.expediente}
             apoderadoName={apoderadoName}
-            emittedBy={emittedBy || 'Dirección de Convivencia Escolar'}
+            emittedBy={emittedBy || "Dirección de Convivencia Escolar"}
             emissionDate={dateStr}
             logoSrc={institutionQuery.data?.logo_url}
             institutionName={institutionQuery.data?.official_name}

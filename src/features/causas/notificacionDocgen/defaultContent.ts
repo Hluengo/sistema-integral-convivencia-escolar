@@ -1,19 +1,25 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import type { NotificationContent } from './types';
+import type { NotificationContent } from "./types";
 
-export const NOTIFICACION_TITLE = 'Notificación de Inicio de Indagación';
+export const NOTIFICACION_TITLE = "Notificación de Inicio de Indagación";
 
 /** Títulos de las 8 secciones numeradas del documento. */
-export const NOTIFICATION_SECTIONS: Array<{ key: keyof NotificationContent; title: string }> = [
-  { key: 'fundamentoProcedimiento', title: 'Fundamento del procedimiento' },
-  { key: 'hallazgoIncidente', title: 'Hechos que motivan la indagación' },
-  { key: 'calificacionFalta', title: 'Calificación preliminar de la falta' },
-  { key: 'evidenciaTestimonios', title: 'Evidencias y testimonios' },
-  { key: 'atenuantesAgravantes', title: 'Circunstancias atenuantes y agravantes' },
-  { key: 'medidasEnEvaluacion', title: 'Medidas en evaluación' },
-  { key: 'garantiasDebidoProceso', title: 'Garantías del debido proceso' },
-  { key: 'confidencialidad', title: 'Confidencialidad' },
+export const NOTIFICATION_SECTIONS: Array<{
+  key: keyof NotificationContent;
+  title: string;
+}> = [
+  { key: "fundamentoProcedimiento", title: "Fundamento del procedimiento" },
+  { key: "hallazgoIncidente", title: "Hechos que motivan la indagación" },
+  { key: "calificacionFalta", title: "Calificación preliminar de la falta" },
+  { key: "evidenciaTestimonios", title: "Evidencias y testimonios" },
+  {
+    key: "atenuantesAgravantes",
+    title: "Circunstancias atenuantes y agravantes",
+  },
+  { key: "medidasEnEvaluacion", title: "Medidas en evaluación" },
+  { key: "garantiasDebidoProceso", title: "Garantías del debido proceso" },
+  { key: "confidencialidad", title: "Confidencialidad" },
 ];
 
 /**
@@ -26,20 +32,21 @@ export const NOTIFICATION_SECTIONS: Array<{ key: keyof NotificationContent; titl
  */
 export const DEFAULT_NOTIFICATION_CONTENT: NotificationContent = {
   fundamentoProcedimiento:
-    'Conforme al Paso 1 (Detección) y Paso 2 (Acopio de Información) de la Circular N° 482 (2018) y al RICE vigente, se inicia la indagación para verificar los hechos antes de adoptar medida alguna.',
+    "Estimado/a apoderado/a: junto con saludar, informamos el inicio de una indagación del expediente indicado, conforme a la Circular N° 482 y al RICE vigente, para recopilar antecedentes antes de decidir.",
   hallazgoIncidente:
-    'Los hechos corresponden a lo reportado y registrado en el expediente de la causa, en particular la recepción de la denuncia y la revisión inicial de antecedentes.',
+    "Los hechos corresponden a lo reportado y registrado inicialmente en el expediente, incluyendo la recepción de la denuncia y la revisión preliminar de antecedentes disponibles.",
   evidenciaTestimonios:
-    'Se incorporarán al expediente los antecedentes, testimonios y evidencias pertinentes que se obtengan durante la indagación.',
+    "Durante la indagación se podrán incorporar antecedentes, testimonios y evidencias pertinentes.",
   atenuantesAgravantes:
-    'Se considerarán los antecedentes personales y contextuales del estudiante, incluyendo atenuantes o agravantes que surjan de la información recopilada.',
+    "También se considerarán los antecedentes personales y contextuales del estudiante, incluyendo eventuales atenuantes o agravantes que surjan de la información recopilada.",
   calificacionFalta:
-    'La calificación preliminar se determina según la conducta tipificada en el RICE vigente y podrá revisarse al concluir la indagación.',
+    "La calificación preliminar de la falta se determina según la conducta tipificada en el RICE vigente y podrá revisarse al concluir la indagación.",
   medidasEnEvaluacion:
-    'Las medidas se evaluarán conforme a los principios de gradualidad, proporcionalidad y enfoque formativo de la normativa vigente.',
-  advertenciaEspecial: '',
+    "Las medidas que eventualmente correspondan se evaluarán conforme a los principios de gradualidad, proporcionalidad y enfoque formativo de la normativa vigente.",
+  advertenciaEspecial:
+    "Para aportar antecedentes o solicitar entrevista, comuníquese con el establecimiento por los canales institucionales.",
   garantiasDebidoProceso:
-    'Se advierte que esta indagación no constituye una sanción anticipada; el estudiante conserva su derecho a ser informado, derecho a ser escuchado, derecho a presentar antecedentes y descargos, derecho a conocer los resultados y derecho a solicitar la reconsideración de la decisión final.',
+    "La indagación no constituye una sanción anticipada. El estudiante mantiene derecho a ser informado, derecho a ser escuchado, a presentar antecedentes y descargos, conocer resultados y solicitar reconsideración cuando corresponda.",
   confidencialidad:
-    'Se solicita mantener la confidencialidad de esta notificación y sus antecedentes, en resguardo de la intimidad y honra del estudiante y su familia.',
+    "Se solicita mantener la confidencialidad de esta notificación y sus antecedentes, en resguardo de la intimidad y honra del estudiante y su familia.",
 };
