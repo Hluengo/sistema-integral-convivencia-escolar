@@ -1,59 +1,64 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { describe, it } from 'node:test';
-import { fileURLToPath } from 'node:url';
-import { EstadoCausa, type Causa } from '../../shared/lib/types';
-import { getCausaDeadline, getCausaDeadlineStages } from './causaPresentation';
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { describe, it } from "node:test";
+import { fileURLToPath } from "node:url";
+import { EstadoCausa, type Causa } from "../../shared/lib/types";
+import { getCausaDeadline, getCausaDeadlineStages } from "./causaPresentation";
 
 const featureDir = dirname(fileURLToPath(import.meta.url));
-const read = (relativePath: string) => readFileSync(resolve(featureDir, relativePath), 'utf-8');
+const read = (relativePath: string) =>
+  readFileSync(resolve(featureDir, relativePath), "utf-8");
 
 const cause = (overrides: Partial<Causa> = {}): Causa => ({
-  id: 'DC-2026-014',
-  estudianteNombre: 'Nombre completo',
-  estudianteCurso: '7° Básico A',
-  nnaProtectedName: 'N. C.',
-  runEstudiante: '12.345.678-9',
-  fechaApertura: '2026-07-01',
+  id: "DC-2026-014",
+  estudianteNombre: "Nombre completo",
+  estudianteCurso: "7° Básico A",
+  nnaProtectedName: "N. C.",
+  runEstudiante: "12.345.678-9",
+  fechaApertura: "2026-07-01",
   estadoActual: EstadoCausa.EN_PROCESO_INDAGACION,
-  tipoInfraccion: 'Grave',
-  responsable: 'Responsable',
+  tipoInfraccion: "Grave",
+  responsable: "Responsable",
   comprometeAulaSegura: false,
-  fechaUltimaActualizacion: '2026-07-01',
-  observaciones: 'Resumen',
+  fechaUltimaActualizacion: "2026-07-01",
+  observaciones: "Resumen",
   bitacora: [],
   checklistDebidoProceso: [],
   ...overrides,
 });
 
-const cierreIndagacion = (fechaCompletado: string): Causa['checklistDebidoProceso'][number] => ({
-  id: 'chk_res_2',
-  label: 'Informe Cierre de Indagación Emitido',
-  descripcion: '',
+const cierreIndagacion = (
+  fechaCompletado: string,
+): Causa["checklistDebidoProceso"][number] => ({
+  id: "chk_res_2",
+  label: "Informe Cierre de Indagación Emitido",
+  descripcion: "",
   completado: true,
   fechaCompletado,
-  requeridoPor: 'Reglamento Interno',
+  requeridoPor: "Reglamento Interno",
 });
 
-const informeConcluyente = (fechaCompletado: string): Causa['checklistDebidoProceso'][number] => ({
-  id: 'chk_res_6',
-  label: 'Informe Concluyente Emitido',
-  descripcion: '',
+const informeConcluyente = (
+  fechaCompletado: string,
+): Causa["checklistDebidoProceso"][number] => ({
+  id: "chk_res_6",
+  label: "Informe Concluyente Emitido",
+  descripcion: "",
   completado: true,
   fechaCompletado,
-  requeridoPor: 'Reglamento Interno',
+  requeridoPor: "Reglamento Interno",
 });
 
-describe('Listado de causas activas', () => {
-  it('mantiene el orden búsqueda/filtros, fases y tabla', () => {
-    const view = read('MainContent/CausasView.tsx');
+describe("Listado de causas activas", () => {
+  it("mantiene el orden búsqueda/filtros, fases y tabla", () => {
+    const view = read("MainContent/CausasView.tsx");
     const searchPosition = view.indexOf('id="search-active-causes"');
     const coursePosition = view.indexOf('id="active-causes-course-filter"');
     const phasePosition = view.indexOf('aria-label="Filtro por fase"');
-    const tablePosition = view.indexOf('<CausasTable');
+    const tablePosition = view.indexOf("<CausasTable");
 
     assert.ok(searchPosition > 0);
     assert.ok(coursePosition > searchPosition);
@@ -61,37 +66,42 @@ describe('Listado de causas activas', () => {
     assert.ok(tablePosition > phasePosition);
   });
 
-  it('incluye las columnas esenciales, privacidad y acción de gestión', () => {
-    const table = read('CausasTable.tsx');
+  it("incluye las columnas esenciales, privacidad y acción de gestión", () => {
+    const table = read("CausasTable.tsx");
     for (const heading of [
-      'Estudiante',
-      'Curso',
-      'Expediente',
-      'Tipificación',
-      'Fase actual',
-      'Días para cierre',
-      'Estado',
-      'Acción',
+      "Estudiante",
+      "Curso",
+      "Expediente",
+      "Tipificación",
+      "Fase actual",
+      "Días para cierre",
+      "Estado",
+      "Acción",
     ]) {
       assert.match(table, new RegExp(heading));
     }
-    assert.match(table, /privacyMode \? causa\.nnaProtectedName : causa\.estudianteNombre/);
+    assert.match(
+      table,
+      /privacyMode \? causa\.nnaProtectedName : causa\.estudianteNombre/,
+    );
     assert.match(table, /!privacyMode && causa\.runEstudiante/);
     assert.match(table, /onSelectCausa\(causa\)/);
     assert.match(table, /Gestionar expediente/);
   });
 
-  it('abre un modal accesible, mueve el trabajo de fases a la ruta y centraliza el asistente legal', () => {
-    const view = read('MainContent/CausasView.tsx');
-    const modal = read('CausaDetailModal.tsx');
-    const tabs = read('../timeline/TimelineTabs.tsx');
-    const summary = read('../timeline/ResumenTab.tsx');
-    const route = read('../timeline/RutaExpedienteTab.tsx');
-    const panels = read('../timeline/TimelineTabPanels.tsx');
-    const processTab = read('../timeline/ProcesoTab.tsx');
-    const advisor = read('MainContent/AdvisorView.tsx');
-    const operationalSummary = read('causaOperationalSummary.ts');
-    const investigationChecklist = read('../timeline/InvestigationChecklist.tsx');
+  it("abre un modal accesible, mueve el trabajo de fases a la ruta y centraliza el asistente legal", () => {
+    const view = read("MainContent/CausasView.tsx");
+    const modal = read("CausaDetailModal.tsx");
+    const tabs = read("../timeline/TimelineTabs.tsx");
+    const summary = read("../timeline/ResumenTab.tsx");
+    const route = read("../timeline/RutaExpedienteTab.tsx");
+    const panels = read("../timeline/TimelineTabPanels.tsx");
+    const processTab = read("../timeline/ProcesoTab.tsx");
+    const advisor = read("MainContent/AdvisorView.tsx");
+    const operationalSummary = read("causaOperationalSummary.ts");
+    const investigationChecklist = read(
+      "../timeline/InvestigationChecklist.tsx",
+    );
 
     assert.match(view, /<CausaDetailModal/);
     assert.match(modal, /<Dialog open=/);
@@ -107,7 +117,13 @@ describe('Listado de causas activas', () => {
     assert.doesNotMatch(advisor, /Auditoría legal/);
     assert.doesNotMatch(advisor, /legal-case-selector/);
     assert.doesNotMatch(tabs, /Recepción/);
-    for (const phase of ['Recepción', 'Investigación', 'Resolución', 'Apelación', 'Seguimiento']) {
+    for (const phase of [
+      "Recepción",
+      "Investigación",
+      "Resolución",
+      "Apelación",
+      "Seguimiento",
+    ]) {
       assert.match(operationalSummary, new RegExp(phase));
     }
     assert.doesNotMatch(summary, /Ruta del expediente/);
@@ -125,134 +141,148 @@ describe('Listado de causas activas', () => {
     assert.doesNotMatch(processTab, /MAPPED_STATES/);
     assert.match(investigationChecklist, /Mediación no requerida/);
     assert.match(investigationChecklist, /Derivar a mediación/);
-    assert.match(investigationChecklist, /handleStartRegister\(derivationItem\)/);
+    assert.match(
+      investigationChecklist,
+      /handleStartRegister\(derivationItem\)/,
+    );
     assert.match(investigationChecklist, /model\.mediationActive &&/);
-    assert.match(investigationChecklist, /notRequired={model\.mediationOutcome === 'agreement'}/);
-    assert.match(investigationChecklist, /notRequired={model\.mediationOutcome === 'failed'}/);
+    assert.match(
+      investigationChecklist,
+      /notRequired={model\.mediationOutcome === 'agreement'}/,
+    );
+    assert.match(
+      investigationChecklist,
+      /notRequired={model\.mediationOutcome === 'failed'}/,
+    );
   });
 
-  it('calcula días civiles usando la fecha chilena incluso cerca de UTC', () => {
+  it("calcula días civiles usando la fecha chilena incluso cerca de UTC", () => {
     const deadline = getCausaDeadline(
-      cause({ fechaApertura: '2026-07-01', plazoInvestigacionDias: 60 }),
-      new Date('2026-07-30T02:30:00.000Z'),
+      cause({ fechaApertura: "2026-07-01", plazoInvestigacionDias: 60 }),
+      new Date("2026-07-30T02:30:00.000Z"),
     );
     assert.equal(deadline.remainingDays, 31);
-    assert.equal(deadline.text, '31 días');
+    assert.equal(deadline.text, "31 días");
   });
 
-  it('distingue plazo próximo y plazo excedido', () => {
+  it("distingue plazo próximo y plazo excedido", () => {
     const warning = getCausaDeadline(
-      cause({ fechaApertura: '2026-07-01', plazoInvestigacionDias: 30 }),
-      new Date('2026-07-27T12:00:00.000Z'),
+      cause({ fechaApertura: "2026-07-01", plazoInvestigacionDias: 30 }),
+      new Date("2026-07-27T12:00:00.000Z"),
     );
     const overdue = getCausaDeadline(
-      cause({ fechaApertura: '2026-07-01', plazoInvestigacionDias: 10 }),
-      new Date('2026-07-20T12:00:00.000Z'),
+      cause({ fechaApertura: "2026-07-01", plazoInvestigacionDias: 10 }),
+      new Date("2026-07-20T12:00:00.000Z"),
     );
-    assert.equal(warning.tone, 'warning');
-    assert.equal(overdue.text, 'Plazo excedido');
+    assert.equal(warning.tone, "warning");
+    assert.equal(overdue.text, "Plazo excedido");
   });
 
-  it('cuenta faltas Muy Graves y Gravísimas con 10 días aunque tengan plazo heredado de 60', () => {
+  it("cuenta faltas Muy Graves y Gravísimas con 10 días aunque tengan plazo heredado de 60", () => {
     const deadline = getCausaDeadline(
       cause({
-        fechaApertura: '2026-07-01',
-        tipoInfraccion: 'Muy Grave',
+        fechaApertura: "2026-07-01",
+        tipoInfraccion: "Muy Grave",
         plazoInvestigacionDias: 60,
-        fechaLimiteInvestigacion: '2026-09-22',
+        fechaLimiteInvestigacion: "2026-09-22",
       }),
-        new Date('2026-07-16T12:00:00.000Z'),
+      new Date("2026-07-16T12:00:00.000Z"),
     );
-    assert.equal(deadline.text, 'Plazo excedido');
+    assert.equal(deadline.text, "Plazo excedido");
   });
 
-  it('presenta el plazo de alta complejidad en días hábiles', () => {
+  it("presenta el plazo de alta complejidad en días hábiles", () => {
     const deadline = getCausaDeadline(
-      cause({ fechaApertura: '2026-08-27', tipoInfraccion: 'Gravísima' }),
-      new Date('2026-09-04T12:00:00.000Z'),
+      cause({ fechaApertura: "2026-08-27", tipoInfraccion: "Gravísima" }),
+      new Date("2026-09-04T12:00:00.000Z"),
     );
     assert.equal(deadline.remainingDays, 4);
-    assert.equal(deadline.text, '4 días');
-    assert.equal(deadline.deadlineDate, '2026-09-10');
+    assert.equal(deadline.text, "4 días");
+    assert.equal(deadline.deadlineDate, "2026-09-10");
   });
 
-  it('usa el hito de cierre para evaluar si la indagación quedó excedida', () => {
+  it("usa el hito de cierre para evaluar si la indagación quedó excedida", () => {
     const enPlazo = getCausaDeadline(
       cause({
-        fechaApertura: '2026-08-13',
-        fechaInicioInvestigacion: '2026-08-13',
-        tipoInfraccion: 'Gravísima',
-        checklistDebidoProceso: [cierreIndagacion('2026-08-26')],
+        fechaApertura: "2026-08-13",
+        fechaInicioInvestigacion: "2026-08-13",
+        tipoInfraccion: "Gravísima",
+        checklistDebidoProceso: [cierreIndagacion("2026-08-26")],
       }),
-      new Date('2026-09-03T12:00:00.000Z'),
+      new Date("2026-09-03T12:00:00.000Z"),
     );
     const fueraPlazo = getCausaDeadline(
       cause({
-        fechaApertura: '2026-08-13',
-        fechaInicioInvestigacion: '2026-08-13',
-        tipoInfraccion: 'Gravísima',
-        checklistDebidoProceso: [cierreIndagacion('2026-08-28')],
+        fechaApertura: "2026-08-13",
+        fechaInicioInvestigacion: "2026-08-13",
+        tipoInfraccion: "Gravísima",
+        checklistDebidoProceso: [cierreIndagacion("2026-08-28")],
       }),
-      new Date('2026-09-03T12:00:00.000Z'),
+      new Date("2026-09-03T12:00:00.000Z"),
     );
 
-    assert.equal(enPlazo.text, 'Cerró en plazo');
-    assert.equal(enPlazo.tone, 'normal');
-    assert.equal(fueraPlazo.text, 'Cerró fuera de plazo');
-    assert.equal(fueraPlazo.tone, 'overdue');
+    assert.equal(enPlazo.text, "Cerró en plazo");
+    assert.equal(enPlazo.tone, "normal");
+    assert.equal(fueraPlazo.text, "Cerró fuera de plazo");
+    assert.equal(fueraPlazo.tone, "overdue");
   });
 
-  it('distingue cierre a 10 días e informe concluyente a 15 días totales', () => {
+  it("distingue cierre a 10 días e informe concluyente a 15 días totales", () => {
     const deadlines = getCausaDeadlineStages(
       cause({
-        fechaApertura: '2026-08-13',
-        fechaInicioInvestigacion: '2026-08-13',
-        tipoInfraccion: 'Gravísima',
+        fechaApertura: "2026-08-13",
+        fechaInicioInvestigacion: "2026-08-13",
+        tipoInfraccion: "Gravísima",
         checklistDebidoProceso: [
-          cierreIndagacion('2026-08-26'),
-          informeConcluyente('2026-09-03'),
+          cierreIndagacion("2026-08-26"),
+          informeConcluyente("2026-09-03"),
         ],
       }),
-      new Date('2026-09-03T12:00:00.000Z'),
+      new Date("2026-09-03T12:00:00.000Z"),
     );
 
-    assert.equal(deadlines.cierreIndagacion.text, 'Cerró en plazo');
-    assert.equal(deadlines.informeConcluyente?.text, 'Cerró fuera de plazo');
+    assert.equal(deadlines.cierreIndagacion.text, "Cerró en plazo");
+    assert.equal(deadlines.informeConcluyente?.text, "Cerró fuera de plazo");
   });
 
-  it('usa el hito de inicio de indagación para no adelantar el plazo', () => {
+  it("usa el hito de inicio de indagación para no adelantar el plazo", () => {
     const deadlines = getCausaDeadlineStages(
       cause({
-        fechaApertura: '2026-08-13',
-        fechaInicioInvestigacion: '2026-08-13',
-        tipoInfraccion: 'Gravísima',
+        fechaApertura: "2026-08-13",
+        fechaInicioInvestigacion: "2026-08-13",
+        tipoInfraccion: "Gravísima",
         checklistDebidoProceso: [
           {
-            id: 'chk_rec_3',
-            label: 'Notificación de Inicio de Indagación',
-            descripcion: '',
+            id: "chk_rec_3",
+            label: "Notificación de Inicio de Indagación",
+            descripcion: "",
             completado: true,
-            fechaCompletado: '2026-08-14',
-            requeridoPor: 'Circular 482',
+            fechaCompletado: "2026-08-14",
+            requeridoPor: "Circular 482",
           },
-          cierreIndagacion('2026-08-27'),
-          informeConcluyente('2026-09-03'),
+          cierreIndagacion("2026-08-27"),
+          informeConcluyente("2026-09-03"),
         ],
       }),
-      new Date('2026-09-03T12:00:00.000Z'),
+      new Date("2026-09-03T12:00:00.000Z"),
     );
 
-    assert.equal(deadlines.cierreIndagacion.text, 'Cerró en plazo');
-    assert.equal(deadlines.informeConcluyente?.text, 'Cerró en plazo');
+    assert.equal(deadlines.cierreIndagacion.text, "Cerró en plazo");
+    assert.equal(deadlines.informeConcluyente?.text, "Cerró en plazo");
   });
 
-  it('mantiene la bitácora y checklist como fuentes del detalle', () => {
-    const panels = read('../timeline/TimelineTabPanels.tsx');
-    const process = read('../timeline/ProcessChecklist.tsx');
-    const checklistItemCard = read('../timeline/ChecklistItemCard.tsx');
-    const checklistRegistration = read('../../shared/lib/hooks/useChecklistRegistration.ts');
+  it("mantiene la bitácora y checklist como fuentes del detalle", () => {
+    const panels = read("../timeline/TimelineTabPanels.tsx");
+    const process = read("../timeline/ProcessChecklist.tsx");
+    const checklistItemCard = read("../timeline/ChecklistItemCard.tsx");
+    const checklistRegistration = read(
+      "../../shared/lib/hooks/useChecklistRegistration.ts",
+    );
     assert.match(panels, /<BitacoraTab/);
-    assert.match(process, /getApplicableChecklistItems\(causa, section\.phaseName\)/);
+    assert.match(
+      process,
+      /getApplicableChecklistItems\(\s*causa,\s*section\.phaseName,?\s*\)/,
+    );
     assert.match(checklistItemCard, /item\.registradoPor/);
     assert.match(checklistItemCard, /item\.fechaCompletado/);
     assert.match(process, /Abrir hitos/);
@@ -260,8 +290,8 @@ describe('Listado de causas activas', () => {
     assert.doesNotMatch(checklistRegistration, /investigacion: true/);
   });
 
-  it('usa color contextual suave en las tarjetas de resumen del expediente', () => {
-    const summary = read('../timeline/ResumenTab.tsx');
+  it("usa color contextual suave en las tarjetas de resumen del expediente", () => {
+    const summary = read("../timeline/ResumenTab.tsx");
 
     assert.match(summary, /bg-violet-50/);
     assert.match(summary, /bg-sky-50/);
@@ -269,9 +299,9 @@ describe('Listado de causas activas', () => {
     assert.match(summary, /bg-leve-50/);
   });
 
-  it('muestra la ruta, plazo, próximo hito y actividad sin nuevas fuentes de datos', () => {
-    const route = read('../timeline/RutaExpedienteTab.tsx');
-    const operationalSummary = read('causaOperationalSummary.ts');
+  it("muestra la ruta, plazo, próximo hito y actividad sin nuevas fuentes de datos", () => {
+    const route = read("../timeline/RutaExpedienteTab.tsx");
+    const operationalSummary = read("causaOperationalSummary.ts");
 
     assert.match(route, /Ruta del expediente/);
     assert.match(route, /Próximo hito/);
@@ -281,38 +311,44 @@ describe('Listado de causas activas', () => {
     assert.match(operationalSummary, /causa\.bitacora/);
   });
 
-  it('alinea el historial de causas con el registro manual y las tarjetas de anotaciones', () => {
-    const causesHistory = read('../timeline/BitacoraTab.tsx');
+  it("alinea el historial de causas con el registro manual y las tarjetas de anotaciones", () => {
+    const causesHistory = read("../timeline/BitacoraTab.tsx");
     const annotationHistoryForm = read(
-      '../anotaciones/AnotacionesStudentDetailModal/ManualHistoryEntryForm.tsx',
+      "../anotaciones/AnotacionesStudentDetailModal/ManualHistoryEntryForm.tsx",
     );
-    const sharedHistoryForm = read('../../shared/ui/HistoryEntryForm.tsx');
+    const sharedHistoryForm = read("../../shared/ui/HistoryEntryForm.tsx");
 
     assert.match(causesHistory, /HistoryEntryForm/);
     assert.match(causesHistory, /Detalles del registro/);
-    assert.match(causesHistory, /rounded-xl border border-neutral-200 bg-white p-4 shadow-xs/);
+    assert.match(
+      causesHistory,
+      /rounded-xl border border-neutral-200 bg-white p-4 shadow-xs/,
+    );
     assert.match(causesHistory, /NotebookPen/);
     assert.match(annotationHistoryForm, /HistoryEntryForm/);
     assert.match(sharedHistoryForm, /Nueva entrada en el historial/);
     assert.match(sharedHistoryForm, /Registrar entrada manual/);
   });
 
-  it('no selecciona automáticamente la primera causa al cargar el listado', () => {
-    const workspace = read('../../app/hooks/useCausaWorkspace.ts');
+  it("no selecciona automáticamente la primera causa al cargar el listado", () => {
+    const workspace = read("../../app/hooks/useCausaWorkspace.ts");
     assert.match(workspace, /setSelectedCausaId\(''\)/);
-    assert.doesNotMatch(workspace, /setSelectedCausaId\(causasQuery\.data\[0\]/);
+    assert.doesNotMatch(
+      workspace,
+      /setSelectedCausaId\(causasQuery\.data\[0\]/,
+    );
   });
 
-  it('no reinicia Zustand en bucle mientras la sesión aún no está autenticada', () => {
-    const workspace = read('../../app/hooks/useCausaWorkspace.ts');
+  it("no reinicia Zustand en bucle mientras la sesión aún no está autenticada", () => {
+    const workspace = read("../../app/hooks/useCausaWorkspace.ts");
 
     assert.match(workspace, /if \(causas\.length > 0\) setCausas\(\[\]\);/);
     assert.match(workspace, /if \(selectedCausaId\) setSelectedCausaId\(''\);/);
   });
 
-  it('mantiene el borrador contextual y simplifica su edición antes de imprimir', () => {
-    const workspace = read('MainContent/CaseLegalWorkspace.tsx');
-    const draft = read('../timeline/DraftPanel.tsx');
+  it("mantiene el borrador contextual y simplifica su edición antes de imprimir", () => {
+    const workspace = read("MainContent/CaseLegalWorkspace.tsx");
+    const draft = read("../timeline/DraftPanel.tsx");
 
     assert.match(workspace, /useAuditDraft\(\{ causa \}\)/);
     assert.match(workspace, /<DraftPanel/);
@@ -323,8 +359,8 @@ describe('Listado de causas activas', () => {
     assert.match(draft, /Ver vista previa para impresión Oficio/);
   });
 
-  it('redirige la redacción de la notificación de apertura al checklist de Recepción', () => {
-    const draft = read('../timeline/DraftPanel.tsx');
+  it("redirige la redacción de la notificación de apertura al checklist de Recepción", () => {
+    const draft = read("../timeline/DraftPanel.tsx");
 
     assert.match(draft, /DOC_TYPE_OPTIONS/);
     assert.match(draft, /hito chk_rec_3 del checklist de Recepción/);
@@ -332,9 +368,11 @@ describe('Listado de causas activas', () => {
     assert.match(draft, /informe_concluyente/);
   });
 
-  it('mantiene Plantillas como administración clara, con estados de acceso y sin recargas repetidas', () => {
-    const templates = read('../document-templates/TemplateEditor.tsx');
-    const templatesService = read('../../shared/api/services/documentTemplates.service.ts');
+  it("mantiene Plantillas como administración clara, con estados de acceso y sin recargas repetidas", () => {
+    const templates = read("../document-templates/TemplateEditor.tsx");
+    const templatesService = read(
+      "../../shared/api/services/documentTemplates.service.ts",
+    );
 
     assert.match(templates, /Plantillas institucionales/);
     assert.match(templates, /No hay plantillas institucionales disponibles/);
@@ -349,8 +387,8 @@ describe('Listado de causas activas', () => {
     assert.match(templatesService, /updateDocumentTemplate/);
   });
 
-  it('deja el membrete y los metadatos al formato de impresión, no al cuerpo generado', () => {
-    const draftRoute = read('../../../server/api/routes/draft.ts');
+  it("deja el membrete y los metadatos al formato de impresión, no al cuerpo generado", () => {
+    const draftRoute = read("../../../server/api/routes/draft.ts");
 
     assert.match(draftRoute, /No los repitas en el cuerpo/);
     assert.match(draftRoute, /templatePrompt \|\| getTemplateFallback\(\)/);
