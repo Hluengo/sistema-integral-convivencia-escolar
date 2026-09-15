@@ -3,15 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ArrowLeft, ListChecks } from 'lucide-react';
-import type { Causa, FaseProcedimental } from '../../shared/lib/types';
-import ProcesoTab from './ProcesoTab';
-import BitacoraTab from './BitacoraTab';
-import ResumenTab from './ResumenTab';
-import RutaExpedienteTab from './RutaExpedienteTab';
-import { useTimelineContext } from '../../shared/lib/useTimelineContext';
-import type { TimelineTab } from './timelineTabs.types';
-import { DetailModalBody } from '../../shared/ui/DetailModal';
+import { ArrowLeft, Download, ListChecks } from "lucide-react";
+import type { Causa, FaseProcedimental } from "../../shared/lib/types";
+import ProcesoTab from "./ProcesoTab";
+import BitacoraTab from "./BitacoraTab";
+import ResumenTab from "./ResumenTab";
+import RutaExpedienteTab from "./RutaExpedienteTab";
+import ExpedienteExportPanel from "../causas/expediente/ExpedienteExportPanel";
+import { useTimelineContext } from "../../shared/lib/useTimelineContext";
+import type { TimelineTab } from "./timelineTabs.types";
+import { DetailModalBody } from "../../shared/ui/DetailModal";
 
 interface TimelineTabPanelsProps {
   activeTab: TimelineTab;
@@ -34,11 +35,15 @@ export default function TimelineTabPanels({
 
   return (
     <DetailModalBody className="space-y-4 bg-neutral-50/60">
-      {activeTab === 'resumen' && (
-        <ResumenTab causa={causa} breaches={breaches} privacyMode={ctx.privacyMode} />
+      {activeTab === "resumen" && (
+        <ResumenTab
+          causa={causa}
+          breaches={breaches}
+          privacyMode={ctx.privacyMode}
+        />
       )}
 
-      {activeTab === 'ruta' &&
+      {activeTab === "ruta" &&
         (selectedPhase ? (
           <section
             id="phase-workspace"
@@ -47,7 +52,10 @@ export default function TimelineTabPanels({
           >
             <header className="flex flex-col gap-2.5 rounded-lg border border-neutral-200 bg-neutral-50/80 p-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex min-w-0 items-start gap-2.5">
-                <span className="rounded-lg bg-brand-100 p-1.5 text-brand-700" aria-hidden="true">
+                <span
+                  className="rounded-lg bg-brand-100 p-1.5 text-brand-700"
+                  aria-hidden="true"
+                >
                   <ListChecks className="size-4.5" />
                 </span>
                 <div>
@@ -61,7 +69,8 @@ export default function TimelineTabPanels({
                     {selectedPhase}
                   </h3>
                   <p className="mt-0.5 text-neutral-600 text-xs">
-                    Registra y consulta los hitos, antecedentes y documentos de esta fase.
+                    Registra y consulta los hitos, antecedentes y documentos de
+                    esta fase.
                   </p>
                 </div>
               </div>
@@ -120,7 +129,7 @@ export default function TimelineTabPanels({
           />
         ))}
 
-      {activeTab === 'bitacora' && (
+      {activeTab === "bitacora" && (
         <BitacoraTab
           causa={causa}
           currentRole={ctx.currentRole}
@@ -129,6 +138,34 @@ export default function TimelineTabPanels({
           manualEntryError={ctx.manualLogError}
           onResetManualEntryError={ctx.resetManualLogError}
         />
+      )}
+
+      {activeTab === "expediente" && (
+        <section aria-labelledby="expediente-title" className="space-y-3">
+          <header className="flex items-start gap-2.5 rounded-lg border border-neutral-200 bg-white p-3">
+            <span
+              className="rounded-lg bg-brand-100 p-1.5 text-brand-700"
+              aria-hidden="true"
+            >
+              <Download className="size-4" />
+            </span>
+            <div>
+              <h3
+                id="expediente-title"
+                className="font-semibold text-neutral-900 text-sm"
+              >
+                Descargar expediente completo
+              </h3>
+              <p className="mt-0.5 text-neutral-600 text-xs">
+                PDF imprimible, Markdown para IA y ZIP con los documentos
+                subidos. Cada descarga queda registrada en la bitácora.
+              </p>
+            </div>
+          </header>
+          <div className="rounded-lg border border-neutral-200 bg-white p-4">
+            <ExpedienteExportPanel causa={causa} />
+          </div>
+        </section>
       )}
     </DetailModalBody>
   );

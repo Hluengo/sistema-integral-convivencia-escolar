@@ -130,7 +130,7 @@ describe("Listado de causas activas", () => {
     assert.match(route, /onSelectPhase/);
     assert.match(route, /Trabajar.*hitos/);
     assert.match(route, /aria-controls="phase-workspace"/);
-    assert.match(panels, /activeTab === 'ruta'/);
+    assert.match(panels, /activeTab === ["']ruta["']/);
     assert.match(panels, /selectedPhase \? \(/);
     assert.match(panels, /Volver a la ruta/);
     assert.match(panels, /onSelectPhase\(null\)/);
