@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   Circle,
   Download,
+  FileStack,
   ListChecks,
 } from "lucide-react";
 import type { Causa, FaseProcedimental } from "../../shared/lib/types";
@@ -16,6 +17,7 @@ import BitacoraTab from "./BitacoraTab";
 import ResumenTab from "./ResumenTab";
 import RutaExpedienteTab from "./RutaExpedienteTab";
 import ExpedienteExportPanel from "../causas/expediente/ExpedienteExportPanel";
+import MatrizPanel from "../causas/matriz/MatrizPanel";
 import { getCausaOperationalSummary } from "../causas/causaOperationalSummary";
 import { useTimelineContext } from "../../shared/lib/useTimelineContext";
 import type { TimelineTab } from "./timelineTabs.types";
@@ -196,6 +198,32 @@ export default function TimelineTabPanels({
             onSelectPhase={onSelectPhase}
           />
         ))}
+
+      {activeTab === "matriz" && (
+        <section aria-labelledby="matriz-title" className="space-y-3">
+          <header className="flex items-start gap-2.5 rounded-lg border border-slate-200 bg-white p-3 shadow-xs">
+            <span
+              className="rounded-lg bg-brand-100 p-1.5 text-brand-700"
+              aria-hidden="true"
+            >
+              <FileStack className="size-4" />
+            </span>
+            <div>
+              <h3
+                id="matriz-title"
+                className="font-semibold text-sm text-slate-900"
+              >
+                Matriz Hecho–Evidencia–RICE
+              </h3>
+              <p className="mt-0.5 text-xs text-slate-600">
+                Cada hecho acreditado debe tener evidencia y norma RICE. Soporta
+                casos colectivos vía incidente compartido.
+              </p>
+            </div>
+          </header>
+          <MatrizPanel causa={causa} />
+        </section>
+      )}
 
       {activeTab === "bitacora" && (
         <BitacoraTab

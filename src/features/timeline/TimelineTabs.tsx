@@ -4,7 +4,7 @@
  */
 
 import type React from "react";
-import { Download, FileSearch, History, Route } from "lucide-react";
+import { Download, FileSearch, FileStack, History, Route } from "lucide-react";
 import type { Causa } from "../../shared/lib/types";
 import type { TimelineTab } from "./timelineTabs.types";
 import {
@@ -30,6 +30,7 @@ export default function TimelineTabs({
   }> = [
     { id: "resumen", label: "Resumen", Icon: FileSearch },
     { id: "ruta", label: "Ruta del expediente", Icon: Route },
+    { id: "matriz", label: "Matriz", Icon: FileStack },
     {
       id: "bitacora",
       label: `Historial (${causa.bitacora.length})`,
