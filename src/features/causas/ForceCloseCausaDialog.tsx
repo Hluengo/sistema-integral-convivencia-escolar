@@ -3,15 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, type FormEvent } from 'react';
-import { FileUp, LockKeyhole } from 'lucide-react';
-import type { Causa } from '../../shared/lib/types';
+import { useState, type FormEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { AlertTriangle, FileUp, LockKeyhole } from "lucide-react";
+import type { Causa } from "../../shared/lib/types";
 import {
   DOCUMENT_UPLOAD_ACCEPT,
   DOCUMENT_UPLOAD_HELPER_TEXT,
   uploadDocument,
-} from '../../shared/api/services/storage.service';
-import Button from '../../shared/ui/Button';
+} from "../../shared/api/services/storage.service";
+import Button from "../../shared/ui/Button";
 import {
   Dialog,
   DialogContent,
@@ -19,8 +20,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../../shared/ui/Dialog';
-import { buildForceClosedCausa } from './forceCloseCausa';
+} from "../../shared/ui/Dialog";
+import { buildForceClosedCausa } from "./forceCloseCausa";
+import {
+  fetchHechoEvidencias,
+  fetchHechos,
+} from "../../shared/api/services/hechos.service";
+import { auditarExpediente } from "../../shared/lib/auditoria";
 
 interface ForceCloseCausaDialogProps {
   causa: Causa;
@@ -35,26 +41,53 @@ export default function ForceCloseCausaDialog({
   onOpenChange,
   onConfirm,
 }: ForceCloseCausaDialogProps) {
-  const [responsable, setResponsable] = useState(causa.responsable.split(' (')[0].trim());
-  const [titulo, setTitulo] = useState('Cierre anticipado fundado');
-  const [motivo, setMotivo] = useState('');
+  const [responsable, setResponsable] = useState(
+    causa.responsable.split(" (")[0].trim(),
+  );
+  const [titulo, setTitulo] = useState("Cierre anticipado fundado");
+  const [motivo, setMotivo] = useState("");
   const [informe, setInforme] = useState<File | null>(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [ackRisk, setAckRisk] = useState(false);
+
+  const hechosQuery = useQuery({
+    queryKey: ["hechos", causa.id, "forceClose"],
+    queryFn: () => fetchHechos(causa.id),
+    enabled: open,
+  });
+  const vinculosQuery = useQuery({
+    queryKey: ["hecho_evidencias", causa.id, "forceClose"],
+    queryFn: () => fetchHechoEvidencias(causa.id),
+    enabled: open,
+  });
+  const audit = auditarExpediente(
+    causa,
+    hechosQuery.data ?? [],
+    vinculosQuery.data ?? [],
+  );
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setError('');
+    setError("");
 
     if (!responsable.trim() || !titulo.trim() || !motivo.trim()) {
-      setError('Complete responsable, título y fundamento antes de cerrar la causa.');
+      setError(
+        "Complete responsable, título y fundamento antes de cerrar la causa.",
+      );
+      return;
+    }
+    if (!audit.puedeCerrar && !ackRisk) {
+      setError(
+        "Confirme que entiende el riesgo de cerrar con garantías bloqueantes.",
+      );
       return;
     }
 
     setIsSaving(true);
     try {
       const documentoAdjunto = informe
-        ? await uploadDocument(causa.id, informe, 'documentos')
+        ? await uploadDocument(causa.id, informe, "documentos")
         : undefined;
       onConfirm(
         buildForceClosedCausa(causa, {
@@ -66,24 +99,35 @@ export default function ForceCloseCausaDialog({
       );
       onOpenChange(false);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'No fue posible cerrar la causa.');
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "No fue posible cerrar la causa.",
+      );
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => !isSaving && onOpenChange(nextOpen)}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => !isSaving && onOpenChange(nextOpen)}
+    >
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader className="pr-10">
           <div>
             <DialogTitle className="flex items-center gap-2">
-              <LockKeyhole className="size-5 text-gravisima-600" aria-hidden="true" />
+              <LockKeyhole
+                className="size-5 text-gravisima-600"
+                aria-hidden="true"
+              />
               Cerrar causa con fundamento
             </DialogTitle>
             <DialogDescription className="mt-1">
-              El expediente {causa.id} pasará a cerrado. Sus hitos, documentos e investigación se
-              conservarán y este cierre quedará registrado en Historial.
+              El expediente {causa.id} pasará a cerrado. Sus hitos, documentos e
+              investigación se conservarán y este cierre quedará registrado en
+              Historial.
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -126,7 +170,10 @@ export default function ForceCloseCausaDialog({
             </div>
 
             <div>
-              <label htmlFor="force-close-reason" className="block font-semibold text-neutral-700 text-sm">
+              <label
+                htmlFor="force-close-reason"
+                className="block font-semibold text-neutral-700 text-sm"
+              >
                 Motivo y fundamento
               </label>
               <textarea
@@ -157,13 +204,44 @@ export default function ForceCloseCausaDialog({
                 aria-label="Informe ad-hoc"
                 type="file"
                 accept={DOCUMENT_UPLOAD_ACCEPT}
-                onChange={(event) => setInforme(event.target.files?.[0] ?? null)}
+                onChange={(event) =>
+                  setInforme(event.target.files?.[0] ?? null)
+                }
                 className="mt-3 block w-full text-neutral-600 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-2 file:font-semibold file:text-brand-700 file:text-xs"
               />
               {informe && (
-                <span className="mt-2 block truncate text-neutral-600 text-xs">{informe.name}</span>
+                <span className="mt-2 block truncate text-neutral-600 text-xs">
+                  {informe.name}
+                </span>
               )}
             </div>
+
+            {!audit.puedeCerrar && (
+              <div
+                role="alert"
+                className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"
+              >
+                <p className="flex items-center gap-1.5 font-semibold">
+                  <AlertTriangle className="size-4" /> Auditoría bloqueante —{" "}
+                  {audit.verificadas}/{audit.total}
+                </p>
+                <ul className="mt-1 list-disc pl-5">
+                  {audit.advertencias.map((w) => (
+                    <li key={w}>{w}</li>
+                  ))}
+                </ul>
+                <label className="mt-2 flex items-center gap-2 font-medium">
+                  <input
+                    type="checkbox"
+                    checked={ackRisk}
+                    onChange={(e) => setAckRisk(e.target.checked)}
+                    className="size-4"
+                  />
+                  Entiendo el riesgo y deseo cerrar con fundamento de todas
+                  formas
+                </label>
+              </div>
+            )}
 
             {error && (
               <p
@@ -184,7 +262,12 @@ export default function ForceCloseCausaDialog({
             >
               Cancelar
             </Button>
-            <Button type="submit" variant="danger" isLoading={isSaving}>
+            <Button
+              type="submit"
+              variant="danger"
+              isLoading={isSaving}
+              disabled={!audit.puedeCerrar && !ackRisk}
+            >
               Confirmar cierre
             </Button>
           </DialogFooter>

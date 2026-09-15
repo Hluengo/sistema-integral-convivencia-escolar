@@ -34,6 +34,8 @@ import {
   type AgravanteId,
   type AtenuanteId,
 } from "@/shared/lib/proporcionalidad";
+import AuditoriaPanel from "./AuditoriaPanel";
+import { auditarExpediente } from "@/shared/lib/auditoria";
 
 const estadoLabel: Record<HechoEstado, string> = {
   denunciado: "Denunciado",
@@ -202,7 +204,25 @@ export default function MatrizPanel({ causa }: { causa: Causa }) {
 
   return (
     <div className="space-y-4">
-      {/* Auditoría */}
+      <AuditoriaPanel causa={causa} hechos={hechos} vinculos={vinculos} />
+      {(() => {
+        const a = auditarExpediente(causa, hechos, vinculos);
+        if (a.puedeCerrar || a.bloqueantes === 0) return null;
+        return (
+          <div className="rounded-lg border border-slate-200 bg-slate-900 p-3 text-xs text-slate-100">
+            <p className="font-semibold">Asistente de revisión (IA auditora)</p>
+            <p className="mt-1 text-slate-300">
+              La medida seleccionada requiere fundamentación adicional.{" "}
+              {a.advertencias[0] ?? "Complete la trazabilidad antes de cerrar."}
+            </p>
+            <p className="mt-1 text-11px text-slate-400">
+              La IA no sanciona — audita el debido proceso.
+            </p>
+          </div>
+        );
+      })()}
+
+      {/* Auditoría rápida matriz (compat) */}
       {(sinEvidencia.length > 0 ||
         sinRice.length > 0 ||
         denunciadoSinResolver.length > 0) && (
