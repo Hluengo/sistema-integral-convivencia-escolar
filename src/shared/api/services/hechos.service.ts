@@ -15,6 +15,8 @@ export interface HechoRow {
   estado: HechoEstado;
   participacion_acreditada: boolean;
   rice_articulo: string | null;
+  agravantes: string[];
+  atenuantes: string[];
   created_at: string;
   updated_at: string;
 }
@@ -104,6 +106,8 @@ export async function updateHecho(
       | "estado"
       | "participacion_acreditada"
       | "rice_articulo"
+      | "agravantes"
+      | "atenuantes"
     >
   >,
 ): Promise<boolean> {

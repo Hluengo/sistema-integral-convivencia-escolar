@@ -8,6 +8,7 @@ import {
   FileStack,
   Link2,
   Scale,
+  Shield,
   Trash2,
   Unlink,
 } from "lucide-react";
@@ -26,6 +27,13 @@ import {
 } from "@/shared/api/services/hechos.service";
 import { useAuthStore } from "@/shared/lib/stores/authStore";
 import { listExpedienteAnexos } from "../expediente/expedienteBuilders";
+import {
+  AGRAVANTES,
+  ATENUANTES,
+  calcularMedidasPermitidas,
+  type AgravanteId,
+  type AtenuanteId,
+} from "@/shared/lib/proporcionalidad";
 
 const estadoLabel: Record<HechoEstado, string> = {
   denunciado: "Denunciado",
@@ -149,6 +157,34 @@ export default function MatrizPanel({ causa }: { causa: Causa }) {
   const handleUnlink = useCallback(
     async (id: string) => {
       const ok = await unlinkEvidencia(id);
+      if (ok) invalidate();
+    },
+    [invalidate],
+  );
+
+  const toggleAgravante = useCallback(
+    async (hecho: HechoRow, id: AgravanteId) => {
+      const current = (hecho.agravantes ?? []) as AgravanteId[];
+      const next = current.includes(id)
+        ? current.filter((x) => x !== id)
+        : [...current, id];
+      const ok = await updateHecho(hecho.id, {
+        agravantes: next as unknown as string[],
+      });
+      if (ok) invalidate();
+    },
+    [invalidate],
+  );
+
+  const toggleAtenuante = useCallback(
+    async (hecho: HechoRow, id: AtenuanteId) => {
+      const current = (hecho.atenuantes ?? []) as AtenuanteId[];
+      const next = current.includes(id)
+        ? current.filter((x) => x !== id)
+        : [...current, id];
+      const ok = await updateHecho(hecho.id, {
+        atenuantes: next as unknown as string[],
+      });
       if (ok) invalidate();
     },
     [invalidate],
@@ -431,6 +467,136 @@ export default function MatrizPanel({ causa }: { causa: Causa }) {
                   </p>
                 )}
               </div>
+
+              {/* Motor proporcionalidad */}
+              {(() => {
+                const agravantes = (hecho.agravantes ?? []) as AgravanteId[];
+                const atenuantes = (hecho.atenuantes ?? []) as AtenuanteId[];
+                const result = calcularMedidasPermitidas({
+                  tipoInfraccion: causa.tipoInfraccion,
+                  estado: hecho.estado,
+                  participacionAcreditada: hecho.participacion_acreditada,
+                  agravantes,
+                  atenuantes,
+                  annotationsCount:
+                    (causa as unknown as { annotations_count?: number })
+                      .annotations_count ?? 0,
+                  comprometeAulaSegura: causa.comprometeAulaSegura,
+                });
+                return (
+                  <div className="mt-3 rounded-lg border border-brand-100 bg-brand-50/40 p-3">
+                    <p className="flex items-center gap-1.5 text-xs font-semibold text-brand-800">
+                      <Shield className="size-3.5" /> Proporcionalidad — medidas
+                      posibles
+                    </p>
+                    {hecho.estado !== "acreditado" ? (
+                      <p className="mt-1 text-xs text-slate-600">
+                        Acredita el hecho y la participación para habilitar el
+                        motor.
+                      </p>
+                    ) : (
+                      <>
+                        <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          <div>
+                            <p className="text-11px font-semibold uppercase tracking-wide text-slate-500">
+                              Agravantes
+                            </p>
+                            <div className="mt-1 flex flex-wrap gap-1.5">
+                              {AGRAVANTES.map((a) => (
+                                <label
+                                  key={a.id}
+                                  className={`inline-flex cursor-pointer items-center gap-1 rounded-full border px-2 py-1 text-11px ${agravantes.includes(a.id as AgravanteId) ? "border-amber-300 bg-amber-100 text-amber-800" : "border-slate-200 bg-white text-slate-600"}`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={agravantes.includes(
+                                      a.id as AgravanteId,
+                                    )}
+                                    onChange={() =>
+                                      void toggleAgravante(
+                                        hecho,
+                                        a.id as AgravanteId,
+                                      )
+                                    }
+                                    className="size-3"
+                                    aria-label={a.label}
+                                  />
+                                  {a.label}
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-11px font-semibold uppercase tracking-wide text-slate-500">
+                              Atenuantes
+                            </p>
+                            <div className="mt-1 flex flex-wrap gap-1.5">
+                              {ATENUANTES.map((a) => (
+                                <label
+                                  key={a.id}
+                                  className={`inline-flex cursor-pointer items-center gap-1 rounded-full border px-2 py-1 text-11px ${atenuantes.includes(a.id as AtenuanteId) ? "border-green-300 bg-green-100 text-green-800" : "border-slate-200 bg-white text-slate-600"}`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={atenuantes.includes(
+                                      a.id as AtenuanteId,
+                                    )}
+                                    onChange={() =>
+                                      void toggleAtenuante(
+                                        hecho,
+                                        a.id as AtenuanteId,
+                                      )
+                                    }
+                                    className="size-3"
+                                    aria-label={a.label}
+                                  />
+                                  {a.label}
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-3 rounded-lg border border-slate-200 bg-white p-2.5">
+                          <p className="text-xs font-semibold text-slate-700">
+                            Medidas permitidas por RICE (
+                            {result.medidasPermitidas.length})
+                          </p>
+                          {result.medidasPermitidas.length === 0 ? (
+                            <p className="mt-1 text-xs text-slate-500">
+                              Sin medidas — revisa estado y participación.
+                            </p>
+                          ) : (
+                            <ul className="mt-1 flex flex-wrap gap-1.5">
+                              {result.medidasPermitidas.map((m) => (
+                                <li
+                                  key={m}
+                                  className={`rounded-full border px-2 py-0.5 text-xs ${m === result.recomendada ? "border-brand-600 bg-brand-600 text-white font-semibold" : "border-slate-200 bg-slate-50 text-slate-700"}`}
+                                >
+                                  {m}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                          {result.recomendada && (
+                            <p className="mt-1 text-11px text-brand-700">
+                              Sugerida: <strong>{result.recomendada}</strong> —{" "}
+                              {result.fundamento}
+                            </p>
+                          )}
+                          {result.advertencias.length > 0 && (
+                            <ul className="mt-1 list-disc pl-4 text-11px text-amber-700">
+                              {result.advertencias.map((w) => (
+                                <li key={w}>{w}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           );
         })}
