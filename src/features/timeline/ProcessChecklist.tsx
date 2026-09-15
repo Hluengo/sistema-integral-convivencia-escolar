@@ -16,7 +16,6 @@ import AttachedDocuments from "./AttachedDocuments";
 import ChecklistItemCard from "./ChecklistItemCard";
 import InvestigationChecklist from "./InvestigationChecklist";
 import CausaNotificationPanel from "../causas/notificacionDocgen/CausaNotificationPanel";
-import ExpedienteExportPanel from "../causas/expediente/ExpedienteExportPanel";
 import { getApplicableChecklistItems } from "../../shared/lib/domain/investigationChecklist";
 
 interface ProcessChecklistProps {
@@ -265,27 +264,6 @@ export default function ProcessChecklist({
           );
         })}
       </div>
-
-      {currentRole !== "docente" && (
-        <section
-          aria-labelledby="expediente-export-title"
-          className="mt-3 rounded-xl border border-neutral-200 bg-white p-4"
-        >
-          <div className="mb-3 border-neutral-100 border-b pb-3">
-            <h4
-              id="expediente-export-title"
-              className="font-semibold text-neutral-900 text-sm"
-            >
-              Descargar expediente completo
-            </h4>
-            <p className="mt-1 text-11px text-neutral-500">
-              PDF imprimible, Markdown para IA e ZIP con los documentos subidos.
-              La descarga queda registrada en la bitácora.
-            </p>
-          </div>
-          <ExpedienteExportPanel causa={causa} />
-        </section>
-      )}
 
       {documents.length > 0 && (
         <AttachedDocuments
