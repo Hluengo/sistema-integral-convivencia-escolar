@@ -1,0 +1,8 @@
+node_modules
+dist
+.vite
+enhanced-video
+reportes
+playwright-report
+test-results
+coverage
