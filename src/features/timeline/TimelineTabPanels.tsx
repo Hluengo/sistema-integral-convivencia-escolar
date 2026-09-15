@@ -3,13 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ArrowLeft, Download, ListChecks } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Circle,
+  Download,
+  ListChecks,
+} from "lucide-react";
 import type { Causa, FaseProcedimental } from "../../shared/lib/types";
 import ProcesoTab from "./ProcesoTab";
 import BitacoraTab from "./BitacoraTab";
 import ResumenTab from "./ResumenTab";
 import RutaExpedienteTab from "./RutaExpedienteTab";
 import ExpedienteExportPanel from "../causas/expediente/ExpedienteExportPanel";
+import { getCausaOperationalSummary } from "../causas/causaOperationalSummary";
 import { useTimelineContext } from "../../shared/lib/useTimelineContext";
 import type { TimelineTab } from "./timelineTabs.types";
 import { DetailModalBody } from "../../shared/ui/DetailModal";
@@ -32,6 +39,14 @@ export default function TimelineTabPanels({
   onSelectPhase,
 }: TimelineTabPanelsProps) {
   const ctx = useTimelineContext();
+  const operationalSummary = getCausaOperationalSummary(causa);
+  const faseOrder: FaseProcedimental[] = [
+    "Recepción",
+    "Investigación",
+    "Resolución",
+    "Apelación",
+    "Seguimiento",
+  ];
 
   return (
     <DetailModalBody className="space-y-4 bg-neutral-50/60">
@@ -50,7 +65,45 @@ export default function TimelineTabPanels({
             aria-labelledby="phase-workspace-title"
             className="space-y-3"
           >
-            <header className="flex flex-col gap-2.5 rounded-lg border border-neutral-200 bg-neutral-50/80 p-3 sm:flex-row sm:items-center sm:justify-between">
+            <nav
+              aria-label="Ruta del expediente"
+              className="flex flex-wrap items-center gap-1 text-xs text-slate-500"
+            >
+              {faseOrder.map((fase, idx) => {
+                const phaseData = operationalSummary.phaseProgress.find(
+                  (p) => p.phase === fase,
+                );
+                const isComplete = phaseData
+                  ? phaseData.completed === phaseData.total &&
+                    phaseData.total > 0
+                  : false;
+                const isCurrent = fase === selectedPhase;
+                const isPast =
+                  faseOrder.indexOf(selectedPhase as FaseProcedimental) > idx;
+                return (
+                  <span key={fase} className="flex items-center gap-1">
+                    {idx > 0 && <span className="text-slate-300">›</span>}
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium ${
+                        isCurrent
+                          ? "bg-brand-600 text-white"
+                          : isComplete || isPast
+                            ? "bg-green-100 text-green-700"
+                            : "bg-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {isComplete ? (
+                        <CheckCircle2 className="size-3" />
+                      ) : (
+                        <Circle className="size-3" />
+                      )}
+                      {fase}
+                    </span>
+                  </span>
+                );
+              })}
+            </nav>
+            <header className="flex flex-col gap-2.5 rounded-lg border border-slate-200 bg-white p-3 shadow-xs sm:flex-row sm:items-center sm:justify-between">
               <div className="flex min-w-0 items-start gap-2.5">
                 <span
                   className="rounded-lg bg-brand-100 p-1.5 text-brand-700"
@@ -59,38 +112,53 @@ export default function TimelineTabPanels({
                   <ListChecks className="size-4.5" />
                 </span>
                 <div>
-                  <p className="font-semibold text-10px text-neutral-500 uppercase tracking-wide">
+                  <p className="font-semibold text-10px uppercase tracking-wide text-slate-500">
                     Fase de trabajo
                   </p>
                   <h3
                     id="phase-workspace-title"
-                    className="font-semibold text-neutral-900 text-base"
+                    className="font-semibold text-base text-slate-900"
                   >
                     {selectedPhase}
                   </h3>
-                  <p className="mt-0.5 text-neutral-600 text-xs">
-                    Registra y consulta los hitos, antecedentes y documentos de
-                    esta fase.
-                  </p>
+                  {(() => {
+                    const phaseData = operationalSummary.phaseProgress.find(
+                      (p) => p.phase === selectedPhase,
+                    );
+                    if (!phaseData)
+                      return (
+                        <p className="mt-0.5 text-xs text-slate-600">
+                          Registra y consulta los hitos, antecedentes y
+                          documentos de esta fase.
+                        </p>
+                      );
+                    const pct =
+                      phaseData.total > 0
+                        ? Math.round(
+                            (phaseData.completed / phaseData.total) * 100,
+                          )
+                        : 0;
+                    const nextItem =
+                      operationalSummary.nextChecklistItem &&
+                      operationalSummary.nextChecklistPhase === selectedPhase
+                        ? operationalSummary.nextChecklistItem.label
+                        : null;
+                    return (
+                      <p className="mt-0.5 text-xs text-slate-600">
+                        {phaseData.completed}/{phaseData.total} hitos · {pct}%
+                        {nextItem ? ` · Falta: ${nextItem}` : ""}
+                      </p>
+                    );
+                  })()}
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => onSelectPhase(null)}
-                className="group inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-brand-200 bg-brand-50 px-3 py-1.5 font-semibold text-brand-800 text-xs shadow-xs transition hover:border-brand-300 hover:bg-brand-100 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
               >
-                <span
-                  className="flex size-5 items-center justify-center rounded-full bg-brand-600 text-white transition group-hover:-translate-x-0.5"
-                  aria-hidden="true"
-                >
-                  <ArrowLeft className="size-3" />
-                </span>
-                <span className="flex flex-col items-start leading-tight">
-                  <span>Volver a la ruta</span>
-                  <span className="mt-0.5 font-medium text-9px text-brand-700">
-                    Ver las 5 fases
-                  </span>
-                </span>
+                <ArrowLeft className="size-3.5" />
+                Volver a la ruta
               </button>
             </header>
             <ProcesoTab

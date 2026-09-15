@@ -1,11 +1,18 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { memo } from 'react';
-import { ArrowRight, CircleCheck, Files, ListChecks, MoveRight } from 'lucide-react';
-import type { Causa, FaseProcedimental } from '../../shared/lib/types';
-import { getCausaDeadlineStages } from '../causas/causaPresentation';
-import { getCausaOperationalSummary } from '../causas/causaOperationalSummary';
-import { formatChileDate } from '../../shared/lib/dateTime';
+import { memo } from "react";
+import {
+  ArrowRight,
+  CircleCheck,
+  Files,
+  ListChecks,
+  MoveRight,
+} from "lucide-react";
+import type { Causa, FaseProcedimental } from "../../shared/lib/types";
+import { getCausaDeadlineStages } from "../causas/causaPresentation";
+import { getCausaOperationalSummary } from "../causas/causaOperationalSummary";
+import { getFaseForEstado } from "../../shared/lib/data";
+import { formatChileDate } from "../../shared/lib/dateTime";
 
 interface RutaExpedienteTabProps {
   causa: Causa;
@@ -20,11 +27,16 @@ export default memo(function RutaExpedienteTab({
 }: RutaExpedienteTabProps) {
   const deadlines = getCausaDeadlineStages(causa);
   const summary = getCausaOperationalSummary(causa);
-  const deadlineClass = (tone: 'normal' | 'warning' | 'overdue') => ({
-    normal: 'border-leve-200 bg-leve-50 text-leve-700',
-    warning: 'border-grave-200 bg-grave-50 text-grave-700',
-    overdue: 'border-gravisima-200 bg-gravisima-50 text-gravisima-700',
-  })[tone];
+  const currentFase = getFaseForEstado(causa.estadoActual) as FaseProcedimental;
+  const showConcluyente =
+    deadlines.informeConcluyente !== null &&
+    ["Resolución", "Apelación", "Seguimiento"].includes(currentFase);
+  const deadlineClass = (tone: "normal" | "warning" | "overdue") =>
+    ({
+      normal: "border-leve-200 bg-leve-50 text-leve-700",
+      warning: "border-grave-200 bg-grave-50 text-grave-700",
+      overdue: "border-gravisima-200 bg-gravisima-50 text-gravisima-700",
+    })[tone];
 
   return (
     <section
@@ -34,7 +46,10 @@ export default memo(function RutaExpedienteTab({
       <div className="border-neutral-200 border-b px-4 py-3 sm:px-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h3 id="expediente-operativo-title" className="font-semibold text-neutral-900 text-sm">
+            <h3
+              id="expediente-operativo-title"
+              className="font-semibold text-neutral-900 text-sm"
+            >
               Ruta del expediente
             </h3>
             <p className="mt-0.5 text-neutral-500 text-xs">
@@ -42,12 +57,17 @@ export default memo(function RutaExpedienteTab({
             </p>
           </div>
           <div className="flex flex-wrap justify-end gap-2">
-            <span className={`rounded-full border px-2.5 py-1 font-semibold text-xs ${deadlineClass(deadlines.cierreIndagacion.tone)}`}>
-                Plazo: Cierre: {formatChileDate(deadlines.cierreIndagacion.deadlineDate)} ·{' '}
-                {deadlines.cierreIndagacion.text}
+            <span
+              className={`rounded-full border px-2.5 py-1 font-semibold text-xs ${deadlineClass(deadlines.cierreIndagacion.tone)}`}
+            >
+              Plazo: Cierre:{" "}
+              {formatChileDate(deadlines.cierreIndagacion.deadlineDate)} ·{" "}
+              {deadlines.cierreIndagacion.text}
             </span>
-            {deadlines.informeConcluyente && (
-              <span className={`rounded-full border px-2.5 py-1 font-semibold text-xs ${deadlineClass(deadlines.informeConcluyente.tone)}`}>
+            {showConcluyente && deadlines.informeConcluyente && (
+              <span
+                className={`rounded-full border px-2.5 py-1 font-semibold text-xs ${deadlineClass(deadlines.informeConcluyente.tone)}`}
+              >
                 Concluyente: {deadlines.informeConcluyente.text}
               </span>
             )}
@@ -55,10 +75,13 @@ export default memo(function RutaExpedienteTab({
         </div>
       </div>
 
-      <ol className="grid grid-cols-2 gap-3 px-4 py-4 sm:grid-cols-5 sm:gap-2 sm:px-5">
+      {/* Desktop stepper: 5 columnas */}
+      <ol className="hidden gap-2 px-5 py-4 sm:grid sm:grid-cols-5">
         {summary.phaseProgress.map((phase, index) => {
           const percentage =
-            phase.total > 0 ? Math.round((phase.completed / phase.total) * 100) : 0;
+            phase.total > 0
+              ? Math.round((phase.completed / phase.total) * 100)
+              : 0;
           const isCurrentPhase = phase.phase === summary.currentPhase;
           const isComplete = phase.total > 0 && phase.completed === phase.total;
           const isSelected = phase.phase === selectedPhase;
@@ -71,52 +94,61 @@ export default memo(function RutaExpedienteTab({
                 aria-expanded={isSelected}
                 aria-controls="phase-workspace"
                 className="group w-full rounded-lg text-left outline-none transition focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
-                aria-label={`${isSelected ? 'Cerrar' : 'Trabajar'} hitos de ${phase.phase}`}
+                aria-label={`${isSelected ? "Cerrar" : "Trabajar"} hitos de ${phase.phase}`}
               >
                 <div className="flex items-center gap-1.5">
                   <span
-                    className={`flex size-5 shrink-0 items-center justify-center rounded-full font-bold text-10px ${
+                    className={`flex shrink-0 items-center justify-center rounded-full font-bold ${
                       isComplete
-                        ? 'bg-leve-600 text-white'
+                        ? "size-6 bg-green-600 text-white text-10px"
                         : isSelected || isCurrentPhase
-                          ? 'bg-neutral-800 text-white ring-4 ring-neutral-200'
-                          : 'bg-neutral-200 text-neutral-600'
+                          ? "size-7 bg-brand-600 text-white text-xs ring-4 ring-brand-100"
+                          : "size-6 bg-slate-200 text-slate-600 text-10px"
                     }`}
                     aria-hidden="true"
                   >
-                    {isComplete ? <CircleCheck className="size-3" /> : index + 1}
+                    {isComplete ? (
+                      <CircleCheck className="size-3.5" />
+                    ) : (
+                      index + 1
+                    )}
                   </span>
-                  <span className="hidden h-px flex-1 bg-neutral-200 sm:block" aria-hidden="true" />
+                  <span
+                    className="h-px flex-1 bg-slate-200"
+                    aria-hidden="true"
+                  />
                 </div>
                 <div className="mt-2 flex items-center justify-between gap-1">
                   <p
-                    className={`truncate font-semibold text-10px sm:text-xs ${
-                      isSelected || isCurrentPhase ? 'text-neutral-900' : 'text-neutral-500'
+                    className={`truncate font-semibold text-xs ${
+                      isSelected || isCurrentPhase
+                        ? "text-slate-900"
+                        : "text-slate-500"
                     }`}
                     title={phase.phase}
                   >
                     {phase.phase}
                   </p>
                   <span
-                    className={`flex shrink-0 items-center gap-0.5 rounded-full px-1.5 py-0.5 font-bold text-8px transition-colors ${
+                    className={`flex shrink-0 items-center gap-0.5 rounded-full border px-2 py-0.5 font-bold text-10px transition-colors ${
                       isSelected
-                        ? 'bg-brand-600 text-white'
-                        : 'bg-brand-50 text-brand-700 group-hover:bg-brand-100'
+                        ? "border-brand-600 bg-brand-600 text-white"
+                        : "border-brand-200 bg-brand-50 text-brand-700 group-hover:bg-brand-100"
                     }`}
                     aria-hidden="true"
                   >
-                    <span className="hidden sm:inline">Abrir</span>
+                    Ver hitos
                     <ArrowRight className="size-3" />
                   </span>
                 </div>
-                <div className="mt-1 h-1 overflow-hidden rounded-full bg-neutral-200">
+                <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200">
                   <span
                     className={`block h-full rounded-full ${
                       isComplete
-                        ? 'bg-leve-500'
+                        ? "bg-green-600"
                         : isSelected || isCurrentPhase
-                          ? 'bg-neutral-700'
-                          : 'bg-neutral-400'
+                          ? "bg-brand-600"
+                          : "bg-slate-400"
                     }`}
                     style={{ width: `${percentage}%` }}
                   />
@@ -127,62 +159,186 @@ export default memo(function RutaExpedienteTab({
         })}
       </ol>
 
-      <div className="grid gap-3 border-neutral-200 border-t bg-neutral-50/70 p-4 sm:grid-cols-3 sm:p-5">
-        <div className="rounded-lg border border-neutral-200 bg-white p-3">
-          <p className="flex items-center gap-1.5 font-semibold text-neutral-600 text-11px uppercase tracking-wide">
+      {/* Mobile stepper: vertical */}
+      <ol
+        className="flex flex-col gap-0 px-4 py-3 sm:hidden"
+        aria-label="Ruta del expediente vertical"
+      >
+        {summary.phaseProgress.map((phase, index) => {
+          const percentage =
+            phase.total > 0
+              ? Math.round((phase.completed / phase.total) * 100)
+              : 0;
+          const isCurrentPhase = phase.phase === summary.currentPhase;
+          const isComplete = phase.total > 0 && phase.completed === phase.total;
+          const isSelected = phase.phase === selectedPhase;
+          const isLast = index === summary.phaseProgress.length - 1;
+
+          return (
+            <li key={phase.phase} className="flex gap-3">
+              <div className="flex flex-col items-center">
+                <span
+                  className={`flex shrink-0 items-center justify-center rounded-full font-bold ${
+                    isComplete
+                      ? "size-7 bg-green-600 text-white text-xs"
+                      : isSelected || isCurrentPhase
+                        ? "size-8 bg-brand-600 text-white text-sm ring-4 ring-brand-100"
+                        : "size-7 bg-slate-200 text-slate-600 text-xs"
+                  }`}
+                  aria-hidden="true"
+                >
+                  {isComplete ? <CircleCheck className="size-4" /> : index + 1}
+                </span>
+                {!isLast && (
+                  <span
+                    className={`mt-1 w-1.5 flex-1 rounded-full ${
+                      isComplete ? "bg-green-600" : "bg-slate-200"
+                    }`}
+                    aria-hidden="true"
+                  />
+                )}
+              </div>
+              <div className="min-w-0 flex-1 pb-4">
+                <button
+                  type="button"
+                  onClick={() => onSelectPhase(isSelected ? null : phase.phase)}
+                  aria-expanded={isSelected}
+                  aria-controls="phase-workspace"
+                  className="flex w-full items-center justify-between gap-2 rounded-lg border border-transparent px-2 py-1 text-left transition hover:border-slate-200 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                >
+                  <div className="min-w-0">
+                    <p
+                      className={`truncate font-semibold text-sm ${
+                        isSelected || isCurrentPhase
+                          ? "text-slate-900"
+                          : "text-slate-600"
+                      }`}
+                    >
+                      {phase.phase}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {phase.completed}/{phase.total} hitos · {percentage}%
+                    </p>
+                  </div>
+                  <span
+                    className={`flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 font-bold text-xs ${
+                      isSelected
+                        ? "border-brand-600 bg-brand-600 text-white"
+                        : "border-brand-200 bg-brand-50 text-brand-700"
+                    }`}
+                    aria-hidden="true"
+                  >
+                    Ver hitos
+                    <ArrowRight className="size-3.5" />
+                  </span>
+                </button>
+                <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200">
+                  <span
+                    className={`block h-full rounded-full ${
+                      isComplete
+                        ? "bg-green-600"
+                        : isSelected || isCurrentPhase
+                          ? "bg-brand-600"
+                          : "bg-slate-400"
+                    }`}
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+
+      <div className="grid gap-3 border-slate-200 border-t bg-slate-50/60 p-4 sm:grid-cols-[1fr_1.4fr_1fr] sm:p-5">
+        <div className="rounded-lg border border-slate-200 border-l-4 border-l-brand-600 bg-white p-3 shadow-xs">
+          <p className="flex items-center gap-1.5 font-semibold text-slate-500 text-11px uppercase tracking-wide">
             <ListChecks className="size-3.5" aria-hidden="true" />
             Fase actual
           </p>
-          <p className="mt-2 font-semibold text-neutral-900 text-sm">{summary.currentPhase}</p>
-          <p className="mt-1 text-neutral-500 text-xs">
-            {summary.currentPhaseProgress.completed} de {summary.currentPhaseProgress.total} hitos
-            completados
+          <p className="mt-1 font-bold text-slate-900 text-base">
+            {summary.currentPhase}
+          </p>
+          <p className="mt-1 flex items-baseline gap-1">
+            <span className="font-bold text-2xl text-brand-700">
+              {summary.currentPhaseProgress.completed}/
+              {summary.currentPhaseProgress.total}
+            </span>
+            <span className="text-xs text-slate-500">hitos</span>
           </p>
           {summary.laterActivityPhase ? (
             <p className="mt-2 rounded-md bg-amber-50 px-2 py-1.5 text-amber-800 text-xs">
-              Hay actividad registrada en {summary.laterActivityPhase}. Revisa el estado actual.
+              Hay actividad registrada en {summary.laterActivityPhase}. Revisa
+              el estado actual.
             </p>
           ) : null}
         </div>
 
-        <div className="rounded-lg border border-sky-100 bg-sky-50/70 p-3">
-          <p className="flex items-center gap-1.5 font-semibold text-sky-700 text-11px uppercase tracking-wide">
+        <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-xs">
+          <p className="flex items-center gap-1.5 font-semibold text-brand-700 text-11px uppercase tracking-wide">
             <MoveRight className="size-3.5" aria-hidden="true" />
-            Próximo hito{summary.nextChecklistPhase ? ` · ${summary.nextChecklistPhase}` : ''}
+            Próximo hito
+            {summary.nextChecklistPhase
+              ? ` · ${summary.nextChecklistPhase}`
+              : ""}
           </p>
           {summary.nextChecklistItem ? (
             <>
-              <p className="mt-2 font-semibold text-neutral-900 text-sm">
+              <p className="mt-2 font-semibold text-slate-900 text-sm">
                 {summary.nextChecklistItem.label}
               </p>
-              <p className="mt-1 line-clamp-2 text-neutral-600 text-xs">
+              <p className="mt-1 line-clamp-2 text-slate-600 text-xs">
                 {summary.nextChecklistItem.descripcion}
               </p>
+              <button
+                type="button"
+                onClick={() =>
+                  onSelectPhase(summary.nextChecklistPhase as FaseProcedimental)
+                }
+                className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:text-brand-800 hover:underline"
+              >
+                Registrar <ArrowRight className="size-3" />
+              </button>
             </>
           ) : (
-            <p className="mt-2 font-medium text-neutral-700 text-sm">
+            <p className="mt-2 font-medium text-slate-700 text-sm">
               Sin hitos pendientes en esta etapa.
             </p>
           )}
         </div>
 
-        <div className="rounded-lg border border-leve-100 bg-leve-50/70 p-3">
-          <p className="flex items-center gap-1.5 font-semibold text-leve-700 text-11px uppercase tracking-wide">
+        <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-xs">
+          <p className="flex items-center gap-1.5 font-semibold text-slate-600 text-11px uppercase tracking-wide">
             <Files className="size-3.5" aria-hidden="true" />
             Actividad registrada
           </p>
-          <div className="mt-2 space-y-1 text-neutral-700 text-xs">
-            <p>
-              <strong className="text-neutral-900">{summary.completedHitos}</strong> hitos
-              completados
+          <div className="mt-2 space-y-1.5 text-slate-700 text-xs">
+            <p className="flex items-center gap-2">
+              <span className="flex size-6 items-center justify-center rounded-full bg-green-100 text-green-700">
+                <ListChecks className="size-3.5" />
+              </span>
+              <strong className="text-sm text-slate-900">
+                {summary.completedHitos}
+              </strong>{" "}
+              hitos completados
             </p>
-            <p>
-              <strong className="text-neutral-900">{summary.documentsCount}</strong> documentos
-              registrados
+            <p className="flex items-center gap-2">
+              <span className="flex size-6 items-center justify-center rounded-full bg-sky-100 text-sky-700">
+                <Files className="size-3.5" />
+              </span>
+              <strong className="text-sm text-slate-900">
+                {summary.documentsCount}
+              </strong>{" "}
+              documentos
             </p>
-            <p>
-              <strong className="text-neutral-900">{summary.historyCount}</strong> registros en
-              historial
+            <p className="flex items-center gap-2">
+              <span className="flex size-6 items-center justify-center rounded-full bg-slate-100 text-slate-700">
+                <ListChecks className="size-3.5" />
+              </span>
+              <strong className="text-sm text-slate-900">
+                {summary.historyCount}
+              </strong>{" "}
+              registros en historial
             </p>
           </div>
         </div>

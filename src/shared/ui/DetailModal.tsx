@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { ReactNode } from 'react';
-import { DialogContent } from './Dialog';
+import type { ReactNode } from "react";
+import { DialogContent } from "./Dialog";
 
 export interface DetailModalTab<T extends string> {
   id: T;
@@ -41,7 +41,10 @@ interface DetailModalBodyProps {
  * Marco visual común para fichas individuales que requieren navegación por pestañas.
  * Mantiene un alto responsive y un único scroll interno para evitar que el diálogo se desplace.
  */
-export function DetailModalContent({ ariaLabel, children }: DetailModalContentProps) {
+export function DetailModalContent({
+  ariaLabel,
+  children,
+}: DetailModalContentProps) {
   return (
     <DialogContent
       hideClose
@@ -68,7 +71,9 @@ export function DetailModalHeader({
       <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/10">
-            <span className="font-bold text-neutral-100 text-sm">{avatarInitial}</span>
+            <span className="font-bold text-neutral-100 text-sm">
+              {avatarInitial}
+            </span>
           </div>
           <div className="min-w-0">
             <h2 className="truncate font-bold text-base text-white">{title}</h2>
@@ -77,7 +82,9 @@ export function DetailModalHeader({
             </div>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-1 self-end sm:self-auto">{actions}</div>
+        <div className="flex shrink-0 items-center gap-1 self-end sm:self-auto">
+          {actions}
+        </div>
       </div>
     </header>
   );
@@ -105,8 +112,8 @@ export function DetailModalTabs<T extends string>({
             aria-selected={activeTab === tab.id}
             className={`relative flex min-w-[10rem] flex-1 flex-col items-stretch justify-center gap-1 overflow-hidden rounded-lg px-3 py-2 font-medium text-xs transition-colors sm:min-w-0 ${
               activeTab === tab.id
-                ? 'bg-white text-brand-700 shadow-sm'
-                : 'text-neutral-500 hover:bg-white/50 hover:text-neutral-700'
+                ? "bg-white text-brand-700 shadow-sm ring-1 ring-brand-200"
+                : "text-slate-600 hover:bg-white/60 hover:text-slate-800"
             }`}
           >
             <span className="flex items-center justify-center gap-1.5 whitespace-nowrap">
@@ -121,7 +128,10 @@ export function DetailModalTabs<T extends string>({
   );
 }
 
-export function DetailModalBody({ children, className = '' }: DetailModalBodyProps) {
+export function DetailModalBody({
+  children,
+  className = "",
+}: DetailModalBodyProps) {
   return (
     <div
       tabIndex={0}

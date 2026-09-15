@@ -245,3 +245,29 @@ Si la mejora rompe layout, accesibilidad o flujo:
 ## 11. Cierre
 
 El trabajo se considera terminado solo cuando el resultado visual fue revisado en desktop y móvil, las validaciones automatizadas pasan y el diff contiene únicamente archivos frontend y sus pruebas asociadas.
+
+## 12. Ejecución 2026-09-15 — Lotes 1-3 (Ruta del expediente)
+
+**Commit:** `feat(timeline): mejora Ruta del expediente y modal causa — header RUN, stepper vertical, cards`
+
+**Cambios aplicados:**
+
+- **Lote 1 — Header (`TimelineHeader.tsx`) + Tabs (`TimelineTabs.tsx`, `DetailModal.tsx`):**
+  - RUN enmascarado: `maskRut(runEstudiante, privacyMode)` y `maskName` con `title="RUN protegido"` cuando `privacyMode=true` (resp. 1).
+  - Chips plazo: `Cierre: 14-09-2026 · Cerró en plazo` con `deadlineChipClass(tone)` (leve/grave/gravisima) y `CalendarClock 3`. `Concluyente` solo si `fase ∈ Resolución|Apelación|Seguimiento` vía `getFaseForEstado` (resp. 2).
+  - Tabs: icono `size-4`, activo `ring-1 ring-brand-200` + `shadow-sm`, inactivo `text-slate-600 hover:text-slate-800` (contraste AA).
+
+- **Lote 2 — Stepper Ruta (`RutaExpedienteTab.tsx`):**
+  - Desktop: `hidden sm:grid grid-cols-5`, track `h-1.5`, dots `size-6/7` (`green-600` completo, `brand-600+ring-4 brand-100` actual, `slate-200` futuro), botón `Ver hitos` `border-brand-200` 44px.
+  - Mobile: `sm:hidden flex-col` vertical con línea `w-1.5` (`green-600` si completo), cada fase `Ver hitos` + `completed/total · %` + barra `h-1.5` (resp. 4).
+  - Header Ruta: badge `Concluyente` condicional; badges `rounded-full border px-2.5`.
+  - 3 cards: `grid-cols-[1fr_1.4fr_1fr]` → stack, `FASE ACTUAL` con `border-l-4 border-l-brand-600` y `text-2xl font-bold`, `PRÓXIMO HITO` con CTA `Registrar → onSelectPhase`, `ACTIVIDAD` con iconos `size-6 rounded-full` por métrica.
+
+- **Lote 3 — Workspace fase (`TimelineTabPanels.tsx`):**
+  - Mini-stepper breadcrumb `Recepción › Investigación › Resolución ●` (`green-100` / `brand-600` actual / `slate-100`).
+  - Header fase: subtítulo `2/3 hitos · 67% · Falta: Informe Concluyente` vía `getCausaOperationalSummary`, botón `Volver a la ruta` ghost `border-slate-200 bg-white`.
+  - Descarga expediente: eliminada de workspace fase, queda solo en tab `Expediente` (`ExpedienteExportPanel`) (resp. 3).
+
+**Verificación:** `typecheck` ok, `lint` ok, `tests 808/808`, `build:web` 7s, `CausaDetailModal--KtdzfUd.js 121kB`.
+
+**Rollback:** `git revert <commit>` — sin migración, redeploy Vercel automático.

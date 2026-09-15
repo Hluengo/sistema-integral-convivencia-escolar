@@ -3,11 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { Causa, UserRole } from '../../shared/lib/types';
-import { AlertTriangle, CalendarClock, LockKeyhole, Pencil, Trash2, X } from 'lucide-react';
-import { getCausaDeadlineStages, getCausaStatus } from '../causas/causaPresentation';
-import { formatChileDate } from '../../shared/lib/dateTime';
-import { DetailModalHeader } from '../../shared/ui/DetailModal';
+import type { Causa, UserRole } from "../../shared/lib/types";
+import {
+  AlertTriangle,
+  CalendarClock,
+  LockKeyhole,
+  Pencil,
+  Trash2,
+  X,
+} from "lucide-react";
+import {
+  getCausaDeadlineStages,
+  getCausaPhase,
+  getCausaStatus,
+} from "../causas/causaPresentation";
+import { formatChileDate } from "../../shared/lib/dateTime";
+import { maskName, maskRut } from "../../shared/lib/anotacionesUtils";
+import { DetailModalHeader } from "../../shared/ui/DetailModal";
 
 interface TimelineHeaderProps {
   causa: Causa;
@@ -36,9 +48,21 @@ export default function TimelineHeader({
   onClose,
   breaches,
 }: TimelineHeaderProps) {
-  const canEdit = currentRole !== 'docente';
+  const canEdit = currentRole !== "docente";
   const deadlines = getCausaDeadlineStages(causa);
-  const displayName = privacyMode ? causa.nnaProtectedName : causa.estudianteNombre;
+  const displayName = privacyMode
+    ? causa.nnaProtectedName
+    : causa.estudianteNombre;
+  const currentPhase = getCausaPhase(causa);
+  const showConcluyente =
+    deadlines.informeConcluyente !== null &&
+    ["Resolución", "Apelación", "Seguimiento"].includes(currentPhase);
+  const deadlineChipClass = (tone: "normal" | "warning" | "overdue") =>
+    ({
+      normal: "border-leve-200 bg-leve-50 text-leve-700",
+      warning: "border-grave-200 bg-grave-50 text-grave-700",
+      overdue: "border-gravisima-200 bg-gravisima-50 text-gravisima-700",
+    })[tone];
 
   return (
     <>
@@ -47,25 +71,51 @@ export default function TimelineHeader({
         title={displayName}
         metadata={
           <>
-            <span>{causa.estudianteCurso || 'Sin curso'}</span>
+            <span>{causa.estudianteCurso || "Sin curso"}</span>
             <span className="font-mono">{causa.id}</span>
             <span
               className={`inline-flex items-center rounded-full px-2 py-0.5 font-bold ${
                 causa.comprometeAulaSegura
-                  ? 'bg-gravisima-100 text-gravisima-700'
-                  : 'bg-grave-100 text-grave-700'
+                  ? "bg-gravisima-100 text-gravisima-700"
+                  : "bg-grave-100 text-grave-700"
               }`}
             >
-              {causa.comprometeAulaSegura ? 'Aula Segura' : causa.tipoInfraccion}
+              {causa.comprometeAulaSegura
+                ? "Aula Segura"
+                : causa.tipoInfraccion}
             </span>
             <span>{getCausaStatus(causa)}</span>
-            <span className="inline-flex items-center gap-1">
-              <CalendarClock className="size-3.5" aria-hidden="true" />
-              Cierre indagación: {formatChileDate(deadlines.cierreIndagacion.deadlineDate)} (
-              {deadlines.cierreIndagacion.text})
+            {causa.runEstudiante && (
+              <span
+                className="inline-flex items-center gap-1 font-mono"
+                title={privacyMode ? "RUN protegido" : undefined}
+              >
+                RUN{" "}
+                {privacyMode
+                  ? maskRut(causa.runEstudiante, true)
+                  : causa.runEstudiante}
+              </span>
+            )}
+            {!causa.runEstudiante && privacyMode && (
+              <span className="font-mono" title="RUN protegido">
+                RUN {maskRut(undefined, true)} — {maskName(displayName, true)}
+              </span>
+            )}
+            <span
+              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-semibold ${deadlineChipClass(deadlines.cierreIndagacion.tone)}`}
+            >
+              <CalendarClock className="size-3" aria-hidden="true" />
+              Cierre: {formatChileDate(
+                deadlines.cierreIndagacion.deadlineDate,
+              )}{" "}
+              · {deadlines.cierreIndagacion.text}
             </span>
-            {deadlines.informeConcluyente && (
-              <span>Informe concluyente: {deadlines.informeConcluyente.text}</span>
+            {showConcluyente && deadlines.informeConcluyente && (
+              <span
+                className={`inline-flex items-center rounded-full border px-2 py-0.5 font-semibold ${deadlineChipClass(deadlines.informeConcluyente.tone)}`}
+              >
+                Concluyente: {deadlines.informeConcluyente.text}
+              </span>
             )}
             <span>Apertura: {formatChileDate(causa.fechaApertura)}</span>
           </>
@@ -136,7 +186,10 @@ export default function TimelineHeader({
           className="border-danger-200 border-b bg-danger-50 px-4 py-2.5 text-danger-800 text-xs sm:px-6"
         >
           <div className="mb-1 flex items-center gap-1.5 font-semibold">
-            <AlertTriangle className="size-4 text-danger-600" aria-hidden="true" />
+            <AlertTriangle
+              className="size-4 text-danger-600"
+              aria-hidden="true"
+            />
             <span>Riesgos procedimentales</span>
           </div>
           <ul

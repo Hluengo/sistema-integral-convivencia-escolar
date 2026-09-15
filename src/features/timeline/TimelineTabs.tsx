@@ -42,7 +42,7 @@ export default function TimelineTabs({
     ({ id, label, Icon }) => ({
       id,
       label,
-      icon: <Icon className="size-3.5" aria-hidden="true" />,
+      icon: <Icon className="size-4" aria-hidden="true" />,
     }),
   );
 
