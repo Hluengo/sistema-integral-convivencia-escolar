@@ -1,0 +1,183 @@
+{
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Vercel (frontend + serverless)",
+      "wraps": ["spa", "express"]
+    },
+    {
+      "kind": "security-group",
+      "label": "Datos de menores: RLS + tenant",
+      "wraps": ["postgres", "storage"]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "items": [
+        "SPA React 19 + Vite; server state en TanStack Query con clave por tenant",
+        "Zustand solo UI efímera; formularios RHF + Zod en español"
+      ],
+      "title": "Frontend"
+    },
+    {
+      "dot": "emerald",
+      "items": [
+        "Express :3001 (dev) / serverless en prod; helmet, CORS, rate-limit",
+        "SERVICE_ROLE_KEY solo en servidor; frontend usa publishable key"
+      ],
+      "title": "Backend"
+    },
+    {
+      "dot": "rose",
+      "items": [
+        "Toda operación filtrada por tenant y membresía verificada (app_memberships)",
+        "Observabilidad: Sentry (errores) + PostHog (analítica)"
+      ],
+      "title": "Seguridad"
+    }
+  ],
+  "components": [
+    {
+      "id": "usuarios",
+      "label": "Usuarios",
+      "pos": [40, 300],
+      "size": [120, 60],
+      "sublabel": "Apoderados / inspectores",
+      "type": "external"
+    },
+    {
+      "id": "spa",
+      "label": "SPA Convivencia",
+      "pos": [250, 300],
+      "size": [140, 60],
+      "sublabel": "React 19 + Vite",
+      "type": "frontend"
+    },
+    {
+      "id": "express",
+      "label": "API Express",
+      "pos": [480, 300],
+      "size": [140, 60],
+      "sublabel": ":3001 / serverless",
+      "type": "backend"
+    },
+    {
+      "id": "auth",
+      "label": "Supabase Auth",
+      "pos": [40, 120],
+      "size": [140, 60],
+      "sublabel": "JWT por sesión",
+      "tag": "JWT",
+      "type": "security"
+    },
+    {
+      "id": "postgres",
+      "label": "Supabase Postgres",
+      "pos": [710, 300],
+      "size": [150, 60],
+      "sublabel": "RLS + app_memberships",
+      "type": "database"
+    },
+    {
+      "id": "storage",
+      "label": "Supabase Storage",
+      "pos": [710, 120],
+      "size": [150, 60],
+      "sublabel": "Archivos y PDFs",
+      "type": "database"
+    },
+    {
+      "id": "gemini",
+      "label": "Gemini API",
+      "pos": [480, 470],
+      "size": [140, 60],
+      "sublabel": "Borradores e informes",
+      "type": "external"
+    },
+    {
+      "id": "openrouter",
+      "label": "OpenRouter",
+      "pos": [710, 470],
+      "size": [150, 60],
+      "sublabel": "Fallback modelos",
+      "type": "external"
+    },
+    {
+      "id": "vercel",
+      "label": "Vercel",
+      "pos": [40, 470],
+      "size": [120, 60],
+      "sublabel": "Hosting + edge",
+      "type": "cloud"
+    }
+  ],
+  "connections": [
+    {
+      "from": "usuarios",
+      "id": "u-spa",
+      "label": "HTTPS",
+      "to": "spa",
+      "variant": "emphasis"
+    },
+    { "from": "spa", "id": "spa-api", "label": "REST /api", "to": "express" },
+    {
+      "from": "auth",
+      "fromSide": "right",
+      "id": "spa-auth",
+      "label": "login",
+      "to": "spa",
+      "toSide": "top",
+      "variant": "security"
+    },
+    {
+      "from": "spa",
+      "fromSide": "top",
+      "id": "spa-pg",
+      "label": "PostgREST por tenant",
+      "to": "postgres",
+      "toSide": "right"
+    },
+    {
+      "from": "spa",
+      "fromSide": "top",
+      "id": "spa-sto",
+      "label": "uploads",
+      "to": "storage",
+      "toSide": "top",
+      "variant": "dashed"
+    },
+    {
+      "from": "express",
+      "id": "api-pg",
+      "label": "service_role",
+      "to": "postgres",
+      "variant": "security"
+    },
+    {
+      "from": "express",
+      "fromSide": "bottom",
+      "id": "api-gemini",
+      "label": "generación IA",
+      "labelAt": [500, 420],
+      "to": "gemini",
+      "toSide": "top",
+      "variant": "dashed"
+    },
+    {
+      "from": "express",
+      "fromSide": "bottom",
+      "id": "api-or",
+      "label": "fallback",
+      "to": "openrouter",
+      "toSide": "top",
+      "variant": "dashed"
+    }
+  ],
+  "diagram_type": "architecture",
+  "meta": {
+    "quality_profile": "showcase",
+    "title": "Sistema Convivencia Escolar — runtime"
+  },
+  "schema_version": 1
+}

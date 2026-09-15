@@ -196,53 +196,11 @@ export default memo(function BitacoraTab({
           )}
         </div>
 
-        {/* Stats */}
-        <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6">
-          <div className="rounded-lg border border-slate-200 bg-slate-50 px-2 py-2 text-center">
-            <p className="text-lg font-bold text-slate-900">{stats.total}</p>
-            <p className="text-10px font-semibold uppercase tracking-wide text-slate-500">
-              Total
-            </p>
-          </div>
-          <div className="rounded-lg border border-purple-200 bg-purple-50 px-2 py-2 text-center">
-            <p className="text-lg font-bold text-purple-700">
-              {stats.notificaciones}
-            </p>
-            <p className="text-10px font-semibold uppercase tracking-wide text-purple-600">
-              Notifs.
-            </p>
-          </div>
-          <div className="rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-2 text-center">
-            <p className="text-lg font-bold text-indigo-700">
-              {stats.citaciones}
-            </p>
-            <p className="text-10px font-semibold uppercase tracking-wide text-indigo-600">
-              Citaciones
-            </p>
-          </div>
-          <div className="rounded-lg border border-sky-200 bg-sky-50 px-2 py-2 text-center">
-            <p className="text-lg font-bold text-sky-700">
-              {stats.entrevistas}
-            </p>
-            <p className="text-10px font-semibold uppercase tracking-wide text-sky-600">
-              Entrevistas
-            </p>
-          </div>
-          <div className="rounded-lg border border-blue-200 bg-blue-50 px-2 py-2 text-center">
-            <p className="text-lg font-bold text-blue-700">{stats.correos}</p>
-            <p className="text-10px font-semibold uppercase tracking-wide text-blue-600">
-              Correos
-            </p>
-          </div>
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-2 py-2 text-center">
-            <p className="text-lg font-bold text-amber-700">
-              {stats.conDocumento}
-            </p>
-            <p className="text-10px font-semibold uppercase tracking-wide text-amber-600">
-              Con doc.
-            </p>
-          </div>
-        </div>
+        <p className="mt-3 text-xs text-slate-600">
+          <strong className="text-slate-900">{stats.total}</strong>{" "}
+          comunicaciones · {stats.notificaciones} notifs. · {stats.entrevistas}{" "}
+          entrevs. · {stats.conDocumento} con doc.
+        </p>
 
         {/* Filtros + búsqueda */}
         <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">

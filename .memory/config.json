@@ -1,0 +1,11 @@
+{
+  "idioma": "es",
+  "presupuestoTokensPorSesion": 60000,
+  "umbralAviso": 0.8,
+  "estrategia": "cachear-patrones + comprimir-prompts + enrutar-modelo-segun-complejidad",
+  "modelos": {
+    "dudaPuntual": "anthropic/claude-haiku-4.5",
+    "disenoModulo": "anthropic/claude-sonnet-4.5",
+    "implementacionCompleja": "anthropic/claude-opus-4.5"
+  }
+}

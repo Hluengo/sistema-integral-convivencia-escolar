@@ -236,6 +236,7 @@ export default function ForceCloseCausaDialog({
                     checked={ackRisk}
                     onChange={(e) => setAckRisk(e.target.checked)}
                     className="size-4"
+                    aria-label="Acepto el riesgo de cerrar con garantías bloqueantes"
                   />
                   Entiendo el riesgo y deseo cerrar con fundamento de todas
                   formas

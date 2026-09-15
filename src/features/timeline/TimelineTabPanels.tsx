@@ -228,18 +228,6 @@ export default function TimelineTabPanels({
             </div>
           </header>
           <MatrizPanel causa={causa} />
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
-            <h3 className="font-semibold text-sm text-slate-900">
-              Seguimiento post-cierre
-            </h3>
-            <p className="mt-1 text-xs text-slate-500">
-              Programa de intervención, cumplimiento y evaluación — visible
-              también en fase Seguimiento.
-            </p>
-            <div className="mt-3">
-              <SeguimientoPanel causa={causa} />
-            </div>
-          </div>
         </section>
       )}
 

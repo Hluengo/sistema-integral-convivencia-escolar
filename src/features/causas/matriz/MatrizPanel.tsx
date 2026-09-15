@@ -3,8 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  AlertTriangle,
-  CheckCircle2,
+  ChevronDown,
   FileStack,
   Link2,
   Scale,
@@ -84,6 +83,7 @@ export default function MatrizPanel({ causa }: { causa: Causa }) {
   const [rice, setRice] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(hechos.length === 0);
 
   const invalidate = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: hechosKey });
@@ -112,6 +112,7 @@ export default function MatrizPanel({ causa }: { causa: Causa }) {
     setTitulo("");
     setDescripcion("");
     setRice("");
+    setShowForm(false);
     invalidate();
   }, [causa.id, causa.incidenteId, descripcion, invalidate, rice, titulo]);
 
@@ -192,340 +193,335 @@ export default function MatrizPanel({ causa }: { causa: Causa }) {
     [invalidate],
   );
 
-  // Auditoría mínima
-  const sinEvidencia = hechos.filter(
-    (h) =>
-      h.estado === "acreditado" && !vinculos.some((v) => v.hecho_id === h.id),
-  );
-  const sinRice = hechos.filter(
-    (h) => h.estado === "acreditado" && !h.rice_articulo,
-  );
-  const denunciadoSinResolver = hechos.filter((h) => h.estado === "denunciado");
+  const audit = auditarExpediente(causa, hechos, vinculos);
 
   return (
     <div className="space-y-4">
-      <AuditoriaPanel causa={causa} hechos={hechos} vinculos={vinculos} />
-      {(() => {
-        const a = auditarExpediente(causa, hechos, vinculos);
-        if (a.puedeCerrar || a.bloqueantes === 0) return null;
-        return (
-          <div className="rounded-lg border border-slate-200 bg-slate-900 p-3 text-xs text-slate-100">
-            <p className="font-semibold">Asistente de revisión (IA auditora)</p>
-            <p className="mt-1 text-slate-300">
-              La medida seleccionada requiere fundamentación adicional.{" "}
-              {a.advertencias[0] ?? "Complete la trazabilidad antes de cerrar."}
-            </p>
-            <p className="mt-1 text-11px text-slate-400">
-              La IA no sanciona — audita el debido proceso.
-            </p>
-          </div>
-        );
-      })()}
+      {/* Auditoría — colapsable */}
+      <details className="group rounded-xl border border-slate-200 bg-white shadow-xs">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-3">
+          <span className="flex items-center gap-2 font-semibold text-sm text-slate-900">
+            <Shield className="size-4 text-brand-600" />
+            Auditoría {audit.verificadas}/{audit.total}
+            {!audit.puedeCerrar && (
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-10px font-bold text-amber-800">
+                Revisar
+              </span>
+            )}
+            {audit.puedeCerrar && (
+              <span className="rounded-full bg-green-100 px-2 py-0.5 text-10px font-bold text-green-700">
+                Al día
+              </span>
+            )}
+          </span>
+          <ChevronDown className="size-4 text-slate-400 transition group-open:rotate-180" />
+        </summary>
+        <div className="border-t border-slate-100 p-3">
+          <AuditoriaPanel causa={causa} hechos={hechos} vinculos={vinculos} />
+        </div>
+      </details>
 
-      {/* Auditoría rápida matriz (compat) */}
-      {(sinEvidencia.length > 0 ||
-        sinRice.length > 0 ||
-        denunciadoSinResolver.length > 0) && (
-        <div
-          role="alert"
-          className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"
-        >
-          <p className="flex items-center gap-1.5 font-semibold">
-            <AlertTriangle className="size-4" /> Revisión de matriz
-          </p>
-          <ul className="mt-1 list-disc pl-5">
-            {sinEvidencia.length > 0 && (
-              <li>
-                {sinEvidencia.length} hecho(s) acreditado(s) sin evidencia
-                vinculada.
-              </li>
-            )}
-            {sinRice.length > 0 && (
-              <li>
-                {sinRice.length} hecho(s) acreditado(s) sin artículo RICE.
-              </li>
-            )}
-            {denunciadoSinResolver.length > 0 && (
-              <li>
-                {denunciadoSinResolver.length} hecho(s) aún denunciado(s) por
-                calificar.
-              </li>
-            )}
-          </ul>
-          <p className="mt-1 text-11px text-amber-700">
-            No se debe cerrar el expediente si quedan hechos sin trazabilidad
-            completa.
+      {/* IA auditora — solo si bloquea */}
+      {!audit.puedeCerrar && audit.bloqueantes > 0 && (
+        <div className="rounded-lg border border-slate-200 bg-slate-900 p-3 text-xs text-slate-100">
+          <p className="font-semibold">Asistente de revisión</p>
+          <p className="mt-1 text-slate-300">{audit.advertencias[0]}</p>
+          <p className="mt-1 text-11px text-slate-400">
+            La IA audita el debido proceso, no sanciona.
           </p>
         </div>
       )}
 
-      {/* Form nuevo hecho */}
-      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
-        <h3 className="flex items-center gap-2 font-semibold text-sm text-slate-900">
-          <FileStack className="size-4 text-brand-600" /> Nuevo hecho
-        </h3>
-        <p className="mt-1 text-xs text-slate-500">
-          Registra cada hecho denunciado. Luego acredita, vincula evidencia y
-          artículo RICE.
-        </p>
-        <div className="mt-3 space-y-3">
-          <div>
-            <label
-              className="text-xs font-medium text-slate-700"
-              htmlFor="hecho-titulo"
-            >
-              Título del hecho *
-            </label>
-            <input
-              id="hecho-titulo"
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
-              placeholder="Ej: Agresión física en patio durante recreo"
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
+      {/* Nuevo hecho — colapsable */}
+      <div className="rounded-xl border border-slate-200 bg-white shadow-xs">
+        <button
+          type="button"
+          onClick={() => setShowForm((v) => !v)}
+          className="flex w-full items-center justify-between gap-2 p-3 text-left"
+        >
+          <span className="flex items-center gap-2 font-semibold text-sm text-slate-900">
+            <FileStack className="size-4 text-brand-600" /> Nuevo hecho
+          </span>
+          <span className="flex items-center gap-1 text-xs text-slate-500">
+            {showForm ? "Ocultar" : "Agregar"}
+            <ChevronDown
+              className={`size-4 transition ${showForm ? "rotate-180" : ""}`}
             />
-          </div>
-          <div>
-            <label
-              className="text-xs font-medium text-slate-700"
-              htmlFor="hecho-desc"
-            >
-              Descripción
-            </label>
-            <textarea
-              id="hecho-desc"
-              value={descripcion}
-              onChange={(e) => setDescripcion(e.target.value)}
-              rows={2}
-              placeholder="Relato breve, fecha/hora/lugar si aplica"
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
-            />
-          </div>
-          <div>
-            <label
-              className="text-xs font-medium text-slate-700"
-              htmlFor="hecho-rice"
-            >
-              Artículo RICE (opcional)
-            </label>
-            <input
-              id="hecho-rice"
-              value={rice}
-              onChange={(e) => setRice(e.target.value)}
-              placeholder="Ej: Art. 18.c — Agresión física"
-              className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
-            />
-          </div>
-          {error && (
-            <p role="alert" className="text-xs text-red-600">
-              {error}
+          </span>
+        </button>
+        {showForm && (
+          <div className="border-t border-slate-100 p-3">
+            <p className="text-xs text-slate-500">
+              Registra el hecho denunciado. Luego acredita y vincula
+              evidencia/RICE.
             </p>
-          )}
-          <Button
-            onClick={() => void handleCreate()}
-            disabled={busy}
-            variant="custom"
-            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
-          >
-            {busy ? "Guardando…" : "Agregar hecho"}
-          </Button>
-        </div>
+            <div className="mt-3 space-y-3">
+              <div>
+                <label
+                  className="text-xs font-medium text-slate-700"
+                  htmlFor="hecho-titulo"
+                >
+                  Título *
+                </label>
+                <input
+                  id="hecho-titulo"
+                  value={titulo}
+                  onChange={(e) => setTitulo(e.target.value)}
+                  placeholder="Ej: Agresión física en patio"
+                  aria-label="Título del hecho"
+                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
+                />
+              </div>
+              <div>
+                <label
+                  className="text-xs font-medium text-slate-700"
+                  htmlFor="hecho-rice"
+                >
+                  Artículo RICE
+                </label>
+                <input
+                  id="hecho-rice"
+                  value={rice}
+                  onChange={(e) => setRice(e.target.value)}
+                  placeholder="Art. 18.c — Agresión física"
+                  aria-label="Artículo RICE"
+                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
+                />
+              </div>
+              <div>
+                <label
+                  className="text-xs font-medium text-slate-700"
+                  htmlFor="hecho-desc"
+                >
+                  Descripción
+                </label>
+                <textarea
+                  id="hecho-desc"
+                  value={descripcion}
+                  onChange={(e) => setDescripcion(e.target.value)}
+                  rows={2}
+                  placeholder="Breve relato, fecha/lugar"
+                  aria-label="Descripción del hecho"
+                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
+                />
+              </div>
+              {error && <p className="text-xs text-red-600">{error}</p>}
+              <Button
+                onClick={() => void handleCreate()}
+                disabled={busy}
+                variant="custom"
+                className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
+              >
+                {busy ? "Guardando…" : "Agregar hecho"}
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Lista hechos */}
+      {/* Lista hechos — compacta */}
       <div className="space-y-3">
         {hechosQuery.isLoading && (
           <p className="text-xs text-slate-500">Cargando hechos…</p>
         )}
         {hechos.length === 0 && !hechosQuery.isLoading && (
           <p className="rounded-lg border border-dashed border-slate-200 bg-slate-50 p-4 text-center text-sm text-slate-500">
-            Aún no hay hechos. Agrega el primero para iniciar la trazabilidad.
+            Sin hechos. Agrega el primero para iniciar la trazabilidad.
           </p>
         )}
         {hechos.map((hecho) => {
           const evidenciasDeHecho = vinculos.filter(
             (v) => v.hecho_id === hecho.id,
           );
+          const agravantes = (hecho.agravantes ?? []) as AgravanteId[];
+          const atenuantes = (hecho.atenuantes ?? []) as AtenuanteId[];
+          const result = calcularMedidasPermitidas({
+            tipoInfraccion: causa.tipoInfraccion,
+            estado: hecho.estado,
+            participacionAcreditada: hecho.participacion_acreditada,
+            agravantes,
+            atenuantes,
+            annotationsCount:
+              (causa as unknown as { annotations_count?: number })
+                .annotations_count ?? 0,
+            comprometeAulaSegura: causa.comprometeAulaSegura,
+          });
           return (
-            <div
+            <details
               key={hecho.id}
-              className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs"
+              className="group rounded-xl border border-slate-200 bg-white shadow-xs open:shadow-sm"
             >
-              <div className="flex items-start justify-between gap-2">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-3">
                 <div className="min-w-0">
-                  <h4 className="font-semibold text-sm text-slate-900">
+                  <h4 className="truncate font-semibold text-sm text-slate-900">
                     {hecho.titulo}
                   </h4>
-                  {hecho.descripcion && (
-                    <p className="mt-1 text-xs text-slate-600">
-                      {hecho.descripcion}
-                    </p>
-                  )}
-                  {hecho.rice_articulo && (
-                    <p className="mt-1 flex items-center gap-1 text-xs text-slate-600">
-                      <Scale className="size-3.5 text-slate-500" /> RICE:{" "}
-                      {hecho.rice_articulo}
-                    </p>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => void handleDelete(hecho.id)}
-                  className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-red-50 hover:text-red-600"
-                  aria-label="Eliminar hecho"
-                  title="Eliminar hecho"
-                >
-                  <Trash2 className="size-4" />
-                </button>
-              </div>
-
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span
-                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold ${estadoTone[hecho.estado]}`}
-                >
-                  <CheckCircle2 className="size-3" />{" "}
-                  {estadoLabel[hecho.estado]}
-                </span>
-                <label className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs">
-                  <input
-                    type="checkbox"
-                    checked={hecho.participacion_acreditada}
-                    onChange={() => void handleToggleParticipacion(hecho)}
-                    className="size-3 rounded border-slate-300"
-                  />
-                  Participación acreditada
-                </label>
-                <select
-                  value={hecho.estado}
-                  onChange={(e) =>
-                    void handleUpdateEstado(
-                      hecho,
-                      e.target.value as HechoEstado,
-                    )
-                  }
-                  className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
-                  aria-label="Cambiar estado del hecho"
-                >
-                  {Object.entries(estadoLabel).map(([val, lab]) => (
-                    <option key={val} value={val}>
-                      {lab}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Evidencias vinculadas */}
-              <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50/60 p-3">
-                <p className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-                  <Link2 className="size-3.5" /> Evidencias (
-                  {evidenciasDeHecho.length})
-                </p>
-                {evidenciasDeHecho.length > 0 ? (
-                  <ul className="mt-2 space-y-1">
-                    {evidenciasDeHecho.map((ev) => (
-                      <li
-                        key={ev.id}
-                        className="flex items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
-                      >
-                        <span className="truncate">
-                          {ev.evidencia_nombre || ev.evidencia_path}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => void handleUnlink(ev.id)}
-                          className="flex size-6 items-center justify-center rounded text-slate-500 hover:bg-slate-100 hover:text-slate-700"
-                          aria-label="Desvincular evidencia"
-                        >
-                          <Unlink className="size-3.5" />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="mt-1 text-xs text-slate-500">
-                    Sin evidencias vinculadas.
-                  </p>
-                )}
-
-                {/* Selector anexo */}
-                {anexos.length > 0 ? (
-                  <div className="mt-2 flex gap-2">
-                    <select
-                      id={`ev-select-${hecho.id}`}
-                      defaultValue=""
-                      className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs"
-                      aria-label="Seleccionar evidencia"
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                    <span
+                      className={`rounded-full border px-2 py-0.5 text-10px font-semibold ${estadoTone[hecho.estado]}`}
                     >
-                      <option value="" disabled>
-                        Seleccionar anexo…
-                      </option>
-                      {anexos.map((a) => (
-                        <option
-                          key={`${a.origen}:${a.refId}:${a.path}`}
-                          value={a.path}
-                        >
-                          [{a.origen}] {a.nombre}
-                        </option>
-                      ))}
-                    </select>
-                    <Button
-                      variant="custom"
-                      onClick={() => {
-                        const sel = document.getElementById(
-                          `ev-select-${hecho.id}`,
-                        ) as HTMLSelectElement | null;
-                        if (sel?.value) void handleLink(hecho.id, sel.value);
-                      }}
-                      className="shrink-0 rounded-lg bg-white px-3 py-1.5 text-xs font-semibold border border-slate-200 hover:bg-slate-50"
-                    >
-                      Vincular
-                    </Button>
+                      {estadoLabel[hecho.estado]}
+                    </span>
+                    {hecho.rice_articulo && (
+                      <span className="text-10px text-slate-500">
+                        RICE: {hecho.rice_articulo}
+                      </span>
+                    )}
+                    {evidenciasDeHecho.length > 0 && (
+                      <span className="inline-flex items-center gap-1 text-10px text-slate-500">
+                        <Link2 className="size-3" /> {evidenciasDeHecho.length}{" "}
+                        evid.
+                      </span>
+                    )}
                   </div>
-                ) : (
-                  <p className="mt-2 text-11px text-slate-500">
-                    No hay anexos en checklist/bitácora para vincular. Sube un
-                    documento primero.
-                  </p>
-                )}
-              </div>
+                </div>
+                <span className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      void handleDelete(hecho.id);
+                    }}
+                    className="flex size-7 items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                    aria-label="Eliminar"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
+                  <ChevronDown className="size-4 text-slate-400 transition group-open:rotate-180" />
+                </span>
+              </summary>
 
-              {/* Motor proporcionalidad */}
-              {(() => {
-                const agravantes = (hecho.agravantes ?? []) as AgravanteId[];
-                const atenuantes = (hecho.atenuantes ?? []) as AtenuanteId[];
-                const result = calcularMedidasPermitidas({
-                  tipoInfraccion: causa.tipoInfraccion,
-                  estado: hecho.estado,
-                  participacionAcreditada: hecho.participacion_acreditada,
-                  agravantes,
-                  atenuantes,
-                  annotationsCount:
-                    (causa as unknown as { annotations_count?: number })
-                      .annotations_count ?? 0,
-                  comprometeAulaSegura: causa.comprometeAulaSegura,
-                });
-                return (
-                  <div className="mt-3 rounded-lg border border-brand-100 bg-brand-50/40 p-3">
-                    <p className="flex items-center gap-1.5 text-xs font-semibold text-brand-800">
-                      <Shield className="size-3.5" /> Proporcionalidad — medidas
-                      posibles
-                    </p>
+              <div className="border-t border-slate-100 p-3">
+                {hecho.descripcion && (
+                  <p className="text-xs text-slate-600">{hecho.descripcion}</p>
+                )}
+
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <select
+                    value={hecho.estado}
+                    onChange={(e) =>
+                      void handleUpdateEstado(
+                        hecho,
+                        e.target.value as HechoEstado,
+                      )
+                    }
+                    className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
+                    aria-label="Estado"
+                  >
+                    {Object.entries(estadoLabel).map(([val, lab]) => (
+                      <option key={val} value={val}>
+                        {lab}
+                      </option>
+                    ))}
+                  </select>
+                  <label className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-11px">
+                    <input
+                      type="checkbox"
+                      checked={hecho.participacion_acreditada}
+                      onChange={() => void handleToggleParticipacion(hecho)}
+                      className="size-3"
+                      aria-label="Participación"
+                    />
+                    Participación
+                  </label>
+                </div>
+
+                {/* Evidencias — resumido */}
+                <details className="mt-3 rounded-lg border border-slate-200 bg-slate-50/60">
+                  <summary className="cursor-pointer list-none p-2.5 text-xs font-semibold text-slate-700">
+                    Evidencias ({evidenciasDeHecho.length}) —{" "}
+                    {evidenciasDeHecho.length ? "vinculadas" : "sin vincular"}
+                  </summary>
+                  <div className="border-t border-slate-200 bg-white p-2.5">
+                    {evidenciasDeHecho.length > 0 ? (
+                      <ul className="space-y-1">
+                        {evidenciasDeHecho.map((ev) => (
+                          <li
+                            key={ev.id}
+                            className="flex items-center justify-between gap-2 rounded border border-slate-200 bg-white px-2 py-1 text-xs"
+                          >
+                            <span className="truncate">
+                              {ev.evidencia_nombre || ev.evidencia_path}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => void handleUnlink(ev.id)}
+                              className="flex size-6 items-center justify-center rounded text-slate-500 hover:bg-slate-100"
+                              aria-label="Desvincular"
+                            >
+                              <Unlink className="size-3.5" />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-xs text-slate-500">
+                        Sin evidencias vinculadas.
+                      </p>
+                    )}
+                    {anexos.length > 0 && (
+                      <div className="mt-2 flex gap-2">
+                        <select
+                          id={`ev-select-${hecho.id}`}
+                          defaultValue=""
+                          className="min-w-0 flex-1 rounded border border-slate-200 bg-white px-2 py-1 text-xs"
+                          aria-label="Anexo"
+                        >
+                          <option value="" disabled>
+                            Seleccionar anexo…
+                          </option>
+                          {anexos.map((a) => (
+                            <option
+                              key={`${a.origen}:${a.refId}:${a.path}`}
+                              value={a.path}
+                            >
+                              [{a.origen}] {a.nombre}
+                            </option>
+                          ))}
+                        </select>
+                        <Button
+                          variant="custom"
+                          onClick={() => {
+                            const sel = document.getElementById(
+                              `ev-select-${hecho.id}`,
+                            ) as HTMLSelectElement | null;
+                            if (sel?.value)
+                              void handleLink(hecho.id, sel.value);
+                          }}
+                          className="shrink-0 rounded border border-slate-200 bg-white px-3 py-1 text-xs font-semibold hover:bg-slate-50"
+                        >
+                          Vincular
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </details>
+
+                {/* Proporcionalidad — colapsado */}
+                <details className="mt-3 rounded-lg border border-brand-100 bg-brand-50/40">
+                  <summary className="cursor-pointer list-none p-2.5 text-xs font-semibold text-brand-800">
+                    Proporcionalidad —{" "}
+                    {result.medidasPermitidas.length
+                      ? `${result.medidasPermitidas.length} medidas`
+                      : "sin medidas"}
+                  </summary>
+                  <div className="border-t border-brand-100 bg-white p-2.5">
                     {hecho.estado !== "acreditado" ? (
-                      <p className="mt-1 text-xs text-slate-600">
-                        Acredita el hecho y la participación para habilitar el
-                        motor.
+                      <p className="text-xs text-slate-500">
+                        Acredita el hecho y la participación para ver medidas.
                       </p>
                     ) : (
                       <>
-                        <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div className="grid gap-2 sm:grid-cols-2">
                           <div>
-                            <p className="text-11px font-semibold uppercase tracking-wide text-slate-500">
+                            <p className="text-10px font-semibold uppercase tracking-wide text-slate-500">
                               Agravantes
                             </p>
-                            <div className="mt-1 flex flex-wrap gap-1.5">
+                            <div className="mt-1 flex flex-wrap gap-1">
                               {AGRAVANTES.map((a) => (
                                 <label
                                   key={a.id}
-                                  className={`inline-flex cursor-pointer items-center gap-1 rounded-full border px-2 py-1 text-11px ${agravantes.includes(a.id as AgravanteId) ? "border-amber-300 bg-amber-100 text-amber-800" : "border-slate-200 bg-white text-slate-600"}`}
+                                  className={`inline-flex cursor-pointer items-center gap-1 rounded-full border px-2 py-0.5 text-11px ${agravantes.includes(a.id as AgravanteId) ? "border-amber-300 bg-amber-100 text-amber-800" : "border-slate-200 bg-white text-slate-600"}`}
                                 >
                                   <input
                                     type="checkbox"
@@ -547,14 +543,14 @@ export default function MatrizPanel({ causa }: { causa: Causa }) {
                             </div>
                           </div>
                           <div>
-                            <p className="text-11px font-semibold uppercase tracking-wide text-slate-500">
+                            <p className="text-10px font-semibold uppercase tracking-wide text-slate-500">
                               Atenuantes
                             </p>
-                            <div className="mt-1 flex flex-wrap gap-1.5">
+                            <div className="mt-1 flex flex-wrap gap-1">
                               {ATENUANTES.map((a) => (
                                 <label
                                   key={a.id}
-                                  className={`inline-flex cursor-pointer items-center gap-1 rounded-full border px-2 py-1 text-11px ${atenuantes.includes(a.id as AtenuanteId) ? "border-green-300 bg-green-100 text-green-800" : "border-slate-200 bg-white text-slate-600"}`}
+                                  className={`inline-flex cursor-pointer items-center gap-1 rounded-full border px-2 py-0.5 text-11px ${atenuantes.includes(a.id as AtenuanteId) ? "border-green-300 bg-green-100 text-green-800" : "border-slate-200 bg-white text-slate-600"}`}
                                 >
                                   <input
                                     type="checkbox"
@@ -576,34 +572,20 @@ export default function MatrizPanel({ causa }: { causa: Causa }) {
                             </div>
                           </div>
                         </div>
-
-                        <div className="mt-3 rounded-lg border border-slate-200 bg-white p-2.5">
+                        <div className="mt-2 rounded border border-slate-200 bg-white p-2">
                           <p className="text-xs font-semibold text-slate-700">
-                            Medidas permitidas por RICE (
-                            {result.medidasPermitidas.length})
+                            Medidas permitidas
                           </p>
-                          {result.medidasPermitidas.length === 0 ? (
-                            <p className="mt-1 text-xs text-slate-500">
-                              Sin medidas — revisa estado y participación.
-                            </p>
-                          ) : (
-                            <ul className="mt-1 flex flex-wrap gap-1.5">
-                              {result.medidasPermitidas.map((m) => (
-                                <li
-                                  key={m}
-                                  className={`rounded-full border px-2 py-0.5 text-xs ${m === result.recomendada ? "border-brand-600 bg-brand-600 text-white font-semibold" : "border-slate-200 bg-slate-50 text-slate-700"}`}
-                                >
-                                  {m}
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                          {result.recomendada && (
-                            <p className="mt-1 text-11px text-brand-700">
-                              Sugerida: <strong>{result.recomendada}</strong> —{" "}
-                              {result.fundamento}
-                            </p>
-                          )}
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {result.medidasPermitidas.map((m) => (
+                              <span
+                                key={m}
+                                className={`rounded-full border px-2 py-0.5 text-11px ${m === result.recomendada ? "border-brand-600 bg-brand-600 text-white" : "border-slate-200 bg-slate-50 text-slate-700"}`}
+                              >
+                                {m}
+                              </span>
+                            ))}
+                          </div>
                           {result.advertencias.length > 0 && (
                             <ul className="mt-1 list-disc pl-4 text-11px text-amber-700">
                               {result.advertencias.map((w) => (
@@ -615,16 +597,16 @@ export default function MatrizPanel({ causa }: { causa: Causa }) {
                       </>
                     )}
                   </div>
-                );
-              })()}
-            </div>
+                </details>
+              </div>
+            </details>
           );
         })}
       </div>
 
-      <p className="flex items-center gap-1.5 text-11px text-slate-500">
-        <Scale className="size-3.5" /> Caso colectivo: una misma evidencia puede
-        vincularse a hechos de varios estudiantes vía `incidente_id` compartido.
+      <p className="flex items-center gap-1.5 text-10px text-slate-400">
+        <Scale className="size-3" /> Caso colectivo: una evidencia puede
+        vincularse a varios hechos vía incidente.
       </p>
     </div>
   );

@@ -51,7 +51,7 @@ export default function PlanGestionView() {
     queryFn: () => fetchPlanGestion(ano),
     enabled: Boolean(tenantId),
   });
-  const rows = q.data ?? [];
+  const rows = useMemo(() => q.data ?? [], [q.data]);
 
   const [objetivo, setObjetivo] = useState("");
   const [accion, setAccion] = useState("");
@@ -165,131 +165,113 @@ export default function PlanGestionView() {
           </div>
         </div>
 
-        <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4">
-          <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-center">
-            <p className="text-xl font-bold text-slate-900">{stats.total}</p>
-            <p className="text-10px font-semibold uppercase tracking-wide text-slate-500">
-              Acciones
-            </p>
-          </div>
-          <div className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-center">
-            <p className="text-xl font-bold text-sky-700">{stats.enCurso}</p>
-            <p className="text-10px font-semibold uppercase tracking-wide text-sky-600">
-              En curso
-            </p>
-          </div>
-          <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-center">
-            <p className="text-xl font-bold text-green-700">
-              {stats.cumplidos}
-            </p>
-            <p className="text-10px font-semibold uppercase tracking-wide text-green-600">
-              Cumplidos
-            </p>
-          </div>
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-center">
-            <p className="text-xl font-bold text-amber-700">
-              {stats.pendientes}
-            </p>
-            <p className="text-10px font-semibold uppercase tracking-wide text-amber-600">
-              Pendientes
-            </p>
-          </div>
-        </div>
+        <p className="mt-3 text-xs text-slate-600">
+          <strong className="text-slate-900">{stats.total}</strong> acciones ·{" "}
+          {stats.enCurso} en curso · {stats.cumplidos} cumplidas ·{" "}
+          {stats.pendientes} pendientes
+        </p>
 
-        <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/60 p-4">
-          <h3 className="font-semibold text-sm text-slate-900">
+        <details className="mt-4 rounded-xl border border-slate-200 bg-slate-50/60">
+          <summary className="cursor-pointer list-none p-4 font-semibold text-sm text-slate-900">
             Nueva acción preventiva
-          </h3>
-          <div className="mt-3 grid gap-3">
-            <div>
-              <label
-                className="text-xs font-medium text-slate-700"
-                htmlFor="plan-objetivo"
+          </summary>
+          <div className="border-t border-slate-200 bg-white p-4">
+            <div className="mt-3 grid gap-3">
+              <div>
+                <label
+                  className="text-xs font-medium text-slate-700"
+                  htmlFor="plan-objetivo"
+                >
+                  Objetivo *
+                </label>
+                <input
+                  id="plan-objetivo"
+                  aria-label="Objetivo del plan"
+                  value={objetivo}
+                  onChange={(e) => setObjetivo(e.target.value)}
+                  placeholder="Ej: Prevenir violencia en recreos"
+                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
+                />
+              </div>
+              <div>
+                <label
+                  className="text-xs font-medium text-slate-700"
+                  htmlFor="plan-accion"
+                >
+                  Acción *
+                </label>
+                <textarea
+                  id="plan-accion"
+                  aria-label="Acción preventiva"
+                  value={accion}
+                  onChange={(e) => setAccion(e.target.value)}
+                  rows={2}
+                  placeholder="Talleres, turnos, campañas, protocolos"
+                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
+                />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div>
+                  <label
+                    className="text-xs font-medium text-slate-700"
+                    htmlFor="plan-resp"
+                  >
+                    Responsable
+                  </label>
+                  <input
+                    id="plan-resp"
+                    aria-label="Responsable"
+                    value={responsable}
+                    onChange={(e) => setResponsable(e.target.value)}
+                    placeholder="Convivencia / Inspectoría"
+                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
+                  />
+                </div>
+                <div>
+                  <label
+                    className="text-xs font-medium text-slate-700"
+                    htmlFor="plan-find"
+                  >
+                    Fecha límite
+                  </label>
+                  <input
+                    id="plan-find"
+                    aria-label="Fecha límite"
+                    type="date"
+                    value={fechaFin}
+                    onChange={(e) => setFechaFin(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
+                  />
+                </div>
+                <div>
+                  <label
+                    className="text-xs font-medium text-slate-700"
+                    htmlFor="plan-ind"
+                  >
+                    Indicador
+                  </label>
+                  <input
+                    id="plan-ind"
+                    aria-label="Indicador"
+                    value={indicador}
+                    onChange={(e) => setIndicador(e.target.value)}
+                    placeholder="Ej: % asistencia talleres"
+                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
+                  />
+                </div>
+              </div>
+              {error && <p className="text-xs text-red-600">{error}</p>}
+              <Button
+                onClick={() => void handleCreate()}
+                disabled={busy}
+                variant="custom"
+                className="w-fit rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
               >
-                Objetivo *
-              </label>
-              <input
-                id="plan-objetivo"
-                value={objetivo}
-                onChange={(e) => setObjetivo(e.target.value)}
-                placeholder="Ej: Prevenir violencia en recreos"
-                className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
-              />
+                {busy ? "Guardando…" : "Agregar al plan"}
+              </Button>
             </div>
-            <div>
-              <label
-                className="text-xs font-medium text-slate-700"
-                htmlFor="plan-accion"
-              >
-                Acción *
-              </label>
-              <textarea
-                id="plan-accion"
-                value={accion}
-                onChange={(e) => setAccion(e.target.value)}
-                rows={2}
-                placeholder="Talleres, turnos, campañas, protocolos"
-                className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
-              />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div>
-                <label
-                  className="text-xs font-medium text-slate-700"
-                  htmlFor="plan-resp"
-                >
-                  Responsable
-                </label>
-                <input
-                  id="plan-resp"
-                  value={responsable}
-                  onChange={(e) => setResponsable(e.target.value)}
-                  placeholder="Convivencia / Inspectoría"
-                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
-                />
-              </div>
-              <div>
-                <label
-                  className="text-xs font-medium text-slate-700"
-                  htmlFor="plan-find"
-                >
-                  Fecha límite
-                </label>
-                <input
-                  id="plan-find"
-                  type="date"
-                  value={fechaFin}
-                  onChange={(e) => setFechaFin(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
-                />
-              </div>
-              <div>
-                <label
-                  className="text-xs font-medium text-slate-700"
-                  htmlFor="plan-ind"
-                >
-                  Indicador
-                </label>
-                <input
-                  id="plan-ind"
-                  value={indicador}
-                  onChange={(e) => setIndicador(e.target.value)}
-                  placeholder="Ej: % asistencia talleres"
-                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
-                />
-              </div>
-            </div>
-            {error && <p className="text-xs text-red-600">{error}</p>}
-            <Button
-              onClick={() => void handleCreate()}
-              disabled={busy}
-              variant="custom"
-              className="w-fit rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
-            >
-              {busy ? "Guardando…" : "Agregar al plan"}
-            </Button>
           </div>
-        </div>
+        </details>
       </div>
 
       <div className="space-y-3">
