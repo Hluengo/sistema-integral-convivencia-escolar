@@ -5,47 +5,56 @@
 
 export enum EstadoCausa {
   // Phase 1: Recepción y Apertura
-  DENUNCIA_RECEPCIONADA = 'Recepción de Denuncia',
-  ANTECEDENTES_REVISION_INICIAL = 'Revisión Inicial de Antecedentes',
-  INICIO_INDAGACION_NOTIFICADO = 'Notificación de Inicio de Indagación',
+  DENUNCIA_RECEPCIONADA = "Recepción de Denuncia",
+  ANTECEDENTES_REVISION_INICIAL = "Revisión Inicial de Antecedentes",
+  INICIO_INDAGACION_NOTIFICADO = "Notificación de Inicio de Indagación",
 
   // Phase 2: Investigación
-  EN_PROCESO_INDAGACION = 'En Proceso de Indagación',
-  RECOPILACION_EVIDENCIAS_CURSO = 'Recopilación de Evidencias en Curso',
-  DERIVADO_A_MEDIACION = 'Derivado a Mediación',
-  MEDIACION_EN_DESARROLLO = 'Mediación en Desarrollo',
-  MEDIACION_CERRADA_ACUERDO = 'Mediación Cerrada con Acuerdo',
-  MEDIACION_FRACASADA_RETORNO = 'Mediación Fracasada – Retorno a Indagación',
+  EN_PROCESO_INDAGACION = "En Proceso de Indagación",
+  RECOPILACION_EVIDENCIAS_CURSO = "Recopilación de Evidencias en Curso",
+  DERIVADO_A_MEDIACION = "Derivado a Mediación",
+  MEDIACION_EN_DESARROLLO = "Mediación en Desarrollo",
+  MEDIACION_CERRADA_ACUERDO = "Mediación Cerrada con Acuerdo",
+  MEDIACION_FRACASADA_RETORNO = "Mediación Fracasada – Retorno a Indagación",
 
   // Phase 3: Análisis y Resolución
-  INFORME_CONCLUYENTE_ELABORACION = 'Informe Cierre de Indagación en Elaboración',
-  INFORME_CONCLUYENTE_EMITIDO = 'Informe Cierre de Indagación Emitido',
-  ENTREVISTA_DISCIPLINARIA_PENDIENTE = 'Entrevista Disciplinaria Pendiente',
-  ENTREVISTA_DISCIPLINARIA_REALIZADA = 'Entrevista Disciplinaria Realizada',
-  RESOLUCION_ELABORACION = 'Informe Concluyente en Elaboración',
-  RESOLUCION_FINAL_NOTIFICADA = 'Informe Concluyente Emitido',
+  INFORME_CONCLUYENTE_ELABORACION = "Informe Cierre de Indagación en Elaboración",
+  INFORME_CONCLUYENTE_EMITIDO = "Informe Cierre de Indagación Emitido",
+  ENTREVISTA_DISCIPLINARIA_PENDIENTE = "Entrevista Disciplinaria Pendiente",
+  ENTREVISTA_DISCIPLINARIA_REALIZADA = "Entrevista Disciplinaria Realizada",
+  RESOLUCION_ELABORACION = "Informe Concluyente en Elaboración",
+  RESOLUCION_FINAL_NOTIFICADA = "Informe Concluyente Emitido",
 
   // Phase 4: Apelación
-  EN_PLAZO_APELACION = 'En Plazo de Apelación',
-  APELACION_RECEPCIONADA = 'Apelación Recepcionada',
-  APELACION_REVISION_RECTORIA = 'Apelación en Revisión por Rectoría',
-  APELACION_RESUELTA = 'Apelación Resuelta',
-  RESOLUCION_EJECUTORIADA = 'Resolución Ejecutoriada',
+  EN_PLAZO_APELACION = "En Plazo de Apelación",
+  APELACION_RECEPCIONADA = "Apelación Recepcionada",
+  APELACION_REVISION_RECTORIA = "Apelación en Revisión por Rectoría",
+  APELACION_RESUELTA = "Apelación Resuelta",
+  RESOLUCION_EJECUTORIADA = "Resolución Ejecutoriada",
 
   // Phase 5: Seguimiento
-  MEDIDA_EJECUCION = 'Medida en Ejecución',
-  PROCESO_SEGUIMIENTO = 'En Proceso de Seguimiento',
-  SEGUIMIENTO_FINALIZADO = 'Seguimiento Finalizado',
-  CAUSA_CERRADA = 'Causa Cerrada',
+  MEDIDA_EJECUCION = "Medida en Ejecución",
+  PROCESO_SEGUIMIENTO = "En Proceso de Seguimiento",
+  SEGUIMIENTO_FINALIZADO = "Seguimiento Finalizado",
+  CAUSA_CERRADA = "Causa Cerrada",
 }
 
 export type FaseProcedimental =
-  'Recepción' | 'Investigación' | 'Resolución' | 'Apelación' | 'Seguimiento';
+  "Recepción" | "Investigación" | "Resolución" | "Apelación" | "Seguimiento";
 
 export interface BitacoraEntry {
   id: string;
   fecha: string;
-  tipo: 'Entrevista' | 'Evidencia' | 'Notificación' | 'Mediación' | 'Resolución' | 'Otro';
+  tipo:
+    | "Entrevista"
+    | "Evidencia"
+    | "Notificación"
+    | "Mediación"
+    | "Resolución"
+    | "Citación"
+    | "Correo"
+    | "Descargo"
+    | "Otro";
   titulo: string;
   descripcion: string;
   participantes: string[];
@@ -59,7 +68,7 @@ export interface ChecklistItem {
   descripcion: string;
   completado: boolean;
   fechaCompletado?: string;
-  requeridoPor: 'Circular 482' | 'Ley 21809' | 'Reglamento Interno' | 'Ambas';
+  requeridoPor: "Circular 482" | "Ley 21809" | "Reglamento Interno" | "Ambas";
   registradoPor?: string;
   observaciones?: string;
   documentoNombre?: string;
@@ -73,7 +82,7 @@ export interface ChecklistProgressEntry {
   checklistItemId: string;
   title: string;
   description: string;
-  entryType: BitacoraEntry['tipo'];
+  entryType: BitacoraEntry["tipo"];
   occurredAt: string;
   documentName?: string;
   documentUrl?: string;
@@ -84,7 +93,7 @@ export interface ChecklistProgressEntry {
   invalidationReason?: string;
 }
 
-export type TipoInfraccion = 'Leve' | 'Grave' | 'Muy Grave' | 'Gravísima';
+export type TipoInfraccion = "Leve" | "Grave" | "Muy Grave" | "Gravísima";
 
 export interface Causa {
   id: string; // e.g. "DC-2026-014"
@@ -156,7 +165,7 @@ export interface Incidente {
   updatedAt: string;
 }
 
-export type DocumentScope = 'causa' | 'incidente';
+export type DocumentScope = "causa" | "incidente";
 
 export interface Statistics {
   total: number;
@@ -166,13 +175,14 @@ export interface Statistics {
   aulaSeguraActivas: number;
 }
 
-export type UserRole = 'convivencia_escolar' | 'director_rector' | 'mediador' | 'docente';
+export type UserRole =
+  "convivencia_escolar" | "director_rector" | "mediador" | "docente";
 
 // ============================================================
 // Tipos para Gestión de Anotaciones
 // ============================================================
 
-export type DisciplinaryStatus = 'Verde' | 'Amarillo' | 'Naranja' | 'Rojo';
+export type DisciplinaryStatus = "Verde" | "Amarillo" | "Naranja" | "Rojo";
 
 export interface AnotacionStudent {
   id: string;
@@ -186,7 +196,7 @@ export interface AnotacionStudent {
   informative_annotations_count?: number;
   last_annotation_date?: string;
   disciplinary_status: DisciplinaryStatus;
-  effective_letter_type?: CartaDisciplinaria['letter_type'] | null;
+  effective_letter_type?: CartaDisciplinaria["letter_type"] | null;
   rut?: string;
   course_name?: string;
   ai_analysis?: AnnotationSummary;
@@ -197,9 +207,9 @@ export interface Annotation {
   student_id: string;
   text: string;
   date: string;
-  severity: 'Leve' | 'Grave' | 'Muy Grave' | 'Gravísima';
+  severity: "Leve" | "Grave" | "Muy Grave" | "Gravísima";
   registered_by: string;
-  type: 'Positiva' | 'Negativa' | 'Información';
+  type: "Positiva" | "Negativa" | "Información";
   pdf_file_path?: string | null;
 }
 
@@ -225,21 +235,24 @@ export interface DocumentAnalysis {
 export interface CartaDisciplinaria {
   id: string;
   student_id: string;
-  letter_type: 'Amonestación Escrita' | 'Carta de Compromiso Conductual' | 'Ficha de Derivación';
+  letter_type:
+    | "Amonestación Escrita"
+    | "Carta de Compromiso Conductual"
+    | "Ficha de Derivación";
   emission_date: string;
-  status: 'Vigente' | 'Cumplida' | 'Incumplida' | 'Anulada';
+  status: "Vigente" | "Cumplida" | "Incumplida" | "Anulada";
   emitted_by: string;
   supervisor_name?: string;
   apoderado_name: string;
   annotations_count: number;
-  origin?: 'platform' | 'physical';
+  origin?: "platform" | "physical";
   school_year?: number;
   student_name: string;
   course: string;
   regulation_basis: string;
   observations?: string;
   created_at: string;
-  workflow_status?: 'pending' | 'completed' | 'archived' | 'annulled';
+  workflow_status?: "pending" | "completed" | "archived" | "annulled";
   suggested_at?: string | null;
   created_event_at?: string | null;
   registered_at?: string | null;
