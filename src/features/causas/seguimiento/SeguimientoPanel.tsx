@@ -152,6 +152,7 @@ export default function SeguimientoPanel({ causa }: { causa: Causa }) {
             </label>
             <input
               id="seg-titulo"
+              aria-label="Título u objetivo del programa"
               value={titulo}
               onChange={(e) => setTitulo(e.target.value)}
               placeholder="Ej: Acompañamiento socioemocional quincenal"
@@ -167,6 +168,7 @@ export default function SeguimientoPanel({ causa }: { causa: Causa }) {
             </label>
             <textarea
               id="seg-desc"
+              aria-label="Acciones o medidas del programa"
               value={descripcion}
               onChange={(e) => setDescripcion(e.target.value)}
               rows={2}
@@ -184,6 +186,7 @@ export default function SeguimientoPanel({ causa }: { causa: Causa }) {
               </label>
               <input
                 id="seg-resp"
+                aria-label="Responsable del programa"
                 value={responsable}
                 onChange={(e) => setResponsable(e.target.value)}
                 placeholder="Ej: Orientadora"
@@ -200,6 +203,7 @@ export default function SeguimientoPanel({ causa }: { causa: Causa }) {
               <input
                 id="seg-fin"
                 type="date"
+                aria-label="Fecha límite del programa"
                 value={fechaFin}
                 onChange={(e) => setFechaFin(e.target.value)}
                 className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
@@ -227,106 +231,125 @@ export default function SeguimientoPanel({ causa }: { causa: Causa }) {
             Sin plan post-cierre. Crea el primer programa de intervención.
           </p>
         )}
-        {planes.map((p) => (
-          <div
-            key={p.id}
-            className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <h4 className="font-semibold text-sm text-slate-900">
-                  {p.titulo}
-                </h4>
-                {p.descripcion && (
-                  <p className="mt-1 text-xs text-slate-600">{p.descripcion}</p>
-                )}
-                <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                  {p.responsable && (
-                    <span className="inline-flex items-center gap-1">
-                      <User className="size-3.5" /> {p.responsable}
-                    </span>
+        {planes.map((p) => {
+          const cumplimientoId = `seg-cumplimiento-${p.id}`;
+          const evaluacionId = `seg-evaluacion-${p.id}`;
+
+          return (
+            <div
+              key={p.id}
+              className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h4 className="font-semibold text-sm text-slate-900">
+                    {p.titulo}
+                  </h4>
+                  {p.descripcion && (
+                    <p className="mt-1 text-xs text-slate-600">
+                      {p.descripcion}
+                    </p>
                   )}
-                  <span className="inline-flex items-center gap-1">
-                    <Calendar className="size-3.5" /> {p.fecha_inicio}
-                    {p.fecha_fin ? ` → ${p.fecha_fin}` : ""}
-                  </span>
+                  <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                    {p.responsable && (
+                      <span className="inline-flex items-center gap-1">
+                        <User className="size-3.5" /> {p.responsable}
+                      </span>
+                    )}
+                    <span className="inline-flex items-center gap-1">
+                      <Calendar className="size-3.5" /> {p.fecha_inicio}
+                      {p.fecha_fin ? ` → ${p.fecha_fin}` : ""}
+                    </span>
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void handleDelete(p.id)}
+                  className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-red-50 hover:text-red-600"
+                  aria-label="Eliminar programa"
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <span
+                  className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${estadoTone[p.estado]}`}
+                >
+                  {estadoLabel[p.estado]}
+                </span>
+                <select
+                  value={p.estado}
+                  onChange={(e) =>
+                    void handleUpdate(p.id, {
+                      estado: e.target.value as SeguimientoEstado,
+                    })
+                  }
+                  className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
+                  aria-label="Cambiar estado"
+                >
+                  {Object.entries(estadoLabel).map(([v, l]) => (
+                    <option key={v} value={v}>
+                      {l}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label
+                    className="text-11px font-semibold uppercase tracking-wide text-slate-500"
+                    htmlFor={cumplimientoId}
+                  >
+                    Cumplimiento
+                  </label>
+                  <textarea
+                    id={cumplimientoId}
+                    aria-label="Cumplimiento del programa"
+                    defaultValue={p.cumplimiento}
+                    onBlur={(e) => {
+                      if (e.target.value !== p.cumplimiento)
+                        void handleUpdate(p.id, {
+                          cumplimiento: e.target.value,
+                        });
+                    }}
+                    rows={2}
+                    placeholder="Avances, asistencia, evidencias"
+                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
+                  />
+                </div>
+                <div>
+                  <label
+                    className="text-11px font-semibold uppercase tracking-wide text-slate-500"
+                    htmlFor={evaluacionId}
+                  >
+                    Evaluación
+                  </label>
+                  <textarea
+                    id={evaluacionId}
+                    aria-label="Evaluación del programa"
+                    defaultValue={p.evaluacion}
+                    onBlur={(e) => {
+                      if (e.target.value !== p.evaluacion)
+                        void handleUpdate(p.id, { evaluacion: e.target.value });
+                    }}
+                    rows={2}
+                    placeholder="Logros, ajustes, cierre"
+                    className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
+                  />
+                </div>
+              </div>
+
+              {p.estado === "cumplido" && !p.evaluacion && (
+                <p className="mt-2 flex items-center gap-1 text-11px text-amber-700">
+                  <CheckCircle2 className="size-3.5" /> Cumplido sin evaluación
+                  — registra evaluación para cerrar el ciclo.
                 </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => void handleDelete(p.id)}
-                className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-red-50 hover:text-red-600"
-                aria-label="Eliminar programa"
-              >
-                <Trash2 className="size-4" />
-              </button>
+              )}
             </div>
-
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span
-                className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${estadoTone[p.estado]}`}
-              >
-                {estadoLabel[p.estado]}
-              </span>
-              <select
-                value={p.estado}
-                onChange={(e) =>
-                  void handleUpdate(p.id, {
-                    estado: e.target.value as SeguimientoEstado,
-                  })
-                }
-                className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
-                aria-label="Cambiar estado"
-              >
-                {Object.entries(estadoLabel).map(([v, l]) => (
-                  <option key={v} value={v}>
-                    {l}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <div>
-                <label className="text-11px font-semibold uppercase tracking-wide text-slate-500">
-                  Cumplimiento
-                </label>
-                <textarea
-                  defaultValue={p.cumplimiento}
-                  onBlur={(e) => {
-                    if (e.target.value !== p.cumplimiento)
-                      void handleUpdate(p.id, { cumplimiento: e.target.value });
-                  }}
-                  rows={2}
-                  placeholder="Avances, asistencia, evidencias"
-                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
-                />
-              </div>
-              <div>
-                <label className="text-11px font-semibold uppercase tracking-wide text-slate-500">
-                  Evaluación
-                </label>
-                <textarea
-                  defaultValue={p.evaluacion}
-                  onBlur={(e) => {
-                    if (e.target.value !== p.evaluacion)
-                      void handleUpdate(p.id, { evaluacion: e.target.value });
-                  }}
-                  rows={2}
-                  placeholder="Logros, ajustes, cierre"
-                  className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs outline-none focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
-                />
-              </div>
-            </div>
-
-            {p.estado === "cumplido" && !p.evaluacion && (
-              <p className="mt-2 flex items-center gap-1 text-11px text-amber-700">
-                <CheckCircle2 className="size-3.5" /> Cumplido sin evaluación —
-                registra evaluación para cerrar el ciclo.
-              </p>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
