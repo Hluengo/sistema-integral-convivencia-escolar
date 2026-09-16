@@ -48,7 +48,7 @@ export function DetailModalContent({
   return (
     <DialogContent
       hideClose
-      className="flex h-[min(92vh,900px)] max-h-[calc(100vh-2rem)] w-[min(96vw,1280px)] max-w-none flex-col overflow-hidden p-0"
+      className="flex h-[min(94vh,940px)] max-h-[calc(100vh-1rem)] w-[min(98vw,1360px)] max-w-none flex-col overflow-hidden border-slate-200 bg-slate-50 p-0 shadow-2xl"
       aria-label={ariaLabel}
     >
       {children}
@@ -63,21 +63,21 @@ export function DetailModalHeader({
   actions,
 }: DetailModalHeaderProps) {
   return (
-    <header className="relative mb-3 overflow-hidden border-neutral-600/70 border-b bg-gradient-to-br from-neutral-700 via-neutral-700 to-neutral-900 px-4 py-4 sm:mb-4 sm:px-6">
+    <header className="relative z-20 overflow-hidden border-slate-800 border-b bg-slate-950 px-4 py-4 sm:px-6">
       <div
-        className="pointer-events-none absolute inset-0 opacity-30 [background-image:linear-gradient(90deg,rgba(255,255,255,0.045)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.045)_1px,transparent_1px)] [background-size:56px_56px]"
+        className="pointer-events-none absolute inset-0 opacity-35 [background-image:linear-gradient(135deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:18px_18px]"
         aria-hidden="true"
       />
       <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/10">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white/10 ring-1 ring-white/15">
             <span className="font-bold text-neutral-100 text-sm">
               {avatarInitial}
             </span>
           </div>
           <div className="min-w-0">
-            <h2 className="truncate font-bold text-base text-white">{title}</h2>
-            <div className="mt-0.5 flex flex-wrap items-center gap-2 text-neutral-200 text-xs">
+            <h2 className="truncate font-bold text-lg text-white">{title}</h2>
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-slate-200 text-xs">
               {metadata}
             </div>
           </div>
@@ -98,11 +98,11 @@ export function DetailModalTabs<T extends string>({
 }: DetailModalTabsProps<T>) {
   return (
     <div
-      className="border-neutral-100 border-b bg-white px-4 pb-2 sm:px-6"
+      className="z-10 border-slate-200 border-b bg-white/95 px-4 py-2 backdrop-blur sm:px-6"
       role="tablist"
       aria-label={ariaLabel}
     >
-      <div className="flex gap-1 overflow-x-auto rounded-xl bg-neutral-100/60 p-1">
+      <div className="flex gap-1 overflow-x-auto rounded-lg bg-slate-100 p-1">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -110,10 +110,10 @@ export function DetailModalTabs<T extends string>({
             onClick={() => onChange(tab.id)}
             role="tab"
             aria-selected={activeTab === tab.id}
-            className={`relative flex min-w-[10rem] flex-1 flex-col items-stretch justify-center gap-1 overflow-hidden rounded-lg px-3 py-2 font-medium text-xs transition-colors sm:min-w-0 ${
+            className={`relative flex min-w-[9.5rem] flex-1 flex-col items-stretch justify-center gap-1 overflow-hidden rounded-md px-3 py-2 font-semibold text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-100 sm:min-w-0 ${
               activeTab === tab.id
-                ? "bg-white text-brand-700 shadow-sm ring-1 ring-brand-200"
-                : "text-slate-600 hover:bg-white/60 hover:text-slate-800"
+                ? "bg-white text-slate-950 shadow-sm ring-1 ring-slate-200"
+                : "text-slate-600 hover:bg-white/70 hover:text-slate-900"
             }`}
           >
             <span className="flex items-center justify-center gap-1.5 whitespace-nowrap">
@@ -135,7 +135,7 @@ export function DetailModalBody({
   return (
     <div
       tabIndex={0}
-      className={`flex-1 min-h-0 overflow-y-auto p-4 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500 sm:p-5 ${className}`}
+      className={`min-h-0 flex-1 overflow-y-auto p-4 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500 sm:p-5 ${className}`}
     >
       {children}
     </div>

@@ -290,13 +290,16 @@ describe("Listado de causas activas", () => {
     assert.doesNotMatch(checklistRegistration, /investigacion: true/);
   });
 
-  it("usa color contextual suave en las tarjetas de resumen del expediente", () => {
+  it("presenta el resumen como centro operativo del expediente", () => {
     const summary = read("../timeline/ResumenTab.tsx");
+    const tabs = read("../timeline/TimelineTabs.tsx");
 
-    assert.match(summary, /bg-violet-50/);
-    assert.match(summary, /bg-sky-50/);
-    assert.match(summary, /bg-grave-50/);
-    assert.match(summary, /bg-leve-50/);
+    assert.match(summary, /Centro operativo del expediente/);
+    assert.match(summary, /Avance de fase/);
+    assert.match(summary, /nextChecklistItem/);
+    assert.match(summary, /documentsCount/);
+    assert.match(tabs, /getCausaOperationalSummary/);
+    assert.match(tabs, /summary\.currentPhase/);
   });
 
   it("muestra la ruta, plazo, próximo hito y actividad sin nuevas fuentes de datos", () => {

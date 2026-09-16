@@ -57,6 +57,9 @@ export default function TimelineHeader({
   const showConcluyente =
     deadlines.informeConcluyente !== null &&
     ["Resolución", "Apelación", "Seguimiento"].includes(currentPhase);
+  const riskLabel = breaches.length
+    ? `${breaches.length} alerta${breaches.length === 1 ? "" : "s"}`
+    : "Sin alertas";
   const deadlineChipClass = (tone: "normal" | "warning" | "overdue") =>
     ({
       normal: "border-leve-200 bg-leve-50 text-leve-700",
@@ -71,23 +74,57 @@ export default function TimelineHeader({
         title={displayName}
         metadata={
           <>
-            <span>{causa.estudianteCurso || "Sin curso"}</span>
-            <span className="font-mono">{causa.id}</span>
+            <span className="rounded-full bg-white/10 px-2 py-0.5 text-white">
+              {causa.estudianteCurso || "Sin curso"}
+            </span>
+            <span className="rounded-full bg-white/10 px-2 py-0.5 font-mono text-slate-100">
+              {causa.id}
+            </span>
             <span
               className={`inline-flex items-center rounded-full px-2 py-0.5 font-bold ${
                 causa.comprometeAulaSegura
-                  ? "bg-gravisima-100 text-gravisima-700"
-                  : "bg-grave-100 text-grave-700"
+                  ? "bg-gravisima-200 text-gravisima-900"
+                  : "bg-amber-200 text-amber-950"
               }`}
             >
               {causa.comprometeAulaSegura
                 ? "Aula Segura"
                 : causa.tipoInfraccion}
             </span>
-            <span>{getCausaStatus(causa)}</span>
+            <span className="rounded-full bg-white/10 px-2 py-0.5 text-slate-100">
+              {getCausaStatus(causa)} · {currentPhase}
+            </span>
+            <span
+              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-semibold ${deadlineChipClass(deadlines.cierreIndagacion.tone)}`}
+            >
+              <CalendarClock className="size-3" aria-hidden="true" />
+              Cierre {formatChileDate(
+                deadlines.cierreIndagacion.deadlineDate,
+              )}{" "}
+              · {deadlines.cierreIndagacion.text}
+            </span>
+            <span
+              className={`rounded-full px-2 py-0.5 font-semibold ${
+                breaches.length
+                  ? "bg-danger-100 text-danger-800"
+                  : "bg-leve-100 text-leve-800"
+              }`}
+            >
+              {riskLabel}
+            </span>
+            {showConcluyente && deadlines.informeConcluyente && (
+              <span
+                className={`inline-flex items-center rounded-full border px-2 py-0.5 font-semibold ${deadlineChipClass(deadlines.informeConcluyente.tone)}`}
+              >
+                Concluyente: {deadlines.informeConcluyente.text}
+              </span>
+            )}
+            <span className="rounded-full bg-white/10 px-2 py-0.5 text-slate-200">
+              Apertura {formatChileDate(causa.fechaApertura)}
+            </span>
             {causa.runEstudiante && (
               <span
-                className="inline-flex items-center gap-1 font-mono"
+                className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 font-mono text-slate-200"
                 title={privacyMode ? "RUN protegido" : undefined}
               >
                 RUN{" "}
@@ -97,27 +134,13 @@ export default function TimelineHeader({
               </span>
             )}
             {!causa.runEstudiante && privacyMode && (
-              <span className="font-mono" title="RUN protegido">
-                RUN {maskRut(undefined, true)} — {maskName(displayName, true)}
-              </span>
-            )}
-            <span
-              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-semibold ${deadlineChipClass(deadlines.cierreIndagacion.tone)}`}
-            >
-              <CalendarClock className="size-3" aria-hidden="true" />
-              Cierre: {formatChileDate(
-                deadlines.cierreIndagacion.deadlineDate,
-              )}{" "}
-              · {deadlines.cierreIndagacion.text}
-            </span>
-            {showConcluyente && deadlines.informeConcluyente && (
               <span
-                className={`inline-flex items-center rounded-full border px-2 py-0.5 font-semibold ${deadlineChipClass(deadlines.informeConcluyente.tone)}`}
+                className="rounded-full bg-white/10 px-2 py-0.5 font-mono text-slate-200"
+                title="RUN protegido"
               >
-                Concluyente: {deadlines.informeConcluyente.text}
+                RUN {maskRut(undefined, true)} · {maskName(displayName, true)}
               </span>
             )}
-            <span>Apertura: {formatChileDate(causa.fechaApertura)}</span>
           </>
         }
         actions={
@@ -127,7 +150,7 @@ export default function TimelineHeader({
                 <button
                   type="button"
                   onClick={onForceCloseClick}
-                  className="hidden items-center gap-1.5 rounded-lg px-3 py-2 font-semibold text-gravisima-100 text-xs transition-colors hover:bg-gravisima-500/20 hover:text-white sm:inline-flex"
+                  className="hidden items-center gap-1.5 rounded-md bg-white px-3 py-2 font-semibold text-slate-950 text-xs shadow-sm transition-colors hover:bg-gravisima-50 hover:text-gravisima-700 sm:inline-flex"
                   title="Cerrar causa con fundamento"
                   aria-label="Cerrar causa con fundamento"
                 >
@@ -137,7 +160,7 @@ export default function TimelineHeader({
                 <button
                   type="button"
                   onClick={onForceCloseClick}
-                  className="flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 text-gravisima-100 transition-colors hover:bg-gravisima-500/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-800 sm:hidden"
+                  className="flex min-h-10 min-w-10 items-center justify-center rounded-md bg-white/10 p-2 text-gravisima-100 transition-colors hover:bg-gravisima-500/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-800 sm:hidden"
                   title="Cerrar causa con fundamento"
                   aria-label="Cerrar causa con fundamento"
                 >
@@ -146,7 +169,7 @@ export default function TimelineHeader({
                 <button
                   type="button"
                   onClick={onEditClick}
-                  className="flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 text-neutral-200 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-800"
+                  className="flex min-h-10 min-w-10 items-center justify-center rounded-md bg-white/10 p-2 text-neutral-200 transition-colors hover:bg-white/15 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-800"
                   title="Editar expediente"
                   aria-label="Editar expediente"
                 >

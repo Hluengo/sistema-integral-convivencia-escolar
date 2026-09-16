@@ -52,7 +52,7 @@ export default function TimelineTabPanels({
   ];
 
   return (
-    <DetailModalBody className="space-y-4 bg-neutral-50/60">
+    <DetailModalBody className="space-y-4 bg-slate-50">
       {activeTab === "resumen" && (
         <ResumenTab
           causa={causa}
@@ -106,7 +106,7 @@ export default function TimelineTabPanels({
                 );
               })}
             </nav>
-            <header className="flex flex-col gap-2.5 rounded-lg border border-slate-200 bg-white p-3 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+            <header className="flex flex-col gap-2.5 rounded-lg border border-slate-200 bg-white p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between">
               <div className="flex min-w-0 items-start gap-2.5">
                 <span
                   className="rounded-lg bg-brand-100 p-1.5 text-brand-700"
@@ -207,7 +207,7 @@ export default function TimelineTabPanels({
 
       {activeTab === "matriz" && (
         <section aria-labelledby="matriz-title" className="space-y-3">
-          <header className="flex items-start gap-2.5 rounded-lg border border-slate-200 bg-white p-3 shadow-xs">
+          <header className="flex items-start gap-2.5 rounded-lg border border-slate-200 bg-white p-4 shadow-xs">
             <span
               className="rounded-lg bg-brand-100 p-1.5 text-brand-700"
               aria-hidden="true"
@@ -244,7 +244,7 @@ export default function TimelineTabPanels({
 
       {activeTab === "expediente" && (
         <section aria-labelledby="expediente-title" className="space-y-3">
-          <header className="flex items-start gap-2.5 rounded-lg border border-neutral-200 bg-white p-3">
+          <header className="flex items-start gap-2.5 rounded-lg border border-slate-200 bg-white p-4 shadow-xs">
             <span
               className="rounded-lg bg-brand-100 p-1.5 text-brand-700"
               aria-hidden="true"
@@ -264,7 +264,7 @@ export default function TimelineTabPanels({
               </p>
             </div>
           </header>
-          <div className="rounded-lg border border-neutral-200 bg-white p-4">
+          <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-xs">
             <ExpedienteExportPanel causa={causa} />
           </div>
         </section>
