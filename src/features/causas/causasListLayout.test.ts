@@ -148,11 +148,11 @@ describe("Listado de causas activas", () => {
     assert.match(investigationChecklist, /model\.mediationActive &&/);
     assert.match(
       investigationChecklist,
-      /notRequired={model\.mediationOutcome === 'agreement'}/,
+      /notRequired={model\.mediationOutcome === ["']agreement["']}/,
     );
     assert.match(
       investigationChecklist,
-      /notRequired={model\.mediationOutcome === 'failed'}/,
+      /notRequired={model\.mediationOutcome === ["']failed["']}/,
     );
   });
 

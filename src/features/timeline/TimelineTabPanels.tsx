@@ -52,7 +52,7 @@ export default function TimelineTabPanels({
   ];
 
   return (
-    <DetailModalBody className="space-y-4 bg-slate-50">
+    <DetailModalBody className="space-y-4 bg-neutral-50">
       {activeTab === "resumen" && (
         <ResumenTab
           causa={causa}
@@ -70,7 +70,7 @@ export default function TimelineTabPanels({
           >
             <nav
               aria-label="Ruta del expediente"
-              className="flex flex-wrap items-center gap-1 text-xs text-slate-500"
+              className="flex flex-wrap items-center gap-1 text-xs text-neutral-500"
             >
               {faseOrder.map((fase, idx) => {
                 const phaseData = operationalSummary.phaseProgress.find(
@@ -85,14 +85,14 @@ export default function TimelineTabPanels({
                   faseOrder.indexOf(selectedPhase as FaseProcedimental) > idx;
                 return (
                   <span key={fase} className="flex items-center gap-1">
-                    {idx > 0 && <span className="text-slate-300">›</span>}
+                    {idx > 0 && <span className="text-neutral-200">›</span>}
                     <span
                       className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium ${
                         isCurrent
                           ? "bg-brand-600 text-white"
                           : isComplete || isPast
                             ? "bg-green-100 text-green-700"
-                            : "bg-slate-100 text-slate-600"
+                            : "bg-neutral-100 text-neutral-600"
                       }`}
                     >
                       {isComplete ? (
@@ -106,7 +106,7 @@ export default function TimelineTabPanels({
                 );
               })}
             </nav>
-            <header className="flex flex-col gap-2.5 rounded-lg border border-slate-200 bg-white p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between">
+            <header className="flex flex-col gap-2.5 rounded-lg border border-neutral-150 bg-white p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between">
               <div className="flex min-w-0 items-start gap-2.5">
                 <span
                   className="rounded-lg bg-brand-100 p-1.5 text-brand-700"
@@ -115,12 +115,12 @@ export default function TimelineTabPanels({
                   <ListChecks className="size-4.5" />
                 </span>
                 <div>
-                  <p className="font-semibold text-10px uppercase tracking-wide text-slate-500">
+                  <p className="font-semibold text-10px uppercase tracking-wide text-neutral-500">
                     Fase de trabajo
                   </p>
                   <h3
                     id="phase-workspace-title"
-                    className="font-semibold text-base text-slate-900"
+                    className="font-semibold text-base text-neutral-900"
                   >
                     {selectedPhase}
                   </h3>
@@ -130,7 +130,7 @@ export default function TimelineTabPanels({
                     );
                     if (!phaseData)
                       return (
-                        <p className="mt-0.5 text-xs text-slate-600">
+                        <p className="mt-0.5 text-xs text-neutral-600">
                           Registra y consulta los hitos, antecedentes y
                           documentos de esta fase.
                         </p>
@@ -147,7 +147,7 @@ export default function TimelineTabPanels({
                         ? operationalSummary.nextChecklistItem.label
                         : null;
                     return (
-                      <p className="mt-0.5 text-xs text-slate-600">
+                      <p className="mt-0.5 text-xs text-neutral-600">
                         {phaseData.completed}/{phaseData.total} hitos · {pct}%
                         {nextItem ? ` · Falta: ${nextItem}` : ""}
                       </p>
@@ -158,7 +158,7 @@ export default function TimelineTabPanels({
               <button
                 type="button"
                 onClick={() => onSelectPhase(null)}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-neutral-150 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-700 shadow-xs transition hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
               >
                 <ArrowLeft className="size-3.5" />
                 Volver a la ruta
@@ -192,7 +192,7 @@ export default function TimelineTabPanels({
               selectedPhase={selectedPhase}
             />
             {selectedPhase === "Seguimiento" && (
-              <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
+              <div className="rounded-xl border border-neutral-150 bg-white p-4 shadow-xs">
                 <SeguimientoPanel causa={causa} />
               </div>
             )}
@@ -207,7 +207,7 @@ export default function TimelineTabPanels({
 
       {activeTab === "matriz" && (
         <section aria-labelledby="matriz-title" className="space-y-3">
-          <header className="flex items-start gap-2.5 rounded-lg border border-slate-200 bg-white p-4 shadow-xs">
+          <header className="flex items-start gap-2.5 rounded-lg border border-neutral-150 bg-white p-4 shadow-xs">
             <span
               className="rounded-lg bg-brand-100 p-1.5 text-brand-700"
               aria-hidden="true"
@@ -217,11 +217,11 @@ export default function TimelineTabPanels({
             <div>
               <h3
                 id="matriz-title"
-                className="font-semibold text-sm text-slate-900"
+                className="font-semibold text-sm text-neutral-900"
               >
                 Matriz Hecho–Evidencia–RICE
               </h3>
-              <p className="mt-0.5 text-xs text-slate-600">
+              <p className="mt-0.5 text-xs text-neutral-600">
                 Cada hecho acreditado debe tener evidencia y norma RICE. Soporta
                 casos colectivos vía incidente compartido.
               </p>
@@ -244,7 +244,7 @@ export default function TimelineTabPanels({
 
       {activeTab === "expediente" && (
         <section aria-labelledby="expediente-title" className="space-y-3">
-          <header className="flex items-start gap-2.5 rounded-lg border border-slate-200 bg-white p-4 shadow-xs">
+          <header className="flex items-start gap-2.5 rounded-lg border border-neutral-150 bg-white p-4 shadow-xs">
             <span
               className="rounded-lg bg-brand-100 p-1.5 text-brand-700"
               aria-hidden="true"
@@ -264,7 +264,7 @@ export default function TimelineTabPanels({
               </p>
             </div>
           </header>
-          <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-xs">
+          <div className="rounded-lg border border-neutral-150 bg-white p-4 shadow-xs">
             <ExpedienteExportPanel causa={causa} />
           </div>
         </section>

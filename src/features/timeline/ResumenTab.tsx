@@ -56,16 +56,16 @@ export default memo(function ResumenTab({
       )}
 
       <section className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_minmax(20rem,0.65fr)]">
-        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-xs">
+        <div className="rounded-lg border border-neutral-150 bg-white p-4 shadow-xs">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase text-slate-500">
+              <p className="text-xs font-semibold uppercase text-neutral-500">
                 Centro operativo del expediente
               </p>
-              <h3 className="mt-1 text-xl font-bold leading-tight text-slate-950">
+              <h3 className="mt-1 text-xl font-bold leading-tight text-brand-950">
                 {summary.currentPhase}
               </h3>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-neutral-600">
                 {nextAction}
               </p>
             </div>
@@ -88,15 +88,15 @@ export default memo(function ResumenTab({
           </div>
 
           <div className="mt-4">
-            <div className="flex items-center justify-between gap-3 text-xs text-slate-600">
+            <div className="flex items-center justify-between gap-3 text-xs text-neutral-600">
               <span>Avance de fase</span>
-              <span className="font-semibold text-slate-900">
+              <span className="font-semibold text-neutral-900">
                 {currentProgress.completed}/{currentProgress.total} · {phasePct}
                 %
               </span>
             </div>
             <div
-              className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100"
+              className="mt-2 h-2 overflow-hidden rounded-full bg-neutral-100"
               role="progressbar"
               aria-label={`Avance de fase ${summary.currentPhase}`}
               aria-valuenow={currentProgress.completed}
@@ -114,30 +114,35 @@ export default memo(function ResumenTab({
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-          <div className="rounded-lg border border-slate-200 bg-slate-950 p-4 text-white shadow-xs">
+          <div className="rounded-lg border border-neutral-150 bg-brand-950 p-4 text-white shadow-xs">
             <CalendarClock
               className="size-5 text-amber-200"
               aria-hidden="true"
             />
-            <p className="mt-3 text-xs text-slate-300">Cierre de indagación</p>
+            <p className="mt-3 text-xs text-neutral-200">
+              Cierre de indagación
+            </p>
             <p className="mt-1 font-semibold">
               {formatChileDate(deadlines.cierreIndagacion.deadlineDate)} ·{" "}
               {deadlines.cierreIndagacion.text}
             </p>
             {deadlines.informeConcluyente && (
-              <p className="mt-1 text-xs text-slate-300">
+              <p className="mt-1 text-xs text-neutral-200">
                 Concluyente: {deadlines.informeConcluyente.text}
               </p>
             )}
           </div>
-          <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-xs">
-            <FolderArchive className="size-5 text-sky-700" aria-hidden="true" />
-            <p className="mt-3 text-xs text-slate-500">Trazabilidad</p>
-            <p className="mt-1 font-semibold text-slate-950">
+          <div className="rounded-lg border border-neutral-150 bg-white p-4 shadow-xs">
+            <FolderArchive
+              className="size-5 text-brand-700"
+              aria-hidden="true"
+            />
+            <p className="mt-3 text-xs text-neutral-500">Trazabilidad</p>
+            <p className="mt-1 font-semibold text-brand-950">
               {completed}/{totalHitos} hitos · {summary.documentsCount}{" "}
               documentos
             </p>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-neutral-500">
               {summary.historyCount} registros en historial
             </p>
           </div>
@@ -166,15 +171,15 @@ export default memo(function ResumenTab({
             label: "Responsable",
             value: causa.responsable,
             Icon: UserRound,
-            cardClass: "border-slate-200 bg-white",
-            iconClass: "text-slate-600",
+            cardClass: "border-neutral-150 bg-white",
+            iconClass: "text-neutral-600",
           },
           {
             label: "Última actualización",
             value: formatChileDate(causa.fechaUltimaActualizacion),
             Icon: ClipboardList,
-            cardClass: "border-sky-200 bg-sky-50",
-            iconClass: "text-sky-700",
+            cardClass: "border-brand-200 bg-brand-50",
+            iconClass: "text-brand-700",
           },
         ].map(({ label, value, Icon, cardClass, iconClass }) => (
           <div
@@ -182,45 +187,45 @@ export default memo(function ResumenTab({
             className={`rounded-lg border p-4 shadow-xs ${cardClass}`}
           >
             <Icon className={`mb-2 size-5 ${iconClass}`} aria-hidden="true" />
-            <p className="text-xs text-slate-500">{label}</p>
-            <p className="mt-1 text-sm font-semibold text-slate-950">{value}</p>
+            <p className="text-xs text-neutral-500">{label}</p>
+            <p className="mt-1 text-sm font-semibold text-brand-950">{value}</p>
           </div>
         ))}
       </div>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-xs">
-        <h3 className="text-sm font-semibold text-slate-950">
+      <section className="rounded-lg border border-neutral-150 bg-white p-4 shadow-xs">
+        <h3 className="text-sm font-semibold text-brand-950">
           Antecedentes generales
         </h3>
         <dl className="mt-3 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
           <div>
-            <dt className="text-slate-500">Apertura</dt>
-            <dd className="font-medium text-slate-900">
+            <dt className="text-neutral-500">Apertura</dt>
+            <dd className="font-medium text-neutral-900">
               {formatChileDate(causa.fechaApertura)}
             </dd>
           </div>
           <div>
-            <dt className="text-slate-500">Fase operativa</dt>
-            <dd className="font-medium text-slate-900">
+            <dt className="text-neutral-500">Fase operativa</dt>
+            <dd className="font-medium text-neutral-900">
               {summary.currentPhase}
             </dd>
           </div>
         </dl>
-        <div className="mt-4 grid gap-3 rounded-lg bg-slate-50 p-3">
+        <div className="mt-4 grid gap-3 rounded-lg bg-neutral-50 p-3">
           <div>
-            <p className="text-xs font-medium text-slate-500">
+            <p className="text-xs font-medium text-neutral-500">
               Descripción de la falta
             </p>
-            <p className="mt-1 text-sm leading-6 text-slate-700">
+            <p className="mt-1 text-sm leading-6 text-neutral-700">
               {conductaDescripcion ||
                 "No se ha asociado una conducta específica del RICE."}
             </p>
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500">
+            <p className="text-xs font-medium text-neutral-500">
               Relato de los hechos
             </p>
-            <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-700">
+            <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-neutral-700">
               {causa.observaciones || "Sin relato de los hechos registrado."}
             </p>
           </div>

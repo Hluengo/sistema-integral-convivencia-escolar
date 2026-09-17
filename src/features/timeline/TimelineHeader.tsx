@@ -77,21 +77,21 @@ export default function TimelineHeader({
             <span className="rounded-full bg-white/10 px-2 py-0.5 text-white">
               {causa.estudianteCurso || "Sin curso"}
             </span>
-            <span className="rounded-full bg-white/10 px-2 py-0.5 font-mono text-slate-100">
+            <span className="rounded-full bg-white/10 px-2 py-0.5 font-mono text-neutral-100">
               {causa.id}
             </span>
             <span
               className={`inline-flex items-center rounded-full px-2 py-0.5 font-bold ${
                 causa.comprometeAulaSegura
-                  ? "bg-gravisima-200 text-gravisima-900"
-                  : "bg-amber-200 text-amber-950"
+                  ? "bg-gravisima-200 text-gravisima-700"
+                  : "bg-grave-200 text-grave-700"
               }`}
             >
               {causa.comprometeAulaSegura
                 ? "Aula Segura"
                 : causa.tipoInfraccion}
             </span>
-            <span className="rounded-full bg-white/10 px-2 py-0.5 text-slate-100">
+            <span className="rounded-full bg-white/10 px-2 py-0.5 text-neutral-100">
               {getCausaStatus(causa)} · {currentPhase}
             </span>
             <span
@@ -119,12 +119,12 @@ export default function TimelineHeader({
                 Concluyente: {deadlines.informeConcluyente.text}
               </span>
             )}
-            <span className="rounded-full bg-white/10 px-2 py-0.5 text-slate-200">
+            <span className="rounded-full bg-white/10 px-2 py-0.5 text-neutral-150">
               Apertura {formatChileDate(causa.fechaApertura)}
             </span>
             {causa.runEstudiante && (
               <span
-                className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 font-mono text-slate-200"
+                className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 font-mono text-neutral-150"
                 title={privacyMode ? "RUN protegido" : undefined}
               >
                 RUN{" "}
@@ -135,7 +135,7 @@ export default function TimelineHeader({
             )}
             {!causa.runEstudiante && privacyMode && (
               <span
-                className="rounded-full bg-white/10 px-2 py-0.5 font-mono text-slate-200"
+                className="rounded-full bg-white/10 px-2 py-0.5 font-mono text-neutral-150"
                 title="RUN protegido"
               >
                 RUN {maskRut(undefined, true)} · {maskName(displayName, true)}
@@ -150,7 +150,7 @@ export default function TimelineHeader({
                 <button
                   type="button"
                   onClick={onForceCloseClick}
-                  className="hidden items-center gap-1.5 rounded-md bg-white px-3 py-2 font-semibold text-slate-950 text-xs shadow-sm transition-colors hover:bg-gravisima-50 hover:text-gravisima-700 sm:inline-flex"
+                  className="hidden items-center gap-1.5 rounded-md bg-white px-3 py-2 font-semibold text-brand-950 text-xs shadow-sm transition-colors hover:bg-gravisima-50 hover:text-gravisima-700 sm:inline-flex"
                   title="Cerrar causa con fundamento"
                   aria-label="Cerrar causa con fundamento"
                 >

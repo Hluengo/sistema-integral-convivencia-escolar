@@ -42,7 +42,7 @@ const ENTRY_STYLE: Record<
   { tone: string; Icon: typeof History; label: string }
 > = {
   Entrevista: {
-    tone: "bg-sky-50 text-sky-700 border-sky-200",
+    tone: "bg-brand-50 text-brand-700 border-brand-200",
     Icon: NotebookPen,
     label: "Entrevista",
   },
@@ -82,7 +82,7 @@ const ENTRY_STYLE: Record<
     label: "Descargo",
   },
   Otro: {
-    tone: "bg-slate-100 text-slate-700 border-slate-200",
+    tone: "bg-neutral-100 text-neutral-700 border-neutral-150",
     Icon: History,
     label: "Otro",
   },
@@ -179,11 +179,11 @@ export default memo(function BitacoraTab({
       <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-xs">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="flex items-center gap-2 font-semibold text-sm text-slate-900">
+            <h3 className="flex items-center gap-2 font-semibold text-sm text-neutral-900">
               <Mail className="size-4 text-brand-600" /> Centro de
               comunicaciones
             </h3>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-neutral-500">
               Cronología de notificaciones, citaciones, entrevistas, descargos y
               correos. Cada registro queda en el historial y puede llevar
               respaldo documental.
@@ -196,8 +196,8 @@ export default memo(function BitacoraTab({
           )}
         </div>
 
-        <p className="mt-3 text-xs text-slate-600">
-          <strong className="text-slate-900">{stats.total}</strong>{" "}
+        <p className="mt-3 text-xs text-neutral-600">
+          <strong className="text-neutral-900">{stats.total}</strong>{" "}
           comunicaciones · {stats.notificaciones} notifs. · {stats.entrevistas}{" "}
           entrevs. · {stats.conDocumento} con doc.
         </p>
@@ -215,7 +215,7 @@ export default memo(function BitacoraTab({
                 className={`rounded-full border px-2.5 py-1 text-xs font-semibold transition ${
                   filter === opt.id
                     ? "border-brand-600 bg-brand-600 text-white"
-                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                    : "border-neutral-150 bg-white text-neutral-600 hover:bg-neutral-50"
                 }`}
                 aria-pressed={filter === opt.id}
               >
@@ -224,12 +224,12 @@ export default memo(function BitacoraTab({
             ))}
           </div>
           <div className="relative w-full sm:w-64">
-            <Search className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-slate-400" />
+            <Search className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-neutral-400" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar en comunicaciones…"
-              className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-8 pr-3 text-sm outline-none placeholder:text-slate-400 focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
+              className="w-full rounded-lg border border-neutral-150 bg-white py-2 pl-8 pr-3 text-sm outline-none placeholder:text-neutral-400 focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
               aria-label="Buscar en comunicaciones"
             />
           </div>
@@ -340,7 +340,7 @@ export default memo(function BitacoraTab({
                 {causa.incidenteId && (
                   <label
                     htmlFor="manual-log-share"
-                    className="flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50/50 p-2.5 text-10px text-sky-950 sm:col-span-2"
+                    className="flex items-start gap-2 rounded-lg border border-brand-200 bg-brand-50/50 p-2.5 text-10px text-brand-950 sm:col-span-2"
                   >
                     <input
                       id="manual-log-share"
@@ -352,7 +352,7 @@ export default memo(function BitacoraTab({
                           event.target.checked ? "incidente" : "causa",
                         )
                       }
-                      className="mt-0.5 h-3.5 w-3.5 rounded border-sky-300 text-brand-600 focus:ring-brand-500"
+                      className="mt-0.5 h-3.5 w-3.5 rounded border-brand-300 text-brand-600 focus:ring-brand-500"
                     />
                     <span>
                       Compartir esta comunicación y su documento con el
@@ -368,23 +368,23 @@ export default memo(function BitacoraTab({
 
       {progressEntries.length > 0 && (
         <section
-          className="rounded-xl border border-sky-200 bg-sky-50/40 p-4"
+          className="rounded-xl border border-brand-200 bg-brand-50/40 p-4"
           aria-labelledby="progress-history-title"
         >
           <div className="flex items-center justify-between gap-2">
             <div>
               <h3
                 id="progress-history-title"
-                className="font-semibold text-sky-950 text-sm"
+                className="font-semibold text-brand-950 text-sm"
               >
                 Avances vinculados a hitos
               </h3>
-              <p className="mt-0.5 text-sky-900/70 text-11px">
+              <p className="mt-0.5 text-brand-900/70 text-11px">
                 Cada registro conserva el hito al que pertenece.
               </p>
             </div>
             {isLoadingProgress && (
-              <span className="text-10px text-sky-800">Actualizando…</span>
+              <span className="text-10px text-brand-800">Actualizando…</span>
             )}
           </div>
           <div className="mt-3 space-y-2">
@@ -393,14 +393,14 @@ export default memo(function BitacoraTab({
               .map((entry) => (
                 <article
                   key={entry.id}
-                  className="rounded-lg border border-sky-100 bg-white p-3"
+                  className="rounded-lg border border-brand-100 bg-white p-3"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
                       <p className="font-semibold text-neutral-900 text-xs">
                         {entry.title}
                       </p>
-                      <p className="mt-0.5 text-10px text-sky-800">
+                      <p className="mt-0.5 text-10px text-brand-800">
                         {checklistLabels.get(entry.checklistItemId) ||
                           "Hito del expediente"}
                       </p>
@@ -431,9 +431,9 @@ export default memo(function BitacoraTab({
       {/* Cronología */}
       {filtered.length > 0 ? (
         <div className="space-y-3">
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-neutral-500">
             Mostrando{" "}
-            <strong className="text-slate-700">{filtered.length}</strong> de{" "}
+            <strong className="text-neutral-700">{filtered.length}</strong> de{" "}
             {entries.length} comunicaciones
             {filter !== "Todos" ? ` · filtro: ${filter}` : ""}
           </p>
@@ -445,7 +445,7 @@ export default memo(function BitacoraTab({
             return (
               <article
                 key={entry.id}
-                className="flex gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-xs"
+                className="flex gap-3 rounded-xl border border-neutral-150 bg-white p-4 shadow-xs"
               >
                 <div
                   className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${style.tone}`}
@@ -455,7 +455,7 @@ export default memo(function BitacoraTab({
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-sm font-bold text-slate-900">
+                      <h3 className="text-sm font-bold text-neutral-900">
                         {entry.titulo}
                       </h3>
                       <span
@@ -475,26 +475,26 @@ export default memo(function BitacoraTab({
                         </span>
                       )}
                     </div>
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-neutral-400">
                       {formatChileDateTime(entry.fecha)}
                     </span>
                   </div>
-                  <p className="mt-1 whitespace-pre-wrap text-sm text-slate-600">
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-600">
                     {entry.descripcion}
                   </p>
-                  <p className="mt-2 flex items-center gap-1.5 text-xs text-slate-400">
+                  <p className="mt-2 flex items-center gap-1.5 text-xs text-neutral-400">
                     <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
                     {entry.participantes.length > 0
                       ? entry.participantes.join(", ")
                       : "Sin participantes"}
                   </p>
                   {entry.documentoAdjunto && (
-                    <div className="mt-3 flex items-center gap-1.5 rounded-lg border border-sky-200 bg-sky-50 px-2.5 py-2 text-xs">
+                    <div className="mt-3 flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-2 text-xs">
                       <File
-                        className="h-3.5 w-3.5 shrink-0 text-sky-500"
+                        className="h-3.5 w-3.5 shrink-0 text-brand-500"
                         aria-hidden="true"
                       />
-                      <span className="truncate font-medium text-sky-700">
+                      <span className="truncate font-medium text-brand-700">
                         Documento adjunto
                       </span>
                       <button
@@ -503,7 +503,7 @@ export default memo(function BitacoraTab({
                           if (entry.documentoAdjunto)
                             void openDocument(entry.documentoAdjunto);
                         }}
-                        className="ml-auto flex shrink-0 items-center gap-1 font-semibold text-sky-600 hover:underline"
+                        className="ml-auto flex shrink-0 items-center gap-1 font-semibold text-brand-600 hover:underline"
                         aria-label="Ver documento adjunto"
                       >
                         <Download className="h-3.5 w-3.5" aria-hidden="true" />{" "}
@@ -517,12 +517,12 @@ export default memo(function BitacoraTab({
           })}
         </div>
       ) : (
-        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center shadow-xs">
+        <div className="rounded-xl border border-neutral-150 bg-white p-8 text-center shadow-xs">
           <History
-            className="mx-auto mb-3 h-12 w-12 text-slate-300"
+            className="mx-auto mb-3 h-12 w-12 text-neutral-200"
             aria-hidden="true"
           />
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-neutral-500">
             {entries.length === 0
               ? "No hay comunicaciones registradas. Registra la primera notificación o entrevista."
               : `Sin resultados para "${search}" en ${filter}.`}

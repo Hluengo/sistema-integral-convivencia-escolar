@@ -48,7 +48,7 @@ export function DetailModalContent({
   return (
     <DialogContent
       hideClose
-      className="flex h-[min(94vh,940px)] max-h-[calc(100vh-1rem)] w-[min(98vw,120rem)] max-w-none flex-col overflow-hidden border-slate-200 bg-slate-50 p-0 shadow-2xl reduce-motion:[animation-duration:0ms,transition-duration:0ms]"
+      className="flex h-[min(94vh,940px)] max-h-[calc(100vh-1rem)] w-[min(98vw,120rem)] max-w-none flex-col overflow-hidden border-neutral-150 bg-neutral-50 p-0 shadow-2xl reduce-motion:[animation-duration:0ms,transition-duration:0ms]"
       aria-label={ariaLabel}
     >
       {children}
@@ -63,7 +63,7 @@ export function DetailModalHeader({
   actions,
 }: DetailModalHeaderProps) {
   return (
-    <header className="relative z-20 overflow-hidden border-slate-800 border-b bg-slate-950 px-4 py-4 sm:px-6">
+    <header className="relative z-20 overflow-hidden border-neutral-800 border-b bg-brand-950 px-4 py-4 sm:px-6">
       <div
         className="pointer-events-none absolute inset-0 opacity-35 [background-image:linear-gradient(135deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:18px_18px]"
         aria-hidden="true"
@@ -77,7 +77,7 @@ export function DetailModalHeader({
           </div>
           <div className="min-w-0">
             <h2 className="truncate font-bold text-lg text-white">{title}</h2>
-            <div className="mt-1 flex flex-wrap items-center gap-2 text-slate-200 text-xs">
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-neutral-150 text-xs">
               {metadata}
             </div>
           </div>
@@ -98,11 +98,11 @@ export function DetailModalTabs<T extends string>({
 }: DetailModalTabsProps<T>) {
   return (
     <div
-      className="z-10 border-slate-200 border-b bg-white/95 px-4 py-2 backdrop-blur sm:px-6"
+      className="z-10 border-neutral-150 border-b bg-white/95 px-4 py-2 backdrop-blur sm:px-6"
       role="tablist"
       aria-label={ariaLabel}
     >
-      <div className="flex gap-1 overflow-x-auto rounded-lg bg-slate-100 p-1">
+      <div className="flex gap-1 overflow-x-auto rounded-lg bg-neutral-100 p-1">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -110,10 +110,10 @@ export function DetailModalTabs<T extends string>({
             onClick={() => onChange(tab.id)}
             role="tab"
             aria-selected={activeTab === tab.id}
-            className={`relative flex min-w-[9.5rem] flex-1 flex-col items-stretch justify-center gap-1 overflow-hidden rounded-md px-3 py-2 font-semibold text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-100 sm:min-w-0 ${
+            className={`relative flex min-w-[9.5rem] flex-1 flex-col items-stretch justify-center gap-1 overflow-hidden rounded-md px-3 py-2 font-semibold text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-100 sm:min-w-0 ${
               activeTab === tab.id
-                ? "bg-white text-slate-950 shadow-sm ring-1 ring-slate-200"
-                : "text-slate-600 hover:bg-white/70 hover:text-slate-900"
+                ? "bg-white text-brand-950 shadow-sm ring-1 ring-neutral-150"
+                : "text-neutral-600 hover:bg-white/70 hover:text-neutral-900"
             }`}
           >
             <span className="flex items-center justify-center gap-1.5 whitespace-nowrap">

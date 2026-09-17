@@ -32,19 +32,17 @@ export default function TimelineTabs({
 
   const badge = (
     text: string,
-    tone: "brand" | "grave" | "sky" | "amber" | "slate" = "brand",
+    tone: "brand" | "grave" | "neutral" | "info" = "brand",
   ) => (
     <span
       className={`mx-auto w-fit max-w-full truncate rounded-full px-2 py-0.5 text-[0.7rem] leading-tight ${
         tone === "grave"
           ? "bg-grave-100 text-grave-700"
-          : tone === "amber"
-            ? "bg-amber-100 text-amber-800"
-            : tone === "sky"
-              ? "bg-sky-100 text-sky-800"
-              : tone === "slate"
-                ? "bg-slate-200 text-slate-700"
-                : "bg-brand-100 text-brand-700"
+          : tone === "neutral"
+            ? "bg-neutral-150 text-neutral-700"
+            : tone === "info"
+              ? "bg-info-100 text-info-600"
+              : "bg-brand-100 text-brand-700"
       }`}
     >
       {text}
@@ -62,7 +60,7 @@ export default function TimelineTabs({
       id: "ruta",
       label: "Ruta del expediente",
       Icon: Route,
-      indicator: badge(`${summary.currentPhase} · ${progressLabel}`, "sky"),
+      indicator: badge(`${summary.currentPhase} · ${progressLabel}`),
     },
     {
       id: "matriz",
@@ -70,7 +68,7 @@ export default function TimelineTabs({
       Icon: FileStack,
       indicator: badge(
         causa.tipoInfraccion,
-        causa.comprometeAulaSegura ? "amber" : "slate",
+        causa.comprometeAulaSegura ? "grave" : "neutral",
       ),
     },
     {

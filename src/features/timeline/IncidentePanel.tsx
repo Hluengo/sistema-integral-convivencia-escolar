@@ -30,7 +30,7 @@ export default function IncidentePanel({
   privacyMode,
 }: IncidentePanelProps) {
   const incidenteId = causa.incidenteId;
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const { data, isLoading } = useQuery({
     queryKey: ["incidente", incidenteId],
     queryFn: async () => {
@@ -48,7 +48,7 @@ export default function IncidentePanel({
   if (!incidenteId) return null;
   if (isLoading) {
     return (
-      <section className="rounded-xl border border-sky-200 bg-sky-50 p-4 text-sky-800 text-sm">
+      <section className="rounded-xl border border-brand-200 bg-brand-50 p-4 text-brand-800 text-sm">
         Cargando incidente grupal…
       </section>
     );
@@ -57,28 +57,30 @@ export default function IncidentePanel({
 
   return (
     <section
-      className="rounded-xl border border-sky-200 bg-sky-50/70 p-4"
+      className="rounded-xl border border-brand-200 bg-brand-50/70 p-4"
       aria-labelledby="incident-group-title"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h3
             id="incident-group-title"
-            className="flex items-center gap-2 font-semibold text-sky-950 text-sm"
+            className="flex items-center gap-2 font-semibold text-brand-950 text-sm"
           >
-            <Users className="size-4 text-sky-700" aria-hidden="true" />{" "}
+            <Users className="size-4 text-brand-700" aria-hidden="true" />{" "}
             Incidente grupal
           </h3>
-          <p className="mt-1 font-mono text-10px text-sky-800">{incidenteId}</p>
+          <p className="mt-1 font-mono text-10px text-brand-800">
+            {incidenteId}
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="rounded-full bg-white px-2 py-1 font-semibold text-10px text-sky-800">
+          <span className="rounded-full bg-white px-2 py-1 font-semibold text-10px text-brand-800">
             {data.causas.length} expedientes vinculados
           </span>
           <button
             type="button"
             onClick={() => setIsCollapsed((current) => !current)}
-            className="inline-flex items-center gap-1 rounded-lg border border-sky-200 bg-white px-2.5 py-1 font-semibold text-10px text-sky-800 transition-colors hover:bg-sky-50"
+            className="inline-flex items-center gap-1 rounded-lg border border-brand-200 bg-white px-2.5 py-1 font-semibold text-10px text-brand-800 transition-colors hover:bg-brand-50"
             aria-expanded={!isCollapsed}
             aria-controls="incident-group-details"
           >
@@ -87,7 +89,7 @@ export default function IncidentePanel({
             ) : (
               <ChevronUp className="size-3.5" aria-hidden="true" />
             )}
-            {isCollapsed ? "Descolapsar" : "Recoger"}
+            {isCollapsed ? "Ver detalles" : "Ocultar"}
           </button>
         </div>
       </div>
@@ -95,64 +97,64 @@ export default function IncidentePanel({
         <dl className="mt-3 grid gap-2 text-xs sm:grid-cols-3">
           <div className="flex items-start gap-1.5">
             <CalendarClock
-              className="mt-0.5 size-3.5 text-sky-700"
+              className="mt-0.5 size-3.5 text-brand-700"
               aria-hidden="true"
             />
             <div>
-              <dt className="text-sky-800/70">Fecha</dt>
-              <dd className="font-medium text-sky-950">
+              <dt className="text-brand-800/70">Fecha</dt>
+              <dd className="font-medium text-brand-950">
                 {formatChileDateTime(data.incidente.fechaHora)}
               </dd>
             </div>
           </div>
           <div className="flex items-start gap-1.5">
             <MapPin
-              className="mt-0.5 size-3.5 text-sky-700"
+              className="mt-0.5 size-3.5 text-brand-700"
               aria-hidden="true"
             />
             <div>
-              <dt className="text-sky-800/70">Lugar</dt>
-              <dd className="font-medium text-sky-950">
+              <dt className="text-brand-800/70">Lugar</dt>
+              <dd className="font-medium text-brand-950">
                 {data.incidente.lugar || "No informado"}
               </dd>
             </div>
           </div>
           <div className="flex items-start gap-1.5">
             <FileStack
-              className="mt-0.5 size-3.5 text-sky-700"
+              className="mt-0.5 size-3.5 text-brand-700"
               aria-hidden="true"
             />
             <div>
-              <dt className="text-sky-800/70">Tipo</dt>
-              <dd className="font-medium text-sky-950">
+              <dt className="text-brand-800/70">Tipo</dt>
+              <dd className="font-medium text-brand-950">
                 {data.incidente.tipo}
               </dd>
             </div>
           </div>
         </dl>
-        <p className="mt-3 whitespace-pre-wrap rounded-lg bg-white/70 p-2.5 text-xs text-sky-950">
+        <p className="mt-3 whitespace-pre-wrap rounded-lg bg-white/70 p-2.5 text-xs text-brand-950">
           {data.incidente.descripcion}
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           {data.causas.map((linkedCausa) => (
             <span
               key={linkedCausa.id}
-              className="rounded-lg border border-sky-200 bg-white px-2.5 py-1.5 text-10px text-sky-950"
+              className="rounded-lg border border-brand-200 bg-white px-2.5 py-1.5 text-10px text-brand-950"
             >
               <strong>
                 {privacyMode
                   ? linkedCausa.nnaProtectedName
                   : linkedCausa.estudianteNombre}
               </strong>
-              <span className="ml-1 text-sky-800/70">
+              <span className="ml-1 text-brand-800/70">
                 · {linkedCausa.id} · {linkedCausa.estadoActual}
               </span>
             </span>
           ))}
         </div>
         {data.activity.length > 0 && (
-          <div className="mt-4 rounded-lg border border-sky-200 bg-white/70 p-3">
-            <h4 className="font-semibold text-sky-950 text-xs">
+          <div className="mt-4 rounded-lg border border-brand-200 bg-white/70 p-3">
+            <h4 className="font-semibold text-brand-950 text-xs">
               Avances e hitos compartidos
             </h4>
             <div className="mt-2 space-y-2">
@@ -163,14 +165,14 @@ export default function IncidentePanel({
                 return (
                   <article
                     key={`${activity.kind}-${activity.id}`}
-                    className="rounded-lg border border-sky-100 bg-white p-2.5"
+                    className="rounded-lg border border-brand-100 bg-white p-2.5"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div>
                         <p className="font-semibold text-neutral-900 text-xs">
                           {activity.title}
                         </p>
-                        <p className="text-10px text-sky-800">
+                        <p className="text-10px text-brand-800">
                           {activity.kind === "hito" ? "Hito" : "Avance"} ·{" "}
                           {privacyMode
                             ? source?.nnaProtectedName
