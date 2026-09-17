@@ -6,11 +6,11 @@ import {
   type Causa,
   type ChecklistItem,
   type FaseProcedimental,
-} from '../types';
+} from "../types";
 
-export const INVESTIGATION_BASE_ITEM_IDS = ['chk_inv_1', 'chk_inv_2'] as const;
-export const MEDIATION_FLOW_ITEM_IDS = ['chk_inv_3', 'chk_inv_4'] as const;
-export const MEDIATION_OUTCOME_ITEM_IDS = ['chk_inv_5', 'chk_inv_6'] as const;
+export const INVESTIGATION_BASE_ITEM_IDS = ["chk_inv_1", "chk_inv_2"] as const;
+export const MEDIATION_FLOW_ITEM_IDS = ["chk_inv_3", "chk_inv_4"] as const;
+export const MEDIATION_OUTCOME_ITEM_IDS = ["chk_inv_5", "chk_inv_6"] as const;
 export const INVESTIGATION_ITEM_IDS = [
   ...INVESTIGATION_BASE_ITEM_IDS,
   ...MEDIATION_FLOW_ITEM_IDS,
@@ -18,28 +18,34 @@ export const INVESTIGATION_ITEM_IDS = [
 ] as const;
 
 export const PHASE_PREFIXES: Readonly<Record<FaseProcedimental, string>> = {
-  Recepción: 'chk_rec',
-  Investigación: 'chk_inv',
-  Resolución: 'chk_res',
-  Apelación: 'chk_imp',
-  Seguimiento: 'chk_seg',
+  Recepción: "chk_rec",
+  Investigación: "chk_inv",
+  Resolución: "chk_res",
+  Apelación: "chk_imp",
+  Seguimiento: "chk_seg",
 };
 
 /**
  * Hitos operativos visibles en la ruta. Los IDs omitidos se conservan para
  * reconstruir expedientes históricos, pero representan estados transitorios
  * que no requieren un registro independiente.
+ * Apelación opera con 2 hitos (chk_imp_2 recibida, chk_imp_4 resuelta).
+ * chk_imp_1 (derecho informado) es implícito al notificar la resolución
+ * (chk_res_6), que incluye la cláusula de reconsideración; chk_imp_3 es
+ * revisión interna y chk_imp_5 es cierre que vive en Seguimiento.
  */
-export const ACTIVE_PHASE_ITEM_IDS: Readonly<Record<FaseProcedimental, readonly string[]>> = {
-  Recepción: ['chk_rec_1', 'chk_rec_2', 'chk_rec_3'],
+export const ACTIVE_PHASE_ITEM_IDS: Readonly<
+  Record<FaseProcedimental, readonly string[]>
+> = {
+  Recepción: ["chk_rec_1", "chk_rec_2", "chk_rec_3"],
   Investigación: INVESTIGATION_ITEM_IDS,
-  Resolución: ['chk_res_2', 'chk_res_4', 'chk_res_6'],
-  Apelación: ['chk_imp_1', 'chk_imp_2', 'chk_imp_4', 'chk_imp_5'],
-  Seguimiento: ['chk_seg_1', 'chk_seg_3', 'chk_seg_4'],
+  Resolución: ["chk_res_2", "chk_res_4", "chk_res_6"],
+  Apelación: ["chk_imp_2", "chk_imp_4"],
+  Seguimiento: ["chk_seg_1", "chk_seg_3", "chk_seg_4"],
 };
 
 type InvestigationItemId = (typeof INVESTIGATION_ITEM_IDS)[number];
-type MediationOutcome = 'agreement' | 'failed' | null;
+type MediationOutcome = "agreement" | "failed" | null;
 
 interface CausaChecklistContext {
   estadoActual?: EstadoCausa;
@@ -90,27 +96,40 @@ function itemHasPersistentEvidence(item: ChecklistItem): boolean {
 
 function entryHasMediationEvidence(entry: BitacoraEntry): boolean {
   return (
-    entry.tipo === 'Mediación' ||
+    entry.tipo === "Mediación" ||
     MEDIATION_TEXT_PATTERN.test(entry.titulo) ||
     MEDIATION_TEXT_PATTERN.test(entry.descripcion) ||
-    Boolean(entry.documentoAdjunto && MEDIATION_TEXT_PATTERN.test(entry.documentoAdjunto))
+    Boolean(
+      entry.documentoAdjunto &&
+      MEDIATION_TEXT_PATTERN.test(entry.documentoAdjunto),
+    )
   );
 }
 
-function itemById(checklist: ChecklistItem[], id: string): ChecklistItem | null {
+function itemById(
+  checklist: ChecklistItem[],
+  id: string,
+): ChecklistItem | null {
   return checklist.find((item) => item.id === id) ?? null;
 }
 
 function completedItemIds(checklist: ChecklistItem[]): Set<string> {
-  return new Set(checklist.filter((item) => item.completado).map((item) => item.id));
+  return new Set(
+    checklist.filter((item) => item.completado).map((item) => item.id),
+  );
 }
 
-function filterChecklistByIds(checklist: ChecklistItem[], ids: readonly string[]): ChecklistItem[] {
+function filterChecklistByIds(
+  checklist: ChecklistItem[],
+  ids: readonly string[],
+): ChecklistItem[] {
   const allowedIds = new Set(ids);
   return checklist.filter((item) => allowedIds.has(item.id));
 }
 
-export function isMediationState(estadoActual: EstadoCausa | undefined): boolean {
+export function isMediationState(
+  estadoActual: EstadoCausa | undefined,
+): boolean {
   return estadoActual ? MEDIATION_STATES.has(estadoActual) : false;
 }
 
@@ -133,14 +152,18 @@ export function isMediationActive(causa: CausaChecklistContext): boolean {
   return causa.bitacora?.some(entryHasMediationEvidence) ?? false;
 }
 
-export function getMediationOutcome(checklist: ChecklistItem[]): MediationOutcome {
+export function getMediationOutcome(
+  checklist: ChecklistItem[],
+): MediationOutcome {
   const completedIds = completedItemIds(checklist);
-  if (completedIds.has('chk_inv_5')) return 'agreement';
-  if (completedIds.has('chk_inv_6')) return 'failed';
+  if (completedIds.has("chk_inv_5")) return "agreement";
+  if (completedIds.has("chk_inv_6")) return "failed";
   return null;
 }
 
-export function getApplicableInvestigationItemIds(causa: CausaChecklistContext): string[] {
+export function getApplicableInvestigationItemIds(
+  causa: CausaChecklistContext,
+): string[] {
   if (!isMediationActive(causa)) {
     return [...INVESTIGATION_BASE_ITEM_IDS];
   }
@@ -148,12 +171,14 @@ export function getApplicableInvestigationItemIds(causa: CausaChecklistContext):
   const outcome = getMediationOutcome(causa.checklistDebidoProceso);
   const ids = [...INVESTIGATION_BASE_ITEM_IDS, ...MEDIATION_FLOW_ITEM_IDS];
 
-  if (outcome === 'agreement') return [...ids, 'chk_inv_5'];
-  if (outcome === 'failed') return [...ids, 'chk_inv_6'];
+  if (outcome === "agreement") return [...ids, "chk_inv_5"];
+  if (outcome === "failed") return [...ids, "chk_inv_6"];
   return [...ids, ...MEDIATION_OUTCOME_ITEM_IDS];
 }
 
-export function getInvestigationChecklistProgress(causa: CausaChecklistContext): ChecklistProgress {
+export function getInvestigationChecklistProgress(
+  causa: CausaChecklistContext,
+): ChecklistProgress {
   const checklist = causa.checklistDebidoProceso;
   const byId = new Map(checklist.map((item) => [item.id, item]));
   const countCompleted = (ids: readonly string[]) =>
@@ -168,7 +193,9 @@ export function getInvestigationChecklistProgress(causa: CausaChecklistContext):
   return { total: baseTotal, completed: baseCompleted };
 }
 
-export function getInvestigationChecklistModel(causa: Causa): InvestigationChecklistModel {
+export function getInvestigationChecklistModel(
+  causa: Causa,
+): InvestigationChecklistModel {
   const checklist = causa.checklistDebidoProceso;
   const mediationActive = isMediationActive(causa);
   const mediationOutcome = getMediationOutcome(checklist);
@@ -180,9 +207,12 @@ export function getInvestigationChecklistModel(causa: Causa): InvestigationCheck
     mediationActive,
     mediationOutcome,
     baseItems: filterChecklistByIds(checklist, INVESTIGATION_BASE_ITEM_IDS),
-    mediationFlowItems: filterChecklistByIds(checklist, MEDIATION_FLOW_ITEM_IDS),
-    agreementItem: itemById(checklist, 'chk_inv_5'),
-    failedItem: itemById(checklist, 'chk_inv_6'),
+    mediationFlowItems: filterChecklistByIds(
+      checklist,
+      MEDIATION_FLOW_ITEM_IDS,
+    ),
+    agreementItem: itemById(checklist, "chk_inv_5"),
+    failedItem: itemById(checklist, "chk_inv_6"),
     applicableItems,
     progress,
     nextItem: getNextInvestigationChecklistItem(causa),
@@ -206,7 +236,7 @@ export function getApplicableChecklistItems(
   causa: CausaChecklistContext,
   phase: FaseProcedimental,
 ): ChecklistItem[] {
-  if (phase === 'Investigación') {
+  if (phase === "Investigación") {
     return getApplicableInvestigationItems(causa);
   }
 
@@ -214,9 +244,33 @@ export function getApplicableChecklistItems(
   return causa.checklistDebidoProceso.filter((item) => activeIds.has(item.id));
 }
 
-export function getApplicableInvestigationItems(causa: CausaChecklistContext): ChecklistItem[] {
+export function getApplicableInvestigationItems(
+  causa: CausaChecklistContext,
+): ChecklistItem[] {
   return filterChecklistByIds(
     causa.checklistDebidoProceso,
     getApplicableInvestigationItemIds(causa),
   );
+}
+
+/**
+ * Derecho a apelar informado: explícito (chk_imp_1 completado) o implícito
+ * al notificar la resolución (chk_res_6 completado, que incluye la cláusula
+ * de reconsideración). Regla derivada, no escribe en DB.
+ */
+export function getDerechoApelacionDetalle(causa: CausaChecklistContext): {
+  informado: boolean;
+  via: "hito" | "resolucion" | null;
+  fecha?: string;
+} {
+  const byId = new Map(
+    causa.checklistDebidoProceso.map((item) => [item.id, item]),
+  );
+  const hito = byId.get("chk_imp_1");
+  if (hito?.completado)
+    return { informado: true, via: "hito", fecha: hito.fechaCompletado };
+  const res = byId.get("chk_res_6");
+  if (res?.completado)
+    return { informado: true, via: "resolucion", fecha: res.fechaCompletado };
+  return { informado: false, via: null };
 }

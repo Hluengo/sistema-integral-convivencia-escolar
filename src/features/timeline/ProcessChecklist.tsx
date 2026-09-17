@@ -16,7 +16,10 @@ import AttachedDocuments from "./AttachedDocuments";
 import ChecklistItemCard from "./ChecklistItemCard";
 import InvestigationChecklist from "./InvestigationChecklist";
 import CausaNotificationPanel from "../causas/notificacionDocgen/CausaNotificationPanel";
-import { getApplicableChecklistItems } from "../../shared/lib/domain/investigationChecklist";
+import {
+  getApplicableChecklistItems,
+  getDerechoApelacionDetalle,
+} from "../../shared/lib/domain/investigationChecklist";
 
 interface ProcessChecklistProps {
   causa: Causa;
@@ -216,6 +219,21 @@ export default function ProcessChecklist({
               {/* Section Content */}
               {isExpanded && (
                 <div id={`section-${section.id}`} className="space-y-4 p-3">
+                  {section.phaseName === "Apelación" &&
+                    (() => {
+                      const derecho = getDerechoApelacionDetalle(causa);
+                      if (!derecho.informado) return null;
+                      return (
+                        <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                          Derecho a apelar informado
+                          {derecho.via === "resolucion"
+                            ? " en la resolución notificada"
+                            : " (hito registrado)"}
+                          {derecho.fecha ? ` el ${derecho.fecha}` : ""}. No
+                          requiere registro adicional.
+                        </p>
+                      );
+                    })()}
                   {sectionItems.map((item) => (
                     <ChecklistItemCard
                       key={item.id}

@@ -104,7 +104,7 @@ describe("Listado de causas activas", () => {
     );
 
     assert.match(view, /<CausaDetailModal/);
-    assert.match(modal, /<Dialog open=/);
+    assert.match(modal, /<Dialog\s+open=/);
     assert.match(modal, /onOpenChange/);
     assert.match(modal, /<DetailModalContent/);
     assert.match(tabs, /Resumen/);

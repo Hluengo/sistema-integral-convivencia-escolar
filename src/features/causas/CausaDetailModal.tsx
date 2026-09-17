@@ -20,11 +20,7 @@ export default function CausaDetailModal({
   onClose,
 }: CausaDetailModalProps) {
   return (
-    <Dialog
-      open={Boolean(causa)}
-      onOpenChange={(open) => !open && onClose()}
-      className="reduce-motion:[animation-duration:0ms]"
-    >
+    <Dialog open={Boolean(causa)} onOpenChange={(open) => !open && onClose()}>
       <DetailModalContent
         ariaLabel={
           causa
@@ -32,10 +28,10 @@ export default function CausaDetailModal({
             : "Gestión del expediente"
         }
       >
-        <DialogTitle>
+        <DialogTitle className="sr-only">
           {causa ? `Expediente ${causa.id}` : "Expediente"}
         </DialogTitle>
-        <DialogDescription>
+        <DialogDescription className="sr-only">
           Gestión completa del debido proceso, sus hitos, documentos y bitácora.
         </DialogDescription>
         {causa && isLoading && <ViewLoader view="causas" compact />}

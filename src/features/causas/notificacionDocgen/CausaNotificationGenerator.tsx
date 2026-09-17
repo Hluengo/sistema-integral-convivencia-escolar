@@ -191,7 +191,9 @@ export default function CausaNotificationGenerator({
       "<p>Le solicitamos responder a este correo indicando sus horarios de preferencia durante la semana, para agendar el encuentro de la manera más cómoda para usted.</p>" +
       "<p>Agradecemos desde ya su valiosa colaboración y compromiso con la formación de su hijo/a.</p>" +
       "<p>Atentamente,</p>" +
-      "<p><strong>Coordinación de Convivencia Escolar</strong><br/><strong>Colegio Carmela Romero de Espinosa - Madres Dominicas</strong></p>" +
+      "<p><strong>Coordinación de Convivencia Escolar</strong><br/><strong>" +
+      (institutionQuery.data?.official_name ?? "Establecimiento") +
+      "</strong></p>" +
       "</div>"
     }${documentHtml}`;
     if (!documentHtml || new Blob([html]).size > MAX_EMAIL_HTML_BYTES) {
@@ -239,6 +241,7 @@ export default function CausaNotificationGenerator({
     causa.id,
     currentSnapshot,
     hasOverflow,
+    institutionQuery.data?.official_name,
     onMarkNotified,
     onSaveApoderadoEmail,
   ]);

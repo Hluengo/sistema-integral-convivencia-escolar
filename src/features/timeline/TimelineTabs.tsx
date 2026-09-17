@@ -30,14 +30,21 @@ export default function TimelineTabs({
     ? `${progress.completed}/${progress.total}`
     : "Sin hitos";
 
-  const badge = (text: string, tone: "slate" | "amber" | "sky" = "slate") => (
+  const badge = (
+    text: string,
+    tone: "brand" | "grave" | "sky" | "amber" | "slate" = "brand",
+  ) => (
     <span
-      className={`mx-auto w-fit rounded-full px-2 py-0.5 text-[0.65rem] leading-tight ${
-        tone === "amber"
-          ? "bg-amber-100 text-amber-800"
-          : tone === "sky"
-            ? "bg-sky-100 text-sky-800"
-            : "bg-slate-100 text-slate-600"
+      className={`mx-auto w-fit max-w-full truncate rounded-full px-2 py-0.5 text-[0.7rem] leading-tight ${
+        tone === "grave"
+          ? "bg-grave-100 text-grave-700"
+          : tone === "amber"
+            ? "bg-amber-100 text-amber-800"
+            : tone === "sky"
+              ? "bg-sky-100 text-sky-800"
+              : tone === "slate"
+                ? "bg-slate-200 text-slate-700"
+                : "bg-brand-100 text-brand-700"
       }`}
     >
       {text}

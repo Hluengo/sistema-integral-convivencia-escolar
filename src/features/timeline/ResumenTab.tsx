@@ -95,7 +95,15 @@ export default memo(function ResumenTab({
                 %
               </span>
             </div>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+            <div
+              className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100"
+              role="progressbar"
+              aria-label={`Avance de fase ${summary.currentPhase}`}
+              aria-valuenow={currentProgress.completed}
+              aria-valuemin={0}
+              aria-valuemax={Math.max(currentProgress.total, 1)}
+              aria-valuetext={`${currentProgress.completed} de ${currentProgress.total} hitos, ${phasePct} por ciento`}
+            >
               <div
                 className="h-full rounded-full bg-brand-600"
                 style={{ width: `${phasePct}%` }}
