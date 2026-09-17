@@ -48,7 +48,7 @@ export function DetailModalContent({
   return (
     <DialogContent
       hideClose
-      className="flex h-[min(94vh,940px)] max-h-[calc(100vh-1rem)] w-[min(98vw,120rem)] max-w-none flex-col overflow-hidden border-slate-200 bg-slate-50 p-0 shadow-2xl"
+      className="flex h-[min(94vh,940px)] max-h-[calc(100vh-1rem)] w-[min(98vw,120rem)] max-w-none flex-col overflow-hidden border-slate-200 bg-slate-50 p-0 shadow-2xl reduce-motion:[animation-duration:0ms,transition-duration:0ms]"
       aria-label={ariaLabel}
     >
       {children}

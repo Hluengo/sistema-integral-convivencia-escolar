@@ -1,10 +1,10 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { Dialog, DialogDescription, DialogTitle } from '../../shared/ui/Dialog';
-import { DetailModalContent } from '../../shared/ui/DetailModal';
-import ViewLoader from '../../shared/ui/ViewLoader';
-import type { Causa } from '../../shared/lib/types';
-import InteractiveTimeline from '../timeline/InteractiveTimeline';
+import { Dialog, DialogDescription, DialogTitle } from "../../shared/ui/Dialog";
+import { DetailModalContent } from "../../shared/ui/DetailModal";
+import ViewLoader from "../../shared/ui/ViewLoader";
+import type { Causa } from "../../shared/lib/types";
+import InteractiveTimeline from "../timeline/InteractiveTimeline";
 
 interface CausaDetailModalProps {
   causa: Causa | undefined;
@@ -20,14 +20,22 @@ export default function CausaDetailModal({
   onClose,
 }: CausaDetailModalProps) {
   return (
-    <Dialog open={Boolean(causa)} onOpenChange={(open) => !open && onClose()}>
+    <Dialog
+      open={Boolean(causa)}
+      onOpenChange={(open) => !open && onClose()}
+      className="reduce-motion:[animation-duration:0ms]"
+    >
       <DetailModalContent
-        ariaLabel={causa ? `Gestión del expediente ${causa.id}` : 'Gestión del expediente'}
+        ariaLabel={
+          causa
+            ? `Gestión del expediente ${causa.id}`
+            : "Gestión del expediente"
+        }
       >
-        <DialogTitle className="sr-only">
-          {causa ? `Expediente ${causa.id}` : 'Expediente'}
+        <DialogTitle>
+          {causa ? `Expediente ${causa.id}` : "Expediente"}
         </DialogTitle>
-        <DialogDescription className="sr-only">
+        <DialogDescription>
           Gestión completa del debido proceso, sus hitos, documentos y bitácora.
         </DialogDescription>
         {causa && isLoading && <ViewLoader view="causas" compact />}
