@@ -186,7 +186,7 @@ describe("Listado de causas activas", () => {
         plazoInvestigacionDias: 60,
         fechaLimiteInvestigacion: "2026-09-22",
       }),
-      new Date("2026-07-16T12:00:00.000Z"),
+      new Date("2026-07-20T12:00:00.000Z"),
     );
     assert.equal(deadline.text, "Plazo excedido");
   });
