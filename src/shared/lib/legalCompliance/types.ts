@@ -5,7 +5,7 @@
  */
 
 /** Estado posible de un plazo legal */
-type EstadoPlazo = 'cumplido' | 'alerta' | 'vencido' | 'no_iniciado';
+export type EstadoPlazo = "cumplido" | "alerta" | "vencido" | "no_iniciado";
 
 /** Resultado de la verificación de un plazo */
 export interface ResultadoPlazo {
