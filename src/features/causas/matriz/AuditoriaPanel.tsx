@@ -43,8 +43,8 @@ export default function AuditoriaPanel({
                 : c.estado === "bloqueante"
                   ? "border-red-200 bg-red-50 text-red-800"
                   : c.estado === "no_aplica"
-                    ? "border-slate-200 bg-slate-50 text-slate-400"
-                    : "border-amber-200 bg-amber-50 text-amber-800"
+                    ? "border-slate-200 bg-slate-50 text-slate-700"
+                    : "border-amber-200 bg-amber-50 text-amber-900"
             }`}
             title={c.detalle}
           >
@@ -56,7 +56,7 @@ export default function AuditoriaPanel({
               <Circle className="size-3.5 shrink-0" />
             )}
             <span className="truncate font-medium">{c.label}</span>
-            <span className="ml-auto truncate text-11px opacity-70">
+            <span className="ml-auto truncate text-11px text-current">
               {c.detalle}
             </span>
           </div>

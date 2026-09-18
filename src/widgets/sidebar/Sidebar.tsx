@@ -247,11 +247,16 @@ export default memo(function Sidebar({
 }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const mobileSidebarRef = useRef<HTMLDivElement>(null);
+  const mobileTriggerRef = useRef<HTMLButtonElement>(null);
+  const wasMobileOpen = useRef(false);
 
   useEffect(() => {
     if (!mobileOpen) {
+      if (wasMobileOpen.current) mobileTriggerRef.current?.focus();
+      wasMobileOpen.current = false;
       return;
     }
+    wasMobileOpen.current = true;
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -306,6 +311,7 @@ export default memo(function Sidebar({
         onClick={() => setMobileOpen(true)}
         className="fixed top-4 left-4 z-50 rounded-xl bg-brand-700 p-2.5 text-white shadow-lg shadow-brand-900/20 transition-colors hover:bg-brand-800 active:scale-95 lg:hidden"
         aria-label="Abrir menú"
+        ref={mobileTriggerRef}
       >
         <Menu className="h-5 w-5" />
       </button>

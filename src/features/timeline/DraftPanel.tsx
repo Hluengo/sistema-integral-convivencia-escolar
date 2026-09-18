@@ -96,10 +96,10 @@ export default function DraftPanel({
           aria-hidden="true"
         />
         <div>
-          <h4 className="font-semibold text-11px text-neutral-900">
+          <h4 className="font-semibold text-xs text-neutral-900">
             Redacción de documentos oficiales
           </h4>
-          <p className="mt-0.5 text-10px leading-relaxed text-neutral-500">
+          <p className="mt-0.5 text-xs leading-relaxed text-neutral-500">
             Gemini prepara un borrador desde los antecedentes registrados.
             Revise y edite el documento antes de imprimirlo.
           </p>
@@ -112,7 +112,7 @@ export default function DraftPanel({
             className="mt-0.5 h-4 w-4 shrink-0 text-brand-600"
             aria-hidden="true"
           />
-          <p className="text-10px leading-relaxed text-neutral-600">
+          <p className="text-xs leading-relaxed text-neutral-600">
             La <strong>Notificación de Inicio de Indagación</strong> se genera
             desde el hito del checklist de Recepción del expediente (sin IA),
             con su propia plantilla e impresión hoja Carta.
@@ -202,7 +202,7 @@ export default function DraftPanel({
                 {draftProgress.checklist.map((item) => (
                   <li
                     key={item.label}
-                    className="flex items-start gap-2 text-10px text-neutral-700"
+                    className="flex items-start gap-2 text-xs text-neutral-700"
                   >
                     {item.complete ? (
                       <CheckCircle2
@@ -231,7 +231,7 @@ export default function DraftPanel({
                 />
                 Documentos del expediente
               </div>
-              <ul className="space-y-1 text-10px text-neutral-700">
+              <ul className="space-y-1 text-xs text-neutral-700">
                 {draftProgress.documents.map((name) => (
                   <li key={name} className="truncate">
                     {name}
@@ -272,7 +272,7 @@ export default function DraftPanel({
           />
 
           <details className="overflow-hidden rounded-xl border border-neutral-200 bg-neutral-100">
-            <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 font-semibold text-11px text-neutral-700 marker:hidden">
+            <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 font-semibold text-xs text-neutral-700 marker:hidden">
               <Eye className="size-4 text-brand-600" aria-hidden="true" />
               Ver vista previa para impresión Oficio
             </summary>

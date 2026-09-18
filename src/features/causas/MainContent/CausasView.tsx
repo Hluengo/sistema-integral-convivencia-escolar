@@ -183,7 +183,7 @@ export default function CausasView({
 
         <div
           className="inline-flex flex-wrap gap-1 rounded-xl bg-neutral-100 p-1"
-          role="tablist"
+          role="group"
           aria-label="Filtro por fase"
         >
           {(
@@ -203,8 +203,7 @@ export default function CausasView({
                 setSelectedFaseFilter(fase);
                 clearSelectedCausa();
               }}
-              role="tab"
-              aria-selected={selectedFaseFilter === fase}
+              aria-pressed={selectedFaseFilter === fase}
               className={`rounded-lg px-3.5 py-1.5 font-semibold text-sm transition-colors duration-150 ${
                 selectedFaseFilter === fase
                   ? "bg-white text-neutral-900 shadow-sm"
@@ -259,7 +258,17 @@ export default function CausasView({
                       label: "Crear primera causa",
                       onClick: createCausa.onOpen,
                     }
-                  : undefined
+                  : hasActiveFilters
+                    ? {
+                        label: "Limpiar filtros",
+                        onClick: () => {
+                          setSearchQuery("");
+                          setSelectedCourse("");
+                          setSelectedFaseFilter("Todas");
+                          clearSelectedCausa();
+                        },
+                      }
+                    : undefined
               }
             />
           </div>

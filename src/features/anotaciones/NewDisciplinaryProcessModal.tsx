@@ -854,7 +854,10 @@ export default function NewDisciplinaryProcessModal({
           )}
 
           {analysisError && step !== "upload" && (
-            <div className="rounded-xl border border-gravisima-200 bg-gravisima-50 p-3 text-gravisima-700 text-sm">
+            <div
+              role="alert"
+              className="rounded-xl border border-gravisima-200 bg-gravisima-50 p-3 text-gravisima-800 text-sm"
+            >
               {analysisError}
             </div>
           )}

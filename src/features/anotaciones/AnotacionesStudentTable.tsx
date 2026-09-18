@@ -63,13 +63,13 @@ const DISC_STATUS: Record<string, { text: string; bg: string }> = {
 };
 
 const CARD_STATUS_BADGE: Record<string, { bg: string; textClass: string }> = {
-  Vigente: { bg: "bg-leve-100", textClass: "text-neutral-800" },
-  Archivada: { bg: "bg-leve-100", textClass: "text-neutral-800" },
-  Procesada: { bg: "bg-brand-100", textClass: "text-brand-800" },
-  Pendiente: { bg: "bg-grave-100", textClass: "text-neutral-800" },
-  Cumplida: { bg: "bg-brand-100", textClass: "text-brand-800" },
-  Incumplida: { bg: "bg-gravisima-100", textClass: "text-neutral-800" },
-  Anulada: { bg: "bg-neutral-100", textClass: "text-neutral-600" },
+  Vigente: { bg: "bg-green-50", textClass: "text-green-800" },
+  Archivada: { bg: "bg-neutral-100", textClass: "text-neutral-700" },
+  Procesada: { bg: "bg-blue-50", textClass: "text-blue-800" },
+  Pendiente: { bg: "bg-amber-50", textClass: "text-amber-900" },
+  Cumplida: { bg: "bg-blue-50", textClass: "text-blue-800" },
+  Incumplida: { bg: "bg-red-50", textClass: "text-red-800" },
+  Anulada: { bg: "bg-slate-100", textClass: "text-slate-700" },
 };
 
 const getDisciplinaryStatusLabel = (
@@ -182,6 +182,18 @@ export default memo(function AnotacionesStudentTable({
     selectedCartaStatus,
     cartaStatuses,
   );
+  const hasActiveFilters = Boolean(
+    searchQuery.trim() ||
+    selectedCourseId ||
+    selectedCartaStatus ||
+    activeFilter !== "con_registro",
+  );
+  const clearFilters = () => {
+    setSearchQuery("");
+    setSelectedCourseId("");
+    setSelectedCartaStatus("");
+    setActiveFilter("con_registro");
+  };
   const exportMenuRef = useRef<HTMLDetailsElement>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -396,12 +408,22 @@ export default memo(function AnotacionesStudentTable({
                   </td>
                 </tr>
               ) : filteredStudents.length === 0 ? (
-                <tr aria-label="Estado de carga de estudiantes">
-                  <td
-                    colSpan={7}
-                    className="px-4 py-12 text-center text-neutral-500 text-sm"
-                  >
-                    No se encontraron estudiantes con los filtros seleccionados.
+                <tr aria-label="Sin resultados">
+                  <td colSpan={7} className="px-4 py-12 text-center">
+                    <p className="text-neutral-600 text-sm">
+                      {hasActiveFilters
+                        ? "No se encontraron estudiantes con los filtros seleccionados."
+                        : "Aún no hay estudiantes para mostrar."}
+                    </p>
+                    {hasActiveFilters && (
+                      <button
+                        type="button"
+                        onClick={clearFilters}
+                        className="mt-3 rounded-lg border border-brand-200 bg-white px-3 py-2 font-semibold text-brand-700 text-sm transition-colors hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                      >
+                        Limpiar filtros
+                      </button>
+                    )}
                   </td>
                 </tr>
               ) : (

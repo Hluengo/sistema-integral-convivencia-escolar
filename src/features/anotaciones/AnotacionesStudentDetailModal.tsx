@@ -1,35 +1,44 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { memo, useEffect, useMemo, useState } from 'react';
-import { X } from 'lucide-react';
-import type { Annotation } from '@/shared/lib/types';
-import { maskName, maskRut } from '@/shared/lib/anotacionesUtils';
-import { getCurrentSchoolYear, getYearInChile } from '@/shared/lib/dateUtils';
-import { getDisciplinaryStage, type LetterDocType } from '@/shared/lib/domain/disciplinaryStage';
+import { memo, useEffect, useMemo, useState } from "react";
+import { X } from "lucide-react";
+import type { Annotation } from "@/shared/lib/types";
+import { maskName, maskRut } from "@/shared/lib/anotacionesUtils";
+import { getCurrentSchoolYear, getYearInChile } from "@/shared/lib/dateUtils";
+import {
+  getDisciplinaryStage,
+  type LetterDocType,
+} from "@/shared/lib/domain/disciplinaryStage";
 import {
   STAGE_STYLE,
   TAB_ICONS,
   TAB_LABELS,
   type ActiveTab,
   type StudentInfo,
-} from './AnotacionesStudentDetailModal/constants';
-import StudentSummaryTab from './AnotacionesStudentDetailModal/StudentSummaryTab';
-import RevisionTab from './AnotacionesStudentDetailModal/RevisionTab';
-import HistoryTab from './AnotacionesStudentDetailModal/HistoryTab';
-import CartasTab from './AnotacionesStudentDetailModal/CartasTab';
-import EditAnnotationsTab from './AnotacionesStudentDetailModal/EditAnnotationsTab';
-import { useDisciplinaryData } from './AnotacionesStudentDetailModal/hooks/useDisciplinaryData';
-import { Dialog, DialogDescription, DialogTitle } from '@/shared/ui/Dialog';
+} from "./AnotacionesStudentDetailModal/constants";
+import StudentSummaryTab from "./AnotacionesStudentDetailModal/StudentSummaryTab";
+import RevisionTab from "./AnotacionesStudentDetailModal/RevisionTab";
+import HistoryTab from "./AnotacionesStudentDetailModal/HistoryTab";
+import CartasTab from "./AnotacionesStudentDetailModal/CartasTab";
+import EditAnnotationsTab from "./AnotacionesStudentDetailModal/EditAnnotationsTab";
+import { useDisciplinaryData } from "./AnotacionesStudentDetailModal/hooks/useDisciplinaryData";
+import { Dialog, DialogDescription, DialogTitle } from "@/shared/ui/Dialog";
 import {
   DetailModalBody,
   DetailModalContent,
   DetailModalHeader,
   DetailModalTabs,
   type DetailModalTab,
-} from '@/shared/ui/DetailModal';
+} from "@/shared/ui/DetailModal";
 
-const Skeleton = memo(function Skeleton({ className = '' }: { className?: string }) {
-  return <div className={`animate-pulse rounded-xl bg-neutral-200 ${className}`} />;
+const Skeleton = memo(function Skeleton({
+  className = "",
+}: {
+  className?: string;
+}) {
+  return (
+    <div className={`animate-pulse rounded-xl bg-neutral-200 ${className}`} />
+  );
 });
 
 interface AnotacionesStudentDetailModalProps {
@@ -46,7 +55,7 @@ export default function AnotacionesStudentDetailModal({
   student,
   annotations,
   privacyMode,
-  initialTab = 'estado',
+  initialTab = "estado",
   onClose,
   onDataChanged,
   teachers,
@@ -55,7 +64,7 @@ export default function AnotacionesStudentDetailModal({
   const [pendingCartaSuggestion, setPendingCartaSuggestion] = useState<{
     docType: LetterDocType;
     negativeCount: number;
-    source: 'pdf' | 'supabase';
+    source: "pdf" | "supabase";
   } | null>(null);
   const disciplinaryData = useDisciplinaryData(student.id);
 
@@ -71,18 +80,27 @@ export default function AnotacionesStudentDetailModal({
     return annotations.reduce(
       (acc, annotation) => {
         if (getYearInChile(annotation.date) !== schoolYear) return acc;
-        if (annotation.type === 'Negativa') acc.negativas += 1;
-        if (annotation.type === 'Positiva') acc.positivas += 1;
-        if (annotation.type === 'Información') acc.informativas += 1;
+        if (annotation.type === "Negativa") acc.negativas += 1;
+        if (annotation.type === "Positiva") acc.positivas += 1;
+        if (annotation.type === "Información") acc.informativas += 1;
         return acc;
       },
       { negativas: 0, positivas: 0, informativas: 0 },
     );
-  }, [annotations, student.annotations_count, student.positive_annotations_count]);
+  }, [
+    annotations,
+    student.annotations_count,
+    student.positive_annotations_count,
+  ]);
 
-  const counts = disciplinaryData.annotations.length > 0 ? disciplinaryData.counts : fallbackCounts;
+  const counts =
+    disciplinaryData.annotations.length > 0
+      ? disciplinaryData.counts
+      : fallbackCounts;
   const effectiveAnnotations =
-    disciplinaryData.annotations.length > 0 ? disciplinaryData.annotations : annotations;
+    disciplinaryData.annotations.length > 0
+      ? disciplinaryData.annotations
+      : annotations;
   const stage = getDisciplinaryStage(counts.negativas);
   const stageStyle = STAGE_STYLE[stage.key];
 
@@ -107,41 +125,51 @@ export default function AnotacionesStudentDetailModal({
     }
 
     switch (activeTab) {
-      case 'estado':
+      case "estado":
         return (
           <StudentSummaryTab
             counts={counts}
             currentCarta={disciplinaryData.currentCarta}
             lastAnalysis={disciplinaryData.lastAnalysis}
-            onGoToRevisionTab={() => setActiveTab('revisar_pdf')}
-            onGoToCartasTab={() => setActiveTab('cartas')}
+            onGoToRevisionTab={() => setActiveTab("revisar_pdf")}
+            onGoToCartasTab={() => setActiveTab("cartas")}
           />
         );
-      case 'revisar_pdf':
+      case "revisar_pdf":
         return (
           <RevisionTab
             student={student}
             counts={counts}
             currentCarta={disciplinaryData.currentCarta}
             onConfirmed={async () => {
-              await Promise.all([disciplinaryData.refresh(), onDataChanged?.()]);
+              await Promise.all([
+                disciplinaryData.refresh(),
+                onDataChanged?.(),
+              ]);
             }}
             onGoToCarta={(docType, negativeCount) => {
-              setPendingCartaSuggestion({ docType, negativeCount, source: 'pdf' });
-              setActiveTab('cartas');
+              setPendingCartaSuggestion({
+                docType,
+                negativeCount,
+                source: "pdf",
+              });
+              setActiveTab("cartas");
             }}
           />
         );
-      case 'editar_anotaciones':
+      case "editar_anotaciones":
         return (
           <EditAnnotationsTab
             annotations={effectiveAnnotations}
             onSaved={async () => {
-              await Promise.all([disciplinaryData.refresh(), onDataChanged?.()]);
+              await Promise.all([
+                disciplinaryData.refresh(),
+                onDataChanged?.(),
+              ]);
             }}
           />
         );
-      case 'cartas':
+      case "cartas":
         return (
           <CartasTab
             student={student}
@@ -153,11 +181,14 @@ export default function AnotacionesStudentDetailModal({
             teachers={teachers}
             cartaEvents={disciplinaryData.cartaEvents}
             onRefresh={async () => {
-              await Promise.all([disciplinaryData.refresh(), onDataChanged?.()]);
+              await Promise.all([
+                disciplinaryData.refresh(),
+                onDataChanged?.(),
+              ]);
             }}
           />
         );
-      case 'historial':
+      case "historial":
         return (
           <HistoryTab
             studentId={student.id}
@@ -185,14 +216,21 @@ export default function AnotacionesStudentDetailModal({
           Ficha disciplinaria de {maskName(student.full_name, privacyMode)}
         </DialogTitle>
         <DialogDescription className="sr-only">
-          Revisión del estado, anotaciones, cartas e historial disciplinario del estudiante.
+          Revisión del estado, anotaciones, cartas e historial disciplinario del
+          estudiante.
         </DialogDescription>
         <DetailModalHeader
           avatarInitial={student.full_name.charAt(0).toUpperCase()}
-          title={privacyMode ? maskName(student.full_name, privacyMode) : student.full_name}
+          title={
+            privacyMode
+              ? maskName(student.full_name, privacyMode)
+              : student.full_name
+          }
           metadata={
             <>
-              <span>{student.course_name || student.course_id || 'Sin curso'}</span>
+              <span>
+                {student.course_name || student.course_id || "Sin curso"}
+              </span>
               {student.rut && <span>{maskRut(student.rut, privacyMode)}</span>}
               <span
                 className={`inline-flex items-center rounded-full px-2 py-0.5 font-bold ${stageStyle.bg} ${stageStyle.text}`}
@@ -208,7 +246,7 @@ export default function AnotacionesStudentDetailModal({
                 type="button"
                 aria-label="Cerrar"
                 onClick={onClose}
-                className="rounded-lg p-2 text-neutral-200 transition-colors hover:bg-white/10 hover:text-white"
+                className="rounded-lg p-2 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -219,13 +257,17 @@ export default function AnotacionesStudentDetailModal({
           activeTab={activeTab}
           ariaLabel="Secciones de la ficha disciplinaria"
           onChange={setActiveTab}
-          tabs={(Object.keys(TAB_ICONS) as ActiveTab[]).map((tab): DetailModalTab<ActiveTab> => ({
-            id: tab,
-            label: TAB_LABELS[tab],
-            icon: TAB_ICONS[tab],
-          }))}
+          tabs={(Object.keys(TAB_ICONS) as ActiveTab[]).map(
+            (tab): DetailModalTab<ActiveTab> => ({
+              id: tab,
+              label: TAB_LABELS[tab],
+              icon: TAB_ICONS[tab],
+            }),
+          )}
         />
-        <DetailModalBody>{renderTabContent()}</DetailModalBody>
+        <DetailModalBody activeTabId={activeTab}>
+          {renderTabContent()}
+        </DetailModalBody>
       </DetailModalContent>
     </Dialog>
   );

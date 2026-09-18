@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { ReactNode } from "react";
+import { useRef } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
 import { DialogContent } from "./Dialog";
 
 export interface DetailModalTab<T extends string> {
@@ -35,6 +36,7 @@ interface DetailModalTabsProps<T extends string> {
 interface DetailModalBodyProps {
   children: ReactNode;
   className?: string;
+  activeTabId?: string;
 }
 
 /**
@@ -94,6 +96,30 @@ export function DetailModalTabs<T extends string>({
   onChange,
   tabs,
 }: DetailModalTabsProps<T>) {
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  const focusTab = (index: number) => {
+    const tab = tabs[index];
+    if (!tab) return;
+    onChange(tab.id);
+    tabRefs.current[tab.id]?.focus();
+  };
+
+  const handleKeyDown = (
+    event: KeyboardEvent<HTMLButtonElement>,
+    index: number,
+  ) => {
+    let nextIndex: number | null = null;
+    if (event.key === "ArrowRight") nextIndex = (index + 1) % tabs.length;
+    if (event.key === "ArrowLeft")
+      nextIndex = (index - 1 + tabs.length) % tabs.length;
+    if (event.key === "Home") nextIndex = 0;
+    if (event.key === "End") nextIndex = tabs.length - 1;
+    if (nextIndex === null) return;
+    event.preventDefault();
+    focusTab(nextIndex);
+  };
+
   return (
     <div
       className="sticky top-0 z-10 border-neutral-150 border-b bg-white/95 px-4 py-2 backdrop-blur sm:px-6"
@@ -105,9 +131,16 @@ export function DetailModalTabs<T extends string>({
           <button
             key={tab.id}
             type="button"
+            ref={(element) => {
+              tabRefs.current[tab.id] = element;
+            }}
             onClick={() => onChange(tab.id)}
+            onKeyDown={(event) => handleKeyDown(event, tabs.indexOf(tab))}
+            id={`detail-tab-${tab.id}`}
             role="tab"
             aria-selected={activeTab === tab.id}
+            aria-controls={`detail-tabpanel-${tab.id}`}
+            tabIndex={activeTab === tab.id ? 0 : -1}
             className={`relative flex min-h-11 min-w-[9.5rem] flex-1 flex-col items-stretch justify-center gap-1 overflow-hidden rounded-md px-3 py-2 font-semibold text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-100 sm:min-w-0 ${
               activeTab === tab.id
                 ? "bg-white text-brand-950 shadow-sm ring-1 ring-neutral-150"
@@ -129,9 +162,13 @@ export function DetailModalTabs<T extends string>({
 export function DetailModalBody({
   children,
   className = "",
+  activeTabId,
 }: DetailModalBodyProps) {
   return (
     <div
+      id={activeTabId ? `detail-tabpanel-${activeTabId}` : undefined}
+      role={activeTabId ? "tabpanel" : undefined}
+      aria-labelledby={activeTabId ? `detail-tab-${activeTabId}` : undefined}
       tabIndex={0}
       className={`min-h-0 flex-1 overflow-y-auto p-4 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500 sm:p-5 ${className}`}
     >

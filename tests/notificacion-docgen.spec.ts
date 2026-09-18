@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { expect, test } from '@playwright/test';
-import { hasStaffCredentials, loginAsStaff } from './helpers';
+import { expect, test } from "@playwright/test";
+import { hasStaffCredentials, loginAsStaff } from "./helpers";
 
 /**
  * Revisión E2E de la Notificación de Inicio de Indagación:
@@ -13,35 +13,47 @@ import { hasStaffCredentials, loginAsStaff } from './helpers';
  * Los tests son de solo lectura: no se persisten documentos ni se marca como
  * notificada, para no alterar los datos del entorno E2E.
  */
-test.describe('Notificación de Inicio de Indagación (E2E)', () => {
-  test.skip(!hasStaffCredentials, 'Requiere credenciales E2E explícitas.');
+test.describe("Notificación de Inicio de Indagación (E2E)", () => {
+  test.skip(!hasStaffCredentials, "Requiere credenciales E2E explícitas.");
 
   test.beforeEach(async ({ page }) => {
     await loginAsStaff(page);
   });
 
-  test('el hito chk_rec_3 muestra el generador de la notificación en la fase Recepción', async ({
+  test("el hito chk_rec_3 muestra el generador de la notificación en la fase Recepción", async ({
     page,
   }) => {
-    const sidebar = page.getByRole('complementary', { name: 'Barra de navegación principal' });
-    await sidebar.getByRole('button', { name: /causas/i }).click();
+    const sidebar = page.getByRole("complementary", {
+      name: "Barra de navegación principal",
+    });
+    await sidebar.getByRole("button", { name: /causas/i }).click();
 
-    const manageButton = page.getByRole('button', { name: /Gestionar expediente/i }).first();
+    const manageButton = page
+      .getByRole("button", { name: /Gestionar expediente/i })
+      .first();
     await expect(manageButton).toBeVisible({ timeout: 20_000 });
     await manageButton.click();
     await expect(page).toHaveURL(/\/expedientes\/[^/?#]+$/);
 
     // Abre la ruta del expediente y la fase de Recepción.
-    await page.getByRole('tab', { name: 'Ruta del expediente' }).click();
-    await page.getByRole('button', { name: /Trabajar hitos de Recepción/ }).click();
-    await page.getByRole('button', { name: 'Abrir hitos de 1. Recepción y Apertura' }).click();
+    await page.getByRole("tab", { name: "Ruta del expediente" }).click();
+    await page
+      .getByRole("button", { name: /Trabajar hitos de Recepción/ })
+      .click();
+    await page
+      .getByRole("button", { name: "Abrir hitos de 1. Recepción y Apertura" })
+      .click();
 
     // El hito chk_rec_3 existe con su etiqueta oficial.
-    const hito = page.getByText('Notificación de Inicio de Indagación', { exact: true }).first();
+    const hito = page
+      .getByText("Notificación de Inicio de Indagación", { exact: true })
+      .first();
     await expect(hito).toBeVisible({ timeout: 10_000 });
 
     // El generador expone el título del documento y la impresión Carta.
-    await expect(page.getByRole('button', { name: /^Imprimir/ }).first()).toBeVisible({
+    await expect(
+      page.getByRole("button", { name: /^Imprimir/ }).first(),
+    ).toBeVisible({
       timeout: 10_000,
     });
 
@@ -50,32 +62,48 @@ test.describe('Notificación de Inicio de Indagación (E2E)', () => {
     // solo lectura que no persiste documentos).
     const statusBadge = page.getByText(/estado:/i);
     const editableHint = page.getByText(/plantilla editable/i);
-    const hasDocumentState = (await statusBadge.count()) > 0 || (await editableHint.count()) > 0;
+    const hasDocumentState =
+      (await statusBadge.count()) > 0 || (await editableHint.count()) > 0;
     expect(hasDocumentState).toBe(true);
   });
 
-  test('el generador reemplaza el registro genérico en chk_rec_3', async ({ page }) => {
-    const sidebar = page.getByRole('complementary', { name: 'Barra de navegación principal' });
-    await sidebar.getByRole('button', { name: /causas/i }).click();
+  test("el generador reemplaza el registro genérico en chk_rec_3", async ({
+    page,
+  }) => {
+    const sidebar = page.getByRole("complementary", {
+      name: "Barra de navegación principal",
+    });
+    await sidebar.getByRole("button", { name: /causas/i }).click();
 
-    const manageButton = page.getByRole('button', { name: /Gestionar expediente/i }).first();
+    const manageButton = page
+      .getByRole("button", { name: /Gestionar expediente/i })
+      .first();
     await expect(manageButton).toBeVisible({ timeout: 20_000 });
     await manageButton.click();
 
-    await page.getByRole('tab', { name: 'Ruta del expediente' }).click();
-    await page.getByRole('button', { name: /Trabajar hitos de Recepción/ }).click();
-    await page.getByRole('button', { name: 'Abrir hitos de 1. Recepción y Apertura' }).click();
+    await page.getByRole("tab", { name: "Ruta del expediente" }).click();
+    await page
+      .getByRole("button", { name: /Trabajar hitos de Recepción/ })
+      .click();
+    await page
+      .getByRole("button", { name: "Abrir hitos de 1. Recepción y Apertura" })
+      .click();
 
     // El bloque del hito chk_rec_3 contiene el generador (Guardar borrador o
     // Marcar como notificada, según el estado persistido del documento).
-    const panel = page.locator('#notificacion-preview-letter').first();
+    const panel = page.locator("#notificacion-preview-letter").first();
     await expect(panel).toBeVisible({ timeout: 10_000 });
 
-    const saveButton = page.getByRole('button', { name: /Guardar borrador/i });
-    const markButton = page.getByRole('button', { name: /Marcar como notificada/i });
-    const statusText = page.getByText(/documento notificado|documento anulado/i);
+    const saveButton = page.getByRole("button", { name: /Guardar borrador/i });
+    const markButton = page.getByRole("button", {
+      name: /Marcar como notificada/i,
+    });
+    const statusText = page.getByText(
+      /documento notificado|documento anulado/i,
+    );
 
-    const hasGeneratorActions = (await saveButton.count()) > 0 || (await markButton.count()) > 0;
+    const hasGeneratorActions =
+      (await saveButton.count()) > 0 || (await markButton.count()) > 0;
     const hasFinalState = (await statusText.count()) > 0;
     expect(hasGeneratorActions || hasFinalState).toBe(true);
 
@@ -84,50 +112,52 @@ test.describe('Notificación de Inicio de Indagación (E2E)', () => {
     // pendiente (un snapshot persistido antiguo podría desbordar legítimamente,
     // por eso la aserción solo aplica al estado editable).
     if (hasGeneratorActions) {
-      await expect(page.getByText(/El contenido supera una hoja Carta/)).toHaveCount(0);
+      await expect(
+        page.getByText(/El contenido supera una hoja Carta/),
+      ).toHaveCount(0);
     }
 
     // El membrete y el bloque de firmas son propios de la indagación: el
     // encargado figura como "Encargado de Indagación" (header y firma) y el
     // bloque de firmas no lleva el título genérico "Firmas".
-    const letter = page.locator('#notificacion-preview-letter');
-    await expect(letter.getByText('ENCARGADO DE INDAGACIÓN', { exact: true })).toHaveCount(1);
-    await expect(letter.getByText('Encargado de Indagación', { exact: true })).toHaveCount(1);
-    await expect(letter.getByText('Firmas', { exact: true })).toHaveCount(0);
+    const letter = page.locator("#notificacion-preview-letter");
+    await expect(
+      letter.getByText("ENCARGADO DE INDAGACIÓN", { exact: true }),
+    ).toHaveCount(1);
+    await expect(
+      letter.getByText("Encargado de Indagación", { exact: true }),
+    ).toHaveCount(1);
+    await expect(letter.getByText("Firmas", { exact: true })).toHaveCount(0);
 
-    const apoderadoInput = page.getByRole('textbox', {
-      name: 'Nombre del apoderado o adulto responsable',
+    const apoderadoInput = page.getByRole("textbox", {
+      name: "Nombre del apoderado o adulto responsable",
     });
     if (await apoderadoInput.count()) {
-      await apoderadoInput.fill('Claudia Soto');
-      await expect(letter.getByText('Claudia Soto', { exact: true })).toHaveCount(2);
+      await apoderadoInput.fill("Claudia Soto");
+      await expect(
+        letter.getByText("Claudia Soto", { exact: true }),
+      ).toHaveCount(2);
     }
   });
 
-  test('el DraftPanel solo ofrece informes en redacción asistida', async ({ page }) => {
-    const sidebar = page.getByRole('complementary', { name: 'Barra de navegación principal' });
-    await sidebar.getByRole('button', { name: /asistente legal/i }).click();
+  test("el asistente legal expone la consulta normativa vigente", async ({
+    page,
+  }) => {
+    const sidebar = page.getByRole("complementary", {
+      name: "Barra de navegación principal",
+    });
+    await sidebar.getByRole("button", { name: /asistente legal/i }).click();
 
-    await page.getByRole('tab', { name: 'Redacción documentos' }).click();
-
-    // Selecciona un expediente para habilitar la redacción.
-    const caseSelector = page.locator('#legal-case-selector');
-    await expect(caseSelector).toBeVisible({ timeout: 15_000 });
-    const firstOptionValue = await caseSelector.locator('option').nth(1).getAttribute('value');
-    expect(firstOptionValue).toBeTruthy();
-    await caseSelector.selectOption(firstOptionValue!);
-
-    const docTypeSelect = page.locator('#doc-type');
-    await expect(docTypeSelect).toBeVisible({ timeout: 15_000 });
-
-    // La redacción asistida queda limitada a informes.
-    await expect(docTypeSelect.locator('option')).toHaveCount(2);
-    await expect(docTypeSelect.locator('option[value="informe_cierre_indagacion"]')).toHaveCount(1);
-    await expect(docTypeSelect.locator('option[value="informe_concluyente"]')).toHaveCount(1);
-
-    // El aviso dirige la notificación al checklist de Recepción.
     await expect(
-      page.getByText(/se genera desde el hito del checklist de Recepción/i),
+      page.getByRole("tab", { name: "Consulta legal" }),
     ).toBeVisible();
+    await expect(
+      page.getByRole("tabpanel", { name: "Consulta legal" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Revisor de Debido Proceso" }),
+    ).toBeVisible();
+    await expect(page.getByText(/No sanciona/i)).toBeVisible();
+    await expect(page.getByText(/Redacción documentos/i)).toHaveCount(0);
   });
 });

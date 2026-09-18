@@ -1,10 +1,10 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
 interface FormFieldProps {
   label: string;
-  htmlFor?: string;
+  htmlFor: string;
   hint?: string;
   error?: string;
   className?: string;
@@ -16,12 +16,15 @@ export default function FormField({
   htmlFor,
   hint,
   error,
-  className = '',
+  className = "",
   children,
 }: FormFieldProps) {
   return (
     <div className={`space-y-1.5 ${className}`}>
-      <label htmlFor={htmlFor} className="block font-semibold text-neutral-600 text-xs uppercase">
+      <label
+        htmlFor={htmlFor}
+        className="block font-semibold text-neutral-600 text-xs uppercase"
+      >
         {label}
       </label>
       {children}

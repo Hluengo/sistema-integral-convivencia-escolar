@@ -181,14 +181,7 @@ export default function CommandPalette({
         className="max-w-lg p-0 gap-0 overflow-hidden rounded-2xl"
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
-        <div
-          className="flex items-center gap-3 border-b border-neutral-100 px-4 py-3"
-          role="combobox"
-          tabIndex={0}
-          aria-expanded={isOpen}
-          aria-haspopup="listbox"
-          aria-controls="cmd-listbox"
-        >
+        <div className="flex items-center gap-3 border-b border-neutral-100 px-4 py-3">
           <Search
             className="h-4 w-4 shrink-0 text-neutral-500"
             aria-hidden="true"
@@ -201,8 +194,11 @@ export default function CommandPalette({
             onKeyDown={handleKeyDown}
             placeholder="Buscar expedientes, vistas, acciones..."
             className="flex-1 bg-transparent text-neutral-800 text-sm placeholder:text-neutral-500 focus:outline-none"
+            role="combobox"
             aria-label="Buscar en la paleta de comandos"
             aria-autocomplete="list"
+            aria-expanded={isOpen}
+            aria-haspopup="listbox"
             aria-controls="cmd-listbox"
             aria-activedescendant={activeDescendantId}
           />
@@ -226,13 +222,15 @@ export default function CommandPalette({
             </div>
           ) : (
             filtered.map((item, idx) => (
-              <button
+              <div
                 key={item.id}
                 id={`cmd-option-${item.id}`}
-                type="button"
                 role="option"
                 aria-selected={idx === clampedIndex}
-                onClick={item.action}
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  item.action();
+                }}
                 className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors ${
                   idx === clampedIndex
                     ? "bg-brand-50 text-brand-700"
@@ -255,7 +253,7 @@ export default function CommandPalette({
                 <span className="shrink-0 font-medium text-10px text-neutral-500">
                   {item.category}
                 </span>
-              </button>
+              </div>
             ))
           )}
         </div>
