@@ -16,10 +16,10 @@ interface Message {
 }
 
 const SUGGESTED_PROMPTS = [
-  "¿Cuáles son los plazos fatales y pasos obligatorios según la Ley Aula Segura?",
-  "¿Qué formalidades mínimas se exigen en la entrevista de descargos escolar?",
+  "Quiero revisar un caso antes de resolver: ¿qué debo verificar?",
+  "¿Qué debe contener una resolución fundada en convivencia escolar?",
   "¿Cuáles son las etapas del debido proceso bajo la Circular 482 y Ley 21809?",
-  "¿Qué multas puede aplicar la Supereduc por abandono o negligencia en el debido proceso?",
+  "Describo un caso y dime qué garantías faltan por respaldar",
 ];
 
 export default function AiAdvisor() {
@@ -27,7 +27,7 @@ export default function AiAdvisor() {
     {
       role: "model",
       content:
-        "Hola. Soy su **Asesor Legal Especializado en Convivencia Escolar y Debido Proceso Chileno**...",
+        "Hola. Soy su **Revisor de Debido Proceso**: audito que el expediente esté completo y fundado antes de resolver. No decido culpabilidad ni aplico sanciones; la decisión final siempre es suya. Cuénteme el caso o consulte la normativa...",
     },
   ]);
   const [inputMessage, setInputMessage] = useState<string>("");
@@ -169,10 +169,10 @@ export default function AiAdvisor() {
           </div>
           <div>
             <h3 className="font-sans font-semibold text-neutral-900 text-xs">
-              Consultor Legal de Convivencia
+              Revisor de Debido Proceso
             </h3>
             <p className="mt-0.25 font-medium text-9px text-neutral-600">
-              Circular 482 • Ley 21809 • Aula Segura
+              Revisa el expediente • No sanciona
             </p>
           </div>
         </div>
@@ -226,7 +226,7 @@ export default function AiAdvisor() {
                   }`}
                 >
                   <span className="mb-1 block font-semibold text-8px text-neutral-700 uppercase">
-                    {isModel ? "Asesor Legal" : "Usted"}
+                    {isModel ? "Revisor" : "Usted"}
                   </span>
                   <MessageContent text={m.content} />
                 </div>
@@ -311,8 +311,8 @@ export default function AiAdvisor() {
           </Button>
         </form>
         <div className="mt-2 text-left font-mono text-10px text-neutral-600">
-          Las respuestas son referenciales. Consulte siempre el RIE de su
-          sostenedor y la normativa vigente.
+          Revisa el procedimiento, no decide ni sanciona. Consulte siempre el
+          RIE de su sostenedor y la normativa vigente.
         </div>
       </div>
     </section>
