@@ -1,10 +1,10 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @theme {
   /* Typography */
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
   /* Font-size scale (text-8px..text-17px) */
   --text-8px: 8px;
@@ -25,7 +25,6 @@
   --color-brand-500: #2563eb;
   --color-brand-600: #1d4ed8;
   --color-brand-700: #1e40af;
-  --color-brand-750: #1e3a8a;
   --color-brand-800: #1e3a8a;
   --color-brand-900: #172554;
   --color-brand-950: #0f172a;
@@ -116,14 +115,18 @@
   /* Shadow scale */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.03);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.02);
-  --shadow-md: 0 4px 6px -2px rgba(0, 0, 0, 0.05), 0 2px 3px -1px rgba(0, 0, 0, 0.03);
-  --shadow-lg: 0 10px 15px -4px rgba(0, 0, 0, 0.06), 0 4px 5px -2px rgba(0, 0, 0, 0.03);
-  --shadow-xl: 0 20px 25px -6px rgba(0, 0, 0, 0.06), 0 8px 10px -4px rgba(0, 0, 0, 0.03);
+  --shadow-md:
+    0 4px 6px -2px rgba(0, 0, 0, 0.05), 0 2px 3px -1px rgba(0, 0, 0, 0.03);
+  --shadow-lg:
+    0 10px 15px -4px rgba(0, 0, 0, 0.06), 0 4px 5px -2px rgba(0, 0, 0, 0.03);
+  --shadow-xl:
+    0 20px 25px -6px rgba(0, 0, 0, 0.06), 0 8px 10px -4px rgba(0, 0, 0, 0.03);
   --shadow-2xl: 0 25px 48px -8px rgba(0, 0, 0, 0.08);
 
   /* Custom shadows for cards */
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
-  --shadow-card-hover: 0 10px 25px -6px rgba(0, 0, 0, 0.08), 0 4px 8px -4px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover:
+    0 10px 25px -6px rgba(0, 0, 0, 0.08), 0 4px 8px -4px rgba(0, 0, 0, 0.04);
 
   /* Animation easings */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -143,7 +146,11 @@
 /* ===== BASE STYLES ===== */
 body {
   background:
-    radial-gradient(circle at 100% 0%, rgba(249, 115, 22, 0.035), transparent 28rem),
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(249, 115, 22, 0.035),
+      transparent 28rem
+    ),
     var(--color-neutral-50);
   color: var(--color-neutral-800);
   font-family: var(--font-sans);
@@ -215,7 +222,11 @@ a {
 
 /* Shared visual surface for dense application areas. */
 .surface-muted {
-  background: linear-gradient(135deg, rgba(248, 250, 252, 0.92), rgba(241, 245, 249, 0.72));
+  background: linear-gradient(
+    135deg,
+    rgba(248, 250, 252, 0.92),
+    rgba(241, 245, 249, 0.72)
+  );
   border: 1px solid rgba(203, 213, 225, 0.72);
 }
 
@@ -238,7 +249,11 @@ textarea:focus-visible {
 
 /* Gradient text */
 .text-gradient {
-  background: linear-gradient(135deg, var(--color-brand-600), var(--color-brand-400));
+  background: linear-gradient(
+    135deg,
+    var(--color-brand-600),
+    var(--color-brand-400)
+  );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -429,7 +444,7 @@ textarea:focus-visible {
   }
 }
 .animate-logo-shine::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   bottom: 0;
@@ -478,7 +493,7 @@ textarea:focus-visible {
   }
   button,
   a,
-  [role='button'] {
+  [role="button"] {
     border-width: 1px;
   }
   .skeleton {
@@ -493,7 +508,7 @@ textarea:focus-visible {
   }
   button,
   a,
-  [role='button'] {
+  [role="button"] {
     border: 1px solid ButtonText;
     forced-color-adjust: none;
   }

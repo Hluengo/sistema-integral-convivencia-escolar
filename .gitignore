@@ -53,3 +53,9 @@ tsconfig.tsbuildinfo
 .opencode/node_modules/
 .opencode/skills/
 
+# Cache y datos locales no versionables
+.vite/
+enhanced-video/
+reportes/
+*.pptx
+
