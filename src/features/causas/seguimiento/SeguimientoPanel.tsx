@@ -19,6 +19,7 @@ import {
   type SeguimientoEstado,
   type SeguimientoRow,
 } from "@/shared/api/services/seguimiento.service";
+import { getSeguimientoPlazo } from "@/shared/api/services/seguimientoPlazo";
 import { useAuthStore } from "@/shared/lib/stores/authStore";
 
 const estadoTone: Record<SeguimientoEstado, string> = {
@@ -36,6 +37,22 @@ const estadoLabel: Record<SeguimientoEstado, string> = {
   incumplido: "Incumplido",
   evaluado: "Evaluado",
 };
+
+const plazoTone = {
+  sin_plazo: "bg-slate-100 text-slate-600 border-slate-200",
+  vigente: "bg-green-50 text-green-700 border-green-200",
+  proximo: "bg-amber-50 text-amber-700 border-amber-200",
+  vencido: "bg-red-50 text-red-700 border-red-200",
+  cerrado: "bg-purple-50 text-purple-700 border-purple-200",
+} as const;
+
+const plazoLabel = {
+  sin_plazo: "Sin fecha límite",
+  vigente: "En plazo",
+  proximo: "Vence pronto",
+  vencido: "Plazo vencido",
+  cerrado: "Cerrado",
+} as const;
 
 export default function SeguimientoPanel({ causa }: { causa: Causa }) {
   const tenantId = useAuthStore((s) => s.tenantId);
@@ -233,6 +250,7 @@ export default function SeguimientoPanel({ causa }: { causa: Causa }) {
         )}
         {planes.map((p) => {
           const cumplimientoId = `seg-cumplimiento-${p.id}`;
+          const plazo = getSeguimientoPlazo(p.fecha_fin, p.estado);
           const evaluacionId = `seg-evaluacion-${p.id}`;
 
           return (
@@ -277,6 +295,11 @@ export default function SeguimientoPanel({ causa }: { causa: Causa }) {
                   className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${estadoTone[p.estado]}`}
                 >
                   {estadoLabel[p.estado]}
+                </span>
+                <span
+                  className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${plazoTone[plazo]}`}
+                >
+                  {plazoLabel[plazo]}
                 </span>
                 <select
                   value={p.estado}
@@ -341,6 +364,17 @@ export default function SeguimientoPanel({ causa }: { causa: Causa }) {
                 </div>
               </div>
 
+              {plazo === "vencido" && (
+                <p className="mt-2 rounded-lg border border-red-200 bg-red-50 px-2.5 py-2 text-11px text-red-700">
+                  El plazo del plan venció. Registra el cumplimiento, ajusta la
+                  fecha o marca el incumplimiento.
+                </p>
+              )}
+              {plazo === "proximo" && (
+                <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-2 text-11px text-amber-700">
+                  Este plan vence dentro de 3 días.
+                </p>
+              )}
               {p.estado === "cumplido" && !p.evaluacion && (
                 <p className="mt-2 flex items-center gap-1 text-11px text-amber-700">
                   <CheckCircle2 className="size-3.5" /> Cumplido sin evaluación

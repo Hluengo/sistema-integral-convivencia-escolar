@@ -97,6 +97,7 @@ const FILTER_OPTIONS: Array<{
   { id: "Citación", label: "Citaciones" },
   { id: "Entrevista", label: "Entrevistas" },
   { id: "Descargo", label: "Descargos" },
+  { id: "Mediación", label: "Mediaciones" },
   { id: "Correo", label: "Correos" },
   { id: "Evidencia", label: "Evidencias" },
   { id: "Resolución", label: "Resoluciones" },
