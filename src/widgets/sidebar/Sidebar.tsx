@@ -127,21 +127,17 @@ function SidebarContent({
   return (
     <div className="flex h-full flex-col">
       <div
-        className={`flex items-center border-white/10 border-b ${isCollapsed && !mobile ? "justify-center px-3 py-5" : "gap-3 px-5 py-5"}`}
+        className={`flex items-center border-neutral-200 border-b ${isCollapsed && !mobile ? "justify-center px-3 py-5" : "gap-3 px-5 py-5"}`}
       >
         <div className="flex shrink-0 items-center justify-center">
-          <img
-            src="/logo.svg"
-            alt="Escudo Veritas"
-            className="h-9 w-auto invert"
-          />
+          <img src="/logo.svg" alt="Escudo Veritas" className="h-9 w-auto" />
         </div>
         {(!isCollapsed || mobile) && (
           <div className="min-w-0">
-            <h1 className="font-bold text-17px text-white leading-tight tracking-tight">
+            <h1 className="font-bold text-17px text-neutral-900 leading-tight tracking-tight">
               Gestión de Casos
             </h1>
-            <p className="mt-0.5 font-semibold text-10px text-neutral-300 uppercase leading-tight tracking-[0.12em]">
+            <p className="mt-0.5 font-semibold text-10px text-neutral-500 uppercase leading-tight tracking-[0.12em]">
               Convivencia Escolar
             </p>
           </div>
@@ -164,7 +160,7 @@ function SidebarContent({
 
       {(!isCollapsed || mobile) && (
         <div className="px-5 pt-5 pb-2">
-          <span className="font-bold text-10px text-neutral-300 uppercase tracking-[0.15em]">
+          <span className="font-bold text-10px text-neutral-500 uppercase tracking-[0.15em]">
             Navegación
           </span>
         </div>
@@ -193,19 +189,19 @@ function SidebarContent({
                 className={`flex w-full cursor-pointer select-none items-center gap-3 rounded-xl font-medium text-13px transition-[color,background-color,box-shadow,transform] duration-150 ${isCollapsed && !mobile ? "justify-center px-0 py-3" : "px-3.5 py-2.5"}
                 ${
                   isActive
-                    ? "border-l-2 border-white bg-white/15 font-semibold text-white shadow-sm shadow-black/10"
-                    : "border-l-2 border-transparent text-neutral-300 hover:bg-white/8 hover:text-white"
+                    ? "border-l-2 border-brand-600 bg-brand-50 font-semibold text-brand-800"
+                    : "border-l-2 border-transparent text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
                 }`}
                 style={
                   isActive && !isCollapsed
-                    ? { boxShadow: "inset 3px 0 0 0 white" }
+                    ? { boxShadow: "inset 3px 0 0 0 var(--color-brand-600)" }
                     : undefined
                 }
                 aria-current={isActive ? "page" : undefined}
                 title={isCollapsed && !mobile ? item.label : undefined}
               >
                 <span
-                  className={`shrink-0 transition-colors ${isActive ? "text-white" : "text-neutral-300"}`}
+                  className={`shrink-0 transition-colors ${isActive ? "text-brand-700" : "text-neutral-500"}`}
                 >
                   <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
                 </span>
@@ -218,8 +214,8 @@ function SidebarContent({
                       <span
                         className={`rounded-full px-1.5 py-0.5 font-bold text-10px tabular-nums ${
                           isActive
-                            ? "bg-brand-950 text-white"
-                            : "bg-brand-950 text-white ring-1 ring-white/20"
+                            ? "bg-brand-700 text-white"
+                            : "bg-neutral-200 text-neutral-700"
                         }`}
                       >
                         {badge}
@@ -308,7 +304,7 @@ export default memo(function Sidebar({
       <button
         type="button"
         onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-50 rounded-xl bg-brand-800 p-2.5 text-white shadow-lg shadow-brand-950/20 transition-colors hover:bg-brand-700 active:scale-95 lg:hidden"
+        className="fixed top-4 left-4 z-50 rounded-xl bg-brand-700 p-2.5 text-white shadow-lg shadow-brand-900/20 transition-colors hover:bg-brand-800 active:scale-95 lg:hidden"
         aria-label="Abrir menú"
       >
         <Menu className="h-5 w-5" />
@@ -326,7 +322,7 @@ export default memo(function Sidebar({
       {mobileOpen && (
         <div
           ref={mobileSidebarRef}
-          className="fixed inset-y-0 left-0 z-50 w-[280px] translate-x-0 bg-brand-800 shadow-2xl shadow-brand-950/30 transition-transform duration-300 ease-out-expo lg:hidden"
+          className="fixed inset-y-0 left-0 z-50 w-[280px] translate-x-0 border-r border-neutral-200 bg-white shadow-2xl shadow-neutral-900/10 transition-transform duration-300 ease-out-expo lg:hidden"
           role="dialog"
           aria-modal="true"
           aria-label="Menú móvil"
@@ -334,7 +330,7 @@ export default memo(function Sidebar({
           <button
             type="button"
             onClick={() => setMobileOpen(false)}
-            className="absolute top-4 right-4 rounded-lg p-1.5 text-white/40 transition-colors hover:bg-white/10 hover:text-white"
+            className="absolute top-4 right-4 rounded-lg p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-800"
             aria-label="Cerrar menú"
           >
             <X className="h-4 w-4" />
@@ -348,7 +344,7 @@ export default memo(function Sidebar({
       )}
 
       <aside
-        className={`relative hidden shrink-0 flex-col bg-brand-800 shadow-2xl shadow-brand-950/20 transition-colors duration-300 ease-out-expo lg:flex ${
+        className={`relative hidden shrink-0 flex-col border-r border-neutral-200 bg-white transition-colors duration-300 ease-out-expo lg:flex ${
           isCollapsed ? "w-[68px]" : "w-[240px]"
         }`}
         aria-label="Barra de navegación principal"

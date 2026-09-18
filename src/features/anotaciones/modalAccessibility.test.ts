@@ -23,7 +23,7 @@ describe("Modales disciplinarios accesibles", () => {
     ok(detailModal.includes("h-[min(94vh,940px)]"));
     ok(detailModal.includes("w-[min(98vw,120rem)]"));
     ok(detailModal.includes("min-h-0 flex-1 overflow-y-auto"));
-    ok(detailModal.includes("bg-brand-800"));
+    ok(detailModal.includes("bg-brand-700"));
     ok(detailModal.includes("gap-3"));
     ok(!content.includes("onTogglePrivacy"));
     ok(!content.includes("EyeOff"));

@@ -544,7 +544,7 @@ export default memo(function AnotacionesStudentTable({
 
       {/* Footer: Pagination info and color legend */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-neutral-500 text-sm">
+        <p className="text-neutral-600 text-sm">
           Mostrando{" "}
           <span className="font-medium text-neutral-700">
             {filteredStudents.length}
@@ -557,7 +557,7 @@ export default memo(function AnotacionesStudentTable({
         </p>
 
         <div className="flex flex-wrap items-center gap-3">
-          <span className="font-medium text-neutral-500 text-xs">Leyenda:</span>
+          <span className="font-medium text-neutral-600 text-xs">Leyenda:</span>
           <span className="inline-flex items-center gap-1 text-neutral-600 text-xs">
             <span className="inline-block size-2.5 rounded-full bg-grave-500" />
             Amonestación (5–9)

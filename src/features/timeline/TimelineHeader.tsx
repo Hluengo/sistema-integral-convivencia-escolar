@@ -74,10 +74,10 @@ export default function TimelineHeader({
         title={displayName}
         metadata={
           <>
-            <span className="rounded-full bg-white/10 px-2 py-0.5 text-white">
+            <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-neutral-700">
               {causa.estudianteCurso || "Sin curso"}
             </span>
-            <span className="rounded-full bg-white/10 px-2 py-0.5 font-mono text-neutral-100">
+            <span className="rounded-full bg-neutral-100 px-2 py-0.5 font-mono text-neutral-700">
               {causa.id}
             </span>
             <span
@@ -91,7 +91,7 @@ export default function TimelineHeader({
                 ? "Aula Segura"
                 : causa.tipoInfraccion}
             </span>
-            <span className="rounded-full bg-white/10 px-2 py-0.5 text-neutral-100">
+            <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-neutral-700">
               {getCausaStatus(causa)} · {currentPhase}
             </span>
             <span
@@ -119,12 +119,12 @@ export default function TimelineHeader({
                 Concluyente: {deadlines.informeConcluyente.text}
               </span>
             )}
-            <span className="rounded-full bg-white/10 px-2 py-0.5 text-neutral-150">
+            <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-neutral-600">
               Apertura {formatChileDate(causa.fechaApertura)}
             </span>
             {causa.runEstudiante && (
               <span
-                className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 font-mono text-neutral-150"
+                className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 font-mono text-neutral-600"
                 title={privacyMode ? "RUN protegido" : undefined}
               >
                 RUN{" "}
@@ -135,7 +135,7 @@ export default function TimelineHeader({
             )}
             {!causa.runEstudiante && privacyMode && (
               <span
-                className="rounded-full bg-white/10 px-2 py-0.5 font-mono text-neutral-150"
+                className="rounded-full bg-neutral-100 px-2 py-0.5 font-mono text-neutral-600"
                 title="RUN protegido"
               >
                 RUN {maskRut(undefined, true)} · {maskName(displayName, true)}
@@ -160,7 +160,7 @@ export default function TimelineHeader({
                 <button
                   type="button"
                   onClick={onForceCloseClick}
-                  className="flex min-h-10 min-w-10 items-center justify-center rounded-md bg-white/10 p-2 text-gravisima-100 transition-colors hover:bg-gravisima-500/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-800 sm:hidden"
+                  className="flex min-h-10 min-w-10 items-center justify-center rounded-md bg-gravisima-50 p-2 text-gravisima-700 transition-colors hover:bg-gravisima-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white sm:hidden"
                   title="Cerrar causa con fundamento"
                   aria-label="Cerrar causa con fundamento"
                 >
@@ -169,7 +169,7 @@ export default function TimelineHeader({
                 <button
                   type="button"
                   onClick={onEditClick}
-                  className="flex min-h-10 min-w-10 items-center justify-center rounded-md bg-white/10 p-2 text-neutral-200 transition-colors hover:bg-white/15 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-800"
+                  className="flex min-h-10 min-w-10 items-center justify-center rounded-md bg-neutral-100 p-2 text-neutral-600 transition-colors hover:bg-neutral-200 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                   title="Editar expediente"
                   aria-label="Editar expediente"
                 >
@@ -181,7 +181,7 @@ export default function TimelineHeader({
               <button
                 type="button"
                 onClick={onDeleteClick}
-                className="flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 text-neutral-200 transition-colors hover:bg-gravisima-500/20 hover:text-gravisima-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-200 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-800"
+                className="flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 text-gravisima-600 transition-colors hover:bg-gravisima-50 hover:text-gravisima-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                 title="Eliminar expediente"
                 aria-label="Eliminar expediente"
               >
@@ -192,7 +192,7 @@ export default function TimelineHeader({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 text-neutral-200 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-800"
+                className="flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                 title="Cerrar"
                 aria-label="Cerrar"
               >
