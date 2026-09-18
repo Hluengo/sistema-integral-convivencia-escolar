@@ -40,6 +40,17 @@ function hasBitacoraTipo(causa: Causa, tipo: string): boolean {
   return causa.bitacora.some((b) => b.tipo === (tipo as never));
 }
 
+function hasInterviewEvidence(causa: Causa): boolean {
+  return (
+    hasBitacoraTipo(causa, "Entrevista") ||
+    causa.bitacora.some((entry) => /entrevista/i.test(entry.titulo)) ||
+    hasChecklist(causa, "chk_res_4") ||
+    causa.checklistDebidoProceso.some(
+      (item) => item.completado && /entrevista.*realizada/i.test(item.label),
+    )
+  );
+}
+
 export function auditarExpediente(
   causa: Causa,
   hechos: HechoRow[],
@@ -73,8 +84,8 @@ export function auditarExpediente(
     bloqueante: false,
   });
 
-  // 3. Derecho a ser oído (entrevista)
-  const c3 = hasBitacoraTipo(causa, "Entrevista");
+  // 3. Derecho a ser oído (entrevista), incluido el hito disciplinario realizado.
+  const c3 = hasInterviewEvidence(causa);
   checks.push({
     id: "ser_oido",
     label: "Derecho a ser oído",

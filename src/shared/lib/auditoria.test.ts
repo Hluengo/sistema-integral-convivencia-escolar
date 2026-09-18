@@ -39,3 +39,20 @@ test("auditoría considera Recepción de Denuncia como comunicación de hechos",
   assert.equal(check?.estado, "verificada");
   assert.equal(check?.detalle, "Recepción de denuncia registrada");
 });
+
+test("auditoría reconoce el hito de entrevista disciplinaria realizada", () => {
+  const causa = causaConRecepcion();
+  causa.checklistDebidoProceso.push({
+    id: "chk_res_4",
+    label: "Entrevista Disciplinaria Realizada",
+    descripcion: "",
+    completado: true,
+    requeridoPor: "Ambas",
+  });
+
+  const audit = auditarExpediente(causa, [], []);
+  const check = audit.checks.find((item) => item.id === "ser_oido");
+
+  assert.equal(check?.estado, "verificada");
+  assert.equal(check?.detalle, "Entrevista registrada");
+});

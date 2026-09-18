@@ -88,6 +88,16 @@ const ENTRY_STYLE: Record<
   },
 };
 
+function getEffectiveEntryType(entry: BitacoraEntry): BitacoraEntry["tipo"] {
+  if (
+    entry.tipo === "Notificación" &&
+    /(?:registro|rectificación) de hito:.*entrevista/i.test(entry.titulo)
+  ) {
+    return "Entrevista";
+  }
+  return entry.tipo;
+}
+
 const FILTER_OPTIONS: Array<{
   id: BitacoraEntry["tipo"] | "Todos";
   label: string;
@@ -139,11 +149,12 @@ export default memo(function BitacoraTab({
 
   const filtered = useMemo(() => {
     return entries.filter((e) => {
-      if (filter !== "Todos" && e.tipo !== filter) {
+      const effectiveType = getEffectiveEntryType(e);
+      if (filter !== "Todos" && effectiveType !== filter) {
         // Descargo puede venir como Otro con "descargo" en título
         if (
           filter === "Descargo" &&
-          e.tipo === "Otro" &&
+          effectiveType === "Otro" &&
           /descargo/i.test(e.titulo + e.descripcion)
         )
           return true;
@@ -161,7 +172,8 @@ export default memo(function BitacoraTab({
 
   const stats = useMemo(() => {
     const byTipo = entries.reduce<Record<string, number>>((acc, e) => {
-      acc[e.tipo] = (acc[e.tipo] ?? 0) + 1;
+      const effectiveType = getEffectiveEntryType(e);
+      acc[effectiveType] = (acc[effectiveType] ?? 0) + 1;
       return acc;
     }, {});
     return {
@@ -439,10 +451,11 @@ export default memo(function BitacoraTab({
             {filter !== "Todos" ? ` · filtro: ${filter}` : ""}
           </p>
           {filtered.map((entry) => {
-            const style = ENTRY_STYLE[entry.tipo] ?? ENTRY_STYLE.Otro;
+            const effectiveType = getEffectiveEntryType(entry);
+            const style = ENTRY_STYLE[effectiveType] ?? ENTRY_STYLE.Otro;
             const Icon = style.Icon;
-            const isNotificacion = entry.tipo === "Notificación";
-            const hasCorreo = entry.tipo === "Correo";
+            const isNotificacion = effectiveType === "Notificación";
+            const hasCorreo = effectiveType === "Correo";
             return (
               <article
                 key={entry.id}
