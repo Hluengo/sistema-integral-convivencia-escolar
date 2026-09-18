@@ -55,31 +55,34 @@ export default memo(function ResumenTab({
         <IncidentePanel causa={causa} privacyMode={privacyMode} />
       )}
 
-      <section className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_minmax(20rem,0.65fr)]">
-        <div className="rounded-lg border border-neutral-150 bg-white p-4 shadow-xs">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <section className="grid gap-2.5 xl:grid-cols-[minmax(0,1fr)_minmax(16rem,19rem)]">
+        <div className="rounded-lg border border-neutral-150 bg-white p-3 shadow-xs">
+          <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase text-neutral-500">
+              <p className="text-11px font-semibold uppercase text-neutral-500">
                 Centro operativo del expediente
               </p>
-              <h3 className="mt-1 text-xl font-bold leading-tight text-brand-950">
+              <h3 className="mt-0.5 text-base font-bold leading-tight text-brand-950">
                 {summary.currentPhase}
               </h3>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-neutral-600">
+              <p
+                className="mt-1 truncate text-xs leading-5 text-neutral-600"
+                title={nextAction}
+              >
                 {nextAction}
               </p>
             </div>
             <span
-              className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${
+              className={`inline-flex w-fit shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-11px font-bold ${
                 breaches.length
                   ? "bg-gravisima-100 text-gravisima-800"
                   : "bg-leve-100 text-neutral-800"
               }`}
             >
               {breaches.length ? (
-                <AlertTriangle className="size-3.5" />
+                <AlertTriangle className="size-3" />
               ) : (
-                <CheckCircle2 className="size-3.5" />
+                <CheckCircle2 className="size-3" />
               )}
               {breaches.length
                 ? `${breaches.length} alerta${breaches.length === 1 ? "" : "s"}`
@@ -87,8 +90,8 @@ export default memo(function ResumenTab({
             </span>
           </div>
 
-          <div className="mt-4">
-            <div className="flex items-center justify-between gap-3 text-xs text-neutral-600">
+          <div className="mt-2.5">
+            <div className="flex items-center justify-between gap-3 text-11px text-neutral-600">
               <span>Avance de fase</span>
               <span className="font-semibold text-neutral-900">
                 {currentProgress.completed}/{currentProgress.total} · {phasePct}
@@ -96,7 +99,7 @@ export default memo(function ResumenTab({
               </span>
             </div>
             <div
-              className="mt-2 h-2 overflow-hidden rounded-full bg-neutral-100"
+              className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-100"
               role="progressbar"
               aria-label={`Avance de fase ${summary.currentPhase}`}
               aria-valuenow={currentProgress.completed}
@@ -113,38 +116,42 @@ export default memo(function ResumenTab({
           </div>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-          <div className="rounded-lg border border-neutral-150 border-t-2 border-t-grave-500 bg-white p-4 shadow-xs">
+        <div className="divide-y divide-neutral-100 rounded-lg border border-neutral-150 bg-white shadow-xs">
+          <div className="flex items-center gap-2.5 px-3 py-2">
             <CalendarClock
-              className="size-5 text-grave-600"
+              className="size-4 shrink-0 text-grave-600"
               aria-hidden="true"
             />
-            <p className="mt-3 text-neutral-600 text-xs">
-              Cierre de indagación
-            </p>
-            <p className="mt-1 font-semibold text-neutral-900">
-              {formatChileDate(deadlines.cierreIndagacion.deadlineDate)} ·{" "}
-              {deadlines.cierreIndagacion.text}
-            </p>
-            {deadlines.informeConcluyente && (
-              <p className="mt-1 text-neutral-600 text-xs">
-                Concluyente: {deadlines.informeConcluyente.text}
+            <div className="min-w-0">
+              <p className="text-11px text-neutral-600">Cierre de indagación</p>
+              <p className="truncate text-xs font-semibold text-neutral-900">
+                {formatChileDate(deadlines.cierreIndagacion.deadlineDate)} ·{" "}
+                {deadlines.cierreIndagacion.text}
               </p>
+            </div>
+            {deadlines.informeConcluyente && (
+              <span
+                className="ml-auto shrink-0 text-right text-10px text-neutral-500"
+                title={`Concluyente: ${deadlines.informeConcluyente.text}`}
+              >
+                Concluyente
+              </span>
             )}
           </div>
-          <div className="rounded-lg border border-neutral-150 bg-white p-4 shadow-xs">
+          <div className="flex items-center gap-2.5 px-3 py-2">
             <FolderArchive
-              className="size-5 text-brand-700"
+              className="size-4 shrink-0 text-brand-700"
               aria-hidden="true"
             />
-            <p className="mt-3 text-neutral-600 text-xs">Trazabilidad</p>
-            <p className="mt-1 font-semibold text-neutral-900">
-              {completed}/{totalHitos} hitos · {summary.documentsCount}{" "}
-              documentos
-            </p>
-            <p className="mt-1 text-neutral-600 text-xs">
-              {summary.historyCount} registros en historial
-            </p>
+            <div className="min-w-0">
+              <p className="text-11px text-neutral-600">Trazabilidad</p>
+              <p className="truncate text-xs font-semibold text-neutral-900">
+                {completed}/{totalHitos} hitos · {summary.documentsCount} docs
+              </p>
+            </div>
+            <span className="ml-auto shrink-0 text-right text-10px text-neutral-500">
+              {summary.historyCount} historial
+            </span>
           </div>
         </div>
       </section>
@@ -158,7 +165,7 @@ export default memo(function ResumenTab({
             label: "Estado actual",
             value: getCausaStatus(causa),
             Icon: CheckCircle2,
-            cardClass: "border-t-2 border-t-leve-500",
+            cardClass: "",
             iconClass: "text-leve-700",
           },
           {
@@ -167,28 +174,39 @@ export default memo(function ResumenTab({
               ? "Aula Segura"
               : causa.tipoInfraccion,
             Icon: FileText,
-            cardClass: "border-t-2 border-t-amber-500",
+            cardClass: "",
             iconClass: "text-amber-700",
           },
           {
             label: "Responsable",
             value: causa.responsable,
             Icon: UserRound,
-            cardClass: "border-t-2 border-t-neutral-300",
+            cardClass: "",
             iconClass: "text-neutral-600",
           },
           {
             label: "Última actualización",
             value: formatChileDate(causa.fechaUltimaActualizacion),
             Icon: ClipboardList,
-            cardClass: "border-t-2 border-t-brand-500",
+            cardClass: "",
             iconClass: "text-brand-700",
           },
         ].map(({ label, value, Icon, cardClass, iconClass }) => (
-          <div key={label} className={`p-4 ${cardClass}`}>
-            <Icon className={`mb-2 size-5 ${iconClass}`} aria-hidden="true" />
-            <p className="text-xs text-neutral-500">{label}</p>
-            <p className="mt-1 text-sm font-semibold text-brand-950">{value}</p>
+          <div
+            key={label}
+            className={`min-w-0 px-3 py-2 ${cardClass}`}
+            title={value}
+          >
+            <div className="flex min-w-0 items-center gap-1.5">
+              <Icon
+                className={`size-3.5 shrink-0 ${iconClass}`}
+                aria-hidden="true"
+              />
+              <p className="truncate text-11px text-neutral-500">{label}</p>
+            </div>
+            <p className="mt-0.5 truncate text-xs font-semibold text-brand-950">
+              {value}
+            </p>
           </div>
         ))}
       </section>
