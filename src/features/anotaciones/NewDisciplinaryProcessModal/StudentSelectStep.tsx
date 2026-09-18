@@ -1,8 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useState } from 'react';
-import { Search, Users } from 'lucide-react';
-import { statusStyle, type Student } from './constants';
+import { useState } from "react";
+import { Search, Users } from "lucide-react";
+import { statusStyle, type Student } from "./constants";
 
 interface StudentSelectStepProps {
   students: Student[];
@@ -21,7 +21,7 @@ export default function StudentSelectStep({
   title,
   helperText,
 }: StudentSelectStepProps) {
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const filtered = course
     ? students.filter((s) => (s.course_name || s.course_id) === course)
     : students;
@@ -37,13 +37,14 @@ export default function StudentSelectStep({
     <div className="space-y-3">
       <div className="space-y-1">
         <p className="flex items-center gap-2 font-medium text-neutral-600 text-sm">
-          <Users className="h-4 w-4 text-indigo-600" />{' '}
-          {title || (course ? `Estudiantes de ${course}` : 'Seleccionar estudiante')}
+          <Users className="h-4 w-4 text-indigo-600" />{" "}
+          {title ||
+            (course ? `Estudiantes de ${course}` : "Seleccionar estudiante")}
         </p>
         {helperText && <p className="text-neutral-500 text-xs">{helperText}</p>}
       </div>
       <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
         <input
           type="text"
           id="search-student-step"
@@ -55,12 +56,12 @@ export default function StudentSelectStep({
         />
       </div>
       {searched.length === 0 ? (
-        <div className="py-8 text-center text-neutral-400 text-sm">
+        <div className="py-8 text-center text-neutral-500 text-sm">
           {search
-            ? 'No se encontraron estudiantes con ese nombre o RUT.'
+            ? "No se encontraron estudiantes con ese nombre o RUT."
             : course
-              ? 'No hay estudiantes en este curso.'
-              : 'No hay estudiantes disponibles.'}
+              ? "No hay estudiantes en este curso."
+              : "No hay estudiantes disponibles."}
         </div>
       ) : (
         <div className="max-h-72 space-y-2 overflow-y-auto">
@@ -71,17 +72,19 @@ export default function StudentSelectStep({
               onClick={() => onSelect(s)}
               className={`flex w-full items-center justify-between rounded-xl border p-3 text-left transition-colors${
                 selectedId === s.id
-                  ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200'
-                  : 'border-neutral-200 hover:border-neutral-300'
+                  ? "border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200"
+                  : "border-neutral-200 hover:border-neutral-300"
               }`}
             >
               <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold text-neutral-800 text-sm">{s.full_name}</p>
-                <p className="text-neutral-400 text-xs">
-                  {s.rut ? `RUT: ${s.rut} | ` : ''}
-                  {s.course_name ? `${s.course_name} | ` : ''}
+                <p className="truncate font-semibold text-neutral-800 text-sm">
+                  {s.full_name}
+                </p>
+                <p className="text-neutral-500 text-xs">
+                  {s.rut ? `RUT: ${s.rut} | ` : ""}
+                  {s.course_name ? `${s.course_name} | ` : ""}
                   {s.annotations_count ?? 0} anotacion
-                  {(s.annotations_count ?? 0) !== 1 ? 'es' : ''}
+                  {(s.annotations_count ?? 0) !== 1 ? "es" : ""}
                 </p>
               </div>
               {s.disciplinary_status && (

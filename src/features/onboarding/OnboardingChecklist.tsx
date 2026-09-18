@@ -1,17 +1,17 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useMemo, useState } from 'react';
-import { ArrowRight, CheckCircle2, Circle, ListChecks, X } from 'lucide-react';
-import type { SidebarView } from '../../widgets/sidebar/Sidebar';
-import Button from '../../shared/ui/Button';
+import { useMemo, useState } from "react";
+import { ArrowRight, CheckCircle2, Circle, ListChecks, X } from "lucide-react";
+import type { SidebarView } from "../../widgets/sidebar/Sidebar";
+import Button from "../../shared/ui/Button";
 import {
   getOnboardingStorageKey,
   readOnboardingState,
   writeOnboardingState,
   type OnboardingState,
   type OnboardingStepId,
-} from './onboarding';
-import type { OnboardingStatus } from '../../shared/api/services/institution.service';
+} from "./onboarding";
+import type { OnboardingStatus } from "../../shared/api/services/institution.service";
 
 interface OnboardingChecklistProps {
   tenantId: string;
@@ -30,34 +30,36 @@ interface StepDefinition {
 
 const STEPS: StepDefinition[] = [
   {
-    id: 'profile',
-    label: 'Configurar perfil institucional',
-    description: 'Revisa los datos del establecimiento y de tu cuenta.',
-    view: 'admin',
+    id: "profile",
+    label: "Configurar perfil institucional",
+    description: "Revisa los datos del establecimiento y de tu cuenta.",
+    view: "admin",
   },
   {
-    id: 'courses',
-    label: 'Revisar cursos',
-    description: 'Confirma que los cursos del establecimiento estén disponibles.',
-    view: 'alumnos',
+    id: "courses",
+    label: "Revisar cursos",
+    description:
+      "Confirma que los cursos del establecimiento estén disponibles.",
+    view: "alumnos",
   },
   {
-    id: 'templates',
-    label: 'Crear o revisar plantillas',
-    description: 'Asegura que las plantillas institucionales estén listas.',
-    view: 'informes',
+    id: "templates",
+    label: "Crear o revisar plantillas",
+    description: "Asegura que las plantillas institucionales estén listas.",
+    view: "informes",
   },
   {
-    id: 'members',
-    label: 'Invitar usuarios',
-    description: 'Incorpora a las personas que participarán en la gestión.',
-    view: 'admin',
+    id: "members",
+    label: "Invitar usuarios",
+    description: "Incorpora a las personas que participarán en la gestión.",
+    view: "admin",
   },
   {
-    id: 'rules',
-    label: 'Confirmar reglas de convivencia',
-    description: 'Verifica que las reglas institucionales estén alineadas con tu reglamento.',
-    view: 'admin',
+    id: "rules",
+    label: "Confirmar reglas de convivencia",
+    description:
+      "Verifica que las reglas institucionales estén alineadas con tu reglamento.",
+    view: "admin",
   },
 ];
 
@@ -68,11 +70,17 @@ export default function OnboardingChecklist({
   readiness,
   onNavigate,
 }: OnboardingChecklistProps) {
-  const storageKey = useMemo(() => getOnboardingStorageKey(tenantId, userId), [tenantId, userId]);
-  const [state, setState] = useState<OnboardingState>(() => readOnboardingState(storageKey));
+  const storageKey = useMemo(
+    () => getOnboardingStorageKey(tenantId, userId),
+    [tenantId, userId],
+  );
+  const [state, setState] = useState<OnboardingState>(() =>
+    readOnboardingState(storageKey),
+  );
   const [expanded, setExpanded] = useState(true);
   const isReady = (step: OnboardingStepId) =>
-    state.completed[step] || (readiness ? readiness[step] : step === 'courses' && coursesCount > 0);
+    state.completed[step] ||
+    (readiness ? readiness[step] : step === "courses" && coursesCount > 0);
   const completed = STEPS.filter((step) => isReady(step.id)).length;
   const isComplete = completed === STEPS.length;
 
@@ -91,14 +99,15 @@ export default function OnboardingChecklist({
             <ListChecks className="size-5" aria-hidden="true" />
           </span>
           <div>
-            <p className="font-semibold text-brand-700 text-xs uppercase tracking-[0.14em]">
+            <p className="font-semibold text-brand-800 text-xs">
               Inicio guiado
             </p>
             <h2 className="mt-1 font-bold text-neutral-900 text-lg">
               Deja tu establecimiento listo
             </h2>
             <p className="mt-1 max-w-xl text-neutral-600 text-sm">
-              Completa estas tareas iniciales para comenzar a trabajar con una configuración clara.
+              Completa estas tareas iniciales para comenzar a trabajar con una
+              configuración clara.
             </p>
           </div>
         </div>
@@ -108,7 +117,7 @@ export default function OnboardingChecklist({
             updateState({ ...state, dismissed: true });
             setExpanded(false);
           }}
-          className="self-end rounded-lg p-1.5 text-neutral-400 transition-colors hover:bg-white hover:text-neutral-700 sm:self-start"
+          className="self-end rounded-lg p-1.5 text-neutral-500 transition-colors hover:bg-white hover:text-neutral-700 sm:self-start"
           aria-label="Ocultar inicio guiado"
         >
           <X className="size-4" aria-hidden="true" />
@@ -135,14 +144,16 @@ export default function OnboardingChecklist({
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-leve-200 bg-leve-50 px-4 py-3">
             <div className="flex items-center gap-2 text-leve-700 text-sm">
               <CheckCircle2 className="size-4" aria-hidden="true" />
-              <span className="font-semibold">Configuración inicial completada.</span>
+              <span className="font-semibold">
+                Configuración inicial completada.
+              </span>
             </div>
             <Button
               variant="ghost"
               onClick={() => setExpanded((value) => !value)}
               className="rounded-lg px-3 py-1.5 text-xs"
             >
-              {expanded ? 'Ocultar tareas' : 'Revisar tareas'}
+              {expanded ? "Ocultar tareas" : "Revisar tareas"}
             </Button>
           </div>
         ) : null}
@@ -154,14 +165,17 @@ export default function OnboardingChecklist({
               return (
                 <div
                   key={step.id}
-                  className={`flex flex-col gap-3 rounded-xl border px-3 py-3 sm:flex-row sm:items-center sm:justify-between ${isStepComplete ? 'border-leve-200 bg-leve-50/60' : 'border-neutral-200 bg-white'}`}
+                  className={`flex flex-col gap-3 rounded-xl border px-3 py-3 sm:flex-row sm:items-center sm:justify-between ${isStepComplete ? "border-leve-200 bg-leve-50/60" : "border-neutral-200 bg-white"}`}
                 >
                   <button
                     type="button"
                     onClick={() =>
                       updateState({
                         ...state,
-                        completed: { ...state.completed, [step.id]: !isStepComplete },
+                        completed: {
+                          ...state.completed,
+                          [step.id]: !isStepComplete,
+                        },
                       })
                     }
                     className="flex min-w-0 items-start gap-3 text-left"
@@ -173,7 +187,7 @@ export default function OnboardingChecklist({
                       />
                     ) : (
                       <Circle
-                        className="mt-0.5 size-5 shrink-0 text-neutral-300"
+                        className="mt-0.5 size-5 shrink-0 text-neutral-400"
                         aria-hidden="true"
                       />
                     )}
@@ -192,7 +206,8 @@ export default function OnboardingChecklist({
                       onClick={() => onNavigate(step.view as SidebarView)}
                       className="self-start rounded-lg px-3 py-1.5 text-xs sm:self-center"
                     >
-                      Revisar <ArrowRight className="size-3.5" aria-hidden="true" />
+                      Revisar{" "}
+                      <ArrowRight className="size-3.5" aria-hidden="true" />
                     </Button>
                   )}
                 </div>

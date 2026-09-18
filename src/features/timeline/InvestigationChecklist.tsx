@@ -187,7 +187,7 @@ export default function InvestigationChecklist({
           >
             <h4
               id="investigation-base-title"
-              className="font-semibold text-neutral-700 text-11px uppercase tracking-wide"
+              className="font-semibold text-neutral-800 text-xs"
             >
               Investigación
             </h4>
@@ -263,7 +263,7 @@ export default function InvestigationChecklist({
                 )}
 
                 <div className="space-y-2 pt-1">
-                  <p className="font-semibold text-neutral-700 text-11px uppercase tracking-wide">
+                  <p className="font-semibold text-neutral-800 text-xs">
                     Resultado
                   </p>
                   {model.agreementItem && (

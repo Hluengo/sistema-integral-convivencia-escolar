@@ -3,13 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Search, FileText, LayoutDashboard, Users, MessageSquare } from 'lucide-react';
-import type { Causa } from '../../shared/lib/types';
-import { maskName } from '../../shared/lib/anotacionesUtils';
-import type { SidebarView } from '../../widgets/sidebar/Sidebar';
-import { Dialog, DialogContent } from '../../shared/ui/Dialog';
+import type React from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import {
+  Search,
+  FileText,
+  LayoutDashboard,
+  Users,
+  MessageSquare,
+} from "lucide-react";
+import type { Causa } from "../../shared/lib/types";
+import { maskName } from "../../shared/lib/anotacionesUtils";
+import type { SidebarView } from "../../widgets/sidebar/Sidebar";
+import { Dialog, DialogContent } from "../../shared/ui/Dialog";
 
 interface CommandPaletteProps {
   causas: Causa[];
@@ -25,57 +31,59 @@ export default function CommandPalette({
   onSelectCausa,
 }: CommandPaletteProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
-  const focusTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const focusTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
 
   const items = useMemo(
     () => [
       {
-        id: 'view-dashboard',
+        id: "view-dashboard",
         icon: <LayoutDashboard className="h-4 w-4" aria-hidden="true" />,
-        label: 'Dashboard',
-        description: 'Ver panel principal',
+        label: "Dashboard",
+        description: "Ver panel principal",
         action: () => {
-          onNavigate('dashboard');
+          onNavigate("dashboard");
           setIsOpen(false);
         },
-        category: 'Vistas',
+        category: "Vistas",
       },
       {
-        id: 'view-causas',
+        id: "view-causas",
         icon: <FileText className="h-4 w-4" aria-hidden="true" />,
-        label: 'Expedientes',
-        description: 'Gestionar expedientes',
+        label: "Expedientes",
+        description: "Gestionar expedientes",
         action: () => {
-          onNavigate('causas');
+          onNavigate("causas");
           setIsOpen(false);
         },
-        category: 'Vistas',
+        category: "Vistas",
       },
       {
-        id: 'view-advisor',
+        id: "view-advisor",
         icon: <MessageSquare className="h-4 w-4" aria-hidden="true" />,
-        label: 'Asesor Legal',
-        description: 'Consultar asistente IA',
+        label: "Asesor Legal",
+        description: "Consultar asistente IA",
         action: () => {
-          onNavigate('informes');
+          onNavigate("informes");
           setIsOpen(false);
         },
-        category: 'Vistas',
+        category: "Vistas",
       },
       {
-        id: 'view-students',
+        id: "view-students",
         icon: <Users className="h-4 w-4" aria-hidden="true" />,
-        label: 'Estudiantes',
-        description: 'Panel de estudiantes',
+        label: "Estudiantes",
+        description: "Panel de estudiantes",
         action: () => {
-          onNavigate('alumnos');
+          onNavigate("alumnos");
           setIsOpen(false);
         },
-        category: 'Vistas',
+        category: "Vistas",
       },
       ...causas.map((c) => ({
         id: `causa-${c.id}`,
@@ -83,11 +91,11 @@ export default function CommandPalette({
         label: `${c.id} — ${maskName(c.estudianteNombre, privacyMode)}`,
         description: `${c.tipoInfraccion} • ${c.estadoActual}`,
         action: () => {
-          onNavigate('causas');
+          onNavigate("causas");
           onSelectCausa(c.id);
           setIsOpen(false);
         },
-        category: 'Expedientes',
+        category: "Expedientes",
       })),
     ],
     [causas, onNavigate, onSelectCausa, privacyMode],
@@ -110,18 +118,18 @@ export default function CommandPalette({
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setIsOpen((prev) => !prev);
       }
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, []);
 
   useEffect(() => {
     if (isOpen) {
-      setQuery('');
+      setQuery("");
       setSelectedIndex(0);
       focusTimerRef.current = setTimeout(() => inputRef.current?.focus(), 50);
       return () => {
@@ -134,7 +142,7 @@ export default function CommandPalette({
 
   useEffect(() => {
     const el = listRef.current?.children[clampedIndex] as HTMLElement;
-    el?.scrollIntoView({ block: 'nearest' });
+    el?.scrollIntoView({ block: "nearest" });
   }, [clampedIndex]);
 
   const handleQueryChange = useCallback((value: string) => {
@@ -144,13 +152,13 @@ export default function CommandPalette({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'ArrowDown') {
+      if (e.key === "ArrowDown") {
         e.preventDefault();
         setSelectedIndex((prev) => Math.min(prev + 1, filtered.length - 1));
-      } else if (e.key === 'ArrowUp') {
+      } else if (e.key === "ArrowUp") {
         e.preventDefault();
         setSelectedIndex((prev) => Math.max(prev - 1, 0));
-      } else if (e.key === 'Enter' && filtered[clampedIndex]) {
+      } else if (e.key === "Enter" && filtered[clampedIndex]) {
         e.preventDefault();
         filtered[clampedIndex].action();
       }
@@ -181,7 +189,10 @@ export default function CommandPalette({
           aria-haspopup="listbox"
           aria-controls="cmd-listbox"
         >
-          <Search className="h-4 w-4 shrink-0 text-neutral-400" aria-hidden="true" />
+          <Search
+            className="h-4 w-4 shrink-0 text-neutral-500"
+            aria-hidden="true"
+          />
           <input
             ref={inputRef}
             type="search"
@@ -189,13 +200,13 @@ export default function CommandPalette({
             onChange={(e) => handleQueryChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Buscar expedientes, vistas, acciones..."
-            className="flex-1 bg-transparent text-neutral-800 text-sm placeholder-neutral-400 focus:outline-none"
+            className="flex-1 bg-transparent text-neutral-800 text-sm placeholder:text-neutral-500 focus:outline-none"
             aria-label="Buscar en la paleta de comandos"
             aria-autocomplete="list"
             aria-controls="cmd-listbox"
             aria-activedescendant={activeDescendantId}
           />
-          <kbd className="hidden items-center gap-0.5 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-10px text-neutral-400 sm:inline-flex">
+          <kbd className="hidden items-center gap-0.5 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-10px text-neutral-500 sm:inline-flex">
             ESC
           </kbd>
         </div>
@@ -209,7 +220,9 @@ export default function CommandPalette({
         >
           {filtered.length === 0 ? (
             <div role="status" className="px-4 py-8 text-center">
-              <p className="text-neutral-500 text-xs">Sin resultados para &quot;{query}&quot;</p>
+              <p className="text-neutral-500 text-xs">
+                Sin resultados para &quot;{query}&quot;
+              </p>
             </div>
           ) : (
             filtered.map((item, idx) => (
@@ -222,22 +235,24 @@ export default function CommandPalette({
                 onClick={item.action}
                 className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors ${
                   idx === clampedIndex
-                    ? 'bg-brand-50 text-brand-700'
-                    : 'text-neutral-700 hover:bg-neutral-50'
+                    ? "bg-brand-50 text-brand-700"
+                    : "text-neutral-700 hover:bg-neutral-50"
                 }`}
               >
                 <span
-                  className={`shrink-0 ${idx === clampedIndex ? 'text-brand-600' : 'text-neutral-400'}`}
+                  className={`shrink-0 ${idx === clampedIndex ? "text-brand-700" : "text-neutral-500"}`}
                 >
                   {item.icon}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium text-sm">{item.label}</p>
                   {item.description && (
-                    <p className="truncate text-11px text-neutral-500">{item.description}</p>
+                    <p className="truncate text-11px text-neutral-500">
+                      {item.description}
+                    </p>
                   )}
                 </div>
-                <span className="shrink-0 font-medium text-10px text-neutral-400">
+                <span className="shrink-0 font-medium text-10px text-neutral-500">
                   {item.category}
                 </span>
               </button>
@@ -245,7 +260,7 @@ export default function CommandPalette({
           )}
         </div>
 
-        <div className="flex items-center gap-4 border-t border-neutral-100 px-4 py-2 text-10px text-neutral-400">
+        <div className="flex items-center gap-4 border-t border-neutral-100 px-4 py-2 text-10px text-neutral-500">
           <span className="flex items-center gap-1">
             <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1 py-0.5 font-mono">
               ↑↓

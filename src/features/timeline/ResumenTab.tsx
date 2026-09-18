@@ -73,7 +73,7 @@ export default memo(function ResumenTab({
               className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${
                 breaches.length
                   ? "bg-danger-100 text-danger-800"
-                  : "bg-leve-100 text-leve-800"
+                  : "bg-leve-100 text-neutral-800"
               }`}
             >
               {breaches.length ? (
@@ -114,20 +114,20 @@ export default memo(function ResumenTab({
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-          <div className="rounded-lg border border-neutral-150 bg-brand-950 p-4 text-white shadow-xs">
+          <div className="rounded-lg border border-neutral-150 border-t-2 border-t-grave-500 bg-white p-4 shadow-xs">
             <CalendarClock
-              className="size-5 text-amber-200"
+              className="size-5 text-grave-600"
               aria-hidden="true"
             />
-            <p className="mt-3 text-xs text-neutral-200">
+            <p className="mt-3 text-neutral-600 text-xs">
               Cierre de indagación
             </p>
-            <p className="mt-1 font-semibold">
+            <p className="mt-1 font-semibold text-neutral-900">
               {formatChileDate(deadlines.cierreIndagacion.deadlineDate)} ·{" "}
               {deadlines.cierreIndagacion.text}
             </p>
             {deadlines.informeConcluyente && (
-              <p className="mt-1 text-xs text-neutral-200">
+              <p className="mt-1 text-neutral-600 text-xs">
                 Concluyente: {deadlines.informeConcluyente.text}
               </p>
             )}
@@ -137,25 +137,28 @@ export default memo(function ResumenTab({
               className="size-5 text-brand-700"
               aria-hidden="true"
             />
-            <p className="mt-3 text-xs text-neutral-500">Trazabilidad</p>
-            <p className="mt-1 font-semibold text-brand-950">
+            <p className="mt-3 text-neutral-600 text-xs">Trazabilidad</p>
+            <p className="mt-1 font-semibold text-neutral-900">
               {completed}/{totalHitos} hitos · {summary.documentsCount}{" "}
               documentos
             </p>
-            <p className="mt-1 text-xs text-neutral-500">
+            <p className="mt-1 text-neutral-600 text-xs">
               {summary.historyCount} registros en historial
             </p>
           </div>
         </div>
       </section>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section
+        aria-label="Datos del expediente"
+        className="card grid overflow-hidden sm:grid-cols-2 xl:grid-cols-4 xl:divide-x xl:divide-neutral-200"
+      >
         {[
           {
             label: "Estado actual",
             value: getCausaStatus(causa),
             Icon: CheckCircle2,
-            cardClass: "border-leve-200 bg-leve-50",
+            cardClass: "border-t-2 border-t-leve-500",
             iconClass: "text-leve-700",
           },
           {
@@ -164,34 +167,31 @@ export default memo(function ResumenTab({
               ? "Aula Segura"
               : causa.tipoInfraccion,
             Icon: FileText,
-            cardClass: "border-amber-200 bg-amber-50",
+            cardClass: "border-t-2 border-t-amber-500",
             iconClass: "text-amber-700",
           },
           {
             label: "Responsable",
             value: causa.responsable,
             Icon: UserRound,
-            cardClass: "border-neutral-150 bg-white",
+            cardClass: "border-t-2 border-t-neutral-300",
             iconClass: "text-neutral-600",
           },
           {
             label: "Última actualización",
             value: formatChileDate(causa.fechaUltimaActualizacion),
             Icon: ClipboardList,
-            cardClass: "border-brand-200 bg-brand-50",
+            cardClass: "border-t-2 border-t-brand-500",
             iconClass: "text-brand-700",
           },
         ].map(({ label, value, Icon, cardClass, iconClass }) => (
-          <div
-            key={label}
-            className={`rounded-lg border p-4 shadow-xs ${cardClass}`}
-          >
+          <div key={label} className={`p-4 ${cardClass}`}>
             <Icon className={`mb-2 size-5 ${iconClass}`} aria-hidden="true" />
             <p className="text-xs text-neutral-500">{label}</p>
             <p className="mt-1 text-sm font-semibold text-brand-950">{value}</p>
           </div>
         ))}
-      </div>
+      </section>
 
       <section className="rounded-lg border border-neutral-150 bg-white p-4 shadow-xs">
         <h3 className="text-sm font-semibold text-brand-950">

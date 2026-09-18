@@ -1,9 +1,9 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import type React from 'react';
-import { forwardRef, useMemo, useRef } from 'react';
-import { useReactToPrint } from 'react-to-print';
-import { OFICIO_PAGE_STYLE } from '@/shared/ui/printStyles';
+import type React from "react";
+import { forwardRef, useMemo, useRef } from "react";
+import { useReactToPrint } from "react-to-print";
+import { OFICIO_PAGE_STYLE } from "@/shared/ui/printStyles";
 import {
   CheckCircle2,
   Circle,
@@ -15,20 +15,20 @@ import {
   ListChecks,
   Printer,
   PencilLine,
-} from 'lucide-react';
-import { LOGO_URL } from '@/src/lib/logoBase64';
-import { LetterInstitutionalHeader } from '@/src/features/anotaciones/docgen/DocumentPreview/SharedComponents';
-import Button from '@/shared/ui/Button';
-import type { DraftProgress } from '@/shared/lib/hooks/useAuditDraft';
-import './official-document.css';
+} from "lucide-react";
+import { LOGO_URL } from "@/src/lib/logoBase64";
+import { LetterInstitutionalHeader } from "@/src/features/anotaciones/docgen/DocumentPreview/SharedComponents";
+import Button from "@/shared/ui/Button";
+import type { DraftProgress } from "@/shared/lib/hooks/useAuditDraft";
+import "./official-document.css";
 
-type DocType = 'informe_cierre_indagacion' | 'informe_concluyente';
+type DocType = "informe_cierre_indagacion" | "informe_concluyente";
 
 type MarkdownRenderer = ({ text }: { text: string }) => React.ReactElement;
 
 const DOCUMENT_TITLES: Record<DocType, string> = {
-  informe_cierre_indagacion: 'Informe de Cierre de Indagación',
-  informe_concluyente: 'Informe Concluyente y Resolución',
+  informe_cierre_indagacion: "Informe de Cierre de Indagación",
+  informe_concluyente: "Informe Concluyente y Resolución",
 };
 
 /**
@@ -36,8 +36,11 @@ const DOCUMENT_TITLES: Record<DocType, string> = {
  * emite desde el hito chk_rec_3 del checklist de Recepción (sin IA).
  */
 const DOC_TYPE_OPTIONS: { value: DocType; label: string }[] = [
-  { value: 'informe_cierre_indagacion', label: 'Informe de Cierre de Indagación' },
-  { value: 'informe_concluyente', label: 'Informe Concluyente y Resolución' },
+  {
+    value: "informe_cierre_indagacion",
+    label: "Informe de Cierre de Indagación",
+  },
+  { value: "informe_concluyente", label: "Informe Concluyente y Resolución" },
 ];
 
 interface DraftPanelProps {
@@ -73,52 +76,61 @@ export default function DraftPanel({
   const documentTitle = DOCUMENT_TITLES[selectedDocType];
   const date = useMemo(
     () =>
-      new Intl.DateTimeFormat('es-CL', { dateStyle: 'long', timeZone: 'America/Santiago' }).format(
-        new Date(),
-      ),
+      new Intl.DateTimeFormat("es-CL", {
+        dateStyle: "long",
+        timeZone: "America/Santiago",
+      }).format(new Date()),
     [],
   );
   const printDocument = useReactToPrint({
     contentRef: printRef,
-    documentTitle: `${caseId}_${documentTitle}`.replace(/[^a-zA-Z0-9_ -]/g, ''),
+    documentTitle: `${caseId}_${documentTitle}`.replace(/[^a-zA-Z0-9_ -]/g, ""),
     pageStyle: OFICIO_PAGE_STYLE,
   });
 
   return (
     <div className="space-y-4">
       <div className="flex items-start gap-2.5 rounded-lg border border-brand-200 bg-brand-50 p-3 text-left">
-        <FileText className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" aria-hidden="true" />
+        <FileText
+          className="mt-0.5 h-5 w-5 shrink-0 text-brand-600"
+          aria-hidden="true"
+        />
         <div>
           <h4 className="font-semibold text-11px text-neutral-900">
             Redacción de documentos oficiales
           </h4>
           <p className="mt-0.5 text-10px leading-relaxed text-neutral-500">
-            Gemini prepara un borrador desde los antecedentes registrados. Revise y edite el
-            documento antes de imprimirlo.
+            Gemini prepara un borrador desde los antecedentes registrados.
+            Revise y edite el documento antes de imprimirlo.
           </p>
         </div>
       </div>
 
       <div className="space-y-2">
         <div className="flex items-start gap-2 rounded-lg border border-brand-200 bg-brand-50 p-2.5 text-left">
-          <FileText className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" aria-hidden="true" />
+          <FileText
+            className="mt-0.5 h-4 w-4 shrink-0 text-brand-600"
+            aria-hidden="true"
+          />
           <p className="text-10px leading-relaxed text-neutral-600">
-            La <strong>Notificación de Inicio de Indagación</strong> se genera desde el hito del
-            checklist de Recepción del expediente (sin IA), con su propia plantilla e impresión hoja
-            Carta.
+            La <strong>Notificación de Inicio de Indagación</strong> se genera
+            desde el hito del checklist de Recepción del expediente (sin IA),
+            con su propia plantilla e impresión hoja Carta.
           </p>
         </div>
 
         <label
           htmlFor="doc-type"
-          className="block font-semibold text-10px uppercase tracking-wider text-neutral-500"
+          className="block font-semibold text-neutral-700 text-xs"
         >
           Tipo de documento
         </label>
         <select
           id="doc-type"
           value={selectedDocType}
-          onChange={(event) => setSelectedDocType(event.target.value as DocType)}
+          onChange={(event) =>
+            setSelectedDocType(event.target.value as DocType)
+          }
           className="w-full rounded-lg border border-neutral-300 bg-white p-2.5 font-medium text-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
         >
           {DOC_TYPE_OPTIONS.map((option) => (
@@ -138,12 +150,13 @@ export default function DraftPanel({
       >
         {isDrafting ? (
           <>
-            <RefreshCw className="h-4 w-4 animate-spin" aria-hidden="true" /> Redactando
-            documento...
+            <RefreshCw className="h-4 w-4 animate-spin" aria-hidden="true" />{" "}
+            Redactando documento...
           </>
         ) : (
           <>
-            <FileSignature className="h-4 w-4" aria-hidden="true" /> Generar borrador legal
+            <FileSignature className="h-4 w-4" aria-hidden="true" /> Generar
+            borrador legal
           </>
         )}
       </Button>
@@ -156,28 +169,51 @@ export default function DraftPanel({
         >
           <div className="flex items-start gap-2">
             {isDrafting ? (
-              <RefreshCw className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-brand-600" aria-hidden="true" />
-            ) : draftProgress.phase === 'error' ? (
-              <FileText className="mt-0.5 h-4 w-4 shrink-0 text-gravisima-600" aria-hidden="true" />
+              <RefreshCw
+                className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-brand-600"
+                aria-hidden="true"
+              />
+            ) : draftProgress.phase === "error" ? (
+              <FileText
+                className="mt-0.5 h-4 w-4 shrink-0 text-gravisima-600"
+                aria-hidden="true"
+              />
             ) : (
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600" aria-hidden="true" />
+              <CheckCircle2
+                className="mt-0.5 h-4 w-4 shrink-0 text-green-600"
+                aria-hidden="true"
+              />
             )}
-            <p className="text-xs font-semibold text-neutral-800">{draftProgress.message}</p>
+            <p className="text-xs font-semibold text-neutral-800">
+              {draftProgress.message}
+            </p>
           </div>
 
           {draftProgress.checklist && draftProgress.checklist.length > 0 && (
             <div className="rounded-lg border border-brand-100 bg-white p-2.5">
-              <div className="mb-2 flex items-center gap-2 text-10px font-semibold uppercase tracking-wider text-neutral-500">
-                <ListChecks className="h-4 w-4 text-brand-600" aria-hidden="true" />
+              <div className="mb-2 flex items-center gap-2 font-semibold text-neutral-700 text-xs">
+                <ListChecks
+                  className="h-4 w-4 text-brand-600"
+                  aria-hidden="true"
+                />
                 Checklist revisado
               </div>
               <ul className="space-y-1.5">
                 {draftProgress.checklist.map((item) => (
-                  <li key={item.label} className="flex items-start gap-2 text-10px text-neutral-700">
+                  <li
+                    key={item.label}
+                    className="flex items-start gap-2 text-10px text-neutral-700"
+                  >
                     {item.complete ? (
-                      <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-green-600" aria-hidden="true" />
+                      <CheckCircle2
+                        className="mt-0.5 h-3.5 w-3.5 shrink-0 text-green-600"
+                        aria-hidden="true"
+                      />
                     ) : (
-                      <Circle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden="true" />
+                      <Circle
+                        className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-500"
+                        aria-hidden="true"
+                      />
                     )}
                     <span>{item.label}</span>
                   </li>
@@ -188,13 +224,18 @@ export default function DraftPanel({
 
           {draftProgress.documents && draftProgress.documents.length > 0 && (
             <div className="rounded-lg border border-brand-100 bg-white p-2.5">
-              <div className="mb-2 flex items-center gap-2 text-10px font-semibold uppercase tracking-wider text-neutral-500">
-                <FileSearch className="h-4 w-4 text-brand-600" aria-hidden="true" />
+              <div className="mb-2 flex items-center gap-2 font-semibold text-neutral-700 text-xs">
+                <FileSearch
+                  className="h-4 w-4 text-brand-600"
+                  aria-hidden="true"
+                />
                 Documentos del expediente
               </div>
               <ul className="space-y-1 text-10px text-neutral-700">
                 {draftProgress.documents.map((name) => (
-                  <li key={name} className="truncate">{name}</li>
+                  <li key={name} className="truncate">
+                    {name}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -212,7 +253,10 @@ export default function DraftPanel({
       )}
 
       {draftedDocument && (
-        <section className="space-y-3" aria-label="Edición e impresión del borrador">
+        <section
+          className="space-y-3"
+          aria-label="Edición e impresión del borrador"
+        >
           <div className="flex items-center gap-2">
             <PencilLine className="h-4 w-4 text-brand-600" aria-hidden="true" />
             <h5 className="font-semibold text-sm text-neutral-900">
@@ -233,7 +277,10 @@ export default function DraftPanel({
               Ver vista previa para impresión Oficio
             </summary>
             <div className="overflow-x-auto border-neutral-200 border-t p-3">
-              <div className="origin-top-left scale-[0.42]" style={{ width: '238%' }}>
+              <div
+                className="origin-top-left scale-[0.42]"
+                style={{ width: "238%" }}
+              >
                 <OfficialDraftDocument
                   title={documentTitle}
                   studentName={studentName}
@@ -263,7 +310,8 @@ export default function DraftPanel({
             onClick={() => printDocument()}
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-800 px-4 py-2.5 font-semibold text-xs text-white transition-colors hover:bg-brand-900"
           >
-            <Printer className="h-4 w-4" aria-hidden="true" /> Imprimir en formato Oficio
+            <Printer className="h-4 w-4" aria-hidden="true" /> Imprimir en
+            formato Oficio
           </button>
         </section>
       )}
@@ -282,28 +330,39 @@ interface OfficialDraftDocumentProps {
   printSource?: boolean;
 }
 
-const OfficialDraftDocument = forwardRef<HTMLDivElement, OfficialDraftDocumentProps>(
-  function OfficialDraftDocument(
-    { title, studentName, course, caseId, date, text, CustomMarkdownRenderer, printSource = false },
-    ref,
-  ) {
-    return (
-      <div
-        ref={ref}
-        className={`official-document${printSource ? ' official-document--print-source' : ''}`}
-      >
-        <LetterInstitutionalHeader year="2026" logoSrc={LOGO_URL} />
-        <h1 className="official-document-title">{title}</h1>
-        <p className="official-document-meta">
-          <strong>Folio:</strong> {caseId} &nbsp;·&nbsp; <strong>Fecha:</strong> {date}
-          <br />
-          <strong>Estudiante:</strong> {studentName} &nbsp;·&nbsp; <strong>Curso:</strong>{' '}
-          {course || 'No registrado'}
-        </p>
-        <div className="official-document-body">
-          <CustomMarkdownRenderer text={text} />
-        </div>
-      </div>
-    );
+const OfficialDraftDocument = forwardRef<
+  HTMLDivElement,
+  OfficialDraftDocumentProps
+>(function OfficialDraftDocument(
+  {
+    title,
+    studentName,
+    course,
+    caseId,
+    date,
+    text,
+    CustomMarkdownRenderer,
+    printSource = false,
   },
-);
+  ref,
+) {
+  return (
+    <div
+      ref={ref}
+      className={`official-document${printSource ? " official-document--print-source" : ""}`}
+    >
+      <LetterInstitutionalHeader year="2026" logoSrc={LOGO_URL} />
+      <h1 className="official-document-title">{title}</h1>
+      <p className="official-document-meta">
+        <strong>Folio:</strong> {caseId} &nbsp;·&nbsp; <strong>Fecha:</strong>{" "}
+        {date}
+        <br />
+        <strong>Estudiante:</strong> {studentName} &nbsp;·&nbsp;{" "}
+        <strong>Curso:</strong> {course || "No registrado"}
+      </p>
+      <div className="official-document-body">
+        <CustomMarkdownRenderer text={text} />
+      </div>
+    </div>
+  );
+});

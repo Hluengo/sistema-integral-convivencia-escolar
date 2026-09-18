@@ -63,7 +63,7 @@ export function DetailModalHeader({
   actions,
 }: DetailModalHeaderProps) {
   return (
-    <header className="relative z-20 overflow-hidden border-neutral-800 border-b bg-brand-950 px-4 py-4 sm:px-6">
+    <header className="relative z-20 overflow-hidden border-brand-900 border-b bg-brand-800 px-4 py-4 sm:px-6">
       <div
         className="pointer-events-none absolute inset-0 opacity-35 [background-image:linear-gradient(135deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:18px_18px]"
         aria-hidden="true"
@@ -98,7 +98,7 @@ export function DetailModalTabs<T extends string>({
 }: DetailModalTabsProps<T>) {
   return (
     <div
-      className="z-10 border-neutral-150 border-b bg-white/95 px-4 py-2 backdrop-blur sm:px-6"
+      className="sticky top-0 z-10 border-neutral-150 border-b bg-white/95 px-4 py-2 backdrop-blur sm:px-6"
       role="tablist"
       aria-label={ariaLabel}
     >
@@ -110,7 +110,7 @@ export function DetailModalTabs<T extends string>({
             onClick={() => onChange(tab.id)}
             role="tab"
             aria-selected={activeTab === tab.id}
-            className={`relative flex min-w-[9.5rem] flex-1 flex-col items-stretch justify-center gap-1 overflow-hidden rounded-md px-3 py-2 font-semibold text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-100 sm:min-w-0 ${
+            className={`relative flex min-h-11 min-w-[9.5rem] flex-1 flex-col items-stretch justify-center gap-1 overflow-hidden rounded-md px-3 py-2 font-semibold text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-100 sm:min-w-0 ${
               activeTab === tab.id
                 ? "bg-white text-brand-950 shadow-sm ring-1 ring-neutral-150"
                 : "text-neutral-600 hover:bg-white/70 hover:text-neutral-900"

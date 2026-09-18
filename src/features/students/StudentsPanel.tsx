@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useReducer, useMemo, useState, useCallback } from 'react';
+import { useReducer, useMemo, useState, useCallback } from "react";
 import {
   Users,
   Search,
@@ -13,13 +13,16 @@ import {
   ChevronDown,
   ChevronUp,
   ChevronsUpDown,
-} from 'lucide-react';
-import Button from '@/shared/ui/Button';
-import PageHeader from '@/shared/ui/PageHeader';
-import type { Course, StudentActivitySummary } from '../../shared/api/services/courses.service';
-import { TableSkeleton } from '../../shared/Skeleton';
-import { useCoursesQuery } from '../../shared/lib/hooks/useCoursesQuery';
-import { usePaginatedStudentActivityHistoryQuery } from '../../shared/lib/hooks/useStudentsQuery';
+} from "lucide-react";
+import Button from "@/shared/ui/Button";
+import PageHeader from "@/shared/ui/PageHeader";
+import type {
+  Course,
+  StudentActivitySummary,
+} from "../../shared/api/services/courses.service";
+import { TableSkeleton } from "../../shared/Skeleton";
+import { useCoursesQuery } from "../../shared/lib/hooks/useCoursesQuery";
+import { usePaginatedStudentActivityHistoryQuery } from "../../shared/lib/hooks/useStudentsQuery";
 
 const EMPTY_COURSES: Course[] = [];
 const EMPTY_STUDENTS: StudentActivitySummary[] = [];
@@ -36,18 +39,22 @@ interface StudentsPanelState {
 }
 
 type StudentsPanelAction =
-  { type: 'SET_SEARCH'; query: string } | { type: 'SET_COURSE'; courseId: string };
+  | { type: "SET_SEARCH"; query: string }
+  | { type: "SET_COURSE"; courseId: string };
 
 const initialState: StudentsPanelState = {
-  searchQuery: '',
-  selectedCourseId: 'all',
+  searchQuery: "",
+  selectedCourseId: "all",
 };
 
-function reducer(state: StudentsPanelState, action: StudentsPanelAction): StudentsPanelState {
+function reducer(
+  state: StudentsPanelState,
+  action: StudentsPanelAction,
+): StudentsPanelState {
   switch (action.type) {
-    case 'SET_SEARCH':
+    case "SET_SEARCH":
       return { ...state, searchQuery: action.query };
-    case 'SET_COURSE':
+    case "SET_COURSE":
       return { ...state, selectedCourseId: action.courseId };
     default:
       return state;
@@ -63,10 +70,13 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
   const studentsQuery = usePaginatedStudentActivityHistoryQuery();
   const courses = coursesQuery.data ?? EMPTY_COURSES;
   const students = useMemo(
-    () => studentsQuery.data?.pages.flatMap((page) => page.students) ?? EMPTY_STUDENTS,
+    () =>
+      studentsQuery.data?.pages.flatMap((page) => page.students) ??
+      EMPTY_STUDENTS,
     [studentsQuery.data],
   );
-  const totalStudents = studentsQuery.data?.pages[0]?.totalCount ?? students.length;
+  const totalStudents =
+    studentsQuery.data?.pages[0]?.totalCount ?? students.length;
   const activityTotals = useMemo(
     () =>
       students.reduce(
@@ -81,12 +91,12 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
   const isLoading = coursesQuery.isLoading || studentsQuery.isLoading;
   const error =
     coursesQuery.isError || studentsQuery.isError
-      ? 'No se pudieron cargar los estudiantes. Verifique la conexión con Supabase.'
+      ? "No se pudieron cargar los estudiantes. Verifique la conexión con Supabase."
       : null;
 
   const filteredStudents = useMemo(() => {
     return students.filter((s) => {
-      if (selectedCourseId !== 'all' && s.course_id !== selectedCourseId) {
+      if (selectedCourseId !== "all" && s.course_id !== selectedCourseId) {
         return false;
       }
       if (searchQuery.trim()) {
@@ -101,10 +111,18 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
     });
   }, [students, selectedCourseId, searchQuery]);
 
-  const basicCourses = useMemo(() => courses.filter((c) => c.level === 'BASICA'), [courses]);
-  const mediaCourses = useMemo(() => courses.filter((c) => c.level === 'MEDIA'), [courses]);
+  const basicCourses = useMemo(
+    () => courses.filter((c) => c.level === "BASICA"),
+    [courses],
+  );
+  const mediaCourses = useMemo(
+    () => courses.filter((c) => c.level === "MEDIA"),
+    [courses],
+  );
 
-  const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set());
+  const [expandedCourses, setExpandedCourses] = useState<Set<string>>(
+    new Set(),
+  );
 
   const groupedByCourse = useMemo(() => {
     const courseById = new Map(courses.map((c) => [c.id, c]));
@@ -121,7 +139,12 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
       const key = student.course_id;
       if (!groups.has(key)) {
         const course = courseById.get(key) ?? null;
-        groups.set(key, { course, students: [], openCauses: 0, annotations: 0 });
+        groups.set(key, {
+          course,
+          students: [],
+          openCauses: 0,
+          annotations: 0,
+        });
       }
       const group = groups.get(key);
       if (group) {
@@ -163,25 +186,28 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
 
   const allExpanded =
     groupedByCourse.length > 0 &&
-    groupedByCourse.every((g) => expandedCourses.has(g.course?.id ?? ''));
+    groupedByCourse.every((g) => expandedCourses.has(g.course?.id ?? ""));
 
-  const todayLabel = new Date().toLocaleDateString('es-CL', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
+  const todayLabel = new Date().toLocaleDateString("es-CL", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
   });
   const formatActivityDate = useCallback((value: string | null) => {
-    if (!value) return 'Sin actividad';
-    return new Intl.DateTimeFormat('es-CL', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
+    if (!value) return "Sin actividad";
+    return new Intl.DateTimeFormat("es-CL", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
     }).format(new Date(value));
   }, []);
 
   return (
-    <section aria-label="Gestión de alumnos" className="animate-fade-in space-y-6">
+    <section
+      aria-label="Gestión de alumnos"
+      className="animate-fade-in space-y-6"
+    >
       <PageHeader
         eyebrow="Matrícula"
         title="Estudiantes"
@@ -189,31 +215,38 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
         action={
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-2 text-center">
-              <p className="font-bold text-neutral-950 text-xl tabular-nums">{totalStudents}</p>
-              <p className="font-semibold text-10px text-neutral-500 uppercase">Estudiantes</p>
+              <p className="font-bold text-neutral-950 text-xl tabular-nums">
+                {totalStudents}
+              </p>
+              <p className="font-semibold text-neutral-600 text-xs">
+                Estudiantes
+              </p>
             </div>
             <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-2 text-center">
               <p className="font-bold text-grave-700 text-xl tabular-nums">
                 {activityTotals.openCauses}
               </p>
-              <p className="font-semibold text-10px text-grave-700 uppercase">Abiertas</p>
+              <p className="font-semibold text-grave-700 text-xs">Abiertas</p>
             </div>
             <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-2 text-center">
               <p className="font-bold text-muygrave-700 text-xl tabular-nums">
                 {activityTotals.annotations}
               </p>
-              <p className="font-semibold text-10px text-muygrave-700 uppercase">Anotaciones</p>
+              <p className="font-semibold text-muygrave-700 text-xs">
+                Anotaciones
+              </p>
             </div>
             <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-2 text-center">
-              <p className="font-bold text-neutral-950 text-xl tabular-nums">{courses.length}</p>
-              <p className="font-semibold text-10px text-neutral-500 uppercase">Cursos</p>
+              <p className="font-bold text-neutral-950 text-xl tabular-nums">
+                {courses.length}
+              </p>
+              <p className="font-semibold text-neutral-600 text-xs">Cursos</p>
             </div>
           </div>
         }
       />
 
-      {/* Filters */}
-      <div className="card p-5">
+      <section aria-label="Filtros de estudiantes" className="card p-4">
         <div className="flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
             <Search
@@ -224,16 +257,20 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
               type="text"
               spellCheck={false}
               value={searchQuery}
-              onChange={(e) => dispatch({ type: 'SET_SEARCH', query: e.target.value })}
+              onChange={(e) =>
+                dispatch({ type: "SET_SEARCH", query: e.target.value })
+              }
               placeholder="Buscar por nombre, RUN o curso..."
-              className="w-full rounded-xl border border-neutral-200/60 bg-neutral-50 py-2.5 pr-4 pl-10 font-medium text-neutral-800 text-sm transition-colors placeholder:text-neutral-400 hover:border-neutral-300 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              className="min-h-11 w-full rounded-lg border border-neutral-200 bg-neutral-50 py-2 pr-4 pl-10 font-medium text-neutral-800 text-sm transition-colors placeholder:text-neutral-500 hover:border-neutral-300 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
               aria-label="Buscar estudiantes"
             />
           </div>
           <select
             value={selectedCourseId}
-            onChange={(e) => dispatch({ type: 'SET_COURSE', courseId: e.target.value })}
-            className="rounded-xl border border-neutral-200/80 bg-neutral-50 px-4 py-2.5 font-medium text-neutral-800 text-sm transition-colors hover:border-neutral-300 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 sm:w-56"
+            onChange={(e) =>
+              dispatch({ type: "SET_COURSE", courseId: e.target.value })
+            }
+            className="min-h-11 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-2 font-medium text-neutral-800 text-sm transition-colors hover:border-neutral-300 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 sm:w-56"
             aria-label="Filtrar por curso"
           >
             <option value="all">Todos los cursos</option>
@@ -259,53 +296,73 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
           {groupedByCourse.length > 0 && (
             <Button
               variant="secondary"
-              aria-label={allExpanded ? 'Colapsar todos los cursos' : 'Expandir todos los cursos'}
+              aria-label={
+                allExpanded
+                  ? "Colapsar todos los cursos"
+                  : "Expandir todos los cursos"
+              }
               onClick={allExpanded ? collapseAll : expandAll}
-              className="rounded-xl px-3.5 py-2.5 text-xs"
+              className="min-h-11 rounded-lg px-3.5 py-2 text-xs"
             >
               <ChevronsUpDown className="h-3.5 w-3.5" />
-              {allExpanded ? 'Colapsar todos' : 'Expandir todos'}
+              {allExpanded ? "Colapsar todos" : "Expandir todos"}
             </Button>
           )}
         </div>
-      </div>
+      </section>
 
       {/* Content */}
       {isLoading ? (
         <TableSkeleton rows={8} />
       ) : error ? (
-        <div className="card flex items-start gap-3 border-gravisima-200 bg-gravisima-50 p-8">
-          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-gravisima-600" aria-hidden="true" />
+        <div
+          role="alert"
+          className="card flex items-start gap-3 border-gravisima-200 bg-gravisima-50 p-8"
+        >
+          <AlertCircle
+            className="mt-0.5 h-5 w-5 shrink-0 text-gravisima-600"
+            aria-hidden="true"
+          />
           <div>
-            <p className="font-semibold text-gravisima-700 text-sm">Error de conexión</p>
+            <p className="font-semibold text-gravisima-700 text-sm">
+              Error de conexión
+            </p>
             <p className="mt-1 text-gravisima-700 text-xs">{error}</p>
           </div>
         </div>
       ) : filteredStudents.length === 0 ? (
         <div className="card p-12 text-center">
-          <Users className="mx-auto mb-3 h-10 w-10 text-neutral-300" aria-hidden="true" />
-          <p className="font-medium text-neutral-600 text-sm">No se encontraron estudiantes</p>
-          <p className="mt-1 text-neutral-400 text-xs">
+          <Users
+            className="mx-auto mb-3 h-10 w-10 text-neutral-400"
+            aria-hidden="true"
+          />
+          <p className="font-medium text-neutral-600 text-sm">
+            No se encontraron estudiantes
+          </p>
+          <p className="mt-1 text-neutral-500 text-xs">
             {students.length === 0
-              ? 'No hay estudiantes con causas o anotaciones registradas.'
-              : 'Pruebe con otro filtro o término de búsqueda.'}
+              ? "No hay estudiantes con causas o anotaciones registradas."
+              : "Pruebe con otro filtro o término de búsqueda."}
           </p>
         </div>
       ) : (
         <div className="stagger-children space-y-4">
           {groupedByCourse.map(
-            ({ course, students: courseStudents, openCauses, annotations }, gi) => {
+            (
+              { course, students: courseStudents, openCauses, annotations },
+              gi,
+            ) => {
               const courseId = course?.id ?? `unknown-${gi}`;
               const isExpanded =
                 expandedCourses.has(courseId) ||
-                selectedCourseId !== 'all' ||
-                searchQuery.trim() !== '';
+                selectedCourseId !== "all" ||
+                searchQuery.trim() !== "";
               const courseContentId = `students-course-${courseId}`;
               return (
                 <div key={courseId} className="card overflow-hidden">
                   <button
                     type="button"
-                    aria-label={`Alternar curso ${course?.name ?? 'sin nombre'}`}
+                    aria-label={`Alternar curso ${course?.name ?? "sin nombre"}`}
                     aria-expanded={isExpanded}
                     aria-controls={courseContentId}
                     onClick={() => toggleCourse(courseId)}
@@ -317,35 +374,49 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
                     />
                     <div className="flex items-center gap-3">
                       <div className="rounded-lg bg-brand-50 p-2">
-                        <GraduationCap className="h-4 w-4 text-brand-600" aria-hidden="true" />
+                        <GraduationCap
+                          className="h-4 w-4 text-brand-600"
+                          aria-hidden="true"
+                        />
                       </div>
                       <div className="flex-1">
                         <h3 className="font-bold text-neutral-900 text-sm">
-                          {course?.name ?? 'Sin curso asignado'}
+                          {course?.name ?? "Sin curso asignado"}
                         </h3>
-                        <p className="font-medium text-11px text-neutral-400">
-                          {course?.level === 'BASICA'
-                            ? 'Enseñanza Básica'
-                            : course?.level === 'MEDIA'
-                              ? 'Enseñanza Media'
-                              : 'Sin nivel'}
-                          {' · '}
-                          {courseStudents.length} estudiante{courseStudents.length !== 1 ? 's' : ''}
-                          {' · '}
+                        <p className="font-medium text-11px text-neutral-500">
+                          {course?.level === "BASICA"
+                            ? "Enseñanza Básica"
+                            : course?.level === "MEDIA"
+                              ? "Enseñanza Media"
+                              : "Sin nivel"}
+                          {" · "}
+                          {courseStudents.length} estudiante
+                          {courseStudents.length !== 1 ? "s" : ""}
+                          {" · "}
                           <span
-                            className={openCauses > 0 ? 'font-semibold text-grave-700' : undefined}
+                            className={
+                              openCauses > 0
+                                ? "font-semibold text-grave-700"
+                                : undefined
+                            }
                           >
-                            {openCauses} abierta{openCauses !== 1 ? 's' : ''}
+                            {openCauses} abierta{openCauses !== 1 ? "s" : ""}
                           </span>
-                          {' · '}
-                          {annotations} anotación{annotations !== 1 ? 'es' : ''}
+                          {" · "}
+                          {annotations} anotación{annotations !== 1 ? "es" : ""}
                         </p>
                       </div>
                       <div className="shrink-0 rounded-lg bg-neutral-200 p-1">
                         {isExpanded ? (
-                          <ChevronUp className="h-4 w-4 text-neutral-600" aria-hidden="true" />
+                          <ChevronUp
+                            className="h-4 w-4 text-neutral-600"
+                            aria-hidden="true"
+                          />
                         ) : (
-                          <ChevronDown className="h-4 w-4 text-neutral-600" aria-hidden="true" />
+                          <ChevronDown
+                            className="h-4 w-4 text-neutral-600"
+                            aria-hidden="true"
+                          />
                         )}
                       </div>
                     </div>
@@ -364,17 +435,17 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
                                 <p className="truncate font-semibold text-neutral-900 text-sm">
                                   {privacyMode
                                     ? student.full_name
-                                        .split(' ')
+                                        .split(" ")
                                         .filter((w) => w.length > 2)
                                         .map((w) => `${w[0]}.`)
-                                        .join(' ')
+                                        .join(" ")
                                     : student.full_name}
                                 </p>
                                 <p className="mt-0.5 font-mono text-neutral-500 text-xs">
-                                  {privacyMode ? 'XX.XXX.XXX-X' : student.rut}
+                                  {privacyMode ? "XX.XXX.XXX-X" : student.rut}
                                 </p>
                               </div>
-                              <span className="shrink-0 text-neutral-400 text-xs">
+                              <span className="shrink-0 text-neutral-500 text-xs">
                                 {formatActivityDate(student.last_activity_at)}
                               </span>
                             </div>
@@ -383,11 +454,12 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
                                 {student.active_cause_count} abiertas
                               </span>
                               <span className="rounded-md bg-brand-50 px-2 py-1 font-semibold text-brand-700">
-                                {student.cause_count} causa{student.cause_count !== 1 ? 's' : ''}
+                                {student.cause_count} causa
+                                {student.cause_count !== 1 ? "s" : ""}
                               </span>
                               <span className="rounded-md bg-muygrave-50 px-2 py-1 font-semibold text-muygrave-700">
                                 {student.annotation_count} anotación
-                                {student.annotation_count !== 1 ? 'es' : ''}
+                                {student.annotation_count !== 1 ? "es" : ""}
                               </span>
                             </div>
                           </article>
@@ -397,19 +469,19 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
                         <table className="w-full text-left">
                           <thead>
                             <tr className="border-neutral-100 border-b">
-                              <th className="px-5 py-3 font-semibold text-10px text-neutral-400 uppercase">
+                              <th className="px-5 py-3 font-semibold text-neutral-700 text-xs">
                                 Nombre
                               </th>
-                              <th className="px-5 py-3 font-semibold text-10px text-neutral-400 uppercase">
+                              <th className="px-5 py-3 font-semibold text-neutral-700 text-xs">
                                 RUN
                               </th>
-                              <th className="hidden px-5 py-3 font-semibold text-10px text-neutral-400 uppercase sm:table-cell">
+                              <th className="hidden px-5 py-3 font-semibold text-neutral-700 text-xs sm:table-cell">
                                 Curso
                               </th>
-                              <th className="px-5 py-3 font-semibold text-10px text-neutral-400 uppercase">
+                              <th className="px-5 py-3 font-semibold text-neutral-700 text-xs">
                                 Actividad
                               </th>
-                              <th className="hidden px-5 py-3 font-semibold text-10px text-neutral-400 uppercase md:table-cell">
+                              <th className="hidden px-5 py-3 font-semibold text-neutral-700 text-xs md:table-cell">
                                 Última actividad
                               </th>
                             </tr>
@@ -420,54 +492,65 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
                                 key={student.id}
                                 className="border-neutral-50 border-b transition-colors last:border-b-0 hover:bg-neutral-50/80"
                               >
-                                <td className="px-5 py-3" aria-label="Nombre del estudiante">
+                                <td
+                                  className="px-5 py-3"
+                                  aria-label="Nombre del estudiante"
+                                >
                                   <div className="flex items-center gap-2.5">
-                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-brand-100 to-brand-200 font-bold text-10px text-brand-700">
+                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-100 font-bold text-10px text-brand-800">
                                       {student.full_name
-                                        .split(' ')
+                                        .split(" ")
                                         .filter((w) => w.length > 2)
                                         .slice(0, 2)
                                         .map((w) => w[0])
-                                        .join('')}
+                                        .join("")}
                                     </div>
                                     <span className="font-semibold text-neutral-900 text-sm">
                                       {privacyMode
                                         ? student.full_name
-                                            .split(' ')
+                                            .split(" ")
                                             .filter((w) => w.length > 2)
                                             .map((w) => `${w[0]}.`)
-                                            .join(' ')
+                                            .join(" ")
                                         : student.full_name}
                                     </span>
                                   </div>
                                 </td>
                                 <td className="px-5 py-3">
                                   <span className="font-medium font-mono text-neutral-600 text-xs">
-                                    {privacyMode ? 'XX.XXX.XXX-X' : student.rut}
+                                    {privacyMode ? "XX.XXX.XXX-X" : student.rut}
                                   </span>
                                 </td>
                                 <td className="hidden px-5 py-3 sm:table-cell">
-                                  <span className="inline-flex items-center gap-1 rounded-md border border-neutral-200/60 bg-neutral-50 px-2 py-0.5 font-medium text-11px text-neutral-500">
-                                    <BookOpen className="h-3 w-3" aria-hidden="true" />
+                                  <span className="inline-flex items-center gap-1 rounded-md border border-neutral-200/60 bg-neutral-50 px-2 py-0.5 font-medium text-11px text-neutral-600">
+                                    <BookOpen
+                                      className="h-3 w-3"
+                                      aria-hidden="true"
+                                    />
                                     {student.course_name}
                                   </span>
                                 </td>
-                                <td className="px-5 py-3" aria-label="Actividad del estudiante">
+                                <td
+                                  className="px-5 py-3"
+                                  aria-label="Actividad del estudiante"
+                                >
                                   <div className="flex flex-wrap gap-1.5 text-11px">
                                     <span className="rounded-md bg-grave-50 px-2 py-0.5 font-semibold text-grave-700">
                                       {student.active_cause_count} abiertas
                                     </span>
                                     <span className="rounded-md bg-brand-50 px-2 py-0.5 font-semibold text-brand-700">
                                       {student.cause_count} causa
-                                      {student.cause_count !== 1 ? 's' : ''}
+                                      {student.cause_count !== 1 ? "s" : ""}
                                     </span>
                                     <span className="rounded-md bg-grave-50 px-2 py-0.5 font-semibold text-grave-700">
                                       {student.annotation_count} anotación
-                                      {student.annotation_count !== 1 ? 'es' : ''}
+                                      {student.annotation_count !== 1
+                                        ? "es"
+                                        : ""}
                                     </span>
                                   </div>
                                 </td>
-                                <td className="hidden px-5 py-3 text-neutral-500 text-xs md:table-cell">
+                                <td className="hidden px-5 py-3 text-neutral-600 text-xs md:table-cell">
                                   {formatActivityDate(student.last_activity_at)}
                                 </td>
                               </tr>
@@ -488,7 +571,9 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
                 onClick={() => void studentsQuery.fetchNextPage()}
                 disabled={studentsQuery.isFetchingNextPage}
               >
-                {studentsQuery.isFetchingNextPage ? 'Cargando…' : 'Cargar más estudiantes'}
+                {studentsQuery.isFetchingNextPage
+                  ? "Cargando…"
+                  : "Cargar más estudiantes"}
               </Button>
             </div>
           )}

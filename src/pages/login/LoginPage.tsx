@@ -3,47 +3,54 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useEffect, useRef, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import type { UseFormRegisterReturn } from 'react-hook-form';
-import { AlertCircle, CheckCircle2, Eye, EyeOff, Scale } from 'lucide-react';
+import { useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import type { UseFormRegisterReturn } from "react-hook-form";
+import { AlertCircle, CheckCircle2, Eye, EyeOff, Scale } from "lucide-react";
 import {
   requestPasswordReset,
   signInWithEmail,
   signOut,
   updatePassword,
-} from '../../shared/api/services/auth.service';
+} from "../../shared/api/services/auth.service";
 import {
   type LoginFormValues,
   loginFormSchema,
   passwordResetRequestSchema,
   passwordUpdateFormSchema,
-} from '../../shared/lib/schemas/loginForm';
-import { useAppContext } from '../../shared/lib/useAppContext';
-import { useAuthStore } from '../../shared/lib/stores/authStore';
-import { Dialog, DialogContent } from '../../shared/ui/Dialog';
-import Button from '../../shared/ui/Button';
+} from "../../shared/lib/schemas/loginForm";
+import { useAppContext } from "../../shared/lib/useAppContext";
+import { useAuthStore } from "../../shared/lib/stores/authStore";
+import { Dialog, DialogContent } from "../../shared/ui/Dialog";
+import Button from "../../shared/ui/Button";
 
 interface LoginPageProps {
   onClose?: () => void;
 }
 
-type AuthMode = 'login' | 'request-reset' | 'update-password';
+type AuthMode = "login" | "request-reset" | "update-password";
 
 type LoginFormField = keyof LoginFormValues;
 
-const LOGIN_FIELD_NAMES: LoginFormField[] = ['email', 'password', 'passwordConfirmation'];
+const LOGIN_FIELD_NAMES: LoginFormField[] = [
+  "email",
+  "password",
+  "passwordConfirmation",
+];
 
 function isLoginFormField(field: unknown): field is LoginFormField {
-  return typeof field === 'string' && LOGIN_FIELD_NAMES.includes(field as LoginFormField);
+  return (
+    typeof field === "string" &&
+    LOGIN_FIELD_NAMES.includes(field as LoginFormField)
+  );
 }
 
 export default function LoginPage({ onClose }: LoginPageProps) {
   const [mode, setMode] = useState<AuthMode>(() =>
-    typeof window !== 'undefined' &&
-    window.sessionStorage.getItem('supabase-password-recovery') === 'true'
-      ? 'update-password'
-      : 'login',
+    typeof window !== "undefined" &&
+    window.sessionStorage.getItem("supabase-password-recovery") === "true"
+      ? "update-password"
+      : "login",
   );
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +58,9 @@ export default function LoginPage({ onClose }: LoginPageProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { setShowLoginModal } = useAppContext();
   const sessionExpired = useAuthStore((state) => state.sessionExpired);
-  const clearSessionExpired = useAuthStore((state) => state.clearSessionExpired);
+  const clearSessionExpired = useAuthStore(
+    (state) => state.clearSessionExpired,
+  );
   const emailRef = useRef<HTMLInputElement>(null);
   const {
     register,
@@ -62,17 +71,17 @@ export default function LoginPage({ onClose }: LoginPageProps) {
     formState: { errors },
   } = useForm<LoginFormValues>({
     defaultValues: {
-      email: '',
-      password: '',
-      passwordConfirmation: '',
+      email: "",
+      password: "",
+      passwordConfirmation: "",
     },
-    mode: 'onChange',
+    mode: "onChange",
   });
-  const emailRegistration = register('email');
+  const emailRegistration = register("email");
 
   useEffect(() => {
     if (sessionExpired) {
-      setNotice('La sesión expiró. Inicie sesión nuevamente para continuar.');
+      setNotice("La sesión expiró. Inicie sesión nuevamente para continuar.");
       clearSessionExpired();
     }
   }, [clearSessionExpired, sessionExpired]);
@@ -85,16 +94,18 @@ export default function LoginPage({ onClose }: LoginPageProps) {
 
   const changeMode = (nextMode: AuthMode) => {
     resetMessages();
-    resetField('password');
-    resetField('passwordConfirmation');
+    resetField("password");
+    resetField("passwordConfirmation");
     setMode(nextMode);
   };
 
-  const applyValidationIssues = (issues: Array<{ path: PropertyKey[]; message: string }>) => {
+  const applyValidationIssues = (
+    issues: Array<{ path: PropertyKey[]; message: string }>,
+  ) => {
     for (const issue of issues) {
       const [field] = issue.path;
       if (isLoginFormField(field)) {
-        setFieldError(field, { type: 'validate', message: issue.message });
+        setFieldError(field, { type: "validate", message: issue.message });
       }
     }
   };
@@ -103,7 +114,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
     const parsed = loginFormSchema.safeParse(values);
     if (!parsed.success) {
       applyValidationIssues(parsed.error.issues);
-      setError('Revise los datos de inicio de sesión.');
+      setError("Revise los datos de inicio de sesión.");
       return;
     }
 
@@ -111,11 +122,14 @@ export default function LoginPage({ onClose }: LoginPageProps) {
     resetMessages();
     try {
       const { email, password } = parsed.data;
-      const { error: authError } = await signInWithEmail(email.trim(), password);
+      const { error: authError } = await signInWithEmail(
+        email.trim(),
+        password,
+      );
       if (authError) {
         setError(
-          authError.message === 'Invalid login credentials'
-            ? 'Credenciales incorrectas. Verifique su email y contraseña.'
+          authError.message === "Invalid login credentials"
+            ? "Credenciales incorrectas. Verifique su email y contraseña."
             : authError.message,
         );
         return;
@@ -130,20 +144,22 @@ export default function LoginPage({ onClose }: LoginPageProps) {
     const parsed = passwordResetRequestSchema.safeParse(values);
     if (!parsed.success) {
       applyValidationIssues(parsed.error.issues);
-      setError('Ingrese un correo electrónico válido.');
+      setError("Ingrese un correo electrónico válido.");
       return;
     }
 
     setIsLoading(true);
     resetMessages();
     try {
-      const { error: authError } = await requestPasswordReset(parsed.data.email.trim());
+      const { error: authError } = await requestPasswordReset(
+        parsed.data.email.trim(),
+      );
       if (authError) {
         setError(authError.message);
         return;
       }
       setNotice(
-        'Si la cuenta existe, recibirá un correo con el enlace para crear una contraseña nueva.',
+        "Si la cuenta existe, recibirá un correo con el enlace para crear una contraseña nueva.",
       );
     } finally {
       setIsLoading(false);
@@ -154,7 +170,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
     const parsed = passwordUpdateFormSchema.safeParse(values);
     if (!parsed.success) {
       applyValidationIssues(parsed.error.issues);
-      setError('Revise la nueva contraseña.');
+      setError("Revise la nueva contraseña.");
       return;
     }
 
@@ -166,39 +182,39 @@ export default function LoginPage({ onClose }: LoginPageProps) {
         setError(authError.message);
         return;
       }
-      if (typeof window !== 'undefined') {
-        window.sessionStorage.removeItem('supabase-password-recovery');
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem("supabase-password-recovery");
       }
       clearSessionExpired();
       await signOut();
-      resetField('password');
-      resetField('passwordConfirmation');
-      setMode('login');
-      setNotice('Contraseña actualizada. Ya puede iniciar sesión.');
+      resetField("password");
+      resetField("passwordConfirmation");
+      setMode("login");
+      setNotice("Contraseña actualizada. Ya puede iniciar sesión.");
     } finally {
       setIsLoading(false);
     }
   });
 
   const title =
-    mode === 'login'
-      ? 'Iniciar sesión'
-      : mode === 'request-reset'
-        ? 'Recuperar contraseña'
-        : 'Crear nueva contraseña';
+    mode === "login"
+      ? "Iniciar sesión"
+      : mode === "request-reset"
+        ? "Recuperar contraseña"
+        : "Crear nueva contraseña";
 
   const subtitle =
-    mode === 'login'
-      ? 'Acceda para gestionar expedientes'
-      : mode === 'request-reset'
-        ? 'Le enviaremos un enlace seguro a su correo'
-        : 'Ingrese y confirme su nueva contraseña';
+    mode === "login"
+      ? "Acceda para gestionar expedientes"
+      : mode === "request-reset"
+        ? "Le enviaremos un enlace seguro a su correo"
+        : "Ingrese y confirme su nueva contraseña";
 
   return (
     <Dialog
       open
       onOpenChange={(open: boolean) => {
-        if (!open && mode !== 'update-password') {
+        if (!open && mode !== "update-password") {
           setShowLoginModal(false);
           onClose?.();
         }
@@ -208,7 +224,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
         className="max-w-[420px] overflow-hidden p-0"
         onOpenAutoFocus={(e) => {
           e.preventDefault();
-          if (mode !== 'update-password') emailRef.current?.focus();
+          if (mode !== "update-password") emailRef.current?.focus();
         }}
       >
         <div className="h-1 w-full bg-linear-to-r from-brand-500 via-brand-600 to-brand-700" />
@@ -240,7 +256,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
             </div>
           )}
 
-          {mode !== 'update-password' && (
+          {mode !== "update-password" && (
             <div className="mb-4">
               <label
                 htmlFor="login-email"
@@ -252,7 +268,9 @@ export default function LoginPage({ onClose }: LoginPageProps) {
                 id="login-email"
                 aria-label="Correo electrónico"
                 aria-invalid={!!errors.email}
-                aria-describedby={errors.email ? 'login-email-error' : undefined}
+                aria-describedby={
+                  errors.email ? "login-email-error" : undefined
+                }
                 type="email"
                 placeholder="usuario@colegio.cl"
                 autoComplete="email"
@@ -265,16 +283,19 @@ export default function LoginPage({ onClose }: LoginPageProps) {
                   emailRef.current = element;
                 }}
               />
-              <FieldError id="login-email-error" message={errors.email?.message} />
+              <FieldError
+                id="login-email-error"
+                message={errors.email?.message}
+              />
             </div>
           )}
 
-          {mode === 'login' && (
+          {mode === "login" && (
             <form onSubmit={handleLogin} className="space-y-4">
               <PasswordInput
                 id="login-password"
                 label="Contraseña"
-                registration={register('password')}
+                registration={register("password")}
                 error={errors.password?.message}
                 visible={showPassword}
                 onToggle={() => setShowPassword((value) => !value)}
@@ -282,7 +303,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
               />
               <button
                 type="button"
-                onClick={() => changeMode('request-reset')}
+                onClick={() => changeMode("request-reset")}
                 className="block w-full text-right font-medium text-brand-600 text-xs transition-colors hover:text-brand-700"
               >
                 ¿Olvidó su contraseña?
@@ -295,19 +316,23 @@ export default function LoginPage({ onClose }: LoginPageProps) {
             </form>
           )}
 
-          {mode === 'request-reset' && (
+          {mode === "request-reset" && (
             <form onSubmit={handleResetRequest} className="space-y-4">
-              <PrimaryButton loading={isLoading} label="Enviar enlace" loadingLabel="Enviando..." />
-              <BackButton onClick={() => changeMode('login')} />
+              <PrimaryButton
+                loading={isLoading}
+                label="Enviar enlace"
+                loadingLabel="Enviando..."
+              />
+              <BackButton onClick={() => changeMode("login")} />
             </form>
           )}
 
-          {mode === 'update-password' && (
+          {mode === "update-password" && (
             <form onSubmit={handlePasswordUpdate} className="space-y-4">
               <PasswordInput
                 id="new-password"
                 label="Nueva contraseña"
-                registration={register('password')}
+                registration={register("password")}
                 error={errors.password?.message}
                 visible={showPassword}
                 onToggle={() => setShowPassword((value) => !value)}
@@ -316,7 +341,7 @@ export default function LoginPage({ onClose }: LoginPageProps) {
               <PasswordInput
                 id="confirm-password"
                 label="Confirmar contraseña"
-                registration={register('passwordConfirmation')}
+                registration={register("passwordConfirmation")}
                 error={errors.passwordConfirmation?.message}
                 visible={showPassword}
                 onToggle={() => setShowPassword((value) => !value)}
@@ -374,7 +399,10 @@ function PasswordInput({
 }: PasswordInputProps) {
   return (
     <div>
-      <label htmlFor={id} className="mb-1.5 block font-semibold text-neutral-600 text-xs">
+      <label
+        htmlFor={id}
+        className="mb-1.5 block font-semibold text-neutral-600 text-xs"
+      >
         {label}
       </label>
       <div className="relative">
@@ -383,7 +411,7 @@ function PasswordInput({
           aria-label={label}
           aria-invalid={!!error}
           aria-describedby={error ? `${id}-error` : undefined}
-          type={visible ? 'text' : 'password'}
+          type={visible ? "text" : "password"}
           placeholder="••••••••"
           autoComplete={autoComplete}
           className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 pr-11 text-neutral-900 text-sm placeholder-neutral-400 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/15"
@@ -392,11 +420,15 @@ function PasswordInput({
         <button
           type="button"
           onClick={onToggle}
-          className="absolute top-1/2 right-3 -translate-y-1/2 rounded-lg p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600"
+          className="absolute top-1/2 right-3 -translate-y-1/2 rounded-lg p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-600"
           tabIndex={-1}
-          aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+          aria-label={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
         >
-          {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          {visible ? (
+            <EyeOff className="h-4 w-4" />
+          ) : (
+            <Eye className="h-4 w-4" />
+          )}
         </button>
       </div>
       <FieldError id={`${id}-error`} message={error} />

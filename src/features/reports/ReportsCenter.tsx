@@ -1,46 +1,64 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useMemo, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Download, FileBarChart, History, RefreshCw } from 'lucide-react';
-import type { Causa, TipoInfraccion } from '../../shared/lib/types';
-import Button from '../../shared/ui/Button';
-import SummaryCard from '../../shared/ui/SummaryCard';
-import Input from '../../shared/ui/Input';
-import PageHeader from '../../shared/ui/PageHeader';
-import Select from '../../shared/ui/Select';
-import { TrendChart, type ChartSeriesItem, type TrendChartPoint } from '../../shared/ui/charts';
-import { formatChileDateTime } from '../../shared/lib/dateTime';
-import { useAuthStore } from '../../shared/lib/stores/authStore';
-import { fetchUsageStats } from '../../shared/api/services/admin.service';
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Download, FileBarChart, History, RefreshCw } from "lucide-react";
+import type { Causa, TipoInfraccion } from "../../shared/lib/types";
+import Button from "../../shared/ui/Button";
+import SummaryCard from "../../shared/ui/SummaryCard";
+import Input from "../../shared/ui/Input";
+import PageHeader from "../../shared/ui/PageHeader";
+import Select from "../../shared/ui/Select";
+import {
+  TrendChart,
+  type ChartSeriesItem,
+  type TrendChartPoint,
+} from "../../shared/ui/charts";
+import { formatChileDateTime } from "../../shared/lib/dateTime";
+import { useAuthStore } from "../../shared/lib/stores/authStore";
+import { fetchUsageStats } from "../../shared/api/services/admin.service";
 import {
   createReportHistory,
   fetchReportHistory,
   type ReportFilters,
-} from '../../shared/api/services/reports.service';
-import { getStats } from '../../shared/lib/data';
-import { buildReportFileName, buildReportSheet, filterReportCausas } from './reportUtils';
+} from "../../shared/api/services/reports.service";
+import { getStats } from "../../shared/lib/data";
+import {
+  buildReportFileName,
+  buildReportSheet,
+  filterReportCausas,
+} from "./reportUtils";
 
 const EMPTY_FILTERS: ReportFilters = {
-  course: '',
-  fromDate: '',
-  toDate: '',
-  status: '',
-  responsible: '',
+  course: "",
+  fromDate: "",
+  toDate: "",
+  status: "",
+  responsible: "",
 };
-const SEVERITY_ORDER: TipoInfraccion[] = ['Leve', 'Grave', 'Muy Grave', 'Gravísima'];
+const SEVERITY_ORDER: TipoInfraccion[] = [
+  "Leve",
+  "Grave",
+  "Muy Grave",
+  "Gravísima",
+];
 const SEVERITY_COLORS: Record<TipoInfraccion, string> = {
-  Leve: 'bg-leve-500',
-  Grave: 'bg-grave-500',
-  'Muy Grave': 'bg-muygrave-500',
-  Gravísima: 'bg-gravisima-500',
+  Leve: "bg-leve-500",
+  Grave: "bg-grave-500",
+  "Muy Grave": "bg-muygrave-500",
+  Gravísima: "bg-gravisima-500",
 };
 
 function buildSeverityTrendPoints(causas: Causa[]): TrendChartPoint[] {
   const total = Math.max(1, causas.length);
-  const counts = new Map<TipoInfraccion, number>(SEVERITY_ORDER.map((severity) => [severity, 0]));
+  const counts = new Map<TipoInfraccion, number>(
+    SEVERITY_ORDER.map((severity) => [severity, 0]),
+  );
   for (const causa of causas) {
-    counts.set(causa.tipoInfraccion, (counts.get(causa.tipoInfraccion) ?? 0) + 1);
+    counts.set(
+      causa.tipoInfraccion,
+      (counts.get(causa.tipoInfraccion) ?? 0) + 1,
+    );
   }
 
   return SEVERITY_ORDER.map((severity) => {
@@ -49,8 +67,10 @@ function buildSeverityTrendPoints(causas: Causa[]): TrendChartPoint[] {
     return {
       key: severity,
       label: severity,
-      series: [{ label: severity, value, className: SEVERITY_COLORS[severity] }],
-      primary: `${value} expediente${value === 1 ? '' : 's'}`,
+      series: [
+        { label: severity, value, className: SEVERITY_COLORS[severity] },
+      ],
+      primary: `${value} expediente${value === 1 ? "" : "s"}`,
       secondary: `${share}%`,
       isObserved: true,
       isCurrent: value > 0,
@@ -59,7 +79,9 @@ function buildSeverityTrendPoints(causas: Causa[]): TrendChartPoint[] {
 }
 
 function buildSeverityLegend(points: TrendChartPoint[]): ChartSeriesItem[] {
-  return points.map((point) => point.series[0]).filter((item) => item.value > 0);
+  return points
+    .map((point) => point.series[0])
+    .filter((item) => item.value > 0);
 }
 
 export default function ReportsCenter({ causas }: { causas: Causa[] }) {
@@ -67,26 +89,33 @@ export default function ReportsCenter({ causas }: { causas: Causa[] }) {
   const queryClient = useQueryClient();
   const tenantId = useAuthStore((state) => state.tenantId);
   const history = useQuery({
-    queryKey: ['reports', 'history', tenantId],
+    queryKey: ["reports", "history", tenantId],
     queryFn: fetchReportHistory,
     enabled: Boolean(tenantId),
   });
   const usage = useQuery({
-    queryKey: ['reports', 'usage', tenantId],
+    queryKey: ["reports", "usage", tenantId],
     queryFn: fetchUsageStats,
     enabled: Boolean(tenantId),
     retry: false,
   });
-  const filtered = useMemo(() => filterReportCausas(causas, filters), [causas, filters]);
+  const filtered = useMemo(
+    () => filterReportCausas(causas, filters),
+    [causas, filters],
+  );
   const dashboardStats = useMemo(() => getStats(filtered), [filtered]);
-  const severityTrendPoints = useMemo(() => buildSeverityTrendPoints(filtered), [filtered]);
+  const severityTrendPoints = useMemo(
+    () => buildSeverityTrendPoints(filtered),
+    [filtered],
+  );
   const severityLegend = useMemo(
     () => buildSeverityLegend(severityTrendPoints),
     [severityTrendPoints],
   );
   const dueProcessPending = filtered.reduce(
     (total, causa) =>
-      total + causa.checklistDebidoProceso.filter((item) => !item.completado).length,
+      total +
+      causa.checklistDebidoProceso.filter((item) => !item.completado).length,
     0,
   );
   const courses = useMemo(
@@ -101,9 +130,10 @@ export default function ReportsCenter({ causas }: { causas: Causa[] }) {
     mutationFn: async () => {
       const generatedAt = new Date();
       const fileName = buildReportFileName(generatedAt);
-      const { default: writeExcelFile } = await import('write-excel-file/browser');
+      const { default: writeExcelFile } =
+        await import("write-excel-file/browser");
       await writeExcelFile(buildReportSheet(filtered, generatedAt), {
-        sheet: 'Expedientes',
+        sheet: "Expedientes",
         columns: [
           { width: 20 },
           { width: 20 },
@@ -115,14 +145,16 @@ export default function ReportsCenter({ causas }: { causas: Causa[] }) {
         ],
       }).toFile(fileName);
       await createReportHistory({
-        reportType: 'expedientes',
+        reportType: "expedientes",
         filters,
         rowCount: filtered.length,
         fileName,
       });
     },
     onSuccess: () =>
-      void queryClient.invalidateQueries({ queryKey: ['reports', 'history', tenantId] }),
+      void queryClient.invalidateQueries({
+        queryKey: ["reports", "history", tenantId],
+      }),
   });
   const setFilter = (key: keyof ReportFilters, value: string) =>
     setFilters((current) => ({ ...current, [key]: value }));
@@ -134,9 +166,12 @@ export default function ReportsCenter({ causas }: { causas: Causa[] }) {
         title="Centro de reportes"
         description="Dashboard, expedientes y métricas con filtros auditables."
         action={
-          <Button onClick={() => exportMutation.mutate()} disabled={exportMutation.isPending}>
-            <Download className="size-4" aria-hidden="true" />{' '}
-            {exportMutation.isPending ? 'Generando…' : 'Exportar Excel'}
+          <Button
+            onClick={() => exportMutation.mutate()}
+            disabled={exportMutation.isPending}
+          >
+            <Download className="size-4" aria-hidden="true" />{" "}
+            {exportMutation.isPending ? "Generando…" : "Exportar Excel"}
           </Button>
         }
       />
@@ -144,7 +179,7 @@ export default function ReportsCenter({ causas }: { causas: Causa[] }) {
       <div className="grid grid-cols-1 gap-3 rounded-lg border border-neutral-200/70 bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-5">
         <Select
           value={filters.course}
-          onChange={(event) => setFilter('course', event.target.value)}
+          onChange={(event) => setFilter("course", event.target.value)}
           aria-label="Curso"
         >
           <option value="">Todos los cursos</option>
@@ -156,27 +191,29 @@ export default function ReportsCenter({ causas }: { causas: Causa[] }) {
           type="date"
           aria-label="Desde"
           value={filters.fromDate}
-          onChange={(event) => setFilter('fromDate', event.target.value)}
+          onChange={(event) => setFilter("fromDate", event.target.value)}
         />
         <Input
           type="date"
           aria-label="Hasta"
           value={filters.toDate}
-          onChange={(event) => setFilter('toDate', event.target.value)}
+          onChange={(event) => setFilter("toDate", event.target.value)}
         />
         <Select
           value={filters.status}
-          onChange={(event) => setFilter('status', event.target.value)}
+          onChange={(event) => setFilter("status", event.target.value)}
           aria-label="Estado"
         >
           <option value="">Todos los estados</option>
-          {[...new Set(causas.map((causa) => causa.estadoActual))].sort().map((status) => (
-            <option key={status}>{status}</option>
-          ))}
+          {[...new Set(causas.map((causa) => causa.estadoActual))]
+            .sort()
+            .map((status) => (
+              <option key={status}>{status}</option>
+            ))}
         </Select>
         <Select
           value={filters.responsible}
-          onChange={(event) => setFilter('responsible', event.target.value)}
+          onChange={(event) => setFilter("responsible", event.target.value)}
           aria-label="Responsable"
         >
           <option value="">Todos los responsables</option>
@@ -195,12 +232,16 @@ export default function ReportsCenter({ causas }: { causas: Causa[] }) {
         <SummaryCard
           icon={FileBarChart}
           label="Cursos involucrados"
-          value={String(new Set(filtered.map((causa) => causa.estudianteCurso)).size)}
+          value={String(
+            new Set(filtered.map((causa) => causa.estudianteCurso)).size,
+          )}
         />
         <SummaryCard
           icon={FileBarChart}
           label="Responsables"
-          value={String(new Set(filtered.map((causa) => causa.responsable)).size)}
+          value={String(
+            new Set(filtered.map((causa) => causa.responsable)).size,
+          )}
         />
         <SummaryCard
           icon={FileBarChart}
@@ -215,13 +256,20 @@ export default function ReportsCenter({ causas }: { causas: Causa[] }) {
       </div>
 
       {filtered.length > 0 ? (
-        <section className="card p-5 sm:p-6" aria-labelledby="reports-severity-title">
+        <section
+          className="card p-5 sm:p-6"
+          aria-labelledby="reports-severity-title"
+        >
           <div className="mb-4">
-            <h3 id="reports-severity-title" className="font-bold text-neutral-900">
+            <h3
+              id="reports-severity-title"
+              className="font-bold text-neutral-900"
+            >
               Distribución por gravedad
             </h3>
             <p className="mt-1 text-neutral-500 text-xs">
-              Vista compacta sobre los expedientes que coinciden con los filtros activos.
+              Vista compacta sobre los expedientes que coinciden con los filtros
+              activos.
             </p>
           </div>
           <TrendChart
@@ -262,7 +310,9 @@ export default function ReportsCenter({ causas }: { causas: Causa[] }) {
         <div className="border-neutral-200/70 border-b px-5 py-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h3 className="font-bold text-neutral-900">Historial de reportes</h3>
+              <h3 className="font-bold text-neutral-900">
+                Historial de reportes
+              </h3>
               <p className="mt-1 text-neutral-500 text-xs">
                 Registro de exportaciones generadas desde este centro.
               </p>
@@ -281,7 +331,9 @@ export default function ReportsCenter({ causas }: { causas: Causa[] }) {
           {history.isLoading ? (
             <p className="p-5 text-neutral-500 text-sm">Cargando historial…</p>
           ) : history.isError ? (
-            <div className="p-5 text-neutral-500 text-sm">No fue posible cargar el historial.</div>
+            <div className="p-5 text-neutral-500 text-sm">
+              No fue posible cargar el historial.
+            </div>
           ) : history.data?.length ? (
             history.data.map((item) => (
               <div
@@ -289,18 +341,24 @@ export default function ReportsCenter({ causas }: { causas: Causa[] }) {
                 className="flex flex-col gap-1 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex items-center gap-2">
-                  <History className="size-4 text-neutral-400" aria-hidden="true" />
+                  <History
+                    className="size-4 text-neutral-500"
+                    aria-hidden="true"
+                  />
                   <span className="font-semibold text-neutral-800">
                     {item.file_name ?? item.report_type}
                   </span>
                 </div>
                 <span className="text-neutral-500 text-xs">
-                  {item.row_count} registros · {formatChileDateTime(item.created_at)}
+                  {item.row_count} registros ·{" "}
+                  {formatChileDateTime(item.created_at)}
                 </span>
               </div>
             ))
           ) : (
-            <p className="p-5 text-neutral-500 text-sm">Aún no hay reportes generados.</p>
+            <p className="p-5 text-neutral-500 text-sm">
+              Aún no hay reportes generados.
+            </p>
           )}
         </div>
       </section>

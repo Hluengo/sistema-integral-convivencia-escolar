@@ -3,17 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
-import { Controller, useWatch } from 'react-hook-form';
-import type { UseFormReturn } from 'react-hook-form';
-import { Scale, AlertCircle, FileText, Loader2, Users } from 'lucide-react';
-import type { Course, Student } from '../../../shared/api/services/courses.service';
-import type { NewCausaFormValues } from '../../../shared/lib/schemas/newCausaForm';
-import type { Causa } from '../../../shared/lib/types';
-import RiceConductSelect from '../NewCausaForm/RiceConductSelect';
-import Button from '../../../shared/ui/Button';
-import Input from '../../../shared/ui/Input';
-import Select from '../../../shared/ui/Select';
+import type React from "react";
+import { Controller, useWatch } from "react-hook-form";
+import type { UseFormReturn } from "react-hook-form";
+import { Scale, AlertCircle, FileText, Loader2, Users } from "lucide-react";
+import type {
+  Course,
+  Student,
+} from "../../../shared/api/services/courses.service";
+import type { NewCausaFormValues } from "../../../shared/lib/schemas/newCausaForm";
+import type { Causa } from "../../../shared/lib/types";
+import RiceConductSelect from "../NewCausaForm/RiceConductSelect";
+import Button from "../../../shared/ui/Button";
+import Input from "../../../shared/ui/Input";
+import Select from "../../../shared/ui/Select";
 
 interface NewCausaFormProps {
   form: UseFormReturn<NewCausaFormValues>;
@@ -56,17 +59,20 @@ export default function NewCausaForm({
     control,
     formState: { errors, isSubmitting },
   } = form;
-  const selectedCourseId = useWatch({ control, name: 'selectedCourseId' }) ?? '';
-  const selectedStudentId = useWatch({ control, name: 'selectedStudentId' }) ?? '';
-  const newEstRut = useWatch({ control, name: 'newEstRut' }) ?? '';
-  const newInfTipo = useWatch({ control, name: 'newInfTipo' });
-  const newAulaSegura = useWatch({ control, name: 'newAulaSegura' });
-  const newObs = useWatch({ control, name: 'newObs' }) ?? '';
+  const selectedCourseId =
+    useWatch({ control, name: "selectedCourseId" }) ?? "";
+  const selectedStudentId =
+    useWatch({ control, name: "selectedStudentId" }) ?? "";
+  const newEstRut = useWatch({ control, name: "newEstRut" }) ?? "";
+  const newInfTipo = useWatch({ control, name: "newInfTipo" });
+  const newAulaSegura = useWatch({ control, name: "newAulaSegura" });
+  const newObs = useWatch({ control, name: "newObs" }) ?? "";
   const hasTenDayInvestigationDeadline =
-    newInfTipo === 'Muy Grave' || newInfTipo === 'Gravísima';
-  const manualStudentEntry = !!selectedCourseId && !isLoadingStudents && students.length === 0;
-  const basicCourses = courses.filter((course) => course.level === 'BASICA');
-  const mediaCourses = courses.filter((course) => course.level === 'MEDIA');
+    newInfTipo === "Muy Grave" || newInfTipo === "Gravísima";
+  const manualStudentEntry =
+    !!selectedCourseId && !isLoadingStudents && students.length === 0;
+  const basicCourses = courses.filter((course) => course.level === "BASICA");
+  const mediaCourses = courses.filter((course) => course.level === "MEDIA");
 
   return (
     <div className="space-y-4 p-4 sm:p-6">
@@ -76,8 +82,12 @@ export default function NewCausaForm({
             <Scale className="h-4 w-4 text-brand-600" aria-hidden="true" />
           </div>
           <div className="min-w-0">
-            <h4 className="font-bold font-sans text-neutral-900 text-sm">Nuevo Expediente</h4>
-            <p className="font-medium text-neutral-600 text-xs">Registro de causa de convivencia</p>
+            <h4 className="font-bold font-sans text-neutral-900 text-sm">
+              Nuevo Expediente
+            </h4>
+            <p className="font-medium text-neutral-600 text-xs">
+              Registro de causa de convivencia
+            </p>
           </div>
         </div>
         <button
@@ -89,7 +99,11 @@ export default function NewCausaForm({
         </button>
       </div>
 
-      <form onSubmit={onSubmit} noValidate className="space-y-4 text-left text-neutral-800 text-sm">
+      <form
+        onSubmit={onSubmit}
+        noValidate
+        className="space-y-4 text-left text-neutral-800 text-sm"
+      >
         <div>
           <label
             htmlFor="create-course"
@@ -101,7 +115,9 @@ export default function NewCausaForm({
             id="create-course"
             aria-label="Curso del estudiante"
             invalid={!!errors.selectedCourseId}
-            aria-describedby={errors.selectedCourseId ? 'create-course-error' : undefined}
+            aria-describedby={
+              errors.selectedCourseId ? "create-course-error" : undefined
+            }
             value={selectedCourseId}
             onChange={(event) => onCourseChange(event.target.value)}
             className="mt-1.5 bg-neutral-50 p-3 font-medium"
@@ -153,7 +169,10 @@ export default function NewCausaForm({
               </>
             )}
           </Select>
-          <FieldError id="create-course-error" message={errors.selectedCourseId?.message} />
+          <FieldError
+            id="create-course-error"
+            message={errors.selectedCourseId?.message}
+          />
         </div>
 
         <div>
@@ -169,7 +188,9 @@ export default function NewCausaForm({
                       className="h-3.5 w-3.5 animate-spin text-brand-600"
                       aria-hidden="true"
                     />
-                    <span className="text-neutral-500 text-xs">Cargando estudiantes...</span>
+                    <span className="text-neutral-500 text-xs">
+                      Cargando estudiantes...
+                    </span>
                   </div>
                 </>
               ) : students.length > 0 ? (
@@ -187,7 +208,9 @@ export default function NewCausaForm({
                     onChange={(event) => onStudentSelect(event.target.value)}
                     className="mt-1.5 bg-neutral-50 p-3 font-medium"
                     invalid={!!errors.newEstNombre}
-                    aria-describedby={errors.newEstNombre ? 'create-student-error' : undefined}
+                    aria-describedby={
+                      errors.newEstNombre ? "create-student-error" : undefined
+                    }
                   >
                     <option value="">-- Seleccionar estudiante --</option>
                     {students.map((student) => (
@@ -208,20 +231,32 @@ export default function NewCausaForm({
                       aria-hidden="true"
                     />
                     <span className="text-grave-700 text-xs">
-                      No hay estudiantes en este curso. Ingrese los datos manualmente.
+                      No hay estudiantes en este curso. Ingrese los datos
+                      manualmente.
                     </span>
                   </div>
                 </>
               )}
-              <FieldError id="create-student-error" message={errors.newEstNombre?.message} />
+              <FieldError
+                id="create-student-error"
+                message={errors.newEstNombre?.message}
+              />
             </>
           ) : (
             <>
               <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-2.5">
-                <Users className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden="true" />
-                <span className="text-neutral-600 text-xs">Seleccione un curso primero</span>
+                <Users
+                  className="h-3.5 w-3.5 shrink-0 text-neutral-500"
+                  aria-hidden="true"
+                />
+                <span className="text-neutral-600 text-xs">
+                  Seleccione un curso primero
+                </span>
               </div>
-              <FieldError id="create-student-error" message={errors.newEstNombre?.message} />
+              <FieldError
+                id="create-student-error"
+                message={errors.newEstNombre?.message}
+              />
             </>
           )}
         </div>
@@ -238,13 +273,18 @@ export default function NewCausaForm({
               id="create-student-name"
               aria-label="Nombre del estudiante"
               invalid={!!errors.newEstNombre}
-              aria-describedby={errors.newEstNombre ? 'create-student-name-error' : undefined}
+              aria-describedby={
+                errors.newEstNombre ? "create-student-name-error" : undefined
+              }
               type="text"
               spellCheck
-              {...register('newEstNombre')}
+              {...register("newEstNombre")}
               className="mt-1.5 bg-neutral-50 p-3 font-medium"
             />
-            <FieldError id="create-student-name-error" message={errors.newEstNombre?.message} />
+            <FieldError
+              id="create-student-name-error"
+              message={errors.newEstNombre?.message}
+            />
           </div>
         )}
 
@@ -259,38 +299,55 @@ export default function NewCausaForm({
             id="create-rut"
             aria-label="RUN o RUT"
             invalid={!!errors.newEstRut}
-            aria-describedby={errors.newEstRut ? 'create-rut-error' : undefined}
+            aria-describedby={errors.newEstRut ? "create-rut-error" : undefined}
             type="text"
             spellCheck={false}
-            readOnly={!selectedCourseId || (!!selectedCourseId && students.length > 0)}
+            readOnly={
+              !selectedCourseId || (!!selectedCourseId && students.length > 0)
+            }
             aria-disabled={!selectedCourseId}
             placeholder={
               manualStudentEntry
-                ? 'Ingrese RUN manualmente'
-                : 'Se auto-completa al seleccionar estudiante'
+                ? "Ingrese RUN manualmente"
+                : "Se auto-completa al seleccionar estudiante"
             }
-            {...register('newEstRut')}
+            {...register("newEstRut")}
             className={
               selectedCourseId && students.length === 0
-                ? 'mt-1.5 bg-neutral-50 p-3 font-medium'
-                : 'mt-1.5 bg-neutral-100 p-3 font-medium text-neutral-600 text-xs'
+                ? "mt-1.5 bg-neutral-50 p-3 font-medium"
+                : "mt-1.5 bg-neutral-100 p-3 font-medium text-neutral-600 text-xs"
             }
           />
-          <FieldError id="create-rut-error" message={errors.newEstRut?.message} />
+          <FieldError
+            id="create-rut-error"
+            message={errors.newEstRut?.message}
+          />
         </div>
 
         <RiceConductSelect
           setConductaRiceId={(value) =>
-            setValue('conductaRiceId', value, { shouldDirty: true, shouldValidate: true })
+            setValue("conductaRiceId", value, {
+              shouldDirty: true,
+              shouldValidate: true,
+            })
           }
           setNewInfTipo={(value) =>
-            setValue('newInfTipo', value, { shouldDirty: true, shouldValidate: true })
+            setValue("newInfTipo", value, {
+              shouldDirty: true,
+              shouldValidate: true,
+            })
           }
           setNewAulaSegura={(value) =>
-            setValue('newAulaSegura', value, { shouldDirty: true, shouldValidate: true })
+            setValue("newAulaSegura", value, {
+              shouldDirty: true,
+              shouldValidate: true,
+            })
           }
           setNewObs={(value) =>
-            setValue('newObs', value, { shouldDirty: true, shouldValidate: true })
+            setValue("newObs", value, {
+              shouldDirty: true,
+              shouldValidate: true,
+            })
           }
           currentObs={newObs}
         />
@@ -308,11 +365,18 @@ export default function NewCausaForm({
               aria-label="Gravedad"
               value={newInfTipo}
               onChange={(event) => {
-                setValue('newInfTipo', event.target.value as Causa['tipoInfraccion'], {
+                setValue(
+                  "newInfTipo",
+                  event.target.value as Causa["tipoInfraccion"],
+                  {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  },
+                );
+                setValue("conductaRiceId", "", {
                   shouldDirty: true,
                   shouldValidate: true,
                 });
-                setValue('conductaRiceId', '', { shouldDirty: true, shouldValidate: true });
               }}
               className="mt-1.5 bg-neutral-50 p-3 font-medium"
             >
@@ -331,7 +395,7 @@ export default function NewCausaForm({
                 type="checkbox"
                 checked={newAulaSegura}
                 onChange={(event) =>
-                  setValue('newAulaSegura', event.target.checked, {
+                  setValue("newAulaSegura", event.target.checked, {
                     shouldDirty: true,
                     shouldValidate: true,
                   })
@@ -348,7 +412,10 @@ export default function NewCausaForm({
           name="newObs"
           render={({ field }) => (
             <div>
-              <label htmlFor="create-obs" className="block font-semibold text-neutral-500 text-xs uppercase tracking-wide">
+              <label
+                htmlFor="create-obs"
+                className="block font-semibold text-neutral-700 text-xs"
+              >
                 Relato de los hechos
               </label>
               <textarea
@@ -358,16 +425,21 @@ export default function NewCausaForm({
                 value={field.value}
                 onChange={field.onChange}
                 required
-                aria-describedby={errors.newObs ? 'create-obs-error' : undefined}
+                aria-describedby={
+                  errors.newObs ? "create-obs-error" : undefined
+                }
                 aria-invalid={!!errors.newObs}
                 rows={3}
                 className={
                   errors.newObs
-                    ? 'mt-1.5 w-full rounded-xl border border-grave-300 bg-grave-50 p-3 font-sans text-xs leading-relaxed transition-colors duration-200 focus:border-grave-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-grave-500/30'
-                    : 'mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-sans text-xs leading-relaxed transition-colors duration-200 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30'
+                    ? "mt-1.5 w-full rounded-xl border border-grave-300 bg-grave-50 p-3 font-sans text-xs leading-relaxed transition-colors duration-200 focus:border-grave-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-grave-500/30"
+                    : "mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-sans text-xs leading-relaxed transition-colors duration-200 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30"
                 }
               />
-              <FieldError id="create-obs-error" message={errors.newObs?.message} />
+              <FieldError
+                id="create-obs-error"
+                message={errors.newObs?.message}
+              />
             </div>
           )}
         />
@@ -385,17 +457,23 @@ export default function NewCausaForm({
             type="text"
             spellCheck={false}
             invalid={!!errors.newResponsable}
-            aria-describedby={errors.newResponsable ? 'create-responsable-error' : undefined}
-            {...register('newResponsable')}
+            aria-describedby={
+              errors.newResponsable ? "create-responsable-error" : undefined
+            }
+            {...register("newResponsable")}
             className="mt-1.5 bg-neutral-50 p-3 font-medium"
           />
-          <FieldError id="create-responsable-error" message={errors.newResponsable?.message} />
+          <FieldError
+            id="create-responsable-error"
+            message={errors.newResponsable?.message}
+          />
         </div>
 
         {hasTenDayInvestigationDeadline && (
           <div className="rounded-lg border border-gravisima-200 bg-gravisima-50 p-3 font-medium font-sans text-gravisima-700 text-xs leading-normal">
-            <strong>Plazo de indagación:</strong> las faltas Muy Graves y Gravísimas deben tener
-            informe de cierre de indagación dentro de 10 días hábiles.
+            <strong>Plazo de indagación:</strong> las faltas Muy Graves y
+            Gravísimas deben tener informe de cierre de indagación dentro de 10
+            días hábiles.
           </div>
         )}
 

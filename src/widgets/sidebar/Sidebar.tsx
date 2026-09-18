@@ -193,8 +193,8 @@ function SidebarContent({
                 className={`flex w-full cursor-pointer select-none items-center gap-3 rounded-xl font-medium text-13px transition-[color,background-color,box-shadow,transform] duration-150 ${isCollapsed && !mobile ? "justify-center px-0 py-3" : "px-3.5 py-2.5"}
                 ${
                   isActive
-                    ? "bg-white/15 font-semibold text-white shadow-sm shadow-black/10"
-                    : "text-neutral-300 hover:bg-white/8 hover:text-white"
+                    ? "border-l-2 border-white bg-white/15 font-semibold text-white shadow-sm shadow-black/10"
+                    : "border-l-2 border-transparent text-neutral-300 hover:bg-white/8 hover:text-white"
                 }`}
                 style={
                   isActive && !isCollapsed
@@ -218,8 +218,8 @@ function SidebarContent({
                       <span
                         className={`rounded-full px-1.5 py-0.5 font-bold text-10px tabular-nums ${
                           isActive
-                            ? "bg-white/25 text-white"
-                            : "bg-muygrave-500 text-white"
+                            ? "bg-brand-950 text-white"
+                            : "bg-brand-950 text-white ring-1 ring-white/20"
                         }`}
                       >
                         {badge}
@@ -308,7 +308,7 @@ export default memo(function Sidebar({
       <button
         type="button"
         onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-50 rounded-xl bg-neutral-900 p-2.5 text-white shadow-lg shadow-neutral-900/20 transition-colors hover:bg-neutral-800 active:scale-95 lg:hidden"
+        className="fixed top-4 left-4 z-50 rounded-xl bg-brand-800 p-2.5 text-white shadow-lg shadow-brand-950/20 transition-colors hover:bg-brand-700 active:scale-95 lg:hidden"
         aria-label="Abrir menú"
       >
         <Menu className="h-5 w-5" />
@@ -326,7 +326,7 @@ export default memo(function Sidebar({
       {mobileOpen && (
         <div
           ref={mobileSidebarRef}
-          className="fixed inset-y-0 left-0 z-50 w-[280px] translate-x-0 bg-neutral-950 shadow-2xl shadow-neutral-950/50 transition-transform duration-300 ease-out-expo lg:hidden"
+          className="fixed inset-y-0 left-0 z-50 w-[280px] translate-x-0 bg-brand-800 shadow-2xl shadow-brand-950/30 transition-transform duration-300 ease-out-expo lg:hidden"
           role="dialog"
           aria-modal="true"
           aria-label="Menú móvil"
@@ -348,7 +348,7 @@ export default memo(function Sidebar({
       )}
 
       <aside
-        className={`relative hidden shrink-0 flex-col bg-neutral-950 shadow-2xl shadow-neutral-950/30 transition-colors duration-300 ease-out-expo lg:flex ${
+        className={`relative hidden shrink-0 flex-col bg-brand-800 shadow-2xl shadow-brand-950/20 transition-colors duration-300 ease-out-expo lg:flex ${
           isCollapsed ? "w-[68px]" : "w-[240px]"
         }`}
         aria-label="Barra de navegación principal"

@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Info, Users } from 'lucide-react';
-import type { TeacherAnnotationRankingItem } from '../../shared/lib/domain/annotationRankings';
-import { maskName } from '../../shared/lib/anotacionesUtils';
+import { Info, Users } from "lucide-react";
+import type { TeacherAnnotationRankingItem } from "../../shared/lib/domain/annotationRankings";
+import { maskName } from "../../shared/lib/anotacionesUtils";
 
 interface TeacherAnnotationRankingProps {
   ranking: TeacherAnnotationRankingItem[];
@@ -21,10 +21,15 @@ export default function TeacherAnnotationRanking({
   privacyMode = false,
 }: TeacherAnnotationRankingProps) {
   const maxNegativeCount =
-    ranking.length > 0 ? Math.max(...ranking.map((item) => item.negative_count)) : 0;
+    ranking.length > 0
+      ? Math.max(...ranking.map((item) => item.negative_count))
+      : 0;
 
   return (
-    <article className="card p-5" aria-labelledby="teacher-annotation-ranking-title">
+    <article
+      className="card p-5"
+      aria-labelledby="teacher-annotation-ranking-title"
+    >
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-2.5">
           <div className="rounded-lg bg-brand-50 p-2">
@@ -42,12 +47,12 @@ export default function TeacherAnnotationRanking({
             </p>
           </div>
         </div>
-        <span className="shrink-0 rounded-full bg-neutral-100 px-2 py-1 font-semibold text-neutral-500 text-10px uppercase tracking-wide">
+        <span className="shrink-0 rounded-full bg-neutral-100 px-2 py-1 font-semibold text-neutral-600 text-10px">
           Top 5
         </span>
       </div>
 
-      <div className="mb-4 flex flex-wrap gap-x-3 gap-y-1.5 text-11px text-neutral-500">
+      <div className="mb-4 flex flex-wrap gap-x-3 gap-y-1.5 text-11px text-neutral-600">
         <LegendDot color="bg-grave-500" label="Negativas" />
         <LegendDot color="bg-leve-500" label="Positivas" />
         <LegendDot color="bg-sky-500" label="Informativas" />
@@ -69,8 +74,8 @@ export default function TeacherAnnotationRanking({
         </p>
       ) : ranking.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-2 py-6 text-center">
-          <Info className="h-8 w-8 text-neutral-300" aria-hidden="true" />
-          <p className="font-medium text-neutral-400 text-sm">
+          <Info className="h-8 w-8 text-neutral-400" aria-hidden="true" />
+          <p className="font-medium text-neutral-500 text-sm">
             Aún no hay anotaciones docentes registradas
           </p>
         </div>
@@ -79,13 +84,20 @@ export default function TeacherAnnotationRanking({
           {ranking.map((item, index) => {
             const total = Math.max(
               item.total_count,
-              item.negative_count + item.positive_count + item.informative_count,
+              item.negative_count +
+                item.positive_count +
+                item.informative_count,
             );
-            const negativeWidth = total > 0 ? (item.negative_count / total) * 100 : 0;
-            const positiveWidth = total > 0 ? (item.positive_count / total) * 100 : 0;
-            const informativeWidth = total > 0 ? (item.informative_count / total) * 100 : 0;
+            const negativeWidth =
+              total > 0 ? (item.negative_count / total) * 100 : 0;
+            const positiveWidth =
+              total > 0 ? (item.positive_count / total) * 100 : 0;
+            const informativeWidth =
+              total > 0 ? (item.informative_count / total) * 100 : 0;
             const negativeRankWidth =
-              maxNegativeCount > 0 ? (item.negative_count / maxNegativeCount) * 100 : 0;
+              maxNegativeCount > 0
+                ? (item.negative_count / maxNegativeCount) * 100
+                : 0;
 
             return (
               <li
@@ -94,7 +106,7 @@ export default function TeacherAnnotationRanking({
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-2">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-100 font-semibold text-neutral-500 text-xs">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-100 font-semibold text-neutral-600 text-xs">
                       {index + 1}
                     </span>
                     <p className="truncate font-medium text-neutral-800 text-sm">
@@ -105,7 +117,7 @@ export default function TeacherAnnotationRanking({
                     <p className="font-bold text-neutral-900 text-lg leading-none tabular-nums">
                       {total}
                     </p>
-                    <p className="mt-1 text-neutral-400 text-10px uppercase tracking-wide">total</p>
+                    <p className="mt-1 text-neutral-500 text-10px">total</p>
                   </div>
                 </div>
 
@@ -113,7 +125,9 @@ export default function TeacherAnnotationRanking({
                   <span className="font-medium text-grave-700">
                     {item.negative_count} negativas
                   </span>
-                  <span className="text-neutral-400">prioridad del ranking</span>
+                  <span className="text-neutral-500">
+                    prioridad del ranking
+                  </span>
                 </div>
 
                 <div
@@ -121,9 +135,18 @@ export default function TeacherAnnotationRanking({
                   role="img"
                   aria-label={`${total} anotaciones: ${item.negative_count} negativas, ${item.positive_count} positivas y ${item.informative_count} informativas`}
                 >
-                  <span className="bg-grave-500" style={{ width: `${negativeWidth}%` }} />
-                  <span className="bg-leve-500" style={{ width: `${positiveWidth}%` }} />
-                  <span className="bg-sky-500" style={{ width: `${informativeWidth}%` }} />
+                  <span
+                    className="bg-grave-500"
+                    style={{ width: `${negativeWidth}%` }}
+                  />
+                  <span
+                    className="bg-leve-500"
+                    style={{ width: `${positiveWidth}%` }}
+                  />
+                  <span
+                    className="bg-sky-500"
+                    style={{ width: `${informativeWidth}%` }}
+                  />
                 </div>
 
                 <div
@@ -142,13 +165,21 @@ export default function TeacherAnnotationRanking({
                     value={item.negative_count}
                     tone="text-grave-700 bg-grave-50"
                   />
-                  <Count label="Pos." value={item.positive_count} tone="text-leve-700 bg-leve-50" />
+                  <Count
+                    label="Pos."
+                    value={item.positive_count}
+                    tone="text-leve-700 bg-leve-50"
+                  />
                   <Count
                     label="Inf."
                     value={item.informative_count}
                     tone="text-sky-700 bg-sky-50"
                   />
-                  <Count label="Total" value={total} tone="text-neutral-600 bg-neutral-100" />
+                  <Count
+                    label="Total"
+                    value={total}
+                    tone="text-neutral-600 bg-neutral-100"
+                  />
                 </div>
               </li>
             );
@@ -168,7 +199,15 @@ function LegendDot({ color, label }: { color: string; label: string }) {
   );
 }
 
-function Count({ label, value, tone }: { label: string; value: number; tone: string }) {
+function Count({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: string;
+}) {
   return (
     <span className={`rounded px-1.5 py-1 font-medium ${tone}`}>
       <span className="mr-1 opacity-70">{label}</span>

@@ -37,12 +37,12 @@ export default function TimelineTabs({
     <span
       className={`mx-auto w-fit max-w-full truncate rounded-full px-2 py-0.5 text-[0.7rem] leading-tight ${
         tone === "grave"
-          ? "bg-grave-100 text-grave-700"
+          ? "bg-grave-100 text-neutral-800"
           : tone === "neutral"
             ? "bg-neutral-150 text-neutral-700"
             : tone === "info"
-              ? "bg-info-100 text-info-600"
-              : "bg-brand-100 text-brand-700"
+              ? "bg-info-100 text-neutral-800"
+              : "bg-brand-100 text-brand-800"
       }`}
     >
       {text}
@@ -63,6 +63,12 @@ export default function TimelineTabs({
       indicator: badge(`${summary.currentPhase} · ${progressLabel}`),
     },
     {
+      id: "bitacora",
+      label: "Historial",
+      Icon: History,
+      indicator: badge(`${summary.historyCount} registros`),
+    },
+    {
       id: "matriz",
       label: "Matriz",
       Icon: FileStack,
@@ -70,12 +76,6 @@ export default function TimelineTabs({
         causa.tipoInfraccion,
         causa.comprometeAulaSegura ? "grave" : "neutral",
       ),
-    },
-    {
-      id: "bitacora",
-      label: "Historial",
-      Icon: History,
-      indicator: badge(`${summary.historyCount} registros`),
     },
     {
       id: "expediente",

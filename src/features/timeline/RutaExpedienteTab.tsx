@@ -252,7 +252,7 @@ export default memo(function RutaExpedienteTab({
 
       <div className="grid gap-3 border-neutral-150 border-t bg-neutral-50/60 p-4 sm:grid-cols-[1fr_1.4fr_1fr] sm:p-5">
         <div className="rounded-lg border border-neutral-150 border-l-4 border-l-brand-600 bg-white p-3 shadow-xs">
-          <p className="flex items-center gap-1.5 font-semibold text-neutral-500 text-11px uppercase tracking-wide">
+          <p className="flex items-center gap-1.5 font-semibold text-neutral-600 text-xs">
             <ListChecks className="size-3.5" aria-hidden="true" />
             Fase actual
           </p>
@@ -264,7 +264,7 @@ export default memo(function RutaExpedienteTab({
               {summary.currentPhaseProgress.completed}/
               {summary.currentPhaseProgress.total}
             </span>
-            <span className="text-xs text-neutral-500">hitos</span>
+            <span className="text-neutral-600 text-xs">hitos</span>
           </p>
           {summary.laterActivityPhase ? (
             <p className="mt-2 rounded-md bg-amber-50 px-2 py-1.5 text-amber-800 text-xs">
@@ -275,7 +275,7 @@ export default memo(function RutaExpedienteTab({
         </div>
 
         <div className="rounded-lg border border-neutral-150 bg-white p-3 shadow-xs">
-          <p className="flex items-center gap-1.5 font-semibold text-brand-700 text-11px uppercase tracking-wide">
+          <p className="flex items-center gap-1.5 font-semibold text-brand-800 text-xs">
             <MoveRight className="size-3.5" aria-hidden="true" />
             Próximo hito
             {summary.nextChecklistPhase
@@ -308,7 +308,7 @@ export default memo(function RutaExpedienteTab({
         </div>
 
         <div className="rounded-lg border border-neutral-150 bg-white p-3 shadow-xs">
-          <p className="flex items-center gap-1.5 font-semibold text-neutral-600 text-11px uppercase tracking-wide">
+          <p className="flex items-center gap-1.5 font-semibold text-neutral-600 text-xs">
             <Files className="size-3.5" aria-hidden="true" />
             Actividad registrada
           </p>

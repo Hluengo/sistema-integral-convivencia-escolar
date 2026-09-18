@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
-import { Download, File, Plus, Trash } from 'lucide-react';
-import type { Causa, ChecklistItem, UserRole } from '../../shared/lib/types';
-import { openDocument } from '../../shared/api/services/storage.service';
-import RegistrationForm from './RegistrationForm';
+import type React from "react";
+import { Download, File, Plus, Trash } from "lucide-react";
+import type { Causa, ChecklistItem, UserRole } from "../../shared/lib/types";
+import { openDocument } from "../../shared/api/services/storage.service";
+import RegistrationForm from "./RegistrationForm";
 
 interface ChecklistItemCardProps {
   causa: Causa;
@@ -50,18 +50,18 @@ export default function ChecklistItemCard({
   notRequired = false,
 }: ChecklistItemCardProps) {
   const isSelected = registeringItemId === item.id;
-  const canRegister = currentRole !== 'docente' && !notRequired;
+  const canRegister = currentRole !== "docente" && !notRequired;
 
   return (
     <div
       className={`rounded-lg border p-4 text-left transition-colors ${
         notRequired
-          ? 'border-neutral-200 bg-neutral-50/50'
+          ? "border-neutral-200 bg-neutral-50/50"
           : item.completado
-            ? 'border-success-200 bg-success-50/30'
+            ? "border-success-200 bg-success-50/30"
             : isSelected
-              ? 'border-info-200 bg-info-50/30'
-              : 'border-neutral-200 bg-neutral-50/30 hover:bg-neutral-50/50'
+              ? "border-info-200 bg-info-50/30"
+              : "border-neutral-200 bg-neutral-50/30 hover:bg-neutral-50/50"
       }`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -76,27 +76,33 @@ export default function ChecklistItemCard({
             )}
           </div>
           <div className="min-w-0">
-            <h4 className="font-semibold text-neutral-900 text-xs leading-tight">{item.label}</h4>
-            <p className="mt-0.5 text-10px text-neutral-500 leading-snug">{item.descripcion}</p>
+            <h4 className="font-semibold text-neutral-900 text-xs leading-tight">
+              {item.label}
+            </h4>
+            <p className="mt-0.5 text-10px text-neutral-500 leading-snug">
+              {item.descripcion}
+            </p>
           </div>
         </div>
 
         <span
           className={`shrink-0 rounded px-1.5 py-0.5 font-semibold text-8px ${
-            notRequired ? 'bg-neutral-200 text-neutral-600' : 'bg-brand-100 text-brand-700'
+            notRequired
+              ? "bg-neutral-200 text-neutral-600"
+              : "bg-brand-100 text-brand-700"
           }`}
         >
-          {notRequired ? 'No requerido' : item.requeridoPor}
+          {notRequired ? "No requerido" : item.requeridoPor}
         </span>
       </div>
 
       {item.completado && (
         <div className="mt-2 space-y-1.5 rounded border border-success-200/70 bg-white p-2.5 font-sans text-11px">
-          <div className="flex flex-wrap items-center justify-between gap-1 border-neutral-100 border-b pb-1 text-neutral-400">
+          <div className="flex flex-wrap items-center justify-between gap-1 border-neutral-100 border-b pb-1 text-neutral-500">
             <span>
-              Registrado por:{' '}
+              Registrado por:{" "}
               <strong className="text-neutral-600">
-                {item.registradoPor || 'Esteban Valenzuela'}
+                {item.registradoPor || "Esteban Valenzuela"}
               </strong>
             </span>
             <span className="font-mono">Fecha: {item.fechaCompletado}</span>
@@ -109,7 +115,10 @@ export default function ChecklistItemCard({
           {item.documentoNombre && item.documentoUrl && (
             <div className="flex items-center justify-between rounded border border-neutral-200 bg-neutral-50 px-2 py-1 text-11px">
               <span className="flex items-center gap-1 truncate text-neutral-600">
-                <File className="h-3 w-3 shrink-0 text-info-500" aria-hidden="true" />
+                <File
+                  className="h-3 w-3 shrink-0 text-info-500"
+                  aria-hidden="true"
+                />
                 <span className="truncate">{item.documentoNombre}</span>
               </span>
               <button
@@ -166,7 +175,7 @@ export default function ChecklistItemCard({
         />
       )}
 
-      {!item.completado && !notRequired && item.id !== 'chk_rec_3' && (
+      {!item.completado && !notRequired && item.id !== "chk_rec_3" && (
         <div className="mt-2.5">
           {!isSelected ? (
             canRegister && (
@@ -175,7 +184,11 @@ export default function ChecklistItemCard({
                 onClick={() => handleStartRegister(item)}
                 className="flex cursor-pointer items-center gap-1.5 rounded border border-neutral-300 bg-white px-2.5 py-1 font-medium text-11px text-neutral-700 transition-colors hover:bg-neutral-50"
               >
-                <Plus className="h-3.5 w-3.5 text-success-600" aria-hidden="true" /> Registrar hito
+                <Plus
+                  className="h-3.5 w-3.5 text-success-600"
+                  aria-hidden="true"
+                />{" "}
+                Registrar hito
               </button>
             )
           ) : (

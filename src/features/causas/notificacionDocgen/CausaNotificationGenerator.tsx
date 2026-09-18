@@ -316,7 +316,7 @@ export default function CausaNotificationGenerator({
 
       <div className="space-y-4">
         <div className="mx-auto w-full max-w-[216mm] rounded-xl border border-neutral-200 bg-white p-4 shadow-xs">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-neutral-500">
+          <p className="mb-3 font-semibold text-neutral-700 text-xs">
             Acciones del documento
           </p>
           <div className="flex flex-wrap gap-3">

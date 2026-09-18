@@ -3,18 +3,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { ComponentType } from 'react';
-import { AlertTriangle, BarChart3, FileQuestion, FileText, FileWarning } from 'lucide-react';
+import type { ComponentType } from "react";
+import {
+  AlertTriangle,
+  BarChart3,
+  FileQuestion,
+  FileText,
+  FileWarning,
+} from "lucide-react";
 import type {
   AnnotationStageBreakdown,
   AnnotationStageCounts,
-} from '../../shared/lib/domain/annotationStageCounts';
-import CourseCartaRanking from './CourseCartaRanking';
-import type { CourseCartaRankingItem } from '../../shared/lib/domain/courseCartaRanking';
-import TeacherAnnotationRanking from './TeacherAnnotationRanking';
-import type { TeacherAnnotationRankingItem } from '../../shared/lib/domain/annotationRankings';
-import StudentAnnotationRanking from './StudentAnnotationRanking';
-import type { StudentAnnotationRankingItem } from '../../shared/lib/domain/annotationRankings';
+} from "../../shared/lib/domain/annotationStageCounts";
+import CourseCartaRanking from "./CourseCartaRanking";
+import type { CourseCartaRankingItem } from "../../shared/lib/domain/courseCartaRanking";
+import TeacherAnnotationRanking from "./TeacherAnnotationRanking";
+import type { TeacherAnnotationRankingItem } from "../../shared/lib/domain/annotationRankings";
+import StudentAnnotationRanking from "./StudentAnnotationRanking";
+import type { StudentAnnotationRankingItem } from "../../shared/lib/domain/annotationRankings";
 
 interface AnotacionesDashboardStatsProps {
   counts: AnnotationStageCounts;
@@ -50,43 +56,51 @@ function AnnotationStageCard({
   accentColor,
 }: AnnotationStageCardProps) {
   return (
-    <article className="card relative overflow-hidden p-5">
+    <article className="relative p-4">
       <div
-        className="absolute top-0 right-3 left-3 h-[3px] rounded-full"
+        className="absolute inset-y-4 left-0 w-0.5 rounded-full"
         style={{ backgroundColor: accentColor }}
       />
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h4 className="font-semibold text-neutral-700 text-sm">{label}</h4>
-          <p className="mt-0.5 text-neutral-400 text-xs">{threshold}</p>
+          <h4 className="font-semibold text-neutral-800 text-sm">{label}</h4>
+          <p className="mt-0.5 text-neutral-500 text-xs">{threshold}</p>
         </div>
         <div className={`rounded-xl p-2.5 ${iconBg}`}>
           <Icon className={`h-5 w-5 ${iconColor}`} />
         </div>
       </div>
-      <div className="mt-4 flex items-end justify-between gap-3">
+      <div className="mt-3 flex items-end justify-between gap-3">
         <div>
-          <p className="font-bold text-3xl text-neutral-900 tabular-nums">{counts.total}</p>
-          <p className="font-medium text-neutral-400 text-xs">Total</p>
+          <p className="font-bold text-3xl text-neutral-900 tabular-nums">
+            {counts.total}
+          </p>
+          <p className="font-medium text-neutral-500 text-xs">Total</p>
         </div>
         <dl className="grid min-w-0 flex-1 grid-cols-3 gap-1.5 text-center">
           <div className="min-w-0 rounded-lg bg-grave-50 px-1.5 py-1.5 sm:px-2">
             <dt className="whitespace-nowrap font-medium text-[9px] text-grave-700 leading-tight tracking-tight sm:text-[10px]">
               Pendientes
             </dt>
-            <dd className="font-bold text-grave-700 text-lg tabular-nums">{counts.pending}</dd>
+            <dd className="font-bold text-grave-700 text-lg tabular-nums">
+              {counts.pending}
+            </dd>
           </div>
           <div className="min-w-0 rounded-lg bg-leve-50 px-1.5 py-1.5 sm:px-2">
             <dt className="whitespace-nowrap font-medium text-[9px] text-leve-700 leading-tight tracking-tight sm:text-[10px]">
               Procesadas
             </dt>
-            <dd className="font-bold text-leve-700 text-lg tabular-nums">{counts.processed}</dd>
+            <dd className="font-bold text-leve-700 text-lg tabular-nums">
+              {counts.processed}
+            </dd>
           </div>
           <div className="min-w-0 rounded-lg bg-neutral-100 px-1.5 py-1.5 sm:px-2">
             <dt className="whitespace-nowrap font-medium text-[9px] text-neutral-700 leading-tight tracking-tight sm:text-[10px]">
               Archivadas
             </dt>
-            <dd className="font-bold text-neutral-700 text-lg tabular-nums">{counts.archived}</dd>
+            <dd className="font-bold text-neutral-700 text-lg tabular-nums">
+              {counts.archived}
+            </dd>
           </div>
         </dl>
       </div>
@@ -109,16 +123,25 @@ export default function AnotacionesDashboardStats({
 }: AnotacionesDashboardStatsProps) {
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
+      <section
+        aria-labelledby="annotation-dashboard-title"
+        className="card p-5"
+      >
         <div className="flex items-center gap-2">
           <div className="rounded-lg bg-neutral-100 p-1.5">
-            <BarChart3 className="h-3.5 w-3.5 text-neutral-500" aria-hidden="true" />
+            <BarChart3
+              className="h-3.5 w-3.5 text-neutral-500"
+              aria-hidden="true"
+            />
           </div>
-          <h3 className="font-semibold text-neutral-500 text-xs uppercase tracking-[0.06em]">
-            Anotaciones
-          </h3>
+          <h2
+            id="annotation-dashboard-title"
+            className="font-semibold text-neutral-800 text-sm"
+          >
+            Estado de anotaciones
+          </h2>
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-4 grid grid-cols-1 divide-y divide-neutral-200 border border-neutral-200 sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
           <AnnotationStageCard
             label="Sin Carta"
             counts={counts.sinCarta}
@@ -157,40 +180,51 @@ export default function AnotacionesDashboardStats({
           />
         </div>
         <p className="mt-3 text-neutral-500 text-xs leading-relaxed">
-          <span className="font-semibold text-grave-700">Pendientes:</span> requieren gestionar la
-          carta o derivación.
-          <span className="mx-2 text-neutral-300" aria-hidden="true">
+          <span className="font-semibold text-grave-700">Pendientes:</span>{" "}
+          requieren gestionar la carta o derivación.
+          <span className="mx-2 text-neutral-200" aria-hidden="true">
             ·
           </span>
-          <span className="font-semibold text-leve-700">Procesadas:</span> carta impresa y
-          disponible para firma.
-          <span className="mx-2 text-neutral-300" aria-hidden="true">
+          <span className="font-semibold text-leve-700">Procesadas:</span> carta
+          impresa y disponible para firma.
+          <span className="mx-2 text-neutral-200" aria-hidden="true">
             ·
           </span>
-          <span className="font-semibold text-neutral-700">Archivadas:</span> carta firmada por
-          apoderado.
+          <span className="font-semibold text-neutral-700">Archivadas:</span>{" "}
+          carta firmada por apoderado.
         </p>
-      </div>
+      </section>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <CourseCartaRanking
-          ranking={courseCartaRanking}
-          isLoading={courseCartaRankingLoading}
-          error={courseCartaRankingError}
-        />
-        <TeacherAnnotationRanking
-          ranking={teacherAnnotationRanking}
-          isLoading={teacherAnnotationRankingLoading}
-          error={teacherAnnotationRankingError}
-          privacyMode={privacyMode}
-        />
-        <StudentAnnotationRanking
-          ranking={studentAnnotationRanking}
-          isLoading={studentAnnotationRankingLoading}
-          error={studentAnnotationRankingError}
-          privacyMode={privacyMode}
-        />
-      </div>
+      <details className="group">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between rounded-lg border border-neutral-200 bg-white px-4 font-semibold text-neutral-800 text-sm hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
+          Rankings y análisis secundarios
+          <span className="text-neutral-500 text-xs group-open:hidden">
+            Mostrar
+          </span>
+          <span className="hidden text-neutral-500 text-xs group-open:inline">
+            Ocultar
+          </span>
+        </summary>
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <CourseCartaRanking
+            ranking={courseCartaRanking}
+            isLoading={courseCartaRankingLoading}
+            error={courseCartaRankingError}
+          />
+          <TeacherAnnotationRanking
+            ranking={teacherAnnotationRanking}
+            isLoading={teacherAnnotationRankingLoading}
+            error={teacherAnnotationRankingError}
+            privacyMode={privacyMode}
+          />
+          <StudentAnnotationRanking
+            ranking={studentAnnotationRanking}
+            isLoading={studentAnnotationRankingLoading}
+            error={studentAnnotationRankingError}
+            privacyMode={privacyMode}
+          />
+        </div>
+      </details>
     </div>
   );
 }

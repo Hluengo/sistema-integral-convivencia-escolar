@@ -3,17 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
-import type { FieldErrors, Resolver, ResolverResult } from 'react-hook-form';
-import { Scale, AlertCircle, FileText, Shield, Trash2 } from 'lucide-react';
-import { type Causa, EstadoCausa, type TipoInfraccion } from '@/shared/lib/types';
-import { nowDateOnly } from '@/shared/lib/dateUtils';
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import type { FieldErrors, Resolver, ResolverResult } from "react-hook-form";
+import { Scale, AlertCircle, FileText, Shield, Trash2 } from "lucide-react";
+import {
+  type Causa,
+  EstadoCausa,
+  type TipoInfraccion,
+} from "@/shared/lib/types";
+import { nowDateOnly } from "@/shared/lib/dateUtils";
 import {
   editCausaFormSchema,
   isValidStateTransition,
   type EditCausaFormValues,
-} from '@/shared/lib/schemas/editCausaForm';
+} from "@/shared/lib/schemas/editCausaForm";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,59 +28,67 @@ import {
   AlertDialogHeader,
   AlertDialogIcon,
   AlertDialogTitle,
-} from '@/shared/ui/AlertDialog';
-import Button from '@/shared/ui/Button';
-import RiceConductSelect from '../NewCausaForm/RiceConductSelect';
+} from "@/shared/ui/AlertDialog";
+import Button from "@/shared/ui/Button";
+import RiceConductSelect from "../NewCausaForm/RiceConductSelect";
 
-const INFRACCIONES: TipoInfraccion[] = ['Leve', 'Grave', 'Muy Grave', 'Gravísima'];
+const INFRACCIONES: TipoInfraccion[] = [
+  "Leve",
+  "Grave",
+  "Muy Grave",
+  "Gravísima",
+];
 const EDIT_CAUSA_FIELDS = [
-  'estudianteNombre',
-  'estudianteCurso',
-  'runEstudiante',
-  'tipoInfraccion',
-  'conductaRiceId',
-  'responsable',
-  'estadoActual',
-  'observaciones',
-  'comprometeAulaSegura',
-  'esDenunciaConfidencial',
-  'identidadReservada',
-  'fechaInicioInvestigacion',
-  'fechaInicioSuspension',
-  'duracionSuspensionDias',
-  'monitoreoPedagogico',
-  'requiereNotificacionSuperintendencia',
-  'fechaNotificacionSuperintendencia',
-  'estudianteTieneNEE',
-  'tipoNEE',
+  "estudianteNombre",
+  "estudianteCurso",
+  "runEstudiante",
+  "tipoInfraccion",
+  "conductaRiceId",
+  "responsable",
+  "estadoActual",
+  "observaciones",
+  "comprometeAulaSegura",
+  "esDenunciaConfidencial",
+  "identidadReservada",
+  "fechaInicioInvestigacion",
+  "fechaInicioSuspension",
+  "duracionSuspensionDias",
+  "monitoreoPedagogico",
+  "requiereNotificacionSuperintendencia",
+  "fechaNotificacionSuperintendencia",
+  "estudianteTieneNEE",
+  "tipoNEE",
 ] as const satisfies Array<keyof EditCausaFormValues>;
 
 const fieldClass =
-  'w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-50 font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:bg-white transition-colors text-xs';
+  "w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-50 font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:bg-white transition-colors text-xs";
 const fieldErrorClass =
-  'w-full mt-1.5 border border-grave-300 rounded-lg p-2.5 bg-grave-50 font-medium text-grave-900 focus:outline-none focus:ring-2 focus:ring-grave-500/30 focus:border-grave-500 focus:bg-white transition-colors text-xs';
-const labelClass = 'block text-9px font-semibold text-neutral-700 uppercase tracking-wide';
+  "w-full mt-1.5 border border-grave-300 rounded-lg p-2.5 bg-grave-50 font-medium text-grave-900 focus:outline-none focus:ring-2 focus:ring-grave-500/30 focus:border-grave-500 focus:bg-white transition-colors text-xs";
+const labelClass = "block font-semibold text-neutral-700 text-xs";
 const selectClass =
-  'w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-50 font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:bg-white transition-colors text-xs appearance-none';
+  "w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-50 font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:bg-white transition-colors text-xs appearance-none";
 const selectErrorClass =
-  'w-full mt-1.5 border border-grave-300 rounded-lg p-2.5 bg-grave-50 font-medium text-grave-900 focus:outline-none focus:ring-2 focus:ring-grave-500/30 focus:border-grave-500 focus:bg-white transition-colors text-xs appearance-none';
+  "w-full mt-1.5 border border-grave-300 rounded-lg p-2.5 bg-grave-50 font-medium text-grave-900 focus:outline-none focus:ring-2 focus:ring-grave-500/30 focus:border-grave-500 focus:bg-white transition-colors text-xs appearance-none";
 
 function toInitials(name: string): string {
-  if (!name) return '';
+  if (!name) return "";
   return name
-    .split(' ')
+    .split(" ")
     .filter((word) => word.length >= 2)
     .map((word) => `${word[0].toUpperCase()}.`)
-    .join(' ');
+    .join(" ");
 }
 
 function isEditCausaField(field: unknown): field is keyof EditCausaFormValues {
   return (
-    typeof field === 'string' && EDIT_CAUSA_FIELDS.includes(field as keyof EditCausaFormValues)
+    typeof field === "string" &&
+    EDIT_CAUSA_FIELDS.includes(field as keyof EditCausaFormValues)
   );
 }
 
-function createEditCausaResolver(estadoActual: EstadoCausa): Resolver<EditCausaFormValues> {
+function createEditCausaResolver(
+  estadoActual: EstadoCausa,
+): Resolver<EditCausaFormValues> {
   return async (values): Promise<ResolverResult<EditCausaFormValues>> => {
     const result = editCausaFormSchema.safeParse(values);
     if (result.success) {
@@ -85,9 +97,9 @@ function createEditCausaResolver(estadoActual: EstadoCausa): Resolver<EditCausaF
           values: {},
           errors: {
             estadoActual: {
-              type: 'custom',
+              type: "custom",
               message:
-                'La transición salta una fase del debido proceso (p. ej. de Recepción a Resolución sin Investigación). Avance por las fases en orden.',
+                "La transición salta una fase del debido proceso (p. ej. de Recepción a Resolución sin Investigación). Avance por las fases en orden.",
             },
           },
         };
@@ -113,21 +125,23 @@ function buildDefaultValues(causa: Causa): EditCausaFormValues {
     estudianteCurso: causa.estudianteCurso,
     runEstudiante: causa.runEstudiante,
     tipoInfraccion: causa.tipoInfraccion,
-    conductaRiceId: causa.conductaRiceId || '',
+    conductaRiceId: causa.conductaRiceId || "",
     responsable: causa.responsable,
     estadoActual: causa.estadoActual,
     observaciones: causa.observaciones,
     comprometeAulaSegura: causa.comprometeAulaSegura,
     esDenunciaConfidencial: causa.esDenunciaConfidencial || false,
     identidadReservada: causa.identidadReservada || false,
-    fechaInicioInvestigacion: causa.fechaInicioInvestigacion || '',
-    fechaInicioSuspension: causa.fechaInicioSuspension || '',
+    fechaInicioInvestigacion: causa.fechaInicioInvestigacion || "",
+    fechaInicioSuspension: causa.fechaInicioSuspension || "",
     duracionSuspensionDias: causa.duracionSuspensionDias || 0,
     monitoreoPedagogico: causa.monitoreoPedagogico || false,
-    requiereNotificacionSuperintendencia: causa.requiereNotificacionSuperintendencia || false,
-    fechaNotificacionSuperintendencia: causa.fechaNotificacionSuperintendencia || '',
+    requiereNotificacionSuperintendencia:
+      causa.requiereNotificacionSuperintendencia || false,
+    fechaNotificacionSuperintendencia:
+      causa.fechaNotificacionSuperintendencia || "",
     estudianteTieneNEE: causa.estudianteTieneNEE || false,
-    tipoNEE: causa.tipoNEE || '',
+    tipoNEE: causa.tipoNEE || "",
   };
 }
 
@@ -164,16 +178,17 @@ export default function EditCausaModalForm({
     formState: { errors },
   } = useForm<EditCausaFormValues>({
     defaultValues: buildDefaultValues(causa),
-    mode: 'onChange',
+    mode: "onChange",
     resolver: createEditCausaResolver(causa.estadoActual),
   });
-  const estudianteTieneNEE = watch('estudianteTieneNEE');
+  const estudianteTieneNEE = watch("estudianteTieneNEE");
 
   const submitUpdatedCausa = handleSubmit((values) => {
     onSave({
       ...causa,
       estudianteNombre: values.estudianteNombre,
-      nnaProtectedName: toInitials(values.estudianteNombre) || causa.nnaProtectedName,
+      nnaProtectedName:
+        toInitials(values.estudianteNombre) || causa.nnaProtectedName,
       estudianteCurso: values.estudianteCurso,
       runEstudiante: values.runEstudiante,
       tipoInfraccion: values.tipoInfraccion,
@@ -189,8 +204,10 @@ export default function EditCausaModalForm({
       fechaInicioSuspension: values.fechaInicioSuspension || undefined,
       duracionSuspensionDias: values.duracionSuspensionDias || undefined,
       monitoreoPedagogico: values.monitoreoPedagogico,
-      requiereNotificacionSuperintendencia: values.requiereNotificacionSuperintendencia,
-      fechaNotificacionSuperintendencia: values.fechaNotificacionSuperintendencia || undefined,
+      requiereNotificacionSuperintendencia:
+        values.requiereNotificacionSuperintendencia,
+      fechaNotificacionSuperintendencia:
+        values.fechaNotificacionSuperintendencia || undefined,
       estudianteTieneNEE: values.estudianteTieneNEE,
       tipoNEE: values.tipoNEE || undefined,
     });
@@ -198,13 +215,19 @@ export default function EditCausaModalForm({
 
   return (
     <>
-      <form onSubmit={submitUpdatedCausa} noValidate className="space-y-6 p-4 sm:p-6">
+      <form
+        onSubmit={submitUpdatedCausa}
+        noValidate
+        className="space-y-6 p-4 sm:p-6"
+      >
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50">
             <Scale className="h-5 w-5 text-brand-600" aria-hidden="true" />
           </div>
           <div>
-            <h2 className="font-bold text-lg text-neutral-900">Editar Expediente</h2>
+            <h2 className="font-bold text-lg text-neutral-900">
+              Editar Expediente
+            </h2>
             <p className="text-neutral-500 text-xs">Expediente: {causa.id}</p>
           </div>
         </div>
@@ -218,12 +241,17 @@ export default function EditCausaModalForm({
               id="edit-estudiante"
               aria-label="Estudiante"
               aria-invalid={!!errors.estudianteNombre}
-              aria-describedby={errors.estudianteNombre ? 'edit-estudiante-error' : undefined}
+              aria-describedby={
+                errors.estudianteNombre ? "edit-estudiante-error" : undefined
+              }
               className={errors.estudianteNombre ? fieldErrorClass : fieldClass}
               placeholder="Nombre completo"
-              {...register('estudianteNombre')}
+              {...register("estudianteNombre")}
             />
-            <FieldError id="edit-estudiante-error" message={errors.estudianteNombre?.message} />
+            <FieldError
+              id="edit-estudiante-error"
+              message={errors.estudianteNombre?.message}
+            />
           </div>
           <div>
             <label htmlFor="edit-curso" className={labelClass}>
@@ -234,7 +262,7 @@ export default function EditCausaModalForm({
               aria-label="Curso"
               className={fieldClass}
               placeholder="Ej: 7 Basico A"
-              {...register('estudianteCurso')}
+              {...register("estudianteCurso")}
             />
           </div>
           <div>
@@ -245,12 +273,17 @@ export default function EditCausaModalForm({
               id="edit-run"
               aria-label="RUN"
               aria-invalid={!!errors.runEstudiante}
-              aria-describedby={errors.runEstudiante ? 'edit-run-error' : undefined}
+              aria-describedby={
+                errors.runEstudiante ? "edit-run-error" : undefined
+              }
               className={errors.runEstudiante ? fieldErrorClass : fieldClass}
               placeholder="12.345.678-9"
-              {...register('runEstudiante')}
+              {...register("runEstudiante")}
             />
-            <FieldError id="edit-run-error" message={errors.runEstudiante?.message} />
+            <FieldError
+              id="edit-run-error"
+              message={errors.runEstudiante?.message}
+            />
           </div>
           <div>
             <label htmlFor="edit-tipo-infraccion" className={labelClass}>
@@ -260,7 +293,7 @@ export default function EditCausaModalForm({
               id="edit-tipo-infraccion"
               aria-label="Tipo de infracción"
               className={selectClass}
-              {...register('tipoInfraccion')}
+              {...register("tipoInfraccion")}
             >
               {INFRACCIONES.map((infraccion) => (
                 <option key={infraccion} value={infraccion}>
@@ -277,12 +310,17 @@ export default function EditCausaModalForm({
               id="edit-responsable"
               aria-label="Encargado o responsable"
               aria-invalid={!!errors.responsable}
-              aria-describedby={errors.responsable ? 'edit-responsable-error' : undefined}
+              aria-describedby={
+                errors.responsable ? "edit-responsable-error" : undefined
+              }
               className={errors.responsable ? fieldErrorClass : fieldClass}
               placeholder="Nombre del inspector/a"
-              {...register('responsable')}
+              {...register("responsable")}
             />
-            <FieldError id="edit-responsable-error" message={errors.responsable?.message} />
+            <FieldError
+              id="edit-responsable-error"
+              message={errors.responsable?.message}
+            />
           </div>
           <div>
             <label htmlFor="edit-estado" className={labelClass}>
@@ -292,9 +330,11 @@ export default function EditCausaModalForm({
               id="edit-estado"
               aria-label="Estado actual"
               aria-invalid={!!errors.estadoActual}
-              aria-describedby={errors.estadoActual ? 'edit-estado-error' : undefined}
+              aria-describedby={
+                errors.estadoActual ? "edit-estado-error" : undefined
+              }
               className={errors.estadoActual ? selectErrorClass : selectClass}
-              {...register('estadoActual')}
+              {...register("estadoActual")}
             >
               {Object.values(EstadoCausa).map((estado) => (
                 <option key={estado} value={estado}>
@@ -302,21 +342,33 @@ export default function EditCausaModalForm({
                 </option>
               ))}
             </select>
-            <FieldError id="edit-estado-error" message={errors.estadoActual?.message} />
+            <FieldError
+              id="edit-estado-error"
+              message={errors.estadoActual?.message}
+            />
           </div>
         </div>
 
         <div>
           <RiceConductSelect
-            value={watch('conductaRiceId') || ''}
+            value={watch("conductaRiceId") || ""}
             preserveObservations
-            setConductaRiceId={(value) => setValue('conductaRiceId', value, { shouldDirty: true })}
-            setNewInfTipo={(value) => setValue('tipoInfraccion', value, { shouldDirty: true })}
-            setNewAulaSegura={(value) => setValue('comprometeAulaSegura', value, { shouldDirty: true })}
-            setNewObs={(value) => setValue('observaciones', value, { shouldDirty: true })}
+            setConductaRiceId={(value) =>
+              setValue("conductaRiceId", value, { shouldDirty: true })
+            }
+            setNewInfTipo={(value) =>
+              setValue("tipoInfraccion", value, { shouldDirty: true })
+            }
+            setNewAulaSegura={(value) =>
+              setValue("comprometeAulaSegura", value, { shouldDirty: true })
+            }
+            setNewObs={(value) =>
+              setValue("observaciones", value, { shouldDirty: true })
+            }
           />
           <p className="mt-1 text-xs text-neutral-500">
-            Seleccionar una conducta actualiza la gravedad y Aula Segura. El relato de los hechos se conserva.
+            Seleccionar una conducta actualiza la gravedad y Aula Segura. El
+            relato de los hechos se conserva.
           </p>
         </div>
 
@@ -354,27 +406,33 @@ export default function EditCausaModalForm({
                 type="checkbox"
                 aria-label="Compromete Aula Segura"
                 className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
-                {...register('comprometeAulaSegura')}
+                {...register("comprometeAulaSegura")}
               />
-              <span className="text-neutral-700 text-sm">Compromete Aula Segura</span>
+              <span className="text-neutral-700 text-sm">
+                Compromete Aula Segura
+              </span>
             </label>
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
                 aria-label="Denuncia confidencial"
                 className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
-                {...register('esDenunciaConfidencial')}
+                {...register("esDenunciaConfidencial")}
               />
-              <span className="text-neutral-700 text-sm">Denuncia Confidencial</span>
+              <span className="text-neutral-700 text-sm">
+                Denuncia Confidencial
+              </span>
             </label>
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
                 aria-label="Identidad reservada"
                 className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
-                {...register('identidadReservada')}
+                {...register("identidadReservada")}
               />
-              <span className="text-neutral-700 text-sm">Identidad Reservada</span>
+              <span className="text-neutral-700 text-sm">
+                Identidad Reservada
+              </span>
             </label>
           </div>
         </div>
@@ -394,7 +452,7 @@ export default function EditCausaModalForm({
                 aria-label="Inicio investigación"
                 type="date"
                 className={fieldClass}
-                {...register('fechaInicioInvestigacion')}
+                {...register("fechaInicioInvestigacion")}
               />
             </div>
             <div>
@@ -406,7 +464,7 @@ export default function EditCausaModalForm({
                 aria-label="Inicio suspensión"
                 type="date"
                 className={fieldClass}
-                {...register('fechaInicioSuspension')}
+                {...register("fechaInicioSuspension")}
               />
             </div>
             <div>
@@ -421,10 +479,14 @@ export default function EditCausaModalForm({
                 max="15"
                 aria-invalid={!!errors.duracionSuspensionDias}
                 aria-describedby={
-                  errors.duracionSuspensionDias ? 'edit-dias-suspension-error' : undefined
+                  errors.duracionSuspensionDias
+                    ? "edit-dias-suspension-error"
+                    : undefined
                 }
-                className={errors.duracionSuspensionDias ? fieldErrorClass : fieldClass}
-                {...register('duracionSuspensionDias', { valueAsNumber: true })}
+                className={
+                  errors.duracionSuspensionDias ? fieldErrorClass : fieldClass
+                }
+                {...register("duracionSuspensionDias", { valueAsNumber: true })}
               />
               <FieldError
                 id="edit-dias-suspension-error"
@@ -436,9 +498,11 @@ export default function EditCausaModalForm({
                 type="checkbox"
                 aria-label="Monitoreo pedagógico obligatorio"
                 className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
-                {...register('monitoreoPedagogico')}
+                {...register("monitoreoPedagogico")}
               />
-              <span className="text-neutral-700 text-sm">Monitoreo Pedagógico Obligatorio</span>
+              <span className="text-neutral-700 text-sm">
+                Monitoreo Pedagógico Obligatorio
+              </span>
             </label>
           </div>
         </div>
@@ -454,7 +518,7 @@ export default function EditCausaModalForm({
                 type="checkbox"
                 aria-label="Requiere notificación a Superintendencia"
                 className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
-                {...register('requiereNotificacionSuperintendencia')}
+                {...register("requiereNotificacionSuperintendencia")}
               />
               <span className="text-neutral-700 text-sm">
                 Requiere Notificación a Superintendencia
@@ -469,7 +533,7 @@ export default function EditCausaModalForm({
                 aria-label="Fecha de notificación"
                 type="date"
                 className={fieldClass}
-                {...register('fechaNotificacionSuperintendencia')}
+                {...register("fechaNotificacionSuperintendencia")}
               />
             </div>
           </div>
@@ -486,9 +550,11 @@ export default function EditCausaModalForm({
                 type="checkbox"
                 aria-label="Estudiante con NEE"
                 className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
-                {...register('estudianteTieneNEE')}
+                {...register("estudianteTieneNEE")}
               />
-              <span className="text-neutral-700 text-sm">Estudiante con NEE</span>
+              <span className="text-neutral-700 text-sm">
+                Estudiante con NEE
+              </span>
             </label>
             <div>
               <label htmlFor="edit-tipo-nee" className={labelClass}>
@@ -500,7 +566,7 @@ export default function EditCausaModalForm({
                 className={fieldClass}
                 placeholder="TEA, TDAH, Disc. Intelectual, etc."
                 disabled={!estudianteTieneNEE}
-                {...register('tipoNEE')}
+                {...register("tipoNEE")}
               />
             </div>
           </div>
@@ -530,14 +596,16 @@ export default function EditCausaModalForm({
             <AlertDialogTitle>¿Eliminar expediente?</AlertDialogTitle>
           </AlertDialogHeader>
           <AlertDialogDescription>
-            Esta acción eliminará el expediente {causa.id} de forma permanente. No se puede
-            deshacer.
+            Esta acción eliminará el expediente {causa.id} de forma permanente.
+            No se puede deshacer.
           </AlertDialogDescription>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setShowDeleteConfirm(false)}>
               Cancelar
             </AlertDialogCancel>
-            <AlertDialogAction onClick={() => onDelete(causa.id)}>Eliminar</AlertDialogAction>
+            <AlertDialogAction onClick={() => onDelete(causa.id)}>
+              Eliminar
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { ComponentType, ReactNode } from 'react';
+import type { ComponentType, ReactNode } from "react";
 
 export interface RankingCardItem {
   key: string;
@@ -51,24 +51,22 @@ export default function RankingCard({
   barColorClass,
   headerBadge,
 }: RankingCardProps) {
-  const maxCount = items.length > 0 ? Math.max(...items.map((item) => item.count)) : 0;
+  const maxCount =
+    items.length > 0 ? Math.max(...items.map((item) => item.count)) : 0;
 
   return (
     <article className="card p-5" aria-labelledby={titleId}>
       <div className="mb-4 flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           <div className="rounded-lg bg-neutral-100 p-1.5">
-            <Icon className="h-3.5 w-3.5 text-neutral-500" aria-hidden="true" />
+            <Icon className="h-3.5 w-3.5 text-neutral-600" aria-hidden="true" />
           </div>
-          <h3
-            id={titleId}
-            className="font-semibold text-neutral-500 text-xs uppercase tracking-[0.06em]"
-          >
+          <h3 id={titleId} className="font-semibold text-neutral-800 text-sm">
             {title}
           </h3>
         </div>
         {headerBadge ? (
-          <span className="shrink-0 rounded-full bg-neutral-100 px-2 py-1 font-semibold text-neutral-500 text-10px uppercase tracking-wide">
+          <span className="shrink-0 rounded-full bg-neutral-100 px-2 py-1 font-semibold text-neutral-600 text-10px">
             {headerBadge}
           </span>
         ) : null}
@@ -82,13 +80,14 @@ export default function RankingCard({
         </p>
       ) : items.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-2 py-6 text-center">
-          <Icon className="h-8 w-8 text-neutral-300" aria-hidden="true" />
-          <p className="font-medium text-neutral-400 text-sm">{emptyMessage}</p>
+          <Icon className="h-8 w-8 text-neutral-400" aria-hidden="true" />
+          <p className="font-medium text-neutral-500 text-sm">{emptyMessage}</p>
         </div>
       ) : (
         <ol className="space-y-3">
           {items.map((item, index) => {
-            const widthPercentage = maxCount > 0 ? (item.count / maxCount) * 100 : 0;
+            const widthPercentage =
+              maxCount > 0 ? (item.count / maxCount) * 100 : 0;
             const position = index + 1;
 
             return (
@@ -96,15 +95,19 @@ export default function RankingCard({
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex min-w-0 items-center gap-2">
                     <span
-                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-neutral-100 font-semibold text-neutral-500 text-10px"
+                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-neutral-100 font-semibold text-neutral-600 text-10px"
                       aria-hidden="true"
                     >
                       {position}
                     </span>
                     <div className="min-w-0">
-                      <p className="truncate font-medium text-neutral-700 text-sm">{item.label}</p>
+                      <p className="truncate font-medium text-neutral-700 text-sm">
+                        {item.label}
+                      </p>
                       {item.sublabel ? (
-                        <p className="truncate text-neutral-400 text-xs">{item.sublabel}</p>
+                        <p className="truncate text-neutral-500 text-xs">
+                          {item.sublabel}
+                        </p>
                       ) : null}
                     </div>
                   </div>
@@ -120,7 +123,9 @@ export default function RankingCard({
                   />
                 </div>
                 {item.badges ? (
-                  <div className="flex flex-wrap items-center gap-1.5">{item.badges}</div>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {item.badges}
+                  </div>
                 ) : null}
               </li>
             );

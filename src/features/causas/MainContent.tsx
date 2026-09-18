@@ -93,7 +93,7 @@ export default function MainContent({
               Inicio
             </button>
             <ChevronRight
-              className="size-3.5 text-neutral-300"
+              className="size-3.5 text-neutral-400"
               aria-hidden="true"
             />
           </>

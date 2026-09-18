@@ -115,7 +115,7 @@ export default function TimelineTabPanels({
                   <ListChecks className="size-4.5" />
                 </span>
                 <div>
-                  <p className="font-semibold text-10px uppercase tracking-wide text-neutral-500">
+                  <p className="font-semibold text-neutral-600 text-xs">
                     Fase de trabajo
                   </p>
                   <h3

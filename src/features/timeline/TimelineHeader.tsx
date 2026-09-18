@@ -83,8 +83,8 @@ export default function TimelineHeader({
             <span
               className={`inline-flex items-center rounded-full px-2 py-0.5 font-bold ${
                 causa.comprometeAulaSegura
-                  ? "bg-gravisima-200 text-gravisima-700"
-                  : "bg-grave-200 text-grave-700"
+                  ? "bg-gravisima-100 text-neutral-900"
+                  : "bg-grave-100 text-neutral-900"
               }`}
             >
               {causa.comprometeAulaSegura
@@ -107,7 +107,7 @@ export default function TimelineHeader({
               className={`rounded-full px-2 py-0.5 font-semibold ${
                 breaches.length
                   ? "bg-danger-100 text-danger-800"
-                  : "bg-leve-100 text-leve-800"
+                  : "bg-leve-100 text-neutral-800"
               }`}
             >
               {riskLabel}
@@ -150,7 +150,7 @@ export default function TimelineHeader({
                 <button
                   type="button"
                   onClick={onForceCloseClick}
-                  className="hidden items-center gap-1.5 rounded-md bg-white px-3 py-2 font-semibold text-brand-950 text-xs shadow-sm transition-colors hover:bg-gravisima-50 hover:text-gravisima-700 sm:inline-flex"
+                  className="hidden items-center gap-1.5 rounded-md bg-gravisima-600 px-3 py-2 font-semibold text-white text-xs shadow-sm transition-colors hover:bg-gravisima-700 sm:inline-flex"
                   title="Cerrar causa con fundamento"
                   aria-label="Cerrar causa con fundamento"
                 >

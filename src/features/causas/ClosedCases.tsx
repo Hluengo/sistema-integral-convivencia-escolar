@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { memo, useMemo, useState } from 'react';
-import { type Causa, EstadoCausa } from '../../shared/lib/types';
+import { memo, useMemo, useState } from "react";
+import { type Causa, EstadoCausa } from "../../shared/lib/types";
 import {
   Search,
   Archive,
@@ -15,8 +15,8 @@ import {
   CheckCircle2,
   FileText,
   BarChart3,
-} from 'lucide-react';
-import Button from '../../shared/ui/Button';
+} from "lucide-react";
+import Button from "../../shared/ui/Button";
 
 interface ClosedCasesProps {
   causas: Causa[];
@@ -25,9 +25,14 @@ interface ClosedCasesProps {
   onSelectCausa: (causa: Causa) => void;
 }
 
-function ClosedCases({ causas, privacyMode, onReopenCausa, onSelectCausa }: ClosedCasesProps) {
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [sortBy, setSortBy] = useState<'fecha' | 'nombre'>('fecha');
+function ClosedCases({
+  causas,
+  privacyMode,
+  onReopenCausa,
+  onSelectCausa,
+}: ClosedCasesProps) {
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [sortBy, setSortBy] = useState<"fecha" | "nombre">("fecha");
 
   const closedCausas = useMemo(
     () => causas.filter((c) => c.estadoActual === EstadoCausa.CAUSA_CERRADA),
@@ -50,7 +55,7 @@ function ClosedCases({ causas, privacyMode, onReopenCausa, onSelectCausa }: Clos
           );
         })
         .sort((a, b) => {
-          if (sortBy === 'fecha') {
+          if (sortBy === "fecha") {
             return (
               new Date(b.fechaUltimaActualizacion).getTime() -
               new Date(a.fechaUltimaActualizacion).getTime()
@@ -65,11 +70,14 @@ function ClosedCases({ causas, privacyMode, onReopenCausa, onSelectCausa }: Clos
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <div className="mb-4 rounded-full bg-neutral-100 p-4">
-          <Archive className="h-10 w-10 text-neutral-400" />
+          <Archive className="h-10 w-10 text-neutral-500" />
         </div>
-        <h3 className="mb-1 font-semibold text-neutral-700 text-sm">No hay casos cerrados</h3>
+        <h3 className="mb-1 font-semibold text-neutral-700 text-sm">
+          No hay casos cerrados
+        </h3>
         <p className="max-w-sm text-neutral-500 text-xs">
-          Los expedientes que finalicen su proceso aparecerán aquí para su consulta y auditoría.
+          Los expedientes que finalicen su proceso aparecerán aquí para su
+          consulta y auditoría.
         </p>
       </div>
     );
@@ -85,8 +93,9 @@ function ClosedCases({ causas, privacyMode, onReopenCausa, onSelectCausa }: Clos
             Casos Cerrados
           </h2>
           <p className="mt-0.5 text-11px text-neutral-500">
-            {closedCausas.length} expediente{closedCausas.length !== 1 ? 's' : ''} finalizado
-            {closedCausas.length !== 1 ? 's' : ''}
+            {closedCausas.length} expediente
+            {closedCausas.length !== 1 ? "s" : ""} finalizado
+            {closedCausas.length !== 1 ? "s" : ""}
           </p>
         </div>
 
@@ -95,7 +104,9 @@ function ClosedCases({ causas, privacyMode, onReopenCausa, onSelectCausa }: Clos
           <div className="hidden items-center gap-3 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-10px sm:flex">
             <div className="flex items-center gap-1.5 text-neutral-500">
               <BarChart3 className="h-3 w-3" />
-              <span className="font-semibold text-neutral-700">{closedCausas.length}</span>
+              <span className="font-semibold text-neutral-700">
+                {closedCausas.length}
+              </span>
             </div>
             <div className="h-4 w-px bg-neutral-200" />
             <div className="flex items-center gap-1.5 text-neutral-500">
@@ -117,7 +128,7 @@ function ClosedCases({ causas, privacyMode, onReopenCausa, onSelectCausa }: Clos
           {/* Sort selector */}
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'fecha' | 'nombre')}
+            onChange={(e) => setSortBy(e.target.value as "fecha" | "nombre")}
             className="rounded-lg border border-neutral-200 bg-white p-1.5 font-medium text-10px text-neutral-600 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
             aria-label="Ordenar por"
           >
@@ -130,7 +141,7 @@ function ClosedCases({ causas, privacyMode, onReopenCausa, onSelectCausa }: Clos
       {/* Search */}
       <div className="relative w-full sm:max-w-md">
         <Search
-          className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400"
+          className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2 text-neutral-500"
           aria-hidden="true"
         />
         <input
@@ -139,7 +150,7 @@ function ClosedCases({ causas, privacyMode, onReopenCausa, onSelectCausa }: Clos
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Buscar en casos cerrados..."
-          className="w-full bg-white py-2 pr-4 pl-9 font-medium text-neutral-800 text-xs placeholder-neutral-400 focus:outline-none"
+          className="w-full bg-white py-2 pr-4 pl-9 font-medium text-neutral-800 text-xs placeholder:text-neutral-500 focus:outline-none"
           aria-label="Buscar casos cerrados"
         />
       </div>
@@ -153,7 +164,9 @@ function ClosedCases({ causas, privacyMode, onReopenCausa, onSelectCausa }: Clos
                 new Date(causa.fechaApertura).getTime()) /
                 (1000 * 60 * 60 * 24),
             );
-            const completedCount = causa.checklistDebidoProceso.filter((c) => c.completado).length;
+            const completedCount = causa.checklistDebidoProceso.filter(
+              (c) => c.completado,
+            ).length;
             const totalCount = causa.checklistDebidoProceso.length;
 
             return (
@@ -170,18 +183,21 @@ function ClosedCases({ causas, privacyMode, onReopenCausa, onSelectCausa }: Clos
                           {causa.id}
                         </span>
                         <span className="flex items-center gap-1 rounded-full border border-success-200 bg-success-100 px-1.5 py-0.5 font-semibold text-8px text-success-700">
-                          <CheckCircle2 className="h-2.5 w-2.5" aria-hidden="true" />
+                          <CheckCircle2
+                            className="h-2.5 w-2.5"
+                            aria-hidden="true"
+                          />
                           Cerrado
                         </span>
                         <span
                           className={`rounded px-1.5 py-0.5 font-bold text-8px ${
-                            causa.tipoInfraccion === 'Gravísima'
-                              ? 'bg-gravisima-100 text-gravisima-700'
-                              : causa.tipoInfraccion === 'Muy Grave'
-                                ? 'bg-purple-100 text-purple-800'
-                                : causa.tipoInfraccion === 'Grave'
-                                  ? 'bg-grave-100 text-grave-700'
-                                  : 'bg-blue-100 text-blue-800'
+                            causa.tipoInfraccion === "Gravísima"
+                              ? "bg-gravisima-100 text-gravisima-700"
+                              : causa.tipoInfraccion === "Muy Grave"
+                                ? "bg-purple-100 text-purple-800"
+                                : causa.tipoInfraccion === "Grave"
+                                  ? "bg-grave-100 text-grave-700"
+                                  : "bg-blue-100 text-blue-800"
                           }`}
                         >
                           {causa.tipoInfraccion}
@@ -190,16 +206,18 @@ function ClosedCases({ causas, privacyMode, onReopenCausa, onSelectCausa }: Clos
 
                       {/* Student info */}
                       <h3 className="font-bold text-neutral-900 text-sm">
-                        {privacyMode ? causa.nnaProtectedName : causa.estudianteNombre}
-                        <span className="ml-2 rounded border border-neutral-200/60 bg-neutral-50 px-1.5 py-0.5 align-middle font-medium text-10px text-neutral-400">
+                        {privacyMode
+                          ? causa.nnaProtectedName
+                          : causa.estudianteNombre}
+                        <span className="ml-2 rounded border border-neutral-200/60 bg-neutral-50 px-1.5 py-0.5 align-middle font-medium text-10px text-neutral-600">
                           {causa.estudianteCurso}
                         </span>
                       </h3>
 
                       {/* Details */}
-                      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-10px text-neutral-500">
+                      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-10px text-neutral-600">
                         <span className="flex items-center gap-1">
-                          <CalendarDays className="h-3 w-3 text-neutral-400" />
+                          <CalendarDays className="h-3 w-3 text-neutral-500" />
                           Abierto: {causa.fechaApertura}
                         </span>
                         <span className="flex items-center gap-1">
@@ -207,19 +225,21 @@ function ClosedCases({ causas, privacyMode, onReopenCausa, onSelectCausa }: Clos
                           Cerrado: {causa.fechaUltimaActualizacion}
                         </span>
                         <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3 text-neutral-400" />
+                          <Clock className="h-3 w-3 text-neutral-500" />
                           Duración: {duration} días
                         </span>
                         <span className="flex items-center gap-1">
-                          <UserCheck className="h-3 w-3 text-neutral-400" />
-                          {causa.responsable ? causa.responsable.split(' (')[0] : 'Sin responsable'}
+                          <UserCheck className="h-3 w-3 text-neutral-500" />
+                          {causa.responsable
+                            ? causa.responsable.split(" (")[0]
+                            : "Sin responsable"}
                         </span>
                       </div>
 
                       {/* Progress bar */}
                       <div className="mt-3 flex items-center gap-3">
                         <div className="max-w-xs flex-1">
-                          <div className="mb-1 flex items-center justify-between text-9px text-neutral-400">
+                          <div className="mb-1 flex items-center justify-between text-9px text-neutral-500">
                             <span>Debido proceso</span>
                             <span className="font-semibold text-neutral-600">
                               {completedCount}/{totalCount}
@@ -271,7 +291,7 @@ function ClosedCases({ causas, privacyMode, onReopenCausa, onSelectCausa }: Clos
           })
         ) : (
           <div className="rounded-xl border border-neutral-200 bg-white p-8 text-center">
-            <Search className="mx-auto mb-2 h-8 w-8 text-neutral-300" />
+            <Search className="mx-auto mb-2 h-8 w-8 text-neutral-400" />
             <p className="font-medium text-neutral-500 text-xs">
               No se encontraron casos cerrados con ese criterio.
             </p>

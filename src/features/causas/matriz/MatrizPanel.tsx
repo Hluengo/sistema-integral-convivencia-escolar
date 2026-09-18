@@ -514,7 +514,7 @@ export default function MatrizPanel({ causa }: { causa: Causa }) {
                       <>
                         <div className="grid gap-2 sm:grid-cols-2">
                           <div>
-                            <p className="text-10px font-semibold uppercase tracking-wide text-slate-500">
+                            <p className="font-semibold text-neutral-700 text-xs">
                               Agravantes
                             </p>
                             <div className="mt-1 flex flex-wrap gap-1">
@@ -543,7 +543,7 @@ export default function MatrizPanel({ causa }: { causa: Causa }) {
                             </div>
                           </div>
                           <div>
-                            <p className="text-10px font-semibold uppercase tracking-wide text-slate-500">
+                            <p className="font-semibold text-neutral-700 text-xs">
                               Atenuantes
                             </p>
                             <div className="mt-1 flex flex-wrap gap-1">

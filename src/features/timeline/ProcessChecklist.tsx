@@ -86,14 +86,14 @@ export default function ProcessChecklist({
     <div className="space-y-3">
       <div className="flex items-center justify-between border-neutral-100 border-b pb-2">
         <div>
-          <h3 className="flex items-center gap-1.5 font-sans font-semibold text-neutral-700 text-xs uppercase tracking-wider">
+          <h3 className="flex items-center gap-1.5 font-sans font-semibold text-neutral-800 text-sm">
             <CheckSquare
               className="h-4 w-4 text-success-600"
               aria-hidden="true"
             />{" "}
             Registro de hitos procesales
           </h3>
-          <p className="mt-0.5 font-sans text-9px text-neutral-400 leading-tight">
+          <p className="mt-0.5 font-sans text-neutral-500 text-xs leading-tight">
             Preserve la trazabilidad del debido proceso
           </p>
         </div>

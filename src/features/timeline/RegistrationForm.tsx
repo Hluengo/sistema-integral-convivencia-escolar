@@ -3,19 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
-import type { ChecklistItem } from '../../shared/lib/types';
-import { Upload, Check } from 'lucide-react';
-import Button from '../../shared/ui/Button';
+import type React from "react";
+import type { ChecklistItem } from "../../shared/lib/types";
+import { Upload, Check } from "lucide-react";
+import Button from "../../shared/ui/Button";
 import {
   DOCUMENT_UPLOAD_ACCEPT,
   DOCUMENT_UPLOAD_PLACEHOLDER,
-} from '../../shared/api/services/storage.service';
-import { useTimelineContext } from '../../shared/lib/useTimelineContext';
+} from "../../shared/api/services/storage.service";
+import { useTimelineContext } from "../../shared/lib/useTimelineContext";
 
 interface RegistrationFormProps {
   item: ChecklistItem;
-  mode?: 'register' | 'edit';
+  mode?: "register" | "edit";
   regName: string;
   setRegName: React.Dispatch<React.SetStateAction<string>>;
   regFileName: string;
@@ -31,7 +31,7 @@ interface RegistrationFormProps {
 
 export default function RegistrationForm({
   item,
-  mode = 'register',
+  mode = "register",
   regName,
   setRegName,
   regFileName,
@@ -44,14 +44,14 @@ export default function RegistrationForm({
   isSaving,
   errorMessage,
 }: RegistrationFormProps) {
-  const isEditing = mode === 'edit';
+  const isEditing = mode === "edit";
   const { causa, documentScope, setDocumentScope } = useTimelineContext();
 
   return (
     <div className="mt-2 space-y-3 rounded border border-info-200 bg-white p-3 text-left">
       <div className="flex items-center justify-between border-neutral-100 border-b pb-1.5">
-        <span className="font-semibold text-10px text-info-700 uppercase tracking-wide">
-          {isEditing ? 'Rectificación oficial' : 'Registro oficial'}
+        <span className="font-semibold text-neutral-800 text-xs">
+          {isEditing ? "Rectificación oficial" : "Registro oficial"}
         </span>
       </div>
 
@@ -59,7 +59,7 @@ export default function RegistrationForm({
         <div>
           <label
             htmlFor={`reg-name-${item.id}`}
-            className="block font-semibold text-9px text-neutral-400 uppercase"
+            className="block font-semibold text-neutral-600 text-xs"
           >
             Responsable:
           </label>
@@ -67,7 +67,7 @@ export default function RegistrationForm({
             id={`reg-name-${item.id}`}
             type="text"
             spellCheck={false}
-            className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-medium text-neutral-800 text-xs placeholder-neutral-400 transition-colors focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+            className="mt-1 min-h-11 w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-medium text-neutral-800 text-xs placeholder:text-neutral-500 transition-colors focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
             value={regName}
             onChange={(e) => setRegName(e.target.value)}
             aria-label="Nombre del responsable"
@@ -77,16 +77,19 @@ export default function RegistrationForm({
         <div>
           <span
             id={`reg-file-label-${item.id}`}
-            className="block font-semibold text-9px text-neutral-400 uppercase"
+            className="block font-semibold text-neutral-600 text-xs"
           >
             Documento de respaldo:
           </span>
           <div className="relative mt-1 flex items-center justify-center rounded-lg border-2 border-neutral-300 border-dashed bg-neutral-50/50 px-2 py-1.5 transition-colors hover:bg-neutral-50">
             <label
               htmlFor={`reg-file-${item.id}`}
-              className="flex cursor-pointer items-center gap-1.5 font-medium text-11px text-neutral-500"
+              className="flex cursor-pointer items-center gap-1.5 font-medium text-11px text-neutral-600"
             >
-              <Upload className="h-3.5 w-3.5 text-neutral-400" aria-hidden="true" />
+              <Upload
+                className="h-3.5 w-3.5 text-neutral-500"
+                aria-hidden="true"
+              />
               {regFileName || DOCUMENT_UPLOAD_PLACEHOLDER}
               <input
                 id={`reg-file-${item.id}`}
@@ -102,7 +105,10 @@ export default function RegistrationForm({
       </div>
 
       <div>
-        <label htmlFor={`reg-obs-${item.id}`} className="block font-semibold text-neutral-700 text-xs">
+        <label
+          htmlFor={`reg-obs-${item.id}`}
+          className="block font-semibold text-neutral-700 text-xs"
+        >
           Observaciones:
         </label>
         <textarea
@@ -121,17 +127,23 @@ export default function RegistrationForm({
           <legend className="font-semibold text-9px text-sky-800 uppercase">
             Visibilidad del hito
           </legend>
-          <label htmlFor={`reg-share-${item.id}`} className="mt-1 flex items-start gap-2 text-10px text-sky-950">
+          <label
+            htmlFor={`reg-share-${item.id}`}
+            className="mt-1 flex items-start gap-2 text-10px text-sky-950"
+          >
             <input
               id={`reg-share-${item.id}`}
               aria-label="Compartir hito con el incidente grupal"
               type="checkbox"
-              checked={documentScope === 'incidente'}
-              onChange={(event) => setDocumentScope(event.target.checked ? 'incidente' : 'causa')}
+              checked={documentScope === "incidente"}
+              onChange={(event) =>
+                setDocumentScope(event.target.checked ? "incidente" : "causa")
+              }
               className="mt-0.5 h-3.5 w-3.5 rounded border-sky-300 text-brand-600 focus:ring-brand-500"
             />
             <span>
-              Compartir este hito y su documento con el incidente grupal y sus expedientes vinculados.
+              Compartir este hito y su documento con el incidente grupal y sus
+              expedientes vinculados.
             </span>
           </label>
         </fieldset>
@@ -147,7 +159,12 @@ export default function RegistrationForm({
       )}
 
       <div className="flex justify-end gap-2 pt-1">
-        <Button variant="ghost" size="sm" onClick={onCancel} disabled={isSaving}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onCancel}
+          disabled={isSaving}
+        >
           Cancelar
         </Button>
         <Button size="sm" onClick={onSubmit} disabled={isSaving}>
@@ -162,11 +179,11 @@ export default function RegistrationForm({
               )}
               {isEditing
                 ? regFile
-                  ? 'Adjuntar y rectificar'
-                  : 'Guardar rectificación'
+                  ? "Adjuntar y rectificar"
+                  : "Guardar rectificación"
                 : regFile
-                  ? 'Adjuntar y registrar'
-                  : 'Confirmar registro'}
+                  ? "Adjuntar y registrar"
+                  : "Confirmar registro"}
             </>
           )}
         </Button>

@@ -1,10 +1,10 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { memo } from 'react';
-import { ChevronRight, Clock, Shield } from 'lucide-react';
-import type { Causa, TipoInfraccion } from '../../shared/lib/types';
-import { getCausaDeadline, getCausaStatus } from './causaPresentation';
-import { getCausaOperationalPhase } from './causaOperationalSummary';
+import { memo } from "react";
+import { ChevronRight, Clock, Shield } from "lucide-react";
+import type { Causa, TipoInfraccion } from "../../shared/lib/types";
+import { getCausaDeadline, getCausaStatus } from "./causaPresentation";
+import { getCausaOperationalPhase } from "./causaOperationalSummary";
 
 interface CausasTableProps {
   causas: Causa[];
@@ -13,20 +13,28 @@ interface CausasTableProps {
 }
 
 const severityClasses: Record<TipoInfraccion, string> = {
-  Leve: 'bg-leve-100 text-leve-700',
-  Grave: 'bg-grave-100 text-grave-700',
-  'Muy Grave': 'bg-muygrave-100 text-muygrave-700',
-  Gravísima: 'bg-gravisima-100 text-gravisima-700',
+  Leve: "bg-leve-100 text-leve-700",
+  Grave: "bg-grave-100 text-grave-700",
+  "Muy Grave": "bg-muygrave-100 text-muygrave-700",
+  Gravísima: "bg-gravisima-100 text-gravisima-700",
 };
 
-function StudentName({ causa, privacyMode }: { causa: Causa; privacyMode: boolean }) {
+function StudentName({
+  causa,
+  privacyMode,
+}: {
+  causa: Causa;
+  privacyMode: boolean;
+}) {
   return (
     <>
       <span className="font-semibold text-neutral-900">
         {privacyMode ? causa.nnaProtectedName : causa.estudianteNombre}
       </span>
       {!privacyMode && causa.runEstudiante && (
-        <span className="font-mono text-neutral-600 text-xs">{causa.runEstudiante}</span>
+        <span className="font-mono text-neutral-600 text-xs">
+          {causa.runEstudiante}
+        </span>
       )}
     </>
   );
@@ -35,11 +43,11 @@ function StudentName({ causa, privacyMode }: { causa: Causa; privacyMode: boolea
 function Deadline({ causa }: { causa: Causa }) {
   const deadline = getCausaDeadline(causa);
   const tone =
-    deadline.tone === 'overdue'
-      ? 'bg-gravisima-50 text-gravisima-700 ring-gravisima-200'
-      : deadline.tone === 'warning'
-        ? 'bg-grave-50 text-grave-700 ring-grave-200'
-        : 'bg-neutral-50 text-neutral-600 ring-neutral-200';
+    deadline.tone === "overdue"
+      ? "bg-gravisima-50 text-gravisima-700 ring-gravisima-200"
+      : deadline.tone === "warning"
+        ? "bg-grave-50 text-grave-700 ring-grave-200"
+        : "bg-neutral-50 text-neutral-600 ring-neutral-200";
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 font-semibold text-xs ring-1 ${tone}`}
@@ -50,7 +58,11 @@ function Deadline({ causa }: { causa: Causa }) {
   );
 }
 
-export default memo(function CausasTable({ causas, privacyMode, onSelectCausa }: CausasTableProps) {
+export default memo(function CausasTable({
+  causas,
+  privacyMode,
+  onSelectCausa,
+}: CausasTableProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-neutral-200/60 bg-white shadow-sm">
       <div className="divide-y divide-neutral-100 md:hidden">
@@ -66,17 +78,24 @@ export default memo(function CausasTable({ causas, privacyMode, onSelectCausa }:
               <div className="flex min-w-0 flex-col">
                 <StudentName causa={causa} privacyMode={privacyMode} />
                 <span className="text-neutral-600 text-xs">
-                  {causa.estudianteCurso || 'Sin curso'}
+                  {causa.estudianteCurso || "Sin curso"}
                 </span>
               </div>
-              <ChevronRight className="size-5 shrink-0 text-brand-600" aria-hidden="true" />
+              <ChevronRight
+                className="size-5 shrink-0 text-brand-600"
+                aria-hidden="true"
+              />
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-mono font-semibold text-brand-700 text-xs">{causa.id}</span>
+              <span className="font-mono font-semibold text-brand-700 text-xs">
+                {causa.id}
+              </span>
               <span
                 className={`rounded-full px-2 py-0.5 font-semibold text-xs ${severityClasses[causa.tipoInfraccion]}`}
               >
-                {causa.comprometeAulaSegura ? 'Aula Segura' : causa.tipoInfraccion}
+                {causa.comprometeAulaSegura
+                  ? "Aula Segura"
+                  : causa.tipoInfraccion}
               </span>
               <span className="rounded-md bg-neutral-100 px-2 py-1 font-medium text-neutral-700 text-xs">
                 {getCausaOperationalPhase(causa)}
@@ -95,19 +114,19 @@ export default memo(function CausasTable({ causas, privacyMode, onSelectCausa }:
           <thead className="border-neutral-200/60 border-b bg-neutral-50">
             <tr>
               {[
-                'Estudiante',
-                'Curso',
-                'Expediente',
-                'Tipificación',
-                'Fase actual',
-                'Días para cierre',
-                'Estado',
-                'Acción',
+                "Estudiante",
+                "Curso",
+                "Expediente",
+                "Tipificación",
+                "Fase actual",
+                "Días para cierre",
+                "Estado",
+                "Acción",
               ].map((heading) => (
                 <th
                   key={heading}
                   scope="col"
-                  className="whitespace-nowrap px-4 py-3 text-left font-semibold text-neutral-600 text-xs uppercase tracking-wider"
+                  className="whitespace-nowrap px-4 py-3 text-left font-semibold text-neutral-700 text-xs"
                 >
                   {heading}
                 </th>
@@ -120,7 +139,7 @@ export default memo(function CausasTable({ causas, privacyMode, onSelectCausa }:
                 key={causa.id}
                 onClick={() => onSelectCausa(causa)}
                 onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
+                  if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
                     onSelectCausa(causa);
                   }
@@ -135,7 +154,7 @@ export default memo(function CausasTable({ causas, privacyMode, onSelectCausa }:
                   </div>
                 </td>
                 <td className="whitespace-nowrap px-4 py-3 text-neutral-600 text-sm">
-                  {causa.estudianteCurso || '—'}
+                  {causa.estudianteCurso || "—"}
                 </td>
                 <td className="whitespace-nowrap px-4 py-3 font-mono font-semibold text-brand-700 text-sm">
                   {causa.id}
@@ -144,8 +163,12 @@ export default memo(function CausasTable({ causas, privacyMode, onSelectCausa }:
                   <span
                     className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-semibold text-xs ${severityClasses[causa.tipoInfraccion]}`}
                   >
-                    {causa.comprometeAulaSegura && <Shield className="size-3" aria-hidden="true" />}
-                    {causa.comprometeAulaSegura ? 'Aula Segura' : causa.tipoInfraccion}
+                    {causa.comprometeAulaSegura && (
+                      <Shield className="size-3" aria-hidden="true" />
+                    )}
+                    {causa.comprometeAulaSegura
+                      ? "Aula Segura"
+                      : causa.tipoInfraccion}
                   </span>
                 </td>
                 <td className="whitespace-nowrap px-4 py-3 text-sm">
@@ -166,10 +189,11 @@ export default memo(function CausasTable({ causas, privacyMode, onSelectCausa }:
                       event.stopPropagation();
                       onSelectCausa(causa);
                     }}
-                    className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 font-semibold text-brand-700 text-xs hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                    className="inline-flex min-h-10 items-center gap-1 rounded-lg bg-brand-700 px-3 py-1.5 font-semibold text-white text-xs transition-colors hover:bg-brand-800 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
                     aria-label={`Gestionar expediente ${causa.id}`}
                   >
-                    Gestionar <ChevronRight className="size-3.5" aria-hidden="true" />
+                    Gestionar{" "}
+                    <ChevronRight className="size-3.5" aria-hidden="true" />
                   </button>
                 </td>
               </tr>

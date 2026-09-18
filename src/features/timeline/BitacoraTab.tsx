@@ -224,12 +224,12 @@ export default memo(function BitacoraTab({
             ))}
           </div>
           <div className="relative w-full sm:w-64">
-            <Search className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-neutral-400" />
+            <Search className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-neutral-500" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar en comunicaciones…"
-              className="w-full rounded-lg border border-neutral-150 bg-white py-2 pl-8 pr-3 text-sm outline-none placeholder:text-neutral-400 focus:border-brand-300 focus:ring-2 focus:ring-brand-100"
+              className="min-h-11 w-full rounded-lg border border-neutral-150 bg-white py-2 pl-8 pr-3 text-sm outline-none placeholder:text-neutral-500 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
               aria-label="Buscar en comunicaciones"
             />
           </div>
@@ -475,14 +475,14 @@ export default memo(function BitacoraTab({
                         </span>
                       )}
                     </div>
-                    <span className="text-xs text-neutral-400">
+                    <span className="text-neutral-500 text-xs">
                       {formatChileDateTime(entry.fecha)}
                     </span>
                   </div>
                   <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-600">
                     {entry.descripcion}
                   </p>
-                  <p className="mt-2 flex items-center gap-1.5 text-xs text-neutral-400">
+                  <p className="mt-2 flex items-center gap-1.5 text-neutral-500 text-xs">
                     <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
                     {entry.participantes.length > 0
                       ? entry.participantes.join(", ")
@@ -491,7 +491,7 @@ export default memo(function BitacoraTab({
                   {entry.documentoAdjunto && (
                     <div className="mt-3 flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-2 text-xs">
                       <File
-                        className="h-3.5 w-3.5 shrink-0 text-brand-500"
+                        className="h-3.5 w-3.5 shrink-0 text-brand-700"
                         aria-hidden="true"
                       />
                       <span className="truncate font-medium text-brand-700">

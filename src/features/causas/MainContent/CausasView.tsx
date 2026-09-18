@@ -132,87 +132,90 @@ export default function CausasView({
         }
       />
 
-      {/* Search and course filter — matching Anotaciones */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
-          <Search
-            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400"
-            aria-hidden="true"
-          />
-          <input
-            type="search"
-            id="search-active-causes"
-            placeholder="Buscar estudiante, RUT o curso..."
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            aria-label="Buscar expedientes"
-            className="w-full rounded-xl border border-neutral-200/60 bg-neutral-100 py-2 pr-4 pl-10 font-medium text-neutral-800 text-sm transition-colors placeholder:text-neutral-400 hover:border-neutral-300 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-          />
-        </div>
-        <div className="relative sm:w-72">
-          <GraduationCap
-            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400"
-            aria-hidden="true"
-          />
-          <select
-            id="active-causes-course-filter"
-            value={selectedCourse}
-            onChange={(event) => {
-              setSelectedCourse(event.target.value);
-              clearSelectedCausa();
-            }}
-            aria-label="Filtrar expedientes por curso"
-            className="w-full appearance-none rounded-xl border border-neutral-200/60 bg-neutral-100 py-2 pr-9 pl-10 font-medium text-neutral-800 text-sm transition-colors hover:border-neutral-300 focus:border-brand-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-          >
-            <option value="">Todos los cursos</option>
-            {courseOptions.map((course) => (
-              <option key={course} value={course}>
-                {course}
-              </option>
-            ))}
-          </select>
-          <ChevronDown
-            className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-neutral-400"
-            aria-hidden="true"
-          />
-        </div>
-      </div>
-
-      {/* Fase filter tabs — full-width, matching Anotaciones */}
-      <div
-        className="inline-flex flex-wrap gap-1 rounded-xl bg-neutral-100 p-1"
-        role="tablist"
-        aria-label="Filtro por fase"
+      <section
+        aria-label="Filtros de expedientes"
+        className="card space-y-4 p-4"
       >
-        {(
-          [
-            "Todas",
-            "Recepción",
-            "Investigación",
-            "Resolución",
-            "Apelación",
-            "Seguimiento",
-          ] as const
-        ).map((fase) => (
-          <button
-            key={fase}
-            type="button"
-            onClick={() => {
-              setSelectedFaseFilter(fase);
-              clearSelectedCausa();
-            }}
-            role="tab"
-            aria-selected={selectedFaseFilter === fase}
-            className={`rounded-lg px-3.5 py-1.5 font-semibold text-sm transition-colors duration-150 ${
-              selectedFaseFilter === fase
-                ? "bg-white text-neutral-900 shadow-sm"
-                : "text-neutral-600 hover:text-neutral-800"
-            }`}
-          >
-            {fase}
-          </button>
-        ))}
-      </div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search
+              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400"
+              aria-hidden="true"
+            />
+            <input
+              type="search"
+              id="search-active-causes"
+              placeholder="Buscar estudiante, RUT o curso..."
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              aria-label="Buscar expedientes"
+              className="min-h-11 w-full rounded-lg border border-neutral-200 bg-neutral-50 py-2 pr-4 pl-10 font-medium text-neutral-800 text-sm transition-colors placeholder:text-neutral-500 hover:border-neutral-300 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            />
+          </div>
+          <div className="relative sm:w-72">
+            <GraduationCap
+              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400"
+              aria-hidden="true"
+            />
+            <select
+              id="active-causes-course-filter"
+              value={selectedCourse}
+              onChange={(event) => {
+                setSelectedCourse(event.target.value);
+                clearSelectedCausa();
+              }}
+              aria-label="Filtrar expedientes por curso"
+              className="min-h-11 w-full appearance-none rounded-lg border border-neutral-200 bg-neutral-50 py-2 pr-9 pl-10 font-medium text-neutral-800 text-sm transition-colors hover:border-neutral-300 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            >
+              <option value="">Todos los cursos</option>
+              {courseOptions.map((course) => (
+                <option key={course} value={course}>
+                  {course}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-neutral-400"
+              aria-hidden="true"
+            />
+          </div>
+        </div>
+
+        <div
+          className="inline-flex flex-wrap gap-1 rounded-xl bg-neutral-100 p-1"
+          role="tablist"
+          aria-label="Filtro por fase"
+        >
+          {(
+            [
+              "Todas",
+              "Recepción",
+              "Investigación",
+              "Resolución",
+              "Apelación",
+              "Seguimiento",
+            ] as const
+          ).map((fase) => (
+            <button
+              key={fase}
+              type="button"
+              onClick={() => {
+                setSelectedFaseFilter(fase);
+                clearSelectedCausa();
+              }}
+              role="tab"
+              aria-selected={selectedFaseFilter === fase}
+              className={`rounded-lg px-3.5 py-1.5 font-semibold text-sm transition-colors duration-150 ${
+                selectedFaseFilter === fase
+                  ? "bg-white text-neutral-900 shadow-sm"
+                  : "text-neutral-700 hover:text-neutral-900"
+              }`}
+            >
+              {fase}
+            </button>
+          ))}
+        </div>
+      </section>
 
       {/* Table follows the same hierarchy as Anotaciones. */}
       {workspace.isCausasLoading ? (

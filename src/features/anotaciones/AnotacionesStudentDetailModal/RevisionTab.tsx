@@ -1,14 +1,24 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useCallback, useRef } from 'react';
-import { AlertTriangle, ArrowRight, CheckCircle2, FileText, RefreshCw, X } from 'lucide-react';
-import type { CartaDisciplinaria } from '@/shared/lib/types';
-import { mapDocTypeToLetterType, type LetterDocType } from '@/shared/lib/domain/disciplinaryStage';
-import type { ReviewAnnotationType } from '../NewDisciplinaryProcessModal/ReviewStep';
-import Button from '@/shared/ui/Button';
-import ReviewStep from '../NewDisciplinaryProcessModal/ReviewStep';
-import { formatDate, type StudentInfo } from './constants';
-import { useStudentPdfDisciplinaryReview } from './hooks/useStudentPdfDisciplinaryReview';
+import { useCallback, useRef } from "react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  CheckCircle2,
+  FileText,
+  RefreshCw,
+  X,
+} from "lucide-react";
+import type { CartaDisciplinaria } from "@/shared/lib/types";
+import {
+  mapDocTypeToLetterType,
+  type LetterDocType,
+} from "@/shared/lib/domain/disciplinaryStage";
+import type { ReviewAnnotationType } from "../NewDisciplinaryProcessModal/ReviewStep";
+import Button from "@/shared/ui/Button";
+import ReviewStep from "../NewDisciplinaryProcessModal/ReviewStep";
+import { formatDate, type StudentInfo } from "./constants";
+import { useStudentPdfDisciplinaryReview } from "./hooks/useStudentPdfDisciplinaryReview";
 
 interface RevisionTabProps {
   student: StudentInfo;
@@ -19,10 +29,10 @@ interface RevisionTabProps {
 }
 
 const RECOMMENDATION_LABEL: Record<string, string> = {
-  mantener: 'Mantener seguimiento actual',
-  escalar: 'Escalar medida disciplinaria',
-  derivar: 'Derivar a Convivencia Escolar',
-  revisar_conflicto: 'Revisar conflicto de estudiante',
+  mantener: "Mantener seguimiento actual",
+  escalar: "Escalar medida disciplinaria",
+  derivar: "Derivar a Convivencia Escolar",
+  revisar_conflicto: "Revisar conflicto de estudiante",
 };
 
 export default function RevisionTab({
@@ -55,7 +65,10 @@ export default function RevisionTab({
     (event: React.DragEvent) => {
       event.preventDefault();
       event.stopPropagation();
-      if (dropZoneRef.current && !dropZoneRef.current.contains(event.relatedTarget as Node)) {
+      if (
+        dropZoneRef.current &&
+        !dropZoneRef.current.contains(event.relatedTarget as Node)
+      ) {
         review.setIsDragging(false);
       }
     },
@@ -63,13 +76,15 @@ export default function RevisionTab({
   );
 
   const totalDetected = review.summary
-    ? review.summary.negativas + review.summary.positivas + review.summary.informativas
+    ? review.summary.negativas +
+      review.summary.positivas +
+      review.summary.informativas
     : 0;
   const canGoToCarta = Boolean(
     review.comparison?.suggestedDocType &&
     !review.comparison.conflictMessage &&
-    (review.comparison.recommendation === 'escalar' ||
-      review.comparison.recommendation === 'derivar'),
+    (review.comparison.recommendation === "escalar" ||
+      review.comparison.recommendation === "derivar"),
   );
 
   const handleGoToCarta = async () => {
@@ -77,7 +92,10 @@ export default function RevisionTab({
     if (!docType) return;
     const confirmed = await review.confirmReview();
     if (!confirmed) return;
-    onGoToCarta?.(docType, Math.max(counts.negativas, review.summary?.negativas || 0));
+    onGoToCarta?.(
+      docType,
+      Math.max(counts.negativas, review.summary?.negativas || 0),
+    );
   };
 
   return (
@@ -85,23 +103,33 @@ export default function RevisionTab({
       <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
         <div className="mb-3 flex items-center gap-2">
           <FileText className="h-4 w-4 text-brand-600" />
-          <h3 className="text-sm font-bold text-neutral-900">Revisión de PDF del estudiante</h3>
+          <h3 className="text-sm font-bold text-neutral-900">
+            Revisión de PDF del estudiante
+          </h3>
         </div>
         <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
           <div className="rounded-lg bg-neutral-50 p-3">
-            <p className="text-xs font-semibold text-neutral-400">Negativas en Supabase</p>
-            <p className="mt-1 text-xl font-black text-neutral-900">{counts.negativas}</p>
-          </div>
-          <div className="rounded-lg bg-neutral-50 p-3">
-            <p className="text-xs font-semibold text-neutral-400">Carta vigente</p>
-            <p className="mt-1 text-sm font-bold text-neutral-900">
-              {currentCarta?.letter_type || 'Sin carta vigente'}
+            <p className="font-semibold text-neutral-600 text-xs">
+              Negativas en Supabase
+            </p>
+            <p className="mt-1 text-xl font-black text-neutral-900">
+              {counts.negativas}
             </p>
           </div>
           <div className="rounded-lg bg-neutral-50 p-3">
-            <p className="text-xs font-semibold text-neutral-400">Última emisión</p>
+            <p className="font-semibold text-neutral-600 text-xs">
+              Carta vigente
+            </p>
             <p className="mt-1 text-sm font-bold text-neutral-900">
-              {currentCarta ? formatDate(currentCarta.emission_date) : '-'}
+              {currentCarta?.letter_type || "Sin carta vigente"}
+            </p>
+          </div>
+          <div className="rounded-lg bg-neutral-50 p-3">
+            <p className="font-semibold text-neutral-600 text-xs">
+              Última emisión
+            </p>
+            <p className="mt-1 text-sm font-bold text-neutral-900">
+              {currentCarta ? formatDate(currentCarta.emission_date) : "-"}
             </p>
           </div>
         </div>
@@ -121,9 +149,9 @@ export default function RevisionTab({
         disabled={review.isBusy}
         className={`w-full rounded-xl border-2 border-dashed p-8 text-center transition-colors ${
           review.isDragging
-            ? 'border-brand-400 bg-brand-50'
-            : 'border-neutral-300 bg-white hover:border-brand-300 hover:bg-brand-50/30'
-        } ${review.isBusy ? 'cursor-wait opacity-70' : ''}`}
+            ? "border-brand-400 bg-brand-50"
+            : "border-neutral-300 bg-white hover:border-brand-300 hover:bg-brand-50/30"
+        } ${review.isBusy ? "cursor-wait opacity-70" : ""}`}
       >
         <input
           ref={fileInputRef}
@@ -137,13 +165,15 @@ export default function RevisionTab({
           {review.isBusy ? (
             <div className="h-10 w-10 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
           ) : (
-            <RefreshCw className="h-10 w-10 text-neutral-300" />
+            <RefreshCw className="h-10 w-10 text-neutral-400" />
           )}
           <div>
             <p className="text-sm font-semibold text-neutral-800">
-              {review.file ? review.file.name : 'Subir PDF actualizado de hoja de vida'}
+              {review.file
+                ? review.file.name
+                : "Subir PDF actualizado de hoja de vida"}
             </p>
-            <p className="mt-1 text-xs text-neutral-400">
+            <p className="mt-1 text-neutral-500 text-xs">
               Se analizará y comparará antes de registrar cualquier cambio.
             </p>
           </div>
@@ -177,7 +207,9 @@ export default function RevisionTab({
         <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="text-sm font-bold text-neutral-900">Resultado comparado</h3>
+              <h3 className="text-sm font-bold text-neutral-900">
+                Resultado comparado
+              </h3>
               <p className="text-xs text-neutral-500">
                 {totalDetected} anotaciones detectadas en el PDF.
               </p>
@@ -189,26 +221,32 @@ export default function RevisionTab({
 
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <div className="rounded-lg border border-neutral-100 p-3">
-              <p className="text-xs text-neutral-400">Negativas registradas</p>
+              <p className="font-medium text-neutral-600 text-xs">
+                Negativas registradas
+              </p>
               <p className="text-xl font-black text-neutral-900">
                 {review.comparison.registeredNegativeCount}
               </p>
             </div>
             <div className="rounded-lg border border-gravisima-100 bg-gravisima-50 p-3">
-              <p className="text-xs text-gravisima-500">Negativas en PDF</p>
+              <p className="font-medium text-neutral-800 text-xs">
+                Negativas en PDF
+              </p>
               <p className="text-xl font-black text-gravisima-700">
                 {review.comparison.detectedNegativeCount}
               </p>
             </div>
             <div className="rounded-lg border border-grave-100 bg-grave-50 p-3">
-              <p className="text-xs text-grave-600">Diferencia</p>
+              <p className="font-medium text-neutral-800 text-xs">Diferencia</p>
               <p className="text-xl font-black text-grave-700">
-                {review.comparison.difference >= 0 ? '+' : ''}
+                {review.comparison.difference >= 0 ? "+" : ""}
                 {review.comparison.difference}
               </p>
             </div>
             <div className="rounded-lg border border-blue-100 bg-blue-50 p-3">
-              <p className="text-xs text-blue-600">Posibles nuevas</p>
+              <p className="font-medium text-neutral-800 text-xs">
+                Posibles nuevas
+              </p>
               <p className="text-xl font-black text-blue-700">
                 {review.comparison.possibleNewAnnotations}
               </p>
@@ -217,19 +255,20 @@ export default function RevisionTab({
 
           <div className="mt-4 grid grid-cols-1 gap-3 text-sm lg:grid-cols-2">
             <div className="rounded-lg bg-neutral-50 p-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
+              <p className="font-semibold text-neutral-600 text-xs">
                 Carta vigente
               </p>
               <p className="mt-1 font-semibold text-neutral-800">
-                {review.comparison.currentLetterType || 'Sin carta vigente'}
+                {review.comparison.currentLetterType || "Sin carta vigente"}
               </p>
             </div>
             <div className="rounded-lg bg-neutral-50 p-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
+              <p className="font-semibold text-neutral-600 text-xs">
                 Carta sugerida
               </p>
               <p className="mt-1 font-semibold text-neutral-800">
-                {review.comparison.suggestedLetterType || 'Mantener estado actual'}
+                {review.comparison.suggestedLetterType ||
+                  "Mantener estado actual"}
               </p>
             </div>
           </div>
@@ -245,17 +284,20 @@ export default function RevisionTab({
       {review.analysis && (
         <ReviewStep
           studentName={student.full_name}
-          course={student.course_name || student.course_id || ''}
+          course={student.course_name || student.course_id || ""}
           summary={review.summary}
           classification={
-            review.comparison?.suggestedDocType || review.analysis.recommended_letter_type || 'none'
+            review.comparison?.suggestedDocType ||
+            review.analysis.recommended_letter_type ||
+            "none"
           }
-          fileName={review.file?.name || ''}
+          fileName={review.file?.name || ""}
           annotations={review.annotations}
           warnings={review.analysis.warnings || []}
-          onAnnotationTypeChange={(sequenceNumber, type: ReviewAnnotationType) =>
-            review.handleAnnotationTypeChange(sequenceNumber, type)
-          }
+          onAnnotationTypeChange={(
+            sequenceNumber,
+            type: ReviewAnnotationType,
+          ) => review.handleAnnotationTypeChange(sequenceNumber, type)}
           onAnnotationTextChange={review.handleAnnotationTextChange}
         />
       )}
@@ -285,7 +327,8 @@ export default function RevisionTab({
               disabled={review.isBusy}
               className="rounded-xl px-5 py-2"
             >
-              Ir a Carta: {mapDocTypeToLetterType(review.comparison.suggestedDocType)}
+              Ir a Carta:{" "}
+              {mapDocTypeToLetterType(review.comparison.suggestedDocType)}
               <ArrowRight className="h-4 w-4" />
             </Button>
           )}

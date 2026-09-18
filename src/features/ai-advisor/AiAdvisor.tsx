@@ -3,34 +3,34 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
-import { useState, useRef, useEffect } from 'react';
-import { Send, RefreshCw, Bot, User, BookOpen, Gavel } from 'lucide-react';
-import Button from '@/shared/ui/Button';
-import MessageContent from './AdvisorMessage';
-import { supabase } from '../../shared/api/lib/supabase';
+import type React from "react";
+import { useState, useRef, useEffect } from "react";
+import { Send, RefreshCw, Bot, User, BookOpen, Gavel } from "lucide-react";
+import Button from "@/shared/ui/Button";
+import MessageContent from "./AdvisorMessage";
+import { supabase } from "../../shared/api/lib/supabase";
 
 interface Message {
-  role: 'user' | 'model';
+  role: "user" | "model";
   content: string;
 }
 
 const SUGGESTED_PROMPTS = [
-  '¿Cuáles son los plazos fatales y pasos obligatorios según la Ley Aula Segura?',
-  '¿Qué formalidades mínimas se exigen en la entrevista de descargos escolar?',
-  '¿Cuáles son las etapas del debido proceso bajo la Circular 482 y Ley 21809?',
-  '¿Qué multas puede aplicar la Supereduc por abandono o negligencia en el debido proceso?',
+  "¿Cuáles son los plazos fatales y pasos obligatorios según la Ley Aula Segura?",
+  "¿Qué formalidades mínimas se exigen en la entrevista de descargos escolar?",
+  "¿Cuáles son las etapas del debido proceso bajo la Circular 482 y Ley 21809?",
+  "¿Qué multas puede aplicar la Supereduc por abandono o negligencia en el debido proceso?",
 ];
 
 export default function AiAdvisor() {
   const [messages, setMessages] = useState<Message[]>([
     {
-      role: 'model',
+      role: "model",
       content:
-        'Hola. Soy su **Asesor Legal Especializado en Convivencia Escolar y Debido Proceso Chileno**...',
+        "Hola. Soy su **Asesor Legal Especializado en Convivencia Escolar y Debido Proceso Chileno**...",
     },
   ]);
-  const [inputMessage, setInputMessage] = useState<string>('');
+  const [inputMessage, setInputMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const messagesRef = useRef(messages);
   useEffect(() => {
@@ -46,7 +46,7 @@ export default function AiAdvisor() {
     }
     scrollContainerRef.current?.scrollTo({
       top: scrollContainerRef.current.scrollHeight,
-      behavior: 'smooth',
+      behavior: "smooth",
     });
   }, [messages]);
 
@@ -56,10 +56,13 @@ export default function AiAdvisor() {
     }
 
     const userMsg = textToSend.trim();
-    setInputMessage('');
+    setInputMessage("");
 
     // Add user message to state using functional update
-    setMessages((prev) => [...prev, { role: 'user', content: userMsg } as Message]);
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", content: userMsg } as Message,
+    ]);
     setIsLoading(true);
 
     try {
@@ -70,23 +73,23 @@ export default function AiAdvisor() {
         setMessages((prev) => [
           ...prev,
           {
-            role: 'model',
+            role: "model",
             content:
-              '**Sesión requerida:** Su sesión ha expirado o no está autenticado. Por favor, cierre sesión e inicie sesión nuevamente para actualizar sus credenciales.',
+              "**Sesión requerida:** Su sesión ha expirado o no está autenticado. Por favor, cierre sesión e inicie sesión nuevamente para actualizar sus credenciales.",
           },
         ]);
         return;
       }
       const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         Authorization: `Bearer ${session.access_token}`,
       };
       const historyForApi = messagesRef.current
         .slice(1)
-        .concat([{ role: 'user', content: userMsg }])
+        .concat([{ role: "user", content: userMsg }])
         .map((m) => ({ role: m.role, content: m.content }));
-      const response = await fetch('/api/advisor-chat', {
-        method: 'POST',
+      const response = await fetch("/api/advisor-chat", {
+        method: "POST",
         headers,
         body: JSON.stringify({
           message: userMsg,
@@ -94,45 +97,54 @@ export default function AiAdvisor() {
         }),
       });
 
-      const contentType = response.headers.get('content-type') || '';
+      const contentType = response.headers.get("content-type") || "";
       if (response.status === 401) {
         setMessages((prev) => [
           ...prev,
           {
-            role: 'model',
+            role: "model",
             content:
-              '**Sesión inválida:** Su token de sesión no es válido. Por favor, cierre sesión e inicie sesión nuevamente.',
+              "**Sesión inválida:** Su token de sesión no es válido. Por favor, cierre sesión e inicie sesión nuevamente.",
           },
         ]);
         return;
       }
-      if (!response.ok || !contentType.includes('application/json')) {
-        const body = await response.text().catch(() => '');
+      if (!response.ok || !contentType.includes("application/json")) {
+        const body = await response.text().catch(() => "");
         const hint =
-          body.includes('page') || contentType.includes('text/html')
-            ? 'No se pudo conectar con el servidor de IA (el backend no está respondiendo). Asegúrate de ejecutar `npm run dev`, que levanta el servidor Express con los endpoints /api.'
+          body.includes("page") || contentType.includes("text/html")
+            ? "No se pudo conectar con el servidor de IA (el backend no está respondiendo). Asegúrate de ejecutar `npm run dev`, que levanta el servidor Express con los endpoints /api."
             : `El servidor respondió con estado ${response.status}.`;
         setMessages((prev) => [
           ...prev,
-          { role: 'model', content: `**Error de conexión con el asistente:** ${hint}` },
+          {
+            role: "model",
+            content: `**Error de conexión con el asistente:** ${hint}`,
+          },
         ]);
         return;
       }
 
       const data = await response.json();
       if (data.success) {
-        setMessages((prev) => [...prev, { role: 'model', content: data.reply }]);
+        setMessages((prev) => [
+          ...prev,
+          { role: "model", content: data.reply },
+        ]);
       } else {
         setMessages((prev) => [
           ...prev,
-          { role: 'model', content: `**Error de Consultoría:** ${data.error}` },
+          { role: "model", content: `**Error de Consultoría:** ${data.error}` },
         ]);
       }
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);
       setMessages((prev) => [
         ...prev,
-        { role: 'model', content: `**Error al comunicar con el asistente:** ${message}` },
+        {
+          role: "model",
+          content: `**Error al comunicar con el asistente:** ${message}`,
+        },
       ]);
     } finally {
       setIsLoading(false);
@@ -167,12 +179,12 @@ export default function AiAdvisor() {
         <div
           className={`rounded-full border px-2.5 py-1 font-semibold text-9px ${
             isLoading
-              ? 'border-grave-200 bg-grave-50 text-grave-700'
-              : 'border-leve-200 bg-leve-50 text-leve-700'
+              ? "border-grave-200 bg-grave-50 text-grave-700"
+              : "border-leve-200 bg-leve-50 text-neutral-800"
           }`}
           aria-live="polite"
         >
-          {isLoading ? 'Analizando normativa' : 'Listo para consultar'}
+          {isLoading ? "Analizando normativa" : "Listo para consultar"}
         </div>
       </div>
 
@@ -185,19 +197,19 @@ export default function AiAdvisor() {
         className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-neutral-50 p-4 sm:p-5"
       >
         {messages.map((m, _idx) => {
-          const isModel = m.role === 'model';
+          const isModel = m.role === "model";
           const messageKey = `msg-${m.role}-${m.content.length}-${m.content.charCodeAt(0) || 0}`;
           return (
             <div
               key={messageKey}
-              className={`flex ${isModel ? 'justify-start' : 'justify-end'} animate-fade-in text-left`}
+              className={`flex ${isModel ? "justify-start" : "justify-end"} animate-fade-in text-left`}
             >
               <div
-                className={`flex max-w-[88%] items-start gap-2.5 ${isModel ? 'flex-row' : 'flex-row-reverse'}`}
+                className={`flex max-w-[88%] items-start gap-2.5 ${isModel ? "flex-row" : "flex-row-reverse"}`}
               >
                 {/* Avatars */}
                 <div
-                  className={`shrink-0 rounded-lg p-1.5 ${isModel ? 'bg-neutral-900 text-white' : 'bg-brand-600 text-white'}`}
+                  className={`shrink-0 rounded-lg p-1.5 ${isModel ? "bg-neutral-900 text-white" : "bg-brand-600 text-white"}`}
                 >
                   {isModel ? (
                     <Bot className="h-3.5 w-3.5" aria-hidden="true" />
@@ -209,12 +221,12 @@ export default function AiAdvisor() {
                 <div
                   className={`rounded-xl border p-3 ${
                     isModel
-                      ? 'rounded-tl-none border-neutral-200 bg-white text-neutral-800 shadow-xs'
-                      : 'rounded-tr-none border-brand-100 bg-brand-50/70 text-neutral-900 shadow-xs'
+                      ? "rounded-tl-none border-neutral-200 bg-white text-neutral-800 shadow-xs"
+                      : "rounded-tr-none border-brand-100 bg-brand-50/70 text-neutral-900 shadow-xs"
                   }`}
                 >
                   <span className="mb-1 block font-semibold text-8px text-neutral-700 uppercase">
-                    {isModel ? 'Asesor Legal' : 'Usted'}
+                    {isModel ? "Asesor Legal" : "Usted"}
                   </span>
                   <MessageContent text={m.content} />
                 </div>
@@ -236,7 +248,10 @@ export default function AiAdvisor() {
                 <Bot className="h-3.5 w-3.5" aria-hidden="true" />
               </div>
               <div className="flex items-center gap-2 rounded-xl rounded-tl-none border border-neutral-200 bg-white p-3 text-neutral-700 text-xs">
-                <RefreshCw className="h-3 w-3 animate-spin text-brand-600" aria-hidden="true" />
+                <RefreshCw
+                  className="h-3 w-3 animate-spin text-brand-600"
+                  aria-hidden="true"
+                />
                 <span className="font-medium text-11px text-neutral-700">
                   Analizando normativa vigente...
                 </span>
@@ -250,7 +265,7 @@ export default function AiAdvisor() {
       {/* Suggested prompts */}
       {messages.length === 1 && !isLoading && (
         <div className="border-neutral-100 border-t bg-white px-4 py-3 text-left">
-          <span className="mb-2.5 block flex items-center gap-1.5 font-semibold text-9px text-neutral-700 uppercase tracking-wider">
+          <span className="mb-2.5 block flex items-center gap-1.5 font-semibold text-neutral-700 text-xs">
             <BookOpen className="h-3 w-3 text-neutral-600" aria-hidden="true" />
             Consultas sugeridas
           </span>
@@ -296,8 +311,8 @@ export default function AiAdvisor() {
           </Button>
         </form>
         <div className="mt-2 text-left font-mono text-10px text-neutral-600">
-          Las respuestas son referenciales. Consulte siempre el RIE de su sostenedor y la normativa
-          vigente.
+          Las respuestas son referenciales. Consulte siempre el RIE de su
+          sostenedor y la normativa vigente.
         </div>
       </div>
     </section>

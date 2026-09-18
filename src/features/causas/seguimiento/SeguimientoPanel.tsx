@@ -299,7 +299,7 @@ export default function SeguimientoPanel({ causa }: { causa: Causa }) {
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 <div>
                   <label
-                    className="text-11px font-semibold uppercase tracking-wide text-slate-500"
+                    className="font-semibold text-neutral-700 text-xs"
                     htmlFor={cumplimientoId}
                   >
                     Cumplimiento
@@ -321,7 +321,7 @@ export default function SeguimientoPanel({ causa }: { causa: Causa }) {
                 </div>
                 <div>
                   <label
-                    className="text-11px font-semibold uppercase tracking-wide text-slate-500"
+                    className="font-semibold text-neutral-700 text-xs"
                     htmlFor={evaluacionId}
                   >
                     Evaluación

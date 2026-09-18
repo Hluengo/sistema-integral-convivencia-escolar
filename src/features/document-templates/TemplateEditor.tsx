@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useEffect, useRef, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Save,
   Loader2,
@@ -13,22 +13,25 @@ import {
   FileText,
   LockKeyhole,
   RefreshCw,
-} from 'lucide-react';
-import { TextBlockSkeleton } from '../../shared/Skeleton';
-import Button from '../../shared/ui/Button';
-import { useAuthStore } from '../../shared/lib/stores/authStore';
+} from "lucide-react";
+import { TextBlockSkeleton } from "../../shared/Skeleton";
+import Button from "../../shared/ui/Button";
+import { useAuthStore } from "../../shared/lib/stores/authStore";
 import {
   fetchAdminDocumentTemplates,
   type DocumentTemplate,
   updateDocumentTemplate,
-} from '../../shared/api/services/documentTemplates.service';
+} from "../../shared/api/services/documentTemplates.service";
 
-const TEMPLATE_ADMIN_ROLES = new Set(['superadmin', 'admin', 'direccion']);
-const ACTIVE_TEMPLATE_DOC_TYPES = new Set(['informe_cierre_indagacion', 'informe_concluyente']);
+const TEMPLATE_ADMIN_ROLES = new Set(["superadmin", "admin", "direccion"]);
+const ACTIVE_TEMPLATE_DOC_TYPES = new Set([
+  "informe_cierre_indagacion",
+  "informe_concluyente",
+]);
 
 const DOC_TYPE_LABELS: Record<string, string> = {
-  informe_cierre_indagacion: 'Informe de Cierre',
-  informe_concluyente: 'Informe Concluyente',
+  informe_cierre_indagacion: "Informe de Cierre",
+  informe_concluyente: "Informe Concluyente",
 };
 
 export default function TemplateEditor() {
@@ -40,18 +43,19 @@ export default function TemplateEditor() {
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [editPrompt, setEditPrompt] = useState('');
+  const [editPrompt, setEditPrompt] = useState("");
   const saveSuccessTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const selectedIdRef = useRef<string | null>(null);
 
   const templatesQuery = useQuery({
-    queryKey: ['document-templates', tenantId],
+    queryKey: ["document-templates", tenantId],
     queryFn: fetchAdminDocumentTemplates,
-    enabled: Boolean(tenantId) && TEMPLATE_ADMIN_ROLES.has(profileRole ?? ''),
+    enabled: Boolean(tenantId) && TEMPLATE_ADMIN_ROLES.has(profileRole ?? ""),
     staleTime: 5 * 60 * 1000,
     retry: (failureCount, error) =>
-      !(error instanceof Error && error.message.includes('solo para Dirección')) &&
-      failureCount < 2,
+      !(
+        error instanceof Error && error.message.includes("solo para Dirección")
+      ) && failureCount < 2,
   });
 
   useEffect(() => {
@@ -61,17 +65,19 @@ export default function TemplateEditor() {
     );
     setTemplates(activeTemplates);
     const selected =
-      activeTemplates.find((template) => template.id === selectedIdRef.current) ??
-      activeTemplates[0];
+      activeTemplates.find(
+        (template) => template.id === selectedIdRef.current,
+      ) ?? activeTemplates[0];
     selectedIdRef.current = selected?.id ?? null;
     setSelectedId(selected?.id ?? null);
-    setEditPrompt(selected?.system_prompt ?? '');
+    setEditPrompt(selected?.system_prompt ?? "");
     return () => clearTimeout(saveSuccessTimer.current);
   }, [templatesQuery.data]);
 
   const loading = templatesQuery.isLoading;
-  const loadError = templatesQuery.error instanceof Error ? templatesQuery.error.message : null;
-  const canManageTemplates = TEMPLATE_ADMIN_ROLES.has(profileRole ?? '');
+  const loadError =
+    templatesQuery.error instanceof Error ? templatesQuery.error.message : null;
+  const canManageTemplates = TEMPLATE_ADMIN_ROLES.has(profileRole ?? "");
   const waitingForRole = Boolean(tenantId) && profileRole === null;
 
   const handleSelect = (tpl: DocumentTemplate) => {
@@ -91,21 +97,34 @@ export default function TemplateEditor() {
     setSaveError(null);
 
     try {
-      await updateDocumentTemplate({ id: selectedId, systemPrompt: editPrompt });
+      await updateDocumentTemplate({
+        id: selectedId,
+        systemPrompt: editPrompt,
+      });
       setSaveSuccess(selectedId);
-      queryClient.setQueryData<DocumentTemplate[]>(['document-templates', tenantId], (current) =>
-        current?.map((template) =>
-          template.id === selectedId ? { ...template, system_prompt: editPrompt } : template,
-        ),
+      queryClient.setQueryData<DocumentTemplate[]>(
+        ["document-templates", tenantId],
+        (current) =>
+          current?.map((template) =>
+            template.id === selectedId
+              ? { ...template, system_prompt: editPrompt }
+              : template,
+          ),
       );
       setTemplates((prev) =>
         prev.map((template) =>
-          template.id === selectedId ? { ...template, system_prompt: editPrompt } : template,
+          template.id === selectedId
+            ? { ...template, system_prompt: editPrompt }
+            : template,
         ),
       );
       saveSuccessTimer.current = setTimeout(() => setSaveSuccess(null), 2000);
     } catch (error) {
-      setSaveError(error instanceof Error ? error.message : 'Error de conexión al guardar.');
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : "Error de conexión al guardar.",
+      );
     } finally {
       setSaving(null);
     }
@@ -113,13 +132,19 @@ export default function TemplateEditor() {
 
   const header = (
     <div className="flex items-start gap-3 border-neutral-200/60 border-b bg-white px-4 py-3 sm:px-5">
-      <span className="rounded-lg bg-brand-50 p-2 text-brand-700" aria-hidden="true">
+      <span
+        className="rounded-lg bg-brand-50 p-2 text-brand-700"
+        aria-hidden="true"
+      >
         <FileText className="h-4 w-4" />
       </span>
       <div>
-        <h3 className="font-semibold text-neutral-900 text-sm">Plantillas institucionales</h3>
+        <h3 className="font-semibold text-neutral-900 text-sm">
+          Plantillas institucionales
+        </h3>
         <p className="mt-0.5 text-10px text-neutral-500">
-          Administración de instrucciones para futuras generaciones de documentos.
+          Administración de instrucciones para futuras generaciones de
+          documentos.
         </p>
       </div>
     </div>
@@ -142,10 +167,15 @@ export default function TemplateEditor() {
       <div className="min-h-[280px] bg-white">
         {header}
         <div className="flex flex-col items-center justify-center px-5 py-14 text-center">
-          <span className="rounded-xl bg-neutral-100 p-3 text-neutral-500" aria-hidden="true">
+          <span
+            className="rounded-xl bg-neutral-100 p-3 text-neutral-500"
+            aria-hidden="true"
+          >
             <LockKeyhole className="size-5" />
           </span>
-          <h4 className="mt-3 font-semibold text-neutral-900 text-sm">Acceso a plantillas</h4>
+          <h4 className="mt-3 font-semibold text-neutral-900 text-sm">
+            Acceso a plantillas
+          </h4>
           <p className="mt-1 max-w-md text-neutral-500 text-sm">
             Esta sección está disponible solo para Dirección y Administración.
           </p>
@@ -171,12 +201,18 @@ export default function TemplateEditor() {
       <div className="min-h-[280px] bg-white">
         {header}
         <div className="flex flex-col items-center justify-center px-5 py-14 text-center">
-          <span className="rounded-xl bg-grave-50 p-3 text-grave-700" aria-hidden="true">
+          <span
+            className="rounded-xl bg-grave-50 p-3 text-grave-700"
+            aria-hidden="true"
+          >
             <LockKeyhole className="size-5" />
           </span>
-          <h4 className="mt-3 font-semibold text-neutral-900 text-sm">Acceso a plantillas</h4>
+          <h4 className="mt-3 font-semibold text-neutral-900 text-sm">
+            Acceso a plantillas
+          </h4>
           <p className="mt-1 max-w-md text-neutral-500 text-sm">{loadError}</p>
-          {loadError.includes('conexión') || loadError.includes('cargar las plantillas') ? (
+          {loadError.includes("conexión") ||
+          loadError.includes("cargar las plantillas") ? (
             <Button
               variant="secondary"
               onClick={() => void templatesQuery.refetch()}
@@ -196,12 +232,16 @@ export default function TemplateEditor() {
       <div className="min-h-[280px] bg-white">
         {header}
         <div className="px-5 py-14 text-center">
-          <FileText className="mx-auto size-6 text-neutral-300" aria-hidden="true" />
+          <FileText
+            className="mx-auto size-6 text-neutral-400"
+            aria-hidden="true"
+          />
           <h4 className="mt-3 font-semibold text-neutral-900 text-sm">
             No hay plantillas institucionales disponibles
           </h4>
           <p className="mx-auto mt-1 max-w-md text-neutral-500 text-sm">
-            Un perfil autorizado debe cargar las plantillas de informes para habilitar su edición.
+            Un perfil autorizado debe cargar las plantillas de informes para
+            habilitar su edición.
           </p>
         </div>
       </div>
@@ -222,8 +262,8 @@ export default function TemplateEditor() {
               onClick={() => handleSelect(tpl)}
               className={`w-full border-neutral-100 border-b px-3 py-2.5 text-left font-medium text-10px transition-colors ${
                 selectedId === tpl.id
-                  ? 'border-l-2 border-l-brand-600 bg-brand-50 text-brand-700'
-                  : 'text-neutral-600 hover:bg-neutral-100'
+                  ? "border-l-2 border-l-brand-600 bg-brand-50 text-brand-700"
+                  : "text-neutral-600 hover:bg-neutral-100"
               }`}
             >
               {DOC_TYPE_LABELS[tpl.doc_type] || tpl.doc_type}
@@ -237,7 +277,8 @@ export default function TemplateEditor() {
             <>
               <div className="flex items-center justify-between border-neutral-100 border-b bg-white px-4 py-2">
                 <span className="font-medium text-10px text-neutral-500">
-                  {templates.find((t) => t.id === selectedId)?.label || selectedId}
+                  {templates.find((t) => t.id === selectedId)?.label ||
+                    selectedId}
                 </span>
                 <div className="flex items-center gap-2">
                   {saveSuccess === selectedId && (
@@ -274,7 +315,7 @@ export default function TemplateEditor() {
               />
             </>
           ) : (
-            <div className="flex flex-1 items-center justify-center text-neutral-400 text-xs">
+            <div className="flex flex-1 items-center justify-center text-neutral-500 text-xs">
               Seleccione una plantilla para editar
             </div>
           )}
