@@ -165,7 +165,7 @@ export default function StudentSummaryTab({
 
         <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
           <div className="mb-3 flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-indigo-600" />
+            <Sparkles className="h-4 w-4 text-brand-600" />
             <h4 className="text-sm font-bold text-neutral-900">
               Último análisis PDF
             </h4>
@@ -190,7 +190,7 @@ export default function StudentSummaryTab({
             <Button
               variant="custom"
               onClick={onGoToRevisionTab}
-              className="mt-4 rounded-lg border border-indigo-200 px-3 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50"
+              className="mt-4 rounded-lg border border-brand-200 px-3 py-2 text-xs font-semibold text-brand-700 hover:bg-brand-50"
             >
               Revisar nuevo PDF <ArrowRight className="h-3.5 w-3.5" />
             </Button>

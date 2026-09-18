@@ -146,7 +146,7 @@ export default function ChecklistItemCard({
               <button
                 type="button"
                 onClick={() => handleResetRegistration(item.id)}
-                className="flex items-center gap-1 font-semibold text-10px text-danger-600 transition-colors hover:text-danger-700"
+                className="flex items-center gap-1 font-semibold text-10px text-gravisima-600 transition-colors hover:text-gravisima-700"
               >
                 <Trash className="h-3 w-3" aria-hidden="true" /> Anular registro
               </button>

@@ -373,7 +373,7 @@ export default function CausaNotificationGenerator({
                     variant="secondary"
                     onClick={() => void onAnnul()}
                     disabled={isProcessing}
-                    className="rounded-xl px-4 py-2.5 font-medium text-danger-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-xl px-4 py-2.5 font-medium text-gravisima-600 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <Trash2 className="h-4 w-4" /> Anular
                   </Button>

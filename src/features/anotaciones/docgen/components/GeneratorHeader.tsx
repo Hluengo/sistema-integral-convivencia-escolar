@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { FileText, AlertTriangle } from 'lucide-react';
+import { FileText, AlertTriangle } from "lucide-react";
 
 interface GeneratorHeaderProps {
   negativeCount: number;
@@ -15,7 +15,7 @@ export default function GeneratorHeader({
     <div className="flex flex-col justify-between gap-4 rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-xs sm:flex-row sm:items-center">
       <div>
         <h3 className="flex items-center gap-2 font-bold text-neutral-900 text-sm">
-          <FileText className="h-5 w-5 text-indigo-600" />
+          <FileText className="h-5 w-5 text-brand-600" />
           Generación de Documentos Disciplinarios
         </h3>
         <p className="mt-1 text-neutral-500 text-xs">
@@ -23,7 +23,7 @@ export default function GeneratorHeader({
         </p>
       </div>
       <div
-        className={`flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2 font-semibold text-xs ${negativeCount >= 10 ? 'bg-gravisima-50 border-gravisima-200 text-gravisima-700' : 'bg-grave-50 border-grave-200 text-grave-700'}`}
+        className={`flex shrink-0 items-center gap-2 rounded-xl border px-4 py-2 font-semibold text-xs ${negativeCount >= 10 ? "bg-gravisima-50 border-gravisima-200 text-gravisima-700" : "bg-grave-50 border-grave-200 text-grave-700"}`}
       >
         <AlertTriangle className="h-4 w-4 shrink-0" />
         <span>

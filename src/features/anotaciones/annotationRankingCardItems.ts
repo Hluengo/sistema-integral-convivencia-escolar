@@ -5,10 +5,10 @@
 import type {
   StudentAnnotationRankingItem,
   TeacherAnnotationRankingItem,
-} from '../../shared/lib/domain/annotationRankings';
-import { createElement } from 'react';
-import { maskName } from '../../shared/lib/anotacionesUtils';
-import type { RankingCardItem } from './RankingCard';
+} from "../../shared/lib/domain/annotationRankings";
+import { createElement } from "react";
+import { maskName } from "../../shared/lib/anotacionesUtils";
+import type { RankingCardItem } from "./RankingCard";
 
 /**
  * Mapea el ranking de docentes a items de RankingCard.
@@ -24,23 +24,35 @@ export function toTeacherCardItems(
     count: item.negative_count,
     badges: [
       createElement(
-        'span',
-        { key: 'negative', className: 'rounded bg-grave-50 px-1.5 py-0.5 text-grave-700' },
+        "span",
+        {
+          key: "negative",
+          className: "rounded bg-grave-50 px-1.5 py-0.5 text-grave-700",
+        },
         `Neg. ${item.negative_count}`,
       ),
       createElement(
-        'span',
-        { key: 'positive', className: 'rounded bg-leve-50 px-1.5 py-0.5 text-leve-700' },
+        "span",
+        {
+          key: "positive",
+          className: "rounded bg-leve-50 px-1.5 py-0.5 text-leve-700",
+        },
         `Pos. ${item.positive_count}`,
       ),
       createElement(
-        'span',
-        { key: 'informative', className: 'rounded bg-sky-50 px-1.5 py-0.5 text-sky-700' },
+        "span",
+        {
+          key: "informative",
+          className: "rounded bg-brand-50 px-1.5 py-0.5 text-brand-700",
+        },
         `Inf. ${item.informative_count}`,
       ),
       createElement(
-        'span',
-        { key: 'total', className: 'rounded bg-neutral-100 px-1.5 py-0.5 text-neutral-600' },
+        "span",
+        {
+          key: "total",
+          className: "rounded bg-neutral-100 px-1.5 py-0.5 text-neutral-600",
+        },
         `Total ${item.total_count}`,
       ),
     ],

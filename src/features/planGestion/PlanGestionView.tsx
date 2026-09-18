@@ -22,7 +22,7 @@ import { useAuthStore } from "@/shared/lib/stores/authStore";
 
 const estadoTone: Record<PlanGestionEstado, string> = {
   pendiente: "bg-slate-100 text-slate-700 border-slate-200",
-  en_curso: "bg-sky-100 text-sky-700 border-sky-200",
+  en_curso: "bg-brand-100 text-brand-700 border-brand-200",
   cumplido: "bg-green-100 text-green-700 border-green-200",
   evaluado: "bg-purple-100 text-purple-700 border-purple-200",
   atrasado: "bg-red-100 text-red-700 border-red-200",
@@ -337,7 +337,7 @@ export default function PlanGestionView() {
                 ))}
               </select>
               {r.evidencia_nombre && (
-                <span className="inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-11px text-sky-700">
+                <span className="inline-flex items-center gap-1 rounded-full border border-brand-200 bg-brand-50 px-2 py-0.5 text-11px text-brand-700">
                   <File className="size-3" /> {r.evidencia_nombre}
                 </span>
               )}

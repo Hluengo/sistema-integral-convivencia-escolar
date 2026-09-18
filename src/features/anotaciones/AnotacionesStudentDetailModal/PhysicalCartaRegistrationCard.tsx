@@ -1,23 +1,25 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useState } from 'react';
-import { ClipboardCheck, Plus, X } from 'lucide-react';
-import type { CartaDisciplinaria } from '@/shared/lib/types';
+import { useState } from "react";
+import { ClipboardCheck, Plus, X } from "lucide-react";
+import type { CartaDisciplinaria } from "@/shared/lib/types";
 import {
   getPhysicalCartaBaselineType,
   getSuggestedLetterType,
   mapDocTypeToLetterType,
   type LetterType,
-} from '@/shared/lib/domain/disciplinaryStage';
-import { usePhysicalCartaRegistration } from '@/shared/lib/hooks/usePhysicalCartaRegistration';
-import { formatDate } from './constants';
-import { getCurrentSchoolYear, getYearFromDateOnly, nowDateOnly } from '@/shared/lib/dateUtils';
-import Button from '@/shared/ui/Button';
+} from "@/shared/lib/domain/disciplinaryStage";
+import { usePhysicalCartaRegistration } from "@/shared/lib/hooks/usePhysicalCartaRegistration";
+import { formatDate } from "./constants";
+import {
+  getCurrentSchoolYear,
+  getYearFromDateOnly,
+  nowDateOnly,
+} from "@/shared/lib/dateUtils";
+import Button from "@/shared/ui/Button";
 
-const PHYSICAL_LETTER_TYPES: Array<Exclude<LetterType, 'Ficha de Derivación'>> = [
-  'Amonestación Escrita',
-  'Carta de Compromiso Conductual',
-];
+const PHYSICAL_LETTER_TYPES: Array<Exclude<LetterType, "Ficha de Derivación">> =
+  ["Amonestación Escrita", "Carta de Compromiso Conductual"];
 
 interface PhysicalCartaRegistrationCardProps {
   studentId: string;
@@ -35,33 +37,44 @@ export default function PhysicalCartaRegistrationCard({
   const today = nowDateOnly();
   const schoolYear = getCurrentSchoolYear();
   const physicalCartas = cartas.filter((carta) => {
-    const cartaYear = carta.school_year ?? getYearFromDateOnly(carta.emission_date);
-    return carta.origin === 'physical' && carta.status !== 'Anulada' && cartaYear === schoolYear;
+    const cartaYear =
+      carta.school_year ?? getYearFromDateOnly(carta.emission_date);
+    return (
+      carta.origin === "physical" &&
+      carta.status !== "Anulada" &&
+      cartaYear === schoolYear
+    );
   });
   const physicalBaselineType = getPhysicalCartaBaselineType(cartas, schoolYear);
-  const requiredLetterType = mapDocTypeToLetterType(getSuggestedLetterType(negativeCount));
+  const requiredLetterType = mapDocTypeToLetterType(
+    getSuggestedLetterType(negativeCount),
+  );
   const outstandingLetterType = mapDocTypeToLetterType(
     getSuggestedLetterType(negativeCount, physicalBaselineType),
   );
-  const registeredTypes = new Set(physicalCartas.map((carta) => carta.letter_type));
+  const registeredTypes = new Set(
+    physicalCartas.map((carta) => carta.letter_type),
+  );
   const allPhysicalTypesRegistered = PHYSICAL_LETTER_TYPES.every((type) =>
     registeredTypes.has(type),
   );
   const initialType =
-    registeredTypes.has('Amonestación Escrita') &&
-    !registeredTypes.has('Carta de Compromiso Conductual')
-      ? 'Carta de Compromiso Conductual'
-      : 'Amonestación Escrita';
+    registeredTypes.has("Amonestación Escrita") &&
+    !registeredTypes.has("Carta de Compromiso Conductual")
+      ? "Carta de Compromiso Conductual"
+      : "Amonestación Escrita";
   const [showForm, setShowForm] = useState(false);
   const [letterType, setLetterType] =
-    useState<Exclude<LetterType, 'Ficha de Derivación'>>(initialType);
+    useState<Exclude<LetterType, "Ficha de Derivación">>(initialType);
   const [emissionDate, setEmissionDate] = useState(today);
-  const [observations, setObservations] = useState('');
+  const [observations, setObservations] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [hasError, setHasError] = useState(false);
-  const { isRegistering, registerPhysicalCarta } = usePhysicalCartaRegistration({
-    onRegistered,
-  });
+  const { isRegistering, registerPhysicalCarta } = usePhysicalCartaRegistration(
+    {
+      onRegistered,
+    },
+  );
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -76,27 +89,29 @@ export default function PhysicalCartaRegistrationCard({
     setMessage(result.message);
     if (result.ok) {
       setShowForm(false);
-      setObservations('');
+      setObservations("");
       setLetterType(
-        letterType === 'Amonestación Escrita'
-          ? 'Carta de Compromiso Conductual'
-          : 'Amonestación Escrita',
+        letterType === "Amonestación Escrita"
+          ? "Carta de Compromiso Conductual"
+          : "Amonestación Escrita",
       );
     }
   };
 
   return (
-    <section className="rounded-xl border border-sky-200 bg-sky-50/50 p-5 shadow-xs">
+    <section className="rounded-xl border border-brand-200 bg-brand-50/50 p-5 shadow-xs">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-700">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-100 text-brand-700">
             <ClipboardCheck className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-neutral-900">Carta física existente</h3>
+            <h3 className="text-sm font-bold text-neutral-900">
+              Carta física existente
+            </h3>
             <p className="mt-1 max-w-2xl text-xs text-neutral-600">
-              Registra una carta emitida fuera de la plataforma. Esta constancia no suma anotaciones
-              ni genera un documento digital.
+              Registra una carta emitida fuera de la plataforma. Esta constancia
+              no suma anotaciones ni genera un documento digital.
             </p>
           </div>
         </div>
@@ -107,14 +122,14 @@ export default function PhysicalCartaRegistrationCard({
             setMessage(null);
           }}
           disabled={allPhysicalTypesRegistered}
-          className="rounded-lg border border-sky-300 bg-white px-3 py-2 text-xs font-bold text-sky-800 hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-lg border border-brand-300 bg-white px-3 py-2 text-xs font-bold text-brand-800 hover:bg-brand-100 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
           {allPhysicalTypesRegistered
-            ? 'Constancias registradas'
+            ? "Constancias registradas"
             : showForm
-              ? 'Cancelar'
-              : 'Registrar carta física'}
+              ? "Cancelar"
+              : "Registrar carta física"}
         </Button>
       </div>
 
@@ -123,21 +138,23 @@ export default function PhysicalCartaRegistrationCard({
           {physicalCartas.map((carta) => (
             <div
               key={carta.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-sky-200 bg-white px-3 py-2 text-xs"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-brand-200 bg-white px-3 py-2 text-xs"
             >
-              <span className="font-bold text-neutral-900">{carta.letter_type}</span>
+              <span className="font-bold text-neutral-900">
+                {carta.letter_type}
+              </span>
               <span className="text-neutral-500">
                 Fecha física: {formatDate(carta.emission_date)}
               </span>
             </div>
           ))}
           {physicalBaselineType && (
-            <p className="text-xs font-semibold text-sky-800">
+            <p className="text-xs font-semibold text-brand-800">
               {outstandingLetterType
                 ? `Constancia procesada. Por el conteo actual corresponde ${outstandingLetterType}.`
                 : requiredLetterType
                   ? `Constancia procesada: acredita ${physicalBaselineType} para el conteo actual.`
-                  : 'Constancia procesada. No hay una carta exigible por el conteo actual.'}
+                  : "Constancia procesada. No hay una carta exigible por el conteo actual."}
             </p>
           )}
         </div>
@@ -145,28 +162,43 @@ export default function PhysicalCartaRegistrationCard({
 
       {showForm && (
         <form
-          className="mt-4 grid grid-cols-1 gap-3 rounded-lg border border-sky-200 bg-white p-4 md:grid-cols-2"
+          className="mt-4 grid grid-cols-1 gap-3 rounded-lg border border-brand-200 bg-white p-4 md:grid-cols-2"
           onSubmit={(event) => void handleSubmit(event)}
         >
-          <label htmlFor="physical-letter-type" className="text-xs font-semibold text-neutral-700">
+          <label
+            htmlFor="physical-letter-type"
+            className="text-xs font-semibold text-neutral-700"
+          >
             Tipo de carta física
             <select
               id="physical-letter-type"
               value={letterType}
               onChange={(event) =>
-                setLetterType(event.target.value as Exclude<LetterType, 'Ficha de Derivación'>)
+                setLetterType(
+                  event.target.value as Exclude<
+                    LetterType,
+                    "Ficha de Derivación"
+                  >,
+                )
               }
               className="mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900"
             >
               {PHYSICAL_LETTER_TYPES.map((type) => (
-                <option key={type} value={type} disabled={registeredTypes.has(type)}>
+                <option
+                  key={type}
+                  value={type}
+                  disabled={registeredTypes.has(type)}
+                >
                   {type}
-                  {registeredTypes.has(type) ? ' · ya registrada' : ''}
+                  {registeredTypes.has(type) ? " · ya registrada" : ""}
                 </option>
               ))}
             </select>
           </label>
-          <label htmlFor="physical-letter-date" className="text-xs font-semibold text-neutral-700">
+          <label
+            htmlFor="physical-letter-date"
+            className="text-xs font-semibold text-neutral-700"
+          >
             Fecha de la carta
             <input
               id="physical-letter-date"
@@ -201,9 +233,9 @@ export default function PhysicalCartaRegistrationCard({
               type="submit"
               variant="custom"
               disabled={isRegistering || registeredTypes.has(letterType)}
-              className="rounded-lg bg-sky-700 px-4 py-2 text-sm font-bold text-white hover:bg-sky-800 disabled:opacity-50"
+              className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-bold text-white hover:bg-brand-800 disabled:opacity-50"
             >
-              {isRegistering ? 'Guardando...' : 'Guardar constancia'}
+              {isRegistering ? "Guardando..." : "Guardar constancia"}
             </Button>
           </div>
         </form>
@@ -211,8 +243,8 @@ export default function PhysicalCartaRegistrationCard({
 
       {message && (
         <p
-          role={hasError ? 'alert' : 'status'}
-          className={`mt-3 text-xs font-semibold ${hasError ? 'text-gravisima-700' : 'text-leve-700'}`}
+          role={hasError ? "alert" : "status"}
+          className={`mt-3 text-xs font-semibold ${hasError ? "text-gravisima-700" : "text-leve-700"}`}
         >
           {message}
         </p>

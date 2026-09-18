@@ -123,13 +123,13 @@ export default function RegistrationForm({
       </div>
 
       {causa.incidenteId && (
-        <fieldset className="rounded-lg border border-sky-200 bg-sky-50/50 p-2.5">
-          <legend className="font-semibold text-9px text-sky-800 uppercase">
+        <fieldset className="rounded-lg border border-brand-200 bg-brand-50/50 p-2.5">
+          <legend className="font-semibold text-9px text-brand-800 uppercase">
             Visibilidad del hito
           </legend>
           <label
             htmlFor={`reg-share-${item.id}`}
-            className="mt-1 flex items-start gap-2 text-10px text-sky-950"
+            className="mt-1 flex items-start gap-2 text-10px text-brand-950"
           >
             <input
               id={`reg-share-${item.id}`}
@@ -139,7 +139,7 @@ export default function RegistrationForm({
               onChange={(event) =>
                 setDocumentScope(event.target.checked ? "incidente" : "causa")
               }
-              className="mt-0.5 h-3.5 w-3.5 rounded border-sky-300 text-brand-600 focus:ring-brand-500"
+              className="mt-0.5 h-3.5 w-3.5 rounded border-brand-300 text-brand-600 focus:ring-brand-500"
             />
             <span>
               Compartir este hito y su documento con el incidente grupal y sus
@@ -152,7 +152,7 @@ export default function RegistrationForm({
       {errorMessage && (
         <p
           role="alert"
-          className="rounded-lg border border-danger-200 bg-danger-50 p-2 text-10px text-danger-700"
+          className="rounded-lg border border-gravisima-200 bg-gravisima-50 p-2 text-10px text-gravisima-700"
         >
           {errorMessage}
         </p>

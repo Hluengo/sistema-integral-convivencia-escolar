@@ -67,7 +67,7 @@ const ENTRY_STYLE: Record<
     label: "Resolución",
   },
   Citación: {
-    tone: "bg-indigo-50 text-indigo-700 border-indigo-200",
+    tone: "bg-brand-50 text-brand-700 border-brand-200",
     Icon: Calendar,
     label: "Citación",
   },

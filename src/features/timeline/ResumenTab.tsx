@@ -75,7 +75,7 @@ export default memo(function ResumenTab({
             <span
               className={`inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${
                 breaches.length
-                  ? "bg-danger-100 text-danger-800"
+                  ? "bg-gravisima-100 text-gravisima-800"
                   : "bg-leve-100 text-neutral-800"
               }`}
             >
@@ -237,14 +237,14 @@ export default memo(function ResumenTab({
 
       {breaches.length > 0 && (
         <section
-          className="rounded-lg border border-danger-200 bg-danger-50 p-4"
+          className="rounded-lg border border-gravisima-200 bg-gravisima-50 p-4"
           role="alert"
         >
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-danger-800">
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-gravisima-800">
             <AlertTriangle className="size-4" aria-hidden="true" />
             Alertas jurídicas o procedimentales
           </h3>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-danger-800">
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-gravisima-800">
             {breaches.map((breach) => (
               <li key={breach}>{breach}</li>
             ))}

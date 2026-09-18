@@ -55,7 +55,7 @@ export default function TeacherAnnotationRanking({
       <div className="mb-4 flex flex-wrap gap-x-3 gap-y-1.5 text-11px text-neutral-600">
         <LegendDot color="bg-grave-500" label="Negativas" />
         <LegendDot color="bg-leve-500" label="Positivas" />
-        <LegendDot color="bg-sky-500" label="Informativas" />
+        <LegendDot color="bg-brand-500" label="Informativas" />
       </div>
 
       {isLoading ? (
@@ -144,7 +144,7 @@ export default function TeacherAnnotationRanking({
                     style={{ width: `${positiveWidth}%` }}
                   />
                   <span
-                    className="bg-sky-500"
+                    className="bg-brand-500"
                     style={{ width: `${informativeWidth}%` }}
                   />
                 </div>
@@ -173,7 +173,7 @@ export default function TeacherAnnotationRanking({
                   <Count
                     label="Inf."
                     value={item.informative_count}
-                    tone="text-sky-700 bg-sky-50"
+                    tone="text-brand-700 bg-brand-50"
                   />
                   <Count
                     label="Total"

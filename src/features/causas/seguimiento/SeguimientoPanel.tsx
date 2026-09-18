@@ -24,7 +24,7 @@ import { useAuthStore } from "@/shared/lib/stores/authStore";
 
 const estadoTone: Record<SeguimientoEstado, string> = {
   pendiente: "bg-slate-100 text-slate-700 border-slate-200",
-  en_curso: "bg-sky-100 text-sky-700 border-sky-200",
+  en_curso: "bg-brand-100 text-brand-700 border-brand-200",
   cumplido: "bg-green-100 text-green-700 border-green-200",
   incumplido: "bg-red-100 text-red-700 border-red-200",
   evaluado: "bg-purple-100 text-purple-700 border-purple-200",

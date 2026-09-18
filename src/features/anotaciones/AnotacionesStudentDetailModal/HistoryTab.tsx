@@ -9,19 +9,23 @@ import {
   NotebookPen,
   ScrollText,
   Upload,
-} from 'lucide-react';
-import type { CartaDisciplinaria, DocumentAnalysis, EtapaDisciplinaria } from '@/shared/lib/types';
+} from "lucide-react";
+import type {
+  CartaDisciplinaria,
+  DocumentAnalysis,
+  EtapaDisciplinaria,
+} from "@/shared/lib/types";
 import type {
   CartaEvent,
   DetectedAnnotationRecord,
   DisciplinaryFileRecord,
   DisciplinaryProcessRecord,
   LetterOutputEvent,
-} from '@/shared/api/services/cartas.service';
-import { resolveCartaWorkflowStatus } from '@/shared/api/services/cartas.service';
-import { formatDate } from './constants';
-import { useStudentHistoryEntries } from '@/shared/lib/hooks/useStudentHistoryEntries';
-import ManualHistoryEntryForm from './ManualHistoryEntryForm';
+} from "@/shared/api/services/cartas.service";
+import { resolveCartaWorkflowStatus } from "@/shared/api/services/cartas.service";
+import { formatDate } from "./constants";
+import { useStudentHistoryEntries } from "@/shared/lib/hooks/useStudentHistoryEntries";
+import ManualHistoryEntryForm from "./ManualHistoryEntryForm";
 
 interface TimelineItem {
   id: string;
@@ -44,72 +48,77 @@ interface HistoryTabProps {
   cartaEvents: CartaEvent[];
 }
 
-function describeCartaEvent(event: CartaEvent, carta?: CartaDisciplinaria): TimelineItem {
-  const letterType = carta?.letter_type || 'Carta disciplinaria';
+function describeCartaEvent(
+  event: CartaEvent,
+  carta?: CartaDisciplinaria,
+): TimelineItem {
+  const letterType = carta?.letter_type || "Carta disciplinaria";
   const base = {
     id: `carta-event-${event.id}`,
     date: event.created_at,
     icon: <FileText className="h-4 w-4" />,
   };
 
-  if (event.event_type === 'printed') {
+  if (event.event_type === "printed") {
     return {
       ...base,
       title: `Carta emitida: ${letterType}`,
-      description: 'Medio de validación: impresión.',
-      tone: 'bg-leve-50 text-leve-700',
+      description: "Medio de validación: impresión.",
+      tone: "bg-leve-50 text-leve-700",
     };
   }
-  if (event.event_type === 'processed_manually') {
+  if (event.event_type === "processed_manually") {
     return {
       ...base,
       title: `Carta procesada manualmente: ${letterType}`,
-      description: `Observación: ${event.event_detail || 'Sin observación.'}`,
-      tone: 'bg-leve-50 text-leve-700',
+      description: `Observación: ${event.event_detail || "Sin observación."}`,
+      tone: "bg-leve-50 text-leve-700",
     };
   }
-  if (event.event_type === 'archived') {
+  if (event.event_type === "archived") {
     return {
       ...base,
       title: `Carta archivada: ${letterType}`,
-      description: event.event_detail || 'Carta firmada y archivada en expediente físico.',
-      tone: 'bg-leve-50 text-leve-700',
+      description:
+        event.event_detail || "Carta firmada y archivada en expediente físico.",
+      tone: "bg-leve-50 text-leve-700",
     };
   }
-  if (event.event_type === 'convivencia_interviewed') {
+  if (event.event_type === "convivencia_interviewed") {
     return {
       ...base,
-      title: 'Entrevista con Convivencia realizada',
-      description: event.event_detail || 'Entrevista registrada por Convivencia Escolar.',
-      tone: 'bg-leve-50 text-leve-700',
+      title: "Entrevista con Convivencia realizada",
+      description:
+        event.event_detail || "Entrevista registrada por Convivencia Escolar.",
+      tone: "bg-leve-50 text-leve-700",
     };
   }
-  if (event.event_type === 'registered') {
-    const isPhysical = event.metadata?.origin === 'physical';
+  if (event.event_type === "registered") {
+    const isPhysical = event.metadata?.origin === "physical";
     return {
       ...base,
-      title: `${isPhysical ? 'Carta física registrada' : 'Carta registrada'}: ${letterType}`,
+      title: `${isPhysical ? "Carta física registrada" : "Carta registrada"}: ${letterType}`,
       description:
         event.event_detail ||
         (isPhysical
-          ? 'Constancia registrada sin modificar anotaciones.'
-          : 'Registro en Supabase confirmado.'),
-      tone: 'bg-leve-50 text-leve-700',
+          ? "Constancia registrada sin modificar anotaciones."
+          : "Registro en Supabase confirmado."),
+      tone: "bg-leve-50 text-leve-700",
     };
   }
-  if (event.event_type === 'annulled') {
+  if (event.event_type === "annulled") {
     return {
       ...base,
       title: `Carta anulada: ${letterType}`,
-      description: event.event_detail || 'Sin motivo registrado.',
-      tone: 'bg-neutral-100 text-neutral-600',
+      description: event.event_detail || "Sin motivo registrado.",
+      tone: "bg-neutral-100 text-neutral-600",
     };
   }
   return {
     ...base,
     title: `Evento de carta: ${letterType}`,
-    description: event.event_detail || 'Sin detalle registrado.',
-    tone: 'bg-neutral-100 text-neutral-600',
+    description: event.event_detail || "Sin detalle registrado.",
+    tone: "bg-neutral-100 text-neutral-600",
   };
 }
 
@@ -127,42 +136,50 @@ export default function HistoryTab({
   const manualHistory = useStudentHistoryEntries(studentId);
   const cartasById = new Map(cartas.map((carta) => [carta.id, carta]));
   const relevantCartaEvents = cartaEvents.filter(
-    (event) => event.event_type !== 'created' && event.event_type !== 'suggested',
+    (event) =>
+      event.event_type !== "created" && event.event_type !== "suggested",
   );
-  const cartasWithEvents = new Set(relevantCartaEvents.map((event) => event.carta_id));
+  const cartasWithEvents = new Set(
+    relevantCartaEvents.map((event) => event.carta_id),
+  );
   const syntheticCartaItems = cartas.reduce<TimelineItem[]>((items, carta) => {
     if (cartasWithEvents.has(carta.id)) return items;
     const status = resolveCartaWorkflowStatus(carta);
-    if (status === 'archived') {
+    if (status === "archived") {
       items.push({
         id: `carta-${carta.id}`,
         date: carta.archived_at || carta.created_at || carta.emission_date,
         icon: <FileText className="h-4 w-4" />,
         title: `Carta archivada: ${carta.letter_type}`,
-        description: carta.archived_note || 'Carta firmada y archivada en expediente físico.',
-        tone: 'bg-leve-50 text-leve-700',
+        description:
+          carta.archived_note ||
+          "Carta firmada y archivada en expediente físico.",
+        tone: "bg-leve-50 text-leve-700",
       });
       return items;
     }
-    if (status === 'completed') {
+    if (status === "completed") {
       items.push({
         id: `carta-${carta.id}`,
         date: carta.created_at || carta.emission_date,
         icon: <FileText className="h-4 w-4" />,
         title: `Carta realizada: ${carta.letter_type}`,
-        description: 'Medio de validación registrado en la carta.',
-        tone: 'bg-leve-50 text-leve-700',
+        description: "Medio de validación registrado en la carta.",
+        tone: "bg-leve-50 text-leve-700",
       });
       return items;
     }
-    if (status === 'annulled') {
+    if (status === "annulled") {
       items.push({
         id: `carta-${carta.id}`,
         date: carta.created_at || carta.emission_date,
         icon: <FileText className="h-4 w-4" />,
         title: `Carta anulada: ${carta.letter_type}`,
-        description: carta.annulled_reason || carta.observations || 'Sin motivo registrado.',
-        tone: 'bg-neutral-100 text-neutral-600',
+        description:
+          carta.annulled_reason ||
+          carta.observations ||
+          "Sin motivo registrado.",
+        tone: "bg-neutral-100 text-neutral-600",
       });
       return items;
     }
@@ -176,39 +193,45 @@ export default function HistoryTab({
       icon: <NotebookPen className="h-4 w-4" />,
       title: entry.title,
       description: entry.description,
-      tone: 'bg-grave-50 text-grave-700',
+      tone: "bg-grave-50 text-grave-700",
     })),
     ...files.map((file) => ({
       id: `file-${file.id}`,
       date: file.uploaded_at,
       icon: <Upload className="h-4 w-4" />,
-      title: 'PDF subido',
-      description: file.original_file_name || file.file_name || file.storage_path,
-      tone: 'bg-blue-50 text-blue-700',
+      title: "PDF subido",
+      description:
+        file.original_file_name || file.file_name || file.storage_path,
+      tone: "bg-blue-50 text-blue-700",
     })),
     ...documentAnalyses.map((analysis) => ({
       id: `analysis-${analysis.id}`,
       date: analysis.analyzed_at,
       icon: <FileSearch className="h-4 w-4" />,
-      title: 'PDF analizado',
-      description: `${analysis.file_name || 'Documento'} · ${analysis.negativas} negativas, ${analysis.positivas} positivas, ${analysis.informativas} informativas`,
-      tone: 'bg-indigo-50 text-indigo-700',
+      title: "PDF analizado",
+      description: `${analysis.file_name || "Documento"} · ${analysis.negativas} negativas, ${analysis.positivas} positivas, ${analysis.informativas} informativas`,
+      tone: "bg-brand-50 text-brand-700",
     })),
     ...processes.map((process) => ({
       id: `process-${process.id}`,
       date: process.completed_at || process.created_at,
       icon: <CheckCircle2 className="h-4 w-4" />,
-      title: process.is_completed ? 'Actualización PDF confirmada' : 'Proceso PDF creado',
-      description: `${process.process_number} · ${process.total_negativas} negativas · sugerencia: ${process.final_letter_type || process.suggested_letter_type || 'sin carta'}`,
-      tone: 'bg-leve-50 text-leve-700',
+      title: process.is_completed
+        ? "Actualización PDF confirmada"
+        : "Proceso PDF creado",
+      description: `${process.process_number} · ${process.total_negativas} negativas · sugerencia: ${process.final_letter_type || process.suggested_letter_type || "sin carta"}`,
+      tone: "bg-leve-50 text-leve-700",
     })),
     ...detectedAnnotations.slice(0, 25).map((annotation) => ({
       id: `detected-${annotation.id}`,
       date: annotation.detected_at,
       icon: <History className="h-4 w-4" />,
       title: `Anotación ${annotation.annotation_type} detectada`,
-      description: annotation.annotation_text || annotation.raw_text || 'Sin texto registrado',
-      tone: 'bg-neutral-50 text-neutral-700',
+      description:
+        annotation.annotation_text ||
+        annotation.raw_text ||
+        "Sin texto registrado",
+      tone: "bg-neutral-50 text-neutral-700",
     })),
     ...relevantCartaEvents.map((event) =>
       describeCartaEvent(event, cartasById.get(event.carta_id)),
@@ -217,9 +240,12 @@ export default function HistoryTab({
       id: `letter-output-${event.id}`,
       date: event.created_at,
       icon: <FileText className="h-4 w-4" />,
-      title: event.event_name === 'letter_printed' ? 'Carta impresa' : 'Carta descargada',
-      description: `${event.properties.letterType || 'Carta'} · evento legacy de uso`,
-      tone: 'bg-cyan-50 text-cyan-700',
+      title:
+        event.event_name === "letter_printed"
+          ? "Carta impresa"
+          : "Carta descargada",
+      description: `${event.properties.letterType || "Carta"} · evento legacy de uso`,
+      tone: "bg-cyan-50 text-cyan-700",
     })),
     ...syntheticCartaItems,
     ...etapas.map((etapa) => ({
@@ -227,8 +253,8 @@ export default function HistoryTab({
       date: etapa.transition_date || etapa.created_at,
       icon: <ScrollText className="h-4 w-4" />,
       title: `Cambio de etapa disciplinaria: ${etapa.stage_name}`,
-      description: `${etapa.responsible || 'Sin responsable'}${etapa.comment ? ` · ${etapa.comment}` : ''}`,
-      tone: 'bg-purple-50 text-purple-700',
+      description: `${etapa.responsible || "Sin responsable"}${etapa.comment ? ` · ${etapa.comment}` : ""}`,
+      tone: "bg-purple-50 text-purple-700",
     })),
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -243,7 +269,10 @@ export default function HistoryTab({
       />
 
       {manualHistory.loadError && (
-        <p role="alert" className="rounded-xl bg-gravisima-50 px-4 py-3 text-gravisima-700 text-sm">
+        <p
+          role="alert"
+          className="rounded-xl bg-gravisima-50 px-4 py-3 text-gravisima-700 text-sm"
+        >
           {manualHistory.loadError}
         </p>
       )}
@@ -274,8 +303,12 @@ export default function HistoryTab({
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="text-sm font-bold text-neutral-900">{item.title}</h3>
-                  <span className="text-xs text-neutral-400">{formatDate(item.date)}</span>
+                  <h3 className="text-sm font-bold text-neutral-900">
+                    {item.title}
+                  </h3>
+                  <span className="text-xs text-neutral-400">
+                    {formatDate(item.date)}
+                  </span>
                 </div>
                 <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-600">
                   {item.description}

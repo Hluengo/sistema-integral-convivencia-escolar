@@ -16,18 +16,18 @@
   --text-17px: 17px;
 
   /* ===== PRIMARY: Institutional blue ===== */
-  --color-brand-50: #eff6ff;
-  --color-brand-100: #dbeafe;
-  --color-brand-150: #bfdbfe;
-  --color-brand-200: #93c5fd;
-  --color-brand-300: #60a5fa;
-  --color-brand-400: #3b82f6;
-  --color-brand-500: #2563eb;
-  --color-brand-600: #1d4ed8;
-  --color-brand-700: #1e40af;
-  --color-brand-800: #1e3a8a;
-  --color-brand-900: #172554;
-  --color-brand-950: #0f172a;
+  --color-brand-50: #edf8fc;
+  --color-brand-100: #d9eff8;
+  --color-brand-150: #bfe4f2;
+  --color-brand-200: #9dd4e8;
+  --color-brand-300: #64b9d6;
+  --color-brand-400: #2498c0;
+  --color-brand-500: #0b78aa;
+  --color-brand-600: #086b98;
+  --color-brand-700: #075a80;
+  --color-brand-800: #064766;
+  --color-brand-900: #073b55;
+  --color-brand-950: #052a3d;
 
   /* ===== SECONDARY: Orange Energy (#F97316) ===== */
   --color-secondary-50: #fff7ed;
@@ -41,27 +41,27 @@
   --color-secondary-800: #9a3412;
 
   /* Neutral scale - modern, clean */
-  --color-neutral-50: #f8fafc;
-  --color-neutral-100: #f1f5f9;
-  --color-neutral-150: #e2e8f0;
-  --color-neutral-200: #cbd5e1;
-  --color-neutral-300: #b0bccd;
-  --color-neutral-400: #94a3b8;
-  --color-neutral-500: #64748b;
-  --color-neutral-600: #475569;
-  --color-neutral-700: #334155;
-  --color-neutral-800: #1e293b;
-  --color-neutral-900: #0f172a;
-  --color-neutral-950: #020617;
+  --color-neutral-50: #f3f7fa;
+  --color-neutral-100: #e8f0f5;
+  --color-neutral-150: #d9e5ec;
+  --color-neutral-200: #c4d4df;
+  --color-neutral-300: #a9bccb;
+  --color-neutral-400: #8197a8;
+  --color-neutral-500: #5d7285;
+  --color-neutral-600: #42586b;
+  --color-neutral-700: #294052;
+  --color-neutral-800: #172c3d;
+  --color-neutral-900: #0c2130;
+  --color-neutral-950: #06151f;
 
   /* ===== SEMANTIC ===== */
   /* Leve - Green */
-  --color-leve-50: #f0fdf4;
-  --color-leve-100: #dcfce7;
-  --color-leve-200: #bbf7d0;
-  --color-leve-500: #22c55e;
-  --color-leve-600: #16a34a;
-  --color-leve-700: #15803d;
+  --color-leve-50: #edfbf8;
+  --color-leve-100: #d3f4ed;
+  --color-leve-200: #a8e8dc;
+  --color-leve-500: #18b39d;
+  --color-leve-600: #0d9f8e;
+  --color-leve-700: #056b60;
 
   /* Grave - Amber */
   --color-grave-50: #fffbeb;
@@ -106,11 +106,11 @@
   --color-danger-500: #ef4444;
   --color-danger-600: #dc2626;
 
-  --color-info-50: #f8fafc;
-  --color-info-100: #f1f5f9;
-  --color-info-200: #e2e8f0;
-  --color-info-500: #64748b;
-  --color-info-600: #475569;
+  --color-info-50: #edf8fc;
+  --color-info-100: #d9eff8;
+  --color-info-200: #bfe4f2;
+  --color-info-500: #0b78aa;
+  --color-info-600: #075a80;
 
   /* Shadow scale */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.03);

@@ -77,7 +77,7 @@ export default function ClassificationStep({
       {summary && (
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <Star className="h-4 w-4 text-indigo-600" />
+            <Star className="h-4 w-4 text-brand-600" />
             <p className="font-medium text-neutral-700 text-sm">
               Resultado del Análisis
             </p>
@@ -129,7 +129,7 @@ export default function ClassificationStep({
             onClick={() => onChange(opt.value)}
             className={`w-full rounded-xl border p-4 text-left transition-colors${
               value === opt.value
-                ? "border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200"
+                ? "border-brand-500 bg-brand-50 ring-2 ring-brand-200"
                 : "border-neutral-200 hover:border-neutral-300"
             }`}
           >

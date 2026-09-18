@@ -223,7 +223,7 @@ export default function ChecklistProgressPanel({
           {incidenteId && (
             <label
               htmlFor={`progress-share-${item.id}`}
-              className="flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50/50 p-2.5 text-10px text-sky-950 sm:col-span-2"
+              className="flex items-start gap-2 rounded-lg border border-brand-200 bg-brand-50/50 p-2.5 text-10px text-brand-950 sm:col-span-2"
             >
               <input
                 id={`progress-share-${item.id}`}
@@ -233,7 +233,7 @@ export default function ChecklistProgressPanel({
                 onChange={(event) =>
                   setDocumentScope(event.target.checked ? "incidente" : "causa")
                 }
-                className="mt-0.5 h-3.5 w-3.5 rounded border-sky-300 text-brand-600 focus:ring-brand-500"
+                className="mt-0.5 h-3.5 w-3.5 rounded border-brand-300 text-brand-600 focus:ring-brand-500"
               />
               <span>
                 Compartir este avance y su documento con el incidente grupal y
@@ -244,7 +244,7 @@ export default function ChecklistProgressPanel({
           {(formError || error) && (
             <p
               role="alert"
-              className="sm:col-span-2 rounded-lg border border-danger-200 bg-danger-50 px-2.5 py-2 text-danger-700 text-10px"
+              className="sm:col-span-2 rounded-lg border border-gravisima-200 bg-gravisima-50 px-2.5 py-2 text-gravisima-700 text-10px"
             >
               {formError ||
                 (error instanceof Error

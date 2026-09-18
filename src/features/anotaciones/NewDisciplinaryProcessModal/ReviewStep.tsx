@@ -165,7 +165,7 @@ export default function ReviewStep({
                           event.target.value as ReviewAnnotationType,
                         )
                       }
-                      className="rounded-lg border border-neutral-300 bg-white px-2 py-1 text-xs outline-none focus:border-indigo-500"
+                      className="rounded-lg border border-neutral-300 bg-white px-2 py-1 text-xs outline-none focus:border-brand-500"
                       aria-label={`Clasificación anotación ${annotation.sequence_number}`}
                     >
                       {Object.entries(TYPE_LABELS).map(([value, label]) => (

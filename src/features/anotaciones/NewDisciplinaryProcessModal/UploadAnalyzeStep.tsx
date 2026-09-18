@@ -70,7 +70,7 @@ export default function UploadAnalyzeStep({
     <div className="space-y-4">
       <div className="space-y-1">
         <p className="flex items-center gap-2 font-medium text-neutral-700 text-sm">
-          <Upload className="h-4 w-4 text-indigo-600" /> Subir hoja de vida en
+          <Upload className="h-4 w-4 text-brand-600" /> Subir hoja de vida en
           PDF
         </p>
         <p className="text-neutral-500 text-xs">
@@ -92,7 +92,7 @@ export default function UploadAnalyzeStep({
         aria-label={"Seleccionar PDF de hoja de vida"}
         className={`w-full cursor-pointer rounded-2xl border-2 border-dashed p-8 text-center transition-colors disabled:cursor-not-allowed disabled:opacity-70${
           drag
-            ? "border-indigo-500 bg-indigo-50"
+            ? "border-brand-500 bg-brand-50"
             : "border-neutral-300 hover:border-neutral-400"
         }`}
       >
@@ -110,7 +110,7 @@ export default function UploadAnalyzeStep({
             Arrastra un PDF o haz clic para seleccionar
           </p>
           {file && (
-            <p className="font-medium text-indigo-600 text-xs">
+            <p className="font-medium text-brand-600 text-xs">
               {file.name} · {formatBytes(file.size)}
             </p>
           )}
@@ -123,7 +123,7 @@ export default function UploadAnalyzeStep({
           fullWidth
           onClick={onAnalyze}
           disabled={isAnalyzing}
-          className="rounded-xl bg-indigo-600 py-2.5 font-medium text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
+          className="rounded-xl bg-brand-600 py-2.5 font-medium text-sm text-white hover:bg-brand-700 disabled:opacity-50"
         >
           {isAnalyzing ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -144,7 +144,7 @@ export default function UploadAnalyzeStep({
       {summary && (
         <div className="space-y-2">
           <p className="flex items-center gap-2 font-medium text-neutral-700 text-sm">
-            <Star className="h-4 w-4 text-indigo-600" /> Resultado del análisis
+            <Star className="h-4 w-4 text-brand-600" /> Resultado del análisis
           </p>
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-xl border border-gravisima-200 bg-gravisima-50 p-4 text-center">

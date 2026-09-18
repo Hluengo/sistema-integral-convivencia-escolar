@@ -106,7 +106,7 @@ export default function TimelineHeader({
             <span
               className={`rounded-full px-2 py-0.5 font-semibold ${
                 breaches.length
-                  ? "bg-danger-100 text-danger-800"
+                  ? "bg-gravisima-100 text-gravisima-800"
                   : "bg-leve-100 text-neutral-800"
               }`}
             >
@@ -206,11 +206,11 @@ export default function TimelineHeader({
       {breaches.length > 0 && (
         <div
           role="alert"
-          className="border-danger-200 border-b bg-danger-50 px-4 py-2.5 text-danger-800 text-xs sm:px-6"
+          className="border-gravisima-200 border-b bg-gravisima-50 px-4 py-2.5 text-gravisima-800 text-xs sm:px-6"
         >
           <div className="mb-1 flex items-center gap-1.5 font-semibold">
             <AlertTriangle
-              className="size-4 text-danger-600"
+              className="size-4 text-gravisima-600"
               aria-hidden="true"
             />
             <span>Riesgos procedimentales</span>

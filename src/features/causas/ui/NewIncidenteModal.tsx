@@ -253,9 +253,9 @@ export default function NewIncidenteModal({
               />
             </div>
 
-            <div className="flex items-start gap-2 rounded-lg border border-sky-200 bg-sky-50 p-3 text-xs text-sky-950">
+            <div className="flex items-start gap-2 rounded-lg border border-brand-200 bg-brand-50 p-3 text-xs text-brand-950">
               <AlertTriangle
-                className="mt-0.5 size-4 shrink-0 text-sky-700"
+                className="mt-0.5 size-4 shrink-0 text-brand-700"
                 aria-hidden="true"
               />
               <p>
@@ -270,7 +270,7 @@ export default function NewIncidenteModal({
             {error && (
               <p
                 role="alert"
-                className="rounded-lg border border-danger-200 bg-danger-50 p-2.5 text-danger-700 text-xs"
+                className="rounded-lg border border-gravisima-200 bg-gravisima-50 p-2.5 text-gravisima-700 text-xs"
               >
                 {error}
               </p>

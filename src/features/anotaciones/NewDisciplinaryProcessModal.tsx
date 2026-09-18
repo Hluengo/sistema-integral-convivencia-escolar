@@ -648,7 +648,7 @@ export default function NewDisciplinaryProcessModal({
                 className="flex flex-1 flex-col items-center gap-1"
               >
                 <div
-                  className={`h-1 w-full rounded-full ${index <= currentStepIndex ? "bg-indigo-500" : "bg-neutral-200"}`}
+                  className={`h-1 w-full rounded-full ${index <= currentStepIndex ? "bg-brand-500" : "bg-neutral-200"}`}
                 />
                 <span className="font-medium text-10px text-neutral-500">
                   {STEP_LABELS[labelStep]}
@@ -806,7 +806,7 @@ export default function NewDisciplinaryProcessModal({
                   <Button
                     variant="custom"
                     onClick={continueAfterDuplicateWarning}
-                    className="flex-1 rounded-xl bg-indigo-600 px-4 py-2.5 font-medium text-sm text-white hover:bg-indigo-700"
+                    className="flex-1 rounded-xl bg-brand-600 px-4 py-2.5 font-medium text-sm text-white hover:bg-brand-700"
                   >
                     Subir PDF como actualización
                     <ArrowRight className="h-4 w-4" />
@@ -880,7 +880,7 @@ export default function NewDisciplinaryProcessModal({
               variant="custom"
               onClick={step === "success" ? onClose : goNext}
               disabled={step !== "success" && !canNext()}
-              className="rounded-xl bg-indigo-600 px-5 py-2 font-medium text-sm text-white hover:bg-indigo-700 disabled:opacity-40"
+              className="rounded-xl bg-brand-600 px-5 py-2 font-medium text-sm text-white hover:bg-brand-700 disabled:opacity-40"
             >
               {status === "confirming" && (
                 <Loader2 className="h-4 w-4 animate-spin" />

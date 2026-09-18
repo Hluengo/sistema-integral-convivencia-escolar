@@ -20,7 +20,7 @@ const DialogOverlay = forwardRef<
 >(({ className = "", ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
-    className={`fixed inset-0 z-50 bg-black/40 backdrop-blur-sm data-[state=open]:animate-fade-in data-[state=closed]:animate-fade-out ${className} dark:bg-black/50`}
+    className={`fixed inset-0 z-50 bg-black/40 backdrop-blur-sm data-[state=open]:animate-fade-in data-[state=closed]:animate-fade-out ${className}`}
     {...props}
   />
 ));
@@ -40,13 +40,13 @@ const DialogContent = forwardRef<
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
-      className={`fixed left-1/2 top-1/2 z-50 w-full -translate-x-1/2 -translate-y-1/2 animate-scale-in rounded-2xl bg-white p-6 shadow-xl outline-none [&_*]:reduce-motion:[animation-duration:0ms] dark:bg-slate-900 ${className}`}
+      className={`fixed left-1/2 top-1/2 z-50 w-full max-w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 animate-scale-in rounded-2xl bg-white p-6 shadow-xl outline-none [&_*]:reduce-motion:[animation-duration:0ms] ${className}`}
       {...props}
     >
       {children}
       {!hideClose && (
         <DialogPrimitive.Close
-          className="absolute top-4 right-4 flex min-h-10 min-w-10 items-center justify-center rounded-xl p-2 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 dark:hover:text-neutral-200"
+          className="absolute top-4 right-4 flex min-h-10 min-w-10 items-center justify-center rounded-xl p-2 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
           aria-label="Cerrar"
         >
           <X className="h-4 w-4" />
