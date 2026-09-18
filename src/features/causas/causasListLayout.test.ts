@@ -382,7 +382,7 @@ describe("Listado de causas activas", () => {
     assert.match(templates, /min-h-\[440px\]/);
     assert.match(templates, /selectedIdRef/);
     assert.match(templates, /useQuery/);
-    assert.match(templates, /queryKey: \['document-templates', tenantId\]/);
+    assert.match(templates, /queryKey: \["document-templates", tenantId\]/);
     assert.match(templates, /TEMPLATE_ADMIN_ROLES/);
     assert.match(templates, /ACTIVE_TEMPLATE_DOC_TYPES/);
     assert.match(templates, /fetchAdminDocumentTemplates/);
