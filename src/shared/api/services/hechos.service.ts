@@ -17,6 +17,9 @@ export interface HechoRow {
   rice_articulo: string | null;
   agravantes: string[];
   atenuantes: string[];
+  medida_seleccionada: string | null;
+  analisis_proporcionalidad: string;
+  decision_fundada: string;
   created_at: string;
   updated_at: string;
 }
@@ -108,6 +111,9 @@ export async function updateHecho(
       | "rice_articulo"
       | "agravantes"
       | "atenuantes"
+      | "medida_seleccionada"
+      | "analisis_proporcionalidad"
+      | "decision_fundada"
     >
   >,
 ): Promise<boolean> {

@@ -157,7 +157,29 @@ export function auditarExpediente(
     bloqueante: false,
   });
 
-  // 9. Resolución fundada — checklist Resolución completado
+  // 9. Decisión fundada por hecho — medida + fundamento en acreditados
+  const conDecision = acreditados.filter(
+    (h) =>
+      h.participacion_acreditada &&
+      Boolean(h.medida_seleccionada?.trim()) &&
+      Boolean(h.decision_fundada.trim()),
+  );
+  const conDecisionOk =
+    acreditados.filter((h) => h.participacion_acreditada).length === 0
+      ? true
+      : conDecision.length ===
+        acreditados.filter((h) => h.participacion_acreditada).length;
+  checks.push({
+    id: "decision_fundada",
+    label: "Decisión fundada por hecho",
+    estado: conDecisionOk ? "verificada" : "pendiente",
+    detalle: conDecisionOk
+      ? "Medida y fundamento registrados"
+      : "Falta medida o fundamento en hechos con participación",
+    bloqueante: false,
+  });
+
+  // 10. Resolución fundada — checklist Resolución completado
   const c9 =
     hasChecklist(causa, "chk_res_") ||
     causa.estadoActual === ("Resolución Ejecutoriada" as EstadoCausa);
@@ -170,7 +192,7 @@ export function auditarExpediente(
     bloqueante: false,
   });
 
-  // 10. Notificación de decisión
+  // 11. Notificación de decisión
   const c10 =
     hasChecklist(causa, "chk_res_") && hasBitacoraTipo(causa, "Resolución");
   checks.push({
@@ -181,7 +203,7 @@ export function auditarExpediente(
     bloqueante: false,
   });
 
-  // 11. Reconsideración/apelación
+  // 12. Reconsideración/apelación
   const enApelacion = [
     "En Plazo de Apelación",
     "Apelación Recepcionada",

@@ -34,7 +34,9 @@ import {
   type AtenuanteId,
 } from "@/shared/lib/proporcionalidad";
 import AuditoriaPanel from "./AuditoriaPanel";
+import DecisionFundada from "./DecisionFundada";
 import { auditarExpediente } from "@/shared/lib/auditoria";
+import { countDecisionSteps } from "@/shared/lib/decisionFundada";
 
 const estadoLabel: Record<HechoEstado, string> = {
   denunciado: "Denunciado",
@@ -335,16 +337,23 @@ export default function MatrizPanel({ causa }: { causa: Causa }) {
           );
           const agravantes = (hecho.agravantes ?? []) as AgravanteId[];
           const atenuantes = (hecho.atenuantes ?? []) as AtenuanteId[];
+          const annotationsCount =
+            (causa as unknown as { annotations_count?: number })
+              .annotations_count ?? 0;
           const result = calcularMedidasPermitidas({
             tipoInfraccion: causa.tipoInfraccion,
             estado: hecho.estado,
             participacionAcreditada: hecho.participacion_acreditada,
             agravantes,
             atenuantes,
-            annotationsCount:
-              (causa as unknown as { annotations_count?: number })
-                .annotations_count ?? 0,
+            annotationsCount,
             comprometeAulaSegura: causa.comprometeAulaSegura,
+          });
+          const decision = countDecisionSteps({
+            hecho,
+            evidenciasCount: evidenciasDeHecho.length,
+            medidasPermitidasCount: result.medidasPermitidas.length,
+            calificacionPresente: Boolean(causa.tipoInfraccion),
           });
           return (
             <details
@@ -367,6 +376,9 @@ export default function MatrizPanel({ causa }: { causa: Causa }) {
                         RICE: {hecho.rice_articulo}
                       </span>
                     )}
+                    <span className="text-10px text-slate-500">
+                      Decisión {decision.completadas}/{decision.total}
+                    </span>
                     {evidenciasDeHecho.length > 0 && (
                       <span className="inline-flex items-center gap-1 text-10px text-slate-500">
                         <Link2 className="size-3" /> {evidenciasDeHecho.length}{" "}
@@ -596,6 +608,23 @@ export default function MatrizPanel({ causa }: { causa: Causa }) {
                         </div>
                       </>
                     )}
+                  </div>
+                </details>
+
+                {/* Decisión fundada — 12 pasos */}
+                <details className="mt-3 rounded-lg border border-slate-200 bg-white">
+                  <summary className="cursor-pointer list-none p-2.5 text-xs font-semibold text-slate-700">
+                    Decisión fundada — {decision.completadas}/{decision.total}
+                  </summary>
+                  <div className="border-t border-slate-100 p-2.5">
+                    <DecisionFundada
+                      hecho={hecho}
+                      evidenciasCount={evidenciasDeHecho.length}
+                      medidasPermitidas={result.medidasPermitidas}
+                      calificacionPresente={Boolean(causa.tipoInfraccion)}
+                      annotationsCount={annotationsCount}
+                      onSaved={invalidate}
+                    />
                   </div>
                 </details>
               </div>
