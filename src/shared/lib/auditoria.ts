@@ -47,15 +47,18 @@ export function auditarExpediente(
 ): AuditoriaResult {
   const checks: GarantiaCheck[] = [];
 
-  // 1. Comunicación de hechos — al menos un hecho denunciado
-  const c1 = hechos.length > 0;
+  // 1. Comunicación de hechos: hecho registrado o recepción formal de denuncia.
+  const recepcionDenuncia = hasChecklist(causa, "chk_rec_1");
+  const c1 = hechos.length > 0 || recepcionDenuncia;
   checks.push({
     id: "comunicacion",
     label: "Comunicación de hechos",
     estado: c1 ? "verificada" : "bloqueante",
     detalle: c1
-      ? `${hechos.length} hecho(s) registrado(s)`
-      : "Sin hechos denunciados",
+      ? hechos.length > 0
+        ? `${hechos.length} hecho(s) registrado(s)`
+        : "Recepción de denuncia registrada"
+      : "Sin hechos ni recepción de denuncia",
     bloqueante: !c1,
   });
 

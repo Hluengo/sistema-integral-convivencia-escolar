@@ -18,6 +18,7 @@ import ResumenTab from "./ResumenTab";
 import RutaExpedienteTab from "./RutaExpedienteTab";
 import ExpedienteExportPanel from "../causas/expediente/ExpedienteExportPanel";
 import MatrizPanel from "../causas/matriz/MatrizPanel";
+import EstadoProcedimental from "../causas/matriz/EstadoProcedimental";
 import SeguimientoPanel from "../causas/seguimiento/SeguimientoPanel";
 import { getCausaOperationalSummary } from "../causas/causaOperationalSummary";
 import { useTimelineContext } from "../../shared/lib/useTimelineContext";
@@ -256,14 +257,15 @@ export default function TimelineTabPanels({
                 id="expediente-title"
                 className="font-semibold text-neutral-900 text-sm"
               >
-                Descargar expediente completo
+                Auditoría/expediente
               </h3>
               <p className="mt-0.5 text-neutral-600 text-xs">
-                PDF imprimible, Markdown para IA y ZIP con los documentos
-                subidos. Cada descarga queda registrada en la bitácora.
+                Estado jurídico-procedimental, auditoría de garantías y descarga
+                completa del expediente.
               </p>
             </div>
           </header>
+          <EstadoProcedimental causa={causa} />
           <div className="rounded-lg border border-neutral-150 bg-white p-4 shadow-xs">
             <ExpedienteExportPanel causa={causa} />
           </div>

@@ -79,7 +79,7 @@ export default function TimelineTabs({
     },
     {
       id: "expediente",
-      label: "Expediente",
+      label: "Auditoría/expediente",
       Icon: Download,
       indicator: badge(`${summary.documentsCount} documentos`),
     },

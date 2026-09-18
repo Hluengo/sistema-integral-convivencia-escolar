@@ -22,7 +22,6 @@ import {
 import { getCausaOperationalSummary } from "../causas/causaOperationalSummary";
 import { formatChileDate } from "../../shared/lib/dateTime";
 import IncidentePanel from "./IncidentePanel";
-import EstadoProcedimental from "../causas/matriz/EstadoProcedimental";
 
 interface ResumenTabProps {
   causa: Causa;
@@ -55,8 +54,6 @@ export default memo(function ResumenTab({
       {causa.incidenteId && (
         <IncidentePanel causa={causa} privacyMode={privacyMode} />
       )}
-
-      <EstadoProcedimental causa={causa} />
 
       <section className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_minmax(20rem,0.65fr)]">
         <div className="rounded-lg border border-neutral-150 bg-white p-4 shadow-xs">
