@@ -20,8 +20,8 @@ describe("Modales disciplinarios accesibles", () => {
     ok(content.includes("<DetailModalContent"));
     ok(content.includes("<DetailModalHeader"));
     ok(content.includes("<DetailModalTabs"));
-    ok(detailModal.includes("h-[min(94vh,940px)]"));
-    ok(detailModal.includes("w-[min(98vw,120rem)]"));
+    ok(detailModal.includes("h-[min(96vh,1080px)]"));
+    ok(detailModal.includes("w-[min(98vw,128rem)]"));
     ok(detailModal.includes("min-h-0 flex-1 overflow-y-auto"));
     ok(detailModal.includes("bg-brand-700"));
     ok(detailModal.includes("gap-3"));

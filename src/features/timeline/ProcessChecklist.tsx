@@ -84,7 +84,7 @@ export default function ProcessChecklist({
 }: ProcessChecklistProps) {
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between border-neutral-100 border-b pb-2">
+      <div className="flex items-center justify-between border-neutral-100 border-b pb-1.5">
         <div>
           <h3 className="flex items-center gap-1.5 font-sans font-semibold text-neutral-800 text-sm">
             <CheckSquare
@@ -100,7 +100,7 @@ export default function ProcessChecklist({
       </div>
 
       {/* Accordion of 5 stages */}
-      <div className="max-h-[500px] space-y-2 overflow-y-auto pr-1">
+      <div className="space-y-2 pr-1">
         {PROCESS_SECTIONS.filter(
           (section) => section.phaseName === selectedPhase,
         ).map((section) => {
