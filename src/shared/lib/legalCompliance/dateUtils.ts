@@ -91,6 +91,30 @@ export function agregarDiasHabiles(
   return formatDateOnly(fecha);
 }
 
+/**
+ * Agrega días corridos (calendario) a una fecha. Se usa para el plazo
+ * máximo de investigación de 2 meses (Ley 21809): son 60 días corridos,
+ * no hábiles.
+ */
+export function agregarDiasCorridos(fechaInicio: string, dias: number): string {
+  const fecha = parseDateOnly(fechaInicio);
+  fecha.setDate(fecha.getDate() + dias);
+  return formatDateOnly(fecha);
+}
+
+/** Días corridos entre dos fechas, sin contar el día de inicio. */
+export function calcularDiasCorridosDesdeDiaSiguiente(
+  fechaInicio: string,
+  fechaFin: string,
+): number {
+  const inicio = parseDateOnly(fechaInicio);
+  const fin = parseDateOnly(fechaFin);
+  return Math.max(
+    0,
+    Math.round((fin.getTime() - inicio.getTime()) / 86_400_000),
+  );
+}
+
 function formatDateOnly(fecha: Date): string {
   const year = fecha.getFullYear();
   const month = String(fecha.getMonth() + 1).padStart(2, "0");

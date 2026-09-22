@@ -14,6 +14,7 @@ import {
 } from "./deadlineCalculators";
 import {
   agregarDiasHabiles,
+  calcularDiasCorridosDesdeDiaSiguiente,
   calcularDiasHabilesDesdeDiaSiguiente,
 } from "./dateUtils";
 
@@ -85,10 +86,11 @@ test("constantes legales centralizadas: investigación 60/10, concluyente 5, sus
   assert.equal(MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS, 5);
 });
 
-test("calcularFechaLimiteInvestigacion suma 60 días hábiles desde el día siguiente", () => {
+test("calcularFechaLimiteInvestigacion suma 60 días corridos (2 meses)", () => {
   const resultado = calcularFechaLimiteInvestigacion("2026-08-03");
+  assert.equal(resultado, "2026-10-02");
   assert.equal(
-    calcularDiasHabilesDesdeDiaSiguiente("2026-08-03", resultado),
+    calcularDiasCorridosDesdeDiaSiguiente("2026-08-03", resultado),
     60,
   );
   assert.ok(resultado > "2026-08-03");
@@ -116,11 +118,20 @@ test("calcularFechaLimiteNotificacionSuperintendencia suma 5 días hábiles desd
   assert.equal(resultado, "2026-09-14");
 });
 
-test("verificarPlazoInvestigacion vencido cuando supera 60 días hábiles", () => {
-  const causa = makeCausa({ fechaApertura: "2026-01-05" }); // más de 60 días hábiles atrás
+test("verificarPlazoInvestigacion vencido cuando supera 60 días corridos", () => {
+  const causa = makeCausa({ fechaApertura: "2026-01-05" }); // más de 60 días corridos atrás
   const result = verificarPlazoInvestigacion(causa);
   assert.equal(result.estado, "vencido");
-  assert.match(result.mensaje, /60/);
+  assert.match(result.mensaje, /60 días corridos/);
+});
+
+test("verificarPlazoInvestigacion cuenta fines de semana (60 corridos, no hábiles)", () => {
+  // 2026-07-13 + 60 corridos = 2026-09-11; en hábiles aún no vencería.
+  const causa = makeCausa({ fechaApertura: "2026-07-13" });
+  const result = verificarPlazoInvestigacion(causa);
+  assert.equal(result.fechaLimite, "2026-09-11");
+  assert.equal(result.estado, "vencido");
+  assert.match(result.mensaje, /corridos/);
 });
 
 test("verificarPlazoInvestigacion usa 10 días hábiles para faltas Muy Graves", () => {

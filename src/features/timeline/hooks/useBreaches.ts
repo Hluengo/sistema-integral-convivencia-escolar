@@ -1,17 +1,18 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useMemo } from 'react';
-import { type Causa, EstadoCausa } from '@/shared/lib/types';
-import { getFaseForEstado } from '@/shared/lib/data';
+import { useMemo } from "react";
+import { type Causa, EstadoCausa } from "@/shared/lib/types";
+import { getFaseForEstado } from "@/shared/lib/data";
 import {
   verificarPlazoInvestigacion,
   verificarPlazoInformeConcluyente,
   verificarPlazoSuspension,
   verificarPlazoNotificacionSuperintendencia,
   getMaxPlazoInvestigacionDias,
+  MAX_PLAZO_INVESTIGACION_DIAS,
   MAX_PLAZO_SUSPENSION_DIAS,
   MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS,
-} from '@/shared/lib/legalCompliance';
+} from "@/shared/lib/legalCompliance";
 
 /**
  * Lógica pura de detección de brechas de debido proceso (Circular 482 / Ley 21809).
@@ -19,22 +20,24 @@ import {
  */
 export function computeBreaches(causa: Causa): string[] {
   const result: string[] = [];
-  const hasResguardo = causa.checklistDebidoProceso.find((c) => c.id === 'chk_inv_2')?.completado;
+  const hasResguardo = causa.checklistDebidoProceso.find(
+    (c) => c.id === "chk_inv_2",
+  )?.completado;
   const hasAcompanamiento = causa.checklistDebidoProceso.find(
-    (c) => c.id === 'chk_seg_1',
+    (c) => c.id === "chk_seg_1",
   )?.completado;
 
   const casePhase = getFaseForEstado(causa.estadoActual);
   const isInInvestigacionOrBeyond =
-    casePhase === 'Investigación' ||
-    casePhase === 'Resolución' ||
-    casePhase === 'Apelación' ||
-    casePhase === 'Seguimiento';
+    casePhase === "Investigación" ||
+    casePhase === "Resolución" ||
+    casePhase === "Apelación" ||
+    casePhase === "Seguimiento";
 
   if (
-    (causa.tipoInfraccion === 'Grave' ||
-      causa.tipoInfraccion === 'Muy Grave' ||
-      causa.tipoInfraccion === 'Gravísima') &&
+    (causa.tipoInfraccion === "Grave" ||
+      causa.tipoInfraccion === "Muy Grave" ||
+      causa.tipoInfraccion === "Gravísima") &&
     !hasResguardo &&
     isInInvestigacionOrBeyond
   ) {
@@ -44,7 +47,8 @@ export function computeBreaches(causa: Causa): string[] {
   }
 
   if (
-    (causa.tipoInfraccion === 'Muy Grave' || causa.tipoInfraccion === 'Gravísima') &&
+    (causa.tipoInfraccion === "Muy Grave" ||
+      causa.tipoInfraccion === "Gravísima") &&
     !hasAcompanamiento &&
     causa.estadoActual === EstadoCausa.PROCESO_SEGUIMIENTO
   ) {
@@ -53,66 +57,73 @@ export function computeBreaches(causa: Causa): string[] {
     );
   }
 
-  if (causa.comprometeAulaSegura && causa.estadoActual === EstadoCausa.MEDIACION_EN_DESARROLLO) {
+  if (
+    causa.comprometeAulaSegura &&
+    causa.estadoActual === EstadoCausa.MEDIACION_EN_DESARROLLO
+  ) {
     result.push(
-      'Contradicción Procedimental: El caso compromete Aula Segura (Ley 21.128), lo cual es legalmente incompatible con derivaciones o procesos de mediación activa.',
+      "Contradicción Procedimental: El caso compromete Aula Segura (Ley 21.128), lo cual es legalmente incompatible con derivaciones o procesos de mediación activa.",
     );
   }
 
   const plazoInvestigacion = verificarPlazoInvestigacion(causa);
-  if (plazoInvestigacion.estado === 'vencido') {
+  if (plazoInvestigacion.estado === "vencido") {
     const maxPlazoInvestigacionDias = getMaxPlazoInvestigacionDias(
       causa.tipoInfraccion,
       causa.comprometeAulaSegura,
     );
+    const unidadPlazo =
+      maxPlazoInvestigacionDias === MAX_PLAZO_INVESTIGACION_DIAS
+        ? "corridos"
+        : "hábiles";
     result.push(
-      `INCUMPLIMIENTO LEGAL: ${plazoInvestigacion.mensaje}. Máximo permitido: ${maxPlazoInvestigacionDias} días hábiles (Ley 21809, Art. 16E, letra g).`,
+      `INCUMPLIMIENTO LEGAL: ${plazoInvestigacion.mensaje}. Máximo permitido: ${maxPlazoInvestigacionDias} días ${unidadPlazo} (Ley 21809, Art. 16E, letra g).`,
     );
-  } else if (plazoInvestigacion.estado === 'alerta') {
+  } else if (plazoInvestigacion.estado === "alerta") {
     result.push(`ALERTA LEGAL: ${plazoInvestigacion.mensaje}`);
   }
 
   const plazoInformeConcluyente = verificarPlazoInformeConcluyente(causa);
-  if (plazoInformeConcluyente.estado === 'vencido') {
+  if (plazoInformeConcluyente.estado === "vencido") {
     result.push(`INCUMPLIMIENTO LEGAL: ${plazoInformeConcluyente.mensaje}.`);
-  } else if (plazoInformeConcluyente.estado === 'alerta') {
+  } else if (plazoInformeConcluyente.estado === "alerta") {
     result.push(`ALERTA LEGAL: ${plazoInformeConcluyente.mensaje}`);
   }
 
   const plazoSuspension = verificarPlazoSuspension(causa);
-  if (plazoSuspension.estado === 'vencido') {
+  if (plazoSuspension.estado === "vencido") {
     result.push(
       `INCUMPLIMIENTO LEGAL: ${plazoSuspension.mensaje}. Máximo permitido: ${MAX_PLAZO_SUSPENSION_DIAS} días hábiles (Ley 21809, Art. 16E, letra j).`,
     );
-  } else if (plazoSuspension.estado === 'alerta') {
+  } else if (plazoSuspension.estado === "alerta") {
     result.push(`ALERTA LEGAL: ${plazoSuspension.mensaje}`);
   }
 
   const plazoNotificacion = verificarPlazoNotificacionSuperintendencia(causa);
-  if (plazoNotificacion.estado === 'vencido') {
+  if (plazoNotificacion.estado === "vencido") {
     result.push(
       `INCUMPLIMIENTO LEGAL: ${plazoNotificacion.mensaje}. Plazo: ${MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS} días hábiles (Ley 21809, Art. 16E).`,
     );
-  } else if (plazoNotificacion.estado === 'alerta') {
+  } else if (plazoNotificacion.estado === "alerta") {
     result.push(`ALERTA LEGAL: ${plazoNotificacion.mensaje}`);
   }
 
   if (causa.esDenunciaConfidencial && !causa.identidadReservada) {
     result.push(
-      'ALERTA LEGAL: La denuncia está marcada como confidencial pero no se ha reservado la identidad del denunciante (Ley 21809, Art. 16E, letra e).',
+      "ALERTA LEGAL: La denuncia está marcada como confidencial pero no se ha reservado la identidad del denunciante (Ley 21809, Art. 16E, letra e).",
     );
   }
 
   if (causa.fechaInicioSuspension && !causa.monitoreoPedagogico) {
     result.push(
-      'ALERTA LEGAL: La suspensión requiere monitoreo pedagógico obligatorio (Ley 21809, Art. 16E, letra j).',
+      "ALERTA LEGAL: La suspensión requiere monitoreo pedagógico obligatorio (Ley 21809, Art. 16E, letra j).",
     );
   }
 
   // Derecho a apelación: la resolución ejecutoriada presupone que se informó el
   // derecho a recurrir (chk_imp_1 = vigencia del plazo de reconsideración).
   const hasApelacionInformada = causa.checklistDebidoProceso.find(
-    (c) => c.id === 'chk_imp_1',
+    (c) => c.id === "chk_imp_1",
   )?.completado;
   if (
     (causa.estadoActual === EstadoCausa.RESOLUCION_EJECUTORIADA ||
@@ -120,7 +131,7 @@ export function computeBreaches(causa: Causa): string[] {
     !hasApelacionInformada
   ) {
     result.push(
-      'ALERTA LEGAL: El expediente alcanzó resolución ejecutoriada sin registrar que se informó al apoderado su derecho a solicitar reconsideración o apelación (chk_imp_1).',
+      "ALERTA LEGAL: El expediente alcanzó resolución ejecutoriada sin registrar que se informó al apoderado su derecho a solicitar reconsideración o apelación (chk_imp_1).",
     );
   }
 
@@ -142,7 +153,7 @@ export function computeBreaches(causa: Causa): string[] {
       causa.estadoActual === EstadoCausa.CAUSA_CERRADA)
   ) {
     result.push(
-      'ALERTA LEGAL: Se aplicaron medidas disciplinarias sin registrar medidas formativas previas; la Circular 482 exige priorizar el enfoque formativo antes de sancionar.',
+      "ALERTA LEGAL: Se aplicaron medidas disciplinarias sin registrar medidas formativas previas; la Circular 482 exige priorizar el enfoque formativo antes de sancionar.",
     );
   }
 

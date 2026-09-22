@@ -1,32 +1,36 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { getFaseForEstado } from '../../shared/lib/data';
-import { remainingProcedureDays, toDateOnly } from '../../shared/lib/dateUtils';
+import { getFaseForEstado } from "../../shared/lib/data";
+import { remainingProcedureDays, toDateOnly } from "../../shared/lib/dateUtils";
 import {
   calcularFechaLimiteCierreIndagacion,
   calcularFechaLimiteInformeConcluyente,
   calcularFechaLimiteInvestigacion,
-} from '../../shared/lib/legalCompliance/deadlineCalculators';
+} from "../../shared/lib/legalCompliance/deadlineCalculators";
 import {
-  agregarDiasHabiles,
+  agregarDiasCorridos,
   calcularDiasHabilesDesdeDiaSiguiente,
-} from '../../shared/lib/legalCompliance/dateUtils';
+} from "../../shared/lib/legalCompliance/dateUtils";
 import {
   PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS,
   PLAZO_INFORME_CONCLUYENTE_DIAS,
   getMaxPlazoInvestigacionDias,
-} from '../../shared/lib/legalCompliance/constants';
+} from "../../shared/lib/legalCompliance/constants";
 import {
   getConclusiveReportDate,
   getInvestigationStartDate,
   getInvestigationClosureDate,
-} from '../../shared/lib/legalCompliance/deadlineValidators';
-import { EstadoCausa, type Causa, type FaseProcedimental } from '../../shared/lib/types';
+} from "../../shared/lib/legalCompliance/deadlineValidators";
+import {
+  EstadoCausa,
+  type Causa,
+  type FaseProcedimental,
+} from "../../shared/lib/types";
 
 export interface DeadlinePresentation {
   remainingDays: number;
   text: string;
-  tone: 'normal' | 'warning' | 'overdue';
+  tone: "normal" | "warning" | "overdue";
   deadlineDate: string;
 }
 
@@ -35,15 +39,41 @@ export interface CausaDeadlineStages {
   informeConcluyente: DeadlinePresentation | null;
 }
 
-function presentDeadlineDate(fechaLimite: string, today: Date): DeadlinePresentation | null {
+function presentDeadlineDate(
+  fechaLimite: string,
+  today: Date,
+): DeadlinePresentation | null {
   const deadline = Date.parse(`${fechaLimite}T12:00:00Z`);
   if (Number.isNaN(deadline)) return null;
   const todayDate = Date.parse(`${toDateOnly(today)}T12:00:00Z`);
   const remainingDays = Math.round((deadline - todayDate) / 86_400_000);
-  if (remainingDays < 0) return { remainingDays, text: 'Plazo excedido', tone: 'overdue', deadlineDate: fechaLimite };
-  if (remainingDays === 0) return { remainingDays, text: 'Vence hoy', tone: 'warning', deadlineDate: fechaLimite };
-  if (remainingDays <= 5) return { remainingDays, text: `${remainingDays} días`, tone: 'warning', deadlineDate: fechaLimite };
-  return { remainingDays, text: `${remainingDays} días`, tone: 'normal', deadlineDate: fechaLimite };
+  if (remainingDays < 0)
+    return {
+      remainingDays,
+      text: "Plazo excedido",
+      tone: "overdue",
+      deadlineDate: fechaLimite,
+    };
+  if (remainingDays === 0)
+    return {
+      remainingDays,
+      text: "Vence hoy",
+      tone: "warning",
+      deadlineDate: fechaLimite,
+    };
+  if (remainingDays <= 5)
+    return {
+      remainingDays,
+      text: `${remainingDays} días`,
+      tone: "warning",
+      deadlineDate: fechaLimite,
+    };
+  return {
+    remainingDays,
+    text: `${remainingDays} días`,
+    tone: "normal",
+    deadlineDate: fechaLimite,
+  };
 }
 
 function presentBusinessDeadline(
@@ -52,11 +82,31 @@ function presentBusinessDeadline(
   today: Date,
   deadlineDate: string,
 ): DeadlinePresentation {
-  const remainingDays = maxDays - calcularDiasHabilesDesdeDiaSiguiente(startDate, toDateOnly(today));
-  if (remainingDays < 0) return { remainingDays, text: 'Plazo excedido', tone: 'overdue', deadlineDate };
-  if (remainingDays === 0) return { remainingDays, text: 'Vence hoy', tone: 'warning', deadlineDate };
-  if (remainingDays <= 5) return { remainingDays, text: `${remainingDays} días`, tone: 'warning', deadlineDate };
-  return { remainingDays, text: `${remainingDays} días`, tone: 'normal', deadlineDate };
+  const remainingDays =
+    maxDays -
+    calcularDiasHabilesDesdeDiaSiguiente(startDate, toDateOnly(today));
+  if (remainingDays < 0)
+    return {
+      remainingDays,
+      text: "Plazo excedido",
+      tone: "overdue",
+      deadlineDate,
+    };
+  if (remainingDays === 0)
+    return { remainingDays, text: "Vence hoy", tone: "warning", deadlineDate };
+  if (remainingDays <= 5)
+    return {
+      remainingDays,
+      text: `${remainingDays} días`,
+      tone: "warning",
+      deadlineDate,
+    };
+  return {
+    remainingDays,
+    text: `${remainingDays} días`,
+    tone: "normal",
+    deadlineDate,
+  };
 }
 
 function presentClosedDeadlineDate(
@@ -67,8 +117,19 @@ function presentClosedDeadlineDate(
   const closed = Date.parse(`${fechaCierre}T12:00:00Z`);
   if (Number.isNaN(deadline) || Number.isNaN(closed)) return null;
   const remainingDays = Math.round((deadline - closed) / 86_400_000);
-  if (remainingDays < 0) return { remainingDays, text: 'Cerró fuera de plazo', tone: 'overdue', deadlineDate: fechaLimite };
-  return { remainingDays, text: 'Cerró en plazo', tone: 'normal', deadlineDate: fechaLimite };
+  if (remainingDays < 0)
+    return {
+      remainingDays,
+      text: "Cerró fuera de plazo",
+      tone: "overdue",
+      deadlineDate: fechaLimite,
+    };
+  return {
+    remainingDays,
+    text: "Cerró en plazo",
+    tone: "normal",
+    deadlineDate: fechaLimite,
+  };
 }
 
 export function getCausaPhase(causa: Causa): FaseProcedimental {
@@ -76,30 +137,32 @@ export function getCausaPhase(causa: Causa): FaseProcedimental {
 }
 
 export function getCausaStatus(causa: Causa): string {
-  if (causa.estadoActual === EstadoCausa.CAUSA_CERRADA) return 'Cerrada';
-  if (causa.estadoActual === EstadoCausa.RESOLUCION_EJECUTORIADA) return 'Ejecutoriada';
+  if (causa.estadoActual === EstadoCausa.CAUSA_CERRADA) return "Cerrada";
+  if (causa.estadoActual === EstadoCausa.RESOLUCION_EJECUTORIADA)
+    return "Ejecutoriada";
   if (
     causa.estadoActual === EstadoCausa.EN_PLAZO_APELACION ||
     causa.estadoActual === EstadoCausa.APELACION_RECEPCIONADA ||
     causa.estadoActual === EstadoCausa.APELACION_REVISION_RECTORIA ||
     causa.estadoActual === EstadoCausa.APELACION_RESUELTA
   ) {
-    return 'En apelación';
+    return "En apelación";
   }
-  return 'Activa';
+  return "Activa";
 }
 
-export function getCausaDeadline(causa: Causa, today = new Date()): DeadlinePresentation {
+export function getCausaDeadline(
+  causa: Causa,
+  today = new Date(),
+): DeadlinePresentation {
   const defaultMaxDays = getMaxPlazoInvestigacionDias(
     causa.tipoInfraccion,
     causa.comprometeAulaSegura,
   );
-  const isHighSeverity = defaultMaxDays === PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS;
+  const isHighSeverity =
+    defaultMaxDays === PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS;
   const fechaCierreInvestigacion = getInvestigationClosureDate(causa);
-  if (
-    causa.fechaLimiteInvestigacion &&
-    !isHighSeverity
-  ) {
+  if (causa.fechaLimiteInvestigacion && !isHighSeverity) {
     if (fechaCierreInvestigacion) {
       const closedPresentation = presentClosedDeadlineDate(
         causa.fechaLimiteInvestigacion,
@@ -107,7 +170,10 @@ export function getCausaDeadline(causa: Causa, today = new Date()): DeadlinePres
       );
       if (closedPresentation) return closedPresentation;
     }
-    const presentation = presentDeadlineDate(causa.fechaLimiteInvestigacion, today);
+    const presentation = presentDeadlineDate(
+      causa.fechaLimiteInvestigacion,
+      today,
+    );
     if (presentation) return presentation;
   }
   if (isHighSeverity) {
@@ -118,44 +184,82 @@ export function getCausaDeadline(causa: Causa, today = new Date()): DeadlinePres
       causa.comprometeAulaSegura,
     );
     if (fechaCierreInvestigacion) {
-      const closedPresentation = presentClosedDeadlineDate(fechaLimite, fechaCierreInvestigacion);
+      const closedPresentation = presentClosedDeadlineDate(
+        fechaLimite,
+        fechaCierreInvestigacion,
+      );
       if (closedPresentation) return closedPresentation;
     }
-    return presentBusinessDeadline(startDate, defaultMaxDays, today, fechaLimite);
+    return presentBusinessDeadline(
+      startDate,
+      defaultMaxDays,
+      today,
+      fechaLimite,
+    );
   }
-  const maxDays =
-    isHighSeverity
-      ? defaultMaxDays
-      : (causa.plazoInvestigacionDias ?? defaultMaxDays);
+  const maxDays = isHighSeverity
+    ? defaultMaxDays
+    : (causa.plazoInvestigacionDias ?? defaultMaxDays);
   const startDate = getInvestigationStartDate(causa) || causa.fechaApertura;
   if (fechaCierreInvestigacion) {
-    const fechaLimite = agregarDiasHabiles(startDate, maxDays);
-    const closedPresentation = presentClosedDeadlineDate(fechaLimite, fechaCierreInvestigacion);
+    // Plazo estándar (no alta complejidad): 60 días corridos.
+    const fechaLimite = agregarDiasCorridos(startDate, maxDays);
+    const closedPresentation = presentClosedDeadlineDate(
+      fechaLimite,
+      fechaCierreInvestigacion,
+    );
     if (closedPresentation) return closedPresentation;
   }
   const remainingDays = remainingProcedureDays(startDate, maxDays, today);
-  const deadlineDate = agregarDiasHabiles(startDate, maxDays);
+  const deadlineDate = agregarDiasCorridos(startDate, maxDays);
 
   if (remainingDays < 0) {
-    return { remainingDays, text: 'Plazo excedido', tone: 'overdue', deadlineDate };
+    return {
+      remainingDays,
+      text: "Plazo excedido",
+      tone: "overdue",
+      deadlineDate,
+    };
   }
   if (remainingDays === 0) {
-    return { remainingDays, text: 'Vence hoy', tone: 'warning', deadlineDate };
+    return { remainingDays, text: "Vence hoy", tone: "warning", deadlineDate };
   }
   if (remainingDays <= 5) {
-    return { remainingDays, text: `${remainingDays} días`, tone: 'warning', deadlineDate };
+    return {
+      remainingDays,
+      text: `${remainingDays} días`,
+      tone: "warning",
+      deadlineDate,
+    };
   }
-  return { remainingDays, text: `${remainingDays} días`, tone: 'normal', deadlineDate };
+  return {
+    remainingDays,
+    text: `${remainingDays} días`,
+    tone: "normal",
+    deadlineDate,
+  };
 }
 
-export function getCausaDeadlineStages(causa: Causa, today = new Date()): CausaDeadlineStages {
-  const maxDays = getMaxPlazoInvestigacionDias(causa.tipoInfraccion, causa.comprometeAulaSegura);
+export function getCausaDeadlineStages(
+  causa: Causa,
+  today = new Date(),
+): CausaDeadlineStages {
+  const maxDays = getMaxPlazoInvestigacionDias(
+    causa.tipoInfraccion,
+    causa.comprometeAulaSegura,
+  );
   const startDate = getInvestigationStartDate(causa) || causa.fechaApertura;
   if (!startDate) {
-    return { cierreIndagacion: getCausaDeadline(causa, today), informeConcluyente: null };
+    return {
+      cierreIndagacion: getCausaDeadline(causa, today),
+      informeConcluyente: null,
+    };
   }
   if (maxDays !== PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS) {
-    return { cierreIndagacion: getCausaDeadline(causa, today), informeConcluyente: null };
+    return {
+      cierreIndagacion: getCausaDeadline(causa, today),
+      informeConcluyente: null,
+    };
   }
 
   const fechaCierre = getInvestigationClosureDate(causa);
@@ -166,7 +270,8 @@ export function getCausaDeadlineStages(causa: Causa, today = new Date()): CausaD
   const fechaInforme = getConclusiveReportDate(causa);
   const informeConcluyente = fechaCierre
     ? (() => {
-        const fechaLimiteInforme = calcularFechaLimiteInformeConcluyente(fechaCierre);
+        const fechaLimiteInforme =
+          calcularFechaLimiteInformeConcluyente(fechaCierre);
         return fechaInforme
           ? presentClosedDeadlineDate(fechaLimiteInforme, fechaInforme)
           : presentBusinessDeadline(

@@ -4,18 +4,20 @@
  * Calculadoras de fechas límite legales
  */
 
-import { agregarDiasHabiles } from './dateUtils';
+import { agregarDiasCorridos, agregarDiasHabiles } from "./dateUtils";
 import {
   MAX_PLAZO_INVESTIGACION_DIAS,
   MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS,
   PLAZO_INFORME_CONCLUYENTE_DIAS,
   PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS,
   getMaxPlazoInvestigacionDias,
-} from './constants';
-import type { TipoInfraccion } from '../types';
+} from "./constants";
+import type { TipoInfraccion } from "../types";
 
 /**
- * Calcula fecha límite de investigación desde apertura.
+ * Calcula fecha límite de investigación desde apertura. El plazo estándar
+ * de 2 meses (60 días) es en días corridos (Ley 21809); solo el plazo de
+ * alta complejidad (10 días) se cuenta en días hábiles.
  */
 export function calcularFechaLimiteInvestigacion(
   fechaApertura: string,
@@ -25,20 +27,38 @@ export function calcularFechaLimiteInvestigacion(
   const maxDias = tipoInfraccion
     ? getMaxPlazoInvestigacionDias(tipoInfraccion, comprometeAulaSegura)
     : MAX_PLAZO_INVESTIGACION_DIAS;
+  if (maxDias === MAX_PLAZO_INVESTIGACION_DIAS) {
+    return agregarDiasCorridos(fechaApertura, maxDias);
+  }
   return agregarDiasHabiles(fechaApertura, maxDias);
 }
 
-export function calcularFechaLimiteInformeConcluyente(fechaCierreIndagacion: string): string {
-  return agregarDiasHabiles(fechaCierreIndagacion, PLAZO_INFORME_CONCLUYENTE_DIAS);
+export function calcularFechaLimiteInformeConcluyente(
+  fechaCierreIndagacion: string,
+): string {
+  return agregarDiasHabiles(
+    fechaCierreIndagacion,
+    PLAZO_INFORME_CONCLUYENTE_DIAS,
+  );
 }
 
-export function calcularFechaLimiteCierreIndagacion(fechaInicioInvestigacion: string): string {
-  return agregarDiasHabiles(fechaInicioInvestigacion, PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS);
+export function calcularFechaLimiteCierreIndagacion(
+  fechaInicioInvestigacion: string,
+): string {
+  return agregarDiasHabiles(
+    fechaInicioInvestigacion,
+    PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS,
+  );
 }
 
 /**
  * Calcula fecha límite de notificación a Superintendencia (5 días hábiles desde resolución)
  */
-export function calcularFechaLimiteNotificacionSuperintendencia(fechaResolucion: string): string {
-  return agregarDiasHabiles(fechaResolucion, MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS);
+export function calcularFechaLimiteNotificacionSuperintendencia(
+  fechaResolucion: string,
+): string {
+  return agregarDiasHabiles(
+    fechaResolucion,
+    MAX_PLAZO_NOTIFICACION_SUPERINTENDENCIA_DIAS,
+  );
 }
