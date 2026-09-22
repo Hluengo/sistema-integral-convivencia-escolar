@@ -163,17 +163,27 @@ export function getCausaDeadline(
     defaultMaxDays === PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS;
   const fechaCierreInvestigacion = getInvestigationClosureDate(causa);
   if (causa.fechaLimiteInvestigacion && !isHighSeverity) {
+    const inicioPersistido =
+      getInvestigationStartDate(causa) || causa.fechaApertura;
+    // Tope regla vigente (60 días corridos): las filas guardadas con la
+    // regla anterior (días hábiles) traen fechas más largas; se acotan en
+    // lectura sin tocar plazos personalizados más breves.
+    const topeRegla = agregarDiasCorridos(
+      inicioPersistido,
+      causa.plazoInvestigacionDias ?? defaultMaxDays,
+    );
+    const fechaLimiteEfectiva =
+      causa.fechaLimiteInvestigacion < topeRegla
+        ? causa.fechaLimiteInvestigacion
+        : topeRegla;
     if (fechaCierreInvestigacion) {
       const closedPresentation = presentClosedDeadlineDate(
-        causa.fechaLimiteInvestigacion,
+        fechaLimiteEfectiva,
         fechaCierreInvestigacion,
       );
       if (closedPresentation) return closedPresentation;
     }
-    const presentation = presentDeadlineDate(
-      causa.fechaLimiteInvestigacion,
-      today,
-    );
+    const presentation = presentDeadlineDate(fechaLimiteEfectiva, today);
     if (presentation) return presentation;
   }
   if (isHighSeverity) {

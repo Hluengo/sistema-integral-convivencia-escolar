@@ -167,6 +167,30 @@ describe("Listado de causas activas", () => {
     assert.equal(deadline.text, "31 días");
   });
 
+  it("acota plazos guardados con la regla anterior a 60 días corridos", () => {
+    const deadline = getCausaDeadline(
+      cause({
+        fechaApertura: "2026-07-01",
+        fechaLimiteInvestigacion: "2026-09-23",
+      }),
+      new Date("2026-07-30T12:00:00.000Z"),
+    );
+    assert.equal(deadline.deadlineDate, "2026-08-30");
+    assert.equal(deadline.text, "31 días");
+  });
+
+  it("respeta plazos personalizados más breves que el tope", () => {
+    const deadline = getCausaDeadline(
+      cause({
+        fechaApertura: "2026-07-01",
+        fechaLimiteInvestigacion: "2026-07-20",
+      }),
+      new Date("2026-07-30T12:00:00.000Z"),
+    );
+    assert.equal(deadline.deadlineDate, "2026-07-20");
+    assert.equal(deadline.text, "Plazo excedido");
+  });
+
   it("distingue plazo próximo y plazo excedido", () => {
     const warning = getCausaDeadline(
       cause({ fechaApertura: "2026-07-01", plazoInvestigacionDias: 30 }),
