@@ -67,7 +67,15 @@ export default function TimelineHeader({
     <>
       <DetailModalHeader
         avatarInitial={displayName.charAt(0).toUpperCase()}
+        avatarClassName={
+          causa.comprometeAulaSegura
+            ? "ring-gravisima-400"
+            : causa.tipoInfraccion === "Leve"
+              ? "ring-brand-200"
+              : "ring-grave-400"
+        }
         title={displayName}
+        titleTooltip={displayName}
         metadata={
           <>
             <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-neutral-700">
@@ -99,15 +107,11 @@ export default function TimelineHeader({
               )}{" "}
               · {deadlines.cierreIndagacion.text}
             </span>
-            <span
-              className={`rounded-full px-2 py-0.5 font-semibold ${
-                breaches.length
-                  ? "bg-gravisima-100 text-gravisima-800"
-                  : "bg-leve-100 text-neutral-800"
-              }`}
-            >
-              {riskLabel}
-            </span>
+            {breaches.length > 0 && (
+              <span className="rounded-full bg-gravisima-100 px-2 py-0.5 font-semibold text-gravisima-800">
+                {riskLabel}
+              </span>
+            )}
           </>
         }
         actions={

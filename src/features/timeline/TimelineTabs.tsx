@@ -35,7 +35,7 @@ export default function TimelineTabs({
     tone: "brand" | "grave" | "neutral" | "info" = "brand",
   ) => (
     <span
-      className={`mx-auto w-fit max-w-full truncate rounded-full px-2 py-0.5 text-[0.7rem] leading-tight ${
+      className={`mx-auto w-fit max-w-full truncate rounded-full px-2 py-0.5 text-[11px] leading-tight ${
         tone === "grave"
           ? "bg-grave-100 text-neutral-800"
           : tone === "neutral"

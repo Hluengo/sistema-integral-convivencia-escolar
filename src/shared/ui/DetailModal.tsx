@@ -22,7 +22,9 @@ interface DetailModalContentProps {
 
 interface DetailModalHeaderProps {
   avatarInitial: string;
+  avatarClassName?: string;
   title: string;
+  titleTooltip?: string;
   metadata: ReactNode;
   actions: ReactNode;
 }
@@ -61,7 +63,9 @@ export function DetailModalContent({
 
 export function DetailModalHeader({
   avatarInitial,
+  avatarClassName,
   title,
+  titleTooltip,
   metadata,
   actions,
 }: DetailModalHeaderProps) {
@@ -69,13 +73,18 @@ export function DetailModalHeader({
     <header className="relative z-20 border-neutral-200 border-b bg-white px-4 py-3.5 sm:px-6">
       <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-700 shadow-sm">
+          <div
+            className={`flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-700 shadow-sm ring-2 ${avatarClassName ?? "ring-brand-200"}`}
+          >
             <span className="font-bold text-sm text-white">
               {avatarInitial}
             </span>
           </div>
           <div className="min-w-0">
-            <h2 className="truncate font-bold text-[1.05rem] tracking-tight text-neutral-900">
+            <h2
+              title={titleTooltip ?? title}
+              className="truncate font-bold text-[1.05rem] tracking-tight text-neutral-900"
+            >
               {title}
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-2 text-neutral-600 text-xs">
@@ -154,6 +163,12 @@ export function DetailModalTabs<T extends string>({
               {tab.label}
             </span>
             {tab.indicator}
+            <span
+              aria-hidden="true"
+              className={`pointer-events-none absolute inset-x-3 bottom-1 h-0.5 rounded-full bg-brand-600 transition-transform duration-150 motion-reduce:transition-none ${
+                activeTab === tab.id ? "scale-x-100" : "scale-x-0"
+              }`}
+            />
           </button>
         ))}
       </div>
