@@ -39,17 +39,37 @@ const normalizeDateOnly = (value?: string): string | undefined => {
 export function getInvestigationClosureDate(
   causa: Pick<Causa, "checklistDebidoProceso" | "bitacora">,
 ): string | undefined {
-  const checklistDate = causa.checklistDebidoProceso.find(
-    (item) => item.id === INVESTIGATION_CLOSE_ITEM_ID && item.completado,
-  )?.fechaCompletado;
-  const normalizedChecklistDate = normalizeDateOnly(checklistDate);
+  const closeItem = causa.checklistDebidoProceso.find(
+    (item) => item.id === INVESTIGATION_CLOSE_ITEM_ID,
+  );
+  // ponytail: subir el documento ya cuenta como cierre aunque el flag completado aún no se haya marcado
+  const hasClosureEvidence = Boolean(
+    closeItem &&
+    (closeItem.completado ||
+      closeItem.fechaCompletado ||
+      closeItem.documentoNombre ||
+      closeItem.documentoUrl),
+  );
+  const normalizedChecklistDate = normalizeDateOnly(closeItem?.fechaCompletado);
   if (normalizedChecklistDate) return normalizedChecklistDate;
 
-  return causa.bitacora
+  const bitacoraDate = causa.bitacora
     .filter((entry) => entry.titulo.includes(INVESTIGATION_CLOSE_LABEL))
     .map((entry) => normalizeDateOnly(entry.fecha))
     .filter((date): date is string => Boolean(date))
     .sort()[0];
+  if (bitacoraDate) return bitacoraDate;
+
+  if (hasClosureEvidence) {
+    const attachedDate = causa.bitacora
+      .filter((entry) => Boolean(entry.documentoAdjunto))
+      .map((entry) => normalizeDateOnly(entry.fecha))
+      .filter((date): date is string => Boolean(date))
+      .sort()[0];
+    if (attachedDate) return attachedDate;
+  }
+
+  return undefined;
 }
 
 export function getInvestigationStartDate(causa: Causa): string | undefined {
