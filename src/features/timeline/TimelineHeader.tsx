@@ -14,11 +14,10 @@ import {
 } from "lucide-react";
 import {
   getCausaDeadlineStages,
-  getCausaPhase,
   getCausaStatus,
 } from "../causas/causaPresentation";
 import { formatChileDate } from "../../shared/lib/dateTime";
-import { maskName, maskRut } from "../../shared/lib/anotacionesUtils";
+import { getCausaOperationalPhase } from "../causas/causaOperationalSummary";
 import { DetailModalHeader } from "../../shared/ui/DetailModal";
 
 interface TimelineHeaderProps {
@@ -53,10 +52,7 @@ export default function TimelineHeader({
   const displayName = privacyMode
     ? causa.nnaProtectedName
     : causa.estudianteNombre;
-  const currentPhase = getCausaPhase(causa);
-  const showConcluyente =
-    deadlines.informeConcluyente !== null &&
-    ["Resolución", "Apelación", "Seguimiento"].includes(currentPhase);
+  const currentPhase = getCausaOperationalPhase(causa);
   const riskLabel = breaches.length
     ? `${breaches.length} alerta${breaches.length === 1 ? "" : "s"}`
     : "Sin alertas";
@@ -112,35 +108,6 @@ export default function TimelineHeader({
             >
               {riskLabel}
             </span>
-            {showConcluyente && deadlines.informeConcluyente && (
-              <span
-                className={`inline-flex items-center rounded-full border px-2 py-0.5 font-semibold ${deadlineChipClass(deadlines.informeConcluyente.tone)}`}
-              >
-                Concluyente: {deadlines.informeConcluyente.text}
-              </span>
-            )}
-            <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-neutral-600">
-              Apertura {formatChileDate(causa.fechaApertura)}
-            </span>
-            {causa.runEstudiante && (
-              <span
-                className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 font-mono text-neutral-600"
-                title={privacyMode ? "RUN protegido" : undefined}
-              >
-                RUN{" "}
-                {privacyMode
-                  ? maskRut(causa.runEstudiante, true)
-                  : causa.runEstudiante}
-              </span>
-            )}
-            {!causa.runEstudiante && privacyMode && (
-              <span
-                className="rounded-full bg-neutral-100 px-2 py-0.5 font-mono text-neutral-600"
-                title="RUN protegido"
-              >
-                RUN {maskRut(undefined, true)} · {maskName(displayName, true)}
-              </span>
-            )}
           </>
         }
         actions={

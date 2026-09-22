@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { memo, useMemo, useState } from "react";
-import type { Causa, BitacoraEntry, UserRole } from "../../shared/lib/types";
+import type { Causa, BitacoraEntry } from "../../shared/lib/types";
 import {
   Bell,
   Calendar,
@@ -25,16 +25,11 @@ import {
 } from "../../shared/api/services/storage.service";
 import { formatChileDateTime } from "../../shared/lib/dateTime";
 import HistoryEntryForm from "../../shared/ui/HistoryEntryForm";
-import type { ManualBitacoraEntryInput } from "../../shared/lib/hooks/useBitacoraLog";
 import { useChecklistProgress } from "../../shared/lib/hooks/useChecklistProgress";
+import { useTimelineContext } from "../../shared/lib/useTimelineContext";
 
 interface BitacoraTabProps {
   causa: Causa;
-  currentRole: UserRole;
-  onCreateManualEntry: (input: ManualBitacoraEntryInput) => Promise<void>;
-  isSavingManualEntry: boolean;
-  manualEntryError: string | null;
-  onResetManualEntryError: () => void;
 }
 
 const ENTRY_STYLE: Record<
@@ -113,14 +108,14 @@ const FILTER_OPTIONS: Array<{
   { id: "Resolución", label: "Resoluciones" },
 ];
 
-export default memo(function BitacoraTab({
-  causa,
-  currentRole,
-  onCreateManualEntry,
-  isSavingManualEntry,
-  manualEntryError,
-  onResetManualEntryError,
-}: BitacoraTabProps) {
+export default memo(function BitacoraTab({ causa }: BitacoraTabProps) {
+  const {
+    currentRole,
+    createManualLog: onCreateManualEntry,
+    isCreatingManualLog: isSavingManualEntry,
+    manualLogError: manualEntryError,
+    resetManualLogError: onResetManualEntryError,
+  } = useTimelineContext();
   const [logType, setLogType] = useState<BitacoraEntry["tipo"]>("Entrevista");
   const [participants, setParticipants] = useState("");
   const [manualFile, setManualFile] = useState<File | null>(null);

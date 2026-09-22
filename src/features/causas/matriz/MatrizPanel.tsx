@@ -7,7 +7,6 @@ import {
   FileStack,
   Link2,
   Scale,
-  Shield,
   Trash2,
   Unlink,
 } from "lucide-react";
@@ -33,9 +32,7 @@ import {
   type AgravanteId,
   type AtenuanteId,
 } from "@/shared/lib/proporcionalidad";
-import AuditoriaPanel from "./AuditoriaPanel";
 import DecisionFundada from "./DecisionFundada";
-import { auditarExpediente } from "@/shared/lib/auditoria";
 import { countDecisionSteps } from "@/shared/lib/decisionFundada";
 
 const estadoLabel: Record<HechoEstado, string> = {
@@ -195,45 +192,8 @@ export default function MatrizPanel({ causa }: { causa: Causa }) {
     [invalidate],
   );
 
-  const audit = auditarExpediente(causa, hechos, vinculos);
-
   return (
     <div className="space-y-4">
-      {/* Auditoría — colapsable */}
-      <details className="group rounded-xl border border-slate-200 bg-white shadow-xs">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 p-3">
-          <span className="flex items-center gap-2 font-semibold text-sm text-slate-900">
-            <Shield className="size-4 text-brand-600" />
-            Auditoría {audit.verificadas}/{audit.total}
-            {!audit.puedeCerrar && (
-              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-10px font-bold text-amber-800">
-                Revisar
-              </span>
-            )}
-            {audit.puedeCerrar && (
-              <span className="rounded-full bg-green-100 px-2 py-0.5 text-10px font-bold text-green-700">
-                Al día
-              </span>
-            )}
-          </span>
-          <ChevronDown className="size-4 text-slate-400 transition group-open:rotate-180" />
-        </summary>
-        <div className="border-t border-slate-100 p-3">
-          <AuditoriaPanel causa={causa} hechos={hechos} vinculos={vinculos} />
-        </div>
-      </details>
-
-      {/* IA auditora — solo si bloquea */}
-      {!audit.puedeCerrar && audit.bloqueantes > 0 && (
-        <div className="rounded-lg border border-slate-200 bg-slate-900 p-3 text-xs text-slate-100">
-          <p className="font-semibold">Asistente de revisión</p>
-          <p className="mt-1 text-slate-300">{audit.advertencias[0]}</p>
-          <p className="mt-1 text-11px text-slate-400">
-            La IA audita el debido proceso, no sanciona.
-          </p>
-        </div>
-      )}
-
       {/* Nuevo hecho — colapsable */}
       <div className="rounded-xl border border-slate-200 bg-white shadow-xs">
         <button

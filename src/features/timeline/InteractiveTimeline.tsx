@@ -3,22 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Suspense, lazy, useState } from "react";
+import { useState } from "react";
 import type { Causa, FaseProcedimental, UserRole } from "@/shared/lib/types";
-import { getFaseForEstado } from "@/shared/lib/data";
+import { getCausaOperationalPhase } from "../causas/causaOperationalSummary";
 import TimelineHeader from "./TimelineHeader";
 import TimelineTabs from "./TimelineTabs";
 import TimelineTabPanels from "./TimelineTabPanels";
 import { useTimelineController } from "@/shared/lib/hooks/useTimelineController";
 import { TimelineProvider } from "@/shared/lib/TimelineContext";
 import { useAppContext } from "@/shared/lib/useAppContext";
-import ConfirmDialog from "../../shared/ConfirmDialog";
 import { useBreaches } from "./hooks/useBreaches";
 import type { TimelineTab } from "./timelineTabs.types";
-import ForceCloseCausaDialog from "../causas/ForceCloseCausaDialog";
-import { TimelineEditSkeleton } from "../../shared/Skeleton";
-
-const EditCausaModal = lazy(() => import("../causas/ui/EditCausaModal"));
+import TimelineOverlays from "./TimelineOverlays";
 
 interface InteractiveTimelineProps {
   causa: Causa;
@@ -68,7 +64,7 @@ export default function InteractiveTimeline({
     currentRole,
     privacyMode,
   });
-  const currentFase = getFaseForEstado(causa.estadoActual);
+  const currentFase = getCausaOperationalPhase(causa);
   const breaches = useBreaches(causa);
 
   return (
@@ -89,46 +85,18 @@ export default function InteractiveTimeline({
           breaches={breaches}
           onClose={onClose}
         />
-        <ConfirmDialog
-          open={showConfirmDelete}
-          title="Eliminar expediente"
-          description={`¿Eliminar el expediente ${causa.id} de forma permanente? Esta acción no se puede deshacer.`}
-          onConfirm={async () => {
-            const deleted = await onDeleteCausa(causa.id);
-            setShowConfirmDelete(false);
-            if (deleted) onClose?.();
-          }}
-          onCancel={() => setShowConfirmDelete(false)}
-        />
-        <ForceCloseCausaDialog
+        <TimelineOverlays
           causa={causa}
-          open={showForceClose}
-          onOpenChange={setShowForceClose}
-          onConfirm={(updated) => {
-            onUpdateCausa(updated);
-            onClose?.();
-          }}
+          showEdit={showEdit}
+          showConfirmDelete={showConfirmDelete}
+          showForceClose={showForceClose}
+          onShowEdit={setShowEdit}
+          onShowConfirmDelete={setShowConfirmDelete}
+          onShowForceClose={setShowForceClose}
+          onUpdateCausa={onUpdateCausa}
+          onDeleteCausa={onDeleteCausa}
+          onClose={onClose}
         />
-        {showEdit && (
-          <Suspense fallback={<TimelineEditSkeleton />}>
-            <EditCausaModal
-              causa={causa}
-              onClose={() => setShowEdit(false)}
-              onSave={(updated) => {
-                onUpdateCausa(updated);
-                setShowEdit(false);
-              }}
-              onDelete={async (id) => {
-                const deleted = await onDeleteCausa(id);
-                if (deleted) {
-                  setShowEdit(false);
-                  onClose?.();
-                }
-                return deleted;
-              }}
-            />
-          </Suspense>
-        )}
         <TimelineTabs
           activeTab={activeTab}
           setActiveTab={setActiveTab}

@@ -111,10 +111,10 @@ export default function InvestigationChecklist({
         onClick={() =>
           setExpandedStages({ ...expandedStages, investigacion: !isExpanded })
         }
-        className={`flex w-full select-none items-center justify-between p-3 text-left font-sans transition-colors ${
+        className={`flex w-full select-none items-center justify-between gap-3 p-4 text-left font-sans transition-colors ${
           isExpanded
-            ? "border-neutral-200 border-b bg-neutral-50"
-            : "bg-neutral-50/50 hover:bg-neutral-50"
+            ? "border-neutral-200 border-b bg-white"
+            : "bg-neutral-50/60 hover:bg-white"
         }`}
         aria-expanded={isExpanded}
         aria-controls="section-investigacion"
@@ -122,7 +122,7 @@ export default function InvestigationChecklist({
       >
         <div className="flex min-w-0 items-center gap-2">
           <span
-            className={`font-semibold text-xs ${
+            className={`font-semibold text-sm ${
               model.progress.total > 0 &&
               model.progress.completed === model.progress.total
                 ? "text-success-700"
@@ -132,7 +132,7 @@ export default function InvestigationChecklist({
             2. Investigación
           </span>
           <span
-            className={`shrink-0 rounded-full px-1.5 py-0.5 font-semibold text-8px ${
+            className={`shrink-0 rounded-full px-2 py-0.5 font-semibold text-10px ${
               model.progress.total > 0 &&
               model.progress.completed === model.progress.total
                 ? "bg-success-100 text-success-700"
@@ -143,7 +143,7 @@ export default function InvestigationChecklist({
           >
             {model.progress.completed}/{model.progress.total}
           </span>
-          <span className="shrink-0 font-mono text-8px text-brand-600 tabular-nums">
+          <span className="shrink-0 font-mono text-10px font-semibold text-brand-700 tabular-nums">
             {model.progress.total > 0
               ? Math.round(
                   (model.progress.completed / model.progress.total) * 100,
@@ -154,7 +154,7 @@ export default function InvestigationChecklist({
         </div>
         <span className="flex shrink-0 items-center gap-1.5">
           <span
-            className={`hidden rounded-full px-2 py-1 font-bold text-9px sm:inline ${
+            className={`hidden rounded-full px-2.5 py-1.5 font-bold text-10px sm:inline ${
               isExpanded
                 ? "bg-brand-100 text-brand-800"
                 : "bg-brand-600 text-white"
@@ -163,7 +163,7 @@ export default function InvestigationChecklist({
             {isExpanded ? "Ocultar hitos" : "Abrir hitos"}
           </span>
           <span
-            className={`flex h-8 w-8 items-center justify-center rounded-full border shadow-xs transition-all ${
+            className={`flex size-9 items-center justify-center rounded-full border shadow-xs transition-all ${
               isExpanded
                 ? "border-brand-600 bg-brand-600 text-white"
                 : "border-brand-500 bg-brand-50 text-brand-700 hover:scale-105 hover:bg-brand-600 hover:text-white"
@@ -180,7 +180,10 @@ export default function InvestigationChecklist({
       </button>
 
       {isExpanded && (
-        <div id="section-investigacion" className="space-y-5 p-3">
+        <div
+          id="section-investigacion"
+          className="space-y-5 bg-neutral-50/30 p-4 sm:p-5"
+        >
           <section
             className="space-y-4"
             aria-labelledby="investigation-base-title"

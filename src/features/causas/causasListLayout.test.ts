@@ -96,6 +96,7 @@ describe("Listado de causas activas", () => {
     const summary = read("../timeline/ResumenTab.tsx");
     const route = read("../timeline/RutaExpedienteTab.tsx");
     const panels = read("../timeline/TimelineTabPanels.tsx");
+    const phaseWorkspace = read("../timeline/TimelinePhaseWorkspace.tsx");
     const processTab = read("../timeline/ProcesoTab.tsx");
     const advisor = read("MainContent/AdvisorView.tsx");
     const operationalSummary = read("causaOperationalSummary.ts");
@@ -132,11 +133,12 @@ describe("Listado de causas activas", () => {
     assert.match(route, /aria-controls="phase-workspace"/);
     assert.match(panels, /activeTab === ["']ruta["']/);
     assert.match(panels, /selectedPhase \? \(/);
-    assert.match(panels, /Volver a la ruta/);
-    assert.match(panels, /onSelectPhase\(null\)/);
-    assert.match(panels, /<ProcesoTab/);
-    assert.match(panels, /id="phase-workspace"/);
-    assert.match(panels, /Fase de trabajo/);
+    assert.match(panels, /<TimelinePhaseWorkspace/);
+    assert.match(phaseWorkspace, /Volver a la ruta/);
+    assert.match(phaseWorkspace, /onSelectPhase\(null\)/);
+    assert.match(phaseWorkspace, /<ProcesoTab/);
+    assert.match(phaseWorkspace, /id="phase-workspace"/);
+    assert.match(phaseWorkspace, /Ruta del expediente/);
     assert.doesNotMatch(processTab, /Estado de la causa/);
     assert.doesNotMatch(processTab, /MAPPED_STATES/);
     assert.match(investigationChecklist, /Mediación no requerida/);

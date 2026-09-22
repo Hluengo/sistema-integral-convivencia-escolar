@@ -4,7 +4,7 @@
  */
 
 import type React from "react";
-import { Download, FileSearch, FileStack, History, Route } from "lucide-react";
+import { Download, FileSearch, History, Route } from "lucide-react";
 import type { Causa } from "../../shared/lib/types";
 import type { TimelineTab } from "./timelineTabs.types";
 import {
@@ -58,7 +58,7 @@ export default function TimelineTabs({
     { id: "resumen", label: "Resumen", Icon: FileSearch },
     {
       id: "ruta",
-      label: "Ruta del expediente",
+      label: "Ruta",
       Icon: Route,
       indicator: badge(`${summary.currentPhase} · ${progressLabel}`),
     },
@@ -69,17 +69,8 @@ export default function TimelineTabs({
       indicator: badge(`${summary.historyCount} registros`),
     },
     {
-      id: "matriz",
-      label: "Matriz",
-      Icon: FileStack,
-      indicator: badge(
-        causa.tipoInfraccion,
-        causa.comprometeAulaSegura ? "grave" : "neutral",
-      ),
-    },
-    {
       id: "expediente",
-      label: "Auditoría/expediente",
+      label: "Expediente",
       Icon: Download,
       indicator: badge(`${summary.documentsCount} documentos`),
     },
@@ -89,6 +80,12 @@ export default function TimelineTabs({
     ({ id, label, Icon, indicator }) => ({
       id,
       label,
+      ariaLabel:
+        id === "ruta"
+          ? "Ruta del expediente"
+          : id === "expediente"
+            ? "Auditoría/expediente"
+            : undefined,
       icon: <Icon className="size-4" aria-hidden="true" />,
       indicator,
     }),

@@ -10,6 +10,7 @@ import { DialogContent } from "./Dialog";
 export interface DetailModalTab<T extends string> {
   id: T;
   label: string;
+  ariaLabel?: string;
   icon: ReactNode;
   indicator?: ReactNode;
 }
@@ -50,7 +51,7 @@ export function DetailModalContent({
   return (
     <DialogContent
       hideClose
-      className="flex h-[min(96vh,1080px)] max-h-[calc(100vh-1rem)] w-[min(98vw,128rem)] max-w-none flex-col overflow-hidden border-neutral-150 bg-neutral-50 p-0 shadow-2xl reduce-motion:[animation-duration:0ms,transition-duration:0ms]"
+      className="flex h-[min(94vh,980px)] max-h-[calc(100vh-1rem)] w-[min(96vw,112rem)] max-w-none flex-col overflow-hidden border-neutral-150 bg-neutral-50 p-0 shadow-2xl reduce-motion:[animation-duration:0ms,transition-duration:0ms]"
       aria-label={ariaLabel}
     >
       {children}
@@ -65,16 +66,16 @@ export function DetailModalHeader({
   actions,
 }: DetailModalHeaderProps) {
   return (
-    <header className="relative z-20 border-neutral-200 border-b bg-white px-4 py-4 sm:px-6">
+    <header className="relative z-20 border-neutral-200 border-b bg-white px-4 py-3.5 sm:px-6">
       <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-brand-700">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-700 shadow-sm">
             <span className="font-bold text-sm text-white">
               {avatarInitial}
             </span>
           </div>
           <div className="min-w-0">
-            <h2 className="truncate font-bold text-lg text-neutral-900">
+            <h2 className="truncate font-bold text-[1.05rem] tracking-tight text-neutral-900">
               {title}
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-2 text-neutral-600 text-xs">
@@ -126,7 +127,7 @@ export function DetailModalTabs<T extends string>({
       role="tablist"
       aria-label={ariaLabel}
     >
-      <div className="flex gap-1 overflow-x-auto rounded-lg bg-neutral-100 p-1">
+      <div className="flex gap-1 overflow-x-auto rounded-xl bg-neutral-100/90 p-1">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -138,6 +139,7 @@ export function DetailModalTabs<T extends string>({
             onKeyDown={(event) => handleKeyDown(event, tabs.indexOf(tab))}
             id={`detail-tab-${tab.id}`}
             role="tab"
+            aria-label={tab.ariaLabel}
             aria-selected={activeTab === tab.id}
             aria-controls={`detail-tabpanel-${tab.id}`}
             tabIndex={activeTab === tab.id ? 0 : -1}

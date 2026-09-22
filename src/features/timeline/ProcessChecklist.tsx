@@ -10,7 +10,7 @@ import type {
   FaseProcedimental,
   UserRole,
 } from "../../shared/lib/types";
-import { CheckSquare, ChevronUp, ChevronDown } from "lucide-react";
+import { ChevronUp, ChevronDown } from "lucide-react";
 import { PROCESS_SECTIONS } from "./processSections";
 import AttachedDocuments from "./AttachedDocuments";
 import ChecklistItemCard from "./ChecklistItemCard";
@@ -84,23 +84,8 @@ export default function ProcessChecklist({
 }: ProcessChecklistProps) {
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between border-neutral-100 border-b pb-1.5">
-        <div>
-          <h3 className="flex items-center gap-1.5 font-sans font-semibold text-neutral-800 text-sm">
-            <CheckSquare
-              className="h-4 w-4 text-success-600"
-              aria-hidden="true"
-            />{" "}
-            Registro de hitos procesales
-          </h3>
-          <p className="mt-0.5 font-sans text-neutral-500 text-xs leading-tight">
-            Preserve la trazabilidad del debido proceso
-          </p>
-        </div>
-      </div>
-
       {/* Accordion of 5 stages */}
-      <div className="space-y-2 pr-1">
+      <div className="overflow-hidden rounded-xl border border-neutral-150 bg-white shadow-xs">
         {PROCESS_SECTIONS.filter(
           (section) => section.phaseName === selectedPhase,
         ).map((section) => {
@@ -145,7 +130,7 @@ export default function ProcessChecklist({
             <div
               key={section.id}
               id={`stage-${section.id}`}
-              className={`overflow-hidden rounded-lg border bg-white transition-colors ${isActive ? "border-brand-300 bg-brand-50/5 ring-1 ring-brand-300/30" : "border-neutral-200"}`}
+              className={`border-b last:border-b-0 transition-colors ${isActive ? "bg-brand-50/20 ring-1 ring-inset ring-brand-300/30" : "bg-white"}`}
             >
               {/* Section Header */}
               <button
@@ -156,10 +141,10 @@ export default function ProcessChecklist({
                     [section.id]: !isExpanded,
                   })
                 }
-                className={`flex w-full select-none items-center justify-between p-3 text-left font-sans transition-colors ${
+                className={`flex w-full select-none items-center justify-between gap-3 p-4 text-left font-sans transition-colors ${
                   isExpanded
-                    ? "border-neutral-200 border-b bg-neutral-50"
-                    : "bg-neutral-50/50 hover:bg-neutral-50"
+                    ? "border-neutral-200 border-b bg-white"
+                    : "bg-neutral-50/60 hover:bg-white"
                 }`}
                 aria-expanded={isExpanded}
                 aria-controls={`section-${section.id}`}
@@ -167,12 +152,12 @@ export default function ProcessChecklist({
               >
                 <div className="flex min-w-0 items-center gap-2">
                   <span
-                    className={`font-semibold text-xs ${completedCount === sectionItems.length ? "text-success-700" : "text-neutral-800"}`}
+                    className={`font-semibold text-sm ${completedCount === sectionItems.length ? "text-success-700" : "text-neutral-900"}`}
                   >
                     {section.title}
                   </span>
                   <span
-                    className={`shrink-0 rounded-full px-1.5 py-0.5 font-semibold text-8px ${
+                    className={`shrink-0 rounded-full px-2 py-0.5 font-semibold text-10px ${
                       completedCount === sectionItems.length
                         ? "bg-success-100 text-success-700"
                         : completedCount > 0
@@ -182,7 +167,7 @@ export default function ProcessChecklist({
                   >
                     {completedCount}/{sectionItems.length}
                   </span>
-                  <span className="shrink-0 font-mono text-8px text-brand-600 tabular-nums">
+                  <span className="shrink-0 font-mono text-10px font-semibold text-brand-700 tabular-nums">
                     {sectionItems.length > 0
                       ? Math.round((completedCount / sectionItems.length) * 100)
                       : 0}
@@ -191,7 +176,7 @@ export default function ProcessChecklist({
                 </div>
                 <span className="flex shrink-0 items-center gap-1.5">
                   <span
-                    className={`hidden rounded-full px-2 py-1 font-bold text-9px sm:inline ${
+                    className={`hidden rounded-full px-2.5 py-1.5 font-bold text-10px sm:inline ${
                       isExpanded
                         ? "bg-brand-100 text-brand-800"
                         : "bg-brand-600 text-white"
@@ -200,7 +185,7 @@ export default function ProcessChecklist({
                     {isExpanded ? "Ocultar hitos" : "Abrir hitos"}
                   </span>
                   <span
-                    className={`flex h-8 w-8 items-center justify-center rounded-full border shadow-xs transition-all ${
+                    className={`flex size-9 items-center justify-center rounded-full border shadow-xs transition-all ${
                       isExpanded
                         ? "border-brand-600 bg-brand-600 text-white"
                         : "border-brand-500 bg-brand-50 text-brand-700 hover:scale-105 hover:bg-brand-600 hover:text-white"
@@ -218,7 +203,10 @@ export default function ProcessChecklist({
 
               {/* Section Content */}
               {isExpanded && (
-                <div id={`section-${section.id}`} className="space-y-4 p-3">
+                <div
+                  id={`section-${section.id}`}
+                  className="space-y-4 bg-neutral-50/30 p-4 sm:p-5"
+                >
                   {section.phaseName === "Apelación" &&
                     (() => {
                       const derecho = getDerechoApelacionDetalle(causa);
