@@ -56,3 +56,23 @@ test("auditoría reconoce el hito de entrevista disciplinaria realizada", () => 
   assert.equal(check?.estado, "verificada");
   assert.equal(check?.detalle, "Entrevista registrada");
 });
+
+test("auditoría reconoce descargos del estudiante como derecho a ser oído", () => {
+  const causa = causaConRecepcion();
+  causa.bitacora.push({
+    id: "b_desc_1",
+    fecha: "2026-09-18T10:00:00.000Z",
+    tipo: "Otro",
+    titulo: "Descargos del estudiante",
+    descripcion: "El estudiante presenta sus descargos por escrito.",
+    participantes: ["Estudiante"],
+  });
+
+  const audit = auditarExpediente(causa, [], []);
+  const serOido = audit.checks.find((item) => item.id === "ser_oido");
+  const descargos = audit.checks.find((item) => item.id === "descargos");
+
+  assert.equal(serOido?.estado, "verificada");
+  assert.equal(serOido?.detalle, "Descargos registrados");
+  assert.equal(descargos?.estado, "verificada");
+});

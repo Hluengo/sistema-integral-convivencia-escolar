@@ -40,7 +40,11 @@ function hasBitacoraTipo(causa: Causa, tipo: string): boolean {
   return causa.bitacora.some((b) => b.tipo === (tipo as never));
 }
 
-function hasInterviewEvidence(causa: Causa): boolean {
+function hasDescargos(causa: Causa): boolean {
+  return causa.bitacora.some((b) => /descargo/i.test(b.titulo + b.descripcion));
+}
+
+function hasEntrevista(causa: Causa): boolean {
   return (
     hasBitacoraTipo(causa, "Entrevista") ||
     causa.bitacora.some((entry) => /entrevista/i.test(entry.titulo)) ||
@@ -84,20 +88,27 @@ export function auditarExpediente(
     bloqueante: false,
   });
 
-  // 3. Derecho a ser oído (entrevista), incluido el hito disciplinario realizado.
-  const c3 = hasInterviewEvidence(causa);
+  // 3. Derecho a ser oído: entrevista o descargos del estudiante/apoderado
+  // (Ley 21.809: ser oídos, presentar descargos y pedir reconsideración).
+  const conEntrevista = hasEntrevista(causa);
+  const conDescargos = hasDescargos(causa);
+  const c3 = conEntrevista || conDescargos;
   checks.push({
     id: "ser_oido",
     label: "Derecho a ser oído",
     estado: c3 ? "verificada" : "pendiente",
-    detalle: c3 ? "Entrevista registrada" : "Sin entrevista registrada",
+    detalle: c3
+      ? conEntrevista && conDescargos
+        ? "Entrevista y descargos registrados"
+        : conEntrevista
+          ? "Entrevista registrada"
+          : "Descargos registrados"
+      : "Sin entrevista ni descargos",
     bloqueante: false,
   });
 
   // 4. Descargos recibidos — bitácora Otro con descargo o evidencia
-  const c4 = causa.bitacora.some((b) =>
-    /descargo/i.test(b.titulo + b.descripcion),
-  );
+  const c4 = conDescargos;
   checks.push({
     id: "descargos",
     label: "Descargos recibidos",
