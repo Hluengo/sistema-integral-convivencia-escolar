@@ -1,17 +1,10 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useEffect, useMemo, useState } from "react";
-import {
-  AlertTriangle,
-  Download,
-  FileText,
-  History,
-  Search,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { AlertTriangle, Download, FileText, History } from "lucide-react";
 import {
   fetchExpedienteCompleto,
   buildExpedienteHistory,
-  filterExpedienteHistory,
 } from "../../../shared/api/services/expediente.service";
 import { openDocument } from "../../../shared/api/services/storage.service";
 import { formatChileDateTime } from "../../../shared/lib/dateTime";
@@ -33,17 +26,6 @@ export default function ExpedienteHistoryPanel({
   const [entries, setEntries] = useState<ExpedienteHistoryEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
-  const [type, setType] = useState("");
-  const [status, setStatus] = useState<ExpedienteHistoryEntry["status"] | "">(
-    "",
-  );
-  const [origin, setOrigin] = useState<ExpedienteHistoryEntry["origin"] | "">(
-    "",
-  );
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-
   useEffect(() => {
     let active = true;
     setIsLoading(true);
@@ -62,26 +44,6 @@ export default function ExpedienteHistoryPanel({
       active = false;
     };
   }, [causa.id]);
-
-  const types = useMemo(
-    () =>
-      [...new Set(entries.map((entry) => entry.type))].sort((a, b) =>
-        a.localeCompare(b, "es-CL"),
-      ),
-    [entries],
-  );
-  const filtered = useMemo(
-    () =>
-      filterExpedienteHistory(entries, {
-        search,
-        type: type || undefined,
-        status: status || undefined,
-        origin: origin || undefined,
-        dateFrom: dateFrom || undefined,
-        dateTo: dateTo || undefined,
-      }),
-    [dateFrom, dateTo, entries, origin, search, status, type],
-  );
 
   return (
     <section aria-labelledby="expediente-history-title" className="space-y-3">
@@ -106,93 +68,6 @@ export default function ExpedienteHistoryPanel({
         </div>
       </div>
 
-      <div className="grid gap-2 rounded-lg border border-neutral-150 bg-white p-3 sm:grid-cols-2 lg:grid-cols-3">
-        <label className="relative sm:col-span-2 lg:col-span-3">
-          <span className="sr-only">Buscar historial</span>
-          <Search
-            className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-neutral-500"
-            aria-hidden="true"
-          />
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar título, descripción, participante, hito o documento"
-            className="min-h-10 w-full rounded-lg border border-neutral-200 bg-white py-2 pl-8 pr-3 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
-            aria-label="Buscar historial unificado"
-          />
-        </label>
-        <label className="space-y-1">
-          <span className="text-10px font-semibold text-neutral-600">Tipo</span>
-          <select
-            value={type}
-            onChange={(event) => setType(event.target.value)}
-            className="min-h-10 w-full rounded-lg border border-neutral-200 bg-white px-2.5 text-sm"
-          >
-            <option value="">Todos</option>
-            {types.map((itemType) => (
-              <option key={itemType} value={itemType}>
-                {itemType}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="space-y-1">
-          <span className="text-10px font-semibold text-neutral-600">
-            Estado
-          </span>
-          <select
-            value={status}
-            onChange={(event) => setStatus(event.target.value as typeof status)}
-            className="min-h-10 w-full rounded-lg border border-neutral-200 bg-white px-2.5 text-sm"
-          >
-            <option value="">Todos</option>
-            {Object.entries(STATUS_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="space-y-1">
-          <span className="text-10px font-semibold text-neutral-600">
-            Origen
-          </span>
-          <select
-            value={origin}
-            onChange={(event) => setOrigin(event.target.value as typeof origin)}
-            className="min-h-10 w-full rounded-lg border border-neutral-200 bg-white px-2.5 text-sm"
-          >
-            <option value="">Todos</option>
-            <option value="individual">Individual</option>
-            <option value="grupal">Grupal</option>
-          </select>
-        </label>
-        <label className="space-y-1">
-          <span className="text-10px font-semibold text-neutral-600">
-            Desde
-          </span>
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(event) => setDateFrom(event.target.value)}
-            className="min-h-10 w-full rounded-lg border border-neutral-200 bg-white px-2.5 text-sm"
-            aria-label="Fecha inicial del historial"
-          />
-        </label>
-        <label className="space-y-1">
-          <span className="text-10px font-semibold text-neutral-600">
-            Hasta
-          </span>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(event) => setDateTo(event.target.value)}
-            className="min-h-10 w-full rounded-lg border border-neutral-200 bg-white px-2.5 text-sm"
-            aria-label="Fecha final del historial"
-          />
-        </label>
-      </div>
-
       {isLoading && (
         <p className="rounded-lg border border-neutral-150 bg-white p-4 text-sm text-neutral-600">
           Cargando historial…
@@ -208,14 +83,14 @@ export default function ExpedienteHistoryPanel({
       )}
       {!isLoading &&
         !error &&
-        (filtered.length > 0 ? (
+        (entries.length > 0 ? (
           <div className="space-y-2">
             <p className="text-xs text-neutral-500">
               Mostrando{" "}
-              <strong className="text-neutral-700">{filtered.length}</strong> de{" "}
+              <strong className="text-neutral-700">{entries.length}</strong> de{" "}
               {entries.length} registros.
             </p>
-            {filtered.map((entry) => (
+            {entries.map((entry) => (
               <article
                 key={entry.id}
                 className={`rounded-lg border p-3 ${entry.status === "invalidado" ? "border-grave-200 bg-grave-50/60" : entry.status === "rectificado" ? "border-warning-200 bg-warning-50/50" : "border-neutral-150 bg-white"}`}
@@ -301,7 +176,7 @@ export default function ExpedienteHistoryPanel({
           </div>
         ) : (
           <p className="rounded-lg border border-neutral-150 bg-white p-6 text-center text-sm text-neutral-500">
-            No hay registros para los filtros seleccionados.
+            No hay registros en el historial.
           </p>
         ))}
     </section>
