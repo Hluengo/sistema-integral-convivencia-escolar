@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { memo, useEffect, useMemo, useState } from "react";
-import { X } from "lucide-react";
+import { AlertTriangle, RefreshCw, X } from "lucide-react";
 import type { Annotation } from "@/shared/lib/types";
 import { maskName, maskRut } from "@/shared/lib/anotacionesUtils";
 import { getCurrentSchoolYear, getYearInChile } from "@/shared/lib/dateUtils";
@@ -114,13 +114,49 @@ export default function AnotacionesStudentDetailModal({
         <div className="space-y-4 p-2">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-28 w-full" />
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Skeleton className="h-20" />
             <Skeleton className="h-20" />
             <Skeleton className="h-20" />
           </div>
           <Skeleton className="h-36 w-full" />
         </div>
+      );
+    }
+
+    if (disciplinaryData.isDataError) {
+      return (
+        <section
+          role="alert"
+          className="rounded-xl border border-gravisima-200 bg-gravisima-50 p-5 text-gravisima-900"
+        >
+          <div className="flex items-start gap-3">
+            <AlertTriangle
+              className="mt-0.5 size-5 shrink-0 text-gravisima-600"
+              aria-hidden="true"
+            />
+            <div className="min-w-0">
+              <h3 className="font-bold text-sm">No pudimos cargar la ficha</h3>
+              <p className="mt-1 text-sm leading-relaxed text-gravisima-800">
+                Revisa tu conexión y vuelve a intentar. No se realizaron cambios
+                en los registros del estudiante.
+              </p>
+              <button
+                type="button"
+                onClick={() => void disciplinaryData.refresh()}
+                disabled={disciplinaryData.isRefreshing}
+                aria-busy={disciplinaryData.isRefreshing}
+                className="mt-4 inline-flex items-center gap-2 rounded-lg border border-gravisima-300 bg-white px-3 py-2 font-semibold text-gravisima-800 text-sm transition-colors hover:bg-gravisima-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-500 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60"
+              >
+                <RefreshCw
+                  className={`size-4 ${disciplinaryData.isRefreshing ? "animate-spin" : ""}`}
+                  aria-hidden="true"
+                />
+                {disciplinaryData.isRefreshing ? "Reintentando…" : "Reintentar"}
+              </button>
+            </div>
+          </div>
+        </section>
       );
     }
 
@@ -226,6 +262,9 @@ export default function AnotacionesStudentDetailModal({
               ? maskName(student.full_name, privacyMode)
               : student.full_name
           }
+          titleTooltip={
+            privacyMode ? maskName(student.full_name, true) : student.full_name
+          }
           metadata={
             <>
               <span>
@@ -244,7 +283,8 @@ export default function AnotacionesStudentDetailModal({
             <>
               <button
                 type="button"
-                aria-label="Cerrar"
+                aria-label="Cerrar ficha disciplinaria"
+                title="Cerrar ficha"
                 onClick={onClose}
                 className="rounded-lg p-2 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
               >

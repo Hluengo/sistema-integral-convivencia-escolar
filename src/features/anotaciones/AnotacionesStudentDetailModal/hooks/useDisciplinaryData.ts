@@ -1,13 +1,12 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { queryClient } from '@/src/lib/queryClient';
-import type { CartaDisciplinaria } from '@/shared/lib/types';
+import { useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/src/lib/queryClient";
 import {
   fetchStudentDisciplinarySnapshot,
   type StudentDisciplinarySnapshot,
-} from '@/shared/api/services/cartas.service';
+} from "@/shared/api/services/cartas.service";
 
 const EMPTY_SNAPSHOT: StudentDisciplinarySnapshot = {
   annotations: [],
@@ -24,12 +23,13 @@ const EMPTY_SNAPSHOT: StudentDisciplinarySnapshot = {
   lastAnalysis: null,
 };
 
-const SNAPSHOT_QUERY_KEY = 'disciplinary-snapshot';
+const SNAPSHOT_QUERY_KEY = "disciplinary-snapshot";
 
 interface DisciplinaryDataResult extends StudentDisciplinarySnapshot {
   isDataLoading: boolean;
+  isDataError: boolean;
+  isRefreshing: boolean;
   refresh: () => Promise<void>;
-  cartas: CartaDisciplinaria[];
 }
 
 export function useDisciplinaryData(studentId: string): DisciplinaryDataResult {
@@ -42,10 +42,18 @@ export function useDisciplinaryData(studentId: string): DisciplinaryDataResult {
 
   const refresh = useCallback(async () => {
     if (!studentId) return;
-    await queryClient.refetchQueries({ queryKey: [SNAPSHOT_QUERY_KEY, studentId] });
+    await queryClient.refetchQueries({
+      queryKey: [SNAPSHOT_QUERY_KEY, studentId],
+    });
   }, [studentId]);
 
   const snapshot = query.data ?? EMPTY_SNAPSHOT;
 
-  return { isDataLoading: query.isPending, refresh, ...snapshot };
+  return {
+    isDataLoading: query.isPending,
+    isDataError: query.isError,
+    isRefreshing: query.isFetching,
+    refresh,
+    ...snapshot,
+  };
 }
