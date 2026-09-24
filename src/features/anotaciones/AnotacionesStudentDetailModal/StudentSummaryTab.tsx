@@ -106,7 +106,7 @@ export default function StudentSummaryTab({
         </div>
       </section>
 
-      <section className="rounded-xl border border-neutral-200 bg-white p-3 shadow-xs">
+      <section className="h-fit self-start rounded-lg border border-neutral-200 bg-white p-2.5 shadow-xs">
         <div className="mb-2 flex items-center gap-2">
           <Gauge className="h-4 w-4 text-brand-600" />
           <h4 className="text-sm font-bold text-neutral-900">
@@ -129,8 +129,8 @@ export default function StudentSummaryTab({
         </div>
       </section>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <section className="rounded-xl border border-neutral-200 bg-white p-3 shadow-xs">
+      <div className="grid grid-cols-1 items-start gap-3 lg:grid-cols-2">
+        <section className="h-fit self-start rounded-lg border border-neutral-200 bg-white p-2.5 shadow-xs">
           <div className="mb-2 flex items-center gap-2">
             <FileText className="h-4 w-4 text-brand-600" />
             <h4 className="text-sm font-bold text-neutral-900">
@@ -138,7 +138,7 @@ export default function StudentSummaryTab({
             </h4>
           </div>
           {currentCarta ? (
-            <div className="space-y-1 text-sm text-neutral-600">
+            <div className="space-y-0.5 text-xs leading-5 text-neutral-600">
               <p className="font-semibold text-neutral-900">
                 {currentCarta.letter_type}
               </p>
@@ -160,14 +160,14 @@ export default function StudentSummaryTab({
             <Button
               variant="custom"
               onClick={onGoToCartasTab}
-              className="mt-3 rounded-lg border border-brand-200 px-3 py-2 text-xs font-semibold text-brand-700 hover:bg-brand-50"
+              className="mt-2 rounded-lg border border-brand-200 px-3 py-1.5 text-xs font-semibold text-brand-700 hover:bg-brand-50"
             >
               Ir a Carta <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           )}
         </section>
 
-        <section className="rounded-xl border border-neutral-200 bg-white p-3 shadow-xs">
+        <section className="h-fit self-start rounded-lg border border-neutral-200 bg-white p-2.5 shadow-xs">
           <div className="mb-2 flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-brand-600" />
             <h4 className="text-sm font-bold text-neutral-900">
@@ -175,7 +175,7 @@ export default function StudentSummaryTab({
             </h4>
           </div>
           {lastAnalysis ? (
-            <div className="space-y-1 text-sm text-neutral-600">
+            <div className="space-y-0.5 text-xs leading-5 text-neutral-600">
               <p className="font-semibold text-neutral-900">
                 {lastAnalysis.file_name || "Documento sin nombre"}
               </p>
@@ -194,7 +194,7 @@ export default function StudentSummaryTab({
             <Button
               variant="custom"
               onClick={onGoToRevisionTab}
-              className="mt-3 rounded-lg border border-brand-200 px-3 py-2 text-xs font-semibold text-brand-700 hover:bg-brand-50"
+              className="mt-2 rounded-lg border border-brand-200 px-3 py-1.5 text-xs font-semibold text-brand-700 hover:bg-brand-50"
             >
               Revisar nuevo PDF <ArrowRight className="h-3.5 w-3.5" />
             </Button>
@@ -202,11 +202,11 @@ export default function StudentSummaryTab({
         </section>
       </div>
 
-      <section className="rounded-xl border border-brand-200 bg-brand-50 p-3 shadow-xs">
+      <section className="rounded-lg border border-brand-200 bg-brand-50 p-2.5 shadow-xs">
         <p className="font-semibold text-brand-800 text-xs">
           Siguiente acción sugerida
         </p>
-        <p className="mt-1 text-sm font-semibold text-brand-900">
+        <p className="mt-1 text-xs font-semibold leading-5 text-brand-900">
           {getActionText(counts.negativas, currentCarta)}
         </p>
         {suggestedLetterType && (
