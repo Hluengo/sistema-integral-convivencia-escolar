@@ -28,7 +28,7 @@ describe("Reintento de sincronización ante error de guardado", () => {
     );
 
     ok(content.includes("onRetry"));
-    ok(content.includes("status === 'error' && onRetry"));
+    ok(/status === ["']error["'] && onRetry/.test(content));
     ok(content.includes("Reintentar"));
     ok(content.includes('aria-label="Reintentar sincronizaci�n"'));
   });

@@ -371,7 +371,7 @@ describe("Listado de causas activas", () => {
 
   it("no selecciona automáticamente la primera causa al cargar el listado", () => {
     const workspace = read("../../app/hooks/useCausaWorkspace.ts");
-    assert.match(workspace, /setSelectedCausaId\(''\)/);
+    assert.match(workspace, /setSelectedCausaId\(["']{2}\)/);
     assert.doesNotMatch(
       workspace,
       /setSelectedCausaId\(causasQuery\.data\[0\]/,
@@ -382,7 +382,10 @@ describe("Listado de causas activas", () => {
     const workspace = read("../../app/hooks/useCausaWorkspace.ts");
 
     assert.match(workspace, /if \(causas\.length > 0\) setCausas\(\[\]\);/);
-    assert.match(workspace, /if \(selectedCausaId\) setSelectedCausaId\(''\);/);
+    assert.match(
+      workspace,
+      /if \(selectedCausaId\) setSelectedCausaId\(["']{2}\);/,
+    );
   });
 
   it("mantiene el borrador contextual y simplifica su edición antes de imprimir", () => {
