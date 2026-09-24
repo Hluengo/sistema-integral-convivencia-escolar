@@ -59,9 +59,9 @@ export default function StudentSummaryTab({
   return (
     <div className="space-y-5">
       <section
-        className={`rounded-xl border ${style.border} bg-white p-5 shadow-xs`}
+        className={`rounded-xl border ${style.border} bg-white p-4 shadow-xs`}
       >
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="font-semibold text-neutral-600 text-xs">
               Resumen de anotaciones
@@ -78,26 +78,30 @@ export default function StudentSummaryTab({
           </span>
         </div>
 
-        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-gravisima-100 bg-gravisima-50 p-4">
-            <p className="text-2xl font-black text-gravisima-700">
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <div className="flex min-w-0 items-center gap-3 rounded-lg border border-gravisima-100 bg-gravisima-50 p-3">
+            <p className="shrink-0 tabular-nums text-xl font-black leading-none text-gravisima-700">
               {counts.negativas}
             </p>
-            <p className="text-xs font-semibold text-gravisima-600">
+            <p className="min-w-0 text-xs font-semibold leading-tight text-gravisima-600">
               Negativas registradas
             </p>
           </div>
-          <div className="rounded-lg border border-leve-100 bg-leve-50 p-4">
-            <p className="text-2xl font-black text-leve-700">
+          <div className="flex min-w-0 items-center gap-3 rounded-lg border border-leve-100 bg-leve-50 p-3">
+            <p className="shrink-0 tabular-nums text-xl font-black leading-none text-leve-700">
               {counts.positivas}
             </p>
-            <p className="text-xs font-semibold text-leve-600">Positivas</p>
+            <p className="min-w-0 text-xs font-semibold leading-tight text-leve-600">
+              Positivas
+            </p>
           </div>
-          <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
-            <p className="text-2xl font-black text-blue-700">
+          <div className="flex min-w-0 items-center gap-3 rounded-lg border border-blue-100 bg-blue-50 p-3">
+            <p className="shrink-0 tabular-nums text-xl font-black leading-none text-blue-700">
               {counts.informativas}
             </p>
-            <p className="text-xs font-semibold text-blue-600">Informativas</p>
+            <p className="min-w-0 text-xs font-semibold leading-tight text-blue-600">
+              Informativas
+            </p>
           </div>
         </div>
       </section>
