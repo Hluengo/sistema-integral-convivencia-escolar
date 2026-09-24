@@ -25,7 +25,6 @@ import {
 } from "../../shared/api/services/storage.service";
 import { formatChileDateTime } from "../../shared/lib/dateTime";
 import HistoryEntryForm from "../../shared/ui/HistoryEntryForm";
-import { useChecklistProgress } from "../../shared/lib/hooks/useChecklistProgress";
 import { useTimelineContext } from "../../shared/lib/useTimelineContext";
 
 interface BitacoraTabProps {
@@ -131,12 +130,6 @@ export default memo(function BitacoraTab({
     "Todos",
   );
   const [search, setSearch] = useState("");
-
-  const { entries: progressEntries, isLoading: isLoadingProgress } =
-    useChecklistProgress(causa.id, causa.incidenteId);
-  const checklistLabels = new Map(
-    causa.checklistDebidoProceso.map((item) => [item.id, item.label]),
-  );
 
   const entries = useMemo(
     () =>
@@ -340,68 +333,6 @@ export default memo(function BitacoraTab({
             </details>
           }
         />
-      )}
-
-      {progressEntries.length > 0 && (
-        <section
-          className="rounded-xl border border-brand-200 bg-brand-50/40 p-4"
-          aria-labelledby="progress-history-title"
-        >
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <h3
-                id="progress-history-title"
-                className="font-semibold text-brand-950 text-sm"
-              >
-                Avances vinculados a hitos
-              </h3>
-              <p className="mt-0.5 text-brand-900/70 text-11px">
-                Cada registro conserva el hito al que pertenece.
-              </p>
-            </div>
-            {isLoadingProgress && (
-              <span className="text-10px text-brand-800">Actualizando…</span>
-            )}
-          </div>
-          <div className="mt-3 space-y-2">
-            {progressEntries
-              .filter((entry) => !entry.invalidatedAt)
-              .map((entry) => (
-                <article
-                  key={entry.id}
-                  className="rounded-lg border border-brand-100 bg-white p-3"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <p className="font-semibold text-neutral-900 text-xs">
-                        {entry.title}
-                      </p>
-                      <p className="mt-0.5 text-10px text-brand-800">
-                        {checklistLabels.get(entry.checklistItemId) ||
-                          "Hito del expediente"}
-                      </p>
-                    </div>
-                    <time className="font-mono text-9px text-neutral-500">
-                      {formatChileDateTime(entry.occurredAt)}
-                    </time>
-                  </div>
-                  <p className="mt-2 whitespace-pre-wrap text-neutral-600 text-xs">
-                    {entry.description}
-                  </p>
-                  {entry.documentName && entry.documentUrl && (
-                    <button
-                      type="button"
-                      onClick={() => void openDocument(entry.documentUrl || "")}
-                      className="mt-2 inline-flex items-center gap-1 font-semibold text-info-700 text-10px hover:underline"
-                    >
-                      <File className="size-3" aria-hidden="true" />{" "}
-                      {entry.documentName}
-                    </button>
-                  )}
-                </article>
-              ))}
-          </div>
-        </section>
       )}
 
       {/* Cronología */}
