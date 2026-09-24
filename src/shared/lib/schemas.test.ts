@@ -1,42 +1,42 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import {
   CausaSchema,
   ChecklistItemSchema,
   BitacoraEntrySchema,
   ChecklistProgressEntrySchema,
-} from './schemas';
-import { physicalCartaRegistrationSchema } from './schemas/physicalCarta';
+} from "./schemas";
+import { physicalCartaRegistrationSchema } from "./schemas/physicalCarta";
 
-describe('CausaSchema', () => {
+describe("CausaSchema", () => {
   const validCausa = {
-    id: 'DC-2026-001',
-    estudianteNombre: 'Juan Pérez',
-    estudianteCurso: '8° Básico A',
-    nnaProtectedName: 'J.P.',
-    runEstudiante: '12.345.678-9',
-    fechaApertura: '2026-07-17',
-    estadoActual: 'Recepción de Denuncia',
-    tipoInfraccion: 'Grave',
-    responsable: 'Inspector Pérez',
+    id: "DC-2026-001",
+    estudianteNombre: "Juan Pérez",
+    estudianteCurso: "8° Básico A",
+    nnaProtectedName: "J.P.",
+    runEstudiante: "12.345.678-9",
+    fechaApertura: "2026-07-17",
+    estadoActual: "Recepción de Denuncia",
+    tipoInfraccion: "Grave",
+    responsable: "Inspector Pérez",
     comprometeAulaSegura: false,
-    fechaUltimaActualizacion: '2026-07-17',
-    observaciones: 'Observación de prueba',
+    fechaUltimaActualizacion: "2026-07-17",
+    observaciones: "Observación de prueba",
     bitacora: [],
     checklistDebidoProceso: [],
   };
 
-  it('accepts a valid causa', () => {
+  it("accepts a valid causa", () => {
     const parsed = CausaSchema.parse(validCausa);
-    assert.equal(parsed.id, 'DC-2026-001');
-    assert.equal(parsed.estudianteNombre, 'Juan Pérez');
+    assert.equal(parsed.id, "DC-2026-001");
+    assert.equal(parsed.estudianteNombre, "Juan Pérez");
     assert.deepEqual(parsed.bitacora, []);
     assert.deepEqual(parsed.checklistDebidoProceso, []);
   });
 
-  it('rejects missing required fields', () => {
+  it("rejects missing required fields", () => {
     assert.throws(
       () => CausaSchema.parse({}),
       (err: unknown) => {
@@ -46,71 +46,118 @@ describe('CausaSchema', () => {
     );
   });
 
-  it('accepts undefined optional fields', () => {
+  it("accepts undefined optional fields", () => {
     const parsed = CausaSchema.parse({
       ...validCausa,
       conductaRiceId: undefined,
       medidasEjecutadas: undefined,
     });
     assert.equal(parsed.conductaRiceId, undefined);
-    assert.ok(parsed.medidasEjecutadas === undefined || Array.isArray(parsed.medidasEjecutadas));
+    assert.ok(
+      parsed.medidasEjecutadas === undefined ||
+        Array.isArray(parsed.medidasEjecutadas),
+    );
   });
 
-  it('accepts all tipoInfraccion values', () => {
-    for (const tipo of ['Leve', 'Grave', 'Muy Grave', 'Gravísima'] as const) {
+  it("accepts all tipoInfraccion values", () => {
+    for (const tipo of ["Leve", "Grave", "Muy Grave", "Gravísima"] as const) {
       const parsed = CausaSchema.parse({ ...validCausa, tipoInfraccion: tipo });
       assert.equal(parsed.tipoInfraccion, tipo);
     }
   });
 
-  it('rejects invalid tipoInfraccion', () => {
-    assert.throws(() => CausaSchema.parse({ ...validCausa, tipoInfraccion: 'Invalida' }));
+  it("mantiene compatibilidad entre expedientes versión 1 y 2", () => {
+    for (const proceduralModelVersion of [1, 2] as const) {
+      const parsed = CausaSchema.parse({
+        ...validCausa,
+        proceduralModelVersion,
+      });
+      assert.equal(parsed.proceduralModelVersion, proceduralModelVersion);
+    }
+    assert.throws(() =>
+      CausaSchema.parse({ ...validCausa, proceduralModelVersion: 3 }),
+    );
   });
 
-  it('rejects invalid estadoActual', () => {
-    assert.throws(() => CausaSchema.parse({ ...validCausa, estadoActual: 'Estado Inexistente' }));
+  it("rejects invalid tipoInfraccion", () => {
+    assert.throws(() =>
+      CausaSchema.parse({ ...validCausa, tipoInfraccion: "Invalida" }),
+    );
+  });
+
+  it("rejects invalid estadoActual", () => {
+    assert.throws(() =>
+      CausaSchema.parse({ ...validCausa, estadoActual: "Estado Inexistente" }),
+    );
   });
 });
 
-describe('ChecklistItemSchema', () => {
-  it('accepts a valid checklist item', () => {
+describe("ChecklistItemSchema", () => {
+  it("accepts a valid checklist item", () => {
     const parsed = ChecklistItemSchema.parse({
-      id: 'item-1',
-      label: 'Notificar apoderado',
-      descripcion: 'Enviar carta de notificación',
+      id: "item-1",
+      label: "Notificar apoderado",
+      descripcion: "Enviar carta de notificación",
       completado: false,
-      requeridoPor: 'Circular 482',
+      requeridoPor: "Circular 482",
     });
-    assert.equal(parsed.id, 'item-1');
+    assert.equal(parsed.id, "item-1");
     assert.equal(parsed.completado, false);
-    assert.equal(parsed.requeridoPor, 'Circular 482');
+    assert.equal(parsed.requeridoPor, "Circular 482");
   });
 
-  it('accepts completed item with optional fields', () => {
+  it("accepts completed item with optional fields", () => {
     const parsed = ChecklistItemSchema.parse({
-      id: 'item-2',
-      label: 'Citar apoderado',
-      descripcion: 'Cita presencial',
+      id: "item-2",
+      label: "Citar apoderado",
+      descripcion: "Cita presencial",
       completado: true,
-      fechaCompletado: '2026-07-17',
-      requeridoPor: 'Ley 21809',
-      registradoPor: 'Inspector Pérez',
-      observaciones: 'Todo en orden',
-      documentoNombre: 'citacion.pdf',
-      documentoUrl: 'https://supabase.co/storage/v1/...',
+      fechaCompletado: "2026-07-17",
+      requeridoPor: "Ley 21809",
+      registradoPor: "Inspector Pérez",
+      observaciones: "Todo en orden",
+      documentoNombre: "citacion.pdf",
+      documentoUrl: "https://supabase.co/storage/v1/...",
     });
     assert.equal(parsed.completado, true);
-    assert.equal(parsed.fechaCompletado, '2026-07-17');
-    assert.equal(parsed.registradoPor, 'Inspector Pérez');
+    assert.equal(parsed.fechaCompletado, "2026-07-17");
+    assert.equal(parsed.registradoPor, "Inspector Pérez");
   });
 
-  it('accepts all requeridoPor values', () => {
-    const values = ['Circular 482', 'Ley 21809', 'Reglamento Interno', 'Ambas'] as const;
+  it("accepts enriched procedural fields", () => {
+    const parsed = ChecklistItemSchema.parse({
+      id: "item-enriched",
+      label: "Resolver expediente",
+      descripcion: "Emitir resolución fundada",
+      completado: false,
+      obligatorio: true,
+      aplicabilidad: "aplica",
+      estado: "en_desarrollo",
+      fechaInicio: "2026-09-23",
+      fechaLimite: "2026-10-03",
+      resultado: "Pendiente de firma",
+      bloqueanteParaAvanzar: true,
+      bloqueanteParaCerrar: false,
+      requeridoPor: "Ley 21809",
+    });
+
+    assert.equal(parsed.aplicabilidad, "aplica");
+    assert.equal(parsed.estado, "en_desarrollo");
+    assert.equal(parsed.bloqueanteParaAvanzar, true);
+  });
+
+  it("accepts all requeridoPor values", () => {
+    const values = [
+      "Circular 482",
+      "Ley 21809",
+      "Reglamento Interno",
+      "Ambas",
+    ] as const;
     for (const v of values) {
       const parsed = ChecklistItemSchema.parse({
-        id: 'item-x',
-        label: 'Test',
-        descripcion: 'Test',
+        id: "item-x",
+        label: "Test",
+        descripcion: "Test",
         completado: false,
         requeridoPor: v,
       });
@@ -118,67 +165,70 @@ describe('ChecklistItemSchema', () => {
     }
   });
 
-  it('rejects missing requeridoPor', () => {
+  it("rejects missing requeridoPor", () => {
     assert.throws(() =>
       ChecklistItemSchema.parse({
-        id: 'item-3',
-        label: 'Test',
-        descripcion: 'Test desc',
+        id: "item-3",
+        label: "Test",
+        descripcion: "Test desc",
         completado: false,
       }),
     );
   });
 
-  it('accepts a queja/denuncia requeridoPor', () => {
+  it("accepts a queja/denuncia requeridoPor", () => {
     const parsed = ChecklistItemSchema.parse({
-      id: 'item-4',
-      label: 'Derivar a mediación',
-      descripcion: 'Derivar el caso a mediación',
+      id: "item-4",
+      label: "Derivar a mediación",
+      descripcion: "Derivar el caso a mediación",
       completado: false,
-      requeridoPor: 'Ambas',
+      requeridoPor: "Ambas",
     });
-    assert.equal(parsed.label, 'Derivar a mediación');
-    assert.equal(parsed.requeridoPor, 'Ambas');
+    assert.equal(parsed.label, "Derivar a mediación");
+    assert.equal(parsed.requeridoPor, "Ambas");
   });
 
-  it('rejects invalid requeridoPor', () => {
+  it("rejects invalid requeridoPor", () => {
     assert.throws(() =>
       ChecklistItemSchema.parse({
-        id: 'item-5',
-        label: 'Test',
-        descripcion: 'Test',
+        id: "item-5",
+        label: "Test",
+        descripcion: "Test",
         completado: false,
-        requeridoPor: 'Ley Inexistente',
+        requeridoPor: "Ley Inexistente",
       }),
     );
   });
 });
 
-describe('BitacoraEntrySchema', () => {
+describe("BitacoraEntrySchema", () => {
   const validEntry = {
-    id: 'entry-1',
-    fecha: '2026-07-17',
-    tipo: 'Entrevista',
-    titulo: 'Reunión con apoderado',
-    descripcion: 'Se acordó compromiso',
-    participantes: ['María García'],
+    id: "entry-1",
+    fecha: "2026-07-17",
+    tipo: "Entrevista",
+    titulo: "Reunión con apoderado",
+    descripcion: "Se acordó compromiso",
+    participantes: ["María García"],
   };
 
-  it('accepts a valid entry', () => {
+  it("accepts a valid entry", () => {
     const parsed = BitacoraEntrySchema.parse(validEntry);
-    assert.equal(parsed.id, 'entry-1');
-    assert.equal(parsed.tipo, 'Entrevista');
-    assert.deepEqual(parsed.participantes, ['María García']);
+    assert.equal(parsed.id, "entry-1");
+    assert.equal(parsed.tipo, "Entrevista");
+    assert.deepEqual(parsed.participantes, ["María García"]);
   });
 
-  it('accepts all tipo values', () => {
+  it("accepts all tipo values", () => {
     const values = [
-      'Entrevista',
-      'Evidencia',
-      'Notificación',
-      'Mediación',
-      'Resolución',
-      'Otro',
+      "Entrevista",
+      "Evidencia",
+      "Notificación",
+      "Citación",
+      "Correo",
+      "Descargo",
+      "Mediación",
+      "Resolución",
+      "Otro",
     ] as const;
     for (const tipo of values) {
       const parsed = BitacoraEntrySchema.parse({ ...validEntry, tipo });
@@ -186,11 +236,13 @@ describe('BitacoraEntrySchema', () => {
     }
   });
 
-  it('rejects invalid tipo', () => {
-    assert.throws(() => BitacoraEntrySchema.parse({ ...validEntry, tipo: 'Reunión' }));
+  it("rejects invalid tipo", () => {
+    assert.throws(() =>
+      BitacoraEntrySchema.parse({ ...validEntry, tipo: "Reunión" }),
+    );
   });
 
-  it('accepts entry without participantes', () => {
+  it("accepts entry without participantes", () => {
     const parsed = BitacoraEntrySchema.parse({
       ...validEntry,
       participantes: [],
@@ -198,67 +250,91 @@ describe('BitacoraEntrySchema', () => {
     assert.deepEqual(parsed.participantes, []);
   });
 
-  it('accepts entry with documentoAdjunto', () => {
+  it("accepts entry with documentoAdjunto", () => {
     const parsed = BitacoraEntrySchema.parse({
       ...validEntry,
-      documentoAdjunto: 'https://supabase.co/storage/v1/...',
+      documentoAdjunto: "https://supabase.co/storage/v1/...",
     });
-    assert.equal(parsed.documentoAdjunto, 'https://supabase.co/storage/v1/...');
+    assert.equal(parsed.documentoAdjunto, "https://supabase.co/storage/v1/...");
   });
 });
 
-describe('ChecklistProgressEntrySchema', () => {
+describe("ChecklistProgressEntrySchema", () => {
   const validProgress = {
-    id: 'progress-1',
-    causaId: 'DC-2026-001',
-    checklistItemId: 'chk_inv_1',
-    title: 'Entrevista con apoderado',
-    description: 'Se revisaron los antecedentes entregados.',
-    entryType: 'Entrevista',
-    occurredAt: '2026-08-12T14:00:00.000Z',
-    createdAt: '2026-08-12T14:01:00.000Z',
+    id: "progress-1",
+    causaId: "DC-2026-001",
+    checklistItemId: "chk_inv_1",
+    title: "Entrevista con apoderado",
+    description: "Se revisaron los antecedentes entregados.",
+    entryType: "Entrevista",
+    occurredAt: "2026-08-12T14:00:00.000Z",
+    createdAt: "2026-08-12T14:01:00.000Z",
   };
 
-  it('acepta avances vinculados a un hito', () => {
+  it("acepta avances vinculados a un hito", () => {
     const parsed = ChecklistProgressEntrySchema.parse(validProgress);
-    assert.equal(parsed.checklistItemId, 'chk_inv_1');
+    assert.equal(parsed.checklistItemId, "chk_inv_1");
     assert.equal(parsed.invalidatedAt, undefined);
   });
 
-  it('rechaza tipos de avance fuera del contrato de bitácora', () => {
+  it("conserva todos los tipos de actuación, incluidos citación, correo y descargo", () => {
+    const values = [
+      "Entrevista",
+      "Evidencia",
+      "Notificación",
+      "Citación",
+      "Correo",
+      "Descargo",
+      "Mediación",
+      "Resolución",
+      "Otro",
+    ] as const;
+    for (const entryType of values) {
+      const parsed = ChecklistProgressEntrySchema.parse({
+        ...validProgress,
+        entryType,
+      });
+      assert.equal(parsed.entryType, entryType);
+    }
+  });
+
+  it("rechaza tipos de avance fuera del contrato de bitácora", () => {
     assert.throws(() =>
-      ChecklistProgressEntrySchema.parse({ ...validProgress, entryType: 'Reunión' }),
+      ChecklistProgressEntrySchema.parse({
+        ...validProgress,
+        entryType: "Reunión",
+      }),
     );
   });
 });
 
-describe('physicalCartaRegistrationSchema', () => {
+describe("physicalCartaRegistrationSchema", () => {
   const validRegistration = {
-    studentId: '06c92366-b5bf-46a0-939a-0dd66422dedb',
-    letterType: 'Amonestación Escrita',
-    emissionDate: '2026-07-28',
-    observations: 'Carta archivada físicamente.',
+    studentId: "06c92366-b5bf-46a0-939a-0dd66422dedb",
+    letterType: "Amonestación Escrita",
+    emissionDate: "2026-07-28",
+    observations: "Carta archivada físicamente.",
   };
 
-  it('acepta una constancia física válida', () => {
+  it("acepta una constancia física válida", () => {
     const parsed = physicalCartaRegistrationSchema.parse(validRegistration);
-    assert.equal(parsed.letterType, 'Amonestación Escrita');
+    assert.equal(parsed.letterType, "Amonestación Escrita");
   });
 
-  it('rechaza una derivación como constancia física', () => {
+  it("rechaza una derivación como constancia física", () => {
     assert.throws(() =>
       physicalCartaRegistrationSchema.parse({
         ...validRegistration,
-        letterType: 'Ficha de Derivación',
+        letterType: "Ficha de Derivación",
       }),
     );
   });
 
-  it('rechaza fechas con formato inválido', () => {
+  it("rechaza fechas con formato inválido", () => {
     assert.throws(() =>
       physicalCartaRegistrationSchema.parse({
         ...validRegistration,
-        emissionDate: '28-07-2026',
+        emissionDate: "28-07-2026",
       }),
     );
   });

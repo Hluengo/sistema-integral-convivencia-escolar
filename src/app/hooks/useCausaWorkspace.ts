@@ -1,22 +1,25 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { queryClient } from '../../lib/queryClient';
-import { useCausaDetailsQuery, useCausasQuery } from '../../shared/lib/hooks/useCausasQuery';
-import { useCausasPersistence } from '../../shared/lib/hooks/useCausasPersistence';
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { queryClient } from "../../lib/queryClient";
+import {
+  useCausaDetailsQuery,
+  useCausasQuery,
+} from "../../shared/lib/hooks/useCausasQuery";
+import { useCausasPersistence } from "../../shared/lib/hooks/useCausasPersistence";
 import {
   mergeCausasList,
   syncPersistedCausasToCache,
-} from '../../shared/lib/queries/causasQueryCache';
-import { causasQueryKeys } from '../../shared/lib/queries/causasQueryKeys';
-import { getCausaOperationalPhase } from '../../features/causas/causaOperationalSummary';
-import { useCausasStore } from '../../shared/lib/stores/causasStore';
-import { EstadoCausa } from '../../shared/lib/types';
+} from "../../shared/lib/queries/causasQueryCache";
+import { causasQueryKeys } from "../../shared/lib/queries/causasQueryKeys";
+import { getCausaOperationalPhase } from "../../features/causas/causaOperationalSummary";
+import { useCausasStore } from "../../shared/lib/stores/causasStore";
+import { EstadoCausa } from "../../shared/lib/types";
 
 interface UseCausaWorkspaceArgs {
   isAuthenticated: boolean;
   tenantId: string | null;
-  setCurrentView: (view: 'dashboard') => void;
+  setCurrentView: (view: "dashboard") => void;
   setMobileShowDetail: (show: boolean) => void;
 }
 
@@ -30,6 +33,7 @@ export function useCausaWorkspace({
   const selectedCausaId = useCausasStore((s) => s.selectedCausaId);
   const setSelectedCausaId = useCausasStore((s) => s.setSelectedCausaId);
   const setSaveStatus = useCausasStore((s) => s.setSaveStatus);
+  const saveRetryNonce = useCausasStore((s) => s.saveRetryNonce);
   const selectedFaseFilter = useCausasStore((s) => s.selectedFaseFilter);
   const searchQuery = useCausasStore((s) => s.searchQuery);
   const setCausas = useCausasStore((s) => s.setCausas);
@@ -38,11 +42,13 @@ export function useCausaWorkspace({
   // El detalle se habilita con el id directamente (deep-link a causas que aún
   // no están en la lista cargada); antes se exigía que la causa existiera en
   // la primera página del listado, dejando el expediente inaccesible.
-  const selectedCausaForDetail = isAuthenticated && selectedCausaId ? selectedCausaId : '';
+  const selectedCausaForDetail =
+    isAuthenticated && selectedCausaId ? selectedCausaId : "";
   const causaDetailsQuery = useCausaDetailsQuery(selectedCausaForDetail);
   const hasInitializedCausasRef = useRef(false);
   const lastCausasQueryDataRef = useRef<typeof causasQuery.data>(undefined);
-  const lastDetailsQueryDataRef = useRef<typeof causaDetailsQuery.data>(undefined);
+  const lastDetailsQueryDataRef =
+    useRef<typeof causaDetailsQuery.data>(undefined);
 
   const selectedCausa = useMemo(
     () => causas.find((causa) => causa.id === selectedCausaId) || null,
@@ -54,7 +60,7 @@ export function useCausaWorkspace({
     return causas.filter((causa) => {
       if (causa.estadoActual === EstadoCausa.CAUSA_CERRADA) return false;
       if (
-        selectedFaseFilter !== 'Todas' &&
+        selectedFaseFilter !== "Todas" &&
         getCausaOperationalPhase(causa) !== selectedFaseFilter
       ) {
         return false;
@@ -81,6 +87,7 @@ export function useCausaWorkspace({
     setSaveStatus,
     isAuthenticated,
     onPersisted: handlePersistedCausas,
+    saveRetryNonce,
   });
 
   useEffect(() => {
@@ -88,17 +95,21 @@ export function useCausaWorkspace({
       lastCausasQueryDataRef.current = undefined;
       lastDetailsQueryDataRef.current = undefined;
       hasInitializedCausasRef.current = false;
-      setCurrentView('dashboard');
+      setCurrentView("dashboard");
       setMobileShowDetail(false);
       // Evita un ciclo de render: [] es una nueva referencia en cada efecto.
       // Solo limpiamos Zustand si hay información efectivamente cargada.
       if (causas.length > 0) setCausas([]);
-      if (selectedCausaId) setSelectedCausaId('');
+      if (selectedCausaId) setSelectedCausaId("");
       queryClient.removeQueries({ queryKey: causasQueryKeys.root });
       return;
     }
 
-    if (!causasQuery.data || lastCausasQueryDataRef.current === causasQuery.data) return;
+    if (
+      !causasQuery.data ||
+      lastCausasQueryDataRef.current === causasQuery.data
+    )
+      return;
 
     const hydratedCausas = mergeCausasList(causas, causasQuery.data);
     markCausasHydrated(hydratedCausas);
@@ -106,7 +117,7 @@ export function useCausaWorkspace({
     setCausas(hydratedCausas);
     if (!hasInitializedCausasRef.current) {
       // La carga inicial siempre presenta la tabla: no abre expedientes por defecto.
-      setSelectedCausaId('');
+      setSelectedCausaId("");
       hasInitializedCausasRef.current = true;
     }
   }, [
@@ -133,16 +144,23 @@ export function useCausaWorkspace({
       // Deep-link a una causa que aún no está en la lista cargada: se inserta
       // para que el modal y las vistas puedan abrirla sin esperar el listado.
       if (!exists) return [hydratedCausa, ...current];
-      return current.map((causa) => (causa.id === hydratedCausa.id ? hydratedCausa : causa));
+      return current.map((causa) =>
+        causa.id === hydratedCausa.id ? hydratedCausa : causa,
+      );
     });
-  }, [causaDetailsQuery.data, markCausaHydrated, selectedCausaForDetail, setCausas]);
+  }, [
+    causaDetailsQuery.data,
+    markCausaHydrated,
+    selectedCausaForDetail,
+    setCausas,
+  ]);
 
   const loadError = useMemo(() => {
     const error = causasQuery.error ?? causaDetailsQuery.error;
     if (!error) return null;
     return selectedCausaForDetail
-      ? 'Error al cargar los antecedentes del expediente.'
-      : 'Error al cargar los expedientes. Verifique su conexión.';
+      ? "Error al cargar los antecedentes del expediente."
+      : "Error al cargar los expedientes. Verifique su conexión.";
   }, [causaDetailsQuery.error, causasQuery.error, selectedCausaForDetail]);
 
   const retryLoad = useCallback(() => {

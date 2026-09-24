@@ -14,6 +14,7 @@ interface SupabaseCausaRow {
   id: string;
   student_id: string | null;
   incidente_id: string | null;
+  procedural_model_version: number | null;
   estudiante_nombre: string;
   estudiante_curso: string;
   nna_protected_name: string;
@@ -43,6 +44,15 @@ interface SupabaseChecklistRow {
   descripcion: string;
   completado: boolean;
   fecha_completado: string | null;
+  obligatorio: boolean | null;
+  aplicabilidad: ChecklistItem["aplicabilidad"] | null;
+  estado: ChecklistItem["estado"] | null;
+  fundamento_no_aplica: string | null;
+  fecha_inicio: string | null;
+  fecha_limite: string | null;
+  resultado: string | null;
+  bloqueante_para_avanzar: boolean | null;
+  bloqueante_para_cerrar: boolean | null;
   requerido_por: string;
   registrado_por: string | null;
   observaciones: string | null;
@@ -78,6 +88,15 @@ function mapChecklistRow(row: SupabaseChecklistRow): ChecklistItem | null {
     label: row.label,
     descripcion: row.descripcion,
     completado: row.completado,
+    obligatorio: row.obligatorio ?? undefined,
+    aplicabilidad: row.aplicabilidad ?? undefined,
+    estado: row.estado ?? undefined,
+    fundamentoNoAplica: row.fundamento_no_aplica || undefined,
+    fechaInicio: row.fecha_inicio || undefined,
+    fechaLimite: row.fecha_limite || undefined,
+    resultado: row.resultado || undefined,
+    bloqueanteParaAvanzar: row.bloqueante_para_avanzar ?? undefined,
+    bloqueanteParaCerrar: row.bloqueante_para_cerrar ?? undefined,
     fechaCompletado: row.fecha_completado || undefined,
     requeridoPor: row.requerido_por,
     registradoPor: row.registrado_por || undefined,
@@ -110,7 +129,7 @@ function mapBitacoraRow(row: SupabaseBitacoraRow): BitacoraEntry | null {
     console.error(`Invalid bitacora entry ${row.id}:`, parsed.error.flatten());
     return null;
   }
-  return parsed.data;
+  return { ...parsed.data, causaOrigenId: row.causa_id };
 }
 
 const DEFAULT_PAGE_SIZE = 100;
@@ -127,6 +146,7 @@ function mapCausaRows(rows: SupabaseCausaRow[]): Causa[] {
       id: row.id,
       studentId: row.student_id || undefined,
       incidenteId: row.incidente_id || undefined,
+      proceduralModelVersion: row.procedural_model_version === 2 ? 2 : 1,
       estudianteNombre: row.estudiante_nombre,
       estudianteCurso: row.estudiante_curso,
       nnaProtectedName: row.nna_protected_name,
@@ -166,7 +186,7 @@ export async function fetchCausasPage(
   let query = supabase
     .from("causas")
     .select(
-      "id,student_id,incidente_id,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas,plazo_24h,fecha_limite_24h,fecha_inicio_investigacion,plazo_investigacion_dias,fecha_limite_investigacion,fecha_limite_cierre,apoderado_email",
+      "id,student_id,incidente_id,procedural_model_version,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas,plazo_24h,fecha_limite_24h,fecha_inicio_investigacion,plazo_investigacion_dias,fecha_limite_investigacion,fecha_limite_cierre,apoderado_email",
     )
     .order("fecha_ultima_actualizacion", { ascending: false });
   // Defensa en profundidad: RLS ya filtra por tenant, pero el cliente
@@ -216,6 +236,89 @@ export async function fetchCausasPage(
         causa.checklistDebidoProceso = checklistByCausa.get(causa.id) || [];
       }
     }
+    // Los hitos registrados en bitácora ("Registro de Hito: …") son la fuente
+    // de verdad del avance: se reconcilian aquí para que la tabla muestre el
+    // día de cierre correcto sin necesidad de abrir el expediente.
+    // Los hitos compartidos del incidente grupal (compartido_grupal) viven en
+    // la bitácora de la causa hermana: se resuelven todas las hermanas.
+    const incidenteIds = [
+      ...new Set(
+        causas
+          .map((causa) => causa.incidenteId)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    ];
+    const entryCausaIds = causas.map((causa) => causa.id);
+    const incidenteByCausaId = new Map<string, string>();
+    for (const causa of causas) {
+      if (causa.incidenteId)
+        incidenteByCausaId.set(causa.id, causa.incidenteId);
+    }
+    if (incidenteIds.length > 0) {
+      const { data: siblingData, error: siblingError } = await supabase
+        .from("causas")
+        .select("id,incidente_id")
+        .in("incidente_id", incidenteIds);
+      if (siblingError) {
+        console.error("Error fetching sibling incident causas:", siblingError);
+      } else {
+        for (const row of (siblingData || []) as Array<{
+          id: string;
+          incidente_id: string | null;
+        }>) {
+          if (row.incidente_id)
+            incidenteByCausaId.set(row.id, row.incidente_id);
+          if (!entryCausaIds.includes(row.id)) entryCausaIds.push(row.id);
+        }
+      }
+    }
+    const { data: hitoEntriesData, error: hitoEntriesError } = await supabase
+      .from("bitacora_entries")
+      .select(
+        "id,causa_id,fecha,tipo,titulo,descripcion,participantes,documento_adjunto,compartido_grupal",
+      )
+      .in("causa_id", entryCausaIds)
+      .or(
+        "titulo.like.Registro de Hito:%,titulo.like.Rectificación de Hito:%,titulo.like.Invalidador Hito:%",
+      );
+    if (hitoEntriesError) {
+      console.error(
+        "Error fetching causa milestone log entries:",
+        hitoEntriesError,
+      );
+    } else {
+      const hitoEntriesByCausa = new Map<string, BitacoraEntry[]>();
+      for (const row of (hitoEntriesData || []) as SupabaseBitacoraRow[]) {
+        const entry = mapBitacoraRow(row);
+        if (!entry) continue;
+        const list = hitoEntriesByCausa.get(row.causa_id) || [];
+        list.push(entry);
+        hitoEntriesByCausa.set(row.causa_id, list);
+      }
+      for (const causa of causas) {
+        const ownEntries = hitoEntriesByCausa.get(causa.id) || [];
+        const hitoEntries = [...ownEntries];
+        if (causa.incidenteId) {
+          for (const [ownerId, list] of hitoEntriesByCausa) {
+            if (
+              ownerId !== causa.id &&
+              incidenteByCausaId.get(ownerId) === causa.incidenteId
+            ) {
+              for (const entry of list) {
+                if (entry.compartidoGrupal) hitoEntries.push(entry);
+              }
+            }
+          }
+        }
+        if (hitoEntries.length > 0) {
+          causa.checklistDebidoProceso = reconcileChecklistFromBitacora(
+            causa.checklistDebidoProceso,
+            hitoEntries,
+            causa.proceduralModelVersion ?? 1,
+          );
+        }
+      }
+    }
   }
   return {
     causas,
@@ -240,7 +343,7 @@ export async function fetchCausaDetails(
   let causaQuery = supabase
     .from("causas")
     .select(
-      "id,student_id,incidente_id,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas,plazo_24h,fecha_limite_24h,fecha_inicio_investigacion,plazo_investigacion_dias,fecha_limite_investigacion,fecha_limite_cierre,apoderado_email",
+      "id,student_id,incidente_id,procedural_model_version,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas,plazo_24h,fecha_limite_24h,fecha_inicio_investigacion,plazo_investigacion_dias,fecha_limite_investigacion,fecha_limite_cierre,apoderado_email",
     )
     .eq("id", causaId);
   if (tenantId) causaQuery = causaQuery.eq("tenant_id", tenantId);
@@ -249,7 +352,7 @@ export async function fetchCausaDetails(
     supabase
       .from("checklist_items")
       .select(
-        "id,causa_id,label,descripcion,completado,fecha_completado,requerido_por,registrado_por,observaciones,documento_nombre,documento_url",
+        "id,causa_id,label,descripcion,completado,fecha_completado,obligatorio,aplicabilidad,estado,fundamento_no_aplica,fecha_inicio,fecha_limite,resultado,bloqueante_para_avanzar,bloqueante_para_cerrar,requerido_por,registrado_por,observaciones,documento_nombre,documento_url",
       )
       .eq("causa_id", causaId),
     supabase
@@ -333,7 +436,11 @@ export async function fetchCausaDetails(
   return {
     ...base,
     bitacora,
-    checklistDebidoProceso: reconcileChecklistFromBitacora(checklist, bitacora),
+    checklistDebidoProceso: reconcileChecklistFromBitacora(
+      checklist,
+      bitacora,
+      base.proceduralModelVersion ?? 1,
+    ),
   };
 }
 
@@ -365,6 +472,7 @@ export async function createCausa(
     tenant_id: tenantId,
     student_id: causa.studentId || null,
     incidente_id: causa.incidenteId || null,
+    procedural_model_version: causa.proceduralModelVersion ?? 2,
     estudiante_nombre: causa.estudianteNombre,
     estudiante_curso: causa.estudianteCurso,
     nna_protected_name: causa.nnaProtectedName,
@@ -402,6 +510,7 @@ export async function updateCausa(
     .update({
       ...(causa.studentId ? { student_id: causa.studentId } : {}),
       incidente_id: causa.incidenteId || null,
+      procedural_model_version: causa.proceduralModelVersion ?? 1,
       estudiante_nombre: causa.estudianteNombre,
       estudiante_curso: causa.estudianteCurso,
       nna_protected_name: causa.nnaProtectedName,

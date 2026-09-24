@@ -322,6 +322,17 @@ describe("Listado de causas activas", () => {
 
     assert.match(summary, /Centro operativo del expediente/);
     assert.match(summary, /Avance de fase/);
+    assert.match(summary, /Fase completada · lista para avanzar/);
+    assert.match(summary, /Próximo hito ·/);
+    assert.match(summary, /\(fase \$\{summary\.nextChecklistPhase\}\)/);
+    assert.match(summary, /Plazo de investigación/);
+    assert.match(summary, /días \{unidadPlazo\}/);
+    assert.match(summary, /Relato de los hechos · ver completo/);
+    assert.match(summary, /registros/);
+    assert.doesNotMatch(summary, /Sin alertas/);
+    assert.doesNotMatch(summary, /Cierre de indagación/);
+    assert.doesNotMatch(summary, /Trazabilidad/);
+    assert.doesNotMatch(summary, /Estado actual/);
     assert.match(summary, /nextChecklistItem/);
     assert.match(summary, /documentsCount/);
     assert.match(tabs, /getCausaOperationalSummary/);
@@ -335,7 +346,7 @@ describe("Listado de causas activas", () => {
     assert.match(route, /Ruta del expediente/);
     assert.match(route, /Próximo hito/);
     assert.match(route, /Actividad registrada/);
-    assert.match(route, /Plazo:/);
+    assert.match(route, /Cierre:/);
     assert.match(operationalSummary, /causa\.checklistDebidoProceso/);
     assert.match(operationalSummary, /causa\.bitacora/);
   });
@@ -349,10 +360,9 @@ describe("Listado de causas activas", () => {
 
     assert.match(causesHistory, /HistoryEntryForm/);
     assert.match(causesHistory, /Detalles del registro/);
-    assert.match(
-      causesHistory,
-      /rounded-xl border border-neutral-200 bg-white p-4 shadow-xs/,
-    );
+    assert.match(causesHistory, /FILTER_OPTIONS/);
+    assert.match(causesHistory, /Buscar en comunicaciones/);
+    assert.doesNotMatch(causesHistory, /Centro de comunicaciones/);
     assert.match(causesHistory, /NotebookPen/);
     assert.match(annotationHistoryForm, /HistoryEntryForm/);
     assert.match(sharedHistoryForm, /Nueva entrada en el historial/);

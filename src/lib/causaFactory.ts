@@ -1,25 +1,33 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
-import { getBaseChecklist } from '../shared/lib/data';
+import { getBaseChecklist } from "../shared/lib/data";
 import {
   calcularFechaLimiteInvestigacion,
   getMaxPlazoInvestigacionDias,
-} from '../shared/lib/legalCompliance';
-import { type Causa, EstadoCausa } from '../shared/lib/types';
-import { nowDateOnly, nowIso } from '../shared/lib/dateUtils';
+} from "../shared/lib/legalCompliance";
+import { type Causa, EstadoCausa } from "../shared/lib/types";
+import { nowDateOnly, nowIso } from "../shared/lib/dateUtils";
 
 export function generateInitials(fullName: string): string {
   if (!fullName) {
-    return 'N. N.';
+    return "N. N.";
   }
   return fullName
-    .split(' ')
+    .split(" ")
     .filter((word) => word.length >= 2)
     .map((word) => `${word[0].toUpperCase()}.`)
-    .join(' ');
+    .join(" ");
 }
 
-export function formatSequentialCaseId(counter: number, year = new Date().getFullYear()): string {
-  const padding = counter < 10 ? `00${counter}` : counter < 100 ? `0${counter}` : `${counter}`;
+export function formatSequentialCaseId(
+  counter: number,
+  year = new Date().getFullYear(),
+): string {
+  const padding =
+    counter < 10
+      ? `00${counter}`
+      : counter < 100
+        ? `0${counter}`
+        : `${counter}`;
   return `DC-${year}-${padding}`;
 }
 
@@ -30,7 +38,7 @@ interface CreateDraftCausaArgs {
   estudianteNombre: string;
   estudianteCurso: string;
   runEstudiante: string;
-  tipoInfraccion: Causa['tipoInfraccion'];
+  tipoInfraccion: Causa["tipoInfraccion"];
   conductaRiceId?: string;
   comprometeAulaSegura: boolean;
   observaciones: string;
@@ -58,6 +66,7 @@ export function createDraftCausa({
 
   return {
     id: formatSequentialCaseId(counter),
+    proceduralModelVersion: 2,
     ...(studentId ? { studentId } : {}),
     ...(incidenteId ? { incidenteId } : {}),
     estudianteNombre,
@@ -78,18 +87,21 @@ export function createDraftCausa({
       tipoInfraccion,
       comprometeAulaSegura,
     ),
-    observaciones: observaciones || 'Registro inicial del procedimiento regulado.',
+    observaciones:
+      observaciones || "Registro inicial del procedimiento regulado.",
     bitacora: [
       {
         id: `b_init_${Date.now()}`,
         fecha: nowIso(),
-        tipo: 'Otro',
-        titulo: 'Apertura formal de Causa de Convivencia',
+        tipo: "Otro",
+        titulo: "Apertura formal de Causa de Convivencia",
         descripcion:
-          'Se inicia formalmente la tramitación del expediente de disciplina de conformidad con el Reglamento Interno (RIE) del colegio.',
-        participantes: [responsable ? responsable.split(' (')[0] : 'Esteban Valenzuela'],
+          "Se inicia formalmente la tramitación del expediente de disciplina de conformidad con el Reglamento Interno (RIE) del colegio.",
+        participantes: [
+          responsable ? responsable.split(" (")[0] : "Esteban Valenzuela",
+        ],
       },
     ],
-    checklistDebidoProceso: getBaseChecklist(),
+    checklistDebidoProceso: getBaseChecklist(2),
   };
 }

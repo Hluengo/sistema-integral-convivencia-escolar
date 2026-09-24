@@ -152,9 +152,9 @@ export function DetailModalTabs<T extends string>({
             aria-selected={activeTab === tab.id}
             aria-controls={`detail-tabpanel-${tab.id}`}
             tabIndex={activeTab === tab.id ? 0 : -1}
-            className={`relative flex min-h-11 min-w-[9.5rem] flex-1 flex-col items-stretch justify-center gap-1 overflow-hidden rounded-md px-3 py-2 font-semibold text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-100 sm:min-w-0 ${
+            className={`relative flex min-h-11 min-w-[8.5rem] flex-1 flex-col items-center justify-center gap-1 overflow-hidden rounded-lg px-3 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-neutral-100 sm:min-w-0 sm:flex-row sm:gap-2 ${
               activeTab === tab.id
-                ? "bg-white text-brand-950 shadow-sm ring-1 ring-neutral-150"
+                ? "bg-white text-brand-950 shadow-xs ring-1 ring-neutral-200"
                 : "text-neutral-600 hover:bg-white/70 hover:text-neutral-900"
             }`}
           >
@@ -165,7 +165,7 @@ export function DetailModalTabs<T extends string>({
             {tab.indicator}
             <span
               aria-hidden="true"
-              className={`pointer-events-none absolute inset-x-3 bottom-1 h-0.5 rounded-full bg-brand-600 transition-transform duration-150 motion-reduce:transition-none ${
+              className={`pointer-events-none absolute inset-x-3 bottom-0.5 h-0.5 rounded-full bg-brand-600 transition-transform duration-150 motion-reduce:transition-none ${
                 activeTab === tab.id ? "scale-x-100" : "scale-x-0"
               }`}
             />

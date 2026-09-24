@@ -30,6 +30,9 @@ import {
   AlertDialogTitle,
 } from "@/shared/ui/AlertDialog";
 import Button from "@/shared/ui/Button";
+import FormField from "@/shared/ui/FormField";
+import Input from "@/shared/ui/Input";
+import Select from "@/shared/ui/Select";
 import RiceConductSelect from "../NewCausaForm/RiceConductSelect";
 
 const INFRACCIONES: TipoInfraccion[] = [
@@ -59,16 +62,6 @@ const EDIT_CAUSA_FIELDS = [
   "estudianteTieneNEE",
   "tipoNEE",
 ] as const satisfies Array<keyof EditCausaFormValues>;
-
-const fieldClass =
-  "w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-50 font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:bg-white transition-colors text-xs";
-const fieldErrorClass =
-  "w-full mt-1.5 border border-grave-300 rounded-lg p-2.5 bg-grave-50 font-medium text-grave-900 focus:outline-none focus:ring-2 focus:ring-grave-500/30 focus:border-grave-500 focus:bg-white transition-colors text-xs";
-const labelClass = "block font-semibold text-neutral-700 text-xs";
-const selectClass =
-  "w-full mt-1.5 border border-neutral-200 rounded-lg p-2.5 bg-neutral-50 font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 focus:bg-white transition-colors text-xs appearance-none";
-const selectErrorClass =
-  "w-full mt-1.5 border border-grave-300 rounded-lg p-2.5 bg-grave-50 font-medium text-grave-900 focus:outline-none focus:ring-2 focus:ring-grave-500/30 focus:border-grave-500 focus:bg-white transition-colors text-xs appearance-none";
 
 function toInitials(name: string): string {
   if (!name) return "";
@@ -143,16 +136,6 @@ function buildDefaultValues(causa: Causa): EditCausaFormValues {
     estudianteTieneNEE: causa.estudianteTieneNEE || false,
     tipoNEE: causa.tipoNEE || "",
   };
-}
-
-function FieldError({ id, message }: { id: string; message?: string }) {
-  if (!message) return null;
-
-  return (
-    <p id={id} role="alert" className="mt-1 text-grave-700 text-xs">
-      {message}
-    </p>
-  );
 }
 
 interface EditCausaModalFormProps {
@@ -233,66 +216,50 @@ export default function EditCausaModalForm({
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label htmlFor="edit-estudiante" className={labelClass}>
-              Estudiante
-            </label>
-            <input
+          <FormField
+            label="Estudiante"
+            htmlFor="edit-estudiante"
+            error={errors.estudianteNombre?.message}
+          >
+            <Input
               id="edit-estudiante"
               aria-label="Estudiante"
-              aria-invalid={!!errors.estudianteNombre}
               aria-describedby={
                 errors.estudianteNombre ? "edit-estudiante-error" : undefined
               }
-              className={errors.estudianteNombre ? fieldErrorClass : fieldClass}
+              invalid={!!errors.estudianteNombre}
               placeholder="Nombre completo"
               {...register("estudianteNombre")}
             />
-            <FieldError
-              id="edit-estudiante-error"
-              message={errors.estudianteNombre?.message}
-            />
-          </div>
-          <div>
-            <label htmlFor="edit-curso" className={labelClass}>
-              Curso
-            </label>
-            <input
+          </FormField>
+          <FormField label="Curso" htmlFor="edit-curso">
+            <Input
               id="edit-curso"
               aria-label="Curso"
-              className={fieldClass}
               placeholder="Ej: 7 Basico A"
               {...register("estudianteCurso")}
             />
-          </div>
-          <div>
-            <label htmlFor="edit-run" className={labelClass}>
-              RUN
-            </label>
-            <input
+          </FormField>
+          <FormField
+            label="RUN"
+            htmlFor="edit-run"
+            error={errors.runEstudiante?.message}
+          >
+            <Input
               id="edit-run"
               aria-label="RUN"
-              aria-invalid={!!errors.runEstudiante}
               aria-describedby={
                 errors.runEstudiante ? "edit-run-error" : undefined
               }
-              className={errors.runEstudiante ? fieldErrorClass : fieldClass}
+              invalid={!!errors.runEstudiante}
               placeholder="12.345.678-9"
               {...register("runEstudiante")}
             />
-            <FieldError
-              id="edit-run-error"
-              message={errors.runEstudiante?.message}
-            />
-          </div>
-          <div>
-            <label htmlFor="edit-tipo-infraccion" className={labelClass}>
-              Tipo Infracción
-            </label>
-            <select
+          </FormField>
+          <FormField label="Tipo Infracción" htmlFor="edit-tipo-infraccion">
+            <Select
               id="edit-tipo-infraccion"
               aria-label="Tipo de infracción"
-              className={selectClass}
               {...register("tipoInfraccion")}
             >
               {INFRACCIONES.map((infraccion) => (
@@ -300,40 +267,36 @@ export default function EditCausaModalForm({
                   {infraccion}
                 </option>
               ))}
-            </select>
-          </div>
-          <div>
-            <label htmlFor="edit-responsable" className={labelClass}>
-              Encargado / Responsable
-            </label>
-            <input
+            </Select>
+          </FormField>
+          <FormField
+            label="Encargado / Responsable"
+            htmlFor="edit-responsable"
+            error={errors.responsable?.message}
+          >
+            <Input
               id="edit-responsable"
               aria-label="Encargado o responsable"
-              aria-invalid={!!errors.responsable}
               aria-describedby={
                 errors.responsable ? "edit-responsable-error" : undefined
               }
-              className={errors.responsable ? fieldErrorClass : fieldClass}
+              invalid={!!errors.responsable}
               placeholder="Nombre del inspector/a"
               {...register("responsable")}
             />
-            <FieldError
-              id="edit-responsable-error"
-              message={errors.responsable?.message}
-            />
-          </div>
-          <div>
-            <label htmlFor="edit-estado" className={labelClass}>
-              Estado Actual
-            </label>
-            <select
+          </FormField>
+          <FormField
+            label="Estado Actual"
+            htmlFor="edit-estado"
+            error={errors.estadoActual?.message}
+          >
+            <Select
               id="edit-estado"
               aria-label="Estado actual"
-              aria-invalid={!!errors.estadoActual}
               aria-describedby={
                 errors.estadoActual ? "edit-estado-error" : undefined
               }
-              className={errors.estadoActual ? selectErrorClass : selectClass}
+              invalid={!!errors.estadoActual}
               {...register("estadoActual")}
             >
               {Object.values(EstadoCausa).map((estado) => (
@@ -341,12 +304,8 @@ export default function EditCausaModalForm({
                   {estado}
                 </option>
               ))}
-            </select>
-            <FieldError
-              id="edit-estado-error"
-              message={errors.estadoActual?.message}
-            />
-          </div>
+            </Select>
+          </FormField>
         </div>
 
         <div>
@@ -372,28 +331,23 @@ export default function EditCausaModalForm({
           </p>
         </div>
 
-        <div>
-          <Controller
-            control={control}
-            name="observaciones"
-            render={({ field }) => (
-              <div>
-                <label htmlFor="edit-obs" className={labelClass}>
-                  Observaciones
-                </label>
-                <textarea
-                  id="edit-obs"
-                  aria-label="Observaciones"
-                  value={field.value}
-                  onChange={field.onChange}
-                  className={fieldClass}
-                  rows={3}
-                  placeholder="Descripción de los hechos, contexto, etc."
-                />
-              </div>
-            )}
-          />
-        </div>
+        <Controller
+          control={control}
+          name="observaciones"
+          render={({ field }) => (
+            <FormField label="Observaciones" htmlFor="edit-obs">
+              <textarea
+                id="edit-obs"
+                aria-label="Observaciones"
+                value={field.value}
+                onChange={field.onChange}
+                className="mt-1.5 w-full rounded-lg border border-neutral-200 bg-neutral-50 p-2.5 font-medium text-neutral-700 text-xs outline-none transition-colors placeholder:text-neutral-400 focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-500/30"
+                rows={3}
+                placeholder="Descripción de los hechos, contexto, etc."
+              />
+            </FormField>
+          )}
+        />
 
         <div className="border-t border-neutral-100 pt-4">
           <div className="flex items-center gap-2 font-semibold text-brand-700 text-sm">
@@ -443,56 +397,48 @@ export default function EditCausaModalForm({
             Plazos y Suspensión
           </div>
           <div className="mt-3 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            <div>
-              <label htmlFor="edit-inicio-investigacion" className={labelClass}>
-                Inicio Investigación
-              </label>
-              <input
+            <FormField
+              label="Inicio Investigación"
+              htmlFor="edit-inicio-investigacion"
+            >
+              <Input
                 id="edit-inicio-investigacion"
                 aria-label="Inicio investigación"
                 type="date"
-                className={fieldClass}
                 {...register("fechaInicioInvestigacion")}
               />
-            </div>
-            <div>
-              <label htmlFor="edit-inicio-suspension" className={labelClass}>
-                Inicio Suspensión
-              </label>
-              <input
+            </FormField>
+            <FormField
+              label="Inicio Suspensión"
+              htmlFor="edit-inicio-suspension"
+            >
+              <Input
                 id="edit-inicio-suspension"
                 aria-label="Inicio suspensión"
                 type="date"
-                className={fieldClass}
                 {...register("fechaInicioSuspension")}
               />
-            </div>
-            <div>
-              <label htmlFor="edit-dias-suspension" className={labelClass}>
-                Días Suspensión
-              </label>
-              <input
+            </FormField>
+            <FormField
+              label="Días Suspensión"
+              htmlFor="edit-dias-suspension"
+              error={errors.duracionSuspensionDias?.message}
+            >
+              <Input
                 id="edit-dias-suspension"
                 aria-label="Días de suspensión"
                 type="number"
                 min="0"
                 max="15"
-                aria-invalid={!!errors.duracionSuspensionDias}
                 aria-describedby={
                   errors.duracionSuspensionDias
                     ? "edit-dias-suspension-error"
                     : undefined
                 }
-                className={
-                  errors.duracionSuspensionDias ? fieldErrorClass : fieldClass
-                }
+                invalid={!!errors.duracionSuspensionDias}
                 {...register("duracionSuspensionDias", { valueAsNumber: true })}
               />
-              <FieldError
-                id="edit-dias-suspension-error"
-                message={errors.duracionSuspensionDias?.message}
-              />
-            </div>
+            </FormField>
             <label className="flex items-center gap-2 md:col-span-2">
               <input
                 type="checkbox"
@@ -524,18 +470,17 @@ export default function EditCausaModalForm({
                 Requiere Notificación a Superintendencia
               </span>
             </label>
-            <div>
-              <label htmlFor="edit-fecha-notificacion" className={labelClass}>
-                Fecha Notificación
-              </label>
-              <input
+            <FormField
+              label="Fecha Notificación"
+              htmlFor="edit-fecha-notificacion"
+            >
+              <Input
                 id="edit-fecha-notificacion"
                 aria-label="Fecha de notificación"
                 type="date"
-                className={fieldClass}
                 {...register("fechaNotificacionSuperintendencia")}
               />
-            </div>
+            </FormField>
           </div>
         </div>
 
@@ -556,19 +501,15 @@ export default function EditCausaModalForm({
                 Estudiante con NEE
               </span>
             </label>
-            <div>
-              <label htmlFor="edit-tipo-nee" className={labelClass}>
-                Tipo NEE
-              </label>
-              <input
+            <FormField label="Tipo NEE" htmlFor="edit-tipo-nee">
+              <Input
                 id="edit-tipo-nee"
                 aria-label="Tipo NEE"
-                className={fieldClass}
                 placeholder="TEA, TDAH, Disc. Intelectual, etc."
                 disabled={!estudianteTieneNEE}
                 {...register("tipoNEE")}
               />
-            </div>
+            </FormField>
           </div>
         </div>
 

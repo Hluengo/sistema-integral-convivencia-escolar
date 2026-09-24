@@ -60,13 +60,33 @@ export interface BitacoraEntry {
   participantes: string[];
   documentoAdjunto?: string;
   compartidoGrupal?: boolean;
+  /** Causa propietaria cuando el registro fue heredado desde un incidente grupal. */
+  causaOrigenId?: string;
 }
+
+export type MilestoneApplicability = "pendiente" | "aplica" | "no_aplica";
+export type MilestoneStatus =
+  | "no_iniciado"
+  | "en_desarrollo"
+  | "cumplido"
+  | "vencido"
+  | "no_aplica"
+  | "invalidado";
 
 export interface ChecklistItem {
   id: string;
   label: string;
   descripcion: string;
   completado: boolean;
+  obligatorio?: boolean;
+  aplicabilidad?: MilestoneApplicability;
+  estado?: MilestoneStatus;
+  fundamentoNoAplica?: string;
+  fechaInicio?: string;
+  fechaLimite?: string;
+  resultado?: string;
+  bloqueanteParaAvanzar?: boolean;
+  bloqueanteParaCerrar?: boolean;
   fechaCompletado?: string;
   requeridoPor: "Circular 482" | "Ley 21809" | "Reglamento Interno" | "Ambas";
   registradoPor?: string;
@@ -97,6 +117,8 @@ export type TipoInfraccion = "Leve" | "Grave" | "Muy Grave" | "Gravísima";
 
 export interface Causa {
   id: string; // e.g. "DC-2026-014"
+  /** Version 1 para expedientes históricos; versión 2 para casos nuevos. */
+  proceduralModelVersion?: 1 | 2;
   studentId?: string;
   incidenteId?: string;
   estudianteNombre: string;
@@ -166,6 +188,109 @@ export interface Incidente {
 }
 
 export type DocumentScope = "causa" | "incidente";
+
+export type ExpedienteEventStatus = "vigente" | "rectificado" | "invalidado";
+export type ExpedienteDocumentStatus = "vigente" | "invalidado" | "reemplazado";
+export type ExpedienteDocumentOrigin = "interno" | "externo" | "importado";
+export type ExpedienteDocumentScope = "individual" | "grupal";
+
+export interface ExpedienteEvent {
+  id: string;
+  tenant_id: string;
+  causa_id: string;
+  incidente_id: string | null;
+  occurred_at: string;
+  recorded_at: string;
+  recorded_by: string | null;
+  event_type: string;
+  title: string;
+  description: string;
+  milestone_id: string | null;
+  hecho_id: string | null;
+  source_table: string | null;
+  source_id: string | null;
+  participants: string[];
+  status: ExpedienteEventStatus;
+  previous_event_id: string | null;
+  correction_reason: string | null;
+  metadata: Record<string, unknown>;
+}
+
+export type ReconsideracionTipo = "reconsideracion" | "apelacion";
+export type ReconsideracionEstado =
+  "pendiente" | "acogida" | "rechazada" | "desistida" | "vencida";
+
+export interface ReconsideracionRecord {
+  id: string;
+  tipo: ReconsideracionTipo;
+  estado: ReconsideracionEstado;
+  solicitadaAt: string;
+  resueltaAt: string | null;
+  solicitadaPor: string | null;
+  solicitud: string;
+  resolucion: string;
+  documentoNombre: string | null;
+}
+
+export interface SeguimientoRecord {
+  id: string;
+  estado: string;
+  fecha: string | null;
+  descripcion: string;
+  titulo: string;
+  responsable: string;
+  fechaFin: string | null;
+  cumplimiento: string;
+  evaluacion: string;
+}
+
+export type ExpedienteHistoryOrigin = "individual" | "grupal";
+
+export interface ExpedienteHistoryEntry {
+  id: string;
+  occurredAt: string;
+  recordedAt: string | null;
+  type: string;
+  title: string;
+  description: string;
+  responsible: string | null;
+  participants: string[];
+  milestoneId: string | null;
+  hechoId: string | null;
+  documentNames: string[];
+  documentPaths: string[];
+  status: "vigente" | "rectificado" | "invalidado";
+  origin: ExpedienteHistoryOrigin;
+  source: "event" | "bitacora" | "avance" | "reconsideracion" | "seguimiento";
+  correctionReason: string | null;
+}
+
+export interface ExpedienteDocument {
+  id: string;
+  tenant_id: string;
+  causa_id: string;
+  incidente_id: string | null;
+  original_name: string;
+  display_name: string;
+  mime_type: string;
+  byte_size: number;
+  storage_path: string;
+  milestone_id: string | null;
+  event_id: string | null;
+  hecho_id: string | null;
+  document_date: string | null;
+  incorporated_at: string;
+  incorporated_by: string | null;
+  origin: ExpedienteDocumentOrigin;
+  scope: ExpedienteDocumentScope;
+  version: number;
+  status: ExpedienteDocumentStatus;
+  invalidated_at: string | null;
+  invalidated_by: string | null;
+  invalidation_reason: string | null;
+  sha256: string | null;
+  metadata: Record<string, unknown>;
+}
 
 export interface Statistics {
   total: number;

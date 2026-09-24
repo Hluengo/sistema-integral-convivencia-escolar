@@ -1,11 +1,14 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
+import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, Circle, ShieldAlert } from "lucide-react";
 import type { Causa } from "@/shared/lib/types";
 import type {
   HechoRow,
   HechoEvidenciaRow,
 } from "@/shared/api/services/hechos.service";
+import { fetchReconsideraciones } from "@/shared/api/services/reconsideracion.service";
+import { fetchSeguimiento } from "@/shared/api/services/seguimiento.service";
 import { auditarExpediente } from "@/shared/lib/auditoria";
 
 export default function AuditoriaPanel({
@@ -17,7 +20,28 @@ export default function AuditoriaPanel({
   hechos: HechoRow[];
   vinculos: HechoEvidenciaRow[];
 }) {
-  const audit = auditarExpediente(causa, hechos, vinculos);
+  const reconsideracionesQuery = useQuery({
+    queryKey: ["reconsideraciones", causa.id, "auditoria"],
+    queryFn: () => fetchReconsideraciones(causa.id),
+  });
+  const seguimientoQuery = useQuery({
+    queryKey: ["seguimiento", causa.id, "auditoria"],
+    queryFn: () => fetchSeguimiento(causa.id),
+  });
+  const audit = auditarExpediente(causa, hechos, vinculos, {
+    reconsideraciones: reconsideracionesQuery.data ?? [],
+    seguimientos: (seguimientoQuery.data ?? []).map((record) => ({
+      id: record.id,
+      estado: record.estado,
+      fecha: record.fecha_inicio,
+      descripcion: record.descripcion,
+      titulo: record.titulo,
+      responsable: record.responsable,
+      fechaFin: record.fecha_fin,
+      cumplimiento: record.cumplimiento,
+      evaluacion: record.evaluacion,
+    })),
+  });
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">

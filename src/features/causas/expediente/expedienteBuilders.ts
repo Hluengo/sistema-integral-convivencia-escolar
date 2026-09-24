@@ -1,11 +1,16 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import type { BitacoraEntry, Causa } from "@/shared/lib/types";
+import type { ExpedienteCompleto } from "@/shared/api/services/expediente.service";
 import { normalizeDocumentPath } from "@/shared/api/services/storage.service";
+import type {
+  BitacoraEntry,
+  Causa,
+  ExpedienteDocument,
+} from "@/shared/lib/types";
 
 /** Anexo rastreable hasta su origen en el expediente. */
 export interface ExpedienteAnexo {
-  origen: "checklist" | "bitacora";
+  origen: "checklist" | "bitacora" | "expediente";
   refId: string;
   refTitulo: string;
   nombre: string;
@@ -38,7 +43,10 @@ export function expedienteBaseName(causaId: string, dateStr: string): string {
  * Los paths ya vienen normalizados por fetchCausaDetails; se re-normalizan
  * por seguridad porque bitácora/checklist pueden traer URLs firmadas legacy.
  */
-export function listExpedienteAnexos(causa: Causa): ExpedienteAnexo[] {
+export function listExpedienteAnexos(
+  causa: Causa,
+  documentos: ExpedienteDocument[] = [],
+): ExpedienteAnexo[] {
   const seen = new Set<string>();
   const anexos: ExpedienteAnexo[] = [];
   for (const item of causa.checklistDebidoProceso) {
@@ -51,6 +59,18 @@ export function listExpedienteAnexos(causa: Causa): ExpedienteAnexo[] {
       refId: item.id,
       refTitulo: item.label,
       nombre: item.documentoNombre || path.split("/").pop() || "documento",
+      path,
+    });
+  }
+  for (const document of documentos) {
+    const path = normalizeDocumentPath(document.storage_path);
+    if (!path || seen.has(path)) continue;
+    seen.add(path);
+    anexos.push({
+      origen: "expediente",
+      refId: document.id,
+      refTitulo: document.display_name || document.original_name,
+      nombre: document.display_name || document.original_name,
       path,
     });
   }
@@ -85,7 +105,20 @@ function bitacoraAsc(bitacora: BitacoraEntry[]): BitacoraEntry[] {
 export function buildExpedienteMarkdown(
   causa: Causa,
   privacyMode: boolean,
-  opts: { generatedAt: string; generatedBy: string },
+  opts: {
+    generatedAt: string;
+    generatedBy: string;
+    expediente?: Pick<
+      ExpedienteCompleto,
+      | "actuaciones"
+      | "avances"
+      | "hechos"
+      | "vinculosHechoEvidencia"
+      | "documentos"
+      | "reconsideraciones"
+      | "seguimientos"
+    >;
+  },
 ): string {
   const nombre = displayName(causa, privacyMode);
   const lines: string[] = [
@@ -132,7 +165,35 @@ export function buildExpedienteMarkdown(
       ``,
     );
   }
-  lines.push(`## 5. Brechas para el informe de cierre`, ``);
+  if (opts.expediente) {
+    const {
+      actuaciones,
+      avances,
+      hechos,
+      vinculosHechoEvidencia,
+      reconsideraciones,
+      seguimientos,
+    } = opts.expediente;
+    lines.push(
+      `## 5. Hechos y evidencias`,
+      ``,
+      ...hechos.map(
+        (hecho) =>
+          `- ${hecho.titulo}: ${hecho.estado}; participación=${hecho.participacion_acreditada ? "determinada" : "pendiente"}; evidencia=${vinculosHechoEvidencia.filter((vinculo) => vinculo.hecho_id === hecho.id).length}; RICE=${hecho.rice_articulo ?? "—"}`,
+      ),
+      hechos.length === 0 ? "(Sin hechos estructurados registrados)" : "",
+      ``,
+      `## 6. Actuaciones y avances persistidos`,
+      ``,
+      `- Actuaciones: ${actuaciones.length}`,
+      `- Avances: ${avances.length}`,
+      `- Documentos: ${opts.expediente.documentos.length}`,
+      `- Reconsideraciones: ${reconsideraciones.length}`,
+      `- Seguimientos: ${seguimientos.length}`,
+      ``,
+    );
+  }
+  lines.push(`## 7. Brechas para el informe de cierre`, ``);
   const brechas: string[] = [];
   if (!causa.conductaRiceId)
     brechas.push("- Falta tipificación de conducta RICE.");
@@ -151,7 +212,20 @@ export function buildExpedienteMarkdown(
 export function buildExpedienteJson(
   causa: Causa,
   privacyMode: boolean,
-  opts: { generatedAt: string; generatedBy: string },
+  opts: {
+    generatedAt: string;
+    generatedBy: string;
+    expediente?: Pick<
+      ExpedienteCompleto,
+      | "actuaciones"
+      | "avances"
+      | "hechos"
+      | "vinculosHechoEvidencia"
+      | "documentos"
+      | "reconsideraciones"
+      | "seguimientos"
+    >;
+  },
 ): Record<string, unknown> {
   return {
     expedienteId: causa.id,
@@ -185,11 +259,20 @@ export function buildExpedienteJson(
       participantes: entry.participantes,
       tieneAdjunto: Boolean(entry.documentoAdjunto),
     })),
-    anexos: listExpedienteAnexos(causa).map((a) => ({
-      origen: a.origen,
-      refId: a.refId,
-      nombre: a.nombre,
-    })),
+    actuaciones: opts.expediente?.actuaciones ?? [],
+    avances: opts.expediente?.avances ?? [],
+    hechos: opts.expediente?.hechos ?? [],
+    evidencias: opts.expediente?.vinculosHechoEvidencia ?? [],
+    documentos: opts.expediente?.documentos ?? [],
+    reconsideraciones: opts.expediente?.reconsideraciones ?? [],
+    seguimientos: opts.expediente?.seguimientos ?? [],
+    anexos: listExpedienteAnexos(causa, opts.expediente?.documentos).map(
+      (a) => ({
+        origen: a.origen,
+        refId: a.refId,
+        nombre: a.nombre,
+      }),
+    ),
   };
 }
 
@@ -202,18 +285,19 @@ export function buildExpedienteIndice(
   const lines = [
     `# Índice — Expediente ${causa.id} (${nombre})`,
     ``,
-    `- 01_Expediente.pdf — versión formal imprimible (generar con botón Imprimir/PDF).`,
-    `- 02_Expediente_para_IA.md — contenido estructurado para NotebookLM/Gemini.`,
-    `- 02_datos.json — mismo contenido en formato canónico.`,
-    `- 03_Anexos/ — ${anexos.length} documento(s) original(es) tal cual se subieron.`,
-    `- MANIFIESTO.txt — trazabilidad de anexos incluidos/faltantes.`,
+    `- 01_CARATULA_Y_DATOS_GENERALES/ — datos generales del expediente.`,
+    `- 02_CRONOLOGIA_COMPLETA/ — cronología y actuaciones registradas.`,
+    `- 03_RUTA_DEL_DEBIDO_PROCESO/ — hitos y garantías del procedimiento.`,
+    `- 15_ANEXOS_ORIGINALES/ — ${anexos.length} documento(s) original(es) tal cual se subieron.`,
+    `- 16_DATOS_ESTRUCTURADOS_JSON/ — contenido canónico para NotebookLM/Gemini.`,
+    `- 17_MANIFIESTO_DE_ARCHIVOS/ — trazabilidad de anexos incluidos/faltantes.`,
     ``,
     `## Anexos`,
     ``,
   ];
   anexos.forEach((a, i) => {
     lines.push(
-      `${i + 1}. [${a.origen}:${a.refId}] ${a.refTitulo} → 03_Anexos/${a.nombre}`,
+      `${i + 1}. [${a.origen}:${a.refId}] ${a.refTitulo} → 15_ANEXOS_ORIGINALES/${a.nombre}`,
     );
   });
   if (anexos.length === 0) lines.push("(Sin anexos subidos en esta causa)");

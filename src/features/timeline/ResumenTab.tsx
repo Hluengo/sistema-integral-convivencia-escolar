@@ -4,10 +4,9 @@ import { memo } from "react";
 import {
   AlertTriangle,
   CalendarClock,
-  CheckCircle2,
   ClipboardList,
+  FileCheck2,
   FileText,
-  FolderArchive,
   UserRound,
 } from "lucide-react";
 import type { Causa } from "../../shared/lib/types";
@@ -16,9 +15,9 @@ import {
   getConductaReglamentada,
 } from "../../reglamentoData";
 import {
-  getCausaDeadlineStages,
-  getCausaStatus,
-} from "../causas/causaPresentation";
+  MAX_PLAZO_INVESTIGACION_DIAS,
+  getMaxPlazoInvestigacionDias,
+} from "../../shared/lib/legalCompliance/constants";
 import { getCausaOperationalSummary } from "../causas/causaOperationalSummary";
 import { formatChileDate } from "../../shared/lib/dateTime";
 import IncidentePanel from "./IncidentePanel";
@@ -34,7 +33,6 @@ export default memo(function ResumenTab({
   breaches,
   privacyMode,
 }: ResumenTabProps) {
-  const deadlines = getCausaDeadlineStages(causa);
   const summary = getCausaOperationalSummary(causa);
   const completed = summary.completedHitos;
   const totalHitos = causa.checklistDebidoProceso.length;
@@ -42,8 +40,20 @@ export default memo(function ResumenTab({
   const phasePct = currentProgress.total
     ? Math.round((currentProgress.completed / currentProgress.total) * 100)
     : 0;
+  const phaseComplete =
+    currentProgress.total > 0 &&
+    currentProgress.completed >= currentProgress.total;
+  const maxDias =
+    causa.plazoInvestigacionDias ??
+    getMaxPlazoInvestigacionDias(
+      causa.tipoInfraccion,
+      causa.comprometeAulaSegura,
+    );
+  const unidadPlazo =
+    maxDias === MAX_PLAZO_INVESTIGACION_DIAS ? "corridos" : "hábiles";
+  const relatoLargo = (causa.observaciones?.length ?? 0) > 240;
   const nextAction = summary.nextChecklistItem
-    ? `${summary.nextChecklistPhase}: ${summary.nextChecklistItem.label}`
+    ? `Próximo hito · ${summary.nextChecklistItem.label} (fase ${summary.nextChecklistPhase})`
     : "Sin hito pendiente en la ruta visible";
   const conductaDescripcion =
     getConductaReglamentada(causa.conductaRiceId)?.conducta ||
@@ -55,51 +65,100 @@ export default memo(function ResumenTab({
         <IncidentePanel causa={causa} privacyMode={privacyMode} />
       )}
 
-      <section className="grid gap-2.5 xl:grid-cols-[minmax(0,1fr)_minmax(16rem,19rem)]">
-        <div className="rounded-lg border border-neutral-150 bg-white p-3 shadow-xs">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-11px font-semibold uppercase text-neutral-500">
-                Centro operativo del expediente
-              </p>
-              <h3 className="mt-0.5 text-base font-bold leading-tight text-brand-950">
-                {summary.currentPhase}
-              </h3>
-              <p
-                className="mt-1 truncate text-xs leading-5 text-neutral-600"
-                title={nextAction}
-              >
-                {nextAction}
-              </p>
+      {/* Hero del Centro Operativo */}
+      <section
+        aria-label="Centro operativo del expediente"
+        className="rounded-xl border border-neutral-200 bg-white p-4 shadow-xs sm:p-5"
+      >
+        <div className="flex flex-col gap-3.5">
+          {/* Encabezado y Fase Actual */}
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-100 pb-3">
+            <div className="flex items-center gap-2.5">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
+                <ClipboardList className="size-4" aria-hidden="true" />
+              </span>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                  Centro operativo del expediente
+                </p>
+                <div className="mt-0.5 flex items-center gap-2">
+                  <span className="text-sm font-bold text-neutral-900">
+                    Fase operativa:
+                  </span>
+                  <span className="rounded-full border border-brand-200 bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-800">
+                    {summary.currentPhase}
+                  </span>
+                </div>
+              </div>
             </div>
-            <span
-              className={`inline-flex w-fit shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-11px font-bold ${
-                breaches.length
-                  ? "bg-gravisima-100 text-gravisima-800"
-                  : "bg-leve-100 text-neutral-800"
-              }`}
-            >
-              {breaches.length ? (
-                <AlertTriangle className="size-3" />
-              ) : (
-                <CheckCircle2 className="size-3" />
-              )}
-              {breaches.length
-                ? `${breaches.length} alerta${breaches.length === 1 ? "" : "s"}`
-                : "Sin alertas"}
-            </span>
+
+            {/* Resumen cuantitativo */}
+            <div className="flex items-center gap-2 sm:gap-3 text-xs text-neutral-500">
+              <span className="inline-flex items-center gap-1">
+                <strong className="font-semibold text-neutral-900">
+                  {completed}/{totalHitos}
+                </strong>{" "}
+                hitos
+              </span>
+              <span className="text-neutral-300">·</span>
+              <span className="inline-flex items-center gap-1">
+                <strong className="font-semibold text-neutral-900">
+                  {summary.documentsCount}
+                </strong>{" "}
+                docs
+              </span>
+              <span className="text-neutral-300">·</span>
+              <span className="inline-flex items-center gap-1">
+                <strong className="font-semibold text-neutral-900">
+                  {summary.historyCount}
+                </strong>{" "}
+                registros
+              </span>
+            </div>
           </div>
 
-          <div className="mt-2.5">
-            <div className="flex items-center justify-between gap-3 text-11px text-neutral-600">
-              <span>Avance de fase</span>
-              <span className="font-semibold text-neutral-900">
-                {currentProgress.completed}/{currentProgress.total} · {phasePct}
-                %
+          {/* Próximo hito operacional */}
+          <div className="rounded-lg border border-brand-100 bg-brand-50/60 p-3 sm:p-3.5">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p
+                  className="flex items-center gap-1.5 text-xs font-semibold text-brand-900"
+                  title={nextAction}
+                >
+                  <FileCheck2
+                    className="size-4 shrink-0 text-brand-600"
+                    aria-hidden="true"
+                  />
+                  {nextAction}
+                </p>
+                {summary.nextChecklistItem?.descripcion && (
+                  <p className="mt-1 line-clamp-2 text-xs text-neutral-600">
+                    {summary.nextChecklistItem.descripcion}
+                  </p>
+                )}
+              </div>
+              {summary.nextChecklistItem && (
+                <span className="shrink-0 rounded-md bg-brand-600 px-2.5 py-1 text-xs font-semibold text-white shadow-xs">
+                  Pendiente
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Barra de progreso de la fase */}
+          <div className="space-y-1.5 pt-0.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-neutral-700">
+                {phaseComplete
+                  ? "Fase completada · lista para avanzar"
+                  : `Avance de fase ${currentProgress.completed}/${currentProgress.total} · ${phasePct}%`}
+              </span>
+              <span className="font-mono text-neutral-500 tabular-nums">
+                {phasePct}%
               </span>
             </div>
             <div
-              className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-100"
+              className="h-2 w-full overflow-hidden rounded-full bg-neutral-100"
               role="progressbar"
               aria-label={`Avance de fase ${summary.currentPhase}`}
               aria-valuenow={currentProgress.completed}
@@ -108,66 +167,23 @@ export default memo(function ResumenTab({
               aria-valuetext={`${currentProgress.completed} de ${currentProgress.total} hitos, ${phasePct} por ciento`}
             >
               <div
-                className="h-full rounded-full bg-brand-600"
+                className={`h-full rounded-full transition-all duration-300 ${
+                  phaseComplete ? "bg-leve-600" : "bg-brand-600"
+                }`}
                 style={{ width: `${phasePct}%` }}
                 aria-hidden="true"
               />
             </div>
           </div>
         </div>
-
-        <div className="divide-y divide-neutral-100 rounded-lg border border-neutral-150 bg-white shadow-xs">
-          <div className="flex items-center gap-2.5 px-3 py-2">
-            <CalendarClock
-              className="size-4 shrink-0 text-grave-600"
-              aria-hidden="true"
-            />
-            <div className="min-w-0">
-              <p className="text-11px text-neutral-600">Cierre de indagación</p>
-              <p className="truncate text-xs font-semibold text-neutral-900">
-                {formatChileDate(deadlines.cierreIndagacion.deadlineDate)} ·{" "}
-                {deadlines.cierreIndagacion.text}
-              </p>
-            </div>
-            {deadlines.informeConcluyente && (
-              <span
-                className="ml-auto shrink-0 text-right text-10px text-neutral-500"
-                title={`Concluyente: ${deadlines.informeConcluyente.text}`}
-              >
-                Concluyente
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2.5 px-3 py-2">
-            <FolderArchive
-              className="size-4 shrink-0 text-brand-700"
-              aria-hidden="true"
-            />
-            <div className="min-w-0">
-              <p className="text-11px text-neutral-600">Trazabilidad</p>
-              <p className="truncate text-xs font-semibold text-neutral-900">
-                {completed}/{totalHitos} hitos · {summary.documentsCount} docs
-              </p>
-            </div>
-            <span className="ml-auto shrink-0 text-right text-10px text-neutral-500">
-              {summary.historyCount} historial
-            </span>
-          </div>
-        </div>
       </section>
 
+      {/* Grid de 4 tarjetas de datos del expediente */}
       <section
         aria-label="Datos del expediente"
         className="card grid overflow-hidden sm:grid-cols-2 xl:grid-cols-4 xl:divide-x xl:divide-neutral-200"
       >
         {[
-          {
-            label: "Estado actual",
-            value: getCausaStatus(causa),
-            Icon: CheckCircle2,
-            cardClass: "",
-            iconClass: "text-leve-700",
-          },
           {
             label: "Tipificación",
             value: causa.comprometeAulaSegura
@@ -179,22 +195,29 @@ export default memo(function ResumenTab({
           },
           {
             label: "Responsable",
-            value: causa.responsable,
+            value: causa.responsable || "Sin asignar",
             Icon: UserRound,
             cardClass: "",
             iconClass: "text-neutral-600",
           },
           {
+            label: "Fase actual",
+            value: summary.currentPhase,
+            Icon: ClipboardList,
+            cardClass: "",
+            iconClass: "text-brand-700",
+          },
+          {
             label: "Última actualización",
             value: formatChileDate(causa.fechaUltimaActualizacion),
-            Icon: ClipboardList,
+            Icon: CalendarClock,
             cardClass: "",
             iconClass: "text-brand-700",
           },
         ].map(({ label, value, Icon, cardClass, iconClass }) => (
           <div
             key={label}
-            className={`min-w-0 px-3 py-2 ${cardClass}`}
+            className={`min-w-0 px-4 py-3 ${cardClass}`}
             title={value}
           >
             <div className="flex min-w-0 items-center gap-1.5">
@@ -202,36 +225,41 @@ export default memo(function ResumenTab({
                 className={`size-3.5 shrink-0 ${iconClass}`}
                 aria-hidden="true"
               />
-              <p className="truncate text-11px text-neutral-500">{label}</p>
+              <p className="truncate text-11px font-medium text-neutral-500">
+                {label}
+              </p>
             </div>
-            <p className="mt-0.5 truncate text-xs font-semibold text-brand-950">
+            <p className="mt-1 truncate text-xs font-semibold text-brand-950">
               {value}
             </p>
           </div>
         ))}
       </section>
 
-      <section className="rounded-lg border border-neutral-150 bg-white p-4 shadow-xs">
+      {/* Antecedentes generales y Relato */}
+      <section className="rounded-xl border border-neutral-150 bg-white p-4 shadow-xs sm:p-5">
         <h3 className="text-sm font-semibold text-brand-950">
           Antecedentes generales
         </h3>
         <dl className="mt-3 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
-          <div>
-            <dt className="text-neutral-500">Apertura</dt>
-            <dd className="font-medium text-neutral-900">
+          <div className="rounded-lg bg-neutral-50 p-3">
+            <dt className="text-xs font-medium text-neutral-500">Apertura</dt>
+            <dd className="mt-0.5 font-semibold text-neutral-900">
               {formatChileDate(causa.fechaApertura)}
             </dd>
           </div>
-          <div>
-            <dt className="text-neutral-500">Fase operativa</dt>
-            <dd className="font-medium text-neutral-900">
-              {summary.currentPhase}
+          <div className="rounded-lg bg-neutral-50 p-3">
+            <dt className="text-xs font-medium text-neutral-500">
+              Plazo de investigación
+            </dt>
+            <dd className="mt-0.5 font-semibold text-neutral-900">
+              {maxDias} días {unidadPlazo}
             </dd>
           </div>
         </dl>
-        <div className="mt-4 grid gap-3 rounded-lg bg-neutral-50 p-3">
+        <div className="mt-4 grid gap-3 rounded-lg bg-neutral-50 p-3.5">
           <div>
-            <p className="text-xs font-medium text-neutral-500">
+            <p className="text-xs font-semibold text-neutral-600">
               Descripción de la falta
             </p>
             <p className="mt-1 text-sm leading-6 text-neutral-700">
@@ -240,19 +268,34 @@ export default memo(function ResumenTab({
             </p>
           </div>
           <div>
-            <p className="text-xs font-medium text-neutral-500">
-              Relato de los hechos
-            </p>
-            <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-neutral-700">
-              {causa.observaciones || "Sin relato de los hechos registrado."}
-            </p>
+            {relatoLargo ? (
+              <details>
+                <summary className="cursor-pointer text-xs font-semibold text-brand-700 hover:text-brand-800 hover:underline">
+                  Relato de los hechos · ver completo
+                </summary>
+                <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-neutral-700">
+                  {causa.observaciones}
+                </p>
+              </details>
+            ) : (
+              <>
+                <p className="text-xs font-semibold text-neutral-600">
+                  Relato de los hechos
+                </p>
+                <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-neutral-700">
+                  {causa.observaciones ||
+                    "Sin relato de los hechos registrado."}
+                </p>
+              </>
+            )}
           </div>
         </div>
       </section>
 
+      {/* Alertas Jurídicas si existen */}
       {breaches.length > 0 && (
         <section
-          className="rounded-lg border border-gravisima-200 bg-gravisima-50 p-4"
+          className="rounded-xl border border-gravisima-200 bg-gravisima-50 p-4 shadow-xs"
           role="alert"
         >
           <h3 className="flex items-center gap-2 text-sm font-semibold text-gravisima-800">

@@ -33,6 +33,8 @@ interface TimelineHeaderProps {
   setIsSidebarCollapsed?: (collapsed: boolean) => void;
   isTimelineCollapsed?: boolean;
   setIsTimelineCollapsed?: (collapsed: boolean) => void;
+  saveStatus?: "idle" | "saving" | "saved" | "error";
+  onRetrySave?: () => void;
   breaches: string[];
 }
 
@@ -45,6 +47,8 @@ export default function TimelineHeader({
   onDeleteClick,
   onForceCloseClick,
   onClose,
+  saveStatus = "idle",
+  onRetrySave,
   breaches,
 }: TimelineHeaderProps) {
   const canEdit = currentRole !== "docente";
@@ -78,73 +82,114 @@ export default function TimelineHeader({
         titleTooltip={displayName}
         metadata={
           <>
-            <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-neutral-700">
+            <span className="inline-flex h-6 items-center rounded-full bg-neutral-100 px-2.5 text-xs font-medium text-neutral-700 leading-none">
               {causa.estudianteCurso || "Sin curso"}
             </span>
-            <span className="rounded-full bg-neutral-100 px-2 py-0.5 font-mono text-neutral-700">
+            <span className="inline-flex h-6 items-center rounded-full border border-neutral-200 bg-neutral-50 px-2.5 font-mono text-[11px] font-semibold text-neutral-700 leading-none">
               {causa.id}
             </span>
             <span
-              className={`inline-flex items-center rounded-full px-2 py-0.5 font-bold ${
+              className={`inline-flex h-6 items-center rounded-full px-2.5 text-xs font-bold leading-none ${
                 causa.comprometeAulaSegura
-                  ? "bg-gravisima-100 text-neutral-900"
-                  : "bg-grave-100 text-neutral-900"
+                  ? "border border-gravisima-200 bg-gravisima-100 text-gravisima-900"
+                  : causa.tipoInfraccion === "Leve"
+                    ? "border border-leve-200 bg-leve-100 text-leve-900"
+                    : "border border-grave-200 bg-grave-100 text-grave-900"
               }`}
             >
               {causa.comprometeAulaSegura
                 ? "Aula Segura"
                 : causa.tipoInfraccion}
             </span>
-            <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-neutral-700">
+            <span className="inline-flex h-6 items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-50 px-2.5 text-xs font-medium text-neutral-700 leading-none">
+              <span
+                className="size-1.5 rounded-full bg-brand-600 shrink-0"
+                aria-hidden="true"
+              />
               {getCausaStatus(causa)} · {currentPhase}
             </span>
             <span
-              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-semibold ${deadlineChipClass(deadlines.cierreIndagacion.tone)}`}
+              className={`inline-flex h-6 items-center gap-1.5 rounded-full border px-2.5 text-xs font-semibold leading-none ${deadlineChipClass(deadlines.cierreIndagacion.tone)}`}
             >
-              <CalendarClock className="size-3" aria-hidden="true" />
+              <CalendarClock className="size-3.5 shrink-0" aria-hidden="true" />
               Cierre {formatChileDate(
                 deadlines.cierreIndagacion.deadlineDate,
               )}{" "}
               · {deadlines.cierreIndagacion.text}
             </span>
             {breaches.length > 0 && (
-              <span className="rounded-full bg-gravisima-100 px-2 py-0.5 font-semibold text-gravisima-800">
+              <span className="inline-flex h-6 items-center gap-1.5 rounded-full border border-gravisima-200 bg-gravisima-100 px-2.5 text-xs font-semibold text-gravisima-800 leading-none">
+                <AlertTriangle
+                  className="size-3.5 shrink-0 text-gravisima-600"
+                  aria-hidden="true"
+                />
                 {riskLabel}
+              </span>
+            )}
+            {privacyMode && (
+              <span
+                className="inline-flex h-6 items-center gap-1.5 rounded-full bg-neutral-100 px-2.5 text-[11px] font-medium text-neutral-600 leading-none"
+                title="RUN e identidad protegidos"
+              >
+                <LockKeyhole
+                  className="size-3 text-neutral-500 shrink-0"
+                  aria-hidden="true"
+                />
+                NNA Protegido
               </span>
             )}
           </>
         }
         actions={
-          <>
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {canEdit && (
               <>
                 <button
                   type="button"
-                  onClick={onForceCloseClick}
-                  className="hidden items-center gap-1.5 rounded-md bg-gravisima-600 px-3 py-2 font-semibold text-white text-xs shadow-sm transition-colors hover:bg-gravisima-700 sm:inline-flex"
-                  title="Cerrar causa con fundamento"
-                  aria-label="Cerrar causa con fundamento"
+                  onClick={onEditClick}
+                  className="hidden sm:inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-700 shadow-xs transition-colors hover:border-neutral-300 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                  title="Editar expediente"
+                  aria-label="Editar expediente"
                 >
-                  <LockKeyhole className="size-4" aria-hidden="true" />
-                  Cerrar causa
-                </button>
-                <button
-                  type="button"
-                  onClick={onForceCloseClick}
-                  className="flex min-h-10 min-w-10 items-center justify-center rounded-md bg-gravisima-50 p-2 text-gravisima-700 transition-colors hover:bg-gravisima-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white sm:hidden"
-                  title="Cerrar causa con fundamento"
-                  aria-label="Cerrar causa con fundamento"
-                >
-                  <LockKeyhole className="size-5" aria-hidden="true" />
+                  <Pencil
+                    className="size-3.5 text-neutral-500"
+                    aria-hidden="true"
+                  />
+                  <span>Editar</span>
                 </button>
                 <button
                   type="button"
                   onClick={onEditClick}
-                  className="flex min-h-10 min-w-10 items-center justify-center rounded-md bg-neutral-100 p-2 text-neutral-600 transition-colors hover:bg-neutral-200 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                  className="flex sm:hidden min-h-10 min-w-10 items-center justify-center rounded-lg border border-neutral-200 bg-white p-2 text-neutral-700 transition-colors hover:bg-neutral-50 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                   title="Editar expediente"
                   aria-label="Editar expediente"
                 >
-                  <Pencil className="size-5" aria-hidden="true" />
+                  <Pencil
+                    className="size-4 text-neutral-600"
+                    aria-hidden="true"
+                  />
+                </button>
+                <button
+                  type="button"
+                  onClick={onForceCloseClick}
+                  className="hidden sm:inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-gravisima-200 bg-gravisima-50 px-3 py-2 text-xs font-semibold text-gravisima-700 shadow-xs transition-colors hover:border-gravisima-300 hover:bg-gravisima-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                  title="Cerrar causa con fundamento"
+                  aria-label="Cerrar causa con fundamento"
+                >
+                  <LockKeyhole
+                    className="size-3.5 text-gravisima-600"
+                    aria-hidden="true"
+                  />
+                  <span>Cerrar causa</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={onForceCloseClick}
+                  className="flex sm:hidden min-h-10 min-w-10 items-center justify-center rounded-lg border border-gravisima-200 bg-gravisima-50 p-2 text-gravisima-700 transition-colors hover:bg-gravisima-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                  title="Cerrar causa con fundamento"
+                  aria-label="Cerrar causa con fundamento"
+                >
+                  <LockKeyhole className="size-4" aria-hidden="true" />
                 </button>
               </>
             )}
@@ -152,11 +197,11 @@ export default function TimelineHeader({
               <button
                 type="button"
                 onClick={onDeleteClick}
-                className="flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 text-gravisima-600 transition-colors hover:bg-gravisima-50 hover:text-gravisima-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                className="flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 text-neutral-400 transition-colors hover:bg-gravisima-50 hover:text-gravisima-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                 title="Eliminar expediente"
                 aria-label="Eliminar expediente"
               >
-                <Trash2 className="size-5" aria-hidden="true" />
+                <Trash2 className="size-4" aria-hidden="true" />
               </button>
             )}
             {onClose && (
@@ -170,10 +215,32 @@ export default function TimelineHeader({
                 <X className="size-5" aria-hidden="true" />
               </button>
             )}
-          </>
+          </div>
         }
       />
 
+      {saveStatus === "error" && canEdit && onRetrySave && (
+        <div
+          role="alert"
+          className="flex items-center gap-2 border-gravisima-200 border-b bg-gravisima-50 px-4 py-2.5 text-gravisima-800 text-xs sm:px-6"
+        >
+          <AlertTriangle
+            className="size-4 shrink-0 text-gravisima-600"
+            aria-hidden="true"
+          />
+          <span className="font-semibold">
+            No se pudieron sincronizar los cambios. Revisa tu conexión.
+          </span>
+          <button
+            type="button"
+            onClick={onRetrySave}
+            aria-label="Reintentar sincronización"
+            className="ml-auto shrink-0 rounded-md bg-gravisima-600 px-3 py-1.5 font-semibold text-white transition-colors hover:bg-gravisima-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
       {breaches.length > 0 && (
         <div
           role="alert"

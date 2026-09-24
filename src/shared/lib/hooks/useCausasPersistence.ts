@@ -14,8 +14,10 @@ import { saveChecklist } from "@/shared/api/services/checklist.service";
 import { updateCausa } from "@/shared/api/services/causas.service";
 import { useAuthStore } from "@/shared/lib/stores/authStore";
 import {
+  mergePendingCausaSave,
   persistExistingCausa,
   type CausaPersistenceChanges,
+  type PendingCausaSave,
 } from "./causaPersistence";
 import { invalidateDashboardQueries } from "./useInvalidateDashboardQueries";
 
@@ -26,6 +28,7 @@ interface UseCausasPersistenceArgs {
   setSaveStatus: Dispatch<SetStateAction<SaveStatus>>;
   isAuthenticated: boolean;
   onPersisted: (causas: Causa[]) => void;
+  saveRetryNonce: number;
 }
 
 /**
@@ -39,6 +42,7 @@ export function useCausasPersistence({
   setSaveStatus,
   isAuthenticated,
   onPersisted,
+  saveRetryNonce,
 }: UseCausasPersistenceArgs) {
   const queryClient = useQueryClient();
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
@@ -50,9 +54,7 @@ export function useCausasPersistence({
   const saveGenerationRef = useRef(0);
   const isMountedRef = useRef(true);
   const prevCausasMapRef = useRef<Map<string, Causa>>(new Map());
-  const pendingSaveRef = useRef<
-    Map<string, { changes: CausaPersistenceChanges; previousCausa: Causa }>
-  >(new Map());
+  const pendingSaveRef = useRef<Map<string, PendingCausaSave>>(new Map());
 
   const markCausasHydrated = useCallback((hydratedCausas: Causa[]) => {
     prevCausasMapRef.current = new Map(
@@ -72,6 +74,98 @@ export function useCausasPersistence({
       if (saveIdleTimeoutRef.current) clearTimeout(saveIdleTimeoutRef.current);
     };
   }, []);
+
+  const causasRef = useRef(causas);
+  causasRef.current = causas;
+
+  const requeueFailedSaves = useCallback(
+    (failedSaves: Map<string, PendingCausaSave>) => {
+      // Re-encola lo fallido: el reintento manual o el pr�ximo cambio
+      // vuelve a persistirlo en vez de perderlo.
+      for (const [id, entry] of failedSaves) {
+        pendingSaveRef.current.set(
+          id,
+          mergePendingCausaSave(pendingSaveRef.current.get(id), entry),
+        );
+      }
+    },
+    [],
+  );
+
+  const runPendingSaves = useCallback(async () => {
+    const pendingSaves = new Map(pendingSaveRef.current);
+    pendingSaveRef.current.clear();
+    if (pendingSaves.size === 0) return;
+
+    setSaveStatus("saving");
+    try {
+      const causasToSave = causasRef.current.filter((causa) =>
+        pendingSaves.has(causa.id),
+      );
+      const results = await Promise.all(
+        causasToSave.map((causa) => {
+          const pending = pendingSaves.get(causa.id);
+          if (!pending) return true;
+          return persistExistingCausa(
+            causa,
+            pending.previousCausa,
+            pending.changes,
+            {
+              updateCausa: (c) =>
+                updateCausa(c, useAuthStore.getState().tenantId),
+              saveBitacora,
+              saveChecklist,
+            },
+          );
+        }),
+      );
+
+      if (!isMountedRef.current) return;
+      if (results.some((result) => !result)) {
+        requeueFailedSaves(pendingSaves);
+        setSaveStatus("error");
+        return;
+      }
+
+      onPersisted(causasToSave);
+      void invalidateDashboardQueries(queryClient);
+      for (const causa of causasToSave) {
+        if (causa.incidenteId) {
+          void queryClient.invalidateQueries({
+            queryKey: ["incidente", causa.incidenteId],
+          });
+          void queryClient.invalidateQueries({
+            queryKey: [
+              "causas",
+              useAuthStore.getState().tenantId ?? "",
+              "details",
+            ],
+          });
+        }
+      }
+      setSaveStatus("saved");
+      saveIdleTimeoutRef.current = setTimeout(() => {
+        if (isMountedRef.current) {
+          setSaveStatus((previous) =>
+            previous === "saved" ? "idle" : previous,
+          );
+        }
+      }, 2000);
+    } catch (error) {
+      if (!isMountedRef.current) return;
+      console.error("Autosave failed:", error);
+      requeueFailedSaves(pendingSaves);
+      setSaveStatus("error");
+    }
+  }, [onPersisted, queryClient, requeueFailedSaves, setSaveStatus]);
+
+  // Reintento manual: saveRetryNonce cambia con cada clic en "Reintentar".
+  const retryNonceRef = useRef(saveRetryNonce);
+  useEffect(() => {
+    if (saveRetryNonce === retryNonceRef.current) return;
+    retryNonceRef.current = saveRetryNonce;
+    void runPendingSaves();
+  }, [saveRetryNonce, runPendingSaves]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -106,15 +200,14 @@ export function useCausasPersistence({
 
       if (changes.causa || changes.bitacora || changes.checklist) {
         const pending = pendingSaveRef.current.get(causa.id);
-        pendingSaveRef.current.set(causa.id, {
-          previousCausa:
-            pending?.previousCausa ?? createInitialSnapshot(causa, prev),
-          changes: {
-            causa: pending?.changes.causa || changes.causa,
-            bitacora: pending?.changes.bitacora || changes.bitacora,
-            checklist: pending?.changes.checklist || changes.checklist,
-          },
-        });
+        pendingSaveRef.current.set(
+          causa.id,
+          mergePendingCausaSave(pending, {
+            previousCausa:
+              pending?.previousCausa ?? createInitialSnapshot(causa, prev),
+            changes,
+          }),
+        );
       }
     }
 
@@ -126,71 +219,9 @@ export function useCausasPersistence({
     if (saveIdleTimeoutRef.current) clearTimeout(saveIdleTimeoutRef.current);
 
     const generation = ++saveGenerationRef.current;
-    saveTimeoutRef.current = setTimeout(async () => {
+    saveTimeoutRef.current = setTimeout(() => {
       if (generation !== saveGenerationRef.current) return;
-
-      const pendingSaves = new Map(pendingSaveRef.current);
-      pendingSaveRef.current.clear();
-      if (pendingSaves.size === 0) return;
-
-      setSaveStatus("saving");
-      try {
-        const causasToSave = causas.filter((causa) =>
-          pendingSaves.has(causa.id),
-        );
-        const results = await Promise.all(
-          causasToSave.map((causa) => {
-            const pending = pendingSaves.get(causa.id);
-            if (!pending) return true;
-            return persistExistingCausa(
-              causa,
-              pending.previousCausa,
-              pending.changes,
-              {
-                updateCausa: (c) =>
-                  updateCausa(c, useAuthStore.getState().tenantId),
-                saveBitacora,
-                saveChecklist,
-              },
-            );
-          }),
-        );
-
-        if (!isMountedRef.current) return;
-        if (results.some((result) => !result)) {
-          setSaveStatus("error");
-          return;
-        }
-
-        onPersisted(causasToSave);
-        void invalidateDashboardQueries(queryClient);
-        for (const causa of causasToSave) {
-          if (causa.incidenteId) {
-            void queryClient.invalidateQueries({
-              queryKey: ["incidente", causa.incidenteId],
-            });
-            void queryClient.invalidateQueries({
-              queryKey: [
-                "causas",
-                useAuthStore.getState().tenantId ?? "",
-                "details",
-              ],
-            });
-          }
-        }
-        setSaveStatus("saved");
-        saveIdleTimeoutRef.current = setTimeout(() => {
-          if (isMountedRef.current) {
-            setSaveStatus((previous) =>
-              previous === "saved" ? "idle" : previous,
-            );
-          }
-        }, 2000);
-      } catch (error) {
-        if (!isMountedRef.current) return;
-        console.error("Autosave failed:", error);
-        setSaveStatus("error");
-      }
+      void runPendingSaves();
     }, 2000);
 
     return () => {
@@ -203,7 +234,14 @@ export function useCausasPersistence({
         saveIdleTimeoutRef.current = undefined;
       }
     };
-  }, [causas, isAuthenticated, onPersisted, queryClient, setSaveStatus]);
+  }, [
+    causas,
+    isAuthenticated,
+    onPersisted,
+    queryClient,
+    setSaveStatus,
+    runPendingSaves,
+  ]);
 
   return { markCausasHydrated, markCausaHydrated };
 }

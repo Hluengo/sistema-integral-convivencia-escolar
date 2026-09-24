@@ -1,30 +1,35 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import type { Dispatch, SetStateAction } from 'react';
-import { create } from 'zustand';
-import type { Causa, FaseProcedimental } from '../types';
-import { EstadoCausa } from '../types';
-import { createCausa, deleteCausa } from '../../api/services/causas.service';
-import { createDraftCausa } from '../../../lib/causaFactory';
-import { nowDateOnly } from '../../../shared/lib/dateUtils';
-import { useAuthStore } from './authStore';
-import { useToastStore } from './toastStore';
-import { addCausaToCache, removeCausaFromCache } from '../queries/causasQueryCache';
-import { invalidateDashboardQueries } from '../hooks/useInvalidateDashboardQueries';
+import type { Dispatch, SetStateAction } from "react";
+import { create } from "zustand";
+import type { Causa, FaseProcedimental } from "../types";
+import { EstadoCausa } from "../types";
+import { createCausa, deleteCausa } from "../../api/services/causas.service";
+import { createDraftCausa } from "../../../lib/causaFactory";
+import { nowDateOnly } from "../../../shared/lib/dateUtils";
+import { useAuthStore } from "./authStore";
+import { useToastStore } from "./toastStore";
+import {
+  addCausaToCache,
+  removeCausaFromCache,
+} from "../queries/causasQueryCache";
+import { invalidateDashboardQueries } from "../hooks/useInvalidateDashboardQueries";
 
-export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 interface CausasState {
   causas: Causa[];
   selectedCausaId: string;
   saveStatus: SaveStatus;
-  selectedFaseFilter: FaseProcedimental | 'Todas';
+  saveRetryNonce: number;
+  selectedFaseFilter: FaseProcedimental | "Todas";
   searchQuery: string;
 
   setCausas: Dispatch<SetStateAction<Causa[]>>;
   setSelectedCausaId: (id: string) => void;
   setSaveStatus: Dispatch<SetStateAction<SaveStatus>>;
-  setSelectedFaseFilter: (filter: FaseProcedimental | 'Todas') => void;
+  requestSaveRetry: () => void;
+  setSelectedFaseFilter: (filter: FaseProcedimental | "Todas") => void;
   setSearchQuery: (query: string) => void;
 
   handleCreateCausa: (params: {
@@ -33,28 +38,32 @@ interface CausasState {
     newEstNombre: string;
     newEstRut: string;
     newEstCurso: string;
-    newInfTipo: Causa['tipoInfraccion'];
+    newInfTipo: Causa["tipoInfraccion"];
     conductaRiceId?: string;
     newAulaSegura: boolean;
     newObs: string;
     newResponsable: string;
   }) => Promise<string | false>;
-  handleDeleteCausa: (id: string, requireAuth: () => boolean) => Promise<boolean>;
+  handleDeleteCausa: (
+    id: string,
+    requireAuth: () => boolean,
+  ) => Promise<boolean>;
   handleUpdateCausa: (updated: Causa) => void;
   handleReopenCausa: (causa: Causa) => void;
 }
 
 export const useCausasStore = create<CausasState>((set, get) => ({
   causas: [],
-  selectedCausaId: '',
-  saveStatus: 'idle',
-  selectedFaseFilter: 'Todas',
-  searchQuery: '',
+  selectedCausaId: "",
+  saveStatus: "idle",
+  saveRetryNonce: 0,
+  selectedFaseFilter: "Todas",
+  searchQuery: "",
 
   setCausas: (causas) =>
     set((state) => ({
       causas:
-        typeof causas === 'function'
+        typeof causas === "function"
           ? (causas as (prev: Causa[]) => Causa[])(state.causas)
           : causas,
     })),
@@ -62,10 +71,12 @@ export const useCausasStore = create<CausasState>((set, get) => ({
   setSaveStatus: (status) =>
     set((state) => ({
       saveStatus:
-        typeof status === 'function'
+        typeof status === "function"
           ? (status as (prev: SaveStatus) => SaveStatus)(state.saveStatus)
           : status,
     })),
+  requestSaveRetry: () =>
+    set((state) => ({ saveRetryNonce: state.saveRetryNonce + 1 })),
   setSelectedFaseFilter: (filter) => set({ selectedFaseFilter: filter }),
   setSearchQuery: (query) => set({ searchQuery: query }),
 
@@ -74,7 +85,7 @@ export const useCausasStore = create<CausasState>((set, get) => ({
     // Reduce en lugar de Math.max(...spread): evita exceder el límite de
     // argumentos de una función con listas muy grandes de expedientes.
     const maxCounter = state.causas.reduce((max, causa) => {
-      const n = Number.parseInt(causa.id.split('-')[2], 10) || 0;
+      const n = Number.parseInt(causa.id.split("-")[2], 10) || 0;
       return n > max ? n : max;
     }, 0);
     const nextCounter = state.causas.length > 0 ? maxCounter + 1 : 1;
@@ -101,9 +112,11 @@ export const useCausasStore = create<CausasState>((set, get) => ({
       const tenantId = useAuthStore.getState().tenantId;
       if (tenantId) addCausaToCache(tenantId, createdCausa);
       void invalidateDashboardQueries();
-      useToastStore.getState().addToast('success', `Caso ${result} creado exitosamente`);
+      useToastStore
+        .getState()
+        .addToast("success", `Caso ${result} creado exitosamente`);
     } else {
-      useToastStore.getState().addToast('error', 'Error al crear el caso');
+      useToastStore.getState().addToast("error", "Error al crear el caso");
     }
     return result;
   },
@@ -112,7 +125,7 @@ export const useCausasStore = create<CausasState>((set, get) => ({
     if (!requireAuth()) return false;
     const ok = await deleteCausa(id, useAuthStore.getState().tenantId);
     if (!ok) {
-      useToastStore.getState().addToast('error', 'Error al eliminar el caso');
+      useToastStore.getState().addToast("error", "Error al eliminar el caso");
       return false;
     }
     const tenantId = useAuthStore.getState().tenantId;
@@ -122,10 +135,11 @@ export const useCausasStore = create<CausasState>((set, get) => ({
       const nextCausas = state.causas.filter((c) => c.id !== id);
       return {
         causas: nextCausas,
-        selectedCausaId: state.selectedCausaId === id ? '' : state.selectedCausaId,
+        selectedCausaId:
+          state.selectedCausaId === id ? "" : state.selectedCausaId,
       };
     });
-    useToastStore.getState().addToast('success', `Caso ${id} eliminado`);
+    useToastStore.getState().addToast("success", `Caso ${id} eliminado`);
     return true;
   },
 
@@ -149,16 +163,21 @@ export const useCausasStore = create<CausasState>((set, get) => ({
 }));
 
 // Selectors (derived data — pure functions)
-export function selectActiveCausas(state: Pick<CausasState, 'causas'>) {
-  return state.causas.filter((c) => c.estadoActual !== EstadoCausa.CAUSA_CERRADA);
-}
-
-export function selectClosedCausas(state: Pick<CausasState, 'causas'>) {
-  return state.causas.filter((c) => c.estadoActual === EstadoCausa.CAUSA_CERRADA);
-}
-
-export function selectAulaSeguraCausas(state: Pick<CausasState, 'causas'>) {
+export function selectActiveCausas(state: Pick<CausasState, "causas">) {
   return state.causas.filter(
-    (c) => c.comprometeAulaSegura && c.estadoActual !== EstadoCausa.CAUSA_CERRADA,
+    (c) => c.estadoActual !== EstadoCausa.CAUSA_CERRADA,
+  );
+}
+
+export function selectClosedCausas(state: Pick<CausasState, "causas">) {
+  return state.causas.filter(
+    (c) => c.estadoActual === EstadoCausa.CAUSA_CERRADA,
+  );
+}
+
+export function selectAulaSeguraCausas(state: Pick<CausasState, "causas">) {
+  return state.causas.filter(
+    (c) =>
+      c.comprometeAulaSegura && c.estadoActual !== EstadoCausa.CAUSA_CERRADA,
   );
 }

@@ -5,9 +5,9 @@
 
 import type { Causa, FaseProcedimental } from "../../shared/lib/types";
 import BitacoraTab from "./BitacoraTab";
+import ExpedienteHistoryPanel from "../causas/expediente/ExpedienteHistoryPanel";
 import ResumenTab from "./ResumenTab";
 import RutaExpedienteTab from "./RutaExpedienteTab";
-import CausaExpedienteTab from "../causas/expediente/CausaExpedienteTab";
 import TimelinePhaseWorkspace from "./TimelinePhaseWorkspace";
 import { useTimelineContext } from "../../shared/lib/useTimelineContext";
 import type { TimelineTab } from "./timelineTabs.types";
@@ -60,9 +60,12 @@ export default function TimelineTabPanels({
           />
         ))}
 
-      {activeTab === "bitacora" && <BitacoraTab causa={causa} />}
-
-      {activeTab === "expediente" && <CausaExpedienteTab causa={causa} />}
+      {activeTab === "bitacora" && (
+        <div className="space-y-6">
+          <ExpedienteHistoryPanel causa={causa} />
+          <BitacoraTab causa={causa} showChronology={false} />
+        </div>
+      )}
     </DetailModalBody>
   );
 }

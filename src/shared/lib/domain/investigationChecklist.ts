@@ -11,10 +11,16 @@ import {
 export const INVESTIGATION_BASE_ITEM_IDS = ["chk_inv_1", "chk_inv_2"] as const;
 export const MEDIATION_FLOW_ITEM_IDS = ["chk_inv_3", "chk_inv_4"] as const;
 export const MEDIATION_OUTCOME_ITEM_IDS = ["chk_inv_5", "chk_inv_6"] as const;
+export const INVESTIGATION_REINFORCED_ITEM_IDS = [
+  "chk_inv_7",
+  "chk_inv_8",
+  "chk_inv_9",
+] as const;
 export const INVESTIGATION_ITEM_IDS = [
   ...INVESTIGATION_BASE_ITEM_IDS,
   ...MEDIATION_FLOW_ITEM_IDS,
   ...MEDIATION_OUTCOME_ITEM_IDS,
+  ...INVESTIGATION_REINFORCED_ITEM_IDS,
 ] as const;
 
 export const PHASE_PREFIXES: Readonly<Record<FaseProcedimental, string>> = {
@@ -39,8 +45,15 @@ export const ACTIVE_PHASE_ITEM_IDS: Readonly<
 > = {
   Recepción: ["chk_rec_1", "chk_rec_2", "chk_rec_3"],
   Investigación: INVESTIGATION_ITEM_IDS,
-  Resolución: ["chk_res_2", "chk_res_4", "chk_res_6"],
-  Apelación: ["chk_imp_2", "chk_imp_4"],
+  Resolución: [
+    "chk_res_2",
+    "chk_res_4",
+    "chk_res_6",
+    "chk_res_7",
+    "chk_res_8",
+    "chk_res_9",
+  ],
+  Apelación: ["chk_imp_2", "chk_imp_4", "chk_imp_6", "chk_imp_7"],
   Seguimiento: ["chk_seg_1", "chk_seg_3", "chk_seg_4"],
 };
 
@@ -169,7 +182,11 @@ export function getApplicableInvestigationItemIds(
   }
 
   const outcome = getMediationOutcome(causa.checklistDebidoProceso);
-  const ids = [...INVESTIGATION_BASE_ITEM_IDS, ...MEDIATION_FLOW_ITEM_IDS];
+  const ids = [
+    ...INVESTIGATION_BASE_ITEM_IDS,
+    ...MEDIATION_FLOW_ITEM_IDS,
+    ...INVESTIGATION_REINFORCED_ITEM_IDS,
+  ];
 
   if (outcome === "agreement") return [...ids, "chk_inv_5"];
   if (outcome === "failed") return [...ids, "chk_inv_6"];
@@ -241,7 +258,20 @@ export function getApplicableChecklistItems(
   }
 
   const activeIds = new Set(ACTIVE_PHASE_ITEM_IDS[phase]);
-  return causa.checklistDebidoProceso.filter((item) => activeIds.has(item.id));
+  const items = causa.checklistDebidoProceso.filter((item) =>
+    activeIds.has(item.id),
+  );
+  if (phase !== "Apelación") return items;
+
+  const requestReceived = items.some(
+    (item) => item.id === "chk_imp_2" && item.completado,
+  );
+  const deadlineExpired = items.some(
+    (item) => item.id === "chk_imp_6" && item.completado,
+  );
+  if (requestReceived) return items.filter((item) => item.id !== "chk_imp_6");
+  if (deadlineExpired) return items.filter((item) => item.id !== "chk_imp_2");
+  return items;
 }
 
 export function getApplicableInvestigationItems(

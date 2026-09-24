@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 
 interface FormFieldProps {
   label: string;
-  htmlFor: string;
+  htmlFor?: string;
   hint?: string;
   error?: string;
   className?: string;
@@ -29,7 +29,11 @@ export default function FormField({
       </label>
       {children}
       {error ? (
-        <p className="text-gravisima-600 text-xs" role="alert">
+        <p
+          id={htmlFor ? `${htmlFor}-error` : undefined}
+          className="text-gravisima-600 text-xs"
+          role="alert"
+        >
           {error}
         </p>
       ) : hint ? (

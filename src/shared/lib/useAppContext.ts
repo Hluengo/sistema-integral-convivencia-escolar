@@ -1,18 +1,18 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useMemo } from 'react';
-import { useAuthStore } from './stores/authStore';
+import { useMemo } from "react";
+import { useAuthStore } from "./stores/authStore";
 import {
   useCausasStore,
   selectActiveCausas,
   selectClosedCausas,
   selectAulaSeguraCausas,
-} from './stores/causasStore';
-import { useUIStore } from './stores/uiStore';
-import type { User } from '@supabase/supabase-js';
-import type { Causa, UserRole } from './types';
-import { canDeleteCausaForRoles } from './causaPermissions';
-import type { SidebarView } from '../../widgets/sidebar/Sidebar';
+} from "./stores/causasStore";
+import { useUIStore } from "./stores/uiStore";
+import type { User } from "@supabase/supabase-js";
+import type { Causa, UserRole } from "./types";
+import { canDeleteCausaForRoles } from "./causaPermissions";
+import type { SidebarView } from "../../widgets/sidebar/Sidebar";
 
 export interface AppContextValue {
   user: User | null;
@@ -32,7 +32,8 @@ export interface AppContextValue {
   handleOpenCreateForm: () => void;
   mobileShowDetail: boolean;
   setMobileShowDetail: (v: boolean) => void;
-  saveStatus: 'idle' | 'saving' | 'saved' | 'error';
+  saveStatus: "idle" | "saving" | "saved" | "error";
+  requestSaveRetry: () => void;
   activeCausas: Causa[];
   closedCausas: Causa[];
   aulaSeguraCausas: Causa[];
@@ -48,8 +49,11 @@ export function useAppContext(): AppContextValue {
 
   const causas = useCausasStore((state) => state.causas);
   const selectedCausaId = useCausasStore((state) => state.selectedCausaId);
-  const setSelectedCausaId = useCausasStore((state) => state.setSelectedCausaId);
+  const setSelectedCausaId = useCausasStore(
+    (state) => state.setSelectedCausaId,
+  );
   const saveStatus = useCausasStore((state) => state.saveStatus);
+  const requestSaveRetry = useCausasStore((state) => state.requestSaveRetry);
   const handleUpdateCausa = useCausasStore((state) => state.handleUpdateCausa);
   const handleDeleteCausa = useCausasStore((state) => state.handleDeleteCausa);
 
@@ -85,14 +89,15 @@ export function useAppContext(): AppContextValue {
     handleUpdateCausa,
     handleDeleteCausa: (id) => handleDeleteCausa(id, () => true),
     handleSelectCausaFromDashboard: (causaId) => {
-      setCurrentView('causas');
+      setCurrentView("causas");
       setSelectedCausaId(causaId);
       setMobileShowDetail(true);
     },
-    handleOpenCreateForm: () => setCurrentView('causas'),
+    handleOpenCreateForm: () => setCurrentView("causas"),
     mobileShowDetail,
     setMobileShowDetail,
     saveStatus,
+    requestSaveRetry,
     activeCausas,
     closedCausas,
     aulaSeguraCausas,

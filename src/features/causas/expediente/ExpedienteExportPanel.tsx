@@ -1,10 +1,12 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useCallback, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useReactToPrint } from "react-to-print";
 import { Archive, FileDown, FileText, Printer } from "lucide-react";
 import { supabase } from "@/shared/api/lib/supabase";
 import { saveBitacora } from "@/shared/api/services/bitacora.service";
+import { fetchExpedienteCompleto } from "@/shared/api/services/expediente.service";
 import { STORAGE_BUCKET } from "@/shared/api/services/storage.service";
 import { nowIso } from "@/shared/lib/dateUtils";
 import { getCurrentDateStr } from "@/shared/lib/anotacionesUtils";
@@ -53,11 +55,20 @@ export default function ExpedienteExportPanel({
   } | null>(null);
 
   const dateStr = getCurrentDateStr();
+  const expedienteQuery = useQuery({
+    queryKey: ["expediente-export", causa.id],
+    queryFn: () => fetchExpedienteCompleto(causa.id),
+    staleTime: 30_000,
+  });
+  const expedienteData = expedienteQuery.data;
   const base = useMemo(
     () => expedienteBaseName(causa.id, dateStr),
     [causa.id, dateStr],
   );
-  const anexos = useMemo(() => listExpedienteAnexos(causa), [causa]);
+  const anexos = useMemo(
+    () => listExpedienteAnexos(causa, expedienteData?.documentos),
+    [causa, expedienteData?.documentos],
+  );
   const studentName = privacyMode
     ? causa.nnaProtectedName
     : causa.estudianteNombre;
@@ -105,9 +116,12 @@ export default function ExpedienteExportPanel({
   const handleDownloadMarkdown = useCallback(() => {
     setIsBusy(true);
     try {
+      if (!expedienteData)
+        throw new Error("El expediente unificado aún está cargando.");
       const md = buildExpedienteMarkdown(causa, privacyMode, {
         generatedAt: dateStr,
         generatedBy,
+        expediente: expedienteData,
       });
       downloadBlob(
         new Blob([md], { type: "text/markdown;charset=utf-8" }),
@@ -121,29 +135,50 @@ export default function ExpedienteExportPanel({
     } finally {
       setIsBusy(false);
     }
-  }, [auditDownload, base, causa, dateStr, generatedBy, privacyMode]);
+  }, [
+    auditDownload,
+    base,
+    causa,
+    dateStr,
+    expedienteData,
+    generatedBy,
+    privacyMode,
+  ]);
 
   const handleDownloadZip = useCallback(async () => {
     setIsBusy(true);
     setMessage(null);
     try {
+      if (!expedienteData)
+        throw new Error("El expediente unificado aún está cargando.");
       const { zipSync, strToU8 } = await import("fflate");
       const generatedAt = nowIso();
       const md = buildExpedienteMarkdown(causa, privacyMode, {
         generatedAt,
         generatedBy,
+        expediente: expedienteData,
       });
       const json = JSON.stringify(
-        buildExpedienteJson(causa, privacyMode, { generatedAt, generatedBy }),
+        buildExpedienteJson(causa, privacyMode, {
+          generatedAt,
+          generatedBy,
+          expediente: expedienteData,
+        }),
         null,
         2,
       );
       const files: Record<string, Uint8Array> = {
-        "00_INDICE.md": strToU8(
+        "00_INDICE_DEL_EXPEDIENTE/INDICE.md": strToU8(
           buildExpedienteIndice(causa, privacyMode, anexos),
         ),
-        "02_Expediente_para_IA.md": strToU8(md),
-        "02_datos.json": strToU8(json),
+        "01_CARATULA_Y_DATOS_GENERALES/datos.md": strToU8(
+          md.split("## 2. Hechos registrados")[0] ?? md,
+        ),
+        "02_CRONOLOGIA_COMPLETA/cronologia.md": strToU8(md),
+        "03_RUTA_DEL_DEBIDO_PROCESO/hitos.md": strToU8(
+          md.slice(md.indexOf("## 3. Checklist debido proceso")),
+        ),
+        "16_DATOS_ESTRUCTURADOS_JSON/expediente.json": strToU8(json),
       };
       const outcomes: AnexoFetchOutcome[] = [];
       const usedNames = new Set<string>();
@@ -165,7 +200,7 @@ export default function ExpedienteExportPanel({
             throw new Error(error?.message || "sin URL firmada");
           const res = await fetch(data.signedUrl);
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          files[`03_Anexos/${fileName}`] = new Uint8Array(
+          files[`15_ANEXOS_ORIGINALES/${fileName}`] = new Uint8Array(
             await res.arrayBuffer(),
           );
           outcomes.push({ nombre: fileName, estado: "incluido" });
@@ -177,7 +212,7 @@ export default function ExpedienteExportPanel({
           });
         }
       }
-      files["MANIFIESTO.txt"] = strToU8(
+      files["17_MANIFIESTO_DE_ARCHIVOS/MANIFIESTO.txt"] = strToU8(
         buildExpedienteManifiesto(causa.id, generatedAt, outcomes),
       );
       const zipBytes = zipSync(files, { level: 6 });
@@ -200,7 +235,15 @@ export default function ExpedienteExportPanel({
     } finally {
       setIsBusy(false);
     }
-  }, [anexos, auditDownload, base, causa, generatedBy, privacyMode]);
+  }, [
+    anexos,
+    auditDownload,
+    base,
+    causa,
+    expedienteData,
+    generatedBy,
+    privacyMode,
+  ]);
 
   return (
     <div className="space-y-3">

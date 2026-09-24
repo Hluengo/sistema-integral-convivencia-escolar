@@ -1,20 +1,22 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { describe, it } from 'node:test';
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { describe, it } from "node:test";
 
-process.env.VITE_SUPABASE_URL ??= 'https://example.supabase.co';
-process.env.VITE_SUPABASE_ANON_KEY ??= 'anon-key-for-unit-tests';
+process.env.VITE_SUPABASE_URL ??= "https://example.supabase.co";
+process.env.VITE_SUPABASE_ANON_KEY ??= "anon-key-for-unit-tests";
 
-const VALID_CAUSA_ID = '00000000-0000-4000-8000-000000000001';
-const VALID_INCIDENTE_ID = '00000000-0000-4000-8000-000000000002';
-const VALID_ITEM_ID = 'chk_rec_1';
+const VALID_CAUSA_ID = "00000000-0000-4000-8000-000000000001";
+const VALID_INCIDENTE_ID = "00000000-0000-4000-8000-000000000002";
+const VALID_ITEM_ID = "chk_rec_1";
 
 class MockQueryBuilder<T> {
   insertedRow: Record<string, unknown> | null = null;
 
-  constructor(private readonly result: { data: T | null; error: Error | null }) {}
+  constructor(
+    private readonly result: { data: T | null; error: Error | null },
+  ) {}
 
   select() {
     return this;
@@ -48,7 +50,7 @@ async function withProgressMock<T>(
   result: { data: T | null; error: Error | null },
   fn: (query: MockQueryBuilder<T>) => Promise<unknown>,
 ): Promise<unknown> {
-  const { supabase } = await import('../lib/supabase');
+  const { supabase } = await import("../lib/supabase");
   const mutable = supabase as unknown as {
     from: (table: string) => MockQueryBuilder<T>;
   };
@@ -61,53 +63,62 @@ async function withProgressMock<T>(
     mutable.from = originalFrom;
   }
 }
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const migrationPath = resolve(
   dirname(fileURLToPath(import.meta.url)),
-  '../../../../supabase/migrations/20260812165845_add_checklist_progress_entries.sql',
+  "../../../../supabase/migrations/20260812165845_add_checklist_progress_entries.sql",
 );
 const sharingMigrationPath = resolve(
   dirname(fileURLToPath(import.meta.url)),
-  '../../../../supabase/migrations/20260827184509_share_incident_progress_and_milestones.sql',
+  "../../../../supabase/migrations/20260827184509_share_incident_progress_and_milestones.sql",
 );
 
-describe('checklist_progress_entries migration', () => {
-  it('mantiene tenant, FK compuesta, RLS y no expone anon', () => {
-    const migration = readFileSync(migrationPath, 'utf8');
+describe("checklist_progress_entries migration", () => {
+  it("mantiene tenant, FK compuesta, RLS y no expone anon", () => {
+    const migration = readFileSync(migrationPath, "utf8");
     assert.match(migration, /tenant_id uuid not null/);
     assert.match(migration, /foreign key \(checklist_item_id, causa_id\)/);
     assert.match(migration, /enable row level security/);
-    assert.match(migration, /revoke all on table public\.checklist_progress_entries from anon/);
+    assert.match(
+      migration,
+      /revoke all on table public\.checklist_progress_entries from anon/,
+    );
     assert.match(
       migration,
       /grant select, insert, update, delete on table public\.checklist_progress_entries to authenticated/,
     );
   });
 
-  it('relaciona avances y hitos grupales con el incidente', () => {
-    const migration = readFileSync(sharingMigrationPath, 'utf8');
-    assert.match(migration, /add column if not exists compartido_grupal boolean not null default false/);
-    assert.match(migration, /add column if not exists incidente_id uuid references public\.incidentes\(id\)/);
+  it("relaciona avances y hitos grupales con el incidente", () => {
+    const migration = readFileSync(sharingMigrationPath, "utf8");
+    assert.match(
+      migration,
+      /add column if not exists compartido_grupal boolean not null default false/,
+    );
+    assert.match(
+      migration,
+      /add column if not exists incidente_id uuid references public\.incidentes\(id\)/,
+    );
     assert.match(migration, /ensure_checklist_progress_incidente_same_tenant/);
     assert.match(migration, /ensure_bitacora_group_sharing_allowed/);
   });
 });
 
-describe('checklist progress service', () => {
-  it('mapea la fecha y conserva la asociación con el hito', async () => {
-    const occurredAt = '2026-08-12T14:30:00.000Z';
+describe("checklist progress service", () => {
+  it("mapea la fecha y conserva la asociación con el hito", async () => {
+    const occurredAt = "2026-08-12T14:30:00.000Z";
     const result = await withProgressMock(
       {
         data: {
-          id: 'progress-1',
+          id: "progress-1",
           incidente_id: null,
           causa_id: VALID_CAUSA_ID,
           checklist_item_id: VALID_ITEM_ID,
-          title: 'Entrevista con apoderado',
-          description: 'Se registra la entrevista y sus acuerdos.',
-          entry_type: 'Entrevista',
+          title: "Entrevista con apoderado",
+          description: "Se registra la entrevista y sus acuerdos.",
+          entry_type: "Entrevista",
           occurred_at: occurredAt,
           document_name: null,
           document_url: null,
@@ -120,15 +131,16 @@ describe('checklist progress service', () => {
         error: null,
       },
       async (query) => {
-        const { createChecklistProgress } = await import('./checklistProgress.service');
+        const { createChecklistProgress } =
+          await import("./checklistProgress.service");
         const created = await createChecklistProgress({
           causaId: VALID_CAUSA_ID,
           checklistItemId: VALID_ITEM_ID,
-          title: ' Entrevista con apoderado ',
-          description: ' Se registra la entrevista y sus acuerdos. ',
-          entryType: 'Entrevista',
+          title: " Entrevista con apoderado ",
+          description: " Se registra la entrevista y sus acuerdos. ",
+          entryType: "Entrevista",
           occurredAt,
-          documentScope: 'incidente',
+          documentScope: "incidente",
           incidenteId: VALID_INCIDENTE_ID,
         });
         assert.equal(query.insertedRow?.causa_id, VALID_CAUSA_ID);
@@ -142,19 +154,20 @@ describe('checklist progress service', () => {
     assert.equal((result as { occurredAt: string }).occurredAt, occurredAt);
   });
 
-  it('devuelve los avances ordenados por fecha y descarta filas inválidas', async () => {
-    const occurredAt = '2026-08-12T14:30:00.000Z';
-    const result = await withProgressMock(
-      {
-        data: [
-          {
-            id: 'progress-1',
+  it("persiste y recarga citación, correo y descargo sin descartarlos", async () => {
+    const values = ["Citación", "Correo", "Descargo"] as const;
+    for (const entryType of values) {
+      const occurredAt = "2026-08-12T14:30:00.000Z";
+      const result = await withProgressMock(
+        {
+          data: {
+            id: `progress-${entryType}`,
             incidente_id: null,
             causa_id: VALID_CAUSA_ID,
             checklist_item_id: VALID_ITEM_ID,
-            title: 'Avance válido',
-            description: 'Descripción válida.',
-            entry_type: 'Evidencia',
+            title: `Actuación ${entryType}`,
+            description: "Se registra una actuación de prueba.",
+            entry_type: entryType,
             occurred_at: occurredAt,
             document_name: null,
             document_url: null,
@@ -164,17 +177,64 @@ describe('checklist progress service', () => {
             invalidated_by: null,
             invalidation_reason: null,
           },
-          { id: 'invalid-row' },
+          error: null,
+        },
+        async (query) => {
+          const { createChecklistProgress } =
+            await import("./checklistProgress.service");
+          const created = await createChecklistProgress({
+            causaId: VALID_CAUSA_ID,
+            checklistItemId: VALID_ITEM_ID,
+            title: `Actuación ${entryType}`,
+            description: "Se registra una actuación de prueba.",
+            entryType,
+            occurredAt,
+          });
+          assert.equal(query.insertedRow?.entry_type, entryType);
+          return created;
+        },
+      );
+      assert.equal((result as { entryType: string }).entryType, entryType);
+    }
+  });
+
+  it("devuelve los avances ordenados por fecha y descarta filas inválidas", async () => {
+    const occurredAt = "2026-08-12T14:30:00.000Z";
+    const result = await withProgressMock(
+      {
+        data: [
+          {
+            id: "progress-1",
+            incidente_id: null,
+            causa_id: VALID_CAUSA_ID,
+            checklist_item_id: VALID_ITEM_ID,
+            title: "Avance válido",
+            description: "Descripción válida.",
+            entry_type: "Evidencia",
+            occurred_at: occurredAt,
+            document_name: null,
+            document_url: null,
+            created_by: null,
+            created_at: occurredAt,
+            invalidated_at: null,
+            invalidated_by: null,
+            invalidation_reason: null,
+          },
+          { id: "invalid-row" },
         ],
         error: null,
       },
       async () => {
-        const { fetchChecklistProgress } = await import('./checklistProgress.service');
+        const { fetchChecklistProgress } =
+          await import("./checklistProgress.service");
         return fetchChecklistProgress(VALID_CAUSA_ID);
       },
     );
 
     assert.equal((result as unknown[]).length, 1);
-    assert.equal((result as [{ checklistItemId: string }])[0].checklistItemId, VALID_ITEM_ID);
+    assert.equal(
+      (result as [{ checklistItemId: string }])[0].checklistItemId,
+      VALID_ITEM_ID,
+    );
   });
 });

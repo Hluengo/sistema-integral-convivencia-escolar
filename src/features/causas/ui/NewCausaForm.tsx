@@ -7,6 +7,7 @@ import type React from "react";
 import { Controller, useWatch } from "react-hook-form";
 import type { UseFormReturn } from "react-hook-form";
 import { Scale, AlertCircle, FileText, Loader2, Users } from "lucide-react";
+import { getMaxPlazoInvestigacionDias } from "../../../shared/lib/legalCompliance/constants";
 import type {
   Course,
   Student,
@@ -15,8 +16,10 @@ import type { NewCausaFormValues } from "../../../shared/lib/schemas/newCausaFor
 import type { Causa } from "../../../shared/lib/types";
 import RiceConductSelect from "../NewCausaForm/RiceConductSelect";
 import Button from "../../../shared/ui/Button";
+import FormField from "../../../shared/ui/FormField";
 import Input from "../../../shared/ui/Input";
 import Select from "../../../shared/ui/Select";
+import { getStudentState } from "./newCausaFormState";
 
 interface NewCausaFormProps {
   form: UseFormReturn<NewCausaFormValues>;
@@ -28,18 +31,6 @@ interface NewCausaFormProps {
   onSubmit: React.FormEventHandler<HTMLFormElement>;
   onCourseChange: (courseId: string) => void;
   onStudentSelect: (studentId: string) => void;
-}
-
-function FieldError({ id, message }: { id: string; message?: string }) {
-  if (!message) {
-    return null;
-  }
-
-  return (
-    <p id={id} role="alert" className="mt-1 text-grave-700 text-xs">
-      {message}
-    </p>
-  );
 }
 
 export default function NewCausaForm({
@@ -63,14 +54,17 @@ export default function NewCausaForm({
     useWatch({ control, name: "selectedCourseId" }) ?? "";
   const selectedStudentId =
     useWatch({ control, name: "selectedStudentId" }) ?? "";
-  const newEstRut = useWatch({ control, name: "newEstRut" }) ?? "";
   const newInfTipo = useWatch({ control, name: "newInfTipo" });
   const newAulaSegura = useWatch({ control, name: "newAulaSegura" });
   const newObs = useWatch({ control, name: "newObs" }) ?? "";
-  const hasTenDayInvestigationDeadline =
-    newInfTipo === "Muy Grave" || newInfTipo === "Gravísima";
-  const manualStudentEntry =
-    !!selectedCourseId && !isLoadingStudents && students.length === 0;
+  const studentState = getStudentState(
+    selectedCourseId,
+    isLoadingStudents,
+    students.length,
+  );
+  const manualStudentEntry = studentState === "no-students";
+  // Editable solo en ingreso manual (conserva la lógica anterior).
+  const isRutEditable = manualStudentEntry;
   const basicCourses = courses.filter((course) => course.level === "BASICA");
   const mediaCourses = courses.filter((course) => course.level === "MEDIA");
 
@@ -104,20 +98,15 @@ export default function NewCausaForm({
         noValidate
         className="space-y-4 text-left text-neutral-800 text-sm"
       >
-        <div>
-          <label
-            htmlFor="create-course"
-            className="block font-semibold text-neutral-500 text-xs uppercase"
-          >
-            Curso del estudiante
-          </label>
+        <FormField
+          label="Curso del estudiante"
+          htmlFor="create-course"
+          error={errors.selectedCourseId?.message}
+        >
           <Select
             id="create-course"
             aria-label="Curso del estudiante"
             invalid={!!errors.selectedCourseId}
-            aria-describedby={
-              errors.selectedCourseId ? "create-course-error" : undefined
-            }
             value={selectedCourseId}
             onChange={(event) => onCourseChange(event.target.value)}
             className="mt-1.5 bg-neutral-50 p-3 font-medium"
@@ -132,7 +121,7 @@ export default function NewCausaForm({
                 {basicCourses.length > 0 && (
                   <optgroup
                     label="Enseñanza Básica"
-                    className="bg-white font-semibold text-blue-700"
+                    className="bg-white font-semibold text-neutral-700"
                   >
                     {basicCourses.map((course) => (
                       <option
@@ -148,7 +137,7 @@ export default function NewCausaForm({
                 {mediaCourses.length > 0 && (
                   <optgroup
                     label="Enseñanza Media"
-                    className="bg-white font-semibold text-purple-700"
+                    className="bg-white font-semibold text-brand-700"
                   >
                     {mediaCourses.map((course) => (
                       <option
@@ -169,142 +158,97 @@ export default function NewCausaForm({
               </>
             )}
           </Select>
-          <FieldError
-            id="create-course-error"
-            message={errors.selectedCourseId?.message}
-          />
-        </div>
+        </FormField>
 
-        <div>
-          {selectedCourseId ? (
-            <>
-              {isLoadingStudents ? (
-                <>
-                  <p className="block font-semibold text-neutral-500 text-xs uppercase">
-                    Estudiante
-                  </p>
-                  <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-2.5">
-                    <Loader2
-                      className="h-3.5 w-3.5 animate-spin text-brand-600"
-                      aria-hidden="true"
-                    />
-                    <span className="text-neutral-500 text-xs">
-                      Cargando estudiantes...
-                    </span>
-                  </div>
-                </>
-              ) : students.length > 0 ? (
-                <>
-                  <label
-                    htmlFor="create-student"
-                    className="block font-semibold text-neutral-500 text-xs uppercase"
-                  >
-                    Estudiante
-                  </label>
-                  <Select
-                    id="create-student"
-                    aria-label="Estudiante"
-                    value={selectedStudentId}
-                    onChange={(event) => onStudentSelect(event.target.value)}
-                    className="mt-1.5 bg-neutral-50 p-3 font-medium"
-                    invalid={!!errors.newEstNombre}
-                    aria-describedby={
-                      errors.newEstNombre ? "create-student-error" : undefined
-                    }
-                  >
-                    <option value="">-- Seleccionar estudiante --</option>
-                    {students.map((student) => (
-                      <option key={student.id} value={student.id}>
-                        {student.full_name}
-                      </option>
-                    ))}
-                  </Select>
-                </>
-              ) : (
-                <>
-                  <p className="block font-semibold text-neutral-500 text-xs uppercase">
-                    Estudiante
-                  </p>
-                  <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-grave-200 bg-grave-50 p-2.5">
-                    <AlertCircle
-                      className="h-3.5 w-3.5 shrink-0 text-grave-600"
-                      aria-hidden="true"
-                    />
-                    <span className="text-grave-700 text-xs">
-                      No hay estudiantes en este curso. Ingrese los datos
-                      manualmente.
-                    </span>
-                  </div>
-                </>
-              )}
-              <FieldError
-                id="create-student-error"
-                message={errors.newEstNombre?.message}
+        <FormField
+          label="Estudiante"
+          htmlFor={
+            studentState === "has-students" ? "create-student" : undefined
+          }
+          error={errors.newEstNombre?.message}
+        >
+          {studentState === "loading" && (
+            <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-2.5">
+              <Loader2
+                className="h-3.5 w-3.5 animate-spin text-brand-600"
+                aria-hidden="true"
               />
-            </>
-          ) : (
-            <>
-              <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-2.5">
-                <Users
-                  className="h-3.5 w-3.5 shrink-0 text-neutral-500"
-                  aria-hidden="true"
-                />
-                <span className="text-neutral-600 text-xs">
-                  Seleccione un curso primero
-                </span>
-              </div>
-              <FieldError
-                id="create-student-error"
-                message={errors.newEstNombre?.message}
-              />
-            </>
+              <span className="text-neutral-500 text-xs">
+                Cargando estudiantes...
+              </span>
+            </div>
           )}
-        </div>
+          {studentState === "has-students" && (
+            <Select
+              id="create-student"
+              aria-label="Estudiante"
+              value={selectedStudentId}
+              onChange={(event) => onStudentSelect(event.target.value)}
+              className="mt-1.5 bg-neutral-50 p-3 font-medium"
+              invalid={!!errors.newEstNombre}
+            >
+              <option value="">-- Seleccionar estudiante --</option>
+              {students.map((student) => (
+                <option key={student.id} value={student.id}>
+                  {student.full_name}
+                </option>
+              ))}
+            </Select>
+          )}
+          {studentState === "no-students" && (
+            <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-grave-200 bg-grave-50 p-2.5">
+              <AlertCircle
+                className="h-3.5 w-3.5 shrink-0 text-grave-600"
+                aria-hidden="true"
+              />
+              <span className="text-grave-700 text-xs">
+                No hay estudiantes en este curso. Ingrese los datos manualmente.
+              </span>
+            </div>
+          )}
+          {studentState === "no-course" && (
+            <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-2.5">
+              <Users
+                className="h-3.5 w-3.5 shrink-0 text-neutral-500"
+                aria-hidden="true"
+              />
+              <span className="text-neutral-600 text-xs">
+                Seleccione un curso primero
+              </span>
+            </div>
+          )}
+        </FormField>
 
         {manualStudentEntry && (
-          <div>
-            <label
-              htmlFor="create-student-name"
-              className="block font-semibold text-neutral-500 text-xs uppercase"
-            >
-              Nombre del estudiante
-            </label>
+          <FormField
+            label="Nombre del estudiante"
+            htmlFor="create-student-name"
+            error={errors.newEstNombre?.message}
+          >
             <Input
               id="create-student-name"
               aria-label="Nombre del estudiante"
               invalid={!!errors.newEstNombre}
-              aria-describedby={
-                errors.newEstNombre ? "create-student-name-error" : undefined
-              }
               type="text"
               spellCheck
               {...register("newEstNombre")}
               className="mt-1.5 bg-neutral-50 p-3 font-medium"
             />
-            <FieldError
-              id="create-student-name-error"
-              message={errors.newEstNombre?.message}
-            />
-          </div>
+          </FormField>
         )}
 
-        <div>
-          <label
-            htmlFor="create-rut"
-            className="block font-semibold text-neutral-500 text-xs uppercase"
-          >
-            RUN / RUT
-          </label>
+        <FormField
+          label="RUN / RUT"
+          htmlFor="create-rut"
+          error={errors.newEstRut?.message}
+        >
           <Input
             id="create-rut"
             aria-label="RUN o RUT"
             invalid={!!errors.newEstRut}
-            aria-describedby={errors.newEstRut ? "create-rut-error" : undefined}
             type="text"
             spellCheck={false}
-            readOnly={
-              !selectedCourseId || (!!selectedCourseId && students.length > 0)
-            }
+            readOnly={!isRutEditable}
             aria-disabled={!selectedCourseId}
             placeholder={
               manualStudentEntry
@@ -318,11 +262,7 @@ export default function NewCausaForm({
                 : "mt-1.5 bg-neutral-100 p-3 font-medium text-neutral-600 text-xs"
             }
           />
-          <FieldError
-            id="create-rut-error"
-            message={errors.newEstRut?.message}
-          />
-        </div>
+        </FormField>
 
         <RiceConductSelect
           setConductaRiceId={(value) =>
@@ -352,72 +292,23 @@ export default function NewCausaForm({
           currentObs={newObs}
         />
 
-        <div className="grid grid-cols-2 gap-3 border-neutral-100 border-b pb-2">
-          <div>
-            <label
-              htmlFor="create-gravedad"
-              className="block font-semibold text-neutral-500 text-xs uppercase"
-            >
-              Gravedad
-            </label>
-            <Select
-              id="create-gravedad"
-              aria-label="Gravedad"
-              value={newInfTipo}
-              onChange={(event) => {
-                setValue(
-                  "newInfTipo",
-                  event.target.value as Causa["tipoInfraccion"],
-                  {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  },
-                );
-                setValue("conductaRiceId", "", {
-                  shouldDirty: true,
-                  shouldValidate: true,
-                });
-              }}
-              className="mt-1.5 bg-neutral-50 p-3 font-medium"
-            >
-              <option value="Leve">Falta Leve</option>
-              <option value="Grave">Falta Grave</option>
-              <option value="Muy Grave">Falta Muy Grave</option>
-              <option value="Gravísima">Falta Gravísima</option>
-            </Select>
-          </div>
-          <div className="flex flex-col justify-end">
-            <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-2.5 font-medium text-neutral-700 transition hover:bg-neutral-100/60">
-              <input
-                id="create-aula-segura"
-                aria-label="Afecta Aula Segura"
-                name="create-aula-segura"
-                type="checkbox"
-                checked={newAulaSegura}
-                onChange={(event) =>
-                  setValue("newAulaSegura", event.target.checked, {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  })
-                }
-                className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
-              />
-              <span className="text-xs">Afecta Aula Segura</span>
-            </label>
-          </div>
+        <div className="border-b border-neutral-100 pb-2">
+          <p className="text-xs text-neutral-500 leading-relaxed">
+            La gravedad, la conducta RICE y el Aula Segura se derivan
+            automáticamente al seleccionar una falta del reglamento en el
+            control superior.
+          </p>
         </div>
 
         <Controller
           control={control}
           name="newObs"
           render={({ field }) => (
-            <div>
-              <label
-                htmlFor="create-obs"
-                className="block font-semibold text-neutral-700 text-xs"
-              >
-                Relato de los hechos
-              </label>
+            <FormField
+              label="Relato de los hechos"
+              htmlFor="create-obs"
+              error={errors.newObs?.message}
+            >
               <textarea
                 id="create-obs"
                 aria-label="Relato de los hechos"
@@ -425,9 +316,6 @@ export default function NewCausaForm({
                 value={field.value}
                 onChange={field.onChange}
                 required
-                aria-describedby={
-                  errors.newObs ? "create-obs-error" : undefined
-                }
                 aria-invalid={!!errors.newObs}
                 rows={3}
                 className={
@@ -436,65 +324,56 @@ export default function NewCausaForm({
                     : "mt-1.5 w-full rounded-xl border border-neutral-200 bg-neutral-50 p-3 font-sans text-xs leading-relaxed transition-colors duration-200 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/30"
                 }
               />
-              <FieldError
-                id="create-obs-error"
-                message={errors.newObs?.message}
-              />
-            </div>
+            </FormField>
           )}
         />
 
-        <div>
-          <label
-            htmlFor="create-responsable"
-            className="block font-semibold text-neutral-500 text-xs uppercase"
-          >
-            Fiscalizador a cargo
-          </label>
+        <FormField
+          label="Fiscalizador a cargo"
+          htmlFor="create-responsable"
+          error={errors.newResponsable?.message}
+        >
           <Input
             id="create-responsable"
             aria-label="Fiscalizador a cargo"
             type="text"
             spellCheck={false}
             invalid={!!errors.newResponsable}
-            aria-describedby={
-              errors.newResponsable ? "create-responsable-error" : undefined
-            }
             {...register("newResponsable")}
             className="mt-1.5 bg-neutral-50 p-3 font-medium"
           />
-          <FieldError
-            id="create-responsable-error"
-            message={errors.newResponsable?.message}
-          />
+        </FormField>
+
+        <div className="rounded-lg border border-gravisima-200 bg-gravisima-50 p-3 font-medium font-sans text-gravisima-700 text-xs leading-normal">
+          <strong>Plazo de indagación:</strong> según Ley 21809, el plazo máximo
+          es de{" "}
+          {getMaxPlazoInvestigacionDias(
+            newInfTipo as Causa["tipoInfraccion"],
+            newAulaSegura,
+          )}{" "}
+          días hábiles. Se reduce a 10 días hábiles en casos de alta complejidad
+          (Aula Segura o faltas Muy Grave/Gravísima).
         </div>
 
-        {hasTenDayInvestigationDeadline && (
-          <div className="rounded-lg border border-gravisima-200 bg-gravisima-50 p-3 font-medium font-sans text-gravisima-700 text-xs leading-normal">
-            <strong>Plazo de indagación:</strong> las faltas Muy Graves y
-            Gravísimas deben tener informe de cierre de indagación dentro de 10
-            días hábiles.
+        <div className="sticky bottom-0 -mx-4 border-neutral-100 border-t bg-white/95 px-4 pt-2 pb-1 backdrop-blur sm:-mx-6 sm:px-6">
+          <div className="flex items-center justify-end gap-2 pt-1">
+            <Button type="button" variant="ghost" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="rounded-xl px-5 py-2.5 hover:scale-[1.02] active:scale-95"
+            >
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <FileText className="h-4 w-4" aria-hidden="true" />
+              )}
+              Registrar Expediente
+            </Button>
           </div>
-        )}
-
-        <div className="flex items-center justify-end gap-2 border-neutral-100 border-t pt-2">
-          <Button type="button" variant="ghost" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="rounded-xl px-5 py-2.5 hover:scale-[1.02] active:scale-95"
-          >
-            {isSubmitting ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <FileText className="h-4 w-4" aria-hidden="true" />
-            )}
-            Registrar Expediente
-          </Button>
         </div>
-        <input type="hidden" value={newEstRut} readOnly aria-hidden="true" />
       </form>
     </div>
   );

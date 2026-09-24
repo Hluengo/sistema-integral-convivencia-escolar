@@ -1,53 +1,91 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
-import type { ChecklistItem } from '../../lib/types';
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+import type { ChecklistItem } from "../../lib/types";
 
 interface MutableRpcClient {
-  rpc: (fn: string, params?: unknown) => Promise<{ data: unknown; error: Error | null }>;
+  rpc: (
+    fn: string,
+    params?: unknown,
+  ) => Promise<{ data: unknown; error: Error | null }>;
 }
 
-process.env.VITE_SUPABASE_URL ??= 'https://example.supabase.co';
-process.env.VITE_SUPABASE_ANON_KEY ??= 'anon-key-for-unit-tests';
+process.env.VITE_SUPABASE_URL ??= "https://example.supabase.co";
+process.env.VITE_SUPABASE_ANON_KEY ??= "anon-key-for-unit-tests";
 
-describe('saveChecklist', () => {
-  it('prepara solo filas cambiadas e IDs removidos para la RPC atómica', async () => {
-    const { buildChecklistSnapshotDelta } = await import('./checklist.service');
+describe("saveChecklist", () => {
+  it("prepara solo filas cambiadas e IDs removidos para la RPC atómica", async () => {
+    const { buildChecklistSnapshotDelta } = await import("./checklist.service");
     const previous: ChecklistItem[] = [
-      createChecklistItem({ id: 'permanece', completado: false }),
-      createChecklistItem({ id: 'removido' }),
+      createChecklistItem({ id: "permanece", completado: false }),
+      createChecklistItem({ id: "removido" }),
     ];
     const current: ChecklistItem[] = [
-      createChecklistItem({ id: 'permanece', completado: true, documentoUrl: 'caso/doc.pdf' }),
-      createChecklistItem({ id: 'nuevo' }),
+      createChecklistItem({
+        id: "permanece",
+        completado: true,
+        documentoUrl: "caso/doc.pdf",
+      }),
+      createChecklistItem({ id: "nuevo" }),
     ];
 
     const delta = buildChecklistSnapshotDelta(current, previous);
 
-    assert.deepEqual(delta.removedIds, ['removido']);
+    assert.deepEqual(delta.removedIds, ["removido"]);
     assert.deepEqual(
       delta.rows.map((row) => row.id),
-      ['permanece', 'nuevo'],
+      ["permanece", "nuevo"],
     );
     assert.equal(delta.rows[0].completado, true);
-    assert.equal(delta.rows[0].documento_url, 'caso/doc.pdf');
+    assert.equal(delta.rows[0].documento_url, "caso/doc.pdf");
     assert.equal(delta.rows[1].documento_url, null);
   });
 
-  it('reporta false cuando la RPC transaccional falla', async () => {
+  it("serializa los campos procedimentales enriquecidos", async () => {
+    const { buildChecklistSnapshotDelta } = await import("./checklist.service");
+    const [row] = buildChecklistSnapshotDelta([
+      createChecklistItem({
+        aplicabilidad: "no_aplica",
+        estado: "invalidado",
+        fundamentoNoAplica: "No corresponde por mediación aceptada",
+        fechaInicio: "2026-09-23",
+        fechaLimite: "2026-10-03",
+        resultado: "Derivado",
+        bloqueanteParaAvanzar: true,
+        bloqueanteParaCerrar: false,
+      }),
+    ]).rows;
+
+    assert.equal(row.aplicabilidad, "no_aplica");
+    assert.equal(row.estado, "invalidado");
+    assert.equal(
+      row.fundamento_no_aplica,
+      "No corresponde por mediación aceptada",
+    );
+    assert.equal(row.fecha_inicio, "2026-09-23");
+    assert.equal(row.fecha_limite, "2026-10-03");
+    assert.equal(row.bloqueante_para_avanzar, true);
+    assert.equal(row.bloqueante_para_cerrar, false);
+  });
+
+  it("reporta false cuando la RPC transaccional falla", async () => {
     const [{ supabase }, { saveChecklist }] = await Promise.all([
-      import('../lib/supabase'),
-      import('./checklist.service'),
+      import("../lib/supabase"),
+      import("./checklist.service"),
     ]);
     const rpcClient = supabase as unknown as MutableRpcClient;
     const originalRpc = rpcClient.rpc;
     const originalConsoleError = console.error;
-    rpcClient.rpc = async () => ({ data: null, error: new Error('rollback') });
+    rpcClient.rpc = async () => ({ data: null, error: new Error("rollback") });
     console.error = () => undefined;
 
     try {
-      const result = await saveChecklist('DC-2026-001', [createChecklistItem({ id: 'nuevo' })], []);
+      const result = await saveChecklist(
+        "DC-2026-001",
+        [createChecklistItem({ id: "nuevo" })],
+        [],
+      );
 
       assert.equal(result, false);
     } finally {
@@ -57,13 +95,15 @@ describe('saveChecklist', () => {
   });
 });
 
-function createChecklistItem(overrides: Partial<ChecklistItem> = {}): ChecklistItem {
+function createChecklistItem(
+  overrides: Partial<ChecklistItem> = {},
+): ChecklistItem {
   return {
-    id: 'item',
-    label: 'Notificar apertura',
-    descripcion: 'Registro obligatorio',
+    id: "item",
+    label: "Notificar apertura",
+    descripcion: "Registro obligatorio",
     completado: false,
-    requeridoPor: 'Circular 482',
+    requeridoPor: "Circular 482",
     ...overrides,
   };
 }

@@ -91,6 +91,34 @@ describe("expedienteBuilders", () => {
     assert.equal(json["estudiante"], "V.R.S.");
   });
 
+  it("incluye el agregado estructurado en JSON y Markdown", () => {
+    const causa = baseCausa();
+    const expediente = {
+      actuaciones: [],
+      avances: [],
+      hechos: [],
+      vinculosHechoEvidencia: [],
+      documentos: [],
+      reconsideraciones: [],
+      seguimientos: [],
+    };
+    const json = builders.buildExpedienteJson(causa, true, {
+      generatedAt: "x",
+      generatedBy: "y",
+      expediente,
+    });
+    const md = builders.buildExpedienteMarkdown(causa, true, {
+      generatedAt: "x",
+      generatedBy: "y",
+      expediente,
+    });
+
+    assert.deepEqual(json["hechos"], []);
+    assert.deepEqual(json["reconsideraciones"], []);
+    assert.match(md, /Actuaciones y avances persistidos/);
+    assert.match(md, /Documentos: 0/);
+  });
+
   it("ordena la bitácora cronológicamente en el markdown", () => {
     const md = builders.buildExpedienteMarkdown(baseCausa(), false, {
       generatedAt: "x",
@@ -120,7 +148,7 @@ describe("expedienteBuilders", () => {
     const anexos = builders.listExpedienteAnexos(causa);
     assert.match(
       builders.buildExpedienteIndice(causa, false, anexos),
-      /03_Anexos/,
+      /15_ANEXOS_ORIGINALES/,
     );
     const man = builders.buildExpedienteManifiesto(causa.id, "2026-09-11", [
       { nombre: "a.pdf", estado: "incluido" },

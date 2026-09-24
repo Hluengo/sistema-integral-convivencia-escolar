@@ -1,12 +1,18 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.5';
+    PostgrestVersion: "14.5";
   };
   public: {
     Tables: {
@@ -43,11 +49,11 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'absences_student_id_fkey';
-            columns: ['student_id'];
+            foreignKeyName: "absences_student_id_fkey";
+            columns: ["student_id"];
             isOneToOne: false;
-            referencedRelation: 'students';
-            referencedColumns: ['id'];
+            referencedRelation: "students";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -84,18 +90,18 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'app_memberships_application_code_fkey';
-            columns: ['application_code'];
+            foreignKeyName: "app_memberships_application_code_fkey";
+            columns: ["application_code"];
             isOneToOne: false;
-            referencedRelation: 'applications';
-            referencedColumns: ['code'];
+            referencedRelation: "applications";
+            referencedColumns: ["code"];
           },
           {
-            foreignKeyName: 'app_memberships_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "app_memberships_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -156,11 +162,11 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'audit_events_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "audit_events_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -245,18 +251,18 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'bitacora_entries_causa_id_fkey';
-            columns: ['causa_id'];
+            foreignKeyName: "bitacora_entries_causa_id_fkey";
+            columns: ["causa_id"];
             isOneToOne: false;
-            referencedRelation: 'causas';
-            referencedColumns: ['id'];
+            referencedRelation: "causas";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: 'bitacora_entries_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "bitacora_entries_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -296,25 +302,25 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'carta_events_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "carta_events_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: 'fk_carta_events_carta_id';
-            columns: ['carta_id'];
+            foreignKeyName: "fk_carta_events_carta_id";
+            columns: ["carta_id"];
             isOneToOne: false;
-            referencedRelation: 'cartas_disciplinarias';
-            referencedColumns: ['id'];
+            referencedRelation: "cartas_disciplinarias";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: 'fk_carta_events_student_id';
-            columns: ['student_id'];
+            foreignKeyName: "fk_carta_events_student_id";
+            columns: ["student_id"];
             isOneToOne: false;
-            referencedRelation: 'students';
-            referencedColumns: ['id'];
+            referencedRelation: "students";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -387,18 +393,18 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'cartas_disciplinarias_student_id_fkey';
-            columns: ['student_id'];
+            foreignKeyName: "cartas_disciplinarias_student_id_fkey";
+            columns: ["student_id"];
             isOneToOne: false;
-            referencedRelation: 'students';
-            referencedColumns: ['id'];
+            referencedRelation: "students";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: 'cartas_disciplinarias_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "cartas_disciplinarias_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -456,11 +462,11 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'causa_documents_causa_id_fkey';
-            columns: ['causa_id'];
+            foreignKeyName: "causa_documents_causa_id_fkey";
+            columns: ["causa_id"];
             isOneToOne: false;
-            referencedRelation: 'causas';
-            referencedColumns: ['id'];
+            referencedRelation: "causas";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -500,11 +506,11 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'incidentes_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "incidentes_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -517,6 +523,7 @@ export type Database = {
           created_by: string | null;
           estado_actual: string;
           estudiante_curso: string;
+          procedural_model_version: number;
           estudiante_nombre: string;
           fecha_apertura: string;
           fecha_ultima_actualizacion: string;
@@ -547,6 +554,7 @@ export type Database = {
           created_by?: string | null;
           estado_actual: string;
           estudiante_curso: string;
+          procedural_model_version: number;
           estudiante_nombre: string;
           fecha_apertura: string;
           fecha_ultima_actualizacion: string;
@@ -577,6 +585,7 @@ export type Database = {
           created_by?: string | null;
           estado_actual?: string;
           estudiante_curso?: string;
+          procedural_model_version?: number;
           estudiante_nombre?: string;
           fecha_apertura?: string;
           fecha_ultima_actualizacion?: string;
@@ -601,25 +610,25 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'causas_student_id_fkey';
-            columns: ['student_id'];
+            foreignKeyName: "causas_student_id_fkey";
+            columns: ["student_id"];
             isOneToOne: false;
-            referencedRelation: 'students';
-            referencedColumns: ['id'];
+            referencedRelation: "students";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: 'causas_incidente_id_fkey';
-            columns: ['incidente_id'];
+            foreignKeyName: "causas_incidente_id_fkey";
+            columns: ["incidente_id"];
             isOneToOne: false;
-            referencedRelation: 'incidentes';
-            referencedColumns: ['id'];
+            referencedRelation: "incidentes";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: 'causas_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "causas_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -631,6 +640,15 @@ export type Database = {
           descripcion: string | null;
           documento_nombre: string | null;
           documento_url: string | null;
+          obligatorio: boolean | null;
+          aplicabilidad: string | null;
+          estado: string | null;
+          fundamento_no_aplica: string | null;
+          fecha_inicio: string | null;
+          fecha_limite: string | null;
+          resultado: string | null;
+          bloqueante_para_avanzar: boolean | null;
+          bloqueante_para_cerrar: boolean | null;
           fecha_completado: string | null;
           id: string;
           label: string;
@@ -646,6 +664,15 @@ export type Database = {
           descripcion?: string | null;
           documento_nombre?: string | null;
           documento_url?: string | null;
+          obligatorio?: boolean | null;
+          aplicabilidad?: string | null;
+          estado?: string | null;
+          fundamento_no_aplica?: string | null;
+          fecha_inicio?: string | null;
+          fecha_limite?: string | null;
+          resultado?: string | null;
+          bloqueante_para_avanzar?: boolean | null;
+          bloqueante_para_cerrar?: boolean | null;
           fecha_completado?: string | null;
           id: string;
           label: string;
@@ -661,6 +688,15 @@ export type Database = {
           descripcion?: string | null;
           documento_nombre?: string | null;
           documento_url?: string | null;
+          obligatorio?: boolean | null;
+          aplicabilidad?: string | null;
+          estado?: string | null;
+          fundamento_no_aplica?: string | null;
+          fecha_inicio?: string | null;
+          fecha_limite?: string | null;
+          resultado?: string | null;
+          bloqueante_para_avanzar?: boolean | null;
+          bloqueante_para_cerrar?: boolean | null;
           fecha_completado?: string | null;
           id?: string;
           label?: string;
@@ -671,18 +707,18 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'checklist_items_causa_id_fkey';
-            columns: ['causa_id'];
+            foreignKeyName: "checklist_items_causa_id_fkey";
+            columns: ["causa_id"];
             isOneToOne: false;
-            referencedRelation: 'causas';
-            referencedColumns: ['id'];
+            referencedRelation: "causas";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: 'checklist_items_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "checklist_items_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -743,60 +779,60 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'checklist_progress_entries_incidente_id_fkey';
-            columns: ['incidente_id'];
+            foreignKeyName: "checklist_progress_entries_incidente_id_fkey";
+            columns: ["incidente_id"];
             isOneToOne: false;
-            referencedRelation: 'incidentes';
-            referencedColumns: ['id'];
+            referencedRelation: "incidentes";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: 'checklist_progress_entries_causa_fkey';
-            columns: ['causa_id'];
+            foreignKeyName: "checklist_progress_entries_causa_fkey";
+            columns: ["causa_id"];
             isOneToOne: false;
-            referencedRelation: 'causas';
-            referencedColumns: ['id'];
+            referencedRelation: "causas";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: 'checklist_progress_entries_created_by_fkey';
-            columns: ['created_by'];
+            foreignKeyName: "checklist_progress_entries_created_by_fkey";
+            columns: ["created_by"];
             isOneToOne: false;
-            referencedRelation: 'membership_readiness';
-            referencedColumns: ['user_id'];
+            referencedRelation: "membership_readiness";
+            referencedColumns: ["user_id"];
           },
           {
-            foreignKeyName: 'checklist_progress_entries_created_by_fkey';
-            columns: ['created_by'];
+            foreignKeyName: "checklist_progress_entries_created_by_fkey";
+            columns: ["created_by"];
             isOneToOne: false;
-            referencedRelation: 'profiles';
-            referencedColumns: ['user_id'];
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
           },
           {
-            foreignKeyName: 'checklist_progress_entries_invalidated_by_fkey';
-            columns: ['invalidated_by'];
+            foreignKeyName: "checklist_progress_entries_invalidated_by_fkey";
+            columns: ["invalidated_by"];
             isOneToOne: false;
-            referencedRelation: 'membership_readiness';
-            referencedColumns: ['user_id'];
+            referencedRelation: "membership_readiness";
+            referencedColumns: ["user_id"];
           },
           {
-            foreignKeyName: 'checklist_progress_entries_invalidated_by_fkey';
-            columns: ['invalidated_by'];
+            foreignKeyName: "checklist_progress_entries_invalidated_by_fkey";
+            columns: ["invalidated_by"];
             isOneToOne: false;
-            referencedRelation: 'profiles';
-            referencedColumns: ['user_id'];
+            referencedRelation: "profiles";
+            referencedColumns: ["user_id"];
           },
           {
-            foreignKeyName: 'checklist_progress_entries_item_fkey';
-            columns: ['checklist_item_id', 'causa_id'];
+            foreignKeyName: "checklist_progress_entries_item_fkey";
+            columns: ["checklist_item_id", "causa_id"];
             isOneToOne: false;
-            referencedRelation: 'checklist_items';
-            referencedColumns: ['id', 'causa_id'];
+            referencedRelation: "checklist_items";
+            referencedColumns: ["id", "causa_id"];
           },
           {
-            foreignKeyName: 'checklist_progress_entries_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "checklist_progress_entries_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -863,11 +899,11 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'coexistence_cases_curso_id_fkey';
-            columns: ['curso_id'];
+            foreignKeyName: "coexistence_cases_curso_id_fkey";
+            columns: ["curso_id"];
             isOneToOne: false;
-            referencedRelation: 'courses';
-            referencedColumns: ['id'];
+            referencedRelation: "courses";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -898,11 +934,11 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'courses_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "courses_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -981,25 +1017,25 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'disciplinary_annotations_detected_process_id_fkey';
-            columns: ['process_id'];
+            foreignKeyName: "disciplinary_annotations_detected_process_id_fkey";
+            columns: ["process_id"];
             isOneToOne: false;
-            referencedRelation: 'disciplinary_processes';
-            referencedColumns: ['id'];
+            referencedRelation: "disciplinary_processes";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: 'disciplinary_annotations_detected_student_id_fkey';
-            columns: ['student_id'];
+            foreignKeyName: "disciplinary_annotations_detected_student_id_fkey";
+            columns: ["student_id"];
             isOneToOne: false;
-            referencedRelation: 'students';
-            referencedColumns: ['id'];
+            referencedRelation: "students";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: 'disciplinary_annotations_detected_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "disciplinary_annotations_detected_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -1063,25 +1099,25 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'disciplinary_process_files_process_id_fkey';
-            columns: ['process_id'];
+            foreignKeyName: "disciplinary_process_files_process_id_fkey";
+            columns: ["process_id"];
             isOneToOne: false;
-            referencedRelation: 'disciplinary_processes';
-            referencedColumns: ['id'];
+            referencedRelation: "disciplinary_processes";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: 'disciplinary_process_files_student_id_fkey';
-            columns: ['student_id'];
+            foreignKeyName: "disciplinary_process_files_student_id_fkey";
+            columns: ["student_id"];
             isOneToOne: false;
-            referencedRelation: 'students';
-            referencedColumns: ['id'];
+            referencedRelation: "students";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: 'disciplinary_process_files_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "disciplinary_process_files_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -1151,18 +1187,18 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'disciplinary_processes_student_id_fkey';
-            columns: ['student_id'];
+            foreignKeyName: "disciplinary_processes_student_id_fkey";
+            columns: ["student_id"];
             isOneToOne: false;
-            referencedRelation: 'students';
-            referencedColumns: ['id'];
+            referencedRelation: "students";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: 'disciplinary_processes_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "disciplinary_processes_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -1223,11 +1259,11 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'disciplinary_rules_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "disciplinary_rules_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -1300,32 +1336,32 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'document_analyses_file_id_fkey';
-            columns: ['file_id'];
+            foreignKeyName: "document_analyses_file_id_fkey";
+            columns: ["file_id"];
             isOneToOne: false;
-            referencedRelation: 'disciplinary_process_files';
-            referencedColumns: ['id'];
+            referencedRelation: "disciplinary_process_files";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: 'document_analyses_process_id_fkey';
-            columns: ['process_id'];
+            foreignKeyName: "document_analyses_process_id_fkey";
+            columns: ["process_id"];
             isOneToOne: false;
-            referencedRelation: 'disciplinary_processes';
-            referencedColumns: ['id'];
+            referencedRelation: "disciplinary_processes";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: 'document_analyses_student_id_fkey';
-            columns: ['student_id'];
+            foreignKeyName: "document_analyses_student_id_fkey";
+            columns: ["student_id"];
             isOneToOne: false;
-            referencedRelation: 'students';
-            referencedColumns: ['id'];
+            referencedRelation: "students";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: 'document_analyses_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "document_analyses_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -1356,11 +1392,11 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'document_templates_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "document_templates_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -1403,18 +1439,18 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'etapas_disciplinarias_student_id_fkey';
-            columns: ['student_id'];
+            foreignKeyName: "etapas_disciplinarias_student_id_fkey";
+            columns: ["student_id"];
             isOneToOne: false;
-            referencedRelation: 'students';
-            referencedColumns: ['id'];
+            referencedRelation: "students";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: 'etapas_disciplinarias_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "etapas_disciplinarias_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -1478,18 +1514,18 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'inspectorate_records_student_id_fkey';
-            columns: ['student_id'];
+            foreignKeyName: "inspectorate_records_student_id_fkey";
+            columns: ["student_id"];
             isOneToOne: false;
-            referencedRelation: 'students';
-            referencedColumns: ['id'];
+            referencedRelation: "students";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: 'inspectorate_records_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "inspectorate_records_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -1538,18 +1574,18 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'instant_messages_course_id_fkey';
-            columns: ['course_id'];
+            foreignKeyName: "instant_messages_course_id_fkey";
+            columns: ["course_id"];
             isOneToOne: false;
-            referencedRelation: 'courses';
-            referencedColumns: ['id'];
+            referencedRelation: "courses";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: 'instant_messages_student_id_fkey';
-            columns: ['student_id'];
+            foreignKeyName: "instant_messages_student_id_fkey";
+            columns: ["student_id"];
             isOneToOne: false;
-            referencedRelation: 'students';
-            referencedColumns: ['id'];
+            referencedRelation: "students";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -1601,11 +1637,11 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'institution_documents_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "institution_documents_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -1651,11 +1687,11 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'institution_rule_versions_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "institution_rule_versions_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -1710,11 +1746,11 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'institution_settings_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "institution_settings_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: true;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -1766,18 +1802,18 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'membership_invitations_application_code_fkey';
-            columns: ['application_code'];
+            foreignKeyName: "membership_invitations_application_code_fkey";
+            columns: ["application_code"];
             isOneToOne: false;
-            referencedRelation: 'applications';
-            referencedColumns: ['code'];
+            referencedRelation: "applications";
+            referencedColumns: ["code"];
           },
           {
-            foreignKeyName: 'membership_invitations_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "membership_invitations_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -1835,11 +1871,11 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'notifications_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "notifications_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -1879,11 +1915,11 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'profiles_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "profiles_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -1935,11 +1971,11 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'report_history_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "report_history_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -1973,18 +2009,18 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'student_history_entries_student_id_fkey';
-            columns: ['student_id'];
+            foreignKeyName: "student_history_entries_student_id_fkey";
+            columns: ["student_id"];
             isOneToOne: false;
-            referencedRelation: 'students';
-            referencedColumns: ['id'];
+            referencedRelation: "students";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: 'student_history_entries_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "student_history_entries_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -2018,18 +2054,18 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'students_course_id_fkey';
-            columns: ['course_id'];
+            foreignKeyName: "students_course_id_fkey";
+            columns: ["course_id"];
             isOneToOne: false;
-            referencedRelation: 'courses';
-            referencedColumns: ['id'];
+            referencedRelation: "courses";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: 'students_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "students_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -2084,11 +2120,11 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'tests_course_id_fkey';
-            columns: ['course_id'];
+            foreignKeyName: "tests_course_id_fkey";
+            columns: ["course_id"];
             isOneToOne: false;
-            referencedRelation: 'courses';
-            referencedColumns: ['id'];
+            referencedRelation: "courses";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -2139,11 +2175,11 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: 'profiles_tenant_id_fkey';
-            columns: ['tenant_id'];
+            foreignKeyName: "profiles_tenant_id_fkey";
+            columns: ["tenant_id"];
             isOneToOne: false;
-            referencedRelation: 'tenants';
-            referencedColumns: ['id'];
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
           },
         ];
       };
@@ -2570,9 +2606,9 @@ export type Database = {
       };
     };
     Enums: {
-      absence_status: 'PENDIENTE' | 'JUSTIFICADA';
-      education_level: 'BASICA' | 'MEDIA';
-      user_role: 'inspector' | 'coordinador' | 'director' | 'superuser';
+      absence_status: "PENDIENTE" | "JUSTIFICADA";
+      education_level: "BASICA" | "MEDIA";
+      user_role: "inspector" | "coordinador" | "director" | "superuser";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -2580,31 +2616,36 @@ export type Database = {
   };
 };
 
-type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>;
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, 'public'>];
+type DefaultSchema = DatabaseWithoutInternals[Extract<
+  keyof Database,
+  "public"
+>];
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals;
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R;
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-    ? (DefaultSchema['Tables'] & DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
         Row: infer R;
       }
       ? R
@@ -2613,22 +2654,22 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    keyof DefaultSchema['Tables'] | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals;
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I;
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Insert: infer I;
       }
       ? I
@@ -2637,22 +2678,22 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    keyof DefaultSchema['Tables'] | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
   TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals;
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U;
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
-    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
         Update: infer U;
       }
       ? U
@@ -2661,42 +2702,43 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    keyof DefaultSchema['Enums'] | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["Enums"] | { schema: keyof DatabaseWithoutInternals },
   EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals;
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
-    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never;
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    keyof DefaultSchema['CompositeTypes'] | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals;
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
-    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never;
 
 export const Constants = {
   public: {
     Enums: {
-      absence_status: ['PENDIENTE', 'JUSTIFICADA'],
-      education_level: ['BASICA', 'MEDIA'],
-      user_role: ['inspector', 'coordinador', 'director', 'superuser'],
+      absence_status: ["PENDIENTE", "JUSTIFICADA"],
+      education_level: ["BASICA", "MEDIA"],
+      user_role: ["inspector", "coordinador", "director", "superuser"],
     },
   },
 } as const;

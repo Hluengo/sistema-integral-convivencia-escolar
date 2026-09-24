@@ -28,6 +28,8 @@ interface InteractiveTimelineProps {
   isTimelineCollapsed?: boolean;
   setIsTimelineCollapsed?: (collapsed: boolean) => void;
   onClose?: () => void;
+  saveStatus?: "idle" | "saving" | "saved" | "error";
+  onRetrySave?: () => void;
 }
 
 export default function InteractiveTimeline({
@@ -42,8 +44,12 @@ export default function InteractiveTimeline({
   isTimelineCollapsed = false,
   setIsTimelineCollapsed,
   onClose,
+  saveStatus: propSaveStatus,
+  onRetrySave: propOnRetrySave,
 }: InteractiveTimelineProps) {
   const ctx = useAppContext();
+  const saveStatus = propSaveStatus ?? ctx.saveStatus;
+  const onRetrySave = propOnRetrySave ?? ctx.requestSaveRetry;
   const onUpdateCausa = propOnUpdate ?? ctx.handleUpdateCausa;
   const onDeleteCausa = propOnDelete ?? ctx.handleDeleteCausa;
   const currentRole = propRole ?? ctx.currentRole;
@@ -84,6 +90,8 @@ export default function InteractiveTimeline({
           setIsTimelineCollapsed={setIsTimelineCollapsed}
           breaches={breaches}
           onClose={onClose}
+          saveStatus={saveStatus}
+          onRetrySave={onRetrySave}
         />
         <TimelineOverlays
           causa={causa}

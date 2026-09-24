@@ -30,6 +30,7 @@ import { useTimelineContext } from "../../shared/lib/useTimelineContext";
 
 interface BitacoraTabProps {
   causa: Causa;
+  showChronology?: boolean;
 }
 
 const ENTRY_STYLE: Record<
@@ -108,7 +109,10 @@ const FILTER_OPTIONS: Array<{
   { id: "Resolución", label: "Resoluciones" },
 ];
 
-export default memo(function BitacoraTab({ causa }: BitacoraTabProps) {
+export default memo(function BitacoraTab({
+  causa,
+  showChronology = true,
+}: BitacoraTabProps) {
   const {
     currentRole,
     createManualLog: onCreateManualEntry,
@@ -165,53 +169,10 @@ export default memo(function BitacoraTab({ causa }: BitacoraTabProps) {
     });
   }, [entries, filter, search]);
 
-  const stats = useMemo(() => {
-    const byTipo = entries.reduce<Record<string, number>>((acc, e) => {
-      const effectiveType = getEffectiveEntryType(e);
-      acc[effectiveType] = (acc[effectiveType] ?? 0) + 1;
-      return acc;
-    }, {});
-    return {
-      total: entries.length,
-      notificaciones: byTipo["Notificación"] ?? 0,
-      citaciones: byTipo["Citación"] ?? 0,
-      entrevistas: byTipo["Entrevista"] ?? 0,
-      correos: byTipo["Correo"] ?? 0,
-      conDocumento: entries.filter((e) => e.documentoAdjunto).length,
-    };
-  }, [entries]);
-
   return (
     <div className="space-y-4">
-      {/* Header centro */}
-      <div className="rounded-xl border border-neutral-200 bg-white p-4 shadow-xs">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h3 className="flex items-center gap-2 font-semibold text-sm text-neutral-900">
-              <Mail className="size-4 text-brand-600" /> Centro de
-              comunicaciones
-            </h3>
-            <p className="mt-1 text-xs text-neutral-500">
-              Cronología de notificaciones, citaciones, entrevistas, descargos y
-              correos. Cada registro queda en el historial y puede llevar
-              respaldo documental.
-            </p>
-          </div>
-          {causa.apoderadoEmail && (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
-              <Mail className="size-3.5" /> Apoderado: {causa.apoderadoEmail}
-            </span>
-          )}
-        </div>
-
-        <p className="mt-3 text-xs text-neutral-600">
-          <strong className="text-neutral-900">{stats.total}</strong>{" "}
-          comunicaciones · {stats.notificaciones} notifs. · {stats.entrevistas}{" "}
-          entrevs. · {stats.conDocumento} con doc.
-        </p>
-
-        {/* Filtros + búsqueda */}
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      {showChronology && (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap gap-1.5">
             {FILTER_OPTIONS.map((opt) => (
               <button
@@ -231,18 +192,25 @@ export default memo(function BitacoraTab({ causa }: BitacoraTabProps) {
               </button>
             ))}
           </div>
-          <div className="relative w-full sm:w-64">
-            <Search className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-neutral-500" />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar en comunicaciones…"
-              className="min-h-11 w-full rounded-lg border border-neutral-150 bg-white py-2 pl-8 pr-3 text-sm outline-none placeholder:text-neutral-500 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
-              aria-label="Buscar en comunicaciones"
-            />
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+            {causa.apoderadoEmail && (
+              <span className="inline-flex items-center gap-1.5 self-start rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 sm:self-center">
+                <Mail className="size-3.5" /> Apoderado: {causa.apoderadoEmail}
+              </span>
+            )}
+            <div className="relative w-full sm:w-64">
+              <Search className="pointer-events-none absolute left-2.5 top-2.5 size-4 text-neutral-500" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar en comunicaciones…"
+                className="min-h-11 w-full rounded-lg border border-neutral-150 bg-white py-2 pl-8 pr-3 text-sm outline-none placeholder:text-neutral-500 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
+                aria-label="Buscar en comunicaciones"
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Form registro — renombrado */}
       {currentRole !== "docente" && (
@@ -437,107 +405,117 @@ export default memo(function BitacoraTab({ causa }: BitacoraTabProps) {
       )}
 
       {/* Cronología */}
-      {filtered.length > 0 ? (
-        <div className="space-y-3">
-          <p className="text-xs text-neutral-500">
-            Mostrando{" "}
-            <strong className="text-neutral-700">{filtered.length}</strong> de{" "}
-            {entries.length} comunicaciones
-            {filter !== "Todos" ? ` · filtro: ${filter}` : ""}
-          </p>
-          {filtered.map((entry) => {
-            const effectiveType = getEffectiveEntryType(entry);
-            const style = ENTRY_STYLE[effectiveType] ?? ENTRY_STYLE.Otro;
-            const Icon = style.Icon;
-            const isNotificacion = effectiveType === "Notificación";
-            const hasCorreo = effectiveType === "Correo";
-            return (
-              <article
-                key={entry.id}
-                className="flex gap-3 rounded-xl border border-neutral-150 bg-white p-4 shadow-xs"
-              >
-                <div
-                  className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${style.tone}`}
+      {showChronology &&
+        (filtered.length > 0 ? (
+          <div className="space-y-3">
+            <p className="text-xs text-neutral-500">
+              Mostrando{" "}
+              <strong className="text-neutral-700">{filtered.length}</strong> de{" "}
+              {entries.length} comunicaciones
+              {filter !== "Todos" ? ` · filtro: ${filter}` : ""}
+            </p>
+            {filtered.map((entry) => {
+              const effectiveType = getEffectiveEntryType(entry);
+              const style = ENTRY_STYLE[effectiveType] ?? ENTRY_STYLE.Otro;
+              const Icon = style.Icon;
+              const isNotificacion = effectiveType === "Notificación";
+              const hasCorreo = effectiveType === "Correo";
+              return (
+                <article
+                  key={entry.id}
+                  className="flex gap-3 rounded-xl border border-neutral-150 bg-white p-4 shadow-xs"
                 >
-                  <Icon className="h-4 w-4" aria-hidden="true" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-sm font-bold text-neutral-900">
-                        {entry.titulo}
-                      </h3>
-                      <span
-                        className={`rounded-full border px-2 py-0.5 text-10px font-semibold ${style.tone}`}
-                      >
-                        {style.label}
-                      </span>
-                      {isNotificacion && causa.apoderadoEmail && (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-10px font-medium text-blue-700">
-                          <Mail className="size-3" /> Enviado a{" "}
-                          {causa.apoderadoEmail}
-                        </span>
-                      )}
-                      {hasCorreo && (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-10px font-medium text-emerald-700">
-                          <Phone className="size-3" /> Correo registrado
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-neutral-500 text-xs">
-                      {formatChileDateTime(entry.fecha)}
-                    </span>
+                  <div
+                    className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${style.tone}`}
+                  >
+                    <Icon className="h-4 w-4" aria-hidden="true" />
                   </div>
-                  <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-600">
-                    {entry.descripcion}
-                  </p>
-                  <p className="mt-2 flex items-center gap-1.5 text-neutral-500 text-xs">
-                    <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
-                    {entry.participantes.length > 0
-                      ? entry.participantes.join(", ")
-                      : "Sin participantes"}
-                  </p>
-                  {entry.documentoAdjunto && (
-                    <div className="mt-3 flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-2 text-xs">
-                      <File
-                        className="h-3.5 w-3.5 shrink-0 text-brand-700"
-                        aria-hidden="true"
-                      />
-                      <span className="truncate font-medium text-brand-700">
-                        Documento adjunto
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-sm font-bold text-neutral-900">
+                          {entry.titulo}
+                        </h3>
+                        <span
+                          className={`rounded-full border px-2 py-0.5 text-10px font-semibold ${style.tone}`}
+                        >
+                          {style.label}
+                        </span>
+                        {isNotificacion && causa.apoderadoEmail && (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-10px font-medium text-blue-700">
+                            <Mail className="size-3" /> Enviado a{" "}
+                            {causa.apoderadoEmail}
+                          </span>
+                        )}
+                        {hasCorreo && (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-10px font-medium text-emerald-700">
+                            <Phone className="size-3" /> Correo registrado
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-neutral-500 text-xs">
+                        {formatChileDateTime(entry.fecha)}
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (entry.documentoAdjunto)
-                            void openDocument(entry.documentoAdjunto);
-                        }}
-                        className="ml-auto flex shrink-0 items-center gap-1 font-semibold text-brand-600 hover:underline"
-                        aria-label="Ver documento adjunto"
-                      >
-                        <Download className="h-3.5 w-3.5" aria-hidden="true" />{" "}
-                        Ver
-                      </button>
                     </div>
-                  )}
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="rounded-xl border border-neutral-150 bg-white p-8 text-center shadow-xs">
-          <History
-            className="mx-auto mb-3 h-12 w-12 text-neutral-200"
-            aria-hidden="true"
-          />
-          <p className="text-sm text-neutral-500">
-            {entries.length === 0
-              ? "No hay comunicaciones registradas. Registra la primera notificación o entrevista."
-              : `Sin resultados para "${search}" en ${filter}.`}
-          </p>
-        </div>
-      )}
+                    {entry.causaOrigenId &&
+                      entry.causaOrigenId !== causa.id && (
+                        <p className="mt-1 inline-flex rounded-full border border-info-200 bg-info-50 px-2 py-0.5 text-10px font-semibold text-info-800">
+                          Registro grupal heredado · solo lectura
+                        </p>
+                      )}
+                    <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-600">
+                      {entry.descripcion}
+                    </p>
+                    <p className="mt-2 flex items-center gap-1.5 text-neutral-500 text-xs">
+                      <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+                      {entry.participantes.length > 0
+                        ? entry.participantes.join(", ")
+                        : "Sin participantes"}
+                    </p>
+                    {entry.documentoAdjunto && (
+                      <div className="mt-3 flex items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-2 text-xs">
+                        <File
+                          className="h-3.5 w-3.5 shrink-0 text-brand-700"
+                          aria-hidden="true"
+                        />
+                        <span className="truncate font-medium text-brand-700">
+                          Documento adjunto
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (entry.documentoAdjunto)
+                              void openDocument(entry.documentoAdjunto);
+                          }}
+                          className="ml-auto flex shrink-0 items-center gap-1 font-semibold text-brand-600 hover:underline"
+                          aria-label="Ver documento adjunto"
+                        >
+                          <Download
+                            className="h-3.5 w-3.5"
+                            aria-hidden="true"
+                          />{" "}
+                          Ver
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-neutral-150 bg-white p-8 text-center shadow-xs">
+            <History
+              className="mx-auto mb-3 h-12 w-12 text-neutral-200"
+              aria-hidden="true"
+            />
+            <p className="text-sm text-neutral-500">
+              {entries.length === 0
+                ? "No hay comunicaciones registradas. Registra la primera notificación o entrevista."
+                : `Sin resultados para "${search}" en ${filter}.`}
+            </p>
+          </div>
+        ))}
     </div>
   );
 });

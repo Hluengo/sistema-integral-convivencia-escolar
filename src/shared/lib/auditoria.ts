@@ -5,6 +5,12 @@ import type {
   HechoRow,
   HechoEvidenciaRow,
 } from "../api/services/hechos.service";
+import {
+  canCloseCase,
+  canCloseInvestigation,
+  canNotifyDecision,
+  type ProceduralContext,
+} from "./domain/proceduralTransitions";
 
 export type GarantiaEstado =
   "verificada" | "pendiente" | "no_aplica" | "bloqueante";
@@ -59,8 +65,20 @@ export function auditarExpediente(
   causa: Causa,
   hechos: HechoRow[],
   vinculos: HechoEvidenciaRow[],
+  persisted: Pick<ProceduralContext, "reconsideraciones" | "seguimientos"> = {},
 ): AuditoriaResult {
   const checks: GarantiaCheck[] = [];
+  const proceduralContext: ProceduralContext = {
+    hechos,
+    vinculos,
+    ...persisted,
+  };
+  const investigationTransition = canCloseInvestigation(
+    causa,
+    proceduralContext,
+  );
+  const decisionTransition = canNotifyDecision(causa);
+  const closureTransition = canCloseCase(causa, proceduralContext);
 
   // 1. Comunicación de hechos: hecho registrado o recepción formal de denuncia.
   const recepcionDenuncia = hasChecklist(causa, "chk_rec_1");
@@ -246,6 +264,22 @@ export function auditarExpediente(
         : "Sin registro"
       : "No aplica",
     bloqueante: false,
+  });
+
+  const transitionBlockers = [
+    ...investigationTransition.blockers,
+    ...decisionTransition.blockers,
+    ...closureTransition.blockers,
+  ].filter((blocker, index, blockers) => blockers.indexOf(blocker) === index);
+  checks.push({
+    id: "ruta_procedimental",
+    label: "Ruta procedimental",
+    estado: transitionBlockers.length === 0 ? "verificada" : "bloqueante",
+    detalle:
+      transitionBlockers.length === 0
+        ? "Transiciones procedimentales habilitadas"
+        : transitionBlockers.join(" "),
+    bloqueante: transitionBlockers.length > 0,
   });
 
   const verificadas = checks.filter((c) => c.estado === "verificada").length;

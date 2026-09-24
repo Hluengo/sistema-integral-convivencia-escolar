@@ -13,6 +13,7 @@ import { getCausaDeadlineStages } from "../causas/causaPresentation";
 import { getCausaOperationalSummary } from "../causas/causaOperationalSummary";
 import { getFaseForEstado } from "../../shared/lib/data";
 import { formatChileDate } from "../../shared/lib/dateTime";
+import { getNextRequiredAction } from "../../shared/lib/domain/proceduralTransitions";
 
 interface RutaExpedienteTabProps {
   causa: Causa;
@@ -27,13 +28,17 @@ export default memo(function RutaExpedienteTab({
 }: RutaExpedienteTabProps) {
   const deadlines = getCausaDeadlineStages(causa);
   const summary = getCausaOperationalSummary(causa);
+  const nextRequiredAction = getNextRequiredAction(causa);
   const currentFase = getFaseForEstado(causa.estadoActual) as FaseProcedimental;
+  const currentPhaseIndex = summary.phaseProgress.findIndex(
+    (item) => item.phase === summary.currentPhase,
+  );
   const showConcluyente =
     deadlines.informeConcluyente !== null &&
     ["Resolución", "Apelación", "Seguimiento"].includes(currentFase);
   const deadlineClass = (tone: "normal" | "warning" | "overdue") =>
     ({
-      normal: "border-leve-200 bg-leve-50 text-leve-700",
+      normal: "border-neutral-200 bg-neutral-50 text-neutral-600",
       warning: "border-grave-200 bg-grave-50 text-grave-700",
       overdue: "border-gravisima-200 bg-gravisima-50 text-gravisima-700",
     })[tone];
@@ -41,28 +46,33 @@ export default memo(function RutaExpedienteTab({
   return (
     <section
       aria-labelledby="expediente-operativo-title"
-      className="overflow-hidden rounded-xl border border-neutral-200 bg-white"
+      className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm"
     >
-      <div className="border-neutral-200 border-b px-4 py-3 sm:px-5">
+      <div className="border-neutral-200 border-b bg-gradient-to-r from-white to-neutral-50/70 px-4 py-4 sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h3
               id="expediente-operativo-title"
-              className="font-semibold text-neutral-900 text-sm"
+              className="font-bold text-neutral-950 text-base tracking-tight"
             >
               Ruta del expediente
             </h3>
-            <p className="mt-0.5 text-neutral-500 text-xs">
+            <p className="mt-1 text-neutral-600 text-sm">
               Elige una fase para registrar y consultar sus hitos.
             </p>
+            {nextRequiredAction && (
+              <p className="mt-2 flex items-center gap-1.5 font-semibold text-brand-700 text-xs">
+                <MoveRight className="size-3.5" aria-hidden="true" />
+                Próxima actuación: {nextRequiredAction}
+              </p>
+            )}
           </div>
           <div className="flex flex-wrap justify-end gap-2">
             <span
               className={`rounded-full border px-2.5 py-1 font-semibold text-xs ${deadlineClass(deadlines.cierreIndagacion.tone)}`}
             >
-              Plazo: Cierre:{" "}
-              {formatChileDate(deadlines.cierreIndagacion.deadlineDate)} ·{" "}
-              {deadlines.cierreIndagacion.text}
+              Cierre: {formatChileDate(deadlines.cierreIndagacion.deadlineDate)}{" "}
+              · {deadlines.cierreIndagacion.text}
             </span>
             {showConcluyente && deadlines.informeConcluyente && (
               <span
@@ -76,7 +86,7 @@ export default memo(function RutaExpedienteTab({
       </div>
 
       {/* Desktop stepper: 5 columnas */}
-      <ol className="hidden gap-2 px-5 py-4 sm:grid sm:grid-cols-5">
+      <ol className="hidden gap-3 px-5 py-6 sm:grid sm:grid-cols-5 sm:px-6">
         {summary.phaseProgress.map((phase, index) => {
           const percentage =
             phase.total > 0
@@ -85,6 +95,7 @@ export default memo(function RutaExpedienteTab({
           const isCurrentPhase = phase.phase === summary.currentPhase;
           const isComplete = phase.total > 0 && phase.completed === phase.total;
           const isSelected = phase.phase === selectedPhase;
+          const isFuture = currentPhaseIndex >= 0 && index > currentPhaseIndex;
 
           return (
             <li key={phase.phase} className="min-w-0">
@@ -93,18 +104,18 @@ export default memo(function RutaExpedienteTab({
                 onClick={() => onSelectPhase(isSelected ? null : phase.phase)}
                 aria-expanded={isSelected}
                 aria-controls="phase-workspace"
-                className="group w-full rounded-lg text-left outline-none transition focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                className="group w-full rounded-lg text-left outline-none transition duration-150 focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
                 aria-label={`${isSelected ? "Cerrar" : "Trabajar"} hitos de ${phase.phase}`}
               >
                 <div className="flex items-center gap-1.5">
                   <span
                     className={`flex shrink-0 items-center justify-center rounded-full font-bold ${
                       isComplete
-                        ? "size-6 bg-green-600 text-white text-10px"
+                        ? "size-6 bg-leve-600 text-white text-10px"
                         : isSelected || isCurrentPhase
-                          ? "size-7 bg-brand-600 text-white text-xs ring-4 ring-brand-100"
+                          ? "size-7 bg-brand-600 text-white text-xs shadow-sm ring-4 ring-brand-100"
                           : "size-6 bg-neutral-150 text-neutral-600 text-10px"
-                    }`}
+                    }${isFuture && !isSelected ? " opacity-60" : ""}`}
                     aria-hidden="true"
                   >
                     {isComplete ? (
@@ -114,7 +125,13 @@ export default memo(function RutaExpedienteTab({
                     )}
                   </span>
                   <span
-                    className="h-px flex-1 bg-neutral-150"
+                    className={`h-0.5 flex-1 rounded-full ${
+                      isComplete
+                        ? "bg-leve-500"
+                        : isSelected || isCurrentPhase
+                          ? "bg-brand-500"
+                          : "bg-neutral-150"
+                    }${isFuture && !isSelected ? " opacity-60" : ""}`}
                     aria-hidden="true"
                   />
                 </div>
@@ -123,17 +140,17 @@ export default memo(function RutaExpedienteTab({
                     className={`truncate font-semibold text-xs ${
                       isSelected || isCurrentPhase
                         ? "text-neutral-900"
-                        : "text-neutral-500"
+                        : "text-neutral-600"
                     }`}
                     title={phase.phase}
                   >
                     {phase.phase}
                   </p>
                   <span
-                    className={`flex shrink-0 items-center gap-0.5 rounded-full border px-2 py-0.5 font-bold text-10px transition-colors ${
+                    className={`flex shrink-0 items-center gap-0.5 rounded-full border px-2 py-0.5 font-bold text-10px transition duration-150 ${
                       isSelected
                         ? "border-brand-600 bg-brand-600 text-white"
-                        : "border-brand-200 bg-brand-50 text-brand-700 group-hover:bg-brand-100"
+                        : "border-brand-200 bg-brand-50 text-brand-700"
                     }`}
                     aria-hidden="true"
                   >
@@ -141,11 +158,13 @@ export default memo(function RutaExpedienteTab({
                     <ArrowRight className="size-3" />
                   </span>
                 </div>
-                <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-150">
+                <div
+                  className={`mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-150${isFuture && !isSelected ? " opacity-60" : ""}`}
+                >
                   <span
                     className={`block h-full rounded-full ${
                       isComplete
-                        ? "bg-green-600"
+                        ? "bg-leve-600"
                         : isSelected || isCurrentPhase
                           ? "bg-brand-600"
                           : "bg-neutral-400"
@@ -173,6 +192,7 @@ export default memo(function RutaExpedienteTab({
           const isComplete = phase.total > 0 && phase.completed === phase.total;
           const isSelected = phase.phase === selectedPhase;
           const isLast = index === summary.phaseProgress.length - 1;
+          const isFuture = currentPhaseIndex >= 0 && index > currentPhaseIndex;
 
           return (
             <li key={phase.phase} className="flex gap-3">
@@ -180,20 +200,20 @@ export default memo(function RutaExpedienteTab({
                 <span
                   className={`flex shrink-0 items-center justify-center rounded-full font-bold ${
                     isComplete
-                      ? "size-7 bg-green-600 text-white text-xs"
+                      ? "size-7 bg-leve-600 text-white text-xs"
                       : isSelected || isCurrentPhase
-                        ? "size-8 bg-brand-600 text-white text-sm ring-4 ring-brand-100"
+                        ? "size-8 bg-brand-600 text-white text-sm shadow-sm ring-4 ring-brand-100"
                         : "size-7 bg-neutral-150 text-neutral-600 text-xs"
-                  }`}
+                  }${isFuture && !isSelected ? " opacity-60" : ""}`}
                   aria-hidden="true"
                 >
                   {isComplete ? <CircleCheck className="size-4" /> : index + 1}
                 </span>
                 {!isLast && (
                   <span
-                    className={`mt-1 w-1.5 flex-1 rounded-full ${
-                      isComplete ? "bg-green-600" : "bg-neutral-150"
-                    }`}
+                    className={`mt-1 w-1.5 flex-1 rounded-full transition duration-150 ${
+                      isComplete ? "bg-leve-500" : "bg-neutral-150"
+                    }${isFuture && !isSelected ? " opacity-60" : ""}`}
                     aria-hidden="true"
                   />
                 )}
@@ -204,7 +224,7 @@ export default memo(function RutaExpedienteTab({
                   onClick={() => onSelectPhase(isSelected ? null : phase.phase)}
                   aria-expanded={isSelected}
                   aria-controls="phase-workspace"
-                  className="flex w-full items-center justify-between gap-2 rounded-lg border border-transparent px-2 py-1 text-left transition hover:border-neutral-150 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                  className="flex w-full items-center justify-between gap-2 rounded-lg border border-transparent px-2 py-1 text-left transition duration-150 hover:border-neutral-150 hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                 >
                   <div className="min-w-0">
                     <p
@@ -216,12 +236,12 @@ export default memo(function RutaExpedienteTab({
                     >
                       {phase.phase}
                     </p>
-                    <p className="text-xs text-neutral-500">
+                    <p className="text-xs text-neutral-600 tabular-nums">
                       {phase.completed}/{phase.total} hitos · {percentage}%
                     </p>
                   </div>
                   <span
-                    className={`flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 font-bold text-xs ${
+                    className={`flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-1 font-bold text-xs transition duration-150 ${
                       isSelected
                         ? "border-brand-600 bg-brand-600 text-white"
                         : "border-brand-200 bg-brand-50 text-brand-700"
@@ -232,11 +252,13 @@ export default memo(function RutaExpedienteTab({
                     <ArrowRight className="size-3.5" />
                   </span>
                 </button>
-                <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-150">
+                <div
+                  className={`mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-150${isFuture && !isSelected ? " opacity-60" : ""}`}
+                >
                   <span
                     className={`block h-full rounded-full ${
                       isComplete
-                        ? "bg-green-600"
+                        ? "bg-leve-600"
                         : isSelected || isCurrentPhase
                           ? "bg-brand-600"
                           : "bg-neutral-400"
@@ -250,8 +272,8 @@ export default memo(function RutaExpedienteTab({
         })}
       </ol>
 
-      <div className="grid gap-3 border-neutral-150 border-t bg-neutral-50/60 p-4 sm:grid-cols-[1fr_1.4fr_1fr] sm:p-5">
-        <div className="rounded-lg border border-neutral-150 border-l-4 border-l-brand-600 bg-white p-3 shadow-xs">
+      <div className="grid gap-4 border-neutral-150 border-t bg-neutral-50/60 p-4 sm:grid-cols-[0.9fr_1.4fr_1fr] sm:p-6">
+        <div className="rounded-xl border border-neutral-150 border-l-4 border-l-brand-600 bg-white p-4 shadow-sm">
           <p className="flex items-center gap-1.5 font-semibold text-neutral-600 text-xs">
             <ListChecks className="size-3.5" aria-hidden="true" />
             Fase actual
@@ -260,21 +282,21 @@ export default memo(function RutaExpedienteTab({
             {summary.currentPhase}
           </p>
           <p className="mt-1 flex items-baseline gap-1">
-            <span className="font-bold text-2xl text-brand-700">
+            <span className="font-bold text-2xl text-brand-700 tabular-nums">
               {summary.currentPhaseProgress.completed}/
               {summary.currentPhaseProgress.total}
             </span>
             <span className="text-neutral-600 text-xs">hitos</span>
           </p>
           {summary.laterActivityPhase ? (
-            <p className="mt-2 rounded-md bg-amber-50 px-2 py-1.5 text-amber-800 text-xs">
+            <p className="mt-2 rounded-md border border-grave-200 bg-grave-50 px-2 py-1.5 text-grave-700 text-xs">
               Hay actividad registrada en {summary.laterActivityPhase}. Revisa
               el estado actual.
             </p>
           ) : null}
         </div>
 
-        <div className="rounded-lg border border-neutral-150 bg-white p-3 shadow-xs">
+        <div className="rounded-xl border border-neutral-150 bg-white p-4 shadow-sm">
           <p className="flex items-center gap-1.5 font-semibold text-brand-800 text-xs">
             <MoveRight className="size-3.5" aria-hidden="true" />
             Próximo hito
@@ -307,35 +329,35 @@ export default memo(function RutaExpedienteTab({
           )}
         </div>
 
-        <div className="rounded-lg border border-neutral-150 bg-white p-3 shadow-xs">
+        <div className="rounded-xl border border-neutral-150 bg-white p-4 shadow-sm">
           <p className="flex items-center gap-1.5 font-semibold text-neutral-600 text-xs">
             <Files className="size-3.5" aria-hidden="true" />
             Actividad registrada
           </p>
           <div className="mt-2 space-y-1.5 text-neutral-700 text-xs">
             <p className="flex items-center gap-2">
-              <span className="flex size-6 items-center justify-center rounded-full bg-green-100 text-green-700">
+              <span className="flex size-6 items-center justify-center rounded-full bg-leve-100 text-leve-700">
                 <ListChecks className="size-3.5" />
               </span>
-              <strong className="text-sm text-neutral-900">
+              <strong className="text-sm text-neutral-900 tabular-nums">
                 {summary.completedHitos}
               </strong>{" "}
               hitos completados
             </p>
             <p className="flex items-center gap-2">
-              <span className="flex size-6 items-center justify-center rounded-full bg-brand-100 text-brand-700">
+              <span className="flex size-6 items-center justify-center rounded-full bg-neutral-100 text-neutral-600">
                 <Files className="size-3.5" />
               </span>
-              <strong className="text-sm text-neutral-900">
+              <strong className="text-sm text-neutral-900 tabular-nums">
                 {summary.documentsCount}
               </strong>{" "}
               documentos
             </p>
             <p className="flex items-center gap-2">
-              <span className="flex size-6 items-center justify-center rounded-full bg-neutral-100 text-neutral-700">
+              <span className="flex size-6 items-center justify-center rounded-full bg-neutral-100 text-neutral-600">
                 <ListChecks className="size-3.5" />
               </span>
-              <strong className="text-sm text-neutral-900">
+              <strong className="text-sm text-neutral-900 tabular-nums">
                 {summary.historyCount}
               </strong>{" "}
               registros en historial

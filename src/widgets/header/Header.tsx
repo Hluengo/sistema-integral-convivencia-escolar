@@ -15,6 +15,7 @@ interface HeaderProps {
   privacyMode: boolean;
   onTogglePrivacyMode: () => void;
   saveStatus?: "idle" | "saving" | "saved" | "error";
+  onRetrySave?: () => void;
   currentView?: string;
   causas: Causa[];
   user?: { email?: string } | null;
@@ -26,6 +27,7 @@ export default memo(function Header({
   privacyMode,
   onTogglePrivacyMode,
   saveStatus = "idle",
+  onRetrySave,
   currentView = "dashboard",
   causas,
   user = null,
@@ -67,6 +69,7 @@ export default memo(function Header({
           privacyMode={privacyMode}
           onTogglePrivacyMode={onTogglePrivacyMode}
           saveStatus={saveStatus}
+          onRetrySave={onRetrySave}
           user={user}
           notifications={notificationCenter.notifications}
           notificationsLoading={notificationCenter.isLoading}

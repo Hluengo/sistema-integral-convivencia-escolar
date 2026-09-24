@@ -32,6 +32,9 @@ class MockQueryBuilder<T> {
   in(_column: string, _values: unknown[]) {
     return this;
   }
+  or(_filters: string) {
+    return this;
+  }
   limit(_n: number) {
     return this;
   }
@@ -165,6 +168,7 @@ describe("fetchCausasPage", () => {
     const page = result as { causas: Causa[]; nextOffset?: number };
     assert.equal(page.causas.length, 1);
     assert.equal(page.causas[0].id, "DC-2026-001");
+    assert.equal(page.causas[0].proceduralModelVersion, 1);
     assert.equal(page.causas[0].estudianteNombre, "Estudiante");
     assert.equal(page.nextOffset, undefined);
   });
@@ -218,6 +222,81 @@ describe("fetchCausasPage", () => {
       page.causas[0].checklistDebidoProceso[0]?.fechaCompletado,
       "2026-08-27",
     );
+  });
+
+  it("resuelve el cierre desde bitácora sin abrir el expediente", async () => {
+    const { getInvestigationClosureDate } =
+      await import("../../lib/legalCompliance/deadlineValidators");
+    const result = await withCausasMocks(
+      {
+        resultForTable: (table) =>
+          table === "bitacora_entries"
+            ? {
+                data: [
+                  makeBitacoraRow({
+                    tipo: "Notificación",
+                    titulo:
+                      "Registro de Hito: Informe Cierre de Indagación Emitido",
+                    fecha: "2026-09-20T15:00:00.000Z",
+                    descripcion: "Responsable: Equipo de Coordinación",
+                  }),
+                ],
+                error: null,
+              }
+            : table === "checklist_items"
+              ? { data: [], error: null }
+              : { data: [makeCausaRow()], error: null },
+      },
+      async () => {
+        const { fetchCausasPage } = await import("./causas.service");
+        return fetchCausasPage();
+      },
+    );
+    const page = result as { causas: Causa[] };
+    assert.equal(getInvestigationClosureDate(page.causas[0]), "2026-09-20");
+  });
+
+  it("resuelve el cierre desde hitos compartidos de la causa hermana", async () => {
+    const { getInvestigationClosureDate } =
+      await import("../../lib/legalCompliance/deadlineValidators");
+    const row020 = makeCausaRow({
+      id: "DC-2026-020",
+      incidente_id: "a1411bb1-9560-403e-b5a0-135665c4f232",
+    });
+    const row019 = makeCausaRow({
+      id: "DC-2026-019",
+      incidente_id: "a1411bb1-9560-403e-b5a0-135665c4f232",
+    });
+    const result = await withCausasMocks(
+      {
+        resultForTable: (table) =>
+          table === "bitacora_entries"
+            ? {
+                data: [
+                  makeBitacoraRow({
+                    causa_id: "DC-2026-019",
+                    tipo: "Notificación",
+                    titulo:
+                      "Registro de Hito: Informe Cierre de Indagación Emitido",
+                    fecha: "2026-09-22T15:00:00.000Z",
+                    descripcion: "Responsable: Equipo de Coordinación",
+                    compartido_grupal: true,
+                  }),
+                ],
+                error: null,
+              }
+            : table === "checklist_items"
+              ? { data: [], error: null }
+              : { data: [row020, row019], error: null },
+      },
+      async () => {
+        const { fetchCausasPage } = await import("./causas.service");
+        return fetchCausasPage();
+      },
+    );
+    const page = result as { causas: Causa[] };
+    const causa020 = page.causas.find((causa) => causa.id === "DC-2026-020");
+    assert.equal(getInvestigationClosureDate(causa020!), "2026-09-22");
   });
 
   it("propaga el error de lectura", async () => {

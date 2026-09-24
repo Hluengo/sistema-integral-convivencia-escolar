@@ -4,7 +4,7 @@
  */
 
 import type React from "react";
-import { Download, FileSearch, History, Route } from "lucide-react";
+import { FileSearch, History, Route } from "lucide-react";
 import type { Causa } from "../../shared/lib/types";
 import type { TimelineTab } from "./timelineTabs.types";
 import {
@@ -35,7 +35,7 @@ export default function TimelineTabs({
     tone: "brand" | "grave" | "neutral" | "info" = "brand",
   ) => (
     <span
-      className={`mx-auto w-fit max-w-full truncate rounded-full px-2 py-0.5 text-[11px] leading-tight ${
+      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold leading-none ${
         tone === "grave"
           ? "bg-grave-100 text-neutral-800"
           : tone === "neutral"
@@ -68,24 +68,13 @@ export default function TimelineTabs({
       Icon: History,
       indicator: badge(`${summary.historyCount} registros`),
     },
-    {
-      id: "expediente",
-      label: "Expediente",
-      Icon: Download,
-      indicator: badge(`${summary.documentsCount} documentos`),
-    },
   ];
 
   const tabs: DetailModalTab<TimelineTab>[] = tabDefinitions.map(
     ({ id, label, Icon, indicator }) => ({
       id,
       label,
-      ariaLabel:
-        id === "ruta"
-          ? "Ruta del expediente"
-          : id === "expediente"
-            ? "Auditoría/expediente"
-            : undefined,
+      ariaLabel: id === "ruta" ? "Ruta del expediente" : undefined,
       icon: <Icon className="size-4" aria-hidden="true" />,
       indicator,
     }),

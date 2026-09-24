@@ -1,17 +1,17 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { getBaseChecklist } from '../data';
-import type { BitacoraEntry, ChecklistItem } from '../types';
-import { toDateOnly } from '../../../shared/lib/dateUtils';
+import { getBaseChecklist } from "../data";
+import type { BitacoraEntry, ChecklistItem } from "../types";
+import { toDateOnly } from "../../../shared/lib/dateUtils";
 
-const REGISTRATION_PREFIX = 'Registro de Hito: ';
-const RECTIFICATION_PREFIX = 'Rectificación de Hito: ';
-const RESET_PREFIX = 'Invalidador Hito: ';
-const RESPONSIBLE_MARKER = 'Responsable: ';
-const OBSERVATIONS_MARKER = '. Observaciones: ';
+const REGISTRATION_PREFIX = "Registro de Hito: ";
+const RECTIFICATION_PREFIX = "Rectificación de Hito: ";
+const RESET_PREFIX = "Invalidador Hito: ";
+const RESPONSIBLE_MARKER = "Responsable: ";
+const OBSERVATIONS_MARKER = ". Observaciones: ";
 const LEGACY_LABEL_ALIASES: Record<string, string> = {
-  'En Plazo de Apelación': 'Derecho a Apelación Informado',
-  'Medida en Ejecución': 'Medida o Plan de Acompañamiento Iniciado',
+  "En Plazo de Apelación": "Derecho a Apelación Informado",
+  "Medida en Ejecución": "Medida o Plan de Acompañamiento Iniciado",
 };
 
 function parseRegistrationDescription(description: string): {
@@ -22,8 +22,11 @@ function parseRegistrationDescription(description: string): {
   if (responsibleStart < 0) return {};
 
   const valueStart = responsibleStart + RESPONSIBLE_MARKER.length;
-  const observationsStart = description.indexOf(OBSERVATIONS_MARKER, valueStart);
-  const rectificationObservationsMarker = '. Observaciones actualizadas: ';
+  const observationsStart = description.indexOf(
+    OBSERVATIONS_MARKER,
+    valueStart,
+  );
+  const rectificationObservationsMarker = ". Observaciones actualizadas: ";
   const rectificationObservationsStart = description.indexOf(
     rectificationObservationsMarker,
     valueStart,
@@ -35,24 +38,33 @@ function parseRegistrationDescription(description: string): {
       return { responsable: description.slice(valueStart).trim() || undefined };
     }
     return {
-      responsable: description.slice(valueStart, rectificationObservationsStart).trim() || undefined,
+      responsable:
+        description.slice(valueStart, rectificationObservationsStart).trim() ||
+        undefined,
       observaciones:
         description
-          .slice(rectificationObservationsStart + rectificationObservationsMarker.length)
+          .slice(
+            rectificationObservationsStart +
+              rectificationObservationsMarker.length,
+          )
           .trim() || undefined,
     };
   }
 
   return {
-    responsable: description.slice(valueStart, selectedObservationsStart).trim() || undefined,
+    responsable:
+      description.slice(valueStart, selectedObservationsStart).trim() ||
+      undefined,
     observaciones:
-      description.slice(selectedObservationsStart + OBSERVATIONS_MARKER.length).trim() || undefined,
+      description
+        .slice(selectedObservationsStart + OBSERVATIONS_MARKER.length)
+        .trim() || undefined,
   };
 }
 
 function documentNameFromPath(path?: string): string | undefined {
   if (!path) return undefined;
-  const name = path.split('/').pop();
+  const name = path.split("/").pop();
   if (!name) return undefined;
   try {
     return decodeURIComponent(name);
@@ -64,8 +76,9 @@ function documentNameFromPath(path?: string): string | undefined {
 export function reconcileChecklistFromBitacora(
   persistedItems: ChecklistItem[],
   bitacora: BitacoraEntry[],
+  proceduralModelVersion: 1 | 2 = 1,
 ): ChecklistItem[] {
-  const items = getBaseChecklist();
+  const items = getBaseChecklist(proceduralModelVersion);
   const indexById = new Map(items.map((item, index) => [item.id, index]));
   const idByLabel = new Map(items.map((item) => [item.label, item.id]));
 
@@ -76,12 +89,14 @@ export function reconcileChecklistFromBitacora(
   }
 
   const orderedEntries = [...bitacora].sort(
-    (left, right) => new Date(left.fecha).getTime() - new Date(right.fecha).getTime(),
+    (left, right) =>
+      new Date(left.fecha).getTime() - new Date(right.fecha).getTime(),
   );
 
   for (const entry of orderedEntries) {
     const isRegistration =
-      entry.titulo.startsWith(REGISTRATION_PREFIX) || entry.titulo.startsWith(RECTIFICATION_PREFIX);
+      entry.titulo.startsWith(REGISTRATION_PREFIX) ||
+      entry.titulo.startsWith(RECTIFICATION_PREFIX);
     const isReset = entry.titulo.startsWith(RESET_PREFIX);
     if (!isRegistration && !isReset) continue;
 
@@ -119,9 +134,14 @@ export function reconcileChecklistFromBitacora(
       ...items[index],
       completado: true,
       fechaCompletado,
-      registradoPor: metadata.responsable || entry.participantes[0] || items[index].registradoPor,
+      registradoPor:
+        metadata.responsable ||
+        entry.participantes[0] ||
+        items[index].registradoPor,
       observaciones: metadata.observaciones || items[index].observaciones,
-      documentoNombre: documentNameFromPath(entry.documentoAdjunto) || items[index].documentoNombre,
+      documentoNombre:
+        documentNameFromPath(entry.documentoAdjunto) ||
+        items[index].documentoNombre,
       documentoUrl: entry.documentoAdjunto || items[index].documentoUrl,
     };
   }

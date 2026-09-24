@@ -1,33 +1,33 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { Suspense, useCallback, useMemo } from 'react';
-import { useAuthStore } from '../shared/lib/stores/authStore';
-import { useCausasStore } from '../shared/lib/stores/causasStore';
-import { useUIStore } from '../shared/lib/stores/uiStore';
-import { useMemberships } from '../shared/api/hooks/useMemberships';
-import { ToastProvider } from '../shared/ui/Toast';
+import { Suspense, useCallback, useMemo } from "react";
+import { useAuthStore } from "../shared/lib/stores/authStore";
+import { useCausasStore } from "../shared/lib/stores/causasStore";
+import { useUIStore } from "../shared/lib/stores/uiStore";
+import { useMemberships } from "../shared/api/hooks/useMemberships";
+import { ToastProvider } from "../shared/ui/Toast";
 import {
   CommandPaletteSkeleton,
   HeaderSkeleton,
   MainContentSkeleton,
   ModalSkeleton,
   SidebarSkeleton,
-} from '../shared/Skeleton';
-import { AppProvider } from '../shared/lib/AppContext';
-import { MembershipLoading, MembershipAccessDenied } from '../shared/ui';
-import WelcomeModal from '../shared/ui/WelcomeModal';
-import AppFooter from './components/AppFooter';
-import AppLoadingFallback from './components/AppLoadingFallback';
-import AppLoadError from './components/AppLoadError';
-import SkipToContent from './components/SkipToContent';
-import { useAppNavigation } from './hooks/useAppNavigation';
-import { useAppShortcuts } from './hooks/useAppShortcuts';
-import { useCausaWorkspace } from './hooks/useCausaWorkspace';
-import { useNewCausaModalController } from './hooks/useNewCausaModalController';
-import { useRoleGates } from './hooks/useRoleGates';
-import { useUrlRouting } from './hooks/useUrlRouting';
-import { useWelcomeGate } from './hooks/useWelcomeGate';
-import * as Lazy from './lazyAppComponents';
+} from "../shared/Skeleton";
+import { AppProvider } from "../shared/lib/AppContext";
+import { MembershipLoading, MembershipAccessDenied } from "../shared/ui";
+import WelcomeModal from "../shared/ui/WelcomeModal";
+import AppFooter from "./components/AppFooter";
+import AppLoadingFallback from "./components/AppLoadingFallback";
+import AppLoadError from "./components/AppLoadError";
+import SkipToContent from "./components/SkipToContent";
+import { useAppNavigation } from "./hooks/useAppNavigation";
+import { useAppShortcuts } from "./hooks/useAppShortcuts";
+import { useCausaWorkspace } from "./hooks/useCausaWorkspace";
+import { useNewCausaModalController } from "./hooks/useNewCausaModalController";
+import { useRoleGates } from "./hooks/useRoleGates";
+import { useUrlRouting } from "./hooks/useUrlRouting";
+import { useWelcomeGate } from "./hooks/useWelcomeGate";
+import * as Lazy from "./lazyAppComponents";
 
 export default function App() {
   const user = useAuthStore((s) => s.user);
@@ -40,8 +40,9 @@ export default function App() {
   const appRole = useAuthStore((s) => s.appRole);
   const profileRole = useAuthStore((s) => s.profileRole);
 
-  const membership = useMemberships('convivencia');
+  const membership = useMemberships("convivencia");
   const saveStatus = useCausasStore((s) => s.saveStatus);
+  const requestSaveRetry = useCausasStore((s) => s.requestSaveRetry);
   const setSelectedFaseFilter = useCausasStore((s) => s.setSelectedFaseFilter);
   const handleReopenCausaAction = useCausasStore((s) => s.handleReopenCausa);
 
@@ -55,7 +56,12 @@ export default function App() {
   const showShortcuts = useUIStore((s) => s.showShortcuts);
   const setShowShortcuts = useUIStore((s) => s.setShowShortcuts);
 
-  const { canAccessAdmin, canAccessReports, canAccessPlatform, onboardingEnabled } = useRoleGates({
+  const {
+    canAccessAdmin,
+    canAccessReports,
+    canAccessPlatform,
+    onboardingEnabled,
+  } = useRoleGates({
     isAuthenticated,
     tenantId,
     userId: user?.id,
@@ -90,17 +96,18 @@ export default function App() {
     () => causas.filter((c) => c.comprometeAulaSegura).length,
     [causas],
   );
-  const { navigateToView, navigateToCausa, navigateHome, closeLoginModal } = useUrlRouting({
-    user,
-    currentView,
-    selectedCausaId,
-    canAccessAdmin,
-    canAccessReports,
-    canAccessPlatform,
-    setCurrentView,
-    setSelectedCausaId,
-    setShowLoginModal,
-  });
+  const { navigateToView, navigateToCausa, navigateHome, closeLoginModal } =
+    useUrlRouting({
+      user,
+      currentView,
+      selectedCausaId,
+      canAccessAdmin,
+      canAccessReports,
+      canAccessPlatform,
+      setCurrentView,
+      setSelectedCausaId,
+      setShowLoginModal,
+    });
 
   const {
     requireAuth,
@@ -128,7 +135,7 @@ export default function App() {
   });
 
   const showCausasView = useCallback(() => {
-    navigateToView('causas');
+    navigateToView("causas");
   }, [navigateToView]);
   const {
     showCreateForm,
@@ -156,7 +163,7 @@ export default function App() {
 
   if (authLoading) return <AppLoadingFallback />;
 
-  if (user && !membership.loaded && membership.authMode !== 'legacy') {
+  if (user && !membership.loaded && membership.authMode !== "legacy") {
     return (
       <MembershipLoading
         authMode={membership.authMode}
@@ -193,7 +200,9 @@ export default function App() {
               currentView={currentView}
               onViewChange={handleViewChange}
               isCollapsed={isSidebarCollapsed}
-              onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              onToggleCollapse={() =>
+                setIsSidebarCollapsed(!isSidebarCollapsed)
+              }
               activeCount={filteredCausas.length}
               aulaSeguraCount={aulaSeguraCount}
               user={user}
@@ -210,6 +219,7 @@ export default function App() {
                 privacyMode={privacyMode}
                 onTogglePrivacyMode={togglePrivacyMode}
                 saveStatus={saveStatus}
+                onRetrySave={requestSaveRetry}
                 currentView={currentView}
                 causas={causas}
                 user={user}
@@ -217,7 +227,9 @@ export default function App() {
                 onViewAllNotifications={handleViewAllNotifications}
               />
             </Suspense>
-            {loadError && <AppLoadError message={loadError} onRetry={retryLoad} />}
+            {loadError && (
+              <AppLoadError message={loadError} onRetry={retryLoad} />
+            )}
             <Suspense fallback={<MainContentSkeleton />}>
               <Lazy.MainContent
                 currentView={currentView}
@@ -261,7 +273,11 @@ export default function App() {
             </Suspense>
           )}
           {!user && !showLoginModal && (
-            <WelcomeModal open={showWelcome} onClose={dismissWelcome} onLogin={loginFromWelcome} />
+            <WelcomeModal
+              open={showWelcome}
+              onClose={dismissWelcome}
+              onLogin={loginFromWelcome}
+            />
           )}
         </div>
       </AppProvider>

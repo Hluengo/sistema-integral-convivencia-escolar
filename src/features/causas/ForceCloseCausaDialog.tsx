@@ -26,6 +26,8 @@ import {
   fetchHechoEvidencias,
   fetchHechos,
 } from "../../shared/api/services/hechos.service";
+import { fetchReconsideraciones } from "../../shared/api/services/reconsideracion.service";
+import { fetchSeguimiento } from "../../shared/api/services/seguimiento.service";
 import { auditarExpediente } from "../../shared/lib/auditoria";
 
 interface ForceCloseCausaDialogProps {
@@ -61,10 +63,34 @@ export default function ForceCloseCausaDialog({
     queryFn: () => fetchHechoEvidencias(causa.id),
     enabled: open,
   });
+  const reconsideracionesQuery = useQuery({
+    queryKey: ["reconsideraciones", causa.id, "forceClose"],
+    queryFn: () => fetchReconsideraciones(causa.id),
+    enabled: open,
+  });
+  const seguimientoQuery = useQuery({
+    queryKey: ["seguimiento", causa.id, "forceClose"],
+    queryFn: () => fetchSeguimiento(causa.id),
+    enabled: open,
+  });
   const audit = auditarExpediente(
     causa,
     hechosQuery.data ?? [],
     vinculosQuery.data ?? [],
+    {
+      reconsideraciones: reconsideracionesQuery.data ?? [],
+      seguimientos: (seguimientoQuery.data ?? []).map((record) => ({
+        id: record.id,
+        estado: record.estado,
+        fecha: record.fecha_inicio,
+        descripcion: record.descripcion,
+        titulo: record.titulo,
+        responsable: record.responsable,
+        fechaFin: record.fecha_fin,
+        cumplimiento: record.cumplimiento,
+        evaluacion: record.evaluacion,
+      })),
+    },
   );
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {

@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import type { Causa } from '@/shared/lib/types';
+import type { Causa } from "@/shared/lib/types";
 
 export interface CausaPersistenceChanges {
   causa: boolean;
@@ -8,17 +8,41 @@ export interface CausaPersistenceChanges {
   checklist: boolean;
 }
 
+export interface PendingCausaSave {
+  changes: CausaPersistenceChanges;
+  previousCausa: Causa;
+}
+
+/**
+ * Fusiona un guardado pendiente con uno entrante: conserva la foto previa
+ * m�s antigua (para el diff) y une los bloques modificados.
+ */
+export function mergePendingCausaSave(
+  existing: PendingCausaSave | undefined,
+  incoming: PendingCausaSave,
+): PendingCausaSave {
+  if (!existing) return incoming;
+  return {
+    previousCausa: existing.previousCausa,
+    changes: {
+      causa: existing.changes.causa || incoming.changes.causa,
+      bitacora: existing.changes.bitacora || incoming.changes.bitacora,
+      checklist: existing.changes.checklist || incoming.changes.checklist,
+    },
+  };
+}
+
 export interface ExistingCausaPersistenceOperations {
   updateCausa: (causa: Causa) => Promise<boolean>;
   saveBitacora: (
     causaId: string,
-    entries: Causa['bitacora'],
-    previousEntries: Causa['bitacora'],
+    entries: Causa["bitacora"],
+    previousEntries: Causa["bitacora"],
   ) => Promise<boolean>;
   saveChecklist: (
     causaId: string,
-    checklist: Causa['checklistDebidoProceso'],
-    previousChecklist: Causa['checklistDebidoProceso'],
+    checklist: Causa["checklistDebidoProceso"],
+    previousChecklist: Causa["checklistDebidoProceso"],
   ) => Promise<boolean>;
 }
 
@@ -41,7 +65,9 @@ export async function persistExistingCausa(
 
   const relatedWrites: Promise<boolean>[] = [];
   if (changes.bitacora) {
-    relatedWrites.push(operations.saveBitacora(causa.id, causa.bitacora, previousCausa.bitacora));
+    relatedWrites.push(
+      operations.saveBitacora(causa.id, causa.bitacora, previousCausa.bitacora),
+    );
   }
   if (changes.checklist) {
     relatedWrites.push(

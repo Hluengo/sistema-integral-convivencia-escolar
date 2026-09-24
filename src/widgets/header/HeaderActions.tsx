@@ -1,15 +1,16 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import NotificationsDropdown from './NotificationsDropdown';
-import SaveStatus from './SaveStatus';
-import PrivacyToggle from './PrivacyToggle';
-import UserAvatar from './UserAvatar';
-import type { Notification } from '../../shared/lib/hooks/useNotifications';
+import NotificationsDropdown from "./NotificationsDropdown";
+import SaveStatus from "./SaveStatus";
+import PrivacyToggle from "./PrivacyToggle";
+import UserAvatar from "./UserAvatar";
+import type { Notification } from "../../shared/lib/hooks/useNotifications";
 
 interface HeaderActionsProps {
   privacyMode: boolean;
   onTogglePrivacyMode: () => void;
-  saveStatus?: 'idle' | 'saving' | 'saved' | 'error';
+  saveStatus?: "idle" | "saving" | "saved" | "error";
+  onRetrySave?: () => void;
   user?: { email?: string } | null;
   notifications: Notification[];
   notificationsLoading?: boolean;
@@ -24,7 +25,8 @@ const EMPTY_NOTIFICATIONS: never[] = [];
 export default function HeaderActions({
   privacyMode,
   onTogglePrivacyMode,
-  saveStatus = 'idle',
+  saveStatus = "idle",
+  onRetrySave,
   user = null,
   notifications = EMPTY_NOTIFICATIONS,
   notificationsLoading = false,
@@ -46,7 +48,7 @@ export default function HeaderActions({
 
       <PrivacyToggle privacyMode={privacyMode} onToggle={onTogglePrivacyMode} />
 
-      <SaveStatus status={saveStatus} />
+      <SaveStatus status={saveStatus} onRetry={onRetrySave} />
 
       <UserAvatar user={user} />
     </div>

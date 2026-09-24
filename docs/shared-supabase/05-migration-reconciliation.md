@@ -537,13 +537,14 @@ Con la finalización de Fase 0.5b, se establece un **checkpoint de reconciliaci�
 
 ## 10. Bitácora de reconciliación
 
-| Fecha      | Cambio                                   | Migración(es)                         | Checksum SHA-256                                    | Aplicó     | Validación                       |
-| ---------- | ---------------------------------------- | ------------------------------------- | --------------------------------------------------- | ---------- | -------------------------------- |
-| 2026-07-25 | Fase 0 — Contención emergencia           | 00001, 00003, 00002, 00004            | Documentado en `00-emergency-containment.md`        | SQL Editor | ✅ Checklist Fase 0 cerrada      |
-| 2026-07-25 | Fase 0.5b — Estabilización               | 00001, 00002, 00005 (*), 00003, 00004 | `041C764D`, `213E4015`, `—`, `F7D21029`, `C29010E2` | SQL Editor | ✅ Post-containment estabilizado |
-| 2026-07-26 | Fase 1 — Reconciliación (este documento) | Ninguna                               | —                                                   | —          | Documento de diagnóstico         |
-| 2026-08-16 | Fase 1D — Hardening RLS por rol          | `20260815170000`                      | `66017AC691485254B51B4FC3AA925D7042E2F365FC0A3C41080A77F9DD9DD92A` | `supabase db push --linked --include-all` | ✅ `npm run test:roles` 9/9; staff DELETE bloqueado, INSERT ok, service_role DELETE ok |
-| 2026-08-16 | Fase 1E — `generate_process_number` valida tenant | `20260815173000`            | `AADC8A8EBCDC0AFCCDE130403931E4F9D3B18F9DBFD0996E782397075D75D074` | `supabase db push --linked --include-all` | ✅ tenant ajeno 403 `tenant mismatch`; tenant propio `DP-2026-0165`; service_role `DP-2026-0001` |
+| Fecha      | Cambio                                            | Migración(es)                         | Checksum SHA-256                                                   | Aplicó                                    | Validación                                                                                       |
+| ---------- | ------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| 2026-07-25 | Fase 0 — Contención emergencia                    | 00001, 00003, 00002, 00004            | Documentado en `00-emergency-containment.md`                       | SQL Editor                                | ✅ Checklist Fase 0 cerrada                                                                      |
+| 2026-07-25 | Fase 0.5b — Estabilización                        | 00001, 00002, 00005 (*), 00003, 00004 | `041C764D`, `213E4015`, `—`, `F7D21029`, `C29010E2`                | SQL Editor                                | ✅ Post-containment estabilizado                                                                 |
+| 2026-07-26 | Fase 1 — Reconciliación (este documento)          | Ninguna                               | —                                                                  | —                                         | Documento de diagnóstico                                                                         |
+| 2026-08-16 | Fase 1D — Hardening RLS por rol                   | `20260815170000`                      | `66017AC691485254B51B4FC3AA925D7042E2F365FC0A3C41080A77F9DD9DD92A` | `supabase db push --linked --include-all` | ✅ `npm run test:roles` 9/9; staff DELETE bloqueado, INSERT ok, service_role DELETE ok           |
+| 2026-08-16 | Fase 1E — `generate_process_number` valida tenant | `20260815173000`                      | `AADC8A8EBCDC0AFCCDE130403931E4F9D3B18F9DBFD0996E782397075D75D074` | `supabase db push --linked --include-all` | ✅ tenant ajeno 403 `tenant mismatch`; tenant propio `DP-2026-0165`; service_role `DP-2026-0001` |
+| 2026-09-24 | Enforcement de transiciones de causas versión 2   | `20260924100000`                      | `21E5CC0641E4DC6CEAB60F0B2E93FD76839BE7025F416AC97A4258D10A9B369C` | `supabase db query --linked --file`       | ✅ trigger habilitado; función y grants verificados; 0 causas v2 al aplicar                      |
 
 > **(\*)** El checksum de `20260727000005` no está disponible porque el archivo no existe en el repositorio local. Se recomienda crearlo extrayendo la definición actual de `handle_new_user()` del remoto.
 
@@ -576,6 +577,23 @@ La fase 2 de memberships fue reconciliada con el estado remoto. Se verificó que
 7. Helpers SECURITY DEFINER verificados
 
 Ver `12-phase-2-closure.md` para el mapeo completo local ↔ remoto.
+
+### 2026-09-24 — Cierre de enforcement de transiciones
+
+La migración `20260924100000_enforce_causa_state_transitions.sql` fue aplicada
+directamente al remoto mediante `supabase db query --linked --file`, siguiendo
+la política forward-only del proyecto y evitando `supabase db push` por el
+drift histórico de `schema_migrations`.
+
+La verificación remota confirmó:
+
+1. La función `public.enforce_causa_state_transition()` existe.
+2. El trigger `causas_enforce_state_transition` está habilitado.
+3. `authenticated` y `service_role` tienen permiso de ejecución.
+4. No existían causas versión 2 al momento de la aplicación.
+
+La prueba funcional de salto inválido queda pendiente hasta contar con una
+causa versión 2; no se crearon datos artificiales en producción para probarla.
 
 ---
 

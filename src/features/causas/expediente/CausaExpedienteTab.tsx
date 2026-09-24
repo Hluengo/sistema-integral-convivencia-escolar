@@ -3,6 +3,7 @@
 import { Download } from "lucide-react";
 import type { Causa } from "../../../shared/lib/types";
 import ExpedienteExportPanel from "./ExpedienteExportPanel";
+import ExpedienteHistoryPanel from "./ExpedienteHistoryPanel";
 import EstadoProcedimental from "../matriz/EstadoProcedimental";
 import MatrizPanel from "../matriz/MatrizPanel";
 
@@ -38,6 +39,10 @@ export default function CausaExpedienteTab({ causa }: { causa: Causa }) {
           1. Prueba hecho-evidencia-RICE
         </h3>
         <MatrizPanel causa={causa} />
+      </section>
+
+      <section aria-labelledby="expediente-history-title" className="space-y-3">
+        <ExpedienteHistoryPanel causa={causa} />
       </section>
 
       <section aria-labelledby="expediente-estado-title" className="space-y-3">

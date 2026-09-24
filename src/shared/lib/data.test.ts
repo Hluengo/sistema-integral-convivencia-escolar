@@ -33,6 +33,27 @@ const causa = (
   ...overrides,
 });
 
+describe("versiones del checklist procedimental", () => {
+  it("mantiene los hitos históricos en v1 y agrega los reforzados en v2", () => {
+    const legacyIds = new Set(getBaseChecklist().map((item) => item.id));
+    const currentIds = new Set(getBaseChecklist(2).map((item) => item.id));
+
+    for (const id of [
+      "chk_inv_7",
+      "chk_inv_8",
+      "chk_inv_9",
+      "chk_res_7",
+      "chk_res_8",
+      "chk_res_9",
+      "chk_imp_6",
+      "chk_imp_7",
+    ]) {
+      assert.equal(legacyIds.has(id), false);
+      assert.equal(currentIds.has(id), true);
+    }
+  });
+});
+
 describe("getPhaseProgress", () => {
   it("calcula Investigación sin mediación como 2/2 y no como 2/6", () => {
     const progress = getPhaseProgress(
@@ -72,6 +93,20 @@ describe("getPhaseProgress", () => {
 
     assert.equal(progress.completed, 1);
     assert.equal(progress.total, 3);
+  });
+
+  it("mantiene mutuamente excluidos solicitud y plazo vencido en v2", () => {
+    const current = causa(["chk_imp_2"], {
+      proceduralModelVersion: 2,
+      checklistDebidoProceso: getBaseChecklist(2).map((item) => ({
+        ...item,
+        completado: item.id === "chk_imp_2",
+      })),
+    });
+    const items = getPhaseProgress(current, "Apelación");
+
+    assert.equal(items.total, 3);
+    assert.equal(items.completed, 1);
   });
 
   it("mantiene 2 hitos de apelación y 3 de seguimiento", () => {

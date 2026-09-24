@@ -118,7 +118,7 @@ export default function InvestigationChecklist({
         }`}
         aria-expanded={isExpanded}
         aria-controls="section-investigacion"
-        aria-label={`${isExpanded ? "Ocultar" : "Abrir"} hitos de Investigación`}
+        aria-label={`${isExpanded ? "Ocultar" : "Abrir"} hitos de Indagación`}
       >
         <div className="flex min-w-0 items-center gap-2">
           <span
@@ -129,7 +129,7 @@ export default function InvestigationChecklist({
                 : "text-neutral-800"
             }`}
           >
-            2. Investigación
+            2. Indagación
           </span>
           <span
             className={`shrink-0 rounded-full px-2 py-0.5 font-semibold text-10px ${
@@ -192,7 +192,7 @@ export default function InvestigationChecklist({
               id="investigation-base-title"
               className="font-semibold text-neutral-800 text-xs"
             >
-              Investigación
+              Indagación
             </h4>
             {model.baseItems.map((item) => renderInvestigationItem(item))}
           </section>
