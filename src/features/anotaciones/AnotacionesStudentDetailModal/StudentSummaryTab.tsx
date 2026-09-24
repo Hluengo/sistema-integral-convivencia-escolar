@@ -57,11 +57,11 @@ export default function StudentSummaryTab({
   const suggestedLetterType = mapDocTypeToLetterType(suggestedDocType);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       <section
-        className={`rounded-xl border ${style.border} bg-white p-4 shadow-xs`}
+        className={`rounded-xl border ${style.border} bg-white p-3 shadow-xs`}
       >
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="font-semibold text-neutral-600 text-xs">
               Resumen de anotaciones
@@ -78,25 +78,25 @@ export default function StudentSummaryTab({
           </span>
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
-          <div className="flex min-w-0 items-center gap-3 rounded-lg border border-gravisima-100 bg-gravisima-50 p-3">
-            <p className="shrink-0 tabular-nums text-xl font-black leading-none text-gravisima-700">
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <div className="flex min-w-0 items-center gap-2 rounded-lg border border-gravisima-100 bg-gravisima-50 p-2.5">
+            <p className="shrink-0 tabular-nums text-lg font-black leading-none text-gravisima-700">
               {counts.negativas}
             </p>
             <p className="min-w-0 text-xs font-semibold leading-tight text-gravisima-600">
               Negativas registradas
             </p>
           </div>
-          <div className="flex min-w-0 items-center gap-3 rounded-lg border border-leve-100 bg-leve-50 p-3">
-            <p className="shrink-0 tabular-nums text-xl font-black leading-none text-leve-700">
+          <div className="flex min-w-0 items-center gap-2 rounded-lg border border-leve-100 bg-leve-50 p-2.5">
+            <p className="shrink-0 tabular-nums text-lg font-black leading-none text-leve-700">
               {counts.positivas}
             </p>
             <p className="min-w-0 text-xs font-semibold leading-tight text-leve-600">
               Positivas
             </p>
           </div>
-          <div className="flex min-w-0 items-center gap-3 rounded-lg border border-blue-100 bg-blue-50 p-3">
-            <p className="shrink-0 tabular-nums text-xl font-black leading-none text-blue-700">
+          <div className="flex min-w-0 items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 p-2.5">
+            <p className="shrink-0 tabular-nums text-lg font-black leading-none text-blue-700">
               {counts.informativas}
             </p>
             <p className="min-w-0 text-xs font-semibold leading-tight text-blue-600">
@@ -106,20 +106,20 @@ export default function StudentSummaryTab({
         </div>
       </section>
 
-      <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
-        <div className="mb-3 flex items-center gap-2">
+      <section className="rounded-xl border border-neutral-200 bg-white p-3 shadow-xs">
+        <div className="mb-2 flex items-center gap-2">
           <Gauge className="h-4 w-4 text-brand-600" />
           <h4 className="text-sm font-bold text-neutral-900">
             Progreso disciplinario
           </h4>
         </div>
-        <div className="h-3 overflow-hidden rounded-full bg-neutral-100">
+        <div className="h-2.5 overflow-hidden rounded-full bg-neutral-100">
           <div
             className="h-full rounded-full bg-brand-600 transition-[width]"
             style={{ width: `${progress.percent}%` }}
           />
         </div>
-        <div className="mt-2 flex justify-between text-xs text-neutral-500">
+        <div className="mt-1.5 flex justify-between text-xs text-neutral-500">
           <span>{counts.negativas} negativas</span>
           <span>
             {nextThreshold === null
@@ -130,8 +130,8 @@ export default function StudentSummaryTab({
       </section>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
-          <div className="mb-3 flex items-center gap-2">
+        <section className="rounded-xl border border-neutral-200 bg-white p-3 shadow-xs">
+          <div className="mb-2 flex items-center gap-2">
             <FileText className="h-4 w-4 text-brand-600" />
             <h4 className="text-sm font-bold text-neutral-900">
               Carta vigente y trámite
@@ -160,15 +160,15 @@ export default function StudentSummaryTab({
             <Button
               variant="custom"
               onClick={onGoToCartasTab}
-              className="mt-4 rounded-lg border border-brand-200 px-3 py-2 text-xs font-semibold text-brand-700 hover:bg-brand-50"
+              className="mt-3 rounded-lg border border-brand-200 px-3 py-2 text-xs font-semibold text-brand-700 hover:bg-brand-50"
             >
               Ir a Carta <ArrowRight className="h-3.5 w-3.5" />
             </Button>
           )}
         </section>
 
-        <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
-          <div className="mb-3 flex items-center gap-2">
+        <section className="rounded-xl border border-neutral-200 bg-white p-3 shadow-xs">
+          <div className="mb-2 flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-brand-600" />
             <h4 className="text-sm font-bold text-neutral-900">
               Último análisis PDF
@@ -194,7 +194,7 @@ export default function StudentSummaryTab({
             <Button
               variant="custom"
               onClick={onGoToRevisionTab}
-              className="mt-4 rounded-lg border border-brand-200 px-3 py-2 text-xs font-semibold text-brand-700 hover:bg-brand-50"
+              className="mt-3 rounded-lg border border-brand-200 px-3 py-2 text-xs font-semibold text-brand-700 hover:bg-brand-50"
             >
               Revisar nuevo PDF <ArrowRight className="h-3.5 w-3.5" />
             </Button>
@@ -202,11 +202,11 @@ export default function StudentSummaryTab({
         </section>
       </div>
 
-      <section className="rounded-xl border border-brand-200 bg-brand-50 p-5 shadow-xs">
+      <section className="rounded-xl border border-brand-200 bg-brand-50 p-3 shadow-xs">
         <p className="font-semibold text-brand-800 text-xs">
           Siguiente acción sugerida
         </p>
-        <p className="mt-2 text-sm font-semibold text-brand-900">
+        <p className="mt-1 text-sm font-semibold text-brand-900">
           {getActionText(counts.negativas, currentCarta)}
         </p>
         {suggestedLetterType && (
