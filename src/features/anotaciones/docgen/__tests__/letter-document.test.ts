@@ -329,8 +329,8 @@ describe("Cierre de cartas — validación de etapa registrada", () => {
     const cartasTab = readFileSync(cartasTabPath, "utf-8");
 
     ok(
-      cartasTab.includes(
-        "key={`${student.id}:${activeDocType}:${activeCarta?.id ?? 'new'}`}",
+      /key=\{`\$\{student\.id\}:\$\{activeDocType\}:\$\{activeCarta\?\.id \?\? ["']new["']\}`\}/.test(
+        cartasTab,
       ),
     );
     ok(cartasTab.includes("processingFeedback="));
