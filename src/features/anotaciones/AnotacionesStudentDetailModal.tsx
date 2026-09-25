@@ -233,7 +233,6 @@ export default function AnotacionesStudentDetailModal({
             etapas={disciplinaryData.etapas}
             processes={disciplinaryData.processes}
             files={disciplinaryData.files}
-            detectedAnnotations={disciplinaryData.detectedAnnotations}
             letterOutputEvents={disciplinaryData.letterOutputEvents}
             cartaEvents={disciplinaryData.cartaEvents}
           />

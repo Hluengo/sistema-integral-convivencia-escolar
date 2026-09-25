@@ -33,7 +33,7 @@ export default function TimelinePhaseWorkspace({
     <section id="phase-workspace" className="space-y-3">
       <nav
         aria-label="Ruta del expediente"
-        className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-neutral-150 bg-white p-1.5 text-xs text-neutral-500 shadow-xs"
+        className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-neutral-150 bg-white p-1.5 text-xs text-neutral-500 shadow-xs"
       >
         <div className="flex flex-wrap items-center gap-1">
           {faseOrder.map((fase, index) => {

@@ -18,7 +18,6 @@ import type {
 } from "@/shared/lib/types";
 import type {
   CartaEvent,
-  DetectedAnnotationRecord,
   DisciplinaryFileRecord,
   DisciplinaryProcessRecord,
   LetterOutputEvent,
@@ -44,7 +43,6 @@ interface HistoryTabProps {
   etapas: EtapaDisciplinaria[];
   processes: DisciplinaryProcessRecord[];
   files: DisciplinaryFileRecord[];
-  detectedAnnotations: DetectedAnnotationRecord[];
   letterOutputEvents: LetterOutputEvent[];
   cartaEvents: CartaEvent[];
 }
@@ -130,11 +128,9 @@ export default function HistoryTab({
   etapas,
   processes,
   files,
-  detectedAnnotations,
   letterOutputEvents,
   cartaEvents,
 }: HistoryTabProps) {
-  const [showAllDetected, setShowAllDetected] = useState(false);
   const [kindFilter, setKindFilter] = useState<string>("Todos");
   const manualHistory = useStudentHistoryEntries(studentId);
   const relevantCartaEvents = cartaEvents.filter(
@@ -226,20 +222,6 @@ export default function HistoryTab({
         description: `${process.process_number} · ${process.total_negativas} negativas · sugerencia: ${process.final_letter_type || process.suggested_letter_type || "sin carta"}`,
         tone: "bg-leve-50 text-leve-700",
       })),
-      ...(showAllDetected
-        ? detectedAnnotations
-        : detectedAnnotations.slice(0, 25)
-      ).map((annotation) => ({
-        id: `detected-${annotation.id}`,
-        date: annotation.detected_at,
-        icon: <History className="h-4 w-4" />,
-        title: `Anotación ${annotation.annotation_type} detectada`,
-        description:
-          annotation.annotation_text ||
-          annotation.raw_text ||
-          "Sin texto registrado",
-        tone: "bg-neutral-50 text-neutral-700",
-      })),
       ...relevantCartaEvents.map((event) =>
         describeCartaEvent(event, cartasByIdInner.get(event.carta_id)),
       ),
@@ -272,8 +254,7 @@ export default function HistoryTab({
           : kindFilter === "PDF"
             ? item.id.startsWith("file-") ||
               item.id.startsWith("analysis-") ||
-              item.id.startsWith("process-") ||
-              item.id.startsWith("detected-")
+              item.id.startsWith("process-")
             : kindFilter === "Etapas"
               ? item.id.startsWith("etapa-")
               : kindFilter === "Manual"
@@ -285,13 +266,11 @@ export default function HistoryTab({
     files,
     documentAnalyses,
     processes,
-    detectedAnnotations,
     relevantCartaEvents,
     letterOutputEvents,
     syntheticCartaItems,
     etapas,
     cartas,
-    showAllDetected,
     kindFilter,
   ]);
 
@@ -354,46 +333,33 @@ export default function HistoryTab({
           </p>
         </div>
       ) : (
-        <>
-          <div className="space-y-3">
-            {items.map((item) => (
-              <article
-                key={item.id}
-                className="flex gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-xs"
-              >
-                <div
-                  className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${item.tone}`}
-                >
-                  {item.icon}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h3 className="text-sm font-bold text-neutral-900">
-                      {item.title}
-                    </h3>
-                    <span className="text-xs text-neutral-400">
-                      {formatDate(item.date)}
-                    </span>
-                  </div>
-                  <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-600">
-                    {item.description}
-                  </p>
-                </div>
-              </article>
-            ))}
-          </div>
-          {detectedAnnotations.length > 25 && (
-            <button
-              type="button"
-              onClick={() => setShowAllDetected((v) => !v)}
-              className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-semibold text-neutral-600 hover:bg-neutral-50"
+        <div className="space-y-3">
+          {items.map((item) => (
+            <article
+              key={item.id}
+              className="flex gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-xs"
             >
-              {showAllDetected
-                ? "Mostrar menos"
-                : `Ver ${detectedAnnotations.length - 25} anotaciones detectadas más`}
-            </button>
-          )}
-        </>
+              <div
+                className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${item.tone}`}
+              >
+                {item.icon}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="text-sm font-bold text-neutral-900">
+                    {item.title}
+                  </h3>
+                  <span className="text-xs text-neutral-400">
+                    {formatDate(item.date)}
+                  </span>
+                </div>
+                <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-600">
+                  {item.description}
+                </p>
+              </div>
+            </article>
+          ))}
+        </div>
       )}
     </div>
   );
