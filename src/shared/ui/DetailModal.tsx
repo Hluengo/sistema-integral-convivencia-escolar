@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import type { KeyboardEvent, ReactNode } from "react";
 import { DialogContent } from "./Dialog";
 
@@ -53,7 +53,7 @@ export function DetailModalContent({
   return (
     <DialogContent
       hideClose
-      className="flex h-[min(94vh,980px)] max-h-[calc(100vh-1rem)] w-[min(96vw,112rem)] max-w-none flex-col overflow-hidden border-neutral-150 bg-neutral-50 p-0 shadow-2xl reduce-motion:[animation-duration:0ms,transition-duration:0ms]"
+      className="flex h-[min(94vh,980px)] max-h-[calc(100vh-1rem)] w-[min(96vw,72rem)] max-w-none flex-col overflow-hidden border-neutral-150 bg-neutral-50 p-0 shadow-2xl reduce-motion:[animation-duration:0ms,transition-duration:0ms]"
       aria-label={ariaLabel}
     >
       {children}
@@ -74,6 +74,7 @@ export function DetailModalHeader({
       <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div className="flex min-w-0 items-center gap-3">
           <div
+            aria-hidden="true"
             className={`flex size-10 shrink-0 items-center justify-center rounded-xl bg-brand-700 shadow-sm ring-2 ${avatarClassName ?? "ring-brand-200"}`}
           >
             <span className="font-bold text-sm text-white">
@@ -148,7 +149,7 @@ export function DetailModalTabs<T extends string>({
             onKeyDown={(event) => handleKeyDown(event, tabs.indexOf(tab))}
             id={`detail-tab-${tab.id}`}
             role="tab"
-            aria-label={tab.ariaLabel}
+            aria-label={tab.ariaLabel ?? tab.label}
             aria-selected={activeTab === tab.id}
             aria-controls={`detail-tabpanel-${tab.id}`}
             tabIndex={activeTab === tab.id ? 0 : -1}
@@ -181,8 +182,22 @@ export function DetailModalBody({
   className = "",
   activeTabId,
 }: DetailModalBodyProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const prevTabId = useRef(activeTabId);
+  useEffect(() => {
+    if (prevTabId.current !== activeTabId) {
+      prevTabId.current = activeTabId;
+      // Solo mueve el foco cuando la navegación viene desde dentro del panel
+      // (ej. botones "Ir a Carta"), no al tabular entre tabs.
+      const active = document.activeElement;
+      if (active && panelRef.current?.contains(active)) {
+        panelRef.current?.focus();
+      }
+    }
+  }, [activeTabId]);
   return (
     <div
+      ref={panelRef}
       id={activeTabId ? `detail-tabpanel-${activeTabId}` : undefined}
       role={activeTabId ? "tabpanel" : undefined}
       aria-labelledby={activeTabId ? `detail-tab-${activeTabId}` : undefined}

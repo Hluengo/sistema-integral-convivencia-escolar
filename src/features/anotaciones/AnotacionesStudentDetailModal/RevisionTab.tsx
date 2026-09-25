@@ -6,7 +6,7 @@ import {
   ArrowRight,
   CheckCircle2,
   FileText,
-  RefreshCw,
+  Upload,
   X,
 } from "lucide-react";
 import type { CartaDisciplinaria } from "@/shared/lib/types";
@@ -100,9 +100,9 @@ export default function RevisionTab({
 
   return (
     <div className="space-y-5">
-      <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
+      <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-xs">
         <div className="mb-3 flex items-center gap-2">
-          <FileText className="h-4 w-4 text-brand-600" />
+          <FileText className="h-4 w-4 text-brand-600" aria-hidden="true" />
           <h3 className="text-sm font-bold text-neutral-900">
             Revisión de PDF del estudiante
           </h3>
@@ -146,8 +146,9 @@ export default function RevisionTab({
           event.stopPropagation();
         }}
         onDrop={review.handleDrop}
+        aria-label="Subir PDF de hoja de vida para análisis. También puede arrastrar el archivo aquí."
         disabled={review.isBusy}
-        className={`w-full rounded-xl border-2 border-dashed p-8 text-center transition-colors ${
+        className={`w-full rounded-xl border-2 border-dashed p-5 text-center transition-colors ${
           review.isDragging
             ? "border-brand-400 bg-brand-50"
             : "border-neutral-300 bg-white hover:border-brand-300 hover:bg-brand-50/30"
@@ -163,9 +164,13 @@ export default function RevisionTab({
         />
         <div className="flex flex-col items-center gap-3">
           {review.isBusy ? (
-            <div className="h-10 w-10 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" />
+            <div
+              role="status"
+              aria-label="Analizando PDF"
+              className="h-10 w-10 animate-spin rounded-full border-2 border-brand-600 border-t-transparent"
+            />
           ) : (
-            <RefreshCw className="h-10 w-10 text-neutral-400" />
+            <Upload className="h-10 w-10 text-neutral-400" aria-hidden="true" />
           )}
           <div>
             <p className="text-sm font-semibold text-neutral-800">
@@ -173,23 +178,33 @@ export default function RevisionTab({
                 ? review.file.name
                 : "Subir PDF actualizado de hoja de vida"}
             </p>
-            <p className="mt-1 text-neutral-500 text-xs">
-              Se analizará y comparará antes de registrar cualquier cambio.
+            <p id="pdf-drop-hint" className="mt-1 text-neutral-500 text-xs">
+              Se analizará y comparará antes de registrar cualquier cambio. Solo
+              PDF.
             </p>
           </div>
         </div>
       </button>
 
       {review.statusMessage && (
-        <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-600">
+        <div
+          role="status"
+          className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-600"
+        >
           {review.statusMessage}
         </div>
       )}
 
       {review.errorMessage && (
-        <div className="rounded-xl border border-gravisima-200 bg-gravisima-50 p-4 text-sm text-gravisima-700">
+        <div
+          role="alert"
+          className="rounded-xl border border-gravisima-200 bg-gravisima-50 p-4 text-sm text-gravisima-700"
+        >
           <div className="flex items-start gap-2">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <AlertTriangle
+              className="mt-0.5 h-4 w-4 shrink-0"
+              aria-hidden="true"
+            />
             <span>{review.errorMessage}</span>
             <button
               type="button"
@@ -303,7 +318,19 @@ export default function RevisionTab({
       )}
 
       {review.summary && (
-        <div className="flex flex-col-reverse gap-3 border-t border-neutral-100 pt-4 sm:flex-row sm:justify-end">
+        <div className="flex flex-col gap-3 border-t border-neutral-100 pt-4 sm:flex-row sm:justify-end sm:items-center">
+          {canGoToCarta && review.comparison?.suggestedDocType && (
+            <Button
+              onClick={() => void handleGoToCarta()}
+              disabled={review.isBusy}
+              aria-busy={review.isBusy}
+              className="rounded-xl px-5 py-2 order-first sm:order-last"
+            >
+              Ir a Carta:{" "}
+              {mapDocTypeToLetterType(review.comparison.suggestedDocType)}
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          )}
           <button
             type="button"
             onClick={() => void review.reset()}
@@ -321,17 +348,6 @@ export default function RevisionTab({
             <CheckCircle2 className="h-4 w-4" />
             Confirmar actualización
           </button>
-          {canGoToCarta && review.comparison?.suggestedDocType && (
-            <Button
-              onClick={() => void handleGoToCarta()}
-              disabled={review.isBusy}
-              className="rounded-xl px-5 py-2"
-            >
-              Ir a Carta:{" "}
-              {mapDocTypeToLetterType(review.comparison.suggestedDocType)}
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          )}
         </div>
       )}
     </div>

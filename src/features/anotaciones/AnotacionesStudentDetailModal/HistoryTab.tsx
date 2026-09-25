@@ -1,5 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
+import { useMemo, useState } from "react";
 import {
   CheckCircle2,
   FileSearch,
@@ -133,8 +134,9 @@ export default function HistoryTab({
   letterOutputEvents,
   cartaEvents,
 }: HistoryTabProps) {
+  const [showAllDetected, setShowAllDetected] = useState(false);
+  const [kindFilter, setKindFilter] = useState<string>("Todos");
   const manualHistory = useStudentHistoryEntries(studentId);
-  const cartasById = new Map(cartas.map((carta) => [carta.id, carta]));
   const relevantCartaEvents = cartaEvents.filter(
     (event) =>
       event.event_type !== "created" && event.event_type !== "suggested",
@@ -186,77 +188,112 @@ export default function HistoryTab({
     return items;
   }, []);
 
-  const items: TimelineItem[] = [
-    ...manualHistory.entries.map((entry) => ({
-      id: `manual-${entry.id}`,
-      date: entry.created_at,
-      icon: <NotebookPen className="h-4 w-4" />,
-      title: entry.title,
-      description: entry.description,
-      tone: "bg-grave-50 text-grave-700",
-    })),
-    ...files.map((file) => ({
-      id: `file-${file.id}`,
-      date: file.uploaded_at,
-      icon: <Upload className="h-4 w-4" />,
-      title: "PDF subido",
-      description:
-        file.original_file_name || file.file_name || file.storage_path,
-      tone: "bg-blue-50 text-blue-700",
-    })),
-    ...documentAnalyses.map((analysis) => ({
-      id: `analysis-${analysis.id}`,
-      date: analysis.analyzed_at,
-      icon: <FileSearch className="h-4 w-4" />,
-      title: "PDF analizado",
-      description: `${analysis.file_name || "Documento"} · ${analysis.negativas} negativas, ${analysis.positivas} positivas, ${analysis.informativas} informativas`,
-      tone: "bg-brand-50 text-brand-700",
-    })),
-    ...processes.map((process) => ({
-      id: `process-${process.id}`,
-      date: process.completed_at || process.created_at,
-      icon: <CheckCircle2 className="h-4 w-4" />,
-      title: process.is_completed
-        ? "Actualización PDF confirmada"
-        : "Proceso PDF creado",
-      description: `${process.process_number} · ${process.total_negativas} negativas · sugerencia: ${process.final_letter_type || process.suggested_letter_type || "sin carta"}`,
-      tone: "bg-leve-50 text-leve-700",
-    })),
-    ...detectedAnnotations.slice(0, 25).map((annotation) => ({
-      id: `detected-${annotation.id}`,
-      date: annotation.detected_at,
-      icon: <History className="h-4 w-4" />,
-      title: `Anotación ${annotation.annotation_type} detectada`,
-      description:
-        annotation.annotation_text ||
-        annotation.raw_text ||
-        "Sin texto registrado",
-      tone: "bg-neutral-50 text-neutral-700",
-    })),
-    ...relevantCartaEvents.map((event) =>
-      describeCartaEvent(event, cartasById.get(event.carta_id)),
-    ),
-    ...letterOutputEvents.map((event) => ({
-      id: `letter-output-${event.id}`,
-      date: event.created_at,
-      icon: <FileText className="h-4 w-4" />,
-      title:
-        event.event_name === "letter_printed"
-          ? "Carta impresa"
-          : "Carta descargada",
-      description: `${event.properties.letterType || "Carta"} · evento legacy de uso`,
-      tone: "bg-cyan-50 text-cyan-700",
-    })),
-    ...syntheticCartaItems,
-    ...etapas.map((etapa) => ({
-      id: `etapa-${etapa.id}`,
-      date: etapa.transition_date || etapa.created_at,
-      icon: <ScrollText className="h-4 w-4" />,
-      title: `Cambio de etapa disciplinaria: ${etapa.stage_name}`,
-      description: `${etapa.responsible || "Sin responsable"}${etapa.comment ? ` · ${etapa.comment}` : ""}`,
-      tone: "bg-purple-50 text-purple-700",
-    })),
-  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const items: TimelineItem[] = useMemo(() => {
+    const cartasByIdInner = new Map(cartas.map((carta) => [carta.id, carta]));
+    const all: TimelineItem[] = [
+      ...manualHistory.entries.map((entry) => ({
+        id: `manual-${entry.id}`,
+        date: entry.created_at,
+        icon: <NotebookPen className="h-4 w-4" />,
+        title: entry.title,
+        description: entry.description,
+        tone: "bg-grave-50 text-grave-700",
+      })),
+      ...files.map((file) => ({
+        id: `file-${file.id}`,
+        date: file.uploaded_at,
+        icon: <Upload className="h-4 w-4" />,
+        title: "PDF subido",
+        description:
+          file.original_file_name || file.file_name || file.storage_path,
+        tone: "bg-blue-50 text-blue-700",
+      })),
+      ...documentAnalyses.map((analysis) => ({
+        id: `analysis-${analysis.id}`,
+        date: analysis.analyzed_at,
+        icon: <FileSearch className="h-4 w-4" />,
+        title: "PDF analizado",
+        description: `${analysis.file_name || "Documento"} · ${analysis.negativas} negativas, ${analysis.positivas} positivas, ${analysis.informativas} informativas`,
+        tone: "bg-brand-50 text-brand-700",
+      })),
+      ...processes.map((process) => ({
+        id: `process-${process.id}`,
+        date: process.completed_at || process.created_at,
+        icon: <CheckCircle2 className="h-4 w-4" />,
+        title: process.is_completed
+          ? "Actualización PDF confirmada"
+          : "Proceso PDF creado",
+        description: `${process.process_number} · ${process.total_negativas} negativas · sugerencia: ${process.final_letter_type || process.suggested_letter_type || "sin carta"}`,
+        tone: "bg-leve-50 text-leve-700",
+      })),
+      ...(showAllDetected
+        ? detectedAnnotations
+        : detectedAnnotations.slice(0, 25)
+      ).map((annotation) => ({
+        id: `detected-${annotation.id}`,
+        date: annotation.detected_at,
+        icon: <History className="h-4 w-4" />,
+        title: `Anotación ${annotation.annotation_type} detectada`,
+        description:
+          annotation.annotation_text ||
+          annotation.raw_text ||
+          "Sin texto registrado",
+        tone: "bg-neutral-50 text-neutral-700",
+      })),
+      ...relevantCartaEvents.map((event) =>
+        describeCartaEvent(event, cartasByIdInner.get(event.carta_id)),
+      ),
+      ...letterOutputEvents.map((event) => ({
+        id: `letter-output-${event.id}`,
+        date: event.created_at,
+        icon: <FileText className="h-4 w-4" />,
+        title:
+          event.event_name === "letter_printed"
+            ? "Carta impresa"
+            : "Carta descargada",
+        description: `${event.properties.letterType || "Carta"} · evento legacy de uso`,
+        tone: "bg-cyan-50 text-cyan-700",
+      })),
+      ...syntheticCartaItems,
+      ...etapas.map((etapa) => ({
+        id: `etapa-${etapa.id}`,
+        date: etapa.transition_date || etapa.created_at,
+        icon: <ScrollText className="h-4 w-4" />,
+        title: `Cambio de etapa disciplinaria: ${etapa.stage_name}`,
+        description: `${etapa.responsible || "Sin responsable"}${etapa.comment ? ` · ${etapa.comment}` : ""}`,
+        tone: "bg-purple-50 text-purple-700",
+      })),
+    ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return all.filter(
+      (item) =>
+        kindFilter === "Todos" ||
+        (kindFilter === "Cartas"
+          ? item.id.startsWith("carta-") || item.id.startsWith("letter-output-")
+          : kindFilter === "PDF"
+            ? item.id.startsWith("file-") ||
+              item.id.startsWith("analysis-") ||
+              item.id.startsWith("process-") ||
+              item.id.startsWith("detected-")
+            : kindFilter === "Etapas"
+              ? item.id.startsWith("etapa-")
+              : kindFilter === "Manual"
+                ? item.id.startsWith("manual-")
+                : true),
+    );
+  }, [
+    manualHistory.entries,
+    files,
+    documentAnalyses,
+    processes,
+    detectedAnnotations,
+    relevantCartaEvents,
+    letterOutputEvents,
+    syntheticCartaItems,
+    etapas,
+    cartas,
+    showAllDetected,
+    kindFilter,
+  ]);
 
   return (
     <div className="space-y-4">
@@ -268,6 +305,30 @@ export default function HistoryTab({
         onResetError={manualHistory.resetCreateError}
       />
 
+      <div className="flex items-center gap-2">
+        <label
+          htmlFor="history-kind-filter"
+          className="text-xs font-semibold text-neutral-600"
+        >
+          Filtrar historial
+        </label>
+        <select
+          id="history-kind-filter"
+          value={kindFilter}
+          onChange={(e) => setKindFilter(e.target.value)}
+          className="rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm"
+        >
+          {["Todos", "Cartas", "PDF", "Etapas", "Manual"].map((k) => (
+            <option key={k} value={k}>
+              {k}
+            </option>
+          ))}
+        </select>
+        <span className="text-xs text-neutral-500" role="status">
+          {items.length} eventos
+        </span>
+      </div>
+
       {manualHistory.loadError && (
         <p
           role="alert"
@@ -278,7 +339,10 @@ export default function HistoryTab({
       )}
 
       {manualHistory.isLoading && items.length === 0 ? (
-        <div className="flex items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white p-8 text-neutral-500 text-sm">
+        <div
+          role="status"
+          className="flex items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white p-8 text-neutral-500 text-sm"
+        >
           <Loader2 className="h-4 w-4 animate-spin" />
           Cargando historial...
         </div>
@@ -290,33 +354,46 @@ export default function HistoryTab({
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {items.map((item) => (
-            <article
-              key={item.id}
-              className="flex gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-xs"
-            >
-              <div
-                className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${item.tone}`}
+        <>
+          <div className="space-y-3">
+            {items.map((item) => (
+              <article
+                key={item.id}
+                className="flex gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-xs"
               >
-                {item.icon}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="text-sm font-bold text-neutral-900">
-                    {item.title}
-                  </h3>
-                  <span className="text-xs text-neutral-400">
-                    {formatDate(item.date)}
-                  </span>
+                <div
+                  className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${item.tone}`}
+                >
+                  {item.icon}
                 </div>
-                <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-600">
-                  {item.description}
-                </p>
-              </div>
-            </article>
-          ))}
-        </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="text-sm font-bold text-neutral-900">
+                      {item.title}
+                    </h3>
+                    <span className="text-xs text-neutral-400">
+                      {formatDate(item.date)}
+                    </span>
+                  </div>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-600">
+                    {item.description}
+                  </p>
+                </div>
+              </article>
+            ))}
+          </div>
+          {detectedAnnotations.length > 25 && (
+            <button
+              type="button"
+              onClick={() => setShowAllDetected((v) => !v)}
+              className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-semibold text-neutral-600 hover:bg-neutral-50"
+            >
+              {showAllDetected
+                ? "Mostrar menos"
+                : `Ver ${detectedAnnotations.length - 25} anotaciones detectadas más`}
+            </button>
+          )}
+        </>
       )}
     </div>
   );

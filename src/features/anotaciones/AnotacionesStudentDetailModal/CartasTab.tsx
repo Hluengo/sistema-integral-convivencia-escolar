@@ -1,9 +1,9 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { lazy, Suspense, useState } from 'react';
-import { Archive, Ban, CheckCircle2, FileText, XCircle } from 'lucide-react';
-import type { Annotation, CartaDisciplinaria } from '@/shared/lib/types';
-import { TEACHERS_BY_COURSE } from '@/shared/lib/anotacionesUtils';
+import { lazy, Suspense, useState } from "react";
+import { Archive, Ban, CheckCircle2, FileText, XCircle } from "lucide-react";
+import type { Annotation, CartaDisciplinaria } from "@/shared/lib/types";
+import { TEACHERS_BY_COURSE } from "@/shared/lib/anotacionesUtils";
 import {
   archiveCarta,
   annulCarta,
@@ -11,7 +11,7 @@ import {
   markCartaInterviewed,
   markCartaProcessedManually,
   resolveCartaWorkflowStatus,
-} from '@/shared/api/services/cartas.service';
+} from "@/shared/api/services/cartas.service";
 import {
   getCartaProcessingBlockReason,
   getHighestPriorityLetterType,
@@ -22,23 +22,25 @@ import {
   mapLetterTypeToDocType,
   resolveStudentCartaTableState,
   type LetterDocType,
-} from '@/shared/lib/domain/disciplinaryStage';
-import type { StudentInfo } from './constants';
-import PhysicalCartaRegistrationCard from './PhysicalCartaRegistrationCard';
-import TextInputDialog from '@/shared/ui/TextInputDialog';
-import Button from '@/shared/ui/Button';
-import { DocumentGeneratorSkeleton } from '@/shared/Skeleton';
-import { useAuthStore } from '@/shared/lib/stores/authStore';
-import { useInvalidateDashboardQueries } from '@/shared/lib/hooks/useInvalidateDashboardQueries';
+} from "@/shared/lib/domain/disciplinaryStage";
+import type { StudentInfo } from "./constants";
+import PhysicalCartaRegistrationCard from "./PhysicalCartaRegistrationCard";
+import TextInputDialog from "@/shared/ui/TextInputDialog";
+import Button from "@/shared/ui/Button";
+import { DocumentGeneratorSkeleton } from "@/shared/Skeleton";
+import { useAuthStore } from "@/shared/lib/stores/authStore";
+import { useInvalidateDashboardQueries } from "@/shared/lib/hooks/useInvalidateDashboardQueries";
 
-const AnotacionesDocumentGenerator = lazy(() => import('../AnotacionesDocumentGenerator'));
+const AnotacionesDocumentGenerator = lazy(
+  () => import("../AnotacionesDocumentGenerator"),
+);
 
-type FeedbackTone = 'info' | 'success' | 'error';
+type FeedbackTone = "info" | "success" | "error";
 
 interface PendingCartaSuggestion {
   docType: LetterDocType;
   negativeCount: number;
-  source: 'pdf' | 'supabase';
+  source: "pdf" | "supabase";
 }
 
 interface PendingManualProcess {
@@ -72,15 +74,19 @@ export default function CartasTab({
   const tenantId = useAuthStore((state) => state.tenantId);
   const sessionUser = useAuthStore((state) => state.user);
   const invalidateDashboard = useInvalidateDashboardQueries();
-  const actor = sessionUser ? { userId: sessionUser.id, email: sessionUser.email ?? null } : null;
+  const actor = sessionUser
+    ? { userId: sessionUser.id, email: sessionUser.email ?? null }
+    : null;
   const schoolYear = Number(
-    new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'America/Santiago',
-      year: 'numeric',
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Santiago",
+      year: "numeric",
     }).format(new Date()),
   );
   const platformCurrentCarta =
-    cartas.find((carta) => carta.status !== 'Anulada' && carta.origin !== 'physical') ?? null;
+    cartas.find(
+      (carta) => carta.status !== "Anulada" && carta.origin !== "physical",
+    ) ?? null;
   const physicalBaselineType = getPhysicalCartaBaselineType(cartas, schoolYear);
   const cartaState = resolveStudentCartaTableState(cartas, schoolYear);
   const countSuggestedDocType = getSuggestedLetterType(
@@ -97,30 +103,36 @@ export default function CartasTab({
   );
   const currentDocType = mapLetterTypeToDocType(cartaState.currentLetterType);
   const physicalCurrentDocType = mapLetterTypeToDocType(physicalBaselineType);
-  const activeDocType = suggestedDocType ?? currentDocType ?? physicalCurrentDocType;
+  const activeDocType =
+    suggestedDocType ?? currentDocType ?? physicalCurrentDocType;
   const activeLetterType = mapDocTypeToLetterType(activeDocType);
   const negativeCount = pendingSuggestion?.negativeCount ?? counts.negativas;
-  const source = pendingSuggestion?.source ?? 'supabase';
+  const source = pendingSuggestion?.source ?? "supabase";
   const matchingCarta = activeLetterType
-    ? cartas.find((carta) => carta.status !== 'Anulada' && carta.letter_type === activeLetterType)
+    ? cartas.find(
+        (carta) =>
+          carta.status !== "Anulada" && carta.letter_type === activeLetterType,
+      )
     : null;
   const [localCarta, setLocalCarta] = useState<CartaDisciplinaria | null>(null);
   const activeCarta =
-    localCarta ?? matchingCarta ?? (!suggestedDocType ? platformCurrentCarta : null);
+    localCarta ??
+    matchingCarta ??
+    (!suggestedDocType ? platformCurrentCarta : null);
   const interviewRecorded = Boolean(
     activeCarta &&
-      cartaEvents.some(
-        (event) =>
-          event.carta_id === activeCarta.id && event.event_type === 'convivencia_interviewed',
-      ),
+    cartaEvents.some(
+      (event) =>
+        event.carta_id === activeCarta.id &&
+        event.event_type === "convivencia_interviewed",
+    ),
   );
   const [showGenerator, setShowGenerator] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [messageTone, setMessageTone] = useState<FeedbackTone>('info');
-  const [pendingManualProcess, setPendingManualProcess] = useState<PendingManualProcess | null>(
-    null,
-  );
+  const [messageTone, setMessageTone] = useState<FeedbackTone>("info");
+  const [pendingManualProcess, setPendingManualProcess] =
+    useState<PendingManualProcess | null>(null);
   const [isAnnulDialogOpen, setIsAnnulDialogOpen] = useState(false);
   const [isArchiveDialogOpen, setIsArchiveDialogOpen] = useState(false);
   const [isInterviewDialogOpen, setIsInterviewDialogOpen] = useState(false);
@@ -137,8 +149,8 @@ export default function CartasTab({
 
     if (
       localCarta &&
-      localCarta.status !== 'Anulada' &&
-      localCarta.origin !== 'physical' &&
+      localCarta.status !== "Anulada" &&
+      localCarta.origin !== "physical" &&
       localCarta.letter_type === requestedLetterType
     ) {
       return localCarta;
@@ -146,8 +158,8 @@ export default function CartasTab({
 
     const existingCarta = cartas.find(
       (carta) =>
-        carta.status !== 'Anulada' &&
-        carta.origin !== 'physical' &&
+        carta.status !== "Anulada" &&
+        carta.origin !== "physical" &&
         carta.letter_type === requestedLetterType,
     );
     if (existingCarta) return existingCarta;
@@ -178,19 +190,19 @@ export default function CartasTab({
     const carta = await ensureCarta(requestedDocType);
     if (!carta) {
       setBusy(false);
-      setMessageTone('error');
-      setMessage('No hay carta requerida para este estudiante.');
+      setMessageTone("error");
+      setMessage("No hay carta requerida para este estudiante.");
       return;
     }
     const ok = await action(carta);
     if (ok) {
-      setMessageTone('success');
+      setMessageTone("success");
       setMessage(successText);
       setLocalCarta(null);
       await refreshAfterChange();
     } else {
-      setMessageTone('error');
-      setMessage('No se pudo completar la acción. Inténtelo nuevamente.');
+      setMessageTone("error");
+      setMessage("No se pudo completar la acción. Inténtelo nuevamente.");
     }
     setBusy(false);
   };
@@ -201,11 +213,11 @@ export default function CartasTab({
     const carta = await ensureCarta();
     if (carta) {
       setShowGenerator(true);
-      setMessageTone('info');
-      setMessage('Generador abierto.');
+      setMessageTone("info");
+      setMessage("Generador abierto.");
     } else {
-      setMessageTone('error');
-      setMessage('No hay carta requerida para este estudiante.');
+      setMessageTone("error");
+      setMessage("No hay carta requerida para este estudiante.");
     }
     setBusy(false);
   };
@@ -220,15 +232,15 @@ export default function CartasTab({
       activeDocType,
       counts.negativas,
     );
-    if (blockReason === 'derivacion_requires_15_registered') {
-      setMessageTone('error');
+    if (blockReason === "derivacion_requires_15_registered") {
+      setMessageTone("error");
       setMessage(
         `No se puede procesar la derivación: Supabase registra ${counts.negativas} negativas. Confirme primero la anotación número 15 en “Revisar PDF”.`,
       );
       return;
     }
-    if (blockReason === 'letter_type_mismatch') {
-      setMessageTone('error');
+    if (blockReason === "letter_type_mismatch") {
+      setMessageTone("error");
       setMessage(
         `El documento seleccionado no coincide con la etapa registrada. Seleccione “${activeLetterType}” o confirme primero la actualización de anotaciones.`,
       );
@@ -242,8 +254,9 @@ export default function CartasTab({
     const { contentSnapshot, selectedDocType } = pendingManualProcess;
     setPendingManualProcess(null);
     await runCartaAction(
-      (carta) => markCartaProcessedManually(carta.id, note, contentSnapshot, actor),
-      'Carta marcada como procesada.',
+      (carta) =>
+        markCartaProcessedManually(carta.id, note, contentSnapshot, actor),
+      "Carta marcada como procesada.",
       selectedDocType,
     );
   };
@@ -260,30 +273,36 @@ export default function CartasTab({
 
   const confirmAnnul = async (reason: string) => {
     setIsAnnulDialogOpen(false);
-    await runCartaAction((carta) => annulCarta(carta.id, reason, actor), 'Carta anulada.');
+    await runCartaAction(
+      (carta) => annulCarta(carta.id, reason, actor),
+      "Carta anulada.",
+    );
   };
 
   const confirmArchive = async (note: string) => {
     setIsArchiveDialogOpen(false);
-    await runCartaAction((carta) => archiveCarta(carta.id, note, actor), 'Carta archivada.');
+    await runCartaAction(
+      (carta) => archiveCarta(carta.id, note, actor),
+      "Carta archivada.",
+    );
   };
 
   const confirmInterview = async (note: string) => {
     setIsInterviewDialogOpen(false);
     await runCartaAction(
       (carta) => markCartaInterviewed(carta.id, note, actor),
-      'Entrevista realizada.',
+      "Entrevista realizada.",
     );
   };
 
   const canAct = Boolean(activeDocType && activeLetterType);
   const canArchive =
     Boolean(activeCarta) &&
-    activeCarta?.origin !== 'physical' &&
-    resolveCartaWorkflowStatus(activeCarta) === 'completed';
+    activeCarta?.origin !== "physical" &&
+    resolveCartaWorkflowStatus(activeCarta) === "completed";
   const canMarkInterview =
-    activeDocType === 'derivacion' &&
-    resolveCartaWorkflowStatus(activeCarta) === 'archived' &&
+    activeDocType === "derivacion" &&
+    resolveCartaWorkflowStatus(activeCarta) === "archived" &&
     !interviewRecorded;
 
   return (
@@ -299,52 +318,74 @@ export default function CartasTab({
       <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
-            <h3 className="text-sm font-bold text-neutral-900">Acciones principales</h3>
+            <h3 className="text-sm font-bold text-neutral-900">
+              Acciones principales
+            </h3>
             <p className="mt-1 text-xs text-neutral-500">
-              Abre el generador para editar e imprimir la plantilla. Luego confirma el trámite
-              mediante “Marcar como procesada”.
+              Abre el generador para editar e imprimir la plantilla. Luego
+              confirma el trámite mediante “Marcar como procesada”.
             </p>
           </div>
           {message && (
-            <span
-              role={messageTone === 'error' ? 'alert' : 'status'}
-              className={`rounded-full px-3 py-1 text-xs font-bold ${
-                messageTone === 'error'
-                  ? 'bg-gravisima-50 text-gravisima-700'
-                  : messageTone === 'success'
-                    ? 'bg-leve-50 text-leve-700'
-                    : 'bg-blue-50 text-blue-700'
+            <div
+              role={messageTone === "error" ? "alert" : "status"}
+              className={`rounded-xl border px-3 py-2 text-xs font-semibold ${
+                messageTone === "error"
+                  ? "border-gravisima-200 bg-gravisima-50 text-gravisima-700"
+                  : messageTone === "success"
+                    ? "border-leve-200 bg-leve-50 text-leve-700"
+                    : "border-blue-200 bg-blue-50 text-blue-700"
               }`}
             >
               {message}
-            </span>
+            </div>
           )}
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div
+          className="flex flex-wrap gap-2"
+          role="group"
+          aria-label="Acciones de carta"
+        >
           <Button
             onClick={() => void handleCreate()}
             disabled={!canAct || busy}
+            aria-busy={busy}
+            title={
+              !canAct
+                ? "No hay carta requerida para este estudiante según su etapa"
+                : "Abrir generador de carta"
+            }
             className="rounded-xl px-4 py-2"
           >
-            <FileText className="h-4 w-4" />
+            <FileText className="h-4 w-4" aria-hidden="true" />
             Crear carta
           </Button>
           <Button
             variant="custom"
             onClick={handleAnnul}
             disabled={!activeCarta || busy}
+            title={
+              !activeCarta
+                ? "No hay carta activa para anular"
+                : "Anular la carta activa"
+            }
             className="rounded-xl border border-gravisima-300 bg-gravisima-50 px-4 py-2 text-gravisima-700 shadow-sm hover:bg-gravisima-100 hover:text-gravisima-800 disabled:bg-neutral-50 disabled:text-neutral-400"
           >
-            <Ban className="h-4 w-4" />
+            <Ban className="h-4 w-4" aria-hidden="true" />
             Anular
           </Button>
           <Button
             variant="custom"
             onClick={handleArchive}
             disabled={!canArchive || busy}
+            title={
+              !canArchive
+                ? "Solo se archiva una carta con trámite completado"
+                : "Archivar carta completada"
+            }
             className="rounded-xl border border-leve-300 bg-leve-50 px-4 py-2 text-leve-800 shadow-sm hover:bg-leve-100 hover:text-leve-900 disabled:bg-neutral-50 disabled:text-neutral-400"
           >
-            <Archive className="h-4 w-4" />
+            <Archive className="h-4 w-4" aria-hidden="true" />
             Archivar
           </Button>
           {canMarkInterview ? (
@@ -371,10 +412,12 @@ export default function CartasTab({
         <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
           <div className="mb-4 flex items-center justify-between gap-3">
             <div>
-              <h3 className="text-sm font-bold text-neutral-900">Generador de carta</h3>
+              <h3 className="text-sm font-bold text-neutral-900">
+                Generador de carta
+              </h3>
               <p className="mt-1 text-xs text-neutral-500">
-                Edita la carta en la aplicación y luego imprime o genera PDF desde la plantilla
-                visible.
+                Edita la carta en la aplicación y luego imprime o genera PDF
+                desde la plantilla visible.
               </p>
             </div>
             <button
@@ -388,7 +431,7 @@ export default function CartasTab({
           </div>
           <Suspense fallback={<DocumentGeneratorSkeleton />}>
             <AnotacionesDocumentGenerator
-              key={`${student.id}:${activeDocType}:${activeCarta?.id ?? 'new'}`}
+              key={`${student.id}:${activeDocType}:${activeCarta?.id ?? "new"}`}
               student={{
                 id: student.id,
                 full_name: student.full_name,
@@ -401,11 +444,15 @@ export default function CartasTab({
               teachers={teachers}
               initialDocType={activeDocType}
               initialContentSnapshot={
-                activeCarta?.content_snapshot || localCarta?.content_snapshot || null
+                activeCarta?.content_snapshot ||
+                localCarta?.content_snapshot ||
+                null
               }
               onMarkProcessed={handleManualProcess}
               isProcessing={busy}
-              processingFeedback={message ? { text: message, tone: messageTone } : null}
+              processingFeedback={
+                message ? { text: message, tone: messageTone } : null
+              }
             />
           </Suspense>
         </section>

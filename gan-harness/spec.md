@@ -10,7 +10,7 @@
   Sin react-router (vetado por advisory de seguridad, ver `docs/frontend-improvement-plan.md`).
 - **Contenedor:** `src/features/causas/CausaDetailModal.tsx` → Radix `Dialog` +
   `DetailModalContent` (`src/shared/ui/DetailModal.tsx`):
-  `h-[min(94vh,980px)] × w-[min(96vw,112rem)]`, un solo scroll interno, `hideClose`.
+  `h-[min(94vh,980px)] × w-[min(96vw,72rem)]`, un solo scroll interno, `hideClose`.
 - **Contenido:** `InteractiveTimeline key={causa.id}` =
   `TimelineHeader` (avatar inicial, título, 6 badges, acciones Cerrar causa / Editar / X) +
   `DetailModalTabs` (roving tabindex, flechas/Home/End, `detail-tab-*` / `detail-tabpanel-*`) +

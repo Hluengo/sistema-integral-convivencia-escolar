@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
-import { Check, Pencil, X } from 'lucide-react';
-import type { Annotation } from '@/shared/lib/types';
-import { updateAnnotation } from '@/shared/api/services/annotations.service';
-import { formatDate, SEVERITY_BADGE } from './constants';
-import Button from '@/shared/ui/Button';
-import { toDateTimeLocalValue, toIsoDateTime } from './annotationEditUtils';
-import { useAuthStore } from '@/shared/lib/stores/authStore';
-import { formatAnnotationDisplayText } from './annotationDisplay';
+import { useMemo, useState } from "react";
+import { Check, Pencil, X } from "lucide-react";
+import type { Annotation } from "@/shared/lib/types";
+import { updateAnnotation } from "@/shared/api/services/annotations.service";
+import { formatDate, SEVERITY_BADGE } from "./constants";
+import Button from "@/shared/ui/Button";
+import { toDateTimeLocalValue, toIsoDateTime } from "./annotationEditUtils";
+import { useAuthStore } from "@/shared/lib/stores/authStore";
+import { formatAnnotationDisplayText } from "./annotationDisplay";
 
 interface EditAnnotationsTabProps {
   annotations: Annotation[];
@@ -21,12 +21,21 @@ interface EditAnnotationsTabProps {
 interface EditForm {
   text: string;
   date: string;
-  severity: Annotation['severity'];
-  type: Annotation['type'];
+  severity: Annotation["severity"];
+  type: Annotation["type"];
 }
 
-const ANNOTATION_TYPES: Annotation['type'][] = ['Negativa', 'Positiva', 'Información'];
-const SEVERITIES: Annotation['severity'][] = ['Leve', 'Grave', 'Muy Grave', 'Gravísima'];
+const ANNOTATION_TYPES: Annotation["type"][] = [
+  "Negativa",
+  "Positiva",
+  "Información",
+];
+const SEVERITIES: Annotation["severity"][] = [
+  "Leve",
+  "Grave",
+  "Muy Grave",
+  "Gravísima",
+];
 
 function createEditForm(annotation: Annotation): EditForm {
   return {
@@ -37,13 +46,28 @@ function createEditForm(annotation: Annotation): EditForm {
   };
 }
 
-export default function EditAnnotationsTab({ annotations, onSaved }: EditAnnotationsTabProps) {
+export default function EditAnnotationsTab({
+  annotations,
+  onSaved,
+}: EditAnnotationsTabProps) {
   const tenantId = useAuthStore((state) => state.tenantId);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<EditForm | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [typeFilter, setTypeFilter] = useState<string>("Todas");
+  const [query, setQuery] = useState("");
+  const visibleAnnotations = useMemo(
+    () =>
+      annotations.filter(
+        (a) =>
+          (typeFilter === "Todas" || a.type === typeFilter) &&
+          (query.trim() === "" ||
+            a.text.toLowerCase().includes(query.trim().toLowerCase())),
+      ),
+    [annotations, typeFilter, query],
+  );
 
   const startEditing = (annotation: Annotation) => {
     setEditingId(annotation.id);
@@ -61,7 +85,7 @@ export default function EditAnnotationsTab({ annotations, onSaved }: EditAnnotat
   const saveChanges = async (annotation: Annotation) => {
     if (!form) return;
     if (!form.text.trim()) {
-      setError('La anotación no puede quedar vacía.');
+      setError("La anotación no puede quedar vacía.");
       return;
     }
 
@@ -82,10 +106,12 @@ export default function EditAnnotationsTab({ annotations, onSaved }: EditAnnotat
       await onSaved();
       setEditingId(null);
       setForm(null);
-      setSuccessMessage('Anotación actualizada correctamente.');
+      setSuccessMessage("Anotación actualizada correctamente.");
     } catch (saveError: unknown) {
       setError(
-        saveError instanceof Error ? saveError.message : 'No se pudo actualizar la anotación.',
+        saveError instanceof Error
+          ? saveError.message
+          : "No se pudo actualizar la anotación.",
       );
     } finally {
       setIsSaving(false);
@@ -95,8 +121,13 @@ export default function EditAnnotationsTab({ annotations, onSaved }: EditAnnotat
   if (annotations.length === 0) {
     return (
       <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-6 text-center">
-        <Pencil className="mx-auto size-8 text-neutral-300" aria-hidden="true" />
-        <p className="mt-3 font-semibold text-neutral-700">No hay anotaciones para editar</p>
+        <Pencil
+          className="mx-auto size-8 text-neutral-300"
+          aria-hidden="true"
+        />
+        <p className="mt-3 font-semibold text-neutral-700">
+          No hay anotaciones para editar
+        </p>
         <p className="mt-1 text-sm text-neutral-500">
           Los registros nuevos aparecerán aquí después de confirmarlos.
         </p>
@@ -107,10 +138,12 @@ export default function EditAnnotationsTab({ annotations, onSaved }: EditAnnotat
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="font-bold text-lg text-neutral-900">Editar anotaciones registradas</h3>
+        <h3 className="font-bold text-lg text-neutral-900">
+          Editar anotaciones registradas
+        </h3>
         <p className="mt-1 text-sm text-neutral-500">
-          Corrige el texto, tipo, severidad o fecha. Esta acción no elimina registros ni modifica
-          archivos asociados.
+          Corrige el texto, tipo, severidad o fecha. Esta acción no elimina
+          registros ni modifica archivos asociados.
         </p>
       </div>
 
@@ -130,8 +163,40 @@ export default function EditAnnotationsTab({ annotations, onSaved }: EditAnnotat
         )}
       </div>
 
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <label className="flex flex-1 items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm">
+          <span className="sr-only" id="annotation-search-label">
+            Buscar en anotaciones
+          </span>
+          <input
+            aria-labelledby="annotation-search-label"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Buscar por texto…"
+            className="w-full bg-transparent outline-none placeholder:text-neutral-400"
+          />
+        </label>
+        <label className="flex items-center gap-2 text-sm text-neutral-600">
+          <span className="sr-only">Filtrar por tipo</span>
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm"
+          >
+            {["Todas", ...ANNOTATION_TYPES].map((t) => (
+              <option key={t} value={t}>
+                {t === "Todas" ? "Todos los tipos" : t}
+              </option>
+            ))}
+          </select>
+        </label>
+        <span className="text-xs text-neutral-500" role="status">
+          {visibleAnnotations.length} de {annotations.length}
+        </span>
+      </div>
+
       <div className="space-y-3">
-        {annotations.map((annotation) => {
+        {visibleAnnotations.map((annotation) => {
           const isEditing = editingId === annotation.id && form;
           const severityStyle = SEVERITY_BADGE[annotation.severity];
 
@@ -151,7 +216,9 @@ export default function EditAnnotationsTab({ annotations, onSaved }: EditAnnotat
                       value={form.text}
                       onChange={(event) =>
                         setForm((current) =>
-                          current ? { ...current, text: event.target.value } : current,
+                          current
+                            ? { ...current, text: event.target.value }
+                            : current,
                         )
                       }
                       rows={4}
@@ -173,7 +240,8 @@ export default function EditAnnotationsTab({ annotations, onSaved }: EditAnnotat
                             current
                               ? {
                                   ...current,
-                                  type: event.target.value as Annotation['type'],
+                                  type: event.target
+                                    .value as Annotation["type"],
                                 }
                               : current,
                           )
@@ -199,7 +267,8 @@ export default function EditAnnotationsTab({ annotations, onSaved }: EditAnnotat
                             current
                               ? {
                                   ...current,
-                                  severity: event.target.value as Annotation['severity'],
+                                  severity: event.target
+                                    .value as Annotation["severity"],
                                 }
                               : current,
                           )
@@ -224,7 +293,9 @@ export default function EditAnnotationsTab({ annotations, onSaved }: EditAnnotat
                         value={form.date}
                         onChange={(event) =>
                           setForm((current) =>
-                            current ? { ...current, date: event.target.value } : current,
+                            current
+                              ? { ...current, date: event.target.value }
+                              : current,
                           )
                         }
                         className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
@@ -249,7 +320,7 @@ export default function EditAnnotationsTab({ annotations, onSaved }: EditAnnotat
                       className="rounded-lg px-3 py-2 disabled:cursor-wait disabled:opacity-60"
                     >
                       <Check className="size-4" aria-hidden="true" />
-                      {isSaving ? 'Guardando…' : 'Guardar cambios'}
+                      {isSaving ? "Guardando…" : "Guardar cambios"}
                     </Button>
                   </div>
                 </div>
@@ -261,8 +332,12 @@ export default function EditAnnotationsTab({ annotations, onSaved }: EditAnnotat
                         {annotation.type}
                       </span>
                       <span
-                        className={`rounded-full px-2.5 py-1 font-semibold text-xs ${severityStyle?.bg ?? 'bg-neutral-100'} ${severityStyle?.text ?? 'text-neutral-700'}`}
+                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold text-xs ${severityStyle?.bg ?? "bg-neutral-100"} ${severityStyle?.text ?? "text-neutral-700"}`}
                       >
+                        <span
+                          aria-hidden="true"
+                          className={`size-1.5 rounded-full ${severityStyle?.dot ?? "bg-neutral-400"}`}
+                        />
                         {annotation.severity}
                       </span>
                       <span className="text-neutral-500 text-xs">
@@ -288,7 +363,7 @@ export default function EditAnnotationsTab({ annotations, onSaved }: EditAnnotat
                     onClick={() => startEditing(annotation)}
                     disabled={isSaving}
                     className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-neutral-200 text-neutral-500 transition-colors hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 disabled:opacity-50"
-                    aria-label={`Editar anotación del ${formatDate(annotation.date)}`}
+                    aria-label={`Editar anotación ${annotation.type} del ${formatDate(annotation.date)}`}
                     title="Editar esta anotación"
                   >
                     <Pencil className="size-4" aria-hidden="true" />

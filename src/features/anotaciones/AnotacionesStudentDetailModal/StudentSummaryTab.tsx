@@ -73,7 +73,7 @@ export default function StudentSummaryTab({
           <span
             className={`inline-flex w-fit items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${style.bg} ${style.text}`}
           >
-            <Shield className="h-4 w-4" />
+            <Shield className="h-4 w-4" aria-hidden="true" />
             {stage.label}
           </span>
         </div>
@@ -108,12 +108,19 @@ export default function StudentSummaryTab({
 
       <section className="h-fit self-start rounded-lg border border-neutral-200 bg-white p-2.5 shadow-xs">
         <div className="mb-2 flex items-center gap-2">
-          <Gauge className="h-4 w-4 text-brand-600" />
+          <Gauge className="h-4 w-4 text-brand-600" aria-hidden="true" />
           <h4 className="text-sm font-bold text-neutral-900">
             Progreso disciplinario
           </h4>
         </div>
-        <div className="h-2.5 overflow-hidden rounded-full bg-neutral-100">
+        <div
+          role="progressbar"
+          aria-valuenow={Math.round(progress.percent)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label={`Progreso disciplinario: ${counts.negativas} negativas`}
+          className="h-2.5 overflow-hidden rounded-full bg-neutral-100"
+        >
           <div
             className="h-full rounded-full bg-brand-600 transition-[width]"
             style={{ width: `${progress.percent}%` }}
@@ -132,7 +139,7 @@ export default function StudentSummaryTab({
       <div className="grid grid-cols-1 items-start gap-3 lg:grid-cols-2">
         <section className="h-fit self-start rounded-lg border border-neutral-200 bg-white p-2.5 shadow-xs">
           <div className="mb-2 flex items-center gap-2">
-            <FileText className="h-4 w-4 text-brand-600" />
+            <FileText className="h-4 w-4 text-brand-600" aria-hidden="true" />
             <h4 className="text-sm font-bold text-neutral-900">
               Carta vigente y trámite
             </h4>
@@ -162,14 +169,15 @@ export default function StudentSummaryTab({
               onClick={onGoToCartasTab}
               className="mt-2 rounded-lg border border-brand-200 px-3 py-1.5 text-xs font-semibold text-brand-700 hover:bg-brand-50"
             >
-              Ir a Carta <ArrowRight className="h-3.5 w-3.5" />
+              Ir a Carta{" "}
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
           )}
         </section>
 
         <section className="h-fit self-start rounded-lg border border-neutral-200 bg-white p-2.5 shadow-xs">
           <div className="mb-2 flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-brand-600" />
+            <Sparkles className="h-4 w-4 text-brand-600" aria-hidden="true" />
             <h4 className="text-sm font-bold text-neutral-900">
               Último análisis PDF
             </h4>
@@ -196,7 +204,8 @@ export default function StudentSummaryTab({
               onClick={onGoToRevisionTab}
               className="mt-2 rounded-lg border border-brand-200 px-3 py-1.5 text-xs font-semibold text-brand-700 hover:bg-brand-50"
             >
-              Revisar nuevo PDF <ArrowRight className="h-3.5 w-3.5" />
+              Revisar nuevo PDF{" "}
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
           )}
         </section>
