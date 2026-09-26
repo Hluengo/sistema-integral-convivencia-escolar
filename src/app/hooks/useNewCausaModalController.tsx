@@ -19,6 +19,7 @@ type CreateIncidentFormInput = CreateIncidenteInput & {
   conductaRiceId: string;
   tipoInfraccion: TipoInfraccion;
   comprometeAulaSegura: boolean;
+  tipo: string;
 };
 
 interface UseNewCausaModalControllerArgs {
@@ -137,6 +138,7 @@ export function useNewCausaModalController({
   const handleCreateIncident = useCallback(
     async ({
       lugar,
+      tipo,
       descripcion,
       responsable,
       studentIds,
@@ -146,7 +148,7 @@ export function useNewCausaModalController({
     }: CreateIncidentFormInput) => {
       const tenantId = useAuthStore.getState().tenantId;
       const incident = await createIncidente(
-        { lugar, descripcion, responsable },
+        { lugar, tipo, descripcion, responsable },
         tenantId,
       );
       if (!incident) {

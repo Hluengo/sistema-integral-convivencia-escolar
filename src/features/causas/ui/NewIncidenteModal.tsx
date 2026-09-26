@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { AlertTriangle, Users } from "lucide-react";
 import type { TipoInfraccion } from "../../../shared/lib/types";
+import { getConductaReglamentada } from "../../../reglamentoData";
 import RiceConductSelect from "../NewCausaForm/RiceConductSelect";
 import type {
   Course,
@@ -32,6 +33,7 @@ interface NewIncidenteModalProps {
       conductaRiceId: string;
       tipoInfraccion: TipoInfraccion;
       comprometeAulaSegura: boolean;
+      tipo: string;
     },
   ) => Promise<void>;
 }
@@ -87,9 +89,13 @@ export default function NewIncidenteModal({
     setError(null);
     setIsSaving(true);
     try {
+      const conducta = getConductaReglamentada(conductaRiceId);
       await onSubmit({
         fechaHora: new Date(fechaHora).toISOString(),
         lugar,
+        tipo: conducta
+          ? `${conducta.articulo} N° ${conducta.numero} · ${conducta.gravedad}`
+          : tipoInfraccion,
         descripcion,
         responsable,
         studentIds,
