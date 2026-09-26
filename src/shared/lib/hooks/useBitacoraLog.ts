@@ -1,9 +1,12 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useCallback, useState } from 'react';
-import type { Causa, BitacoraEntry, DocumentScope } from '../types';
-import { nowDateOnly, nowIso } from '../../../shared/lib/dateUtils';
-import { resolveDocumentOwnerId, uploadDocument } from '../../api/services/storage.service';
+import { useCallback, useState } from "react";
+import type { Causa, BitacoraEntry, DocumentScope } from "../types";
+import { nowDateOnly, nowIso } from "../../../shared/lib/dateUtils";
+import {
+  resolveDocumentOwnerId,
+  uploadDocument,
+} from "../../api/services/storage.service";
 
 interface UseBitacoraLogArgs {
   causa: Causa;
@@ -13,7 +16,7 @@ interface UseBitacoraLogArgs {
 export interface ManualBitacoraEntryInput {
   title: string;
   description: string;
-  type: BitacoraEntry['tipo'];
+  type: BitacoraEntry["tipo"];
   participants: string;
   documentFile?: File | null;
   documentScope?: DocumentScope;
@@ -22,7 +25,7 @@ export interface ManualBitacoraEntryInput {
 export function buildManualBitacoraEntry(input: {
   title: string;
   description: string;
-  type: BitacoraEntry['tipo'];
+  type: BitacoraEntry["tipo"];
   participants: string;
   documentoAdjunto?: string;
 }): BitacoraEntry | null {
@@ -32,11 +35,12 @@ export function buildManualBitacoraEntry(input: {
 
   const parsedParticipants = input.participants.trim()
     ? input.participants
-        .split(',')
+        .split(",")
         .map((value) => value.trim())
         .filter(Boolean)
     : [];
-  const participants = parsedParticipants.length > 0 ? parsedParticipants : ['No especificados'];
+  const participants =
+    parsedParticipants.length > 0 ? parsedParticipants : ["No especificados"];
 
   return {
     id: `b_custom_${crypto.randomUUID()}`,
@@ -45,7 +49,9 @@ export function buildManualBitacoraEntry(input: {
     titulo: normalizedTitle,
     descripcion: normalizedDescription,
     participantes: participants,
-    ...(input.documentoAdjunto ? { documentoAdjunto: input.documentoAdjunto } : {}),
+    ...(input.documentoAdjunto
+      ? { documentoAdjunto: input.documentoAdjunto }
+      : {}),
   };
 }
 
@@ -60,17 +66,24 @@ export function useBitacoraLog({ causa, onUpdateCausa }: UseBitacoraLogArgs) {
       type,
       participants: participantText,
       documentFile,
-      documentScope = 'causa',
+      documentScope = "causa",
     }: ManualBitacoraEntryInput): Promise<void> => {
       if (isCreatingManualLog) return;
       setIsCreatingManualLog(true);
       setManualLogError(null);
 
       try {
-        const scope = documentScope === 'incidente' && causa.incidenteId ? 'incidente' : 'causa';
-        const ownerId = resolveDocumentOwnerId(causa.id, causa.incidenteId, scope);
+        const scope =
+          documentScope === "incidente" && causa.incidenteId
+            ? "incidente"
+            : "causa";
+        const ownerId = resolveDocumentOwnerId(
+          causa.id,
+          causa.incidenteId,
+          scope,
+        );
         const documentoAdjunto = documentFile
-          ? await uploadDocument(ownerId, documentFile, 'documentos')
+          ? await uploadDocument(ownerId, documentFile, "documentos")
           : undefined;
         const newEntry = buildManualBitacoraEntry({
           title,
@@ -80,7 +93,7 @@ export function useBitacoraLog({ causa, onUpdateCausa }: UseBitacoraLogArgs) {
           documentoAdjunto,
         });
         if (!newEntry) return;
-        newEntry.compartidoGrupal = scope === 'incidente';
+        newEntry.compartidoGrupal = scope === "incidente";
 
         onUpdateCausa({
           ...causa,
@@ -89,7 +102,9 @@ export function useBitacoraLog({ causa, onUpdateCausa }: UseBitacoraLogArgs) {
         });
       } catch (error) {
         const message =
-          error instanceof Error ? error.message : 'No fue posible guardar la entrada de bitácora.';
+          error instanceof Error
+            ? error.message
+            : "No fue posible guardar la entrada de bitácora.";
         setManualLogError(message);
         throw error;
       } finally {

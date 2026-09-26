@@ -1,10 +1,10 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useCallback, useRef } from 'react';
-import type { User } from '@supabase/supabase-js';
-import { signOut } from '../../shared/api/services/auth.service';
-import type { Causa, FaseProcedimental } from '../../shared/lib/types';
-import type { SidebarView } from '../../widgets/sidebar/Sidebar';
+import { useCallback, useRef } from "react";
+import type { User } from "@supabase/supabase-js";
+import { signOut } from "../../shared/api/services/auth.service";
+import type { Causa, FaseProcedimental } from "../../shared/lib/types";
+import type { SidebarView } from "../../widgets/sidebar/Sidebar";
 
 interface UseAppNavigationArgs {
   user: User | null;
@@ -17,7 +17,7 @@ interface UseAppNavigationArgs {
   setSelectedCausaId: (id: string) => void;
   setMobileShowDetail: (show: boolean) => void;
   setShowShortcuts: (show: boolean) => void;
-  setSelectedFaseFilter: (filter: FaseProcedimental | 'Todas') => void;
+  setSelectedFaseFilter: (filter: FaseProcedimental | "Todas") => void;
   handleReopenCausaAction: (causa: Causa) => void;
   navigateToView: (view: SidebarView) => void;
   navigateToCausa: (causaId: string) => void;
@@ -53,8 +53,8 @@ export function useAppNavigation({
 
   const handleLogout = useCallback(() => {
     clearSessionExpired();
-    setCurrentView('dashboard');
-    setSelectedCausaId('');
+    setCurrentView("dashboard");
+    setSelectedCausaId("");
     setMobileShowDetail(false);
     setShowLoginModal(false);
     setShowShortcuts(false);
@@ -72,17 +72,24 @@ export function useAppNavigation({
 
   const handleViewChange = useCallback(
     (view: SidebarView) => {
-      if (view !== 'dashboard' && !user) {
+      if (view !== "dashboard" && !user) {
         setShowLoginModal(true);
         return;
       }
-      if (view === 'admin' && !canAccessAdmin) return;
-      if (view === 'reportes' && !canAccessReports) return;
-      if (view === 'platform' && !canAccessPlatform) return;
+      if (view === "admin" && !canAccessAdmin) return;
+      if (view === "reportes" && !canAccessReports) return;
+      if (view === "platform" && !canAccessPlatform) return;
       navigateToView(view);
       isTimelineCollapsedRef.current = false;
     },
-    [canAccessAdmin, canAccessReports, canAccessPlatform, navigateToView, user, setShowLoginModal],
+    [
+      canAccessAdmin,
+      canAccessReports,
+      canAccessPlatform,
+      navigateToView,
+      user,
+      setShowLoginModal,
+    ],
   );
 
   const handleReopenCausa = useCallback(
@@ -106,15 +113,26 @@ export function useAppNavigation({
       setMobileShowDetail(true);
       isTimelineCollapsedRef.current = false;
     },
-    [navigateToCausa, user, setShowLoginModal, setSelectedCausaId, setMobileShowDetail],
+    [
+      navigateToCausa,
+      user,
+      setShowLoginModal,
+      setSelectedCausaId,
+      setMobileShowDetail,
+    ],
   );
 
   const handleViewAllNotifications = useCallback(() => {
-    setSelectedFaseFilter('Todas');
-    setSelectedCausaId('');
+    setSelectedFaseFilter("Todas");
+    setSelectedCausaId("");
     setMobileShowDetail(false);
-    navigateToView('causas');
-  }, [navigateToView, setMobileShowDetail, setSelectedCausaId, setSelectedFaseFilter]);
+    navigateToView("causas");
+  }, [
+    navigateToView,
+    setMobileShowDetail,
+    setSelectedCausaId,
+    setSelectedFaseFilter,
+  ]);
 
   return {
     requireAuth,

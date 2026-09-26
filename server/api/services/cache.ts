@@ -1,15 +1,15 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import crypto from 'node:crypto';
+import crypto from "node:crypto";
 
 const CACHE_TTL = 5 * 60 * 1000;
 const cache = new Map<string, { value: unknown; expiresAt: number }>();
 
 export function getCacheKey(endpoint: string, body: unknown): string {
-  const hash = crypto.createHash('sha256');
+  const hash = crypto.createHash("sha256");
   hash.update(endpoint);
   hash.update(JSON.stringify(body));
-  return hash.digest('hex');
+  return hash.digest("hex");
 }
 
 export function getFromCache(key: string): unknown {

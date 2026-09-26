@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { Profiler, type ReactNode } from 'react';
-import { loadTelemetry } from './telemetry';
+import { Profiler, type ReactNode } from "react";
+import { loadTelemetry } from "./telemetry";
 
 const MIN_INTERVAL_MS = 5000;
 const TELEMETRY_DELAY_MS = 10_000;
@@ -9,7 +9,7 @@ const lastReport = new Map<string, number>();
 
 function onRender(
   id: string,
-  phase: 'mount' | 'update' | 'nested-update',
+  phase: "mount" | "update" | "nested-update",
   actualDuration: number,
   baseDuration: number,
   startTime: number,
@@ -23,7 +23,7 @@ function onRender(
   // Keep telemetry out of the initial render path and defer it until the app is usable.
   globalThis.setTimeout(() => {
     void loadTelemetry().then(({ posthog }) => {
-      posthog.captureEvent('react_render', {
+      posthog.captureEvent("react_render", {
         component_id: id,
         phase,
         actual_duration_ms: Math.round(actualDuration),
@@ -35,7 +35,13 @@ function onRender(
   }, TELEMETRY_DELAY_MS);
 }
 
-export default function PerformanceProfiler({ id, children }: { id: string; children: ReactNode }) {
+export default function PerformanceProfiler({
+  id,
+  children,
+}: {
+  id: string;
+  children: ReactNode;
+}) {
   return (
     <Profiler id={id} onRender={onRender}>
       {children}

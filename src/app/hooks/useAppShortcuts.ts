@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useKeyboardShortcuts } from '../../shared/lib/hooks/useKeyboardShortcuts';
+import { useKeyboardShortcuts } from "../../shared/lib/hooks/useKeyboardShortcuts";
 
 interface UseAppShortcutsArgs {
   openCreateForm: () => void;

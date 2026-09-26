@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { supabase } from '../lib/supabase';
+import { supabase } from "../lib/supabase";
 
 export interface DashboardDeadlineKpis {
   overdueCount: number;
@@ -11,7 +11,7 @@ export interface DashboardDeadlineKpis {
 }
 
 export async function fetchDashboardDeadlineKpis(): Promise<DashboardDeadlineKpis> {
-  const { data, error } = await supabase.rpc('get_dashboard_deadline_kpis');
+  const { data, error } = await supabase.rpc("get_dashboard_deadline_kpis");
   if (error) throw error;
   const row = data?.[0];
   return {

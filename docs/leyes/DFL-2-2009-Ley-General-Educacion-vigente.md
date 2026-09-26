@@ -1,12 +1,12 @@
 ---
-titulo: 'Ley General de Educación (texto refundido de Ley N° 20.370)'
-tipo: 'Decreto con Fuerza de Ley'
-identificador: 'DFL N° 2 de 2009'
+titulo: "Ley General de Educación (texto refundido de Ley N° 20.370)"
+tipo: "Decreto con Fuerza de Ley"
+identificador: "DFL N° 2 de 2009"
 estado: vigente
-autoridad: 'Biblioteca del Congreso Nacional de Chile'
-fuente_oficial: 'https://www.bcn.cl/leychile/navegar?idNorma=1014974'
-version_consultada: '2026-07-30'
-nota_uso: 'Texto consolidado vigente descargado desde LeyChile. Usar como referencia jurídica; verificar los artículos aplicables al caso concreto.'
+autoridad: "Biblioteca del Congreso Nacional de Chile"
+fuente_oficial: "https://www.bcn.cl/leychile/navegar?idNorma=1014974"
+version_consultada: "2026-07-30"
+nota_uso: "Texto consolidado vigente descargado desde LeyChile. Usar como referencia jurídica; verificar los artículos aplicables al caso concreto."
 ---
 
 Tipo Norma                              :Decreto con Fuerza de Ley 2

@@ -366,7 +366,7 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
                     aria-expanded={isExpanded}
                     aria-controls={courseContentId}
                     onClick={() => toggleCourse(courseId)}
-                    className="relative w-full border-neutral-100 border-b bg-neutral-50/50 px-5 py-4 text-left transition-colors hover:bg-neutral-100/80"
+                    className="relative min-h-11 w-full border-neutral-100 border-b bg-neutral-50/50 px-5 py-4 text-left transition-colors hover:bg-neutral-100/80"
                   >
                     <div
                       className="absolute top-0 right-4 left-4 h-[3px] rounded-full bg-brand-600"
@@ -570,6 +570,7 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
                 variant="secondary"
                 onClick={() => void studentsQuery.fetchNextPage()}
                 disabled={studentsQuery.isFetchingNextPage}
+                className="min-h-11"
               >
                 {studentsQuery.isFetchingNextPage
                   ? "Cargando…"

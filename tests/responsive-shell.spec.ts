@@ -1,25 +1,34 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { expect, test } from '@playwright/test';
+import { expect, test } from "@playwright/test";
 
-test.describe('Shell responsive público', () => {
+test.describe("Shell responsive público", () => {
   for (const viewport of [
-    { name: 'escritorio', width: 1440, height: 900 },
-    { name: 'móvil', width: 390, height: 844 },
+    { name: "escritorio", width: 1440, height: 900 },
+    { name: "móvil", width: 390, height: 844 },
   ]) {
-    test(`no genera overflow horizontal en ${viewport.name}`, async ({ page }) => {
-      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    test(`no genera overflow horizontal en ${viewport.name}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({
+        width: viewport.width,
+        height: viewport.height,
+      });
       await page.addInitScript(() =>
-        window.sessionStorage.setItem('gestion-casos-welcome-seen', 'true'),
+        window.sessionStorage.setItem("gestion-casos-welcome-seen", "true"),
       );
-      await page.goto('/');
+      await page.goto("/");
       if (viewport.width < 768) {
-        await expect(page.getByRole('button', { name: 'Abrir menú' })).toBeVisible({
+        await expect(
+          page.getByRole("button", { name: "Abrir menú" }),
+        ).toBeVisible({
           timeout: 15_000,
         });
       } else {
         await expect(
-          page.getByRole('complementary', { name: 'Barra de navegación principal' }),
+          page.getByRole("complementary", {
+            name: "Barra de navegación principal",
+          }),
         ).toBeVisible({ timeout: 15_000 });
       }
 
@@ -27,9 +36,10 @@ test.describe('Shell responsive público', () => {
         viewport: document.documentElement.clientWidth,
         content: document.documentElement.scrollWidth,
       }));
-      expect(dimensions.content, `overflow en viewport ${viewport.name}`).toBeLessThanOrEqual(
-        dimensions.viewport + 1,
-      );
+      expect(
+        dimensions.content,
+        `overflow en viewport ${viewport.name}`,
+      ).toBeLessThanOrEqual(dimensions.viewport + 1);
     });
   }
 });

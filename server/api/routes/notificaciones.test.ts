@@ -25,6 +25,14 @@ describe("validación de citaciones por correo", () => {
     assert.equal(isSafeDocumentoHtml("<script>alert(1)</script>"), false);
     assert.equal(isSafeDocumentoHtml('<iframe src="x"></iframe>'), false);
     assert.equal(isSafeDocumentoHtml('<p onclick="x()">hola</p>'), false);
+    assert.equal(
+      isSafeDocumentoHtml('<a href="javascript:alert(1)">x</a>'),
+      false,
+    );
+    assert.equal(
+      isSafeDocumentoHtml('<iframe srcdoc="<script>x</script>"></iframe>'),
+      false,
+    );
     assert.equal(isSafeDocumentoHtml(""), false);
     assert.equal(isSafeDocumentoHtml("x".repeat(100_001)), false);
   });

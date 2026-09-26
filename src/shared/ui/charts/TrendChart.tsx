@@ -16,10 +16,17 @@ export interface TrendChartPoint {
   isCurrent?: boolean;
 }
 
-export function LegendPill({ item }: { item: Pick<ChartSeriesItem, 'label' | 'className'> }) {
+export function LegendPill({
+  item,
+}: {
+  item: Pick<ChartSeriesItem, "label" | "className">;
+}) {
   return (
     <span className="inline-flex items-center gap-1.5">
-      <span className={`h-2.5 w-2.5 rounded-sm ${item.className}`} aria-hidden="true" />
+      <span
+        className={`h-2.5 w-2.5 rounded-sm ${item.className}`}
+        aria-hidden="true"
+      />
       {item.label}
     </span>
   );
@@ -34,20 +41,24 @@ export function MonthlyBars({ points }: { points: TrendChartPoint[] }) {
   return (
     <div
       className="grid h-52 min-w-[36rem] items-end gap-2 sm:min-w-0"
-      style={{ gridTemplateColumns: `repeat(${points.length}, minmax(0, 1fr))` }}
+      style={{
+        gridTemplateColumns: `repeat(${points.length}, minmax(0, 1fr))`,
+      }}
       aria-hidden="true"
     >
       {points.map((point) => (
         <div
           key={point.key}
           className={`flex h-full min-w-0 flex-col justify-end gap-2 ${
-            point.isObserved === false ? 'opacity-35' : ''
+            point.isObserved === false ? "opacity-35" : ""
           }`}
         >
           <div className="flex h-40 items-end justify-center gap-1">
             {point.series.map((item) => {
               const height =
-                item.value > 0 ? Math.max(7, Math.round((item.value / maxValue) * 152)) : 3;
+                item.value > 0
+                  ? Math.max(7, Math.round((item.value / maxValue) * 152))
+                  : 3;
               return (
                 <div
                   key={item.label}
@@ -60,7 +71,7 @@ export function MonthlyBars({ points }: { points: TrendChartPoint[] }) {
           <div className="space-y-0.5 text-center">
             <span
               className={`block truncate font-medium text-11px ${
-                point.isCurrent ? 'text-neutral-800' : 'text-neutral-400'
+                point.isCurrent ? "text-neutral-800" : "text-neutral-400"
               }`}
             >
               {point.label}
@@ -83,10 +94,10 @@ export function TrendChart({
   title,
   description,
   badge,
-  activeLabel = 'Activo',
+  activeLabel = "Activo",
 }: {
   points: TrendChartPoint[];
-  legend: Array<Pick<ChartSeriesItem, 'label' | 'className'>>;
+  legend: Array<Pick<ChartSeriesItem, "label" | "className">>;
   title: string;
   description: string;
   badge: string;
@@ -94,13 +105,21 @@ export function TrendChart({
 }) {
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
-      <div className="overflow-x-auto rounded-lg border border-neutral-200 bg-white px-4 py-3">
+      <div
+        role="region"
+        tabIndex={0}
+        aria-label={`${title}: gráfico mensual desplazable`}
+        className="overflow-x-auto rounded-lg border border-neutral-200 bg-white px-4 py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+      >
         <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-neutral-500 text-xs">
           {legend.map((item) => (
             <LegendPill key={item.label} item={item} />
           ))}
           <span className="inline-flex items-center gap-1.5 text-neutral-400">
-            <span className="h-2.5 w-2.5 rounded-full bg-brand-600" aria-hidden="true" />
+            <span
+              className="h-2.5 w-2.5 rounded-full bg-brand-600"
+              aria-hidden="true"
+            />
             {activeLabel}
           </span>
         </div>
@@ -123,18 +142,18 @@ export function TrendChart({
               key={point.key}
               className={`grid grid-cols-[3.25rem_minmax(0,1fr)_auto] items-center gap-3 rounded-lg px-2 py-1.5 text-xs ${
                 point.isCurrent
-                  ? 'bg-brand-50 text-brand-800'
+                  ? "bg-brand-50 text-brand-800"
                   : point.isObserved === false
-                    ? 'bg-neutral-100 text-neutral-400'
-                    : 'bg-white text-neutral-700'
+                    ? "bg-neutral-100 text-neutral-400"
+                    : "bg-white text-neutral-700"
               }`}
             >
               <span className="font-semibold capitalize">{point.label}</span>
               <span className="min-w-0 truncate">
-                {point.isObserved === false ? 'Pendiente' : point.primary}
+                {point.isObserved === false ? "Pendiente" : point.primary}
               </span>
               <span className="font-medium tabular-nums">
-                {point.isObserved === false ? 'Pend.' : point.secondary}
+                {point.isObserved === false ? "Pend." : point.secondary}
               </span>
             </div>
           ))}

@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import * as Sentry from '@sentry/browser';
+import * as Sentry from "@sentry/browser";
 
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
 const ENVIRONMENT = import.meta.env.MODE;
@@ -11,25 +11,31 @@ export function initSentry() {
       dsn: SENTRY_DSN,
       environment: ENVIRONMENT,
       integrations: [Sentry.browserTracingIntegration()],
-      tracesSampleRate: ENVIRONMENT === 'production' ? 0.1 : 1.0,
+      tracesSampleRate: ENVIRONMENT === "production" ? 0.1 : 1.0,
       beforeSend(event) {
         // No enviar errores de desarrollo localhost a Sentry
-        if (ENVIRONMENT === 'development' && window.location.hostname === 'localhost') {
+        if (
+          ENVIRONMENT === "development" &&
+          window.location.hostname === "localhost"
+        ) {
           return null;
         }
         return event;
       },
       ignoreErrors: [
-        'ResizeObserver loop limit exceeded',
-        'Non-Error promise rejection captured',
-        'NetworkError',
-        'Failed to fetch',
+        "ResizeObserver loop limit exceeded",
+        "Non-Error promise rejection captured",
+        "NetworkError",
+        "Failed to fetch",
       ],
     });
   }
 }
 
-export function captureException(error: unknown, context?: Record<string, unknown>) {
+export function captureException(
+  error: unknown,
+  context?: Record<string, unknown>,
+) {
   if (SENTRY_DSN) {
     Sentry.captureException(error, { extra: context });
   }
@@ -37,7 +43,7 @@ export function captureException(error: unknown, context?: Record<string, unknow
 
 export function captureMessage(
   message: string,
-  level: Sentry.SeverityLevel = 'info',
+  level: Sentry.SeverityLevel = "info",
   context?: Record<string, unknown>,
 ) {
   if (SENTRY_DSN) {
@@ -45,7 +51,9 @@ export function captureMessage(
   }
 }
 
-export function setUserContext(user: { id: string; email?: string; role?: string } | null) {
+export function setUserContext(
+  user: { id: string; email?: string; role?: string } | null,
+) {
   if (SENTRY_DSN) {
     Sentry.setUser(user);
   }

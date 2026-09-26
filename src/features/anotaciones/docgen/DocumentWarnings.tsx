@@ -2,8 +2,8 @@
  * @license SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
-import { AlertTriangle, Info, ShieldAlert } from 'lucide-react';
+import type React from "react";
+import { AlertTriangle, Info, ShieldAlert } from "lucide-react";
 
 interface DocumentWarningsProps {
   docType: string;
@@ -36,14 +36,19 @@ export default function DocumentWarnings({
 
   if (isDocLockedByProgress) {
     warnings.push(
-      <div key="lock" className="rounded-lg border border-grave-200 bg-grave-50 p-3 text-sm">
+      <div
+        key="lock"
+        className="rounded-lg border border-grave-200 bg-grave-50 p-3 text-sm"
+      >
         <div className="flex items-start gap-2">
           <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-grave-600" />
           <div>
-            <p className="font-medium text-grave-700">Etapa de progreso bloqueada</p>
+            <p className="font-medium text-grave-700">
+              Etapa de progreso bloqueada
+            </p>
             <p className="mt-1 text-grave-700">
-              El estudiante se encuentra en una etapa donde la emisión de documentos está
-              restringida.
+              El estudiante se encuentra en una etapa donde la emisión de
+              documentos está restringida.
             </p>
             <label className="mt-2 flex cursor-pointer items-center gap-2 text-grave-700">
               <input
@@ -61,16 +66,19 @@ export default function DocumentWarnings({
     );
   }
 
-  if (docType === 'compromiso_conductual' && !hasTenOrMore) {
+  if (docType === "compromiso_conductual" && !hasTenOrMore) {
     warnings.push(
-      <div key="threshold" className="rounded-lg border border-grave-200 bg-grave-50 p-3 text-sm">
+      <div
+        key="threshold"
+        className="rounded-lg border border-grave-200 bg-grave-50 p-3 text-sm"
+      >
         <div className="flex items-start gap-2">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-grave-600" />
           <div>
             <p className="font-medium text-grave-700">Umbral no alcanzado</p>
             <p className="mt-1 text-grave-700">
-              Se requieren al menos 10 anotaciones negativas para emitir una Carta de Compromiso.
-              Actualmente tiene {negativeCount}.
+              Se requieren al menos 10 anotaciones negativas para emitir una
+              Carta de Compromiso. Actualmente tiene {negativeCount}.
             </p>
             <label className="mt-2 flex cursor-pointer items-center gap-2 text-grave-700">
               <input
@@ -90,7 +98,10 @@ export default function DocumentWarnings({
 
   if (existingLetter) {
     warnings.push(
-      <div key="duplicate" className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm">
+      <div
+        key="duplicate"
+        className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm"
+      >
         <div className="flex items-start gap-2">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
           <div>

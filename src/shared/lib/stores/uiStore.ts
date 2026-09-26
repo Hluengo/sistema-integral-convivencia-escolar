@@ -58,6 +58,5 @@ function initialViewFromPathname(): SidebarView {
   if (pathname.startsWith("/reportes")) return "reportes";
   if (pathname.startsWith("/admin")) return "admin";
   if (pathname.startsWith("/plataforma")) return "platform";
-  if (pathname.startsWith("/plan-gestion")) return "plan-gestion";
   return "dashboard";
 }

@@ -3,7 +3,7 @@ name: Lighthouse
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 6 * * 1' # every Monday at 06:00 UTC
+    - cron: "0 6 * * 1" # every Monday at 06:00 UTC
 
 jobs:
   lighthouse:
@@ -14,8 +14,8 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: "22"
+          cache: "npm"
 
       - name: Install
         run: npm ci
@@ -25,7 +25,7 @@ jobs:
         env:
           VITE_SUPABASE_URL: https://example.supabase.co
           VITE_SUPABASE_ANON_KEY: public-anon-key-for-ci
-          VITE_ALLOW_LOCAL_DEMO: 'true'
+          VITE_ALLOW_LOCAL_DEMO: "true"
 
       - name: Run Lighthouse CI
         run: npm run lighthouse:ci

@@ -1,19 +1,19 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 import {
   DEFAULT_LETTER_CONTENT,
   type DocType,
   type LetterContent,
-} from '../DocumentPreview/docTypes';
+} from "../DocumentPreview/docTypes";
 
 export function useDocumentState() {
-  const [docType, setDocType] = useState<DocType>('amonestacion');
-  const [apoderadoName, setApoderadoName] = useState('');
-  const [inspectorName, setInspectorName] = useState('');
-  const [coordinatorName, setCoordinatorName] = useState('');
-  const [emittedBy, setEmittedBy] = useState('');
-  const [compromisoStatus, setCompromisoStatus] = useState('pendiente');
+  const [docType, setDocType] = useState<DocType>("amonestacion");
+  const [apoderadoName, setApoderadoName] = useState("");
+  const [inspectorName, setInspectorName] = useState("");
+  const [coordinatorName, setCoordinatorName] = useState("");
+  const [emittedBy, setEmittedBy] = useState("");
+  const [compromisoStatus, setCompromisoStatus] = useState("pendiente");
   const [customCommitments, setCustomCommitments] = useState<string[]>([]);
   const [letterContent, setLetterContentState] = useState<LetterContent>(
     DEFAULT_LETTER_CONTENT.amonestacion,
@@ -28,14 +28,18 @@ export function useDocumentState() {
     setLetterContentTouched(true);
   }, []);
 
-  const updateLetterContent = useCallback((field: keyof LetterContent, value: string) => {
-    setLetterContentState((prev) => ({ ...prev, [field]: value }));
-    setLetterContentTouched(true);
-  }, []);
+  const updateLetterContent = useCallback(
+    (field: keyof LetterContent, value: string) => {
+      setLetterContentState((prev) => ({ ...prev, [field]: value }));
+      setLetterContentTouched(true);
+    },
+    [],
+  );
 
   const loadDefaultLetterContent = useCallback(
     (nextDocType: DocType) => {
-      if (!letterContentTouched) setLetterContentState(DEFAULT_LETTER_CONTENT[nextDocType]);
+      if (!letterContentTouched)
+        setLetterContentState(DEFAULT_LETTER_CONTENT[nextDocType]);
     },
     [letterContentTouched],
   );

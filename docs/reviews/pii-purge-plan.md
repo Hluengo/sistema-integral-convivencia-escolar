@@ -14,12 +14,12 @@ El commit `ddbd21d` en `origin/master` contiene 7 archivos con datos sensibles (
 
 ## Archivos Objetivo (en commit `ddbd21d`)
 
-| Archivo | Tipo | Riesgo |
-|---------|------|--------|
-| `ANCALAO 1MA.pdf` | PDF estudiante | **CRÍTICO** — PII estudiantil |
-| `APABLAZA 7BA.md` | Markdown estudiante | **CRÍTICO** — PII estudiantil |
+| Archivo                                   | Tipo                 | Riesgo                             |
+| ----------------------------------------- | -------------------- | ---------------------------------- |
+| `ANCALAO 1MA.pdf`                         | PDF estudiante       | **CRÍTICO** — PII estudiantil      |
+| `APABLAZA 7BA.md`                         | Markdown estudiante  | **CRÍTICO** — PII estudiantil      |
 | `.playwright-mcp/page-*.yml` (5 archivos) | Metadatos Playwright | **MEDIO** — URLs, estructura de UI |
-| `.playwright-mcp/page-*.png` (1 archivo) | Screenshot | **MEDIO** — Captura de pantalla |
+| `.playwright-mcp/page-*.png` (1 archivo)  | Screenshot           | **MEDIO** — Captura de pantalla    |
 
 ---
 

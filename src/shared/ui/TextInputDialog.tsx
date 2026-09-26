@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useEffect, useId, useState, type FormEvent } from 'react';
+import { useEffect, useId, useState, type FormEvent } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,8 +8,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from './Dialog';
-import Button from './Button';
+} from "./Dialog";
+import Button from "./Button";
 
 interface TextInputDialogProps {
   open: boolean;
@@ -34,11 +34,11 @@ export default function TextInputDialog({
   onCancel,
   onConfirm,
 }: TextInputDialogProps) {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState("");
   const inputId = useId();
 
   useEffect(() => {
-    if (open) setValue('');
+    if (open) setValue("");
   }, [open]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -54,10 +54,15 @@ export default function TextInputDialog({
         <form onSubmit={handleSubmit}>
           <DialogHeader className="block">
             <DialogTitle>{title}</DialogTitle>
-            <DialogDescription className="mt-2">{description}</DialogDescription>
+            <DialogDescription className="mt-2">
+              {description}
+            </DialogDescription>
           </DialogHeader>
 
-          <label htmlFor={inputId} className="block text-sm font-semibold text-neutral-700">
+          <label
+            htmlFor={inputId}
+            className="block text-sm font-semibold text-neutral-700"
+          >
             {label}
             <textarea
               id={inputId}
@@ -77,7 +82,7 @@ export default function TextInputDialog({
             </Button>
             <Button
               type="submit"
-              variant={destructive ? 'danger' : 'primary'}
+              variant={destructive ? "danger" : "primary"}
               disabled={!value.trim()}
             >
               {confirmLabel}

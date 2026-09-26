@@ -1,12 +1,16 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import HistoryEntryForm from '@/shared/ui/HistoryEntryForm';
+import HistoryEntryForm from "@/shared/ui/HistoryEntryForm";
 
 interface ManualHistoryEntryFormProps {
   studentId: string;
   isSaving: boolean;
   error: string | null;
-  onSave: (input: { studentId: string; title: string; description: string }) => Promise<unknown>;
+  onSave: (input: {
+    studentId: string;
+    title: string;
+    description: string;
+  }) => Promise<unknown>;
   onResetError: () => void;
 }
 
@@ -23,7 +27,9 @@ export default function ManualHistoryEntryForm({
       isSaving={isSaving}
       error={error}
       helperText="No modifica anotaciones, cartas ni etapas disciplinarias."
-      onSave={({ title, description }) => onSave({ studentId, title, description })}
+      onSave={({ title, description }) =>
+        onSave({ studentId, title, description })
+      }
       onResetError={onResetError}
     />
   );

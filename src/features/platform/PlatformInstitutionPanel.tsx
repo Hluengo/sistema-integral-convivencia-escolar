@@ -1,11 +1,11 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useEffect, useState } from 'react';
-import { Building2, CheckCircle2, ImageUp, Plus, Save } from 'lucide-react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import Button from '../../shared/ui/Button';
-import Input from '../../shared/ui/Input';
-import Textarea from '../../shared/ui/Textarea';
+import { useEffect, useState } from "react";
+import { Building2, CheckCircle2, ImageUp, Plus, Save } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import Button from "../../shared/ui/Button";
+import Input from "../../shared/ui/Input";
+import Textarea from "../../shared/ui/Textarea";
 import {
   createPlatformInstitutionRule,
   fetchPlatformInstitutionRules,
@@ -14,7 +14,7 @@ import {
   updatePlatformInstitutionSettings,
   uploadPlatformInstitutionLogo,
   type InstitutionSettings,
-} from '../../shared/api/services/institution.service';
+} from "../../shared/api/services/institution.service";
 
 interface Props {
   selectedTenantId: string;
@@ -24,9 +24,9 @@ export default function PlatformInstitutionPanel({ selectedTenantId }: Props) {
   const tenantId = selectedTenantId;
   const [form, setForm] = useState<Partial<InstitutionSettings>>({});
   const [rule, setRule] = useState({
-    title: 'Reglamento Interno de Convivencia Escolar',
-    version: '2026.1',
-    content: '',
+    title: "Reglamento Interno de Convivencia Escolar",
+    version: "2026.1",
+    content: "",
   });
   const [message, setMessage] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -35,12 +35,12 @@ export default function PlatformInstitutionPanel({ selectedTenantId }: Props) {
     setMessage(null);
   }, [tenantId]);
   const settingsQuery = useQuery({
-    queryKey: ['platform-institution', tenantId],
+    queryKey: ["platform-institution", tenantId],
     queryFn: () => fetchPlatformInstitutionSettings(tenantId),
     enabled: Boolean(tenantId),
   });
   const rulesQuery = useQuery({
-    queryKey: ['platform-rules', tenantId],
+    queryKey: ["platform-rules", tenantId],
     queryFn: () => fetchPlatformInstitutionRules(tenantId),
     enabled: Boolean(tenantId),
   });
@@ -50,37 +50,49 @@ export default function PlatformInstitutionPanel({ selectedTenantId }: Props) {
   const save = useMutation({
     mutationFn: () => updatePlatformInstitutionSettings(tenantId, form),
     onSuccess: () => {
-      setMessage('Configuración del colegio guardada.');
-      void queryClient.invalidateQueries({ queryKey: ['platform-institution', tenantId] });
+      setMessage("Configuración del colegio guardada.");
+      void queryClient.invalidateQueries({
+        queryKey: ["platform-institution", tenantId],
+      });
     },
     onError: (error: Error) => setMessage(error.message),
   });
   const logo = useMutation({
     mutationFn: (file: File) => uploadPlatformInstitutionLogo(tenantId, file),
     onSuccess: () => {
-      setMessage('Logo actualizado.');
-      void queryClient.invalidateQueries({ queryKey: ['platform-institution', tenantId] });
+      setMessage("Logo actualizado.");
+      void queryClient.invalidateQueries({
+        queryKey: ["platform-institution", tenantId],
+      });
     },
     onError: (error: Error) => setMessage(error.message),
   });
   const createRule = useMutation({
     mutationFn: () => createPlatformInstitutionRule(tenantId, rule),
     onSuccess: () => {
-      setRule((current) => ({ ...current, content: '' }));
-      setMessage('Borrador creado.');
-      void queryClient.invalidateQueries({ queryKey: ['platform-rules', tenantId] });
+      setRule((current) => ({ ...current, content: "" }));
+      setMessage("Borrador creado.");
+      void queryClient.invalidateQueries({
+        queryKey: ["platform-rules", tenantId],
+      });
     },
     onError: (error: Error) => setMessage(error.message),
   });
   const publish = useMutation({
     mutationFn: (id: string) => publishPlatformInstitutionRule(tenantId, id),
     onSuccess: () => {
-      setMessage('Reglamento publicado.');
-      void queryClient.invalidateQueries({ queryKey: ['platform-rules', tenantId] });
+      setMessage("Reglamento publicado.");
+      void queryClient.invalidateQueries({
+        queryKey: ["platform-rules", tenantId],
+      });
     },
     onError: (error: Error) => setMessage(error.message),
   });
-  const busy = save.isPending || logo.isPending || createRule.isPending || publish.isPending;
+  const busy =
+    save.isPending ||
+    logo.isPending ||
+    createRule.isPending ||
+    publish.isPending;
   const setField = (key: keyof InstitutionSettings, value: string) =>
     setForm((current) => ({ ...current, [key]: value }));
 
@@ -92,9 +104,12 @@ export default function PlatformInstitutionPanel({ selectedTenantId }: Props) {
             <Building2 className="size-5" />
           </span>
           <div>
-            <h3 className="font-bold text-neutral-900">Administración institucional global</h3>
+            <h3 className="font-bold text-neutral-900">
+              Administración institucional global
+            </h3>
             <p className="mt-1 text-neutral-500 text-xs">
-              El superadministrador puede configurar cualquier colegio sin cambiar de sesión.
+              El superadministrador puede configurar cualquier colegio sin
+              cambiar de sesión.
             </p>
           </div>
         </div>
@@ -109,22 +124,25 @@ export default function PlatformInstitutionPanel({ selectedTenantId }: Props) {
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {(
                 [
-                  ['official_name', 'Nombre oficial'],
-                  ['institution_rut', 'RUT institucional'],
-                  ['address', 'Dirección'],
-                  ['commune', 'Comuna'],
-                  ['region', 'Región'],
-                  ['phone', 'Teléfono'],
-                  ['institutional_email', 'Correo institucional'],
-                  ['proprietor', 'Sostenedor'],
-                  ['director_name', 'Director/a'],
+                  ["official_name", "Nombre oficial"],
+                  ["institution_rut", "RUT institucional"],
+                  ["address", "Dirección"],
+                  ["commune", "Comuna"],
+                  ["region", "Región"],
+                  ["phone", "Teléfono"],
+                  ["institutional_email", "Correo institucional"],
+                  ["proprietor", "Sostenedor"],
+                  ["director_name", "Director/a"],
                 ] as const
               ).map(([key, label]) => (
-                <label key={key} className="space-y-1.5 text-xs font-semibold text-neutral-700">
+                <label
+                  key={key}
+                  className="space-y-1.5 text-xs font-semibold text-neutral-700"
+                >
                   {label}
                   <Input
                     aria-label={label}
-                    value={(form[key] as string) ?? ''}
+                    value={(form[key] as string) ?? ""}
                     onChange={(event) => setField(key, event.target.value)}
                   />
                 </label>
@@ -145,7 +163,7 @@ export default function PlatformInstitutionPanel({ selectedTenantId }: Props) {
                   onChange={(event) => {
                     const file = event.target.files?.[0];
                     if (file) logo.mutate(file);
-                    event.currentTarget.value = '';
+                    event.currentTarget.value = "";
                   }}
                 />
               </label>
@@ -160,7 +178,9 @@ export default function PlatformInstitutionPanel({ selectedTenantId }: Props) {
           </section>
           <section className="card overflow-hidden">
             <div className="border-b border-neutral-200/70 p-5 sm:p-6">
-              <h3 className="font-bold text-neutral-900">Reglamento y reglas</h3>
+              <h3 className="font-bold text-neutral-900">
+                Reglamento y reglas
+              </h3>
             </div>
             <form
               className="grid gap-3 p-5 sm:grid-cols-[1fr_140px] sm:p-6"
@@ -173,7 +193,10 @@ export default function PlatformInstitutionPanel({ selectedTenantId }: Props) {
                 aria-label="Título del reglamento"
                 value={rule.title}
                 onChange={(event) =>
-                  setRule((current) => ({ ...current, title: event.target.value }))
+                  setRule((current) => ({
+                    ...current,
+                    title: event.target.value,
+                  }))
                 }
                 placeholder="Título"
               />
@@ -181,7 +204,10 @@ export default function PlatformInstitutionPanel({ selectedTenantId }: Props) {
                 aria-label="Versión del reglamento"
                 value={rule.version}
                 onChange={(event) =>
-                  setRule((current) => ({ ...current, version: event.target.value }))
+                  setRule((current) => ({
+                    ...current,
+                    version: event.target.value,
+                  }))
                 }
                 placeholder="Versión"
               />
@@ -190,7 +216,10 @@ export default function PlatformInstitutionPanel({ selectedTenantId }: Props) {
                 className="min-h-36 sm:col-span-2"
                 value={rule.content}
                 onChange={(event) =>
-                  setRule((current) => ({ ...current, content: event.target.value }))
+                  setRule((current) => ({
+                    ...current,
+                    content: event.target.value,
+                  }))
                 }
                 placeholder="Contenido del reglamento…"
               />
@@ -204,20 +233,23 @@ export default function PlatformInstitutionPanel({ selectedTenantId }: Props) {
             </form>
             <div className="divide-y divide-neutral-100 border-t border-neutral-200/70">
               {(rulesQuery.data?.rules ?? []).map((item) => (
-                <div key={item.id} className="flex items-center justify-between gap-3 p-5">
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between gap-3 p-5"
+                >
                   <div>
                     <p className="font-semibold text-neutral-800">
                       {item.title} · v{item.version}
                     </p>
                     <p className="text-neutral-500 text-xs">
-                      {item.status === 'active'
-                        ? 'Vigente'
-                        : item.status === 'draft'
-                          ? 'Borrador'
-                          : 'Archivado'}
+                      {item.status === "active"
+                        ? "Vigente"
+                        : item.status === "draft"
+                          ? "Borrador"
+                          : "Archivado"}
                     </p>
                   </div>
-                  {item.status === 'active' ? (
+                  {item.status === "active" ? (
                     <span className="rounded-full bg-leve-50 px-3 py-1.5 font-semibold text-leve-700 text-xs">
                       Vigente
                     </span>

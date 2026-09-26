@@ -57,13 +57,13 @@ No ejecutar `reset --hard` si existen cambios del usuario que deban preservarse.
 
 ### 3.1 Estado verificado (2026-08-16)
 
-| Ítem | Hallazgo |
-|---|---|
-| Columna `usage_events.tenant_id` en remoto | **NO existe** (error `42703` al consultarla) |
-| `server/api/routes/usage.ts:71` | Ya inserta `tenant_id: authReq.tenantId ?? null` (código preexistente, no introducido por la auditoría) |
-| Consecuencia | `POST /usage/events` responde **503** hoy (bug vivo: el insert falla por columna inexistente) |
-| Policies actuales | `usage_events_insert_own` (WITH CHECK user_id = auth.uid()), `usage_events_select_admin` (solo admin/direccion) — sin restricción de tenant |
-| `usage_events` en ledger | CANÓNICO COMPARTIDO (riesgo BAJO, monitorear) |
+| Ítem                                       | Hallazgo                                                                                                                                    |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Columna `usage_events.tenant_id` en remoto | **NO existe** (error `42703` al consultarla)                                                                                                |
+| `server/api/routes/usage.ts:71`            | Ya inserta `tenant_id: authReq.tenantId ?? null` (código preexistente, no introducido por la auditoría)                                     |
+| Consecuencia                               | `POST /usage/events` responde **503** hoy (bug vivo: el insert falla por columna inexistente)                                               |
+| Policies actuales                          | `usage_events_insert_own` (WITH CHECK user_id = auth.uid()), `usage_events_select_admin` (solo admin/direccion) — sin restricción de tenant |
+| `usage_events` en ledger                   | CANÓNICO COMPARTIDO (riesgo BAJO, monitorear)                                                                                               |
 
 ### 3.2 Pregunta exacta a inasistencias
 
@@ -73,18 +73,18 @@ Evidencia para la consulta: convivencia ya envía `tenant_id` en el insert (`usa
 
 ### 3.3 Ramas según confirmación
 
-| Respuesta | Acción |
-|---|---|
+| Respuesta                  | Acción                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **No insertan sin tenant** | Crear migración nueva `<ts>_usage_events_tenant_id.sql`: `ADD COLUMN tenant_id uuid NULL` + backfill `UPDATE usage_events e SET tenant_id = p.tenant_id FROM profiles p WHERE e.user_id = p.user_id` + índice `idx_usage_events_tenant_id` + `SET NOT NULL`. Políticas: `usage_events_select_admin` agrega `tenant_id = current_tenant_id()`; `usage_events_insert_own` agrega `WITH CHECK (tenant_id = current_tenant_id())`. Aplicar con `supabase db push --linked`. |
-| **Sí insertan sin tenant** | No tocar `usage_events`. Documentar el 503 como hallazgo compartido y dejar la columna pendiente de coordinación multi-equipo. |
+| **Sí insertan sin tenant** | No tocar `usage_events`. Documentar el 503 como hallazgo compartido y dejar la columna pendiente de coordinación multi-equipo.                                                                                                                                                                                                                                                                                                                                          |
 
 **Validación (si se aplica):** `npm run test:multitenant` (`scripts/validate-multitenant.mjs`); verificar con SQL que no hay NULLs tras backfill; probar `POST /usage/events` autenticado → 200.
 
 ## 4. Fase P2 — Aplicar migración 1D (RLS por rol)
 
-| Paso | Archivo | Acción |
-|---|---|---|
-| 1 | `supabase/migrations/20260815170000_harden_convivencia_rls_roles.sql` | Aplicar con `supabase db push --linked` |
+| Paso | Archivo                                                               | Acción                                  |
+| ---- | --------------------------------------------------------------------- | --------------------------------------- |
+| 1    | `supabase/migrations/20260815170000_harden_convivencia_rls_roles.sql` | Aplicar con `supabase db push --linked` |
 
 Contenido aplicado (5 bloques, solo tablas CONVIVENCIA):
 
@@ -102,15 +102,16 @@ npm run test:roles                 # ✅ 9/9 roles OK (admin/direccion 200, rest
 ```
 
 Revisión manual ejecutada (staff `00000000-0000-0000-0000-000000000001`):
+
 - **DELETE bitácora (staff)** → bloqueado por RLS (PostgREST 204 sin filas afectadas; fila intacta) ✅
 - **INSERT bitácora (staff)** → OK (desviación documentada: tenant-only) ✅
 - **DELETE bitácora (service_role)** → OK ✅
 
 ## 5. Fase P3 — Aplicar migración 1E (`generate_process_number`)
 
-| Paso | Archivo | Acción |
-|---|---|---|
-| 1 | `supabase/migrations/20260815173000_fix_generate_process_number_tenant.sql` | Aplicar con `supabase db push --linked` (misma ventana que P2) |
+| Paso | Archivo                                                                     | Acción                                                         |
+| ---- | --------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| 1    | `supabase/migrations/20260815173000_fix_generate_process_number_tenant.sql` | Aplicar con `supabase db push --linked` (misma ventana que P2) |
 
 Contenido aplicado:
 
@@ -121,6 +122,7 @@ Contenido aplicado:
 **Validación (ejecutada 2026-08-16):**
 
 Smoke test real:
+
 - **Service role, tenant `6f979bb9-...`** → `DP-2026-0001` ✅
 - **Authenticated staff, tenant propio `00000000-...-0001`** → `DP-2026-0165` (conteo real del tenant) ✅
 - **Authenticated staff, tenant ajeno** → HTTP 403 `tenant mismatch` (42501) ✅
@@ -129,26 +131,26 @@ Smoke test real:
 
 ## 6. Fase P4 — Actualizar documentación
 
-| Paso | Archivo | Acción |
-|---|---|---|
-| 1 | `docs/shared-supabase/04-canonical-object-ledger.md` | Marcar 1D/1E como aplicadas; actualizar fila `generate_process_number()` (ahora tenant-aware, riesgo sube a MEDIO/CRÍTICO por validación) |
-| 2 | `docs/shared-supabase/05-migration-reconciliation.md` | Registrar 1D/1E/1C en la matriz de reconciliación |
-| 3 | `.opencode/memory/project.md` | Actualizar sección "Pendientes": 1D/1E aplicadas; 1C resuelta o diferida |
-| 4 | `README.md` | Nota de migraciones aplicadas (patrón existente de 2026-08-06) |
-| 5 | `docs/operations/runbook-auditoria-integral-2026-08-15.md` | Marcar fases 1C/1D/1E con estado final |
+| Paso | Archivo                                                    | Acción                                                                                                                                    |
+| ---- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | `docs/shared-supabase/04-canonical-object-ledger.md`       | Marcar 1D/1E como aplicadas; actualizar fila `generate_process_number()` (ahora tenant-aware, riesgo sube a MEDIO/CRÍTICO por validación) |
+| 2    | `docs/shared-supabase/05-migration-reconciliation.md`      | Registrar 1D/1E/1C en la matriz de reconciliación                                                                                         |
+| 3    | `.opencode/memory/project.md`                              | Actualizar sección "Pendientes": 1D/1E aplicadas; 1C resuelta o diferida                                                                  |
+| 4    | `README.md`                                                | Nota de migraciones aplicadas (patrón existente de 2026-08-06)                                                                            |
+| 5    | `docs/operations/runbook-auditoria-integral-2026-08-15.md` | Marcar fases 1C/1D/1E con estado final                                                                                                    |
 
 **Validación:** `npm run lint` (documentación no afecta tipos, pero verificar formato); revisión manual de los documentos.
 
 ## 7. Fase P5 — Commit, push y deploy (SOLO con autorización explícita)
 
-| Paso | Acción |
-|---|---|
-| 1 | Revisar `git diff` para detectar secrets (ya verificado limpio en la auditoría) |
-| 2 | `git add` de archivos afectados (código, migraciones, docs, tests, `eslint.config.js`) |
-| 3 | `git commit` descriptivo en español, p.ej.: `fix: endurecer RLS por rol, validar tenant en generate_process_number y cerrar auditoría 2026-08-15` |
-| 4 | `git push origin master` |
-| 5 | `vercel --prod` (proyecto `sistema-integral-convivencia-escolar`) |
-| 6 | Smoke test en producción: login staff, dashboard, abrir expediente, gate de fase, exportación Excel |
+| Paso | Acción                                                                                                                                            |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | Revisar `git diff` para detectar secrets (ya verificado limpio en la auditoría)                                                                   |
+| 2    | `git add` de archivos afectados (código, migraciones, docs, tests, `eslint.config.js`)                                                            |
+| 3    | `git commit` descriptivo en español, p.ej.: `fix: endurecer RLS por rol, validar tenant en generate_process_number y cerrar auditoría 2026-08-15` |
+| 4    | `git push origin master`                                                                                                                          |
+| 5    | `vercel --prod` (proyecto `sistema-integral-convivencia-escolar`)                                                                                 |
+| 6    | Smoke test en producción: login staff, dashboard, abrir expediente, gate de fase, exportación Excel                                               |
 
 **Validación pre-commit (obligatoria):** `npm run lint && npm run test && npm run build && npm run security-audit && npm run test:e2e`.
 
@@ -161,10 +163,10 @@ Smoke test real:
 
 ## Estado de ejecución
 
-| Fase | Descripción | Estado |
-|---|---|---|
-| P1 | 1C `usage_events.tenant_id` | ⏸️ Bloqueada — espera confirmación inasistencias (endpoint `/usage/events` 503 mientras tanto) |
-| P2 | Migración 1D RLS por rol | ✅ Aplicada y validada (`supabase db push --linked --include-all` 2026-08-16) |
-| P3 | Migración 1E `generate_process_number` | ✅ Aplicada y validada (misma ventana; smoke 403/OK/OK) |
-| P4 | Documentación (ledger, memoria, runbooks) | ✅ Completada (ledger, 05-reconciliation, memoria, README, runbook auditoría) |
-| P5 | Commit, push, deploy | ✅ Ejecutada (commit `12187cd`, push master, deploy Vercel, smoke E2E 4/4 producción) |
+| Fase | Descripción                               | Estado                                                                                         |
+| ---- | ----------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| P1   | 1C `usage_events.tenant_id`               | ⏸️ Bloqueada — espera confirmación inasistencias (endpoint `/usage/events` 503 mientras tanto) |
+| P2   | Migración 1D RLS por rol                  | ✅ Aplicada y validada (`supabase db push --linked --include-all` 2026-08-16)                  |
+| P3   | Migración 1E `generate_process_number`    | ✅ Aplicada y validada (misma ventana; smoke 403/OK/OK)                                        |
+| P4   | Documentación (ledger, memoria, runbooks) | ✅ Completada (ledger, 05-reconciliation, memoria, README, runbook auditoría)                  |
+| P5   | Commit, push, deploy                      | ✅ Ejecutada (commit `12187cd`, push master, deploy Vercel, smoke E2E 4/4 producción)          |

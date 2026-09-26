@@ -1,12 +1,12 @@
 ---
-titulo: 'Sistema Nacional de Aseguramiento de la Calidad de la Educación Parvularia, Básica y Media y su Fiscalización'
-tipo: 'Ley'
-identificador: 'Ley N° 20.529'
+titulo: "Sistema Nacional de Aseguramiento de la Calidad de la Educación Parvularia, Básica y Media y su Fiscalización"
+tipo: "Ley"
+identificador: "Ley N° 20.529"
 estado: vigente
-autoridad: 'Biblioteca del Congreso Nacional de Chile'
-fuente_oficial: 'https://www.bcn.cl/leychile/navegar?idNorma=1028635'
-version_consultada: '2026-07-30'
-nota_uso: 'Texto consolidado vigente descargado desde LeyChile. Usar como referencia jurídica; verificar los artículos aplicables al caso concreto.'
+autoridad: "Biblioteca del Congreso Nacional de Chile"
+fuente_oficial: "https://www.bcn.cl/leychile/navegar?idNorma=1028635"
+version_consultada: "2026-07-30"
+nota_uso: "Texto consolidado vigente descargado desde LeyChile. Usar como referencia jurídica; verificar los artículos aplicables al caso concreto."
 ---
 
 Tipo Norma                              :Ley 20529

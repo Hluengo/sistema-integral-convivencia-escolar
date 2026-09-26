@@ -1604,7 +1604,13 @@ async function verifyJwtWithJwks(token, supabaseUrl) {
       const namedCurve =
         key.crv === "P-256" ? "P-256" : key.crv === "P-384" ? "P-384" : key.crv;
       if (!namedCurve) return null;
-      const jwk = { kty: "EC", crv: namedCurve, x: key.x, y: key.y, ext: true };
+      const jwk = {
+        kty: "EC",
+        crv: namedCurve,
+        x: key.x,
+        y: key.y,
+        ext: true,
+      };
       cryptoKey = await crypto.subtle.importKey(
         "jwk",
         jwk,
@@ -1619,7 +1625,13 @@ async function verifyJwtWithJwks(token, supabaseUrl) {
         data,
       );
     } else if (key.kty === "RSA") {
-      const jwk = { kty: "RSA", n: key.n, e: key.e, alg: key.alg, ext: true };
+      const jwk = {
+        kty: "RSA",
+        n: key.n,
+        e: key.e,
+        alg: key.alg,
+        ext: true,
+      };
       cryptoKey = await crypto.subtle.importKey(
         "jwk",
         jwk,
@@ -2620,11 +2632,9 @@ function requireMembership(params, checkAccess = checkMembershipViaApi) {
       return;
     }
     if (!authReq.tenantId) {
-      res
-        .status(403)
-        .json({
-          error: "No fue posible determinar el establecimiento autenticado.",
-        });
+      res.status(403).json({
+        error: "No fue posible determinar el establecimiento autenticado.",
+      });
       return;
     }
     const mode = getMembershipMode();
@@ -2682,11 +2692,9 @@ function requireMembership(params, checkAccess = checkMembershipViaApi) {
         }
         logServer("transition_fallback_denied", "no matching role");
       }
-      res
-        .status(403)
-        .json({
-          error: "No tiene una membres\xEDa activa para esta aplicaci\xF3n.",
-        });
+      res.status(403).json({
+        error: "No tiene una membres\xEDa activa para esta aplicaci\xF3n.",
+      });
     } catch (err) {
       if (mode === "transition") {
         logServer(
@@ -2820,11 +2828,9 @@ function requireTenant(req, res, next) {
     return;
   }
   if (!authReq.tenantId) {
-    res
-      .status(403)
-      .json({
-        error: "No fue posible determinar el establecimiento autenticado.",
-      });
+    res.status(403).json({
+      error: "No fue posible determinar el establecimiento autenticado.",
+    });
     return;
   }
   next();
@@ -2940,11 +2946,9 @@ router2.post(
       const authReq = req;
       const tenantId = authReq.tenantId;
       if (!tenantId) {
-        res
-          .status(403)
-          .json({
-            error: "No fue posible determinar el establecimiento autenticado.",
-          });
+        res.status(403).json({
+          error: "No fue posible determinar el establecimiento autenticado.",
+        });
         return;
       }
       const client = getAdminClient();
@@ -2987,11 +2991,9 @@ router2.post(
         ]);
       if (causaResult.error) throw causaResult.error;
       if (!causaResult.data) {
-        res
-          .status(404)
-          .json({
-            error: "No se encontr\xF3 la causa en el establecimiento actual.",
-          });
+        res.status(404).json({
+          error: "No se encontr\xF3 la causa en el establecimiento actual.",
+        });
         return;
       }
       if (checklistResult.error) throw checklistResult.error;
@@ -3530,11 +3532,9 @@ router3.post(
     try {
       const parsed = draftDocumentBodySchema.safeParse(req.body);
       if (!parsed.success) {
-        res
-          .status(400)
-          .json({
-            error: parsed.error.issues[0]?.message ?? "Solicitud no v\xE1lida.",
-          });
+        res.status(400).json({
+          error: parsed.error.issues[0]?.message ?? "Solicitud no v\xE1lida.",
+        });
         return;
       }
       const docType = parsed.data.docType;
@@ -3900,11 +3900,9 @@ function requireRole(allowedRoles) {
       return;
     }
     if (!authReq.tenantId) {
-      res
-        .status(403)
-        .json({
-          error: "No fue posible determinar el establecimiento autenticado.",
-        });
+      res.status(403).json({
+        error: "No fue posible determinar el establecimiento autenticado.",
+      });
       return;
     }
     const role = authReq.profileRole;
@@ -4015,12 +4013,10 @@ router5.put(
       return;
     }
     if (system_prompt.length > 2e4) {
-      res
-        .status(400)
-        .json({
-          error:
-            "El system_prompt excede el m\xE1ximo permitido (20000 caracteres).",
-        });
+      res.status(400).json({
+        error:
+          "El system_prompt excede el m\xE1ximo permitido (20000 caracteres).",
+      });
       return;
     }
     try {
@@ -4052,11 +4048,9 @@ router5.put(
         !Array.isArray(updated.body) ||
         updated.body.length !== 1
       ) {
-        res
-          .status(404)
-          .json({
-            error: "Plantilla no encontrada para el establecimiento actual.",
-          });
+        res.status(404).json({
+          error: "Plantilla no encontrada para el establecimiento actual.",
+        });
         return;
       }
       res.json({ success: true });
@@ -4161,12 +4155,10 @@ var errorHandler = (err, _req, res, _next) => {
     tooLarge ||
     (err instanceof Error && "status" in err && err.status === 413)
   ) {
-    res
-      .status(413)
-      .json({
-        error:
-          "El archivo o cuerpo de la solicitud excede el tama\xF1o permitido.",
-      });
+    res.status(413).json({
+      error:
+        "El archivo o cuerpo de la solicitud excede el tama\xF1o permitido.",
+    });
     return;
   }
   const isDev = process.env.NODE_ENV === "development";
@@ -4244,11 +4236,9 @@ router7.post(
         return;
       }
       if (!body.bucket || !body.storagePath || !body.fileName) {
-        res
-          .status(400)
-          .json({
-            error: "Faltan par\xE1metros requeridos para analizar el PDF",
-          });
+        res.status(400).json({
+          error: "Faltan par\xE1metros requeridos para analizar el PDF",
+        });
         return;
       }
       const result = await analyzeDisciplinaryPdf({
@@ -4296,20 +4286,15 @@ router7.post(
         !body.fileHash ||
         !body.studentId
       ) {
-        res
-          .status(400)
-          .json({
-            error: "Faltan par\xE1metros requeridos para confirmar el proceso",
-          });
+        res.status(400).json({
+          error: "Faltan par\xE1metros requeridos para confirmar el proceso",
+        });
         return;
       }
       if (body.annotations !== void 0 && !Array.isArray(body.annotations)) {
-        res
-          .status(400)
-          .json({
-            error:
-              "Las anotaciones confirmadas no tienen un formato v\xE1lido.",
-          });
+        res.status(400).json({
+          error: "Las anotaciones confirmadas no tienen un formato v\xE1lido.",
+        });
         return;
       }
       const result = await confirmDisciplinaryProcess({
@@ -4374,12 +4359,10 @@ router8.post(
         typeof eventName !== "string" ||
         !EVENT_NAME_RE.test(eventName)
       ) {
-        res
-          .status(400)
-          .json({
-            error:
-              "eventName debe usar formato snake_case y tener hasta 80 caracteres.",
-          });
+        res.status(400).json({
+          error:
+            "eventName debe usar formato snake_case y tener hasta 80 caracteres.",
+        });
         return;
       }
       if (!hasSafeProperties(properties)) {
@@ -4388,7 +4371,7 @@ router8.post(
           .json({ error: "properties debe ser un objeto JSON de hasta 4 KB." });
         return;
       }
-      const { createClient: createClient6 } =
+      const { createClient: createClient7 } =
         await import("@supabase/supabase-js");
       const supabaseUrl =
         process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
@@ -4401,7 +4384,7 @@ router8.post(
         return;
       }
       const authReq = req;
-      const supabase = createClient6(supabaseUrl, anonKey, {
+      const supabase = createClient7(supabaseUrl, anonKey, {
         auth: { persistSession: false },
         global: { headers: { Authorization: `Bearer ${authReq.authToken}` } },
       });
@@ -4435,7 +4418,7 @@ router8.get(
     try {
       const since = req.query.since ?? void 0;
       const until = req.query.until ?? void 0;
-      const { createClient: createClient6 } =
+      const { createClient: createClient7 } =
         await import("@supabase/supabase-js");
       const supabaseUrl =
         process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
@@ -4449,7 +4432,7 @@ router8.get(
           .json({ error: "Servicio de estad\xEDsticas no configurado." });
         return;
       }
-      const supabase = createClient6(supabaseUrl, serviceRoleKey, {
+      const supabase = createClient7(supabaseUrl, serviceRoleKey, {
         auth: { persistSession: false, autoRefreshToken: false },
       });
       const params = {};
@@ -4487,10 +4470,255 @@ router8.get(
 );
 var usage_default = router8;
 
-// server/api/routes/pilot.ts
+// server/api/routes/notificaciones.ts
 import { Router as Router9 } from "express";
+import { createClient as createClient3 } from "@supabase/supabase-js";
+
+// server/api/services/composio.ts
+import { Composio } from "@composio/core";
+var COMPOSIO_SENDER_USER_ID = "colegio";
+var cachedSession = null;
+function requireApiKey() {
+  if (!process.env.COMPOSIO_API_KEY) {
+    throw new Error(
+      "Composio no configurado: falta COMPOSIO_API_KEY en .env.local.",
+    );
+  }
+}
+async function getComposioSession() {
+  requireApiKey();
+  if (!cachedSession) {
+    const composio = new Composio();
+    cachedSession = await composio.create(COMPOSIO_SENDER_USER_ID, {
+      toolkits: ["gmail"],
+      sandbox: { enable: false },
+    });
+  }
+  return cachedSession;
+}
+async function sendCitacionEmail({ to, subject, body, isHtml }) {
+  const session = await getComposioSession();
+  return session.execute("GMAIL_SEND_EMAIL", {
+    recipient_email: to,
+    subject,
+    body,
+    ...(isHtml ? { is_html: true } : {}),
+  });
+}
+
+// server/api/routes/notificaciones.ts
 var router9 = Router9();
-router9.get(
+var EMAIL_RE2 = /^[^\s@]{1,64}@[^\s@]{1,253}\.[^\s@]{2,}$/;
+var MAX_SUBJECT = 200;
+var MAX_BODY = 8e3;
+function isValidCitacionEmail(value) {
+  return (
+    typeof value === "string" &&
+    value.length <= 320 &&
+    EMAIL_RE2.test(value.trim())
+  );
+}
+function getCitacionEmailDomain(email) {
+  return email.trim().split("@")[1]?.toLowerCase() ?? "";
+}
+var MAX_HTML_BYTES = 1e5;
+var DANGEROUS_HTML_RE =
+  /<\s*(script|iframe|object|embed|form)\b|on\w+\s*=|(?:javascript|data:text\/html|vbscript):|srcdoc\s*=/i;
+function isSafeDocumentoHtml(value) {
+  if (typeof value !== "string") return false;
+  if (value.length === 0 || Buffer.byteLength(value, "utf8") > MAX_HTML_BYTES)
+    return false;
+  return !DANGEROUS_HTML_RE.test(value);
+}
+function getAdminClient2() {
+  const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+  if (!url || !key) throw new Error("Supabase administrativo no configurado.");
+  return createClient3(url, key, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false,
+    },
+  });
+}
+router9.post(
+  "/notificaciones/citacion",
+  requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
+  requireTenant,
+  rateLimit,
+  async (req, res) => {
+    try {
+      const body = req.body;
+      const causaId = requireStr(
+        {
+          id:
+            optStr(body, "causaId", 100).trim() ||
+            optStr(body, "id", 100).trim(),
+        },
+        "id",
+        100,
+      );
+      const to = optStr(body, "to", 320).trim();
+      const subject = optStr(body, "subject", MAX_SUBJECT).trim();
+      const text = optStr(body, "body", MAX_BODY).trim();
+      if (!isValidCitacionEmail(to)) {
+        res
+          .status(400)
+          .json({ error: "El destinatario debe ser un correo v\xE1lido." });
+        return;
+      }
+      if (!subject || !text) {
+        res.status(400).json({ error: "Asunto y cuerpo son obligatorios." });
+        return;
+      }
+      const authReq = req;
+      const tenantId = authReq.tenantId;
+      if (!tenantId) {
+        res.status(403).json({
+          error: "No fue posible determinar el establecimiento autenticado.",
+        });
+        return;
+      }
+      const client = getAdminClient2();
+      const { data: causa, error: causaError } = await client
+        .from("causas")
+        .select("id")
+        .eq("id", causaId)
+        .eq("tenant_id", tenantId)
+        .maybeSingle();
+      if (causaError || !causa) {
+        res
+          .status(404)
+          .json({ error: "Causa no encontrada en este establecimiento." });
+        return;
+      }
+      let sendResult;
+      try {
+        sendResult = await sendCitacionEmail({ to, subject, body: text });
+      } catch (sendError2) {
+        console.error(
+          "Error enviando citaci\xF3n v\xEDa Composio:",
+          sendError2,
+        );
+        res
+          .status(502)
+          .json({ error: "No fue posible enviar la citaci\xF3n por correo." });
+        return;
+      }
+      const { error: logError } = await client.from("usage_events").insert({
+        event_name: "citacion_email_enviada",
+        user_id: authReq.user?.sub ?? null,
+        tenant_id: tenantId,
+        properties: { causaId, dominio: getCitacionEmailDomain(to) },
+      });
+      if (logError) {
+        console.error("Error registrando env\xEDo de citaci\xF3n:", logError);
+      }
+      res.json({ success: true, result: sendResult });
+    } catch (error) {
+      console.error("Error en citaci\xF3n:", error);
+      res
+        .status(500)
+        .json({ error: "Error interno al procesar la citaci\xF3n." });
+    }
+  },
+);
+router9.post(
+  "/notificaciones/documento",
+  requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
+  requireTenant,
+  rateLimit,
+  async (req, res) => {
+    try {
+      const body = req.body;
+      const causaId = requireStr(
+        {
+          id:
+            optStr(body, "causaId", 100).trim() ||
+            optStr(body, "id", 100).trim(),
+        },
+        "id",
+        100,
+      );
+      const to = optStr(body, "to", 320).trim();
+      const subject = optStr(body, "subject", MAX_SUBJECT).trim();
+      const html = optStr(body, "html", MAX_HTML_BYTES).trim();
+      if (!isValidCitacionEmail(to)) {
+        res
+          .status(400)
+          .json({ error: "El destinatario debe ser un correo v\xE1lido." });
+        return;
+      }
+      if (!subject || !isSafeDocumentoHtml(html)) {
+        res
+          .status(400)
+          .json({ error: "Asunto y cuerpo HTML v\xE1lido son obligatorios." });
+        return;
+      }
+      const authReq = req;
+      const tenantId = authReq.tenantId;
+      if (!tenantId) {
+        res.status(403).json({
+          error: "No fue posible determinar el establecimiento autenticado.",
+        });
+        return;
+      }
+      const client = getAdminClient2();
+      const { data: causa, error: causaError } = await client
+        .from("causas")
+        .select("id")
+        .eq("id", causaId)
+        .eq("tenant_id", tenantId)
+        .maybeSingle();
+      if (causaError || !causa) {
+        res
+          .status(404)
+          .json({ error: "Causa no encontrada en este establecimiento." });
+        return;
+      }
+      let sendResult;
+      try {
+        sendResult = await sendCitacionEmail({
+          to,
+          subject,
+          body: html,
+          isHtml: true,
+        });
+      } catch (sendError2) {
+        console.error("Error enviando documento v\xEDa Composio:", sendError2);
+        res
+          .status(502)
+          .json({ error: "No fue posible enviar el documento por correo." });
+        return;
+      }
+      const { error: logError } = await client.from("usage_events").insert({
+        event_name: "notificacion_email_enviada",
+        user_id: authReq.user?.sub ?? null,
+        tenant_id: tenantId,
+        properties: { causaId, dominio: getCitacionEmailDomain(to) },
+      });
+      if (logError) {
+        console.error("Error registrando env\xEDo de documento:", logError);
+      }
+      res.json({ success: true, result: sendResult });
+    } catch (error) {
+      console.error("Error en env\xEDo de documento:", error);
+      res
+        .status(500)
+        .json({ error: "Error interno al procesar el documento." });
+    }
+  },
+);
+var notificaciones_default = router9;
+
+// server/api/routes/pilot.ts
+import { Router as Router10 } from "express";
+var router10 = Router10();
+router10.get(
   "/pilot/membership-check",
   requireAuth,
   requireTenant,
@@ -4503,13 +4731,13 @@ router9.get(
     });
   },
 );
-var pilot_default = router9;
+var pilot_default = router10;
 
 // server/api/routes/admin.ts
-import { Router as Router10 } from "express";
+import { Router as Router11 } from "express";
 import multer from "multer";
-import { createClient as createClient3 } from "@supabase/supabase-js";
-var router10 = Router10();
+import { createClient as createClient4 } from "@supabase/supabase-js";
+var router11 = Router11();
 var ownUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -4527,16 +4755,16 @@ var VALID_ROLES2 = [
   "user",
   "staff",
 ];
-var EMAIL_RE2 = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+var EMAIL_RE3 = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 function invitationErrorStatus(message) {
   return /rate limit|too many requests|email rate/i.test(message) ? 429 : 500;
 }
-function getAdminClient2() {
+function getAdminClient3() {
   const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   const key =
     process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) throw new Error("Supabase administrativo no configurado.");
-  return createClient3(url, key, {
+  return createClient4(url, key, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -4593,11 +4821,11 @@ async function listAuthUsers(client) {
   if (result.error) throw result.error;
   return new Map(result.data.users.map((user) => [user.id, user]));
 }
-router10.use("/admin", requireAuth, requireTenant, requireRole(ADMIN_ROLES));
-router10.get("/admin/members", async (req, res) => {
+router11.use("/admin", requireAuth, requireTenant, requireRole(ADMIN_ROLES));
+router11.get("/admin/members", async (req, res) => {
   try {
     const request2 = getRequest(req);
-    const client = getAdminClient2();
+    const client = getAdminClient3();
     await assertFreshAdmin(client, request2);
     const [
       profilesResult,
@@ -4690,10 +4918,10 @@ router10.get("/admin/members", async (req, res) => {
     res.status(status).json(clientErrorBody(message, status));
   }
 });
-router10.patch("/admin/members/:userId", async (req, res) => {
+router11.patch("/admin/members/:userId", async (req, res) => {
   try {
     const request2 = getRequest(req);
-    const client = getAdminClient2();
+    const client = getAdminClient3();
     await assertFreshAdmin(client, request2);
     const userId = req.params.userId;
     const role = req.body?.role;
@@ -4735,12 +4963,10 @@ router10.patch("/admin/members/:userId", async (req, res) => {
         .neq("user_id", userId);
       if (countError) throw countError;
       if ((count ?? 0) < 1) {
-        res
-          .status(409)
-          .json({
-            error:
-              "No puede dejar al establecimiento sin un administrador activo.",
-          });
+        res.status(409).json({
+          error:
+            "No puede dejar al establecimiento sin un administrador activo.",
+        });
         return;
       }
     }
@@ -4788,17 +5014,17 @@ router10.patch("/admin/members/:userId", async (req, res) => {
     res.status(status).json(clientErrorBody(message, status));
   }
 });
-router10.post("/admin/invitations", async (req, res) => {
+router11.post("/admin/invitations", async (req, res) => {
   try {
     const request2 = getRequest(req);
-    const client = getAdminClient2();
+    const client = getAdminClient3();
     await assertFreshAdmin(client, request2);
     const email =
       typeof req.body?.email === "string"
         ? req.body.email.trim().toLowerCase()
         : "";
     const role = req.body?.role;
-    if (!EMAIL_RE2.test(email) || !isRole(role)) {
+    if (!EMAIL_RE3.test(email) || !isRole(role)) {
       res
         .status(400)
         .json({ error: "Ingrese un correo v\xE1lido y un rol existente." });
@@ -4812,11 +5038,9 @@ router10.post("/admin/invitations", async (req, res) => {
       .maybeSingle();
     if (profileError) throw profileError;
     if (existingProfile) {
-      res
-        .status(409)
-        .json({
-          error: "Ese correo ya pertenece a un usuario del establecimiento.",
-        });
+      res.status(409).json({
+        error: "Ese correo ya pertenece a un usuario del establecimiento.",
+      });
       return;
     }
     const { data: existingInvitation, error: invitationError } = await client
@@ -4828,11 +5052,9 @@ router10.post("/admin/invitations", async (req, res) => {
       .maybeSingle();
     if (invitationError) throw invitationError;
     if (existingInvitation) {
-      res
-        .status(409)
-        .json({
-          error: "Ya existe una invitaci\xF3n pendiente para ese correo.",
-        });
+      res.status(409).json({
+        error: "Ya existe una invitaci\xF3n pendiente para ese correo.",
+      });
       return;
     }
     const invitation = await client.auth.admin.inviteUserByEmail(email, {
@@ -4888,10 +5110,10 @@ router10.post("/admin/invitations", async (req, res) => {
       .json(clientErrorBody(message, invitationErrorStatus(message)));
   }
 });
-router10.post("/admin/invitations/:invitationId/resend", async (req, res) => {
+router11.post("/admin/invitations/:invitationId/resend", async (req, res) => {
   try {
     const request2 = getRequest(req);
-    const client = getAdminClient2();
+    const client = getAdminClient3();
     await assertFreshAdmin(client, request2);
     if (!req.params.invitationId || !isValidUuid(req.params.invitationId)) {
       res
@@ -4940,10 +5162,10 @@ router10.post("/admin/invitations/:invitationId/resend", async (req, res) => {
       .json(clientErrorBody(message, invitationErrorStatus(message)));
   }
 });
-router10.post("/admin/invitations/:invitationId/cancel", async (req, res) => {
+router11.post("/admin/invitations/:invitationId/cancel", async (req, res) => {
   try {
     const request2 = getRequest(req);
-    const client = getAdminClient2();
+    const client = getAdminClient3();
     await assertFreshAdmin(client, request2);
     if (!req.params.invitationId || !isValidUuid(req.params.invitationId)) {
       res
@@ -5000,10 +5222,10 @@ router10.post("/admin/invitations/:invitationId/cancel", async (req, res) => {
     res.status(500).json(clientErrorBody(message, 500));
   }
 });
-router10.post("/admin/import", ownUpload.single("file"), async (req, res) => {
+router11.post("/admin/import", ownUpload.single("file"), async (req, res) => {
   try {
     const request2 = getRequest(req);
-    const client = getAdminClient2();
+    const client = getAdminClient3();
     await assertFreshAdmin(client, request2);
     if (!request2.tenantId)
       throw new Error("No fue posible determinar el establecimiento.");
@@ -5040,13 +5262,13 @@ router10.post("/admin/import", ownUpload.single("file"), async (req, res) => {
     res.status(status).json(clientErrorBody(message, status));
   }
 });
-var admin_default = router10;
+var admin_default = router11;
 
 // server/api/routes/platform.ts
-import { Router as Router11 } from "express";
+import { Router as Router12 } from "express";
 import multer2 from "multer";
 import { randomUUID as randomUUID2 } from "node:crypto";
-import { createClient as createClient4 } from "@supabase/supabase-js";
+import { createClient as createClient5 } from "@supabase/supabase-js";
 
 // server/middleware/requireSuperAdmin.ts
 function requireSuperAdmin(req, res, next) {
@@ -5072,23 +5294,23 @@ function requireSuperAdmin(req, res, next) {
 }
 
 // server/api/routes/platform.ts
-var router11 = Router11();
+var router12 = Router12();
 var upload = multer2({
   storage: multer2.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 var DEFAULT_TENANT_ID = "00000000-0000-0000-0000-000000000001";
 var APPLICATION_CODE2 = "convivencia";
-var EMAIL_RE3 = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+var EMAIL_RE4 = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 function getRequest2(req) {
   return req;
 }
-function getAdminClient3() {
+function getAdminClient4() {
   const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   const key =
     process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) throw new Error("Supabase administrativo no configurado.");
-  return createClient4(url, key, {
+  return createClient5(url, key, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -5175,11 +5397,11 @@ async function recordAudit2(
   });
   if (error) throw error;
 }
-router11.use("/platform", requireAuth, requireSuperAdmin);
-router11.get("/platform/tenants", async (req, res) => {
+router12.use("/platform", requireAuth, requireSuperAdmin);
+router12.get("/platform/tenants", async (req, res) => {
   try {
     const request2 = getRequest2(req);
-    const client = getAdminClient3();
+    const client = getAdminClient4();
     await assertFreshSuperAdmin(client, request2);
     const { data, error } = await client
       .from("tenants")
@@ -5221,10 +5443,10 @@ router11.get("/platform/tenants", async (req, res) => {
     res.status(status).json(clientErrorBody(message, status));
   }
 });
-router11.get("/platform/tenants/:id/summary", async (req, res) => {
+router12.get("/platform/tenants/:id/summary", async (req, res) => {
   try {
     const request2 = getRequest2(req);
-    const client = getAdminClient3();
+    const client = getAdminClient4();
     await assertFreshSuperAdmin(client, request2);
     const tenantId = req.params.id;
     const tenant = await client
@@ -5287,13 +5509,13 @@ router11.get("/platform/tenants/:id/summary", async (req, res) => {
     res.status(500).json(clientErrorBody(message, 500));
   }
 });
-router11.post("/platform/tenants", async (req, res) => {
+router12.post("/platform/tenants", async (req, res) => {
   let client = null;
   let createdTenantId = null;
   let createdAuthUserId = null;
   try {
     const request2 = getRequest2(req);
-    client = getAdminClient3();
+    client = getAdminClient4();
     await assertFreshSuperAdmin(client, request2);
     const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
     const adminEmail =
@@ -5302,12 +5524,10 @@ router11.post("/platform/tenants", async (req, res) => {
         : "";
     const providedSlug =
       typeof req.body?.slug === "string" ? req.body.slug.trim() : "";
-    if (!name || !EMAIL_RE3.test(adminEmail)) {
-      res
-        .status(400)
-        .json({
-          error: "Ingrese un nombre v\xE1lido y un correo de administrador.",
-        });
+    if (!name || !EMAIL_RE4.test(adminEmail)) {
+      res.status(400).json({
+        error: "Ingrese un nombre v\xE1lido y un correo de administrador.",
+      });
       return;
     }
     const tenantId = randomUUID2();
@@ -5406,10 +5626,10 @@ router11.post("/platform/tenants", async (req, res) => {
       .json({ error: responseMessage });
   }
 });
-router11.post("/platform/tenants/:id/invite", async (req, res) => {
+router12.post("/platform/tenants/:id/invite", async (req, res) => {
   try {
     const request2 = getRequest2(req);
-    const client = getAdminClient3();
+    const client = getAdminClient4();
     await assertFreshSuperAdmin(client, request2);
     const tenantId = req.params.id;
     const { data, error } = await client
@@ -5421,11 +5641,9 @@ router11.post("/platform/tenants/:id/invite", async (req, res) => {
     if (error) throw error;
     const admin = data;
     if (!admin?.email) {
-      res
-        .status(404)
-        .json({
-          error: "No se encontr\xF3 un administrador para este colegio.",
-        });
+      res.status(404).json({
+        error: "No se encontr\xF3 un administrador para este colegio.",
+      });
       return;
     }
     const resend = await client.auth.admin.inviteUserByEmail(admin.email, {
@@ -5451,13 +5669,13 @@ router11.post("/platform/tenants/:id/invite", async (req, res) => {
     res.status(500).json(clientErrorBody(message, 500));
   }
 });
-router11.post(
+router12.post(
   "/platform/tenants/:id/import",
   upload.single("file"),
   async (req, res) => {
     try {
       const request2 = getRequest2(req);
-      const client = getAdminClient3();
+      const client = getAdminClient4();
       await assertFreshSuperAdmin(client, request2);
       const tenantId = req.params.id;
       if (!req.file?.buffer) {
@@ -5484,14 +5702,14 @@ router11.post(
     }
   },
 );
-var platform_default = router11;
+var platform_default = router12;
 
 // server/api/routes/institution.ts
-import { Router as Router12 } from "express";
+import { Router as Router13 } from "express";
 import { randomUUID as randomUUID3 } from "node:crypto";
 import multer3 from "multer";
-import { createClient as createClient5 } from "@supabase/supabase-js";
-var router12 = Router12();
+import { createClient as createClient6 } from "@supabase/supabase-js";
+var router13 = Router13();
 var upload2 = multer3({
   storage: multer3.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 },
@@ -5527,12 +5745,12 @@ var INSTITUTION_DOCUMENT_COLUMNS =
 function getRequest3(req) {
   return req;
 }
-function getAdminClient4() {
+function getAdminClient5() {
   const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   const key =
     process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) throw new Error("Supabase administrativo no configurado.");
-  return createClient5(url, key, {
+  return createClient6(url, key, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -5871,14 +6089,14 @@ async function sendError(res, error) {
   const status = message.includes("Solo el superadministrador") ? 403 : 500;
   res.status(status).json(clientErrorBody(message, status));
 }
-router12.get(
+router13.get(
   "/institution/settings",
   requireAuth,
   requireTenant,
   async (req, res) => {
     try {
       const request2 = getRequest3(req);
-      const client = getAdminClient4();
+      const client = getAdminClient5();
       const tenantId = await getTenantFromRequest(client, request2);
       res.json(await loadDocumentSettings(client, tenantId));
     } catch (error) {
@@ -5886,26 +6104,26 @@ router12.get(
     }
   },
 );
-router12.use(
+router13.use(
   "/admin/institution",
   requireAuth,
   requireTenant,
   requireRole(ADMIN_ROLES2),
 );
-router12.use(
+router13.use(
   "/admin/rules",
   requireAuth,
   requireTenant,
   requireRole(ADMIN_ROLES2),
 );
-router12.get(
+router13.get(
   "/onboarding/status",
   requireAuth,
   requireTenant,
   async (req, res) => {
     try {
       const request2 = getRequest3(req);
-      const client = getAdminClient4();
+      const client = getAdminClient5();
       const tenantId = request2.tenantId;
       if (!tenantId) throw new Error("No fue posible determinar el colegio.");
       const [settings, courses, templates, members, rules] = await Promise.all([
@@ -5948,20 +6166,20 @@ router12.get(
     }
   },
 );
-router12.get("/admin/institution", async (req, res) => {
+router13.get("/admin/institution", async (req, res) => {
   try {
     const request2 = getRequest3(req);
-    const client = getAdminClient4();
+    const client = getAdminClient5();
     const tenantId = await getTenantFromRequest(client, request2);
     res.json(await loadSettings(client, tenantId));
   } catch (error) {
     await sendError(res, error);
   }
 });
-router12.patch("/admin/institution", async (req, res) => {
+router13.patch("/admin/institution", async (req, res) => {
   try {
     const request2 = getRequest3(req);
-    const client = getAdminClient4();
+    const client = getAdminClient5();
     const tenantId = await getTenantFromRequest(client, request2);
     res.json(
       await updateSettings(
@@ -5975,13 +6193,13 @@ router12.patch("/admin/institution", async (req, res) => {
     await sendError(res, error);
   }
 });
-router12.post(
+router13.post(
   "/admin/institution/logo",
   upload2.single("logo"),
   async (req, res) => {
     try {
       const request2 = getRequest3(req);
-      const client = getAdminClient4();
+      const client = getAdminClient5();
       const tenantId = await getTenantFromRequest(client, request2);
       if (!req.file) throw new Error("Seleccione un archivo de logo.");
       res.json(
@@ -5992,20 +6210,20 @@ router12.post(
     }
   },
 );
-router12.get("/admin/rules", async (req, res) => {
+router13.get("/admin/rules", async (req, res) => {
   try {
     const request2 = getRequest3(req);
-    const client = getAdminClient4();
+    const client = getAdminClient5();
     const tenantId = await getTenantFromRequest(client, request2);
     res.json({ rules: await listRules(client, tenantId) });
   } catch (error) {
     await sendError(res, error);
   }
 });
-router12.post("/admin/rules", async (req, res) => {
+router13.post("/admin/rules", async (req, res) => {
   try {
     const request2 = getRequest3(req);
-    const client = getAdminClient4();
+    const client = getAdminClient5();
     const tenantId = await getTenantFromRequest(client, request2);
     res
       .status(201)
@@ -6016,10 +6234,10 @@ router12.post("/admin/rules", async (req, res) => {
     await sendError(res, error);
   }
 });
-router12.patch("/admin/rules/:id", async (req, res) => {
+router13.patch("/admin/rules/:id", async (req, res) => {
   try {
     const request2 = getRequest3(req);
-    const client = getAdminClient4();
+    const client = getAdminClient5();
     const tenantId = await getTenantFromRequest(client, request2);
     const updates = {
       title: cleanText(req.body?.title, 200),
@@ -6051,10 +6269,10 @@ router12.patch("/admin/rules/:id", async (req, res) => {
     await sendError(res, error);
   }
 });
-router12.post("/admin/rules/:id/publish", async (req, res) => {
+router13.post("/admin/rules/:id/publish", async (req, res) => {
   try {
     const request2 = getRequest3(req);
-    const client = getAdminClient4();
+    const client = getAdminClient5();
     const tenantId = await getTenantFromRequest(client, request2);
     res.json(
       await publishRule(client, tenantId, req.params.id, request2.user?.sub),
@@ -6063,19 +6281,19 @@ router12.post("/admin/rules/:id/publish", async (req, res) => {
     await sendError(res, error);
   }
 });
-router12.use(
+router13.use(
   "/platform/tenants/:tenantId/institution",
   requireAuth,
   requireSuperAdmin,
 );
-router12.use(
+router13.use(
   "/platform/tenants/:tenantId/rules",
   requireAuth,
   requireSuperAdmin,
 );
-router12.get("/platform/tenants/:tenantId/institution", async (req, res) => {
+router13.get("/platform/tenants/:tenantId/institution", async (req, res) => {
   try {
-    const client = getAdminClient4();
+    const client = getAdminClient5();
     const tenantId = req.params.tenantId;
     await assertTargetTenant(client, tenantId);
     res.json(await loadSettings(client, tenantId));
@@ -6083,10 +6301,10 @@ router12.get("/platform/tenants/:tenantId/institution", async (req, res) => {
     await sendError(res, error);
   }
 });
-router12.patch("/platform/tenants/:tenantId/institution", async (req, res) => {
+router13.patch("/platform/tenants/:tenantId/institution", async (req, res) => {
   try {
     const request2 = getRequest3(req);
-    const client = getAdminClient4();
+    const client = getAdminClient5();
     const tenantId = req.params.tenantId;
     await assertTargetTenant(client, tenantId);
     res.json(
@@ -6101,13 +6319,13 @@ router12.patch("/platform/tenants/:tenantId/institution", async (req, res) => {
     await sendError(res, error);
   }
 });
-router12.post(
+router13.post(
   "/platform/tenants/:tenantId/institution/logo",
   upload2.single("logo"),
   async (req, res) => {
     try {
       const request2 = getRequest3(req);
-      const client = getAdminClient4();
+      const client = getAdminClient5();
       const tenantId = req.params.tenantId;
       await assertTargetTenant(client, tenantId);
       if (!req.file) throw new Error("Seleccione un archivo de logo.");
@@ -6119,9 +6337,9 @@ router12.post(
     }
   },
 );
-router12.get("/platform/tenants/:tenantId/rules", async (req, res) => {
+router13.get("/platform/tenants/:tenantId/rules", async (req, res) => {
   try {
-    const client = getAdminClient4();
+    const client = getAdminClient5();
     const tenantId = req.params.tenantId;
     await assertTargetTenant(client, tenantId);
     res.json({ rules: await listRules(client, tenantId) });
@@ -6129,10 +6347,10 @@ router12.get("/platform/tenants/:tenantId/rules", async (req, res) => {
     await sendError(res, error);
   }
 });
-router12.post("/platform/tenants/:tenantId/rules", async (req, res) => {
+router13.post("/platform/tenants/:tenantId/rules", async (req, res) => {
   try {
     const request2 = getRequest3(req);
-    const client = getAdminClient4();
+    const client = getAdminClient5();
     const tenantId = req.params.tenantId;
     await assertTargetTenant(client, tenantId);
     res
@@ -6144,12 +6362,12 @@ router12.post("/platform/tenants/:tenantId/rules", async (req, res) => {
     await sendError(res, error);
   }
 });
-router12.post(
+router13.post(
   "/platform/tenants/:tenantId/rules/:id/publish",
   async (req, res) => {
     try {
       const request2 = getRequest3(req);
-      const client = getAdminClient4();
+      const client = getAdminClient5();
       const tenantId = req.params.tenantId;
       await assertTargetTenant(client, tenantId);
       res.json(
@@ -6160,14 +6378,14 @@ router12.post(
     }
   },
 );
-router12.use(
+router13.use(
   "/platform/tenants/:tenantId/documents",
   requireAuth,
   requireSuperAdmin,
 );
-router12.get("/platform/tenants/:tenantId/documents", async (req, res) => {
+router13.get("/platform/tenants/:tenantId/documents", async (req, res) => {
   try {
-    const client = getAdminClient4();
+    const client = getAdminClient5();
     const tenantId = req.params.tenantId;
     await assertTargetTenant(client, tenantId);
     res.json({ documents: await listDocuments(client, tenantId) });
@@ -6175,13 +6393,13 @@ router12.get("/platform/tenants/:tenantId/documents", async (req, res) => {
     await sendError(res, error);
   }
 });
-router12.post(
+router13.post(
   "/platform/tenants/:tenantId/documents",
   documentUpload.single("document"),
   async (req, res) => {
     try {
       const request2 = getRequest3(req);
-      const client = getAdminClient4();
+      const client = getAdminClient5();
       const tenantId = req.params.tenantId;
       await assertTargetTenant(client, tenantId);
       if (!req.file) {
@@ -6204,12 +6422,12 @@ router12.post(
     }
   },
 );
-router12.post(
+router13.post(
   "/platform/tenants/:tenantId/documents/:id/archive",
   async (req, res) => {
     try {
       const request2 = getRequest3(req);
-      const client = getAdminClient4();
+      const client = getAdminClient5();
       const tenantId = req.params.tenantId;
       await assertTargetTenant(client, tenantId);
       const { data, error } = await client
@@ -6244,7 +6462,7 @@ router12.post(
     }
   },
 );
-var institution_default = router12;
+var institution_default = router13;
 
 // server/api/index.ts
 var __filename = fileURLToPath(import.meta.url);
@@ -6304,6 +6522,7 @@ app.use("/api", processDisciplinaryPdf_default);
 app.use("/api", debug_default);
 app.use("/api", templates_default);
 app.use("/api", usage_default);
+app.use("/api", notificaciones_default);
 app.use("/api", pilot_default);
 app.use("/api", admin_default);
 app.use("/api", platform_default);

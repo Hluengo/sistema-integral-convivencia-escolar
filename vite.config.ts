@@ -1,8 +1,8 @@
-import tailwindcss from '@tailwindcss/vite';
-import react from '@vitejs/plugin-react';
-import path from 'node:path';
-import { defineConfig, type Plugin } from 'vite';
-import { visualizer } from 'rollup-plugin-visualizer';
+import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react";
+import path from "node:path";
+import { defineConfig, type Plugin } from "vite";
+import { visualizer } from "rollup-plugin-visualizer";
 
 /**
  * Plugin dev-only: permite el WebSocket de HMR de Vite (puerto 3002) y el
@@ -13,8 +13,8 @@ import { visualizer } from 'rollup-plugin-visualizer';
  */
 function devCspHmrPlugin(): Plugin {
   return {
-    name: 'dev-csp-hmr',
-    apply: 'serve',
+    name: "dev-csp-hmr",
+    apply: "serve",
     transformIndexHtml(html) {
       return html.replace(
         "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.posthog.com https://*.ingest.us.sentry.io",
@@ -27,10 +27,10 @@ function devCspHmrPlugin(): Plugin {
 const plugins = [react(), tailwindcss(), devCspHmrPlugin()];
 const projectRoot = import.meta.dirname;
 
-if (process.env.ANALYZE === 'true') {
+if (process.env.ANALYZE === "true") {
   plugins.push(
     visualizer({
-      filename: 'dist/stats.html',
+      filename: "dist/stats.html",
       open: true,
       gzipSize: true,
       brotliSize: true,
@@ -43,43 +43,46 @@ export default defineConfig(() => {
     plugins,
     resolve: {
       alias: {
-        '@/shared': path.resolve(projectRoot, 'src/shared'),
-        '@': path.resolve(projectRoot, '.'),
+        "@/shared": path.resolve(projectRoot, "src/shared"),
+        "@": path.resolve(projectRoot, "."),
       },
     },
     build: {
-      target: 'es2020',
+      target: "es2020",
       chunkSizeWarningLimit: 550,
       rollupOptions: {
         output: {
           manualChunks(id) {
-            if (!id.includes('node_modules')) return;
-            if (id.includes('/write-excel-file/')) return 'excel';
-            if (id.includes('/posthog-js/')) return 'telemetry-posthog';
-            if (id.includes('/@sentry/')) return 'telemetry-sentry';
-            if (id.includes('/web-vitals/')) return 'telemetry-vitals';
+            if (!id.includes("node_modules")) return;
+            if (id.includes("/write-excel-file/")) return "excel";
+            if (id.includes("/posthog-js/")) return "telemetry-posthog";
+            if (id.includes("/@sentry/")) return "telemetry-sentry";
+            if (id.includes("/web-vitals/")) return "telemetry-vitals";
             if (
-              id.includes('/react/') ||
-              id.includes('/react-dom/') ||
-              id.includes('/scheduler/')
+              id.includes("/react/") ||
+              id.includes("/react-dom/") ||
+              id.includes("/scheduler/")
             ) {
-              return 'react';
+              return "react";
             }
-            if (id.includes('/@supabase/')) return 'supabase';
-            if (id.includes('/@radix-ui/')) return 'radix';
-            if (id.includes('/@tanstack/')) return 'tanstack';
-            if (id.includes('/date-fns/')) return 'date';
-            return 'vendor';
+            if (id.includes("/@supabase/")) return "supabase";
+            if (id.includes("/@radix-ui/")) return "radix";
+            if (id.includes("/@tanstack/")) return "tanstack";
+            if (id.includes("/date-fns/")) return "date";
+            return "vendor";
           },
         },
       },
     },
     optimizeDeps: {
-      include: ['@supabase/supabase-js'],
+      include: ["@supabase/supabase-js"],
     },
     server: {
-      watch: process.env.DISABLE_HMR === 'true' ? null : {},
-      hmr: process.env.DISABLE_HMR !== 'true' ? { port: 3002, host: 'localhost' } : false,
+      watch: process.env.DISABLE_HMR === "true" ? null : {},
+      hmr:
+        process.env.DISABLE_HMR !== "true"
+          ? { port: 3002, host: "localhost" }
+          : false,
     },
   };
 });

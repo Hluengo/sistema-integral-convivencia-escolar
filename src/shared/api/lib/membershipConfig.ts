@@ -1,6 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-export type MembershipAuthMode = 'legacy' | 'transition' | 'enforced' | 'invalid';
+export type MembershipAuthMode =
+  "legacy" | "transition" | "enforced" | "invalid";
 
 export interface MembershipConfig {
   enabled: boolean;
@@ -10,44 +11,48 @@ export interface MembershipConfig {
 }
 
 function readEnvBoolean(key: string, fallback: boolean): boolean {
-  const viteEnv = import.meta.env as Record<string, string | boolean | undefined> | undefined;
+  const viteEnv = import.meta.env as
+    Record<string, string | boolean | undefined> | undefined;
   const nodeEnv =
-    typeof process !== 'undefined'
+    typeof process !== "undefined"
       ? (process.env as Record<string, string | undefined>)
       : undefined;
   const raw = viteEnv?.[key] ?? nodeEnv?.[key];
-  if (raw === undefined || raw === null || raw === '') return fallback;
-  return raw === 'true';
+  if (raw === undefined || raw === null || raw === "") return fallback;
+  return raw === "true";
 }
 
 export function getMembershipConfig(): MembershipConfig {
-  const enabled = readEnvBoolean('VITE_APP_MEMBERSHIPS_ENABLED', false);
-  const enforced = readEnvBoolean('VITE_APP_MEMBERSHIPS_ENFORCED', false);
-  const allowLegacyFallback = readEnvBoolean('VITE_APP_MEMBERSHIPS_ALLOW_LEGACY_FALLBACK', true);
+  const enabled = readEnvBoolean("VITE_APP_MEMBERSHIPS_ENABLED", false);
+  const enforced = readEnvBoolean("VITE_APP_MEMBERSHIPS_ENFORCED", false);
+  const allowLegacyFallback = readEnvBoolean(
+    "VITE_APP_MEMBERSHIPS_ALLOW_LEGACY_FALLBACK",
+    true,
+  );
   return { enabled, enforced, allowLegacyFallback };
 }
 
 export function getMembershipAuthMode(): MembershipAuthMode {
   const config = getMembershipConfig();
-  if (!config.enabled) return 'legacy';
-  if (config.enforced) return 'enforced';
-  if (config.enabled && !config.enforced) return 'transition';
-  return 'invalid';
+  if (!config.enabled) return "legacy";
+  if (config.enforced) return "enforced";
+  if (config.enabled && !config.enforced) return "transition";
+  return "invalid";
 }
 
 const APP_ROLE_RULES: Record<string, readonly string[]> = {
   convivencia: [
-    'admin',
-    'direccion',
-    'convivencia',
-    'inspectoria',
-    'profesor_jefe',
-    'teacher',
-    'inspector',
-    'user',
-    'staff',
+    "admin",
+    "direccion",
+    "convivencia",
+    "inspectoria",
+    "profesor_jefe",
+    "teacher",
+    "inspector",
+    "user",
+    "staff",
   ],
-  inasistencias: ['teacher'],
+  inasistencias: ["teacher"],
 };
 
 export function getAllowedRoles(applicationCode: string): readonly string[] {
@@ -57,6 +62,6 @@ export function getAllowedRoles(applicationCode: string): readonly string[] {
 export function isDev(): boolean {
   return (
     import.meta.env?.DEV === true ||
-    (typeof process !== 'undefined' && process.env.NODE_ENV === 'development')
+    (typeof process !== "undefined" && process.env.NODE_ENV === "development")
   );
 }

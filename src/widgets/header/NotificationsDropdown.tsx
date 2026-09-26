@@ -70,7 +70,7 @@ export default function NotificationsDropdown({
       <button
         type="button"
         onClick={() => setIsOpen((value) => !value)}
-        className="relative cursor-pointer rounded-xl p-2.5 text-neutral-500 transition-colors hover:bg-neutral-100"
+        className="relative flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-xl text-neutral-500 transition-colors hover:bg-neutral-100"
         aria-label={`Notificaciones: ${unreadCount} sin leer`}
         aria-haspopup="true"
         aria-expanded={isOpen}
@@ -210,7 +210,7 @@ function FilterButton({
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={`flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 font-semibold text-11px ${active ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500 hover:text-neutral-800"}`}
+      className={`flex min-h-11 flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 font-semibold text-11px ${active ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500 hover:text-neutral-800"}`}
     >
       {children}
     </button>

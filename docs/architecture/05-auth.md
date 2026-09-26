@@ -4,14 +4,14 @@
 
 ## Auth Stack
 
-| Component | Tecnología |
-|-----------|-----------|
-| Identity Provider | Supabase Auth |
-| Auth Method | Email/Password |
-| Session | JWT (HS256 / ES256) |
-| Session Storage | LocalStorage (persistSession: true) |
-| Refresh | Auto-refresh token rotation (10s reuse interval) |
-| JWT Expiry | 3600s (1 hour) |
+| Component         | Tecnología                                       |
+| ----------------- | ------------------------------------------------ |
+| Identity Provider | Supabase Auth                                    |
+| Auth Method       | Email/Password                                   |
+| Session           | JWT (HS256 / ES256)                              |
+| Session Storage   | LocalStorage (persistSession: true)              |
+| Refresh           | Auto-refresh token rotation (10s reuse interval) |
+| JWT Expiry        | 3600s (1 hour)                                   |
 
 ## Auth Flow
 

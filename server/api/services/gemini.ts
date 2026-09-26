@@ -1,10 +1,11 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { httpsPost } from '../lib/https.js';
+import { httpsPost } from "../lib/https.js";
 
 // Usar un identificador estable evita cambios de latencia/comportamiento propios
 // del alias "latest" en un flujo legal sensible.
-const LEGAL_DRAFT_GEMINI_MODEL = process.env.LEGAL_DRAFT_MODEL || 'gemini-3.6-flash';
+const LEGAL_DRAFT_GEMINI_MODEL =
+  process.env.LEGAL_DRAFT_MODEL || "gemini-3.6-flash";
 
 interface GeminiGenerationOptions {
   maxOutputTokens?: number;
@@ -14,17 +15,17 @@ interface GeminiGenerationOptions {
 function getApiKey(): string {
   const key = process.env.GEMINI_API_KEY;
   if (!key) {
-    throw new Error('GEMINI_API_KEY no configurada');
+    throw new Error("GEMINI_API_KEY no configurada");
   }
   return key;
 }
 
 function collectText(value: unknown): string[] {
   if (Array.isArray(value)) return value.flatMap(collectText);
-  if (!value || typeof value !== 'object') return [];
+  if (!value || typeof value !== "object") return [];
 
   const record = value as Record<string, unknown>;
-  if (typeof record.text === 'string') return [record.text];
+  if (typeof record.text === "string") return [record.text];
   return Object.values(record).flatMap(collectText);
 }
 
@@ -52,7 +53,7 @@ async function callGeminiGenerateContent(
   timeoutMs: number,
 ): Promise<string> {
   const response = await httpsPost(
-    'generativelanguage.googleapis.com',
+    "generativelanguage.googleapis.com",
     `/v1beta/models/${encodeURIComponent(model)}:generateContent`,
     {
       systemInstruction: {
@@ -60,7 +61,7 @@ async function callGeminiGenerateContent(
       },
       contents: [
         {
-          role: 'user',
+          role: "user",
           parts: [{ text: userContent }],
         },
       ],
@@ -68,18 +69,20 @@ async function callGeminiGenerateContent(
         maxOutputTokens,
       },
     },
-    { 'x-goog-api-key': getApiKey() },
+    { "x-goog-api-key": getApiKey() },
     timeoutMs,
   );
 
   if (response.status < 200 || response.status >= 300) {
-    throw new Error(`Gemini error: ${response.status} ${JSON.stringify(response.body)}`);
+    throw new Error(
+      `Gemini error: ${response.status} ${JSON.stringify(response.body)}`,
+    );
   }
 
   const body = response.body as Record<string, unknown>;
   const candidates = Array.isArray(body.candidates) ? body.candidates : [];
-  const text = collectText(candidates).join('\n').trim();
-  if (!text) throw new Error('Gemini no devolvió contenido de texto.');
+  const text = collectText(candidates).join("\n").trim();
+  if (!text) throw new Error("Gemini no devolvió contenido de texto.");
   return text;
 }
 

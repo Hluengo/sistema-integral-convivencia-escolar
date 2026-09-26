@@ -321,7 +321,7 @@ export default function ReportsCenter({ causas }: { causas: Causa[] }) {
               variant="ghost"
               onClick={() => void history.refetch()}
               aria-label="Actualizar historial"
-              className="rounded-lg px-3 py-2 text-xs"
+              className="min-h-11 rounded-lg px-3 py-2 text-xs"
             >
               <RefreshCw className="size-4" aria-hidden="true" />
             </Button>

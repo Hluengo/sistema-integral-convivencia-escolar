@@ -1,21 +1,27 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
-import type { PublicDashboardKpis } from './public-dashboard.service';
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+import type { PublicDashboardKpis } from "./public-dashboard.service";
 
-process.env.VITE_SUPABASE_URL ??= 'https://example.supabase.co';
-process.env.VITE_SUPABASE_ANON_KEY ??= 'anon-key-for-unit-tests';
+process.env.VITE_SUPABASE_URL ??= "https://example.supabase.co";
+process.env.VITE_SUPABASE_ANON_KEY ??= "anon-key-for-unit-tests";
 
 interface MutableSupabase {
-  rpc: (fn: string, params?: unknown) => Promise<{ data: unknown; error: Error | null }>;
+  rpc: (
+    fn: string,
+    params?: unknown,
+  ) => Promise<{ data: unknown; error: Error | null }>;
 }
 
 async function withPublicDashboardMocks(options: {
-  rpc: (fn: string, params?: unknown) => Promise<{ data: unknown; error: Error | null }>;
+  rpc: (
+    fn: string,
+    params?: unknown,
+  ) => Promise<{ data: unknown; error: Error | null }>;
   fn: () => Promise<unknown>;
 }): Promise<unknown> {
-  const { supabase } = await import('../lib/supabase');
+  const { supabase } = await import("../lib/supabase");
   const mutable = supabase as unknown as MutableSupabase;
   const originalRpc = mutable.rpc;
   mutable.rpc = options.rpc;
@@ -46,15 +52,16 @@ function makeRpcRow(
   };
 }
 
-describe('fetchPublicDashboardKpis', () => {
-  it('mapea la fila de la RPC a camelCase numérico', async () => {
+describe("fetchPublicDashboardKpis", () => {
+  it("mapea la fila de la RPC a camelCase numérico", async () => {
     const result = (await withPublicDashboardMocks({
       rpc: async (fn) => {
-        assert.equal(fn, 'get_public_dashboard_kpis');
+        assert.equal(fn, "get_public_dashboard_kpis");
         return { data: [makeRpcRow()], error: null };
       },
       fn: async () => {
-        const { fetchPublicDashboardKpis } = await import('./public-dashboard.service');
+        const { fetchPublicDashboardKpis } =
+          await import("./public-dashboard.service");
         return fetchPublicDashboardKpis();
       },
     })) as PublicDashboardKpis;
@@ -64,22 +71,27 @@ describe('fetchPublicDashboardKpis', () => {
     assert.equal(result.derivacionCount, 2);
   });
 
-  it('convierte strings numéricos y usa 0 como fallback', async () => {
+  it("convierte strings numéricos y usa 0 como fallback", async () => {
     const result = (await withPublicDashboardMocks({
-      rpc: async () => ({ data: [makeRpcRow({ total_causes: '25' })], error: null }),
+      rpc: async () => ({
+        data: [makeRpcRow({ total_causes: "25" })],
+        error: null,
+      }),
       fn: async () => {
-        const { fetchPublicDashboardKpis } = await import('./public-dashboard.service');
+        const { fetchPublicDashboardKpis } =
+          await import("./public-dashboard.service");
         return fetchPublicDashboardKpis();
       },
     })) as PublicDashboardKpis;
     assert.equal(result.totalCauses, 25);
   });
 
-  it('retorna KPIs vacíos cuando la fila no existe', async () => {
+  it("retorna KPIs vacíos cuando la fila no existe", async () => {
     const result = (await withPublicDashboardMocks({
       rpc: async () => ({ data: [], error: null }),
       fn: async () => {
-        const { fetchPublicDashboardKpis } = await import('./public-dashboard.service');
+        const { fetchPublicDashboardKpis } =
+          await import("./public-dashboard.service");
         return fetchPublicDashboardKpis();
       },
     })) as PublicDashboardKpis;
@@ -87,12 +99,13 @@ describe('fetchPublicDashboardKpis', () => {
     assert.equal(result.criticalAlerts, 0);
   });
 
-  it('lanza error cuando falla la RPC', async () => {
+  it("lanza error cuando falla la RPC", async () => {
     await assert.rejects(
       withPublicDashboardMocks({
-        rpc: async () => ({ data: null, error: new Error('rpc denied') }),
+        rpc: async () => ({ data: null, error: new Error("rpc denied") }),
         fn: async () => {
-          const { fetchPublicDashboardKpis } = await import('./public-dashboard.service');
+          const { fetchPublicDashboardKpis } =
+            await import("./public-dashboard.service");
           return fetchPublicDashboardKpis();
         },
       }),

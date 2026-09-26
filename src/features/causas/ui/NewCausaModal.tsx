@@ -3,12 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
-import type { UseFormReturn } from 'react-hook-form';
-import type { Course, Student } from '../../../shared/api/services/courses.service';
-import type { NewCausaFormValues } from '../../../shared/lib/schemas/newCausaForm';
-import NewCausaForm from './NewCausaForm';
-import { Dialog, DialogContent } from '../../../shared/ui/Dialog';
+import type React from "react";
+import type { UseFormReturn } from "react-hook-form";
+import type {
+  Course,
+  Student,
+} from "../../../shared/api/services/courses.service";
+import type { NewCausaFormValues } from "../../../shared/lib/schemas/newCausaForm";
+import NewCausaForm from "./NewCausaForm";
+import { Dialog, DialogContent } from "../../../shared/ui/Dialog";
 
 interface NewCausaModalProps {
   form: UseFormReturn<NewCausaFormValues>;

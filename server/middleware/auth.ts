@@ -1,9 +1,9 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import type { Request, Response, NextFunction } from 'express';
-import https from 'node:https';
-import type { AuthenticatedRequest, ProfileRole } from '../types';
-import { verifyJwtWithJwks } from '../lib/jwks';
+import type { Request, Response, NextFunction } from "express";
+import https from "node:https";
+import type { AuthenticatedRequest, ProfileRole } from "../types";
+import { verifyJwtWithJwks } from "../lib/jwks";
 
 export interface JwtPayload {
   sub?: string;
@@ -13,21 +13,26 @@ export interface JwtPayload {
   app_metadata?: Record<string, unknown>;
 }
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const VALID_ROLES: readonly ProfileRole[] = [
-  'superadmin',
-  'admin',
-  'direccion',
-  'convivencia',
-  'inspectoria',
-  'profesor_jefe',
-  'teacher',
-  'inspector',
-  'user',
-  'staff',
+  "superadmin",
+  "admin",
+  "direccion",
+  "convivencia",
+  "inspectoria",
+  "profesor_jefe",
+  "teacher",
+  "inspector",
+  "user",
+  "staff",
 ];
-const FRESH_PROFILE_ROLES: readonly ProfileRole[] = ['superadmin', 'admin', 'direccion'];
+const FRESH_PROFILE_ROLES: readonly ProfileRole[] = [
+  "superadmin",
+  "admin",
+  "direccion",
+];
 
 export function isValidUuid(value: string): boolean {
   return UUID_RE.test(value);
@@ -37,34 +42,40 @@ function isValidRole(value: string): value is ProfileRole {
   return (VALID_ROLES as readonly string[]).includes(value);
 }
 
-async function verifyJwtViaHmac(token: string, secret: string): Promise<JwtPayload | null> {
+async function verifyJwtViaHmac(
+  token: string,
+  secret: string,
+): Promise<JwtPayload | null> {
   // Sin secreto configurado no hay HMAC que validar: rechazar de inmediato para
   // evitar que una firma con clave vacía sea aceptada como válida.
   if (!secret) return null;
 
-  const parts = token.split('.');
+  const parts = token.split(".");
   if (parts.length !== 3) return null;
 
   let payload: JwtPayload;
   try {
-    payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+    payload = JSON.parse(Buffer.from(parts[1], "base64url").toString());
   } catch {
     return null;
   }
 
-  const signature = Buffer.from(parts[2], 'base64url');
+  const signature = Buffer.from(parts[2], "base64url");
 
-  for (const secretBytes of [new TextEncoder().encode(secret), Buffer.from(secret, 'base64')]) {
+  for (const secretBytes of [
+    new TextEncoder().encode(secret),
+    Buffer.from(secret, "base64"),
+  ]) {
     try {
       const key = await crypto.subtle.importKey(
-        'raw',
+        "raw",
         secretBytes,
-        { name: 'HMAC', hash: 'SHA-256' },
+        { name: "HMAC", hash: "SHA-256" },
         false,
-        ['verify'],
+        ["verify"],
       );
       const data = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
-      const valid = await crypto.subtle.verify('HMAC', key, signature, data);
+      const valid = await crypto.subtle.verify("HMAC", key, signature, data);
       if (valid) {
         // `exp` es obligatorio y debe estar en el futuro; sin `exp` el token se
         // consideraría válido para siempre.
@@ -80,7 +91,9 @@ async function verifyJwtViaHmac(token: string, secret: string): Promise<JwtPaylo
 
 function verifyViaSupabaseApi(token: string): Promise<JwtPayload | null> {
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const anonKey =
+    process.env.VITE_SUPABASE_ANON_KEY ??
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   if (!supabaseUrl || !anonKey || !URL.canParse(supabaseUrl)) {
     return Promise.resolve(null);
   }
@@ -90,19 +103,23 @@ function verifyViaSupabaseApi(token: string): Promise<JwtPayload | null> {
     const req = https.request(
       {
         hostname,
-        path: '/auth/v1/user',
-        method: 'GET',
+        path: "/auth/v1/user",
+        method: "GET",
         headers: { Authorization: `Bearer ${token}`, apikey: anonKey },
       },
       (res) => {
-        let data = '';
-        res.on('data', (chunk: string) => {
+        let data = "";
+        res.on("data", (chunk: string) => {
           data += chunk;
         });
-        res.on('end', () => {
+        res.on("end", () => {
           if (res.statusCode !== 200) return resolve(null);
           try {
-            const user = JSON.parse(data) as { id: string; email: string; role: string };
+            const user = JSON.parse(data) as {
+              id: string;
+              email: string;
+              role: string;
+            };
             resolve({ sub: user.id, email: user.email, role: user.role });
           } catch {
             resolve(null);
@@ -110,7 +127,7 @@ function verifyViaSupabaseApi(token: string): Promise<JwtPayload | null> {
         });
       },
     );
-    req.on('error', () => resolve(null));
+    req.on("error", () => resolve(null));
     req.setTimeout(5000, () => {
       req.destroy();
       resolve(null);
@@ -126,20 +143,20 @@ async function verifyJwtSignature(
   secret: string,
   verifyRemote: RemoteTokenVerifier = verifyViaSupabaseApi,
 ): Promise<JwtPayload | null> {
-  const parts = token.split('.');
+  const parts = token.split(".");
   if (parts.length !== 3) return null;
 
   let header: { alg?: string; kid?: string };
   try {
-    header = JSON.parse(Buffer.from(parts[0], 'base64url').toString());
+    header = JSON.parse(Buffer.from(parts[0], "base64url").toString());
   } catch {
     return null;
   }
 
-  const alg = header.alg ?? '';
+  const alg = header.alg ?? "";
   const kid = header.kid;
 
-  if (alg === 'none') return null;
+  if (alg === "none") return null;
 
   const isAsymmetric = /^(ES|RS)/.test(alg);
 
@@ -187,15 +204,15 @@ const defaultProfileFetcher: ProfileFetcher = async (
       {
         hostname,
         path: `/rest/v1/profiles?user_id=eq.${encodeURIComponent(userId)}&select=tenant_id,role,is_active&limit=1`,
-        method: 'GET',
+        method: "GET",
         headers: { apikey: anonKey, Authorization: `Bearer ${token}` },
       },
       (res2) => {
-        let chunks = '';
-        res2.on('data', (c: string) => {
+        let chunks = "";
+        res2.on("data", (c: string) => {
           chunks += c;
         });
-        res2.on('end', () => {
+        res2.on("end", () => {
           if (res2.statusCode !== 200) return resolve(null);
           try {
             resolve(JSON.parse(chunks));
@@ -205,7 +222,7 @@ const defaultProfileFetcher: ProfileFetcher = async (
         });
       },
     );
-    r.on('error', () => resolve(null));
+    r.on("error", () => resolve(null));
     r.setTimeout(3000, () => {
       r.destroy();
       resolve(null);
@@ -217,7 +234,11 @@ const defaultProfileFetcher: ProfileFetcher = async (
     return null;
   }
 
-  const profile = data[0] as { tenant_id?: string; role?: string; is_active?: boolean };
+  const profile = data[0] as {
+    tenant_id?: string;
+    role?: string;
+    is_active?: boolean;
+  };
   if (!profile.tenant_id || !isValidUuid(profile.tenant_id)) {
     return null;
   }
@@ -245,8 +266,11 @@ async function injectTenantContext(
   // synchronizes these claims, and it makes self-contained test JWTs possible.
   const appMetadata = user.app_metadata;
   const jwtTenantId =
-    typeof appMetadata?.tenant_id === 'string' ? appMetadata.tenant_id : undefined;
-  const jwtRole = typeof appMetadata?.role === 'string' ? appMetadata.role : undefined;
+    typeof appMetadata?.tenant_id === "string"
+      ? appMetadata.tenant_id
+      : undefined;
+  const jwtRole =
+    typeof appMetadata?.role === "string" ? appMetadata.role : undefined;
   if (
     jwtTenantId &&
     isValidUuid(jwtTenantId) &&
@@ -260,17 +284,26 @@ async function injectTenantContext(
   }
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const anonKey =
+    process.env.VITE_SUPABASE_ANON_KEY ??
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   if (!supabaseUrl || !anonKey || !URL.canParse(supabaseUrl)) {
     return false;
   }
 
   try {
-    const result = await profileFetcher({ supabaseUrl, anonKey, token, userId: user.sub }, https);
+    const result = await profileFetcher(
+      { supabaseUrl, anonKey, token, userId: user.sub },
+      https,
+    );
     if (!result) {
       return false;
     }
-    if (!isValidUuid(result.tenantId) || !result.profileRole || result.isActive === false) {
+    if (
+      !isValidUuid(result.tenantId) ||
+      !result.profileRole ||
+      result.isActive === false
+    ) {
       return false;
     }
     req.tenantId = result.tenantId;
@@ -278,7 +311,7 @@ async function injectTenantContext(
     return true;
   } catch (err) {
     console.error(
-      '[tenant] Failed to inject tenant context:',
+      "[tenant] Failed to inject tenant context:",
       err instanceof Error ? err.message : err,
     );
     return false;
@@ -295,40 +328,44 @@ export function createRequireAuth(
     next: NextFunction,
   ): Promise<void> {
     const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith('Bearer ')) {
-      res.status(401).json({ error: 'Autenticación requerida.' });
+    if (!authHeader?.startsWith("Bearer ")) {
+      res.status(401).json({ error: "Autenticación requerida." });
       return;
     }
-    const token = authHeader.replace('Bearer ', '');
+    const token = authHeader.replace("Bearer ", "");
     if (token.length < 10) {
-      res.status(401).json({ error: 'Token inválido.' });
+      res.status(401).json({ error: "Token inválido." });
       return;
     }
 
     try {
       const payload = await verifyJwtSignature(
         token,
-        process.env.SUPABASE_JWT_SECRET ?? '',
+        process.env.SUPABASE_JWT_SECRET ?? "",
         verifyRemote,
       );
       if (!payload) {
-        res.status(401).json({ error: 'Token JWT inválido o expirado.' });
+        res.status(401).json({ error: "Token JWT inválido o expirado." });
         return;
       }
       const authReq = req as AuthenticatedRequest;
       authReq.user = payload;
       authReq.authToken = token;
-      const tenantOk = await injectTenantContext(authReq, token, profileFetcher);
+      const tenantOk = await injectTenantContext(
+        authReq,
+        token,
+        profileFetcher,
+      );
       if (!tenantOk) {
         res.status(403).json({
           error:
-            'No fue posible determinar el establecimiento autenticado. Verifique que su perfil esté activo.',
+            "No fue posible determinar el establecimiento autenticado. Verifique que su perfil esté activo.",
         });
         return;
       }
       next();
     } catch {
-      res.status(401).json({ error: 'Token JWT inválido.' });
+      res.status(401).json({ error: "Token JWT inválido." });
     }
   };
 }

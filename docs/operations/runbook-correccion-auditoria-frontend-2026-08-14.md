@@ -16,14 +16,14 @@ Corregir los hallazgos detectados en la auditoría integral del frontend, manten
 
 ## 2. Hallazgos y prioridad
 
-| ID | Severidad | Hallazgo | Archivo principal |
-| --- | --- | --- | --- |
-| FE-01 | Alto | La caché de membresía no distingue usuario ni tenant | `src/shared/api/services/membership.service.ts`, `src/shared/api/hooks/useMemberships.ts` |
-| FE-02 | Alto condicionado | Supabase Auth usa la `storageKey` por defecto | `src/shared/api/lib/supabase.ts` |
-| FE-03 | Medio | La paleta de comandos muestra nombres completos con privacidad activa | `src/features/command-palette/CommandPalette.tsx` |
-| FE-04 | Medio | Estudiantes y resumen de anotaciones se cargan sin paginación | `src/shared/api/services/courses.service.ts`, `annotations.service.ts` |
-| FE-05 | Medio | El cliente Supabase no usa tipos generados del esquema | `src/shared/api/lib/supabase.ts` |
-| FE-06 | Bajo | Documentos de notificación se cargan con `useEffect` en vez de React Query | `src/features/causas/notificacionDocgen/CausaNotificationPanel.tsx` |
+| ID    | Severidad         | Hallazgo                                                                   | Archivo principal                                                                         |
+| ----- | ----------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| FE-01 | Alto              | La caché de membresía no distingue usuario ni tenant                       | `src/shared/api/services/membership.service.ts`, `src/shared/api/hooks/useMemberships.ts` |
+| FE-02 | Alto condicionado | Supabase Auth usa la `storageKey` por defecto                              | `src/shared/api/lib/supabase.ts`                                                          |
+| FE-03 | Medio             | La paleta de comandos muestra nombres completos con privacidad activa      | `src/features/command-palette/CommandPalette.tsx`                                         |
+| FE-04 | Medio             | Estudiantes y resumen de anotaciones se cargan sin paginación              | `src/shared/api/services/courses.service.ts`, `annotations.service.ts`                    |
+| FE-05 | Medio             | El cliente Supabase no usa tipos generados del esquema                     | `src/shared/api/lib/supabase.ts`                                                          |
+| FE-06 | Bajo              | Documentos de notificación se cargan con `useEffect` en vez de React Query | `src/features/causas/notificacionDocgen/CausaNotificationPanel.tsx`                       |
 
 ## 3. Reglas de ejecución
 
@@ -87,7 +87,8 @@ Acciones:
 1. Configurar una clave propia:
 
 ```ts
-storageKey: import.meta.env.VITE_SUPABASE_AUTH_STORAGE_KEY ?? 'convivencia-auth-token'
+storageKey: import.meta.env.VITE_SUPABASE_AUTH_STORAGE_KEY ??
+  "convivencia-auth-token";
 ```
 
 2. Documentar `VITE_SUPABASE_AUTH_STORAGE_KEY=convivencia-auth-token` en `.env.example`.

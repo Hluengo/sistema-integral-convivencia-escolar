@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useRef, useEffect } from 'react';
-import type { Causa } from '../types';
-import { supabase } from '../../api/lib/supabase';
+import { useState, useRef, useEffect } from "react";
+import type { Causa } from "../types";
+import { supabase } from "../../api/lib/supabase";
 
 interface UseAuditDraftArgs {
   causa: Causa;
@@ -13,15 +13,15 @@ interface UseAuditDraftArgs {
 
 export interface DraftProgress {
   phase:
-    | 'preparing'
-    | 'checklist'
-    | 'documents'
-    | 'document'
-    | 'sources'
-    | 'template'
-    | 'generation'
-    | 'completed'
-    | 'error';
+    | "preparing"
+    | "checklist"
+    | "documents"
+    | "document"
+    | "sources"
+    | "template"
+    | "generation"
+    | "completed"
+    | "error";
   message: string;
   checklist?: Array<{ label: string; complete: boolean }>;
   documents?: string[];
@@ -36,29 +36,34 @@ async function readDraftResponse(
   if (!reader) return (await response.json()) as Record<string, unknown>;
 
   const decoder = new TextDecoder();
-  let buffer = '';
+  let buffer = "";
   let finalEvent: Record<string, unknown> | null = null;
   const consume = (line: string) => {
     if (!line.trim()) return;
     const event = JSON.parse(line) as Record<string, unknown>;
-    if (event.type === 'progress') onProgress(event as unknown as DraftProgress);
+    if (event.type === "progress")
+      onProgress(event as unknown as DraftProgress);
     else finalEvent = event;
   };
 
   for (;;) {
     const { done, value } = await reader.read();
     buffer += decoder.decode(value, { stream: !done });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() ?? '';
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
     lines.forEach(consume);
     if (done) break;
   }
   consume(buffer);
-  return finalEvent ?? { error: 'El servidor no devolvió el resultado del informe.' };
+  return (
+    finalEvent ?? { error: "El servidor no devolvió el resultado del informe." }
+  );
 }
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
   try {
     const {
       data: { session },
@@ -67,21 +72,23 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
       headers.Authorization = `Bearer ${session.access_token}`;
     }
   } catch (err) {
-    console.warn('No se pudo obtener sesión para auth headers:', err);
+    console.warn("No se pudo obtener sesión para auth headers:", err);
   }
   return headers;
 }
 
 export function useAuditDraft({ causa }: UseAuditDraftArgs) {
-  const [auditReport, setAuditReport] = useState<string>('');
+  const [auditReport, setAuditReport] = useState<string>("");
   const [isAuditing, setIsAuditing] = useState<boolean>(false);
 
   const [selectedDocType, setSelectedDocType] = useState<
-    'informe_cierre_indagacion' | 'informe_concluyente'
-  >('informe_cierre_indagacion');
-  const [draftedDocument, setDraftedDocument] = useState<string>('');
+    "informe_cierre_indagacion" | "informe_concluyente"
+  >("informe_cierre_indagacion");
+  const [draftedDocument, setDraftedDocument] = useState<string>("");
   const [draftError, setDraftError] = useState<string | null>(null);
-  const [draftProgress, setDraftProgress] = useState<DraftProgress | null>(null);
+  const [draftProgress, setDraftProgress] = useState<DraftProgress | null>(
+    null,
+  );
   const [isDrafting, setIsDrafting] = useState<boolean>(false);
   const isMountedRef = useRef(true);
   const auditAbortRef = useRef<AbortController | null>(null);
@@ -99,14 +106,14 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
 
   const handleRunAudit = async () => {
     setIsAuditing(true);
-    setAuditReport('');
+    setAuditReport("");
     try {
       const headers = await getAuthHeaders();
       auditAbortRef.current?.abort();
       const controller = new AbortController();
       auditAbortRef.current = controller;
-      const response = await fetch('/api/audit-due-process', {
-        method: 'POST',
+      const response = await fetch("/api/audit-due-process", {
+        method: "POST",
         headers,
         signal: controller.signal,
         body: JSON.stringify({
@@ -127,12 +134,14 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
       if (!isMountedRef.current) {
         return;
       }
-      setAuditReport(data.success ? data.report : `**Error de Auditoría:** ${data.error}`);
+      setAuditReport(
+        data.success ? data.report : `**Error de Auditoría:** ${data.error}`,
+      );
     } catch (error: unknown) {
       if (!isMountedRef.current) {
         return;
       }
-      const msg = error instanceof Error ? error.message : 'Error desconocido';
+      const msg = error instanceof Error ? error.message : "Error desconocido";
       setAuditReport(`**Error al comunicar con el servidor:** ${msg}`);
     } finally {
       if (isMountedRef.current) {
@@ -143,16 +152,19 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
 
   const handleDraftDocument = async () => {
     setIsDrafting(true);
-    setDraftedDocument('');
+    setDraftedDocument("");
     setDraftError(null);
-    setDraftProgress({ phase: 'preparing', message: 'Preparando el dossier del expediente.' });
+    setDraftProgress({
+      phase: "preparing",
+      message: "Preparando el dossier del expediente.",
+    });
     try {
       const headers = await getAuthHeaders();
       draftAbortRef.current?.abort();
       const controller = new AbortController();
       draftAbortRef.current = controller;
-      const response = await fetch('/api/draft-document', {
-        method: 'POST',
+      const response = await fetch("/api/draft-document", {
+        method: "POST",
         headers,
         signal: controller.signal,
         body: JSON.stringify({
@@ -160,7 +172,7 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
           id: causa.id,
           studentName: causa.estudianteNombre,
           course: causa.estudianteCurso,
-          fatherName: '',
+          fatherName: "",
           managerName: causa.responsable,
           infractionType: causa.tipoInfraccion,
           observations: causa.observaciones,
@@ -178,19 +190,23 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
       });
       const data = await readDraftResponse(response, (progress) => {
         if (isMountedRef.current) {
-          setDraftProgress((current) => (current ? { ...current, ...progress } : progress));
+          setDraftProgress((current) =>
+            current ? { ...current, ...progress } : progress,
+          );
         }
       });
       if (!isMountedRef.current) {
         return;
       }
       if (data.success) {
-        setDraftedDocument(String(data.document ?? ''));
+        setDraftedDocument(String(data.document ?? ""));
       } else {
-        const errorMessage = String(data.error ?? 'No fue posible generar el borrador.');
+        const errorMessage = String(
+          data.error ?? "No fue posible generar el borrador.",
+        );
         setDraftError(errorMessage);
         setDraftProgress((current) => ({
-          phase: 'error',
+          phase: "error",
           message: errorMessage,
           checklist: current?.checklist,
           documents: current?.documents,
@@ -200,7 +216,7 @@ export function useAuditDraft({ causa }: UseAuditDraftArgs) {
       if (!isMountedRef.current) {
         return;
       }
-      const msg = error instanceof Error ? error.message : 'Error desconocido';
+      const msg = error instanceof Error ? error.message : "Error desconocido";
       setDraftError(`Error de conexión: ${msg}`);
     } finally {
       if (isMountedRef.current) {

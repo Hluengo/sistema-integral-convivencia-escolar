@@ -1,1182 +1,1152 @@
-## FUNDACIÓN EDUCACIONAL COLEGIO CARMELA ROMERO DE ESPINOSA MADRES DOMINICAS - CONCEPCIÓN 
+## FUNDACIÓN EDUCACIONAL COLEGIO CARMELA ROMERO DE ESPINOSA MADRES DOMINICAS - CONCEPCIÓN
 
-## **REGLAMENTO DE CONVIVENCIA ESCOLAR** 
+## **REGLAMENTO DE CONVIVENCIA ESCOLAR**
 
--  2026 - 
+- 2026 -
 
-## **TABLA DE CONTENIDOS** 
+## **TABLA DE CONTENIDOS**
 
-|**Capítulo**|**Tema**|**Artículos reales**|
-|---|---|---|
-|I|Bases LegalesyFundamentos|1–2|
-|II|Visión,MisiónyPrincipios Institucionales|3|
-|III|Pedagogía de la Convivencia Escolar|4-5|
-|IV|Políticas Preventivas|6–8|
-|V|Resolución de Conflictos|9|
-|VI|Gestión de la Convivencia|10–12|
-|VII|Derechos de los Estudiantes|13|
-|VIII|Deberes de los Estudiantes|14|
-|IX|CriteriosyCircunstancias Disciplinarias|15–17|
-|X|Medidas DisciplinariasyProcedimiento|18–23|
-|XI|Clasificación de Faltas|24–28|
-|XII|Normas de Convivencia en Contextos Específicos|29–33|
-|XIII|DerechosyDeberes de PadresyApoderados|34–36|
-|XIV|Sanciones a PadresyApoderados|37–39|
-|XV|Protocolos de Actuación|40–41|
-|XVI|Información institucionalyregulaciones técnico-administrativas|42|
-|XVII|DifusiónyActualización|43–45|
+| **Capítulo** | **Tema**                                                       | **Artículos reales** |
+| ------------ | -------------------------------------------------------------- | -------------------- |
+| I            | Bases LegalesyFundamentos                                      | 1–2                  |
+| II           | Visión,MisiónyPrincipios Institucionales                       | 3                    |
+| III          | Pedagogía de la Convivencia Escolar                            | 4-5                  |
+| IV           | Políticas Preventivas                                          | 6–8                  |
+| V            | Resolución de Conflictos                                       | 9                    |
+| VI           | Gestión de la Convivencia                                      | 10–12                |
+| VII          | Derechos de los Estudiantes                                    | 13                   |
+| VIII         | Deberes de los Estudiantes                                     | 14                   |
+| IX           | CriteriosyCircunstancias Disciplinarias                        | 15–17                |
+| X            | Medidas DisciplinariasyProcedimiento                           | 18–23                |
+| XI           | Clasificación de Faltas                                        | 24–28                |
+| XII          | Normas de Convivencia en Contextos Específicos                 | 29–33                |
+| XIII         | DerechosyDeberes de PadresyApoderados                          | 34–36                |
+| XIV          | Sanciones a PadresyApoderados                                  | 37–39                |
+| XV           | Protocolos de Actuación                                        | 40–41                |
+| XVI          | Información institucionalyregulaciones técnico-administrativas | 42                   |
+| XVII         | DifusiónyActualización                                         | 43–45                |
 
+## **CAPÍTULO I: BASES LEGALES Y FUNDAMENTOS**
 
+## **Art. 1.- Definición y Propósito del Reglamento**
 
-## **CAPÍTULO I: BASES LEGALES Y FUNDAMENTOS** 
+El presente Reglamento Interno de Convivencia Escolar del Colegio Carmela Romero de Espinosa, Madres Dominicas (Concepción) define el marco normativo que regula la convivencia de todos los miembros de la comunidad educativa: estudiantes, docentes, asistentes de educación, padres y apoderados.
 
-## **Art. 1.- Definición y Propósito del Reglamento** 
+La convivencia escolar se entiende como un aspecto esencial que se enseña y se aprende, en coherencia con la misión educativa del colegio. Este Reglamento funciona como herramienta de gestión pedagógica, buscando garantizar la dignidad y el desarrollo integral de todos, formando personas íntegras que logren sus máximas potencialidades al servicio de la comunidad.
 
-El presente Reglamento Interno de Convivencia Escolar del Colegio Carmela Romero de Espinosa, Madres Dominicas (Concepción) define el marco normativo que regula la convivencia de todos los miembros de la comunidad educativa: estudiantes, docentes, asistentes de educación, padres y apoderados. 
+## **Art. 2.- Marcos Legales Vigentes**
 
-La convivencia escolar se entiende como un aspecto esencial que se enseña y se aprende, en coherencia con la misión educativa del colegio. Este Reglamento funciona como herramienta de gestión pedagógica, buscando garantizar la dignidad y el desarrollo integral de todos, formando personas íntegras que logren sus máximas potencialidades al servicio de la comunidad. 
+Este Reglamento se alinea con la normativa educacional chilena vigente, especialmente:
 
-## **Art. 2.- Marcos Legales Vigentes** 
+- Ley Nº 20.370 (Ley General de Educación) y sus modificaciones
 
-Este Reglamento se alinea con la normativa educacional chilena vigente, especialmente: 
+- Ley Nº 20.536 (Sobre Violencia Escolar)
 
-- Ley Nº 20.370 (Ley General de Educación) y sus modificaciones 
+- Ley Nº 20.609 (Ley Antidiscriminación)
 
-- Ley Nº 20.536 (Sobre Violencia Escolar) 
+- Ley Nº 20.845 (Ley de Inclusión Escolar)
 
-- Ley Nº 20.609 (Ley Antidiscriminación) 
+- Ley Nº 21.545 (Ley de Autismo – 2023)
 
-- Ley Nº 20.845 (Ley de Inclusión Escolar) 
+- Ley Nº 21.675 (Prevención de Violencia de Género – 2023)
 
-- Ley Nº 21.545 (Ley de Autismo – 2023) 
+- Ley Nº 21.430 (Garantías de Derechos de la Niñez – 2022)
 
-- Ley Nº 21.675 (Prevención de Violencia de Género – 2023) 
+- Decreto Exento Nº 67 de 2018 (Evaluación, Calificación y Promoción)
 
-- Ley Nº 21.430 (Garantías de Derechos de la Niñez – 2022) 
+- Convenciones Internacionales: Declaración Universal de Derechos Humanos, Convención sobre Derechos del Niño
 
-- Decreto Exento Nº 67 de 2018 (Evaluación, Calificación y Promoción) 
+_Nota: Cualquier actualización normativa futura se entenderá incorporada en este Reglamento._
 
-- Convenciones Internacionales: Declaración Universal de Derechos Humanos, Convención sobre Derechos del Niño 
+## **CAPÍTULO II: VISIÓN, MISIÓN Y PRINCIPIOS INSTITUCIONALES Art. 3.- Identidad Institucional: Visión y Misión**
 
-_Nota: Cualquier actualización normativa futura se entenderá incorporada en este Reglamento._ 
+## **3.1. Visión Institucional**
 
-## **CAPÍTULO II: VISIÓN, MISIÓN Y PRINCIPIOS INSTITUCIONALES Art. 3.- Identidad Institucional: Visión y Misión** 
+## **VISIÓN**
 
-## **3.1. Visión Institucional** 
+La visión del **Colegio Madres Dominicas** se encuentra estrechamente relacionada con el carisma de la “ **Congregación Dominicas Misioneras de la Sagrada Familia”** , cuyo fin es la formación cristiana del hombre y la mujer, preferentemente de la juventud.
 
-## **VISIÓN** 
+Nuestro ideal de formación es el desarrollo integral de niños/as y jóvenes, abiertos a la trascendencia, de modo que, a la luz de nuestra formación cristiana, se conviertan en miembros activos de su comunidad y, de esta manera, puedan responder a su vocación profunda de ser humano y como testimonio vivo de su fe en Cristo.
 
-La visión del **Colegio Madres Dominicas** se encuentra estrechamente relacionada con el carisma de la “ **Congregación Dominicas Misioneras de la Sagrada Familia”** , cuyo fin es la formación cristiana del hombre y la mujer, preferentemente de la juventud. 
+Propiciamos una cultura de excelencia educativa, que estimule el desarrollo de todas las capacidades de nuestros alumnos y alumnas, a fin de que se conviertan en agentes de cambio, y transformen su medio social, cultural y natural, bajo los ideales dominicos de una sociedad más democrática, justa y comprometida.
 
-Nuestro ideal de formación es el desarrollo integral de niños/as y jóvenes, abiertos a la trascendencia, de modo que, a la luz de nuestra formación cristiana, se conviertan en miembros activos de su comunidad y, de esta manera, puedan responder a su vocación profunda de ser humano y como testimonio vivo de su fe en Cristo. 
+## **3.2. Misión Institucional**
 
-Propiciamos una cultura de excelencia educativa, que estimule el desarrollo de todas las capacidades de nuestros alumnos y alumnas, a fin de que se conviertan en agentes de cambio, y transformen su medio social, cultural y natural, bajo los ideales dominicos de una sociedad más democrática, justa y comprometida. 
+## **MISIÓN.**
 
-## **3.2. Misión Institucional** 
+Nuestra misión es la formación académica integral humanístico-científica, de nuestros alumnos, sustentada en la concepción valórica cristiana católica de la vida, con énfasis en el carisma Dominico
 
-## **MISIÓN.** 
+Bajo esta concepción hacemos vida nuestro lema institucional:
 
-Nuestra misión es la formación académica integral humanístico-científica, de nuestros alumnos, sustentada en la concepción valórica cristiana católica de la vida, con énfasis en el carisma Dominico 
+## **“Saber más para servir mejor”.**
 
-Bajo esta concepción hacemos vida nuestro lema institucional: 
+**3.3. Pilares dominicos:** El Colegio Carmela Romero de Espinosa se fundamenta en los **cuatro pilares dominicanos** , que guían nuestra misión educativa y reflejan los valores esenciales que buscamos cultivar en nuestros estudiantes:
 
-## **“Saber más para servir mejor”.** 
+**1-Un Colegio que vive la oración:** Como comunidad educativa, comprendemos la oración como una actitud de vida contemplativa que nos mueve a una relación confiada en Dios y en los demás. Esto se manifestará en la educación de estudiantes compasivos con su entorno y conscientes del dolor de los otros. Por ello, como institución, nos dedicaremos a promover la empatía dentro y fuera de las aulas. Adicionalmente, este sello se traducirá en la formación de estudiantes con la capacidad de confiar en Dios y en los demás, nos destacaremos en la promoción de estudiantes agradecidos y compasivos
 
-**3.3. Pilares dominicos:** El Colegio Carmela Romero de Espinosa se fundamenta en los **cuatro pilares dominicanos** , que guían nuestra misión educativa y reflejan los valores esenciales que buscamos cultivar en nuestros estudiantes: 
+**2-Un Colegio que forma comunidad:** Promovemos y fomentamos el respeto, la equidad y un ambiente propicio que nos permite formar una comunidad educativa sustentada en los pilares dominicanos, procurando promover la solidaridad, fraternidad, democracia y acoger la diversidad de los estudiantes y sus necesidades. El estudiante dominicano se caracteriza por desarrollarse integralmente para ser un agente de iniciativa y participación desde el diálogo constructivo para fomentar una sociedad generadora de vida.
 
-**1-Un Colegio que vive la oración:** Como comunidad educativa, comprendemos la oración como una actitud de vida contemplativa que nos mueve a una relación confiada en Dios y en los demás. Esto se manifestará en la educación de estudiantes compasivos con su entorno y conscientes del dolor de los otros. Por ello, como institución, nos dedicaremos a promover la empatía dentro y fuera de las aulas. Adicionalmente, este sello se traducirá en la formación de estudiantes con la capacidad de confiar en Dios y en los demás, nos destacaremos en la promoción de estudiantes agradecidos y compasivos 
+**3-Un Colegio que estudia para servir:** Inculcamos el estudio como una forma no solo de desarrollo personal y académico, sino también como una forma de Ser, Se busca el desarrollo de los dones de los estudiantes para encaminarlos a un bien común, a **“Saber más para servir mejor”** . Esto se refleja en un proyecto que busca formar estudiantes que sean un aporte positivo para la sociedad mediante el desarrollo de los valores de la libertad, la participación, la autenticidad, la solidaridad y un profundo espíritu crítico y constructivo; mediante una educación de excelencia, integral entre lo académico, lo comunitario y lo espiritual.
 
-**2-Un Colegio que forma comunidad:** Promovemos y fomentamos el respeto, la equidad y un ambiente propicio que nos permite formar una comunidad educativa sustentada en los pilares dominicanos, procurando promover la solidaridad, fraternidad, democracia y acoger la diversidad de los estudiantes y sus necesidades. El estudiante dominicano se caracteriza por desarrollarse integralmente para ser un agente de iniciativa y participación desde el diálogo constructivo para fomentar una sociedad generadora de vida. 
-
-**3-Un Colegio que estudia para servir:** Inculcamos el estudio como una forma no solo de desarrollo personal y académico, sino también como una forma de Ser, Se busca el desarrollo de los dones de los estudiantes para encaminarlos a un bien común, a **“Saber más para servir mejor”** . Esto se refleja en un proyecto que busca formar estudiantes que sean un aporte positivo para la sociedad mediante el desarrollo de los valores de la libertad, la participación, la autenticidad, la solidaridad y un profundo espíritu crítico y constructivo; mediante una educación de excelencia, integral entre lo académico, lo comunitario y lo espiritual. 
-
-**4-Un Colegio que vive la predicación como Misión:** Nos definimos como Anunciadores de la Buena Nueva transmitida por Jesús de Nazaret desde un convencimiento personal que se traduce en actos de amor compasivo en nuestro quehacer diario al interior de nuestro patio y en la vida ciudadana en general. Nos caracteriza una permanente inclinación a la búsqueda de la Verdad trascendente, que nos mueve a compromisos personales y comunitarios en favor de quienes más lo necesitan 
+**4-Un Colegio que vive la predicación como Misión:** Nos definimos como Anunciadores de la Buena Nueva transmitida por Jesús de Nazaret desde un convencimiento personal que se traduce en actos de amor compasivo en nuestro quehacer diario al interior de nuestro patio y en la vida ciudadana en general. Nos caracteriza una permanente inclinación a la búsqueda de la Verdad trascendente, que nos mueve a compromisos personales y comunitarios en favor de quienes más lo necesitan
 
 **==> picture [464 x 603] intentionally omitted <==**
 
 **----- Start of picture text -----**<br>
 r=] “8<br>3 cd 34<br>| 2 ”cg<br>H br=| 4‘<br>; na a# 43F| ca<br>= Oo8 aid‘<br>8 a<br>ey 5<br>5 Bt o<br>=| a A<br>a<br>wa<br>fr]<br>aoO Fe «<br>=Oo _a 5 q5 Fy# adBs<br>ras= 5B | | eea5 AdBe] |3a 44Bhs<br>ce rn A oe a<br>aa<br>o<br>5 Fa A a /<br>co i a<br>a ai mS ae ao<br>7) 4 A aa 24 5 2 a<br>“Br=) || aem 3’EP SemiBoe aoeee| | a BS<br>fi) a = Be ‘a uo co = A<br>| os Og Ay rae<br>a) | BS) /2a0| |# Be Ae<br>= HI | A @ “4<br>O El pe | 4 o<br>= 2 || o | o =<br>S eSa bl) Fy Fh co<br>a fe | 5 pu<br>Ss | ad a=rE<br>aao || — iB23 je 8a3mE —+<br>g : a| |88<br>oe 4 Bo<br>a= 9 s ad a<br>= 5 A bre 4 =<br>fy a aa ~~ a a<br>=o° &3 nd ~ oD© i=<br>° oy b<br>= B a A<br>az =) SI Se]a<br>af<br>Sd<br>f 5 ue<br>i] |é: ”4<br>‘hh o<br>a a<br>a oO tH<br>s a at<br>elelya pe tel <=<br>5 A<br>a fay d<br>=| I a<br>A oO<br>**----- End of picture text -----**<br>
 
+## **CAPÍTULO III: PEDAGOGÍA DE LA CONVIVENCIA ESCOLAR**
 
-## **CAPÍTULO III: PEDAGOGÍA DE LA CONVIVENCIA ESCOLAR** 
+## **Art. 4.- Principios Orientadores de la Convivencia**
 
-## **Art. 4.- Principios Orientadores de la Convivencia** 
+La convivencia escolar, en nuestra institución, es comprendida como un proceso educativo permanente que no ocurre de manera natural, sino que requiere ser intencionalmente enseñada, modelada y practicada. Partimos de la premisa fundamental de que todo conflicto o conducta inapropiada es una oportunidad pedagógica para el crecimiento personal y comunitario.
 
-La convivencia escolar, en nuestra institución, es comprendida como un proceso educativo permanente que no ocurre de manera natural, sino que requiere ser intencionalmente enseñada, modelada y practicada. Partimos de la premisa fundamental de que todo conflicto o conducta inapropiada es una oportunidad pedagógica para el crecimiento personal y comunitario. 
+Nuestro enfoque se fundamenta en los siguientes principios educativos:
 
-Nuestro enfoque se fundamenta en los siguientes principios educativos: 
+1. **Participación Democrática y Ciudadanía:** Reconocemos que todos los miembros de la comunidad educativa tienen derecho a participar en las decisiones que nos afectan. Valoramos especialmente las opiniones diferentes como oportunidades genuinas para crecer en comprensión y perspectiva. Estimulamos la participación estudiantil en consejos de curso, Centro de Alumnos y Comités de Convivencia, entendiendo que ejercitar la ciudadanía es parte fundamental de nuestra formación.
 
-1. **Participación Democrática y Ciudadanía:** Reconocemos que todos los miembros de la comunidad educativa tienen derecho a participar en las decisiones que nos afectan. Valoramos especialmente las opiniones diferentes como oportunidades genuinas para crecer en comprensión y perspectiva. Estimulamos la participación estudiantil en consejos de curso, Centro de Alumnos y Comités de Convivencia, entendiendo que ejercitar la ciudadanía es parte fundamental de nuestra formación. 
+2. **Inclusión Real y No Discriminación Arbitraria:** Nuestro colegio es un espacio de acogida para todos. Cada estudiante es bienvenido por lo que es, no por cómo se vea, de donde venga o cuáles sean sus capacidades. Rechazamos categóricamente cualquier forma de discriminación. Trabajamos activamente para que estudiantes con necesidades educativas especiales, con discapacidades, o pertenecientes a grupos históricamente marginalizados, tengan experiencias realmente inclusivas, no meramente integradoras.
 
-2. **Inclusión Real y No Discriminación Arbitraria:** Nuestro colegio es un espacio de acogida para todos. Cada estudiante es bienvenido por lo que es, no por cómo se vea, de donde venga o cuáles sean sus capacidades. Rechazamos categóricamente cualquier forma de discriminación. Trabajamos activamente para que estudiantes con necesidades educativas especiales, con discapacidades, o pertenecientes a grupos históricamente marginalizados, tengan experiencias realmente inclusivas, no meramente integradoras. 
+3. **Responsabilidad Personal y Conciencia Social:** Cada acción tiene consecuencias que se extienden más allá del actor individual. Educamos para que nuestros estudiantes desarrollen conciencia de cómo sus decisiones afectan a otros y al bienestar común. La responsabilidad no es impuesta externamente; es desarrollada internamente a través de la reflexión y la experiencia.
 
-3. **Responsabilidad Personal y Conciencia Social:** Cada acción tiene consecuencias que se extienden más allá del actor individual. Educamos para que nuestros estudiantes desarrollen conciencia de cómo sus decisiones afectan a otros y al bienestar común. La responsabilidad no es impuesta externamente; es desarrollada internamente a través de la reflexión y la experiencia. 
+4. **Autocuidado, Protección y Seguridad Emocional:** Nuestro colegio rechaza categóricamente toda forma de violencia, acoso, abuso o conductas que expongan a riesgo la salud emocional y física de cualquier miembro de la comunidad. Entendemos que un ambiente seguro es condición fundamental para el aprendizaje.
 
-4. **Autocuidado, Protección y Seguridad Emocional:** Nuestro colegio rechaza categóricamente toda forma de violencia, acoso, abuso o conductas que expongan a riesgo la salud emocional y física de cualquier miembro de la comunidad. Entendemos que un ambiente seguro es condición fundamental para el aprendizaje. 
+5. **Enfoque Restaurativo y Reparador:** Cuando ocurren faltas o conflictos, nuestro énfasis no está en el castigo punitivo, sino en la restauración del daño causado y la reintegración de quien cometió la falta. Creemos en la capacidad de las personas de cambiar, aprender y reparar.
 
-5. **Enfoque Restaurativo y Reparador:** Cuando ocurren faltas o conflictos, nuestro énfasis no está en el castigo punitivo, sino en la restauración del daño causado y la reintegración de quien cometió la falta. Creemos en la capacidad de las personas de cambiar, aprender y reparar. 
+6. **Formación en Valores Cristianos Dominicanos:** Cultivamos activamente la honestidad, la justicia, la solidaridad, el respeto profundo a la dignidad ajena y el compromiso con los más vulnerables. Estos valores no son teóricos; son vivenciados en acciones concretas día a día.
 
-6. **Formación en Valores Cristianos Dominicanos:** Cultivamos activamente la honestidad, la justicia, la solidaridad, el respeto profundo a la dignidad ajena y el compromiso con los más vulnerables. Estos valores no son teóricos; son vivenciados en acciones concretas día a día. 
+## **Art. 5.- Enfoque Pedagógico de la Convivencia**
 
-## **Art. 5.- Enfoque Pedagógico de la Convivencia** 
+En nuestro colegio, la disciplina es conceptualizada como **un proceso formativo integral que desarrolla la autorregulación** , no como un sistema de castigos externos. Partimos del reconocimiento de que los estudiantes, en sus diversos períodos de desarrollo, requieren apoyo progresivo para aprender a autorregularse.
 
-En nuestro colegio, la disciplina es conceptualizada como **un proceso formativo integral que desarrolla la autorregulación** , no como un sistema de castigos externos. Partimos del reconocimiento de que los estudiantes, en sus diversos períodos de desarrollo, requieren apoyo progresivo para aprender a autorregularse. 
+Comprendemos que cada situación difícil, cada conducta inapropiada, representa una oportunidad genuina para que el estudiante reflexione profundamente sobre el impacto de sus acciones, entienda las emociones que las motivaron, y desarrolle capacidades para actuar de manera diferente en el futuro. No queremos estudiantes que simplemente cumplan normas por temor a la sanción. Queremos jóvenes que comprendan las normas, acuerden con su sentido y las respeten por convicción personal.
 
-Comprendemos que cada situación difícil, cada conducta inapropiada, representa una oportunidad genuina para que el estudiante reflexione profundamente sobre el impacto de sus acciones, entienda las emociones que las motivaron, y desarrolle capacidades para actuar de manera diferente en el futuro. No queremos estudiantes que simplemente cumplan normas por temor a la sanción. Queremos jóvenes que comprendan las normas, acuerden con su sentido y las respeten por convicción personal. 
+Para ello, utilizamos metodologías pedagógicamente sólidas: mediación entre compañeros donde los estudiantes desarrollan empatía al escuchar a otros; construcción participativa de normas de aula donde los estudiantes sienten propiedad de las reglas que crean; diálogos restaurativos donde se busca comprensión mutua, no culpabilización; y planes de mejora colaborativos donde estudiante, familia y colegio trabajan juntos hacia objetivos comunes.
 
-Para ello, utilizamos metodologías pedagógicamente sólidas: mediación entre compañeros donde los estudiantes desarrollan empatía al escuchar a otros; construcción participativa de normas de aula donde los estudiantes sienten propiedad de las reglas que crean; diálogos restaurativos donde se busca comprensión mutua, no culpabilización; y planes de mejora colaborativos donde estudiante, familia y colegio trabajan juntos hacia objetivos comunes. 
+La progresión lógica de una situación disciplinaria siempre privilegia primero las medidas formativas de bajo impacto académico. Solo cuando estas han demostrado ser insuficientes, y existiendo fundamento pedagógico claro, se escalan a medidas más severas. Incluso las sanciones más significativas incluyen componentes formativos explícitos.
 
-La progresión lógica de una situación disciplinaria siempre privilegia primero las medidas formativas de bajo impacto académico. Solo cuando estas han demostrado ser insuficientes, y existiendo fundamento pedagógico claro, se escalan a medidas más severas. Incluso las sanciones más significativas incluyen componentes formativos explícitos. 
+## **CAPÍTULO IV: POLÍTICAS PREVENTIVAS**
 
-## **CAPÍTULO IV: POLÍTICAS PREVENTIVAS** 
+## **Art. 6.- Prevención del Maltrato y Discriminación**
 
-## **Art. 6.- Prevención del Maltrato y Discriminación** 
+El colegio implementa programas de prevención de violencia, acoso, ciberacoso y discriminación, mediante campañas y talleres periódicos que promueven el buen trato, habilidades socioemocionales, resolución pacífica de conflictos, y
 
-El colegio implementa programas de prevención de violencia, acoso, ciberacoso y discriminación, mediante campañas y talleres periódicos que promueven el buen trato, habilidades socioemocionales, resolución pacífica de conflictos, y 
+sensibilización en temas como violencia de género y uso responsable de redes sociales. Estas acciones buscan garantizar un entorno respetuoso y seguro para todos los miembros de la comunidad educativa. Las acciones preventivas incluyen:
 
-sensibilización en temas como violencia de género y uso responsable de redes sociales. Estas acciones buscan garantizar un entorno respetuoso y seguro para todos los miembros de la comunidad educativa. Las acciones preventivas incluyen: 
+- Campañas periódicas de buen trato y no violencia, que promuevan el respeto mutuo y la convivencia armoniosa en todos los espacios del colegio.
 
-- Campañas periódicas de buen trato y no violencia, que promuevan el respeto mutuo y la convivencia armoniosa en todos los espacios del colegio. 
+- Talleres de formación en resolución pacífica de conflictos dirigidos a estudiantes, para fomentar el diálogo y la mediación como herramientas de resolución de desacuerdos.
 
-- Talleres de formación en resolución pacífica de conflictos dirigidos a estudiantes, para fomentar el diálogo y la mediación como herramientas de resolución de desacuerdos. 
+- Educación en afectividad e inclusión con perspectiva de género, conforme a la Ley N° 21.675, para sensibilizar sobre las problemáticas de violencia de género, promoviendo la igualdad y el respeto hacia todas las identidades de género.
 
-- Educación en afectividad e inclusión con perspectiva de género, conforme a la Ley N° 21.675, para sensibilizar sobre las problemáticas de violencia de género, promoviendo la igualdad y el respeto hacia todas las identidades de género. 
+- Promoción explícita de no discriminación por raza, origen, religión, género, identidad de género, orientación sexual, discapacidad u otra condición, asegurando un ambiente inclusivo y libre de discriminación en todas sus formas.
 
-- Promoción explícita de no discriminación por raza, origen, religión, género, identidad de género, orientación sexual, discapacidad u otra condición, asegurando un ambiente inclusivo y libre de discriminación en todas sus formas. 
+- Tolerancia cero a violencia de género y cualquier forma de abuso, comprometiendo a toda la comunidad educativa a actuar con firmeza ante cualquier incidente de violencia o abuso, garantizando la protección de las víctimas y el acompañamiento adecuado en todo momento.
 
-- Tolerancia cero a violencia de género y cualquier forma de abuso, comprometiendo a toda la comunidad educativa a actuar con firmeza ante cualquier incidente de violencia o abuso, garantizando la protección de las víctimas y el acompañamiento adecuado en todo momento. 
+Las estrategias mencionadas se aplicarán de forma transversal en todas las actividades académicas, recreativas y de convivencia escolar, con el propósito de generar un cambio cultural en la comunidad educativa, basada en la comprensión, el respeto y la inclusión.
 
-Las estrategias mencionadas se aplicarán de forma transversal en todas las actividades académicas, recreativas y de convivencia escolar, con el propósito de generar un cambio cultural en la comunidad educativa, basada en la comprensión, el respeto y la inclusión. 
+## **Art. 7.- Clima Escolar y Disciplina Formativa**
 
-## **Art. 7.- Clima Escolar y Disciplina Formativa** 
+Se fomenta un clima de relaciones basadas en respeto y solidaridad mediante:
 
-Se fomenta un clima de relaciones basadas en respeto y solidaridad mediante: 
+- Monitoreo constante del ambiente de aula, patios y espacios comunes
 
-- Monitoreo constante del ambiente de aula, patios y espacios comunes 
+- Diálogo y mediación como herramientas prioritarias antes de sanciones
 
-- Diálogo y mediación como herramientas prioritarias antes de sanciones 
+- Talleres y consejerías de curso para reforzar normas y valores
 
-- Talleres y consejerías de curso para reforzar normas y valores 
+- Promoción de autorregulación de conducta por convicción personal
 
-- Promoción de autorregulación de conducta por convicción personal 
+- Reconocimiento y refuerzo positivo de conductas prosociales
 
-- Reconocimiento y refuerzo positivo de conductas prosociales 
+## **Art. 8.- Formación de Todos los Estamentos en Convivencia**
 
-## **Art. 8.- Formación de Todos los Estamentos en Convivencia** 
+- **Para Padres y Apoderados** : Brindar información acerca de temáticas como crianza positiva, prevención de drogas, uso seguro de internet, detección de riesgos de salud mental en adolescentes.
 
-- **Para Padres y Apoderados** : Brindar información acerca de temáticas como crianza positiva, prevención de drogas, uso seguro de internet, detección de riesgos de salud mental en adolescentes. 
+- **Para Docentes y Asistentes:**
 
-- **Para Docentes y Asistentes:** 
+  - Se proporciona capacitación permanente en convivencia escolar, protocolos de actuación, primeros auxilios psicológicos, atención a la diversidad y educación inclusiva.
 
-   - Se proporciona capacitación permanente en convivencia escolar, protocolos de actuación, primeros auxilios psicológicos, atención a la diversidad y educación inclusiva. 
+- **Para Estudiantes** :
 
-- **Para Estudiantes** : 
+  - Se promueve participación estudiantil activa mediante Centro de Alumnos y presidentes de curso como agentes de prevención, promoviendo campañas de compañerismo e inclusión.
 
-   - Se promueve participación estudiantil activa mediante Centro de Alumnos y presidentes de curso como agentes de prevención, promoviendo campañas de compañerismo e inclusión. 
+## **CAPÍTULO V: RESOLUCIÓN DE CONFLICTOS**
 
-## **CAPÍTULO V: RESOLUCIÓN DE CONFLICTOS** 
+## **Art. 9.- Principios Generales de Resolución de Conflictos**
 
-## **Art. 9.- Principios Generales de Resolución de Conflictos** 
+Es natural que surjan conflictos dentro de la convivencia escolar. El colegio cuenta con un conjunto de estrategias graduales y escalonadas para abordarlos, basadas en un enfoque pedagógico, participativo y restaurativo, que respeta el debido proceso y garantiza la protección de todos los involucrados. Las estrategias están diseñadas para fomentar el aprendizaje a través del conflicto, priorizando la reparación del daño, la restauración de las relaciones y la creación de una cultura de paz. Cuando ocurren conflictos en nuestro colegio, utilizamos estrategias progresivas, gradualmente más intensas, que siempre respetan el debido proceso y la dignidad de los involucrados.
 
-Es natural que surjan conflictos dentro de la convivencia escolar. El colegio cuenta con un conjunto de estrategias graduales y escalonadas para abordarlos, basadas en un enfoque pedagógico, participativo y restaurativo, que respeta el debido proceso y garantiza la protección de todos los involucrados. Las estrategias están diseñadas para fomentar el aprendizaje a través del conflicto, priorizando la reparación del daño, la restauración de las relaciones y la creación de una cultura de paz. Cuando ocurren conflictos en nuestro colegio, utilizamos estrategias progresivas, gradualmente más intensas, que siempre respetan el debido proceso y la dignidad de los involucrados. 
+1. **Primera Estrategia: Diálogo Directo y Mediación Informal:** Para conflictos menores—malentendidos entre compañeros, desacuerdos sobre normas, diferencias en percepciones—utilizamos como primer recurso el diálogo directo. Un docente, inspector o psicólogo actúa como mediador neutral en espacios físicos y emocionalmente neutrales. Se utiliza escucha activa genuina, donde cada parte expresa su perspectiva sin interrupciones. Se busca que los involucrados reconocemos el impacto mutuo de sus acciones. El objetivo es llegar a acuerdos voluntarios sobre cómo proceder. Este proceso típicamente toma entre cinco y siete días hábiles. Muchos conflictos se resuelven en esta etapa porque ambas partes simplemente necesitaban ser escuchadas.
 
-1. **Primera Estrategia: Diálogo Directo y Mediación Informal:** Para conflictos menores—malentendidos entre compañeros, desacuerdos sobre normas, diferencias en percepciones—utilizamos como primer recurso el diálogo directo. Un docente, inspector o psicólogo actúa como mediador neutral en espacios físicos y emocionalmente neutrales. Se utiliza escucha activa genuina, donde cada parte expresa su perspectiva sin interrupciones. Se busca que los involucrados reconocemos el impacto mutuo de sus acciones. El objetivo es llegar a acuerdos voluntarios sobre cómo proceder. Este proceso típicamente toma entre cinco y siete días hábiles. Muchos conflictos se resuelven en esta etapa porque ambas partes simplemente necesitaban ser escuchadas. 
+2. **Segunda Estrategia: Intervención Formal del Equipo de Convivencia:** Cuando conflictos no se resuelven en el primer nivel, o cuando existe gravedad inicial que lo amerita, el Equipo de Convivencia interviene formalmente. Realiza
 
-2. **Segunda Estrategia: Intervención Formal del Equipo de Convivencia:** Cuando conflictos no se resuelven en el primer nivel, o cuando existe gravedad inicial que lo amerita, el Equipo de Convivencia interviene formalmente. Realiza 
+entrevistas separadas a los involucrados y a testigos, recopila información objetiva y evidencia, y puede resultar en una Carta de Compromiso donde ambas partes se comprometen a conductas específicas. Este proceso toma máximo diez días hábiles. Hay un registro formal de lo ocurrido.
 
-entrevistas separadas a los involucrados y a testigos, recopila información objetiva y evidencia, y puede resultar en una Carta de Compromiso donde ambas partes se comprometen a conductas específicas. Este proceso toma máximo diez días hábiles. Hay un registro formal de lo ocurrido. 
+3. **Tercera Estrategia: Participación Activa de la Familia:** Para situaciones que requieren apoyo familiar para su resolución sostenible, convocamos a los apoderados a reuniones donde participan profesor jefe, psicólogo, inspector, coordinador de convivencia, apoderado, y el estudiante. Esta reunión debe ocurrir dentro de veinticuatro horas del conocimiento de la situación. El resultado es un Plan de Mejora colaborativo entre colegio y hogar, con objetivos claros, plazos y roles definidos.
 
-3. **Tercera Estrategia: Participación Activa de la Familia:** Para situaciones que requieren apoyo familiar para su resolución sostenible, convocamos a los apoderados a reuniones donde participan profesor jefe, psicólogo, inspector, coordinador de convivencia, apoderado, y el estudiante. Esta reunión debe ocurrir dentro de veinticuatro horas del conocimiento de la situación. El resultado es un Plan de Mejora colaborativo entre colegio y hogar, con objetivos claros, plazos y roles definidos. 
+4. **Cuarta Estrategia: Espacios Colegiados:** Para situaciones complejas que involucran múltiples actores, conflictos de grupo, o dinámicas difíciles, convocamos un Consejo de Profesores urgente o sesión extraordinaria del Comité de Buena Convivencia. Estos espacios aportan perspectiva pedagógica integral, análisis psicosocial profundo, y consideración normativa cuidadosa.
 
-4. **Cuarta Estrategia: Espacios Colegiados:** Para situaciones complejas que involucran múltiples actores, conflictos de grupo, o dinámicas difíciles, convocamos un Consejo de Profesores urgente o sesión extraordinaria del Comité de Buena Convivencia. Estos espacios aportan perspectiva pedagógica integral, análisis psicosocial profundo, y consideración normativa cuidadosa. 
+5. **Quinta Estrategia: Reparación y Enfoque Restaurativo:** El enfoque restaurativo busca que quien cometió la falta repare el daño causado y desarrolle comprensión empática por el impacto de sus acciones. Las acciones reparadoras concretas incluyen disculpas sinceras (privadas, ante el grupo afectado, o en algunos casos semipúblicas); reposición material de lo dañado o, si no es posible, colaboración en obtención de reemplazo; servicios comunitarios dentro del colegio durante el periodo determinado bajo supervisión; y encuentros restaurativos supervisados donde ambas partes se reúnen voluntariamente para dialogar. Un elemento muy importante: si la reparación es iniciativa espontánea del estudiante, ocurre **antes** de la intervención formal, esto se considera una circunstancia atenuante muy significativa. Queremos incentivar que los estudiantes tomen iniciativa por reparar.
 
-5. **Quinta Estrategia: Reparación y Enfoque Restaurativo:** El enfoque restaurativo busca que quien cometió la falta repare el daño causado y desarrolle comprensión empática por el impacto de sus acciones. Las acciones reparadoras concretas incluyen disculpas sinceras (privadas, ante el grupo afectado, o en algunos casos semipúblicas); reposición material de lo dañado o, si no es posible, colaboración en obtención de reemplazo; servicios comunitarios dentro del colegio durante el periodo determinado bajo supervisión; y encuentros restaurativos supervisados donde ambas partes se reúnen voluntariamente para dialogar.  Un elemento muy importante: si la reparación es iniciativa espontánea del estudiante, ocurre **antes** de la intervención formal, esto se considera una circunstancia atenuante muy significativa. Queremos incentivar que los estudiantes tomen iniciativa por reparar. 
+6. **Sexta Estrategia: Escalada a Medidas Disciplinarias Formales:** Cuando las estrategias anteriores no han funcionado o la gravedad de la situación lo requiere desde el inicio, escalamos a medidas disciplinarias formales. Se garantiza notificación escrita clara, explicación de la conducta y norma vulnerada, derecho a presentar descargos, y derecho a apelación.
 
-6. **Sexta Estrategia: Escalada a Medidas Disciplinarias Formales:** Cuando las estrategias anteriores no han funcionado o la gravedad de la situación lo requiere desde el inicio, escalamos a medidas disciplinarias formales. Se garantiza notificación escrita clara, explicación de la conducta y norma vulnerada, derecho a presentar descargos, y derecho a apelación. 
+## **CAPÍTULO VI: GESTIÓN DE LA CONVIVENCIA**
 
-## **CAPÍTULO VI: GESTIÓN DE LA CONVIVENCIA** 
+## **Art. 10.- Coordinador/a de Convivencia Escolar**
 
-## **Art. 10.- Coordinador/a de Convivencia Escolar** 
+Cargo: Posición de liderazgo en gestión de convivencia, reporta directamente al Rector. Responsabilidades principales:
 
-Cargo: Posición de liderazgo en gestión de convivencia, reporta directamente al Rector. Responsabilidades principales: 
+- Implementar Plan de Gestión de Convivencia aprobado por Consejo de Profesores
 
-- Implementar Plan de Gestión de Convivencia aprobado por Consejo de Profesores 
+- Promover políticas preventivas mediante talleres, charlas y capacitaciones
 
-- Promover políticas preventivas mediante talleres, charlas y capacitaciones 
+- Asesorar a docentes en gestión efectiva del aula y resolución de conflictos menores
 
-- Asesorar a docentes en gestión efectiva del aula y resolución de conflictos menores 
+- Activar y supervisar cumplimiento de protocolos de actuación ante situaciones graves
 
-- Activar y supervisar cumplimiento de protocolos de actuación ante situaciones graves 
+- Mantener informada a Rectoría con reportes periódicos (mensual mínimo)
 
-- Mantener informada a Rectoría con reportes periódicos (mensual mínimo) 
+- Comunicar medidas disciplinarias a apoderados de forma clara y oportuna
 
-- Comunicar medidas disciplinarias a apoderados de forma clara y oportuna 
+- Coordinar con redes externas (DER, OLN, , servicios de salud mental)
 
-- Coordinar con redes externas (DER, OLN, , servicios de salud mental) 
+- Evaluar efectividad de estrategias y proponer mejoras
 
-- Evaluar efectividad de estrategias y proponer mejoras 
+## **Art. 11.- Comité de Buena Convivencia Escolar**
 
-## **Art. 11.- Comité de Buena Convivencia Escolar** 
+Misión: Canalizar participación de todos los estamentos de la comunidad en promoción de buena convivencia y prevención de violencia.
 
-Misión: Canalizar participación de todos los estamentos de la comunidad en promoción de buena convivencia y prevención de violencia. 
+Funciones principales:
 
-Funciones principales: 
+- Colaborar en elaboración, seguimiento y evaluación del Plan Anual de Convivencia
 
-- Colaborar en elaboración, seguimiento y evaluación del Plan Anual de Convivencia 
+- Promover activamente políticas y medidas de fomento de convivencia
 
-- Promover activamente políticas y medidas de fomento de convivencia 
+- Socializar el Reglamento Interno, protocolos y cambios normativos
 
-- Socializar el Reglamento Interno, protocolos y cambios normativos 
+- Recoger opiniones e inquietudes de la comunidad sobre convivencia
 
-- Recoger opiniones e inquietudes de la comunidad sobre convivencia 
+- Constituir canal oficial de comunicación en materias de convivencia
 
-- Constituir canal oficial de comunicación en materias de convivencia 
+- Proponer mejoras normativas según experiencia
 
-- Proponer mejoras normativas según experiencia 
+Composición:
 
-Composición: 
+- Miembros Permanentes (voto):
 
-- Miembros Permanentes (voto): 
+  - Rector/a (presidente)
 
-   - Rector/a (presidente) 
+  - Sostenedor
 
-   - Sostenedor 
+  - Coordinador/a de Convivencia
 
-   - Coordinador/a de Convivencia 
+    - Representante de Docentes (elegido por pares)
 
-      - Representante de Docentes (elegido por pares) 
+    - Representante de Asistentes de Educación (elegido por pares)
 
-      - Representante de Asistentes de Educación (elegido por pares) 
+- Miembros Invitados (voz):
 
-- Miembros Invitados (voz): 
+      - Delegado/a Centro de Padres
 
-      - Delegado/a Centro de Padres 
+      - Delegado/a Centro de Alumnos
 
-      - Delegado/a Centro de Alumnos 
+  - Funcionamiento:
 
-   - Funcionamiento: 
+- Reuniones ordinarias: Mínimo 4 veces al año.
 
-- Reuniones ordinarias: Mínimo 4 veces al año. 
+- Convocatoria: Con 5 días hábiles de anticipación; orden del día publicado con anticipación
 
-- Convocatoria: Con 5 días hábiles de anticipación; orden del día publicado con anticipación 
+- Quórum: Mitad más uno de miembros permanentes para sesionar
 
-- Quórum: Mitad más uno de miembros permanentes para sesionar 
+- Reuniones extraordinarias: Si surge situación urgente; se convoca con máximo 48 horas
 
-- Reuniones extraordinarias: Si surge situación urgente; se convoca con máximo 48 horas 
+- Decisiones: Por mayoría absoluta; presidente dirima empates
 
-- Decisiones: Por mayoría absoluta; presidente dirima empates 
+- Actas: Levantadas por el secretario (designado)
 
-- Actas: Levantadas por el secretario (designado) 
+Carácter de acuerdos: Tienen carácter consultivo y propositivo; Rector evaluará implementación y reportará al Comité.
 
-Carácter de acuerdos: Tienen carácter consultivo y propositivo; Rector evaluará implementación y reportará al Comité. 
+## **Art. 12.- Roles de la comunidad educativa en Gestión de Convivencia**
 
-## **Art. 12.- Roles de la comunidad educativa en Gestión de Convivencia** 
+**Docentes:** Los docentes son responsables de crear un ambiente respetuoso y seguro en su sala de clases, estableciendo normas claras y promoviendo el respeto mutuo entre los estudiantes. Ante faltas menores, aplican estrategias pedagógicas que priorizan el enfoque formativo y restaurativo. En situaciones graves, reportan los incidentes a la inspectoría para su seguimiento. Además, participan en talleres de capacitación sobre convivencia, resolución de conflictos y habilidades socioemocionales.
 
-**Docentes:** Los docentes son responsables de crear un ambiente respetuoso y seguro en su sala de clases, estableciendo normas claras y promoviendo el respeto mutuo entre los estudiantes. Ante faltas menores, aplican estrategias pedagógicas que priorizan el enfoque formativo y restaurativo. En situaciones graves, reportan los incidentes a la inspectoría para su seguimiento. Además, participan en talleres de capacitación sobre convivencia, resolución de conflictos y habilidades socioemocionales. 
+**Asistentes de Educación / Inspectores:** Los asistentes de educación y inspectores supervisan los espacios comunes, asegurando un ambiente seguro. Aplican medidas disciplinarias bajo la orientación del Coordinador de Convivencia Escolar y registran los incidentes para su seguimiento. También facilitan la mediación y resolución de conflictos, promoviendo el diálogo y la restauración de relaciones.
 
-**Asistentes de Educación / Inspectores:** Los asistentes de educación y inspectores supervisan los espacios comunes, asegurando un ambiente seguro. Aplican medidas disciplinarias bajo la orientación del Coordinador de Convivencia Escolar y registran los incidentes para su seguimiento. También facilitan la mediación y resolución de conflictos, promoviendo el diálogo y la restauración de relaciones. 
+**Psicólogo/a:** El psicólogo/a proporciona apoyo psicosocial a los estudiantes con dificultades emocionales o conductuales y colabora en la investigación de faltas graves. Coordina derivaciones a redes externas cuando es necesario y lidera programas de habilidades socioemocionales, ayudando a los estudiantes a gestionar sus emociones y resolver conflictos de manera pacífica.
 
-**Psicólogo/a:** El psicólogo/a proporciona apoyo psicosocial a los estudiantes con dificultades emocionales o conductuales y colabora en la investigación de faltas graves. Coordina derivaciones a redes externas cuando es necesario y lidera programas de habilidades socioemocionales, ayudando a los estudiantes a gestionar sus emociones y resolver conflictos de manera pacífica. 
+**Padres, Madres y Apoderados:** Los padres y apoderados son clave en la gestión de la convivencia, apoyando al colegio en la formación integral de sus hijos/as. Deben colaborar en la creación de planes de mejora, asistir a reuniones convocadas por el colegio y mantener comunicación constante con el personal educativo. En situaciones de faltas graves, colaboran en la restauración y reparación del daño.
 
-**Padres, Madres y Apoderados:** Los padres y apoderados son clave en la gestión de la convivencia, apoyando al colegio en la formación integral de sus hijos/as. Deben colaborar en la creación de planes de mejora, asistir a reuniones convocadas por el colegio y mantener comunicación constante con el personal educativo. En situaciones de faltas graves, colaboran en la restauración y reparación del daño. 
+**Estudiantes:** Los estudiantes son agentes activos en la resolución de conflictos, participando en mediación a través de programas de formación continua en habilidades socioemocionales. Fomentan el diálogo y la cooperación, y a través del Centro de Alumnos y comités de convivencia, promueven una cultura de paz en el colegio.
 
-**Estudiantes:** Los estudiantes son agentes activos en la resolución de conflictos, participando en mediación a través de programas de formación continua en habilidades socioemocionales. Fomentan el diálogo y la cooperación, y a través del Centro de Alumnos y comités de convivencia, promueven una cultura de paz en el colegio. 
+## **CAPÍTULO VII: DERECHOS DE LOS ESTUDIANTES Art. 13.- Todo estudiante tiene derecho a:**
 
-## **CAPÍTULO VII: DERECHOS DE LOS ESTUDIANTES Art. 13.- Todo estudiante tiene derecho a:** 
+Aseguramos a todos nuestros estudiantes un conjunto integral de derechos que son irrenunciables y que no pueden ser condicionados por su comportamiento o desempeño académico:
 
-Aseguramos a todos nuestros estudiantes un conjunto integral de derechos que son irrenunciables y que no pueden ser condicionados por su comportamiento o desempeño académico: 
+| **Derecho**                                                      | **Descripción Ampliada**                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Derecho a Educación de**<br>**Calidad**                        | Cada estudiante tiene derecho a recibir educación que genuinamente desarrolle su<br>máximo potencial académico, moral, espiritual, físico y emocional. No es suficiente<br>cobertura educativa;debe ser formación integradora.                                                                                                                                                                                                                                  |
+| **Derecho a Inclusión y Ajustes**<br>**Razonables**              | Garantizamos educación inclusiva (no meramente integradora) para todos,<br>especialmente para estudiantes con necesidades educativas especiales, con<br>discapacidades, o con Trastorno del Espectro Autista. Esto significa participación plena<br>en vida académica, social y recreativa; ajustes razonables personalizados que permitan<br>acceso genuino al currículum; y atenciones especializadas cuando corresponde, en<br>cumplimiento de la Ley21.545. |
+| **Derecho Innegociable a No**<br>**Discriminacióny Trato Digno** | Ser tratado con profundo respeto sin discriminación por raza, etnia, género, orientación<br>sexual,identidad degénero,religión,origen,condición socioeconómica,discapacidad,                                                                                                                                                                                                                                                                                    |
 
-|**Derecho**|**Descripción Ampliada**|
-|---|---|
-|**Derecho a Educación de**<br>**Calidad**|Cada estudiante tiene derecho a recibir educación que genuinamente desarrolle su<br>máximo potencial académico, moral, espiritual, físico y emocional. No es suficiente<br>cobertura educativa;debe ser formación integradora.|
-|**Derecho a Inclusión y Ajustes**<br>**Razonables**|Garantizamos educación inclusiva (no meramente integradora) para todos,<br>especialmente para estudiantes con necesidades educativas especiales, con<br>discapacidades, o con Trastorno del Espectro Autista. Esto significa participación plena<br>en vida académica, social y recreativa; ajustes razonables personalizados que permitan<br>acceso genuino al currículum; y atenciones especializadas cuando corresponde, en<br>cumplimiento de la Ley21.545.|
-|**Derecho Innegociable a No**<br>**Discriminacióny Trato Digno**|Ser tratado con profundo respeto sin discriminación por raza, etnia, género, orientación<br>sexual,identidad degénero,religión,origen,condición socioeconómica,discapacidad,|
+|                                                                                 | apariencia física, o cualquier otra condición. Derecho a ambiente completamente libre<br>de acoso,violencia verbal o física,o humillación de cualquier tipo.                                                                                                         |
+| ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Derecho a Voz y Participación**                                               | Expresar opiniones, ideas y preocupaciones en temas que afecten su vida escolar.<br>Participación en Centro de Alumnos, Consejos de Curso, y encuestas de satisfacción.<br>Susperspectivas deben sergenuinamente consideradas en decisionesque los afectan.          |
+| **Derecho a Libertad de**<br>**Pensamiento y Conciencia**                       | Ejercer libertad de pensamiento, expresión, conciencia y religión. Aunque el colegio<br>tiene identidad católica dominicana, no hay imposiciones coercitivas. Se respeta la<br>libertad de conciencia;se espera laparticipación respetuosa en actividadespastorales. |
+| **Derecho a Orientación**<br>**Académica y Vocacional**                         | Acceso a orientación profesional en decisiones sobre trayectorias académicas; apoyo<br>en momentos de crisis o dificultades personales; información sobre oportunidades<br>educacionales futuras.                                                                    |
+| **Derecho a Evaluación Justa y**<br>**Transparente**                            | Evaluación con criterios claros conocidos previamente; acceso a revisión de pruebas y<br>trabajos;retroalimentaciónquepermite mejorar;no sorpresas en calificaciones finales.                                                                                        |
+| **Derecho a recibir una**<br>**corrección educativa digna y**<br>**respetuosa** | Ser corregido cuando comete errores, pero mediante procesos formativos, reflexivos,<br>y respetuosos de su dignidad. Nunca humillación pública, burlas o castigos corporales.                                                                                        |
+| **Derecho a Participación en**<br>**Vida Escolar Integral**                     | Actividades culturales, deportivas, pastorales, científicas, solidarias, recreativas. El<br>desarrollo integral requiere experiencias variadas.                                                                                                                      |
+| **Derecho a Bienestar y**<br>**Protección Psicosocial:**                        | Acceso a apoyo en salud mental cuando lo requiera; orientación en situaciones de crisis;<br>derivación a especialistas cuando necesario; ambiente de protección frente a cualquier<br>forma de abuso.                                                                |
+| **Derecho a Privacidad y**<br>**Confidencialidad**                              | Información personal tratada con confidencialidad estricta, salvo cuando existe<br>obligación legal de denuncia. Registros de salud mental o información sensible no son<br>públicos.                                                                                |
+| **Derecho a Defensa en**<br>**Situaciones de Faltas Graves**                    | Ser informado claramente de acusaciones en su contra; acceder a información del caso;<br>presentar su versión de los hechos;ser escuchado antes de una sanción importante.                                                                                           |
+| **Derecho a Apelación**                                                         | Poder apelar decisiones disciplinarias que considera injustas. Tiene 48 horas desde<br>notificación para solicitar revisión. Rectoría responde por escrito en máximo 5 días<br>hábiles.                                                                              |
 
+## **CAPÍTULO VIII: DEBERES DE LOS ESTUDIANTES Art. 14.- Todo estudiante tiene el deber de:**
 
+Los derechos siempre van acompañados de responsabilidades correlativas. Los estudiantes, a cambio de los derechos que les aseguramos, tienen deberes claros que estructuran nuestra convivencia:
 
-||apariencia física, o cualquier otra condición. Derecho a ambiente completamente libre<br>de acoso,violencia verbal o física,o humillación de cualquier tipo.|
-|---|---|
-|**Derecho a Voz y Participación**|Expresar opiniones, ideas y preocupaciones en temas que afecten su vida escolar.<br>Participación en Centro de Alumnos, Consejos de Curso, y encuestas de satisfacción.<br>Susperspectivas deben sergenuinamente consideradas en decisionesque los afectan.|
-|**Derecho a Libertad de**<br>**Pensamiento y Conciencia**|Ejercer libertad de pensamiento, expresión, conciencia y religión. Aunque el colegio<br>tiene identidad católica dominicana, no hay imposiciones coercitivas. Se respeta la<br>libertad de conciencia;se espera laparticipación respetuosa en actividadespastorales.|
-|**Derecho a Orientación**<br>**Académica y Vocacional**|Acceso a orientación profesional en decisiones sobre trayectorias académicas; apoyo<br>en momentos de crisis o dificultades personales; información sobre oportunidades<br>educacionales futuras.|
-|**Derecho a Evaluación Justa y**<br>**Transparente**|Evaluación con criterios claros conocidos previamente; acceso a revisión de pruebas y<br>trabajos;retroalimentaciónquepermite mejorar;no sorpresas en calificaciones finales.|
-|**Derecho a recibir una**<br>**corrección educativa digna y**<br>**respetuosa**|Ser corregido cuando comete errores, pero mediante procesos formativos, reflexivos,<br>y respetuosos de su dignidad. Nunca humillación pública, burlas o castigos corporales.|
-|**Derecho a Participación en**<br>**Vida Escolar Integral**|Actividades culturales, deportivas, pastorales, científicas, solidarias, recreativas. El<br>desarrollo integral requiere experiencias variadas.|
-|**Derecho a Bienestar y**<br>**Protección Psicosocial:**|Acceso a apoyo en salud mental cuando lo requiera; orientación en situaciones de crisis;<br>derivación a especialistas cuando necesario; ambiente de protección frente a cualquier<br>forma de abuso.|
-|**Derecho a Privacidad y**<br>**Confidencialidad**|Información personal tratada con confidencialidad estricta, salvo cuando existe<br>obligación legal de denuncia. Registros de salud mental o información sensible no son<br>públicos.|
-|**Derecho a Defensa en**<br>**Situaciones de Faltas Graves**|Ser informado claramente de acusaciones en su contra; acceder a información del caso;<br>presentar su versión de los hechos;ser escuchado antes de una sanción importante.|
-|**Derecho a Apelación**|Poder apelar decisiones disciplinarias que considera injustas. Tiene 48 horas desde<br>notificación para solicitar revisión. Rectoría responde por escrito en máximo 5 días<br>hábiles.|
+| **Deberes**                                                       | **Descripción Ampliada**                                                                                                                                                                                                                                                                                                                |
+| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Deber de Conocer y Respetar el**<br>**Reglamento**              | Conocer profundamente este documento y el Proyecto Educativo Institucional.<br>Demostrar adhesión al espíritu católico dominicano mediante conducta cotidiana,<br>participación activa, ycompromisogenuino con los valoresqueproclamamos.                                                                                               |
+| **Deber de Trato Digno a Todos**                                  | Tratar con dignidad genuina a cada compañero, docente, trabajador del colegio.<br>Especial cuidado con estudiantes más vulnerables—quienes son más pequeños,<br>quienes tienen discapacidades, quienes no tienen amigos, quienes son diferentes.<br>Evitar absolutamente insultos,agresiones físicas,burlas,o cualquier forma de acoso. |
+| **Deber**<br>**de**<br>**Asistencia**<br>**y**<br>**Puntualidad** | Llegar a tiempo a cada clase y actividad escolar. Permanecer hasta fin de jornada.<br>Justificar atrasos mediante formularios o notas de apoderado cuando sea necesario. La<br>asistencia es responsabilidad de ambos—estudianteyfamilia.                                                                                               |
+| **Deber de Participación Activa**<br>**en Clases**                | Escuchar activamente lo que docentes y compañeros comunican. Cumplir actividades<br>propuestas. Formular preguntas respetuosas que demuestren pensamiento crítico.<br>Evitar distraccionesque disminuyan el aprendizajepropio o ajeno.                                                                                                  |
+| **Deber de Estudio Dedicado**                                     | Estudiar con verdadera dedicación, buscando comprensión no memorización. Realizar<br>tareas honestamente. Prepararse genuinamente para evaluaciones. Buscar ayuda<br>cuando algo no se entiende, reconociendo que pedir ayuda es signo de madurez, no<br>debilidad.                                                                     |
 
+| **Deber**<br>**de**<br>**Honestidad**<br>**Académica—Regla de Oro**                                         | Actuar siempre con honestidad intelectual. El fraude académico—copiar, plagiar,<br>falsificar trabajos—es falta muy grave que resulta en nota 1.0 más sanción disciplinaria.<br>No solo afecta lo académico;erosiona la confianza.                                           |
+| ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Deber**<br>**de**<br>**Colaboración**<br>**y**<br>**Solidaridad**                                         | Apoyar a compañeros cuando tienen dificultades. Participar en actividades solidarias.<br>Responderpositivamente a invitaciones del colegiopara colaborar.                                                                                                                    |
+| **Deber**<br>**de**<br>**Convivencia**<br>**Armónica**                                                      | Usar lenguaje apropiado. Respetar turnos en conversaciones. Cumplir normas<br>acordadas. Resolver conflictospacíficamente.                                                                                                                                                   |
+| **Deber**<br>**de**<br>**Participación**<br>**Respetuosa**<br>**en**<br>**Actividades**<br>**Espirituales** | Participar con actitud respetuosa en oraciones, liturgias, clases de religión, actos de<br>reflexión. Se respeta libertad de conciencia; No hay imposiciones.                                                                                                                |
+| **Deber**<br>**de**<br>**Cumplimiento**<br>**Académico Integral**                                           | Entregar trabajos en plazos establecidos. Asistir a evaluaciones. Justificar ausencias.<br>Rendir evaluacionespendientes.                                                                                                                                                    |
+| **Deber de Cuidado de Recursos**<br>**Institucionales**                                                     | Usar<br>adecuadamente<br>materiales,<br>equipamiento,<br>infraestructura.<br>Reportar<br>inmediatamente daños accidentales. Recordar que daños intencionales implican<br>responsabilidad de apoderado.                                                                       |
+| **Deber**<br>**de**<br>**Mantención**<br>**de**<br>**Espacios Comunes**                                     | Colaborar en mantener espacios limpios y ordenados. Usar basureros apropiados.<br>Evitar rayados u otros daños. Participar en limpiezas comunitarias cuando se solicita.                                                                                                     |
+| **Deber**<br>**de**<br>**Presentación**<br>**Personal**                                                     | Uniforme completo y limpio todos los días de clase. Uniforme deportivo en educación<br>física. Higiene personal adecuada. Evitar accesorios excesivos, piercing, expansores,<br>maquillaje extravagante.                                                                     |
+| **Deber de Llevar Agenda Escolar**                                                                          | Documento de comunicación oficial familia-colegio. Debe asistir diariamente. Presentar<br>cuando docentes lo requieran. Mostrar notas a apoderado. Solicitar reemplazo si se<br>pierde.                                                                                      |
+| **Deber de No Portar Objetos**<br>**Peligrosos**                                                            | Prohibición absoluta de portar armas de cualquier tipo, explosivos, drogas o sustancias<br>ilícitas. Uso de celulares restringido durante clases y evaluaciones salvo autorización<br>pedagógica explícita. Prohibición degrabar o fotografiar sin consentimiento informado. |
+| **Deber de Respeto a la Vida e**<br>**Integridad**                                                          | Respeto profundo a vida e integridad de todos. Rechazo total a violencia, acoso sexual,<br>bullying,ciberacoso.                                                                                                                                                              |
+| **Deber de Buen Uso de Espacios**                                                                           | Utilizar recreos y áreas deportivas responsablemente. Respetar normas específicas.<br>Cuidar equipamiento.                                                                                                                                                                   |
+| **Deber**<br>**de**<br>**Asumir**<br>**Responsabilidad**                                                    | Asumir genuina responsabilidad por propias acciones. Participar en reflexiones cuando<br>sea necesario. Colaborar en medidas reparadorasy procesos de mejora.                                                                                                                |
 
+## **CAPÍTULO IX: CRITERIOS Y CIRCUNSTANCIAS DISCIPLINARIAS**
 
-## **CAPÍTULO VIII: DEBERES DE LOS ESTUDIANTES Art. 14.- Todo estudiante tiene el deber de:** 
+## **Art. 15.- Criterios Generales de Aplicación de Medidas Correctivas**
 
-Los derechos siempre van acompañados de responsabilidades correlativas. Los estudiantes, a cambio de los derechos que les aseguramos, tienen deberes claros que estructuran nuestra convivencia: 
+Toda medida tendrá propósito formativo, buscando reflexión genuina y mejora real de conducta del estudiante, siempre garantizando el derecho del estudiante a presentar sus descargos antes de la aplicación de sanciones graves. El objetivo último es mejorar convivencia mediante aprendizaje de valores, no mediante castigo punitivo. Antes de la aplicación de sanciones graves, el estudiante debe ser informado de las acusaciones en su contra, y se deberá otorgar un espacio para su defensa, conforme a los principios de debido proceso establecidos por la Ley N° 20.370.
 
-|**Deberes**|**Descripción Ampliada**|
-|---|---|
-|**Deber de Conocer y Respetar el**<br>**Reglamento**|Conocer profundamente este documento y el Proyecto Educativo Institucional.<br>Demostrar adhesión al espíritu católico dominicano mediante conducta cotidiana,<br>participación activa, ycompromisogenuino con los valoresqueproclamamos.|
-|**Deber de Trato Digno a Todos**|Tratar con dignidad genuina a cada compañero, docente, trabajador del colegio.<br>Especial cuidado con estudiantes más vulnerables—quienes son más pequeños,<br>quienes tienen discapacidades, quienes no tienen amigos, quienes son diferentes.<br>Evitar absolutamente insultos,agresiones físicas,burlas,o cualquier forma de acoso.|
-|**Deber**<br>**de**<br>**Asistencia**<br>**y**<br>**Puntualidad**|Llegar a tiempo a cada clase y actividad escolar. Permanecer hasta fin de jornada.<br>Justificar atrasos mediante formularios o notas de apoderado cuando sea necesario. La<br>asistencia es responsabilidad de ambos—estudianteyfamilia.|
-|**Deber de Participación Activa**<br>**en Clases**|Escuchar activamente lo que docentes y compañeros comunican. Cumplir actividades<br>propuestas. Formular preguntas respetuosas que demuestren pensamiento crítico.<br>Evitar distraccionesque disminuyan el aprendizajepropio o ajeno.|
-|**Deber de Estudio Dedicado**|Estudiar con verdadera dedicación, buscando comprensión no memorización. Realizar<br>tareas honestamente. Prepararse genuinamente para evaluaciones. Buscar ayuda<br>cuando algo no se entiende, reconociendo que pedir ayuda es signo de madurez, no<br>debilidad.|
+**15.1. Finalidad Educativa:** Toda medida tendrá propósito formativo, buscando reflexión genuina y mejora real de conducta del estudiante. El objetivo último es mejorar convivencia mediante aprendizaje de valores, no mediante castigo punitivo.
 
+**15.2. Resguardo de Derechos de la Comunidad y Víctima:** Se considerarán primordialmente derechos de todos los miembros, especialmente de afectados. Se brindará apoyo y protección a víctimas, evitando revictimización o exposición pública innecesaria.
 
+**15.3. Proporcionalidad:** Medidas serán proporcionales a naturaleza y gravedad de la falta:
 
-|**Deber**<br>**de**<br>**Honestidad**<br>**Académica—Regla de Oro**|Actuar siempre con honestidad intelectual. El fraude académico—copiar, plagiar,<br>falsificar trabajos—es falta muy grave que resulta en nota 1.0 más sanción disciplinaria.<br>No solo afecta lo académico;erosiona la confianza.|
-|---|---|
-|**Deber**<br>**de**<br>**Colaboración**<br>**y**<br>**Solidaridad**|Apoyar a compañeros cuando tienen dificultades. Participar en actividades solidarias.<br>Responderpositivamente a invitaciones del colegiopara colaborar.|
-|**Deber**<br>**de**<br>**Convivencia**<br>**Armónica**|Usar lenguaje apropiado. Respetar turnos en conversaciones. Cumplir normas<br>acordadas. Resolver conflictospacíficamente.|
-|**Deber**<br>**de**<br>**Participación**<br>**Respetuosa**<br>**en**<br>**Actividades**<br>**Espirituales**|Participar con actitud respetuosa en oraciones, liturgias, clases de religión, actos de<br>reflexión. Se respeta libertad de conciencia; No hay imposiciones.|
-|**Deber**<br>**de**<br>**Cumplimiento**<br>**Académico Integral**|Entregar trabajos en plazos establecidos. Asistir a evaluaciones. Justificar ausencias.<br>Rendir evaluacionespendientes.|
-|**Deber de Cuidado de Recursos**<br>**Institucionales**|Usar<br>adecuadamente<br>materiales,<br>equipamiento,<br>infraestructura.<br>Reportar<br>inmediatamente daños accidentales. Recordar que daños intencionales implican<br>responsabilidad de apoderado.|
-|**Deber**<br>**de**<br>**Mantención**<br>**de**<br>**Espacios Comunes**|Colaborar en mantener espacios limpios y ordenados. Usar basureros apropiados.<br>Evitar rayados u otros daños. Participar en limpiezas comunitarias cuando se solicita.|
-|**Deber**<br>**de**<br>**Presentación**<br>**Personal**|Uniforme completo y limpio todos los días de clase. Uniforme deportivo en educación<br>física. Higiene personal adecuada. Evitar accesorios excesivos, piercing, expansores,<br>maquillaje extravagante.|
-|**Deber de Llevar Agenda Escolar**|Documento de comunicación oficial familia-colegio. Debe asistir diariamente. Presentar<br>cuando docentes lo requieran. Mostrar notas a apoderado. Solicitar reemplazo si se<br>pierde.|
-|**Deber de No Portar Objetos**<br>**Peligrosos**|Prohibición absoluta de portar armas de cualquier tipo, explosivos, drogas o sustancias<br>ilícitas. Uso de celulares restringido durante clases y evaluaciones salvo autorización<br>pedagógica explícita. Prohibición degrabar o fotografiar sin consentimiento informado.|
-|**Deber de Respeto a la Vida e**<br>**Integridad**|Respeto profundo a vida e integridad de todos. Rechazo total a violencia, acoso sexual,<br>bullying,ciberacoso.|
-|**Deber de Buen Uso de Espacios**|Utilizar recreos y áreas deportivas responsablemente. Respetar normas específicas.<br>Cuidar equipamiento.|
-|**Deber**<br>**de**<br>**Asumir**<br>**Responsabilidad**|Asumir genuina responsabilidad por propias acciones. Participar en reflexiones cuando<br>sea necesario. Colaborar en medidas reparadorasy procesos de mejora.|
+- Faltas leves → sanciones leves (anotaciones, amonestaciones verbales)
 
+- Faltas graves → sanciones moderadas (cartas de compromiso, suspensiones cortas)
 
+- Faltas muy graves → sanciones severas (suspensiones prolongadas, condicionalidades, cancelación de matrícula)
 
-## **CAPÍTULO IX: CRITERIOS Y CIRCUNSTANCIAS DISCIPLINARIAS** 
+- Se evita todo castigo físico, humillante o desproporcionado.
 
-## **Art. 15.- Criterios Generales de Aplicación de Medidas Correctivas** 
+**15.4. Gradualidad y Agotamiento de Instancias Pedagógicas Previas:** Se privilegiará exhaustación de medidas pedagógicas (diálogos, advertencias verbales, reflexiones, cita de apoderados) antes de sanciones formales escritas.
 
-Toda medida tendrá propósito formativo, buscando reflexión genuina y mejora real de conducta del estudiante, siempre garantizando el derecho del estudiante a presentar sus descargos antes de la aplicación de sanciones graves. El objetivo último es mejorar convivencia mediante aprendizaje de valores, no mediante castigo punitivo. Antes de la aplicación de sanciones graves, el estudiante debe ser informado de las acusaciones en su contra, y se deberá otorgar un espacio para su defensa, conforme a los principios de debido proceso establecidos por la Ley N° 20.370. 
+Excepciones: conductas muy gravosas (violencia severa, acoso reiterado confirmado, porte de armas, ingesta de alcohol) requieren acción inmediata sin esperar diálogos previos.
 
-**15.1. Finalidad Educativa:** Toda medida tendrá propósito formativo, buscando reflexión genuina y mejora real de conducta del estudiante. El objetivo último es mejorar convivencia mediante aprendizaje de valores, no mediante castigo punitivo. 
+**15.5. Contexto Individual y Circunstancias Atenuantes/Agravantes:** Se tomarán en cuenta factores personales del estudiante, circunstancias atenuantes (reconocimiento espontáneo, no intencionalidad, buena conducta anterior, reparación voluntaria, contexto personal difícil) o agravantes (reiteración, dolo, negativa a asumir responsabilidad, gravedad del daño, liderazgo negativo, alevosía).
 
-**15.2. Resguardo de Derechos de la Comunidad y Víctima:** Se considerarán primordialmente derechos de todos los miembros, especialmente de afectados. Se brindará apoyo y protección a víctimas, evitando revictimización o exposición pública innecesaria. 
+**15.6. Debido Proceso y Derecho a Defensa:** Se garantiza procedimiento justo y racional. Todo estudiante será escuchado y presentará descargos antes de sanción importante. Todas las sanciones serán notificadas formalmente indicando razones, y tendrá derecho a apelar dentro de plazos establecidos.
 
-**15.3. Proporcionalidad:** Medidas serán proporcionales a naturaleza y gravedad de la falta: 
+**15.7. Coherencia y No Doble Sanción** : Se mantendrán criterios consistentes en aplicación de sanciones, evitando arbitrariedades. Un mismo hecho no será sancionado más de una vez; si infringe simultáneamente varias normas, las consecuencias se evaluarán en conjunto.
 
-   - Faltas leves → sanciones leves (anotaciones, amonestaciones verbales) 
+**15.8. Carácter Reparador:** Junto con sanción se buscará reparación del daño (reposición de bienes, disculpas sinceras, servicios comunitarios).
 
-   - Faltas graves → sanciones moderadas (cartas de compromiso, suspensiones cortas) 
+**15.9. Privacidad y Respeto a Dignidad:** El procedimiento se llevará reservadamente, evitando exposición pública del infractor. Solo involucrará personas necesarias; se cuidará lenguaje y formas respetuosas.
 
-- Faltas muy graves → sanciones severas (suspensiones prolongadas, condicionalidades, cancelación de matrícula) 
+**15.10. Seguimiento y Acompañamiento:** Después de aplicada sanción, se hará seguimiento para evaluar mejora. En sanciones graves, psicólogo realizará entrevistas periódicas (mínimo 1 mensual).
 
-- Se evita todo castigo físico, humillante o desproporcionado. 
+## **Art. 16.- Circunstancias Atenuantes**
 
-**15.4. Gradualidad y Agotamiento de Instancias Pedagógicas Previas:** Se privilegiará exhaustación de medidas pedagógicas (diálogos, advertencias verbales, reflexiones, cita de apoderados) antes de sanciones formales escritas. 
+Se consideran atenuantes:
 
-Excepciones: conductas muy gravosas (violencia severa, acoso reiterado confirmado, porte de armas, ingesta de alcohol) requieren acción inmediata sin esperar diálogos previos. 
+- Reconocimiento espontáneo del error y arrepentimiento sincero antes de ser confrontado
 
-**15.5. Contexto Individual y Circunstancias Atenuantes/Agravantes:** Se tomarán en cuenta factores personales del estudiante, circunstancias atenuantes (reconocimiento espontáneo, no intencionalidad, buena conducta anterior, reparación voluntaria, contexto personal difícil) o agravantes (reiteración, dolo, negativa a asumir responsabilidad, gravedad del daño, liderazgo negativo, alevosía). 
+- No intencionalidad o provocación externa significativa que desencadenó conducta
 
-**15.6. Debido Proceso y Derecho a Defensa:** Se garantiza procedimiento justo y racional. Todo estudiante será escuchado y presentará descargos antes de sanción importante. Todas las sanciones serán notificadas formalmente indicando razones, y tendrá derecho a apelar dentro de plazos establecidos. 
+- Buena conducta anterior sin registros de faltas similares o graves en su historia
 
-**15.7. Coherencia y No Doble Sanción** : Se mantendrán criterios consistentes en aplicación de sanciones, evitando arbitrariedades. Un mismo hecho no será sancionado más de una vez; si infringe simultáneamente varias normas, las consecuencias se evaluarán en conjunto. 
+- Reparación voluntaria del daño antes de intervención formal del colegio
 
-**15.8. Carácter Reparador:** Junto con sanción se buscará reparación del daño (reposición de bienes, disculpas sinceras, servicios comunitarios). 
+- Contexto personal difícil justificadamente (duelo, enfermedad, trastornos emocionales diagnosticados, situación de vulnerabilidad)
 
-**15.9. Privacidad y Respeto a Dignidad:** El procedimiento se llevará reservadamente, evitando exposición pública del infractor. Solo involucrará personas necesarias; se cuidará lenguaje y formas respetuosas. 
+- Edad muy temprana o capacidad cognitiva limitada conforme a diagnósticos
 
-**15.10. Seguimiento y Acompañamiento:** Después de aplicada sanción, se hará seguimiento para evaluar mejora. En sanciones graves, psicólogo realizará entrevistas periódicas (mínimo 1 mensual). 
+- Acción bajo presión grupal o influencia de terceros contra su naturaleza
 
-## **Art. 16.- Circunstancias Atenuantes** 
+## _**Efecto:**_ **Reduce sanción a nivel inferior o acorta duración.**
 
-Se consideran atenuantes: 
+## **Art. 17.- Circunstancias Agravantes**
 
-- Reconocimiento espontáneo del error y arrepentimiento sincero antes de ser confrontado 
+Se consideran agravantes:
 
-- No intencionalidad o provocación externa significativa que desencadenó conducta 
+- Reiteración de faltas similares pese a advertencias o sanciones previas
 
-- Buena conducta anterior sin registros de faltas similares o graves en su historia 
+- Dolo o intencionalidad manifiesta, actuación premeditada
 
-- Reparación voluntaria del daño antes de intervención formal del colegio 
+- Negativa a asumir responsabilidad, mentira, actitud desafiante ante autoridad
 
-- Contexto personal difícil justificadamente (duelo, enfermedad, trastornos emocionales diagnosticados, situación de vulnerabilidad) 
+- Gravedad del daño causado (lesiones físicas graves, trauma psicológico severo, perjuicio material significativo)
 
-- Edad muy temprana o capacidad cognitiva limitada conforme a diagnósticos 
+- Involucramiento de múltiples personas o liderazgo negativo en acciones colectivas contra convivencia
 
-- Acción bajo presión grupal o influencia de terceros contra su naturaleza 
+- Alevosía o ventaja sobre persona más vulnerable (abuso de poder, desproporción manifiesta de fuerzas, aprovechamiento de indefensión)
 
-## _**Efecto:**_ **Reduce sanción a nivel inferior o acorta duración.** 
+- Amenaza o intimidación a testigos o víctimas
 
-## **Art. 17.- Circunstancias Agravantes** 
+_**Efecto:**_ **Aumenta sanción a nivel superior o prolonga duración.**
 
-Se consideran agravantes: 
+## **CAPÍTULO X: MEDIDAS DISCIPLINARIAS Y PROCEDIMIENTO**
 
-- Reiteración de faltas similares pese a advertencias o sanciones previas 
+## **Art.18.- Medidas Disciplinarias Aplicables**
 
-- Dolo o intencionalidad manifiesta, actuación premeditada 
+Las medidas disciplinarias están ordenadas progresivamente de menor a mayor severidad. La selección depende de gravedad de falta, circunstancias personales, y respuesta a intervenciones previas:
 
-- Negativa a asumir responsabilidad, mentira, actitud desafiante ante autoridad 
+**Medida 1 - Llamado de Atención Verbal:** Es intervención oral inmediata ante conducta inapropiada. **Características:** no genera registro formal en libro de clases, se realiza en el momento por el docente o inspector que presenció, tiene enfoque educativo y preventivo. **Aplica a:** faltas leves menores, primeras conductas inapropiadas, situaciones donde el estudiante claramente no sabía que era inapropiado.
 
-- Gravedad del daño causado (lesiones físicas graves, trauma psicológico severo, perjuicio material significativo) 
+**Medida 2 - Anotación Negativa en Libro de Clases:** Registro escrito permanente en hoja de vida del estudiante. **Características:** visible en plataforma digital para apoderados, incluye descripción clara de conducta y contexto, genera comunicación automática a familia, acumula. **Aplica a:** faltas leves confirmadas, repeticiones de conductas menores. Escalada: cinco anotaciones negativas resultan automáticamente en Amonestación Escrita.
 
-- Involucramiento de múltiples personas o liderazgo negativo en acciones colectivas contra convivencia 
+**Medida 3 - Amonestación Escrita Formal:** Comunicación oficial formal a apoderado. **Características:** documento oficial archivado en hoja de vida, firma de apoderado como acuse de recibo, se comunica en entrevista con equipo de convivencia, estudiante se compromete formalmente a cambio de conducta. **Aplica a:** acumulación de cinco o más anotaciones negativas, reiteración de faltas leves, faltas graves menores. Si hay reincidencia posterior, se escalada a falta grave.
 
-- Alevosía o ventaja sobre persona más vulnerable (abuso de poder, desproporción manifiesta de fuerzas, aprovechamiento de indefensión) 
+**Medida 4 - Carta de Compromiso Conductual:** Documento formal reconociendo falta y acordando objetivos de mejora específicos. **Características:** alternativa o complemento a suspensión, objetivos claros y medibles (ej: "No insultar a compañeros por treinta días"), duración determinada entre treinta y sesenta días, seguimiento semanal por profesor jefe mediante reuniones breves, se evalúa cumplimiento. **Aplica a:** faltas graves. **Resultado:** Nota de cumplimiento en hoja de vida o su incumplimiento escala a falta muy grave.
 
-- Amenaza o intimidación a testigos o víctimas 
+**Medida 5: Suspensión Temporal:** Prohibición temporal de asistencia a clases. **Características:** duraciones específicas según gravedad—tres a cinco días hábiles para faltas graves, cuatro a quince días hábiles para faltas muy graves; evaluaciones pendientes se calendariza; acceso a plataforma digital se mantiene; retorno requiere reunión con Coordinador de Convivencia para evaluar disposición genuina al cambio.
 
-_**Efecto:**_ **Aumenta sanción a nivel superior o prolonga duración.** 
+Si el apoderado se niega a aceptar la sanción, está se realizará de igual manera dejando al alumno en biblioteca del Colegio con trabajo alternativo.
 
-## **CAPÍTULO X: MEDIDAS DISCIPLINARIAS Y PROCEDIMIENTO** 
+**Medida 6 - Condicionalidad de Matrícula:** Periodo de observación estricta bajo condiciones especiales. **Características:** documento formal firmado por apoderado, duración determinada (típicamente resto del año escolar o 180 días), restricciones específicas como no poder ser delegado/a, no participación en salidas opcionales, no representación en actividades especiales; seguimiento intensivo con reportes semanales a apoderado. **Resultado:** cumplimiento de condiciones resulta en levantamiento; reincidencia resulta en no renovación de matrícula.
 
-## **Art.18.- Medidas Disciplinarias Aplicables** 
+**Medida 7 - No Renovación de Matrícula:** Establecimiento comunica que no renovará matrícula para periodo siguiente. **Características:** comunicación formal en segundo semestre del año, estudiante finaliza año en curso, acceso a certificados de estudio, derecho a apelar decisión. **Aplica a:** reincidencia grave luego de condicionalidad, conductas gravísimas según evaluación integral.
 
-Las medidas disciplinarias están ordenadas progresivamente de menor a mayor severidad. La selección depende de gravedad de falta, circunstancias personales, y respuesta a intervenciones previas: 
+**Medida 8 - Cancelación de Matrícula (Expulsión):** En casos excepcionales: término inmediato de permanencia en el establecimiento. **Procede en:** violencia severa que causó lesiones, acoso sexual comprobado, porte de armas o comisión de delitos graves, incumplimiento muy grave de condicionalidad, conducta que pone en riesgo inmediato a menores. **Garantías:** evaluación integral, consideración de gravedad, existencia previa de medidas restaurativas, aprobación de Consejo de Profesores, debido proceso, derecho de apelación.
 
-**Medida 1 - Llamado de Atención Verbal:** Es intervención oral inmediata ante conducta inapropiada. **Características:** no genera registro formal en libro de clases, se realiza en el momento por el docente o inspector que presenció, tiene enfoque educativo y preventivo. **Aplica a:** faltas leves menores, primeras conductas inapropiadas, situaciones donde el estudiante claramente no sabía que era inapropiado. 
+## **Art. 19 - Medidas Complementarias a Sanciones Disciplinarias**
 
-**Medida 2 - Anotación Negativa en Libro de Clases:** Registro escrito permanente en hoja de vida del estudiante. **Características:** visible en plataforma digital para apoderados, incluye descripción clara de conducta y contexto, genera comunicación automática a familia, acumula. **Aplica a:** faltas leves confirmadas, repeticiones de conductas menores. Escalada: cinco anotaciones negativas resultan automáticamente en Amonestación Escrita. 
+Todas las sanciones pueden incluir medidas adicionales complementarias: derivación a especialista (psicólogo/a, psicopedagogo/a, médico) según necesidad de estudiante; diseño de Plan de Acompañamiento colaborativo con Orientación, docente jefe, familia; restricciones académicas temporales como no participación en salidas opcionales; modificación temporal de horario escolar para seguimiento más cercano.
 
-**Medida 3 - Amonestación Escrita Formal:** Comunicación oficial formal a apoderado. **Características:** documento oficial archivado en hoja de vida, firma de apoderado como acuse de recibo, se comunica en entrevista con equipo de convivencia, estudiante se compromete formalmente a cambio de conducta. **Aplica a:** acumulación de cinco o más anotaciones negativas, reiteración de faltas leves, faltas graves menores. Si hay reincidencia posterior, se escalada a falta grave. 
+## **Art. 20.- El Debido Proceso**
 
-**Medida 4 - Carta de Compromiso Conductual:** Documento formal reconociendo falta y acordando objetivos de mejora específicos. **Características:** alternativa o complemento a suspensión, objetivos claros y medibles (ej: "No insultar a compañeros por treinta días"), duración determinada entre treinta y sesenta días, seguimiento semanal por profesor jefe mediante reuniones breves, se evalúa cumplimiento. **Aplica a:** faltas graves. **Resultado:** Nota de cumplimiento en hoja de vida o su incumplimiento escala a falta muy grave. 
+Este procedimiento tiene como objetivo garantizar el debido proceso, resguardar los derechos de todos los involucrados y promover la reflexión y el cambio positivo. Se aplica de forma gradual, confidencial y formativa, según la gravedad de la conducta.
 
-**Medida 5: Suspensión Temporal:** Prohibición temporal de asistencia a clases. **Características:** duraciones específicas según gravedad—tres a cinco días hábiles para faltas graves, cuatro a quince días hábiles para faltas muy graves; evaluaciones pendientes se calendariza; acceso a plataforma digital se mantiene; retorno requiere reunión con Coordinador de Convivencia para evaluar disposición genuina al cambio. 
+| **Paso 1: Detección o Denuncia**<br>Acción: Comunicación del hecho a docente, inspector/a<br>o Coordinación de Convivencia.<br>Responsables: Cualquier miembro de la comunidad<br>educativa.<br>Registro: Se documenta fecha, hora, lugar y actores<br>involucrados. | **Paso 2: Acopio de Información Inicial**<br>Acción: Entrevistas breves y separadas a las personas<br>involucradas (víctima, estudiante denunciado, testigos).<br>Garantías:<br><br>Derecho a expresar su versión sin interrupciones.<br><br>Confidencialidad asegurada.<br><br>Se aclara que decir la verdad no conlleva sanción.<br>Documentación: Notas de lo expresado por cada<br>parte. |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Paso 3: Evaluación de Gravedad**<br>Acción: Determinación del tipo de falta: leve, grave,<br>muy grave o gravísima (aula segura) según el Art. 24 al<br>27.                                                                                                        | **Paso 4: Comunicación Preliminar (si falta grave o muy grave)**<br>Acción: Contacto con el apoderado/a para informar situación.<br>Plazo: Dentro de 24 horas desde el conocimiento del hecho.<br>Medios: Llamada telefónica,comunicación escrita o correo                                                                                                                                       |
 
-Si el apoderado se niega a aceptar la sanción, está se realizará de igual manera dejando al alumno en biblioteca del Colegio con trabajo alternativo. 
+- Responsable: Coordinación de Convivencia; consulta electrónico. con Rectoría si es muy grave o gravísima. Contenido: Criterios: Naturaleza de la conducta, reiteración, daño  Descripción objetiva del hecho. causado, intención, edad del estudiante.  Indicación de que se está investigando.  Aviso de futura citación a entrevista.
 
-**Medida 6 - Condicionalidad de Matrícula:** Periodo de observación estricta bajo condiciones especiales. **Características:** documento formal firmado por apoderado, duración determinada (típicamente resto del año escolar o 180 días), restricciones específicas como no poder ser delegado/a, no participación en salidas opcionales, no representación en actividades especiales; seguimiento intensivo con reportes semanales a apoderado. **Resultado:** cumplimiento de condiciones resulta en levantamiento; reincidencia resulta en no renovación de matrícula. 
+- **Paso 5: Investigación Formal Paso 6: Entrevista Disciplinaria (si se aplicará sanción)** Duración: Máximo 10 días hábiles. Participantes: Acciones:  Estudiante.  Entrevistas adicionales si corresponde.  Apoderado/a.  Recopilación de documentos, registros, videos.  Inspector/a, Profesor/a Jefe o Coordinador/a de  Consulta a testigos. Convivencia.  Revisión de antecedentes del estudiante.  Psicólogo/a (si es falta muy grave). Garantías: Contenido:
 
-**Medida 7 - No Renovación de Matrícula:** Establecimiento comunica que no renovará matrícula para periodo siguiente. **Características:** comunicación formal en segundo semestre del año, estudiante finaliza año en curso, acceso a certificados de estudio, derecho a apelar decisión. **Aplica a:** reincidencia grave luego de condicionalidad, conductas gravísimas según evaluación integral. 
+- Respeto a la privacidad.  Presentación clara de hallazgos.  Información compartida solo con personal  Explicación de la conducta y norma vulnerada. necesario.  Espacio para descargos del estudiante.
 
-**Medida 8 - Cancelación de Matrícula (Expulsión):** En casos excepcionales: término inmediato de permanencia en el establecimiento. **Procede en:** violencia severa que causó lesiones, acoso sexual comprobado, porte de armas o comisión de delitos graves, incumplimiento muy grave de condicionalidad, conducta que pone en riesgo inmediato a menores. **Garantías:** evaluación integral, consideración de gravedad, existencia previa de medidas restaurativas, aprobación de Consejo de Profesores, debido proceso, derecho de apelación. 
+- No exposición pública del proceso.  Comunicación de la sanción.  Explicación de derechos de apelación. Duración: 30–45 minutos, en ambiente respetuoso y sin presiones.
 
-## **Art. 19 - Medidas Complementarias a Sanciones Disciplinarias** 
+- **Paso 7: Formalización Escrita de la Sanción Paso 8: Implementación + Seguimiento y Acompañamiento** Acción: Emisión de documento oficial. Acción: Ejecución de la sanción según lo establecido. Contenido: Seguimiento: Coordinación de Convivencia verifica  Identificación del estudiante. cumplimiento.  Descripción de la conducta sancionada. Duración: Período de sanción + mínimo 1 mes posterior.  Acciones:
 
-Todas las sanciones pueden incluir medidas adicionales complementarias: derivación a especialista (psicólogo/a, psicopedagogo/a, médico) según necesidad de estudiante; diseño de Plan de Acompañamiento colaborativo con Orientación, docente jefe, familia; restricciones académicas temporales como no participación en salidas opcionales; modificación temporal de horario escolar para seguimiento más cercano. 
+  - Identificación del estudiante.
 
-## **Art. 20.- El Debido Proceso** 
+  - Descripción de la conducta sancionada.  Fundamentación de la falta (leve, grave, muy grave).
 
-Este procedimiento tiene como objetivo garantizar el debido proceso, resguardar los derechos de todos los involucrados y promover la reflexión y el cambio positivo. Se aplica de forma gradual, confidencial y formativa, según la gravedad de la conducta. 
+  - Reuniones con Profesor/a Jefe (si hubo suspensión).
 
-|**Paso 1: Detección o Denuncia**<br>Acción: Comunicación del hecho a docente, inspector/a<br>o Coordinación de Convivencia.<br>Responsables: Cualquier miembro de la comunidad<br>educativa.<br>Registro: Se documenta fecha, hora, lugar y actores<br>involucrados.|**Paso 2: Acopio de Información Inicial**<br>Acción: Entrevistas breves y separadas a las personas<br>involucradas (víctima, estudiante denunciado, testigos).<br>Garantías:<br><br>Derecho a expresar su versión sin interrupciones.<br><br>Confidencialidad asegurada.<br><br>Se aclara que decir la verdad no conlleva sanción.<br>Documentación: Notas de lo expresado por cada<br>parte.|
-|---|---|
-|**Paso 3: Evaluación de Gravedad**<br>Acción: Determinación del tipo de falta: leve, grave,<br>muy grave o gravísima (aula segura) según el Art. 24 al<br>27.|**Paso 4: Comunicación Preliminar (si falta grave o muy grave)**<br>Acción: Contacto con el apoderado/a para informar situación.<br>Plazo: Dentro de 24 horas desde el conocimiento del hecho.<br>Medios: Llamada telefónica,comunicación escrita o correo|
+  - Informe del Psicólogo/a sobre disposición al cambio.
 
+- Sanción aplicada y condiciones.
 
+  - Evaluación de mejora en conducta general.
 
-- Responsable: Coordinación de Convivencia; consulta electrónico. con Rectoría si es muy grave o gravísima. Contenido: Criterios: Naturaleza de la conducta, reiteración, daño  Descripción objetiva del hecho. causado, intención, edad del estudiante.  Indicación de que se está investigando.  Aviso de futura citación a entrevista. 
+- Derechos de apelación.
 
-- **Paso 5: Investigación Formal Paso 6: Entrevista Disciplinaria (si se aplicará sanción)** Duración: Máximo 10 días hábiles. Participantes: Acciones:  Estudiante.  Entrevistas adicionales si corresponde.  Apoderado/a.  Recopilación de documentos, registros, videos.  Inspector/a, Profesor/a Jefe o Coordinador/a de  Consulta a testigos. Convivencia.  Revisión de antecedentes del estudiante.  Psicólogo/a (si es falta muy grave). Garantías: Contenido: 
+- Firma de Coordinador/a o Inspector/a y Rectoría.
 
-- Respeto a la privacidad.  Presentación clara de hallazgos.  Información compartida solo con personal  Explicación de la conducta y norma vulnerada. necesario.  Espacio para descargos del estudiante. 
+- Solicitud de firma de acuse de recibo al apoderado/a. Entrega: Copia al estudiante y apoderado/a; original archivado en hoja de vida.
 
-- No exposición pública del proceso.  Comunicación de la sanción.  Explicación de derechos de apelación. Duración: 30–45 minutos, en ambiente respetuoso y sin presiones. 
+- Activación de plan de acompañamiento intensivo si es necesario. Objetivo: Verificar si la sanción generó reflexión y cambio positivo.
 
-- **Paso 7: Formalización Escrita de la Sanción Paso 8: Implementación + Seguimiento y Acompañamiento** Acción: Emisión de documento oficial. Acción: Ejecución de la sanción según lo establecido. Contenido: Seguimiento: Coordinación de Convivencia verifica  Identificación del estudiante. cumplimiento.  Descripción de la conducta sancionada. Duración: Período de sanción + mínimo 1 mes posterior.  Acciones: 
+## **Art. 21.- Procedimiento Acelerado en Situaciones de Riesgo Inminente**
 
-   - Identificación del estudiante. 
+Este procedimiento se aplica cuando una conducta representa peligro inmediato y grave para la integridad física o psicológica de algún miembro de la comunidad educativa (por ejemplo, agresión en curso, amenaza directa o porte visible de armas).
 
-   - Descripción de la conducta sancionada.  Fundamentación de la falta (leve, grave, muy grave). 
+## **Acciones inmediatas:**
 
-   - Reuniones con Profesor/a Jefe (si hubo suspensión). 
+- Separación urgente de espacios (agresor y víctima).
 
-   - Informe del Psicólogo/a sobre disposición al cambio. 
+- Llamada a Carabineros si corresponde.
 
-- Sanción aplicada y condiciones. 
+- Notificación inmediata a la Rectoría.
 
-   - Evaluación de mejora en conducta general. 
+- Llamada urgente al apoderado del estudiante involucrado.
 
-- Derechos de apelación. 
+- Atención de emergencia a la víctima si existen lesiones.
 
-- Firma de Coordinador/a o Inspector/a y Rectoría. 
+**Suspensión preventiva:** La Dirección podrá disponer la suspensión preventiva inmediata del estudiante involucrado por un máximo de 10 días hábiles, prorrogable excepcionalmente por otros 5 días, mientras se desarrolla la investigación interna y se garantiza la seguridad de la comunidad.
 
-- Solicitud de firma de acuse de recibo al apoderado/a. Entrega: Copia al estudiante y apoderado/a; original archivado en hoja de vida. 
+**Procedimiento posterior:** Una vez controlado el riesgo, se aplicará el procedimiento regular de investigación y resolución (Artículos siguientes), asegurando el derecho a defensa y apelación.
 
-- Activación de plan de acompañamiento intensivo si es necesario. Objetivo: Verificar si la sanción generó reflexión y cambio positivo. 
+**Denuncia a autoridades:** Si los hechos constituyen delito, la Rectoría deberá realizar la denuncia correspondiente a Carabineros, Fiscalía o Tribunal de Familia, conforme al Código Procesal Penal.
 
-## **Art. 21.- Procedimiento Acelerado en Situaciones de Riesgo Inminente** 
+Toda medida deberá ser documentada y comunicada por escrito al apoderado y al Equipo de Convivencia Escolar.
 
-Este procedimiento se aplica cuando una conducta representa peligro inmediato y grave para la integridad física o psicológica de algún miembro de la comunidad educativa (por ejemplo, agresión en curso, amenaza directa o porte visible de armas). 
+## **Art. 22.- Derecho a Apelación de Medidas Disciplinarias**
 
-## **Acciones inmediatas:** 
+El estudiante y su apoderado tienen derecho a apelación de las medidas disciplinarias adoptadas, solicitando una revisión formal por parte de la Rectoría del colegio. La solicitud de apelación debe presentarse en un
 
-- Separación urgente de espacios (agresor y víctima). 
+plazo no mayor a 24 horas desde la notificación de la sanción. La Rectoría emitirá una respuesta escrita en un plazo máximo de 5 días hábiles, garantizando que el proceso de apelación no suspenda la ejecución de la sanción, salvo en casos excepcionales.
 
-- Llamada a Carabineros si corresponde. 
+## **Art. 23.- Medidas de Reparación**
 
-- Notificación inmediata a la Rectoría. 
+Complementarias a sanciones, buscan que infractor repare daño y desarrolle empatía:
 
-- Llamada urgente al apoderado del estudiante involucrado. 
+## **23.1. Presentación de Disculpas**
 
-- Atención de emergencia a la víctima si existen lesiones. 
+- Privadas: Entre el estudiante, víctima y mediador (mejor para casos de menor impacto)
 
-**Suspensión preventiva:** La Dirección podrá disponer la suspensión preventiva inmediata del estudiante involucrado por un máximo de 10 días hábiles, prorrogable excepcionalmente por otros 5 días, mientras se desarrolla la investigación interna y se garantiza la seguridad de la comunidad. 
+- Semipúblicas: Ante grupo afectado (ej: curso)
 
-**Procedimiento posterior:** Una vez controlado el riesgo, se aplicará el procedimiento regular de investigación y resolución (Artículos siguientes), asegurando el derecho a defensa y apelación. 
+- Públicas: En acto institucional si afectó toda comunidad (muy excepcional)
 
-**Denuncia a autoridades:** Si los hechos constituyen delito, la Rectoría deberá realizar la denuncia correspondiente a Carabineros, Fiscalía o Tribunal de Familia, conforme al Código Procesal Penal. 
+## **23.2. Reposición o Restauración de Bienes**
 
-Toda medida deberá ser documentada y comunicada por escrito al apoderado y al Equipo de Convivencia Escolar. 
+- Si dañó objeto, se repone o repara
 
-## **Art. 22.- Derecho a Apelación de Medidas Disciplinarias** 
+- Si es imposible, estudiante colabora en obtención de reemplazo
 
-El estudiante y su apoderado tienen derecho a apelación de las medidas disciplinarias adoptadas, solicitando una revisión formal por parte de la Rectoría del colegio. La solicitud de apelación debe presentarse en un 
+- Si falta dinero, se coordina con apoderado
 
-plazo no mayor a 24 horas desde la notificación de la sanción. La Rectoría emitirá una respuesta escrita en un plazo máximo de 5 días hábiles, garantizando que el proceso de apelación no suspenda la ejecución de la sanción, salvo en casos excepcionales. 
+## **23.3. Planes de Enmienda**
 
-## **Art. 23.- Medidas de Reparación** 
+- Acuerdos específicos y medibles (ej: "Durante próximos 30 días, seré respetuoso en clase", "Participaré en taller de empatía")
 
-Complementarias a sanciones, buscan que infractor repare daño y desarrolle empatía: 
+- Se evalúa cumplimiento
 
-## **23.1. Presentación de Disculpas** 
+Importancia: Si medida reparativa es iniciativa espontánea antes de intervención formal, se considera circunstancia atenuante para reducir sanción.
 
-- Privadas: Entre el estudiante, víctima y mediador (mejor para casos de menor impacto) 
+## **CAPÍTULO XI: CLASIFICACIÓN DE FALTAS**
 
-- Semipúblicas: Ante grupo afectado (ej: curso) 
+## **Art. 24.- Faltas Leves**
 
-- Públicas: En acto institucional si afectó toda comunidad (muy excepcional) 
+Definición: Comportamientos que alteran la convivencia o el desarrollo normal de actividades, sin causar daño físico o psicológico relevante.
 
-## **23.2. Reposición o Restauración de Bienes** 
+## **Características:**
 
-- Si dañó objeto, se repone o repara 
+- Son frecuentes y menores.
 
-- Si es imposible, estudiante colabora en obtención de reemplazo 
+- No requieren investigación formal.
 
-- Si falta dinero, se coordina con apoderado 
+- Su reiteración puede escalar a medidas disciplinarias aplicadas de manera progresiva y gradual.
 
-## **23.3. Planes de Enmienda** 
+## **Responsables de Aplicación:** Docentes, Inspectores
 
-- Acuerdos específicos y medibles (ej: "Durante próximos 30 días, seré respetuoso en clase", "Participaré en taller de empatía") 
+**Art. 24. BIS. Acumulación de Anotaciones:**
 
-- Se evalúa cumplimiento 
+| Primera acumulación<br>5 anotaciones leves acumuladas.   | Medida: Carta de Amonestación formal y entrevista con apoderado.                                                                                                                                                                                    | Profesor/a jefe         |
+| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| Segunda acumulación:<br>10 anotaciones leves acumuladas. | Medida: Carta de Compromiso Conductual con seguimiento<br>quincenal.                                                                                                                                                                                | Inspector/a             |
+| Tercera acumulación:<br>15 anotaciones leves acumuladas. | Medida: Se considerará una conducta grave, El caso será evaluado<br>por el Equipo de Convivencia y Coordinación de Ciclo, pudiendo<br>derivar a un plan de intervención conductual y medida disciplinaria<br>progresiva y gradual a las anteriores. | Coordinador<br>de Ciclo |
 
-Importancia: Si medida reparativa es iniciativa espontánea antes de intervención formal, se considera circunstancia atenuante para reducir sanción. 
+## **Art. 25.- Faltas Graves**
 
-## **CAPÍTULO XI: CLASIFICACIÓN DE FALTAS** 
+Definición: Conductas que afectan la integridad psicológica o moral de otros, el orden institucional o el bien común; incluyen reiteraciones o agravaciones de faltas leves.
 
-## **Art. 24.- Faltas Leves** 
+## **Características:**
 
-Definición: Comportamientos que alteran la convivencia o el desarrollo normal de actividades, sin causar daño físico o psicológico relevante. 
+- Requieren investigación y citación de apoderado.
 
-## **Características:** 
+- Afectan el clima escolar.
 
-- Son frecuentes y menores. 
+**Responsables:** Coordinación de Ciclo, Dirección de Ciclo
 
-- No requieren investigación formal. 
+## **Art. 26.- Faltas Muy Graves**
 
-- Su reiteración puede escalar a medidas disciplinarias aplicadas de manera progresiva y gradual. 
+Definición: Acciones que dañan gravemente la integridad física o psicológica de otros, el nombre del colegio o su normal funcionamiento; pueden constituir delito.
 
-## **Responsables de Aplicación:** Docentes, Inspectores 
+## **Características:**
 
-**Art. 24. BIS. Acumulación de Anotaciones:** 
+- Requieren investigación exhaustiva.
 
-|Primera acumulación<br>5 anotaciones leves acumuladas.|Medida: Carta de Amonestación formal y entrevista con apoderado.|Profesor/a jefe|
-|---|---|---|
-|Segunda acumulación:<br>10 anotaciones leves acumuladas.|Medida: Carta de Compromiso Conductual con seguimiento<br>quincenal.|Inspector/a|
-|Tercera acumulación:<br>15 anotaciones leves acumuladas.|Medida: Se considerará una conducta grave, El caso será evaluado<br>por el Equipo de Convivencia y Coordinación de Ciclo, pudiendo<br>derivar a un plan de intervención conductual y medida disciplinaria<br>progresiva y gradual a las anteriores.|Coordinador<br>de Ciclo|
+- Pueden implicar denuncia.
 
+- Conllevan sanciones severas.
 
+**Responsables:** Equipo de Convivencia
 
-## **Art. 25.- Faltas Graves** 
+**Garantías:** Se presume inocencia; hay derecho a defensa, información y apelación; se prioriza la protección de derechos.
 
-Definición: Conductas que afectan la integridad psicológica o moral de otros, el orden institucional o el bien común; incluyen reiteraciones o agravaciones de faltas leves. 
+## **Art. 27.- Faltas Gravísimas (Ley N.º 21.128 – Aula Segura)**
 
-## **Características:** 
+Definición: Acciones extremas que vulneran gravemente la integridad física, psicológica o sexual de cualquier miembro de la comunidad, o constituyen delitos, conforme a la Ley Aula Segura y la Ley General de Educación. **Características:**
 
-- Requieren investigación y citación de apoderado. 
+- Riesgo grave o delito.
 
-- Afectan el clima escolar. 
+- Denuncia obligatoria.
 
-**Responsables:** Coordinación de Ciclo, Dirección de Ciclo 
+- Posible expulsión inmediata.
 
-## **Art. 26.- Faltas Muy Graves** 
+## **Procedimiento Acelerado (Ley 21.128):**
 
-Definición: Acciones que dañan gravemente la integridad física o psicológica de otros, el nombre del colegio o su normal funcionamiento; pueden constituir delito. 
+1. Investigación: 24 horas
 
-## **Características:** 
+2. Medidas de protección: separación inmediata, apoyo a víctima
 
-- Requieren investigación exhaustiva. 
+3. Denuncia a autoridades: OBLIGATORIA
 
-- Pueden implicar denuncia. 
+4. Defensa formal: entrevista con garantías plenas
 
-- Conllevan sanciones severas. 
+5. Resolución: Rectoría + Equipo de Convivencia
 
-**Responsables:** Equipo de Convivencia 
+6. Notificación: con sanciones y vías de apelación
 
-**Garantías:** Se presume inocencia; hay derecho a defensa, información y apelación; se prioriza la protección de derechos. 
+7. Apelación: 48 horas; respuesta 5 días hábiles
 
-## **Art. 27.- Faltas Gravísimas (Ley N.º 21.128 – Aula Segura)** 
+**Responsables:** Rectoría del Establecimiento
 
-Definición: Acciones extremas que vulneran gravemente la integridad física, psicológica o sexual de cualquier miembro de la comunidad, o constituyen delitos, conforme a la Ley Aula Segura y la Ley General de Educación. **Características:** 
+## **Art. 28.- Procedimiento para Clasificación de Faltas**
 
-- Riesgo grave o delito. 
+Responsable: Equipo directivo y Coordinador de Convivencia.
 
-- Denuncia obligatoria. 
+Criterios:
 
-- Posible expulsión inmediata. 
+- Naturaleza de conducta (¿daña físico, psicológico, moral?)
 
-## **Procedimiento Acelerado (Ley 21.128):** 
+- Intención (¿fue dolo o negligencia?)
 
-1. Investigación: 24 horas 
+- Reiteración (¿es primera vez o reiterada?)
 
-2. Medidas de protección: separación inmediata, apoyo a víctima 
+- Daño causado (¿menor, significativo, grave?)
 
-3. Denuncia a autoridades: OBLIGATORIA 
+- Edad y madurez del estudiante
 
-4. Defensa formal: entrevista con garantías plenas 
+- Circunstancias atenuantes/agravantes
 
-5. Resolución: Rectoría + Equipo de Convivencia 
+Documentación: Se deja registro escrito de clasificación con fundamentación
 
-6. Notificación: con sanciones y vías de apelación 
+**Art. 28. BIS.-** Si los que cometieran la falta fueran alumnos de 4to medio, considerando las atenuantes y agravantes podrían ser suspendidos de la Ceremonia de Licenciatura. Dentro de lo que se considerará será: manipulación y/o utilización de extintores, negarse a cumplir con los horarios establecidos de sus clases, evadir o no asistir a clases, ocasionar desorden que impida el normal desarrollo de las actividades del resto del alumnado (toque de timbre o campana no autorizado), salir por las ventanas al exterior del colegio (salas 2° y 3° piso hacia Freire), o cualquier acción que atente a su integridad o de otros miembros de la comunidad educativa.
 
-7. Apelación: 48 horas; respuesta 5 días hábiles 
+|              |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |                                               |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| TIPIFICACIÓN | CONDUCTAS TIPIFICADAS<br>(ACCIONES U OMISIONES OBSERVABLES)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | MEDIDAS FORMATIVAS Y DISCIPLINARIAS APLICABLES                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | RESPONSABLE DE<br>APLICACIÓN                  |
+| LEVE         | 1.<br>Llegar atrasado(a) al inicio de la jornada escolar o después de los recreos, sin<br>justificación.<br>2.<br>Asistir al establecimiento sin uniforme o con uniforme incompleto, sin<br>autorización previa.<br>3.<br>Presentar deficiencia en la higiene o presentación personal.<br>4.<br>Asistir sin la agenda escolar correspondiente.<br>5.<br>No entregar circulares, comunicados o evaluaciones firmadas por el apoderado/a<br>dentro del plazo establecido.<br>6.<br>Depositar basura o desperdicios fuera de los lugares habilitados.<br>7.<br>No justificar inasistencias ante el establecimiento dentro del tiempo indicado.<br>8.<br>Interrumpir el desarrollo normal de clases, actos o actividades institucionales<br>mediante conversaciones, risas o movimientos innecesarios.<br>9.<br>No entregar trabajos, tareas o evaluaciones en la fecha indicada.<br>10. Asistir a clases sin materiales o sin las tareas requeridas.<br>11. Comer dentro del aula sin autorización.<br>12. Usar objetos que no sean necesarios para la actividad pedagógica y que<br>interfieran en el desarrollo de la clase.<br>13. Utilizar pertenencias de otros sin consentimiento.<br>14. Demostrar afecto físico inapropiado para el contexto educativo (besos, caricias,<br>sentarse sobre otro estudiante, ocultarse para besarse, etc.).<br>15. No devolver materiales o libros a la biblioteca en el plazo acordado. | **Medidas Formativas**<br>• Diálogo formativo individual<br>• Reflexión escrita o verbal<br>• Compromiso personal de mejora (máx. 30 días)<br>**Medidas Disciplinarias**<br>• Llamado de atención verbal<br>• Anotación en libro de clases (si persiste)                                                                                                                                                                                                                                                                                                                                                                                                                                 | Docente / Inspectoría                         |
+| GRAVE        | 1.<br>Faltar a la verdad u ocultar información relevante en el contexto escolar.<br>2.<br>Participar o promover disturbios en el establecimiento, de forma presencial o<br>virtual.<br>3.<br>Utilizar lenguaje ofensivo o vulgar dentro o fuera del colegio, cuando se<br>representa a la institución.<br>4.<br>Faltar el respeto a integrantes de la comunidad educativa mediante palabras,<br>gestos o actitudes despectivas.<br>5.<br>Agredir física o verbalmente a otra persona (empujones, insultos, gestos<br>ofensivos, etc.).<br>6.<br>Copiar, facilitar o difundir información durante evaluaciones; plagiar trabajos o<br>sustraer información académica.<br>7.<br>Ausentarse de clases sin autorización mientras se encuentra en el<br>establecimiento.<br>8.<br>Realizar colectas, ventas o solicitudes de dinero sin autorización institucional.<br>9.<br>Usar el teléfono celular dentro del aula sin autorización del docente.                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | **Medidas Formativas**<br> Entrevista reflexiva con equipo de convivencia: 45-60<br>minutos con pauta estructurada y acta firmada.<br> Carta de Compromiso Conductual: documento con<br>compromisos concretos, plazo máximo de 30 días.<br> Reparación simbólica o material del daño: disculpa<br>pública, restitución o acción comunitaria.<br> Talleres de habilidades socioemocionales: sesiones<br>sobre empatía, control emocional o resolución de<br>conflictos.<br>**Medidas Disciplinarias**<br> Carta de Amonestación Formal.<br> Suspensión temporal de 3 a 5 días hábiles, según la<br>gravedad y reincidencia.<br> Citación al apoderado para seguimiento conductual. | Coordinación de ciclo<br>/ Dirección de ciclo |
+| MUY GRAVE    | 1.<br>Falsificar o adulterar firmas en documentos institucionales.<br>2.<br>Dañar, ocultar o destruir bienes del colegio o de cualquier integrante de la<br>comunidad educativa.<br>3.<br>Participar en riñas dentro o fuera del establecimiento, cuando se representa al<br>colegio.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | **Medidas Formativas**<br> Plan de Intervención Personalizado (PIP): objetivos<br>conductuales, acompañamiento psicosocial y plazos<br>definidos.<br> Acompañamiento Psicosocial Intensivo: entre 6 y 8                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Equipo de<br>Convivencia                      |
 
-**Responsables:** Rectoría del Establecimiento 
+|                                           |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |                                                                       |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+|                                           | 4.<br>Abandonar clases o salir del establecimiento sin autorización.<br>5.<br>Promover, poseer o difundir material pornográfico o de connotación sexual.<br>6.<br>Falsificar documentos oficiales del colegio (libros, certificados, informes, etc.).<br>7.<br>Impedir el acceso o funcionamiento normal del establecimiento mediante<br>acciones deliberadas.<br>8.<br>Grabar o divulgar imágenes, videos o audios que afecten la dignidad, privacidad<br>o reputación de una persona.<br>9.<br>Discriminar a miembros de la comunidad educativa por condición social, origen,<br>género, orientación sexual, religión, discapacidad u otros factores.<br>10. Ejercer violencia física o psicológica contra cualquier integrante de la comunidad<br>educativa.<br>11. Amenazar, hostigar o difamar a otros a través de mensajes, publicaciones o<br>plataformas digitales, incluyendo el uso de inteligencia artificial para dañar la<br>imagen de terceros (_deepfake, doxxing_).<br>12. Participar en actos de acoso escolar o_bullying_; estas conductas serán derivadas<br>al protocolo correspondiente.                                                                                                                           | sesiones con psicólogo/a del establecimiento o<br>externo.<br> Mediación Restaurativa Supervisada: encuentro<br>voluntario con facilitador capacitado, con acuerdo<br>formal.<br> Derivación a programa externo: OLN, u otro servicio<br>acreditado, con registro y seguimiento.<br>**Medidas Disciplinarias**<br> Reposición o reparación del daño material según<br>Contrato de Prestación de Servicio.<br> Suspensión temporal de 4 a 5 días hábiles.<br> Condicionalidad de matrícula por reiteración o<br>gravedad.<br> No renovación de matrícula para el año siguiente, en<br>casos de reincidencia grave.                                                                                                                                                                                                                                                    |                                                                       |
+| AULA SEGURA LEY<br>21.128<br>(GRAVÍSIMAS) | 1.<br>Ejercer violencia física en contra de cualquier integrante de la comunidad<br>educativa.<br>2.<br>Lanzar objetos o líquidos desde el edificio del establecimiento, al interior o<br>exterior del Colegio, debiendo responder por los daños a terceros o afectación<br>provocada.<br>3.<br>Portar, usar o suministrar cualquier tipo de armas, artefactos explosivos real o<br>que simula ser real, gas pimienta, productos químicos, encender fuego en<br>cualquiera de sus formas (aerosoles, solventes, combustible, desodorante) o la<br>simulación de este a través de la generación de humo o ruido alterando el<br>normal funcionamiento dentro del Establecimiento, etc.<br>4.<br>Distribuir, comercializar, portar o consumir tabaco, cigarrillo electrónico u otro<br>dispositivo similar, bebidas alcohólicas, drogas, sustancias ilícitas o fármacos<br>psicotrópicos sin la debida prescripción médica, ya sea al interior del<br>establecimiento educacional o en actividades organizadas, coordinadas,<br>patrocinadas o supervisadas por éste, así como encontrarse bajo los efectos de<br>cualquiera de las sustancias mencionadas.<br>5.<br>Realizar actos constitutivos de abuso o acoso de connotación sexual. | **Medidas Formativas**<br> Derecho a defensa y apelación garantizado.<br> Plan de acompañamiento psicosocial inmediato:<br>atención individual a agresor y víctima, evaluación de<br>riesgo.<br> Derivación obligatoria a redes externas ( OLN, Fiscalía,<br>Tribunal de Familia) según la gravedad del hecho.<br> Taller obligatorio de control emocional o prevención<br>de violencia: 3-4 sesiones supervisadas.<br> Plan de Reintegración Educativa: gestión de<br>continuidad escolar si se aplica expulsión.<br>**Medidas Disciplinarias**<br> Suspensión preventiva inmediata mientras se<br>desarrolla la investigación interna.<br> Cancelación o expulsión de matrícula, de acuerdo con<br>el procedimiento establecido en la Ley N.º 21.128 y<br>artículos 16 D y 16 E de la Ley General de Educación,<br>garantizando el derecho a defensa y apelación. | Rectoría del<br>establecimiento /<br>Equipo de<br>Convivencia Escolar |
 
-## **Art. 28.- Procedimiento para Clasificación de Faltas** 
+## **CAPÍTULO XII: NORMAS DE CONVIVENCIA EN CONTEXTOS ESPECÍFICOS**
 
-Responsable: Equipo directivo y Coordinador de Convivencia. 
+## **Art. 29.- Normas en Recreos y Espacios Comunes**
 
-Criterios: 
+- Estudiantes respetarán límites de áreas asignadas para juegos
 
-- Naturaleza de conducta (¿daña físico, psicológico, moral?) 
+- Se prohíbe jugar con balones en pasillos, salas o zonas de riesgo (sólo en patio)
 
-- Intención (¿fue dolo o negligencia?) 
+- Se acatarán normas de seguridad establecidas por inspectoría (no correr en escaleras, no jugar en escaleras, etc.)
 
-- Reiteración (¿es primera vez o reiterada?) 
+- Se respetarán horarios de uso de espacios (ej: gimnasio sólo en Educación Física programada)
 
-- Daño causado (¿menor, significativo, grave?) 
+- Se evitarán conductas violentas de juego o que expongan a riesgo
 
-- Edad y madurez del estudiante 
+- Se respetará material y equipamiento disponible
 
-- Circunstancias atenuantes/agravantes 
+- En caso de conflicto, se informará inmediatamente a inspector
 
-Documentación: Se deja registro escrito de clasificación con fundamentación 
+## **Art. 30.- Normas en Sala de Clases**
 
-**Art. 28. BIS.-** Si los que cometieran la falta fueran alumnos de 4to medio, considerando las atenuantes y agravantes podrían ser suspendidos de la Ceremonia de Licenciatura. Dentro de lo que se considerará será: manipulación y/o utilización de extintores, negarse a cumplir con los horarios establecidos de sus clases, evadir o no asistir a clases, ocasionar desorden que impida el normal desarrollo de las actividades del resto del alumnado (toque de timbre o campana no autorizado), salir por las ventanas al exterior del colegio (salas 2° y 3° piso hacia Freire), o cualquier acción que atente a su integridad o de otros miembros de la comunidad educativa. 
+La sala es espacio de aprendizaje que requiere concentración:
 
-|||||
-|---|---|---|---|
-|TIPIFICACIÓN|CONDUCTAS TIPIFICADAS<br>(ACCIONES U OMISIONES OBSERVABLES)|MEDIDAS FORMATIVAS Y DISCIPLINARIAS APLICABLES|RESPONSABLE DE<br>APLICACIÓN|
-|LEVE|1.<br>Llegar atrasado(a) al inicio de la jornada escolar o después de los recreos, sin<br>justificación.<br>2.<br>Asistir al establecimiento sin uniforme o con uniforme incompleto, sin<br>autorización previa.<br>3.<br>Presentar deficiencia en la higiene o presentación personal.<br>4.<br>Asistir sin la agenda escolar correspondiente.<br>5.<br>No entregar circulares, comunicados o evaluaciones firmadas por el apoderado/a<br>dentro del plazo establecido.<br>6.<br>Depositar basura o desperdicios fuera de los lugares habilitados.<br>7.<br>No justificar inasistencias ante el establecimiento dentro del tiempo indicado.<br>8.<br>Interrumpir el desarrollo normal de clases, actos o actividades institucionales<br>mediante conversaciones, risas o movimientos innecesarios.<br>9.<br>No entregar trabajos, tareas o evaluaciones en la fecha indicada.<br>10. Asistir a clases sin materiales o sin las tareas requeridas.<br>11. Comer dentro del aula sin autorización.<br>12. Usar objetos que no sean necesarios para la actividad pedagógica y que<br>interfieran en el desarrollo de la clase.<br>13. Utilizar pertenencias de otros sin consentimiento.<br>14. Demostrar afecto físico inapropiado para el contexto educativo (besos, caricias,<br>sentarse sobre otro estudiante, ocultarse para besarse, etc.).<br>15. No devolver materiales o libros a la biblioteca en el plazo acordado.|**Medidas Formativas**<br>• Diálogo formativo individual<br>• Reflexión escrita o verbal<br>• Compromiso personal de mejora (máx. 30 días)<br>**Medidas Disciplinarias**<br>• Llamado de atención verbal<br>• Anotación en libro de clases (si persiste)|Docente / Inspectoría|
-|GRAVE|1.<br>Faltar a la verdad u ocultar información relevante en el contexto escolar.<br>2.<br>Participar o promover disturbios en el establecimiento, de forma presencial o<br>virtual.<br>3.<br>Utilizar lenguaje ofensivo o vulgar dentro o fuera del colegio, cuando se<br>representa a la institución.<br>4.<br>Faltar el respeto a integrantes de la comunidad educativa mediante palabras,<br>gestos o actitudes despectivas.<br>5.<br>Agredir física o verbalmente a otra persona (empujones, insultos, gestos<br>ofensivos, etc.).<br>6.<br>Copiar, facilitar o difundir información durante evaluaciones; plagiar trabajos o<br>sustraer información académica.<br>7.<br>Ausentarse de clases sin autorización mientras se encuentra en el<br>establecimiento.<br>8.<br>Realizar colectas, ventas o solicitudes de dinero sin autorización institucional.<br>9.<br>Usar el teléfono celular dentro del aula sin autorización del docente.|**Medidas Formativas**<br> Entrevista reflexiva con equipo de convivencia: 45-60<br>minutos con pauta estructurada y acta firmada.<br> Carta de Compromiso Conductual: documento con<br>compromisos concretos, plazo máximo de 30 días.<br> Reparación simbólica o material del daño: disculpa<br>pública, restitución o acción comunitaria.<br> Talleres de habilidades socioemocionales: sesiones<br>sobre empatía, control emocional o resolución de<br>conflictos.<br>**Medidas Disciplinarias**<br> Carta de Amonestación Formal.<br> Suspensión temporal de 3 a 5 días hábiles, según la<br>gravedad y reincidencia.<br> Citación al apoderado para seguimiento conductual.|Coordinación de ciclo<br>/ Dirección de ciclo|
-|MUY GRAVE|1.<br>Falsificar o adulterar firmas en documentos institucionales.<br>2.<br>Dañar, ocultar o destruir bienes del colegio o de cualquier integrante de la<br>comunidad educativa.<br>3.<br>Participar en riñas dentro o fuera del establecimiento, cuando se representa al<br>colegio.|**Medidas Formativas**<br> Plan de Intervención Personalizado (PIP): objetivos<br>conductuales, acompañamiento psicosocial y plazos<br>definidos.<br> Acompañamiento Psicosocial Intensivo: entre 6 y 8|Equipo de<br>Convivencia|
+- Ambiente propicio: Mantener silencio cuando lo indica docente, evitar distracciones
 
+- Respeto al turno de palabra: No interrumpir a docente o compañeros
 
+- No usar celulares dentro del aula.
 
-|||||
-|---|---|---|---|
-||4.<br>Abandonar clases o salir del establecimiento sin autorización.<br>5.<br>Promover, poseer o difundir material pornográfico o de connotación sexual.<br>6.<br>Falsificar documentos oficiales del colegio (libros, certificados, informes, etc.).<br>7.<br>Impedir el acceso o funcionamiento normal del establecimiento mediante<br>acciones deliberadas.<br>8.<br>Grabar o divulgar imágenes, videos o audios que afecten la dignidad, privacidad<br>o reputación de una persona.<br>9.<br>Discriminar a miembros de la comunidad educativa por condición social, origen,<br>género, orientación sexual, religión, discapacidad u otros factores.<br>10. Ejercer violencia física o psicológica contra cualquier integrante de la comunidad<br>educativa.<br>11. Amenazar, hostigar o difamar a otros a través de mensajes, publicaciones o<br>plataformas digitales, incluyendo el uso de inteligencia artificial para dañar la<br>imagen de terceros (_deepfake, doxxing_).<br>12. Participar en actos de acoso escolar o_bullying_; estas conductas serán derivadas<br>al protocolo correspondiente.|sesiones con psicólogo/a del establecimiento o<br>externo.<br> Mediación Restaurativa Supervisada: encuentro<br>voluntario con facilitador capacitado, con acuerdo<br>formal.<br> Derivación a programa externo:  OLN, u otro servicio<br>acreditado, con registro y seguimiento.<br>**Medidas Disciplinarias**<br> Reposición o reparación del daño material según<br>Contrato de Prestación de Servicio.<br> Suspensión temporal de 4 a 5 días hábiles.<br> Condicionalidad de matrícula por reiteración o<br>gravedad.<br> No renovación de matrícula para el año siguiente, en<br>casos de reincidencia grave.||
-|AULA SEGURA LEY<br>21.128<br>(GRAVÍSIMAS)|1.<br>Ejercer violencia física en contra de cualquier integrante de la comunidad<br>educativa.<br>2.<br>Lanzar objetos o líquidos desde el edificio del establecimiento, al interior o<br>exterior del Colegio, debiendo responder por los daños a terceros o afectación<br>provocada.<br>3.<br>Portar, usar o suministrar cualquier tipo de armas, artefactos explosivos real o<br>que simula ser real, gas pimienta, productos químicos, encender fuego en<br>cualquiera de sus formas (aerosoles, solventes, combustible, desodorante) o la<br>simulación de este a través de la generación de humo o ruido alterando el<br>normal funcionamiento dentro del Establecimiento, etc.<br>4.<br>Distribuir, comercializar, portar o consumir tabaco, cigarrillo electrónico u otro<br>dispositivo similar, bebidas alcohólicas, drogas, sustancias ilícitas o fármacos<br>psicotrópicos sin la debida prescripción médica, ya sea al interior del<br>establecimiento educacional o en actividades organizadas, coordinadas,<br>patrocinadas o supervisadas por éste, así como encontrarse bajo los efectos de<br>cualquiera de las sustancias mencionadas.<br>5.<br>Realizar actos constitutivos de abuso o acoso de connotación sexual.|**Medidas Formativas**<br> Derecho a defensa y apelación garantizado.<br> Plan de acompañamiento psicosocial inmediato:<br>atención individual a agresor y víctima, evaluación de<br>riesgo.<br> Derivación obligatoria a redes externas ( OLN, Fiscalía,<br>Tribunal de Familia) según la gravedad del hecho.<br> Taller obligatorio de control emocional o prevención<br>de violencia: 3-4 sesiones supervisadas.<br> Plan de Reintegración Educativa: gestión de<br>continuidad escolar si se aplica expulsión.<br>**Medidas Disciplinarias**<br> Suspensión preventiva inmediata mientras se<br>desarrolla la investigación interna.<br> Cancelación o expulsión de matrícula, de acuerdo con<br>el procedimiento establecido en la Ley N.º 21.128 y<br>artículos 16 D y 16 E de la Ley General de Educación,<br>garantizando el derecho a defensa y apelación.|Rectoría del<br>establecimiento /<br>Equipo de<br>Convivencia Escolar|
+- Normas de aula específicas: Profesor establece normas particulares de su clase (ej: pedir permiso para levantarse, entregar tareas en horario fijo, etc.), consideradas parte de este Reglamento
 
+- Retiro temporal reflexivo: Cuando un estudiante mantenga actitudes que distraigan a sus compañeros, incluso después de recibir una corrección verbal:
 
+  - El docente solicitará su retiro temporal de la sala.
 
-## **CAPÍTULO XII: NORMAS DE CONVIVENCIA EN CONTEXTOS ESPECÍFICOS** 
+  - El estudiante deberá dirigirse a Inspectoría o Coordinación de ciclo.
 
-## **Art. 29.- Normas en Recreos y Espacios Comunes** 
+  - Se registrará el incidente en el libro de clases o sistema institucional.
 
-- Estudiantes respetarán límites de áreas asignadas para juegos 
+  - El estudiante realizará una instancia de reflexión acompañada en Inspectoría o Coordinación de ciclo.
 
-- Se prohíbe jugar con balones en pasillos, salas o zonas de riesgo (sólo en patio) 
+  - Se efectuará la comunicación correspondiente al apoderado.
 
-- Se acatarán normas de seguridad establecidas por inspectoría (no correr en escaleras, no jugar en escaleras, etc.) 
+## **Art. 31.- Normas en Laboratorios y Espacios Especializados**
 
-- Se respetarán horarios de uso de espacios (ej: gimnasio sólo en Educación Física programada) 
+- Supervisión obligatoria: Estudiantes asisten con supervisor presente (docente, asistente)
 
-- Se evitarán conductas violentas de juego o que expongan a riesgo 
+- Protocolos de seguridad: Se seguirán instrucciones específicas de uso de equipamiento
 
-- Se respetará material y equipamiento disponible 
+- Elementos de protección: Se usarán mandiles, gafas, guantes según indicación
 
-- En caso de conflicto, se informará inmediatamente a inspector 
+- Reporte de incidentes: Cualquier rotura, accidente o uso inadecuado se reportará de inmediato
 
-## **Art. 30.- Normas en Sala de Clases** 
+- Prohibición de conductas de riesgo: No mezclar sustancias sin autorización, no correr, no jugar, no distraer
 
-La sala es espacio de aprendizaje que requiere concentración: 
+## **Art. 32.- Normas de Uniforme y Presentación Personal**
 
-- Ambiente propicio: Mantener silencio cuando lo indica docente, evitar distracciones 
+- Uniforme oficial completo: Asistencia con uniforme institucional en días de clase regular
 
-- Respeto al turno de palabra: No interrumpir a docente o compañeros 
+- Uniforme deportivo: Educación Física o actividades específicas
 
-- No usar celulares dentro del aula. 
+- Presentación aseada: Cabello corto para los varones (que no sobrepase el cuello de la camisa), peinado, manos limpias, uñas cortadas, sin accesorios excesivos
 
-- Normas de aula específicas: Profesor establece normas particulares de su clase (ej: pedir permiso para levantarse, entregar tareas en horario fijo, etc.), consideradas parte de este Reglamento 
+- Prohibición de elementos llamativos: No peinados extravagantes, maquillaje excesivo, piercing, expansores, accesorios que no sean discretos
 
-- Retiro temporal reflexivo: Cuando un estudiante mantenga actitudes que distraigan a sus compañeros, incluso después de recibir una corrección verbal: 
+- Flexibilización: Rector puede autorizar excepciones (ej: tratamientos médicos capilares, expresión de género)
 
-   - El docente solicitará su retiro temporal de la sala. 
+## **Art. 33.- Normas de Uso de Dispositivos Electrónicos**
 
-   - El estudiante deberá dirigirse a Inspectoría o Coordinación de ciclo. 
+- Queda prohibido el uso de celulares y tablets personales.
 
-   - Se registrará el incidente en el libro de clases o sistema institucional. 
+- Retención: Pueden ser retenidos por docente y/o inspectora si uso indebido; devueltos al finalizar jornada o a apoderado en reincidencia
 
-   - El estudiante realizará una instancia de reflexión acompañada en Inspectoría o Coordinación de ciclo. 
+- Prohibición de grabación: Se prohíbe grabar, fotografiar, registrar a miembros de comunidad sin consentimiento informado
 
-   - Se efectuará la comunicación correspondiente al apoderado. 
+- Prohibición de contenido inapropiado: Se prohíbe compartir contenido ofensivo, íntimo, que vulnere privacidad (ciberacoso)
 
-## **Art. 31.- Normas en Laboratorios y Espacios Especializados** 
+## **CAPÍTULO XIII: DERECHOS Y DEBERES DE PADRES Y APODERADOS Art. 34.- Derechos de Padres y Apoderados**
 
-- Supervisión obligatoria: Estudiantes asisten con supervisor presente (docente, asistente) 
+| **Derecho**                     | **Descripción Ampliada**                                                                                                                                                                    |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Información Oportuna y<br>Clara | Recibir información veraz, completa y oportuna sobre desempeño académico y conducta de su<br>hijo/a. Derecho a acceder a calificaciones,reportes de convivencia,resultados de evaluaciones. |
 
-- Protocolos de seguridad: Se seguirán instrucciones específicas de uso de equipamiento 
+| Acceso a Documentación<br>Normativa        | Conocer y comprender Reglamento Interno, protocolos de actuación, políticas institucionales.<br>Acceso en formato físico o digital.                                 |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Ser Escuchado y<br>Participar              | Participar en reuniones sobre situación de su hijo/a. Perspectivas expresar sin temor a represalias.<br>Ser considerado en decisiones sobre medidas disciplinarias. |
+| Asesoramiento y<br>Orientación             | Recibir asesoramiento académico sobre opciones de estudio, orientación formativa, apoyo en<br>momentos de dificultad del estudiante.                                |
+| Participación en<br>Instancias de Decisión | Participar en Centro de Padres, Directiva de Curso. Tener voz en decisiones que afecten<br>comunidad.                                                               |
+| Apelación de Decisiones                    | Apelar decisiones disciplinarias que considere injustas o desproporcionadas mediante<br>procedimiento establecido.                                                  |
+| Información de Cambios                     | Ser informado anticipadamente de cambios en horarios, suspensiones, eventos especiales,<br>modificaciones curriculares.                                             |
 
-- Elementos de protección: Se usarán mandiles, gafas, guantes según indicación 
+**Art. 35.- Deberes de Padres y Apoderados**
 
-- Reporte de incidentes: Cualquier rotura, accidente o uso inadecuado se reportará de inmediato 
+| **Deber**                             | **Descripción Ampliada**                                                                                                                               |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Conocer y Hacer Cumplir<br>Reglamento | Leer Reglamento Interno completamente. Velar que su hijo/a lo respete. Reforzar normas en<br>casa.                                                     |
+| Brindar Trato Digno a<br>Comunidad    | Tratar con respeto a todos miembros: docentes, asistentes, otros apoderados, estudiantes. No<br>agresiones verbales,amenazas,o conductas inapropiadas. |
+| Asistir a Reuniones<br>Convocadas     | Asistencia a entrevista presenciales y reuniones de apoderados es obligación. Si es imposible<br>asistir,debejustificar su inasistencia.               |
+| Justificar Inasistencias              | Justificar inasistencias de su hijo/a mediante formulario o nota, dentro de plazo establecido.<br>Sinjustificación, genera falta.                      |
+| Apoyar Labor Educativa                | Colaborar con colegio en labores formativas y disciplinarias. Reforzar en casa lo enseñado en<br>clase. Apoyar hijo/a académicamente.                  |
+| Responsabilidad Material              | Responder por daños intencionales causados por su hijo/a. Pagar reposición de bienes dañados<br>deliberadamente.                                       |
+| Mantener Datos<br>Actualizados        | Informar cambios de teléfono, correo, domicilio. Actualizar datos regularmente.                                                                        |
+| Supervisión Regular                   | Revisarperiódicamente agendayweb consultapersonal. Conversar con hijo/a sobre su día.                                                                  |
+| Respetar Autonomía<br>Profesional     | Respetar decisiones pedagógicas de docentes. No interferir indebidamente en procesos<br>académicos.                                                    |
+| Buena Fe en<br>Procedimientos         | Evitar quejas infundadas. Agotar canales internos antes de acudir a autoridades externas.<br>Comunicarse con respetoyconstructividad.                  |
 
-- Prohibición de conductas de riesgo: No mezclar sustancias sin autorización, no correr, no jugar, no distraer 
+## **Art. 36.- Formas de Comunicación Oficial**
 
-## **Art. 32.- Normas de Uniforme y Presentación Personal** 
+El colegio utilizará canales oficiales:
 
-- Uniforme oficial completo: Asistencia con uniforme institucional en días de clase regular 
+| **Medio**             | **Uso Principal**                                     |
+| --------------------- | ----------------------------------------------------- |
+| Agenda Escolar        | Comunicaciones de rutina,calificaciones,recordatorios |
+| Comunicados Impresos  | Asuntosque afectan a toda comunidad,circulares        |
+| Correo Electrónico    | Información importante,documentación oficial          |
+| Teléfono              | Comunicaciones urgentes,situaciones de riesgo         |
+| Entrevista Presencial | Monitoreo,asuntos diversos,decisiones significativas  |
 
-- Uniforme deportivo:  Educación Física o actividades específicas 
+## **CAPÍTULO XIV: SANCIONES A PADRES Y APODERADOS Art. 37.- Faltas Leves del Apoderado**
 
-- Presentación aseada: Cabello corto para los varones (que no sobrepase el cuello de la camisa), peinado, manos limpias, uñas cortadas, sin accesorios excesivos 
+Ejemplos:
 
-- Prohibición de elementos llamativos: No peinados extravagantes, maquillaje excesivo, piercing, expansores, accesorios que no sean discretos 
+- No asistir a reunión sin aviso previo
 
-- Flexibilización: Rector puede autorizar excepciones (ej: tratamientos médicos capilares, expresión de género) 
+- No justificar inasistencias del alumno oportunamente
 
-## **Art. 33.- Normas de Uso de Dispositivos Electrónicos** 
+- Demoras reiteradas en pagos administrativos
 
-- Queda prohibido el uso de celulares y tablets personales. 
+- Comunicación irrespetuosa menor o inapropiada en redes
 
-- Retención: Pueden ser retenidos por docente y/o inspectora si uso indebido; devueltos al finalizar jornada o a apoderado en reincidencia 
+## Medidas:
 
-- Prohibición de grabación: Se prohíbe grabar, fotografiar, registrar a miembros de comunidad sin consentimiento informado 
+- Recordatorio o advertencia verbal
 
-- Prohibición de contenido inapropiado: Se prohíbe compartir contenido ofensivo, íntimo, que vulnere privacidad (ciberacoso) 
+- Notificación escrita dejando constancia de incumplimiento
 
-## **CAPÍTULO XIII: DERECHOS Y DEBERES DE PADRES Y APODERADOS Art. 34.- Derechos de Padres y Apoderados** 
+## **Art. 38.- Faltas Graves del Apoderado**
 
-|**Derecho**|**Descripción Ampliada**|
-|---|---|
-|Información Oportuna y<br>Clara|Recibir información veraz, completa y oportuna sobre desempeño académico y conducta de su<br>hijo/a. Derecho a acceder a calificaciones,reportes de convivencia,resultados de evaluaciones.|
+Ejemplos:
 
+- Faltar el respeto directo a docente o directivo en reunión (insultos, tono agresivo)
 
+- Conducta agresiva verbal en dependencias del colegio
 
-|Acceso a Documentación<br>Normativa|Conocer y comprender Reglamento Interno, protocolos de actuación, políticas institucionales.<br>Acceso en formato físico o digital.|
-|---|---|
-|Ser Escuchado y<br>Participar|Participar en reuniones sobre situación de su hijo/a. Perspectivas expresar sin temor a represalias.<br>Ser considerado en decisiones sobre medidas disciplinarias.|
-|Asesoramiento y<br>Orientación|Recibir asesoramiento académico sobre opciones de estudio, orientación formativa, apoyo en<br>momentos de dificultad del estudiante.|
-|Participación en<br>Instancias de Decisión|Participar en Centro de Padres, Directiva de Curso. Tener voz en decisiones que afecten<br>comunidad.|
-|Apelación de Decisiones|Apelar decisiones disciplinarias que considere injustas o desproporcionadas mediante<br>procedimiento establecido.|
-|Información de Cambios|Ser informado anticipadamente de cambios en horarios, suspensiones, eventos especiales,<br>modificaciones curriculares.|
+- Incumplimiento grave y reiterado de deberes como apoderado
 
+- Interferencia que socava autoridad pedagógica ante estudiantes
 
+Medidas:
 
-**Art. 35.- Deberes de Padres y Apoderados** 
+- Carta de advertencia formal de Rectoría, describiendo hecho y solicitando reformule actitud bajo apercibimiento de medidas mayores
 
-|**Deber**|**Descripción Ampliada**|
-|---|---|
-|Conocer y Hacer Cumplir<br>Reglamento|Leer Reglamento Interno completamente. Velar que su hijo/a lo respete. Reforzar normas en<br>casa.|
-|Brindar Trato Digno a<br>Comunidad|Tratar con respeto a todos miembros: docentes, asistentes, otros apoderados, estudiantes. No<br>agresiones verbales,amenazas,o conductas inapropiadas.|
-|Asistir a Reuniones<br>Convocadas|Asistencia a entrevista presenciales y reuniones de apoderados es obligación. Si es imposible<br>asistir,debejustificar su inasistencia.|
-|Justificar Inasistencias|Justificar inasistencias de su hijo/a mediante formulario o nota, dentro de plazo establecido.<br>Sinjustificación, genera falta.|
-|Apoyar Labor Educativa|Colaborar con colegio en labores formativas y disciplinarias. Reforzar en casa lo enseñado en<br>clase. Apoyar hijo/a académicamente.|
-|Responsabilidad Material|Responder por daños intencionales causados por su hijo/a. Pagar reposición de bienes dañados<br>deliberadamente.|
-|Mantener Datos<br>Actualizados|Informar cambios de teléfono, correo, domicilio. Actualizar datos regularmente.|
-|Supervisión Regular|Revisarperiódicamente agendayweb consultapersonal. Conversar con hijo/a sobre su día.|
-|Respetar Autonomía<br>Profesional|Respetar decisiones pedagógicas de docentes. No interferir indebidamente en procesos<br>académicos.|
-|Buena Fe en<br>Procedimientos|Evitar quejas infundadas. Agotar canales internos antes de acudir a autoridades externas.<br>Comunicarse con respetoyconstructividad.|
+## **Art. 39.- Faltas Muy Graves del Apoderado**
 
+Ejemplos:
 
+- Agresión física a miembro de comunidad
 
-## **Art. 36.- Formas de Comunicación Oficial** 
+- Amenazas graves a estudiantes, docentes o personal
 
-El colegio utilizará canales oficiales: 
+- Conducta que representa riesgo a estudiantes o personal
 
-|**Medio**|**Uso Principal**|
-|---|---|
-|Agenda Escolar|Comunicaciones de rutina,calificaciones,recordatorios|
-|Comunicados Impresos|Asuntosque afectan a toda comunidad,circulares|
-|Correo Electrónico|Información importante,documentación oficial|
-|Teléfono|Comunicaciones urgentes,situaciones de riesgo|
-|Entrevista Presencial|Monitoreo,asuntos diversos,decisiones significativas|
+- Reincidencia muy grave tras advertencias
 
+- Medidas:
 
+  - Condicionalidad de condición de apoderado (firma de Compromiso de respetar normas)
 
-## **CAPÍTULO XIV: SANCIONES A PADRES Y APODERADOS Art. 37.- Faltas Leves del Apoderado** 
+  - Pérdida de condición de apoderado: Se rechaza su continuidad y deberá nombrar a otro apoderado
 
-Ejemplos: 
+  - Prohibición de ingreso al colegio: Denegación de acceso al establecimiento; se tramita formalmente
 
-- No asistir a reunión sin aviso previo 
+  - Denuncia a autoridades: Si constituye delito (agresión, amenaza grave, abuso), se denuncia a Carabineros, Fiscalía o Tribunales de Familia
 
-- No justificar inasistencias del alumno oportunamente 
+## **CAPÍTULO XV: PROTOCOLOS DE ACTUACIÓN**
 
-- Demoras reiteradas en pagos administrativos 
+## **Art. 40.- Disponibilidad de Protocolos**
 
-- Comunicación irrespetuosa menor o inapropiada en redes 
+Todos los Protocolos de Actuación se encuentran disponibles en página web institucional (sección Convivencia Escolar) y en formato físico en secretaria a solicitud de apoderados o estudiantes.
 
-## Medidas: 
+1. **Protocolo de Violencia Escolar**
 
-- Recordatorio o advertencia verbal 
+   - Descripción: Procedimiento ante maltrato, agresión entre miembros de comunidad educativa
 
-- Notificación escrita dejando constancia de incumplimiento 
+   - Fundamento legal: Ley 20.536 sobre Violencia Escolar
 
-## **Art. 38.- Faltas Graves del Apoderado** 
+2. **Protocolo de Acoso Escolar (Bullying)**
 
-Ejemplos: 
+   - Descripción: Procedimiento ante hostigamiento reiterado con asimetría de poder
 
-- Faltar el respeto directo a docente o directivo en reunión (insultos, tono agresivo) 
+   - Fundamento legal: Ley 20.536 sobre Violencia Escolar
 
-- Conducta agresiva verbal en dependencias del colegio 
+3. **Protocolo de Abuso Sexual y Agresión Sexual**
 
-- Incumplimiento grave y reiterado de deberes como apoderado 
+   - Descripción: Procedimiento ante conductas sexuales no consentidas o agresiones de connotación sexual
 
-- Interferencia que socava autoridad pedagógica ante estudiantes 
+   - Fundamento legal: Código Penal, Ley 21.430 Derechos de la Niñez
 
-Medidas: 
+4. **Protocolo de Vulneración de Derechos**
 
-- Carta de advertencia formal de Rectoría, describiendo hecho y solicitando reformule actitud bajo apercibimiento de medidas mayores 
+   - Descripción: Maltrato, negligencia, abandono de menores, violencia intrafamiliar
 
-## **Art. 39.- Faltas Muy Graves del Apoderado** 
+   - Fundamento legal: Ley 21.430, Código Procesal Penal, Ley Tribunales de Familia
 
-Ejemplos: 
+5. **Protocolo de Consumo de Drogas y Alcohol**
 
-   - Agresión física a miembro de comunidad 
+   - Descripción: Detección, intervención y derivación ante consumo, porte o tráfico de sustancias
 
-   - Amenazas graves a estudiantes, docentes o personal 
+   - Fundamento legal: Ley 20.000 Tráfico Ilícito de Estupefacientes
 
-   - Conducta que representa riesgo a estudiantes o personal 
+6. **Protocolo de Conductas Suicidas**
 
-- Reincidencia muy grave tras advertencias 
+   - Descripción: Ideación, intento y seguimiento de estudiantes en riesgo suicida
 
-- Medidas: 
+   - Fundamento legal: Recomendaciones MINEDUC y Salud Mental
 
-   - Condicionalidad de condición de apoderado (firma de Compromiso de respetar normas) 
+7. **Protocolo de Accidentes y Primeros Auxilios**
 
-   - Pérdida de condición de apoderado: Se rechaza su continuidad y deberá nombrar a otro apoderado 
+   - Descripción: Seguridad y atención en emergencias, accidentes escolares
 
-   - Prohibición de ingreso al colegio: Denegación de acceso al establecimiento; se tramita formalmente 
+   - Fundamento legal: Ley 16.744 Accidentes del Trabajo y Enfermedades Profesionales
 
-   - Denuncia a autoridades: Si constituye delito (agresión, amenaza grave, abuso), se denuncia a Carabineros, Fiscalía o Tribunales de Familia 
+## 8. **Protocolo de Ciberacoso**
 
-## **CAPÍTULO XV: PROTOCOLOS DE ACTUACIÓN** 
+- Descripción: Medidas ante conductas de acoso, hostigamiento o maltrato en medios digitales
 
-## **Art. 40.- Disponibilidad de Protocolos** 
+- Fundamento legal: Ley 20.536, Ley 21.675
 
-Todos los Protocolos de Actuación se encuentran disponibles en página web institucional (sección Convivencia Escolar) y en formato físico en secretaria a solicitud de apoderados o estudiantes. 
+9. **Protocolo de Desregulación Emocional y Conductual**
 
-1. **Protocolo de Violencia Escolar** 
+   - Descripción: Orientación para estudiantes con necesidades emocionales, especialmente relevante para TEA
 
-   - Descripción: Procedimiento ante maltrato, agresión entre miembros de comunidad educativa 
+   - Fundamento legal: Ley 21.545 Ley de Autismo (2023)
 
-   - Fundamento legal: Ley 20.536 sobre Violencia Escolar 
+## **B. PROTOCOLO ADICIONAL**
 
-2. **Protocolo de Acoso Escolar (Bullying)** 
+10. **Protocolo de Salidas Pedagógicas y Giras de Estudio**
 
-   - Descripción: Procedimiento ante hostigamiento reiterado con asimetría de poder 
+- Descripción: Regulaciones sobre autorización, seguridad, responsables, comunicación al DEPROV
 
-   - Fundamento legal: Ley 20.536 sobre Violencia Escolar 
+- Fundamento legal: Normativa MINEDUC sobre salidas educativas
 
-3. **Protocolo de Abuso Sexual y Agresión Sexual** 
+## **C. DOCUMENTOS COMPLEMENTARIOS**
 
-   - Descripción: Procedimiento ante conductas sexuales no consentidas o agresiones de connotación sexual 
+11. **Plan Integral de Seguridad Escolar (PISE)**
 
-   - Fundamento legal: Código Penal, Ley 21.430 Derechos de la Niñez 
+- Descripción: Comité de Seguridad, diagnóstico de riesgos, planes de evacuación, procedimientos de emergencia
 
-4. **Protocolo de Vulneración de Derechos** 
+- Fundamento legal: Art. 8 Reglamento de RO, Resolución Exenta 51/2001 MINEDUC
 
-   - Descripción: Maltrato, negligencia, abandono de menores, violencia intrafamiliar 
+12. **Plan de Gestión de Convivencia Escolar**
 
-   - Fundamento legal: Ley 21.430, Código Procesal Penal, Ley Tribunales de Familia 
+- Descripción: Calendario actividades anuales, objetivos, responsables, fechas, evaluación
 
-5. **Protocolo de Consumo de Drogas y Alcohol** 
+- Fundamento legal: Punto 5.9.3 Circular SIE 2018
 
-   - Descripción: Detección, intervención y derivación ante consumo, porte o tráfico de sustancias 
+13. **Proceso de Admisión**
 
-   - Fundamento legal: Ley 20.000 Tráfico Ilícito de Estupefacientes 
+- Descripción: Descripción proceso, plazos, etapas, criterios, información a familias
 
-6. **Protocolo de Conductas Suicidas** 
+- Fundamento legal: Punto 5.3 Circular SIE 2018, Ley 20.845 SAE si aplica
 
-   - Descripción: Ideación, intento y seguimiento de estudiantes en riesgo suicida 
+14. **Medidas de Higiene**
 
-   - Fundamento legal: Recomendaciones MINEDUC y Salud Mental 
+- Descripción: Procedimientos aseo, desinfección, ventilación, higiene materiales, control vectores
 
-7. **Protocolo de Accidentes y Primeros Auxilios** 
+- Fundamento legal: Punto 5.6.6 Circular SIE 2018
 
-   - Descripción: Seguridad y atención en emergencias, accidentes escolares 
+15. **Reglamento de Evaluación y Promoción**
 
-   - Fundamento legal: Ley 16.744 Accidentes del Trabajo y Enfermedades Profesionales 
+- Descripción: Normas evaluación, calificación, promoción según Decreto 67/2018
 
-## 8. **Protocolo de Ciberacoso** 
+- Fundamento legal: Decreto 67/2018, Punto 5.7.2 Circular SIE
 
-   - Descripción: Medidas ante conductas de acoso, hostigamiento o maltrato en medios digitales 
+## **Art. 41.- Activación de Protocolos**
 
-   - Fundamento legal: Ley 20.536, Ley 21.675 
+Cualquier miembro de la comunidad que tome conocimiento de situación que requiera activación de protocolo debe informar de inmediato a:
 
-9. **Protocolo de Desregulación Emocional y Conductual** 
+- Profesor jefe o docente
 
-   - Descripción: Orientación para estudiantes con necesidades emocionales, especialmente relevante para TEA 
+- Coordinador de ciclo
 
-   - Fundamento legal: Ley 21.545 Ley de Autismo (2023) 
+- Inspector/a
 
-## **B. PROTOCOLO ADICIONAL** 
+- Coordinador de Convivencia
 
-10. **Protocolo de Salidas Pedagógicas y Giras de Estudio** 
+- Rector
 
-   - Descripción: Regulaciones sobre autorización, seguridad, responsables, comunicación al DEPROV 
+Garantías:
 
-   - Fundamento legal: Normativa MINEDUC sobre salidas educativas 
+- Se garantiza confidencialidad y protección de quien reporta
 
-## **C. DOCUMENTOS COMPLEMENTARIOS** 
+- No habrá represalias por hacer denuncia de buena fe
 
-11. **Plan Integral de Seguridad Escolar (PISE)** 
+Acciones del colegio:
 
-   - Descripción: Comité de Seguridad, diagnóstico de riesgos, planes de evacuación, procedimientos de emergencia 
+- Activará investigación interna conforme a protocolo pertinente
 
-   - Fundamento legal: Art. 8 Reglamento de RO, Resolución Exenta 51/2001 MINEDUC 
+- Derivará a autoridades (Carabineros, Fiscalía, OLN, Tribunal) cuando corresponda legalmente
 
-12. **Plan de Gestión de Convivencia Escolar** 
+- Coordinará con redes externas (SENDA, servicios de salud mental, DER) según necesidad
 
-   - Descripción: Calendario actividades anuales, objetivos, responsables, fechas, evaluación 
+- Mantendrá comunicación periódica con apoderado
 
-   - Fundamento legal: Punto 5.9.3 Circular SIE 2018 
+## **CAPÍTULO XVII: DIFUSIÓN Y ACTUALIZACIÓN**
 
-13. **Proceso de Admisión** 
+## **INFORMACIÓN INSTITUCIONAL Y REGULACIONES TÉCNICO-ADMINISTRATIVAS**
 
-   - Descripción: Descripción proceso, plazos, etapas, criterios, información a familias 
+## **Art. 42.- Caracterización del Establecimiento**
 
-   - Fundamento legal: Punto 5.3 Circular SIE 2018, Ley 20.845 SAE si aplica 
+## **42.1. Identificación Institucional**
 
-14. **Medidas de Higiene** 
+Nombre oficial: Fundación Educacional Colegio Carmela Romero de Espinosa Nombre común: Colegio Carmela Romero de Espinosa - Madres Dominicas Ubicación: Concepción, Región del Biobío
 
-   - Descripción: Procedimientos aseo, desinfección, ventilación, higiene materiales, control vectores 
+## RBD: 18.007-6
 
-   - Fundamento legal: Punto 5.6.6 Circular SIE 2018 
+## Dependencia: Pagado particular
 
-15. **Reglamento de Evaluación y Promoción** 
+Decreto Cooperador del Estado: Decreto Exento N° 12593 del 17 de octubre de 1959
 
-   - Descripción: Normas evaluación, calificación, promoción según Decreto 67/2018 
+Sostenedor: Congregación Dominicas Misioneras de la Sagrada Familia
 
-   - Fundamento legal: Decreto 67/2018, Punto 5.7.2 Circular SIE 
+## **42.2. Niveles de Enseñanza**
 
-## **Art. 41.- Activación de Protocolos** 
+El Colegio Carmela Romero de Espinosa imparte los siguientes niveles educativos:
 
-Cualquier miembro de la comunidad que tome conocimiento de situación que requiera activación de protocolo debe informar de inmediato a: 
+- Educación Parvularia: Pre-Kinder y Kinder
 
-- Profesor jefe o docente 
+- Educación primaria: 1° a 6° año básico
 
-- Coordinador de ciclo 
+- Educación Secundaria: 7° básico a 4° año medio (Humanista-Científico)
 
-- Inspector/a 
+El establecimiento ofrece educación completa desde los 4 años hasta la educación media, preparando integralmente a sus estudiantes en un continuo de 14 años de formación.
 
-- Coordinador de Convivencia 
+## **42.3. Horarios de Funcionamiento**
 
-- Rector 
+Los alumnos de Pre-kinder a 4° medio ingresan todos los días a las 8:00 horas, y el horario de salida corresponderá según la siguiente distribución:
 
-Garantías: 
+**Lunes** : Pre kínder y kínder 13:00horas; 1° básico a 2° medio 14:40 horas; 3° y 4° medio 16:40 horas.
 
-- Se garantiza confidencialidad y protección de quien reporta 
+**Martes** : Pre kínder y Kinder 13:00 horas; 1° básico a 4° medio 14:40 horas.
 
-- No habrá represalias por hacer denuncia de buena fe 
+**Miércoles** : Pre kínder y Kinder 13:00 horas; 1°a 4° básico 13:55 horas; 5° básico14:40 horas ;6° a 8° básico 13:55 horas; 1° a 4° medio 14:40 horas.
 
-Acciones del colegio: 
+**Jueves** : Pre kínder y kínder 13:00 horas; 1° a 4° básico 14:40 horas; 5° a básico 13:00 horas; 5°b básico a 4° medio 14:40 horas.
 
-- Activará investigación interna conforme a protocolo pertinente 
+**Viernes** : Pre kínder y kínder 13° horas; 1° a 4° básico 13:55 horas; 5° a básico 14:40 horas; 5° b a 7° básico 13:00 horas; 8° básico a 4° medio 14:40 horas.
 
-- Derivará a autoridades (Carabineros, Fiscalía, OLN, Tribunal) cuando corresponda legalmente 
+Los recreos se realizan en el siguiente horario, todos los días: 9:30 a 9:45 horas; 11:15 a 11:30 horas; 13:00 a 13:10 horas. Las actividades de libre elección se realizarán después de la jornada escolar.
 
-- Coordinará con redes externas (SENDA, servicios de salud mental, DER) según necesidad 
+El colegio solo suspende sus actividades en situaciones excepcionales tales como : catástrofes naturales, cortes de energía eléctrica, de suministro de agua, u otra fuerza mayor, la solicitud debe ser presentada por escrito por el sostenedor ante el Departamento de Educación Provincial respectivo, adjuntando la evidencia correspondiente a las causales que se aluden, junco con el respectivo calendario de recuperación de clases y dentro de los cinco días hábiles posteriores a la suspensión. El alumno/a que llegue al Colegio después de las 9:00 horas deberá hacerlo con su apoderado con comunicación escrita en su agenda escolar, de no ser así el/la inspector/a deberá comunicarse con el apoderado.
 
-- Mantendrá comunicación periódica con apoderado 
+Para retiro de un/a alumno/a del Establecimiento en horario de clases el apoderado/a debe solicitar autorización al inspector/a o Coordinador de ciclo, para lo cual debe asistir personalmente a retirarlo y firmar libro de retiro. Si no puede asistir debe enviar a alguien de su confianza con un poder simple.
 
-## **CAPÍTULO XVII: DIFUSIÓN Y ACTUALIZACIÓN** 
+## **42.4. Canales Oficiales de Comunicación**
 
-## **INFORMACIÓN INSTITUCIONAL Y REGULACIONES TÉCNICO-ADMINISTRATIVAS** 
+El colegio mantiene comunicación permanente con las familias a través de los siguientes canales oficiales: a) Agenda Escolar:
 
-## **Art. 42.- Caracterización del Establecimiento** 
+- Medio oficial de comunicación diaria entre colegio y familia
 
-## **42.1. Identificación Institucional** 
+- Obligatoria para todos los estudiantes
 
-Nombre oficial: Fundación Educacional Colegio Carmela Romero de Espinosa Nombre común: Colegio Carmela Romero de Espinosa - Madres Dominicas Ubicación: Concepción, Región del Biobío 
+- Registro de anotaciones, comunicaciones y justificaciones
 
-## RBD: 18.007-6 
+- b) Plataforma Digital Institucional:
 
-## Dependencia: Pagado particular 
+  - Acceso a calificaciones, asistencia y anotaciones en tiempo real
 
-Decreto Cooperador del Estado: Decreto Exento N° 12593 del 17 de octubre de 1959 
+  - Comunicados oficiales y circulares
 
-Sostenedor: Congregación Dominicas Misioneras de la Sagrada Familia 
+  - Calendario de actividades y evaluaciones
 
-## **42.2. Niveles de Enseñanza** 
+- c) Correo Electrónico Institucional:
 
-El Colegio Carmela Romero de Espinosa imparte los siguientes niveles educativos: 
+  - Comunicaciones formales de Dirección y equipos técnicos
 
-- Educación Parvularia: Pre-Kinder y Kinder 
+  - Envío de documentación oficial
 
-- Educación primaria: 1° a 6° año básico 
+## d) Página Web Institucional: www.mmddconcepcion.cl
 
-- Educación Secundaria: 7° básico a 4° año medio (Humanista-Científico) 
+- Información general del colegio
 
-El establecimiento ofrece educación completa desde los 4 años hasta la educación media, preparando integralmente a sus estudiantes en un continuo de 14 años de formación. 
+- Publicación de reglamentos, protocolos y documentos institucionales
 
-## **42.3. Horarios de Funcionamiento** 
+- Noticias y actividades
 
-Los alumnos de Pre-kinder a 4° medio ingresan todos los días a las 8:00 horas, y el horario de salida corresponderá según la siguiente distribución: 
+- e) Reuniones de Apoderados:
 
-**Lunes** : Pre kínder y kínder 13:00horas; 1° básico a 2° medio 14:40 horas; 3° y 4° medio 16:40 horas. 
+  - Presenciales: Calendario de reuniones ordinarias (mínimo 4 al año)
 
-**Martes** : Pre kínder y Kinder 13:00 horas; 1° básico a 4° medio 14:40 horas. 
+- Entrevistas individuales: Agendadas según necesidad con profesores jefes o equipos especializados
 
-**Miércoles** : Pre kínder y Kinder 13:00 horas; 1°a 4° básico 13:55 horas; 5° básico14:40 horas ;6° a 8° básico 13:55 horas; 1° a 4° medio 14:40 horas. 
+- f) Atención Presencial:
 
-**Jueves** : Pre kínder y kínder 13:00 horas; 1° a 4° básico 14:40 horas; 5° a básico 13:00 horas; 5°b básico a 4° medio 14:40 horas. 
+  - Horarios de atención publicados al inicio del año escolar
 
-**Viernes** : Pre kínder y kínder 13° horas; 1° a 4° básico 13:55 horas; 5° a básico 14:40 horas; 5° b a 7° básico 13:00 horas; 8° básico a 4° medio 14:40 horas. 
+  - Inspectoría: lunes a viernes 08:00-17:00 horas
 
-Los recreos se realizan en el siguiente horario, todos los días: 9:30 a 9:45 horas; 11:15 a 11:30 horas; 13:00 a 13:10 horas. Las actividades de libre elección se realizarán después de la jornada escolar. 
+  - UTP y Coordinaciones: con cita previa
 
-El colegio solo suspende sus actividades en situaciones excepcionales tales como : catástrofes naturales, cortes de energía eléctrica, de suministro de agua, u otra fuerza mayor, la solicitud debe ser presentada por escrito por el sostenedor ante el Departamento de Educación Provincial respectivo, adjuntando la evidencia correspondiente a las causales que se aluden, junco con el respectivo calendario de recuperación de clases y dentro de los cinco días hábiles posteriores a la suspensión. El alumno/a que llegue al Colegio después de las 9:00 horas deberá hacerlo con su apoderado con comunicación escrita en su agenda escolar, de no ser así el/la inspector/a deberá comunicarse con el apoderado. 
+  - Rectoría: con cita previa
 
-Para retiro de un/a alumno/a del Establecimiento en horario de clases el apoderado/a debe solicitar autorización al inspector/a o Coordinador de ciclo, para lo cual debe asistir personalmente a retirarlo y firmar libro de retiro. Si no puede asistir debe enviar a alguien de su confianza con un poder simple. 
+## **CAPÍTULO XVI: DIFUSIÓN Y ACTUALIZACIÓN**
 
-## **42.4. Canales Oficiales de Comunicación** 
+## **Art. 43.- Estrategias de Difusión del Reglamento**
 
-El colegio mantiene comunicación permanente con las familias a través de los siguientes canales oficiales: a) Agenda Escolar: 
+Para que el Reglamento sea ampliamente conocido y comprendido:
 
-   - Medio oficial de comunicación diaria entre colegio y familia 
+- a) Publicación Digital:
 
-   - Obligatoria para todos los estudiantes 
+  - Texto íntegro disponible en página web: www.mmddconcepcion.cl
 
-   - Registro de anotaciones, comunicaciones y justificaciones 
+  - Acceso público sin restricciones
 
-- b) Plataforma Digital Institucional: 
+  - Actualización periódica conforme cambios
 
-   - Acceso a calificaciones, asistencia y anotaciones en tiempo real 
+- b) Entrega a Apoderados:
 
-   - Comunicados oficiales y circulares 
+  - Copia física o digital entregada al momento de matrícula inicial o inicio de año
 
-   - Calendario de actividades y evaluaciones 
+  - Se solicita firma de compromiso de acatamiento (ficha de matrícula)
 
-- c) Correo Electrónico Institucional: 
+  - En agenda escolar
 
-   - Comunicaciones formales de Dirección y equipos técnicos 
+- c) Difusión con Estudiantes:
 
-   - Envío de documentación oficial 
+  - Lecturas en Consejos de Curso (mínimo inicio de año)
 
-## d) Página Web Institucional: www.mmddconcepcion.cl 
+  - Sesiones reflexivas periódicas sobre aspectos específicos (ej.: acoso, drogas, redes sociales)
 
-- Información general del colegio 
+  - Metodologías lúdicas y participativas
 
-- Publicación de reglamentos, protocolos y documentos institucionales 
+- d) Reunión de Apoderados:
 
-- Noticias y actividades 
+  - En Reunión de Apoderados de Inicio de Año, presentación del Reglamento
 
-- e) Reuniones de Apoderados: 
+  - Oportunidad para preguntas y comentarios
 
-   - Presenciales: Calendario de reuniones ordinarias (mínimo 4 al año) 
+- e) Capacitación Personal:
 
-- Entrevistas individuales: Agendadas según necesidad con profesores jefes o equipos especializados 
+  - En Primer Consejo de Profesores, revisión del Reglamento
 
-- f) Atención Presencial: 
+  - Inducción a docentes y funcionarios nuevos sobre normas y protocolos
 
-   - Horarios de atención publicados al inicio del año escolar 
+- f) Comunicación de Modificaciones:
 
-   - Inspectoría: lunes a viernes 08:00-17:00 horas 
+  - Cambios significativos se comunican por escrito a apoderados
 
-   - UTP y Coordinaciones: con cita previa 
+  - Se exponen a estudiantes en consejo de curso
 
-   - Rectoría: con cita previa 
+  - Se publican en web con destacado de "Actualización"
 
-## **CAPÍTULO XVI: DIFUSIÓN Y ACTUALIZACIÓN** 
+## **Art. 44.- Firma de Compromiso**
 
-## **Art. 43.- Estrategias de Difusión del Reglamento** 
+Al momento de matrícula o inicio del año escolar, estudiantes y apoderados firmarán documento comprometiéndose a:
 
-Para que el Reglamento sea ampliamente conocido y comprendido: 
+- Conocer este Reglamento Interno
 
-- a) Publicación Digital: 
+- Respetarlo en su integridad
 
-   - Texto íntegro disponible en página web: www.mmddconcepcion.cl 
+- Informar de violaciones conocidas
 
-   - Acceso público sin restricciones 
+- Participar en su cumplimiento
 
-   - Actualización periódica conforme cambios 
+Documento: Se archiva en hoja de vida del estudiante
 
-- b) Entrega a Apoderados: 
+## **Art. 45.- Actualización Normativa**
 
-   - Copia física o digital entregada al momento de matrícula inicial o inicio de año 
+Revisión anual: El Reglamento será revisado anualmente (preferiblemente en octubre-noviembre) por todos los estamentos del Colegio.
 
-   - Se solicita firma de compromiso de acatamiento (ficha de matrícula) 
+Consideraciones:
 
-   - En agenda escolar 
+- Cambios normativos ministeriales vigentes
 
-- c) Difusión con Estudiantes: 
+- Ajustes a realidad institucional (nuevas conductas no previstas, eficacia de sanciones)
 
-   - Lecturas en Consejos de Curso (mínimo inicio de año) 
+- Feedback de comunidad (encuestas a docentes, estudiantes, apoderados)
 
-   - Sesiones reflexivas periódicas sobre aspectos específicos (ej.: acoso, drogas, redes sociales) 
+- Nuevos protocolos necesarios
 
-   - Metodologías lúdicas y participativas 
+Aprobación: Cambios importantes requieren aprobación de Consejo de Profesores y Rectoría
 
-- d) Reunión de Apoderados: 
+Entrada en vigencia: A partir de 01 de marzo del año siguiente.
 
-   - En Reunión de Apoderados de Inicio de Año, presentación del Reglamento 
+## GLOSARIO DE TÉRMINOS TÉCNICOS
 
-   - Oportunidad para preguntas y comentarios 
+| Término           | Definición                                                                                                             |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Apoderado/a       | Padre,madre opersona autorizada responsable del estudiante ante el colegio                                             |
+| PEI               | Proyecto Educativo Institucional; documento que define visión, misión, valores y estrategias<br>educativas del colegio |
+| Ciclo             | Agrupación de cursos(ej: ciclo básico = 6° a 8° básico;ciclo superior = I a IV medio)                                  |
+| OLN               | Oficina Local de la Niñez                                                                                              |
+| DER               | Departamento de Educación Regional/Municipal(autoridad educativa supervisora)                                          |
+| SENDA             | Servicio Nacionalpara la PrevenciónyRehabilitación del Consumo de DrogasyAlcohol                                       |
+| Ciberacoso        | Acoso a través de medios digitales(redes sociales,correo,mensajería,etc.)                                              |
+| Bullying          | Acoso escolar reiterado con asimetría depoder                                                                          |
+| Falta Leve        | Incumplimiento menor de normas sin daño serio                                                                          |
+| Falta Grave       | Conductaque afecta integridad moral/psicológica o bien común significativamente                                        |
+| Falta MuyGrave    | Conductaque afecta integridad física/psicológicagravemente o constituye delito                                         |
+| Debido Proceso    | Garantía legal de ser escuchado, presentar descargos,derecho a apelación                                               |
+| Medida Reparadora | Acciónque buscaque infractor repare daño(disculpas,reposición,servicio)                                                |
+| Condicionalidad   | Estado de observación estricta duranteperíodo determinado                                                              |
+| Protocolo         | Procedimiento formalydetalladopara abordar situación específica                                                        |
 
-- e) Capacitación Personal: 
+Aprobado por: Rectoría Fecha de entrada en vigencia: 01 de marzo de 2026 Próxima revisión: Octubre de 2026
 
-   - En Primer Consejo de Profesores, revisión del Reglamento 
+_Este Reglamento ha sido elaborado en cumplimiento de la normativa educacional vigente, buscando garantizar la dignidad, inclusión y protección de todos los miembros de la comunidad educativa, en coherencia con la identidad católica dominicana del Colegio Carmela Romero de Espinosa._
 
-   - Inducción a docentes y funcionarios nuevos sobre normas y protocolos 
-
-- f) Comunicación de Modificaciones: 
-
-   - Cambios significativos se comunican por escrito a apoderados 
-
-   - Se exponen a estudiantes en consejo de curso 
-
-   - Se publican en web con destacado de "Actualización" 
-
-## **Art. 44.- Firma de Compromiso** 
-
-Al momento de matrícula o inicio del año escolar, estudiantes y apoderados firmarán documento comprometiéndose a: 
-
-- Conocer este Reglamento Interno 
-
-- Respetarlo en su integridad 
-
-- Informar de violaciones conocidas 
-
-- Participar en su cumplimiento 
-
-Documento: Se archiva en hoja de vida del estudiante 
-
-## **Art. 45.- Actualización Normativa** 
-
-Revisión anual: El Reglamento será revisado anualmente (preferiblemente en octubre-noviembre) por todos los estamentos del Colegio. 
-
-Consideraciones: 
-
-- Cambios normativos ministeriales vigentes 
-
-- Ajustes a realidad institucional (nuevas conductas no previstas, eficacia de sanciones) 
-
-- Feedback de comunidad (encuestas a docentes, estudiantes, apoderados) 
-
-- Nuevos protocolos necesarios 
-
-Aprobación: Cambios importantes requieren aprobación de Consejo de Profesores y Rectoría 
-
-Entrada en vigencia: A partir de 01 de marzo del año siguiente. 
-
-## GLOSARIO DE TÉRMINOS TÉCNICOS 
-
-|Término|Definición|
-|---|---|
-|Apoderado/a|Padre,madre opersona autorizada responsable del estudiante ante el colegio|
-|PEI|Proyecto Educativo Institucional; documento que define visión, misión, valores y estrategias<br>educativas del colegio|
-|Ciclo|Agrupación de cursos(ej: ciclo básico = 6° a 8° básico;ciclo superior = I a IV medio)|
-|OLN|Oficina Local de la Niñez|
-|DER|Departamento de Educación Regional/Municipal(autoridad educativa supervisora)|
-|SENDA|Servicio Nacionalpara la PrevenciónyRehabilitación del Consumo de DrogasyAlcohol|
-|Ciberacoso|Acoso a través de medios digitales(redes sociales,correo,mensajería,etc.)|
-|Bullying|Acoso escolar reiterado con asimetría depoder|
-|Falta Leve|Incumplimiento menor de normas sin daño serio|
-|Falta Grave|Conductaque afecta integridad moral/psicológica o bien común significativamente|
-|Falta MuyGrave|Conductaque afecta integridad física/psicológicagravemente o constituye delito|
-|Debido Proceso|Garantía legal de ser escuchado, presentar descargos,derecho a apelación|
-|Medida Reparadora|Acciónque buscaque infractor repare daño(disculpas,reposición,servicio)|
-|Condicionalidad|Estado de observación estricta duranteperíodo determinado|
-|Protocolo|Procedimiento formalydetalladopara abordar situación específica|
-
-
-
-Aprobado por: Rectoría Fecha de entrada en vigencia: 01 de marzo de 2026 Próxima revisión: Octubre de 2026 
-
-_Este Reglamento ha sido elaborado en cumplimiento de la normativa educacional vigente, buscando garantizar la dignidad, inclusión y protección de todos los miembros de la comunidad educativa, en coherencia con la identidad católica dominicana del Colegio Carmela Romero de Espinosa._ 
-
-—FIN DEL DOCUMENTO— 
-
+—FIN DEL DOCUMENTO—

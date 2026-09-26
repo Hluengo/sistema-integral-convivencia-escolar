@@ -1,11 +1,13 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { z } from 'zod';
-import { EstadoCausa, type FaseProcedimental } from '../types';
-import { getFaseForEstado } from '../data';
-import { isChileanRutFormat, tipoInfraccionValues } from './newCausaForm';
+import { z } from "zod";
+import { EstadoCausa, type FaseProcedimental } from "../types";
+import { getFaseForEstado } from "../data";
+import { isChileanRutFormat, tipoInfraccionValues } from "./newCausaForm";
 
-const EstadoCausaEnum = z.enum(Object.values(EstadoCausa) as [EstadoCausa, ...EstadoCausa[]]);
+const EstadoCausaEnum = z.enum(
+  Object.values(EstadoCausa) as [EstadoCausa, ...EstadoCausa[]],
+);
 
 const FASE_ORDEN: Record<FaseProcedimental, number> = {
   Recepción: 1,
@@ -21,7 +23,10 @@ const FASE_ORDEN: Record<FaseProcedimental, number> = {
  * Resolución sin pasar por Investigación). Retroceder siempre se permite,
  * para correcciones administrativas.
  */
-export function isValidStateTransition(desde: EstadoCausa, hasta: EstadoCausa): boolean {
+export function isValidStateTransition(
+  desde: EstadoCausa,
+  hasta: EstadoCausa,
+): boolean {
   if (desde === hasta) return true;
   const faseOrigen = FASE_ORDEN[getFaseForEstado(desde)];
   const faseDestino = FASE_ORDEN[getFaseForEstado(hasta)];
@@ -33,21 +38,24 @@ const optionalDateSchema = z
   .string()
   .trim()
   .refine((value) => !value || /^\d{4}-\d{2}-\d{2}$/.test(value), {
-    message: 'Ingrese una fecha válida.',
+    message: "Ingrese una fecha válida.",
   });
 
 export const editCausaFormSchema = z.object({
-  estudianteNombre: z.string().trim().min(2, 'Ingrese el nombre del estudiante.'),
+  estudianteNombre: z
+    .string()
+    .trim()
+    .min(2, "Ingrese el nombre del estudiante."),
   estudianteCurso: z.string().trim(),
   runEstudiante: z
     .string()
     .trim()
     .refine((value) => !value || isChileanRutFormat(value), {
-      message: 'Ingrese un RUN chileno válido.',
+      message: "Ingrese un RUN chileno válido.",
     }),
   tipoInfraccion: z.enum(tipoInfraccionValues),
   conductaRiceId: z.string().optional(),
-  responsable: z.string().trim().min(3, 'Ingrese el encargado o responsable.'),
+  responsable: z.string().trim().min(3, "Ingrese el encargado o responsable."),
   estadoActual: EstadoCausaEnum,
   observaciones: z.string().trim(),
   comprometeAulaSegura: z.boolean(),
@@ -57,9 +65,9 @@ export const editCausaFormSchema = z.object({
   fechaInicioSuspension: optionalDateSchema,
   duracionSuspensionDias: z
     .number()
-    .int('Ingrese un número entero.')
-    .min(0, 'La suspensión no puede ser negativa.')
-    .max(15, 'La suspensión preventiva no puede exceder 15 días.'),
+    .int("Ingrese un número entero.")
+    .min(0, "La suspensión no puede ser negativa.")
+    .max(15, "La suspensión preventiva no puede exceder 15 días."),
   monitoreoPedagogico: z.boolean(),
   requiereNotificacionSuperintendencia: z.boolean(),
   fechaNotificacionSuperintendencia: optionalDateSchema,

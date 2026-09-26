@@ -1,0 +1,21 @@
+{
+  "projectId": "7ac4e515-e017-430e-a6bc-5dd9f2acc41a",
+  "target": "authenticated operational workspace / causas-timeline",
+  "baselineDraftId": "4a1e24a6-62b0-487f-81ca-36938147cfe9",
+  "activeDraftId": "4a1e24a6-62b0-487f-81ca-36938147cfe9",
+  "baselineVersion": 1,
+  "contextFiles": [
+    ".superdesign/design-system.md",
+    ".superdesign/init/layouts.md",
+    ".superdesign/init/routes.md",
+    ".superdesign/init/theme.md",
+    "src/widgets/header/Header.tsx",
+    "src/widgets/sidebar/Sidebar.tsx",
+    "src/app/components/AppFooter.tsx",
+    "src/features/timeline/TimelineHeader.tsx",
+    "src/features/causas/MainContent.tsx",
+    "src/shared/ui/DetailModal.tsx",
+    "src/index.css:1:95"
+  ],
+  "status": "baseline-created-branch-blocked-by-credit-limit"
+}

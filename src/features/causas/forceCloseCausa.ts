@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { BitacoraEntry, Causa } from '../../shared/lib/types';
-import { EstadoCausa } from '../../shared/lib/types';
-import { nowDateOnly, nowIso } from '../../shared/lib/dateUtils';
+import type { BitacoraEntry, Causa } from "../../shared/lib/types";
+import { EstadoCausa } from "../../shared/lib/types";
+import { nowDateOnly, nowIso } from "../../shared/lib/dateUtils";
 
 export interface ForceCloseCausaInput {
   responsable: string;
@@ -31,11 +31,13 @@ export function buildForceClosedCausa(
   const entry: BitacoraEntry = {
     id: options.entryId ?? `b_cierre_${crypto.randomUUID()}`,
     fecha: options.fecha ?? nowIso(),
-    tipo: 'Resolución',
+    tipo: "Resolución",
     titulo,
     descripcion: `Cierre anticipado fundado.\n\nResponsable del cierre: ${responsable}\n\nFundamento: ${motivo}`,
     participantes: [responsable],
-    ...(input.documentoAdjunto ? { documentoAdjunto: input.documentoAdjunto } : {}),
+    ...(input.documentoAdjunto
+      ? { documentoAdjunto: input.documentoAdjunto }
+      : {}),
   };
 
   return {
@@ -43,7 +45,7 @@ export function buildForceClosedCausa(
     estadoActual: EstadoCausa.CAUSA_CERRADA,
     fechaUltimaActualizacion: options.fechaCivil ?? nowDateOnly(),
     checklistDebidoProceso: causa.checklistDebidoProceso.map((item) =>
-      item.id === 'chk_seg_4'
+      item.id === "chk_seg_4"
         ? {
             ...item,
             completado: true,

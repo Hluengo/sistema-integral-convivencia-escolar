@@ -1,8 +1,12 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
-import { useCallback, useState } from 'react';
-import type { Causa, BitacoraEntry, UserRole } from '../types';
-import { nowDateOnly, nowIso } from '../../../shared/lib/dateUtils';
-import { uploadDocument, listDocuments, deleteDocument } from '../../api/services/storage.service';
+import { useCallback, useState } from "react";
+import type { Causa, BitacoraEntry, UserRole } from "../types";
+import { nowDateOnly, nowIso } from "../../../shared/lib/dateUtils";
+import {
+  uploadDocument,
+  listDocuments,
+  deleteDocument,
+} from "../../api/services/storage.service";
 
 interface UseDocumentManagerArgs {
   causa: Causa;
@@ -20,18 +24,19 @@ export function useDocumentManager({
   regName,
 }: UseDocumentManagerArgs) {
   const [documents, setDocuments] = useState<
-    { name: string; url: string; scope: 'causa' | 'incidente' }[]
+    { name: string; url: string; scope: "causa" | "incidente" }[]
   >([]);
-  const [isUploadingDocument, setIsUploadingDocument] = useState<boolean>(false);
+  const [isUploadingDocument, setIsUploadingDocument] =
+    useState<boolean>(false);
   const [documentError, setDocumentError] = useState<string | null>(null);
 
   const getResponsableName = useCallback(() => {
     const r = causa.responsable;
-    const fromResponsable = r ? r.split(' (')[0] : '';
+    const fromResponsable = r ? r.split(" (")[0] : "";
     // Evita nombres por defecto que no existen en el sistema: si no hay
     // responsable registrado se usa el nombre de quien registra o un rol
     // institucional genérico, nunca una persona inventada.
-    return fromResponsable || regName || 'Equipo de Convivencia Escolar';
+    return fromResponsable || regName || "Equipo de Convivencia Escolar";
   }, [causa.responsable, regName]);
 
   const refreshDocuments = useCallback(async () => {
@@ -41,14 +46,16 @@ export function useDocumentManager({
       setDocuments(list);
     } catch (error: unknown) {
       setDocumentError(
-        error instanceof Error ? error.message : 'Error al listar los documentos adjuntos.',
+        error instanceof Error
+          ? error.message
+          : "Error al listar los documentos adjuntos.",
       );
     }
   }, [causa.id, causa.incidenteId]);
 
   const handleAttachDocument = useCallback(
     async (itemId: string, file: File | null) => {
-      if (!file || currentRole === 'docente') {
+      if (!file || currentRole === "docente") {
         return;
       }
       setIsUploadingDocument(true);
@@ -56,7 +63,9 @@ export function useDocumentManager({
       try {
         const publicUrl = await uploadDocument(causa.id, file);
         if (!publicUrl) {
-          setDocumentError('No se pudo subir el documento. Verifique el bucket de Storage.');
+          setDocumentError(
+            "No se pudo subir el documento. Verifique el bucket de Storage.",
+          );
           setIsUploadingDocument(false);
           return;
         }
@@ -75,7 +84,7 @@ export function useDocumentManager({
         const newLog: BitacoraEntry = {
           id: `b_doc_${crypto.randomUUID()}`,
           fecha: nowIso(),
-          tipo: 'Evidencia',
+          tipo: "Evidencia",
           titulo: `Documento adjunto: ${file.name}`,
           descripcion: `Se adjuntó el documento "${file.name}" al hito procesal.`,
           participantes: [
@@ -94,18 +103,28 @@ export function useDocumentManager({
         await refreshDocuments();
       } catch (error: unknown) {
         setDocumentError(
-          error instanceof Error ? error.message : 'Error al adjuntar el documento.',
+          error instanceof Error
+            ? error.message
+            : "Error al adjuntar el documento.",
         );
       } finally {
         setIsUploadingDocument(false);
       }
     },
-    [causa, currentRole, getResponsableName, onUpdateCausa, privacyMode, refreshDocuments, regName],
+    [
+      causa,
+      currentRole,
+      getResponsableName,
+      onUpdateCausa,
+      privacyMode,
+      refreshDocuments,
+      regName,
+    ],
   );
 
   const handleRemoveDocument = useCallback(
     async (itemId: string, fileName?: string, filePath?: string) => {
-      if (currentRole === 'docente') {
+      if (currentRole === "docente") {
         return;
       }
       setDocumentError(null);
@@ -125,9 +144,9 @@ export function useDocumentManager({
       const newLog: BitacoraEntry = {
         id: `b_doc_del_${crypto.randomUUID()}`,
         fecha: nowIso(),
-        tipo: 'Otro',
-        titulo: 'Documento eliminado',
-        descripcion: 'Se eliminó el documento adjunto del hito procesal.',
+        tipo: "Otro",
+        titulo: "Documento eliminado",
+        descripcion: "Se eliminó el documento adjunto del hito procesal.",
         participantes: [regName || getResponsableName()],
       };
 
@@ -141,7 +160,9 @@ export function useDocumentManager({
 
       try {
         if (fileName) {
-          await deleteDocument(filePath || `${causa.id}/documentos/${fileName}`);
+          await deleteDocument(
+            filePath || `${causa.id}/documentos/${fileName}`,
+          );
         }
         await refreshDocuments();
       } catch (error: unknown) {
@@ -149,12 +170,21 @@ export function useDocumentManager({
         // del almacenamiento (el archivo sigue existiendo si falló la baja).
         onUpdateCausa(previousCausa);
         setDocumentError(
-          error instanceof Error ? error.message : 'Error al eliminar el documento adjunto.',
+          error instanceof Error
+            ? error.message
+            : "Error al eliminar el documento adjunto.",
         );
         await refreshDocuments();
       }
     },
-    [causa, currentRole, getResponsableName, onUpdateCausa, refreshDocuments, regName],
+    [
+      causa,
+      currentRole,
+      getResponsableName,
+      onUpdateCausa,
+      refreshDocuments,
+      regName,
+    ],
   );
 
   return {

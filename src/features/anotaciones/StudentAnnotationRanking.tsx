@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { UserRound } from 'lucide-react';
-import type { StudentAnnotationRankingItem } from '../../shared/lib/domain/annotationRankings';
-import RankingCard from './RankingCard';
-import { toStudentCardItems } from './annotationRankingCardItems';
+import { UserRound } from "lucide-react";
+import type { StudentAnnotationRankingItem } from "../../shared/lib/domain/annotationRankings";
+import RankingCard from "./RankingCard";
+import { toStudentCardItems } from "./annotationRankingCardItems";
 
 interface StudentAnnotationRankingProps {
   ranking: StudentAnnotationRankingItem[];

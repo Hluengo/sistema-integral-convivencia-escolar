@@ -48,11 +48,11 @@ const processData = (input: any): any => { ... };
 7. CSS/Styles (si los hay)
 
 ```typescript
-import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import { useAuthStore } from '@/shared/lib/stores/authStore';
-import { Button } from '@/shared/ui/Button';
-import type { Causa } from '@/shared/lib/types';
+import { useState, useEffect } from "react";
+import { createClient } from "@supabase/supabase-js";
+import { useAuthStore } from "@/shared/lib/stores/authStore";
+import { Button } from "@/shared/ui/Button";
+import type { Causa } from "@/shared/lib/types";
 ```
 
 ## Component Patterns
@@ -99,10 +99,13 @@ export const useStore = create<StoreState & StoreActions>((set) => ({
 ## Service Pattern
 
 ```typescript
-import { supabase } from '@/shared/api/lib/supabase';
+import { supabase } from "@/shared/api/lib/supabase";
 
 export async function fetchItems(tenantId: string): Promise<Item[]> {
-  const { data, error } = await supabase.from('items').select('*').eq('tenant_id', tenantId);
+  const { data, error } = await supabase
+    .from("items")
+    .select("*")
+    .eq("tenant_id", tenantId);
 
   if (error) throw error;
   return data.map(mapRowToItem);
@@ -112,16 +115,16 @@ export async function fetchItems(tenantId: string): Promise<Item[]> {
 ## Testing Conventions
 
 ```typescript
-import { describe, it } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
 
-describe('functionName', () => {
-  it('handles happy path', () => {
+describe("functionName", () => {
+  it("handles happy path", () => {
     const result = functionName(input);
     assert.equal(result, expected);
   });
 
-  it('handles edge case', () => {
+  it("handles edge case", () => {
     // Test edge case
   });
 });

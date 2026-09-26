@@ -14,12 +14,12 @@
 
 ## Shared Components (`src/shared/`)
 
-| Componente        | Archivo               | Propósito                                            |
-| ----------------- | --------------------- | ---------------------------------------------------- |
-| `EmptyState`      | `EmptyState.tsx`      | Placeholder para estados vacíos                      |
-| `Skeleton`        | `Skeleton.tsx`        | Loading skeletons de vistas, shell, modales y tablas |
-| `SeverityBadge`   | `SeverityBadge.tsx`   | Badge de severidad con color                         |
-| `ConfirmDialog`   | `ConfirmDialog.tsx`   | Confirmación reutilizable                            |
+| Componente      | Archivo             | Propósito                                            |
+| --------------- | ------------------- | ---------------------------------------------------- |
+| `EmptyState`    | `EmptyState.tsx`    | Placeholder para estados vacíos                      |
+| `Skeleton`      | `Skeleton.tsx`      | Loading skeletons de vistas, shell, modales y tablas |
+| `SeverityBadge` | `SeverityBadge.tsx` | Badge de severidad con color                         |
+| `ConfirmDialog` | `ConfirmDialog.tsx` | Confirmación reutilizable                            |
 
 ## Widgets (`src/widgets/`)
 

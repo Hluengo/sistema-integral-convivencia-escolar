@@ -28,15 +28,15 @@ No borrar ni mover el tag durante la revisión. No ejecutar reset --hard si exis
 
 ## Hallazgos que deben corregirse
 
-| ID | Prioridad | Hallazgo | Criterio |
-| --- | --- | --- | --- |
-| KPI-01 | Crítica | “Alertas críticas” cuenta comprometeAulaSegura, no plazos próximos | Medir vencidos y próximos usando fechas y estado |
-| KPI-02 | Crítica | La RPC pública fija critical_alerts en cero | Igualar la semántica pública y autenticada |
-| KPI-03 | Alta | Hay métricas, pero no una cola de acciones | Cada alerta abre el expediente o estudiante correcto |
-| KPI-04 | Alta | Rankings muestran volumen sin urgencia ni contexto | Mostrar período, último evento, umbral y acción |
-| KPI-05 | Alta | El caché operativo puede durar cinco minutos | Alertas frescas y con fecha/hora de actualización |
-| KPI-06 | Alta | La invalidación no incluye tendencias y todas las fuentes | Toda escritura relevante actualiza el dashboard |
-| KPI-07 | Media | “Brecha” puede confundirse con atraso real | Separar backlog actual, flujo mensual y tasa de cierre |
+| ID     | Prioridad | Hallazgo                                                           | Criterio                                               |
+| ------ | --------- | ------------------------------------------------------------------ | ------------------------------------------------------ |
+| KPI-01 | Crítica   | “Alertas críticas” cuenta comprometeAulaSegura, no plazos próximos | Medir vencidos y próximos usando fechas y estado       |
+| KPI-02 | Crítica   | La RPC pública fija critical_alerts en cero                        | Igualar la semántica pública y autenticada             |
+| KPI-03 | Alta      | Hay métricas, pero no una cola de acciones                         | Cada alerta abre el expediente o estudiante correcto   |
+| KPI-04 | Alta      | Rankings muestran volumen sin urgencia ni contexto                 | Mostrar período, último evento, umbral y acción        |
+| KPI-05 | Alta      | El caché operativo puede durar cinco minutos                       | Alertas frescas y con fecha/hora de actualización      |
+| KPI-06 | Alta      | La invalidación no incluye tendencias y todas las fuentes          | Toda escritura relevante actualiza el dashboard        |
+| KPI-07 | Media     | “Brecha” puede confundirse con atraso real                         | Separar backlog actual, flujo mensual y tasa de cierre |
 
 ## Contrato funcional
 

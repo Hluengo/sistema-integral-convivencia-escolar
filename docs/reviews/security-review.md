@@ -59,11 +59,11 @@ El `ROW_NUMBER() OVER (PARTITION BY ...)` en la misma migración (líneas 34-47)
 **Recomendación:** Agregar `cors` middleware con lista blanca de orígenes:
 
 ```ts
-import cors from 'cors';
+import cors from "cors";
 const ALLOWED_ORIGINS = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'https://sistema-integral-convivencia-escolar.vercel.app',
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "https://sistema-integral-convivencia-escolar.vercel.app",
 ];
 app.use(cors({ origin: ALLOWED_ORIGINS, credentials: true }));
 ```
@@ -82,7 +82,7 @@ app.use(cors({ origin: ALLOWED_ORIGINS, credentials: true }));
 **Recomendación:** Agregar `requireAuth` middleware a la ruta debug, o limitarla a IPs internas:
 
 ```ts
-router.get('/auth-debug', requireAuth, handler);
+router.get("/auth-debug", requireAuth, handler);
 ```
 
 **Esfuerzo:** 5 minutos
@@ -98,7 +98,7 @@ router.get('/auth-debug', requireAuth, handler);
 **Recomendación:** Agregar `requireAuth` al GET de templates, o al menos rate limiting:
 
 ```ts
-router.get('/', requireAuth, getTemplates);
+router.get("/", requireAuth, getTemplates);
 ```
 
 **Esfuerzo:** 5 minutos

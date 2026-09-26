@@ -1,10 +1,10 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import crypto from 'node:crypto';
-import dotenv from 'dotenv';
-import { createClient } from '@supabase/supabase-js';
+import crypto from "node:crypto";
+import dotenv from "dotenv";
+import { createClient } from "@supabase/supabase-js";
 
-dotenv.config({ path: '.env.local' });
+dotenv.config({ path: ".env.local" });
 const url = process.env.VITE_SUPABASE_URL;
 const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -12,13 +12,13 @@ const configuredBase = process.env.E2E_BASE_URL;
 const base =
   configuredBase && !/localhost|127\.0\.0\.1/.test(configuredBase)
     ? configuredBase
-    : 'https://sistema-integral-convivencia-escola-pied.vercel.app';
-if (!url || !key || !serviceKey) throw new Error('Faltan variables Supabase.');
+    : "https://sistema-integral-convivencia-escola-pied.vercel.app";
+if (!url || !key || !serviceKey) throw new Error("Faltan variables Supabase.");
 const admin = createClient(url, serviceKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
-const tenantId = '6f979bb9-ba34-491a-ae5c-e7991618050c';
-const password = `Qa-${crypto.randomBytes(18).toString('base64url')}!`;
+const tenantId = "6f979bb9-ba34-491a-ae5c-e7991618050c";
+const password = `Qa-${crypto.randomBytes(18).toString("base64url")}!`;
 const suffix = crypto.randomUUID().slice(0, 8);
 const users = [];
 
@@ -32,10 +32,10 @@ async function createUser(role) {
     app_metadata: { tenant_id: tenantId, role },
   });
   if (created.error || !created.data.user)
-    throw created.error ?? new Error('No se creó usuario QA.');
+    throw created.error ?? new Error("No se creó usuario QA.");
   const userId = created.data.user.id;
   users.push(userId);
-  const profile = await admin.from('profiles').upsert(
+  const profile = await admin.from("profiles").upsert(
     {
       user_id: userId,
       tenant_id: tenantId,
@@ -46,18 +46,18 @@ async function createUser(role) {
       course_ids: [],
       updated_at: new Date().toISOString(),
     },
-    { onConflict: 'user_id' },
+    { onConflict: "user_id" },
   );
   if (profile.error) throw profile.error;
-  const membership = await admin.from('app_memberships').upsert(
+  const membership = await admin.from("app_memberships").upsert(
     {
       tenant_id: tenantId,
       user_id: userId,
-      application_code: 'convivencia',
+      application_code: "convivencia",
       role,
       is_active: true,
     },
-    { onConflict: 'tenant_id,user_id,application_code' },
+    { onConflict: "tenant_id,user_id,application_code" },
   );
   if (membership.error) throw membership.error;
   return email;
@@ -67,7 +67,7 @@ async function getAccessToken(email) {
   const client = createClient(url, key, { auth: { persistSession: false } });
   const session = await client.auth.signInWithPassword({ email, password });
   if (session.error || !session.data.session)
-    throw session.error ?? new Error('No se obtuvo sesión.');
+    throw session.error ?? new Error("No se obtuvo sesión.");
   return session.data.session.access_token;
 }
 
@@ -94,9 +94,15 @@ try {
   for (const [role, statuses] of Object.entries(expected)) {
     const email = await createUser(role);
     const accessToken = await getAccessToken(email);
-    const adminStatus = await request(accessToken, '/api/admin/members');
-    const institutionStatus = await request(accessToken, '/api/admin/institution');
-    const onboardingStatus = await request(accessToken, '/api/onboarding/status');
+    const adminStatus = await request(accessToken, "/api/admin/members");
+    const institutionStatus = await request(
+      accessToken,
+      "/api/admin/institution",
+    );
+    const onboardingStatus = await request(
+      accessToken,
+      "/api/onboarding/status",
+    );
     if (
       adminStatus !== statuses.admin ||
       institutionStatus !== statuses.institution ||
@@ -114,8 +120,8 @@ try {
   console.log(JSON.stringify({ ok: true, results }));
 } finally {
   for (const userId of users) {
-    await admin.from('app_memberships').delete().eq('user_id', userId);
-    await admin.from('profiles').delete().eq('user_id', userId);
+    await admin.from("app_memberships").delete().eq("user_id", userId);
+    await admin.from("profiles").delete().eq("user_id", userId);
     await admin.auth.admin.deleteUser(userId);
   }
 }

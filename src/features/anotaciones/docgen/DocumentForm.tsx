@@ -1,8 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import type { Annotation } from '../../../shared/lib/types';
-import type { LetterContent } from './DocumentPreview/docTypes';
-import Button from '@/shared/ui/Button';
+import type { Annotation } from "../../../shared/lib/types";
+import type { LetterContent } from "./DocumentPreview/docTypes";
+import Button from "@/shared/ui/Button";
 
 interface DocumentFormProps {
   docType: string;
@@ -23,13 +23,17 @@ interface DocumentFormProps {
   annotations: Annotation[];
 }
 
-const TEXT_FIELDS: Array<{ key: keyof LetterContent; label: string; rows: number }> = [
-  { key: 'motivo', label: 'Motivo', rows: 2 },
-  { key: 'descripcion', label: 'Descripción / antecedentes', rows: 4 },
-  { key: 'medida', label: 'Medida o acuerdo', rows: 4 },
-  { key: 'acuerdos', label: 'Acuerdos / acciones', rows: 4 },
-  { key: 'cierre', label: 'Cierre', rows: 3 },
-  { key: 'observaciones', label: 'Observaciones', rows: 3 },
+const TEXT_FIELDS: Array<{
+  key: keyof LetterContent;
+  label: string;
+  rows: number;
+}> = [
+  { key: "motivo", label: "Motivo", rows: 2 },
+  { key: "descripcion", label: "Descripción / antecedentes", rows: 4 },
+  { key: "medida", label: "Medida o acuerdo", rows: 4 },
+  { key: "acuerdos", label: "Acuerdos / acciones", rows: 4 },
+  { key: "cierre", label: "Cierre", rows: 3 },
+  { key: "observaciones", label: "Observaciones", rows: 3 },
 ];
 
 export default function DocumentForm({
@@ -47,12 +51,14 @@ export default function DocumentForm({
   onResetLetterContent,
   negativeCount,
 }: DocumentFormProps) {
-  const showAdvanced = docType === 'compromiso_conductual' || docType === 'derivacion';
+  const showAdvanced =
+    docType === "compromiso_conductual" || docType === "derivacion";
 
   return (
     <div className="space-y-6">
       <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-700">
-        Cantidad de anotaciones negativas consideradas: <strong>{negativeCount}</strong>
+        Cantidad de anotaciones negativas consideradas:{" "}
+        <strong>{negativeCount}</strong>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -113,7 +119,10 @@ export default function DocumentForm({
             />
           </div>
           <div>
-            <label htmlFor="emitted-by" className="mb-1 block text-sm font-medium text-neutral-700">
+            <label
+              htmlFor="emitted-by"
+              className="mb-1 block text-sm font-medium text-neutral-700"
+            >
               Emitido por
             </label>
             <input
@@ -132,7 +141,9 @@ export default function DocumentForm({
       <section className="rounded-xl border border-neutral-200 bg-white p-4">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h5 className="text-sm font-bold text-neutral-900">Texto de la carta</h5>
+            <h5 className="text-sm font-bold text-neutral-900">
+              Texto de la carta
+            </h5>
             <p className="mt-1 text-xs text-neutral-500">
               Estos textos actualizan la plantilla en vivo.
             </p>
@@ -159,7 +170,9 @@ export default function DocumentForm({
                 id={`letter-${field.key}`}
                 aria-label={field.label}
                 value={letterContent[field.key]}
-                onChange={(event) => onLetterContentChange(field.key, event.target.value)}
+                onChange={(event) =>
+                  onLetterContentChange(field.key, event.target.value)
+                }
                 rows={field.rows}
                 className="w-full resize-y rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
               />

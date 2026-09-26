@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { AlertTriangle, X } from 'lucide-react';
+import { AlertTriangle, X } from "lucide-react";
 
 interface ExportErrorProps {
   message: string | null;

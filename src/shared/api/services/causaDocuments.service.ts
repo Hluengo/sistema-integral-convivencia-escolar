@@ -1,16 +1,16 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { supabase } from '../lib/supabase';
-import type { Json } from '../lib/database.types';
-import type { BitacoraEntry, Causa, ChecklistItem } from '../../lib/types';
+import { supabase } from "../lib/supabase";
+import type { Json } from "../lib/database.types";
+import type { BitacoraEntry, Causa, ChecklistItem } from "../../lib/types";
 import type {
   CausaDocumentSnapshot,
   CausaDocumentStatus,
-} from '../../../features/causas/notificacionDocgen/types';
+} from "../../../features/causas/notificacionDocgen/types";
 import {
   buildBitacoraEntryPayload,
   buildChecklistItemPayload,
-} from '../../../features/causas/notificacionDocgen/builders';
+} from "../../../features/causas/notificacionDocgen/builders";
 
 export { buildBitacoraEntryPayload, buildChecklistItemPayload };
 
@@ -20,7 +20,9 @@ export { buildBitacoraEntryPayload, buildChecklistItemPayload };
  * serializar: cualquier valor no serializable (funciones, ciclos) falla en
  * runtime antes de llegar a la base de datos.
  */
-export function toJsonSnapshot(snapshot: CausaDocumentSnapshot): Record<string, unknown> {
+export function toJsonSnapshot(
+  snapshot: CausaDocumentSnapshot,
+): Record<string, unknown> {
   return JSON.parse(JSON.stringify(snapshot)) as Record<string, unknown>;
 }
 
@@ -48,7 +50,7 @@ export async function createPendingCausaDocument(
   snapshot: CausaDocumentSnapshot,
 ): Promise<CausaDocumentRow | null> {
   const { data, error } = await supabase
-    .from('causa_documents')
+    .from("causa_documents")
     .insert({
       causa_id: causa.id,
       doc_type: snapshot.docType,
@@ -57,33 +59,35 @@ export async function createPendingCausaDocument(
       emitted_by: snapshot.emittedBy,
       student_name: snapshot.studentName,
       apoderado_name: snapshot.apoderadoName,
-      course: snapshot.expediente.course || '',
+      course: snapshot.expediente.course || "",
       emission_date: snapshot.emissionDate,
     })
     .select(
-      'id, causa_id, doc_type, status, content_snapshot, created_by, emitted_by, student_name, apoderado_name, course, emission_date, notified_at, tenant_id, created_at, updated_at',
+      "id, causa_id, doc_type, status, content_snapshot, created_by, emitted_by, student_name, apoderado_name, course, emission_date, notified_at, tenant_id, created_at, updated_at",
     )
     .single();
 
   if (error) {
-    console.error('Error creating causa document:', error.message || error);
+    console.error("Error creating causa document:", error.message || error);
     return null;
   }
   return data as CausaDocumentRow;
 }
 
 /** Lista los documentos de una causa (más reciente primero). */
-export async function fetchCausaDocuments(causaId: string): Promise<CausaDocumentRow[]> {
+export async function fetchCausaDocuments(
+  causaId: string,
+): Promise<CausaDocumentRow[]> {
   const { data, error } = await supabase
-    .from('causa_documents')
+    .from("causa_documents")
     .select(
-      'id, causa_id, doc_type, status, content_snapshot, created_by, emitted_by, student_name, apoderado_name, course, emission_date, notified_at, tenant_id, created_at, updated_at',
+      "id, causa_id, doc_type, status, content_snapshot, created_by, emitted_by, student_name, apoderado_name, course, emission_date, notified_at, tenant_id, created_at, updated_at",
     )
-    .eq('causa_id', causaId)
-    .order('created_at', { ascending: false });
+    .eq("causa_id", causaId)
+    .order("created_at", { ascending: false });
 
   if (error) {
-    console.error('Error fetching causa documents:', error.message || error);
+    console.error("Error fetching causa documents:", error.message || error);
     return [];
   }
   return (data ?? []) as CausaDocumentRow[];
@@ -95,16 +99,19 @@ export async function saveCausaDocumentSnapshot(
   snapshot: CausaDocumentSnapshot,
 ): Promise<boolean> {
   const { error } = await supabase
-    .from('causa_documents')
+    .from("causa_documents")
     .update({
       content_snapshot: toJsonSnapshot(snapshot) as unknown as Json,
       emitted_by: snapshot.emittedBy,
     })
-    .eq('id', documentId)
-    .eq('status', 'Pendiente');
+    .eq("id", documentId)
+    .eq("status", "Pendiente");
 
   if (error) {
-    console.error('Error saving causa document snapshot:', error.message || error);
+    console.error(
+      "Error saving causa document snapshot:",
+      error.message || error,
+    );
     return false;
   }
   return true;
@@ -121,16 +128,26 @@ export async function markCausaDocumentNotified(
   checklistItem: ChecklistItem,
   bitacoraEntry: BitacoraEntry,
 ): Promise<{ ok: boolean; error: string | null }> {
-  const { error } = await supabase.rpc('mark_causa_document_notified', {
+  const { error } = await supabase.rpc("mark_causa_document_notified", {
     p_document_id: documentId,
     p_snapshot: toJsonSnapshot(snapshot) as unknown as Json,
-    p_checklist_item: buildChecklistItemPayload(checklistItem) as unknown as Json,
-    p_bitacora_entry: buildBitacoraEntryPayload(bitacoraEntry) as unknown as Json,
+    p_checklist_item: buildChecklistItemPayload(
+      checklistItem,
+    ) as unknown as Json,
+    p_bitacora_entry: buildBitacoraEntryPayload(
+      bitacoraEntry,
+    ) as unknown as Json,
   });
 
   if (error) {
-    console.error('Error marking causa document notified:', error.message || error);
-    return { ok: false, error: error.message || 'No se pudo marcar como notificada.' };
+    console.error(
+      "Error marking causa document notified:",
+      error.message || error,
+    );
+    return {
+      ok: false,
+      error: error.message || "No se pudo marcar como notificada.",
+    };
   }
   return { ok: true, error: null };
 }
@@ -138,13 +155,13 @@ export async function markCausaDocumentNotified(
 /** Anula la notificación (solo mientras esté Pendiente). */
 export async function annulCausaDocument(documentId: string): Promise<boolean> {
   const { error } = await supabase
-    .from('causa_documents')
-    .update({ status: 'Anulada' })
-    .eq('id', documentId)
-    .eq('status', 'Pendiente');
+    .from("causa_documents")
+    .update({ status: "Anulada" })
+    .eq("id", documentId)
+    .eq("status", "Pendiente");
 
   if (error) {
-    console.error('Error annulling causa document:', error.message || error);
+    console.error("Error annulling causa document:", error.message || error);
     return false;
   }
   return true;

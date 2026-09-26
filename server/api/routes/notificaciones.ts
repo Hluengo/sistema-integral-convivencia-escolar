@@ -32,7 +32,8 @@ export function getCitacionEmailDomain(email: string): string {
 }
 
 const MAX_HTML_BYTES = 100_000;
-const DANGEROUS_HTML_RE = /<\s*(script|iframe|object|embed|form)\b|on\w+\s*=/i;
+const DANGEROUS_HTML_RE =
+  /<\s*(script|iframe|object|embed|form)\b|on\w+\s*=|(?:javascript|data:text\/html|vbscript):|srcdoc\s*=/i;
 
 export function isSafeDocumentoHtml(value: unknown): value is string {
   if (typeof value !== "string") return false;

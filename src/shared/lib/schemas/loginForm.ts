@@ -1,12 +1,14 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { z } from 'zod';
+import { z } from "zod";
 
-const emailSchema = z.email('Ingrese un correo electrónico válido.');
-const passwordSchema = z.string().min(6, 'La contraseña debe tener al menos 6 caracteres.');
+const emailSchema = z.email("Ingrese un correo electrónico válido.");
+const passwordSchema = z
+  .string()
+  .min(6, "La contraseña debe tener al menos 6 caracteres.");
 const newPasswordSchema = z
   .string()
-  .min(10, 'La nueva contraseña debe tener al menos 10 caracteres.');
+  .min(10, "La nueva contraseña debe tener al menos 10 caracteres.");
 
 export const loginFormSchema = z.object({
   email: emailSchema,
@@ -23,8 +25,8 @@ export const passwordUpdateFormSchema = z
     passwordConfirmation: newPasswordSchema,
   })
   .refine((value) => value.password === value.passwordConfirmation, {
-    path: ['passwordConfirmation'],
-    message: 'Las contraseñas no coinciden.',
+    path: ["passwordConfirmation"],
+    message: "Las contraseñas no coinciden.",
   });
 
 export interface LoginFormValues {

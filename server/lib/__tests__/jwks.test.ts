@@ -1,36 +1,36 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import assert from 'node:assert/strict';
-import crypto from 'node:crypto';
-import { describe, it, before, after, beforeEach } from 'node:test';
+import assert from "node:assert/strict";
+import crypto from "node:crypto";
+import { describe, it, before, after, beforeEach } from "node:test";
 import {
   verifyJwtWithJwks,
   clearJwksCache,
   __setJwksTestFetcher,
   __setJwksTestKeys,
   __getCacheEntry,
-} from '../jwks';
-import type { JwkKey } from '../jwks';
+} from "../jwks";
+import type { JwkKey } from "../jwks";
 
-const SUPABASE_URL = 'https://mjhbcqwtjzgvqssfiore.supabase.co';
+const SUPABASE_URL = "https://mjhbcqwtjzgvqssfiore.supabase.co";
 
 function base64url(buf: Buffer): string {
-  return buf.toString('base64url');
+  return buf.toString("base64url");
 }
 
 function derToRawSignature(der: Buffer, curveSize: number): Buffer {
   let i = 0;
-  if (der[i++] !== 0x30) throw new Error('Not SEQUENCE');
+  if (der[i++] !== 0x30) throw new Error("Not SEQUENCE");
   if (der[i] & 0x80) {
     i += (der[i] & 0x7f) + 1;
   } else {
     i += 1;
   }
-  if (der[i++] !== 0x02) throw new Error('Expected INTEGER for R');
+  if (der[i++] !== 0x02) throw new Error("Expected INTEGER for R");
   const rLen = der[i++];
   const rStart = i;
   i += rLen;
-  if (der[i++] !== 0x02) throw new Error('Expected INTEGER for S');
+  if (der[i++] !== 0x02) throw new Error("Expected INTEGER for S");
   const sLen = der[i++];
   const sStart = i;
 
@@ -48,18 +48,22 @@ function derToRawSignature(der: Buffer, curveSize: number): Buffer {
   return Buffer.concat([rawR, rawS]);
 }
 
-function generateTestKeypair(): { publicJwk: JwkKey; privateKey: crypto.KeyObject; kid: string } {
-  const { publicKey, privateKey } = crypto.generateKeyPairSync('ec', {
-    namedCurve: 'P-256',
+function generateTestKeypair(): {
+  publicJwk: JwkKey;
+  privateKey: crypto.KeyObject;
+  kid: string;
+} {
+  const { publicKey, privateKey } = crypto.generateKeyPairSync("ec", {
+    namedCurve: "P-256",
   });
-  const jwk = publicKey.export({ format: 'jwk' });
-  const kid = 'test-kid-p256-001';
+  const jwk = publicKey.export({ format: "jwk" });
+  const kid = "test-kid-p256-001";
   const publicJwk: JwkKey = {
     kid,
-    kty: 'EC',
-    alg: 'ES256',
-    use: 'sig',
-    crv: 'P-256',
+    kty: "EC",
+    alg: "ES256",
+    use: "sig",
+    crv: "P-256",
     x: jwk.x!,
     y: jwk.y!,
   };
@@ -72,12 +76,12 @@ function createSignedJwt(
   kid: string,
   headerOverrides?: Record<string, string>,
 ): string {
-  const header = { alg: 'ES256', kid, typ: 'JWT', ...headerOverrides };
+  const header = { alg: "ES256", kid, typ: "JWT", ...headerOverrides };
   const headerB64 = base64url(Buffer.from(JSON.stringify(header)));
   const payloadB64 = base64url(Buffer.from(JSON.stringify(payload)));
   const signingInput = `${headerB64}.${payloadB64}`;
 
-  const sign = crypto.createSign('SHA256');
+  const sign = crypto.createSign("SHA256");
   sign.update(signingInput);
   const derSig = sign.sign(privateKey);
   const rawSig = derToRawSignature(derSig, 32);
@@ -85,11 +89,11 @@ function createSignedJwt(
   return `${headerB64}.${payloadB64}.${base64url(rawSig)}`;
 }
 
-describe('verifyJwtWithJwks — security & positive tests', () => {
+describe("verifyJwtWithJwks — security & positive tests", () => {
   let keypair: { publicJwk: JwkKey; privateKey: crypto.KeyObject; kid: string };
 
   before(() => {
-    process.env.NODE_ENV = 'test';
+    process.env.NODE_ENV = "test";
   });
 
   beforeEach(() => {
@@ -103,11 +107,11 @@ describe('verifyJwtWithJwks — security & positive tests', () => {
     __setJwksTestFetcher(null);
   });
 
-  it('1. positive ES256 — verifies payload with real EC P-256 keypair', async () => {
+  it("1. positive ES256 — verifies payload with real EC P-256 keypair", async () => {
     __setJwksTestKeys(SUPABASE_URL, [keypair.publicJwk]);
 
     const payload = {
-      sub: 'user-abc-123',
+      sub: "user-abc-123",
       exp: Math.floor(Date.now() / 1000) + 3600,
       iss: `${SUPABASE_URL}/auth/v1`,
     };
@@ -115,23 +119,23 @@ describe('verifyJwtWithJwks — security & positive tests', () => {
     const result = await verifyJwtWithJwks(token, SUPABASE_URL);
 
     assert.notEqual(result, null);
-    assert.equal(result!.sub, 'user-abc-123');
+    assert.equal(result!.sub, "user-abc-123");
     assert.equal(result!.exp, payload.exp);
     assert.equal(result!.iss, payload.iss);
   });
 
-  it('2. ES256 — altered signature returns null', async () => {
+  it("2. ES256 — altered signature returns null", async () => {
     __setJwksTestKeys(SUPABASE_URL, [keypair.publicJwk]);
 
     const payload = {
-      sub: 'user-abc-123',
+      sub: "user-abc-123",
       exp: Math.floor(Date.now() / 1000) + 3600,
       iss: `${SUPABASE_URL}/auth/v1`,
     };
     const token = createSignedJwt(payload, keypair.privateKey, keypair.kid);
-    const parts = token.split('.');
+    const parts = token.split(".");
 
-    const sigBuf = Buffer.from(parts[2]!, 'base64url');
+    const sigBuf = Buffer.from(parts[2]!, "base64url");
     sigBuf[0] ^= 0x01;
     const alteredToken = `${parts[0]}.${parts[1]}.${base64url(sigBuf)}`;
 
@@ -139,37 +143,37 @@ describe('verifyJwtWithJwks — security & positive tests', () => {
     assert.equal(result, null);
   });
 
-  it('3. ES256 — wrong issuer returns null', async () => {
+  it("3. ES256 — wrong issuer returns null", async () => {
     __setJwksTestKeys(SUPABASE_URL, [keypair.publicJwk]);
 
     const payload = {
-      sub: 'user-abc-123',
+      sub: "user-abc-123",
       exp: Math.floor(Date.now() / 1000) + 3600,
-      iss: 'https://evil.com/auth/v1',
+      iss: "https://evil.com/auth/v1",
     };
     const token = createSignedJwt(payload, keypair.privateKey, keypair.kid);
     const result = await verifyJwtWithJwks(token, SUPABASE_URL);
     assert.equal(result, null);
   });
 
-  it('4. ES256 — issuer missing is accepted (optional)', async () => {
+  it("4. ES256 — issuer missing is accepted (optional)", async () => {
     __setJwksTestKeys(SUPABASE_URL, [keypair.publicJwk]);
 
     const payload = {
-      sub: 'user-abc-123',
+      sub: "user-abc-123",
       exp: Math.floor(Date.now() / 1000) + 3600,
     };
     const token = createSignedJwt(payload, keypair.privateKey, keypair.kid);
     const result = await verifyJwtWithJwks(token, SUPABASE_URL);
     assert.notEqual(result, null);
-    assert.equal(result!.sub, 'user-abc-123');
+    assert.equal(result!.sub, "user-abc-123");
   });
 
-  it('5. ES256 — exp in the past returns null', async () => {
+  it("5. ES256 — exp in the past returns null", async () => {
     __setJwksTestKeys(SUPABASE_URL, [keypair.publicJwk]);
 
     const payload = {
-      sub: 'user-abc-123',
+      sub: "user-abc-123",
       exp: Math.floor(Date.now() / 1000) - 3600,
       iss: `${SUPABASE_URL}/auth/v1`,
     };
@@ -178,11 +182,11 @@ describe('verifyJwtWithJwks — security & positive tests', () => {
     assert.equal(result, null);
   });
 
-  it('6. ES256 — nbf in the future returns null', async () => {
+  it("6. ES256 — nbf in the future returns null", async () => {
     __setJwksTestKeys(SUPABASE_URL, [keypair.publicJwk]);
 
     const payload = {
-      sub: 'user-abc-123',
+      sub: "user-abc-123",
       exp: Math.floor(Date.now() / 1000) + 7200,
       nbf: Math.floor(Date.now() / 1000) + 3600,
       iss: `${SUPABASE_URL}/auth/v1`,
@@ -192,11 +196,11 @@ describe('verifyJwtWithJwks — security & positive tests', () => {
     assert.equal(result, null);
   });
 
-  it('7. ES256 — nbf in the past is accepted', async () => {
+  it("7. ES256 — nbf in the past is accepted", async () => {
     __setJwksTestKeys(SUPABASE_URL, [keypair.publicJwk]);
 
     const payload = {
-      sub: 'user-abc-123',
+      sub: "user-abc-123",
       exp: Math.floor(Date.now() / 1000) + 3600,
       nbf: Math.floor(Date.now() / 1000) - 60,
       iss: `${SUPABASE_URL}/auth/v1`,
@@ -204,14 +208,14 @@ describe('verifyJwtWithJwks — security & positive tests', () => {
     const token = createSignedJwt(payload, keypair.privateKey, keypair.kid);
     const result = await verifyJwtWithJwks(token, SUPABASE_URL);
     assert.notEqual(result, null);
-    assert.equal(result!.sub, 'user-abc-123');
+    assert.equal(result!.sub, "user-abc-123");
   });
 
-  it('8. ES256 — empty sub returns null', async () => {
+  it("8. ES256 — empty sub returns null", async () => {
     __setJwksTestKeys(SUPABASE_URL, [keypair.publicJwk]);
 
     const payload = {
-      sub: '',
+      sub: "",
       exp: Math.floor(Date.now() / 1000) + 3600,
     };
     const token = createSignedJwt(payload, keypair.privateKey, keypair.kid);
@@ -219,7 +223,7 @@ describe('verifyJwtWithJwks — security & positive tests', () => {
     assert.equal(result, null);
   });
 
-  it('9. ES256 — missing sub returns null', async () => {
+  it("9. ES256 — missing sub returns null", async () => {
     __setJwksTestKeys(SUPABASE_URL, [keypair.publicJwk]);
 
     const payload = {
@@ -230,46 +234,52 @@ describe('verifyJwtWithJwks — security & positive tests', () => {
     assert.equal(result, null);
   });
 
-  it('10. ES256 — RS256 token with ES256 key rejects (alg mismatch)', async () => {
+  it("10. ES256 — RS256 token with ES256 key rejects (alg mismatch)", async () => {
     __setJwksTestKeys(SUPABASE_URL, [keypair.publicJwk]);
 
     const payload = {
-      sub: 'user-abc-123',
+      sub: "user-abc-123",
       exp: Math.floor(Date.now() / 1000) + 3600,
     };
     const token = createSignedJwt(payload, keypair.privateKey, keypair.kid, {
-      alg: 'RS256',
+      alg: "RS256",
     });
     const result = await verifyJwtWithJwks(token, SUPABASE_URL);
     assert.equal(result, null);
   });
 
-  it('11. ES256 — alg=none rejected', async () => {
+  it("11. ES256 — alg=none rejected", async () => {
     __setJwksTestKeys(SUPABASE_URL, [keypair.publicJwk]);
 
-    const header = { alg: 'none', kid: keypair.kid, typ: 'JWT' };
-    const payload = { sub: 'user-abc-123', exp: Math.floor(Date.now() / 1000) + 3600 };
+    const header = { alg: "none", kid: keypair.kid, typ: "JWT" };
+    const payload = {
+      sub: "user-abc-123",
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    };
     const token = `${base64url(Buffer.from(JSON.stringify(header)))}.${base64url(Buffer.from(JSON.stringify(payload)))}.`;
     const result = await verifyJwtWithJwks(token, SUPABASE_URL);
     assert.equal(result, null);
   });
 
-  it('12. ES256 — unknown algorithm rejected', async () => {
+  it("12. ES256 — unknown algorithm rejected", async () => {
     __setJwksTestKeys(SUPABASE_URL, [keypair.publicJwk]);
 
-    const header = { alg: 'foo256', kid: keypair.kid, typ: 'JWT' };
-    const payload = { sub: 'user-abc-123', exp: Math.floor(Date.now() / 1000) + 3600 };
+    const header = { alg: "foo256", kid: keypair.kid, typ: "JWT" };
+    const payload = {
+      sub: "user-abc-123",
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    };
     const token = `${base64url(Buffer.from(JSON.stringify(header)))}.${base64url(Buffer.from(JSON.stringify(payload)))}.fake`;
     const result = await verifyJwtWithJwks(token, SUPABASE_URL);
     assert.equal(result, null);
   });
 
-  it('13. ES256 — kid mismatch with JWKS key returns null (checks refresh)', async () => {
+  it("13. ES256 — kid mismatch with JWKS key returns null (checks refresh)", async () => {
     const otherKeypair = generateTestKeypair();
     __setJwksTestKeys(SUPABASE_URL, [otherKeypair.publicJwk]);
 
     const payload = {
-      sub: 'user-abc-123',
+      sub: "user-abc-123",
       exp: Math.floor(Date.now() / 1000) + 3600,
     };
     const token = createSignedJwt(payload, keypair.privateKey, keypair.kid);
@@ -277,11 +287,11 @@ describe('verifyJwtWithJwks — security & positive tests', () => {
     assert.equal(result, null);
   });
 
-  it('14. cache is used for second call', async () => {
+  it("14. cache is used for second call", async () => {
     __setJwksTestKeys(SUPABASE_URL, [keypair.publicJwk]);
 
     const payload = {
-      sub: 'user-abc-123',
+      sub: "user-abc-123",
       exp: Math.floor(Date.now() / 1000) + 3600,
       iss: `${SUPABASE_URL}/auth/v1`,
     };
@@ -301,20 +311,22 @@ describe('verifyJwtWithJwks — security & positive tests', () => {
     assert.equal(entry!.keys[0]!.kid, keypair.kid);
   });
 
-  it('15. malformed token (2 parts) returns null', async () => {
-    const result = await verifyJwtWithJwks('a.b', SUPABASE_URL);
+  it("15. malformed token (2 parts) returns null", async () => {
+    const result = await verifyJwtWithJwks("a.b", SUPABASE_URL);
     assert.equal(result, null);
   });
 
-  it('16. ES256 without kid returns null', async () => {
-    const header = base64url(Buffer.from(JSON.stringify({ alg: 'ES256', typ: 'JWT' })));
-    const payload = base64url(Buffer.from(JSON.stringify({ sub: 'test' })));
+  it("16. ES256 without kid returns null", async () => {
+    const header = base64url(
+      Buffer.from(JSON.stringify({ alg: "ES256", typ: "JWT" })),
+    );
+    const payload = base64url(Buffer.from(JSON.stringify({ sub: "test" })));
     const token = `${header}.${payload}.fake`;
     const result = await verifyJwtWithJwks(token, SUPABASE_URL);
     assert.equal(result, null);
   });
 
-  it('17. cache evita fetch repetido — same keys after clear', async () => {
+  it("17. cache evita fetch repetido — same keys after clear", async () => {
     __setJwksTestKeys(SUPABASE_URL, [keypair.publicJwk]);
 
     const entryBefore = __getCacheEntry(SUPABASE_URL);
@@ -322,7 +334,7 @@ describe('verifyJwtWithJwks — security & positive tests', () => {
     assert.equal(entryBefore!.keys.length, 1);
 
     const payload = {
-      sub: 'user-cache-test',
+      sub: "user-cache-test",
       exp: Math.floor(Date.now() / 1000) + 3600,
     };
     const token = createSignedJwt(payload, keypair.privateKey, keypair.kid);

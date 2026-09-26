@@ -1,8 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { create } from 'zustand';
+import { create } from "zustand";
 
-export type ToastType = 'success' | 'error' | 'warning' | 'info';
+export type ToastType = "success" | "error" | "warning" | "info";
 
 interface ToastItem {
   id: string;
@@ -21,7 +21,7 @@ const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 export const useToastStore = create<ToastState>((set, get) => ({
   toasts: [],
   addToast: (type, message) => {
-    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const id = crypto.randomUUID();
     set((s) => ({ toasts: [...s.toasts, { id, type, message }] }));
     const timeoutId = setTimeout(() => {
       toastTimeouts.delete(id);

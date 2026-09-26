@@ -1,15 +1,15 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { User } from '@supabase/supabase-js';
-import type { SidebarView } from '../../widgets/sidebar/Sidebar';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import type { User } from "@supabase/supabase-js";
+import type { SidebarView } from "../../widgets/sidebar/Sidebar";
 import {
   canAccessView,
   causaToPath,
   isPublicView,
   routeIntentFromPath,
   viewToPath,
-} from '../routing';
+} from "../routing";
 
 interface UseUrlRoutingArgs {
   user: User | null;
@@ -42,56 +42,59 @@ export function useUrlRouting({
 
   useEffect(() => {
     const handlePopState = () => setPathname(getCurrentPathname());
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  const navigate = useCallback((path: string, options?: { replace?: boolean }) => {
-    if (typeof window === 'undefined') return;
-    const nextPath = path || '/';
-    const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-    if (currentPath === nextPath) return;
-    if (options?.replace) {
-      window.history.replaceState(null, '', nextPath);
-    } else {
-      window.history.pushState(null, '', nextPath);
-    }
-    setPathname(window.location.pathname);
-  }, []);
+  const navigate = useCallback(
+    (path: string, options?: { replace?: boolean }) => {
+      if (typeof window === "undefined") return;
+      const nextPath = path || "/";
+      const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      if (currentPath === nextPath) return;
+      if (options?.replace) {
+        window.history.replaceState(null, "", nextPath);
+      } else {
+        window.history.pushState(null, "", nextPath);
+      }
+      setPathname(window.location.pathname);
+    },
+    [],
+  );
 
   useEffect(() => {
     const intent = routeIntentFromPath(pathname);
 
-    if (intent.kind === 'not-found') {
-      navigate('/', { replace: true });
+    if (intent.kind === "not-found") {
+      navigate("/", { replace: true });
       return;
     }
 
-    if (intent.kind === 'login') {
+    if (intent.kind === "login") {
       if (user) {
-        navigate('/', { replace: true });
+        navigate("/", { replace: true });
         return;
       }
-      if (currentView !== 'dashboard') setCurrentView('dashboard');
-      if (selectedCausaId) setSelectedCausaId('');
+      if (currentView !== "dashboard") setCurrentView("dashboard");
+      if (selectedCausaId) setSelectedCausaId("");
       setShowLoginModal(true);
       return;
     }
 
     if (!user && !isPublicView(intent.view)) {
       setShowLoginModal(true);
-      navigate('/login', { replace: true });
+      navigate("/login", { replace: true });
       return;
     }
 
     if (!canAccessView(intent.view, gates)) {
-      navigate('/', { replace: true });
+      navigate("/", { replace: true });
       return;
     }
 
     if (currentView !== intent.view) setCurrentView(intent.view);
-    if (intent.view === 'causas') {
-      const nextCausaId = intent.causaId ?? '';
+    if (intent.view === "causas") {
+      const nextCausaId = intent.causaId ?? "";
       if (selectedCausaId !== nextCausaId) setSelectedCausaId(nextCausaId);
     }
   }, [
@@ -110,7 +113,7 @@ export function useUrlRouting({
     (view: SidebarView) => {
       if (!user && !isPublicView(view)) {
         setShowLoginModal(true);
-        navigate('/login');
+        navigate("/login");
         return;
       }
       if (!canAccessView(view, gates)) return;
@@ -123,7 +126,7 @@ export function useUrlRouting({
     (causaId: string) => {
       if (!user) {
         setShowLoginModal(true);
-        navigate('/login');
+        navigate("/login");
         return;
       }
       navigate(causaToPath(causaId));
@@ -132,13 +135,13 @@ export function useUrlRouting({
   );
 
   const navigateHome = useCallback(() => {
-    navigate('/', { replace: true });
+    navigate("/", { replace: true });
   }, [navigate]);
 
   const closeLoginModal = useCallback(() => {
     setShowLoginModal(false);
-    if (routeIntentFromPath(pathname).kind === 'login') {
-      navigate('/', { replace: true });
+    if (routeIntentFromPath(pathname).kind === "login") {
+      navigate("/", { replace: true });
     }
   }, [navigate, pathname, setShowLoginModal]);
 
@@ -146,5 +149,5 @@ export function useUrlRouting({
 }
 
 function getCurrentPathname(): string {
-  return typeof window === 'undefined' ? '/' : window.location.pathname;
+  return typeof window === "undefined" ? "/" : window.location.pathname;
 }

@@ -210,7 +210,7 @@ export default function AdminView() {
             type="button"
             key={id}
             onClick={() => setActiveTab(id)}
-            className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2.5 font-semibold text-xs transition-colors sm:px-4 ${activeTab === id ? "bg-neutral-900 text-white" : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800"}`}
+            className={`flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3 py-2.5 font-semibold text-xs transition-colors sm:px-4 ${activeTab === id ? "bg-neutral-900 text-white" : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800"}`}
             aria-pressed={activeTab === id}
           >
             <Icon className="size-4" aria-hidden="true" /> {label}
@@ -638,7 +638,7 @@ function MemberRow({
           aria-label={`${enabled ? "Desactivar" : "Activar"} acceso de ${member.email ?? member.user_id}`}
           disabled={disabled || isPlatformAdmin}
           onClick={() => setEnabled((value) => !value)}
-          className={`rounded-full px-3 py-1.5 font-semibold text-xs ${enabled ? "bg-leve-100 text-leve-800" : "bg-neutral-100 text-neutral-500"}`}
+          className={`min-h-11 rounded-full px-3 py-1.5 font-semibold text-xs ${enabled ? "bg-leve-100 text-leve-800" : "bg-neutral-100 text-neutral-500"}`}
         >
           {enabled ? "Activo" : "Desactivado"}
         </button>

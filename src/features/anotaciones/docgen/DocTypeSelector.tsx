@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { Lock, FileText, AlertTriangle, Users } from 'lucide-react';
+import { Lock, FileText, AlertTriangle, Users } from "lucide-react";
 
 interface DocTypeSelectorProps {
   docType: string;
@@ -11,22 +11,22 @@ interface DocTypeSelectorProps {
 
 const DOC_TYPES = [
   {
-    id: 'amonestacion',
-    label: 'Amonestación',
+    id: "amonestacion",
+    label: "Amonestación",
     icon: FileText,
-    description: 'Carta de amonestación por anotaciones negativas',
+    description: "Carta de amonestación por anotaciones negativas",
   },
   {
-    id: 'compromiso_conductual',
-    label: 'Compromiso Conductual',
+    id: "compromiso_conductual",
+    label: "Compromiso Conductual",
     icon: Users,
-    description: 'Carta de compromiso conductual (requiere 10+ anotaciones)',
+    description: "Carta de compromiso conductual (requiere 10+ anotaciones)",
   },
   {
-    id: 'derivacion',
-    label: 'Derivación',
+    id: "derivacion",
+    label: "Derivación",
     icon: AlertTriangle,
-    description: 'Derivación a Inspectoría / Convivencia Escolar',
+    description: "Derivación a Inspectoría / Convivencia Escolar",
   },
 ] as const;
 
@@ -37,7 +37,7 @@ export default function DocTypeSelector({
   negativeCount,
 }: DocTypeSelectorProps) {
   const isEnabled = (id: string) => {
-    if (id === 'compromiso_conductual') {
+    if (id === "compromiso_conductual") {
       return hasTenOrMore;
     }
     return true;
@@ -45,7 +45,9 @@ export default function DocTypeSelector({
 
   return (
     <fieldset className="space-y-3">
-      <legend className="block font-medium text-neutral-700 text-sm">Tipo de Documento</legend>
+      <legend className="block font-medium text-neutral-700 text-sm">
+        Tipo de Documento
+      </legend>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {DOC_TYPES.map(({ id, label, icon: Icon, description }) => {
           const enabled = isEnabled(id);
@@ -59,10 +61,10 @@ export default function DocTypeSelector({
               disabled={!enabled}
               className={`relative flex flex-col items-center gap-2 rounded-lg border-2 p-4 text-left transition-colors ${
                 isActive
-                  ? 'border-brand-500 bg-blue-50 ring-2 ring-blue-200'
-                  : 'border-neutral-200 bg-white hover:border-neutral-300'
+                  ? "border-brand-500 bg-blue-50 ring-2 ring-blue-200"
+                  : "border-neutral-200 bg-white hover:border-neutral-300"
               }
-                ${!enabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}
+                ${!enabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
               `}
             >
               {!enabled && (
@@ -70,10 +72,12 @@ export default function DocTypeSelector({
                   <Lock className="h-4 w-4" />
                 </div>
               )}
-              <Icon className={`h-8 w-8 ${isActive ? 'text-blue-600' : 'text-neutral-500'}`} />
+              <Icon
+                className={`h-8 w-8 ${isActive ? "text-blue-600" : "text-neutral-500"}`}
+              />
               <div className="text-center">
                 <span
-                  className={`block font-semibold text-sm ${isActive ? 'text-blue-700' : 'text-neutral-800'}`}
+                  className={`block font-semibold text-sm ${isActive ? "text-blue-700" : "text-neutral-800"}`}
                 >
                   {label}
                 </span>
@@ -81,7 +85,7 @@ export default function DocTypeSelector({
                   {description}
                 </span>
               </div>
-              {!enabled && id === 'compromiso_conductual' && (
+              {!enabled && id === "compromiso_conductual" && (
                 <span className="font-medium text-grave-600 text-xs">
                   Faltan {10 - negativeCount} anotaciones
                 </span>

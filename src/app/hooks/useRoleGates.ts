@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useMemo } from 'react';
+import { useMemo } from "react";
 
 const ROLE_PRIORITY: Record<string, number> = {
   superadmin: 7,
@@ -31,27 +31,28 @@ export function resolveRoleGates({
   appRole,
 }: UseRoleGatesArgs) {
   const effectiveAdminRole = [profileRole, appRole].sort(
-    (left, right) => (ROLE_PRIORITY[right ?? ''] ?? -1) - (ROLE_PRIORITY[left ?? ''] ?? -1),
+    (left, right) =>
+      (ROLE_PRIORITY[right ?? ""] ?? -1) - (ROLE_PRIORITY[left ?? ""] ?? -1),
   )[0];
 
   const canAccessAdmin =
-    effectiveAdminRole === 'admin' ||
-    effectiveAdminRole === 'direccion' ||
-    effectiveAdminRole === 'superadmin';
+    effectiveAdminRole === "admin" ||
+    effectiveAdminRole === "direccion" ||
+    effectiveAdminRole === "superadmin";
   const canAccessReports = [
-    'admin',
-    'direccion',
-    'convivencia',
-    'inspectoria',
-    'superadmin',
-  ].includes(effectiveAdminRole ?? '');
-  const canAccessPlatform = effectiveAdminRole === 'superadmin';
+    "admin",
+    "direccion",
+    "convivencia",
+    "inspectoria",
+    "superadmin",
+  ].includes(effectiveAdminRole ?? "");
+  const canAccessPlatform = effectiveAdminRole === "superadmin";
   const onboardingEnabled =
     isAuthenticated &&
     Boolean(tenantId && userId) &&
-    (effectiveAdminRole === 'admin' ||
-      effectiveAdminRole === 'direccion' ||
-      effectiveAdminRole === 'superadmin');
+    (effectiveAdminRole === "admin" ||
+      effectiveAdminRole === "direccion" ||
+      effectiveAdminRole === "superadmin");
 
   return {
     effectiveAdminRole,
@@ -70,7 +71,14 @@ export function useRoleGates({
   appRole,
 }: UseRoleGatesArgs) {
   return useMemo(
-    () => resolveRoleGates({ isAuthenticated, tenantId, userId, profileRole, appRole }),
+    () =>
+      resolveRoleGates({
+        isAuthenticated,
+        tenantId,
+        userId,
+        profileRole,
+        appRole,
+      }),
     [appRole, isAuthenticated, profileRole, tenantId, userId],
   );
 }

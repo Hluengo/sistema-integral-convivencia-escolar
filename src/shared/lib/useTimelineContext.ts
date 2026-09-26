@@ -1,8 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { createContext, useContext } from 'react';
-import type { Causa, ChecklistItem, UserRole } from './types';
-import type { ManualBitacoraEntryInput } from './hooks/useBitacoraLog';
+import { createContext, useContext } from "react";
+import type { Causa, ChecklistItem, UserRole } from "./types";
+import type { ManualBitacoraEntryInput } from "./hooks/useBitacoraLog";
 
 interface TimelineContextValue {
   causa: Causa;
@@ -11,7 +11,9 @@ interface TimelineContextValue {
   onUpdateCausa: (updated: Causa) => void;
 
   expandedStages: Record<string, boolean>;
-  setExpandedStages: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+  setExpandedStages: React.Dispatch<
+    React.SetStateAction<Record<string, boolean>>
+  >;
 
   registeringItemId: string | null;
   setRegisteringItemId: React.Dispatch<React.SetStateAction<string | null>>;
@@ -24,18 +26,22 @@ interface TimelineContextValue {
   regFile: File | null;
   isSavingRegistration: boolean;
   registrationError: string | null;
-  documentScope: 'causa' | 'incidente';
-  setDocumentScope: React.Dispatch<React.SetStateAction<'causa' | 'incidente'>>;
+  documentScope: "causa" | "incidente";
+  setDocumentScope: React.Dispatch<React.SetStateAction<"causa" | "incidente">>;
   handleStartRegister: (item: ChecklistItem) => void;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSaveRegistration: (itemId: string) => Promise<void>;
   handleResetRegistration: (itemId: string) => void;
 
-  documents: { name: string; url: string; scope: 'causa' | 'incidente' }[];
+  documents: { name: string; url: string; scope: "causa" | "incidente" }[];
   isUploadingDocument: boolean;
   documentError: string | null;
   handleAttachDocument: (itemId: string, file: File | null) => Promise<void>;
-  handleRemoveDocument: (itemId: string, fileName?: string, filePath?: string) => Promise<void>;
+  handleRemoveDocument: (
+    itemId: string,
+    fileName?: string,
+    filePath?: string,
+  ) => Promise<void>;
 
   createManualLog: (input: ManualBitacoraEntryInput) => Promise<void>;
   isCreatingManualLog: boolean;
@@ -48,7 +54,9 @@ export const TimelineContext = createContext<TimelineContextValue | null>(null);
 export function useTimelineContext() {
   const ctx = useContext(TimelineContext);
   if (!ctx) {
-    throw new Error('useTimelineContext debe usarse dentro de TimelineProvider');
+    throw new Error(
+      "useTimelineContext debe usarse dentro de TimelineProvider",
+    );
   }
   return ctx;
 }

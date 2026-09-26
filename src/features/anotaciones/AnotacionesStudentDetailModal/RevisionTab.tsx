@@ -147,6 +147,7 @@ export default function RevisionTab({
         }}
         onDrop={review.handleDrop}
         aria-label="Subir PDF de hoja de vida para análisis. También puede arrastrar el archivo aquí."
+        aria-describedby="pdf-drop-hint"
         disabled={review.isBusy}
         className={`w-full rounded-xl border-2 border-dashed p-5 text-center transition-colors ${
           review.isDragging

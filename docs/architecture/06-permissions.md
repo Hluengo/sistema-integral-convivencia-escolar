@@ -15,25 +15,25 @@ admin (full access)
 
 ## RLS Policy Map
 
-| Tabla | SELECT | INSERT | UPDATE | DELETE |
-|-------|--------|--------|--------|--------|
-| tenants | propio | admin | admin/direccion | admin |
-| profiles | propio + same tenant | admin/direccion | propio + admin/direccion | admin/direccion |
-| causas | same tenant | staff | staff | admin/direccion |
-| bitacora_entries | same tenant | same tenant | same tenant | same tenant |
-| checklist_items | same tenant | same tenant | same tenant | same tenant |
-| inspectorate_records | same tenant | same tenant | same tenant | same tenant |
-| cartas_disciplinarias | same tenant | same tenant | same tenant | same tenant |
-| etapas_disciplinarias | same tenant | same tenant | same tenant | same tenant |
-| students | same tenant | same tenant | same tenant | admin/direccion |
-| courses | same tenant | same tenant | same tenant | admin/direccion |
-| document_templates | same tenant | same tenant | same tenant | admin/direccion |
-| document_analyses | same tenant | same tenant | same tenant | same tenant |
-| disciplinary_processes | same tenant | same tenant | same tenant | same tenant |
-| disciplinary_process_files | same tenant | same tenant | same tenant | same tenant |
-| disciplinary_annotations_detected | same tenant | same tenant | same tenant | same tenant |
-| disciplinary_rules | same tenant | same tenant | same tenant | same tenant |
-| usage_events | admin/direccion | propio | — | — |
+| Tabla                             | SELECT               | INSERT          | UPDATE                   | DELETE          |
+| --------------------------------- | -------------------- | --------------- | ------------------------ | --------------- |
+| tenants                           | propio               | admin           | admin/direccion          | admin           |
+| profiles                          | propio + same tenant | admin/direccion | propio + admin/direccion | admin/direccion |
+| causas                            | same tenant          | staff           | staff                    | admin/direccion |
+| bitacora_entries                  | same tenant          | same tenant     | same tenant              | same tenant     |
+| checklist_items                   | same tenant          | same tenant     | same tenant              | same tenant     |
+| inspectorate_records              | same tenant          | same tenant     | same tenant              | same tenant     |
+| cartas_disciplinarias             | same tenant          | same tenant     | same tenant              | same tenant     |
+| etapas_disciplinarias             | same tenant          | same tenant     | same tenant              | same tenant     |
+| students                          | same tenant          | same tenant     | same tenant              | admin/direccion |
+| courses                           | same tenant          | same tenant     | same tenant              | admin/direccion |
+| document_templates                | same tenant          | same tenant     | same tenant              | admin/direccion |
+| document_analyses                 | same tenant          | same tenant     | same tenant              | same tenant     |
+| disciplinary_processes            | same tenant          | same tenant     | same tenant              | same tenant     |
+| disciplinary_process_files        | same tenant          | same tenant     | same tenant              | same tenant     |
+| disciplinary_annotations_detected | same tenant          | same tenant     | same tenant              | same tenant     |
+| disciplinary_rules                | same tenant          | same tenant     | same tenant              | same tenant     |
+| usage_events                      | admin/direccion      | propio          | —                        | —               |
 
 ## RLS Functions
 
@@ -59,4 +59,5 @@ TRIGGER trg_profiles_sync_tenant_to_jwt
   ON profiles AFTER INSERT OR UPDATE OF tenant_id
   EXECUTE FUNCTION sync_tenant_to_jwt()
 ```
+
 Sincroniza `tenant_id` a `auth.users.raw_app_meta_data` para JWT fast path.

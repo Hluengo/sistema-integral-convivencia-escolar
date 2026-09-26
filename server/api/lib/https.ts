@@ -1,8 +1,12 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-async function readCappedText(res: Response, maxBytes: number, hostname: string): Promise<string> {
+async function readCappedText(
+  res: Response,
+  maxBytes: number,
+  hostname: string,
+): Promise<string> {
   const reader = res.body?.getReader();
-  if (!reader) return '';
+  if (!reader) return "";
   const chunks: Uint8Array[] = [];
   let size = 0;
   for (;;) {
@@ -11,11 +15,13 @@ async function readCappedText(res: Response, maxBytes: number, hostname: string)
     size += value.byteLength;
     if (size > maxBytes) {
       await reader.cancel().catch(() => {});
-      throw new Error(`La respuesta desde ${hostname} excede el tamaño máximo.`);
+      throw new Error(
+        `La respuesta desde ${hostname} excede el tamaño máximo.`,
+      );
     }
     chunks.push(value);
   }
-  return Buffer.concat(chunks).toString('utf8');
+  return Buffer.concat(chunks).toString("utf8");
 }
 
 async function readCappedBuffer(
@@ -56,8 +62,8 @@ async function request(
       signal: AbortSignal.timeout(timeoutMs),
     });
   } catch (error) {
-    if (error instanceof Error && error.name === 'TimeoutError') {
-      throw timeoutError(hostname, 'La solicitud');
+    if (error instanceof Error && error.name === "TimeoutError") {
+      throw timeoutError(hostname, "La solicitud");
     }
     throw error;
   }
@@ -75,8 +81,8 @@ export async function httpsPost(
     hostname,
     pathname,
     {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...headers },
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...headers },
       body: JSON.stringify(body),
     },
     timeoutMs,
@@ -96,7 +102,12 @@ export async function httpsGet(
   timeoutMs = 10_000,
   maxBytes = 2 * 1024 * 1024,
 ): Promise<unknown> {
-  const res = await request(hostname, pathname, { method: 'GET', headers: headers || {} }, timeoutMs);
+  const res = await request(
+    hostname,
+    pathname,
+    { method: "GET", headers: headers || {} },
+    timeoutMs,
+  );
   const text = await readCappedText(res, maxBytes, hostname);
   try {
     return JSON.parse(text);
@@ -115,17 +126,21 @@ export async function httpsGetBuffer(
   let res: Response;
   try {
     res = await fetch(`https://${hostname}${pathname}`, {
-      method: 'GET',
+      method: "GET",
       headers: headers || {},
       signal: AbortSignal.timeout(timeoutMs),
     });
   } catch (error) {
-    if (error instanceof Error && error.name === 'TimeoutError') {
-      throw timeoutError(hostname, 'La descarga desde');
+    if (error instanceof Error && error.name === "TimeoutError") {
+      throw timeoutError(hostname, "La descarga desde");
     }
     throw error;
   }
-  const body = await readCappedBuffer(res, maxBytes, () => new Error('La descarga excede el tamaño máximo permitido.'));
+  const body = await readCappedBuffer(
+    res,
+    maxBytes,
+    () => new Error("La descarga excede el tamaño máximo permitido."),
+  );
   return { status: res.status, body };
 }
 
@@ -140,8 +155,8 @@ export async function httpsPatch(
     hostname,
     pathname,
     {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', ...headers },
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...headers },
       body: JSON.stringify(body),
     },
     timeoutMs,

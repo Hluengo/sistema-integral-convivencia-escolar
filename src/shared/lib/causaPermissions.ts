@@ -5,11 +5,11 @@ export function canDeleteCausaForRoles(
   appRole: string | null,
 ): boolean {
   return (
-    profileRole === 'admin' ||
-    profileRole === 'direccion' ||
-    profileRole === 'superadmin' ||
-    appRole === 'admin' ||
-    appRole === 'direccion' ||
-    appRole === 'superadmin'
+    profileRole === "admin" ||
+    profileRole === "direccion" ||
+    profileRole === "superadmin" ||
+    appRole === "admin" ||
+    appRole === "direccion" ||
+    appRole === "superadmin"
   );
 }

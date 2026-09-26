@@ -1,12 +1,15 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { Router } from 'express';
-import { requireAuth } from '../../middleware/auth.js';
-import { requireTenant } from '../../middleware/requireTenant.js';
-import { requireRole } from '../../middleware/requireRole.js';
-import { rateLimit } from '../../middleware/rateLimit.js';
-import type { AuthenticatedRequest } from '../../types.js';
-import { requireMembership, CONVIVENCIA_MEMBERSHIP } from '../../middleware/requireMembership.js';
+import { Router } from "express";
+import { requireAuth } from "../../middleware/auth.js";
+import { requireTenant } from "../../middleware/requireTenant.js";
+import { requireRole } from "../../middleware/requireRole.js";
+import { rateLimit } from "../../middleware/rateLimit.js";
+import type { AuthenticatedRequest } from "../../types.js";
+import {
+  requireMembership,
+  CONVIVENCIA_MEMBERSHIP,
+} from "../../middleware/requireMembership.js";
 
 type AuthRequest = AuthenticatedRequest;
 
@@ -16,21 +19,25 @@ const EVENT_NAME_RE = /^[a-z][a-z0-9_]{1,79}$/;
 const MAX_PROPERTIES_BYTES = 4_000;
 
 export function isValidEventName(value: unknown): value is string {
-  return typeof value === 'string' && EVENT_NAME_RE.test(value);
+  return typeof value === "string" && EVENT_NAME_RE.test(value);
 }
 
-export function hasSafeProperties(value: unknown): value is Record<string, unknown> {
+export function hasSafeProperties(
+  value: unknown,
+): value is Record<string, unknown> {
   if (value === undefined) return true;
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   try {
-    return Buffer.byteLength(JSON.stringify(value), 'utf8') <= MAX_PROPERTIES_BYTES;
+    return (
+      Buffer.byteLength(JSON.stringify(value), "utf8") <= MAX_PROPERTIES_BYTES
+    );
   } catch {
     return false;
   }
 }
 
 router.post(
-  '/usage/events',
+  "/usage/events",
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
   requireTenant,
@@ -38,20 +45,33 @@ router.post(
   async (req, res) => {
     try {
       const { eventName, properties } = req.body;
-      if (!eventName || typeof eventName !== 'string' || !EVENT_NAME_RE.test(eventName)) {
-        res.status(400).json({ error: 'eventName debe usar formato snake_case y tener hasta 80 caracteres.' });
+      if (
+        !eventName ||
+        typeof eventName !== "string" ||
+        !EVENT_NAME_RE.test(eventName)
+      ) {
+        res.status(400).json({
+          error:
+            "eventName debe usar formato snake_case y tener hasta 80 caracteres.",
+        });
         return;
       }
       if (!hasSafeProperties(properties)) {
-        res.status(400).json({ error: 'properties debe ser un objeto JSON de hasta 4 KB.' });
+        res
+          .status(400)
+          .json({ error: "properties debe ser un objeto JSON de hasta 4 KB." });
         return;
       }
 
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
-      const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? '';
+      const { createClient } = await import("@supabase/supabase-js");
+      const supabaseUrl =
+        process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
+      const anonKey =
+        process.env.VITE_SUPABASE_ANON_KEY ??
+        process.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
+        "";
       if (!supabaseUrl || !anonKey) {
-        res.status(500).json({ error: 'Supabase no configurado' });
+        res.status(500).json({ error: "Supabase no configurado" });
         return;
       }
 
@@ -61,42 +81,50 @@ router.post(
         global: { headers: { Authorization: `Bearer ${authReq.authToken}` } },
       });
 
-      const { error: insertError } = await supabase.from('usage_events').insert({
-        event_name: eventName,
-        user_id: authReq.user?.sub ?? null,
-        tenant_id: authReq.tenantId ?? null,
-        properties: properties ?? {},
-      });
+      const { error: insertError } = await supabase
+        .from("usage_events")
+        .insert({
+          event_name: eventName,
+          user_id: authReq.user?.sub ?? null,
+          tenant_id: authReq.tenantId ?? null,
+          properties: properties ?? {},
+        });
       if (insertError) {
-        console.error('Error logging usage event:', insertError);
-        res.status(503).json({ error: 'No fue posible registrar el evento.' });
+        console.error("Error logging usage event:", insertError);
+        res.status(503).json({ error: "No fue posible registrar el evento." });
         return;
       }
 
       res.json({ success: true });
     } catch (error) {
-      console.error('Error logging usage event:', error);
-      res.status(500).json({ error: 'Error interno al registrar evento.' });
+      console.error("Error logging usage event:", error);
+      res.status(500).json({ error: "Error interno al registrar evento." });
     }
   },
 );
 
 router.get(
-  '/usage/stats',
+  "/usage/stats",
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
   requireTenant,
-  requireRole(['superadmin', 'admin', 'direccion']),
+  requireRole(["superadmin", "admin", "direccion"]),
   async (req, res) => {
     try {
       const since = (req.query.since as string) ?? undefined;
       const until = (req.query.until as string) ?? undefined;
 
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? '';
-      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? '';
+      const { createClient } = await import("@supabase/supabase-js");
+      const supabaseUrl =
+        process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
+      const serviceRoleKey =
+        process.env.SUPABASE_SERVICE_ROLE_KEY ??
+        process.env.SUPABASE_SERVICE_KEY ??
+        "";
       if (!supabaseUrl || !serviceRoleKey) {
-        res.status(503).json({ error: 'Servicio de estadísticas no configurado.' });
+        res
+          .status(503)
+          .json({ error: "Servicio de estadísticas no configurado." });
         return;
       }
 
@@ -110,24 +138,33 @@ router.get(
       if (since) params.since = since;
       if (until) params.until = until;
 
-      const { data: eventStats, error: eventError } = await supabase.rpc('get_usage_stats', params);
+      const { data: eventStats, error: eventError } = await supabase.rpc(
+        "get_usage_stats",
+        params,
+      );
       if (eventError) {
-        console.error('Error fetching usage stats:', eventError);
-        res.status(500).json({ error: 'Error al obtener estadísticas.' });
+        console.error("Error fetching usage stats:", eventError);
+        res.status(500).json({ error: "Error al obtener estadísticas." });
         return;
       }
 
-      const { data: dailyActive, error: dailyError } = await supabase.rpc('get_daily_active_users', params);
+      const { data: dailyActive, error: dailyError } = await supabase.rpc(
+        "get_daily_active_users",
+        params,
+      );
       if (dailyError) {
-        console.error('Error fetching daily active users:', dailyError);
-        res.status(500).json({ error: 'Error al obtener usuarios activos.' });
+        console.error("Error fetching daily active users:", dailyError);
+        res.status(500).json({ error: "Error al obtener usuarios activos." });
         return;
       }
 
-      res.json({ events: eventStats ?? [], dailyActiveUsers: dailyActive ?? [] });
+      res.json({
+        events: eventStats ?? [],
+        dailyActiveUsers: dailyActive ?? [],
+      });
     } catch (error) {
-      console.error('Error fetching usage stats:', error);
-      res.status(500).json({ error: 'Error interno al obtener estadísticas.' });
+      console.error("Error fetching usage stats:", error);
+      res.status(500).json({ error: "Error interno al obtener estadísticas." });
     }
   },
 );

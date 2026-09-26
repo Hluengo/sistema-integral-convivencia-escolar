@@ -1,13 +1,13 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
-import type { StudentHistoryEntry } from './student-history.service';
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+import type { StudentHistoryEntry } from "./student-history.service";
 
-process.env.VITE_SUPABASE_URL ??= 'https://example.supabase.co';
-process.env.VITE_SUPABASE_ANON_KEY ??= 'anon-key-for-unit-tests';
+process.env.VITE_SUPABASE_URL ??= "https://example.supabase.co";
+process.env.VITE_SUPABASE_ANON_KEY ??= "anon-key-for-unit-tests";
 
-const VALID_UUID = '00000000-0000-4000-8000-000000000001';
+const VALID_UUID = "00000000-0000-4000-8000-000000000001";
 
 class MockQueryBuilder<T> {
   table: string;
@@ -51,10 +51,11 @@ async function withHistoryMocks(options: {
   resultForTable: (table: string) => { data: unknown; error: Error | null };
   fn: () => Promise<unknown>;
 }): Promise<unknown> {
-  const { supabase } = await import('../lib/supabase');
+  const { supabase } = await import("../lib/supabase");
   const mutable = supabase as unknown as MutableSupabase;
   const originalFrom = mutable.from;
-  mutable.from = (table) => new MockQueryBuilder(table, options.resultForTable(table) as never);
+  mutable.from = (table) =>
+    new MockQueryBuilder(table, options.resultForTable(table) as never);
   try {
     return await options.fn();
   } finally {
@@ -62,24 +63,30 @@ async function withHistoryMocks(options: {
   }
 }
 
-function makeEntry(overrides: Partial<StudentHistoryEntry> = {}): StudentHistoryEntry {
+function makeEntry(
+  overrides: Partial<StudentHistoryEntry> = {},
+): StudentHistoryEntry {
   return {
-    id: 'h-1',
+    id: "h-1",
     student_id: VALID_UUID,
-    title: 'Compromiso firmado',
-    description: 'El estudiante firmó un compromiso.',
-    created_by: 'user-1',
-    created_at: '2026-08-01T12:00:00.000Z',
+    title: "Compromiso firmado",
+    description: "El estudiante firmó un compromiso.",
+    created_by: "user-1",
+    created_at: "2026-08-01T12:00:00.000Z",
     ...overrides,
   };
 }
 
-describe('fetchStudentHistoryEntries', () => {
-  it('consulta por estudiante y devuelve las entradas ordenadas', async () => {
+describe("fetchStudentHistoryEntries", () => {
+  it("consulta por estudiante y devuelve las entradas ordenadas", async () => {
     const result = await withHistoryMocks({
-      resultForTable: () => ({ data: [makeEntry(), makeEntry({ id: 'h-2' })], error: null }),
+      resultForTable: () => ({
+        data: [makeEntry(), makeEntry({ id: "h-2" })],
+        error: null,
+      }),
       fn: async () => {
-        const { fetchStudentHistoryEntries } = await import('./student-history.service');
+        const { fetchStudentHistoryEntries } =
+          await import("./student-history.service");
         return fetchStudentHistoryEntries(VALID_UUID);
       },
     });
@@ -87,23 +94,25 @@ describe('fetchStudentHistoryEntries', () => {
     assert.equal((result as StudentHistoryEntry[])[0].student_id, VALID_UUID);
   });
 
-  it('retorna lista vacía cuando el studentId no es un UUID válido', async () => {
+  it("retorna lista vacía cuando el studentId no es un UUID válido", async () => {
     const result = await withHistoryMocks({
       resultForTable: () => ({ data: [], error: null }),
       fn: async () => {
-        const { fetchStudentHistoryEntries } = await import('./student-history.service');
-        return fetchStudentHistoryEntries('no-es-uuid');
+        const { fetchStudentHistoryEntries } =
+          await import("./student-history.service");
+        return fetchStudentHistoryEntries("no-es-uuid");
       },
     });
     assert.deepEqual(result, []);
   });
 
-  it('lanza error cuando la consulta falla', async () => {
+  it("lanza error cuando la consulta falla", async () => {
     await assert.rejects(
       withHistoryMocks({
-        resultForTable: () => ({ data: null, error: new Error('db down') }),
+        resultForTable: () => ({ data: null, error: new Error("db down") }),
         fn: async () => {
-          const { fetchStudentHistoryEntries } = await import('./student-history.service');
+          const { fetchStudentHistoryEntries } =
+            await import("./student-history.service");
           return fetchStudentHistoryEntries(VALID_UUID);
         },
       }),
@@ -112,30 +121,38 @@ describe('fetchStudentHistoryEntries', () => {
   });
 });
 
-describe('createStudentHistoryEntry', () => {
+describe("createStudentHistoryEntry", () => {
   const input = {
     studentId: VALID_UUID,
-    title: 'Nueva entrada',
-    description: 'Registro manual del apoderado.',
+    title: "Nueva entrada",
+    description: "Registro manual del apoderado.",
   };
 
-  it('inserta la entrada y devuelve la fila creada', async () => {
+  it("inserta la entrada y devuelve la fila creada", async () => {
     const result = await withHistoryMocks({
-      resultForTable: () => ({ data: makeEntry({ title: 'Nueva entrada' }), error: null }),
+      resultForTable: () => ({
+        data: makeEntry({ title: "Nueva entrada" }),
+        error: null,
+      }),
       fn: async () => {
-        const { createStudentHistoryEntry } = await import('./student-history.service');
+        const { createStudentHistoryEntry } =
+          await import("./student-history.service");
         return createStudentHistoryEntry(input);
       },
     });
-    assert.equal((result as StudentHistoryEntry).title, 'Nueva entrada');
+    assert.equal((result as StudentHistoryEntry).title, "Nueva entrada");
   });
 
-  it('lanza error cuando falla la inserción', async () => {
+  it("lanza error cuando falla la inserción", async () => {
     await assert.rejects(
       withHistoryMocks({
-        resultForTable: () => ({ data: null, error: new Error('insert denied') }),
+        resultForTable: () => ({
+          data: null,
+          error: new Error("insert denied"),
+        }),
         fn: async () => {
-          const { createStudentHistoryEntry } = await import('./student-history.service');
+          const { createStudentHistoryEntry } =
+            await import("./student-history.service");
           return createStudentHistoryEntry(input);
         },
       }),
@@ -143,13 +160,14 @@ describe('createStudentHistoryEntry', () => {
     );
   });
 
-  it('rechaza input inválido por Zod antes de consultar', async () => {
+  it("rechaza input inválido por Zod antes de consultar", async () => {
     await assert.rejects(
       withHistoryMocks({
         resultForTable: () => ({ data: null, error: null }),
         fn: async () => {
-          const { createStudentHistoryEntry } = await import('./student-history.service');
-          return createStudentHistoryEntry({ ...input, title: 'ab' });
+          const { createStudentHistoryEntry } =
+            await import("./student-history.service");
+          return createStudentHistoryEntry({ ...input, title: "ab" });
         },
       }),
       /al menos 3 caracteres/,

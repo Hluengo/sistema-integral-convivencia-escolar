@@ -37,17 +37,14 @@ async function expectNoHorizontalOverflow(page: Page, label: string) {
 
 test.describe("Responsive sin scroll horizontal", () => {
   for (const bp of BREAKPOINTS) {
-    test(`dashboard público en ${bp.name} (${bp.width}px)`, async ({
-      page,
-    }) => {
+    test(`acceso público en ${bp.name} (${bp.width}px)`, async ({ page }) => {
       await page.setViewportSize({ width: bp.width, height: bp.height });
       await page.goto("/");
-      await dismissWelcome(page);
-      await expect(page.locator('main, [role="main"]')).toBeVisible({
+      await expect(page.locator("#login-email")).toBeVisible({
         timeout: 15_000,
       });
       await page.waitForTimeout(500);
-      await expectNoHorizontalOverflow(page, `dashboard público ${bp.name}`);
+      await expectNoHorizontalOverflow(page, `acceso público ${bp.name}`);
     });
 
     test(`login en ${bp.name} (${bp.width}px)`, async ({ page }) => {
@@ -68,7 +65,7 @@ test.describe("Responsive sin scroll horizontal", () => {
 test.describe("Responsive vistas privadas", () => {
   const views = [
     { sidebar: "Dashboard", label: "dashboard privado" },
-    { sidebar: "Causas", label: "causas" },
+    { sidebar: "Expedientes", label: "expedientes" },
     { sidebar: "Anotaciones", label: "anotaciones" },
     { sidebar: "Estudiantes", label: "estudiantes" },
   ];
@@ -93,15 +90,25 @@ test.describe("Responsive vistas privadas", () => {
   async function loginResponsive(page: Page) {
     await page.goto("/");
     await dismissWelcome(page);
-    await openMobileMenuIfNeeded(page);
-    const mobileMenu = page.getByRole("dialog", { name: "Menú móvil" });
-    const loginButton = (await mobileMenu.isVisible().catch(() => false))
-      ? mobileMenu.getByRole("button", { name: "Iniciar sesión" })
-      : page
-          .getByRole("complementary", { name: "Barra de navegación principal" })
-          .getByRole("button", { name: "Iniciar sesión" });
-    await loginButton.click();
-    await page.locator("#login-email").fill(process.env.E2E_STAFF_EMAIL ?? "");
+    const loginEmail = page.locator("#login-email");
+    const publicLoginVisible = await loginEmail
+      .waitFor({ state: "visible", timeout: 5_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!publicLoginVisible) {
+      await openMobileMenuIfNeeded(page);
+      const mobileMenu = page.getByRole("dialog", { name: "Menú móvil" });
+      const loginButton = (await mobileMenu.isVisible().catch(() => false))
+        ? mobileMenu.getByRole("button", { name: "Iniciar sesión" })
+        : page
+            .getByRole("complementary", {
+              name: "Barra de navegación principal",
+            })
+            .getByRole("button", { name: "Iniciar sesión" });
+      await loginButton.click();
+    }
+    await expect(loginEmail).toBeVisible({ timeout: 15_000 });
+    await loginEmail.fill(process.env.E2E_STAFF_EMAIL ?? "");
     await page
       .locator("#login-password")
       .fill(process.env.E2E_STAFF_PASSWORD ?? "");

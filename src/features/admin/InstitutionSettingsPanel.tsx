@@ -1,13 +1,20 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useEffect, useState } from 'react';
-import { Building2, CheckCircle2, ImageUp, Plus, RefreshCw, Save } from 'lucide-react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import Button from '../../shared/ui/Button';
-import Input from '../../shared/ui/Input';
-import Select from '../../shared/ui/Select';
-import Textarea from '../../shared/ui/Textarea';
-import { useAuthStore } from '../../shared/lib/stores/authStore';
+import { useEffect, useState } from "react";
+import {
+  Building2,
+  CheckCircle2,
+  ImageUp,
+  Plus,
+  RefreshCw,
+  Save,
+} from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import Button from "../../shared/ui/Button";
+import Input from "../../shared/ui/Input";
+import Select from "../../shared/ui/Select";
+import Textarea from "../../shared/ui/Textarea";
+import { useAuthStore } from "../../shared/lib/stores/authStore";
 import {
   createInstitutionRule,
   fetchInstitutionRules,
@@ -16,23 +23,23 @@ import {
   updateInstitutionSettings,
   uploadInstitutionLogo,
   type InstitutionSettings,
-} from '../../shared/api/services/institution.service';
+} from "../../shared/api/services/institution.service";
 
 type SettingsForm = Omit<
   InstitutionSettings,
-  'tenant_id' | 'logo_path' | 'logo_url' | 'updated_at' | 'updated_by'
+  "tenant_id" | "logo_path" | "logo_url" | "updated_at" | "updated_by"
 >;
 
 const emptyForm: SettingsForm = {
-  official_name: '',
-  institution_rut: '',
-  address: '',
-  commune: '',
-  region: '',
-  phone: '',
-  institutional_email: '',
-  proprietor: '',
-  director_name: '',
+  official_name: "",
+  institution_rut: "",
+  address: "",
+  commune: "",
+  region: "",
+  phone: "",
+  institutional_email: "",
+  proprietor: "",
+  director_name: "",
   education_levels: [],
 };
 
@@ -40,19 +47,21 @@ export default function InstitutionSettingsPanel() {
   const tenantId = useAuthStore((state) => state.tenantId);
   const queryClient = useQueryClient();
   const settingsQuery = useQuery({
-    queryKey: ['institution-settings', tenantId],
+    queryKey: ["institution-settings", tenantId],
     queryFn: fetchInstitutionSettings,
     enabled: Boolean(tenantId),
   });
   const rulesQuery = useQuery({
-    queryKey: ['institution-rules', tenantId],
+    queryKey: ["institution-rules", tenantId],
     queryFn: fetchInstitutionRules,
     enabled: Boolean(tenantId),
   });
   const [form, setForm] = useState<SettingsForm>(emptyForm);
-  const [ruleTitle, setRuleTitle] = useState('Reglamento Interno de Convivencia Escolar');
-  const [ruleVersion, setRuleVersion] = useState('2026.1');
-  const [ruleContent, setRuleContent] = useState('');
+  const [ruleTitle, setRuleTitle] = useState(
+    "Reglamento Interno de Convivencia Escolar",
+  );
+  const [ruleVersion, setRuleVersion] = useState("2026.1");
+  const [ruleContent, setRuleContent] = useState("");
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -71,34 +80,46 @@ export default function InstitutionSettingsPanel() {
   const saveMutation = useMutation({
     mutationFn: () => updateInstitutionSettings(form),
     onSuccess: () => {
-      setMessage('Perfil institucional guardado.');
-      void queryClient.invalidateQueries({ queryKey: ['institution-settings', tenantId] });
+      setMessage("Perfil institucional guardado.");
+      void queryClient.invalidateQueries({
+        queryKey: ["institution-settings", tenantId],
+      });
     },
     onError: (error: Error) => setMessage(error.message),
   });
   const logoMutation = useMutation({
     mutationFn: uploadInstitutionLogo,
     onSuccess: () => {
-      setMessage('Logo actualizado.');
-      void queryClient.invalidateQueries({ queryKey: ['institution-settings', tenantId] });
+      setMessage("Logo actualizado.");
+      void queryClient.invalidateQueries({
+        queryKey: ["institution-settings", tenantId],
+      });
     },
     onError: (error: Error) => setMessage(error.message),
   });
   const ruleMutation = useMutation({
     mutationFn: () =>
-      createInstitutionRule({ title: ruleTitle, version: ruleVersion, content: ruleContent }),
+      createInstitutionRule({
+        title: ruleTitle,
+        version: ruleVersion,
+        content: ruleContent,
+      }),
     onSuccess: () => {
-      setRuleContent('');
-      setMessage('Borrador de reglamento creado.');
-      void queryClient.invalidateQueries({ queryKey: ['institution-rules', tenantId] });
+      setRuleContent("");
+      setMessage("Borrador de reglamento creado.");
+      void queryClient.invalidateQueries({
+        queryKey: ["institution-rules", tenantId],
+      });
     },
     onError: (error: Error) => setMessage(error.message),
   });
   const publishMutation = useMutation({
     mutationFn: publishInstitutionRule,
     onSuccess: () => {
-      setMessage('Versión publicada como vigente.');
-      void queryClient.invalidateQueries({ queryKey: ['institution-rules', tenantId] });
+      setMessage("Versión publicada como vigente.");
+      void queryClient.invalidateQueries({
+        queryKey: ["institution-rules", tenantId],
+      });
     },
     onError: (error: Error) => setMessage(error.message),
   });
@@ -136,7 +157,8 @@ export default function InstitutionSettingsPanel() {
           <div>
             <h3 className="font-bold text-neutral-900">Perfil institucional</h3>
             <p className="mt-1 text-neutral-500 text-xs">
-              Estos datos se usarán en cartas, reportes y documentos del colegio.
+              Estos datos se usarán en cartas, reportes y documentos del
+              colegio.
             </p>
           </div>
         </div>
@@ -149,25 +171,31 @@ export default function InstitutionSettingsPanel() {
         >
           {(
             [
-              ['official_name', 'Nombre oficial', 'text'],
-              ['institution_rut', 'RUT institucional', 'text'],
-              ['address', 'Dirección', 'text'],
-              ['commune', 'Comuna', 'text'],
-              ['region', 'Región', 'text'],
-              ['phone', 'Teléfono', 'tel'],
-              ['institutional_email', 'Correo institucional', 'email'],
-              ['proprietor', 'Sostenedor', 'text'],
-              ['director_name', 'Director/a', 'text'],
+              ["official_name", "Nombre oficial", "text"],
+              ["institution_rut", "RUT institucional", "text"],
+              ["address", "Dirección", "text"],
+              ["commune", "Comuna", "text"],
+              ["region", "Región", "text"],
+              ["phone", "Teléfono", "tel"],
+              ["institutional_email", "Correo institucional", "email"],
+              ["proprietor", "Sostenedor", "text"],
+              ["director_name", "Director/a", "text"],
             ] as const
           ).map(([key, label, type]) => (
-            <label key={key} className="space-y-1.5 text-xs font-semibold text-neutral-700">
+            <label
+              key={key}
+              className="space-y-1.5 text-xs font-semibold text-neutral-700"
+            >
               {label}
               <Input
                 aria-label={label}
                 type={type}
-                value={form[key] ?? ''}
+                value={form[key] ?? ""}
                 onChange={(event) =>
-                  setForm((current) => ({ ...current, [key]: event.target.value }))
+                  setForm((current) => ({
+                    ...current,
+                    [key]: event.target.value,
+                  }))
                 }
               />
             </label>
@@ -204,7 +232,8 @@ export default function InstitutionSettingsPanel() {
               <Save className="size-4" /> Guardar perfil
             </Button>
             <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-neutral-200 px-4 py-2.5 font-semibold text-neutral-700 text-sm hover:bg-neutral-50">
-              <ImageUp className="size-4" /> {logoMutation.isPending ? 'Cargando…' : 'Cargar logo'}
+              <ImageUp className="size-4" />{" "}
+              {logoMutation.isPending ? "Cargando…" : "Cargar logo"}
               <input
                 aria-label="Cargar logo institucional"
                 type="file"
@@ -214,7 +243,7 @@ export default function InstitutionSettingsPanel() {
                 onChange={(event) => {
                   const file = event.target.files?.[0];
                   if (file) logoMutation.mutate(file);
-                  event.currentTarget.value = '';
+                  event.currentTarget.value = "";
                 }}
               />
             </label>
@@ -225,7 +254,9 @@ export default function InstitutionSettingsPanel() {
                 className="h-10 max-w-36 rounded border border-neutral-200 object-contain p-1"
               />
             ) : (
-              <span className="text-neutral-500 text-xs">No hay logo cargado.</span>
+              <span className="text-neutral-500 text-xs">
+                No hay logo cargado.
+              </span>
             )}
           </div>
         </form>
@@ -233,9 +264,12 @@ export default function InstitutionSettingsPanel() {
 
       <section className="card overflow-hidden">
         <div className="border-b border-neutral-200/70 p-5 sm:p-6">
-          <h3 className="font-bold text-neutral-900">Reglamento y reglas de convivencia</h3>
+          <h3 className="font-bold text-neutral-900">
+            Reglamento y reglas de convivencia
+          </h3>
           <p className="mt-1 text-neutral-500 text-xs">
-            Administra versiones sin alterar los umbrales operativos de anotaciones.
+            Administra versiones sin alterar los umbrales operativos de
+            anotaciones.
           </p>
         </div>
         <form
@@ -275,7 +309,9 @@ export default function InstitutionSettingsPanel() {
         </form>
         <div className="divide-y divide-neutral-100 border-t border-neutral-200/70">
           {(rulesQuery.data?.rules ?? []).length === 0 ? (
-            <p className="p-5 text-neutral-500 text-sm">Aún no hay versiones del reglamento.</p>
+            <p className="p-5 text-neutral-500 text-sm">
+              Aún no hay versiones del reglamento.
+            </p>
           ) : (
             rulesQuery.data?.rules.map((rule) => (
               <article
@@ -287,15 +323,15 @@ export default function InstitutionSettingsPanel() {
                     {rule.title} · v{rule.version}
                   </p>
                   <p className="mt-1 text-neutral-500 text-xs">
-                    {rule.status === 'active'
-                      ? 'Vigente'
-                      : rule.status === 'draft'
-                        ? 'Borrador'
-                        : 'Archivado'}{' '}
-                    · {rule.content.length.toLocaleString('es-CL')} caracteres
+                    {rule.status === "active"
+                      ? "Vigente"
+                      : rule.status === "draft"
+                        ? "Borrador"
+                        : "Archivado"}{" "}
+                    · {rule.content.length.toLocaleString("es-CL")} caracteres
                   </p>
                 </div>
-                {rule.status !== 'active' ? (
+                {rule.status !== "active" ? (
                   <Button
                     variant="secondary"
                     disabled={busy}

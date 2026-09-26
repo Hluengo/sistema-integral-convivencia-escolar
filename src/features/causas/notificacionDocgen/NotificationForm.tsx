@@ -1,8 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import Button from '@/shared/ui/Button';
-import { NOTIFICATION_SECTIONS } from './defaultContent';
-import type { NotificationContent } from './types';
+import Button from "@/shared/ui/Button";
+import { NOTIFICATION_SECTIONS } from "./defaultContent";
+import type { NotificationContent } from "./types";
 
 interface NotificationFormProps {
   apoderadoName: string;
@@ -49,7 +49,7 @@ export default function NotificationForm({
             value={apoderadoName}
             onChange={(event) => onApoderadoNameChange(event.target.value)}
             placeholder="Ingrese el nombre del apoderado/a"
-            className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
+            className="min-h-11 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
@@ -67,7 +67,7 @@ export default function NotificationForm({
             value={apoderadoEmail}
             onChange={(event) => onApoderadoEmailChange(event.target.value)}
             placeholder="apoderado@correo.cl"
-            className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
+            className="min-h-11 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
@@ -85,7 +85,7 @@ export default function NotificationForm({
             value={emittedBy}
             onChange={(event) => onEmittedByChange(event.target.value)}
             placeholder="Nombre de quien emite"
-            className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
+            className="min-h-11 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
@@ -93,18 +93,21 @@ export default function NotificationForm({
       <section className="rounded-xl border border-neutral-200 bg-white p-4">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h5 className="text-sm font-bold text-neutral-900">Texto de la notificación</h5>
+            <h5 className="text-sm font-bold text-neutral-900">
+              Texto de la notificación
+            </h5>
             <p className="mt-1 text-xs text-neutral-500">
-              Estos textos actualizan la hoja Carta en vivo. Cada sección no debe superar los 220
-              caracteres para que el documento quepa en una sola hoja. Revise los antecedentes del
-              expediente antes de imprimir.
+              Estos textos actualizan la hoja Carta en vivo. Cada sección no
+              debe superar los 220 caracteres para que el documento quepa en una
+              sola hoja. Revise los antecedentes del expediente antes de
+              imprimir.
             </p>
           </div>
           <Button
             variant="secondary"
             size="sm"
             onClick={onResetContent}
-            className="rounded-lg px-3 py-1.5 text-xs font-semibold"
+            className="min-h-11 rounded-lg px-3 py-1.5 text-xs font-semibold"
           >
             Restaurar texto base
           </Button>
@@ -122,7 +125,9 @@ export default function NotificationForm({
                 id={`notificacion-${section.key}`}
                 aria-label={section.title}
                 value={content[section.key]}
-                onChange={(event) => onContentChange(section.key, event.target.value)}
+                onChange={(event) =>
+                  onContentChange(section.key, event.target.value)
+                }
                 rows={index === 0 || index === 7 ? 4 : 3}
                 className="w-full resize-y rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
               />

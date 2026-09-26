@@ -13,7 +13,7 @@ import {
   AlertDialogFooter,
   AlertDialogCancel,
   AlertDialogAction,
-} from './ui/AlertDialog';
+} from "./ui/AlertDialog";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -28,7 +28,7 @@ export default function ConfirmDialog({
   open,
   title,
   description,
-  confirmLabel = 'Eliminar',
+  confirmLabel = "Eliminar",
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -47,7 +47,9 @@ export default function ConfirmDialog({
         <AlertDialogDescription>{description}</AlertDialogDescription>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onCancel}>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>{confirmLabel}</AlertDialogAction>
+          <AlertDialogAction onClick={onConfirm}>
+            {confirmLabel}
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

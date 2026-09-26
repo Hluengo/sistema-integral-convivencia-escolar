@@ -1,12 +1,12 @@
 ---
-titulo: 'Inclusión, atención integral y protección de derechos de personas con trastorno del espectro autista'
-tipo: 'Ley'
-identificador: 'Ley N° 21.545'
+titulo: "Inclusión, atención integral y protección de derechos de personas con trastorno del espectro autista"
+tipo: "Ley"
+identificador: "Ley N° 21.545"
 estado: vigente
-autoridad: 'Biblioteca del Congreso Nacional de Chile'
-fuente_oficial: 'https://www.bcn.cl/leychile/navegar?idNorma=1190123'
-version_consultada: '2026-07-30'
-nota_uso: 'Texto consolidado vigente descargado desde LeyChile. Usar como referencia jurídica; verificar los artículos aplicables al caso concreto.'
+autoridad: "Biblioteca del Congreso Nacional de Chile"
+fuente_oficial: "https://www.bcn.cl/leychile/navegar?idNorma=1190123"
+version_consultada: "2026-07-30"
+nota_uso: "Texto consolidado vigente descargado desde LeyChile. Usar como referencia jurídica; verificar los artículos aplicables al caso concreto."
 ---
 
 Tipo Norma                              :Ley 21545

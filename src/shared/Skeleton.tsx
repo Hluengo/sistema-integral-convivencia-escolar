@@ -8,11 +8,15 @@ interface SkeletonProps {
   count?: number;
 }
 
-function Skeleton({ className = '', count = 1 }: SkeletonProps) {
+function Skeleton({ className = "", count = 1 }: SkeletonProps) {
   return (
     <>
       {Array.from({ length: count }).map((_, i) => (
-        <div key={'sk-' + i} className={`skeleton ${className}`} aria-hidden="true" />
+        <div
+          key={"sk-" + i}
+          className={`skeleton ${className}`}
+          aria-hidden="true"
+        />
       ))}
     </>
   );
@@ -37,7 +41,7 @@ export function CausaCardSkeleton() {
       <Skeleton className="h-3 w-full rounded-md" />
       <div className="flex items-center gap-1.5">
         {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={'sk-' + i} className="h-6 w-6 rounded-full" />
+          <Skeleton key={"sk-" + i} className="h-6 w-6 rounded-full" />
         ))}
       </div>
       <Skeleton className="h-8 w-full rounded-lg" />
@@ -48,7 +52,11 @@ export function CausaCardSkeleton() {
 
 export function DashboardMetricSkeleton() {
   return (
-    <div role="status" aria-label="Cargando métricas" className="card animate-pulse space-y-3 p-5">
+    <div
+      role="status"
+      aria-label="Cargando métricas"
+      className="card animate-pulse space-y-3 p-5"
+    >
       <div className="flex items-center justify-between">
         <Skeleton className="h-8 w-16 rounded-md" />
         <Skeleton className="h-8 w-8 rounded-lg" />
@@ -62,7 +70,11 @@ export function DashboardMetricSkeleton() {
 
 export function TableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
-    <div role="status" aria-label="Cargando tabla" className="animate-pulse space-y-3">
+    <div
+      role="status"
+      aria-label="Cargando tabla"
+      className="animate-pulse space-y-3"
+    >
       <div className="flex gap-4 border-b border-neutral-100 pb-3">
         <Skeleton className="h-4 w-24" />
         <Skeleton className="h-4 w-32" />
@@ -70,7 +82,7 @@ export function TableSkeleton({ rows = 5 }: { rows?: number }) {
         <Skeleton className="h-4 w-16" />
       </div>
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={'sk-' + i} className="flex items-center gap-4 py-2">
+        <div key={"sk-" + i} className="flex items-center gap-4 py-2">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-4 w-20" />
@@ -85,7 +97,11 @@ export function TableSkeleton({ rows = 5 }: { rows?: number }) {
 
 export function AnnotationsSkeleton() {
   return (
-    <div role="status" aria-label="Cargando anotaciones" className="animate-pulse space-y-4 p-4">
+    <div
+      role="status"
+      aria-label="Cargando anotaciones"
+      className="animate-pulse space-y-4 p-4"
+    >
       <div className="flex items-center justify-between">
         <Skeleton className="h-6 w-48" />
         <Skeleton className="h-9 w-32 rounded-lg" />
@@ -96,7 +112,10 @@ export function AnnotationsSkeleton() {
         <Skeleton className="h-9 w-24 rounded-lg" />
       </div>
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={'sk-' + i} className="rounded-xl border border-neutral-100 p-4">
+        <div
+          key={"sk-" + i}
+          className="rounded-xl border border-neutral-100 p-4"
+        >
           <div className="mb-3 flex items-center gap-2">
             <Skeleton className="h-5 w-16 rounded-full" />
             <Skeleton className="h-3 w-24" />
@@ -119,13 +138,13 @@ export function MainContentSkeleton() {
         <Skeleton className="h-4 w-96" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <DashboardMetricSkeleton key={'sk-' + i} />
+            <DashboardMetricSkeleton key={"sk-" + i} />
           ))}
         </div>
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <div className="col-span-2 space-y-3">
             {Array.from({ length: 3 }).map((_, i) => (
-              <CausaCardSkeleton key={'sk-' + i} />
+              <CausaCardSkeleton key={"sk-" + i} />
             ))}
           </div>
           <div className="space-y-3">
@@ -141,9 +160,16 @@ export function MainContentSkeleton() {
 
 export function TextBlockSkeleton({ lines = 3 }: { lines?: number }) {
   return (
-    <div role="status" aria-label="Cargando texto" className="animate-pulse space-y-2">
+    <div
+      role="status"
+      aria-label="Cargando texto"
+      className="animate-pulse space-y-2"
+    >
       {Array.from({ length: lines }).map((_, i) => (
-        <Skeleton key={'sk-' + i} className={`h-4 ${i === lines - 1 ? 'w-3/4' : 'w-full'}`} />
+        <Skeleton
+          key={"sk-" + i}
+          className={`h-4 ${i === lines - 1 ? "w-3/4" : "w-full"}`}
+        />
       ))}
       <span className="sr-only">Cargando...</span>
     </div>
@@ -155,15 +181,18 @@ export function SidebarSkeleton() {
     <aside
       role="status"
       aria-label="Cargando navegación"
-      className="hidden h-dvh w-[68px] shrink-0 animate-pulse flex-col bg-neutral-950 px-3 py-4 shadow-xl lg:flex"
+      className="hidden h-dvh w-[68px] shrink-0 animate-pulse flex-col border-neutral-200 border-r bg-white px-3 py-4 shadow-sm lg:flex"
     >
-      <Skeleton className="mx-auto h-10 w-10 rounded-xl bg-neutral-800" />
+      <Skeleton className="mx-auto h-10 w-10 rounded-xl bg-neutral-200" />
       <div className="mt-8 space-y-3">
         {Array.from({ length: 7 }).map((_, i) => (
-          <Skeleton key={'nav-' + i} className="h-10 w-10 rounded-xl bg-neutral-800" />
+          <Skeleton
+            key={"nav-" + i}
+            className="h-10 w-10 rounded-xl bg-neutral-200"
+          />
         ))}
       </div>
-      <Skeleton className="mt-auto h-10 w-10 rounded-xl bg-neutral-800" />
+      <Skeleton className="mt-auto h-10 w-10 rounded-xl bg-neutral-200" />
       <span className="sr-only">Cargando...</span>
     </aside>
   );
@@ -194,7 +223,11 @@ export function HeaderSkeleton() {
 
 export function CommandPaletteSkeleton() {
   return (
-    <div role="status" aria-label="Cargando buscador de comandos" className="sr-only">
+    <div
+      role="status"
+      aria-label="Cargando buscador de comandos"
+      className="sr-only"
+    >
       Cargando comandos...
     </div>
   );
@@ -256,7 +289,7 @@ export function DetailModalSkeleton() {
         <div className="border-neutral-100 border-b bg-white px-4 pb-3 sm:px-6">
           <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={'tab-' + i} className="h-10 rounded-xl" />
+              <Skeleton key={"tab-" + i} className="h-10 rounded-xl" />
             ))}
           </div>
         </div>
@@ -283,7 +316,11 @@ export function TimelineEditSkeleton() {
 
 export function DocumentGeneratorSkeleton() {
   return (
-    <div role="status" aria-label="Cargando generador de carta" className="animate-pulse space-y-4">
+    <div
+      role="status"
+      aria-label="Cargando generador de carta"
+      className="animate-pulse space-y-4"
+    >
       <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
         <div className="space-y-3">
           <Skeleton className="h-10 w-full rounded-xl" />

@@ -1,12 +1,12 @@
 ---
-titulo: 'Reconoce y da protección al derecho a la identidad de género'
-tipo: 'Ley'
-identificador: 'Ley N° 21.120'
+titulo: "Reconoce y da protección al derecho a la identidad de género"
+tipo: "Ley"
+identificador: "Ley N° 21.120"
 estado: vigente
-autoridad: 'Biblioteca del Congreso Nacional de Chile'
-fuente_oficial: 'https://www.bcn.cl/leychile/navegar?idNorma=1126480'
-version_consultada: '2026-07-30'
-nota_uso: 'Texto consolidado vigente descargado desde LeyChile. Usar como referencia jurídica; verificar los artículos aplicables al caso concreto.'
+autoridad: "Biblioteca del Congreso Nacional de Chile"
+fuente_oficial: "https://www.bcn.cl/leychile/navegar?idNorma=1126480"
+version_consultada: "2026-07-30"
+nota_uso: "Texto consolidado vigente descargado desde LeyChile. Usar como referencia jurídica; verificar los artículos aplicables al caso concreto."
 ---
 
 Tipo Norma                              :Ley 21120

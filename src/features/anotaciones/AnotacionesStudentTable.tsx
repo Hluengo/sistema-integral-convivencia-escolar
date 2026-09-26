@@ -465,7 +465,7 @@ export default memo(function AnotacionesStudentTable({
                               onEditAnnotations(student);
                             }}
                             onKeyDown={(event) => event.stopPropagation()}
-                            className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-brand-50 hover:text-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                            className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-brand-50 hover:text-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
                             aria-label={`Editar anotaciones de ${studentLabel}`}
                             title="Editar anotaciones"
                           >

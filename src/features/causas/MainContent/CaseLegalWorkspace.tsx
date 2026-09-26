@@ -1,13 +1,13 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { FileSignature, ShieldCheck } from 'lucide-react';
-import type { Causa } from '../../../shared/lib/types';
-import MarkdownRenderer from '../../timeline/MarkdownRenderer';
-import AuditPanel from '../../timeline/AuditPanel';
-import DraftPanel from '../../timeline/DraftPanel';
-import { useAuditDraft } from '../../../shared/lib/hooks/useAuditDraft';
+import { FileSignature, ShieldCheck } from "lucide-react";
+import type { Causa } from "../../../shared/lib/types";
+import MarkdownRenderer from "../../timeline/MarkdownRenderer";
+import AuditPanel from "../../timeline/AuditPanel";
+import DraftPanel from "../../timeline/DraftPanel";
+import { useAuditDraft } from "../../../shared/lib/hooks/useAuditDraft";
 
-export type CaseLegalTool = 'redaccion' | 'auditoria';
+export type CaseLegalTool = "redaccion" | "auditoria";
 
 interface CaseLegalWorkspaceProps {
   causa: Causa;
@@ -23,7 +23,10 @@ export default function CaseLegalWorkspace({
   const draft = useAuditDraft({ causa });
 
   return (
-    <section className="space-y-4" aria-label="Herramientas legales del expediente seleccionado">
+    <section
+      className="space-y-4"
+      aria-label="Herramientas legales del expediente seleccionado"
+    >
       <div className="flex flex-col gap-3 rounded-xl border border-brand-100 bg-linear-to-r from-brand-50/70 to-white p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <div className="mb-1 flex items-center gap-2">
@@ -38,20 +41,22 @@ export default function CaseLegalWorkspace({
             {privacyMode ? causa.nnaProtectedName : causa.estudianteNombre}
           </h3>
           <p className="mt-0.5 font-medium text-neutral-500 text-xs">
-            {causa.estudianteCurso || 'Curso no registrado'} · {causa.id}
+            {causa.estudianteCurso || "Curso no registrado"} · {causa.id}
           </p>
         </div>
         <span className="inline-flex shrink-0 items-center gap-1.5 self-start rounded-full border border-brand-200 bg-brand-50 px-3 py-1 font-semibold text-11px text-brand-800 sm:self-auto">
-          {activeTool === 'redaccion' ? (
+          {activeTool === "redaccion" ? (
             <FileSignature className="size-3.5" aria-hidden="true" />
           ) : (
             <ShieldCheck className="size-3.5" aria-hidden="true" />
           )}
-          {activeTool === 'redaccion' ? 'Redacción de documento' : 'Auditoría del expediente'}
+          {activeTool === "redaccion"
+            ? "Redacción de documento"
+            : "Auditoría del expediente"}
         </span>
       </div>
 
-      {activeTool === 'redaccion' ? (
+      {activeTool === "redaccion" ? (
         <DraftPanel
           selectedDocType={draft.selectedDocType}
           setSelectedDocType={draft.setSelectedDocType}

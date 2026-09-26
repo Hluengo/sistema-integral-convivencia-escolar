@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useState, useEffect } from 'react';
-import Button from './Button';
+import { useState, useEffect } from "react";
+import Button from "./Button";
 
 interface MembershipLoadingProps {
   authMode: string;
@@ -48,7 +48,7 @@ export function MembershipLoading({
       <div className="max-w-md w-full text-center space-y-4">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600 mx-auto" />
         <p className="text-neutral-600 text-sm">Verificando membresía...</p>
-        {authMode === 'transition' && legacyFallbackUsed && (
+        {authMode === "transition" && legacyFallbackUsed && (
           <p className="text-grave-600 text-xs">
             Modo transición — usando credenciales heredadas como respaldo.
           </p>

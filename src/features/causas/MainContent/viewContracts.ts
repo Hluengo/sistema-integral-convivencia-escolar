@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import type { Causa } from '../../../shared/lib/types';
-import type { SidebarView } from '../../../widgets/sidebar/Sidebar';
+import type { Causa } from "../../../shared/lib/types";
+import type { SidebarView } from "../../../widgets/sidebar/Sidebar";
 
 export interface CausaWorkspaceViewModel {
   causas: Causa[];

@@ -1,8 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { supabase } from '../lib/supabase';
+import { supabase } from "../lib/supabase";
 
-const DISCIPLINARY_BUCKET = 'disciplinary-processes';
+const DISCIPLINARY_BUCKET = "disciplinary-processes";
 export const MAX_DISCIPLINARY_PDF_BYTES = 10 * 1024 * 1024;
 
 export interface UploadedDisciplinaryFile {
@@ -15,32 +15,32 @@ export interface UploadedDisciplinaryFile {
 }
 
 function sanitizeFileName(name: string): string {
-  const base = name.split(/[\\/]/).pop() || 'documento.pdf';
-  const withoutExtension = base.replace(/\.pdf$/i, '');
+  const base = name.split(/[\\/]/).pop() || "documento.pdf";
+  const withoutExtension = base.replace(/\.pdf$/i, "");
   return `${withoutExtension}`
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-zA-Z0-9._-]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9._-]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
     .slice(0, 80);
 }
 
 export function validateDisciplinaryPdf(file: File): string | null {
-  if (file.type && file.type !== 'application/pdf') {
-    return 'Solo se permiten archivos PDF.';
+  if (file.type && file.type !== "application/pdf") {
+    return "Solo se permiten archivos PDF.";
   }
 
-  if (!file.name.toLowerCase().endsWith('.pdf')) {
-    return 'El archivo debe tener extensión .pdf.';
+  if (!file.name.toLowerCase().endsWith(".pdf")) {
+    return "El archivo debe tener extensión .pdf.";
   }
 
   if (file.size > MAX_DISCIPLINARY_PDF_BYTES) {
-    return 'El PDF supera el tamaño máximo de 10 MB.';
+    return "El PDF supera el tamaño máximo de 10 MB.";
   }
 
   if (file.size === 0) {
-    return 'El PDF está vacío.';
+    return "El PDF está vacío.";
   }
 
   return null;
@@ -56,21 +56,23 @@ export async function uploadDisciplinaryFile(
   if (validationError) throw new Error(validationError);
 
   const randomId = crypto.randomUUID();
-  const safeBaseName = sanitizeFileName(file.name) || 'documento';
+  const safeBaseName = sanitizeFileName(file.name) || "documento";
   const storedName = `${randomId}-${safeBaseName}.pdf`;
-  const studentSegment = studentId || 'pending-student';
-  const processSegment = processId || 'draft';
+  const studentSegment = studentId || "pending-student";
+  const processSegment = processId || "draft";
   const storagePath = `${tenantId}/${studentSegment}/${processSegment}/${storedName}`;
 
-  const { error } = await supabase.storage.from(DISCIPLINARY_BUCKET).upload(storagePath, file, {
-    cacheControl: '3600',
-    contentType: 'application/pdf',
-    upsert: false,
-  });
+  const { error } = await supabase.storage
+    .from(DISCIPLINARY_BUCKET)
+    .upload(storagePath, file, {
+      cacheControl: "3600",
+      contentType: "application/pdf",
+      upsert: false,
+    });
 
   if (error) {
-    console.error('Error uploading disciplinary file:', error);
-    throw new Error('No fue posible subir el PDF al almacenamiento privado.');
+    console.error("Error uploading disciplinary file:", error);
+    throw new Error("No fue posible subir el PDF al almacenamiento privado.");
   }
 
   return {
@@ -78,15 +80,17 @@ export async function uploadDisciplinaryFile(
     storagePath,
     originalName: file.name,
     storedName,
-    mimeType: 'application/pdf',
+    mimeType: "application/pdf",
     size: file.size,
   };
 }
 
 export async function deleteDisciplinaryFile(filePath: string): Promise<void> {
-  const { error } = await supabase.storage.from(DISCIPLINARY_BUCKET).remove([filePath]);
+  const { error } = await supabase.storage
+    .from(DISCIPLINARY_BUCKET)
+    .remove([filePath]);
 
   if (error) {
-    console.error('Error deleting disciplinary file:', error);
+    console.error("Error deleting disciplinary file:", error);
   }
 }

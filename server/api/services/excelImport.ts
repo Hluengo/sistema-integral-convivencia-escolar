@@ -1,12 +1,12 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { randomUUID } from 'node:crypto';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import readXlsxFile, { type CellValue } from 'read-excel-file/node';
+import { randomUUID } from "node:crypto";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import readXlsxFile, { type CellValue } from "read-excel-file/node";
 
 interface ImportCourseRow {
   name: string;
-  level: 'BASICA' | 'MEDIA';
+  level: "BASICA" | "MEDIA";
   position: number | null;
 }
 
@@ -22,32 +22,32 @@ export interface ParsedImport {
   warnings: string[];
 }
 
-const NORMALIZED_LEVELS: Record<string, 'BASICA' | 'MEDIA'> = {
-  basica: 'BASICA',
-  basico: 'BASICA',
-  media: 'MEDIA',
-  medio: 'MEDIA',
+const NORMALIZED_LEVELS: Record<string, "BASICA" | "MEDIA"> = {
+  basica: "BASICA",
+  basico: "BASICA",
+  media: "MEDIA",
+  medio: "MEDIA",
 };
 
-export function normalizeLevel(value: unknown): 'BASICA' | 'MEDIA' {
-  if (typeof value === 'string') {
+export function normalizeLevel(value: unknown): "BASICA" | "MEDIA" {
+  if (typeof value === "string") {
     let key = value.trim().toLowerCase();
-    key = key.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    key = key.replace(/[^a-z]/g, '');
-    return NORMALIZED_LEVELS[key] ?? 'BASICA';
+    key = key.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    key = key.replace(/[^a-z]/g, "");
+    return NORMALIZED_LEVELS[key] ?? "BASICA";
   }
-  return 'BASICA';
+  return "BASICA";
 }
 
 function normalizeText(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : '';
+  return typeof value === "string" ? value.trim() : "";
 }
 
 export function normalizeRut(value: unknown): string {
-  if (!value) return '';
-  const raw = typeof value === 'number' ? String(value) : String(value).trim();
-  const cleaned = raw.replace(/[^0-9kK-]/g, '').toUpperCase();
-  return cleaned.replace(/^-+/, '').replace(/-{2,}/g, '-');
+  if (!value) return "";
+  const raw = typeof value === "number" ? String(value) : String(value).trim();
+  const cleaned = raw.replace(/[^0-9kK-]/g, "").toUpperCase();
+  return cleaned.replace(/^-+/, "").replace(/-{2,}/g, "-");
 }
 
 function toRow(value: unknown): CellValue[] {
@@ -56,7 +56,9 @@ function toRow(value: unknown): CellValue[] {
 
 function headerIndex(row: CellValue[], candidates: string[]): number {
   return row.findIndex(
-    (cell) => typeof cell === 'string' && candidates.some((c) => cell.trim().toLowerCase() === c),
+    (cell) =>
+      typeof cell === "string" &&
+      candidates.some((c) => cell.trim().toLowerCase() === c),
   );
 }
 
@@ -72,7 +74,7 @@ function headerIndex(row: CellValue[], candidates: string[]): number {
  */
 export async function parseImportWorkbook(
   buffer: Buffer,
-  defaultLevel: 'BASICA' | 'MEDIA' = 'BASICA',
+  defaultLevel: "BASICA" | "MEDIA" = "BASICA",
 ): Promise<ParsedImport> {
   const warnings: string[] = [];
   const sheets = (await readXlsxFile(buffer)) as unknown as {
@@ -81,10 +83,12 @@ export async function parseImportWorkbook(
   }[];
 
   const findSheet = (candidates: string[]) =>
-    sheets.find((sheet) => candidates.includes(sheet.sheet.trim().toLowerCase())) ?? null;
+    sheets.find((sheet) =>
+      candidates.includes(sheet.sheet.trim().toLowerCase()),
+    ) ?? null;
 
-  const coursesSheet = findSheet(['cursos', 'courses']);
-  const studentsSheet = findSheet(['estudiantes', 'students', 'alumnos']);
+  const coursesSheet = findSheet(["cursos", "courses"]);
+  const studentsSheet = findSheet(["estudiantes", "students", "alumnos"]);
 
   const courses: ImportCourseRow[] = [];
   const students: ImportStudentRow[] = [];
@@ -93,16 +97,16 @@ export async function parseImportWorkbook(
   if (coursesSheet) {
     const rows = coursesSheet.data;
     const header = rows[0] ?? [];
-    const iName = headerIndex(header, ['name', 'nombre', 'curso']);
-    const iLevel = headerIndex(header, ['level', 'nivel']);
-    const iPos = headerIndex(header, ['position', 'posicion', 'orden']);
+    const iName = headerIndex(header, ["name", "nombre", "curso"]);
+    const iLevel = headerIndex(header, ["level", "nivel"]);
+    const iPos = headerIndex(header, ["position", "posicion", "orden"]);
     for (let r = 1; r < rows.length; r += 1) {
       const row = toRow(rows[r]);
       const name = normalizeText(row[iName] ?? row[0]);
       if (!name) continue;
       const level = iLevel >= 0 ? normalizeLevel(row[iLevel]) : defaultLevel;
       const posRaw = iPos >= 0 ? row[iPos] : null;
-      const position = typeof posRaw === 'number' ? posRaw : null;
+      const position = typeof posRaw === "number" ? posRaw : null;
       courses.push({ name, level, position });
     }
   }
@@ -111,15 +115,20 @@ export async function parseImportWorkbook(
   if (studentsSheet) {
     const rows = studentsSheet.data;
     const header = rows[0] ?? [];
-    const iName = headerIndex(header, ['full_name', 'nombre', 'nombre completo', 'full name']);
-    const iRut = headerIndex(header, ['rut', 'run']);
-    const iCourse = headerIndex(header, ['curso', 'course', 'course_id']);
+    const iName = headerIndex(header, [
+      "full_name",
+      "nombre",
+      "nombre completo",
+      "full name",
+    ]);
+    const iRut = headerIndex(header, ["rut", "run"]);
+    const iCourse = headerIndex(header, ["curso", "course", "course_id"]);
     for (let r = 1; r < rows.length; r += 1) {
       const row = toRow(rows[r]);
       const full_name = normalizeText(row[iName] ?? row[0]);
       if (!full_name) continue;
-      const rut = iRut >= 0 ? normalizeRut(row[iRut]) : '';
-      const course_name = iCourse >= 0 ? normalizeText(row[iCourse]) : '';
+      const rut = iRut >= 0 ? normalizeRut(row[iRut]) : "";
+      const course_name = iCourse >= 0 ? normalizeText(row[iCourse]) : "";
       students.push({ full_name, rut, course_name });
     }
 
@@ -131,7 +140,11 @@ export async function parseImportWorkbook(
         const key = student.course_name.toLowerCase();
         if (!key || byName.has(key)) continue;
         pos += 1;
-        byName.set(key, { name: student.course_name, level: defaultLevel, position: pos });
+        byName.set(key, {
+          name: student.course_name,
+          level: defaultLevel,
+          position: pos,
+        });
       }
       courses.push(...byName.values());
     }
@@ -168,12 +181,15 @@ export async function runImport(
   const courseMap = new Map<string, string>();
   // Cursos existentes del tenant.
   const { data: existingCourses, error: cErr } = await client
-    .from('courses')
-    .select('id,name')
-    .eq('tenant_id', tenantId);
+    .from("courses")
+    .select("id,name")
+    .eq("tenant_id", tenantId);
   if (cErr) throw cErr;
   for (const c of existingCourses ?? []) {
-    courseMap.set((c as { id: string; name: string }).name.toLowerCase(), (c as { id: string }).id);
+    courseMap.set(
+      (c as { id: string; name: string }).name.toLowerCase(),
+      (c as { id: string }).id,
+    );
   }
 
   const coursesToInsert: Array<{
@@ -198,7 +214,9 @@ export async function runImport(
     courseMap.set(key, id);
   }
   if (coursesToInsert.length > 0) {
-    const { error: insErr } = await client.from('courses').insert(coursesToInsert);
+    const { error: insErr } = await client
+      .from("courses")
+      .insert(coursesToInsert);
     if (insErr) throw insErr;
     coursesInserted = coursesToInsert.length;
   }
@@ -206,10 +224,10 @@ export async function runImport(
   // 2. Estudiantes: dedupe por RUT dentro del lote y contra existentes.
   const seenRuts = new Set<string>();
   const { data: existingStudents, error: sErr } = await client
-    .from('students')
-    .select('rut')
-    .eq('tenant_id', tenantId)
-    .not('rut', 'is', '');
+    .from("students")
+    .select("rut")
+    .eq("tenant_id", tenantId)
+    .not("rut", "is", "");
   if (sErr) throw sErr;
   for (const s of existingStudents ?? []) {
     const rut = (s as { rut: string }).rut;
@@ -247,7 +265,9 @@ export async function runImport(
     });
   }
   if (studentsToInsert.length > 0) {
-    const { error: insErr } = await client.from('students').insert(studentsToInsert);
+    const { error: insErr } = await client
+      .from("students")
+      .insert(studentsToInsert);
     if (insErr) throw insErr;
     studentsInserted = studentsToInsert.length;
   }

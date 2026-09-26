@@ -1,8 +1,10 @@
-import { test, expect } from '@playwright/test';
-import { build } from 'esbuild';
+import { test, expect } from "@playwright/test";
+import { build } from "esbuild";
 
 // Monta el formulario real con datos ficticios; no necesita sesión ni escribe en Supabase.
-test('corrige la conducta, conserva el relato y precarga la selección al reabrir', async ({ page }) => {
+test("corrige la conducta, conserva el relato y precarga la selección al reabrir", async ({
+  page,
+}) => {
   const result = await build({
     stdin: {
       contents: `
@@ -34,27 +36,40 @@ test('corrige la conducta, conserva el relato y precarga la selección al reabri
         render();
       `,
       resolveDir: process.cwd(),
-      loader: 'tsx',
+      loader: "tsx",
     },
     bundle: true,
     write: false,
-    platform: 'browser',
-    format: 'iife',
-    define: { 'process.env.NODE_ENV': '"test"' },
+    platform: "browser",
+    format: "iife",
+    define: { "process.env.NODE_ENV": '"test"' },
   });
   await page.setContent('<div id="root"></div><pre id="saved"></pre>');
   await page.addScriptTag({ content: result.outputFiles[0].text });
-  const selector = page.getByLabel('Descripción de la falta (RICE)');
-  await expect(selector.locator('option:checked')).toContainText(/alcohol/i);
-  const abandono = selector.locator('option').filter({ hasText: /Abandonar clases/i }).first();
-  const id = await abandono.getAttribute('value');
+  const selector = page.getByLabel("Descripción de la falta (RICE)");
+  await expect(selector.locator("option:checked")).toContainText(/alcohol/i);
+  const abandono = selector
+    .locator("option")
+    .filter({ hasText: /Abandonar clases/i })
+    .first();
+  const id = await abandono.getAttribute("value");
   expect(id).toBeTruthy();
   await selector.selectOption(id!);
-  await expect(page.getByLabel('Tipo de infracción', { exact: true })).toHaveValue('Muy Grave');
-  await expect(page.getByLabel('Compromete Aula Segura', { exact: true })).not.toBeChecked();
-  await expect(page.getByLabel('Observaciones', { exact: true })).toHaveValue('Relato original que debe conservarse.');
-  await page.getByRole('button', { name: 'Guardar Cambios' }).click();
-  await expect(page.locator('#saved')).toContainText('"conductaRiceId":"' + id + '"');
+  await expect(
+    page.getByLabel("Tipo de infracción", { exact: true }),
+  ).toHaveValue("Muy Grave");
+  await expect(
+    page.getByLabel("Compromete Aula Segura", { exact: true }),
+  ).not.toBeChecked();
+  await expect(page.getByLabel("Observaciones", { exact: true })).toHaveValue(
+    "Relato original que debe conservarse.",
+  );
+  await page.getByRole("button", { name: "Guardar Cambios" }).click();
+  await expect(page.locator("#saved")).toContainText(
+    '"conductaRiceId":"' + id + '"',
+  );
   await expect(selector).toHaveValue(id!);
-  await expect(page.getByLabel('Observaciones', { exact: true })).toHaveValue('Relato original que debe conservarse.');
+  await expect(page.getByLabel("Observaciones", { exact: true })).toHaveValue(
+    "Relato original que debe conservarse.",
+  );
 });

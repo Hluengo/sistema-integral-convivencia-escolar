@@ -1,70 +1,70 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
-import { getBaseChecklist } from '../../shared/lib/data';
-import { EstadoCausa, type Causa } from '../../shared/lib/types';
-import { getCausaOperationalSummary } from './causaOperationalSummary';
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
+import { getBaseChecklist } from "../../shared/lib/data";
+import { EstadoCausa, type Causa } from "../../shared/lib/types";
+import { getCausaOperationalSummary } from "./causaOperationalSummary";
 
 const causa = (overrides: Partial<Causa> = {}): Causa => ({
-  id: 'DC-2026-014',
-  estudianteNombre: 'Nombre completo',
-  estudianteCurso: '7° Básico A',
-  nnaProtectedName: 'N. C.',
-  runEstudiante: '12.345.678-9',
-  fechaApertura: '2026-07-01',
+  id: "DC-2026-014",
+  estudianteNombre: "Nombre completo",
+  estudianteCurso: "7° Básico A",
+  nnaProtectedName: "N. C.",
+  runEstudiante: "12.345.678-9",
+  fechaApertura: "2026-07-01",
   estadoActual: EstadoCausa.EN_PROCESO_INDAGACION,
-  tipoInfraccion: 'Grave',
-  responsable: 'Responsable',
+  tipoInfraccion: "Grave",
+  responsable: "Responsable",
   comprometeAulaSegura: false,
-  fechaUltimaActualizacion: '2026-07-01',
-  observaciones: 'Resumen',
+  fechaUltimaActualizacion: "2026-07-01",
+  observaciones: "Resumen",
   bitacora: [],
   checklistDebidoProceso: [],
   ...overrides,
 });
 
-describe('Resumen operativo de causa', () => {
-  it('identifica el siguiente hito pendiente de la fase vigente', () => {
+describe("Resumen operativo de causa", () => {
+  it("identifica el siguiente hito pendiente de la fase vigente", () => {
     const summary = getCausaOperationalSummary(
       causa({
         checklistDebidoProceso: [
           {
-            id: 'chk_inv_1',
-            label: 'Primer hito',
-            descripcion: 'Completado',
+            id: "chk_inv_1",
+            label: "Primer hito",
+            descripcion: "Completado",
             completado: true,
-            requeridoPor: 'Circular 482',
+            requeridoPor: "Circular 482",
           },
           {
-            id: 'chk_inv_2',
-            label: 'Siguiente hito',
-            descripcion: 'Pendiente',
+            id: "chk_inv_2",
+            label: "Siguiente hito",
+            descripcion: "Pendiente",
             completado: false,
-            requeridoPor: 'Ambas',
+            requeridoPor: "Ambas",
           },
         ],
       }),
     );
 
-    assert.equal(summary.currentPhase, 'Investigación');
+    assert.equal(summary.currentPhase, "Investigación");
     assert.equal(summary.currentPhaseProgress.completed, 1);
     assert.equal(summary.currentPhaseProgress.total, 2);
-    assert.equal(summary.nextChecklistItem?.label, 'Siguiente hito');
-    assert.equal(summary.nextChecklistPhase, 'Investigación');
+    assert.equal(summary.nextChecklistItem?.label, "Siguiente hito");
+    assert.equal(summary.nextChecklistPhase, "Investigación");
   });
 
-  it('no propone nuevos hitos para una causa cerrada', () => {
+  it("no propone nuevos hitos para una causa cerrada", () => {
     const summary = getCausaOperationalSummary(
       causa({
         estadoActual: EstadoCausa.CAUSA_CERRADA,
         checklistDebidoProceso: [
           {
-            id: 'chk_seg_4',
-            label: 'Causa Cerrada',
-            descripcion: 'Pendiente de checklist',
+            id: "chk_seg_4",
+            label: "Causa Cerrada",
+            descripcion: "Pendiente de checklist",
             completado: false,
-            requeridoPor: 'Reglamento Interno',
+            requeridoPor: "Reglamento Interno",
           },
         ],
       }),
@@ -74,44 +74,46 @@ describe('Resumen operativo de causa', () => {
     assert.equal(summary.nextChecklistPhase, null);
   });
 
-  it('no sugiere derivar a mediación como obligación cuando la investigación base está completa', () => {
+  it("no sugiere derivar a mediación como obligación cuando la investigación base está completa", () => {
     const checklist = getBaseChecklist().map((item) =>
-      item.id === 'chk_inv_1' || item.id === 'chk_inv_2'
-        ? { ...item, completado: true, fechaCompletado: '2026-08-10' }
+      item.id === "chk_inv_1" || item.id === "chk_inv_2"
+        ? { ...item, completado: true, fechaCompletado: "2026-08-10" }
         : item,
     );
-    const summary = getCausaOperationalSummary(causa({ checklistDebidoProceso: checklist }));
+    const summary = getCausaOperationalSummary(
+      causa({ checklistDebidoProceso: checklist }),
+    );
 
-    assert.equal(summary.currentPhase, 'Investigación');
+    assert.equal(summary.currentPhase, "Investigación");
     assert.equal(summary.currentPhaseProgress.completed, 2);
     assert.equal(summary.currentPhaseProgress.total, 2);
-    assert.notEqual(summary.nextChecklistItem?.id, 'chk_inv_3');
-    assert.equal(summary.nextChecklistItem?.id, 'chk_res_2');
-    assert.equal(summary.nextChecklistPhase, 'Resolución');
+    assert.notEqual(summary.nextChecklistItem?.id, "chk_inv_3");
+    assert.equal(summary.nextChecklistItem?.id, "chk_res_2");
+    assert.equal(summary.nextChecklistPhase, "Resolución");
   });
 
-  it('cuenta documentos y actividad desde antecedentes ya cargados', () => {
+  it("cuenta documentos y actividad desde antecedentes ya cargados", () => {
     const summary = getCausaOperationalSummary(
       causa({
         checklistDebidoProceso: [
           {
-            id: 'chk_inv_1',
-            label: 'Hito documentado',
-            descripcion: 'Completado',
+            id: "chk_inv_1",
+            label: "Hito documentado",
+            descripcion: "Completado",
             completado: true,
-            documentoNombre: 'acta.pdf',
-            requeridoPor: 'Circular 482',
+            documentoNombre: "acta.pdf",
+            requeridoPor: "Circular 482",
           },
         ],
         bitacora: [
           {
-            id: 'bit-1',
-            fecha: '2026-07-02T12:00:00Z',
-            tipo: 'Evidencia',
-            titulo: 'Acta incorporada',
-            descripcion: 'Documento adjunto',
+            id: "bit-1",
+            fecha: "2026-07-02T12:00:00Z",
+            tipo: "Evidencia",
+            titulo: "Acta incorporada",
+            descripcion: "Documento adjunto",
             participantes: [],
-            documentoAdjunto: 'acta.pdf',
+            documentoAdjunto: "acta.pdf",
           },
         ],
       }),
@@ -122,75 +124,77 @@ describe('Resumen operativo de causa', () => {
     assert.equal(summary.historyCount, 1);
   });
 
-  it('usa la actividad posterior como fase operativa sin cambiar el estado persistido', () => {
+  it("usa la actividad posterior como fase operativa sin cambiar el estado persistido", () => {
     const summary = getCausaOperationalSummary(
       causa({
         estadoActual: EstadoCausa.DENUNCIA_RECEPCIONADA,
         checklistDebidoProceso: [
-          ...getBaseChecklist().filter((item) => item.id.startsWith('chk_rec_')).map((item) => ({
-            ...item,
-            completado: true,
-          })),
+          ...getBaseChecklist()
+            .filter((item) => item.id.startsWith("chk_rec_"))
+            .map((item) => ({
+              ...item,
+              completado: true,
+            })),
           {
-            id: 'chk_inv_1',
-            label: 'Indagación iniciada',
-            descripcion: 'Registrada',
+            id: "chk_inv_1",
+            label: "Indagación iniciada",
+            descripcion: "Registrada",
             completado: true,
-            requeridoPor: 'Circular 482',
+            requeridoPor: "Circular 482",
           },
           {
-            id: 'chk_inv_2',
-            label: 'Indagación pendiente',
-            descripcion: 'Pendiente',
+            id: "chk_inv_2",
+            label: "Indagación pendiente",
+            descripcion: "Pendiente",
             completado: false,
-            requeridoPor: 'Ambas',
+            requeridoPor: "Ambas",
           },
         ],
       }),
     );
 
-    assert.equal(summary.currentPhase, 'Investigación');
+    assert.equal(summary.currentPhase, "Investigación");
     assert.equal(summary.laterActivityPhase, null);
-    assert.equal(summary.nextChecklistPhase, 'Investigación');
+    assert.equal(summary.nextChecklistPhase, "Investigación");
   });
 
-  it('muestra Resolución cuando hay hitos de resolución aunque el estado siga en recepción', () => {
+  it("muestra Resolución cuando hay hitos de resolución aunque el estado siga en recepción", () => {
     const summary = getCausaOperationalSummary(
       causa({
         estadoActual: EstadoCausa.DENUNCIA_RECEPCIONADA,
         checklistDebidoProceso: getBaseChecklist().map((item) =>
-          item.id.startsWith('chk_rec_') ||
-          item.id === 'chk_inv_1' ||
-          item.id === 'chk_inv_2' ||
-          item.id === 'chk_res_2'
+          item.id.startsWith("chk_rec_") ||
+          item.id === "chk_inv_1" ||
+          item.id === "chk_inv_2" ||
+          item.id === "chk_res_2"
             ? { ...item, completado: true }
             : item,
         ),
       }),
     );
 
-    assert.equal(summary.currentPhase, 'Resolución');
-    assert.equal(summary.currentPhaseProgress.phase, 'Resolución');
-    assert.equal(summary.nextChecklistPhase, 'Resolución');
+    assert.equal(summary.currentPhase, "Resolución");
+    assert.equal(summary.currentPhaseProgress.phase, "Resolución");
+    assert.equal(summary.nextChecklistPhase, "Resolución");
   });
 
-  it('no cuenta como actividad operativa los estados absorbidos', () => {
+  it("no cuenta como actividad operativa los estados absorbidos", () => {
     const summary = getCausaOperationalSummary(
       causa({
         checklistDebidoProceso: [
           {
-            id: 'chk_res_1',
-            label: 'Elaboración histórica',
-            descripcion: 'Estado absorbido',
+            id: "chk_res_1",
+            label: "Elaboración histórica",
+            descripcion: "Estado absorbido",
             completado: true,
-            requeridoPor: 'Circular 482',
+            requeridoPor: "Circular 482",
           },
           {
-            id: 'chk_res_2',
-            label: 'Informe emitido',
-            descripcion: 'Actuación visible',
+            id: "chk_res_2",
+            label: "Informe emitido",
+            descripcion: "Actuación visible",
             completado: true,
-            requeridoPor: 'Circular 482',
+            requeridoPor: "Circular 482",
           },
         ],
         estadoActual: EstadoCausa.INFORME_CONCLUYENTE_ELABORACION,

@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { AnotacionStudent } from '@/shared/lib/types';
+import type { AnotacionStudent } from "@/shared/lib/types";
 import {
   getStudentCartaWorkflowLabel,
   type StudentCartaTableState,
-} from '@/shared/lib/domain/disciplinaryStage';
+} from "@/shared/lib/domain/disciplinaryStage";
 
 export function applyCartaStatesToStudents(
   students: AnotacionStudent[],
@@ -17,7 +17,10 @@ export function applyCartaStatesToStudents(
 
   return students.map((student) => {
     const completedLetterType = states[student.id]?.completedLetterType;
-    if (!completedLetterType || student.effective_letter_type === completedLetterType) {
+    if (
+      !completedLetterType ||
+      student.effective_letter_type === completedLetterType
+    ) {
       return student;
     }
     return { ...student, effective_letter_type: completedLetterType };

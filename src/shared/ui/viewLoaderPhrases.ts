@@ -54,9 +54,4 @@ export const PHRASES: Record<ViewLoaderView, string[]> = {
     "Llamando a todos los colegios…",
     "Sincronizando establecimientos…",
   ],
-  "plan-gestion": [
-    "Abriendo el plan de gestión…",
-    "Revisando objetivos e indicadores…",
-    "Ordenando acciones preventivas…",
-  ],
 };

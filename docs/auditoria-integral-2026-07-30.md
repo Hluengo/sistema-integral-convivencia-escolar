@@ -42,7 +42,7 @@
 
 ```typescript
 // Actual:
-process.env.SUPABASE_JWT_SECRET ?? '';
+process.env.SUPABASE_JWT_SECRET ?? "";
 
 // Problema: Si la variable no existe, intenta verificar HMAC con string vacío.
 // Debería fallar explícitamente.
@@ -72,8 +72,8 @@ helmet({
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", 'data:', 'https://*.supabase.co'],
-      connectSrc: ["'self'", 'https://*.supabase.co', 'https://openrouter.ai'],
+      imgSrc: ["'self'", "data:", "https://*.supabase.co"],
+      connectSrc: ["'self'", "https://*.supabase.co", "https://openrouter.ai"],
     },
   },
 });

@@ -15,7 +15,6 @@ import {
 } from "../shared/Skeleton";
 import { AppProvider } from "../shared/lib/AppContext";
 import { MembershipLoading, MembershipAccessDenied } from "../shared/ui";
-import WelcomeModal from "../shared/ui/WelcomeModal";
 import AppFooter from "./components/AppFooter";
 import AppLoadingFallback from "./components/AppLoadingFallback";
 import AppLoadError from "./components/AppLoadError";
@@ -26,7 +25,6 @@ import { useCausaWorkspace } from "./hooks/useCausaWorkspace";
 import { useNewCausaModalController } from "./hooks/useNewCausaModalController";
 import { useRoleGates } from "./hooks/useRoleGates";
 import { useUrlRouting } from "./hooks/useUrlRouting";
-import { useWelcomeGate } from "./hooks/useWelcomeGate";
 import * as Lazy from "./lazyAppComponents";
 
 export default function App() {
@@ -67,11 +65,6 @@ export default function App() {
     userId: user?.id,
     profileRole,
     appRole,
-  });
-  const { showWelcome, dismissWelcome, loginFromWelcome } = useWelcomeGate({
-    authLoading,
-    user,
-    setShowLoginModal,
   });
   const {
     causas,
@@ -162,6 +155,20 @@ export default function App() {
   });
 
   if (authLoading) return <AppLoadingFallback />;
+
+  if (!user) {
+    return (
+      <ToastProvider>
+        <AppProvider>
+          <div className="min-h-dvh bg-neutral-100">
+            <Suspense fallback={<ModalSkeleton />}>
+              <Lazy.LoginPage required />
+            </Suspense>
+          </div>
+        </AppProvider>
+      </ToastProvider>
+    );
+  }
 
   if (user && !membership.loaded && membership.authMode !== "legacy") {
     return (
@@ -271,13 +278,6 @@ export default function App() {
             <Suspense fallback={<ModalSkeleton />}>
               <Lazy.LoginPage onClose={closeLoginModal} />
             </Suspense>
-          )}
-          {!user && !showLoginModal && (
-            <WelcomeModal
-              open={showWelcome}
-              onClose={dismissWelcome}
-              onLogin={loginFromWelcome}
-            />
           )}
         </div>
       </AppProvider>

@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { User } from 'lucide-react';
+import { User } from "lucide-react";
 
 interface UserAvatarProps {
   user?: { email?: string } | null;

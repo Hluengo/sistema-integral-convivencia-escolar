@@ -3,16 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { SheetData } from 'write-excel-file/browser';
-import { maskName, maskRut } from '../../shared/lib/anotacionesUtils';
+import type { SheetData } from "write-excel-file/browser";
+import { maskName, maskRut } from "../../shared/lib/anotacionesUtils";
 import {
   getEffectiveDisciplinaryStage,
   type LetterType,
-} from '../../shared/lib/domain/disciplinaryStage';
-import { matchesAnnotationFilter } from './annotationStudentFilters';
+} from "../../shared/lib/domain/disciplinaryStage";
+import { matchesAnnotationFilter } from "./annotationStudentFilters";
 
 export type AnnotationExportScope =
-  'all' | 'visible' | 'sin_carta' | 'amonestacion' | 'compromiso' | 'derivacion';
+  | "all"
+  | "visible"
+  | "sin_carta"
+  | "amonestacion"
+  | "compromiso"
+  | "derivacion";
 
 export interface AnnotationExportStudent {
   id: string;
@@ -42,30 +47,30 @@ export const ANNOTATION_EXPORT_OPTIONS: Array<{
   scope: AnnotationExportScope;
   label: string;
 }> = [
-  { scope: 'all', label: 'Toda la lista' },
-  { scope: 'visible', label: 'Resultados visibles' },
-  { scope: 'sin_carta', label: 'Sin Carta (1-4 negativas)' },
-  { scope: 'amonestacion', label: 'Amonestación' },
-  { scope: 'compromiso', label: 'Compromiso conductual' },
-  { scope: 'derivacion', label: 'Derivación a convivencia' },
+  { scope: "all", label: "Toda la lista" },
+  { scope: "visible", label: "Resultados visibles" },
+  { scope: "sin_carta", label: "Sin Carta (1-4 negativas)" },
+  { scope: "amonestacion", label: "Amonestación" },
+  { scope: "compromiso", label: "Compromiso conductual" },
+  { scope: "derivacion", label: "Derivación a convivencia" },
 ];
 
 const HEADER_STYLE = {
-  backgroundColor: '#1E3A5F',
-  textColor: '#FFFFFF',
-  fontWeight: 'bold' as const,
-  align: 'center' as const,
-  alignVertical: 'center' as const,
+  backgroundColor: "#1E3A5F",
+  textColor: "#FFFFFF",
+  fontWeight: "bold" as const,
+  align: "center" as const,
+  alignVertical: "center" as const,
   wrap: true,
   height: 30,
-  borderColor: '#CBD5E1',
-  borderStyle: 'thin' as const,
+  borderColor: "#CBD5E1",
+  borderStyle: "thin" as const,
 };
 
 const CELL_BORDER = {
-  borderColor: '#E2E8F0',
-  borderStyle: 'thin' as const,
-  alignVertical: 'center' as const,
+  borderColor: "#E2E8F0",
+  borderStyle: "thin" as const,
+  alignVertical: "center" as const,
 };
 
 export const ANNOTATIONS_EXCEL_COLUMNS = [
@@ -85,9 +90,9 @@ export function getStudentsForAnnotationExport(
   visibleStudents: AnnotationExportStudent[],
   scope: AnnotationExportScope,
 ): AnnotationExportStudent[] {
-  if (scope === 'all') return students;
-  if (scope === 'visible') return visibleStudents;
-  if (scope === 'sin_carta') {
+  if (scope === "all") return students;
+  if (scope === "visible") return visibleStudents;
+  if (scope === "sin_carta") {
     return students.filter((student) => {
       const negativeCount = Number(student.annotations_count) || 0;
       return negativeCount >= 1 && negativeCount <= 4;
@@ -98,7 +103,10 @@ export function getStudentsForAnnotationExport(
 }
 
 function getAnnotationExportLabel(scope: AnnotationExportScope): string {
-  return ANNOTATION_EXPORT_OPTIONS.find((option) => option.scope === scope)?.label ?? 'Anotaciones';
+  return (
+    ANNOTATION_EXPORT_OPTIONS.find((option) => option.scope === scope)?.label ??
+    "Anotaciones"
+  );
 }
 
 export function buildAnnotationExportRows(
@@ -107,13 +115,16 @@ export function buildAnnotationExportRows(
   privacyMode: boolean,
 ): AnnotationExportRow[] {
   return students.map((student) => {
-    const lastRecord = student.last_annotation_date ? new Date(student.last_annotation_date) : null;
-    const safeLastRecord = lastRecord && !Number.isNaN(lastRecord.getTime()) ? lastRecord : null;
+    const lastRecord = student.last_annotation_date
+      ? new Date(student.last_annotation_date)
+      : null;
+    const safeLastRecord =
+      lastRecord && !Number.isNaN(lastRecord.getTime()) ? lastRecord : null;
 
     return {
       student: maskName(student.full_name, privacyMode),
       rut: maskRut(student.rut, privacyMode),
-      course: student.course_name || 'Sin curso',
+      course: student.course_name || "Sin curso",
       positives: Number(student.positive_annotations_count) || 0,
       negatives: Number(student.annotations_count) || 0,
       informatives: Number(student.informative_annotations_count) || 0,
@@ -122,7 +133,7 @@ export function buildAnnotationExportRows(
         student.annotations_count,
         student.effective_letter_type,
       ).label,
-      documentStatus: cartaStatuses[student.id]?.join(', ') || 'Sin documento',
+      documentStatus: cartaStatuses[student.id]?.join(", ") || "Sin documento",
     };
   });
 }
@@ -135,37 +146,37 @@ export function buildAnnotationsSheetData(
   const scopeLabel = getAnnotationExportLabel(scope);
   const emptyCells = Array.from({ length: 8 }, () => null);
   const header = [
-    'Estudiante',
-    'RUT',
-    'Curso',
-    'Positivas',
-    'Negativas',
-    'Informativas',
-    'Último registro',
-    'Medida disciplinaria',
-    'Estado documental',
+    "Estudiante",
+    "RUT",
+    "Curso",
+    "Positivas",
+    "Negativas",
+    "Informativas",
+    "Último registro",
+    "Medida disciplinaria",
+    "Estado documental",
   ].map((value) => ({ value, ...HEADER_STYLE }));
 
   const dataRows = rows.map((row, index) => {
-    const backgroundColor = index % 2 === 0 ? '#FFFFFF' : '#F8FAFC';
+    const backgroundColor = index % 2 === 0 ? "#FFFFFF" : "#F8FAFC";
     const commonStyle = { ...CELL_BORDER, backgroundColor };
-    const centeredStyle = { ...commonStyle, align: 'center' as const };
+    const centeredStyle = { ...commonStyle, align: "center" as const };
 
     return [
       { value: row.student, ...commonStyle, wrap: true },
-      { value: row.rut, ...commonStyle, format: '@' },
+      { value: row.rut, ...commonStyle, format: "@" },
       { value: row.course, ...commonStyle, wrap: true },
-      { value: row.positives, ...centeredStyle, format: '#,##0' },
-      { value: row.negatives, ...centeredStyle, format: '#,##0' },
-      { value: row.informatives, ...centeredStyle, format: '#,##0' },
+      { value: row.positives, ...centeredStyle, format: "#,##0" },
+      { value: row.negatives, ...centeredStyle, format: "#,##0" },
+      { value: row.informatives, ...centeredStyle, format: "#,##0" },
       row.lastRecord
         ? {
             value: row.lastRecord,
             type: Date,
-            format: 'dd/mm/yyyy',
+            format: "dd/mm/yyyy",
             ...centeredStyle,
           }
-        : { value: '—', ...centeredStyle },
+        : { value: "—", ...centeredStyle },
       { value: row.measure, ...commonStyle, wrap: true },
       { value: row.documentStatus, ...commonStyle, wrap: true },
     ];
@@ -174,26 +185,26 @@ export function buildAnnotationsSheetData(
   return [
     [
       {
-        value: 'Sistema Integral de Convivencia Escolar — Anotaciones',
+        value: "Sistema Integral de Convivencia Escolar — Anotaciones",
         columnSpan: 9,
-        backgroundColor: '#0F2742',
-        textColor: '#FFFFFF',
-        fontWeight: 'bold',
+        backgroundColor: "#0F2742",
+        textColor: "#FFFFFF",
+        fontWeight: "bold",
         fontSize: 15,
         height: 30,
-        alignVertical: 'center',
+        alignVertical: "center",
       },
       ...emptyCells,
     ],
     [
       {
-        value: `Alcance: ${scopeLabel} · ${rows.length} estudiante${rows.length === 1 ? '' : 's'} · Generado: ${generatedAt.toLocaleString('es-CL')}`,
+        value: `Alcance: ${scopeLabel} · ${rows.length} estudiante${rows.length === 1 ? "" : "s"} · Generado: ${generatedAt.toLocaleString("es-CL")}`,
         columnSpan: 9,
-        backgroundColor: '#E8EEF5',
-        textColor: '#334155',
-        fontStyle: 'italic',
+        backgroundColor: "#E8EEF5",
+        textColor: "#334155",
+        fontStyle: "italic",
         height: 24,
-        alignVertical: 'center',
+        alignVertical: "center",
       },
       ...emptyCells,
     ],
@@ -208,11 +219,15 @@ export function buildAnnotationExportFileName(
 ): string {
   const date = [
     generatedAt.getFullYear(),
-    String(generatedAt.getMonth() + 1).padStart(2, '0'),
-    String(generatedAt.getDate()).padStart(2, '0'),
-  ].join('-');
+    String(generatedAt.getMonth() + 1).padStart(2, "0"),
+    String(generatedAt.getDate()).padStart(2, "0"),
+  ].join("-");
   const scopeSlug =
-    scope === 'visible' ? 'resultados-visibles' : scope === 'all' ? 'lista-completa' : scope;
+    scope === "visible"
+      ? "resultados-visibles"
+      : scope === "all"
+        ? "lista-completa"
+        : scope;
   return `anotaciones_${scopeSlug}_${date}.xlsx`;
 }
 
@@ -224,22 +239,26 @@ export async function downloadAnnotationsExcel(params: {
   generatedAt?: Date;
 }): Promise<void> {
   const generatedAt = params.generatedAt ?? new Date();
-  const rows = buildAnnotationExportRows(params.students, params.cartaStatuses, params.privacyMode);
+  const rows = buildAnnotationExportRows(
+    params.students,
+    params.cartaStatuses,
+    params.privacyMode,
+  );
   const sheetData = buildAnnotationsSheetData(rows, params.scope, generatedAt);
-  const { default: writeExcelFile } = await import('write-excel-file/browser');
+  const { default: writeExcelFile } = await import("write-excel-file/browser");
 
   await writeExcelFile(
     sheetData,
     {
-      sheet: 'Anotaciones',
+      sheet: "Anotaciones",
       columns: ANNOTATIONS_EXCEL_COLUMNS,
-      orientation: 'landscape',
+      orientation: "landscape",
       stickyRowsCount: 3,
       showGridLines: false,
       zoomScale: 0.9,
     },
     {
-      fontFamily: 'Aptos',
+      fontFamily: "Aptos",
       fontSize: 10,
     },
   ).toFile(buildAnnotationExportFileName(params.scope, generatedAt));

@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useMemo } from 'react';
-import type { Causa, UserRole } from '../types';
-import { useChecklistRegistration } from './useChecklistRegistration';
-import { useDocumentManager } from './useDocumentManager';
-import { useBitacoraLog } from './useBitacoraLog';
+import { useMemo } from "react";
+import type { Causa, UserRole } from "../types";
+import { useChecklistRegistration } from "./useChecklistRegistration";
+import { useDocumentManager } from "./useDocumentManager";
+import { useBitacoraLog } from "./useBitacoraLog";
 
 interface TimelineControllerArgs {
   causa: Causa;
@@ -22,7 +22,12 @@ export function useTimelineController({
   currentRole,
   privacyMode,
 }: TimelineControllerArgs) {
-  const checklist = useChecklistRegistration({ causa, onUpdateCausa, currentRole, privacyMode });
+  const checklist = useChecklistRegistration({
+    causa,
+    onUpdateCausa,
+    currentRole,
+    privacyMode,
+  });
   const documents = useDocumentManager({
     causa,
     onUpdateCausa,

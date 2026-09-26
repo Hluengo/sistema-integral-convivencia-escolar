@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it } from 'node:test';
-import assert from 'node:assert/strict';
-import type { Request, Response, NextFunction } from 'express';
-import { rateLimit } from '../rateLimit';
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import type { Request, Response, NextFunction } from "express";
+import { rateLimit } from "../rateLimit";
 
 interface MockState {
   statusCode?: number;
@@ -15,8 +15,8 @@ interface MockState {
 
 function mockReq(overrides?: Partial<Request>): Request {
   return {
-    ip: '127.0.0.1',
-    socket: { remoteAddress: '127.0.0.1' } as unknown as Request['socket'],
+    ip: "127.0.0.1",
+    socket: { remoteAddress: "127.0.0.1" } as unknown as Request["socket"],
     headers: {},
     user: undefined,
     ...overrides,
@@ -27,7 +27,10 @@ function mockRes(): Response & { state: MockState } {
   const state: MockState = {};
   const res = {
     statusCode: 200,
-    status(this: { statusCode: number } & Record<string, unknown>, code: number) {
+    status(
+      this: { statusCode: number } & Record<string, unknown>,
+      code: number,
+    ) {
       this.statusCode = code;
       (this as unknown as { state: MockState }).state.statusCode = code;
       return this;
@@ -37,13 +40,13 @@ function mockRes(): Response & { state: MockState } {
       return this;
     },
   } as unknown as Response;
-  Object.defineProperty(res, 'state', { get: () => state });
+  Object.defineProperty(res, "state", { get: () => state });
   return res as unknown as Response & { state: MockState };
 }
 
-describe('rateLimit middleware', () => {
-  it('allows first request from an IP', async () => {
-    const req = mockReq({ ip: 'rl-mw-allow-1' });
+describe("rateLimit middleware", () => {
+  it("allows first request from an IP", async () => {
+    const req = mockReq({ ip: "rl-mw-allow-1" });
     const res = mockRes();
     let called = false;
     const next: NextFunction = () => {
@@ -55,8 +58,8 @@ describe('rateLimit middleware', () => {
     assert.equal(res.state.statusCode, undefined);
   });
 
-  it('allows up to 10 requests per key', async () => {
-    const req = mockReq({ ip: 'rl-mw-limit-1' });
+  it("allows up to 10 requests per key", async () => {
+    const req = mockReq({ ip: "rl-mw-limit-1" });
     const res = mockRes();
 
     for (let i = 0; i < 10; i++) {
@@ -64,7 +67,7 @@ describe('rateLimit middleware', () => {
     }
 
     // Use a fresh IP for reliable test
-    const req2 = mockReq({ ip: 'rl-mw-limit-2' });
+    const req2 = mockReq({ ip: "rl-mw-limit-2" });
     const res2 = mockRes();
     let called2 = false;
     await rateLimit(req2, res2, () => {
@@ -73,8 +76,8 @@ describe('rateLimit middleware', () => {
     assert.equal(called2, true);
   });
 
-  it('blocks 11th request and returns 429', async () => {
-    const ip = 'rl-mw-block';
+  it("blocks 11th request and returns 429", async () => {
+    const ip = "rl-mw-block";
 
     // Exhaust the limit
     for (let i = 0; i < 11; i++) {
@@ -98,10 +101,13 @@ describe('rateLimit middleware', () => {
     assert.equal(body.retryAfter, 60);
   });
 
-  it('uses authenticated user sub as key when available', async () => {
+  it("uses authenticated user sub as key when available", async () => {
     // Request A and B from same IP but different users — each gets own quota
     await rateLimit(
-      mockReq({ ip: 'shared-ip', user: { sub: 'user-a' } } as unknown as Request),
+      mockReq({
+        ip: "shared-ip",
+        user: { sub: "user-a" },
+      } as unknown as Request),
       mockRes(),
       () => {},
     );
@@ -110,7 +116,10 @@ describe('rateLimit middleware', () => {
     const resB = mockRes();
     let calledB = false;
     await rateLimit(
-      mockReq({ ip: 'shared-ip', user: { sub: 'user-b' } } as unknown as Request),
+      mockReq({
+        ip: "shared-ip",
+        user: { sub: "user-b" },
+      } as unknown as Request),
       resB,
       () => {
         calledB = true;
@@ -119,8 +128,11 @@ describe('rateLimit middleware', () => {
     assert.equal(calledB, true);
   });
 
-  it('uses IP fallback when user.sub is missing', async () => {
-    const req = mockReq({ ip: 'rl-fallback-ip', user: { role: 'admin' } } as unknown as Request);
+  it("uses IP fallback when user.sub is missing", async () => {
+    const req = mockReq({
+      ip: "rl-fallback-ip",
+      user: { role: "admin" },
+    } as unknown as Request);
     const res = mockRes();
     let called = false;
     await rateLimit(req, res, () => {

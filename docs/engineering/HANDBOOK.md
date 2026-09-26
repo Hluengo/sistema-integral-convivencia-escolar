@@ -120,7 +120,7 @@ interface CausaCardProps {
 }
 
 // ✅ type alias para uniones
-type StatusValue = 'idle' | 'loading' | 'success' | 'error';
+type StatusValue = "idle" | "loading" | "success" | "error";
 ```
 
 ---
@@ -207,13 +207,13 @@ const supabase = createClient(url, serviceRoleKey, {
 ### 4.2 Patrón de Servicios
 
 ```typescript
-import { supabase } from '@/shared/api/lib/supabase';
+import { supabase } from "@/shared/api/lib/supabase";
 
 export async function fetchItems(tenantId: string): Promise<Item[]> {
   const { data, error } = await supabase
-    .from('items')
-    .select('col1, col2, col3') // Nunca SELECT *
-    .eq('tenant_id', tenantId);
+    .from("items")
+    .select("col1, col2, col3") // Nunca SELECT *
+    .eq("tenant_id", tenantId);
 
   if (error) throw error;
   return data.map(mapRowToItem);
@@ -283,22 +283,22 @@ CREATE INDEX idx_ejemplo_tenant_id ON public.ejemplo(tenant_id);
 ### 6.1 Patrón de Ruta
 
 ```typescript
-import { Router } from 'express';
-import { requireAuth } from '../middleware/auth';
-import { rateLimiter } from '../lib/rateLimit';
+import { Router } from "express";
+import { requireAuth } from "../middleware/auth";
+import { rateLimiter } from "../lib/rateLimit";
 
 const router = Router();
 router.use(requireAuth);
 router.use(rateLimiter(10, 60000)); // 10 req/min
 
-router.post('/api/endpoint', async (req, res) => {
+router.post("/api/endpoint", async (req, res) => {
   try {
     const { param } = req.body;
     // ... lógica
     res.json({ success: true, data: result });
   } catch (e) {
-    console.error('[endpoint]', e);
-    res.status(500).json({ success: false, error: 'Error interno' });
+    console.error("[endpoint]", e);
+    res.status(500).json({ success: false, error: "Error interno" });
   }
 });
 ```
@@ -324,15 +324,15 @@ requireAuth:
 
 ```typescript
 // Llamada a OpenRouter
-const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-  method: 'POST',
+const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+  method: "POST",
   headers: {
     Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    model: 'meta-llama/llama-3.1-8b-instruct',
-    messages: [{ role: 'system', content: systemPrompt }, ...messages],
+    model: "meta-llama/llama-3.1-8b-instruct",
+    messages: [{ role: "system", content: systemPrompt }, ...messages],
     temperature: 0,
     max_tokens: 2000,
   }),
@@ -365,17 +365,17 @@ sanitizeForAI(input):
 ### 7.2 Patrón de Test
 
 ```typescript
-import { describe, it } from 'node:test';
-import assert from 'node:assert/strict';
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
 
-describe('functionName', () => {
-  it('handles happy path', () => {
+describe("functionName", () => {
+  it("handles happy path", () => {
     const result = functionName(input);
     assert.equal(result, expected);
   });
 
-  it('handles empty input', () => {
-    const result = functionName('');
+  it("handles empty input", () => {
+    const result = functionName("");
     assert.equal(result, fallbackValue);
   });
 });

@@ -11,7 +11,6 @@ export const VIEW_PATHS: Record<SidebarView, string> = {
   reportes: "/reportes",
   admin: "/admin",
   platform: "/plataforma",
-  "plan-gestion": "/plan-gestion",
 };
 
 export type RouteIntent =

@@ -23,7 +23,7 @@ export default function FormField({
     <div className={`space-y-1.5 ${className}`}>
       <label
         htmlFor={htmlFor}
-        className="block font-semibold text-neutral-600 text-xs uppercase"
+        className="block font-semibold text-neutral-700 text-sm"
       >
         {label}
       </label>

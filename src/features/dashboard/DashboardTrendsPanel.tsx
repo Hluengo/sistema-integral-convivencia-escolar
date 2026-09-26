@@ -44,6 +44,8 @@ const TREND_MODE_OPTIONS: Array<{
   { id: "annotations", label: "Anotaciones", icon: ClipboardList },
 ];
 
+const TREND_MONTH_COUNT = 6;
+
 const MODE_HELPER_TEXT: Record<TrendMode, string> = {
   cases: "Aperturas, cierres y brecha mensual.",
   annotations: "Comparación mensual entre anotaciones positivas y negativas.",
@@ -170,9 +172,15 @@ export default function DashboardTrendsPanel({
   annotationTrendLoading = false,
   annotationTrendError = null,
 }: DashboardTrendsPanelProps) {
-  const [mode, setMode] = useState<TrendMode>("cases");
+  const [mode, setMode] = useState<TrendMode>("annotations");
   const summary = useMemo(
-    () => buildDashboardTrendSummary(causas, annotationTrends),
+    () =>
+      buildDashboardTrendSummary(
+        causas,
+        annotationTrends,
+        undefined,
+        TREND_MONTH_COUNT,
+      ),
     [causas, annotationTrends],
   );
   const observedPoints = summary.points.filter((point) => point.isObserved);
@@ -215,11 +223,11 @@ export default function DashboardTrendsPanel({
               id="dashboard-trends-title"
               className="font-semibold text-neutral-800 text-sm"
             >
-              Tendencias del año escolar
+              Tendencias de los últimos 6 meses
             </h2>
           </div>
           <p className="max-w-2xl text-neutral-600 text-sm">
-            Ciclo marzo-diciembre {summary.schoolYear}. Datos observados hasta{" "}
+            Datos observados de los últimos 6 meses hasta{" "}
             <span className="font-semibold capitalize text-neutral-800">
               {summary.lastObservedMonthLabel}
             </span>
@@ -354,7 +362,7 @@ export default function DashboardTrendsPanel({
 
       <div className="relative overflow-hidden">
         <table className="sr-only">
-          <caption>Tendencias mensuales marzo-diciembre</caption>
+          <caption>Tendencias mensuales de los últimos 6 meses</caption>
           <thead>
             <tr>
               <th>Mes</th>

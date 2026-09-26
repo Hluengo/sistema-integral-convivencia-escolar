@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
-import type { Causa } from '@/shared/lib/types';
-import { Dialog, DialogContent } from '../../../shared/ui/Dialog';
-import EditCausaModalForm from '../EditCausaModal/EditCausaModalForm';
+import { useState } from "react";
+import type { Causa } from "@/shared/lib/types";
+import { Dialog, DialogContent } from "../../../shared/ui/Dialog";
+import EditCausaModalForm from "../EditCausaModal/EditCausaModalForm";
 
 interface EditCausaModalProps {
   causa: Causa;
@@ -15,7 +15,12 @@ interface EditCausaModalProps {
   onDelete: (id: string) => Promise<boolean>;
 }
 
-export default function EditCausaModal({ causa, onClose, onSave, onDelete }: EditCausaModalProps) {
+export default function EditCausaModal({
+  causa,
+  onClose,
+  onSave,
+  onDelete,
+}: EditCausaModalProps) {
   const [open, setOpen] = useState(true);
 
   const handleClose = () => {

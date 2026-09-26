@@ -1,38 +1,47 @@
-import assert from 'node:assert/strict';
-import { describe, it, before, after } from 'node:test';
-import http from 'node:http';
-import crypto from 'node:crypto';
+import assert from "node:assert/strict";
+import { describe, it, before, after } from "node:test";
+import http from "node:http";
+import crypto from "node:crypto";
 
 // Set up test JWT secret before importing the app
 // Use base64-encoded secret to match Supabase format
-process.env.SUPABASE_JWT_SECRET = Buffer.from('test-secret-key-for-unit-tests').toString('base64');
+process.env.SUPABASE_JWT_SECRET = Buffer.from(
+  "test-secret-key-for-unit-tests",
+).toString("base64");
 
 /**
  * Create a valid JWT token for testing using HMAC-SHA256
  */
-async function createTestJwt(payload: Record<string, unknown>, secret: string): Promise<string> {
-  const header = { alg: 'HS256', typ: 'JWT' };
-  const headerB64 = Buffer.from(JSON.stringify(header)).toString('base64url');
-  const payloadB64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
+async function createTestJwt(
+  payload: Record<string, unknown>,
+  secret: string,
+): Promise<string> {
+  const header = { alg: "HS256", typ: "JWT" };
+  const headerB64 = Buffer.from(JSON.stringify(header)).toString("base64url");
+  const payloadB64 = Buffer.from(JSON.stringify(payload)).toString("base64url");
   const data = `${headerB64}.${payloadB64}`;
 
   // Decode base64 secret to match server behavior (Supabase JWT secrets are base64-encoded)
-  const secretBytes = Buffer.from(secret, 'base64');
+  const secretBytes = Buffer.from(secret, "base64");
   const key = await crypto.subtle.importKey(
-    'raw',
+    "raw",
     secretBytes,
-    { name: 'HMAC', hash: 'SHA-256' },
+    { name: "HMAC", hash: "SHA-256" },
     false,
-    ['sign'],
+    ["sign"],
   );
 
-  const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data));
-  const sigB64 = Buffer.from(signature).toString('base64url');
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(data),
+  );
+  const sigB64 = Buffer.from(signature).toString("base64url");
 
   return `${data}.${sigB64}`;
 }
 
-describe('API endpoints', () => {
+describe("API endpoints", () => {
   let server: http.Server;
   let baseUrl: string;
   let VALID_TOKEN: string;
@@ -41,9 +50,9 @@ describe('API endpoints', () => {
 
   before(async () => {
     // The base64-encoded secret used for JWT verification
-    const b64Secret = process.env.SUPABASE_JWT_SECRET ?? '';
+    const b64Secret = process.env.SUPABASE_JWT_SECRET ?? "";
     if (!b64Secret) {
-      throw new Error('SUPABASE_JWT_SECRET not set');
+      throw new Error("SUPABASE_JWT_SECRET not set");
     }
 
     // Create a valid token for the test session
@@ -51,36 +60,36 @@ describe('API endpoints', () => {
     // can resolve tenant context without calling Supabase in this test.
     VALID_TOKEN = await createTestJwt(
       {
-        sub: '00000000-0000-0000-0000-000000000002',
+        sub: "00000000-0000-0000-0000-000000000002",
         exp: Math.floor(Date.now() / 1000) + 3600,
         app_metadata: {
-          tenant_id: '00000000-0000-0000-0000-000000000001',
-          role: 'teacher',
+          tenant_id: "00000000-0000-0000-0000-000000000001",
+          role: "teacher",
         },
       },
       b64Secret,
     );
     BASIC_ROLE_TOKEN = await createTestJwt(
       {
-        sub: '00000000-0000-0000-0000-000000000004',
+        sub: "00000000-0000-0000-0000-000000000004",
         exp: Math.floor(Date.now() / 1000) + 3600,
         app_metadata: {
-          tenant_id: '00000000-0000-0000-0000-000000000001',
+          tenant_id: "00000000-0000-0000-0000-000000000001",
           // Rol básico sin permiso para confirmar el proceso disciplinario.
           // 'teacher'/'inspector' ya NO son rechazados (autorizados vía
           // PDF_CONFIRM_ROLES), por lo que se usa 'user' para la aserción 403.
-          role: 'user',
+          role: "user",
         },
       },
       b64Secret,
     );
 
-    const mod = await import('../../api/index.js');
+    const mod = await import("../../api/index.js");
     const app = mod.default;
     await new Promise<void>((resolve) => {
       server = app.listen(0, () => {
         const addr = server.address();
-        if (addr && typeof addr === 'object') {
+        if (addr && typeof addr === "object") {
           baseUrl = `http://localhost:${addr.port}`;
         }
         resolve();
@@ -103,43 +112,59 @@ describe('API endpoints', () => {
       const req = http.request(
         url,
         {
-          method: 'POST',
+          method: "POST",
           // El rate limit se aplica después de autenticar y se identifica por
           // usuario. Se conserva una IP aislada por caso para probar el fallback.
           headers: {
-            'Content-Type': 'application/json',
-            'X-Forwarded-For': `127.0.0.${requestSequence++}`,
+            "Content-Type": "application/json",
+            "X-Forwarded-For": `127.0.0.${requestSequence++}`,
             ...headers,
           },
         },
         (res) => {
-          let chunks = '';
-          res.on('data', (c) => (chunks += c));
-          res.on('end', () => {
+          let chunks = "";
+          res.on("data", (c) => (chunks += c));
+          res.on("end", () => {
             try {
-              resolve({ status: res.statusCode || 500, body: JSON.parse(chunks) });
+              resolve({
+                status: res.statusCode || 500,
+                body: JSON.parse(chunks),
+              });
             } catch {
               resolve({ status: res.statusCode || 500, body: chunks });
             }
           });
         },
       );
-      req.on('error', reject);
+      req.on("error", reject);
       req.write(data);
       req.end();
     });
   }
 
-  describe('POST /api/advisor-chat', () => {
-    it('returns 401 without auth', async () => {
-      const res = await post('/api/advisor-chat', { message: 'test' });
+  async function get(
+    path: string,
+    headers: Record<string, string> = {},
+  ): Promise<{ status: number; body: Record<string, unknown> | string }> {
+    const response = await fetch(new URL(path, baseUrl), { headers });
+    const text = await response.text();
+    try {
+      return { status: response.status, body: JSON.parse(text) };
+    } catch {
+      return { status: response.status, body: text };
+    }
+  }
+
+  describe("POST /api/advisor-chat", () => {
+    it("returns 401 without auth", async () => {
+      const res = await post("/api/advisor-chat", { message: "test" });
       assert.equal(res.status, 401);
     });
 
-    it('returns 400 with empty message', async () => {
+    it("returns 400 with empty message", async () => {
       const res = await post(
-        '/api/advisor-chat',
-        { message: '' },
+        "/api/advisor-chat",
+        { message: "" },
         {
           Authorization: `Bearer ${VALID_TOKEN}`,
         },
@@ -147,12 +172,15 @@ describe('API endpoints', () => {
       assert.equal(res.status, 400);
     });
 
-    it('rejects an oversized or malformed conversation history before calling the model', async () => {
+    it("rejects an oversized or malformed conversation history before calling the model", async () => {
       const res = await post(
-        '/api/advisor-chat',
+        "/api/advisor-chat",
         {
-          message: '¿Qué antecedente falta?',
-          history: Array.from({ length: 9 }, () => ({ role: 'user', content: 'Consulta' })),
+          message: "¿Qué antecedente falta?",
+          history: Array.from({ length: 9 }, () => ({
+            role: "user",
+            content: "Consulta",
+          })),
         },
         { Authorization: `Bearer ${VALID_TOKEN}` },
       );
@@ -160,15 +188,15 @@ describe('API endpoints', () => {
     });
   });
 
-  describe('POST /api/audit-due-process', () => {
-    it('returns 401 without auth', async () => {
-      const res = await post('/api/audit-due-process', { id: 'DC-2026-001' });
+  describe("POST /api/audit-due-process", () => {
+    it("returns 401 without auth", async () => {
+      const res = await post("/api/audit-due-process", { id: "DC-2026-001" });
       assert.equal(res.status, 401);
     });
 
-    it('returns 400 without required id', async () => {
+    it("returns 400 without required id", async () => {
       const res = await post(
-        '/api/audit-due-process',
+        "/api/audit-due-process",
         {},
         {
           Authorization: `Bearer ${VALID_TOKEN}`,
@@ -177,10 +205,10 @@ describe('API endpoints', () => {
       assert.equal(res.status, 400);
     });
 
-    it('returns 400 with a blank id', async () => {
+    it("returns 400 with a blank id", async () => {
       const res = await post(
-        '/api/audit-due-process',
-        { id: '   ' },
+        "/api/audit-due-process",
+        { id: "   " },
         {
           Authorization: `Bearer ${VALID_TOKEN}`,
         },
@@ -189,15 +217,17 @@ describe('API endpoints', () => {
     });
   });
 
-  describe('POST /api/draft-document', () => {
-    it('returns 401 without auth', async () => {
-      const res = await post('/api/draft-document', { docType: 'informe_cierre_indagacion' });
+  describe("POST /api/draft-document", () => {
+    it("returns 401 without auth", async () => {
+      const res = await post("/api/draft-document", {
+        docType: "informe_cierre_indagacion",
+      });
       assert.equal(res.status, 401);
     });
 
-    it('returns 400 without required fields', async () => {
+    it("returns 400 without required fields", async () => {
       const res = await post(
-        '/api/draft-document',
+        "/api/draft-document",
         {},
         {
           Authorization: `Bearer ${VALID_TOKEN}`,
@@ -206,13 +236,13 @@ describe('API endpoints', () => {
       assert.equal(res.status, 400);
     });
 
-    it('returns 400 with invalid docType', async () => {
+    it("returns 400 with invalid docType", async () => {
       const res = await post(
-        '/api/draft-document',
+        "/api/draft-document",
         {
-          docType: 'invalid_type',
-          id: 'DC-2026-001',
-          studentName: 'Test Student',
+          docType: "invalid_type",
+          id: "DC-2026-001",
+          studentName: "Test Student",
         },
         {
           Authorization: `Bearer ${VALID_TOKEN}`,
@@ -222,16 +252,17 @@ describe('API endpoints', () => {
     });
   });
 
-  describe('POST /api/process-disciplinary-pdf/confirm', () => {
-    it('rejects basic roles before confirming disciplinary records', async () => {
+  describe("POST /api/process-disciplinary-pdf/confirm", () => {
+    it("rejects basic roles before confirming disciplinary records", async () => {
       const res = await post(
-        '/api/process-disciplinary-pdf/confirm',
+        "/api/process-disciplinary-pdf/confirm",
         {
-          bucket: 'disciplinary-processes',
-          storagePath: '00000000-0000-0000-0000-000000000001/student/process/anotaciones.pdf',
-          fileName: 'anotaciones.pdf',
-          fileHash: 'hash',
-          studentId: '00000000-0000-0000-0000-000000000010',
+          bucket: "disciplinary-processes",
+          storagePath:
+            "00000000-0000-0000-0000-000000000001/student/process/anotaciones.pdf",
+          fileName: "anotaciones.pdf",
+          fileHash: "hash",
+          studentId: "00000000-0000-0000-0000-000000000010",
           annotations: [],
         },
         {
@@ -243,4 +274,65 @@ describe('API endpoints', () => {
     });
   });
 
+  describe("platform endpoints", () => {
+    it("returns 401 for tenant listing without auth", async () => {
+      const res = await get("/api/platform/tenants");
+      assert.equal(res.status, 401);
+    });
+
+    it("returns 401 for tenant provisioning without auth", async () => {
+      const res = await post("/api/platform/tenants", { name: "Colegio" });
+      assert.equal(res.status, 401);
+    });
+  });
+
+  describe("POST /api/notificaciones", () => {
+    it("returns 401 without auth for citation and document delivery", async () => {
+      const citation = await post("/api/notificaciones/citacion", {
+        causaId: "DC-2026-001",
+        to: "apoderado@example.com",
+        subject: "Citación",
+        body: "Contenido",
+      });
+      const document = await post("/api/notificaciones/documento", {
+        causaId: "DC-2026-001",
+        to: "apoderado@example.com",
+        subject: "Documento",
+        html: "<p>Contenido</p>",
+      });
+
+      assert.equal(citation.status, 401);
+      assert.equal(document.status, 401);
+    });
+
+    it("rechaza destinatario inválido antes de consultar la causa", async () => {
+      const res = await post(
+        "/api/notificaciones/citacion",
+        {
+          causaId: "DC-2026-001",
+          to: "correo-inválido",
+          subject: "Citación",
+          body: "Contenido",
+        },
+        { Authorization: `Bearer ${VALID_TOKEN}` },
+      );
+
+      assert.equal(res.status, 400);
+    });
+
+    it("rechaza HTML peligroso antes de consultar la causa", async () => {
+      const res = await post(
+        "/api/notificaciones/documento",
+        {
+          causaId: "DC-2026-001",
+          to: "apoderado@example.com",
+          subject: "Documento",
+          html: '<a href="javascript:alert(1)">Ver</a>',
+        },
+        { Authorization: `Bearer ${VALID_TOKEN}` },
+      );
+
+      assert.equal(res.status, 400);
+    });
+  });
 });

@@ -1,21 +1,21 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { supabase } from '../lib/supabase';
+import { supabase } from "../lib/supabase";
 
 export const ADMIN_ROLES = [
-  'admin',
-  'direccion',
-  'convivencia',
-  'inspectoria',
-  'profesor_jefe',
-  'teacher',
-  'inspector',
-  'user',
-  'staff',
+  "admin",
+  "direccion",
+  "convivencia",
+  "inspectoria",
+  "profesor_jefe",
+  "teacher",
+  "inspector",
+  "user",
+  "staff",
 ] as const;
 
 export type AdminRole = (typeof ADMIN_ROLES)[number];
-export type AdminMemberRole = AdminRole | 'superadmin';
+export type AdminMemberRole = AdminRole | "superadmin";
 
 interface TenantProfileSummary {
   user_id: string;
@@ -43,7 +43,7 @@ interface MembershipInvitation {
   application_code: string;
   auth_user_id: string | null;
   invited_by: string;
-  status: 'pending' | 'accepted' | 'cancelled';
+  status: "pending" | "accepted" | "cancelled";
   created_at: string;
   updated_at: string;
   last_sent_at: string;
@@ -80,7 +80,7 @@ async function adminRequest<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     ...init,
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(init?.headers ?? {}),
     },
@@ -89,18 +89,18 @@ async function adminRequest<T>(path: string, init?: RequestInit): Promise<T> {
   if (!response.ok) {
     const message =
       payload &&
-      typeof payload === 'object' &&
-      'error' in payload &&
-      typeof payload.error === 'string'
+      typeof payload === "object" &&
+      "error" in payload &&
+      typeof payload.error === "string"
         ? payload.error
-        : 'No fue posible completar la operación administrativa.';
+        : "No fue posible completar la operación administrativa.";
     throw new Error(message);
   }
   return payload as T;
 }
 
 export async function fetchAdminMembers(): Promise<AdminMembersData> {
-  return adminRequest<AdminMembersData>('/api/admin/members');
+  return adminRequest<AdminMembersData>("/api/admin/members");
 }
 
 export async function updateAdminMember(
@@ -108,45 +108,62 @@ export async function updateAdminMember(
   values: { role: AdminRole; accessEnabled: boolean },
 ): Promise<void> {
   await adminRequest(`/api/admin/members/${encodeURIComponent(userId)}`, {
-    method: 'PATCH',
+    method: "PATCH",
     body: JSON.stringify(values),
   });
 }
 
-export async function inviteAdminMember(email: string, role: AdminRole): Promise<void> {
-  await adminRequest('/api/admin/invitations', {
-    method: 'POST',
+export async function inviteAdminMember(
+  email: string,
+  role: AdminRole,
+): Promise<void> {
+  await adminRequest("/api/admin/invitations", {
+    method: "POST",
     body: JSON.stringify({ email, role }),
   });
 }
 
-export async function resendAdminInvitation(invitationId: string): Promise<void> {
-  await adminRequest(`/api/admin/invitations/${encodeURIComponent(invitationId)}/resend`, {
-    method: 'POST',
-  });
+export async function resendAdminInvitation(
+  invitationId: string,
+): Promise<void> {
+  await adminRequest(
+    `/api/admin/invitations/${encodeURIComponent(invitationId)}/resend`,
+    {
+      method: "POST",
+    },
+  );
 }
 
-export async function cancelAdminInvitation(invitationId: string): Promise<void> {
-  await adminRequest(`/api/admin/invitations/${encodeURIComponent(invitationId)}/cancel`, {
-    method: 'POST',
-  });
+export async function cancelAdminInvitation(
+  invitationId: string,
+): Promise<void> {
+  await adminRequest(
+    `/api/admin/invitations/${encodeURIComponent(invitationId)}/cancel`,
+    {
+      method: "POST",
+    },
+  );
 }
 
 export async function fetchUsageStats(): Promise<UsageStatsSummary> {
   const { data: sessionData } = await supabase.auth.getSession();
   const token = sessionData.session?.access_token;
-  const response = await fetch('/api/usage/stats', {
+  const response = await fetch("/api/usage/stats", {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
 
-  if (!response.ok) throw new Error('No fue posible cargar las métricas de uso.');
+  if (!response.ok)
+    throw new Error("No fue posible cargar las métricas de uso.");
   const payload: unknown = await response.json();
-  if (!payload || typeof payload !== 'object') throw new Error('Respuesta de métricas inválida.');
+  if (!payload || typeof payload !== "object")
+    throw new Error("Respuesta de métricas inválida.");
   const value = payload as Partial<UsageStatsSummary>;
   return {
-    events: Array.isArray(value.events) ? (value.events as UsageStatsSummary['events']) : [],
+    events: Array.isArray(value.events)
+      ? (value.events as UsageStatsSummary["events"])
+      : [],
     dailyActiveUsers: Array.isArray(value.dailyActiveUsers)
-      ? (value.dailyActiveUsers as UsageStatsSummary['dailyActiveUsers'])
+      ? (value.dailyActiveUsers as UsageStatsSummary["dailyActiveUsers"])
       : [],
   };
 }
@@ -160,15 +177,15 @@ export interface OwnImportSummary {
 
 export async function importOwnTenantBase(
   file: File,
-  defaultLevel: 'BASICA' | 'MEDIA' = 'BASICA',
+  defaultLevel: "BASICA" | "MEDIA" = "BASICA",
 ): Promise<OwnImportSummary> {
   const { data: sessionData } = await supabase.auth.getSession();
   const token = sessionData.session?.access_token;
   const formData = new FormData();
-  formData.append('file', file);
-  formData.append('defaultLevel', defaultLevel);
-  const response = await fetch('/api/admin/import', {
-    method: 'POST',
+  formData.append("file", file);
+  formData.append("defaultLevel", defaultLevel);
+  const response = await fetch("/api/admin/import", {
+    method: "POST",
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
   });
@@ -176,11 +193,11 @@ export async function importOwnTenantBase(
   if (!response.ok) {
     const message =
       payload &&
-      typeof payload === 'object' &&
-      'error' in payload &&
-      typeof payload.error === 'string'
+      typeof payload === "object" &&
+      "error" in payload &&
+      typeof payload.error === "string"
         ? payload.error
-        : 'No fue posible importar la base del establecimiento.';
+        : "No fue posible importar la base del establecimiento.";
     throw new Error(message);
   }
   return payload as OwnImportSummary;

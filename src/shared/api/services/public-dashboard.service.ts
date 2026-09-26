@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { supabase } from '../lib/supabase';
+import { supabase } from "../lib/supabase";
 
 export interface PublicDashboardKpis {
   totalCauses: number;
@@ -48,7 +48,7 @@ const EMPTY_PUBLIC_KPIS: Readonly<PublicDashboardKpis> = {
 };
 
 export async function fetchPublicDashboardKpis(): Promise<PublicDashboardKpis> {
-  const { data, error } = await supabase.rpc('get_public_dashboard_kpis');
+  const { data, error } = await supabase.rpc("get_public_dashboard_kpis");
   if (error) throw error;
 
   const row = (data?.[0] ?? null) as PublicDashboardRpcRow | null;

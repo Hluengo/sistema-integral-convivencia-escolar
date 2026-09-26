@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { GraduationCap } from 'lucide-react';
-import type { CourseCartaRankingItem } from '../../shared/lib/domain/courseCartaRanking';
-import RankingCard, { type RankingCardItem } from './RankingCard';
+import { GraduationCap } from "lucide-react";
+import type { CourseCartaRankingItem } from "../../shared/lib/domain/courseCartaRanking";
+import RankingCard, { type RankingCardItem } from "./RankingCard";
 
 interface CourseCartaRankingProps {
   ranking: CourseCartaRankingItem[];
@@ -60,7 +60,11 @@ function toCardItems(ranking: CourseCartaRankingItem[]): RankingCardItem[] {
   }));
 }
 
-export default function CourseCartaRanking({ ranking, isLoading, error }: CourseCartaRankingProps) {
+export default function CourseCartaRanking({
+  ranking,
+  isLoading,
+  error,
+}: CourseCartaRankingProps) {
   return (
     <RankingCard
       title="Cursos con más cartas disciplinarias"

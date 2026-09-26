@@ -7,7 +7,10 @@ export const VIEW_TITLES: Record<
   { title: string; subtitle: string }
 > = {
   dashboard: { title: "Dashboard", subtitle: "Panel de control ejecutivo" },
-  causas: { title: "Causas", subtitle: "Expedientes y procedimientos activos" },
+  causas: {
+    title: "Expedientes",
+    subtitle: "Seguimientos y acuerdos activos",
+  },
   alumnos: { title: "Estudiantes", subtitle: "Gestión de estudiantes" },
   informes: { title: "Asistente Legal", subtitle: "Asistente y reportes" },
   reportes: {
@@ -25,9 +28,5 @@ export const VIEW_TITLES: Record<
   platform: {
     title: "Plataforma",
     subtitle: "Gestión multi-colegio y superadministración",
-  },
-  "plan-gestion": {
-    title: "Plan de Gestión",
-    subtitle: "Objetivos, acciones preventivas e indicadores",
   },
 };

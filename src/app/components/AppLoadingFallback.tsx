@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import ViewLoader from '../../shared/ui/ViewLoader';
+import ViewLoader from "../../shared/ui/ViewLoader";
 
 export default function AppLoadingFallback() {
   return (

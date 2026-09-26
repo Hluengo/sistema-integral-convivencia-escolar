@@ -1,9 +1,15 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import type { BitacoraEntry, Causa, ChecklistItem } from '@/shared/lib/types';
-import { extractConductaFromObservation, getConductaReglamentada } from '../../../reglamentoData';
-import { nowDateOnly, nowIso } from '@/shared/lib/dateUtils';
-import { DEFAULT_NOTIFICATION_CONTENT, NOTIFICACION_TITLE } from './defaultContent';
+import type { BitacoraEntry, Causa, ChecklistItem } from "@/shared/lib/types";
+import {
+  extractConductaFromObservation,
+  getConductaReglamentada,
+} from "../../../reglamentoData";
+import { nowDateOnly, nowIso } from "@/shared/lib/dateUtils";
+import {
+  DEFAULT_NOTIFICATION_CONTENT,
+  NOTIFICACION_TITLE,
+} from "./defaultContent";
 import {
   CAUSA_DOCUMENT_TYPE,
   NOTIFICACION_TEMPLATE_VERSION,
@@ -11,20 +17,24 @@ import {
   type CausaDocumentSnapshot,
   type NotificacionExpedienteData,
   type NotificationContent,
-} from './types';
+} from "./types";
 
 const APODERADO_EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,253}\.[^\s@]{2,}$/;
 
 /** Valida el correo del apoderado para el envío de la notificación. */
 export function isValidApoderadoEmail(value: unknown): value is string {
-  return typeof value === 'string' && value.trim().length <= 320 && APODERADO_EMAIL_RE.test(value.trim());
+  return (
+    typeof value === "string" &&
+    value.trim().length <= 320 &&
+    APODERADO_EMAIL_RE.test(value.trim())
+  );
 }
 
 /** Firma de la persona que emite la notificación. */
 export function getNotificacionResponsable(causa: Causa): string {
   const responsable = causa.responsable;
-  if (!responsable) return 'Dirección de Convivencia Escolar';
-  return responsable.split(' (')[0] || 'Dirección de Convivencia Escolar';
+  if (!responsable) return "Dirección de Convivencia Escolar";
+  return responsable.split(" (")[0] || "Dirección de Convivencia Escolar";
 }
 
 /**
@@ -45,25 +55,33 @@ export function buildNotificacionExpedienteData(
     responsable: getNotificacionResponsable(causa),
     tipoInfraccion: causa.tipoInfraccion,
     estadoActual: causa.estadoActual,
-    observaciones: causa.observaciones || '',
-    medidasEjecutadas: Array.isArray(causa.medidasEjecutadas) ? causa.medidasEjecutadas : [],
+    observaciones: causa.observaciones || "",
+    medidasEjecutadas: Array.isArray(causa.medidasEjecutadas)
+      ? causa.medidasEjecutadas
+      : [],
   };
 }
 
-function toLowerSeverityLabel(tipoInfraccion: Causa['tipoInfraccion']): string {
-  return tipoInfraccion.toLocaleLowerCase('es-CL');
+function toLowerSeverityLabel(tipoInfraccion: Causa["tipoInfraccion"]): string {
+  return tipoInfraccion.toLocaleLowerCase("es-CL");
 }
 
 function buildCalificacionFalta(causa: Causa): string {
   const descripcion =
     getConductaReglamentada(causa.conductaRiceId)?.conducta ||
     extractConductaFromObservation(causa.observaciones);
-  return `Calificación preliminar: falta ${toLowerSeverityLabel(causa.tipoInfraccion)}. Conducta tipificada según el RICE: ${descripcion || 'No registrada'}.`;
+  return `Calificación preliminar: falta ${toLowerSeverityLabel(causa.tipoInfraccion)}. Conducta tipificada según el RICE: ${descripcion || "No registrada"}.`;
 }
 
-function alignSeverityReferences(text: string, tipoInfraccion: Causa['tipoInfraccion']): string {
+function alignSeverityReferences(
+  text: string,
+  tipoInfraccion: Causa["tipoInfraccion"],
+): string {
   const severityReference = `falta ${toLowerSeverityLabel(tipoInfraccion)}`;
-  return text.replace(/\bfalta\s+(?:leve|grave|muy\s+grave|grav[ií]sima)\b/gi, severityReference);
+  return text.replace(
+    /\bfalta\s+(?:leve|grave|muy\s+grave|grav[ií]sima)\b/gi,
+    severityReference,
+  );
 }
 
 /**
@@ -73,17 +91,22 @@ function alignSeverityReferences(text: string, tipoInfraccion: Causa['tipoInfrac
  */
 function listBitacoraAntecedentes(bitacora: BitacoraEntry[]): string[] {
   return bitacora
-    .filter((entry) => entry.tipo === 'Evidencia' || entry.tipo === 'Entrevista')
+    .filter(
+      (entry) => entry.tipo === "Evidencia" || entry.tipo === "Entrevista",
+    )
     .slice(0, 12)
     .map((entry) => {
-      const doc = entry.documentoAdjunto ? ' (documento adjunto)' : '';
+      const doc = entry.documentoAdjunto ? " (documento adjunto)" : "";
       return `- ${entry.fecha}: ${entry.titulo}${doc}`;
     });
 }
 
 function combineDueProcessSections(content: NotificationContent): string {
-  if (!content.advertenciaEspecial.trim()) return content.garantiasDebidoProceso;
-  if (content.garantiasDebidoProceso.includes(content.advertenciaEspecial.trim())) {
+  if (!content.advertenciaEspecial.trim())
+    return content.garantiasDebidoProceso;
+  if (
+    content.garantiasDebidoProceso.includes(content.advertenciaEspecial.trim())
+  ) {
     return content.garantiasDebidoProceso;
   }
   return `${content.advertenciaEspecial.trim()} ${content.garantiasDebidoProceso.trim()}`;
@@ -108,17 +131,24 @@ export function buildPrefilledNotificationContent(
   }
 
   const antecedentes = listBitacoraAntecedentes(causa.bitacora);
-  const hallazgo = alignSeverityReferences(causa.observaciones.trim(), causa.tipoInfraccion);
+  const hallazgo = alignSeverityReferences(
+    causa.observaciones.trim(),
+    causa.tipoInfraccion,
+  );
 
   return {
     ...DEFAULT_NOTIFICATION_CONTENT,
-    hallazgoIncidente: hallazgo ? hallazgo : DEFAULT_NOTIFICATION_CONTENT.hallazgoIncidente,
+    hallazgoIncidente: hallazgo
+      ? hallazgo
+      : DEFAULT_NOTIFICATION_CONTENT.hallazgoIncidente,
     evidenciaTestimonios:
       antecedentes.length > 0
-        ? `Antecedentes registrados en el expediente:\n${antecedentes.join('\n')}`
+        ? `Antecedentes registrados en el expediente:\n${antecedentes.join("\n")}`
         : DEFAULT_NOTIFICATION_CONTENT.evidenciaTestimonios,
     calificacionFalta: buildCalificacionFalta(causa),
-    garantiasDebidoProceso: combineDueProcessSections(DEFAULT_NOTIFICATION_CONTENT),
+    garantiasDebidoProceso: combineDueProcessSections(
+      DEFAULT_NOTIFICATION_CONTENT,
+    ),
   };
 }
 
@@ -138,8 +168,13 @@ export function buildCausaDocumentSnapshot(params: {
     docType: CAUSA_DOCUMENT_TYPE,
     title: NOTIFICACION_TITLE,
     content: params.content,
-    expediente: buildNotificacionExpedienteData(params.causa, params.privacyMode),
-    studentName: params.privacyMode ? params.causa.nnaProtectedName : params.causa.estudianteNombre,
+    expediente: buildNotificacionExpedienteData(
+      params.causa,
+      params.privacyMode,
+    ),
+    studentName: params.privacyMode
+      ? params.causa.nnaProtectedName
+      : params.causa.estudianteNombre,
     apoderadoName: params.apoderadoName,
     emittedBy: params.emittedBy || getNotificacionResponsable(params.causa),
     emissionDate: nowDateOnly(),
@@ -152,16 +187,18 @@ export function buildNotificacionHito(
   causa: Causa,
   snapshot: CausaDocumentSnapshot,
 ): ChecklistItem {
-  const base = causa.checklistDebidoProceso.find((item) => item.id === 'chk_rec_3');
+  const base = causa.checklistDebidoProceso.find(
+    (item) => item.id === "chk_rec_3",
+  );
   return {
-    id: 'chk_rec_3',
-    label: base?.label || 'Notificación de Inicio de Indagación',
+    id: "chk_rec_3",
+    label: base?.label || "Notificación de Inicio de Indagación",
     descripcion:
       base?.descripcion ||
-      'Se informa formalmente al estudiante y al apoderado sobre la apertura del procedimiento disciplinario dentro de plazo reglamentario.',
+      "Se informa formalmente al estudiante y al apoderado sobre la apertura del procedimiento disciplinario dentro de plazo reglamentario.",
     completado: true,
     fechaCompletado: nowDateOnly(),
-    requeridoPor: base?.requeridoPor || 'Circular 482',
+    requeridoPor: base?.requeridoPor || "Circular 482",
     registradoPor: snapshot.emittedBy,
     observaciones: `Notificación de inicio de indagación emitida con fecha ${snapshot.emissionDate}.`,
   };
@@ -176,8 +213,8 @@ export function buildNotificacionBitacoraEntry(
   return {
     id: `b_notif_${crypto.randomUUID()}`,
     fecha: nowIso(),
-    tipo: 'Notificación',
-    titulo: 'Notificación de Inicio de Indagación emitida',
+    tipo: "Notificación",
+    titulo: "Notificación de Inicio de Indagación emitida",
     descripcion: `Se emitió la Notificación de Inicio de Indagación (${snapshot.emissionDate}) para informar formalmente al estudiante y a su apoderado/a sobre la apertura del procedimiento disciplinario. Emitida por: ${snapshot.emittedBy}.`,
     participantes: [
       snapshot.emittedBy,
@@ -190,7 +227,7 @@ export function buildNotificacionBitacoraEntry(
 export function parseCausaDocumentSnapshot(
   value: Record<string, unknown> | null | undefined,
 ): CausaDocumentSnapshot | null {
-  if (!value || typeof value !== 'object') return null;
+  if (!value || typeof value !== "object") return null;
   const content = value.content;
   const expediente = value.expediente;
   if (!isNotificationContent(content)) return null;
@@ -198,34 +235,40 @@ export function parseCausaDocumentSnapshot(
     value.templateVersion !== NOTIFICACION_TEMPLATE_VERSION ||
     value.docType !== CAUSA_DOCUMENT_TYPE ||
     !expediente ||
-    typeof expediente !== 'object'
+    typeof expediente !== "object"
   ) {
     return null;
   }
   return {
     templateVersion: NOTIFICACION_TEMPLATE_VERSION,
     docType: CAUSA_DOCUMENT_TYPE,
-    title: readOptionalString(value, 'title', ''),
+    title: readOptionalString(value, "title", ""),
     content,
     expediente: expediente as NotificacionExpedienteData,
-    studentName: readOptionalString(value, 'studentName', ''),
-    apoderadoName: readOptionalString(value, 'apoderadoName', ''),
-    emittedBy: readOptionalString(value, 'emittedBy', ''),
-    emissionDate: readOptionalString(value, 'emissionDate', ''),
-    emittedAt: readOptionalString(value, 'emittedAt', ''),
+    studentName: readOptionalString(value, "studentName", ""),
+    apoderadoName: readOptionalString(value, "apoderadoName", ""),
+    emittedBy: readOptionalString(value, "emittedBy", ""),
+    emissionDate: readOptionalString(value, "emissionDate", ""),
+    emittedAt: readOptionalString(value, "emittedAt", ""),
   };
 }
 
-function readOptionalString(value: Record<string, unknown>, key: string, fallback: string): string {
+function readOptionalString(
+  value: Record<string, unknown>,
+  key: string,
+  fallback: string,
+): string {
   const raw = value[key];
-  return typeof raw === 'string' ? raw : fallback;
+  return typeof raw === "string" ? raw : fallback;
 }
 
 /**
  * Payload checklist en snake_case para el RPC mark_causa_document_notified
  * (mismo contrato que save_checklist_snapshot).
  */
-export function buildChecklistItemPayload(item: ChecklistItem): Record<string, unknown> {
+export function buildChecklistItemPayload(
+  item: ChecklistItem,
+): Record<string, unknown> {
   return {
     id: item.id,
     label: item.label,
@@ -244,7 +287,9 @@ export function buildChecklistItemPayload(item: ChecklistItem): Record<string, u
  * Payload bitácora en snake_case para el RPC mark_causa_document_notified
  * (mismo contrato que save_bitacora_snapshot).
  */
-export function buildBitacoraEntryPayload(entry: BitacoraEntry): Record<string, unknown> {
+export function buildBitacoraEntryPayload(
+  entry: BitacoraEntry,
+): Record<string, unknown> {
   return {
     id: entry.id,
     fecha: entry.fecha,

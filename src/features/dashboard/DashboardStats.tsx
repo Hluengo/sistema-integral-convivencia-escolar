@@ -15,10 +15,8 @@ import { getStats } from "../../shared/lib/data";
 import { getCausaOperationalPhase } from "../causas/causaOperationalSummary";
 import {
   Activity,
-  FileSearch,
-  ShieldAlert,
-  CheckCircle,
   BarChart3,
+  CalendarDays,
   AlertCircle,
   Inbox,
   ArrowRight,
@@ -199,7 +197,7 @@ function DashboardActionQueue({
               <button
                 type="button"
                 onClick={() => onOpen(action.causa.id)}
-                className="inline-flex shrink-0 items-center gap-1 rounded-md px-2 py-1.5 font-semibold text-brand-700 text-xs hover:bg-brand-50"
+                className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-md px-2 py-1.5 font-semibold text-brand-700 text-xs hover:bg-brand-50"
                 aria-label={`Abrir expediente ${action.causa.id}`}
               >
                 <span
@@ -332,15 +330,19 @@ export default function DashboardStats({
   const active = isAuthenticated
     ? authenticatedCauseCounts.active
     : (publicKpis?.activeCauses ?? 0);
-  const investigating = isAuthenticated
-    ? authenticatedCauseCounts.investigating
-    : (publicKpis?.investigationCauses ?? 0);
-  const resolved = isAuthenticated
-    ? authenticatedCauseCounts.resolved
-    : (publicKpis?.resolvedCauses ?? 0);
-  const critical = isAuthenticated
-    ? dashboardActions.filter((action) => action.urgency !== "warning").length
-    : (publicKpis?.criticalAlerts ?? 0);
+  const currentDate = new Date();
+  const newThisMonth = isAuthenticated
+    ? causas.filter((causa) => {
+        const openedAt = new Date(causa.fechaApertura);
+        return (
+          openedAt.getFullYear() === currentDate.getFullYear() &&
+          openedAt.getMonth() === currentDate.getMonth()
+        );
+      }).length
+    : 0;
+  const pendingFollowUps = isAuthenticated
+    ? dashboardActions.filter((action) => action.remainingDays <= 2).length
+    : 0;
   const severity = isAuthenticated
     ? authenticatedStats.porGravedad
     : {
@@ -407,9 +409,9 @@ export default function DashboardStats({
         aria-label="Resumen de expedientes"
         className="card overflow-hidden"
       >
-        <div className="stagger-children grid grid-cols-1 divide-y divide-neutral-200 sm:grid-cols-2 lg:grid-cols-4 lg:divide-x lg:divide-y-0">
+        <div className="stagger-children grid grid-cols-1 divide-y divide-neutral-200 sm:grid-cols-3 lg:grid-cols-3 lg:divide-x lg:divide-y-0">
           <MetricCard
-            label="Causas Activas"
+            label="Expedientes activos"
             value={active}
             sublabel={`de ${total} totales`}
             icon={Activity}
@@ -419,33 +421,23 @@ export default function DashboardStats({
             onClick={() => onFaseSelect("Todas")}
           />
           <MetricCard
-            label="En Investigación"
-            value={investigating}
-            sublabel="Fase de indagación"
-            icon={FileSearch}
+            label="Expedientes nuevos"
+            value={newThisMonth}
+            sublabel="Mes calendario actual"
+            icon={CalendarDays}
             iconBg="bg-grave-50"
             iconColor="text-grave-600"
             accentColor="#f59e0b"
-            onClick={() => onFaseSelect("Investigación")}
           />
           <MetricCard
-            label="Causas Resueltas"
-            value={resolved}
-            sublabel="Casos cerrados"
-            icon={CheckCircle}
-            iconBg="bg-leve-50"
-            iconColor="text-leve-600"
-            accentColor="#22c55e"
-          />
-          <MetricCard
-            label="Alertas Críticas"
-            value={critical}
-            sublabel="Vencidas o ≤ 2 días"
-            icon={ShieldAlert}
+            label="Seguimientos pendientes"
+            value={pendingFollowUps}
+            sublabel="Vencidos o dentro de 2 días"
+            icon={Clock3}
             iconBg="bg-gravisima-50"
             iconColor="text-gravisima-600"
             accentColor="#ef4444"
-            isAlert={critical > 0}
+            isAlert={pendingFollowUps > 0}
           />
         </div>
       </section>

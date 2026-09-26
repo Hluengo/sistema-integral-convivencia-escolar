@@ -1,14 +1,14 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createStudentHistoryEntry,
   fetchStudentHistoryEntries,
-} from '../../api/services/student-history.service';
-import type { StudentHistoryEntryInput } from '../schemas/studentHistoryEntry';
+} from "../../api/services/student-history.service";
+import type { StudentHistoryEntryInput } from "../schemas/studentHistoryEntry";
 
 function getQueryKey(studentId: string) {
-  return ['student-history-entries', studentId] as const;
+  return ["student-history-entries", studentId] as const;
 }
 
 export function useStudentHistoryEntries(studentId: string) {
@@ -19,7 +19,8 @@ export function useStudentHistoryEntries(studentId: string) {
     enabled: Boolean(studentId),
   });
   const createMutation = useMutation({
-    mutationFn: (input: StudentHistoryEntryInput) => createStudentHistoryEntry(input),
+    mutationFn: (input: StudentHistoryEntryInput) =>
+      createStudentHistoryEntry(input),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: getQueryKey(studentId) });
     },
@@ -31,7 +32,10 @@ export function useStudentHistoryEntries(studentId: string) {
     loadError: query.error instanceof Error ? query.error.message : null,
     createEntry: createMutation.mutateAsync,
     isCreating: createMutation.isPending,
-    createError: createMutation.error instanceof Error ? createMutation.error.message : null,
+    createError:
+      createMutation.error instanceof Error
+        ? createMutation.error.message
+        : null,
     resetCreateError: createMutation.reset,
   };
 }

@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import posthog from 'posthog-js';
+import posthog from "posthog-js";
 
 const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY;
 const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST;
@@ -18,7 +18,7 @@ export function initPostHog() {
       capture_pageleave: true,
       loaded: (ph) => {
         // Configurar propiedades de usuario si hay sesión
-        const user = ph.get_property('$user_id');
+        const user = ph.get_property("$user_id");
         if (user) {
           ph.identify(user);
         }
@@ -28,7 +28,10 @@ export function initPostHog() {
   }
 }
 
-export function captureEvent(event: string, properties?: Record<string, unknown>) {
+export function captureEvent(
+  event: string,
+  properties?: Record<string, unknown>,
+) {
   if (initialized && POSTHOG_KEY) {
     posthog.capture(event, properties);
   }

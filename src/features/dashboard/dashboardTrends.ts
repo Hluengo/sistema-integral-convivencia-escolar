@@ -8,18 +8,19 @@ import {
   type Annotation,
   type Causa,
   type TipoInfraccion,
-} from '../../shared/lib/types';
+} from "../../shared/lib/types";
 
 const SCHOOL_YEAR_START_MONTH_INDEX = 2;
 const SCHOOL_YEAR_END_MONTH_INDEX = 11;
-const SCHOOL_YEAR_MONTHS = SCHOOL_YEAR_END_MONTH_INDEX - SCHOOL_YEAR_START_MONTH_INDEX + 1;
-const HIGH_SEVERITY_TYPES = new Set<TipoInfraccion>(['Muy Grave', 'Gravísima']);
-const NEGATIVE_ANNOTATION_TYPE: Annotation['type'] = 'Negativa';
+const SCHOOL_YEAR_MONTHS =
+  SCHOOL_YEAR_END_MONTH_INDEX - SCHOOL_YEAR_START_MONTH_INDEX + 1;
+const HIGH_SEVERITY_TYPES = new Set<TipoInfraccion>(["Muy Grave", "Gravísima"]);
+const NEGATIVE_ANNOTATION_TYPE: Annotation["type"] = "Negativa";
 
 export interface AnnotationTrendRecord {
   dateTime: string;
   severity: TipoInfraccion;
-  type: Annotation['type'];
+  type: Annotation["type"];
 }
 
 export interface DashboardTrendPoint {
@@ -78,16 +79,16 @@ function parseDate(value: string | undefined): Date | null {
 }
 
 function monthKey(date: Date): string {
-  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}`;
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
 function monthLabel(date: Date): string {
-  return new Intl.DateTimeFormat('es-CL', {
-    month: 'short',
-    timeZone: 'UTC',
+  return new Intl.DateTimeFormat("es-CL", {
+    month: "short",
+    timeZone: "UTC",
   })
     .format(date)
-    .replace('.', '');
+    .replace(".", "");
 }
 
 function startOfUtcMonth(date: Date): Date {
@@ -95,18 +96,20 @@ function startOfUtcMonth(date: Date): Date {
 }
 
 function addUtcMonths(date: Date, months: number): Date {
-  return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + months, 1));
+  return new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + months, 1),
+  );
 }
 
 function chileParts(date: Date): { year: number; month: number } {
-  const formatter = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'America/Santiago',
-    year: 'numeric',
-    month: 'numeric',
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Santiago",
+    year: "numeric",
+    month: "numeric",
   });
   const parts = formatter.formatToParts(date);
-  const yearPart = parts.find((part) => part.type === 'year')?.value;
-  const monthPart = parts.find((part) => part.type === 'month')?.value;
+  const yearPart = parts.find((part) => part.type === "year")?.value;
+  const monthPart = parts.find((part) => part.type === "month")?.value;
   return {
     year: yearPart ? Number(yearPart) : date.getUTCFullYear(),
     month: monthPart ? Number(monthPart) : date.getUTCMonth() + 1,
@@ -114,7 +117,7 @@ function chileParts(date: Date): { year: number; month: number } {
 }
 
 function monthKeyFor(year: number, month: number): string {
-  return `${year}-${String(month).padStart(2, '0')}`;
+  return `${year}-${String(month).padStart(2, "0")}`;
 }
 
 function percentage(part: number, total: number): number {
@@ -122,22 +125,25 @@ function percentage(part: number, total: number): number {
 }
 
 function formatMonthName(label: string): string {
-  if (!label) return 'Sin mes';
+  if (!label) return "Sin mes";
   const monthNames: Record<string, string> = {
-    ene: 'Enero',
-    feb: 'Febrero',
-    mar: 'Marzo',
-    abr: 'Abril',
-    may: 'Mayo',
-    jun: 'Junio',
-    jul: 'Julio',
-    ago: 'Agosto',
-    sep: 'Septiembre',
-    oct: 'Octubre',
-    nov: 'Noviembre',
-    dic: 'Diciembre',
+    ene: "Enero",
+    feb: "Febrero",
+    mar: "Marzo",
+    abr: "Abril",
+    may: "Mayo",
+    jun: "Junio",
+    jul: "Julio",
+    ago: "Agosto",
+    sep: "Septiembre",
+    oct: "Octubre",
+    nov: "Noviembre",
+    dic: "Diciembre",
   };
-  return monthNames[label.toLowerCase()] ?? `${label.charAt(0).toUpperCase()}${label.slice(1)}`;
+  return (
+    monthNames[label.toLowerCase()] ??
+    `${label.charAt(0).toUpperCase()}${label.slice(1)}`
+  );
 }
 
 export function getDashboardSchoolYear(referenceDate = new Date()): number {
@@ -159,36 +165,42 @@ export function buildDashboardTrendSummary(
   causas: Causa[],
   annotations: AnnotationTrendRecord[] = [],
   referenceDate?: Date,
+  monthCount?: number,
 ): DashboardTrendSummary {
   const reference = referenceDate ?? new Date();
   const schoolYear = getDashboardSchoolYear(reference);
   const { year: referenceYear, month: referenceMonth } = chileParts(reference);
   const currentMonthKey = monthKeyFor(referenceYear, referenceMonth);
-  const firstMonth = startOfUtcMonth(
-    new Date(Date.UTC(schoolYear, SCHOOL_YEAR_START_MONTH_INDEX, 1)),
+  const firstMonth = monthCount
+    ? addUtcMonths(startOfUtcMonth(reference), -(monthCount - 1))
+    : startOfUtcMonth(
+        new Date(Date.UTC(schoolYear, SCHOOL_YEAR_START_MONTH_INDEX, 1)),
+      );
+  const points = Array.from(
+    { length: monthCount ?? SCHOOL_YEAR_MONTHS },
+    (_, index) => {
+      const date = addUtcMonths(firstMonth, index);
+      const key = monthKey(date);
+      return {
+        key,
+        label: monthLabel(date),
+        opened: 0,
+        closed: 0,
+        netLoad: 0,
+        closureRate: 0,
+        highSeverity: 0,
+        annotations: 0,
+        positiveAnnotations: 0,
+        negativeAnnotations: 0,
+        highSeverityAnnotations: 0,
+        positiveAnnotationShare: 0,
+        negativeAnnotationShare: 0,
+        highSeverityAnnotationShare: 0,
+        isObserved: key <= currentMonthKey,
+        isCurrentMonth: key === currentMonthKey,
+      };
+    },
   );
-  const points = Array.from({ length: SCHOOL_YEAR_MONTHS }, (_, index) => {
-    const date = addUtcMonths(firstMonth, index);
-    const key = monthKey(date);
-    return {
-      key,
-      label: monthLabel(date),
-      opened: 0,
-      closed: 0,
-      netLoad: 0,
-      closureRate: 0,
-      highSeverity: 0,
-      annotations: 0,
-      positiveAnnotations: 0,
-      negativeAnnotations: 0,
-      highSeverityAnnotations: 0,
-      positiveAnnotationShare: 0,
-      negativeAnnotationShare: 0,
-      highSeverityAnnotationShare: 0,
-      isObserved: key <= currentMonthKey,
-      isCurrentMonth: key === currentMonthKey,
-    };
-  });
   const pointsByKey = new Map(points.map((point) => [point.key, point]));
 
   for (const causa of causas) {
@@ -205,7 +217,9 @@ export function buildDashboardTrendSummary(
 
     if (isClosed(causa)) {
       const closedAt = parseDate(causa.fechaUltimaActualizacion);
-      const closedPoint = closedAt ? pointsByKey.get(monthKey(closedAt)) : undefined;
+      const closedPoint = closedAt
+        ? pointsByKey.get(monthKey(closedAt))
+        : undefined;
       if (closedPoint) {
         closedPoint.closed += 1;
       }
@@ -221,7 +235,7 @@ export function buildDashboardTrendSummary(
     point.annotations += 1;
     if (annotation.type === NEGATIVE_ANNOTATION_TYPE) {
       point.negativeAnnotations += 1;
-    } else if (annotation.type === 'Positiva') {
+    } else if (annotation.type === "Positiva") {
       point.positiveAnnotations += 1;
     }
     if (HIGH_SEVERITY_TYPES.has(annotation.severity)) {
@@ -232,8 +246,14 @@ export function buildDashboardTrendSummary(
   for (const point of points) {
     point.netLoad = point.opened - point.closed;
     point.closureRate = percentage(point.closed, point.opened);
-    point.negativeAnnotationShare = percentage(point.negativeAnnotations, point.annotations);
-    point.positiveAnnotationShare = percentage(point.positiveAnnotations, point.annotations);
+    point.negativeAnnotationShare = percentage(
+      point.negativeAnnotations,
+      point.annotations,
+    );
+    point.positiveAnnotationShare = percentage(
+      point.positiveAnnotations,
+      point.annotations,
+    );
     point.highSeverityAnnotationShare = percentage(
       point.highSeverityAnnotations,
       point.annotations,
@@ -243,13 +263,34 @@ export function buildDashboardTrendSummary(
   const observedPoints = points.filter((point) => point.isObserved);
   const currentWindow = points.slice(5);
   const previousWindow = points.slice(0, 5);
-  const currentOpened = currentWindow.reduce((sum, point) => sum + point.opened, 0);
-  const previousOpened = previousWindow.reduce((sum, point) => sum + point.opened, 0);
-  const openedTotal = observedPoints.reduce((sum, point) => sum + point.opened, 0);
-  const closedTotal = observedPoints.reduce((sum, point) => sum + point.closed, 0);
-  const netLoadTotal = observedPoints.reduce((sum, point) => sum + point.netLoad, 0);
-  const highSeverityTotal = observedPoints.reduce((sum, point) => sum + point.highSeverity, 0);
-  const annotationTotal = observedPoints.reduce((sum, point) => sum + point.annotations, 0);
+  const currentOpened = currentWindow.reduce(
+    (sum, point) => sum + point.opened,
+    0,
+  );
+  const previousOpened = previousWindow.reduce(
+    (sum, point) => sum + point.opened,
+    0,
+  );
+  const openedTotal = observedPoints.reduce(
+    (sum, point) => sum + point.opened,
+    0,
+  );
+  const closedTotal = observedPoints.reduce(
+    (sum, point) => sum + point.closed,
+    0,
+  );
+  const netLoadTotal = observedPoints.reduce(
+    (sum, point) => sum + point.netLoad,
+    0,
+  );
+  const highSeverityTotal = observedPoints.reduce(
+    (sum, point) => sum + point.highSeverity,
+    0,
+  );
+  const annotationTotal = observedPoints.reduce(
+    (sum, point) => sum + point.annotations,
+    0,
+  );
   const negativeAnnotationTotal = observedPoints.reduce(
     (sum, point) => sum + point.negativeAnnotations,
     0,
@@ -265,12 +306,15 @@ export function buildDashboardTrendSummary(
   const busiestMonth = observedPoints.reduce((currentBusiest, point) =>
     point.opened > currentBusiest.opened ? point : currentBusiest,
   );
-  const busiestAnnotationMonth = observedPoints.reduce((currentBusiest, point) =>
-    point.annotations > currentBusiest.annotations ? point : currentBusiest,
+  const busiestAnnotationMonth = observedPoints.reduce(
+    (currentBusiest, point) =>
+      point.annotations > currentBusiest.annotations ? point : currentBusiest,
   );
   const riskMonth = observedPoints.reduce((currentRiskMonth, point) => {
     const pointRisk =
-      point.negativeAnnotations + point.highSeverityAnnotations + point.highSeverity;
+      point.negativeAnnotations +
+      point.highSeverityAnnotations +
+      point.highSeverity;
     const currentRisk =
       currentRiskMonth.negativeAnnotations +
       currentRiskMonth.highSeverityAnnotations +
@@ -279,16 +323,16 @@ export function buildDashboardTrendSummary(
   });
   const primaryInsight =
     annotationTotal > 0
-      ? `${formatMonthName(busiestAnnotationMonth.label)} concentra ${busiestAnnotationMonth.annotations} anotación${busiestAnnotationMonth.annotations === 1 ? '' : 'es'} del ciclo observado.`
+      ? `${formatMonthName(busiestAnnotationMonth.label)} concentra ${busiestAnnotationMonth.annotations} anotación${busiestAnnotationMonth.annotations === 1 ? "" : "es"} del ciclo observado.`
       : openedTotal > 0
         ? `${formatMonthName(busiestMonth.label)} concentra más aperturas de expedientes.`
-        : 'Aún no hay registros observados para este ciclo escolar.';
+        : "Aún no hay registros observados para este ciclo escolar.";
   const secondaryInsight =
     openedTotal === 0
-      ? 'El panel se activará cuando existan expedientes o anotaciones entre marzo y diciembre.'
+      ? "El panel se activará cuando existan expedientes o anotaciones entre marzo y diciembre."
       : netLoadTotal > 0
-        ? `Hay ${netLoadTotal} apertura${netLoadTotal === 1 ? '' : 's'} más que cierres en los meses observados.`
-        : 'El ritmo de cierre acompaña las aperturas registradas.';
+        ? `Hay ${netLoadTotal} apertura${netLoadTotal === 1 ? "" : "s"} más que cierres en los meses observados.`
+        : "El ritmo de cierre acompaña las aperturas registradas.";
 
   return {
     schoolYear,
@@ -309,14 +353,25 @@ export function buildDashboardTrendSummary(
     positiveAnnotationTotal,
     negativeAnnotationTotal,
     highSeverityAnnotationTotal,
-    negativeAnnotationShare: percentage(negativeAnnotationTotal, annotationTotal),
-    positiveAnnotationShare: percentage(positiveAnnotationTotal, annotationTotal),
-    highSeverityAnnotationShare: percentage(highSeverityAnnotationTotal, annotationTotal),
+    negativeAnnotationShare: percentage(
+      negativeAnnotationTotal,
+      annotationTotal,
+    ),
+    positiveAnnotationShare: percentage(
+      positiveAnnotationTotal,
+      annotationTotal,
+    ),
+    highSeverityAnnotationShare: percentage(
+      highSeverityAnnotationTotal,
+      annotationTotal,
+    ),
     busiestAnnotationMonthLabel: busiestAnnotationMonth.label,
     busiestAnnotationMonthTotal: busiestAnnotationMonth.annotations,
     riskMonthLabel: riskMonth.label,
     riskMonthTotal:
-      riskMonth.negativeAnnotations + riskMonth.highSeverityAnnotations + riskMonth.highSeverity,
+      riskMonth.negativeAnnotations +
+      riskMonth.highSeverityAnnotations +
+      riskMonth.highSeverity,
     primaryInsight,
     secondaryInsight,
   };

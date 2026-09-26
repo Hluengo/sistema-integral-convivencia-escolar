@@ -99,9 +99,9 @@ export default function CausasView({
   return (
     <div className="animate-fade-in space-y-6">
       <PageHeader
-        eyebrow="Expedientes · Debido Proceso"
-        title="Causas activas"
-        description={`${visibleCausas.length} expediente${visibleCausas.length !== 1 ? "s" : ""} activo${visibleCausas.length !== 1 ? "s" : ""}`}
+        eyebrow="Expedientes"
+        title="Expedientes activos"
+        description={`${visibleCausas.length} registro${visibleCausas.length !== 1 ? "s" : ""} activo${visibleCausas.length !== 1 ? "s" : ""}`}
         metric={
           visibleAulaSeguraCount > 0 ? (
             <span className="inline-flex items-center gap-1 rounded-md bg-gravisima-50 px-2.5 py-1 font-semibold text-gravisima-700 text-xs">
@@ -123,10 +123,10 @@ export default function CausasView({
             <Button
               onClick={createCausa.onToggle}
               className="shrink-0"
-              aria-label="Crear nueva causa"
+              aria-label="Crear nuevo expediente"
             >
               <BookOpen className="h-4 w-4" aria-hidden="true" />
-              Nueva Causa
+              Nuevo expediente
             </Button>
           </div>
         }
@@ -204,7 +204,7 @@ export default function CausasView({
                 clearSelectedCausa();
               }}
               aria-pressed={selectedFaseFilter === fase}
-              className={`rounded-lg px-3.5 py-1.5 font-semibold text-sm transition-colors duration-150 ${
+              className={`min-h-11 rounded-lg px-3.5 py-1.5 font-semibold text-sm transition-colors duration-150 ${
                 selectedFaseFilter === fase
                   ? "bg-white text-neutral-900 shadow-sm"
                   : "text-neutral-700 hover:text-neutral-900"
@@ -232,7 +232,7 @@ export default function CausasView({
                 type="button"
                 onClick={workspace.onLoadMoreCausas}
                 disabled={workspace.isLoadingMoreCausas}
-                className="inline-flex min-h-10 items-center justify-center rounded-xl border border-brand-200 bg-white px-4 py-2 font-semibold text-brand-700 text-sm shadow-sm transition-colors hover:bg-brand-50 disabled:cursor-wait disabled:opacity-60"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-brand-200 bg-white px-4 py-2 font-semibold text-brand-700 text-sm shadow-sm transition-colors hover:bg-brand-50 disabled:cursor-wait disabled:opacity-60"
               >
                 {workspace.isLoadingMoreCausas
                   ? "Cargando expedientes…"
@@ -278,7 +278,7 @@ export default function CausasView({
                 type="button"
                 onClick={workspace.onLoadMoreCausas}
                 disabled={workspace.isLoadingMoreCausas}
-                className="inline-flex min-h-10 items-center justify-center rounded-xl border border-brand-200 bg-white px-4 py-2 font-semibold text-brand-700 text-sm shadow-sm transition-colors hover:bg-brand-50 disabled:cursor-wait disabled:opacity-60"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-brand-200 bg-white px-4 py-2 font-semibold text-brand-700 text-sm shadow-sm transition-colors hover:bg-brand-50 disabled:cursor-wait disabled:opacity-60"
               >
                 {workspace.isLoadingMoreCausas
                   ? "Cargando expedientes…"

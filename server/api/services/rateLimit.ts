@@ -37,9 +37,9 @@ function getRedisClient() {
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
 
   if (!url || !token) {
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === "production") {
       console.warn(
-        '[rate-limit] UPSTASH_REDIS_REST_URL no configurado. Rate limit en memoria (inútil en serverless).',
+        "[rate-limit] UPSTASH_REDIS_REST_URL no configurado. Rate limit en memoria (inútil en serverless).",
       );
     }
     return null;
@@ -64,7 +64,8 @@ function getRedisClient() {
     async incr(key: string) {
       const res = await redisFetch(`/incr/${encodeURIComponent(key)}`);
       const data = (await res.json()) as { result?: number };
-      if (typeof data.result !== 'number') throw new Error('Redis returned an invalid counter');
+      if (typeof data.result !== "number")
+        throw new Error("Redis returned an invalid counter");
       return data.result;
     },
     async pexpire(key: string, ms: number) {

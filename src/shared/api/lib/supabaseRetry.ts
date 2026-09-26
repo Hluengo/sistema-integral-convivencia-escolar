@@ -13,15 +13,17 @@ type SupabaseResultLike = {
   error?: SupabaseErrorLike | null;
 };
 
-function isTransientNetworkError(error: SupabaseErrorLike | null | undefined): boolean {
+function isTransientNetworkError(
+  error: SupabaseErrorLike | null | undefined,
+): boolean {
   if (!error) return false;
-  const message = error.message?.toLowerCase() ?? '';
+  const message = error.message?.toLowerCase() ?? "";
   return (
-    message.includes('failed to fetch') ||
-    message.includes('network') ||
-    message.includes('quic') ||
-    message.includes('timeout') ||
-    error.code === ''
+    message.includes("failed to fetch") ||
+    message.includes("network") ||
+    message.includes("quic") ||
+    message.includes("timeout") ||
+    error.code === ""
   );
 }
 

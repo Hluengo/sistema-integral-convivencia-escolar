@@ -35,7 +35,7 @@ export function aggregateTeacherAnnotationRanking(
   const counts = new Map<string, TeacherAnnotationRankingItem>();
 
   for (const annotation of annotations) {
-    const teacherName = annotation.teacher_name?.trim() || 'Sin profesor';
+    const teacherName = annotation.teacher_name?.trim() || "Sin profesor";
     const key = teacherName.toLowerCase();
     const existing = counts.get(key) ?? {
       teacher_name: teacherName,
@@ -46,9 +46,10 @@ export function aggregateTeacherAnnotationRanking(
     };
 
     existing.total_count += 1;
-    if (annotation.annotation_type === 'Negativa') existing.negative_count += 1;
-    if (annotation.annotation_type === 'Positiva') existing.positive_count += 1;
-    if (annotation.annotation_type === 'Información') existing.informative_count += 1;
+    if (annotation.annotation_type === "Negativa") existing.negative_count += 1;
+    if (annotation.annotation_type === "Positiva") existing.positive_count += 1;
+    if (annotation.annotation_type === "Información")
+      existing.informative_count += 1;
 
     counts.set(key, existing);
   }
@@ -56,7 +57,9 @@ export function aggregateTeacherAnnotationRanking(
   return Array.from(counts.values())
     .filter((item) => item.negative_count > 0)
     .sort(
-      (a, b) => b.negative_count - a.negative_count || a.teacher_name.localeCompare(b.teacher_name),
+      (a, b) =>
+        b.negative_count - a.negative_count ||
+        a.teacher_name.localeCompare(b.teacher_name),
     )
     .slice(0, limit);
 }
@@ -81,11 +84,13 @@ export function aggregateStudentAnnotationRanking(
     .map((student) => ({
       student_id: student.id,
       student_name: student.full_name,
-      course_name: student.course_name?.trim() || 'Sin curso',
+      course_name: student.course_name?.trim() || "Sin curso",
       negative_count: student.annotations_count,
     }))
     .sort(
-      (a, b) => b.negative_count - a.negative_count || a.student_name.localeCompare(b.student_name),
+      (a, b) =>
+        b.negative_count - a.negative_count ||
+        a.student_name.localeCompare(b.student_name),
     )
     .slice(0, limit);
 }

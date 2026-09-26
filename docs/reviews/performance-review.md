@@ -43,7 +43,7 @@
 
 ```ts
 // server/index.ts — tiene ✓
-import compression from 'compression';
+import compression from "compression";
 app.use(compression());
 // server/api/index.ts — NO tiene ✗
 ```
@@ -85,7 +85,13 @@ if (rateLimitMap.size > MAX_ENTRIES) {
 
 ```ts
 const causasStore = useCausasStore(); // ← full subscription
-const { selectedCausaId, setSelectedCausaId, causas, saveStatus, setSaveStatus } = causasStore;
+const {
+  selectedCausaId,
+  setSelectedCausaId,
+  causas,
+  saveStatus,
+  setSaveStatus,
+} = causasStore;
 ```
 
 **Propuesta:** Usar selectores individuales (como ya se hace con `useAuthStore`):
@@ -121,14 +127,14 @@ O agrupar en hooks personalizados para mantener legibilidad.
 **Evidencia:**
 
 ```ts
-if (id.includes('pdf-lib') || id.includes('pdfjs-dist')) return 'pdf';
+if (id.includes("pdf-lib") || id.includes("pdfjs-dist")) return "pdf";
 ```
 
 **Propuesta:** Separar en `pdf-lib` y `pdfjs-dist`:
 
 ```ts
-if (id.includes('pdf-lib')) return 'pdf-lib';
-if (id.includes('pdfjs-dist')) return 'pdfjs';
+if (id.includes("pdf-lib")) return "pdf-lib";
+if (id.includes("pdfjs-dist")) return "pdfjs";
 ```
 
 **Riesgo:** Bajo — React.lazy carga el chunk correcto según el componente.

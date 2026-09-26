@@ -1,10 +1,10 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { supabase } from '../lib/supabase';
-import type { Json } from '../lib/database.types';
+import { supabase } from "../lib/supabase";
+import type { Json } from "../lib/database.types";
 
-export type ReportType = 'expedientes' | 'anotaciones' | 'uso' | 'auditoria';
-type ReportStatus = 'queued' | 'processing' | 'completed' | 'failed';
+export type ReportType = "expedientes" | "anotaciones" | "uso" | "auditoria";
+type ReportStatus = "queued" | "processing" | "completed" | "failed";
 
 export interface ReportFilters {
   course: string;
@@ -27,18 +27,20 @@ export interface ReportHistoryItem {
 }
 
 const EMPTY_FILTERS: ReportFilters = {
-  course: '',
-  fromDate: '',
-  toDate: '',
-  status: '',
-  responsible: '',
+  course: "",
+  fromDate: "",
+  toDate: "",
+  status: "",
+  responsible: "",
 };
 
 export async function fetchReportHistory(): Promise<ReportHistoryItem[]> {
   const { data, error } = await supabase
-    .from('report_history')
-    .select('id,created_by,report_type,status,filters,row_count,file_name,created_at,completed_at')
-    .order('created_at', { ascending: false })
+    .from("report_history")
+    .select(
+      "id,created_by,report_type,status,filters,row_count,file_name,created_at,completed_at",
+    )
+    .order("created_at", { ascending: false })
     .limit(100);
   if (error) throw error;
   return (data ?? []).map((item) => ({
@@ -54,12 +56,12 @@ export async function createReportHistory(input: {
   fileName: string;
 }): Promise<void> {
   // La columna tenant_id usa el default current_tenant_id() en PostgreSQL.
-  const { error } = await supabase.from('report_history').insert({
+  const { error } = await supabase.from("report_history").insert({
     report_type: input.reportType,
     filters: input.filters as unknown as Json,
     row_count: input.rowCount,
     file_name: input.fileName,
-    status: 'completed',
+    status: "completed",
     completed_at: new Date().toISOString(),
   } as never);
   if (error) throw error;

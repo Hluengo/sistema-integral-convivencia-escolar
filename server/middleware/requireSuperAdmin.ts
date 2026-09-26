@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import type { Request, Response, NextFunction } from 'express';
-import type { AuthenticatedRequest } from '../types';
+import type { Request, Response, NextFunction } from "express";
+import type { AuthenticatedRequest } from "../types";
 
 /**
  * Middleware que verifica que el usuario autenticado sea superadministrador.
@@ -13,23 +13,31 @@ import type { AuthenticatedRequest } from '../types';
  * Debe colocarse DESPUÉS de `requireAuth` en la cadena del router, ya que
  * depende de `req.profileRole` inyectado por aquel.
  */
-export function requireSuperAdmin(req: Request, res: Response, next: NextFunction): void {
+export function requireSuperAdmin(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void {
   const authReq = req as AuthenticatedRequest;
 
   if (!authReq.user?.sub) {
-    res.status(401).json({ error: 'Autenticación requerida.' });
+    res.status(401).json({ error: "Autenticación requerida." });
     return;
   }
 
   const role = authReq.profileRole;
 
   if (!role) {
-    res.status(403).json({ error: 'No fue posible determinar el rol del usuario.' });
+    res
+      .status(403)
+      .json({ error: "No fue posible determinar el rol del usuario." });
     return;
   }
 
-  if (role !== 'superadmin') {
-    res.status(403).json({ error: 'Acceso restringido a superadministradores.' });
+  if (role !== "superadmin") {
+    res
+      .status(403)
+      .json({ error: "Acceso restringido a superadministradores." });
     return;
   }
 

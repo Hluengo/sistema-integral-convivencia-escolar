@@ -32,8 +32,8 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: "22"
+          cache: "npm"
 
       - name: Install
         run: npm ci
@@ -55,15 +55,15 @@ jobs:
         env:
           VITE_SUPABASE_URL: https://example.supabase.co
           VITE_SUPABASE_ANON_KEY: public-anon-key-for-ci
-          VITE_ALLOW_LOCAL_DEMO: 'true'
+          VITE_ALLOW_LOCAL_DEMO: "true"
 
       - name: Accessibility E2E
         run: npm run test:a11y
         env:
           VITE_SUPABASE_URL: https://example.supabase.co
           VITE_SUPABASE_ANON_KEY: public-anon-key-for-ci
-          VITE_ALLOW_LOCAL_DEMO: 'true'
-          PLAYWRIGHT_USE_WEBSERVER: 'true'
+          VITE_ALLOW_LOCAL_DEMO: "true"
+          PLAYWRIGHT_USE_WEBSERVER: "true"
 
       - name: Bundle budget
         run: npm run check:bundle

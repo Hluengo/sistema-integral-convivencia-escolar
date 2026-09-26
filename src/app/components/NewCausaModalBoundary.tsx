@@ -1,11 +1,13 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { Suspense, lazy } from 'react';
-import type { ComponentProps } from 'react';
-import { ModalSkeleton } from '../../shared/Skeleton';
-import type NewCausaModalType from '../../features/causas/ui/NewCausaModal';
+import { Suspense, lazy } from "react";
+import type { ComponentProps } from "react";
+import { ModalSkeleton } from "../../shared/Skeleton";
+import type NewCausaModalType from "../../features/causas/ui/NewCausaModal";
 
-const NewCausaModal = lazy(() => import('../../features/causas/ui/NewCausaModal'));
+const NewCausaModal = lazy(
+  () => import("../../features/causas/ui/NewCausaModal"),
+);
 
 type NewCausaModalProps = ComponentProps<typeof NewCausaModalType>;
 

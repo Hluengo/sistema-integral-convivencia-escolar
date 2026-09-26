@@ -1,20 +1,20 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { BoldText } from '../../lib/markdownUtils';
+import { BoldText } from "../../lib/markdownUtils";
 
 function renderBoldText(text: string) {
   return <BoldText text={text} />;
 }
 
 export default function MessageContent({ text }: { text: string }) {
-  const lines = text.split('\n');
+  const lines = text.split("\n");
   return (
     <div className="space-y-1.5 text-left font-sans text-xs leading-relaxed">
       {lines.map((line) => {
         const trimmed = line.trim();
         const lineKey = `line-${trimmed.length}-${trimmed.charCodeAt(0) || 0}`;
 
-        if (trimmed.startsWith('### ')) {
+        if (trimmed.startsWith("### ")) {
           return (
             <h4
               key={lineKey}
@@ -24,7 +24,7 @@ export default function MessageContent({ text }: { text: string }) {
             </h4>
           );
         }
-        if (trimmed.startsWith('## ')) {
+        if (trimmed.startsWith("## ")) {
           return (
             <h3
               key={lineKey}
@@ -34,7 +34,7 @@ export default function MessageContent({ text }: { text: string }) {
             </h3>
           );
         }
-        if (trimmed.startsWith('# ')) {
+        if (trimmed.startsWith("# ")) {
           return (
             <h2
               key={lineKey}
@@ -44,9 +44,12 @@ export default function MessageContent({ text }: { text: string }) {
             </h2>
           );
         }
-        if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+        if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
           return (
-            <div key={lineKey} className="ml-3 flex items-start gap-1 font-medium text-neutral-600">
+            <div
+              key={lineKey}
+              className="ml-3 flex items-start gap-1 font-medium text-neutral-600"
+            >
               <span className="select-none text-brand-500">•</span>
               <span>{renderBoldText(trimmed.substring(2))}</span>
             </div>
@@ -60,13 +63,15 @@ export default function MessageContent({ text }: { text: string }) {
               key={lineKey}
               className="ml-3 flex items-start gap-1.5 font-medium text-neutral-600"
             >
-              <span className="font-bold font-mono text-brand-700">{numMatch[1]}.</span>
+              <span className="font-bold font-mono text-brand-700">
+                {numMatch[1]}.
+              </span>
               <span>{renderBoldText(numMatch[2])}</span>
             </div>
           );
         }
 
-        if (trimmed === '') {
+        if (trimmed === "") {
           return <div key={lineKey} className="h-1" />;
         }
 

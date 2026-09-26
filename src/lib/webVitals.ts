@@ -1,8 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { onLCP, onINP, onCLS, onFCP, onTTFB, type Metric } from 'web-vitals';
+import { onLCP, onINP, onCLS, onFCP, onTTFB, type Metric } from "web-vitals";
 
-type BreadcrumbLevel = 'info' | 'warning' | 'error';
+type BreadcrumbLevel = "info" | "warning" | "error";
 
 interface WebVitalsTelemetry {
   captureEvent: (event: string, properties?: Record<string, unknown>) => void;
@@ -21,7 +21,7 @@ interface WebVitalsTelemetry {
 function sendToAnalytics(metric: Metric, telemetry: WebVitalsTelemetry) {
   const { name, value, rating, delta, id } = metric;
 
-  telemetry.captureEvent('web_vital', {
+  telemetry.captureEvent("web_vital", {
     metric_name: name,
     metric_value: value,
     metric_rating: rating,
@@ -30,13 +30,18 @@ function sendToAnalytics(metric: Metric, telemetry: WebVitalsTelemetry) {
   });
 
   telemetry.addBreadcrumb({
-    category: 'web_vital',
+    category: "web_vital",
     message: `${name}: ${value} (${rating})`,
-    level: rating === 'good' ? 'info' : rating === 'needs-improvement' ? 'warning' : 'error',
+    level:
+      rating === "good"
+        ? "info"
+        : rating === "needs-improvement"
+          ? "warning"
+          : "error",
   });
 
-  if (rating !== 'good' && rating !== 'needs-improvement') {
-    telemetry.captureMessage(`Poor Web Vital: ${name}`, 'warning', {
+  if (rating !== "good" && rating !== "needs-improvement") {
+    telemetry.captureMessage(`Poor Web Vital: ${name}`, "warning", {
       metric_value: value,
       metric_rating: rating,
     });

@@ -32,10 +32,10 @@ export function Section({
 }
 
 export function LetterInstitutionalHeader({
-  year = '2026',
+  year = "2026",
   logoSrc,
   institutionName,
-  department = 'DIRECCIÓN DE CONVIVENCIA ESCOLAR',
+  department = "DIRECCIÓN DE CONVIVENCIA ESCOLAR",
   onLogoError,
 }: {
   year?: string;
@@ -58,7 +58,8 @@ export function LetterInstitutionalHeader({
       />
       <div className="letter-header-text">
         <span className="letter-header-institution">
-          {institutionName || 'Fundación Educacional Colegio Carmela Romero de Espinosa'}
+          {institutionName ||
+            "Fundación Educacional Colegio Carmela Romero de Espinosa"}
         </span>
         <span className="letter-header-department">{department}</span>
         <span className="letter-header-year">Año {year}</span>
@@ -77,7 +78,7 @@ export function LetterMetadataGrid({ items }: { items: LetterMetadataItem[] }) {
       {items.map((item, idx) => (
         <div
           key={idx}
-          className={`letter-metadata-item${item.span === 2 ? ' letter-metadata-item--full' : ''}`}
+          className={`letter-metadata-item${item.span === 2 ? " letter-metadata-item--full" : ""}`}
         >
           <span className="letter-metadata-label">{item.label}</span>
           <span className="letter-metadata-value">{item.value}</span>
@@ -89,7 +90,7 @@ export function LetterMetadataGrid({ items }: { items: LetterMetadataItem[] }) {
 
 export function LetterSignatureGrid({
   signatures,
-  title = 'Firmas',
+  title = "Firmas",
 }: {
   signatures: LetterSignature[];
   /** Título del bloque; pase `null` para omitirlo (documentos de hoja única). */
@@ -105,7 +106,9 @@ export function LetterSignatureGrid({
       >
         {signatures.map((sig, idx) => (
           <div key={idx} className="letter-signature-item">
-            <div className="letter-signature-line">{sig.name || '_________________________'}</div>
+            <div className="letter-signature-line">
+              {sig.name || "_________________________"}
+            </div>
             <p className="letter-signature-role">{sig.role}</p>
           </div>
         ))}

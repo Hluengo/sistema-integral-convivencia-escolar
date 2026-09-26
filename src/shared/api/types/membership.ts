@@ -8,9 +8,16 @@ export interface AppMembership {
 }
 
 export type MembershipStatus =
-  'idle' | 'loading' | 'active' | 'no_membership' | 'inactive' | 'error' | 'not_available';
+  | "idle"
+  | "loading"
+  | "active"
+  | "no_membership"
+  | "inactive"
+  | "error"
+  | "not_available";
 
-export type MembershipAuthMode = 'legacy' | 'transition' | 'enforced' | 'invalid';
+export type MembershipAuthMode =
+  "legacy" | "transition" | "enforced" | "invalid";
 
 export interface MembershipResult {
   memberships: AppMembership[];

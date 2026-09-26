@@ -3,9 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
-import { forwardRef, type ComponentPropsWithoutRef, type ElementRef } from 'react';
-import { AlertTriangle } from 'lucide-react';
+import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
+import {
+  forwardRef,
+  type ComponentPropsWithoutRef,
+  type ElementRef,
+} from "react";
+import { AlertTriangle } from "lucide-react";
 
 const AlertDialog = AlertDialogPrimitive.Root;
 
@@ -14,7 +18,7 @@ const AlertDialogPortal = AlertDialogPrimitive.Portal;
 const AlertDialogOverlay = forwardRef<
   ElementRef<typeof AlertDialogPrimitive.Overlay>,
   ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Overlay>
->(({ className = '', ...props }, ref) => (
+>(({ className = "", ...props }, ref) => (
   <AlertDialogPrimitive.Overlay
     ref={ref}
     className={`fixed inset-0 z-50 bg-black/40 backdrop-blur-sm data-[state=open]:animate-fade-in data-[state=closed]:animate-fade-out ${className}`}
@@ -26,7 +30,7 @@ AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName;
 const AlertDialogContent = forwardRef<
   ElementRef<typeof AlertDialogPrimitive.Content>,
   ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>
->(({ className = '', children, ...props }, ref) => (
+>(({ className = "", children, ...props }, ref) => (
   <AlertDialogPortal>
     <AlertDialogOverlay />
     <AlertDialogPrimitive.Content
@@ -40,24 +44,27 @@ const AlertDialogContent = forwardRef<
 ));
 AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName;
 
-const AlertDialogHeader = ({ className = '', ...props }: ComponentPropsWithoutRef<'div'>) => (
+const AlertDialogHeader = ({
+  className = "",
+  ...props
+}: ComponentPropsWithoutRef<"div">) => (
   <div className={`mb-4 flex items-center gap-3 ${className}`} {...props} />
 );
-AlertDialogHeader.displayName = 'AlertDialogHeader';
+AlertDialogHeader.displayName = "AlertDialogHeader";
 
-const AlertDialogIcon = ({ className = '' }: { className?: string }) => (
+const AlertDialogIcon = ({ className = "" }: { className?: string }) => (
   <div
     className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gravisima-50 ${className}`}
   >
     <AlertTriangle className="h-5 w-5 text-gravisima-500" />
   </div>
 );
-AlertDialogIcon.displayName = 'AlertDialogIcon';
+AlertDialogIcon.displayName = "AlertDialogIcon";
 
 const AlertDialogTitle = forwardRef<
   ElementRef<typeof AlertDialogPrimitive.Title>,
   ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Title>
->(({ className = '', ...props }, ref) => (
+>(({ className = "", ...props }, ref) => (
   <AlertDialogPrimitive.Title
     ref={ref}
     className={`font-semibold text-base text-neutral-900 ${className}`}
@@ -69,24 +76,28 @@ AlertDialogTitle.displayName = AlertDialogPrimitive.Title.displayName;
 const AlertDialogDescription = forwardRef<
   ElementRef<typeof AlertDialogPrimitive.Description>,
   ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Description>
->(({ className = '', ...props }, ref) => (
+>(({ className = "", ...props }, ref) => (
   <AlertDialogPrimitive.Description
     ref={ref}
     className={`ml-[52px] text-neutral-500 text-sm ${className}`}
     {...props}
   />
 ));
-AlertDialogDescription.displayName = AlertDialogPrimitive.Description.displayName;
+AlertDialogDescription.displayName =
+  AlertDialogPrimitive.Description.displayName;
 
-const AlertDialogFooter = ({ className = '', ...props }: ComponentPropsWithoutRef<'div'>) => (
+const AlertDialogFooter = ({
+  className = "",
+  ...props
+}: ComponentPropsWithoutRef<"div">) => (
   <div className={`mt-6 flex justify-end gap-3 ${className}`} {...props} />
 );
-AlertDialogFooter.displayName = 'AlertDialogFooter';
+AlertDialogFooter.displayName = "AlertDialogFooter";
 
 const AlertDialogCancel = forwardRef<
   ElementRef<typeof AlertDialogPrimitive.Cancel>,
   ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Cancel>
->(({ className = '', children, ...props }, ref) => (
+>(({ className = "", children, ...props }, ref) => (
   <AlertDialogPrimitive.Cancel
     ref={ref}
     className={`cursor-pointer rounded-xl bg-neutral-100 px-4 py-2 font-medium text-neutral-700 text-sm transition-colors hover:bg-neutral-200 ${className}`}
@@ -100,7 +111,7 @@ AlertDialogCancel.displayName = AlertDialogPrimitive.Cancel.displayName;
 const AlertDialogAction = forwardRef<
   ElementRef<typeof AlertDialogPrimitive.Action>,
   ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action>
->(({ className = '', children, ...props }, ref) => (
+>(({ className = "", children, ...props }, ref) => (
   <AlertDialogPrimitive.Action
     ref={ref}
     className={`cursor-pointer rounded-xl bg-gravisima-600 px-4 py-2 font-medium text-sm text-white transition-colors hover:bg-gravisima-700 ${className}`}

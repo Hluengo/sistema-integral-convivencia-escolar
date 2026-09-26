@@ -29,8 +29,7 @@ export type SidebarView =
   | "reportes"
   | "anotaciones"
   | "admin"
-  | "platform"
-  | "plan-gestion";
+  | "platform";
 
 interface SidebarProps {
   currentView: SidebarView;
@@ -72,11 +71,10 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { id: "dashboard", label: "Dashboard", Icon: LayoutDashboard },
-  { id: "causas", label: "Causas", Icon: Scale, badgeKey: "activeCount" },
+  { id: "causas", label: "Expedientes", Icon: Scale, badgeKey: "activeCount" },
   { id: "anotaciones", label: "Anotaciones", Icon: ClipboardList },
   { id: "informes", label: "Asistente Legal", Icon: FileBarChart },
   { id: "alumnos", label: "Estudiantes", Icon: Users },
-  { id: "plan-gestion", label: "Plan de Gestión", Icon: ClipboardList },
 ];
 
 function SidebarContent({
@@ -135,9 +133,9 @@ function SidebarContent({
         {(!isCollapsed || mobile) && (
           <div className="min-w-0">
             <h1 className="font-bold text-17px text-neutral-900 leading-tight tracking-tight">
-              Gestión de Casos
+              Gestión Integral
             </h1>
-            <p className="mt-0.5 font-semibold text-10px text-neutral-500 uppercase leading-tight tracking-[0.12em]">
+            <p className="mt-0.5 font-semibold text-xs text-neutral-500 uppercase leading-tight tracking-[0.12em]">
               Convivencia Escolar
             </p>
           </div>
@@ -160,7 +158,7 @@ function SidebarContent({
 
       {(!isCollapsed || mobile) && (
         <div className="px-5 pt-5 pb-2">
-          <span className="font-bold text-10px text-neutral-500 uppercase tracking-[0.15em]">
+          <span className="font-bold text-xs text-neutral-500 uppercase tracking-[0.15em]">
             Navegación
           </span>
         </div>
@@ -212,7 +210,7 @@ function SidebarContent({
                     </span>
                     {badge !== undefined && badge > 0 && (
                       <span
-                        className={`rounded-full px-1.5 py-0.5 font-bold text-10px tabular-nums ${
+                        className={`rounded-full px-1.5 py-0.5 font-bold text-xs tabular-nums ${
                           isActive
                             ? "bg-brand-700 text-white"
                             : "bg-neutral-200 text-neutral-700"
@@ -309,7 +307,7 @@ export default memo(function Sidebar({
       <button
         type="button"
         onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-50 rounded-xl bg-brand-700 p-2.5 text-white shadow-lg shadow-brand-900/20 transition-colors hover:bg-brand-800 active:scale-95 lg:hidden"
+        className="fixed top-4 left-4 z-50 flex min-h-11 min-w-11 items-center justify-center rounded-xl bg-brand-700 text-white shadow-lg shadow-brand-900/20 transition-colors hover:bg-brand-800 active:scale-95 lg:hidden"
         aria-label="Abrir menú"
         ref={mobileTriggerRef}
       >
@@ -336,7 +334,7 @@ export default memo(function Sidebar({
           <button
             type="button"
             onClick={() => setMobileOpen(false)}
-            className="absolute top-4 right-4 rounded-lg p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-800"
+            className="absolute top-4 right-4 flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-800"
             aria-label="Cerrar menú"
           >
             <X className="h-4 w-4" />

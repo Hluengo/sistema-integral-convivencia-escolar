@@ -32,9 +32,6 @@ const ReportsCenter = lazy(
   () => import("../../features/reports/ReportsCenter"),
 );
 const PlatformView = lazy(() => import("../../features/platform/PlatformView"));
-const PlanGestionView = lazy(
-  () => import("../../features/planGestion/PlanGestionView"),
-);
 
 interface MainContentProps {
   currentView: SidebarView;
@@ -77,7 +74,6 @@ export default function MainContent({
         {currentView === "anotaciones" && "Vista: Gesti\u00f3n de Anotaciones"}
         {currentView === "admin" && "Vista: Administración"}
         {currentView === "platform" && "Vista: Plataforma"}
-        {currentView === "plan-gestion" && "Vista: Plan de Gestión"}
       </div>
       <nav
         aria-label="Migas de pan"
@@ -182,14 +178,6 @@ export default function MainContent({
         <ErrorBoundary>
           <Suspense fallback={<ViewLoader view={currentView} />}>
             <PlatformView />
-          </Suspense>
-        </ErrorBoundary>
-      )}
-
-      {currentView === "plan-gestion" && (
-        <ErrorBoundary>
-          <Suspense fallback={<ViewLoader view={currentView} />}>
-            <PlanGestionView />
           </Suspense>
         </ErrorBoundary>
       )}

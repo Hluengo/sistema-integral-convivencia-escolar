@@ -1,18 +1,21 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { forwardRef } from 'react';
-import type { Annotation } from '@/shared/lib/types';
+import { forwardRef } from "react";
+import type { Annotation } from "@/shared/lib/types";
 import {
   TITLE_MAP,
   type DocType,
   type LetterAnnotationSummary,
   type LetterContent,
-} from './DocumentPreview/docTypes';
-import { LetterInstitutionalHeader, LetterTitle } from './DocumentPreview/SharedComponents';
-import AmonestacionContent from './DocumentPreview/AmonestacionContent';
-import CompromisoContent from './DocumentPreview/CompromisoContent';
-import DerivacionContent from './DocumentPreview/DerivacionContent';
-import './letter-document.css';
+} from "./DocumentPreview/docTypes";
+import {
+  LetterInstitutionalHeader,
+  LetterTitle,
+} from "./DocumentPreview/SharedComponents";
+import AmonestacionContent from "./DocumentPreview/AmonestacionContent";
+import CompromisoContent from "./DocumentPreview/CompromisoContent";
+import DerivacionContent from "./DocumentPreview/DerivacionContent";
+import "./letter-document.css";
 
 interface LetterA4DocumentProps {
   id?: string;
@@ -38,7 +41,7 @@ interface LetterA4DocumentProps {
 const LetterA4Document = forwardRef<HTMLDivElement, LetterA4DocumentProps>(
   function LetterA4Document(
     {
-      id = 'document-preview-a4',
+      id = "document-preview-a4",
       docType,
       currentName,
       currentRut,
@@ -52,14 +55,14 @@ const LetterA4Document = forwardRef<HTMLDivElement, LetterA4DocumentProps>(
       selectedAnnsObjects,
       annotationSummary,
       letterContent,
-      className = '',
+      className = "",
       logoSrc,
       institutionName,
       onLogoError,
     },
     ref,
   ) {
-    const title = TITLE_MAP[docType] ?? 'Documento Disciplinario';
+    const title = TITLE_MAP[docType] ?? "Documento Disciplinario";
     const sharedProps = {
       currentName,
       currentRut,
@@ -85,9 +88,11 @@ const LetterA4Document = forwardRef<HTMLDivElement, LetterA4DocumentProps>(
         />
         <LetterTitle>{title}</LetterTitle>
 
-        {docType === 'amonestacion' && <AmonestacionContent {...sharedProps} />}
-        {docType === 'compromiso_conductual' && <CompromisoContent {...sharedProps} />}
-        {docType === 'derivacion' && <DerivacionContent {...sharedProps} />}
+        {docType === "amonestacion" && <AmonestacionContent {...sharedProps} />}
+        {docType === "compromiso_conductual" && (
+          <CompromisoContent {...sharedProps} />
+        )}
+        {docType === "derivacion" && <DerivacionContent {...sharedProps} />}
       </div>
     );
   },

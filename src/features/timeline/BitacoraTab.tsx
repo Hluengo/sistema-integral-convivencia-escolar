@@ -174,7 +174,7 @@ export default memo(function BitacoraTab({
                 onClick={() =>
                   setFilter(opt.id as BitacoraEntry["tipo"] | "Todos")
                 }
-                className={`rounded-full border px-2.5 py-1 text-xs font-semibold transition ${
+                className={`min-h-11 rounded-full border px-3 py-1 text-xs font-semibold transition ${
                   filter === opt.id
                     ? "border-brand-600 bg-brand-600 text-white"
                     : "border-neutral-150 bg-white text-neutral-600 hover:bg-neutral-50"
@@ -253,7 +253,7 @@ export default memo(function BitacoraTab({
                     onChange={(event) =>
                       setLogType(event.target.value as BitacoraEntry["tipo"])
                     }
-                    className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-neutral-900 text-sm outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20"
+                    className="min-h-11 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-neutral-900 text-sm outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20"
                   >
                     <option value="Entrevista">Entrevista</option>
                     <option value="Evidencia">Evidencia</option>
@@ -277,14 +277,14 @@ export default memo(function BitacoraTab({
                     value={participants}
                     onChange={(event) => setParticipants(event.target.value)}
                     placeholder="Ej: Apoderado, estudiante, inspector"
-                    className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-neutral-900 text-sm outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20"
+                    className="min-h-11 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-neutral-900 text-sm outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20"
                   />
                 </label>
                 <label className="space-y-1.5 sm:col-span-2">
                   <span className="block font-semibold text-neutral-700 text-sm">
                     Documento de respaldo
                   </span>
-                  <span className="flex cursor-pointer items-center gap-2 rounded-xl border-2 border-dashed border-neutral-300 bg-neutral-50 px-3 py-2.5 text-neutral-600 text-sm transition hover:border-brand-300 hover:bg-brand-50/40">
+                  <span className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border-2 border-dashed border-neutral-300 bg-neutral-50 px-3 py-2.5 text-neutral-600 text-sm transition hover:border-brand-300 hover:bg-brand-50/40">
                     <Upload
                       className="h-4 w-4 text-brand-600"
                       aria-hidden="true"
@@ -418,7 +418,7 @@ export default memo(function BitacoraTab({
                             if (entry.documentoAdjunto)
                               void openDocument(entry.documentoAdjunto);
                           }}
-                          className="ml-auto flex shrink-0 items-center gap-1 font-semibold text-brand-600 hover:underline"
+                          className="ml-auto flex min-h-11 shrink-0 items-center gap-1 px-2 font-semibold text-brand-600 hover:underline"
                           aria-label="Ver documento adjunto"
                         >
                           <Download

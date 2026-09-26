@@ -1,12 +1,12 @@
 ---
-titulo: 'Ley de Subvenciones a Establecimientos Educacionales'
-tipo: 'Decreto con Fuerza de Ley'
-identificador: 'DFL N° 2 de 1998'
+titulo: "Ley de Subvenciones a Establecimientos Educacionales"
+tipo: "Decreto con Fuerza de Ley"
+identificador: "DFL N° 2 de 1998"
 estado: vigente
-autoridad: 'Biblioteca del Congreso Nacional de Chile'
-fuente_oficial: 'https://www.bcn.cl/leychile/navegar?idNorma=127911'
-version_consultada: '2026-07-30'
-nota_uso: 'Texto consolidado vigente descargado desde LeyChile. Usar como referencia jurídica; verificar los artículos aplicables al caso concreto.'
+autoridad: "Biblioteca del Congreso Nacional de Chile"
+fuente_oficial: "https://www.bcn.cl/leychile/navegar?idNorma=127911"
+version_consultada: "2026-07-30"
+nota_uso: "Texto consolidado vigente descargado desde LeyChile. Usar como referencia jurídica; verificar los artículos aplicables al caso concreto."
 ---
 
 Tipo Norma                              :Decreto con Fuerza de Ley 2

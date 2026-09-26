@@ -1,19 +1,26 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
-import { fetchCausaDetails, fetchCausasPage } from '../../api/services/causas.service';
-import { track } from '../../../lib/analytics';
-import { useAuthStore } from '../stores/authStore';
-import { causasQueryKeys } from '../queries/causasQueryKeys';
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
+import {
+  fetchCausaDetails,
+  fetchCausasPage,
+} from "../../api/services/causas.service";
+import { track } from "../../../lib/analytics";
+import { useAuthStore } from "../stores/authStore";
+import { causasQueryKeys } from "../queries/causasQueryKeys";
 
 const CAUSAS_LIST_STALE_TIME_MS = 60_000;
 const CAUSA_DETAILS_STALE_TIME_MS = 5 * 60_000;
 const CAUSAS_CACHE_TIME_MS = 30 * 60_000;
 const CAUSAS_PAGE_SIZE = 50;
 
-function trackCausasQuery(scope: 'list' | 'detail', startedAt: number, resultCount: number): void {
-  track('causas_query_completed', {
+function trackCausasQuery(
+  scope: "list" | "detail",
+  startedAt: number,
+  resultCount: number,
+): void {
+  track("causas_query_completed", {
     scope,
     durationMs: Math.round(performance.now() - startedAt),
     resultCount,
@@ -25,11 +32,11 @@ export function useCausasQuery() {
   const tenantId = useAuthStore((state) => state.tenantId);
 
   const query = useInfiniteQuery({
-    queryKey: causasQueryKeys.list(tenantId ?? ''),
+    queryKey: causasQueryKeys.list(tenantId ?? ""),
     queryFn: async ({ pageParam }) => {
       const startedAt = performance.now();
       const page = await fetchCausasPage(pageParam, CAUSAS_PAGE_SIZE, tenantId);
-      trackCausasQuery('list', startedAt, page.causas.length);
+      trackCausasQuery("list", startedAt, page.causas.length);
       return page;
     },
     initialPageParam: 0,
@@ -39,7 +46,10 @@ export function useCausasQuery() {
     gcTime: CAUSAS_CACHE_TIME_MS,
   });
 
-  const causas = useMemo(() => query.data?.pages.flatMap((page) => page.causas), [query.data]);
+  const causas = useMemo(
+    () => query.data?.pages.flatMap((page) => page.causas),
+    [query.data],
+  );
 
   return {
     ...query,
@@ -52,12 +62,12 @@ export function useCausaDetailsQuery(causaId: string) {
   const tenantId = useAuthStore((state) => state.tenantId);
 
   return useQuery({
-    queryKey: causasQueryKeys.details(tenantId ?? '', causaId),
+    queryKey: causasQueryKeys.details(tenantId ?? "", causaId),
     queryFn: async () => {
       const startedAt = performance.now();
       const details = await fetchCausaDetails(causaId, tenantId);
       trackCausasQuery(
-        'detail',
+        "detail",
         startedAt,
         details.bitacora.length + details.checklistDebidoProceso.length,
       );

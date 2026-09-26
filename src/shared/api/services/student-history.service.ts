@@ -1,12 +1,13 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { supabase } from '../lib/supabase';
+import { supabase } from "../lib/supabase";
 import {
   studentHistoryEntrySchema,
   type StudentHistoryEntryInput,
-} from '../../lib/schemas/studentHistoryEntry';
+} from "../../lib/schemas/studentHistoryEntry";
 
-const HISTORY_ENTRY_COLUMNS = 'id,student_id,title,description,created_by,created_at';
+const HISTORY_ENTRY_COLUMNS =
+  "id,student_id,title,description,created_by,created_at";
 
 export interface StudentHistoryEntry {
   id: string;
@@ -20,14 +21,15 @@ export interface StudentHistoryEntry {
 export async function fetchStudentHistoryEntries(
   studentId: string,
 ): Promise<StudentHistoryEntry[]> {
-  const parsedStudentId = studentHistoryEntrySchema.shape.studentId.safeParse(studentId);
+  const parsedStudentId =
+    studentHistoryEntrySchema.shape.studentId.safeParse(studentId);
   if (!parsedStudentId.success) return [];
 
   const { data, error } = await supabase
-    .from('student_history_entries')
+    .from("student_history_entries")
     .select(HISTORY_ENTRY_COLUMNS)
-    .eq('student_id', parsedStudentId.data)
-    .order('created_at', { ascending: false })
+    .eq("student_id", parsedStudentId.data)
+    .order("created_at", { ascending: false })
     .limit(200);
 
   if (error) {
@@ -42,7 +44,7 @@ export async function createStudentHistoryEntry(
 ): Promise<StudentHistoryEntry> {
   const parsed = studentHistoryEntrySchema.parse(input);
   const { data, error } = await supabase
-    .from('student_history_entries')
+    .from("student_history_entries")
     .insert({
       student_id: parsed.studentId,
       title: parsed.title,
@@ -52,7 +54,9 @@ export async function createStudentHistoryEntry(
     .single();
 
   if (error) {
-    throw new Error(`No se pudo guardar la entrada en el historial: ${error.message}`);
+    throw new Error(
+      `No se pudo guardar la entrada en el historial: ${error.message}`,
+    );
   }
 
   return data as StudentHistoryEntry;

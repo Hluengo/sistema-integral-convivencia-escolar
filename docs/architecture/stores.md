@@ -34,16 +34,18 @@ interface AuthActions {
 interface CausasState {
   causas: Causa[];
   selectedCausaId: string;
-  saveStatus: 'idle' | 'saving' | 'saved' | 'error';
-  selectedFaseFilter: FaseProcedimental | 'Todas';
+  saveStatus: "idle" | "saving" | "saved" | "error";
+  selectedFaseFilter: FaseProcedimental | "Todas";
   searchQuery: string;
 }
 
 interface CausasActions {
   setCausas: (causas: Causa[] | ((prev: Causa[]) => Causa[])) => void;
   setSelectedCausaId: (id: string) => void;
-  setSaveStatus: (status: SaveStatus | ((prev: SaveStatus) => SaveStatus)) => void;
-  setSelectedFaseFilter: (filter: FaseProcedimental | 'Todas') => void;
+  setSaveStatus: (
+    status: SaveStatus | ((prev: SaveStatus) => SaveStatus),
+  ) => void;
+  setSelectedFaseFilter: (filter: FaseProcedimental | "Todas") => void;
   setSearchQuery: (query: string) => void;
   handleCreateCausa: (params: CreateCausaParams) => Promise<void>;
   handleDeleteCausa: (id: string, requireAuth?: boolean) => Promise<void>;
@@ -93,7 +95,7 @@ interface ToastState {
 }
 
 interface ToastActions {
-  addToast: (type: 'success' | 'error' | 'info', message: string) => void;
+  addToast: (type: "success" | "error" | "info", message: string) => void;
   removeToast: (id: string) => void;
 }
 ```

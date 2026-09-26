@@ -10,11 +10,11 @@ trazabilidad, derecho a defensa ni documentos históricos.
 La ruta muestra solo actuaciones verificables. Los estados transitorios se
 mantienen en `estadoActual` y no exigen un hito separado.
 
-| Fase | Hitos visibles | Estados absorbidos |
-|---|---|---|
-| Resolución | Informe emitido; audiencia/descargos realizados; resolución notificada | Elaboración del informe; citación pendiente; elaboración de resolución |
-| Apelación | Derecho y plazo informados; recurso recibido; recurso resuelto; resolución ejecutoriada | Revisión interna por Rectoría |
-| Seguimiento | Medida/plan iniciado; seguimiento finalizado; cierre del expediente | Seguimiento en curso |
+| Fase        | Hitos visibles                                                                          | Estados absorbidos                                                     |
+| ----------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Resolución  | Informe emitido; audiencia/descargos realizados; resolución notificada                  | Elaboración del informe; citación pendiente; elaboración de resolución |
+| Apelación   | Derecho y plazo informados; recurso recibido; recurso resuelto; resolución ejecutoriada | Revisión interna por Rectoría                                          |
+| Seguimiento | Medida/plan iniciado; seguimiento finalizado; cierre del expediente                     | Seguimiento en curso                                                   |
 
 ## Reglas de uso
 

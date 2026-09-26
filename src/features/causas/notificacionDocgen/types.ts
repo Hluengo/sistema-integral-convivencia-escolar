@@ -8,12 +8,13 @@
  * snapshot. Aislado del DocType de cartas disciplinarias y del DraftPanel.
  */
 
-export const CAUSA_DOCUMENT_TYPE = 'notificacion_inicio_indagacion' as const;
+export const CAUSA_DOCUMENT_TYPE = "notificacion_inicio_indagacion" as const;
 export type CausaDocumentType = typeof CAUSA_DOCUMENT_TYPE;
 
-export type CausaDocumentStatus = 'Pendiente' | 'Notificada' | 'Anulada';
+export type CausaDocumentStatus = "Pendiente" | "Notificada" | "Anulada";
 
-export const NOTIFICACION_TEMPLATE_VERSION = 'notificacion-inicio-indagacion-v1';
+export const NOTIFICACION_TEMPLATE_VERSION =
+  "notificacion-inicio-indagacion-v1";
 
 /** Las 9 secciones numeradas editables del documento. */
 export interface NotificationContent {
@@ -29,15 +30,15 @@ export interface NotificationContent {
 }
 
 export const NOTIFICATION_CONTENT_FIELDS: Array<keyof NotificationContent> = [
-  'fundamentoProcedimiento',
-  'hallazgoIncidente',
-  'evidenciaTestimonios',
-  'atenuantesAgravantes',
-  'calificacionFalta',
-  'medidasEnEvaluacion',
-  'advertenciaEspecial',
-  'garantiasDebidoProceso',
-  'confidencialidad',
+  "fundamentoProcedimiento",
+  "hallazgoIncidente",
+  "evidenciaTestimonios",
+  "atenuantesAgravantes",
+  "calificacionFalta",
+  "medidasEnEvaluacion",
+  "advertenciaEspecial",
+  "garantiasDebidoProceso",
+  "confidencialidad",
 ];
 
 /** Datos del expediente capturados al momento de emitir (trazabilidad). */
@@ -67,8 +68,12 @@ export interface CausaDocumentSnapshot {
   emittedAt: string;
 }
 
-export function isNotificationContent(value: unknown): value is NotificationContent {
-  if (!value || typeof value !== 'object') return false;
+export function isNotificationContent(
+  value: unknown,
+): value is NotificationContent {
+  if (!value || typeof value !== "object") return false;
   const candidate = value as Record<keyof NotificationContent, unknown>;
-  return NOTIFICATION_CONTENT_FIELDS.every((field) => typeof candidate[field] === 'string');
+  return NOTIFICATION_CONTENT_FIELDS.every(
+    (field) => typeof candidate[field] === "string",
+  );
 }

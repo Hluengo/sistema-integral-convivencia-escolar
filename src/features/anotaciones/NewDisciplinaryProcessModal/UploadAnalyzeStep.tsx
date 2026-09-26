@@ -73,7 +73,7 @@ export default function UploadAnalyzeStep({
           <Upload className="h-4 w-4 text-brand-600" /> Subir hoja de vida en
           PDF
         </p>
-        <p className="text-neutral-500 text-xs">
+        <p id="disciplinary-pdf-help" className="text-neutral-500 text-xs">
           Archivo privado, máximo {formatBytes(MAX_DISCIPLINARY_PDF_BYTES)}. El
           análisis se ejecuta en backend.
         </p>
@@ -90,6 +90,7 @@ export default function UploadAnalyzeStep({
         onClick={() => fileRef.current?.click()}
         disabled={isAnalyzing}
         aria-label={"Seleccionar PDF de hoja de vida"}
+        aria-describedby="disciplinary-pdf-help"
         className={`w-full cursor-pointer rounded-2xl border-2 border-dashed p-8 text-center transition-colors disabled:cursor-not-allowed disabled:opacity-70${
           drag
             ? "border-brand-500 bg-brand-50"

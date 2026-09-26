@@ -9,14 +9,14 @@
  * Separada del hook para poder testearla sin montar React.
  */
 
-import type { AnnotationSummary } from '@/shared/lib/types';
-import type { ReviewAnnotation } from '../../NewDisciplinaryProcessModal/ReviewStep';
+import type { AnnotationSummary } from "@/shared/lib/types";
+import type { ReviewAnnotation } from "../../NewDisciplinaryProcessModal/ReviewStep";
 import {
   getSuggestedLetterType,
   mapDocTypeToLetterType,
   mapLetterTypeToDocType,
   type LetterDocType,
-} from '@/shared/lib/domain/disciplinaryStage';
+} from "@/shared/lib/domain/disciplinaryStage";
 
 export interface StudentCandidate {
   id: string;
@@ -56,16 +56,18 @@ export interface ReviewComparison {
   currentLetterType: string | null;
   suggestedDocType: LetterDocType | null;
   suggestedLetterType: string | null;
-  recommendation: 'mantener' | 'escalar' | 'derivar' | 'revisar_conflicto';
+  recommendation: "mantener" | "escalar" | "derivar" | "revisar_conflicto";
   conflictMessage: string | null;
 }
 
-export function summaryFromAnnotations(annotations: ReviewAnnotation[]): AnnotationSummary {
+export function summaryFromAnnotations(
+  annotations: ReviewAnnotation[],
+): AnnotationSummary {
   return annotations.reduce(
     (acc, annotation) => {
-      if (annotation.type === 'negative') acc.negativas += 1;
-      if (annotation.type === 'positive') acc.positivas += 1;
-      if (annotation.type === 'information') acc.informativas += 1;
+      if (annotation.type === "negative") acc.negativas += 1;
+      if (annotation.type === "positive") acc.positivas += 1;
+      if (annotation.type === "information") acc.informativas += 1;
       return acc;
     },
     { negativas: 0, positivas: 0, informativas: 0 },
@@ -92,8 +94,14 @@ export function buildReviewComparison({
 }: ReviewComparisonInput): ReviewComparison | null {
   if (!summary) return null;
   const detectedNegativeCount = summary.negativas;
-  const effectiveNegativeCount = Math.max(currentNegativeCount, detectedNegativeCount);
-  const suggestedDocType = getSuggestedLetterType(effectiveNegativeCount, currentLetterType);
+  const effectiveNegativeCount = Math.max(
+    currentNegativeCount,
+    detectedNegativeCount,
+  );
+  const suggestedDocType = getSuggestedLetterType(
+    effectiveNegativeCount,
+    currentLetterType,
+  );
   const suggestedLetterType = mapDocTypeToLetterType(suggestedDocType);
   const detectedOtherStudent =
     analysis?.selected_student_id && analysis.selected_student_id !== studentId
@@ -105,8 +113,10 @@ export function buildReviewComparison({
     analysis?.detected_student_name &&
     !analysis.detected_student_name
       .toLowerCase()
-      .includes(studentName.split(' ')[0].toLowerCase()) &&
-    !studentName.toLowerCase().includes(analysis.detected_student_name.split(' ')[0].toLowerCase());
+      .includes(studentName.split(" ")[0].toLowerCase()) &&
+    !studentName
+      .toLowerCase()
+      .includes(analysis.detected_student_name.split(" ")[0].toLowerCase());
   const conflictMessage = detectedOtherStudent
     ? `El PDF parece corresponder a ${detectedOtherStudent.full_name}.`
     : nameConflict
@@ -114,18 +124,21 @@ export function buildReviewComparison({
       : null;
   const currentDocType = mapLetterTypeToDocType(currentLetterType);
   const recommendation = conflictMessage
-    ? 'revisar_conflicto'
-    : suggestedDocType === 'derivacion'
-      ? 'derivar'
+    ? "revisar_conflicto"
+    : suggestedDocType === "derivacion"
+      ? "derivar"
       : suggestedDocType && suggestedDocType !== currentDocType
-        ? 'escalar'
-        : 'mantener';
+        ? "escalar"
+        : "mantener";
 
   return {
     registeredNegativeCount: currentNegativeCount,
     detectedNegativeCount,
     difference: detectedNegativeCount - currentNegativeCount,
-    possibleNewAnnotations: Math.max(0, detectedNegativeCount - currentNegativeCount),
+    possibleNewAnnotations: Math.max(
+      0,
+      detectedNegativeCount - currentNegativeCount,
+    ),
     currentLetterType: currentLetterType || null,
     suggestedDocType,
     suggestedLetterType,

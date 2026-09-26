@@ -44,24 +44,24 @@ No ejecutar `reset --hard` si existen cambios del usuario que deban preservarse.
 
 ## 3. Fase 1A — Limpieza del proyecto Supabase anterior
 
-| Paso | Archivo | Acción |
-|---|---|---|
-| 1 | `.env.local:20-22` | Eliminar `VITE_SUPABASE_URL_OLD`, `VITE_SUPABASE_PUBLISHABLE_KEY_OLD`, `SUPABASE_SERVICE_ROLE_KEY_OLD` (0 usos en código, verificado) |
-| 2 | `.opencode/rules/supabase.md:17` | `jjzwwhnofiepvliugowr` → `mjhbcqwtjzgvqssfiore` |
-| 3 | `.opencode/docs/supabase-guide.md:7` | Idem |
-| 4 | `server/lib/__tests__/jwks.test.ts:15` | Idem (URL de test) |
-| 5 | `docs/shared-supabase/*.md` (9 archivos) | Reemplazar ref `jjzwwhnofiepvliugowr` → `mjhbcqwtjzgvqssfiore` |
+| Paso | Archivo                                  | Acción                                                                                                                                |
+| ---- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | `.env.local:20-22`                       | Eliminar `VITE_SUPABASE_URL_OLD`, `VITE_SUPABASE_PUBLISHABLE_KEY_OLD`, `SUPABASE_SERVICE_ROLE_KEY_OLD` (0 usos en código, verificado) |
+| 2    | `.opencode/rules/supabase.md:17`         | `jjzwwhnofiepvliugowr` → `mjhbcqwtjzgvqssfiore`                                                                                       |
+| 3    | `.opencode/docs/supabase-guide.md:7`     | Idem                                                                                                                                  |
+| 4    | `server/lib/__tests__/jwks.test.ts:15`   | Idem (URL de test)                                                                                                                    |
+| 5    | `docs/shared-supabase/*.md` (9 archivos) | Reemplazar ref `jjzwwhnofiepvliugowr` → `mjhbcqwtjzgvqssfiore`                                                                        |
 
 **Validación:** `grep -r jjzwwhnofiepvliugowr` → 0 resultados en `.env*` y código; `npm run test` OK.
 
 ## 4. Fase 1B — [CRÍTICO] Fix JWT HMAC
 
-| Paso | Archivo | Acción |
-|---|---|---|
-| 1 | `server/middleware/auth.ts:40` | `verifyJwtViaHmac`: agregar `if (!secret) return null;` al inicio |
-| 2 | `server/middleware/auth.ts:65` | Exigir `exp` presente y futuro: `if (!payload.exp || payload.exp*1000 < Date.now()) return null;` |
-| 3 | `server/index.ts:82-97` + `server/api/index.ts:18-32` | `ensureJwtConfig`: lanzar en producción si no hay `SUPABASE_JWT_SECRET` ni modo JWKS |
-| 4 | `server/middleware/__tests__/auth.test.ts` | Agregar casos: secret vacío → token rechazado; token sin exp → rechazado |
+| Paso | Archivo                                               | Acción                                                                               |
+| ---- | ----------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| 1    | `server/middleware/auth.ts:40`                        | `verifyJwtViaHmac`: agregar `if (!secret) return null;` al inicio                    |
+| 2    | `server/middleware/auth.ts:65`                        | Exigir `exp` presente y futuro: `if (!payload.exp                                    |     | payload.exp*1000 < Date.now()) return null;` |
+| 3    | `server/index.ts:82-97` + `server/api/index.ts:18-32` | `ensureJwtConfig`: lanzar en producción si no hay `SUPABASE_JWT_SECRET` ni modo JWKS |
+| 4    | `server/middleware/__tests__/auth.test.ts`            | Agregar casos: secret vacío → token rechazado; token sin exp → rechazado             |
 
 **Validación:** test nuevo + `npm run test` (769+). No afecta inasistencias (código server exclusivo convivencia).
 
@@ -69,23 +69,23 @@ No ejecutar `reset --hard` si existen cambios del usuario que deban preservarse.
 
 > ⚠️ **Consulta previa requerida**: confirmar con inasistencias que no insertan `usage_events` vía service_role sin tenant. Si no confirman en el plazo, dejar el paso **pausado** y continuar con 1D.
 
-| Paso | Archivo | Acción |
-|---|---|---|
-| 1 | `supabase/migrations/<ts>_usage_events_tenant.sql` (nuevo) | `ADD COLUMN tenant_id uuid NULL` + backfill `FROM profiles p WHERE e.user_id = p.user_id` + índice + `SET NOT NULL` (solo tras confirmar) |
-| 2 | Política `usage_events_select_admin` | Agregar `tenant_id = current_tenant_id()` |
-| 3 | `usage_events_insert_own` | `WITH CHECK (tenant_id = current_tenant_id())` |
+| Paso | Archivo                                                    | Acción                                                                                                                                    |
+| ---- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | `supabase/migrations/<ts>_usage_events_tenant.sql` (nuevo) | `ADD COLUMN tenant_id uuid NULL` + backfill `FROM profiles p WHERE e.user_id = p.user_id` + índice + `SET NOT NULL` (solo tras confirmar) |
+| 2    | Política `usage_events_select_admin`                       | Agregar `tenant_id = current_tenant_id()`                                                                                                 |
+| 3    | `usage_events_insert_own`                                  | `WITH CHECK (tenant_id = current_tenant_id())`                                                                                            |
 
 **Validación:** `supabase db push`; `npm run test:multitenant`; verificar con SQL que no hay NULLs tras backfill.
 
 ## 6. Fase 1D — Restricción de rol en RLS (solo tablas CONVIVENCIA) — ✅ APLICADA 2026-08-16
 
-| Paso | Tabla | Policy actual | Acción |
-|---|---|---|---|
-| 1 | `disciplinary_processes` | `tenant_processes` (FOR ALL) | UPDATE/DELETE solo `admin`/`direccion` |
-| 2 | `disciplinary_rules` | `tenant_rules` (FOR ALL) | UPDATE/DELETE solo `admin`/`direccion` |
-| 3 | `document_analyses` | `tenant_analyses` (FOR ALL) | DELETE solo `admin`/`direccion` |
-| 4 | `bitacora_entries`, `checklist_items`, `cartas_disciplinarias`, `etapas_disciplinarias` | escritura tenant-only | INSERT/UPDATE restringidos por rol (`convivencia`+, `inspectoria`, `profesor_jefe`) |
-| 5 | `carta_events` | append-only | Dejar como está (deny-by-default); documentar |
+| Paso | Tabla                                                                                   | Policy actual                | Acción                                                                              |
+| ---- | --------------------------------------------------------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------- |
+| 1    | `disciplinary_processes`                                                                | `tenant_processes` (FOR ALL) | UPDATE/DELETE solo `admin`/`direccion`                                              |
+| 2    | `disciplinary_rules`                                                                    | `tenant_rules` (FOR ALL)     | UPDATE/DELETE solo `admin`/`direccion`                                              |
+| 3    | `document_analyses`                                                                     | `tenant_analyses` (FOR ALL)  | DELETE solo `admin`/`direccion`                                                     |
+| 4    | `bitacora_entries`, `checklist_items`, `cartas_disciplinarias`, `etapas_disciplinarias` | escritura tenant-only        | INSERT/UPDATE restringidos por rol (`convivencia`+, `inspectoria`, `profesor_jefe`) |
+| 5    | `carta_events`                                                                          | append-only                  | Dejar como está (deny-by-default); documentar                                       |
 
 Migración aplicada: `supabase/migrations/20260815170000_harden_convivencia_rls_roles.sql`. **NO** se tocaron `students`/`courses` (compartidas). **Validación ejecutada:** `npm run test:roles` (9/9); staff DELETE bitácora bloqueado (204 sin filas afectadas), INSERT staff OK, service_role DELETE OK.
 
@@ -93,9 +93,9 @@ Migración aplicada: `supabase/migrations/20260815170000_harden_convivencia_rls_
 
 ## 7. Fase 1E — `generate_process_number` — ✅ APLICADA 2026-08-16
 
-| Paso | Archivo | Acción |
-|---|---|---|
-| 1 | `supabase/migrations/20260815173000_fix_generate_process_number_tenant.sql` (aplicada) | Resolver tenant con `current_tenant_id()`; validar/ignorar el parámetro `p_tenant_id`; manejar concurrencia (`INSERT ... ON CONFLICT` o retry) |
+| Paso | Archivo                                                                                | Acción                                                                                                                                         |
+| ---- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | `supabase/migrations/20260815173000_fix_generate_process_number_tenant.sql` (aplicada) | Resolver tenant con `current_tenant_id()`; validar/ignorar el parámetro `p_tenant_id`; manejar concurrencia (`INSERT ... ON CONFLICT` o retry) |
 
 **Validación ejecutada:** smoke real — service_role tenant válido → `DP-2026-0001`; authenticated staff tenant propio → `DP-2026-0165`; tenant ajeno → HTTP 403 `tenant mismatch` (42501).
 
@@ -113,34 +113,34 @@ Migración aplicada: `supabase/migrations/20260815170000_harden_convivencia_rls_
 
 ## 10. Fase 2 — Debido proceso (solo convivencia)
 
-| ID | Paso | Archivo |
-|---|---|---|
-| 2A | Gates de transición de fase (validación en schema Zod + server) | `src/shared/lib/schemas/editCausaForm.ts:23`, `EditCausaModalForm.tsx`, nueva validación server en ruta de update causa |
-| 2B | Función canónica de plazos (días hábiles + feriados + Aula Segura) consumida por TS y RPC dashboard | migración RPC + `src/shared/lib/legalCompliance/deadlineValidators.ts:32` |
-| 2C | Plazo Superintendencia anclado a resolución; validar Aula Segura 10d/24h | `deadlineValidators.ts:137-147`, `useBreaches.ts` |
-| 2D | Cláusula de reconsideración en cartas/resoluciones; README "39"→"24" | `AmonestacionContent.tsx`, `CompromisoContent.tsx`, `DerivacionContent.tsx`, `README.md` |
+| ID  | Paso                                                                                                | Archivo                                                                                                                 |
+| --- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 2A  | Gates de transición de fase (validación en schema Zod + server)                                     | `src/shared/lib/schemas/editCausaForm.ts:23`, `EditCausaModalForm.tsx`, nueva validación server en ruta de update causa |
+| 2B  | Función canónica de plazos (días hábiles + feriados + Aula Segura) consumida por TS y RPC dashboard | migración RPC + `src/shared/lib/legalCompliance/deadlineValidators.ts:32`                                               |
+| 2C  | Plazo Superintendencia anclado a resolución; validar Aula Segura 10d/24h                            | `deadlineValidators.ts:137-147`, `useBreaches.ts`                                                                       |
+| 2D  | Cláusula de reconsideración en cartas/resoluciones; README "39"→"24"                                | `AmonestacionContent.tsx`, `CompromisoContent.tsx`, `DerivacionContent.tsx`, `README.md`                                |
 
 **Validación:** tests unitarios nuevos de cada validador + `npm run test`.
 
 ## 11. Fase 3 — Rendimiento (quick wins)
 
-| Paso | Archivo | Acción |
-|---|---|---|
-| 1 | `src/features/dashboard/DashboardStats.tsx:264-307` | Quitar `refetchOnMount: true` |
-| 2 | `src/lib/sentry.ts` | Cargar Sentry solo con `import()` si `MODE === 'production'` |
-| 3 | `src/app/App.tsx:193` | `useMemo` para `causas.filter(...)` |
-| 4 | `src/shared/lib/hooks/useCausasPersistence.ts:68-100` | Hash por causa en vez de `JSON.stringify` completo |
+| Paso | Archivo                                               | Acción                                                       |
+| ---- | ----------------------------------------------------- | ------------------------------------------------------------ |
+| 1    | `src/features/dashboard/DashboardStats.tsx:264-307`   | Quitar `refetchOnMount: true`                                |
+| 2    | `src/lib/sentry.ts`                                   | Cargar Sentry solo con `import()` si `MODE === 'production'` |
+| 3    | `src/app/App.tsx:193`                                 | `useMemo` para `causas.filter(...)`                          |
+| 4    | `src/shared/lib/hooks/useCausasPersistence.ts:68-100` | Hash por causa en vez de `JSON.stringify` completo           |
 
 **Validación:** `npm run build:web` + comparar tamaño de bundle (Sentry fuera en dev). Nada de esto afecta inasistencias.
 
 ## 12. Fase 4 — Testing y deuda
 
-| ID | Acción |
-|---|---|
-| 4A | Tests directos de `legalCompliance/` (plazos 60/15/5, Aula Segura) y `maskName`/`maskRut` (`anotacionesUtils.ts`) |
-| 4B | Unit tests de rutas AI (`advisor`, `improve`, `parse`, `usage`), `processDisciplinaryPdf`, middlewares `requireRole`/`requireTenant`/`requireMembership` |
-| 4C | Limpiar legacy `src/components/` (23 shims huérfanos, 6 consumidos) — evaluar con `legacyCompatibility.test.ts` |
-| 4D | Sincronizar `.opencode/memory/project.md` y `04-canonical-object-ledger.md` al proyecto real |
+| ID  | Acción                                                                                                                                                   |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 4A  | Tests directos de `legalCompliance/` (plazos 60/15/5, Aula Segura) y `maskName`/`maskRut` (`anotacionesUtils.ts`)                                        |
+| 4B  | Unit tests de rutas AI (`advisor`, `improve`, `parse`, `usage`), `processDisciplinaryPdf`, middlewares `requireRole`/`requireTenant`/`requireMembership` |
+| 4C  | Limpiar legacy `src/components/` (23 shims huérfanos, 6 consumidos) — evaluar con `legacyCompatibility.test.ts`                                          |
+| 4D  | Sincronizar `.opencode/memory/project.md` y `04-canonical-object-ledger.md` al proyecto real                                                             |
 
 **Validación:** `npm run test` + `npm run test:coverage` (umbral 60%).
 
@@ -148,12 +148,12 @@ Migración aplicada: `supabase/migrations/20260815170000_harden_convivencia_rls_
 
 > ⚠️ **Solo se ejecuta al completar TODAS las fases anteriores** y tras aprobación para commit.
 
-| Paso | Archivo | Acción |
-|---|---|---|
-| 1 | `tests/auditoria-final.spec.ts` (nuevo) | E2E que recorre: login → flujo completo RICE → causa → cartas/resolución con cláusula reconsideración → verificación de gates de fase → privacidad activa → modo superadmin → exportación |
-| 2 | Config | `playwright.config.ts` (workers 1, retries 2 en CI, webServer prod) |
-| 3 | A11y | Correr `npm run test:a11y` sobre dashboard público y login |
-| 4 | Suite completa | `npm run lint && npm run test && npm run build && npm run security-audit && npm run test:e2e` |
+| Paso | Archivo                                 | Acción                                                                                                                                                                                    |
+| ---- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | `tests/auditoria-final.spec.ts` (nuevo) | E2E que recorre: login → flujo completo RICE → causa → cartas/resolución con cláusula reconsideración → verificación de gates de fase → privacidad activa → modo superadmin → exportación |
+| 2    | Config                                  | `playwright.config.ts` (workers 1, retries 2 en CI, webServer prod)                                                                                                                       |
+| 3    | A11y                                    | Correr `npm run test:a11y` sobre dashboard público y login                                                                                                                                |
+| 4    | Suite completa                          | `npm run lint && npm run test && npm run build && npm run security-audit && npm run test:e2e`                                                                                             |
 
 **Validación final:** 0 fallos E2E, 769+ tests, build OK, 0 vulnerabilidades.
 

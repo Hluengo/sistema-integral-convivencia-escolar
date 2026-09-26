@@ -1,12 +1,12 @@
 ---
-titulo: 'Garantías y Protección Integral de los Derechos de la Niñez y Adolescencia'
-tipo: 'Ley'
-identificador: 'Ley N° 21.430'
+titulo: "Garantías y Protección Integral de los Derechos de la Niñez y Adolescencia"
+tipo: "Ley"
+identificador: "Ley N° 21.430"
 estado: vigente
-autoridad: 'Biblioteca del Congreso Nacional de Chile'
-fuente_oficial: 'https://www.bcn.cl/leychile/navegar?idNorma=1173643'
-version_consultada: '2026-07-30'
-nota_uso: 'Texto consolidado vigente descargado desde LeyChile. Usar como referencia jurídica; verificar los artículos aplicables al caso concreto.'
+autoridad: "Biblioteca del Congreso Nacional de Chile"
+fuente_oficial: "https://www.bcn.cl/leychile/navegar?idNorma=1173643"
+version_consultada: "2026-07-30"
+nota_uso: "Texto consolidado vigente descargado desde LeyChile. Usar como referencia jurídica; verificar los artículos aplicables al caso concreto."
 ---
 
 Tipo Norma                              :Ley 21430

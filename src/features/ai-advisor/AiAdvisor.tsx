@@ -275,7 +275,7 @@ export default function AiAdvisor() {
                 key={p}
                 type="button"
                 onClick={() => handleSendMessage(p)}
-                className="rounded-lg border border-neutral-200 bg-neutral-50 p-2 text-left font-medium text-10px text-neutral-700 leading-normal transition-colors hover:border-brand-200/60 hover:bg-brand-50/40 hover:shadow-xs sm:p-2.5 sm:text-11px"
+                className="min-h-11 rounded-lg border border-neutral-200 bg-neutral-50 p-2 text-left font-medium text-10px text-neutral-700 leading-normal transition-colors hover:border-brand-200/60 hover:bg-brand-50/40 hover:shadow-xs sm:p-2.5 sm:text-11px"
               >
                 {p}
               </button>
@@ -296,7 +296,7 @@ export default function AiAdvisor() {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Escriba su consulta legal..."
-              className="flex-1 bg-transparent py-2.5 font-medium text-neutral-800 text-xs placeholder-neutral-400 focus:outline-none"
+              className="min-h-11 flex-1 bg-transparent py-2.5 font-medium text-neutral-800 text-xs placeholder-neutral-400 focus:outline-none"
               aria-label="Mensaje para el asesor legal"
             />
           </div>
@@ -304,7 +304,7 @@ export default function AiAdvisor() {
             type="submit"
             variant="custom"
             disabled={isLoading || !inputMessage.trim()}
-            className="shrink-0 rounded-lg bg-neutral-900 px-4 py-2.5 text-xs text-white hover:scale-[1.02] hover:bg-neutral-800 active:scale-95 disabled:bg-neutral-300 disabled:opacity-50"
+            className="min-h-11 shrink-0 rounded-lg bg-neutral-900 px-4 py-2.5 text-xs text-white hover:scale-[1.02] hover:bg-neutral-800 active:scale-95 disabled:bg-neutral-300 disabled:opacity-50"
           >
             <span className="hidden sm:inline">Enviar</span>
             <Send className="h-3.5 w-3.5" aria-hidden="true" />

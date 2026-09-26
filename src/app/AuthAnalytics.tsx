@@ -1,8 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useEffect } from 'react';
-import { identifyAnalyticsUser, resetAnalyticsUser } from '../lib/analytics';
-import { useAuthStore } from '../shared/lib/stores/authStore';
+import { useEffect } from "react";
+import { identifyAnalyticsUser, resetAnalyticsUser } from "../lib/analytics";
+import { useAuthStore } from "../shared/lib/stores/authStore";
 
 export default function AuthAnalytics() {
   const user = useAuthStore((s) => s.user);

@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-export type ReviewAnnotationType = 'negative' | 'positive' | 'information';
+export type ReviewAnnotationType = "negative" | "positive" | "information";
 
 export interface ReviewAnnotation {
   raw_text: string;

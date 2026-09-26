@@ -1,6 +1,12 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { type ReactNode, useRef, useEffect, useState, useCallback } from 'react';
+import {
+  type ReactNode,
+  useRef,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 
 interface LetterPreviewViewportProps {
   children: ReactNode;
@@ -12,14 +18,16 @@ const LETTER_WIDTH_MM = 216;
 
 export default function LetterPreviewViewport({
   children,
-  className = '',
+  className = "",
   onOverflowChange,
 }: LetterPreviewViewportProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
 
   const checkOverflow = useCallback(() => {
-    const el = containerRef.current?.querySelector('.letter-document') as HTMLElement | null;
+    const el = containerRef.current?.querySelector(
+      ".letter-document",
+    ) as HTMLElement | null;
     if (!el) return;
     const overflow = el.scrollHeight > el.clientHeight + 2;
     onOverflowChange?.(overflow);
@@ -53,17 +61,17 @@ export default function LetterPreviewViewport({
       ref={containerRef}
       className={`overflow-hidden ${className}`}
       style={{
-        display: 'flex',
-        justifyContent: 'center',
-        background: '#f3f4f6',
-        borderRadius: '12px',
-        padding: '16px',
+        display: "flex",
+        justifyContent: "center",
+        background: "#f3f4f6",
+        borderRadius: "12px",
+        padding: "16px",
       }}
     >
       <div
         style={{
           transform: `scale(${scale})`,
-          transformOrigin: 'top center',
+          transformOrigin: "top center",
           width: `${(LETTER_WIDTH_MM / 25.4) * 96}px`,
           flexShrink: 0,
         }}

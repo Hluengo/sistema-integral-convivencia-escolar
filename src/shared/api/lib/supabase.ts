@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { createClient } from '@supabase/supabase-js';
-import type { Database } from './database.types';
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "./database.types";
 
-const nodeEnv = typeof process !== 'undefined' ? process.env : {};
+const nodeEnv = typeof process !== "undefined" ? process.env : {};
 const viteEnv = import.meta.env ?? {};
 const supabaseUrl = viteEnv.VITE_SUPABASE_URL ?? nodeEnv.VITE_SUPABASE_URL;
 const supabaseAnonKey =
@@ -17,12 +17,12 @@ const supabaseAnonKey =
 const authStorageKey =
   viteEnv.VITE_SUPABASE_AUTH_STORAGE_KEY ??
   nodeEnv.VITE_SUPABASE_AUTH_STORAGE_KEY ??
-  'convivencia-auth-token';
+  "convivencia-auth-token";
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(
-    'Faltan las variables de entorno VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY o VITE_SUPABASE_PUBLISHABLE_KEY. ' +
-      'Créalas en el archivo .env.local',
+    "Faltan las variables de entorno VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY o VITE_SUPABASE_PUBLISHABLE_KEY. " +
+      "Créalas en el archivo .env.local",
   );
 }
 

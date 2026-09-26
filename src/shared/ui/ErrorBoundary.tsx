@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { Component, type ErrorInfo, type ReactNode, createRef } from 'react';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { Component, type ErrorInfo, type ReactNode, createRef } from "react";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -13,7 +13,7 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-const CHUNK_RELOAD_STORAGE_PREFIX = 'sice:chunk-reload:';
+const CHUNK_RELOAD_STORAGE_PREFIX = "sice:chunk-reload:";
 const CHUNK_LOAD_ERROR_PATTERNS = [
   /ChunkLoadError/i,
   /Failed to fetch dynamically imported module/i,
@@ -34,7 +34,10 @@ function getChunkReloadKey(error: Error): string {
   return `${CHUNK_RELOAD_STORAGE_PREFIX}${locationKey}:${error.name}`;
 }
 
-export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export default class ErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   state: ErrorBoundaryState = { hasError: false, error: null };
   retryButtonRef = createRef<HTMLButtonElement>();
 
@@ -43,14 +46,21 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error('ErrorBoundary caught:', error, info.componentStack);
+    console.error("ErrorBoundary caught:", error, info.componentStack);
     if (isChunkLoadError(error)) {
       this.reloadStaleChunkOnce(error);
     }
   }
 
-  componentDidUpdate(_prevProps: ErrorBoundaryProps, prevState: ErrorBoundaryState) {
-    if (!prevState.hasError && this.state.hasError && this.retryButtonRef.current) {
+  componentDidUpdate(
+    _prevProps: ErrorBoundaryProps,
+    prevState: ErrorBoundaryState,
+  ) {
+    if (
+      !prevState.hasError &&
+      this.state.hasError &&
+      this.retryButtonRef.current
+    ) {
       this.retryButtonRef.current.focus();
     }
   }
@@ -66,9 +76,9 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
   reloadStaleChunkOnce(error: Error) {
     try {
       const reloadKey = getChunkReloadKey(error);
-      if (sessionStorage.getItem(reloadKey) === '1') return;
+      if (sessionStorage.getItem(reloadKey) === "1") return;
 
-      sessionStorage.setItem(reloadKey, '1');
+      sessionStorage.setItem(reloadKey, "1");
       window.location.reload();
     } catch {
       // If storage is unavailable, keep the manual reload fallback visible.
@@ -82,11 +92,13 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
       }
 
       const isStaleChunk = isChunkLoadError(this.state.error);
-      const title = isStaleChunk ? 'La app necesita actualizarse' : 'Algo salió mal';
+      const title = isStaleChunk
+        ? "La app necesita actualizarse"
+        : "Algo salió mal";
       const message = isStaleChunk
-        ? 'Se detectó una versión anterior de esta sección. Recargue la app para continuar.'
-        : 'Ocurrió un error inesperado. Puede intentar recargar esta sección.';
-      const actionLabel = isStaleChunk ? 'Recargar aplicación' : 'Reintentar';
+        ? "Se detectó una versión anterior de esta sección. Recargue la app para continuar."
+        : "Ocurrió un error inesperado. Puede intentar recargar esta sección.";
+      const actionLabel = isStaleChunk ? "Recargar aplicación" : "Reintentar";
 
       return (
         <div
@@ -97,8 +109,12 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
           <div className="mb-4 inline-flex items-center justify-center rounded-xl bg-gravisima-50 p-3 text-gravisima-600">
             <AlertTriangle className="h-6 w-6" aria-hidden="true" />
           </div>
-          <h3 className="mb-1 font-semibold text-neutral-800 text-sm">{title}</h3>
-          <p className="mx-auto mb-4 max-w-xs text-neutral-500 text-xs">{message}</p>
+          <h3 className="mb-1 font-semibold text-neutral-800 text-sm">
+            {title}
+          </h3>
+          <p className="mx-auto mb-4 max-w-xs text-neutral-500 text-xs">
+            {message}
+          </p>
           <button
             ref={this.retryButtonRef}
             type="button"

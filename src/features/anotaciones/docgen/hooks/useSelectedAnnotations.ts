@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useState, useCallback, useMemo } from 'react';
-import type { Annotation } from '@/shared/lib/types';
+import { useState, useCallback, useMemo } from "react";
+import type { Annotation } from "@/shared/lib/types";
 export function useSelectedAnnotations(annotations: Annotation[]) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -21,7 +21,7 @@ export function useSelectedAnnotations(annotations: Annotation[]) {
 
   const selectAllNegative = useCallback(() => {
     const negIds = annotations.reduce<Set<string>>((acc, a) => {
-      if (a.type === 'Negativa') acc.add(a.id);
+      if (a.type === "Negativa") acc.add(a.id);
       return acc;
     }, new Set());
     setSelectedIds(negIds);

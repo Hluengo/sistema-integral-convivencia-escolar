@@ -1,8 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useState, type FormEvent, type ReactNode } from 'react';
-import { NotebookPen, Plus, X } from 'lucide-react';
-import Button from './Button';
+import { useState, type FormEvent, type ReactNode } from "react";
+import { NotebookPen, Plus, X } from "lucide-react";
+import Button from "./Button";
 
 interface HistoryEntryFormInput {
   title: string;
@@ -31,14 +31,14 @@ export default function HistoryEntryForm({
   additionalFields,
 }: HistoryEntryFormProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
 
   const closeForm = () => {
     if (isSaving) return;
     setIsOpen(false);
-    setTitle('');
-    setDescription('');
+    setTitle("");
+    setDescription("");
     onResetError();
     onClose?.();
   };
@@ -70,7 +70,8 @@ export default function HistoryEntryForm({
     );
   }
 
-  const canSave = title.trim().length >= 3 && description.trim().length >= 3 && !isSaving;
+  const canSave =
+    title.trim().length >= 3 && description.trim().length >= 3 && !isSaving;
   const titleId = `${idPrefix}-title`;
   const descriptionId = `${idPrefix}-description`;
 
@@ -83,7 +84,9 @@ export default function HistoryEntryForm({
         <div className="flex items-center gap-2">
           <NotebookPen className="h-5 w-5 text-brand-600" aria-hidden="true" />
           <div>
-            <h3 className="font-bold text-neutral-900 text-sm">Nueva entrada en el historial</h3>
+            <h3 className="font-bold text-neutral-900 text-sm">
+              Nueva entrada en el historial
+            </h3>
             <p className="mt-0.5 text-neutral-500 text-xs">{helperText}</p>
           </div>
         </div>
@@ -100,7 +103,10 @@ export default function HistoryEntryForm({
 
       <div>
         <div className="mb-1.5 flex items-center justify-between gap-3">
-          <label htmlFor={titleId} className="font-semibold text-neutral-700 text-sm">
+          <label
+            htmlFor={titleId}
+            className="font-semibold text-neutral-700 text-sm"
+          >
             Título
           </label>
           <span className="text-neutral-400 text-xs">{title.length}/120</span>
@@ -120,9 +126,14 @@ export default function HistoryEntryForm({
 
       <div>
         <div className="mb-1.5 flex justify-end">
-          <span className="text-neutral-400 text-xs">{description.length}/2.000</span>
+          <span className="text-neutral-400 text-xs">
+            {description.length}/2.000
+          </span>
         </div>
-        <label htmlFor={descriptionId} className="block font-semibold text-neutral-700 text-sm">
+        <label
+          htmlFor={descriptionId}
+          className="block font-semibold text-neutral-700 text-sm"
+        >
           Descripción
         </label>
         <textarea
@@ -142,7 +153,10 @@ export default function HistoryEntryForm({
       {additionalFields}
 
       {error && (
-        <p role="alert" className="rounded-lg bg-gravisima-50 px-3 py-2 text-gravisima-700 text-sm">
+        <p
+          role="alert"
+          className="rounded-lg bg-gravisima-50 px-3 py-2 text-gravisima-700 text-sm"
+        >
           {error}
         </p>
       )}

@@ -2,12 +2,12 @@
 
 export function BoldText({
   text,
-  strongClass = 'font-bold text-neutral-950',
+  strongClass = "font-bold text-neutral-950",
 }: {
   text: string;
   strongClass?: string;
 }) {
-  const parts = text.split('**');
+  const parts = text.split("**");
   return (
     <>
       {parts.map((part, i) =>
