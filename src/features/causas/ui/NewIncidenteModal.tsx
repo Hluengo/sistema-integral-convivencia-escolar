@@ -1,7 +1,9 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useState, type FormEvent } from "react";
-import { AlertTriangle, ChevronDown, ChevronUp, Users } from "lucide-react";
+import { AlertTriangle, Users } from "lucide-react";
+import type { TipoInfraccion } from "../../../shared/lib/types";
+import RiceConductSelect from "../NewCausaForm/RiceConductSelect";
 import type {
   Course,
   Student,
@@ -25,7 +27,12 @@ interface NewIncidenteModalProps {
   onCourseChange: (courseId: string) => void;
   onClose: () => void;
   onSubmit: (
-    input: CreateIncidenteInput & { studentIds: string[] },
+    input: CreateIncidenteInput & {
+      studentIds: string[];
+      conductaRiceId: string;
+      tipoInfraccion: TipoInfraccion;
+      comprometeAulaSegura: boolean;
+    },
   ) => Promise<void>;
 }
 
@@ -49,9 +56,11 @@ export default function NewIncidenteModal({
   const [responsable, setResponsable] = useState(
     "Equipo de Convivencia Escolar",
   );
+  const [conductaRiceId, setConductaRiceId] = useState("");
+  const [tipoInfraccion, setTipoInfraccion] = useState<TipoInfraccion>("Grave");
+  const [aulaSegura, setAulaSegura] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -69,6 +78,12 @@ export default function NewIncidenteModal({
       setError("Ingrese el responsable del incidente.");
       return;
     }
+    if (!conductaRiceId) {
+      setError(
+        "Seleccione la falta del reglamento (RICE) para determinar la gravedad de cada expediente.",
+      );
+      return;
+    }
     setError(null);
     setIsSaving(true);
     try {
@@ -78,6 +93,9 @@ export default function NewIncidenteModal({
         descripcion,
         responsable,
         studentIds,
+        conductaRiceId,
+        tipoInfraccion,
+        comprometeAulaSegura: aulaSegura,
       });
     } catch (submitError) {
       setError(
@@ -92,37 +110,18 @@ export default function NewIncidenteModal({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent
-        hideClose
-        className="max-h-[calc(100vh-1rem)] max-w-[48rem] overflow-y-auto p-6 sm:p-8 sm:max-h-[90vh]"
-      >
+      <DialogContent className="max-h-[calc(100vh-1rem)] max-w-[48rem] overflow-y-auto p-6 sm:p-8 sm:max-h-[90vh]">
         <div className="space-y-5">
           <div className="border-neutral-100 border-b pb-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <DialogTitle className="flex items-center gap-2 text-base">
-                  <Users className="size-5 text-brand-600" aria-hidden="true" />{" "}
-                  Nuevo incidente grupal
-                </DialogTitle>
-                <DialogDescription className="mt-1">
-                  Crea un hecho común y un expediente independiente por cada
-                  estudiante.
-                </DialogDescription>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setIsCollapsed((current) => !current)}
-                aria-expanded={!isCollapsed}
-                aria-controls="group-incident-form"
-              >
-                {isCollapsed ? (
-                  <ChevronDown className="size-4" aria-hidden="true" />
-                ) : (
-                  <ChevronUp className="size-4" aria-hidden="true" />
-                )}
-                {isCollapsed ? "Descolapsar" : "Recoger"}
-              </Button>
+            <div>
+              <DialogTitle className="flex items-center gap-2 text-base">
+                <Users className="size-5 text-brand-600" aria-hidden="true" />{" "}
+                Nuevo incidente grupal
+              </DialogTitle>
+              <DialogDescription className="mt-1">
+                Crea un hecho común y un expediente independiente por cada
+                estudiante.
+              </DialogDescription>
             </div>
           </div>
 
@@ -130,7 +129,6 @@ export default function NewIncidenteModal({
             id="group-incident-form"
             onSubmit={handleSubmit}
             className="space-y-4"
-            hidden={isCollapsed}
             noValidate
           >
             <div>
@@ -235,6 +233,15 @@ export default function NewIncidenteModal({
               </label>
             </div>
 
+            <RiceConductSelect
+              setNewInfTipo={setTipoInfraccion}
+              setConductaRiceId={setConductaRiceId}
+              setNewAulaSegura={setAulaSegura}
+              setNewObs={setDescripcion}
+              currentObs={descripcion}
+              value={conductaRiceId}
+            />
+
             <div>
               <label
                 htmlFor="group-description"
@@ -261,9 +268,8 @@ export default function NewIncidenteModal({
               <p>
                 Los documentos compartidos serán visibles en todos los
                 expedientes vinculados. Los descargos y antecedentes personales
-                se registran por separado. Cada expediente se crea con
-                AS4/Gravísima como propuesta; revise la aplicación de Aula
-                Segura en cada caso.
+                se registran por separado. Cada expediente se crea con la falta,
+                gravedad y Aula Segura seleccionadas del reglamento.
               </p>
             </div>
 

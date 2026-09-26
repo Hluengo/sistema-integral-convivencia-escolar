@@ -1,19 +1,25 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useCallback, useState } from 'react';
-import { useWatch } from 'react-hook-form';
-import { useCausasStore } from '../../shared/lib/stores/causasStore';
-import { useNewCausaForm } from '../../shared/lib/hooks/useNewCausaForm';
-import { useCoursesQuery } from '../../shared/lib/hooks/useCoursesQuery';
-import { useStudentsQuery } from '../../shared/lib/hooks/useStudentsQuery';
-import NewCausaModalBoundary from '../components/NewCausaModalBoundary';
-import NewIncidenteModalBoundary from '../components/NewIncidenteModalBoundary';
-import { createIncidente } from '../../shared/api/services/incidentes.service';
-import type { CreateIncidenteInput } from '../../shared/api/services/incidentes.service';
-import { useAuthStore } from '../../shared/lib/stores/authStore';
-import { useToastStore } from '../../shared/lib/stores/toastStore';
+import { useCallback, useState } from "react";
+import { useWatch } from "react-hook-form";
+import { useCausasStore } from "../../shared/lib/stores/causasStore";
+import { useNewCausaForm } from "../../shared/lib/hooks/useNewCausaForm";
+import { useCoursesQuery } from "../../shared/lib/hooks/useCoursesQuery";
+import { useStudentsQuery } from "../../shared/lib/hooks/useStudentsQuery";
+import NewCausaModalBoundary from "../components/NewCausaModalBoundary";
+import NewIncidenteModalBoundary from "../components/NewIncidenteModalBoundary";
+import { createIncidente } from "../../shared/api/services/incidentes.service";
+import type { CreateIncidenteInput } from "../../shared/api/services/incidentes.service";
+import type { TipoInfraccion } from "../../shared/lib/types";
+import { useAuthStore } from "../../shared/lib/stores/authStore";
+import { useToastStore } from "../../shared/lib/stores/toastStore";
 
-type CreateIncidentFormInput = CreateIncidenteInput & { studentIds: string[] };
+type CreateIncidentFormInput = CreateIncidenteInput & {
+  studentIds: string[];
+  conductaRiceId: string;
+  tipoInfraccion: TipoInfraccion;
+  comprometeAulaSegura: boolean;
+};
 
 interface UseNewCausaModalControllerArgs {
   requireAuth: () => boolean;
@@ -26,7 +32,9 @@ export function useNewCausaModalController({
   onOpened,
   onCreated,
 }: UseNewCausaModalControllerArgs) {
-  const handleCreateCausaAction = useCausasStore((state) => state.handleCreateCausa);
+  const handleCreateCausaAction = useCausasStore(
+    (state) => state.handleCreateCausa,
+  );
   const {
     form,
     showCreateForm,
@@ -36,16 +44,20 @@ export function useNewCausaModalController({
     setCourse,
     setStudent,
   } = useNewCausaForm();
-  const selectedCourseId = useWatch({ control: form.control, name: 'selectedCourseId' });
+  const selectedCourseId = useWatch({
+    control: form.control,
+    name: "selectedCourseId",
+  });
   const [showGroupForm, setShowGroupForm] = useState(false);
-  const [groupCourseId, setGroupCourseId] = useState('');
+  const [groupCourseId, setGroupCourseId] = useState("");
 
   const { data: courses = [], isLoading: isLoadingCourses } = useCoursesQuery();
-  const { data: students = [], isLoading: isLoadingStudents } = useStudentsQuery(
-    selectedCourseId ?? '',
-  );
-  const { data: groupStudents = [], isLoading: isLoadingGroupStudents } = useStudentsQuery(groupCourseId);
-  const newEstCurso = courses.find((course) => course.id === selectedCourseId)?.name ?? '';
+  const { data: students = [], isLoading: isLoadingStudents } =
+    useStudentsQuery(selectedCourseId ?? "");
+  const { data: groupStudents = [], isLoading: isLoadingGroupStudents } =
+    useStudentsQuery(groupCourseId);
+  const newEstCurso =
+    courses.find((course) => course.id === selectedCourseId)?.name ?? "";
 
   const openCreateForm = useCallback(() => {
     if (!requireAuth()) return;
@@ -61,7 +73,7 @@ export function useNewCausaModalController({
 
   const closeGroupForm = useCallback(() => {
     setShowGroupForm(false);
-    setGroupCourseId('');
+    setGroupCourseId("");
   }, []);
 
   const toggleCreateForm = useCallback(() => {
@@ -75,7 +87,7 @@ export function useNewCausaModalController({
   const handleStudentSelect = useCallback(
     (studentId: string) => {
       if (!studentId) {
-        setStudent('', '', '');
+        setStudent("", "", "");
         return;
       }
       const student = students.find((candidate) => candidate.id === studentId);
@@ -98,9 +110,9 @@ export function useNewCausaModalController({
       newResponsable,
     }) => {
       if (!newEstCurso) {
-        form.setError('selectedCourseId', {
-          type: 'validate',
-          message: 'Seleccione un curso disponible.',
+        form.setError("selectedCourseId", {
+          type: "validate",
+          message: "Seleccione un curso disponible.",
         });
         return;
       }
@@ -123,26 +135,40 @@ export function useNewCausaModalController({
   );
 
   const handleCreateIncident = useCallback(
-    async ({ lugar, descripcion, responsable, studentIds }: CreateIncidentFormInput) => {
+    async ({
+      lugar,
+      descripcion,
+      responsable,
+      studentIds,
+      conductaRiceId,
+      tipoInfraccion,
+      comprometeAulaSegura,
+    }: CreateIncidentFormInput) => {
       const tenantId = useAuthStore.getState().tenantId;
-      const incident = await createIncidente({ lugar, descripcion, responsable }, tenantId);
+      const incident = await createIncidente(
+        { lugar, descripcion, responsable },
+        tenantId,
+      );
       if (!incident) {
-        throw new Error('No fue posible crear el incidente grupal.');
+        throw new Error("No fue posible crear el incidente grupal.");
       }
 
       let created = 0;
       for (const studentId of studentIds) {
-        const student = groupStudents.find((candidate) => candidate.id === studentId);
+        const student = groupStudents.find(
+          (candidate) => candidate.id === studentId,
+        );
         if (!student) continue;
         const result = await handleCreateCausaAction({
           incidenteId: incident.id,
           studentId: student.id,
           newEstNombre: student.full_name,
           newEstRut: student.rut,
-          newEstCurso: courses.find((course) => course.id === groupCourseId)?.name ?? '',
-          newInfTipo: 'Gravísima',
-          conductaRiceId: 'AS4',
-          newAulaSegura: false,
+          newEstCurso:
+            courses.find((course) => course.id === groupCourseId)?.name ?? "",
+          newInfTipo: tipoInfraccion,
+          conductaRiceId,
+          newAulaSegura: comprometeAulaSegura,
           newObs: descripcion,
           newResponsable: responsable,
         });
@@ -150,18 +176,27 @@ export function useNewCausaModalController({
       }
 
       if (created === 0) {
-        throw new Error('El incidente se creó, pero no se pudo crear ningún expediente.');
+        throw new Error(
+          "El incidente se creó, pero no se pudo crear ningún expediente.",
+        );
       }
       useToastStore
         .getState()
         .addToast(
-          created === studentIds.length ? 'success' : 'warning',
+          created === studentIds.length ? "success" : "warning",
           `Incidente grupal creado con ${created} de ${studentIds.length} expedientes.`,
         );
       closeGroupForm();
       onCreated();
     },
-    [closeGroupForm, courses, groupCourseId, groupStudents, handleCreateCausaAction, onCreated],
+    [
+      closeGroupForm,
+      courses,
+      groupCourseId,
+      groupStudents,
+      handleCreateCausaAction,
+      onCreated,
+    ],
   );
 
   const modal = showCreateForm ? (
