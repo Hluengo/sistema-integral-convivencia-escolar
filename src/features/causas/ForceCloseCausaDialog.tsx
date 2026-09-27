@@ -245,7 +245,7 @@ export default function ForceCloseCausaDialog({
             {!audit.puedeCerrar && (
               <div
                 role="alert"
-                className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"
+                className="rounded-lg border border-grave-200 bg-grave-50 p-3 text-grave-800 text-xs"
               >
                 <p className="flex items-center gap-1.5 font-semibold">
                   <AlertTriangle className="size-4" /> Auditoría bloqueante —{" "}
@@ -256,12 +256,12 @@ export default function ForceCloseCausaDialog({
                     <li key={w}>{w}</li>
                   ))}
                 </ul>
-                <label className="mt-2 flex items-center gap-2 font-medium">
+                <label className="mt-2 flex min-h-11 cursor-pointer items-center gap-2 font-medium">
                   <input
                     type="checkbox"
                     checked={ackRisk}
                     onChange={(e) => setAckRisk(e.target.checked)}
-                    className="size-4"
+                    className="h-5 w-5 rounded border-neutral-300 text-brand-600 accent-brand-600 focus:ring-2 focus:ring-brand-500/20"
                     aria-label="Acepto el riesgo de cerrar con garantías bloqueantes"
                   />
                   Entiendo el riesgo y deseo cerrar con fundamento de todas

@@ -18,7 +18,7 @@ import {
  * Lógica pura de detección de brechas de debido proceso (Circular 482 / Ley 21809).
  * Separada del hook para poder testearla sin infraestructura de rendering.
  */
-export function computeBreaches(causa: Causa): string[] {
+export function computeBreaches(causa: Causa, today?: string): string[] {
   const result: string[] = [];
   const hasResguardo = causa.checklistDebidoProceso.find(
     (c) => c.id === "chk_inv_2",
@@ -66,7 +66,7 @@ export function computeBreaches(causa: Causa): string[] {
     );
   }
 
-  const plazoInvestigacion = verificarPlazoInvestigacion(causa);
+  const plazoInvestigacion = verificarPlazoInvestigacion(causa, today);
   if (plazoInvestigacion.estado === "vencido") {
     const maxPlazoInvestigacionDias = getMaxPlazoInvestigacionDias(
       causa.tipoInfraccion,

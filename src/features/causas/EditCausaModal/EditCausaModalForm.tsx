@@ -355,33 +355,33 @@ export default function EditCausaModalForm({
             Aula Segura / Ley 21.128
           </div>
           <div className="mt-3 grid gap-3 md:grid-cols-2">
-            <label className="flex items-center gap-2">
+            <label className="flex min-h-11 cursor-pointer items-center gap-2">
               <input
                 type="checkbox"
                 aria-label="Compromete Aula Segura"
-                className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
+                className="h-5 w-5 rounded border-neutral-300 text-brand-600 accent-brand-600 focus:ring-2 focus:ring-brand-500/20"
                 {...register("comprometeAulaSegura")}
               />
               <span className="text-neutral-700 text-sm">
                 Compromete Aula Segura
               </span>
             </label>
-            <label className="flex items-center gap-2">
+            <label className="flex min-h-11 cursor-pointer items-center gap-2">
               <input
                 type="checkbox"
                 aria-label="Denuncia confidencial"
-                className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
+                className="h-5 w-5 rounded border-neutral-300 text-brand-600 accent-brand-600 focus:ring-2 focus:ring-brand-500/20"
                 {...register("esDenunciaConfidencial")}
               />
               <span className="text-neutral-700 text-sm">
                 Denuncia Confidencial
               </span>
             </label>
-            <label className="flex items-center gap-2">
+            <label className="flex min-h-11 cursor-pointer items-center gap-2">
               <input
                 type="checkbox"
                 aria-label="Identidad reservada"
-                className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
+                className="h-5 w-5 rounded border-neutral-300 text-brand-600 accent-brand-600 focus:ring-2 focus:ring-brand-500/20"
                 {...register("identidadReservada")}
               />
               <span className="text-neutral-700 text-sm">
@@ -439,11 +439,11 @@ export default function EditCausaModalForm({
                 {...register("duracionSuspensionDias", { valueAsNumber: true })}
               />
             </FormField>
-            <label className="flex items-center gap-2 md:col-span-2">
+            <label className="flex min-h-11 cursor-pointer items-center gap-2 md:col-span-2">
               <input
                 type="checkbox"
                 aria-label="Monitoreo pedagógico obligatorio"
-                className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
+                className="h-5 w-5 rounded border-neutral-300 text-brand-600 accent-brand-600 focus:ring-2 focus:ring-brand-500/20"
                 {...register("monitoreoPedagogico")}
               />
               <span className="text-neutral-700 text-sm">
@@ -459,11 +459,11 @@ export default function EditCausaModalForm({
             Notificación Superintendencia
           </div>
           <div className="mt-3 grid gap-3 md:grid-cols-2">
-            <label className="flex items-center gap-2">
+            <label className="flex min-h-11 cursor-pointer items-center gap-2">
               <input
                 type="checkbox"
                 aria-label="Requiere notificación a Superintendencia"
-                className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
+                className="h-5 w-5 rounded border-neutral-300 text-brand-600 accent-brand-600 focus:ring-2 focus:ring-brand-500/20"
                 {...register("requiereNotificacionSuperintendencia")}
               />
               <span className="text-neutral-700 text-sm">
@@ -490,11 +490,11 @@ export default function EditCausaModalForm({
             NEE / Discapacidad
           </div>
           <div className="mt-3 grid gap-3 md:grid-cols-2">
-            <label className="flex items-center gap-2">
+            <label className="flex min-h-11 cursor-pointer items-center gap-2">
               <input
                 type="checkbox"
                 aria-label="Estudiante con NEE"
-                className="h-4 w-4 rounded border-neutral-300 text-brand-600 focus:ring-brand-500"
+                className="h-5 w-5 rounded border-neutral-300 text-brand-600 accent-brand-600 focus:ring-2 focus:ring-brand-500/20"
                 {...register("estudianteTieneNEE")}
               />
               <span className="text-neutral-700 text-sm">

@@ -11,15 +11,21 @@ type NotificationFilter = "active" | "unread" | "history";
 interface NotificationsDropdownProps {
   notifications: Notification[];
   notificationsLoading?: boolean;
+  notificationsError?: string | null;
+  notificationsUpdating?: boolean;
+  onRetryNotifications?: () => Promise<void>;
   onNotificationClick?: (causaId: string) => void;
-  onMarkNotificationRead?: (notification: Notification) => void;
-  onMarkAllNotificationsRead?: () => void;
+  onMarkNotificationRead?: (notification: Notification) => Promise<void>;
+  onMarkAllNotificationsRead?: () => Promise<void>;
   onViewAll?: () => void;
 }
 
 export default function NotificationsDropdown({
   notifications,
   notificationsLoading = false,
+  notificationsError,
+  notificationsUpdating = false,
+  onRetryNotifications,
   onNotificationClick,
   onMarkNotificationRead,
   onMarkAllNotificationsRead,
@@ -134,6 +140,25 @@ export default function NotificationsDropdown({
                 </FilterButton>
               </div>
             </div>
+            {notificationsError && (
+              <div
+                className="flex items-center justify-between gap-3 border-b border-gravisima-200 bg-gravisima-50 px-4 py-3"
+                role="alert"
+              >
+                <p className="text-gravisima-800 text-xs">
+                  {notificationsError}
+                </p>
+                {onRetryNotifications && (
+                  <button
+                    type="button"
+                    onClick={() => void onRetryNotifications()}
+                    className="min-h-11 shrink-0 rounded-lg px-3 font-semibold text-gravisima-800 text-xs hover:bg-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-500"
+                  >
+                    Reintentar
+                  </button>
+                )}
+              </div>
+            )}
             <div className="max-h-[360px] overflow-y-auto">
               {notificationsLoading ? (
                 <div className="px-6 py-10 text-center text-neutral-500 text-sm">
@@ -157,8 +182,13 @@ export default function NotificationsDropdown({
                   <NotificationItem
                     key={notification.persistedId ?? notification.id}
                     notification={notification}
-                    onClick={() => {
-                      onMarkNotificationRead?.(notification);
+                    disabled={notificationsUpdating}
+                    onClick={async () => {
+                      try {
+                        await onMarkNotificationRead?.(notification);
+                      } catch {
+                        return;
+                      }
                       setIsOpen(false);
                       if (notification.causaId)
                         onNotificationClick?.(notification.causaId);
@@ -170,8 +200,15 @@ export default function NotificationsDropdown({
             <div className="flex items-center justify-between gap-2 border-neutral-100 border-t p-3">
               <button
                 type="button"
-                onClick={() => onMarkAllNotificationsRead?.()}
-                className="inline-flex items-center gap-1.5 font-semibold text-brand-600 text-xs transition-colors hover:text-brand-700"
+                disabled={notificationsUpdating || unreadCount === 0}
+                onClick={async () => {
+                  try {
+                    await onMarkAllNotificationsRead?.();
+                  } catch {
+                    // The hook exposes the failure in the alert above.
+                  }
+                }}
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 font-semibold text-brand-600 text-xs transition-colors hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <CheckCheck className="size-3.5" aria-hidden="true" /> Marcar
                 todo leído
@@ -220,14 +257,17 @@ function FilterButton({
 function NotificationItem({
   notification,
   onClick,
+  disabled,
 }: {
   notification: Notification;
   onClick: () => void;
+  disabled: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       className={`flex w-full items-start gap-3 border-neutral-100 border-b p-4 text-left transition-colors last:border-b-0 hover:bg-neutral-50 ${notification.readAt ? "opacity-70" : ""}`}
     >
       <div

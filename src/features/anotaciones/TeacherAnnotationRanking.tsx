@@ -27,32 +27,33 @@ export default function TeacherAnnotationRanking({
 
   return (
     <article
-      className="card p-5"
+      className="flex min-h-[610px] flex-col rounded-xl border border-[#e2e8f0] bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
       aria-labelledby="teacher-annotation-ranking-title"
     >
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-2.5">
-          <div className="rounded-lg bg-brand-50 p-2">
-            <Users className="h-4 w-4 text-brand-700" aria-hidden="true" />
+          <div className="flex size-6 items-center justify-center rounded-md bg-brand-50">
+            <Users className="size-3.5 text-brand-600" aria-hidden="true" />
           </div>
           <div className="min-w-0">
             <h3
               id="teacher-annotation-ranking-title"
-              className="font-semibold text-neutral-700 text-sm"
+              className="font-bold text-neutral-900 text-[13px]"
             >
-              Panorama de anotaciones docentes
+              Panorama docente
             </h3>
             <p className="mt-1 text-neutral-500 text-xs">
-              Todas las anotaciones por docente, ordenadas por negativas.
+              Desglose de anotaciones ingresadas: Negativas / Positivas /
+              Informativas.
             </p>
           </div>
         </div>
         <span className="shrink-0 rounded-full bg-neutral-100 px-2 py-1 font-semibold text-neutral-600 text-10px">
-          Top 5
+          Top 5 Docentes
         </span>
       </div>
 
-      <div className="mb-4 flex flex-wrap gap-x-3 gap-y-1.5 text-11px text-neutral-600">
+      <div className="hidden">
         <LegendDot color="bg-grave-500" label="Negativas" />
         <LegendDot color="bg-leve-500" label="Positivas" />
         <LegendDot color="bg-brand-500" label="Informativas" />
@@ -80,7 +81,7 @@ export default function TeacherAnnotationRanking({
           </p>
         </div>
       ) : (
-        <ol className="space-y-4">
+        <ol className="space-y-3.5">
           {ranking.map((item, index) => {
             const total = Math.max(
               item.total_count,
@@ -100,24 +101,20 @@ export default function TeacherAnnotationRanking({
                 : 0;
 
             return (
-              <li
-                key={item.teacher_name}
-                className="border-neutral-100 border-b pb-4 last:border-b-0 last:pb-0"
-              >
+              <li key={item.teacher_name} className="pb-0">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-2">
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-neutral-100 font-semibold text-neutral-600 text-xs">
                       {index + 1}
                     </span>
-                    <p className="truncate font-medium text-neutral-800 text-sm">
-                      {maskName(item.teacher_name, privacyMode)}
+                    <p className="truncate font-bold text-neutral-800 text-xs">
+                      {index + 1}. {maskName(item.teacher_name, privacyMode)}
                     </p>
                   </div>
                   <div className="shrink-0 text-right">
-                    <p className="font-bold text-neutral-900 text-lg leading-none tabular-nums">
-                      {total}
+                    <p className="font-bold text-neutral-900 text-xs leading-none tabular-nums">
+                      {total} tot.
                     </p>
-                    <p className="mt-1 text-neutral-500 text-10px">total</p>
                   </div>
                 </div>
 
@@ -131,7 +128,7 @@ export default function TeacherAnnotationRanking({
                 </div>
 
                 <div
-                  className="mt-1.5 flex h-2.5 w-full overflow-hidden rounded-full bg-neutral-100"
+                  className="hidden"
                   role="img"
                   aria-label={`${total} anotaciones: ${item.negative_count} negativas, ${item.positive_count} positivas y ${item.informative_count} informativas`}
                 >
@@ -149,37 +146,36 @@ export default function TeacherAnnotationRanking({
                   />
                 </div>
 
-                <div
-                  className="mt-2 flex h-1 overflow-hidden rounded-full bg-neutral-100"
-                  aria-hidden="true"
-                >
+                <div className="hidden" aria-hidden="true">
                   <span
                     className="rounded-full bg-grave-300"
                     style={{ width: `${negativeRankWidth}%` }}
                   />
                 </div>
 
-                <div className="mt-2 grid grid-cols-4 gap-1 text-center text-10px tabular-nums">
+                <div className="mt-1.5 grid grid-cols-3 gap-1 text-center text-10px tabular-nums">
                   <Count
-                    label="Neg."
+                    label="Negativas:"
                     value={item.negative_count}
                     tone="text-grave-700 bg-grave-50"
                   />
                   <Count
-                    label="Pos."
+                    label="Positivas:"
                     value={item.positive_count}
                     tone="text-leve-700 bg-leve-50"
                   />
                   <Count
-                    label="Inf."
+                    label="Inf:"
                     value={item.informative_count}
                     tone="text-brand-700 bg-brand-50"
                   />
-                  <Count
-                    label="Total"
-                    value={total}
-                    tone="text-neutral-600 bg-neutral-100"
-                  />
+                  <span className="hidden">
+                    <Count
+                      label="Total"
+                      value={total}
+                      tone="text-neutral-600 bg-neutral-100"
+                    />
+                  </span>
                 </div>
               </li>
             );

@@ -93,6 +93,8 @@ export interface DetectedAnnotationRecord {
   annotation_type: string;
   annotation_text: string | null;
   raw_text?: string | null;
+  category?: string | null;
+  teacher_name?: string | null;
   annotation_date?: string | null;
   detected_at: string;
 }
@@ -693,7 +695,7 @@ async function fetchDetectedAnnotationsByStudent(
   const { data, error } = await supabase
     .from("disciplinary_annotations_detected")
     .select(
-      "id,process_id,student_id,annotation_type,annotation_text,raw_text,annotation_date,detected_at",
+      "id,process_id,student_id,annotation_type,annotation_text,raw_text,category,teacher_name,annotation_date,detected_at",
     )
     .eq("student_id", studentId)
     .order("detected_at", { ascending: false })

@@ -636,7 +636,7 @@ export default function NewDisciplinaryProcessModal({
               aria-label="Cerrar"
               onClick={() => void closeSafely()}
               disabled={isBusy}
-              className="rounded-lg p-2 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-xl p-3 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <X className="h-5 w-5" />
             </button>

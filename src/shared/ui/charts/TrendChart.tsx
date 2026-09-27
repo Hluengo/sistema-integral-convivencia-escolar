@@ -32,7 +32,13 @@ export function LegendPill({
   );
 }
 
-export function MonthlyBars({ points }: { points: TrendChartPoint[] }) {
+export function MonthlyBars({
+  points,
+  dashboard = false,
+}: {
+  points: TrendChartPoint[];
+  dashboard?: boolean;
+}) {
   const maxValue = Math.max(
     1,
     ...points.flatMap((point) => point.series.map((series) => series.value)),
@@ -40,7 +46,7 @@ export function MonthlyBars({ points }: { points: TrendChartPoint[] }) {
 
   return (
     <div
-      className="grid h-52 min-w-[36rem] items-end gap-2 sm:min-w-0"
+      className={`grid ${dashboard ? "h-64" : "h-52"} min-w-[36rem] items-end gap-2 sm:min-w-0`}
       style={{
         gridTemplateColumns: `repeat(${points.length}, minmax(0, 1fr))`,
       }}
@@ -53,11 +59,18 @@ export function MonthlyBars({ points }: { points: TrendChartPoint[] }) {
             point.isObserved === false ? "opacity-35" : ""
           }`}
         >
-          <div className="flex h-40 items-end justify-center gap-1">
+          <div
+            className={`flex ${dashboard ? "h-52" : "h-40"} items-end justify-center gap-1`}
+          >
             {point.series.map((item) => {
               const height =
                 item.value > 0
-                  ? Math.max(7, Math.round((item.value / maxValue) * 152))
+                  ? Math.max(
+                      7,
+                      Math.round(
+                        (item.value / maxValue) * (dashboard ? 200 : 152),
+                      ),
+                    )
                   : 3;
               return (
                 <div
@@ -95,6 +108,7 @@ export function TrendChart({
   description,
   badge,
   activeLabel = "Activo",
+  dashboard = false,
 }: {
   points: TrendChartPoint[];
   legend: Array<Pick<ChartSeriesItem, "label" | "className">>;
@@ -102,6 +116,7 @@ export function TrendChart({
   description: string;
   badge: string;
   activeLabel?: string;
+  dashboard?: boolean;
 }) {
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
@@ -109,27 +124,33 @@ export function TrendChart({
         role="region"
         tabIndex={0}
         aria-label={`${title}: gráfico mensual desplazable`}
-        className="overflow-x-auto rounded-lg border border-neutral-200 bg-white px-4 py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+        className={`overflow-x-auto ${dashboard ? "border-b border-slate-200 px-0 pb-3" : "rounded-lg border border-neutral-200 bg-white px-4 py-3"} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600`}
       >
         <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-neutral-500 text-xs">
           {legend.map((item) => (
             <LegendPill key={item.label} item={item} />
           ))}
-          <span className="inline-flex items-center gap-1.5 text-neutral-400">
-            <span
-              className="h-2.5 w-2.5 rounded-full bg-brand-600"
-              aria-hidden="true"
-            />
-            {activeLabel}
-          </span>
+          {!dashboard ? (
+            <span className="inline-flex items-center gap-1.5 text-neutral-400">
+              <span
+                className="h-2.5 w-2.5 rounded-full bg-brand-600"
+                aria-hidden="true"
+              />
+              {activeLabel}
+            </span>
+          ) : null}
         </div>
-        <MonthlyBars points={points} />
+        <MonthlyBars points={points} dashboard={dashboard} />
       </div>
 
-      <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+      <div
+        className={`${dashboard ? "rounded-xl border border-slate-200 bg-slate-50 p-4" : "rounded-lg border border-neutral-200 bg-neutral-50 p-4"}`}
+      >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="font-semibold text-neutral-700 text-sm">{title}</p>
+            <p className="font-semibold text-neutral-700 text-sm">
+              {dashboard ? "Balance Mensual" : title}
+            </p>
             <p className="mt-1 text-neutral-500 text-xs">{description}</p>
           </div>
           <span className="rounded-full bg-white px-2 py-1 font-semibold text-10px text-neutral-500 uppercase tracking-wide">

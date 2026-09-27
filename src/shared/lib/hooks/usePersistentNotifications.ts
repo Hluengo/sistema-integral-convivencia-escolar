@@ -11,16 +11,22 @@ import {
   syncNotification,
   type PersistedNotification,
 } from "../../api/services/notifications.service";
-import { buildNotifications, type Notification } from "./useNotifications";
+import {
+  buildNotifications,
+  compareNotifications,
+  type Notification,
+} from "./useNotifications";
 import type { Causa } from "../types";
 
 export interface NotificationCenter {
   notifications: Notification[];
   isLoading: boolean;
-  markRead: (notification: Notification) => void;
-  markUnread: (notification: Notification) => void;
-  markAllRead: () => void;
-  refresh: () => void;
+  isUpdating: boolean;
+  error: string | null;
+  markRead: (notification: Notification) => Promise<void>;
+  markUnread: (notification: Notification) => Promise<void>;
+  markAllRead: () => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 function toNotificationInput(notification: Notification) {
@@ -68,6 +74,8 @@ export function useNotifications(causas: Causa[]): NotificationCenter {
   const tenantId = useAuthStore((state) => state.tenantId);
   const queryClient = useQueryClient();
   const syncSignatureRef = useRef("");
+  const [syncFailed, setSyncFailed] = useState(false);
+  const [actionFailed, setActionFailed] = useState(false);
   const currentNotifications = useMemo(() => {
     const expiresAt = new Date(
       Date.now() + 14 * 24 * 60 * 60 * 1000,
@@ -150,18 +158,20 @@ export function useNotifications(causas: Causa[]): NotificationCenter {
       )
       .join("|");
     if (!signature || signature === syncSignatureRef.current) return;
-    syncSignatureRef.current = signature;
     void Promise.all(
       currentNotifications.map((notification) =>
         syncNotification(toNotificationInput(notification)),
       ),
     )
-      .then(() =>
-        queryClient.invalidateQueries({
+      .then(async () => {
+        syncSignatureRef.current = signature;
+        setSyncFailed(false);
+        await queryClient.invalidateQueries({
           queryKey: ["notifications", tenantId, userId],
-        }),
-      )
+        });
+      })
       .catch((error: unknown) => {
+        setSyncFailed(true);
         console.warn(
           "Error al sincronizar notificaciones persistentes:",
           error,
@@ -170,6 +180,7 @@ export function useNotifications(causas: Causa[]): NotificationCenter {
   }, [
     currentNotifications,
     persistedQuery.isLoading,
+    persistedQuery.dataUpdatedAt,
     queryClient,
     tenantId,
     userId,
@@ -203,11 +214,13 @@ export function useNotifications(causas: Causa[]): NotificationCenter {
     const history = persisted
       .filter((notification) => !currentKeys.has(notification.notification_key))
       .map(persistedToNotification);
-    return [...mergedCurrent, ...history].sort(
-      (left, right) => Number(right.urgent) - Number(left.urgent),
-    );
+    return [...mergedCurrent, ...history].sort(compareNotifications);
   }, [currentNotifications, persistedQuery.data]);
 
+  const invalidateNotifications = () =>
+    queryClient.invalidateQueries({
+      queryKey: ["notifications", tenantId, userId],
+    });
   const readMutation = useMutation({
     mutationFn: async ({
       notification,
@@ -221,27 +234,49 @@ export function useNotifications(causas: Causa[]): NotificationCenter {
         (await syncNotification(toNotificationInput(notification)));
       await setNotificationRead(id, read);
     },
-    onSuccess: () =>
-      void queryClient.invalidateQueries({
-        queryKey: ["notifications", tenantId, userId],
-      }),
+    onMutate: () => setActionFailed(false),
+    onError: () => setActionFailed(true),
+    onSuccess: () => {
+      setActionFailed(false);
+      void invalidateNotifications();
+    },
   });
   const markAllMutation = useMutation({
-    mutationFn: markAllNotificationsRead,
-    onSuccess: () =>
-      void queryClient.invalidateQueries({
-        queryKey: ["notifications", tenantId, userId],
-      }),
+    mutationFn: async () => {
+      await Promise.all(
+        currentNotifications.map((notification) =>
+          syncNotification(toNotificationInput(notification)),
+        ),
+      );
+      await markAllNotificationsRead();
+    },
+    onMutate: () => setActionFailed(false),
+    onError: () => setActionFailed(true),
+    onSuccess: () => {
+      setActionFailed(false);
+      void invalidateNotifications();
+    },
   });
+  const refresh = async () => {
+    syncSignatureRef.current = "";
+    setSyncFailed(false);
+    setActionFailed(false);
+    await persistedQuery.refetch();
+  };
 
   return {
     notifications,
     isLoading: persistedQuery.isLoading,
+    isUpdating: readMutation.isPending || markAllMutation.isPending,
+    error:
+      persistedQuery.isError || syncFailed || actionFailed
+        ? "No se pudieron actualizar las notificaciones. Intenta nuevamente."
+        : null,
     markRead: (notification) =>
-      readMutation.mutate({ notification, read: true }),
+      readMutation.mutateAsync({ notification, read: true }),
     markUnread: (notification) =>
-      readMutation.mutate({ notification, read: false }),
-    markAllRead: () => markAllMutation.mutate(),
-    refresh: () => void persistedQuery.refetch(),
+      readMutation.mutateAsync({ notification, read: false }),
+    markAllRead: () => markAllMutation.mutateAsync(),
+    refresh,
   };
 }

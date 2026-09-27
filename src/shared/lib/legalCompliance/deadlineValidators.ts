@@ -111,7 +111,10 @@ export function getConclusiveReportDate(
 /**
  * Verifica el estado del plazo de investigación
  */
-export function verificarPlazoInvestigacion(causa: Causa): ResultadoPlazo {
+export function verificarPlazoInvestigacion(
+  causa: Causa,
+  today = nowDateOnly(),
+): ResultadoPlazo {
   if (!causa.fechaApertura) {
     return {
       estado: "no_iniciado",
@@ -137,7 +140,7 @@ export function verificarPlazoInvestigacion(causa: Causa): ResultadoPlazo {
     causa.comprometeAulaSegura,
   );
   const fechaCierre = getInvestigationClosureDate(causa);
-  const fechaEvaluacion = fechaCierre || nowDateOnly();
+  const fechaEvaluacion = fechaCierre || today;
   const diasTranscurridos = esEstandar
     ? calcularDiasCorridosDesdeDiaSiguiente(fechaInicio, fechaEvaluacion)
     : calcularDiasHabilesDesdeDiaSiguiente(fechaInicio, fechaEvaluacion);

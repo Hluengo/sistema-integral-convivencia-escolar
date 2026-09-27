@@ -63,7 +63,7 @@ export default function MainContent({
     <main
       id="main-content"
       tabIndex={-1}
-      className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col px-4 py-6 outline-none sm:px-6 sm:py-8 lg:px-8"
+      className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col bg-[#faf8ff] px-4 py-6 outline-none sm:px-6 sm:py-8 lg:px-8"
     >
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {currentView === "dashboard" && "Vista: Panel de control"}
@@ -75,11 +75,11 @@ export default function MainContent({
         {currentView === "admin" && "Vista: Administración"}
         {currentView === "platform" && "Vista: Plataforma"}
       </div>
-      <nav
-        aria-label="Migas de pan"
-        className="mb-5 flex items-center gap-1.5 text-xs text-neutral-600"
-      >
-        {currentView !== "dashboard" ? (
+      {currentView !== "dashboard" ? (
+        <nav
+          aria-label="Migas de pan"
+          className="mb-5 flex items-center gap-1.5 text-xs text-neutral-600"
+        >
           <>
             <button
               type="button"
@@ -93,14 +93,14 @@ export default function MainContent({
               aria-hidden="true"
             />
           </>
-        ) : null}
-        <span
-          aria-current="page"
-          className="px-1.5 py-1 font-medium text-neutral-700"
-        >
-          {VIEW_TITLES[currentView].title}
-        </span>
-      </nav>
+          <span
+            aria-current="page"
+            className="px-1.5 py-1 font-medium text-neutral-700"
+          >
+            {VIEW_TITLES[currentView].title}
+          </span>
+        </nav>
+      ) : null}
       {/* VIEW 1: DASHBOARD - Fully redesigned */}
       {currentView === "dashboard" && (
         <ErrorBoundary>

@@ -383,7 +383,7 @@ export default function LoginPage({
                       onChange={(event) =>
                         setRememberEmail(event.target.checked)
                       }
-                      className="h-4 w-4 rounded border-neutral-300 text-brand-600 accent-brand-600 focus:ring-2 focus:ring-brand-500/20"
+                      className="h-5 w-5 rounded border-neutral-300 text-brand-600 accent-brand-600 focus:ring-2 focus:ring-brand-500/20"
                     />
                     Recordar mi correo
                   </label>

@@ -34,4 +34,25 @@ describe("usePersistentNotifications realtime lifecycle", () => {
       /queryKey:\s*\[\s*["']notifications["']\s*,\s*tenantId\s*,\s*userId\s*\]/,
     );
   });
+
+  it("sincroniza alertas actuales antes de marcar todo como leído", () => {
+    const mutationStart = source.indexOf("const markAllMutation = useMutation");
+    const mutationEnd = source.indexOf("const refresh = async", mutationStart);
+    const mutation = source.slice(mutationStart, mutationEnd);
+
+    assert.ok(mutationStart >= 0 && mutationEnd > mutationStart);
+    assert.ok(
+      mutation.indexOf("await Promise.all") <
+        mutation.indexOf("await markAllNotificationsRead()"),
+    );
+  });
+
+  it("expone errores de sincronización y permite reintentar", () => {
+    assert.ok(source.includes("setSyncFailed(true)"));
+    assert.ok(
+      source.includes("persistedQuery.isError || syncFailed || actionFailed"),
+    );
+    assert.ok(source.includes("syncSignatureRef.current = signature;"));
+    assert.ok(source.includes("persistedQuery.dataUpdatedAt"));
+  });
 });

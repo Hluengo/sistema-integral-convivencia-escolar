@@ -4,7 +4,7 @@
  */
 
 import type React from "react";
-import { memo } from "react";
+import { memo, type ReactNode } from "react";
 import { TrendingDown, TrendingUp } from "lucide-react";
 
 interface MetricCardProps {
@@ -18,6 +18,8 @@ interface MetricCardProps {
   trend?: { value: string; positive: boolean };
   onClick?: () => void;
   isAlert?: boolean;
+  footer?: ReactNode;
+  valueAside?: ReactNode;
 }
 
 export default memo(function MetricCard({
@@ -27,10 +29,11 @@ export default memo(function MetricCard({
   icon: Icon,
   iconBg,
   iconColor,
-  accentColor,
   trend,
   onClick,
   isAlert,
+  footer,
+  valueAside,
 }: MetricCardProps) {
   const Comp = onClick ? "button" : "div";
   const interactionProps = onClick
@@ -44,43 +47,39 @@ export default memo(function MetricCard({
   return (
     <Comp
       {...interactionProps}
-      className={`group relative border-neutral-200 px-4 py-3 transition-colors duration-150 sm:border-r sm:last:border-r-0 ${
+      className={`group relative rounded-xl border border-[#e2e8f0] bg-white p-4 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all duration-150 ${
         onClick
-          ? "cursor-pointer hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-600"
+          ? "cursor-pointer hover:border-slate-300 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-600"
           : ""
       }`}
     >
-      <div
-        className="absolute top-0 right-4 left-4 h-0.5 rounded-full opacity-80"
-        style={{ background: accentColor }}
-      />
-
       <div className="mb-3 flex items-start justify-between">
         <div>
-          <span className="font-semibold text-neutral-600 text-xs">
+          <span className="font-semibold text-[#0f172a] text-[13px]">
             {label}
           </span>
           {sublabel && (
-            <span className="mt-0.5 block font-medium text-neutral-500 text-xs">
+            <span className="mt-0.5 block font-medium text-slate-500 text-[11px]">
               {sublabel}
             </span>
           )}
         </div>
-        <div className={`shrink-0 rounded-lg p-2 ${iconBg}`}>
-          <Icon className={`h-4 w-4 ${iconColor}`} aria-hidden="true" />
+        <div
+          className={`flex size-10 shrink-0 items-center justify-center rounded-full ${iconBg}`}
+        >
+          <Icon className={`size-5 ${iconColor}`} aria-hidden="true" />
         </div>
       </div>
 
       <div className="flex items-baseline justify-between gap-2">
         <span
-          className={`font-bold text-3xl tracking-tight ${
+          className={`font-extrabold text-[32px] leading-none tracking-tight ${
             isAlert ? "text-gravisima-600" : "text-neutral-900"
           }`}
         >
-          {typeof value === "number" && value > 0 && value < 10
-            ? `0${value}`
-            : value}
+          {value}
         </span>
+        {valueAside ? <span className="min-w-0">{valueAside}</span> : null}
         {trend && (
           <span
             className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold text-11px ${
@@ -98,6 +97,9 @@ export default memo(function MetricCard({
           </span>
         )}
       </div>
+      {footer ? (
+        <div className="mt-4 border-slate-100 border-t pt-3">{footer}</div>
+      ) : null}
     </Comp>
   );
 });

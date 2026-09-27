@@ -37,7 +37,7 @@ export default memo(function Header({
   const notificationCenter = useNotifications(causas);
 
   return (
-    <header className="glass sticky top-0 z-30 shadow-[0_1px_0_rgba(148,163,184,0.12)]">
+    <header className="sticky top-0 z-30 border-neutral-200 border-b bg-white shadow-[0_1px_0_rgba(148,163,184,0.12)]">
       <div
         className="absolute top-0 right-0 left-0 h-0.5 bg-brand-800"
         aria-hidden="true"
@@ -73,6 +73,9 @@ export default memo(function Header({
           user={user}
           notifications={notificationCenter.notifications}
           notificationsLoading={notificationCenter.isLoading}
+          notificationsError={notificationCenter.error}
+          notificationsUpdating={notificationCenter.isUpdating}
+          onRetryNotifications={notificationCenter.refresh}
           onMarkNotificationRead={notificationCenter.markRead}
           onMarkAllNotificationsRead={notificationCenter.markAllRead}
           onNotificationClick={onNotificationClick}

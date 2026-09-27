@@ -50,13 +50,13 @@ export default function DocumentWarnings({
               El estudiante se encuentra en una etapa donde la emisión de
               documentos está restringida.
             </p>
-            <label className="mt-2 flex cursor-pointer items-center gap-2 text-grave-700">
+            <label className="mt-2 flex min-h-11 cursor-pointer items-center gap-2 text-grave-700">
               <input
                 type="checkbox"
                 aria-label="Autorizar emisión ignorando bloqueo de etapa"
                 checked={bypassProgressLock}
                 onChange={onBypassProgressLock}
-                className="rounded border-grave-200"
+                className="h-5 w-5 rounded border-grave-200 accent-brand-600 focus:ring-2 focus:ring-brand-500/20"
               />
               Autorizar emisión ignorando bloqueo de etapa
             </label>
@@ -80,13 +80,13 @@ export default function DocumentWarnings({
               Se requieren al menos 10 anotaciones negativas para emitir una
               Carta de Compromiso. Actualmente tiene {negativeCount}.
             </p>
-            <label className="mt-2 flex cursor-pointer items-center gap-2 text-grave-700">
+            <label className="mt-2 flex min-h-11 cursor-pointer items-center gap-2 text-grave-700">
               <input
                 type="checkbox"
                 aria-label="Autorizar emisión excepcional"
                 checked={authorizedBypass}
                 onChange={onAuthorizedBypass}
-                className="rounded border-grave-200"
+                className="h-5 w-5 rounded border-grave-200 accent-brand-600 focus:ring-2 focus:ring-brand-500/20"
               />
               Autorizar emisión excepcional
             </label>
@@ -110,13 +110,13 @@ export default function DocumentWarnings({
               Ya existe una carta de este tipo emitida para este estudiante (
               {existingLetter.emission_date}).
             </p>
-            <label className="mt-2 flex cursor-pointer items-center gap-2 text-blue-700">
+            <label className="mt-2 flex min-h-11 cursor-pointer items-center gap-2 text-blue-700">
               <input
                 type="checkbox"
                 aria-label="Autorizar duplicado"
                 checked={authorizedDuplicate}
                 onChange={onAuthorizedDuplicate}
-                className="rounded border-blue-300"
+                className="h-5 w-5 rounded border-blue-300 accent-brand-600 focus:ring-2 focus:ring-brand-500/20"
               />
               Autorizar duplicado
             </label>

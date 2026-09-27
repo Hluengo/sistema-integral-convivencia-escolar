@@ -43,17 +43,17 @@ function toCardItems(ranking: CourseCartaRankingItem[]): RankingCardItem[] {
         <LetterBadge
           count={item.amonestacion_count}
           label="Amonestación"
-          colorClass="bg-grave-100 text-grave-700"
+          colorClass="bg-slate-100 text-slate-700"
         />
         <LetterBadge
           count={item.compromiso_count}
           label="Compromiso"
-          colorClass="bg-muygrave-100 text-muygrave-700"
+          colorClass="bg-orange-50 text-orange-700"
         />
         <LetterBadge
           count={item.derivacion_count}
           label="Derivación"
-          colorClass="bg-gravisima-100 text-gravisima-700"
+          colorClass="bg-indigo-50 text-indigo-700"
         />
       </>
     ),
@@ -67,7 +67,7 @@ export default function CourseCartaRanking({
 }: CourseCartaRankingProps) {
   return (
     <RankingCard
-      title="Cursos con más cartas disciplinarias"
+      title="Cursos con más cartas"
       titleId="course-carta-ranking-title"
       icon={GraduationCap}
       emptyMessage="Aún no hay cartas disciplinarias registradas"
@@ -76,7 +76,8 @@ export default function CourseCartaRanking({
       error={error}
       items={toCardItems(ranking)}
       barColorClass="bg-gravisima-500"
-      headerBadge="Top 12"
+      headerBadge="Top Cursos"
+      description="Distribución según medidas formalizadas por Jefatura y Convivencia."
     />
   );
 }

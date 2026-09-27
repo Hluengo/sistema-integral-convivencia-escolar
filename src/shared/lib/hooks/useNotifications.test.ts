@@ -34,6 +34,23 @@ describe("buildNotifications", () => {
     assert.match(notifications[0].id, /^DC-2026-001:/);
   });
 
+  it("prioriza primero los procedimientos con mayor exceso de plazo", () => {
+    const today = new Date("2026-07-30T12:00:00Z");
+    const newer = {
+      ...baseCausa(),
+      id: "DC-NEWER",
+      fechaApertura: "2026-05-20",
+    };
+    const older = {
+      ...baseCausa(),
+      id: "DC-OLDER",
+      fechaApertura: "2026-04-20",
+    };
+
+    const notifications = buildNotifications([newer, older], today);
+    assert.equal(notifications[0]?.causaId, older.id);
+  });
+
   it("no notifica causas cerradas", () => {
     const causa = { ...baseCausa(), estadoActual: EstadoCausa.CAUSA_CERRADA };
     assert.deepEqual(

@@ -28,6 +28,29 @@ Explorar una evolucion editorial-operativa del sistema actual: interfaz sobria, 
 - Responsive behavior must be intentionally designed for desktop and narrow mobile, not merely stacked.
 - Keep the exact product vocabulary: Dashboard, Causas, Anotaciones, Timeline, Admin, Debido Proceso.
 
+## Paleta de estados documentados
+
+Use los siguientes tokens para estados de documentos, cartas y procesos disciplinarios:
+
+| Estado                      | Clase Tailwind                       | Uso recomendado                        |
+| --------------------------- | ------------------------------------ | -------------------------------------- |
+| Sin medida activa / Vigente | `bg-leve-50 text-leve-800`           | Estados normales, sin acción inmediata |
+| Amonestación Escrita        | `bg-grave-50 text-grave-800`         | Acción moderada requerida              |
+| Carta de Compromiso         | `bg-muygrave-50 text-muygrave-800`   | Acción urgente requerida               |
+| Derivación / Cierre forzoso | `bg-gravisima-50 text-gravisima-800` | Situaciones críticas                   |
+| Procesado / Cumplido        | `bg-brand-50 text-brand-800`         | Documentos procesados exitosamente     |
+| Archivado                   | `bg-neutral-100 text-neutral-700`    | Documentos inactivos                   |
+| Anulado                     | `bg-neutral-200 text-neutral-700`    | Documentos cancelados                  |
+
+### Buenas prácticas
+
+1. **Color + texto/icono**: Nunca codificar severidad solo con color. Siempre acompañar con texto legible o icono.
+2. **Touch targets**: Botones e inputs interactivos deben tener al menos 44px × 44px; los checkboxes pueden conservar un control visual de 20px dentro de un label de 44px.
+3. **Vocabulario consistente**: Use el vocabulario del producto: Dashboard, Expedientes, Anotaciones, Timeline, Admin, Debido Proceso.
+4. **Sin gradientes en texto**: Evite `.text-gradient`; reduce la legibilidad. Use colores sólidos.
+5. **Sin glassmorphism excesivo**: Evite `backdrop-filter: blur(20px+)`; use superficies sólidas y sombras.
+6. **Naranja solo para urgencia**: El color naranja (`secondary-500`, `secondary-600`) debe resaltar acciones requeridas inmediatamente.
+
 ## Source
 
 Canonical tokens: `src/index.css`. Shared shell: `src/widgets/sidebar/Sidebar.tsx`, `src/widgets/header/Header.tsx`, `src/app/components/AppFooter.tsx`, `src/app/App.tsx`.

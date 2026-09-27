@@ -23,7 +23,7 @@ export default function StudentAnnotationRanking({
 }: StudentAnnotationRankingProps) {
   return (
     <RankingCard
-      title="Estudiantes con más anotaciones negativas"
+      title="Seguimiento individual"
       titleId="student-annotation-ranking-title"
       icon={UserRound}
       emptyMessage="Aún no hay anotaciones negativas registradas"
@@ -32,7 +32,11 @@ export default function StudentAnnotationRanking({
       error={error}
       items={toStudentCardItems(ranking, privacyMode)}
       barColorClass="bg-blue-500"
-      headerBadge="Top 12"
+      headerBadge="Top Casos"
+      description="Estudiantes con mayor frecuencia de anotaciones negativas registradas."
+      showRankCircle
+      showBar={false}
+      showChevron
     />
   );
 }

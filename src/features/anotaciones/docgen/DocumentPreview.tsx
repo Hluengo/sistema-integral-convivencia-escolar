@@ -110,7 +110,7 @@ const DocumentPreview = forwardRef<HTMLDivElement, DocumentPreviewProps>(
                   ? "bg-gravisima-50 text-gravisima-700"
                   : processingFeedback.tone === "success"
                     ? "bg-leve-50 text-leve-700"
-                    : "bg-blue-50 text-blue-700"
+                    : "bg-brand-50 text-brand-800"
               }`}
             >
               {processingFeedback.text}

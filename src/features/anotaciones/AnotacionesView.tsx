@@ -134,10 +134,6 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
           setDetailInitialTab("estado");
           setSelectedStudent(student);
         }}
-        onEditAnnotations={(student) => {
-          setDetailInitialTab("editar_anotaciones");
-          setSelectedStudent(student);
-        }}
         activeFilter={activeFilter}
         setActiveFilter={setActiveFilter}
         searchQuery={searchQuery}

@@ -147,7 +147,7 @@ export default function TimelineHeader({
                 <button
                   type="button"
                   onClick={onEditClick}
-                  className="hidden sm:inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-700 shadow-xs transition-colors hover:border-neutral-300 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                  className="hidden sm:inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-700 shadow-xs transition-colors hover:border-neutral-300 hover:bg-neutral-50 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                   title="Editar expediente"
                   aria-label="Editar expediente"
                 >
@@ -160,7 +160,7 @@ export default function TimelineHeader({
                 <button
                   type="button"
                   onClick={onEditClick}
-                  className="flex sm:hidden min-h-10 min-w-10 items-center justify-center rounded-lg border border-neutral-200 bg-white p-2 text-neutral-700 transition-colors hover:bg-neutral-50 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                  className="flex sm:hidden min-h-11 min-w-11 items-center justify-center rounded-lg border border-neutral-200 bg-white p-2 text-neutral-700 transition-colors hover:bg-neutral-50 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                   title="Editar expediente"
                   aria-label="Editar expediente"
                 >
@@ -172,7 +172,7 @@ export default function TimelineHeader({
                 <button
                   type="button"
                   onClick={onForceCloseClick}
-                  className="hidden sm:inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-gravisima-200 bg-gravisima-50 px-3 py-2 text-xs font-semibold text-gravisima-700 shadow-xs transition-colors hover:border-gravisima-300 hover:bg-gravisima-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                  className="hidden sm:inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-gravisima-200 bg-gravisima-50 px-3 py-2 text-xs font-semibold text-gravisima-700 shadow-xs transition-colors hover:border-gravisima-300 hover:bg-gravisima-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                   title="Cerrar causa con fundamento"
                   aria-label="Cerrar causa con fundamento"
                 >
@@ -185,7 +185,7 @@ export default function TimelineHeader({
                 <button
                   type="button"
                   onClick={onForceCloseClick}
-                  className="flex sm:hidden min-h-10 min-w-10 items-center justify-center rounded-lg border border-gravisima-200 bg-gravisima-50 p-2 text-gravisima-700 transition-colors hover:bg-gravisima-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                  className="flex sm:hidden min-h-11 min-w-11 items-center justify-center rounded-lg border border-gravisima-200 bg-gravisima-50 p-2 text-gravisima-700 transition-colors hover:bg-gravisima-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                   title="Cerrar causa con fundamento"
                   aria-label="Cerrar causa con fundamento"
                 >
@@ -197,7 +197,7 @@ export default function TimelineHeader({
               <button
                 type="button"
                 onClick={onDeleteClick}
-                className="flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 text-neutral-400 transition-colors hover:bg-gravisima-50 hover:text-gravisima-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-lg p-2 text-neutral-400 transition-colors hover:bg-gravisima-50 hover:text-gravisima-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                 title="Eliminar expediente"
                 aria-label="Eliminar expediente"
               >
@@ -208,7 +208,7 @@ export default function TimelineHeader({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-lg p-2 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                 title="Cerrar"
                 aria-label="Cerrar"
               >

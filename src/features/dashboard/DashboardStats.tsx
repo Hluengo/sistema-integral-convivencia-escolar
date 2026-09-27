@@ -21,10 +21,19 @@ import {
   Inbox,
   ArrowRight,
   Clock3,
+  CheckCircle2,
+  FolderOpen,
+  FileQuestion,
+  FileText,
+  FileWarning,
+  AlertTriangle,
+  GitCompareArrows,
+  Info,
 } from "lucide-react";
 import MetricCard from "../../shared/ui/MetricCard";
-import SeverityBadge from "../../shared/SeverityBadge";
-import AnotacionesDashboardStats from "../anotaciones/AnotacionesDashboardStats";
+import AnotacionesDashboardStats, {
+  AnnotationStageCard,
+} from "../anotaciones/AnotacionesDashboardStats";
 import EmptyState from "../../shared/EmptyState";
 import DashboardTrendsPanel from "./DashboardTrendsPanel";
 import {
@@ -46,7 +55,10 @@ import {
 import OnboardingChecklist from "../onboarding/OnboardingChecklist";
 import type { SidebarView } from "../../widgets/sidebar/Sidebar";
 import { fetchOnboardingStatus } from "../../shared/api/services/institution.service";
-import { getDashboardSchoolYear } from "./dashboardTrends";
+import {
+  buildDashboardTrendSummary,
+  getDashboardSchoolYear,
+} from "./dashboardTrends";
 import { getDashboardActions, type DashboardAction } from "./dashboardActions";
 
 const DASHBOARD_STALE_TIME_MS = 300_000;
@@ -82,22 +94,20 @@ function SeverityCard({
   const percentage = total > 0 ? Math.round((count / total) * 100) : 0;
 
   return (
-    <div className="border-neutral-200 py-3 sm:border-r sm:px-4 sm:last:border-r-0">
-      <div className="flex items-center justify-between gap-3">
-        <SeverityBadge level={tipo} size="sm" />
-        <span
-          className={`font-bold text-xs tabular-nums ${tipo === "Leve" ? "text-leve-600" : tipo === "Grave" ? "text-grave-600" : tipo === "Muy Grave" ? "text-muygrave-600" : "text-gravisima-600"}`}
-        >
-          {percentage}%
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between gap-3 text-[11px] font-semibold">
+        <span className="inline-flex items-center gap-2 text-neutral-700">
+          <span
+            className={`size-2 rounded-full ${cfg.dot}`}
+            aria-hidden="true"
+          />
+          {tipo.toUpperCase()}
+        </span>
+        <span className="text-neutral-500 tabular-nums">
+          {count} de {total} ({percentage}%)
         </span>
       </div>
-      <div className="mt-2 flex items-baseline gap-1.5">
-        <span className="font-bold text-2xl text-neutral-900 tabular-nums">
-          {count}
-        </span>
-        <span className="font-medium text-neutral-500 text-xs">de {total}</span>
-      </div>
-      <div className="mt-2 h-1 overflow-hidden rounded-full bg-neutral-100">
+      <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
         <div
           className={`h-full ${cfg.dot}`}
           style={{ width: `${percentage}%` }}
@@ -158,7 +168,7 @@ function DashboardActionQueue({
   return (
     <section
       aria-labelledby="dashboard-action-queue-title"
-      className="border-l-4 border-gravisima-500 bg-white px-5 py-4 shadow-xs"
+      className="rounded-2xl border border-gravisima-200/80 border-l-4 border-l-gravisima-500 bg-white px-5 py-5 shadow-sm ring-1 ring-black/[0.02]"
     >
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
@@ -306,6 +316,16 @@ export default function DashboardStats({
     staleTime: DASHBOARD_STALE_TIME_MS,
   });
   const publicKpis = publicKpisQuery.data as PublicDashboardKpis | undefined;
+  const trendSummary = useMemo(
+    () =>
+      buildDashboardTrendSummary(
+        causas,
+        annualAnnotationTrendsQuery.data ?? [],
+        undefined,
+        6,
+      ),
+    [causas, annualAnnotationTrendsQuery.data],
+  );
   const loading = isAuthenticated
     ? !tenantId || annotationKpisQuery.isLoading
     : publicKpisQuery.isLoading;
@@ -330,18 +350,20 @@ export default function DashboardStats({
   const active = isAuthenticated
     ? authenticatedCauseCounts.active
     : (publicKpis?.activeCauses ?? 0);
-  const currentDate = new Date();
+  const pendingFollowUps = isAuthenticated
+    ? dashboardActions.filter((action) => action.remainingDays <= 2).length
+    : 0;
+  const operationalStatus =
+    pendingFollowUps > 0 ? "Atención requerida" : "Operación regular";
   const newThisMonth = isAuthenticated
     ? causas.filter((causa) => {
         const openedAt = new Date(causa.fechaApertura);
+        const now = new Date();
         return (
-          openedAt.getFullYear() === currentDate.getFullYear() &&
-          openedAt.getMonth() === currentDate.getMonth()
+          openedAt.getFullYear() === now.getFullYear() &&
+          openedAt.getMonth() === now.getMonth()
         );
       }).length
-    : 0;
-  const pendingFollowUps = isAuthenticated
-    ? dashboardActions.filter((action) => action.remainingDays <= 2).length
     : 0;
   const severity = isAuthenticated
     ? authenticatedStats.porGravedad
@@ -365,6 +387,10 @@ export default function DashboardStats({
         compromiso: asPendingBreakdown(publicKpis?.compromisoCount ?? 0),
         derivacion: asPendingBreakdown(publicKpis?.derivacionCount ?? 0),
       };
+  const closed = isAuthenticated
+    ? authenticatedCauseCounts.resolved
+    : Math.max(total - active, 0);
+  const closureRate = total > 0 ? Math.round((closed / total) * 100) : 0;
 
   if (!isAuthenticated && total === 0 && !kpiError) {
     return (
@@ -379,8 +405,50 @@ export default function DashboardStats({
   return (
     <section
       aria-label="Panel de control"
-      className="animate-fade-in space-y-6"
+      className="animate-fade-in space-y-6 pb-8"
     >
+      <section className="flex flex-col gap-4 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+            <CheckCircle2 className="size-6" aria-hidden="true" />
+          </div>
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className="size-2 rounded-full bg-leve-500"
+                aria-hidden="true"
+              />
+              <h2 className="font-semibold text-neutral-900 text-sm">
+                {operationalStatus}
+              </h2>
+              <span className="rounded-full bg-brand-50 px-2 py-0.5 font-semibold text-[10px] text-brand-700 uppercase tracking-wide">
+                Protocolo Ley Aula Segura
+              </span>
+            </div>
+            <p className="mt-1 text-neutral-500 text-xs">
+              {pendingFollowUps > 0
+                ? `${pendingFollowUps} expediente${pendingFollowUps === 1 ? " requiere" : "s requieren"} atención por plazo.`
+                : "Sin plazos ministeriales vencidos ni seguimientos próximos."}
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="rounded-lg bg-slate-50 px-3 py-2 font-semibold text-neutral-600">
+            Ciclo académico actual
+          </span>
+          {onNavigate ? (
+            <button
+              type="button"
+              onClick={() => onNavigate("causas")}
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-brand-600 px-3 font-semibold text-white transition-colors hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            >
+              <FolderOpen className="size-4" aria-hidden="true" />
+              Ver expedientes
+            </button>
+          ) : null}
+        </div>
+      </section>
+
       {onboardingEnabled && tenantId && userId && onNavigate ? (
         <OnboardingChecklist
           tenantId={tenantId}
@@ -406,71 +474,256 @@ export default function DashboardStats({
       ) : null}
 
       <section
-        aria-label="Resumen de expedientes"
-        className="card overflow-hidden"
+        aria-label="Resumen ejecutivo"
+        className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"
       >
-        <div className="stagger-children grid grid-cols-1 divide-y divide-neutral-200 sm:grid-cols-3 lg:grid-cols-3 lg:divide-x lg:divide-y-0">
-          <MetricCard
-            label="Expedientes activos"
-            value={active}
-            sublabel={`de ${total} totales`}
-            icon={Activity}
-            iconBg="bg-brand-50"
-            iconColor="text-brand-600"
-            accentColor="#475569"
-            onClick={() => onFaseSelect("Todas")}
-          />
-          <MetricCard
-            label="Expedientes nuevos"
-            value={newThisMonth}
-            sublabel="Mes calendario actual"
-            icon={CalendarDays}
-            iconBg="bg-grave-50"
-            iconColor="text-grave-600"
-            accentColor="#f59e0b"
-          />
-          <MetricCard
-            label="Seguimientos pendientes"
-            value={pendingFollowUps}
-            sublabel="Vencidos o dentro de 2 días"
-            icon={Clock3}
-            iconBg="bg-gravisima-50"
-            iconColor="text-gravisima-600"
-            accentColor="#ef4444"
-            isAlert={pendingFollowUps > 0}
-          />
-        </div>
+        <MetricCard
+          label="Expedientes activos"
+          value={active}
+          sublabel={`de ${total} totales`}
+          icon={Activity}
+          iconBg="bg-brand-50"
+          iconColor="text-brand-600"
+          accentColor="#006194"
+          onClick={() => onFaseSelect("Todas")}
+          valueAside={
+            <span className="rounded-full bg-brand-50 px-2 py-1 font-bold text-[11px] text-brand-700">
+              +{newThisMonth} nuevos este mes
+            </span>
+          }
+          footer={
+            <div className="grid grid-cols-2 gap-2 text-neutral-600 text-[11px]">
+              <span className="rounded-md bg-slate-50 px-2 py-1.5">
+                <strong className="text-neutral-900">{closed}</strong> cerrados
+                formalmente
+              </span>
+              <span className="rounded-md bg-slate-50 px-2 py-1.5">
+                Tasa cierre:{" "}
+                <strong className="text-neutral-900">{closureRate}%</strong>
+              </span>
+            </div>
+          }
+        />
+        <MetricCard
+          label="Brecha de Resolución"
+          value={Math.max(active, 0)}
+          valueAside={
+            <span className="rounded-full bg-gravisima-50 px-2 py-1 font-bold text-[11px] text-gravisima-700">
+              Aperturas netas
+            </span>
+          }
+          sublabel="Casos abiertos vs. acuerdos"
+          icon={GitCompareArrows}
+          iconBg="bg-slate-100"
+          iconColor="text-slate-600"
+          accentColor="#64748b"
+          footer={
+            <div className="grid grid-cols-2 gap-2 text-neutral-600 text-[11px]">
+              <span className="rounded-md bg-slate-50 px-2 py-1.5">
+                <strong className="text-neutral-900">{total}</strong> aperturas
+                acumuladas
+              </span>
+              <span className="rounded-md bg-slate-50 px-2 py-1.5">
+                <strong className="text-neutral-900">{closed}</strong> cerradas
+                en el ciclo
+              </span>
+            </div>
+          }
+        />
+        <MetricCard
+          label="Anotaciones registradas"
+          value={trendSummary.annotationTotal}
+          valueAside={
+            <span className="font-medium text-neutral-600 text-[11px]">
+              Total Libro de Clases
+            </span>
+          }
+          sublabel="Periodo de observación"
+          icon={CalendarDays}
+          iconBg="bg-muygrave-50"
+          iconColor="text-muygrave-600"
+          accentColor="#4648d4"
+          footer={
+            <div className="grid grid-cols-2 gap-2 text-center font-semibold text-[11px]">
+              <span className="rounded-md bg-leve-50 px-2 py-1.5 text-leve-700">
+                {trendSummary.positiveAnnotationShare}% Positivas
+              </span>
+              <span className="rounded-md bg-gravisima-50 px-2 py-1.5 text-gravisima-700">
+                {trendSummary.negativeAnnotationShare}% Negativas
+              </span>
+            </div>
+          }
+        />
+        <MetricCard
+          label="Plazos de Seguimiento"
+          value={pendingFollowUps}
+          valueAside={
+            <span className="rounded-full bg-leve-50 px-2 py-1 font-bold text-[11px] text-leve-700">
+              {pendingFollowUps > 0
+                ? "Requiere atención"
+                : "Sin alertas críticas"}
+            </span>
+          }
+          sublabel="Vencidos o dentro de 48 hrs"
+          icon={pendingFollowUps > 0 ? Clock3 : CheckCircle2}
+          iconBg={pendingFollowUps > 0 ? "bg-gravisima-50" : "bg-leve-50"}
+          iconColor={
+            pendingFollowUps > 0 ? "text-gravisima-600" : "text-leve-600"
+          }
+          accentColor={pendingFollowUps > 0 ? "#ef4444" : "#16a34a"}
+          isAlert={pendingFollowUps > 0}
+          footer={
+            <div className="grid grid-cols-2 gap-2 text-neutral-600 text-[11px]">
+              <span className="rounded-md bg-slate-50 px-2 py-1.5">
+                {pendingFollowUps > 0 ? "Requieren atención" : "Sin atrasos"}
+              </span>
+              <span className="rounded-md bg-slate-50 px-2 py-1.5 text-center">
+                {pendingFollowUps > 0
+                  ? `${pendingFollowUps} alertas activas`
+                  : "Sin alertas activas"}
+              </span>
+            </div>
+          }
+        />
       </section>
 
-      <section aria-labelledby="severity-title" className="card p-5">
-        <div className="mb-4 flex items-center gap-2">
-          <div className="rounded-lg bg-neutral-100 p-1.5">
-            <BarChart3
-              className="h-3.5 w-3.5 text-neutral-500"
-              aria-hidden="true"
+      <section className="grid grid-cols-1 gap-5 lg:grid-cols-12">
+        <section
+          aria-labelledby="severity-title"
+          className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6 lg:col-span-4"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="size-4 text-brand-600" aria-hidden="true" />
+              <h2
+                id="severity-title"
+                className="font-bold text-neutral-900 text-sm"
+              >
+                Distribución por Gravedad
+              </h2>
+            </div>
+            <span className="rounded-full bg-indigo-100 px-3 py-1 font-bold text-[11px] text-indigo-700">
+              {total} Casos
+            </span>
+          </div>
+          <p className="mt-1 text-neutral-500 text-xs leading-relaxed">
+            Clasificación tipificada según Reglamento Interno de Convivencia
+            Escolar (RICE).
+          </p>
+          <div className="mt-5 space-y-3.5">
+            <SeverityCard tipo="Leve" count={severity.Leve} total={total} />
+            <SeverityCard tipo="Grave" count={severity.Grave} total={total} />
+            <SeverityCard
+              tipo="Muy Grave"
+              count={severity["Muy Grave"]}
+              total={total}
+            />
+            <SeverityCard
+              tipo="Gravísima"
+              count={severity.Gravísima}
+              total={total}
             />
           </div>
-          <h2
-            id="severity-title"
-            className="font-semibold text-neutral-800 text-sm"
-          >
-            Distribución por gravedad
-          </h2>
-        </div>
-        <div className="grid grid-cols-2 divide-x divide-y divide-neutral-200 border border-neutral-200 sm:grid-cols-4 sm:divide-y-0">
-          <SeverityCard tipo="Leve" count={severity.Leve} total={total} />
-          <SeverityCard tipo="Grave" count={severity.Grave} total={total} />
-          <SeverityCard
-            tipo="Muy Grave"
-            count={severity["Muy Grave"]}
-            total={total}
-          />
-          <SeverityCard
-            tipo="Gravísima"
-            count={severity.Gravísima}
-            total={total}
-          />
-        </div>
+          <div className="mt-5 flex items-start gap-2.5 rounded-lg border border-blue-100 bg-blue-50 p-3">
+            <CheckCircle2
+              className="mt-0.5 size-4 shrink-0 text-blue-700"
+              aria-hidden="true"
+            />
+            <p className="text-blue-800 text-[11px] leading-tight">
+              <strong>
+                {total > 0
+                  ? Math.round(
+                      ((severity["Muy Grave"] + severity.Gravísima) / total) *
+                        100,
+                    )
+                  : 0}
+                %
+              </strong>{" "}
+              de los expedientes corresponden a faltas de alta ponderación
+              formativa.
+            </p>
+          </div>
+        </section>
+
+        <section
+          aria-labelledby="measures-title"
+          className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6 lg:col-span-8"
+        >
+          <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2">
+              <FileText className="size-4 text-brand-600" aria-hidden="true" />
+              <h2
+                id="measures-title"
+                className="font-bold text-neutral-900 text-sm"
+              >
+                Estado de Medidas y Cartas Disciplinarias
+              </h2>
+            </div>
+            <span className="inline-flex items-center gap-1 text-brand-600 text-[11px]">
+              <Info className="size-3.5" aria-hidden="true" />
+              Flujo de intervención gradual
+            </span>
+          </div>
+          <p className="mt-1 text-neutral-500 text-xs">
+            Seguimiento en línea según volumen de anotaciones negativas
+            registradas por estudiante.
+          </p>
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <AnnotationStageCard
+              label="Sin Carta"
+              counts={annotations.sinCarta}
+              threshold="1-4 anotaciones"
+              icon={FileQuestion}
+              iconBg="bg-neutral-50"
+              iconColor="text-neutral-600"
+              accentColor="#64748b"
+            />
+            <AnnotationStageCard
+              label="Amonestación"
+              counts={annotations.amonestacion}
+              threshold="5-9 anotaciones"
+              icon={FileText}
+              iconBg="bg-grave-50"
+              iconColor="text-grave-600"
+              accentColor="#f59e0b"
+            />
+            <AnnotationStageCard
+              label="Compromiso"
+              counts={annotations.compromiso}
+              threshold="10-14 anotaciones"
+              icon={FileWarning}
+              iconBg="bg-muygrave-50"
+              iconColor="text-muygrave-600"
+              accentColor="#f97316"
+            />
+            <AnnotationStageCard
+              label="Derivación"
+              counts={annotations.derivacion}
+              threshold="15+ anotaciones"
+              icon={AlertTriangle}
+              iconBg="bg-gravisima-50"
+              iconColor="text-gravisima-600"
+              accentColor="#ef4444"
+            />
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1.5 border-slate-100 border-t pt-3 text-neutral-600 text-[11px]">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-red-500" />
+              <strong className="text-neutral-800">Pendientes:</strong>{" "}
+              requieren redactar y gestionar firma.
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-sky-500" />
+              <strong className="text-neutral-800">Procesadas:</strong> impresas
+              en inspectoría / citación apoderado.
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-slate-700" />
+              <strong className="text-neutral-800">Archivadas:</strong> firmadas
+              y cargadas en ficha del alumno.
+            </span>
+          </div>
+        </section>
       </section>
 
       {kpiError ? (
@@ -513,6 +766,7 @@ export default function DashboardStats({
 
       <AnotacionesDashboardStats
         counts={annotations}
+        showStage={false}
         courseCartaRanking={courseCartaRankingQuery.data ?? []}
         courseCartaRankingLoading={courseCartaRankingQuery.isLoading}
         courseCartaRankingError={cartaRankingError}

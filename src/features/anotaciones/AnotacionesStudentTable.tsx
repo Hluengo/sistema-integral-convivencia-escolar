@@ -9,7 +9,6 @@ import {
   FileSpreadsheet,
   FileCheck2,
   GraduationCap,
-  Pencil,
   Search,
 } from "lucide-react";
 import {
@@ -47,29 +46,29 @@ interface StudentRowData extends AnnotationExportStudent {
 }
 
 const DISC_STATUS: Record<string, { text: string; bg: string }> = {
-  Verde: { text: "Sin medida activa", bg: "bg-leve-100 text-neutral-800" },
+  Verde: { text: "Sin medida activa", bg: "bg-leve-100 text-leve-800" },
   Amarillo: {
     text: "Amonestación Escrita",
-    bg: "bg-grave-100 text-neutral-800",
+    bg: "bg-grave-100 text-grave-800",
   },
   Naranja: {
     text: "Carta de Compromiso Conductual",
-    bg: "bg-muygrave-100 text-neutral-800",
+    bg: "bg-muygrave-100 text-muygrave-800",
   },
   Rojo: {
     text: "Derivación a Convivencia Escolar",
-    bg: "bg-gravisima-100 text-neutral-800",
+    bg: "bg-gravisima-100 text-gravisima-800",
   },
 };
 
 const CARD_STATUS_BADGE: Record<string, { bg: string; textClass: string }> = {
-  Vigente: { bg: "bg-green-50", textClass: "text-green-800" },
+  Vigente: { bg: "bg-leve-50", textClass: "text-leve-800" },
   Archivada: { bg: "bg-neutral-100", textClass: "text-neutral-700" },
-  Procesada: { bg: "bg-blue-50", textClass: "text-blue-800" },
-  Pendiente: { bg: "bg-amber-50", textClass: "text-amber-900" },
-  Cumplida: { bg: "bg-blue-50", textClass: "text-blue-800" },
-  Incumplida: { bg: "bg-red-50", textClass: "text-red-800" },
-  Anulada: { bg: "bg-slate-100", textClass: "text-slate-700" },
+  Procesada: { bg: "bg-brand-50", textClass: "text-brand-800" },
+  Pendiente: { bg: "bg-grave-50", textClass: "text-grave-800" },
+  Cumplida: { bg: "bg-brand-50", textClass: "text-brand-800" },
+  Incumplida: { bg: "bg-gravisima-50", textClass: "text-gravisima-800" },
+  Anulada: { bg: "bg-neutral-200", textClass: "text-neutral-700" },
 };
 
 const getDisciplinaryStatusLabel = (
@@ -87,7 +86,6 @@ interface AnotacionesStudentTableProps {
   students: StudentRowData[];
   privacyMode: boolean;
   onSelectStudent: (student: StudentRowData) => void;
-  onEditAnnotations: (student: StudentRowData) => void;
   activeFilter: string;
   setActiveFilter: (filter: string) => void;
   searchQuery: string;
@@ -148,7 +146,6 @@ export default memo(function AnotacionesStudentTable({
   students,
   privacyMode,
   onSelectStudent,
-  onEditAnnotations,
   activeFilter,
   setActiveFilter,
   searchQuery,
@@ -453,23 +450,10 @@ export default memo(function AnotacionesStudentTable({
                           <button
                             type="button"
                             onClick={() => onSelectStudent(student)}
-                            className="rounded-md text-left font-semibold text-neutral-900 transition-colors hover:text-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                            className="cursor-pointer rounded-md text-left font-semibold text-neutral-900 transition-colors hover:text-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
                             aria-label={`Ver detalle de ${studentLabel}`}
                           >
                             {maskName(student.full_name, privacyMode)}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              onEditAnnotations(student);
-                            }}
-                            onKeyDown={(event) => event.stopPropagation()}
-                            className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-brand-50 hover:text-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
-                            aria-label={`Editar anotaciones de ${studentLabel}`}
-                            title="Editar anotaciones"
-                          >
-                            <Pencil className="size-3.5" aria-hidden="true" />
                           </button>
                         </div>
                       </td>

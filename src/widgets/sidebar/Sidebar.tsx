@@ -13,6 +13,7 @@ import {
   ClipboardList,
   Settings,
   Building2,
+  ShieldCheck,
   ChevronLeft,
   ChevronRight,
   Menu,
@@ -98,17 +99,8 @@ function SidebarContent({
       ? [
           {
             id: "reportes" as SidebarView,
-            label: "Centro de reportes",
+            label: "Reportes",
             Icon: FileBarChart,
-          },
-        ]
-      : []),
-    ...(canAccessAdmin
-      ? [
-          {
-            id: "admin" as SidebarView,
-            label: "Administración",
-            Icon: Settings,
           },
         ]
       : []),
@@ -121,22 +113,31 @@ function SidebarContent({
           },
         ]
       : []),
+    ...(canAccessAdmin
+      ? [
+          {
+            id: "admin" as SidebarView,
+            label: "Configuración",
+            Icon: Settings,
+          },
+        ]
+      : []),
   ];
   return (
     <div className="flex h-full flex-col">
       <div
         className={`flex items-center border-neutral-200 border-b ${isCollapsed && !mobile ? "justify-center px-3 py-5" : "gap-3 px-5 py-5"}`}
       >
-        <div className="flex shrink-0 items-center justify-center">
-          <img src="/logo.svg" alt="Escudo Veritas" className="h-9 w-auto" />
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-brand-700 text-white shadow-sm">
+          <ShieldCheck className="size-5" aria-hidden="true" />
         </div>
         {(!isCollapsed || mobile) && (
           <div className="min-w-0">
-            <h1 className="font-bold text-17px text-neutral-900 leading-tight tracking-tight">
-              Gestión Integral
+            <h1 className="font-semibold text-neutral-900 text-sm leading-tight tracking-tight">
+              Convivencia
             </h1>
-            <p className="mt-0.5 font-semibold text-xs text-neutral-500 uppercase leading-tight tracking-[0.12em]">
-              Convivencia Escolar
+            <p className="mt-0.5 font-bold text-[10px] text-brand-700 uppercase leading-tight tracking-[0.16em]">
+              Escolar Pro
             </p>
           </div>
         )}
@@ -184,22 +185,17 @@ function SidebarContent({
                   onViewChange(item.id);
                   onNavigate?.();
                 }}
-                className={`flex w-full cursor-pointer select-none items-center gap-3 rounded-xl font-medium text-13px transition-[color,background-color,box-shadow,transform] duration-150 ${isCollapsed && !mobile ? "justify-center px-0 py-3" : "px-3.5 py-2.5"}
+                className={`group flex min-h-11 w-full cursor-pointer select-none items-center gap-3 rounded-xl border border-transparent font-medium text-13px transition-colors duration-150 ${isCollapsed && !mobile ? "justify-center px-0" : "px-3"}
                 ${
                   isActive
-                    ? "border-l-2 border-brand-600 bg-brand-50 font-semibold text-brand-800"
-                    : "border-l-2 border-transparent text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
+                    ? "border-brand-100 bg-brand-50 font-semibold text-brand-800 shadow-xs"
+                    : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
                 }`}
-                style={
-                  isActive && !isCollapsed
-                    ? { boxShadow: "inset 3px 0 0 0 var(--color-brand-600)" }
-                    : undefined
-                }
                 aria-current={isActive ? "page" : undefined}
                 title={isCollapsed && !mobile ? item.label : undefined}
               >
                 <span
-                  className={`shrink-0 transition-colors ${isActive ? "text-brand-700" : "text-neutral-500"}`}
+                  className={`flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors ${isActive ? "bg-white text-brand-700 shadow-xs" : "text-neutral-500 group-hover:text-neutral-700"}`}
                 >
                   <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
                 </span>
@@ -225,6 +221,25 @@ function SidebarContent({
             );
           })}
       </nav>
+
+      {(!isCollapsed || mobile) && (
+        <div className="mt-auto flex flex-col gap-2 border-neutral-100 border-t bg-white p-4">
+          <div className="flex items-center gap-2 rounded-xl bg-neutral-50 p-2.5">
+            <ShieldCheck
+              className="size-5 shrink-0 text-brand-600"
+              aria-hidden="true"
+            />
+            <div className="min-w-0">
+              <p className="truncate font-semibold text-neutral-700 text-xs">
+                Superintendencia
+              </p>
+              <p className="truncate text-neutral-500 text-[11px]">
+                Protocolos MINEDUC
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -349,7 +364,7 @@ export default memo(function Sidebar({
 
       <aside
         className={`relative hidden shrink-0 flex-col border-r border-neutral-200 bg-white transition-colors duration-300 ease-out-expo lg:flex ${
-          isCollapsed ? "w-[68px]" : "w-[240px]"
+          isCollapsed ? "w-[68px]" : "w-64"
         }`}
         aria-label="Barra de navegación principal"
       >

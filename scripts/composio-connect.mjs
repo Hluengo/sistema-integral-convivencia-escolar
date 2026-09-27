@@ -14,4 +14,3 @@ const session = await composio.create(userId, {
 });
 const connectionRequest = await session.authorize("gmail");
 console.log("CONNECT_LINK=" + connectionRequest.redirectUrl);
-console.log("USER_ID=" + userId);

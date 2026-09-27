@@ -62,6 +62,7 @@
   --color-leve-500: #18b39d;
   --color-leve-600: #0d9f8e;
   --color-leve-700: #056b60;
+  --color-leve-800: #04574f;
 
   /* Grave - Amber */
   --color-grave-50: #fffbeb;
@@ -70,6 +71,7 @@
   --color-grave-500: #f59e0b;
   --color-grave-600: #d97706;
   --color-grave-700: #b45309;
+  --color-grave-800: #92400e;
 
   /* Muy Grave - Orange */
   --color-muygrave-50: #fff7ed;
@@ -78,6 +80,7 @@
   --color-muygrave-500: #f97316;
   --color-muygrave-600: #ea580c;
   --color-muygrave-700: #c2410c;
+  --color-muygrave-800: #9a3412;
 
   /* Gravísima - Red */
   --color-gravisima-50: #fef2f2;
@@ -86,6 +89,7 @@
   --color-gravisima-500: #ef4444;
   --color-gravisima-600: #dc2626;
   --color-gravisima-700: #b91c1c;
+  --color-gravisima-800: #991b1b;
 
   /* Legacy semantic aliases */
   --color-success-50: #f0fdf4;
@@ -145,13 +149,7 @@
 
 /* ===== BASE STYLES ===== */
 body {
-  background:
-    radial-gradient(
-      circle at 100% 0%,
-      rgba(249, 115, 22, 0.035),
-      transparent 28rem
-    ),
-    var(--color-neutral-50);
+  background: var(--color-neutral-50);
   color: var(--color-neutral-800);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -205,29 +203,17 @@ a {
 
 /* Card base */
 .card {
-  background: rgba(255, 255, 255, 0.96);
-  border-radius: var(--radius-md);
+  background: #fff;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--color-neutral-200);
   box-shadow: var(--shadow-card);
   transition:
-    transform 0.25s var(--ease-out-expo),
-    box-shadow 0.25s var(--ease-out-expo),
-    border-color 0.25s var(--ease-out-expo);
+    box-shadow 0.2s var(--ease-out-expo),
+    border-color 0.2s var(--ease-out-expo);
 }
 .card:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-card-hover);
+  box-shadow: var(--shadow-md);
   border-color: var(--color-neutral-300);
-}
-
-/* Shared visual surface for dense application areas. */
-.surface-muted {
-  background: linear-gradient(
-    135deg,
-    rgba(248, 250, 252, 0.92),
-    rgba(241, 245, 249, 0.72)
-  );
-  border: 1px solid rgba(203, 213, 225, 0.72);
 }
 
 /* Keep keyboard focus prominent without changing component behavior. */
@@ -237,26 +223,6 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
   box-shadow: 0 0 0 3px rgba(100, 116, 139, 0.18);
-}
-
-/* Glassmorphism */
-.glass {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(203, 213, 225, 0.5);
-}
-
-/* Gradient text */
-.text-gradient {
-  background: linear-gradient(
-    135deg,
-    var(--color-brand-600),
-    var(--color-brand-400)
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 /* Animations */

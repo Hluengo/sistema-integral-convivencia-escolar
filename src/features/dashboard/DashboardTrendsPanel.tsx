@@ -13,6 +13,7 @@ import {
   Gauge,
   ShieldAlert,
   TrendingUp,
+  Sparkles,
 } from "lucide-react";
 import type { Causa } from "../../shared/lib/types";
 import {
@@ -57,21 +58,25 @@ function getSeriesForPoint(
 ): ChartSeriesItem[] {
   if (mode === "annotations") {
     return [
-      { label: "Total", value: point.annotations, className: "bg-neutral-400" },
+      {
+        label: "Total Mensual",
+        value: point.annotations,
+        className: "bg-slate-700",
+      },
       {
         label: "Positivas",
         value: point.positiveAnnotations,
-        className: "bg-leve-500",
+        className: "bg-teal-600",
       },
       {
         label: "Negativas",
         value: point.negativeAnnotations,
-        className: "bg-grave-500",
+        className: "bg-blue-300",
       },
       {
         label: "Alta gravedad",
         value: point.highSeverityAnnotations,
-        className: "bg-gravisima-500",
+        className: "bg-red-600",
       },
     ];
   }
@@ -223,7 +228,7 @@ export default function DashboardTrendsPanel({
               id="dashboard-trends-title"
               className="font-semibold text-neutral-800 text-sm"
             >
-              Tendencias de los últimos 6 meses
+              Tendencias de Anotaciones – Últimos 6 Meses
             </h2>
           </div>
           <p className="max-w-2xl text-neutral-600 text-sm">
@@ -247,7 +252,7 @@ export default function DashboardTrendsPanel({
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-1 divide-y divide-neutral-200 border border-neutral-200 sm:grid-cols-2 sm:divide-x sm:divide-y-0 xl:grid-cols-4">
+      <div className="hidden">
         <SummaryMetric
           icon={Activity}
           label="Aperturas"
@@ -287,9 +292,15 @@ export default function DashboardTrendsPanel({
       <div className="mt-4 rounded-lg border border-brand-100 bg-brand-50 px-4 py-3">
         <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
           <div className="min-w-0">
-            <p className="font-semibold text-brand-900 text-sm">
-              {summary.primaryInsight}
-            </p>
+            <div className="flex items-start gap-2">
+              <Sparkles
+                className="mt-0.5 size-4 shrink-0 text-brand-600"
+                aria-hidden="true"
+              />
+              <p className="font-semibold text-brand-900 text-sm">
+                {summary.primaryInsight}
+              </p>
+            </div>
             <p className="mt-1 text-brand-800 text-xs">
               {summary.secondaryInsight}
             </p>
@@ -347,6 +358,7 @@ export default function DashboardTrendsPanel({
             "Vista"
           }
           activeLabel="Mes actual"
+          dashboard
         />
       </div>
 

@@ -164,6 +164,8 @@ export default function AnotacionesStudentDetailModal({
       case "estado":
         return (
           <StudentSummaryTab
+            annotations={effectiveAnnotations}
+            detectedAnnotations={disciplinaryData.detectedAnnotations}
             counts={counts}
             currentCarta={disciplinaryData.currentCarta}
             lastAnalysis={disciplinaryData.lastAnalysis}
@@ -256,6 +258,7 @@ export default function AnotacionesStudentDetailModal({
         </DialogDescription>
         <DetailModalHeader
           avatarInitial={student.full_name.charAt(0).toUpperCase()}
+          avatarClassName="ring-brand-300"
           title={
             privacyMode
               ? maskName(student.full_name, privacyMode)
@@ -271,7 +274,7 @@ export default function AnotacionesStudentDetailModal({
               </span>
               {student.rut && <span>{maskRut(student.rut, privacyMode)}</span>}
               <span
-                className={`inline-flex items-center rounded-full px-2 py-0.5 font-bold ${stageStyle.bg} ${stageStyle.text}`}
+                className={`inline-flex items-center rounded-full border border-current/10 px-2.5 py-1 font-bold ${stageStyle.bg} ${stageStyle.text}`}
               >
                 {stage.label}
               </span>
@@ -285,7 +288,7 @@ export default function AnotacionesStudentDetailModal({
                 aria-label="Cerrar ficha disciplinaria"
                 title="Cerrar ficha"
                 onClick={onClose}
-                className="rounded-lg p-2 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                className="rounded-xl p-3 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
               >
                 <X className="h-5 w-5" />
               </button>

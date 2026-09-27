@@ -2692,9 +2692,11 @@ function requireMembership(params, checkAccess = checkMembershipViaApi) {
         }
         logServer("transition_fallback_denied", "no matching role");
       }
-      res.status(403).json({
-        error: "No tiene una membres\xEDa activa para esta aplicaci\xF3n.",
-      });
+      res
+        .status(403)
+        .json({
+          error: "No tiene una membres\xEDa activa para esta aplicaci\xF3n.",
+        });
     } catch (err) {
       if (mode === "transition") {
         logServer(
@@ -4236,9 +4238,11 @@ router7.post(
         return;
       }
       if (!body.bucket || !body.storagePath || !body.fileName) {
-        res.status(400).json({
-          error: "Faltan par\xE1metros requeridos para analizar el PDF",
-        });
+        res
+          .status(400)
+          .json({
+            error: "Faltan par\xE1metros requeridos para analizar el PDF",
+          });
         return;
       }
       const result = await analyzeDisciplinaryPdf({
@@ -5052,9 +5056,11 @@ router11.post("/admin/invitations", async (req, res) => {
       .maybeSingle();
     if (invitationError) throw invitationError;
     if (existingInvitation) {
-      res.status(409).json({
-        error: "Ya existe una invitaci\xF3n pendiente para ese correo.",
-      });
+      res
+        .status(409)
+        .json({
+          error: "Ya existe una invitaci\xF3n pendiente para ese correo.",
+        });
       return;
     }
     const invitation = await client.auth.admin.inviteUserByEmail(email, {
@@ -5641,9 +5647,11 @@ router12.post("/platform/tenants/:id/invite", async (req, res) => {
     if (error) throw error;
     const admin = data;
     if (!admin?.email) {
-      res.status(404).json({
-        error: "No se encontr\xF3 un administrador para este colegio.",
-      });
+      res
+        .status(404)
+        .json({
+          error: "No se encontr\xF3 un administrador para este colegio.",
+        });
       return;
     }
     const resend = await client.auth.admin.inviteUserByEmail(admin.email, {

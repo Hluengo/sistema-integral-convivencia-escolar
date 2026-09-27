@@ -14,8 +14,11 @@ interface HeaderActionsProps {
   user?: { email?: string } | null;
   notifications: Notification[];
   notificationsLoading?: boolean;
-  onMarkNotificationRead?: (notification: Notification) => void;
-  onMarkAllNotificationsRead?: () => void;
+  notificationsError?: string | null;
+  notificationsUpdating?: boolean;
+  onRetryNotifications?: () => Promise<void>;
+  onMarkNotificationRead?: (notification: Notification) => Promise<void>;
+  onMarkAllNotificationsRead?: () => Promise<void>;
   onNotificationClick?: (causaId: string) => void;
   onViewAll?: () => void;
 }
@@ -30,6 +33,9 @@ export default function HeaderActions({
   user = null,
   notifications = EMPTY_NOTIFICATIONS,
   notificationsLoading = false,
+  notificationsError,
+  notificationsUpdating = false,
+  onRetryNotifications,
   onMarkNotificationRead,
   onMarkAllNotificationsRead,
   onNotificationClick,
@@ -40,6 +46,9 @@ export default function HeaderActions({
       <NotificationsDropdown
         notifications={notifications}
         notificationsLoading={notificationsLoading}
+        notificationsError={notificationsError}
+        notificationsUpdating={notificationsUpdating}
+        onRetryNotifications={onRetryNotifications}
         onMarkNotificationRead={onMarkNotificationRead}
         onMarkAllNotificationsRead={onMarkAllNotificationsRead}
         onNotificationClick={onNotificationClick}

@@ -15,8 +15,3 @@ const result = await session.execute("GMAIL_FETCH_EMAILS", { max_results: 1 });
 const data = result?.data ?? result;
 const messages = data?.messages ?? data?.emails ?? [];
 console.log("OK mensajes:", Array.isArray(messages) ? messages.length : "?");
-for (const m of Array.isArray(messages) ? messages.slice(0, 1) : []) {
-  console.log("FROM:", m.from ?? m.sender ?? "?");
-  console.log("SUBJECT:", m.subject ?? "?");
-  console.log("DATE:", m.date ?? m.internalDate ?? "?");
-}

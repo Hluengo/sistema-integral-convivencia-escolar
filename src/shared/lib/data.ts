@@ -440,7 +440,7 @@ export const getBaseChecklist = (
     id: "chk_legal_2",
     label: "Plazo de Investigación Controlado",
     descripcion:
-      "Se ha registrado el inicio de investigación y se controla el plazo máximo: 10 días hábiles para faltas Muy Graves o Gravísimas, 60 días hábiles para las demás.",
+      "Se ha registrado el inicio de investigación y se controla el plazo máximo: 10 días hábiles para faltas Muy Graves o Gravísimas, 60 días corridos para las demás.",
     completado: false,
     requeridoPor: "Ley 21809",
   },

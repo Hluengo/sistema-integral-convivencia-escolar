@@ -129,7 +129,7 @@ export default function RegistrationForm({
           </legend>
           <label
             htmlFor={`reg-share-${item.id}`}
-            className="mt-1 flex items-start gap-2 text-10px text-brand-950"
+            className="mt-1 flex min-h-11 cursor-pointer items-start gap-2 text-10px text-brand-950"
           >
             <input
               id={`reg-share-${item.id}`}
@@ -139,7 +139,7 @@ export default function RegistrationForm({
               onChange={(event) =>
                 setDocumentScope(event.target.checked ? "incidente" : "causa")
               }
-              className="mt-0.5 h-3.5 w-3.5 rounded border-brand-300 text-brand-600 focus:ring-brand-500"
+              className="mt-0.5 h-5 w-5 rounded border-brand-300 text-brand-600 accent-brand-600 focus:ring-2 focus:ring-brand-500/20"
             />
             <span>
               Compartir este hito y su documento con el incidente grupal y sus

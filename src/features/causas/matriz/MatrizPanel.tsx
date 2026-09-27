@@ -386,12 +386,12 @@ export default function MatrizPanel({ causa }: { causa: Causa }) {
                       </option>
                     ))}
                   </select>
-                  <label className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-11px">
+                  <label className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-11px">
                     <input
                       type="checkbox"
                       checked={hecho.participacion_acreditada}
                       onChange={() => void handleToggleParticipacion(hecho)}
-                      className="size-3"
+                      className="size-5"
                       aria-label="Participación"
                     />
                     Participación
@@ -493,7 +493,7 @@ export default function MatrizPanel({ causa }: { causa: Causa }) {
                               {AGRAVANTES.map((a) => (
                                 <label
                                   key={a.id}
-                                  className={`inline-flex cursor-pointer items-center gap-1 rounded-full border px-2 py-0.5 text-11px ${agravantes.includes(a.id as AgravanteId) ? "border-amber-300 bg-amber-100 text-amber-800" : "border-slate-200 bg-white text-slate-600"}`}
+                                  className={`inline-flex min-h-11 cursor-pointer items-center gap-1 rounded-full border px-2 py-0.5 text-11px ${agravantes.includes(a.id as AgravanteId) ? "border-amber-300 bg-amber-100 text-amber-800" : "border-slate-200 bg-white text-slate-600"}`}
                                 >
                                   <input
                                     type="checkbox"
@@ -506,7 +506,7 @@ export default function MatrizPanel({ causa }: { causa: Causa }) {
                                         a.id as AgravanteId,
                                       )
                                     }
-                                    className="size-3"
+                                    className="size-5"
                                     aria-label={a.label}
                                   />
                                   {a.label}
@@ -522,7 +522,7 @@ export default function MatrizPanel({ causa }: { causa: Causa }) {
                               {ATENUANTES.map((a) => (
                                 <label
                                   key={a.id}
-                                  className={`inline-flex cursor-pointer items-center gap-1 rounded-full border px-2 py-0.5 text-11px ${atenuantes.includes(a.id as AtenuanteId) ? "border-green-300 bg-green-100 text-green-800" : "border-slate-200 bg-white text-slate-600"}`}
+                                  className={`inline-flex min-h-11 cursor-pointer items-center gap-1 rounded-full border px-2 py-0.5 text-11px ${atenuantes.includes(a.id as AtenuanteId) ? "border-green-300 bg-green-100 text-green-800" : "border-slate-200 bg-white text-slate-600"}`}
                                 >
                                   <input
                                     type="checkbox"
@@ -535,7 +535,7 @@ export default function MatrizPanel({ causa }: { causa: Causa }) {
                                         a.id as AtenuanteId,
                                       )
                                     }
-                                    className="size-3"
+                                    className="size-5"
                                     aria-label={a.label}
                                   />
                                   {a.label}

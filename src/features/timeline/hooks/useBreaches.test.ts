@@ -22,6 +22,12 @@ function makeChecklist(
   }));
 }
 
+const TEST_TODAY = "2026-08-15";
+
+function computeTestBreaches(causa: Causa): string[] {
+  return computeBreaches(causa, TEST_TODAY);
+}
+
 function makeCausa(overrides: Partial<Causa> = {}): Causa {
   return {
     id: "DC-2026-001",
@@ -45,7 +51,7 @@ function makeCausa(overrides: Partial<Causa> = {}): Causa {
 describe("computeBreaches", () => {
   it("retorna vacío para una causa sin brechas", () => {
     const causa = makeCausa();
-    assert.deepEqual(computeBreaches(causa), []);
+    assert.deepEqual(computeTestBreaches(causa), []);
   });
 
   it("alerta de resguardo para falta grave sin chk_inv_2 en fase avanzada", () => {
@@ -53,7 +59,7 @@ describe("computeBreaches", () => {
       tipoInfraccion: "Grave",
       estadoActual: "En Proceso de Indagación" as EstadoCausa,
     });
-    const breaches = computeBreaches(causa);
+    const breaches = computeTestBreaches(causa);
     assert.ok(breaches.some((b) => b.includes("Alerta de Resguardo")));
     assert.ok(breaches.some((b) => b.includes("Falta Grave")));
   });
@@ -67,14 +73,18 @@ describe("computeBreaches", () => {
       ]),
     });
     assert.ok(
-      !computeBreaches(causa).some((b) => b.includes("Alerta de Resguardo")),
+      !computeTestBreaches(causa).some((b) =>
+        b.includes("Alerta de Resguardo"),
+      ),
     );
   });
 
   it("no alerta resguardo en fase de recepción", () => {
     const causa = makeCausa({ tipoInfraccion: "Grave" });
     assert.ok(
-      !computeBreaches(causa).some((b) => b.includes("Alerta de Resguardo")),
+      !computeTestBreaches(causa).some((b) =>
+        b.includes("Alerta de Resguardo"),
+      ),
     );
   });
 
@@ -84,7 +94,9 @@ describe("computeBreaches", () => {
       estadoActual: "En Proceso de Seguimiento" as EstadoCausa,
     });
     assert.ok(
-      computeBreaches(causa).some((b) => b.includes("Alerta Socioemocional")),
+      computeTestBreaches(causa).some((b) =>
+        b.includes("Alerta Socioemocional"),
+      ),
     );
   });
 
@@ -97,7 +109,9 @@ describe("computeBreaches", () => {
       ]),
     });
     assert.ok(
-      !computeBreaches(causa).some((b) => b.includes("Alerta Socioemocional")),
+      !computeTestBreaches(causa).some((b) =>
+        b.includes("Alerta Socioemocional"),
+      ),
     );
   });
 
@@ -107,7 +121,7 @@ describe("computeBreaches", () => {
       estadoActual: "Mediación en Desarrollo" as EstadoCausa,
     });
     assert.ok(
-      computeBreaches(causa).some((b) =>
+      computeTestBreaches(causa).some((b) =>
         b.includes("Contradicción Procedimental"),
       ),
     );
@@ -118,7 +132,7 @@ describe("computeBreaches", () => {
       fechaApertura: "2026-01-01", // más de 60 días hábiles atrás
       estadoActual: "En Proceso de Indagación" as EstadoCausa,
     });
-    const breaches = computeBreaches(causa);
+    const breaches = computeTestBreaches(causa);
     assert.ok(breaches.some((b) => b.includes("INCUMPLIMIENTO LEGAL")));
     assert.ok(breaches.some((b) => b.includes("Art. 16E, letra g")));
   });
@@ -129,7 +143,9 @@ describe("computeBreaches", () => {
       duracionSuspensionDias: 30,
     });
     assert.ok(
-      computeBreaches(causa).some((b) => b.includes("INCUMPLIMIENTO LEGAL")),
+      computeTestBreaches(causa).some((b) =>
+        b.includes("INCUMPLIMIENTO LEGAL"),
+      ),
     );
   });
 
@@ -140,7 +156,7 @@ describe("computeBreaches", () => {
       monitoreoPedagogico: false,
     });
     assert.ok(
-      computeBreaches(causa).some((b) =>
+      computeTestBreaches(causa).some((b) =>
         b.includes("monitoreo pedagógico obligatorio"),
       ),
     );
@@ -153,7 +169,9 @@ describe("computeBreaches", () => {
       monitoreoPedagogico: true,
     });
     assert.ok(
-      !computeBreaches(causa).some((b) => b.includes("monitoreo pedagógico")),
+      !computeTestBreaches(causa).some((b) =>
+        b.includes("monitoreo pedagógico"),
+      ),
     );
   });
 
@@ -163,7 +181,7 @@ describe("computeBreaches", () => {
       identidadReservada: false,
     });
     assert.ok(
-      computeBreaches(causa).some((b) =>
+      computeTestBreaches(causa).some((b) =>
         b.includes("identidad del denunciante"),
       ),
     );
@@ -175,7 +193,7 @@ describe("computeBreaches", () => {
       identidadReservada: true,
     });
     assert.ok(
-      !computeBreaches(causa).some((b) =>
+      !computeTestBreaches(causa).some((b) =>
         b.includes("identidad del denunciante"),
       ),
     );
@@ -183,7 +201,7 @@ describe("computeBreaches", () => {
 
   it("no genera brechas de plazos sin fechas de apertura/suspensión", () => {
     const causa = makeCausa({ fechaApertura: "2026-08-01" });
-    assert.deepEqual(computeBreaches(causa), []);
+    assert.deepEqual(computeTestBreaches(causa), []);
   });
 
   it("combina varias brechas en orden estable", () => {
@@ -195,7 +213,7 @@ describe("computeBreaches", () => {
       identidadReservada: false,
       fechaApertura: "2026-01-01",
     });
-    const breaches = computeBreaches(causa);
+    const breaches = computeTestBreaches(causa);
     // Resguardo + denuncia confidencial + plazo de investigación vencido
     assert.ok(breaches.length >= 3);
     assert.match(breaches[0], /Alerta de Resguardo/);
@@ -206,7 +224,7 @@ describe("computeBreaches", () => {
       estadoActual: "Resolución Ejecutoriada" as EstadoCausa,
     });
     assert.ok(
-      computeBreaches(causa).some((b) =>
+      computeTestBreaches(causa).some((b) =>
         b.includes("derecho a solicitar reconsideración"),
       ),
     );
@@ -220,7 +238,7 @@ describe("computeBreaches", () => {
       ]),
     });
     assert.ok(
-      !computeBreaches(causa).some((b) =>
+      !computeTestBreaches(causa).some((b) =>
         b.includes("derecho a solicitar reconsideración"),
       ),
     );
@@ -232,7 +250,7 @@ describe("computeBreaches", () => {
       medidasEjecutadas: ["Amonestación escrita", "Suspensión 3 días"],
     });
     assert.ok(
-      computeBreaches(causa).some((b) =>
+      computeTestBreaches(causa).some((b) =>
         b.includes("medidas formativas previas"),
       ),
     );
@@ -247,7 +265,7 @@ describe("computeBreaches", () => {
       ],
     });
     assert.ok(
-      !computeBreaches(causa).some((b) =>
+      !computeTestBreaches(causa).some((b) =>
         b.includes("medidas formativas previas"),
       ),
     );
@@ -259,7 +277,7 @@ describe("computeBreaches", () => {
       medidasEjecutadas: ["Suspensión 3 días"],
     });
     assert.ok(
-      !computeBreaches(causa).some((b) =>
+      !computeTestBreaches(causa).some((b) =>
         b.includes("medidas formativas previas"),
       ),
     );

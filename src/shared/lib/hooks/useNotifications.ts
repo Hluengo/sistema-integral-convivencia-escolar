@@ -13,6 +13,7 @@ export interface Notification {
   description: string;
   time: string;
   urgent: boolean;
+  priority?: number;
   causaId: string;
   notificationKey?: string;
   notificationType?: string;
@@ -21,6 +22,18 @@ export interface Notification {
   entityType?: string | null;
   actionUrl?: string | null;
   persistedId?: string;
+}
+
+export function compareNotifications(
+  left: Notification,
+  right: Notification,
+): number {
+  return (
+    Number(right.urgent) - Number(left.urgent) ||
+    (left.priority ?? Number.POSITIVE_INFINITY) -
+      (right.priority ?? Number.POSITIVE_INFINITY) ||
+    left.id.localeCompare(right.id)
+  );
 }
 
 export function buildNotifications(
@@ -43,6 +56,7 @@ export function buildNotifications(
           description: `Causa ${causa.id} - ${remaining <= 0 ? "plazo EXCEDIDO" : remaining === 1 ? `vence en ${remaining} día` : `vence en ${remaining} días`}`,
           time: remaining <= 0 ? "URGENTE" : "Requiere atención",
           urgent: true,
+          priority: remaining,
           causaId: causa.id,
         });
     }
@@ -53,6 +67,7 @@ export function buildNotifications(
         description: `Causa ${causa.id} - periodo de apelación en curso`,
         time: "Pendiente",
         urgent: true,
+        priority: 0,
         causaId: causa.id,
       });
     if (
@@ -67,6 +82,7 @@ export function buildNotifications(
           description: `Causa ${causa.id} - ${elapsed} días desde apertura sin resolución definitiva`,
           time: `Hace ${elapsed - 60} días sobre plazo`,
           urgent: true,
+          priority: -(elapsed - 60),
           causaId: causa.id,
         });
     }
@@ -83,12 +99,11 @@ export function buildNotifications(
           description: `Causa ${causa.id} - ${remaining} días restantes del procedimiento ordinario`,
           time: `${remaining} días`,
           urgent: false,
+          priority: remaining,
           causaId: causa.id,
         });
     }
   });
 
-  return notifications.sort(
-    (left, right) => Number(right.urgent) - Number(left.urgent),
-  );
+  return notifications.sort(compareNotifications);
 }
