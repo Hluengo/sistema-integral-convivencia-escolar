@@ -3,11 +3,12 @@
 import type { ReactNode } from "react";
 
 interface FormFieldProps {
-  label: string;
+  label: ReactNode;
   htmlFor?: string;
   hint?: string;
   error?: string;
   className?: string;
+  labelAction?: ReactNode;
   children: ReactNode;
 }
 
@@ -17,16 +18,29 @@ export default function FormField({
   hint,
   error,
   className = "",
+  labelAction,
   children,
 }: FormFieldProps) {
   return (
     <div className={`space-y-1.5 ${className}`}>
-      <label
-        htmlFor={htmlFor}
-        className="block font-semibold text-neutral-700 text-sm"
-      >
-        {label}
-      </label>
+      {labelAction ? (
+        <div className="flex items-center justify-between gap-2">
+          <label
+            htmlFor={htmlFor}
+            className="block font-semibold text-neutral-700 text-sm"
+          >
+            {label}
+          </label>
+          {labelAction}
+        </div>
+      ) : (
+        <label
+          htmlFor={htmlFor}
+          className="block font-semibold text-neutral-700 text-sm"
+        >
+          {label}
+        </label>
+      )}
       {children}
       {error ? (
         <p

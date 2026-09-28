@@ -42,7 +42,11 @@ export default function EditCausaModal({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-h-[calc(100vh-1rem)] max-w-2xl overflow-y-auto p-0 sm:max-h-[90vh]">
+      <DialogContent
+        hideClose
+        style={{ maxWidth: "820px" }}
+        className="max-h-[calc(100vh-1rem)] overflow-y-auto p-0 sm:max-h-[90vh]"
+      >
         <EditCausaModalForm
           causa={causa}
           onSave={handleSave}
