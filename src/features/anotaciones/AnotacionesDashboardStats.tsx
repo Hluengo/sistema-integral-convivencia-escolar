@@ -92,13 +92,13 @@ export function AnnotationStageCard({
           </span>
         </div>
         <p className="mt-1 text-neutral-500 text-[10px]">{threshold}</p>
-        <div className="mt-2.5 flex items-baseline gap-1.5">
+        <div className="mt-2.5 flex flex-wrap items-baseline gap-x-1 gap-y-1">
           <p className="font-extrabold text-2xl text-neutral-900 leading-none tabular-nums">
             {counts.total}
           </p>
           <p className="text-neutral-500 text-[11px]">alumnos</p>
           {needsAction ? (
-            <span className="ml-auto rounded-full bg-gravisima-50 px-2 py-0.5 font-bold text-gravisima-700 text-[10px] tabular-nums">
+            <span className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-gravisima-50 px-1.5 py-0.5 font-bold text-gravisima-700 text-[9px] tabular-nums">
               {counts.pending} por gestionar
             </span>
           ) : null}

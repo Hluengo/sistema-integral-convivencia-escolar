@@ -5,6 +5,7 @@
 
 import type React from "react";
 import { useState, useRef, useEffect, memo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboard,
   Scale,
@@ -21,6 +22,8 @@ import {
 } from "lucide-react";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { SidebarUserMenu, SidebarAulaSeguraAlert } from "./SidebarUserMenu";
+import { fetchInstitutionDocumentSettings } from "../../shared/api/services/institution.service";
+import { useAuthStore } from "../../shared/lib/stores/authStore";
 
 export type SidebarView =
   | "dashboard"
@@ -78,6 +81,48 @@ const NAV_ITEMS: NavItem[] = [
   { id: "alumnos", label: "Estudiantes", Icon: Users },
 ];
 
+function SidebarBrand({ showText }: { showText: boolean }) {
+  const tenantId = useAuthStore((state) => state.tenantId);
+  const institutionQuery = useQuery({
+    queryKey: ["institution-settings", tenantId, "sidebar"],
+    queryFn: fetchInstitutionDocumentSettings,
+    enabled: Boolean(tenantId),
+    staleTime: 300_000,
+  });
+  const logoUrl = institutionQuery.data?.logo_url ?? null;
+  const tenantName =
+    institutionQuery.data?.official_name?.trim() || "Escolar Pro";
+
+  return (
+    <>
+      {logoUrl ? (
+        <img
+          src={logoUrl}
+          alt={`Logo de ${tenantName}`}
+          className="size-9 shrink-0 rounded-xl bg-white object-contain shadow-sm ring-1 ring-neutral-200"
+        />
+      ) : (
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-brand-700 text-white shadow-sm">
+          <ShieldCheck className="size-5" aria-hidden="true" />
+        </div>
+      )}
+      {showText && (
+        <div className="min-w-0">
+          <h1 className="truncate font-semibold text-neutral-900 text-sm leading-tight tracking-tight">
+            Gestión Integral
+          </h1>
+          <p
+            title={tenantName}
+            className="mt-0.5 truncate font-bold text-[10px] text-brand-700 uppercase leading-tight tracking-[0.16em]"
+          >
+            {tenantName}
+          </p>
+        </div>
+      )}
+    </>
+  );
+}
+
 function SidebarContent({
   currentView,
   onViewChange,
@@ -128,19 +173,7 @@ function SidebarContent({
       <div
         className={`flex items-center border-neutral-200 border-b ${isCollapsed && !mobile ? "justify-center px-3 py-5" : "gap-3 px-5 py-5"}`}
       >
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-brand-700 text-white shadow-sm">
-          <ShieldCheck className="size-5" aria-hidden="true" />
-        </div>
-        {(!isCollapsed || mobile) && (
-          <div className="min-w-0">
-            <h1 className="font-semibold text-neutral-900 text-sm leading-tight tracking-tight">
-              Convivencia
-            </h1>
-            <p className="mt-0.5 font-bold text-[10px] text-brand-700 uppercase leading-tight tracking-[0.16em]">
-              Escolar Pro
-            </p>
-          </div>
-        )}
+        <SidebarBrand showText={!isCollapsed || mobile} />
       </div>
 
       <SidebarUserMenu
