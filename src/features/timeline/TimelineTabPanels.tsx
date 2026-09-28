@@ -7,9 +7,7 @@ import type { Causa, FaseProcedimental } from "../../shared/lib/types";
 import BitacoraTab from "./BitacoraTab";
 import ExpedienteHistoryPanel from "../causas/expediente/ExpedienteHistoryPanel";
 import ResumenTab from "./ResumenTab";
-import RutaExpedienteTab from "./RutaExpedienteTab";
-import TimelinePhaseWorkspace from "./TimelinePhaseWorkspace";
-import { useTimelineContext } from "../../shared/lib/useTimelineContext";
+import RutaYoloView from "./RutaYoloView";
 import type { TimelineTab } from "./timelineTabs.types";
 import { DetailModalBody } from "../../shared/ui/DetailModal";
 
@@ -20,6 +18,8 @@ interface TimelineTabPanelsProps {
   breaches: string[];
   selectedPhase: FaseProcedimental | null;
   onSelectPhase: (phase: FaseProcedimental | null) => void;
+  onRegisterHito: () => void;
+  onOpenHistory: () => void;
 }
 
 export default function TimelineTabPanels({
@@ -29,36 +29,31 @@ export default function TimelineTabPanels({
   breaches,
   selectedPhase,
   onSelectPhase,
+  onRegisterHito,
+  onOpenHistory,
 }: TimelineTabPanelsProps) {
-  const ctx = useTimelineContext();
   return (
     <DetailModalBody
       activeTabId={activeTab}
-      className="space-y-4 bg-neutral-50"
+      className="space-y-3 bg-[#F8FAFC] p-3 sm:p-4"
     >
       {activeTab === "resumen" && (
         <ResumenTab
           causa={causa}
           breaches={breaches}
-          privacyMode={ctx.privacyMode}
+          onRegisterHito={onRegisterHito}
         />
       )}
 
-      {activeTab === "ruta" &&
-        (selectedPhase ? (
-          <TimelinePhaseWorkspace
-            causa={causa}
-            currentFase={currentFase}
-            selectedPhase={selectedPhase}
-            onSelectPhase={onSelectPhase}
-          />
-        ) : (
-          <RutaExpedienteTab
-            causa={causa}
-            selectedPhase={selectedPhase}
-            onSelectPhase={onSelectPhase}
-          />
-        ))}
+      {activeTab === "ruta" && (
+        <RutaYoloView
+          causa={causa}
+          currentFase={currentFase}
+          selectedPhase={selectedPhase}
+          onSelectPhase={onSelectPhase}
+          onOpenHistory={onOpenHistory}
+        />
+      )}
 
       {activeTab === "bitacora" && (
         <div className="space-y-6">

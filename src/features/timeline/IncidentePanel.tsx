@@ -57,7 +57,7 @@ export default function IncidentePanel({
 
   return (
     <section
-      className="rounded-xl border border-brand-200 bg-brand-50/70 p-4"
+      className="rounded-lg border border-brand-200 bg-brand-50/70 p-2"
       aria-labelledby="incident-group-title"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -69,9 +69,6 @@ export default function IncidentePanel({
             <Users className="size-4 text-brand-700" aria-hidden="true" />{" "}
             Incidente grupal
           </h3>
-          <p className="mt-1 font-mono text-10px text-brand-800">
-            {incidenteId}
-          </p>
         </div>
         <div className="flex items-center gap-2">
           <span className="rounded-full bg-white px-2 py-1 font-semibold text-10px text-brand-800">
@@ -94,7 +91,7 @@ export default function IncidentePanel({
         </div>
       </div>
       <div id="incident-group-details" hidden={isCollapsed}>
-        <dl className="mt-3 grid gap-2 text-xs sm:grid-cols-3">
+        <dl className="mt-2 grid gap-2 text-xs sm:grid-cols-3">
           <div className="flex items-start gap-1.5">
             <CalendarClock
               className="mt-0.5 size-3.5 text-brand-700"
@@ -132,10 +129,10 @@ export default function IncidentePanel({
             </div>
           </div>
         </dl>
-        <p className="mt-3 whitespace-pre-wrap rounded-lg bg-white/70 p-2.5 text-xs text-brand-950">
+        <p className="mt-2 whitespace-pre-wrap rounded-lg bg-white/70 p-2.5 text-xs text-brand-950">
           {data.incidente.descripcion}
         </p>
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-2 flex flex-wrap gap-2">
           {data.causas.map((linkedCausa) => (
             <span
               key={linkedCausa.id}

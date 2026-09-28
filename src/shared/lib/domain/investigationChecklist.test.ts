@@ -53,7 +53,7 @@ describe("investigationChecklist domain", () => {
     assert.equal(model.progress.completed, 2);
     assert.deepEqual(
       model.applicableItems.map((item) => item.id),
-      ["chk_inv_1", "chk_inv_2"],
+      ["chk_inv_1", "chk_inv_2", "chk_res_4"],
     );
   });
 

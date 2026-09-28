@@ -43,8 +43,8 @@ export default function WelcomeModal({
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>
       <DialogContent className="max-w-2xl overflow-hidden p-0">
         <div className="h-2 w-full bg-linear-to-r from-brand-500 via-brand-600 to-brand-800" />
-        <div className="p-6 sm:p-8">
-          <DialogHeader className="mb-6 block text-center">
+        <div className="p-4 sm:p-6">
+          <DialogHeader className="mb-4 block text-center">
             <DialogTitle className="text-2xl sm:text-3xl">
               Bienvenido a Gestión Integral
             </DialogTitle>
@@ -74,7 +74,7 @@ export default function WelcomeModal({
             ))}
           </div>
 
-          <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
               variant="secondary"
               onClick={onClose}

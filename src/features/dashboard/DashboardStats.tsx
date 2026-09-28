@@ -659,10 +659,23 @@ export default function DashboardStats({
                 Estado de Medidas y Cartas Disciplinarias
               </h2>
             </div>
-            <span className="inline-flex items-center gap-1 text-brand-600 text-[11px]">
-              <Info className="size-3.5" aria-hidden="true" />
-              Flujo de intervención gradual
-            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-slate-100 px-2.5 py-1 font-bold text-neutral-700 text-[11px] tabular-nums">
+                {annotations.sinCarta.total +
+                  annotations.amonestacion.total +
+                  annotations.compromiso.total +
+                  annotations.derivacion.total}{" "}
+                alumnos ·{" "}
+                {annotations.amonestacion.pending +
+                  annotations.compromiso.pending +
+                  annotations.derivacion.pending}{" "}
+                por gestionar
+              </span>
+              <span className="inline-flex items-center gap-1 text-brand-600 text-[11px]">
+                <Info className="size-3.5" aria-hidden="true" />
+                Flujo de intervención gradual
+              </span>
+            </div>
           </div>
           <p className="mt-1 text-neutral-500 text-xs">
             Seguimiento en línea según volumen de anotaciones negativas
@@ -708,17 +721,17 @@ export default function DashboardStats({
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1.5 border-slate-100 border-t pt-3 text-neutral-600 text-[11px]">
             <span className="inline-flex items-center gap-1.5">
-              <span className="size-2 rounded-full bg-red-500" />
+              <span className="size-2 rounded-full bg-gravisima-500" />
               <strong className="text-neutral-800">Pendientes:</strong>{" "}
               requieren redactar y gestionar firma.
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <span className="size-2 rounded-full bg-sky-500" />
+              <span className="size-2 rounded-full bg-brand-600" />
               <strong className="text-neutral-800">Procesadas:</strong> impresas
               en inspectoría / citación apoderado.
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <span className="size-2 rounded-full bg-slate-700" />
+              <span className="size-2 rounded-full bg-neutral-400" />
               <strong className="text-neutral-800">Archivadas:</strong> firmadas
               y cargadas en ficha del alumno.
             </span>

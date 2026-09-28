@@ -201,7 +201,7 @@ export default function EditCausaModalForm({
       <form
         onSubmit={submitUpdatedCausa}
         noValidate
-        className="space-y-6 p-4 sm:p-6"
+        className="space-y-4 p-3 sm:p-4"
       >
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50">

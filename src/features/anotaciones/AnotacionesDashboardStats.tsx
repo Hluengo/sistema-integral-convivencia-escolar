@@ -54,18 +54,42 @@ export function AnnotationStageCard({
   threshold,
   counts,
   icon: Icon,
+  iconBg,
   iconColor,
   accentColor,
 }: AnnotationStageCardProps) {
+  const workflowTotal = counts.pending + counts.processed + counts.archived;
+  const hasWorkflow = workflowTotal > 0;
+  // Sin Carta con desglose en cero: es seguimiento preventivo, no un trámite de firma.
+  const showWorkflow = hasWorkflow || label !== "Sin Carta";
+  const pendingShare =
+    showWorkflow && counts.total > 0
+      ? Math.round((counts.pending / counts.total) * 100)
+      : 0;
+  const processedShare =
+    showWorkflow && counts.total > 0
+      ? Math.round((counts.processed / counts.total) * 100)
+      : 0;
+  const archivedShare =
+    showWorkflow && counts.total > 0
+      ? Math.max(0, 100 - pendingShare - processedShare)
+      : 0;
+  const needsAction = counts.pending > 0 && label !== "Sin Carta";
+
   return (
     <article
-      className="flex min-h-[190px] flex-col justify-between rounded-xl border border-slate-200/70 bg-slate-50 p-3"
-      style={{ borderTopColor: `${accentColor}66` }}
+      aria-label={`${label}: ${counts.total} alumnos${needsAction ? `, ${counts.pending} por gestionar` : ""}`}
+      className={`flex min-h-[190px] flex-col justify-between rounded-xl border bg-white p-3 shadow-xs ${needsAction ? "border-slate-200/70 ring-1 ring-gravisima-200" : "border-slate-200/70"}`}
+      style={{ borderTop: `3px solid ${accentColor}` }}
     >
       <div>
         <div className="flex items-center justify-between gap-2">
           <h4 className="font-bold text-neutral-800 text-xs">{label}</h4>
-          <Icon className={`size-4 ${iconColor}`} aria-hidden="true" />
+          <span
+            className={`flex size-7 items-center justify-center rounded-lg ${iconBg}`}
+          >
+            <Icon className={`size-4 ${iconColor}`} aria-hidden="true" />
+          </span>
         </div>
         <p className="mt-1 text-neutral-500 text-[10px]">{threshold}</p>
         <div className="mt-2.5 flex items-baseline gap-1.5">
@@ -73,28 +97,59 @@ export function AnnotationStageCard({
             {counts.total}
           </p>
           <p className="text-neutral-500 text-[11px]">alumnos</p>
+          {needsAction ? (
+            <span className="ml-auto rounded-full bg-gravisima-50 px-2 py-0.5 font-bold text-gravisima-700 text-[10px] tabular-nums">
+              {counts.pending} por gestionar
+            </span>
+          ) : null}
         </div>
+        {showWorkflow ? (
+          <div
+            className="mt-2.5 flex h-1.5 w-full overflow-hidden rounded-full bg-slate-100"
+            role="img"
+            aria-label={`Pendientes ${pendingShare}%, procesadas ${processedShare}%, archivadas ${archivedShare}%`}
+          >
+            <span
+              className="h-full bg-gravisima-500"
+              style={{ width: `${pendingShare}%` }}
+            />
+            <span
+              className="h-full bg-brand-600"
+              style={{ width: `${processedShare}%` }}
+            />
+            <span
+              className="h-full bg-neutral-400"
+              style={{ width: `${archivedShare}%` }}
+            />
+          </div>
+        ) : null}
       </div>
-      <dl className="mt-2.5 grid grid-cols-3 gap-1 border-slate-200/70 border-t pt-2.5 text-center text-[10px]">
-        <div>
-          <dt className="text-neutral-400">Pend.</dt>
-          <dd className="font-bold text-gravisima-600 tabular-nums">
-            {counts.pending}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-neutral-400">Proc.</dt>
-          <dd className="font-bold text-brand-700 tabular-nums">
-            {counts.processed}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-neutral-400">Arch.</dt>
-          <dd className="font-bold text-neutral-700 tabular-nums">
-            {counts.archived}
-          </dd>
-        </div>
-      </dl>
+      {showWorkflow ? (
+        <dl className="mt-2.5 grid grid-cols-3 gap-1 border-slate-200/70 border-t pt-2.5 text-center text-[11px]">
+          <div title="Cartas pendientes: requieren redactar y gestionar firma">
+            <dt className="text-neutral-500">Pend.</dt>
+            <dd className="font-bold text-gravisima-600 tabular-nums">
+              {counts.pending}
+            </dd>
+          </div>
+          <div title="Cartas procesadas: impresas en inspectoría / citación apoderado">
+            <dt className="text-neutral-500">Proc.</dt>
+            <dd className="font-bold text-brand-700 tabular-nums">
+              {counts.processed}
+            </dd>
+          </div>
+          <div title="Cartas archivadas: firmadas y cargadas en ficha del alumno">
+            <dt className="text-neutral-500">Arch.</dt>
+            <dd className="font-bold text-neutral-700 tabular-nums">
+              {counts.archived}
+            </dd>
+          </div>
+        </dl>
+      ) : (
+        <p className="mt-2.5 rounded-lg bg-slate-50 px-2.5 py-2 text-neutral-500 text-[11px] leading-snug">
+          Seguimiento preventivo · sin trámite de firma requerido.
+        </p>
+      )}
     </article>
   );
 }

@@ -27,6 +27,7 @@ export default function CausaDetailModal({
             ? `Gestión del expediente ${causa.id}`
             : "Gestión del expediente"
         }
+        className="w-[min(94vw,64rem)]"
       >
         <DialogTitle className="sr-only">
           {causa ? `Expediente ${causa.id}` : "Expediente"}

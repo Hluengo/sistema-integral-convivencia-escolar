@@ -62,7 +62,7 @@ export async function createIncidente(
       tenant_id: tenantId,
       fecha_hora: input.fechaHora || new Date().toISOString(),
       lugar: input.lugar.trim(),
-      tipo: input.tipo?.trim() || "Consumo de alcohol",
+      tipo: input.tipo?.trim() || "No informado",
       descripcion: input.descripcion.trim(),
       responsable: input.responsable.trim(),
     })

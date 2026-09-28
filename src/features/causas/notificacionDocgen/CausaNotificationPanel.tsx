@@ -27,6 +27,7 @@ import type { CausaDocumentSnapshot } from "./types";
 
 interface CausaNotificationPanelProps {
   causa: Causa;
+  compact?: boolean;
 }
 
 /**
@@ -38,6 +39,7 @@ interface CausaNotificationPanelProps {
  */
 export default function CausaNotificationPanel({
   causa,
+  compact = false,
 }: CausaNotificationPanelProps) {
   const { privacyMode, currentRole, onUpdateCausa } = useTimelineContext();
   const tenantId = useAuthStore((state) => state.tenantId);
@@ -251,6 +253,7 @@ export default function CausaNotificationPanel({
     <CausaNotificationGenerator
       key={causa.id}
       causa={causa}
+      compact={compact}
       privacyMode={privacyMode}
       initialSnapshot={initialSnapshot}
       documentStatus={activeDocument?.status ?? null}

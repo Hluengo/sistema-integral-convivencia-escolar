@@ -40,6 +40,7 @@ export interface NotificationFeedback {
 
 interface CausaNotificationGeneratorProps {
   causa: Causa;
+  compact?: boolean;
   privacyMode: boolean;
   initialSnapshot: CausaDocumentSnapshot | null;
   documentStatus: CausaDocumentStatus | null;
@@ -63,6 +64,7 @@ const MAX_EMAIL_HTML_BYTES = 100_000;
  */
 export default function CausaNotificationGenerator({
   causa,
+  compact = false,
   privacyMode,
   initialSnapshot,
   documentStatus,
@@ -269,143 +271,177 @@ export default function CausaNotificationGenerator({
         </div>
       )}
 
-      <div className="space-y-4 rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h4 className="text-sm font-bold text-neutral-900">
-              {NOTIFICACION_TITLE}
-            </h4>
-            <p className="mt-0.5 text-xs text-neutral-500">
-              {documentStatus === "Notificada"
-                ? "Documento notificado. Puede reimprimir el snapshot guardado."
-                : documentStatus === "Anulada"
-                  ? "Documento anulado. Cree una nueva notificación si corresponde."
-                  : "Plantilla editable. Revise los antecedentes del expediente antes de emitir."}
-            </p>
+      {!compact && (
+        <div className="space-y-4 rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h4 className="text-sm font-bold text-neutral-900">
+                {NOTIFICACION_TITLE}
+              </h4>
+              <p className="mt-0.5 text-xs text-neutral-500">
+                {documentStatus === "Notificada"
+                  ? "Documento notificado. Puede reimprimir el snapshot guardado."
+                  : documentStatus === "Anulada"
+                    ? "Documento anulado. Cree una nueva notificación si corresponde."
+                    : "Plantilla editable. Revise los antecedentes del expediente antes de emitir."}
+              </p>
+            </div>
+            {documentStatus && (
+              <span className="rounded-full bg-neutral-100 px-2.5 py-1 font-semibold text-10px text-neutral-600">
+                Estado: {documentStatus}
+              </span>
+            )}
           </div>
-          {documentStatus && (
-            <span className="rounded-full bg-neutral-100 px-2.5 py-1 font-semibold text-10px text-neutral-600">
-              Estado: {documentStatus}
-            </span>
+
+          {!canEdit && (
+            <div className="rounded-lg border border-info-200 bg-info-50 p-3 text-sm text-info-700">
+              Este documento ya fue{" "}
+              {documentStatus === "Notificada" ? "notificado" : "anulado"} y no
+              admite edición. Se muestra el contenido exacto guardado al momento
+              de la emisión.
+            </div>
+          )}
+
+          {!compact && canEdit && (
+            <NotificationForm
+              apoderadoName={apoderadoName}
+              onApoderadoNameChange={setApoderadoName}
+              apoderadoEmail={apoderadoEmail}
+              onApoderadoEmailChange={setApoderadoEmail}
+              emittedBy={emittedBy}
+              onEmittedByChange={setEmittedBy}
+              content={content}
+              onContentChange={updateContent}
+              onResetContent={resetContent}
+            />
           )}
         </div>
-
-        {!canEdit && (
-          <div className="rounded-lg border border-info-200 bg-info-50 p-3 text-sm text-info-700">
-            Este documento ya fue{" "}
-            {documentStatus === "Notificada" ? "notificado" : "anulado"} y no
-            admite edición. Se muestra el contenido exacto guardado al momento
-            de la emisión.
-          </div>
-        )}
-
-        {canEdit && (
-          <NotificationForm
-            apoderadoName={apoderadoName}
-            onApoderadoNameChange={setApoderadoName}
-            apoderadoEmail={apoderadoEmail}
-            onApoderadoEmailChange={setApoderadoEmail}
-            emittedBy={emittedBy}
-            onEmittedByChange={setEmittedBy}
-            content={content}
-            onContentChange={updateContent}
-            onResetContent={resetContent}
-          />
-        )}
-      </div>
+      )}
 
       <div className="space-y-4">
-        <div className="mx-auto w-full max-w-[216mm] rounded-xl border border-neutral-200 bg-white p-4 shadow-xs">
-          <p className="mb-3 font-semibold text-neutral-700 text-xs">
-            Acciones del documento
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <Button
-              variant="custom"
-              onClick={() => handlePrint()}
-              className="rounded-xl bg-neutral-700 px-4 py-2.5 font-medium text-white shadow-xs hover:bg-neutral-800"
-            >
-              <Printer className="h-4 w-4" /> Imprimir
-            </Button>
-
-            {canEdit && (
-              <>
+        {compact && (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2">
+            <div className="flex items-center gap-2 text-[10px]">
+              <span className="rounded bg-emerald-50 px-2 py-1 font-semibold text-emerald-700">
+                Foliación Digital Inmutable
+              </span>
+              <span className="text-neutral-500">
+                • Auditado Mineduc Ley 19.979
+              </span>
+            </div>
+            <div className="flex gap-1.5">
+              <Button
+                variant="custom"
+                onClick={() => handlePrint()}
+                className="rounded-md bg-neutral-800 px-2.5 py-1.5 text-[10px] font-semibold text-white"
+              >
+                <Printer className="mr-1 inline size-3" /> Imprimir
+              </Button>
+              {documentStatus === "Notificada" && (
                 <Button
                   variant="secondary"
-                  onClick={() => void onSaveDraft(currentSnapshot)}
-                  disabled={isProcessing}
-                  className="rounded-xl px-4 py-2.5 font-medium disabled:cursor-not-allowed disabled:opacity-50"
+                  onClick={() => handlePrint()}
+                  className="rounded-md px-2.5 py-1.5 text-[10px] font-semibold"
                 >
-                  <FileSignature className="h-4 w-4" /> Guardar borrador
+                  Reimprimir
                 </Button>
+              )}
+            </div>
+          </div>
+        )}
+        {!compact && (
+          <div className="mx-auto w-full max-w-[216mm] rounded-xl border border-neutral-200 bg-white p-4 shadow-xs">
+            <p className="mb-3 font-semibold text-neutral-700 text-xs">
+              Acciones del documento
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Button
+                variant="custom"
+                onClick={() => handlePrint()}
+                className="rounded-xl bg-neutral-700 px-4 py-2.5 font-medium text-white shadow-xs hover:bg-neutral-800"
+              >
+                <Printer className="h-4 w-4" /> Imprimir
+              </Button>
 
-                <Button
-                  variant="custom"
-                  onClick={() => void onMarkNotified(currentSnapshot)}
-                  disabled={isProcessing}
-                  className="rounded-xl border border-leve-200 bg-leve-50 px-4 py-2.5 font-medium text-leve-700 shadow-xs hover:bg-leve-100 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <CheckCircle2 className="h-4 w-4" />
-                  {isProcessing ? "Procesando…" : "Marcar como notificada"}
-                </Button>
-
-                <Button
-                  variant="custom"
-                  onClick={() => void handleSendEmail()}
-                  disabled={
-                    isProcessing ||
-                    isSending ||
-                    !isValidApoderadoEmail(apoderadoEmail)
-                  }
-                  title={
-                    isValidApoderadoEmail(apoderadoEmail)
-                      ? "Enviar por correo y marcar como notificada"
-                      : "Ingrese un correo de apoderado válido para enviar"
-                  }
-                  className="rounded-xl bg-brand-600 px-4 py-2.5 font-medium text-white shadow-xs hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <Send className="h-4 w-4" />
-                  {isSending ? "Enviando…" : "Enviar por correo"}
-                </Button>
-
-                {documentStatus === "Pendiente" && (
+              {canEdit && (
+                <>
                   <Button
                     variant="secondary"
-                    onClick={() => void onAnnul()}
+                    onClick={() => void onSaveDraft(currentSnapshot)}
                     disabled={isProcessing}
-                    className="rounded-xl px-4 py-2.5 font-medium text-gravisima-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-xl px-4 py-2.5 font-medium disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <Trash2 className="h-4 w-4" /> Anular
+                    <FileSignature className="h-4 w-4" /> Guardar borrador
                   </Button>
-                )}
-              </>
-            )}
 
-            {documentStatus === "Notificada" && (
-              <Button
-                variant="secondary"
-                onClick={() => handlePrint()}
-                className="rounded-xl px-4 py-2.5 font-medium"
+                  <Button
+                    variant="custom"
+                    onClick={() => void onMarkNotified(currentSnapshot)}
+                    disabled={isProcessing}
+                    className="rounded-xl border border-leve-200 bg-leve-50 px-4 py-2.5 font-medium text-leve-700 shadow-xs hover:bg-leve-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                    {isProcessing ? "Procesando…" : "Marcar como notificada"}
+                  </Button>
+
+                  <Button
+                    variant="custom"
+                    onClick={() => void handleSendEmail()}
+                    disabled={
+                      isProcessing ||
+                      isSending ||
+                      !isValidApoderadoEmail(apoderadoEmail)
+                    }
+                    title={
+                      isValidApoderadoEmail(apoderadoEmail)
+                        ? "Enviar por correo y marcar como notificada"
+                        : "Ingrese un correo de apoderado válido para enviar"
+                    }
+                    className="rounded-xl bg-brand-600 px-4 py-2.5 font-medium text-white shadow-xs hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Send className="h-4 w-4" />
+                    {isSending ? "Enviando…" : "Enviar por correo"}
+                  </Button>
+
+                  {documentStatus === "Pendiente" && (
+                    <Button
+                      variant="secondary"
+                      onClick={() => void onAnnul()}
+                      disabled={isProcessing}
+                      className="rounded-xl px-4 py-2.5 font-medium text-gravisima-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <Trash2 className="h-4 w-4" /> Anular
+                    </Button>
+                  )}
+                </>
+              )}
+
+              {documentStatus === "Notificada" && (
+                <Button
+                  variant="secondary"
+                  onClick={() => handlePrint()}
+                  className="rounded-xl px-4 py-2.5 font-medium"
+                >
+                  <RotateCcw className="h-4 w-4" /> Reimprimir
+                </Button>
+              )}
+            </div>
+            {feedback && (
+              <p
+                role={feedback.tone === "error" ? "alert" : "status"}
+                className={`mt-3 rounded-lg px-3 py-2 text-sm font-medium ${
+                  feedback.tone === "error"
+                    ? "bg-gravisima-50 text-gravisima-700"
+                    : feedback.tone === "success"
+                      ? "bg-leve-50 text-leve-700"
+                      : "bg-blue-50 text-blue-700"
+                }`}
               >
-                <RotateCcw className="h-4 w-4" /> Reimprimir
-              </Button>
+                {feedback.text}
+              </p>
             )}
           </div>
-          {feedback && (
-            <p
-              role={feedback.tone === "error" ? "alert" : "status"}
-              className={`mt-3 rounded-lg px-3 py-2 text-sm font-medium ${
-                feedback.tone === "error"
-                  ? "bg-gravisima-50 text-gravisima-700"
-                  : feedback.tone === "success"
-                    ? "bg-leve-50 text-leve-700"
-                    : "bg-blue-50 text-blue-700"
-              }`}
-            >
-              {feedback.text}
-            </p>
-          )}
-        </div>
+        )}
 
         <LetterPreviewViewport onOverflowChange={handleOverflowChange}>
           <NotificacionContent

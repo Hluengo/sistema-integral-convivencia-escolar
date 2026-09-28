@@ -116,7 +116,7 @@ export default function NewIncidenteModal({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[calc(100vh-1rem)] max-w-[48rem] overflow-y-auto p-6 sm:p-8 sm:max-h-[90vh]">
+      <DialogContent className="max-h-[calc(100vh-1rem)] max-w-[48rem] overflow-y-auto p-4 sm:p-6 sm:max-h-[90vh]">
         <div className="space-y-5">
           <div className="border-neutral-100 border-b pb-4">
             <div>

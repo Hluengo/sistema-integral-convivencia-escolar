@@ -658,7 +658,7 @@ export default function NewDisciplinaryProcessModal({
           </div>
         </div>
 
-        <div className="space-y-5 p-6">
+        <div className="space-y-4 p-4">
           {step === "upload" && (
             <UploadAnalyzeStep
               file={file}
@@ -732,7 +732,7 @@ export default function NewDisciplinaryProcessModal({
           {step === "duplicate_check" && (
             <div className="space-y-4">
               <div
-                className={`rounded-2xl border p-5 ${
+                className={`rounded-xl border p-3 ${
                   duplicateFile
                     ? "border-gravisima-200 bg-gravisima-50"
                     : "border-grave-200 bg-grave-50"

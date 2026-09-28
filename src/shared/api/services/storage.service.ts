@@ -117,6 +117,12 @@ async function getDocumentSignedUrl(
   return data.signedUrl;
 }
 
+export async function getDocumentUrl(
+  pathOrLegacyUrl: string,
+): Promise<string | null> {
+  return getDocumentSignedUrl(pathOrLegacyUrl);
+}
+
 export async function openDocument(pathOrLegacyUrl: string): Promise<boolean> {
   const popup = window.open("", "_blank", "noopener,noreferrer");
   const signedUrl = await getDocumentSignedUrl(pathOrLegacyUrl);

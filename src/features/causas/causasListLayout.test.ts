@@ -96,6 +96,7 @@ describe("Listado de causas activas", () => {
     const summary = read("../timeline/ResumenTab.tsx");
     const route = read("../timeline/RutaExpedienteTab.tsx");
     const panels = read("../timeline/TimelineTabPanels.tsx");
+    const routeYolo = read("../timeline/RutaYoloView.tsx");
     const phaseWorkspace = read("../timeline/TimelinePhaseWorkspace.tsx");
     const processTab = read("../timeline/ProcesoTab.tsx");
     const advisor = read("MainContent/AdvisorView.tsx");
@@ -132,8 +133,9 @@ describe("Listado de causas activas", () => {
     assert.match(route, /Trabajar.*hitos/);
     assert.match(route, /aria-controls="phase-workspace"/);
     assert.match(panels, /activeTab === ["']ruta["']/);
-    assert.match(panels, /selectedPhase \? \(/);
-    assert.match(panels, /<TimelinePhaseWorkspace/);
+    assert.match(panels, /<RutaYoloView/);
+    assert.match(routeYolo, /onSelectPhase/);
+    assert.match(routeYolo, /Visor documental del hito/);
     assert.match(phaseWorkspace, /Volver a la ruta/);
     assert.match(phaseWorkspace, /onSelectPhase\(null\)/);
     assert.match(phaseWorkspace, /<ProcesoTab/);

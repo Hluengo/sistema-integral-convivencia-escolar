@@ -92,7 +92,7 @@ describe("getPhaseProgress", () => {
     );
 
     assert.equal(progress.completed, 1);
-    assert.equal(progress.total, 3);
+    assert.equal(progress.total, 2);
   });
 
   it("mantiene mutuamente excluidos solicitud y plazo vencido en v2", () => {

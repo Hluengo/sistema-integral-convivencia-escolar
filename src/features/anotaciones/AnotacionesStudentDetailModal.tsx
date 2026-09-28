@@ -269,16 +269,22 @@ export default function AnotacionesStudentDetailModal({
           }
           metadata={
             <>
-              <span>
+              <span className="rounded-md border border-neutral-200 bg-neutral-100 px-2 py-0.5 font-medium text-neutral-700">
                 {student.course_name || student.course_id || "Sin curso"}
               </span>
-              {student.rut && <span>{maskRut(student.rut, privacyMode)}</span>}
+              {student.rut && (
+                <span className="rounded-md border border-neutral-200 bg-neutral-50 px-2 py-0.5 font-medium text-neutral-600">
+                  {maskRut(student.rut, privacyMode)}
+                </span>
+              )}
               <span
-                className={`inline-flex items-center rounded-full border border-current/10 px-2.5 py-1 font-bold ${stageStyle.bg} ${stageStyle.text}`}
+                className={`inline-flex items-center rounded-md border border-current/10 px-2 py-0.5 font-semibold ${stageStyle.bg} ${stageStyle.text}`}
               >
                 {stage.label}
               </span>
-              <span>{counts.negativas} negativas</span>
+              <span className="rounded-md border border-neutral-200 bg-neutral-50 px-2 py-0.5 font-medium text-neutral-600">
+                {counts.negativas} negativas
+              </span>
             </>
           }
           actions={
@@ -288,9 +294,9 @@ export default function AnotacionesStudentDetailModal({
                 aria-label="Cerrar ficha disciplinaria"
                 title="Cerrar ficha"
                 onClick={onClose}
-                className="rounded-xl p-3 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                className="min-h-10 min-w-10 rounded-lg p-2 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
               >
-                <X className="h-5 w-5" />
+                <X className="size-4" />
               </button>
             </>
           }

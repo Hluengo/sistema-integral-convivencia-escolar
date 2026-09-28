@@ -34,6 +34,7 @@ export interface CausaOperationalSummary {
   nextChecklistPhase: FaseProcedimental | null;
   laterActivityPhase: FaseProcedimental | null;
   completedHitos: number;
+  totalHitos: number;
   documentsCount: number;
   historyCount: number;
 }
@@ -117,6 +118,10 @@ export function getCausaOperationalSummary(
     (count, progress) => count + progress.completed,
     0,
   );
+  const totalHitos = phaseProgress.reduce(
+    (count, progress) => count + progress.total,
+    0,
+  );
   const documentsCount =
     causa.checklistDebidoProceso.filter((item) => item.documentoNombre).length +
     causa.bitacora.filter((entry) => entry.documentoAdjunto).length;
@@ -133,6 +138,7 @@ export function getCausaOperationalSummary(
     nextChecklistPhase: nextChecklist.phase,
     laterActivityPhase,
     completedHitos,
+    totalHitos,
     documentsCount,
     historyCount: causa.bitacora.length,
   };

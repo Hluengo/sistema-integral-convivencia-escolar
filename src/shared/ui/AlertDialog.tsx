@@ -35,7 +35,7 @@ const AlertDialogContent = forwardRef<
     <AlertDialogOverlay />
     <AlertDialogPrimitive.Content
       ref={ref}
-      className={`fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 animate-scale-in rounded-2xl bg-white p-6 shadow-xl outline-none data-[state=closed]:animate-scale-out ${className}`}
+      className={`fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 animate-scale-in rounded-2xl bg-white p-4 shadow-xl outline-none data-[state=closed]:animate-scale-out ${className}`}
       {...props}
     >
       {children}
@@ -90,7 +90,7 @@ const AlertDialogFooter = ({
   className = "",
   ...props
 }: ComponentPropsWithoutRef<"div">) => (
-  <div className={`mt-6 flex justify-end gap-3 ${className}`} {...props} />
+  <div className={`mt-4 flex justify-end gap-3 ${className}`} {...props} />
 );
 AlertDialogFooter.displayName = "AlertDialogFooter";
 

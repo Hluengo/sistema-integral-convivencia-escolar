@@ -16,8 +16,10 @@ export const INVESTIGATION_REINFORCED_ITEM_IDS = [
   "chk_inv_8",
   "chk_inv_9",
 ] as const;
+export const INVESTIGATION_INTERVIEW_ITEM_IDS = ["chk_res_4"] as const;
 export const INVESTIGATION_ITEM_IDS = [
   ...INVESTIGATION_BASE_ITEM_IDS,
+  ...INVESTIGATION_INTERVIEW_ITEM_IDS,
   ...MEDIATION_FLOW_ITEM_IDS,
   ...MEDIATION_OUTCOME_ITEM_IDS,
   ...INVESTIGATION_REINFORCED_ITEM_IDS,
@@ -35,7 +37,7 @@ export const PHASE_PREFIXES: Readonly<Record<FaseProcedimental, string>> = {
  * Hitos operativos visibles en la ruta. Los IDs omitidos se conservan para
  * reconstruir expedientes históricos, pero representan estados transitorios
  * que no requieren un registro independiente.
- * Apelación opera con 2 hitos (chk_imp_2 recibida, chk_imp_4 resuelta).
+ * Apelación opera con 3 hitos (chk_imp_2 recibida, chk_imp_4 resuelta, chk_imp_7 notificada).
  * chk_imp_1 (derecho informado) es implícito al notificar la resolución
  * (chk_res_6), que incluye la cláusula de reconsideración; chk_imp_3 es
  * revisión interna y chk_imp_5 es cierre que vive en Seguimiento.
@@ -45,15 +47,8 @@ export const ACTIVE_PHASE_ITEM_IDS: Readonly<
 > = {
   Recepción: ["chk_rec_1", "chk_rec_2", "chk_rec_3"],
   Investigación: INVESTIGATION_ITEM_IDS,
-  Resolución: [
-    "chk_res_2",
-    "chk_res_4",
-    "chk_res_6",
-    "chk_res_7",
-    "chk_res_8",
-    "chk_res_9",
-  ],
-  Apelación: ["chk_imp_2", "chk_imp_4", "chk_imp_6", "chk_imp_7"],
+  Resolución: ["chk_res_2", "chk_res_6"],
+  Apelación: ["chk_imp_2", "chk_imp_4", "chk_imp_7"],
   Seguimiento: ["chk_seg_1", "chk_seg_3", "chk_seg_4"],
 };
 
@@ -178,12 +173,16 @@ export function getApplicableInvestigationItemIds(
   causa: CausaChecklistContext,
 ): string[] {
   if (!isMediationActive(causa)) {
-    return [...INVESTIGATION_BASE_ITEM_IDS];
+    return [
+      ...INVESTIGATION_BASE_ITEM_IDS,
+      ...INVESTIGATION_INTERVIEW_ITEM_IDS,
+    ];
   }
 
   const outcome = getMediationOutcome(causa.checklistDebidoProceso);
   const ids = [
     ...INVESTIGATION_BASE_ITEM_IDS,
+    ...INVESTIGATION_INTERVIEW_ITEM_IDS,
     ...MEDIATION_FLOW_ITEM_IDS,
     ...INVESTIGATION_REINFORCED_ITEM_IDS,
   ];
@@ -266,11 +265,7 @@ export function getApplicableChecklistItems(
   const requestReceived = items.some(
     (item) => item.id === "chk_imp_2" && item.completado,
   );
-  const deadlineExpired = items.some(
-    (item) => item.id === "chk_imp_6" && item.completado,
-  );
-  if (requestReceived) return items.filter((item) => item.id !== "chk_imp_6");
-  if (deadlineExpired) return items.filter((item) => item.id !== "chk_imp_2");
+  if (requestReceived) return items;
   return items;
 }
 

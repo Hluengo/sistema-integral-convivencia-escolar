@@ -88,8 +88,8 @@ describe("Resumen operativo de causa", () => {
     assert.equal(summary.currentPhaseProgress.completed, 2);
     assert.equal(summary.currentPhaseProgress.total, 2);
     assert.notEqual(summary.nextChecklistItem?.id, "chk_inv_3");
-    assert.equal(summary.nextChecklistItem?.id, "chk_res_2");
-    assert.equal(summary.nextChecklistPhase, "Resolución");
+    assert.equal(summary.nextChecklistItem?.id, "chk_res_4");
+    assert.equal(summary.nextChecklistPhase, "Investigación");
   });
 
   it("cuenta documentos y actividad desde antecedentes ya cargados", () => {

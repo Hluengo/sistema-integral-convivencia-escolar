@@ -22,10 +22,10 @@ describe("Modales disciplinarios accesibles", () => {
     ok(content.includes("<DetailModalTabs"));
     ok(content.includes("privacyMode ? maskName(student.full_name, true)"));
     ok(detailModal.includes("h-[min(94vh,980px)]"));
-    ok(detailModal.includes("w-[min(96vw,72rem)]"));
+    ok(detailModal.includes("w-[min(94vw,64rem)]"));
     ok(detailModal.includes("min-h-0 flex-1 overflow-y-auto"));
-    ok(detailModal.includes("bg-brand-700"));
-    ok(detailModal.includes("gap-3"));
+    ok(detailModal.includes("bg-neutral-950"));
+    ok(detailModal.includes("gap-2.5"));
     ok(!content.includes("onTogglePrivacy"));
     ok(!content.includes("EyeOff"));
     ok(!content.includes("<dialog"));

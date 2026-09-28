@@ -40,7 +40,7 @@ const DialogContent = forwardRef<
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
-      className={`fixed left-1/2 top-1/2 z-50 w-full max-w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 animate-scale-in rounded-2xl bg-white p-6 shadow-xl outline-none [&_*]:reduce-motion:[animation-duration:0ms] ${className}`}
+      className={`fixed left-1/2 top-1/2 z-50 w-full max-w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 animate-scale-in rounded-2xl bg-white p-4 shadow-xl outline-none [&_*]:reduce-motion:[animation-duration:0ms] ${className}`}
       {...props}
     >
       {children}
@@ -62,7 +62,7 @@ const DialogHeader = ({
   ...props
 }: ComponentPropsWithoutRef<"div">) => (
   <div
-    className={`mb-5 flex items-start justify-between gap-4 ${className}`}
+    className={`mb-4 flex items-start justify-between gap-4 ${className}`}
     {...props}
   />
 );
@@ -97,7 +97,7 @@ const DialogFooter = ({
   ...props
 }: ComponentPropsWithoutRef<"div">) => (
   <div
-    className={`mt-6 flex items-center justify-end gap-3 ${className}`}
+    className={`mt-4 flex items-center justify-end gap-3 ${className}`}
     {...props}
   />
 );

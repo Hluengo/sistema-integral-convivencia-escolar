@@ -5,6 +5,7 @@
 
 import { memo, useMemo, useState } from "react";
 import { type Causa, EstadoCausa } from "../../shared/lib/types";
+import { getCausaOperationalSummary } from "./causaOperationalSummary";
 import {
   Search,
   Archive,
@@ -164,10 +165,9 @@ function ClosedCases({
                 new Date(causa.fechaApertura).getTime()) /
                 (1000 * 60 * 60 * 24),
             );
-            const completedCount = causa.checklistDebidoProceso.filter(
-              (c) => c.completado,
-            ).length;
-            const totalCount = causa.checklistDebidoProceso.length;
+            const operational = getCausaOperationalSummary(causa);
+            const completedCount = operational.completedHitos;
+            const totalCount = operational.totalHitos;
 
             return (
               <div
