@@ -200,7 +200,7 @@ export function buildNotificacionHito(
     fechaCompletado: nowDateOnly(),
     requeridoPor: base?.requeridoPor || "Circular 482",
     registradoPor: snapshot.emittedBy,
-    observaciones: `Notificación de inicio de indagación emitida con fecha ${snapshot.emissionDate}.`,
+    observaciones: `Notificación de inicio de indagación emitida con fecha ${snapshot.emissionDate}. Apoderado/a: ${snapshot.apoderadoName?.trim() || "No registrado"}. Encargado/a de indagación: ${snapshot.emittedBy?.trim() || "No registrado"}.`,
   };
 }
 
@@ -210,16 +210,22 @@ export function buildNotificacionBitacoraEntry(
   snapshot: CausaDocumentSnapshot,
   privacyMode: boolean,
 ): BitacoraEntry {
+  const emisor = snapshot.emittedBy?.trim() || "No registrado";
+  const apoderado = snapshot.apoderadoName?.trim() || "No registrado";
+  const estudiante = privacyMode
+    ? causa.nnaProtectedName
+    : causa.estudianteNombre;
   return {
     id: `b_notif_${crypto.randomUUID()}`,
     fecha: nowIso(),
     tipo: "Notificación",
     titulo: "Notificación de Inicio de Indagación emitida",
-    descripcion: `Se emitió la Notificación de Inicio de Indagación (${snapshot.emissionDate}) para informar formalmente al estudiante y a su apoderado/a sobre la apertura del procedimiento disciplinario. Emitida por: ${snapshot.emittedBy}.`,
+    descripcion: `Se emitió la Notificación de Inicio de Indagación (${snapshot.emissionDate}) para informar formalmente al estudiante y a su apoderado/a ${apoderado} sobre la apertura del procedimiento disciplinario. Emitida por (encargado/a de indagación): ${emisor}.`,
     participantes: [
-      snapshot.emittedBy,
-      privacyMode ? causa.nnaProtectedName : causa.estudianteNombre,
-    ],
+      emisor,
+      estudiante,
+      snapshot.apoderadoName?.trim() || "",
+    ].filter(Boolean),
   };
 }
 

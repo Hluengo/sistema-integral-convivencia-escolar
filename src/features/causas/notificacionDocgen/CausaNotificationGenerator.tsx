@@ -22,6 +22,7 @@ import LetterPreviewViewport from "@/src/features/anotaciones/docgen/LetterPrevi
 import {
   buildCausaDocumentSnapshot,
   buildPrefilledNotificationContent,
+  getNotificacionResponsable,
   isValidApoderadoEmail,
 } from "./builders";
 import NotificationForm from "./NotificationForm";
@@ -91,11 +92,15 @@ export default function CausaNotificationGenerator({
     void refetchInstitution();
   }, [refetchInstitution]);
 
-  const [apoderadoName, setApoderadoName] = useState("");
+  const [apoderadoName, setApoderadoName] = useState(
+    initialSnapshot?.apoderadoName ?? "",
+  );
   const [apoderadoEmail, setApoderadoEmail] = useState(
     causa.apoderadoEmail ?? "",
   );
-  const [emittedBy, setEmittedBy] = useState("");
+  const [emittedBy, setEmittedBy] = useState(
+    initialSnapshot?.emittedBy || getNotificacionResponsable(causa),
+  );
   const [isSending, setIsSending] = useState(false);
   const [content, setContent] = useState<NotificationContent>(() =>
     buildPrefilledNotificationContent(causa),
@@ -319,6 +324,72 @@ export default function CausaNotificationGenerator({
       )}
 
       <div className="space-y-4">
+        {compact && canEdit && (
+          <div className="grid grid-cols-1 gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 sm:grid-cols-2">
+            <div>
+              <label
+                htmlFor="notificacion-apoderado-compact"
+                className="mb-1 block text-[10px] font-medium text-neutral-700"
+              >
+                Nombre del Apoderado/a
+              </label>
+              <input
+                id="notificacion-apoderado-compact"
+                aria-label="Nombre del apoderado o adulto responsable"
+                type="text"
+                value={apoderadoName}
+                onChange={(event) => setApoderadoName(event.target.value)}
+                placeholder="Ingrese el nombre del apoderado/a"
+                className="min-h-9 w-full rounded-md border border-neutral-300 px-2 py-1.5 text-xs shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="notificacion-emitido-por-compact"
+                className="mb-1 block text-[10px] font-medium text-neutral-700"
+              >
+                Encargado/a de indagación
+              </label>
+              <input
+                id="notificacion-emitido-por-compact"
+                aria-label="Encargado de indagación que emite"
+                type="text"
+                value={emittedBy}
+                onChange={(event) => setEmittedBy(event.target.value)}
+                placeholder="Nombre de quien emite"
+                className="min-h-9 w-full rounded-md border border-neutral-300 px-2 py-1.5 text-xs shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="flex flex-wrap gap-1.5 sm:col-span-2">
+              <Button
+                variant="secondary"
+                onClick={() => void onSaveDraft(currentSnapshot)}
+                disabled={isProcessing}
+                className="rounded-md px-2.5 py-1.5 text-[10px] font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <FileSignature className="mr-1 inline size-3" /> Guardar
+                borrador
+              </Button>
+              <Button
+                variant="custom"
+                onClick={() => void onMarkNotified(currentSnapshot)}
+                disabled={isProcessing}
+                className="rounded-md border border-leve-200 bg-leve-50 px-2.5 py-1.5 text-[10px] font-semibold text-leve-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <CheckCircle2 className="mr-1 inline size-3" />
+                {isProcessing ? "Procesando…" : "Marcar como notificada"}
+              </Button>
+            </div>
+            {feedback && (
+              <p
+                role={feedback.tone === "error" ? "alert" : "status"}
+                className="text-[10px] font-medium text-neutral-600 sm:col-span-2"
+              >
+                {feedback.text}
+              </p>
+            )}
+          </div>
+        )}
         {compact && (
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2">
             <div className="flex items-center gap-2 text-[10px]">
