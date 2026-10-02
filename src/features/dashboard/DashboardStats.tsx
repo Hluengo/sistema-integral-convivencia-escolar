@@ -765,9 +765,15 @@ export default function DashboardStats({
                     ? Math.round((count / visiblePhases.length) * 100)
                     : 0;
                   return (
-                    <div
+                    <button
                       key={phase}
-                      className="flex min-h-36 flex-col rounded-xl border border-neutral-200 bg-neutral-50/60 p-3"
+                      type="button"
+                      onClick={() => {
+                        onFaseSelect(phase);
+                        onNavigate?.("causas");
+                      }}
+                      aria-label={`Ver expedientes en etapa ${phase}`}
+                      className="flex min-h-36 flex-col rounded-xl border border-neutral-200 bg-neutral-50/60 p-3 text-left transition-colors hover:border-brand-300 hover:bg-brand-50/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span
@@ -800,7 +806,7 @@ export default function DashboardStats({
                           {percentage}%
                         </span>
                       </div>
-                    </div>
+                    </button>
                   );
                 },
               )}
