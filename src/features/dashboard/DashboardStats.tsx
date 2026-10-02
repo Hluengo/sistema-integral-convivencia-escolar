@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   type Causa,
@@ -13,6 +13,7 @@ import {
 } from "../../shared/lib/types";
 import { getStats } from "../../shared/lib/data";
 import { getCausaOperationalPhase } from "../causas/causaOperationalSummary";
+import { getCausaDeadline } from "../causas/causaPresentation";
 import {
   Activity,
   BarChart3,
@@ -62,6 +63,58 @@ import {
 import { getDashboardActions, type DashboardAction } from "./dashboardActions";
 
 const DASHBOARD_STALE_TIME_MS = 300_000;
+
+const PHASE_CARDS: {
+  phase: FaseProcedimental;
+  description: string;
+  color: string;
+  tone: string;
+  badge: string;
+  badgeTone: string;
+}[] = [
+  {
+    phase: "Recepción",
+    description: "Ingreso y revisión inicial del expediente.",
+    color: "bg-blue-500",
+    tone: "bg-blue-50 text-blue-700",
+    badge: "Inicio",
+    badgeTone: "bg-emerald-50 text-emerald-700",
+  },
+  {
+    phase: "Investigación",
+    description: "Indagación y recopilación de antecedentes.",
+    color: "bg-amber-500",
+    tone: "bg-amber-50 text-amber-700",
+    badge: "En curso",
+    badgeTone: "bg-amber-50 text-amber-700",
+  },
+  {
+    phase: "Resolución",
+    description: "Informe y decisión sobre las medidas.",
+    color: "bg-violet-500",
+    tone: "bg-violet-50 text-violet-700",
+    badge: "Decisión",
+    badgeTone: "bg-sky-50 text-sky-700",
+  },
+  {
+    phase: "Apelación",
+    description: "Revisión de recursos presentados.",
+    color: "bg-teal-500",
+    tone: "bg-teal-50 text-teal-700",
+    badge: "Recursos",
+    badgeTone: "bg-emerald-50 text-emerald-700",
+  },
+  {
+    phase: "Seguimiento",
+    description: "Ejecución y seguimiento de medidas.",
+    color: "bg-slate-400",
+    tone: "bg-slate-100 text-slate-700",
+    badge: "Seguimiento",
+    badgeTone: "bg-slate-100 text-slate-700",
+  },
+];
+
+type PhaseFilter = "all" | "onTime" | "toResolve";
 
 interface DashboardStatsProps {
   causas: Causa[];
@@ -244,6 +297,41 @@ export default function DashboardStats({
 }: DashboardStatsProps) {
   const authenticatedStats = getStats(causas);
   const dashboardActions = useMemo(() => getDashboardActions(causas), [causas]);
+  const [phaseFilter, setPhaseFilter] = useState<PhaseFilter>("all");
+  const activePhases = useMemo(
+    () =>
+      causas
+        .filter(
+          (causa) =>
+            causa.estadoActual !== EstadoCausa.CAUSA_CERRADA &&
+            causa.estadoActual !== EstadoCausa.RESOLUCION_EJECUTORIADA,
+        )
+        .map((causa) => ({ causa, phase: getCausaOperationalPhase(causa) })),
+    [causas],
+  );
+  const onTimeCount = useMemo(
+    () =>
+      activePhases.filter(
+        ({ causa, phase }) =>
+          (phase === "Recepción" || phase === "Investigación") &&
+          getCausaDeadline(causa).remainingDays >= 0,
+      ).length,
+    [activePhases],
+  );
+  const toResolveCount = activePhases.filter(
+    ({ phase }) => phase === "Resolución" || phase === "Apelación",
+  ).length;
+  const visiblePhases = activePhases.filter(({ causa, phase }) => {
+    if (phaseFilter === "toResolve")
+      return phase === "Resolución" || phase === "Apelación";
+    if (phaseFilter === "onTime") {
+      return (
+        (phase === "Recepción" || phase === "Investigación") &&
+        getCausaDeadline(causa).remainingDays >= 0
+      );
+    }
+    return true;
+  });
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const tenantId = useAuthStore((state) => state.tenantId);
   const userId = useAuthStore((state) => state.user?.id ?? null);
@@ -586,6 +674,140 @@ export default function DashboardStats({
           }
         />
       </section>
+
+      {isAuthenticated ? (
+        <section
+          aria-labelledby="dashboard-phases-title"
+          className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-5"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-4 border-b border-neutral-100 pb-4">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-lg bg-brand-50 p-2 text-brand-600">
+                  <FileText className="size-4" aria-hidden="true" />
+                </span>
+                <h2
+                  id="dashboard-phases-title"
+                  className="font-bold text-neutral-900 text-sm sm:text-base"
+                >
+                  Distribución de Casos Abiertos por Etapa Procesal
+                </h2>
+                <span className="rounded-full bg-slate-100 px-2 py-1 font-semibold text-neutral-700 text-xs">
+                  {activePhases.length} casos activos
+                </span>
+              </div>
+              <p className="mt-1 text-neutral-500 text-xs">
+                Clasificación según la fase operativa actual de cada expediente.
+              </p>
+            </div>
+            <div
+              className="flex flex-wrap items-center gap-1.5"
+              role="group"
+              aria-label="Filtrar etapas procesales"
+            >
+              <span className="mr-1 text-neutral-500 text-xs">
+                Filtrar vista:
+              </span>
+              {(
+                [
+                  ["all", "Todos", activePhases.length],
+                  ["onTime", "En plazo", onTimeCount],
+                  ["toResolve", "Por resolver", toResolveCount],
+                ] as const
+              ).map(([value, label, count]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setPhaseFilter(value)}
+                  aria-pressed={phaseFilter === value}
+                  className={`min-h-9 rounded-lg px-2.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+                    phaseFilter === value
+                      ? "bg-brand-600 text-white"
+                      : "bg-slate-100 text-neutral-700 hover:bg-slate-200"
+                  }`}
+                >
+                  {label} ({count})
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="mt-4 flex items-center justify-between gap-3 text-neutral-600 text-xs">
+            <span>Secuencia procesal</span>
+            <span>{visiblePhases.length} casos en la vista</span>
+          </div>
+          <div
+            className="mt-2 flex h-2 overflow-hidden rounded-full bg-slate-100"
+            role="img"
+            aria-label={`Distribución de ${visiblePhases.length} casos por fase`}
+          >
+            {PHASE_CARDS.map(({ phase, color }) => {
+              const count = visiblePhases.filter(
+                (item) => item.phase === phase,
+              ).length;
+              return count > 0 ? (
+                <span
+                  key={phase}
+                  className={color}
+                  style={{ width: `${(count / visiblePhases.length) * 100}%` }}
+                  aria-hidden="true"
+                />
+              ) : null;
+            })}
+          </div>
+          <div className="mt-5 overflow-x-auto">
+            <div className="grid min-w-[650px] grid-cols-5 gap-3">
+              {PHASE_CARDS.map(
+                ({ phase, description, tone, badge, badgeTone }, index) => {
+                  const count = visiblePhases.filter(
+                    (item) => item.phase === phase,
+                  ).length;
+                  const percentage = visiblePhases.length
+                    ? Math.round((count / visiblePhases.length) * 100)
+                    : 0;
+                  return (
+                    <div
+                      key={phase}
+                      className="flex min-h-36 flex-col rounded-xl border border-neutral-200 bg-neutral-50/60 p-3"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span
+                          className={`rounded px-1.5 py-0.5 font-bold text-[11px] ${tone}`}
+                        >
+                          ETAPA {index + 1}
+                        </span>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[11px] ${badgeTone}`}
+                        >
+                          {badge}
+                        </span>
+                      </div>
+                      <h3 className="mt-2 font-semibold text-neutral-900 text-sm">
+                        {phase}
+                      </h3>
+                      <p className="mt-1 flex-1 text-neutral-600 text-xs leading-relaxed">
+                        {description}
+                      </p>
+                      <div className="mt-3 flex items-end justify-between gap-2 border-t border-neutral-200 pt-2">
+                        <span className="text-neutral-500 text-xs">
+                          <strong className="mr-1 text-lg text-neutral-950 tabular-nums">
+                            {count}
+                          </strong>
+                          casos
+                        </span>
+                        <span
+                          className={`rounded-md px-2 py-1 font-semibold text-xs tabular-nums ${tone}`}
+                        >
+                          {percentage}%
+                        </span>
+                      </div>
+                    </div>
+                  );
+                },
+              )}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <section className="grid grid-cols-1 gap-5 lg:grid-cols-12">
         <section
