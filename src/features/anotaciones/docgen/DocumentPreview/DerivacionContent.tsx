@@ -85,17 +85,6 @@ export default function DerivacionContent(props: DocContentProps) {
             Observaciones: {letterContent.observaciones}
           </p>
         )}
-        <div className="letter-legal-box">
-          <p className="letter-legal-text">
-            <strong>Marco Legal:</strong> La presente derivación se realiza de
-            conformidad con el Reglamento Interno de Convivencia Escolar 2026 y
-            la normativa vigente sobre convivencia educativa, particularmente la
-            Ley N.º 21.809, que promueve la buena convivencia, el buen trato y
-            el bienestar de las comunidades educativas, junto con la Circular
-            N.º 482/2018 de la Superintendencia de Educación, en lo que resulte
-            aplicable.
-          </p>
-        </div>
       </Section>
 
       <LetterSignatureGrid signatures={signatures} />
