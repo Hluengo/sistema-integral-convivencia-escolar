@@ -2,6 +2,7 @@
 
 import {
   Section,
+  LetterAgreements,
   LetterMetadataGrid,
   LetterSignatureGrid,
 } from "./SharedComponents";
@@ -60,7 +61,7 @@ export default function DerivacionContent(props: DocContentProps) {
       </Section>
 
       <Section number={5} title="Acuerdos y cierre">
-        <p style={{ whiteSpace: "pre-line" }}>{letterContent.acuerdos}</p>
+        <LetterAgreements text={letterContent.acuerdos} />
         <p
           style={{
             marginTop: "12px",
@@ -86,10 +87,13 @@ export default function DerivacionContent(props: DocContentProps) {
         )}
         <div className="letter-legal-box">
           <p className="letter-legal-text">
-            <strong>Marco Legal:</strong> La presente derivación se realiza en
-            conformidad con el Reglamento Interno RICE 2026, Circular 482/2018
-            de la Superintendencia de Educación Escolar y normativa vigente
-            sobre convivencia escolar.
+            <strong>Marco Legal:</strong> La presente derivación se realiza de
+            conformidad con el Reglamento Interno de Convivencia Escolar 2026 y
+            la normativa vigente sobre convivencia educativa, particularmente la
+            Ley N.º 21.809, que promueve la buena convivencia, el buen trato y
+            el bienestar de las comunidades educativas, junto con la Circular
+            N.º 482/2018 de la Superintendencia de Educación, en lo que resulte
+            aplicable.
           </p>
         </div>
       </Section>

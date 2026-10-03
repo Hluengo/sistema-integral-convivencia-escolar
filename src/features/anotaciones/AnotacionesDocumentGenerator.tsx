@@ -292,97 +292,107 @@ export default function AnotacionesDocumentGenerator({
         onCancel={() => setShowPrintHint(false)}
       />
 
-      <div className="mx-auto w-full max-w-[216mm] space-y-5">
-        <GeneratorHeader
-          negativeCount={negativeCount}
-          semaphoric={semaphoric}
-        />
-
-        <div className="space-y-4 rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
-          <DocTypeSelector
-            docType={docType}
-            onDocTypeChange={(type: string) => {
-              const nextDocType = type as DocType;
-              setDocType(nextDocType);
-              documentState.loadDefaultLetterContent(nextDocType);
-            }}
-            hasTenOrMore={negativeCount >= 10}
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+        <div className="w-full space-y-5">
+          <GeneratorHeader
             negativeCount={negativeCount}
+            semaphoric={semaphoric}
           />
 
-          <DocumentWarnings
-            docType={docType}
-            negativeCount={negativeCount}
-            hasTenOrMore={negativeCount >= 10}
-            authorizedBypass={documentState.authorizedBypass}
-            onAuthorizedBypass={() =>
-              documentState.setAuthorizedBypass((v) => !v)
-            }
-            authorizedDuplicate={documentState.authorizedDuplicate}
-            onAuthorizedDuplicate={() =>
-              documentState.setAuthorizedDuplicate((v) => !v)
-            }
-            isDocLockedByProgress={false}
-            existingLetter={null}
-            bypassProgressLock={documentState.bypassProgressLock}
-            onBypassProgressLock={() =>
-              documentState.setBypassProgressLock((v) => !v)
-            }
-          />
+          <div className="space-y-4 rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
+            <DocTypeSelector
+              docType={docType}
+              onDocTypeChange={(type: string) => {
+                const nextDocType = type as DocType;
+                setDocType(nextDocType);
+                documentState.loadDefaultLetterContent(nextDocType);
+              }}
+              hasTenOrMore={negativeCount >= 10}
+              negativeCount={negativeCount}
+            />
+
+            <DocumentWarnings
+              docType={docType}
+              negativeCount={negativeCount}
+              hasTenOrMore={negativeCount >= 10}
+              authorizedBypass={documentState.authorizedBypass}
+              onAuthorizedBypass={() =>
+                documentState.setAuthorizedBypass((v) => !v)
+              }
+              authorizedDuplicate={documentState.authorizedDuplicate}
+              onAuthorizedDuplicate={() =>
+                documentState.setAuthorizedDuplicate((v) => !v)
+              }
+              isDocLockedByProgress={false}
+              existingLetter={null}
+              bypassProgressLock={documentState.bypassProgressLock}
+              onBypassProgressLock={() =>
+                documentState.setBypassProgressLock((v) => !v)
+              }
+            />
+          </div>
+
+          <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
+            <h4 className="mb-4 text-sm font-bold text-neutral-900">
+              Datos editables de la carta
+            </h4>
+            <DocumentForm
+              docType={docType}
+              apoderadoName={documentState.apoderadoName}
+              onApoderadoNameChange={documentState.setApoderadoName}
+              coordinatorName={documentState.coordinatorName}
+              onCoordinatorNameChange={documentState.setCoordinatorName}
+              emittedBy={documentState.emittedBy}
+              onEmittedByChange={documentState.setEmittedBy}
+              inspectorName={documentState.inspectorName}
+              onInspectorNameChange={documentState.setInspectorName}
+              letterContent={documentState.letterContent}
+              onLetterContentChange={documentState.updateLetterContent}
+              onResetLetterContent={() =>
+                documentState.resetLetterContent(docType)
+              }
+              selectedAnnotationsForDoc={Array.from(
+                selectedAnnotations.selectedIds,
+              )}
+              onToggleAnnotation={selectedAnnotations.toggleAnnotation}
+              negativeCount={negativeCount}
+              annotations={annotations}
+            />
+          </div>
         </div>
-
-        <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
-          <h4 className="mb-4 text-sm font-bold text-neutral-900">
-            Datos editables de la carta
-          </h4>
-          <DocumentForm
+        <div className="lg:sticky lg:top-6 lg:self-start">
+          <div className="mb-3 flex items-center justify-between rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-wider text-neutral-500 shadow-xs">
+            <span>Vista Previa Oficial (Tamaño Carta • 8.5” × 11”)</span>
+          </div>
+          <DocumentPreview
+            ref={previewRef}
             docType={docType}
-            apoderadoName={documentState.apoderadoName}
-            onApoderadoNameChange={documentState.setApoderadoName}
-            coordinatorName={documentState.coordinatorName}
-            onCoordinatorNameChange={documentState.setCoordinatorName}
-            emittedBy={documentState.emittedBy}
-            onEmittedByChange={documentState.setEmittedBy}
-            inspectorName={documentState.inspectorName}
-            onInspectorNameChange={documentState.setInspectorName}
-            letterContent={documentState.letterContent}
-            onLetterContentChange={documentState.updateLetterContent}
-            onResetLetterContent={() =>
-              documentState.resetLetterContent(docType)
+            currentName={student.full_name}
+            currentCourse={student.course_id}
+            currentRut={student.rut || ""}
+            currentTeacher={
+              teachers[student.course_id] ||
+              student.teacher_id ||
+              "Sin Profesor"
             }
-            selectedAnnotationsForDoc={Array.from(
-              selectedAnnotations.selectedIds,
-            )}
-            onToggleAnnotation={selectedAnnotations.toggleAnnotation}
+            coordinatorName={documentState.coordinatorName}
+            inspectorName={documentState.inspectorName}
+            apoderadoName={documentState.apoderadoName}
+            dateStr={dateStr}
             negativeCount={negativeCount}
-            annotations={annotations}
+            selectedAnnsObjects={selectedAnnsObjects}
+            annotationSummary={annotationSummary}
+            letterContent={documentState.letterContent}
+            onPrint={handlePrintDoc}
+            onMarkProcessed={() =>
+              void onMarkProcessed(contentSnapshot, docType)
+            }
+            isProcessing={isProcessing}
+            processingFeedback={processingFeedback}
+            onOverflowChange={handleOverflowChange}
           />
         </div>
       </div>
-
-      <DocumentPreview
-        ref={previewRef}
-        docType={docType}
-        currentName={student.full_name}
-        currentCourse={student.course_id}
-        currentRut={student.rut || ""}
-        currentTeacher={
-          teachers[student.course_id] || student.teacher_id || "Sin Profesor"
-        }
-        coordinatorName={documentState.coordinatorName}
-        inspectorName={documentState.inspectorName}
-        apoderadoName={documentState.apoderadoName}
-        dateStr={dateStr}
-        negativeCount={negativeCount}
-        selectedAnnsObjects={selectedAnnsObjects}
-        annotationSummary={annotationSummary}
-        letterContent={documentState.letterContent}
-        onPrint={handlePrintDoc}
-        onMarkProcessed={() => void onMarkProcessed(contentSnapshot, docType)}
-        isProcessing={isProcessing}
-        processingFeedback={processingFeedback}
-        onOverflowChange={handleOverflowChange}
-      />
     </div>
   );
 }

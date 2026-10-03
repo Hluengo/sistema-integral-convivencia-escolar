@@ -1,6 +1,5 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import type { Json } from "../lib/database.types";
 import { supabase } from "../lib/supabase";
 import type {
   ExpedienteDocument,
@@ -96,56 +95,4 @@ export async function fetchExpedienteDocuments(
     return (data ?? []) as ExpedienteDocument[];
   });
   return [...new Map(rows.map((row) => [row.id, row])).values()];
-}
-
-export async function registerExpedienteDocument(
-  input: RegisterExpedienteDocumentInput,
-): Promise<ExpedienteDocument> {
-  const { data, error } = await db
-    .from("expediente_documents")
-    .insert(buildExpedienteDocumentPayload(input) as unknown as Json)
-    .select(DOCUMENT_COLUMNS)
-    .single();
-  if (error || !data)
-    throw error || new Error("No fue posible indexar el documento.");
-  return data as unknown as ExpedienteDocument;
-}
-
-export async function invalidateExpedienteDocument(
-  id: string,
-  reason: string,
-): Promise<boolean> {
-  const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user)
-    throw authError || new Error("La sesión ya no está disponible.");
-
-  const { error } = await db
-    .from("expediente_documents")
-    .update({
-      status: "invalidado",
-      invalidated_at: new Date().toISOString(),
-      invalidated_by: authData.user.id,
-      invalidation_reason: reason.trim(),
-    })
-    .eq("id", id)
-    .eq("status", "vigente");
-  if (error) throw error;
-  return true;
-}
-
-export async function replaceExpedienteDocument(
-  previousId: string,
-  input: RegisterExpedienteDocumentInput,
-): Promise<ExpedienteDocument> {
-  const next = await registerExpedienteDocument({
-    ...input,
-    version: input.version ?? 1,
-  });
-  const { error } = await db
-    .from("expediente_documents")
-    .update({ status: "reemplazado" })
-    .eq("id", previousId)
-    .eq("status", "vigente");
-  if (error) throw error;
-  return next;
 }

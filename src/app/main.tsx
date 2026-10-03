@@ -1,7 +1,13 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { StrictMode } from "react";
+import { config as zodConfig } from "zod";
 import { createRoot } from "react-dom/client";
+
+// Zod v4 usa `new Function` (JIT) para validar más rápido. Eso choca con
+// `script-src 'self'` (sin 'unsafe-eval') y dispara el error CSP en el
+// vendor. jitless lo desactiva con costo mínimo y mantiene el CSP estricto.
+zodConfig({ jitless: true });
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "../lib/queryClient";
 import ErrorBoundary from "../shared/ui/ErrorBoundary";

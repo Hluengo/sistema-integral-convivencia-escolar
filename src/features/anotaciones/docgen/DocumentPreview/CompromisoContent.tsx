@@ -2,6 +2,7 @@
 
 import {
   Section,
+  LetterAgreements,
   LetterMetadataGrid,
   LetterSignatureGrid,
 } from "./SharedComponents";
@@ -60,19 +61,24 @@ export default function CompromisoContent(props: DocContentProps) {
         <p>{letterContent.medida}</p>
       </Section>
 
-      <Section number={5} title="Acuerdos y cierre">
-        <p style={{ whiteSpace: "pre-line" }}>{letterContent.acuerdos}</p>
-        <p
-          style={{
-            marginTop: "12px",
-            whiteSpace: "pre-line",
-            fontSize: "9pt",
-            color: "#6b7280",
-            fontStyle: "italic",
-          }}
-        >
-          {letterContent.cierre}
-        </p>
+      <Section
+        number={5}
+        title={letterContent.cierre.trim() ? "Acuerdos y cierre" : "Acuerdos"}
+      >
+        <LetterAgreements text={letterContent.acuerdos} />
+        {letterContent.cierre.trim() && (
+          <p
+            style={{
+              marginTop: "12px",
+              whiteSpace: "pre-line",
+              fontSize: "9pt",
+              color: "#6b7280",
+              fontStyle: "italic",
+            }}
+          >
+            {letterContent.cierre}
+          </p>
+        )}
         {letterContent.observaciones && (
           <p
             style={{

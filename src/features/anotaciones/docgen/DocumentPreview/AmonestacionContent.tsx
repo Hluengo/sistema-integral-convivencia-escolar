@@ -2,6 +2,7 @@
 
 import {
   Section,
+  LetterAgreements,
   LetterMetadataGrid,
   LetterSignatureGrid,
 } from "./SharedComponents";
@@ -62,7 +63,7 @@ export default function AmonestacionContent(props: DocContentProps) {
       </Section>
 
       <Section number={5} title="Acuerdos y cierre">
-        <p style={{ whiteSpace: "pre-line" }}>{letterContent.acuerdos}</p>
+        <LetterAgreements text={letterContent.acuerdos} />
         <p
           style={{
             marginTop: "12px",

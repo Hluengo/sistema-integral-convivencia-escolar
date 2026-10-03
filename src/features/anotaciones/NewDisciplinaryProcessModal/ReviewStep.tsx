@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AlertTriangle, Check, Pencil, X } from "lucide-react";
 import { CLASSIFICATION_OPTIONS } from "./constants";
+import { formatAnnotationDisplayText } from "../AnotacionesStudentDetailModal/annotationDisplay";
 import type { AnnotationSummary } from "@/shared/lib/types";
 import Button from "@/shared/ui/Button";
 
@@ -233,7 +234,7 @@ export default function ReviewStep({
                   </div>
                 ) : (
                   <p className="line-clamp-3 text-neutral-600 text-xs">
-                    {annotation.raw_text}
+                    {formatAnnotationDisplayText(annotation.raw_text)}
                   </p>
                 )}
                 {(annotation.detected_date || annotation.detected_teacher) && (

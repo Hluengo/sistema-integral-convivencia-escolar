@@ -49,7 +49,7 @@ export const ACTIVE_PHASE_ITEM_IDS: Readonly<
   Investigación: INVESTIGATION_ITEM_IDS,
   Resolución: ["chk_res_2", "chk_res_6"],
   Apelación: ["chk_imp_2", "chk_imp_4", "chk_imp_7"],
-  Seguimiento: ["chk_seg_1", "chk_seg_3", "chk_seg_4"],
+  Seguimiento: ["chk_seg_1", "chk_seg_4"],
 };
 
 type InvestigationItemId = (typeof INVESTIGATION_ITEM_IDS)[number];
@@ -283,19 +283,3 @@ export function getApplicableInvestigationItems(
  * al notificar la resolución (chk_res_6 completado, que incluye la cláusula
  * de reconsideración). Regla derivada, no escribe en DB.
  */
-export function getDerechoApelacionDetalle(causa: CausaChecklistContext): {
-  informado: boolean;
-  via: "hito" | "resolucion" | null;
-  fecha?: string;
-} {
-  const byId = new Map(
-    causa.checklistDebidoProceso.map((item) => [item.id, item]),
-  );
-  const hito = byId.get("chk_imp_1");
-  if (hito?.completado)
-    return { informado: true, via: "hito", fecha: hito.fechaCompletado };
-  const res = byId.get("chk_res_6");
-  if (res?.completado)
-    return { informado: true, via: "resolucion", fecha: res.fechaCompletado };
-  return { informado: false, via: null };
-}

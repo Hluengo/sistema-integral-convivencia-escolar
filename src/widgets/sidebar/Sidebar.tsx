@@ -83,23 +83,30 @@ const NAV_ITEMS: NavItem[] = [
 
 function SidebarBrand({ showText }: { showText: boolean }) {
   const tenantId = useAuthStore((state) => state.tenantId);
+  const [logoError, setLogoError] = useState(false);
   const institutionQuery = useQuery({
     queryKey: ["institution-settings", tenantId, "sidebar"],
     queryFn: fetchInstitutionDocumentSettings,
     enabled: Boolean(tenantId),
     staleTime: 300_000,
+    // ponytail: conserva el logo previo durante refetch; la URL firmada cambia
+    // en cada request y sin esto el <img> se desmonta y parpadea.
+    placeholderData: (previous) => previous,
   });
-  const logoUrl = institutionQuery.data?.logo_url ?? null;
+  useEffect(() => setLogoError(false), [tenantId]);
+  const logoUrl = logoError ? null : (institutionQuery.data?.logo_url ?? null);
   const tenantName =
     institutionQuery.data?.official_name?.trim() || "Escolar Pro";
 
   return (
     <>
       {logoUrl ? (
+        // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
         <img
           src={logoUrl}
           alt={`Logo de ${tenantName}`}
           className="size-9 shrink-0 rounded-xl bg-white object-contain shadow-sm ring-1 ring-neutral-200"
+          onError={() => setLogoError(true)}
         />
       ) : (
         <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-brand-700 text-white shadow-sm">

@@ -398,9 +398,9 @@ export const getBaseChecklist = (
   // 5. Estado de Seguimiento. chk_seg_2 se integra con el plan/medida.
   {
     id: "chk_seg_1",
-    label: "Medida o Plan de Acompañamiento Iniciado",
+    label: "Seguimiento realizado",
     descripcion:
-      "Se inicia la aplicación de la medida formativa o disciplinaria y el plan de acompañamiento correspondiente.",
+      "Se registra la realización del seguimiento o acompañamiento correspondiente.",
     completado: false,
     requeridoPor: "Circular 482",
   },
@@ -421,8 +421,8 @@ export const getBaseChecklist = (
   },
   {
     id: "chk_seg_4",
-    label: "Causa Cerrada",
-    descripcion: "Procedimiento completamente finalizado y archivado.",
+    label: "Cierre",
+    descripcion: "El procedimiento queda finalizado y archivado.",
     completado: false,
     requeridoPor: "Reglamento Interno",
   },

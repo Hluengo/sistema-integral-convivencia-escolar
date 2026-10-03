@@ -70,25 +70,29 @@ export default function DocumentWarnings({
     warnings.push(
       <div
         key="threshold"
-        className="rounded-lg border border-grave-200 bg-grave-50 p-3 text-sm"
+        className="rounded-xl border border-grave-200 bg-grave-50 p-4 text-sm"
       >
         <div className="flex items-start gap-2">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-grave-600" />
-          <div>
-            <p className="font-medium text-grave-700">Umbral no alcanzado</p>
-            <p className="mt-1 text-grave-700">
-              Se requieren al menos 10 anotaciones negativas para emitir una
-              Carta de Compromiso. Actualmente tiene {negativeCount}.
+          <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-grave-600" />
+          <div className="min-w-0">
+            <p className="font-bold text-grave-800">
+              Umbral ordinario no alcanzado
             </p>
-            <label className="mt-2 flex min-h-11 cursor-pointer items-center gap-2 text-grave-700">
+            <p className="mt-1 text-grave-700">
+              Se requieren 10 anotaciones negativas para Compromiso regular. El
+              estudiante acumula{" "}
+              <strong className="font-bold">{negativeCount} de 10</strong>.
+            </p>
+            <label className="mt-3 flex min-h-11 cursor-pointer items-center gap-2 border-t border-grave-200/60 pt-3 font-semibold text-neutral-800">
               <input
                 type="checkbox"
                 aria-label="Autorizar emisión excepcional"
                 checked={authorizedBypass}
                 onChange={onAuthorizedBypass}
-                className="h-5 w-5 rounded border-grave-200 accent-brand-600 focus:ring-2 focus:ring-brand-500/20"
+                className="h-4 w-4 rounded border-grave-300 accent-brand-600 focus:ring-2 focus:ring-brand-500/20"
               />
-              Autorizar emisión excepcional
+              Autorizar emisión excepcional con visado de Inspectoría General
+              (Art. 24 BIS)
             </label>
           </div>
         </div>

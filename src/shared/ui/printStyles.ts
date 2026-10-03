@@ -24,6 +24,3 @@ export const CARTA_PAGE_STYLE = `
     transform: none !important;
   }
 `;
-
-/** Papel oficio (216 x 330 mm) para borradores. */
-export const OFICIO_PAGE_STYLE = `@page { size: 216mm 330mm; margin: 0; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }`;

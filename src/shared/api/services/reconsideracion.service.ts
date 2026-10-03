@@ -57,30 +57,3 @@ export async function fetchReconsideraciones(
   if (error) throw error;
   return ((data ?? []) as ReconsideracionRow[]).map(mapRow);
 }
-
-export async function createReconsideracion(input: {
-  causaId: string;
-  incidenteId?: string | null;
-  tipo: ReconsideracionTipo;
-  solicitud: string;
-  solicitadaPor?: string | null;
-  documentoNombre?: string | null;
-  documentoUrl?: string | null;
-}): Promise<ReconsideracionRecord> {
-  const { data, error } = await db
-    .from("reconsideraciones")
-    .insert({
-      causa_id: input.causaId,
-      incidente_id: input.incidenteId ?? null,
-      tipo: input.tipo,
-      solicitud: input.solicitud.trim(),
-      solicitada_por: input.solicitadaPor ?? null,
-      documento_nombre: input.documentoNombre ?? null,
-      documento_url: input.documentoUrl ?? null,
-    })
-    .select(COLUMNS)
-    .single();
-  if (error || !data)
-    throw error || new Error("No fue posible registrar la reconsideración.");
-  return mapRow(data as ReconsideracionRow);
-}

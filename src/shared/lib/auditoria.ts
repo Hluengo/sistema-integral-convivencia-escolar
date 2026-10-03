@@ -201,6 +201,9 @@ export function auditarExpediente(
   });
 
   // 9. Decisión fundada por hecho — medida + fundamento en acreditados
+  const acreditadosConParticipacion = acreditados.filter(
+    (h) => h.participacion_acreditada,
+  );
   const conDecision = acreditados.filter(
     (h) =>
       h.participacion_acreditada &&
@@ -208,10 +211,9 @@ export function auditarExpediente(
       Boolean(h.decision_fundada.trim()),
   );
   const conDecisionOk =
-    acreditados.filter((h) => h.participacion_acreditada).length === 0
+    acreditadosConParticipacion.length === 0
       ? true
-      : conDecision.length ===
-        acreditados.filter((h) => h.participacion_acreditada).length;
+      : conDecision.length === acreditadosConParticipacion.length;
   checks.push({
     id: "decision_fundada",
     label: "Decisión fundada por hecho",
@@ -266,11 +268,13 @@ export function auditarExpediente(
     bloqueante: false,
   });
 
-  const transitionBlockers = [
-    ...investigationTransition.blockers,
-    ...decisionTransition.blockers,
-    ...closureTransition.blockers,
-  ].filter((blocker, index, blockers) => blockers.indexOf(blocker) === index);
+  const transitionBlockers = Array.from(
+    new Set([
+      ...investigationTransition.blockers,
+      ...decisionTransition.blockers,
+      ...closureTransition.blockers,
+    ]),
+  );
   checks.push({
     id: "ruta_procedimental",
     label: "Ruta procedimental",

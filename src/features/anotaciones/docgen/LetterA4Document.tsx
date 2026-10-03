@@ -79,7 +79,11 @@ const LetterA4Document = forwardRef<HTMLDivElement, LetterA4DocumentProps>(
     };
 
     return (
-      <div ref={ref} id={id} className={`letter-document ${className}`}>
+      <div
+        ref={ref}
+        id={id}
+        className={`letter-document letter-document--single ${className}`}
+      >
         <LetterInstitutionalHeader
           year="2026"
           logoSrc={logoSrc ?? undefined}

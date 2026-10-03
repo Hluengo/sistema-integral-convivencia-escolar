@@ -1,8 +1,17 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { lazy, Suspense, useState } from "react";
-import { Archive, Ban, CheckCircle2, FileText, XCircle } from "lucide-react";
+import {
+  Archive,
+  BadgeCheck,
+  Ban,
+  CheckCircle2,
+  FileText,
+  ShieldCheck,
+  XCircle,
+} from "lucide-react";
 import type { Annotation, CartaDisciplinaria } from "@/shared/lib/types";
+import { formatChileDate } from "@/shared/lib/dateTime";
 import { TEACHERS_BY_COURSE } from "@/shared/lib/anotacionesUtils";
 import {
   archiveCarta,
@@ -88,6 +97,14 @@ export default function CartasTab({
       (carta) => carta.status !== "Anulada" && carta.origin !== "physical",
     ) ?? null;
   const physicalBaselineType = getPhysicalCartaBaselineType(cartas, schoolYear);
+  const physicalAcreditada: CartaDisciplinaria | null = physicalBaselineType
+    ? (cartas.find(
+        (carta) =>
+          carta.origin === "physical" &&
+          carta.letter_type === physicalBaselineType &&
+          carta.status !== "Anulada",
+      ) ?? null)
+    : null;
   const cartaState = resolveStudentCartaTableState(cartas, schoolYear);
   const countSuggestedDocType = getSuggestedLetterType(
     counts.negativas,
@@ -127,7 +144,7 @@ export default function CartasTab({
         event.event_type === "convivencia_interviewed",
     ),
   );
-  const [showGenerator, setShowGenerator] = useState(false);
+  const [showGenerator, setShowGenerator] = useState(true);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [messageTone, setMessageTone] = useState<FeedbackTone>("info");
@@ -307,106 +324,119 @@ export default function CartasTab({
 
   return (
     <div className="space-y-5">
-      <PhysicalCartaRegistrationCard
-        key={student.id}
-        studentId={student.id}
-        cartas={cartas}
-        negativeCount={counts.negativas}
-        onRegistered={onRefresh}
-      />
+      <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-2">
+        <PhysicalCartaRegistrationCard
+          key={student.id}
+          studentId={student.id}
+          cartas={cartas}
+          negativeCount={counts.negativas}
+          onRegistered={onRefresh}
+        />
 
-      <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div>
-            <h3 className="text-sm font-bold text-neutral-900">
-              Acciones principales
-            </h3>
-            <p className="mt-1 text-xs text-neutral-500">
-              Abre el generador para editar e imprimir la plantilla. Luego
-              confirma el trámite mediante “Marcar como procesada”.
-            </p>
-          </div>
-          {message && (
-            <div
-              role={messageTone === "error" ? "alert" : "status"}
-              className={`rounded-xl border px-3 py-2 text-xs font-semibold ${
-                messageTone === "error"
-                  ? "border-gravisima-200 bg-gravisima-50 text-gravisima-700"
-                  : messageTone === "success"
-                    ? "border-leve-200 bg-leve-50 text-leve-700"
-                    : "border-blue-200 bg-blue-50 text-blue-700"
-              }`}
-            >
-              {message}
+        <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="flex items-center gap-2 text-sm font-bold text-brand-900">
+                <ShieldCheck
+                  className="h-4 w-4 shrink-0 text-leve-600"
+                  aria-hidden="true"
+                />
+                Acciones principales
+              </h3>
+              <p className="mt-1 text-xs text-neutral-500">
+                Abre el generador para editar e imprimir la plantilla. Luego
+                confirma el trámite mediante “Marcar como procesada”.
+              </p>
+              {physicalAcreditada ? (
+                <p className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-leve-200 bg-leve-50 px-2.5 py-1 font-semibold text-leve-700 text-xs">
+                  <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
+                  Acredita {physicalAcreditada.letter_type} física (
+                  {formatChileDate(physicalAcreditada.emission_date)})
+                </p>
+              ) : null}
             </div>
-          )}
-        </div>
-        <div
-          className="flex flex-wrap gap-2"
-          role="group"
-          aria-label="Acciones de carta"
-        >
-          <Button
-            onClick={() => void handleCreate()}
-            disabled={!canAct || busy}
-            aria-busy={busy}
-            title={
-              !canAct
-                ? "No hay carta requerida para este estudiante según su etapa"
-                : "Abrir generador de carta"
-            }
-            className="rounded-xl px-4 py-2"
+            {message && (
+              <div
+                role={messageTone === "error" ? "alert" : "status"}
+                className={`rounded-xl border px-3 py-2 text-xs font-semibold ${
+                  messageTone === "error"
+                    ? "border-gravisima-200 bg-gravisima-50 text-gravisima-700"
+                    : messageTone === "success"
+                      ? "border-leve-200 bg-leve-50 text-leve-700"
+                      : "border-blue-200 bg-blue-50 text-blue-700"
+                }`}
+              >
+                {message}
+              </div>
+            )}
+          </div>
+          <div
+            className="flex flex-wrap gap-2"
+            role="group"
+            aria-label="Acciones de carta"
           >
-            <FileText className="h-4 w-4" aria-hidden="true" />
-            Crear carta
-          </Button>
-          <Button
-            variant="custom"
-            onClick={handleAnnul}
-            disabled={!activeCarta || busy}
-            title={
-              !activeCarta
-                ? "No hay carta activa para anular"
-                : "Anular la carta activa"
-            }
-            className="rounded-xl border border-gravisima-300 bg-gravisima-50 px-4 py-2 text-gravisima-700 shadow-sm hover:bg-gravisima-100 hover:text-gravisima-800 disabled:bg-neutral-50 disabled:text-neutral-400"
-          >
-            <Ban className="h-4 w-4" aria-hidden="true" />
-            Anular
-          </Button>
-          <Button
-            variant="custom"
-            onClick={handleArchive}
-            disabled={!canArchive || busy}
-            title={
-              !canArchive
-                ? "Solo se archiva una carta con trámite completado"
-                : "Archivar carta completada"
-            }
-            className="rounded-xl border border-leve-300 bg-leve-50 px-4 py-2 text-leve-800 shadow-sm hover:bg-leve-100 hover:text-leve-900 disabled:bg-neutral-50 disabled:text-neutral-400"
-          >
-            <Archive className="h-4 w-4" aria-hidden="true" />
-            Archivar
-          </Button>
-          {canMarkInterview ? (
+            <Button
+              onClick={() => void handleCreate()}
+              disabled={!canAct || busy}
+              aria-busy={busy}
+              title={
+                !canAct
+                  ? "No hay carta requerida para este estudiante según su etapa"
+                  : "Abrir generador de carta"
+              }
+              className="rounded-xl px-4 py-2"
+            >
+              <FileText className="h-4 w-4" aria-hidden="true" />
+              Crear carta
+            </Button>
             <Button
               variant="custom"
-              onClick={() => setIsInterviewDialogOpen(true)}
-              disabled={busy}
-              className="rounded-xl border border-leve-300 bg-leve-50 px-4 py-2 text-leve-800 shadow-sm hover:bg-leve-100 hover:text-leve-900"
+              onClick={handleAnnul}
+              disabled={!activeCarta || busy}
+              title={
+                !activeCarta
+                  ? "No hay carta activa para anular"
+                  : "Anular la carta activa"
+              }
+              className="rounded-xl border border-gravisima-300 bg-gravisima-50 px-4 py-2 text-gravisima-700 shadow-sm hover:bg-gravisima-100 hover:text-gravisima-800 disabled:bg-neutral-50 disabled:text-neutral-400"
             >
-              <CheckCircle2 className="h-4 w-4" />
-              Marcar entrevista realizada
+              <Ban className="h-4 w-4" aria-hidden="true" />
+              Anular
             </Button>
-          ) : null}
-          {interviewRecorded ? (
-            <span className="inline-flex items-center gap-1.5 rounded-xl border border-leve-200 bg-leve-50 px-4 py-2 text-xs font-semibold text-leve-800">
-              <CheckCircle2 className="h-4 w-4" />
-              Entrevista realizada
-            </span>
-          ) : null}
-        </div>
-      </section>
+            <Button
+              variant="custom"
+              onClick={handleArchive}
+              disabled={!canArchive || busy}
+              title={
+                !canArchive
+                  ? "Solo se archiva una carta con trámite completado"
+                  : "Archivar carta completada"
+              }
+              className="rounded-xl border border-leve-300 bg-leve-50 px-4 py-2 text-leve-800 shadow-sm hover:bg-leve-100 hover:text-leve-900 disabled:bg-neutral-50 disabled:text-neutral-400"
+            >
+              <Archive className="h-4 w-4" aria-hidden="true" />
+              Archivar
+            </Button>
+            {canMarkInterview ? (
+              <Button
+                variant="custom"
+                onClick={() => setIsInterviewDialogOpen(true)}
+                disabled={busy}
+                className="rounded-xl border border-leve-300 bg-leve-50 px-4 py-2 text-leve-800 shadow-sm hover:bg-leve-100 hover:text-leve-900"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                Marcar entrevista realizada
+              </Button>
+            ) : null}
+            {interviewRecorded ? (
+              <span className="inline-flex items-center gap-1.5 rounded-xl border border-leve-200 bg-leve-50 px-4 py-2 text-xs font-semibold text-leve-800">
+                <CheckCircle2 className="h-4 w-4" />
+                Entrevista realizada
+              </span>
+            ) : null}
+          </div>
+        </section>
+      </div>
 
       {showGenerator && activeDocType && (
         <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">

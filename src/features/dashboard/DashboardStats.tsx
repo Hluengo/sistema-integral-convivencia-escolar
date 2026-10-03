@@ -116,6 +116,22 @@ const PHASE_CARDS: {
 
 type PhaseFilter = "all" | "onTime" | "toResolve";
 
+function isOpenCausa(causa: Causa) {
+  return (
+    causa.estadoActual !== EstadoCausa.CAUSA_CERRADA &&
+    causa.estadoActual !== EstadoCausa.RESOLUCION_EJECUTORIADA
+  );
+}
+
+function asPendingBreakdown(value: number) {
+  return {
+    total: value,
+    pending: value,
+    processed: 0,
+    archived: 0,
+  };
+}
+
 interface DashboardStatsProps {
   causas: Causa[];
   onFaseSelect: (fase: FaseProcedimental | "Todas") => void;
@@ -301,11 +317,7 @@ export default function DashboardStats({
   const activePhases = useMemo(
     () =>
       causas
-        .filter(
-          (causa) =>
-            causa.estadoActual !== EstadoCausa.CAUSA_CERRADA &&
-            causa.estadoActual !== EstadoCausa.RESOLUCION_EJECUTORIADA,
-        )
+        .filter(isOpenCausa)
         .map((causa) => ({ causa, phase: getCausaOperationalPhase(causa) })),
     [causas],
   );
@@ -332,17 +344,25 @@ export default function DashboardStats({
     }
     return true;
   });
+  const criticalPhaseDeadlines = useMemo(
+    () =>
+      activePhases
+        .filter(
+          ({ phase }) =>
+            phase === "Investigación" ||
+            phase === "Resolución" ||
+            phase === "Apelación",
+        )
+        .map(({ causa }) => getCausaDeadline(causa)),
+    [activePhases],
+  );
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const tenantId = useAuthStore((state) => state.tenantId);
   const userId = useAuthStore((state) => state.user?.id ?? null);
   const dashboardSchoolYear = useMemo(() => getDashboardSchoolYear(), []);
 
   const authenticatedCauseCounts = useMemo(() => {
-    const active = causas.filter(
-      (c) =>
-        c.estadoActual !== EstadoCausa.CAUSA_CERRADA &&
-        c.estadoActual !== EstadoCausa.RESOLUCION_EJECUTORIADA,
-    ).length;
+    const active = causas.filter(isOpenCausa).length;
     const investigating = causas.filter(
       (c) => getCausaOperationalPhase(c) === "Investigación",
     ).length;
@@ -461,12 +481,6 @@ export default function DashboardStats({
         "Muy Grave": publicKpis?.muyGraveCount ?? 0,
         Gravísima: publicKpis?.gravisimaCount ?? 0,
       };
-  const asPendingBreakdown = (value: number) => ({
-    total: value,
-    pending: value,
-    processed: 0,
-    archived: 0,
-  });
   const annotations: AnnotationStageCounts = isAuthenticated
     ? (annotationKpisQuery.data ?? createEmptyAnnotationStageCounts())
     : {
@@ -479,6 +493,28 @@ export default function DashboardStats({
     ? authenticatedCauseCounts.resolved
     : Math.max(total - active, 0);
   const closureRate = total > 0 ? Math.round((closed / total) * 100) : 0;
+  const overdueDeadlines = isAuthenticated
+    ? criticalPhaseDeadlines.filter((deadline) => deadline.remainingDays < 0)
+        .length
+    : 0;
+  const dueWithin48Hours = isAuthenticated
+    ? criticalPhaseDeadlines.filter(
+        (deadline) =>
+          deadline.remainingDays >= 0 && deadline.remainingDays <= 2,
+      ).length
+    : 0;
+  const withoutDelay = isAuthenticated
+    ? criticalPhaseDeadlines.filter((deadline) => deadline.remainingDays >= 0)
+        .length
+    : 0;
+  const investigatingCount = isAuthenticated
+    ? authenticatedCauseCounts.investigating
+    : (publicKpis?.investigationCauses ?? 0);
+  const resolvingCount = isAuthenticated
+    ? toResolveCount
+    : Math.max(active - investigatingCount, 0);
+  const negativeAnnotations = trendSummary.negativeAnnotationTotal;
+  const positiveAnnotations = trendSummary.positiveAnnotationTotal;
 
   if (!isAuthenticated && total === 0 && !kpiError) {
     return (
@@ -566,24 +602,23 @@ export default function DashboardStats({
         className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"
       >
         <MetricCard
-          label="Expedientes activos"
-          value={active}
-          sublabel={`de ${total} totales`}
-          icon={Activity}
+          label="Casos ingresados"
+          value={total}
+          sublabel="Total de expedientes del ciclo"
+          icon={GitCompareArrows}
           iconBg="bg-brand-50"
           iconColor="text-brand-600"
           accentColor="#006194"
-          onClick={() => onFaseSelect("Todas")}
           valueAside={
             <span className="rounded-full bg-brand-50 px-2 py-1 font-bold text-[11px] text-brand-700">
-              +{newThisMonth} nuevos este mes
+              +{newThisMonth} ingresados este mes
             </span>
           }
           footer={
             <div className="grid grid-cols-2 gap-2 text-neutral-600 text-[11px]">
               <span className="rounded-md bg-slate-50 px-2 py-1.5">
-                <strong className="text-neutral-900">{closed}</strong> cerrados
-                formalmente
+                <strong className="text-neutral-900">{closed}</strong>{" "}
+                expedientes cerrados
               </span>
               <span className="rounded-md bg-slate-50 px-2 py-1.5">
                 Tasa cierre:{" "}
@@ -593,82 +628,78 @@ export default function DashboardStats({
           }
         />
         <MetricCard
-          label="Brecha de Resolución"
-          value={Math.max(active, 0)}
-          valueAside={
-            <span className="rounded-full bg-gravisima-50 px-2 py-1 font-bold text-[11px] text-gravisima-700">
-              Aperturas netas
-            </span>
-          }
-          sublabel="Casos abiertos vs. acuerdos"
-          icon={GitCompareArrows}
+          label="Casos abiertos"
+          value={active}
+          sublabel={`de ${total} expedientes ingresados`}
+          icon={Activity}
           iconBg="bg-slate-100"
           iconColor="text-slate-600"
           accentColor="#64748b"
+          onClick={() => onFaseSelect("Todas")}
           footer={
             <div className="grid grid-cols-2 gap-2 text-neutral-600 text-[11px]">
               <span className="rounded-md bg-slate-50 px-2 py-1.5">
-                <strong className="text-neutral-900">{total}</strong> aperturas
-                acumuladas
+                <strong className="text-neutral-900">
+                  {investigatingCount}
+                </strong>{" "}
+                en etapa de investigación
               </span>
               <span className="rounded-md bg-slate-50 px-2 py-1.5">
-                <strong className="text-neutral-900">{closed}</strong> cerradas
-                en el ciclo
+                <strong className="text-neutral-900">{resolvingCount}</strong>{" "}
+                en resolución o apelación
               </span>
             </div>
           }
         />
         <MetricCard
-          label="Anotaciones registradas"
+          label="Anotaciones en seguimiento"
           value={trendSummary.annotationTotal}
           valueAside={
             <span className="font-medium text-neutral-600 text-[11px]">
-              Total Libro de Clases
+              Estudiantes en seguimiento
             </span>
           }
-          sublabel="Periodo de observación"
+          sublabel="Anotaciones de estudiantes ingresados al seguimiento"
           icon={CalendarDays}
           iconBg="bg-muygrave-50"
           iconColor="text-muygrave-600"
           accentColor="#4648d4"
           footer={
             <div className="grid grid-cols-2 gap-2 text-center font-semibold text-[11px]">
-              <span className="rounded-md bg-leve-50 px-2 py-1.5 text-leve-700">
-                {trendSummary.positiveAnnotationShare}% Positivas
-              </span>
               <span className="rounded-md bg-gravisima-50 px-2 py-1.5 text-gravisima-700">
-                {trendSummary.negativeAnnotationShare}% Negativas
+                {negativeAnnotations} negativas
+              </span>
+              <span className="rounded-md bg-leve-50 px-2 py-1.5 text-leve-700">
+                {positiveAnnotations} positivas
               </span>
             </div>
           }
         />
         <MetricCard
-          label="Plazos de Seguimiento"
-          value={pendingFollowUps}
+          label="Plazos por etapa procesal"
+          value={overdueDeadlines}
           valueAside={
             <span className="rounded-full bg-leve-50 px-2 py-1 font-bold text-[11px] text-leve-700">
-              {pendingFollowUps > 0
-                ? "Requiere atención"
-                : "Sin alertas críticas"}
+              {overdueDeadlines > 0 ? "Vencidos" : "Sin vencidos"}
             </span>
           }
-          sublabel="Vencidos o dentro de 48 hrs"
-          icon={pendingFollowUps > 0 ? Clock3 : CheckCircle2}
-          iconBg={pendingFollowUps > 0 ? "bg-gravisima-50" : "bg-leve-50"}
+          sublabel="Investigación, resolución y apelación"
+          icon={overdueDeadlines > 0 ? Clock3 : CheckCircle2}
+          iconBg={overdueDeadlines > 0 ? "bg-gravisima-50" : "bg-leve-50"}
           iconColor={
-            pendingFollowUps > 0 ? "text-gravisima-600" : "text-leve-600"
+            overdueDeadlines > 0 ? "text-gravisima-600" : "text-leve-600"
           }
-          accentColor={pendingFollowUps > 0 ? "#ef4444" : "#16a34a"}
-          isAlert={pendingFollowUps > 0}
+          accentColor={overdueDeadlines > 0 ? "#ef4444" : "#16a34a"}
+          isAlert={overdueDeadlines > 0}
           footer={
             <div className="grid grid-cols-2 gap-2 text-neutral-600 text-[11px]">
               <span className="rounded-md bg-slate-50 px-2 py-1.5">
-                {pendingFollowUps > 0 ? "Requieren atención" : "Sin atrasos"}
+                <strong className="text-neutral-900">{dueWithin48Hours}</strong>{" "}
+                vencen en 48 h
               </span>
-              <span className="rounded-md bg-slate-50 px-2 py-1.5 text-center">
-                {pendingFollowUps > 0
-                  ? `${pendingFollowUps} alertas activas`
-                  : "Sin alertas activas"}
+              <span className="rounded-md bg-slate-50 px-2 py-1.5">
+                <strong className="text-neutral-900">{withoutDelay}</strong>{" "}
+                dentro de plazo
               </span>
             </div>
           }
@@ -697,7 +728,8 @@ export default function DashboardStats({
                 </span>
               </div>
               <p className="mt-1 text-neutral-500 text-xs">
-                Clasificación según la fase operativa actual de cada expediente.
+                Cada expediente abierto se ubica en la etapa procesal que
+                corresponde.
               </p>
             </div>
             <div
@@ -711,8 +743,8 @@ export default function DashboardStats({
               {(
                 [
                   ["all", "Todos", activePhases.length],
-                  ["onTime", "En plazo", onTimeCount],
-                  ["toResolve", "Por resolver", toResolveCount],
+                  ["onTime", "Investigación en plazo", onTimeCount],
+                  ["toResolve", "Resolución / apelación", toResolveCount],
                 ] as const
               ).map(([value, label, count]) => (
                 <button

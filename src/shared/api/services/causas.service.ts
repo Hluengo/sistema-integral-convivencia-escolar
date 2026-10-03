@@ -205,125 +205,130 @@ export async function fetchCausasPage(
     rows.slice(0, requestedSize) as unknown as SupabaseCausaRow[],
   );
   if (causas.length > 0) {
-    const { data: checklistData, error: checklistError } = await supabase
-      .from("checklist_items")
-      .select("id,causa_id,completado,fecha_completado")
-      .in(
-        "causa_id",
-        causas.map((causa) => causa.id),
-      );
-    if (checklistError) {
-      console.error(
-        "Error fetching causa milestone summaries:",
-        checklistError,
-      );
-    } else {
-      const checklistByCausa = new Map<string, ChecklistItem[]>();
-      for (const row of (checklistData ||
-        []) as SupabaseChecklistSummaryRow[]) {
-        const items = checklistByCausa.get(row.causa_id) || [];
-        items.push({
-          id: row.id,
-          label: "",
-          descripcion: "",
-          completado: row.completado,
-          fechaCompletado: row.fecha_completado || undefined,
-          requeridoPor: "Circular 482",
-        });
-        checklistByCausa.set(row.causa_id, items);
-      }
-      for (const causa of causas) {
-        causa.checklistDebidoProceso = checklistByCausa.get(causa.id) || [];
-      }
-    }
-    // Los hitos registrados en bitácora ("Registro de Hito: …") son la fuente
-    // de verdad del avance: se reconcilian aquí para que la tabla muestre el
-    // día de cierre correcto sin necesidad de abrir el expediente.
-    // Los hitos compartidos del incidente grupal (compartido_grupal) viven en
-    // la bitácora de la causa hermana: se resuelven todas las hermanas.
-    const incidenteIds = [
-      ...new Set(
-        causas
-          .map((causa) => causa.incidenteId)
-          .filter((id): id is string => Boolean(id)),
-      ),
-    ];
-    const entryCausaIds = causas.map((causa) => causa.id);
-    const incidenteByCausaId = new Map<string, string>();
-    for (const causa of causas) {
-      if (causa.incidenteId)
-        incidenteByCausaId.set(causa.id, causa.incidenteId);
-    }
-    if (incidenteIds.length > 0) {
-      const { data: siblingData, error: siblingError } = await supabase
-        .from("causas")
-        .select("id,incidente_id")
-        .in("incidente_id", incidenteIds);
-      if (siblingError) {
-        console.error("Error fetching sibling incident causas:", siblingError);
-      } else {
-        for (const row of (siblingData || []) as Array<{
-          id: string;
-          incidente_id: string | null;
-        }>) {
-          if (row.incidente_id)
-            incidenteByCausaId.set(row.id, row.incidente_id);
-          if (!entryCausaIds.includes(row.id)) entryCausaIds.push(row.id);
-        }
-      }
-    }
-    const { data: hitoEntriesData, error: hitoEntriesError } = await supabase
-      .from("bitacora_entries")
-      .select(
-        "id,causa_id,fecha,tipo,titulo,descripcion,participantes,documento_adjunto,compartido_grupal",
-      )
-      .in("causa_id", entryCausaIds)
-      .or(
-        "titulo.like.Registro de Hito:%,titulo.like.Rectificación de Hito:%,titulo.like.Invalidador Hito:%",
-      );
-    if (hitoEntriesError) {
-      console.error(
-        "Error fetching causa milestone log entries:",
-        hitoEntriesError,
-      );
-    } else {
-      const hitoEntriesByCausa = new Map<string, BitacoraEntry[]>();
-      for (const row of (hitoEntriesData || []) as SupabaseBitacoraRow[]) {
-        const entry = mapBitacoraRow(row);
-        if (!entry) continue;
-        const list = hitoEntriesByCausa.get(row.causa_id) || [];
-        list.push(entry);
-        hitoEntriesByCausa.set(row.causa_id, list);
-      }
-      for (const causa of causas) {
-        const ownEntries = hitoEntriesByCausa.get(causa.id) || [];
-        const hitoEntries = [...ownEntries];
-        if (causa.incidenteId) {
-          for (const [ownerId, list] of hitoEntriesByCausa) {
-            if (
-              ownerId !== causa.id &&
-              incidenteByCausaId.get(ownerId) === causa.incidenteId
-            ) {
-              for (const entry of list) {
-                if (entry.compartidoGrupal) hitoEntries.push(entry);
-              }
-            }
-          }
-        }
-        if (hitoEntries.length > 0) {
-          causa.checklistDebidoProceso = reconcileChecklistFromBitacora(
-            causa.checklistDebidoProceso,
-            hitoEntries,
-            causa.proceduralModelVersion ?? 1,
-          );
-        }
-      }
-    }
+    await hydrateChecklistSummaries(causas);
+    await hydrateMilestoneReconciliation(causas);
   }
   return {
     causas,
     nextOffset: hasNextPage ? offset + requestedSize : undefined,
   };
+}
+
+/** Adjunta el resumen de hitos del checklist (sin labels) a cada causa de la página. */
+async function hydrateChecklistSummaries(causas: Causa[]): Promise<void> {
+  const { data: checklistData, error: checklistError } = await supabase
+    .from("checklist_items")
+    .select("id,causa_id,completado,fecha_completado")
+    .in(
+      "causa_id",
+      causas.map((causa) => causa.id),
+    );
+  if (checklistError) {
+    console.error("Error fetching causa milestone summaries:", checklistError);
+    return;
+  }
+  const checklistByCausa = new Map<string, ChecklistItem[]>();
+  for (const row of (checklistData || []) as SupabaseChecklistSummaryRow[]) {
+    const items = checklistByCausa.get(row.causa_id) || [];
+    items.push({
+      id: row.id,
+      label: "",
+      descripcion: "",
+      completado: row.completado,
+      fechaCompletado: row.fecha_completado || undefined,
+      requeridoPor: "Circular 482",
+    });
+    checklistByCausa.set(row.causa_id, items);
+  }
+  for (const causa of causas) {
+    causa.checklistDebidoProceso = checklistByCausa.get(causa.id) || [];
+  }
+}
+
+/**
+ * Los hitos registrados en bitácora ("Registro de Hito: …") son la fuente
+ * de verdad del avance: se reconcilian aquí para que la tabla muestre el
+ * día de cierre correcto sin necesidad de abrir el expediente.
+ * Los hitos compartidos del incidente grupal (compartido_grupal) viven en
+ * la bitácora de la causa hermana: se resuelven todas las hermanas.
+ */
+async function hydrateMilestoneReconciliation(causas: Causa[]): Promise<void> {
+  const incidenteIds = [
+    ...new Set(
+      causas
+        .map((causa) => causa.incidenteId)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ];
+  const entryCausaIds = causas.map((causa) => causa.id);
+  const incidenteByCausaId = new Map<string, string>();
+  for (const causa of causas) {
+    if (causa.incidenteId) incidenteByCausaId.set(causa.id, causa.incidenteId);
+  }
+  if (incidenteIds.length > 0) {
+    const { data: siblingData, error: siblingError } = await supabase
+      .from("causas")
+      .select("id,incidente_id")
+      .in("incidente_id", incidenteIds);
+    if (siblingError) {
+      console.error("Error fetching sibling incident causas:", siblingError);
+    } else {
+      for (const row of (siblingData || []) as Array<{
+        id: string;
+        incidente_id: string | null;
+      }>) {
+        if (row.incidente_id) incidenteByCausaId.set(row.id, row.incidente_id);
+        if (!entryCausaIds.includes(row.id)) entryCausaIds.push(row.id);
+      }
+    }
+  }
+  const { data: hitoEntriesData, error: hitoEntriesError } = await supabase
+    .from("bitacora_entries")
+    .select(
+      "id,causa_id,fecha,tipo,titulo,descripcion,participantes,documento_adjunto,compartido_grupal",
+    )
+    .in("causa_id", entryCausaIds)
+    .or(
+      "titulo.like.Registro de Hito:%,titulo.like.Rectificación de Hito:%,titulo.like.Invalidador Hito:%",
+    );
+  if (hitoEntriesError) {
+    console.error(
+      "Error fetching causa milestone log entries:",
+      hitoEntriesError,
+    );
+    return;
+  }
+  const hitoEntriesByCausa = new Map<string, BitacoraEntry[]>();
+  for (const row of (hitoEntriesData || []) as SupabaseBitacoraRow[]) {
+    const entry = mapBitacoraRow(row);
+    if (!entry) continue;
+    const list = hitoEntriesByCausa.get(row.causa_id) || [];
+    list.push(entry);
+    hitoEntriesByCausa.set(row.causa_id, list);
+  }
+  for (const causa of causas) {
+    const ownEntries = hitoEntriesByCausa.get(causa.id) || [];
+    const hitoEntries = [...ownEntries];
+    if (causa.incidenteId) {
+      for (const [ownerId, list] of hitoEntriesByCausa) {
+        if (
+          ownerId !== causa.id &&
+          incidenteByCausaId.get(ownerId) === causa.incidenteId
+        ) {
+          for (const entry of list) {
+            if (entry.compartidoGrupal) hitoEntries.push(entry);
+          }
+        }
+      }
+    }
+    if (hitoEntries.length > 0) {
+      causa.checklistDebidoProceso = reconcileChecklistFromBitacora(
+        causa.checklistDebidoProceso,
+        hitoEntries,
+        causa.proceduralModelVersion ?? 1,
+      );
+    }
+  }
 }
 
 /**

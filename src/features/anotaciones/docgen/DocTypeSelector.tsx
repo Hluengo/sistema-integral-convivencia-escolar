@@ -59,34 +59,36 @@ export default function DocTypeSelector({
               type="button"
               onClick={() => enabled && onDocTypeChange(id)}
               disabled={!enabled}
-              className={`relative flex flex-col items-center gap-2 rounded-lg border-2 p-4 text-left transition-colors ${
+              className={`relative rounded-xl border p-3 text-left transition-colors ${
                 isActive
-                  ? "border-brand-500 bg-blue-50 ring-2 ring-blue-200"
-                  : "border-neutral-200 bg-white hover:border-neutral-300"
+                  ? "border-brand-600 bg-brand-50 ring-1 ring-brand-200"
+                  : "border-neutral-200 bg-slate-50/70 hover:border-neutral-300"
               }
-                ${!enabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
+                ${!enabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}
               `}
             >
-              {!enabled && (
-                <div className="absolute top-2 right-2 text-neutral-400">
-                  <Lock className="h-4 w-4" />
-                </div>
-              )}
+              <span className="absolute top-2 right-2">
+                {!enabled ? (
+                  <Lock className="h-3.5 w-3.5 text-neutral-400" />
+                ) : isActive ? (
+                  <span className="rounded bg-brand-600 px-1.5 py-0.5 font-bold text-white text-[10px]">
+                    Activo
+                  </span>
+                ) : null}
+              </span>
               <Icon
-                className={`h-8 w-8 ${isActive ? "text-blue-600" : "text-neutral-500"}`}
+                className={`mb-1 h-5 w-5 ${isActive ? "text-brand-700" : "text-neutral-500"}`}
               />
-              <div className="text-center">
-                <span
-                  className={`block font-semibold text-sm ${isActive ? "text-blue-700" : "text-neutral-800"}`}
-                >
-                  {label}
-                </span>
-                <span className="mt-1 block text-neutral-500 text-xs leading-tight">
-                  {description}
-                </span>
-              </div>
+              <span
+                className={`block font-bold text-xs ${isActive ? "text-brand-900" : "text-neutral-800"}`}
+              >
+                {label}
+              </span>
+              <span className="mt-0.5 block text-neutral-500 text-[11px] leading-tight">
+                {description}
+              </span>
               {!enabled && id === "compromiso_conductual" && (
-                <span className="font-medium text-grave-600 text-xs">
+                <span className="mt-1 block font-semibold text-grave-600 text-xs">
                   Faltan {10 - negativeCount} anotaciones
                 </span>
               )}

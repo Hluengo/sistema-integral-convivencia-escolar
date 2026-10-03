@@ -1,6 +1,5 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import type { Json } from "../lib/database.types";
 import { supabase } from "../lib/supabase";
 import type { ExpedienteEvent } from "../../lib/types";
 
@@ -90,35 +89,4 @@ export async function fetchExpedienteEvents(
     return (data ?? []) as ExpedienteEvent[];
   });
   return [...new Map(rows.map((row) => [row.id, row])).values()];
-}
-
-export async function appendExpedienteEvent(
-  input: CreateExpedienteEventInput,
-): Promise<ExpedienteEvent> {
-  const { data, error } = await db
-    .from("expediente_events")
-    .insert(buildExpedienteEventPayload(input) as unknown as Json)
-    .select(EVENT_COLUMNS)
-    .single();
-  if (error || !data)
-    throw error || new Error("No fue posible registrar la actuación.");
-  return data as unknown as ExpedienteEvent;
-}
-
-export async function appendExpedienteEventCorrection(
-  input: CreateExpedienteEventInput,
-  correction: {
-    previousEventId: string;
-    status: "rectificado" | "invalidado";
-    reason: string;
-  },
-): Promise<ExpedienteEvent> {
-  const { data, error } = await db
-    .from("expediente_events")
-    .insert(buildExpedienteEventPayload(input, correction) as unknown as Json)
-    .select(EVENT_COLUMNS)
-    .single();
-  if (error || !data)
-    throw error || new Error("No fue posible registrar la rectificación.");
-  return data as unknown as ExpedienteEvent;
 }

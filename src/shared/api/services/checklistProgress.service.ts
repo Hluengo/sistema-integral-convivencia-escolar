@@ -147,22 +147,3 @@ export async function createChecklistProgress(
     throw new Error("El avance guardado no tiene un formato válido.");
   return mapped;
 }
-
-export async function invalidateChecklistProgress(
-  id: string,
-  reason: string,
-): Promise<void> {
-  const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError || !authData.user)
-    throw authError || new Error("La sesión ya no está disponible.");
-  const { error } = await supabase
-    .from("checklist_progress_entries")
-    .update({
-      invalidated_at: new Date().toISOString(),
-      invalidated_by: authData.user.id,
-      invalidation_reason: reason.trim(),
-    })
-    .eq("id", id)
-    .is("invalidated_at", null);
-  if (error) throw error;
-}

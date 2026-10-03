@@ -88,57 +88,44 @@ export const TITLE_MAP: Record<DocType, string> = {
   derivacion: "Derivación a Convivencia Escolar",
 };
 
-const DEFAULT_COMMITMENTS = [
-  "Establecimiento de objetivos de mejora conductual claros, observables y medibles, orientados al cese de las conductas que originan anotaciones negativas y al fortalecimiento de conductas positivas; ejecución de un seguimiento periódico, con evaluación formal del cumplimiento de dichos objetivos; y notificación explícita al estudiante y a su apoderado de que la inobservancia o el incumplimiento reiterado de estos acuerdos configurará una escalada directa a falta muy grave, con la consecuente aplicación de las medidas estipuladas en el Reglamento Interno de Convivencia Escolar (RICE).",
-];
-
-/**
- * Cláusula estándar de derecho a reconsideración/apelación que debe acompañar
- * a toda medida disciplinaria (Ley 21.809, debido proceso y derecho a defensa).
- */
-const CLAUSULA_RECONSIDERACION =
-  "El apoderado podrá solicitar la reconsideración de esta medida por escrito ante la Dirección del establecimiento dentro de los 5 días hábiles siguientes a la notificación, de conformidad con el Reglamento Interno y la normativa vigente.";
-
 export const DEFAULT_LETTER_CONTENT: Record<DocType, LetterContent> = {
   amonestacion: {
     motivo:
-      "Activación de la Medida 3 debido a la primera acumulación crítica de 5 o más anotaciones leves en la hoja de vida del estudiante, conforme a lo establecido en el sistema de progresión disciplinaria institucional.",
+      "Se activa la Medida 3 ante la primera acumulación de 5 o más anotaciones leves en la hoja de vida del estudiante, de acuerdo con lo establecido en el Art. 24 BIS del Reglamento Interno de Convivencia Escolar.",
     descripcion:
-      "Los registros pedagógicos dan cuenta de la persistencia de conductas tipificadas como faltas leves (Art. 24) que, pese a los llamados de atención verbales previos (Medida 1), no han sido corregidas. Esta reiteración evidencia una falta de adhesión a las normas básicas de convivencia y un impacto negativo en el clima de aula.",
+      "Los registros realizados dan cuenta de conductas tipificadas como faltas leves (Art. 24) que se han reiterado pese a los llamados de atención y orientaciones entregadas previamente. Esta medida busca favorecer la reflexión del estudiante respecto de sus acciones, promover la responsabilidad y generar una oportunidad concreta para mejorar su forma de relacionarse y desenvolverse en la comunidad educativa.",
     medida:
-      "Aplicación de una Amonestación Escrita Formal, que constituye una comunicación oficial archivada de forma permanente en la hoja de vida del estudiante. Esta medida actúa como una instancia de advertencia superior antes de escalar a una falta grave o a la firma de una Carta de Compromiso.",
+      "Amonestación Escrita Formal. Esta medida constituye una comunicación formal que queda registrada en la hoja de vida del estudiante y tiene como propósito advertir la reiteración de conductas que afectan la convivencia, favoreciendo un proceso de reflexión y mejora antes de avanzar a otras medidas contempladas en el Reglamento.",
     acuerdos:
-      "Realización de una entrevista formal entre el apoderado, el estudiante y el profesor jefe para analizar los antecedentes; con el objeto de adoptar a un compromiso de cambio conductual inmediato por parte del alumno; y notificación explícita sobre el riesgo de escalar a la Medida 4 (Carta de Compromiso) al alcanzar las 10 anotaciones.",
+      "El estudiante se compromete a favorecer una convivencia respetuosa y a evitar nuevas anotaciones leves durante los próximos 30 días.\nEl estudiante y su apoderado deberán participar en una entrevista con el profesor jefe, dejando constancia de los acuerdos adoptados.\nCuando corresponda, el estudiante deberá asumir acciones reparatorias frente a eventuales daños ocasionados, tales como ofrecer disculpas o reparar/reponer aquello que corresponda, conforme al Art. 23.\nSi durante los próximos 30 días no se registran nuevas anotaciones leves, se podrá reconocer este avance mediante una nota de mérito en su hoja de vida.\nEn caso de alcanzar las 10 anotaciones, se procederá conforme a la Medida 4 establecida en el Reglamento Interno.",
     cierre:
-      "Esta acción se fundamenta en los artículos 18 (Medida 3) y 24 BIS del Reglamento Interno de Convivencia Escolar 2026, cumpliendo con los principios de gradualidad y debido proceso de nuestra comunidad educativa. " +
-      CLAUSULA_RECONSIDERACION,
+      "Esta medida se fundamenta en los artículos 18 (Medida 3) y 24 BIS del Reglamento Interno de Convivencia Escolar 2026, procurando una intervención gradual, formativa y orientada a la mejora de la convivencia y al desarrollo de la responsabilidad del estudiante.",
     observaciones: "",
   },
   compromiso_conductual: {
     motivo:
-      "Activación de la Medida 4 debido a la acumulación de 10 o más anotaciones leves en la hoja de vida del estudiante (Art. 24 BIS).",
+      "Se activa la Medida 4 ante la acumulación de 10 o más anotaciones leves, conforme al Art. 24 BIS (segunda acumulación), o ante la constatación de una falta grave, de acuerdo con las disposiciones del Reglamento Interno.",
     descripcion:
-      "Se registra que las medidas pedagógicas previas (Llamado de atención y Amonestación Escrita) no han sido suficientes para lograr la autorregulación del estudiante. La persistencia de las conductas disruptivas o la naturaleza de la falta cometida evidencian un distanciamiento del compromiso académico y de convivencia, lo que hace imperativo formalizar objetivos de mejora específicos.",
+      "Considerando que las orientaciones y medidas implementadas previamente no han sido suficientes para favorecer un cambio sostenido en la conducta, se establece un espacio formal de acompañamiento y compromiso, destinado a que el estudiante pueda reconocer las situaciones que requieren mejora y asumir objetivos concretos para fortalecer su convivencia con los demás.",
     medida:
-      "Firma de una Carta de Compromiso Conductual. Esta medida es una instancia superior de apoyo pedagógico antes de transitar hacia sanciones que afecten la asistencia regular (Medida 5) o la condicionalidad de la permanencia en el establecimiento.",
-    acuerdos: DEFAULT_COMMITMENTS.join("\n"),
+      "Carta de Compromiso Conductual. Esta medida busca establecer compromisos claros, alcanzables y verificables, promoviendo la responsabilidad del estudiante y el acompañamiento de los adultos responsables. Constituye una instancia formativa previa a la eventual aplicación de medidas de mayor intensidad contempladas en el Reglamento.",
+    acuerdos:
+      "El estudiante se compromete a trabajar durante los próximos 30 días en la mejora de los patrones de conducta identificados en sus registros (según conste en sus anotaciones), procurando mantener relaciones respetuosas y acordes con las normas de convivencia.\nDeberá participar en instancias de seguimiento quincenal con Inspectoría de su nivel, dejando registro de los avances, dificultades y acuerdos adoptados.\nDurante este período se favorecerá la reflexión sobre las situaciones ocurridas y la búsqueda de estrategias que permitan prevenir su reiteración.\nAl finalizar los 30 días se realizará una evaluación del cumplimiento de los compromisos. En caso de observarse avances significativos, estos podrán ser reconocidos mediante una nota de mérito en su hoja de vida.\nSi las conductas persisten, se analizarán las medidas que correspondan de acuerdo con el Reglamento Interno, considerando los antecedentes del caso, las acciones desarrolladas y el debido proceso.",
     cierre:
-      "Esta medida se aplica bajo los lineamientos de los artículos 18 y 24 BIS del Reglamento Interno de Convivencia Escolar 2026, garantizando el debido proceso y el enfoque de disciplina formativa para el desarrollo integral del estudiante. " +
-      CLAUSULA_RECONSIDERACION,
+      "Esta medida se fundamenta en los artículos 18 (Medida 4) y 24 BIS del Reglamento Interno de Convivencia Escolar 2026 y se implementa desde un enfoque formativo, de acompañamiento y corresponsabilidad, orientado a favorecer el desarrollo de habilidades para una convivencia respetuosa.",
     observaciones: "",
   },
   derivacion: {
     motivo:
-      "Activación de intervención técnica especializada por agotamiento de instancias pedagógicas iniciales y/o acumulación crítica de registros (Art. 24 BIS), requiriendo un análisis psicosocial antes de la escalada a medidas de alta complejidad administrativa.",
+      "Se activa una instancia de intervención especializada ante la persistencia de conductas que requieren un abordaje más integral, considerando los antecedentes registrados y las medidas formativas implementadas previamente, conforme al Art. 24 BIS. Esta instancia busca comprender los factores que pueden estar influyendo en la situación y definir estrategias de apoyo y mejora.",
     descripcion:
-      "El historial del estudiante registra una persistencia de conductas disruptivas que no han sido modificadas tras la aplicación de medidas previas (Amonestación Escrita o Carta de Compromiso). Se observa una dificultad en la autorregulación y una falta de adhesión a los acuerdos institucionales, lo que evidencia que la situación ha superado el manejo exclusivamente pedagógico del aula y requiere una evaluación de factores subyacentes.",
+      "Los antecedentes registrados muestran que, pese a las orientaciones, la Amonestación Escrita y la Carta de Compromiso, persisten conductas que afectan la convivencia. Por ello, se considera necesario ampliar la mirada sobre la situación y favorecer una intervención que permita comprender sus causas, fortalecer los recursos personales del estudiante y establecer estrategias que contribuyan a una mejora sostenida.",
     medida:
-      "Derivación formal al Equipo de Convivencia Escolar (Psicólogo/a de Ciclo o Trabajadora Social) para la realización de una entrevista reflexiva profunda y la orientación estratégica para la modificación efectiva de conductas. Esta medida busca garantizar el debido proceso y agotar el apoyo profesional antes de considerar sanciones que afecten la permanencia del estudiante.",
+      "Derivación formal al Equipo de Convivencia Escolar, para una instancia de entrevista y acompañamiento especializada, de acuerdo con las características y necesidades del caso. A partir de esta intervención se podrán establecer objetivos de trabajo y acciones de seguimiento que permitan apoyar al estudiante en el desarrollo de estrategias adecuadas para una convivencia respetuosa.",
     acuerdos:
-      "Realización de una entrevista reflexiva estructurada con el estudiante para confrontar la falta de modificación conductual, la cual quedará formalizada en una hoja de entrevista oficial; ejecución de un seguimiento quincenal respecto a su evolución; y la notificación explícita de que la persistencia de estas conductas tras esta instancia técnica derivará en medidas gravosas, como la suspensión temporal prolongada o la condicionalidad de matrícula.",
+      "El estudiante deberá participar en la entrevista con el Equipo de Convivencia Escolar en la fecha acordada.\nLa instancia de entrevista podrá desarrollarse inicialmente con el estudiante, resguardando un espacio adecuado para la reflexión y expresión de sus necesidades, sin perjuicio de la participación del apoderado u otros integrantes de la comunidad educativa cuando resulte pertinente.\nEl estudiante deberá participar activamente en los acuerdos y acciones que se definan a partir de la intervención, procurando avanzar en los objetivos establecidos.\nSe realizará seguimiento quincenal por parte de la Coordinación de Convivencia, dejando registro de los avances y de las dificultades que pudieran presentarse.\nEn caso de observarse avances en el proceso, estos serán reconocidos y reforzados como parte del acompañamiento formativo.\nSi, pese a las medidas de apoyo implementadas, las conductas persisten, se evaluarán las acciones que correspondan conforme al Reglamento Interno, considerando la naturaleza de los hechos, sus antecedentes, la proporcionalidad de la medida y el debido proceso.",
     cierre:
-      "Este procedimiento se fundamenta en los Artículos 12, 19, 20 (Paso 8) y 24 BIS del Reglamento Interno de Convivencia Escolar 2026, asegurando el enfoque formativo y restaurativo mandatado por la normativa educacional vigente. " +
-      CLAUSULA_RECONSIDERACION,
+      "Esta medida se fundamenta en los artículos 12, 19, 20 (Paso 8) y 24 BIS del Reglamento Interno de Convivencia Escolar 2026 y busca fortalecer un proceso de acompañamiento, reflexión y mejora, resguardando el buen trato, la dignidad y los derechos de quienes integran la comunidad educativa.",
     observaciones: "",
   },
 };

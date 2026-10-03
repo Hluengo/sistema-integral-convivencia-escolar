@@ -10,6 +10,7 @@ import {
   DEFAULT_LETTER_CONTENT,
   isLetterAnnotationSummary,
 } from "../DocumentPreview/docTypes";
+import { splitAgreements } from "../DocumentPreview/SharedComponents";
 import {
   getCartaProcessingBlockReason,
   getEffectiveDisciplinaryStage,
@@ -108,11 +109,11 @@ describe("letter-document — Formato Carta (216x279mm)", () => {
     ok(css.includes("min-height: 279mm"), "min-height debe ser 279mm");
   });
 
-  it("debe usar padding uniforme de 15mm", () => {
-    ok(css.includes("padding: 15mm"), "padding debe ser 15mm");
+  it("debe usar padding uniforme de 12mm", () => {
+    ok(css.includes("padding: 12mm"), "padding debe ser 12mm");
     ok(
-      css.includes("padding: 15mm;"),
-      "padding en .letter-document debe ser 15mm",
+      css.includes("padding: 12mm;"),
+      "padding en .letter-document debe ser 12mm",
     );
   });
 
@@ -610,14 +611,22 @@ describe("Carta de derivación — texto institucional", () => {
   it("mantiene el contenido base actualizado", () => {
     const derivacion = DEFAULT_LETTER_CONTENT.derivacion;
 
-    ok(derivacion.motivo.includes("intervención técnica especializada"));
+    ok(derivacion.motivo.includes("instancia de intervención especializada"));
     ok(derivacion.motivo.includes("Art. 24 BIS"));
-    ok(derivacion.descripcion.includes("evaluación de factores subyacentes"));
-    ok(derivacion.medida.includes("Psicólogo/a de Ciclo o Trabajadora Social"));
-    ok(derivacion.medida.includes("garantizar el debido proceso"));
+    ok(
+      derivacion.descripcion.includes(
+        "Amonestación Escrita y la Carta de Compromiso",
+      ),
+    );
+    ok(derivacion.medida.includes("Equipo de Convivencia Escolar"));
     ok(derivacion.acuerdos.includes("seguimiento quincenal"));
-    ok(derivacion.acuerdos.includes("condicionalidad de matrícula"));
-    ok(derivacion.cierre.includes("Artículos 12, 19, 20 (Paso 8) y 24 BIS"));
+    ok(
+      derivacion.acuerdos.includes(
+        "sin perjuicio de la participación del apoderado",
+      ),
+    );
+    ok(derivacion.acuerdos.includes("debido proceso"));
+    ok(derivacion.cierre.includes("artículos 12, 19, 20 (Paso 8) y 24 BIS"));
   });
 });
 
@@ -627,12 +636,18 @@ describe("Carta de amonestación — texto institucional", () => {
 
     ok(
       amonestacion.motivo.includes(
-        "primera acumulación crítica de 5 o más anotaciones leves",
+        "primera acumulación de 5 o más anotaciones leves",
       ),
     );
+    ok(amonestacion.motivo.includes("Art. 24 BIS"));
     ok(amonestacion.descripcion.includes("faltas leves (Art. 24)"));
     ok(amonestacion.medida.includes("Amonestación Escrita Formal"));
-    ok(amonestacion.acuerdos.includes("Medida 4 (Carta de Compromiso)"));
+    ok(amonestacion.acuerdos.includes("nota de mérito"));
+    ok(
+      amonestacion.acuerdos.includes(
+        "Medida 4 establecida en el Reglamento Interno",
+      ),
+    );
     ok(amonestacion.cierre.includes("artículos 18 (Medida 3) y 24 BIS"));
   });
 });
@@ -642,23 +657,78 @@ describe("Carta de compromiso — texto institucional", () => {
     const compromiso = DEFAULT_LETTER_CONTENT.compromiso_conductual;
 
     ok(compromiso.motivo.includes("10 o más anotaciones leves"));
-    ok(compromiso.descripcion.includes("medidas pedagógicas previas"));
+    ok(compromiso.motivo.includes("segunda acumulación"));
+    ok(compromiso.descripcion.includes("acompañamiento y compromiso"));
     ok(compromiso.medida.includes("Carta de Compromiso Conductual"));
-    ok(compromiso.medida.includes("Medida 5"));
-    ok(compromiso.acuerdos.includes("objetivos de mejora conductual claros"));
-    ok(
-      compromiso.acuerdos.includes(
-        "conductas que originan anotaciones negativas",
-      ),
+    ok(compromiso.acuerdos.includes("(según conste en sus anotaciones)"));
+    ok(!compromiso.acuerdos.includes("{PATRONES}"));
+    ok(compromiso.acuerdos.includes("Inspectoría de su nivel"));
+    ok(compromiso.acuerdos.includes("nota de mérito"));
+    ok(compromiso.acuerdos.includes("debido proceso"));
+    ok(compromiso.cierre.includes("artículos 18 (Medida 4) y 24 BIS"));
+  });
+});
+
+describe("Acuerdos numerados — división robusta", () => {
+  it("divide por saltos de línea reales", () => {
+    deepEqual(splitAgreements("Primero.\nSegundo.\nTercero."), [
+      "Primero.",
+      "Segundo.",
+      "Tercero.",
+    ]);
+  });
+
+  it("reconoce secuencias literales de escape", () => {
+    deepEqual(splitAgreements("Primero.\\nSegundo."), ["Primero.", "Segundo."]);
+  });
+
+  it("divide un bloque largo sin saltos por oraciones", () => {
+    const block =
+      "El estudiante se compromete a trabajar durante los próximos 30 días en la mejora de los patrones de conducta identificados en sus registros (según conste en sus anotaciones), procurando mantener relaciones respetuosas y acordes con las normas de convivencia. Deberá participar en instancias de seguimiento quincenal con Inspectoría de su nivel, dejando registro de los avances, dificultades y acuerdos adoptados. Durante este período se favorecerá la reflexión sobre las situaciones ocurridas y la búsqueda de estrategias que permitan prevenir su reiteración. Al finalizar los 30 días se realizará una evaluación del cumplimiento de los compromisos. En caso de observarse avances significativos, estos podrán ser reconocidos mediante una nota de mérito en su hoja de vida. Si las conductas persisten, se analizarán las medidas que correspondan de acuerdo con el Reglamento Interno, considerando los antecedentes del caso, las acciones desarrolladas y el debido proceso.";
+    const items = splitAgreements(block);
+
+    ok(items.length > 1);
+    ok(items.every((item) => item.endsWith(".")));
+  });
+
+  it("no parte abreviaturas como Art. 23 en bloques largos", () => {
+    const block = `${"x".repeat(380)} conforme al Art. 23. Deberá asistir a seguimiento.`;
+    const items = splitAgreements(block);
+
+    ok(items.some((item) => item.includes("Art. 23")));
+  });
+
+  it("conserva el bloque corto como párrafo único", () => {
+    deepEqual(splitAgreements("Un solo acuerdo breve."), [
+      "Un solo acuerdo breve.",
+    ]);
+  });
+});
+
+describe("Cartas en una hoja — anti-regresión", () => {
+  it("define la variante de densidad para hoja Carta", () => {
+    const css = readFileSync(
+      resolve(import.meta.dirname!, "../letter-document.css"),
+      "utf-8",
     );
-    ok(compromiso.acuerdos.includes("evaluación formal del cumplimiento"));
-    ok(compromiso.acuerdos.includes("escalada directa a falta muy grave"));
-    ok(
-      compromiso.acuerdos.includes(
-        "Reglamento Interno de Convivencia Escolar (RICE)",
-      ),
+
+    ok(css.includes(".letter-document--single"));
+    ok(css.includes(".letter-agreements"));
+  });
+
+  it("aplica la variante de hoja única a las tres cartas", () => {
+    const source = readFileSync(
+      resolve(import.meta.dirname!, "../LetterA4Document.tsx"),
+      "utf-8",
     );
-    ok(compromiso.cierre.includes("artículos 18 y 24 BIS"));
+
+    ok(source.includes("letter-document--single"));
+  });
+
+  it("mantiene los acuerdos del compromiso acotados a una hoja", () => {
+    const compromiso = DEFAULT_LETTER_CONTENT.compromiso_conductual;
+
+    ok(compromiso.acuerdos.length < 1400);
   });
 });
 

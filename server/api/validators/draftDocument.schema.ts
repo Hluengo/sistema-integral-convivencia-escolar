@@ -54,5 +54,3 @@ export const draftDocumentBodySchema = z.object({
   bitacora: z.array(bitacoraEntryInputSchema).optional().default([]),
   checklist: z.array(checklistItemInputSchema).optional().default([]),
 });
-
-export type DraftDocumentBody = z.infer<typeof draftDocumentBodySchema>;

@@ -11,7 +11,7 @@ const RESPONSIBLE_MARKER = "Responsable: ";
 const OBSERVATIONS_MARKER = ". Observaciones: ";
 const LEGACY_LABEL_ALIASES: Record<string, string> = {
   "En Plazo de Apelación": "Derecho a Apelación Informado",
-  "Medida en Ejecución": "Medida o Plan de Acompañamiento Iniciado",
+  "Medida en Ejecución": "Seguimiento realizado",
 };
 
 function parseRegistrationDescription(description: string): {

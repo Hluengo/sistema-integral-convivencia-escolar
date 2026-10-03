@@ -36,6 +36,7 @@ pdf-estudiantes/
 student-data/
 private-data/
 backups/
+.backups/
 supabase_schema_actual_remoto.sql
 
 # Capturas oficiales del README (anonimizadas con modo privacidad)

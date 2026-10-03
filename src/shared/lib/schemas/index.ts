@@ -139,6 +139,8 @@ export const CausaSchema = z.object({
 });
 
 // Barril único: todo esquema compartido cliente/servidor se importa desde aquí.
+// Knip los marca unused (solo los exige el contract test "barril único" por
+// source-scan): son API intencional, no borrar.
 export {
   newCausaFormSchema,
   normalizeRutInput,

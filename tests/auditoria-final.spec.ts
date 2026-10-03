@@ -199,16 +199,13 @@ test.describe("Auditoría integral 2026-08-15 (E2E final)", () => {
       timeout: 15_000,
     });
 
-    // La plantilla base de las tres cartas cierra con la cláusula de
-    // reconsideración ante la Dirección (visible en el editor y en la
-    // previsualización del documento).
-    const clausula = dialog.getByText(
-      /reconsideración de esta medida por escrito ante la Dirección/i,
-    );
-    await expect(clausula.first()).toBeVisible({ timeout: 15_000 });
+    // La plantilla base ya no incluye la cláusula de reconsideración:
+    // se elimina del documento generado.
     await expect(
-      dialog.getByText(/5 días hábiles siguientes a la notificación/i).first(),
-    ).toBeVisible();
+      dialog.getByText(
+        /reconsideración de esta medida por escrito ante la Dirección/i,
+      ),
+    ).toHaveCount(0);
   });
 
   test("modo privacidad oculta RUN y nombres completos visibles", async ({

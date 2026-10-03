@@ -50,9 +50,6 @@ export const optStr = (
   max = MAX_STR,
 ): string => sanitize(obj[key]).slice(0, max);
 
-export const optArr = (obj: Record<string, unknown>, key: string): unknown[] =>
-  Array.isArray(obj[key]) ? (obj[key] as unknown[]) : [];
-
 export function sanitizeForAI(text: unknown): string {
   if (!text || typeof text !== "string") {
     return "";

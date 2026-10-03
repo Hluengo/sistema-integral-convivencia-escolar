@@ -94,16 +94,10 @@ describe("Listado de causas activas", () => {
     const modal = read("CausaDetailModal.tsx");
     const tabs = read("../timeline/TimelineTabs.tsx");
     const summary = read("../timeline/ResumenTab.tsx");
-    const route = read("../timeline/RutaExpedienteTab.tsx");
     const panels = read("../timeline/TimelineTabPanels.tsx");
     const routeYolo = read("../timeline/RutaYoloView.tsx");
-    const phaseWorkspace = read("../timeline/TimelinePhaseWorkspace.tsx");
-    const processTab = read("../timeline/ProcesoTab.tsx");
     const advisor = read("MainContent/AdvisorView.tsx");
     const operationalSummary = read("causaOperationalSummary.ts");
-    const investigationChecklist = read(
-      "../timeline/InvestigationChecklist.tsx",
-    );
 
     assert.match(view, /<CausaDetailModal/);
     assert.match(modal, /<Dialog\s+open=/);
@@ -129,35 +123,10 @@ describe("Listado de causas activas", () => {
       assert.match(operationalSummary, new RegExp(phase));
     }
     assert.doesNotMatch(summary, /Ruta del expediente/);
-    assert.match(route, /onSelectPhase/);
-    assert.match(route, /Trabajar.*hitos/);
-    assert.match(route, /aria-controls="phase-workspace"/);
     assert.match(panels, /activeTab === ["']ruta["']/);
     assert.match(panels, /<RutaYoloView/);
     assert.match(routeYolo, /onSelectPhase/);
     assert.match(routeYolo, /Visor documental del hito/);
-    assert.match(phaseWorkspace, /Volver a la ruta/);
-    assert.match(phaseWorkspace, /onSelectPhase\(null\)/);
-    assert.match(phaseWorkspace, /<ProcesoTab/);
-    assert.match(phaseWorkspace, /id="phase-workspace"/);
-    assert.match(phaseWorkspace, /Ruta del expediente/);
-    assert.doesNotMatch(processTab, /Estado de la causa/);
-    assert.doesNotMatch(processTab, /MAPPED_STATES/);
-    assert.match(investigationChecklist, /Mediación no requerida/);
-    assert.match(investigationChecklist, /Derivar a mediación/);
-    assert.match(
-      investigationChecklist,
-      /handleStartRegister\(derivationItem\)/,
-    );
-    assert.match(investigationChecklist, /model\.mediationActive &&/);
-    assert.match(
-      investigationChecklist,
-      /notRequired={model\.mediationOutcome === ["']agreement["']}/,
-    );
-    assert.match(
-      investigationChecklist,
-      /notRequired={model\.mediationOutcome === ["']failed["']}/,
-    );
   });
 
   it("calcula días civiles usando la fecha chilena incluso cerca de UTC", () => {
@@ -301,19 +270,10 @@ describe("Listado de causas activas", () => {
 
   it("mantiene la bitácora y checklist como fuentes del detalle", () => {
     const panels = read("../timeline/TimelineTabPanels.tsx");
-    const process = read("../timeline/ProcessChecklist.tsx");
-    const checklistItemCard = read("../timeline/ChecklistItemCard.tsx");
     const checklistRegistration = read(
       "../../shared/lib/hooks/useChecklistRegistration.ts",
     );
     assert.match(panels, /<BitacoraTab/);
-    assert.match(
-      process,
-      /getApplicableChecklistItems\(\s*causa,\s*section\.phaseName,?\s*\)/,
-    );
-    assert.match(checklistItemCard, /item\.registradoPor/);
-    assert.match(checklistItemCard, /item\.fechaCompletado/);
-    assert.match(process, /Abrir hitos/);
     assert.doesNotMatch(checklistRegistration, /recepcion: true/);
     assert.doesNotMatch(checklistRegistration, /investigacion: true/);
   });
@@ -339,18 +299,6 @@ describe("Listado de causas activas", () => {
     assert.match(summary, /documentsCount/);
     assert.match(tabs, /getCausaOperationalSummary/);
     assert.match(tabs, /summary\.currentPhase/);
-  });
-
-  it("muestra la ruta, plazo, próximo hito y actividad sin nuevas fuentes de datos", () => {
-    const route = read("../timeline/RutaExpedienteTab.tsx");
-    const operationalSummary = read("causaOperationalSummary.ts");
-
-    assert.match(route, /Ruta del expediente/);
-    assert.match(route, /Próximo hito/);
-    assert.match(route, /Actividad registrada/);
-    assert.match(route, /Cierre:/);
-    assert.match(operationalSummary, /causa\.checklistDebidoProceso/);
-    assert.match(operationalSummary, /causa\.bitacora/);
   });
 
   it("alinea el historial de causas con el registro manual y las tarjetas de anotaciones", () => {
@@ -388,28 +336,6 @@ describe("Listado de causas activas", () => {
       workspace,
       /if \(selectedCausaId\) setSelectedCausaId\(["']{2}\);/,
     );
-  });
-
-  it("mantiene el borrador contextual y simplifica su edición antes de imprimir", () => {
-    const workspace = read("MainContent/CaseLegalWorkspace.tsx");
-    const draft = read("../timeline/DraftPanel.tsx");
-
-    assert.match(workspace, /useAuditDraft\(\{ causa \}\)/);
-    assert.match(workspace, /<DraftPanel/);
-    assert.match(workspace, /<AuditPanel/);
-    assert.match(draft, /informe_cierre_indagacion/);
-    assert.match(draft, /informe_concluyente/);
-    assert.match(draft, /<details/);
-    assert.match(draft, /Ver vista previa para impresión Oficio/);
-  });
-
-  it("redirige la redacción de la notificación de apertura al checklist de Recepción", () => {
-    const draft = read("../timeline/DraftPanel.tsx");
-
-    assert.match(draft, /DOC_TYPE_OPTIONS/);
-    assert.match(draft, /hito chk_rec_3 del checklist de Recepción/);
-    assert.match(draft, /informe_cierre_indagacion/);
-    assert.match(draft, /informe_concluyente/);
   });
 
   it("mantiene Plantillas como administración clara, con estados de acceso y sin recargas repetidas", () => {

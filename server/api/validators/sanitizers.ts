@@ -2,7 +2,6 @@
 
 export {
   isRequestValidationError,
-  optArr,
   optStr,
   requireStr,
   redactSensitiveForAI,

@@ -152,8 +152,8 @@ export default function StudentSummaryTab({
   const suggestedLetterType = mapDocTypeToLetterType(suggestedDocType);
 
   return (
-    <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-12">
-      <div className="space-y-4 lg:col-span-8">
+    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+      <div className="flex flex-col gap-5">
         <section
           className={`rounded-xl border ${style.border} bg-white p-4 shadow-sm sm:p-5`}
         >
@@ -181,48 +181,52 @@ export default function StudentSummaryTab({
             </span>
           </div>
 
-          <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-            <div className="group relative flex min-h-24 min-w-0 flex-col items-start justify-between rounded-xl border border-gravisima-100 bg-gravisima-50/80 p-3 transition-transform hover:-translate-y-0.5">
+          <div className="mt-4 flex flex-col gap-3">
+            <div className="flex items-center justify-between rounded-xl border border-gravisima-100 bg-gravisima-50/50 p-4">
+              <div>
+                <p className="text-xs font-semibold text-gravisima-700">
+                  Negativas registradas
+                </p>
+                <p className="text-3xl font-extrabold tabular-nums text-gravisima-600">
+                  {counts.negativas}
+                </p>
+              </div>
               <span
-                className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-lg border border-gravisima-100 bg-white/70 text-gravisima-600"
+                className="flex size-8 items-center justify-center rounded-full bg-gravisima-100 text-gravisima-600"
                 aria-hidden="true"
               >
-                <AlertTriangle className="size-5" />
+                <AlertTriangle className="size-4" />
               </span>
-              <p className="shrink-0 tabular-nums text-2xl font-black leading-none text-gravisima-700 sm:text-3xl">
-                {counts.negativas}
-              </p>
-              <p className="min-w-0 text-sm font-semibold leading-tight text-gravisima-600">
-                Negativas registradas
-              </p>
             </div>
-            <div className="group relative flex min-h-24 min-w-0 flex-col items-start justify-between rounded-xl border border-leve-100 bg-leve-50/80 p-3 transition-transform hover:-translate-y-0.5">
+            <div className="flex items-center justify-between rounded-xl border border-leve-100 bg-leve-50/50 p-4">
+              <div>
+                <p className="text-xs font-semibold text-leve-700">Positivas</p>
+                <p className="text-3xl font-extrabold tabular-nums text-leve-600">
+                  {counts.positivas}
+                </p>
+              </div>
               <span
-                className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-lg border border-leve-100 bg-white/70 text-leve-600"
+                className="flex size-8 items-center justify-center rounded-full bg-leve-100 text-leve-600"
                 aria-hidden="true"
               >
-                <CheckCircle2 className="size-5" />
+                <CheckCircle2 className="size-4" />
               </span>
-              <p className="shrink-0 tabular-nums text-2xl font-black leading-none text-leve-700 sm:text-3xl">
-                {counts.positivas}
-              </p>
-              <p className="min-w-0 text-sm font-semibold leading-tight text-leve-600">
-                Positivas
-              </p>
             </div>
-            <div className="group relative flex min-h-24 min-w-0 flex-col items-start justify-between rounded-xl border border-blue-100 bg-blue-50/80 p-3 transition-transform hover:-translate-y-0.5">
+            <div className="flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+              <div>
+                <p className="text-xs font-semibold text-blue-700">
+                  Informativas
+                </p>
+                <p className="text-3xl font-extrabold tabular-nums text-blue-600">
+                  {counts.informativas}
+                </p>
+              </div>
               <span
-                className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-lg border border-blue-100 bg-white/70 text-blue-600"
+                className="flex size-8 items-center justify-center rounded-full bg-blue-100 text-blue-600"
                 aria-hidden="true"
               >
-                <Info className="size-5" />
+                <Info className="size-4" />
               </span>
-              <p className="shrink-0 tabular-nums text-2xl font-black leading-none text-blue-700 sm:text-3xl">
-                {counts.informativas}
-              </p>
-              <p className="min-w-0 text-sm font-semibold leading-tight text-blue-600">
-                Informativas
-              </p>
             </div>
           </div>
         </section>
@@ -267,85 +271,85 @@ export default function StudentSummaryTab({
             <span>Crítico (10+)</span>
           </div>
         </section>
-
-        <div className="grid grid-cols-1 items-start gap-2.5 lg:grid-cols-2">
-          <section className="h-fit self-start rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-            <div className="mb-4 flex items-center gap-2.5">
-              <FileText className="h-4 w-4 text-brand-600" aria-hidden="true" />
-              <h4 className="text-sm font-bold text-neutral-900">
-                Carta y estado del trámite
-              </h4>
-            </div>
-            {currentCarta ? (
-              <div className="space-y-0.5 text-xs leading-5 text-neutral-600">
-                <p className="font-semibold text-neutral-900">
-                  {currentCarta.letter_type}
-                </p>
-                <p>
-                  Registro:{" "}
-                  {formatDate(
-                    currentCarta.created_at || currentCarta.emission_date,
-                  )}
-                </p>
-                <p>Apoderado: {currentCarta.apoderado_name || "-"}</p>
-                <p>Estado del trámite: {getCartaWorkflowLabel(currentCarta)}</p>
-              </div>
-            ) : (
-              <p className="text-sm text-neutral-500">
-                No hay carta vigente registrada en Supabase.
-              </p>
-            )}
-            {onGoToCartasTab && (
-              <Button
-                variant="custom"
-                onClick={onGoToCartasTab}
-                className="mt-4 inline-flex min-h-10 items-center rounded-lg border border-brand-200 px-3.5 py-2 text-xs font-semibold text-brand-700 transition-colors hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
-              >
-                Ir a Carta{" "}
-                <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-              </Button>
-            )}
-          </section>
-
-          <section className="h-fit self-start rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-            <div className="mb-4 flex items-center gap-2.5">
-              <Sparkles className="h-4 w-4 text-brand-600" aria-hidden="true" />
-              <h4 className="text-sm font-bold text-neutral-900">
-                Análisis más reciente del PDF
-              </h4>
-            </div>
-            {lastAnalysis ? (
-              <div className="space-y-0.5 text-xs leading-5 text-neutral-600">
-                <p className="font-semibold text-neutral-900">
-                  {lastAnalysis.file_name || "Documento sin nombre"}
-                </p>
-                <p>{formatDate(lastAnalysis.analyzed_at)}</p>
-                <p>
-                  Conteos del análisis: {lastAnalysis.negativas} negativas ·{" "}
-                  {lastAnalysis.positivas} positivas ·{" "}
-                  {lastAnalysis.informativas} informativas
-                </p>
-              </div>
-            ) : (
-              <p className="text-sm text-neutral-500">
-                No hay análisis PDF registrado para este estudiante.
-              </p>
-            )}
-            {onGoToRevisionTab && (
-              <Button
-                variant="custom"
-                onClick={onGoToRevisionTab}
-                className="mt-4 inline-flex min-h-10 items-center rounded-lg border border-brand-200 px-3.5 py-2 text-xs font-semibold text-brand-700 transition-colors hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
-              >
-                Revisar nuevo PDF{" "}
-                <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-              </Button>
-            )}
-          </section>
-        </div>
       </div>
 
-      <aside className="space-y-4 lg:col-span-4">
+      <div className="flex flex-col gap-5">
+        <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center gap-2.5">
+            <FileText className="h-4 w-4 text-brand-600" aria-hidden="true" />
+            <h4 className="text-sm font-bold text-neutral-900">
+              Carta y estado del trámite
+            </h4>
+          </div>
+          {currentCarta ? (
+            <div className="space-y-0.5 text-xs leading-5 text-neutral-600">
+              <p className="font-semibold text-neutral-900">
+                {currentCarta.letter_type}
+              </p>
+              <p>
+                Registro:{" "}
+                {formatDate(
+                  currentCarta.created_at || currentCarta.emission_date,
+                )}
+              </p>
+              <p>Apoderado: {currentCarta.apoderado_name || "-"}</p>
+              <p>Estado del trámite: {getCartaWorkflowLabel(currentCarta)}</p>
+            </div>
+          ) : (
+            <p className="text-sm text-neutral-500">
+              No hay carta vigente registrada en Supabase.
+            </p>
+          )}
+          {onGoToCartasTab && (
+            <Button
+              variant="custom"
+              onClick={onGoToCartasTab}
+              className="mt-4 inline-flex min-h-10 items-center rounded-lg border border-brand-200 px-3.5 py-2 text-xs font-semibold text-brand-700 transition-colors hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+            >
+              Ir a Carta{" "}
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </Button>
+          )}
+        </section>
+
+        <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center gap-2.5">
+            <Sparkles className="h-4 w-4 text-brand-600" aria-hidden="true" />
+            <h4 className="text-sm font-bold text-neutral-900">
+              Análisis más reciente del PDF
+            </h4>
+          </div>
+          {lastAnalysis ? (
+            <div className="space-y-0.5 text-xs leading-5 text-neutral-600">
+              <p className="font-semibold text-neutral-900">
+                {lastAnalysis.file_name || "Documento sin nombre"}
+              </p>
+              <p>{formatDate(lastAnalysis.analyzed_at)}</p>
+              <p>
+                Conteos del análisis: {lastAnalysis.negativas} negativas ·{" "}
+                {lastAnalysis.positivas} positivas · {lastAnalysis.informativas}{" "}
+                informativas
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-neutral-500">
+              No hay análisis PDF registrado para este estudiante.
+            </p>
+          )}
+          {onGoToRevisionTab && (
+            <Button
+              variant="custom"
+              onClick={onGoToRevisionTab}
+              className="mt-4 inline-flex min-h-10 items-center rounded-lg border border-brand-200 px-3.5 py-2 text-xs font-semibold text-brand-700 transition-colors hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+            >
+              Revisar nuevo PDF{" "}
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+            </Button>
+          )}
+        </section>
+      </div>
+
+      <div className="flex flex-col gap-5">
         <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="flex items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/70 text-brand-700">
@@ -438,7 +442,7 @@ export default function StudentSummaryTab({
             )}
           </div>
         </section>
-      </aside>
+      </div>
     </div>
   );
 }
