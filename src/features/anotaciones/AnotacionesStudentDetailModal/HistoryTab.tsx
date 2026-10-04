@@ -2,13 +2,16 @@
 
 import { useMemo, useState } from "react";
 import {
+  Calendar,
   CheckCircle2,
   FileSearch,
   FileText,
   History,
   Loader2,
   NotebookPen,
+  Plus,
   ScrollText,
+  Search,
   Upload,
 } from "lucide-react";
 import type {
@@ -26,9 +29,19 @@ import { resolveCartaWorkflowStatus } from "@/shared/api/services/cartas.service
 import { formatDate } from "./constants";
 import { useStudentHistoryEntries } from "@/shared/lib/hooks/useStudentHistoryEntries";
 import ManualHistoryEntryForm from "./ManualHistoryEntryForm";
+import {
+  filterHistoryItems,
+  getHistoryBadge,
+  groupHistoryItemsByMonth,
+  sortHistoryItems,
+  type HistoryFilterKind,
+  type HistorySortDirection,
+  type HistoryTimelineKind,
+} from "./historyTimeline";
 
 interface TimelineItem {
   id: string;
+  kind: HistoryTimelineKind;
   date: string;
   icon: React.ReactNode;
   title: string;
@@ -54,6 +67,7 @@ function describeCartaEvent(
   const letterType = carta?.letter_type || "Carta disciplinaria";
   const base = {
     id: `carta-event-${event.id}`,
+    kind: "Cartas" as const,
     date: event.created_at,
     icon: <FileText className="h-4 w-4" />,
   };
@@ -131,7 +145,10 @@ export default function HistoryTab({
   letterOutputEvents,
   cartaEvents,
 }: HistoryTabProps) {
-  const [kindFilter, setKindFilter] = useState<string>("Todos");
+  const [kindFilter, setKindFilter] = useState<HistoryFilterKind>("Todos");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortDirection, setSortDirection] =
+    useState<HistorySortDirection>("desc");
   const manualHistory = useStudentHistoryEntries(studentId);
   const relevantCartaEvents = cartaEvents.filter(
     (event) =>
@@ -146,6 +163,7 @@ export default function HistoryTab({
     if (status === "archived") {
       items.push({
         id: `carta-${carta.id}`,
+        kind: "Cartas" as const,
         date: carta.archived_at || carta.created_at || carta.emission_date,
         icon: <FileText className="h-4 w-4" />,
         title: `Carta archivada: ${carta.letter_type}`,
@@ -159,6 +177,7 @@ export default function HistoryTab({
     if (status === "completed") {
       items.push({
         id: `carta-${carta.id}`,
+        kind: "Cartas" as const,
         date: carta.created_at || carta.emission_date,
         icon: <FileText className="h-4 w-4" />,
         title: `Carta realizada: ${carta.letter_type}`,
@@ -170,6 +189,7 @@ export default function HistoryTab({
     if (status === "annulled") {
       items.push({
         id: `carta-${carta.id}`,
+        kind: "Cartas" as const,
         date: carta.created_at || carta.emission_date,
         icon: <FileText className="h-4 w-4" />,
         title: `Carta anulada: ${carta.letter_type}`,
@@ -184,11 +204,12 @@ export default function HistoryTab({
     return items;
   }, []);
 
-  const items: TimelineItem[] = useMemo(() => {
+  const allItems: TimelineItem[] = useMemo(() => {
     const cartasByIdInner = new Map(cartas.map((carta) => [carta.id, carta]));
     const all: TimelineItem[] = [
       ...manualHistory.entries.map((entry) => ({
         id: `manual-${entry.id}`,
+        kind: "Manual" as const,
         date: entry.created_at,
         icon: <NotebookPen className="h-4 w-4" />,
         title: entry.title,
@@ -197,6 +218,7 @@ export default function HistoryTab({
       })),
       ...files.map((file) => ({
         id: `file-${file.id}`,
+        kind: "PDF" as const,
         date: file.uploaded_at,
         icon: <Upload className="h-4 w-4" />,
         title: "PDF subido",
@@ -206,6 +228,7 @@ export default function HistoryTab({
       })),
       ...documentAnalyses.map((analysis) => ({
         id: `analysis-${analysis.id}`,
+        kind: "PDF" as const,
         date: analysis.analyzed_at,
         icon: <FileSearch className="h-4 w-4" />,
         title: "PDF analizado",
@@ -214,6 +237,7 @@ export default function HistoryTab({
       })),
       ...processes.map((process) => ({
         id: `process-${process.id}`,
+        kind: "PDF" as const,
         date: process.completed_at || process.created_at,
         icon: <CheckCircle2 className="h-4 w-4" />,
         title: process.is_completed
@@ -227,6 +251,7 @@ export default function HistoryTab({
       ),
       ...letterOutputEvents.map((event) => ({
         id: `letter-output-${event.id}`,
+        kind: "Cartas" as const,
         date: event.created_at,
         icon: <FileText className="h-4 w-4" />,
         title:
@@ -239,28 +264,15 @@ export default function HistoryTab({
       ...syntheticCartaItems,
       ...etapas.map((etapa) => ({
         id: `etapa-${etapa.id}`,
+        kind: "Etapas" as const,
         date: etapa.transition_date || etapa.created_at,
         icon: <ScrollText className="h-4 w-4" />,
         title: `Cambio de etapa disciplinaria: ${etapa.stage_name}`,
         description: `${etapa.responsible || "Sin responsable"}${etapa.comment ? ` · ${etapa.comment}` : ""}`,
         tone: "bg-purple-50 text-purple-700",
       })),
-    ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    return all.filter(
-      (item) =>
-        kindFilter === "Todos" ||
-        (kindFilter === "Cartas"
-          ? item.id.startsWith("carta-") || item.id.startsWith("letter-output-")
-          : kindFilter === "PDF"
-            ? item.id.startsWith("file-") ||
-              item.id.startsWith("analysis-") ||
-              item.id.startsWith("process-")
-            : kindFilter === "Etapas"
-              ? item.id.startsWith("etapa-")
-              : kindFilter === "Manual"
-                ? item.id.startsWith("manual-")
-                : true),
-    );
+    ];
+    return all;
   }, [
     manualHistory.entries,
     files,
@@ -271,11 +283,48 @@ export default function HistoryTab({
     syntheticCartaItems,
     etapas,
     cartas,
-    kindFilter,
   ]);
+
+  const visibleItems = useMemo(
+    () =>
+      sortHistoryItems(
+        filterHistoryItems(allItems, kindFilter, searchQuery),
+        sortDirection,
+      ),
+    [allItems, kindFilter, searchQuery, sortDirection],
+  );
+  const groups = useMemo(
+    () => groupHistoryItemsByMonth(visibleItems),
+    [visibleItems],
+  );
+  const hasActiveFilters =
+    kindFilter !== "Todos" || searchQuery.trim().length > 0;
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-col gap-4 rounded-xl border border-dashed border-sky-300 bg-sky-50/70 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div
+            aria-hidden="true"
+            className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-600 font-bold text-lg text-white shadow-sm"
+          >
+            <Plus className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-sm text-neutral-900">
+              ¿Deseas registrar un nuevo evento o actualización?
+            </h3>
+            <p className="mt-0.5 text-xs text-neutral-500">
+              Ingresa actas de entrevistas, acuerdos con apoderados o cartas
+              físicas emitidas.
+            </p>
+          </div>
+        </div>
+        <span className="inline-flex items-center gap-2 self-start rounded-lg bg-white px-3 py-2 text-xs font-semibold text-neutral-600 shadow-sm sm:self-auto">
+          <NotebookPen className="h-4 w-4" aria-hidden="true" />
+          Registro manual
+        </span>
+      </div>
       <ManualHistoryEntryForm
         studentId={studentId}
         isSaving={manualHistory.isCreating}
@@ -284,28 +333,64 @@ export default function HistoryTab({
         onResetError={manualHistory.resetCreateError}
       />
 
-      <div className="flex items-center gap-2">
-        <label
-          htmlFor="history-kind-filter"
-          className="text-xs font-semibold text-neutral-600"
-        >
-          Filtrar historial
-        </label>
-        <select
-          id="history-kind-filter"
-          value={kindFilter}
-          onChange={(e) => setKindFilter(e.target.value)}
-          className="rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm"
-        >
-          {["Todos", "Cartas", "PDF", "Etapas", "Manual"].map((k) => (
-            <option key={k} value={k}>
-              {k}
-            </option>
-          ))}
-        </select>
-        <span className="text-xs text-neutral-500" role="status">
-          {items.length} eventos
-        </span>
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
+        <div className="flex min-w-52 flex-1 items-center gap-3">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-neutral-500">
+            <label htmlFor="history-kind-filter">Filtrar:</label>
+            <select
+              id="history-kind-filter"
+              value={kindFilter}
+              onChange={(e) =>
+                setKindFilter(e.target.value as HistoryFilterKind)
+              }
+              className="rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 py-1.5 font-medium text-xs normal-case tracking-normal text-neutral-700 focus:outline-none focus:ring-1 focus:ring-sky-500"
+            >
+              {(["Todos", "Cartas", "PDF", "Etapas", "Manual"] as const).map(
+                (kind) => (
+                  <option key={kind} value={kind}>
+                    {kind === "Todos" ? "Todos los eventos" : kind}
+                  </option>
+                ),
+              )}
+            </select>
+          </div>
+          <div className="relative max-w-sm flex-1">
+            <Search
+              aria-hidden="true"
+              className="pointer-events-none absolute top-2.5 left-3 h-3.5 w-3.5 text-neutral-400"
+            />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar por palabra clave..."
+              aria-label="Buscar en el historial por palabra clave"
+              className="w-full rounded-lg border border-neutral-200 bg-neutral-50 py-1.5 pr-3 pl-8 text-xs text-neutral-700 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-sky-500"
+            />
+          </div>
+        </div>
+        <div className="flex items-center gap-3 text-xs text-neutral-500">
+          <span role="status">
+            <strong className="text-neutral-800">{visibleItems.length}</strong>{" "}
+            eventos registrados
+          </span>
+          <span className="border-l border-neutral-200 pl-3">
+            Orden:{" "}
+            <button
+              type="button"
+              onClick={() =>
+                setSortDirection((direction) =>
+                  direction === "desc" ? "asc" : "desc",
+                )
+              }
+              className="font-medium text-neutral-700 hover:text-sky-600"
+            >
+              {sortDirection === "desc"
+                ? "Más recientes primero"
+                : "Más antiguos primero"}
+            </button>
+          </span>
+        </div>
       </div>
 
       {manualHistory.loadError && (
@@ -317,7 +402,7 @@ export default function HistoryTab({
         </p>
       )}
 
-      {manualHistory.isLoading && items.length === 0 ? (
+      {manualHistory.isLoading && visibleItems.length === 0 ? (
         <div
           role="status"
           className="flex items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white p-8 text-neutral-500 text-sm"
@@ -325,40 +410,80 @@ export default function HistoryTab({
           <Loader2 className="h-4 w-4 animate-spin" />
           Cargando historial...
         </div>
-      ) : items.length === 0 ? (
+      ) : visibleItems.length === 0 ? (
         <div className="rounded-xl border border-neutral-200 bg-white p-8 text-center shadow-xs">
           <History className="mx-auto mb-3 h-12 w-12 text-neutral-300" />
           <p className="text-sm text-neutral-500">
-            No hay eventos disciplinarios registrados para este estudiante.
+            {hasActiveFilters
+              ? "Sin resultados para los filtros aplicados."
+              : "No hay eventos disciplinarios registrados para este estudiante."}
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {items.map((item) => (
-            <article
-              key={item.id}
-              className="flex gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-xs"
-            >
-              <div
-                className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${item.tone}`}
-              >
-                {item.icon}
+        <div className="relative space-y-6">
+          <div
+            aria-hidden="true"
+            className="absolute top-8 bottom-4 left-6 w-0.5 bg-neutral-200"
+          />
+          {groups.map((group) => (
+            <div key={group.key}>
+              <div className="relative z-10 flex items-center gap-3">
+                <span className="inline-flex items-center gap-1.5 rounded-md bg-neutral-900 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-sm">
+                  <Calendar className="h-3 w-3" aria-hidden="true" />
+                  {group.label}
+                </span>
+                <div
+                  aria-hidden="true"
+                  className="h-px flex-1 bg-neutral-200"
+                />
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h3 className="text-sm font-bold text-neutral-900">
-                    {item.title}
-                  </h3>
-                  <span className="text-xs text-neutral-400">
-                    {formatDate(item.date)}
-                  </span>
-                </div>
-                <p className="mt-1 whitespace-pre-wrap text-sm text-neutral-600">
-                  {item.description}
-                </p>
+              <div className="mt-4 space-y-4">
+                {group.items.map((item) => {
+                  const badge = getHistoryBadge(item);
+                  return (
+                    <article
+                      key={item.id}
+                      className="relative flex items-start gap-4"
+                    >
+                      <div
+                        aria-hidden="true"
+                        className={`z-10 mt-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-2 bg-white shadow-sm ${badge.iconClass}`}
+                      >
+                        {item.icon}
+                      </div>
+                      <div className="flex-1 rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
+                        <div className="mb-2 flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span
+                              className={`rounded border px-2 py-0.5 font-semibold text-[11px] ${badge.badgeClass}`}
+                            >
+                              {badge.label}
+                            </span>
+                            <h3 className="font-bold text-sm text-neutral-900">
+                              {item.title}
+                            </h3>
+                          </div>
+                          <span className="shrink-0 text-xs text-neutral-500">
+                            {formatDate(item.date)}
+                          </span>
+                        </div>
+                        <p className="whitespace-pre-wrap text-xs leading-relaxed text-neutral-600">
+                          {item.description}
+                        </p>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
-            </article>
+            </div>
           ))}
+          <p className="flex items-center justify-center gap-2 pt-2 pb-4 text-center text-xs text-neutral-400">
+            <CheckCircle2
+              className="h-3.5 w-3.5 text-neutral-300"
+              aria-hidden="true"
+            />
+            Has llegado al inicio del registro de este período lectivo
+          </p>
         </div>
       )}
     </div>

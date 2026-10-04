@@ -125,7 +125,6 @@ export default function InteractiveTimeline({
             setActiveTab("ruta");
             setSelectedPhase(currentFase);
           }}
-          onOpenHistory={() => setActiveTab("bitacora")}
         />
         <footer className="flex flex-col items-center justify-between gap-2 border-slate-200 border-t bg-white/70 px-8 py-4 text-xs text-slate-600 sm:flex-row">
           <span>Sistema Integral de Gestión de Convivencia Escolar · v3.4</span>

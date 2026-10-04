@@ -9,6 +9,7 @@ process.env.VITE_SUPABASE_ANON_KEY ??= "anon-key-for-unit-tests";
 
 /** Cadena encadenable para mockear `supabase.from(...)` en tests. */
 class MockQueryBuilder<T> {
+  static inCalls: Array<{ table: string; values: unknown[] }> = [];
   table: string;
   result: { data: T | null; error: Error | null };
 
@@ -30,6 +31,7 @@ class MockQueryBuilder<T> {
     return this;
   }
   in(_column: string, _values: unknown[]) {
+    MockQueryBuilder.inCalls.push({ table: this.table, values: _values });
     return this;
   }
   or(_filters: string) {
@@ -322,6 +324,108 @@ describe("fetchCausasPage", () => {
         },
       ),
       /No se recibieron causas/,
+    );
+  });
+});
+
+describe("chunkIds", () => {
+  it("parte lotes grandes en tramos acotados", async () => {
+    const { chunkIds, BATCHED_QUERY_CHUNK_SIZE } =
+      await import("./causas.service");
+    assert.equal(BATCHED_QUERY_CHUNK_SIZE, 20);
+    const ids = Array.from(
+      { length: 45 },
+      (_, index) => `DC-2026-${String(index + 1).padStart(3, "0")}`,
+    );
+    const chunks = chunkIds(ids);
+    assert.deepEqual(
+      chunks.map((chunk) => chunk.length),
+      [20, 20, 5],
+    );
+    assert.deepEqual(chunks.flat(), ids);
+    assert.deepEqual(chunkIds([]), []);
+  });
+});
+
+describe("hidratación por tramos", () => {
+  it("pide resúmenes e hitos en tramos de a lo más 20 causas y fusiona todo", async () => {
+    const ids = Array.from(
+      { length: 25 },
+      (_, index) => `DC-2026-${String(index + 1).padStart(3, "0")}`,
+    );
+    MockQueryBuilder.inCalls = [];
+    const result = await withCausasMocks(
+      {
+        resultForTable: (table) => {
+          if (table === "checklist_items") {
+            return {
+              data: ids.map((id) =>
+                makeChecklistRow({
+                  causa_id: id,
+                  id: "chk_seg_1",
+                  completado: id === "DC-2026-025",
+                  fecha_completado: "2026-10-03",
+                }),
+              ),
+              error: null,
+            };
+          }
+          if (table === "bitacora_entries") {
+            return { data: [], error: null };
+          }
+          return {
+            data: ids.map((id) => makeCausaRow({ id })),
+            error: null,
+          };
+        },
+      },
+      async () => {
+        const { fetchCausasPage } = await import("./causas.service");
+        return fetchCausasPage(0, 50);
+      },
+    );
+    const page = result as { causas: Causa[] };
+    assert.equal(page.causas.length, 25);
+    const chunks = MockQueryBuilder.inCalls.filter(
+      (call) =>
+        call.table === "checklist_items" || call.table === "bitacora_entries",
+    );
+    assert.ok(
+      chunks.length >= 4,
+      `se esperaba pedir por tramos, llamadas: ${chunks.length}`,
+    );
+    for (const chunk of chunks) {
+      assert.ok(
+        chunk.values.length <= 20,
+        `tramo de ${chunk.values.length} supera el tope`,
+      );
+    }
+    const covered = new Set(chunks.flatMap((chunk) => chunk.values));
+    for (const id of ids) {
+      assert.ok(covered.has(id), `falta ${id} en los tramos`);
+    }
+    const causa025 = page.causas.find((causa) => causa.id === "DC-2026-025");
+    const seg1 = causa025?.checklistDebidoProceso.find(
+      (item) => item.id === "chk_seg_1",
+    );
+    assert.equal(seg1?.completado, true);
+  });
+
+  it("rechaza la página si falla un tramo en vez de mostrar fases parciales", async () => {
+    await assert.rejects(
+      withCausasMocks(
+        {
+          resultForTable: (table) =>
+            table === "checklist_items"
+              ? { data: null, error: new Error("tramo caído") }
+              : { data: [makeCausaRow()], error: null },
+        },
+        async () => {
+          const { fetchCausasPage } = await import("./causas.service");
+          return fetchCausasPage(0, 50);
+        },
+      ),
+      /hidratación incompleta/,
     );
   });
 });

@@ -122,7 +122,7 @@ test.describe("Notificación de Inicio de Indagación (E2E)", () => {
     // bloque de firmas no lleva el título genérico "Firmas".
     const letter = page.locator("#notificacion-preview-letter");
     await expect(
-      letter.getByText("ENCARGADO DE INDAGACIÓN", { exact: true }),
+      letter.getByText("EQUIPO DE INDAGACIÓN", { exact: true }),
     ).toHaveCount(1);
     await expect(
       letter.getByText("Encargado de Indagación", { exact: true }),

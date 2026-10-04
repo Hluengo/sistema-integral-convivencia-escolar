@@ -189,29 +189,25 @@ describe("tipos de la notificación", () => {
     assert.equal(NOTIFICATION_SECTIONS.length, 8);
     assert.match(
       DEFAULT_NOTIFICATION_CONTENT.fundamentoProcedimiento,
-      /Circular N?°? 482/,
+      /Circular N\.º 482/,
     );
     assert.match(
       DEFAULT_NOTIFICATION_CONTENT.garantiasDebidoProceso,
-      /derecho a ser escuchado/,
+      /a ser escuchado/,
     );
     assert.match(
       DEFAULT_NOTIFICATION_CONTENT.garantiasDebidoProceso,
-      /no constituye una sanción anticipada/,
+      /no constituye una sanción/,
     );
   });
 
-  it("la plantilla base es concisa para caber en una sola hoja Carta", () => {
+  it("la plantilla base humanizada cabe en el formato Carta compacto", () => {
     const paragraphs = Object.values(DEFAULT_NOTIFICATION_CONTENT);
     assert.equal(paragraphs.length, 9);
     for (const paragraph of paragraphs) {
-      const maxLength =
-        paragraph === DEFAULT_NOTIFICATION_CONTENT.garantiasDebidoProceso
-          ? 320
-          : 220;
       assert.ok(
-        paragraph.length <= maxLength,
-        `el párrafo excede 220 caracteres (${paragraph.length}): ${paragraph.slice(0, 60)}…`,
+        paragraph.length <= 600,
+        `el párrafo excede 600 caracteres (${paragraph.length}): ${paragraph.slice(0, 60)}…`,
       );
     }
   });
@@ -278,28 +274,24 @@ describe("builders de la notificación", () => {
 
   it("fusiona advertencia y garantías en la sección 7", () => {
     const content = buildPrefilledNotificationContent(baseCausa());
-    assert.match(
-      content.garantiasDebidoProceso,
-      /no constituye una sanción anticipada/,
-    );
-    assert.match(content.garantiasDebidoProceso, /derecho a ser escuchado/);
+    assert.match(content.garantiasDebidoProceso, /no constituye una sanción/);
+    assert.match(content.garantiasDebidoProceso, /a ser escuchado/);
     assert.equal(
       NOTIFICATION_SECTIONS[6]?.title,
       "Garantías del debido proceso",
     );
   });
 
-  it("lista antecedentes reales de la bitácora sin inventar hechos", () => {
+  it("usa el texto institucional fijo en evidencias y testimonios aunque la bitácora tenga registros", () => {
     const content = buildPrefilledNotificationContent(baseCausa());
-    assert.match(
+    assert.equal(
       content.evidenciaTestimonios,
-      /Registro audiovisual del patio/,
+      DEFAULT_NOTIFICATION_CONTENT.evidenciaTestimonios,
     );
-    assert.match(
+    assert.doesNotMatch(
       content.evidenciaTestimonios,
-      /Entrevista a compañeros presentes/,
+      /Antecedentes registrados/,
     );
-    assert.doesNotMatch(content.evidenciaTestimonios, /no registrada/);
   });
 
   it("respeta un snapshot guardado y no regenera el contenido", () => {

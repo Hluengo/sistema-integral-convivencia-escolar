@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Check,
   Download,
-  FilePlus2,
   FileText,
   Maximize2,
   Minimize2,
@@ -21,6 +20,7 @@ import {
   getCausaDeadlineStages,
 } from "../causas/causaPresentation";
 import { getApplicableChecklistItems } from "../../shared/lib/domain/investigationChecklist";
+import { getPhaseTone } from "../../shared/lib/domain/phaseTones";
 import CausaNotificationPanel from "../causas/notificacionDocgen/CausaNotificationPanel";
 import RegistrationForm from "./RegistrationForm";
 import { useTimelineContext } from "../../shared/lib/useTimelineContext";
@@ -34,7 +34,6 @@ interface RutaYoloViewProps {
   currentFase: string;
   selectedPhase: FaseProcedimental | null;
   onSelectPhase: (phase: FaseProcedimental | null) => void;
-  onOpenHistory: () => void;
 }
 
 function defaultItem(items: ChecklistItem[]) {
@@ -75,10 +74,10 @@ export default function RutaYoloView({
   currentFase,
   selectedPhase,
   onSelectPhase,
-  onOpenHistory,
 }: RutaYoloViewProps) {
   const summary = getCausaOperationalSummary(causa);
   const activePhase = selectedPhase ?? (currentFase as FaseProcedimental);
+  const activeTone = getPhaseTone(activePhase);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [expandedPhase, setExpandedPhase] = useState<FaseProcedimental | null>(
     null,
@@ -187,12 +186,13 @@ export default function RutaYoloView({
           {summary.phaseProgress.map((phase, index) => {
             const phaseName = phase.phase as FaseProcedimental;
             const active = phaseName === activePhase;
+            const tone = getPhaseTone(phaseName);
             return (
               <button
                 key={phase.phase}
                 type="button"
                 onClick={() => selectPhase(phaseName)}
-                className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 font-semibold transition ${active ? "bg-brand-600 text-white" : "text-neutral-500 hover:bg-neutral-100"}`}
+                className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-1 font-semibold transition ${active ? `${tone.solid} text-white` : "text-neutral-500 hover:bg-neutral-100"}`}
                 aria-current={active ? "step" : undefined}
               >
                 <span
@@ -218,7 +218,9 @@ export default function RutaYoloView({
                   Actuaciones de la fase actual
                 </p>
               </div>
-              <span className="rounded-full bg-brand-100 px-2 py-1 font-semibold text-brand-800 text-10px">
+              <span
+                className={`rounded-full px-2 py-1 font-semibold text-10px ${activeTone.softBg} ${activeTone.softText}`}
+              >
                 {phaseItems.length} hitos
               </span>
             </div>
@@ -229,28 +231,29 @@ export default function RutaYoloView({
               {summary.phaseProgress.map((phase) => {
                 const phaseName = phase.phase as FaseProcedimental;
                 const items = getApplicableChecklistItems(causa, phaseName);
+                const tone = getPhaseTone(phaseName);
                 const isExpanded = phaseName === expandedPhase;
                 const isCurrent = phaseName === summary.currentPhase;
 
                 return (
                   <section
                     key={phase.phase}
-                    className="overflow-hidden rounded-xl border border-neutral-200 bg-white"
+                    className={`overflow-hidden rounded-xl border bg-white ${tone.frame}`}
                   >
                     <button
                       type="button"
                       onClick={() => selectPhase(phaseName)}
-                      className={`flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left transition ${isExpanded ? "bg-brand-50/70" : "hover:bg-neutral-50"}`}
+                      className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left transition hover:bg-neutral-50"
                       aria-expanded={isExpanded}
                       aria-label={`${isExpanded ? "Ocultar" : "Mostrar"} hitos de ${phase.phase}`}
                     >
                       <span
-                        className={`font-semibold text-xs ${isExpanded ? "text-brand-800" : "text-neutral-700"}`}
+                        className={`font-semibold text-xs ${isExpanded ? tone.strongText : "text-neutral-700"}`}
                       >
                         {phase.phase}
                       </span>
                       <span
-                        className={`rounded-full px-2 py-0.5 font-bold text-10px ${isCurrent ? "bg-brand-100 text-brand-800" : "bg-neutral-100 text-neutral-600"}`}
+                        className={`rounded-full px-2 py-0.5 font-bold text-10px ${isCurrent ? `${tone.softBg} ${tone.softText}` : "bg-neutral-100 text-neutral-600"}`}
                       >
                         {phase.completed}/{phase.total}
                       </span>
@@ -354,26 +357,6 @@ export default function RutaYoloView({
                 );
               })}
             </div>
-          </div>
-
-          <div className="space-y-2 border-neutral-200 border-t p-3">
-            <button
-              type="button"
-              onClick={onOpenHistory}
-              className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-brand-800 text-xs font-semibold transition hover:bg-brand-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-            >
-              <FilePlus2 className="size-4" aria-hidden="true" />
-              Agregar actualización extraordinaria
-            </button>
-            <button
-              type="button"
-              disabled
-              title="La descarga ZIP se habilitará al integrar el visor documental"
-              className="flex min-h-10 w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-neutral-400 text-xs font-semibold"
-            >
-              <Download className="size-4" aria-hidden="true" />
-              Descargar expediente ZIP
-            </button>
           </div>
         </aside>
 

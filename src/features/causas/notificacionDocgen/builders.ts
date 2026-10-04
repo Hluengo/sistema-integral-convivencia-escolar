@@ -84,23 +84,6 @@ function alignSeverityReferences(
   );
 }
 
-/**
- * Registros reales de la bitácora (evidencias, entrevistas, notificaciones)
- * que alimentan la sección de antecedentes. Solo se usa texto que ya existe
- * en el expediente: nunca se inventan hechos.
- */
-function listBitacoraAntecedentes(bitacora: BitacoraEntry[]): string[] {
-  return bitacora
-    .filter(
-      (entry) => entry.tipo === "Evidencia" || entry.tipo === "Entrevista",
-    )
-    .slice(0, 12)
-    .map((entry) => {
-      const doc = entry.documentoAdjunto ? " (documento adjunto)" : "";
-      return `- ${entry.fecha}: ${entry.titulo}${doc}`;
-    });
-}
-
 function combineDueProcessSections(content: NotificationContent): string {
   if (!content.advertenciaEspecial.trim())
     return content.garantiasDebidoProceso;
@@ -114,9 +97,10 @@ function combineDueProcessSections(content: NotificationContent): string {
 
 /**
  * Texto base precargado: mezcla los datos reales del expediente con la
- * plantilla base. hallazgoIncidente usa las observaciones de la causa y
- * evidenciaTestimonios lista los antecedentes reales de la bitácora; el resto
- * queda con la plantilla institucional editable.
+ * plantilla base. hallazgoIncidente usa las observaciones de la causa; la
+ * sección de evidencias y testimonios queda siempre con el texto
+ * institucional fijo (nunca lista registros de la bitácora); el resto queda
+ * con la plantilla institucional editable.
  */
 export function buildPrefilledNotificationContent(
   causa: Causa,
@@ -130,7 +114,6 @@ export function buildPrefilledNotificationContent(
     };
   }
 
-  const antecedentes = listBitacoraAntecedentes(causa.bitacora);
   const hallazgo = alignSeverityReferences(
     causa.observaciones.trim(),
     causa.tipoInfraccion,
@@ -141,10 +124,6 @@ export function buildPrefilledNotificationContent(
     hallazgoIncidente: hallazgo
       ? hallazgo
       : DEFAULT_NOTIFICATION_CONTENT.hallazgoIncidente,
-    evidenciaTestimonios:
-      antecedentes.length > 0
-        ? `Antecedentes registrados en el expediente:\n${antecedentes.join("\n")}`
-        : DEFAULT_NOTIFICATION_CONTENT.evidenciaTestimonios,
     calificacionFalta: buildCalificacionFalta(causa),
     garantiasDebidoProceso: combineDueProcessSections(
       DEFAULT_NOTIFICATION_CONTENT,

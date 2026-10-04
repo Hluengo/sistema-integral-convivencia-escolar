@@ -25,7 +25,7 @@ function createCausaFixture() {
 }
 
 describe("persistExistingCausa", () => {
-  it("no guarda datos relacionados cuando falla la actualización", async () => {
+  it("intenta guardar colecciones aunque falle la actualización del núcleo", async () => {
     const calls: string[] = [];
     const operations: ExistingCausaPersistenceOperations = {
       updateCausa: async () => {
@@ -47,7 +47,7 @@ describe("persistExistingCausa", () => {
       await persistExistingCausa(causa, causa, allChanges, operations),
       false,
     );
-    assert.deepEqual(calls, ["update"]);
+    assert.deepEqual(calls, ["update", "bitacora", "checklist"]);
   });
 
   it("guarda bitácora y checklist después de actualizar el expediente", async () => {
@@ -77,6 +77,31 @@ describe("persistExistingCausa", () => {
       new Set(calls.slice(1)),
       new Set(["bitacora", "checklist"]),
     );
+  });
+
+  it("tolera rechazos sin propagar la excepción e intenta el resto", async () => {
+    const calls: string[] = [];
+    const operations: ExistingCausaPersistenceOperations = {
+      updateCausa: async () => {
+        calls.push("update");
+        throw new Error("red caída");
+      },
+      saveBitacora: async () => {
+        calls.push("bitacora");
+        return true;
+      },
+      saveChecklist: async () => {
+        calls.push("checklist");
+        return true;
+      },
+    };
+
+    const causa = createCausaFixture();
+    assert.equal(
+      await persistExistingCausa(causa, causa, allChanges, operations),
+      false,
+    );
+    assert.deepEqual(calls, ["update", "bitacora", "checklist"]);
   });
 
   it("reporta error si falla una colección relacionada", async () => {

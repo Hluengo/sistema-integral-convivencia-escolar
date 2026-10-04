@@ -61,7 +61,7 @@ const NotificacionContent = forwardRef<
         year="2026"
         logoSrc={logoSrc ?? undefined}
         institutionName={institutionName ?? undefined}
-        department="ENCARGADO DE INDAGACIÓN"
+        department="EQUIPO DE INDAGACIÓN"
         onLogoError={onLogoError}
       />
       <LetterTitle>Notificación de Inicio de Indagación</LetterTitle>

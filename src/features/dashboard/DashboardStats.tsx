@@ -23,7 +23,6 @@ import {
   ArrowRight,
   Clock3,
   CheckCircle2,
-  FolderOpen,
   FileQuestion,
   FileText,
   FileWarning,
@@ -61,58 +60,9 @@ import {
   getDashboardSchoolYear,
 } from "./dashboardTrends";
 import { getDashboardActions, type DashboardAction } from "./dashboardActions";
+import { PHASE_STAGE_TONES as PHASE_CARDS } from "../../shared/lib/domain/phaseTones";
 
 const DASHBOARD_STALE_TIME_MS = 300_000;
-
-const PHASE_CARDS: {
-  phase: FaseProcedimental;
-  description: string;
-  color: string;
-  tone: string;
-  badge: string;
-  badgeTone: string;
-}[] = [
-  {
-    phase: "Recepción",
-    description: "Ingreso y revisión inicial del expediente.",
-    color: "bg-blue-500",
-    tone: "bg-blue-50 text-blue-700",
-    badge: "Inicio",
-    badgeTone: "bg-emerald-50 text-emerald-700",
-  },
-  {
-    phase: "Investigación",
-    description: "Indagación y recopilación de antecedentes.",
-    color: "bg-amber-500",
-    tone: "bg-amber-50 text-amber-700",
-    badge: "En curso",
-    badgeTone: "bg-amber-50 text-amber-700",
-  },
-  {
-    phase: "Resolución",
-    description: "Informe y decisión sobre las medidas.",
-    color: "bg-violet-500",
-    tone: "bg-violet-50 text-violet-700",
-    badge: "Decisión",
-    badgeTone: "bg-sky-50 text-sky-700",
-  },
-  {
-    phase: "Apelación",
-    description: "Revisión de recursos presentados.",
-    color: "bg-teal-500",
-    tone: "bg-teal-50 text-teal-700",
-    badge: "Recursos",
-    badgeTone: "bg-emerald-50 text-emerald-700",
-  },
-  {
-    phase: "Seguimiento",
-    description: "Ejecución y seguimiento de medidas.",
-    color: "bg-slate-400",
-    tone: "bg-slate-100 text-slate-700",
-    badge: "Seguimiento",
-    badgeTone: "bg-slate-100 text-slate-700",
-  },
-];
 
 type PhaseFilter = "all" | "onTime" | "toResolve";
 
@@ -458,11 +408,6 @@ export default function DashboardStats({
   const active = isAuthenticated
     ? authenticatedCauseCounts.active
     : (publicKpis?.activeCauses ?? 0);
-  const pendingFollowUps = isAuthenticated
-    ? dashboardActions.filter((action) => action.remainingDays <= 2).length
-    : 0;
-  const operationalStatus =
-    pendingFollowUps > 0 ? "Atención requerida" : "Operación regular";
   const newThisMonth = isAuthenticated
     ? causas.filter((causa) => {
         const openedAt = new Date(causa.fechaApertura);
@@ -531,48 +476,6 @@ export default function DashboardStats({
       aria-label="Panel de control"
       className="animate-fade-in space-y-6 pb-8"
     >
-      <section className="flex flex-col gap-4 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
-            <CheckCircle2 className="size-6" aria-hidden="true" />
-          </div>
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className="size-2 rounded-full bg-leve-500"
-                aria-hidden="true"
-              />
-              <h2 className="font-semibold text-neutral-900 text-sm">
-                {operationalStatus}
-              </h2>
-              <span className="rounded-full bg-brand-50 px-2 py-0.5 font-semibold text-[10px] text-brand-700 uppercase tracking-wide">
-                Protocolo Ley Aula Segura
-              </span>
-            </div>
-            <p className="mt-1 text-neutral-500 text-xs">
-              {pendingFollowUps > 0
-                ? `${pendingFollowUps} expediente${pendingFollowUps === 1 ? " requiere" : "s requieren"} atención por plazo.`
-                : "Sin plazos ministeriales vencidos ni seguimientos próximos."}
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="rounded-lg bg-slate-50 px-3 py-2 font-semibold text-neutral-600">
-            Ciclo académico actual
-          </span>
-          {onNavigate ? (
-            <button
-              type="button"
-              onClick={() => onNavigate("causas")}
-              className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-brand-600 px-3 font-semibold text-white transition-colors hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-            >
-              <FolderOpen className="size-4" aria-hidden="true" />
-              Ver expedientes
-            </button>
-          ) : null}
-        </div>
-      </section>
-
       {onboardingEnabled && tenantId && userId && onNavigate ? (
         <OnboardingChecklist
           tenantId={tenantId}

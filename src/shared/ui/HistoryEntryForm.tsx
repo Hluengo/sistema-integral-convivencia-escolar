@@ -17,6 +17,8 @@ interface HistoryEntryFormProps {
   onSave: (input: HistoryEntryFormInput) => Promise<unknown>;
   onResetError: () => void;
   onClose?: () => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   additionalFields?: ReactNode;
 }
 
@@ -28,9 +30,16 @@ export default function HistoryEntryForm({
   onSave,
   onResetError,
   onClose,
+  open,
+  onOpenChange,
   additionalFields,
 }: HistoryEntryFormProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = open ?? internalOpen;
+  const setIsOpen = (value: boolean) => {
+    if (open === undefined) setInternalOpen(value);
+    onOpenChange?.(value);
+  };
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
 

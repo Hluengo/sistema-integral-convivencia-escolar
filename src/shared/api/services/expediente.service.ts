@@ -271,10 +271,10 @@ export function buildExpedienteHistory(
     });
   }
 
-  const ordered = entries.sort(
+  const ordered = [...entries].sort(
     (left, right) =>
-      new Date(right.occurredAt).getTime() -
-      new Date(left.occurredAt).getTime(),
+      new Date(left.occurredAt).getTime() -
+      new Date(right.occurredAt).getTime(),
   );
   return dedupeExpedienteHistory(ordered);
 }
@@ -291,16 +291,56 @@ function hitoKey(title: string): string {
   return title.replace(HITO_TITLE_PREFIX, "").trim().toLocaleLowerCase("es-CL");
 }
 
+function normalizeText(value: string): string {
+  return value.trim().toLocaleLowerCase("es-CL").replace(/\s+/g, " ");
+}
 function hitoPriority(entry: ExpedienteHistoryEntry): number {
   if (/rectificaci[oó]n de hito/i.test(entry.title)) return 2;
   if (/invalidador hito/i.test(entry.title)) return 1;
   return 0;
 }
 
+function sourceRank(entry: ExpedienteHistoryEntry): number {
+  if (entry.source === "event") return 2;
+  if (entry.source === "bitacora") return 1;
+  return 0;
+}
+
+function dedupeKey(entry: ExpedienteHistoryEntry): string {
+  if (HITO_TITLE_PREFIX.test(entry.title)) {
+    return `hito|${hitoKey(entry.title)}|${entry.origin}`;
+  }
+  return `exacto|${entry.type}|${normalizeText(entry.title)}|${normalizeText(entry.description)}|${minuteBucket(entry.occurredAt)}|${entry.origin}`;
+}
+
+/** Fusiona participantes, documentos y responsable del duplicado en la fila que se conserva. */
+function mergeDuplicado(
+  conservado: ExpedienteHistoryEntry,
+  duplicado: ExpedienteHistoryEntry,
+): void {
+  conservado.participants = [
+    ...new Set([...conservado.participants, ...duplicado.participants]),
+  ];
+  duplicado.documentNames.forEach((name, index) => {
+    if (!conservado.documentNames.includes(name)) {
+      conservado.documentNames.push(name);
+      const path = duplicado.documentPaths[index];
+      if (path !== undefined) conservado.documentPaths.push(path);
+    }
+  });
+  if (!conservado.responsible && duplicado.responsible) {
+    conservado.responsible = duplicado.responsible;
+  }
+}
+
 /**
- * Colapsa el par Registro/Rectificación del mismo hito y minuto a una sola
- * fila (gana la rectificación). Las invalidaciones nunca se ocultan.
- * Solo actúa sobre títulos de hito; el resto conserva su id único.
+ * Evita el registro repetido en el historial unificado:
+ * - Mismo hito (Registro/Rectificación o compartido entre hermanas) → una
+ *   sola fila; gana la rectificación y luego el más reciente. Se fusionan
+ *   participantes y documentos de las filas colapsadas.
+ * - Mismo tipo, texto, minuto y origen sin vínculo de fuente (evento sin
+ *   source_table frente a bitácora/avance) → una sola fila; gana el evento.
+ * Las invalidaciones nunca se ocultan ni se colapsan.
  */
 export function dedupeExpedienteHistory(
   entries: ExpedienteHistoryEntry[],
@@ -310,26 +350,30 @@ export function dedupeExpedienteHistory(
       new Date(right.occurredAt).getTime() -
       new Date(left.occurredAt).getTime();
     if (byTime !== 0) return byTime;
-    return hitoPriority(right) - hitoPriority(left);
+    const byPriority = hitoPriority(right) - hitoPriority(left);
+    if (byPriority !== 0) return byPriority;
+    return sourceRank(right) - sourceRank(left);
   });
-  const seen = new Set<string>();
+  const keptByKey = new Map<string, ExpedienteHistoryEntry>();
   const result: ExpedienteHistoryEntry[] = [];
   for (const entry of ranked) {
     if (entry.status === "invalidado") {
       result.push(entry);
       continue;
     }
-    const key = HITO_TITLE_PREFIX.test(entry.title)
-      ? `hito|${hitoKey(entry.title)}|${minuteBucket(entry.occurredAt)}|${entry.origin}`
-      : `id|${entry.id}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    result.push(entry);
+    const key = dedupeKey(entry);
+    const kept = keptByKey.get(key);
+    if (!kept) {
+      keptByKey.set(key, entry);
+      result.push(entry);
+      continue;
+    }
+    mergeDuplicado(kept, entry);
   }
   return result.sort(
     (left, right) =>
-      new Date(right.occurredAt).getTime() -
-      new Date(left.occurredAt).getTime(),
+      new Date(left.occurredAt).getTime() -
+      new Date(right.occurredAt).getTime(),
   );
 }
 

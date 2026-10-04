@@ -30,6 +30,8 @@ import { useTimelineContext } from "../../shared/lib/useTimelineContext";
 interface BitacoraTabProps {
   causa: Causa;
   showChronology?: boolean;
+  manualFormOpen?: boolean;
+  onManualFormOpenChange?: (open: boolean) => void;
 }
 
 const ENTRY_STYLE: Record<
@@ -111,6 +113,8 @@ const FILTER_OPTIONS: Array<{
 export default memo(function BitacoraTab({
   causa,
   showChronology = true,
+  manualFormOpen,
+  onManualFormOpenChange,
 }: BitacoraTabProps) {
   const {
     currentRole,
@@ -211,6 +215,8 @@ export default memo(function BitacoraTab({
           idPrefix="causa-history"
           isSaving={isSavingManualEntry}
           error={manualEntryError}
+          open={manualFormOpen}
+          onOpenChange={onManualFormOpenChange}
           helperText="Registra una comunicación. Quedará en la cronología y puede compartirse con el incidente grupal."
           onSave={async ({ title, description }) => {
             await onCreateManualEntry({

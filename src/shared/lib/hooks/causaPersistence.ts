@@ -51,6 +51,13 @@ export interface ExistingCausaPersistenceOperations {
  *
  * Un fallo de actualización nunca debe convertirse en una creación: puede
  * representar pérdida de red, falta de permisos o una restricción RLS.
+ *
+ * Los bloques se intentan todos aunque falle el núcleo: antes un fallo del
+ * update descartaba los guardados de bitácora y checklist (p. ej. un hito
+ * marcado como grupal se veía local pero nunca llegaba a la base ni a los
+ * expedientes hermanos). El false se mantiene para que el reintento
+ * re-encole todo. Un rechazo (throw) cuenta como bloque fallido, nunca como
+ * excepción propagada.
  */
 export async function persistExistingCausa(
   causa: Causa,
@@ -58,27 +65,40 @@ export async function persistExistingCausa(
   changes: CausaPersistenceChanges,
   operations: ExistingCausaPersistenceOperations,
 ): Promise<boolean> {
+  const attempt = async (write: Promise<boolean>): Promise<boolean> => {
+    try {
+      return await write;
+    } catch {
+      return false;
+    }
+  };
+  const pendingWrites: Promise<boolean>[] = [];
   if (changes.causa) {
-    const updated = await operations.updateCausa(causa);
-    if (!updated) return false;
+    pendingWrites.push(attempt(operations.updateCausa(causa)));
   }
-
-  const relatedWrites: Promise<boolean>[] = [];
   if (changes.bitacora) {
-    relatedWrites.push(
-      operations.saveBitacora(causa.id, causa.bitacora, previousCausa.bitacora),
+    pendingWrites.push(
+      attempt(
+        operations.saveBitacora(
+          causa.id,
+          causa.bitacora,
+          previousCausa.bitacora,
+        ),
+      ),
     );
   }
   if (changes.checklist) {
-    relatedWrites.push(
-      operations.saveChecklist(
-        causa.id,
-        causa.checklistDebidoProceso,
-        previousCausa.checklistDebidoProceso,
+    pendingWrites.push(
+      attempt(
+        operations.saveChecklist(
+          causa.id,
+          causa.checklistDebidoProceso,
+          previousCausa.checklistDebidoProceso,
+        ),
       ),
     );
   }
 
-  const relatedResults = await Promise.all(relatedWrites);
-  return relatedResults.every(Boolean);
+  const results = await Promise.all(pendingWrites);
+  return results.every(Boolean);
 }

@@ -214,21 +214,48 @@ export async function fetchCausasPage(
   };
 }
 
+/**
+ * PostgREST trunca las respuestas a su máximo de filas: una página de 50
+ * causas × ~35 ítems supera ese tope y el resumen llegaba mutilado (fases
+ * mal calculadas en la tabla). Los lotes se piden por tramos.
+ */
+export const BATCHED_QUERY_CHUNK_SIZE = 20;
+
+/** Tope de filas por respuesta de PostgREST: sobre ese umbral trunca en silencio. */
+export const POSTGREST_MAX_ROWS = 1000;
+
+export function chunkIds(
+  ids: string[],
+  size = BATCHED_QUERY_CHUNK_SIZE,
+): string[][] {
+  const chunks: string[][] = [];
+  for (let index = 0; index < ids.length; index += size) {
+    chunks.push(ids.slice(index, index + size));
+  }
+  return chunks;
+}
+
 /** Adjunta el resumen de hitos del checklist (sin labels) a cada causa de la página. */
 async function hydrateChecklistSummaries(causas: Causa[]): Promise<void> {
-  const { data: checklistData, error: checklistError } = await supabase
-    .from("checklist_items")
-    .select("id,causa_id,completado,fecha_completado")
-    .in(
-      "causa_id",
-      causas.map((causa) => causa.id),
-    );
-  if (checklistError) {
-    console.error("Error fetching causa milestone summaries:", checklistError);
-    return;
-  }
+  const pages = await Promise.all(
+    chunkIds(causas.map((causa) => causa.id)).map(async (chunk) => {
+      const { data, error } = await supabase
+        .from("checklist_items")
+        .select("id,causa_id,completado,fecha_completado")
+        .in("causa_id", chunk)
+        .limit(POSTGREST_MAX_ROWS);
+      if (error) {
+        console.error("Error fetching causa milestone summaries:", error);
+        throw new Error(
+          "No se pudo cargar el resumen de hitos: hidratación incompleta.",
+          { cause: error },
+        );
+      }
+      return (data || []) as SupabaseChecklistSummaryRow[];
+    }),
+  );
   const checklistByCausa = new Map<string, ChecklistItem[]>();
-  for (const row of (checklistData || []) as SupabaseChecklistSummaryRow[]) {
+  for (const row of pages.flat()) {
     const items = checklistByCausa.get(row.causa_id) || [];
     items.push({
       id: row.id,
@@ -272,6 +299,10 @@ async function hydrateMilestoneReconciliation(causas: Causa[]): Promise<void> {
       .in("incidente_id", incidenteIds);
     if (siblingError) {
       console.error("Error fetching sibling incident causas:", siblingError);
+      throw new Error(
+        "No se pudieron resolver las causas hermanas: reconciliación incompleta.",
+        { cause: siblingError },
+      );
     } else {
       for (const row of (siblingData || []) as Array<{
         id: string;
@@ -282,24 +313,30 @@ async function hydrateMilestoneReconciliation(causas: Causa[]): Promise<void> {
       }
     }
   }
-  const { data: hitoEntriesData, error: hitoEntriesError } = await supabase
-    .from("bitacora_entries")
-    .select(
-      "id,causa_id,fecha,tipo,titulo,descripcion,participantes,documento_adjunto,compartido_grupal",
-    )
-    .in("causa_id", entryCausaIds)
-    .or(
-      "titulo.like.Registro de Hito:%,titulo.like.Rectificación de Hito:%,titulo.like.Invalidador Hito:%",
-    );
-  if (hitoEntriesError) {
-    console.error(
-      "Error fetching causa milestone log entries:",
-      hitoEntriesError,
-    );
-    return;
-  }
+  const hitoPages = await Promise.all(
+    chunkIds(entryCausaIds).map(async (chunk) => {
+      const { data, error } = await supabase
+        .from("bitacora_entries")
+        .select(
+          "id,causa_id,fecha,tipo,titulo,descripcion,participantes,documento_adjunto,compartido_grupal",
+        )
+        .in("causa_id", chunk)
+        .or(
+          "titulo.like.Registro de Hito:%,titulo.like.Rectificación de Hito:%,titulo.like.Invalidador Hito:%",
+        )
+        .limit(POSTGREST_MAX_ROWS);
+      if (error) {
+        console.error("Error fetching causa milestone log entries:", error);
+        throw new Error(
+          "No se pudieron cargar los hitos de bitácora: reconciliación incompleta.",
+          { cause: error },
+        );
+      }
+      return (data || []) as SupabaseBitacoraRow[];
+    }),
+  );
   const hitoEntriesByCausa = new Map<string, BitacoraEntry[]>();
-  for (const row of (hitoEntriesData || []) as SupabaseBitacoraRow[]) {
+  for (const row of hitoPages.flat()) {
     const entry = mapBitacoraRow(row);
     if (!entry) continue;
     const list = hitoEntriesByCausa.get(row.causa_id) || [];

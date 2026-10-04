@@ -9,6 +9,7 @@ import {
 import { useCausasPersistence } from "../../shared/lib/hooks/useCausasPersistence";
 import {
   mergeCausasList,
+  resolveDetailCausa,
   syncPersistedCausasToCache,
 } from "../../shared/lib/queries/causasQueryCache";
 import { causasQueryKeys } from "../../shared/lib/queries/causasQueryKeys";
@@ -49,6 +50,12 @@ export function useCausaWorkspace({
   const lastCausasQueryDataRef = useRef<typeof causasQuery.data>(undefined);
   const lastDetailsQueryDataRef =
     useRef<typeof causaDetailsQuery.data>(undefined);
+  const causasRef = useRef(causas);
+  useEffect(() => {
+    // Último valor sin re-disparar el efecto del detalle: este efecto va
+    // declarado antes, así corre primero tras cada commit.
+    causasRef.current = causas;
+  });
 
   const selectedCausa = useMemo(
     () => causas.find((causa) => causa.id === selectedCausaId) || null,
@@ -82,13 +89,14 @@ export function useCausaWorkspace({
     [tenantId],
   );
 
-  const { markCausasHydrated, markCausaHydrated } = useCausasPersistence({
-    causas,
-    setSaveStatus,
-    isAuthenticated,
-    onPersisted: handlePersistedCausas,
-    saveRetryNonce,
-  });
+  const { markCausasHydrated, markCausaHydrated, hasUnsavedCausaChanges } =
+    useCausasPersistence({
+      causas,
+      setSaveStatus,
+      isAuthenticated,
+      onPersisted: handlePersistedCausas,
+      saveRetryNonce,
+    });
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -137,6 +145,15 @@ export function useCausaWorkspace({
     if (lastDetailsQueryDataRef.current === causaDetailsQuery.data) return;
 
     const hydratedCausa = causaDetailsQuery.data;
+    const resolvedCausa = resolveDetailCausa(
+      causasRef.current.find((causa) => causa.id === hydratedCausa.id),
+      hydratedCausa,
+      hasUnsavedCausaChanges(hydratedCausa.id),
+    );
+    if (resolvedCausa !== hydratedCausa) {
+      lastDetailsQueryDataRef.current = causaDetailsQuery.data;
+      return;
+    }
     markCausaHydrated(hydratedCausa);
     lastDetailsQueryDataRef.current = causaDetailsQuery.data;
     setCausas((current) => {
@@ -150,6 +167,7 @@ export function useCausaWorkspace({
     });
   }, [
     causaDetailsQuery.data,
+    hasUnsavedCausaChanges,
     markCausaHydrated,
     selectedCausaForDetail,
     setCausas,

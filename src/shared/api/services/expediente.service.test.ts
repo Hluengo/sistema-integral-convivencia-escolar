@@ -9,19 +9,19 @@ process.env.VITE_SUPABASE_URL ??= "https://example.supabase.co";
 process.env.VITE_SUPABASE_ANON_KEY ??= "anon-key-for-unit-tests";
 
 describe("expediente agregado", () => {
-  it("une actuaciones, bitácora y avances en orden descendente", async () => {
+  it("une actuaciones, bitácora y avances en orden ascendente", async () => {
     const { buildExpedienteHistory } = await import("./expediente.service");
     const expediente = createExpediente();
     const entries = buildExpedienteHistory(expediente);
 
     assert.deepEqual(
       entries.map((entry) => entry.id),
-      ["event:event-1", "avance:progress-1", "bitacora:log-1"],
+      ["bitacora:log-1", "avance:progress-1", "event:event-1"],
     );
-    assert.equal(entries[0]?.documentNames[0], "Resolución.pdf");
-    assert.equal(entries[0]?.documentPaths[0], "DC-2026-001/resolucion.pdf");
+    assert.equal(entries[2]?.documentNames[0], "Resolución.pdf");
+    assert.equal(entries[2]?.documentPaths[0], "DC-2026-001/resolucion.pdf");
     assert.equal(entries[1]?.status, "invalidado");
-    assert.equal(entries[2]?.origin, "grupal");
+    assert.equal(entries[0]?.origin, "grupal");
   });
 
   it("incorpora reconsideraciones y seguimientos persistidos al historial", async () => {
@@ -116,6 +116,82 @@ describe("expediente agregado", () => {
     );
     assert.equal(hitos.length, 1);
     assert.match(hitos[0]?.title ?? "", /rectificación/i);
+  });
+
+  it("colapsa el mismo hito compartido aunque difieran el minuto y la hermana", async () => {
+    const { buildExpedienteHistory } = await import("./expediente.service");
+    const expediente = createExpediente();
+    expediente.causa.bitacora.push(
+      {
+        id: "log-sis-1",
+        fecha: "2026-10-03T15:00:00.000Z",
+        tipo: "Notificación",
+        titulo: "Registro de Hito: Medida o Plan de Acompañamiento Iniciado",
+        descripcion: "En seguimiento en agenda abierta.",
+        participantes: ["Javiera Klapp", "JOSEFA AGUSTINA CABALÍN VIVEROS"],
+        compartidoGrupal: true,
+      } as unknown as Causa["bitacora"][number],
+      {
+        id: "log-sis-2",
+        fecha: "2026-10-03T15:37:00.000Z",
+        tipo: "Notificación",
+        titulo: "Registro de Hito: Medida o Plan de Acompañamiento Iniciado",
+        descripcion: "Se comienza con la agenda para entrevista reflexiva.",
+        participantes: ["Javiera Klapp", "VICENTE OMAR DELGADO MOLINA"],
+        compartidoGrupal: true,
+      } as unknown as Causa["bitacora"][number],
+    );
+    const entries = buildExpedienteHistory(expediente);
+    const hitos = entries.filter((entry) =>
+      /medida o plan de acompañamiento iniciado/i.test(entry.title),
+    );
+    assert.equal(hitos.length, 1);
+    assert.ok(
+      hitos[0]?.participants.includes("JOSEFA AGUSTINA CABALÍN VIVEROS"),
+    );
+    assert.ok(hitos[0]?.participants.includes("VICENTE OMAR DELGADO MOLINA"));
+  });
+
+  it("colapsa el duplicado exacto entre evento y bitácora sin vínculo y conserva el evento", async () => {
+    const { buildExpedienteHistory } = await import("./expediente.service");
+    const expediente = createExpediente();
+    expediente.actuaciones.push({
+      id: "event-dup",
+      tenant_id: "tenant-1",
+      causa_id: expediente.causa.id,
+      incidente_id: null,
+      occurred_at: "2026-09-24T10:00:50.000Z",
+      recorded_at: "2026-09-24T10:00:50.000Z",
+      recorded_by: "inspector-1",
+      event_type: "Entrevista",
+      title: "Entrevista con apoderado",
+      description: "Se acuerda plan de acompañamiento.",
+      milestone_id: null,
+      hecho_id: null,
+      source_table: null,
+      source_id: null,
+      participants: ["apoderado"],
+      status: "vigente",
+      previous_event_id: null,
+      correction_reason: null,
+      metadata: {},
+    } as unknown as ExpedienteCompleto["actuaciones"][number]);
+    expediente.causa.bitacora.push({
+      id: "log-dup",
+      fecha: "2026-09-24T10:00:30.000Z",
+      tipo: "Entrevista",
+      titulo: "Entrevista con apoderado",
+      descripcion: "Se acuerda plan de acompañamiento.",
+      participantes: ["apoderado", "estudiante"],
+      compartidoGrupal: false,
+    } as unknown as Causa["bitacora"][number]);
+    const entries = buildExpedienteHistory(expediente);
+    const dupes = entries.filter(
+      (entry) => entry.title === "Entrevista con apoderado",
+    );
+    assert.equal(dupes.length, 1);
+    assert.equal(dupes[0]?.source, "event");
+    assert.ok(dupes[0]?.participants.includes("estudiante"));
   });
 });
 
