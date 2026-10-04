@@ -55,6 +55,10 @@ export function useCausasPersistence({
   const isMountedRef = useRef(true);
   const prevCausasMapRef = useRef<Map<string, Causa>>(new Map());
   const pendingSaveRef = useRef<Map<string, PendingCausaSave>>(new Map());
+  const hasUnsavedCausaChanges = useCallback(
+    (causaId: string) => pendingSaveRef.current.has(causaId),
+    [],
+  );
 
   const markCausasHydrated = useCallback((hydratedCausas: Causa[]) => {
     prevCausasMapRef.current = new Map(
@@ -243,7 +247,7 @@ export function useCausasPersistence({
     runPendingSaves,
   ]);
 
-  return { markCausasHydrated, markCausaHydrated };
+  return { markCausasHydrated, markCausaHydrated, hasUnsavedCausaChanges };
 }
 
 function serializeCausaCore(causa: Causa): string {

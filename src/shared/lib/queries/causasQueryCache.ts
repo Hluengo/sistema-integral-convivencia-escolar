@@ -78,6 +78,23 @@ export function mergeCausasList(current: Causa[], freshList: Causa[]): Causa[] {
   });
 }
 
+/**
+ * Decide qué copia del expediente conserva la hidratación del detalle.
+ *
+ * Si hay edición local aún no guardada se conserva la copia actual: pisarla
+ * con la foto del servidor descartaría el cambio y rompería el diff del
+ * autoguardado (el hito marcado se vería local pero nunca llegaría a la
+ * base ni a los expedientes hermanos).
+ */
+export function resolveDetailCausa(
+  current: Causa | undefined,
+  hydrated: Causa,
+  hasUnsavedChanges: boolean,
+): Causa {
+  if (current && hasUnsavedChanges) return current;
+  return hydrated;
+}
+
 export function addCausaToCache(tenantId: string, causa: Causa): void {
   queryClient.setQueryData<CausasListData>(
     causasQueryKeys.list(tenantId),

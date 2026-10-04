@@ -7,6 +7,7 @@ import { EstadoCausa, type Causa } from "../../../shared/lib/types";
 import {
   mergeCausasList,
   mergeChecklistItems,
+  resolveDetailCausa,
   syncPersistedCausasToCache,
 } from "./causasQueryCache";
 import { getInvestigationClosureDate } from "../legalCompliance/deadlineValidators";
@@ -173,5 +174,44 @@ describe("causasQueryCache", () => {
     assert.equal(cached?.estudianteNombre, causa.estudianteNombre);
     assert.equal(cached?.bitacora[0]?.id, "historial-1");
     queryClient.removeQueries({ queryKey: key, exact: true });
+  });
+
+  it("conserva la copia local cuando hay guardado pendiente del detalle", () => {
+    const current = createCausa({
+      bitacora: [
+        {
+          id: "b_step_nuevo_hito",
+          fecha: "2026-10-03T12:00:00.000Z",
+          tipo: "Otro",
+          titulo: "Registro de Hito: Seguimiento realizado",
+          descripcion: "Detalle",
+          participantes: [],
+          compartidoGrupal: true,
+        },
+      ],
+    });
+    const hydrated = createCausa({ bitacora: [] });
+
+    assert.equal(resolveDetailCausa(current, hydrated, true), current);
+  });
+
+  it("aplica la foto del servidor cuando no hay guardado pendiente", () => {
+    const current = createCausa({
+      bitacora: [
+        {
+          id: "b_step_nuevo_hito",
+          fecha: "2026-10-03T12:00:00.000Z",
+          tipo: "Otro",
+          titulo: "Registro de Hito: Seguimiento realizado",
+          descripcion: "Detalle",
+          participantes: [],
+          compartidoGrupal: true,
+        },
+      ],
+    });
+    const hydrated = createCausa({ bitacora: [] });
+
+    assert.equal(resolveDetailCausa(current, hydrated, false), hydrated);
+    assert.equal(resolveDetailCausa(undefined, hydrated, true), hydrated);
   });
 });

@@ -1,13 +1,12 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
+// Debe ser el primer import: src/shared/lib/schemas/index fija
+// `jitless` al evaluarse y z.object() prueba `new Function` al definirse.
+// Si un schema se define antes, el CSP (script-src sin 'unsafe-eval')
+// reporta el error en el vendor aunque la validación igual funcione.
+import "../shared/lib/schemas/index";
 import { StrictMode } from "react";
-import { config as zodConfig } from "zod";
 import { createRoot } from "react-dom/client";
-
-// Zod v4 usa `new Function` (JIT) para validar más rápido. Eso choca con
-// `script-src 'self'` (sin 'unsafe-eval') y dispara el error CSP en el
-// vendor. jitless lo desactiva con costo mínimo y mantiene el CSP estricto.
-zodConfig({ jitless: true });
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "../lib/queryClient";
 import ErrorBoundary from "../shared/ui/ErrorBoundary";

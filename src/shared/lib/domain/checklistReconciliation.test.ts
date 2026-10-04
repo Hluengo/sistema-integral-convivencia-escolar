@@ -200,4 +200,46 @@ describe("reconcileChecklistFromBitacora", () => {
     assert.equal(isMediationActive(legacy), true);
     assert.equal(getPhaseProgress(legacy, "Investigación").total, 2);
   });
+
+  it("completa el seguimiento del hermano con el hito colectivo compartido", () => {
+    const result = reconcileChecklistFromBitacora(
+      [],
+      [
+        {
+          ...entry(
+            "b-grupo",
+            "2026-10-03T17:34:26.301Z",
+            "Registro de Hito: Medida o Plan de Acompañamiento Iniciado",
+            "Registro. Responsable: Javiera Klapp. Observaciones: En proceso de agenda.",
+          ),
+          compartidoGrupal: true,
+          causaOrigenId: "DC-2026-019",
+        },
+      ],
+    );
+    const item = result.find((candidate) => candidate.id === "chk_seg_1");
+
+    assert.equal(item?.completado, true);
+    assert.equal(item?.fechaCompletado, "2026-10-03");
+    assert.equal(getPhaseProgress(result, "Seguimiento").completed >= 1, true);
+  });
+
+  it("completa el cierre con el hito colectivo de causa cerrada", () => {
+    const result = reconcileChecklistFromBitacora(
+      [],
+      [
+        entry(
+          "b-cierre",
+          "2026-10-03T04:09:26.301Z",
+          "Registro de Hito: Causa Cerrada",
+          "Registro. Responsable: Javiera Klapp. Observaciones: Cierre grupal.",
+        ),
+      ],
+    );
+
+    assert.equal(
+      result.find((candidate) => candidate.id === "chk_seg_4")?.completado,
+      true,
+    );
+  });
 });

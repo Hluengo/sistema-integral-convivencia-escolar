@@ -12,6 +12,11 @@ const OBSERVATIONS_MARKER = ". Observaciones: ";
 const LEGACY_LABEL_ALIASES: Record<string, string> = {
   "En Plazo de Apelación": "Derecho a Apelación Informado",
   "Medida en Ejecución": "Seguimiento realizado",
+  // Hitos colectivos: el registro comparte el label operativo ("Medida o Plan…",
+  // "Causa Cerrada"), distinto del label base. Sin este alias el hito compartido
+  // se hereda en la bitácora de los hermanos pero nunca les completa el checklist.
+  "Medida o Plan de Acompañamiento Iniciado": "Seguimiento realizado",
+  "Causa Cerrada": "Cierre",
 };
 
 function parseRegistrationDescription(description: string): {
