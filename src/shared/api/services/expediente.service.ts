@@ -271,7 +271,62 @@ export function buildExpedienteHistory(
     });
   }
 
-  return entries.sort(
+  const ordered = entries.sort(
+    (left, right) =>
+      new Date(right.occurredAt).getTime() -
+      new Date(left.occurredAt).getTime(),
+  );
+  return dedupeExpedienteHistory(ordered);
+}
+
+function minuteBucket(iso: string): number {
+  const time = new Date(iso).getTime();
+  return Number.isNaN(time) ? 0 : Math.floor(time / 60000);
+}
+
+const HITO_TITLE_PREFIX =
+  /^(registro de hito|rectificaci[oó]n de hito|invalidador hito)\s*:/i;
+
+function hitoKey(title: string): string {
+  return title.replace(HITO_TITLE_PREFIX, "").trim().toLocaleLowerCase("es-CL");
+}
+
+function hitoPriority(entry: ExpedienteHistoryEntry): number {
+  if (/rectificaci[oó]n de hito/i.test(entry.title)) return 2;
+  if (/invalidador hito/i.test(entry.title)) return 1;
+  return 0;
+}
+
+/**
+ * Colapsa el par Registro/Rectificación del mismo hito y minuto a una sola
+ * fila (gana la rectificación). Las invalidaciones nunca se ocultan.
+ * Solo actúa sobre títulos de hito; el resto conserva su id único.
+ */
+export function dedupeExpedienteHistory(
+  entries: ExpedienteHistoryEntry[],
+): ExpedienteHistoryEntry[] {
+  const ranked = [...entries].sort((left, right) => {
+    const byTime =
+      new Date(right.occurredAt).getTime() -
+      new Date(left.occurredAt).getTime();
+    if (byTime !== 0) return byTime;
+    return hitoPriority(right) - hitoPriority(left);
+  });
+  const seen = new Set<string>();
+  const result: ExpedienteHistoryEntry[] = [];
+  for (const entry of ranked) {
+    if (entry.status === "invalidado") {
+      result.push(entry);
+      continue;
+    }
+    const key = HITO_TITLE_PREFIX.test(entry.title)
+      ? `hito|${hitoKey(entry.title)}|${minuteBucket(entry.occurredAt)}|${entry.origin}`
+      : `id|${entry.id}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(entry);
+  }
+  return result.sort(
     (left, right) =>
       new Date(right.occurredAt).getTime() -
       new Date(left.occurredAt).getTime(),

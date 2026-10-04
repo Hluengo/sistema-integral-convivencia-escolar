@@ -85,6 +85,38 @@ describe("expediente agregado", () => {
     assert.equal(invalidated.length, 1);
     assert.equal(invalidated[0]?.id, "avance:progress-1");
   });
+
+  it("colapsa el par registro/rectificación del mismo hito y minuto", async () => {
+    const { buildExpedienteHistory } = await import("./expediente.service");
+    const expediente = createExpediente();
+    expediente.causa.bitacora.push(
+      {
+        id: "log-reg",
+        fecha: "2026-10-03T16:02:10.000Z",
+        tipo: "Notificación",
+        titulo: "Registro de Hito: Medida o Plan de Acompañamiento Iniciado",
+        descripcion: "Se ha registrado formalmente la finalización.",
+        participantes: ["Javiera Klapp"],
+        compartidoGrupal: true,
+      } as unknown as Causa["bitacora"][number],
+      {
+        id: "log-rec",
+        fecha: "2026-10-03T16:02:40.000Z",
+        tipo: "Otro",
+        titulo:
+          "Rectificación de Hito: Medida o Plan de Acompañamiento Iniciado",
+        descripcion: "Se rectificó el registro del hito.",
+        participantes: ["Javiera Klapp"],
+        compartidoGrupal: true,
+      } as unknown as Causa["bitacora"][number],
+    );
+    const entries = buildExpedienteHistory(expediente);
+    const hitos = entries.filter((entry) =>
+      /medida o plan de acompañamiento iniciado/i.test(entry.title),
+    );
+    assert.equal(hitos.length, 1);
+    assert.match(hitos[0]?.title ?? "", /rectificación/i);
+  });
 });
 
 function createExpediente(): ExpedienteCompleto {
