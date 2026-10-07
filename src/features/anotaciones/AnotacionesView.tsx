@@ -2,7 +2,7 @@
 
 import { useState, useCallback, lazy, useMemo, Suspense } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Shield, Plus } from "lucide-react";
+import { FileUp, Shield, Plus } from "lucide-react";
 import type { Annotation, AnotacionStudent } from "../../shared/lib/types";
 import {
   fetchAnnotations,
@@ -26,6 +26,9 @@ const AnotacionesStudentDetailModal = lazy(
 const NewDisciplinaryProcessModal = lazy(
   () => import("./NewDisciplinaryProcessModal"),
 );
+const BulkAnnotationsImportModal = lazy(
+  () => import("./BulkAnnotationsImportModal"),
+);
 
 interface AnotacionesViewProps {
   privacyMode: boolean;
@@ -33,11 +36,14 @@ interface AnotacionesViewProps {
 
 export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
   const tenantId = useAuthStore((state) => state.tenantId);
+  const profileRole = useAuthStore((state) => state.profileRole);
   const queryClient = useQueryClient();
   const [selectedStudent, setSelectedStudent] =
     useState<AnotacionStudent | null>(null);
   const [detailInitialTab, setDetailInitialTab] = useState<ActiveTab>("estado");
   const [isNewProcessModalOpen, setIsNewProcessModalOpen] =
+    useState<boolean>(false);
+  const [isBulkImportModalOpen, setIsBulkImportModalOpen] =
     useState<boolean>(false);
   const [activeFilter, setActiveFilter] = useState<string>("con_registro");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -97,14 +103,29 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
         title="Anotaciones"
         description="Registro de anotaciones disciplinarias de estudiantes"
         action={
-          <Button
-            onClick={() => setIsNewProcessModalOpen(true)}
-            className="shrink-0"
-            aria-label="Crear nuevo proceso"
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" />
-            Nuevo Proceso
-          </Button>
+          <div className="flex flex-wrap justify-end gap-2">
+            {(["superadmin", "admin", "direccion"] as string[]).includes(
+              profileRole ?? "",
+            ) && (
+              <Button
+                variant="secondary"
+                onClick={() => setIsBulkImportModalOpen(true)}
+                className="shrink-0"
+                aria-label="Importar fichas PDF"
+              >
+                <FileUp className="h-4 w-4" aria-hidden="true" />
+                Importar fichas PDF
+              </Button>
+            )}
+            <Button
+              onClick={() => setIsNewProcessModalOpen(true)}
+              className="shrink-0"
+              aria-label="Crear nuevo proceso"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Nuevo Proceso
+            </Button>
+          </div>
         }
       />
 
@@ -176,6 +197,15 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
               setDetailInitialTab("historial");
               setSelectedStudent(student);
             }}
+          />
+        </Suspense>
+      )}
+      {isBulkImportModalOpen && (
+        <Suspense fallback={<ModalSkeleton />}>
+          <BulkAnnotationsImportModal
+            privacyMode={privacyMode}
+            onClose={() => setIsBulkImportModalOpen(false)}
+            onImported={loadData}
           />
         </Suspense>
       )}

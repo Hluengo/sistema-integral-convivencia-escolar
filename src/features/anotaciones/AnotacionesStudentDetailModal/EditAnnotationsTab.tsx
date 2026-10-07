@@ -11,7 +11,11 @@ import { formatDate, SEVERITY_BADGE } from "./constants";
 import Button from "@/shared/ui/Button";
 import { toDateTimeLocalValue, toIsoDateTime } from "./annotationEditUtils";
 import { useAuthStore } from "@/shared/lib/stores/authStore";
-import { formatAnnotationDisplayText } from "./annotationDisplay";
+import {
+  extractAnnotationCategory,
+  formatAnnotationDisplayText,
+  resolveAnnotationRegistrar,
+} from "./annotationDisplay";
 
 interface EditAnnotationsTabProps {
   annotations: Annotation[];
@@ -21,8 +25,8 @@ interface EditAnnotationsTabProps {
 interface EditForm {
   text: string;
   date: string;
-  severity: Annotation["severity"];
   type: Annotation["type"];
+  registeredBy: string;
 }
 
 const ANNOTATION_TYPES: Annotation["type"][] = [
@@ -30,19 +34,15 @@ const ANNOTATION_TYPES: Annotation["type"][] = [
   "Positiva",
   "Información",
 ];
-const SEVERITIES: Annotation["severity"][] = [
-  "Leve",
-  "Grave",
-  "Muy Grave",
-  "Gravísima",
-];
-
 function createEditForm(annotation: Annotation): EditForm {
   return {
     text: annotation.text,
     date: toDateTimeLocalValue(annotation.date),
-    severity: annotation.severity,
     type: annotation.type,
+    registeredBy: resolveAnnotationRegistrar(
+      annotation.registered_by,
+      annotation.text,
+    ),
   };
 }
 
@@ -98,8 +98,9 @@ export default function EditAnnotationsTab({
           id: annotation.id,
           text: form.text,
           date: toIsoDateTime(form.date),
-          severity: form.severity,
+          severity: annotation.severity,
           type: form.type,
+          registeredBy: form.registeredBy,
         },
         tenantId!,
       );
@@ -142,7 +143,7 @@ export default function EditAnnotationsTab({
           Editar anotaciones registradas
         </h3>
         <p className="mt-1 text-sm text-neutral-500">
-          Corrige el texto, tipo, severidad o fecha. Esta acción no elimina
+          Corrige el texto, tipo, fecha o responsable. Esta acción no elimina
           registros ni modifica archivos asociados.
         </p>
       </div>
@@ -199,6 +200,11 @@ export default function EditAnnotationsTab({
         {visibleAnnotations.map((annotation) => {
           const isEditing = editingId === annotation.id && form;
           const severityStyle = SEVERITY_BADGE[annotation.severity];
+          const category = extractAnnotationCategory(annotation.text);
+          const registrar = resolveAnnotationRegistrar(
+            annotation.registered_by,
+            annotation.text,
+          );
 
           return (
             <article
@@ -228,7 +234,7 @@ export default function EditAnnotationsTab({
                     />
                   </label>
 
-                  <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="grid gap-3 sm:grid-cols-2">
                     <label className="block">
                       <span className="mb-1.5 block font-semibold text-neutral-700 text-sm">
                         Tipo
@@ -258,33 +264,6 @@ export default function EditAnnotationsTab({
 
                     <label className="block">
                       <span className="mb-1.5 block font-semibold text-neutral-700 text-sm">
-                        Severidad
-                      </span>
-                      <select
-                        value={form.severity}
-                        onChange={(event) =>
-                          setForm((current) =>
-                            current
-                              ? {
-                                  ...current,
-                                  severity: event.target
-                                    .value as Annotation["severity"],
-                                }
-                              : current,
-                          )
-                        }
-                        className="w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                      >
-                        {SEVERITIES.map((severity) => (
-                          <option key={severity} value={severity}>
-                            {severity}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-
-                    <label className="block">
-                      <span className="mb-1.5 block font-semibold text-neutral-700 text-sm">
                         Fecha y hora
                       </span>
                       <input
@@ -303,6 +282,28 @@ export default function EditAnnotationsTab({
                       />
                     </label>
                   </div>
+
+                  <label className="block">
+                    <span className="mb-1.5 block font-semibold text-neutral-700 text-sm">
+                      Registrada por
+                    </span>
+                    <input
+                      aria-label="Responsable que registra la anotación"
+                      type="text"
+                      value={form.registeredBy}
+                      onChange={(event) =>
+                        setForm((current) =>
+                          current
+                            ? { ...current, registeredBy: event.target.value }
+                            : current,
+                        )
+                      }
+                      maxLength={120}
+                      placeholder="Nombre de quien registra"
+                      className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                      required
+                    />
+                  </label>
 
                   <div className="flex justify-end gap-2">
                     <Button
@@ -331,15 +332,22 @@ export default function EditAnnotationsTab({
                       <span className="rounded-full bg-neutral-100 px-2.5 py-1 font-semibold text-neutral-700 text-xs">
                         {annotation.type}
                       </span>
-                      <span
-                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold text-xs ${severityStyle?.bg ?? "bg-neutral-100"} ${severityStyle?.text ?? "text-neutral-700"}`}
-                      >
+                      {category && (
+                        <span className="rounded-full border border-brand-200 bg-brand-50 px-2.5 py-1 font-semibold text-brand-700 text-xs">
+                          {category}
+                        </span>
+                      )}
+                      {annotation.severity !== "Leve" && (
                         <span
-                          aria-hidden="true"
-                          className={`size-1.5 rounded-full ${severityStyle?.dot ?? "bg-neutral-400"}`}
-                        />
-                        {annotation.severity}
-                      </span>
+                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold text-xs ${severityStyle?.bg ?? "bg-neutral-100"} ${severityStyle?.text ?? "text-neutral-700"}`}
+                        >
+                          <span
+                            aria-hidden="true"
+                            className={`size-1.5 rounded-full ${severityStyle?.dot ?? "bg-neutral-400"}`}
+                          />
+                          {annotation.severity}
+                        </span>
+                      )}
                       <span className="text-neutral-500 text-xs">
                         {formatDate(annotation.date)}
                       </span>
@@ -352,9 +360,9 @@ export default function EditAnnotationsTab({
                         {formatAnnotationDisplayText(annotation.text)}
                       </p>
                     </div>
-                    {annotation.registered_by && (
+                    {registrar && (
                       <p className="text-neutral-400 text-xs">
-                        Registrada por {annotation.registered_by}
+                        Registrada por {registrar}
                       </p>
                     )}
                   </div>

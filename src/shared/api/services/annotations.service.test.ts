@@ -245,6 +245,74 @@ describe("updateAnnotation", () => {
     assert.equal((result as Annotation).text, "Observación actualizada.");
   });
 
+  it("actualiza el responsable cuando se provee", async () => {
+    const result = await withSupabaseMocks({
+      from: () => ({
+        data: makeInspectorateRow({
+          observation: "Observación actualizada.",
+          registered_by: "Docente Nuevo",
+        }),
+        error: null,
+      }),
+      fn: async () => {
+        const { updateAnnotation } = await import("./annotations.service");
+        return updateAnnotation(
+          {
+            id: "ann-1",
+            text: "Observación actualizada.",
+            date: "2026-08-02",
+            severity: "Leve",
+            type: "Negativa",
+            registeredBy: "Docente Nuevo",
+          },
+          "tenant-1",
+        );
+      },
+    });
+    assert.equal((result as Annotation).registered_by, "Docente Nuevo");
+  });
+
+  it("rechaza responsable vacío o demasiado largo", async () => {
+    await assert.rejects(
+      withSupabaseMocks({
+        fn: async () => {
+          const { updateAnnotation } = await import("./annotations.service");
+          return updateAnnotation(
+            {
+              id: "ann-1",
+              text: "Observación",
+              date: "2026-08-02",
+              severity: "Leve",
+              type: "Negativa",
+              registeredBy: "   ",
+            },
+            "tenant-1",
+          );
+        },
+      }),
+      /responsable/i,
+    );
+    await assert.rejects(
+      withSupabaseMocks({
+        fn: async () => {
+          const { updateAnnotation } = await import("./annotations.service");
+          return updateAnnotation(
+            {
+              id: "ann-1",
+              text: "Observación",
+              date: "2026-08-02",
+              severity: "Leve",
+              type: "Negativa",
+              registeredBy: "x".repeat(121),
+            },
+            "tenant-1",
+          );
+        },
+      }),
+      /120 caracteres/,
+    );
+  });
+
   it("propaga el error de la base de datos", async () => {
     await assert.rejects(
       withSupabaseMocks({

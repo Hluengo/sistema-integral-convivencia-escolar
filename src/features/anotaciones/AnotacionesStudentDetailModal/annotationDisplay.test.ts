@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { formatAnnotationDisplayText } from "./annotationDisplay";
+import {
+  extractAnnotationCategory,
+  extractAnnotationTeacher,
+  formatAnnotationDisplayText,
+  resolveAnnotationRegistrar,
+} from "./annotationDisplay";
 
 describe("formatAnnotationDisplayText", () => {
   it("extrae la anotación legible desde el texto repetido del PDF", () => {
@@ -16,6 +21,115 @@ describe("formatAnnotationDisplayText", () => {
     assert.equal(
       formatAnnotationDisplayText("  Llega tarde\n a clases.  "),
       "Llega tarde a clases.",
+    );
+  });
+
+  it("oculta el prefijo de categoría del lote masivo", () => {
+    assert.equal(
+      formatAnnotationDisplayText(
+        "[COMPORTAMIENTO] UTILIZA CELULAR DURANTE LA CLASE.",
+      ),
+      "UTILIZA CELULAR DURANTE LA CLASE.",
+    );
+  });
+
+  it("limpia restos de sintaxis del lote antes del prefijo", () => {
+    assert.equal(
+      formatAnnotationDisplayText(
+        "[RESPONSABILIDAD] Anotación: SE AGRADECE PARTICIPACIÓN EN EUCARISTÍA.",
+      ),
+      "SE AGRADECE PARTICIPACIÓN EN EUCARISTÍA.",
+    );
+  });
+
+  it("no repite metadatos cuando el bloque no trae descripción", () => {
+    assert.equal(
+      formatAnnotationDisplayText(
+        "11/08/2026 Tipo: Negativa Profesor: VANNIA ANDREA RETAMAL SALGADO",
+      ),
+      "Sin descripción registrada en el PDF.",
+    );
+  });
+});
+
+describe("extractAnnotationCategory", () => {
+  it("lee el prefijo del lote masivo", () => {
+    assert.equal(
+      extractAnnotationCategory("[COMPORTAMIENTO] UTILIZA CELULAR."),
+      "COMPORTAMIENTO",
+    );
+  });
+
+  it("lee la categoría del bloque individual", () => {
+    assert.equal(
+      extractAnnotationCategory(
+        "08/04/2026 Tipo: Negativa Categoria: COMPORTAMIENTO Anotación: ALUMNO GRITA. Profesor: X",
+      ),
+      "COMPORTAMIENTO",
+    );
+  });
+
+  it("normaliza el acento de información", () => {
+    assert.equal(
+      extractAnnotationCategory("[INFORMACIÒN] AUSENTE A EVALUACIÓN."),
+      "INFORMACIÓN",
+    );
+  });
+
+  it("retorna null sin categoría", () => {
+    assert.equal(extractAnnotationCategory("Llega tarde a clases."), null);
+  });
+});
+
+describe("extractAnnotationTeacher", () => {
+  it("extrae el docente al final del bloque", () => {
+    assert.equal(
+      extractAnnotationTeacher(
+        "18/03/2026 Tipo: Negativa Anotación: ALUMNO USA CELULAR. Profesor: MARIA ANDREA ABDALA JURE",
+      ),
+      "MARIA ANDREA ABDALA JURE",
+    );
+  });
+
+  it("recorta arrastre de campos", () => {
+    assert.equal(
+      extractAnnotationTeacher(
+        "10/07/2026 Tipo: Negativa Anotación: GRITA. Profesor: MARITZA PALMA Anotación: AUSENTE.",
+      ),
+      "MARITZA PALMA",
+    );
+  });
+
+  it("retorna null sin profesor", () => {
+    assert.equal(extractAnnotationTeacher("Llega tarde a clases."), null);
+  });
+});
+
+describe("resolveAnnotationRegistrar", () => {
+  it("conserva el responsable guardado cuando no es genérico", () => {
+    assert.equal(
+      resolveAnnotationRegistrar(
+        "MARITZA FERNANDA CARRASCO PALMA",
+        "[COMPORTAMIENTO] GRITA.",
+      ),
+      "MARITZA FERNANDA CARRASCO PALMA",
+    );
+  });
+
+  it("resuelve el docente desde el texto cuando es genérico", () => {
+    assert.equal(
+      resolveAnnotationRegistrar(
+        "PDF Convivencia Escolar",
+        "18/03/2026 Tipo: Negativa Anotación: ALUMNO USA CELULAR. Profesor: MARIA ANDREA ABDALA JURE",
+      ),
+      "MARIA ANDREA ABDALA JURE",
+    );
+  });
+
+  it("mantiene el genérico si no hay docente en el texto", () => {
+    assert.equal(
+      resolveAnnotationRegistrar("PDF Convivencia Escolar", "Llega tarde."),
+      "PDF Convivencia Escolar",
     );
   });
 });

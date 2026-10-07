@@ -47,6 +47,7 @@ export interface UpdateAnnotationInput {
   date: string;
   severity: Annotation["severity"];
   type: Annotation["type"];
+  registeredBy?: string;
 }
 
 export async function fetchAnnotations(
@@ -102,6 +103,13 @@ export async function updateAnnotation(
   if (!observation) {
     throw new Error("La anotación no puede quedar vacía.");
   }
+  const registeredBy = input.registeredBy?.trim() ?? "";
+  if (input.registeredBy !== undefined && !registeredBy) {
+    throw new Error("El responsable no puede quedar vacío.");
+  }
+  if (registeredBy.length > 120) {
+    throw new Error("El responsable no puede superar los 120 caracteres.");
+  }
 
   const { data, error } = await supabase
     .from("inspectorate_records")
@@ -110,6 +118,9 @@ export async function updateAnnotation(
       date_time: input.date,
       severity: input.severity,
       type: input.type,
+      ...(input.registeredBy !== undefined
+        ? { registered_by: registeredBy }
+        : {}),
     })
     .eq("id", input.id)
     .eq("tenant_id", tenantId)

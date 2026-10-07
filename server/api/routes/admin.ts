@@ -13,6 +13,19 @@ import { requireRole } from "../../middleware/requireRole.js";
 import { requireTenant } from "../../middleware/requireTenant.js";
 import { clientErrorBody } from "../../middleware/errorHandler.js";
 import type { AuthenticatedRequest, ProfileRole } from "../../types.js";
+import {
+  bulkCourseKey,
+  bulkNameKey,
+  BULK_QUERY_MAX_ROWS,
+  chunkQueryIds,
+  parseBulkDisciplinaryPdf,
+  selectNewBulkAnnotations,
+  type BulkAnnotation,
+} from "../../lib/bulkDisciplinaryPdf.js";
+import {
+  previewBulkCartas,
+  syncBulkPendingCartas,
+} from "../../lib/bulkCartaWorkflow.js";
 
 const router = Router();
 const ownUpload = multer({
@@ -37,6 +50,61 @@ const VALID_ROLES: readonly ProfileRole[] = [
   "staff",
 ];
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+interface BulkPreviewAnnotation extends BulkAnnotation {
+  student_id: string;
+  student_name: string;
+}
+
+const PDF_MAGIC = [0x25, 0x50, 0x44, 0x46, 0x2d];
+const BULK_MAX_ANNOTATIONS = 5000;
+
+function hasPdfMagic(buffer: Uint8Array): boolean {
+  return PDF_MAGIC.every((byte, index) => buffer[index] === byte);
+}
+
+function isPdfUpload(
+  file: { buffer?: Uint8Array; mimetype?: string } | undefined,
+): boolean {
+  return Boolean(
+    file?.buffer &&
+    file.mimetype === "application/pdf" &&
+    hasPdfMagic(file.buffer),
+  );
+}
+
+function safeFileName(name: unknown): string {
+  if (typeof name !== "string") return "archivo.pdf";
+  const printable = name
+    .split("")
+    .filter((ch) => {
+      const code = ch.charCodeAt(0);
+      return code >= 0x20 && code !== 0x7f;
+    })
+    .join("");
+  const base = printable.split(/[\\/]/).pop()?.trim() ?? "";
+  return base.slice(0, 128) || "archivo.pdf";
+}
+
+async function fetchExistingBulkRecords(
+  client: SupabaseClient,
+  tenantId: string,
+  studentIds: string[],
+) {
+  const pages = await Promise.all(
+    chunkQueryIds(studentIds).map(async (chunk) => {
+      const { data, error } = await client
+        .from("inspectorate_records")
+        .select("student_id,type,date_time,observation")
+        .eq("tenant_id", tenantId)
+        .in("student_id", chunk)
+        .limit(BULK_QUERY_MAX_ROWS);
+      if (error) throw error;
+      return data ?? [];
+    }),
+  );
+  return pages.flat();
+}
 
 function invitationErrorStatus(message: string): number {
   return /rate limit|too many requests|email rate/i.test(message) ? 429 : 500;
@@ -617,5 +685,369 @@ router.post("/admin/import", ownUpload.single("file"), async (req, res) => {
     res.status(status).json(clientErrorBody(message, status));
   }
 });
+
+router.post(
+  "/admin/annotations/bulk-preview",
+  ownUpload.single("file"),
+  async (req, res) => {
+    try {
+      const request = getRequest(req);
+      const client = getAdminClient();
+      await assertFreshAdmin(client, request);
+      if (!isPdfUpload(req.file)) {
+        res.status(400).json({ error: "Adjunte un archivo PDF válido." });
+        return;
+      }
+
+      const parsed = await parseBulkDisciplinaryPdf(req.file!.buffer);
+      const detectedTotal = parsed.estudiantes.reduce(
+        (total, student) => total + student.anotaciones.length,
+        0,
+      );
+      if (detectedTotal > BULK_MAX_ANNOTATIONS) {
+        res.status(400).json({
+          error: "El PDF contiene demasiadas anotaciones para importar.",
+        });
+        return;
+      }
+      const { data: courses, error: coursesError } = await client
+        .from("courses")
+        .select("id,name,level")
+        .eq("tenant_id", request.tenantId);
+      if (coursesError) throw coursesError;
+      const courseKeys = new Map(
+        (courses ?? []).map((course) => [bulkCourseKey(course.name), course]),
+      );
+      const detectedCourse = parsed.estudiantes[0]?.curso ?? "";
+      const course = courseKeys.get(bulkCourseKey(detectedCourse));
+      if (!course) {
+        res.status(422).json({
+          error: `No existe en este establecimiento el curso detectado "${detectedCourse}".`,
+          detected_course: detectedCourse,
+        });
+        return;
+      }
+      const { data: students, error: studentsError } = await client
+        .from("students")
+        .select("id,full_name,rut,course_id")
+        .eq("tenant_id", request.tenantId)
+        .eq("course_id", course.id);
+      if (studentsError) throw studentsError;
+      const studentsByName = new Map<string, (typeof students)[number][]>();
+      for (const student of students ?? []) {
+        const key = bulkNameKey(student.full_name);
+        studentsByName.set(key, [...(studentsByName.get(key) ?? []), student]);
+      }
+
+      const matchedStudentIds = parsed.estudiantes.flatMap((source) => {
+        const candidates = studentsByName.get(bulkNameKey(source.nombre)) ?? [];
+        return candidates.length === 1 ? [candidates[0].id] : [];
+      });
+      const existingRecords = matchedStudentIds.length
+        ? await fetchExistingBulkRecords(
+            client,
+            request.tenantId ?? "",
+            matchedStudentIds,
+          )
+        : [];
+      const existingByStudent = new Map<string, typeof existingRecords>();
+      for (const record of existingRecords ?? []) {
+        const records = existingByStudent.get(record.student_id) ?? [];
+        records.push(record);
+        existingByStudent.set(record.student_id, records);
+      }
+
+      const previewStudents = parsed.estudiantes.map((source) => {
+        const candidates = studentsByName.get(bulkNameKey(source.nombre)) ?? [];
+        const match = candidates.length === 1 ? candidates[0] : null;
+        return {
+          source_name: source.nombre,
+          student_id: match?.id ?? null,
+          matched_name: match?.full_name ?? null,
+          rut: match?.rut ?? null,
+          status:
+            candidates.length === 1
+              ? "matched"
+              : candidates.length > 1
+                ? "ambiguous"
+                : "missing",
+          annotation_count: source.anotaciones.length,
+          duplicates_removed: source.duplicados_eliminados,
+        };
+      });
+      const annotations: BulkPreviewAnnotation[] = parsed.estudiantes.flatMap(
+        (source) => {
+          const candidates =
+            studentsByName.get(bulkNameKey(source.nombre)) ?? [];
+          const match = candidates.length === 1 ? candidates[0] : null;
+          return match
+            ? selectNewBulkAnnotations(
+                source.anotaciones,
+                existingByStudent.get(match.id) ?? [],
+              ).map((annotation) => ({
+                ...annotation,
+                student_id: match.id,
+                student_name: match.full_name,
+              }))
+            : [];
+        },
+      );
+      const additionalNegatives = new Map<string, number>();
+      for (const annotation of annotations) {
+        if (annotation.tipo === "Negativa") {
+          additionalNegatives.set(
+            annotation.student_id,
+            (additionalNegatives.get(annotation.student_id) ?? 0) + 1,
+          );
+        }
+      }
+      const cartaPlan = await previewBulkCartas(
+        {
+          supabase: client,
+          tenantId: request.tenantId ?? "",
+          studentIds: matchedStudentIds,
+        },
+        additionalNegatives,
+      );
+      const cartasByStudent = new Map(
+        cartaPlan.map((item) => [item.student.id, item]),
+      );
+      res.json({
+        file_name: safeFileName(req.file?.originalname),
+        file_hash: parsed.file_hash,
+        paginas: parsed.paginas,
+        detected_course: course.name,
+        course_id: course.id,
+        warnings: parsed.warnings,
+        students: previewStudents.map((student) => ({
+          ...student,
+          existing_count:
+            existingByStudent.get(student.student_id ?? "")?.length ?? 0,
+          new_count: annotations.filter(
+            (annotation) => annotation.student_id === student.student_id,
+          ).length,
+          current_letter:
+            cartasByStudent.get(student.student_id ?? "")?.current_letter ??
+            null,
+          pending_letter:
+            cartasByStudent.get(student.student_id ?? "")?.pending_letter ??
+            null,
+        })),
+        annotations,
+        summary: {
+          students_in_file: parsed.estudiantes.length,
+          students_in_database: students?.length ?? 0,
+          matched_students: previewStudents.filter(
+            (row) => row.status === "matched",
+          ).length,
+          missing_students: previewStudents.filter(
+            (row) => row.status === "missing",
+          ).length,
+          ambiguous_students: previewStudents.filter(
+            (row) => row.status === "ambiguous",
+          ).length,
+          annotations_detected: detectedTotal,
+          annotations_existing: existingRecords?.length ?? 0,
+          annotations_ready: annotations.length,
+          duplicates_removed: parsed.estudiantes.reduce(
+            (total, student) => total + student.duplicados_eliminados,
+            0,
+          ),
+        },
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "No fue posible analizar el PDF.";
+      res.status(500).json(clientErrorBody(message, 500));
+    }
+  },
+);
+
+router.post(
+  "/admin/annotations/bulk-confirm",
+  ownUpload.single("file"),
+  async (req, res) => {
+    try {
+      const request = getRequest(req);
+      const client = getAdminClient();
+      await assertFreshAdmin(client, request);
+      const courseId = req.body?.course_id;
+      const fileHash = req.body?.file_hash;
+      if (
+        !isPdfUpload(req.file) ||
+        !isValidUuid(courseId) ||
+        typeof fileHash !== "string" ||
+        !/^[a-f0-9]{64}$/.test(fileHash)
+      ) {
+        res
+          .status(400)
+          .json({ error: "Vista previa de importación inválida." });
+        return;
+      }
+      const parsed = await parseBulkDisciplinaryPdf(req.file!.buffer);
+      if (parsed.file_hash !== fileHash) {
+        res
+          .status(400)
+          .json({ error: "El hash del PDF no coincide con la vista previa." });
+        return;
+      }
+      const { data: course, error: courseError } = await client
+        .from("courses")
+        .select("id,name")
+        .eq("id", courseId)
+        .eq("tenant_id", request.tenantId)
+        .maybeSingle();
+      if (courseError) throw courseError;
+      if (!course) {
+        res
+          .status(404)
+          .json({ error: "Curso no encontrado en este establecimiento." });
+        return;
+      }
+      const { data: students, error: studentsError } = await client
+        .from("students")
+        .select("id,full_name,course_id")
+        .eq("tenant_id", request.tenantId)
+        .eq("course_id", courseId);
+      if (studentsError) throw studentsError;
+      const studentsByName = new Map<string, (typeof students)[number][]>();
+      for (const student of students ?? []) {
+        const key = bulkNameKey(student.full_name);
+        studentsByName.set(key, [...(studentsByName.get(key) ?? []), student]);
+      }
+      const matchOf = (source: { nombre: string }) =>
+        studentsByName.get(bulkNameKey(source.nombre)) ?? [];
+      const unresolvedSources = parsed.estudiantes.filter(
+        (source) => matchOf(source).length !== 1,
+      );
+      if (unresolvedSources.length > 0) {
+        res.status(409).json({
+          error: `Hay ${unresolvedSources.length} estudiantes sin coincidencia única en este establecimiento; corrige el PDF y vuelve a intentarlo.`,
+          unresolved: unresolvedSources
+            .map((source) => source.nombre)
+            .slice(0, 50),
+        });
+        return;
+      }
+      if (parsed.warnings.length > 0) {
+        res.status(422).json({
+          error:
+            "El PDF contiene fichas con advertencias; corrígelas y vuelve a intentarlo.",
+          warnings: parsed.warnings.slice(0, 50),
+        });
+        return;
+      }
+      const matchedStudentIds = parsed.estudiantes.flatMap((source) => {
+        const candidates = studentsByName.get(bulkNameKey(source.nombre)) ?? [];
+        return candidates.length === 1 ? [candidates[0].id] : [];
+      });
+      const existingRecords = matchedStudentIds.length
+        ? await fetchExistingBulkRecords(
+            client,
+            request.tenantId ?? "",
+            matchedStudentIds,
+          )
+        : [];
+      const existingByStudent = new Map<string, typeof existingRecords>();
+      for (const record of existingRecords ?? []) {
+        const records = existingByStudent.get(record.student_id) ?? [];
+        records.push(record);
+        existingByStudent.set(record.student_id, records);
+      }
+      const newAnnotations: BulkPreviewAnnotation[] =
+        parsed.estudiantes.flatMap((source) => {
+          const candidates =
+            studentsByName.get(bulkNameKey(source.nombre)) ?? [];
+          if (candidates.length !== 1) return [];
+          const student = candidates[0];
+          return selectNewBulkAnnotations(
+            source.anotaciones,
+            existingByStudent.get(student.id) ?? [],
+          ).map((annotation) => ({
+            ...annotation,
+            student_id: student.id,
+            student_name: student.full_name,
+          }));
+        });
+      const detectedTotal = parsed.estudiantes.reduce(
+        (total, student) => total + student.anotaciones.length,
+        0,
+      );
+      if (newAnnotations.length > BULK_MAX_ANNOTATIONS) {
+        res.status(400).json({
+          error: "El PDF contiene demasiadas anotaciones para importar.",
+        });
+        return;
+      }
+      const pdfPath = `bulk-pdf/${request.tenantId}/${courseId}/${fileHash}`;
+      const { count: existingCount, error: existingError } = await client
+        .from("inspectorate_records")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", request.tenantId)
+        .eq("pdf_file_path", pdfPath);
+      if (existingError) throw existingError;
+      if ((existingCount ?? 0) > 0) {
+        res
+          .status(409)
+          .json({ error: "Este PDF ya fue importado para este curso." });
+        return;
+      }
+
+      const rows = newAnnotations.map((annotation) => ({
+        student_id: annotation.student_id,
+        date_time: `${annotation.fecha_iso}T12:00:00.000Z`,
+        observation: `[${annotation.categoria}] ${annotation.texto}`,
+        type: annotation.tipo,
+        severity: "Leve",
+        registered_by: annotation.profesor?.trim() || "PDF Importación Masiva",
+        created_by: request.user?.sub ?? "",
+        tenant_id: request.tenantId,
+        pdf_file_path: pdfPath,
+      }));
+      if (rows.length > 0) {
+        const { error: insertError } = await client
+          .from("inspectorate_records")
+          .insert(rows);
+        if (insertError) throw insertError;
+      }
+      const pendingCartas = await syncBulkPendingCartas({
+        supabase: client,
+        tenantId: request.tenantId ?? "",
+        studentIds: matchedStudentIds,
+        actorUserId: request.user?.sub ?? "",
+        sourceHash: fileHash,
+      });
+      const { error: auditError } = await client.from("audit_events").insert({
+        tenant_id: request.tenantId,
+        actor_user_id: request.user?.sub ?? "",
+        action: "annotations_bulk_imported",
+        entity_type: "annotation_bulk_import",
+        entity_id: courseId,
+        previous_values: null,
+        new_values: {
+          file_hash: fileHash,
+          course_id: courseId,
+          annotations: rows.length,
+          pending_cartas: pendingCartas,
+        },
+      });
+      if (auditError) throw auditError;
+      res.json({
+        imported: rows.length,
+        skipped: detectedTotal - newAnnotations.length,
+        course: course.name,
+        pending_cartas: pendingCartas,
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "No fue posible confirmar la importación.";
+      res.status(500).json(clientErrorBody(message, 500));
+    }
+  },
+);
 
 export default router;
