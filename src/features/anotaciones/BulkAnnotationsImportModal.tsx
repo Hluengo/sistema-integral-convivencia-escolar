@@ -1,14 +1,17 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useRef, useState, type DragEvent } from "react";
+import { Fragment, useRef, useState, type DragEvent } from "react";
 import {
   AlertTriangle,
   Check,
   CheckCircle2,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   FileText,
   FileUp,
+  Info,
+  LockKeyhole,
   Mail,
   Search,
   ShieldCheck,
@@ -27,6 +30,7 @@ import {
   previewBulkAnnotations,
   type BulkPreview,
 } from "../../shared/api/services/bulkAnnotations.service";
+import { formatAnnotationDisplayText } from "./AnotacionesStudentDetailModal/annotationDisplay";
 
 interface Props {
   onClose: () => void;
@@ -59,6 +63,7 @@ export default function BulkAnnotationsImportModal({
   const [refreshError, setRefreshError] = useState(false);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
+  const [expandedStudent, setExpandedStudent] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const pendingLetters =
@@ -78,8 +83,10 @@ export default function BulkAnnotationsImportModal({
     (preview.summary.annotations_ready > 0 || pendingLetters.length > 0),
   );
   const canConfirm = !blocked && hasChanges && !result && !busy;
+  const displayName = (name: string | null) =>
+    maskName(name ?? "Sin nombre", privacyMode);
   const visibleStudents = (preview?.students ?? []).filter((student) =>
-    maskName(student.matched_name ?? student.source_name, privacyMode)
+    displayName(student.matched_name ?? student.source_name)
       .toLocaleLowerCase("es-CL")
       .includes(search.toLocaleLowerCase("es-CL")),
   );
@@ -88,6 +95,10 @@ export default function BulkAnnotationsImportModal({
     page * pageSize,
     (page + 1) * pageSize,
   );
+  const newAnnotationsOf = (studentId: string | null) =>
+    (preview?.annotations ?? []).filter(
+      (annotation) => annotation.student_id === studentId,
+    );
 
   async function handleFile(nextFile: File | undefined) {
     if (!nextFile || requestPending.current) return;
@@ -99,6 +110,7 @@ export default function BulkAnnotationsImportModal({
     setSearch("");
     setPage(0);
     setStep(1);
+    setExpandedStudent(null);
     if (
       !/\.pdf$/i.test(nextFile.name) ||
       (nextFile.type && nextFile.type !== "application/pdf")
@@ -185,11 +197,12 @@ export default function BulkAnnotationsImportModal({
     >
       <DialogContent
         hideClose
-        className="max-h-[90vh] max-w-5xl overflow-y-auto p-0"
+        className="flex max-h-[92vh] w-[min(96vw,72rem)] max-w-none flex-col overflow-hidden p-0"
         onInteractOutside={(event) => event.preventDefault()}
         onEscapeKeyDown={(event) => {
           if (requestPending.current) event.preventDefault();
         }}
+        aria-label="Importar fichas PDF"
       >
         <DialogTitle className="sr-only">Importar fichas PDF</DialogTitle>
         <DialogDescription className="sr-only">
@@ -197,60 +210,75 @@ export default function BulkAnnotationsImportModal({
           revisando cada coincidencia antes de guardar.
         </DialogDescription>
 
-        <div className="sticky top-0 z-10 border-b border-neutral-100 bg-white p-4">
-          <div className="mb-3 flex items-center justify-between gap-3">
+        <header className="border-b border-neutral-200 bg-white px-6 pt-5">
+          <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold text-neutral-500">
-                Anotaciones · Importación masiva
+              <p className="mb-1 text-xs font-medium tracking-wide text-neutral-500">
+                Anotaciones <span className="mx-1 text-neutral-400">·</span>{" "}
+                Importación masiva
               </p>
-              <h2 className="text-lg font-bold text-neutral-800">
-                Importar fichas PDF
-                {preview ? ` — ${preview.detected_course}` : ""}
+              <h2 className="text-2xl font-bold tracking-tight text-neutral-900">
+                Importar fichas PDF{" "}
+                {preview && (
+                  <>
+                    <span className="font-normal text-neutral-400">—</span>{" "}
+                    {preview.detected_course}
+                  </>
+                )}
               </h2>
             </div>
             <button
               type="button"
-              aria-label="Cerrar"
+              aria-label="Cerrar importación"
               onClick={closeSafely}
               disabled={busy}
-              className="rounded-xl p-3 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-lg p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              <X className="h-5 w-5" />
+              <X className="h-6 w-6" aria-hidden="true" />
             </button>
           </div>
-          <div className="flex gap-1" aria-label="Progreso de importación">
-            {STEP_LABELS.map((label, index) => (
-              <div
-                key={label}
-                className="flex flex-1 flex-col items-center gap-1"
-                aria-current={index + 1 === step ? "step" : undefined}
-              >
-                <div
-                  className={`h-1 w-full rounded-full ${
-                    index + 1 <= step || result
-                      ? "bg-brand-500"
-                      : "bg-neutral-200"
-                  }`}
-                />
-                <span className="text-center text-[10px] font-medium text-neutral-500">
-                  {label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+          <nav aria-label="Progreso de importación" className="mt-6">
+            <ol className="grid grid-cols-3 gap-3">
+              {STEP_LABELS.map((label, index) => {
+                const done = index + 1 < step || result !== null;
+                const active = index + 1 === step && !result;
+                return (
+                  <li
+                    key={label}
+                    aria-current={active ? "step" : undefined}
+                    className={`flex flex-col border-b-[3.5px] pb-3 transition-all ${
+                      done || active ? "border-brand-600" : "border-neutral-200"
+                    }`}
+                  >
+                    <span
+                      className={`text-center text-xs ${
+                        active
+                          ? "font-bold text-brand-700"
+                          : done
+                            ? "font-semibold text-neutral-600"
+                            : "font-medium text-neutral-400"
+                      }`}
+                    >
+                      {label}
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
+        </header>
 
-        <div className="space-y-4 p-4">
+        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto bg-[#F8FAFC] px-6 py-6">
           <div role="status" aria-live="polite">
             {busy && (
-              <p className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-700">
+              <p className="rounded-xl border border-neutral-200 bg-white p-3 text-sm text-neutral-700">
                 {step === 3
                   ? "Guardando anotaciones y cartas. Espera a que termine la importación…"
                   : "Analizando el PDF y comparando con el historial del curso…"}
               </p>
             )}
             {result && (
-              <div className="flex items-start gap-3 rounded-xl border border-leve-200 bg-leve-50 p-3 text-sm text-leve-700">
+              <div className="flex items-start gap-3 rounded-xl border border-leve-200 bg-leve-50 p-4 text-sm text-leve-700">
                 <CheckCircle2
                   className="mt-0.5 h-5 w-5 shrink-0"
                   aria-hidden="true"
@@ -270,7 +298,7 @@ export default function BulkAnnotationsImportModal({
           {error && (
             <div
               role="alert"
-              className="flex items-start gap-3 rounded-xl border border-gravisima-200 bg-gravisima-50 p-3 text-sm text-gravisima-800"
+              className="flex items-start gap-3 rounded-xl border border-gravisima-200 bg-gravisima-50 p-4 text-sm text-gravisima-800"
             >
               <AlertTriangle
                 className="mt-0.5 h-5 w-5 shrink-0"
@@ -290,16 +318,14 @@ export default function BulkAnnotationsImportModal({
           )}
 
           {step === 1 && (
-            <section className="space-y-3">
-              <div>
-                <h3 className="font-semibold text-neutral-800">
-                  Selecciona la ficha del curso
-                </h3>
-                <p className="mt-1 text-sm text-neutral-500">
-                  El archivo debe contener las fichas personales de convivencia
-                  de un solo curso.
-                </p>
-              </div>
+            <section className="mx-auto max-w-3xl rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
+              <h3 className="font-bold text-neutral-900">
+                Selecciona la ficha del curso
+              </h3>
+              <p className="mt-1 text-sm text-neutral-500">
+                El archivo debe contener las fichas personales de convivencia de
+                un solo curso.
+              </p>
               <div
                 role="button"
                 tabIndex={0}
@@ -320,13 +346,16 @@ export default function BulkAnnotationsImportModal({
                 }}
                 onDragLeave={() => setDragging(false)}
                 onDrop={handleDrop}
-                className={`flex min-h-56 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors ${
+                className={`mt-5 flex min-h-56 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors ${
                   dragging
                     ? "border-brand-500 bg-brand-50"
-                    : "border-neutral-300 bg-neutral-50 hover:border-brand-400 hover:bg-brand-50"
+                    : "border-neutral-300 bg-neutral-50 hover:border-brand-400 hover:bg-brand-50/40"
                 }`}
               >
-                <FileUp className="h-8 w-8 text-brand-600" aria-hidden="true" />
+                <FileUp
+                  className="h-8 w-8 text-neutral-700"
+                  aria-hidden="true"
+                />
                 <span className="text-sm font-semibold text-neutral-800">
                   Arrastra tu PDF aquí o selecciona un archivo
                 </span>
@@ -349,7 +378,7 @@ export default function BulkAnnotationsImportModal({
                 />
               </div>
               {file && (
-                <p className="flex items-center gap-2 text-sm text-neutral-700">
+                <p className="mt-3 flex items-center gap-2 text-sm text-neutral-700">
                   <FileText className="h-4 w-4" aria-hidden="true" />
                   {privacyMode ? "PDF seleccionado" : file.name}
                 </p>
@@ -359,26 +388,38 @@ export default function BulkAnnotationsImportModal({
                   variant="secondary"
                   disabled={busy}
                   onClick={() => void handleFile(file)}
+                  className="mt-3"
                 >
                   Reintentar análisis
                 </Button>
               )}
-              <p className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-600">
+              <p className="mt-5 flex items-center gap-2 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
+                <LockKeyhole className="h-4 w-4 shrink-0" aria-hidden="true" />
                 Nada se guarda hasta que confirmes la importación.
               </p>
             </section>
           )}
 
           {step > 1 && preview && (
-            <section className="space-y-4">
-              <div className="rounded-xl border border-neutral-200 bg-white p-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-sm font-semibold text-neutral-800">
-                    {privacyMode ? "PDF del curso" : preview.file_name} ·{" "}
-                    {preview.detected_course} · {preview.paginas} páginas
+            <>
+              <section
+                aria-label="Resumen del archivo"
+                className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-200 bg-neutral-50/60 px-6 py-3.5">
+                  <p className="text-sm font-semibold text-neutral-900">
+                    {privacyMode ? "PDF del curso" : preview.file_name}
+                    <span className="font-normal text-neutral-300"> · </span>
+                    <span className="font-medium text-neutral-700">
+                      {preview.detected_course}
+                    </span>
+                    <span className="font-normal text-neutral-300"> · </span>
+                    <span className="font-normal text-neutral-500">
+                      {preview.paginas} páginas
+                    </span>
                   </p>
                   <span
-                    className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-semibold ${
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium ${
                       blocked
                         ? "border-grave-200 bg-grave-50 text-grave-700"
                         : "border-leve-200 bg-leve-50 text-leve-700"
@@ -395,43 +436,47 @@ export default function BulkAnnotationsImportModal({
                     {blocked ? "Requiere revisión" : "Coincidencias revisadas"}
                   </span>
                 </div>
-                <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  <Summary
+                <div className="grid grid-cols-2 divide-neutral-100 bg-white sm:grid-cols-3 lg:grid-cols-6 lg:divide-x">
+                  <Kpi
                     label="Estudiantes encontrados"
                     value={`${preview.summary.matched_students}/${preview.summary.students_in_file}`}
                   />
-                  <Summary
+                  <Kpi
                     label="Anotaciones nuevas"
                     value={`${preview.summary.annotations_ready}`}
                   />
-                  <Summary
+                  <Kpi
                     label="Históricas conservadas"
                     value={`${preview.summary.annotations_existing ?? 0}`}
                   />
-                  <Summary
+                  <Kpi
                     label="Detectadas en PDF"
                     value={`${preview.summary.annotations_detected}`}
                   />
-                  <Summary
-                    label="Faltantes / Ambiguos"
+                  <Kpi
+                    label="Faltantes / ambiguos"
                     value={`${preview.summary.missing_students} / ${preview.summary.ambiguous_students}`}
                   />
-                  <Summary
+                  <Kpi
                     label="Duplicados descartados"
                     value={`${preview.summary.duplicates_removed}`}
                   />
                 </div>
-                <p className="mt-3 text-xs text-neutral-500">
+                <p className="flex items-center gap-1.5 border-t border-neutral-100 bg-neutral-50/40 px-6 py-2.5 text-xs text-neutral-500">
+                  <Info
+                    className="h-4 w-4 shrink-0 text-neutral-400"
+                    aria-hidden="true"
+                  />
                   Actualización incremental: se agregan solo las diferencias
                   nuevas y se conservan las anotaciones manuales y los registros
                   de PDFs anteriores.
                 </p>
-              </div>
+              </section>
 
               {blocked && (
                 <div
                   role="alert"
-                  className="flex items-start gap-3 rounded-xl border border-grave-200 bg-grave-50 p-3 text-sm text-grave-700"
+                  className="flex items-start gap-3 rounded-xl border border-grave-200 bg-grave-50 p-4 text-sm text-grave-700"
                 >
                   <AlertTriangle
                     className="mt-0.5 h-5 w-5 shrink-0"
@@ -460,26 +505,32 @@ export default function BulkAnnotationsImportModal({
                 </div>
               )}
               {!blocked && !hasChanges && (
-                <p className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-600">
+                <p className="rounded-xl border border-neutral-200 bg-white p-4 text-sm text-neutral-600">
                   El curso ya está al día con este PDF. No hay nuevas
                   anotaciones ni cartas por crear.
                 </p>
               )}
 
-              <div className="overflow-hidden rounded-xl border border-neutral-200">
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-100 bg-white p-3">
+              <section
+                aria-label="Coincidencias por estudiante"
+                className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm"
+              >
+                <div className="flex flex-col gap-4 border-b border-neutral-200 p-6 pb-5 md:flex-row md:items-center md:justify-between">
                   <div>
-                    <h3 className="font-semibold text-neutral-800">
+                    <h3 className="text-lg font-bold tracking-tight text-neutral-900">
                       {step === 3
                         ? "Cambios que vas a confirmar"
                         : "Coincidencias por estudiante"}
                     </h3>
-                    <p className="text-xs text-neutral-500">
+                    <p className="mt-0.5 text-xs text-neutral-500">
                       Comparación por nombre normalizado dentro del curso.
                     </p>
                   </div>
-                  <label className="flex items-center gap-2 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-sm text-neutral-600">
-                    <Search className="h-4 w-4" aria-hidden="true" />
+                  <label className="relative w-full md:w-80">
+                    <Search
+                      className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-neutral-400"
+                      aria-hidden="true"
+                    />
                     <input
                       aria-label="Buscar estudiante en la importación"
                       placeholder="Buscar estudiante"
@@ -488,94 +539,199 @@ export default function BulkAnnotationsImportModal({
                         setSearch(event.target.value);
                         setPage(0);
                       }}
-                      className="w-40 bg-transparent text-sm outline-none"
+                      className="w-full rounded-xl border border-neutral-300 bg-white py-2 pr-4 pl-9 text-sm placeholder:text-neutral-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none"
                     />
                   </label>
                 </div>
-                <div className="max-h-72 overflow-auto">
-                  <table className="min-w-full text-left text-xs">
-                    <thead className="sticky top-0 bg-neutral-100 text-neutral-600">
+                <div
+                  className="overflow-x-auto"
+                  tabIndex={0}
+                  role="region"
+                  aria-label="Tabla de coincidencias desplazable"
+                >
+                  <table className="w-full text-left text-sm">
+                    <caption className="sr-only">
+                      Anotaciones nuevas, registros conservados y carta
+                      resultante por estudiante
+                    </caption>
+                    <thead className="border-b border-neutral-200 bg-neutral-50/90 text-[11px] font-bold tracking-wider text-neutral-600 uppercase">
                       <tr>
-                        <th scope="col" className="px-3 py-2 font-semibold">
+                        <th scope="col" className="px-6 py-3">
                           Estudiante
                         </th>
-                        <th scope="col" className="px-3 py-2 font-semibold">
+                        <th scope="col" className="px-6 py-3">
                           Coincidencia
                         </th>
-                        <th scope="col" className="px-3 py-2 font-semibold">
+                        <th scope="col" className="px-6 py-3 text-center">
                           Nuevas
                         </th>
-                        <th scope="col" className="px-3 py-2 font-semibold">
+                        <th scope="col" className="px-6 py-3 text-center">
                           Conservadas
                         </th>
-                        <th scope="col" className="px-3 py-2 font-semibold">
+                        <th scope="col" className="px-6 py-3">
                           Carta resultante
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-right">
+                          Acciones
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-neutral-100 bg-white">
-                      {pageStudents.map((student, index) => (
-                        <tr
-                          key={`${student.student_id ?? student.source_name}-${index}`}
-                        >
-                          <td className="px-3 py-2 font-medium text-neutral-800">
-                            {maskName(
-                              student.matched_name ?? student.source_name,
-                              privacyMode,
+                    <tbody className="divide-y divide-neutral-100 text-neutral-700">
+                      {pageStudents.map((student, index) => {
+                        const key = `${student.student_id ?? student.source_name}-${index}`;
+                        const expanded = expandedStudent === key;
+                        const news = newAnnotationsOf(student.student_id);
+                        return (
+                          <Fragment key={key}>
+                            <tr className="transition-colors hover:bg-neutral-50/70">
+                              <th
+                                scope="row"
+                                className="px-6 py-3.5 font-semibold tracking-tight text-neutral-900"
+                              >
+                                {displayName(
+                                  student.matched_name ?? student.source_name,
+                                )}
+                              </th>
+                              <td className="px-6 py-3.5">
+                                <span
+                                  className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
+                                    student.status === "matched"
+                                      ? "border-leve-200/60 bg-leve-50 text-leve-700"
+                                      : "border-grave-200 bg-grave-50 text-grave-700"
+                                  }`}
+                                >
+                                  {student.status === "matched"
+                                    ? "Encontrado"
+                                    : student.status === "missing"
+                                      ? "No encontrado"
+                                      : "Ambiguo"}
+                                </span>
+                              </td>
+                              <td className="px-6 py-3.5 text-center font-medium text-neutral-800">
+                                {student.status === "matched"
+                                  ? student.new_count
+                                  : "—"}
+                              </td>
+                              <td className="px-6 py-3.5 text-center text-neutral-500">
+                                {student.status === "matched"
+                                  ? student.existing_count
+                                  : "—"}
+                              </td>
+                              <td className="px-6 py-3.5 text-xs text-neutral-600">
+                                {student.status !== "matched" ? (
+                                  "Por resolver"
+                                ) : student.pending_letter ? (
+                                  <>
+                                    <span className="font-medium text-neutral-800">
+                                      {student.pending_letter}
+                                    </span>{" "}
+                                    <span className="text-neutral-400">·</span>{" "}
+                                    <span className="font-medium text-grave-700">
+                                      {result
+                                        ? "Pendiente"
+                                        : "Quedará pendiente"}
+                                    </span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="font-medium text-neutral-800">
+                                      {student.current_letter ?? "Sin carta"}
+                                    </span>{" "}
+                                    <span className="text-neutral-400">·</span>{" "}
+                                    <span className="font-normal text-neutral-500">
+                                      {student.current_letter
+                                        ? "Conserva su estado"
+                                        : "Sin cambio de etapa"}
+                                    </span>
+                                  </>
+                                )}
+                              </td>
+                              <td className="px-6 py-3.5 text-right">
+                                {student.status === "matched" &&
+                                student.new_count > 0 ? (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setExpandedStudent(expanded ? null : key)
+                                    }
+                                    aria-expanded={expanded}
+                                    className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-400 transition-colors hover:text-brand-700"
+                                  >
+                                    Ver detalle
+                                    <ChevronDown
+                                      className={`h-3.5 w-3.5 transition-transform ${expanded ? "rotate-180" : ""}`}
+                                      aria-hidden="true"
+                                    />
+                                  </button>
+                                ) : (
+                                  <span className="text-xs text-neutral-300">
+                                    —
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                            {expanded && (
+                              <tr
+                                className="bg-neutral-50/60"
+                                aria-label={`Detalle de anotaciones nuevas de ${displayName(student.matched_name ?? student.source_name)}`}
+                              >
+                                <td colSpan={6} className="px-6 py-4">
+                                  <p className="mb-2 text-[11px] font-bold tracking-wider text-neutral-500 uppercase">
+                                    Anotaciones nuevas de{" "}
+                                    {displayName(
+                                      student.matched_name ??
+                                        student.source_name,
+                                    )}
+                                  </p>
+                                  <ul className="space-y-2">
+                                    {news.map((annotation, position) => (
+                                      <li
+                                        key={`${annotation.fecha_iso}-${position}`}
+                                        className="rounded-lg border border-neutral-200 bg-white px-3.5 py-2.5 text-xs leading-relaxed text-neutral-700"
+                                      >
+                                        <span className="font-semibold text-neutral-500">
+                                          {annotation.fecha_iso} ·{" "}
+                                          {annotation.tipo} ·{" "}
+                                          {annotation.categoria}
+                                          {annotation.profesor
+                                            ? ` · ${privacyMode ? "Docente" : annotation.profesor}`
+                                            : ""}
+                                        </span>
+                                        <span className="mt-1 block text-sm text-neutral-800">
+                                          {formatAnnotationDisplayText(
+                                            `[${annotation.categoria}] ${annotation.texto}`,
+                                          )}
+                                        </span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </td>
+                              </tr>
                             )}
-                          </td>
-                          <td className="px-3 py-2">
-                            <span
-                              className={
-                                student.status === "matched"
-                                  ? "font-semibold text-leve-700"
-                                  : "font-semibold text-grave-700"
-                              }
-                            >
-                              {student.status === "matched"
-                                ? "Encontrado"
-                                : student.status === "missing"
-                                  ? "No encontrado"
-                                  : "Ambiguo"}
-                            </span>
-                          </td>
-                          <td className="px-3 py-2 text-neutral-600">
-                            {student.status === "matched"
-                              ? student.new_count
-                              : "—"}
-                          </td>
-                          <td className="px-3 py-2 text-neutral-600">
-                            {student.status === "matched"
-                              ? student.existing_count
-                              : "—"}
-                          </td>
-                          <td className="px-3 py-2 text-neutral-600">
-                            {student.status !== "matched"
-                              ? "Por resolver"
-                              : student.pending_letter
-                                ? `${student.pending_letter} · Quedará pendiente`
-                                : student.current_letter
-                                  ? `${student.current_letter} · Conserva su estado`
-                                  : "Sin cambio de etapa"}
-                          </td>
-                        </tr>
-                      ))}
+                          </Fragment>
+                        );
+                      })}
                     </tbody>
                   </table>
                   {pageStudents.length === 0 && (
-                    <p className="bg-white p-6 text-center text-sm text-neutral-500">
+                    <p className="bg-white p-8 text-center text-sm text-neutral-500">
                       No hay estudiantes que coincidan con la búsqueda.
                     </p>
                   )}
                 </div>
-                <div className="flex items-center justify-between gap-2 border-t border-neutral-100 bg-white p-3 text-xs text-neutral-500">
+                <div className="flex flex-wrap items-center justify-between gap-4 border-t border-neutral-200 bg-white px-6 py-4 text-xs text-neutral-500">
                   <span>
-                    {visibleStudents.length
-                      ? `${page * pageSize + 1}–${Math.min(
-                          (page + 1) * pageSize,
-                          visibleStudents.length,
-                        )} de ${visibleStudents.length}`
-                      : "0 estudiantes"}
+                    Mostrando{" "}
+                    <span className="font-semibold text-neutral-700">
+                      {visibleStudents.length
+                        ? `${page * pageSize + 1}–${Math.min((page + 1) * pageSize, visibleStudents.length)}`
+                        : "0"}
+                    </span>{" "}
+                    de{" "}
+                    <span className="font-semibold text-neutral-700">
+                      {visibleStudents.length}
+                    </span>{" "}
+                    estudiantes
                   </span>
                   <div className="flex items-center gap-2">
                     <Button
@@ -587,7 +743,7 @@ export default function BulkAnnotationsImportModal({
                     >
                       <ChevronLeft className="h-4 w-4" aria-hidden="true" />
                     </Button>
-                    <span>
+                    <span className="font-medium text-neutral-700">
                       Página {page + 1} de {pageCount}
                     </span>
                     <Button
@@ -601,124 +757,152 @@ export default function BulkAnnotationsImportModal({
                     </Button>
                   </div>
                 </div>
-              </div>
+              </section>
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl border border-grave-200 bg-grave-50 p-3 text-sm text-grave-700">
-                  <p className="flex items-center gap-2 font-semibold">
-                    <Mail className="h-4 w-4" aria-hidden="true" />
-                    {result
-                      ? `${result.pending_cartas} cartas pendientes creadas`
-                      : `${pendingLetters.length} cartas quedarían pendientes`}
-                  </p>
-                  {!result && letterCounts.size > 0 && (
-                    <ul className="mt-2 space-y-1 text-xs">
-                      {Array.from(letterCounts, ([label, count]) => (
-                        <li
-                          key={label}
-                          className="flex items-center justify-between gap-2"
-                        >
-                          <span>{label}</span>
-                          <strong>{count}</strong>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  <p className="mt-2 text-xs">
+              <div className="grid grid-cols-1 items-stretch gap-6 md:grid-cols-2">
+                <section
+                  aria-label="Cartas pendientes"
+                  className="flex flex-col justify-between rounded-2xl border border-grave-200/90 bg-grave-50/50 p-6 text-neutral-800 shadow-sm"
+                >
+                  <div className="space-y-4">
+                    <p className="flex items-center gap-2 text-sm font-bold text-grave-900">
+                      <Mail
+                        className="h-5 w-5 shrink-0 text-grave-600"
+                        aria-hidden="true"
+                      />
+                      {result
+                        ? `${result.pending_cartas} cartas pendientes creadas`
+                        : `${pendingLetters.length} cartas quedarían pendientes`}
+                    </p>
+                    {!result && letterCounts.size > 0 && (
+                      <ul className="space-y-2 pl-7 text-xs font-medium text-grave-950/80">
+                        {Array.from(letterCounts, ([label, count]) => (
+                          <li
+                            key={label}
+                            className="flex items-center justify-between"
+                          >
+                            <span>{label}</span>
+                            <strong className="rounded bg-grave-100/70 px-2 py-0.5 text-[11px] font-bold text-grave-900">
+                              {count}
+                            </strong>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <p className="mt-4 border-t border-grave-200/60 pt-3 text-[11px] leading-relaxed text-grave-800/90">
                     Una carta nueva o un cambio de etapa queda pendiente. Si la
                     carta se mantiene, conserva su estado.
                   </p>
-                </div>
-                <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-600">
-                  <p className="flex items-center gap-2 font-semibold text-neutral-800">
-                    <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-                    Trazabilidad del archivo
-                  </p>
-                  <p className="mt-2 text-xs">
-                    {preview.summary.duplicates_removed} duplicados internos
-                    descartados. La confirmación vuelve a comprobar el archivo y
-                    deja registro de la operación.
-                  </p>
-                  <details className="mt-2 text-xs">
-                    <summary className="cursor-pointer text-brand-700">
+                </section>
+                <section
+                  aria-label="Trazabilidad del archivo"
+                  className="flex flex-col justify-between rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm"
+                >
+                  <div className="space-y-3.5">
+                    <p className="flex items-center gap-2 text-sm font-bold text-neutral-900">
+                      <ShieldCheck
+                        className="h-5 w-5 shrink-0 text-brand-700"
+                        aria-hidden="true"
+                      />
+                      Trazabilidad del archivo
+                    </p>
+                    <p className="text-xs leading-relaxed text-neutral-600">
+                      {preview.summary.duplicates_removed} duplicados internos
+                      descartados. La confirmación vuelve a comprobar el archivo
+                      y deja registro de la operación auditada.
+                    </p>
+                  </div>
+                  <details className="pt-4 text-xs">
+                    <summary className="cursor-pointer font-semibold text-brand-700 hover:text-brand-800">
                       Ver huella SHA-256
                     </summary>
-                    <code className="mt-1 block break-all text-neutral-500">
+                    <code className="mt-2 block text-neutral-500 break-all">
                       {preview.file_hash}
                     </code>
                   </details>
-                </div>
+                </section>
               </div>
-            </section>
+            </>
           )}
         </div>
 
-        <div className="flex justify-between gap-2 border-t border-neutral-100 p-4">
-          <div>
-            {!result && step > 1 && (
-              <Button
-                variant="ghost"
-                disabled={busy}
-                onClick={() => {
-                  setStep(step - 1);
-                  setError(null);
-                }}
-                className="rounded-xl px-4 py-2 font-medium"
-              >
-                <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-                {step === 2 ? "Cambiar archivo" : "Volver a revisar"}
-              </Button>
-            )}
+        <footer className="sticky bottom-0 z-20 mt-auto border-t border-neutral-200 bg-white py-4 shadow-lg">
+          <div className="mx-auto flex max-w-none items-center justify-between px-6">
+            <div>
+              {step === 1 ? (
+                <Button variant="secondary" onClick={onClose} disabled={busy}>
+                  Cancelar
+                </Button>
+              ) : (
+                !result && (
+                  <Button
+                    variant="secondary"
+                    disabled={busy}
+                    onClick={() => {
+                      setStep(step - 1);
+                      setError(null);
+                    }}
+                  >
+                    <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+                    {step === 2 ? "Cambiar archivo" : "Volver a revisar"}
+                  </Button>
+                )
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {result ? (
+                <Button
+                  variant="custom"
+                  onClick={onClose}
+                  className="rounded-xl bg-brand-600 px-6 py-2.5 text-sm font-semibold tracking-wide text-white hover:bg-brand-700"
+                >
+                  Volver a Anotaciones
+                </Button>
+              ) : step === 1 ? (
+                <span className="inline-flex items-center gap-1.5 text-xs text-neutral-500">
+                  <LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" />
+                  Carga y análisis sin guardar cambios
+                </span>
+              ) : step === 2 ? (
+                <Button
+                  variant="custom"
+                  disabled={!canConfirm}
+                  onClick={() => setStep(3)}
+                  className="rounded-xl bg-brand-600 px-6 py-2.5 text-sm font-semibold tracking-wide text-white hover:bg-brand-700 disabled:opacity-40"
+                >
+                  Revisar confirmación
+                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                </Button>
+              ) : (
+                <Button
+                  variant="custom"
+                  disabled={!canConfirm}
+                  isLoading={busy}
+                  onClick={() => void handleConfirm()}
+                  className="rounded-xl bg-brand-600 px-6 py-2.5 text-sm font-semibold tracking-wide text-white hover:bg-brand-700 disabled:opacity-40"
+                >
+                  <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                  Confirmar importación masiva
+                </Button>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            {result ? (
-              <Button
-                variant="custom"
-                onClick={onClose}
-                className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-medium text-white hover:bg-brand-700"
-              >
-                Volver a Anotaciones
-              </Button>
-            ) : step === 1 ? (
-              <span className="text-xs text-neutral-500">
-                Carga y análisis sin guardar cambios
-              </span>
-            ) : step === 2 ? (
-              <Button
-                variant="custom"
-                disabled={!canConfirm}
-                onClick={() => setStep(3)}
-                className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-40"
-              >
-                Revisar confirmación
-                <ChevronRight className="h-4 w-4" aria-hidden="true" />
-              </Button>
-            ) : (
-              <Button
-                variant="custom"
-                disabled={!canConfirm}
-                isLoading={busy}
-                onClick={() => void handleConfirm()}
-                className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-40"
-              >
-                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-                Confirmar importación masiva
-              </Button>
-            )}
-          </div>
-        </div>
+        </footer>
       </DialogContent>
     </Dialog>
   );
 }
 
-function Summary({ label, value }: { label: string; value: string }) {
+function Kpi({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+    <div className="p-4 px-5 transition-colors hover:bg-neutral-50/50">
+      <p className="text-[11px] font-bold tracking-wider text-neutral-500 uppercase">
         {label}
       </p>
-      <p className="mt-1 text-lg font-bold text-neutral-900">{value}</p>
+      <p className="mt-1 text-2xl font-extrabold tracking-tight text-neutral-900 lg:text-3xl">
+        {value}
+      </p>
     </div>
   );
 }

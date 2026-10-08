@@ -132,7 +132,7 @@ interface ConfirmInput {
 const PARSER_VERSION = "disciplinary-pdf-parser-v1";
 const PDF_BUCKET = "disciplinary-processes";
 const MAX_PDF_BYTES = 10 * 1024 * 1024;
-const MAX_PDF_PAGES = 80;
+const MAX_PDF_PAGES = 200;
 const MAX_CONFIRMED_ANNOTATIONS = 300;
 const MAX_CONFIRMED_ANNOTATION_TEXT = 4_000;
 
