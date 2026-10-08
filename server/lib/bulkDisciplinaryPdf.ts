@@ -106,14 +106,17 @@ function annotationKey(
   date: string | null,
   text: string,
 ): string {
-  const cleanText =
-    text
-      .replace(/^\[[^\]]+\]\s*/, "")
-      .split(/Anotaci[oó]n\s*:\s*/i)
-      .at(-1)
-      ?.split(/\s+Profesor\s*:/i)[0]
-      .trim() ?? "";
-  return `${normalize(type)}|${date?.slice(0, 10) ?? ""}|${normalize(cleanText)}`;
+  // Los bloques repiten los encabezados y el fragmento completo no siempre es
+  // el último: la identidad es el segmento limpio más largo de ambos lados.
+  const withoutPrefix = text.replace(/^\[[^\]]+\]\s*/, "");
+  const parts = withoutPrefix.split(/Anotaci[oó]n\s*:\s*/i);
+  const segments = parts.length > 1 ? parts.slice(1) : parts;
+  let best = "";
+  for (const segment of segments) {
+    const candidate = cleanCandidate(segment);
+    if (candidate.length > best.length) best = candidate;
+  }
+  return `${normalize(type)}|${date?.slice(0, 10) ?? ""}|${normalize(best)}`;
 }
 
 export function selectNewBulkAnnotations(
@@ -239,6 +242,14 @@ export function stripTrailingStudentName(
   return cleaned ?? profesor;
 }
 
+function cleanCandidate(segment: string): string {
+  return segment
+    .split(/\s*Profesor\s*:/i)[0]
+    .split(/\s*(?:Tipo|Categoria)\s*:/i)[0]
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function extractFullAnnotationText(block: string): string {
   // El generador del PDF repite los encabezados (Tipo/Categoria/Anotación) en
   // medio de la redacción y re-emite el texto acumulado: el primer fragmento
@@ -246,11 +257,7 @@ export function extractFullAnnotationText(block: string): string {
   const segments = block.split(/Anotaci[óo]n\s*:\s*/i).slice(1);
   let best = "";
   for (const segment of segments) {
-    const candidate = segment
-      .split(/\s*Profesor\s*:/i)[0]
-      .split(/\s*Tipo\s*:/i)[0]
-      .replace(/\s+/g, " ")
-      .trim();
+    const candidate = cleanCandidate(segment);
     if (candidate.length > best.length) best = candidate;
   }
   return best;

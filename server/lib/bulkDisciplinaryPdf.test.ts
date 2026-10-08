@@ -156,6 +156,28 @@ test("conserva la redacción completa cuando el PDF repite encabezados", () => {
   assert.equal(extractFullAnnotationText("Sin marcador de anotación"), "");
 });
 
+test("reconoce el registro previo aunque el bloque repita encabezados sin profesor", () => {
+  const parsed = [
+    {
+      fecha_iso: "2026-03-13",
+      tipo: "Negativa" as const,
+      categoria: "COMPORTAMIENTO",
+      profesor: "MARÍA ISABEL MATUS RETAMAL",
+      texto: "EN CLASES HAY UN INTERCAMBIO DE PAPELES CON MARTINA HERNÁNDEZ",
+      page_number: null,
+    },
+  ];
+  const fresh = selectNewBulkAnnotations(parsed, [
+    {
+      type: "Negativa",
+      date_time: "2026-03-13T12:00:00.000Z",
+      observation:
+        "13/03/2026 Tipo: Negativa Categoria: COMPORTAMIENTO Anotación: EN CLASES HAY UN INTERCAMBIO DE PAPELES CON MARTINA HERNÁNDEZ Tipo: Negativa Categoria: COMPORTAMIENTO Anotación: EN CLASES HAY UN INTERCAMBIO DE PAPELES",
+    },
+  ]);
+  assert.deepEqual(fresh, []);
+});
+
 test("solo cambia la carta cuando la progresión sube de etapa", () => {
   assert.equal(bulkSuggestedLetterType(5, null), "Amonestación Escrita");
   assert.equal(
