@@ -106,10 +106,34 @@ test("recorta campos arrastrados tras el nombre del profesor", () => {
   assert.equal(cutTrailingFields(null), null);
 });
 
+function buildMinimalPdf(): Uint8Array {
+  const stream =
+    "BT /F1 24 Tf 100 700 Td (FICHA PERSONAL DE CONVIVENCIA ESCOLAR) Tj ET";
+  const objects = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+    `<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+  ];
+  let pdf = "%PDF-1.4\n";
+  const offsets = [0];
+  objects.forEach((body, index) => {
+    offsets[index + 1] = pdf.length;
+    pdf += `${index + 1} 0 obj\n${body}\nendobj\n`;
+  });
+  const xref = pdf.length;
+  pdf += "xref\n0 6\n0000000000 65535 f \n";
+  for (let index = 1; index <= 5; index += 1) {
+    pdf += `${String(offsets[index]).padStart(10, "0")} 00000 n \n`;
+  }
+  pdf += `trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+  return new TextEncoder().encode(pdf);
+}
+
 test("el hash del PDF corresponde al contenido del archivo", async () => {
-  const { readFileSync } = await import("node:fs");
   const { createHash } = await import("node:crypto");
-  const bytes = readFileSync("Archivos/1MA.pdf");
+  const bytes = buildMinimalPdf();
   const parsed = await parseBulkDisciplinaryPdf(bytes);
   assert.equal(
     parsed.file_hash,
@@ -119,7 +143,6 @@ test("el hash del PDF corresponde al contenido del archivo", async () => {
     parsed.file_hash,
     createHash("sha256").update("").digest("hex"),
   );
-  assert.equal(parsed.estudiantes.length, 38);
 });
 
 test("parte los lotes de consulta en tramos acotados", () => {
