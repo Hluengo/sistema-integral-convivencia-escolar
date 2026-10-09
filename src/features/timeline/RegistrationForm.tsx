@@ -22,6 +22,10 @@ interface RegistrationFormProps {
   regObservations: string;
   setRegObservations: React.Dispatch<React.SetStateAction<string>>;
   regFile: File | null;
+  regText: string;
+  setRegText: React.Dispatch<React.SetStateAction<string>>;
+  regActionDate: string;
+  setRegActionDate: React.Dispatch<React.SetStateAction<string>>;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onCancel: () => void;
   onSubmit: () => void;
@@ -38,6 +42,10 @@ export default function RegistrationForm({
   regObservations,
   setRegObservations,
   regFile,
+  regText,
+  setRegText,
+  regActionDate,
+  setRegActionDate,
   handleFileChange,
   onCancel,
   onSubmit,
@@ -55,7 +63,7 @@ export default function RegistrationForm({
         </span>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(15rem,0.8fr)]">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,0.8fr)_10rem_minmax(0,1.25fr)]">
         <div>
           <label
             htmlFor={`reg-name-${item.id}`}
@@ -71,6 +79,23 @@ export default function RegistrationForm({
             value={regName}
             onChange={(e) => setRegName(e.target.value)}
             aria-label="Nombre del responsable"
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor={`reg-date-${item.id}`}
+            className="block font-semibold text-neutral-700 text-xs"
+          >
+            Fecha de la acción:
+          </label>
+          <input
+            id={`reg-date-${item.id}`}
+            aria-label="Fecha de la acción"
+            type="date"
+            value={regActionDate}
+            onChange={(event) => setRegActionDate(event.target.value)}
+            className="mt-1 min-h-11 w-full rounded-lg border border-neutral-300 bg-white px-2 font-medium text-neutral-800 text-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
           />
         </div>
 
@@ -101,6 +126,19 @@ export default function RegistrationForm({
               />
             </label>
           </div>
+          <label>
+            <span className="block font-semibold text-neutral-600 text-xs">
+              O pegar texto como respaldo
+            </span>
+            <textarea
+              aria-label="Texto del documento de respaldo"
+              value={regText}
+              onChange={(event) => setRegText(event.target.value)}
+              rows={4}
+              placeholder="Pega aquí el contenido de la evidencia..."
+              className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-2 font-medium text-neutral-800 text-xs placeholder:text-neutral-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+            />
+          </label>
         </div>
       </div>
 

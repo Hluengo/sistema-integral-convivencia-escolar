@@ -51,6 +51,8 @@ export function useChecklistRegistration({
   const [regObservations, setRegObservations] = useState<string>("");
   const [regFileName, setRegFileName] = useState<string>("");
   const [regFile, setRegFile] = useState<File | null>(null);
+  const [regText, setRegText] = useState("");
+  const [regActionDate, setRegActionDate] = useState(nowDateOnly());
   const [isSavingRegistration, setIsSavingRegistration] = useState(false);
   const [registrationError, setRegistrationError] = useState<string | null>(
     null,
@@ -72,6 +74,8 @@ export function useChecklistRegistration({
       setRegName(item.registradoPor || getResponsableName());
       setRegObservations(item.observaciones || "");
       setRegFileName(item.documentoNombre || "");
+      setRegText("");
+      setRegActionDate(nowDateOnly());
       const latestMilestone = causa.bitacora
         .filter(
           (entry) =>
@@ -119,7 +123,7 @@ export function useChecklistRegistration({
 
         const newLog: BitacoraEntry = {
           id: `${isRectification ? "b_step_edit" : "b_step"}_${crypto.randomUUID()}`,
-          fecha: nowIso(),
+          fecha: regActionDate ? `${regActionDate}T12:00:00.000Z` : nowIso(),
           tipo: isRectification ? "Otro" : getChecklistEntryType(itemLabel),
           titulo: `${isRectification ? "Rectificación de Hito" : "Registro de Hito"}: ${itemLabel}`,
           descripcion: isRectification
@@ -135,8 +139,14 @@ export function useChecklistRegistration({
 
         let documentoUrl = targetItem?.documentoUrl;
         let documentoNombre = targetItem?.documentoNombre;
+        const textFile = regText.trim()
+          ? new File([regText], "evidencia-pegada.txt", {
+              type: "text/plain",
+            })
+          : null;
+        const evidenceFile = regFile ?? textFile;
 
-        if (regFile) {
+        if (evidenceFile) {
           const scope =
             documentScope === "incidente" && causa.incidenteId
               ? "incidente"
@@ -148,11 +158,11 @@ export function useChecklistRegistration({
           );
           const documentPath = await uploadDocument(
             ownerId,
-            regFile,
+            evidenceFile,
             "documentos",
           );
           documentoUrl = documentPath;
-          documentoNombre = regFile.name;
+          documentoNombre = evidenceFile.name;
           newLog.documentoAdjunto = documentPath;
         }
 
@@ -163,7 +173,8 @@ export function useChecklistRegistration({
           return {
             ...item,
             completado: true,
-            fechaCompletado: item.fechaCompletado || nowDateOnly(),
+            fechaCompletado:
+              item.fechaCompletado || regActionDate || nowDateOnly(),
             registradoPor: responsable,
             observaciones: trimmedObservations,
             documentoNombre,
@@ -183,6 +194,8 @@ export function useChecklistRegistration({
         setRegObservations("");
         setRegFileName("");
         setRegFile(null);
+        setRegText("");
+        setRegActionDate(nowDateOnly());
       } catch (error) {
         setRegistrationError(
           error instanceof Error
@@ -201,6 +214,8 @@ export function useChecklistRegistration({
       privacyMode,
       regFile,
       regName,
+      regText,
+      regActionDate,
       regObservations,
       documentScope,
     ],
@@ -265,6 +280,10 @@ export function useChecklistRegistration({
     regFileName,
     setRegFileName,
     regFile,
+    regText,
+    setRegText,
+    regActionDate,
+    setRegActionDate,
     documentScope,
     setDocumentScope,
     isSavingRegistration,

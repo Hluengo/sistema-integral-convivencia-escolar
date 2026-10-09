@@ -10,17 +10,18 @@ export const STORAGE_BUCKET = "documentos_convivencia";
 const SIGNED_URL_TTL_SECONDS = 3600;
 const MAX_DOCUMENT_BYTES = 10 * 1024 * 1024;
 export const DOCUMENT_UPLOAD_ACCEPT =
-  ".pdf,.md,.doc,.docx,.jpg,.jpeg,.png,.webp,application/pdf,text/markdown,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp";
+  ".pdf,.md,.doc,.docx,.txt,.jpg,.jpeg,.png,.webp,application/pdf,text/markdown,text/plain,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/jpeg,image/png,image/webp";
 export const DOCUMENT_UPLOAD_HELPER_TEXT =
-  "PDF, Markdown, Word o imagen (JPG, PNG o WEBP). Máximo 10 MB.";
+  "PDF, Markdown, Word, texto o imagen (JPG, PNG o WEBP). Máximo 10 MB.";
 export const DOCUMENT_UPLOAD_PLACEHOLDER =
-  "Seleccionar PDF, Markdown, Word o imagen";
+  "Seleccionar PDF, Markdown, Word, texto o imagen";
 
 const ALLOWED_DOCUMENT_EXTENSIONS = new Set([
   "pdf",
   "md",
   "doc",
   "docx",
+  "txt",
   "jpg",
   "jpeg",
   "png",

@@ -2,11 +2,14 @@
 
 import { useState, type FormEvent, type ReactNode } from "react";
 import { NotebookPen, Plus, X } from "lucide-react";
+import { nowDateOnly } from "../lib/dateUtils";
 import Button from "./Button";
 
 interface HistoryEntryFormInput {
   title: string;
   description: string;
+  actionDate: string;
+  documentText: string;
 }
 
 interface HistoryEntryFormProps {
@@ -42,12 +45,16 @@ export default function HistoryEntryForm({
   };
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [actionDate, setActionDate] = useState(nowDateOnly());
+  const [documentText, setDocumentText] = useState("");
 
   const closeForm = () => {
     if (isSaving) return;
     setIsOpen(false);
     setTitle("");
     setDescription("");
+    setActionDate(nowDateOnly());
+    setDocumentText("");
     onResetError();
     onClose?.();
   };
@@ -55,7 +62,7 @@ export default function HistoryEntryForm({
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     try {
-      await onSave({ title, description });
+      await onSave({ title, description, actionDate, documentText });
       closeForm();
     } catch {
       // El error tipado de la mutación se muestra debajo del formulario.
@@ -110,27 +117,46 @@ export default function HistoryEntryForm({
         </button>
       </div>
 
-      <div>
-        <div className="mb-1.5 flex items-center justify-between gap-3">
-          <label
-            htmlFor={titleId}
-            className="font-semibold text-neutral-700 text-sm"
-          >
-            Título
-          </label>
-          <span className="text-neutral-400 text-xs">{title.length}/120</span>
+      <div className="grid gap-4 md:grid-cols-[minmax(0,1.5fr)_12rem] md:items-end">
+        <div>
+          <div className="mb-1.5 flex items-center justify-between gap-3">
+            <label
+              htmlFor={titleId}
+              className="font-semibold text-neutral-700 text-sm"
+            >
+              Título
+            </label>
+            <span className="text-neutral-400 text-xs">{title.length}/120</span>
+          </div>
+          <input
+            id={titleId}
+            aria-label="Título de la entrada"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            maxLength={120}
+            required
+            disabled={isSaving}
+            placeholder="Ej.: Entrevista con apoderado"
+            className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-neutral-900 text-sm outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
+          />
         </div>
-        <input
-          id={titleId}
-          aria-label="Título de la entrada"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          maxLength={120}
-          required
-          disabled={isSaving}
-          placeholder="Ej.: Entrevista con apoderado"
-          className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-neutral-900 text-sm outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
-        />
+        <div>
+          <label
+            htmlFor={`${idPrefix}-action-date`}
+            className="block font-semibold text-neutral-700 text-sm"
+          >
+            Fecha de la acción
+          </label>
+          <input
+            id={`${idPrefix}-action-date`}
+            aria-label="Fecha de la acción"
+            type="date"
+            value={actionDate}
+            onChange={(event) => setActionDate(event.target.value)}
+            disabled={isSaving}
+            className="mt-1 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-neutral-900 text-sm outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
+          />
+        </div>
       </div>
 
       <div>
@@ -150,7 +176,7 @@ export default function HistoryEntryForm({
           aria-label="Descripción"
           value={description}
           onChange={(event) => setDescription(event.target.value)}
-          rows={4}
+          rows={3}
           required
           disabled={isSaving}
           maxLength={2000}
@@ -159,7 +185,24 @@ export default function HistoryEntryForm({
         />
       </div>
 
-      {additionalFields}
+      <div className="grid items-start gap-4 md:grid-cols-2">
+        <div className="space-y-3">{additionalFields}</div>
+
+        <label className="space-y-1.5">
+          <span className="block font-semibold text-neutral-700 text-sm">
+            O pegar texto de evidencia (opcional)
+          </span>
+          <textarea
+            aria-label="Texto de evidencia adicional"
+            value={documentText}
+            onChange={(event) => setDocumentText(event.target.value)}
+            rows={4}
+            disabled={isSaving}
+            placeholder="Pega aquí el contenido de la evidencia..."
+            className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-neutral-900 text-sm outline-none transition placeholder:text-neutral-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
+          />
+        </label>
+      </div>
 
       {error && (
         <p

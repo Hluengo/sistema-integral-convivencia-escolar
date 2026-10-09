@@ -23,6 +23,11 @@ import { getApplicableChecklistItems } from "../../shared/lib/domain/investigati
 import { getPhaseTone } from "../../shared/lib/domain/phaseTones";
 import CausaNotificationPanel from "../causas/notificacionDocgen/CausaNotificationPanel";
 import RegistrationForm from "./RegistrationForm";
+import HistoryEntryForm from "../../shared/ui/HistoryEntryForm";
+import {
+  DOCUMENT_UPLOAD_ACCEPT,
+  DOCUMENT_UPLOAD_PLACEHOLDER,
+} from "../../shared/api/services/storage.service";
 import { useTimelineContext } from "../../shared/lib/useTimelineContext";
 import {
   openDocument,
@@ -85,8 +90,14 @@ export default function RutaYoloView({
   const [isLoadingPdf, setIsLoadingPdf] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isDocumentExpanded, setIsDocumentExpanded] = useState(false);
+  const [additionalEvidenceFile, setAdditionalEvidenceFile] =
+    useState<File | null>(null);
+  const [additionalEvidenceFileName, setAdditionalEvidenceFileName] =
+    useState("");
   const {
     currentRole,
+    documentScope,
+    setDocumentScope,
     registeringItemId,
     setRegisteringItemId,
     regName,
@@ -95,6 +106,10 @@ export default function RutaYoloView({
     setRegObservations,
     regFileName,
     regFile,
+    regText,
+    setRegText,
+    regActionDate,
+    setRegActionDate,
     handleStartRegister,
     handleFileChange,
     handleSaveRegistration,
@@ -112,6 +127,20 @@ export default function RutaYoloView({
   );
   const selectedItem =
     phaseItems.find((item) => item.id === selectedItemId) ?? null;
+  const evidenceEntries = useMemo(
+    () =>
+      selectedItem?.id === "chk_inv_2"
+        ? causa.bitacora
+            .filter(
+              (entry) =>
+                entry.tipo === "Evidencia" ||
+                entry.titulo === `Registro de Hito: ${selectedItem.label}` ||
+                entry.titulo === `Rectificación de Hito: ${selectedItem.label}`,
+            )
+            .sort((a, b) => a.fecha.localeCompare(b.fecha))
+        : [],
+    [causa.bitacora, selectedItem?.id, selectedItem?.label],
+  );
   const isNotification = selectedItem?.id === "chk_rec_3";
   const isEditing = selectedItem
     ? registeringItemId === selectedItem.id
@@ -422,6 +451,10 @@ export default function RutaYoloView({
                     regObservations={regObservations}
                     setRegObservations={setRegObservations}
                     regFile={regFile}
+                    regText={regText}
+                    setRegText={setRegText}
+                    regActionDate={regActionDate}
+                    setRegActionDate={setRegActionDate}
                     handleFileChange={handleFileChange}
                     onCancel={() => setRegisteringItemId(null)}
                     onSubmit={() =>
@@ -434,7 +467,7 @@ export default function RutaYoloView({
 
               {selectedItem &&
                 !isNotification &&
-                selectedItem.completado &&
+                (selectedItem.completado || selectedItem.id === "chk_inv_2") &&
                 !isEditing && (
                   <div className="space-y-4">
                     <div className="grid gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-xs sm:grid-cols-2">
@@ -502,20 +535,187 @@ export default function RutaYoloView({
                         />
                       </div>
                     )}
-                    {!isLoadingPdf && !pdfUrl && (
-                      <div className="flex min-h-40 flex-col items-center justify-center rounded-xl border border-dashed border-neutral-300 bg-neutral-50 text-center">
-                        <Upload
-                          className="size-7 text-neutral-400"
-                          aria-hidden="true"
-                        />
-                        <p className="mt-2 font-semibold text-neutral-700 text-sm">
-                          Este hito no tiene un PDF adjunto.
-                        </p>
-                        <p className="mt-1 text-neutral-500 text-xs">
-                          Puedes editar el hito para adjuntar el documento.
-                        </p>
-                      </div>
+                    {!isLoadingPdf &&
+                      !pdfUrl &&
+                      evidenceEntries.length === 0 && (
+                        <div className="flex min-h-40 flex-col items-center justify-center rounded-xl border border-dashed border-neutral-300 bg-neutral-50 text-center">
+                          <Upload
+                            className="size-7 text-neutral-400"
+                            aria-hidden="true"
+                          />
+                          <p className="mt-2 font-semibold text-neutral-700 text-sm">
+                            Este hito no tiene un PDF adjunto.
+                          </p>
+                          <p className="mt-1 text-neutral-500 text-xs">
+                            Puedes editar el hito para adjuntar el documento.
+                          </p>
+                        </div>
+                      )}
+
+                    {evidenceEntries.length > 0 && (
+                      <section className="rounded-xl border border-brand-200 bg-brand-50/30 p-4">
+                        <div className="mb-3 flex items-center justify-between gap-3 border-brand-100 border-b pb-3">
+                          <div>
+                            <h4 className="font-bold text-brand-950 text-sm">
+                              Hilo de acciones y evidencias
+                            </h4>
+                            <p className="mt-1 text-brand-900/70 text-xs">
+                              {evidenceEntries.length} registro
+                              {evidenceEntries.length === 1 ? "" : "s"} asociado
+                              {evidenceEntries.length === 1 ? "" : "s"} a este
+                              hito.
+                            </p>
+                          </div>
+                        </div>
+                        <ol className="space-y-3">
+                          {evidenceEntries.map((entry, index) => (
+                            <li
+                              key={entry.id}
+                              className="relative rounded-lg border border-neutral-200 bg-white p-3"
+                            >
+                              <div className="flex items-start gap-3">
+                                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-100 font-bold text-brand-700 text-xs">
+                                  {index + 1}
+                                </span>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <h5 className="font-semibold text-neutral-900 text-sm">
+                                      {entry.titulo}
+                                    </h5>
+                                    <time
+                                      className="text-neutral-500 text-xs"
+                                      dateTime={entry.fecha}
+                                    >
+                                      {entry.fecha.slice(0, 10)}
+                                    </time>
+                                  </div>
+                                  <p className="mt-2 whitespace-pre-wrap text-neutral-700 text-xs">
+                                    {entry.descripcion}
+                                  </p>
+                                  {entry.participantes.length > 0 && (
+                                    <p className="mt-2 text-neutral-500 text-xs">
+                                      Responsable:{" "}
+                                      {entry.participantes.join(", ")}
+                                    </p>
+                                  )}
+                                  {entry.documentoAdjunto && (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        void openDocument(
+                                          entry.documentoAdjunto!,
+                                        )
+                                      }
+                                      className="mt-3 inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-brand-200 px-2.5 py-1.5 font-semibold text-brand-700 text-xs hover:bg-brand-50"
+                                    >
+                                      <Download
+                                        className="size-3.5"
+                                        aria-hidden="true"
+                                      />
+                                      Abrir evidencia adjunta
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            </li>
+                          ))}
+                        </ol>
+                      </section>
                     )}
+
+                    {selectedItem.id === "chk_inv_2" &&
+                      currentRole !== "docente" && (
+                        <HistoryEntryForm
+                          idPrefix="additional-evidence"
+                          isSaving={isCreatingManualLog}
+                          error={manualLogError}
+                          helperText="Agrega otra evidencia sin reemplazar la ya registrada. Cada registro quedará en el historial."
+                          onSave={async ({
+                            title,
+                            description,
+                            actionDate,
+                            documentText,
+                          }) => {
+                            const pastedEvidence = documentText.trim()
+                              ? new File(
+                                  [documentText],
+                                  "evidencia-pegada.txt",
+                                  {
+                                    type: "text/plain",
+                                  },
+                                )
+                              : null;
+                            await createManualLog({
+                              title,
+                              description,
+                              type: "Evidencia",
+                              participants: "Equipo de Convivencia Escolar",
+                              documentFile:
+                                additionalEvidenceFile ?? pastedEvidence,
+                              documentScope,
+                              actionDate,
+                            });
+                            setAdditionalEvidenceFile(null);
+                            setAdditionalEvidenceFileName("");
+                          }}
+                          onResetError={resetManualLogError}
+                          additionalFields={
+                            <>
+                              <label className="space-y-1.5">
+                                <span className="block font-semibold text-neutral-700 text-sm">
+                                  Documento de evidencia (opcional)
+                                </span>
+                                <span className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border-2 border-dashed border-neutral-300 bg-white px-3 py-2.5 text-neutral-600 text-sm transition hover:border-brand-300 hover:bg-brand-50/40">
+                                  <Upload
+                                    className="size-4 text-brand-600"
+                                    aria-hidden="true"
+                                  />
+                                  <span className="truncate">
+                                    {additionalEvidenceFileName ||
+                                      DOCUMENT_UPLOAD_PLACEHOLDER}
+                                  </span>
+                                  <input
+                                    aria-label="Documento de evidencia adicional"
+                                    type="file"
+                                    className="sr-only"
+                                    accept={DOCUMENT_UPLOAD_ACCEPT}
+                                    onChange={(event) => {
+                                      const file =
+                                        event.target.files?.[0] ?? null;
+                                      setAdditionalEvidenceFile(file);
+                                      setAdditionalEvidenceFileName(
+                                        file?.name ?? "",
+                                      );
+                                      resetManualLogError();
+                                    }}
+                                  />
+                                </span>
+                              </label>
+                              {causa.incidenteId && (
+                                <label className="flex min-h-11 cursor-pointer items-start gap-2 rounded-lg border border-brand-200 bg-brand-50/50 p-2.5 text-10px text-brand-950">
+                                  <input
+                                    aria-label="Compartir evidencia adicional con el incidente grupal"
+                                    type="checkbox"
+                                    checked={documentScope === "incidente"}
+                                    onChange={(event) =>
+                                      setDocumentScope(
+                                        event.target.checked
+                                          ? "incidente"
+                                          : "causa",
+                                      )
+                                    }
+                                    className="mt-0.5 h-5 w-5 rounded border-brand-300 text-brand-600 accent-brand-600 focus:ring-2 focus:ring-brand-500/20"
+                                  />
+                                  <span>
+                                    Compartir esta evidencia con el incidente
+                                    grupal.
+                                  </span>
+                                </label>
+                              )}
+                            </>
+                          }
+                        />
+                      )}
 
                     <div className="flex flex-wrap justify-end gap-2">
                       {selectedItem.documentoUrl && (

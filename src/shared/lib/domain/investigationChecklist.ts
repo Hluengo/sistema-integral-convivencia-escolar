@@ -174,15 +174,17 @@ export function getApplicableInvestigationItemIds(
 ): string[] {
   if (!isMediationActive(causa)) {
     return [
-      ...INVESTIGATION_BASE_ITEM_IDS,
+      INVESTIGATION_BASE_ITEM_IDS[0],
       ...INVESTIGATION_INTERVIEW_ITEM_IDS,
+      INVESTIGATION_BASE_ITEM_IDS[1],
     ];
   }
 
   const outcome = getMediationOutcome(causa.checklistDebidoProceso);
   const ids = [
-    ...INVESTIGATION_BASE_ITEM_IDS,
+    INVESTIGATION_BASE_ITEM_IDS[0],
     ...INVESTIGATION_INTERVIEW_ITEM_IDS,
+    INVESTIGATION_BASE_ITEM_IDS[1],
     ...MEDIATION_FLOW_ITEM_IDS,
     ...INVESTIGATION_REINFORCED_ITEM_IDS,
   ];
@@ -215,8 +217,7 @@ export function getInvestigationChecklistModel(
   const checklist = causa.checklistDebidoProceso;
   const mediationActive = isMediationActive(causa);
   const mediationOutcome = getMediationOutcome(checklist);
-  const applicableItemIds = getApplicableInvestigationItemIds(causa);
-  const applicableItems = filterChecklistByIds(checklist, applicableItemIds);
+  const applicableItems = getApplicableInvestigationItems(causa);
   const progress = getInvestigationChecklistProgress(causa);
 
   return {
@@ -272,10 +273,12 @@ export function getApplicableChecklistItems(
 export function getApplicableInvestigationItems(
   causa: CausaChecklistContext,
 ): ChecklistItem[] {
-  return filterChecklistByIds(
-    causa.checklistDebidoProceso,
-    getApplicableInvestigationItemIds(causa),
+  const itemsById = new Map(
+    causa.checklistDebidoProceso.map((item) => [item.id, item]),
   );
+  return getApplicableInvestigationItemIds(causa)
+    .map((id) => itemsById.get(id))
+    .filter((item): item is ChecklistItem => Boolean(item));
 }
 
 /**

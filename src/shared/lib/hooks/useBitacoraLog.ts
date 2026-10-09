@@ -20,6 +20,7 @@ export interface ManualBitacoraEntryInput {
   participants: string;
   documentFile?: File | null;
   documentScope?: DocumentScope;
+  actionDate?: string;
 }
 
 export function buildManualBitacoraEntry(input: {
@@ -28,6 +29,7 @@ export function buildManualBitacoraEntry(input: {
   type: BitacoraEntry["tipo"];
   participants: string;
   documentoAdjunto?: string;
+  fecha?: string;
 }): BitacoraEntry | null {
   const normalizedTitle = input.title.trim();
   const normalizedDescription = input.description.trim();
@@ -44,7 +46,7 @@ export function buildManualBitacoraEntry(input: {
 
   return {
     id: `b_custom_${crypto.randomUUID()}`,
-    fecha: nowIso(),
+    fecha: input.fecha || nowIso(),
     tipo: input.type,
     titulo: normalizedTitle,
     descripcion: normalizedDescription,
@@ -67,6 +69,7 @@ export function useBitacoraLog({ causa, onUpdateCausa }: UseBitacoraLogArgs) {
       participants: participantText,
       documentFile,
       documentScope = "causa",
+      actionDate,
     }: ManualBitacoraEntryInput): Promise<void> => {
       if (isCreatingManualLog) return;
       setIsCreatingManualLog(true);
@@ -91,6 +94,7 @@ export function useBitacoraLog({ causa, onUpdateCausa }: UseBitacoraLogArgs) {
           type,
           participants: participantText,
           documentoAdjunto,
+          fecha: actionDate ? `${actionDate}T12:00:00.000Z` : undefined,
         });
         if (!newEntry) return;
         newEntry.compartidoGrupal = scope === "incidente";

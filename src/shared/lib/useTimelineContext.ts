@@ -24,6 +24,10 @@ interface TimelineContextValue {
   regFileName: string;
   setRegFileName: React.Dispatch<React.SetStateAction<string>>;
   regFile: File | null;
+  regText: string;
+  setRegText: React.Dispatch<React.SetStateAction<string>>;
+  regActionDate: string;
+  setRegActionDate: React.Dispatch<React.SetStateAction<string>>;
   isSavingRegistration: boolean;
   registrationError: string | null;
   documentScope: "causa" | "incidente";
