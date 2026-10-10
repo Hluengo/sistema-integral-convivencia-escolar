@@ -172,18 +172,19 @@ if (rateLimitMap.size > 10000) {
 **Prioridad:** MEDIA
 **Corregible localmente:** Sí
 
-### M-02: CSP con `'unsafe-inline'` y `'unsafe-eval'`
+### M-02: CSP con `'unsafe-inline'` y `'unsafe-eval'` (resuelto)
 
-**Ubicación:** `vercel.json:39`
+**Ubicación histórica:** `vercel.json:39`
+**Estado:** Resuelto. La CSP vigente elimina ambos permisos de `script-src`.
 **Evidencia:**
 
 ```json
-"Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; ..."
+"Content-Security-Policy": "default-src 'self'; script-src 'self'; ..."
 ```
 
-**Impacto:** Permite ejecución de scripts inline arbitrarios. Si hay un XSS, no hay defensa por CSP.
+**Impacto histórico:** Permitía ejecución de scripts inline/evaluados. La configuración actual reduce ese riesgo.
 **Probabilidad:** BAJA (React escapa por defecto), pero si hay algún `dangerouslySetInnerHTML` (revisar MarkdownRenderer), el CSP no protege.
-**Recomendación:** Evaluar si `'unsafe-eval'` puede eliminarse (React 19 no lo requiere en producción). `'unsafe-inline'` es necesario para bundles Vite.
+**Resolución:** Se eliminó `'unsafe-eval'` de `script-src`; `'unsafe-inline'` solo permanece en `style-src`.
 **Esfuerzo:** 1 hora (requiere prueba de build con CSP estricto)
 **Prioridad:** MEDIA
 **Corregible localmente:** Sí

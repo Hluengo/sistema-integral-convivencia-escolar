@@ -168,6 +168,42 @@ export async function fetchUsageStats(): Promise<UsageStatsSummary> {
   };
 }
 
+export interface TeacherImportSummary {
+  fileName: string;
+  rows: number;
+  inserted: number;
+  skippedExisting: number;
+  emptyRows: number;
+  rosterSize: number;
+  errors: string[];
+}
+
+export async function importTeacherWorkbook(
+  file: File,
+): Promise<TeacherImportSummary> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData.session?.access_token;
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await fetch("/api/admin/profesores/import", {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  const payload: unknown = await response.json().catch(() => null);
+  if (!response.ok) {
+    const message =
+      payload &&
+      typeof payload === "object" &&
+      "error" in payload &&
+      typeof payload.error === "string"
+        ? payload.error
+        : "No fue posible importar la nómina docente.";
+    throw new Error(message);
+  }
+  return payload as TeacherImportSummary;
+}
+
 export interface OwnImportSummary {
   coursesInserted: number;
   studentsInserted: number;

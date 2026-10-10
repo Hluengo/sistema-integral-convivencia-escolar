@@ -291,3 +291,62 @@ describe("importOwnTenantBase", () => {
     );
   });
 });
+
+describe("importTeacherWorkbook", () => {
+  it("envía FormData con el archivo y devuelve el resumen", async () => {
+    let capturedUrl = "";
+    let capturedBody: FormData | undefined;
+    const result = await withAdminMocks({
+      sessionToken: "token-1",
+      fetch: async (url, init) => {
+        capturedUrl = url;
+        capturedBody = init?.body as FormData;
+        return jsonResponse({
+          fileName: "profesores.xlsx",
+          rows: 2,
+          inserted: 1,
+          skippedExisting: 1,
+          emptyRows: 0,
+          rosterSize: 42,
+          errors: [],
+        });
+      },
+      fn: async () => {
+        const { importTeacherWorkbook } = await import("./admin.service");
+        const file = new File(["x"], "profesores.xlsx", {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+        return importTeacherWorkbook(file);
+      },
+    });
+    assert.equal(capturedUrl, "/api/admin/profesores/import");
+    assert.ok(capturedBody instanceof FormData);
+    assert.equal((capturedBody?.get("file") as File)?.name, "profesores.xlsx");
+    assert.deepEqual(result, {
+      fileName: "profesores.xlsx",
+      rows: 2,
+      inserted: 1,
+      skippedExisting: 1,
+      emptyRows: 0,
+      rosterSize: 42,
+      errors: [],
+    });
+  });
+
+  it("lanza error del servidor cuando falla", async () => {
+    await assert.rejects(
+      withAdminMocks({
+        sessionToken: "token-1",
+        fetch: async () => jsonResponse({ error: "Solo .xlsx" }, 400),
+        fn: async () => {
+          const { importTeacherWorkbook } = await import("./admin.service");
+          const file = new File(["x"], "profesores.xlsx", {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          });
+          return importTeacherWorkbook(file);
+        },
+      }),
+      /Solo \.xlsx/,
+    );
+  });
+});

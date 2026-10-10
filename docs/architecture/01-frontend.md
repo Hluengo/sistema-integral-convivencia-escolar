@@ -4,7 +4,7 @@
 
 ## Stack
 
-React 19 + TypeScript 5.8 + Vite 6 + Tailwind v4 + Zustand 5 + React Query 5
+React 19 + TypeScript 5.8 + Vite 8 + Tailwind v4 + Zustand 5 + React Query 5
 
 ## Component Tree
 

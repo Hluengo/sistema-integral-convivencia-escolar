@@ -19,6 +19,7 @@ export interface Student {
   full_name: string;
   course_id: string;
   rut: string;
+  apoderado_nombre?: string | null;
   created_at: string;
 }
 
@@ -79,7 +80,7 @@ export async function fetchStudentsByCourse(
 
   const { data, error } = await supabase
     .from("students")
-    .select("id,full_name,course_id,rut,created_at")
+    .select("id,full_name,course_id,rut,apoderado_nombre,created_at")
     .eq("course_id", courseId)
     .order("full_name", { ascending: true });
 
@@ -92,6 +93,7 @@ export async function fetchStudentsByCourse(
     ...row,
     course_id: row.course_id ?? "",
     rut: row.rut ?? "",
+    apoderado_nombre: row.apoderado_nombre ?? null,
     created_at: row.created_at ?? "",
   }));
 }
@@ -102,7 +104,9 @@ export async function fetchStudentsByCourse(
 export async function fetchStudentsWithCourses(): Promise<StudentWithCourse[]> {
   const { data, error } = await supabase
     .from("students")
-    .select("id,full_name,course_id,rut,created_at,courses(name, level)")
+    .select(
+      "id,full_name,course_id,rut,apoderado_nombre,created_at,courses(name, level)",
+    )
     .order("full_name", { ascending: true });
 
   if (error) {
@@ -120,6 +124,7 @@ export async function fetchStudentsWithCourses(): Promise<StudentWithCourse[]> {
       full_name: row.full_name as string,
       course_id: row.course_id as string,
       rut: row.rut as string,
+      apoderado_nombre: row.apoderado_nombre as string | null,
       created_at: row.created_at as string,
       course_name: courses?.name ?? "Sin curso",
       course_level: courses?.level ?? null,

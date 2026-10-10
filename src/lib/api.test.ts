@@ -286,6 +286,13 @@ describe("API endpoints", () => {
     });
   });
 
+  describe("POST /api/admin/profesores/import", () => {
+    it("returns 401 without auth", async () => {
+      const res = await post("/api/admin/profesores/import", {});
+      assert.equal(res.status, 401);
+    });
+  });
+
   describe("POST /api/notificaciones", () => {
     it("returns 401 without auth for citation and document delivery", async () => {
       const citation = await post("/api/notificaciones/citacion", {

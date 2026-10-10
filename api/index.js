@@ -1106,7 +1106,7 @@ var init_disciplinaryPdfAnalysis = __esm({
     PARSER_VERSION = "disciplinary-pdf-parser-v1";
     PDF_BUCKET = "disciplinary-processes";
     MAX_PDF_BYTES = 10 * 1024 * 1024;
-    MAX_PDF_PAGES = 80;
+    MAX_PDF_PAGES = 200;
     MAX_CONFIRMED_ANNOTATIONS = 300;
     MAX_CONFIRMED_ANNOTATION_TEXT = 4e3;
     NodeDomMatrixPolyfill = class _NodeDomMatrixPolyfill {
@@ -1218,6 +1218,336 @@ var init_disciplinaryPdfAnalysis = __esm({
     NodePath2DPolyfill = class {
       addPath() {}
     };
+  },
+});
+
+// server/lib/bulkDisciplinaryPdf.ts
+import { createHash as createHash2 } from "node:crypto";
+function matchTeacherName(captured, roster) {
+  if (!captured || roster.length === 0) return null;
+  const source = ` ${normalize(captured)} `;
+  let best = null;
+  let bestLength = 0;
+  for (const teacher of roster) {
+    const key = normalize(teacher);
+    if (!key || !source.includes(` ${key} `)) continue;
+    if (key.length > bestLength) {
+      best = teacher;
+      bestLength = key.length;
+    }
+  }
+  return best;
+}
+function normalize(value) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+function bulkNameKey(value) {
+  return normalize(value).split(" ").sort().join(" ");
+}
+function chunkQueryIds(ids, size = BULK_QUERY_CHUNK_SIZE) {
+  const chunks = [];
+  for (let index = 0; index < ids.length; index += size) {
+    chunks.push(ids.slice(index, index + size));
+  }
+  return chunks;
+}
+function bulkCourseKey(value) {
+  const text = normalize(value).replace(/\b(basico|basica)\b/g, "basico");
+  const numberFirst = text.match(/^(\d+)\s*([a-z])\s*(medio|basico)$/);
+  if (numberFirst)
+    return `${numberFirst[1]} ${numberFirst[3]} ${numberFirst[2]}`;
+  const levelFirst = text.match(/^(\d+)\s*(medio|basico)\s*([a-z])$/);
+  return levelFirst
+    ? `${levelFirst[1]} ${levelFirst[2]} ${levelFirst[3]}`
+    : text;
+}
+function bulkSuggestedLetterType(negativeCount, currentLetterType) {
+  const suggested =
+    negativeCount >= 15
+      ? "Ficha de Derivaci\xF3n"
+      : negativeCount >= 10
+        ? "Carta de Compromiso Conductual"
+        : negativeCount >= 5
+          ? "Amonestaci\xF3n Escrita"
+          : null;
+  if (!suggested) return null;
+  const rank = {
+    "Amonestaci\xF3n Escrita": 1,
+    "Carta de Compromiso Conductual": 2,
+    "Ficha de Derivaci\xF3n": 3,
+  };
+  const currentRank = currentLetterType ? (rank[currentLetterType] ?? 0) : 0;
+  return rank[suggested] > currentRank ? suggested : null;
+}
+function annotationKey(type, date, text) {
+  const withoutPrefix = text.replace(/^\[[^\]]+\]\s*/, "");
+  const parts = withoutPrefix.split(/Anotaci[oó]n\s*:\s*/i);
+  const segments = parts.length > 1 ? parts.slice(1) : parts;
+  let best = "";
+  for (const segment of segments) {
+    const candidate = cleanCandidate(segment);
+    if (candidate.length > best.length) best = candidate;
+  }
+  return `${normalize(type)}|${date?.slice(0, 10) ?? ""}|${normalize(best)}`;
+}
+function selectNewBulkAnnotations(annotations, existingRecords) {
+  const existingCounts = /* @__PURE__ */ new Map();
+  for (const record of existingRecords) {
+    const key = annotationKey(
+      record.type ?? "",
+      record.date_time,
+      record.observation ?? "",
+    );
+    existingCounts.set(key, (existingCounts.get(key) ?? 0) + 1);
+  }
+  return annotations.filter((annotation) => {
+    const key = annotationKey(
+      annotation.tipo,
+      annotation.fecha_iso,
+      annotation.texto,
+    );
+    const remaining = existingCounts.get(key) ?? 0;
+    if (remaining === 0) return true;
+    existingCounts.set(key, remaining - 1);
+    return false;
+  });
+}
+function toIsoDate2(value) {
+  const match = value.match(/(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})/);
+  if (!match) return null;
+  const year = match[3].length === 2 ? `20${match[3]}` : match[3];
+  return `${year}-${match[2].padStart(2, "0")}-${match[1].padStart(2, "0")}`;
+}
+function titleCase(value) {
+  return value
+    .toLowerCase()
+    .replace(
+      /(^|[\s-])([a-záéíóúñ])/gi,
+      (_, prefix, letter) => `${prefix}${letter.toUpperCase()}`,
+    );
+}
+function extractCourse2(text) {
+  const match = text.match(
+    /\b(\d{1,2})\s*(?:°?\s*(MEDIO|BASICO|BÁSICO|BASICA|BÁSICA)\s*([A-Z])|([A-Z])\s*(MEDIO|BASICO|BÁSICO|BASICA|BÁSICA))\b/i,
+  );
+  if (!match) return "";
+  const levelValue = match[2] ?? match[5];
+  const letter = match[3] ?? match[4];
+  const level = normalize(levelValue) === "medio" ? "Medio" : "B\xE1sico";
+  return `${match[1]}\xB0 ${level} ${letter.toUpperCase()}`;
+}
+function splitBlocks(text) {
+  const blocks = [];
+  const normalized = text
+    .split(String.fromCharCode(12))
+    .join(" ")
+    .replace(/\s+(?=\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/g, "\n");
+  const lines = normalized
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  let current = "";
+  for (const line of lines) {
+    if (/^Ficha\s+Personal\b/i.test(line)) {
+      if (current) blocks.push({ block: current, page: null });
+      current = "";
+      continue;
+    }
+    if (/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b/.test(line)) {
+      if (current) blocks.push({ block: current, page: null });
+      current = line;
+    } else if (current) {
+      current += ` ${line}`;
+    }
+  }
+  if (current) blocks.push({ block: current, page: null });
+  return blocks;
+}
+function tokenKey(value) {
+  return normalize(value);
+}
+function stripTrailingStudentName(profesor, studentNames) {
+  if (!profesor) return profesor;
+  const candidates = (
+    Array.isArray(studentNames) ? studentNames : [studentNames]
+  ).filter((name) => !!name && name.trim().length > 0);
+  if (!candidates.length) return profesor;
+  const teacherWords = profesor.trim().split(/\s+/);
+  if (teacherWords.length <= 2) return profesor;
+  const normTeacher = teacherWords.map(tokenKey);
+  let cleaned = null;
+  let cleanedLength = 0;
+  for (const candidate of candidates) {
+    const studentWords = candidate.trim().split(/\s+/);
+    if (studentWords.length < 2) continue;
+    const maxK = Math.min(teacherWords.length - 2, studentWords.length);
+    for (let k = maxK; k >= 2; k -= 1) {
+      const tail = normTeacher.slice(-k).join(" ");
+      for (let start = 0; start < studentWords.length; start += 1) {
+        const rotated = [
+          ...studentWords.slice(start),
+          ...studentWords.slice(0, start),
+        ].map(tokenKey);
+        for (let i = 0; i + k <= rotated.length; i += 1) {
+          if (rotated.slice(i, i + k).join(" ") === tail && k > cleanedLength) {
+            cleaned = teacherWords.slice(0, -k).join(" ");
+            cleanedLength = k;
+          }
+        }
+      }
+    }
+  }
+  return cleaned ?? profesor;
+}
+function cleanCandidate(segment) {
+  return segment
+    .split(/\s*Profesor\s*:/i)[0]
+    .split(/\s*(?:Tipo|Categoria)\s*:/i)[0]
+    .replace(/\s+/g, " ")
+    .trim();
+}
+function extractFullAnnotationText(block) {
+  const segments = block.split(/Anotaci[óo]n\s*:\s*/i).slice(1);
+  let best = "";
+  for (const segment of segments) {
+    const candidate = cleanCandidate(segment);
+    if (candidate.length > best.length) best = candidate;
+  }
+  return best;
+}
+function cutTrailingFields(profesor) {
+  if (!profesor) return profesor;
+  const cut = profesor
+    .normalize("NFC")
+    .split(/\s*(?:Tipo|Categoria|Anotaci[óo]n)\s*:|\s*Ficha\s+Personal\b/i)[0]
+    .trim();
+  return cut.length > 0 ? cut : profesor;
+}
+function parseBlock(block, page, studentName = null, teacherNames = []) {
+  const text = block.normalize("NFC");
+  if (!/Tipo\s*:/i.test(text)) return null;
+  const date = text.match(/(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/)?.[1];
+  const fecha_iso = date ? toIsoDate2(date) : null;
+  const tipo = text.match(
+    /Tipo\s*:\s*(Negativa|Positiva|Informaci[óo]n)/i,
+  )?.[1];
+  if (!fecha_iso || !tipo) return null;
+  const categoria =
+    text
+      .match(
+        /Categoria\s*:\s*(RESPONSABILIDAD\s+Y\s+COMPORTAMIENTO|RESPONSABILIDAD|COMPORTAMIENTO|INFORMACI[ÓOÒ]N|ENTREVISTA)/i,
+      )?.[1]
+      ?.trim()
+      .toUpperCase() ?? "SIN CATEGORIA";
+  const rawProfesor =
+    text
+      .match(
+        /Profesor\s*:\s*(.+?)(?=\s*\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\s*(?:LUNES|MARTES|MIERCOLES|MIÉRCOLES|JUEVES|VIERNES|SABADO|SÁBADO|DOMINGO)\b|\s*(?:Tipo|Categoria|Anotaci[óo]n|Profesor)\s*:|\s*Ficha\s+Personal\b|\s*$)/i,
+      )?.[1]
+      ?.trim() ?? null;
+  const cleaned = stripTrailingStudentName(
+    cutTrailingFields(rawProfesor),
+    studentName,
+  );
+  const rosterHit = matchTeacherName(cleaned, teacherNames);
+  const profesor = rosterHit ?? cleaned;
+  const profesorReconocido =
+    teacherNames.length > 0 ? rosterHit !== null : void 0;
+  const texto = extractFullAnnotationText(text);
+  if (!texto) return null;
+  return {
+    fecha_iso,
+    tipo: tipo.toLowerCase().startsWith("neg")
+      ? "Negativa"
+      : tipo.toLowerCase().startsWith("pos")
+        ? "Positiva"
+        : "Informaci\xF3n",
+    categoria,
+    profesor,
+    profesorReconocido,
+    texto,
+    page_number: page,
+  };
+}
+async function parseBulkDisciplinaryPdf(buffer, teacherNames = []) {
+  const data = new Uint8Array(buffer);
+  const file_hash = createHash2("sha256").update(data).digest("hex");
+  const pages = await extractPdfPages(data);
+  const fullText = pages.join("\f");
+  const parts = fullText.split(/FICHA PERSONAL DE CONVIVENCIA ESCOLAR/i);
+  const students = [];
+  const warnings = [];
+  for (let index = 1; index < parts.length; index += 1) {
+    const previousLines = parts[index - 1]
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    const nombre =
+      (previousLines.at(-1) ?? "")
+        .split(String.fromCharCode(12))
+        .at(-1)
+        ?.trim() ?? "";
+    const body = parts[index];
+    const curso = extractCourse2(body);
+    if (!nombre || !curso) {
+      warnings.push(`Ficha ${index}: no se pudo identificar nombre o curso.`);
+      continue;
+    }
+    const seen = /* @__PURE__ */ new Set();
+    let duplicados_eliminados = 0;
+    const anotaciones = [];
+    for (const { block, page } of splitBlocks(body)) {
+      const annotation = parseBlock(block, page, nombre, teacherNames);
+      if (!annotation) continue;
+      const key = [
+        annotation.fecha_iso,
+        annotation.tipo,
+        normalize(annotation.texto).slice(0, 160),
+      ].join("|");
+      if (seen.has(key)) {
+        duplicados_eliminados += 1;
+        continue;
+      }
+      seen.add(key);
+      anotaciones.push(annotation);
+    }
+    students.push({
+      nombre: titleCase(nombre),
+      curso,
+      anotaciones,
+      duplicados_eliminados,
+    });
+  }
+  const allNames = students.map((student) => student.nombre);
+  for (const student of students) {
+    for (const annotation of student.anotaciones) {
+      annotation.profesor = stripTrailingStudentName(
+        annotation.profesor,
+        allNames,
+      );
+    }
+  }
+  if (!students.length) warnings.push("No se encontraron fichas en el PDF.");
+  return {
+    file_hash,
+    paginas: pages.length,
+    estudiantes: students,
+    warnings,
+  };
+}
+var BULK_QUERY_CHUNK_SIZE, BULK_QUERY_MAX_ROWS;
+var init_bulkDisciplinaryPdf = __esm({
+  "server/lib/bulkDisciplinaryPdf.ts"() {
+    "use strict";
+    init_disciplinaryPdfAnalysis();
+    BULK_QUERY_CHUNK_SIZE = 20;
+    BULK_QUERY_MAX_ROWS = 1e3;
   },
 });
 
@@ -1415,6 +1745,118 @@ var init_excelImport = __esm({
       media: "MEDIA",
       medio: "MEDIA",
     };
+  },
+});
+
+// server/api/services/teachersImport.ts
+var teachersImport_exports = {};
+__export(teachersImport_exports, {
+  importTeachers: () => importTeachers,
+  parseTeachersWorkbook: () => parseTeachersWorkbook,
+});
+import readXlsxFile2 from "read-excel-file/node";
+function normalizeText3(value) {
+  return typeof value === "string"
+    ? value.normalize("NFC").replace(/\s+/g, " ").trim()
+    : "";
+}
+function headerIndex2(row, candidates) {
+  return row.findIndex(
+    (cell) =>
+      typeof cell === "string" &&
+      candidates.some((c) => cell.trim().toLowerCase() === c),
+  );
+}
+async function parseTeachersWorkbook(buffer) {
+  const warnings = [];
+  const sheets = await readXlsxFile2(buffer);
+  const sheet =
+    sheets.find((entry) =>
+      ["profesores", "teachers", "docentes", "profesor"].includes(
+        entry.sheet.trim().toLowerCase(),
+      ),
+    ) ??
+    sheets[0] ??
+    null;
+  if (!sheet) throw new Error("El archivo no contiene hojas.");
+  if (sheet.data.length === 0) {
+    throw new Error("La hoja de profesores est\xE1 vac\xEDa.");
+  }
+  const nameIndex = headerIndex2(sheet.data[0] ?? [], [
+    "full_name",
+    "nombre",
+    "nombre completo",
+    "docente",
+    "profesor",
+    "teacher",
+    "name",
+  ]);
+  if (nameIndex === -1) {
+    throw new Error(
+      "Incluya la columna \xABfull_name\xBB en la hoja de profesores.",
+    );
+  }
+  const names = [];
+  let emptyRows = 0;
+  for (const row of sheet.data.slice(1)) {
+    const name = normalizeText3(row[nameIndex]);
+    if (!name) {
+      emptyRows += 1;
+      continue;
+    }
+    names.push(name);
+  }
+  return { names, emptyRows, warnings };
+}
+async function importTeachers(client, tenantId, file) {
+  const parsed = await parseTeachersWorkbook(file.buffer);
+  const seen = /* @__PURE__ */ new Set();
+  const unique = [];
+  for (const name of parsed.names) {
+    const key = bulkNameKey(name);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(name);
+  }
+  const { data: existing, error: existingError } = await client
+    .from("teachers")
+    .select("full_name")
+    .eq("tenant_id", tenantId);
+  if (existingError) throw existingError;
+  const existingKeys = new Set(
+    (existing ?? []).map((row) => bulkNameKey(row.full_name)),
+  );
+  const fresh = unique.filter((name) => !existingKeys.has(bulkNameKey(name)));
+  const errors = [];
+  let inserted = 0;
+  if (fresh.length > 0) {
+    const { error: insertError } = await client
+      .from("teachers")
+      .insert(fresh.map((full_name) => ({ tenant_id: tenantId, full_name })));
+    if (insertError) {
+      errors.push(
+        insertError instanceof Error
+          ? insertError.message
+          : "No fue posible guardar la n\xF3mina.",
+      );
+    } else {
+      inserted = fresh.length;
+    }
+  }
+  return {
+    fileName: file.originalname,
+    rows: parsed.names.length,
+    inserted,
+    skippedExisting: unique.length - fresh.length,
+    emptyRows: parsed.emptyRows,
+    rosterSize: (existing ?? []).length + inserted,
+    errors,
+  };
+}
+var init_teachersImport = __esm({
+  "server/api/services/teachersImport.ts"() {
+    "use strict";
+    init_bulkDisciplinaryPdf();
   },
 });
 
@@ -4741,6 +5183,185 @@ var pilot_default = router10;
 import { Router as Router11 } from "express";
 import multer from "multer";
 import { createClient as createClient4 } from "@supabase/supabase-js";
+init_bulkDisciplinaryPdf();
+
+// server/lib/bulkCartaWorkflow.ts
+init_bulkDisciplinaryPdf();
+async function previewBulkCartas(
+  { supabase, tenantId, studentIds },
+  additionalNegatives = /* @__PURE__ */ new Map(),
+) {
+  if (!studentIds.length) return [];
+  const studentPages = await Promise.all(
+    chunkQueryIds(studentIds).map(async (chunk) => {
+      const { data, error } = await supabase
+        .from("students")
+        .select("id,full_name,course_id,apoderado_nombre")
+        .eq("tenant_id", tenantId)
+        .in("id", chunk)
+        .limit(BULK_QUERY_MAX_ROWS);
+      if (error) throw error;
+      return data ?? [];
+    }),
+  );
+  const students = studentPages.flat();
+  const courseIds = [
+    ...new Set(students.map((student) => student.course_id).filter(Boolean)),
+  ];
+  const coursePages = await Promise.all(
+    chunkQueryIds(courseIds).map(async (chunk) => {
+      const { data, error } = await supabase
+        .from("courses")
+        .select("id,name")
+        .eq("tenant_id", tenantId)
+        .in("id", chunk)
+        .limit(BULK_QUERY_MAX_ROWS);
+      if (error) throw error;
+      return data ?? [];
+    }),
+  );
+  const courseNames = new Map(
+    coursePages.flat().map((course) => [course.id, course.name]),
+  );
+  const recordPages = await Promise.all(
+    chunkQueryIds(studentIds).map(async (chunk) => {
+      const { data, error } = await supabase
+        .from("inspectorate_records")
+        .select("student_id,type")
+        .eq("tenant_id", tenantId)
+        .in("student_id", chunk)
+        .limit(BULK_QUERY_MAX_ROWS);
+      if (error) throw error;
+      return data ?? [];
+    }),
+  );
+  const records = recordPages.flat();
+  const cartaPages = await Promise.all(
+    chunkQueryIds(studentIds).map(async (chunk) => {
+      const { data, error } = await supabase
+        .from("cartas_disciplinarias")
+        .select("id,student_id,letter_type,emission_date,created_at,status")
+        .eq("tenant_id", tenantId)
+        .in("student_id", chunk)
+        .limit(BULK_QUERY_MAX_ROWS);
+      if (error) throw error;
+      return data ?? [];
+    }),
+  );
+  const cartas = cartaPages
+    .flat()
+    .sort(
+      (a, b) =>
+        (b.emission_date ?? "").localeCompare(a.emission_date ?? "") ||
+        (b.created_at ?? "").localeCompare(a.created_at ?? ""),
+    );
+  const cartaIds = [...new Set(cartas.map((carta) => carta.id))];
+  const eventPages = await Promise.all(
+    chunkQueryIds(cartaIds).map(async (chunk) => {
+      const { data, error } = await supabase
+        .from("carta_events")
+        .select("carta_id,event_type,created_at")
+        .eq("tenant_id", tenantId)
+        .in("carta_id", chunk)
+        .limit(BULK_QUERY_MAX_ROWS);
+      if (error) throw error;
+      return data ?? [];
+    }),
+  );
+  const events = eventPages
+    .flat()
+    .sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""));
+  const latestEvent = /* @__PURE__ */ new Map();
+  for (const event of events ?? []) {
+    if (!latestEvent.has(event.carta_id))
+      latestEvent.set(event.carta_id, event.event_type);
+  }
+  const activeCartaByStudent = /* @__PURE__ */ new Map();
+  for (const carta of cartas ?? []) {
+    if (carta.status === "Anulada" || latestEvent.get(carta.id) === "annulled")
+      continue;
+    if (!activeCartaByStudent.has(carta.student_id))
+      activeCartaByStudent.set(carta.student_id, carta);
+  }
+  const negativeCounts = /* @__PURE__ */ new Map();
+  for (const record of records ?? []) {
+    if (record.type === "Negativa") {
+      negativeCounts.set(
+        record.student_id,
+        (negativeCounts.get(record.student_id) ?? 0) + 1,
+      );
+    }
+  }
+  return (students ?? []).map((student) => {
+    const current = activeCartaByStudent.get(student.id);
+    const negativeCount =
+      (negativeCounts.get(student.id) ?? 0) +
+      (additionalNegatives.get(student.id) ?? 0);
+    return {
+      student,
+      course: courseNames.get(student.course_id) ?? student.course_id,
+      negativeCount,
+      current_letter: current?.letter_type ?? null,
+      pending_letter: bulkSuggestedLetterType(
+        negativeCount,
+        current?.letter_type ?? null,
+      ),
+    };
+  });
+}
+async function syncBulkPendingCartas(input) {
+  const { supabase, tenantId, actorUserId, sourceHash } = input;
+  const plan = await previewBulkCartas(input);
+  let created = 0;
+  for (const {
+    student,
+    course,
+    negativeCount,
+    pending_letter: letterType,
+  } of plan) {
+    if (!letterType) continue;
+    const { data: carta, error: insertError } = await supabase
+      .from("cartas_disciplinarias")
+      .insert({
+        student_id: student.id,
+        tenant_id: tenantId,
+        letter_type: letterType,
+        emission_date: /* @__PURE__ */ new Date().toISOString().slice(0, 10),
+        status: "Vigente",
+        emitted_by: "Inspector\xEDa",
+        supervisor_name: null,
+        apoderado_name: student.apoderado_nombre?.trim() || "Pendiente",
+        annotations_count: negativeCount,
+        student_name: student.full_name,
+        course,
+        regulation_basis: "RICE 2026 - Progresi\xF3n disciplinaria",
+        observations: `Carta pendiente sugerida por importaci\xF3n PDF masiva (${sourceHash}).`,
+      })
+      .select("id,student_id")
+      .single();
+    if (insertError || !carta)
+      throw insertError ?? new Error("No se pudo crear la carta pendiente.");
+    const { error: eventError } = await supabase.from("carta_events").insert({
+      carta_id: carta.id,
+      student_id: student.id,
+      tenant_id: tenantId,
+      event_type: "suggested",
+      event_detail:
+        "Carta sugerida por progresi\xF3n desde importaci\xF3n PDF masiva",
+      created_by: actorUserId,
+      metadata: {
+        source: "bulk_pdf",
+        sourceHash,
+        negativeCount,
+      },
+    });
+    if (eventError) throw eventError;
+    created += 1;
+  }
+  return created;
+}
+
+// server/api/routes/admin.ts
 var router11 = Router11();
 var ownUpload = multer({
   storage: multer.memoryStorage(),
@@ -4760,6 +5381,45 @@ var VALID_ROLES2 = [
   "staff",
 ];
 var EMAIL_RE3 = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+var PDF_MAGIC = [37, 80, 68, 70, 45];
+var BULK_MAX_ANNOTATIONS = 5e3;
+function hasPdfMagic(buffer) {
+  return PDF_MAGIC.every((byte, index) => buffer[index] === byte);
+}
+function isPdfUpload(file) {
+  return Boolean(
+    file?.buffer &&
+    file.mimetype === "application/pdf" &&
+    hasPdfMagic(file.buffer),
+  );
+}
+function safeFileName(name) {
+  if (typeof name !== "string") return "archivo.pdf";
+  const printable = name
+    .split("")
+    .filter((ch) => {
+      const code = ch.charCodeAt(0);
+      return code >= 32 && code !== 127;
+    })
+    .join("");
+  const base = printable.split(/[\\/]/).pop()?.trim() ?? "";
+  return base.slice(0, 128) || "archivo.pdf";
+}
+async function fetchExistingBulkRecords(client, tenantId, studentIds) {
+  const pages = await Promise.all(
+    chunkQueryIds(studentIds).map(async (chunk) => {
+      const { data, error } = await client
+        .from("inspectorate_records")
+        .select("student_id,type,date_time,observation")
+        .eq("tenant_id", tenantId)
+        .in("student_id", chunk)
+        .limit(BULK_QUERY_MAX_ROWS);
+      if (error) throw error;
+      return data ?? [];
+    }),
+  );
+  return pages.flat();
+}
 function invitationErrorStatus(message) {
   return /rate limit|too many requests|email rate/i.test(message) ? 429 : 500;
 }
@@ -5268,6 +5928,429 @@ router11.post("/admin/import", ownUpload.single("file"), async (req, res) => {
     res.status(status).json(clientErrorBody(message, status));
   }
 });
+router11.post(
+  "/admin/profesores/import",
+  ownUpload.single("file"),
+  async (req, res) => {
+    try {
+      const request2 = getRequest(req);
+      const client = getAdminClient3();
+      await assertFreshAdmin(client, request2);
+      const file = req.file;
+      if (!file) {
+        res.status(400).json({ error: "Adjunte un archivo .xlsx." });
+        return;
+      }
+      if (!file.originalname.toLowerCase().endsWith(".xlsx")) {
+        res.status(400).json({ error: "Solo se permiten archivos .xlsx." });
+        return;
+      }
+      const { importTeachers: importTeachers2 } = await Promise.resolve().then(
+        () => (init_teachersImport(), teachersImport_exports),
+      );
+      const result = await importTeachers2(client, request2.tenantId ?? "", {
+        buffer: file.buffer,
+        originalname: safeFileName(file.originalname),
+      });
+      await recordAudit(
+        client,
+        request2,
+        "teachers_roster_imported",
+        request2.tenantId ?? "",
+        null,
+        result,
+      );
+      res.json(result);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "No fue posible importar la n\xF3mina docente.";
+      res.status(500).json(clientErrorBody(message, 500));
+    }
+  },
+);
+async function loadTeacherNames(client, tenantId) {
+  const { data, error } = await client
+    .from("teachers")
+    .select("full_name")
+    .eq("tenant_id", tenantId);
+  if (error) return [];
+  return (data ?? [])
+    .map((row) => row.full_name)
+    .filter((name) => name.trim().length > 0);
+}
+router11.post(
+  "/admin/annotations/bulk-preview",
+  ownUpload.single("file"),
+  async (req, res) => {
+    try {
+      const request2 = getRequest(req);
+      const client = getAdminClient3();
+      await assertFreshAdmin(client, request2);
+      if (!isPdfUpload(req.file)) {
+        res.status(400).json({ error: "Adjunte un archivo PDF v\xE1lido." });
+        return;
+      }
+      const teacherNames = await loadTeacherNames(
+        client,
+        request2.tenantId ?? "",
+      );
+      const parsed = await parseBulkDisciplinaryPdf(
+        req.file.buffer,
+        teacherNames,
+      );
+      const detectedTotal = parsed.estudiantes.reduce(
+        (total, student) => total + student.anotaciones.length,
+        0,
+      );
+      if (detectedTotal > BULK_MAX_ANNOTATIONS) {
+        res.status(400).json({
+          error: "El PDF contiene demasiadas anotaciones para importar.",
+        });
+        return;
+      }
+      const { data: courses, error: coursesError } = await client
+        .from("courses")
+        .select("id,name,level")
+        .eq("tenant_id", request2.tenantId);
+      if (coursesError) throw coursesError;
+      const courseKeys = new Map(
+        (courses ?? []).map((course2) => [
+          bulkCourseKey(course2.name),
+          course2,
+        ]),
+      );
+      const detectedCourse = parsed.estudiantes[0]?.curso ?? "";
+      const course = courseKeys.get(bulkCourseKey(detectedCourse));
+      if (!course) {
+        res.status(422).json({
+          error: `No existe en este establecimiento el curso detectado "${detectedCourse}".`,
+          detected_course: detectedCourse,
+        });
+        return;
+      }
+      const { data: students, error: studentsError } = await client
+        .from("students")
+        .select("id,full_name,rut,course_id")
+        .eq("tenant_id", request2.tenantId)
+        .eq("course_id", course.id);
+      if (studentsError) throw studentsError;
+      const studentsByName = /* @__PURE__ */ new Map();
+      for (const student of students ?? []) {
+        const key = bulkNameKey(student.full_name);
+        studentsByName.set(key, [...(studentsByName.get(key) ?? []), student]);
+      }
+      const matchedStudentIds = parsed.estudiantes.flatMap((source) => {
+        const candidates = studentsByName.get(bulkNameKey(source.nombre)) ?? [];
+        return candidates.length === 1 ? [candidates[0].id] : [];
+      });
+      const existingRecords = matchedStudentIds.length
+        ? await fetchExistingBulkRecords(
+            client,
+            request2.tenantId ?? "",
+            matchedStudentIds,
+          )
+        : [];
+      const existingByStudent = /* @__PURE__ */ new Map();
+      for (const record of existingRecords ?? []) {
+        const records = existingByStudent.get(record.student_id) ?? [];
+        records.push(record);
+        existingByStudent.set(record.student_id, records);
+      }
+      const previewStudents = parsed.estudiantes.map((source) => {
+        const candidates = studentsByName.get(bulkNameKey(source.nombre)) ?? [];
+        const match = candidates.length === 1 ? candidates[0] : null;
+        return {
+          source_name: source.nombre,
+          student_id: match?.id ?? null,
+          matched_name: match?.full_name ?? null,
+          rut: match?.rut ?? null,
+          status:
+            candidates.length === 1
+              ? "matched"
+              : candidates.length > 1
+                ? "ambiguous"
+                : "missing",
+          annotation_count: source.anotaciones.length,
+          duplicates_removed: source.duplicados_eliminados,
+        };
+      });
+      const annotations = parsed.estudiantes.flatMap((source) => {
+        const candidates = studentsByName.get(bulkNameKey(source.nombre)) ?? [];
+        const match = candidates.length === 1 ? candidates[0] : null;
+        return match
+          ? selectNewBulkAnnotations(
+              source.anotaciones,
+              existingByStudent.get(match.id) ?? [],
+            ).map((annotation) => ({
+              ...annotation,
+              student_id: match.id,
+              student_name: match.full_name,
+            }))
+          : [];
+      });
+      const additionalNegatives = /* @__PURE__ */ new Map();
+      for (const annotation of annotations) {
+        if (annotation.tipo === "Negativa") {
+          additionalNegatives.set(
+            annotation.student_id,
+            (additionalNegatives.get(annotation.student_id) ?? 0) + 1,
+          );
+        }
+      }
+      const cartaPlan = await previewBulkCartas(
+        {
+          supabase: client,
+          tenantId: request2.tenantId ?? "",
+          studentIds: matchedStudentIds,
+        },
+        additionalNegatives,
+      );
+      const cartasByStudent = new Map(
+        cartaPlan.map((item) => [item.student.id, item]),
+      );
+      res.json({
+        file_name: safeFileName(req.file?.originalname),
+        file_hash: parsed.file_hash,
+        paginas: parsed.paginas,
+        detected_course: course.name,
+        course_id: course.id,
+        warnings: parsed.warnings,
+        students: previewStudents.map((student) => ({
+          ...student,
+          existing_count:
+            existingByStudent.get(student.student_id ?? "")?.length ?? 0,
+          new_count: annotations.filter(
+            (annotation) => annotation.student_id === student.student_id,
+          ).length,
+          current_letter:
+            cartasByStudent.get(student.student_id ?? "")?.current_letter ??
+            null,
+          pending_letter:
+            cartasByStudent.get(student.student_id ?? "")?.pending_letter ??
+            null,
+        })),
+        annotations,
+        summary: {
+          students_in_file: parsed.estudiantes.length,
+          students_in_database: students?.length ?? 0,
+          matched_students: previewStudents.filter(
+            (row) => row.status === "matched",
+          ).length,
+          missing_students: previewStudents.filter(
+            (row) => row.status === "missing",
+          ).length,
+          ambiguous_students: previewStudents.filter(
+            (row) => row.status === "ambiguous",
+          ).length,
+          annotations_detected: detectedTotal,
+          annotations_existing: existingRecords?.length ?? 0,
+          annotations_ready: annotations.length,
+          duplicates_removed: parsed.estudiantes.reduce(
+            (total, student) => total + student.duplicados_eliminados,
+            0,
+          ),
+        },
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "No fue posible analizar el PDF.";
+      res.status(500).json(clientErrorBody(message, 500));
+    }
+  },
+);
+router11.post(
+  "/admin/annotations/bulk-confirm",
+  ownUpload.single("file"),
+  async (req, res) => {
+    try {
+      const request2 = getRequest(req);
+      const client = getAdminClient3();
+      await assertFreshAdmin(client, request2);
+      const courseId = req.body?.course_id;
+      const fileHash = req.body?.file_hash;
+      if (
+        !isPdfUpload(req.file) ||
+        !isValidUuid(courseId) ||
+        typeof fileHash !== "string" ||
+        !/^[a-f0-9]{64}$/.test(fileHash)
+      ) {
+        res
+          .status(400)
+          .json({ error: "Vista previa de importaci\xF3n inv\xE1lida." });
+        return;
+      }
+      const teacherNames = await loadTeacherNames(
+        client,
+        request2.tenantId ?? "",
+      );
+      const parsed = await parseBulkDisciplinaryPdf(
+        req.file.buffer,
+        teacherNames,
+      );
+      if (parsed.file_hash !== fileHash) {
+        res
+          .status(400)
+          .json({ error: "El hash del PDF no coincide con la vista previa." });
+        return;
+      }
+      const { data: course, error: courseError } = await client
+        .from("courses")
+        .select("id,name")
+        .eq("id", courseId)
+        .eq("tenant_id", request2.tenantId)
+        .maybeSingle();
+      if (courseError) throw courseError;
+      if (!course) {
+        res
+          .status(404)
+          .json({ error: "Curso no encontrado en este establecimiento." });
+        return;
+      }
+      const { data: students, error: studentsError } = await client
+        .from("students")
+        .select("id,full_name,course_id")
+        .eq("tenant_id", request2.tenantId)
+        .eq("course_id", courseId);
+      if (studentsError) throw studentsError;
+      const studentsByName = /* @__PURE__ */ new Map();
+      for (const student of students ?? []) {
+        const key = bulkNameKey(student.full_name);
+        studentsByName.set(key, [...(studentsByName.get(key) ?? []), student]);
+      }
+      const matchOf = (source) =>
+        studentsByName.get(bulkNameKey(source.nombre)) ?? [];
+      const unresolvedSources = parsed.estudiantes.filter(
+        (source) => matchOf(source).length !== 1,
+      );
+      if (unresolvedSources.length > 0) {
+        res.status(409).json({
+          error: `Hay ${unresolvedSources.length} estudiantes sin coincidencia \xFAnica en este establecimiento; corrige el PDF y vuelve a intentarlo.`,
+          unresolved: unresolvedSources
+            .map((source) => source.nombre)
+            .slice(0, 50),
+        });
+        return;
+      }
+      if (parsed.warnings.length > 0) {
+        res.status(422).json({
+          error:
+            "El PDF contiene fichas con advertencias; corr\xEDgelas y vuelve a intentarlo.",
+          warnings: parsed.warnings.slice(0, 50),
+        });
+        return;
+      }
+      const matchedStudentIds = parsed.estudiantes.flatMap((source) => {
+        const candidates = studentsByName.get(bulkNameKey(source.nombre)) ?? [];
+        return candidates.length === 1 ? [candidates[0].id] : [];
+      });
+      const existingRecords = matchedStudentIds.length
+        ? await fetchExistingBulkRecords(
+            client,
+            request2.tenantId ?? "",
+            matchedStudentIds,
+          )
+        : [];
+      const existingByStudent = /* @__PURE__ */ new Map();
+      for (const record of existingRecords ?? []) {
+        const records = existingByStudent.get(record.student_id) ?? [];
+        records.push(record);
+        existingByStudent.set(record.student_id, records);
+      }
+      const newAnnotations = parsed.estudiantes.flatMap((source) => {
+        const candidates = studentsByName.get(bulkNameKey(source.nombre)) ?? [];
+        if (candidates.length !== 1) return [];
+        const student = candidates[0];
+        return selectNewBulkAnnotations(
+          source.anotaciones,
+          existingByStudent.get(student.id) ?? [],
+        ).map((annotation) => ({
+          ...annotation,
+          student_id: student.id,
+          student_name: student.full_name,
+        }));
+      });
+      const detectedTotal = parsed.estudiantes.reduce(
+        (total, student) => total + student.anotaciones.length,
+        0,
+      );
+      if (newAnnotations.length > BULK_MAX_ANNOTATIONS) {
+        res.status(400).json({
+          error: "El PDF contiene demasiadas anotaciones para importar.",
+        });
+        return;
+      }
+      const pdfPath = `bulk-pdf/${request2.tenantId}/${courseId}/${fileHash}`;
+      const { count: existingCount, error: existingError } = await client
+        .from("inspectorate_records")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", request2.tenantId)
+        .eq("pdf_file_path", pdfPath);
+      if (existingError) throw existingError;
+      if ((existingCount ?? 0) > 0) {
+        res
+          .status(409)
+          .json({ error: "Este PDF ya fue importado para este curso." });
+        return;
+      }
+      const rows = newAnnotations.map((annotation) => ({
+        student_id: annotation.student_id,
+        date_time: `${annotation.fecha_iso}T12:00:00.000Z`,
+        observation: `[${annotation.categoria}] ${annotation.texto}`,
+        type: annotation.tipo,
+        severity: "Leve",
+        registered_by:
+          annotation.profesor?.trim() || "PDF Importaci\xF3n Masiva",
+        created_by: request2.user?.sub ?? "",
+        tenant_id: request2.tenantId,
+        pdf_file_path: pdfPath,
+      }));
+      if (rows.length > 0) {
+        const { error: insertError } = await client
+          .from("inspectorate_records")
+          .insert(rows);
+        if (insertError) throw insertError;
+      }
+      const pendingCartas = await syncBulkPendingCartas({
+        supabase: client,
+        tenantId: request2.tenantId ?? "",
+        studentIds: matchedStudentIds,
+        actorUserId: request2.user?.sub ?? "",
+        sourceHash: fileHash,
+      });
+      const { error: auditError } = await client.from("audit_events").insert({
+        tenant_id: request2.tenantId,
+        actor_user_id: request2.user?.sub ?? "",
+        action: "annotations_bulk_imported",
+        entity_type: "annotation_bulk_import",
+        entity_id: courseId,
+        previous_values: null,
+        new_values: {
+          file_hash: fileHash,
+          course_id: courseId,
+          annotations: rows.length,
+          pending_cartas: pendingCartas,
+        },
+      });
+      if (auditError) throw auditError;
+      res.json({
+        imported: rows.length,
+        skipped: detectedTotal - newAnnotations.length,
+        course: course.name,
+        pending_cartas: pendingCartas,
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "No fue posible confirmar la importaci\xF3n.";
+      res.status(500).json(clientErrorBody(message, 500));
+    }
+  },
+);
 var admin_default = router11;
 
 // server/api/routes/platform.ts

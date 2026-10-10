@@ -25,15 +25,6 @@ async function login(page: Page, email: string, password: string) {
   await page.goto("/");
   await dismissWelcome(page);
 
-  const sidebar = page.getByRole("complementary", {
-    name: "Barra de navegación principal",
-  });
-  await expect(sidebar).toBeVisible({ timeout: 15000 });
-
-  const loginBtn = sidebar.getByRole("button", { name: "Iniciar sesión" });
-  await expect(loginBtn).toBeVisible({ timeout: 5000 });
-  await loginBtn.click();
-
   await expect(page.locator("#login-email")).toBeVisible({ timeout: 5000 });
   await page.fill("#login-email", email);
   await page.fill("#login-password", password);
@@ -87,11 +78,7 @@ test.describe("Convivencia - Phase 3 Membership Enforcement", () => {
     await page.getByRole("button", { name: "Cerrar sesión" }).click();
     await page.waitForTimeout(3000);
 
-    await expect(
-      sidebar.getByRole("button", { name: "Iniciar sesión" }),
-    ).toBeVisible({
-      timeout: 10000,
-    });
+    await expect(page.locator("#login-email")).toBeVisible({ timeout: 10000 });
   });
 
   test("transition mode: membership RPC runs and staff with active membership enters", async ({
@@ -133,11 +120,7 @@ test.describe("Convivencia - Phase 3 Membership Enforcement", () => {
     await page.getByRole("button", { name: "Cerrar sesión" }).click();
     await page.waitForTimeout(3000);
 
-    await expect(
-      sidebar.getByRole("button", { name: "Iniciar sesión" }),
-    ).toBeVisible({
-      timeout: 10000,
-    });
+    await expect(page.locator("#login-email")).toBeVisible({ timeout: 10000 });
     await expect(page.getByText("Vista: Panel de control")).toBeVisible({
       timeout: 10000,
     });
@@ -169,11 +152,7 @@ test.describe("Convivencia - Phase 3 Membership Enforcement", () => {
     await page.getByRole("button", { name: "Cerrar sesión" }).click();
     await page.waitForTimeout(3000);
 
-    await expect(
-      sidebar.getByRole("button", { name: "Iniciar sesión" }),
-    ).toBeVisible({
-      timeout: 10000,
-    });
+    await expect(page.locator("#login-email")).toBeVisible({ timeout: 10000 });
   });
 
   test("enforced mode: AccessDenied screen when account has no membership", async ({
@@ -210,13 +189,8 @@ test.describe("Convivencia - Phase 3 Membership Enforcement", () => {
     await page.getByRole("button", { name: "Cerrar sesión" }).click();
     await page.waitForTimeout(3000);
 
-    await expect(
-      sidebar.getByRole("button", { name: "Iniciar sesión" }),
-    ).toBeVisible({
-      timeout: 10000,
-    });
+    await expect(page.locator("#login-email")).toBeVisible({ timeout: 10000 });
 
-    const loginModal = page.locator("#login-email");
-    await expect(loginModal).not.toBeVisible();
+    await expect(page.locator("#login-email")).toBeVisible();
   });
 });

@@ -122,7 +122,7 @@ function SectionHeading({
         <span>{title}</span>
       </div>
       {hint ? (
-        <span className="shrink-0 text-slate-400 text-xs">{hint}</span>
+        <span className="shrink-0 text-slate-500 text-xs">{hint}</span>
       ) : null}
     </div>
   );

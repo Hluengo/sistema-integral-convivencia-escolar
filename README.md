@@ -11,9 +11,6 @@
     <a href="https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/ci.yml">
       <img src="https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/ci.yml?branch=master&label=CI&style=for-the-badge" alt="CI" />
     </a>
-    <a href="https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/lighthouse.yml">
-      <img src="https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/lighthouse.yml?branch=master&label=Lighthouse&style=for-the-badge" alt="Lighthouse" />
-    </a>
     <a href="https://github.com/Hluengo/sistema-integral-convivencia-escolar/blob/master/LICENSE">
       <img src="https://img.shields.io/github/license/Hluengo/sistema-integral-convivencia-escolar?style=for-the-badge" alt="Licencia" />
     </a>
@@ -21,7 +18,7 @@
   <p>
     <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=white" alt="React 19" />
     <img src="https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat&logo=typescript&logoColor=white" alt="TypeScript 5.8" />
-    <img src="https://img.shields.io/badge/Vite-6-646CFF?style=flat&logo=vite&logoColor=white" alt="Vite 6" />
+    <img src="https://img.shields.io/badge/Vite-8-646CFF?style=flat&logo=vite&logoColor=white" alt="Vite 8" />
     <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=flat&logo=tailwindcss&logoColor=white" alt="Tailwind CSS 4" />
     <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=flat&logo=supabase&logoColor=white" alt="Supabase" />
     <img src="https://img.shields.io/badge/Express-4-000000?style=flat&logo=express&logoColor=white" alt="Express 4" />
@@ -115,7 +112,7 @@ Este proyecto maneja **datos de estudiantes (NNA)**, por lo que la seguridad es 
 - Se incorporaron loaders animados por vista y para el arranque de la aplicación, con frases contextuales, barra indeterminada y soporte para `prefers-reduced-motion`.
 - Se mejoraron contraste, accesibilidad y estados de carga del shell, login y vistas lazy.
 - Se agregaron índices compuestos para los patrones frecuentes de lectura por tenant, estudiante, fecha, estado y ordenamiento.
-- La suite actual valida **787 pruebas unitarias en 171 suites**, E2E de navegación/privacidad, auditoría axe pública y auditoría de dependencias sin vulnerabilidades.
+- La suite actual valida **932 pruebas unitarias e integración en 202 suites**. La auditoría de dependencias de producción no reporta vulnerabilidades; la suite E2E requiere actualización de sus expectativas del flujo anónimo.
 
 ### Auditoría integral 2026-08-06 (pendientes MEDIO)
 
@@ -227,7 +224,7 @@ Para más detalles, revisa:
 | ♿ **A11y**       | `npm run test:a11y` sobre dashboard público y login                                                                                                                                                                                                                 |
 | 🔐 **Seguridad**  | `npm audit --omit=dev` 0 vulnerabilidades                                                                                                                                                                                                                           |
 
-> Los badges de CI y Lighthouse se actualizan automáticamente con cada push. Los informes de Lighthouse se generan en `.lighthouseci/`.
+> Los informes de Lighthouse se generan en `.lighthouseci/` cuando se ejecuta `npm run lighthouse:ci`.
 
 ---
 
@@ -236,7 +233,7 @@ Para más detalles, revisa:
 | Capa          | Tecnología                  | Versión         |
 | ------------- | --------------------------- | --------------- |
 | Frontend      | React + TypeScript          | 19.0.1 / 5.8.2  |
-| Build         | Vite                        | 6.4.3           |
+| Build         | Vite                        | 8.2.2           |
 | CSS           | Tailwind CSS v4             | 4.1.14          |
 | Estado global | Zustand                     | 5.0.14          |
 | Server state  | TanStack React Query        | 5.101.2         |

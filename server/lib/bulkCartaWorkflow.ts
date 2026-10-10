@@ -30,7 +30,7 @@ export async function previewBulkCartas(
     chunkQueryIds(studentIds).map(async (chunk) => {
       const { data, error } = await supabase
         .from("students")
-        .select("id,full_name,course_id")
+        .select("id,full_name,course_id,apoderado_nombre")
         .eq("tenant_id", tenantId)
         .in("id", chunk)
         .limit(BULK_QUERY_MAX_ROWS);
@@ -176,7 +176,7 @@ export async function syncBulkPendingCartas(
         status: "Vigente",
         emitted_by: "Inspectoría",
         supervisor_name: null,
-        apoderado_name: "Pendiente",
+        apoderado_name: student.apoderado_nombre?.trim() || "Pendiente",
         annotations_count: negativeCount,
         student_name: student.full_name,
         course,

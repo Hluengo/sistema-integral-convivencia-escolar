@@ -2027,6 +2027,8 @@ export type Database = {
       students: {
         Row: {
           ai_analysis: Json | null;
+          apoderado_actualizado_at: string | null;
+          apoderado_nombre: string | null;
           course_id: string | null;
           created_at: string | null;
           full_name: string;
@@ -2036,6 +2038,8 @@ export type Database = {
         };
         Insert: {
           ai_analysis?: Json | null;
+          apoderado_actualizado_at?: string | null;
+          apoderado_nombre?: string | null;
           course_id?: string | null;
           created_at?: string | null;
           full_name: string;
@@ -2045,6 +2049,8 @@ export type Database = {
         };
         Update: {
           ai_analysis?: Json | null;
+          apoderado_actualizado_at?: string | null;
+          apoderado_nombre?: string | null;
           course_id?: string | null;
           created_at?: string | null;
           full_name?: string;
@@ -2062,6 +2068,38 @@ export type Database = {
           },
           {
             foreignKeyName: "students_tenant_id_fkey";
+            columns: ["tenant_id"];
+            isOneToOne: false;
+            referencedRelation: "tenants";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      teachers: {
+        Row: {
+          created_at: string | null;
+          full_name: string;
+          id: string;
+          tenant_id: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          full_name: string;
+          id?: string;
+          tenant_id: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          full_name?: string;
+          id?: string;
+          tenant_id?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "teachers_tenant_id_fkey";
             columns: ["tenant_id"];
             isOneToOne: false;
             referencedRelation: "tenants";

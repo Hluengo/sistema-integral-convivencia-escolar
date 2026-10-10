@@ -14,7 +14,7 @@
 | ------------- | ------------------------------ | --------------------- | ------------------------ |
 | Runtime       | Node.js                        | 22+                   | Requerido por pdfjs-dist |
 | Frontend      | React + TypeScript             | 19.0.1 / 5.8.2        | UI                       |
-| Build         | Vite                           | 6.4.3                 | Dev server + bundler     |
+| Build         | Vite                           | 8.2.2                 | Dev server + bundler     |
 | CSS           | Tailwind CSS v4                | 4.1.14                | Estilos utility-first    |
 | State         | Zustand                        | 5.0.14                | Estado global            |
 | Data Fetching | TanStack React Query           | 5.101.2               | Server state cache       |
@@ -588,11 +588,12 @@ Capa 5: Service role (bypass RLS, solo server-side)
 
 ```
 default-src 'self'
-script-src 'self' 'unsafe-inline' 'unsafe-eval'
-style-src 'self' 'unsafe-inline' fonts.googleapis.com
-connect-src 'self' openrouter.ai *.supabase.co wss://*.supabase.co
-img-src 'self' *.supabase.co data: blob:
-font-src 'self' fonts.gstatic.com data:
+script-src 'self'
+style-src 'self' 'unsafe-inline' https://fonts.googleapis.com
+connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.posthog.com https://*.ingest.us.sentry.io
+img-src 'self' data: blob: https://*.supabase.co
+font-src 'self' https://fonts.gstatic.com data:
+worker-src 'self' blob:
 ```
 
 ---

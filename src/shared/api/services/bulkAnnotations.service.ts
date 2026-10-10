@@ -21,6 +21,8 @@ export interface BulkPreviewAnnotation {
   tipo: "Positiva" | "Negativa" | "Información";
   categoria: string;
   profesor: string | null;
+  /** false cuando el responsable no calza con la nómina; ausente sin nómina. */
+  profesorReconocido?: boolean;
   texto: string;
   page_number: number | null;
   student_id: string;

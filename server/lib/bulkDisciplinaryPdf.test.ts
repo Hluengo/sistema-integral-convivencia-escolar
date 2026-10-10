@@ -11,6 +11,8 @@ import {
   bulkSuggestedLetterType,
   stripTrailingStudentName,
   cutTrailingFields,
+  matchTeacherName,
+  parseBlock,
   parseBulkDisciplinaryPdf,
 } from "./bulkDisciplinaryPdf.js";
 
@@ -98,6 +100,12 @@ test("recorta campos arrastrados tras el nombre del profesor", () => {
   );
   assert.equal(
     cutTrailingFields(
+      "ESTER NOEMI CONTRERAS ESPINOZA Anotación: ALUMNA QUE LLEGA TARDE .-",
+    ),
+    "ESTER NOEMI CONTRERAS ESPINOZA",
+  );
+  assert.equal(
+    cutTrailingFields(
       "MARIA EUGENIA MUÑOZ JARA Categoria: RESPONSABILIDAD Anotación: NO REGISTRA APUNTES.",
     ),
     "MARIA EUGENIA MUÑOZ JARA",
@@ -177,6 +185,73 @@ test("conserva la redacción completa cuando el PDF repite encabezados", () => {
     "LLEGA TARDE.",
   );
   assert.equal(extractFullAnnotationText("Sin marcador de anotación"), "");
+});
+
+test("parseBlock no arrastra etiquetas con acento descompuesto al profesor", () => {
+  const parsed = parseBlock(
+    "13-08-2026 Tipo: Negativa Categoria: RESPONSABILIDAD Anotación: ALUMNA QUE LLEGA TARDE .- Profesor: ESTER NOEMI CONTRERAS ESPINOZA Anotación: ALUMNA QUE LLEGA TARDE .-",
+    null,
+    "BENJAMÍN IGNACIO CARRASCO SOTO",
+  );
+  assert.equal(parsed?.profesor, "ESTER NOEMI CONTRERAS ESPINOZA");
+});
+
+test("parseBlock detiene al profesor antes del encabezado de la ficha siguiente", () => {
+  const parsed = parseBlock(
+    "01-10-2026 Tipo: Negativa Categoria: COMPORTAMIENTO Anotación: TOMA DEL CUELLO. Profesor: CESAR MANUEL AVILES MUÑOZ GUTIÉRREZ AGUILAR JORGE ALONSO FICHA PERSONAL DE CONVIVENCIA ESCOLAR",
+    null,
+    "VICENTE IGNACIO GUAJARDO CAMPOS",
+  );
+  assert.ok(
+    !(parsed?.profesor ?? "").includes("FICHA PERSONAL"),
+    `profesor contaminado: ${parsed?.profesor}`,
+  );
+});
+
+test("matchTeacherName prefiere la coincidencia más larga sin acentos", () => {
+  const roster = [
+    "MARÍA ISABEL MATUS RETAMAL",
+    "MARITZA FERNANDA CARRASCO PALMA",
+  ];
+  assert.equal(
+    matchTeacherName("maria isabel matus retamal arancibia vidal", roster),
+    "MARÍA ISABEL MATUS RETAMAL",
+  );
+  assert.equal(matchTeacherName("DOCENTE DESCONOCIDO", roster), null);
+  assert.equal(matchTeacherName(null, roster), null);
+  assert.equal(matchTeacherName("MARÍA ISABEL MATUS RETAMAL", []), null);
+});
+
+test("parseBlock reconoce al docente de la nómina aunque venga con cola", () => {
+  const parsed = parseBlock(
+    "01-10-2026 Tipo: Negativa Categoria: COMPORTAMIENTO Anotación: TOMA DEL CUELLO. Profesor: CESAR MANUEL AVILES MUÑOZ GUTIÉRREZ AGUILAR JORGE ALONSO 25-09-2026",
+    null,
+    "VICENTE IGNACIO GUAJARDO CAMPOS",
+    ["CESAR MANUEL AVILES MUÑOZ", "MARÍA ISABEL MATUS RETAMAL"],
+  );
+  assert.equal(parsed?.profesor, "CESAR MANUEL AVILES MUÑOZ");
+  assert.equal(parsed?.profesorReconocido, true);
+});
+
+test("parseBlock marca no reconocido cuando nadie de la nómina calza", () => {
+  const parsed = parseBlock(
+    "01-10-2026 Tipo: Negativa Categoria: COMPORTAMIENTO Anotación: X. Profesor: DOCENTE DESCONOCIDO",
+    null,
+    "VICENTE IGNACIO GUAJARDO CAMPOS",
+    ["CESAR MANUEL AVILES MUÑOZ"],
+  );
+  assert.equal(parsed?.profesor, "DOCENTE DESCONOCIDO");
+  assert.equal(parsed?.profesorReconocido, false);
+});
+
+test("parseBlock omite el indicador cuando no hay nómina cargada", () => {
+  const parsed = parseBlock(
+    "01-10-2026 Tipo: Negativa Categoria: COMPORTAMIENTO Anotación: X. Profesor: DOCENTE DESCONOCIDO",
+    null,
+    "VICENTE IGNACIO GUAJARDO CAMPOS",
+  );
+  assert.equal(parsed?.profesor, "DOCENTE DESCONOCIDO");
+  assert.equal(parsed?.profesorReconocido, undefined);
 });
 
 test("reconoce el registro previo aunque el bloque repita encabezados sin profesor", () => {

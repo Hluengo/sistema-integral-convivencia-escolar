@@ -35,16 +35,6 @@ export async function loginAsStaff(page: Page) {
   await dismissWelcome(page);
 
   const loginEmail = page.locator("#login-email");
-  const publicLoginVisible = await loginEmail
-    .waitFor({ state: "visible", timeout: 5_000 })
-    .then(() => true)
-    .catch(() => false);
-  if (!publicLoginVisible) {
-    const sidebar = page.getByRole("complementary", {
-      name: "Barra de navegación principal",
-    });
-    await sidebar.getByRole("button", { name: "Iniciar sesión" }).click();
-  }
   await expect(loginEmail).toBeVisible({ timeout: 15_000 });
   await loginEmail.fill(staffEmail ?? "");
   await page.locator("#login-password").fill(staffPassword ?? "");

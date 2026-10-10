@@ -4,18 +4,16 @@ import { expect, test } from "@playwright/test";
 import { dismissWelcome, hasStaffCredentials, loginAsStaff } from "./helpers";
 
 test.describe("Navegación por URL", () => {
-  test("abre el login desde /login y vuelve al dashboard al cerrar", async ({
-    page,
-  }) => {
+  test("muestra el login en /login y en la raíz pública", async ({ page }) => {
     await page.addInitScript(() =>
       window.sessionStorage.setItem("gestion-casos-welcome-seen", "true"),
     );
     await page.goto("/login");
 
     await expect(page.locator("#login-email")).toBeVisible({ timeout: 15_000 });
-    await page.getByRole("button", { name: "Cerrar" }).click();
+    await page.goto("/");
     await expect(page).toHaveURL(/\/$/);
-    await expect(page.locator('main, [role="main"]')).toBeVisible();
+    await expect(page.locator("#login-email")).toBeVisible();
   });
 
   test("redirige rutas desconocidas al dashboard público", async ({ page }) => {
@@ -23,9 +21,7 @@ test.describe("Navegación por URL", () => {
     await dismissWelcome(page);
 
     await expect(page).toHaveURL(/\/$/);
-    await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible({
-      timeout: 15_000,
-    });
+    await expect(page.locator("#login-email")).toBeVisible({ timeout: 15_000 });
   });
 
   test("mantiene una sola navegación lateral accesible en escritorio", async ({
@@ -35,8 +31,11 @@ test.describe("Navegación por URL", () => {
 
     await loginAsStaff(page);
 
+    const sidebar = page.getByRole("complementary", {
+      name: "Barra de navegación principal",
+    });
     await expect(
-      page.getByRole("button", { name: /^Causas(?:\s+\d+)?$/i }),
+      sidebar.getByRole("button", { name: /^Expedientes(?:\s+\d+)?$/i }),
     ).toHaveCount(1);
   });
 

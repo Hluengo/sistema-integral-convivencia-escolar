@@ -697,6 +697,14 @@ export default function BulkAnnotationsImportModal({
                                             ? ` · ${privacyMode ? "Docente" : annotation.profesor}`
                                             : ""}
                                         </span>
+                                        {annotation.profesorReconocido ===
+                                          false && (
+                                          <span className="mt-1 block text-xs font-semibold text-grave-700">
+                                            {privacyMode
+                                              ? "Responsable por verificar"
+                                              : `Docente no reconocido${annotation.profesor ? "" : " (sin responsable)"}`}
+                                          </span>
+                                        )}
                                         <span className="mt-1 block text-sm text-neutral-800">
                                           {formatAnnotationDisplayText(
                                             `[${annotation.categoria}] ${annotation.texto}`,

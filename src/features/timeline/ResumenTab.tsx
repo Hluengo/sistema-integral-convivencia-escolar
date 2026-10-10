@@ -196,7 +196,7 @@ export default memo(function ResumenTab({
                   />{" "}
                   Relato de los hechos · ver completo
                 </span>
-                <span className="text-neutral-400">Expandir detalle</span>
+                <span className="text-neutral-500">Expandir detalle</span>
               </summary>
               <p className="mt-3 whitespace-pre-wrap leading-relaxed text-neutral-700">
                 {causa.observaciones || "Sin relato de los hechos registrado."}

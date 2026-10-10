@@ -186,6 +186,7 @@ export default function CartasTab({
         id: student.id,
         full_name: student.full_name,
         course_id: student.course_id,
+        apoderado_nombre: student.apoderado_nombre,
         course_name: student.course_name,
       },
       letterType: requestedLetterType,
@@ -467,6 +468,7 @@ export default function CartasTab({
                 full_name: student.full_name,
                 course_id: student.course_name || student.course_id,
                 rut: student.rut,
+                apoderado_nombre: student.apoderado_nombre,
                 teacher_id: student.teacher_id,
               }}
               annotations={annotations}

@@ -108,6 +108,25 @@ export default function CausaNotificationGenerator({
   const initialAppliedRef = useRef(false);
 
   useEffect(() => {
+    if (!causa.studentId || initialSnapshot?.apoderadoName?.trim()) return;
+    let cancelled = false;
+    void supabase
+      .from("students")
+      .select("apoderado_nombre")
+      .eq("id", causa.studentId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        const value = data?.apoderado_nombre?.trim() ?? "";
+        if (value)
+          setApoderadoName((current) => (current.trim() ? current : value));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [causa.studentId, initialSnapshot?.apoderadoName]);
+
+  useEffect(() => {
     if (initialAppliedRef.current) return;
     if (initialSnapshot) {
       setContent(

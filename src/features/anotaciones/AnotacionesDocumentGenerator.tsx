@@ -55,6 +55,7 @@ interface AnotacionesDocumentGeneratorProps {
     full_name: string;
     course_id: string;
     rut?: string;
+    apoderado_nombre?: string | null;
     teacher_id?: string;
   };
   annotations: Annotation[];
@@ -119,7 +120,9 @@ export default function AnotacionesDocumentGenerator({
       documentState.setLetterContent(initialContentSnapshot.letterContent);
     }
     documentState.setApoderadoName(
-      getSnapshotString(initialContentSnapshot, "apoderadoName") || "",
+      getSnapshotString(initialContentSnapshot, "apoderadoName") ||
+        student.apoderado_nombre ||
+        "",
     );
     documentState.setInspectorName(
       getSnapshotString(initialContentSnapshot, "inspectorName") || "",
@@ -131,7 +134,19 @@ export default function AnotacionesDocumentGenerator({
       getSnapshotString(initialContentSnapshot, "emittedBy") || "",
     );
     initialSnapshotApplied.current = true;
-  }, [documentState, initialContentSnapshot, setDocType]);
+  }, [
+    documentState,
+    initialContentSnapshot,
+    setDocType,
+    student.apoderado_nombre,
+  ]);
+
+  useEffect(() => {
+    if (!initialContentSnapshot && !initialSnapshotApplied.current) {
+      documentState.setApoderadoName(student.apoderado_nombre || "");
+      initialSnapshotApplied.current = true;
+    }
+  }, [documentState, initialContentSnapshot, student.apoderado_nombre]);
 
   useEffect(() => {
     if (initialDocType && !initialDocTypeApplied.current) {

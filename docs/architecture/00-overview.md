@@ -45,7 +45,7 @@
 
 | Capa         | Tecnología                     | Archivo                                    |
 | ------------ | ------------------------------ | ------------------------------------------ |
-| Frontend     | React 19 + Vite 6 + Tailwind 4 | [01-frontend.md](./01-frontend.md)         |
+| Frontend     | React 19 + Vite 8 + Tailwind 4 | [01-frontend.md](./01-frontend.md)         |
 | Backend      | Express 4 / Vercel Serverless  | [02-backend.md](./02-backend.md)           |
 | Database     | Supabase PostgreSQL 17         | [03-database.md](./03-database.md)         |
 | Storage      | Supabase Storage               | [04-storage.md](./04-storage.md)           |

@@ -9,14 +9,14 @@ const superadminPassword = process.env.E2E_SUPERADMIN_PASSWORD;
 
 async function login(page: Page, email: string, password: string) {
   await dismissWelcome(page);
-  const sidebar = page.getByRole("complementary", {
-    name: "Barra de navegación principal",
-  });
-  await sidebar.getByRole("button", { name: "Iniciar sesión" }).click();
   await page.locator("#login-email").fill(email);
   await page.locator("#login-password").fill(password);
   await page.locator('form button[type="submit"]').click();
-  await expect(sidebar.getByText(email)).toBeVisible({ timeout: 15_000 });
+  await expect(
+    page
+      .getByRole("complementary", { name: "Barra de navegación principal" })
+      .getByText(email),
+  ).toBeVisible({ timeout: 15_000 });
 }
 
 test.describe("Plataforma superadmin", () => {
@@ -26,12 +26,11 @@ test.describe("Plataforma superadmin", () => {
     await page.goto("/");
     await dismissWelcome(page);
 
-    const sidebar = page.getByRole("complementary", {
-      name: "Barra de navegación principal",
-    });
-    await expect(sidebar).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator("#login-email")).toBeVisible({ timeout: 15_000 });
     await expect(
-      sidebar.getByRole("button", { name: "Plataforma" }),
+      page.getByRole("complementary", {
+        name: "Barra de navegación principal",
+      }),
     ).toHaveCount(0);
     await expect(
       page.getByRole("heading", { name: "Gestión de colegios" }),

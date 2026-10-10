@@ -105,6 +105,26 @@ describe("extractAnnotationTeacher", () => {
   });
 });
 
+describe("acentos descompuestos del PDF", () => {
+  it("extrae al docente aunque la etiqueta use acento descompuesto", () => {
+    assert.equal(
+      extractAnnotationTeacher(
+        "13-08-2026 Tipo: Negativa Anotación: ALUMNA QUE LLEGA TARDE .- Profesor: ESTER NOEMI CONTRERAS ESPINOZA Anotación: ALUMNA QUE LLEGA TARDE .-",
+      ),
+      "ESTER NOEMI CONTRERAS ESPINOZA",
+    );
+  });
+
+  it("muestra el texto limpio aunque las etiquetas usen acento descompuesto", () => {
+    assert.equal(
+      formatAnnotationDisplayText(
+        "13-08-2026 Tipo: Negativa Anotación: ALUMNA QUE LLEGA TARDE .- Profesor: ESTER NOEMI CONTRERAS ESPINOZA",
+      ),
+      "ALUMNA QUE LLEGA TARDE .-",
+    );
+  });
+});
+
 describe("resolveAnnotationRegistrar", () => {
   it("conserva el responsable guardado cuando no es genérico", () => {
     assert.equal(
@@ -130,6 +150,16 @@ describe("resolveAnnotationRegistrar", () => {
     assert.equal(
       resolveAnnotationRegistrar("PDF Convivencia Escolar", "Llega tarde."),
       "PDF Convivencia Escolar",
+    );
+  });
+
+  it("recorta etiquetas arrastradas en un responsable ya guardado", () => {
+    assert.equal(
+      resolveAnnotationRegistrar(
+        "ESTER NOEMI CONTRERAS ESPINOZA Anotación: Anotación: ALUMNA QUE LLEGA TARDE .-",
+        "",
+      ),
+      "ESTER NOEMI CONTRERAS ESPINOZA",
     );
   });
 });

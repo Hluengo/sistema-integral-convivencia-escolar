@@ -67,11 +67,16 @@ Donde `current_tenant_id()` lee del JWT (fast path) con fallback a DB query.
 ```
 Content-Security-Policy:
   default-src 'self'
-  script-src 'self' 'unsafe-inline' 'unsafe-eval'
-  style-src 'self' 'unsafe-inline' fonts.googleapis.com
-  connect-src 'self' openrouter.ai *.supabase.co wss://*.supabase.co
-  img-src 'self' *.supabase.co data: blob:
-  font-src 'self' fonts.gstatic.com data:
+  script-src 'self'
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com
+  connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.posthog.com https://*.ingest.us.sentry.io
+  img-src 'self' data: blob: https://*.supabase.co
+  font-src 'self' https://fonts.gstatic.com data:
+  worker-src 'self' blob:
+
+La política vigente no permite `unsafe-eval` ni `unsafe-inline` para scripts.
+`unsafe-inline` se mantiene únicamente en `style-src` por los estilos inline
+generados por la interfaz.
 
 X-Frame-Options: DENY
 X-Content-Type-Options: nosniff

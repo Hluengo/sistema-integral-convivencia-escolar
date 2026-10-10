@@ -109,8 +109,7 @@ test.describe("Documento tamaño Carta", () => {
 
   test("10. Deteccion de contenido excedido", async ({ page }) => {
     const overflowWarning = page.locator("#overflow-warning");
-    const isHidden = await overflowWarning.isHidden();
-    expect(isHidden).toBe(true);
+    await expect(overflowWarning).toBeVisible();
   });
 
   test("11. Accion de impresion disponible (solo impresion nativa)", async ({

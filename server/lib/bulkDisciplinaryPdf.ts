@@ -10,8 +10,34 @@ export interface BulkAnnotation {
   tipo: BulkAnnotationType;
   categoria: string;
   profesor: string | null;
+  /** true si el profesor calza con la nómina; ausente cuando no hay nómina. */
+  profesorReconocido?: boolean;
   texto: string;
   page_number: number | null;
+}
+
+/**
+ * Busca el nombre de la nómina dentro del responsable capturado. Compara sin
+ * acentos ni mayúsculas y prefiere la coincidencia más larga. Devuelve el
+ * nombre en su forma canónica o null si nadie calza.
+ */
+export function matchTeacherName(
+  captured: string | null,
+  roster: string[],
+): string | null {
+  if (!captured || roster.length === 0) return null;
+  const source = ` ${normalize(captured)} `;
+  let best: string | null = null;
+  let bestLength = 0;
+  for (const teacher of roster) {
+    const key = normalize(teacher);
+    if (!key || !source.includes(` ${key} `)) continue;
+    if (key.length > bestLength) {
+      best = teacher;
+      bestLength = key.length;
+    }
+  }
+  return best;
 }
 
 export interface BulkStudent {
@@ -187,6 +213,13 @@ function splitBlocks(
     .filter(Boolean);
   let current = "";
   for (const line of lines) {
+    // El encabezado de la ficha siguiente no trae fecha: si se pegara al
+    // bloque anterior, su nombre quedaría dentro del profesor capturado.
+    if (/^Ficha\s+Personal\b/i.test(line)) {
+      if (current) blocks.push({ block: current, page: null });
+      current = "";
+      continue;
+    }
     if (/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b/.test(line)) {
       if (current) blocks.push({ block: current, page: null });
       current = line;
@@ -265,42 +298,55 @@ export function extractFullAnnotationText(block: string): string {
 
 export function cutTrailingFields(profesor: string | null): string | null {
   if (!profesor) return profesor;
+  // El texto del PDF puede traer acentos descompuestos (o + U+0301) que no
+  // calzan con [óo]; se normaliza a NFC antes de recortar.
   const cut = profesor
-    .split(/\s*(?:Tipo|Categoria|Anotaci[óo]n)\s*:/i)[0]
+    .normalize("NFC")
+    .split(/\s*(?:Tipo|Categoria|Anotaci[óo]n)\s*:|\s*Ficha\s+Personal\b/i)[0]
     .trim();
   return cut.length > 0 ? cut : profesor;
 }
 
-function parseBlock(
+export function parseBlock(
   block: string,
   page: number | null,
   studentName: string | null = null,
+  teacherNames: string[] = [],
 ): BulkAnnotation | null {
-  if (!/Tipo\s*:/i.test(block)) return null;
-  const date = block.match(/(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/)?.[1];
+  // El PDF puede emitir acentos descompuestos (o + U+0301): sin NFC las
+  // etiquetas Anotación/Categoría no calzan y el profesor arrastra texto.
+  const text = block.normalize("NFC");
+  if (!/Tipo\s*:/i.test(text)) return null;
+  const date = text.match(/(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/)?.[1];
   const fecha_iso = date ? toIsoDate(date) : null;
-  const tipo = block.match(
+  const tipo = text.match(
     /Tipo\s*:\s*(Negativa|Positiva|Informaci[óo]n)/i,
   )?.[1];
   if (!fecha_iso || !tipo) return null;
   const categoria =
-    block
+    text
       .match(
         /Categoria\s*:\s*(RESPONSABILIDAD\s+Y\s+COMPORTAMIENTO|RESPONSABILIDAD|COMPORTAMIENTO|INFORMACI[ÓOÒ]N|ENTREVISTA)/i,
       )?.[1]
       ?.trim()
       .toUpperCase() ?? "SIN CATEGORIA";
   const rawProfesor =
-    block
+    text
       .match(
-        /Profesor\s*:\s*(.+?)(?=\s*\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\s*(?:LUNES|MARTES|MIERCOLES|MIÉRCOLES|JUEVES|VIERNES|SABADO|SÁBADO|DOMINGO)\b|\s*(?:Tipo|Categoria|Anotaci[óo]n|Profesor)\s*:|\s*$)/i,
+        /Profesor\s*:\s*(.+?)(?=\s*\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\s*(?:LUNES|MARTES|MIERCOLES|MIÉRCOLES|JUEVES|VIERNES|SABADO|SÁBADO|DOMINGO)\b|\s*(?:Tipo|Categoria|Anotaci[óo]n|Profesor)\s*:|\s*Ficha\s+Personal\b|\s*$)/i,
       )?.[1]
       ?.trim() ?? null;
-  const profesor = stripTrailingStudentName(
+  const cleaned = stripTrailingStudentName(
     cutTrailingFields(rawProfesor),
     studentName,
   );
-  const texto = extractFullAnnotationText(block);
+  // Con nómina cargada se prefiere el nombre reconocido aunque venga con
+  // cola pegada; sin nómina se conserva el comportamiento anterior.
+  const rosterHit = matchTeacherName(cleaned, teacherNames);
+  const profesor = rosterHit ?? cleaned;
+  const profesorReconocido =
+    teacherNames.length > 0 ? rosterHit !== null : undefined;
+  const texto = extractFullAnnotationText(text);
   if (!texto) return null;
   return {
     fecha_iso,
@@ -311,6 +357,7 @@ function parseBlock(
         : "Información",
     categoria,
     profesor,
+    profesorReconocido,
     texto,
     page_number: page,
   };
@@ -318,6 +365,7 @@ function parseBlock(
 
 export async function parseBulkDisciplinaryPdf(
   buffer: Uint8Array,
+  teacherNames: string[] = [],
 ): Promise<BulkPdfParseResult> {
   const data = new Uint8Array(buffer);
   // El lector PDF transfiere el buffer al leerlo: el hash debe calcularse antes.
@@ -348,7 +396,7 @@ export async function parseBulkDisciplinaryPdf(
     let duplicados_eliminados = 0;
     const anotaciones: BulkAnnotation[] = [];
     for (const { block, page } of splitBlocks(body)) {
-      const annotation = parseBlock(block, page, nombre);
+      const annotation = parseBlock(block, page, nombre, teacherNames);
       if (!annotation) continue;
       const key = [
         annotation.fecha_iso,

@@ -687,6 +687,61 @@ router.post("/admin/import", ownUpload.single("file"), async (req, res) => {
 });
 
 router.post(
+  "/admin/profesores/import",
+  ownUpload.single("file"),
+  async (req, res) => {
+    try {
+      const request = getRequest(req);
+      const client = getAdminClient();
+      await assertFreshAdmin(client, request);
+      const file = req.file as Express.Multer.File | undefined;
+      if (!file) {
+        res.status(400).json({ error: "Adjunte un archivo .xlsx." });
+        return;
+      }
+      if (!file.originalname.toLowerCase().endsWith(".xlsx")) {
+        res.status(400).json({ error: "Solo se permiten archivos .xlsx." });
+        return;
+      }
+      const { importTeachers } = await import("../services/teachersImport.js");
+      const result = await importTeachers(client, request.tenantId ?? "", {
+        buffer: file.buffer,
+        originalname: safeFileName(file.originalname),
+      });
+      await recordAudit(
+        client,
+        request,
+        "teachers_roster_imported",
+        request.tenantId ?? "",
+        null,
+        result as unknown as Record<string, unknown>,
+      );
+      res.json(result);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "No fue posible importar la nómina docente.";
+      res.status(500).json(clientErrorBody(message, 500));
+    }
+  },
+);
+
+async function loadTeacherNames(
+  client: SupabaseClient,
+  tenantId: string,
+): Promise<string[]> {
+  const { data, error } = await client
+    .from("teachers")
+    .select("full_name")
+    .eq("tenant_id", tenantId);
+  if (error) return [];
+  return ((data ?? []) as Array<{ full_name: string }>)
+    .map((row) => row.full_name)
+    .filter((name) => name.trim().length > 0);
+}
+
+router.post(
   "/admin/annotations/bulk-preview",
   ownUpload.single("file"),
   async (req, res) => {
@@ -699,7 +754,14 @@ router.post(
         return;
       }
 
-      const parsed = await parseBulkDisciplinaryPdf(req.file!.buffer);
+      const teacherNames = await loadTeacherNames(
+        client,
+        request.tenantId ?? "",
+      );
+      const parsed = await parseBulkDisciplinaryPdf(
+        req.file!.buffer,
+        teacherNames,
+      );
       const detectedTotal = parsed.estudiantes.reduce(
         (total, student) => total + student.anotaciones.length,
         0,
@@ -886,7 +948,14 @@ router.post(
           .json({ error: "Vista previa de importación inválida." });
         return;
       }
-      const parsed = await parseBulkDisciplinaryPdf(req.file!.buffer);
+      const teacherNames = await loadTeacherNames(
+        client,
+        request.tenantId ?? "",
+      );
+      const parsed = await parseBulkDisciplinaryPdf(
+        req.file!.buffer,
+        teacherNames,
+      );
       if (parsed.file_hash !== fileHash) {
         res
           .status(400)

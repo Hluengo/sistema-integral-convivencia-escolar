@@ -144,7 +144,7 @@ export default function RankingCard({
                     </span>
                     {showChevron ? (
                       <ChevronRight
-                        className="size-3.5 text-slate-400"
+                        className="size-3.5 text-slate-500"
                         aria-hidden="true"
                       />
                     ) : null}

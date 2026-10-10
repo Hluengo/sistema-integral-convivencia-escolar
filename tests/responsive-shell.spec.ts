@@ -18,19 +18,9 @@ test.describe("Shell responsive público", () => {
         window.sessionStorage.setItem("gestion-casos-welcome-seen", "true"),
       );
       await page.goto("/");
-      if (viewport.width < 768) {
-        await expect(
-          page.getByRole("button", { name: "Abrir menú" }),
-        ).toBeVisible({
-          timeout: 15_000,
-        });
-      } else {
-        await expect(
-          page.getByRole("complementary", {
-            name: "Barra de navegación principal",
-          }),
-        ).toBeVisible({ timeout: 15_000 });
-      }
+      await expect(page.locator("#login-email")).toBeVisible({
+        timeout: 15_000,
+      });
 
       const dimensions = await page.evaluate(() => ({
         viewport: document.documentElement.clientWidth,

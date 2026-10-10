@@ -11,7 +11,7 @@ Sistema SaaS multi-tenant para la gestión integral de convivencia escolar en es
 | Capa         | Tecnología                                      | Versión           |
 | ------------ | ----------------------------------------------- | ----------------- |
 | Frontend     | React + TypeScript                              | 19.0.1 / 5.8.2    |
-| Build        | Vite                                            | 6.4.3             |
+| Build        | Vite                                            | 8.2.2             |
 | CSS          | Tailwind CSS v4                                 | 4.1.14            |
 | State        | Zustand                                         | 5.0.14            |
 | Server Data  | TanStack React Query                            | 5.101.2           |
@@ -21,7 +21,7 @@ Sistema SaaS multi-tenant para la gestión integral de convivencia escolar en es
 | Database     | Supabase PostgreSQL                             | 17.6.1            |
 | Auth         | Supabase Auth                                   | —                 |
 | AI           | OpenRouter (text) + Gemini (reports/drafts)     | —                 |
-| Documentos   | docx (Word) / pdf-lib + pdfjs-dist              | 9.7.1             |
+| Documentos   | HTML imprimible + react-to-print / pdfjs-dist   | 6.1.200           |
 | Monitoring   | Sentry Browser + PostHog                        | 10.66.0 / 1.404.1 |
 | Tests        | node:test + Playwright                          | —                 |
 | Lint/Format  | TypeScript (tsc), ESLint 9, Prettier 3, Biome 2 | —                 |

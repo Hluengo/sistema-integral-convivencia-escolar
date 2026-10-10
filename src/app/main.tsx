@@ -1,9 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-// Debe ser el primer import: src/shared/lib/schemas/index fija
-// `jitless` al evaluarse y z.object() prueba `new Function` al definirse.
-// Si un schema se define antes, el CSP (script-src sin 'unsafe-eval')
-// reporta el error en el vendor aunque la validación igual funcione.
+import "../shared/lib/schemas/zodCsp";
 import "../shared/lib/schemas/index";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";

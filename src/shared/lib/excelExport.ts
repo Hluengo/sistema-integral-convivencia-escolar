@@ -11,7 +11,7 @@ export async function exportExcelWorkbook(
   await writeExcelFile(sheets).toFile(fileName);
 }
 
-/** Plantilla base (Cursos + Estudiantes) para carga masiva al colegio. */
+/** Plantilla base (Cursos + Estudiantes + Profesores) para carga masiva. */
 export async function downloadBaseTemplate(): Promise<void> {
   const cursos = [
     [{ value: "name" }, { value: "level" }, { value: "position" }],
@@ -19,10 +19,12 @@ export async function downloadBaseTemplate(): Promise<void> {
   const estudiantes = [
     [{ value: "full_name" }, { value: "rut" }, { value: "curso" }],
   ];
+  const profesores = [[{ value: "full_name" }]];
   await exportExcelWorkbook(
     [
       { sheet: "Cursos", data: cursos },
       { sheet: "Estudiantes", data: estudiantes },
+      { sheet: "Profesores", data: profesores },
     ],
     "plantilla-base-colegio.xlsx",
   );

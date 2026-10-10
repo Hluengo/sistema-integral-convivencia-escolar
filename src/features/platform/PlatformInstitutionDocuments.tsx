@@ -184,7 +184,7 @@ export default function PlatformInstitutionDocuments({ tenantId }: Props) {
                     <a
                       href={document.download_url}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="inline-flex items-center rounded-lg border border-neutral-200 px-3 py-2 font-semibold text-neutral-700 text-xs hover:bg-neutral-50"
                     >
                       Ver archivo

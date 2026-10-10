@@ -2,10 +2,7 @@
 
 import { z } from "zod";
 import { EstadoCausa } from "../types";
-
-// Keep Zod validation compatible with the production CSP. Without jitless,
-// Zod probes `new Function`, which Chrome reports as a blocked eval attempt.
-z.config({ jitless: true });
+import "./zodCsp";
 
 export const BitacoraEntrySchema = z.object({
   id: z.string(),

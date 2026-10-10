@@ -540,6 +540,7 @@ export async function createPendingCartaForStudent(params: {
     full_name: string;
     course_id: string;
     course_name?: string | null;
+    apoderado_nombre?: string | null;
   };
   letterType: LetterType;
   negativeCount: number;
@@ -566,7 +567,7 @@ export async function createPendingCartaForStudent(params: {
       status: "Vigente",
       emitted_by: "Inspectoría",
       supervisor_name: null,
-      apoderado_name: "Pendiente",
+      apoderado_name: params.student.apoderado_nombre?.trim() || "Pendiente",
       annotations_count: params.negativeCount,
       student_name: params.student.full_name,
       course: params.student.course_name || params.student.course_id,

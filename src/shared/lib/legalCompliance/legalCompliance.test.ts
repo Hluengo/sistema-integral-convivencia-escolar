@@ -228,7 +228,7 @@ test("verificarPlazoInformeConcluyente separa los 5 días finales y el total de 
 
 test("verificarPlazoInvestigacion cumplido con fecha reciente", () => {
   const causa = makeCausa({ fechaApertura: "2026-08-10" });
-  const result = verificarPlazoInvestigacion(causa);
+  const result = verificarPlazoInvestigacion(causa, "2026-08-20");
   assert.ok(["cumplido", "alerta"].includes(result.estado));
   assert.equal(typeof result.diasRestantes, "number");
 });

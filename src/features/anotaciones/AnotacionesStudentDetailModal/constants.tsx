@@ -22,6 +22,7 @@ export interface StudentInfo {
   last_annotation_date?: string;
   disciplinary_status?: string;
   rut?: string;
+  apoderado_nombre?: string | null;
   course_name?: string;
 }
 

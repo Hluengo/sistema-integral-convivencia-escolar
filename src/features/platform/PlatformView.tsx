@@ -445,9 +445,10 @@ export default function PlatformView() {
                   Importar cursos y estudiantes
                 </h3>
                 <p className="mt-1 text-neutral-500 text-xs">
-                  Formato: dos hojas — «Cursos» (name, level, position) y
-                  «Estudiantes» (full_name, rut, curso). Si solo viene
-                  «Estudiantes», los cursos se derivan de la columna «curso».
+                  Formato: tres hojas — «Cursos» (name, level, position),
+                  «Estudiantes» (full_name, rut, curso) y «Profesores»
+                  (full_name). Si solo viene «Estudiantes», los cursos se
+                  derivan de la columna «curso».
                 </p>
               </div>
             </div>

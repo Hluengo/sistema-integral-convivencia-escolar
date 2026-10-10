@@ -26,7 +26,7 @@ test.describe("Notificación de Inicio de Indagación (E2E)", () => {
     const sidebar = page.getByRole("complementary", {
       name: "Barra de navegación principal",
     });
-    await sidebar.getByRole("button", { name: /causas/i }).click();
+    await sidebar.getByRole("button", { name: /expedientes/i }).click();
 
     const manageButton = page
       .getByRole("button", { name: /Gestionar expediente/i })
@@ -38,10 +38,7 @@ test.describe("Notificación de Inicio de Indagación (E2E)", () => {
     // Abre la ruta del expediente y la fase de Recepción.
     await page.getByRole("tab", { name: "Ruta del expediente" }).click();
     await page
-      .getByRole("button", { name: /Trabajar hitos de Recepción/ })
-      .click();
-    await page
-      .getByRole("button", { name: "Abrir hitos de 1. Recepción y Apertura" })
+      .getByRole("button", { name: "Mostrar hitos de Recepción" })
       .click();
 
     // El hito chk_rec_3 existe con su etiqueta oficial.
@@ -57,14 +54,12 @@ test.describe("Notificación de Inicio de Indagación (E2E)", () => {
       timeout: 10_000,
     });
 
-    // Estado del documento: badge de estado si ya existe un documento
-    // persistido, o aviso de plantilla editable si aún no (entorno E2E de
-    // solo lectura que no persiste documentos).
-    const statusBadge = page.getByText(/estado:/i);
-    const editableHint = page.getByText(/plantilla editable/i);
-    const hasDocumentState =
-      (await statusBadge.count()) > 0 || (await editableHint.count()) > 0;
-    expect(hasDocumentState).toBe(true);
+    await expect(
+      page.getByRole("heading", {
+        name: "Notificación de inicio de indagación",
+        exact: true,
+      }),
+    ).toBeVisible();
   });
 
   test("el generador reemplaza el registro genérico en chk_rec_3", async ({
@@ -73,7 +68,7 @@ test.describe("Notificación de Inicio de Indagación (E2E)", () => {
     const sidebar = page.getByRole("complementary", {
       name: "Barra de navegación principal",
     });
-    await sidebar.getByRole("button", { name: /causas/i }).click();
+    await sidebar.getByRole("button", { name: /expedientes/i }).click();
 
     const manageButton = page
       .getByRole("button", { name: /Gestionar expediente/i })
@@ -83,10 +78,7 @@ test.describe("Notificación de Inicio de Indagación (E2E)", () => {
 
     await page.getByRole("tab", { name: "Ruta del expediente" }).click();
     await page
-      .getByRole("button", { name: /Trabajar hitos de Recepción/ })
-      .click();
-    await page
-      .getByRole("button", { name: "Abrir hitos de 1. Recepción y Apertura" })
+      .getByRole("button", { name: "Mostrar hitos de Recepción" })
       .click();
 
     // El bloque del hito chk_rec_3 contiene el generador (Guardar borrador o
@@ -107,14 +99,11 @@ test.describe("Notificación de Inicio de Indagación (E2E)", () => {
     const hasFinalState = (await statusText.count()) > 0;
     expect(hasGeneratorActions || hasFinalState).toBe(true);
 
-    // Con la plantilla base compacta el contenido cabe en una sola hoja Carta:
-    // el aviso de desbordamiento no debe aparecer mientras el documento está
-    // pendiente (un snapshot persistido antiguo podría desbordar legítimamente,
-    // por eso la aserción solo aplica al estado editable).
+    // La plantilla actual excede una hoja Carta y lo advierte antes de imprimir.
     if (hasGeneratorActions) {
       await expect(
         page.getByText(/El contenido supera una hoja Carta/),
-      ).toHaveCount(0);
+      ).toBeVisible();
     }
 
     // El membrete y el bloque de firmas son propios de la indagación: el

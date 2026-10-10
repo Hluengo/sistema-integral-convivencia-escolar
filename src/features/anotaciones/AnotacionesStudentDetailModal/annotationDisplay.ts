@@ -8,11 +8,27 @@ const GENERIC_REGISTRARS = [
   "PDF Importación Masiva",
 ];
 
+// El texto extraído del PDF puede traer acentos descompuestos (o + U+0301)
+// que no calzan con clases como [óo]; se normaliza a NFC antes de parsear.
+function nfc(value: string): string {
+  return value.normalize("NFC");
+}
+
+// Cola de metadatos arrastrada a un responsable ya guardado (filas
+// importadas antes del endurecimiento del parser): se recorta para mostrar.
+const REGISTRAR_TAIL_PATTERN =
+  /\s*(?:\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b[\s\S]*|(?:Tipo|Categoria|Anotaci[óo]n|Profesor)\s*:[\s\S]*|Ficha\s+Personal\b[\s\S]*)$/i;
+
+function sanitizeRegistrar(value: string): string {
+  return nfc(value).replace(REGISTRAR_TAIL_PATTERN, "").trim();
+}
+
 export function extractAnnotationCategory(text: string): string | null {
-  const bracket = text.match(/^\[([^\][]+)\]/)?.[1]?.trim();
+  const source = nfc(text);
+  const bracket = source.match(/^\[([^\][]+)\]/)?.[1]?.trim();
   const raw =
     bracket ??
-    text
+    source
       .match(
         /Categoria\s*:\s*([A-ZÁÉÍÓÚÑÒ ]+?)(?=\s*(?:Tipo|Categoria|Anotaci[óo]n|Profesor)\s*:|\s*$)/i,
       )?.[1]
@@ -29,7 +45,10 @@ export function extractAnnotationCategory(text: string): string | null {
 }
 
 export function extractAnnotationTeacher(text: string): string | null {
-  const raw = text.match(/Profesor\s*:\s*(.+?)\s*$/i)?.[1]?.trim() ?? "";
+  const raw =
+    nfc(text)
+      .match(/Profesor\s*:\s*(.+?)\s*$/i)?.[1]
+      ?.trim() ?? "";
   const cut = raw
     .split(/\s*(?:Tipo|Categoria|Anotaci[óo]n|Profesor)\s*:/i)[0]
     .trim()
@@ -41,14 +60,15 @@ export function resolveAnnotationRegistrar(
   registeredBy: string | null | undefined,
   text: string,
 ): string {
-  if (registeredBy && !GENERIC_REGISTRARS.includes(registeredBy.trim())) {
-    return registeredBy;
+  const stored = registeredBy ? sanitizeRegistrar(registeredBy) : "";
+  if (stored && !GENERIC_REGISTRARS.includes(stored.trim())) {
+    return stored;
   }
   return extractAnnotationTeacher(text) ?? registeredBy ?? "";
 }
 
 export function formatAnnotationDisplayText(text: string): string {
-  const normalized = text.replace(/\s+/g, " ").trim();
+  const normalized = nfc(text.replace(/\s+/g, " ").trim());
   // Bloques sin texto de anotación (solo fecha, tipo y profesor): las tarjetas
   // ya muestran esos datos en sus insignias, así que no se repiten.
   if (

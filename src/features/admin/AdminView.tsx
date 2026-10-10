@@ -31,6 +31,7 @@ import {
   fetchAdminMembers,
   fetchUsageStats,
   importOwnTenantBase,
+  importTeacherWorkbook,
   inviteAdminMember,
   resendAdminInvitation,
   updateAdminMember,
@@ -91,6 +92,8 @@ export default function AdminView() {
   const [role, setRole] = useState<AdminRole>("convivencia");
   const [operationError, setOperationError] = useState<string | null>(null);
   const [importFile, setImportFile] = useState<File | null>(null);
+  const [teacherFile, setTeacherFile] = useState<File | null>(null);
+  const [teacherResult, setTeacherResult] = useState<string | null>(null);
   const [importLevel, setImportLevel] = useState<"BASICA" | "MEDIA">("BASICA");
   const [importResult, setImportResult] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -183,12 +186,35 @@ export default function AdminView() {
           : "No fue posible importar la base.",
       ),
   });
+  const teacherMutation = useMutation({
+    mutationFn: async () => {
+      if (!teacherFile) throw new Error("Seleccione un archivo .xlsx.");
+      return importTeacherWorkbook(teacherFile);
+    },
+    onSuccess: (data) => {
+      setTeacherResult(
+        `${data.inserted} docentes agregados. ${data.skippedExisting} existentes quedaron intactos. ` +
+          `Nómina actual: ${data.rosterSize}.` +
+          (data.errors.length > 0
+            ? ` Advertencias: ${data.errors.length}.`
+            : ""),
+      );
+      setTeacherFile(null);
+    },
+    onError: (error: unknown) =>
+      setTeacherResult(
+        error instanceof Error
+          ? error.message
+          : "No fue posible importar la nómina docente.",
+      ),
+  });
   const isBusy =
     inviteMutation.isPending ||
     memberMutation.isPending ||
     resendMutation.isPending ||
     cancelMutation.isPending ||
-    importMutation.isPending;
+    importMutation.isPending ||
+    teacherMutation.isPending;
 
   return (
     <div className="animate-fade-in space-y-6">
@@ -507,9 +533,10 @@ export default function AdminView() {
                   Importar cursos y estudiantes
                 </h3>
                 <p className="mt-1 text-neutral-500 text-xs">
-                  Formato: dos hojas — «Cursos» (name, level, position) y
-                  «Estudiantes» (full_name, rut, curso). Si solo viene
-                  «Estudiantes», los cursos se derivan de la columna «curso».
+                  Formato: tres hojas — «Cursos» (name, level, position),
+                  «Estudiantes» (full_name, rut, curso) y «Profesores»
+                  (full_name). Si solo viene «Estudiantes», los cursos se
+                  derivan de la columna «curso».
                 </p>
               </div>
             </div>
@@ -550,6 +577,53 @@ export default function AdminView() {
             {importResult ? (
               <p className="mt-4 rounded-xl bg-neutral-50 px-4 py-3 text-neutral-700 text-xs">
                 {importResult}
+              </p>
+            ) : null}
+          </section>
+
+          <section className="card p-5 sm:p-6">
+            <div className="flex items-start gap-3">
+              <span className="rounded-xl bg-brand-50 p-2.5 text-brand-700">
+                <Users className="size-5" aria-hidden="true" />
+              </span>
+              <div>
+                <h3 className="font-bold text-neutral-900">
+                  Importar profesores
+                </h3>
+                <p className="mt-1 text-neutral-500 text-xs">
+                  Nómina docente del establecimiento (hoja «Profesores», columna
+                  full_name). Se usa para reconocer al responsable en la
+                  revisión del PDF masivo.
+                </p>
+              </div>
+            </div>
+            <form
+              className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]"
+              onSubmit={(event) => {
+                event.preventDefault();
+                teacherMutation.mutate();
+              }}
+            >
+              <Input
+                aria-label="Excel de nómina docente"
+                type="file"
+                accept=".xlsx"
+                onChange={(event) =>
+                  setTeacherFile(event.target.files?.[0] ?? null)
+                }
+                className="text-sm text-neutral-700 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-2 file:text-brand-700 file:text-xs hover:file:bg-brand-100"
+              />
+              <Button
+                type="submit"
+                disabled={isBusy || !teacherFile}
+                className="rounded-xl px-4 py-2.5 text-sm"
+              >
+                <Upload className="size-4" aria-hidden="true" /> Subir nómina
+              </Button>
+            </form>
+            {teacherResult ? (
+              <p className="mt-4 rounded-xl bg-neutral-50 px-4 py-3 text-neutral-700 text-xs">
+                {teacherResult}
               </p>
             ) : null}
           </section>

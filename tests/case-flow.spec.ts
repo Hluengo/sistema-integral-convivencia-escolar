@@ -16,10 +16,10 @@ test.describe("Flujo de expedientes", () => {
     const sidebar = page.getByRole("complementary", {
       name: "Barra de navegación principal",
     });
-    await sidebar.getByRole("button", { name: /causas/i }).click();
+    await sidebar.getByRole("button", { name: /expedientes/i }).click();
 
     await page
-      .getByRole("button", { name: /crear nueva causa|nueva causa/i })
+      .getByRole("button", { name: /crear nuevo expediente|nuevo expediente/i })
       .first()
       .click();
 
@@ -36,10 +36,10 @@ test.describe("Flujo de expedientes", () => {
     const sidebar = page.getByRole("complementary", {
       name: "Barra de navegación principal",
     });
-    await sidebar.getByRole("button", { name: /causas/i }).click();
+    await sidebar.getByRole("button", { name: /expedientes/i }).click();
 
     await page
-      .getByRole("button", { name: /crear nueva causa|nueva causa/i })
+      .getByRole("button", { name: /crear nuevo expediente|nuevo expediente/i })
       .first()
       .click();
     await page.getByRole("button", { name: "Registrar Expediente" }).click();
@@ -70,7 +70,7 @@ test.describe("Flujo de expedientes", () => {
     const sidebar = page.getByRole("complementary", {
       name: "Barra de navegación principal",
     });
-    await sidebar.getByRole("button", { name: /causas/i }).click();
+    await sidebar.getByRole("button", { name: /expedientes/i }).click();
 
     const manageButton = page
       .getByRole("button", { name: /Gestionar expediente/i })
@@ -87,7 +87,7 @@ test.describe("Flujo de expedientes", () => {
     const sidebar = page.getByRole("complementary", {
       name: "Barra de navegación principal",
     });
-    await sidebar.getByRole("button", { name: /causas/i }).click();
+    await sidebar.getByRole("button", { name: /expedientes/i }).click();
 
     await page.getByRole("button", { name: "Activar modo privacidad" }).click();
 
