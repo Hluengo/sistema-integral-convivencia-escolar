@@ -50,6 +50,15 @@ describe("formatAnnotationDisplayText", () => {
       "Sin descripción registrada en el PDF.",
     );
   });
+
+  it("no muestra la categoría como descripción cuando no hay registro", () => {
+    assert.equal(
+      formatAnnotationDisplayText(
+        "[RESPONSABILIDAD] Categoria: RESPONSABILIDAD",
+      ),
+      "Sin descripción registrada en el PDF.",
+    );
+  });
 });
 
 describe("extractAnnotationCategory", () => {

@@ -74,6 +74,19 @@ export function bulkNameKey(value: string): string {
   return normalize(value).split(" ").sort().join(" ");
 }
 
+/**
+ * Detecta si dos textos son el mismo registro con distinto largo: el PDF
+ * re-emite anotaciones y a veces deja la versión truncada junto a la
+ * completa. Se exige un mínimo para no unir textos cortos coincidentes.
+ */
+export function textsOverlap(a: string, b: string): boolean {
+  const x = normalize(a);
+  const y = normalize(b);
+  const [short, long] = x.length <= y.length ? [x, y] : [y, x];
+  if (short.length < 20) return false;
+  return short === long || long.startsWith(short);
+}
+
 export const BULK_QUERY_CHUNK_SIZE = 20;
 export const BULK_QUERY_MAX_ROWS = 1000;
 
@@ -151,11 +164,10 @@ export function selectNewBulkAnnotations(
 ): BulkAnnotation[] {
   const existingCounts = new Map<string, number>();
   for (const record of existingRecords) {
-    const key = annotationKey(
-      record.type ?? "",
-      record.date_time,
-      record.observation ?? "",
-    );
+    // Lo guardado lleva prefijo `[CATEGORIA]` agregado al confirmar; se
+    // retira para comparar contra el parse fresco y no duplicar re-importes.
+    const stored = (record.observation ?? "").replace(/^\[[^\][]+\]\s*/, "");
+    const key = annotationKey(record.type ?? "", record.date_time, stored);
     existingCounts.set(key, (existingCounts.get(key) ?? 0) + 1);
   }
 
@@ -166,9 +178,21 @@ export function selectNewBulkAnnotations(
       annotation.texto,
     );
     const remaining = existingCounts.get(key) ?? 0;
-    if (remaining === 0) return true;
-    existingCounts.set(key, remaining - 1);
-    return false;
+    if (remaining > 0) {
+      existingCounts.set(key, remaining - 1);
+      return false;
+    }
+    // La base puede guardar la versión truncada (o completa) del mismo
+    // registro: se conserva lo registrado y no se vuelve a importar.
+    const overlap = existingRecords.some((record) => {
+      const stored = (record.observation ?? "").replace(/^\[[^\][]+\]\s*/, "");
+      return (
+        normalize(record.type ?? "") === normalize(annotation.tipo) &&
+        (record.date_time ?? "").slice(0, 10) === annotation.fecha_iso &&
+        textsOverlap(stored, annotation.texto)
+      );
+    });
+    return !overlap;
   });
 }
 
@@ -307,6 +331,52 @@ export function cutTrailingFields(profesor: string | null): string | null {
   return cut.length > 0 ? cut : profesor;
 }
 
+/**
+ * Recupera el trozo de anotación que el PDF deja después de la línea del
+ * profesor por un salto de página (ej. "...LIBRO DE" / "Profesor: X" /
+ * "LA ASIGNATURA."). Con nómina se ubica al docente, se recorta el nombre
+ * del estudiante siguiente y el resto vuelve al texto si venía truncado.
+ */
+export function resolveTeacherAndContinuation(
+  profesor: string | null,
+  texto: string,
+  teacherNames: string[],
+  studentNames: string[],
+): { profesor: string | null; texto: string } {
+  if (!profesor || teacherNames.length === 0) {
+    return {
+      profesor: stripTrailingStudentName(profesor, studentNames),
+      texto,
+    };
+  }
+  const hit = matchTeacherName(profesor, teacherNames);
+  if (!hit) {
+    return {
+      profesor: stripTrailingStudentName(profesor, studentNames),
+      texto,
+    };
+  }
+  const words = profesor.split(/\s+/);
+  const normalized = words.map((word) => normalize(word));
+  const hitWords = normalize(hit).split(" ").filter(Boolean);
+  let spanEnd = -1;
+  for (let i = 0; i + hitWords.length <= normalized.length; i += 1) {
+    if (hitWords.every((word, offset) => normalized[i + offset] === word)) {
+      spanEnd = i + hitWords.length;
+    }
+  }
+  if (spanEnd < 0) return { profesor: hit, texto };
+  const tail = stripTrailingStudentName(
+    words.slice(spanEnd).join(" "),
+    studentNames,
+  );
+  const continuation = (tail ?? "").trim();
+  if (continuation && !/[.!?…]\s*-?\s*$/.test(texto)) {
+    return { profesor: hit, texto: `${texto} ${continuation}` };
+  }
+  return { profesor: hit, texto };
+}
+
 export function parseBlock(
   block: string,
   page: number | null,
@@ -315,7 +385,8 @@ export function parseBlock(
 ): BulkAnnotation | null {
   // El PDF puede emitir acentos descompuestos (o + U+0301): sin NFC las
   // etiquetas Anotación/Categoría no calzan y el profesor arrastra texto.
-  const text = block.normalize("NFC");
+  // También puede partir "Profesor:" entre páginas ("Profes" + "or:").
+  const text = block.normalize("NFC").replace(/Profes\s+or\s*:/gi, "Profesor:");
   if (!/Tipo\s*:/i.test(text)) return null;
   const date = text.match(/(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/)?.[1];
   const fecha_iso = date ? toIsoDate(date) : null;
@@ -340,12 +411,13 @@ export function parseBlock(
     cutTrailingFields(rawProfesor),
     studentName,
   );
-  // Con nómina cargada se prefiere el nombre reconocido aunque venga con
-  // cola pegada; sin nómina se conserva el comportamiento anterior.
-  const rosterHit = matchTeacherName(cleaned, teacherNames);
-  const profesor = rosterHit ?? cleaned;
+  // La resolución fina (canonizar + recuperar continuación tras salto de
+  // página) ocurre en la segunda pasada, cuando se conocen todos los nombres.
+  const profesor = cleaned;
   const profesorReconocido =
-    teacherNames.length > 0 ? rosterHit !== null : undefined;
+    teacherNames.length > 0
+      ? matchTeacherName(cleaned, teacherNames) !== null
+      : undefined;
   const texto = extractFullAnnotationText(text);
   if (!texto) return null;
   return {
@@ -403,8 +475,21 @@ export async function parseBulkDisciplinaryPdf(
         annotation.tipo,
         normalize(annotation.texto).slice(0, 160),
       ].join("|");
-      if (seen.has(key)) {
+      const truncated = anotaciones.find(
+        (kept) =>
+          kept.fecha_iso === annotation.fecha_iso &&
+          kept.tipo === annotation.tipo &&
+          textsOverlap(kept.texto, annotation.texto),
+      );
+      if (seen.has(key) || truncated) {
         duplicados_eliminados += 1;
+        // Si convivían la versión truncada y la completa, se deja la completa.
+        if (
+          truncated &&
+          normalize(annotation.texto).length > normalize(truncated.texto).length
+        ) {
+          anotaciones[anotaciones.indexOf(truncated)] = annotation;
+        }
         continue;
       }
       seen.add(key);
@@ -419,14 +504,23 @@ export async function parseBulkDisciplinaryPdf(
   }
 
   // Segunda pasada: el nombre pegado puede ser el del estudiante siguiente,
-  // que solo se conoce al terminar de recorrer todas las fichas.
+  // que solo se conoce al terminar de recorrer todas las fichas. Acá también
+  // se canoniza al docente y se recupera texto cortado por salto de página.
   const allNames = students.map((student) => student.nombre);
   for (const student of students) {
     for (const annotation of student.anotaciones) {
-      annotation.profesor = stripTrailingStudentName(
+      const resolved = resolveTeacherAndContinuation(
         annotation.profesor,
+        annotation.texto,
+        teacherNames,
         allNames,
       );
+      annotation.profesor = resolved.profesor;
+      annotation.texto = resolved.texto;
+      annotation.profesorReconocido =
+        teacherNames.length > 0
+          ? matchTeacherName(resolved.profesor, teacherNames) !== null
+          : undefined;
     }
   }
 

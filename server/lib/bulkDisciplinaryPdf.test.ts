@@ -12,6 +12,8 @@ import {
   stripTrailingStudentName,
   cutTrailingFields,
   matchTeacherName,
+  resolveTeacherAndContinuation,
+  textsOverlap,
   parseBlock,
   parseBulkDisciplinaryPdf,
 } from "./bulkDisciplinaryPdf.js";
@@ -229,8 +231,15 @@ test("parseBlock reconoce al docente de la nómina aunque venga con cola", () =>
     "VICENTE IGNACIO GUAJARDO CAMPOS",
     ["CESAR MANUEL AVILES MUÑOZ", "MARÍA ISABEL MATUS RETAMAL"],
   );
-  assert.equal(parsed?.profesor, "CESAR MANUEL AVILES MUÑOZ");
   assert.equal(parsed?.profesorReconocido, true);
+  // La canonización ocurre en la segunda pasada (requiere todos los nombres).
+  const resolved = resolveTeacherAndContinuation(
+    parsed?.profesor ?? null,
+    parsed?.texto ?? "",
+    ["CESAR MANUEL AVILES MUÑOZ", "MARÍA ISABEL MATUS RETAMAL"],
+    ["VICENTE IGNACIO GUAJARDO CAMPOS"],
+  );
+  assert.equal(resolved.profesor, "CESAR MANUEL AVILES MUÑOZ");
 });
 
 test("parseBlock marca no reconocido cuando nadie de la nómina calza", () => {
@@ -252,6 +261,117 @@ test("parseBlock omite el indicador cuando no hay nómina cargada", () => {
   );
   assert.equal(parsed?.profesor, "DOCENTE DESCONOCIDO");
   assert.equal(parsed?.profesorReconocido, undefined);
+});
+
+test("textsOverlap detecta la versión truncada junto a la completa", () => {
+  assert.equal(
+    textsOverlap(
+      "CONVERSA CONSTANTEMENTE CON JAVIER LILLO . NO TRAE SU LIBRO Y",
+      "CONVERSA CONSTANTEMENTE CON JAVIER LILLO . NO TRAE SU LIBRO Y NO PONE ATENCIÓN.",
+    ),
+    true,
+  );
+  assert.equal(textsOverlap("ALUMNO GRITA.", "ALUMNA GRITA."), false);
+  assert.equal(textsOverlap("CORTO.", "CORTO Y ALGO MÁS."), false);
+});
+
+test("selectNewBulkAnnotations reconoce el prefijo guardado al confirmar", () => {
+  const kept = selectNewBulkAnnotations(
+    [
+      {
+        fecha_iso: "2026-03-31",
+        tipo: "Positiva",
+        categoria: "RESPONSABILIDAD",
+        profesor: "VALENTINA ANDREA ALBORNOZ TOLOZA",
+        texto:
+          "LEE EN VOZ ALTA PARA SUS COMPAÑEROS Y PARTICIPA ENTREGANDO SUS INTERPRETACIONES EN CLASE.",
+        page_number: 1,
+      },
+    ],
+    [
+      {
+        type: "Positiva",
+        date_time: "2026-03-31",
+        observation:
+          "[RESPONSABILIDAD] LEE EN VOZ ALTA PARA SUS COMPAÑEROS Y PARTICIPA ENTREGANDO SUS INTERPRETACIONES EN CLASE.",
+      },
+    ],
+  );
+  assert.equal(kept.length, 0);
+});
+
+test("selectNewBulkAnnotations omite el truncado ya registrado", () => {
+  const full =
+    "CONVERSA CONSTANTEMENTE CON JAVIER LILLO . NO TRAE SU LIBRO Y NO PONE ATENCIÓN.";
+  const kept = selectNewBulkAnnotations(
+    [
+      {
+        fecha_iso: "2026-07-24",
+        tipo: "Negativa",
+        categoria: "RESPONSABILIDAD Y COMPORTAMIENTO",
+        profesor: "VALENTINA ANDREA ALBORNOZ TOLOZA",
+        texto: full,
+        page_number: 1,
+      },
+    ],
+    [
+      {
+        type: "Negativa",
+        date_time: "2026-07-24",
+        observation:
+          "CONVERSA CONSTANTEMENTE CON JAVIER LILLO . NO TRAE SU LIBRO Y",
+      },
+    ],
+  );
+  assert.equal(kept.length, 0);
+});
+
+test("resolveTeacherAndContinuation recupera texto tras salto de página", () => {
+  const roster = ["SILVANA LORETO PINCHEIRA RODRÍGUEZ"];
+  const students = ["MILLA AGUAYO MAGDALENA PAZ"];
+  const out = resolveTeacherAndContinuation(
+    "SILVANA LORETO PINCHEIRA RODRÍGUEZ LA ASIGNATURA. MILLA AGUAYO MAGDALENA PAZ",
+    "NO DESARROLLA ACTIVIDADES DE LA CLASE . ADEMÁS NO TRAE LIBRO DE",
+    roster,
+    students,
+  );
+  assert.equal(out.profesor, "SILVANA LORETO PINCHEIRA RODRÍGUEZ");
+  assert.equal(
+    out.texto,
+    "NO DESARROLLA ACTIVIDADES DE LA CLASE . ADEMÁS NO TRAE LIBRO DE LA ASIGNATURA.",
+  );
+});
+
+test("resolveTeacherAndContinuation no pega colas si el texto está completo", () => {
+  const out = resolveTeacherAndContinuation(
+    "SILVANA LORETO PINCHEIRA RODRÍGUEZ LA ASIGNATURA.",
+    "TEXTO COMPLETO.",
+    ["SILVANA LORETO PINCHEIRA RODRÍGUEZ"],
+    [],
+  );
+  assert.equal(out.profesor, "SILVANA LORETO PINCHEIRA RODRÍGUEZ");
+  assert.equal(out.texto, "TEXTO COMPLETO.");
+});
+
+test("resolveTeacherAndContinuation sin nómina solo recorta al estudiante", () => {
+  const out = resolveTeacherAndContinuation(
+    "DOCENTE DESCONOCIDO MILLA AGUAYO MAGDALENA PAZ",
+    "TEXTO.",
+    [],
+    ["MILLA AGUAYO MAGDALENA PAZ"],
+  );
+  assert.equal(out.profesor, "DOCENTE DESCONOCIDO");
+  assert.equal(out.texto, "TEXTO.");
+});
+
+test("parseBlock une Profesor partido por salto de página", () => {
+  const parsed = parseBlock(
+    "14/04/2026 Tipo: Información Categoria: INFORMACIÓN Anotación: SE REGISTRA DEC DE ESTUDIANTE Profes or: VANNIA ANDREA RETAMAL SALGADO",
+    null,
+    "PEPITO PRUEBA",
+  );
+  assert.equal(parsed?.profesor, "VANNIA ANDREA RETAMAL SALGADO");
+  assert.equal(parsed?.texto, "SE REGISTRA DEC DE ESTUDIANTE");
 });
 
 test("reconoce el registro previo aunque el bloque repita encabezados sin profesor", () => {

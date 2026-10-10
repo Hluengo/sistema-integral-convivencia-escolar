@@ -405,3 +405,18 @@ describe("fetchCartaTableStates", () => {
     }
   });
 });
+
+describe("isSupersedableCarta", () => {
+  it("acepta la vigente pendiente y conserva el historial cerrado", async () => {
+    const { isSupersedableCarta } = await import("./cartas.service");
+    assert.equal(isSupersedableCarta("Vigente", []), true);
+    assert.equal(
+      isSupersedableCarta("Vigente", ["suggested", "printed"]),
+      true,
+    );
+    assert.equal(isSupersedableCarta("Anulada", []), false);
+    assert.equal(isSupersedableCarta("Vigente", ["processed_manually"]), false);
+    assert.equal(isSupersedableCarta("Vigente", ["archived"]), false);
+    assert.equal(isSupersedableCarta(null, []), false);
+  });
+});

@@ -92,5 +92,30 @@ export function formatAnnotationDisplayText(text: string): string {
   // El lote masivo guarda la categoría como prefijo `[CATEGORIA]`; el flujo
   // individual nunca la muestra, así que se oculta para igualar ambas vistas.
   const withoutPrefix = visible.replace(/^\[[^\][]+\]\s*/, "").trim();
-  return withoutPrefix.length > 0 ? withoutPrefix : visible;
+  if (withoutPrefix.length === 0) return visible;
+  // Si solo quedan etiquetas y el valor de la categoría, no hay registro
+  // propiamente tal: se informa en vez de repetir la insignia.
+  if (
+    isMetadataOnlyRemainder(
+      withoutPrefix,
+      extractAnnotationCategory(normalized),
+    )
+  ) {
+    return "Sin descripción registrada en el PDF.";
+  }
+  return withoutPrefix;
+}
+
+function isMetadataOnlyRemainder(
+  value: string,
+  category: string | null,
+): boolean {
+  let rest = value
+    .replace(/\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b[, ]*/g, "")
+    .replace(/\b(Tipo|Categoria|Anotaci[óo]n|Profesor)\s*:?/gi, "");
+  if (category) {
+    const escaped = category.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    rest = rest.replace(new RegExp(escaped, "gi"), "");
+  }
+  return rest.replace(/[.\-–—:;,()\s]+/g, "").length === 0;
 }

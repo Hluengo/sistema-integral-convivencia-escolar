@@ -129,6 +129,38 @@ export function filterHistoryItems<T extends HistoryTimelineItemLike>(
   });
 }
 
+export interface CartaEventLike {
+  carta_id: string;
+  event_type: string;
+  created_at: string;
+}
+
+/**
+ * Colapsa eventos repetidos por doble registro (misma carta y tipo dentro de
+ * 60 segundos): se conserva el primero. Solo oculta en la vista, no borra.
+ */
+export function collapseNearDuplicateEvents<T extends CartaEventLike>(
+  events: T[],
+): T[] {
+  const sorted = [...events].sort(
+    (a, b) => +new Date(a.created_at) - +new Date(b.created_at),
+  );
+  const last: Record<string, number> = {};
+  const out: T[] = [];
+  for (const event of sorted) {
+    const time = +new Date(event.created_at);
+    if (Number.isNaN(time)) {
+      out.push(event);
+      continue;
+    }
+    const key = `${event.carta_id}|${event.event_type}`;
+    if (last[key] !== undefined && time - last[key] < 60000) continue;
+    last[key] = time;
+    out.push(event);
+  }
+  return out;
+}
+
 /** Ordena por fecha (copia nueva); fechas inválidas van al final. */
 export function sortHistoryItems<T extends { date: string }>(
   items: T[],

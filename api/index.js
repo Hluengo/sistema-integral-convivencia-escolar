@@ -1250,6 +1250,13 @@ function normalize(value) {
 function bulkNameKey(value) {
   return normalize(value).split(" ").sort().join(" ");
 }
+function textsOverlap(a, b) {
+  const x = normalize(a);
+  const y = normalize(b);
+  const [short, long] = x.length <= y.length ? [x, y] : [y, x];
+  if (short.length < 20) return false;
+  return short === long || long.startsWith(short);
+}
 function chunkQueryIds(ids, size = BULK_QUERY_CHUNK_SIZE) {
   const chunks = [];
   for (let index = 0; index < ids.length; index += size) {
@@ -1299,11 +1306,8 @@ function annotationKey(type, date, text) {
 function selectNewBulkAnnotations(annotations, existingRecords) {
   const existingCounts = /* @__PURE__ */ new Map();
   for (const record of existingRecords) {
-    const key = annotationKey(
-      record.type ?? "",
-      record.date_time,
-      record.observation ?? "",
-    );
+    const stored = (record.observation ?? "").replace(/^\[[^\][]+\]\s*/, "");
+    const key = annotationKey(record.type ?? "", record.date_time, stored);
     existingCounts.set(key, (existingCounts.get(key) ?? 0) + 1);
   }
   return annotations.filter((annotation) => {
@@ -1313,9 +1317,19 @@ function selectNewBulkAnnotations(annotations, existingRecords) {
       annotation.texto,
     );
     const remaining = existingCounts.get(key) ?? 0;
-    if (remaining === 0) return true;
-    existingCounts.set(key, remaining - 1);
-    return false;
+    if (remaining > 0) {
+      existingCounts.set(key, remaining - 1);
+      return false;
+    }
+    const overlap = existingRecords.some((record) => {
+      const stored = (record.observation ?? "").replace(/^\[[^\][]+\]\s*/, "");
+      return (
+        normalize(record.type ?? "") === normalize(annotation.tipo) &&
+        (record.date_time ?? "").slice(0, 10) === annotation.fecha_iso &&
+        textsOverlap(stored, annotation.texto)
+      );
+    });
+    return !overlap;
   });
 }
 function toIsoDate2(value) {
@@ -1429,8 +1443,47 @@ function cutTrailingFields(profesor) {
     .trim();
   return cut.length > 0 ? cut : profesor;
 }
+function resolveTeacherAndContinuation(
+  profesor,
+  texto,
+  teacherNames,
+  studentNames,
+) {
+  if (!profesor || teacherNames.length === 0) {
+    return {
+      profesor: stripTrailingStudentName(profesor, studentNames),
+      texto,
+    };
+  }
+  const hit = matchTeacherName(profesor, teacherNames);
+  if (!hit) {
+    return {
+      profesor: stripTrailingStudentName(profesor, studentNames),
+      texto,
+    };
+  }
+  const words = profesor.split(/\s+/);
+  const normalized = words.map((word) => normalize(word));
+  const hitWords = normalize(hit).split(" ").filter(Boolean);
+  let spanEnd = -1;
+  for (let i = 0; i + hitWords.length <= normalized.length; i += 1) {
+    if (hitWords.every((word, offset) => normalized[i + offset] === word)) {
+      spanEnd = i + hitWords.length;
+    }
+  }
+  if (spanEnd < 0) return { profesor: hit, texto };
+  const tail = stripTrailingStudentName(
+    words.slice(spanEnd).join(" "),
+    studentNames,
+  );
+  const continuation = (tail ?? "").trim();
+  if (continuation && !/[.!?…]\s*-?\s*$/.test(texto)) {
+    return { profesor: hit, texto: `${texto} ${continuation}` };
+  }
+  return { profesor: hit, texto };
+}
 function parseBlock(block, page, studentName = null, teacherNames = []) {
-  const text = block.normalize("NFC");
+  const text = block.normalize("NFC").replace(/Profes\s+or\s*:/gi, "Profesor:");
   if (!/Tipo\s*:/i.test(text)) return null;
   const date = text.match(/(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/)?.[1];
   const fecha_iso = date ? toIsoDate2(date) : null;
@@ -1455,10 +1508,11 @@ function parseBlock(block, page, studentName = null, teacherNames = []) {
     cutTrailingFields(rawProfesor),
     studentName,
   );
-  const rosterHit = matchTeacherName(cleaned, teacherNames);
-  const profesor = rosterHit ?? cleaned;
+  const profesor = cleaned;
   const profesorReconocido =
-    teacherNames.length > 0 ? rosterHit !== null : void 0;
+    teacherNames.length > 0
+      ? matchTeacherName(cleaned, teacherNames) !== null
+      : void 0;
   const texto = extractFullAnnotationText(text);
   if (!texto) return null;
   return {
@@ -1510,8 +1564,20 @@ async function parseBulkDisciplinaryPdf(buffer, teacherNames = []) {
         annotation.tipo,
         normalize(annotation.texto).slice(0, 160),
       ].join("|");
-      if (seen.has(key)) {
+      const truncated = anotaciones.find(
+        (kept) =>
+          kept.fecha_iso === annotation.fecha_iso &&
+          kept.tipo === annotation.tipo &&
+          textsOverlap(kept.texto, annotation.texto),
+      );
+      if (seen.has(key) || truncated) {
         duplicados_eliminados += 1;
+        if (
+          truncated &&
+          normalize(annotation.texto).length > normalize(truncated.texto).length
+        ) {
+          anotaciones[anotaciones.indexOf(truncated)] = annotation;
+        }
         continue;
       }
       seen.add(key);
@@ -1527,10 +1593,18 @@ async function parseBulkDisciplinaryPdf(buffer, teacherNames = []) {
   const allNames = students.map((student) => student.nombre);
   for (const student of students) {
     for (const annotation of student.anotaciones) {
-      annotation.profesor = stripTrailingStudentName(
+      const resolved = resolveTeacherAndContinuation(
         annotation.profesor,
+        annotation.texto,
+        teacherNames,
         allNames,
       );
+      annotation.profesor = resolved.profesor;
+      annotation.texto = resolved.texto;
+      annotation.profesorReconocido =
+        teacherNames.length > 0
+          ? matchTeacherName(resolved.profesor, teacherNames) !== null
+          : void 0;
     }
   }
   if (!students.length) warnings.push("No se encontraron fichas en el PDF.");
@@ -5356,9 +5430,64 @@ async function syncBulkPendingCartas(input) {
       },
     });
     if (eventError) throw eventError;
+    await archiveSupersededCartas(
+      supabase,
+      tenantId,
+      student.id,
+      letterType,
+      carta.id,
+    );
     created += 1;
   }
   return created;
+}
+var CLOSED_EVENT_TYPES = ["processed_manually", "archived", "annulled"];
+function isSupersedableCarta(status, eventTypes) {
+  if (status !== "Vigente") return false;
+  return !eventTypes.some((type) => CLOSED_EVENT_TYPES.includes(type));
+}
+async function archiveSupersededCartas(
+  supabase,
+  tenantId,
+  studentId,
+  letterType,
+  keepId,
+) {
+  const { data, error } = await supabase
+    .from("cartas_disciplinarias")
+    .select("id,status")
+    .eq("tenant_id", tenantId)
+    .eq("student_id", studentId)
+    .eq("letter_type", letterType)
+    .eq("status", "Vigente")
+    .neq("id", keepId);
+  if (error || !data?.length) return 0;
+  const ids = data.map((row) => row.id);
+  const { data: events } = await supabase
+    .from("carta_events")
+    .select("carta_id,event_type")
+    .in("carta_id", ids);
+  const byCarta = /* @__PURE__ */ new Map();
+  for (const event of events ?? []) {
+    byCarta.set(event.carta_id, [
+      ...(byCarta.get(event.carta_id) ?? []),
+      event.event_type,
+    ]);
+  }
+  let archived = 0;
+  for (const row of data) {
+    if (!isSupersedableCarta(row.status, byCarta.get(row.id) ?? [])) continue;
+    const { error: eventError } = await supabase.from("carta_events").insert({
+      carta_id: row.id,
+      student_id: studentId,
+      tenant_id: tenantId,
+      event_type: "archived",
+      event_detail: "Reemplazada por reemisi\xF3n del mismo tipo.",
+    });
+    if (eventError) continue;
+    archived += 1;
+  }
+  return archived;
 }
 
 // server/api/routes/admin.ts

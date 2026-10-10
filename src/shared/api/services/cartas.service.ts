@@ -587,7 +587,7 @@ export async function createPendingCartaForStudent(params: {
   await createCartaEvent(
     carta.id,
     "suggested",
-    `Carta sugerida por progresión ${sourceLabel}`,
+    `Carta sugerida por progresi�n ${sourceLabel}`,
     {
       source: params.source,
       negativeCount: params.negativeCount,
@@ -595,10 +595,64 @@ export async function createPendingCartaForStudent(params: {
       sourceAnalysisId: params.sourceAnalysisId || null,
     },
   );
+  await archiveSupersededCartas(
+    params.tenantId,
+    carta.student_id,
+    params.letterType,
+    carta.id,
+  );
   return hydrateCartaWorkflow(
     carta,
     await fetchCartaEventsByStudent(params.student.id),
   );
+}
+
+const CLOSED_EVENT_TYPES = ["processed_manually", "archived", "annulled"];
+
+/**
+ * Vigente pendiente: puede archivarse al reemitir sin tocar el historial ya
+ * cerrado. Mismo criterio que el flujo masivo del servidor.
+ */
+export function isSupersedableCarta(
+  status: string | null,
+  eventTypes: string[],
+): boolean {
+  if (status !== "Vigente") return false;
+  return !eventTypes.some((type) => CLOSED_EVENT_TYPES.includes(type));
+}
+
+async function archiveSupersededCartas(
+  tenantId: string,
+  studentId: string,
+  letterType: string,
+  keepId: string,
+): Promise<void> {
+  const { data } = await supabase
+    .from("cartas_disciplinarias")
+    .select("id,status")
+    .eq("tenant_id", tenantId)
+    .eq("student_id", studentId)
+    .eq("letter_type", letterType)
+    .eq("status", "Vigente")
+    .neq("id", keepId);
+  const ids = ((data ?? []) as Array<{ id: string }>).map((row) => row.id);
+  if (ids.length === 0) return;
+  const events = await fetchCartaEventsByStudent(studentId);
+  const byCarta = new Map<string, string[]>();
+  for (const event of events) {
+    if (!ids.includes(event.carta_id)) continue;
+    byCarta.set(event.carta_id, [
+      ...(byCarta.get(event.carta_id) ?? []),
+      event.event_type,
+    ]);
+  }
+  for (const row of (data ?? []) as Array<{
+    id: string;
+    status: string | null;
+  }>) {
+    if (!isSupersedableCarta(row.status, byCarta.get(row.id) ?? [])) continue;
+    await archiveCarta(row.id, "Reemplazada por reemisión del mismo tipo.");
+  }
 }
 
 async function fetchEtapasByStudent(

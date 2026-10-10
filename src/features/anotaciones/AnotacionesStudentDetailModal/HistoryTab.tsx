@@ -30,6 +30,7 @@ import { formatDate } from "./constants";
 import { useStudentHistoryEntries } from "@/shared/lib/hooks/useStudentHistoryEntries";
 import ManualHistoryEntryForm from "./ManualHistoryEntryForm";
 import {
+  collapseNearDuplicateEvents,
   filterHistoryItems,
   getHistoryBadge,
   groupHistoryItemsByMonth,
@@ -150,9 +151,11 @@ export default function HistoryTab({
   const [sortDirection, setSortDirection] =
     useState<HistorySortDirection>("desc");
   const manualHistory = useStudentHistoryEntries(studentId);
-  const relevantCartaEvents = cartaEvents.filter(
-    (event) =>
-      event.event_type !== "created" && event.event_type !== "suggested",
+  const relevantCartaEvents = collapseNearDuplicateEvents(
+    cartaEvents.filter(
+      (event) =>
+        event.event_type !== "created" && event.event_type !== "suggested",
+    ),
   );
   const cartasWithEvents = new Set(
     relevantCartaEvents.map((event) => event.carta_id),

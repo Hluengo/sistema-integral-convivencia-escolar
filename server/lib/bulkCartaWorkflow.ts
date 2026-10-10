@@ -203,8 +203,81 @@ export async function syncBulkPendingCartas(
       },
     });
     if (eventError) throw eventError;
+    await archiveSupersededCartas(
+      supabase,
+      tenantId,
+      student.id,
+      letterType,
+      carta.id,
+    );
     created += 1;
   }
 
   return created;
+}
+
+const CLOSED_EVENT_TYPES = ["processed_manually", "archived", "annulled"];
+
+/**
+ * Vigente pendiente: puede archivarse al reemitir sin tocar el historial ya
+ * cerrado. El trámite vive en carta_events (la tabla no tiene columnas de
+ * flujo), así que la decisión usa estado + eventos registrados.
+ */
+export function isSupersedableCarta(
+  status: string | null,
+  eventTypes: string[],
+): boolean {
+  if (status !== "Vigente") return false;
+  return !eventTypes.some((type) => CLOSED_EVENT_TYPES.includes(type));
+}
+
+/**
+ * Archiva (evento) las vigentes pendientes del mismo tipo al reemitir, para
+ * que no convivan dos vigentes. Devuelve cuántas archivó.
+ */
+export async function archiveSupersededCartas(
+  supabase: SupabaseClient,
+  tenantId: string,
+  studentId: string,
+  letterType: string,
+  keepId: string,
+): Promise<number> {
+  const { data, error } = await supabase
+    .from("cartas_disciplinarias")
+    .select("id,status")
+    .eq("tenant_id", tenantId)
+    .eq("student_id", studentId)
+    .eq("letter_type", letterType)
+    .eq("status", "Vigente")
+    .neq("id", keepId);
+  if (error || !data?.length) return 0;
+  const ids = (data as Array<{ id: string }>).map((row) => row.id);
+  const { data: events } = await supabase
+    .from("carta_events")
+    .select("carta_id,event_type")
+    .in("carta_id", ids);
+  const byCarta = new Map<string, string[]>();
+  for (const event of (events ?? []) as Array<{
+    carta_id: string;
+    event_type: string;
+  }>) {
+    byCarta.set(event.carta_id, [
+      ...(byCarta.get(event.carta_id) ?? []),
+      event.event_type,
+    ]);
+  }
+  let archived = 0;
+  for (const row of data as Array<{ id: string; status: string | null }>) {
+    if (!isSupersedableCarta(row.status, byCarta.get(row.id) ?? [])) continue;
+    const { error: eventError } = await supabase.from("carta_events").insert({
+      carta_id: row.id,
+      student_id: studentId,
+      tenant_id: tenantId,
+      event_type: "archived",
+      event_detail: "Reemplazada por reemisión del mismo tipo.",
+    });
+    if (eventError) continue;
+    archived += 1;
+  }
+  return archived;
 }

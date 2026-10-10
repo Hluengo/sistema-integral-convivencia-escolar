@@ -3,6 +3,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  collapseNearDuplicateEvents,
   filterHistoryItems,
   getHistoryBadge,
   groupHistoryItemsByMonth,
@@ -115,6 +116,40 @@ describe("historyTimeline", () => {
       items.map((entry) => entry.id),
       ["a", "b", "c"],
     );
+  });
+
+  it("colapsa eventos repetidos dentro de 60 segundos", () => {
+    const ev = (id: string, created_at: string, event_type = "printed") => ({
+      carta_id: "carta-1",
+      event_type,
+      created_at,
+      id,
+    });
+    const collapsed = collapseNearDuplicateEvents([
+      ev("a", "2026-10-08T10:00:00.000Z"),
+      ev("b", "2026-10-08T10:00:25.000Z"),
+      ev("c", "2026-10-08T10:05:00.000Z"),
+    ]);
+    assert.deepEqual(
+      collapsed.map((entry) => entry.id),
+      ["a", "c"],
+    );
+  });
+
+  it("conserva tipos distintos aunque sean cercanos", () => {
+    const collapsed = collapseNearDuplicateEvents([
+      {
+        carta_id: "carta-1",
+        event_type: "printed",
+        created_at: "2026-10-08T10:00:00.000Z",
+      },
+      {
+        carta_id: "carta-1",
+        event_type: "archived",
+        created_at: "2026-10-08T10:00:20.000Z",
+      },
+    ]);
+    assert.equal(collapsed.length, 2);
   });
 
   it("agrupa por mes con etiqueta en español", () => {
