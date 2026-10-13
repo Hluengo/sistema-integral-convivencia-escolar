@@ -25,6 +25,14 @@ test("excluye el 18 de septiembre como feriado nacional chileno", () => {
   );
   assert.equal(agregarDiasHabiles("2026-09-17", 1), "2026-09-21");
 });
+
+test("excluye el 12 de octubre como feriado nacional chileno", () => {
+  assert.equal(
+    calcularDiasHabilesDesdeDiaSiguiente("2026-10-09", "2026-10-12"),
+    0,
+  );
+  assert.equal(agregarDiasHabiles("2026-10-09", 1), "2026-10-13");
+});
 import {
   MAX_PLAZO_INVESTIGACION_DIAS,
   PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS,

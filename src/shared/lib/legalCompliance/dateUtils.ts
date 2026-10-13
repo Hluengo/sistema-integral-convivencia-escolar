@@ -23,6 +23,7 @@ const FERIADOS_NACIONALES_FIJOS = new Set([
   "08-15",
   "09-18",
   "09-19",
+  "10-12",
   "10-31",
   "11-01",
   "12-08",
