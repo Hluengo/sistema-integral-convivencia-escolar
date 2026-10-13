@@ -224,6 +224,24 @@ describe("reconcileChecklistFromBitacora", () => {
     assert.equal(getPhaseProgress(result, "Seguimiento").completed >= 1, true);
   });
 
+  it("completa chk_rec_3 con la notificación emitida (DC-2026-040)", () => {
+    const result = reconcileChecklistFromBitacora(
+      [],
+      [
+        entry(
+          "b-notif",
+          "2026-10-01T10:56:05.758Z",
+          "Notificación de Inicio de Indagación emitida",
+          "Se emitió la Notificación de Inicio de Indagación (2026-10-01) para informar formalmente al estudiante.",
+        ),
+      ],
+    );
+    const item = result.find((candidate) => candidate.id === "chk_rec_3");
+
+    assert.equal(item?.completado, true);
+    assert.equal(item?.fechaCompletado, "2026-10-01");
+  });
+
   it("completa el cierre con el hito colectivo de causa cerrada", () => {
     const result = reconcileChecklistFromBitacora(
       [],

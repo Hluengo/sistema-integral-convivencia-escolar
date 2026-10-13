@@ -7,6 +7,10 @@ import { toDateOnly } from "../../../shared/lib/dateUtils";
 const REGISTRATION_PREFIX = "Registro de Hito: ";
 const RECTIFICATION_PREFIX = "Rectificación de Hito: ";
 const RESET_PREFIX = "Invalidador Hito: ";
+// La Notificación de Inicio de Indagación se registra como "<label> emitida"
+// (ver notificacionDocgen/builders): sin este sufijo su hito nunca se
+// completa aunque el documento esté notificado.
+const EMISSION_SUFFIX = " emitida";
 const RESPONSIBLE_MARKER = "Responsable: ";
 const OBSERVATIONS_MARKER = ". Observaciones: ";
 const LEGACY_LABEL_ALIASES: Record<string, string> = {
@@ -103,15 +107,19 @@ export function reconcileChecklistFromBitacora(
       entry.titulo.startsWith(REGISTRATION_PREFIX) ||
       entry.titulo.startsWith(RECTIFICATION_PREFIX);
     const isReset = entry.titulo.startsWith(RESET_PREFIX);
-    if (!isRegistration && !isReset) continue;
+    const isEmission =
+      !isRegistration && !isReset && entry.titulo.endsWith(EMISSION_SUFFIX);
+    if (!isRegistration && !isReset && !isEmission) continue;
 
-    const label = entry.titulo.slice(
-      entry.titulo.startsWith(RECTIFICATION_PREFIX)
-        ? RECTIFICATION_PREFIX.length
-        : isRegistration
-          ? REGISTRATION_PREFIX.length
-          : RESET_PREFIX.length,
-    );
+    const label = isEmission
+      ? entry.titulo.slice(0, -EMISSION_SUFFIX.length)
+      : entry.titulo.slice(
+          entry.titulo.startsWith(RECTIFICATION_PREFIX)
+            ? RECTIFICATION_PREFIX.length
+            : isRegistration
+              ? REGISTRATION_PREFIX.length
+              : RESET_PREFIX.length,
+        );
     const itemId = idByLabel.get(LEGACY_LABEL_ALIASES[label] ?? label);
     const index = itemId ? indexById.get(itemId) : undefined;
     if (index === undefined) continue;
