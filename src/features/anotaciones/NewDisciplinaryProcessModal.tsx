@@ -14,6 +14,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import type { Student } from "./NewDisciplinaryProcessModal/constants";
 import { useInvalidateDashboardQueries } from "@/shared/lib/hooks/useInvalidateDashboardQueries";
+import { queryClient } from "@/src/lib/queryClient";
 import { supabase } from "../../shared/api/lib/supabase";
 import { useAuthStore } from "@/shared/lib/stores/authStore";
 import type { AnnotationSummary } from "@/shared/lib/types";
@@ -513,6 +514,9 @@ export default function NewDisciplinaryProcessModal({
         processNumber: string;
       };
       setCreatedProcess({ id: data.processId, number: data.processNumber });
+      await queryClient.invalidateQueries({
+        queryKey: ["disciplinary-snapshot", selectedStudent.id],
+      });
       setStep("success");
       setStatus("success");
       uploadedFileRef.current = null;

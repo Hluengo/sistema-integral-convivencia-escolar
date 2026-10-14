@@ -37,7 +37,9 @@ export function useDisciplinaryData(studentId: string): DisciplinaryDataResult {
     queryKey: [SNAPSHOT_QUERY_KEY, studentId],
     queryFn: () => fetchStudentDisciplinarySnapshot(studentId),
     enabled: Boolean(studentId),
-    staleTime: 5 * 60 * 1000,
+    // El historial de PDF puede cambiar tras confirmar un proceso en otro modal.
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const refresh = useCallback(async () => {

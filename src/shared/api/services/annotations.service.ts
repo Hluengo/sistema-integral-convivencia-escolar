@@ -76,15 +76,20 @@ export async function fetchAnnotations(
 export async function fetchDocumentAnalyses(
   studentId: string,
 ): Promise<DocumentAnalysis[]> {
-  const { data, error } = await supabase
-    .from("document_analyses")
-    .select(DOCUMENT_ANALYSIS_COLUMNS)
-    .eq("student_id", studentId)
-    .order("analyzed_at", { ascending: false });
+  const { data, error } = await withSupabaseReadRetry(() =>
+    supabase
+      .from("document_analyses")
+      .select(DOCUMENT_ANALYSIS_COLUMNS)
+      .eq("student_id", studentId)
+      .order("analyzed_at", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false, nullsFirst: false })
+      .order("id", { ascending: false }),
+  );
 
   if (error) {
-    console.error("Error fetching document analyses:", error);
-    return [];
+    throw new Error(
+      `No se pudo cargar el historial de análisis PDF: ${error.message ?? "error desconocido"}`,
+    );
   }
   return (data || []) as DocumentAnalysis[];
 }

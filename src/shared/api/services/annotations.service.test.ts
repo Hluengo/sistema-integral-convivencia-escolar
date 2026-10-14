@@ -33,7 +33,10 @@ class MockQueryBuilder<T> {
   lt(_column: string, _value: unknown) {
     return this;
   }
-  order(_column: string, _opts?: { ascending?: boolean }) {
+  order(
+    _column: string,
+    _opts?: { ascending?: boolean; nullsFirst?: boolean },
+  ) {
     return this;
   }
   update(_row: Record<string, unknown>) {
@@ -143,15 +146,18 @@ describe("fetchAnnotations", () => {
 });
 
 describe("fetchDocumentAnalyses", () => {
-  it("retorna vacío cuando hay error", async () => {
-    const result = await withSupabaseMocks({
-      from: () => ({ data: null, error: new Error("boom") }),
-      fn: async () => {
-        const { fetchDocumentAnalyses } = await import("./annotations.service");
-        return fetchDocumentAnalyses("student-1");
-      },
-    });
-    assert.deepEqual(result, []);
+  it("expone el error en vez de ocultarlo como historial vacío", async () => {
+    await assert.rejects(
+      withSupabaseMocks({
+        from: () => ({ data: null, error: new Error("boom") }),
+        fn: async () => {
+          const { fetchDocumentAnalyses } =
+            await import("./annotations.service");
+          return fetchDocumentAnalyses("student-1");
+        },
+      }),
+      /No se pudo cargar el historial de análisis PDF: boom/,
+    );
   });
 
   it("retorna las filas de document_analyses", async () => {
