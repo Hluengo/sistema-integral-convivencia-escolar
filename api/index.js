@@ -1071,6 +1071,18 @@ async function confirmDisciplinaryProcess(input) {
     },
   );
   if (atomicError || !Array.isArray(atomicResult) || !atomicResult[0]) {
+    if (atomicError?.code === "23505") {
+      const concurrentDuplicate = await findDuplicateFileByHash(
+        supabase,
+        confirmedInput.tenantId,
+        confirmedInput.fileHash,
+      );
+      if (concurrentDuplicate) {
+        throw new Error(
+          `Este PDF ya fue registrado en el proceso ${concurrentDuplicate.process_number}. No se cre\xF3 un duplicado.`,
+        );
+      }
+    }
     throw new Error(
       "Error al confirmar at\xF3micamente el proceso disciplinario",
     );
@@ -6295,6 +6307,7 @@ router11.post(
   "/admin/annotations/bulk-confirm",
   ownUpload.single("file"),
   async (req, res) => {
+    let bulkClaim = null;
     try {
       const request2 = getRequest(req);
       const client = getAdminClient3();
@@ -6425,6 +6438,27 @@ router11.post(
           .json({ error: "Este PDF ya fue importado para este curso." });
         return;
       }
+      const { data: claimed, error: claimError } = await client.rpc(
+        "claim_bulk_pdf_import",
+        {
+          p_tenant_id: request2.tenantId ?? "",
+          p_course_id: courseId,
+          p_file_hash: fileHash,
+        },
+      );
+      if (claimError) throw claimError;
+      if (!claimed) {
+        res.status(409).json({
+          error:
+            "Este PDF ya est\xE1 siendo procesado o fue importado anteriormente.",
+        });
+        return;
+      }
+      bulkClaim = {
+        tenantId: request2.tenantId ?? "",
+        courseId,
+        fileHash,
+      };
       const rows = newAnnotations.map((annotation) => ({
         student_id: annotation.student_id,
         date_time: `${annotation.fecha_iso}T12:00:00.000Z`,
@@ -6465,6 +6499,16 @@ router11.post(
         },
       });
       if (auditError) throw auditError;
+      const { error: completeError } = await client.rpc(
+        "complete_bulk_pdf_import",
+        {
+          p_tenant_id: request2.tenantId ?? "",
+          p_course_id: courseId,
+          p_file_hash: fileHash,
+        },
+      );
+      if (completeError) throw completeError;
+      bulkClaim = null;
       res.json({
         imported: rows.length,
         skipped: detectedTotal - newAnnotations.length,
@@ -6472,6 +6516,13 @@ router11.post(
         pending_cartas: pendingCartas,
       });
     } catch (error) {
+      if (bulkClaim) {
+        await getAdminClient3().rpc("release_bulk_pdf_import", {
+          p_tenant_id: bulkClaim.tenantId,
+          p_course_id: bulkClaim.courseId,
+          p_file_hash: bulkClaim.fileHash,
+        });
+      }
       const message =
         error instanceof Error
           ? error.message

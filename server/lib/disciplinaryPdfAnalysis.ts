@@ -1520,6 +1520,18 @@ export async function confirmDisciplinaryProcess(input: ConfirmInput): Promise<{
     },
   );
   if (atomicError || !Array.isArray(atomicResult) || !atomicResult[0]) {
+    if (atomicError?.code === "23505") {
+      const concurrentDuplicate = await findDuplicateFileByHash(
+        supabase,
+        confirmedInput.tenantId,
+        confirmedInput.fileHash,
+      );
+      if (concurrentDuplicate) {
+        throw new Error(
+          `Este PDF ya fue registrado en el proceso ${concurrentDuplicate.process_number}. No se creó un duplicado.`,
+        );
+      }
+    }
     throw new Error("Error al confirmar atómicamente el proceso disciplinario");
   }
 

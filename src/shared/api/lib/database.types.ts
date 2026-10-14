@@ -2238,6 +2238,14 @@ export type Database = {
     Functions: {
       app_role: { Args: never; Returns: string };
       clean_old_logs: { Args: { days_to_keep?: number }; Returns: string };
+      claim_bulk_pdf_import: {
+        Args: { p_course_id: string; p_file_hash: string; p_tenant_id: string };
+        Returns: boolean;
+      };
+      complete_bulk_pdf_import: {
+        Args: { p_course_id: string; p_file_hash: string; p_tenant_id: string };
+        Returns: undefined;
+      };
       confirm_disciplinary_process_atomic: {
         Args: {
           p_analysis_version: string;
@@ -2273,6 +2281,10 @@ export type Database = {
       current_app_role: { Args: never; Returns: string };
       current_role: { Args: never; Returns: string };
       current_tenant_id: { Args: never; Returns: string };
+      release_bulk_pdf_import: {
+        Args: { p_course_id: string; p_file_hash: string; p_tenant_id: string };
+        Returns: undefined;
+      };
       current_user_memberships: {
         Args: never;
         Returns: {

@@ -931,6 +931,11 @@ router.post(
   "/admin/annotations/bulk-confirm",
   ownUpload.single("file"),
   async (req, res) => {
+    let bulkClaim: {
+      tenantId: string;
+      courseId: string;
+      fileHash: string;
+    } | null = null;
     try {
       const request = getRequest(req);
       const client = getAdminClient();
@@ -1064,6 +1069,28 @@ router.post(
         return;
       }
 
+      const { data: claimed, error: claimError } = await client.rpc(
+        "claim_bulk_pdf_import",
+        {
+          p_tenant_id: request.tenantId ?? "",
+          p_course_id: courseId,
+          p_file_hash: fileHash,
+        },
+      );
+      if (claimError) throw claimError;
+      if (!claimed) {
+        res.status(409).json({
+          error:
+            "Este PDF ya está siendo procesado o fue importado anteriormente.",
+        });
+        return;
+      }
+      bulkClaim = {
+        tenantId: request.tenantId ?? "",
+        courseId,
+        fileHash,
+      };
+
       const rows = newAnnotations.map((annotation) => ({
         student_id: annotation.student_id,
         date_time: `${annotation.fecha_iso}T12:00:00.000Z`,
@@ -1103,6 +1130,16 @@ router.post(
         },
       });
       if (auditError) throw auditError;
+      const { error: completeError } = await client.rpc(
+        "complete_bulk_pdf_import",
+        {
+          p_tenant_id: request.tenantId ?? "",
+          p_course_id: courseId,
+          p_file_hash: fileHash,
+        },
+      );
+      if (completeError) throw completeError;
+      bulkClaim = null;
       res.json({
         imported: rows.length,
         skipped: detectedTotal - newAnnotations.length,
@@ -1110,6 +1147,13 @@ router.post(
         pending_cartas: pendingCartas,
       });
     } catch (error) {
+      if (bulkClaim) {
+        await getAdminClient().rpc("release_bulk_pdf_import", {
+          p_tenant_id: bulkClaim.tenantId,
+          p_course_id: bulkClaim.courseId,
+          p_file_hash: bulkClaim.fileHash,
+        });
+      }
       const message =
         error instanceof Error
           ? error.message
