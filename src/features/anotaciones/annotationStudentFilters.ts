@@ -23,6 +23,27 @@ interface CartaStatusFilterStudent {
 
 export const WITHOUT_COURSE_FILTER = "__without_course__";
 
+function courseOrder(label: string): number {
+  const normalized = label
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+  const match = normalized.match(/^(\d+)\s*°?\s*(basico|medio)\s*([ab])?$/);
+  if (!match) return normalized === "sin curso asignado" ? 10000 : 9000;
+  const grade = Number(match[1]);
+  const cycleOffset = match[2] === "medio" ? 16 : 0;
+  return cycleOffset + (grade - 1) * 2 + (match[3] === "b" ? 1 : 0);
+}
+
+export function compareCourseLabels(left: string, right: string): number {
+  const orderDifference = courseOrder(left) - courseOrder(right);
+  return (
+    orderDifference ||
+    left.localeCompare(right, "es-CL", { sensitivity: "base" })
+  );
+}
+
 export function getAnnotationRange(filter: string): [number, number] | null {
   switch (filter) {
     case "con_registro":

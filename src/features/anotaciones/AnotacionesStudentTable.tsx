@@ -31,6 +31,7 @@ import {
   matchesAnnotationFilter,
   matchesCartaStatusFilter,
   matchesCourseFilter,
+  compareCourseLabels,
   WITHOUT_COURSE_FILTER,
 } from "./annotationStudentFilters";
 import { formatChileDate } from "../../shared/lib/dateTime";
@@ -164,12 +165,7 @@ export default memo(function AnotacionesStudentTable({
     }
     return [...courses.entries()]
       .map(([value, label]) => ({ value, label }))
-      .sort((left, right) =>
-        left.label.localeCompare(right.label, "es-CL", {
-          numeric: true,
-          sensitivity: "base",
-        }),
-      );
+      .sort((left, right) => compareCourseLabels(left.label, right.label));
   }, [students]);
   const filteredStudents = filterStudents(
     students,

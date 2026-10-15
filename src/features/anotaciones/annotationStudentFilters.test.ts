@@ -10,6 +10,7 @@ import {
   matchesCartaStatusFilter,
   matchesAnnotationFilter,
   matchesCourseFilter,
+  compareCourseLabels,
   WITHOUT_COURSE_FILTER,
 } from "./annotationStudentFilters";
 
@@ -75,6 +76,26 @@ describe("annotationStudentFilters", () => {
     assert.equal(matchesCourseFilter(student, ""), true);
     assert.equal(matchesCourseFilter(student, "curso-3a"), true);
     assert.equal(matchesCourseFilter(student, "curso-4a"), false);
+  });
+
+  it("ordena los cursos por nivel y letra", () => {
+    const courses = [
+      "2° Medio B",
+      "1° Básico B",
+      "1° Medio A",
+      "8° Básico A",
+      "1° Básico A",
+      "2° Básico A",
+    ].sort(compareCourseLabels);
+
+    assert.deepEqual(courses, [
+      "1° Básico A",
+      "1° Básico B",
+      "2° Básico A",
+      "8° Básico A",
+      "1° Medio A",
+      "2° Medio B",
+    ]);
   });
 
   it("permite identificar estudiantes sin curso asignado", () => {
