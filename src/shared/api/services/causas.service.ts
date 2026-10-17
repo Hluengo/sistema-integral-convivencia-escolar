@@ -657,43 +657,16 @@ export async function updateCausa(
 
 export async function deleteCausa(
   causaId: string,
-  tenantId?: string | null,
+  _tenantId?: string | null,
 ): Promise<boolean> {
-  // Verificación previa de pertenencia al tenant: evita borrar hijos
-  // de un expediente de otro colegio aunque el id sea adivinable.
-  if (tenantId) {
-    const { data: owner, error: ownerError } = await supabase
-      .from("causas")
-      .select("id")
-      .eq("id", causaId)
-      .eq("tenant_id", tenantId)
-      .maybeSingle();
-    if (ownerError || !owner) {
-      console.error("Causa no pertenece al tenant o no existe:", causaId);
-      return false;
-    }
-  }
-  const relatedDeletes = await Promise.all([
-    supabase.from("bitacora_entries").delete().eq("causa_id", causaId),
-    supabase.from("checklist_items").delete().eq("causa_id", causaId),
-    supabase.from("causa_documents").delete().eq("causa_id", causaId),
-  ]);
-  const relatedError = relatedDeletes.find((result) => result.error)?.error;
-  if (relatedError) {
-    console.error("Error deleting related causa records:", relatedError);
-    return false;
-  }
-
-  let deleteQuery = supabase.from("causas").delete().eq("id", causaId);
-  if (tenantId) deleteQuery = deleteQuery.eq("tenant_id", tenantId);
-  const { data: deletedCausas, error } = await deleteQuery.select("id");
+  // La RPC borra todos los snapshots dentro de una única transacción y la RLS
+  // vuelve a comprobar tenant/rol en el servidor.
+  const { data, error } = await supabase.rpc("delete_causa_cascade", {
+    p_causa_id: causaId,
+  });
   if (error) {
     console.error("Error deleting causa:", error);
     return false;
   }
-  if (!deletedCausas || deletedCausas.length !== 1) {
-    console.error("Causa deletion affected no rows:", causaId);
-    return false;
-  }
-  return true;
+  return data === true;
 }

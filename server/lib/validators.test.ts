@@ -87,3 +87,13 @@ test("redactSensitiveForAI remueve instrucciones de prompt injection y nombres r
   assert.doesNotMatch(result, /Juan Soto/);
   assert.match(result, /alumno \[nombre\]/);
 });
+
+test("redactSensitiveForAI oculta nombres escritos en relato libre", () => {
+  const result = redactSensitiveForAI(
+    "Camila Valdés relató el incidente durante el recreo.",
+  );
+
+  assert.doesNotMatch(result, /Camila Valdés/);
+  assert.match(result, /\[nombre\]/);
+  assert.match(result, /relató el incidente/);
+});

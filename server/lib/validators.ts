@@ -76,6 +76,10 @@ const CHILEAN_RUT_RE =
 const CHILEAN_PHONE_RE = /(?:\+?56\s*)?(?:9\s*)?\b\d{4}\s*\d{4}\b/g;
 const LABELLED_NAME_RE =
   /\b(estudiante|alumno|alumna|apoderado|apoderada|madre|padre)\s+([A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+(?:\s+[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+){1,4})/g;
+// Conservador: dos a cuatro palabras con mayúscula inicial. Evita dejar pasar
+// nombres escritos en relato libre cuando no vienen precedidos por una etiqueta.
+const UNLABELLED_NAME_RE =
+  /\b[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+(?:\s+[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+){1,3}\b/g;
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -110,6 +114,7 @@ export function redactSensitiveForAI(
     .replace(CHILEAN_RUT_RE, "[RUT]")
     .replace(CHILEAN_PHONE_RE, "[teléfono]")
     .replace(LABELLED_NAME_RE, "$1 [nombre]")
+    .replace(UNLABELLED_NAME_RE, "[nombre]")
     .replace(/\n{3,}/g, "\n\n")
     .slice(0, MAX_STR);
 }

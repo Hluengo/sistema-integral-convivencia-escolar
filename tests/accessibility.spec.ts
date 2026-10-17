@@ -70,10 +70,10 @@ test.describe("Accesibilidad pública", () => {
     await expectNoA11yViolations(page);
   });
 
-  test.skip(!hasStaffCredentials, "Requiere credenciales E2E explícitas.");
   test("modal de expediente autenticado cumple WCAG A/AA básico", async ({
     page,
   }) => {
+    test.skip(!hasStaffCredentials, "Requiere credenciales E2E explícitas.");
     await loginAsStaff(page);
     await page
       .getByLabel("Secciones principales")
@@ -92,6 +92,7 @@ test.describe("Accesibilidad pública", () => {
   test("modal de creación de expediente cumple WCAG A/AA básico", async ({
     page,
   }) => {
+    test.skip(!hasStaffCredentials, "Requiere credenciales E2E explícitas.");
     await loginAsStaff(page);
     await page
       .getByLabel("Secciones principales")
@@ -113,6 +114,7 @@ test.describe("Accesibilidad pública", () => {
   test("vistas privadas principales cumplen WCAG A/AA básico", async ({
     page,
   }) => {
+    test.skip(!hasStaffCredentials, "Requiere credenciales E2E explícitas.");
     await loginAsStaff(page);
     const sidebar = page.getByRole("complementary", {
       name: "Barra de navegación principal",
@@ -141,6 +143,7 @@ test.describe("Accesibilidad pública", () => {
   test("modal de nuevo proceso en Anotaciones cumple WCAG A/AA básico", async ({
     page,
   }) => {
+    test.skip(!hasStaffCredentials, "Requiere credenciales E2E explícitas.");
     await loginAsStaff(page);
     const sidebar = page.getByRole("complementary", {
       name: "Barra de navegación principal",
@@ -166,6 +169,7 @@ test.describe("Accesibilidad pública", () => {
   test("formularios de archivo y edición en Anotaciones cumplen WCAG A/AA básico", async ({
     page,
   }) => {
+    test.skip(!hasStaffCredentials, "Requiere credenciales E2E explícitas.");
     await loginAsStaff(page);
     const sidebar = page.getByRole("complementary", {
       name: "Barra de navegación principal",
@@ -208,6 +212,7 @@ test.describe("Accesibilidad pública", () => {
   });
 
   test("generador de cartas cumple WCAG A/AA básico", async ({ page }) => {
+    test.skip(!hasStaffCredentials, "Requiere credenciales E2E explícitas.");
     await loginAsStaff(page);
     const sidebar = page.getByRole("complementary", {
       name: "Barra de navegación principal",
@@ -250,6 +255,7 @@ test.describe("Accesibilidad pública", () => {
   test("modal de edición de expediente cumple WCAG A/AA básico", async ({
     page,
   }) => {
+    test.skip(!hasStaffCredentials, "Requiere credenciales E2E explícitas.");
     await loginAsStaff(page);
     await page
       .getByLabel("Secciones principales")
@@ -276,6 +282,7 @@ test.describe("Accesibilidad pública", () => {
   test("Administración cumple WCAG A/AA básico cuando el rol tiene acceso", async ({
     page,
   }) => {
+    test.skip(!hasStaffCredentials, "Requiere credenciales E2E explícitas.");
     await loginAsStaff(page);
     const sidebar = page.getByRole("complementary", {
       name: "Barra de navegación principal",

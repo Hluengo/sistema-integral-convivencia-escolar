@@ -2658,6 +2658,10 @@ export type Database = {
           title: string;
         }[];
       };
+      delete_causa_cascade: {
+        Args: { p_causa_id: string };
+        Returns: boolean;
+      };
     };
     Enums: {
       absence_status: "PENDIENTE" | "JUSTIFICADA";

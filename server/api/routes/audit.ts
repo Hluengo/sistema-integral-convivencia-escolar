@@ -68,7 +68,7 @@ router.post(
           client
             .from("causas")
             .select(
-              "id,tipo_infraccion,compromete_aula_segura,observaciones,estado_actual,fecha_apertura,fecha_inicio_investigacion,fecha_limite_investigacion,fecha_limite_cierre,conducta_rice_id,medidas_ejecutadas",
+              "id,student_id,tipo_infraccion,compromete_aula_segura,observaciones,estado_actual,fecha_apertura,fecha_inicio_investigacion,fecha_limite_investigacion,fecha_limite_cierre,conducta_rice_id,medidas_ejecutadas",
             )
             .eq("id", causaId)
             .eq("tenant_id", tenantId)
@@ -88,7 +88,7 @@ router.post(
             )
             .eq("causa_id", causaId)
             .eq("tenant_id", tenantId)
-            .order("created_at", { ascending: true })
+            .order("created_at", { ascending: false })
             .limit(100),
           client
             .from("checklist_progress_entries")
@@ -97,7 +97,7 @@ router.post(
             )
             .eq("causa_id", causaId)
             .eq("tenant_id", tenantId)
-            .order("occurred_at", { ascending: true })
+            .order("occurred_at", { ascending: false })
             .limit(150),
         ]);
 
@@ -113,11 +113,25 @@ router.post(
       if (progressResult.error) throw progressResult.error;
 
       const causa = causaResult.data;
+      const studentResult = causa.student_id
+        ? await client
+            .from("students")
+            .select("full_name,rut")
+            .eq("id", causa.student_id)
+            .eq("tenant_id", tenantId)
+            .maybeSingle()
+        : { data: null, error: null };
+      if (studentResult.error) throw studentResult.error;
       const infractionType = String(
         causa.tipo_infraccion ?? "No registrada",
       ).slice(0, 100);
       const observations = String(causa.observaciones ?? "").slice(0, 5000);
-      const knownSensitiveValues = [causaId, infractionType, observations];
+      const knownSensitiveValues = [
+        causaId,
+        infractionType,
+        studentResult.data?.full_name,
+        studentResult.data?.rut,
+      ];
 
       const safeChecklist = (checklistResult.data ?? [])
         .slice(0, 100)
@@ -151,50 +165,54 @@ router.post(
           ).slice(0, 250),
         }));
 
-      const safeHistory = (historyResult.data ?? []).map((entry) => ({
-        title: redactSensitiveForAI(entry.titulo, knownSensitiveValues).slice(
-          0,
-          200,
-        ),
-        date: redactSensitiveForAI(entry.fecha, knownSensitiveValues).slice(
-          0,
-          50,
-        ),
-        type: redactSensitiveForAI(entry.tipo, knownSensitiveValues).slice(
-          0,
-          80,
-        ),
-        description: redactSensitiveForAI(
-          entry.descripcion,
-          knownSensitiveValues,
-        ).slice(0, 2_000),
-        document: redactSensitiveForAI(
-          entry.documento_adjunto,
-          knownSensitiveValues,
-        ).slice(0, 250),
-      }));
+      const safeHistory = [...(historyResult.data ?? [])]
+        .reverse()
+        .map((entry) => ({
+          title: redactSensitiveForAI(entry.titulo, knownSensitiveValues).slice(
+            0,
+            200,
+          ),
+          date: redactSensitiveForAI(entry.fecha, knownSensitiveValues).slice(
+            0,
+            50,
+          ),
+          type: redactSensitiveForAI(entry.tipo, knownSensitiveValues).slice(
+            0,
+            80,
+          ),
+          description: redactSensitiveForAI(
+            entry.descripcion,
+            knownSensitiveValues,
+          ).slice(0, 2_000),
+          document: redactSensitiveForAI(
+            entry.documento_adjunto,
+            knownSensitiveValues,
+          ).slice(0, 250),
+        }));
 
-      const safeProgress = (progressResult.data ?? []).map((entry) => ({
-        checklistItemId: String(entry.checklist_item_id ?? "").slice(0, 100),
-        title: redactSensitiveForAI(entry.title, knownSensitiveValues).slice(
-          0,
-          250,
-        ),
-        description: redactSensitiveForAI(
-          entry.description,
-          knownSensitiveValues,
-        ).slice(0, 1500),
-        type: redactSensitiveForAI(
-          entry.entry_type,
-          knownSensitiveValues,
-        ).slice(0, 80),
-        occurredAt: entry.occurred_at ?? null,
-        documentName: redactSensitiveForAI(
-          entry.document_name,
-          knownSensitiveValues,
-        ).slice(0, 250),
-        invalidated: Boolean(entry.invalidated_at),
-      }));
+      const safeProgress = [...(progressResult.data ?? [])]
+        .reverse()
+        .map((entry) => ({
+          checklistItemId: String(entry.checklist_item_id ?? "").slice(0, 100),
+          title: redactSensitiveForAI(entry.title, knownSensitiveValues).slice(
+            0,
+            250,
+          ),
+          description: redactSensitiveForAI(
+            entry.description,
+            knownSensitiveValues,
+          ).slice(0, 1500),
+          type: redactSensitiveForAI(
+            entry.entry_type,
+            knownSensitiveValues,
+          ).slice(0, 80),
+          occurredAt: entry.occurred_at ?? null,
+          documentName: redactSensitiveForAI(
+            entry.document_name,
+            knownSensitiveValues,
+          ).slice(0, 250),
+          invalidated: Boolean(entry.invalidated_at),
+        }));
 
       const legalSources = await getRelevantLegalSources(
         `debido proceso norma previa comunicación hechos indagación descargos resolución fundada proporcionalidad reconsideración ${infractionType}`,

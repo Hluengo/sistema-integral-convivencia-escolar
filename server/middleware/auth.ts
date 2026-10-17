@@ -16,30 +16,8 @@ export interface JwtPayload {
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const VALID_ROLES: readonly ProfileRole[] = [
-  "superadmin",
-  "admin",
-  "direccion",
-  "convivencia",
-  "inspectoria",
-  "profesor_jefe",
-  "teacher",
-  "inspector",
-  "user",
-  "staff",
-];
-const FRESH_PROFILE_ROLES: readonly ProfileRole[] = [
-  "superadmin",
-  "admin",
-  "direccion",
-];
-
 export function isValidUuid(value: string): boolean {
   return UUID_RE.test(value);
-}
-
-function isValidRole(value: string): value is ProfileRole {
-  return (VALID_ROLES as readonly string[]).includes(value);
 }
 
 async function verifyJwtViaHmac(
@@ -260,28 +238,6 @@ async function injectTenantContext(
 ): Promise<boolean> {
   const user = req.user;
   if (!user?.sub) return false;
-
-  // Fast-path: read tenant_id and role directly from the signed JWT app_metadata.
-  // This avoids a DB round-trip when the identity provider (Supabase) already
-  // synchronizes these claims, and it makes self-contained test JWTs possible.
-  const appMetadata = user.app_metadata;
-  const jwtTenantId =
-    typeof appMetadata?.tenant_id === "string"
-      ? appMetadata.tenant_id
-      : undefined;
-  const jwtRole =
-    typeof appMetadata?.role === "string" ? appMetadata.role : undefined;
-  if (
-    jwtTenantId &&
-    isValidUuid(jwtTenantId) &&
-    jwtRole &&
-    isValidRole(jwtRole) &&
-    !FRESH_PROFILE_ROLES.includes(jwtRole)
-  ) {
-    req.tenantId = jwtTenantId;
-    req.profileRole = jwtRole;
-    return true;
-  }
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const anonKey =

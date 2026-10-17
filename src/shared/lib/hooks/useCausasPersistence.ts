@@ -55,8 +55,12 @@ export function useCausasPersistence({
   const isMountedRef = useRef(true);
   const prevCausasMapRef = useRef<Map<string, Causa>>(new Map());
   const pendingSaveRef = useRef<Map<string, PendingCausaSave>>(new Map());
+  const inFlightSaveRef = useRef<Map<string, PendingCausaSave>>(new Map());
+  const saveRunningRef = useRef(false);
   const hasUnsavedCausaChanges = useCallback(
-    (causaId: string) => pendingSaveRef.current.has(causaId),
+    (causaId: string) =>
+      pendingSaveRef.current.has(causaId) ||
+      inFlightSaveRef.current.has(causaId),
     [],
   );
 
@@ -76,6 +80,7 @@ export function useCausasPersistence({
       isMountedRef.current = false;
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
       if (saveIdleTimeoutRef.current) clearTimeout(saveIdleTimeoutRef.current);
+      inFlightSaveRef.current.clear();
     };
   }, []);
 
@@ -97,10 +102,13 @@ export function useCausasPersistence({
   );
 
   const runPendingSaves = useCallback(async () => {
+    if (saveRunningRef.current) return;
     const pendingSaves = new Map(pendingSaveRef.current);
     pendingSaveRef.current.clear();
     if (pendingSaves.size === 0) return;
 
+    saveRunningRef.current = true;
+    inFlightSaveRef.current = pendingSaves;
     setSaveStatus("saving");
     try {
       const causasToSave = causasRef.current.filter((causa) =>
@@ -127,11 +135,13 @@ export function useCausasPersistence({
       if (!isMountedRef.current) return;
       if (results.some((result) => !result)) {
         requeueFailedSaves(pendingSaves);
+        inFlightSaveRef.current.clear();
         setSaveStatus("error");
         return;
       }
 
       onPersisted(causasToSave);
+      inFlightSaveRef.current.clear();
       void invalidateDashboardQueries(queryClient);
       for (const causa of causasToSave) {
         if (causa.incidenteId) {
@@ -159,7 +169,10 @@ export function useCausasPersistence({
       if (!isMountedRef.current) return;
       console.error("Autosave failed:", error);
       requeueFailedSaves(pendingSaves);
+      inFlightSaveRef.current.clear();
       setSaveStatus("error");
+    } finally {
+      saveRunningRef.current = false;
     }
   }, [onPersisted, queryClient, requeueFailedSaves, setSaveStatus]);
 

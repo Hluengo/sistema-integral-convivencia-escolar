@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import {
   fetchCausaDetails,
   fetchCausasPage,
@@ -45,6 +45,21 @@ export function useCausasQuery() {
     staleTime: CAUSAS_LIST_STALE_TIME_MS,
     gcTime: CAUSAS_CACHE_TIME_MS,
   });
+  const { fetchNextPage, hasNextPage, isFetchingNextPage } = query;
+
+  // Dashboard, reportes y exportaciones necesitan el conjunto completo, no
+  // sólo la primera página visible del listado.
+  useEffect(() => {
+    if (hasNextPage && !isFetchingNextPage && isAuthenticated && tenantId) {
+      void fetchNextPage();
+    }
+  }, [
+    isAuthenticated,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    tenantId,
+  ]);
 
   const causas = useMemo(
     () => query.data?.pages.flatMap((page) => page.causas),

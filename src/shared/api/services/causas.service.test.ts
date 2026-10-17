@@ -846,17 +846,11 @@ describe("updateCausa", () => {
 });
 
 describe("deleteCausa", () => {
-  it("elimina documentos relacionados, bitácora, checklist y causa, retornando true", async () => {
-    const tables: string[] = [];
+  it("elimina el expediente mediante la RPC transaccional", async () => {
     const result = await withCausasMocks(
       {
-        resultForTable: (table) => {
-          tables.push(table);
-          return {
-            data: table === "causas" ? [{ id: "DC-2026-001" }] : null,
-            error: null,
-          };
-        },
+        resultForTable: () => ({ data: null, error: null }),
+        rpcResult: { data: true, error: null },
       },
       async () => {
         const { deleteCausa } = await import("./causas.service");
@@ -864,26 +858,13 @@ describe("deleteCausa", () => {
       },
     );
     assert.equal(result, true);
-    assert.deepEqual(tables, [
-      "bitacora_entries",
-      "checklist_items",
-      "causa_documents",
-      "causas",
-    ]);
   });
 
-  it("no intenta eliminar la causa si falla un registro relacionado", async () => {
-    const tables: string[] = [];
+  it("retorna false cuando la RPC transaccional falla", async () => {
     const result = await withCausasMocks(
       {
-        resultForTable: (table) => {
-          tables.push(table);
-          return {
-            data: null,
-            error:
-              table === "causa_documents" ? new Error("delete denied") : null,
-          };
-        },
+        resultForTable: () => ({ data: null, error: null }),
+        rpcResult: { data: null, error: new Error("delete denied") },
       },
       async () => {
         const { deleteCausa } = await import("./causas.service");
@@ -892,39 +873,19 @@ describe("deleteCausa", () => {
     );
 
     assert.equal(result, false);
-    assert.equal(tables.includes("causas"), false);
   });
 
-  it("retorna false cuando falla la eliminación de la causa", async () => {
+  it("retorna false cuando la RPC no elimina filas", async () => {
     const result = await withCausasMocks(
       {
-        resultForTable: () => ({
-          data: null,
-          error: new Error("delete denied"),
-        }),
+        resultForTable: () => ({ data: null, error: null }),
+        rpcResult: { data: false, error: null },
       },
       async () => {
         const { deleteCausa } = await import("./causas.service");
         return deleteCausa("DC-2026-001");
       },
     );
-    assert.equal(result, false);
-  });
-
-  it("retorna false cuando la eliminación de la causa no afecta filas", async () => {
-    const result = await withCausasMocks(
-      {
-        resultForTable: (table) => ({
-          data: table === "causas" ? [] : null,
-          error: null,
-        }),
-      },
-      async () => {
-        const { deleteCausa } = await import("./causas.service");
-        return deleteCausa("DC-2026-001");
-      },
-    );
-
     assert.equal(result, false);
   });
 });
