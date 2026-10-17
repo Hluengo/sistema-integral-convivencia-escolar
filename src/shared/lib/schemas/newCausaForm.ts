@@ -40,6 +40,24 @@ export function isChileanRutFormat(value: string): boolean {
   return CHILEAN_RUT_FORMAT_RE.test(normalizeRutInput(value));
 }
 
+/** Valida el dígito verificador del RUN mediante el algoritmo módulo 11. */
+export function isValidRut(value: string): boolean {
+  const [body = "", dv = ""] = normalizeRutInput(value).split("-");
+  if (body.length < 7 || !/^\d+$/.test(body)) return false;
+
+  let sum = 0;
+  let multiplier = 2;
+  for (let i = body.length - 1; i >= 0; i -= 1) {
+    sum += Number(body[i]) * multiplier;
+    multiplier = multiplier === 7 ? 2 : multiplier + 1;
+  }
+
+  const expected = 11 - (sum % 11);
+  const expectedDv =
+    expected === 11 ? "0" : expected === 10 ? "K" : String(expected);
+  return expectedDv === dv;
+}
+
 export const newCausaFormSchema = z.object({
   selectedCourseId: z.string().trim().min(1, "Seleccione un curso."),
   selectedStudentId: z.string().trim().optional(),
@@ -49,7 +67,10 @@ export const newCausaFormSchema = z.object({
     .trim()
     .transform(normalizeRutInput)
     .pipe(
-      z.string().regex(CHILEAN_RUT_FORMAT_RE, "Ingrese un RUN chileno válido."),
+      z
+        .string()
+        .regex(CHILEAN_RUT_FORMAT_RE, "Ingrese un RUN chileno válido.")
+        .refine(isValidRut, "El dígito verificador del RUN no coincide."),
     ),
   newInfTipo: z.enum(tipoInfraccionValues),
   conductaRiceId: z.string().optional(),

@@ -11,8 +11,8 @@
     "clean": "node -e \"const fs=require('node:fs');fs.rmSync('dist',{recursive:true,force:true});fs.rmSync('server.js',{force:true})\"",
     "lint": "npm run lint:code && npm run typecheck",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-test-module-mocks --import tsx --test \"src/**/*.test.ts\" \"server/**/*.test.ts\"",
-    "ci": "npm run lint && npm run test && npm run build && npm run security-audit",
+    "test": "node --experimental-test-module-mocks --test-concurrency=1 --import tsx --test \"src/**/*.test.ts\" \"server/**/*.test.ts\"",
+    "ci": "npm run lint && npm run test:coverage && npm run build && npm run security-audit",
     "prepare": "husky",
     "lint:types": "tsc --noEmit",
     "lint:code": "eslint .",
@@ -30,9 +30,11 @@
     "lighthouse:ci": "node scripts/run-lighthouse-ci.mjs",
     "test:e2e:ui": "playwright test --ui",
     "knip": "knip",
+    "knip:ci": "knip --include files,dependencies",
     "security-audit": "npm audit --omit=dev",
     "security:secrets": "gitleaks detect --source . --verbose",
-    "pre-push": "npm run lint && npm run test && npm run build && npm run security-audit"
+    "pre-push": "npm run lint && npm run test:coverage && npm run build && npm run security-audit",
+    "professional-gate": "node scripts/professional-gate.mjs"
   },
   "overrides": {
     "fflate": "^0.8.3",
@@ -41,7 +43,14 @@
   "knip": {
     "ignore": [
       "lighthouserc.cjs",
-      "scripts/serve-dist.mjs"
+      "scripts/serve-dist.mjs",
+      "api/index.js",
+      "src/shared/api/lib/database.types.ts",
+      "committed-lf.js",
+      "rebuilt-lf.js",
+      "scripts/apply-pilot-1ma.mjs",
+      "scripts/compare-pilot-1ma.mjs",
+      "scripts/pilot-fichas-1ma.mjs"
     ],
     "ignoreDependencies": [
       "@lhci/cli",

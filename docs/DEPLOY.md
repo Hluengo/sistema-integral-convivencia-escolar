@@ -22,9 +22,13 @@ Agregar en Vercel Dashboard > Project Settings > Environment Variables:
 | Variable                                 | Valor                                                               |
 | ---------------------------------------- | ------------------------------------------------------------------- |
 | `VITE_SUPABASE_URL`                      | URL del proyecto Supabase                                           |
-| `VITE_SUPABASE_ANON_KEY`                 | Anon key pública                                                    |
+| `VITE_SUPABASE_ANON_KEY`                 | Anon key pública (compatibilidad)                                   |
+| `VITE_SUPABASE_PUBLISHABLE_KEY`          | Publishable key pública                                             |
 | `SUPABASE_JWT_SECRET`                    | JWT secret de Supabase                                              |
 | `SUPABASE_SERVICE_ROLE_KEY`              | Service role key                                                    |
+| `UPSTASH_REDIS_REST_URL`                 | Redis REST URL para rate limit distribuido                          |
+| `UPSTASH_REDIS_REST_TOKEN`               | Redis REST token para rate limit distribuido                        |
+| `ALLOWED_ORIGINS`                        | Orígenes CORS permitidos, separados por coma                        |
 | `GEMINI_API_KEY`                         | Gemini API key pospago para informes, auditorías y documentos       |
 | `OPENROUTER_API_KEY`                     | OpenRouter API key para asesoría legal breve                        |
 | `LEGAL_DRAFT_MODEL`                      | Modelo Gemini para borradores legales (opcional)                    |
@@ -35,9 +39,9 @@ Agregar en Vercel Dashboard > Project Settings > Environment Variables:
 
 ### Pre-deploy Checklist
 
-1. `npm run build`
-2. `npm run typecheck` — 0 errores
-3. `npm run test` — todas las pruebas, 0 fallos
+1. `npm run lint` - 0 errores
+2. `npm run test:coverage` - todas las pruebas, cobertura mínima de 80%
+3. `npm run build`
 4. Aplicar migraciones SQL antes de desplegar el frontend/serverless
 5. Si se activa `VITE_APP_MEMBERSHIPS_ENFORCED`, verificar primero el backfill de membresías
 6. Verificar RLS policies activas
@@ -48,7 +52,9 @@ Las migraciones están en `supabase/migrations/`:
 
 - `20260717001_add_tenant_rls.sql` — Multi-tenant: tabla `tenants`, columnas `tenant_id`, RLS
 - `20260717002_jwt_tenant_claim.sql` — Sincronización JWT tenant_id
-- `20260717003_performance_indexes.sql` — Índices compuestos
+- `20260717003_performance_indexes.sql` - Índices compuestos
+- `20261017221534_audit_events_hash_chain.sql` - cadena de integridad de auditoría
+- `20261017221547_restrict_audit_hash_functions.sql` - ejecución restringida a `service_role`
 
 Aplicar migraciones vía Management API:
 

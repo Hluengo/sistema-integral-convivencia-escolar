@@ -4,6 +4,10 @@ import { randomUUID } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import readXlsxFile, { type CellValue } from "read-excel-file/node";
 import { fetchAllRows } from "../../lib/fetchAllRows.js";
+import {
+  isValidRut,
+  normalizeRutInput,
+} from "../../../src/shared/lib/schemas/index.js";
 
 interface ImportCourseRow {
   name: string;
@@ -128,7 +132,17 @@ export async function parseImportWorkbook(
       const row = toRow(rows[r]);
       const full_name = normalizeText(row[iName] ?? row[0]);
       if (!full_name) continue;
-      const rut = iRut >= 0 ? normalizeRut(row[iRut]) : "";
+      let rut = iRut >= 0 ? normalizeRutInput(normalizeRut(row[iRut])) : "";
+      if (rut && !isValidRut(rut)) {
+        warnings.push(
+          "Fila " +
+            (r + 1) +
+            ": RUN inválido " +
+            rut +
+            ", se importará sin RUN.",
+        );
+        rut = "";
+      }
       const course_name = iCourse >= 0 ? normalizeText(row[iCourse]) : "";
       students.push({ full_name, rut, course_name });
     }
@@ -173,7 +187,7 @@ export async function runImport(
   tenantId: string,
   parsed: ParsedImport,
 ): Promise<ImportResult> {
-  const errors: string[] = [];
+  const errors: string[] = [...parsed.warnings];
   let coursesInserted = 0;
   let studentsInserted = 0;
   let duplicates = 0;

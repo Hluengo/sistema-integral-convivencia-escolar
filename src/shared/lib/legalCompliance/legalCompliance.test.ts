@@ -16,6 +16,7 @@ import {
   agregarDiasHabiles,
   calcularDiasCorridosDesdeDiaSiguiente,
   calcularDiasHabilesDesdeDiaSiguiente,
+  esFeriadoNacional,
 } from "./dateUtils";
 
 test("excluye el 18 de septiembre como feriado nacional chileno", () => {
@@ -268,4 +269,38 @@ test("verificarPlazoSuspension cumplido dentro del máximo", () => {
 test("verificarPlazoSuspension no_iniciado sin suspensión", () => {
   const causa = makeCausa();
   assert.equal(verificarPlazoSuspension(causa).estado, "no_iniciado");
+});
+
+test("reconoce Viernes y Sábado Santo de 2026", () => {
+  assert.equal(esFeriadoNacional(new Date(2026, 3, 3)), true);
+  assert.equal(esFeriadoNacional(new Date(2026, 3, 4)), true);
+});
+
+test("salta Viernes Santo al sumar días hábiles", () => {
+  assert.equal(agregarDiasHabiles("2026-04-02", 1), "2026-04-06");
+});
+
+test("reconoce los 16 feriados oficiales de 2026", () => {
+  const feriados = [
+    "2026-01-01",
+    "2026-04-03",
+    "2026-04-04",
+    "2026-05-01",
+    "2026-05-21",
+    "2026-06-21",
+    "2026-06-29",
+    "2026-07-16",
+    "2026-08-15",
+    "2026-09-18",
+    "2026-09-19",
+    "2026-10-12",
+    "2026-10-31",
+    "2026-11-01",
+    "2026-12-08",
+    "2026-12-25",
+  ];
+  for (const fecha of feriados) {
+    const [anio, mes, dia] = fecha.split("-").map(Number);
+    assert.equal(esFeriadoNacional(new Date(anio, mes - 1, dia)), true, fecha);
+  }
 });

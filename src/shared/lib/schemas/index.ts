@@ -142,6 +142,7 @@ export {
   newCausaFormSchema,
   normalizeRutInput,
   isChileanRutFormat,
+  isValidRut,
 } from "./newCausaForm";
 export type { NewCausaFormValues } from "./newCausaForm";
 export { editCausaFormSchema, isValidStateTransition } from "./editCausaForm";

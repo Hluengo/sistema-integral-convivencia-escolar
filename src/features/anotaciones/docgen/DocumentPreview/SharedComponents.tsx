@@ -1,5 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
+import { splitAgreements } from "./splitAgreements";
+
 export interface LetterMetadataItem {
   label: string;
   value: React.ReactNode;
@@ -71,23 +73,6 @@ export function LetterTitle({ children }: { children: React.ReactNode }) {
   return <h2 className="letter-title">{children}</h2>;
 }
 
-export function splitAgreements(text: string): string[] {
-  const byLines = text
-    .replace(/\\n/g, "\n")
-    .split("\n")
-    .map((item) => item.trim())
-    .filter(Boolean);
-  if (byLines.length > 1) return byLines;
-  const single = byLines[0] ?? "";
-  if (single.length < 400) return byLines;
-  const bySentences = single
-    .split(/\.\s+(?=[A-ZÁÉÍÓÚÑ])/)
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .map((item) => (item.endsWith(".") ? item : `${item}.`));
-  return bySentences.length > 1 ? bySentences : byLines;
-}
-
 export function LetterAgreements({ text }: { text: string }) {
   const items = splitAgreements(text);
   if (items.length <= 1)
@@ -122,7 +107,6 @@ export function LetterSignatureGrid({
   title = "Firmas",
 }: {
   signatures: LetterSignature[];
-  /** Título del bloque; pase `null` para omitirlo (documentos de hoja única). */
   title?: string | null;
 }) {
   const cols = Math.min(Math.max(signatures.length, 1), 4);

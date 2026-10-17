@@ -1749,6 +1749,589 @@ var init_fetchAllRows = __esm({
   },
 });
 
+// src/shared/lib/types.ts
+var EstadoCausa;
+var init_types = __esm({
+  "src/shared/lib/types.ts"() {
+    "use strict";
+    EstadoCausa = /* @__PURE__ */ ((EstadoCausa2) => {
+      EstadoCausa2["DENUNCIA_RECEPCIONADA"] = "Recepci\xF3n de Denuncia";
+      EstadoCausa2["ANTECEDENTES_REVISION_INICIAL"] =
+        "Revisi\xF3n Inicial de Antecedentes";
+      EstadoCausa2["INICIO_INDAGACION_NOTIFICADO"] =
+        "Notificaci\xF3n de Inicio de Indagaci\xF3n";
+      EstadoCausa2["EN_PROCESO_INDAGACION"] = "En Proceso de Indagaci\xF3n";
+      EstadoCausa2["RECOPILACION_EVIDENCIAS_CURSO"] =
+        "Recopilaci\xF3n de Evidencias en Curso";
+      EstadoCausa2["DERIVADO_A_MEDIACION"] = "Derivado a Mediaci\xF3n";
+      EstadoCausa2["MEDIACION_EN_DESARROLLO"] = "Mediaci\xF3n en Desarrollo";
+      EstadoCausa2["MEDIACION_CERRADA_ACUERDO"] =
+        "Mediaci\xF3n Cerrada con Acuerdo";
+      EstadoCausa2["MEDIACION_FRACASADA_RETORNO"] =
+        "Mediaci\xF3n Fracasada \u2013 Retorno a Indagaci\xF3n";
+      EstadoCausa2["INFORME_CONCLUYENTE_ELABORACION"] =
+        "Informe Cierre de Indagaci\xF3n en Elaboraci\xF3n";
+      EstadoCausa2["INFORME_CONCLUYENTE_EMITIDO"] =
+        "Informe Cierre de Indagaci\xF3n Emitido";
+      EstadoCausa2["ENTREVISTA_DISCIPLINARIA_PENDIENTE"] =
+        "Entrevista Disciplinaria Pendiente";
+      EstadoCausa2["ENTREVISTA_DISCIPLINARIA_REALIZADA"] =
+        "Entrevista Disciplinaria Realizada";
+      EstadoCausa2["RESOLUCION_ELABORACION"] =
+        "Informe Concluyente en Elaboraci\xF3n";
+      EstadoCausa2["RESOLUCION_FINAL_NOTIFICADA"] =
+        "Informe Concluyente Emitido";
+      EstadoCausa2["EN_PLAZO_APELACION"] = "En Plazo de Apelaci\xF3n";
+      EstadoCausa2["APELACION_RECEPCIONADA"] = "Apelaci\xF3n Recepcionada";
+      EstadoCausa2["APELACION_REVISION_RECTORIA"] =
+        "Apelaci\xF3n en Revisi\xF3n por Rector\xEDa";
+      EstadoCausa2["APELACION_RESUELTA"] = "Apelaci\xF3n Resuelta";
+      EstadoCausa2["RESOLUCION_EJECUTORIADA"] = "Resoluci\xF3n Ejecutoriada";
+      EstadoCausa2["MEDIDA_EJECUCION"] = "Medida en Ejecuci\xF3n";
+      EstadoCausa2["PROCESO_SEGUIMIENTO"] = "En Proceso de Seguimiento";
+      EstadoCausa2["SEGUIMIENTO_FINALIZADO"] = "Seguimiento Finalizado";
+      EstadoCausa2["CAUSA_CERRADA"] = "Causa Cerrada";
+      return EstadoCausa2;
+    })(EstadoCausa || {});
+  },
+});
+
+// src/shared/lib/schemas/zodCsp.ts
+import { z as z2 } from "zod";
+var init_zodCsp = __esm({
+  "src/shared/lib/schemas/zodCsp.ts"() {
+    "use strict";
+    z2.config({ jitless: true });
+  },
+});
+
+// src/shared/lib/schemas/newCausaForm.ts
+import { z as z3 } from "zod";
+function normalizeRutInput(value) {
+  const compact = value
+    .trim()
+    .replace(/\./g, "")
+    .replace(/\s+/g, "")
+    .toUpperCase();
+  if (!compact) {
+    return "";
+  }
+  if (compact.includes("-")) {
+    const [body = "", verifier = ""] = compact.split("-");
+    return `${body}-${verifier}`;
+  }
+  if (compact.length < 2) {
+    return compact;
+  }
+  return `${compact.slice(0, -1)}-${compact.slice(-1)}`;
+}
+function isChileanRutFormat(value) {
+  return CHILEAN_RUT_FORMAT_RE.test(normalizeRutInput(value));
+}
+function isValidRut(value) {
+  const [body = "", dv = ""] = normalizeRutInput(value).split("-");
+  if (body.length < 7 || !/^\d+$/.test(body)) return false;
+  let sum = 0;
+  let multiplier = 2;
+  for (let i = body.length - 1; i >= 0; i -= 1) {
+    sum += Number(body[i]) * multiplier;
+    multiplier = multiplier === 7 ? 2 : multiplier + 1;
+  }
+  const expected = 11 - (sum % 11);
+  const expectedDv =
+    expected === 11 ? "0" : expected === 10 ? "K" : String(expected);
+  return expectedDv === dv;
+}
+var CHILEAN_RUT_FORMAT_RE, tipoInfraccionValues, newCausaFormSchema;
+var init_newCausaForm = __esm({
+  "src/shared/lib/schemas/newCausaForm.ts"() {
+    "use strict";
+    CHILEAN_RUT_FORMAT_RE = /^\d{7,8}-[\dK]$/;
+    tipoInfraccionValues = ["Leve", "Grave", "Muy Grave", "Grav\xEDsima"];
+    newCausaFormSchema = z3.object({
+      selectedCourseId: z3.string().trim().min(1, "Seleccione un curso."),
+      selectedStudentId: z3.string().trim().optional(),
+      newEstNombre: z3
+        .string()
+        .trim()
+        .min(2, "Ingrese el nombre del estudiante."),
+      newEstRut: z3
+        .string()
+        .trim()
+        .transform(normalizeRutInput)
+        .pipe(
+          z3
+            .string()
+            .regex(CHILEAN_RUT_FORMAT_RE, "Ingrese un RUN chileno v\xE1lido.")
+            .refine(
+              isValidRut,
+              "El d\xEDgito verificador del RUN no coincide.",
+            ),
+        ),
+      newInfTipo: z3.enum(tipoInfraccionValues),
+      conductaRiceId: z3.string().optional(),
+      newAulaSegura: z3.boolean(),
+      newObs: z3
+        .string()
+        .trim()
+        .min(10, "Describa los hechos con al menos 10 caracteres."),
+      newResponsable: z3
+        .string()
+        .trim()
+        .min(3, "Ingrese el fiscalizador a cargo."),
+    });
+  },
+});
+
+// src/shared/lib/domain/investigationChecklist.ts
+var INVESTIGATION_BASE_ITEM_IDS,
+  MEDIATION_FLOW_ITEM_IDS,
+  MEDIATION_OUTCOME_ITEM_IDS,
+  INVESTIGATION_REINFORCED_ITEM_IDS,
+  INVESTIGATION_INTERVIEW_ITEM_IDS,
+  INVESTIGATION_ITEM_IDS,
+  MEDIATION_STATES;
+var init_investigationChecklist = __esm({
+  "src/shared/lib/domain/investigationChecklist.ts"() {
+    "use strict";
+    init_types();
+    INVESTIGATION_BASE_ITEM_IDS = ["chk_inv_1", "chk_inv_2"];
+    MEDIATION_FLOW_ITEM_IDS = ["chk_inv_3", "chk_inv_4"];
+    MEDIATION_OUTCOME_ITEM_IDS = ["chk_inv_5", "chk_inv_6"];
+    INVESTIGATION_REINFORCED_ITEM_IDS = ["chk_inv_7", "chk_inv_8", "chk_inv_9"];
+    INVESTIGATION_INTERVIEW_ITEM_IDS = ["chk_res_4"];
+    INVESTIGATION_ITEM_IDS = [
+      ...INVESTIGATION_BASE_ITEM_IDS,
+      ...INVESTIGATION_INTERVIEW_ITEM_IDS,
+      ...MEDIATION_FLOW_ITEM_IDS,
+      ...MEDIATION_OUTCOME_ITEM_IDS,
+      ...INVESTIGATION_REINFORCED_ITEM_IDS,
+    ];
+    MEDIATION_STATES = /* @__PURE__ */ new Set([
+      "Derivado a Mediaci\xF3n" /* DERIVADO_A_MEDIACION */,
+      "Mediaci\xF3n en Desarrollo" /* MEDIACION_EN_DESARROLLO */,
+      "Mediaci\xF3n Cerrada con Acuerdo" /* MEDIACION_CERRADA_ACUERDO */,
+      "Mediaci\xF3n Fracasada \u2013 Retorno a Indagaci\xF3n" /* MEDIACION_FRACASADA_RETORNO */,
+    ]);
+  },
+});
+
+// src/shared/lib/data.ts
+var MAPPED_STATES;
+var init_data = __esm({
+  "src/shared/lib/data.ts"() {
+    "use strict";
+    init_types();
+    init_dateUtils();
+    init_investigationChecklist();
+    MAPPED_STATES = {
+      ["Recepci\xF3n de Denuncia" /* DENUNCIA_RECEPCIONADA */]: {
+        fase: "Recepci\xF3n",
+        desc: "Se recibe formalmente el reporte, denuncia o antecedente inicial.",
+      },
+      ["Revisi\xF3n Inicial de Antecedentes" /* ANTECEDENTES_REVISION_INICIAL */]:
+        {
+          fase: "Recepci\xF3n",
+          desc: "Se realiza acopio preliminar de informaci\xF3n y verificaci\xF3n b\xE1sica de los hechos.",
+        },
+      ["Notificaci\xF3n de Inicio de Indagaci\xF3n" /* INICIO_INDAGACION_NOTIFICADO */]:
+        {
+          fase: "Recepci\xF3n",
+          desc: "Se informa formalmente al estudiante y al apoderado sobre la apertura del procedimiento disciplinario dentro de plazo reglamentario.",
+        },
+      ["En Proceso de Indagaci\xF3n" /* EN_PROCESO_INDAGACION */]: {
+        fase: "Investigaci\xF3n",
+        desc: "Investigaci\xF3n activa mediante entrevistas, revisi\xF3n documental y recopilaci\xF3n de evidencias.",
+      },
+      ["Recopilaci\xF3n de Evidencias en Curso" /* RECOPILACION_EVIDENCIAS_CURSO */]:
+        {
+          fase: "Investigaci\xF3n",
+          desc: "Estado intermedio para investigaciones complejas o extensas.",
+        },
+      ["Derivado a Mediaci\xF3n" /* DERIVADO_A_MEDIACION */]: {
+        fase: "Investigaci\xF3n",
+        desc: "El caso es abordado mediante estrategia alternativa/restaurativa autorizada reglamentariamente.",
+      },
+      ["Mediaci\xF3n en Desarrollo" /* MEDIACION_EN_DESARROLLO */]: {
+        fase: "Investigaci\xF3n",
+        desc: "Las partes participan activamente en proceso de resoluci\xF3n colaborativa.",
+      },
+      ["Mediaci\xF3n Cerrada con Acuerdo" /* MEDIACION_CERRADA_ACUERDO */]: {
+        fase: "Investigaci\xF3n",
+        desc: "Se logra acuerdo restaurativo y se suspende o cierra el proceso disciplinario.",
+      },
+      ["Mediaci\xF3n Fracasada \u2013 Retorno a Indagaci\xF3n" /* MEDIACION_FRACASADA_RETORNO */]:
+        {
+          fase: "Investigaci\xF3n",
+          desc: "No existe acuerdo o no se cumplen condiciones para mediaci\xF3n.",
+        },
+      ["Informe Cierre de Indagaci\xF3n en Elaboraci\xF3n" /* INFORME_CONCLUYENTE_ELABORACION */]:
+        {
+          fase: "Resoluci\xF3n",
+          desc: "El Encargado de la indagaci\xF3n sistematiza antecedentes y redacta conclusiones.",
+        },
+      ["Informe Cierre de Indagaci\xF3n Emitido" /* INFORME_CONCLUYENTE_EMITIDO */]:
+        {
+          fase: "Resoluci\xF3n",
+          desc: "El informe t\xE9cnico fue entregado a Equipo de Convivencia Escolar para Revisi\xF3n.",
+        },
+      ["Entrevista Disciplinaria Pendiente" /* ENTREVISTA_DISCIPLINARIA_PENDIENTE */]:
+        {
+          fase: "Resoluci\xF3n",
+          desc: "Citaci\xF3n realizada a estudiante y apoderado para presentaci\xF3n de hallazgos.",
+        },
+      ["Entrevista Disciplinaria Realizada" /* ENTREVISTA_DISCIPLINARIA_REALIZADA */]:
+        {
+          fase: "Resoluci\xF3n",
+          desc: "Se efectu\xF3 audiencia disciplinaria y ejercicio del derecho a ser o\xEDdo.",
+        },
+      ["Informe Concluyente en Elaboraci\xF3n" /* RESOLUCION_ELABORACION */]: {
+        fase: "Resoluci\xF3n",
+        desc: "Equipo de Convivencia Escolar se encuentra determinando medida Formativa y disciplinaria.",
+      },
+      ["Informe Concluyente Emitido" /* RESOLUCION_FINAL_NOTIFICADA */]: {
+        fase: "Resoluci\xF3n",
+        desc: "Se entrega formalmente resoluci\xF3n Formativa y disciplinaria al apoderado.",
+      },
+      ["En Plazo de Apelaci\xF3n" /* EN_PLAZO_APELACION */]: {
+        fase: "Apelaci\xF3n",
+        desc: "Se encuentra vigente el periodo reglamentario para presentar recurso de reconsideraci\xF3n.",
+      },
+      ["Apelaci\xF3n Recepcionada" /* APELACION_RECEPCIONADA */]: {
+        fase: "Apelaci\xF3n",
+        desc: "Se recibe formalmente recurso de reconsideraci\xF3n o apelaci\xF3n.",
+      },
+      ["Apelaci\xF3n en Revisi\xF3n por Rector\xEDa" /* APELACION_REVISION_RECTORIA */]:
+        {
+          fase: "Apelaci\xF3n",
+          desc: "Autoridad competente analiza antecedentes y emite resoluci\xF3n definitiva.",
+        },
+      ["Apelaci\xF3n Resuelta" /* APELACION_RESUELTA */]: {
+        fase: "Apelaci\xF3n",
+        desc: "Se confirma, modifica o revoca la medida inicialmente aplicada.",
+      },
+      ["Resoluci\xF3n Ejecutoriada" /* RESOLUCION_EJECUTORIADA */]: {
+        fase: "Apelaci\xF3n",
+        desc: "Finaliza completamente el debido proceso administrativo interno.",
+      },
+      ["Medida en Ejecuci\xF3n" /* MEDIDA_EJECUCION */]: {
+        fase: "Seguimiento",
+        desc: "Se encuentra vigente la aplicaci\xF3n de medidas formativas o disciplinarias.",
+      },
+      ["En Proceso de Seguimiento" /* PROCESO_SEGUIMIENTO */]: {
+        fase: "Seguimiento",
+        desc: "Se monitorea cumplimiento, conducta y evoluci\xF3n del estudiante.",
+      },
+      ["Seguimiento Finalizado" /* SEGUIMIENTO_FINALIZADO */]: {
+        fase: "Seguimiento",
+        desc: "Se concluye etapa de acompa\xF1amiento institucional.",
+      },
+      ["Causa Cerrada" /* CAUSA_CERRADA */]: {
+        fase: "Seguimiento",
+        desc: "Procedimiento completamente finalizado y archivado.",
+      },
+    };
+  },
+});
+
+// src/shared/lib/schemas/editCausaForm.ts
+import { z as z4 } from "zod";
+var EstadoCausaEnum, optionalDateSchema, editCausaFormSchema;
+var init_editCausaForm = __esm({
+  "src/shared/lib/schemas/editCausaForm.ts"() {
+    "use strict";
+    init_types();
+    init_data();
+    init_newCausaForm();
+    EstadoCausaEnum = z4.enum(Object.values(EstadoCausa));
+    optionalDateSchema = z4
+      .string()
+      .trim()
+      .refine((value) => !value || /^\d{4}-\d{2}-\d{2}$/.test(value), {
+        message: "Ingrese una fecha v\xE1lida.",
+      });
+    editCausaFormSchema = z4.object({
+      estudianteNombre: z4
+        .string()
+        .trim()
+        .min(2, "Ingrese el nombre del estudiante."),
+      estudianteCurso: z4.string().trim(),
+      runEstudiante: z4
+        .string()
+        .trim()
+        .refine((value) => !value || isChileanRutFormat(value), {
+          message: "Ingrese un RUN chileno v\xE1lido.",
+        }),
+      tipoInfraccion: z4.enum(tipoInfraccionValues),
+      conductaRiceId: z4.string().optional(),
+      responsable: z4
+        .string()
+        .trim()
+        .min(3, "Ingrese el encargado o responsable."),
+      estadoActual: EstadoCausaEnum,
+      observaciones: z4.string().trim(),
+      comprometeAulaSegura: z4.boolean(),
+      esDenunciaConfidencial: z4.boolean(),
+      identidadReservada: z4.boolean(),
+      fechaInicioInvestigacion: optionalDateSchema,
+      fechaInicioSuspension: optionalDateSchema,
+      duracionSuspensionDias: z4
+        .number()
+        .int("Ingrese un n\xFAmero entero.")
+        .min(0, "La suspensi\xF3n no puede ser negativa.")
+        .max(15, "La suspensi\xF3n preventiva no puede exceder 15 d\xEDas."),
+      monitoreoPedagogico: z4.boolean(),
+      requiereNotificacionSuperintendencia: z4.boolean(),
+      fechaNotificacionSuperintendencia: optionalDateSchema,
+      estudianteTieneNEE: z4.boolean(),
+      tipoNEE: z4.string().trim(),
+    });
+  },
+});
+
+// src/shared/lib/schemas/loginForm.ts
+import { z as z5 } from "zod";
+var emailSchema,
+  passwordSchema,
+  newPasswordSchema,
+  loginFormSchema,
+  passwordResetRequestSchema,
+  passwordUpdateFormSchema;
+var init_loginForm = __esm({
+  "src/shared/lib/schemas/loginForm.ts"() {
+    "use strict";
+    emailSchema = z5.email("Ingrese un correo electr\xF3nico v\xE1lido.");
+    passwordSchema = z5
+      .string()
+      .min(6, "La contrase\xF1a debe tener al menos 6 caracteres.");
+    newPasswordSchema = z5
+      .string()
+      .min(10, "La nueva contrase\xF1a debe tener al menos 10 caracteres.");
+    loginFormSchema = z5.object({
+      email: emailSchema,
+      password: passwordSchema,
+    });
+    passwordResetRequestSchema = z5.object({
+      email: emailSchema,
+    });
+    passwordUpdateFormSchema = z5
+      .object({
+        password: newPasswordSchema,
+        passwordConfirmation: newPasswordSchema,
+      })
+      .refine((value) => value.password === value.passwordConfirmation, {
+        path: ["passwordConfirmation"],
+        message: "Las contrase\xF1as no coinciden.",
+      });
+  },
+});
+
+// src/shared/lib/schemas/physicalCarta.ts
+import { z as z6 } from "zod";
+var ISO_DATE_PATTERN, physicalCartaRegistrationSchema;
+var init_physicalCarta = __esm({
+  "src/shared/lib/schemas/physicalCarta.ts"() {
+    "use strict";
+    ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+    physicalCartaRegistrationSchema = z6.object({
+      studentId: z6.string().uuid("El estudiante no es v\xE1lido."),
+      letterType: z6.enum([
+        "Amonestaci\xF3n Escrita",
+        "Carta de Compromiso Conductual",
+      ]),
+      emissionDate: z6
+        .string()
+        .regex(ISO_DATE_PATTERN, "Ingrese una fecha v\xE1lida.")
+        .refine(
+          (value) => !Number.isNaN(Date.parse(`${value}T00:00:00`)),
+          "Ingrese una fecha v\xE1lida.",
+        ),
+      observations: z6
+        .string()
+        .trim()
+        .max(1e3, "La observaci\xF3n no puede superar 1000 caracteres.")
+        .optional(),
+    });
+  },
+});
+
+// src/shared/lib/schemas/studentHistoryEntry.ts
+import { z as z7 } from "zod";
+var studentHistoryEntrySchema;
+var init_studentHistoryEntry = __esm({
+  "src/shared/lib/schemas/studentHistoryEntry.ts"() {
+    "use strict";
+    studentHistoryEntrySchema = z7.object({
+      studentId: z7
+        .string()
+        .uuid("El estudiante seleccionado no es v\xE1lido."),
+      title: z7
+        .string()
+        .trim()
+        .min(3, "El t\xEDtulo debe tener al menos 3 caracteres.")
+        .max(120, "El t\xEDtulo no puede superar los 120 caracteres."),
+      description: z7
+        .string()
+        .trim()
+        .min(3, "La descripci\xF3n debe tener al menos 3 caracteres.")
+        .max(2e3, "La descripci\xF3n no puede superar los 2.000 caracteres."),
+    });
+  },
+});
+
+// src/shared/lib/schemas/index.ts
+import { z as z8 } from "zod";
+var BitacoraEntrySchema,
+  ChecklistItemSchema,
+  ChecklistProgressEntrySchema,
+  EstadoCausaEnum2,
+  TipoInfraccionEnum,
+  CausaSchema;
+var init_schemas = __esm({
+  "src/shared/lib/schemas/index.ts"() {
+    "use strict";
+    init_types();
+    init_zodCsp();
+    init_newCausaForm();
+    init_editCausaForm();
+    init_loginForm();
+    init_physicalCarta();
+    init_studentHistoryEntry();
+    BitacoraEntrySchema = z8.object({
+      id: z8.string(),
+      fecha: z8.string(),
+      tipo: z8.enum([
+        "Entrevista",
+        "Evidencia",
+        "Notificaci\xF3n",
+        "Citaci\xF3n",
+        "Correo",
+        "Descargo",
+        "Mediaci\xF3n",
+        "Resoluci\xF3n",
+        "Otro",
+      ]),
+      titulo: z8.string(),
+      descripcion: z8.string(),
+      participantes: z8.array(z8.string()),
+      documentoAdjunto: z8.string().optional(),
+      compartidoGrupal: z8.boolean().optional(),
+    });
+    ChecklistItemSchema = z8.object({
+      id: z8.string(),
+      label: z8.string(),
+      descripcion: z8.string(),
+      completado: z8.boolean(),
+      obligatorio: z8.boolean().optional(),
+      aplicabilidad: z8.enum(["pendiente", "aplica", "no_aplica"]).optional(),
+      estado: z8
+        .enum([
+          "no_iniciado",
+          "en_desarrollo",
+          "cumplido",
+          "vencido",
+          "no_aplica",
+          "invalidado",
+        ])
+        .optional(),
+      fundamentoNoAplica: z8.string().optional(),
+      fechaInicio: z8.string().optional(),
+      fechaLimite: z8.string().optional(),
+      resultado: z8.string().optional(),
+      bloqueanteParaAvanzar: z8.boolean().optional(),
+      bloqueanteParaCerrar: z8.boolean().optional(),
+      fechaCompletado: z8.string().optional(),
+      requeridoPor: z8.enum([
+        "Circular 482",
+        "Ley 21809",
+        "Reglamento Interno",
+        "Ambas",
+      ]),
+      registradoPor: z8.string().optional(),
+      observaciones: z8.string().optional(),
+      documentoNombre: z8.string().optional(),
+      documentoUrl: z8.string().optional(),
+    });
+    ChecklistProgressEntrySchema = z8.object({
+      id: z8.string(),
+      causaId: z8.string(),
+      incidenteId: z8.string().uuid().optional(),
+      checklistItemId: z8.string(),
+      title: z8.string().min(1),
+      description: z8.string().min(1),
+      entryType: z8.enum([
+        "Entrevista",
+        "Evidencia",
+        "Notificaci\xF3n",
+        "Citaci\xF3n",
+        "Correo",
+        "Descargo",
+        "Mediaci\xF3n",
+        "Resoluci\xF3n",
+        "Otro",
+      ]),
+      occurredAt: z8.string(),
+      documentName: z8.string().optional(),
+      documentUrl: z8.string().optional(),
+      createdBy: z8.string().optional(),
+      createdAt: z8.string(),
+      invalidatedAt: z8.string().optional(),
+      invalidatedBy: z8.string().optional(),
+      invalidationReason: z8.string().optional(),
+    });
+    EstadoCausaEnum2 = z8.enum(Object.values(EstadoCausa));
+    TipoInfraccionEnum = z8.enum([
+      "Leve",
+      "Grave",
+      "Muy Grave",
+      "Grav\xEDsima",
+    ]);
+    CausaSchema = z8.object({
+      id: z8.string(),
+      proceduralModelVersion: z8
+        .union([z8.literal(1), z8.literal(2)])
+        .optional(),
+      studentId: z8.string().uuid().optional(),
+      incidenteId: z8.string().uuid().optional(),
+      estudianteNombre: z8.string(),
+      estudianteCurso: z8.string(),
+      nnaProtectedName: z8.string(),
+      runEstudiante: z8.string(),
+      fechaApertura: z8.string(),
+      estadoActual: EstadoCausaEnum2,
+      tipoInfraccion: TipoInfraccionEnum,
+      responsable: z8.string(),
+      apoderadoEmail: z8.string().max(320).optional(),
+      comprometeAulaSegura: z8.boolean(),
+      fechaUltimaActualizacion: z8.string(),
+      observaciones: z8.string(),
+      bitacora: z8.array(BitacoraEntrySchema),
+      checklistDebidoProceso: z8.array(ChecklistItemSchema),
+      conductaRiceId: z8.string().optional(),
+      medidasEjecutadas: z8.array(z8.string()).optional(),
+      esDenunciaConfidencial: z8.boolean().optional(),
+      denunciantAnonimo: z8.boolean().optional(),
+      identidadReservada: z8.boolean().optional(),
+      fechaInicioInvestigacion: z8.string().optional(),
+      plazoInvestigacionDias: z8.number().optional(),
+      fechaLimiteInvestigacion: z8.string().optional(),
+      fechaInicioSuspension: z8.string().optional(),
+      duracionSuspensionDias: z8.number().optional(),
+      fechaFinSuspension: z8.string().optional(),
+      monitoreoPedagogico: z8.boolean().optional(),
+      requiereNotificacionSuperintendencia: z8.boolean().optional(),
+      fechaNotificacionSuperintendencia: z8.string().optional(),
+      plazoNotificacionDias: z8.number().optional(),
+      fechaLimiteNotificacion: z8.string().optional(),
+      medidasProteccionVictima: z8.array(z8.string()).optional(),
+      medidasProteccionDenunciado: z8.array(z8.string()).optional(),
+      estudianteTieneNEE: z8.boolean().optional(),
+      tipoNEE: z8.string().optional(),
+      sancionesNEEDesactivadas: z8.boolean().optional(),
+    });
+  },
+});
+
 // server/api/services/excelImport.ts
 var excelImport_exports = {};
 __export(excelImport_exports, {
@@ -1829,7 +2412,17 @@ async function parseImportWorkbook(buffer, defaultLevel = "BASICA") {
       const row = toRow(rows[r]);
       const full_name = normalizeText2(row[iName] ?? row[0]);
       if (!full_name) continue;
-      const rut = iRut >= 0 ? normalizeRut(row[iRut]) : "";
+      let rut = iRut >= 0 ? normalizeRutInput(normalizeRut(row[iRut])) : "";
+      if (rut && !isValidRut(rut)) {
+        warnings.push(
+          "Fila " +
+            (r + 1) +
+            ": RUN inv\xE1lido " +
+            rut +
+            ", se importar\xE1 sin RUN.",
+        );
+        rut = "";
+      }
       const course_name = iCourse >= 0 ? normalizeText2(row[iCourse]) : "";
       students.push({ full_name, rut, course_name });
     }
@@ -1854,7 +2447,7 @@ async function parseImportWorkbook(buffer, defaultLevel = "BASICA") {
   return { courses, students, warnings };
 }
 async function runImport(client, tenantId, parsed) {
-  const errors = [];
+  const errors = [...parsed.warnings];
   let coursesInserted = 0;
   let studentsInserted = 0;
   let duplicates = 0;
@@ -1940,6 +2533,7 @@ var init_excelImport = __esm({
   "server/api/services/excelImport.ts"() {
     "use strict";
     init_fetchAllRows();
+    init_schemas();
     NORMALIZED_LEVELS = {
       basica: "BASICA",
       basico: "BASICA",
@@ -2071,6 +2665,50 @@ import cors from "cors";
 import express from "express";
 import path2 from "node:path";
 import { fileURLToPath } from "node:url";
+
+// server/config/runtime.ts
+function ensureJwtConfig() {
+  if (process.env.NODE_ENV !== "production") return;
+  const hasLegacy = Boolean(process.env.SUPABASE_JWT_SECRET?.trim());
+  const hasSupabase = Boolean(process.env.VITE_SUPABASE_URL?.trim());
+  if (!hasLegacy && !hasSupabase) {
+    throw new Error(
+      "Missing SUPABASE_JWT_SECRET and VITE_SUPABASE_URL (no JWKS). Aborting startup to avoid running with degraded JWT verification.",
+    );
+  }
+  if (!hasLegacy) {
+    console.warn(
+      "[jwt] SUPABASE_JWT_SECRET no configurado: se usar\xE1 JWKS y fallback a Supabase API.",
+    );
+  }
+}
+function ensureRuntimeConfig() {
+  if (process.env.NODE_ENV !== "production") return;
+  const missing = [];
+  if (!process.env.VITE_SUPABASE_URL?.trim()) missing.push("VITE_SUPABASE_URL");
+  if (
+    !(
+      process.env.VITE_SUPABASE_ANON_KEY ??
+      process.env.VITE_SUPABASE_PUBLISHABLE_KEY
+    )?.trim()
+  ) {
+    missing.push("VITE_SUPABASE_PUBLISHABLE_KEY");
+  }
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()) {
+    missing.push("SUPABASE_SERVICE_ROLE_KEY");
+  }
+  if (missing.length > 0) {
+    throw new Error(
+      `Faltan variables de entorno obligatorias: ${missing.join(", ")}. Aborting startup.`,
+    );
+  }
+  if (!process.env.UPSTASH_REDIS_REST_URL?.trim()) {
+    console.warn(
+      "[rate-limit] UPSTASH_REDIS_REST_URL no configurado: el fallback en memoria no aplica entre instancias.",
+    );
+  }
+  ensureJwtConfig();
+}
 
 // server/api/routes/advisor.ts
 import { Router } from "express";
@@ -2301,11 +2939,7 @@ async function verifyJwtWithJwks(token, supabaseUrl) {
       return null;
     }
     if (!valid) return null;
-    if (
-      payload.exp &&
-      typeof payload.exp === "number" &&
-      payload.exp * 1e3 < Date.now()
-    )
+    if (typeof payload.exp !== "number" || payload.exp * 1e3 < Date.now())
       return null;
     if (
       payload.nbf &&
@@ -2331,24 +2965,8 @@ async function verifyJwtWithJwks(token, supabaseUrl) {
 
 // server/middleware/auth.ts
 var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-var VALID_ROLES = [
-  "superadmin",
-  "admin",
-  "direccion",
-  "convivencia",
-  "inspectoria",
-  "profesor_jefe",
-  "teacher",
-  "inspector",
-  "user",
-  "staff",
-];
-var FRESH_PROFILE_ROLES = ["superadmin", "admin", "direccion"];
 function isValidUuid(value) {
   return UUID_RE.test(value);
-}
-function isValidRole(value) {
-  return VALID_ROLES.includes(value);
 }
 async function verifyJwtViaHmac(token, secret) {
   if (!secret) return null;
@@ -2514,27 +3132,30 @@ async function injectTenantContext(
 ) {
   const user = req.user;
   if (!user?.sub) return false;
-  const appMetadata = user.app_metadata;
-  const jwtTenantId =
-    typeof appMetadata?.tenant_id === "string" ? appMetadata.tenant_id : void 0;
-  const jwtRole =
-    typeof appMetadata?.role === "string" ? appMetadata.role : void 0;
-  if (
-    jwtTenantId &&
-    isValidUuid(jwtTenantId) &&
-    jwtRole &&
-    isValidRole(jwtRole) &&
-    !FRESH_PROFILE_ROLES.includes(jwtRole)
-  ) {
-    req.tenantId = jwtTenantId;
-    req.profileRole = jwtRole;
-    return true;
-  }
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
   const anonKey =
     process.env.VITE_SUPABASE_ANON_KEY ??
     process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  if (!supabaseUrl || !anonKey || !URL.canParse(supabaseUrl)) {
+  if (
+    !supabaseUrl ||
+    !anonKey ||
+    !URL.canParse(supabaseUrl) ||
+    process.env.E2E_USE_JWT_CLAIMS === "true"
+  ) {
+    const claims = user.app_metadata;
+    const tenantId =
+      typeof claims?.tenant_id === "string" ? claims.tenant_id : void 0;
+    const profileRole =
+      typeof claims?.role === "string"
+        ? claims.role
+        : typeof user.role === "string"
+          ? user.role
+          : void 0;
+    if (tenantId && profileRole && isValidUuid(tenantId)) {
+      req.tenantId = tenantId;
+      req.profileRole = profileRole;
+      return true;
+    }
     return false;
   }
   try {
@@ -2662,6 +3283,8 @@ var CHILEAN_RUT_RE = /\b(?:\d{1,2}\.?\d{3}\.?\d{3}-?[\dkK]|\d{7,8}-[\dkK])\b/g;
 var CHILEAN_PHONE_RE = /(?:\+?56\s*)?(?:9\s*)?\b\d{4}\s*\d{4}\b/g;
 var LABELLED_NAME_RE =
   /\b(estudiante|alumno|alumna|apoderado|apoderada|madre|padre)\s+([A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+(?:\s+[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+){1,4})/g;
+var UNLABELLED_NAME_RE =
+  /\b[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+(?:\s+[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+){1,3}\b/g;
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -2688,6 +3311,7 @@ function redactSensitiveForAI(text, knownValues = []) {
     .replace(CHILEAN_RUT_RE, "[RUT]")
     .replace(CHILEAN_PHONE_RE, "[tel\xE9fono]")
     .replace(LABELLED_NAME_RE, "$1 [nombre]")
+    .replace(UNLABELLED_NAME_RE, "[nombre]")
     .replace(/\n{3,}/g, "\n\n")
     .slice(0, MAX_STR);
 }
@@ -3138,23 +3762,24 @@ function getRedisClient() {
   };
   return redisClient;
 }
-async function checkRateLimitAsync(ip) {
+async function checkRateLimitAsync(ip, namespace = "global") {
   const redis = getRedisClient();
   if (!redis) {
-    return checkRateLimit(ip);
+    return checkRateLimit(ip, namespace);
   }
   try {
-    const key = `rl:${ip}`;
+    const key = namespace === "global" ? `rl:${ip}` : `rl:${namespace}:${ip}`;
     const count = await redis.incr(key);
     await redis.pexpire(key, RATE_WINDOW);
     return count <= RATE_LIMIT;
   } catch {
-    return checkRateLimit(ip);
+    return checkRateLimit(ip, namespace);
   }
 }
-function checkRateLimit(ip) {
+function checkRateLimit(ip, namespace = "global") {
   const now = Date.now();
-  const record = rateLimitMap.get(ip);
+  const key = namespace === "global" ? ip : `${namespace}:${ip}`;
+  const record = rateLimitMap.get(key);
   if (!record || now > record.resetAt) {
     if (rateLimitMap.size >= MAX_ENTRIES) {
       prune();
@@ -3164,7 +3789,7 @@ function checkRateLimit(ip) {
       prune();
       insertsSincePrune = 0;
     }
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
+    rateLimitMap.set(key, { count: 1, resetAt: now + RATE_WINDOW });
     return true;
   }
   if (record.count >= RATE_LIMIT) {
@@ -3179,7 +3804,8 @@ var DEFAULT_WINDOW_SEC = 60;
 async function rateLimit(req, res, next) {
   const authReq = req;
   const key = authReq.user?.sub ?? req.ip ?? "unknown";
-  const allowed = await checkRateLimitAsync(key);
+  const namespace = `${req.method}:${req.baseUrl}${req.path}`;
+  const allowed = await checkRateLimitAsync(key, namespace);
   if (!allowed) {
     res.status(429).json({
       error: "Demasiadas solicitudes. Intente nuevamente en un minuto.",
@@ -3562,6 +4188,151 @@ async function callGeminiLegalDraft(systemInstruction, dossier, options = {}) {
   return callGeminiComplexGeneration(systemInstruction, dossier, options);
 }
 
+// src/shared/lib/legalCompliance/dateUtils.ts
+function parseDateOnly(fecha) {
+  const [year, month, day] = fecha.split("-").map(Number);
+  return new Date(year, (month ?? 1) - 1, day ?? 1);
+}
+var FERIADOS_NACIONALES_FIJOS = /* @__PURE__ */ new Set([
+  "01-01",
+  "05-01",
+  "05-21",
+  "06-21",
+  "07-16",
+  "08-15",
+  "09-18",
+  "09-19",
+  "11-01",
+  "12-08",
+  "12-25",
+]);
+function sumarDias(fecha, dias) {
+  const resultado = new Date(fecha);
+  resultado.setDate(resultado.getDate() + dias);
+  return resultado;
+}
+function calcularPascua(anio) {
+  const a = anio % 19;
+  const b = Math.floor(anio / 100);
+  const c = anio % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const mes = Math.floor((h + l - 7 * m + 114) / 31);
+  const dia = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(anio, mes - 1, dia);
+}
+function mismoDia(a, b) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+function lunesDeLaSemana(fecha, semanas = 0) {
+  const lunes = sumarDias(fecha, -(fecha.getDay() || 7) + 1);
+  return sumarDias(lunes, semanas * 7);
+}
+function feriadoTrasladable(fecha, mes, dia) {
+  const original = new Date(fecha.getFullYear(), mes - 1, dia);
+  const diaSemana = original.getDay();
+  if ((mes === 6 && dia === 29) || (mes === 10 && dia === 12)) {
+    if (diaSemana >= 2 && diaSemana <= 4) return lunesDeLaSemana(original);
+    if (diaSemana === 5) return lunesDeLaSemana(original, 1);
+    return original;
+  }
+  if (mes === 10 && dia === 31) {
+    if (diaSemana === 2) return sumarDias(original, -3);
+    if (diaSemana === 3) return sumarDias(original, 2);
+    return original;
+  }
+  return null;
+}
+function esFeriadoNacional(fecha) {
+  const mesDia =
+    String(fecha.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(fecha.getDate()).padStart(2, "0");
+  if (FERIADOS_NACIONALES_FIJOS.has(mesDia)) return true;
+  const pascua = calcularPascua(fecha.getFullYear());
+  if (
+    mismoDia(fecha, sumarDias(pascua, -2)) ||
+    mismoDia(fecha, sumarDias(pascua, -1))
+  )
+    return true;
+  return [
+    feriadoTrasladable(fecha, 6, 29),
+    feriadoTrasladable(fecha, 10, 12),
+    feriadoTrasladable(fecha, 10, 31),
+  ].some((feriado) => feriado !== null && mismoDia(fecha, feriado));
+}
+function agregarDiasHabiles(fechaInicio, diasHabiles) {
+  const fecha = parseDateOnly(fechaInicio);
+  let diasAgregados = 0;
+  while (diasAgregados < diasHabiles) {
+    fecha.setDate(fecha.getDate() + 1);
+    const diaSemana = fecha.getDay();
+    if (diaSemana !== 0 && diaSemana !== 6 && !esFeriadoNacional(fecha))
+      diasAgregados++;
+  }
+  return formatDateOnly(fecha);
+}
+function agregarDiasCorridos(fechaInicio, dias) {
+  const fecha = parseDateOnly(fechaInicio);
+  fecha.setDate(fecha.getDate() + dias);
+  return formatDateOnly(fecha);
+}
+function formatDateOnly(fecha) {
+  const year = fecha.getFullYear();
+  const month = String(fecha.getMonth() + 1).padStart(2, "0");
+  const day = String(fecha.getDate()).padStart(2, "0");
+  return year + "-" + month + "-" + day;
+}
+
+// src/shared/lib/legalCompliance/constants.ts
+var MAX_PLAZO_INVESTIGACION_DIAS = 60;
+var PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS = 10;
+var PLAZO_INFORME_CONCLUYENTE_DIAS = 5;
+var PLAZO_TOTAL_ALTA_COMPLEJIDAD_DIAS =
+  PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS + PLAZO_INFORME_CONCLUYENTE_DIAS;
+function getMaxPlazoInvestigacionDias(
+  tipoInfraccion,
+  comprometeAulaSegura = false,
+) {
+  return comprometeAulaSegura ||
+    tipoInfraccion === "Muy Grave" ||
+    tipoInfraccion === "Grav\xEDsima"
+    ? PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS
+    : MAX_PLAZO_INVESTIGACION_DIAS;
+}
+
+// src/shared/lib/legalCompliance/deadlineCalculators.ts
+function calcularFechaLimiteInvestigacion(
+  fechaApertura,
+  tipoInfraccion,
+  comprometeAulaSegura = false,
+) {
+  const maxDias = tipoInfraccion
+    ? getMaxPlazoInvestigacionDias(tipoInfraccion, comprometeAulaSegura)
+    : MAX_PLAZO_INVESTIGACION_DIAS;
+  if (maxDias === MAX_PLAZO_INVESTIGACION_DIAS) {
+    return agregarDiasCorridos(fechaApertura, maxDias);
+  }
+  return agregarDiasHabiles(fechaApertura, maxDias);
+}
+function calcularFechaLimiteCierreIndagacion(fechaInicioInvestigacion) {
+  return agregarDiasHabiles(
+    fechaInicioInvestigacion,
+    PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS,
+  );
+}
+
 // server/api/routes/audit.ts
 var router2 = Router2();
 function getAdminClient() {
@@ -3609,7 +4380,7 @@ router2.post(
           client
             .from("causas")
             .select(
-              "id,tipo_infraccion,compromete_aula_segura,observaciones,estado_actual,fecha_apertura,fecha_inicio_investigacion,fecha_limite_investigacion,fecha_limite_cierre,conducta_rice_id,medidas_ejecutadas",
+              "id,student_id,tipo_infraccion,compromete_aula_segura,observaciones,estado_actual,fecha_apertura,fecha_inicio_investigacion,fecha_limite_investigacion,fecha_limite_cierre,conducta_rice_id,medidas_ejecutadas",
             )
             .eq("id", causaId)
             .eq("tenant_id", tenantId)
@@ -3629,7 +4400,7 @@ router2.post(
             )
             .eq("causa_id", causaId)
             .eq("tenant_id", tenantId)
-            .order("created_at", { ascending: true })
+            .order("created_at", { ascending: false })
             .limit(100),
           client
             .from("checklist_progress_entries")
@@ -3638,7 +4409,7 @@ router2.post(
             )
             .eq("causa_id", causaId)
             .eq("tenant_id", tenantId)
-            .order("occurred_at", { ascending: true })
+            .order("occurred_at", { ascending: false })
             .limit(150),
         ]);
       if (causaResult.error) throw causaResult.error;
@@ -3652,11 +4423,25 @@ router2.post(
       if (historyResult.error) throw historyResult.error;
       if (progressResult.error) throw progressResult.error;
       const causa = causaResult.data;
+      const studentResult = causa.student_id
+        ? await client
+            .from("students")
+            .select("full_name,rut")
+            .eq("id", causa.student_id)
+            .eq("tenant_id", tenantId)
+            .maybeSingle()
+        : { data: null, error: null };
+      if (studentResult.error) throw studentResult.error;
       const infractionType = String(
         causa.tipo_infraccion ?? "No registrada",
       ).slice(0, 100);
       const observations = String(causa.observaciones ?? "").slice(0, 5e3);
-      const knownSensitiveValues = [causaId, infractionType, observations];
+      const knownSensitiveValues = [
+        causaId,
+        infractionType,
+        studentResult.data?.full_name,
+        studentResult.data?.rut,
+      ];
       const safeChecklist = (checklistResult.data ?? [])
         .slice(0, 100)
         .map((item) => ({
@@ -3688,49 +4473,53 @@ router2.post(
             knownSensitiveValues,
           ).slice(0, 250),
         }));
-      const safeHistory = (historyResult.data ?? []).map((entry) => ({
-        title: redactSensitiveForAI(entry.titulo, knownSensitiveValues).slice(
-          0,
-          200,
-        ),
-        date: redactSensitiveForAI(entry.fecha, knownSensitiveValues).slice(
-          0,
-          50,
-        ),
-        type: redactSensitiveForAI(entry.tipo, knownSensitiveValues).slice(
-          0,
-          80,
-        ),
-        description: redactSensitiveForAI(
-          entry.descripcion,
-          knownSensitiveValues,
-        ).slice(0, 2e3),
-        document: redactSensitiveForAI(
-          entry.documento_adjunto,
-          knownSensitiveValues,
-        ).slice(0, 250),
-      }));
-      const safeProgress = (progressResult.data ?? []).map((entry) => ({
-        checklistItemId: String(entry.checklist_item_id ?? "").slice(0, 100),
-        title: redactSensitiveForAI(entry.title, knownSensitiveValues).slice(
-          0,
-          250,
-        ),
-        description: redactSensitiveForAI(
-          entry.description,
-          knownSensitiveValues,
-        ).slice(0, 1500),
-        type: redactSensitiveForAI(
-          entry.entry_type,
-          knownSensitiveValues,
-        ).slice(0, 80),
-        occurredAt: entry.occurred_at ?? null,
-        documentName: redactSensitiveForAI(
-          entry.document_name,
-          knownSensitiveValues,
-        ).slice(0, 250),
-        invalidated: Boolean(entry.invalidated_at),
-      }));
+      const safeHistory = [...(historyResult.data ?? [])]
+        .reverse()
+        .map((entry) => ({
+          title: redactSensitiveForAI(entry.titulo, knownSensitiveValues).slice(
+            0,
+            200,
+          ),
+          date: redactSensitiveForAI(entry.fecha, knownSensitiveValues).slice(
+            0,
+            50,
+          ),
+          type: redactSensitiveForAI(entry.tipo, knownSensitiveValues).slice(
+            0,
+            80,
+          ),
+          description: redactSensitiveForAI(
+            entry.descripcion,
+            knownSensitiveValues,
+          ).slice(0, 2e3),
+          document: redactSensitiveForAI(
+            entry.documento_adjunto,
+            knownSensitiveValues,
+          ).slice(0, 250),
+        }));
+      const safeProgress = [...(progressResult.data ?? [])]
+        .reverse()
+        .map((entry) => ({
+          checklistItemId: String(entry.checklist_item_id ?? "").slice(0, 100),
+          title: redactSensitiveForAI(entry.title, knownSensitiveValues).slice(
+            0,
+            250,
+          ),
+          description: redactSensitiveForAI(
+            entry.description,
+            knownSensitiveValues,
+          ).slice(0, 1500),
+          type: redactSensitiveForAI(
+            entry.entry_type,
+            knownSensitiveValues,
+          ).slice(0, 80),
+          occurredAt: entry.occurred_at ?? null,
+          documentName: redactSensitiveForAI(
+            entry.document_name,
+            knownSensitiveValues,
+          ).slice(0, 250),
+          invalidated: Boolean(entry.invalidated_at),
+        }));
       const legalSources = await getRelevantLegalSources(
         `debido proceso norma previa comunicaci\xF3n hechos indagaci\xF3n descargos resoluci\xF3n fundada proporcionalidad reconsideraci\xF3n ${infractionType}`,
       );
@@ -3739,6 +4528,18 @@ router2.post(
 Tu funci\xF3n es verificar la coherencia entre los hitos efectivamente registrados en un expediente y siete garant\xEDas del debido proceso. No calificas la responsabilidad del estudiante, no propones sanciones, no estimas multas y no agregas exigencias que no se desprendan de las fuentes autorizadas.
 
 Usa solo el expediente persistido y las fuentes jur\xEDdicas autorizadas incluidas por el sistema. Redacta en espa\xF1ol formal de Chile, con tono t\xE9cnico, neutral y verificable.`;
+      const fechaInicioPlazo =
+        causa.fecha_inicio_investigacion ?? causa.fecha_apertura;
+      const fechaLimiteInvestigacionCalculada = fechaInicioPlazo
+        ? calcularFechaLimiteInvestigacion(
+            fechaInicioPlazo,
+            causa.tipo_infraccion,
+            Boolean(causa.compromete_aula_segura),
+          )
+        : null;
+      const fechaLimiteCierreCalculada = causa.fecha_inicio_investigacion
+        ? calcularFechaLimiteCierreIndagacion(causa.fecha_inicio_investigacion)
+        : null;
       const auditDossier = `FUENTES JUR\xCDDICAS AUTORIZADAS:
 ${legalSources}
 
@@ -3750,8 +4551,8 @@ EXPEDIENTE PERSISTIDO:
 - Referencia de procedimiento especial informada por el expediente: ${causa.compromete_aula_segura ? "S\xED" : "No"}
 - Fecha de apertura: ${causa.fecha_apertura ?? "No registrada"}
 - Inicio de indagaci\xF3n/investigaci\xF3n: ${causa.fecha_inicio_investigacion ?? "No registrado"}
-- Fecha l\xEDmite de indagaci\xF3n/investigaci\xF3n: ${causa.fecha_limite_investigacion ?? "No registrada"}
-- Fecha l\xEDmite de cierre: ${causa.fecha_limite_cierre ?? "No registrada"}
+- Fecha l\xEDmite de indagaci\xF3n/investigaci\xF3n: ${fechaLimiteInvestigacionCalculada ?? causa.fecha_limite_investigacion ?? "No registrada"}
+- Fecha l\xEDmite de cierre: ${fechaLimiteCierreCalculada ?? causa.fecha_limite_cierre ?? "No registrada"}
 - Observaciones: ${redactSensitiveForAI(observations, knownSensitiveValues)}
 - Medidas ejecutadas: ${redactSensitiveForAI(JSON.stringify(causa.medidas_ejecutadas ?? [], null, 2), knownSensitiveValues)}
 - Checklist registrado: ${redactSensitiveForAI(JSON.stringify(safeChecklist, null, 2), knownSensitiveValues)}
@@ -4928,6 +5729,10 @@ var processDisciplinaryPdf_default = router6;
 // server/api/routes/usage.ts
 import { Router as Router7 } from "express";
 var router7 = Router7();
+var DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/;
+function validDateOnly(value) {
+  return typeof value === "string" && DATE_ONLY_RE.test(value);
+}
 var EVENT_NAME_RE = /^[a-z][a-z0-9_]{1,79}$/;
 var MAX_PROPERTIES_BYTES = 4e3;
 function hasSafeProperties(value) {
@@ -5014,6 +5819,14 @@ router7.get(
     try {
       const since = req.query.since ?? void 0;
       const until = req.query.until ?? void 0;
+      if (
+        (since !== void 0 && !validDateOnly(since)) ||
+        (until !== void 0 && !validDateOnly(until)) ||
+        (since && until && since > until)
+      ) {
+        res.status(400).json({ error: "Rango de fechas inv\xE1lido." });
+        return;
+      }
       const tenantId = req.tenantId;
       if (!tenantId) {
         res.status(400).json({ error: "Establecimiento no determinado." });
@@ -5109,6 +5922,13 @@ async function sendCitacionEmail({ to, subject, body, isHtml }) {
 
 // server/api/routes/notificaciones.ts
 var router8 = Router8();
+var NOTIFICATION_ROLES = [
+  "superadmin",
+  "admin",
+  "direccion",
+  "convivencia",
+  "inspectoria",
+];
 var EMAIL_RE2 = /^[^\s@]{1,64}@[^\s@]{1,253}\.[^\s@]{2,}$/;
 var MAX_SUBJECT = 200;
 var MAX_BODY = 8e3;
@@ -5149,6 +5969,7 @@ router8.post(
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
   requireTenant,
+  requireRole(NOTIFICATION_ROLES),
   rateLimit,
   async (req, res) => {
     try {
@@ -5238,6 +6059,7 @@ router8.post(
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
   requireTenant,
+  requireRole(NOTIFICATION_ROLES),
   rateLimit,
   async (req, res) => {
     try {
@@ -5354,6 +6176,7 @@ init_bulkDisciplinaryPdf();
 init_bulkDisciplinaryPdf();
 init_regulationBasis();
 init_fetchAllRows();
+init_dateUtils();
 async function previewBulkCartas(
   { supabase, tenantId, studentIds },
   additionalNegatives = /* @__PURE__ */ new Map(),
@@ -5494,7 +6317,7 @@ async function syncBulkPendingCartas(input) {
         student_id: student.id,
         tenant_id: tenantId,
         letter_type: letterType,
-        emission_date: /* @__PURE__ */ new Date().toISOString().slice(0, 10),
+        emission_date: nowDateOnly(),
         status: "Vigente",
         emitted_by: "Inspector\xEDa",
         supervisor_name: null,
@@ -5593,7 +6416,7 @@ var ownUpload = multer({
 });
 var ADMIN_ROLES = ["superadmin", "admin", "direccion"];
 var APPLICATION_CODE = "convivencia";
-var VALID_ROLES2 = [
+var VALID_ROLES = [
   "admin",
   "direccion",
   "convivencia",
@@ -5664,7 +6487,7 @@ function getRequest(req) {
   return req;
 }
 function isRole(value) {
-  return typeof value === "string" && VALID_ROLES2.includes(value);
+  return typeof value === "string" && VALID_ROLES.includes(value);
 }
 async function assertFreshAdmin(client, request2) {
   if (!request2.user?.sub || !request2.tenantId)
@@ -5714,7 +6537,13 @@ async function listAuthUsers(client) {
     if (result.data.users.length < perPage) return users;
   }
 }
-router10.use("/admin", requireAuth, requireTenant, requireRole(ADMIN_ROLES));
+router10.use(
+  "/admin",
+  requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
+  requireTenant,
+  requireRole(ADMIN_ROLES),
+);
 router10.get("/admin/members", async (req, res) => {
   try {
     const request2 = getRequest(req);
@@ -6126,48 +6955,56 @@ router10.post("/admin/invitations/:invitationId/cancel", async (req, res) => {
     res.status(500).json(clientErrorBody(message, 500));
   }
 });
-router10.post("/admin/import", ownUpload.single("file"), async (req, res) => {
-  try {
-    const request2 = getRequest(req);
-    const client = getAdminClient3();
-    await assertFreshAdmin(client, request2);
-    if (!request2.tenantId)
-      throw new Error("No fue posible determinar el establecimiento.");
-    if (!req.file?.buffer) {
-      res.status(400).json({ error: "Adjunte un archivo .xlsx v\xE1lido." });
-      return;
-    }
-    const defaultLevel =
-      req.body?.defaultLevel === "MEDIA" ? "MEDIA" : "BASICA";
-    const { parseImportWorkbook: parseImportWorkbook2, runImport: runImport2 } =
-      await Promise.resolve().then(
+router10.post(
+  "/admin/import",
+  rateLimit,
+  ownUpload.single("file"),
+  async (req, res) => {
+    try {
+      const request2 = getRequest(req);
+      const client = getAdminClient3();
+      await assertFreshAdmin(client, request2);
+      if (!request2.tenantId)
+        throw new Error("No fue posible determinar el establecimiento.");
+      if (!req.file?.buffer) {
+        res.status(400).json({ error: "Adjunte un archivo .xlsx v\xE1lido." });
+        return;
+      }
+      const defaultLevel =
+        req.body?.defaultLevel === "MEDIA" ? "MEDIA" : "BASICA";
+      const {
+        parseImportWorkbook: parseImportWorkbook2,
+        runImport: runImport2,
+      } = await Promise.resolve().then(
         () => (init_excelImport(), excelImport_exports),
       );
-    const parsed = await parseImportWorkbook2(req.file.buffer, defaultLevel);
-    const result = await runImport2(client, request2.tenantId, parsed);
-    await recordAudit(
-      client,
-      request2,
-      "tenant_base_imported",
-      request2.tenantId,
-      null,
-      {
-        courses: result.coursesInserted,
-        students: result.studentsInserted,
-      },
-    );
-    res.json(result);
-  } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "No fue posible importar la base.";
-    const status = message.includes("permisos") ? 403 : 500;
-    res.status(status).json(clientErrorBody(message, status));
-  }
-});
+      const parsed = await parseImportWorkbook2(req.file.buffer, defaultLevel);
+      const result = await runImport2(client, request2.tenantId, parsed);
+      await recordAudit(
+        client,
+        request2,
+        "tenant_base_imported",
+        request2.tenantId,
+        null,
+        {
+          courses: result.coursesInserted,
+          students: result.studentsInserted,
+        },
+      );
+      res.json(result);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "No fue posible importar la base.";
+      const status = message.includes("permisos") ? 403 : 500;
+      res.status(status).json(clientErrorBody(message, status));
+    }
+  },
+);
 router10.post(
   "/admin/profesores/import",
+  rateLimit,
   ownUpload.single("file"),
   async (req, res) => {
     try {
@@ -6226,6 +7063,7 @@ async function loadTeacherNames(client, tenantId) {
 }
 router10.post(
   "/admin/annotations/bulk-preview",
+  rateLimit,
   ownUpload.single("file"),
   async (req, res) => {
     try {
@@ -6408,6 +7246,7 @@ router10.post(
 );
 router10.post(
   "/admin/annotations/bulk-confirm",
+  rateLimit,
   ownUpload.single("file"),
   async (req, res) => {
     let bulkClaim = null;
@@ -6632,6 +7471,24 @@ router10.post(
               "pdf_file_path",
               `bulk-pdf/${bulkClaim.tenantId}/${bulkClaim.courseId}/${bulkClaim.fileHash}`,
             );
+          const adminClient = getAdminClient3();
+          const { data: orphanedCartas } = await adminClient
+            .from("cartas_disciplinarias")
+            .select("id")
+            .eq("tenant_id", bulkClaim.tenantId)
+            .like("observations", `%${bulkClaim.fileHash}%`);
+          const cartaIds = (orphanedCartas ?? []).map((row) => row.id);
+          if (cartaIds.length > 0) {
+            await adminClient
+              .from("carta_events")
+              .delete()
+              .in("carta_id", cartaIds);
+            await adminClient
+              .from("cartas_disciplinarias")
+              .delete()
+              .eq("tenant_id", bulkClaim.tenantId)
+              .in("id", cartaIds);
+          }
           await getAdminClient3().rpc("release_bulk_pdf_import", {
             p_tenant_id: bulkClaim.tenantId,
             p_course_id: bulkClaim.courseId,
@@ -7499,12 +8356,14 @@ router12.get(
 router12.use(
   "/admin/institution",
   requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
   requireTenant,
   requireRole(ADMIN_ROLES2),
 );
 router12.use(
   "/admin/rules",
   requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
   requireTenant,
   requireRole(ADMIN_ROLES2),
 );
@@ -7863,35 +8722,30 @@ var allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
   .split(",")
   .map((o) => o.trim())
   .filter(Boolean);
-function ensureJwtConfig() {
-  if (process.env.NODE_ENV === "production") {
-    const hasLegacy = Boolean(
-      process.env.SUPABASE_JWT_SECRET &&
-      process.env.SUPABASE_JWT_SECRET.length > 0,
-    );
-    const hasSupabase = Boolean(
-      process.env.VITE_SUPABASE_URL && process.env.VITE_SUPABASE_URL.length > 0,
-    );
-    if (!hasLegacy && !hasSupabase) {
-      throw new Error(
-        "Missing SUPABASE_JWT_SECRET and VITE_SUPABASE_URL (no JWKS). Aborting startup to avoid running with degraded JWT verification.",
-      );
-    }
-    if (!hasLegacy) {
-      console.warn(
-        "[jwt] SUPABASE_JWT_SECRET no configurado: verificaci\xF3n HMAC deshabilitada; se usar\xE1 JWKS (ES256) y fallback a Supabase API.",
-      );
-    }
-  }
-}
-ensureJwtConfig();
+ensureRuntimeConfig();
 var app = express();
 app.set("trust proxy", 1);
 app.use(compression());
 app.use(
   helmet({
-    contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false,
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+        imgSrc: ["'self'", "data:", "blob:", "https://*.supabase.co"],
+        connectSrc: [
+          "'self'",
+          "https://*.supabase.co",
+          "wss://*.supabase.co",
+          "https://*.posthog.com",
+          "https://*.ingest.us.sentry.io",
+        ],
+        workerSrc: ["'self'", "blob:"],
+      },
+    },
   }),
 );
 app.use(
@@ -7918,16 +8772,31 @@ app.use("/api", pilot_default);
 app.use("/api", admin_default);
 app.use("/api", platform_default);
 app.use("/api", institution_default);
-app.use(errorHandler);
 var distPath = path2.join(__dirname, "..", "dist");
 app.use(express.static(distPath));
 app.get("*", (_req, res) => {
   res.sendFile(path2.join(distPath, "index.html"));
 });
+app.use(errorHandler);
 var index_default = app;
 export { index_default as default };
 /** @license SPDX-License-Identifier: Apache-2.0 */
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
+ */
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ * Utilidades de cálculo de fechas hábiles
+ */
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ * Constantes legales - Circular 482 / Ley 21809
+ */
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ * Calculadoras de fechas límite legales
  */

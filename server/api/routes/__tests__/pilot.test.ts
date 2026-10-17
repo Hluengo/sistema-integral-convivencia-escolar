@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import assert from "node:assert/strict";
-import { describe, it, beforeEach } from "node:test";
+import { afterEach, describe, it, beforeEach } from "node:test";
 import type { Request, Response } from "express";
 import { requireAuth } from "../../../middleware/auth.js";
 import { requireTenant } from "../../../middleware/requireTenant.js";
@@ -41,6 +41,10 @@ describe("Pilot route — GET /pilot/membership-check", () => {
     process.env = { ...originalEnv };
     delete process.env.VITE_APP_MEMBERSHIPS_ENABLED;
     delete process.env.VITE_APP_MEMBERSHIPS_ENFORCED;
+  });
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
   });
 
   it("rejects without auth", () => {

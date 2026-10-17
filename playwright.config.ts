@@ -40,6 +40,7 @@ export default defineConfig({
         env: {
           ...process.env,
           NODE_ENV: "production",
+          E2E_USE_JWT_CLAIMS: "true",
         },
       }
     : undefined,

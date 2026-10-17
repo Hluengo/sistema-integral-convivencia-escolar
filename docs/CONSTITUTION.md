@@ -56,13 +56,13 @@
 
 ### ✅ Antes de Commit
 
-| #   | Regla                                                      |
-| --- | ---------------------------------------------------------- |
-| 1   | **Siempre ejecutar `npm run lint`** — 0 errores            |
-| 2   | **Siempre ejecutar `npm run test`** — 22/22 pasando        |
-| 3   | **Siempre ejecutar `npm run build:web`** — Build exitoso   |
-| 4   | **Siempre revisar `git diff` para detectar secrets**       |
-| 5   | **Siempre escribir commit message descriptivo en español** |
+| #   | Regla                                                               |
+| --- | ------------------------------------------------------------------- |
+| 1   | **Siempre ejecutar `npm run lint`** — 0 errores                     |
+| 2   | **Siempre ejecutar `npm run test:coverage`** - 1002 pruebas pasando |
+| 3   | **Siempre ejecutar `npm run build:web`** — Build exitoso            |
+| 4   | **Siempre revisar `git diff` para detectar secrets**                |
+| 5   | **Siempre escribir commit message descriptivo en español**          |
 
 ### ✅ Al Codificar
 

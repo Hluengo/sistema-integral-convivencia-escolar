@@ -68,20 +68,26 @@ async function createProbeUser(tenantId, label) {
   return { email, userId };
 }
 
-async function queryAsUser(email, table, select = "*") {
+async function signInAsUser(email) {
   const client = createClient(url, publishableKey, {
     auth: { persistSession: false },
   });
   const session = await client.auth.signInWithPassword({ email, password });
   if (session.error || !session.data.session)
     throw session.error ?? new Error("No se obtuvo sesión QA.");
+  return client;
+}
+
+async function queryAsUser(email, table, select = "*") {
+  const client = await signInAsUser(email);
   const result = await client.from(table).select(select);
   if (result.error) throw result.error;
   return result.data ?? [];
 }
 
-async function assertAuditAppendOnly(tenantId) {
-  const event = await admin
+async function assertAuditAppendOnly(tenantId, email) {
+  const client = await signInAsUser(email);
+  const event = await client
     .from("audit_events")
     .select("id")
     .eq("tenant_id", tenantId)
@@ -89,11 +95,11 @@ async function assertAuditAppendOnly(tenantId) {
     .maybeSingle();
   if (event.error) throw event.error;
   if (!event.data) return false;
-  const update = await admin
+  const update = await client
     .from("audit_events")
     .update({ action: "qa_mutation_attempt" })
     .eq("id", event.data.id);
-  const remove = await admin
+  const remove = await client
     .from("audit_events")
     .delete()
     .eq("id", event.data.id);
@@ -176,7 +182,7 @@ try {
     throw new Error("El tenant fuente ve reglamentos ajenos.");
   if (targetRules.some((row) => row.tenant_id !== target.id))
     throw new Error("El tenant destino ve reglamentos ajenos.");
-  if (!(await assertAuditAppendOnly(target.id)))
+  if (!(await assertAuditAppendOnly(target.id, targetUser.email)))
     throw new Error("No había eventos para probar append-only.");
 
   console.log(

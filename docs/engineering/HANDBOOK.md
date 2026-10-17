@@ -355,12 +355,11 @@ sanitizeForAI(input):
 
 ### 7.1 Stack
 
-| Tipo   | Framework                          | Ejecución             |
-| ------ | ---------------------------------- | --------------------- |
-| Unit   | `node:test` + `node:assert/strict` | `npm run test`        |
-| Vitest | Vitest + `@vitest/coverage-v8`     | `npm run test:vitest` |
-| E2E    | Playwright                         | `npm run test:e2e`    |
-| A11y   | Playwright + axe                   | `npm run test:a11y`   |
+| Tipo | Framework                          | Ejecución           |
+| ---- | ---------------------------------- | ------------------- |
+| Unit | `node:test` + `node:assert/strict` | `npm run test`      |
+| E2E  | Playwright                         | `npm run test:e2e`  |
+| A11y | Playwright + axe                   | `npm run test:a11y` |
 
 ### 7.2 Patrón de Test
 

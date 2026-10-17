@@ -374,7 +374,7 @@ export default function EditCausaModalForm({
                   errors.runEstudiante ? "edit-run-error" : undefined
                 }
                 invalid={!!errors.runEstudiante}
-                placeholder="12.345.678-9"
+                placeholder="12.345.678-5"
                 {...register("runEstudiante")}
               />
             </FormField>

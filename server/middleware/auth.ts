@@ -243,7 +243,26 @@ async function injectTenantContext(
   const anonKey =
     process.env.VITE_SUPABASE_ANON_KEY ??
     process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  if (!supabaseUrl || !anonKey || !URL.canParse(supabaseUrl)) {
+  if (
+    !supabaseUrl ||
+    !anonKey ||
+    !URL.canParse(supabaseUrl) ||
+    process.env.E2E_USE_JWT_CLAIMS === "true"
+  ) {
+    const claims = user.app_metadata;
+    const tenantId =
+      typeof claims?.tenant_id === "string" ? claims.tenant_id : undefined;
+    const profileRole =
+      typeof claims?.role === "string"
+        ? claims.role
+        : typeof user.role === "string"
+          ? user.role
+          : undefined;
+    if (tenantId && profileRole && isValidUuid(tenantId)) {
+      req.tenantId = tenantId;
+      req.profileRole = profileRole as ProfileRole;
+      return true;
+    }
     return false;
   }
 

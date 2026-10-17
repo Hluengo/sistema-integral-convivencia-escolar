@@ -29,10 +29,10 @@ test("normalizeLevel normaliza niveles con acentos y variantes", () => {
 // normalizeRut
 // ============================================================
 test("normalizeRut limpia y mayusculiza el RUT", () => {
-  assert.equal(normalizeRut("12.345.678-9"), "12345678-9");
+  assert.equal(normalizeRut("12.345.678-5"), "12345678-5");
   assert.equal(normalizeRut("  9.876.543-k  "), "9876543-K");
   assert.equal(normalizeRut(12345678), "12345678");
-  assert.equal(normalizeRut("abc-12.345.678-9"), "12345678-9");
+  assert.equal(normalizeRut("abc-12.345.678-5"), "12345678-5");
   assert.equal(normalizeRut(""), "");
 });
 
@@ -49,10 +49,10 @@ test("parseImportWorkbook lee dos hojas y normaliza niveles", async () => {
     [{ value: "full_name" }, { value: "rut" }, { value: "curso" }],
     [
       { value: "Juan Pérez" },
-      { value: "12.345.678-9" },
+      { value: "12.345.678-5" },
       { value: "1° Básico" },
     ],
-    [{ value: "María Gómez" }, { value: "9.876.543-k" }, { value: "2° Medio" }],
+    [{ value: "María Gómez" }, { value: "9.876.543-3" }, { value: "2° Medio" }],
   ];
   const buffer = await writeExcelFile([
     { sheet: "Cursos", data: cursos },
@@ -68,14 +68,30 @@ test("parseImportWorkbook lee dos hojas y normaliza niveles", async () => {
   assert.equal(parsed.courses[1].position, 2);
   assert.equal(parsed.students.length, 2);
   assert.equal(parsed.students[0].full_name, "Juan Pérez");
-  assert.equal(parsed.students[0].rut, "12345678-9");
+  assert.equal(parsed.students[0].rut, "12345678-5");
   assert.equal(parsed.students[0].course_name, "1° Básico");
-  assert.equal(parsed.students[1].rut, "9876543-K");
+  assert.equal(parsed.students[1].rut, "9876543-3");
 });
 
 // ============================================================
 // parseImportWorkbook deriva cursos si solo hay hoja Estudiantes
 // ============================================================
+test("parseImportWorkbook advierte y omite un RUN con DV inválido", async () => {
+  const estudiantes = [
+    [{ value: "full_name" }, { value: "rut" }, { value: "curso" }],
+    [{ value: "Ana" }, { value: "12.345.678-9" }, { value: "1° Básico" }],
+  ];
+  const buffer = await writeExcelFile([
+    { sheet: "Estudiantes", data: estudiantes },
+  ]).toBuffer();
+
+  const parsed = await parseImportWorkbook(buffer);
+
+  assert.equal(parsed.students[0].rut, "");
+  assert.match(parsed.warnings[0], /Fila 2/);
+  assert.match(parsed.warnings[0], /12345678-9/);
+});
+
 test("parseImportWorkbook deriva cursos desde la hoja Estudiantes", async () => {
   const estudiantes = [
     [{ value: "full_name" }, { value: "rut" }, { value: "curso" }],
@@ -162,6 +178,16 @@ test("runImport inserta cursos, mapea course_id y deduplica por RUT", async () =
   assert.equal(result.duplicates, 1);
   assert.equal(result.errors.length, 1);
   assert.match(result.errors[0], /Sin Curso/);
+});
+
+test("runImport propaga advertencias del parseo como errores del resultado", async () => {
+  const result = await runImport(makeMockClient({}), "tenant-1", {
+    courses: [],
+    students: [],
+    warnings: ["RUN inválido en fila 2"],
+  });
+
+  assert.deepEqual(result.errors, ["RUN inválido en fila 2"]);
 });
 
 test("runImport respeta RUTs ya existentes en la base", async () => {

@@ -10,7 +10,7 @@ import {
   DEFAULT_LETTER_CONTENT,
   isLetterAnnotationSummary,
 } from "../DocumentPreview/docTypes";
-import { splitAgreements } from "../DocumentPreview/SharedComponents";
+import { splitAgreements } from "../DocumentPreview/splitAgreements";
 import {
   getCartaProcessingBlockReason,
   getEffectiveDisciplinaryStage,
