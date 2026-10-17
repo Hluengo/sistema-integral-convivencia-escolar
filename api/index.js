@@ -1,14 +1,13 @@
 var __defProp = Object.defineProperty;
 var __getOwnPropNames = Object.getOwnPropertyNames;
-var __esm = (fn, res, err) =>
-  function __init() {
-    if (err) throw err[0];
-    try {
-      return (fn && (res = (0, fn[__getOwnPropNames(fn)[0]])((fn = 0))), res);
-    } catch (e) {
-      throw ((err = [e]), e);
-    }
-  };
+var __esm = (fn, res, err) => function __init() {
+  if (err) throw err[0];
+  try {
+    return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+  } catch (e) {
+    throw err = [e], e;
+  }
+};
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -25,26 +24,23 @@ var init_dateUtils = __esm({
         timeZone: CHILE_TIME_ZONE,
         year: "numeric",
         month: "2-digit",
-        day: "2-digit",
+        day: "2-digit"
       }).formatToParts(date);
       const values = Object.fromEntries(
-        parts.map((part) => [part.type, part.value]),
+        parts.map((part) => [part.type, part.value])
       );
       return `${values.year}-${values.month}-${values.day}`;
     };
     nowDateOnly = () => toDateOnly(/* @__PURE__ */ new Date());
-  },
+  }
 });
 
 // src/shared/lib/domain/disciplinaryStage.ts
 function getDisciplinaryStage(negativeCount) {
   const count = Math.max(0, Number(negativeCount) || 0);
-  return (
-    DISCIPLINARY_STAGES.find(
-      (stage) =>
-        count >= stage.min && (stage.max === null || count <= stage.max),
-    ) || DISCIPLINARY_STAGES[0]
-  );
+  return DISCIPLINARY_STAGES.find(
+    (stage) => count >= stage.min && (stage.max === null || count <= stage.max)
+  ) || DISCIPLINARY_STAGES[0];
 }
 function mapDocTypeToLetterType(docType) {
   if (!docType || docType === "none") return null;
@@ -60,10 +56,7 @@ function mapLetterTypeToDocType(letterType) {
   if (letterType === "Amonestaci\xF3n Escrita") return "amonestacion";
   if (letterType === "Carta de Compromiso Conductual")
     return "compromiso_conductual";
-  if (
-    letterType === "Ficha de Derivaci\xF3n" ||
-    letterType === "Derivaci\xF3n a Convivencia Escolar"
-  ) {
+  if (letterType === "Ficha de Derivaci\xF3n" || letterType === "Derivaci\xF3n a Convivencia Escolar") {
     return "derivacion";
   }
   return null;
@@ -82,54 +75,41 @@ var init_disciplinaryStage = __esm({
     "use strict";
     init_dateUtils();
     DISCIPLINARY_STAGES = [
-      {
-        key: "none",
-        label: "Sin medida activa",
-        min: 0,
-        max: 4,
-        color: "neutral",
-      },
+      { key: "none", label: "Sin medida activa", min: 0, max: 4, color: "neutral" },
       {
         key: "amonestacion",
         label: "Amonestaci\xF3n Escrita",
         min: 5,
         max: 9,
-        color: "yellow",
+        color: "yellow"
       },
       {
         key: "compromiso_conductual",
         label: "Carta de Compromiso Conductual",
         min: 10,
         max: 14,
-        color: "orange",
+        color: "orange"
       },
       {
         key: "derivacion",
         label: "Derivaci\xF3n a Convivencia Escolar",
         min: 15,
         max: null,
-        color: "red",
-      },
+        color: "red"
+      }
     ];
     STAGE_RANK = {
       none: 0,
       amonestacion: 1,
       compromiso_conductual: 2,
-      derivacion: 3,
+      derivacion: 3
     };
-  },
+  }
 });
 
 // server/lib/regulationBasis.ts
 async function fetchActiveRegulationBasis(supabase, tenantId) {
-  const { data } = await supabase
-    .from("institution_rule_versions")
-    .select("title,version")
-    .eq("tenant_id", tenantId)
-    .eq("status", "active")
-    .order("updated_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const { data } = await supabase.from("institution_rule_versions").select("title,version").eq("tenant_id", tenantId).eq("status", "active").order("updated_at", { ascending: false }).limit(1).maybeSingle();
   const row = data;
   const title = row?.title?.trim();
   if (!title) return FALLBACK_REGULATION_BASIS;
@@ -140,9 +120,8 @@ var FALLBACK_REGULATION_BASIS;
 var init_regulationBasis = __esm({
   "server/lib/regulationBasis.ts"() {
     "use strict";
-    FALLBACK_REGULATION_BASIS =
-      "Reglamento Interno de Convivencia Escolar (RICE)";
-  },
+    FALLBACK_REGULATION_BASIS = "Reglamento Interno de Convivencia Escolar (RICE)";
+  }
 });
 
 // server/lib/disciplinaryPdfAnalysis.ts
@@ -154,7 +133,7 @@ __export(disciplinaryPdfAnalysis_exports, {
   extractPdfPages: () => extractPdfPages,
   parseDisciplinaryTextPagesForTest: () => parseDisciplinaryTextPagesForTest,
   prepareConfirmedAnnotationsForTest: () => prepareConfirmedAnnotationsForTest,
-  selectNewAnnotationsForLegacySync: () => selectNewAnnotationsForLegacySync,
+  selectNewAnnotationsForLegacySync: () => selectNewAnnotationsForLegacySync
 });
 import { createHash } from "node:crypto";
 import { createClient as createClient2 } from "@supabase/supabase-js";
@@ -165,56 +144,34 @@ function ensurePdfJsNodePolyfills() {
   globals.Path2D ??= NodePath2DPolyfill;
 }
 function getSupabaseAdmin(authToken) {
-  const supabaseUrl =
-    process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
-  const serviceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ??
-    process.env.SUPABASE_SERVICE_KEY ??
-    "";
-  const userScopedKey =
-    process.env.VITE_SUPABASE_ANON_KEY ??
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
-    "";
+  const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
+  const userScopedKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "";
   const supabaseKey = serviceKey || userScopedKey;
   if (!supabaseUrl || !supabaseKey) {
     throw new Error("Supabase no configurado");
   }
-  const headers =
-    !serviceKey && authToken
-      ? { Authorization: `Bearer ${authToken}` }
-      : void 0;
+  const headers = !serviceKey && authToken ? { Authorization: `Bearer ${authToken}` } : void 0;
   return createClient2(supabaseUrl, supabaseKey, {
     auth: { persistSession: false },
-    global: headers ? { headers } : void 0,
+    global: headers ? { headers } : void 0
   });
 }
 function normalizeText(value) {
-  return value
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[.,;:()[\]{}]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[.,;:()[\]{}]/g, " ").replace(/\s+/g, " ").trim();
 }
 function isDateRangeLine(value) {
   return /\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b\s*(?:a|-|hasta)\s*\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b/i.test(
-    value,
+    value
   );
 }
 function normalizeCourseLabel(value) {
-  const normalized = value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/º/g, "\xB0")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toUpperCase();
+  const normalized = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/º/g, "\xB0").replace(/\s+/g, " ").trim().toUpperCase();
   const letterBeforeCycle = normalized.match(
-    /\b(\d{1,2})\s*(?:°\s*)?([A-Z])\s*(MEDIO|BASICO|BASICA)\b/,
+    /\b(\d{1,2})\s*(?:°\s*)?([A-Z])\s*(MEDIO|BASICO|BASICA)\b/
   );
   const cycleBeforeLetter = normalized.match(
-    /\b(\d{1,2})\s*(?:°\s*)?(MEDIO|BASICO|BASICA)\s*([A-Z])\b/,
+    /\b(\d{1,2})\s*(?:°\s*)?(MEDIO|BASICO|BASICA)\s*([A-Z])\b/
   );
   const level = Number(letterBeforeCycle?.[1] ?? cycleBeforeLetter?.[1]);
   const letter = letterBeforeCycle?.[2] ?? cycleBeforeLetter?.[3];
@@ -228,22 +185,13 @@ function courseMatchKey(value) {
   return normalized ? normalizeText(normalized) : null;
 }
 function titleCaseFromUpper(value) {
-  return value
-    .toLowerCase()
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
+  return value.toLowerCase().split(/\s+/).filter(Boolean).map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
 }
 function assertStoragePathAllowed(bucket, storagePath, tenantId) {
   if (bucket !== PDF_BUCKET) {
     throw new Error("Bucket de documentos disciplinarios no permitido");
   }
-  if (
-    !storagePath ||
-    storagePath.includes("..") ||
-    storagePath.startsWith("/")
-  ) {
+  if (!storagePath || storagePath.includes("..") || storagePath.startsWith("/")) {
     throw new Error("Ruta de archivo no v\xE1lida");
   }
   const [tenantSegment] = storagePath.split("/");
@@ -268,17 +216,17 @@ async function extractPdfPages(buffer) {
   ensurePdfJsNodePolyfills();
   const workerModule = await import("pdfjs-dist/legacy/build/pdf.worker.mjs");
   globalThis.pdfjsWorker = {
-    WorkerMessageHandler: workerModule.WorkerMessageHandler,
+    WorkerMessageHandler: workerModule.WorkerMessageHandler
   };
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
   const pdf = await pdfjs.getDocument({
     data: buffer,
     useWorkerFetch: false,
-    isEvalSupported: false,
+    isEvalSupported: false
   }).promise;
   if (pdf.numPages > MAX_PDF_PAGES) {
     throw new Error(
-      `El PDF tiene demasiadas p\xE1ginas. M\xE1ximo permitido: ${MAX_PDF_PAGES}.`,
+      `El PDF tiene demasiadas p\xE1ginas. M\xE1ximo permitido: ${MAX_PDF_PAGES}.`
     );
   }
   const pages = [];
@@ -286,21 +234,13 @@ async function extractPdfPages(buffer) {
     const page = await pdf.getPage(pageNumber);
     const content = await page.getTextContent();
     pages.push(
-      content.items
-        .map((item) => (item.str ?? "") + (item.hasEOL ? "\n" : " "))
-        .join("")
-        .replace(/[^\S\n]+/g, " ")
-        .replace(/\s*\n\s*/g, "\n")
-        .trim(),
+      content.items.map((item) => (item.str ?? "") + (item.hasEOL ? "\n" : " ")).join("").replace(/[^\S\n]+/g, " ").replace(/\s*\n\s*/g, "\n").trim()
     );
   }
   return pages;
 }
 function extractCourse(text) {
-  const lines = text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
+  const lines = text.split("\n").map((line) => line.trim()).filter(Boolean);
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
     if (!/\bcurso\b/i.test(line)) continue;
@@ -309,14 +249,10 @@ function extractCourse(text) {
       sameLineValue,
       lines[index + 1],
       lines[index + 2],
-      lines[index + 3],
+      lines[index + 3]
     ];
     for (const candidate of candidates) {
-      if (
-        !candidate ||
-        /^rango\s+fechas?/i.test(candidate) ||
-        isDateRangeLine(candidate)
-      )
+      if (!candidate || /^rango\s+fechas?/i.test(candidate) || isDateRangeLine(candidate))
         continue;
       const normalized = normalizeCourseLabel(candidate);
       if (normalized) return normalized;
@@ -324,62 +260,44 @@ function extractCourse(text) {
   }
   const normalizedText = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const courseMatch = normalizedText.match(
-    /\b(?:\d{1,2}\s*(?:°\s*)?[A-Z]\s*(?:MEDIO|BASICO|BASICA)|\d{1,2}\s*(?:°\s*)?(?:MEDIO|BASICO|BASICA)\s*[A-Z])\b/i,
+    /\b(?:\d{1,2}\s*(?:°\s*)?[A-Z]\s*(?:MEDIO|BASICO|BASICA)|\d{1,2}\s*(?:°\s*)?(?:MEDIO|BASICO|BASICA)\s*[A-Z])\b/i
   );
   return courseMatch?.[0] ? normalizeCourseLabel(courseMatch[0]) : null;
 }
 function extractStudentName(text) {
   const labelled = text.match(
-    /(?:estudiante|alumno|nombre(?: completo)?)\s*[:-]\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ'-]+(?:\s+[A-ZÁÉÍÓÚÑa-záéíóúñ'-]+){1,5})/i,
+    /(?:estudiante|alumno|nombre(?: completo)?)\s*[:-]\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑa-záéíóúñ'-]+(?:\s+[A-ZÁÉÍÓÚÑa-záéíóúñ'-]+){1,5})/i
   );
   if (labelled?.[1]) return labelled[1].trim();
   const fichaMatch = text.match(
-    /([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ'-]+(?:\s+[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ'-]+){2,6})\s+FICHA\s+PERSONAL\s+DE\s+CONVIVENCIA\s+ESCOLAR/i,
+    /([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ'-]+(?:\s+[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ'-]+){2,6})\s+FICHA\s+PERSONAL\s+DE\s+CONVIVENCIA\s+ESCOLAR/i
   );
   if (fichaMatch?.[1]) return titleCaseFromUpper(fichaMatch[1].trim());
-  const headingLines = text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.startsWith("## "))
-    .map((line) => line.slice(3).trim())
-    .filter(
-      (line) =>
-        line.length > 1 &&
-        !/^(fundaci[oó]n|saber|ficha|rango|curso|fecha)/i.test(line),
-    );
+  const headingLines = text.split("\n").map((line) => line.trim()).filter((line) => line.startsWith("## ")).map((line) => line.slice(3).trim()).filter(
+    (line) => line.length > 1 && !/^(fundaci[oó]n|saber|ficha|rango|curso|fecha)/i.test(line)
+  );
   if (headingLines.length >= 3)
     return `${headingLines[0]} ${headingLines[1]} ${headingLines.slice(2).join(" ")}`;
   if (headingLines.length > 0) return headingLines.join(" ");
-  const uppercaseLine = text
-    .split("\n")
-    .map((line) => line.trim())
-    .find((line) => {
-      const normalized = normalizeText(line);
-      const words = normalized.split(" ").filter(Boolean);
-      return (
-        words.length >= 3 &&
-        words.length <= 6 &&
-        line === line.toUpperCase() &&
-        !normalized.includes("curso")
-      );
-    });
+  const uppercaseLine = text.split("\n").map((line) => line.trim()).find((line) => {
+    const normalized = normalizeText(line);
+    const words = normalized.split(" ").filter(Boolean);
+    return words.length >= 3 && words.length <= 6 && line === line.toUpperCase() && !normalized.includes("curso");
+  });
   return uppercaseLine ? titleCaseFromUpper(uppercaseLine) : null;
 }
 function splitAnnotationBlocks(pageText) {
   const normalized = pageText.replace(
     /\s+(?=\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/g,
-    "\n",
+    "\n"
   );
-  const lines = normalized
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
+  const lines = normalized.split("\n").map((line) => line.trim()).filter(Boolean);
   const blocks = [];
   let current = [];
   let hasDatedRecords = false;
   for (const line of lines) {
     const startsDatedRecord = /(?:^|\s)(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})\b/.test(
-      line,
+      line
     );
     if (startsDatedRecord) {
       hasDatedRecords = true;
@@ -393,14 +311,13 @@ function splitAnnotationBlocks(pageText) {
   }
   if (current.length > 0) blocks.push(current.join(" "));
   if (hasDatedRecords) return blocks;
-  return lines.filter((line) =>
-    /\b(?:tipo|anotaci[oó]n|observaci[oó]n)\s*[:-]/i.test(line),
+  return lines.filter(
+    (line) => /\b(?:tipo|anotaci[oó]n|observaci[oó]n)\s*[:-]/i.test(line)
   );
 }
 function classifyAnnotation(block) {
   const normalized = normalizeText(block);
-  const typePattern =
-    /(?:tipo|anotacion|observacion)\s*[:-]?\s*(negativa|positiva|informacion|informativa)/;
+  const typePattern = /(?:tipo|anotacion|observacion)\s*[:-]?\s*(negativa|positiva|informacion|informativa)/;
   const typed = normalized.match(typePattern);
   const value = typed?.[1];
   if (value?.startsWith("neg")) return { type: "negative", confidence: 0.95 };
@@ -409,9 +326,7 @@ function classifyAnnotation(block) {
     return { type: "information", confidence: 0.95 };
   if (/\b(reconocimiento|felicitacion|destaca|positiva)\b/.test(normalized))
     return { type: "positive", confidence: 0.7 };
-  if (
-    /\b(negativa|falta|agresion|interrumpe|incumple|atraso)\b/.test(normalized)
-  )
+  if (/\b(negativa|falta|agresion|interrumpe|incumple|atraso)\b/.test(normalized))
     return { type: "negative", confidence: 0.65 };
   if (/\b(informacion|informativa|entrevista|comunicacion)\b/.test(normalized))
     return { type: "information", confidence: 0.65 };
@@ -427,7 +342,7 @@ function parseAnnotationsByPage(pages) {
       if (!classification.type) return;
       const dateMatch = block.match(/\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})\b/);
       const teacherMatch = block.match(
-        /(?:profesor(?:a)?|responsable)\s*[:-]\s*([^|\n]{3,60})/i,
+        /(?:profesor(?:a)?|responsable)\s*[:-]\s*([^|\n]{3,60})/i
       );
       const normalizedBlock = normalizeText(block);
       const detectedDate = toIsoDate(dateMatch?.[1]);
@@ -436,7 +351,7 @@ function parseAnnotationsByPage(pages) {
         pageIndex + 1,
         classification.type,
         detectedDate ?? "",
-        normalizedBlock,
+        normalizedBlock
       ].join("|");
       if (seenAnnotations.has(dedupeKey)) return;
       seenAnnotations.add(dedupeKey);
@@ -450,7 +365,7 @@ function parseAnnotationsByPage(pages) {
         detected_teacher: detectedTeacher,
         classification_method: "regex",
         confidence: classification.confidence,
-        parser_version: PARSER_VERSION,
+        parser_version: PARSER_VERSION
       });
     });
   });
@@ -463,7 +378,7 @@ function parseDisciplinaryTextPagesForTest(pages) {
 function extractDisciplinaryMetadataForTest(text) {
   return {
     studentName: extractStudentName(text),
-    course: extractCourse(text),
+    course: extractCourse(text)
   };
 }
 function summarizeAnnotations(annotations) {
@@ -474,20 +389,15 @@ function summarizeAnnotations(annotations) {
       if (annotation.type === "information") acc.informativas += 1;
       return acc;
     },
-    { negativas: 0, positivas: 0, informativas: 0 },
+    { negativas: 0, positivas: 0, informativas: 0 }
   );
 }
 function isAnnotationType(value) {
-  return (
-    value === "negative" || value === "positive" || value === "information"
-  );
+  return value === "negative" || value === "positive" || value === "information";
 }
 function sanitizeConfirmedAnnotationText(value) {
   if (typeof value !== "string") return "";
-  return value
-    .replaceAll(String.fromCharCode(0), "")
-    .trim()
-    .slice(0, MAX_CONFIRMED_ANNOTATION_TEXT);
+  return value.replaceAll(String.fromCharCode(0), "").trim().slice(0, MAX_CONFIRMED_ANNOTATION_TEXT);
 }
 function sanitizeIsoDate(value, fallback) {
   if (typeof value !== "string") return fallback;
@@ -495,27 +405,25 @@ function sanitizeIsoDate(value, fallback) {
 }
 function prepareConfirmedAnnotations(annotations, parsedAnnotations) {
   if (annotations.length > MAX_CONFIRMED_ANNOTATIONS) {
-    throw new Error(
-      "Las anotaciones confirmadas superan el m\xE1ximo permitido.",
-    );
+    throw new Error("Las anotaciones confirmadas superan el m\xE1ximo permitido.");
   }
   const parsedBySequence = new Map(
     parsedAnnotations.map((annotation) => [
       annotation.sequence_number,
-      annotation,
-    ]),
+      annotation
+    ])
   );
   return annotations.map((annotation, index) => {
     if (!isAnnotationType(annotation.type)) {
       throw new Error(
-        "Las anotaciones confirmadas contienen una clasificaci\xF3n no v\xE1lida.",
+        "Las anotaciones confirmadas contienen una clasificaci\xF3n no v\xE1lida."
       );
     }
     const sequenceNumber = Number(annotation.sequence_number || index + 1);
     const parsed = parsedBySequence.get(sequenceNumber);
     if (!parsed) {
       throw new Error(
-        "Las anotaciones confirmadas no corresponden al PDF analizado.",
+        "Las anotaciones confirmadas no corresponden al PDF analizado."
       );
     }
     const rawText = sanitizeConfirmedAnnotationText(annotation.raw_text);
@@ -531,14 +439,12 @@ function prepareConfirmedAnnotations(annotations, parsedAnnotations) {
       sequence_number: parsed.sequence_number,
       detected_date: sanitizeIsoDate(
         annotation.detected_date,
-        parsed.detected_date,
+        parsed.detected_date
       ),
       detected_teacher: sanitizeConfirmedAnnotationText(
-        annotation.detected_teacher ?? parsed.detected_teacher ?? "",
+        annotation.detected_teacher ?? parsed.detected_teacher ?? ""
       ).slice(0, 100),
-      confidence: Number.isFinite(confidence)
-        ? Math.max(0, Math.min(1, confidence))
-        : 0.8,
+      confidence: Number.isFinite(confidence) ? Math.max(0, Math.min(1, confidence)) : 0.8
     };
   });
 }
@@ -546,123 +452,90 @@ function prepareConfirmedAnnotationsForTest(annotations, parsedAnnotations) {
   return prepareConfirmedAnnotations(annotations, parsedAnnotations);
 }
 function getNameParts(value) {
-  return normalizeText(value)
-    .split(" ")
-    .filter((part) => part.length >= 3);
+  return normalizeText(value).split(" ").filter((part) => part.length >= 3);
 }
 function buildNameTokenQuery(parts) {
-  return [...new Set(parts)]
-    .map((part) => `full_name.ilike.%${part}%`)
-    .join(",");
+  return [...new Set(parts)].map((part) => `full_name.ilike.%${part}%`).join(",");
 }
 async function enrichStudentRows(supabase, rows, confidence, status) {
   if (rows.length === 0) return [];
   const courseIds = [
-    ...new Set(rows.flatMap((row) => (row.course_id ? [row.course_id] : []))),
+    ...new Set(rows.flatMap((row) => row.course_id ? [row.course_id] : []))
   ];
-  const { data: courses } = courseIds.length
-    ? await supabase.from("courses").select("id, name").in("id", courseIds)
-    : { data: [] };
+  const { data: courses } = courseIds.length ? await supabase.from("courses").select("id, name").in("id", courseIds) : { data: [] };
   const courseMap = new Map(
-    (courses ?? []).map((course) => [course.id, course.name]),
+    (courses ?? []).map((course) => [
+      course.id,
+      course.name
+    ])
   );
   return rows.map((row) => ({
     id: row.id,
     full_name: row.full_name,
     rut: row.rut,
     course_id: row.course_id,
-    course_name: row.course_id ? (courseMap.get(row.course_id) ?? null) : null,
+    course_name: row.course_id ? courseMap.get(row.course_id) ?? null : null,
     confidence,
-    match_status: status,
+    match_status: status
   }));
 }
-async function findStudentCandidates(
-  supabase,
-  tenantId,
-  detectedName,
-  detectedCourse,
-) {
+async function findStudentCandidates(supabase, tenantId, detectedName, detectedCourse) {
   if (!detectedName)
     return { candidates: [], selectedStudentId: null, status: "no_match" };
   const baseSelect = "id, full_name, rut, course_id";
   const exactName = detectedName.trim();
   const normalizedDetected = normalizeText(detectedName);
   const detectedCourseKey = courseMatchKey(detectedCourse);
-  const { data: courseRows } = await supabase
-    .from("courses")
-    .select("id, name")
-    .eq("tenant_id", tenantId)
-    .limit(200);
+  const { data: courseRows } = await supabase.from("courses").select("id, name").eq("tenant_id", tenantId).limit(200);
   const courseKeyById = new Map(
     (courseRows ?? []).map((course) => [
       course.id,
-      courseMatchKey(course.name),
-    ]),
+      courseMatchKey(course.name)
+    ])
   );
-  const { data: exactRows } = await supabase
-    .from("students")
-    .select(baseSelect)
-    .eq("tenant_id", tenantId)
-    .ilike("full_name", exactName)
-    .limit(5);
+  const { data: exactRows } = await supabase.from("students").select(baseSelect).eq("tenant_id", tenantId).ilike("full_name", exactName).limit(5);
   if (exactRows && exactRows.length > 0) {
     const candidates2 = await enrichStudentRows(
       supabase,
       exactRows,
       0.99,
-      exactRows.length === 1 ? "exact_match" : "multiple_candidates",
+      exactRows.length === 1 ? "exact_match" : "multiple_candidates"
     );
     return {
       candidates: candidates2,
       selectedStudentId: candidates2.length === 1 ? candidates2[0].id : null,
-      status: candidates2.length === 1 ? "exact_match" : "multiple_candidates",
+      status: candidates2.length === 1 ? "exact_match" : "multiple_candidates"
     };
   }
   const detectedParts = getNameParts(detectedName);
   const tokenQuery = buildNameTokenQuery(detectedParts);
-  const tokenCandidatesQuery = supabase
-    .from("students")
-    .select(baseSelect)
-    .eq("tenant_id", tenantId)
-    .limit(1e3);
-  const { data: tenantStudents } = tokenQuery
-    ? await tokenCandidatesQuery.or(tokenQuery)
-    : await tokenCandidatesQuery;
+  const tokenCandidatesQuery = supabase.from("students").select(baseSelect).eq("tenant_id", tenantId).limit(1e3);
+  const { data: tenantStudents } = tokenQuery ? await tokenCandidatesQuery.or(tokenQuery) : await tokenCandidatesQuery;
   const normalizedMatches = (tenantStudents ?? []).filter(
-    (student) => normalizeText(student.full_name) === normalizedDetected,
+    (student) => normalizeText(student.full_name) === normalizedDetected
   );
   if (normalizedMatches.length > 0) {
     const candidates2 = await enrichStudentRows(
       supabase,
       normalizedMatches,
       0.94,
-      normalizedMatches.length === 1
-        ? "unique_normalized_match"
-        : "multiple_candidates",
+      normalizedMatches.length === 1 ? "unique_normalized_match" : "multiple_candidates"
     );
     return {
       candidates: candidates2,
       selectedStudentId: candidates2.length === 1 ? candidates2[0].id : null,
-      status:
-        candidates2.length === 1
-          ? "unique_normalized_match"
-          : "multiple_candidates",
+      status: candidates2.length === 1 ? "unique_normalized_match" : "multiple_candidates"
     };
   }
   const detectedPartSet = new Set(detectedParts);
   const scored = [];
   for (const student of tenantStudents ?? []) {
     const studentParts = new Set(getNameParts(student.full_name));
-    const overlap = [...detectedPartSet].filter((part) =>
-      studentParts.has(part),
+    const overlap = [...detectedPartSet].filter(
+      (part) => studentParts.has(part)
     ).length;
     const denominator = Math.max(detectedPartSet.size, studentParts.size, 1);
-    const courseBoost =
-      detectedCourseKey &&
-      student.course_id &&
-      courseKeyById.get(student.course_id) === detectedCourseKey
-        ? 0.15
-        : 0;
+    const courseBoost = detectedCourseKey && student.course_id && courseKeyById.get(student.course_id) === detectedCourseKey ? 0.15 : 0;
     const score = overlap / denominator + courseBoost;
     if (score >= 0.5) scored.push({ student, score });
   }
@@ -675,27 +548,20 @@ async function findStudentCandidates(
         courseIds.push(course.id);
     }
     if (courseIds.length > 0) {
-      const { data: courseStudents } = await supabase
-        .from("students")
-        .select(baseSelect)
-        .eq("tenant_id", tenantId)
-        .in("course_id", courseIds)
-        .limit(50);
-      approximate = (courseStudents ?? [])
-        .slice(0, 8)
-        .map((student) => ({ student, score: 0.45 }));
+      const { data: courseStudents } = await supabase.from("students").select(baseSelect).eq("tenant_id", tenantId).in("course_id", courseIds).limit(50);
+      approximate = (courseStudents ?? []).slice(0, 8).map((student) => ({ student, score: 0.45 }));
     }
   }
   const candidates = await enrichStudentRows(
     supabase,
     approximate.map((item) => item.student),
     approximate[0]?.score ?? 0,
-    approximate.length > 0 ? "multiple_candidates" : "no_match",
+    approximate.length > 0 ? "multiple_candidates" : "no_match"
   );
   return {
     candidates,
     selectedStudentId: null,
-    status: candidates.length > 0 ? "multiple_candidates" : "no_match",
+    status: candidates.length > 0 ? "multiple_candidates" : "no_match"
   };
 }
 function annotationTypeToLegacy(type) {
@@ -715,7 +581,7 @@ function selectNewAnnotationsForLegacySync(annotations, existingRecords) {
     const key = annotationIdentityKey(
       record.type,
       record.date_time,
-      record.observation,
+      record.observation
     );
     existingCounts.set(key, (existingCounts.get(key) || 0) + 1);
   }
@@ -723,7 +589,7 @@ function selectNewAnnotationsForLegacySync(annotations, existingRecords) {
     const key = annotationIdentityKey(
       annotationTypeToLegacy(annotation.type),
       annotation.detected_date,
-      annotation.raw_text,
+      annotation.raw_text
     );
     const remainingMatches = existingCounts.get(key) || 0;
     if (remainingMatches === 0) return true;
@@ -739,42 +605,27 @@ function suggestedLetterToDocumentType(suggestedLetterType) {
 }
 function suggestedLetterToStageName(suggestedLetterType) {
   if (suggestedLetterType === "amonestacion") return "amonestacion";
-  if (
-    suggestedLetterType === "compromiso" ||
-    suggestedLetterType === "compromiso_conductual"
-  ) {
+  if (suggestedLetterType === "compromiso" || suggestedLetterType === "compromiso_conductual") {
     return "compromiso";
   }
   if (suggestedLetterType === "derivacion") return "derivacion";
   return null;
 }
-async function syncConfirmedProcessToLegacyViews(
-  supabase,
-  input,
-  processId,
-  processNumber,
-  summary,
-  student,
-) {
-  const { data: existingRecords, error: existingRecordsError } = await supabase
-    .from("inspectorate_records")
-    .select("type,date_time,observation")
-    .eq("tenant_id", input.tenantId)
-    .eq("student_id", input.studentId);
+async function syncConfirmedProcessToLegacyViews(supabase, input, processId, processNumber, summary, student) {
+  const { data: existingRecords, error: existingRecordsError } = await supabase.from("inspectorate_records").select("type,date_time,observation").eq("tenant_id", input.tenantId).eq("student_id", input.studentId);
   if (existingRecordsError) {
     throw new Error(
-      "Error al comparar las anotaciones existentes del estudiante",
+      "Error al comparar las anotaciones existentes del estudiante"
     );
   }
   const newAnnotations = selectNewAnnotationsForLegacySync(
     input.annotations,
-    existingRecords || [],
+    existingRecords || []
   );
   const insertedSummary = summarizeAnnotations(
     newAnnotations.map((annotation, index) => ({
       raw_text: annotation.raw_text,
-      normalized_text:
-        annotation.normalized_text ?? normalizeText(annotation.raw_text),
+      normalized_text: annotation.normalized_text ?? normalizeText(annotation.raw_text),
       type: annotation.type,
       page_number: annotation.page_number ?? null,
       sequence_number: annotation.sequence_number || index + 1,
@@ -782,57 +633,42 @@ async function syncConfirmedProcessToLegacyViews(
       detected_teacher: annotation.detected_teacher ?? null,
       classification_method: "regex",
       confidence: annotation.confidence ?? 0.8,
-      parser_version: PARSER_VERSION,
-    })),
+      parser_version: PARSER_VERSION
+    }))
   );
   if (newAnnotations.length > 0) {
     const legacyRecords = newAnnotations.map((annotation) => ({
       student_id: input.studentId,
       tenant_id: input.tenantId,
-      date_time: annotation.detected_date
-        ? `${annotation.detected_date}T12:00:00.000Z`
-        : /* @__PURE__ */ new Date().toISOString(),
+      date_time: annotation.detected_date ? `${annotation.detected_date}T12:00:00.000Z` : (/* @__PURE__ */ new Date()).toISOString(),
       observation: annotation.raw_text,
       severity: severityForAnnotation(annotation.type),
       type: annotationTypeToLegacy(annotation.type),
       registered_by: "PDF Convivencia Escolar",
       created_by: "Sistema PDF",
-      pdf_file_path: input.storagePath,
+      pdf_file_path: input.storagePath
     }));
     if (legacyRecords.length > 0) {
-      const { error } = await supabase
-        .from("inspectorate_records")
-        .insert(legacyRecords);
+      const { error } = await supabase.from("inspectorate_records").insert(legacyRecords);
       if (error)
         throw new Error(
-          "Error al registrar anotaciones en la vista de registros",
+          "Error al registrar anotaciones en la vista de registros"
         );
     }
   }
   const documentType = suggestedLetterToDocumentType(input.suggestedLetterType);
   let courseName = student.course_id || "Sin curso";
   if (student.course_id) {
-    const { data: course } = await supabase
-      .from("courses")
-      .select("name")
-      .eq("tenant_id", input.tenantId)
-      .eq("id", student.course_id)
-      .maybeSingle();
+    const { data: course } = await supabase.from("courses").select("name").eq("tenant_id", input.tenantId).eq("id", student.course_id).maybeSingle();
     courseName = course?.name || courseName;
   }
   const processMarker = `Proceso PDF ${processNumber} (${processId})`;
   if (documentType) {
-    const { data: existingDocument } = await supabase
-      .from("cartas_disciplinarias")
-      .select("id")
-      .eq("tenant_id", input.tenantId)
-      .eq("student_id", input.studentId)
-      .ilike("observations", `%${processId}%`)
-      .limit(1);
+    const { data: existingDocument } = await supabase.from("cartas_disciplinarias").select("id").eq("tenant_id", input.tenantId).eq("student_id", input.studentId).ilike("observations", `%${processId}%`).limit(1);
     if (!existingDocument || existingDocument.length === 0) {
       const regulationBasis = await fetchActiveRegulationBasis(
         supabase,
-        input.tenantId,
+        input.tenantId
       );
       const { error } = await supabase.from("cartas_disciplinarias").insert({
         student_id: input.studentId,
@@ -848,24 +684,16 @@ async function syncConfirmedProcessToLegacyViews(
         course: courseName,
         regulation_basis: `${regulationBasis} - Registro de anotaciones y debido proceso`,
         observations: `${processMarker}. Documento sugerido autom\xE1ticamente desde PDF confirmado.`,
-        created_by: "Sistema PDF",
+        created_by: "Sistema PDF"
       });
       if (error) throw new Error("Error al registrar el documento sugerido");
     }
   }
   const stageName = suggestedLetterToStageName(input.suggestedLetterType);
   if (stageName) {
-    const { data: existingStage } = await supabase
-      .from("etapas_disciplinarias")
-      .select("id")
-      .eq("tenant_id", input.tenantId)
-      .eq("student_id", input.studentId)
-      .eq("stage_name", stageName)
-      .ilike("comment", `%${processId}%`)
-      .limit(1);
+    const { data: existingStage } = await supabase.from("etapas_disciplinarias").select("id").eq("tenant_id", input.tenantId).eq("student_id", input.studentId).eq("stage_name", stageName).ilike("comment", `%${processId}%`).limit(1);
     if (!existingStage || existingStage.length === 0) {
-      const stepNumber =
-        stageName === "amonestacion" ? 1 : stageName === "compromiso" ? 2 : 3;
+      const stepNumber = stageName === "amonestacion" ? 1 : stageName === "compromiso" ? 2 : 3;
       const { error } = await supabase.from("etapas_disciplinarias").insert({
         student_id: input.studentId,
         tenant_id: input.tenantId,
@@ -873,7 +701,7 @@ async function syncConfirmedProcessToLegacyViews(
         stage_name: stageName,
         responsible: "Convivencia Escolar",
         comment: `${processMarker}. Etapa sugerida autom\xE1ticamente desde PDF confirmado.`,
-        created_by: "Sistema PDF",
+        created_by: "Sistema PDF"
       });
       if (error)
         throw new Error("Error al registrar la etapa disciplinaria sugerida");
@@ -886,48 +714,38 @@ async function getSuggestedLetter(supabase, tenantId, summary) {
     p_negativas: summary.negativas,
     p_positivas: summary.positivas,
     p_informativas: summary.informativas,
-    p_tenant_id: tenantId,
+    p_tenant_id: tenantId
   });
   if (error || !data) return "none";
   return String(data);
 }
 async function findDuplicateFileByHash(supabase, tenantId, fileHash) {
-  const { data: duplicateFile, error: duplicateFileError } = await supabase
-    .from("disciplinary_process_files")
-    .select("process_id,student_id,uploaded_at")
-    .eq("tenant_id", tenantId)
-    .eq("file_hash", fileHash)
-    .order("uploaded_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const { data: duplicateFile, error: duplicateFileError } = await supabase.from("disciplinary_process_files").select("process_id,student_id,uploaded_at").eq("tenant_id", tenantId).eq("file_hash", fileHash).order("uploaded_at", { ascending: false }).limit(1).maybeSingle();
   if (duplicateFileError) {
     throw new Error("No fue posible comprobar si el PDF ya estaba registrado");
   }
   if (!duplicateFile) return null;
-  const processId = String(duplicateFile.process_id);
-  const { data: process2, error: processError } = await supabase
-    .from("disciplinary_processes")
-    .select("process_number")
-    .eq("tenant_id", tenantId)
-    .eq("id", processId)
-    .maybeSingle();
+  const processId = String(
+    duplicateFile.process_id
+  );
+  const { data: process2, error: processError } = await supabase.from("disciplinary_processes").select("process_number").eq("tenant_id", tenantId).eq("id", processId).maybeSingle();
   if (processError) {
     throw new Error(
-      "No fue posible recuperar el proceso asociado al PDF existente",
+      "No fue posible recuperar el proceso asociado al PDF existente"
     );
   }
   return {
     process_id: processId,
-    process_number: String(process2?.process_number ?? "Sin n\xFAmero"),
+    process_number: String(
+      process2?.process_number ?? "Sin n\xFAmero"
+    ),
     student_id: duplicateFile.student_id ?? null,
-    uploaded_at: String(duplicateFile.uploaded_at),
+    uploaded_at: String(duplicateFile.uploaded_at)
   };
 }
 async function loadAndParsePdf(supabase, input) {
   assertStoragePathAllowed(input.bucket, input.storagePath, input.tenantId);
-  const { data: fileBlob, error: downloadError } = await supabase.storage
-    .from(input.bucket)
-    .download(input.storagePath);
+  const { data: fileBlob, error: downloadError } = await supabase.storage.from(input.bucket).download(input.storagePath);
   if (downloadError || !fileBlob) {
     throw new Error("No fue posible descargar el PDF privado desde Storage");
   }
@@ -940,109 +758,85 @@ async function loadAndParsePdf(supabase, input) {
   const fileHash = createHash("sha256").update(bytes).digest("hex");
   const pages = await extractPdfPages(bytes);
   const textContent = pages.join("\n");
-  const annotations =
-    normalizeText(textContent).length < 20 ? [] : parseAnnotationsByPage(pages);
+  const annotations = normalizeText(textContent).length < 20 ? [] : parseAnnotationsByPage(pages);
   const summary = summarizeAnnotations(annotations);
   return { bytes, fileHash, pages, textContent, annotations, summary };
 }
-async function assertAnalysisMatchesFile(
-  supabase,
-  tenantId,
-  analysisId,
-  fileHash,
-) {
+async function assertAnalysisMatchesFile(supabase, tenantId, analysisId, fileHash) {
   if (!analysisId) return;
-  const { data, error } = await supabase
-    .from("document_analyses")
-    .select("id,file_hash,status")
-    .eq("id", analysisId)
-    .eq("tenant_id", tenantId)
-    .maybeSingle();
+  const { data, error } = await supabase.from("document_analyses").select("id,file_hash,status").eq("id", analysisId).eq("tenant_id", tenantId).maybeSingle();
   if (error)
     throw new Error("No fue posible validar el an\xE1lisis previo del PDF");
   if (!data)
     throw new Error(
-      "El an\xE1lisis informado no corresponde al establecimiento activo",
+      "El an\xE1lisis informado no corresponde al establecimiento activo"
     );
   if (data.file_hash !== fileHash) {
-    throw new Error(
-      "El an\xE1lisis informado no coincide con el PDF confirmado",
-    );
+    throw new Error("El an\xE1lisis informado no coincide con el PDF confirmado");
   }
 }
 async function analyzeDisciplinaryPdf(input) {
   const supabase = getSupabaseAdmin(input.authToken);
   const { fileHash, textContent, annotations, summary } = await loadAndParsePdf(
     supabase,
-    input,
+    input
   );
   const warnings = [];
   if (normalizeText(textContent).length < 20) {
     warnings.push(
-      "El PDF no contiene texto seleccionable suficiente. Puede requerir OCR.",
+      "El PDF no contiene texto seleccionable suficiente. Puede requerir OCR."
     );
   }
   const detectedStudentName = extractStudentName(textContent);
   const detectedCourse = extractCourse(textContent);
-  const [recommendedLetterType, studentMatch, duplicateFile] =
-    await Promise.all([
-      getSuggestedLetter(supabase, input.tenantId, summary),
-      findStudentCandidates(
-        supabase,
-        input.tenantId,
-        detectedStudentName,
-        detectedCourse,
-      ),
-      findDuplicateFileByHash(supabase, input.tenantId, fileHash),
-    ]);
+  const [recommendedLetterType, studentMatch, duplicateFile] = await Promise.all([
+    getSuggestedLetter(supabase, input.tenantId, summary),
+    findStudentCandidates(
+      supabase,
+      input.tenantId,
+      detectedStudentName,
+      detectedCourse
+    ),
+    findDuplicateFileByHash(supabase, input.tenantId, fileHash)
+  ]);
   if (duplicateFile)
     warnings.push(
-      `Este mismo PDF ya est\xE1 registrado en el proceso ${duplicateFile.process_number}.`,
+      `Este mismo PDF ya est\xE1 registrado en el proceso ${duplicateFile.process_number}.`
     );
   if (!detectedStudentName)
     warnings.push("No se pudo detectar un nombre de estudiante en el PDF.");
   if (annotations.length === 0 && normalizeText(textContent).length >= 20)
     warnings.push(
-      "No se detectaron anotaciones clasificables en el documento.",
+      "No se detectaron anotaciones clasificables en el documento."
     );
   if (studentMatch.status === "multiple_candidates")
     warnings.push(
-      "Se requiere confirmar el estudiante porque existen m\xFAltiples candidatos.",
+      "Se requiere confirmar el estudiante porque existen m\xFAltiples candidatos."
     );
   if (studentMatch.status === "no_match")
     warnings.push(
-      "Se requiere seleccionar manualmente un estudiante autorizado.",
+      "Se requiere seleccionar manualmente un estudiante autorizado."
     );
-  const processingStatus =
-    normalizeText(textContent).length < 20
-      ? "ocr_required"
-      : studentMatch.selectedStudentId
-        ? "completed"
-        : "student_resolution";
-  const { data: analysisRow } = await supabase
-    .from("document_analyses")
-    .insert({
-      student_id: studentMatch.selectedStudentId,
-      file_name: input.fileName,
-      negativas: summary.negativas,
-      positivas: summary.positivas,
-      informativas: summary.informativas,
-      tenant_id: input.tenantId,
-      status: processingStatus,
-      detected_student_name: detectedStudentName,
-      detected_course: detectedCourse,
-      student_match_status: studentMatch.status,
-      warnings,
-      file_hash: fileHash,
-      parser_version: PARSER_VERSION,
-    })
-    .select("id,analyzed_at")
-    .maybeSingle();
+  const processingStatus = normalizeText(textContent).length < 20 ? "ocr_required" : studentMatch.selectedStudentId ? "completed" : "student_resolution";
+  const { data: analysisRow } = await supabase.from("document_analyses").insert({
+    student_id: studentMatch.selectedStudentId,
+    file_name: input.fileName,
+    negativas: summary.negativas,
+    positivas: summary.positivas,
+    informativas: summary.informativas,
+    tenant_id: input.tenantId,
+    status: processingStatus,
+    detected_student_name: detectedStudentName,
+    detected_course: detectedCourse,
+    student_match_status: studentMatch.status,
+    warnings,
+    file_hash: fileHash,
+    parser_version: PARSER_VERSION
+  }).select("id,analyzed_at").maybeSingle();
   return {
     success: true,
     analysis_id: analysisRow?.id ?? null,
-    analyzed_at:
-      analysisRow?.analyzed_at ?? /* @__PURE__ */ new Date().toISOString(),
+    analyzed_at: analysisRow?.analyzed_at ?? (/* @__PURE__ */ new Date()).toISOString(),
     file_id: null,
     process_id: null,
     detected_student_name: detectedStudentName,
@@ -1065,7 +859,7 @@ async function analyzeDisciplinaryPdf(input) {
     mode: studentMatch.selectedStudentId ? "preview" : "student_pending",
     file_hash: fileHash,
     duplicate_file: duplicateFile,
-    parser_version: PARSER_VERSION,
+    parser_version: PARSER_VERSION
   };
 }
 async function confirmDisciplinaryProcess(input) {
@@ -1078,32 +872,26 @@ async function confirmDisciplinaryProcess(input) {
     supabase,
     input.tenantId,
     input.analysisId,
-    parsedPdf.fileHash,
+    parsedPdf.fileHash
   );
   const confirmedInput = {
     ...input,
     fileHash: parsedPdf.fileHash,
     annotations: prepareConfirmedAnnotations(
       input.annotations,
-      parsedPdf.annotations,
-    ),
+      parsedPdf.annotations
+    )
   };
-  const { data: student, error: studentError } = await supabase
-    .from("students")
-    .select("id, tenant_id, full_name, course_id")
-    .eq("id", confirmedInput.studentId)
-    .eq("tenant_id", confirmedInput.tenantId)
-    .maybeSingle();
+  const { data: student, error: studentError } = await supabase.from("students").select("id, tenant_id, full_name, course_id").eq("id", confirmedInput.studentId).eq("tenant_id", confirmedInput.tenantId).maybeSingle();
   if (studentError || !student) {
     throw new Error(
-      "El estudiante seleccionado no pertenece al establecimiento activo",
+      "El estudiante seleccionado no pertenece al establecimiento activo"
     );
   }
   const summary = summarizeAnnotations(
     confirmedInput.annotations.map((annotation, index) => ({
       raw_text: annotation.raw_text,
-      normalized_text:
-        annotation.normalized_text ?? normalizeText(annotation.raw_text),
+      normalized_text: annotation.normalized_text ?? normalizeText(annotation.raw_text),
       type: annotation.type,
       page_number: annotation.page_number ?? null,
       sequence_number: annotation.sequence_number || index + 1,
@@ -1111,16 +899,11 @@ async function confirmDisciplinaryProcess(input) {
       detected_teacher: annotation.detected_teacher ?? null,
       classification_method: "regex",
       confidence: annotation.confidence ?? 0.8,
-      parser_version: PARSER_VERSION,
-    })),
+      parser_version: PARSER_VERSION
+    }))
   );
   if (input.idempotencyKey) {
-    const { data: existing } = await supabase
-      .from("disciplinary_process_files")
-      .select("process_id, disciplinary_processes(process_number)")
-      .eq("tenant_id", confirmedInput.tenantId)
-      .eq("storage_path", confirmedInput.storagePath)
-      .maybeSingle();
+    const { data: existing } = await supabase.from("disciplinary_process_files").select("process_id, disciplinary_processes(process_number)").eq("tenant_id", confirmedInput.tenantId).eq("storage_path", confirmedInput.storagePath).maybeSingle();
     if (existing && existing.process_id) {
       const nested = existing.disciplinary_processes;
       const existingProcessId = existing.process_id;
@@ -1131,24 +914,24 @@ async function confirmDisciplinaryProcess(input) {
         existingProcessId,
         existingProcessNumber,
         summary,
-        student,
+        student
       );
       return {
         success: true,
         processId: existingProcessId,
         processNumber: existingProcessNumber,
-        insertedAnnotations: insertedAnnotations2,
+        insertedAnnotations: insertedAnnotations2
       };
     }
   }
   const duplicateFile = await findDuplicateFileByHash(
     supabase,
     confirmedInput.tenantId,
-    confirmedInput.fileHash,
+    confirmedInput.fileHash
   );
   if (duplicateFile) {
     throw new Error(
-      `Este PDF ya fue registrado en el proceso ${duplicateFile.process_number}. No se cre\xF3 un duplicado.`,
+      `Este PDF ya fue registrado en el proceso ${duplicateFile.process_number}. No se cre\xF3 un duplicado.`
     );
   }
   const { data: atomicResult, error: atomicError } = await supabase.rpc(
@@ -1164,32 +947,29 @@ async function confirmDisciplinaryProcess(input) {
       p_file_hash: confirmedInput.fileHash,
       p_bucket: confirmedInput.bucket,
       p_original_file_name: confirmedInput.fileName,
-      p_stored_file_name:
-        confirmedInput.storagePath.split("/").pop() || confirmedInput.fileName,
+      p_stored_file_name: confirmedInput.storagePath.split("/").pop() || confirmedInput.fileName,
       p_analysis_version: PARSER_VERSION,
       p_annotations: confirmedInput.annotations,
       p_total_negativas: summary.negativas,
       p_total_positivas: summary.positivas,
       p_total_informativas: summary.informativas,
-      p_confirmed_by: confirmedInput.confirmedBy ?? null,
-    },
+      p_confirmed_by: confirmedInput.confirmedBy ?? null
+    }
   );
   if (atomicError || !Array.isArray(atomicResult) || !atomicResult[0]) {
     if (atomicError?.code === "23505") {
       const concurrentDuplicate = await findDuplicateFileByHash(
         supabase,
         confirmedInput.tenantId,
-        confirmedInput.fileHash,
+        confirmedInput.fileHash
       );
       if (concurrentDuplicate) {
         throw new Error(
-          `Este PDF ya fue registrado en el proceso ${concurrentDuplicate.process_number}. No se cre\xF3 un duplicado.`,
+          `Este PDF ya fue registrado en el proceso ${concurrentDuplicate.process_number}. No se cre\xF3 un duplicado.`
         );
       }
     }
-    throw new Error(
-      "Error al confirmar at\xF3micamente el proceso disciplinario",
-    );
+    throw new Error("Error al confirmar at\xF3micamente el proceso disciplinario");
   }
   const atomicRow = atomicResult[0];
   const processId = atomicRow.process_id;
@@ -1197,24 +977,16 @@ async function confirmDisciplinaryProcess(input) {
   const insertedAnnotations = {
     negativas: Number(atomicRow.inserted_negativas) || 0,
     positivas: Number(atomicRow.inserted_positivas) || 0,
-    informativas: Number(atomicRow.inserted_informativas) || 0,
+    informativas: Number(atomicRow.inserted_informativas) || 0
   };
   return {
     success: true,
     processId,
     processNumber,
-    insertedAnnotations,
+    insertedAnnotations
   };
 }
-var PARSER_VERSION,
-  PDF_BUCKET,
-  MAX_PDF_BYTES,
-  MAX_PDF_PAGES,
-  MAX_CONFIRMED_ANNOTATIONS,
-  MAX_CONFIRMED_ANNOTATION_TEXT,
-  NodeDomMatrixPolyfill,
-  NodeImageDataPolyfill,
-  NodePath2DPolyfill;
+var PARSER_VERSION, PDF_BUCKET, MAX_PDF_BYTES, MAX_PDF_PAGES, MAX_CONFIRMED_ANNOTATIONS, MAX_CONFIRMED_ANNOTATION_TEXT, NodeDomMatrixPolyfill, NodeImageDataPolyfill, NodePath2DPolyfill;
 var init_disciplinaryPdfAnalysis = __esm({
   "server/lib/disciplinaryPdfAnalysis.ts"() {
     "use strict";
@@ -1261,7 +1033,7 @@ var init_disciplinaryPdfAnalysis = __esm({
           other.c,
           other.d,
           other.e,
-          other.f,
+          other.f
         ]);
         copy.multiplySelf(this);
         this.a = copy.a;
@@ -1279,13 +1051,11 @@ var init_disciplinaryPdfAnalysis = __esm({
           this.c,
           this.d,
           this.e,
-          this.f,
+          this.f
         ]).translateSelf(tx, ty);
       }
       translateSelf(tx = 0, ty = 0) {
-        return this.multiplySelf(
-          new _NodeDomMatrixPolyfill([1, 0, 0, 1, tx, ty]),
-        );
+        return this.multiplySelf(new _NodeDomMatrixPolyfill([1, 0, 0, 1, tx, ty]));
       }
       scale(scaleX = 1, scaleY = scaleX) {
         return new _NodeDomMatrixPolyfill([
@@ -1294,12 +1064,12 @@ var init_disciplinaryPdfAnalysis = __esm({
           this.c,
           this.d,
           this.e,
-          this.f,
+          this.f
         ]).scaleSelf(scaleX, scaleY);
       }
       scaleSelf(scaleX = 1, scaleY = scaleX) {
         return this.multiplySelf(
-          new _NodeDomMatrixPolyfill([scaleX, 0, 0, scaleY, 0, 0]),
+          new _NodeDomMatrixPolyfill([scaleX, 0, 0, scaleY, 0, 0])
         );
       }
       invertSelf() {
@@ -1334,9 +1104,10 @@ var init_disciplinaryPdfAnalysis = __esm({
       }
     };
     NodePath2DPolyfill = class {
-      addPath() {}
+      addPath() {
+      }
     };
-  },
+  }
 });
 
 // server/lib/bulkDisciplinaryPdf.ts
@@ -1357,13 +1128,7 @@ function matchTeacherName(captured, roster) {
   return best;
 }
 function normalize(value) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9 ]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
 }
 function bulkNameKey(value) {
   return normalize(value).split(" ").sort().join(" ");
@@ -1388,13 +1153,11 @@ function bulkCourseKey(value) {
   if (numberFirst)
     return `${numberFirst[1]} ${numberFirst[3]} ${numberFirst[2]}`;
   const levelFirst = text.match(/^(\d+)\s*(medio|basico)\s*([a-z])$/);
-  return levelFirst
-    ? `${levelFirst[1]} ${levelFirst[2]} ${levelFirst[3]}`
-    : text;
+  return levelFirst ? `${levelFirst[1]} ${levelFirst[2]} ${levelFirst[3]}` : text;
 }
 function bulkSuggestedLetterType(negativeCount, currentLetterType) {
   return mapDocTypeToLetterType(
-    getSuggestedLetterType(negativeCount, currentLetterType),
+    getSuggestedLetterType(negativeCount, currentLetterType)
   );
 }
 function annotationKey(type, date, text) {
@@ -1419,7 +1182,7 @@ function selectNewBulkAnnotations(annotations, existingRecords) {
     const key = annotationKey(
       annotation.tipo,
       annotation.fecha_iso,
-      annotation.texto,
+      annotation.texto
     );
     const remaining = existingCounts.get(key) ?? 0;
     if (remaining > 0) {
@@ -1428,11 +1191,7 @@ function selectNewBulkAnnotations(annotations, existingRecords) {
     }
     const overlap = existingRecords.some((record) => {
       const stored = (record.observation ?? "").replace(/^\[[^\][]+\]\s*/, "");
-      return (
-        normalize(record.type ?? "") === normalize(annotation.tipo) &&
-        (record.date_time ?? "").slice(0, 10) === annotation.fecha_iso &&
-        textsOverlap(stored, annotation.texto)
-      );
+      return normalize(record.type ?? "") === normalize(annotation.tipo) && (record.date_time ?? "").slice(0, 10) === annotation.fecha_iso && textsOverlap(stored, annotation.texto);
     });
     return !overlap;
   });
@@ -1444,16 +1203,14 @@ function toIsoDate2(value) {
   return `${year}-${match[2].padStart(2, "0")}-${match[1].padStart(2, "0")}`;
 }
 function titleCase(value) {
-  return value
-    .toLowerCase()
-    .replace(
-      /(^|[\s-])([a-záéíóúñ])/gi,
-      (_, prefix, letter) => `${prefix}${letter.toUpperCase()}`,
-    );
+  return value.toLowerCase().replace(
+    /(^|[\s-])([a-záéíóúñ])/gi,
+    (_, prefix, letter) => `${prefix}${letter.toUpperCase()}`
+  );
 }
 function extractCourse2(text) {
   const match = text.match(
-    /\b(\d{1,2})\s*(?:°?\s*(MEDIO|BASICO|BÁSICO|BASICA|BÁSICA)\s*([A-Z])|([A-Z])\s*(MEDIO|BASICO|BÁSICO|BASICA|BÁSICA))\b/i,
+    /\b(\d{1,2})\s*(?:°?\s*(MEDIO|BASICO|BÁSICO|BASICA|BÁSICA)\s*([A-Z])|([A-Z])\s*(MEDIO|BASICO|BÁSICO|BASICA|BÁSICA))\b/i
   );
   if (!match) return "";
   const levelValue = match[2] ?? match[5];
@@ -1463,14 +1220,8 @@ function extractCourse2(text) {
 }
 function splitBlocks(text) {
   const blocks = [];
-  const normalized = text
-    .split(String.fromCharCode(12))
-    .join(" ")
-    .replace(/\s+(?=\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/g, "\n");
-  const lines = normalized
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
+  const normalized = text.split(String.fromCharCode(12)).join(" ").replace(/\s+(?=\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/g, "\n");
+  const lines = normalized.split("\n").map((line) => line.trim()).filter(Boolean);
   let current = "";
   for (const line of lines) {
     if (/^Ficha\s+Personal\b/i.test(line)) {
@@ -1493,9 +1244,7 @@ function tokenKey(value) {
 }
 function stripTrailingStudentName(profesor, studentNames) {
   if (!profesor) return profesor;
-  const candidates = (
-    Array.isArray(studentNames) ? studentNames : [studentNames]
-  ).filter((name) => !!name && name.trim().length > 0);
+  const candidates = (Array.isArray(studentNames) ? studentNames : [studentNames]).filter((name) => !!name && name.trim().length > 0);
   if (!candidates.length) return profesor;
   const teacherWords = profesor.trim().split(/\s+/);
   if (teacherWords.length <= 2) return profesor;
@@ -1511,7 +1260,7 @@ function stripTrailingStudentName(profesor, studentNames) {
       for (let start = 0; start < studentWords.length; start += 1) {
         const rotated = [
           ...studentWords.slice(start),
-          ...studentWords.slice(0, start),
+          ...studentWords.slice(0, start)
         ].map(tokenKey);
         for (let i = 0; i + k <= rotated.length; i += 1) {
           if (rotated.slice(i, i + k).join(" ") === tail && k > cleanedLength) {
@@ -1525,11 +1274,7 @@ function stripTrailingStudentName(profesor, studentNames) {
   return cleaned ?? profesor;
 }
 function cleanCandidate(segment) {
-  return segment
-    .split(/\s*Profesor\s*:/i)[0]
-    .split(/\s*(?:Tipo|Categoria)\s*:/i)[0]
-    .replace(/\s+/g, " ")
-    .trim();
+  return segment.split(/\s*Profesor\s*:/i)[0].split(/\s*(?:Tipo|Categoria)\s*:/i)[0].replace(/\s+/g, " ").trim();
 }
 function extractFullAnnotationText(block) {
   const segments = block.split(/Anotaci[óo]n\s*:\s*/i).slice(1);
@@ -1542,29 +1287,21 @@ function extractFullAnnotationText(block) {
 }
 function cutTrailingFields(profesor) {
   if (!profesor) return profesor;
-  const cut = profesor
-    .normalize("NFC")
-    .split(/\s*(?:Tipo|Categoria|Anotaci[óo]n)\s*:|\s*Ficha\s+Personal\b/i)[0]
-    .trim();
+  const cut = profesor.normalize("NFC").split(/\s*(?:Tipo|Categoria|Anotaci[óo]n)\s*:|\s*Ficha\s+Personal\b/i)[0].trim();
   return cut.length > 0 ? cut : profesor;
 }
-function resolveTeacherAndContinuation(
-  profesor,
-  texto,
-  teacherNames,
-  studentNames,
-) {
+function resolveTeacherAndContinuation(profesor, texto, teacherNames, studentNames) {
   if (!profesor || teacherNames.length === 0) {
     return {
       profesor: stripTrailingStudentName(profesor, studentNames),
-      texto,
+      texto
     };
   }
   const hit = matchTeacherName(profesor, teacherNames);
   if (!hit) {
     return {
       profesor: stripTrailingStudentName(profesor, studentNames),
-      texto,
+      texto
     };
   }
   const words = profesor.split(/\s+/);
@@ -1579,7 +1316,7 @@ function resolveTeacherAndContinuation(
   if (spanEnd < 0) return { profesor: hit, texto };
   const tail = stripTrailingStudentName(
     words.slice(spanEnd).join(" "),
-    studentNames,
+    studentNames
   );
   const continuation = (tail ?? "").trim();
   if (continuation && !/[.!?…]\s*-?\s*$/.test(texto)) {
@@ -1593,45 +1330,31 @@ function parseBlock(block, page, studentName = null, teacherNames = []) {
   const date = text.match(/(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/)?.[1];
   const fecha_iso = date ? toIsoDate2(date) : null;
   const tipo = text.match(
-    /Tipo\s*:\s*(Negativa|Positiva|Informaci[óo]n)/i,
+    /Tipo\s*:\s*(Negativa|Positiva|Informaci[óo]n)/i
   )?.[1];
   if (!fecha_iso || !tipo) return null;
-  const categoria =
-    text
-      .match(
-        /Categoria\s*:\s*(RESPONSABILIDAD\s+Y\s+COMPORTAMIENTO|RESPONSABILIDAD|COMPORTAMIENTO|INFORMACI[ÓOÒ]N|ENTREVISTA)/i,
-      )?.[1]
-      ?.trim()
-      .toUpperCase() ?? "SIN CATEGORIA";
-  const rawProfesor =
-    text
-      .match(
-        /Profesor\s*:\s*(.+?)(?=\s*\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\s*(?:LUNES|MARTES|MIERCOLES|MIÉRCOLES|JUEVES|VIERNES|SABADO|SÁBADO|DOMINGO)\b|\s*(?:Tipo|Categoria|Anotaci[óo]n|Profesor)\s*:|\s*Ficha\s+Personal\b|\s*$)/i,
-      )?.[1]
-      ?.trim() ?? null;
+  const categoria = text.match(
+    /Categoria\s*:\s*(RESPONSABILIDAD\s+Y\s+COMPORTAMIENTO|RESPONSABILIDAD|COMPORTAMIENTO|INFORMACI[ÓOÒ]N|ENTREVISTA)/i
+  )?.[1]?.trim().toUpperCase() ?? "SIN CATEGORIA";
+  const rawProfesor = text.match(
+    /Profesor\s*:\s*(.+?)(?=\s*\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\s*(?:LUNES|MARTES|MIERCOLES|MIÉRCOLES|JUEVES|VIERNES|SABADO|SÁBADO|DOMINGO)\b|\s*(?:Tipo|Categoria|Anotaci[óo]n|Profesor)\s*:|\s*Ficha\s+Personal\b|\s*$)/i
+  )?.[1]?.trim() ?? null;
   const cleaned = stripTrailingStudentName(
     cutTrailingFields(rawProfesor),
-    studentName,
+    studentName
   );
   const profesor = cleaned;
-  const profesorReconocido =
-    teacherNames.length > 0
-      ? matchTeacherName(cleaned, teacherNames) !== null
-      : void 0;
+  const profesorReconocido = teacherNames.length > 0 ? matchTeacherName(cleaned, teacherNames) !== null : void 0;
   const texto = extractFullAnnotationText(text);
   if (!texto) return null;
   return {
     fecha_iso,
-    tipo: tipo.toLowerCase().startsWith("neg")
-      ? "Negativa"
-      : tipo.toLowerCase().startsWith("pos")
-        ? "Positiva"
-        : "Informaci\xF3n",
+    tipo: tipo.toLowerCase().startsWith("neg") ? "Negativa" : tipo.toLowerCase().startsWith("pos") ? "Positiva" : "Informaci\xF3n",
     categoria,
     profesor,
     profesorReconocido,
     texto,
-    page_number: page,
+    page_number: page
   };
 }
 async function parseBulkDisciplinaryPdf(buffer, teacherNames = []) {
@@ -1643,15 +1366,8 @@ async function parseBulkDisciplinaryPdf(buffer, teacherNames = []) {
   const students = [];
   const warnings = [];
   for (let index = 1; index < parts.length; index += 1) {
-    const previousLines = parts[index - 1]
-      .split("\n")
-      .map((line) => line.trim())
-      .filter(Boolean);
-    const nombre =
-      (previousLines.at(-1) ?? "")
-        .split(String.fromCharCode(12))
-        .at(-1)
-        ?.trim() ?? "";
+    const previousLines = parts[index - 1].split("\n").map((line) => line.trim()).filter(Boolean);
+    const nombre = (previousLines.at(-1) ?? "").split(String.fromCharCode(12)).at(-1)?.trim() ?? "";
     const body = parts[index];
     const curso = extractCourse2(body);
     if (!nombre || !curso) {
@@ -1667,20 +1383,14 @@ async function parseBulkDisciplinaryPdf(buffer, teacherNames = []) {
       const key = [
         annotation.fecha_iso,
         annotation.tipo,
-        normalize(annotation.texto).slice(0, 160),
+        normalize(annotation.texto).slice(0, 160)
       ].join("|");
       const truncated = anotaciones.find(
-        (kept) =>
-          kept.fecha_iso === annotation.fecha_iso &&
-          kept.tipo === annotation.tipo &&
-          textsOverlap(kept.texto, annotation.texto),
+        (kept) => kept.fecha_iso === annotation.fecha_iso && kept.tipo === annotation.tipo && textsOverlap(kept.texto, annotation.texto)
       );
       if (seen.has(key) || truncated) {
         duplicados_eliminados += 1;
-        if (
-          truncated &&
-          normalize(annotation.texto).length > normalize(truncated.texto).length
-        ) {
+        if (truncated && normalize(annotation.texto).length > normalize(truncated.texto).length) {
           anotaciones[anotaciones.indexOf(truncated)] = annotation;
         }
         continue;
@@ -1692,7 +1402,7 @@ async function parseBulkDisciplinaryPdf(buffer, teacherNames = []) {
       nombre: titleCase(nombre),
       curso,
       anotaciones,
-      duplicados_eliminados,
+      duplicados_eliminados
     });
   }
   const allNames = students.map((student) => student.nombre);
@@ -1702,14 +1412,11 @@ async function parseBulkDisciplinaryPdf(buffer, teacherNames = []) {
         annotation.profesor,
         annotation.texto,
         teacherNames,
-        allNames,
+        allNames
       );
       annotation.profesor = resolved.profesor;
       annotation.texto = resolved.texto;
-      annotation.profesorReconocido =
-        teacherNames.length > 0
-          ? matchTeacherName(resolved.profesor, teacherNames) !== null
-          : void 0;
+      annotation.profesorReconocido = teacherNames.length > 0 ? matchTeacherName(resolved.profesor, teacherNames) !== null : void 0;
     }
   }
   if (!students.length) warnings.push("No se encontraron fichas en el PDF.");
@@ -1717,7 +1424,7 @@ async function parseBulkDisciplinaryPdf(buffer, teacherNames = []) {
     file_hash,
     paginas: pages.length,
     estudiantes: students,
-    warnings,
+    warnings
   };
 }
 var BULK_QUERY_CHUNK_SIZE;
@@ -1727,7 +1434,7 @@ var init_bulkDisciplinaryPdf = __esm({
     init_disciplinaryStage();
     init_disciplinaryPdfAnalysis();
     BULK_QUERY_CHUNK_SIZE = 20;
-  },
+  }
 });
 
 // server/lib/fetchAllRows.ts
@@ -1746,7 +1453,7 @@ var init_fetchAllRows = __esm({
   "server/lib/fetchAllRows.ts"() {
     "use strict";
     PAGE_SIZE = 1e3;
-  },
+  }
 });
 
 // src/shared/lib/types.ts
@@ -1756,35 +1463,23 @@ var init_types = __esm({
     "use strict";
     EstadoCausa = /* @__PURE__ */ ((EstadoCausa2) => {
       EstadoCausa2["DENUNCIA_RECEPCIONADA"] = "Recepci\xF3n de Denuncia";
-      EstadoCausa2["ANTECEDENTES_REVISION_INICIAL"] =
-        "Revisi\xF3n Inicial de Antecedentes";
-      EstadoCausa2["INICIO_INDAGACION_NOTIFICADO"] =
-        "Notificaci\xF3n de Inicio de Indagaci\xF3n";
+      EstadoCausa2["ANTECEDENTES_REVISION_INICIAL"] = "Revisi\xF3n Inicial de Antecedentes";
+      EstadoCausa2["INICIO_INDAGACION_NOTIFICADO"] = "Notificaci\xF3n de Inicio de Indagaci\xF3n";
       EstadoCausa2["EN_PROCESO_INDAGACION"] = "En Proceso de Indagaci\xF3n";
-      EstadoCausa2["RECOPILACION_EVIDENCIAS_CURSO"] =
-        "Recopilaci\xF3n de Evidencias en Curso";
+      EstadoCausa2["RECOPILACION_EVIDENCIAS_CURSO"] = "Recopilaci\xF3n de Evidencias en Curso";
       EstadoCausa2["DERIVADO_A_MEDIACION"] = "Derivado a Mediaci\xF3n";
       EstadoCausa2["MEDIACION_EN_DESARROLLO"] = "Mediaci\xF3n en Desarrollo";
-      EstadoCausa2["MEDIACION_CERRADA_ACUERDO"] =
-        "Mediaci\xF3n Cerrada con Acuerdo";
-      EstadoCausa2["MEDIACION_FRACASADA_RETORNO"] =
-        "Mediaci\xF3n Fracasada \u2013 Retorno a Indagaci\xF3n";
-      EstadoCausa2["INFORME_CONCLUYENTE_ELABORACION"] =
-        "Informe Cierre de Indagaci\xF3n en Elaboraci\xF3n";
-      EstadoCausa2["INFORME_CONCLUYENTE_EMITIDO"] =
-        "Informe Cierre de Indagaci\xF3n Emitido";
-      EstadoCausa2["ENTREVISTA_DISCIPLINARIA_PENDIENTE"] =
-        "Entrevista Disciplinaria Pendiente";
-      EstadoCausa2["ENTREVISTA_DISCIPLINARIA_REALIZADA"] =
-        "Entrevista Disciplinaria Realizada";
-      EstadoCausa2["RESOLUCION_ELABORACION"] =
-        "Informe Concluyente en Elaboraci\xF3n";
-      EstadoCausa2["RESOLUCION_FINAL_NOTIFICADA"] =
-        "Informe Concluyente Emitido";
+      EstadoCausa2["MEDIACION_CERRADA_ACUERDO"] = "Mediaci\xF3n Cerrada con Acuerdo";
+      EstadoCausa2["MEDIACION_FRACASADA_RETORNO"] = "Mediaci\xF3n Fracasada \u2013 Retorno a Indagaci\xF3n";
+      EstadoCausa2["INFORME_CONCLUYENTE_ELABORACION"] = "Informe Cierre de Indagaci\xF3n en Elaboraci\xF3n";
+      EstadoCausa2["INFORME_CONCLUYENTE_EMITIDO"] = "Informe Cierre de Indagaci\xF3n Emitido";
+      EstadoCausa2["ENTREVISTA_DISCIPLINARIA_PENDIENTE"] = "Entrevista Disciplinaria Pendiente";
+      EstadoCausa2["ENTREVISTA_DISCIPLINARIA_REALIZADA"] = "Entrevista Disciplinaria Realizada";
+      EstadoCausa2["RESOLUCION_ELABORACION"] = "Informe Concluyente en Elaboraci\xF3n";
+      EstadoCausa2["RESOLUCION_FINAL_NOTIFICADA"] = "Informe Concluyente Emitido";
       EstadoCausa2["EN_PLAZO_APELACION"] = "En Plazo de Apelaci\xF3n";
       EstadoCausa2["APELACION_RECEPCIONADA"] = "Apelaci\xF3n Recepcionada";
-      EstadoCausa2["APELACION_REVISION_RECTORIA"] =
-        "Apelaci\xF3n en Revisi\xF3n por Rector\xEDa";
+      EstadoCausa2["APELACION_REVISION_RECTORIA"] = "Apelaci\xF3n en Revisi\xF3n por Rector\xEDa";
       EstadoCausa2["APELACION_RESUELTA"] = "Apelaci\xF3n Resuelta";
       EstadoCausa2["RESOLUCION_EJECUTORIADA"] = "Resoluci\xF3n Ejecutoriada";
       EstadoCausa2["MEDIDA_EJECUCION"] = "Medida en Ejecuci\xF3n";
@@ -1793,7 +1488,7 @@ var init_types = __esm({
       EstadoCausa2["CAUSA_CERRADA"] = "Causa Cerrada";
       return EstadoCausa2;
     })(EstadoCausa || {});
-  },
+  }
 });
 
 // src/shared/lib/schemas/zodCsp.ts
@@ -1802,17 +1497,13 @@ var init_zodCsp = __esm({
   "src/shared/lib/schemas/zodCsp.ts"() {
     "use strict";
     z2.config({ jitless: true });
-  },
+  }
 });
 
 // src/shared/lib/schemas/newCausaForm.ts
 import { z as z3 } from "zod";
 function normalizeRutInput(value) {
-  const compact = value
-    .trim()
-    .replace(/\./g, "")
-    .replace(/\s+/g, "")
-    .toUpperCase();
+  const compact = value.trim().replace(/\./g, "").replace(/\s+/g, "").toUpperCase();
   if (!compact) {
     return "";
   }
@@ -1837,9 +1528,8 @@ function isValidRut(value) {
     sum += Number(body[i]) * multiplier;
     multiplier = multiplier === 7 ? 2 : multiplier + 1;
   }
-  const expected = 11 - (sum % 11);
-  const expectedDv =
-    expected === 11 ? "0" : expected === 10 ? "K" : String(expected);
+  const expected = 11 - sum % 11;
+  const expectedDv = expected === 11 ? "0" : expected === 10 ? "K" : String(expected);
   return expectedDv === dv;
 }
 var CHILEAN_RUT_FORMAT_RE, tipoInfraccionValues, newCausaFormSchema;
@@ -1847,50 +1537,30 @@ var init_newCausaForm = __esm({
   "src/shared/lib/schemas/newCausaForm.ts"() {
     "use strict";
     CHILEAN_RUT_FORMAT_RE = /^\d{7,8}-[\dK]$/;
-    tipoInfraccionValues = ["Leve", "Grave", "Muy Grave", "Grav\xEDsima"];
+    tipoInfraccionValues = [
+      "Leve",
+      "Grave",
+      "Muy Grave",
+      "Grav\xEDsima"
+    ];
     newCausaFormSchema = z3.object({
       selectedCourseId: z3.string().trim().min(1, "Seleccione un curso."),
       selectedStudentId: z3.string().trim().optional(),
-      newEstNombre: z3
-        .string()
-        .trim()
-        .min(2, "Ingrese el nombre del estudiante."),
-      newEstRut: z3
-        .string()
-        .trim()
-        .transform(normalizeRutInput)
-        .pipe(
-          z3
-            .string()
-            .regex(CHILEAN_RUT_FORMAT_RE, "Ingrese un RUN chileno v\xE1lido.")
-            .refine(
-              isValidRut,
-              "El d\xEDgito verificador del RUN no coincide.",
-            ),
-        ),
+      newEstNombre: z3.string().trim().min(2, "Ingrese el nombre del estudiante."),
+      newEstRut: z3.string().trim().transform(normalizeRutInput).pipe(
+        z3.string().regex(CHILEAN_RUT_FORMAT_RE, "Ingrese un RUN chileno v\xE1lido.").refine(isValidRut, "El d\xEDgito verificador del RUN no coincide.")
+      ),
       newInfTipo: z3.enum(tipoInfraccionValues),
       conductaRiceId: z3.string().optional(),
       newAulaSegura: z3.boolean(),
-      newObs: z3
-        .string()
-        .trim()
-        .min(10, "Describa los hechos con al menos 10 caracteres."),
-      newResponsable: z3
-        .string()
-        .trim()
-        .min(3, "Ingrese el fiscalizador a cargo."),
+      newObs: z3.string().trim().min(10, "Describa los hechos con al menos 10 caracteres."),
+      newResponsable: z3.string().trim().min(3, "Ingrese el fiscalizador a cargo.")
     });
-  },
+  }
 });
 
 // src/shared/lib/domain/investigationChecklist.ts
-var INVESTIGATION_BASE_ITEM_IDS,
-  MEDIATION_FLOW_ITEM_IDS,
-  MEDIATION_OUTCOME_ITEM_IDS,
-  INVESTIGATION_REINFORCED_ITEM_IDS,
-  INVESTIGATION_INTERVIEW_ITEM_IDS,
-  INVESTIGATION_ITEM_IDS,
-  MEDIATION_STATES;
+var INVESTIGATION_BASE_ITEM_IDS, MEDIATION_FLOW_ITEM_IDS, MEDIATION_OUTCOME_ITEM_IDS, INVESTIGATION_REINFORCED_ITEM_IDS, INVESTIGATION_INTERVIEW_ITEM_IDS, INVESTIGATION_ITEM_IDS, MEDIATION_STATES;
 var init_investigationChecklist = __esm({
   "src/shared/lib/domain/investigationChecklist.ts"() {
     "use strict";
@@ -1898,22 +1568,26 @@ var init_investigationChecklist = __esm({
     INVESTIGATION_BASE_ITEM_IDS = ["chk_inv_1", "chk_inv_2"];
     MEDIATION_FLOW_ITEM_IDS = ["chk_inv_3", "chk_inv_4"];
     MEDIATION_OUTCOME_ITEM_IDS = ["chk_inv_5", "chk_inv_6"];
-    INVESTIGATION_REINFORCED_ITEM_IDS = ["chk_inv_7", "chk_inv_8", "chk_inv_9"];
+    INVESTIGATION_REINFORCED_ITEM_IDS = [
+      "chk_inv_7",
+      "chk_inv_8",
+      "chk_inv_9"
+    ];
     INVESTIGATION_INTERVIEW_ITEM_IDS = ["chk_res_4"];
     INVESTIGATION_ITEM_IDS = [
       ...INVESTIGATION_BASE_ITEM_IDS,
       ...INVESTIGATION_INTERVIEW_ITEM_IDS,
       ...MEDIATION_FLOW_ITEM_IDS,
       ...MEDIATION_OUTCOME_ITEM_IDS,
-      ...INVESTIGATION_REINFORCED_ITEM_IDS,
+      ...INVESTIGATION_REINFORCED_ITEM_IDS
     ];
     MEDIATION_STATES = /* @__PURE__ */ new Set([
       "Derivado a Mediaci\xF3n" /* DERIVADO_A_MEDIACION */,
       "Mediaci\xF3n en Desarrollo" /* MEDIACION_EN_DESARROLLO */,
       "Mediaci\xF3n Cerrada con Acuerdo" /* MEDIACION_CERRADA_ACUERDO */,
-      "Mediaci\xF3n Fracasada \u2013 Retorno a Indagaci\xF3n" /* MEDIACION_FRACASADA_RETORNO */,
+      "Mediaci\xF3n Fracasada \u2013 Retorno a Indagaci\xF3n" /* MEDIACION_FRACASADA_RETORNO */
     ]);
-  },
+  }
 });
 
 // src/shared/lib/data.ts
@@ -1927,111 +1601,102 @@ var init_data = __esm({
     MAPPED_STATES = {
       ["Recepci\xF3n de Denuncia" /* DENUNCIA_RECEPCIONADA */]: {
         fase: "Recepci\xF3n",
-        desc: "Se recibe formalmente el reporte, denuncia o antecedente inicial.",
+        desc: "Se recibe formalmente el reporte, denuncia o antecedente inicial."
       },
-      ["Revisi\xF3n Inicial de Antecedentes" /* ANTECEDENTES_REVISION_INICIAL */]:
-        {
-          fase: "Recepci\xF3n",
-          desc: "Se realiza acopio preliminar de informaci\xF3n y verificaci\xF3n b\xE1sica de los hechos.",
-        },
-      ["Notificaci\xF3n de Inicio de Indagaci\xF3n" /* INICIO_INDAGACION_NOTIFICADO */]:
-        {
-          fase: "Recepci\xF3n",
-          desc: "Se informa formalmente al estudiante y al apoderado sobre la apertura del procedimiento disciplinario dentro de plazo reglamentario.",
-        },
+      ["Revisi\xF3n Inicial de Antecedentes" /* ANTECEDENTES_REVISION_INICIAL */]: {
+        fase: "Recepci\xF3n",
+        desc: "Se realiza acopio preliminar de informaci\xF3n y verificaci\xF3n b\xE1sica de los hechos."
+      },
+      ["Notificaci\xF3n de Inicio de Indagaci\xF3n" /* INICIO_INDAGACION_NOTIFICADO */]: {
+        fase: "Recepci\xF3n",
+        desc: "Se informa formalmente al estudiante y al apoderado sobre la apertura del procedimiento disciplinario dentro de plazo reglamentario."
+      },
       ["En Proceso de Indagaci\xF3n" /* EN_PROCESO_INDAGACION */]: {
         fase: "Investigaci\xF3n",
-        desc: "Investigaci\xF3n activa mediante entrevistas, revisi\xF3n documental y recopilaci\xF3n de evidencias.",
+        desc: "Investigaci\xF3n activa mediante entrevistas, revisi\xF3n documental y recopilaci\xF3n de evidencias."
       },
-      ["Recopilaci\xF3n de Evidencias en Curso" /* RECOPILACION_EVIDENCIAS_CURSO */]:
-        {
-          fase: "Investigaci\xF3n",
-          desc: "Estado intermedio para investigaciones complejas o extensas.",
-        },
+      ["Recopilaci\xF3n de Evidencias en Curso" /* RECOPILACION_EVIDENCIAS_CURSO */]: {
+        fase: "Investigaci\xF3n",
+        desc: "Estado intermedio para investigaciones complejas o extensas."
+      },
       ["Derivado a Mediaci\xF3n" /* DERIVADO_A_MEDIACION */]: {
         fase: "Investigaci\xF3n",
-        desc: "El caso es abordado mediante estrategia alternativa/restaurativa autorizada reglamentariamente.",
+        desc: "El caso es abordado mediante estrategia alternativa/restaurativa autorizada reglamentariamente."
       },
       ["Mediaci\xF3n en Desarrollo" /* MEDIACION_EN_DESARROLLO */]: {
         fase: "Investigaci\xF3n",
-        desc: "Las partes participan activamente en proceso de resoluci\xF3n colaborativa.",
+        desc: "Las partes participan activamente en proceso de resoluci\xF3n colaborativa."
       },
       ["Mediaci\xF3n Cerrada con Acuerdo" /* MEDIACION_CERRADA_ACUERDO */]: {
         fase: "Investigaci\xF3n",
-        desc: "Se logra acuerdo restaurativo y se suspende o cierra el proceso disciplinario.",
+        desc: "Se logra acuerdo restaurativo y se suspende o cierra el proceso disciplinario."
       },
-      ["Mediaci\xF3n Fracasada \u2013 Retorno a Indagaci\xF3n" /* MEDIACION_FRACASADA_RETORNO */]:
-        {
-          fase: "Investigaci\xF3n",
-          desc: "No existe acuerdo o no se cumplen condiciones para mediaci\xF3n.",
-        },
-      ["Informe Cierre de Indagaci\xF3n en Elaboraci\xF3n" /* INFORME_CONCLUYENTE_ELABORACION */]:
-        {
-          fase: "Resoluci\xF3n",
-          desc: "El Encargado de la indagaci\xF3n sistematiza antecedentes y redacta conclusiones.",
-        },
-      ["Informe Cierre de Indagaci\xF3n Emitido" /* INFORME_CONCLUYENTE_EMITIDO */]:
-        {
-          fase: "Resoluci\xF3n",
-          desc: "El informe t\xE9cnico fue entregado a Equipo de Convivencia Escolar para Revisi\xF3n.",
-        },
-      ["Entrevista Disciplinaria Pendiente" /* ENTREVISTA_DISCIPLINARIA_PENDIENTE */]:
-        {
-          fase: "Resoluci\xF3n",
-          desc: "Citaci\xF3n realizada a estudiante y apoderado para presentaci\xF3n de hallazgos.",
-        },
-      ["Entrevista Disciplinaria Realizada" /* ENTREVISTA_DISCIPLINARIA_REALIZADA */]:
-        {
-          fase: "Resoluci\xF3n",
-          desc: "Se efectu\xF3 audiencia disciplinaria y ejercicio del derecho a ser o\xEDdo.",
-        },
+      ["Mediaci\xF3n Fracasada \u2013 Retorno a Indagaci\xF3n" /* MEDIACION_FRACASADA_RETORNO */]: {
+        fase: "Investigaci\xF3n",
+        desc: "No existe acuerdo o no se cumplen condiciones para mediaci\xF3n."
+      },
+      ["Informe Cierre de Indagaci\xF3n en Elaboraci\xF3n" /* INFORME_CONCLUYENTE_ELABORACION */]: {
+        fase: "Resoluci\xF3n",
+        desc: "El Encargado de la indagaci\xF3n sistematiza antecedentes y redacta conclusiones."
+      },
+      ["Informe Cierre de Indagaci\xF3n Emitido" /* INFORME_CONCLUYENTE_EMITIDO */]: {
+        fase: "Resoluci\xF3n",
+        desc: "El informe t\xE9cnico fue entregado a Equipo de Convivencia Escolar para Revisi\xF3n."
+      },
+      ["Entrevista Disciplinaria Pendiente" /* ENTREVISTA_DISCIPLINARIA_PENDIENTE */]: {
+        fase: "Resoluci\xF3n",
+        desc: "Citaci\xF3n realizada a estudiante y apoderado para presentaci\xF3n de hallazgos."
+      },
+      ["Entrevista Disciplinaria Realizada" /* ENTREVISTA_DISCIPLINARIA_REALIZADA */]: {
+        fase: "Resoluci\xF3n",
+        desc: "Se efectu\xF3 audiencia disciplinaria y ejercicio del derecho a ser o\xEDdo."
+      },
       ["Informe Concluyente en Elaboraci\xF3n" /* RESOLUCION_ELABORACION */]: {
         fase: "Resoluci\xF3n",
-        desc: "Equipo de Convivencia Escolar se encuentra determinando medida Formativa y disciplinaria.",
+        desc: "Equipo de Convivencia Escolar se encuentra determinando medida Formativa y disciplinaria."
       },
       ["Informe Concluyente Emitido" /* RESOLUCION_FINAL_NOTIFICADA */]: {
         fase: "Resoluci\xF3n",
-        desc: "Se entrega formalmente resoluci\xF3n Formativa y disciplinaria al apoderado.",
+        desc: "Se entrega formalmente resoluci\xF3n Formativa y disciplinaria al apoderado."
       },
       ["En Plazo de Apelaci\xF3n" /* EN_PLAZO_APELACION */]: {
         fase: "Apelaci\xF3n",
-        desc: "Se encuentra vigente el periodo reglamentario para presentar recurso de reconsideraci\xF3n.",
+        desc: "Se encuentra vigente el periodo reglamentario para presentar recurso de reconsideraci\xF3n."
       },
       ["Apelaci\xF3n Recepcionada" /* APELACION_RECEPCIONADA */]: {
         fase: "Apelaci\xF3n",
-        desc: "Se recibe formalmente recurso de reconsideraci\xF3n o apelaci\xF3n.",
+        desc: "Se recibe formalmente recurso de reconsideraci\xF3n o apelaci\xF3n."
       },
-      ["Apelaci\xF3n en Revisi\xF3n por Rector\xEDa" /* APELACION_REVISION_RECTORIA */]:
-        {
-          fase: "Apelaci\xF3n",
-          desc: "Autoridad competente analiza antecedentes y emite resoluci\xF3n definitiva.",
-        },
+      ["Apelaci\xF3n en Revisi\xF3n por Rector\xEDa" /* APELACION_REVISION_RECTORIA */]: {
+        fase: "Apelaci\xF3n",
+        desc: "Autoridad competente analiza antecedentes y emite resoluci\xF3n definitiva."
+      },
       ["Apelaci\xF3n Resuelta" /* APELACION_RESUELTA */]: {
         fase: "Apelaci\xF3n",
-        desc: "Se confirma, modifica o revoca la medida inicialmente aplicada.",
+        desc: "Se confirma, modifica o revoca la medida inicialmente aplicada."
       },
       ["Resoluci\xF3n Ejecutoriada" /* RESOLUCION_EJECUTORIADA */]: {
         fase: "Apelaci\xF3n",
-        desc: "Finaliza completamente el debido proceso administrativo interno.",
+        desc: "Finaliza completamente el debido proceso administrativo interno."
       },
       ["Medida en Ejecuci\xF3n" /* MEDIDA_EJECUCION */]: {
         fase: "Seguimiento",
-        desc: "Se encuentra vigente la aplicaci\xF3n de medidas formativas o disciplinarias.",
+        desc: "Se encuentra vigente la aplicaci\xF3n de medidas formativas o disciplinarias."
       },
       ["En Proceso de Seguimiento" /* PROCESO_SEGUIMIENTO */]: {
         fase: "Seguimiento",
-        desc: "Se monitorea cumplimiento, conducta y evoluci\xF3n del estudiante.",
+        desc: "Se monitorea cumplimiento, conducta y evoluci\xF3n del estudiante."
       },
       ["Seguimiento Finalizado" /* SEGUIMIENTO_FINALIZADO */]: {
         fase: "Seguimiento",
-        desc: "Se concluye etapa de acompa\xF1amiento institucional.",
+        desc: "Se concluye etapa de acompa\xF1amiento institucional."
       },
       ["Causa Cerrada" /* CAUSA_CERRADA */]: {
         fase: "Seguimiento",
-        desc: "Procedimiento completamente finalizado y archivado.",
-      },
+        desc: "Procedimiento completamente finalizado y archivado."
+      }
     };
-  },
+  }
 });
 
 // src/shared/lib/schemas/editCausaForm.ts
@@ -2043,31 +1708,21 @@ var init_editCausaForm = __esm({
     init_types();
     init_data();
     init_newCausaForm();
-    EstadoCausaEnum = z4.enum(Object.values(EstadoCausa));
-    optionalDateSchema = z4
-      .string()
-      .trim()
-      .refine((value) => !value || /^\d{4}-\d{2}-\d{2}$/.test(value), {
-        message: "Ingrese una fecha v\xE1lida.",
-      });
+    EstadoCausaEnum = z4.enum(
+      Object.values(EstadoCausa)
+    );
+    optionalDateSchema = z4.string().trim().refine((value) => !value || /^\d{4}-\d{2}-\d{2}$/.test(value), {
+      message: "Ingrese una fecha v\xE1lida."
+    });
     editCausaFormSchema = z4.object({
-      estudianteNombre: z4
-        .string()
-        .trim()
-        .min(2, "Ingrese el nombre del estudiante."),
+      estudianteNombre: z4.string().trim().min(2, "Ingrese el nombre del estudiante."),
       estudianteCurso: z4.string().trim(),
-      runEstudiante: z4
-        .string()
-        .trim()
-        .refine((value) => !value || isChileanRutFormat(value), {
-          message: "Ingrese un RUN chileno v\xE1lido.",
-        }),
+      runEstudiante: z4.string().trim().refine((value) => !value || isChileanRutFormat(value), {
+        message: "Ingrese un RUN chileno v\xE1lido."
+      }),
       tipoInfraccion: z4.enum(tipoInfraccionValues),
       conductaRiceId: z4.string().optional(),
-      responsable: z4
-        .string()
-        .trim()
-        .min(3, "Ingrese el encargado o responsable."),
+      responsable: z4.string().trim().min(3, "Ingrese el encargado o responsable."),
       estadoActual: EstadoCausaEnum,
       observaciones: z4.string().trim(),
       comprometeAulaSegura: z4.boolean(),
@@ -2075,55 +1730,40 @@ var init_editCausaForm = __esm({
       identidadReservada: z4.boolean(),
       fechaInicioInvestigacion: optionalDateSchema,
       fechaInicioSuspension: optionalDateSchema,
-      duracionSuspensionDias: z4
-        .number()
-        .int("Ingrese un n\xFAmero entero.")
-        .min(0, "La suspensi\xF3n no puede ser negativa.")
-        .max(15, "La suspensi\xF3n preventiva no puede exceder 15 d\xEDas."),
+      duracionSuspensionDias: z4.number().int("Ingrese un n\xFAmero entero.").min(0, "La suspensi\xF3n no puede ser negativa.").max(15, "La suspensi\xF3n preventiva no puede exceder 15 d\xEDas."),
       monitoreoPedagogico: z4.boolean(),
       requiereNotificacionSuperintendencia: z4.boolean(),
       fechaNotificacionSuperintendencia: optionalDateSchema,
       estudianteTieneNEE: z4.boolean(),
-      tipoNEE: z4.string().trim(),
+      tipoNEE: z4.string().trim()
     });
-  },
+  }
 });
 
 // src/shared/lib/schemas/loginForm.ts
 import { z as z5 } from "zod";
-var emailSchema,
-  passwordSchema,
-  newPasswordSchema,
-  loginFormSchema,
-  passwordResetRequestSchema,
-  passwordUpdateFormSchema;
+var emailSchema, passwordSchema, newPasswordSchema, loginFormSchema, passwordResetRequestSchema, passwordUpdateFormSchema;
 var init_loginForm = __esm({
   "src/shared/lib/schemas/loginForm.ts"() {
     "use strict";
     emailSchema = z5.email("Ingrese un correo electr\xF3nico v\xE1lido.");
-    passwordSchema = z5
-      .string()
-      .min(6, "La contrase\xF1a debe tener al menos 6 caracteres.");
-    newPasswordSchema = z5
-      .string()
-      .min(10, "La nueva contrase\xF1a debe tener al menos 10 caracteres.");
+    passwordSchema = z5.string().min(6, "La contrase\xF1a debe tener al menos 6 caracteres.");
+    newPasswordSchema = z5.string().min(10, "La nueva contrase\xF1a debe tener al menos 10 caracteres.");
     loginFormSchema = z5.object({
       email: emailSchema,
-      password: passwordSchema,
+      password: passwordSchema
     });
     passwordResetRequestSchema = z5.object({
-      email: emailSchema,
+      email: emailSchema
     });
-    passwordUpdateFormSchema = z5
-      .object({
-        password: newPasswordSchema,
-        passwordConfirmation: newPasswordSchema,
-      })
-      .refine((value) => value.password === value.passwordConfirmation, {
-        path: ["passwordConfirmation"],
-        message: "Las contrase\xF1as no coinciden.",
-      });
-  },
+    passwordUpdateFormSchema = z5.object({
+      password: newPasswordSchema,
+      passwordConfirmation: newPasswordSchema
+    }).refine((value) => value.password === value.passwordConfirmation, {
+      path: ["passwordConfirmation"],
+      message: "Las contrase\xF1as no coinciden."
+    });
+  }
 });
 
 // src/shared/lib/schemas/physicalCarta.ts
@@ -2137,22 +1777,15 @@ var init_physicalCarta = __esm({
       studentId: z6.string().uuid("El estudiante no es v\xE1lido."),
       letterType: z6.enum([
         "Amonestaci\xF3n Escrita",
-        "Carta de Compromiso Conductual",
+        "Carta de Compromiso Conductual"
       ]),
-      emissionDate: z6
-        .string()
-        .regex(ISO_DATE_PATTERN, "Ingrese una fecha v\xE1lida.")
-        .refine(
-          (value) => !Number.isNaN(Date.parse(`${value}T00:00:00`)),
-          "Ingrese una fecha v\xE1lida.",
-        ),
-      observations: z6
-        .string()
-        .trim()
-        .max(1e3, "La observaci\xF3n no puede superar 1000 caracteres.")
-        .optional(),
+      emissionDate: z6.string().regex(ISO_DATE_PATTERN, "Ingrese una fecha v\xE1lida.").refine(
+        (value) => !Number.isNaN(Date.parse(`${value}T00:00:00`)),
+        "Ingrese una fecha v\xE1lida."
+      ),
+      observations: z6.string().trim().max(1e3, "La observaci\xF3n no puede superar 1000 caracteres.").optional()
     });
-  },
+  }
 });
 
 // src/shared/lib/schemas/studentHistoryEntry.ts
@@ -2162,31 +1795,16 @@ var init_studentHistoryEntry = __esm({
   "src/shared/lib/schemas/studentHistoryEntry.ts"() {
     "use strict";
     studentHistoryEntrySchema = z7.object({
-      studentId: z7
-        .string()
-        .uuid("El estudiante seleccionado no es v\xE1lido."),
-      title: z7
-        .string()
-        .trim()
-        .min(3, "El t\xEDtulo debe tener al menos 3 caracteres.")
-        .max(120, "El t\xEDtulo no puede superar los 120 caracteres."),
-      description: z7
-        .string()
-        .trim()
-        .min(3, "La descripci\xF3n debe tener al menos 3 caracteres.")
-        .max(2e3, "La descripci\xF3n no puede superar los 2.000 caracteres."),
+      studentId: z7.string().uuid("El estudiante seleccionado no es v\xE1lido."),
+      title: z7.string().trim().min(3, "El t\xEDtulo debe tener al menos 3 caracteres.").max(120, "El t\xEDtulo no puede superar los 120 caracteres."),
+      description: z7.string().trim().min(3, "La descripci\xF3n debe tener al menos 3 caracteres.").max(2e3, "La descripci\xF3n no puede superar los 2.000 caracteres.")
     });
-  },
+  }
 });
 
 // src/shared/lib/schemas/index.ts
 import { z as z8 } from "zod";
-var BitacoraEntrySchema,
-  ChecklistItemSchema,
-  ChecklistProgressEntrySchema,
-  EstadoCausaEnum2,
-  TipoInfraccionEnum,
-  CausaSchema;
+var BitacoraEntrySchema, ChecklistItemSchema, ChecklistProgressEntrySchema, EstadoCausaEnum2, TipoInfraccionEnum, CausaSchema;
 var init_schemas = __esm({
   "src/shared/lib/schemas/index.ts"() {
     "use strict";
@@ -2209,13 +1827,13 @@ var init_schemas = __esm({
         "Descargo",
         "Mediaci\xF3n",
         "Resoluci\xF3n",
-        "Otro",
+        "Otro"
       ]),
       titulo: z8.string(),
       descripcion: z8.string(),
       participantes: z8.array(z8.string()),
       documentoAdjunto: z8.string().optional(),
-      compartidoGrupal: z8.boolean().optional(),
+      compartidoGrupal: z8.boolean().optional()
     });
     ChecklistItemSchema = z8.object({
       id: z8.string(),
@@ -2224,16 +1842,14 @@ var init_schemas = __esm({
       completado: z8.boolean(),
       obligatorio: z8.boolean().optional(),
       aplicabilidad: z8.enum(["pendiente", "aplica", "no_aplica"]).optional(),
-      estado: z8
-        .enum([
-          "no_iniciado",
-          "en_desarrollo",
-          "cumplido",
-          "vencido",
-          "no_aplica",
-          "invalidado",
-        ])
-        .optional(),
+      estado: z8.enum([
+        "no_iniciado",
+        "en_desarrollo",
+        "cumplido",
+        "vencido",
+        "no_aplica",
+        "invalidado"
+      ]).optional(),
       fundamentoNoAplica: z8.string().optional(),
       fechaInicio: z8.string().optional(),
       fechaLimite: z8.string().optional(),
@@ -2245,12 +1861,12 @@ var init_schemas = __esm({
         "Circular 482",
         "Ley 21809",
         "Reglamento Interno",
-        "Ambas",
+        "Ambas"
       ]),
       registradoPor: z8.string().optional(),
       observaciones: z8.string().optional(),
       documentoNombre: z8.string().optional(),
-      documentoUrl: z8.string().optional(),
+      documentoUrl: z8.string().optional()
     });
     ChecklistProgressEntrySchema = z8.object({
       id: z8.string(),
@@ -2268,7 +1884,7 @@ var init_schemas = __esm({
         "Descargo",
         "Mediaci\xF3n",
         "Resoluci\xF3n",
-        "Otro",
+        "Otro"
       ]),
       occurredAt: z8.string(),
       documentName: z8.string().optional(),
@@ -2277,20 +1893,13 @@ var init_schemas = __esm({
       createdAt: z8.string(),
       invalidatedAt: z8.string().optional(),
       invalidatedBy: z8.string().optional(),
-      invalidationReason: z8.string().optional(),
+      invalidationReason: z8.string().optional()
     });
     EstadoCausaEnum2 = z8.enum(Object.values(EstadoCausa));
-    TipoInfraccionEnum = z8.enum([
-      "Leve",
-      "Grave",
-      "Muy Grave",
-      "Grav\xEDsima",
-    ]);
+    TipoInfraccionEnum = z8.enum(["Leve", "Grave", "Muy Grave", "Grav\xEDsima"]);
     CausaSchema = z8.object({
       id: z8.string(),
-      proceduralModelVersion: z8
-        .union([z8.literal(1), z8.literal(2)])
-        .optional(),
+      proceduralModelVersion: z8.union([z8.literal(1), z8.literal(2)]).optional(),
       studentId: z8.string().uuid().optional(),
       incidenteId: z8.string().uuid().optional(),
       estudianteNombre: z8.string(),
@@ -2327,9 +1936,9 @@ var init_schemas = __esm({
       medidasProteccionDenunciado: z8.array(z8.string()).optional(),
       estudianteTieneNEE: z8.boolean().optional(),
       tipoNEE: z8.string().optional(),
-      sancionesNEEDesactivadas: z8.boolean().optional(),
+      sancionesNEEDesactivadas: z8.boolean().optional()
     });
-  },
+  }
 });
 
 // server/api/services/excelImport.ts
@@ -2338,7 +1947,7 @@ __export(excelImport_exports, {
   normalizeLevel: () => normalizeLevel,
   normalizeRut: () => normalizeRut,
   parseImportWorkbook: () => parseImportWorkbook,
-  runImport: () => runImport,
+  runImport: () => runImport
 });
 import { randomUUID } from "node:crypto";
 import readXlsxFile from "read-excel-file/node";
@@ -2365,18 +1974,15 @@ function toRow(value) {
 }
 function headerIndex(row, candidates) {
   return row.findIndex(
-    (cell) =>
-      typeof cell === "string" &&
-      candidates.some((c) => cell.trim().toLowerCase() === c),
+    (cell) => typeof cell === "string" && candidates.some((c) => cell.trim().toLowerCase() === c)
   );
 }
 async function parseImportWorkbook(buffer, defaultLevel = "BASICA") {
   const warnings = [];
   const sheets = await readXlsxFile(buffer);
-  const findSheet = (candidates) =>
-    sheets.find((sheet) =>
-      candidates.includes(sheet.sheet.trim().toLowerCase()),
-    ) ?? null;
+  const findSheet = (candidates) => sheets.find(
+    (sheet) => candidates.includes(sheet.sheet.trim().toLowerCase())
+  ) ?? null;
   const coursesSheet = findSheet(["cursos", "courses"]);
   const studentsSheet = findSheet(["estudiantes", "students", "alumnos"]);
   const courses = [];
@@ -2404,7 +2010,7 @@ async function parseImportWorkbook(buffer, defaultLevel = "BASICA") {
       "full_name",
       "nombre",
       "nombre completo",
-      "full name",
+      "full name"
     ]);
     const iRut = headerIndex(header, ["rut", "run"]);
     const iCourse = headerIndex(header, ["curso", "course", "course_id"]);
@@ -2415,11 +2021,7 @@ async function parseImportWorkbook(buffer, defaultLevel = "BASICA") {
       let rut = iRut >= 0 ? normalizeRutInput(normalizeRut(row[iRut])) : "";
       if (rut && !isValidRut(rut)) {
         warnings.push(
-          "Fila " +
-            (r + 1) +
-            ": RUN inv\xE1lido " +
-            rut +
-            ", se importar\xE1 sin RUN.",
+          "Fila " + (r + 1) + ": RUN inv\xE1lido " + rut + ", se importar\xE1 sin RUN."
         );
         rut = "";
       }
@@ -2436,7 +2038,7 @@ async function parseImportWorkbook(buffer, defaultLevel = "BASICA") {
         byName.set(key, {
           name: student.course_name,
           level: defaultLevel,
-          position: pos,
+          position: pos
         });
       }
       courses.push(...byName.values());
@@ -2452,13 +2054,13 @@ async function runImport(client, tenantId, parsed) {
   let studentsInserted = 0;
   let duplicates = 0;
   const courseMap = /* @__PURE__ */ new Map();
-  const { data: existingCourses, error: cErr } = await client
-    .from("courses")
-    .select("id,name")
-    .eq("tenant_id", tenantId);
+  const { data: existingCourses, error: cErr } = await client.from("courses").select("id,name").eq("tenant_id", tenantId);
   if (cErr) throw cErr;
   for (const c of existingCourses ?? []) {
-    courseMap.set(c.name.toLowerCase(), c.id);
+    courseMap.set(
+      c.name.toLowerCase(),
+      c.id
+    );
   }
   const coursesToInsert = [];
   const seenCourseNames = /* @__PURE__ */ new Set();
@@ -2471,25 +2073,18 @@ async function runImport(client, tenantId, parsed) {
       name: course.name,
       level: course.level,
       position: course.position,
-      tenant_id: tenantId,
+      tenant_id: tenantId
     });
     courseMap.set(key, id);
   }
   if (coursesToInsert.length > 0) {
-    const { error: insErr } = await client
-      .from("courses")
-      .insert(coursesToInsert);
+    const { error: insErr } = await client.from("courses").insert(coursesToInsert);
     if (insErr) throw insErr;
     coursesInserted = coursesToInsert.length;
   }
   const seenRuts = /* @__PURE__ */ new Set();
-  const existingStudents = await fetchAllRows((from, to) =>
-    client
-      .from("students")
-      .select("rut")
-      .eq("tenant_id", tenantId)
-      .not("rut", "is", "")
-      .range(from, to),
+  const existingStudents = await fetchAllRows(
+    (from, to) => client.from("students").select("rut").eq("tenant_id", tenantId).not("rut", "is", "").range(from, to)
   );
   for (const s of existingStudents) {
     const rut = s.rut;
@@ -2501,12 +2096,10 @@ async function runImport(client, tenantId, parsed) {
       duplicates += 1;
       continue;
     }
-    const course_id = student.course_name
-      ? (courseMap.get(student.course_name.toLowerCase()) ?? null)
-      : null;
+    const course_id = student.course_name ? courseMap.get(student.course_name.toLowerCase()) ?? null : null;
     if (student.course_name && !course_id) {
       errors.push(
-        `Estudiante "${student.full_name}" referencia curso "${student.course_name}" no encontrado.`,
+        `Estudiante "${student.full_name}" referencia curso "${student.course_name}" no encontrado.`
       );
       continue;
     }
@@ -2516,13 +2109,11 @@ async function runImport(client, tenantId, parsed) {
       full_name: student.full_name,
       rut: student.rut,
       course_id,
-      tenant_id: tenantId,
+      tenant_id: tenantId
     });
   }
   if (studentsToInsert.length > 0) {
-    const { error: insErr } = await client
-      .from("students")
-      .insert(studentsToInsert);
+    const { error: insErr } = await client.from("students").insert(studentsToInsert);
     if (insErr) throw insErr;
     studentsInserted = studentsToInsert.length;
   }
@@ -2538,41 +2129,34 @@ var init_excelImport = __esm({
       basica: "BASICA",
       basico: "BASICA",
       media: "MEDIA",
-      medio: "MEDIA",
+      medio: "MEDIA"
     };
-  },
+  }
 });
 
 // server/api/services/teachersImport.ts
 var teachersImport_exports = {};
 __export(teachersImport_exports, {
   importTeachers: () => importTeachers,
-  parseTeachersWorkbook: () => parseTeachersWorkbook,
+  parseTeachersWorkbook: () => parseTeachersWorkbook
 });
 import readXlsxFile2 from "read-excel-file/node";
 function normalizeText3(value) {
-  return typeof value === "string"
-    ? value.normalize("NFC").replace(/\s+/g, " ").trim()
-    : "";
+  return typeof value === "string" ? value.normalize("NFC").replace(/\s+/g, " ").trim() : "";
 }
 function headerIndex2(row, candidates) {
   return row.findIndex(
-    (cell) =>
-      typeof cell === "string" &&
-      candidates.some((c) => cell.trim().toLowerCase() === c),
+    (cell) => typeof cell === "string" && candidates.some((c) => cell.trim().toLowerCase() === c)
   );
 }
 async function parseTeachersWorkbook(buffer) {
   const warnings = [];
   const sheets = await readXlsxFile2(buffer);
-  const sheet =
-    sheets.find((entry) =>
-      ["profesores", "teachers", "docentes", "profesor"].includes(
-        entry.sheet.trim().toLowerCase(),
-      ),
-    ) ??
-    sheets[0] ??
-    null;
+  const sheet = sheets.find(
+    (entry) => ["profesores", "teachers", "docentes", "profesor"].includes(
+      entry.sheet.trim().toLowerCase()
+    )
+  ) ?? sheets[0] ?? null;
   if (!sheet) throw new Error("El archivo no contiene hojas.");
   if (sheet.data.length === 0) {
     throw new Error("La hoja de profesores est\xE1 vac\xEDa.");
@@ -2584,12 +2168,10 @@ async function parseTeachersWorkbook(buffer) {
     "docente",
     "profesor",
     "teacher",
-    "name",
+    "name"
   ]);
   if (nameIndex === -1) {
-    throw new Error(
-      "Incluya la columna \xABfull_name\xBB en la hoja de profesores.",
-    );
+    throw new Error("Incluya la columna \xABfull_name\xBB en la hoja de profesores.");
   }
   const names = [];
   let emptyRows = 0;
@@ -2613,28 +2195,20 @@ async function importTeachers(client, tenantId, file) {
     seen.add(key);
     unique.push(name);
   }
-  const existing = await fetchAllRows((from, to) =>
-    client
-      .from("teachers")
-      .select("full_name")
-      .eq("tenant_id", tenantId)
-      .range(from, to),
+  const existing = await fetchAllRows(
+    (from, to) => client.from("teachers").select("full_name").eq("tenant_id", tenantId).range(from, to)
   );
   const existingKeys = new Set(
-    existing.map((row) => bulkNameKey(row.full_name)),
+    existing.map((row) => bulkNameKey(row.full_name))
   );
   const fresh = unique.filter((name) => !existingKeys.has(bulkNameKey(name)));
   const errors = [];
   let inserted = 0;
   if (fresh.length > 0) {
-    const { error: insertError } = await client
-      .from("teachers")
-      .insert(fresh.map((full_name) => ({ tenant_id: tenantId, full_name })));
+    const { error: insertError } = await client.from("teachers").insert(fresh.map((full_name) => ({ tenant_id: tenantId, full_name })));
     if (insertError) {
       errors.push(
-        insertError instanceof Error
-          ? insertError.message
-          : "No fue posible guardar la n\xF3mina.",
+        insertError instanceof Error ? insertError.message : "No fue posible guardar la n\xF3mina."
       );
     } else {
       inserted = fresh.length;
@@ -2647,7 +2221,7 @@ async function importTeachers(client, tenantId, file) {
     skippedExisting: unique.length - fresh.length,
     emptyRows: parsed.emptyRows,
     rosterSize: (existing ?? []).length + inserted,
-    errors,
+    errors
   };
 }
 var init_teachersImport = __esm({
@@ -2655,7 +2229,7 @@ var init_teachersImport = __esm({
     "use strict";
     init_bulkDisciplinaryPdf();
     init_fetchAllRows();
-  },
+  }
 });
 
 // server/api/index.ts
@@ -2673,12 +2247,12 @@ function ensureJwtConfig() {
   const hasSupabase = Boolean(process.env.VITE_SUPABASE_URL?.trim());
   if (!hasLegacy && !hasSupabase) {
     throw new Error(
-      "Missing SUPABASE_JWT_SECRET and VITE_SUPABASE_URL (no JWKS). Aborting startup to avoid running with degraded JWT verification.",
+      "Missing SUPABASE_JWT_SECRET and VITE_SUPABASE_URL (no JWKS). Aborting startup to avoid running with degraded JWT verification."
     );
   }
   if (!hasLegacy) {
     console.warn(
-      "[jwt] SUPABASE_JWT_SECRET no configurado: se usar\xE1 JWKS y fallback a Supabase API.",
+      "[jwt] SUPABASE_JWT_SECRET no configurado: se usar\xE1 JWKS y fallback a Supabase API."
     );
   }
 }
@@ -2686,12 +2260,7 @@ function ensureRuntimeConfig() {
   if (process.env.NODE_ENV !== "production") return;
   const missing = [];
   if (!process.env.VITE_SUPABASE_URL?.trim()) missing.push("VITE_SUPABASE_URL");
-  if (
-    !(
-      process.env.VITE_SUPABASE_ANON_KEY ??
-      process.env.VITE_SUPABASE_PUBLISHABLE_KEY
-    )?.trim()
-  ) {
+  if (!(process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY)?.trim()) {
     missing.push("VITE_SUPABASE_PUBLISHABLE_KEY");
   }
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()) {
@@ -2699,12 +2268,12 @@ function ensureRuntimeConfig() {
   }
   if (missing.length > 0) {
     throw new Error(
-      `Faltan variables de entorno obligatorias: ${missing.join(", ")}. Aborting startup.`,
+      `Faltan variables de entorno obligatorias: ${missing.join(", ")}. Aborting startup.`
     );
   }
   if (!process.env.UPSTASH_REDIS_REST_URL?.trim()) {
     console.warn(
-      "[rate-limit] UPSTASH_REDIS_REST_URL no configurado: el fallback en memoria no aplica entre instancias.",
+      "[rate-limit] UPSTASH_REDIS_REST_URL no configurado: el fallback en memoria no aplica entre instancias."
     );
   }
   ensureJwtConfig();
@@ -2729,7 +2298,7 @@ var ALG_HASHES = {
   ES512: "SHA-512",
   RS256: "SHA-256",
   RS384: "SHA-384",
-  RS512: "SHA-512",
+  RS512: "SHA-512"
 };
 var ALLOWED_ASYMMETRIC_ALGS = new Set(Object.keys(ALG_HASHES));
 function getOrCreateCacheEntry(supabaseUrl) {
@@ -2762,7 +2331,7 @@ function fetchJwksFromServer(supabaseUrl) {
         path: url.pathname,
         method: "GET",
         headers: { Accept: "application/json" },
-        timeout: FETCH_TIMEOUT_MS,
+        timeout: FETCH_TIMEOUT_MS
       },
       (res) => {
         let data = "";
@@ -2785,7 +2354,7 @@ function fetchJwksFromServer(supabaseUrl) {
             const keys = (parsed.keys ?? []).filter((k) => k.use === "sig");
             if (keys.length === 0) {
               return reject(
-                new Error("No signing keys found in JWKS endpoint"),
+                new Error("No signing keys found in JWKS endpoint")
               );
             }
             resolve(keys);
@@ -2793,7 +2362,7 @@ function fetchJwksFromServer(supabaseUrl) {
             reject(new Error("Invalid JWKS response"));
           }
         });
-      },
+      }
     );
     req.on("error", reject);
     req.on("timeout", () => {
@@ -2813,20 +2382,18 @@ async function getJwksKeys(supabaseUrl) {
   if (entry.fetchPromise) {
     return entry.fetchPromise;
   }
-  entry.fetchPromise = activeJwksFetcher(supabaseUrl)
-    .then((keys) => {
-      entry.keys = keys;
-      entry.timestamp = Date.now();
-      entry.fetchPromise = null;
-      return keys;
-    })
-    .catch((err) => {
-      entry.fetchPromise = null;
-      if (entry.keys.length > 0) {
-        return entry.keys;
-      }
-      throw err;
-    });
+  entry.fetchPromise = activeJwksFetcher(supabaseUrl).then((keys) => {
+    entry.keys = keys;
+    entry.timestamp = Date.now();
+    entry.fetchPromise = null;
+    return keys;
+  }).catch((err) => {
+    entry.fetchPromise = null;
+    if (entry.keys.length > 0) {
+      return entry.keys;
+    }
+    throw err;
+  });
   return entry.fetchPromise;
 }
 async function refreshJwksOnce(supabaseUrl) {
@@ -2839,7 +2406,7 @@ async function refreshJwksOnce(supabaseUrl) {
 }
 function base64urlToBuffer(b64) {
   const base64 = b64.replace(/-/g, "+").replace(/_/g, "/");
-  const pad = 4 - (b64.length % 4);
+  const pad = 4 - b64.length % 4;
   const padded = pad < 4 ? base64 + "=".repeat(pad) : base64;
   const buf = Buffer.from(padded, "base64");
   const ab = new ArrayBuffer(buf.length);
@@ -2891,28 +2458,27 @@ async function verifyJwtWithJwks(token, supabaseUrl) {
     let cryptoKey;
     let valid;
     if (key.kty === "EC") {
-      const namedCurve =
-        key.crv === "P-256" ? "P-256" : key.crv === "P-384" ? "P-384" : key.crv;
+      const namedCurve = key.crv === "P-256" ? "P-256" : key.crv === "P-384" ? "P-384" : key.crv;
       if (!namedCurve) return null;
       const jwk = {
         kty: "EC",
         crv: namedCurve,
         x: key.x,
         y: key.y,
-        ext: true,
+        ext: true
       };
       cryptoKey = await crypto.subtle.importKey(
         "jwk",
         jwk,
         { name: "ECDSA", namedCurve },
         false,
-        ["verify"],
+        ["verify"]
       );
       valid = await crypto.subtle.verify(
         { name: "ECDSA", hash },
         cryptoKey,
         signature,
-        data,
+        data
       );
     } else if (key.kty === "RSA") {
       const jwk = {
@@ -2920,20 +2486,20 @@ async function verifyJwtWithJwks(token, supabaseUrl) {
         n: key.n,
         e: key.e,
         alg: key.alg,
-        ext: true,
+        ext: true
       };
       cryptoKey = await crypto.subtle.importKey(
         "jwk",
         jwk,
         { name: "RSASSA-PKCS1-v1_5", hash },
         false,
-        ["verify"],
+        ["verify"]
       );
       valid = await crypto.subtle.verify(
         "RSASSA-PKCS1-v1_5",
         cryptoKey,
         signature,
-        data,
+        data
       );
     } else {
       return null;
@@ -2941,17 +2507,9 @@ async function verifyJwtWithJwks(token, supabaseUrl) {
     if (!valid) return null;
     if (typeof payload.exp !== "number" || payload.exp * 1e3 < Date.now())
       return null;
-    if (
-      payload.nbf &&
-      typeof payload.nbf === "number" &&
-      payload.nbf * 1e3 > Date.now()
-    )
+    if (payload.nbf && typeof payload.nbf === "number" && payload.nbf * 1e3 > Date.now())
       return null;
-    if (
-      !payload.sub ||
-      typeof payload.sub !== "string" ||
-      payload.sub.length === 0
-    )
+    if (!payload.sub || typeof payload.sub !== "string" || payload.sub.length === 0)
       return null;
     if (payload.iss && typeof payload.iss === "string") {
       const expectedIss = `${supabaseUrl.replace(/\/+$/, "")}/auth/v1`;
@@ -2981,7 +2539,7 @@ async function verifyJwtViaHmac(token, secret) {
   const signature = Buffer.from(parts[2], "base64url");
   for (const secretBytes of [
     new TextEncoder().encode(secret),
-    Buffer.from(secret, "base64"),
+    Buffer.from(secret, "base64")
   ]) {
     try {
       const key = await crypto.subtle.importKey(
@@ -2989,7 +2547,7 @@ async function verifyJwtViaHmac(token, secret) {
         secretBytes,
         { name: "HMAC", hash: "SHA-256" },
         false,
-        ["verify"],
+        ["verify"]
       );
       const data = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
       const valid = await crypto.subtle.verify("HMAC", key, signature, data);
@@ -2997,15 +2555,14 @@ async function verifyJwtViaHmac(token, secret) {
         if (!payload.exp || payload.exp * 1e3 < Date.now()) return null;
         return payload;
       }
-    } catch {}
+    } catch {
+    }
   }
   return null;
 }
 function verifyViaSupabaseApi(token) {
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const anonKey =
-    process.env.VITE_SUPABASE_ANON_KEY ??
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   if (!supabaseUrl || !anonKey || !URL.canParse(supabaseUrl)) {
     return Promise.resolve(null);
   }
@@ -3016,7 +2573,7 @@ function verifyViaSupabaseApi(token) {
         hostname,
         path: "/auth/v1/user",
         method: "GET",
-        headers: { Authorization: `Bearer ${token}`, apikey: anonKey },
+        headers: { Authorization: `Bearer ${token}`, apikey: anonKey }
       },
       (res) => {
         let data = "";
@@ -3032,7 +2589,7 @@ function verifyViaSupabaseApi(token) {
             resolve(null);
           }
         });
-      },
+      }
     );
     req.on("error", () => resolve(null));
     req.setTimeout(5e3, () => {
@@ -3042,11 +2599,7 @@ function verifyViaSupabaseApi(token) {
     req.end();
   });
 }
-async function verifyJwtSignature(
-  token,
-  secret,
-  verifyRemote = verifyViaSupabaseApi,
-) {
+async function verifyJwtSignature(token, secret, verifyRemote = verifyViaSupabaseApi) {
   const parts = token.split(".");
   if (parts.length !== 3) return null;
   let header;
@@ -3074,10 +2627,7 @@ async function verifyJwtSignature(
   if (hmacResult) return hmacResult;
   return verifyRemote(token);
 }
-var defaultProfileFetcher = async (
-  { supabaseUrl, anonKey, token, userId },
-  httpsImpl,
-) => {
+var defaultProfileFetcher = async ({ supabaseUrl, anonKey, token, userId }, httpsImpl) => {
   const hostname = new URL(supabaseUrl).hostname;
   const data = await new Promise((resolve) => {
     const r = httpsImpl.request(
@@ -3085,7 +2635,7 @@ var defaultProfileFetcher = async (
         hostname,
         path: `/rest/v1/profiles?user_id=eq.${encodeURIComponent(userId)}&select=tenant_id,role,is_active&limit=1`,
         method: "GET",
-        headers: { apikey: anonKey, Authorization: `Bearer ${token}` },
+        headers: { apikey: anonKey, Authorization: `Bearer ${token}` }
       },
       (res2) => {
         let chunks = "";
@@ -3100,7 +2650,7 @@ var defaultProfileFetcher = async (
             resolve(null);
           }
         });
-      },
+      }
     );
     r.on("error", () => resolve(null));
     r.setTimeout(3e3, () => {
@@ -3122,35 +2672,18 @@ var defaultProfileFetcher = async (
   return {
     tenantId: profile.tenant_id,
     profileRole: profile.role,
-    isActive: profile.is_active !== false,
+    isActive: profile.is_active !== false
   };
 };
-async function injectTenantContext(
-  req,
-  token,
-  profileFetcher = defaultProfileFetcher,
-) {
+async function injectTenantContext(req, token, profileFetcher = defaultProfileFetcher) {
   const user = req.user;
   if (!user?.sub) return false;
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const anonKey =
-    process.env.VITE_SUPABASE_ANON_KEY ??
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  if (
-    !supabaseUrl ||
-    !anonKey ||
-    !URL.canParse(supabaseUrl) ||
-    process.env.E2E_USE_JWT_CLAIMS === "true"
-  ) {
+  const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  if (!supabaseUrl || !anonKey || !URL.canParse(supabaseUrl) || process.env.E2E_USE_JWT_CLAIMS === "true") {
     const claims = user.app_metadata;
-    const tenantId =
-      typeof claims?.tenant_id === "string" ? claims.tenant_id : void 0;
-    const profileRole =
-      typeof claims?.role === "string"
-        ? claims.role
-        : typeof user.role === "string"
-          ? user.role
-          : void 0;
+    const tenantId = typeof claims?.tenant_id === "string" ? claims.tenant_id : void 0;
+    const profileRole = typeof claims?.role === "string" ? claims.role : typeof user.role === "string" ? user.role : void 0;
     if (tenantId && profileRole && isValidUuid(tenantId)) {
       req.tenantId = tenantId;
       req.profileRole = profileRole;
@@ -3161,16 +2694,12 @@ async function injectTenantContext(
   try {
     const result = await profileFetcher(
       { supabaseUrl, anonKey, token, userId: user.sub },
-      https2,
+      https2
     );
     if (!result) {
       return false;
     }
-    if (
-      !isValidUuid(result.tenantId) ||
-      !result.profileRole ||
-      result.isActive === false
-    ) {
+    if (!isValidUuid(result.tenantId) || !result.profileRole || result.isActive === false) {
       return false;
     }
     req.tenantId = result.tenantId;
@@ -3179,7 +2708,7 @@ async function injectTenantContext(
   } catch (err) {
     console.error(
       "[tenant] Failed to inject tenant context:",
-      err instanceof Error ? err.message : err,
+      err instanceof Error ? err.message : err
     );
     return false;
   }
@@ -3200,7 +2729,7 @@ function createRequireAuth(profileFetcher, verifyRemote) {
       const payload = await verifyJwtSignature(
         token,
         process.env.SUPABASE_JWT_SECRET ?? "",
-        verifyRemote,
+        verifyRemote
       );
       if (!payload) {
         res.status(401).json({ error: "Token JWT inv\xE1lido o expirado." });
@@ -3212,12 +2741,11 @@ function createRequireAuth(profileFetcher, verifyRemote) {
       const tenantOk = await injectTenantContext(
         authReq,
         token,
-        profileFetcher,
+        profileFetcher
       );
       if (!tenantOk) {
         res.status(403).json({
-          error:
-            "No fue posible determinar el establecimiento autenticado. Verifique que su perfil est\xE9 activo.",
+          error: "No fue posible determinar el establecimiento autenticado. Verifique que su perfil est\xE9 activo."
         });
         return;
       }
@@ -3233,7 +2761,7 @@ var requireAuth = createRequireAuth();
 var MAX_STR = 1e4;
 var CONTROL_CHARS = new RegExp(
   `[${String.fromCharCode(0)}-${String.fromCharCode(31)}${String.fromCharCode(127)}-${String.fromCharCode(159)}]`,
-  "g",
+  "g"
 );
 var RequestValidationError = class extends Error {
   constructor(message, field) {
@@ -3263,39 +2791,27 @@ function sanitizeForAI(text) {
   if (!text || typeof text !== "string") {
     return "";
   }
-  return text
-    .replace(/\[INST\]|\[\/INST\]|<<SYS>>|<<\/SYS>>/gi, "")
-    .replace(/<\|im_start\|>|<\|im_end\|>/gi, "")
-    .replace(/<\|system\|>|<\|user\|>|<\|assistant\|>/gi, "")
-    .replace(
-      /^(ignore|ignora|olvida|disregard|anula).{0,50}(instrucciones|instructions|reglas|rules|sistema|system)/gim,
-      "",
-    )
-    .replace(
-      /(eres|you are|act as|actúa como|actuá como).{0,30}(un|a|el|la|un(a)?\s+abogado|lawyer|juez|judge)/gim,
-      "",
-    )
-    .replace(/\n{3,}/g, "\n\n")
-    .slice(0, MAX_STR);
+  return text.replace(/\[INST\]|\[\/INST\]|<<SYS>>|<<\/SYS>>/gi, "").replace(/<\|im_start\|>|<\|im_end\|>/gi, "").replace(/<\|system\|>|<\|user\|>|<\|assistant\|>/gi, "").replace(
+    /^(ignore|ignora|olvida|disregard|anula).{0,50}(instrucciones|instructions|reglas|rules|sistema|system)/gim,
+    ""
+  ).replace(
+    /(eres|you are|act as|actúa como|actuá como).{0,30}(un|a|el|la|un(a)?\s+abogado|lawyer|juez|judge)/gim,
+    ""
+  ).replace(/\n{3,}/g, "\n\n").slice(0, MAX_STR);
 }
 var EMAIL_RE = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
 var CHILEAN_RUT_RE = /\b(?:\d{1,2}\.?\d{3}\.?\d{3}-?[\dkK]|\d{7,8}-[\dkK])\b/g;
 var CHILEAN_PHONE_RE = /(?:\+?56\s*)?(?:9\s*)?\b\d{4}\s*\d{4}\b/g;
-var LABELLED_NAME_RE =
-  /\b(estudiante|alumno|alumna|apoderado|apoderada|madre|padre)\s+([A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+(?:\s+[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+){1,4})/g;
-var UNLABELLED_NAME_RE =
-  /\b[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+(?:\s+[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+){1,3}\b/g;
+var LABELLED_NAME_RE = /\b(estudiante|alumno|alumna|apoderado|apoderada|madre|padre)\s+([A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+(?:\s+[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+){1,4})/g;
+var UNLABELLED_NAME_RE = /\b[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+(?:\s+[A-ZÁÉÍÓÚÑ][A-Za-zÁÉÍÓÚÑáéíóúñ'-]+){1,3}\b/g;
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 function uniqueKnownValues(values) {
   return [
     ...new Set(
-      values
-        .filter((value) => typeof value === "string")
-        .map((value) => value.trim())
-        .filter((value) => value.length >= 3),
-    ),
+      values.filter((value) => typeof value === "string").map((value) => value.trim()).filter((value) => value.length >= 3)
+    )
   ].sort((a, b) => b.length - a.length);
 }
 function redactSensitiveForAI(text, knownValues = []) {
@@ -3303,17 +2819,10 @@ function redactSensitiveForAI(text, knownValues = []) {
   for (const value of uniqueKnownValues(knownValues)) {
     redacted = redacted.replace(
       new RegExp(escapeRegExp(value), "gi"),
-      "[dato personal]",
+      "[dato personal]"
     );
   }
-  return redacted
-    .replace(EMAIL_RE, "[correo]")
-    .replace(CHILEAN_RUT_RE, "[RUT]")
-    .replace(CHILEAN_PHONE_RE, "[tel\xE9fono]")
-    .replace(LABELLED_NAME_RE, "$1 [nombre]")
-    .replace(UNLABELLED_NAME_RE, "[nombre]")
-    .replace(/\n{3,}/g, "\n\n")
-    .slice(0, MAX_STR);
+  return redacted.replace(EMAIL_RE, "[correo]").replace(CHILEAN_RUT_RE, "[RUT]").replace(CHILEAN_PHONE_RE, "[tel\xE9fono]").replace(LABELLED_NAME_RE, "$1 [nombre]").replace(UNLABELLED_NAME_RE, "[nombre]").replace(/\n{3,}/g, "\n\n").slice(0, MAX_STR);
 }
 
 // server/api/services/cache.ts
@@ -3349,14 +2858,15 @@ async function readCappedText(res, maxBytes, hostname) {
   if (!reader) return "";
   const chunks = [];
   let size = 0;
-  for (;;) {
+  for (; ; ) {
     const { done, value } = await reader.read();
     if (done) break;
     size += value.byteLength;
     if (size > maxBytes) {
-      await reader.cancel().catch(() => {});
+      await reader.cancel().catch(() => {
+      });
       throw new Error(
-        `La respuesta desde ${hostname} excede el tama\xF1o m\xE1ximo.`,
+        `La respuesta desde ${hostname} excede el tama\xF1o m\xE1ximo.`
       );
     }
     chunks.push(value);
@@ -3368,12 +2878,13 @@ async function readCappedBuffer(res, maxBytes, onTooLarge) {
   if (!reader) return Buffer.alloc(0);
   const chunks = [];
   let size = 0;
-  for (;;) {
+  for (; ; ) {
     const { done, value } = await reader.read();
     if (done) break;
     size += value.byteLength;
     if (size > maxBytes) {
-      await reader.cancel().catch(() => {});
+      await reader.cancel().catch(() => {
+      });
       throw onTooLarge();
     }
     chunks.push(value);
@@ -3387,7 +2898,7 @@ async function request(hostname, pathname, init, timeoutMs) {
   try {
     return await fetch(`https://${hostname}${pathname}`, {
       ...init,
-      signal: AbortSignal.timeout(timeoutMs),
+      signal: AbortSignal.timeout(timeoutMs)
     });
   } catch (error) {
     if (error instanceof Error && error.name === "TimeoutError") {
@@ -3396,23 +2907,16 @@ async function request(hostname, pathname, init, timeoutMs) {
     throw error;
   }
 }
-async function httpsPost(
-  hostname,
-  pathname,
-  body,
-  headers,
-  timeoutMs = 2e4,
-  maxBytes = 2 * 1024 * 1024,
-) {
+async function httpsPost(hostname, pathname, body, headers, timeoutMs = 2e4, maxBytes = 2 * 1024 * 1024) {
   const res = await request(
     hostname,
     pathname,
     {
       method: "POST",
       headers: { "Content-Type": "application/json", ...headers },
-      body: JSON.stringify(body),
+      body: JSON.stringify(body)
     },
-    timeoutMs,
+    timeoutMs
   );
   const text = await readCappedText(res, maxBytes, hostname);
   try {
@@ -3421,18 +2925,12 @@ async function httpsPost(
     throw new Error(`HTTP ${res.status}: ${text}`);
   }
 }
-async function httpsGet(
-  hostname,
-  pathname,
-  headers,
-  timeoutMs = 1e4,
-  maxBytes = 2 * 1024 * 1024,
-) {
+async function httpsGet(hostname, pathname, headers, timeoutMs = 1e4, maxBytes = 2 * 1024 * 1024) {
   const res = await request(
     hostname,
     pathname,
     { method: "GET", headers: headers || {} },
-    timeoutMs,
+    timeoutMs
   );
   const text = await readCappedText(res, maxBytes, hostname);
   try {
@@ -3441,19 +2939,13 @@ async function httpsGet(
     throw new Error(`HTTP ${res.status}: respuesta no v\xE1lida.`);
   }
 }
-async function httpsGetBuffer(
-  hostname,
-  pathname,
-  headers,
-  maxBytes = 10 * 1024 * 1024,
-  timeoutMs = 6e3,
-) {
+async function httpsGetBuffer(hostname, pathname, headers, maxBytes = 10 * 1024 * 1024, timeoutMs = 6e3) {
   let res;
   try {
     res = await fetch(`https://${hostname}${pathname}`, {
       method: "GET",
       headers: headers || {},
-      signal: AbortSignal.timeout(timeoutMs),
+      signal: AbortSignal.timeout(timeoutMs)
     });
   } catch (error) {
     if (error instanceof Error && error.name === "TimeoutError") {
@@ -3464,7 +2956,7 @@ async function httpsGetBuffer(
   const body = await readCappedBuffer(
     res,
     maxBytes,
-    () => new Error("La descarga excede el tama\xF1o m\xE1ximo permitido."),
+    () => new Error("La descarga excede el tama\xF1o m\xE1ximo permitido.")
   );
   return { status: res.status, body };
 }
@@ -3475,9 +2967,9 @@ async function httpsPatch(hostname, pathname, body, headers, timeoutMs = 1e4) {
     {
       method: "PATCH",
       headers: { "Content-Type": "application/json", ...headers },
-      body: JSON.stringify(body),
+      body: JSON.stringify(body)
     },
-    timeoutMs,
+    timeoutMs
   );
   const text = await res.text();
   try {
@@ -3494,19 +2986,12 @@ function getApiKey() {
   if (!key) throw new Error("OPENROUTER_API_KEY no configurada");
   return key;
 }
-async function callOpenRouter(
-  messages,
-  systemInstruction,
-  model = AI_MODEL,
-  options = {},
-) {
+async function callOpenRouter(messages, systemInstruction, model = AI_MODEL, options = {}) {
   const body = {
     model,
     max_tokens: options.maxTokens ?? 2e3,
     temperature: options.temperature ?? 0,
-    messages: systemInstruction
-      ? [{ role: "system", content: systemInstruction }, ...messages]
-      : messages,
+    messages: systemInstruction ? [{ role: "system", content: systemInstruction }, ...messages] : messages
   };
   const res = await httpsPost(
     "openrouter.ai",
@@ -3515,13 +3000,13 @@ async function callOpenRouter(
     {
       Authorization: `Bearer ${getApiKey()}`,
       "HTTP-Referer": "http://localhost:3001",
-      "X-Title": "Sistema Integral Convivencia Escolar",
+      "X-Title": "Sistema Integral Convivencia Escolar"
     },
-    options.timeoutMs,
+    options.timeoutMs
   );
   if (res.status !== 200)
     throw new Error(
-      `OpenRouter error: ${res.status} ${JSON.stringify(res.body)}`,
+      `OpenRouter error: ${res.status} ${JSON.stringify(res.body)}`
     );
   const choices = res.body?.choices;
   return choices?.[0]?.message?.content || "";
@@ -3565,7 +3050,7 @@ var STOP_WORDS = /* @__PURE__ */ new Set([
   "una",
   "unos",
   "uso",
-  "y",
+  "y"
 ]);
 async function listMarkdownFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
@@ -3573,14 +3058,10 @@ async function listMarkdownFiles(directory) {
     entries.map(async (entry) => {
       const entryPath = path.join(directory, entry.name);
       if (entry.isDirectory()) return listMarkdownFiles(entryPath);
-      return entry.isFile() && entry.name.toLowerCase().endsWith(".md")
-        ? [entryPath]
-        : [];
-    }),
+      return entry.isFile() && entry.name.toLowerCase().endsWith(".md") ? [entryPath] : [];
+    })
   );
-  return nested
-    .flat()
-    .sort((left, right) => left.localeCompare(right, "es-CL"));
+  return nested.flat().sort((left, right) => left.localeCompare(right, "es-CL"));
 }
 async function loadAuthorizedLegalSources() {
   if (!cachedSources) {
@@ -3590,19 +3071,14 @@ async function loadAuthorizedLegalSources() {
         files.map(async (file) => ({
           name: path.relative(LEGAL_SOURCES_DIRECTORY, file),
           text: await readFile(file, "utf8"),
-          normalizedText: "",
-        })),
+          normalizedText: ""
+        }))
       );
       if (!contents.length)
-        throw new Error(
-          "No hay fuentes jur\xEDdicas disponibles en docs/leyes.",
-        );
+        throw new Error("No hay fuentes jur\xEDdicas disponibles en docs/leyes.");
       return contents.map((source) => ({
         ...source,
-        normalizedText: source.text
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .toLocaleLowerCase("es-CL"),
+        normalizedText: source.text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CL")
       }));
     })();
   }
@@ -3611,52 +3087,34 @@ async function loadAuthorizedLegalSources() {
 function searchTerms(value) {
   return [
     ...new Set(
-      value
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLocaleLowerCase("es-CL")
-        .match(/[a-z0-9]{3,}/g)
-        ?.filter((term) => !STOP_WORDS.has(term)) ?? [],
-    ),
+      value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CL").match(/[a-z0-9]{3,}/g)?.filter((term) => !STOP_WORDS.has(term)) ?? []
+    )
   ].slice(0, 30);
 }
 function sourceScore(source, terms) {
-  const normalizedName = source.name
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLocaleLowerCase("es-CL");
+  const normalizedName = source.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CL");
   const haystack = `${normalizedName}
 ${source.normalizedText}`;
   return terms.reduce((score, term) => {
     const matches = haystack.match(
-      new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g"),
+      new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g")
     );
     const count = matches?.length ?? 0;
-    return (
-      score +
-      (count ? 100 : 0) +
-      Math.min(count, 12) +
-      (normalizedName.includes(term) ? 100 : 0)
-    );
+    return score + (count ? 100 : 0) + Math.min(count, 12) + (normalizedName.includes(term) ? 100 : 0);
   }, 0);
 }
 function relevantExcerpt(text, terms, maxChars) {
   if (text.length <= maxChars) return text;
-  const normalized = text
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLocaleLowerCase("es-CL");
-  const anchorPositions = terms
-    .flatMap((term) => {
-      const positions = [];
-      let index = normalized.indexOf(term);
-      while (index >= 0 && positions.length < 3) {
-        positions.push(index);
-        index = normalized.indexOf(term, index + term.length);
-      }
-      return positions;
-    })
-    .sort((left, right) => left - right);
+  const normalized = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CL");
+  const anchorPositions = terms.flatMap((term) => {
+    const positions = [];
+    let index = normalized.indexOf(term);
+    while (index >= 0 && positions.length < 3) {
+      positions.push(index);
+      index = normalized.indexOf(term, index + term.length);
+    }
+    return positions;
+  }).sort((left, right) => left - right);
   if (!anchorPositions.length) return text.slice(0, maxChars);
   const excerpts = [];
   const headerLength = Math.min(2e3, Math.floor(maxChars * 0.18));
@@ -3665,7 +3123,7 @@ function relevantExcerpt(text, terms, maxChars) {
   const anchors = [...new Set(anchorPositions)].slice(0, 6);
   const excerptLength = Math.max(
     900,
-    Math.floor(remaining / anchors.length) - 32,
+    Math.floor(remaining / anchors.length) - 32
   );
   for (const anchor of anchors) {
     const start = Math.max(0, anchor - Math.floor(excerptLength * 0.28));
@@ -3682,19 +3140,15 @@ ${excerpt}
 async function getRelevantLegalSources(query, maxChars = 9e4) {
   const sources = await loadAuthorizedLegalSources();
   const terms = searchTerms(query);
-  const selected = [...sources]
-    .map((source) => ({ source, score: sourceScore(source, terms) }))
-    .sort(
-      (left, right) =>
-        right.score - left.score ||
-        left.source.name.localeCompare(right.source.name, "es-CL"),
-    );
+  const selected = [...sources].map((source) => ({ source, score: sourceScore(source, terms) })).sort(
+    (left, right) => right.score - left.score || left.source.name.localeCompare(right.source.name, "es-CL")
+  );
   const relevant = selected.filter(({ score }) => score > 0);
   const candidates = (relevant.length ? relevant : selected).slice(0, 6);
   const output = [];
   const charsPerSource = Math.max(
     1e3,
-    Math.floor(maxChars / candidates.length) - 120,
+    Math.floor(maxChars / candidates.length) - 120
   );
   for (const { source } of candidates) {
     const excerpt = relevantExcerpt(source.text, terms, charsPerSource);
@@ -3729,7 +3183,7 @@ function getRedisClient() {
   if (!url || !token) {
     if (process.env.NODE_ENV === "production") {
       console.warn(
-        "[rate-limit] UPSTASH_REDIS_REST_URL no configurado. Rate limit en memoria (in\xFAtil en serverless).",
+        "[rate-limit] UPSTASH_REDIS_REST_URL no configurado. Rate limit en memoria (in\xFAtil en serverless)."
       );
     }
     return null;
@@ -3740,7 +3194,7 @@ function getRedisClient() {
     try {
       const res = await fetch(`${url}${path3}`, {
         headers: { Authorization: `Bearer ${token}` },
-        signal: controller.signal,
+        signal: controller.signal
       });
       if (!res.ok) throw new Error(`Redis HTTP ${res.status}`);
       return res;
@@ -3758,7 +3212,7 @@ function getRedisClient() {
     },
     async pexpire(key, ms) {
       await redisFetch(`/pexpire/${encodeURIComponent(key)}/${ms}`);
-    },
+    }
   };
   return redisClient;
 }
@@ -3809,7 +3263,7 @@ async function rateLimit(req, res, next) {
   if (!allowed) {
     res.status(429).json({
       error: "Demasiadas solicitudes. Intente nuevamente en un minuto.",
-      retryAfter: DEFAULT_WINDOW_SEC,
+      retryAfter: DEFAULT_WINDOW_SEC
     });
     return;
   }
@@ -3828,11 +3282,11 @@ var CONVIVENCIA_MEMBERSHIP_ROLES = [
   "teacher",
   "inspector",
   "user",
-  "staff",
+  "staff"
 ];
 var CONVIVENCIA_MEMBERSHIP = {
   applicationCode: "convivencia",
-  allowedRoles: CONVIVENCIA_MEMBERSHIP_ROLES,
+  allowedRoles: CONVIVENCIA_MEMBERSHIP_ROLES
 };
 function getMembershipMode() {
   const enabled = process.env.VITE_APP_MEMBERSHIPS_ENABLED === "true";
@@ -3851,7 +3305,7 @@ async function checkMembershipViaApi(hostname, anonKey, token, params) {
   return new Promise((resolve) => {
     const body = JSON.stringify({
       p_application_code: params.applicationCode,
-      p_roles: params.allowedRoles ? [...params.allowedRoles] : null,
+      p_roles: params.allowedRoles ? [...params.allowedRoles] : null
     });
     const req = https3.request(
       {
@@ -3862,8 +3316,8 @@ async function checkMembershipViaApi(hostname, anonKey, token, params) {
           "Content-Type": "application/json",
           "Content-Length": Buffer.byteLength(body),
           apikey: anonKey,
-          Authorization: `Bearer ${token}`,
-        },
+          Authorization: `Bearer ${token}`
+        }
       },
       (res) => {
         let data = "";
@@ -3877,7 +3331,7 @@ async function checkMembershipViaApi(hostname, anonKey, token, params) {
             resolve(false);
           }
         });
-      },
+      }
     );
     req.on("error", () => resolve(false));
     req.setTimeout(5e3, () => {
@@ -3890,9 +3344,7 @@ async function checkMembershipViaApi(hostname, anonKey, token, params) {
 }
 function getSupabaseConfig() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const anonKey =
-    process.env.VITE_SUPABASE_ANON_KEY ??
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   if (!supabaseUrl || !anonKey) return null;
   try {
     return { hostname: new URL(supabaseUrl).hostname, anonKey };
@@ -3909,7 +3361,7 @@ function requireMembership(params, checkAccess = checkMembershipViaApi) {
     }
     if (!authReq.tenantId) {
       res.status(403).json({
-        error: "No fue posible determinar el establecimiento autenticado.",
+        error: "No fue posible determinar el establecimiento autenticado."
       });
       return;
     }
@@ -3918,9 +3370,7 @@ function requireMembership(params, checkAccess = checkMembershipViaApi) {
       logServer("legacy_mode", "using profile role");
       if (params.allowedRoles && authReq.profileRole) {
         if (!params.allowedRoles.includes(authReq.profileRole)) {
-          res
-            .status(403)
-            .json({ error: "No tiene permisos para realizar esta acci\xF3n." });
+          res.status(403).json({ error: "No tiene permisos para realizar esta acci\xF3n." });
           return;
         }
       }
@@ -3929,9 +3379,7 @@ function requireMembership(params, checkAccess = checkMembershipViaApi) {
     }
     const config = getSupabaseConfig();
     if (!config) {
-      res
-        .status(500)
-        .json({ error: "Error de configuraci\xF3n del servidor." });
+      res.status(500).json({ error: "Error de configuraci\xF3n del servidor." });
       return;
     }
     const token = authReq.authToken;
@@ -3942,13 +3390,13 @@ function requireMembership(params, checkAccess = checkMembershipViaApi) {
     try {
       logServer(
         "membership_check",
-        `${mode} mode for ${params.applicationCode}`,
+        `${mode} mode for ${params.applicationCode}`
       );
       const hasAccess = await checkAccess(
         config.hostname,
         config.anonKey,
         token,
-        params,
+        params
       );
       if (hasAccess) {
         next();
@@ -3957,7 +3405,7 @@ function requireMembership(params, checkAccess = checkMembershipViaApi) {
       if (mode === "transition") {
         logServer(
           "transition_fallback",
-          "membership denied, trying profile role",
+          "membership denied, trying profile role"
         );
         if (params.allowedRoles && authReq.profileRole) {
           if (params.allowedRoles.includes(authReq.profileRole)) {
@@ -3968,16 +3416,12 @@ function requireMembership(params, checkAccess = checkMembershipViaApi) {
         }
         logServer("transition_fallback_denied", "no matching role");
       }
-      res
-        .status(403)
-        .json({
-          error: "No tiene una membres\xEDa activa para esta aplicaci\xF3n.",
-        });
+      res.status(403).json({ error: "No tiene una membres\xEDa activa para esta aplicaci\xF3n." });
     } catch (err) {
       if (mode === "transition") {
         logServer(
           "transition_fallback",
-          `membership check failed: ${err instanceof Error ? err.message : "unknown"}, trying profile role`,
+          `membership check failed: ${err instanceof Error ? err.message : "unknown"}, trying profile role`
         );
         if (params.allowedRoles && authReq.profileRole) {
           if (params.allowedRoles.includes(authReq.profileRole)) {
@@ -4007,10 +3451,7 @@ function normalizeHistory(value) {
   for (const item of value) {
     if (!item || typeof item !== "object") return null;
     const record = item;
-    if (
-      typeof record.content !== "string" ||
-      record.content.length > MAX_HISTORY_MESSAGE_LENGTH
-    ) {
+    if (typeof record.content !== "string" || record.content.length > MAX_HISTORY_MESSAGE_LENGTH) {
       return null;
     }
     const content = redactSensitiveForAI(record.content).trim();
@@ -4019,7 +3460,7 @@ function normalizeHistory(value) {
     if (totalLength > MAX_HISTORY_TOTAL_LENGTH) return null;
     normalized.push({
       role: record.role === "user" ? "user" : "assistant",
-      content,
+      content
     });
   }
   return normalized;
@@ -4037,16 +3478,13 @@ router.post(
         return;
       }
       if (message.length > MAX_ADVISOR_MESSAGE_LENGTH) {
-        res
-          .status(400)
-          .json({ error: "El mensaje supera el m\xE1ximo permitido." });
+        res.status(400).json({ error: "El mensaje supera el m\xE1ximo permitido." });
         return;
       }
       const normalizedHistory = normalizeHistory(history);
       if (!normalizedHistory) {
         res.status(400).json({
-          error:
-            "El historial de consulta no es v\xE1lido o supera el m\xE1ximo permitido.",
+          error: "El historial de consulta no es v\xE1lido o supera el m\xE1ximo permitido."
         });
         return;
       }
@@ -4071,14 +3509,16 @@ ${legalSources}`;
       const cacheKey = getCacheKey("advisor-chat", {
         userId,
         message: safeMessage,
-        history: normalizedHistory,
+        history: normalizedHistory
       });
       const cached = getFromCache(cacheKey);
       if (cached) {
         res.json({ success: true, reply: cached, cached: true });
         return;
       }
-      const messages = [...normalizedHistory];
+      const messages = [
+        ...normalizedHistory
+      ];
       messages.push({ role: "user", content: safeMessage });
       const reply = await callOpenRouter(messages, systemInstruction);
       setCache(cacheKey, reply);
@@ -4086,11 +3526,11 @@ ${legalSources}`;
     } catch (error) {
       console.error(
         "Error en el Chat de Consultor\xEDa:",
-        error.message || error,
+        error.message || error
       );
       res.status(500).json({ error: "Error interno del servidor." });
     }
-  },
+  }
 );
 var advisor_default = router;
 
@@ -4107,7 +3547,7 @@ function requireTenant(req, res, next) {
   }
   if (!authReq.tenantId) {
     res.status(403).json({
-      error: "No fue posible determinar el establecimiento autenticado.",
+      error: "No fue posible determinar el establecimiento autenticado."
     });
     return;
   }
@@ -4115,8 +3555,7 @@ function requireTenant(req, res, next) {
 }
 
 // server/api/services/gemini.ts
-var LEGAL_DRAFT_GEMINI_MODEL =
-  process.env.LEGAL_DRAFT_MODEL || "gemini-3.6-flash";
+var LEGAL_DRAFT_GEMINI_MODEL = process.env.LEGAL_DRAFT_MODEL || "gemini-3.6-flash";
 function getApiKey2() {
   const key = process.env.GEMINI_API_KEY;
   if (!key) {
@@ -4131,11 +3570,7 @@ function collectText(value) {
   if (typeof record.text === "string") return [record.text];
   return Object.values(record).flatMap(collectText);
 }
-async function callGeminiComplexGeneration(
-  systemInstruction,
-  userContent,
-  options = {},
-) {
+async function callGeminiComplexGeneration(systemInstruction, userContent, options = {}) {
   const maxOutputTokens = options.maxOutputTokens ?? 6e3;
   const timeoutMs = options.timeoutMs ?? 25e3;
   return callGeminiGenerateContent(
@@ -4143,39 +3578,33 @@ async function callGeminiComplexGeneration(
     systemInstruction,
     userContent,
     maxOutputTokens,
-    timeoutMs,
+    timeoutMs
   );
 }
-async function callGeminiGenerateContent(
-  model,
-  systemInstruction,
-  userContent,
-  maxOutputTokens,
-  timeoutMs,
-) {
+async function callGeminiGenerateContent(model, systemInstruction, userContent, maxOutputTokens, timeoutMs) {
   const response = await httpsPost(
     "generativelanguage.googleapis.com",
     `/v1beta/models/${encodeURIComponent(model)}:generateContent`,
     {
       systemInstruction: {
-        parts: [{ text: systemInstruction }],
+        parts: [{ text: systemInstruction }]
       },
       contents: [
         {
           role: "user",
-          parts: [{ text: userContent }],
-        },
+          parts: [{ text: userContent }]
+        }
       ],
       generationConfig: {
-        maxOutputTokens,
-      },
+        maxOutputTokens
+      }
     },
     { "x-goog-api-key": getApiKey2() },
-    timeoutMs,
+    timeoutMs
   );
   if (response.status < 200 || response.status >= 300) {
     throw new Error(
-      `Gemini error: ${response.status} ${JSON.stringify(response.body)}`,
+      `Gemini error: ${response.status} ${JSON.stringify(response.body)}`
     );
   }
   const body = response.body;
@@ -4204,7 +3633,7 @@ var FERIADOS_NACIONALES_FIJOS = /* @__PURE__ */ new Set([
   "09-19",
   "11-01",
   "12-08",
-  "12-25",
+  "12-25"
 ]);
 function sumarDias(fecha, dias) {
   const resultado = new Date(fecha);
@@ -4225,15 +3654,11 @@ function calcularPascua(anio) {
   const l = (32 + 2 * e + 2 * i - h - k) % 7;
   const m = Math.floor((a + 11 * h + 22 * l) / 451);
   const mes = Math.floor((h + l - 7 * m + 114) / 31);
-  const dia = ((h + l - 7 * m + 114) % 31) + 1;
+  const dia = (h + l - 7 * m + 114) % 31 + 1;
   return new Date(anio, mes - 1, dia);
 }
 function mismoDia(a, b) {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 function lunesDeLaSemana(fecha, semanas = 0) {
   const lunes = sumarDias(fecha, -(fecha.getDay() || 7) + 1);
@@ -4242,7 +3667,7 @@ function lunesDeLaSemana(fecha, semanas = 0) {
 function feriadoTrasladable(fecha, mes, dia) {
   const original = new Date(fecha.getFullYear(), mes - 1, dia);
   const diaSemana = original.getDay();
-  if ((mes === 6 && dia === 29) || (mes === 10 && dia === 12)) {
+  if (mes === 6 && dia === 29 || mes === 10 && dia === 12) {
     if (diaSemana >= 2 && diaSemana <= 4) return lunesDeLaSemana(original);
     if (diaSemana === 5) return lunesDeLaSemana(original, 1);
     return original;
@@ -4255,21 +3680,15 @@ function feriadoTrasladable(fecha, mes, dia) {
   return null;
 }
 function esFeriadoNacional(fecha) {
-  const mesDia =
-    String(fecha.getMonth() + 1).padStart(2, "0") +
-    "-" +
-    String(fecha.getDate()).padStart(2, "0");
+  const mesDia = String(fecha.getMonth() + 1).padStart(2, "0") + "-" + String(fecha.getDate()).padStart(2, "0");
   if (FERIADOS_NACIONALES_FIJOS.has(mesDia)) return true;
   const pascua = calcularPascua(fecha.getFullYear());
-  if (
-    mismoDia(fecha, sumarDias(pascua, -2)) ||
-    mismoDia(fecha, sumarDias(pascua, -1))
-  )
+  if (mismoDia(fecha, sumarDias(pascua, -2)) || mismoDia(fecha, sumarDias(pascua, -1)))
     return true;
   return [
     feriadoTrasladable(fecha, 6, 29),
     feriadoTrasladable(fecha, 10, 12),
-    feriadoTrasladable(fecha, 10, 31),
+    feriadoTrasladable(fecha, 10, 31)
   ].some((feriado) => feriado !== null && mismoDia(fecha, feriado));
 }
 function agregarDiasHabiles(fechaInicio, diasHabiles) {
@@ -4299,28 +3718,14 @@ function formatDateOnly(fecha) {
 var MAX_PLAZO_INVESTIGACION_DIAS = 60;
 var PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS = 10;
 var PLAZO_INFORME_CONCLUYENTE_DIAS = 5;
-var PLAZO_TOTAL_ALTA_COMPLEJIDAD_DIAS =
-  PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS + PLAZO_INFORME_CONCLUYENTE_DIAS;
-function getMaxPlazoInvestigacionDias(
-  tipoInfraccion,
-  comprometeAulaSegura = false,
-) {
-  return comprometeAulaSegura ||
-    tipoInfraccion === "Muy Grave" ||
-    tipoInfraccion === "Grav\xEDsima"
-    ? PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS
-    : MAX_PLAZO_INVESTIGACION_DIAS;
+var PLAZO_TOTAL_ALTA_COMPLEJIDAD_DIAS = PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS + PLAZO_INFORME_CONCLUYENTE_DIAS;
+function getMaxPlazoInvestigacionDias(tipoInfraccion, comprometeAulaSegura = false) {
+  return comprometeAulaSegura || tipoInfraccion === "Muy Grave" || tipoInfraccion === "Grav\xEDsima" ? PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS : MAX_PLAZO_INVESTIGACION_DIAS;
 }
 
 // src/shared/lib/legalCompliance/deadlineCalculators.ts
-function calcularFechaLimiteInvestigacion(
-  fechaApertura,
-  tipoInfraccion,
-  comprometeAulaSegura = false,
-) {
-  const maxDias = tipoInfraccion
-    ? getMaxPlazoInvestigacionDias(tipoInfraccion, comprometeAulaSegura)
-    : MAX_PLAZO_INVESTIGACION_DIAS;
+function calcularFechaLimiteInvestigacion(fechaApertura, tipoInfraccion, comprometeAulaSegura = false) {
+  const maxDias = tipoInfraccion ? getMaxPlazoInvestigacionDias(tipoInfraccion, comprometeAulaSegura) : MAX_PLAZO_INVESTIGACION_DIAS;
   if (maxDias === MAX_PLAZO_INVESTIGACION_DIAS) {
     return agregarDiasCorridos(fechaApertura, maxDias);
   }
@@ -4329,7 +3734,7 @@ function calcularFechaLimiteInvestigacion(
 function calcularFechaLimiteCierreIndagacion(fechaInicioInvestigacion) {
   return agregarDiasHabiles(
     fechaInicioInvestigacion,
-    PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS,
+    PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS
   );
 }
 
@@ -4337,15 +3742,14 @@ function calcularFechaLimiteCierreIndagacion(fechaInicioInvestigacion) {
 var router2 = Router2();
 function getAdminClient() {
   const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) throw new Error("Supabase administrativo no configurado.");
   return createClient(url, key, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
-      detectSessionInUrl: false,
-    },
+      detectSessionInUrl: false
+    }
   });
 }
 router2.post(
@@ -4359,63 +3763,38 @@ router2.post(
       const body = req.body;
       const causaId = requireStr(
         {
-          id:
-            optStr(body, "causaId", 100).trim() ||
-            optStr(body, "id", 100).trim(),
+          id: optStr(body, "causaId", 100).trim() || optStr(body, "id", 100).trim()
         },
         "id",
-        100,
+        100
       );
       const authReq = req;
       const tenantId = authReq.tenantId;
       if (!tenantId) {
         res.status(403).json({
-          error: "No fue posible determinar el establecimiento autenticado.",
+          error: "No fue posible determinar el establecimiento autenticado."
         });
         return;
       }
       const client = getAdminClient();
-      const [causaResult, checklistResult, historyResult, progressResult] =
-        await Promise.all([
-          client
-            .from("causas")
-            .select(
-              "id,student_id,tipo_infraccion,compromete_aula_segura,observaciones,estado_actual,fecha_apertura,fecha_inicio_investigacion,fecha_limite_investigacion,fecha_limite_cierre,conducta_rice_id,medidas_ejecutadas",
-            )
-            .eq("id", causaId)
-            .eq("tenant_id", tenantId)
-            .maybeSingle(),
-          client
-            .from("checklist_items")
-            .select(
-              "id,label,descripcion,completado,fecha_completado,requerido_por,registrado_por,observaciones,documento_nombre",
-            )
-            .eq("causa_id", causaId)
-            .eq("tenant_id", tenantId)
-            .order("created_at", { ascending: true }),
-          client
-            .from("bitacora_entries")
-            .select(
-              "fecha,tipo,titulo,descripcion,documento_adjunto,created_at",
-            )
-            .eq("causa_id", causaId)
-            .eq("tenant_id", tenantId)
-            .order("created_at", { ascending: false })
-            .limit(100),
-          client
-            .from("checklist_progress_entries")
-            .select(
-              "checklist_item_id,title,description,entry_type,occurred_at,document_name,invalidated_at",
-            )
-            .eq("causa_id", causaId)
-            .eq("tenant_id", tenantId)
-            .order("occurred_at", { ascending: false })
-            .limit(150),
-        ]);
+      const [causaResult, checklistResult, historyResult, progressResult] = await Promise.all([
+        client.from("causas").select(
+          "id,student_id,tipo_infraccion,compromete_aula_segura,observaciones,estado_actual,fecha_apertura,fecha_inicio_investigacion,fecha_limite_investigacion,fecha_limite_cierre,conducta_rice_id,medidas_ejecutadas"
+        ).eq("id", causaId).eq("tenant_id", tenantId).maybeSingle(),
+        client.from("checklist_items").select(
+          "id,label,descripcion,completado,fecha_completado,requerido_por,registrado_por,observaciones,documento_nombre"
+        ).eq("causa_id", causaId).eq("tenant_id", tenantId).order("created_at", { ascending: true }),
+        client.from("bitacora_entries").select(
+          "fecha,tipo,titulo,descripcion,documento_adjunto,created_at"
+        ).eq("causa_id", causaId).eq("tenant_id", tenantId).order("created_at", { ascending: false }).limit(100),
+        client.from("checklist_progress_entries").select(
+          "checklist_item_id,title,description,entry_type,occurred_at,document_name,invalidated_at"
+        ).eq("causa_id", causaId).eq("tenant_id", tenantId).order("occurred_at", { ascending: false }).limit(150)
+      ]);
       if (causaResult.error) throw causaResult.error;
       if (!causaResult.data) {
         res.status(404).json({
-          error: "No se encontr\xF3 la causa en el establecimiento actual.",
+          error: "No se encontr\xF3 la causa en el establecimiento actual."
         });
         return;
       }
@@ -4423,123 +3802,105 @@ router2.post(
       if (historyResult.error) throw historyResult.error;
       if (progressResult.error) throw progressResult.error;
       const causa = causaResult.data;
-      const studentResult = causa.student_id
-        ? await client
-            .from("students")
-            .select("full_name,rut")
-            .eq("id", causa.student_id)
-            .eq("tenant_id", tenantId)
-            .maybeSingle()
-        : { data: null, error: null };
+      const studentResult = causa.student_id ? await client.from("students").select("full_name,rut").eq("id", causa.student_id).eq("tenant_id", tenantId).maybeSingle() : { data: null, error: null };
       if (studentResult.error) throw studentResult.error;
       const infractionType = String(
-        causa.tipo_infraccion ?? "No registrada",
+        causa.tipo_infraccion ?? "No registrada"
       ).slice(0, 100);
       const observations = String(causa.observaciones ?? "").slice(0, 5e3);
       const knownSensitiveValues = [
         causaId,
         infractionType,
         studentResult.data?.full_name,
-        studentResult.data?.rut,
+        studentResult.data?.rut
       ];
-      const safeChecklist = (checklistResult.data ?? [])
-        .slice(0, 100)
-        .map((item) => ({
-          id: String(item.id ?? "").slice(0, 100),
-          label: redactSensitiveForAI(item.label, knownSensitiveValues).slice(
-            0,
-            300,
-          ),
-          description: redactSensitiveForAI(
-            item.descripcion,
-            knownSensitiveValues,
-          ).slice(0, 1500),
-          completed: Boolean(item.completado),
-          completedAt: item.fecha_completado ?? null,
-          requiredBy: redactSensitiveForAI(
-            item.requerido_por,
-            knownSensitiveValues,
-          ).slice(0, 120),
-          registeredBy: redactSensitiveForAI(
-            item.registrado_por,
-            knownSensitiveValues,
-          ).slice(0, 120),
-          observations: redactSensitiveForAI(
-            item.observaciones,
-            knownSensitiveValues,
-          ).slice(0, 1500),
-          documentName: redactSensitiveForAI(
-            item.documento_nombre,
-            knownSensitiveValues,
-          ).slice(0, 250),
-        }));
-      const safeHistory = [...(historyResult.data ?? [])]
-        .reverse()
-        .map((entry) => ({
-          title: redactSensitiveForAI(entry.titulo, knownSensitiveValues).slice(
-            0,
-            200,
-          ),
-          date: redactSensitiveForAI(entry.fecha, knownSensitiveValues).slice(
-            0,
-            50,
-          ),
-          type: redactSensitiveForAI(entry.tipo, knownSensitiveValues).slice(
-            0,
-            80,
-          ),
-          description: redactSensitiveForAI(
-            entry.descripcion,
-            knownSensitiveValues,
-          ).slice(0, 2e3),
-          document: redactSensitiveForAI(
-            entry.documento_adjunto,
-            knownSensitiveValues,
-          ).slice(0, 250),
-        }));
-      const safeProgress = [...(progressResult.data ?? [])]
-        .reverse()
-        .map((entry) => ({
-          checklistItemId: String(entry.checklist_item_id ?? "").slice(0, 100),
-          title: redactSensitiveForAI(entry.title, knownSensitiveValues).slice(
-            0,
-            250,
-          ),
-          description: redactSensitiveForAI(
-            entry.description,
-            knownSensitiveValues,
-          ).slice(0, 1500),
-          type: redactSensitiveForAI(
-            entry.entry_type,
-            knownSensitiveValues,
-          ).slice(0, 80),
-          occurredAt: entry.occurred_at ?? null,
-          documentName: redactSensitiveForAI(
-            entry.document_name,
-            knownSensitiveValues,
-          ).slice(0, 250),
-          invalidated: Boolean(entry.invalidated_at),
-        }));
+      const safeChecklist = (checklistResult.data ?? []).slice(0, 100).map((item) => ({
+        id: String(item.id ?? "").slice(0, 100),
+        label: redactSensitiveForAI(item.label, knownSensitiveValues).slice(
+          0,
+          300
+        ),
+        description: redactSensitiveForAI(
+          item.descripcion,
+          knownSensitiveValues
+        ).slice(0, 1500),
+        completed: Boolean(item.completado),
+        completedAt: item.fecha_completado ?? null,
+        requiredBy: redactSensitiveForAI(
+          item.requerido_por,
+          knownSensitiveValues
+        ).slice(0, 120),
+        registeredBy: redactSensitiveForAI(
+          item.registrado_por,
+          knownSensitiveValues
+        ).slice(0, 120),
+        observations: redactSensitiveForAI(
+          item.observaciones,
+          knownSensitiveValues
+        ).slice(0, 1500),
+        documentName: redactSensitiveForAI(
+          item.documento_nombre,
+          knownSensitiveValues
+        ).slice(0, 250)
+      }));
+      const safeHistory = [...historyResult.data ?? []].reverse().map((entry) => ({
+        title: redactSensitiveForAI(entry.titulo, knownSensitiveValues).slice(
+          0,
+          200
+        ),
+        date: redactSensitiveForAI(entry.fecha, knownSensitiveValues).slice(
+          0,
+          50
+        ),
+        type: redactSensitiveForAI(entry.tipo, knownSensitiveValues).slice(
+          0,
+          80
+        ),
+        description: redactSensitiveForAI(
+          entry.descripcion,
+          knownSensitiveValues
+        ).slice(0, 2e3),
+        document: redactSensitiveForAI(
+          entry.documento_adjunto,
+          knownSensitiveValues
+        ).slice(0, 250)
+      }));
+      const safeProgress = [...progressResult.data ?? []].reverse().map((entry) => ({
+        checklistItemId: String(entry.checklist_item_id ?? "").slice(0, 100),
+        title: redactSensitiveForAI(entry.title, knownSensitiveValues).slice(
+          0,
+          250
+        ),
+        description: redactSensitiveForAI(
+          entry.description,
+          knownSensitiveValues
+        ).slice(0, 1500),
+        type: redactSensitiveForAI(
+          entry.entry_type,
+          knownSensitiveValues
+        ).slice(0, 80),
+        occurredAt: entry.occurred_at ?? null,
+        documentName: redactSensitiveForAI(
+          entry.document_name,
+          knownSensitiveValues
+        ).slice(0, 250),
+        invalidated: Boolean(entry.invalidated_at)
+      }));
       const legalSources = await getRelevantLegalSources(
-        `debido proceso norma previa comunicaci\xF3n hechos indagaci\xF3n descargos resoluci\xF3n fundada proporcionalidad reconsideraci\xF3n ${infractionType}`,
+        `debido proceso norma previa comunicaci\xF3n hechos indagaci\xF3n descargos resoluci\xF3n fundada proporcionalidad reconsideraci\xF3n ${infractionType}`
       );
       const systemInstruction = `Eres un auditor documental de debido proceso en convivencia escolar chilena.
 
 Tu funci\xF3n es verificar la coherencia entre los hitos efectivamente registrados en un expediente y siete garant\xEDas del debido proceso. No calificas la responsabilidad del estudiante, no propones sanciones, no estimas multas y no agregas exigencias que no se desprendan de las fuentes autorizadas.
 
 Usa solo el expediente persistido y las fuentes jur\xEDdicas autorizadas incluidas por el sistema. Redacta en espa\xF1ol formal de Chile, con tono t\xE9cnico, neutral y verificable.`;
-      const fechaInicioPlazo =
-        causa.fecha_inicio_investigacion ?? causa.fecha_apertura;
-      const fechaLimiteInvestigacionCalculada = fechaInicioPlazo
-        ? calcularFechaLimiteInvestigacion(
-            fechaInicioPlazo,
-            causa.tipo_infraccion,
-            Boolean(causa.compromete_aula_segura),
-          )
-        : null;
-      const fechaLimiteCierreCalculada = causa.fecha_inicio_investigacion
-        ? calcularFechaLimiteCierreIndagacion(causa.fecha_inicio_investigacion)
-        : null;
+      const fechaInicioPlazo = causa.fecha_inicio_investigacion ?? causa.fecha_apertura;
+      const fechaLimiteInvestigacionCalculada = fechaInicioPlazo ? calcularFechaLimiteInvestigacion(
+        fechaInicioPlazo,
+        causa.tipo_infraccion,
+        Boolean(causa.compromete_aula_segura)
+      ) : null;
+      const fechaLimiteCierreCalculada = causa.fecha_inicio_investigacion ? calcularFechaLimiteCierreIndagacion(causa.fecha_inicio_investigacion) : null;
       const auditDossier = `FUENTES JUR\xCDDICAS AUTORIZADAS:
 ${legalSources}
 
@@ -4585,8 +3946,8 @@ No cites normas externas, no inventes plazos y no agregues explicaciones fuera d
         auditDossier,
         {
           maxOutputTokens: 3200,
-          timeoutMs: 18e3,
-        },
+          timeoutMs: 18e3
+        }
       );
       res.json({ success: true, report: responseText, provider: "Gemini" });
     } catch (error) {
@@ -4595,22 +3956,14 @@ No cites normas externas, no inventes plazos y no agregues explicaciones fuera d
         return;
       }
       console.error("Error al auditar debido proceso:", error);
-      const message =
-        error instanceof Error ? error.message : "Error al contactar Gemini.";
-      const status =
-        message.includes("generativelanguage.googleapis.com") &&
-        message.includes("tiempo m\xE1ximo")
-          ? 504
-          : 503;
+      const message = error instanceof Error ? error.message : "Error al contactar Gemini.";
+      const status = message.includes("generativelanguage.googleapis.com") && message.includes("tiempo m\xE1ximo") ? 504 : 503;
       res.status(status).json({
-        error:
-          status === 504
-            ? "Gemini tard\xF3 m\xE1s de lo esperado al generar la auditor\xEDa. Intente nuevamente."
-            : "Gemini no est\xE1 disponible para generar la auditor\xEDa. Revise GEMINI_API_KEY y LEGAL_DRAFT_MODEL en Vercel.",
-        provider: "Gemini",
+        error: status === 504 ? "Gemini tard\xF3 m\xE1s de lo esperado al generar la auditor\xEDa. Intente nuevamente." : "Gemini no est\xE1 disponible para generar la auditor\xEDa. Revise GEMINI_API_KEY y LEGAL_DRAFT_MODEL en Vercel.",
+        provider: "Gemini"
       });
     }
-  },
+  }
 );
 var audit_default = router2;
 
@@ -4620,14 +3973,17 @@ import { Router as Router3 } from "express";
 // server/api/validators/draftDocument.schema.ts
 import { z } from "zod";
 z.config({ jitless: true });
-var DOC_TYPES = ["informe_cierre_indagacion", "informe_concluyente"];
+var DOC_TYPES = [
+  "informe_cierre_indagacion",
+  "informe_concluyente"
+];
 var bitacoraEntryInputSchema = z.object({
   titulo: z.unknown().optional(),
   fecha: z.unknown().optional(),
   tipo: z.unknown().optional(),
   descripcion: z.unknown().optional(),
   participantes: z.unknown().optional(),
-  documentoAdjunto: z.unknown().optional(),
+  documentoAdjunto: z.unknown().optional()
 });
 var checklistItemInputSchema = z.object({
   label: z.unknown().optional(),
@@ -4637,16 +3993,12 @@ var checklistItemInputSchema = z.object({
   fechaCompletado: z.unknown().optional(),
   observaciones: z.unknown().optional(),
   documentoNombre: z.unknown().optional(),
-  documentoUrl: z.unknown().optional(),
+  documentoUrl: z.unknown().optional()
 });
 var draftDocumentBodySchema = z.object({
   docType: z.enum(DOC_TYPES, "Tipo de documento no v\xE1lido."),
   id: z.string().trim().min(1, "Campo requerido faltante: id").max(100),
-  studentName: z
-    .string()
-    .trim()
-    .min(1, "Campo requerido faltante: studentName")
-    .max(200),
+  studentName: z.string().trim().min(1, "Campo requerido faltante: studentName").max(200),
   course: z.string().max(100).optional().default(""),
   fatherName: z.string().max(200).optional().default(""),
   managerName: z.string().max(200).optional().default(""),
@@ -4657,7 +4009,7 @@ var draftDocumentBodySchema = z.object({
   fechaUltimaActualizacion: z.string().max(50).optional().default(""),
   medidasEjecutadas: z.array(z.unknown()).optional().default([]),
   bitacora: z.array(bitacoraEntryInputSchema).optional().default([]),
-  checklist: z.array(checklistItemInputSchema).optional().default([]),
+  checklist: z.array(checklistItemInputSchema).optional().default([])
 });
 
 // server/api/services/caseDocuments.ts
@@ -4681,9 +4033,7 @@ function normalizeStoragePath(value) {
     const url = new URL(trimmed);
     const marker = `/storage/v1/object/authenticated/${STORAGE_BUCKET}/`;
     const index = url.pathname.indexOf(marker);
-    return index >= 0
-      ? decodeURIComponent(url.pathname.slice(index + marker.length))
-      : null;
+    return index >= 0 ? decodeURIComponent(url.pathname.slice(index + marker.length)) : null;
   } catch {
     return null;
   }
@@ -4696,12 +4046,7 @@ function storagePathname(storagePath) {
   return `/storage/v1/object/authenticated/${STORAGE_BUCKET}/${encodedPath}`;
 }
 function decodeXml(value) {
-  return value
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;/g, "'");
+  return value.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&apos;/g, "'");
 }
 function extractDocxText(buffer) {
   const endSignature = 101010256;
@@ -4709,11 +4054,7 @@ function extractDocxText(buffer) {
   const localSignature = 67324752;
   const minimumOffset = Math.max(0, buffer.length - 65557);
   let endOffset = -1;
-  for (
-    let offset2 = buffer.length - 22;
-    offset2 >= minimumOffset;
-    offset2 -= 1
-  ) {
+  for (let offset2 = buffer.length - 22; offset2 >= minimumOffset; offset2 -= 1) {
     if (buffer.readUInt32LE(offset2) === endSignature) {
       endOffset = offset2;
       break;
@@ -4742,25 +4083,11 @@ function extractDocxText(buffer) {
       const localExtraLength = buffer.readUInt16LE(localOffset + 28);
       const dataStart = localOffset + 30 + localNameLength + localExtraLength;
       const compressed = buffer.subarray(dataStart, dataStart + compressedSize);
-      const xml =
-        compression2 === 8
-          ? inflateRawSync(compressed, { maxOutputLength: MAX_DOCX_XML_BYTES })
-          : compression2 === 0
-            ? compressed
-            : null;
+      const xml = compression2 === 8 ? inflateRawSync(compressed, { maxOutputLength: MAX_DOCX_XML_BYTES }) : compression2 === 0 ? compressed : null;
       if (!xml)
-        throw new Error(
-          "El DOCX usa un m\xE9todo de compresi\xF3n no compatible.",
-        );
+        throw new Error("El DOCX usa un m\xE9todo de compresi\xF3n no compatible.");
       return decodeXml(
-        xml
-          .toString("utf8")
-          .replace(/<w:tab[^>]*\/>/g, "	")
-          .replace(/<w:br[^>]*\/>/g, "\n")
-          .replace(/<\/w:p>/g, "\n")
-          .replace(/<[^>]+>/g, "")
-          .replace(/\n{3,}/g, "\n\n")
-          .trim(),
+        xml.toString("utf8").replace(/<w:tab[^>]*\/>/g, "	").replace(/<w:br[^>]*\/>/g, "\n").replace(/<\/w:p>/g, "\n").replace(/<[^>]+>/g, "").replace(/\n{3,}/g, "\n\n").trim()
       );
     }
     offset += 46 + nameLength + extraLength + commentLength;
@@ -4768,22 +4095,17 @@ function extractDocxText(buffer) {
   throw new Error("El DOCX no contiene word/document.xml.");
 }
 async function extractPdfText(buffer) {
-  const { extractPdfPages: extractPdfPages2 } = await Promise.resolve().then(
-    () => (init_disciplinaryPdfAnalysis(), disciplinaryPdfAnalysis_exports),
-  );
+  const { extractPdfPages: extractPdfPages2 } = await Promise.resolve().then(() => (init_disciplinaryPdfAnalysis(), disciplinaryPdfAnalysis_exports));
   return (await extractPdfPages2(new Uint8Array(buffer))).join("\n\n");
 }
 async function extractCaseDocuments(documentValues, authReq, options = {}) {
   const maxDocuments = options.maxDocuments ?? MAX_DOCUMENTS;
-  const maxCharsPerDocument =
-    options.maxExtractedCharsPerDocument ?? MAX_EXTRACTED_CHARS_PER_DOCUMENT;
+  const maxCharsPerDocument = options.maxExtractedCharsPerDocument ?? MAX_EXTRACTED_CHARS_PER_DOCUMENT;
   const deadlineAt = Date.now() + (options.deadlineMs ?? 8e3);
   const uniquePaths = [
     ...new Set(
-      documentValues
-        .map(normalizeStoragePath)
-        .filter((value) => Boolean(value)),
-    ),
+      documentValues.map(normalizeStoragePath).filter((value) => Boolean(value))
+    )
   ].slice(0, maxDocuments);
   const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? "";
   let remaining = options.maxExtractedCharsTotal ?? MAX_EXTRACTED_CHARS_TOTAL;
@@ -4792,13 +4114,12 @@ async function extractCaseDocuments(documentValues, authReq, options = {}) {
     options.onDocumentStart?.({
       name: fileName(storagePath),
       index: index + 1,
-      total: uniquePaths.length,
+      total: uniquePaths.length
     });
     if (Date.now() >= deadlineAt) {
       results.push({
         name: "Antecedentes restantes",
-        reason:
-          "La extracci\xF3n se limit\xF3 para proteger el tiempo de respuesta.",
+        reason: "La extracci\xF3n se limit\xF3 para proteger el tiempo de respuesta."
       });
       break;
     }
@@ -4807,8 +4128,7 @@ async function extractCaseDocuments(documentValues, authReq, options = {}) {
     if (extension !== "pdf" && extension !== "docx") {
       results.push({
         name,
-        reason:
-          "Formato identificado, sin extracci\xF3n de texto en esta versi\xF3n.",
+        reason: "Formato identificado, sin extracci\xF3n de texto en esta versi\xF3n."
       });
       continue;
     }
@@ -4818,34 +4138,26 @@ async function extractCaseDocuments(documentValues, authReq, options = {}) {
         storagePathname(storagePath),
         { apikey: anonKey, Authorization: `Bearer ${authReq.authToken}` },
         10 * 1024 * 1024,
-        Math.max(1e3, Math.min(5e3, deadlineAt - Date.now())),
+        Math.max(1e3, Math.min(5e3, deadlineAt - Date.now()))
       );
       if (downloaded.status < 200 || downloaded.status >= 300) {
         results.push({
           name,
-          reason: "Archivo no disponible con los permisos actuales.",
+          reason: "Archivo no disponible con los permisos actuales."
         });
         continue;
       }
-      const rawText =
-        extension === "pdf"
-          ? await extractPdfText(downloaded.body)
-          : extractDocxText(downloaded.body);
-      const text = rawText
-        .replaceAll(String.fromCharCode(0), "")
-        .trim()
-        .slice(0, Math.min(maxCharsPerDocument, remaining));
+      const rawText = extension === "pdf" ? await extractPdfText(downloaded.body) : extractDocxText(downloaded.body);
+      const text = rawText.replaceAll(String.fromCharCode(0), "").trim().slice(0, Math.min(maxCharsPerDocument, remaining));
       remaining -= text.length;
       results.push(
-        text
-          ? { name, text }
-          : { name, reason: "El archivo no contiene texto extra\xEDble." },
+        text ? { name, text } : { name, reason: "El archivo no contiene texto extra\xEDble." }
       );
       if (remaining <= 0) break;
     } catch {
       results.push({
         name,
-        reason: "No fue posible extraer texto del archivo.",
+        reason: "No fue posible extraer texto del archivo."
       });
     }
   }
@@ -4856,11 +4168,11 @@ async function extractCaseDocuments(documentValues, authReq, options = {}) {
 var router3 = Router3();
 var DOCUMENT_TITLES = {
   informe_cierre_indagacion: "Informe de Cierre de Indagaci\xF3n",
-  informe_concluyente: "Informe Concluyente y Resoluci\xF3n",
+  informe_concluyente: "Informe Concluyente y Resoluci\xF3n"
 };
 var DOCUMENT_SIGNERS = {
   informe_cierre_indagacion: "Equipo Encargado de Indagaci\xF3n",
-  informe_concluyente: "Equipo de Convivencia Escolar",
+  informe_concluyente: "Equipo de Convivencia Escolar"
 };
 var VERCEL_FUNCTION_BUDGET_MS = 59e3;
 var RESPONSE_GUARD_MS = 1500;
@@ -4874,9 +4186,9 @@ var DRAFT_CONTEXT_LIMITS = {
     documents: {
       maxDocuments: 4,
       maxExtractedCharsPerDocument: 12e3,
-      maxExtractedCharsTotal: 32e3,
+      maxExtractedCharsTotal: 32e3
     },
-    generation: { maxOutputTokens: 5e3, timeoutMs: 4e4 },
+    generation: { maxOutputTokens: 5e3, timeoutMs: 4e4 }
   },
   informe_concluyente: {
     legalSourceChars: 32e3,
@@ -4886,10 +4198,10 @@ var DRAFT_CONTEXT_LIMITS = {
     documents: {
       maxDocuments: 4,
       maxExtractedCharsPerDocument: 14e3,
-      maxExtractedCharsTotal: 4e4,
+      maxExtractedCharsTotal: 4e4
     },
-    generation: { maxOutputTokens: 6e3, timeoutMs: 4e4 },
-  },
+    generation: { maxOutputTokens: 6e3, timeoutMs: 4e4 }
+  }
 };
 function getSupabaseHostname2() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
@@ -4930,20 +4242,10 @@ function displayDocumentName(value) {
   }
 }
 function isGeminiTimeout(message) {
-  return (
-    message.includes("generativelanguage.googleapis.com") &&
-    message.includes("tiempo m\xE1ximo")
-  );
+  return message.includes("generativelanguage.googleapis.com") && message.includes("tiempo m\xE1ximo");
 }
 function isRecoverableGeminiDraftError(message) {
-  return (
-    message.includes("GEMINI_API_KEY no configurada") ||
-    message.includes("Gemini error: 400") ||
-    message.includes("Gemini error: 403") ||
-    message.includes("Gemini error: 404") ||
-    message.includes("Gemini no devolvi\xF3 contenido de texto") ||
-    isGeminiTimeout(message)
-  );
+  return message.includes("GEMINI_API_KEY no configurada") || message.includes("Gemini error: 400") || message.includes("Gemini error: 403") || message.includes("Gemini error: 404") || message.includes("Gemini no devolvi\xF3 contenido de texto") || isGeminiTimeout(message);
 }
 function getGeminiDraftErrorMessage(message) {
   if (isGeminiTimeout(message)) {
@@ -4954,13 +4256,8 @@ function getGeminiDraftErrorMessage(message) {
 function getRemainingDraftBudgetMs(startedAt, now = Date.now()) {
   return Math.max(0, VERCEL_FUNCTION_BUDGET_MS - (now - startedAt));
 }
-function getBoundedDraftTimeoutMs(
-  requestedTimeoutMs,
-  startedAt,
-  now = Date.now(),
-) {
-  const usableBudgetMs =
-    getRemainingDraftBudgetMs(startedAt, now) - RESPONSE_GUARD_MS;
+function getBoundedDraftTimeoutMs(requestedTimeoutMs, startedAt, now = Date.now()) {
+  const usableBudgetMs = getRemainingDraftBudgetMs(startedAt, now) - RESPONSE_GUARD_MS;
   return Math.max(0, Math.min(requestedTimeoutMs, usableBudgetMs));
 }
 router3.post(
@@ -4987,7 +4284,7 @@ router3.post(
       const parsed = draftDocumentBodySchema.safeParse(req.body);
       if (!parsed.success) {
         res.status(400).json({
-          error: parsed.error.issues[0]?.message ?? "Solicitud no v\xE1lida.",
+          error: parsed.error.issues[0]?.message ?? "Solicitud no v\xE1lida."
         });
         return;
       }
@@ -5010,162 +4307,145 @@ router3.post(
         studentName,
         fatherName,
         managerName,
-        ...bitacora.flatMap((entry) =>
-          entry &&
-          typeof entry === "object" &&
-          Array.isArray(entry.participantes)
-            ? entry.participantes
-            : [],
+        ...bitacora.flatMap(
+          (entry) => entry && typeof entry === "object" && Array.isArray(entry.participantes) ? entry.participantes : []
         ),
-        ...checklist.flatMap((item) =>
-          item && typeof item === "object"
-            ? [item.registradoPor, item.observaciones]
-            : [],
-        ),
-      ];
-      const safeMeasures = medidasEjecutadas
-        .map((value) =>
-          redactSensitiveForAI(value, knownSensitiveValues).slice(0, 500),
-        )
-        .slice(0, contextLimits.measures);
-      const safeHistory = bitacora
-        .map((entry) => ({
-          title: redactSensitiveForAI(entry.titulo, knownSensitiveValues).slice(
-            0,
-            200,
-          ),
-          date: redactSensitiveForAI(entry.fecha, knownSensitiveValues).slice(
-            0,
-            50,
-          ),
-          type: redactSensitiveForAI(entry.tipo, knownSensitiveValues).slice(
-            0,
-            80,
-          ),
-          description: redactSensitiveForAI(
-            entry.descripcion,
-            knownSensitiveValues,
-          ).slice(0, 2500),
-          people: Array.isArray(entry.participantes)
-            ? entry.participantes
-                .map((value) =>
-                  redactSensitiveForAI(value, knownSensitiveValues).slice(
-                    0,
-                    100,
-                  ),
-                )
-                .slice(0, 20)
-            : [],
-          document: sanitize(entry.documentoAdjunto).slice(0, 200),
-        }))
-        .slice(0, contextLimits.historyEntries);
-      const safeChecklist = checklist
-        .map((item) => ({
-          label: redactSensitiveForAI(item.label, knownSensitiveValues).slice(
-            0,
-            300,
-          ),
-          complete: Boolean(item.completado),
-          description: redactSensitiveForAI(
-            item.descripcion,
-            knownSensitiveValues,
-          ).slice(0, 1e3),
-          by: redactSensitiveForAI(
+        ...checklist.flatMap(
+          (item) => item && typeof item === "object" ? [
             item.registradoPor,
-            knownSensitiveValues,
-          ).slice(0, 200),
-          date: redactSensitiveForAI(
-            item.fechaCompletado,
-            knownSensitiveValues,
-          ).slice(0, 50),
-          notes: redactSensitiveForAI(
-            item.observaciones,
-            knownSensitiveValues,
-          ).slice(0, 1e3),
-          document: sanitize(item.documentoNombre).slice(0, 200),
-          documentPath: sanitize(item.documentoUrl).slice(0, 500),
-        }))
-        .slice(0, contextLimits.checklistItems);
+            item.observaciones
+          ] : []
+        )
+      ];
+      const safeMeasures = medidasEjecutadas.map(
+        (value) => redactSensitiveForAI(value, knownSensitiveValues).slice(0, 500)
+      ).slice(0, contextLimits.measures);
+      const safeHistory = bitacora.map((entry) => ({
+        title: redactSensitiveForAI(entry.titulo, knownSensitiveValues).slice(
+          0,
+          200
+        ),
+        date: redactSensitiveForAI(entry.fecha, knownSensitiveValues).slice(
+          0,
+          50
+        ),
+        type: redactSensitiveForAI(entry.tipo, knownSensitiveValues).slice(
+          0,
+          80
+        ),
+        description: redactSensitiveForAI(
+          entry.descripcion,
+          knownSensitiveValues
+        ).slice(0, 2500),
+        people: Array.isArray(entry.participantes) ? entry.participantes.map(
+          (value) => redactSensitiveForAI(value, knownSensitiveValues).slice(
+            0,
+            100
+          )
+        ).slice(0, 20) : [],
+        document: sanitize(entry.documentoAdjunto).slice(0, 200)
+      })).slice(0, contextLimits.historyEntries);
+      const safeChecklist = checklist.map((item) => ({
+        label: redactSensitiveForAI(item.label, knownSensitiveValues).slice(
+          0,
+          300
+        ),
+        complete: Boolean(item.completado),
+        description: redactSensitiveForAI(
+          item.descripcion,
+          knownSensitiveValues
+        ).slice(0, 1e3),
+        by: redactSensitiveForAI(
+          item.registradoPor,
+          knownSensitiveValues
+        ).slice(0, 200),
+        date: redactSensitiveForAI(
+          item.fechaCompletado,
+          knownSensitiveValues
+        ).slice(0, 50),
+        notes: redactSensitiveForAI(
+          item.observaciones,
+          knownSensitiveValues
+        ).slice(0, 1e3),
+        document: sanitize(item.documentoNombre).slice(0, 200),
+        documentPath: sanitize(item.documentoUrl).slice(0, 500)
+      })).slice(0, contextLimits.checklistItems);
       const authReq = req;
       const documentValues = [
         ...safeHistory.map((entry) => entry.document),
-        ...safeChecklist.map((item) => item.documentPath || item.document),
+        ...safeChecklist.map((item) => item.documentPath || item.document)
       ].filter(Boolean);
       const checklistProgress = safeChecklist.map((item) => ({
         label: item.label || "\xCDtem sin nombre",
-        complete: item.complete,
+        complete: item.complete
       }));
       const documentNames = [
-        ...new Set(documentValues.map(displayDocumentName)),
+        ...new Set(documentValues.map(displayDocumentName))
       ];
       sendStreamEvent({
         type: "progress",
         phase: "checklist",
         message: "Revisando el checklist de debido proceso.",
-        checklist: checklistProgress,
+        checklist: checklistProgress
       });
       sendStreamEvent({
         type: "progress",
         phase: "documents",
-        message: documentNames.length
-          ? `Revisando ${documentNames.length} documento(s) asociado(s).`
-          : "No hay documentos adjuntos asociados para revisar.",
-        documents: documentNames,
+        message: documentNames.length ? `Revisando ${documentNames.length} documento(s) asociado(s).` : "No hay documentos adjuntos asociados para revisar.",
+        documents: documentNames
       });
       sendStreamEvent({
         type: "progress",
         phase: "sources",
-        message: "Revisando fuentes jur\xEDdicas autorizadas.",
+        message: "Revisando fuentes jur\xEDdicas autorizadas."
       });
-      const [legalSources, extractedDocuments, templatePrompt] =
-        await Promise.all([
-          getRelevantLegalSources(
-            `${DOCUMENT_TITLES[docType]} ${infractionType} convivencia escolar debido proceso reglamento interno medidas disciplinarias apelaci\xF3n`,
-            contextLimits.legalSourceChars,
-          ),
-          extractCaseDocuments(documentValues, authReq, {
-            ...contextLimits.documents,
-            deadlineMs: 2e4,
-            onDocumentStart: ({ name, index, total }) =>
-              sendStreamEvent({
-                type: "progress",
-                phase: "document",
-                message: `Revisando documento ${index} de ${total}: ${name}.`,
-                document: { name, index, total },
-              }),
-          }),
-          (async () => {
-            try {
-              const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? "";
-              const templates = await httpsGet(
-                getSupabaseHostname2(),
-                `/rest/v1/document_templates?doc_type=eq.${docType}&tenant_id=eq.${authReq.tenantId}&select=system_prompt&limit=1`,
-                {
-                  apikey: anonKey,
-                  Authorization: `Bearer ${authReq.authToken}`,
-                },
-              );
-              return templates[0]?.system_prompt?.trim() || null;
-            } catch {
-              return null;
-            }
-          })(),
-        ]);
+      const [legalSources, extractedDocuments, templatePrompt] = await Promise.all([
+        getRelevantLegalSources(
+          `${DOCUMENT_TITLES[docType]} ${infractionType} convivencia escolar debido proceso reglamento interno medidas disciplinarias apelaci\xF3n`,
+          contextLimits.legalSourceChars
+        ),
+        extractCaseDocuments(documentValues, authReq, {
+          ...contextLimits.documents,
+          deadlineMs: 2e4,
+          onDocumentStart: ({ name, index, total }) => sendStreamEvent({
+            type: "progress",
+            phase: "document",
+            message: `Revisando documento ${index} de ${total}: ${name}.`,
+            document: { name, index, total }
+          })
+        }),
+        (async () => {
+          try {
+            const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? "";
+            const templates = await httpsGet(
+              getSupabaseHostname2(),
+              `/rest/v1/document_templates?doc_type=eq.${docType}&tenant_id=eq.${authReq.tenantId}&select=system_prompt&limit=1`,
+              {
+                apikey: anonKey,
+                Authorization: `Bearer ${authReq.authToken}`
+              }
+            );
+            return templates[0]?.system_prompt?.trim() || null;
+          } catch {
+            return null;
+          }
+        })()
+      ]);
       sendStreamEvent({
         type: "progress",
         phase: "checklist",
         message: "Checklist revisado y agregado al dossier.",
-        checklist: checklistProgress,
+        checklist: checklistProgress
       });
       sendStreamEvent({
         type: "progress",
         phase: "sources",
-        message: "Fuentes jur\xEDdicas revisadas y agregadas al dossier.",
+        message: "Fuentes jur\xEDdicas revisadas y agregadas al dossier."
       });
       sendStreamEvent({
         type: "progress",
         phase: "template",
-        message: "Aplicando la plantilla institucional del informe.",
+        message: "Aplicando la plantilla institucional del informe."
       });
       const dossier = `
 # DOSSIER DEL EXPEDIENTE \u2014 DOCUMENTO CITADO
@@ -5186,52 +4466,34 @@ router3.post(
 ${stringifyList(safeMeasures, "No se registran medidas ejecutadas.")}
 
 ## Historial e hitos registrados
-${
-  safeHistory.length
-    ? safeHistory
-        .map(
-          (entry, index) => `
+${safeHistory.length ? safeHistory.map(
+        (entry, index) => `
 ${index + 1}. ${entry.title || "Registro sin t\xEDtulo"}
    - Fecha: ${entry.date || "No registrada"}
    - Tipo: ${entry.type || "No registrado"}
    - Descripci\xF3n: ${entry.description || "Sin descripci\xF3n"}
    - Participantes: ${entry.people.join(", ") || "No registrados"}
-   - Documento asociado: ${entry.document || "No registrado"}`,
-        )
-        .join("\n")
-    : "No hay registros de historial disponibles."
-}
+   - Documento asociado: ${entry.document || "No registrado"}`
+      ).join("\n") : "No hay registros de historial disponibles."}
 
 ## Checklist y cumplimiento
-${
-  safeChecklist.length
-    ? safeChecklist
-        .map(
-          (item) => `
+${safeChecklist.length ? safeChecklist.map(
+        (item) => `
 - [${item.complete ? "X" : " "}] ${item.label || "\xCDtem sin nombre"}
   - Estado: ${item.complete ? "Completado" : "Pendiente"}
   - Descripci\xF3n: ${item.description || "No registrada"}
   - Registrado por: ${item.by || "No registrado"}
   - Fecha: ${item.date || "No registrada"}
   - Observaciones: ${item.notes || "Sin observaciones"}
-  - Documento asociado: ${item.document || "No registrado"}`,
-        )
-        .join("\n")
-    : "No hay checklist disponible."
-}
+  - Documento asociado: ${item.document || "No registrado"}`
+      ).join("\n") : "No hay checklist disponible."}
 
 ## Documentos asociados conocidos
-${
-  extractedDocuments.length
-    ? extractedDocuments
-        .map(
-          (document2) => `
+${extractedDocuments.length ? extractedDocuments.map(
+        (document2) => `
 ### ${document2.name}
-${document2.text ? redactSensitiveForAI(document2.text, knownSensitiveValues) : `Estado de extracci\xF3n: ${document2.reason}`}`,
-        )
-        .join("\n")
-    : "No hay documentos asociados identificados en historial o checklist."
-}
+${document2.text ? redactSensitiveForAI(document2.text, knownSensitiveValues) : `Estado de extracci\xF3n: ${document2.reason}`}`
+      ).join("\n") : "No hay documentos asociados identificados en historial o checklist."}
 
 ## FUENTES AUTORIZADAS
 ${legalSources}
@@ -5245,13 +4507,12 @@ ${templatePrompt || getTemplateFallback()}`;
       try {
         const geminiTimeoutMs = getBoundedDraftTimeoutMs(
           contextLimits.generation.timeoutMs,
-          startedAt,
+          startedAt
         );
         if (geminiTimeoutMs < MIN_GENERATION_TIMEOUT_MS) {
           sendStreamEvent({
             type: "error",
-            error:
-              "No qued\xF3 tiempo suficiente para redactar el documento antes del l\xEDmite de producci\xF3n. Intente nuevamente.",
+            error: "No qued\xF3 tiempo suficiente para redactar el documento antes del l\xEDmite de producci\xF3n. Intente nuevamente."
           });
           res.end();
           return;
@@ -5259,23 +4520,21 @@ ${templatePrompt || getTemplateFallback()}`;
         sendStreamEvent({
           type: "progress",
           phase: "generation",
-          message:
-            "Antecedentes revisados. Gemini est\xE1 redactando el informe de cierre.",
+          message: "Antecedentes revisados. Gemini est\xE1 redactando el informe de cierre."
         });
         document = await callGeminiLegalDraft(systemInstruction, dossier, {
           ...contextLimits.generation,
-          timeoutMs: geminiTimeoutMs,
+          timeoutMs: geminiTimeoutMs
         });
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Error al contactar Gemini.";
+        const message = error instanceof Error ? error.message : "Error al contactar Gemini.";
         if (!isRecoverableGeminiDraftError(message)) {
           throw error;
         }
         sendStreamEvent({
           type: "error",
           error: getGeminiDraftErrorMessage(message),
-          provider: "Gemini",
+          provider: "Gemini"
         });
         res.end();
         return;
@@ -5283,8 +4542,7 @@ ${templatePrompt || getTemplateFallback()}`;
       sendStreamEvent({
         type: "progress",
         phase: "completed",
-        message:
-          "Informe redactado. Puedes revisarlo y editarlo antes de imprimir.",
+        message: "Informe redactado. Puedes revisarlo y editarlo antes de imprimir."
       });
       sendStreamEvent({
         type: "result",
@@ -5294,8 +4552,8 @@ ${templatePrompt || getTemplateFallback()}`;
         title: DOCUMENT_TITLES[docType],
         signer: DOCUMENT_SIGNERS[docType],
         consideredDocuments: extractedDocuments.map(
-          (document2) => document2.name,
-        ),
+          (document2) => document2.name
+        )
       });
       res.end();
     } catch (error) {
@@ -5312,16 +4570,14 @@ ${templatePrompt || getTemplateFallback()}`;
       if (streamStarted) {
         sendStreamEvent({
           type: "error",
-          error: "Error interno del servidor al redactar documento.",
+          error: "Error interno del servidor al redactar documento."
         });
         res.end();
         return;
       }
-      res
-        .status(500)
-        .json({ error: "Error interno del servidor al redactar documento." });
+      res.status(500).json({ error: "Error interno del servidor al redactar documento." });
     }
-  },
+  }
 );
 var draft_default = router3;
 
@@ -5338,7 +4594,7 @@ router4.get(
       return;
     }
     res.json({ authenticated: true });
-  },
+  }
 );
 var debug_default = router4;
 
@@ -5355,21 +4611,17 @@ function requireRole(allowedRoles) {
     }
     if (!authReq.tenantId) {
       res.status(403).json({
-        error: "No fue posible determinar el establecimiento autenticado.",
+        error: "No fue posible determinar el establecimiento autenticado."
       });
       return;
     }
     const role = authReq.profileRole;
     if (!role) {
-      res
-        .status(403)
-        .json({ error: "No fue posible determinar el rol del usuario." });
+      res.status(403).json({ error: "No fue posible determinar el rol del usuario." });
       return;
     }
     if (!allowedRoles.includes(role)) {
-      res
-        .status(403)
-        .json({ error: "No tiene permisos para realizar esta acci\xF3n." });
+      res.status(403).json({ error: "No tiene permisos para realizar esta acci\xF3n." });
       return;
     }
     next();
@@ -5381,12 +4633,11 @@ var router5 = Router5();
 router5.use(
   "/document-templates",
   requireAuth,
-  requireMembership(CONVIVENCIA_MEMBERSHIP),
+  requireMembership(CONVIVENCIA_MEMBERSHIP)
 );
 var TEMPLATE_SELECT_PUBLIC = "id,doc_type,label,updated_at";
 var TEMPLATE_SELECT_ADMIN = "id,doc_type,label,system_prompt,updated_at";
-var ACTIVE_TEMPLATE_FILTER =
-  "doc_type=in.(informe_cierre_indagacion,informe_concluyente)";
+var ACTIVE_TEMPLATE_FILTER = "doc_type=in.(informe_cierre_indagacion,informe_concluyente)";
 function getSupabaseHostname3() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   if (!supabaseUrl || !URL.canParse(supabaseUrl)) {
@@ -5395,17 +4646,10 @@ function getSupabaseHostname3() {
   return new URL(supabaseUrl).hostname;
 }
 function getServiceRoleKey() {
-  return (
-    process.env.SUPABASE_SERVICE_ROLE_KEY ??
-    process.env.SUPABASE_SERVICE_KEY ??
-    ""
-  );
+  return process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
 }
 function authHeaders(req) {
-  const anonKey =
-    process.env.VITE_SUPABASE_ANON_KEY ??
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
-    "";
+  const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "";
   return { apikey: anonKey, Authorization: `Bearer ${req.authToken}` };
 }
 function isTemplateId(value) {
@@ -5417,7 +4661,7 @@ router5.get("/document-templates", requireTenant, async (req, res) => {
     const data = await httpsGet(
       getSupabaseHostname3(),
       `/rest/v1/document_templates?${ACTIVE_TEMPLATE_FILTER}&select=${TEMPLATE_SELECT_PUBLIC}&order=doc_type`,
-      authHeaders(authReq),
+      authHeaders(authReq)
     );
     res.json(data);
   } catch {
@@ -5434,13 +4678,13 @@ router5.get(
       const data = await httpsGet(
         getSupabaseHostname3(),
         `/rest/v1/document_templates?${ACTIVE_TEMPLATE_FILTER}&select=${TEMPLATE_SELECT_ADMIN}&order=doc_type`,
-        authHeaders(authReq),
+        authHeaders(authReq)
       );
       res.json(data);
     } catch {
       res.status(500).json({ error: "Error al obtener plantillas." });
     }
-  },
+  }
 );
 router5.put(
   "/document-templates",
@@ -5457,19 +4701,13 @@ router5.put(
       res.status(400).json({ error: "El id de plantilla no es v\xE1lido." });
       return;
     }
-    if (
-      typeof system_prompt !== "string" ||
-      system_prompt.trim().length === 0
-    ) {
-      res
-        .status(400)
-        .json({ error: "El system_prompt no puede estar vac\xEDo." });
+    if (typeof system_prompt !== "string" || system_prompt.trim().length === 0) {
+      res.status(400).json({ error: "El system_prompt no puede estar vac\xEDo." });
       return;
     }
     if (system_prompt.length > 2e4) {
       res.status(400).json({
-        error:
-          "El system_prompt excede el m\xE1ximo permitido (20000 caracteres).",
+        error: "El system_prompt excede el m\xE1ximo permitido (20000 caracteres)."
       });
       return;
     }
@@ -5477,9 +4715,7 @@ router5.put(
       const authReq = req;
       const serviceRoleKey = getServiceRoleKey();
       if (!serviceRoleKey || !authReq.tenantId) {
-        res
-          .status(503)
-          .json({ error: "Servicio de plantillas no configurado." });
+        res.status(503).json({ error: "Servicio de plantillas no configurado." });
         return;
       }
       const sanitized = sanitize(system_prompt).slice(0, 2e4);
@@ -5488,22 +4724,17 @@ router5.put(
         `/rest/v1/document_templates?id=eq.${encodeURIComponent(id)}&tenant_id=eq.${authReq.tenantId}`,
         {
           system_prompt: sanitized,
-          updated_at: /* @__PURE__ */ new Date().toISOString(),
+          updated_at: (/* @__PURE__ */ new Date()).toISOString()
         },
         {
           apikey: serviceRoleKey,
           Authorization: `Bearer ${serviceRoleKey}`,
-          Prefer: "return=representation",
-        },
+          Prefer: "return=representation"
+        }
       );
-      if (
-        updated.status < 200 ||
-        updated.status >= 300 ||
-        !Array.isArray(updated.body) ||
-        updated.body.length !== 1
-      ) {
+      if (updated.status < 200 || updated.status >= 300 || !Array.isArray(updated.body) || updated.body.length !== 1) {
         res.status(404).json({
-          error: "Plantilla no encontrada para el establecimiento actual.",
+          error: "Plantilla no encontrada para el establecimiento actual."
         });
         return;
       }
@@ -5512,7 +4743,7 @@ router5.put(
       console.error("Error updating template:", error);
       res.status(500).json({ error: "Error al actualizar plantilla." });
     }
-  },
+  }
 );
 var templates_default = router5;
 
@@ -5529,36 +4760,25 @@ function clientErrorBody(message, status) {
 var errorHandler = (err, _req, res, _next) => {
   console.error(
     "[errorHandler]",
-    err instanceof Error ? err.message : String(err),
+    err instanceof Error ? err.message : String(err)
   );
   if (isRequestValidationError(err)) {
     res.status(400).json({ error: err.message });
     return;
   }
   if (err instanceof SyntaxError && "body" in err) {
-    res
-      .status(400)
-      .json({ error: "JSON malformado en el cuerpo de la solicitud." });
+    res.status(400).json({ error: "JSON malformado en el cuerpo de la solicitud." });
     return;
   }
-  const tooLarge =
-    typeof err === "object" &&
-    err !== null &&
-    "type" in err &&
-    err.type === "entity.too.large";
-  if (
-    tooLarge ||
-    (err instanceof Error && "status" in err && err.status === 413)
-  ) {
+  const tooLarge = typeof err === "object" && err !== null && "type" in err && err.type === "entity.too.large";
+  if (tooLarge || err instanceof Error && "status" in err && err.status === 413) {
     res.status(413).json({
-      error:
-        "El archivo o cuerpo de la solicitud excede el tama\xF1o permitido.",
+      error: "El archivo o cuerpo de la solicitud excede el tama\xF1o permitido."
     });
     return;
   }
   const isDev = process.env.NODE_ENV === "development";
-  const message =
-    isDev && err instanceof Error ? err.message : "Error interno del servidor.";
+  const message = isDev && err instanceof Error ? err.message : "Error interno del servidor.";
   res.status(500).json({ error: message });
 };
 
@@ -5573,7 +4793,7 @@ var PDF_PROCESS_ROLES = [
   "inspectoria",
   "profesor_jefe",
   "inspector",
-  "staff",
+  "staff"
 ];
 router6.use("/process-disciplinary-pdf", requireAuth, rateLimit);
 function getBearerToken(req) {
@@ -5581,32 +4801,18 @@ function getBearerToken(req) {
   return authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : void 0;
 }
 function getProcessErrorResponse(error) {
-  const message =
-    error instanceof Error
-      ? error.message
-      : "Error interno al procesar el documento";
+  const message = error instanceof Error ? error.message : "Error interno al procesar el documento";
   if (message === "Supabase no configurado")
     return {
       status: 503,
-      message:
-        "Supabase no est\xE1 configurado en el servidor para procesar PDFs privados.",
+      message: "Supabase no est\xE1 configurado en el servidor para procesar PDFs privados."
     };
-  if (
-    message.includes("Bucket de documentos disciplinarios no permitido") ||
-    message.includes("Ruta de archivo no v\xE1lida") ||
-    message.includes("El archivo no pertenece") ||
-    message.includes("El PDF excede") ||
-    message.includes("PDF v\xE1lido") ||
-    message.includes("demasiadas p\xE1ginas") ||
-    message.includes("no coincide") ||
-    message.includes("no corresponde") ||
-    message.includes("anotaciones confirmadas")
-  )
+  if (message.includes("Bucket de documentos disciplinarios no permitido") || message.includes("Ruta de archivo no v\xE1lida") || message.includes("El archivo no pertenece") || message.includes("El PDF excede") || message.includes("PDF v\xE1lido") || message.includes("demasiadas p\xE1ginas") || message.includes("no coincide") || message.includes("no corresponde") || message.includes("anotaciones confirmadas"))
     return { status: 400, message };
   if (message.includes("No fue posible descargar"))
     return {
       status: 404,
-      message: "No fue posible encontrar o leer el PDF privado subido.",
+      message: "No fue posible encontrar o leer el PDF privado subido."
     };
   if (message.includes("Este PDF ya fue registrado"))
     return { status: 409, message };
@@ -5617,7 +4823,7 @@ router6.post(
   requireTenant,
   requireMembership({
     applicationCode: CONVIVENCIA_MEMBERSHIP.applicationCode,
-    allowedRoles: PDF_PROCESS_ROLES,
+    allowedRoles: PDF_PROCESS_ROLES
   }),
   async (req, res) => {
     try {
@@ -5625,17 +4831,11 @@ router6.post(
       const authReq = req;
       const tenantId = authReq.tenantId;
       if (!tenantId) {
-        res
-          .status(500)
-          .json({ error: "Tenant no resuelto para analizar el PDF" });
+        res.status(500).json({ error: "Tenant no resuelto para analizar el PDF" });
         return;
       }
       if (!body.bucket || !body.storagePath || !body.fileName) {
-        res
-          .status(400)
-          .json({
-            error: "Faltan par\xE1metros requeridos para analizar el PDF",
-          });
+        res.status(400).json({ error: "Faltan par\xE1metros requeridos para analizar el PDF" });
         return;
       }
       const result = await analyzeDisciplinaryPdf({
@@ -5643,27 +4843,25 @@ router6.post(
         storagePath: body.storagePath,
         fileName: body.fileName,
         tenantId,
-        authToken: getBearerToken(req),
+        authToken: getBearerToken(req)
       });
       res.json(result);
     } catch (error) {
       const response = getProcessErrorResponse(error);
       console.error(
         "Error processing disciplinary PDF:",
-        error instanceof Error ? error.message : error,
+        error instanceof Error ? error.message : error
       );
-      res
-        .status(response.status)
-        .json(clientErrorBody(response.message, response.status));
+      res.status(response.status).json(clientErrorBody(response.message, response.status));
     }
-  },
+  }
 );
 router6.post(
   "/process-disciplinary-pdf/confirm",
   requireTenant,
   requireMembership({
     applicationCode: CONVIVENCIA_MEMBERSHIP.applicationCode,
-    allowedRoles: PDF_PROCESS_ROLES,
+    allowedRoles: PDF_PROCESS_ROLES
   }),
   async (req, res) => {
     try {
@@ -5671,26 +4869,18 @@ router6.post(
       const authReq = req;
       const tenantId = authReq.tenantId;
       if (!tenantId) {
-        res
-          .status(500)
-          .json({ error: "Tenant no resuelto para confirmar el proceso" });
+        res.status(500).json({ error: "Tenant no resuelto para confirmar el proceso" });
         return;
       }
-      if (
-        !body.bucket ||
-        !body.storagePath ||
-        !body.fileName ||
-        !body.fileHash ||
-        !body.studentId
-      ) {
+      if (!body.bucket || !body.storagePath || !body.fileName || !body.fileHash || !body.studentId) {
         res.status(400).json({
-          error: "Faltan par\xE1metros requeridos para confirmar el proceso",
+          error: "Faltan par\xE1metros requeridos para confirmar el proceso"
         });
         return;
       }
       if (body.annotations !== void 0 && !Array.isArray(body.annotations)) {
         res.status(400).json({
-          error: "Las anotaciones confirmadas no tienen un formato v\xE1lido.",
+          error: "Las anotaciones confirmadas no tienen un formato v\xE1lido."
         });
         return;
       }
@@ -5709,20 +4899,18 @@ router6.post(
         annotations: body.annotations ?? [],
         idempotencyKey: body.idempotencyKey,
         authToken: getBearerToken(req),
-        confirmedBy: authReq.user?.sub,
+        confirmedBy: authReq.user?.sub
       });
       res.json(result);
     } catch (error) {
       const response = getProcessErrorResponse(error);
       console.error(
         "Error confirming disciplinary process:",
-        error instanceof Error ? error.message : error,
+        error instanceof Error ? error.message : error
       );
-      res
-        .status(response.status)
-        .json(clientErrorBody(response.message, response.status));
+      res.status(response.status).json(clientErrorBody(response.message, response.status));
     }
-  },
+  }
 );
 var processDisciplinaryPdf_default = router6;
 
@@ -5739,9 +4927,7 @@ function hasSafeProperties(value) {
   if (value === void 0) return true;
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   try {
-    return (
-      Buffer.byteLength(JSON.stringify(value), "utf8") <= MAX_PROPERTIES_BYTES
-    );
+    return Buffer.byteLength(JSON.stringify(value), "utf8") <= MAX_PROPERTIES_BYTES;
   } catch {
     return false;
   }
@@ -5755,31 +4941,19 @@ router7.post(
   async (req, res) => {
     try {
       const { eventName, properties } = req.body;
-      if (
-        !eventName ||
-        typeof eventName !== "string" ||
-        !EVENT_NAME_RE.test(eventName)
-      ) {
+      if (!eventName || typeof eventName !== "string" || !EVENT_NAME_RE.test(eventName)) {
         res.status(400).json({
-          error:
-            "eventName debe usar formato snake_case y tener hasta 80 caracteres.",
+          error: "eventName debe usar formato snake_case y tener hasta 80 caracteres."
         });
         return;
       }
       if (!hasSafeProperties(properties)) {
-        res
-          .status(400)
-          .json({ error: "properties debe ser un objeto JSON de hasta 4 KB." });
+        res.status(400).json({ error: "properties debe ser un objeto JSON de hasta 4 KB." });
         return;
       }
-      const { createClient: createClient7 } =
-        await import("@supabase/supabase-js");
-      const supabaseUrl =
-        process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
-      const anonKey =
-        process.env.VITE_SUPABASE_ANON_KEY ??
-        process.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
-        "";
+      const { createClient: createClient7 } = await import("@supabase/supabase-js");
+      const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
+      const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "";
       if (!supabaseUrl || !anonKey) {
         res.status(500).json({ error: "Supabase no configurado" });
         return;
@@ -5787,16 +4961,14 @@ router7.post(
       const authReq = req;
       const supabase = createClient7(supabaseUrl, anonKey, {
         auth: { persistSession: false },
-        global: { headers: { Authorization: `Bearer ${authReq.authToken}` } },
+        global: { headers: { Authorization: `Bearer ${authReq.authToken}` } }
       });
-      const { error: insertError } = await supabase
-        .from("usage_events")
-        .insert({
-          event_name: eventName,
-          user_id: authReq.user?.sub ?? null,
-          tenant_id: authReq.tenantId ?? null,
-          properties: properties ?? {},
-        });
+      const { error: insertError } = await supabase.from("usage_events").insert({
+        event_name: eventName,
+        user_id: authReq.user?.sub ?? null,
+        tenant_id: authReq.tenantId ?? null,
+        properties: properties ?? {}
+      });
       if (insertError) {
         console.error("Error logging usage event:", insertError);
         res.status(503).json({ error: "No fue posible registrar el evento." });
@@ -5807,7 +4979,7 @@ router7.post(
       console.error("Error logging usage event:", error);
       res.status(500).json({ error: "Error interno al registrar evento." });
     }
-  },
+  }
 );
 router7.get(
   "/usage/stats",
@@ -5819,11 +4991,7 @@ router7.get(
     try {
       const since = req.query.since ?? void 0;
       const until = req.query.until ?? void 0;
-      if (
-        (since !== void 0 && !validDateOnly(since)) ||
-        (until !== void 0 && !validDateOnly(until)) ||
-        (since && until && since > until)
-      ) {
+      if (since !== void 0 && !validDateOnly(since) || until !== void 0 && !validDateOnly(until) || since && until && since > until) {
         res.status(400).json({ error: "Rango de fechas inv\xE1lido." });
         return;
       }
@@ -5832,29 +5000,22 @@ router7.get(
         res.status(400).json({ error: "Establecimiento no determinado." });
         return;
       }
-      const { createClient: createClient7 } =
-        await import("@supabase/supabase-js");
-      const supabaseUrl =
-        process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
-      const serviceRoleKey =
-        process.env.SUPABASE_SERVICE_ROLE_KEY ??
-        process.env.SUPABASE_SERVICE_KEY ??
-        "";
+      const { createClient: createClient7 } = await import("@supabase/supabase-js");
+      const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
+      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
       if (!supabaseUrl || !serviceRoleKey) {
-        res
-          .status(503)
-          .json({ error: "Servicio de estad\xEDsticas no configurado." });
+        res.status(503).json({ error: "Servicio de estad\xEDsticas no configurado." });
         return;
       }
       const supabase = createClient7(supabaseUrl, serviceRoleKey, {
-        auth: { persistSession: false, autoRefreshToken: false },
+        auth: { persistSession: false, autoRefreshToken: false }
       });
       const params = { p_tenant_id: tenantId };
       if (since) params.since = since;
       if (until) params.until = until;
       const { data: eventStats, error: eventError } = await supabase.rpc(
         "get_usage_stats",
-        params,
+        params
       );
       if (eventError) {
         console.error("Error fetching usage stats:", eventError);
@@ -5863,7 +5024,7 @@ router7.get(
       }
       const { data: dailyActive, error: dailyError } = await supabase.rpc(
         "get_daily_active_users",
-        params,
+        params
       );
       if (dailyError) {
         console.error("Error fetching daily active users:", dailyError);
@@ -5872,15 +5033,13 @@ router7.get(
       }
       res.json({
         events: eventStats ?? [],
-        dailyActiveUsers: dailyActive ?? [],
+        dailyActiveUsers: dailyActive ?? []
       });
     } catch (error) {
       console.error("Error fetching usage stats:", error);
-      res
-        .status(500)
-        .json({ error: "Error interno al obtener estad\xEDsticas." });
+      res.status(500).json({ error: "Error interno al obtener estad\xEDsticas." });
     }
-  },
+  }
 );
 var usage_default = router7;
 
@@ -5895,7 +5054,7 @@ var cachedSession = null;
 function requireApiKey() {
   if (!process.env.COMPOSIO_API_KEY) {
     throw new Error(
-      "Composio no configurado: falta COMPOSIO_API_KEY en .env.local.",
+      "Composio no configurado: falta COMPOSIO_API_KEY en .env.local."
     );
   }
 }
@@ -5905,18 +5064,23 @@ async function getComposioSession() {
     const composio = new Composio();
     cachedSession = await composio.create(COMPOSIO_SENDER_USER_ID, {
       toolkits: ["gmail"],
-      sandbox: { enable: false },
+      sandbox: { enable: false }
     });
   }
   return cachedSession;
 }
-async function sendCitacionEmail({ to, subject, body, isHtml }) {
+async function sendCitacionEmail({
+  to,
+  subject,
+  body,
+  isHtml
+}) {
   const session = await getComposioSession();
   return session.execute("GMAIL_SEND_EMAIL", {
     recipient_email: to,
     subject,
     body,
-    ...(isHtml ? { is_html: true } : {}),
+    ...isHtml ? { is_html: true } : {}
   });
 }
 
@@ -5927,24 +5091,19 @@ var NOTIFICATION_ROLES = [
   "admin",
   "direccion",
   "convivencia",
-  "inspectoria",
+  "inspectoria"
 ];
 var EMAIL_RE2 = /^[^\s@]{1,64}@[^\s@]{1,253}\.[^\s@]{2,}$/;
 var MAX_SUBJECT = 200;
 var MAX_BODY = 8e3;
 function isValidCitacionEmail(value) {
-  return (
-    typeof value === "string" &&
-    value.length <= 320 &&
-    EMAIL_RE2.test(value.trim())
-  );
+  return typeof value === "string" && value.length <= 320 && EMAIL_RE2.test(value.trim());
 }
 function getCitacionEmailDomain(email) {
   return email.trim().split("@")[1]?.toLowerCase() ?? "";
 }
 var MAX_HTML_BYTES = 1e5;
-var DANGEROUS_HTML_RE =
-  /<\s*(script|iframe|object|embed|form)\b|on\w+\s*=|(?:javascript|data:text\/html|vbscript):|srcdoc\s*=/i;
+var DANGEROUS_HTML_RE = /<\s*(script|iframe|object|embed|form)\b|on\w+\s*=|(?:javascript|data:text\/html|vbscript):|srcdoc\s*=/i;
 function isSafeDocumentoHtml(value) {
   if (typeof value !== "string") return false;
   if (value.length === 0 || Buffer.byteLength(value, "utf8") > MAX_HTML_BYTES)
@@ -5953,15 +5112,14 @@ function isSafeDocumentoHtml(value) {
 }
 function getAdminClient2() {
   const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) throw new Error("Supabase administrativo no configurado.");
   return createClient3(url, key, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
-      detectSessionInUrl: false,
-    },
+      detectSessionInUrl: false
+    }
   });
 }
 router8.post(
@@ -5976,20 +5134,16 @@ router8.post(
       const body = req.body;
       const causaId = requireStr(
         {
-          id:
-            optStr(body, "causaId", 100).trim() ||
-            optStr(body, "id", 100).trim(),
+          id: optStr(body, "causaId", 100).trim() || optStr(body, "id", 100).trim()
         },
         "id",
-        100,
+        100
       );
       const to = optStr(body, "to", 320).trim();
       const subject = optStr(body, "subject", MAX_SUBJECT).trim();
       const text = optStr(body, "body", MAX_BODY).trim();
       if (!isValidCitacionEmail(to)) {
-        res
-          .status(400)
-          .json({ error: "El destinatario debe ser un correo v\xE1lido." });
+        res.status(400).json({ error: "El destinatario debe ser un correo v\xE1lido." });
         return;
       }
       if (!subject || !text) {
@@ -6000,34 +5154,22 @@ router8.post(
       const tenantId = authReq.tenantId;
       if (!tenantId) {
         res.status(403).json({
-          error: "No fue posible determinar el establecimiento autenticado.",
+          error: "No fue posible determinar el establecimiento autenticado."
         });
         return;
       }
       const client = getAdminClient2();
-      const { data: causa, error: causaError } = await client
-        .from("causas")
-        .select("id")
-        .eq("id", causaId)
-        .eq("tenant_id", tenantId)
-        .maybeSingle();
+      const { data: causa, error: causaError } = await client.from("causas").select("id").eq("id", causaId).eq("tenant_id", tenantId).maybeSingle();
       if (causaError || !causa) {
-        res
-          .status(404)
-          .json({ error: "Causa no encontrada en este establecimiento." });
+        res.status(404).json({ error: "Causa no encontrada en este establecimiento." });
         return;
       }
       let sendResult;
       try {
         sendResult = await sendCitacionEmail({ to, subject, body: text });
       } catch (sendError2) {
-        console.error(
-          "Error enviando citaci\xF3n v\xEDa Composio:",
-          sendError2,
-        );
-        res
-          .status(502)
-          .json({ error: "No fue posible enviar la citaci\xF3n por correo." });
+        console.error("Error enviando citaci\xF3n v\xEDa Composio:", sendError2);
+        res.status(502).json({ error: "No fue posible enviar la citaci\xF3n por correo." });
         return;
       }
       const { error: logError } = await client.from("usage_events").insert({
@@ -6039,8 +5181,8 @@ router8.post(
         properties: {
           causaId,
           destinatario: to,
-          dominio: getCitacionEmailDomain(to),
-        },
+          dominio: getCitacionEmailDomain(to)
+        }
       });
       if (logError) {
         console.error("Error registrando env\xEDo de citaci\xF3n:", logError);
@@ -6048,11 +5190,9 @@ router8.post(
       res.json({ success: true, result: sendResult });
     } catch (error) {
       console.error("Error en citaci\xF3n:", error);
-      res
-        .status(500)
-        .json({ error: "Error interno al procesar la citaci\xF3n." });
+      res.status(500).json({ error: "Error interno al procesar la citaci\xF3n." });
     }
-  },
+  }
 );
 router8.post(
   "/notificaciones/documento",
@@ -6066,47 +5206,34 @@ router8.post(
       const body = req.body;
       const causaId = requireStr(
         {
-          id:
-            optStr(body, "causaId", 100).trim() ||
-            optStr(body, "id", 100).trim(),
+          id: optStr(body, "causaId", 100).trim() || optStr(body, "id", 100).trim()
         },
         "id",
-        100,
+        100
       );
       const to = optStr(body, "to", 320).trim();
       const subject = optStr(body, "subject", MAX_SUBJECT).trim();
       const html = optStr(body, "html", MAX_HTML_BYTES).trim();
       if (!isValidCitacionEmail(to)) {
-        res
-          .status(400)
-          .json({ error: "El destinatario debe ser un correo v\xE1lido." });
+        res.status(400).json({ error: "El destinatario debe ser un correo v\xE1lido." });
         return;
       }
       if (!subject || !isSafeDocumentoHtml(html)) {
-        res
-          .status(400)
-          .json({ error: "Asunto y cuerpo HTML v\xE1lido son obligatorios." });
+        res.status(400).json({ error: "Asunto y cuerpo HTML v\xE1lido son obligatorios." });
         return;
       }
       const authReq = req;
       const tenantId = authReq.tenantId;
       if (!tenantId) {
         res.status(403).json({
-          error: "No fue posible determinar el establecimiento autenticado.",
+          error: "No fue posible determinar el establecimiento autenticado."
         });
         return;
       }
       const client = getAdminClient2();
-      const { data: causa, error: causaError } = await client
-        .from("causas")
-        .select("id")
-        .eq("id", causaId)
-        .eq("tenant_id", tenantId)
-        .maybeSingle();
+      const { data: causa, error: causaError } = await client.from("causas").select("id").eq("id", causaId).eq("tenant_id", tenantId).maybeSingle();
       if (causaError || !causa) {
-        res
-          .status(404)
-          .json({ error: "Causa no encontrada en este establecimiento." });
+        res.status(404).json({ error: "Causa no encontrada en este establecimiento." });
         return;
       }
       let sendResult;
@@ -6115,13 +5242,11 @@ router8.post(
           to,
           subject,
           body: html,
-          isHtml: true,
+          isHtml: true
         });
       } catch (sendError2) {
         console.error("Error enviando documento v\xEDa Composio:", sendError2);
-        res
-          .status(502)
-          .json({ error: "No fue posible enviar el documento por correo." });
+        res.status(502).json({ error: "No fue posible enviar el documento por correo." });
         return;
       }
       const { error: logError } = await client.from("usage_events").insert({
@@ -6131,8 +5256,8 @@ router8.post(
         properties: {
           causaId,
           destinatario: to,
-          dominio: getCitacionEmailDomain(to),
-        },
+          dominio: getCitacionEmailDomain(to)
+        }
       });
       if (logError) {
         console.error("Error registrando env\xEDo de documento:", logError);
@@ -6140,11 +5265,9 @@ router8.post(
       res.json({ success: true, result: sendResult });
     } catch (error) {
       console.error("Error en env\xEDo de documento:", error);
-      res
-        .status(500)
-        .json({ error: "Error interno al procesar el documento." });
+      res.status(500).json({ error: "Error interno al procesar el documento." });
     }
-  },
+  }
 );
 var notificaciones_default = router8;
 
@@ -6160,16 +5283,18 @@ router9.get(
     res.json({
       status: "ok",
       message: "Acceso autorizado por membres\xEDa.",
-      timestamp: /* @__PURE__ */ new Date().toISOString(),
+      timestamp: (/* @__PURE__ */ new Date()).toISOString()
     });
-  },
+  }
 );
 var pilot_default = router9;
 
 // server/api/routes/admin.ts
 import { Router as Router10 } from "express";
 import multer from "multer";
-import { createClient as createClient4 } from "@supabase/supabase-js";
+import {
+  createClient as createClient4
+} from "@supabase/supabase-js";
 init_bulkDisciplinaryPdf();
 
 // server/lib/bulkCartaWorkflow.ts
@@ -6177,90 +5302,60 @@ init_bulkDisciplinaryPdf();
 init_regulationBasis();
 init_fetchAllRows();
 init_dateUtils();
-async function previewBulkCartas(
-  { supabase, tenantId, studentIds },
-  additionalNegatives = /* @__PURE__ */ new Map(),
-) {
+async function previewBulkCartas({
+  supabase,
+  tenantId,
+  studentIds
+}, additionalNegatives = /* @__PURE__ */ new Map()) {
   if (!studentIds.length) return [];
   const studentPages = await Promise.all(
-    chunkQueryIds(studentIds).map((chunk) =>
-      fetchAllRows((from, to) =>
-        supabase
-          .from("students")
-          .select("id,full_name,course_id,apoderado_nombre")
-          .eq("tenant_id", tenantId)
-          .in("id", chunk)
-          .range(from, to),
-      ),
-    ),
+    chunkQueryIds(studentIds).map(
+      (chunk) => fetchAllRows(
+        (from, to) => supabase.from("students").select("id,full_name,course_id,apoderado_nombre").eq("tenant_id", tenantId).in("id", chunk).range(from, to)
+      )
+    )
   );
   const students = studentPages.flat();
   const courseIds = [
-    ...new Set(students.map((student) => student.course_id).filter(Boolean)),
+    ...new Set(students.map((student) => student.course_id).filter(Boolean))
   ];
   const coursePages = await Promise.all(
-    chunkQueryIds(courseIds).map((chunk) =>
-      fetchAllRows((from, to) =>
-        supabase
-          .from("courses")
-          .select("id,name")
-          .eq("tenant_id", tenantId)
-          .in("id", chunk)
-          .range(from, to),
-      ),
-    ),
+    chunkQueryIds(courseIds).map(
+      (chunk) => fetchAllRows(
+        (from, to) => supabase.from("courses").select("id,name").eq("tenant_id", tenantId).in("id", chunk).range(from, to)
+      )
+    )
   );
   const courseNames = new Map(
-    coursePages.flat().map((course) => [course.id, course.name]),
+    coursePages.flat().map((course) => [course.id, course.name])
   );
   const recordPages = await Promise.all(
-    chunkQueryIds(studentIds).map((chunk) =>
-      fetchAllRows((from, to) =>
-        supabase
-          .from("inspectorate_records")
-          .select("student_id,type")
-          .eq("tenant_id", tenantId)
-          .in("student_id", chunk)
-          .range(from, to),
-      ),
-    ),
+    chunkQueryIds(studentIds).map(
+      (chunk) => fetchAllRows(
+        (from, to) => supabase.from("inspectorate_records").select("student_id,type").eq("tenant_id", tenantId).in("student_id", chunk).range(from, to)
+      )
+    )
   );
   const records = recordPages.flat();
   const cartaPages = await Promise.all(
-    chunkQueryIds(studentIds).map((chunk) =>
-      fetchAllRows((from, to) =>
-        supabase
-          .from("cartas_disciplinarias")
-          .select("id,student_id,letter_type,emission_date,created_at,status")
-          .eq("tenant_id", tenantId)
-          .in("student_id", chunk)
-          .range(from, to),
-      ),
-    ),
+    chunkQueryIds(studentIds).map(
+      (chunk) => fetchAllRows(
+        (from, to) => supabase.from("cartas_disciplinarias").select("id,student_id,letter_type,emission_date,created_at,status").eq("tenant_id", tenantId).in("student_id", chunk).range(from, to)
+      )
+    )
   );
-  const cartas = cartaPages
-    .flat()
-    .sort(
-      (a, b) =>
-        (b.emission_date ?? "").localeCompare(a.emission_date ?? "") ||
-        (b.created_at ?? "").localeCompare(a.created_at ?? ""),
-    );
+  const cartas = cartaPages.flat().sort(
+    (a, b) => (b.emission_date ?? "").localeCompare(a.emission_date ?? "") || (b.created_at ?? "").localeCompare(a.created_at ?? "")
+  );
   const cartaIds = [...new Set(cartas.map((carta) => carta.id))];
   const eventPages = await Promise.all(
-    chunkQueryIds(cartaIds).map((chunk) =>
-      fetchAllRows((from, to) =>
-        supabase
-          .from("carta_events")
-          .select("carta_id,event_type,created_at")
-          .eq("tenant_id", tenantId)
-          .in("carta_id", chunk)
-          .range(from, to),
-      ),
-    ),
+    chunkQueryIds(cartaIds).map(
+      (chunk) => fetchAllRows(
+        (from, to) => supabase.from("carta_events").select("carta_id,event_type,created_at").eq("tenant_id", tenantId).in("carta_id", chunk).range(from, to)
+      )
+    )
   );
-  const events = eventPages
-    .flat()
-    .sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""));
+  const events = eventPages.flat().sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""));
   const latestEvent = /* @__PURE__ */ new Map();
   for (const event of events ?? []) {
     if (!latestEvent.has(event.carta_id))
@@ -6278,15 +5373,13 @@ async function previewBulkCartas(
     if (record.type === "Negativa") {
       negativeCounts.set(
         record.student_id,
-        (negativeCounts.get(record.student_id) ?? 0) + 1,
+        (negativeCounts.get(record.student_id) ?? 0) + 1
       );
     }
   }
   return (students ?? []).map((student) => {
     const current = activeCartaByStudent.get(student.id);
-    const negativeCount =
-      (negativeCounts.get(student.id) ?? 0) +
-      (additionalNegatives.get(student.id) ?? 0);
+    const negativeCount = (negativeCounts.get(student.id) ?? 0) + (additionalNegatives.get(student.id) ?? 0);
     return {
       student,
       course: courseNames.get(student.course_id) ?? student.course_id,
@@ -6294,8 +5387,8 @@ async function previewBulkCartas(
       current_letter: current?.letter_type ?? null,
       pending_letter: bulkSuggestedLetterType(
         negativeCount,
-        current?.letter_type ?? null,
-      ),
+        current?.letter_type ?? null
+      )
     };
   });
 }
@@ -6308,28 +5401,24 @@ async function syncBulkPendingCartas(input) {
     student,
     course,
     negativeCount,
-    pending_letter: letterType,
+    pending_letter: letterType
   } of plan) {
     if (!letterType) continue;
-    const { data: carta, error: insertError } = await supabase
-      .from("cartas_disciplinarias")
-      .insert({
-        student_id: student.id,
-        tenant_id: tenantId,
-        letter_type: letterType,
-        emission_date: nowDateOnly(),
-        status: "Vigente",
-        emitted_by: "Inspector\xEDa",
-        supervisor_name: null,
-        apoderado_name: student.apoderado_nombre?.trim() || "Pendiente",
-        annotations_count: negativeCount,
-        student_name: student.full_name,
-        course,
-        regulation_basis: `${regulationBasis} - Progresi\xF3n disciplinaria`,
-        observations: `Carta pendiente sugerida por importaci\xF3n PDF masiva (${sourceHash}).`,
-      })
-      .select("id,student_id")
-      .single();
+    const { data: carta, error: insertError } = await supabase.from("cartas_disciplinarias").insert({
+      student_id: student.id,
+      tenant_id: tenantId,
+      letter_type: letterType,
+      emission_date: nowDateOnly(),
+      status: "Vigente",
+      emitted_by: "Inspector\xEDa",
+      supervisor_name: null,
+      apoderado_name: student.apoderado_nombre?.trim() || "Pendiente",
+      annotations_count: negativeCount,
+      student_name: student.full_name,
+      course,
+      regulation_basis: `${regulationBasis} - Progresi\xF3n disciplinaria`,
+      observations: `Carta pendiente sugerida por importaci\xF3n PDF masiva (${sourceHash}).`
+    }).select("id,student_id").single();
     if (insertError || !carta)
       throw insertError ?? new Error("No se pudo crear la carta pendiente.");
     const { error: eventError } = await supabase.from("carta_events").insert({
@@ -6337,14 +5426,13 @@ async function syncBulkPendingCartas(input) {
       student_id: student.id,
       tenant_id: tenantId,
       event_type: "suggested",
-      event_detail:
-        "Carta sugerida por progresi\xF3n desde importaci\xF3n PDF masiva",
+      event_detail: "Carta sugerida por progresi\xF3n desde importaci\xF3n PDF masiva",
       created_by: actorUserId,
       metadata: {
         source: "bulk_pdf",
         sourceHash,
-        negativeCount,
-      },
+        negativeCount
+      }
     });
     if (eventError) throw eventError;
     await archiveSupersededCartas(
@@ -6352,7 +5440,7 @@ async function syncBulkPendingCartas(input) {
       tenantId,
       student.id,
       letterType,
-      carta.id,
+      carta.id
     );
     created += 1;
   }
@@ -6363,32 +5451,16 @@ function isSupersedableCarta(status, eventTypes) {
   if (status !== "Vigente") return false;
   return !eventTypes.some((type) => CLOSED_EVENT_TYPES.includes(type));
 }
-async function archiveSupersededCartas(
-  supabase,
-  tenantId,
-  studentId,
-  letterType,
-  keepId,
-) {
-  const { data, error } = await supabase
-    .from("cartas_disciplinarias")
-    .select("id,status")
-    .eq("tenant_id", tenantId)
-    .eq("student_id", studentId)
-    .eq("letter_type", letterType)
-    .eq("status", "Vigente")
-    .neq("id", keepId);
+async function archiveSupersededCartas(supabase, tenantId, studentId, letterType, keepId) {
+  const { data, error } = await supabase.from("cartas_disciplinarias").select("id,status").eq("tenant_id", tenantId).eq("student_id", studentId).eq("letter_type", letterType).eq("status", "Vigente").neq("id", keepId);
   if (error || !data?.length) return 0;
   const ids = data.map((row) => row.id);
-  const { data: events } = await supabase
-    .from("carta_events")
-    .select("carta_id,event_type")
-    .in("carta_id", ids);
+  const { data: events } = await supabase.from("carta_events").select("carta_id,event_type").in("carta_id", ids);
   const byCarta = /* @__PURE__ */ new Map();
   for (const event of events ?? []) {
     byCarta.set(event.carta_id, [
-      ...(byCarta.get(event.carta_id) ?? []),
-      event.event_type,
+      ...byCarta.get(event.carta_id) ?? [],
+      event.event_type
     ]);
   }
   let archived = 0;
@@ -6399,7 +5471,7 @@ async function archiveSupersededCartas(
       student_id: studentId,
       tenant_id: tenantId,
       event_type: "archived",
-      event_detail: "Reemplazada por reemisi\xF3n del mismo tipo.",
+      event_detail: "Reemplazada por reemisi\xF3n del mismo tipo."
     });
     if (eventError) throw eventError;
     archived += 1;
@@ -6412,9 +5484,13 @@ init_fetchAllRows();
 var router10 = Router10();
 var ownUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 5 * 1024 * 1024 }
 });
-var ADMIN_ROLES = ["superadmin", "admin", "direccion"];
+var ADMIN_ROLES = [
+  "superadmin",
+  "admin",
+  "direccion"
+];
 var APPLICATION_CODE = "convivencia";
 var VALID_ROLES = [
   "admin",
@@ -6425,7 +5501,7 @@ var VALID_ROLES = [
   "teacher",
   "inspector",
   "user",
-  "staff",
+  "staff"
 ];
 var EMAIL_RE3 = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 var PDF_MAGIC = [37, 80, 68, 70, 45];
@@ -6435,35 +5511,25 @@ function hasPdfMagic(buffer) {
 }
 function isPdfUpload(file) {
   return Boolean(
-    file?.buffer &&
-    file.mimetype === "application/pdf" &&
-    hasPdfMagic(file.buffer),
+    file?.buffer && file.mimetype === "application/pdf" && hasPdfMagic(file.buffer)
   );
 }
 function safeFileName(name) {
   if (typeof name !== "string") return "archivo.pdf";
-  const printable = name
-    .split("")
-    .filter((ch) => {
-      const code = ch.charCodeAt(0);
-      return code >= 32 && code !== 127;
-    })
-    .join("");
+  const printable = name.split("").filter((ch) => {
+    const code = ch.charCodeAt(0);
+    return code >= 32 && code !== 127;
+  }).join("");
   const base = printable.split(/[\\/]/).pop()?.trim() ?? "";
   return base.slice(0, 128) || "archivo.pdf";
 }
 async function fetchExistingBulkRecords(client, tenantId, studentIds) {
   const pages = await Promise.all(
-    chunkQueryIds(studentIds).map((chunk) =>
-      fetchAllRows((from, to) =>
-        client
-          .from("inspectorate_records")
-          .select("student_id,type,date_time,observation")
-          .eq("tenant_id", tenantId)
-          .in("student_id", chunk)
-          .range(from, to),
-      ),
-    ),
+    chunkQueryIds(studentIds).map(
+      (chunk) => fetchAllRows(
+        (from, to) => client.from("inspectorate_records").select("student_id,type,date_time,observation").eq("tenant_id", tenantId).in("student_id", chunk).range(from, to)
+      )
+    )
   );
   return pages.flat();
 }
@@ -6472,15 +5538,14 @@ function invitationErrorStatus(message) {
 }
 function getAdminClient3() {
   const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) throw new Error("Supabase administrativo no configurado.");
   return createClient4(url, key, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
-      detectSessionInUrl: false,
-    },
+      detectSessionInUrl: false
+    }
   });
 }
 function getRequest(req) {
@@ -6492,14 +5557,9 @@ function isRole(value) {
 async function assertFreshAdmin(client, request2) {
   if (!request2.user?.sub || !request2.tenantId)
     throw new Error("Contexto administrativo inv\xE1lido.");
-  const { data, error } = await client
-    .from("profiles")
-    .select(
-      "user_id,tenant_id,email,full_name,role,course_ids,is_active,updated_at",
-    )
-    .eq("user_id", request2.user.sub)
-    .eq("tenant_id", request2.tenantId)
-    .maybeSingle();
+  const { data, error } = await client.from("profiles").select(
+    "user_id,tenant_id,email,full_name,role,course_ids,is_active,updated_at"
+  ).eq("user_id", request2.user.sub).eq("tenant_id", request2.tenantId).maybeSingle();
   if (error || !data)
     throw new Error("No fue posible validar al administrador.");
   const profile = data;
@@ -6508,14 +5568,7 @@ async function assertFreshAdmin(client, request2) {
   }
   return profile;
 }
-async function recordAudit(
-  client,
-  request2,
-  action,
-  entityId,
-  previousValues,
-  newValues,
-) {
+async function recordAudit(client, request2, action, entityId, previousValues, newValues) {
   const { error } = await client.from("audit_events").insert({
     tenant_id: request2.tenantId,
     actor_user_id: request2.user?.sub,
@@ -6523,7 +5576,7 @@ async function recordAudit(
     entity_type: "membership",
     entity_id: entityId,
     previous_values: previousValues,
-    new_values: newValues,
+    new_values: newValues
   });
   if (error) throw error;
 }
@@ -6542,7 +5595,7 @@ router10.use(
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
   requireTenant,
-  requireRole(ADMIN_ROLES),
+  requireRole(ADMIN_ROLES)
 );
 router10.get("/admin/members", async (req, res) => {
   try {
@@ -6554,37 +5607,19 @@ router10.get("/admin/members", async (req, res) => {
       membershipsResult,
       invitationsResult,
       auditResult,
-      users,
+      users
     ] = await Promise.all([
-      client
-        .from("profiles")
-        .select(
-          "user_id,tenant_id,email,full_name,role,course_ids,is_active,updated_at",
-        )
-        .eq("tenant_id", request2.tenantId)
-        .order("full_name", { ascending: true }),
-      client
-        .from("app_memberships")
-        .select("user_id,role,is_active,application_code")
-        .eq("tenant_id", request2.tenantId)
-        .eq("application_code", APPLICATION_CODE),
-      client
-        .from("membership_invitations")
-        .select(
-          "id,tenant_id,email,role,application_code,auth_user_id,invited_by,status,created_at,updated_at,last_sent_at,cancelled_at,accepted_at",
-        )
-        .eq("tenant_id", request2.tenantId)
-        .order("created_at", { ascending: false }),
-      client
-        .from("audit_events")
-        .select(
-          "id,actor_user_id,action,entity_type,entity_id,previous_values,new_values,occurred_at",
-        )
-        .eq("tenant_id", request2.tenantId)
-        .eq("entity_type", "membership")
-        .order("occurred_at", { ascending: false })
-        .limit(200),
-      listAuthUsers(client),
+      client.from("profiles").select(
+        "user_id,tenant_id,email,full_name,role,course_ids,is_active,updated_at"
+      ).eq("tenant_id", request2.tenantId).order("full_name", { ascending: true }),
+      client.from("app_memberships").select("user_id,role,is_active,application_code").eq("tenant_id", request2.tenantId).eq("application_code", APPLICATION_CODE),
+      client.from("membership_invitations").select(
+        "id,tenant_id,email,role,application_code,auth_user_id,invited_by,status,created_at,updated_at,last_sent_at,cancelled_at,accepted_at"
+      ).eq("tenant_id", request2.tenantId).order("created_at", { ascending: false }),
+      client.from("audit_events").select(
+        "id,actor_user_id,action,entity_type,entity_id,previous_values,new_values,occurred_at"
+      ).eq("tenant_id", request2.tenantId).eq("entity_type", "membership").order("occurred_at", { ascending: false }).limit(200),
+      listAuthUsers(client)
     ]);
     if (profilesResult.error) throw profilesResult.error;
     if (membershipsResult.error) throw membershipsResult.error;
@@ -6593,22 +5628,20 @@ router10.get("/admin/members", async (req, res) => {
     const profiles = profilesResult.data ?? [];
     const memberships = membershipsResult.data ?? [];
     const membershipByUser = new Map(
-      memberships.map((membership) => [membership.user_id, membership]),
+      memberships.map((membership) => [membership.user_id, membership])
     );
     const invitations = invitationsResult.data ?? [];
     const audits = auditResult.data ?? [];
     const actorEmails = new Map(
-      profiles.map((profile) => [profile.user_id, profile.email ?? ""]),
+      profiles.map((profile) => [profile.user_id, profile.email ?? ""])
     );
     const currentInvitations = invitations.map((invitation) => {
-      const user = invitation.auth_user_id
-        ? users.get(invitation.auth_user_id)
-        : void 0;
+      const user = invitation.auth_user_id ? users.get(invitation.auth_user_id) : void 0;
       if (invitation.status === "pending" && user?.confirmed_at) {
         return {
           ...invitation,
           status: "accepted",
-          accepted_at: user.confirmed_at,
+          accepted_at: user.confirmed_at
         };
       }
       return invitation;
@@ -6622,20 +5655,17 @@ router10.get("/admin/members", async (req, res) => {
           membershipRole: membership?.role ?? profile.role,
           membershipActive: membership?.is_active ?? profile.is_active,
           confirmed: Boolean(user?.confirmed_at),
-          lastSignInAt: user?.last_sign_in_at ?? null,
+          lastSignInAt: user?.last_sign_in_at ?? null
         };
       }),
       invitations: currentInvitations,
       history: audits.map((audit2) => ({
         ...audit2,
-        actorEmail: actorEmails.get(audit2.actor_user_id) ?? null,
-      })),
+        actorEmail: actorEmails.get(audit2.actor_user_id) ?? null
+      }))
     });
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Error al cargar la administraci\xF3n.";
+    const message = error instanceof Error ? error.message : "Error al cargar la administraci\xF3n.";
     const status = message.includes("permisos") ? 403 : 500;
     res.status(status).json(clientErrorBody(message, status));
   }
@@ -6648,72 +5678,45 @@ router10.patch("/admin/members/:userId", async (req, res) => {
     const userId = req.params.userId;
     const role = req.body?.role;
     const accessEnabled = req.body?.accessEnabled;
-    if (
-      !userId ||
-      !isValidUuid(userId) ||
-      !isRole(role) ||
-      typeof accessEnabled !== "boolean"
-    ) {
-      res
-        .status(400)
-        .json({ error: "userId, role y accessEnabled son obligatorios." });
+    if (!userId || !isValidUuid(userId) || !isRole(role) || typeof accessEnabled !== "boolean") {
+      res.status(400).json({ error: "userId, role y accessEnabled son obligatorios." });
       return;
     }
-    const { data: targetData, error: targetError } = await client
-      .from("profiles")
-      .select(
-        "user_id,tenant_id,email,full_name,role,course_ids,is_active,updated_at",
-      )
-      .eq("user_id", userId)
-      .eq("tenant_id", request2.tenantId)
-      .maybeSingle();
+    const { data: targetData, error: targetError } = await client.from("profiles").select(
+      "user_id,tenant_id,email,full_name,role,course_ids,is_active,updated_at"
+    ).eq("user_id", userId).eq("tenant_id", request2.tenantId).maybeSingle();
     if (targetError) throw targetError;
     if (!targetData) {
-      res
-        .status(404)
-        .json({ error: "Usuario no encontrado en este establecimiento." });
+      res.status(404).json({ error: "Usuario no encontrado en este establecimiento." });
       return;
     }
     const target = targetData;
     if (target.role === "admin" && (!accessEnabled || role !== "admin")) {
-      const { count, error: countError } = await client
-        .from("profiles")
-        .select("user_id", { count: "exact", head: true })
-        .eq("tenant_id", request2.tenantId)
-        .eq("role", "admin")
-        .eq("is_active", true)
-        .neq("user_id", userId);
+      const { count, error: countError } = await client.from("profiles").select("user_id", { count: "exact", head: true }).eq("tenant_id", request2.tenantId).eq("role", "admin").eq("is_active", true).neq("user_id", userId);
       if (countError) throw countError;
       if ((count ?? 0) < 1) {
         res.status(409).json({
-          error:
-            "No puede dejar al establecimiento sin un administrador activo.",
+          error: "No puede dejar al establecimiento sin un administrador activo."
         });
         return;
       }
     }
-    const { error: profileError } = await client
-      .from("profiles")
-      .update({
-        role,
-        is_active: accessEnabled,
-        updated_at: /* @__PURE__ */ new Date().toISOString(),
-      })
-      .eq("user_id", userId)
-      .eq("tenant_id", request2.tenantId);
+    const { error: profileError } = await client.from("profiles").update({
+      role,
+      is_active: accessEnabled,
+      updated_at: (/* @__PURE__ */ new Date()).toISOString()
+    }).eq("user_id", userId).eq("tenant_id", request2.tenantId);
     if (profileError) throw profileError;
-    const { error: membershipError } = await client
-      .from("app_memberships")
-      .upsert(
-        {
-          tenant_id: request2.tenantId,
-          user_id: userId,
-          application_code: APPLICATION_CODE,
-          role,
-          is_active: accessEnabled,
-        },
-        { onConflict: "tenant_id,user_id,application_code" },
-      );
+    const { error: membershipError } = await client.from("app_memberships").upsert(
+      {
+        tenant_id: request2.tenantId,
+        user_id: userId,
+        application_code: APPLICATION_CODE,
+        role,
+        is_active: accessEnabled
+      },
+      { onConflict: "tenant_id,user_id,application_code" }
+    );
     if (membershipError) throw membershipError;
     await recordAudit(
       client,
@@ -6722,16 +5725,13 @@ router10.patch("/admin/members/:userId", async (req, res) => {
       userId,
       {
         role: target.role,
-        is_active: target.is_active,
+        is_active: target.is_active
       },
-      { role, is_active: accessEnabled },
+      { role, is_active: accessEnabled }
     );
     res.json({ success: true });
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "No fue posible actualizar al usuario.";
+    const message = error instanceof Error ? error.message : "No fue posible actualizar al usuario.";
     const status = message.includes("administrador") ? 409 : 500;
     res.status(status).json(clientErrorBody(message, status));
   }
@@ -6741,79 +5741,51 @@ router10.post("/admin/invitations", rateLimit, async (req, res) => {
     const request2 = getRequest(req);
     const client = getAdminClient3();
     await assertFreshAdmin(client, request2);
-    const email =
-      typeof req.body?.email === "string"
-        ? req.body.email.trim().toLowerCase()
-        : "";
+    const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
     const role = req.body?.role;
     if (!EMAIL_RE3.test(email) || !isRole(role)) {
-      res
-        .status(400)
-        .json({ error: "Ingrese un correo v\xE1lido y un rol existente." });
+      res.status(400).json({ error: "Ingrese un correo v\xE1lido y un rol existente." });
       return;
     }
-    const { data: existingProfile, error: profileError } = await client
-      .from("profiles")
-      .select("user_id,email")
-      .eq("tenant_id", request2.tenantId)
-      .ilike("email", email)
-      .maybeSingle();
+    const { data: existingProfile, error: profileError } = await client.from("profiles").select("user_id,email").eq("tenant_id", request2.tenantId).ilike("email", email).maybeSingle();
     if (profileError) throw profileError;
     if (existingProfile) {
       res.status(409).json({
-        error: "Ese correo ya pertenece a un usuario del establecimiento.",
+        error: "Ese correo ya pertenece a un usuario del establecimiento."
       });
       return;
     }
-    const { data: existingInvitation, error: invitationError } = await client
-      .from("membership_invitations")
-      .select("id")
-      .eq("tenant_id", request2.tenantId)
-      .eq("email", email)
-      .eq("status", "pending")
-      .maybeSingle();
+    const { data: existingInvitation, error: invitationError } = await client.from("membership_invitations").select("id").eq("tenant_id", request2.tenantId).eq("email", email).eq("status", "pending").maybeSingle();
     if (invitationError) throw invitationError;
     if (existingInvitation) {
-      res
-        .status(409)
-        .json({
-          error: "Ya existe una invitaci\xF3n pendiente para ese correo.",
-        });
+      res.status(409).json({ error: "Ya existe una invitaci\xF3n pendiente para ese correo." });
       return;
     }
     const invitation = await client.auth.admin.inviteUserByEmail(email, {
-      data: { tenant_id: request2.tenantId, role },
+      data: { tenant_id: request2.tenantId, role }
     });
     if (invitation.error || !invitation.data.user)
       throw invitation.error ?? new Error("No se cre\xF3 el usuario invitado.");
     const invitedUser = invitation.data.user;
-    const { data: invitationRow, error: insertError } = await client
-      .from("membership_invitations")
-      .insert({
-        tenant_id: request2.tenantId,
-        email,
-        role,
-        application_code: APPLICATION_CODE,
-        auth_user_id: invitedUser.id,
-        invited_by: request2.user?.sub,
-      })
-      .select("id,email,role,status,created_at,last_sent_at")
-      .single();
+    const { data: invitationRow, error: insertError } = await client.from("membership_invitations").insert({
+      tenant_id: request2.tenantId,
+      email,
+      role,
+      application_code: APPLICATION_CODE,
+      auth_user_id: invitedUser.id,
+      invited_by: request2.user?.sub
+    }).select("id,email,role,status,created_at,last_sent_at").single();
     if (insertError) throw insertError;
-    await client
-      .from("profiles")
-      .update({ role, is_active: true })
-      .eq("user_id", invitedUser.id)
-      .eq("tenant_id", request2.tenantId);
+    await client.from("profiles").update({ role, is_active: true }).eq("user_id", invitedUser.id).eq("tenant_id", request2.tenantId);
     await client.from("app_memberships").upsert(
       {
         tenant_id: request2.tenantId,
         user_id: invitedUser.id,
         application_code: APPLICATION_CODE,
         role,
-        is_active: true,
+        is_active: true
       },
-      { onConflict: "tenant_id,user_id,application_code" },
+      { onConflict: "tenant_id,user_id,application_code" }
     );
     await recordAudit(
       client,
@@ -6821,17 +5793,12 @@ router10.post("/admin/invitations", rateLimit, async (req, res) => {
       "invitation_created",
       invitedUser.id,
       null,
-      { email, role },
+      { email, role }
     );
     res.status(201).json({ invitation: invitationRow });
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "No fue posible enviar la invitaci\xF3n.";
-    res
-      .status(invitationErrorStatus(message))
-      .json(clientErrorBody(message, invitationErrorStatus(message)));
+    const message = error instanceof Error ? error.message : "No fue posible enviar la invitaci\xF3n.";
+    res.status(invitationErrorStatus(message)).json(clientErrorBody(message, invitationErrorStatus(message)));
   }
 });
 router10.post(
@@ -6843,57 +5810,39 @@ router10.post(
       const client = getAdminClient3();
       await assertFreshAdmin(client, request2);
       if (!req.params.invitationId || !isValidUuid(req.params.invitationId)) {
-        res
-          .status(400)
-          .json({ error: "Identificador de invitaci\xF3n inv\xE1lido." });
+        res.status(400).json({ error: "Identificador de invitaci\xF3n inv\xE1lido." });
         return;
       }
-      const { data, error } = await client
-        .from("membership_invitations")
-        .select("id,tenant_id,email,role,auth_user_id,status")
-        .eq("id", req.params.invitationId)
-        .eq("tenant_id", request2.tenantId)
-        .maybeSingle();
+      const { data, error } = await client.from("membership_invitations").select("id,tenant_id,email,role,auth_user_id,status").eq("id", req.params.invitationId).eq("tenant_id", request2.tenantId).maybeSingle();
       if (error) throw error;
       const invitation = data;
       if (!invitation || invitation.status !== "pending") {
-        res
-          .status(404)
-          .json({ error: "Invitaci\xF3n pendiente no encontrada." });
+        res.status(404).json({ error: "Invitaci\xF3n pendiente no encontrada." });
         return;
       }
       const resend = await client.auth.admin.inviteUserByEmail(
         invitation.email,
         {
-          data: { tenant_id: request2.tenantId, role: invitation.role },
-        },
+          data: { tenant_id: request2.tenantId, role: invitation.role }
+        }
       );
       if (resend.error) throw resend.error;
-      const now = /* @__PURE__ */ new Date().toISOString();
-      await client
-        .from("membership_invitations")
-        .update({ last_sent_at: now, updated_at: now })
-        .eq("id", invitation.id)
-        .eq("tenant_id", request2.tenantId);
+      const now = (/* @__PURE__ */ new Date()).toISOString();
+      await client.from("membership_invitations").update({ last_sent_at: now, updated_at: now }).eq("id", invitation.id).eq("tenant_id", request2.tenantId);
       await recordAudit(
         client,
         request2,
         "invitation_resent",
         invitation.auth_user_id ?? invitation.id,
         null,
-        { email: invitation.email },
+        { email: invitation.email }
       );
       res.json({ success: true });
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "No fue posible reenviar la invitaci\xF3n.";
-      res
-        .status(invitationErrorStatus(message))
-        .json(clientErrorBody(message, invitationErrorStatus(message)));
+      const message = error instanceof Error ? error.message : "No fue posible reenviar la invitaci\xF3n.";
+      res.status(invitationErrorStatus(message)).json(clientErrorBody(message, invitationErrorStatus(message)));
     }
-  },
+  }
 );
 router10.post("/admin/invitations/:invitationId/cancel", async (req, res) => {
   try {
@@ -6901,42 +5850,22 @@ router10.post("/admin/invitations/:invitationId/cancel", async (req, res) => {
     const client = getAdminClient3();
     await assertFreshAdmin(client, request2);
     if (!req.params.invitationId || !isValidUuid(req.params.invitationId)) {
-      res
-        .status(400)
-        .json({ error: "Identificador de invitaci\xF3n inv\xE1lido." });
+      res.status(400).json({ error: "Identificador de invitaci\xF3n inv\xE1lido." });
       return;
     }
-    const { data, error } = await client
-      .from("membership_invitations")
-      .select("id,email,role,auth_user_id,status")
-      .eq("id", req.params.invitationId)
-      .eq("tenant_id", request2.tenantId)
-      .maybeSingle();
+    const { data, error } = await client.from("membership_invitations").select("id,email,role,auth_user_id,status").eq("id", req.params.invitationId).eq("tenant_id", request2.tenantId).maybeSingle();
     if (error) throw error;
     const invitation = data;
     if (!invitation || invitation.status !== "pending") {
       res.status(404).json({ error: "Invitaci\xF3n pendiente no encontrada." });
       return;
     }
-    const now = /* @__PURE__ */ new Date().toISOString();
-    const { error: updateError } = await client
-      .from("membership_invitations")
-      .update({ status: "cancelled", cancelled_at: now, updated_at: now })
-      .eq("id", invitation.id)
-      .eq("tenant_id", request2.tenantId);
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    const { error: updateError } = await client.from("membership_invitations").update({ status: "cancelled", cancelled_at: now, updated_at: now }).eq("id", invitation.id).eq("tenant_id", request2.tenantId);
     if (updateError) throw updateError;
     if (invitation.auth_user_id) {
-      await client
-        .from("profiles")
-        .update({ is_active: false, updated_at: now })
-        .eq("user_id", invitation.auth_user_id)
-        .eq("tenant_id", request2.tenantId);
-      await client
-        .from("app_memberships")
-        .update({ is_active: false, updated_at: now })
-        .eq("user_id", invitation.auth_user_id)
-        .eq("tenant_id", request2.tenantId)
-        .eq("application_code", APPLICATION_CODE);
+      await client.from("profiles").update({ is_active: false, updated_at: now }).eq("user_id", invitation.auth_user_id).eq("tenant_id", request2.tenantId);
+      await client.from("app_memberships").update({ is_active: false, updated_at: now }).eq("user_id", invitation.auth_user_id).eq("tenant_id", request2.tenantId).eq("application_code", APPLICATION_CODE);
     }
     await recordAudit(
       client,
@@ -6944,14 +5873,11 @@ router10.post("/admin/invitations/:invitationId/cancel", async (req, res) => {
       "invitation_cancelled",
       invitation.auth_user_id ?? invitation.id,
       { email: invitation.email, role: invitation.role },
-      null,
+      null
     );
     res.json({ success: true });
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "No fue posible cancelar la invitaci\xF3n.";
+    const message = error instanceof Error ? error.message : "No fue posible cancelar la invitaci\xF3n.";
     res.status(500).json(clientErrorBody(message, 500));
   }
 });
@@ -6970,14 +5896,8 @@ router10.post(
         res.status(400).json({ error: "Adjunte un archivo .xlsx v\xE1lido." });
         return;
       }
-      const defaultLevel =
-        req.body?.defaultLevel === "MEDIA" ? "MEDIA" : "BASICA";
-      const {
-        parseImportWorkbook: parseImportWorkbook2,
-        runImport: runImport2,
-      } = await Promise.resolve().then(
-        () => (init_excelImport(), excelImport_exports),
-      );
+      const defaultLevel = req.body?.defaultLevel === "MEDIA" ? "MEDIA" : "BASICA";
+      const { parseImportWorkbook: parseImportWorkbook2, runImport: runImport2 } = await Promise.resolve().then(() => (init_excelImport(), excelImport_exports));
       const parsed = await parseImportWorkbook2(req.file.buffer, defaultLevel);
       const result = await runImport2(client, request2.tenantId, parsed);
       await recordAudit(
@@ -6988,19 +5908,16 @@ router10.post(
         null,
         {
           courses: result.coursesInserted,
-          students: result.studentsInserted,
-        },
+          students: result.studentsInserted
+        }
       );
       res.json(result);
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "No fue posible importar la base.";
+      const message = error instanceof Error ? error.message : "No fue posible importar la base.";
       const status = message.includes("permisos") ? 403 : 500;
       res.status(status).json(clientErrorBody(message, status));
     }
-  },
+  }
 );
 router10.post(
   "/admin/profesores/import",
@@ -7020,12 +5937,10 @@ router10.post(
         res.status(400).json({ error: "Solo se permiten archivos .xlsx." });
         return;
       }
-      const { importTeachers: importTeachers2 } = await Promise.resolve().then(
-        () => (init_teachersImport(), teachersImport_exports),
-      );
+      const { importTeachers: importTeachers2 } = await Promise.resolve().then(() => (init_teachersImport(), teachersImport_exports));
       const result = await importTeachers2(client, request2.tenantId ?? "", {
         buffer: file.buffer,
-        originalname: safeFileName(file.originalname),
+        originalname: safeFileName(file.originalname)
       });
       await recordAudit(
         client,
@@ -7033,30 +5948,21 @@ router10.post(
         "teachers_roster_imported",
         request2.tenantId ?? "",
         null,
-        result,
+        result
       );
       res.json(result);
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "No fue posible importar la n\xF3mina docente.";
+      const message = error instanceof Error ? error.message : "No fue posible importar la n\xF3mina docente.";
       res.status(500).json(clientErrorBody(message, 500));
     }
-  },
+  }
 );
 async function loadTeacherNames(client, tenantId) {
   try {
-    const rows = await fetchAllRows((from, to) =>
-      client
-        .from("teachers")
-        .select("full_name")
-        .eq("tenant_id", tenantId)
-        .range(from, to),
+    const rows = await fetchAllRows(
+      (from, to) => client.from("teachers").select("full_name").eq("tenant_id", tenantId).range(from, to)
     );
-    return rows
-      .map((row) => row.full_name)
-      .filter((name) => name.trim().length > 0);
+    return rows.map((row) => row.full_name).filter((name) => name.trim().length > 0);
   } catch {
     return [];
   }
@@ -7076,64 +5982,52 @@ router10.post(
       }
       const teacherNames = await loadTeacherNames(
         client,
-        request2.tenantId ?? "",
+        request2.tenantId ?? ""
       );
       const parsed = await parseBulkDisciplinaryPdf(
         req.file.buffer,
-        teacherNames,
+        teacherNames
       );
       const detectedTotal = parsed.estudiantes.reduce(
         (total, student) => total + student.anotaciones.length,
-        0,
+        0
       );
       if (detectedTotal > BULK_MAX_ANNOTATIONS) {
         res.status(400).json({
-          error: "El PDF contiene demasiadas anotaciones para importar.",
+          error: "El PDF contiene demasiadas anotaciones para importar."
         });
         return;
       }
-      const { data: courses, error: coursesError } = await client
-        .from("courses")
-        .select("id,name,level")
-        .eq("tenant_id", request2.tenantId);
+      const { data: courses, error: coursesError } = await client.from("courses").select("id,name,level").eq("tenant_id", request2.tenantId);
       if (coursesError) throw coursesError;
       const courseKeys = new Map(
-        (courses ?? []).map((course2) => [
-          bulkCourseKey(course2.name),
-          course2,
-        ]),
+        (courses ?? []).map((course2) => [bulkCourseKey(course2.name), course2])
       );
       const detectedCourse = parsed.estudiantes[0]?.curso ?? "";
       const course = courseKeys.get(bulkCourseKey(detectedCourse));
       if (!course) {
         res.status(422).json({
           error: `No existe en este establecimiento el curso detectado "${detectedCourse}".`,
-          detected_course: detectedCourse,
+          detected_course: detectedCourse
         });
         return;
       }
-      const { data: students, error: studentsError } = await client
-        .from("students")
-        .select("id,full_name,rut,course_id")
-        .eq("tenant_id", request2.tenantId)
-        .eq("course_id", course.id);
+      const { data: students, error: studentsError } = await client.from("students").select("id,full_name,rut,course_id").eq("tenant_id", request2.tenantId).eq("course_id", course.id);
       if (studentsError) throw studentsError;
       const studentsByName = /* @__PURE__ */ new Map();
       for (const student of students ?? []) {
         const key = bulkNameKey(student.full_name);
-        studentsByName.set(key, [...(studentsByName.get(key) ?? []), student]);
+        studentsByName.set(key, [...studentsByName.get(key) ?? [], student]);
       }
       const matchedStudentIds = parsed.estudiantes.flatMap((source) => {
         const candidates = studentsByName.get(bulkNameKey(source.nombre)) ?? [];
         return candidates.length === 1 ? [candidates[0].id] : [];
       });
-      const existingRecords = matchedStudentIds.length
-        ? await fetchExistingBulkRecords(
-            client,
-            request2.tenantId ?? "",
-            matchedStudentIds,
-          )
-        : [];
+      const existingRecords = matchedStudentIds.length ? await fetchExistingBulkRecords(
+        client,
+        request2.tenantId ?? "",
+        matchedStudentIds
+      ) : [];
       const existingByStudent = /* @__PURE__ */ new Map();
       for (const record of existingRecords ?? []) {
         const records = existingByStudent.get(record.student_id) ?? [];
@@ -7148,36 +6042,31 @@ router10.post(
           student_id: match?.id ?? null,
           matched_name: match?.full_name ?? null,
           rut: match?.rut ?? null,
-          status:
-            candidates.length === 1
-              ? "matched"
-              : candidates.length > 1
-                ? "ambiguous"
-                : "missing",
+          status: candidates.length === 1 ? "matched" : candidates.length > 1 ? "ambiguous" : "missing",
           annotation_count: source.anotaciones.length,
-          duplicates_removed: source.duplicados_eliminados,
+          duplicates_removed: source.duplicados_eliminados
         };
       });
-      const annotations = parsed.estudiantes.flatMap((source) => {
-        const candidates = studentsByName.get(bulkNameKey(source.nombre)) ?? [];
-        const match = candidates.length === 1 ? candidates[0] : null;
-        return match
-          ? selectNewBulkAnnotations(
-              source.anotaciones,
-              existingByStudent.get(match.id) ?? [],
-            ).map((annotation) => ({
-              ...annotation,
-              student_id: match.id,
-              student_name: match.full_name,
-            }))
-          : [];
-      });
+      const annotations = parsed.estudiantes.flatMap(
+        (source) => {
+          const candidates = studentsByName.get(bulkNameKey(source.nombre)) ?? [];
+          const match = candidates.length === 1 ? candidates[0] : null;
+          return match ? selectNewBulkAnnotations(
+            source.anotaciones,
+            existingByStudent.get(match.id) ?? []
+          ).map((annotation) => ({
+            ...annotation,
+            student_id: match.id,
+            student_name: match.full_name
+          })) : [];
+        }
+      );
       const additionalNegatives = /* @__PURE__ */ new Map();
       for (const annotation of annotations) {
         if (annotation.tipo === "Negativa") {
           additionalNegatives.set(
             annotation.student_id,
-            (additionalNegatives.get(annotation.student_id) ?? 0) + 1,
+            (additionalNegatives.get(annotation.student_id) ?? 0) + 1
           );
         }
       }
@@ -7185,12 +6074,12 @@ router10.post(
         {
           supabase: client,
           tenantId: request2.tenantId ?? "",
-          studentIds: matchedStudentIds,
+          studentIds: matchedStudentIds
         },
-        additionalNegatives,
+        additionalNegatives
       );
       const cartasByStudent = new Map(
-        cartaPlan.map((item) => [item.student.id, item]),
+        cartaPlan.map((item) => [item.student.id, item])
       );
       res.json({
         file_name: safeFileName(req.file?.originalname),
@@ -7201,48 +6090,40 @@ router10.post(
         warnings: parsed.warnings,
         students: previewStudents.map((student) => ({
           ...student,
-          existing_count:
-            existingByStudent.get(student.student_id ?? "")?.length ?? 0,
+          existing_count: existingByStudent.get(student.student_id ?? "")?.length ?? 0,
           new_count: annotations.filter(
-            (annotation) => annotation.student_id === student.student_id,
+            (annotation) => annotation.student_id === student.student_id
           ).length,
-          current_letter:
-            cartasByStudent.get(student.student_id ?? "")?.current_letter ??
-            null,
-          pending_letter:
-            cartasByStudent.get(student.student_id ?? "")?.pending_letter ??
-            null,
+          current_letter: cartasByStudent.get(student.student_id ?? "")?.current_letter ?? null,
+          pending_letter: cartasByStudent.get(student.student_id ?? "")?.pending_letter ?? null
         })),
         annotations,
         summary: {
           students_in_file: parsed.estudiantes.length,
           students_in_database: students?.length ?? 0,
           matched_students: previewStudents.filter(
-            (row) => row.status === "matched",
+            (row) => row.status === "matched"
           ).length,
           missing_students: previewStudents.filter(
-            (row) => row.status === "missing",
+            (row) => row.status === "missing"
           ).length,
           ambiguous_students: previewStudents.filter(
-            (row) => row.status === "ambiguous",
+            (row) => row.status === "ambiguous"
           ).length,
           annotations_detected: detectedTotal,
           annotations_existing: existingRecords?.length ?? 0,
           annotations_ready: annotations.length,
           duplicates_removed: parsed.estudiantes.reduce(
             (total, student) => total + student.duplicados_eliminados,
-            0,
-          ),
-        },
+            0
+          )
+        }
       });
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "No fue posible analizar el PDF.";
+      const message = error instanceof Error ? error.message : "No fue posible analizar el PDF.";
       res.status(500).json(clientErrorBody(message, 500));
     }
-  },
+  }
 );
 router10.post(
   "/admin/annotations/bulk-confirm",
@@ -7256,74 +6137,50 @@ router10.post(
       await assertFreshAdmin(client, request2);
       const courseId = req.body?.course_id;
       const fileHash = req.body?.file_hash;
-      if (
-        !isPdfUpload(req.file) ||
-        !isValidUuid(courseId) ||
-        typeof fileHash !== "string" ||
-        !/^[a-f0-9]{64}$/.test(fileHash)
-      ) {
-        res
-          .status(400)
-          .json({ error: "Vista previa de importaci\xF3n inv\xE1lida." });
+      if (!isPdfUpload(req.file) || !isValidUuid(courseId) || typeof fileHash !== "string" || !/^[a-f0-9]{64}$/.test(fileHash)) {
+        res.status(400).json({ error: "Vista previa de importaci\xF3n inv\xE1lida." });
         return;
       }
       const teacherNames = await loadTeacherNames(
         client,
-        request2.tenantId ?? "",
+        request2.tenantId ?? ""
       );
       const parsed = await parseBulkDisciplinaryPdf(
         req.file.buffer,
-        teacherNames,
+        teacherNames
       );
       if (parsed.file_hash !== fileHash) {
-        res
-          .status(400)
-          .json({ error: "El hash del PDF no coincide con la vista previa." });
+        res.status(400).json({ error: "El hash del PDF no coincide con la vista previa." });
         return;
       }
-      const { data: course, error: courseError } = await client
-        .from("courses")
-        .select("id,name")
-        .eq("id", courseId)
-        .eq("tenant_id", request2.tenantId)
-        .maybeSingle();
+      const { data: course, error: courseError } = await client.from("courses").select("id,name").eq("id", courseId).eq("tenant_id", request2.tenantId).maybeSingle();
       if (courseError) throw courseError;
       if (!course) {
-        res
-          .status(404)
-          .json({ error: "Curso no encontrado en este establecimiento." });
+        res.status(404).json({ error: "Curso no encontrado en este establecimiento." });
         return;
       }
-      const { data: students, error: studentsError } = await client
-        .from("students")
-        .select("id,full_name,course_id")
-        .eq("tenant_id", request2.tenantId)
-        .eq("course_id", courseId);
+      const { data: students, error: studentsError } = await client.from("students").select("id,full_name,course_id").eq("tenant_id", request2.tenantId).eq("course_id", courseId);
       if (studentsError) throw studentsError;
       const studentsByName = /* @__PURE__ */ new Map();
       for (const student of students ?? []) {
         const key = bulkNameKey(student.full_name);
-        studentsByName.set(key, [...(studentsByName.get(key) ?? []), student]);
+        studentsByName.set(key, [...studentsByName.get(key) ?? [], student]);
       }
-      const matchOf = (source) =>
-        studentsByName.get(bulkNameKey(source.nombre)) ?? [];
+      const matchOf = (source) => studentsByName.get(bulkNameKey(source.nombre)) ?? [];
       const unresolvedSources = parsed.estudiantes.filter(
-        (source) => matchOf(source).length !== 1,
+        (source) => matchOf(source).length !== 1
       );
       if (unresolvedSources.length > 0) {
         res.status(409).json({
           error: `Hay ${unresolvedSources.length} estudiantes sin coincidencia \xFAnica en este establecimiento; corrige el PDF y vuelve a intentarlo.`,
-          unresolved: unresolvedSources
-            .map((source) => source.nombre)
-            .slice(0, 50),
+          unresolved: unresolvedSources.map((source) => source.nombre).slice(0, 50)
         });
         return;
       }
       if (parsed.warnings.length > 0) {
         res.status(422).json({
-          error:
-            "El PDF contiene fichas con advertencias; corr\xEDgelas y vuelve a intentarlo.",
-          warnings: parsed.warnings.slice(0, 50),
+          error: "El PDF contiene fichas con advertencias; corr\xEDgelas y vuelve a intentarlo.",
+          warnings: parsed.warnings.slice(0, 50)
         });
         return;
       }
@@ -7331,13 +6188,11 @@ router10.post(
         const candidates = studentsByName.get(bulkNameKey(source.nombre)) ?? [];
         return candidates.length === 1 ? [candidates[0].id] : [];
       });
-      const existingRecords = matchedStudentIds.length
-        ? await fetchExistingBulkRecords(
-            client,
-            request2.tenantId ?? "",
-            matchedStudentIds,
-          )
-        : [];
+      const existingRecords = matchedStudentIds.length ? await fetchExistingBulkRecords(
+        client,
+        request2.tenantId ?? "",
+        matchedStudentIds
+      ) : [];
       const existingByStudent = /* @__PURE__ */ new Map();
       for (const record of existingRecords ?? []) {
         const records = existingByStudent.get(record.student_id) ?? [];
@@ -7350,34 +6205,28 @@ router10.post(
         const student = candidates[0];
         return selectNewBulkAnnotations(
           source.anotaciones,
-          existingByStudent.get(student.id) ?? [],
+          existingByStudent.get(student.id) ?? []
         ).map((annotation) => ({
           ...annotation,
           student_id: student.id,
-          student_name: student.full_name,
+          student_name: student.full_name
         }));
       });
       const detectedTotal = parsed.estudiantes.reduce(
         (total, student) => total + student.anotaciones.length,
-        0,
+        0
       );
       if (newAnnotations.length > BULK_MAX_ANNOTATIONS) {
         res.status(400).json({
-          error: "El PDF contiene demasiadas anotaciones para importar.",
+          error: "El PDF contiene demasiadas anotaciones para importar."
         });
         return;
       }
       const pdfPath = `bulk-pdf/${request2.tenantId}/${courseId}/${fileHash}`;
-      const { count: existingCount, error: existingError } = await client
-        .from("inspectorate_records")
-        .select("id", { count: "exact", head: true })
-        .eq("tenant_id", request2.tenantId)
-        .eq("pdf_file_path", pdfPath);
+      const { count: existingCount, error: existingError } = await client.from("inspectorate_records").select("id", { count: "exact", head: true }).eq("tenant_id", request2.tenantId).eq("pdf_file_path", pdfPath);
       if (existingError) throw existingError;
       if ((existingCount ?? 0) > 0) {
-        res
-          .status(409)
-          .json({ error: "Este PDF ya fue importado para este curso." });
+        res.status(409).json({ error: "Este PDF ya fue importado para este curso." });
         return;
       }
       const { data: claimed, error: claimError } = await client.rpc(
@@ -7385,21 +6234,20 @@ router10.post(
         {
           p_tenant_id: request2.tenantId ?? "",
           p_course_id: courseId,
-          p_file_hash: fileHash,
-        },
+          p_file_hash: fileHash
+        }
       );
       if (claimError) throw claimError;
       if (!claimed) {
         res.status(409).json({
-          error:
-            "Este PDF ya est\xE1 siendo procesado o fue importado anteriormente.",
+          error: "Este PDF ya est\xE1 siendo procesado o fue importado anteriormente."
         });
         return;
       }
       bulkClaim = {
         tenantId: request2.tenantId ?? "",
         courseId,
-        fileHash,
+        fileHash
       };
       const rows = newAnnotations.map((annotation) => ({
         student_id: annotation.student_id,
@@ -7409,17 +6257,13 @@ router10.post(
         severity: "Leve",
         // El nombre viene del PDF subido, no del usuario autenticado: se marca
         // como lo que es para no atribuir la anotación a un docente real.
-        registered_by: annotation.profesor?.trim()
-          ? `${annotation.profesor.trim()} (seg\xFAn ficha)`
-          : "PDF Importaci\xF3n Masiva",
+        registered_by: annotation.profesor?.trim() ? `${annotation.profesor.trim()} (seg\xFAn ficha)` : "PDF Importaci\xF3n Masiva",
         created_by: request2.user?.sub ?? "",
         tenant_id: request2.tenantId,
-        pdf_file_path: pdfPath,
+        pdf_file_path: pdfPath
       }));
       if (rows.length > 0) {
-        const { error: insertError } = await client
-          .from("inspectorate_records")
-          .insert(rows);
+        const { error: insertError } = await client.from("inspectorate_records").insert(rows);
         if (insertError) throw insertError;
       }
       const pendingCartas = await syncBulkPendingCartas({
@@ -7427,7 +6271,7 @@ router10.post(
         tenantId: request2.tenantId ?? "",
         studentIds: matchedStudentIds,
         actorUserId: request2.user?.sub ?? "",
-        sourceHash: fileHash,
+        sourceHash: fileHash
       });
       const { error: auditError } = await client.from("audit_events").insert({
         tenant_id: request2.tenantId,
@@ -7440,8 +6284,8 @@ router10.post(
           file_hash: fileHash,
           course_id: courseId,
           annotations: rows.length,
-          pending_cartas: pendingCartas,
-        },
+          pending_cartas: pendingCartas
+        }
       });
       if (auditError) throw auditError;
       const { error: completeError } = await client.rpc(
@@ -7449,8 +6293,8 @@ router10.post(
         {
           p_tenant_id: request2.tenantId ?? "",
           p_course_id: courseId,
-          p_file_hash: fileHash,
-        },
+          p_file_hash: fileHash
+        }
       );
       if (completeError) throw completeError;
       bulkClaim = null;
@@ -7458,56 +6302,38 @@ router10.post(
         imported: rows.length,
         skipped: detectedTotal - newAnnotations.length,
         course: course.name,
-        pending_cartas: pendingCartas,
+        pending_cartas: pendingCartas
       });
     } catch (error) {
       if (bulkClaim) {
         try {
-          await getAdminClient3()
-            .from("inspectorate_records")
-            .delete()
-            .eq("tenant_id", bulkClaim.tenantId)
-            .eq(
-              "pdf_file_path",
-              `bulk-pdf/${bulkClaim.tenantId}/${bulkClaim.courseId}/${bulkClaim.fileHash}`,
-            );
+          await getAdminClient3().from("inspectorate_records").delete().eq("tenant_id", bulkClaim.tenantId).eq(
+            "pdf_file_path",
+            `bulk-pdf/${bulkClaim.tenantId}/${bulkClaim.courseId}/${bulkClaim.fileHash}`
+          );
           const adminClient = getAdminClient3();
-          const { data: orphanedCartas } = await adminClient
-            .from("cartas_disciplinarias")
-            .select("id")
-            .eq("tenant_id", bulkClaim.tenantId)
-            .like("observations", `%${bulkClaim.fileHash}%`);
+          const { data: orphanedCartas } = await adminClient.from("cartas_disciplinarias").select("id").eq("tenant_id", bulkClaim.tenantId).like("observations", `%${bulkClaim.fileHash}%`);
           const cartaIds = (orphanedCartas ?? []).map((row) => row.id);
           if (cartaIds.length > 0) {
-            await adminClient
-              .from("carta_events")
-              .delete()
-              .in("carta_id", cartaIds);
-            await adminClient
-              .from("cartas_disciplinarias")
-              .delete()
-              .eq("tenant_id", bulkClaim.tenantId)
-              .in("id", cartaIds);
+            await adminClient.from("carta_events").delete().in("carta_id", cartaIds);
+            await adminClient.from("cartas_disciplinarias").delete().eq("tenant_id", bulkClaim.tenantId).in("id", cartaIds);
           }
           await getAdminClient3().rpc("release_bulk_pdf_import", {
             p_tenant_id: bulkClaim.tenantId,
             p_course_id: bulkClaim.courseId,
-            p_file_hash: bulkClaim.fileHash,
+            p_file_hash: bulkClaim.fileHash
           });
         } catch (releaseError) {
           console.error(
             "No se pudo liberar la importaci\xF3n masiva:",
-            releaseError,
+            releaseError
           );
         }
       }
-      const message =
-        error instanceof Error
-          ? error.message
-          : "No fue posible confirmar la importaci\xF3n.";
+      const message = error instanceof Error ? error.message : "No fue posible confirmar la importaci\xF3n.";
       res.status(500).json(clientErrorBody(message, 500));
     }
-  },
+  }
 );
 var admin_default = router10;
 
@@ -7526,15 +6352,11 @@ function requireSuperAdmin(req, res, next) {
   }
   const role = authReq.profileRole;
   if (!role) {
-    res
-      .status(403)
-      .json({ error: "No fue posible determinar el rol del usuario." });
+    res.status(403).json({ error: "No fue posible determinar el rol del usuario." });
     return;
   }
   if (role !== "superadmin") {
-    res
-      .status(403)
-      .json({ error: "Acceso restringido a superadministradores." });
+    res.status(403).json({ error: "Acceso restringido a superadministradores." });
     return;
   }
   next();
@@ -7544,7 +6366,7 @@ function requireSuperAdmin(req, res, next) {
 var router11 = Router11();
 var upload = multer2({
   storage: multer2.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 5 * 1024 * 1024 }
 });
 var DEFAULT_TENANT_ID = "00000000-0000-0000-0000-000000000001";
 var APPLICATION_CODE2 = "convivencia";
@@ -7554,62 +6376,44 @@ function getRequest2(req) {
 }
 function getAdminClient4() {
   const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) throw new Error("Supabase administrativo no configurado.");
   return createClient5(url, key, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
-      detectSessionInUrl: false,
-    },
+      detectSessionInUrl: false
+    }
   });
 }
 function slugify(name) {
-  return name
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+  return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
 }
 async function generateUniqueSlug(client, base) {
   const slug = slugify(base) || "colegio";
-  const { data } = await client
-    .from("tenants")
-    .select("slug")
-    .ilike("slug", `${slug}%`);
-  const existing = new Set((data ?? []).map((row) => row.slug));
+  const { data } = await client.from("tenants").select("slug").ilike("slug", `${slug}%`);
+  const existing = new Set(
+    (data ?? []).map((row) => row.slug)
+  );
   if (!existing.has(slug)) return slug;
   let n = 2;
   while (existing.has(`${slug}-${n}`)) n += 1;
   return `${slug}-${n}`;
 }
 async function assertFreshSuperAdmin(client, request2) {
-  if (!request2.user?.sub)
-    throw new Error("Contexto de plataforma inv\xE1lido.");
-  const { data, error } = await client
-    .from("profiles")
-    .select("user_id,role,is_active,tenant_id")
-    .eq("user_id", request2.user.sub)
-    .maybeSingle();
+  if (!request2.user?.sub) throw new Error("Contexto de plataforma inv\xE1lido.");
+  const { data, error } = await client.from("profiles").select("user_id,role,is_active,tenant_id").eq("user_id", request2.user.sub).maybeSingle();
   if (error || !data)
     throw new Error("No fue posible validar al superadministrador.");
   const profile = data;
   if (!profile.is_active || profile.role !== "superadmin") {
     throw new Error(
-      "La cuenta no tiene permisos de superadministrador activos.",
+      "La cuenta no tiene permisos de superadministrador activos."
     );
   }
 }
 async function copyDefaultTemplates(client, tenantId) {
-  const { data, error } = await client
-    .from("document_templates")
-    .select("id,doc_type,label,system_prompt")
-    .eq("tenant_id", DEFAULT_TENANT_ID);
+  const { data, error } = await client.from("document_templates").select("id,doc_type,label,system_prompt").eq("tenant_id", DEFAULT_TENANT_ID);
   if (error) throw error;
   const templates = data ?? [];
   if (templates.length === 0) return;
@@ -7618,21 +6422,12 @@ async function copyDefaultTemplates(client, tenantId) {
     doc_type: tpl.doc_type,
     label: tpl.label,
     system_prompt: tpl.system_prompt,
-    tenant_id: tenantId,
+    tenant_id: tenantId
   }));
-  const { error: insertError } = await client
-    .from("document_templates")
-    .upsert(copies, { onConflict: "tenant_id,doc_type" });
+  const { error: insertError } = await client.from("document_templates").upsert(copies, { onConflict: "tenant_id,doc_type" });
   if (insertError) throw insertError;
 }
-async function recordAudit2(
-  client,
-  tenantId,
-  actorUserId,
-  action,
-  entityId,
-  newValues,
-) {
+async function recordAudit2(client, tenantId, actorUserId, action, entityId, newValues) {
   const { error } = await client.from("audit_events").insert({
     tenant_id: tenantId,
     actor_user_id: actorUserId,
@@ -7640,7 +6435,7 @@ async function recordAudit2(
     entity_type: "tenant",
     entity_id: entityId,
     previous_values: null,
-    new_values: newValues,
+    new_values: newValues
   });
   if (error) throw error;
 }
@@ -7650,42 +6445,33 @@ router11.get("/platform/tenants", async (req, res) => {
     const request2 = getRequest2(req);
     const client = getAdminClient4();
     await assertFreshSuperAdmin(client, request2);
-    const { data, error } = await client
-      .from("tenants")
-      .select("id,name,slug,created_at")
-      .order("created_at", { ascending: false });
+    const { data, error } = await client.from("tenants").select("id,name,slug,created_at").order("created_at", { ascending: false });
     if (error) throw error;
     const tenants = data ?? [];
     const { data: countsData, error: countsError } = await client.rpc(
-      "get_tenant_user_counts",
+      "get_tenant_user_counts"
     );
     const rpcAvailable = !countsError && Array.isArray(countsData);
     const rpcCounts = new Map(
-      (Array.isArray(countsData) ? countsData : []).map((row) => [
-        row.tenant_id,
-        Number(row.user_count) || 0,
-      ]),
+      (Array.isArray(countsData) ? countsData : []).map(
+        (row) => [
+          row.tenant_id,
+          Number(row.user_count) || 0
+        ]
+      )
     );
-    const withCounts = rpcAvailable
-      ? tenants.map((tenant) => ({
-          ...tenant,
-          user_count: rpcCounts.get(tenant.id) ?? 0,
-        }))
-      : await Promise.all(
-          tenants.map(async (tenant) => {
-            const { count, error: countError } = await client
-              .from("profiles")
-              .select("user_id", { count: "exact", head: true })
-              .eq("tenant_id", tenant.id);
-            return { ...tenant, user_count: countError ? 0 : (count ?? 0) };
-          }),
-        );
+    const withCounts = rpcAvailable ? tenants.map((tenant) => ({
+      ...tenant,
+      user_count: rpcCounts.get(tenant.id) ?? 0
+    })) : await Promise.all(
+      tenants.map(async (tenant) => {
+        const { count, error: countError } = await client.from("profiles").select("user_id", { count: "exact", head: true }).eq("tenant_id", tenant.id);
+        return { ...tenant, user_count: countError ? 0 : count ?? 0 };
+      })
+    );
     res.json({ tenants: withCounts });
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "No fue posible cargar los colegios.";
+    const message = error instanceof Error ? error.message : "No fue posible cargar los colegios.";
     const status = message.includes("superadministrador") ? 403 : 500;
     res.status(status).json(clientErrorBody(message, status));
   }
@@ -7696,46 +6482,22 @@ router11.get("/platform/tenants/:id/summary", async (req, res) => {
     const client = getAdminClient4();
     await assertFreshSuperAdmin(client, request2);
     const tenantId = req.params.id;
-    const tenant = await client
-      .from("tenants")
-      .select("id")
-      .eq("id", tenantId)
-      .maybeSingle();
+    const tenant = await client.from("tenants").select("id").eq("id", tenantId).maybeSingle();
     if (tenant.error) throw tenant.error;
     if (!tenant.data) {
       res.status(404).json({ error: "Colegio no encontrado." });
       return;
     }
-    const [users, courses, students, cases, templates, documents] =
-      await Promise.all([
-        client
-          .from("profiles")
-          .select("user_id", { count: "exact", head: true })
-          .eq("tenant_id", tenantId),
-        client
-          .from("courses")
-          .select("id", { count: "exact", head: true })
-          .eq("tenant_id", tenantId),
-        client
-          .from("students")
-          .select("id", { count: "exact", head: true })
-          .eq("tenant_id", tenantId),
-        client
-          .from("causas")
-          .select("id", { count: "exact", head: true })
-          .eq("tenant_id", tenantId),
-        client
-          .from("document_templates")
-          .select("id", { count: "exact", head: true })
-          .eq("tenant_id", tenantId),
-        client
-          .from("institution_documents")
-          .select("id", { count: "exact", head: true })
-          .eq("tenant_id", tenantId)
-          .eq("status", "active"),
-      ]);
+    const [users, courses, students, cases, templates, documents] = await Promise.all([
+      client.from("profiles").select("user_id", { count: "exact", head: true }).eq("tenant_id", tenantId),
+      client.from("courses").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId),
+      client.from("students").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId),
+      client.from("causas").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId),
+      client.from("document_templates").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId),
+      client.from("institution_documents").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).eq("status", "active")
+    ]);
     const failed = [users, courses, students, cases, templates, documents].find(
-      (result) => result.error,
+      (result) => result.error
     );
     if (failed?.error) throw failed.error;
     const summary = {
@@ -7745,14 +6507,11 @@ router11.get("/platform/tenants/:id/summary", async (req, res) => {
       students: students.count ?? 0,
       cases: cases.count ?? 0,
       templates: templates.count ?? 0,
-      institution_documents: documents.count ?? 0,
+      institution_documents: documents.count ?? 0
     };
     res.json(summary);
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "No fue posible cargar el resumen del colegio.";
+    const message = error instanceof Error ? error.message : "No fue posible cargar el resumen del colegio.";
     res.status(500).json(clientErrorBody(message, 500));
   }
 });
@@ -7765,68 +6524,49 @@ router11.post("/platform/tenants", rateLimit, async (req, res) => {
     client = getAdminClient4();
     await assertFreshSuperAdmin(client, request2);
     const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
-    const adminEmail =
-      typeof req.body?.adminEmail === "string"
-        ? req.body.adminEmail.trim().toLowerCase()
-        : "";
-    const providedSlug =
-      typeof req.body?.slug === "string" ? req.body.slug.trim() : "";
+    const adminEmail = typeof req.body?.adminEmail === "string" ? req.body.adminEmail.trim().toLowerCase() : "";
+    const providedSlug = typeof req.body?.slug === "string" ? req.body.slug.trim() : "";
     if (!name || !EMAIL_RE4.test(adminEmail)) {
       res.status(400).json({
-        error: "Ingrese un nombre v\xE1lido y un correo de administrador.",
+        error: "Ingrese un nombre v\xE1lido y un correo de administrador."
       });
       return;
     }
     const tenantId = randomUUID2();
     createdTenantId = tenantId;
-    const slug = providedSlug
-      ? slugify(providedSlug) || slugify(name)
-      : await generateUniqueSlug(client, name);
-    const { error: tenantError } = await client
-      .from("tenants")
-      .insert({ id: tenantId, name, slug });
+    const slug = providedSlug ? slugify(providedSlug) || slugify(name) : await generateUniqueSlug(client, name);
+    const { error: tenantError } = await client.from("tenants").insert({ id: tenantId, name, slug });
     if (tenantError) throw tenantError;
-    const { error: settingsError } = await client
-      .from("institution_settings")
-      .insert({
-        tenant_id: tenantId,
-        official_name: name,
-        education_levels: [],
-      });
+    const { error: settingsError } = await client.from("institution_settings").insert({
+      tenant_id: tenantId,
+      official_name: name,
+      education_levels: []
+    });
     if (settingsError) throw settingsError;
     const invitation = await client.auth.admin.inviteUserByEmail(adminEmail, {
-      data: { tenant_id: tenantId, role: "admin" },
+      data: { tenant_id: tenantId, role: "admin" }
     });
     if (invitation.error || !invitation.data.user) {
-      throw (
-        invitation.error ??
-        new Error("No se cre\xF3 el usuario administrador invitado.")
-      );
+      throw invitation.error ?? new Error("No se cre\xF3 el usuario administrador invitado.");
     }
     const adminUser = invitation.data.user;
     createdAuthUserId = adminUser.id;
-    const { error: profileError } = await client
-      .from("profiles")
-      .update({
-        role: "admin",
-        is_active: true,
-        updated_at: /* @__PURE__ */ new Date().toISOString(),
-      })
-      .eq("user_id", adminUser.id)
-      .eq("tenant_id", tenantId);
+    const { error: profileError } = await client.from("profiles").update({
+      role: "admin",
+      is_active: true,
+      updated_at: (/* @__PURE__ */ new Date()).toISOString()
+    }).eq("user_id", adminUser.id).eq("tenant_id", tenantId);
     if (profileError) throw profileError;
-    const { error: membershipError } = await client
-      .from("app_memberships")
-      .upsert(
-        {
-          tenant_id: tenantId,
-          user_id: adminUser.id,
-          application_code: APPLICATION_CODE2,
-          role: "admin",
-          is_active: true,
-        },
-        { onConflict: "tenant_id,user_id,application_code" },
-      );
+    const { error: membershipError } = await client.from("app_memberships").upsert(
+      {
+        tenant_id: tenantId,
+        user_id: adminUser.id,
+        application_code: APPLICATION_CODE2,
+        role: "admin",
+        is_active: true
+      },
+      { onConflict: "tenant_id,user_id,application_code" }
+    );
     if (membershipError) throw membershipError;
     await copyDefaultTemplates(client, tenantId);
     await recordAudit2(
@@ -7838,39 +6578,32 @@ router11.post("/platform/tenants", rateLimit, async (req, res) => {
       {
         name,
         slug,
-        admin_email: adminEmail,
-      },
+        admin_email: adminEmail
+      }
     );
     res.status(201).json({
       tenant: { id: tenantId, name, slug },
-      invitation: { email: adminEmail, status: "pending" },
+      invitation: { email: adminEmail, status: "pending" }
     });
   } catch (error) {
     if (client) {
       if (createdAuthUserId) {
-        await client.auth.admin
-          .deleteUser(createdAuthUserId)
-          .catch(() => void 0);
+        await client.auth.admin.deleteUser(createdAuthUserId).catch(() => void 0);
       }
       if (createdTenantId) {
         try {
           await client.from("tenants").delete().eq("id", createdTenantId);
-        } catch {}
+        } catch {
+        }
       }
     }
     const message = error instanceof Error ? error.message : "";
     const isSuperAdminError = message.includes("superadministrador");
     const isRateLimit = /rate limit|too many requests|email rate/i.test(
-      message,
+      message
     );
-    const responseMessage = isRateLimit
-      ? "Supabase limit\xF3 temporalmente el env\xEDo de invitaciones. Espere unos minutos antes de reintentar."
-      : isSuperAdminError
-        ? message
-        : "No fue posible crear el colegio. No se guardaron datos incompletos.";
-    res
-      .status(isSuperAdminError ? 403 : isRateLimit ? 429 : 500)
-      .json({ error: responseMessage });
+    const responseMessage = isRateLimit ? "Supabase limit\xF3 temporalmente el env\xEDo de invitaciones. Espere unos minutos antes de reintentar." : isSuperAdminError ? message : "No fue posible crear el colegio. No se guardaron datos incompletos.";
+    res.status(isSuperAdminError ? 403 : isRateLimit ? 429 : 500).json({ error: responseMessage });
   }
 });
 router11.post("/platform/tenants/:id/invite", rateLimit, async (req, res) => {
@@ -7879,24 +6612,15 @@ router11.post("/platform/tenants/:id/invite", rateLimit, async (req, res) => {
     const client = getAdminClient4();
     await assertFreshSuperAdmin(client, request2);
     const tenantId = req.params.id;
-    const { data, error } = await client
-      .from("profiles")
-      .select("user_id,email")
-      .eq("tenant_id", tenantId)
-      .eq("role", "admin")
-      .maybeSingle();
+    const { data, error } = await client.from("profiles").select("user_id,email").eq("tenant_id", tenantId).eq("role", "admin").maybeSingle();
     if (error) throw error;
     const admin = data;
     if (!admin?.email) {
-      res
-        .status(404)
-        .json({
-          error: "No se encontr\xF3 un administrador para este colegio.",
-        });
+      res.status(404).json({ error: "No se encontr\xF3 un administrador para este colegio." });
       return;
     }
     const resend = await client.auth.admin.inviteUserByEmail(admin.email, {
-      data: { tenant_id: tenantId, role: "admin" },
+      data: { tenant_id: tenantId, role: "admin" }
     });
     if (resend.error) throw resend.error;
     await recordAudit2(
@@ -7906,15 +6630,12 @@ router11.post("/platform/tenants/:id/invite", rateLimit, async (req, res) => {
       "tenant_admin_reinvited",
       admin.user_id,
       {
-        email: admin.email,
-      },
+        email: admin.email
+      }
     );
     res.json({ success: true });
   } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "No fue posible reenviar la invitaci\xF3n.";
+    const message = error instanceof Error ? error.message : "No fue posible reenviar la invitaci\xF3n.";
     res.status(500).json(clientErrorBody(message, 500));
   }
 });
@@ -7931,25 +6652,16 @@ router11.post(
         res.status(400).json({ error: "Adjunte un archivo .xlsx v\xE1lido." });
         return;
       }
-      const defaultLevel =
-        req.body?.defaultLevel === "MEDIA" ? "MEDIA" : "BASICA";
-      const {
-        parseImportWorkbook: parseImportWorkbook2,
-        runImport: runImport2,
-      } = await Promise.resolve().then(
-        () => (init_excelImport(), excelImport_exports),
-      );
+      const defaultLevel = req.body?.defaultLevel === "MEDIA" ? "MEDIA" : "BASICA";
+      const { parseImportWorkbook: parseImportWorkbook2, runImport: runImport2 } = await Promise.resolve().then(() => (init_excelImport(), excelImport_exports));
       const parsed = await parseImportWorkbook2(req.file.buffer, defaultLevel);
       const result = await runImport2(client, tenantId, parsed);
       res.json(result);
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "No fue posible importar la base.";
+      const message = error instanceof Error ? error.message : "No fue posible importar la base.";
       res.status(500).json(clientErrorBody(message, 500));
     }
-  },
+  }
 );
 var platform_default = router11;
 
@@ -7961,50 +6673,49 @@ import { createClient as createClient6 } from "@supabase/supabase-js";
 var router12 = Router12();
 var upload2 = multer3({
   storage: multer3.memoryStorage(),
-  limits: { fileSize: 2 * 1024 * 1024 },
+  limits: { fileSize: 2 * 1024 * 1024 }
 });
 var documentUpload = multer3({
   storage: multer3.memoryStorage(),
-  limits: { fileSize: 20 * 1024 * 1024 },
+  limits: { fileSize: 20 * 1024 * 1024 }
 });
-var ADMIN_ROLES2 = ["superadmin", "admin", "direccion"];
+var ADMIN_ROLES2 = [
+  "superadmin",
+  "admin",
+  "direccion"
+];
 var CONTENT_LIMIT = 2e5;
 var MIME_EXTENSIONS = {
   "image/png": "png",
   "image/jpeg": "jpg",
-  "image/svg+xml": "svg",
+  "image/svg+xml": "svg"
 };
 var DOCUMENT_MIME_EXTENSIONS = {
   "application/pdf": "pdf",
   "application/msword": "doc",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-    "docx",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
   "text/plain": "txt",
   "image/png": "png",
   "image/jpeg": "jpg",
-  "image/svg+xml": "svg",
+  "image/svg+xml": "svg"
 };
-var INSTITUTION_SETTINGS_COLUMNS =
-  "tenant_id,official_name,institution_rut,address,commune,region,phone,institutional_email,proprietor,director_name,education_levels,logo_path,updated_at,updated_by";
-var RULE_VERSION_COLUMNS =
-  "id,tenant_id,title,version,content,status,effective_at,created_at,updated_at,created_by,published_by";
-var INSTITUTION_DOCUMENT_COLUMNS =
-  "id,tenant_id,title,category,original_name,storage_path,mime_type,size_bytes,status,uploaded_at,archived_at,uploaded_by,archived_by";
+var INSTITUTION_SETTINGS_COLUMNS = "tenant_id,official_name,institution_rut,address,commune,region,phone,institutional_email,proprietor,director_name,education_levels,logo_path,updated_at,updated_by";
+var RULE_VERSION_COLUMNS = "id,tenant_id,title,version,content,status,effective_at,created_at,updated_at,created_by,published_by";
+var INSTITUTION_DOCUMENT_COLUMNS = "id,tenant_id,title,category,original_name,storage_path,mime_type,size_bytes,status,uploaded_at,archived_at,uploaded_by,archived_by";
 function getRequest3(req) {
   return req;
 }
 function getAdminClient5() {
   const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) throw new Error("Supabase administrativo no configurado.");
   return createClient6(url, key, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
-      detectSessionInUrl: false,
-    },
+      detectSessionInUrl: false
+    }
   });
 }
 function cleanText(value, max = 500) {
@@ -8015,40 +6726,29 @@ function cleanText(value, max = 500) {
 }
 function parseLevels(value) {
   if (!Array.isArray(value)) return [];
-  return value
-    .filter((item) => typeof item === "string")
-    .map((item) => item.trim().toUpperCase())
-    .filter(Boolean)
-    .slice(0, 20);
+  return value.filter((item) => typeof item === "string").map((item) => item.trim().toUpperCase()).filter(Boolean).slice(0, 20);
 }
 async function getSignedLogoUrl(client, path3) {
   if (!path3) return null;
-  const { data } = await client.storage
-    .from("institution-assets")
-    .createSignedUrl(path3, 3600);
+  const { data } = await client.storage.from("institution-assets").createSignedUrl(path3, 3600);
   return data?.signedUrl ?? null;
 }
 async function withDocumentUrl(client, document) {
-  const { data } = await client.storage
-    .from("institution-assets")
-    .createSignedUrl(document.storage_path, 3600);
+  const { data } = await client.storage.from("institution-assets").createSignedUrl(document.storage_path, 3600);
   return { ...document, download_url: data?.signedUrl ?? null };
 }
 function safeDocumentName(name) {
-  const cleaned = name
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9._-]/g, "_");
+  const cleaned = name.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9._-]/g, "_");
   return cleaned.slice(-120) || "documento";
 }
 async function listDocuments(client, tenantId) {
-  const { data, error } = await client
-    .from("institution_documents")
-    .select(INSTITUTION_DOCUMENT_COLUMNS)
-    .eq("tenant_id", tenantId)
-    .order("uploaded_at", { ascending: false });
+  const { data, error } = await client.from("institution_documents").select(INSTITUTION_DOCUMENT_COLUMNS).eq("tenant_id", tenantId).order("uploaded_at", { ascending: false });
   if (error) throw error;
-  return Promise.all((data ?? []).map((item) => withDocumentUrl(client, item)));
+  return Promise.all(
+    (data ?? []).map(
+      (item) => withDocumentUrl(client, item)
+    )
+  );
 }
 async function createDocument(client, tenantId, actorUserId, file, body) {
   const extension = DOCUMENT_MIME_EXTENSIONS[file.mimetype];
@@ -8056,27 +6756,21 @@ async function createDocument(client, tenantId, actorUserId, file, body) {
   const title = cleanText(body.title, 200) ?? file.originalname.slice(0, 200);
   const category = cleanText(body.category, 50) ?? "otro";
   const storagePath = `${tenantId}/documents/${randomUUID3()}-${safeDocumentName(file.originalname)}`;
-  const uploadResult = await client.storage
-    .from("institution-assets")
-    .upload(storagePath, file.buffer, {
-      contentType: file.mimetype,
-      upsert: false,
-    });
+  const uploadResult = await client.storage.from("institution-assets").upload(storagePath, file.buffer, {
+    contentType: file.mimetype,
+    upsert: false
+  });
   if (uploadResult.error) throw uploadResult.error;
-  const { data, error } = await client
-    .from("institution_documents")
-    .insert({
-      tenant_id: tenantId,
-      title,
-      category,
-      original_name: file.originalname.slice(0, 255),
-      storage_path: storagePath,
-      mime_type: file.mimetype,
-      size_bytes: file.size,
-      uploaded_by: actorUserId ?? null,
-    })
-    .select(INSTITUTION_DOCUMENT_COLUMNS)
-    .single();
+  const { data, error } = await client.from("institution_documents").insert({
+    tenant_id: tenantId,
+    title,
+    category,
+    original_name: file.originalname.slice(0, 255),
+    storage_path: storagePath,
+    mime_type: file.mimetype,
+    size_bytes: file.size,
+    uploaded_by: actorUserId ?? null
+  }).select(INSTITUTION_DOCUMENT_COLUMNS).single();
   if (error) {
     await client.storage.from("institution-assets").remove([storagePath]);
     throw error;
@@ -8088,28 +6782,20 @@ async function createDocument(client, tenantId, actorUserId, file, body) {
     "institution_document_uploaded",
     data.id,
     null,
-    data,
+    data
   );
   return withDocumentUrl(client, data);
 }
 async function loadSettings(client, tenantId) {
-  const { data, error } = await client
-    .from("institution_settings")
-    .select(INSTITUTION_SETTINGS_COLUMNS)
-    .eq("tenant_id", tenantId)
-    .maybeSingle();
+  const { data, error } = await client.from("institution_settings").select(INSTITUTION_SETTINGS_COLUMNS).eq("tenant_id", tenantId).maybeSingle();
   if (error) throw error;
   if (data) {
     return {
       ...data,
-      logo_url: await getSignedLogoUrl(client, data.logo_path),
+      logo_url: await getSignedLogoUrl(client, data.logo_path)
     };
   }
-  const tenant = await client
-    .from("tenants")
-    .select("name")
-    .eq("id", tenantId)
-    .single();
+  const tenant = await client.from("tenants").select("name").eq("id", tenantId).single();
   if (tenant.error) throw tenant.error;
   return {
     tenant_id: tenantId,
@@ -8125,8 +6811,8 @@ async function loadSettings(client, tenantId) {
     education_levels: [],
     logo_path: null,
     logo_url: null,
-    updated_at: /* @__PURE__ */ new Date().toISOString(),
-    updated_by: null,
+    updated_at: (/* @__PURE__ */ new Date()).toISOString(),
+    updated_by: null
   };
 }
 async function loadDocumentSettings(client, tenantId) {
@@ -8134,18 +6820,10 @@ async function loadDocumentSettings(client, tenantId) {
   return {
     tenant_id: settings.tenant_id,
     official_name: settings.official_name,
-    logo_url: settings.logo_url ?? null,
+    logo_url: settings.logo_url ?? null
   };
 }
-async function audit(
-  client,
-  tenantId,
-  actorUserId,
-  action,
-  entityId,
-  previousValues,
-  newValues,
-) {
+async function audit(client, tenantId, actorUserId, action, entityId, previousValues, newValues) {
   const { error } = await client.from("audit_events").insert({
     tenant_id: tenantId,
     actor_user_id: actorUserId,
@@ -8153,16 +6831,12 @@ async function audit(
     entity_type: "institution",
     entity_id: entityId,
     previous_values: previousValues,
-    new_values: newValues,
+    new_values: newValues
   });
   if (error) throw error;
 }
 async function assertTargetTenant(client, tenantId) {
-  const { data, error } = await client
-    .from("tenants")
-    .select("id")
-    .eq("id", tenantId)
-    .maybeSingle();
+  const { data, error } = await client.from("tenants").select("id").eq("id", tenantId).maybeSingle();
   if (error) throw error;
   if (!data) throw new Error("Colegio no encontrado.");
 }
@@ -8179,9 +6853,7 @@ async function getTenantFromRequest(client, request2, targetTenantId) {
 }
 async function updateSettings(client, tenantId, actorUserId, body) {
   const previous = await loadSettings(client, tenantId);
-  const officialName =
-    cleanText(body.official_name ?? body.officialName, 200) ??
-    previous.official_name;
+  const officialName = cleanText(body.official_name ?? body.officialName, 200) ?? previous.official_name;
   if (!officialName) throw new Error("El nombre oficial es obligatorio.");
   const values = {
     tenant_id: tenantId,
@@ -8193,18 +6865,16 @@ async function updateSettings(client, tenantId, actorUserId, body) {
     phone: cleanText(body.phone, 40),
     institutional_email: cleanText(
       body.institutional_email ?? body.institutionalEmail,
-      180,
+      180
     ),
     proprietor: cleanText(body.proprietor, 200),
     director_name: cleanText(body.director_name ?? body.directorName, 200),
     education_levels: parseLevels(
-      body.education_levels ?? body.educationLevels,
+      body.education_levels ?? body.educationLevels
     ),
-    updated_by: actorUserId ?? null,
+    updated_by: actorUserId ?? null
   };
-  const { error } = await client
-    .from("institution_settings")
-    .upsert(values, { onConflict: "tenant_id" });
+  const { error } = await client.from("institution_settings").upsert(values, { onConflict: "tenant_id" });
   if (error) throw error;
   await audit(
     client,
@@ -8213,16 +6883,12 @@ async function updateSettings(client, tenantId, actorUserId, body) {
     "institution_settings_updated",
     tenantId,
     previous,
-    values,
+    values
   );
   return loadSettings(client, tenantId);
 }
 async function listRules(client, tenantId) {
-  const { data, error } = await client
-    .from("institution_rule_versions")
-    .select(RULE_VERSION_COLUMNS)
-    .eq("tenant_id", tenantId)
-    .order("updated_at", { ascending: false });
+  const { data, error } = await client.from("institution_rule_versions").select(RULE_VERSION_COLUMNS).eq("tenant_id", tenantId).order("updated_at", { ascending: false });
   if (error) throw error;
   return data ?? [];
 }
@@ -8234,17 +6900,13 @@ async function createRule(client, tenantId, actorUserId, body) {
     throw new Error("T\xEDtulo, versi\xF3n y contenido son obligatorios.");
   if (content.length > CONTENT_LIMIT)
     throw new Error("El reglamento supera el l\xEDmite permitido.");
-  const { data, error } = await client
-    .from("institution_rule_versions")
-    .insert({
-      tenant_id: tenantId,
-      title,
-      version,
-      content,
-      created_by: actorUserId ?? null,
-    })
-    .select(RULE_VERSION_COLUMNS)
-    .single();
+  const { data, error } = await client.from("institution_rule_versions").insert({
+    tenant_id: tenantId,
+    title,
+    version,
+    content,
+    created_by: actorUserId ?? null
+  }).select(RULE_VERSION_COLUMNS).single();
   if (error) throw error;
   await audit(
     client,
@@ -8253,38 +6915,22 @@ async function createRule(client, tenantId, actorUserId, body) {
     "institution_rule_created",
     data.id,
     null,
-    data,
+    data
   );
   return data;
 }
 async function publishRule(client, tenantId, ruleId, actorUserId) {
-  const selected = await client
-    .from("institution_rule_versions")
-    .select(RULE_VERSION_COLUMNS)
-    .eq("id", ruleId)
-    .eq("tenant_id", tenantId)
-    .maybeSingle();
+  const selected = await client.from("institution_rule_versions").select(RULE_VERSION_COLUMNS).eq("id", ruleId).eq("tenant_id", tenantId).maybeSingle();
   if (selected.error) throw selected.error;
-  if (!selected.data)
-    throw new Error("Versi\xF3n de reglamento no encontrada.");
-  const archived = await client
-    .from("institution_rule_versions")
-    .update({ status: "archived" })
-    .eq("tenant_id", tenantId)
-    .eq("status", "active");
+  if (!selected.data) throw new Error("Versi\xF3n de reglamento no encontrada.");
+  const archived = await client.from("institution_rule_versions").update({ status: "archived" }).eq("tenant_id", tenantId).eq("status", "active");
   if (archived.error) throw archived.error;
-  const now = /* @__PURE__ */ new Date().toISOString();
-  const active = await client
-    .from("institution_rule_versions")
-    .update({
-      status: "active",
-      effective_at: now,
-      published_by: actorUserId ?? null,
-    })
-    .eq("id", ruleId)
-    .eq("tenant_id", tenantId)
-    .select(RULE_VERSION_COLUMNS)
-    .single();
+  const now = (/* @__PURE__ */ new Date()).toISOString();
+  const active = await client.from("institution_rule_versions").update({
+    status: "active",
+    effective_at: now,
+    published_by: actorUserId ?? null
+  }).eq("id", ruleId).eq("tenant_id", tenantId).select(RULE_VERSION_COLUMNS).single();
   if (active.error) throw active.error;
   await audit(
     client,
@@ -8293,7 +6939,7 @@ async function publishRule(client, tenantId, ruleId, actorUserId) {
     "institution_rule_published",
     ruleId,
     selected.data,
-    active.data,
+    active.data
   );
   return active.data;
 }
@@ -8302,21 +6948,19 @@ async function uploadLogo(client, tenantId, actorUserId, file) {
   if (!extension) throw new Error("El logo debe ser PNG, JPG o SVG.");
   const current = await loadSettings(client, tenantId);
   const path3 = `${tenantId}/logo.${extension}`;
-  const uploadResult = await client.storage
-    .from("institution-assets")
-    .upload(path3, file.buffer, {
-      contentType: file.mimetype,
-      upsert: true,
-    });
+  const uploadResult = await client.storage.from("institution-assets").upload(path3, file.buffer, {
+    contentType: file.mimetype,
+    upsert: true
+  });
   if (uploadResult.error) throw uploadResult.error;
   const { error } = await client.from("institution_settings").upsert(
     {
       tenant_id: tenantId,
       official_name: current.official_name,
       logo_path: path3,
-      updated_by: actorUserId ?? null,
+      updated_by: actorUserId ?? null
     },
-    { onConflict: "tenant_id" },
+    { onConflict: "tenant_id" }
   );
   if (error) throw error;
   await audit(
@@ -8326,15 +6970,12 @@ async function uploadLogo(client, tenantId, actorUserId, file) {
     "institution_logo_updated",
     tenantId,
     { logo_path: current.logo_path },
-    { logo_path: path3 },
+    { logo_path: path3 }
   );
   return loadSettings(client, tenantId);
 }
 async function sendError(res, error) {
-  const message =
-    error instanceof Error
-      ? error.message
-      : "No fue posible actualizar la configuraci\xF3n.";
+  const message = error instanceof Error ? error.message : "No fue posible actualizar la configuraci\xF3n.";
   const status = message.includes("Solo el superadministrador") ? 403 : 500;
   res.status(status).json(clientErrorBody(message, status));
 }
@@ -8351,21 +6992,21 @@ router12.get(
     } catch (error) {
       await sendError(res, error);
     }
-  },
+  }
 );
 router12.use(
   "/admin/institution",
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
   requireTenant,
-  requireRole(ADMIN_ROLES2),
+  requireRole(ADMIN_ROLES2)
 );
 router12.use(
   "/admin/rules",
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
   requireTenant,
-  requireRole(ADMIN_ROLES2),
+  requireRole(ADMIN_ROLES2)
 );
 router12.get(
   "/onboarding/status",
@@ -8378,31 +7019,14 @@ router12.get(
       const tenantId = request2.tenantId;
       if (!tenantId) throw new Error("No fue posible determinar el colegio.");
       const [settings, courses, templates, members, rules] = await Promise.all([
-        client
-          .from("institution_settings")
-          .select("tenant_id")
-          .eq("tenant_id", tenantId)
-          .maybeSingle(),
-        client
-          .from("courses")
-          .select("id", { count: "exact", head: true })
-          .eq("tenant_id", tenantId),
-        client
-          .from("document_templates")
-          .select("id", { count: "exact", head: true })
-          .eq("tenant_id", tenantId),
-        client
-          .from("profiles")
-          .select("user_id", { count: "exact", head: true })
-          .eq("tenant_id", tenantId),
-        client
-          .from("institution_rule_versions")
-          .select("id", { count: "exact", head: true })
-          .eq("tenant_id", tenantId)
-          .eq("status", "active"),
+        client.from("institution_settings").select("tenant_id").eq("tenant_id", tenantId).maybeSingle(),
+        client.from("courses").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId),
+        client.from("document_templates").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId),
+        client.from("profiles").select("user_id", { count: "exact", head: true }).eq("tenant_id", tenantId),
+        client.from("institution_rule_versions").select("id", { count: "exact", head: true }).eq("tenant_id", tenantId).eq("status", "active")
       ]);
       const queryError = [settings, courses, templates, members, rules].find(
-        (result) => result.error,
+        (result) => result.error
       )?.error;
       if (queryError) throw queryError;
       res.json({
@@ -8410,12 +7034,12 @@ router12.get(
         courses: (courses.count ?? 0) > 0,
         templates: (templates.count ?? 0) > 0,
         members: (members.count ?? 0) > 1,
-        rules: (rules.count ?? 0) > 0,
+        rules: (rules.count ?? 0) > 0
       });
     } catch (error) {
       await sendError(res, error);
     }
-  },
+  }
 );
 router12.get("/admin/institution", async (req, res) => {
   try {
@@ -8433,12 +7057,7 @@ router12.patch("/admin/institution", async (req, res) => {
     const client = getAdminClient5();
     const tenantId = await getTenantFromRequest(client, request2);
     res.json(
-      await updateSettings(
-        client,
-        tenantId,
-        request2.user?.sub,
-        req.body ?? {},
-      ),
+      await updateSettings(client, tenantId, request2.user?.sub, req.body ?? {})
     );
   } catch (error) {
     await sendError(res, error);
@@ -8453,13 +7072,11 @@ router12.post(
       const client = getAdminClient5();
       const tenantId = await getTenantFromRequest(client, request2);
       if (!req.file) throw new Error("Seleccione un archivo de logo.");
-      res.json(
-        await uploadLogo(client, tenantId, request2.user?.sub, req.file),
-      );
+      res.json(await uploadLogo(client, tenantId, request2.user?.sub, req.file));
     } catch (error) {
       await sendError(res, error);
     }
-  },
+  }
 );
 router12.get("/admin/rules", async (req, res) => {
   try {
@@ -8476,11 +7093,9 @@ router12.post("/admin/rules", async (req, res) => {
     const request2 = getRequest3(req);
     const client = getAdminClient5();
     const tenantId = await getTenantFromRequest(client, request2);
-    res
-      .status(201)
-      .json(
-        await createRule(client, tenantId, request2.user?.sub, req.body ?? {}),
-      );
+    res.status(201).json(
+      await createRule(client, tenantId, request2.user?.sub, req.body ?? {})
+    );
   } catch (error) {
     await sendError(res, error);
   }
@@ -8493,18 +7108,9 @@ router12.patch("/admin/rules/:id", async (req, res) => {
     const updates = {
       title: cleanText(req.body?.title, 200),
       version: cleanText(req.body?.version, 50),
-      content:
-        typeof req.body?.content === "string"
-          ? req.body.content.trim().slice(0, CONTENT_LIMIT)
-          : void 0,
+      content: typeof req.body?.content === "string" ? req.body.content.trim().slice(0, CONTENT_LIMIT) : void 0
     };
-    const { data, error } = await client
-      .from("institution_rule_versions")
-      .update(updates)
-      .eq("id", req.params.id)
-      .eq("tenant_id", tenantId)
-      .select(RULE_VERSION_COLUMNS)
-      .single();
+    const { data, error } = await client.from("institution_rule_versions").update(updates).eq("id", req.params.id).eq("tenant_id", tenantId).select(RULE_VERSION_COLUMNS).single();
     if (error) throw error;
     await audit(
       client,
@@ -8513,7 +7119,7 @@ router12.patch("/admin/rules/:id", async (req, res) => {
       "institution_rule_updated",
       req.params.id,
       null,
-      data,
+      data
     );
     res.json(data);
   } catch (error) {
@@ -8526,7 +7132,7 @@ router12.post("/admin/rules/:id/publish", async (req, res) => {
     const client = getAdminClient5();
     const tenantId = await getTenantFromRequest(client, request2);
     res.json(
-      await publishRule(client, tenantId, req.params.id, request2.user?.sub),
+      await publishRule(client, tenantId, req.params.id, request2.user?.sub)
     );
   } catch (error) {
     await sendError(res, error);
@@ -8535,13 +7141,9 @@ router12.post("/admin/rules/:id/publish", async (req, res) => {
 router12.use(
   "/platform/tenants/:tenantId/institution",
   requireAuth,
-  requireSuperAdmin,
+  requireSuperAdmin
 );
-router12.use(
-  "/platform/tenants/:tenantId/rules",
-  requireAuth,
-  requireSuperAdmin,
-);
+router12.use("/platform/tenants/:tenantId/rules", requireAuth, requireSuperAdmin);
 router12.get("/platform/tenants/:tenantId/institution", async (req, res) => {
   try {
     const client = getAdminClient5();
@@ -8559,12 +7161,7 @@ router12.patch("/platform/tenants/:tenantId/institution", async (req, res) => {
     const tenantId = req.params.tenantId;
     await assertTargetTenant(client, tenantId);
     res.json(
-      await updateSettings(
-        client,
-        tenantId,
-        request2.user?.sub,
-        req.body ?? {},
-      ),
+      await updateSettings(client, tenantId, request2.user?.sub, req.body ?? {})
     );
   } catch (error) {
     await sendError(res, error);
@@ -8580,13 +7177,11 @@ router12.post(
       const tenantId = req.params.tenantId;
       await assertTargetTenant(client, tenantId);
       if (!req.file) throw new Error("Seleccione un archivo de logo.");
-      res.json(
-        await uploadLogo(client, tenantId, request2.user?.sub, req.file),
-      );
+      res.json(await uploadLogo(client, tenantId, request2.user?.sub, req.file));
     } catch (error) {
       await sendError(res, error);
     }
-  },
+  }
 );
 router12.get("/platform/tenants/:tenantId/rules", async (req, res) => {
   try {
@@ -8604,11 +7199,9 @@ router12.post("/platform/tenants/:tenantId/rules", async (req, res) => {
     const client = getAdminClient5();
     const tenantId = req.params.tenantId;
     await assertTargetTenant(client, tenantId);
-    res
-      .status(201)
-      .json(
-        await createRule(client, tenantId, request2.user?.sub, req.body ?? {}),
-      );
+    res.status(201).json(
+      await createRule(client, tenantId, request2.user?.sub, req.body ?? {})
+    );
   } catch (error) {
     await sendError(res, error);
   }
@@ -8622,17 +7215,17 @@ router12.post(
       const tenantId = req.params.tenantId;
       await assertTargetTenant(client, tenantId);
       res.json(
-        await publishRule(client, tenantId, req.params.id, request2.user?.sub),
+        await publishRule(client, tenantId, req.params.id, request2.user?.sub)
       );
     } catch (error) {
       await sendError(res, error);
     }
-  },
+  }
 );
 router12.use(
   "/platform/tenants/:tenantId/documents",
   requireAuth,
-  requireSuperAdmin,
+  requireSuperAdmin
 );
 router12.get("/platform/tenants/:tenantId/documents", async (req, res) => {
   try {
@@ -8657,21 +7250,19 @@ router12.post(
         res.status(400).json({ error: "Seleccione un documento." });
         return;
       }
-      res
-        .status(201)
-        .json(
-          await createDocument(
-            client,
-            tenantId,
-            request2.user?.sub,
-            req.file,
-            req.body ?? {},
-          ),
-        );
+      res.status(201).json(
+        await createDocument(
+          client,
+          tenantId,
+          request2.user?.sub,
+          req.file,
+          req.body ?? {}
+        )
+      );
     } catch (error) {
       await sendError(res, error);
     }
-  },
+  }
 );
 router12.post(
   "/platform/tenants/:tenantId/documents/:id/archive",
@@ -8681,18 +7272,11 @@ router12.post(
       const client = getAdminClient5();
       const tenantId = req.params.tenantId;
       await assertTargetTenant(client, tenantId);
-      const { data, error } = await client
-        .from("institution_documents")
-        .update({
-          status: "archived",
-          archived_at: /* @__PURE__ */ new Date().toISOString(),
-          archived_by: request2.user?.sub ?? null,
-        })
-        .eq("id", req.params.id)
-        .eq("tenant_id", tenantId)
-        .eq("status", "active")
-        .select(INSTITUTION_DOCUMENT_COLUMNS)
-        .maybeSingle();
+      const { data, error } = await client.from("institution_documents").update({
+        status: "archived",
+        archived_at: (/* @__PURE__ */ new Date()).toISOString(),
+        archived_by: request2.user?.sub ?? null
+      }).eq("id", req.params.id).eq("tenant_id", tenantId).eq("status", "active").select(INSTITUTION_DOCUMENT_COLUMNS).maybeSingle();
       if (error) throw error;
       if (!data) {
         res.status(404).json({ error: "Documento activo no encontrado." });
@@ -8705,23 +7289,20 @@ router12.post(
         "institution_document_archived",
         req.params.id,
         { status: "active" },
-        data,
+        data
       );
       res.json(await withDocumentUrl(client, data));
     } catch (error) {
       await sendError(res, error);
     }
-  },
+  }
 );
 var institution_default = router12;
 
 // server/api/index.ts
 var __filename = fileURLToPath(import.meta.url);
 var __dirname = path2.dirname(__filename);
-var allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
-  .split(",")
-  .map((o) => o.trim())
-  .filter(Boolean);
+var allowedOrigins = (process.env.ALLOWED_ORIGINS || "").split(",").map((o) => o.trim()).filter(Boolean);
 ensureRuntimeConfig();
 var app = express();
 app.set("trust proxy", 1);
@@ -8741,20 +7322,20 @@ app.use(
           "https://*.supabase.co",
           "wss://*.supabase.co",
           "https://*.posthog.com",
-          "https://*.ingest.us.sentry.io",
+          "https://*.ingest.us.sentry.io"
         ],
-        workerSrc: ["'self'", "blob:"],
-      },
-    },
-  }),
+        workerSrc: ["'self'", "blob:"]
+      }
+    }
+  })
 );
 app.use(
   cors({
     origin: allowedOrigins.length > 0 ? allowedOrigins : false,
     credentials: allowedOrigins.length > 0,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  }),
+    allowedHeaders: ["Content-Type", "Authorization"]
+  })
 );
 app.use(express.json({ limit: "100kb" }));
 app.get("/api/health", (_req, res) => {
@@ -8779,7 +7360,9 @@ app.get("*", (_req, res) => {
 });
 app.use(errorHandler);
 var index_default = app;
-export { index_default as default };
+export {
+  index_default as default
+};
 /** @license SPDX-License-Identifier: Apache-2.0 */
 /**
  * @license
