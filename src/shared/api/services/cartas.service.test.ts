@@ -371,15 +371,14 @@ describe("fetchCartaTableStates", () => {
     }
   });
 
-  it("retorna vacío cuando hay error de lectura", async () => {
+  it("propaga el error cuando falla la lectura", async () => {
     const install = await installFromMock(() => ({
       data: null,
       error: new Error("boom"),
     }));
     try {
       const { fetchCartaTableStates } = await import("./cartas.service");
-      const states = await fetchCartaTableStates();
-      assert.deepEqual(states, {});
+      await assert.rejects(fetchCartaTableStates(), /boom/);
     } finally {
       install.restore();
     }

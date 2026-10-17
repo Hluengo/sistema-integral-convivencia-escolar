@@ -12,6 +12,10 @@ import { isValidUuid } from "../../middleware/auth.js";
 import { requireRole } from "../../middleware/requireRole.js";
 import { requireTenant } from "../../middleware/requireTenant.js";
 import { rateLimit } from "../../middleware/rateLimit.js";
+import {
+  CONVIVENCIA_MEMBERSHIP,
+  requireMembership,
+} from "../../middleware/requireMembership.js";
 import { clientErrorBody } from "../../middleware/errorHandler.js";
 import type { AuthenticatedRequest, ProfileRole } from "../../types.js";
 import {
@@ -243,7 +247,13 @@ async function listAuthUsers(
 }
 
 // Guard acotado al prefijo propio para no interceptar otras rutas /api/*.
-router.use("/admin", requireAuth, requireTenant, requireRole(ADMIN_ROLES));
+router.use(
+  "/admin",
+  requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
+  requireTenant,
+  requireRole(ADMIN_ROLES),
+);
 
 router.get("/admin/members", async (req, res) => {
   try {
@@ -668,47 +678,53 @@ router.post("/admin/invitations/:invitationId/cancel", async (req, res) => {
   }
 });
 
-router.post("/admin/import", ownUpload.single("file"), async (req, res) => {
-  try {
-    const request = getRequest(req);
-    const client = getAdminClient();
-    await assertFreshAdmin(client, request);
-    if (!request.tenantId)
-      throw new Error("No fue posible determinar el establecimiento.");
-    if (!req.file?.buffer) {
-      res.status(400).json({ error: "Adjunte un archivo .xlsx válido." });
-      return;
+router.post(
+  "/admin/import",
+  rateLimit,
+  ownUpload.single("file"),
+  async (req, res) => {
+    try {
+      const request = getRequest(req);
+      const client = getAdminClient();
+      await assertFreshAdmin(client, request);
+      if (!request.tenantId)
+        throw new Error("No fue posible determinar el establecimiento.");
+      if (!req.file?.buffer) {
+        res.status(400).json({ error: "Adjunte un archivo .xlsx válido." });
+        return;
+      }
+      const defaultLevel =
+        req.body?.defaultLevel === "MEDIA" ? "MEDIA" : "BASICA";
+      const { parseImportWorkbook, runImport } =
+        await import("../services/excelImport.js");
+      const parsed = await parseImportWorkbook(req.file.buffer, defaultLevel);
+      const result = await runImport(client, request.tenantId, parsed);
+      await recordAudit(
+        client,
+        request,
+        "tenant_base_imported",
+        request.tenantId,
+        null,
+        {
+          courses: result.coursesInserted,
+          students: result.studentsInserted,
+        },
+      );
+      res.json(result);
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "No fue posible importar la base.";
+      const status = message.includes("permisos") ? 403 : 500;
+      res.status(status).json(clientErrorBody(message, status));
     }
-    const defaultLevel =
-      req.body?.defaultLevel === "MEDIA" ? "MEDIA" : "BASICA";
-    const { parseImportWorkbook, runImport } =
-      await import("../services/excelImport.js");
-    const parsed = await parseImportWorkbook(req.file.buffer, defaultLevel);
-    const result = await runImport(client, request.tenantId, parsed);
-    await recordAudit(
-      client,
-      request,
-      "tenant_base_imported",
-      request.tenantId,
-      null,
-      {
-        courses: result.coursesInserted,
-        students: result.studentsInserted,
-      },
-    );
-    res.json(result);
-  } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "No fue posible importar la base.";
-    const status = message.includes("permisos") ? 403 : 500;
-    res.status(status).json(clientErrorBody(message, status));
-  }
-});
+  },
+);
 
 router.post(
   "/admin/profesores/import",
+  rateLimit,
   ownUpload.single("file"),
   async (req, res) => {
     try {
@@ -770,6 +786,7 @@ async function loadTeacherNames(
 
 router.post(
   "/admin/annotations/bulk-preview",
+  rateLimit,
   ownUpload.single("file"),
   async (req, res) => {
     try {
@@ -956,6 +973,7 @@ router.post(
 
 router.post(
   "/admin/annotations/bulk-confirm",
+  rateLimit,
   ownUpload.single("file"),
   async (req, res) => {
     let bulkClaim: {
@@ -1191,6 +1209,24 @@ router.post(
               "pdf_file_path",
               `bulk-pdf/${bulkClaim.tenantId}/${bulkClaim.courseId}/${bulkClaim.fileHash}`,
             );
+          const adminClient = getAdminClient();
+          const { data: orphanedCartas } = await adminClient
+            .from("cartas_disciplinarias")
+            .select("id")
+            .eq("tenant_id", bulkClaim.tenantId)
+            .like("observations", `%${bulkClaim.fileHash}%`);
+          const cartaIds = (orphanedCartas ?? []).map((row) => row.id);
+          if (cartaIds.length > 0) {
+            await adminClient
+              .from("carta_events")
+              .delete()
+              .in("carta_id", cartaIds);
+            await adminClient
+              .from("cartas_disciplinarias")
+              .delete()
+              .eq("tenant_id", bulkClaim.tenantId)
+              .in("id", cartaIds);
+          }
           await getAdminClient().rpc("release_bulk_pdf_import", {
             p_tenant_id: bulkClaim.tenantId,
             p_course_id: bulkClaim.courseId,

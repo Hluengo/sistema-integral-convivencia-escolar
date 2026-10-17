@@ -14,6 +14,11 @@ import {
 type AuthRequest = AuthenticatedRequest;
 
 const router = Router();
+const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+function validDateOnly(value: unknown): value is string {
+  return typeof value === "string" && DATE_ONLY_RE.test(value);
+}
 
 const EVENT_NAME_RE = /^[a-z][a-z0-9_]{1,79}$/;
 const MAX_PROPERTIES_BYTES = 4_000;
@@ -113,6 +118,14 @@ router.get(
     try {
       const since = (req.query.since as string) ?? undefined;
       const until = (req.query.until as string) ?? undefined;
+      if (
+        (since !== undefined && !validDateOnly(since)) ||
+        (until !== undefined && !validDateOnly(until)) ||
+        (since && until && since > until)
+      ) {
+        res.status(400).json({ error: "Rango de fechas inválido." });
+        return;
+      }
       const tenantId = (req as AuthRequest).tenantId;
       if (!tenantId) {
         res.status(400).json({ error: "Establecimiento no determinado." });

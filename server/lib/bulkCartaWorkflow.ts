@@ -7,6 +7,7 @@ import {
 } from "./bulkDisciplinaryPdf.js";
 import { fetchActiveRegulationBasis } from "./regulationBasis.js";
 import { fetchAllRows } from "./fetchAllRows.js";
+import { nowDateOnly } from "../../src/shared/lib/dateUtils.js";
 
 interface BulkCartaWorkflowInput {
   supabase: SupabaseClient;
@@ -192,7 +193,7 @@ export async function syncBulkPendingCartas(
         student_id: student.id,
         tenant_id: tenantId,
         letter_type: letterType,
-        emission_date: new Date().toISOString().slice(0, 10),
+        emission_date: nowDateOnly(),
         status: "Vigente",
         emitted_by: "Inspectoría",
         supervisor_name: null,

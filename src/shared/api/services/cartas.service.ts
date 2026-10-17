@@ -4,6 +4,7 @@
  */
 
 import { supabase } from "../lib/supabase";
+import { chunkIds, POSTGREST_MAX_ROWS } from "./causas.service";
 import type { Json } from "../lib/database.types";
 import type {
   Annotation,
@@ -240,7 +241,7 @@ export async function fetchCartaTableStates(): Promise<
 
   if (cartasError) {
     console.error("Error fetching carta table states:", cartasError);
-    return {};
+    throw cartasError;
   }
 
   const cartas = ((cartasData || []) as unknown as CauseRow[]).map(
@@ -248,23 +249,21 @@ export async function fetchCartaTableStates(): Promise<
   );
   if (cartas.length === 0) return {};
 
-  const { data: eventsData, error: eventsError } = await withSupabaseReadRetry(
-    () =>
-      supabase
-        .from("carta_events")
-        .select(CARTA_EVENT_SELECT)
-        .in(
-          "carta_id",
-          cartas.map((carta) => carta.id),
-        )
-        .order("created_at", { ascending: false }),
+  const eventPages = await Promise.all(
+    chunkIds(cartas.map((carta) => carta.id)).map(async (chunk) => {
+      const { data, error } = await withSupabaseReadRetry(() =>
+        supabase
+          .from("carta_events")
+          .select(CARTA_EVENT_SELECT)
+          .in("carta_id", chunk)
+          .order("created_at", { ascending: false })
+          .limit(POSTGREST_MAX_ROWS),
+      );
+      if (error) throw error;
+      return (data || []) as CartaEvent[];
+    }),
   );
-
-  if (eventsError) {
-    console.error("Error fetching carta events for table:", eventsError);
-  }
-
-  const events = (eventsData || []) as CartaEvent[];
+  const events = eventPages.flat();
   const cartasByStudent = new Map<string, CartaDisciplinaria[]>();
   for (const carta of cartas) {
     const hydrated = hydrateCartaWorkflow(carta, events);

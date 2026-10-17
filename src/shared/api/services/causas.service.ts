@@ -410,10 +410,14 @@ export async function fetchCausaDetails(
     console.error("Error fetching causa details:", causaResult.error);
     throw causaResult.error;
   }
-  if (checklistResult.error)
+  if (checklistResult.error) {
     console.error("Error fetching checklist items:", checklistResult.error);
-  if (bitacoraResult.error)
+    throw checklistResult.error;
+  }
+  if (bitacoraResult.error) {
     console.error("Error fetching bitacora entries:", bitacoraResult.error);
+    throw bitacoraResult.error;
+  }
 
   const [base] = mapCausaRows(
     (causaResult.data
@@ -493,14 +497,7 @@ async function resolveUniqueCausaId(preferred: string): Promise<string> {
     .eq("id", preferred)
     .maybeSingle();
   if (!checkError && !existing) return preferred;
-  const { data: all } = await supabase.from("causas").select("id");
-  const year = new Date().getFullYear();
-  let max = 0;
-  for (const row of all || []) {
-    const match = new RegExp(`^DC-${year}-(\\d+)$`).exec(row.id);
-    if (match) max = Math.max(max, Number.parseInt(match[1], 10));
-  }
-  return `DC-${year}-${String(max + 1).padStart(3, "0")}`;
+  return (await fetchGlobalCausaId()) ?? nextSequentialCausaId(preferred);
 }
 
 /** Siguiente correlativo del mismo año: `DC-2026-001` → `DC-2026-002`. */

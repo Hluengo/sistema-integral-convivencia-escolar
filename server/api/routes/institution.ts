@@ -8,6 +8,10 @@ import { requireAuth } from "../../middleware/auth.js";
 import { requireTenant } from "../../middleware/requireTenant.js";
 import { requireRole } from "../../middleware/requireRole.js";
 import { requireSuperAdmin } from "../../middleware/requireSuperAdmin.js";
+import {
+  CONVIVENCIA_MEMBERSHIP,
+  requireMembership,
+} from "../../middleware/requireMembership.js";
 import { clientErrorBody } from "../../middleware/errorHandler.js";
 import type { AuthenticatedRequest, ProfileRole } from "../../types.js";
 
@@ -544,12 +548,14 @@ router.get(
 router.use(
   "/admin/institution",
   requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
   requireTenant,
   requireRole(ADMIN_ROLES),
 );
 router.use(
   "/admin/rules",
   requireAuth,
+  requireMembership(CONVIVENCIA_MEMBERSHIP),
   requireTenant,
   requireRole(ADMIN_ROLES),
 );

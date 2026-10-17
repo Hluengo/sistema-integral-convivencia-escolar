@@ -8,6 +8,8 @@ import crypto from "node:crypto";
 process.env.SUPABASE_JWT_SECRET = Buffer.from(
   "test-secret-key-for-unit-tests",
 ).toString("base64");
+process.env.VITE_APP_MEMBERSHIPS_ENABLED = "false";
+delete process.env.VITE_APP_MEMBERSHIPS_ENFORCED;
 
 /**
  * Create a valid JWT token for testing using HMAC-SHA256
@@ -46,9 +48,15 @@ describe("API endpoints", () => {
   let baseUrl: string;
   let VALID_TOKEN: string;
   let BASIC_ROLE_TOKEN: string;
+  let NOTIFICATION_TOKEN: string;
   let requestSequence = 1;
 
   before(async () => {
+    // Este suite usa claims firmados y no debe depender de un perfil remoto.
+    delete process.env.VITE_SUPABASE_URL;
+    delete process.env.VITE_SUPABASE_ANON_KEY;
+    delete process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
     // The base64-encoded secret used for JWT verification
     const b64Secret = process.env.SUPABASE_JWT_SECRET ?? "";
     if (!b64Secret) {
@@ -83,8 +91,19 @@ describe("API endpoints", () => {
       },
       b64Secret,
     );
+    NOTIFICATION_TOKEN = await createTestJwt(
+      {
+        sub: "00000000-0000-0000-0000-000000000005",
+        exp: Math.floor(Date.now() / 1000) + 3600,
+        app_metadata: {
+          tenant_id: "00000000-0000-0000-0000-000000000001",
+          role: "convivencia",
+        },
+      },
+      b64Secret,
+    );
 
-    const mod = await import("../../api/index.js");
+    const mod = await import("../../server/api/index.ts");
     const app = mod.default;
     await new Promise<void>((resolve) => {
       server = app.listen(0, () => {
@@ -321,7 +340,7 @@ describe("API endpoints", () => {
           subject: "Citación",
           body: "Contenido",
         },
-        { Authorization: `Bearer ${VALID_TOKEN}` },
+        { Authorization: `Bearer ${NOTIFICATION_TOKEN}` },
       );
 
       assert.equal(res.status, 400);
@@ -336,7 +355,7 @@ describe("API endpoints", () => {
           subject: "Documento",
           html: '<a href="javascript:alert(1)">Ver</a>',
         },
-        { Authorization: `Bearer ${VALID_TOKEN}` },
+        { Authorization: `Bearer ${NOTIFICATION_TOKEN}` },
       );
 
       assert.equal(res.status, 400);

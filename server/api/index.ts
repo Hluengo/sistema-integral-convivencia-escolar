@@ -6,6 +6,7 @@ import cors from "cors";
 import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { ensureRuntimeConfig } from "../config/runtime.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,39 +16,31 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
   .map((o) => o.trim())
   .filter(Boolean);
 
-function ensureJwtConfig() {
-  if (process.env.NODE_ENV === "production") {
-    const hasLegacy = Boolean(
-      process.env.SUPABASE_JWT_SECRET &&
-      process.env.SUPABASE_JWT_SECRET.length > 0,
-    );
-    const hasSupabase = Boolean(
-      process.env.VITE_SUPABASE_URL && process.env.VITE_SUPABASE_URL.length > 0,
-    );
-    if (!hasLegacy && !hasSupabase) {
-      throw new Error(
-        "Missing SUPABASE_JWT_SECRET and VITE_SUPABASE_URL (no JWKS). Aborting startup to avoid running with degraded JWT verification.",
-      );
-    }
-    if (!hasLegacy) {
-      // HMAC queda deshabilitado (verifyJwtViaHmac rechaza con secret vacío);
-      // la verificación depende de JWKS/ES256 y del fallback a la API de Supabase.
-      console.warn(
-        "[jwt] SUPABASE_JWT_SECRET no configurado: verificación HMAC deshabilitada; se usará JWKS (ES256) y fallback a Supabase API.",
-      );
-    }
-  }
-}
-
-ensureJwtConfig();
+ensureRuntimeConfig();
 
 const app = express();
 app.set("trust proxy", 1);
 app.use(compression());
 app.use(
   helmet({
-    contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false,
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+        imgSrc: ["'self'", "data:", "blob:", "https://*.supabase.co"],
+        connectSrc: [
+          "'self'",
+          "https://*.supabase.co",
+          "wss://*.supabase.co",
+          "https://*.posthog.com",
+          "https://*.ingest.us.sentry.io",
+        ],
+        workerSrc: ["'self'", "blob:"],
+      },
+    },
   }),
 );
 app.use(
@@ -94,13 +87,13 @@ app.use("/api", adminRoutes);
 app.use("/api", platformRoutes);
 app.use("/api", institutionRoutes);
 
-// Global error handler — must be registered AFTER all routes
-app.use(errorHandler);
-
 const distPath = path.join(__dirname, "..", "dist");
 app.use(express.static(distPath));
 app.get("*", (_req, res) => {
   res.sendFile(path.join(distPath, "index.html"));
 });
+
+// Global error handler — must be registered after routes and static fallback.
+app.use(errorHandler);
 
 export default app;

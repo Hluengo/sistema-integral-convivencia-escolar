@@ -326,11 +326,7 @@ export async function verifyJwtWithJwks(
 
     if (!valid) return null;
 
-    if (
-      payload.exp &&
-      typeof payload.exp === "number" &&
-      payload.exp * 1000 < Date.now()
-    )
+    if (typeof payload.exp !== "number" || payload.exp * 1000 < Date.now())
       return null;
     if (
       payload.nbf &&

@@ -25,7 +25,8 @@ export async function rateLimit(
 ): Promise<void> {
   const authReq = req as AuthenticatedRequest;
   const key = authReq.user?.sub ?? req.ip ?? "unknown";
-  const allowed = await checkRateLimitAsync(key);
+  const namespace = `${req.method}:${req.baseUrl}${req.path}`;
+  const allowed = await checkRateLimitAsync(key, namespace);
 
   if (!allowed) {
     res.status(429).json({

@@ -4,6 +4,7 @@ import { Router } from "express";
 import { createClient } from "@supabase/supabase-js";
 import { requireAuth } from "../../middleware/auth.js";
 import { requireTenant } from "../../middleware/requireTenant.js";
+import { requireRole } from "../../middleware/requireRole.js";
 import { rateLimit } from "../../middleware/rateLimit.js";
 import {
   requireMembership,
@@ -14,6 +15,13 @@ import { requireStr, optStr } from "../validators/sanitizers.js";
 import { sendCitacionEmail } from "../services/composio.js";
 
 const router = Router();
+const NOTIFICATION_ROLES = [
+  "superadmin",
+  "admin",
+  "direccion",
+  "convivencia",
+  "inspectoria",
+] as const;
 
 const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,253}\.[^\s@]{2,}$/;
 const MAX_SUBJECT = 200;
@@ -61,6 +69,7 @@ router.post(
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
   requireTenant,
+  requireRole(NOTIFICATION_ROLES),
   rateLimit,
   async (req, res) => {
     try {
@@ -151,6 +160,7 @@ router.post(
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
   requireTenant,
+  requireRole(NOTIFICATION_ROLES),
   rateLimit,
   async (req, res) => {
     try {

@@ -76,10 +76,13 @@ function getRedisClient() {
   return redisClient;
 }
 
-export async function checkRateLimitAsync(ip: string): Promise<boolean> {
+export async function checkRateLimitAsync(
+  ip: string,
+  namespace = "global",
+): Promise<boolean> {
   const redis = getRedisClient();
   if (!redis) {
-    return checkRateLimit(ip);
+    return checkRateLimit(ip, namespace);
   }
 
   try {
@@ -87,19 +90,20 @@ export async function checkRateLimitAsync(ip: string): Promise<boolean> {
     // se ancla a la primera petición (sin el doble cupo del borde de minuto de
     // una clave por bucket) y una clave sin TTL se repara en la petición
     // siguiente en vez de dejar al usuario en 429 para siempre.
-    const key = `rl:${ip}`;
+    const key = namespace === "global" ? `rl:${ip}` : `rl:${namespace}:${ip}`;
     const count = await redis.incr(key);
     await redis.pexpire(key, RATE_WINDOW);
 
     return count <= RATE_LIMIT;
   } catch {
-    return checkRateLimit(ip);
+    return checkRateLimit(ip, namespace);
   }
 }
 
-export function checkRateLimit(ip: string): boolean {
+export function checkRateLimit(ip: string, namespace = "global"): boolean {
   const now = Date.now();
-  const record = rateLimitMap.get(ip);
+  const key = namespace === "global" ? ip : `${namespace}:${ip}`;
+  const record = rateLimitMap.get(key);
   if (!record || now > record.resetAt) {
     if (rateLimitMap.size >= MAX_ENTRIES) {
       prune();
@@ -109,7 +113,7 @@ export function checkRateLimit(ip: string): boolean {
       prune();
       insertsSincePrune = 0;
     }
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
+    rateLimitMap.set(key, { count: 1, resetAt: now + RATE_WINDOW });
     return true;
   }
   if (record.count >= RATE_LIMIT) {
