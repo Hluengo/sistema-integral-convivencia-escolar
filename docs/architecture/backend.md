@@ -16,7 +16,6 @@
 | POST   | `/api/advisor-chat`                     | ✅       | ✅  | Chat asesoría legal AI        |
 | POST   | `/api/audit-due-process`                | ✅       | ✅  | Auditoría de debido proceso   |
 | POST   | `/api/draft-document`                   | ✅       | ✅  | Draft de documento legal      |
-| POST   | `/api/parse-annotations`                | ❌       | ❌  | Parseo de anotaciones (regex) |
 | POST   | `/api/process-disciplinary-pdf`         | ✅       | ❌  | Análisis de PDF disciplinario |
 | POST   | `/api/process-disciplinary-pdf/confirm` | ✅ + rol | ❌  | Confirmación de proceso       |
 | GET    | `/api/document-templates`               | ❌       | ❌  | Obtener plantillas            |

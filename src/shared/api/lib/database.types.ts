@@ -2172,6 +2172,7 @@ export type Database = {
           event_name: string;
           id: string;
           properties: Json | null;
+          tenant_id: string | null;
           user_id: string | null;
         };
         Insert: {
@@ -2179,6 +2180,7 @@ export type Database = {
           event_name: string;
           id?: string;
           properties?: Json | null;
+          tenant_id?: string | null;
           user_id?: string | null;
         };
         Update: {
@@ -2186,6 +2188,7 @@ export type Database = {
           event_name?: string;
           id?: string;
           properties?: Json | null;
+          tenant_id?: string | null;
           user_id?: string | null;
         };
         Relationships: [];
@@ -2359,7 +2362,7 @@ export type Database = {
         }[];
       };
       get_daily_active_users: {
-        Args: { since?: string; until?: string };
+        Args: { p_tenant_id: string; since?: string; until?: string };
         Returns: {
           active_users: number;
           date: string;
@@ -2506,7 +2509,7 @@ export type Database = {
         }[];
       };
       get_usage_stats: {
-        Args: { since?: string; until?: string };
+        Args: { p_tenant_id: string; since?: string; until?: string };
         Returns: {
           event_name: string;
           last_occurrence: string;
@@ -2530,6 +2533,7 @@ export type Database = {
         };
         Returns: undefined;
       };
+      next_causa_correlativo: { Args: { p_year: number }; Returns: string };
       register_physical_carta: {
         Args: {
           p_emission_date?: string;

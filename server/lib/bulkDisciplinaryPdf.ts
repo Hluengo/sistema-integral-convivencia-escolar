@@ -1,6 +1,11 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { createHash } from "node:crypto";
+import {
+  getSuggestedLetterType,
+  mapDocTypeToLetterType,
+  type LetterType,
+} from "../../src/shared/lib/domain/disciplinaryStage.js";
 import { extractPdfPages } from "./disciplinaryPdfAnalysis.js";
 
 export type BulkAnnotationType = "Positiva" | "Negativa" | "Información";
@@ -115,29 +120,11 @@ export function bulkCourseKey(value: string): string {
 export function bulkSuggestedLetterType(
   negativeCount: number,
   currentLetterType: string | null,
-):
-  | "Amonestación Escrita"
-  | "Carta de Compromiso Conductual"
-  | "Ficha de Derivación"
-  | null {
-  const suggested =
-    negativeCount >= 15
-      ? "Ficha de Derivación"
-      : negativeCount >= 10
-        ? "Carta de Compromiso Conductual"
-        : negativeCount >= 5
-          ? "Amonestación Escrita"
-          : null;
-  if (!suggested) return null;
-  const rank = {
-    "Amonestación Escrita": 1,
-    "Carta de Compromiso Conductual": 2,
-    "Ficha de Derivación": 3,
-  } as const;
-  const currentRank = currentLetterType
-    ? (rank[currentLetterType as keyof typeof rank] ?? 0)
-    : 0;
-  return rank[suggested] > currentRank ? suggested : null;
+): LetterType | null {
+  // Misma progresión que el cliente (un solo catálogo de cartas).
+  return mapDocTypeToLetterType(
+    getSuggestedLetterType(negativeCount, currentLetterType),
+  );
 }
 
 function annotationKey(

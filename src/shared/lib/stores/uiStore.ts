@@ -2,7 +2,6 @@
 
 import { create } from "zustand";
 import type { SidebarView } from "../../../widgets/sidebar/Sidebar";
-import type { UserRole } from "../types";
 
 interface UIState {
   currentView: SidebarView;
@@ -10,7 +9,6 @@ interface UIState {
   mobileShowDetail: boolean;
   privacyMode: boolean;
   showShortcuts: boolean;
-  currentRole: UserRole;
 
   setCurrentView: (view: SidebarView) => void;
   setIsSidebarCollapsed: (v: boolean) => void;
@@ -26,7 +24,6 @@ export const useUIStore = create<UIState>((set) => ({
   mobileShowDetail: false,
   privacyMode: false,
   showShortcuts: false,
-  currentRole: "convivencia_escolar",
 
   setCurrentView: (view) => set({ currentView: view }),
   setIsSidebarCollapsed: (v) => set({ isSidebarCollapsed: v }),

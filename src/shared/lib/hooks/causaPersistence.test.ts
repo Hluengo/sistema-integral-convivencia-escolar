@@ -160,7 +160,7 @@ describe("mergePendingCausaSave", () => {
     assert.deepEqual(mergePendingCausaSave(undefined, incoming), incoming);
   });
 
-  it("une bloques y conserva la foto previa m�s antigua", () => {
+  it("une bloques y conserva la foto previa más antigua", () => {
     const oldSnapshot = createCausaFixture();
     const newSnapshot = { ...oldSnapshot, observaciones: "cambio intermedio" };
 

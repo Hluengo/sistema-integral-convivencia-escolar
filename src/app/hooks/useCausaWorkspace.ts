@@ -47,6 +47,7 @@ export function useCausaWorkspace({
     isAuthenticated && selectedCausaId ? selectedCausaId : "";
   const causaDetailsQuery = useCausaDetailsQuery(selectedCausaForDetail);
   const hasInitializedCausasRef = useRef(false);
+  const activeTenantIdRef = useRef<string | null>(null);
   const lastCausasQueryDataRef = useRef<typeof causasQuery.data>(undefined);
   const lastDetailsQueryDataRef =
     useRef<typeof causaDetailsQuery.data>(undefined);
@@ -99,16 +100,25 @@ export function useCausaWorkspace({
     });
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    const tenantSwitched =
+      activeTenantIdRef.current !== null &&
+      activeTenantIdRef.current !== tenantId;
+    activeTenantIdRef.current = isAuthenticated ? (tenantId ?? null) : null;
+
+    if (!isAuthenticated || tenantSwitched) {
       lastCausasQueryDataRef.current = undefined;
       lastDetailsQueryDataRef.current = undefined;
       hasInitializedCausasRef.current = false;
-      setCurrentView("dashboard");
-      setMobileShowDetail(false);
       // Evita un ciclo de render: [] es una nueva referencia en cada efecto.
       // Solo limpiamos Zustand si hay información efectivamente cargada.
       if (causas.length > 0) setCausas([]);
       if (selectedCausaId) setSelectedCausaId("");
+      if (!isAuthenticated) {
+        setCurrentView("dashboard");
+        setMobileShowDetail(false);
+      }
+      // Cambio de colegio: la caché del tenant anterior no debe verse ni un
+      // frame (el listado nuevo hidrata en el siguiente render).
       queryClient.removeQueries({ queryKey: causasQueryKeys.root });
       return;
     }
@@ -143,6 +153,7 @@ export function useCausaWorkspace({
     setSelectedCausaId,
     setCurrentView,
     setMobileShowDetail,
+    tenantId,
   ]);
 
   useEffect(() => {

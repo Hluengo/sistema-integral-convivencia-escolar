@@ -494,7 +494,7 @@ const _buildChecklistForCausa = (
         ...baseItem,
         completado: true,
         fechaCompletado: override.fechaCompletado || relativeDate(5),
-        registradoPor: override.registradoPor || "Esteban Valenzuela",
+        registradoPor: override.registradoPor || "Sin responsable informado",
         observaciones:
           override.observaciones ||
           "Hito procesal cerrado conforme a debido proceso.",

@@ -69,7 +69,6 @@ import auditRoutes from "./routes/audit.js";
 import draftRoutes from "./routes/draft.js";
 import debugRoutes from "./routes/debug.js";
 import templatesRoutes from "./routes/templates.js";
-import parseRoutes from "./routes/parse.js";
 import processDisciplinaryPdfRoutes from "./routes/processDisciplinaryPdf.js";
 import usageRoutes from "./routes/usage.js";
 import notificacionesRoutes from "./routes/notificaciones.js";
@@ -83,7 +82,6 @@ import { errorHandler } from "../middleware/errorHandler.js";
 app.use("/api", advisorRoutes);
 app.use("/api", auditRoutes);
 app.use("/api", draftRoutes);
-app.use("/api", parseRoutes);
 app.use("/api", processDisciplinaryPdfRoutes);
 
 // API routes — sin rate limit (lectura, utilidades)

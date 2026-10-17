@@ -474,4 +474,36 @@ describe("updateCartaStatus", () => {
       install.restore();
     }
   });
+
+  it("deja un testigo aunque no venga motivo, para que el CAS detecte al segundo actor", async (t) => {
+    t.mock.method(MockQueryBuilder.prototype, "maybeSingle", function () {
+      return { data: { observations: null }, error: null } as never;
+    });
+    const updates: Array<Record<string, unknown>> = [];
+    t.mock.method(
+      MockQueryBuilder.prototype,
+      "update",
+      function (
+        this: MockQueryBuilder<unknown>,
+        payload: Record<string, unknown>,
+      ) {
+        updates.push(payload);
+        this.result = { data: [{ id: "carta-1" }], error: null } as never;
+        return this;
+      },
+    );
+
+    const install = await installFromMock(() => ({ data: null, error: null }));
+    try {
+      const { updateCartaStatus } = await import("./cartas.service");
+      const ok = await updateCartaStatus("carta-1", "Cumplida");
+      assert.equal(ok, true);
+      assert.equal(updates[0].status, "Cumplida");
+      // Sin testigo el segundo actor no se detecta: la carta queda sin
+      // observaciones y el `is("observations", null)` sigue siendo verdadero.
+      assert.equal(updates[0].observations, "Cambio de estado a Cumplida");
+    } finally {
+      install.restore();
+    }
+  });
 });

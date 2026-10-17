@@ -7,7 +7,10 @@ import type React from "react";
 import { Controller, useWatch } from "react-hook-form";
 import type { UseFormReturn } from "react-hook-form";
 import { Scale, AlertCircle, FileText, Loader2, Users } from "lucide-react";
-import { getMaxPlazoInvestigacionDias } from "../../../shared/lib/legalCompliance/constants";
+import {
+  getMaxPlazoInvestigacionDias,
+  MAX_PLAZO_INVESTIGACION_DIAS,
+} from "../../../shared/lib/legalCompliance/constants";
 import type {
   Course,
   Student,
@@ -56,6 +59,16 @@ export default function NewCausaForm({
     useWatch({ control, name: "selectedStudentId" }) ?? "";
   const newInfTipo = useWatch({ control, name: "newInfTipo" });
   const newAulaSegura = useWatch({ control, name: "newAulaSegura" });
+  // El plazo estándar (60) se cuenta en días corridos; solo el de alta
+  // complejidad (10) es en hábiles, igual que la calculadora de plazos.
+  const plazoInvestigacionDias = getMaxPlazoInvestigacionDias(
+    newInfTipo as Causa["tipoInfraccion"],
+    newAulaSegura,
+  );
+  const plazoInvestigacionUnidad =
+    plazoInvestigacionDias === MAX_PLAZO_INVESTIGACION_DIAS
+      ? "días corridos"
+      : "días hábiles";
   const newObs = useWatch({ control, name: "newObs" }) ?? "";
   const studentState = getStudentState(
     selectedCourseId,
@@ -346,13 +359,9 @@ export default function NewCausaForm({
 
         <div className="rounded-lg border border-gravisima-200 bg-gravisima-50 p-3 font-medium font-sans text-gravisima-700 text-xs leading-normal">
           <strong>Plazo de indagación:</strong> según Ley 21809, el plazo máximo
-          es de{" "}
-          {getMaxPlazoInvestigacionDias(
-            newInfTipo as Causa["tipoInfraccion"],
-            newAulaSegura,
-          )}{" "}
-          días hábiles. Se reduce a 10 días hábiles en casos de alta complejidad
-          (Aula Segura o faltas Muy Grave/Gravísima).
+          es de {plazoInvestigacionDias} {plazoInvestigacionUnidad}. Se reduce a
+          10 días hábiles en casos de alta complejidad (Aula Segura o faltas Muy
+          Grave/Gravísima).
         </div>
 
         <div className="sticky bottom-0 -mx-4 border-neutral-100 border-t bg-white/95 px-4 pt-2 pb-1 backdrop-blur sm:-mx-6 sm:px-6">

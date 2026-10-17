@@ -442,6 +442,10 @@ export async function markCartaInterviewed(
  * de `observations` leída (compare-and-set) para no perder el registro de un
  * cambio concurrente sobre la misma carta. Si nadie más escribió la fila se
  * aplica; si no, se relee y se reintenta.
+ *
+ * Cada cambio deja una línea en `observations` aunque no venga motivo: sin un
+ * testigo que cambie siempre, el compare-and-set no detectaría al segundo
+ * actor cuando la carta no tenía observaciones.
  */
 export async function updateCartaStatus(
   cartaId: string,
@@ -463,9 +467,12 @@ export async function updateCartaStatus(
     const storedObservations =
       typeof current?.observations === "string" ? current.observations : null;
     const reasonText = reason?.trim();
-    const observations = reasonText
-      ? `${storedObservations ? `${storedObservations}\n\n` : ""}Cambio de estado a ${status}: ${reasonText}`
-      : storedObservations;
+    const marker = reasonText
+      ? `Cambio de estado a ${status}: ${reasonText}`
+      : `Cambio de estado a ${status}`;
+    const observations = storedObservations
+      ? `${storedObservations}\n\n${marker}`
+      : marker;
 
     const update = supabase
       .from("cartas_disciplinarias")
@@ -609,7 +616,7 @@ export async function createPendingCartaForStudent(params: {
   await createCartaEvent(
     carta.id,
     "suggested",
-    `Carta sugerida por progresi�n ${sourceLabel}`,
+    `Carta sugerida por progresión ${sourceLabel}`,
     {
       source: params.source,
       negativeCount: params.negativeCount,

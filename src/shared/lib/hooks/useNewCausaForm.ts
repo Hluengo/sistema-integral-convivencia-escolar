@@ -20,7 +20,7 @@ export const NEW_CAUSA_FORM_DEFAULTS: NewCausaFormValues = {
   conductaRiceId: "",
   newAulaSegura: false,
   newObs: "",
-  newResponsable: "Esteban Valenzuela (Encargado de Convivencia)",
+  newResponsable: "",
 };
 
 const NEW_CAUSA_FORM_FIELDS = Object.keys(NEW_CAUSA_FORM_DEFAULTS) as Array<

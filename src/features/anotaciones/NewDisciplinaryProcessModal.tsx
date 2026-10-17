@@ -354,6 +354,12 @@ export default function NewDisciplinaryProcessModal({
       setStatus("uploading");
       const uploaded = await uploadDisciplinaryFile(file, tenantId);
       if (!uploaded) throw new Error("No fue posible subir el PDF.");
+      if (controller.signal.aborted) {
+        // Cancelado durante la subida: abort() corta la petición, no la subida
+        // a Storage, así que hay que borrar el objeto para no dejarlo huérfano.
+        await deleteDisciplinaryFile(uploaded.storagePath);
+        return;
+      }
       uploadedFileRef.current = uploaded;
       setUploadedFile(uploaded);
 

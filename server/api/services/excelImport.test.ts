@@ -127,7 +127,9 @@ function makeMockClient(opts: MockClientOptions): SupabaseClient {
       return {
         select: () => ({
           eq: () => ({
-            not: async () => ({ data: existingStudents, error: null }),
+            not: () => ({
+              range: async () => ({ data: existingStudents, error: null }),
+            }),
           }),
         }),
         insert: async () => ({ error: opts.insertError ?? null }),

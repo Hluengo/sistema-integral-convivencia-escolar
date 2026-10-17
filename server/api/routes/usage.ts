@@ -113,6 +113,11 @@ router.get(
     try {
       const since = (req.query.since as string) ?? undefined;
       const until = (req.query.until as string) ?? undefined;
+      const tenantId = (req as AuthRequest).tenantId;
+      if (!tenantId) {
+        res.status(400).json({ error: "Establecimiento no determinado." });
+        return;
+      }
 
       const { createClient } = await import("@supabase/supabase-js");
       const supabaseUrl =
@@ -129,12 +134,13 @@ router.get(
       }
 
       // La autorización ya fue resuelta por requireAuth + membership + tenant + role.
-      // Las RPC de estadísticas están deliberadamente restringidas a service_role.
+      // Las RPC de estadísticas están deliberadamente restringidas a service_role
+      // y reciben el colegio para no mezclar métricas entre establecimientos.
       const supabase = createClient(supabaseUrl, serviceRoleKey, {
         auth: { persistSession: false, autoRefreshToken: false },
       });
 
-      const params: Record<string, string> = {};
+      const params: Record<string, string> = { p_tenant_id: tenantId };
       if (since) params.since = since;
       if (until) params.until = until;
 

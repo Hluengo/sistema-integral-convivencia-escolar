@@ -2,6 +2,7 @@
 import readXlsxFile, { type CellValue } from "read-excel-file/node";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { bulkNameKey } from "../../lib/bulkDisciplinaryPdf.js";
+import { fetchAllRows } from "../../lib/fetchAllRows.js";
 
 export interface ParsedTeachers {
   names: string[];
@@ -98,15 +99,15 @@ export async function importTeachers(
     seen.add(key);
     unique.push(name);
   }
-  const { data: existing, error: existingError } = await client
-    .from("teachers")
-    .select("full_name")
-    .eq("tenant_id", tenantId);
-  if (existingError) throw existingError;
+  const existing = await fetchAllRows<{ full_name: string }>((from, to) =>
+    client
+      .from("teachers")
+      .select("full_name")
+      .eq("tenant_id", tenantId)
+      .range(from, to),
+  );
   const existingKeys = new Set(
-    ((existing ?? []) as Array<{ full_name: string }>).map((row) =>
-      bulkNameKey(row.full_name),
-    ),
+    existing.map((row) => bulkNameKey(row.full_name)),
   );
   const fresh = unique.filter((name) => !existingKeys.has(bulkNameKey(name)));
   const errors: string[] = [];

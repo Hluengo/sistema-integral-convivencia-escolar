@@ -15,7 +15,6 @@ import auditRoutes from "./api/routes/audit";
 import draftRoutes from "./api/routes/draft";
 import advisorRoutes from "./api/routes/advisor";
 import templatesRoutes from "./api/routes/templates";
-import parseRoutes from "./api/routes/parse";
 import processDisciplinaryPdfRoutes from "./api/routes/processDisciplinaryPdf";
 import debugRoutes from "./api/routes/debug";
 import usageRoutes from "./api/routes/usage";
@@ -63,7 +62,6 @@ app.get("/api/health", (_req, res) => {
 app.use("/api", auditRoutes);
 app.use("/api", draftRoutes);
 app.use("/api", advisorRoutes);
-app.use("/api", parseRoutes);
 app.use("/api", processDisciplinaryPdfRoutes);
 
 // API routes — sin rate limit (lectura, utilidades)
@@ -104,6 +102,36 @@ function ensureJwtConfig() {
   }
 }
 
+function ensureRuntimeConfig() {
+  if (process.env.NODE_ENV === "production") {
+    // Sin estas variables las rutas de administración fallan en el primer
+    // request: mejor abortar el arranque que quedar a medio andar.
+    const missing: string[] = [];
+    if (!process.env.VITE_SUPABASE_URL?.trim()) {
+      missing.push("VITE_SUPABASE_URL");
+    }
+    if (
+      !(
+        process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY
+      )?.trim()
+    ) {
+      missing.push("SUPABASE_SERVICE_ROLE_KEY");
+    }
+    if (missing.length > 0) {
+      throw new Error(
+        `Faltan variables de entorno obligatorias: ${missing.join(", ")}. Aborting startup.`,
+      );
+    }
+    if (!process.env.UPSTASH_REDIS_REST_URL?.trim()) {
+      // El fallback en memoria no limita nada entre instancias.
+      console.warn(
+        "[rate-limit] UPSTASH_REDIS_REST_URL no configurado en producción: el rate limit en memoria no aplica entre instancias.",
+      );
+    }
+  }
+  ensureJwtConfig();
+}
+
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
@@ -124,5 +152,5 @@ async function startServer() {
   });
 }
 
-ensureJwtConfig();
+ensureRuntimeConfig();
 startServer();

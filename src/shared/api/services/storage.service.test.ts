@@ -272,10 +272,18 @@ describe("openDocument", () => {
       windowOpenResult: { location: { href: "" }, close: () => undefined },
       fn: async () => {
         const { openDocument } = await import("./storage.service");
-        return openDocument("causa-1/documentos/a.pdf");
+        const opened = await openDocument("causa-1/documentos/a.pdf");
+        // Los llamadores ignoran el retorno: el aviso tiene que salir de acá.
+        const { useToastStore } = await import("../../lib/stores/toastStore");
+        return { opened, toasts: useToastStore.getState().toasts };
       },
     });
-    assert.equal(result, false);
+    const { opened, toasts } = result as {
+      opened: boolean;
+      toasts: Array<{ type: string; message: string }>;
+    };
+    assert.equal(opened, false);
+    assert.match(toasts.at(-1)?.message ?? "", /ya no está disponible/);
   });
 
   it("retorna false para rutas no normalizables", async () => {

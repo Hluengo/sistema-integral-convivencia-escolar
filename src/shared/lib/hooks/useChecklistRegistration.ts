@@ -62,9 +62,9 @@ export function useChecklistRegistration({
   const getResponsableName = useCallback(() => {
     const r = causa.responsable;
     if (!r) {
-      return "Esteban Valenzuela";
+      return "Sin responsable informado";
     }
-    return r.split(" (")[0] || "Esteban Valenzuela";
+    return r.split(" (")[0] || "Sin responsable informado";
   }, [causa.responsable]);
 
   const handleStartRegister = useCallback(
@@ -118,7 +118,7 @@ export function useChecklistRegistration({
           ? targetItem.label
           : "Paso de Debido Proceso";
         const isRectification = targetItem?.completado === true;
-        const responsable = regName || "Esteban Valenzuela";
+        const responsable = regName || "Sin responsable informado";
         const trimmedObservations = regObservations.trim();
 
         const newLog: BitacoraEntry = {

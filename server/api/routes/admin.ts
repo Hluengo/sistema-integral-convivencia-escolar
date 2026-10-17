@@ -11,12 +11,12 @@ import { requireAuth } from "../../middleware/auth.js";
 import { isValidUuid } from "../../middleware/auth.js";
 import { requireRole } from "../../middleware/requireRole.js";
 import { requireTenant } from "../../middleware/requireTenant.js";
+import { rateLimit } from "../../middleware/rateLimit.js";
 import { clientErrorBody } from "../../middleware/errorHandler.js";
 import type { AuthenticatedRequest, ProfileRole } from "../../types.js";
 import {
   bulkCourseKey,
   bulkNameKey,
-  BULK_QUERY_MAX_ROWS,
   chunkQueryIds,
   parseBulkDisciplinaryPdf,
   selectNewBulkAnnotations,
@@ -26,6 +26,7 @@ import {
   previewBulkCartas,
   syncBulkPendingCartas,
 } from "../../lib/bulkCartaWorkflow.js";
+import { fetchAllRows } from "../../lib/fetchAllRows.js";
 
 const router = Router();
 const ownUpload = multer({
@@ -92,16 +93,21 @@ async function fetchExistingBulkRecords(
   studentIds: string[],
 ) {
   const pages = await Promise.all(
-    chunkQueryIds(studentIds).map(async (chunk) => {
-      const { data, error } = await client
-        .from("inspectorate_records")
-        .select("student_id,type,date_time,observation")
-        .eq("tenant_id", tenantId)
-        .in("student_id", chunk)
-        .limit(BULK_QUERY_MAX_ROWS);
-      if (error) throw error;
-      return data ?? [];
-    }),
+    chunkQueryIds(studentIds).map((chunk) =>
+      fetchAllRows<{
+        student_id: string;
+        type: string;
+        date_time: string;
+        observation: string | null;
+      }>((from, to) =>
+        client
+          .from("inspectorate_records")
+          .select("student_id,type,date_time,observation")
+          .eq("tenant_id", tenantId)
+          .in("student_id", chunk)
+          .range(from, to),
+      ),
+    ),
   );
   return pages.flat();
 }
@@ -225,9 +231,15 @@ async function recordAudit(
 async function listAuthUsers(
   client: SupabaseClient,
 ): Promise<Map<string, User>> {
-  const result = await client.auth.admin.listUsers({ page: 1, perPage: 1000 });
-  if (result.error) throw result.error;
-  return new Map(result.data.users.map((user) => [user.id, user]));
+  // `listUsers` también corta en 1000: pagina hasta el final.
+  const perPage = 1000;
+  const users = new Map<string, User>();
+  for (let page = 1; ; page += 1) {
+    const result = await client.auth.admin.listUsers({ page, perPage });
+    if (result.error) throw result.error;
+    for (const user of result.data.users) users.set(user.id, user);
+    if (result.data.users.length < perPage) return users;
+  }
 }
 
 // Guard acotado al prefijo propio para no interceptar otras rutas /api/*.
@@ -328,7 +340,7 @@ router.get("/admin/members", async (req, res) => {
     const message =
       error instanceof Error
         ? error.message
-        : "Error al cargar la administraci�n.";
+        : "Error al cargar la administración.";
     const status = message.includes("permisos") ? 403 : 500;
     res.status(status).json(clientErrorBody(message, status));
   }
@@ -433,7 +445,7 @@ router.patch("/admin/members/:userId", async (req, res) => {
   }
 });
 
-router.post("/admin/invitations", async (req, res) => {
+router.post("/admin/invitations", rateLimit, async (req, res) => {
   try {
     const request = getRequest(req);
     const client = getAdminClient();
@@ -524,66 +536,75 @@ router.post("/admin/invitations", async (req, res) => {
     const message =
       error instanceof Error
         ? error.message
-        : "No fue posible enviar la invitaci�n.";
+        : "No fue posible enviar la invitación.";
     res
       .status(invitationErrorStatus(message))
       .json(clientErrorBody(message, invitationErrorStatus(message)));
   }
 });
 
-router.post("/admin/invitations/:invitationId/resend", async (req, res) => {
-  try {
-    const request = getRequest(req);
-    const client = getAdminClient();
-    await assertFreshAdmin(client, request);
-    if (!req.params.invitationId || !isValidUuid(req.params.invitationId)) {
-      res.status(400).json({ error: "Identificador de invitación inválido." });
-      return;
+router.post(
+  "/admin/invitations/:invitationId/resend",
+  rateLimit,
+  async (req, res) => {
+    try {
+      const request = getRequest(req);
+      const client = getAdminClient();
+      await assertFreshAdmin(client, request);
+      if (!req.params.invitationId || !isValidUuid(req.params.invitationId)) {
+        res
+          .status(400)
+          .json({ error: "Identificador de invitación inválido." });
+        return;
+      }
+      const { data, error } = await client
+        .from("membership_invitations")
+        .select("id,tenant_id,email,role,auth_user_id,status")
+        .eq("id", req.params.invitationId)
+        .eq("tenant_id", request.tenantId)
+        .maybeSingle();
+      if (error) throw error;
+      const invitation = data as unknown as Pick<
+        InvitationRow,
+        "id" | "tenant_id" | "email" | "role" | "auth_user_id" | "status"
+      > | null;
+      if (!invitation || invitation.status !== "pending") {
+        res.status(404).json({ error: "Invitación pendiente no encontrada." });
+        return;
+      }
+      const resend = await client.auth.admin.inviteUserByEmail(
+        invitation.email,
+        {
+          data: { tenant_id: request.tenantId, role: invitation.role },
+        },
+      );
+      if (resend.error) throw resend.error;
+      const now = new Date().toISOString();
+      await client
+        .from("membership_invitations")
+        .update({ last_sent_at: now, updated_at: now })
+        .eq("id", invitation.id)
+        .eq("tenant_id", request.tenantId);
+      await recordAudit(
+        client,
+        request,
+        "invitation_resent",
+        invitation.auth_user_id ?? invitation.id,
+        null,
+        { email: invitation.email },
+      );
+      res.json({ success: true });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "No fue posible reenviar la invitación.";
+      res
+        .status(invitationErrorStatus(message))
+        .json(clientErrorBody(message, invitationErrorStatus(message)));
     }
-    const { data, error } = await client
-      .from("membership_invitations")
-      .select("id,tenant_id,email,role,auth_user_id,status")
-      .eq("id", req.params.invitationId)
-      .eq("tenant_id", request.tenantId)
-      .maybeSingle();
-    if (error) throw error;
-    const invitation = data as unknown as Pick<
-      InvitationRow,
-      "id" | "tenant_id" | "email" | "role" | "auth_user_id" | "status"
-    > | null;
-    if (!invitation || invitation.status !== "pending") {
-      res.status(404).json({ error: "Invitación pendiente no encontrada." });
-      return;
-    }
-    const resend = await client.auth.admin.inviteUserByEmail(invitation.email, {
-      data: { tenant_id: request.tenantId, role: invitation.role },
-    });
-    if (resend.error) throw resend.error;
-    const now = new Date().toISOString();
-    await client
-      .from("membership_invitations")
-      .update({ last_sent_at: now, updated_at: now })
-      .eq("id", invitation.id)
-      .eq("tenant_id", request.tenantId);
-    await recordAudit(
-      client,
-      request,
-      "invitation_resent",
-      invitation.auth_user_id ?? invitation.id,
-      null,
-      { email: invitation.email },
-    );
-    res.json({ success: true });
-  } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "No fue posible reenviar la invitaci�n.";
-    res
-      .status(invitationErrorStatus(message))
-      .json(clientErrorBody(message, invitationErrorStatus(message)));
-  }
-});
+  },
+);
 
 router.post("/admin/invitations/:invitationId/cancel", async (req, res) => {
   try {
@@ -731,14 +752,20 @@ async function loadTeacherNames(
   client: SupabaseClient,
   tenantId: string,
 ): Promise<string[]> {
-  const { data, error } = await client
-    .from("teachers")
-    .select("full_name")
-    .eq("tenant_id", tenantId);
-  if (error) return [];
-  return ((data ?? []) as Array<{ full_name: string }>)
-    .map((row) => row.full_name)
-    .filter((name) => name.trim().length > 0);
+  try {
+    const rows = await fetchAllRows<{ full_name: string }>((from, to) =>
+      client
+        .from("teachers")
+        .select("full_name")
+        .eq("tenant_id", tenantId)
+        .range(from, to),
+    );
+    return rows
+      .map((row) => row.full_name)
+      .filter((name) => name.trim().length > 0);
+  } catch {
+    return [];
+  }
 }
 
 router.post(
@@ -1097,7 +1124,11 @@ router.post(
         observation: `[${annotation.categoria}] ${annotation.texto}`,
         type: annotation.tipo,
         severity: "Leve",
-        registered_by: annotation.profesor?.trim() || "PDF Importación Masiva",
+        // El nombre viene del PDF subido, no del usuario autenticado: se marca
+        // como lo que es para no atribuir la anotación a un docente real.
+        registered_by: annotation.profesor?.trim()
+          ? `${annotation.profesor.trim()} (según ficha)`
+          : "PDF Importación Masiva",
         created_by: request.user?.sub ?? "",
         tenant_id: request.tenantId,
         pdf_file_path: pdfPath,
@@ -1148,11 +1179,29 @@ router.post(
       });
     } catch (error) {
       if (bulkClaim) {
-        await getAdminClient().rpc("release_bulk_pdf_import", {
-          p_tenant_id: bulkClaim.tenantId,
-          p_course_id: bulkClaim.courseId,
-          p_file_hash: bulkClaim.fileHash,
-        });
+        try {
+          // Rollback de lo ya insertado: el guard de "ya fue importado" se
+          // apoya en pdf_file_path, así que sin borrar estas filas el reintento
+          // queda bloqueado con la importación a medias (409 sin salida).
+          await getAdminClient()
+            .from("inspectorate_records")
+            .delete()
+            .eq("tenant_id", bulkClaim.tenantId)
+            .eq(
+              "pdf_file_path",
+              `bulk-pdf/${bulkClaim.tenantId}/${bulkClaim.courseId}/${bulkClaim.fileHash}`,
+            );
+          await getAdminClient().rpc("release_bulk_pdf_import", {
+            p_tenant_id: bulkClaim.tenantId,
+            p_course_id: bulkClaim.courseId,
+            p_file_hash: bulkClaim.fileHash,
+          });
+        } catch (releaseError) {
+          console.error(
+            "No se pudo liberar la importación masiva:",
+            releaseError,
+          );
+        }
       }
       const message =
         error instanceof Error

@@ -84,7 +84,7 @@ export function useCausasPersistence({
 
   const requeueFailedSaves = useCallback(
     (failedSaves: Map<string, PendingCausaSave>) => {
-      // Re-encola lo fallido: el reintento manual o el pr�ximo cambio
+      // Re-encola lo fallido: el reintento manual o el próximo cambio
       // vuelve a persistirlo en vez de perderlo.
       for (const [id, entry] of failedSaves) {
         pendingSaveRef.current.set(
@@ -115,8 +115,8 @@ export function useCausasPersistence({
             pending.previousCausa,
             pending.changes,
             {
-              updateCausa: (c) =>
-                updateCausa(c, useAuthStore.getState().tenantId),
+              updateCausa: (c, previous) =>
+                updateCausa(c, useAuthStore.getState().tenantId, previous),
               saveBitacora,
               saveChecklist,
             },

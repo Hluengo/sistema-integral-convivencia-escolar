@@ -71,18 +71,20 @@ test.describe("Responsive vistas privadas", () => {
   ];
 
   async function openMobileMenuIfNeeded(page: Page) {
-    // Si el drawer ya está abierto (p. ej. tras el login), no hacer nada.
-    if (
-      await page
-        .getByRole("dialog", { name: "Menú móvil" })
-        .isVisible()
-        .catch(() => false)
-    ) {
-      return;
-    }
+    // Bajo el breakpoint lg la barra lateral es `hidden` y la navegación vive
+    // en el drawer móvil; sobre lg navega la barra lateral y no hay disparador.
+    if ((page.viewportSize()?.width ?? 1280) >= 1024) return;
+    const mobileMenu = page.getByRole("dialog", { name: "Menú móvil" });
     const openMenu = page.getByRole("button", { name: "Abrir menú" });
-    if (await openMenu.isVisible().catch(() => false)) {
-      await openMenu.click();
+    // Tras el login el shell se remonta y el clic puede caer en un nodo
+    // reemplazado: reintentar hasta confirmar que el drawer quedó abierto.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (await mobileMenu.isVisible().catch(() => false)) return;
+      if (!(await openMenu.isVisible().catch(() => false))) {
+        await page.waitForTimeout(500);
+        continue;
+      }
+      await openMenu.click().catch(() => null);
       await page.waitForTimeout(600);
     }
   }

@@ -36,6 +36,115 @@ var init_dateUtils = __esm({
   },
 });
 
+// src/shared/lib/domain/disciplinaryStage.ts
+function getDisciplinaryStage(negativeCount) {
+  const count = Math.max(0, Number(negativeCount) || 0);
+  return (
+    DISCIPLINARY_STAGES.find(
+      (stage) =>
+        count >= stage.min && (stage.max === null || count <= stage.max),
+    ) || DISCIPLINARY_STAGES[0]
+  );
+}
+function mapDocTypeToLetterType(docType) {
+  if (!docType || docType === "none") return null;
+  if (docType === "amonestacion") return "Amonestaci\xF3n Escrita";
+  if (docType === "compromiso" || docType === "compromiso_conductual") {
+    return "Carta de Compromiso Conductual";
+  }
+  if (docType === "derivacion") return "Ficha de Derivaci\xF3n";
+  return null;
+}
+function mapLetterTypeToDocType(letterType) {
+  if (!letterType) return null;
+  if (letterType === "Amonestaci\xF3n Escrita") return "amonestacion";
+  if (letterType === "Carta de Compromiso Conductual")
+    return "compromiso_conductual";
+  if (
+    letterType === "Ficha de Derivaci\xF3n" ||
+    letterType === "Derivaci\xF3n a Convivencia Escolar"
+  ) {
+    return "derivacion";
+  }
+  return null;
+}
+function getSuggestedLetterType(negativeCount, currentLetterType) {
+  const stage = getDisciplinaryStage(negativeCount);
+  if (stage.key === "none") return null;
+  const suggested = stage.key;
+  const currentDocType = mapLetterTypeToDocType(currentLetterType);
+  if (!currentDocType) return suggested;
+  return STAGE_RANK[suggested] > STAGE_RANK[currentDocType] ? suggested : null;
+}
+var DISCIPLINARY_STAGES, STAGE_RANK;
+var init_disciplinaryStage = __esm({
+  "src/shared/lib/domain/disciplinaryStage.ts"() {
+    "use strict";
+    init_dateUtils();
+    DISCIPLINARY_STAGES = [
+      {
+        key: "none",
+        label: "Sin medida activa",
+        min: 0,
+        max: 4,
+        color: "neutral",
+      },
+      {
+        key: "amonestacion",
+        label: "Amonestaci\xF3n Escrita",
+        min: 5,
+        max: 9,
+        color: "yellow",
+      },
+      {
+        key: "compromiso_conductual",
+        label: "Carta de Compromiso Conductual",
+        min: 10,
+        max: 14,
+        color: "orange",
+      },
+      {
+        key: "derivacion",
+        label: "Derivaci\xF3n a Convivencia Escolar",
+        min: 15,
+        max: null,
+        color: "red",
+      },
+    ];
+    STAGE_RANK = {
+      none: 0,
+      amonestacion: 1,
+      compromiso_conductual: 2,
+      derivacion: 3,
+    };
+  },
+});
+
+// server/lib/regulationBasis.ts
+async function fetchActiveRegulationBasis(supabase, tenantId) {
+  const { data } = await supabase
+    .from("institution_rule_versions")
+    .select("title,version")
+    .eq("tenant_id", tenantId)
+    .eq("status", "active")
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const row = data;
+  const title = row?.title?.trim();
+  if (!title) return FALLBACK_REGULATION_BASIS;
+  const version = row?.version?.trim();
+  return version ? `${title} ${version}` : title;
+}
+var FALLBACK_REGULATION_BASIS;
+var init_regulationBasis = __esm({
+  "server/lib/regulationBasis.ts"() {
+    "use strict";
+    FALLBACK_REGULATION_BASIS =
+      "Reglamento Interno de Convivencia Escolar (RICE)";
+  },
+});
+
 // server/lib/disciplinaryPdfAnalysis.ts
 var disciplinaryPdfAnalysis_exports = {};
 __export(disciplinaryPdfAnalysis_exports, {
@@ -626,15 +735,7 @@ function severityForAnnotation(type) {
   return type === "negative" ? "Leve" : "Leve";
 }
 function suggestedLetterToDocumentType(suggestedLetterType) {
-  if (suggestedLetterType === "amonestacion") return "Amonestaci\xF3n Escrita";
-  if (
-    suggestedLetterType === "compromiso" ||
-    suggestedLetterType === "compromiso_conductual"
-  ) {
-    return "Carta de Compromiso Conductual";
-  }
-  if (suggestedLetterType === "derivacion") return "Ficha de Derivaci\xF3n";
-  return null;
+  return mapDocTypeToLetterType(suggestedLetterType);
 }
 function suggestedLetterToStageName(suggestedLetterType) {
   if (suggestedLetterType === "amonestacion") return "amonestacion";
@@ -729,6 +830,10 @@ async function syncConfirmedProcessToLegacyViews(
       .ilike("observations", `%${processId}%`)
       .limit(1);
     if (!existingDocument || existingDocument.length === 0) {
+      const regulationBasis = await fetchActiveRegulationBasis(
+        supabase,
+        input.tenantId,
+      );
       const { error } = await supabase.from("cartas_disciplinarias").insert({
         student_id: input.studentId,
         tenant_id: input.tenantId,
@@ -741,8 +846,7 @@ async function syncConfirmedProcessToLegacyViews(
         annotations_count: summary.negativas,
         student_name: student.full_name || "Estudiante seleccionado",
         course: courseName,
-        regulation_basis:
-          "RICE 2026 - Registro de anotaciones y debido proceso",
+        regulation_basis: `${regulationBasis} - Registro de anotaciones y debido proceso`,
         observations: `${processMarker}. Documento sugerido autom\xE1ticamente desde PDF confirmado.`,
         created_by: "Sistema PDF",
       });
@@ -1115,6 +1219,8 @@ var init_disciplinaryPdfAnalysis = __esm({
   "server/lib/disciplinaryPdfAnalysis.ts"() {
     "use strict";
     init_dateUtils();
+    init_disciplinaryStage();
+    init_regulationBasis();
     PARSER_VERSION = "disciplinary-pdf-parser-v1";
     PDF_BUCKET = "disciplinary-processes";
     MAX_PDF_BYTES = 10 * 1024 * 1024;
@@ -1287,22 +1393,9 @@ function bulkCourseKey(value) {
     : text;
 }
 function bulkSuggestedLetterType(negativeCount, currentLetterType) {
-  const suggested =
-    negativeCount >= 15
-      ? "Ficha de Derivaci\xF3n"
-      : negativeCount >= 10
-        ? "Carta de Compromiso Conductual"
-        : negativeCount >= 5
-          ? "Amonestaci\xF3n Escrita"
-          : null;
-  if (!suggested) return null;
-  const rank = {
-    "Amonestaci\xF3n Escrita": 1,
-    "Carta de Compromiso Conductual": 2,
-    "Ficha de Derivaci\xF3n": 3,
-  };
-  const currentRank = currentLetterType ? (rank[currentLetterType] ?? 0) : 0;
-  return rank[suggested] > currentRank ? suggested : null;
+  return mapDocTypeToLetterType(
+    getSuggestedLetterType(negativeCount, currentLetterType),
+  );
 }
 function annotationKey(type, date, text) {
   const withoutPrefix = text.replace(/^\[[^\]]+\]\s*/, "");
@@ -1627,13 +1720,32 @@ async function parseBulkDisciplinaryPdf(buffer, teacherNames = []) {
     warnings,
   };
 }
-var BULK_QUERY_CHUNK_SIZE, BULK_QUERY_MAX_ROWS;
+var BULK_QUERY_CHUNK_SIZE;
 var init_bulkDisciplinaryPdf = __esm({
   "server/lib/bulkDisciplinaryPdf.ts"() {
     "use strict";
+    init_disciplinaryStage();
     init_disciplinaryPdfAnalysis();
     BULK_QUERY_CHUNK_SIZE = 20;
-    BULK_QUERY_MAX_ROWS = 1e3;
+  },
+});
+
+// server/lib/fetchAllRows.ts
+async function fetchAllRows(page) {
+  const rows = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await page(from, from + PAGE_SIZE - 1);
+    if (error) throw error;
+    const batch = data ?? [];
+    rows.push(...batch);
+    if (batch.length < PAGE_SIZE) return rows;
+  }
+}
+var PAGE_SIZE;
+var init_fetchAllRows = __esm({
+  "server/lib/fetchAllRows.ts"() {
+    "use strict";
+    PAGE_SIZE = 1e3;
   },
 });
 
@@ -1778,13 +1890,15 @@ async function runImport(client, tenantId, parsed) {
     coursesInserted = coursesToInsert.length;
   }
   const seenRuts = /* @__PURE__ */ new Set();
-  const { data: existingStudents, error: sErr } = await client
-    .from("students")
-    .select("rut")
-    .eq("tenant_id", tenantId)
-    .not("rut", "is", "");
-  if (sErr) throw sErr;
-  for (const s of existingStudents ?? []) {
+  const existingStudents = await fetchAllRows((from, to) =>
+    client
+      .from("students")
+      .select("rut")
+      .eq("tenant_id", tenantId)
+      .not("rut", "is", "")
+      .range(from, to),
+  );
+  for (const s of existingStudents) {
     const rut = s.rut;
     if (rut) seenRuts.add(rut);
   }
@@ -1825,6 +1939,7 @@ var NORMALIZED_LEVELS;
 var init_excelImport = __esm({
   "server/api/services/excelImport.ts"() {
     "use strict";
+    init_fetchAllRows();
     NORMALIZED_LEVELS = {
       basica: "BASICA",
       basico: "BASICA",
@@ -1904,13 +2019,15 @@ async function importTeachers(client, tenantId, file) {
     seen.add(key);
     unique.push(name);
   }
-  const { data: existing, error: existingError } = await client
-    .from("teachers")
-    .select("full_name")
-    .eq("tenant_id", tenantId);
-  if (existingError) throw existingError;
+  const existing = await fetchAllRows((from, to) =>
+    client
+      .from("teachers")
+      .select("full_name")
+      .eq("tenant_id", tenantId)
+      .range(from, to),
+  );
   const existingKeys = new Set(
-    (existing ?? []).map((row) => bulkNameKey(row.full_name)),
+    existing.map((row) => bulkNameKey(row.full_name)),
   );
   const fresh = unique.filter((name) => !existingKeys.has(bulkNameKey(name)));
   const errors = [];
@@ -1943,6 +2060,7 @@ var init_teachersImport = __esm({
   "server/api/services/teachersImport.ts"() {
     "use strict";
     init_bulkDisciplinaryPdf();
+    init_fetchAllRows();
   },
 });
 
@@ -3026,7 +3144,7 @@ async function checkRateLimitAsync(ip) {
     return checkRateLimit(ip);
   }
   try {
-    const key = `rl:${ip}:${Math.floor(Date.now() / RATE_WINDOW)}`;
+    const key = `rl:${ip}`;
     const count = await redis.incr(key);
     await redis.pexpire(key, RATE_WINDOW);
     return count <= RATE_LIMIT;
@@ -4597,67 +4715,8 @@ router5.put(
 );
 var templates_default = router5;
 
-// server/api/routes/parse.ts
-import { Router as Router6 } from "express";
-var router6 = Router6();
-var MAX_TEXT_CONTENT_LENGTH = 8e4;
-router6.post(
-  "/parse-annotations",
-  requireAuth,
-  requireMembership(CONVIVENCIA_MEMBERSHIP),
-  rateLimit,
-  async (req, res) => {
-    try {
-      const { textContent } = req.body;
-      if (!textContent || !textContent.trim()) {
-        res
-          .status(400)
-          .json({ error: "No se recibi\xF3 el texto extra\xEDdo del PDF." });
-        return;
-      }
-      if (textContent.length > MAX_TEXT_CONTENT_LENGTH) {
-        res
-          .status(413)
-          .json({ error: "El texto excede el tama\xF1o m\xE1ximo permitido." });
-        return;
-      }
-      const lines = textContent
-        .split("\n")
-        .filter((l) => !l.trim().startsWith("![") && !l.includes("data:image"));
-      const blocks = [];
-      let current = [];
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed) continue;
-        if (/^\d{2}\/\d{2}\/\d{4}/.test(trimmed)) {
-          if (current.length > 0) blocks.push(current.join("\n"));
-          current = [line];
-        } else if (current.length > 0) {
-          current.push(line);
-        }
-      }
-      if (current.length > 0) blocks.push(current.join("\n"));
-      const summary = { negativas: 0, positivas: 0, informativas: 0 };
-      for (const block of blocks) {
-        const m = block.match(/Tipo:\s*(Negativa|Positiva|Informaci[oó]n)/i);
-        if (m) {
-          const t = m[1].toLowerCase();
-          if (t.startsWith("neg")) summary.negativas++;
-          else if (t.startsWith("pos")) summary.positivas++;
-          else summary.informativas++;
-        }
-      }
-      res.json({ success: true, summary });
-    } catch (error) {
-      console.error("Error al analizar documento:", error);
-      res.status(500).json({ error: "Error interno al procesar el archivo." });
-    }
-  },
-);
-var parse_default = router6;
-
 // server/api/routes/processDisciplinaryPdf.ts
-import { Router as Router7 } from "express";
+import { Router as Router6 } from "express";
 
 // server/middleware/errorHandler.ts
 function clientErrorBody(message, status) {
@@ -4704,7 +4763,7 @@ var errorHandler = (err, _req, res, _next) => {
 
 // server/api/routes/processDisciplinaryPdf.ts
 init_disciplinaryPdfAnalysis();
-var router7 = Router7();
+var router6 = Router6();
 var PDF_PROCESS_ROLES = [
   "superadmin",
   "admin",
@@ -4715,7 +4774,7 @@ var PDF_PROCESS_ROLES = [
   "inspector",
   "staff",
 ];
-router7.use("/process-disciplinary-pdf", requireAuth, rateLimit);
+router6.use("/process-disciplinary-pdf", requireAuth, rateLimit);
 function getBearerToken(req) {
   const authHeader = req.headers.authorization;
   return authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : void 0;
@@ -4752,7 +4811,7 @@ function getProcessErrorResponse(error) {
     return { status: 409, message };
   return { status: 500, message };
 }
-router7.post(
+router6.post(
   "/process-disciplinary-pdf",
   requireTenant,
   requireMembership({
@@ -4798,7 +4857,7 @@ router7.post(
     }
   },
 );
-router7.post(
+router6.post(
   "/process-disciplinary-pdf/confirm",
   requireTenant,
   requireMembership({
@@ -4864,11 +4923,11 @@ router7.post(
     }
   },
 );
-var processDisciplinaryPdf_default = router7;
+var processDisciplinaryPdf_default = router6;
 
 // server/api/routes/usage.ts
-import { Router as Router8 } from "express";
-var router8 = Router8();
+import { Router as Router7 } from "express";
+var router7 = Router7();
 var EVENT_NAME_RE = /^[a-z][a-z0-9_]{1,79}$/;
 var MAX_PROPERTIES_BYTES = 4e3;
 function hasSafeProperties(value) {
@@ -4882,7 +4941,7 @@ function hasSafeProperties(value) {
     return false;
   }
 }
-router8.post(
+router7.post(
   "/usage/events",
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
@@ -4945,7 +5004,7 @@ router8.post(
     }
   },
 );
-router8.get(
+router7.get(
   "/usage/stats",
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
@@ -4955,6 +5014,11 @@ router8.get(
     try {
       const since = req.query.since ?? void 0;
       const until = req.query.until ?? void 0;
+      const tenantId = req.tenantId;
+      if (!tenantId) {
+        res.status(400).json({ error: "Establecimiento no determinado." });
+        return;
+      }
       const { createClient: createClient7 } =
         await import("@supabase/supabase-js");
       const supabaseUrl =
@@ -4972,7 +5036,7 @@ router8.get(
       const supabase = createClient7(supabaseUrl, serviceRoleKey, {
         auth: { persistSession: false, autoRefreshToken: false },
       });
-      const params = {};
+      const params = { p_tenant_id: tenantId };
       if (since) params.since = since;
       if (until) params.until = until;
       const { data: eventStats, error: eventError } = await supabase.rpc(
@@ -5005,10 +5069,10 @@ router8.get(
     }
   },
 );
-var usage_default = router8;
+var usage_default = router7;
 
 // server/api/routes/notificaciones.ts
-import { Router as Router9 } from "express";
+import { Router as Router8 } from "express";
 import { createClient as createClient3 } from "@supabase/supabase-js";
 
 // server/api/services/composio.ts
@@ -5044,7 +5108,7 @@ async function sendCitacionEmail({ to, subject, body, isHtml }) {
 }
 
 // server/api/routes/notificaciones.ts
-var router9 = Router9();
+var router8 = Router8();
 var EMAIL_RE2 = /^[^\s@]{1,64}@[^\s@]{1,253}\.[^\s@]{2,}$/;
 var MAX_SUBJECT = 200;
 var MAX_BODY = 8e3;
@@ -5080,7 +5144,7 @@ function getAdminClient2() {
     },
   });
 }
-router9.post(
+router8.post(
   "/notificaciones/citacion",
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
@@ -5149,7 +5213,13 @@ router9.post(
         event_name: "citacion_email_enviada",
         user_id: authReq.user?.sub ?? null,
         tenant_id: tenantId,
-        properties: { causaId, dominio: getCitacionEmailDomain(to) },
+        // El destinatario lo elige el cliente: queda registrado para que el
+        // envío tenga rastro (antes solo se guardaba el dominio).
+        properties: {
+          causaId,
+          destinatario: to,
+          dominio: getCitacionEmailDomain(to),
+        },
       });
       if (logError) {
         console.error("Error registrando env\xEDo de citaci\xF3n:", logError);
@@ -5163,7 +5233,7 @@ router9.post(
     }
   },
 );
-router9.post(
+router8.post(
   "/notificaciones/documento",
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
@@ -5236,7 +5306,11 @@ router9.post(
         event_name: "notificacion_email_enviada",
         user_id: authReq.user?.sub ?? null,
         tenant_id: tenantId,
-        properties: { causaId, dominio: getCitacionEmailDomain(to) },
+        properties: {
+          causaId,
+          destinatario: to,
+          dominio: getCitacionEmailDomain(to),
+        },
       });
       if (logError) {
         console.error("Error registrando env\xEDo de documento:", logError);
@@ -5250,12 +5324,12 @@ router9.post(
     }
   },
 );
-var notificaciones_default = router9;
+var notificaciones_default = router8;
 
 // server/api/routes/pilot.ts
-import { Router as Router10 } from "express";
-var router10 = Router10();
-router10.get(
+import { Router as Router9 } from "express";
+var router9 = Router9();
+router9.get(
   "/pilot/membership-check",
   requireAuth,
   requireTenant,
@@ -5268,76 +5342,78 @@ router10.get(
     });
   },
 );
-var pilot_default = router10;
+var pilot_default = router9;
 
 // server/api/routes/admin.ts
-import { Router as Router11 } from "express";
+import { Router as Router10 } from "express";
 import multer from "multer";
 import { createClient as createClient4 } from "@supabase/supabase-js";
 init_bulkDisciplinaryPdf();
 
 // server/lib/bulkCartaWorkflow.ts
 init_bulkDisciplinaryPdf();
+init_regulationBasis();
+init_fetchAllRows();
 async function previewBulkCartas(
   { supabase, tenantId, studentIds },
   additionalNegatives = /* @__PURE__ */ new Map(),
 ) {
   if (!studentIds.length) return [];
   const studentPages = await Promise.all(
-    chunkQueryIds(studentIds).map(async (chunk) => {
-      const { data, error } = await supabase
-        .from("students")
-        .select("id,full_name,course_id,apoderado_nombre")
-        .eq("tenant_id", tenantId)
-        .in("id", chunk)
-        .limit(BULK_QUERY_MAX_ROWS);
-      if (error) throw error;
-      return data ?? [];
-    }),
+    chunkQueryIds(studentIds).map((chunk) =>
+      fetchAllRows((from, to) =>
+        supabase
+          .from("students")
+          .select("id,full_name,course_id,apoderado_nombre")
+          .eq("tenant_id", tenantId)
+          .in("id", chunk)
+          .range(from, to),
+      ),
+    ),
   );
   const students = studentPages.flat();
   const courseIds = [
     ...new Set(students.map((student) => student.course_id).filter(Boolean)),
   ];
   const coursePages = await Promise.all(
-    chunkQueryIds(courseIds).map(async (chunk) => {
-      const { data, error } = await supabase
-        .from("courses")
-        .select("id,name")
-        .eq("tenant_id", tenantId)
-        .in("id", chunk)
-        .limit(BULK_QUERY_MAX_ROWS);
-      if (error) throw error;
-      return data ?? [];
-    }),
+    chunkQueryIds(courseIds).map((chunk) =>
+      fetchAllRows((from, to) =>
+        supabase
+          .from("courses")
+          .select("id,name")
+          .eq("tenant_id", tenantId)
+          .in("id", chunk)
+          .range(from, to),
+      ),
+    ),
   );
   const courseNames = new Map(
     coursePages.flat().map((course) => [course.id, course.name]),
   );
   const recordPages = await Promise.all(
-    chunkQueryIds(studentIds).map(async (chunk) => {
-      const { data, error } = await supabase
-        .from("inspectorate_records")
-        .select("student_id,type")
-        .eq("tenant_id", tenantId)
-        .in("student_id", chunk)
-        .limit(BULK_QUERY_MAX_ROWS);
-      if (error) throw error;
-      return data ?? [];
-    }),
+    chunkQueryIds(studentIds).map((chunk) =>
+      fetchAllRows((from, to) =>
+        supabase
+          .from("inspectorate_records")
+          .select("student_id,type")
+          .eq("tenant_id", tenantId)
+          .in("student_id", chunk)
+          .range(from, to),
+      ),
+    ),
   );
   const records = recordPages.flat();
   const cartaPages = await Promise.all(
-    chunkQueryIds(studentIds).map(async (chunk) => {
-      const { data, error } = await supabase
-        .from("cartas_disciplinarias")
-        .select("id,student_id,letter_type,emission_date,created_at,status")
-        .eq("tenant_id", tenantId)
-        .in("student_id", chunk)
-        .limit(BULK_QUERY_MAX_ROWS);
-      if (error) throw error;
-      return data ?? [];
-    }),
+    chunkQueryIds(studentIds).map((chunk) =>
+      fetchAllRows((from, to) =>
+        supabase
+          .from("cartas_disciplinarias")
+          .select("id,student_id,letter_type,emission_date,created_at,status")
+          .eq("tenant_id", tenantId)
+          .in("student_id", chunk)
+          .range(from, to),
+      ),
+    ),
   );
   const cartas = cartaPages
     .flat()
@@ -5348,16 +5424,16 @@ async function previewBulkCartas(
     );
   const cartaIds = [...new Set(cartas.map((carta) => carta.id))];
   const eventPages = await Promise.all(
-    chunkQueryIds(cartaIds).map(async (chunk) => {
-      const { data, error } = await supabase
-        .from("carta_events")
-        .select("carta_id,event_type,created_at")
-        .eq("tenant_id", tenantId)
-        .in("carta_id", chunk)
-        .limit(BULK_QUERY_MAX_ROWS);
-      if (error) throw error;
-      return data ?? [];
-    }),
+    chunkQueryIds(cartaIds).map((chunk) =>
+      fetchAllRows((from, to) =>
+        supabase
+          .from("carta_events")
+          .select("carta_id,event_type,created_at")
+          .eq("tenant_id", tenantId)
+          .in("carta_id", chunk)
+          .range(from, to),
+      ),
+    ),
   );
   const events = eventPages
     .flat()
@@ -5402,6 +5478,7 @@ async function previewBulkCartas(
 }
 async function syncBulkPendingCartas(input) {
   const { supabase, tenantId, actorUserId, sourceHash } = input;
+  const regulationBasis = await fetchActiveRegulationBasis(supabase, tenantId);
   const plan = await previewBulkCartas(input);
   let created = 0;
   for (const {
@@ -5425,7 +5502,7 @@ async function syncBulkPendingCartas(input) {
         annotations_count: negativeCount,
         student_name: student.full_name,
         course,
-        regulation_basis: "RICE 2026 - Progresi\xF3n disciplinaria",
+        regulation_basis: `${regulationBasis} - Progresi\xF3n disciplinaria`,
         observations: `Carta pendiente sugerida por importaci\xF3n PDF masiva (${sourceHash}).`,
       })
       .select("id,student_id")
@@ -5508,7 +5585,8 @@ async function archiveSupersededCartas(
 }
 
 // server/api/routes/admin.ts
-var router11 = Router11();
+init_fetchAllRows();
+var router10 = Router10();
 var ownUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -5553,16 +5631,16 @@ function safeFileName(name) {
 }
 async function fetchExistingBulkRecords(client, tenantId, studentIds) {
   const pages = await Promise.all(
-    chunkQueryIds(studentIds).map(async (chunk) => {
-      const { data, error } = await client
-        .from("inspectorate_records")
-        .select("student_id,type,date_time,observation")
-        .eq("tenant_id", tenantId)
-        .in("student_id", chunk)
-        .limit(BULK_QUERY_MAX_ROWS);
-      if (error) throw error;
-      return data ?? [];
-    }),
+    chunkQueryIds(studentIds).map((chunk) =>
+      fetchAllRows((from, to) =>
+        client
+          .from("inspectorate_records")
+          .select("student_id,type,date_time,observation")
+          .eq("tenant_id", tenantId)
+          .in("student_id", chunk)
+          .range(from, to),
+      ),
+    ),
   );
   return pages.flat();
 }
@@ -5627,12 +5705,17 @@ async function recordAudit(
   if (error) throw error;
 }
 async function listAuthUsers(client) {
-  const result = await client.auth.admin.listUsers({ page: 1, perPage: 1e3 });
-  if (result.error) throw result.error;
-  return new Map(result.data.users.map((user) => [user.id, user]));
+  const perPage = 1e3;
+  const users = /* @__PURE__ */ new Map();
+  for (let page = 1; ; page += 1) {
+    const result = await client.auth.admin.listUsers({ page, perPage });
+    if (result.error) throw result.error;
+    for (const user of result.data.users) users.set(user.id, user);
+    if (result.data.users.length < perPage) return users;
+  }
 }
-router11.use("/admin", requireAuth, requireTenant, requireRole(ADMIN_ROLES));
-router11.get("/admin/members", async (req, res) => {
+router10.use("/admin", requireAuth, requireTenant, requireRole(ADMIN_ROLES));
+router10.get("/admin/members", async (req, res) => {
   try {
     const request2 = getRequest(req);
     const client = getAdminClient3();
@@ -5723,12 +5806,12 @@ router11.get("/admin/members", async (req, res) => {
     const message =
       error instanceof Error
         ? error.message
-        : "Error al cargar la administraci\uFFFDn.";
+        : "Error al cargar la administraci\xF3n.";
     const status = message.includes("permisos") ? 403 : 500;
     res.status(status).json(clientErrorBody(message, status));
   }
 });
-router11.patch("/admin/members/:userId", async (req, res) => {
+router10.patch("/admin/members/:userId", async (req, res) => {
   try {
     const request2 = getRequest(req);
     const client = getAdminClient3();
@@ -5824,7 +5907,7 @@ router11.patch("/admin/members/:userId", async (req, res) => {
     res.status(status).json(clientErrorBody(message, status));
   }
 });
-router11.post("/admin/invitations", async (req, res) => {
+router10.post("/admin/invitations", rateLimit, async (req, res) => {
   try {
     const request2 = getRequest(req);
     const client = getAdminClient3();
@@ -5916,65 +5999,74 @@ router11.post("/admin/invitations", async (req, res) => {
     const message =
       error instanceof Error
         ? error.message
-        : "No fue posible enviar la invitaci\uFFFDn.";
+        : "No fue posible enviar la invitaci\xF3n.";
     res
       .status(invitationErrorStatus(message))
       .json(clientErrorBody(message, invitationErrorStatus(message)));
   }
 });
-router11.post("/admin/invitations/:invitationId/resend", async (req, res) => {
-  try {
-    const request2 = getRequest(req);
-    const client = getAdminClient3();
-    await assertFreshAdmin(client, request2);
-    if (!req.params.invitationId || !isValidUuid(req.params.invitationId)) {
+router10.post(
+  "/admin/invitations/:invitationId/resend",
+  rateLimit,
+  async (req, res) => {
+    try {
+      const request2 = getRequest(req);
+      const client = getAdminClient3();
+      await assertFreshAdmin(client, request2);
+      if (!req.params.invitationId || !isValidUuid(req.params.invitationId)) {
+        res
+          .status(400)
+          .json({ error: "Identificador de invitaci\xF3n inv\xE1lido." });
+        return;
+      }
+      const { data, error } = await client
+        .from("membership_invitations")
+        .select("id,tenant_id,email,role,auth_user_id,status")
+        .eq("id", req.params.invitationId)
+        .eq("tenant_id", request2.tenantId)
+        .maybeSingle();
+      if (error) throw error;
+      const invitation = data;
+      if (!invitation || invitation.status !== "pending") {
+        res
+          .status(404)
+          .json({ error: "Invitaci\xF3n pendiente no encontrada." });
+        return;
+      }
+      const resend = await client.auth.admin.inviteUserByEmail(
+        invitation.email,
+        {
+          data: { tenant_id: request2.tenantId, role: invitation.role },
+        },
+      );
+      if (resend.error) throw resend.error;
+      const now = /* @__PURE__ */ new Date().toISOString();
+      await client
+        .from("membership_invitations")
+        .update({ last_sent_at: now, updated_at: now })
+        .eq("id", invitation.id)
+        .eq("tenant_id", request2.tenantId);
+      await recordAudit(
+        client,
+        request2,
+        "invitation_resent",
+        invitation.auth_user_id ?? invitation.id,
+        null,
+        { email: invitation.email },
+      );
+      res.json({ success: true });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "No fue posible reenviar la invitaci\xF3n.";
       res
-        .status(400)
-        .json({ error: "Identificador de invitaci\xF3n inv\xE1lido." });
-      return;
+        .status(invitationErrorStatus(message))
+        .json(clientErrorBody(message, invitationErrorStatus(message)));
     }
-    const { data, error } = await client
-      .from("membership_invitations")
-      .select("id,tenant_id,email,role,auth_user_id,status")
-      .eq("id", req.params.invitationId)
-      .eq("tenant_id", request2.tenantId)
-      .maybeSingle();
-    if (error) throw error;
-    const invitation = data;
-    if (!invitation || invitation.status !== "pending") {
-      res.status(404).json({ error: "Invitaci\xF3n pendiente no encontrada." });
-      return;
-    }
-    const resend = await client.auth.admin.inviteUserByEmail(invitation.email, {
-      data: { tenant_id: request2.tenantId, role: invitation.role },
-    });
-    if (resend.error) throw resend.error;
-    const now = /* @__PURE__ */ new Date().toISOString();
-    await client
-      .from("membership_invitations")
-      .update({ last_sent_at: now, updated_at: now })
-      .eq("id", invitation.id)
-      .eq("tenant_id", request2.tenantId);
-    await recordAudit(
-      client,
-      request2,
-      "invitation_resent",
-      invitation.auth_user_id ?? invitation.id,
-      null,
-      { email: invitation.email },
-    );
-    res.json({ success: true });
-  } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "No fue posible reenviar la invitaci\uFFFDn.";
-    res
-      .status(invitationErrorStatus(message))
-      .json(clientErrorBody(message, invitationErrorStatus(message)));
-  }
-});
-router11.post("/admin/invitations/:invitationId/cancel", async (req, res) => {
+  },
+);
+router10.post("/admin/invitations/:invitationId/cancel", async (req, res) => {
   try {
     const request2 = getRequest(req);
     const client = getAdminClient3();
@@ -6034,7 +6126,7 @@ router11.post("/admin/invitations/:invitationId/cancel", async (req, res) => {
     res.status(500).json(clientErrorBody(message, 500));
   }
 });
-router11.post("/admin/import", ownUpload.single("file"), async (req, res) => {
+router10.post("/admin/import", ownUpload.single("file"), async (req, res) => {
   try {
     const request2 = getRequest(req);
     const client = getAdminClient3();
@@ -6074,7 +6166,7 @@ router11.post("/admin/import", ownUpload.single("file"), async (req, res) => {
     res.status(status).json(clientErrorBody(message, status));
   }
 });
-router11.post(
+router10.post(
   "/admin/profesores/import",
   ownUpload.single("file"),
   async (req, res) => {
@@ -6117,16 +6209,22 @@ router11.post(
   },
 );
 async function loadTeacherNames(client, tenantId) {
-  const { data, error } = await client
-    .from("teachers")
-    .select("full_name")
-    .eq("tenant_id", tenantId);
-  if (error) return [];
-  return (data ?? [])
-    .map((row) => row.full_name)
-    .filter((name) => name.trim().length > 0);
+  try {
+    const rows = await fetchAllRows((from, to) =>
+      client
+        .from("teachers")
+        .select("full_name")
+        .eq("tenant_id", tenantId)
+        .range(from, to),
+    );
+    return rows
+      .map((row) => row.full_name)
+      .filter((name) => name.trim().length > 0);
+  } catch {
+    return [];
+  }
 }
-router11.post(
+router10.post(
   "/admin/annotations/bulk-preview",
   ownUpload.single("file"),
   async (req, res) => {
@@ -6308,7 +6406,7 @@ router11.post(
     }
   },
 );
-router11.post(
+router10.post(
   "/admin/annotations/bulk-confirm",
   ownUpload.single("file"),
   async (req, res) => {
@@ -6470,8 +6568,11 @@ router11.post(
         observation: `[${annotation.categoria}] ${annotation.texto}`,
         type: annotation.tipo,
         severity: "Leve",
-        registered_by:
-          annotation.profesor?.trim() || "PDF Importaci\xF3n Masiva",
+        // El nombre viene del PDF subido, no del usuario autenticado: se marca
+        // como lo que es para no atribuir la anotación a un docente real.
+        registered_by: annotation.profesor?.trim()
+          ? `${annotation.profesor.trim()} (seg\xFAn ficha)`
+          : "PDF Importaci\xF3n Masiva",
         created_by: request2.user?.sub ?? "",
         tenant_id: request2.tenantId,
         pdf_file_path: pdfPath,
@@ -6522,11 +6623,26 @@ router11.post(
       });
     } catch (error) {
       if (bulkClaim) {
-        await getAdminClient3().rpc("release_bulk_pdf_import", {
-          p_tenant_id: bulkClaim.tenantId,
-          p_course_id: bulkClaim.courseId,
-          p_file_hash: bulkClaim.fileHash,
-        });
+        try {
+          await getAdminClient3()
+            .from("inspectorate_records")
+            .delete()
+            .eq("tenant_id", bulkClaim.tenantId)
+            .eq(
+              "pdf_file_path",
+              `bulk-pdf/${bulkClaim.tenantId}/${bulkClaim.courseId}/${bulkClaim.fileHash}`,
+            );
+          await getAdminClient3().rpc("release_bulk_pdf_import", {
+            p_tenant_id: bulkClaim.tenantId,
+            p_course_id: bulkClaim.courseId,
+            p_file_hash: bulkClaim.fileHash,
+          });
+        } catch (releaseError) {
+          console.error(
+            "No se pudo liberar la importaci\xF3n masiva:",
+            releaseError,
+          );
+        }
       }
       const message =
         error instanceof Error
@@ -6536,10 +6652,10 @@ router11.post(
     }
   },
 );
-var admin_default = router11;
+var admin_default = router10;
 
 // server/api/routes/platform.ts
-import { Router as Router12 } from "express";
+import { Router as Router11 } from "express";
 import multer2 from "multer";
 import { randomUUID as randomUUID2 } from "node:crypto";
 import { createClient as createClient5 } from "@supabase/supabase-js";
@@ -6568,7 +6684,7 @@ function requireSuperAdmin(req, res, next) {
 }
 
 // server/api/routes/platform.ts
-var router12 = Router12();
+var router11 = Router11();
 var upload = multer2({
   storage: multer2.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -6671,8 +6787,8 @@ async function recordAudit2(
   });
   if (error) throw error;
 }
-router12.use("/platform", requireAuth, requireSuperAdmin);
-router12.get("/platform/tenants", async (req, res) => {
+router11.use("/platform", requireAuth, requireSuperAdmin);
+router11.get("/platform/tenants", async (req, res) => {
   try {
     const request2 = getRequest2(req);
     const client = getAdminClient4();
@@ -6717,7 +6833,7 @@ router12.get("/platform/tenants", async (req, res) => {
     res.status(status).json(clientErrorBody(message, status));
   }
 });
-router12.get("/platform/tenants/:id/summary", async (req, res) => {
+router11.get("/platform/tenants/:id/summary", async (req, res) => {
   try {
     const request2 = getRequest2(req);
     const client = getAdminClient4();
@@ -6783,7 +6899,7 @@ router12.get("/platform/tenants/:id/summary", async (req, res) => {
     res.status(500).json(clientErrorBody(message, 500));
   }
 });
-router12.post("/platform/tenants", async (req, res) => {
+router11.post("/platform/tenants", rateLimit, async (req, res) => {
   let client = null;
   let createdTenantId = null;
   let createdAuthUserId = null;
@@ -6900,7 +7016,7 @@ router12.post("/platform/tenants", async (req, res) => {
       .json({ error: responseMessage });
   }
 });
-router12.post("/platform/tenants/:id/invite", async (req, res) => {
+router11.post("/platform/tenants/:id/invite", rateLimit, async (req, res) => {
   try {
     const request2 = getRequest2(req);
     const client = getAdminClient4();
@@ -6945,7 +7061,7 @@ router12.post("/platform/tenants/:id/invite", async (req, res) => {
     res.status(500).json(clientErrorBody(message, 500));
   }
 });
-router12.post(
+router11.post(
   "/platform/tenants/:id/import",
   upload.single("file"),
   async (req, res) => {
@@ -6978,14 +7094,14 @@ router12.post(
     }
   },
 );
-var platform_default = router12;
+var platform_default = router11;
 
 // server/api/routes/institution.ts
-import { Router as Router13 } from "express";
+import { Router as Router12 } from "express";
 import { randomUUID as randomUUID3 } from "node:crypto";
 import multer3 from "multer";
 import { createClient as createClient6 } from "@supabase/supabase-js";
-var router13 = Router13();
+var router12 = Router12();
 var upload2 = multer3({
   storage: multer3.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 },
@@ -7361,11 +7477,11 @@ async function sendError(res, error) {
   const message =
     error instanceof Error
       ? error.message
-      : "No fue posible actualizar la configuraci\uFFFDn.";
+      : "No fue posible actualizar la configuraci\xF3n.";
   const status = message.includes("Solo el superadministrador") ? 403 : 500;
   res.status(status).json(clientErrorBody(message, status));
 }
-router13.get(
+router12.get(
   "/institution/settings",
   requireAuth,
   requireTenant,
@@ -7380,19 +7496,19 @@ router13.get(
     }
   },
 );
-router13.use(
+router12.use(
   "/admin/institution",
   requireAuth,
   requireTenant,
   requireRole(ADMIN_ROLES2),
 );
-router13.use(
+router12.use(
   "/admin/rules",
   requireAuth,
   requireTenant,
   requireRole(ADMIN_ROLES2),
 );
-router13.get(
+router12.get(
   "/onboarding/status",
   requireAuth,
   requireTenant,
@@ -7442,7 +7558,7 @@ router13.get(
     }
   },
 );
-router13.get("/admin/institution", async (req, res) => {
+router12.get("/admin/institution", async (req, res) => {
   try {
     const request2 = getRequest3(req);
     const client = getAdminClient5();
@@ -7452,7 +7568,7 @@ router13.get("/admin/institution", async (req, res) => {
     await sendError(res, error);
   }
 });
-router13.patch("/admin/institution", async (req, res) => {
+router12.patch("/admin/institution", async (req, res) => {
   try {
     const request2 = getRequest3(req);
     const client = getAdminClient5();
@@ -7469,7 +7585,7 @@ router13.patch("/admin/institution", async (req, res) => {
     await sendError(res, error);
   }
 });
-router13.post(
+router12.post(
   "/admin/institution/logo",
   upload2.single("logo"),
   async (req, res) => {
@@ -7486,7 +7602,7 @@ router13.post(
     }
   },
 );
-router13.get("/admin/rules", async (req, res) => {
+router12.get("/admin/rules", async (req, res) => {
   try {
     const request2 = getRequest3(req);
     const client = getAdminClient5();
@@ -7496,7 +7612,7 @@ router13.get("/admin/rules", async (req, res) => {
     await sendError(res, error);
   }
 });
-router13.post("/admin/rules", async (req, res) => {
+router12.post("/admin/rules", async (req, res) => {
   try {
     const request2 = getRequest3(req);
     const client = getAdminClient5();
@@ -7510,7 +7626,7 @@ router13.post("/admin/rules", async (req, res) => {
     await sendError(res, error);
   }
 });
-router13.patch("/admin/rules/:id", async (req, res) => {
+router12.patch("/admin/rules/:id", async (req, res) => {
   try {
     const request2 = getRequest3(req);
     const client = getAdminClient5();
@@ -7545,7 +7661,7 @@ router13.patch("/admin/rules/:id", async (req, res) => {
     await sendError(res, error);
   }
 });
-router13.post("/admin/rules/:id/publish", async (req, res) => {
+router12.post("/admin/rules/:id/publish", async (req, res) => {
   try {
     const request2 = getRequest3(req);
     const client = getAdminClient5();
@@ -7557,17 +7673,17 @@ router13.post("/admin/rules/:id/publish", async (req, res) => {
     await sendError(res, error);
   }
 });
-router13.use(
+router12.use(
   "/platform/tenants/:tenantId/institution",
   requireAuth,
   requireSuperAdmin,
 );
-router13.use(
+router12.use(
   "/platform/tenants/:tenantId/rules",
   requireAuth,
   requireSuperAdmin,
 );
-router13.get("/platform/tenants/:tenantId/institution", async (req, res) => {
+router12.get("/platform/tenants/:tenantId/institution", async (req, res) => {
   try {
     const client = getAdminClient5();
     const tenantId = req.params.tenantId;
@@ -7577,7 +7693,7 @@ router13.get("/platform/tenants/:tenantId/institution", async (req, res) => {
     await sendError(res, error);
   }
 });
-router13.patch("/platform/tenants/:tenantId/institution", async (req, res) => {
+router12.patch("/platform/tenants/:tenantId/institution", async (req, res) => {
   try {
     const request2 = getRequest3(req);
     const client = getAdminClient5();
@@ -7595,7 +7711,7 @@ router13.patch("/platform/tenants/:tenantId/institution", async (req, res) => {
     await sendError(res, error);
   }
 });
-router13.post(
+router12.post(
   "/platform/tenants/:tenantId/institution/logo",
   upload2.single("logo"),
   async (req, res) => {
@@ -7613,7 +7729,7 @@ router13.post(
     }
   },
 );
-router13.get("/platform/tenants/:tenantId/rules", async (req, res) => {
+router12.get("/platform/tenants/:tenantId/rules", async (req, res) => {
   try {
     const client = getAdminClient5();
     const tenantId = req.params.tenantId;
@@ -7623,7 +7739,7 @@ router13.get("/platform/tenants/:tenantId/rules", async (req, res) => {
     await sendError(res, error);
   }
 });
-router13.post("/platform/tenants/:tenantId/rules", async (req, res) => {
+router12.post("/platform/tenants/:tenantId/rules", async (req, res) => {
   try {
     const request2 = getRequest3(req);
     const client = getAdminClient5();
@@ -7638,7 +7754,7 @@ router13.post("/platform/tenants/:tenantId/rules", async (req, res) => {
     await sendError(res, error);
   }
 });
-router13.post(
+router12.post(
   "/platform/tenants/:tenantId/rules/:id/publish",
   async (req, res) => {
     try {
@@ -7654,12 +7770,12 @@ router13.post(
     }
   },
 );
-router13.use(
+router12.use(
   "/platform/tenants/:tenantId/documents",
   requireAuth,
   requireSuperAdmin,
 );
-router13.get("/platform/tenants/:tenantId/documents", async (req, res) => {
+router12.get("/platform/tenants/:tenantId/documents", async (req, res) => {
   try {
     const client = getAdminClient5();
     const tenantId = req.params.tenantId;
@@ -7669,7 +7785,7 @@ router13.get("/platform/tenants/:tenantId/documents", async (req, res) => {
     await sendError(res, error);
   }
 });
-router13.post(
+router12.post(
   "/platform/tenants/:tenantId/documents",
   documentUpload.single("document"),
   async (req, res) => {
@@ -7698,7 +7814,7 @@ router13.post(
     }
   },
 );
-router13.post(
+router12.post(
   "/platform/tenants/:tenantId/documents/:id/archive",
   async (req, res) => {
     try {
@@ -7738,7 +7854,7 @@ router13.post(
     }
   },
 );
-var institution_default = router13;
+var institution_default = router12;
 
 // server/api/index.ts
 var __filename = fileURLToPath(import.meta.url);
@@ -7793,7 +7909,6 @@ app.get("/api/health", (_req, res) => {
 app.use("/api", advisor_default);
 app.use("/api", audit_default);
 app.use("/api", draft_default);
-app.use("/api", parse_default);
 app.use("/api", processDisciplinaryPdf_default);
 app.use("/api", debug_default);
 app.use("/api", templates_default);

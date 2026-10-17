@@ -42,7 +42,7 @@ export default function SaveStatus({ status, onRetry }: SaveStatusProps) {
         <button
           type="button"
           onClick={onRetry}
-          aria-label="Reintentar sincronizaci�n"
+          aria-label="Reintentar sincronización"
           className="underline underline-offset-2 hover:text-gravisima-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-500"
         >
           Reintentar

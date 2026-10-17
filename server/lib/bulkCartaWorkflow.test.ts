@@ -37,6 +37,7 @@ function createFakeClient(data: FakeClientData): SupabaseClient {
         eq: () => builder,
         neq: () => builder,
         in: () => builder,
+        range: () => builder,
         limit: () => builder,
         insert: () => {
           inserting = true;

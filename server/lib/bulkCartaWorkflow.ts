@@ -3,9 +3,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   bulkSuggestedLetterType,
-  BULK_QUERY_MAX_ROWS,
   chunkQueryIds,
 } from "./bulkDisciplinaryPdf.js";
+import { fetchActiveRegulationBasis } from "./regulationBasis.js";
+import { fetchAllRows } from "./fetchAllRows.js";
 
 interface BulkCartaWorkflowInput {
   supabase: SupabaseClient;
@@ -27,16 +28,21 @@ export async function previewBulkCartas(
   if (!studentIds.length) return [];
 
   const studentPages = await Promise.all(
-    chunkQueryIds(studentIds).map(async (chunk) => {
-      const { data, error } = await supabase
-        .from("students")
-        .select("id,full_name,course_id,apoderado_nombre")
-        .eq("tenant_id", tenantId)
-        .in("id", chunk)
-        .limit(BULK_QUERY_MAX_ROWS);
-      if (error) throw error;
-      return data ?? [];
-    }),
+    chunkQueryIds(studentIds).map((chunk) =>
+      fetchAllRows<{
+        id: string;
+        full_name: string;
+        course_id: string;
+        apoderado_nombre: string | null;
+      }>((from, to) =>
+        supabase
+          .from("students")
+          .select("id,full_name,course_id,apoderado_nombre")
+          .eq("tenant_id", tenantId)
+          .in("id", chunk)
+          .range(from, to),
+      ),
+    ),
   );
   const students = studentPages.flat();
 
@@ -44,46 +50,53 @@ export async function previewBulkCartas(
     ...new Set(students.map((student) => student.course_id).filter(Boolean)),
   ];
   const coursePages = await Promise.all(
-    chunkQueryIds(courseIds).map(async (chunk) => {
-      const { data, error } = await supabase
-        .from("courses")
-        .select("id,name")
-        .eq("tenant_id", tenantId)
-        .in("id", chunk)
-        .limit(BULK_QUERY_MAX_ROWS);
-      if (error) throw error;
-      return data ?? [];
-    }),
+    chunkQueryIds(courseIds).map((chunk) =>
+      fetchAllRows<{ id: string; name: string }>((from, to) =>
+        supabase
+          .from("courses")
+          .select("id,name")
+          .eq("tenant_id", tenantId)
+          .in("id", chunk)
+          .range(from, to),
+      ),
+    ),
   );
   const courseNames = new Map(
     coursePages.flat().map((course) => [course.id, course.name]),
   );
 
   const recordPages = await Promise.all(
-    chunkQueryIds(studentIds).map(async (chunk) => {
-      const { data, error } = await supabase
-        .from("inspectorate_records")
-        .select("student_id,type")
-        .eq("tenant_id", tenantId)
-        .in("student_id", chunk)
-        .limit(BULK_QUERY_MAX_ROWS);
-      if (error) throw error;
-      return data ?? [];
-    }),
+    chunkQueryIds(studentIds).map((chunk) =>
+      fetchAllRows<{ student_id: string; type: string }>((from, to) =>
+        supabase
+          .from("inspectorate_records")
+          .select("student_id,type")
+          .eq("tenant_id", tenantId)
+          .in("student_id", chunk)
+          .range(from, to),
+      ),
+    ),
   );
   const records = recordPages.flat();
 
   const cartaPages = await Promise.all(
-    chunkQueryIds(studentIds).map(async (chunk) => {
-      const { data, error } = await supabase
-        .from("cartas_disciplinarias")
-        .select("id,student_id,letter_type,emission_date,created_at,status")
-        .eq("tenant_id", tenantId)
-        .in("student_id", chunk)
-        .limit(BULK_QUERY_MAX_ROWS);
-      if (error) throw error;
-      return data ?? [];
-    }),
+    chunkQueryIds(studentIds).map((chunk) =>
+      fetchAllRows<{
+        id: string;
+        student_id: string;
+        letter_type: string;
+        emission_date: string | null;
+        created_at: string | null;
+        status: string;
+      }>((from, to) =>
+        supabase
+          .from("cartas_disciplinarias")
+          .select("id,student_id,letter_type,emission_date,created_at,status")
+          .eq("tenant_id", tenantId)
+          .in("student_id", chunk)
+          .range(from, to),
+      ),
+    ),
   );
   const cartas = cartaPages
     .flat()
@@ -95,16 +108,20 @@ export async function previewBulkCartas(
 
   const cartaIds = [...new Set(cartas.map((carta) => carta.id))];
   const eventPages = await Promise.all(
-    chunkQueryIds(cartaIds).map(async (chunk) => {
-      const { data, error } = await supabase
-        .from("carta_events")
-        .select("carta_id,event_type,created_at")
-        .eq("tenant_id", tenantId)
-        .in("carta_id", chunk)
-        .limit(BULK_QUERY_MAX_ROWS);
-      if (error) throw error;
-      return data ?? [];
-    }),
+    chunkQueryIds(cartaIds).map((chunk) =>
+      fetchAllRows<{
+        carta_id: string;
+        event_type: string;
+        created_at: string | null;
+      }>((from, to) =>
+        supabase
+          .from("carta_events")
+          .select("carta_id,event_type,created_at")
+          .eq("tenant_id", tenantId)
+          .in("carta_id", chunk)
+          .range(from, to),
+      ),
+    ),
   );
   const events = eventPages
     .flat()
@@ -156,6 +173,9 @@ export async function syncBulkPendingCartas(
   input: BulkCartaWorkflowInput,
 ): Promise<number> {
   const { supabase, tenantId, actorUserId, sourceHash } = input;
+  // La base legal es la del colegio, no un literal fijo: el mismo servidor
+  // atiende a todos los tenants.
+  const regulationBasis = await fetchActiveRegulationBasis(supabase, tenantId);
   const plan = await previewBulkCartas(input);
   let created = 0;
   for (const {
@@ -180,7 +200,7 @@ export async function syncBulkPendingCartas(
         annotations_count: negativeCount,
         student_name: student.full_name,
         course,
-        regulation_basis: "RICE 2026 - Progresión disciplinaria",
+        regulation_basis: `${regulationBasis} - Progresión disciplinaria`,
         observations: `Carta pendiente sugerida por importación PDF masiva (${sourceHash}).`,
       })
       .select("id,student_id")

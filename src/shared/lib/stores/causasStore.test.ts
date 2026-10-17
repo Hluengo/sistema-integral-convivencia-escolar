@@ -68,7 +68,7 @@ describe("causasStore", () => {
     assert.equal(state.searchQuery, "demo");
   });
 
-  it("incrementa el nonce de reintento de sincronizaci�n", async () => {
+  it("incrementa el nonce de reintento de sincronización", async () => {
     const { useCausasStore } = await loadStoreModule();
 
     assert.equal(useCausasStore.getState().saveRetryNonce, 0);
@@ -134,5 +134,40 @@ describe("causasStore", () => {
     assert.equal(reopened.bitacora.length, 2);
     assert.equal(reopened.bitacora[1].titulo, "Reapertura de Causa");
     assert.equal(reopened.bitacora[1].tipo, "Otro");
+  });
+
+  it("deja rastro cuando el modal de edición reabre una causa cerrada", async () => {
+    const { useCausasStore } = await loadStoreModule();
+    const closed = makeCausa({
+      estadoActual: EstadoCausa.CAUSA_CERRADA,
+      bitacora: [],
+    });
+
+    useCausasStore.getState().setCausas([closed]);
+    useCausasStore.getState().handleUpdateCausa({
+      ...closed,
+      estadoActual: EstadoCausa.PROCESO_SEGUIMIENTO,
+    });
+
+    const updated = useCausasStore.getState().causas[0];
+    assert.equal(updated.estadoActual, EstadoCausa.PROCESO_SEGUIMIENTO);
+    assert.equal(updated.bitacora.length, 1);
+    assert.equal(updated.bitacora[0].titulo, "Reapertura de Causa");
+  });
+
+  it("no agrega rastro cuando la causa cerrada sólo cambia otros campos", async () => {
+    const { useCausasStore } = await loadStoreModule();
+    const closed = makeCausa({
+      estadoActual: EstadoCausa.CAUSA_CERRADA,
+      bitacora: [],
+    });
+
+    useCausasStore.getState().setCausas([closed]);
+    useCausasStore.getState().handleUpdateCausa({
+      ...closed,
+      observaciones: "Corrección de tipeo",
+    });
+
+    assert.equal(useCausasStore.getState().causas[0].bitacora.length, 0);
   });
 });

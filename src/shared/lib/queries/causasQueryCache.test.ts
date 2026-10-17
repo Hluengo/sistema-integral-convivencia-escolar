@@ -125,7 +125,7 @@ describe("causasQueryCache", () => {
     assert.equal(getInvestigationClosureDate(merged[0]), "2026-09-20");
   });
 
-  it("conserva ticks optimistas locales ante un refetch del listado", () => {
+  it("deja que el servidor invalide un hito completado", () => {
     const current = [
       {
         id: "chk_res_2",
@@ -148,8 +148,8 @@ describe("causasQueryCache", () => {
 
     const merged = mergeChecklistItems(current, fresh);
 
-    assert.equal(merged[0].completado, true);
-    assert.equal(merged[0].fechaCompletado, "2026-09-20");
+    assert.equal(merged[0].completado, false);
+    assert.equal(merged[0].fechaCompletado, undefined);
   });
 
   it("mantiene los detalles cuando el listado llega sin resumen de hitos", () => {

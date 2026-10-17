@@ -6,6 +6,7 @@ import { randomUUID } from "node:crypto";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { requireAuth } from "../../middleware/auth.js";
 import { requireSuperAdmin } from "../../middleware/requireSuperAdmin.js";
+import { rateLimit } from "../../middleware/rateLimit.js";
 import { clientErrorBody } from "../../middleware/errorHandler.js";
 import type { AuthenticatedRequest } from "../../types.js";
 
@@ -288,7 +289,7 @@ router.get("/platform/tenants/:id/summary", async (req, res) => {
 // ============================================================
 // POST /api/platform/tenants — alta de colegio + admin + plantillas
 // ============================================================
-router.post("/platform/tenants", async (req, res) => {
+router.post("/platform/tenants", rateLimit, async (req, res) => {
   let client: SupabaseClient | null = null;
   let createdTenantId: string | null = null;
   let createdAuthUserId: string | null = null;
@@ -420,7 +421,7 @@ router.post("/platform/tenants", async (req, res) => {
 // ============================================================
 // POST /api/platform/tenants/:id/invite — reenviar invitación al admin
 // ============================================================
-router.post("/platform/tenants/:id/invite", async (req, res) => {
+router.post("/platform/tenants/:id/invite", rateLimit, async (req, res) => {
   try {
     const request = getRequest(req);
     const client = getAdminClient();

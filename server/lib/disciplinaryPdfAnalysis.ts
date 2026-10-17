@@ -4,6 +4,11 @@ import { createHash } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { nowDateOnly } from "../../src/shared/lib/dateUtils";
+import {
+  mapDocTypeToLetterType,
+  type LetterType,
+} from "../../src/shared/lib/domain/disciplinaryStage.js";
+import { fetchActiveRegulationBasis } from "./regulationBasis.js";
 
 type AnnotationType = "negative" | "positive" | "information";
 type StudentMatchStatus =
@@ -991,20 +996,9 @@ function severityForAnnotation(
 
 function suggestedLetterToDocumentType(
   suggestedLetterType: string | null | undefined,
-):
-  | "Amonestación Escrita"
-  | "Carta de Compromiso Conductual"
-  | "Ficha de Derivación"
-  | null {
-  if (suggestedLetterType === "amonestacion") return "Amonestación Escrita";
-  if (
-    suggestedLetterType === "compromiso" ||
-    suggestedLetterType === "compromiso_conductual"
-  ) {
-    return "Carta de Compromiso Conductual";
-  }
-  if (suggestedLetterType === "derivacion") return "Ficha de Derivación";
-  return null;
+): LetterType | null {
+  // Un solo catálogo de progresión de cartas: el mismo módulo que usa el cliente.
+  return mapDocTypeToLetterType(suggestedLetterType);
 }
 
 function suggestedLetterToStageName(
@@ -1110,6 +1104,10 @@ async function syncConfirmedProcessToLegacyViews(
       .limit(1);
 
     if (!existingDocument || existingDocument.length === 0) {
+      const regulationBasis = await fetchActiveRegulationBasis(
+        supabase,
+        input.tenantId,
+      );
       const { error } = await supabase.from("cartas_disciplinarias").insert({
         student_id: input.studentId,
         tenant_id: input.tenantId,
@@ -1122,8 +1120,7 @@ async function syncConfirmedProcessToLegacyViews(
         annotations_count: summary.negativas,
         student_name: student.full_name || "Estudiante seleccionado",
         course: courseName,
-        regulation_basis:
-          "RICE 2026 - Registro de anotaciones y debido proceso",
+        regulation_basis: `${regulationBasis} - Registro de anotaciones y debido proceso`,
         observations: `${processMarker}. Documento sugerido automáticamente desde PDF confirmado.`,
         created_by: "Sistema PDF",
       });

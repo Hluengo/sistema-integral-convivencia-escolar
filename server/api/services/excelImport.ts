@@ -3,6 +3,7 @@
 import { randomUUID } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import readXlsxFile, { type CellValue } from "read-excel-file/node";
+import { fetchAllRows } from "../../lib/fetchAllRows.js";
 
 interface ImportCourseRow {
   name: string;
@@ -223,14 +224,16 @@ export async function runImport(
 
   // 2. Estudiantes: dedupe por RUT dentro del lote y contra existentes.
   const seenRuts = new Set<string>();
-  const { data: existingStudents, error: sErr } = await client
-    .from("students")
-    .select("rut")
-    .eq("tenant_id", tenantId)
-    .not("rut", "is", "");
-  if (sErr) throw sErr;
-  for (const s of existingStudents ?? []) {
-    const rut = (s as { rut: string }).rut;
+  const existingStudents = await fetchAllRows<{ rut: string }>((from, to) =>
+    client
+      .from("students")
+      .select("rut")
+      .eq("tenant_id", tenantId)
+      .not("rut", "is", "")
+      .range(from, to),
+  );
+  for (const s of existingStudents) {
+    const rut = s.rut;
     if (rut) seenRuts.add(rut);
   }
 

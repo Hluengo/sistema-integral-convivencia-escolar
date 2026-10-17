@@ -137,6 +137,7 @@ function isEditCausaField(field: unknown): field is keyof EditCausaFormValues {
 
 function createEditCausaResolver(
   estadoActual: EstadoCausa,
+  canReopen: boolean,
 ): Resolver<EditCausaFormValues> {
   return async (values): Promise<ResolverResult<EditCausaFormValues>> => {
     const result = editCausaFormSchema.safeParse(values);
@@ -149,6 +150,24 @@ function createEditCausaResolver(
               type: "custom",
               message:
                 "La transición salta una fase del debido proceso (p. ej. de Recepción a Resolución sin Investigación). Avance por las fases en orden.",
+            },
+          },
+        };
+      }
+      // Reabrir un expediente cerrado altera un dato legal: misma potestad que
+      // el botón de reapertura, aunque el modal sí permita editar el resto.
+      if (
+        estadoActual === EstadoCausa.CAUSA_CERRADA &&
+        result.data.estadoActual !== EstadoCausa.CAUSA_CERRADA &&
+        !canReopen
+      ) {
+        return {
+          values: {},
+          errors: {
+            estadoActual: {
+              type: "custom",
+              message:
+                "Su perfil no puede reabrir un expediente cerrado. Solicítelo a dirección o administración.",
             },
           },
         };
@@ -196,6 +215,8 @@ function buildDefaultValues(causa: Causa): EditCausaFormValues {
 
 interface EditCausaModalFormProps {
   causa: Causa;
+  /** Potestad de reapertura; la resuelve el contenedor para no cargar la sesión aquí. */
+  canReopen: boolean;
   onSave: (updated: Causa) => void;
   onDelete: (id: string) => void;
   onClose: () => void;
@@ -203,11 +224,17 @@ interface EditCausaModalFormProps {
 
 export default function EditCausaModalForm({
   causa,
+  canReopen,
   onSave,
   onDelete,
   onClose,
 }: EditCausaModalFormProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const causaCerrada = causa.estadoActual === EstadoCausa.CAUSA_CERRADA;
+  const estadosDisponibles =
+    causaCerrada && !canReopen
+      ? [EstadoCausa.CAUSA_CERRADA]
+      : Object.values(EstadoCausa);
   const {
     control,
     register,
@@ -218,7 +245,7 @@ export default function EditCausaModalForm({
   } = useForm<EditCausaFormValues>({
     defaultValues: buildDefaultValues(causa),
     mode: "onChange",
-    resolver: createEditCausaResolver(causa.estadoActual),
+    resolver: createEditCausaResolver(causa.estadoActual, canReopen),
   });
   const estudianteTieneNEE = watch("estudianteTieneNEE");
   const tipoInfraccionValue = watch("tipoInfraccion");
@@ -390,7 +417,7 @@ export default function EditCausaModalForm({
                 invalid={!!errors.estadoActual}
                 {...register("estadoActual")}
               >
-                {Object.values(EstadoCausa).map((estado) => (
+                {estadosDisponibles.map((estado) => (
                   <option key={estado} value={estado}>
                     {estado}
                   </option>

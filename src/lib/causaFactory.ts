@@ -98,7 +98,9 @@ export function createDraftCausa({
         descripcion:
           "Se inicia formalmente la tramitación del expediente de disciplina de conformidad con el Reglamento Interno (RIE) del colegio.",
         participantes: [
-          responsable ? responsable.split(" (")[0] : "Esteban Valenzuela",
+          responsable
+            ? responsable.split(" (")[0]
+            : "Sin responsable informado",
         ],
       },
     ],

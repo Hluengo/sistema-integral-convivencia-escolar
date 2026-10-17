@@ -515,10 +515,27 @@ export function nextSequentialCausaId(causaId: string): string {
 const MAX_CAUSA_ID_ATTEMPTS = 25;
 
 /**
+ * Siguiente correlativo global del año. `next_causa_correlativo` es
+ * SECURITY DEFINER: RLS no deja ver los ids de otros colegios y el PK de
+ * `causas` es global.
+ */
+async function fetchGlobalCausaId(): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.rpc("next_causa_correlativo", {
+      p_year: new Date().getFullYear(),
+    });
+    return !error && typeof data === "string" ? data : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * `causas.id` es PK global pero RLS solo expone el tenant propio: el id
  * preferido puede estar tomado por otro colegio sin ser visible. Ante un
- * 23505 (unique_violation) se correlaciona de nuevo en vez de fallar la
- * creación del primer caso del año.
+ * 23505 (unique_violation) se pide el correlativo global —un solo salto que
+ * evita quedarse sin cupo si el otro colegio tiene 25 o más causas del año— y
+ * si eso no está disponible se correlaciona de a uno.
  */
 export async function createCausa(
   causa: Causa,
@@ -552,6 +569,7 @@ export async function createCausa(
     fecha_limite_cierre: causa.fechaLimiteCierre || null,
   };
   let causaId = await resolveUniqueCausaId(causa.id);
+  let usedGlobalId = false;
   for (let attempt = 0; attempt < MAX_CAUSA_ID_ATTEMPTS; attempt++) {
     const { error } = await supabase
       .from("causas")
@@ -561,6 +579,15 @@ export async function createCausa(
       console.error("Error creating causa:", error);
       return false;
     }
+    // Primer choque: saltar al correlativo global del año.
+    if (!usedGlobalId) {
+      usedGlobalId = true;
+      const globalId = await fetchGlobalCausaId();
+      if (globalId && globalId !== causaId) {
+        causaId = globalId;
+        continue;
+      }
+    }
     const next = nextSequentialCausaId(causaId);
     if (next === causaId) break;
     causaId = next;
@@ -569,38 +596,56 @@ export async function createCausa(
   return false;
 }
 
+/** Columnas de `causas` tal como las escribe la app. */
+function causaUpdateRow(causa: Causa) {
+  return {
+    ...(causa.studentId ? { student_id: causa.studentId } : {}),
+    incidente_id: causa.incidenteId || null,
+    procedural_model_version: causa.proceduralModelVersion ?? 1,
+    estudiante_nombre: causa.estudianteNombre,
+    estudiante_curso: causa.estudianteCurso,
+    nna_protected_name: causa.nnaProtectedName,
+    run_estudiante: causa.runEstudiante,
+    fecha_apertura: causa.fechaApertura,
+    estado_actual: causa.estadoActual,
+    tipo_infraccion: causa.tipoInfraccion,
+    responsable: causa.responsable,
+    apoderado_email: causa.apoderadoEmail || null,
+    compromete_aula_segura: causa.comprometeAulaSegura,
+    fecha_ultima_actualizacion: causa.fechaUltimaActualizacion,
+    observaciones: causa.observaciones,
+    conducta_rice_id: causa.conductaRiceId || null,
+    medidas_ejecutadas: causa.medidasEjecutadas || [],
+    plazo_24h: causa.plazo24h ?? false,
+    fecha_limite_24h: causa.fechaLimite24h || null,
+    fecha_inicio_investigacion: causa.fechaInicioInvestigacion || null,
+    plazo_investigacion_dias: causa.plazoInvestigacionDias || null,
+    fecha_limite_investigacion: causa.fechaLimiteInvestigacion || null,
+    fecha_limite_cierre: causa.fechaLimiteCierre || null,
+  };
+}
+
 export async function updateCausa(
   causa: Causa,
   tenantId?: string | null,
+  previousCausa?: Causa,
 ): Promise<boolean> {
-  let query = supabase
-    .from("causas")
-    .update({
-      ...(causa.studentId ? { student_id: causa.studentId } : {}),
-      incidente_id: causa.incidenteId || null,
-      procedural_model_version: causa.proceduralModelVersion ?? 1,
-      estudiante_nombre: causa.estudianteNombre,
-      estudiante_curso: causa.estudianteCurso,
-      nna_protected_name: causa.nnaProtectedName,
-      run_estudiante: causa.runEstudiante,
-      fecha_apertura: causa.fechaApertura,
-      estado_actual: causa.estadoActual,
-      tipo_infraccion: causa.tipoInfraccion,
-      responsable: causa.responsable,
-      apoderado_email: causa.apoderadoEmail || null,
-      compromete_aula_segura: causa.comprometeAulaSegura,
-      fecha_ultima_actualizacion: causa.fechaUltimaActualizacion,
-      observaciones: causa.observaciones,
-      conducta_rice_id: causa.conductaRiceId || null,
-      medidas_ejecutadas: causa.medidasEjecutadas || [],
-      plazo_24h: causa.plazo24h ?? false,
-      fecha_limite_24h: causa.fechaLimite24h || null,
-      fecha_inicio_investigacion: causa.fechaInicioInvestigacion || null,
-      plazo_investigacion_dias: causa.plazoInvestigacionDias || null,
-      fecha_limite_investigacion: causa.fechaLimiteInvestigacion || null,
-      fecha_limite_cierre: causa.fechaLimiteCierre || null,
-    })
-    .eq("id", causa.id);
+  let row: Partial<ReturnType<typeof causaUpdateRow>> = causaUpdateRow(causa);
+  if (previousCausa) {
+    // Escribe sólo lo que cambió: el update completo pisaba lo que otro
+    // usuario guardó mientras esta copia tenía edición local sin guardar.
+    const previousRow = causaUpdateRow(previousCausa);
+    row = Object.fromEntries(
+      Object.entries(row).filter(
+        ([key, value]) =>
+          JSON.stringify(value) !==
+          JSON.stringify((previousRow as Record<string, unknown>)[key]),
+      ),
+    ) as Partial<ReturnType<typeof causaUpdateRow>>;
+    if (Object.keys(row).length === 0) return true;
+  }
+
+  let query = supabase.from("causas").update(row).eq("id", causa.id);
   if (tenantId) query = query.eq("tenant_id", tenantId);
   const { data, error } = await query.select("id");
   if (error) {

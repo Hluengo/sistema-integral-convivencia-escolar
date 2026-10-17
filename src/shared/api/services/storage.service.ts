@@ -5,6 +5,7 @@
 
 import { supabase } from "../lib/supabase";
 import type { DocumentScope } from "../../lib/types";
+import { useToastStore } from "../../lib/stores/toastStore";
 
 export const STORAGE_BUCKET = "documentos_convivencia";
 const SIGNED_URL_TTL_SECONDS = 3600;
@@ -129,6 +130,11 @@ export async function openDocument(pathOrLegacyUrl: string): Promise<boolean> {
   const signedUrl = await getDocumentSignedUrl(pathOrLegacyUrl);
   if (!signedUrl) {
     popup?.close();
+    // Cinco llamadores ignoran el retorno: sin aviso, la pestaña se cierra
+    // sola y el usuario no sabe si falló la app o falta el archivo.
+    useToastStore
+      .getState()
+      .addToast("error", "El documento ya no está disponible.");
     return false;
   }
   if (popup) popup.location.href = signedUrl;

@@ -50,9 +50,11 @@ function makeMockClient(opts: MockClientOptions): {
       if (table !== "teachers") throw new Error(`tabla inesperada: ${table}`);
       return {
         select: () => ({
-          eq: async () => ({
-            data: (opts.existing ?? []).map((full_name) => ({ full_name })),
-            error: null,
+          eq: () => ({
+            range: async () => ({
+              data: (opts.existing ?? []).map((full_name) => ({ full_name })),
+              error: null,
+            }),
           }),
         }),
         insert: async (rows: Array<Record<string, unknown>>) => {

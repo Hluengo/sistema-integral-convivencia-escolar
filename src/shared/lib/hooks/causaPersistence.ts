@@ -15,7 +15,7 @@ export interface PendingCausaSave {
 
 /**
  * Fusiona un guardado pendiente con uno entrante: conserva la foto previa
- * m�s antigua (para el diff) y une los bloques modificados.
+ * más antigua (para el diff) y une los bloques modificados.
  */
 export function mergePendingCausaSave(
   existing: PendingCausaSave | undefined,
@@ -33,7 +33,7 @@ export function mergePendingCausaSave(
 }
 
 export interface ExistingCausaPersistenceOperations {
-  updateCausa: (causa: Causa) => Promise<boolean>;
+  updateCausa: (causa: Causa, previousCausa?: Causa) => Promise<boolean>;
   saveBitacora: (
     causaId: string,
     entries: Causa["bitacora"],
@@ -74,7 +74,7 @@ export async function persistExistingCausa(
   };
   const pendingWrites: Promise<boolean>[] = [];
   if (changes.causa) {
-    pendingWrites.push(attempt(operations.updateCausa(causa)));
+    pendingWrites.push(attempt(operations.updateCausa(causa, previousCausa)));
   }
   if (changes.bitacora) {
     pendingWrites.push(

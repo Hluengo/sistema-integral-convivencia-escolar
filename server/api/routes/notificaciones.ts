@@ -126,7 +126,13 @@ router.post(
         event_name: "citacion_email_enviada",
         user_id: authReq.user?.sub ?? null,
         tenant_id: tenantId,
-        properties: { causaId, dominio: getCitacionEmailDomain(to) },
+        // El destinatario lo elige el cliente: queda registrado para que el
+        // envío tenga rastro (antes solo se guardaba el dominio).
+        properties: {
+          causaId,
+          destinatario: to,
+          dominio: getCitacionEmailDomain(to),
+        },
       });
       if (logError) {
         console.error("Error registrando envío de citación:", logError);
@@ -217,7 +223,11 @@ router.post(
         event_name: "notificacion_email_enviada",
         user_id: authReq.user?.sub ?? null,
         tenant_id: tenantId,
-        properties: { causaId, dominio: getCitacionEmailDomain(to) },
+        properties: {
+          causaId,
+          destinatario: to,
+          dominio: getCitacionEmailDomain(to),
+        },
       });
       if (logError) {
         console.error("Error registrando envío de documento:", logError);

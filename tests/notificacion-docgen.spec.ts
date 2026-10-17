@@ -99,11 +99,12 @@ test.describe("Notificación de Inicio de Indagación (E2E)", () => {
     const hasFinalState = (await statusText.count()) > 0;
     expect(hasGeneratorActions || hasFinalState).toBe(true);
 
-    // La plantilla actual excede una hoja Carta y lo advierte antes de imprimir.
+    // La variante compacta de la indagación cabe en una hoja Carta
+    // (letter-document--compact): la alerta de desborde no debe aparecer.
     if (hasGeneratorActions) {
       await expect(
         page.getByText(/El contenido supera una hoja Carta/),
-      ).toBeVisible();
+      ).toHaveCount(0);
     }
 
     // El membrete y el bloque de firmas son propios de la indagación: el

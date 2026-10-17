@@ -21,13 +21,13 @@ function hasLoadedDetails(causa: Causa): boolean {
 }
 
 /**
- * Fusiona hitos por id: el avance fresco siempre gana y los metadatos ricos
+ * Fusiona hitos por id: el estado fresco siempre gana y los metadatos ricos
  * ya cargados (etiqueta, documentos) se conservan.
  *
- * El avance es monótono (los hitos del debido proceso no retroceden): si el
- * hito ya figura completado en el estado local —p. ej. un tick optimista aún
- * no autoguardado— se conserva aunque el resumen fresco todavía no lo traiga.
- * Así la tabla refleja el avance de hitos sin necesidad de abrir el expediente.
+ * El avance puede retroceder (un hito se invalida desde la bitácora), así que
+ * el resumen del servidor manda en `completado`. Un tick optimista sin guardar
+ * no llega acá: `mergeCausasList` conserva la copia local completa mientras
+ * haya cambios pendientes.
  */
 export function mergeChecklistItems(
   current: ChecklistItem[],
@@ -38,7 +38,7 @@ export function mergeChecklistItems(
   const merged = current.map((item) => {
     const freshItem = freshById.get(item.id);
     if (!freshItem) return item;
-    const completado = item.completado || freshItem.completado;
+    const completado = freshItem.completado;
     return {
       ...item,
       completado,

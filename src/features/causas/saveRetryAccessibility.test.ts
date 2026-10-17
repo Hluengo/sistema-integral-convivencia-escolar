@@ -30,7 +30,7 @@ describe("Reintento de sincronización ante error de guardado", () => {
     ok(content.includes("onRetry"));
     ok(/status === ["']error["'] && onRetry/.test(content));
     ok(content.includes("Reintentar"));
-    ok(content.includes('aria-label="Reintentar sincronizaci�n"'));
+    ok(content.includes('aria-label="Reintentar sincronización"'));
   });
 
   it("el header del expediente muestra alerta con Reintentar en error", () => {

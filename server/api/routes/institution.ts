@@ -519,7 +519,7 @@ async function sendError(res: Response, error: unknown): Promise<void> {
   const message =
     error instanceof Error
       ? error.message
-      : "No fue posible actualizar la configuraci�n.";
+      : "No fue posible actualizar la configuración.";
   const status = message.includes("Solo el superadministrador") ? 403 : 500;
   res.status(status).json(clientErrorBody(message, status));
 }

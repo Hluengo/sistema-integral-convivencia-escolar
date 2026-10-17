@@ -17,6 +17,25 @@ import { invalidateDashboardQueries } from "../hooks/useInvalidateDashboardQueri
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
+/** Reapertura: dato legal, siempre deja rastro en la bitácora del expediente. */
+function withReopenTrace(causa: Causa): Causa {
+  return {
+    ...causa,
+    bitacora: [
+      ...causa.bitacora,
+      {
+        id: `b_reopen_${Date.now()}`,
+        fecha: nowIso(),
+        tipo: "Otro",
+        titulo: "Reapertura de Causa",
+        descripcion:
+          "Se reabre el expediente cerrado y vuelve a la fase de seguimiento.",
+        participantes: [],
+      },
+    ],
+  };
+}
+
 interface CausasState {
   causas: Causa[];
   selectedCausaId: string;
@@ -144,30 +163,26 @@ export const useCausasStore = create<CausasState>((set, get) => ({
   },
 
   handleUpdateCausa: (updated) =>
-    set((state) => ({
-      causas: state.causas.map((c) => (c.id === updated.id ? updated : c)),
-    })),
+    set((state) => {
+      const previous = state.causas.find((c) => c.id === updated.id);
+      // La reapertura por el modal de edición deja el mismo rastro legal que
+      // el botón de reapertura.
+      const reopened =
+        previous?.estadoActual === EstadoCausa.CAUSA_CERRADA &&
+        updated.estadoActual !== EstadoCausa.CAUSA_CERRADA;
+      const next = reopened ? withReopenTrace(updated) : updated;
+      return {
+        causas: state.causas.map((c) => (c.id === next.id ? next : c)),
+      };
+    }),
 
   handleReopenCausa: (causa) =>
     set((state) => {
-      const updated: Causa = {
+      const updated: Causa = withReopenTrace({
         ...causa,
         estadoActual: EstadoCausa.PROCESO_SEGUIMIENTO,
         fechaUltimaActualizacion: nowDateOnly(),
-        // Dato legal: la reapertura deja rastro en la bitácora del expediente.
-        bitacora: [
-          ...causa.bitacora,
-          {
-            id: `b_reopen_${Date.now()}`,
-            fecha: nowIso(),
-            tipo: "Otro",
-            titulo: "Reapertura de Causa",
-            descripcion:
-              "Se reabre el expediente cerrado y vuelve a la fase de seguimiento.",
-            participantes: [],
-          },
-        ],
-      };
+      });
       return {
         causas: state.causas.map((c) => (c.id === updated.id ? updated : c)),
         selectedCausaId: causa.id,

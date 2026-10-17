@@ -64,11 +64,16 @@ class MockQueryBuilder<T> {
 
 interface MutableSupabase {
   from: (table: string) => MockQueryBuilder<unknown>;
+  rpc: (
+    fn: string,
+    params?: unknown,
+  ) => Promise<{ data: unknown; error: Error | null }>;
 }
 
 interface CausasMockOptions {
   resultForTable: (table: string) => { data: unknown; error: Error | null };
   tenantId?: string | null;
+  rpcResult?: { data: unknown; error: Error | null };
 }
 
 async function withCausasMocks(
@@ -81,6 +86,7 @@ async function withCausasMocks(
   ]);
   const mutable = supabase as unknown as MutableSupabase;
   const originalFrom = mutable.from;
+  const originalRpc = mutable.rpc;
   const originalConsoleError = console.error;
   const originalTenantId = useAuthStore.getState().tenantId;
 
@@ -91,6 +97,7 @@ async function withCausasMocks(
         table,
       ) as never,
     );
+  mutable.rpc = async () => options.rpcResult ?? { data: null, error: null };
   console.error = () => undefined;
   useAuthStore.setState({
     tenantId: options.tenantId === undefined ? "tenant-1" : options.tenantId,
@@ -100,6 +107,7 @@ async function withCausasMocks(
     return await fn();
   } finally {
     mutable.from = originalFrom;
+    mutable.rpc = originalRpc;
     console.error = originalConsoleError;
     useAuthStore.setState({ tenantId: originalTenantId });
   }
@@ -658,6 +666,46 @@ describe("createCausa", () => {
     assert.equal(inserts, 2);
     assert.equal(result, "DC-2026-002");
   });
+
+  it("salta al correlativo global cuando el bloque de ids lo tiene otro colegio", async (t) => {
+    let inserts = 0;
+    t.mock.method(
+      MockQueryBuilder.prototype,
+      "insert",
+      function (this: MockQueryBuilder<unknown>) {
+        inserts += 1;
+        this.result =
+          inserts === 1
+            ? {
+                data: null,
+                error: Object.assign(new Error("duplicate key"), {
+                  code: "23505",
+                }),
+              }
+            : { data: null, error: null };
+        return this;
+      },
+    );
+
+    const result = await withCausasMocks(
+      {
+        resultForTable: () => ({ data: null, error: null }),
+        // El otro colegio tiene tomado DC-2026-001..100.
+        rpcResult: { data: "DC-2026-101", error: null },
+      },
+      async () => {
+        const { createCausa } = await import("./causas.service");
+        const causa = {
+          ...(makeCausaRow() as unknown as Causa),
+          estadoActual: "Recepción de Denuncia" as Causa["estadoActual"],
+        };
+        return createCausa(causa, "tenant-1");
+      },
+    );
+
+    assert.equal(inserts, 2);
+    assert.equal(result, "DC-2026-101");
+  });
 });
 
 describe("nextSequentialCausaId", () => {
@@ -735,6 +783,48 @@ describe("updateCausa", () => {
       },
     );
     assert.equal(result, true);
+  });
+
+  it("envía sólo las columnas cambiadas cuando hay foto previa", async (t) => {
+    let payload: Record<string, unknown> | null = null;
+    t.mock.method(
+      MockQueryBuilder.prototype,
+      "update",
+      function (
+        this: MockQueryBuilder<unknown>,
+        values: Record<string, unknown>,
+      ) {
+        payload = values;
+        this.result = { data: [{ id: "DC-2026-001" }], error: null };
+        return this;
+      },
+    );
+
+    const result = await withCausasMocks(
+      {
+        resultForTable: () => ({ data: [{ id: "DC-2026-001" }], error: null }),
+      },
+      async () => {
+        const { updateCausa } = await import("./causas.service");
+        const previous = makeCausaRow() as unknown as Causa;
+        return updateCausa(
+          {
+            ...previous,
+            estadoActual: "Seguimiento" as Causa["estadoActual"],
+            responsable: "Otra persona",
+          },
+          "tenant-1",
+          previous,
+        );
+      },
+    );
+
+    assert.equal(result, true);
+    assert.ok(payload);
+    assert.deepEqual(Object.keys(payload).sort(), [
+      "estado_actual",
+      "responsable",
+    ]);
   });
 
   it("retorna false cuando no hay filas afectadas", async () => {

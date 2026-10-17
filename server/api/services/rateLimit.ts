@@ -83,12 +83,12 @@ export async function checkRateLimitAsync(ip: string): Promise<boolean> {
   }
 
   try {
-    // La clave incluye la ventana: si un INCR quedara sin TTL (p. ej. el
-    // PEXPIRE falla o la instancia muere), la ventana siguiente usa otra clave
-    // y el contador no puede bloquear a ese usuario para siempre.
-    const key = `rl:${ip}:${Math.floor(Date.now() / RATE_WINDOW)}`;
+    // Clave fija por IP: el TTL se renueva en cada llamada, así que la ventana
+    // se ancla a la primera petición (sin el doble cupo del borde de minuto de
+    // una clave por bucket) y una clave sin TTL se repara en la petición
+    // siguiente en vez de dejar al usuario en 429 para siempre.
+    const key = `rl:${ip}`;
     const count = await redis.incr(key);
-    // TTL en cada llamada: idempotente y autorreparable.
     await redis.pexpire(key, RATE_WINDOW);
 
     return count <= RATE_LIMIT;

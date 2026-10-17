@@ -54,7 +54,7 @@ describe("checkRateLimitAsync", () => {
 });
 
 describe("checkRateLimitAsync con Redis", () => {
-  it("renueva el TTL en cada request y usa una clave por ventana", async () => {
+  it("usa una clave fija por IP, renueva el TTL en cada request y no da doble cupo", async () => {
     process.env.UPSTASH_REDIS_REST_URL = "https://redis.example.com";
     process.env.UPSTASH_REDIS_REST_TOKEN = "token-de-prueba";
     const originalFetch = globalThis.fetch;
@@ -71,13 +71,20 @@ describe("checkRateLimitAsync con Redis", () => {
     }) as typeof fetch;
 
     try {
-      assert.equal(await checkRateLimitAsync("ip-redis-ttl"), true);
-      assert.equal(await checkRateLimitAsync("ip-redis-ttl"), true);
+      for (let i = 0; i < 10; i++) {
+        assert.equal(await checkRateLimitAsync("ip-redis-ttl"), true);
+      }
+      // El cupo es por IP, no por bucket de minuto: la petición 11 se bloquea
+      // aunque el reloj haya cruzado el minuto.
+      assert.equal(await checkRateLimitAsync("ip-redis-ttl"), false);
 
-      // Antes solo se ponía TTL al primer INCR: una clave sin expiración
-      // dejaba al usuario en 429 permanente.
-      assert.equal(calls.filter((url) => url.includes("/pexpire/")).length, 2);
-      assert.match(calls[0] ?? "", /\/incr\/rl%3Aip-redis-ttl%3A\d+/);
+      // Un TTL en cada llamada repara una clave que quedó sin expiración.
+      assert.equal(calls.filter((url) => url.includes("/pexpire/")).length, 11);
+      assert.equal(
+        new Set(calls.filter((url) => url.includes("/incr/"))).size,
+        1,
+      );
+      assert.match(calls[0] ?? "", /\/incr\/rl%3Aip-redis-ttl$/);
     } finally {
       globalThis.fetch = originalFetch;
       delete process.env.UPSTASH_REDIS_REST_URL;

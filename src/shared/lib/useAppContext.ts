@@ -11,7 +11,10 @@ import {
 import { useUIStore } from "./stores/uiStore";
 import type { User } from "@supabase/supabase-js";
 import type { Causa, UserRole } from "./types";
-import { canDeleteCausaForRoles } from "./causaPermissions";
+import {
+  canDeleteCausaForRoles,
+  resolveCausaUserRole,
+} from "./causaPermissions";
 import type { SidebarView } from "../../widgets/sidebar/Sidebar";
 
 export interface AppContextValue {
@@ -57,7 +60,7 @@ export function useAppContext(): AppContextValue {
   const handleUpdateCausa = useCausasStore((state) => state.handleUpdateCausa);
   const handleDeleteCausa = useCausasStore((state) => state.handleDeleteCausa);
 
-  const currentRole = useUIStore((state) => state.currentRole);
+  const currentRole = resolveCausaUserRole(profileRole, appRole);
   const privacyMode = useUIStore((state) => state.privacyMode);
   const setPrivacyMode = useUIStore((state) => state.setPrivacyMode);
   const currentView = useUIStore((state) => state.currentView);

@@ -32,6 +32,10 @@ import {
   type DetectedAnnotationRecord,
 } from "@/shared/api/services/cartas.service";
 import Button from "@/shared/ui/Button";
+import {
+  extractAnnotationCategory,
+  resolveAnnotationRegistrar,
+} from "./annotationDisplay";
 
 interface StudentSummaryTabProps {
   annotations: Annotation[];
@@ -111,33 +115,41 @@ export default function StudentSummaryTab({
   onGoToCartasTab,
 }: StudentSummaryTabProps) {
   const stage = getDisciplinaryStage(counts.negativas);
-  const uniqueDetectedAnnotations =
-    deduplicateDetectedAnnotations(detectedAnnotations);
+  // Los registros confirmados incluyen importaciones masivas y correcciones posteriores.
+  const breakdownAnnotations =
+    annotations.length > 0
+      ? annotations.map((annotation) => ({
+          category: extractAnnotationCategory(annotation.text),
+          teacher_name: resolveAnnotationRegistrar(
+            annotation.registered_by,
+            annotation.text,
+          ),
+        }))
+      : deduplicateDetectedAnnotations(detectedAnnotations);
   const categoryRows = Object.entries(
-    uniqueDetectedAnnotations.reduce<Record<string, number>>(
-      (acc, annotation) => {
-        const category = normalizeCategory(annotation.category);
-        acc[category] = (acc[category] ?? 0) + 1;
-        return acc;
-      },
-      {},
-    ),
+    breakdownAnnotations.reduce<Record<string, number>>((acc, annotation) => {
+      const category = normalizeCategory(annotation.category);
+      acc[category] = (acc[category] ?? 0) + 1;
+      return acc;
+    }, {}),
   )
     .sort(([, first], [, second]) => second - first)
     .slice(0, 5);
   const teacherRows = Object.entries(
-    uniqueDetectedAnnotations.reduce<Record<string, number>>(
-      (acc, annotation) => {
-        const teacher = annotation.teacher_name?.trim();
-        if (teacher) acc[teacher] = (acc[teacher] ?? 0) + 1;
-        return acc;
-      },
-      {},
-    ),
+    breakdownAnnotations.reduce<Record<string, number>>((acc, annotation) => {
+      const teacher = annotation.teacher_name?.trim();
+      if (
+        teacher &&
+        !["PDF Convivencia Escolar", "PDF Importación Masiva"].includes(teacher)
+      ) {
+        acc[teacher] = (acc[teacher] ?? 0) + 1;
+      }
+      return acc;
+    }, {}),
   )
     .sort(([, first], [, second]) => second - first)
     .slice(0, 3);
-  const totalAnnotations = annotations.length;
+  const totalAnnotations = breakdownAnnotations.length;
   const profileText =
     totalAnnotations === 0
       ? "No hay anotaciones disponibles para elaborar un resumen analítico."

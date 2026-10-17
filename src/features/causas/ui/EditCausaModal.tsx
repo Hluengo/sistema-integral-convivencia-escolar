@@ -5,6 +5,8 @@
 
 import { useState } from "react";
 import type { Causa } from "@/shared/lib/types";
+import { useAuthStore } from "@/shared/lib/stores/authStore";
+import { canReopenCausaForRoles } from "@/shared/lib/causaPermissions";
 import { Dialog, DialogContent } from "../../../shared/ui/Dialog";
 import EditCausaModalForm from "../EditCausaModal/EditCausaModalForm";
 
@@ -22,6 +24,8 @@ export default function EditCausaModal({
   onDelete,
 }: EditCausaModalProps) {
   const [open, setOpen] = useState(true);
+  const profileRole = useAuthStore((s) => s.profileRole);
+  const appRole = useAuthStore((s) => s.appRole);
 
   const handleClose = () => {
     setOpen(false);
@@ -49,6 +53,7 @@ export default function EditCausaModal({
       >
         <EditCausaModalForm
           causa={causa}
+          canReopen={canReopenCausaForRoles(profileRole, appRole)}
           onSave={handleSave}
           onDelete={handleDelete}
           onClose={handleClose}
