@@ -11,9 +11,8 @@
     <a href="https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/ci.yml">
       <img src="https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/ci.yml?branch=master&label=CI&style=for-the-badge" alt="CI" />
     </a>
-    <a href="https://github.com/Hluengo/sistema-integral-convivencia-escolar/blob/master/LICENSE">
-      <img src="https://img.shields.io/github/license/Hluengo/sistema-integral-convivencia-escolar?style=for-the-badge" alt="Licencia" />
-    </a>
+    <!-- Badge estático: el repo aún no tiene archivo LICENSE en la raíz -->
+    <img src="https://img.shields.io/badge/Licencia-Apache%202.0-blue?style=for-the-badge" alt="Licencia Apache 2.0" />
   </p>
   <p>
     <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=white" alt="React 19" />
@@ -112,15 +111,22 @@ Este proyecto maneja **datos de estudiantes (NNA)**, por lo que la seguridad es 
 - Se incorporaron loaders animados por vista y para el arranque de la aplicación, con frases contextuales, barra indeterminada y soporte para `prefers-reduced-motion`.
 - Se mejoraron contraste, accesibilidad y estados de carga del shell, login y vistas lazy.
 - Se agregaron índices compuestos para los patrones frecuentes de lectura por tenant, estudiante, fecha, estado y ordenamiento.
-- La suite actual valida **932 pruebas unitarias e integración en 202 suites**. La auditoría de dependencias de producción no reporta vulnerabilidades; la suite E2E requiere actualización de sus expectativas del flujo anónimo.
+- La suite actual valida **998 pruebas unitarias e integración en 214 suites**. La auditoría de dependencias de producción no reporta vulnerabilidades.
 
-### Auditoría integral 2026-08-06 (pendientes MEDIO)
+### Auditoría integral 2026-08-06
 
 - La tendencia anual de anotaciones usa la RPC `get_annual_annotation_trend(p_year)` con celdas mensuales disjuntas y ventana marzo-diciembre, con fallback a la lectura previa si la migración no está aplicada.
 - El listado de la plataforma multi-colegio cuenta usuarios por tenant con la RPC agregada `get_tenant_user_counts()` en una sola query (elimina el N+1), degradando al conteo individual si la RPC no existe.
 - `carta_events.tenant_id` ahora es `NOT NULL` con backfill desde `cartas_disciplinarias` y `students`; se eliminan los eventos huérfanos sin carta ni estudiante.
 - Los imports se unificaron al alias `@/shared/...` (nuevo mapeo `@/shared/*` en tsconfig y Vite) y se agregaron license headers SPDX a los archivos que faltaban.
 - El tracing de Sentry se desactiva en desarrollo (evita ~518 KB de bundle) y el chunk obsoleto `documents` se eliminó de `manualChunks`.
+
+### Endurecimiento de seguridad y ciclo de expediente · octubre 2026
+
+- Autenticación: verificación JWT vía JWKS, validación de variables de entorno al arrancar y rate limiting en invitaciones y altas de usuarios.
+- Lecturas: `fetchAllRows` en servidor reemplaza `.limit(1000)`, que truncaba en silencio las consultas que superan el límite de filas de PostgREST.
+- Base de datos: trigger de privilegios en `profiles`, políticas de staff acotadas por colegio, ACL sin rol `anon`, RUT único parcial por colegio y campo de apoderado del estudiante.
+- Expediente: guardado por columnas cambiadas, hito colectivo conciliado en el checklist de expedientes hermanos, refresco al volver a la pestaña y rol derivado de la sesión (borrar y reabrir solo `admin`/`direccion`).
 
 ---
 
@@ -219,8 +225,8 @@ Para más detalles, revisa:
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ⚙️ **CI**         | [![CI](https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/ci.yml?branch=master&label=CI)](https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/ci.yml)                                 |
 | 🚦 **Lighthouse** | [![Lighthouse](https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/lighthouse.yml?branch=master&label=Lighthouse)](https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/lighthouse.yml) |
-| ✅ **Tests**      | 787 tests · 171 suites                                                                                                                                                                                                                                              |
-| 📈 **Cobertura**  | 92.20% líneas / 83.12% ramas / 91.82% funciones (`npm run test:coverage`, excluye el bundle generado `api/index.js`)                                                                                                                                                |
+| ✅ **Tests**      | 998 tests · 214 suites                                                                                                                                                                                                                                              |
+| 📈 **Cobertura**  | 92.54% líneas / 82.61% ramas / 92.36% funciones (`npm run test:coverage`, excluye el bundle generado `api/index.js`)                                                                                                                                                |
 | ♿ **A11y**       | `npm run test:a11y` sobre dashboard público y login                                                                                                                                                                                                                 |
 | 🔐 **Seguridad**  | `npm audit --omit=dev` 0 vulnerabilidades                                                                                                                                                                                                                           |
 
@@ -323,7 +329,7 @@ Las claves `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWT_SECRET`, `OPENROUTER_API_K
 | `npm run lint`           | TypeScript check + ESLint                                                  |
 | `npm run typecheck`      | Verificación estricta de tipos (`tsc --noEmit`)                            |
 | `npm run test`           | Tests unitarios con el runner nativo de Node                               |
-| `npm run test:coverage`  | Tests unitarios con cobertura nativa de Node y umbral mínimo de 60% líneas |
+| `npm run test:coverage`  | Tests unitarios con cobertura nativa de Node y umbral mínimo de 80% líneas |
 | `npm run test:e2e`       | Tests end-to-end con Playwright                                            |
 | `npm run format`         | Formatear código con Prettier                                              |
 | `npm run security-audit` | Auditoría de dependencias (`npm audit`)                                    |
