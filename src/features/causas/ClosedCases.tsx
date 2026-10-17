@@ -18,6 +18,9 @@ import {
   BarChart3,
 } from "lucide-react";
 import Button from "../../shared/ui/Button";
+import ConfirmDialog from "../../shared/ConfirmDialog";
+import { useAuthStore } from "../../shared/lib/stores/authStore";
+import { canReopenCausaForRoles } from "../../shared/lib/causaPermissions";
 
 interface ClosedCasesProps {
   causas: Causa[];
@@ -34,6 +37,10 @@ function ClosedCases({
 }: ClosedCasesProps) {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortBy, setSortBy] = useState<"fecha" | "nombre">("fecha");
+  const [causaToReopen, setCausaToReopen] = useState<Causa | null>(null);
+  const profileRole = useAuthStore((s) => s.profileRole);
+  const appRole = useAuthStore((s) => s.appRole);
+  const canReopen = canReopenCausaForRoles(profileRole, appRole);
 
   const closedCausas = useMemo(
     () => causas.filter((c) => c.estadoActual === EstadoCausa.CAUSA_CERRADA),
@@ -273,16 +280,18 @@ function ClosedCases({
                         <FileText className="h-3 w-3" aria-hidden="true" />
                         <span>Ver</span>
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="custom"
-                        onClick={() => onReopenCausa(causa)}
-                        className="rounded-lg border border-grave-200 bg-grave-50 px-3 py-1.5 text-10px text-grave-700 hover:bg-grave-100"
-                        title="Reabrir caso"
-                      >
-                        <RotateCcw className="h-3 w-3" aria-hidden="true" />
-                        <span>Reabrir</span>
-                      </Button>
+                      {canReopen && (
+                        <Button
+                          size="sm"
+                          variant="custom"
+                          onClick={() => setCausaToReopen(causa)}
+                          className="rounded-lg border border-grave-200 bg-grave-50 px-3 py-1.5 text-10px text-grave-700 hover:bg-grave-100"
+                          title="Reabrir caso"
+                        >
+                          <RotateCcw className="h-3 w-3" aria-hidden="true" />
+                          <span>Reabrir</span>
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -298,6 +307,18 @@ function ClosedCases({
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={causaToReopen !== null}
+        title="Reabrir expediente"
+        description={`¿Reabrir el expediente ${causaToReopen?.id ?? ""}? Volverá a la fase de seguimiento y la reapertura quedará registrada en la bitácora.`}
+        confirmLabel="Reabrir"
+        onConfirm={() => {
+          if (causaToReopen) onReopenCausa(causaToReopen);
+          setCausaToReopen(null);
+        }}
+        onCancel={() => setCausaToReopen(null)}
+      />
     </div>
   );
 }

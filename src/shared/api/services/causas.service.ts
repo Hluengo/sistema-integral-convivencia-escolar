@@ -503,14 +503,29 @@ async function resolveUniqueCausaId(preferred: string): Promise<string> {
   return `DC-${year}-${String(max + 1).padStart(3, "0")}`;
 }
 
+/** Siguiente correlativo del mismo año: `DC-2026-001` → `DC-2026-002`. */
+export function nextSequentialCausaId(causaId: string): string {
+  const match = /^DC-(\d{4})-(\d+)$/.exec(causaId);
+  if (!match) return causaId;
+  const next = Number.parseInt(match[2], 10) + 1;
+  return `DC-${match[1]}-${String(next).padStart(3, "0")}`;
+}
+
+/** Tope de reintentos al chocar con el PK global de `causas`. */
+const MAX_CAUSA_ID_ATTEMPTS = 25;
+
+/**
+ * `causas.id` es PK global pero RLS solo expone el tenant propio: el id
+ * preferido puede estar tomado por otro colegio sin ser visible. Ante un
+ * 23505 (unique_violation) se correlaciona de nuevo en vez de fallar la
+ * creación del primer caso del año.
+ */
 export async function createCausa(
   causa: Causa,
   tenantId: string | null,
 ): Promise<string | false> {
   if (!tenantId) return false;
-  const causaId = await resolveUniqueCausaId(causa.id);
-  const { error } = await supabase.from("causas").insert({
-    id: causaId,
+  const row = {
     tenant_id: tenantId,
     student_id: causa.studentId || null,
     incidente_id: causa.incidenteId || null,
@@ -535,12 +550,23 @@ export async function createCausa(
     plazo_investigacion_dias: causa.plazoInvestigacionDias || null,
     fecha_limite_investigacion: causa.fechaLimiteInvestigacion || null,
     fecha_limite_cierre: causa.fechaLimiteCierre || null,
-  });
-  if (error) {
-    console.error("Error creating causa:", error);
-    return false;
+  };
+  let causaId = await resolveUniqueCausaId(causa.id);
+  for (let attempt = 0; attempt < MAX_CAUSA_ID_ATTEMPTS; attempt++) {
+    const { error } = await supabase
+      .from("causas")
+      .insert({ id: causaId, ...row });
+    if (!error) return causaId;
+    if (error.code !== "23505") {
+      console.error("Error creating causa:", error);
+      return false;
+    }
+    const next = nextSequentialCausaId(causaId);
+    if (next === causaId) break;
+    causaId = next;
   }
-  return causaId;
+  console.error("No se pudo asignar un id único para la causa:", causa.id);
+  return false;
 }
 
 export async function updateCausa(

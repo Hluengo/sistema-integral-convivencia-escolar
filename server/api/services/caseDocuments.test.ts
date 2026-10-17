@@ -2,6 +2,7 @@
 
 import assert from "node:assert/strict";
 import { mock, test } from "node:test";
+import { deflateRawSync } from "node:zlib";
 import type { AuthenticatedRequest } from "../../types.js";
 
 interface DownloadCall {
@@ -57,18 +58,24 @@ function makePdfBuffer(text: string): Buffer {
   return Buffer.from(`%PDF-1.4 ${text}`);
 }
 
-function makeDocxBuffer(xml: string): Buffer {
-  // Construye un ZIP mínimo con word/document.xml (método 0, sin compresión).
-  const content = Buffer.from(xml, "utf8");
+function makeDocxBuffer(
+  xml: string,
+  { compress = false }: { compress?: boolean } = {},
+): Buffer {
+  // Construye un ZIP mínimo con word/document.xml (método 0 = sin compresión,
+  // método 8 = deflate).
+  const raw = Buffer.from(xml, "utf8");
+  const content = compress ? deflateRawSync(raw) : raw;
+  const method = compress ? 8 : 0;
   const fileName = Buffer.from("word/document.xml", "utf8");
   const localHeader = Buffer.alloc(30);
   localHeader.writeUInt32LE(0x04034b50, 0);
   localHeader.writeUInt16LE(20, 4);
   localHeader.writeUInt16LE(0, 6);
-  localHeader.writeUInt16LE(0, 8);
+  localHeader.writeUInt16LE(method, 8);
   localHeader.writeUInt32LE(0, 10);
   localHeader.writeUInt32LE(content.length, 14);
-  localHeader.writeUInt32LE(content.length, 18);
+  localHeader.writeUInt32LE(raw.length, 18);
   localHeader.writeUInt16LE(fileName.length, 26);
   localHeader.writeUInt16LE(0, 28);
 
@@ -77,10 +84,10 @@ function makeDocxBuffer(xml: string): Buffer {
   centralHeader.writeUInt16LE(20, 4);
   centralHeader.writeUInt16LE(20, 6);
   centralHeader.writeUInt16LE(0, 8);
-  centralHeader.writeUInt16LE(0, 10);
+  centralHeader.writeUInt16LE(method, 10);
   centralHeader.writeUInt32LE(0, 12);
   centralHeader.writeUInt32LE(content.length, 16);
-  centralHeader.writeUInt32LE(content.length, 20);
+  centralHeader.writeUInt32LE(raw.length, 20);
   centralHeader.writeUInt16LE(fileName.length, 28);
   centralHeader.writeUInt16LE(0, 30);
   centralHeader.writeUInt16LE(0, 32);
@@ -269,4 +276,23 @@ test("reporta fallo de extracción cuando Supabase no está configurado", async 
 
   assert.equal(result.length, 1);
   assert.equal(result[0]?.reason, "No fue posible extraer texto del archivo.");
+});
+
+test("no infla un DOCX desproporcionado (protección zip-bomb)", async () => {
+  capturedDownloads = [];
+  process.env.VITE_SUPABASE_URL = "https://proyecto.supabase.co";
+  process.env.VITE_SUPABASE_ANON_KEY = "anon-key";
+  // 12 MB de ceros comprimen a ~12 KB: sin tope de salida el inflado cuelga
+  // la función serverless.
+  nextDownload = () => ({
+    status: 200,
+    body: makeDocxBuffer("0".repeat(12 * 1024 * 1024), { compress: true }),
+  });
+
+  const result = await extractCaseDocuments(["tenant/bomba.docx"], AUTH_REQ);
+
+  assert.equal(result.length, 1);
+  assert.equal(result[0]?.reason, "No fue posible extraer texto del archivo.");
+  delete process.env.VITE_SUPABASE_URL;
+  delete process.env.VITE_SUPABASE_ANON_KEY;
 });

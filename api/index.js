@@ -1966,18 +1966,20 @@ var cacheByUrl = /* @__PURE__ */ new Map();
 var CACHE_TTL_MS = 3e5;
 var FETCH_TIMEOUT_MS = 5e3;
 var MAX_RESPONSE_BYTES = 102400;
-var ALLOWED_ASYMMETRIC_ALGS = /* @__PURE__ */ new Set([
-  "ES256",
-  "ES384",
-  "ES512",
-  "RS256",
-  "RS384",
-  "RS512",
-]);
+var REFRESH_COOLDOWN_MS = 1e4;
+var ALG_HASHES = {
+  ES256: "SHA-256",
+  ES384: "SHA-384",
+  ES512: "SHA-512",
+  RS256: "SHA-256",
+  RS384: "SHA-384",
+  RS512: "SHA-512",
+};
+var ALLOWED_ASYMMETRIC_ALGS = new Set(Object.keys(ALG_HASHES));
 function getOrCreateCacheEntry(supabaseUrl) {
   let entry = cacheByUrl.get(supabaseUrl);
   if (!entry) {
-    entry = { keys: [], timestamp: 0, fetchPromise: null };
+    entry = { keys: [], timestamp: 0, fetchPromise: null, lastRefreshAt: 0 };
     cacheByUrl.set(supabaseUrl, entry);
   }
   return entry;
@@ -2073,8 +2075,10 @@ async function getJwksKeys(supabaseUrl) {
 }
 async function refreshJwksOnce(supabaseUrl) {
   const entry = getOrCreateCacheEntry(supabaseUrl);
+  const now = Date.now();
+  if (now - entry.lastRefreshAt < REFRESH_COOLDOWN_MS) return entry.keys;
+  entry.lastRefreshAt = now;
   entry.timestamp = 0;
-  entry.keys = [];
   return getJwksKeys(supabaseUrl);
 }
 function base64urlToBuffer(b64) {
@@ -2125,6 +2129,8 @@ async function verifyJwtWithJwks(token, supabaseUrl) {
   }
   const signature = base64urlToBuffer(parts[2]);
   const data = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
+  const hash = ALG_HASHES[alg];
+  if (!hash) return null;
   try {
     let cryptoKey;
     let valid;
@@ -2147,7 +2153,7 @@ async function verifyJwtWithJwks(token, supabaseUrl) {
         ["verify"],
       );
       valid = await crypto.subtle.verify(
-        { name: "ECDSA", hash: "SHA-256" },
+        { name: "ECDSA", hash },
         cryptoKey,
         signature,
         data,
@@ -2163,7 +2169,7 @@ async function verifyJwtWithJwks(token, supabaseUrl) {
       cryptoKey = await crypto.subtle.importKey(
         "jwk",
         jwk,
-        { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+        { name: "RSASSA-PKCS1-v1_5", hash },
         false,
         ["verify"],
       );
@@ -3020,11 +3026,9 @@ async function checkRateLimitAsync(ip) {
     return checkRateLimit(ip);
   }
   try {
-    const key = `rl:${ip}`;
+    const key = `rl:${ip}:${Math.floor(Date.now() / RATE_WINDOW)}`;
     const count = await redis.incr(key);
-    if (count === 1) {
-      await redis.pexpire(key, RATE_WINDOW);
-    }
+    await redis.pexpire(key, RATE_WINDOW);
     return count <= RATE_LIMIT;
   } catch {
     return checkRateLimit(ip);
@@ -3743,6 +3747,7 @@ var STORAGE_BUCKET = "documentos_convivencia";
 var MAX_DOCUMENTS = 10;
 var MAX_EXTRACTED_CHARS_PER_DOCUMENT = 3e4;
 var MAX_EXTRACTED_CHARS_TOTAL = 8e4;
+var MAX_DOCX_XML_BYTES = 5 * 1024 * 1024;
 function getSupabaseHostname() {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   if (!supabaseUrl || !URL.canParse(supabaseUrl))
@@ -3820,7 +3825,7 @@ function extractDocxText(buffer) {
       const compressed = buffer.subarray(dataStart, dataStart + compressedSize);
       const xml =
         compression2 === 8
-          ? inflateRawSync(compressed)
+          ? inflateRawSync(compressed, { maxOutputLength: MAX_DOCX_XML_BYTES })
           : compression2 === 0
             ? compressed
             : null;
@@ -5496,7 +5501,7 @@ async function archiveSupersededCartas(
       event_type: "archived",
       event_detail: "Reemplazada por reemisi\xF3n del mismo tipo.",
     });
-    if (eventError) continue;
+    if (eventError) throw eventError;
     archived += 1;
   }
   return archived;

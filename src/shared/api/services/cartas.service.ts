@@ -14,6 +14,7 @@ import type {
 import { mapCauseRowToCarta, mapStageRowToEtapa } from "../../lib/mappers";
 import type { CauseRow, StageRow } from "../../lib/mappers";
 import { fetchAnnotations, fetchDocumentAnalyses } from "./annotations.service";
+import { fetchActiveRegulationBasis } from "./institution.service";
 import {
   resolveStudentCartaTableState,
   type LetterType,
@@ -436,34 +437,56 @@ export async function markCartaInterviewed(
   );
 }
 
-async function updateCartaStatus(
+/**
+ * El estado de una carta es dato legal: el update se condiciona a la versión
+ * de `observations` leída (compare-and-set) para no perder el registro de un
+ * cambio concurrente sobre la misma carta. Si nadie más escribió la fila se
+ * aplica; si no, se relee y se reintenta.
+ */
+export async function updateCartaStatus(
   cartaId: string,
   status: CartaStatus,
   reason?: string,
 ): Promise<boolean> {
-  const { data: current } = await supabase
-    .from("cartas_disciplinarias")
-    .select("observations")
-    .eq("id", cartaId)
-    .maybeSingle();
+  const MAX_ATTEMPTS = 3;
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    const { data: current, error: readError } = await supabase
+      .from("cartas_disciplinarias")
+      .select("observations")
+      .eq("id", cartaId)
+      .maybeSingle();
+    if (readError) {
+      console.error("Error reading carta for status update:", readError);
+      return false;
+    }
 
-  const currentObservations =
-    typeof current?.observations === "string" ? current.observations : "";
-  const reasonText = reason?.trim();
-  const observations = reasonText
-    ? `${currentObservations ? `${currentObservations}\n\n` : ""}Cambio de estado a ${status}: ${reasonText}`
-    : currentObservations || null;
+    const storedObservations =
+      typeof current?.observations === "string" ? current.observations : null;
+    const reasonText = reason?.trim();
+    const observations = reasonText
+      ? `${storedObservations ? `${storedObservations}\n\n` : ""}Cambio de estado a ${status}: ${reasonText}`
+      : storedObservations;
 
-  const { error } = await supabase
-    .from("cartas_disciplinarias")
-    .update({ status, observations })
-    .eq("id", cartaId);
-
-  if (error) {
-    console.error("Error updating carta status:", error);
-    return false;
+    const update = supabase
+      .from("cartas_disciplinarias")
+      .update({ status, observations })
+      .eq("id", cartaId);
+    const { data, error } =
+      storedObservations === null
+        ? await update.is("observations", null).select("id")
+        : await update.eq("observations", storedObservations).select("id");
+    if (error) {
+      console.error("Error updating carta status:", error);
+      return false;
+    }
+    if (data?.length) return true;
   }
-  return true;
+
+  console.error(
+    "No se pudo actualizar el estado de la carta (conflicto concurrente):",
+    cartaId,
+  );
+  return false;
 }
 
 export async function annulCarta(
@@ -571,8 +594,7 @@ export async function createPendingCartaForStudent(params: {
       annotations_count: params.negativeCount,
       student_name: params.student.full_name,
       course: params.student.course_name || params.student.course_id,
-      regulation_basis:
-        "RICE 2026 - Fundación Educacional Colegio Carmela Romero de Espinosa",
+      regulation_basis: `${await fetchActiveRegulationBasis()} - Progresión disciplinaria`,
       observations: `Carta pendiente sugerida por progresión ${sourceLabel}.`,
     })
     .select(CARTA_SELECT)

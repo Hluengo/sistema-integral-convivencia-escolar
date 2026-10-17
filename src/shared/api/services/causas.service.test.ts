@@ -620,6 +620,53 @@ describe("createCausa", () => {
     );
     assert.equal(result, false);
   });
+
+  it("reintenta con el siguiente correlativo cuando el id ya existe en otro colegio", async (t) => {
+    let inserts = 0;
+    t.mock.method(
+      MockQueryBuilder.prototype,
+      "insert",
+      function (this: MockQueryBuilder<unknown>) {
+        inserts += 1;
+        // `causas_pkey` es global: el id preferido puede estar tomado por otro
+        // colegio y RLS no lo muestra.
+        this.result =
+          inserts === 1
+            ? {
+                data: null,
+                error: Object.assign(new Error("duplicate key"), {
+                  code: "23505",
+                }),
+              }
+            : { data: null, error: null };
+        return this;
+      },
+    );
+
+    const result = await withCausasMocks(
+      { resultForTable: () => ({ data: null, error: null }) },
+      async () => {
+        const { createCausa } = await import("./causas.service");
+        const causa = {
+          ...(makeCausaRow() as unknown as Causa),
+          estadoActual: "Recepción de Denuncia" as Causa["estadoActual"],
+        };
+        return createCausa(causa, "tenant-1");
+      },
+    );
+
+    assert.equal(inserts, 2);
+    assert.equal(result, "DC-2026-002");
+  });
+});
+
+describe("nextSequentialCausaId", () => {
+  it("avanza el correlativo del año conservando el relleno", async () => {
+    const { nextSequentialCausaId } = await import("./causas.service");
+    assert.equal(nextSequentialCausaId("DC-2026-009"), "DC-2026-010");
+    assert.equal(nextSequentialCausaId("DC-2026-099"), "DC-2026-100");
+    assert.equal(nextSequentialCausaId("otro-id"), "otro-id");
+  });
 });
 
 describe("updateCausa", () => {

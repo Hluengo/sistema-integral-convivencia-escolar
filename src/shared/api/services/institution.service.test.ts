@@ -424,3 +424,45 @@ describe("platform institution", () => {
     );
   });
 });
+
+describe("fetchActiveRegulationBasis", () => {
+  async function withActiveRule(
+    row: { title: string; version: string } | null,
+  ): Promise<string> {
+    const { supabase } = await import("../lib/supabase");
+    const mutable = supabase as unknown as { from: unknown };
+    const originalFrom = mutable.from;
+    mutable.from = () => ({
+      select: () => ({
+        eq: () => ({
+          order: () => ({
+            limit: () => ({
+              maybeSingle: async () => ({ data: row, error: null }),
+            }),
+          }),
+        }),
+      }),
+    });
+    try {
+      const { fetchActiveRegulationBasis } =
+        await import("./institution.service");
+      return await fetchActiveRegulationBasis();
+    } finally {
+      mutable.from = originalFrom;
+    }
+  }
+
+  it("compone título y versión del reglamento vigente del colegio", async () => {
+    assert.equal(
+      await withActiveRule({ title: "RICE", version: "2026" }),
+      "RICE 2026",
+    );
+  });
+
+  it("usa un nombre genérico cuando el colegio no tiene reglamento activo", async () => {
+    assert.equal(
+      await withActiveRule(null),
+      "Reglamento Interno de Convivencia Escolar (RICE)",
+    );
+  });
+});

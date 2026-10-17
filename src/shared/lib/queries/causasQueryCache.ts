@@ -59,13 +59,23 @@ export function mergeChecklistItems(
  * solicitaron explícitamente para un expediente abierto. Los hitos se fusionan
  * por ítem (ver `mergeChecklistItems`) para que el avance fresco —dentro o fuera
  * del modal— se refleje en la tabla.
+ *
+ * Si el expediente tiene una edición local aún no guardada se conserva la copia
+ * actual: la foto del servidor pisaría el borrador y el autoguardado terminaría
+ * escribiendo el valor revertido (mismo criterio que `resolveDetailCausa`).
  */
-export function mergeCausasList(current: Causa[], freshList: Causa[]): Causa[] {
+export function mergeCausasList(
+  current: Causa[],
+  freshList: Causa[],
+  hasUnsavedChanges: (causaId: string) => boolean = () => false,
+): Causa[] {
   const currentById = new Map(current.map((causa) => [causa.id, causa]));
 
   return freshList.map((freshCausa) => {
     const currentCausa = currentById.get(freshCausa.id);
-    if (!currentCausa || !hasLoadedDetails(currentCausa)) return freshCausa;
+    if (!currentCausa) return freshCausa;
+    if (hasUnsavedChanges(freshCausa.id)) return currentCausa;
+    if (!hasLoadedDetails(currentCausa)) return freshCausa;
 
     return {
       ...freshCausa,

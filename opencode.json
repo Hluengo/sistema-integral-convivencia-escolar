@@ -39,7 +39,7 @@
     },
     "supabase": {
       "type": "remote",
-      "url": "https://mcp.supabase.com/mcp",
+      "url": "https://mcp.supabase.com/mcp?project_ref=mjhbcqwtjzgvqssfiore",
       "enabled": true
     },
     "stitch": {
@@ -50,28 +50,17 @@
       },
       "enabled": true
     },
-    "contexto-docs": {
-      "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@upstash/context7-mcp",
-        "--api-key",
-        "{env:CONTEXT7_API_KEY}"
-      ],
-      "enabled": false
-    },
     "playwright": {
       "type": "local",
       "command": ["npx", "-y", "@playwright/mcp@latest"],
       "enabled": true
     },
     "github": {
-      "type": "local",
-      "command": ["npx", "-y", "@modelcontextprotocol/server-github"],
-      "enabled": false,
-      "environment": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "{env:GITHUB_PERSONAL_ACCESS_TOKEN}"
+      "type": "remote",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "oauth": false,
+      "headers": {
+        "Authorization": "Bearer {env:GITHUB_PERSONAL_ACCESS_TOKEN}"
       }
     }
   },

@@ -234,6 +234,9 @@ export function isSupersedableCarta(
 /**
  * Archiva (evento) las vigentes pendientes del mismo tipo al reemitir, para
  * que no convivan dos vigentes. Devuelve cuántas archivó.
+ *
+ * Si el evento de archivado falla se propaga el error: continuar dejaría dos
+ * cartas "Vigente" y el conteo sería una verdad a medias.
  */
 export async function archiveSupersededCartas(
   supabase: SupabaseClient,
@@ -276,7 +279,7 @@ export async function archiveSupersededCartas(
       event_type: "archived",
       event_detail: "Reemplazada por reemisión del mismo tipo.",
     });
-    if (eventError) continue;
+    if (eventError) throw eventError;
     archived += 1;
   }
   return archived;

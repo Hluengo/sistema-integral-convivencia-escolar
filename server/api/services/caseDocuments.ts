@@ -8,6 +8,12 @@ const STORAGE_BUCKET = "documentos_convivencia";
 const MAX_DOCUMENTS = 10;
 const MAX_EXTRACTED_CHARS_PER_DOCUMENT = 30_000;
 const MAX_EXTRACTED_CHARS_TOTAL = 80_000;
+/**
+ * Tope del XML inflado de un DOCX. El texto extraído se recorta a 30k
+ * caracteres, así que un `word/document.xml` mayor es un zip-bomb o un archivo
+ * corrupto: sin tope, un DOCX de pocos KB descomprime a GBs y tumba la función.
+ */
+const MAX_DOCX_XML_BYTES = 5 * 1024 * 1024;
 
 function getSupabaseHostname(): string {
   const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
@@ -88,7 +94,7 @@ function extractDocxText(buffer: Buffer): string {
       const compressed = buffer.subarray(dataStart, dataStart + compressedSize);
       const xml =
         compression === 8
-          ? inflateRawSync(compressed)
+          ? inflateRawSync(compressed, { maxOutputLength: MAX_DOCX_XML_BYTES })
           : compression === 0
             ? compressed
             : null;

@@ -22,26 +22,39 @@ interface CacheEntry {
   keys: JwkKey[];
   timestamp: number;
   fetchPromise: Promise<JwkKey[]> | null;
+  lastRefreshAt: number;
 }
 
 const cacheByUrl = new Map<string, CacheEntry>();
 const CACHE_TTL_MS = 300_000;
 const FETCH_TIMEOUT_MS = 5_000;
 const MAX_RESPONSE_BYTES = 102_400;
+/**
+ * Un `kid` desconocido (falso o recién rotado) no puede provocar un fetch
+ * saliente por request: sin cooldown, cualquier token inventado amplifica
+ * llamadas hacia Supabase.
+ */
+const REFRESH_COOLDOWN_MS = 10_000;
 
-const ALLOWED_ASYMMETRIC_ALGS = new Set([
-  "ES256",
-  "ES384",
-  "ES512",
-  "RS256",
-  "RS384",
-  "RS512",
-]);
+/**
+ * Cada algoritmo se verifica con su propio hash: usar SHA-256 fijo para
+ * ES384/ES512/RS384/RS512 rechaza tokens legítimos (401 silencioso).
+ */
+export const ALG_HASHES: Record<string, "SHA-256" | "SHA-384" | "SHA-512"> = {
+  ES256: "SHA-256",
+  ES384: "SHA-384",
+  ES512: "SHA-512",
+  RS256: "SHA-256",
+  RS384: "SHA-384",
+  RS512: "SHA-512",
+};
+
+const ALLOWED_ASYMMETRIC_ALGS = new Set(Object.keys(ALG_HASHES));
 
 function getOrCreateCacheEntry(supabaseUrl: string): CacheEntry {
   let entry = cacheByUrl.get(supabaseUrl);
   if (!entry) {
-    entry = { keys: [], timestamp: 0, fetchPromise: null };
+    entry = { keys: [], timestamp: 0, fetchPromise: null, lastRefreshAt: 0 };
     cacheByUrl.set(supabaseUrl, entry);
   }
   return entry;
@@ -152,8 +165,13 @@ async function getJwksKeys(supabaseUrl: string): Promise<JwkKey[]> {
 
 async function refreshJwksOnce(supabaseUrl: string): Promise<JwkKey[]> {
   const entry = getOrCreateCacheEntry(supabaseUrl);
+  const now = Date.now();
+  if (now - entry.lastRefreshAt < REFRESH_COOLDOWN_MS) return entry.keys;
+  entry.lastRefreshAt = now;
+  // No se vacían las claves: si el fetch falla, `getJwksKeys` devuelve las
+  // vigentes en vez de dejar la caché vacía (lo que dispararía un fetch por
+  // request) y la rotación legítima sigue resolviéndose al vencer el cooldown.
   entry.timestamp = 0;
-  entry.keys = [];
   return getJwksKeys(supabaseUrl);
 }
 
@@ -181,6 +199,7 @@ export function __setJwksTestKeys(supabaseUrl: string, keys: JwkKey[]): void {
   entry.keys = keys;
   entry.timestamp = Date.now();
   entry.fetchPromise = null;
+  entry.lastRefreshAt = 0;
 }
 
 /** @internal Only for testing */
@@ -248,6 +267,8 @@ export async function verifyJwtWithJwks(
 
   const signature = base64urlToBuffer(parts[2]);
   const data = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
+  const hash = ALG_HASHES[alg];
+  if (!hash) return null;
 
   try {
     let cryptoKey: CryptoKey;
@@ -273,7 +294,7 @@ export async function verifyJwtWithJwks(
         ["verify"],
       );
       valid = await crypto.subtle.verify(
-        { name: "ECDSA", hash: "SHA-256" },
+        { name: "ECDSA", hash },
         cryptoKey,
         signature,
         data,
@@ -289,7 +310,7 @@ export async function verifyJwtWithJwks(
       cryptoKey = await crypto.subtle.importKey(
         "jwk",
         jwk,
-        { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+        { name: "RSASSA-PKCS1-v1_5", hash },
         false,
         ["verify"],
       );

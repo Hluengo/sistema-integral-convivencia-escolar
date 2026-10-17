@@ -6,7 +6,7 @@ import type { Causa, FaseProcedimental } from "../types";
 import { EstadoCausa } from "../types";
 import { createCausa, deleteCausa } from "../../api/services/causas.service";
 import { createDraftCausa } from "../../../lib/causaFactory";
-import { nowDateOnly } from "../../../shared/lib/dateUtils";
+import { nowDateOnly, nowIso } from "../../../shared/lib/dateUtils";
 import { useAuthStore } from "./authStore";
 import { useToastStore } from "./toastStore";
 import {
@@ -154,6 +154,19 @@ export const useCausasStore = create<CausasState>((set, get) => ({
         ...causa,
         estadoActual: EstadoCausa.PROCESO_SEGUIMIENTO,
         fechaUltimaActualizacion: nowDateOnly(),
+        // Dato legal: la reapertura deja rastro en la bitácora del expediente.
+        bitacora: [
+          ...causa.bitacora,
+          {
+            id: `b_reopen_${Date.now()}`,
+            fecha: nowIso(),
+            tipo: "Otro",
+            titulo: "Reapertura de Causa",
+            descripcion:
+              "Se reabre el expediente cerrado y vuelve a la fase de seguimiento.",
+            participantes: [],
+          },
+        ],
       };
       return {
         causas: state.causas.map((c) => (c.id === updated.id ? updated : c)),

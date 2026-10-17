@@ -35,6 +35,9 @@ class MockQueryBuilder<T> {
   in(_column: string, _values: unknown[]) {
     return this;
   }
+  is(_column: string, _value: unknown) {
+    return this;
+  }
   order(_column: string, _opts?: { ascending?: boolean }) {
     return this;
   }
@@ -418,5 +421,57 @@ describe("isSupersedableCarta", () => {
     assert.equal(isSupersedableCarta("Vigente", ["processed_manually"]), false);
     assert.equal(isSupersedableCarta("Vigente", ["archived"]), false);
     assert.equal(isSupersedableCarta(null, []), false);
+  });
+});
+
+describe("updateCartaStatus", () => {
+  it("reintenta cuando otro actor cambió las observaciones entre la lectura y el update", async (t) => {
+    const reads = ["Observación inicial", "Observación inicial\n\nOtro cambio"];
+    let readIndex = 0;
+    const updates: Array<Record<string, unknown>> = [];
+    t.mock.method(
+      MockQueryBuilder.prototype,
+      "maybeSingle",
+      function (this: MockQueryBuilder<unknown>) {
+        const observations = reads[Math.min(readIndex, reads.length - 1)];
+        readIndex += 1;
+        return { data: { observations }, error: null } as never;
+      },
+    );
+    t.mock.method(
+      MockQueryBuilder.prototype,
+      "update",
+      function (
+        this: MockQueryBuilder<unknown>,
+        payload: Record<string, unknown>,
+      ) {
+        updates.push(payload);
+        // El primer update no afecta filas (conflicto); el segundo sí.
+        this.result = {
+          data: updates.length === 1 ? [] : [{ id: "carta-1" }],
+          error: null,
+        } as never;
+        return this;
+      },
+    );
+
+    const install = await installFromMock(() => ({ data: null, error: null }));
+    try {
+      const { updateCartaStatus } = await import("./cartas.service");
+      const ok = await updateCartaStatus(
+        "carta-1",
+        "Anulada",
+        "Anulación administrativa",
+      );
+      assert.equal(ok, true);
+      assert.equal(updates.length, 2);
+      assert.equal(updates[1].status, "Anulada");
+      assert.match(
+        String(updates[1].observations),
+        /Observación inicial\n\nOtro cambio/,
+      );
+    } finally {
+      install.restore();
+    }
   });
 });

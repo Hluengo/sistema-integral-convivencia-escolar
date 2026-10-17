@@ -58,8 +58,7 @@ export function LetterInstitutionalHeader({
       />
       <div className="letter-header-text">
         <span className="letter-header-institution">
-          {institutionName ||
-            "Fundación Educacional Colegio Carmela Romero de Espinosa"}
+          {institutionName || "Establecimiento educacional"}
         </span>
         <span className="letter-header-department">{department}</span>
         <span className="letter-header-year">Año {year}</span>

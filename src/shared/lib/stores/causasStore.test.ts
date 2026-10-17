@@ -129,6 +129,10 @@ describe("causasStore", () => {
     const reopened = useCausasStore.getState().causas[0];
     assert.equal(reopened.estadoActual, EstadoCausa.PROCESO_SEGUIMIENTO);
     assert.equal(useCausasStore.getState().selectedCausaId, closed.id);
-    assert.deepEqual(reopened.bitacora, closed.bitacora);
+    // Los antecedentes previos se conservan y la reapertura deja rastro.
+    assert.deepEqual(reopened.bitacora[0], closed.bitacora[0]);
+    assert.equal(reopened.bitacora.length, 2);
+    assert.equal(reopened.bitacora[1].titulo, "Reapertura de Causa");
+    assert.equal(reopened.bitacora[1].tipo, "Otro");
   });
 });

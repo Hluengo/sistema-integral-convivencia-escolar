@@ -91,6 +91,29 @@ export const fetchInstitutionSettings = () =>
 export const fetchInstitutionDocumentSettings = () =>
   request<InstitutionDocumentSettings>("/api/institution/settings");
 
+/** Nombre genérico mientras el colegio no publica su reglamento. */
+const FALLBACK_REGULATION_BASIS =
+  "Reglamento Interno de Convivencia Escolar (RICE)";
+
+/**
+ * Base legal configurable por colegio: título + versión de su reglamento
+ * vigente (`institution_rule_versions`, aislado por tenant vía RLS). Sin
+ * versión publicada se usa un nombre genérico, nunca el de otro colegio.
+ */
+export async function fetchActiveRegulationBasis(): Promise<string> {
+  const { data } = await supabase
+    .from("institution_rule_versions")
+    .select("title,version")
+    .eq("status", "active")
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const title = data?.title?.trim();
+  if (!title) return FALLBACK_REGULATION_BASIS;
+  const version = data?.version?.trim();
+  return version ? `${title} ${version}` : title;
+}
+
 export const updateInstitutionSettings = (
   values: Partial<InstitutionSettings>,
 ) =>

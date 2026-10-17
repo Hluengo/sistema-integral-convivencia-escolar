@@ -71,6 +71,24 @@ describe("causasQueryCache", () => {
     assert.equal(merged[0].bitacora[0].id, "historial-1");
   });
 
+  it("no pisa una edición local sin guardar al refrescar el listado", () => {
+    const edited = createCausa({
+      estadoActual: EstadoCausa.PROCESO_SEGUIMIENTO,
+    });
+    const freshList = [
+      createCausa({ estadoActual: EstadoCausa.EN_PROCESO_INDAGACION }),
+    ];
+
+    const merged = mergeCausasList([edited], freshList, () => true);
+    assert.equal(merged[0].estadoActual, EstadoCausa.PROCESO_SEGUIMIENTO);
+
+    const sinPendientes = mergeCausasList([edited], freshList);
+    assert.equal(
+      sinPendientes[0].estadoActual,
+      EstadoCausa.EN_PROCESO_INDAGACION,
+    );
+  });
+
   it("refleja en la tabla hitos completados fuera del modal sin perder metadatos", () => {
     const loaded = createCausa({
       checklistDebidoProceso: [

@@ -119,7 +119,11 @@ export function useCausaWorkspace({
     )
       return;
 
-    const hydratedCausas = mergeCausasList(causas, causasQuery.data);
+    const hydratedCausas = mergeCausasList(
+      causas,
+      causasQuery.data,
+      hasUnsavedCausaChanges,
+    );
     markCausasHydrated(hydratedCausas);
     lastCausasQueryDataRef.current = causasQuery.data;
     setCausas(hydratedCausas);
@@ -131,6 +135,7 @@ export function useCausaWorkspace({
   }, [
     causas,
     causasQuery.data,
+    hasUnsavedCausaChanges,
     isAuthenticated,
     markCausasHydrated,
     selectedCausaId,

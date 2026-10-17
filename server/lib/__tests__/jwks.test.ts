@@ -345,4 +345,111 @@ describe("verifyJwtWithJwks — security & positive tests", () => {
     assert.notEqual(entryAfter, null);
     assert.ok(entryAfter!.timestamp >= entryBefore!.timestamp);
   });
+
+  it("18. ES384 — verifica con SHA-384 y no con SHA-256", async () => {
+    const { publicKey, privateKey } = crypto.generateKeyPairSync("ec", {
+      namedCurve: "P-384",
+    });
+    const jwk = publicKey.export({ format: "jwk" });
+    const kid = "test-kid-p384-001";
+    __setJwksTestKeys(SUPABASE_URL, [
+      {
+        kid,
+        kty: "EC",
+        alg: "ES384",
+        use: "sig",
+        crv: "P-384",
+        x: jwk.x!,
+        y: jwk.y!,
+      },
+    ]);
+
+    const header = base64url(
+      Buffer.from(JSON.stringify({ alg: "ES384", kid, typ: "JWT" })),
+    );
+    const payload = base64url(
+      Buffer.from(
+        JSON.stringify({
+          sub: "user-es384",
+          exp: Math.floor(Date.now() / 1000) + 3600,
+        }),
+      ),
+    );
+    const signer = crypto.createSign("SHA384");
+    signer.update(`${header}.${payload}`);
+    const rawSignature = derToRawSignature(signer.sign(privateKey), 48);
+
+    const result = await verifyJwtWithJwks(
+      `${header}.${payload}.${base64url(rawSignature)}`,
+      SUPABASE_URL,
+    );
+
+    assert.notEqual(result, null);
+    assert.equal(result!.sub, "user-es384");
+  });
+
+  it("19. RS256 — verifica tokens firmados con RSA", async () => {
+    const { publicKey, privateKey } = crypto.generateKeyPairSync("rsa", {
+      modulusLength: 2048,
+    });
+    const jwk = publicKey.export({ format: "jwk" });
+    const kid = "test-kid-rsa-001";
+    __setJwksTestKeys(SUPABASE_URL, [
+      {
+        kid,
+        kty: "RSA",
+        alg: "RS256",
+        use: "sig",
+        n: jwk.n!,
+        e: jwk.e!,
+      },
+    ]);
+
+    const header = base64url(
+      Buffer.from(JSON.stringify({ alg: "RS256", kid, typ: "JWT" })),
+    );
+    const payload = base64url(
+      Buffer.from(
+        JSON.stringify({
+          sub: "user-rs256",
+          exp: Math.floor(Date.now() / 1000) + 3600,
+        }),
+      ),
+    );
+    const signer = crypto.createSign("SHA256");
+    signer.update(`${header}.${payload}`);
+
+    const result = await verifyJwtWithJwks(
+      `${header}.${payload}.${base64url(signer.sign(privateKey))}`,
+      SUPABASE_URL,
+    );
+
+    assert.notEqual(result, null);
+    assert.equal(result!.sub, "user-rs256");
+  });
+
+  it("20. no refetchea JWKS por kid desconocido repetido (cooldown)", async () => {
+    let fetches = 0;
+    __setJwksTestFetcher(async () => {
+      fetches += 1;
+      return [keypair.publicJwk];
+    });
+
+    const payload = {
+      sub: "user-cooldown",
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    };
+    const token = createSignedJwt(
+      payload,
+      keypair.privateKey,
+      "kid-que-no-existe",
+    );
+
+    assert.equal(await verifyJwtWithJwks(token, SUPABASE_URL), null);
+    const fetchesAfterFirst = fetches;
+    assert.ok(fetchesAfterFirst >= 1);
+
+    assert.equal(await verifyJwtWithJwks(token, SUPABASE_URL), null);
+    assert.equal(fetches, fetchesAfterFirst);
+  });
 });

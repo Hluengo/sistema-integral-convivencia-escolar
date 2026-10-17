@@ -29,7 +29,7 @@ interface RiceConductSelectProps {
 type RiceConducta = (typeof REGLAMENTO_CONDUCTAS)[number];
 
 function buildRiceObservation(matched: RiceConducta): string {
-  return `Falta ${matched.gravedad} según el Reglamento del Colegio Carmela Romero. Artículo/Sección: ${matched.articulo} N° ${matched.numero}. Conducta: ${matched.conducta}\n\n[Medidas Formativas del RICE]:\n${matched.medidasFormativas.map((medida) => ` - ${medida}`).join("\n")}\n\n[Medidas Disciplinarias del RICE]:\n${matched.medidasDisciplinarias.map((medida) => ` - ${medida}`).join("\n")}`;
+  return `Falta ${matched.gravedad} según el Reglamento Interno de Convivencia Escolar (RICE). Artículo/Sección: ${matched.articulo} N° ${matched.numero}. Conducta: ${matched.conducta}\n\n[Medidas Formativas del RICE]:\n${matched.medidasFormativas.map((medida) => ` - ${medida}`).join("\n")}\n\n[Medidas Disciplinarias del RICE]:\n${matched.medidasDisciplinarias.map((medida) => ` - ${medida}`).join("\n")}`;
 }
 
 export default function RiceConductSelect({
