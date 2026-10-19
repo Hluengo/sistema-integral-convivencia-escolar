@@ -89,8 +89,15 @@ describe("Listado de causas activas", () => {
     assert.match(table, /Gestionar expediente/);
   });
 
+  it("conserva las vistas visitadas y sus modales al navegar", () => {
+    const mainContent = read("../../features/causas/MainContent.tsx");
+    assert.match(mainContent, /visitedViews/);
+    assert.match(mainContent, /hidden={!active}/);
+    assert.match(mainContent, /visitedViews\.includes\("anotaciones"\)/);
+  });
+
   it("abre un modal accesible, mueve el trabajo de fases a la ruta y centraliza el asistente legal", () => {
-    const view = read("MainContent/CausasView.tsx");
+    const app = read("../../app/App.tsx");
     const modal = read("CausaDetailModal.tsx");
     const tabs = read("../timeline/TimelineTabs.tsx");
     const summary = read("../timeline/ResumenTab.tsx");
@@ -99,7 +106,7 @@ describe("Listado de causas activas", () => {
     const advisor = read("MainContent/AdvisorView.tsx");
     const operationalSummary = read("causaOperationalSummary.ts");
 
-    assert.match(view, /<CausaDetailModal/);
+    assert.match(app, /<Lazy\.CausaDetailModal/);
     assert.match(modal, /<Dialog\s+open=/);
     assert.match(modal, /onOpenChange/);
     assert.match(modal, /<DetailModalContent/);

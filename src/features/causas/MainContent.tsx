@@ -3,7 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useCallback, Suspense, lazy } from "react";
+import {
+  useCallback,
+  Suspense,
+  lazy,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import type { FaseProcedimental } from "../../shared/lib/types";
 import type { SidebarView } from "../../widgets/sidebar/Sidebar";
 import { ChevronRight } from "lucide-react";
@@ -42,6 +49,16 @@ interface MainContentProps {
   coursesCount: number;
 }
 
+function KeepAliveView({
+  active,
+  children,
+}: {
+  active: boolean;
+  children: ReactNode;
+}) {
+  return <div hidden={!active}>{children}</div>;
+}
+
 export default function MainContent({
   currentView,
   causaWorkspace,
@@ -51,6 +68,14 @@ export default function MainContent({
   coursesCount,
 }: MainContentProps) {
   const privacyMode = useUIStore((state) => state.privacyMode);
+  const [visitedViews, setVisitedViews] = useState<SidebarView[]>([
+    currentView,
+  ]);
+  useEffect(() => {
+    setVisitedViews((views) =>
+      views.includes(currentView) ? views : [...views, currentView],
+    );
+  }, [currentView]);
   const setSelectedFaseFilter = useCausasStore(
     (state) => state.setSelectedFaseFilter,
   );
@@ -102,84 +127,101 @@ export default function MainContent({
         </nav>
       ) : null}
       {/* VIEW 1: DASHBOARD - Fully redesigned */}
-      {currentView === "dashboard" && (
-        <ErrorBoundary>
-          <Suspense fallback={<ViewLoader view={currentView} />}>
-            <DashboardStats
-              causas={causaWorkspace.causas}
-              onFaseSelect={handleFaseSelect}
-              onboardingEnabled={onboardingEnabled}
-              coursesCount={coursesCount}
-              onNavigate={navigation.onNavigate}
-              onSelectCausa={navigation.onSelectCausaFromDashboard}
-              privacyMode={privacyMode}
-            />
-          </Suspense>
-        </ErrorBoundary>
+      {(currentView === "dashboard" || visitedViews.includes("dashboard")) && (
+        <KeepAliveView active={currentView === "dashboard"}>
+          <ErrorBoundary>
+            <Suspense fallback={<ViewLoader view={currentView} />}>
+              <DashboardStats
+                causas={causaWorkspace.causas}
+                onFaseSelect={handleFaseSelect}
+                onboardingEnabled={onboardingEnabled}
+                coursesCount={coursesCount}
+                onNavigate={navigation.onNavigate}
+                onSelectCausa={navigation.onSelectCausaFromDashboard}
+                privacyMode={privacyMode}
+              />
+            </Suspense>
+          </ErrorBoundary>
+        </KeepAliveView>
       )}
 
       {/* VIEW 2: CAUSAS (Active Cases workspace) */}
-      {currentView === "causas" && (
-        <ErrorBoundary>
-          <Suspense fallback={<ViewLoader view={currentView} />}>
-            <CausasView
-              workspace={causaWorkspace}
-              createCausa={createCausa}
-              navigation={navigation}
-            />
-          </Suspense>
-        </ErrorBoundary>
+      {(currentView === "causas" || visitedViews.includes("causas")) && (
+        <KeepAliveView active={currentView === "causas"}>
+          <ErrorBoundary>
+            <Suspense fallback={<ViewLoader view={currentView} />}>
+              <CausasView
+                workspace={causaWorkspace}
+                createCausa={createCausa}
+                navigation={navigation}
+              />
+            </Suspense>
+          </ErrorBoundary>
+        </KeepAliveView>
       )}
 
       {/* VIEW 4: AI ADVISOR */}
-      {currentView === "informes" && (
-        <ErrorBoundary>
-          <Suspense fallback={<ViewLoader view={currentView} />}>
-            <AdvisorView />
-          </Suspense>
-        </ErrorBoundary>
+      {(currentView === "informes" || visitedViews.includes("informes")) && (
+        <KeepAliveView active={currentView === "informes"}>
+          <ErrorBoundary>
+            <Suspense fallback={<ViewLoader view={currentView} />}>
+              <AdvisorView />
+            </Suspense>
+          </ErrorBoundary>
+        </KeepAliveView>
       )}
 
       {/* VIEW 5: ALUMNOS */}
-      {currentView === "alumnos" && (
-        <ErrorBoundary>
-          <Suspense fallback={<ViewLoader view={currentView} />}>
-            <StudentsPanel privacyMode={privacyMode} />
-          </Suspense>
-        </ErrorBoundary>
+      {(currentView === "alumnos" || visitedViews.includes("alumnos")) && (
+        <KeepAliveView active={currentView === "alumnos"}>
+          <ErrorBoundary>
+            <Suspense fallback={<ViewLoader view={currentView} />}>
+              <StudentsPanel privacyMode={privacyMode} />
+            </Suspense>
+          </ErrorBoundary>
+        </KeepAliveView>
       )}
 
       {/* VIEW 6: ANOTACIONES */}
-      {currentView === "anotaciones" && (
-        <ErrorBoundary>
-          <Suspense fallback={<ViewLoader view={currentView} />}>
-            <AnotacionesView privacyMode={privacyMode} />
-          </Suspense>
-        </ErrorBoundary>
+      {(currentView === "anotaciones" ||
+        visitedViews.includes("anotaciones")) && (
+        <KeepAliveView active={currentView === "anotaciones"}>
+          <ErrorBoundary>
+            <Suspense fallback={<ViewLoader view={currentView} />}>
+              <AnotacionesView privacyMode={privacyMode} />
+            </Suspense>
+          </ErrorBoundary>
+        </KeepAliveView>
       )}
 
-      {currentView === "reportes" && (
-        <ErrorBoundary>
-          <Suspense fallback={<ViewLoader view={currentView} />}>
-            <ReportsCenter causas={causaWorkspace.causas} />
-          </Suspense>
-        </ErrorBoundary>
+      {(currentView === "reportes" || visitedViews.includes("reportes")) && (
+        <KeepAliveView active={currentView === "reportes"}>
+          <ErrorBoundary>
+            <Suspense fallback={<ViewLoader view={currentView} />}>
+              <ReportsCenter causas={causaWorkspace.causas} />
+            </Suspense>
+          </ErrorBoundary>
+        </KeepAliveView>
       )}
 
-      {currentView === "admin" && (
-        <ErrorBoundary>
-          <Suspense fallback={<ViewLoader view={currentView} />}>
-            <AdminView />
-          </Suspense>
-        </ErrorBoundary>
+      {(currentView === "admin" || visitedViews.includes("admin")) && (
+        <KeepAliveView active={currentView === "admin"}>
+          <ErrorBoundary>
+            <Suspense fallback={<ViewLoader view={currentView} />}>
+              <AdminView />
+            </Suspense>
+          </ErrorBoundary>
+        </KeepAliveView>
       )}
 
-      {currentView === "platform" && (
-        <ErrorBoundary>
-          <Suspense fallback={<ViewLoader view={currentView} />}>
-            <PlatformView />
-          </Suspense>
-        </ErrorBoundary>
+      {(currentView === "platform" || visitedViews.includes("platform")) && (
+        <KeepAliveView active={currentView === "platform"}>
+          <ErrorBoundary>
+            <Suspense fallback={<ViewLoader view={currentView} />}>
+              <PlatformView />
+            </Suspense>
+          </ErrorBoundary>
+        </KeepAliveView>
       )}
     </main>
   );

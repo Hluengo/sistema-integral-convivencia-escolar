@@ -85,7 +85,8 @@ describe("lazy loading fallbacks", () => {
     assert.ok(
       causasView.includes('fallback={<ViewLoader view="causas" compact />}'),
     );
-    assert.ok(causasView.includes("fallback={<DetailModalSkeleton />}"));
+    assert.ok(app.includes("<Lazy.CausaDetailModal"));
+    assert.ok(app.includes("fallback={<ModalSkeleton />}"));
     assert.ok(anotacionesView.includes("fallback={<ModalSkeleton />}"));
     assert.ok(cartasTab.includes("fallback={<DocumentGeneratorSkeleton />}"));
   });

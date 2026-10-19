@@ -130,6 +130,10 @@ export default function App() {
   const showCausasView = useCallback(() => {
     navigateToView("causas");
   }, [navigateToView]);
+  const closeCausaDetail = useCallback(() => {
+    setSelectedCausaId("");
+    if (currentView === "causas") navigateToView("causas");
+  }, [currentView, navigateToView, setSelectedCausaId]);
   const {
     showCreateForm,
     openCreateForm,
@@ -269,6 +273,14 @@ export default function App() {
             <AppFooter />
           </div>
           {newCausaModal}
+          <Suspense fallback={<ModalSkeleton />}>
+            <Lazy.CausaDetailModal
+              causa={selectedCausa ?? undefined}
+              privacyMode={privacyMode}
+              isLoading={isCausaDetailLoading}
+              onClose={closeCausaDetail}
+            />
+          </Suspense>
           {showShortcuts && (
             <Suspense fallback={<ModalSkeleton />}>
               <Lazy.ShortcutsModal onClose={() => setShowShortcuts(false)} />

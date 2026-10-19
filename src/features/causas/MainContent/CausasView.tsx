@@ -13,7 +13,6 @@ import {
   Users,
 } from "lucide-react";
 import EmptyState from "../../../shared/EmptyState";
-import { DetailModalSkeleton } from "../../../shared/Skeleton";
 import ViewLoader from "../../../shared/ui/ViewLoader";
 import type { Causa } from "../../../shared/lib/types";
 import { useCausasStore } from "../../../shared/lib/stores/causasStore";
@@ -27,7 +26,6 @@ import type {
   MainNavigationActions,
 } from "./viewContracts";
 
-const CausaDetailModal = lazy(() => import("../CausaDetailModal"));
 const ClosedCases = lazy(() => import("../ClosedCases"));
 
 interface CausasViewProps {
@@ -288,15 +286,6 @@ export default function CausasView({
           )}
         </div>
       )}
-
-      <Suspense fallback={<DetailModalSkeleton />}>
-        <CausaDetailModal
-          causa={workspace.selectedCausa ?? undefined}
-          privacyMode={privacyMode}
-          isLoading={workspace.isCausaDetailLoading}
-          onClose={clearSelectedCausa}
-        />
-      </Suspense>
 
       {/* VIEW 3: CLOSED CASES */}
       {!workspace.isCausasLoading &&
