@@ -6,7 +6,9 @@ import {
   bulkCourseKey,
   bulkNameKey,
   chunkQueryIds,
+  cleanStoredAnnotationText,
   extractFullAnnotationText,
+  splitBlocks,
   selectNewBulkAnnotations,
   bulkSuggestedLetterType,
   stripTrailingStudentName,
@@ -189,6 +191,52 @@ test("conserva la redacción completa cuando el PDF repite encabezados", () => {
   assert.equal(extractFullAnnotationText("Sin marcador de anotación"), "");
 });
 
+test("una fecha embebida en la redacción no corta el bloque", () => {
+  const blocks = splitBlocks(
+    [
+      "25/05/2026 Tipo: Información Categoria: INFORMACIÓN Anotación: SE DEJA CONSTANCIA QUE EL ALUMNO SE COMPROMETE A RENDIR EVALUACIÓN PENDIENTE EL 01/06/2026 .- Profesor: MARIA EUGENIA MUÑOZ JARA",
+      "02/06/2026 Tipo: Negativa Categoria: COMPORTAMIENTO Anotación: DUERME EN CLASES. Profesor: JORDÁN ESTEBAN ROA SEGURA",
+    ].join(" "),
+  );
+  assert.equal(blocks.length, 2);
+  assert.match(blocks[0].block, /PENDIENTE EL 01\/06\/2026/);
+  assert.match(blocks[0].block, /MARIA EUGENIA MUÑOZ JARA/);
+  assert.match(blocks[1].block, /^02\/06\/2026/);
+});
+
+test("splitBlocks no arrastra el nombre del estudiante siguiente", () => {
+  const blocks = splitBlocks(
+    [
+      "21/09/2026 Tipo: Positiva Categoria: RESPONSABILIDAD Profesor: MARCELO HUMBERTO MUÑOZ PINO",
+      "P33",
+      "Anotación: Anotación:",
+      "ALUMNO PRESENTA RESPONSABLEMENTE SU TAREA N°4 DE LEY DE GASES",
+      ".-",
+      "P34",
+      "ORELLANA RIQUELME EMILIA TRINIDAD",
+      "FICHA PERSONAL DE CONVIVENCIA ESCOLAR",
+      "Rango Fechas:",
+    ].join("\n"),
+  );
+  assert.equal(blocks.length, 1);
+  assert.doesNotMatch(blocks[0].block, /ORELLANA/);
+  assert.doesNotMatch(blocks[0].block, /P33|P34/);
+  const parsed = parseBlock(blocks[0].block, null, "ESTUDIANTE ACTUAL");
+  assert.equal(
+    parsed?.texto,
+    "ALUMNO PRESENTA RESPONSABLEMENTE SU TAREA N°4 DE LEY DE GASES .-",
+  );
+});
+
+test("cleanStoredAnnotationText quita encabezados de importaciones viejas", () => {
+  assert.equal(
+    cleanStoredAnnotationText(
+      "[COMPORTAMIENTO] 13/03/2026 Tipo: Negativa Categoria: COMPORTAMIENTO Anotación: EN CLASES HAY UN INTERCAMBIO DE PAPELES Tipo: Negativa Categoria: COMPORTAMIENTO Anotación: EN CLASES HAY UN INTERCAMBIO DE PAPELES",
+    ),
+    "EN CLASES HAY UN INTERCAMBIO DE PAPELES EN CLASES HAY UN INTERCAMBIO DE PAPELES",
+  );
+});
+
 test("parseBlock no arrastra etiquetas con acento descompuesto al profesor", () => {
   const parsed = parseBlock(
     "13-08-2026 Tipo: Negativa Categoria: RESPONSABILIDAD Anotación: ALUMNA QUE LLEGA TARDE .- Profesor: ESTER NOEMI CONTRERAS ESPINOZA Anotación: ALUMNA QUE LLEGA TARDE .-",
@@ -222,6 +270,16 @@ test("matchTeacherName prefiere la coincidencia más larga sin acentos", () => {
   assert.equal(matchTeacherName("DOCENTE DESCONOCIDO", roster), null);
   assert.equal(matchTeacherName(null, roster), null);
   assert.equal(matchTeacherName("MARÍA ISABEL MATUS RETAMAL", []), null);
+});
+
+test("resuelve los alias de profesores definidos por el colegio", () => {
+  const roster = ["YERCO NILSON OJEDA ULE"];
+  assert.equal(
+    matchTeacherName("DANIEL MEDINA .", roster),
+    "YERCO NILSON OJEDA ULE",
+  );
+  assert.equal(matchTeacherName("SERGIO CAMPOS .", roster), "PASTORAL");
+  assert.equal(matchTeacherName("DOCENTE DESCONOCIDO", roster), null);
 });
 
 test("parseBlock reconoce al docente de la nómina aunque venga con cola", () => {
@@ -326,6 +384,30 @@ test("selectNewBulkAnnotations omite el truncado ya registrado", () => {
   assert.equal(kept.length, 0);
 });
 
+test("selectNewBulkAnnotations no duplica si el tipo guardado es incorrecto", () => {
+  const kept = selectNewBulkAnnotations(
+    [
+      {
+        fecha_iso: "2026-04-10",
+        tipo: "Negativa",
+        categoria: "RESPONSABILIDAD",
+        profesor: "ESTER NOEMI CONTRERAS ESPINOZA",
+        texto: "AUSENTE A EVALUACIÓN CALENDARIZADA.",
+        page_number: null,
+      },
+    ],
+    [
+      {
+        type: "Información",
+        date_time: "2026-04-10T12:00:00.000Z",
+        observation:
+          "10/04/2026 Tipo: Negativa Categoria: RESPONSABILIDAD Anotación: AUSENTE A EVALUACIÓN CALENDARIZADA.",
+      },
+    ],
+  );
+  assert.deepEqual(kept, []);
+});
+
 test("resolveTeacherAndContinuation recupera texto tras salto de página", () => {
   const roster = ["SILVANA LORETO PINCHEIRA RODRÍGUEZ"];
   const students = ["MILLA AGUAYO MAGDALENA PAZ"];
@@ -340,6 +422,17 @@ test("resolveTeacherAndContinuation recupera texto tras salto de página", () =>
     out.texto,
     "NO DESARROLLA ACTIVIDADES DE LA CLASE . ADEMÁS NO TRAE LIBRO DE LA ASIGNATURA.",
   );
+});
+
+test("resolveTeacherAndContinuation no deja apellidos del estudiante siguiente en el texto", () => {
+  const out = resolveTeacherAndContinuation(
+    "VANNIA ANDREA RETAMAL SALGADO AYALA SAÉZ EMILIA ANTONIA",
+    "USA CELULAR",
+    ["VANNIA ANDREA RETAMAL SALGADO"],
+    ["AYALA SAÉZ EMILIA ANTONIA"],
+  );
+  assert.equal(out.profesor, "VANNIA ANDREA RETAMAL SALGADO");
+  assert.equal(out.texto, "USA CELULAR");
 });
 
 test("resolveTeacherAndContinuation no pega colas si el texto está completo", () => {

@@ -21,6 +21,15 @@ export interface BulkAnnotation {
   page_number: number | null;
 }
 
+// El sistema de origen usa nombres cortos o cargos que no calzan con la
+// nómina. Se resuelven acá para que la anotación quede atribuida a la persona
+// o área correcta sin agregar cargos ficticios a `teachers`.
+const TEACHER_ALIASES: Record<string, string> = {
+  "daniel medina": "YERCO NILSON OJEDA ULE",
+  "sergio campos": "PASTORAL",
+  pastoral: "PASTORAL",
+};
+
 /**
  * Busca el nombre de la nómina dentro del responsable capturado. Compara sin
  * acentos ni mayúsculas y prefiere la coincidencia más larga. Devuelve el
@@ -30,7 +39,14 @@ export function matchTeacherName(
   captured: string | null,
   roster: string[],
 ): string | null {
-  if (!captured || roster.length === 0) return null;
+  if (!captured) return null;
+  const alias = TEACHER_ALIASES[normalize(captured)];
+  if (alias) {
+    return (
+      roster.find((teacher) => normalize(teacher) === normalize(alias)) ?? alias
+    );
+  }
+  if (roster.length === 0) return null;
   const source = ` ${normalize(captured)} `;
   let best: string | null = null;
   let bestLength = 0;
@@ -50,6 +66,8 @@ export interface BulkStudent {
   curso: string;
   anotaciones: BulkAnnotation[];
   duplicados_eliminados: number;
+  /** Última línea del cuerpo: suele ser el nombre del estudiante siguiente. */
+  trailingCandidate?: string;
 }
 
 export interface BulkPdfParseResult {
@@ -127,22 +145,36 @@ export function bulkSuggestedLetterType(
   );
 }
 
+/**
+ * Limpia un texto guardado por importaciones antiguas: prefijo `[CATEGORIA]`,
+ * fecha inicial, encabezados repetidos (`Tipo:`, `Categoria:`, `Anotación:`) y
+ * cola de profesor. Se usa para comparar y para reparar registros existentes.
+ */
+export function cleanStoredAnnotationText(value: string): string {
+  let text = String(value ?? "").trim();
+  text = text.replace(/^\[[^\]]+\]\s*/, "");
+  text = text.replace(/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\s*/, "");
+  text = text.replace(
+    /\bTipo\s*:\s*[^:]*?(?=\b(?:Tipo|Categoria|Anotaci[oó]n|Profesor)\s*:|$)/gi,
+    " ",
+  );
+  text = text.replace(
+    /\bCategoria\s*:\s*[^:]*?(?=\b(?:Tipo|Categoria|Anotaci[oó]n|Profesor)\s*:|$)/gi,
+    " ",
+  );
+  text = text.replace(/\bAnotaci[oó]n\s*:\s*/gi, " ");
+  text = text.split(/\bProfesor\s*:/i)[0];
+  return text.replace(/\s+/g, " ").trim();
+}
+
 function annotationKey(
   type: string,
   date: string | null,
   text: string,
 ): string {
-  // Los bloques repiten los encabezados y el fragmento completo no siempre es
-  // el último: la identidad es el segmento limpio más largo de ambos lados.
-  const withoutPrefix = text.replace(/^\[[^\]]+\]\s*/, "");
-  const parts = withoutPrefix.split(/Anotaci[oó]n\s*:\s*/i);
-  const segments = parts.length > 1 ? parts.slice(1) : parts;
-  let best = "";
-  for (const segment of segments) {
-    const candidate = cleanCandidate(segment);
-    if (candidate.length > best.length) best = candidate;
-  }
-  return `${normalize(type)}|${date?.slice(0, 10) ?? ""}|${normalize(best)}`;
+  // Los bloques repiten encabezados y los registros viejos guardaron el bloque
+  // crudo: la identidad se calcula sobre el texto ya limpio.
+  return `${normalize(type)}|${date?.slice(0, 10) ?? ""}|${normalize(cleanStoredAnnotationText(text))}`;
 }
 
 export function selectNewBulkAnnotations(
@@ -151,10 +183,11 @@ export function selectNewBulkAnnotations(
 ): BulkAnnotation[] {
   const existingCounts = new Map<string, number>();
   for (const record of existingRecords) {
-    // Lo guardado lleva prefijo `[CATEGORIA]` agregado al confirmar; se
-    // retira para comparar contra el parse fresco y no duplicar re-importes.
-    const stored = (record.observation ?? "").replace(/^\[[^\][]+\]\s*/, "");
-    const key = annotationKey(record.type ?? "", record.date_time, stored);
+    const key = annotationKey(
+      record.type ?? "",
+      record.date_time,
+      record.observation ?? "",
+    );
     existingCounts.set(key, (existingCounts.get(key) ?? 0) + 1);
   }
 
@@ -169,14 +202,17 @@ export function selectNewBulkAnnotations(
       existingCounts.set(key, remaining - 1);
       return false;
     }
-    // La base puede guardar la versión truncada (o completa) del mismo
-    // registro: se conserva lo registrado y no se vuelve a importar.
+    // La base puede guardar el mismo hecho con otro tipo (por ejemplo,
+    // "Información" en vez de "Negativa") o con la versión truncada. No se
+    // inserta un duplicado: la corrección de tipo/texto va por reconciliación.
+    const fresh = cleanStoredAnnotationText(annotation.texto);
     const overlap = existingRecords.some((record) => {
-      const stored = (record.observation ?? "").replace(/^\[[^\][]+\]\s*/, "");
+      if ((record.date_time ?? "").slice(0, 10) !== annotation.fecha_iso) {
+        return false;
+      }
+      const stored = cleanStoredAnnotationText(record.observation ?? "");
       return (
-        normalize(record.type ?? "") === normalize(annotation.tipo) &&
-        (record.date_time ?? "").slice(0, 10) === annotation.fecha_iso &&
-        textsOverlap(stored, annotation.texto)
+        normalize(stored) === normalize(fresh) || textsOverlap(stored, fresh)
       );
     });
     return !overlap;
@@ -210,28 +246,43 @@ function extractCourse(text: string): string {
   return `${match[1]}° ${level} ${letter.toUpperCase()}`;
 }
 
-function splitBlocks(
+export function splitBlocks(
   text: string,
 ): Array<{ block: string; page: number | null }> {
   const blocks: Array<{ block: string; page: number | null }> = [];
+  // Solo una fecha seguida de "Tipo:" abre una ficha nueva. Las fechas
+  // embebidas en la redacción (ej. "ENTREGAR EL 01/06/2026 .-") no deben
+  // cortar el bloque ni perder el profesor y la cola del texto.
   const normalized = text
     .split(String.fromCharCode(12))
     .join(" ")
-    .replace(/\s+(?=\d{1,2}[/-]\d{1,2}[/-]\d{2,4})/g, "\n");
+    .replace(/\s+(?=\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\s*Tipo\s*:)/gi, "\n");
   const lines = normalized
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
   let current = "";
-  for (const line of lines) {
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    // Los marcadores de página no aportan texto y ensucian la cola.
+    if (/^P\d+$/i.test(line)) continue;
     // El encabezado de la ficha siguiente no trae fecha: si se pegara al
-    // bloque anterior, su nombre quedaría dentro del profesor capturado.
+    // bloque anterior, su nombre quedaría dentro del profesor o del texto.
     if (/^Ficha\s+Personal\b/i.test(line)) {
       if (current) blocks.push({ block: current, page: null });
       current = "";
       continue;
     }
-    if (/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b/.test(line)) {
+    const next = lines
+      .slice(index + 1)
+      .find((candidate) => candidate.length > 0);
+    if (next && /^Ficha\s+Personal\b/i.test(next)) {
+      // `line` es el nombre del estudiante de la ficha que empieza.
+      if (current) blocks.push({ block: current, page: null });
+      current = "";
+      continue;
+    }
+    if (/^\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\s*Tipo\s*:/i.test(line)) {
       if (current) blocks.push({ block: current, page: null });
       current = line;
     } else if (current) {
@@ -249,6 +300,7 @@ function tokenKey(value: string): string {
 export function stripTrailingStudentName(
   profesor: string | null,
   studentNames: string | Array<string | null> | null,
+  minRemaining = 2,
 ): string | null {
   if (!profesor) return profesor;
   const candidates = (
@@ -256,7 +308,7 @@ export function stripTrailingStudentName(
   ).filter((name): name is string => !!name && name.trim().length > 0);
   if (!candidates.length) return profesor;
   const teacherWords = profesor.trim().split(/\s+/);
-  if (teacherWords.length <= 2) return profesor;
+  if (teacherWords.length <= Math.max(2, minRemaining)) return profesor;
   const normTeacher = teacherWords.map(tokenKey);
   let cleaned: string | null = null;
   let cleanedLength = 0;
@@ -266,7 +318,10 @@ export function stripTrailingStudentName(
   for (const candidate of candidates) {
     const studentWords = candidate.trim().split(/\s+/);
     if (studentWords.length < 2) continue;
-    const maxK = Math.min(teacherWords.length - 2, studentWords.length);
+    const maxK = Math.min(
+      teacherWords.length - minRemaining,
+      studentWords.length,
+    );
     for (let k = maxK; k >= 2; k -= 1) {
       const tail = normTeacher.slice(-k).join(" ");
       for (let start = 0; start < studentWords.length; start += 1) {
@@ -353,9 +408,12 @@ export function resolveTeacherAndContinuation(
     }
   }
   if (spanEnd < 0) return { profesor: hit, texto };
+  // Acá el nombre del docente ya quedó fuera: la cola puede ser solo el
+  // estudiante siguiente, así que se permite recortarla completa.
   const tail = stripTrailingStudentName(
     words.slice(spanEnd).join(" "),
     studentNames,
+    0,
   );
   const continuation = (tail ?? "").trim();
   if (continuation && !/[.!?…]\s*-?\s*$/.test(texto)) {
@@ -482,11 +540,18 @@ export async function parseBulkDisciplinaryPdf(
       seen.add(key);
       anotaciones.push(annotation);
     }
+    const trailingCandidate =
+      body
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .at(-1) ?? "";
     students.push({
       nombre: titleCase(nombre),
       curso,
       anotaciones,
       duplicados_eliminados,
+      trailingCandidate,
     });
   }
 
@@ -494,8 +559,20 @@ export async function parseBulkDisciplinaryPdf(
   // que solo se conoce al terminar de recorrer todas las fichas. Acá también
   // se canoniza al docente y se recupera texto cortado por salto de página.
   const allNames = students.map((student) => student.nombre);
-  for (const student of students) {
+  for (let index = 0; index < students.length; index += 1) {
+    const student = students[index];
+    const nextName = students[index + 1]?.nombre;
+    const stripNext = Boolean(
+      nextName &&
+      student.trailingCandidate &&
+      normalize(student.trailingCandidate) === normalize(nextName),
+    );
     for (const annotation of student.anotaciones) {
+      if (stripNext && nextName) {
+        annotation.texto =
+          stripTrailingStudentName(annotation.texto, [nextName], 0) ??
+          annotation.texto;
+      }
       const resolved = resolveTeacherAndContinuation(
         annotation.profesor,
         annotation.texto,

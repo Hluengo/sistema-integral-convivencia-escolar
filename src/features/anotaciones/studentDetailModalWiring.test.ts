@@ -60,4 +60,11 @@ describe("Ficha disciplinaria: cableado del modal", () => {
     ok(modal.includes("onRefresh={async () =>"));
     ok(modal.includes("onDataChanged?.()"));
   });
+
+  it("conserva la ficha abierta al desmontar y volver a montar la vista", () => {
+    const view = read("AnotacionesView.tsx");
+    ok(view.includes("sessionStorage"));
+    ok(view.includes("selectedStudentId"));
+    ok(view.includes("anotaciones-detail"));
+  });
 });

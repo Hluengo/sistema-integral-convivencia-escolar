@@ -1,6 +1,13 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useState, useCallback, lazy, useMemo, Suspense } from "react";
+import {
+  useState,
+  useCallback,
+  lazy,
+  useMemo,
+  useEffect,
+  Suspense,
+} from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileUp, Shield, Plus } from "lucide-react";
 import type { Annotation, AnotacionStudent } from "../../shared/lib/types";
@@ -30,6 +37,17 @@ const BulkAnnotationsImportModal = lazy(
   () => import("./BulkAnnotationsImportModal"),
 );
 
+const DETAIL_STORAGE_PREFIX = "anotaciones-detail";
+
+function detailStorageKey(tenantId: string) {
+  return `${DETAIL_STORAGE_PREFIX}:${tenantId}`;
+}
+
+function clearStoredDetail(tenantId: string | null) {
+  if (!tenantId || typeof window === "undefined") return;
+  window.sessionStorage.removeItem(detailStorageKey(tenantId));
+}
+
 interface AnotacionesViewProps {
   privacyMode: boolean;
 }
@@ -38,8 +56,9 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
   const tenantId = useAuthStore((state) => state.tenantId);
   const profileRole = useAuthStore((state) => state.profileRole);
   const queryClient = useQueryClient();
-  const [selectedStudent, setSelectedStudent] =
-    useState<AnotacionStudent | null>(null);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
+    null,
+  );
   const [detailInitialTab, setDetailInitialTab] = useState<ActiveTab>("estado");
   const [isNewProcessModalOpen, setIsNewProcessModalOpen] =
     useState<boolean>(false);
@@ -67,6 +86,39 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
     () => applyCartaStatesToStudents(rawStudents, cartaStatesQuery.data),
     [cartaStatesQuery.data, rawStudents],
   );
+  const selectedStudent = useMemo(
+    () =>
+      selectedStudentId
+        ? (students.find((student) => student.id === selectedStudentId) ?? null)
+        : null,
+    [selectedStudentId, students],
+  );
+  useEffect(() => {
+    if (!tenantId || typeof window === "undefined") return;
+    const storedId = window.sessionStorage.getItem(detailStorageKey(tenantId));
+    setSelectedStudentId(storedId);
+  }, [tenantId]);
+  useEffect(() => {
+    if (!tenantId || !studentsQuery.data || !selectedStudentId) return;
+    if (!students.some((student) => student.id === selectedStudentId)) {
+      clearStoredDetail(tenantId);
+      setSelectedStudentId(null);
+    }
+  }, [selectedStudentId, students, studentsQuery.data, tenantId]);
+  const openStudentDetail = useCallback(
+    (student: AnotacionStudent, initialTab: ActiveTab) => {
+      setDetailInitialTab(initialTab);
+      setSelectedStudentId(student.id);
+      if (tenantId && typeof window !== "undefined") {
+        window.sessionStorage.setItem(detailStorageKey(tenantId), student.id);
+      }
+    },
+    [tenantId],
+  );
+  const closeStudentDetail = useCallback(() => {
+    clearStoredDetail(tenantId);
+    setSelectedStudentId(null);
+  }, [tenantId]);
   const cartaStatuses = useMemo(
     () => buildCartaStatusLabels(students, cartaStatesQuery.data),
     [cartaStatesQuery.data, students],
@@ -151,10 +203,7 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
       <AnotacionesStudentTable
         students={students}
         privacyMode={privacyMode}
-        onSelectStudent={(student) => {
-          setDetailInitialTab("estado");
-          setSelectedStudent(student);
-        }}
+        onSelectStudent={(student) => openStudentDetail(student, "estado")}
         activeFilter={activeFilter}
         setActiveFilter={setActiveFilter}
         searchQuery={searchQuery}
@@ -174,7 +223,7 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
             )}
             privacyMode={privacyMode}
             initialTab={detailInitialTab}
-            onClose={() => setSelectedStudent(null)}
+            onClose={closeStudentDetail}
             onDataChanged={refreshStudentTable}
           />
         </Suspense>
@@ -194,8 +243,7 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
               );
               if (!student) return;
               setIsNewProcessModalOpen(false);
-              setDetailInitialTab("historial");
-              setSelectedStudent(student);
+              openStudentDetail(student, "historial");
             }}
           />
         </Suspense>
