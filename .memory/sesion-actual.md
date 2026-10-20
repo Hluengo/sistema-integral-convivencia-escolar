@@ -19,6 +19,12 @@
 - Piloto Gortex en curso (v0.64.0, 16.7k nodos).
 - MCP: supabase autenticado (OAuth), server `git` roto eliminado, regla presupuesto MCP (máx. 10) en `opencode.json`.
 
+## Guardado para enero 2027 (actualización grande)
+
+- Último runbook ejecutado: `docs/operations/runbook-mejora-auditoria-integral-2026-09-26.md` — cerrado el 2026-09-27 en el commit `cf6171df`, ya versionado en git (no se pierde). Guardado como línea base para la actualización de enero.
+- Cubre: enlace `target="_blank"`, cobertura de pruebas, logs de consola, CORS/redirección fija y superficie de excepciones; su criterio es no refactorizar por métricas sin evidencia.
+- Después de esa fecha hubo trabajo sin runbook propio (bug de hitos grupales y truncamiento PostgREST, 2026-10-03); la evidencia de eso vive en `causas.service.ts`, `checklistReconciliation.ts` y esta memoria.
+
 ## Notas para la próxima sesión
 
 - `.agents/arquitectura.ts` e `implementacion.ts` ya no referencian `mcp-server-git`; git se usa por terminal.
