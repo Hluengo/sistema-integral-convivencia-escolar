@@ -380,7 +380,7 @@ export async function markCartaProcessedManually(
   return createCartaEvent(
     cartaId,
     "processed_manually",
-    note || "Trámite marcado como procesado manualmente",
+    note || "Carta impresa; pendiente de entrega y/o firma",
     {},
     actor,
   );
@@ -394,7 +394,7 @@ export async function archiveCarta(
   return createCartaEvent(
     cartaId,
     "archived",
-    note || "Carta firmada por apoderado/a y archivada en expediente físico",
+    note || "Carta entregada y/o firmada; archivada en el expediente físico",
     {},
     actor,
   );

@@ -76,25 +76,27 @@ function describeCartaEvent(
   if (event.event_type === "printed") {
     return {
       ...base,
-      title: `Carta emitida: ${letterType}`,
-      description: "Medio de validación: impresión.",
+      title: `Carta impresa: ${letterType}`,
+      description:
+        "Impresión registrada. Pendiente de entrega y/o firma del apoderado/a.",
       tone: "bg-leve-50 text-leve-700",
     };
   }
   if (event.event_type === "processed_manually") {
     return {
       ...base,
-      title: `Carta procesada manualmente: ${letterType}`,
-      description: `Observación: ${event.event_detail || "Sin observación."}`,
+      title: `Carta impresa, pendiente de entrega y/o firma: ${letterType}`,
+      description:
+        event.event_detail ||
+        "Impresión confirmada. Falta registrar la entrega y/o firma.",
       tone: "bg-leve-50 text-leve-700",
     };
   }
   if (event.event_type === "archived") {
     return {
       ...base,
-      title: `Carta archivada: ${letterType}`,
-      description:
-        event.event_detail || "Carta firmada y archivada en expediente físico.",
+      title: `Carta entregada y/o firmada: ${letterType}`,
+      description: event.event_detail || "Archivada en el expediente físico.",
       tone: "bg-leve-50 text-leve-700",
     };
   }
@@ -169,10 +171,9 @@ export default function HistoryTab({
         kind: "Cartas" as const,
         date: carta.archived_at || carta.created_at || carta.emission_date,
         icon: <FileText className="h-4 w-4" />,
-        title: `Carta archivada: ${carta.letter_type}`,
+        title: `Carta entregada y/o firmada: ${carta.letter_type}`,
         description:
-          carta.archived_note ||
-          "Carta firmada y archivada en expediente físico.",
+          carta.archived_note || "Archivada en el expediente físico.",
         tone: "bg-leve-50 text-leve-700",
       });
       return items;

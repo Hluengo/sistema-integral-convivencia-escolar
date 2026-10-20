@@ -6,11 +6,10 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 2,
-      // Debe ser true: sin esto una pestaña montada jamás se refresca sola
-      // (los hitos grupales guardados en otra pestaña/sesión no aparecen en
-      // la tabla ni en los hermanos hasta recargar). Solo re-consulta las
-      // queries vencidas según su staleTime, así que el costo está acotado.
-      refetchOnWindowFocus: true,
+      // Al volver de otra pestaña no se re-consulta: el modal perdía el
+      // avance mientras se copiaban datos desde otra ventana. La frescura se
+      // resuelve al remontar la vista o al recargar.
+      refetchOnWindowFocus: false,
       staleTime: 1000 * 60 * 5,
     },
   },
