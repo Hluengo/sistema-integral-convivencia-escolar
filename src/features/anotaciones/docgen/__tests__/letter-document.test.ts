@@ -714,6 +714,7 @@ describe("Cartas en una hoja — anti-regresión", () => {
 
     ok(css.includes(".letter-document--single"));
     ok(css.includes(".letter-agreements"));
+    ok(css.includes("list-style: decimal"));
   });
 
   it("aplica la variante de hoja única a las tres cartas", () => {

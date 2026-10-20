@@ -270,6 +270,9 @@
 .letter-agreements {
   margin: 0;
   padding-left: 5mm;
+  /* Tailwind preflight aplica list-style:none; sin esto los acuerdos
+     pierden su numeración al imprimir. */
+  list-style: decimal outside;
   font-size: 9.5pt;
   line-height: 1.35;
   color: #374151;
