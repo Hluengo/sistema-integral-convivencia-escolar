@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import type { FieldErrors, Resolver, ResolverResult } from "react-hook-form";
 import {
@@ -42,6 +42,11 @@ import FormField from "@/shared/ui/FormField";
 import Input from "@/shared/ui/Input";
 import Select from "@/shared/ui/Select";
 import RiceConductSelect from "../NewCausaForm/RiceConductSelect";
+import {
+  clearSessionDraft,
+  readSessionDraft,
+  writeSessionDraft,
+} from "@/shared/lib/sessionDraft";
 
 const INFRACCIONES: TipoInfraccion[] = [
   "Leve",
@@ -230,6 +235,7 @@ export default function EditCausaModalForm({
   onClose,
 }: EditCausaModalFormProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const draftKey = `draft:edit-causa:${causa.id}`;
   const causaCerrada = causa.estadoActual === EstadoCausa.CAUSA_CERRADA;
   const estadosDisponibles =
     causaCerrada && !canReopen
@@ -243,7 +249,7 @@ export default function EditCausaModalForm({
     handleSubmit,
     formState: { errors },
   } = useForm<EditCausaFormValues>({
-    defaultValues: buildDefaultValues(causa),
+    defaultValues: readSessionDraft(draftKey, buildDefaultValues(causa)),
     mode: "onChange",
     resolver: createEditCausaResolver(causa.estadoActual, canReopen),
   });
@@ -251,7 +257,15 @@ export default function EditCausaModalForm({
   const tipoInfraccionValue = watch("tipoInfraccion");
   const estadoActualValue = watch("estadoActual");
 
+  useEffect(() => {
+    const subscription = watch((values) => {
+      writeSessionDraft(draftKey, values);
+    });
+    return () => subscription.unsubscribe();
+  }, [draftKey, watch]);
+
   const submitUpdatedCausa = handleSubmit((values) => {
+    clearSessionDraft(draftKey);
     onSave({
       ...causa,
       estudianteNombre: values.estudianteNombre,

@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { AlertTriangle, Users } from "lucide-react";
 import type { TipoInfraccion } from "../../../shared/lib/types";
 import { getConductaReglamentada } from "../../../reglamentoData";
@@ -19,6 +19,23 @@ import {
   DialogDescription,
   DialogTitle,
 } from "../../../shared/ui/Dialog";
+import {
+  clearSessionDraft,
+  readSessionDraft,
+  writeSessionDraft,
+} from "../../../shared/lib/sessionDraft";
+
+const INCIDENT_DRAFT_KEY = "draft:new-incidente";
+const INCIDENT_DEFAULTS = {
+  studentIds: [] as string[],
+  fechaHora: "",
+  lugar: "",
+  descripcion: "",
+  responsable: "Equipo de Convivencia Escolar",
+  conductaRiceId: "",
+  tipoInfraccion: "Grave" as TipoInfraccion,
+  aulaSegura: false,
+};
 
 interface NewIncidenteModalProps {
   courses: Course[];
@@ -47,22 +64,46 @@ export default function NewIncidenteModal({
   onClose,
   onSubmit,
 }: NewIncidenteModalProps) {
-  const [studentIds, setStudentIds] = useState<string[]>([]);
+  const draft = readSessionDraft(INCIDENT_DRAFT_KEY, INCIDENT_DEFAULTS);
+  const [studentIds, setStudentIds] = useState<string[]>(draft.studentIds);
   const [fechaHora, setFechaHora] = useState(() => {
+    if (draft.fechaHora) return draft.fechaHora;
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     return now.toISOString().slice(0, 16);
   });
-  const [lugar, setLugar] = useState("");
-  const [descripcion, setDescripcion] = useState("");
-  const [responsable, setResponsable] = useState(
-    "Equipo de Convivencia Escolar",
+  const [lugar, setLugar] = useState(draft.lugar);
+  const [descripcion, setDescripcion] = useState(draft.descripcion);
+  const [responsable, setResponsable] = useState(draft.responsable);
+  const [conductaRiceId, setConductaRiceId] = useState(draft.conductaRiceId);
+  const [tipoInfraccion, setTipoInfraccion] = useState<TipoInfraccion>(
+    draft.tipoInfraccion,
   );
-  const [conductaRiceId, setConductaRiceId] = useState("");
-  const [tipoInfraccion, setTipoInfraccion] = useState<TipoInfraccion>("Grave");
-  const [aulaSegura, setAulaSegura] = useState(false);
+  const [aulaSegura, setAulaSegura] = useState(draft.aulaSegura);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    writeSessionDraft(INCIDENT_DRAFT_KEY, {
+      studentIds,
+      fechaHora,
+      lugar,
+      descripcion,
+      responsable,
+      conductaRiceId,
+      tipoInfraccion,
+      aulaSegura,
+    });
+  }, [
+    aulaSegura,
+    conductaRiceId,
+    descripcion,
+    fechaHora,
+    lugar,
+    responsable,
+    studentIds,
+    tipoInfraccion,
+  ]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -103,6 +144,7 @@ export default function NewIncidenteModal({
         tipoInfraccion,
         comprometeAulaSegura: aulaSegura,
       });
+      clearSessionDraft(INCIDENT_DRAFT_KEY);
     } catch (submitError) {
       setError(
         submitError instanceof Error

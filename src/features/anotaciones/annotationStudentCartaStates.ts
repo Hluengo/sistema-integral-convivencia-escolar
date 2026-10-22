@@ -5,6 +5,7 @@
 
 import type { AnotacionStudent } from "@/shared/lib/types";
 import {
+  getDisciplinaryStage,
   getStudentCartaWorkflowLabel,
   type StudentCartaTableState,
 } from "@/shared/lib/domain/disciplinaryStage";
@@ -34,9 +35,17 @@ export function buildCartaStatusLabels(
   const statuses: Record<string, string[]> = {};
 
   for (const student of students) {
+    const state = states?.[student.id];
+    if (
+      !state &&
+      getDisciplinaryStage(student.annotations_count).key !== "none"
+    ) {
+      statuses[student.id] = ["Pendiente"];
+      continue;
+    }
     const cartaStatus = getStudentCartaWorkflowLabel(
       student.annotations_count,
-      states?.[student.id],
+      state,
     );
     if (cartaStatus) statuses[student.id] = [cartaStatus];
   }

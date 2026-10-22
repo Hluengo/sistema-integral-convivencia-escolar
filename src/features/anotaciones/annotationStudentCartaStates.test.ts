@@ -54,4 +54,12 @@ describe("annotationStudentCartaStates", () => {
       "student-1": ["Procesada"],
     });
   });
+
+  it("marca como pendiente la carta requerida que aún no está registrada", () => {
+    const student = { ...baseStudent, annotations_count: 7 };
+
+    assert.deepEqual(buildCartaStatusLabels([student], {}), {
+      "student-1": ["Pendiente"],
+    });
+  });
 });

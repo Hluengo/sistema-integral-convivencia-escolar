@@ -10,6 +10,9 @@ export const queryClient = new QueryClient({
       // avance mientras se copiaban datos desde otra ventana. La frescura se
       // resuelve al remontar la vista o al recargar.
       refetchOnWindowFocus: false,
+      // Una pestaña suspendida puede informar una reconexión al volver; no
+      // reemplazar datos mientras el usuario tiene trabajo sin confirmar.
+      refetchOnReconnect: false,
       staleTime: 1000 * 60 * 5,
     },
   },

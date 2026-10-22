@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, FileUp, LockKeyhole } from "lucide-react";
 import type { Causa } from "../../shared/lib/types";
@@ -29,6 +29,11 @@ import {
 import { fetchReconsideraciones } from "../../shared/api/services/reconsideracion.service";
 import { fetchSeguimiento } from "../../shared/api/services/seguimiento.service";
 import { auditarExpediente } from "../../shared/lib/auditoria";
+import {
+  clearSessionDraft,
+  readSessionDraft,
+  writeSessionDraft,
+} from "../../shared/lib/sessionDraft";
 
 interface ForceCloseCausaDialogProps {
   causa: Causa;
@@ -43,15 +48,24 @@ export default function ForceCloseCausaDialog({
   onOpenChange,
   onConfirm,
 }: ForceCloseCausaDialogProps) {
-  const [responsable, setResponsable] = useState(
-    causa.responsable.split(" (")[0].trim(),
-  );
-  const [titulo, setTitulo] = useState("Cierre anticipado fundado");
-  const [motivo, setMotivo] = useState("");
+  const draftKey = `draft:force-close:${causa.id}`;
+  const draft = readSessionDraft(draftKey, {
+    responsable: causa.responsable.split(" (")[0].trim(),
+    titulo: "Cierre anticipado fundado",
+    motivo: "",
+    ackRisk: false,
+  });
+  const [responsable, setResponsable] = useState(draft.responsable);
+  const [titulo, setTitulo] = useState(draft.titulo);
+  const [motivo, setMotivo] = useState(draft.motivo);
   const [informe, setInforme] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [ackRisk, setAckRisk] = useState(false);
+  const [ackRisk, setAckRisk] = useState(draft.ackRisk);
+
+  useEffect(() => {
+    writeSessionDraft(draftKey, { responsable, titulo, motivo, ackRisk });
+  }, [ackRisk, draftKey, motivo, responsable, titulo]);
 
   const hechosQuery = useQuery({
     queryKey: ["hechos", causa.id, "forceClose"],
@@ -123,6 +137,7 @@ export default function ForceCloseCausaDialog({
           documentoAdjunto,
         }),
       );
+      clearSessionDraft(draftKey);
       onOpenChange(false);
     } catch (cause) {
       setError(
