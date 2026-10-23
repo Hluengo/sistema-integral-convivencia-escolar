@@ -929,13 +929,15 @@ test("bitácora: respalda detalles y espera confirmación durable sin borrar la 
   await page.getByRole("button", { name: "Guardar en historial" }).click();
   await page.clock.runFor(2100);
   await page.getByRole("button", { name: "Registrar entrada manual" }).click();
-  expect(
-    await page.evaluate(
-      () =>
-        (window as unknown as { bitacoraInput: { descripcion: string }[] })
-          .bitacoraInput[0].descripcion,
-    ),
-  ).toContain("Texto junto al archivo.");
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as unknown as { bitacoraInput: { descripcion: string }[] })
+            .bitacoraInput?.[0]?.descripcion ?? "",
+      ),
+    )
+    .toContain("Texto junto al archivo.");
   await page.evaluate((key) => {
     const original = Storage.prototype.setItem;
     Storage.prototype.setItem = function (name, value) {
