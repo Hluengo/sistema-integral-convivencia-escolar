@@ -247,6 +247,7 @@ interface RpcStudentSummary {
   full_name: string;
   course_id: string;
   rut: string;
+  apoderado_nombre?: string | null;
   course_name: string;
   annotations_count: number;
   positive_annotations_count: number;
@@ -275,6 +276,7 @@ function mapAnnotationSummaryRows(
       last_annotation_date: row.last_annotation_date || undefined,
       disciplinary_status: calculateDisciplinaryStatus(negativeCount),
       rut: row.rut || "",
+      apoderado_nombre: row.apoderado_nombre || null,
       course_name: row.course_name || "Sin curso",
       ai_analysis: row.ai_analysis
         ? {

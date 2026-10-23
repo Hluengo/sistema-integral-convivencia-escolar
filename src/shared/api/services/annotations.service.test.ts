@@ -594,6 +594,7 @@ describe("fetchStudentsWithAnnotationCounts", () => {
             full_name: "Estudiante Uno",
             course_id: "c-1",
             rut: "11.111.111-1",
+            apoderado_nombre: "Apoderado Uno",
             course_name: "8° Básico A",
             annotations_count: 6,
             positive_annotations_count: 2,
@@ -615,6 +616,7 @@ describe("fetchStudentsWithAnnotationCounts", () => {
     assert.equal(students.length, 1);
     assert.equal(students[0].full_name, "Estudiante Uno");
     assert.equal(students[0].annotations_count, 6);
+    assert.equal(students[0].apoderado_nombre, "Apoderado Uno");
     assert.equal(students[0].ai_analysis?.negativas, 3);
     assert.equal(students[0].course_name, "8° Básico A");
   });

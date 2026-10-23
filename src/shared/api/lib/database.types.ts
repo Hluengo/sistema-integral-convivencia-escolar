@@ -2448,6 +2448,7 @@ export type Database = {
           informative_annotations_count: number;
           last_annotation_date: string;
           positive_annotations_count: number;
+          apoderado_nombre: string;
           rut: string;
           status: string;
           teacher_id: string;

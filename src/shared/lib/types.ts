@@ -323,6 +323,7 @@ export interface AnotacionStudent {
   disciplinary_status: DisciplinaryStatus;
   effective_letter_type?: CartaDisciplinaria["letter_type"] | null;
   rut?: string;
+  apoderado_nombre?: string | null;
   course_name?: string;
   ai_analysis?: AnnotationSummary;
 }
