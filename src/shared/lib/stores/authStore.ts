@@ -11,6 +11,7 @@ import type {
   AppMembership,
 } from "../../api/types/membership";
 import { getMembershipAuthMode, isDev } from "../../api/lib/membershipConfig";
+import { clearUserSessionDrafts } from "../sessionDraft";
 
 interface AuthState {
   user: User | null;
@@ -20,6 +21,7 @@ interface AuthState {
   showLoginModal: boolean;
   isAuthenticated: boolean;
   sessionExpired: boolean;
+  authorizationRevision: number;
   setShowLoginModal: (v: boolean) => void;
   clearSessionExpired: () => void;
   setUser: (user: User | null) => void;
@@ -64,31 +66,32 @@ export function disposeAuthStoreSubscription() {
 async function loadTenantProfile(
   userId: string,
 ): Promise<{ tenantId: string | null; role: string | null }> {
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("tenant_id,role")
-    .eq("user_id", userId)
-    .maybeSingle();
-  if (error) {
-    console.error("Error loading tenant profile:", error);
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("tenant_id,role,is_active")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error || data?.is_active === false)
+      return { tenantId: null, role: null };
+    return { tenantId: data?.tenant_id ?? null, role: data?.role ?? null };
+  } catch {
+    console.error("No fue posible verificar el perfil del colegio.");
     return { tenantId: null, role: null };
   }
-  return { tenantId: data?.tenant_id ?? null, role: data?.role ?? null };
 }
 
-export const useAuthStore = create<AuthState>((set) => {
+export const useAuthStore = create<AuthState>((set, get) => {
   const AUTH_TIMEOUT_MS = 8000;
   let hadAuthenticatedSession = false;
+  let authGeneration = 0;
 
   authTimeoutId = setTimeout(() => {
     set({ authLoading: false });
     authTimeoutId = null;
   }, AUTH_TIMEOUT_MS);
 
-  // Do not await Supabase queries inside onAuthStateChange. Supabase holds an
-  // internal auth lock while invoking this callback; using the same client
-  // before the callback returns can leave subsequent REST requests without a
-  // usable session and produce repeated 401 responses.
+  // Supabase mantiene un lock durante el callback: consultar después evita bloqueos de sesión.
   disposeAuthStoreSubscription();
   authSubscription = subscribeAuth((event, session) => {
     if (authTimeoutId) {
@@ -96,27 +99,35 @@ export const useAuthStore = create<AuthState>((set) => {
       authTimeoutId = null;
     }
     const user = session?.user ?? null;
+    const generation = ++authGeneration;
+    const previousUserId = get()?.user?.id;
+    const identityChanged = previousUserId !== user?.id;
+    if (previousUserId && identityChanged)
+      clearUserSessionDrafts(previousUserId);
     const sessionEndedUnexpectedly =
       event === "SIGNED_OUT" && hadAuthenticatedSession;
     if (user) hadAuthenticatedSession = true;
     if (event === "SIGNED_OUT") hadAuthenticatedSession = false;
 
     if (event === "PASSWORD_RECOVERY" && typeof window !== "undefined") {
-      window.sessionStorage.setItem("supabase-password-recovery", "true");
+      try {
+        window.sessionStorage.setItem("supabase-password-recovery", "true");
+      } catch {
+        // El formulario de recuperación sigue disponible con storage bloqueado.
+      }
     }
 
     set({
       user,
       ...(event === "PASSWORD_RECOVERY" ? { showLoginModal: true } : {}),
-      tenantId: user ? null : null,
-      profileRole: null,
+      ...(identityChanged ? { tenantId: null, profileRole: null } : {}),
       authLoading: false,
       isAuthenticated: Boolean(session?.access_token && user),
       ...(user ? { sessionExpired: false } : {}),
       ...(sessionEndedUnexpectedly
         ? { sessionExpired: true, showLoginModal: true }
         : {}),
-      ...(user === null
+      ...(identityChanged || user === null
         ? {
             membershipStatus: "not_available" as MembershipStatus,
             membershipAuthMode: getMembershipAuthMode(),
@@ -134,11 +145,32 @@ export const useAuthStore = create<AuthState>((set) => {
     if (user) {
       queueMicrotask(() => {
         void loadTenantProfile(user.id).then((profile) => {
-          set((state) =>
-            state.user?.id === user.id
-              ? { tenantId: profile.tenantId, profileRole: profile.role }
-              : state,
-          );
+          set((state) => {
+            if (state.user?.id !== user.id || generation !== authGeneration)
+              return state;
+            const scopeChanged = state.tenantId !== profile.tenantId;
+            const accessUnavailable = !profile.tenantId || !profile.role;
+            return {
+              tenantId: profile.tenantId,
+              profileRole: profile.role,
+              authorizationRevision: state.authorizationRevision + 1,
+              ...(scopeChanged || accessUnavailable
+                ? {
+                    appRole: null,
+                    membership: null,
+                    membershipStatus: (accessUnavailable
+                      ? "error"
+                      : "not_available") as MembershipStatus,
+                    membershipLoaded: accessUnavailable,
+                    membershipLoading: false,
+                    membershipError: accessUnavailable
+                      ? "No fue posible verificar un perfil activo en el colegio. Inicie sesión nuevamente o solicite la revisión de su acceso."
+                      : null,
+                    legacyFallbackUsed: false,
+                  }
+                : {}),
+            };
+          });
         });
       });
     }
@@ -158,6 +190,7 @@ export const useAuthStore = create<AuthState>((set) => {
     showLoginModal: false,
     isAuthenticated: false,
     sessionExpired: false,
+    authorizationRevision: 0,
 
     membershipStatus: "not_available" as MembershipStatus,
     membershipAuthMode: getMembershipAuthMode(),
@@ -193,7 +226,18 @@ export const useAuthStore = create<AuthState>((set) => {
 
     setMembershipError: (error: string | null) => {
       logDev("set_membership_error", error ?? "cleared");
-      set({ membershipError: error, membershipLoading: false });
+      set({
+        membershipError: error,
+        membershipLoading: false,
+        ...(error
+          ? {
+              membershipStatus: "error" as MembershipStatus,
+              appRole: null,
+              membershipLoaded: true,
+              legacyFallbackUsed: false,
+            }
+          : {}),
+      });
     },
 
     clearMembership: () => {

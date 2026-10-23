@@ -1,27 +1,98 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { z } from "zod";
+import { useSessionDraftKey } from "@/shared/lib/hooks/useSessionDraftKey";
+import { readSessionDraft, writeSessionDraft } from "@/shared/lib/sessionDraft";
 import {
   DEFAULT_LETTER_CONTENT,
   type DocType,
   type LetterContent,
 } from "../DocumentPreview/docTypes";
 
-export function useDocumentState() {
-  const [docType, setDocType] = useState<DocType>("amonestacion");
-  const [apoderadoName, setApoderadoName] = useState("");
-  const [inspectorName, setInspectorName] = useState("");
-  const [coordinatorName, setCoordinatorName] = useState("");
-  const [emittedBy, setEmittedBy] = useState("");
-  const [compromisoStatus, setCompromisoStatus] = useState("pendiente");
-  const [customCommitments, setCustomCommitments] = useState<string[]>([]);
-  const [letterContent, setLetterContentState] = useState<LetterContent>(
-    DEFAULT_LETTER_CONTENT.amonestacion,
+const DOCUMENT_DEFAULTS = {
+  docType: "amonestacion" as DocType,
+  apoderadoName: "",
+  inspectorName: "",
+  coordinatorName: "",
+  emittedBy: "",
+  compromisoStatus: "pendiente",
+  customCommitments: [] as string[],
+  letterContent: DEFAULT_LETTER_CONTENT.amonestacion,
+  letterContentTouched: false,
+};
+const documentDraftSchema = z
+  .object({
+    docType: z.enum(["amonestacion", "compromiso_conductual", "derivacion"]),
+    apoderadoName: z.string(),
+    inspectorName: z.string(),
+    coordinatorName: z.string(),
+    emittedBy: z.string(),
+    compromisoStatus: z.string(),
+    customCommitments: z.array(z.string()),
+    letterContentTouched: z.boolean(),
+    letterContent: z.object({
+      motivo: z.string(),
+      descripcion: z.string(),
+      medida: z.string(),
+      acuerdos: z.string(),
+      cierre: z.string(),
+      observaciones: z.string(),
+    }),
+  })
+  .partial();
+
+export function useDocumentState(recordId: string, enabled = true) {
+  const scopedKey = useSessionDraftKey("letter", recordId);
+  const draftKey = enabled ? scopedKey : null;
+  const [draft] = useState(() =>
+    readSessionDraft(draftKey, DOCUMENT_DEFAULTS, documentDraftSchema),
   );
-  const [letterContentTouched, setLetterContentTouched] = useState(false);
+  const [docType, setDocType] = useState<DocType>(draft.docType);
+  const [apoderadoName, setApoderadoName] = useState(draft.apoderadoName);
+  const [inspectorName, setInspectorName] = useState(draft.inspectorName);
+  const [coordinatorName, setCoordinatorName] = useState(draft.coordinatorName);
+  const [emittedBy, setEmittedBy] = useState(draft.emittedBy);
+  const [compromisoStatus, setCompromisoStatus] = useState(
+    draft.compromisoStatus,
+  );
+  const [customCommitments, setCustomCommitments] = useState<string[]>(
+    draft.customCommitments,
+  );
+  const [letterContent, setLetterContentState] = useState<LetterContent>(
+    draft.letterContent,
+  );
+  const [letterContentTouched, setLetterContentTouched] = useState(
+    draft.letterContentTouched,
+  );
   const [authorizedBypass, setAuthorizedBypass] = useState(false);
   const [authorizedDuplicate, setAuthorizedDuplicate] = useState(false);
   const [bypassProgressLock, setBypassProgressLock] = useState(false);
+
+  useEffect(() => {
+    writeSessionDraft(draftKey, {
+      docType,
+      apoderadoName,
+      inspectorName,
+      coordinatorName,
+      emittedBy,
+      compromisoStatus,
+      customCommitments,
+      letterContent,
+      letterContentTouched,
+    });
+  }, [
+    draftKey,
+    docType,
+    apoderadoName,
+    inspectorName,
+    coordinatorName,
+    emittedBy,
+    compromisoStatus,
+    customCommitments,
+    letterContent,
+    letterContentTouched,
+  ]);
 
   const setLetterContent = useCallback((next: LetterContent) => {
     setLetterContentState(next);
@@ -63,6 +134,7 @@ export function useDocumentState() {
   }, []);
 
   return {
+    hasRestoredDraft: draft !== DOCUMENT_DEFAULTS,
     docType,
     setDocType,
     apoderadoName,

@@ -15,6 +15,7 @@ interface UploadAnalyzeStepProps {
   analysisError: string | null;
   summary: AnnotationSummary | null;
   statusLabel?: string;
+  hasAnalysis?: boolean;
   onFileChange: (file: File | null) => void;
   onAnalyze: () => void;
 }
@@ -31,6 +32,7 @@ export default function UploadAnalyzeStep({
   analysisError,
   summary,
   statusLabel,
+  hasAnalysis = false,
   onFileChange,
   onAnalyze,
 }: UploadAnalyzeStepProps) {
@@ -43,7 +45,7 @@ export default function UploadAnalyzeStep({
       if (!candidate) return;
       const validationError = validateDisciplinaryPdf(candidate);
       setLocalError(validationError);
-      onFileChange(validationError ? null : candidate);
+      if (!validationError) onFileChange(candidate);
     },
     [onFileChange],
   );
@@ -131,7 +133,11 @@ export default function UploadAnalyzeStep({
           ) : (
             <FileText className="h-4 w-4" />
           )}
-          {isAnalyzing ? statusLabel || "Analizando..." : "Analizar PDF"}
+          {isAnalyzing
+            ? statusLabel || "Analizando..."
+            : hasAnalysis
+              ? "Continuar revisión"
+              : "Analizar PDF"}
         </Button>
       )}
 

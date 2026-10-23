@@ -176,6 +176,7 @@ export default function AnotacionesStudentDetailModal({
       case "revisar_pdf":
         return (
           <RevisionTab
+            key={student.id}
             student={student}
             counts={counts}
             currentCarta={disciplinaryData.currentCarta}
@@ -198,6 +199,8 @@ export default function AnotacionesStudentDetailModal({
       case "editar_anotaciones":
         return (
           <EditAnnotationsTab
+            key={student.id}
+            studentId={student.id}
             annotations={effectiveAnnotations}
             onSaved={async () => {
               await Promise.all([

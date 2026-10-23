@@ -53,6 +53,9 @@ jobs:
       - name: Unit tests with coverage
         run: npm run test:coverage
 
+      - name: Regresiones de formularios sin servicios remotos
+        run: npm run test:e2e:offline
+
       - name: Build web
         run: npm run build:web
         env:

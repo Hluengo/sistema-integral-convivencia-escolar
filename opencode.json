@@ -3,7 +3,6 @@
   "model": "anthropic/claude-sonnet-4-5",
   "small_model": "anthropic/claude-haiku-4-5",
   "default_agent": "build",
-  "subagent_depth": 1,
   "instructions": [
     "AGENTS.md",
     "docs/agents/opencode-instructions.md",
@@ -103,7 +102,6 @@
   },
   "compaction": {
     "auto": true,
-    "prune": true,
     "reserved": 12000
   }
 }

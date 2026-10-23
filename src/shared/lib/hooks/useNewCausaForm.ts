@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import type { FieldErrors, Resolver } from "react-hook-form";
 import {
   newCausaFormSchema,
+  newCausaDraftSchema,
   type NewCausaFormValues,
 } from "../schemas/newCausaForm";
 import {
@@ -15,8 +16,7 @@ import {
   readSessionDraft,
   writeSessionDraft,
 } from "../sessionDraft";
-
-const NEW_CAUSA_DRAFT_KEY = "draft:new-causa";
+import { useSessionDraftKey } from "./useSessionDraftKey";
 
 export const NEW_CAUSA_FORM_DEFAULTS: NewCausaFormValues = {
   selectedCourseId: "",
@@ -66,21 +66,23 @@ export const newCausaFormResolver: Resolver<NewCausaFormValues> = async (
 };
 
 export function useNewCausaForm() {
+  const draftKey = useSessionDraftKey("new-causa");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const form = useForm<NewCausaFormValues>({
     defaultValues: readSessionDraft(
-      NEW_CAUSA_DRAFT_KEY,
+      draftKey,
       NEW_CAUSA_FORM_DEFAULTS,
+      newCausaDraftSchema,
     ),
     mode: "onChange",
     resolver: newCausaFormResolver,
   });
   useEffect(() => {
     const subscription = form.watch((values) => {
-      writeSessionDraft(NEW_CAUSA_DRAFT_KEY, values);
+      writeSessionDraft(draftKey, values);
     });
     return () => subscription.unsubscribe();
-  }, [form]);
+  }, [draftKey, form]);
   const { reset, setValue } = form;
 
   const openCreateForm = useCallback(() => {
@@ -93,9 +95,9 @@ export function useNewCausaForm() {
 
   const resetCreateForm = useCallback(() => {
     reset(NEW_CAUSA_FORM_DEFAULTS);
-    clearSessionDraft(NEW_CAUSA_DRAFT_KEY);
+    clearSessionDraft(draftKey);
     setShowCreateForm(false);
-  }, [reset]);
+  }, [draftKey, reset]);
 
   const setCourse = useCallback(
     (courseId: string) => {

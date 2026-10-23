@@ -249,9 +249,22 @@ export default function CausaNotificationPanel({
     );
   }
 
+  if (documentsQuery.isPending)
+    return <p role="status">Cargando notificación guardada…</p>;
+  if (documentsQuery.isError)
+    return (
+      <p role="alert">
+        No fue posible cargar la notificación.{" "}
+        <button type="button" onClick={() => void documentsQuery.refetch()}>
+          Reintentar
+        </button>
+      </p>
+    );
+
   return (
     <CausaNotificationGenerator
-      key={causa.id}
+      key={`${causa.id}:${activeDocument?.id ?? "new"}:${activeDocument?.status ?? "new"}`}
+      documentId={activeDocument?.id}
       causa={causa}
       compact={compact}
       privacyMode={privacyMode}

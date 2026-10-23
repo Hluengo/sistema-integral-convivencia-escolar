@@ -24,6 +24,7 @@ import platformRoutes from "./api/routes/platform";
 import institutionRoutes from "./api/routes/institution";
 import notificacionesRoutes from "./api/routes/notificaciones";
 import { errorHandler } from "./middleware/errorHandler";
+import { configureJsonBody } from "./middleware/jsonBody";
 import { ensureRuntimeConfig } from "./config/runtime";
 
 dotenv.config();
@@ -31,6 +32,7 @@ dotenv.config({ path: ".env.local" });
 
 const app = express();
 const PORT = Number.parseInt(process.env.PORT || "3001", 10);
+const isDevelopment = process.env.NODE_ENV !== "production";
 
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
   .split(",")
@@ -45,12 +47,15 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'"],
+        scriptSrc: ["'self'", ...(isDevelopment ? ["'unsafe-inline'"] : [])],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
         imgSrc: ["'self'", "data:", "blob:", "https://*.supabase.co"],
         connectSrc: [
           "'self'",
+          ...(isDevelopment
+            ? ["ws://localhost:3002", "ws://localhost:3001"]
+            : []),
           "https://*.supabase.co",
           "wss://*.supabase.co",
           "https://*.posthog.com",
@@ -69,7 +74,7 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
-app.use(express.json({ limit: "100kb" }));
+configureJsonBody(app);
 
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true });

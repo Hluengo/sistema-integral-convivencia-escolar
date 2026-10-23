@@ -1,6 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useState } from "react";
+import { z } from "zod";
 import { ClipboardCheck, Plus, X } from "lucide-react";
 import type { CartaDisciplinaria } from "@/shared/lib/types";
 import {
@@ -17,6 +18,12 @@ import {
   nowDateOnly,
 } from "@/shared/lib/dateUtils";
 import Button from "@/shared/ui/Button";
+import { useSessionDraftKey } from "@/shared/lib/hooks/useSessionDraftKey";
+import {
+  clearSessionDraft,
+  readSessionDraft,
+  writeSessionDraft,
+} from "@/shared/lib/sessionDraft";
 
 const PHYSICAL_LETTER_TYPES: Array<Exclude<LetterType, "Ficha de Derivación">> =
   ["Amonestación Escrita", "Carta de Compromiso Conductual"];
@@ -63,11 +70,43 @@ export default function PhysicalCartaRegistrationCard({
     !registeredTypes.has("Carta de Compromiso Conductual")
       ? "Carta de Compromiso Conductual"
       : "Amonestación Escrita";
-  const [showForm, setShowForm] = useState(false);
-  const [letterType, setLetterType] =
-    useState<Exclude<LetterType, "Ficha de Derivación">>(initialType);
-  const [emissionDate, setEmissionDate] = useState(today);
-  const [observations, setObservations] = useState("");
+  const draftKey = useSessionDraftKey("physical-carta", studentId);
+  const initialDraft = readSessionDraft(
+    draftKey,
+    { letterType: initialType, emissionDate: today, observations: "" },
+    z
+      .object({
+        letterType: z.enum([
+          "Amonestación Escrita",
+          "Carta de Compromiso Conductual",
+        ]),
+        emissionDate: z.string(),
+        observations: z.string().max(1000),
+      })
+      .partial(),
+  );
+  const [showForm, setShowForm] = useState(
+    Boolean(initialDraft.observations || initialDraft.emissionDate !== today),
+  );
+  const [letterType, setLetterType] = useState<
+    Exclude<LetterType, "Ficha de Derivación">
+  >(initialDraft.letterType as Exclude<LetterType, "Ficha de Derivación">);
+  const [emissionDate, setEmissionDate] = useState(initialDraft.emissionDate);
+  const [observations, setObservations] = useState(initialDraft.observations);
+  const updateDraft = (
+    patch: Partial<{
+      letterType: Exclude<LetterType, "Ficha de Derivación">;
+      emissionDate: string;
+      observations: string;
+    }>,
+  ) => {
+    writeSessionDraft(draftKey, {
+      letterType,
+      emissionDate,
+      observations,
+      ...patch,
+    });
+  };
   const [message, setMessage] = useState<string | null>(null);
   const [hasError, setHasError] = useState(false);
   const { isRegistering, registerPhysicalCarta } = usePhysicalCartaRegistration(
@@ -88,6 +127,7 @@ export default function PhysicalCartaRegistrationCard({
     setHasError(!result.ok);
     setMessage(result.message);
     if (result.ok) {
+      clearSessionDraft(draftKey);
       setShowForm(false);
       setObservations("");
       setLetterType(
@@ -173,14 +213,14 @@ export default function PhysicalCartaRegistrationCard({
             <select
               id="physical-letter-type"
               value={letterType}
-              onChange={(event) =>
-                setLetterType(
-                  event.target.value as Exclude<
-                    LetterType,
-                    "Ficha de Derivación"
-                  >,
-                )
-              }
+              onChange={(event) => {
+                const nextType = event.target.value as Exclude<
+                  LetterType,
+                  "Ficha de Derivación"
+                >;
+                setLetterType(nextType);
+                updateDraft({ letterType: nextType });
+              }}
               className="mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900"
             >
               {PHYSICAL_LETTER_TYPES.map((type) => (
@@ -208,7 +248,10 @@ export default function PhysicalCartaRegistrationCard({
               min={`${schoolYear}-01-01`}
               max={today}
               value={emissionDate}
-              onChange={(event) => setEmissionDate(event.target.value)}
+              onChange={(event) => {
+                setEmissionDate(event.target.value);
+                updateDraft({ emissionDate: event.target.value });
+              }}
               className="mt-1 w-full rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900"
             />
           </label>
@@ -223,7 +266,10 @@ export default function PhysicalCartaRegistrationCard({
               rows={2}
               maxLength={1000}
               value={observations}
-              onChange={(event) => setObservations(event.target.value)}
+              onChange={(event) => {
+                setObservations(event.target.value);
+                updateDraft({ observations: event.target.value });
+              }}
               placeholder="Ej.: Carta firmada y archivada en expediente físico."
               className="mt-1 w-full resize-y rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900"
             />

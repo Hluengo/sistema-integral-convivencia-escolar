@@ -20,6 +20,9 @@ function logDev(event: string, detail?: string) {
 export function useMemberships(applicationCode: string) {
   const user = useAuthStore((state) => state.user);
   const tenantId = useAuthStore((state) => state.tenantId);
+  const authorizationRevision = useAuthStore(
+    (state) => state.authorizationRevision,
+  );
   const membershipStatus = useAuthStore((state) => state.membershipStatus);
   const membershipAuthMode = useAuthStore((state) => state.membershipAuthMode);
   const appRole = useAuthStore((state) => state.appRole);
@@ -40,12 +43,6 @@ export function useMemberships(applicationCode: string) {
   const mode = getMembershipMode();
   const shouldFetch = mode !== "legacy" && Boolean(user && tenantId);
 
-  // Cuando cambia el usuario o el tenant, la caché interna del servicio debe
-  // invalidarse para que el próximo fetch no reutilice datos de otra sesión.
-  useEffect(() => {
-    invalidateMembershipCache();
-  }, [user?.id, tenantId]);
-
   useEffect(() => {
     if (mode === "legacy") {
       logDev("legacy_mode_skip");
@@ -54,7 +51,7 @@ export function useMemberships(applicationCode: string) {
       return;
     }
 
-    if (!user || !tenantId) {
+    if (!user) {
       if (membershipLoaded) {
         logDev("session_cleared");
         clearMembership();
@@ -76,8 +73,13 @@ export function useMemberships(applicationCode: string) {
       applicationCode,
       user?.id ?? "anonymous",
       tenantId ?? "no-tenant",
+      authorizationRevision,
     ],
-    queryFn: () => getMyMembership(applicationCode, user?.id ?? null, tenantId),
+    queryFn: () => {
+      // Invalidar antes de leer evita reutilizar permisos previos durante una renovación.
+      invalidateMembershipCache();
+      return getMyMembership(applicationCode, user?.id ?? null, tenantId);
+    },
     enabled: shouldFetch,
     staleTime: 5 * 60 * 1000,
   });
@@ -129,7 +131,8 @@ export function useMemberships(applicationCode: string) {
     membershipStatus === "active" ||
     (mode === "transition" &&
       legacyFallbackUsed &&
-      membershipStatus !== "inactive");
+      membershipStatus !== "inactive" &&
+      membershipStatus !== "error");
 
   return {
     status: membershipStatus,

@@ -47,7 +47,7 @@ interface TimelineContextValue {
     filePath?: string,
   ) => Promise<void>;
 
-  createManualLog: (input: ManualBitacoraEntryInput) => Promise<void>;
+  createManualLog: (input: ManualBitacoraEntryInput) => Promise<string>;
   isCreatingManualLog: boolean;
   manualLogError: string | null;
   resetManualLogError: () => void;

@@ -19,8 +19,10 @@ export interface ManualBitacoraEntryInput {
   type: BitacoraEntry["tipo"];
   participants: string;
   documentFile?: File | null;
+  documentText?: string;
   documentScope?: DocumentScope;
   actionDate?: string;
+  entryId?: string;
 }
 
 export function buildManualBitacoraEntry(input: {
@@ -30,6 +32,7 @@ export function buildManualBitacoraEntry(input: {
   participants: string;
   documentoAdjunto?: string;
   fecha?: string;
+  entryId?: string;
 }): BitacoraEntry | null {
   const normalizedTitle = input.title.trim();
   const normalizedDescription = input.description.trim();
@@ -45,7 +48,7 @@ export function buildManualBitacoraEntry(input: {
     parsedParticipants.length > 0 ? parsedParticipants : ["No especificados"];
 
   return {
-    id: `b_custom_${crypto.randomUUID()}`,
+    id: `b_custom_${input.entryId ?? crypto.randomUUID()}`,
     fecha: input.fecha || nowIso(),
     tipo: input.type,
     titulo: normalizedTitle,
@@ -68,10 +71,13 @@ export function useBitacoraLog({ causa, onUpdateCausa }: UseBitacoraLogArgs) {
       type,
       participants: participantText,
       documentFile,
+      documentText = "",
       documentScope = "causa",
       actionDate,
-    }: ManualBitacoraEntryInput): Promise<void> => {
-      if (isCreatingManualLog) return;
+      entryId,
+    }: ManualBitacoraEntryInput): Promise<string> => {
+      if (isCreatingManualLog)
+        throw new Error("Ya se está guardando una entrada.");
       setIsCreatingManualLog(true);
       setManualLogError(null);
 
@@ -85,25 +91,41 @@ export function useBitacoraLog({ causa, onUpdateCausa }: UseBitacoraLogArgs) {
           causa.incidenteId,
           scope,
         );
-        const documentoAdjunto = documentFile
-          ? await uploadDocument(ownerId, documentFile, "documentos")
+        const evidenceFile =
+          documentFile ??
+          (documentText.trim()
+            ? new File([documentText], "evidencia-pegada.txt", {
+                type: "text/plain",
+              })
+            : null);
+        const documentoAdjunto = evidenceFile
+          ? await uploadDocument(ownerId, evidenceFile, "documentos")
           : undefined;
         const newEntry = buildManualBitacoraEntry({
           title,
-          description,
+          description:
+            documentFile && documentText.trim()
+              ? `${description}\n\nTexto de evidencia:\n${documentText}`
+              : description,
           type,
           participants: participantText,
           documentoAdjunto,
           fecha: actionDate ? `${actionDate}T12:00:00.000Z` : undefined,
+          entryId,
         });
-        if (!newEntry) return;
+        if (!newEntry)
+          throw new Error("Ingrese el título y la descripción de la entrada.");
         newEntry.compartidoGrupal = scope === "incidente";
 
         onUpdateCausa({
           ...causa,
-          bitacora: [newEntry, ...causa.bitacora],
+          bitacora: [
+            newEntry,
+            ...causa.bitacora.filter((entry) => entry.id !== newEntry.id),
+          ],
           fechaUltimaActualizacion: nowDateOnly(),
         });
+        return JSON.stringify(newEntry);
       } catch (error) {
         const message =
           error instanceof Error

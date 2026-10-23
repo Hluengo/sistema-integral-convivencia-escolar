@@ -1,6 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useEffect, useId, useState, type FormEvent } from "react";
+import { z } from "zod";
 import {
   Dialog,
   DialogContent,
@@ -10,9 +11,16 @@ import {
   DialogTitle,
 } from "./Dialog";
 import Button from "./Button";
+import {
+  clearSessionDraft,
+  readSessionDraft,
+  registerSessionDraftSave,
+  writeSessionDraft,
+} from "../lib/sessionDraft";
 
 interface TextInputDialogProps {
   open: boolean;
+  draftKey: string | null;
   title: string;
   description: string;
   label: string;
@@ -20,11 +28,12 @@ interface TextInputDialogProps {
   confirmLabel: string;
   destructive?: boolean;
   onCancel: () => void;
-  onConfirm: (value: string) => void;
+  onConfirm: (value: string) => void | Promise<string | null | void>;
 }
 
 export default function TextInputDialog({
   open,
+  draftKey,
   title,
   description,
   label,
@@ -34,18 +43,49 @@ export default function TextInputDialog({
   onCancel,
   onConfirm,
 }: TextInputDialogProps) {
-  const [value, setValue] = useState("");
+  const [draft, setDraft] = useState(() =>
+    readSessionDraft(
+      draftKey,
+      { value: "" },
+      z.object({ value: z.string().max(5000) }).partial(),
+    ),
+  );
+  const value = draft.value;
+  const setValue = (nextValue: string) => {
+    const next = { value: nextValue };
+    setDraft(next);
+    writeSessionDraft(draftKey, next);
+  };
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const inputId = useId();
 
   useEffect(() => {
-    if (open) setValue("");
-  }, [open]);
+    if (open) {
+      setDraft(
+        readSessionDraft(
+          draftKey,
+          { value: "" },
+          z.object({ value: z.string().max(5000) }).partial(),
+        ),
+      );
+    }
+  }, [draftKey, open]);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isSubmitting) return;
     const normalizedValue = value.trim();
     if (!normalizedValue) return;
-    onConfirm(normalizedValue);
+    setIsSubmitting(true);
+    try {
+      const result = await onConfirm(normalizedValue);
+      if (typeof result === "string") {
+        registerSessionDraftSave(draftKey, result, JSON.stringify(draft));
+        clearSessionDraft(draftKey, JSON.stringify(draft));
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -77,13 +117,29 @@ export default function TextInputDialog({
           </label>
 
           <DialogFooter>
-            <Button variant="secondary" onClick={onCancel}>
+            <Button
+              variant="ghost"
+              type="button"
+              disabled={isSubmitting}
+              onClick={() => {
+                if (!draftKey || clearSessionDraft(draftKey))
+                  setDraft({ value: "" });
+              }}
+            >
+              Descartar borrador
+            </Button>
+            <Button
+              variant="secondary"
+              type="button"
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
               Cancelar
             </Button>
             <Button
               type="submit"
+              disabled={isSubmitting || !value.trim()}
               variant={destructive ? "danger" : "primary"}
-              disabled={!value.trim()}
             >
               {confirmLabel}
             </Button>

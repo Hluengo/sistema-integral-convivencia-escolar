@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { Suspense, useCallback, useMemo } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useAuthStore } from "../shared/lib/stores/authStore";
 import { useCausasStore } from "../shared/lib/stores/causasStore";
 import { useUIStore } from "../shared/lib/stores/uiStore";
@@ -26,8 +26,26 @@ import { useNewCausaModalController } from "./hooks/useNewCausaModalController";
 import { useRoleGates } from "./hooks/useRoleGates";
 import { useUrlRouting } from "./hooks/useUrlRouting";
 import * as Lazy from "./lazyAppComponents";
+import { queryClient } from "../lib/queryClient";
+import { useToastStore } from "../shared/lib/stores/toastStore";
 
 export default function App() {
+  const userId = useAuthStore((s) => s.user?.id);
+  const tenantId = useAuthStore((s) => s.tenantId);
+  const scope = `${userId ?? "anonymous"}:${tenantId ?? "no-tenant"}`;
+  const [activeScope, setActiveScope] = useState(scope);
+  useEffect(() => {
+    if (scope === activeScope) return;
+    useCausasStore.setState(useCausasStore.getInitialState(), true);
+    useUIStore.setState(useUIStore.getInitialState(), true);
+    queryClient.clear();
+    setActiveScope(scope);
+  }, [activeScope, scope]);
+  if (scope !== activeScope) return <AppLoadingFallback />;
+  return <AppSession key={scope} />;
+}
+
+function AppSession() {
   const user = useAuthStore((s) => s.user);
   const authLoading = useAuthStore((s) => s.authLoading);
   const showLoginModal = useAuthStore((s) => s.showLoginModal);
@@ -37,6 +55,28 @@ export default function App() {
   const tenantId = useAuthStore((s) => s.tenantId);
   const appRole = useAuthStore((s) => s.appRole);
   const profileRole = useAuthStore((s) => s.profileRole);
+  const draftOwnerId = user?.id;
+
+  useEffect(() => {
+    if (!draftOwnerId || !tenantId) return;
+    try {
+      const storage = window.sessionStorage;
+      const hasLegacy = Array.from({ length: storage.length }, (_, index) =>
+        storage.key(index),
+      ).some(
+        (key) => key?.startsWith("draft:") && !key.startsWith("draft:v2:"),
+      );
+      if (hasLegacy)
+        useToastStore
+          .getState()
+          .addToast(
+            "warning",
+            "Hay borradores antiguos sin propietario verificable. No se restaurarán ni eliminarán automáticamente; resguarde el trabajo en su sesión original.",
+          );
+    } catch {
+      // Los formularios informan si no pueden respaldarse al editar.
+    }
+  }, [tenantId, draftOwnerId]);
 
   const membership = useMemberships("convivencia");
   const saveStatus = useCausasStore((s) => s.saveStatus);

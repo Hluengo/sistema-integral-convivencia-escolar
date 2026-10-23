@@ -266,6 +266,20 @@ Independientes:
 
 ---
 
+## 9. Propuestas del runbook de octubre — 23-10-2026
+
+**Estado:** implementación y ensayo local, no aplicación remota. El inventario de julio se conserva como antecedente; no se revalidaron todos sus objetos ni recuentos.
+
+- `20261022120000_reject_unverified_profile_privileges.sql`: nuevas definiciones de `protect_profile_privileges()`, `sync_convivencia_membership_from_profile()` y su trigger. **Compartidos:** requieren coordinación/aprobación de Inasistencias antes de migrar. Sin reactivación automática de membresías revocadas.
+- `20261022130000_authorize_causas_by_convivencia_membership.sql`: `current_convivencia_role()`, políticas del expediente y relaciones, protectores de reapertura/estudiante-tenant y borrado incluyendo avances. **Convivencia:** fuente de autorización aprobada en ADR-0009; no modifica los resolutores compartidos de rol/tenant.
+- `20261022140000_create_incidente_with_causas_atomically.sql`: RPC invoker, `incidente_creation_requests` y ancho del correlativo global. **Convivencia:** migración antes que cliente; si falta RPC, se conserva el borrador sin alta parcial.
+
+Evidencia: `npm run test:db:runbook`, exclusivamente en `runbook_audit_20261022_v3`. Fixtures sin datos personales; autorización con rol autenticado, rollback y carreras reales. Esquema de `postgres` original idéntico a la copia previa. El fixture vacío de `gmail_imports` no certifica el flujo real de Inasistencias.
+
+Faltan ambos consumidores en staging, revisión de grants/propietarios del destino, respaldo/recuperación y aprobación. Estas propuestas no cambian el estado remoto del ledger ni autorizan commit/push/deploy.
+
+---
+
 ## SHA-256 del documento
 
 > _(Calcular con: `certutil -hashfile docs\shared-supabase\04-canonical-object-ledger.md SHA256`)_

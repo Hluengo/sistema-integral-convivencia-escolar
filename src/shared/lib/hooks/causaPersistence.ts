@@ -2,6 +2,15 @@
 
 import type { Causa } from "@/shared/lib/types";
 
+export function serializeCausaCore(causa: Causa): string {
+  const {
+    bitacora: _bitacora,
+    checklistDebidoProceso: _checklist,
+    ...core
+  } = causa;
+  return JSON.stringify(core);
+}
+
 export interface CausaPersistenceChanges {
   causa: boolean;
   bitacora: boolean;

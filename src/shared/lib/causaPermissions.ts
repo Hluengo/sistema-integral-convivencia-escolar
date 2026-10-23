@@ -4,15 +4,12 @@ import type { UserRole } from "./types";
 
 const CAUSA_ADMIN_ROLES = ["admin", "direccion", "superadmin"];
 
-/** Potestad de administración sobre un expediente (perfil o membresía de app). */
+/** El perfil no sustituye una membresía administrativa de Convivencia. */
 function hasCausaAdminRole(
-  profileRole: string | null,
+  _profileRole: string | null,
   appRole: string | null,
 ): boolean {
-  return (
-    CAUSA_ADMIN_ROLES.includes(profileRole ?? "") ||
-    CAUSA_ADMIN_ROLES.includes(appRole ?? "")
-  );
+  return CAUSA_ADMIN_ROLES.includes(appRole ?? "");
 }
 
 /** Sin un rol autorizado, el expediente se presenta en modo de solo lectura. */
@@ -22,11 +19,7 @@ export function resolveCausaUserRole(
 ): UserRole {
   if (hasCausaAdminRole(profileRole, appRole)) return "director_rector";
   if (
-    [profileRole, appRole].some((role) =>
-      // "staff" es el rol operativo de convivencia: las políticas RLS le dan
-      // INSERT/UPDATE sobre causas, aunque no borrar ni reabrir.
-      ["convivencia", "inspectoria", "inspector", "staff"].includes(role ?? ""),
-    )
+    ["convivencia", "inspectoria", "inspector", "staff"].includes(appRole ?? "")
   ) {
     return "convivencia_escolar";
   }

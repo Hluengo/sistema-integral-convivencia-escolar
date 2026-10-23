@@ -83,3 +83,13 @@ export const newCausaFormSchema = z.object({
 });
 
 export type NewCausaFormValues = z.infer<typeof newCausaFormSchema>;
+
+export const newCausaDraftSchema = newCausaFormSchema
+  .extend({
+    selectedCourseId: z.string(),
+    newEstNombre: z.string(),
+    newEstRut: z.string(),
+    newObs: z.string(),
+    newResponsable: z.string(),
+  })
+  .partial();

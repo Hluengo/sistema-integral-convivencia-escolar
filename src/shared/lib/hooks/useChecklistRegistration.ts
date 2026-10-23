@@ -1,5 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { z } from "zod";
 import type {
   Causa,
   ChecklistItem,
@@ -8,10 +9,27 @@ import type {
   UserRole,
 } from "../types";
 import { nowDateOnly, nowIso } from "../../../shared/lib/dateUtils";
+import { useSessionDraftKey } from "./useSessionDraftKey";
+import {
+  readSessionDraft,
+  registerSessionDraftSave,
+  writeSessionDraft,
+} from "../sessionDraft";
+import { useAuthStore } from "../stores/authStore";
 import {
   resolveDocumentOwnerId,
   uploadDocument,
 } from "../../api/services/storage.service";
+
+const checklistRegistrationDraftSchema = z
+  .object({
+    regName: z.string().max(200),
+    regObservations: z.string().max(2000),
+    regText: z.string().max(10000),
+    regActionDate: z.string(),
+    documentScope: z.enum(["causa", "incidente"]),
+  })
+  .partial();
 
 interface UseChecklistRegistrationArgs {
   causa: Causa;
@@ -58,6 +76,56 @@ export function useChecklistRegistration({
     null,
   );
   const [documentScope, setDocumentScope] = useState<DocumentScope>("causa");
+  const registrationDraftKey = useSessionDraftKey(
+    "checklist-registration",
+    registeringItemId ? `${causa.id}:${registeringItemId}` : undefined,
+  );
+  const loadedDraftKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!registrationDraftKey || !registeringItemId) return;
+    const draft = readSessionDraft(
+      registrationDraftKey,
+      {
+        regName,
+        regObservations,
+        regText,
+        regActionDate,
+        documentScope,
+      },
+      checklistRegistrationDraftSchema,
+    );
+    setRegName(draft.regName);
+    setRegObservations(draft.regObservations);
+    setRegText(draft.regText);
+    setRegActionDate(draft.regActionDate);
+    setDocumentScope(draft.documentScope);
+    // El archivo nunca se restaura: debe seleccionarse nuevamente.
+    setRegFile(null);
+    setRegFileName("");
+    loadedDraftKeyRef.current = registrationDraftKey;
+    // Solo hidrata al cambiar de hito; los cambios de campos se persisten en el efecto siguiente.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [registrationDraftKey, registeringItemId]);
+
+  useEffect(() => {
+    if (loadedDraftKeyRef.current === registrationDraftKey) {
+      writeSessionDraft(registrationDraftKey, {
+        regName,
+        regObservations,
+        regText,
+        regActionDate,
+        documentScope,
+      });
+    }
+  }, [
+    documentScope,
+    regActionDate,
+    regName,
+    regObservations,
+    regText,
+    registrationDraftKey,
+  ]);
 
   const getResponsableName = useCallback(() => {
     const r = causa.responsable;
@@ -73,7 +141,8 @@ export function useChecklistRegistration({
       setRegisteringItemId(item.id);
       setRegName(item.registradoPor || getResponsableName());
       setRegObservations(item.observaciones || "");
-      setRegFileName(item.documentoNombre || "");
+      setRegFileName("");
+      setRegFile(null);
       setRegText("");
       setRegActionDate(nowDateOnly());
       const latestMilestone = causa.bitacora
@@ -182,6 +251,23 @@ export function useChecklistRegistration({
           };
         });
 
+        const draftSnapshot = JSON.stringify({
+          regName,
+          regObservations,
+          regText,
+          regActionDate,
+          documentScope,
+        });
+        const tenantId = useAuthStore.getState().tenantId;
+        const userId = useAuthStore.getState().user?.id;
+        if (tenantId && userId && registrationDraftKey) {
+          registerSessionDraftSave(
+            registrationDraftKey,
+            JSON.stringify(newLog),
+            draftSnapshot,
+          );
+        }
+
         onUpdateCausa({
           ...causa,
           checklistDebidoProceso: updatedChecklist,
@@ -218,6 +304,7 @@ export function useChecklistRegistration({
       regActionDate,
       regObservations,
       documentScope,
+      registrationDraftKey,
     ],
   );
 

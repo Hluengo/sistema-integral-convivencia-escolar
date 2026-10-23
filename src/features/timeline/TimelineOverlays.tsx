@@ -47,6 +47,7 @@ export default function TimelineOverlays({
         onCancel={() => onShowConfirmDelete(false)}
       />
       <ForceCloseCausaDialog
+        key={causa.id}
         causa={causa}
         open={showForceClose}
         onOpenChange={onShowForceClose}

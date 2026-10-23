@@ -41,13 +41,39 @@ export function getCitacionEmailDomain(email: string): string {
 
 const MAX_HTML_BYTES = 100_000;
 const DANGEROUS_HTML_RE =
-  /<\s*(script|iframe|object|embed|form)\b|on\w+\s*=|(?:javascript|data:text\/html|vbscript):|srcdoc\s*=/i;
+  /<\s*(script|iframe|object|embed|form|meta|base|link)\b|on\w+\s*=|(?:javascript|data:text\/html|vbscript):|srcdoc\s*=/i;
+const HTML_SPACE_CONTROLS = new RegExp(
+  `[${String.fromCharCode(0)}-${String.fromCharCode(32)}${String.fromCharCode(127)}-${String.fromCharCode(159)}]`,
+  "g",
+);
 
 export function isSafeDocumentoHtml(value: unknown): value is string {
   if (typeof value !== "string") return false;
-  if (value.length === 0 || Buffer.byteLength(value, "utf8") > MAX_HTML_BYTES)
+  if (
+    value.trim().length === 0 ||
+    Buffer.byteLength(value, "utf8") > MAX_HTML_BYTES
+  )
     return false;
-  return !DANGEROUS_HTML_RE.test(value);
+  // Normalizar solo para inspeccionar: nunca se recorta ni modifica el documento enviado.
+  const inspected = value.replace(
+    /&#(?:x([0-9a-f]+)|(\d+));?|&(colon|tab|newline);/gi,
+    (
+      match,
+      hex: string | undefined,
+      decimal: string | undefined,
+      named: string | undefined,
+    ) => {
+      if (named) return named.toLowerCase() === "colon" ? ":" : "";
+      const code = Number.parseInt(hex ?? decimal ?? "", hex ? 16 : 10);
+      return code >= 0 && code <= 0x10ffff ? String.fromCodePoint(code) : match;
+    },
+  );
+  return (
+    !DANGEROUS_HTML_RE.test(inspected) &&
+    !/(?:javascript|data:text\/html|vbscript):/i.test(
+      inspected.replace(HTML_SPACE_CONTROLS, ""),
+    )
+  );
 }
 
 function getAdminClient() {
@@ -176,7 +202,7 @@ router.post(
       );
       const to = optStr(body, "to", 320).trim();
       const subject = optStr(body, "subject", MAX_SUBJECT).trim();
-      const html = optStr(body, "html", MAX_HTML_BYTES).trim();
+      const html = body.html;
       if (!isValidCitacionEmail(to)) {
         res
           .status(400)

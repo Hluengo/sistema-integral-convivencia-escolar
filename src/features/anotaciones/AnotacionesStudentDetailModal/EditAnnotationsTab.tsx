@@ -3,7 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type SetStateAction } from "react";
+import { z } from "zod";
+import { useSessionDraftKey } from "@/shared/lib/hooks/useSessionDraftKey";
+import { readSessionDraft, writeSessionDraft } from "@/shared/lib/sessionDraft";
 import { Check, Pencil, X } from "lucide-react";
 import type { Annotation } from "@/shared/lib/types";
 import { updateAnnotation } from "@/shared/api/services/annotations.service";
@@ -18,6 +21,7 @@ import {
 } from "./annotationDisplay";
 
 interface EditAnnotationsTabProps {
+  studentId: string;
   annotations: Annotation[];
   onSaved: () => void | Promise<void>;
 }
@@ -28,6 +32,21 @@ interface EditForm {
   type: Annotation["type"];
   registeredBy: string;
 }
+
+const editsDraftSchema = z
+  .object({
+    editingId: z.string().nullable(),
+    edits: z.record(
+      z.string(),
+      z.object({
+        text: z.string(),
+        date: z.string(),
+        type: z.enum(["Negativa", "Positiva", "Información"]),
+        registeredBy: z.string(),
+      }),
+    ),
+  })
+  .partial();
 
 const ANNOTATION_TYPES: Annotation["type"][] = [
   "Negativa",
@@ -47,12 +66,37 @@ function createEditForm(annotation: Annotation): EditForm {
 }
 
 export default function EditAnnotationsTab({
+  studentId,
   annotations,
   onSaved,
 }: EditAnnotationsTabProps) {
   const tenantId = useAuthStore((state) => state.tenantId);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<EditForm | null>(null);
+  const draftKey = useSessionDraftKey("edit-annotations", studentId);
+  const [draft, setDraft] = useState(() =>
+    readSessionDraft(
+      draftKey,
+      {
+        editingId: null as string | null,
+        edits: {} as Record<string, EditForm>,
+      },
+      editsDraftSchema,
+    ),
+  );
+  const editingId = draft.editingId;
+  const form = editingId ? (draft.edits[editingId] ?? null) : null;
+  const setForm = (update: SetStateAction<EditForm | null>) => {
+    setDraft((current) => {
+      if (!current.editingId) return current;
+      const previous = current.edits[current.editingId] ?? null;
+      const next = typeof update === "function" ? update(previous) : update;
+      return next
+        ? { ...current, edits: { ...current.edits, [current.editingId]: next } }
+        : current;
+    });
+  };
+  useEffect(() => {
+    writeSessionDraft(draftKey, draft);
+  }, [draft, draftKey]);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -70,15 +114,23 @@ export default function EditAnnotationsTab({
   );
 
   const startEditing = (annotation: Annotation) => {
-    setEditingId(annotation.id);
-    setForm(createEditForm(annotation));
+    setDraft((current) => ({
+      editingId: annotation.id,
+      edits: {
+        ...current.edits,
+        [annotation.id]:
+          current.edits[annotation.id] ?? createEditForm(annotation),
+      },
+    }));
     setError(null);
     setSuccessMessage(null);
   };
 
   const cancelEditing = () => {
-    setEditingId(null);
-    setForm(null);
+    setDraft((current) => {
+      const { [current.editingId ?? ""]: _discarded, ...edits } = current.edits;
+      return { editingId: null, edits };
+    });
     setError(null);
   };
 
@@ -105,8 +157,18 @@ export default function EditAnnotationsTab({
         tenantId!,
       );
       await onSaved();
-      setEditingId(null);
-      setForm(null);
+      setDraft((current) => {
+        if (
+          JSON.stringify(current.edits[annotation.id]) !== JSON.stringify(form)
+        )
+          return current;
+        const { [annotation.id]: _saved, ...edits } = current.edits;
+        return {
+          editingId:
+            current.editingId === annotation.id ? null : current.editingId,
+          edits,
+        };
+      });
       setSuccessMessage("Anotación actualizada correctamente.");
     } catch (saveError: unknown) {
       setError(

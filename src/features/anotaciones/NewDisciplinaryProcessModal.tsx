@@ -43,6 +43,13 @@ import {
 } from "@/shared/ui/Dialog";
 import PdfAnalysisComparison from "./NewDisciplinaryProcessModal/PdfAnalysisComparison";
 import Button from "@/shared/ui/Button";
+import { usePdfReviewDraft } from "./usePdfReviewDraft";
+import {
+  clearSessionDraft,
+  writeSessionDraft,
+} from "@/shared/lib/sessionDraft";
+import { summaryFromAnnotations } from "./AnotacionesStudentDetailModal/hooks/pdfReviewLogic";
+import type { AnalysisResponse, PdfReviewDraft } from "./disciplinaryDraft";
 
 type FlowStep =
   | "upload"
@@ -79,29 +86,6 @@ interface StudentCandidate {
   confidence: number;
 }
 
-interface AnalysisResponse {
-  success: true;
-  analysis_id: string | null;
-  analyzed_at: string;
-  file_id: string | null;
-  selected_student_id: string | null;
-  detected_student_name: string | null;
-  detected_course: string | null;
-  student_candidates: StudentCandidate[];
-  summary: AnnotationSummary;
-  annotations: ReviewAnnotation[];
-  recommended_letter_type: string;
-  warnings: string[];
-  processing_status: string;
-  file_hash: string;
-  duplicate_file: {
-    process_id: string;
-    process_number: string;
-    student_id: string | null;
-    uploaded_at: string;
-  } | null;
-}
-
 interface NewDisciplinaryProcessModalProps {
   students: Student[];
   onClose: () => void;
@@ -127,20 +111,6 @@ const STEP_ORDER: FlowStep[] = [
   "review",
   "success",
 ];
-
-function summaryFromAnnotations(
-  annotations: ReviewAnnotation[],
-): AnnotationSummary {
-  return annotations.reduce(
-    (acc, annotation) => {
-      if (annotation.type === "negative") acc.negativas += 1;
-      if (annotation.type === "positive") acc.positivas += 1;
-      if (annotation.type === "information") acc.informativas += 1;
-      return acc;
-    },
-    { negativas: 0, positivas: 0, informativas: 0 },
-  );
-}
 
 function matchLocalStudent(
   students: Student[],
@@ -190,31 +160,98 @@ export default function NewDisciplinaryProcessModal({
 }: NewDisciplinaryProcessModalProps) {
   const invalidateDashboard = useInvalidateDashboardQueries();
   const tenantId = useAuthStore((state) => state.tenantId);
-  const [step, setStep] = useState<FlowStep>("upload");
-  const [status, setStatus] = useState<ProcessingState>("idle");
-  const [course, setCourse] = useState<string | null>(null);
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [studentCandidates, setStudentCandidates] = useState<Student[]>([]);
+  const { draftKey, draft, fileQuery } = usePdfReviewDraft(
+    "new-disciplinary-process",
+  );
+  const [step, setStep] = useState<FlowStep>(draft.step);
+  const [status, setStatus] = useState<ProcessingState>(
+    draft.analysis ? "review" : "idle",
+  );
+  const [course, setCourse] = useState<string | null>(draft.course);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(
+    () =>
+      students.find((student) => student.id === draft.selectedStudentId) ??
+      null,
+  );
+  const [studentCandidates, setStudentCandidates] = useState<Student[]>(() =>
+    (draft.analysis?.student_candidates ?? []).map((candidate) =>
+      matchLocalStudent(students, candidate),
+    ),
+  );
   const [file, setFile] = useState<File | null>(null);
   const [uploadedFile, setUploadedFile] =
-    useState<UploadedDisciplinaryFile | null>(null);
-  const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
+    useState<UploadedDisciplinaryFile | null>(draft.uploadedFile);
+  const [analysis, setAnalysis] = useState<AnalysisResponse | null>(
+    draft.analysis,
+  );
   const [previousAnalysis, setPreviousAnalysis] =
     useState<DocumentAnalysis | null>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
-  const [summary, setSummary] = useState<AnnotationSummary | null>(null);
-  const [annotations, setAnnotations] = useState<ReviewAnnotation[]>([]);
-  const [suggestedType, setSuggestedType] = useState<string | null>(null);
-  const [classification, setClassification] = useState("");
+  const [summary, setSummary] = useState<AnnotationSummary | null>(
+    draft.analysis ? summaryFromAnnotations(draft.annotations) : null,
+  );
+  const [annotations, setAnnotations] = useState<ReviewAnnotation[]>(
+    draft.annotations,
+  );
+  const [textDraft, setTextDraft] = useState(draft.textDraft);
+  const [suggestedType, setSuggestedType] = useState<string | null>(
+    draft.analysis?.recommended_letter_type ?? null,
+  );
+  const [classification, setClassification] = useState(draft.classification);
   const [createdProcess, setCreatedProcess] = useState<{
     id: string;
     number: string;
   } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const uploadedFileRef = useRef<UploadedDisciplinaryFile | null>(null);
-  const idempotencyKeyRef = useRef<string | null>(null);
-  if (idempotencyKeyRef.current === null)
-    idempotencyKeyRef.current = crypto.randomUUID();
+  const idempotencyKeyRef = useRef(draft.idempotencyKey);
+  const confirmedRef = useRef(false);
+  const confirmingRef = useRef(false);
+  const restoringRef = useRef(Boolean(draft.analysis));
+
+  useEffect(() => () => abortRef.current?.abort(), []);
+  useEffect(() => {
+    if (!restoringRef.current) return;
+    if (fileQuery.isError) {
+      setFile(null);
+      setAnalysisError(
+        fileQuery.error instanceof Error
+          ? fileQuery.error.message
+          : "No fue posible reabrir el PDF privado.",
+      );
+      setStatus("error");
+    } else if (fileQuery.data) {
+      setFile(fileQuery.data);
+      setAnalysisError(null);
+      setStatus("review");
+    }
+  }, [fileQuery.data, fileQuery.error, fileQuery.isError]);
+  const draftValue = useMemo<PdfReviewDraft>(
+    () => ({
+      uploadedFile,
+      analysis,
+      annotations,
+      textDraft,
+      idempotencyKey: idempotencyKeyRef.current,
+      step: step === "success" ? "review" : step,
+      selectedStudentId: selectedStudent?.id ?? null,
+      course,
+      classification,
+    }),
+    [
+      uploadedFile,
+      analysis,
+      annotations,
+      textDraft,
+      step,
+      selectedStudent?.id,
+      course,
+      classification,
+    ],
+  );
+  useEffect(() => {
+    if (!confirmedRef.current && (uploadedFile || analysis || classification))
+      writeSessionDraft(draftKey, draftValue);
+  }, [analysis, classification, draftKey, draftValue, uploadedFile]);
 
   const {
     data: rules = [],
@@ -227,10 +264,6 @@ export default function NewDisciplinaryProcessModal({
     staleTime: 5 * 60 * 1000,
     retry: 1,
   });
-
-  useEffect(() => {
-    uploadedFileRef.current = uploadedFile;
-  }, [uploadedFile]);
 
   const ruleOptions = useMemo(() => {
     if (rules.length === 0) return [];
@@ -256,9 +289,11 @@ export default function NewDisciplinaryProcessModal({
   }, [rules]);
 
   const resetDraftState = () => {
+    restoringRef.current = false;
+    confirmedRef.current = true;
+    clearSessionDraft(draftKey);
     abortRef.current?.abort();
     abortRef.current = null;
-    uploadedFileRef.current = null;
     setStep("upload");
     setStatus("idle");
     setCourse(null);
@@ -271,22 +306,17 @@ export default function NewDisciplinaryProcessModal({
     setAnalysisError(null);
     setSummary(null);
     setAnnotations([]);
+    setTextDraft({ activeSequenceNumber: null, texts: {} });
     setSuggestedType(null);
     setClassification("");
     setCreatedProcess(null);
     idempotencyKeyRef.current = crypto.randomUUID();
   };
 
-  const cleanupUploadedDraft = async () => {
-    const draft = uploadedFileRef.current;
-    if (!draft) return;
-    uploadedFileRef.current = null;
-    setUploadedFile(null);
-    await deleteDisciplinaryFile(draft.storagePath);
-  };
   const availableStudents =
     studentCandidates.length > 0 ? studentCandidates : students;
   const isBusy =
+    fileQuery.isFetching ||
     status === "validating" ||
     status === "uploading" ||
     status === "processing" ||
@@ -322,14 +352,24 @@ export default function NewDisciplinaryProcessModal({
   const openExistingStudent = async () => {
     if (!existingStudentId || !onOpenExistingStudent) return;
     const studentId = existingStudentId;
-    await cleanupUploadedDraft();
-    resetDraftState();
     onClose();
     onOpenExistingStudent(studentId);
   };
 
   const handleAnalyze = async () => {
     if (!file) return;
+    if (analysis && uploadedFile) {
+      setStep(
+        !selectedStudent
+          ? "student_resolution"
+          : duplicateFile || hasExistingStudentRecord
+            ? "duplicate_check"
+            : "classification",
+      );
+      return;
+    }
+    restoringRef.current = false;
+    confirmedRef.current = false;
     const tenantId = useAuthStore.getState().tenantId;
     if (!tenantId) {
       setAnalysisError(
@@ -347,6 +387,7 @@ export default function NewDisciplinaryProcessModal({
     setPreviousAnalysis(null);
     setSummary(null);
     setAnnotations([]);
+    setTextDraft({ activeSequenceNumber: null, texts: {} });
     setSelectedStudent(null);
     setStudentCandidates([]);
 
@@ -360,7 +401,6 @@ export default function NewDisciplinaryProcessModal({
         await deleteDisciplinaryFile(uploaded.storagePath);
         return;
       }
-      uploadedFileRef.current = uploaded;
       setUploadedFile(uploaded);
 
       const {
@@ -393,6 +433,7 @@ export default function NewDisciplinaryProcessModal({
       }
 
       const data = (await response.json()) as AnalysisResponse;
+      if (controller.signal.aborted) return;
       setAnalysis(data);
       setSummary(data.summary);
       setAnnotations(data.annotations || []);
@@ -419,6 +460,7 @@ export default function NewDisciplinaryProcessModal({
       if (selected) {
         setSelectedStudent(selected);
         await loadPreviousAnalysis(selected.id, data.analysis_id);
+        if (controller.signal.aborted) return;
         setCourse(
           selected.course_name ||
             selected.course_id ||
@@ -437,6 +479,7 @@ export default function NewDisciplinaryProcessModal({
         setStatus("student_resolution");
       }
     } catch (error) {
+      if (controller.signal.aborted) return;
       if ((error as Error)?.name === "AbortError") {
         setAnalysisError("Análisis cancelado.");
       } else {
@@ -446,7 +489,7 @@ export default function NewDisciplinaryProcessModal({
       }
       setStatus("error");
     } finally {
-      abortRef.current = null;
+      if (abortRef.current === controller) abortRef.current = null;
     }
   };
 
@@ -470,6 +513,13 @@ export default function NewDisciplinaryProcessModal({
   };
 
   const handleConfirm = async () => {
+    if (
+      confirmedRef.current ||
+      confirmingRef.current ||
+      isBusy ||
+      Object.keys(textDraft.texts).length > 0
+    )
+      return;
     const tenantId = useAuthStore.getState().tenantId;
     if (!tenantId || !uploadedFile || !analysis || !selectedStudent || !file) {
       setAnalysisError("Faltan datos para confirmar el proceso.");
@@ -477,6 +527,7 @@ export default function NewDisciplinaryProcessModal({
     }
 
     try {
+      confirmingRef.current = true;
       setStatus("confirming");
       setAnalysisError(null);
       const {
@@ -519,13 +570,14 @@ export default function NewDisciplinaryProcessModal({
         processId: string;
         processNumber: string;
       };
+      confirmedRef.current = true;
+      clearSessionDraft(draftKey, JSON.stringify(draftValue));
       setCreatedProcess({ id: data.processId, number: data.processNumber });
       await queryClient.invalidateQueries({
         queryKey: ["disciplinary-snapshot", selectedStudent.id],
       });
       setStep("success");
       setStatus("success");
-      uploadedFileRef.current = null;
       await onProcessCreated?.({
         suggestedLetterType: classification || suggestedType || undefined,
         studentId: selectedStudent.id,
@@ -536,12 +588,22 @@ export default function NewDisciplinaryProcessModal({
       await invalidateDashboard();
       onClose();
     } catch (error) {
+      if (confirmedRef.current) {
+        setStatus("success");
+        setStep("success");
+        setAnalysisError(
+          "El proceso fue confirmado, pero no se pudo refrescar la vista. No vuelva a confirmarlo; revise el historial.",
+        );
+        return;
+      }
       setAnalysisError(
         error instanceof Error
           ? error.message
           : "Error al confirmar el proceso.",
       );
       setStatus("error");
+    } finally {
+      confirmingRef.current = false;
     }
   };
 
@@ -576,19 +638,17 @@ export default function NewDisciplinaryProcessModal({
   const goBack = async () => {
     if (isBusy) {
       abortRef.current?.abort();
-      await cleanupUploadedDraft();
-      resetDraftState();
+      setStep("upload");
+      setStatus("idle");
       return;
     }
     if (step === "student_resolution") {
-      await cleanupUploadedDraft();
-      resetDraftState();
+      setStep("upload");
       return;
     }
     if (step === "duplicate_check") {
       if (analysis?.selected_student_id) {
-        await cleanupUploadedDraft();
-        resetDraftState();
+        setStep("upload");
       } else {
         setStep("student_resolution");
       }
@@ -596,8 +656,11 @@ export default function NewDisciplinaryProcessModal({
     }
     if (step === "classification") {
       if (analysis?.selected_student_id) {
-        await cleanupUploadedDraft();
-        resetDraftState();
+        setStep(
+          duplicateFile || hasExistingStudentRecord
+            ? "duplicate_check"
+            : "upload",
+        );
       } else {
         setStep("student_resolution");
       }
@@ -610,16 +673,19 @@ export default function NewDisciplinaryProcessModal({
     if (step === "student_resolution") return !!selectedStudent;
     if (step === "classification") return !!classification;
     if (step === "review")
-      return !!selectedStudent && !!uploadedFile && !!analysis && !isBusy;
+      return (
+        !!selectedStudent &&
+        !!uploadedFile &&
+        !!analysis &&
+        !!file &&
+        !isBusy &&
+        Object.keys(textDraft.texts).length === 0
+      );
     return false;
   };
 
   const closeSafely = async () => {
     if (isBusy) return;
-    if (status !== "success") {
-      await cleanupUploadedDraft();
-      resetDraftState();
-    }
     onClose();
   };
 
@@ -669,6 +735,15 @@ export default function NewDisciplinaryProcessModal({
         </div>
 
         <div className="space-y-4 p-4">
+          {fileQuery.isError && restoringRef.current && (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => void fileQuery.refetch()}
+            >
+              Reintentar archivo guardado
+            </Button>
+          )}
           {step === "upload" && (
             <UploadAnalyzeStep
               file={file}
@@ -676,14 +751,19 @@ export default function NewDisciplinaryProcessModal({
               analysisError={analysisError}
               summary={summary}
               statusLabel={getStatusLabel(status)}
+              hasAnalysis={Boolean(analysis)}
               onFileChange={(nextFile) => {
-                void cleanupUploadedDraft();
+                restoringRef.current = false;
+                confirmedRef.current = false;
+                idempotencyKeyRef.current = crypto.randomUUID();
                 setFile(nextFile);
                 setUploadedFile(null);
                 setAnalysis(null);
                 setPreviousAnalysis(null);
                 setSummary(null);
                 setAnnotations([]);
+                setTextDraft({ activeSequenceNumber: null, texts: {} });
+                setClassification("");
                 setAnalysisError(null);
                 setStatus("idle");
               }}
@@ -839,6 +919,9 @@ export default function NewDisciplinaryProcessModal({
               summary={summary}
               classification={classification}
               fileName={file?.name ?? ""}
+              textDraft={textDraft}
+              onTextDraftChange={setTextDraft}
+              disabled={isBusy}
               annotations={annotations}
               warnings={analysis?.warnings ?? []}
               onAnnotationTypeChange={handleAnnotationTypeChange}
@@ -904,6 +987,18 @@ export default function NewDisciplinaryProcessModal({
                 <ArrowRight className="h-4 w-4" />
               )}
             </Button>
+          </div>
+        )}
+        {step !== "success" && (
+          <div className="px-4 pb-4">
+            <Button variant="ghost" disabled={isBusy} onClick={resetDraftState}>
+              Descartar borrador
+            </Button>
+            <p className="mt-2 text-xs text-neutral-500">
+              El borrador se conserva en esta pestaña al cerrar la vista o
+              recargar. Cerrar la pestaña puede eliminarlo. Descartarlo no borra
+              PDFs remotos.
+            </p>
           </div>
         )}
       </DialogContent>

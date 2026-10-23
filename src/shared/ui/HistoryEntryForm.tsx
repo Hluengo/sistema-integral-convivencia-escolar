@@ -1,8 +1,17 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { z } from "zod";
 import { NotebookPen, Plus, X } from "lucide-react";
 import { nowDateOnly } from "../lib/dateUtils";
+import type { BitacoraEntry, DocumentScope } from "../lib/types";
+import {
+  clearSessionDraft,
+  readSessionDraft,
+  writeSessionDraft,
+  registerSessionDraftSave,
+  SESSION_DRAFT_CLEARED_EVENT,
+} from "../lib/sessionDraft";
 import Button from "./Button";
 
 interface HistoryEntryFormInput {
@@ -10,23 +19,74 @@ interface HistoryEntryFormInput {
   description: string;
   actionDate: string;
   documentText: string;
+  entryId: string;
+  type: BitacoraEntry["tipo"];
+  participants: string;
+  documentScope: DocumentScope;
+}
+
+const historyDraftSchema = z
+  .object({
+    title: z.string().max(120),
+    description: z.string().max(2000),
+    actionDate: z.string(),
+    documentText: z.string(),
+    entryId: z.string().uuid(),
+    type: z.enum([
+      "Entrevista",
+      "Evidencia",
+      "Notificación",
+      "Mediación",
+      "Resolución",
+      "Citación",
+      "Correo",
+      "Descargo",
+      "Otro",
+    ]),
+    participants: z.string(),
+    documentScope: z.enum(["causa", "incidente"]),
+  })
+  .partial();
+
+function emptyDraft(): HistoryEntryFormInput {
+  return {
+    title: "",
+    description: "",
+    actionDate: nowDateOnly(),
+    documentText: "",
+    entryId: crypto.randomUUID(),
+    type: "Entrevista",
+    participants: "",
+    documentScope: "causa",
+  };
 }
 
 interface HistoryEntryFormProps {
   idPrefix: string;
+  draftKey: string | null;
   isSaving: boolean;
   error: string | null;
   helperText: string;
-  onSave: (input: HistoryEntryFormInput) => Promise<unknown>;
+  onSave: (input: HistoryEntryFormInput) => Promise<string | void>;
   onResetError: () => void;
   onClose?: () => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  additionalFields?: ReactNode;
+  additionalFields?: (
+    values: HistoryEntryFormInput,
+    update: (patch: Partial<HistoryEntryFormInput>) => void,
+  ) => ReactNode;
 }
 
-export default function HistoryEntryForm({
+export default function HistoryEntryForm(props: HistoryEntryFormProps) {
+  return (
+    <HistoryEntryFormContent key={props.draftKey ?? "unverified"} {...props} />
+  );
+}
+
+function HistoryEntryFormContent({
   idPrefix,
+  draftKey,
   isSaving,
   error,
   helperText,
@@ -43,29 +103,60 @@ export default function HistoryEntryForm({
     if (open === undefined) setInternalOpen(value);
     onOpenChange?.(value);
   };
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [actionDate, setActionDate] = useState(nowDateOnly());
-  const [documentText, setDocumentText] = useState("");
+  const [values, setValues] = useState(() =>
+    readSessionDraft(draftKey, emptyDraft(), historyDraftSchema),
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const busy = isSaving || isSubmitting;
+  const { title, description, actionDate, documentText } = values;
+  const updateValues = (patch: Partial<HistoryEntryFormInput>) => {
+    const next = { ...values, ...patch };
+    setValues(next);
+    writeSessionDraft(draftKey, next);
+  };
+  useEffect(() => {
+    const onClear = (event: Event) => {
+      const cleared = (
+        event as CustomEvent<{ key: string; expectedRaw?: string }>
+      ).detail;
+      if (cleared.key !== draftKey) return;
+      setValues((current) =>
+        cleared.expectedRaw === undefined ||
+        JSON.stringify(current) === cleared.expectedRaw
+          ? emptyDraft()
+          : current,
+      );
+    };
+    window.addEventListener(SESSION_DRAFT_CLEARED_EVENT, onClear);
+    return () =>
+      window.removeEventListener(SESSION_DRAFT_CLEARED_EVENT, onClear);
+  }, [draftKey]);
 
   const closeForm = () => {
-    if (isSaving) return;
+    if (busy) return;
     setIsOpen(false);
-    setTitle("");
-    setDescription("");
-    setActionDate(nowDateOnly());
-    setDocumentText("");
     onResetError();
     onClose?.();
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (busy) return;
+    const submitted = JSON.stringify(values);
+    writeSessionDraft(draftKey, values);
+    setIsSubmitting(true);
     try {
-      await onSave({ title, description, actionDate, documentText });
-      closeForm();
+      const pendingResult = await onSave(values);
+      if (typeof pendingResult === "string")
+        registerSessionDraftSave(draftKey, pendingResult, submitted);
+      else clearSessionDraft(draftKey, submitted);
+      setIsOpen(false);
+      onResetError();
+      onClose?.();
     } catch {
       // El error tipado de la mutación se muestra debajo del formulario.
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -87,7 +178,7 @@ export default function HistoryEntryForm({
   }
 
   const canSave =
-    title.trim().length >= 3 && description.trim().length >= 3 && !isSaving;
+    title.trim().length >= 3 && description.trim().length >= 3 && !busy;
   const titleId = `${idPrefix}-title`;
   const descriptionId = `${idPrefix}-description`;
 
@@ -109,7 +200,7 @@ export default function HistoryEntryForm({
         <button
           type="button"
           onClick={closeForm}
-          disabled={isSaving}
+          disabled={busy}
           aria-label="Cerrar formulario"
           className="rounded-lg p-1.5 text-neutral-400 hover:bg-white hover:text-neutral-700 disabled:opacity-40"
         >
@@ -132,10 +223,10 @@ export default function HistoryEntryForm({
             id={titleId}
             aria-label="Título de la entrada"
             value={title}
-            onChange={(event) => setTitle(event.target.value)}
+            onChange={(event) => updateValues({ title: event.target.value })}
             maxLength={120}
             required
-            disabled={isSaving}
+            disabled={busy}
             placeholder="Ej.: Entrevista con apoderado"
             className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-neutral-900 text-sm outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
           />
@@ -152,8 +243,10 @@ export default function HistoryEntryForm({
             aria-label="Fecha de la acción"
             type="date"
             value={actionDate}
-            onChange={(event) => setActionDate(event.target.value)}
-            disabled={isSaving}
+            onChange={(event) =>
+              updateValues({ actionDate: event.target.value })
+            }
+            disabled={busy}
             className="mt-1 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-neutral-900 text-sm outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
           />
         </div>
@@ -175,10 +268,12 @@ export default function HistoryEntryForm({
           id={descriptionId}
           aria-label="Descripción"
           value={description}
-          onChange={(event) => setDescription(event.target.value)}
+          onChange={(event) =>
+            updateValues({ description: event.target.value })
+          }
           rows={3}
           required
-          disabled={isSaving}
+          disabled={busy}
           maxLength={2000}
           placeholder="Describe el hecho, acuerdo, entrevista o seguimiento realizado."
           className="w-full resize-y rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-neutral-900 text-sm outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
@@ -186,7 +281,9 @@ export default function HistoryEntryForm({
       </div>
 
       <div className="grid items-start gap-4 md:grid-cols-2">
-        <div className="space-y-3">{additionalFields}</div>
+        <fieldset disabled={busy} className="space-y-3">
+          {additionalFields?.(values, updateValues)}
+        </fieldset>
 
         <label className="space-y-1.5">
           <span className="block font-semibold text-neutral-700 text-sm">
@@ -195,9 +292,11 @@ export default function HistoryEntryForm({
           <textarea
             aria-label="Texto de evidencia adicional"
             value={documentText}
-            onChange={(event) => setDocumentText(event.target.value)}
+            onChange={(event) =>
+              updateValues({ documentText: event.target.value })
+            }
             rows={4}
-            disabled={isSaving}
+            disabled={busy}
             placeholder="Pega aquí el contenido de la evidencia..."
             className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-neutral-900 text-sm outline-none transition placeholder:text-neutral-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
           />
@@ -213,11 +312,27 @@ export default function HistoryEntryForm({
         </p>
       )}
 
-      <div className="flex justify-end gap-2">
-        <Button variant="ghost" onClick={closeForm} disabled={isSaving}>
-          Cancelar
+      <p className="text-neutral-500 text-xs">
+        El texto se respalda solo en esta pestaña. Al cerrar o recargar, los
+        archivos deben seleccionarse nuevamente.
+      </p>
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button
+          variant="ghost"
+          disabled={busy}
+          onClick={() => {
+            if (!draftKey || clearSessionDraft(draftKey)) {
+              setValues(emptyDraft());
+              closeForm();
+            }
+          }}
+        >
+          Descartar borrador
         </Button>
-        <Button type="submit" disabled={!canSave} isLoading={isSaving}>
+        <Button variant="ghost" onClick={closeForm} disabled={busy}>
+          Cerrar y conservar
+        </Button>
+        <Button type="submit" disabled={!canSave} isLoading={busy}>
           Guardar en historial
         </Button>
       </div>

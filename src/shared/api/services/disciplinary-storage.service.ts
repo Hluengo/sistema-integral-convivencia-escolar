@@ -94,3 +94,65 @@ export async function deleteDisciplinaryFile(filePath: string): Promise<void> {
     console.error("Error deleting disciplinary file:", error);
   }
 }
+
+export async function restoreDisciplinaryFile(
+  input: UploadedDisciplinaryFile,
+  tenantId: string,
+  expectedHash: string,
+  analysisId: string | null,
+): Promise<File> {
+  if (
+    !tenantId ||
+    input.bucket !== DISCIPLINARY_BUCKET ||
+    !input.storagePath.startsWith(`${tenantId}/`) ||
+    /[\\%]/.test(input.storagePath) ||
+    input.storagePath
+      .split("/")
+      .some((part) => !part || part === "." || part === "..") ||
+    !/^[a-f0-9]{64}$/i.test(expectedHash) ||
+    !analysisId
+  )
+    throw new Error(
+      "No fue posible reabrir el borrador: revise su colegio, archivo y análisis.",
+    );
+
+  const { data: analysis, error: analysisError } = await supabase
+    .from("document_analyses")
+    .select("id,file_hash,status")
+    .eq("tenant_id", tenantId)
+    .eq("id", analysisId)
+    .maybeSingle();
+  if (analysisError || !analysis || analysis.file_hash !== expectedHash) {
+    throw new Error(
+      "El análisis guardado no coincide con el archivo o ya no está disponible.",
+    );
+  }
+  if (analysis.status === "confirmed") {
+    throw new Error(
+      "Este análisis ya fue confirmado. Revise el historial antes de continuar; su borrador se conservó.",
+    );
+  }
+  const { data: blob, error } = await supabase.storage
+    .from(input.bucket)
+    .download(input.storagePath);
+  if (error || !blob)
+    throw new Error(
+      "No fue posible reabrir el PDF privado. Su revisión se conserva para reintentar.",
+    );
+  if (blob.size > MAX_DISCIPLINARY_PDF_BYTES || blob.size !== input.size) {
+    throw new Error(
+      "El archivo guardado no coincide con el tamaño del PDF original.",
+    );
+  }
+  const bytes = await blob.arrayBuffer();
+  const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+  if (
+    hash !== expectedHash ||
+    new TextDecoder().decode(bytes.slice(0, 5)) !== "%PDF-"
+  ) {
+    throw new Error("El archivo guardado no coincide con el PDF analizado.");
+  }
+  return new File([blob], input.originalName, { type: "application/pdf" });
+}

@@ -38,6 +38,7 @@ import TextInputDialog from "@/shared/ui/TextInputDialog";
 import Button from "@/shared/ui/Button";
 import { DocumentGeneratorSkeleton } from "@/shared/Skeleton";
 import { useAuthStore } from "@/shared/lib/stores/authStore";
+import { useSessionDraftKey } from "@/shared/lib/hooks/useSessionDraftKey";
 import { useInvalidateDashboardQueries } from "@/shared/lib/hooks/useInvalidateDashboardQueries";
 
 const AnotacionesDocumentGenerator = lazy(
@@ -153,6 +154,22 @@ export default function CartasTab({
   const [isAnnulDialogOpen, setIsAnnulDialogOpen] = useState(false);
   const [isArchiveDialogOpen, setIsArchiveDialogOpen] = useState(false);
   const [isInterviewDialogOpen, setIsInterviewDialogOpen] = useState(false);
+  const manualProcessDraftKey = useSessionDraftKey(
+    "carta-manual-process",
+    student.id + ":" + (activeDocType ?? "new"),
+  );
+  const interviewDraftKey = useSessionDraftKey(
+    "carta-interview",
+    activeCarta?.id ?? student.id + ":new",
+  );
+  const annulDraftKey = useSessionDraftKey(
+    "carta-annul",
+    activeCarta?.id ?? student.id + ":new",
+  );
+  const archiveDraftKey = useSessionDraftKey(
+    "carta-archive",
+    activeCarta?.id ?? student.id + ":new",
+  );
 
   const refreshAfterChange = async () => {
     await Promise.all([onRefresh(), invalidateDashboard()]);
@@ -202,7 +219,7 @@ export default function CartasTab({
     action: (carta: CartaDisciplinaria) => Promise<boolean>,
     successText: string,
     requestedDocType: LetterDocType | null = activeDocType,
-  ) => {
+  ): Promise<string | null> => {
     setBusy(true);
     setMessage(null);
     const carta = await ensureCarta(requestedDocType);
@@ -210,7 +227,7 @@ export default function CartasTab({
       setBusy(false);
       setMessageTone("error");
       setMessage("No hay carta requerida para este estudiante.");
-      return;
+      return null;
     }
     const ok = await action(carta);
     if (ok) {
@@ -223,6 +240,7 @@ export default function CartasTab({
       setMessage("No se pudo completar la acción. Inténtelo nuevamente.");
     }
     setBusy(false);
+    return ok ? carta.id + ":" + successText : null;
   };
 
   const handleCreate = async () => {
@@ -267,11 +285,11 @@ export default function CartasTab({
     setPendingManualProcess({ contentSnapshot, selectedDocType });
   };
 
-  const confirmManualProcess = async (note: string) => {
-    if (!pendingManualProcess) return;
+  const confirmManualProcess = async (note: string): Promise<string | null> => {
+    if (!pendingManualProcess) return null;
     const { contentSnapshot, selectedDocType } = pendingManualProcess;
     setPendingManualProcess(null);
-    await runCartaAction(
+    return runCartaAction(
       (carta) =>
         markCartaProcessedManually(carta.id, note, contentSnapshot, actor),
       "Carta marcada como procesada.",
@@ -289,25 +307,25 @@ export default function CartasTab({
     setIsArchiveDialogOpen(true);
   };
 
-  const confirmAnnul = async (reason: string) => {
+  const confirmAnnul = async (reason: string): Promise<string | null> => {
     setIsAnnulDialogOpen(false);
-    await runCartaAction(
+    return runCartaAction(
       (carta) => annulCarta(carta.id, reason, actor),
       "Carta anulada.",
     );
   };
 
-  const confirmArchive = async (note: string) => {
+  const confirmArchive = async (note: string): Promise<string | null> => {
     setIsArchiveDialogOpen(false);
-    await runCartaAction(
+    return runCartaAction(
       (carta) => archiveCarta(carta.id, note, actor),
       "Carta archivada.",
     );
   };
 
-  const confirmInterview = async (note: string) => {
+  const confirmInterview = async (note: string): Promise<string | null> => {
     setIsInterviewDialogOpen(false);
-    await runCartaAction(
+    return runCartaAction(
       (carta) => markCartaInterviewed(carta.id, note, actor),
       "Entrevista realizada.",
     );
@@ -463,6 +481,11 @@ export default function CartasTab({
           <Suspense fallback={<DocumentGeneratorSkeleton />}>
             <AnotacionesDocumentGenerator
               key={`${student.id}:${activeDocType}:${activeCarta?.id ?? "new"}`}
+              draftRecordId={activeCarta?.id ?? "new"}
+              draftEnabled={
+                !activeCarta ||
+                resolveCartaWorkflowStatus(activeCarta) === "pending"
+              }
               student={{
                 id: student.id,
                 full_name: student.full_name,
@@ -491,6 +514,7 @@ export default function CartasTab({
       )}
 
       <TextInputDialog
+        draftKey={manualProcessDraftKey}
         open={pendingManualProcess !== null}
         title="Confirmar procesamiento de carta"
         description="Registre qué se realizó y cuándo. Este texto no cambia el tipo de carta."
@@ -498,10 +522,11 @@ export default function CartasTab({
         placeholder="Ej.: Carta impresa y entregada al apoderado el 28-07-2026."
         confirmLabel="Marcar como procesada"
         onCancel={() => setPendingManualProcess(null)}
-        onConfirm={(note) => void confirmManualProcess(note)}
+        onConfirm={confirmManualProcess}
       />
 
       <TextInputDialog
+        draftKey={interviewDraftKey}
         open={isInterviewDialogOpen}
         title="Registrar entrevista con Convivencia"
         description="Confirme que la Ficha de Derivación fue revisada en entrevista por Convivencia Escolar."
@@ -509,10 +534,11 @@ export default function CartasTab({
         placeholder="Ej.: Entrevista realizada con estudiante y apoderado/a; se acuerda seguimiento."
         confirmLabel="Marcar entrevista realizada"
         onCancel={() => setIsInterviewDialogOpen(false)}
-        onConfirm={(note) => void confirmInterview(note)}
+        onConfirm={confirmInterview}
       />
 
       <TextInputDialog
+        draftKey={annulDraftKey}
         open={isAnnulDialogOpen}
         title="Anular carta"
         description="La carta permanecerá en el historial con estado anulado y no se considerará vigente."
@@ -521,10 +547,11 @@ export default function CartasTab({
         confirmLabel="Anular carta"
         destructive
         onCancel={() => setIsAnnulDialogOpen(false)}
-        onConfirm={(reason) => void confirmAnnul(reason)}
+        onConfirm={confirmAnnul}
       />
 
       <TextInputDialog
+        draftKey={archiveDraftKey}
         open={isArchiveDialogOpen}
         title="Archivar carta"
         description="Confirme que la carta fue impresa, revisada en entrevista con apoderado/a, firmada y archivada en expediente físico."
@@ -532,7 +559,7 @@ export default function CartasTab({
         placeholder="Ej.: Carta firmada por apoderado/a el 03-08-2026 y archivada en hoja de vida."
         confirmLabel="Archivar carta"
         onCancel={() => setIsArchiveDialogOpen(false)}
-        onConfirm={(note) => void confirmArchive(note)}
+        onConfirm={confirmArchive}
       />
     </div>
   );

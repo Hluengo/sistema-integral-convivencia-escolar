@@ -25,6 +25,15 @@ const baseStudent: AnotacionStudent = {
 };
 
 describe("annotationStudentCartaStates", () => {
+  it("no presenta carga o error de consulta como ausencia confirmada de carta", () => {
+    assert.deepEqual(
+      buildCartaStatusLabels(
+        [{ ...baseStudent, annotations_count: 11 }],
+        undefined,
+      ),
+      {},
+    );
+  });
   it("aplica la carta procesada al filtro de etapa efectiva", () => {
     const states: Record<string, StudentCartaTableState> = {
       "student-1": {

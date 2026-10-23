@@ -23,6 +23,7 @@ import {
 import { nowDateOnly } from "@/shared/lib/dateUtils";
 import {
   editCausaFormSchema,
+  editCausaDraftSchema,
   isValidStateTransition,
   type EditCausaFormValues,
 } from "@/shared/lib/schemas/editCausaForm";
@@ -43,10 +44,11 @@ import Input from "@/shared/ui/Input";
 import Select from "@/shared/ui/Select";
 import RiceConductSelect from "../NewCausaForm/RiceConductSelect";
 import {
-  clearSessionDraft,
+  registerSessionDraftSave,
   readSessionDraft,
   writeSessionDraft,
 } from "@/shared/lib/sessionDraft";
+import { serializeCausaCore } from "@/shared/lib/hooks/causaPersistence";
 
 const INFRACCIONES: TipoInfraccion[] = [
   "Leve",
@@ -222,6 +224,7 @@ interface EditCausaModalFormProps {
   causa: Causa;
   /** Potestad de reapertura; la resuelve el contenedor para no cargar la sesión aquí. */
   canReopen: boolean;
+  draftKey?: string | null;
   onSave: (updated: Causa) => void;
   onDelete: (id: string) => void;
   onClose: () => void;
@@ -230,12 +233,12 @@ interface EditCausaModalFormProps {
 export default function EditCausaModalForm({
   causa,
   canReopen,
+  draftKey = null,
   onSave,
   onDelete,
   onClose,
 }: EditCausaModalFormProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const draftKey = `draft:edit-causa:${causa.id}`;
   const causaCerrada = causa.estadoActual === EstadoCausa.CAUSA_CERRADA;
   const estadosDisponibles =
     causaCerrada && !canReopen
@@ -249,7 +252,11 @@ export default function EditCausaModalForm({
     handleSubmit,
     formState: { errors },
   } = useForm<EditCausaFormValues>({
-    defaultValues: readSessionDraft(draftKey, buildDefaultValues(causa)),
+    defaultValues: readSessionDraft(
+      draftKey,
+      buildDefaultValues(causa),
+      editCausaDraftSchema,
+    ),
     mode: "onChange",
     resolver: createEditCausaResolver(causa.estadoActual, canReopen),
   });
@@ -265,8 +272,7 @@ export default function EditCausaModalForm({
   }, [draftKey, watch]);
 
   const submitUpdatedCausa = handleSubmit((values) => {
-    clearSessionDraft(draftKey);
-    onSave({
+    const updated: Causa = {
       ...causa,
       estudianteNombre: values.estudianteNombre,
       nnaProtectedName:
@@ -292,7 +298,9 @@ export default function EditCausaModalForm({
         values.fechaNotificacionSuperintendencia || undefined,
       estudianteTieneNEE: values.estudianteTieneNEE,
       tipoNEE: values.tipoNEE || undefined,
-    });
+    };
+    registerSessionDraftSave(draftKey, serializeCausaCore(updated));
+    onSave(updated);
   });
 
   return (

@@ -411,33 +411,58 @@ test("getStudentCartaWorkflowLabel: flujo por estado y etapa efectiva", () => {
     }),
     "Archivada",
   );
-  // Archivada sin carta completada pero estado archivado.
+  // Una carta inferior archivada no acredita la etapa requerida.
   assert.equal(
     getStudentCartaWorkflowLabel(12, {
       completedLetterType: null,
       currentLetterType: "Amonestación Escrita",
       workflowStatus: "archived",
     }),
-    "Archivada",
+    "Pendiente",
   );
-  // Completed sin carta completada.
+  // Una carta inferior procesada no acredita la etapa requerida.
   assert.equal(
     getStudentCartaWorkflowLabel(12, {
       completedLetterType: null,
       currentLetterType: "Amonestación Escrita",
       workflowStatus: "completed",
     }),
-    "Procesada",
+    "Pendiente",
   );
-  // Sin estados reconocibles → null.
+  // Ausencia confirmada de carta en un tramo que sí la requiere.
   assert.equal(
     getStudentCartaWorkflowLabel(12, {
       completedLetterType: null,
       currentLetterType: null,
       workflowStatus: "none",
     }),
-    null,
+    "Pendiente",
   );
+});
+
+test("la etiqueta corresponde al tramo requerido y no a una carta inferior", () => {
+  for (const count of [4, 5, 9, 10, 14, 15, 28]) {
+    const none = {
+      completedLetterType: null,
+      currentLetterType: null,
+      workflowStatus: "none",
+    } as const;
+    assert.equal(
+      getStudentCartaWorkflowLabel(count, none),
+      count < 5 ? null : "Pendiente",
+    );
+    assert.equal(getStudentCartaWorkflowLabel(count, undefined), null);
+  }
+  for (const workflowStatus of ["completed", "archived"] as const) {
+    assert.equal(
+      getStudentCartaWorkflowLabel(11, {
+        completedLetterType: "Amonestación Escrita",
+        currentLetterType: "Amonestación Escrita",
+        workflowStatus,
+      }),
+      "Pendiente",
+    );
+  }
 });
 
 test("getCartaProcessingBlockReason: derivación requiere 15 anotaciones registradas", () => {

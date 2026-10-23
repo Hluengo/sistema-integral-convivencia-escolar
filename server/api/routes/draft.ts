@@ -6,7 +6,6 @@ import { requireAuth } from "../../middleware/auth.js";
 import {
   isRequestValidationError,
   redactSensitiveForAI,
-  sanitizeForAI,
   sanitize,
 } from "../validators/sanitizers.js";
 import {
@@ -208,7 +207,6 @@ router.post(
       }
       const docType = parsed.data.docType;
       const contextLimits = DRAFT_CONTEXT_LIMITS[docType];
-      const id = parsed.data.id;
       const studentName = parsed.data.studentName;
       const course = parsed.data.course;
       const fatherName = parsed.data.fatherName;
@@ -234,10 +232,7 @@ router.post(
         ),
         ...checklist.flatMap((item) =>
           item && typeof item === "object"
-            ? [
-                (item as Record<string, unknown>).registradoPor,
-                (item as Record<string, unknown>).observaciones,
-              ]
+            ? [(item as Record<string, unknown>).registradoPor]
             : [],
         ),
       ];
@@ -391,14 +386,14 @@ router.post(
 # DOSSIER DEL EXPEDIENTE — DOCUMENTO CITADO
 
 ## Datos generales
-- Código de causa: ${sanitizeForAI(id)}
+- Código de causa: [expediente]
 - Estudiante: ${redactSensitiveForAI(studentName, knownSensitiveValues)}
-- Curso: ${sanitizeForAI(course) || "No registrado"}
+- Curso: ${redactSensitiveForAI(course, knownSensitiveValues) || "No registrado"}
 - Apoderado/a o adulto responsable: ${redactSensitiveForAI(fatherName, knownSensitiveValues) || "No registrado"}
 - Responsable actual: ${redactSensitiveForAI(managerName, knownSensitiveValues) || "No registrado"}
-- Fecha de apertura: ${sanitizeForAI(fechaApertura) || "No registrada"}
-- Estado actual: ${sanitizeForAI(estadoActual) || "No registrado"}
-- Última actualización: ${sanitizeForAI(fechaUltimaActualizacion) || "No registrada"}
+- Fecha de apertura: ${redactSensitiveForAI(fechaApertura, knownSensitiveValues) || "No registrada"}
+- Estado actual: ${redactSensitiveForAI(estadoActual, knownSensitiveValues) || "No registrado"}
+- Última actualización: ${redactSensitiveForAI(fechaUltimaActualizacion, knownSensitiveValues) || "No registrada"}
 - Materia o conducta registrada: ${redactSensitiveForAI(infractionType, knownSensitiveValues) || "No registrada"}
 - Observaciones iniciales: ${redactSensitiveForAI(observations, knownSensitiveValues) || "Sin observaciones registradas"}
 
@@ -416,7 +411,7 @@ ${index + 1}. ${entry.title || "Registro sin título"}
    - Tipo: ${entry.type || "No registrado"}
    - Descripción: ${entry.description || "Sin descripción"}
    - Participantes: ${entry.people.join(", ") || "No registrados"}
-   - Documento asociado: ${entry.document || "No registrado"}`,
+   - Documento asociado: ${entry.document ? "Documento adjunto" : "No registrado"}`,
         )
         .join("\n")
     : "No hay registros de historial disponibles."
@@ -434,7 +429,7 @@ ${
   - Registrado por: ${item.by || "No registrado"}
   - Fecha: ${item.date || "No registrada"}
   - Observaciones: ${item.notes || "Sin observaciones"}
-  - Documento asociado: ${item.document || "No registrado"}`,
+  - Documento asociado: ${item.document || item.documentPath ? "Documento adjunto" : "No registrado"}`,
         )
         .join("\n")
     : "No hay checklist disponible."
@@ -445,8 +440,8 @@ ${
   extractedDocuments.length
     ? extractedDocuments
         .map(
-          (document) => `
-### ${document.name}
+          (document, index) => `
+### Documento asociado ${index + 1}
 ${document.text ? redactSensitiveForAI(document.text, knownSensitiveValues) : `Estado de extracción: ${document.reason}`}`,
         )
         .join("\n")

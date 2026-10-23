@@ -6,6 +6,7 @@ import { CLASSIFICATION_OPTIONS } from "./constants";
 import { formatAnnotationDisplayText } from "../AnotacionesStudentDetailModal/annotationDisplay";
 import type { AnnotationSummary } from "@/shared/lib/types";
 import Button from "@/shared/ui/Button";
+import type { PdfReviewDraft } from "../disciplinaryDraft";
 
 export type {
   ReviewAnnotation,
@@ -22,6 +23,9 @@ interface ReviewStepProps {
   summary: AnnotationSummary | null;
   classification: string;
   fileName: string;
+  textDraft: PdfReviewDraft["textDraft"];
+  onTextDraftChange: (draft: PdfReviewDraft["textDraft"]) => void;
+  disabled?: boolean;
   annotations?: ReviewAnnotation[];
   warnings?: string[];
   onAnnotationTypeChange?: (
@@ -50,15 +54,16 @@ export default function ReviewStep({
   summary,
   classification,
   fileName,
+  textDraft,
+  onTextDraftChange,
+  disabled = false,
   annotations = [],
   warnings = [],
   onAnnotationTypeChange,
   onAnnotationTextChange,
 }: ReviewStepProps) {
-  const [editingSequenceNumber, setEditingSequenceNumber] = useState<
-    number | null
-  >(null);
-  const [draftText, setDraftText] = useState("");
+  const editingSequenceNumber = textDraft.activeSequenceNumber;
+  const draftText = textDraft.texts[String(editingSequenceNumber)] ?? "";
   const [editError, setEditError] = useState<string | null>(null);
   const classLabel = getClassificationLabel(classification);
   const total = summary
@@ -66,14 +71,21 @@ export default function ReviewStep({
     : 0;
 
   const startEditing = (annotation: ReviewAnnotation) => {
-    setEditingSequenceNumber(annotation.sequence_number);
-    setDraftText(annotation.raw_text);
+    onTextDraftChange({
+      activeSequenceNumber: annotation.sequence_number,
+      texts: {
+        ...textDraft.texts,
+        [annotation.sequence_number]:
+          textDraft.texts[annotation.sequence_number] ?? annotation.raw_text,
+      },
+    });
     setEditError(null);
   };
 
   const cancelEditing = () => {
-    setEditingSequenceNumber(null);
-    setDraftText("");
+    const { [String(editingSequenceNumber)]: _discarded, ...texts } =
+      textDraft.texts;
+    onTextDraftChange({ activeSequenceNumber: null, texts });
     setEditError(null);
   };
 
@@ -92,6 +104,12 @@ export default function ReviewStep({
       <p className="font-medium text-neutral-600 text-sm">
         Revisión antes de confirmar
       </p>
+      {Object.keys(textDraft.texts).length > 0 && (
+        <p role="status" className="text-sm text-grave-700">
+          Hay textos en edición. Guárdelos o descártelos antes de confirmar; se
+          respaldan al salir de esta vista.
+        </p>
+      )}
 
       <div className="space-y-2 rounded-xl bg-neutral-50 p-4 text-sm">
         <div className="flex justify-between gap-4">
@@ -159,6 +177,7 @@ export default function ReviewStep({
                   </span>
                   <div className="flex items-center gap-2">
                     <select
+                      disabled={disabled}
                       value={annotation.type}
                       onChange={(event) =>
                         onAnnotationTypeChange?.(
@@ -178,6 +197,7 @@ export default function ReviewStep({
                     {onAnnotationTextChange &&
                       editingSequenceNumber !== annotation.sequence_number && (
                         <button
+                          disabled={disabled}
                           type="button"
                           onClick={() => startEditing(annotation)}
                           className="inline-flex items-center gap-1 rounded-lg border border-neutral-300 bg-white px-2 py-1 font-medium text-neutral-600 text-xs transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
@@ -193,9 +213,16 @@ export default function ReviewStep({
                 {editingSequenceNumber === annotation.sequence_number ? (
                   <div className="space-y-2">
                     <textarea
+                      disabled={disabled}
                       value={draftText}
                       onChange={(event) => {
-                        setDraftText(event.target.value);
+                        onTextDraftChange({
+                          ...textDraft,
+                          texts: {
+                            ...textDraft.texts,
+                            [String(editingSequenceNumber)]: event.target.value,
+                          },
+                        });
                         if (editError) setEditError(null);
                       }}
                       rows={4}
@@ -212,6 +239,7 @@ export default function ReviewStep({
                     )}
                     <div className="flex justify-end gap-2">
                       <Button
+                        disabled={disabled}
                         variant="secondary"
                         size="sm"
                         onClick={cancelEditing}
@@ -221,6 +249,7 @@ export default function ReviewStep({
                         Cancelar
                       </Button>
                       <Button
+                        disabled={disabled}
                         size="sm"
                         onClick={() =>
                           saveEditedText(annotation.sequence_number)

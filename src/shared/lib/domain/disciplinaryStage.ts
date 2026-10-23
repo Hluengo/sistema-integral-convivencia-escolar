@@ -311,10 +311,9 @@ export function getStudentCartaWorkflowLabel(
   }
   if (completedStage && completedStage === effectiveStage.key)
     return "Procesada";
-  if (state.workflowStatus === "pending") return "Pendiente";
-  if (state.workflowStatus === "archived") return "Archivada";
-  if (state.workflowStatus === "completed") return "Procesada";
-  return null;
+  return effectiveStage.key !== "none" || state.workflowStatus === "pending"
+    ? "Pendiente"
+    : null;
 }
 
 export function getCartaProcessingBlockReason(

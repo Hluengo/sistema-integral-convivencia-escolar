@@ -25,6 +25,7 @@ import {
 } from "../../shared/api/services/storage.service";
 import { formatChileDateTime } from "../../shared/lib/dateTime";
 import HistoryEntryForm from "../../shared/ui/HistoryEntryForm";
+import { useSessionDraftKey } from "../../shared/lib/hooks/useSessionDraftKey";
 import { useTimelineContext } from "../../shared/lib/useTimelineContext";
 
 interface BitacoraTabProps {
@@ -110,12 +111,24 @@ const FILTER_OPTIONS: Array<{
   { id: "Resolución", label: "Resoluciones" },
 ];
 
-export default memo(function BitacoraTab({
+export default memo(function BitacoraTab(props: BitacoraTabProps) {
+  const draftKey = useSessionDraftKey("causa-history", props.causa.id);
+  return (
+    <BitacoraTabContent
+      key={draftKey ?? "unverified"}
+      {...props}
+      draftKey={draftKey}
+    />
+  );
+});
+
+const BitacoraTabContent = memo(function BitacoraTabContent({
   causa,
+  draftKey,
   showChronology = true,
   manualFormOpen,
   onManualFormOpenChange,
-}: BitacoraTabProps) {
+}: BitacoraTabProps & { draftKey: string | null }) {
   const {
     currentRole,
     createManualLog: onCreateManualEntry,
@@ -123,13 +136,7 @@ export default memo(function BitacoraTab({
     manualLogError: manualEntryError,
     resetManualLogError: onResetManualEntryError,
   } = useTimelineContext();
-  const [logType, setLogType] = useState<BitacoraEntry["tipo"]>("Entrevista");
-  const [participants, setParticipants] = useState("");
   const [manualFile, setManualFile] = useState<File | null>(null);
-  const [manualFileName, setManualFileName] = useState("");
-  const [documentScope, setDocumentScope] = useState<"causa" | "incidente">(
-    "causa",
-  );
   const [filter, setFilter] = useState<BitacoraEntry["tipo"] | "Todos">(
     "Todos",
   );
@@ -213,35 +220,18 @@ export default memo(function BitacoraTab({
       {currentRole !== "docente" && (
         <HistoryEntryForm
           idPrefix="causa-history"
+          draftKey={draftKey}
           isSaving={isSavingManualEntry}
           error={manualEntryError}
           open={manualFormOpen}
           onOpenChange={onManualFormOpenChange}
           helperText="Registra una comunicación. Quedará en la cronología y puede compartirse con el incidente grupal."
-          onSave={async ({ title, description }) => {
-            await onCreateManualEntry({
-              title,
-              description,
-              type: logType,
-              participants,
-              documentFile: manualFile,
-              documentScope,
-            });
-            setParticipants("");
-            setLogType("Entrevista");
-            setManualFile(null);
-            setManualFileName("");
-            setDocumentScope("causa");
-          }}
+          onSave={(values) =>
+            onCreateManualEntry({ ...values, documentFile: manualFile })
+          }
           onResetError={onResetManualEntryError}
-          onClose={() => {
-            setParticipants("");
-            setLogType("Entrevista");
-            setManualFile(null);
-            setManualFileName("");
-            setDocumentScope("causa");
-          }}
-          additionalFields={
+          onClose={() => setManualFile(null)}
+          additionalFields={(values, updateValues) => (
             <details
               open
               className="rounded-xl border border-neutral-200 bg-white px-3 py-2.5"
@@ -255,9 +245,12 @@ export default memo(function BitacoraTab({
                     Tipo
                   </span>
                   <select
-                    value={logType}
+                    aria-label="Tipo"
+                    value={values.type}
                     onChange={(event) =>
-                      setLogType(event.target.value as BitacoraEntry["tipo"])
+                      updateValues({
+                        type: event.target.value as BitacoraEntry["tipo"],
+                      })
                     }
                     className="min-h-11 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-neutral-900 text-sm outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20"
                   >
@@ -280,8 +273,10 @@ export default memo(function BitacoraTab({
                     aria-label="Participantes"
                     type="text"
                     spellCheck={false}
-                    value={participants}
-                    onChange={(event) => setParticipants(event.target.value)}
+                    value={values.participants}
+                    onChange={(event) =>
+                      updateValues({ participants: event.target.value })
+                    }
                     placeholder="Ej: Apoderado, estudiante, inspector"
                     className="min-h-11 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-neutral-900 text-sm outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20"
                   />
@@ -296,7 +291,7 @@ export default memo(function BitacoraTab({
                       aria-hidden="true"
                     />
                     <span className="truncate">
-                      {manualFileName || DOCUMENT_UPLOAD_PLACEHOLDER}
+                      {manualFile?.name || DOCUMENT_UPLOAD_PLACEHOLDER}
                     </span>
                     <input
                       aria-label="Documento de respaldo"
@@ -306,7 +301,6 @@ export default memo(function BitacoraTab({
                       onChange={(event) => {
                         const file = event.target.files?.[0] ?? null;
                         setManualFile(file);
-                        setManualFileName(file?.name ?? "");
                         onResetManualEntryError();
                       }}
                     />
@@ -321,11 +315,13 @@ export default memo(function BitacoraTab({
                       id="manual-log-share"
                       aria-label="Compartir avance con el incidente grupal"
                       type="checkbox"
-                      checked={documentScope === "incidente"}
+                      checked={values.documentScope === "incidente"}
                       onChange={(event) =>
-                        setDocumentScope(
-                          event.target.checked ? "incidente" : "causa",
-                        )
+                        updateValues({
+                          documentScope: event.target.checked
+                            ? "incidente"
+                            : "causa",
+                        })
                       }
                       className="mt-0.5 h-5 w-5 rounded border-brand-300 text-brand-600 accent-brand-600 focus:ring-2 focus:ring-brand-500/20"
                     />
@@ -337,7 +333,7 @@ export default memo(function BitacoraTab({
                 )}
               </div>
             </details>
-          }
+          )}
         />
       )}
 

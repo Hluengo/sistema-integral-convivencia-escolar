@@ -1,6 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
 import { useReactToPrint } from "react-to-print";
 import { CARTA_PAGE_STYLE } from "@/shared/ui/printStyles";
@@ -16,6 +17,8 @@ import { supabase } from "@/shared/api/lib/supabase";
 import type { Causa } from "@/shared/lib/types";
 import { getCurrentDateStr } from "@/shared/lib/anotacionesUtils";
 import { useAuthStore } from "@/shared/lib/stores/authStore";
+import { useSessionDraftKey } from "@/shared/lib/hooks/useSessionDraftKey";
+import { readSessionDraft, writeSessionDraft } from "@/shared/lib/sessionDraft";
 import { fetchInstitutionDocumentSettings } from "@/shared/api/services/institution.service";
 import Button from "@/shared/ui/Button";
 import LetterPreviewViewport from "@/src/features/anotaciones/docgen/LetterPreviewViewport";
@@ -40,6 +43,7 @@ export interface NotificationFeedback {
 }
 
 interface CausaNotificationGeneratorProps {
+  documentId?: string;
   causa: Causa;
   compact?: boolean;
   privacyMode: boolean;
@@ -54,6 +58,24 @@ interface CausaNotificationGeneratorProps {
 }
 
 const MAX_EMAIL_HTML_BYTES = 100_000;
+const notificationDraftSchema = z
+  .object({
+    apoderadoName: z.string(),
+    apoderadoEmail: z.string(),
+    emittedBy: z.string(),
+    content: z.object({
+      fundamentoProcedimiento: z.string(),
+      hallazgoIncidente: z.string(),
+      evidenciaTestimonios: z.string(),
+      atenuantesAgravantes: z.string(),
+      calificacionFalta: z.string(),
+      medidasEnEvaluacion: z.string(),
+      advertenciaEspecial: z.string(),
+      garantiasDebidoProceso: z.string(),
+      confidencialidad: z.string(),
+    }),
+  })
+  .partial();
 
 /**
  * Editor de la Notificación de Inicio de Indagación (hoja Carta, sin IA).
@@ -64,6 +86,7 @@ const MAX_EMAIL_HTML_BYTES = 100_000;
  * contenido exacto aunque cambien las plantillas base.
  */
 export default function CausaNotificationGenerator({
+  documentId,
   causa,
   compact = false,
   privacyMode,
@@ -76,6 +99,31 @@ export default function CausaNotificationGenerator({
   onSaveApoderadoEmail,
   onAnnul,
 }: CausaNotificationGeneratorProps) {
+  const canEdit = documentStatus === null || documentStatus === "Pendiente";
+  const scopedKey = useSessionDraftKey(
+    "notification",
+    `${causa.id}:${documentId ?? "new"}`,
+  );
+  const draftKey = canEdit ? scopedKey : null;
+  const [draft] = useState(() =>
+    readSessionDraft(
+      draftKey,
+      {
+        apoderadoName: initialSnapshot?.apoderadoName ?? "",
+        apoderadoEmail: causa.apoderadoEmail ?? "",
+        emittedBy:
+          initialSnapshot?.emittedBy || getNotificacionResponsable(causa),
+        content:
+          initialSnapshot && !canEdit
+            ? initialSnapshot.content
+            : buildPrefilledNotificationContent(
+                causa,
+                initialSnapshot?.content,
+              ),
+      },
+      notificationDraftSchema,
+    ),
+  );
   const tenantId = useAuthStore((state) => state.tenantId);
   const institutionQuery = useQuery({
     queryKey: ["institution-settings", tenantId, "notificacion-preview"],
@@ -92,20 +140,19 @@ export default function CausaNotificationGenerator({
     void refetchInstitution();
   }, [refetchInstitution]);
 
-  const [apoderadoName, setApoderadoName] = useState(
-    initialSnapshot?.apoderadoName ?? "",
-  );
-  const [apoderadoEmail, setApoderadoEmail] = useState(
-    causa.apoderadoEmail ?? "",
-  );
-  const [emittedBy, setEmittedBy] = useState(
-    initialSnapshot?.emittedBy || getNotificacionResponsable(causa),
-  );
+  const [apoderadoName, setApoderadoName] = useState(draft.apoderadoName);
+  const [apoderadoEmail, setApoderadoEmail] = useState(draft.apoderadoEmail);
+  const [emittedBy, setEmittedBy] = useState(draft.emittedBy);
   const [isSending, setIsSending] = useState(false);
-  const [content, setContent] = useState<NotificationContent>(() =>
-    buildPrefilledNotificationContent(causa),
-  );
-  const initialAppliedRef = useRef(false);
+  const [content, setContent] = useState<NotificationContent>(draft.content);
+  useEffect(() => {
+    writeSessionDraft(draftKey, {
+      apoderadoName,
+      apoderadoEmail,
+      emittedBy,
+      content,
+    });
+  }, [draftKey, apoderadoName, apoderadoEmail, emittedBy, content]);
 
   useEffect(() => {
     if (!causa.studentId || initialSnapshot?.apoderadoName?.trim()) return;
@@ -125,21 +172,6 @@ export default function CausaNotificationGenerator({
       cancelled = true;
     };
   }, [causa.studentId, initialSnapshot?.apoderadoName]);
-
-  useEffect(() => {
-    if (initialAppliedRef.current) return;
-    if (initialSnapshot) {
-      setContent(
-        documentStatus === "Pendiente"
-          ? buildPrefilledNotificationContent(causa, initialSnapshot.content)
-          : initialSnapshot.content,
-      );
-      setApoderadoName(initialSnapshot.apoderadoName);
-      setEmittedBy(initialSnapshot.emittedBy);
-    }
-    initialAppliedRef.current = true;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const updateContent = useCallback(
     (field: keyof NotificationContent, value: string) => {
@@ -272,7 +304,6 @@ export default function CausaNotificationGenerator({
     onSaveApoderadoEmail,
   ]);
 
-  const canEdit = documentStatus === null || documentStatus === "Pendiente";
   return (
     <div className="space-y-5">
       {printMessage && (

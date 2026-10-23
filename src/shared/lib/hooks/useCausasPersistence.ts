@@ -16,10 +16,12 @@ import { useAuthStore } from "@/shared/lib/stores/authStore";
 import {
   mergePendingCausaSave,
   persistExistingCausa,
+  serializeCausaCore,
   type CausaPersistenceChanges,
   type PendingCausaSave,
 } from "./causaPersistence";
 import { invalidateDashboardQueries } from "./useInvalidateDashboardQueries";
+import { confirmSessionDraftSave, getSessionDraftKey } from "../sessionDraft";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
@@ -72,6 +74,9 @@ export function useCausasPersistence({
 
   const markCausaHydrated = useCallback((hydratedCausa: Causa) => {
     prevCausasMapRef.current.set(hydratedCausa.id, hydratedCausa);
+    const { tenantId, user } = useAuthStore.getState();
+    if (tenantId && user)
+      confirmHistoryDrafts(hydratedCausa, tenantId, user.id);
   }, []);
 
   useEffect(() => {
@@ -101,8 +106,10 @@ export function useCausasPersistence({
     [],
   );
 
-  const runPendingSaves = useCallback(async () => {
-    if (saveRunningRef.current) return;
+  const runPendingSaves = useCallback(async (): Promise<void> => {
+    if (saveRunningRef.current || !isMountedRef.current) return;
+    const { tenantId, user } = useAuthStore.getState();
+    if (!tenantId || !user) return;
     const pendingSaves = new Map(pendingSaveRef.current);
     pendingSaveRef.current.clear();
     if (pendingSaves.size === 0) return;
@@ -110,6 +117,7 @@ export function useCausasPersistence({
     saveRunningRef.current = true;
     inFlightSaveRef.current = pendingSaves;
     setSaveStatus("saving");
+    let succeeded = false;
     try {
       const causasToSave = causasRef.current.filter((causa) =>
         pendingSaves.has(causa.id),
@@ -123,8 +131,7 @@ export function useCausasPersistence({
             pending.previousCausa,
             pending.changes,
             {
-              updateCausa: (c, previous) =>
-                updateCausa(c, useAuthStore.getState().tenantId, previous),
+              updateCausa: (c, previous) => updateCausa(c, tenantId, previous),
               saveBitacora,
               saveChecklist,
             },
@@ -132,7 +139,12 @@ export function useCausasPersistence({
         }),
       );
 
-      if (!isMountedRef.current) return;
+      if (
+        !isMountedRef.current ||
+        useAuthStore.getState().user?.id !== user.id ||
+        useAuthStore.getState().tenantId !== tenantId
+      )
+        return;
       if (results.some((result) => !result)) {
         requeueFailedSaves(pendingSaves);
         inFlightSaveRef.current.clear();
@@ -144,6 +156,13 @@ export function useCausasPersistence({
       inFlightSaveRef.current.clear();
       void invalidateDashboardQueries(queryClient);
       for (const causa of causasToSave) {
+        confirmHistoryDrafts(causa, tenantId, user.id);
+        for (const form of ["edit-causa", "force-close"]) {
+          confirmSessionDraftSave(
+            getSessionDraftKey(form, tenantId, user.id, causa.id),
+            serializeCausaCore(causa),
+          );
+        }
         if (causa.incidenteId) {
           void queryClient.invalidateQueries({
             queryKey: ["incidente", causa.incidenteId],
@@ -158,6 +177,7 @@ export function useCausasPersistence({
         }
       }
       setSaveStatus("saved");
+      succeeded = true;
       saveIdleTimeoutRef.current = setTimeout(() => {
         if (isMountedRef.current) {
           setSaveStatus((previous) =>
@@ -173,6 +193,14 @@ export function useCausasPersistence({
       setSaveStatus("error");
     } finally {
       saveRunningRef.current = false;
+      // El temporizador de una edición nueva pudo vencer mientras esta petición seguía en curso.
+      if (
+        succeeded &&
+        isMountedRef.current &&
+        pendingSaveRef.current.size > 0
+      ) {
+        void runPendingSaves();
+      }
     }
   }, [onPersisted, queryClient, requeueFailedSaves, setSaveStatus]);
 
@@ -231,6 +259,7 @@ export function useCausasPersistence({
     prevCausasMapRef.current = currentMap;
 
     if (pendingSaveRef.current.size === 0) return;
+    setSaveStatus("saving");
 
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     if (saveIdleTimeoutRef.current) clearTimeout(saveIdleTimeoutRef.current);
@@ -263,19 +292,40 @@ export function useCausasPersistence({
   return { markCausasHydrated, markCausaHydrated, hasUnsavedCausaChanges };
 }
 
-function serializeCausaCore(causa: Causa): string {
-  const {
-    bitacora: _bitacora,
-    checklistDebidoProceso: _checklist,
-    ...core
-  } = causa;
-  return JSON.stringify(core);
-}
-
 function createInitialSnapshot(
   causa: Causa,
   previousCausa: Causa | undefined,
 ): Causa {
   if (previousCausa) return previousCausa;
   return { ...causa, bitacora: [], checklistDebidoProceso: [] };
+}
+
+function confirmHistoryDrafts(causa: Causa, tenantId: string, userId: string) {
+  for (const entry of causa.bitacora) {
+    for (const form of ["causa-history", "additional-evidence"]) {
+      confirmSessionDraftSave(
+        getSessionDraftKey(form, tenantId, userId, causa.id),
+        JSON.stringify(entry),
+      );
+    }
+    const milestoneMatch = entry.titulo.match(
+      /^(?:Registro|Rectificación) de Hito: (.+)$/,
+    );
+    if (milestoneMatch) {
+      const item = causa.checklistDebidoProceso.find(
+        (candidate) => candidate.label === milestoneMatch[1],
+      );
+      if (item) {
+        confirmSessionDraftSave(
+          getSessionDraftKey(
+            "checklist-registration",
+            tenantId,
+            userId,
+            causa.id + ":" + item.id,
+          ),
+          JSON.stringify(entry),
+        );
+      }
+    }
+  }
 }

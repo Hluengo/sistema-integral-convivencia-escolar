@@ -218,6 +218,15 @@ export default function RevisionTab({
           </div>
         </div>
       )}
+      {review.canRetryRestore && (
+        <Button
+          variant="secondary"
+          onClick={review.retryRestore}
+          disabled={review.isBusy}
+        >
+          Reintentar archivo guardado
+        </Button>
+      )}
 
       {review.summary && review.comparison && (
         <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
@@ -308,6 +317,9 @@ export default function RevisionTab({
             "none"
           }
           fileName={review.file?.name || ""}
+          textDraft={review.textDraft}
+          onTextDraftChange={review.setTextDraft}
+          disabled={review.isBusy || review.status === "success"}
           annotations={review.annotations}
           warnings={review.analysis.warnings || []}
           onAnnotationTypeChange={(
@@ -323,7 +335,7 @@ export default function RevisionTab({
           {canGoToCarta && review.comparison?.suggestedDocType && (
             <Button
               onClick={() => void handleGoToCarta()}
-              disabled={review.isBusy}
+              disabled={review.isBusy || !review.canConfirm}
               aria-busy={review.isBusy}
               className="rounded-xl px-5 py-2 order-first sm:order-last"
             >
@@ -343,7 +355,7 @@ export default function RevisionTab({
           <button
             type="button"
             onClick={() => void review.confirmReview()}
-            disabled={review.isBusy || !!review.comparison?.conflictMessage}
+            disabled={review.isBusy || !review.canConfirm}
             className="inline-flex items-center justify-center gap-2 rounded-xl border border-brand-200 px-5 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50 disabled:opacity-50"
           >
             <CheckCircle2 className="h-4 w-4" />

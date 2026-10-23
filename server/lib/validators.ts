@@ -85,6 +85,27 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function knownIdentityPattern(value: string): string {
+  const variants: Record<string, string> = {
+    a: "[aáàäâ]",
+    e: "[eéèëê]",
+    i: "[iíìïî]",
+    o: "[oóòöô]",
+    u: "[uúùüû]",
+    n: "[nñ]",
+  };
+  return value
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .split(/[\s_-]+/)
+    .map((part) =>
+      [...part]
+        .map((char) => variants[char.toLowerCase()] ?? escapeRegExp(char))
+        .join(""),
+    )
+    .join("[\\s_-]+");
+}
+
 function uniqueKnownValues(values: readonly unknown[]): string[] {
   return [
     ...new Set(
@@ -100,11 +121,15 @@ export function redactSensitiveForAI(
   text: unknown,
   knownValues: readonly unknown[] = [],
 ): string {
-  let redacted = sanitizeForAI(text);
+  // shortcut: terceros no declarados dependen de heurísticas; exigir revisión estructurada antes de habilitar texto libre sensible.
+  let redacted = sanitizeForAI(text).normalize("NFC");
 
   for (const value of uniqueKnownValues(knownValues)) {
     redacted = redacted.replace(
-      new RegExp(escapeRegExp(value), "gi"),
+      new RegExp(
+        `(?<![\\p{L}\\p{N}])${knownIdentityPattern(value)}(?![\\p{L}\\p{N}])`,
+        "giu",
+      ),
       "[dato personal]",
     );
   }

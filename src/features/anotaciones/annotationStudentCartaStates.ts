@@ -33,6 +33,7 @@ export function buildCartaStatusLabels(
   states: Record<string, StudentCartaTableState> | undefined,
 ): Record<string, string[]> {
   const statuses: Record<string, string[]> = {};
+  if (!states) return statuses;
 
   for (const student of students) {
     const state = states?.[student.id];

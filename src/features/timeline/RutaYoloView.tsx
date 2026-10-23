@@ -28,6 +28,7 @@ import {
   DOCUMENT_UPLOAD_ACCEPT,
   DOCUMENT_UPLOAD_PLACEHOLDER,
 } from "../../shared/api/services/storage.service";
+import { useSessionDraftKey } from "../../shared/lib/hooks/useSessionDraftKey";
 import { useTimelineContext } from "../../shared/lib/useTimelineContext";
 import {
   openDocument,
@@ -90,14 +91,17 @@ export default function RutaYoloView({
   const [isLoadingPdf, setIsLoadingPdf] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isDocumentExpanded, setIsDocumentExpanded] = useState(false);
-  const [additionalEvidenceFile, setAdditionalEvidenceFile] =
-    useState<File | null>(null);
-  const [additionalEvidenceFileName, setAdditionalEvidenceFileName] =
-    useState("");
+  const evidenceDraftKey = useSessionDraftKey("additional-evidence", causa.id);
+  const [evidenceSelection, setEvidenceSelection] = useState<{
+    key: string | null;
+    file: File;
+  } | null>(null);
+  const additionalEvidenceFile =
+    evidenceSelection?.key === evidenceDraftKey
+      ? evidenceSelection?.file
+      : null;
   const {
     currentRole,
-    documentScope,
-    setDocumentScope,
     registeringItemId,
     setRegisteringItemId,
     regName,
@@ -627,6 +631,7 @@ export default function RutaYoloView({
                       currentRole !== "docente" && (
                         <HistoryEntryForm
                           idPrefix="additional-evidence"
+                          draftKey={evidenceDraftKey}
                           isSaving={isCreatingManualLog}
                           error={manualLogError}
                           helperText="Agrega otra evidencia sin reemplazar la ya registrada. Cada registro quedará en el historial."
@@ -635,31 +640,30 @@ export default function RutaYoloView({
                             description,
                             actionDate,
                             documentText,
+                            entryId,
+                            documentScope,
                           }) => {
-                            const pastedEvidence = documentText.trim()
-                              ? new File(
-                                  [documentText],
-                                  "evidencia-pegada.txt",
-                                  {
-                                    type: "text/plain",
-                                  },
-                                )
-                              : null;
-                            await createManualLog({
+                            return createManualLog({
+                              entryId,
                               title,
                               description,
                               type: "Evidencia",
                               participants: "Equipo de Convivencia Escolar",
-                              documentFile:
-                                additionalEvidenceFile ?? pastedEvidence,
+                              documentFile: additionalEvidenceFile,
+                              documentText,
                               documentScope,
                               actionDate,
                             });
-                            setAdditionalEvidenceFile(null);
-                            setAdditionalEvidenceFileName("");
                           }}
                           onResetError={resetManualLogError}
-                          additionalFields={
+                          onClose={() =>
+                            setEvidenceSelection((current) =>
+                              current?.key === evidenceDraftKey
+                                ? null
+                                : current,
+                            )
+                          }
+                          additionalFields={(values, updateValues) => (
                             <>
                               <label className="space-y-1.5">
                                 <span className="block font-semibold text-neutral-700 text-sm">
@@ -671,7 +675,7 @@ export default function RutaYoloView({
                                     aria-hidden="true"
                                   />
                                   <span className="truncate">
-                                    {additionalEvidenceFileName ||
+                                    {additionalEvidenceFile?.name ||
                                       DOCUMENT_UPLOAD_PLACEHOLDER}
                                   </span>
                                   <input
@@ -682,9 +686,10 @@ export default function RutaYoloView({
                                     onChange={(event) => {
                                       const file =
                                         event.target.files?.[0] ?? null;
-                                      setAdditionalEvidenceFile(file);
-                                      setAdditionalEvidenceFileName(
-                                        file?.name ?? "",
+                                      setEvidenceSelection(
+                                        file
+                                          ? { key: evidenceDraftKey, file }
+                                          : null,
                                       );
                                       resetManualLogError();
                                     }}
@@ -696,13 +701,15 @@ export default function RutaYoloView({
                                   <input
                                     aria-label="Compartir evidencia adicional con el incidente grupal"
                                     type="checkbox"
-                                    checked={documentScope === "incidente"}
+                                    checked={
+                                      values.documentScope === "incidente"
+                                    }
                                     onChange={(event) =>
-                                      setDocumentScope(
-                                        event.target.checked
+                                      updateValues({
+                                        documentScope: event.target.checked
                                           ? "incidente"
                                           : "causa",
-                                      )
+                                      })
                                     }
                                     className="mt-0.5 h-5 w-5 rounded border-brand-300 text-brand-600 accent-brand-600 focus:ring-2 focus:ring-brand-500/20"
                                   />
@@ -713,7 +720,7 @@ export default function RutaYoloView({
                                 </label>
                               )}
                             </>
-                          }
+                          )}
                         />
                       )}
 

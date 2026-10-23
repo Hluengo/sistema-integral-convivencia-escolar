@@ -2534,6 +2534,15 @@ export type Database = {
         Returns: undefined;
       };
       next_causa_correlativo: { Args: { p_year: number }; Returns: string };
+      create_incidente_with_causas: {
+        Args: {
+          p_request_id: string;
+          p_request: Json;
+          p_defaults: Json;
+          p_initial_checklist: Json;
+        };
+        Returns: Json;
+      };
       register_physical_carta: {
         Args: {
           p_emission_date?: string;

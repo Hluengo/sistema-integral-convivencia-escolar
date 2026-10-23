@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/shared/api/lib/supabase";
 import { useAuthStore } from "@/shared/lib/stores/authStore";
 import { useInvalidateDashboardQueries } from "@/shared/lib/hooks/useInvalidateDashboardQueries";
@@ -22,6 +22,12 @@ import {
   type ConfirmationResponse,
   type ReviewComparison,
 } from "./pdfReviewLogic";
+import { usePdfReviewDraft } from "../../usePdfReviewDraft";
+import {
+  clearSessionDraft,
+  writeSessionDraft,
+} from "@/shared/lib/sessionDraft";
+import type { PdfReviewDraft } from "../../disciplinaryDraft";
 
 interface StudentPdfReviewParams {
   studentId: string;
@@ -38,12 +44,23 @@ export function useStudentPdfDisciplinaryReview({
   currentLetterType,
   onConfirmed,
 }: StudentPdfReviewParams) {
+  const { draftKey, draft, fileQuery } = usePdfReviewDraft(
+    "student-pdf-review",
+    studentId,
+  );
   const [file, setFile] = useState<File | null>(null);
   const [uploadedFile, setUploadedFile] =
-    useState<UploadedDisciplinaryFile | null>(null);
-  const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
-  const [annotations, setAnnotations] = useState<ReviewAnnotation[]>([]);
-  const [summary, setSummary] = useState<AnnotationSummary | null>(null);
+    useState<UploadedDisciplinaryFile | null>(draft.uploadedFile);
+  const [analysis, setAnalysis] = useState<AnalysisResponse | null>(
+    draft.analysis,
+  );
+  const [annotations, setAnnotations] = useState<ReviewAnnotation[]>(
+    draft.annotations,
+  );
+  const [textDraft, setTextDraft] = useState(draft.textDraft);
+  const [summary, setSummary] = useState<AnnotationSummary | null>(
+    draft.analysis ? summaryFromAnnotations(draft.annotations) : null,
+  );
   const [status, setStatus] = useState<
     | "idle"
     | "uploading"
@@ -52,35 +69,85 @@ export function useStudentPdfDisciplinaryReview({
     | "confirming"
     | "success"
     | "error"
-  >("idle");
+  >(draft.analysis ? "ready" : "idle");
   const [statusMessage, setStatusMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const invalidateDashboard = useInvalidateDashboardQueries();
-  const idempotencyKeyRef = useRef<string | null>(null);
-  if (idempotencyKeyRef.current === null)
-    idempotencyKeyRef.current = crypto.randomUUID();
+  const idempotencyKeyRef = useRef(draft.idempotencyKey);
+  const confirmedRef = useRef(false);
+  const confirmingRef = useRef(false);
+  const restoringRef = useRef(Boolean(draft.analysis));
   const abortRef = useRef<AbortController | null>(null);
   const analysisRunRef = useRef(0);
 
+  useEffect(
+    () => () => {
+      analysisRunRef.current += 1;
+      abortRef.current?.abort();
+    },
+    [],
+  );
+  useEffect(() => {
+    if (!restoringRef.current) return;
+    if (fileQuery.isError) {
+      setFile(null);
+      setErrorMessage(
+        fileQuery.error instanceof Error
+          ? fileQuery.error.message
+          : "No fue posible reabrir el PDF privado.",
+      );
+      setStatus("error");
+    } else if (fileQuery.data) {
+      setFile(fileQuery.data);
+      setErrorMessage(null);
+      setStatus("ready");
+      setStatusMessage(
+        "Borrador recuperado y PDF revalidado. Revise antes de confirmar.",
+      );
+    }
+  }, [fileQuery.data, fileQuery.error, fileQuery.isError]);
+
+  const draftValue = useMemo<PdfReviewDraft>(
+    () => ({
+      ...draft,
+      uploadedFile,
+      analysis,
+      annotations,
+      textDraft,
+      selectedStudentId: studentId,
+      step: analysis ? "review" : "upload",
+      idempotencyKey: idempotencyKeyRef.current,
+    }),
+    [draft, uploadedFile, analysis, annotations, textDraft, studentId],
+  );
+  useEffect(() => {
+    if (!confirmedRef.current && (uploadedFile || analysis))
+      writeSessionDraft(draftKey, draftValue);
+  }, [analysis, draftKey, draftValue, uploadedFile]);
+
   const cleanupDraft = useCallback(async () => {
     abortRef.current?.abort();
-    if (uploadedFile?.storagePath)
-      await deleteDisciplinaryFile(uploadedFile.storagePath);
+    // Cambiar de vista o descartar texto no autoriza borrar un PDF que pudo quedar confirmado.
     setUploadedFile(null);
-  }, [uploadedFile]);
+  }, []);
 
   const reset = useCallback(async () => {
+    restoringRef.current = false;
+    confirmedRef.current = true;
+    analysisRunRef.current += 1;
+    clearSessionDraft(draftKey);
     await cleanupDraft();
     setFile(null);
     setAnalysis(null);
     setAnnotations([]);
+    setTextDraft({ activeSequenceNumber: null, texts: {} });
     setSummary(null);
     setStatus("idle");
     setStatusMessage("");
     setErrorMessage(null);
     idempotencyKeyRef.current = crypto.randomUUID();
-  }, [cleanupDraft]);
+  }, [cleanupDraft, draftKey]);
 
   const comparison = useMemo<ReviewComparison | null>(
     () =>
@@ -115,6 +182,10 @@ export function useStudentPdfDisciplinaryReview({
         return;
       }
 
+      restoringRef.current = false;
+      confirmedRef.current = false;
+      idempotencyKeyRef.current = crypto.randomUUID();
+
       await cleanupDraft();
       if (analysisRunRef.current !== runId) return;
       const controller = new AbortController();
@@ -122,6 +193,7 @@ export function useStudentPdfDisciplinaryReview({
       setFile(nextFile);
       setAnalysis(null);
       setAnnotations([]);
+      setTextDraft({ activeSequenceNumber: null, texts: {} });
       setSummary(null);
       setErrorMessage(null);
       setStatus("uploading");
@@ -224,6 +296,12 @@ export function useStudentPdfDisciplinaryReview({
   );
 
   const confirmReview = useCallback(async () => {
+    if (
+      confirmedRef.current ||
+      confirmingRef.current ||
+      Object.keys(textDraft.texts).length > 0
+    )
+      return false;
     const tenantId = useAuthStore.getState().tenantId;
     if (!tenantId || !uploadedFile || !analysis || !file || !summary) {
       setErrorMessage("Faltan datos para confirmar la actualización.");
@@ -237,6 +315,7 @@ export function useStudentPdfDisciplinaryReview({
     }
 
     try {
+      confirmingRef.current = true;
       setStatus("confirming");
       setStatusMessage("Confirmando actualización en Supabase...");
       setErrorMessage(null);
@@ -283,6 +362,8 @@ export function useStudentPdfDisciplinaryReview({
       const inserted = confirmation.insertedAnnotations;
       const insertedTotal =
         inserted.negativas + inserted.positivas + inserted.informativas;
+      confirmedRef.current = true;
+      clearSessionDraft(draftKey, JSON.stringify(draftValue));
       setStatus("success");
       setStatusMessage(
         insertedTotal === 0
@@ -290,9 +371,17 @@ export function useStudentPdfDisciplinaryReview({
           : `Actualización confirmada. Se agregaron ${insertedTotal} anotación${insertedTotal === 1 ? "" : "es"} nueva${insertedTotal === 1 ? "" : "s"}.`,
       );
       setUploadedFile(null);
+      setFile(null);
       await Promise.all([onConfirmed?.(), invalidateDashboard()]);
       return true;
     } catch (error) {
+      if (confirmedRef.current) {
+        setStatus("success");
+        setErrorMessage(
+          "La actualización fue confirmada, pero no se pudo refrescar la vista. No vuelva a confirmarla; recargue el historial.",
+        );
+        return true;
+      }
       setErrorMessage(
         error instanceof Error
           ? error.message
@@ -301,6 +390,8 @@ export function useStudentPdfDisciplinaryReview({
       setStatus("error");
       setStatusMessage("Error al confirmar.");
       return false;
+    } finally {
+      confirmingRef.current = false;
     }
   }, [
     analysis,
@@ -312,6 +403,9 @@ export function useStudentPdfDisciplinaryReview({
     studentId,
     summary,
     uploadedFile,
+    draftKey,
+    draftValue,
+    textDraft,
   ]);
 
   const handleDrop = useCallback(
@@ -338,6 +432,8 @@ export function useStudentPdfDisciplinaryReview({
     file,
     analysis,
     annotations,
+    textDraft,
+    setTextDraft,
     summary,
     comparison,
     status,
@@ -345,6 +441,7 @@ export function useStudentPdfDisciplinaryReview({
     errorMessage,
     isDragging,
     isBusy:
+      fileQuery.isFetching ||
       status === "uploading" ||
       status === "processing" ||
       status === "confirming",
@@ -356,5 +453,17 @@ export function useStudentPdfDisciplinaryReview({
     handleAnnotationTextChange,
     confirmReview,
     reset,
+    canConfirm: Boolean(
+      file &&
+      uploadedFile &&
+      analysis &&
+      !confirmedRef.current &&
+      Object.keys(textDraft.texts).length === 0 &&
+      !comparison?.conflictMessage,
+    ),
+    canRetryRestore: restoringRef.current && fileQuery.isError,
+    retryRestore: () => {
+      if (restoringRef.current) void fileQuery.refetch();
+    },
   };
 }

@@ -4,6 +4,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import { z } from "zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Save,
@@ -17,6 +18,13 @@ import {
 import { TextBlockSkeleton } from "../../shared/Skeleton";
 import Button from "../../shared/ui/Button";
 import { useAuthStore } from "../../shared/lib/stores/authStore";
+import { useSessionDraftKey } from "../../shared/lib/hooks/useSessionDraftKey";
+import {
+  clearSessionDraft,
+  getSessionDraftKey,
+  readSessionDraft,
+  writeSessionDraft,
+} from "../../shared/lib/sessionDraft";
 import {
   fetchAdminDocumentTemplates,
   type DocumentTemplate,
@@ -37,6 +45,7 @@ const DOC_TYPE_LABELS: Record<string, string> = {
 export default function TemplateEditor() {
   const tenantId = useAuthStore((state) => state.tenantId);
   const profileRole = useAuthStore((state) => state.profileRole);
+  const userId = useAuthStore((state) => state.user?.id);
   const queryClient = useQueryClient();
   const [templates, setTemplates] = useState<DocumentTemplate[]>([]);
   const [saving, setSaving] = useState<string | null>(null);
@@ -46,6 +55,10 @@ export default function TemplateEditor() {
   const [editPrompt, setEditPrompt] = useState("");
   const saveSuccessTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const selectedIdRef = useRef<string | null>(null);
+  const draftKey = useSessionDraftKey(
+    "document-template",
+    selectedId ?? undefined,
+  );
 
   const templatesQuery = useQuery({
     queryKey: ["document-templates", tenantId],
@@ -70,9 +83,20 @@ export default function TemplateEditor() {
       ) ?? activeTemplates[0];
     selectedIdRef.current = selected?.id ?? null;
     setSelectedId(selected?.id ?? null);
-    setEditPrompt(selected?.system_prompt ?? "");
+    setEditPrompt(
+      readSessionDraft(
+        getSessionDraftKey(
+          "document-template",
+          tenantId,
+          userId,
+          selected?.id ?? "new",
+        ),
+        { value: selected?.system_prompt ?? "" },
+        z.object({ value: z.string().max(100000) }).partial(),
+      ).value,
+    );
     return () => clearTimeout(saveSuccessTimer.current);
-  }, [templatesQuery.data]);
+  }, [templatesQuery.data, tenantId, userId]);
 
   const loading = templatesQuery.isLoading;
   const loadError =
@@ -83,7 +107,13 @@ export default function TemplateEditor() {
   const handleSelect = (tpl: DocumentTemplate) => {
     selectedIdRef.current = tpl.id;
     setSelectedId(tpl.id);
-    setEditPrompt(tpl.system_prompt);
+    setEditPrompt(
+      readSessionDraft(
+        getSessionDraftKey("document-template", tenantId, userId, tpl.id),
+        { value: tpl.system_prompt },
+        z.object({ value: z.string().max(100000) }).partial(),
+      ).value,
+    );
     setSaveSuccess(null);
     setSaveError(null);
   };
@@ -95,12 +125,14 @@ export default function TemplateEditor() {
     setSaving(selectedId);
     setSaveSuccess(null);
     setSaveError(null);
+    const draftRaw = JSON.stringify({ value: editPrompt });
 
     try {
       await updateDocumentTemplate({
         id: selectedId,
         systemPrompt: editPrompt,
       });
+      clearSessionDraft(draftKey, draftRaw);
       setSaveSuccess(selectedId);
       queryClient.setQueryData<DocumentTemplate[]>(
         ["document-templates", tenantId],
@@ -308,7 +340,11 @@ export default function TemplateEditor() {
               </div>
               <textarea
                 value={editPrompt}
-                onChange={(e) => setEditPrompt(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setEditPrompt(value);
+                  writeSessionDraft(draftKey, { value });
+                }}
                 className="min-h-[330px] w-full flex-1 resize-none bg-white p-4 font-mono text-11px text-neutral-800 leading-relaxed focus:outline-none focus:ring-2 focus:ring-brand-200"
                 spellCheck={false}
                 aria-label="Contenido del prompt"

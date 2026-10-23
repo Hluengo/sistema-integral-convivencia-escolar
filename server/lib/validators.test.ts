@@ -97,3 +97,12 @@ test("redactSensitiveForAI oculta nombres escritos en relato libre", () => {
   assert.match(result, /\[nombre\]/);
   assert.match(result, /relató el incidente/);
 });
+
+test("redactSensitiveForAI reconoce identidades conocidas sin tildes y con separadores de archivo", () => {
+  const result = redactSensitiveForAI(
+    "camila valdes relató el incidente. Acta_camila-valdes.pdf",
+    ["Camila Valdés"],
+  );
+  assert.doesNotMatch(result, /camila|valdes/i);
+  assert.match(result, /relató el incidente/);
+});

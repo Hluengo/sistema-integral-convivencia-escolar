@@ -88,7 +88,7 @@ router.post(
           client
             .from("bitacora_entries")
             .select(
-              "fecha,tipo,titulo,descripcion,documento_adjunto,created_at",
+              "fecha,tipo,titulo,descripcion,participantes,documento_adjunto,created_at",
             )
             .eq("causa_id", causaId)
             .eq("tenant_id", tenantId)
@@ -132,9 +132,12 @@ router.post(
       const observations = String(causa.observaciones ?? "").slice(0, 5000);
       const knownSensitiveValues = [
         causaId,
-        infractionType,
         studentResult.data?.full_name,
         studentResult.data?.rut,
+        ...(historyResult.data ?? []).flatMap((entry) =>
+          Array.isArray(entry.participantes) ? entry.participantes : [],
+        ),
+        ...(checklistResult.data ?? []).map((item) => item.registrado_por),
       ];
 
       const safeChecklist = (checklistResult.data ?? [])
@@ -163,10 +166,7 @@ router.post(
             item.observaciones,
             knownSensitiveValues,
           ).slice(0, 1500),
-          documentName: redactSensitiveForAI(
-            item.documento_nombre,
-            knownSensitiveValues,
-          ).slice(0, 250),
+          documentName: item.documento_nombre ? "Documento adjunto" : "",
         }));
 
       const safeHistory = [...(historyResult.data ?? [])]
@@ -188,10 +188,7 @@ router.post(
             entry.descripcion,
             knownSensitiveValues,
           ).slice(0, 2_000),
-          document: redactSensitiveForAI(
-            entry.documento_adjunto,
-            knownSensitiveValues,
-          ).slice(0, 250),
+          document: entry.documento_adjunto ? "Documento adjunto" : "",
         }));
 
       const safeProgress = [...(progressResult.data ?? [])]
@@ -211,10 +208,7 @@ router.post(
             knownSensitiveValues,
           ).slice(0, 80),
           occurredAt: entry.occurred_at ?? null,
-          documentName: redactSensitiveForAI(
-            entry.document_name,
-            knownSensitiveValues,
-          ).slice(0, 250),
+          documentName: entry.document_name ? "Documento adjunto" : "",
           invalidated: Boolean(entry.invalidated_at),
         }));
 

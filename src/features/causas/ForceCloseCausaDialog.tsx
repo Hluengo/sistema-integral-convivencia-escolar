@@ -4,6 +4,7 @@
  */
 
 import { useEffect, useState, type FormEvent } from "react";
+import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, FileUp, LockKeyhole } from "lucide-react";
 import type { Causa } from "../../shared/lib/types";
@@ -30,10 +31,16 @@ import { fetchReconsideraciones } from "../../shared/api/services/reconsideracio
 import { fetchSeguimiento } from "../../shared/api/services/seguimiento.service";
 import { auditarExpediente } from "../../shared/lib/auditoria";
 import {
-  clearSessionDraft,
+  registerSessionDraftSave,
   readSessionDraft,
   writeSessionDraft,
 } from "../../shared/lib/sessionDraft";
+import { useSessionDraftKey } from "../../shared/lib/hooks/useSessionDraftKey";
+import { serializeCausaCore } from "../../shared/lib/hooks/causaPersistence";
+
+const forceCloseDraftSchema = z
+  .object({ responsable: z.string(), titulo: z.string(), motivo: z.string() })
+  .partial();
 
 interface ForceCloseCausaDialogProps {
   causa: Causa;
@@ -48,24 +55,31 @@ export default function ForceCloseCausaDialog({
   onOpenChange,
   onConfirm,
 }: ForceCloseCausaDialogProps) {
-  const draftKey = `draft:force-close:${causa.id}`;
-  const draft = readSessionDraft(draftKey, {
-    responsable: causa.responsable.split(" (")[0].trim(),
-    titulo: "Cierre anticipado fundado",
-    motivo: "",
-    ackRisk: false,
-  });
+  const draftKey = useSessionDraftKey("force-close", causa.id);
+  const draft = readSessionDraft(
+    draftKey,
+    {
+      responsable: causa.responsable.split(" (")[0].trim(),
+      titulo: "Cierre anticipado fundado",
+      motivo: "",
+    },
+    forceCloseDraftSchema,
+  );
   const [responsable, setResponsable] = useState(draft.responsable);
   const [titulo, setTitulo] = useState(draft.titulo);
   const [motivo, setMotivo] = useState(draft.motivo);
   const [informe, setInforme] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [ackRisk, setAckRisk] = useState(draft.ackRisk);
+  const [ackRisk, setAckRisk] = useState(false);
 
   useEffect(() => {
-    writeSessionDraft(draftKey, { responsable, titulo, motivo, ackRisk });
-  }, [ackRisk, draftKey, motivo, responsable, titulo]);
+    writeSessionDraft(draftKey, { responsable, titulo, motivo });
+  }, [draftKey, motivo, responsable, titulo]);
+
+  useEffect(() => {
+    if (!open) setAckRisk(false);
+  }, [open]);
 
   const hechosQuery = useQuery({
     queryKey: ["hechos", causa.id, "forceClose"],
@@ -129,15 +143,14 @@ export default function ForceCloseCausaDialog({
       const documentoAdjunto = informe
         ? await uploadDocument(causa.id, informe, "documentos")
         : undefined;
-      onConfirm(
-        buildForceClosedCausa(causa, {
-          responsable,
-          titulo,
-          motivo,
-          documentoAdjunto,
-        }),
-      );
-      clearSessionDraft(draftKey);
+      const updated = buildForceClosedCausa(causa, {
+        responsable,
+        titulo,
+        motivo,
+        documentoAdjunto,
+      });
+      registerSessionDraftSave(draftKey, serializeCausaCore(updated));
+      onConfirm(updated);
       onOpenChange(false);
     } catch (cause) {
       setError(

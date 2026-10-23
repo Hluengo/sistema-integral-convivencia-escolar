@@ -50,6 +50,8 @@ function getSnapshotString(
 }
 
 interface AnotacionesDocumentGeneratorProps {
+  draftRecordId?: string;
+  draftEnabled?: boolean;
   student: {
     id: string;
     full_name: string;
@@ -78,6 +80,8 @@ interface AnotacionesDocumentGeneratorProps {
 }
 
 export default function AnotacionesDocumentGenerator({
+  draftRecordId,
+  draftEnabled = true,
   student,
   annotations,
   privacyMode: _privacyMode,
@@ -97,12 +101,22 @@ export default function AnotacionesDocumentGenerator({
   const negativeCount = providedNegativeCount ?? negativeAnnotations.length;
   const semaphoric = getSemaphoricStyle(negativeCount);
 
-  const documentState = useDocumentState();
-  const selectedAnnotations = useSelectedAnnotations(annotations);
+  const documentRecordId = `${student.id}:${initialDocType ?? "automatic"}:${draftRecordId ?? sourceProcessId ?? "new"}`;
+  const documentState = useDocumentState(documentRecordId, draftEnabled);
+  const selectedAnnotations = useSelectedAnnotations(
+    annotations,
+    documentRecordId,
+    draftEnabled,
+  );
   const previewRef = useRef<HTMLDivElement>(null);
   const { docType, setDocType } = documentState;
 
   useEffect(() => {
+    if (documentState.hasRestoredDraft) {
+      initialSnapshotApplied.current = true;
+      initialDocTypeApplied.current = true;
+      return;
+    }
     if (!initialContentSnapshot || initialSnapshotApplied.current) return;
     const snapshotDocType = getSnapshotString(
       initialContentSnapshot,
@@ -142,6 +156,7 @@ export default function AnotacionesDocumentGenerator({
   ]);
 
   useEffect(() => {
+    if (documentState.hasRestoredDraft) return;
     if (!initialContentSnapshot && !initialSnapshotApplied.current) {
       documentState.setApoderadoName(student.apoderado_nombre || "");
       initialSnapshotApplied.current = true;
@@ -149,6 +164,7 @@ export default function AnotacionesDocumentGenerator({
   }, [documentState, initialContentSnapshot, student.apoderado_nombre]);
 
   useEffect(() => {
+    if (documentState.hasRestoredDraft) return;
     if (initialDocType && !initialDocTypeApplied.current) {
       const nextDocType = initialDocType as DocType;
       setDocType(nextDocType);
@@ -169,11 +185,6 @@ export default function AnotacionesDocumentGenerator({
       documentState.loadDefaultLetterContent("amonestacion");
     }
   }, [documentState, negativeCount, docType, setDocType, hasInitialDocType]);
-
-  useEffect(() => {
-    selectedAnnotations.selectAllNegative();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const [exportError, setExportError] = useState<string | null>(null);
   const [printMessage, setPrintMessage] = useState<string | null>(null);

@@ -8,19 +8,11 @@ import { useCoursesQuery } from "../../shared/lib/hooks/useCoursesQuery";
 import { useStudentsQuery } from "../../shared/lib/hooks/useStudentsQuery";
 import NewCausaModalBoundary from "../components/NewCausaModalBoundary";
 import NewIncidenteModalBoundary from "../components/NewIncidenteModalBoundary";
-import { createIncidente } from "../../shared/api/services/incidentes.service";
-import type { CreateIncidenteInput } from "../../shared/api/services/incidentes.service";
-import type { TipoInfraccion } from "../../shared/lib/types";
+import { createIncidenteWithCausas } from "../../shared/api/services/incidentes.service";
+import type { CreateGroupIncidenteInput } from "../../shared/lib/schemas/groupIncidente";
+import { invalidateDashboardQueries } from "../../shared/lib/hooks/useInvalidateDashboardQueries";
 import { useAuthStore } from "../../shared/lib/stores/authStore";
 import { useToastStore } from "../../shared/lib/stores/toastStore";
-
-type CreateIncidentFormInput = CreateIncidenteInput & {
-  studentIds: string[];
-  conductaRiceId: string;
-  tipoInfraccion: TipoInfraccion;
-  comprometeAulaSegura: boolean;
-  tipo: string;
-};
 
 interface UseNewCausaModalControllerArgs {
   requireAuth: () => boolean;
@@ -136,69 +128,36 @@ export function useNewCausaModalController({
   );
 
   const handleCreateIncident = useCallback(
-    async ({
-      lugar,
-      tipo,
-      descripcion,
-      responsable,
-      studentIds,
-      conductaRiceId,
-      tipoInfraccion,
-      comprometeAulaSegura,
-    }: CreateIncidentFormInput) => {
-      const tenantId = useAuthStore.getState().tenantId;
-      const incident = await createIncidente(
-        { lugar, tipo, descripcion, responsable },
-        tenantId,
-      );
-      if (!incident) {
-        throw new Error("No fue posible crear el incidente grupal.");
-      }
-
-      let created = 0;
-      for (const studentId of studentIds) {
-        const student = groupStudents.find(
-          (candidate) => candidate.id === studentId,
-        );
-        if (!student) continue;
-        const result = await handleCreateCausaAction({
-          incidenteId: incident.id,
-          studentId: student.id,
-          newEstNombre: student.full_name,
-          newEstRut: student.rut,
-          newEstCurso:
-            courses.find((course) => course.id === groupCourseId)?.name ?? "",
-          newInfTipo: tipoInfraccion,
-          conductaRiceId,
-          newAulaSegura: comprometeAulaSegura,
-          newObs: descripcion,
-          newResponsable: responsable,
-        });
-        if (result) created += 1;
-      }
-
-      if (created === 0) {
+    async (input: CreateGroupIncidenteInput) => {
+      const { tenantId, user } = useAuthStore.getState();
+      const result = await createIncidenteWithCausas(input, tenantId);
+      if (
+        useAuthStore.getState().tenantId !== tenantId ||
+        useAuthStore.getState().user?.id !== user?.id
+      ) {
         throw new Error(
-          "El incidente se creó, pero no se pudo crear ningún expediente.",
+          "La sesión cambió durante el alta. Revise el historial del colegio original antes de reintentar.",
         );
       }
+      useCausasStore.getState().setSelectedCausaId(result.causaIds[0]);
       useToastStore
         .getState()
         .addToast(
-          created === studentIds.length ? "success" : "warning",
-          `Incidente grupal creado con ${created} de ${studentIds.length} expedientes.`,
+          "success",
+          `Incidente grupal confirmado con sus ${result.causaIds.length} expedientes.`,
         );
       closeGroupForm();
       onCreated();
+      void invalidateDashboardQueries().catch(() =>
+        useToastStore
+          .getState()
+          .addToast(
+            "warning",
+            "El grupo quedó confirmado, pero no se pudo refrescar el listado. Recargue la vista; no cree otro incidente.",
+          ),
+      );
     },
-    [
-      closeGroupForm,
-      courses,
-      groupCourseId,
-      groupStudents,
-      handleCreateCausaAction,
-      onCreated,
-    ],
+    [closeGroupForm, onCreated],
   );
 
   const modal = showCreateForm ? (

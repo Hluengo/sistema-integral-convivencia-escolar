@@ -7,6 +7,7 @@ import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { ensureRuntimeConfig } from "../config/runtime.js";
+import { configureJsonBody } from "../middleware/jsonBody.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -51,7 +52,7 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
-app.use(express.json({ limit: "100kb" }));
+configureJsonBody(app);
 
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true });

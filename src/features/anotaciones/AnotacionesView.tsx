@@ -200,6 +200,23 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
       )}
 
       {/* Student Table - full width */}
+      {cartaStatesQuery.isError ? (
+        <p role="alert" className="text-sm text-gravisima-700">
+          No fue posible verificar las cartas. Su estado no se considera
+          pendiente hasta reintentar la consulta.
+          <button
+            type="button"
+            className="ml-2 underline"
+            onClick={() => void cartaStatesQuery.refetch()}
+          >
+            Reintentar
+          </button>
+        </p>
+      ) : cartaStatesQuery.isPending ? (
+        <p role="status" className="text-sm text-neutral-600">
+          Verificando estado de cartas…
+        </p>
+      ) : null}
       <AnotacionesStudentTable
         students={students}
         privacyMode={privacyMode}

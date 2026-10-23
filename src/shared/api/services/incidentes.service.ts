@@ -3,17 +3,30 @@
 import { supabase } from "../lib/supabase";
 import type { Causa, Incidente } from "../../lib/types";
 import { normalizeDocumentPath } from "./storage.service";
+import { z } from "zod";
+import { createDraftCausa } from "../../../lib/causaFactory";
+import {
+  groupIncidenteSchema,
+  type CreateGroupIncidenteInput,
+} from "../../lib/schemas/groupIncidente";
 
 const INCIDENTE_COLUMNS =
   "id,tenant_id,fecha_hora,lugar,tipo,descripcion,responsable,created_at,updated_at";
 
-export interface CreateIncidenteInput {
-  fechaHora?: string;
-  lugar: string;
-  tipo?: string;
-  descripcion: string;
-  responsable: string;
-}
+const createdGroupSchema = z.object({
+  incidente: z.object({
+    id: z.uuid(),
+    tenant_id: z.uuid(),
+    fecha_hora: z.string(),
+    lugar: z.string(),
+    tipo: z.string(),
+    descripcion: z.string(),
+    responsable: z.string(),
+    created_at: z.string(),
+    updated_at: z.string(),
+  }),
+  causaIds: z.array(z.string().min(1)),
+});
 
 export interface IncidenteCausaSummary {
   id: string;
@@ -51,28 +64,70 @@ function mapIncidente(row: Record<string, unknown>): Incidente {
   };
 }
 
-export async function createIncidente(
-  input: CreateIncidenteInput,
+export async function createIncidenteWithCausas(
+  input: CreateGroupIncidenteInput,
   tenantId: string | null,
-): Promise<Incidente | null> {
-  if (!tenantId) return null;
-  const { data, error } = await supabase
-    .from("incidentes")
-    .insert({
-      tenant_id: tenantId,
-      fecha_hora: input.fechaHora || new Date().toISOString(),
-      lugar: input.lugar.trim(),
-      tipo: input.tipo?.trim() || "No informado",
-      descripcion: input.descripcion.trim(),
-      responsable: input.responsable.trim(),
-    })
-    .select(INCIDENTE_COLUMNS)
-    .single();
-  if (error || !data) {
-    console.error("Error creating incidente:", error);
-    return null;
+): Promise<{ incidente: Incidente; causaIds: string[] }> {
+  if (!tenantId) throw new Error("No se pudo resolver el colegio activo.");
+  const parsed = groupIncidenteSchema.safeParse(input);
+  if (!parsed.success) throw new Error(parsed.error.issues[0].message);
+  const { requestId, ...request } = parsed.data;
+  const draft = createDraftCausa({
+    counter: 1,
+    estudianteNombre: "",
+    estudianteCurso: "",
+    runEstudiante: "",
+    tipoInfraccion: request.tipoInfraccion,
+    comprometeAulaSegura: request.comprometeAulaSegura,
+    observaciones: request.descripcion,
+    responsable: request.responsable,
+  });
+  const { data, error } = await supabase.rpc("create_incidente_with_causas", {
+    p_request_id: requestId,
+    p_request: request,
+    p_defaults: {
+      fechaApertura: draft.fechaApertura,
+      fechaInicioInvestigacion: draft.fechaInicioInvestigacion,
+      plazoInvestigacionDias: draft.plazoInvestigacionDias,
+      fechaLimiteInvestigacion: draft.fechaLimiteInvestigacion,
+    },
+    p_initial_checklist: draft.checklistDebidoProceso.map((item) => ({
+      id: item.id,
+      label: item.label,
+      descripcion: item.descripcion,
+      completado: false,
+      requeridoPor: item.requeridoPor,
+    })),
+  });
+  if (error) {
+    if (error.code === "PGRST202" || error.code === "42883")
+      throw new Error(
+        "El alta grupal atómica todavía no está habilitada. Su borrador se conserva; no se intentará un alta parcial.",
+      );
+    if (error.code === "42501")
+      throw new Error(
+        "No tiene permiso para crear expedientes de Convivencia en este colegio.",
+      );
+    if (error.code === "22023") throw new Error(error.message);
+    throw new Error(
+      "No fue posible confirmar el incidente y todos sus expedientes. Su borrador y la solicitud se conservan para reintentar sin duplicarlos.",
+    );
   }
-  return mapIncidente(data as Record<string, unknown>);
+  const result = createdGroupSchema.safeParse(data);
+  if (
+    !result.success ||
+    result.data.incidente.tenant_id !== tenantId ||
+    result.data.causaIds.length !== request.studentIds.length ||
+    new Set(result.data.causaIds).size !== request.studentIds.length
+  ) {
+    throw new Error(
+      "No fue posible comprobar la confirmación completa del grupo. Revise el historial o reintente con la misma solicitud.",
+    );
+  }
+  return {
+    incidente: mapIncidente(result.data.incidente),
+    causaIds: result.data.causaIds,
+  };
 }
 
 export async function fetchIncidente(

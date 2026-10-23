@@ -30,16 +30,14 @@ describe("resolveCausaUserRole", () => {
     }
   });
 
-  it("conserva las facultades de los roles administrativos y de convivencia", () => {
+  it("autoriza por la membresía de Convivencia y no por un perfil más privilegiado", () => {
     for (const role of ["superadmin", "admin", "direccion"]) {
-      assert.equal(resolveCausaUserRole(role, "teacher"), "director_rector");
+      assert.equal(resolveCausaUserRole(role, "teacher"), "docente");
+      assert.equal(resolveCausaUserRole(role, null), "docente");
       assert.equal(resolveCausaUserRole("teacher", role), "director_rector");
     }
     for (const role of ["convivencia", "inspectoria", "inspector", "staff"]) {
-      assert.equal(
-        resolveCausaUserRole(role, "teacher"),
-        "convivencia_escolar",
-      );
+      assert.equal(resolveCausaUserRole(role, "teacher"), "docente");
       assert.equal(
         resolveCausaUserRole("teacher", role),
         "convivencia_escolar",
@@ -56,8 +54,9 @@ describe("resolveCausaUserRole", () => {
 });
 
 describe("canDeleteCausaForRoles", () => {
-  it("permite eliminar a superadmin desde cualquiera de sus fuentes de rol", () => {
-    assert.equal(canDeleteCausaForRoles("superadmin", null), true);
+  it("permite eliminar solo con membresía administrativa activa", () => {
+    assert.equal(canDeleteCausaForRoles("superadmin", null), false);
+    assert.equal(canDeleteCausaForRoles("superadmin", "teacher"), false);
     assert.equal(canDeleteCausaForRoles(null, "superadmin"), true);
   });
 
@@ -69,7 +68,7 @@ describe("canDeleteCausaForRoles", () => {
 
 describe("canReopenCausaForRoles", () => {
   it("solo habilita la reapertura a roles administrativos", () => {
-    assert.equal(canReopenCausaForRoles("direccion", null), true);
+    assert.equal(canReopenCausaForRoles("direccion", null), false);
     assert.equal(canReopenCausaForRoles(null, "admin"), true);
     assert.equal(canReopenCausaForRoles("convivencia", null), false);
   });

@@ -16,10 +16,12 @@ function devCspHmrPlugin(): Plugin {
     name: "dev-csp-hmr",
     apply: "serve",
     transformIndexHtml(html) {
-      return html.replace(
-        "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.posthog.com https://*.ingest.us.sentry.io",
-        "connect-src 'self' ws://localhost:3002 ws://localhost:3001 https://*.supabase.co wss://*.supabase.co https://*.posthog.com https://*.ingest.us.sentry.io",
-      );
+      return html
+        .replace("script-src 'self'", "script-src 'self' 'unsafe-inline'")
+        .replace(
+          "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.posthog.com https://*.ingest.us.sentry.io",
+          "connect-src 'self' ws://localhost:3002 ws://localhost:3001 https://*.supabase.co wss://*.supabase.co https://*.posthog.com https://*.ingest.us.sentry.io",
+        );
     },
   };
 }

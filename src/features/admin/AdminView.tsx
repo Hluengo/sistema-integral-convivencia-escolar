@@ -1,6 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BarChart3,
@@ -24,6 +25,12 @@ import PageHeader from "../../shared/ui/PageHeader";
 import Select from "../../shared/ui/Select";
 import SummaryCard from "../../shared/ui/SummaryCard";
 import { useAuthStore } from "../../shared/lib/stores/authStore";
+import { useSessionDraftKey } from "../../shared/lib/hooks/useSessionDraftKey";
+import {
+  clearSessionDraft,
+  readSessionDraft,
+  writeSessionDraft,
+} from "../../shared/lib/sessionDraft";
 import { useCoursesQuery } from "../../shared/lib/hooks/useCoursesQuery";
 import {
   ADMIN_ROLES,
@@ -98,6 +105,38 @@ export default function AdminView() {
   const [importResult, setImportResult] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const tenantId = useAuthStore((state) => state.tenantId);
+  const inviteDraftKey = useSessionDraftKey("admin-invite");
+  const importDraftKey = useSessionDraftKey("admin-import");
+  useEffect(() => {
+    const inviteDraft = readSessionDraft(
+      inviteDraftKey,
+      { email: "", role: "convivencia" as AdminRole },
+      z
+        .object({
+          email: z.string().max(320),
+          role: z.enum([
+            "admin",
+            "direccion",
+            "convivencia",
+            "inspectoria",
+            "profesor_jefe",
+            "teacher",
+            "inspector",
+            "user",
+            "staff",
+          ]),
+        })
+        .partial(),
+    );
+    const importDraft = readSessionDraft(
+      importDraftKey,
+      { importLevel: "BASICA" as "BASICA" | "MEDIA" },
+      z.object({ importLevel: z.enum(["BASICA", "MEDIA"]) }).partial(),
+    );
+    setEmail(inviteDraft.email);
+    setRole(inviteDraft.role as AdminRole);
+    setImportLevel(importDraft.importLevel);
+  }, [importDraftKey, inviteDraftKey]);
   const membersQuery = useQuery({
     queryKey: ["admin", "members", tenantId],
     queryFn: fetchAdminMembers,
@@ -119,6 +158,7 @@ export default function AdminView() {
   const inviteMutation = useMutation({
     mutationFn: () => inviteAdminMember(email, role),
     onSuccess: () => {
+      clearSessionDraft(inviteDraftKey);
       setEmail("");
       setOperationError(null);
       invalidate();
@@ -177,6 +217,7 @@ export default function AdminView() {
             : ""),
       );
       setImportFile(null);
+      clearSessionDraft(importDraftKey);
       void queryClient.invalidateQueries({ queryKey: ["courses", tenantId] });
     },
     onError: (error: unknown) =>
@@ -340,7 +381,13 @@ export default function AdminView() {
                 type="email"
                 required
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  writeSessionDraft(inviteDraftKey, {
+                    email: event.target.value,
+                    role,
+                  });
+                }}
                 placeholder="persona@establecimiento.cl"
               />
               <label className="sr-only" htmlFor="member-role">
@@ -349,7 +396,14 @@ export default function AdminView() {
               <Select
                 id="member-role"
                 value={role}
-                onChange={(event) => setRole(event.target.value as AdminRole)}
+                onChange={(event) => {
+                  const nextRole = event.target.value as AdminRole;
+                  setRole(nextRole);
+                  writeSessionDraft(inviteDraftKey, {
+                    email,
+                    role: nextRole,
+                  });
+                }}
               >
                 {ADMIN_ROLES.map((item) => (
                   <option key={item} value={item}>
@@ -550,9 +604,13 @@ export default function AdminView() {
               <Select
                 aria-label="Nivel por defecto"
                 value={importLevel}
-                onChange={(event) =>
-                  setImportLevel(event.target.value as "BASICA" | "MEDIA")
-                }
+                onChange={(event) => {
+                  const nextLevel = event.target.value as "BASICA" | "MEDIA";
+                  setImportLevel(nextLevel);
+                  writeSessionDraft(importDraftKey, {
+                    importLevel: nextLevel,
+                  });
+                }}
               >
                 <option value="BASICA">Básica</option>
                 <option value="MEDIA">Media</option>

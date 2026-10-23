@@ -9,6 +9,7 @@ import { useAuthStore } from "@/shared/lib/stores/authStore";
 import { canReopenCausaForRoles } from "@/shared/lib/causaPermissions";
 import { Dialog, DialogContent } from "../../../shared/ui/Dialog";
 import EditCausaModalForm from "../EditCausaModal/EditCausaModalForm";
+import { useSessionDraftKey } from "@/shared/lib/hooks/useSessionDraftKey";
 
 interface EditCausaModalProps {
   causa: Causa;
@@ -26,6 +27,7 @@ export default function EditCausaModal({
   const [open, setOpen] = useState(true);
   const profileRole = useAuthStore((s) => s.profileRole);
   const appRole = useAuthStore((s) => s.appRole);
+  const draftKey = useSessionDraftKey("edit-causa", causa.id);
 
   const handleClose = () => {
     setOpen(false);
@@ -52,7 +54,9 @@ export default function EditCausaModal({
         className="max-h-[calc(100vh-1rem)] overflow-y-auto p-0 sm:max-h-[90vh]"
       >
         <EditCausaModalForm
+          key={draftKey ?? causa.id}
           causa={causa}
+          draftKey={draftKey}
           canReopen={canReopenCausaForRoles(profileRole, appRole)}
           onSave={handleSave}
           onDelete={handleDelete}

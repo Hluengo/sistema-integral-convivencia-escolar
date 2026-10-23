@@ -76,3 +76,18 @@ export const editCausaFormSchema = z.object({
 });
 
 export type EditCausaFormValues = z.infer<typeof editCausaFormSchema>;
+
+export const editCausaDraftSchema = editCausaFormSchema
+  .extend({
+    estudianteNombre: z.string(),
+    runEstudiante: z.string(),
+    responsable: z.string(),
+    fechaInicioInvestigacion: z.string(),
+    fechaInicioSuspension: z.string(),
+    fechaNotificacionSuperintendencia: z.string(),
+    duracionSuspensionDias: z
+      .number()
+      .nullable()
+      .transform((value) => value ?? 0),
+  })
+  .partial();

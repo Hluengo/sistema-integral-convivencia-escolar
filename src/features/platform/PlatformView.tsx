@@ -1,6 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useEffect, useMemo, useState } from "react";
+import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Building2,
@@ -14,6 +15,12 @@ import {
 import Button from "../../shared/ui/Button";
 import { downloadBaseTemplate } from "../../shared/lib/excelExport";
 import SummaryCard from "../../shared/ui/SummaryCard";
+import {
+  clearSessionDraft,
+  readSessionDraft,
+  writeSessionDraft,
+} from "../../shared/lib/sessionDraft";
+import { useSessionDraftKey } from "../../shared/lib/hooks/useSessionDraftKey";
 import FormField from "../../shared/ui/FormField";
 import Input from "../../shared/ui/Input";
 import PageHeader from "../../shared/ui/PageHeader";
@@ -82,6 +89,30 @@ export default function PlatformView() {
   const [importLevel, setImportLevel] = useState<"BASICA" | "MEDIA">("BASICA");
   const [importResult, setImportResult] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  const createDraftKey = useSessionDraftKey("platform-create-tenant");
+  const importDraftKey = useSessionDraftKey("platform-import");
+  useEffect(() => {
+    const createDraft = readSessionDraft(
+      createDraftKey,
+      { name: "", adminEmail: "", slug: "" },
+      z
+        .object({
+          name: z.string().max(200),
+          adminEmail: z.string().max(320),
+          slug: z.string().max(100),
+        })
+        .partial(),
+    );
+    const importDraft = readSessionDraft(
+      importDraftKey,
+      { importLevel: "BASICA" as "BASICA" | "MEDIA" },
+      z.object({ importLevel: z.enum(["BASICA", "MEDIA"]) }).partial(),
+    );
+    setName(createDraft.name);
+    setAdminEmail(createDraft.adminEmail);
+    setSlug(createDraft.slug);
+    setImportLevel(importDraft.importLevel);
+  }, [createDraftKey, importDraftKey]);
 
   const tenantsQuery = useQuery({
     queryKey: ["platform", "tenants"],
@@ -117,6 +148,7 @@ export default function PlatformView() {
         slug: slug.trim() || undefined,
       }),
     onSuccess: () => {
+      clearSessionDraft(createDraftKey);
       setName("");
       setAdminEmail("");
       setSlug("");
@@ -157,6 +189,7 @@ export default function PlatformView() {
             : ""),
       );
       setImportFile(null);
+      clearSessionDraft(importDraftKey);
     },
     onError: (error: unknown) =>
       setImportResult(
@@ -328,7 +361,14 @@ export default function PlatformView() {
                 type="text"
                 required
                 value={name}
-                onChange={(event) => setName(event.target.value)}
+                onChange={(event) => {
+                  setName(event.target.value);
+                  writeSessionDraft(createDraftKey, {
+                    name: event.target.value,
+                    adminEmail,
+                    slug,
+                  });
+                }}
                 placeholder="Nombre del establecimiento"
               />
               <Input
@@ -336,14 +376,28 @@ export default function PlatformView() {
                 type="email"
                 required
                 value={adminEmail}
-                onChange={(event) => setAdminEmail(event.target.value)}
+                onChange={(event) => {
+                  setAdminEmail(event.target.value);
+                  writeSessionDraft(createDraftKey, {
+                    name,
+                    adminEmail: event.target.value,
+                    slug,
+                  });
+                }}
                 placeholder="admin@establecimiento.cl"
               />
               <Input
                 aria-label="Slug (opcional)"
                 type="text"
                 value={slug}
-                onChange={(event) => setSlug(event.target.value)}
+                onChange={(event) => {
+                  setSlug(event.target.value);
+                  writeSessionDraft(createDraftKey, {
+                    name,
+                    adminEmail,
+                    slug: event.target.value,
+                  });
+                }}
                 placeholder="colegio-san-jose (opcional)"
               />
               <Button
@@ -467,9 +521,13 @@ export default function PlatformView() {
               <Select
                 aria-label="Nivel por defecto"
                 value={importLevel}
-                onChange={(event) =>
-                  setImportLevel(event.target.value as "BASICA" | "MEDIA")
-                }
+                onChange={(event) => {
+                  const nextLevel = event.target.value as "BASICA" | "MEDIA";
+                  setImportLevel(nextLevel);
+                  writeSessionDraft(importDraftKey, {
+                    importLevel: nextLevel,
+                  });
+                }}
               >
                 <option value="BASICA">Básica</option>
                 <option value="MEDIA">Media</option>
