@@ -1,6 +1,39 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
+import selloCoordinacionSecundaria from "../../../../../Archivos/sello_coordinacion_secundaria.png";
+import selloInspectoriaSecundaria from "../../../../../Archivos/sello_inspectoria_secundaria.png";
+import selloProfesorJefe from "../../../../../Archivos/sello_profesor_jefe.png";
 import { splitAgreements } from "./splitAgreements";
+
+const SIGNATURE_STAMPS = {
+  coordinacion: selloCoordinacionSecundaria,
+  inspectoria: selloInspectoriaSecundaria,
+  profesorJefe: selloProfesorJefe,
+} as const;
+
+function normalizeSignatureRole(role: string): string {
+  return role
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .replace(/\s*\/\s*a\b/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getSignatureStamp(role: string): string | undefined {
+  const normalizedRole = normalizeSignatureRole(role);
+  if (/^inspectora?(?:\s|$)/.test(normalizedRole)) {
+    return SIGNATURE_STAMPS.inspectoria;
+  }
+  if (/^coordinadora?(?: de ciclo| de secundaria)$/.test(normalizedRole)) {
+    return SIGNATURE_STAMPS.coordinacion;
+  }
+  if (/^profesora? jefe$/.test(normalizedRole)) {
+    return SIGNATURE_STAMPS.profesorJefe;
+  }
+  return undefined;
+}
 
 export interface LetterMetadataItem {
   label: string;
@@ -117,14 +150,28 @@ export function LetterSignatureGrid({
         className="letter-signature-grid"
         style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
       >
-        {signatures.map((sig, idx) => (
-          <div key={idx} className="letter-signature-item">
-            <div className="letter-signature-line">
-              {sig.name || "_________________________"}
+        {signatures.map((sig, idx) => {
+          const stampSrc = getSignatureStamp(sig.role);
+          return (
+            <div
+              key={idx}
+              className={`letter-signature-item${stampSrc ? " letter-signature-item--stamped" : ""}`}
+            >
+              {stampSrc && (
+                <img
+                  src={stampSrc}
+                  alt=""
+                  aria-hidden="true"
+                  className="letter-signature-stamp"
+                />
+              )}
+              <div className="letter-signature-line">
+                {sig.name || "_________________________"}
+              </div>
+              <p className="letter-signature-role">{sig.role}</p>
             </div>
-            <p className="letter-signature-role">{sig.role}</p>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

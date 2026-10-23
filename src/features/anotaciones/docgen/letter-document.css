@@ -235,6 +235,7 @@
 }
 
 .letter-signature-item {
+  position: relative;
   text-align: center;
   break-inside: avoid;
   page-break-inside: avoid;
@@ -253,6 +254,23 @@
   margin-top: 2px;
   font-size: 8pt;
   color: #6b7280;
+}
+
+.letter-signature-item--stamped {
+  padding-top: 0;
+}
+
+.letter-signature-stamp {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  z-index: 1;
+  display: block;
+  width: 30mm;
+  height: 30mm;
+  margin: 0;
+  transform: translateX(-50%);
+  object-fit: contain;
 }
 
 /* ============================================================
