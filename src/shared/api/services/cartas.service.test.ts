@@ -292,6 +292,42 @@ describe("registerPhysicalCartaForStudent", () => {
   });
 });
 
+describe("updateCartaApoderadoNombre", () => {
+  it("rechaza nombres vacíos sin llamar al RPC", async () => {
+    const { updateCartaApoderadoNombre } = await import("./cartas.service");
+    assert.equal(await updateCartaApoderadoNombre("carta-1", "  "), false);
+  });
+
+  it("persiste el nombre mediante el RPC seguro", async () => {
+    const [{ supabase }, { updateCartaApoderadoNombre }] = await Promise.all([
+      import("../lib/supabase"),
+      import("./cartas.service"),
+    ]);
+    const mutable = supabase as unknown as MutableSupabase;
+    const originalRpc = mutable.rpc;
+    let received: unknown;
+    mutable.rpc = async (fn, params) => {
+      received = { fn, params };
+      return { data: true, error: null };
+    };
+    try {
+      assert.equal(
+        await updateCartaApoderadoNombre("carta-1", "  Ana Apoderada  "),
+        true,
+      );
+      assert.deepEqual(received, {
+        fn: "update_carta_apoderado_nombre",
+        params: {
+          p_carta_id: "carta-1",
+          p_apoderado_nombre: "Ana Apoderada",
+        },
+      });
+    } finally {
+      mutable.rpc = originalRpc;
+    }
+  });
+});
+
 describe("fetchCourseCartaRanking", () => {
   it("mapea las filas del RPC a items del ranking", async () => {
     const [{ supabase }, { fetchCourseCartaRanking }] = await Promise.all([

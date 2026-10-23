@@ -2284,6 +2284,10 @@ export type Database = {
       current_app_role: { Args: never; Returns: string };
       current_role: { Args: never; Returns: string };
       current_tenant_id: { Args: never; Returns: string };
+      update_carta_apoderado_nombre: {
+        Args: { p_apoderado_nombre: string; p_carta_id: string };
+        Returns: boolean;
+      };
       release_bulk_pdf_import: {
         Args: { p_course_id: string; p_file_hash: string; p_tenant_id: string };
         Returns: undefined;

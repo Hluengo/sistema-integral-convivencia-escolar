@@ -357,6 +357,23 @@ async function createCartaEvent(
   return true;
 }
 
+export async function updateCartaApoderadoNombre(
+  cartaId: string,
+  apoderadoNombre: string,
+): Promise<boolean> {
+  const nombre = apoderadoNombre.trim();
+  if (!nombre) return false;
+  const { data, error } = await supabase.rpc("update_carta_apoderado_nombre", {
+    p_carta_id: cartaId,
+    p_apoderado_nombre: nombre,
+  });
+  if (error) {
+    console.error("Error guardando el apoderado titular:", error);
+    return false;
+  }
+  return data === true;
+}
+
 export async function markCartaProcessedManually(
   cartaId: string,
   note: string,
@@ -373,6 +390,15 @@ export async function markCartaProcessedManually(
 
     if (error || !data) {
       console.error("Error saving final carta content:", error);
+      return false;
+    }
+
+    const apoderadoNombre = contentSnapshot.apoderadoName;
+    if (
+      typeof apoderadoNombre !== "string" ||
+      !(await updateCartaApoderadoNombre(cartaId, apoderadoNombre))
+    ) {
+      console.error("No se pudo guardar el apoderado titular de la carta.");
       return false;
     }
   }
