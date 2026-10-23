@@ -1,5 +1,10 @@
-import { z } from "zod";
+type ZodGlobalConfig = { jitless?: boolean };
 
-// Configure Zod before any schema module is evaluated. Strict CSP blocks the
-// optional JIT probe otherwise, even though Zod catches the failed eval.
-z.config({ jitless: true });
+type GlobalWithZodConfig = typeof globalThis & {
+  __zod_globalConfig?: ZodGlobalConfig;
+};
+
+// Set this before importing Zod so its optional JIT probe never runs under CSP.
+const globalWithZodConfig = globalThis as GlobalWithZodConfig;
+globalWithZodConfig.__zod_globalConfig ??= {};
+globalWithZodConfig.__zod_globalConfig.jitless = true;

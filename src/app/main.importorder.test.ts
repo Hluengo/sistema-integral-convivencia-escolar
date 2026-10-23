@@ -20,4 +20,15 @@ describe("main.tsx", () => {
       .find((line) => line.startsWith("import "));
     assert.equal(firstImport, 'import "../shared/lib/schemas/zodCsp";');
   });
+
+  it("configura el flag global sin importar Zod antes", () => {
+    const dir = dirname(fileURLToPath(import.meta.url));
+    const source = readFileSync(
+      join(dir, "../shared/lib/schemas/zodCsp.ts"),
+      "utf8",
+    );
+    assert.doesNotMatch(source, /from ["']zod["']/);
+    assert.match(source, /__zod_globalConfig/);
+    assert.match(source, /jitless = true/);
+  });
 });
