@@ -93,7 +93,7 @@ export const TEACHERS_BY_COURSE: Record<string, string> = {
   "6° Básico B": "ROSARIO SALINAS CAMPOS",
   "7° Básico A": "MARCELO MUÑOZ PINO",
   "7° Básico B": "MARÍA ISABEL MATUS RETAMAL",
-  "8° Básico A": "VANNIA RETAMAL SALGADO",
+  "8° Básico A": "MANUEL FLORES FUENTES",
   "8° Básico B": "PATRICIO ZAMBRANO ASENCIO",
   "1° Medio A": "ESTER CONTRERAS ESPINOZA",
   "1° Medio B": "MARITZA CARRASCO PALMA",
