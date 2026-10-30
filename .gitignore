@@ -63,3 +63,9 @@ tsconfig.tsbuildinfo
 enhanced-video/
 reportes/
 *.pptx
+
+# Datos personales de estudiantes y correos de apoderados (este repo es público)
+correos_citacion.json
+envio_citaciones_20261029.json
+envio_segundo_llamado_*.json
+scripts_informes/
