@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
-  collapseNearDuplicateEvents,
+  collapseDuplicateItems,
   filterHistoryItems,
   getHistoryBadge,
   groupHistoryItemsByMonth,
@@ -118,38 +118,46 @@ describe("historyTimeline", () => {
     );
   });
 
-  it("colapsa eventos repetidos dentro de 60 segundos", () => {
-    const ev = (id: string, created_at: string, event_type = "printed") => ({
-      carta_id: "carta-1",
-      event_type,
-      created_at,
-      id,
-    });
-    const collapsed = collapseNearDuplicateEvents([
-      ev("a", "2026-10-08T10:00:00.000Z"),
-      ev("b", "2026-10-08T10:00:25.000Z"),
-      ev("c", "2026-10-08T10:05:00.000Z"),
+  it("deja un solo registro por clave y conserva el más reciente", () => {
+    const collapsed = collapseDuplicateItems([
+      {
+        id: "a",
+        date: "2026-10-08T10:00:00.000Z",
+        groupKey: "carta:1:printed",
+      },
+      {
+        id: "b",
+        date: "2026-10-08T10:05:00.000Z",
+        groupKey: "carta:1:printed",
+      },
+      {
+        id: "c",
+        date: "2026-10-09T09:00:00.000Z",
+        groupKey: "carta:1:archived",
+      },
     ]);
     assert.deepEqual(
       collapsed.map((entry) => entry.id),
-      ["a", "c"],
+      ["b", "c"],
     );
   });
 
-  it("conserva tipos distintos aunque sean cercanos", () => {
-    const collapsed = collapseNearDuplicateEvents([
+  it("conserva los registros sin clave y los de documentos distintos", () => {
+    const collapsed = collapseDuplicateItems([
+      { id: "manual-1", date: "2026-10-08T10:00:00.000Z" },
+      { id: "manual-2", date: "2026-10-08T10:00:00.000Z" },
       {
-        carta_id: "carta-1",
-        event_type: "printed",
-        created_at: "2026-10-08T10:00:00.000Z",
+        id: "pdf-1",
+        date: "2026-10-08T10:00:00.000Z",
+        groupKey: "archivo:a.pdf",
       },
       {
-        carta_id: "carta-1",
-        event_type: "archived",
-        created_at: "2026-10-08T10:00:20.000Z",
+        id: "pdf-2",
+        date: "2026-10-08T11:00:00.000Z",
+        groupKey: "archivo:b.pdf",
       },
     ]);
-    assert.equal(collapsed.length, 2);
+    assert.equal(collapsed.length, 4);
   });
 
   it("agrupa por mes con etiqueta en español", () => {

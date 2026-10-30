@@ -30,7 +30,7 @@ import { formatDate } from "./constants";
 import { useStudentHistoryEntries } from "@/shared/lib/hooks/useStudentHistoryEntries";
 import ManualHistoryEntryForm from "./ManualHistoryEntryForm";
 import {
-  collapseNearDuplicateEvents,
+  collapseDuplicateItems,
   filterHistoryItems,
   getHistoryBadge,
   groupHistoryItemsByMonth,
@@ -48,6 +48,8 @@ interface TimelineItem {
   title: string;
   description: string;
   tone: string;
+  /** Acciones repetidas sobre el mismo documento comparten clave. */
+  groupKey?: string;
 }
 
 interface HistoryTabProps {
@@ -71,6 +73,7 @@ function describeCartaEvent(
     kind: "Cartas" as const,
     date: event.created_at,
     icon: <FileText className="h-4 w-4" />,
+    groupKey: `carta:${event.carta_id}:${event.event_type}`,
   };
 
   if (event.event_type === "printed") {
@@ -153,14 +156,19 @@ export default function HistoryTab({
   const [sortDirection, setSortDirection] =
     useState<HistorySortDirection>("desc");
   const manualHistory = useStudentHistoryEntries(studentId);
-  const relevantCartaEvents = collapseNearDuplicateEvents(
-    cartaEvents.filter(
-      (event) =>
-        event.event_type !== "created" && event.event_type !== "suggested",
-    ),
+  const relevantCartaEvents = cartaEvents.filter(
+    (event) =>
+      event.event_type !== "created" && event.event_type !== "suggested",
   );
   const cartasWithEvents = new Set(
     relevantCartaEvents.map((event) => event.carta_id),
+  );
+  // Los eventos de uso son telemetría legacy: si la carta ya tiene su evento
+  // canónico, repetirlos duplica "Carta impresa" en la vista.
+  const relevantLetterOutputEvents = letterOutputEvents.filter(
+    (event) =>
+      !event.properties.cartaId ||
+      !cartasWithEvents.has(event.properties.cartaId),
   );
   const syntheticCartaItems = cartas.reduce<TimelineItem[]>((items, carta) => {
     if (cartasWithEvents.has(carta.id)) return items;
@@ -175,6 +183,7 @@ export default function HistoryTab({
         description:
           carta.archived_note || "Archivada en el expediente físico.",
         tone: "bg-leve-50 text-leve-700",
+        groupKey: `carta:${carta.id}:archived`,
       });
       return items;
     }
@@ -187,6 +196,7 @@ export default function HistoryTab({
         title: `Carta realizada: ${carta.letter_type}`,
         description: "Medio de validación registrado en la carta.",
         tone: "bg-leve-50 text-leve-700",
+        groupKey: `carta:${carta.id}:completed`,
       });
       return items;
     }
@@ -202,6 +212,7 @@ export default function HistoryTab({
           carta.observations ||
           "Sin motivo registrado.",
         tone: "bg-neutral-100 text-neutral-600",
+        groupKey: `carta:${carta.id}:annulled`,
       });
       return items;
     }
@@ -229,6 +240,7 @@ export default function HistoryTab({
         description:
           file.original_file_name || file.file_name || file.storage_path,
         tone: "bg-blue-50 text-blue-700",
+        groupKey: `archivo:${file.original_file_name || file.file_name || file.storage_path}`,
       })),
       ...documentAnalyses.map((analysis) => ({
         id: `analysis-${analysis.id}`,
@@ -238,6 +250,7 @@ export default function HistoryTab({
         title: "PDF analizado",
         description: `${analysis.file_name || "Documento"} · ${analysis.negativas} negativas, ${analysis.positivas} positivas, ${analysis.informativas} informativas`,
         tone: "bg-brand-50 text-brand-700",
+        groupKey: `analisis:${analysis.file_name || analysis.id}`,
       })),
       ...processes.map((process) => ({
         id: `process-${process.id}`,
@@ -249,11 +262,12 @@ export default function HistoryTab({
           : "Proceso PDF creado",
         description: `${process.process_number} · ${process.total_negativas} negativas · sugerencia: ${process.final_letter_type || process.suggested_letter_type || "sin carta"}`,
         tone: "bg-leve-50 text-leve-700",
+        groupKey: `proceso:${process.process_number}`,
       })),
       ...relevantCartaEvents.map((event) =>
         describeCartaEvent(event, cartasByIdInner.get(event.carta_id)),
       ),
-      ...letterOutputEvents.map((event) => ({
+      ...relevantLetterOutputEvents.map((event) => ({
         id: `letter-output-${event.id}`,
         kind: "Cartas" as const,
         date: event.created_at,
@@ -274,16 +288,17 @@ export default function HistoryTab({
         title: `Cambio de etapa disciplinaria: ${etapa.stage_name}`,
         description: `${etapa.responsible || "Sin responsable"}${etapa.comment ? ` · ${etapa.comment}` : ""}`,
         tone: "bg-purple-50 text-purple-700",
+        groupKey: `etapa:${etapa.stage_name}`,
       })),
     ];
-    return all;
+    return collapseDuplicateItems(all);
   }, [
     manualHistory.entries,
     files,
     documentAnalyses,
     processes,
     relevantCartaEvents,
-    letterOutputEvents,
+    relevantLetterOutputEvents,
     syntheticCartaItems,
     etapas,
     cartas,

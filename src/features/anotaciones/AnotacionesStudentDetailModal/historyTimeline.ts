@@ -129,34 +129,40 @@ export function filterHistoryItems<T extends HistoryTimelineItemLike>(
   });
 }
 
-export interface CartaEventLike {
-  carta_id: string;
-  event_type: string;
-  created_at: string;
+export interface CollapsibleHistoryItem {
+  date: string;
+  /** Misma clave = misma acción sobre el mismo documento; null conserva todo. */
+  groupKey?: string | null;
+}
+
+function timeOf(date: string): number {
+  const time = +new Date(date);
+  return Number.isNaN(time) ? -Infinity : time;
 }
 
 /**
- * Colapsa eventos repetidos por doble registro (misma carta y tipo dentro de
- * 60 segundos): se conserva el primero. Solo oculta en la vista, no borra.
+ * Deja un solo registro por `groupKey`, conservando el más reciente: evita
+ * repetir impresiones, reanálisis del mismo PDF o reingresos a una etapa.
+ * Solo oculta en la vista, no borra datos.
  */
-export function collapseNearDuplicateEvents<T extends CartaEventLike>(
-  events: T[],
+export function collapseDuplicateItems<T extends CollapsibleHistoryItem>(
+  items: T[],
 ): T[] {
-  const sorted = [...events].sort(
-    (a, b) => +new Date(a.created_at) - +new Date(b.created_at),
-  );
-  const last: Record<string, number> = {};
+  const positions = new Map<string, number>();
   const out: T[] = [];
-  for (const event of sorted) {
-    const time = +new Date(event.created_at);
-    if (Number.isNaN(time)) {
-      out.push(event);
+  for (const item of items) {
+    const key = item.groupKey;
+    if (!key) {
+      out.push(item);
       continue;
     }
-    const key = `${event.carta_id}|${event.event_type}`;
-    if (last[key] !== undefined && time - last[key] < 60000) continue;
-    last[key] = time;
-    out.push(event);
+    const position = positions.get(key);
+    if (position === undefined) {
+      positions.set(key, out.length);
+      out.push(item);
+      continue;
+    }
+    if (timeOf(item.date) >= timeOf(out[position]!.date)) out[position] = item;
   }
   return out;
 }
