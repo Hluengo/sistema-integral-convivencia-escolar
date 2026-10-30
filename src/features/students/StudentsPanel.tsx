@@ -66,8 +66,17 @@ function reducer(
 export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
   const [state, dispatch] = useReducer(reducer, initialState);
   const { searchQuery, selectedCourseId } = state;
+  const [expandedCourses, setExpandedCourses] = useState<Set<string>>(
+    new Set(),
+  );
+  const hasActiveFilters =
+    searchQuery.trim() !== "" || selectedCourseId !== "all";
   const coursesQuery = useCoursesQuery();
-  const studentsQuery = usePaginatedStudentActivityHistoryQuery();
+  // Buscar, filtrar o abrir un curso exige el historial completo, no solo la
+  // primera página, porque el filtro se aplica en el cliente.
+  const studentsQuery = usePaginatedStudentActivityHistoryQuery(
+    hasActiveFilters || expandedCourses.size > 0,
+  );
   const courses = coursesQuery.data ?? EMPTY_COURSES;
   const students = useMemo(
     () =>
@@ -118,10 +127,6 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
   const mediaCourses = useMemo(
     () => courses.filter((c) => c.level === "MEDIA"),
     [courses],
-  );
-
-  const [expandedCourses, setExpandedCourses] = useState<Set<string>>(
-    new Set(),
   );
 
   const groupedByCourse = useMemo(() => {
@@ -329,6 +334,38 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
             </p>
             <p className="mt-1 text-gravisima-700 text-xs">{error}</p>
           </div>
+        </div>
+      ) : filteredStudents.length === 0 &&
+        hasActiveFilters &&
+        studentsQuery.hasNextPage ? (
+        <div role="status" className="card p-12 text-center">
+          <Users
+            className="mx-auto mb-3 h-10 w-10 text-neutral-400"
+            aria-hidden="true"
+          />
+          {studentsQuery.isFetchNextPageError ? (
+            <>
+              <p className="font-medium text-neutral-600 text-sm">
+                No se pudo cargar el resto de los estudiantes
+              </p>
+              <Button
+                variant="secondary"
+                className="mt-4"
+                onClick={() => void studentsQuery.fetchNextPage()}
+              >
+                Reintentar
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="font-medium text-neutral-600 text-sm">
+                Buscando en todos los estudiantes…
+              </p>
+              <p className="mt-1 text-neutral-500 text-xs">
+                Cargando el historial completo para aplicar el filtro.
+              </p>
+            </>
+          )}
         </div>
       ) : filteredStudents.length === 0 ? (
         <div className="card p-12 text-center">

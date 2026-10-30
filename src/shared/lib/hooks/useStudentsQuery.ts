@@ -1,5 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
+import { useEffect } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
   fetchStudentsByCourse,
@@ -18,11 +19,34 @@ export function useStudentsQuery(courseId: string) {
   });
 }
 
-export function usePaginatedStudentActivityHistoryQuery() {
+interface StudentPageAutoLoad {
+  loadAllPages: boolean;
+  enabled: boolean;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
+  isFetchNextPageError: boolean;
+}
+
+/**
+ * El buscador y el filtro de curso del panel son locales: si falta alguna
+ * página, un estudiante con actividad queda fuera de la búsqueda.
+ */
+export function shouldLoadNextStudentPage(state: StudentPageAutoLoad): boolean {
+  return (
+    state.loadAllPages &&
+    state.enabled &&
+    state.hasNextPage &&
+    !state.isFetchingNextPage &&
+    !state.isFetchNextPageError
+  );
+}
+
+export function usePaginatedStudentActivityHistoryQuery(loadAllPages = false) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const tenantId = useAuthStore((state) => state.tenantId);
+  const enabled = isAuthenticated && Boolean(tenantId);
 
-  return useInfiniteQuery({
+  const query = useInfiniteQuery({
     queryKey: ["student-activity-history", tenantId],
     queryFn: ({ pageParam }) => fetchStudentActivityHistoryPage(pageParam),
     initialPageParam: 0,
@@ -33,7 +57,37 @@ export function usePaginatedStudentActivityHistoryQuery() {
       );
       return loaded < lastPage.totalCount ? loaded : undefined;
     },
-    enabled: isAuthenticated && Boolean(tenantId),
+    enabled,
     staleTime: 1000 * 60 * 5,
   });
+
+  const {
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+  } = query;
+
+  useEffect(() => {
+    if (
+      shouldLoadNextStudentPage({
+        loadAllPages,
+        enabled,
+        hasNextPage,
+        isFetchingNextPage,
+        isFetchNextPageError,
+      })
+    ) {
+      void fetchNextPage();
+    }
+  }, [
+    enabled,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+    loadAllPages,
+  ]);
+
+  return query;
 }
