@@ -3,9 +3,21 @@
 import { readFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 
+// La CLI se ejecuta bajo demanda: mantenerla instalada arrastraba 16 avisos de
+// seguridad solo de desarrollo (lighthouse → puppeteer-core → proxy-agent).
+const cliArgs = [
+  "--yes",
+  "@lhci/cli@0.15.1",
+  "autorun",
+  "--config=lighthouserc.cjs",
+];
+
+// En Windows npx es un .cmd y spawn lo rechaza sin shell.
 const child = spawn(
-  process.execPath,
-  ["node_modules/@lhci/cli/src/cli.js", "autorun", "--config=lighthouserc.cjs"],
+  process.platform === "win32" ? "cmd.exe" : "npx",
+  process.platform === "win32"
+    ? ["/d", "/s", "/c", `npx ${cliArgs.join(" ")}`]
+    : cliArgs,
   {
     stdio: ["inherit", "pipe", "pipe"],
     windowsHide: true,
