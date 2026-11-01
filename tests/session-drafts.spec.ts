@@ -13,7 +13,7 @@ async function mount(
     write: false,
     platform: "browser",
     format: "iife",
-    loader: { ".css": "empty" },
+    loader: { ".css": "empty", ".png": "dataurl" },
     define: { "process.env.NODE_ENV": '"test"' },
     plugins: [
       {
