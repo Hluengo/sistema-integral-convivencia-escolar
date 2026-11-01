@@ -1,8 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import selloCoordinacionSecundaria from "../../../../../Archivos/sello_coordinacion_secundaria.png";
-import selloInspectoriaSecundaria from "../../../../../Archivos/sello_inspectoria_secundaria.png";
-import selloProfesorJefe from "../../../../../Archivos/sello_profesor_jefe.png";
+import selloCoordinacionSecundaria from "../../../../assets/sello_coordinacion_secundaria.png";
+import selloInspectoriaSecundaria from "../../../../assets/sello_inspectoria_secundaria.png";
+import selloProfesorJefe from "../../../../assets/sello_profesor_jefe.png";
 import { splitAgreements } from "./splitAgreements";
 
 const SIGNATURE_STAMPS = {

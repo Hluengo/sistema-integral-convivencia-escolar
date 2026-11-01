@@ -12,6 +12,8 @@ supabase/operations/*password*.sql
 *.png
 *.jpg
 *.jpeg
+!src/assets/
+!src/assets/*.png
 .kilo/
 .kiro/
 .agents/
