@@ -71,6 +71,7 @@ export default defineConfig(() => {
             if (id.includes("/@radix-ui/")) return "radix";
             if (id.includes("/@tanstack/")) return "tanstack";
             if (id.includes("/date-fns/")) return "date";
+            if (id.includes("/pdfjs-dist/")) return "pdf-viewer";
             return "vendor";
           },
         },
