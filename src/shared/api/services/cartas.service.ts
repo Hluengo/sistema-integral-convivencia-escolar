@@ -49,6 +49,12 @@ type CartaEventType =
   | "convivencia_interviewed"
   | "annulled";
 
+let lastCartaServiceError: string | null = null;
+
+export function getLastCartaServiceError(): string | null {
+  return lastCartaServiceError;
+}
+
 export interface CartaEvent {
   id: string;
   carta_id: string;
@@ -316,6 +322,7 @@ async function fetchCartaForEvent(cartaId: string): Promise<{
     .maybeSingle();
 
   if (error || !data) {
+    lastCartaServiceError = error?.message ?? "La carta no está disponible.";
     console.error("Error fetching carta for event:", error);
     return null;
   }
@@ -333,6 +340,7 @@ async function createCartaEvent(
   metadata: Record<string, unknown> = {},
   actor?: { userId?: string | null; email?: string | null } | null,
 ): Promise<boolean> {
+  lastCartaServiceError = null;
   const carta = await fetchCartaForEvent(cartaId);
   if (!carta) return false;
 
@@ -351,6 +359,7 @@ async function createCartaEvent(
   });
 
   if (error) {
+    lastCartaServiceError = error.message;
     console.error("Error creating carta event:", error);
     return false;
   }
@@ -417,6 +426,20 @@ export async function archiveCarta(
   note: string,
   actor?: { userId?: string | null; email?: string | null } | null,
 ): Promise<boolean> {
+  const { data: existingEvent, error: existingError } = await supabase
+    .from("carta_events")
+    .select("id")
+    .eq("carta_id", cartaId)
+    .eq("event_type", "archived")
+    .limit(1)
+    .maybeSingle();
+  if (existingError) {
+    lastCartaServiceError = existingError.message;
+    console.error("Error checking archived carta event:", existingError);
+    return false;
+  }
+  if (existingEvent) return true;
+
   return createCartaEvent(
     cartaId,
     "archived",

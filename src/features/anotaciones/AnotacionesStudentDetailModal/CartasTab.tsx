@@ -17,6 +17,7 @@ import {
   archiveCarta,
   annulCarta,
   createPendingCartaForStudent,
+  getLastCartaServiceError,
   markCartaInterviewed,
   markCartaProcessedManually,
   resolveCartaWorkflowStatus,
@@ -237,7 +238,10 @@ export default function CartasTab({
       await refreshAfterChange();
     } else {
       setMessageTone("error");
-      setMessage("No se pudo completar la acción. Inténtelo nuevamente.");
+      setMessage(
+        getLastCartaServiceError() ??
+          "No se pudo completar la acción. Inténtelo nuevamente.",
+      );
     }
     setBusy(false);
     return ok ? carta.id + ":" + successText : null;
