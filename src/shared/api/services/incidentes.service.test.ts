@@ -4,7 +4,8 @@ import assert from "node:assert/strict";
 import { beforeEach, describe, it, mock } from "node:test";
 
 const writes: Array<Record<string, unknown>> = [];
-const tenantId = "30000000-0000-4000-8000-000000000001";
+const defaultTenantId = "30000000-0000-4000-8000-000000000001";
+let tenantId = defaultTenantId;
 let rpcError: { code: string; message: string } | null = null;
 let causeIds = ["DC-2026-001", "DC-2026-002"];
 await mock.module("../lib/supabase", {
@@ -60,6 +61,7 @@ beforeEach(() => {
   writes.length = 0;
   rpcError = null;
   causeIds = ["DC-2026-001", "DC-2026-002"];
+  tenantId = defaultTenantId;
 });
 
 describe("fecha del incidente", () => {
@@ -146,5 +148,10 @@ describe("fecha del incidente", () => {
         ),
       /confirmación completa/,
     );
+  });
+  it("acepta el id histórico del colegio, que no cumple RFC 9562", async () => {
+    tenantId = "00000000-0000-0000-0000-000000000001";
+    const result = await createIncidenteWithCausas(input, tenantId);
+    assert.deepEqual(result.causaIds, ["DC-2026-001", "DC-2026-002"]);
   });
 });

@@ -16,7 +16,8 @@ const INCIDENTE_COLUMNS =
 const createdGroupSchema = z.object({
   incidente: z.object({
     id: z.uuid(),
-    tenant_id: z.uuid(),
+    // guid: los colegios usan ids históricos (p. ej. 00000000-...-0001) que no cumplen RFC 9562.
+    tenant_id: z.guid(),
     fecha_hora: z.string(),
     lugar: z.string(),
     tipo: z.string(),
