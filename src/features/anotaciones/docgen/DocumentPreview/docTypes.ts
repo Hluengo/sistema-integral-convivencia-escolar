@@ -2,7 +2,11 @@
 
 import type { Annotation } from "../../../../shared/lib/types";
 
-export type DocType = "amonestacion" | "compromiso_conductual" | "derivacion";
+export type DocType =
+  | "amonestacion"
+  | "compromiso_conductual"
+  | "compromiso_conductual_dupla"
+  | "derivacion";
 
 export interface LetterContent {
   motivo: string;
@@ -37,6 +41,7 @@ export interface DocContentProps {
   selectedAnnsObjects: Annotation[];
   annotationSummary: LetterAnnotationSummary;
   letterContent: LetterContent;
+  docType?: DocType;
 }
 
 export function buildLetterAnnotationSummary(
@@ -85,6 +90,7 @@ export function isLetterAnnotationSummary(
 export const TITLE_MAP: Record<DocType, string> = {
   amonestacion: "Amonestación Escrita",
   compromiso_conductual: "Compromiso Conductual",
+  compromiso_conductual_dupla: "Compromiso Conductual - Dupla Psicosocial",
   derivacion: "Derivación a Convivencia Escolar",
 };
 
@@ -113,6 +119,18 @@ export const DEFAULT_LETTER_CONTENT: Record<DocType, LetterContent> = {
       "El estudiante se compromete a trabajar durante los próximos 30 días en la mejora de los patrones de conducta identificados en sus registros (según conste en sus anotaciones), procurando mantener relaciones respetuosas y acordes con las normas de convivencia.\nDeberá participar en instancias de seguimiento quincenal con Inspectoría de su nivel, dejando registro de los avances, dificultades y acuerdos adoptados.\nDurante este período se favorecerá la reflexión sobre las situaciones ocurridas y la búsqueda de estrategias que permitan prevenir su reiteración.\nAl finalizar los 30 días se realizará una evaluación del cumplimiento de los compromisos. En caso de observarse avances significativos, estos podrán ser reconocidos mediante una nota de mérito en su hoja de vida.\nSi las conductas persisten, se analizarán las medidas que correspondan de acuerdo con el Reglamento Interno, considerando los antecedentes del caso, las acciones desarrolladas y el debido proceso.",
     cierre:
       "Esta medida se fundamenta en los artículos 18 (Medida 4) y 24 BIS del Reglamento Interno de Convivencia Escolar 2026 y se implementa desde un enfoque formativo, de acompañamiento y corresponsabilidad, orientado a favorecer el desarrollo de habilidades para una convivencia respetuosa.",
+    observaciones: "",
+  },
+  compromiso_conductual_dupla: {
+    motivo:
+      "A partir de la entrevista realizada, se acuerda una instancia de acompañamiento psicosocial para apoyar al estudiante en la reflexión, la autorregulación y la mejora de su convivencia escolar.",
+    descripcion:
+      "Esta medida se desarrolla desde un enfoque formativo y de corresponsabilidad. La dupla psicosocial y el estudiante definirán objetivos y estrategias de apoyo pertinentes a sus necesidades.",
+    medida:
+      "Compromiso conductual con Plan de Acompañamiento colaborativo y seguimiento. Los acuerdos serán definidos y ajustados junto al estudiante durante la entrevista, procurando un acompañamiento gradual y respetuoso.",
+    acuerdos: "",
+    cierre:
+      "Esta medida se adopta como una acción formativa y de acompañamiento psicosocial, conforme a los artículos 12, 19 y 20 (Paso 8), y considerando lo dispuesto en el artículo 24 BIS respecto de la acumulación de anotaciones. Su propósito es apoyar la reflexión, la autorregulación y la mejora de la conducta mediante objetivos y seguimiento acordados con el estudiante, resguardando el buen trato, la dignidad, la confidencialidad y los derechos de quienes integran la comunidad educativa.",
     observaciones: "",
   },
   derivacion: {

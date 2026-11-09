@@ -125,6 +125,7 @@ export default function AnotacionesDocumentGenerator({
     if (
       snapshotDocType === "amonestacion" ||
       snapshotDocType === "compromiso_conductual" ||
+      snapshotDocType === "compromiso_conductual_dupla" ||
       snapshotDocType === "derivacion"
     ) {
       setDocType(snapshotDocType);
@@ -360,7 +361,7 @@ export default function AnotacionesDocumentGenerator({
 
           <div className="rounded-xl border border-neutral-200 bg-white p-5 shadow-xs">
             <h4 className="mb-4 text-sm font-bold text-neutral-900">
-              Datos editables de la carta
+              Datos editables y acuerdos de la carta
             </h4>
             <DocumentForm
               docType={docType}
@@ -370,8 +371,6 @@ export default function AnotacionesDocumentGenerator({
               onCoordinatorNameChange={documentState.setCoordinatorName}
               emittedBy={documentState.emittedBy}
               onEmittedByChange={documentState.setEmittedBy}
-              inspectorName={documentState.inspectorName}
-              onInspectorNameChange={documentState.setInspectorName}
               letterContent={documentState.letterContent}
               onLetterContentChange={documentState.updateLetterContent}
               onResetLetterContent={() =>

@@ -8,8 +8,6 @@ interface DocumentFormProps {
   docType: string;
   apoderadoName: string;
   onApoderadoNameChange: (value: string) => void;
-  inspectorName: string;
-  onInspectorNameChange: (value: string) => void;
   coordinatorName: string;
   onCoordinatorNameChange: (value: string) => void;
   emittedBy: string;
@@ -26,22 +24,51 @@ interface DocumentFormProps {
 const TEXT_FIELDS: Array<{
   key: keyof LetterContent;
   label: string;
+  help: string;
   rows: number;
 }> = [
-  { key: "motivo", label: "Motivo", rows: 2 },
-  { key: "descripcion", label: "Descripción / antecedentes", rows: 4 },
-  { key: "medida", label: "Medida o acuerdo", rows: 4 },
-  { key: "acuerdos", label: "Acuerdos / acciones", rows: 4 },
-  { key: "cierre", label: "Cierre", rows: 3 },
-  { key: "observaciones", label: "Observaciones", rows: 3 },
+  {
+    key: "motivo",
+    label: "Motivo de la medida",
+    help: "Explique por qué se aplica la medida y relaciónela con los antecedentes registrados.",
+    rows: 2,
+  },
+  {
+    key: "descripcion",
+    label: "Descripción objetiva / antecedentes",
+    help: "Describa hechos verificables, evitando juicios, etiquetas o información no registrada.",
+    rows: 4,
+  },
+  {
+    key: "medida",
+    label: "Medida formativa y acompañamiento",
+    help: "Indique el apoyo, responsable y plazo, privilegiando reflexión, autorregulación y mejora.",
+    rows: 4,
+  },
+  {
+    key: "acuerdos",
+    label: "Acuerdos, acciones y seguimiento",
+    help: "Registre compromisos concretos, responsables, frecuencia y fecha o condición de revisión.",
+    rows: 4,
+  },
+  {
+    key: "cierre",
+    label: "Cierre y evaluación",
+    help: "Consigne cómo se evaluará el cumplimiento, los avances y las medidas posteriores si corresponde.",
+    rows: 3,
+  },
+  {
+    key: "observaciones",
+    label: "Observaciones relevantes",
+    help: "Agregue solo antecedentes necesarios para el seguimiento y resguarde la confidencialidad.",
+    rows: 3,
+  },
 ];
 
 export default function DocumentForm({
   docType,
   apoderadoName,
   onApoderadoNameChange,
-  inspectorName,
-  onInspectorNameChange,
   coordinatorName,
   onCoordinatorNameChange,
   emittedBy,
@@ -52,13 +79,22 @@ export default function DocumentForm({
   negativeCount,
 }: DocumentFormProps) {
   const showAdvanced =
-    docType === "compromiso_conductual" || docType === "derivacion";
+    docType === "compromiso_conductual" ||
+    docType === "compromiso_conductual_dupla" ||
+    docType === "derivacion";
 
   return (
     <div className="space-y-6">
       <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-sm text-neutral-700">
         Cantidad de anotaciones negativas consideradas:{" "}
         <strong>{negativeCount}</strong>
+      </div>
+
+      <div className="rounded-lg border border-brand-200 bg-brand-50 p-3 text-xs leading-relaxed text-brand-900">
+        <strong>Orientación reglamentaria:</strong> redacte la carta con enfoque
+        formativo, proporcional y confidencial. Priorice acuerdos colaborativos,
+        acompañamiento y seguimiento, conforme a los Arts. 5, 19, 20 y 24 BIS
+        del Reglamento Interno.
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -79,24 +115,6 @@ export default function DocumentForm({
             className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
           />
         </div>
-
-        <div>
-          <label
-            htmlFor="inspector-name"
-            className="mb-1 block text-sm font-medium text-neutral-700"
-          >
-            Nombre Inspector/a
-          </label>
-          <input
-            id="inspector-name"
-            aria-label="Nombre inspector/a"
-            type="text"
-            value={inspectorName}
-            onChange={(e) => onInspectorNameChange(e.target.value)}
-            placeholder="Ingrese el nombre del inspector/a"
-            className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
       </div>
 
       {showAdvanced && (
@@ -106,7 +124,9 @@ export default function DocumentForm({
               htmlFor="coordinator-name"
               className="mb-1 block text-sm font-medium text-neutral-700"
             >
-              Nombre del Coordinador
+              {docType === "compromiso_conductual_dupla"
+                ? "Nombre de la dupla psicosocial"
+                : "Nombre del Coordinador"}
             </label>
             <input
               id="coordinator-name"
@@ -114,7 +134,11 @@ export default function DocumentForm({
               type="text"
               value={coordinatorName}
               onChange={(e) => onCoordinatorNameChange(e.target.value)}
-              placeholder="Coordinador de ciclo / convivencia"
+              placeholder={
+                docType === "compromiso_conductual_dupla"
+                  ? "Nombre del profesional de la dupla psicosocial"
+                  : "Coordinador de ciclo / convivencia"
+              }
               className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -166,6 +190,9 @@ export default function DocumentForm({
               >
                 {field.label}
               </label>
+              <p className="mb-1 text-xs leading-relaxed text-neutral-500">
+                {field.help}
+              </p>
               <textarea
                 id={`letter-${field.key}`}
                 aria-label={field.label}

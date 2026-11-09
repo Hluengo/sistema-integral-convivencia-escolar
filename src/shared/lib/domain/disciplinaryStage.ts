@@ -6,7 +6,10 @@ type DisciplinaryStageKey =
   "none" | "amonestacion" | "compromiso_conductual" | "derivacion";
 
 export type LetterDocType =
-  "amonestacion" | "compromiso_conductual" | "derivacion";
+  | "amonestacion"
+  | "compromiso_conductual"
+  | "compromiso_conductual_dupla"
+  | "derivacion";
 
 export type CartaProcessingBlockReason =
   "derivacion_requires_15_registered" | "letter_type_mismatch";
@@ -14,6 +17,7 @@ export type CartaProcessingBlockReason =
 export type LetterType =
   | "Amonestación Escrita"
   | "Carta de Compromiso Conductual"
+  | "Compromiso Conductual - Derivación a Dupla Psicosocial"
   | "Ficha de Derivación";
 
 export interface DisciplinaryStage {
@@ -69,10 +73,11 @@ const DISCIPLINARY_STAGES: readonly DisciplinaryStage[] = [
   },
 ];
 
-const STAGE_RANK: Readonly<Record<DisciplinaryStageKey, number>> = {
+const STAGE_RANK: Readonly<Record<LetterDocType | "none", number>> = {
   none: 0,
   amonestacion: 1,
   compromiso_conductual: 2,
+  compromiso_conductual_dupla: 2,
   derivacion: 3,
 };
 
@@ -94,6 +99,9 @@ export function mapDocTypeToLetterType(
   if (docType === "compromiso" || docType === "compromiso_conductual") {
     return "Carta de Compromiso Conductual";
   }
+  if (docType === "compromiso_conductual_dupla") {
+    return "Compromiso Conductual - Derivación a Dupla Psicosocial";
+  }
   if (docType === "derivacion") return "Ficha de Derivación";
   return null;
 }
@@ -105,6 +113,8 @@ export function mapLetterTypeToDocType(
   if (letterType === "Amonestación Escrita") return "amonestacion";
   if (letterType === "Carta de Compromiso Conductual")
     return "compromiso_conductual";
+  if (letterType === "Compromiso Conductual - Derivación a Dupla Psicosocial")
+    return "compromiso_conductual_dupla";
   if (
     letterType === "Ficha de Derivación" ||
     letterType === "Derivación a Convivencia Escolar"
@@ -325,7 +335,11 @@ export function getCartaProcessingBlockReason(
   if (selectedDocType === "derivacion" && count < 15) {
     return "derivacion_requires_15_registered";
   }
-  if (expectedDocType && selectedDocType !== expectedDocType) {
+  if (
+    expectedDocType &&
+    selectedDocType !== "compromiso_conductual_dupla" &&
+    selectedDocType !== expectedDocType
+  ) {
     return "letter_type_mismatch";
   }
   return null;

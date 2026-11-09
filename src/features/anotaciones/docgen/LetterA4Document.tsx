@@ -76,6 +76,7 @@ const LetterA4Document = forwardRef<HTMLDivElement, LetterA4DocumentProps>(
       selectedAnnsObjects,
       annotationSummary,
       letterContent,
+      docType,
     };
 
     return (
@@ -94,6 +95,9 @@ const LetterA4Document = forwardRef<HTMLDivElement, LetterA4DocumentProps>(
 
         {docType === "amonestacion" && <AmonestacionContent {...sharedProps} />}
         {docType === "compromiso_conductual" && (
+          <CompromisoContent {...sharedProps} />
+        )}
+        {docType === "compromiso_conductual_dupla" && (
           <CompromisoContent {...sharedProps} />
         )}
         {docType === "derivacion" && <DerivacionContent {...sharedProps} />}

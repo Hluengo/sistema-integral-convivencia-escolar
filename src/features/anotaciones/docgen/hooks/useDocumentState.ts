@@ -23,7 +23,12 @@ const DOCUMENT_DEFAULTS = {
 };
 const documentDraftSchema = z
   .object({
-    docType: z.enum(["amonestacion", "compromiso_conductual", "derivacion"]),
+    docType: z.enum([
+      "amonestacion",
+      "compromiso_conductual",
+      "compromiso_conductual_dupla",
+      "derivacion",
+    ]),
     apoderadoName: z.string(),
     inspectorName: z.string(),
     coordinatorName: z.string(),
@@ -109,10 +114,12 @@ export function useDocumentState(recordId: string, enabled = true) {
 
   const loadDefaultLetterContent = useCallback(
     (nextDocType: DocType) => {
-      if (!letterContentTouched)
+      if (!letterContentTouched || nextDocType !== docType) {
         setLetterContentState(DEFAULT_LETTER_CONTENT[nextDocType]);
+        setLetterContentTouched(false);
+      }
     },
-    [letterContentTouched],
+    [docType, letterContentTouched],
   );
 
   const resetLetterContent = useCallback(

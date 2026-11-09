@@ -1,6 +1,12 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { Lock, FileText, AlertTriangle, Users } from "lucide-react";
+import {
+  Lock,
+  FileText,
+  AlertTriangle,
+  Users,
+  HeartHandshake,
+} from "lucide-react";
 
 interface DocTypeSelectorProps {
   docType: string;
@@ -28,6 +34,12 @@ const DOC_TYPES = [
     icon: AlertTriangle,
     description: "Derivación a Inspectoría / Convivencia Escolar",
   },
+  {
+    id: "compromiso_conductual_dupla",
+    label: "Compromiso Conductual",
+    icon: HeartHandshake,
+    description: "Dupla Psicosocial · Plan de acompañamiento y seguimiento",
+  },
 ] as const;
 
 export default function DocTypeSelector({
@@ -48,7 +60,7 @@ export default function DocTypeSelector({
       <legend className="block font-medium text-neutral-700 text-sm">
         Tipo de Documento
       </legend>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {DOC_TYPES.map(({ id, label, icon: Icon, description }) => {
           const enabled = isEnabled(id);
           const isActive = docType === id;

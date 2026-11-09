@@ -32,11 +32,17 @@ export default function CompromisoContent(props: DocContentProps) {
     { label: "Anotaciones Negativas", value: negativeCount },
   ];
 
-  const signatures: LetterSignature[] = [
-    { name: currentName, role: "Estudiante" },
-    { name: apoderadoName, role: "Apoderado/a" },
-    { name: props.coordinatorName, role: "Coordinador/a de Ciclo" },
-  ];
+  const signatures: LetterSignature[] =
+    props.docType === "compromiso_conductual_dupla"
+      ? [
+          { name: props.coordinatorName, role: "Dupla Psicosocial" },
+          { name: currentName, role: "Estudiante" },
+        ]
+      : [
+          { name: currentName, role: "Estudiante" },
+          { name: apoderadoName, role: "Apoderado/a" },
+          { name: props.coordinatorName, role: "Coordinador/a de Ciclo" },
+        ];
 
   return (
     <div>

@@ -364,6 +364,7 @@ export interface CartaDisciplinaria {
   letter_type:
     | "Amonestación Escrita"
     | "Carta de Compromiso Conductual"
+    | "Compromiso Conductual - Derivación a Dupla Psicosocial"
     | "Ficha de Derivación";
   emission_date: string;
   status: "Vigente" | "Cumplida" | "Incumplida" | "Anulada";

@@ -89,13 +89,27 @@ export default function PhysicalCartaRegistrationCard({
     Boolean(initialDraft.observations || initialDraft.emissionDate !== today),
   );
   const [letterType, setLetterType] = useState<
-    Exclude<LetterType, "Ficha de Derivación">
-  >(initialDraft.letterType as Exclude<LetterType, "Ficha de Derivación">);
+    Exclude<
+      LetterType,
+      | "Ficha de Derivación"
+      | "Compromiso Conductual - Derivación a Dupla Psicosocial"
+    >
+  >(
+    initialDraft.letterType as Exclude<
+      LetterType,
+      | "Ficha de Derivación"
+      | "Compromiso Conductual - Derivación a Dupla Psicosocial"
+    >,
+  );
   const [emissionDate, setEmissionDate] = useState(initialDraft.emissionDate);
   const [observations, setObservations] = useState(initialDraft.observations);
   const updateDraft = (
     patch: Partial<{
-      letterType: Exclude<LetterType, "Ficha de Derivación">;
+      letterType: Exclude<
+        LetterType,
+        | "Ficha de Derivación"
+        | "Compromiso Conductual - Derivación a Dupla Psicosocial"
+      >;
       emissionDate: string;
       observations: string;
     }>,
@@ -216,7 +230,8 @@ export default function PhysicalCartaRegistrationCard({
               onChange={(event) => {
                 const nextType = event.target.value as Exclude<
                   LetterType,
-                  "Ficha de Derivación"
+                  | "Ficha de Derivación"
+                  | "Compromiso Conductual - Derivación a Dupla Psicosocial"
                 >;
                 setLetterType(nextType);
                 updateDraft({ letterType: nextType });

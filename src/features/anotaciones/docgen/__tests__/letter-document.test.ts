@@ -19,10 +19,25 @@ import {
   getOutstandingLetterType,
   getPhysicalCartaBaselineType,
   getStudentCartaWorkflowLabel,
+  mapDocTypeToLetterType,
+  mapLetterTypeToDocType,
   resolveStudentCartaTableState,
 } from "../../../../shared/lib/domain/disciplinaryStage";
 
 const srcDir = resolve(import.meta.dirname!, "../../../../..");
+
+describe("Compromiso conductual con dupla psicosocial", () => {
+  it("conserva el tipo especial al guardar y reabrir la carta", () => {
+    const letterType = mapDocTypeToLetterType("compromiso_conductual_dupla");
+    equal(letterType, "Compromiso Conductual - Derivación a Dupla Psicosocial");
+    equal(mapLetterTypeToDocType(letterType), "compromiso_conductual_dupla");
+    equal(DEFAULT_LETTER_CONTENT.compromiso_conductual_dupla.acuerdos, "");
+    equal(
+      DEFAULT_LETTER_CONTENT.compromiso_conductual_dupla.cierre,
+      "Esta medida se adopta como una acción formativa y de acompañamiento psicosocial, conforme a los artículos 12, 19 y 20 (Paso 8), y considerando lo dispuesto en el artículo 24 BIS respecto de la acumulación de anotaciones. Su propósito es apoyar la reflexión, la autorregulación y la mejora de la conducta mediante objetivos y seguimiento acordados con el estudiante, resguardando el buen trato, la dignidad, la confidencialidad y los derechos de quienes integran la comunidad educativa.",
+    );
+  });
+});
 
 describe("Resumen de anotaciones de cartas", () => {
   const annotations: Annotation[] = [
