@@ -48,6 +48,9 @@ function mapDocTypeToLetterType(docType) {
   if (docType === "compromiso" || docType === "compromiso_conductual") {
     return "Carta de Compromiso Conductual";
   }
+  if (docType === "compromiso_conductual_dupla") {
+    return "Compromiso Conductual - Derivaci\xF3n a Dupla Psicosocial";
+  }
   if (docType === "derivacion") return "Ficha de Derivaci\xF3n";
   return null;
 }
@@ -56,6 +59,8 @@ function mapLetterTypeToDocType(letterType) {
   if (letterType === "Amonestaci\xF3n Escrita") return "amonestacion";
   if (letterType === "Carta de Compromiso Conductual")
     return "compromiso_conductual";
+  if (letterType === "Compromiso Conductual - Derivaci\xF3n a Dupla Psicosocial")
+    return "compromiso_conductual_dupla";
   if (letterType === "Ficha de Derivaci\xF3n" || letterType === "Derivaci\xF3n a Convivencia Escolar") {
     return "derivacion";
   }
@@ -102,6 +107,7 @@ var init_disciplinaryStage = __esm({
       none: 0,
       amonestacion: 1,
       compromiso_conductual: 2,
+      compromiso_conductual_dupla: 2,
       derivacion: 3
     };
   }
