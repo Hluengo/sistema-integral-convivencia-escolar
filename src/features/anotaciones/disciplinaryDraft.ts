@@ -81,7 +81,6 @@ const pdfReviewDraftValuesSchema = z.object({
 export const pdfReviewDraftSchema = pdfReviewDraftValuesSchema.partial();
 export type PdfReviewDraft = z.infer<typeof pdfReviewDraftValuesSchema>;
 export type AnalysisResponse = z.infer<typeof pdfAnalysisSchema>;
-export type StudentCandidate = z.infer<typeof studentCandidateSchema>;
 
 export function createPdfReviewDraft(): PdfReviewDraft {
   return {

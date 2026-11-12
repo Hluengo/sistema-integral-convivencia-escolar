@@ -263,53 +263,6 @@ export function ModalSkeleton() {
   );
 }
 
-export function DetailModalSkeleton() {
-  return (
-    <div
-      role="status"
-      aria-label="Cargando detalle del expediente"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-3 backdrop-blur-sm"
-    >
-      <div className="flex h-[min(92vh,900px)] w-[min(96vw,1280px)] animate-pulse flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
-        <div className="bg-neutral-900 px-4 py-4 sm:px-6">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex min-w-0 items-center gap-3">
-              <Skeleton className="h-10 w-10 shrink-0 rounded-xl bg-neutral-800" />
-              <div className="min-w-0 space-y-2">
-                <Skeleton className="h-5 w-48 bg-neutral-800" />
-                <Skeleton className="h-3 w-64 max-w-full bg-neutral-800" />
-              </div>
-            </div>
-            <div className="hidden gap-2 sm:flex">
-              <Skeleton className="h-9 w-9 rounded-xl bg-neutral-800" />
-              <Skeleton className="h-9 w-9 rounded-xl bg-neutral-800" />
-            </div>
-          </div>
-        </div>
-        <div className="border-neutral-100 border-b bg-white px-4 pb-3 sm:px-6">
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={"tab-" + i} className="h-10 rounded-xl" />
-            ))}
-          </div>
-        </div>
-        <div className="grid min-h-0 flex-1 gap-4 overflow-hidden p-4 lg:grid-cols-[1fr_320px]">
-          <div className="space-y-3">
-            <Skeleton className="h-32 w-full rounded-xl" />
-            <Skeleton className="h-48 w-full rounded-xl" />
-            <Skeleton className="h-28 w-full rounded-xl" />
-          </div>
-          <div className="hidden space-y-3 lg:block">
-            <Skeleton className="h-36 w-full rounded-xl" />
-            <Skeleton className="h-56 w-full rounded-xl" />
-          </div>
-        </div>
-        <span className="sr-only">Cargando...</span>
-      </div>
-    </div>
-  );
-}
-
 export function TimelineEditSkeleton() {
   return <ModalSkeleton />;
 }

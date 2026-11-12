@@ -111,7 +111,6 @@ export function textsOverlap(a: string, b: string): boolean {
 }
 
 export const BULK_QUERY_CHUNK_SIZE = 20;
-export const BULK_QUERY_MAX_ROWS = 1000;
 
 export function chunkQueryIds(
   ids: string[],
