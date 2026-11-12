@@ -3,7 +3,7 @@
 **Fecha:** 2026-11-12
 **Base:** `0dd73417` (árbol limpio, sin cambios locales)
 **Alcance:** eliminar código de producción sin llamadores, exports sin uso y configuración obsoleta detectados en la auditoría del 2026-11-12.
-**Estado:** L1–L4 y L7 ejecutados y verificados; L5, L6, L8 y L9 pendientes de decisión/autorización humana.
+**Estado:** L1–L9 ejecutados y verificados. No se hicieron migraciones, escrituras remotas ni despliegues.
 **Audiencia:** cualquier modelo o persona. Cada paso indica archivos exactos, comando de verificación y criterio para avanzar.
 
 ---
@@ -312,22 +312,22 @@ correos_citacion.json
 envio_citaciones_20261029.json
 ```
 
-**Acción:** moverlos fuera del repositorio (por ejemplo, a una carpeta privada del usuario). **No borrarlos** sin confirmación.
+**Acción ejecutada:** movidos fuera del repositorio a `C:\Users\heae2\private-convivencia-escolar-data-2026-11-12`. No se borraron.
 
 **Verificación:** `git status --porcelain` sigue vacío y los archivos ya no están en la raíz.
 
 ---
 
-## 5. Decisiones que requieren humano (parar y preguntar)
+## 5. Decisiones humanas resueltas
 
-| Punto | Pregunta exacta                                                         |
-| ----- | ----------------------------------------------------------------------- |
-| L5    | ¿`/audit-due-process` se reconectará a la UI o se elimina?              |
-| L6    | ¿El pipeline de borradores se elimina o se conserva como pendiente A10? |
-| L8    | ¿Se exige Upstash en producción y se aborta el arranque si falta?       |
-| L9    | ¿Se mueven los archivos de datos personales fuera del repo?             |
+| Punto | Pregunta exacta                                                        |
+| ----- | ---------------------------------------------------------------------- |
+| L5    | Eliminado `/audit-due-process`, según autorización humana.             |
+| L6    | Eliminado el pipeline de borradores Gemini, según autorización humana. |
+| L8    | Upstash es obligatorio en producción; el arranque aborta si falta.     |
+| L9    | Archivos personales movidos fuera del repositorio, sin borrarlos.      |
 
-Sin respuesta, el ejecutor se detiene en ese lote y continúa con los siguientes solo si son independientes.
+Estas decisiones fueron confirmadas por el usuario el 2026-11-12 y ya fueron ejecutadas.
 
 ---
 
@@ -349,9 +349,9 @@ Esperado:
 - `knip`: sin exports ni tipos sin uso.
 - `knip:ci`: sin archivos ni dependencias sin uso; conserva 2 excepciones justificadas (`database.types.ts` generado y binario externo `gitleaks`). `knip` conserva 9 re-exports/4 tipos públicos intencionales del barrel de schemas.
 - `check:bundle`: dentro de 650 KiB por archivo y 3 MiB total.
-- `git status`: solo los archivos modificados en los lotes ejecutados.
+- `git status`: limpio después del commit documental final.
 
-Si no se ejecutó una validación (por ejemplo Playwright), se registra el motivo y **no** se presenta como aprobada.
+Playwright no se ejecutó: este runbook no modificó UI ni flujos navegables; queda fuera de esta verificación.
 
 ---
 
@@ -366,11 +366,11 @@ Completar por lote:
 | L2          | `058e7f74`              | 8        | 1.066/1.066 | 1.040/1.040   | ✅   | ✅   | ✅    | sin hallazgos nuevos              | Se retiraron helpers huérfanos y sus tests; el test de `seguimientoPlazo` fue incluido tras detectar su único importador.                                  |
 | L3          | `defca497`              | 7        | 1.040/1.040 | 1.037/1.037   | ✅   | ✅   | ✅    | sin hallazgos nuevos              | Se retiraron `/pilot/membership-check` y `/usage/events`, ajustando registros y tests.                                                                     |
 | L4          | `54d153c2`              | 4        | 1.037/1.037 | 1.037/1.037   | ✅   | ✅   | ✅    | sin hallazgos nuevos              | Se retiró `/notificaciones/citacion`; se conservaron validadores/transporte compartidos por `/notificaciones/documento`.                                   |
-| L5          |                         |          |             |               |      |      |       |                                   |                                                                                                                                                            |
-| L6          |                         |          |             |               |      |      |       |                                   |                                                                                                                                                            |
+| L5          | `c9eaeefc`              | 8        | 1.037/1.037 | 1.032/1.032   | ✅   | ✅   | ✅    | sin hallazgos nuevos              | Se eliminó `/audit-due-process` y sus referencias de tests/E2E.                                                                                            |
+| L6          | `748fa67b`              | 14       | 1.032/1.032 | 1.011/1.011   | ✅   | ✅   | ✅    | sin hallazgos nuevos              | Se eliminó el pipeline Gemini de borradores y sus variables exclusivas.                                                                                    |
 | L7          | `26450592` + `0ba02499` | 1        | 1.037/1.037 | 1.037/1.037   | ✅   | ✅   | ✅    | 2 excepciones justificadas        | Se retiraron los ignores de `committed-lf.js`, `rebuilt-lf.js` y `@lhci/cli`; se conservaron `database.types.ts` y `gitleaks` porque son usados realmente. |
-| L8          |                         |          |             |               |      |      |       |                                   |                                                                                                                                                            |
-| L9          |                         |          |             |               |      |      |       |                                   |                                                                                                                                                            |
+| L8          | `f38ff789`              | 3        | 1.011/1.011 | 1.012/1.012   | ✅   | ✅   | ✅    | sin cambios                       | Producción exige `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN`.                                                                                    |
+| L9          | —                       | 0        | —           | —             | —    | —    | —     | —                                 | Se movieron seis archivos personales fuera del repo; no se borraron.                                                                                       |
 
 Formato de commit sugerido: `chore(limpieza): <lote> - <qué se elimina>`.
 
