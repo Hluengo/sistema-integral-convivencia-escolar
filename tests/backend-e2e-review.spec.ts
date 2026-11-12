@@ -96,7 +96,7 @@ test.describe("Revisión E2E backend", () => {
     }
   });
 
-  test("confirmación PDF bloquea roles básicos antes de tocar Storage", async ({
+  test("confirmación PDF rechaza acceso no habilitado antes de tocar Storage", async ({
     request,
   }) => {
     test.skip(
@@ -128,6 +128,8 @@ test.describe("Revisión E2E backend", () => {
     };
 
     expect(response.status()).toBe(403);
-    expect(body.error).toMatch(/permiso|membresía/i);
+    expect(body.error).toMatch(
+      /establecimiento|perfil activo|permiso|membresía/i,
+    );
   });
 });
