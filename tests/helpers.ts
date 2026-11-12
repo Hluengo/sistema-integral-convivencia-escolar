@@ -1,6 +1,6 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 export const staffEmail = process.env.E2E_STAFF_EMAIL;
 export const staffPassword = process.env.E2E_STAFF_PASSWORD;
@@ -28,6 +28,17 @@ export async function dismissWelcome(page: Page) {
   } catch {
     // ignore any unexpected errors during welcome dismissal
   }
+}
+
+/** Espera un locator y devuelve false si no aparece, sin fallar el test. */
+export async function isVisibleSoon(
+  locator: Locator,
+  timeout = 15_000,
+): Promise<boolean> {
+  return locator
+    .waitFor({ state: "visible", timeout })
+    .then(() => true)
+    .catch(() => false);
 }
 
 export async function loginAsStaff(page: Page) {

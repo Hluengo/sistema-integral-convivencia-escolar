@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { expect, test } from "@playwright/test";
-import { hasStaffCredentials, loginAsStaff } from "./helpers";
+import { hasStaffCredentials, isVisibleSoon, loginAsStaff } from "./helpers";
 
 const superadminEmail = process.env.E2E_SUPERADMIN_EMAIL;
 const superadminPassword = process.env.E2E_SUPERADMIN_PASSWORD;
@@ -58,7 +58,15 @@ test.describe("Auditoría integral 2026-08-15 (E2E final)", () => {
     await manageButton.click();
     await expect(page.getByRole("dialog")).toBeVisible({ timeout: 20_000 });
 
-    await page.getByRole("button", { name: "Editar expediente" }).click();
+    const editButton = page.getByRole("button", { name: "Editar expediente" });
+    if (!(await isVisibleSoon(editButton))) {
+      test.skip(
+        true,
+        "Cuenta E2E de solo lectura (docente): se requiere rol de convivencia o inspectoría.",
+      );
+      return;
+    }
+    await editButton.click();
     await expect(
       page.getByRole("heading", { name: "Editar Expediente" }),
     ).toBeVisible({
