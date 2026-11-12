@@ -5,6 +5,7 @@ import test from "node:test";
 import type { Request, Response } from "express";
 import { requireRole } from "../requireRole";
 import { requireTenant } from "../requireTenant";
+import { requireMembership } from "../requireMembership";
 import type { AuthenticatedRequest } from "../../types";
 
 function makeRes() {
@@ -121,4 +122,54 @@ test("requireRole no permite un rol no autorizado incluso con tenant", () => {
   const middleware = requireRole(["admin"]);
   middleware(req, res, () => assert.fail("no debería continuar"));
   assert.equal(res.statusCode, 403);
+});
+
+test("requireMembership rechaza un rol no autorizado en modo legacy", async () => {
+  const previous = process.env.VITE_APP_MEMBERSHIPS_ENABLED;
+  delete process.env.VITE_APP_MEMBERSHIPS_ENABLED;
+  try {
+    const req = makeReq({
+      user: { sub: "u1" },
+      tenantId: "t1",
+      profileRole: "teacher",
+    } as Partial<AuthenticatedRequest>);
+    const res = makeRes();
+    await requireMembership({
+      applicationCode: "convivencia",
+      allowedRoles: ["admin"],
+    })(req, res, () => assert.fail("no debería continuar"));
+    assert.equal(res.statusCode, 403);
+    assert.equal(
+      (res.body as { error: string }).error,
+      "No tiene permisos para realizar esta acción.",
+    );
+  } finally {
+    if (previous === undefined) delete process.env.VITE_APP_MEMBERSHIPS_ENABLED;
+    else process.env.VITE_APP_MEMBERSHIPS_ENABLED = previous;
+  }
+});
+
+test("requireMembership continúa con un rol autorizado en modo legacy", async () => {
+  const previous = process.env.VITE_APP_MEMBERSHIPS_ENABLED;
+  delete process.env.VITE_APP_MEMBERSHIPS_ENABLED;
+  try {
+    const req = makeReq({
+      user: { sub: "u1" },
+      tenantId: "t1",
+      profileRole: "admin",
+    } as Partial<AuthenticatedRequest>);
+    const res = makeRes();
+    let called = false;
+    await requireMembership({
+      applicationCode: "convivencia",
+      allowedRoles: ["admin"],
+    })(req, res, () => {
+      called = true;
+    });
+    assert.equal(called, true);
+    assert.equal(res.statusCode, 200);
+  } finally {
+    if (previous === undefined) delete process.env.VITE_APP_MEMBERSHIPS_ENABLED;
+    else process.env.VITE_APP_MEMBERSHIPS_ENABLED = previous;
+  }
 });
