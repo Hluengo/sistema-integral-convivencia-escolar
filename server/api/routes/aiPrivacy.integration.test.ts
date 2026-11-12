@@ -38,18 +38,6 @@ await mock.module("../services/caseDocuments.js", {
   },
 });
 const outgoing: string[] = [];
-await mock.module("../services/gemini.js", {
-  namedExports: {
-    callGeminiComplexGeneration: async (...input: unknown[]) => {
-      outgoing.push(JSON.stringify(input));
-      return "Informe simulado";
-    },
-    callGeminiLegalDraft: async (...input: unknown[]) => {
-      outgoing.push(JSON.stringify(input));
-      return "Borrador simulado";
-    },
-  },
-});
 await mock.module("../services/openrouter.js", {
   namedExports: {
     callOpenRouter: async (...input: unknown[]) => {
@@ -108,7 +96,6 @@ await mock.module("@supabase/supabase-js", {
   },
 });
 const { default: advisor } = await import("./advisor");
-const { default: draft } = await import("./draft");
 let server: Server;
 let base: string;
 before(async () => {
@@ -124,7 +111,7 @@ before(async () => {
     });
     next();
   });
-  app.use("/api", advisor, draft);
+  app.use("/api", advisor);
   server = await new Promise<Server>((resolve) => {
     const listener = app.listen(0, "127.0.0.1", () => resolve(listener));
   });
@@ -161,33 +148,5 @@ describe("privacidad del payload completo al proveedor simulado", () => {
       result,
       /Camila Valdés|camila@example.com|12\.345\.678-9/,
     );
-  });
-  it("redacta también archivos, texto extraído y campos auxiliares del borrador", async () => {
-    const result = await post("/draft-document", {
-      docType: "informe_cierre_indagacion",
-      id: "causa-test",
-      studentName: "Camila Valdés",
-      course: "8 A",
-      fatherName: "Adulto Ficticio",
-      managerName: "Inspectoría",
-      observations: "camila valdes relató un hecho que debe conservarse.",
-      bitacora: [
-        {
-          titulo: "Entrevista",
-          descripcion: "Hecho revisado.",
-          participantes: ["Camila Valdés"],
-          documentoAdjunto: "tenant-test/camila_valdes.pdf",
-        },
-      ],
-      checklist: [
-        {
-          label: "Comunicación",
-          documentoNombre: "camila_valdes.pdf",
-          documentoUrl: "tenant-test/camila_valdes.pdf",
-        },
-      ],
-    });
-    assert.doesNotMatch(result, /camila|valdes|12\.345\.678-9|tenant-test\//i);
-    assert.match(result, /relató un hecho que debe conservarse/);
   });
 });

@@ -60,14 +60,6 @@ test.describe("Revisión E2E backend", () => {
         data: { message: "¿Cuál es el siguiente paso?" },
       },
       {
-        path: "/api/draft-document",
-        data: {
-          docType: "informe_cierre_indagacion",
-          id: "DC-2026-001",
-          studentName: "Estudiante de prueba",
-        },
-      },
-      {
         path: "/api/process-disciplinary-pdf",
         data: {
           bucket: "disciplinary-processes",

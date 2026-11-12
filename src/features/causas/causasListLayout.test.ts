@@ -363,11 +363,4 @@ describe("Listado de causas activas", () => {
     assert.match(templatesService, /solo para Dirección y Administración/);
     assert.match(templatesService, /updateDocumentTemplate/);
   });
-
-  it("deja el membrete y los metadatos al formato de impresión, no al cuerpo generado", () => {
-    const draftRoute = read("../../../server/api/routes/draft.ts");
-
-    assert.match(draftRoute, /No los repitas en el cuerpo/);
-    assert.match(draftRoute, /templatePrompt \|\| getTemplateFallback\(\)/);
-  });
 });

@@ -207,41 +207,6 @@ describe("API endpoints", () => {
     });
   });
 
-  describe("POST /api/draft-document", () => {
-    it("returns 401 without auth", async () => {
-      const res = await post("/api/draft-document", {
-        docType: "informe_cierre_indagacion",
-      });
-      assert.equal(res.status, 401);
-    });
-
-    it("returns 400 without required fields", async () => {
-      const res = await post(
-        "/api/draft-document",
-        {},
-        {
-          Authorization: `Bearer ${VALID_TOKEN}`,
-        },
-      );
-      assert.equal(res.status, 400);
-    });
-
-    it("returns 400 with invalid docType", async () => {
-      const res = await post(
-        "/api/draft-document",
-        {
-          docType: "invalid_type",
-          id: "DC-2026-001",
-          studentName: "Test Student",
-        },
-        {
-          Authorization: `Bearer ${VALID_TOKEN}`,
-        },
-      );
-      assert.equal(res.status, 400);
-    });
-  });
-
   describe("POST /api/process-disciplinary-pdf/confirm", () => {
     it("rejects basic roles before confirming disciplinary records", async () => {
       const res = await post(

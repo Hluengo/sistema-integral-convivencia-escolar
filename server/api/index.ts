@@ -59,7 +59,6 @@ app.get("/api/health", (_req, res) => {
 });
 
 import advisorRoutes from "./routes/advisor.js";
-import draftRoutes from "./routes/draft.js";
 import debugRoutes from "./routes/debug.js";
 import templatesRoutes from "./routes/templates.js";
 import processDisciplinaryPdfRoutes from "./routes/processDisciplinaryPdf.js";
@@ -73,7 +72,6 @@ import { errorHandler } from "../middleware/errorHandler.js";
 
 // API routes — cada módulo aplica su propio rate limit después de autenticar.
 app.use("/api", advisorRoutes);
-app.use("/api", draftRoutes);
 app.use("/api", processDisciplinaryPdfRoutes);
 
 // API routes — sin rate limit (lectura, utilidades)

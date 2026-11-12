@@ -11,7 +11,6 @@ import cors from "cors";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
 
-import draftRoutes from "./api/routes/draft";
 import advisorRoutes from "./api/routes/advisor";
 import templatesRoutes from "./api/routes/templates";
 import processDisciplinaryPdfRoutes from "./api/routes/processDisciplinaryPdf";
@@ -80,7 +79,6 @@ app.get("/api/health", (_req, res) => {
 });
 
 // API routes — cada módulo aplica su propio rate limit después de autenticar.
-app.use("/api", draftRoutes);
 app.use("/api", advisorRoutes);
 app.use("/api", processDisciplinaryPdfRoutes);
 
