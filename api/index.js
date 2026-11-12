@@ -2320,8 +2320,14 @@ function ensureRuntimeConfig() {
     );
   }
   if (!process.env.UPSTASH_REDIS_REST_URL?.trim()) {
-    console.warn(
-      "[rate-limit] UPSTASH_REDIS_REST_URL no configurado: el fallback en memoria no aplica entre instancias."
+    missing.push("UPSTASH_REDIS_REST_URL");
+  }
+  if (!process.env.UPSTASH_REDIS_REST_TOKEN?.trim()) {
+    missing.push("UPSTASH_REDIS_REST_TOKEN");
+  }
+  if (missing.length > 0) {
+    throw new Error(
+      `Faltan variables de entorno obligatorias: ${missing.join(", ")}. Aborting startup.`
     );
   }
   ensureJwtConfig();

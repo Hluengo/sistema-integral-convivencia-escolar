@@ -92,3 +92,40 @@ describe("checkRateLimitAsync con Redis", () => {
     }
   });
 });
+
+describe("configuración de runtime", () => {
+  it("exige ambas credenciales Upstash en producción", async () => {
+    const previous = new Map(
+      [
+        "NODE_ENV",
+        "VITE_SUPABASE_URL",
+        "VITE_SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_JWT_SECRET",
+        "UPSTASH_REDIS_REST_URL",
+        "UPSTASH_REDIS_REST_TOKEN",
+      ].map((key) => [key, process.env[key]]),
+    );
+
+    try {
+      process.env.NODE_ENV = "production";
+      process.env.VITE_SUPABASE_URL = "https://supabase.example.com";
+      process.env.VITE_SUPABASE_PUBLISHABLE_KEY = "publishable-test";
+      process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role-test";
+      process.env.SUPABASE_JWT_SECRET = "jwt-test";
+      delete process.env.UPSTASH_REDIS_REST_URL;
+      delete process.env.UPSTASH_REDIS_REST_TOKEN;
+
+      const { ensureRuntimeConfig } = await import("../../config/runtime.js");
+      assert.throws(
+        () => ensureRuntimeConfig(),
+        /UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN/,
+      );
+    } finally {
+      for (const [key, value] of previous) {
+        if (value === undefined) delete process.env[key];
+        else process.env[key] = value;
+      }
+    }
+  });
+});
