@@ -47,6 +47,7 @@
       "lighthouserc.cjs",
       "scripts/serve-dist.mjs",
       "api/index.js",
+      "src/shared/api/lib/database.types.ts",
       "scripts/apply-pilot-1ma.mjs",
       "scripts/compare-pilot-1ma.mjs",
       "scripts/pilot-fichas-1ma.mjs"
@@ -54,7 +55,10 @@
     "ignoreDependencies": [
       "typescript-language-server"
     ],
-    "ignoreExportsUsedInFile": true
+    "ignoreExportsUsedInFile": true,
+    "ignoreBinaries": [
+      "gitleaks"
+    ]
   },
   "dependencies": {
     "@composio/core": "^0.18.1",
