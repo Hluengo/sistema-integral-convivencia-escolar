@@ -3,7 +3,7 @@
 **Fecha:** 2026-11-12
 **Base:** `0dd73417` (árbol limpio, sin cambios locales)
 **Alcance:** eliminar código de producción sin llamadores, exports sin uso y configuración obsoleta detectados en la auditoría del 2026-11-12.
-**Estado:** no ejecutado.
+**Estado:** L1–L4 ejecutados y verificados; L5–L9 pendientes de decisión/autorización humana.
 **Audiencia:** cualquier modelo o persona. Cada paso indica archivos exactos, comando de verificación y criterio para avanzar.
 
 ---
@@ -347,7 +347,7 @@ Esperado:
 
 - `lint`, `test`, `build`: exit 0.
 - `knip`: sin exports ni tipos sin uso.
-- `knip:ci`: sin archivos, dependencias ni hints.
+- `knip:ci`: sin archivos ni dependencias sin uso; quedan 9 re-exports/4 tipos públicos intencionales y 3 hints de configuración documentados.
 - `check:bundle`: dentro de 650 KiB por archivo y 3 MiB total.
 - `git status`: solo los archivos modificados en los lotes ejecutados.
 
@@ -359,18 +359,18 @@ Si no se ejecutó una validación (por ejemplo Playwright), se registra el motiv
 
 Completar por lote:
 
-| Lote        | Commit | Archivos | Tests antes | Tests después | lint | test | build | knip | Notas |
-| ----------- | ------ | -------- | ----------- | ------------- | ---- | ---- | ----- | ---- | ----- |
-| Preparación |        | 0        |             |               |      |      |       |      |       |
-| L1          |        |          |             |               |      |      |       |      |       |
-| L2          |        |          |             |               |      |      |       |      |       |
-| L3          |        |          |             |               |      |      |       |      |       |
-| L4          |        |          |             |               |      |      |       |      |       |
-| L5          |        |          |             |               |      |      |       |      |       |
-| L6          |        |          |             |               |      |      |       |      |       |
-| L7          |        |          |             |               |      |      |       |      |       |
-| L8          |        |          |             |               |      |      |       |      |       |
-| L9          |        |          |             |               |      |      |       |      |       |
+| Lote        | Commit     | Archivos | Tests antes | Tests después | lint | test | build | knip                              | Notas                                                                                                                                               |
+| ----------- | ---------- | -------- | ----------- | ------------- | ---- | ---- | ----- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Preparación | `0dd73417` | 0        | —           | 1.066/1.066   | ✅   | ✅   | ✅    | base                              | Árbol limpio confirmado; no se modificó producción.                                                                                                 |
+| L1          | `89a6daab` | 4        | 1.066/1.066 | 1.066/1.066   | ✅   | ✅   | ✅    | 9 exports + 4 tipos intencionales | Se retiraron `DetailModalSkeleton`, `BULK_QUERY_MAX_ROWS`, `StudentCandidate` y `sanitizeForAI`; se conservaron los re-exports públicos del barrel. |
+| L2          | `058e7f74` | 8        | 1.066/1.066 | 1.040/1.040   | ✅   | ✅   | ✅    | sin hallazgos nuevos              | Se retiraron helpers huérfanos y sus tests; el test de `seguimientoPlazo` fue incluido tras detectar su único importador.                           |
+| L3          | `defca497` | 7        | 1.040/1.040 | 1.037/1.037   | ✅   | ✅   | ✅    | sin hallazgos nuevos              | Se retiraron `/pilot/membership-check` y `/usage/events`, ajustando registros y tests.                                                              |
+| L4          | `54d153c2` | 4        | 1.037/1.037 | 1.037/1.037   | ✅   | ✅   | ✅    | sin hallazgos nuevos              | Se retiró `/notificaciones/citacion`; se conservaron validadores/transporte compartidos por `/notificaciones/documento`.                            |
+| L5          |            |          |             |               |      |      |       |                                   |                                                                                                                                                     |
+| L6          |            |          |             |               |      |      |       |                                   |                                                                                                                                                     |
+| L7          |            |          |             |               |      |      |       |                                   |                                                                                                                                                     |
+| L8          |            |          |             |               |      |      |       |                                   |                                                                                                                                                     |
+| L9          |            |          |             |               |      |      |       |                                   |                                                                                                                                                     |
 
 Formato de commit sugerido: `chore(limpieza): <lote> - <qué se elimina>`.
 
