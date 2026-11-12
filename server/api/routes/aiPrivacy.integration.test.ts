@@ -108,7 +108,6 @@ await mock.module("@supabase/supabase-js", {
   },
 });
 const { default: advisor } = await import("./advisor");
-const { default: audit } = await import("./audit");
 const { default: draft } = await import("./draft");
 let server: Server;
 let base: string;
@@ -125,7 +124,7 @@ before(async () => {
     });
     next();
   });
-  app.use("/api", advisor, audit, draft);
+  app.use("/api", advisor, draft);
   server = await new Promise<Server>((resolve) => {
     const listener = app.listen(0, "127.0.0.1", () => resolve(listener));
   });
@@ -162,12 +161,6 @@ describe("privacidad del payload completo al proveedor simulado", () => {
       result,
       /Camila Valdés|camila@example.com|12\.345\.678-9/,
     );
-  });
-  it("omite identificadores y nombres de documentos del dossier persistido de auditoría", async () => {
-    const result = await post("/audit-due-process", { causaId: "causa-test" });
-    assert.doesNotMatch(result, /camila|valdes|12\.345\.678-9|tenant-test\//i);
-    assert.match(result, /relató un hecho que debe conservarse/);
-    assert.match(result, /Grave/);
   });
   it("redacta también archivos, texto extraído y campos auxiliares del borrador", async () => {
     const result = await post("/draft-document", {

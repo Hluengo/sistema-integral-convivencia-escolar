@@ -207,35 +207,6 @@ describe("API endpoints", () => {
     });
   });
 
-  describe("POST /api/audit-due-process", () => {
-    it("returns 401 without auth", async () => {
-      const res = await post("/api/audit-due-process", { id: "DC-2026-001" });
-      assert.equal(res.status, 401);
-    });
-
-    it("returns 400 without required id", async () => {
-      const res = await post(
-        "/api/audit-due-process",
-        {},
-        {
-          Authorization: `Bearer ${VALID_TOKEN}`,
-        },
-      );
-      assert.equal(res.status, 400);
-    });
-
-    it("returns 400 with a blank id", async () => {
-      const res = await post(
-        "/api/audit-due-process",
-        { id: "   " },
-        {
-          Authorization: `Bearer ${VALID_TOKEN}`,
-        },
-      );
-      assert.equal(res.status, 400);
-    });
-  });
-
   describe("POST /api/draft-document", () => {
     it("returns 401 without auth", async () => {
       const res = await post("/api/draft-document", {

@@ -9,16 +9,6 @@ function source(path: string): string {
 }
 
 describe("AI provider routing", () => {
-  it("usa Gemini para borradores e informes oficiales", () => {
-    const draftRoute = source("server/api/routes/draft.ts");
-    const auditRoute = source("server/api/routes/audit.ts");
-
-    assert.match(draftRoute, /services\/gemini/);
-    assert.match(auditRoute, /services\/gemini/);
-    assert.doesNotMatch(draftRoute, /callOpenRouterLegalDraft/);
-    assert.doesNotMatch(auditRoute, /services\/openrouter/);
-  });
-
   it("no mantiene respaldo OpenRouter para documentos legales complejos", () => {
     const openRouterService = source("server/api/services/openrouter.ts");
 

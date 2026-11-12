@@ -142,7 +142,7 @@ __export(disciplinaryPdfAnalysis_exports, {
   selectNewAnnotationsForLegacySync: () => selectNewAnnotationsForLegacySync
 });
 import { createHash } from "node:crypto";
-import { createClient as createClient2 } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 function ensurePdfJsNodePolyfills() {
   const globals = globalThis;
   globals.DOMMatrix ??= NodeDomMatrixPolyfill;
@@ -158,7 +158,7 @@ function getSupabaseAdmin(authToken) {
     throw new Error("Supabase no configurado");
   }
   const headers = !serviceKey && authToken ? { Authorization: `Bearer ${authToken}` } : void 0;
-  return createClient2(supabaseUrl, supabaseKey, {
+  return createClient(supabaseUrl, supabaseKey, {
     auth: { persistSession: false },
     global: headers ? { headers } : void 0
   });
@@ -3628,25 +3628,50 @@ ${legalSources}`;
 );
 var advisor_default = router;
 
-// server/api/routes/audit.ts
+// server/api/routes/draft.ts
 import { Router as Router2 } from "express";
-import { createClient } from "@supabase/supabase-js";
 
-// server/middleware/requireTenant.ts
-function requireTenant(req, res, next) {
-  const authReq = req;
-  if (!authReq.user?.sub) {
-    res.status(401).json({ error: "Autenticaci\xF3n requerida." });
-    return;
-  }
-  if (!authReq.tenantId) {
-    res.status(403).json({
-      error: "No fue posible determinar el establecimiento autenticado."
-    });
-    return;
-  }
-  next();
-}
+// server/api/validators/draftDocument.schema.ts
+import { z } from "zod";
+z.config({ jitless: true });
+var DOC_TYPES = [
+  "informe_cierre_indagacion",
+  "informe_concluyente"
+];
+var bitacoraEntryInputSchema = z.object({
+  titulo: z.unknown().optional(),
+  fecha: z.unknown().optional(),
+  tipo: z.unknown().optional(),
+  descripcion: z.unknown().optional(),
+  participantes: z.unknown().optional(),
+  documentoAdjunto: z.unknown().optional()
+});
+var checklistItemInputSchema = z.object({
+  label: z.unknown().optional(),
+  completado: z.unknown().optional(),
+  descripcion: z.unknown().optional(),
+  registradoPor: z.unknown().optional(),
+  fechaCompletado: z.unknown().optional(),
+  observaciones: z.unknown().optional(),
+  documentoNombre: z.unknown().optional(),
+  documentoUrl: z.unknown().optional()
+});
+var draftDocumentBodySchema = z.object({
+  docType: z.enum(DOC_TYPES, "Tipo de documento no v\xE1lido."),
+  id: z.string().trim().min(1, "Campo requerido faltante: id").max(100),
+  studentName: z.string().trim().min(1, "Campo requerido faltante: studentName").max(200),
+  course: z.string().max(100).optional().default(""),
+  fatherName: z.string().max(200).optional().default(""),
+  managerName: z.string().max(200).optional().default(""),
+  infractionType: z.string().max(100).optional().default(""),
+  observations: z.string().max(5e3).optional().default(""),
+  fechaApertura: z.string().max(50).optional().default(""),
+  estadoActual: z.string().max(80).optional().default(""),
+  fechaUltimaActualizacion: z.string().max(50).optional().default(""),
+  medidasEjecutadas: z.array(z.unknown()).optional().default([]),
+  bitacora: z.array(bitacoraEntryInputSchema).optional().default([]),
+  checklist: z.array(checklistItemInputSchema).optional().default([])
+});
 
 // server/api/services/gemini.ts
 var LEGAL_DRAFT_GEMINI_MODEL = process.env.LEGAL_DRAFT_MODEL || "gemini-3.6-flash";
@@ -3710,395 +3735,6 @@ async function callGeminiGenerateContent(model, systemInstruction, userContent, 
 async function callGeminiLegalDraft(systemInstruction, dossier, options = {}) {
   return callGeminiComplexGeneration(systemInstruction, dossier, options);
 }
-
-// src/shared/lib/legalCompliance/dateUtils.ts
-function parseDateOnly(fecha) {
-  const [year, month, day] = fecha.split("-").map(Number);
-  return new Date(year, (month ?? 1) - 1, day ?? 1);
-}
-var FERIADOS_NACIONALES_FIJOS = /* @__PURE__ */ new Set([
-  "01-01",
-  "05-01",
-  "05-21",
-  "06-21",
-  "07-16",
-  "08-15",
-  "09-18",
-  "09-19",
-  "11-01",
-  "12-08",
-  "12-25"
-]);
-function sumarDias(fecha, dias) {
-  const resultado = new Date(fecha);
-  resultado.setDate(resultado.getDate() + dias);
-  return resultado;
-}
-function calcularPascua(anio) {
-  const a = anio % 19;
-  const b = Math.floor(anio / 100);
-  const c = anio % 100;
-  const d = Math.floor(b / 4);
-  const e = b % 4;
-  const f = Math.floor((b + 8) / 25);
-  const g = Math.floor((b - f + 1) / 3);
-  const h = (19 * a + b - d - g + 15) % 30;
-  const i = Math.floor(c / 4);
-  const k = c % 4;
-  const l = (32 + 2 * e + 2 * i - h - k) % 7;
-  const m = Math.floor((a + 11 * h + 22 * l) / 451);
-  const mes = Math.floor((h + l - 7 * m + 114) / 31);
-  const dia = (h + l - 7 * m + 114) % 31 + 1;
-  return new Date(anio, mes - 1, dia);
-}
-function mismoDia(a, b) {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
-}
-function lunesDeLaSemana(fecha, semanas = 0) {
-  const lunes = sumarDias(fecha, -(fecha.getDay() || 7) + 1);
-  return sumarDias(lunes, semanas * 7);
-}
-function feriadoTrasladable(fecha, mes, dia) {
-  const original = new Date(fecha.getFullYear(), mes - 1, dia);
-  const diaSemana = original.getDay();
-  if (mes === 6 && dia === 29 || mes === 10 && dia === 12) {
-    if (diaSemana >= 2 && diaSemana <= 4) return lunesDeLaSemana(original);
-    if (diaSemana === 5) return lunesDeLaSemana(original, 1);
-    return original;
-  }
-  if (mes === 10 && dia === 31) {
-    if (diaSemana === 2) return sumarDias(original, -3);
-    if (diaSemana === 3) return sumarDias(original, 2);
-    return original;
-  }
-  return null;
-}
-function esFeriadoNacional(fecha) {
-  const mesDia = String(fecha.getMonth() + 1).padStart(2, "0") + "-" + String(fecha.getDate()).padStart(2, "0");
-  if (FERIADOS_NACIONALES_FIJOS.has(mesDia)) return true;
-  const pascua = calcularPascua(fecha.getFullYear());
-  if (mismoDia(fecha, sumarDias(pascua, -2)) || mismoDia(fecha, sumarDias(pascua, -1)))
-    return true;
-  return [
-    feriadoTrasladable(fecha, 6, 29),
-    feriadoTrasladable(fecha, 10, 12),
-    feriadoTrasladable(fecha, 10, 31)
-  ].some((feriado) => feriado !== null && mismoDia(fecha, feriado));
-}
-function agregarDiasHabiles(fechaInicio, diasHabiles) {
-  const fecha = parseDateOnly(fechaInicio);
-  let diasAgregados = 0;
-  while (diasAgregados < diasHabiles) {
-    fecha.setDate(fecha.getDate() + 1);
-    const diaSemana = fecha.getDay();
-    if (diaSemana !== 0 && diaSemana !== 6 && !esFeriadoNacional(fecha))
-      diasAgregados++;
-  }
-  return formatDateOnly(fecha);
-}
-function agregarDiasCorridos(fechaInicio, dias) {
-  const fecha = parseDateOnly(fechaInicio);
-  fecha.setDate(fecha.getDate() + dias);
-  return formatDateOnly(fecha);
-}
-function formatDateOnly(fecha) {
-  const year = fecha.getFullYear();
-  const month = String(fecha.getMonth() + 1).padStart(2, "0");
-  const day = String(fecha.getDate()).padStart(2, "0");
-  return year + "-" + month + "-" + day;
-}
-
-// src/shared/lib/legalCompliance/constants.ts
-var MAX_PLAZO_INVESTIGACION_DIAS = 60;
-var PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS = 10;
-var PLAZO_INFORME_CONCLUYENTE_DIAS = 5;
-var PLAZO_TOTAL_ALTA_COMPLEJIDAD_DIAS = PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS + PLAZO_INFORME_CONCLUYENTE_DIAS;
-function getMaxPlazoInvestigacionDias(tipoInfraccion, comprometeAulaSegura = false) {
-  return comprometeAulaSegura || tipoInfraccion === "Muy Grave" || tipoInfraccion === "Grav\xEDsima" ? PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS : MAX_PLAZO_INVESTIGACION_DIAS;
-}
-
-// src/shared/lib/legalCompliance/deadlineCalculators.ts
-function calcularFechaLimiteInvestigacion(fechaApertura, tipoInfraccion, comprometeAulaSegura = false) {
-  const maxDias = tipoInfraccion ? getMaxPlazoInvestigacionDias(tipoInfraccion, comprometeAulaSegura) : MAX_PLAZO_INVESTIGACION_DIAS;
-  if (maxDias === MAX_PLAZO_INVESTIGACION_DIAS) {
-    return agregarDiasCorridos(fechaApertura, maxDias);
-  }
-  return agregarDiasHabiles(fechaApertura, maxDias);
-}
-function calcularFechaLimiteCierreIndagacion(fechaInicioInvestigacion) {
-  return agregarDiasHabiles(
-    fechaInicioInvestigacion,
-    PLAZO_INVESTIGACION_ALTA_COMPLEJIDAD_DIAS
-  );
-}
-
-// server/api/routes/audit.ts
-var router2 = Router2();
-function getAdminClient() {
-  const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
-  if (!url || !key) throw new Error("Supabase administrativo no configurado.");
-  return createClient(url, key, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-      detectSessionInUrl: false
-    }
-  });
-}
-router2.post(
-  "/audit-due-process",
-  requireAuth,
-  requireMembership(CONVIVENCIA_MEMBERSHIP),
-  requireTenant,
-  rateLimit,
-  async (req, res) => {
-    try {
-      const body = req.body;
-      const causaId = requireStr(
-        {
-          id: optStr(body, "causaId", 100).trim() || optStr(body, "id", 100).trim()
-        },
-        "id",
-        100
-      );
-      const authReq = req;
-      const tenantId = authReq.tenantId;
-      if (!tenantId) {
-        res.status(403).json({
-          error: "No fue posible determinar el establecimiento autenticado."
-        });
-        return;
-      }
-      const client = getAdminClient();
-      const [causaResult, checklistResult, historyResult, progressResult] = await Promise.all([
-        client.from("causas").select(
-          "id,student_id,tipo_infraccion,compromete_aula_segura,observaciones,estado_actual,fecha_apertura,fecha_inicio_investigacion,fecha_limite_investigacion,fecha_limite_cierre,conducta_rice_id,medidas_ejecutadas"
-        ).eq("id", causaId).eq("tenant_id", tenantId).maybeSingle(),
-        client.from("checklist_items").select(
-          "id,label,descripcion,completado,fecha_completado,requerido_por,registrado_por,observaciones,documento_nombre"
-        ).eq("causa_id", causaId).eq("tenant_id", tenantId).order("created_at", { ascending: true }),
-        client.from("bitacora_entries").select(
-          "fecha,tipo,titulo,descripcion,participantes,documento_adjunto,created_at"
-        ).eq("causa_id", causaId).eq("tenant_id", tenantId).order("created_at", { ascending: false }).limit(100),
-        client.from("checklist_progress_entries").select(
-          "checklist_item_id,title,description,entry_type,occurred_at,document_name,invalidated_at"
-        ).eq("causa_id", causaId).eq("tenant_id", tenantId).order("occurred_at", { ascending: false }).limit(150)
-      ]);
-      if (causaResult.error) throw causaResult.error;
-      if (!causaResult.data) {
-        res.status(404).json({
-          error: "No se encontr\xF3 la causa en el establecimiento actual."
-        });
-        return;
-      }
-      if (checklistResult.error) throw checklistResult.error;
-      if (historyResult.error) throw historyResult.error;
-      if (progressResult.error) throw progressResult.error;
-      const causa = causaResult.data;
-      const studentResult = causa.student_id ? await client.from("students").select("full_name,rut").eq("id", causa.student_id).eq("tenant_id", tenantId).maybeSingle() : { data: null, error: null };
-      if (studentResult.error) throw studentResult.error;
-      const infractionType = String(
-        causa.tipo_infraccion ?? "No registrada"
-      ).slice(0, 100);
-      const observations = String(causa.observaciones ?? "").slice(0, 5e3);
-      const knownSensitiveValues = [
-        causaId,
-        studentResult.data?.full_name,
-        studentResult.data?.rut,
-        ...(historyResult.data ?? []).flatMap(
-          (entry) => Array.isArray(entry.participantes) ? entry.participantes : []
-        ),
-        ...(checklistResult.data ?? []).map((item) => item.registrado_por)
-      ];
-      const safeChecklist = (checklistResult.data ?? []).slice(0, 100).map((item) => ({
-        id: String(item.id ?? "").slice(0, 100),
-        label: redactSensitiveForAI(item.label, knownSensitiveValues).slice(
-          0,
-          300
-        ),
-        description: redactSensitiveForAI(
-          item.descripcion,
-          knownSensitiveValues
-        ).slice(0, 1500),
-        completed: Boolean(item.completado),
-        completedAt: item.fecha_completado ?? null,
-        requiredBy: redactSensitiveForAI(
-          item.requerido_por,
-          knownSensitiveValues
-        ).slice(0, 120),
-        registeredBy: redactSensitiveForAI(
-          item.registrado_por,
-          knownSensitiveValues
-        ).slice(0, 120),
-        observations: redactSensitiveForAI(
-          item.observaciones,
-          knownSensitiveValues
-        ).slice(0, 1500),
-        documentName: item.documento_nombre ? "Documento adjunto" : ""
-      }));
-      const safeHistory = [...historyResult.data ?? []].reverse().map((entry) => ({
-        title: redactSensitiveForAI(entry.titulo, knownSensitiveValues).slice(
-          0,
-          200
-        ),
-        date: redactSensitiveForAI(entry.fecha, knownSensitiveValues).slice(
-          0,
-          50
-        ),
-        type: redactSensitiveForAI(entry.tipo, knownSensitiveValues).slice(
-          0,
-          80
-        ),
-        description: redactSensitiveForAI(
-          entry.descripcion,
-          knownSensitiveValues
-        ).slice(0, 2e3),
-        document: entry.documento_adjunto ? "Documento adjunto" : ""
-      }));
-      const safeProgress = [...progressResult.data ?? []].reverse().map((entry) => ({
-        checklistItemId: String(entry.checklist_item_id ?? "").slice(0, 100),
-        title: redactSensitiveForAI(entry.title, knownSensitiveValues).slice(
-          0,
-          250
-        ),
-        description: redactSensitiveForAI(
-          entry.description,
-          knownSensitiveValues
-        ).slice(0, 1500),
-        type: redactSensitiveForAI(
-          entry.entry_type,
-          knownSensitiveValues
-        ).slice(0, 80),
-        occurredAt: entry.occurred_at ?? null,
-        documentName: entry.document_name ? "Documento adjunto" : "",
-        invalidated: Boolean(entry.invalidated_at)
-      }));
-      const legalSources = await getRelevantLegalSources(
-        `debido proceso norma previa comunicaci\xF3n hechos indagaci\xF3n descargos resoluci\xF3n fundada proporcionalidad reconsideraci\xF3n ${infractionType}`
-      );
-      const systemInstruction = `Eres un auditor documental de debido proceso en convivencia escolar chilena.
-
-Tu funci\xF3n es verificar la coherencia entre los hitos efectivamente registrados en un expediente y siete garant\xEDas del debido proceso. No calificas la responsabilidad del estudiante, no propones sanciones, no estimas multas y no agregas exigencias que no se desprendan de las fuentes autorizadas.
-
-Usa solo el expediente persistido y las fuentes jur\xEDdicas autorizadas incluidas por el sistema. Redacta en espa\xF1ol formal de Chile, con tono t\xE9cnico, neutral y verificable.`;
-      const fechaInicioPlazo = causa.fecha_inicio_investigacion ?? causa.fecha_apertura;
-      const fechaLimiteInvestigacionCalculada = fechaInicioPlazo ? calcularFechaLimiteInvestigacion(
-        fechaInicioPlazo,
-        causa.tipo_infraccion,
-        Boolean(causa.compromete_aula_segura)
-      ) : null;
-      const fechaLimiteCierreCalculada = causa.fecha_inicio_investigacion ? calcularFechaLimiteCierreIndagacion(causa.fecha_inicio_investigacion) : null;
-      const auditDossier = `FUENTES JUR\xCDDICAS AUTORIZADAS:
-${legalSources}
-
-EXPEDIENTE PERSISTIDO:
-- C\xF3digo: ${redactSensitiveForAI(causaId, knownSensitiveValues)}
-- Estado actual: ${redactSensitiveForAI(causa.estado_actual, knownSensitiveValues)}
-- Materia registrada: ${redactSensitiveForAI(infractionType, knownSensitiveValues)}
-- Conducta RICE registrada: ${redactSensitiveForAI(causa.conducta_rice_id, knownSensitiveValues)}
-- Referencia de procedimiento especial informada por el expediente: ${causa.compromete_aula_segura ? "S\xED" : "No"}
-- Fecha de apertura: ${causa.fecha_apertura ?? "No registrada"}
-- Inicio de indagaci\xF3n/investigaci\xF3n: ${causa.fecha_inicio_investigacion ?? "No registrado"}
-- Fecha l\xEDmite de indagaci\xF3n/investigaci\xF3n: ${fechaLimiteInvestigacionCalculada ?? causa.fecha_limite_investigacion ?? "No registrada"}
-- Fecha l\xEDmite de cierre: ${fechaLimiteCierreCalculada ?? causa.fecha_limite_cierre ?? "No registrada"}
-- Observaciones: ${redactSensitiveForAI(observations, knownSensitiveValues)}
-- Medidas ejecutadas: ${redactSensitiveForAI(JSON.stringify(causa.medidas_ejecutadas ?? [], null, 2), knownSensitiveValues)}
-- Checklist registrado: ${redactSensitiveForAI(JSON.stringify(safeChecklist, null, 2), knownSensitiveValues)}
-- Historial/bit\xE1cora registrado: ${JSON.stringify(safeHistory, null, 2)}
-- Progreso documental del checklist: ${JSON.stringify(safeProgress, null, 2)}
-
-Eval\xFAa exclusivamente estas garant\xEDas:
-1. Existencia de una norma previa.
-2. Comunicaci\xF3n de los hechos.
-3. Indagaci\xF3n.
-4. Oportunidad de presentar descargos.
-5. Resoluci\xF3n fundada.
-6. Proporcionalidad.
-7. Derecho a solicitar reconsideraci\xF3n.
-
-Para cada garant\xEDa usa solo uno de estos estados: **Acreditado**, **Pendiente** o **No verificable con el expediente disponible**. No infieras que est\xE1 cumplida solo por el nombre de una fase o de un checklist; identifica el hito, documento o registro persistido que la respalda. Si un registro fue invalidado, no lo uses como acreditaci\xF3n.
-
-Devuelve Markdown con esta estructura exacta:
-# Auditor\xEDa de debido proceso
-## Matriz de garant\xEDas
-Una tabla con: Garant\xEDa | Estado | Evidencia registrada | Brecha o acci\xF3n documental pendiente.
-## Secuencia de hitos
-Explica brevemente si el orden documentado es coherente y qu\xE9 antecedente falta registrar, si corresponde.
-## Fuentes consideradas
-Lista solo los archivos y secciones de las fuentes autorizadas que efectivamente utilizaste.
-
-No cites normas externas, no inventes plazos y no agregues explicaciones fuera de esta estructura.`;
-      const responseText = await callGeminiComplexGeneration(
-        systemInstruction,
-        auditDossier,
-        {
-          maxOutputTokens: 3200,
-          timeoutMs: 18e3
-        }
-      );
-      res.json({ success: true, report: responseText, provider: "Gemini" });
-    } catch (error) {
-      if (isRequestValidationError(error)) {
-        res.status(400).json({ error: error.message });
-        return;
-      }
-      console.error("Error al auditar debido proceso:", error);
-      const message = error instanceof Error ? error.message : "Error al contactar Gemini.";
-      const status = message.includes("generativelanguage.googleapis.com") && message.includes("tiempo m\xE1ximo") ? 504 : 503;
-      res.status(status).json({
-        error: status === 504 ? "Gemini tard\xF3 m\xE1s de lo esperado al generar la auditor\xEDa. Intente nuevamente." : "Gemini no est\xE1 disponible para generar la auditor\xEDa. Revise GEMINI_API_KEY y LEGAL_DRAFT_MODEL en Vercel.",
-        provider: "Gemini"
-      });
-    }
-  }
-);
-var audit_default = router2;
-
-// server/api/routes/draft.ts
-import { Router as Router3 } from "express";
-
-// server/api/validators/draftDocument.schema.ts
-import { z } from "zod";
-z.config({ jitless: true });
-var DOC_TYPES = [
-  "informe_cierre_indagacion",
-  "informe_concluyente"
-];
-var bitacoraEntryInputSchema = z.object({
-  titulo: z.unknown().optional(),
-  fecha: z.unknown().optional(),
-  tipo: z.unknown().optional(),
-  descripcion: z.unknown().optional(),
-  participantes: z.unknown().optional(),
-  documentoAdjunto: z.unknown().optional()
-});
-var checklistItemInputSchema = z.object({
-  label: z.unknown().optional(),
-  completado: z.unknown().optional(),
-  descripcion: z.unknown().optional(),
-  registradoPor: z.unknown().optional(),
-  fechaCompletado: z.unknown().optional(),
-  observaciones: z.unknown().optional(),
-  documentoNombre: z.unknown().optional(),
-  documentoUrl: z.unknown().optional()
-});
-var draftDocumentBodySchema = z.object({
-  docType: z.enum(DOC_TYPES, "Tipo de documento no v\xE1lido."),
-  id: z.string().trim().min(1, "Campo requerido faltante: id").max(100),
-  studentName: z.string().trim().min(1, "Campo requerido faltante: studentName").max(200),
-  course: z.string().max(100).optional().default(""),
-  fatherName: z.string().max(200).optional().default(""),
-  managerName: z.string().max(200).optional().default(""),
-  infractionType: z.string().max(100).optional().default(""),
-  observations: z.string().max(5e3).optional().default(""),
-  fechaApertura: z.string().max(50).optional().default(""),
-  estadoActual: z.string().max(80).optional().default(""),
-  fechaUltimaActualizacion: z.string().max(50).optional().default(""),
-  medidasEjecutadas: z.array(z.unknown()).optional().default([]),
-  bitacora: z.array(bitacoraEntryInputSchema).optional().default([]),
-  checklist: z.array(checklistItemInputSchema).optional().default([])
-});
 
 // server/api/services/caseDocuments.ts
 import { inflateRawSync } from "node:zlib";
@@ -4253,7 +3889,7 @@ async function extractCaseDocuments(documentValues, authReq, options = {}) {
 }
 
 // server/api/routes/draft.ts
-var router3 = Router3();
+var router2 = Router2();
 var DOCUMENT_TITLES = {
   informe_cierre_indagacion: "Informe de Cierre de Indagaci\xF3n",
   informe_concluyente: "Informe Concluyente y Resoluci\xF3n"
@@ -4348,7 +3984,7 @@ function getBoundedDraftTimeoutMs(requestedTimeoutMs, startedAt, now = Date.now(
   const usableBudgetMs = getRemainingDraftBudgetMs(startedAt, now) - RESPONSE_GUARD_MS;
   return Math.max(0, Math.min(requestedTimeoutMs, usableBudgetMs));
 }
-router3.post(
+router2.post(
   "/draft-document",
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
@@ -4663,12 +4299,12 @@ ${templatePrompt || getTemplateFallback()}`;
     }
   }
 );
-var draft_default = router3;
+var draft_default = router2;
 
 // server/api/routes/debug.ts
-import { Router as Router4 } from "express";
-var router4 = Router4();
-router4.get(
+import { Router as Router3 } from "express";
+var router3 = Router3();
+router3.get(
   "/auth-debug",
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
@@ -4680,10 +4316,26 @@ router4.get(
     res.json({ authenticated: true });
   }
 );
-var debug_default = router4;
+var debug_default = router3;
 
 // server/api/routes/templates.ts
-import { Router as Router5 } from "express";
+import { Router as Router4 } from "express";
+
+// server/middleware/requireTenant.ts
+function requireTenant(req, res, next) {
+  const authReq = req;
+  if (!authReq.user?.sub) {
+    res.status(401).json({ error: "Autenticaci\xF3n requerida." });
+    return;
+  }
+  if (!authReq.tenantId) {
+    res.status(403).json({
+      error: "No fue posible determinar el establecimiento autenticado."
+    });
+    return;
+  }
+  next();
+}
 
 // server/middleware/requireRole.ts
 function requireRole(allowedRoles) {
@@ -4713,8 +4365,8 @@ function requireRole(allowedRoles) {
 }
 
 // server/api/routes/templates.ts
-var router5 = Router5();
-router5.use(
+var router4 = Router4();
+router4.use(
   "/document-templates",
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP)
@@ -4739,7 +4391,7 @@ function authHeaders(req) {
 function isTemplateId(value) {
   return /^tpl_[a-z0-9_]{3,100}$/i.test(value);
 }
-router5.get("/document-templates", requireTenant, async (req, res) => {
+router4.get("/document-templates", requireTenant, async (req, res) => {
   try {
     const authReq = req;
     const data = await httpsGet(
@@ -4752,7 +4404,7 @@ router5.get("/document-templates", requireTenant, async (req, res) => {
     res.status(500).json({ error: "Error al obtener plantillas." });
   }
 });
-router5.get(
+router4.get(
   "/document-templates/admin",
   requireTenant,
   requireRole(["superadmin", "admin", "direccion"]),
@@ -4770,7 +4422,7 @@ router5.get(
     }
   }
 );
-router5.put(
+router4.put(
   "/document-templates",
   requireTenant,
   requireRole(["superadmin", "admin", "direccion"]),
@@ -4829,10 +4481,10 @@ router5.put(
     }
   }
 );
-var templates_default = router5;
+var templates_default = router4;
 
 // server/api/routes/processDisciplinaryPdf.ts
-import { Router as Router6 } from "express";
+import { Router as Router5 } from "express";
 
 // server/middleware/errorHandler.ts
 function clientErrorBody(message, status) {
@@ -4868,7 +4520,7 @@ var errorHandler = (err, _req, res, _next) => {
 
 // server/api/routes/processDisciplinaryPdf.ts
 init_disciplinaryPdfAnalysis();
-var router6 = Router6();
+var router5 = Router5();
 var PDF_PROCESS_ROLES = [
   "superadmin",
   "admin",
@@ -4879,7 +4531,7 @@ var PDF_PROCESS_ROLES = [
   "inspector",
   "staff"
 ];
-router6.use("/process-disciplinary-pdf", requireAuth, rateLimit);
+router5.use("/process-disciplinary-pdf", requireAuth, rateLimit);
 function getBearerToken(req) {
   const authHeader = req.headers.authorization;
   return authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : void 0;
@@ -4902,7 +4554,7 @@ function getProcessErrorResponse(error) {
     return { status: 409, message };
   return { status: 500, message };
 }
-router6.post(
+router5.post(
   "/process-disciplinary-pdf",
   requireTenant,
   requireMembership({
@@ -4940,7 +4592,7 @@ router6.post(
     }
   }
 );
-router6.post(
+router5.post(
   "/process-disciplinary-pdf/confirm",
   requireTenant,
   requireMembership({
@@ -4996,16 +4648,16 @@ router6.post(
     }
   }
 );
-var processDisciplinaryPdf_default = router6;
+var processDisciplinaryPdf_default = router5;
 
 // server/api/routes/usage.ts
-import { Router as Router7 } from "express";
-var router7 = Router7();
+import { Router as Router6 } from "express";
+var router6 = Router6();
 var DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/;
 function validDateOnly(value) {
   return typeof value === "string" && DATE_ONLY_RE.test(value);
 }
-router7.get(
+router6.get(
   "/usage/stats",
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
@@ -5024,14 +4676,14 @@ router7.get(
         res.status(400).json({ error: "Establecimiento no determinado." });
         return;
       }
-      const { createClient: createClient7 } = await import("@supabase/supabase-js");
+      const { createClient: createClient6 } = await import("@supabase/supabase-js");
       const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
       const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_KEY ?? "";
       if (!supabaseUrl || !serviceRoleKey) {
         res.status(503).json({ error: "Servicio de estad\xEDsticas no configurado." });
         return;
       }
-      const supabase = createClient7(supabaseUrl, serviceRoleKey, {
+      const supabase = createClient6(supabaseUrl, serviceRoleKey, {
         auth: { persistSession: false, autoRefreshToken: false }
       });
       const params = { p_tenant_id: tenantId };
@@ -5065,11 +4717,11 @@ router7.get(
     }
   }
 );
-var usage_default = router7;
+var usage_default = router6;
 
 // server/api/routes/notificaciones.ts
-import { Router as Router8 } from "express";
-import { createClient as createClient3 } from "@supabase/supabase-js";
+import { Router as Router7 } from "express";
+import { createClient as createClient2 } from "@supabase/supabase-js";
 
 // server/api/services/composio.ts
 import { Composio } from "@composio/core";
@@ -5109,7 +4761,7 @@ async function sendCitacionEmail({
 }
 
 // server/api/routes/notificaciones.ts
-var router8 = Router8();
+var router7 = Router7();
 var NOTIFICATION_ROLES = [
   "superadmin",
   "admin",
@@ -5147,11 +4799,11 @@ function isSafeDocumentoHtml(value) {
     inspected.replace(HTML_SPACE_CONTROLS, "")
   );
 }
-function getAdminClient2() {
+function getAdminClient() {
   const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) throw new Error("Supabase administrativo no configurado.");
-  return createClient3(url, key, {
+  return createClient2(url, key, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -5159,7 +4811,7 @@ function getAdminClient2() {
     }
   });
 }
-router8.post(
+router7.post(
   "/notificaciones/documento",
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
@@ -5195,7 +4847,7 @@ router8.post(
         });
         return;
       }
-      const client = getAdminClient2();
+      const client = getAdminClient();
       const { data: causa, error: causaError } = await client.from("causas").select("id").eq("id", causaId).eq("tenant_id", tenantId).maybeSingle();
       if (causaError || !causa) {
         res.status(404).json({ error: "Causa no encontrada en este establecimiento." });
@@ -5234,13 +4886,13 @@ router8.post(
     }
   }
 );
-var notificaciones_default = router8;
+var notificaciones_default = router7;
 
 // server/api/routes/admin.ts
-import { Router as Router9 } from "express";
+import { Router as Router8 } from "express";
 import multer from "multer";
 import {
-  createClient as createClient4
+  createClient as createClient3
 } from "@supabase/supabase-js";
 init_bulkDisciplinaryPdf();
 
@@ -5428,7 +5080,7 @@ async function archiveSupersededCartas(supabase, tenantId, studentId, letterType
 
 // server/api/routes/admin.ts
 init_fetchAllRows();
-var router9 = Router9();
+var router8 = Router8();
 var ownUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }
@@ -5483,11 +5135,11 @@ async function fetchExistingBulkRecords(client, tenantId, studentIds) {
 function invitationErrorStatus(message) {
   return /rate limit|too many requests|email rate/i.test(message) ? 429 : 500;
 }
-function getAdminClient3() {
+function getAdminClient2() {
   const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) throw new Error("Supabase administrativo no configurado.");
-  return createClient4(url, key, {
+  return createClient3(url, key, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -5537,17 +5189,17 @@ async function listAuthUsers(client) {
     if (result.data.users.length < perPage) return users;
   }
 }
-router9.use(
+router8.use(
   "/admin",
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
   requireTenant,
   requireRole(ADMIN_ROLES)
 );
-router9.get("/admin/members", async (req, res) => {
+router8.get("/admin/members", async (req, res) => {
   try {
     const request2 = getRequest(req);
-    const client = getAdminClient3();
+    const client = getAdminClient2();
     await assertFreshAdmin(client, request2);
     const [
       profilesResult,
@@ -5617,10 +5269,10 @@ router9.get("/admin/members", async (req, res) => {
     res.status(status).json(clientErrorBody(message, status));
   }
 });
-router9.patch("/admin/members/:userId", async (req, res) => {
+router8.patch("/admin/members/:userId", async (req, res) => {
   try {
     const request2 = getRequest(req);
-    const client = getAdminClient3();
+    const client = getAdminClient2();
     await assertFreshAdmin(client, request2);
     const userId = req.params.userId;
     const role = req.body?.role;
@@ -5683,10 +5335,10 @@ router9.patch("/admin/members/:userId", async (req, res) => {
     res.status(status).json(clientErrorBody(message, status));
   }
 });
-router9.post("/admin/invitations", rateLimit, async (req, res) => {
+router8.post("/admin/invitations", rateLimit, async (req, res) => {
   try {
     const request2 = getRequest(req);
-    const client = getAdminClient3();
+    const client = getAdminClient2();
     await assertFreshAdmin(client, request2);
     const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
     const role = req.body?.role;
@@ -5748,13 +5400,13 @@ router9.post("/admin/invitations", rateLimit, async (req, res) => {
     res.status(invitationErrorStatus(message)).json(clientErrorBody(message, invitationErrorStatus(message)));
   }
 });
-router9.post(
+router8.post(
   "/admin/invitations/:invitationId/resend",
   rateLimit,
   async (req, res) => {
     try {
       const request2 = getRequest(req);
-      const client = getAdminClient3();
+      const client = getAdminClient2();
       await assertFreshAdmin(client, request2);
       if (!req.params.invitationId || !isValidUuid(req.params.invitationId)) {
         res.status(400).json({ error: "Identificador de invitaci\xF3n inv\xE1lido." });
@@ -5791,10 +5443,10 @@ router9.post(
     }
   }
 );
-router9.post("/admin/invitations/:invitationId/cancel", async (req, res) => {
+router8.post("/admin/invitations/:invitationId/cancel", async (req, res) => {
   try {
     const request2 = getRequest(req);
-    const client = getAdminClient3();
+    const client = getAdminClient2();
     await assertFreshAdmin(client, request2);
     if (!req.params.invitationId || !isValidUuid(req.params.invitationId)) {
       res.status(400).json({ error: "Identificador de invitaci\xF3n inv\xE1lido." });
@@ -5828,14 +5480,14 @@ router9.post("/admin/invitations/:invitationId/cancel", async (req, res) => {
     res.status(500).json(clientErrorBody(message, 500));
   }
 });
-router9.post(
+router8.post(
   "/admin/import",
   rateLimit,
   ownUpload.single("file"),
   async (req, res) => {
     try {
       const request2 = getRequest(req);
-      const client = getAdminClient3();
+      const client = getAdminClient2();
       await assertFreshAdmin(client, request2);
       if (!request2.tenantId)
         throw new Error("No fue posible determinar el establecimiento.");
@@ -5866,14 +5518,14 @@ router9.post(
     }
   }
 );
-router9.post(
+router8.post(
   "/admin/profesores/import",
   rateLimit,
   ownUpload.single("file"),
   async (req, res) => {
     try {
       const request2 = getRequest(req);
-      const client = getAdminClient3();
+      const client = getAdminClient2();
       await assertFreshAdmin(client, request2);
       const file = req.file;
       if (!file) {
@@ -5914,14 +5566,14 @@ async function loadTeacherNames(client, tenantId) {
     return [];
   }
 }
-router9.post(
+router8.post(
   "/admin/annotations/bulk-preview",
   rateLimit,
   ownUpload.single("file"),
   async (req, res) => {
     try {
       const request2 = getRequest(req);
-      const client = getAdminClient3();
+      const client = getAdminClient2();
       await assertFreshAdmin(client, request2);
       if (!isPdfUpload(req.file)) {
         res.status(400).json({ error: "Adjunte un archivo PDF v\xE1lido." });
@@ -6072,7 +5724,7 @@ router9.post(
     }
   }
 );
-router9.post(
+router8.post(
   "/admin/annotations/bulk-confirm",
   rateLimit,
   ownUpload.single("file"),
@@ -6080,7 +5732,7 @@ router9.post(
     let bulkClaim = null;
     try {
       const request2 = getRequest(req);
-      const client = getAdminClient3();
+      const client = getAdminClient2();
       await assertFreshAdmin(client, request2);
       const courseId = req.body?.course_id;
       const fileHash = req.body?.file_hash;
@@ -6254,18 +5906,18 @@ router9.post(
     } catch (error) {
       if (bulkClaim) {
         try {
-          await getAdminClient3().from("inspectorate_records").delete().eq("tenant_id", bulkClaim.tenantId).eq(
+          await getAdminClient2().from("inspectorate_records").delete().eq("tenant_id", bulkClaim.tenantId).eq(
             "pdf_file_path",
             `bulk-pdf/${bulkClaim.tenantId}/${bulkClaim.courseId}/${bulkClaim.fileHash}`
           );
-          const adminClient = getAdminClient3();
+          const adminClient = getAdminClient2();
           const { data: orphanedCartas } = await adminClient.from("cartas_disciplinarias").select("id").eq("tenant_id", bulkClaim.tenantId).like("observations", `%${bulkClaim.fileHash}%`);
           const cartaIds = (orphanedCartas ?? []).map((row) => row.id);
           if (cartaIds.length > 0) {
             await adminClient.from("carta_events").delete().in("carta_id", cartaIds);
             await adminClient.from("cartas_disciplinarias").delete().eq("tenant_id", bulkClaim.tenantId).in("id", cartaIds);
           }
-          await getAdminClient3().rpc("release_bulk_pdf_import", {
+          await getAdminClient2().rpc("release_bulk_pdf_import", {
             p_tenant_id: bulkClaim.tenantId,
             p_course_id: bulkClaim.courseId,
             p_file_hash: bulkClaim.fileHash
@@ -6282,13 +5934,13 @@ router9.post(
     }
   }
 );
-var admin_default = router9;
+var admin_default = router8;
 
 // server/api/routes/platform.ts
-import { Router as Router10 } from "express";
+import { Router as Router9 } from "express";
 import multer2 from "multer";
 import { randomUUID as randomUUID2 } from "node:crypto";
-import { createClient as createClient5 } from "@supabase/supabase-js";
+import { createClient as createClient4 } from "@supabase/supabase-js";
 
 // server/middleware/requireSuperAdmin.ts
 function requireSuperAdmin(req, res, next) {
@@ -6310,7 +5962,7 @@ function requireSuperAdmin(req, res, next) {
 }
 
 // server/api/routes/platform.ts
-var router10 = Router10();
+var router9 = Router9();
 var upload = multer2({
   storage: multer2.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }
@@ -6321,11 +5973,11 @@ var EMAIL_RE4 = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 function getRequest2(req) {
   return req;
 }
-function getAdminClient4() {
+function getAdminClient3() {
   const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) throw new Error("Supabase administrativo no configurado.");
-  return createClient5(url, key, {
+  return createClient4(url, key, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -6386,11 +6038,11 @@ async function recordAudit2(client, tenantId, actorUserId, action, entityId, new
   });
   if (error) throw error;
 }
-router10.use("/platform", requireAuth, requireSuperAdmin);
-router10.get("/platform/tenants", async (req, res) => {
+router9.use("/platform", requireAuth, requireSuperAdmin);
+router9.get("/platform/tenants", async (req, res) => {
   try {
     const request2 = getRequest2(req);
-    const client = getAdminClient4();
+    const client = getAdminClient3();
     await assertFreshSuperAdmin(client, request2);
     const { data, error } = await client.from("tenants").select("id,name,slug,created_at").order("created_at", { ascending: false });
     if (error) throw error;
@@ -6423,10 +6075,10 @@ router10.get("/platform/tenants", async (req, res) => {
     res.status(status).json(clientErrorBody(message, status));
   }
 });
-router10.get("/platform/tenants/:id/summary", async (req, res) => {
+router9.get("/platform/tenants/:id/summary", async (req, res) => {
   try {
     const request2 = getRequest2(req);
-    const client = getAdminClient4();
+    const client = getAdminClient3();
     await assertFreshSuperAdmin(client, request2);
     const tenantId = req.params.id;
     const tenant = await client.from("tenants").select("id").eq("id", tenantId).maybeSingle();
@@ -6462,13 +6114,13 @@ router10.get("/platform/tenants/:id/summary", async (req, res) => {
     res.status(500).json(clientErrorBody(message, 500));
   }
 });
-router10.post("/platform/tenants", rateLimit, async (req, res) => {
+router9.post("/platform/tenants", rateLimit, async (req, res) => {
   let client = null;
   let createdTenantId = null;
   let createdAuthUserId = null;
   try {
     const request2 = getRequest2(req);
-    client = getAdminClient4();
+    client = getAdminClient3();
     await assertFreshSuperAdmin(client, request2);
     const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
     const adminEmail = typeof req.body?.adminEmail === "string" ? req.body.adminEmail.trim().toLowerCase() : "";
@@ -6553,10 +6205,10 @@ router10.post("/platform/tenants", rateLimit, async (req, res) => {
     res.status(isSuperAdminError ? 403 : isRateLimit ? 429 : 500).json({ error: responseMessage });
   }
 });
-router10.post("/platform/tenants/:id/invite", rateLimit, async (req, res) => {
+router9.post("/platform/tenants/:id/invite", rateLimit, async (req, res) => {
   try {
     const request2 = getRequest2(req);
-    const client = getAdminClient4();
+    const client = getAdminClient3();
     await assertFreshSuperAdmin(client, request2);
     const tenantId = req.params.id;
     const { data, error } = await client.from("profiles").select("user_id,email").eq("tenant_id", tenantId).eq("role", "admin").maybeSingle();
@@ -6586,13 +6238,13 @@ router10.post("/platform/tenants/:id/invite", rateLimit, async (req, res) => {
     res.status(500).json(clientErrorBody(message, 500));
   }
 });
-router10.post(
+router9.post(
   "/platform/tenants/:id/import",
   upload.single("file"),
   async (req, res) => {
     try {
       const request2 = getRequest2(req);
-      const client = getAdminClient4();
+      const client = getAdminClient3();
       await assertFreshSuperAdmin(client, request2);
       const tenantId = req.params.id;
       if (!req.file?.buffer) {
@@ -6610,14 +6262,14 @@ router10.post(
     }
   }
 );
-var platform_default = router10;
+var platform_default = router9;
 
 // server/api/routes/institution.ts
-import { Router as Router11 } from "express";
+import { Router as Router10 } from "express";
 import { randomUUID as randomUUID3 } from "node:crypto";
 import multer3 from "multer";
-import { createClient as createClient6 } from "@supabase/supabase-js";
-var router11 = Router11();
+import { createClient as createClient5 } from "@supabase/supabase-js";
+var router10 = Router10();
 var upload2 = multer3({
   storage: multer3.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 }
@@ -6653,11 +6305,11 @@ var INSTITUTION_DOCUMENT_COLUMNS = "id,tenant_id,title,category,original_name,st
 function getRequest3(req) {
   return req;
 }
-function getAdminClient5() {
+function getAdminClient4() {
   const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) throw new Error("Supabase administrativo no configurado.");
-  return createClient6(url, key, {
+  return createClient5(url, key, {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
@@ -6926,14 +6578,14 @@ async function sendError(res, error) {
   const status = message.includes("Solo el superadministrador") ? 403 : 500;
   res.status(status).json(clientErrorBody(message, status));
 }
-router11.get(
+router10.get(
   "/institution/settings",
   requireAuth,
   requireTenant,
   async (req, res) => {
     try {
       const request2 = getRequest3(req);
-      const client = getAdminClient5();
+      const client = getAdminClient4();
       const tenantId = await getTenantFromRequest(client, request2);
       res.json(await loadDocumentSettings(client, tenantId));
     } catch (error) {
@@ -6941,28 +6593,28 @@ router11.get(
     }
   }
 );
-router11.use(
+router10.use(
   "/admin/institution",
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
   requireTenant,
   requireRole(ADMIN_ROLES2)
 );
-router11.use(
+router10.use(
   "/admin/rules",
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
   requireTenant,
   requireRole(ADMIN_ROLES2)
 );
-router11.get(
+router10.get(
   "/onboarding/status",
   requireAuth,
   requireTenant,
   async (req, res) => {
     try {
       const request2 = getRequest3(req);
-      const client = getAdminClient5();
+      const client = getAdminClient4();
       const tenantId = request2.tenantId;
       if (!tenantId) throw new Error("No fue posible determinar el colegio.");
       const [settings, courses, templates, members, rules] = await Promise.all([
@@ -6988,20 +6640,20 @@ router11.get(
     }
   }
 );
-router11.get("/admin/institution", async (req, res) => {
+router10.get("/admin/institution", async (req, res) => {
   try {
     const request2 = getRequest3(req);
-    const client = getAdminClient5();
+    const client = getAdminClient4();
     const tenantId = await getTenantFromRequest(client, request2);
     res.json(await loadSettings(client, tenantId));
   } catch (error) {
     await sendError(res, error);
   }
 });
-router11.patch("/admin/institution", async (req, res) => {
+router10.patch("/admin/institution", async (req, res) => {
   try {
     const request2 = getRequest3(req);
-    const client = getAdminClient5();
+    const client = getAdminClient4();
     const tenantId = await getTenantFromRequest(client, request2);
     res.json(
       await updateSettings(client, tenantId, request2.user?.sub, req.body ?? {})
@@ -7010,13 +6662,13 @@ router11.patch("/admin/institution", async (req, res) => {
     await sendError(res, error);
   }
 });
-router11.post(
+router10.post(
   "/admin/institution/logo",
   upload2.single("logo"),
   async (req, res) => {
     try {
       const request2 = getRequest3(req);
-      const client = getAdminClient5();
+      const client = getAdminClient4();
       const tenantId = await getTenantFromRequest(client, request2);
       if (!req.file) throw new Error("Seleccione un archivo de logo.");
       res.json(await uploadLogo(client, tenantId, request2.user?.sub, req.file));
@@ -7025,20 +6677,20 @@ router11.post(
     }
   }
 );
-router11.get("/admin/rules", async (req, res) => {
+router10.get("/admin/rules", async (req, res) => {
   try {
     const request2 = getRequest3(req);
-    const client = getAdminClient5();
+    const client = getAdminClient4();
     const tenantId = await getTenantFromRequest(client, request2);
     res.json({ rules: await listRules(client, tenantId) });
   } catch (error) {
     await sendError(res, error);
   }
 });
-router11.post("/admin/rules", async (req, res) => {
+router10.post("/admin/rules", async (req, res) => {
   try {
     const request2 = getRequest3(req);
-    const client = getAdminClient5();
+    const client = getAdminClient4();
     const tenantId = await getTenantFromRequest(client, request2);
     res.status(201).json(
       await createRule(client, tenantId, request2.user?.sub, req.body ?? {})
@@ -7047,10 +6699,10 @@ router11.post("/admin/rules", async (req, res) => {
     await sendError(res, error);
   }
 });
-router11.patch("/admin/rules/:id", async (req, res) => {
+router10.patch("/admin/rules/:id", async (req, res) => {
   try {
     const request2 = getRequest3(req);
-    const client = getAdminClient5();
+    const client = getAdminClient4();
     const tenantId = await getTenantFromRequest(client, request2);
     const updates = {
       title: cleanText(req.body?.title, 200),
@@ -7073,10 +6725,10 @@ router11.patch("/admin/rules/:id", async (req, res) => {
     await sendError(res, error);
   }
 });
-router11.post("/admin/rules/:id/publish", async (req, res) => {
+router10.post("/admin/rules/:id/publish", async (req, res) => {
   try {
     const request2 = getRequest3(req);
-    const client = getAdminClient5();
+    const client = getAdminClient4();
     const tenantId = await getTenantFromRequest(client, request2);
     res.json(
       await publishRule(client, tenantId, req.params.id, request2.user?.sub)
@@ -7085,15 +6737,15 @@ router11.post("/admin/rules/:id/publish", async (req, res) => {
     await sendError(res, error);
   }
 });
-router11.use(
+router10.use(
   "/platform/tenants/:tenantId/institution",
   requireAuth,
   requireSuperAdmin
 );
-router11.use("/platform/tenants/:tenantId/rules", requireAuth, requireSuperAdmin);
-router11.get("/platform/tenants/:tenantId/institution", async (req, res) => {
+router10.use("/platform/tenants/:tenantId/rules", requireAuth, requireSuperAdmin);
+router10.get("/platform/tenants/:tenantId/institution", async (req, res) => {
   try {
-    const client = getAdminClient5();
+    const client = getAdminClient4();
     const tenantId = req.params.tenantId;
     await assertTargetTenant(client, tenantId);
     res.json(await loadSettings(client, tenantId));
@@ -7101,10 +6753,10 @@ router11.get("/platform/tenants/:tenantId/institution", async (req, res) => {
     await sendError(res, error);
   }
 });
-router11.patch("/platform/tenants/:tenantId/institution", async (req, res) => {
+router10.patch("/platform/tenants/:tenantId/institution", async (req, res) => {
   try {
     const request2 = getRequest3(req);
-    const client = getAdminClient5();
+    const client = getAdminClient4();
     const tenantId = req.params.tenantId;
     await assertTargetTenant(client, tenantId);
     res.json(
@@ -7114,13 +6766,13 @@ router11.patch("/platform/tenants/:tenantId/institution", async (req, res) => {
     await sendError(res, error);
   }
 });
-router11.post(
+router10.post(
   "/platform/tenants/:tenantId/institution/logo",
   upload2.single("logo"),
   async (req, res) => {
     try {
       const request2 = getRequest3(req);
-      const client = getAdminClient5();
+      const client = getAdminClient4();
       const tenantId = req.params.tenantId;
       await assertTargetTenant(client, tenantId);
       if (!req.file) throw new Error("Seleccione un archivo de logo.");
@@ -7130,9 +6782,9 @@ router11.post(
     }
   }
 );
-router11.get("/platform/tenants/:tenantId/rules", async (req, res) => {
+router10.get("/platform/tenants/:tenantId/rules", async (req, res) => {
   try {
-    const client = getAdminClient5();
+    const client = getAdminClient4();
     const tenantId = req.params.tenantId;
     await assertTargetTenant(client, tenantId);
     res.json({ rules: await listRules(client, tenantId) });
@@ -7140,10 +6792,10 @@ router11.get("/platform/tenants/:tenantId/rules", async (req, res) => {
     await sendError(res, error);
   }
 });
-router11.post("/platform/tenants/:tenantId/rules", async (req, res) => {
+router10.post("/platform/tenants/:tenantId/rules", async (req, res) => {
   try {
     const request2 = getRequest3(req);
-    const client = getAdminClient5();
+    const client = getAdminClient4();
     const tenantId = req.params.tenantId;
     await assertTargetTenant(client, tenantId);
     res.status(201).json(
@@ -7153,12 +6805,12 @@ router11.post("/platform/tenants/:tenantId/rules", async (req, res) => {
     await sendError(res, error);
   }
 });
-router11.post(
+router10.post(
   "/platform/tenants/:tenantId/rules/:id/publish",
   async (req, res) => {
     try {
       const request2 = getRequest3(req);
-      const client = getAdminClient5();
+      const client = getAdminClient4();
       const tenantId = req.params.tenantId;
       await assertTargetTenant(client, tenantId);
       res.json(
@@ -7169,14 +6821,14 @@ router11.post(
     }
   }
 );
-router11.use(
+router10.use(
   "/platform/tenants/:tenantId/documents",
   requireAuth,
   requireSuperAdmin
 );
-router11.get("/platform/tenants/:tenantId/documents", async (req, res) => {
+router10.get("/platform/tenants/:tenantId/documents", async (req, res) => {
   try {
-    const client = getAdminClient5();
+    const client = getAdminClient4();
     const tenantId = req.params.tenantId;
     await assertTargetTenant(client, tenantId);
     res.json({ documents: await listDocuments(client, tenantId) });
@@ -7184,13 +6836,13 @@ router11.get("/platform/tenants/:tenantId/documents", async (req, res) => {
     await sendError(res, error);
   }
 });
-router11.post(
+router10.post(
   "/platform/tenants/:tenantId/documents",
   documentUpload.single("document"),
   async (req, res) => {
     try {
       const request2 = getRequest3(req);
-      const client = getAdminClient5();
+      const client = getAdminClient4();
       const tenantId = req.params.tenantId;
       await assertTargetTenant(client, tenantId);
       if (!req.file) {
@@ -7211,12 +6863,12 @@ router11.post(
     }
   }
 );
-router11.post(
+router10.post(
   "/platform/tenants/:tenantId/documents/:id/archive",
   async (req, res) => {
     try {
       const request2 = getRequest3(req);
-      const client = getAdminClient5();
+      const client = getAdminClient4();
       const tenantId = req.params.tenantId;
       await assertTargetTenant(client, tenantId);
       const { data, error } = await client.from("institution_documents").update({
@@ -7244,7 +6896,7 @@ router11.post(
     }
   }
 );
-var institution_default = router11;
+var institution_default = router10;
 
 // server/api/index.ts
 var __filename = fileURLToPath(import.meta.url);
@@ -7289,7 +6941,6 @@ app.get("/api/health", (_req, res) => {
   res.json({ ok: true });
 });
 app.use("/api", advisor_default);
-app.use("/api", audit_default);
 app.use("/api", draft_default);
 app.use("/api", processDisciplinaryPdf_default);
 app.use("/api", debug_default);
@@ -7313,19 +6964,4 @@ export {
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
- */
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- * Utilidades de cálculo de fechas hábiles
- */
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- * Constantes legales - Circular 482 / Ley 21809
- */
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- * Calculadoras de fechas límite legales
  */

@@ -60,10 +60,6 @@ test.describe("Revisión E2E backend", () => {
         data: { message: "¿Cuál es el siguiente paso?" },
       },
       {
-        path: "/api/audit-due-process",
-        data: { id: "DC-2026-001", infractionType: "Falta grave" },
-      },
-      {
         path: "/api/draft-document",
         data: {
           docType: "informe_cierre_indagacion",
