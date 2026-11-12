@@ -47,21 +47,14 @@
       "lighthouserc.cjs",
       "scripts/serve-dist.mjs",
       "api/index.js",
-      "src/shared/api/lib/database.types.ts",
-      "committed-lf.js",
-      "rebuilt-lf.js",
       "scripts/apply-pilot-1ma.mjs",
       "scripts/compare-pilot-1ma.mjs",
       "scripts/pilot-fichas-1ma.mjs"
     ],
     "ignoreDependencies": [
-      "@lhci/cli",
       "typescript-language-server"
     ],
-    "ignoreExportsUsedInFile": true,
-    "ignoreBinaries": [
-      "gitleaks"
-    ]
+    "ignoreExportsUsedInFile": true
   },
   "dependencies": {
     "@composio/core": "^0.18.1",
