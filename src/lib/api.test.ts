@@ -314,12 +314,6 @@ describe("API endpoints", () => {
 
   describe("POST /api/notificaciones", () => {
     it("returns 401 without auth for citation and document delivery", async () => {
-      const citation = await post("/api/notificaciones/citacion", {
-        causaId: "DC-2026-001",
-        to: "apoderado@example.com",
-        subject: "Citación",
-        body: "Contenido",
-      });
       const document = await post("/api/notificaciones/documento", {
         causaId: "DC-2026-001",
         to: "apoderado@example.com",
@@ -327,23 +321,7 @@ describe("API endpoints", () => {
         html: "<p>Contenido</p>",
       });
 
-      assert.equal(citation.status, 401);
       assert.equal(document.status, 401);
-    });
-
-    it("rechaza destinatario inválido antes de consultar la causa", async () => {
-      const res = await post(
-        "/api/notificaciones/citacion",
-        {
-          causaId: "DC-2026-001",
-          to: "correo-inválido",
-          subject: "Citación",
-          body: "Contenido",
-        },
-        { Authorization: `Bearer ${NOTIFICATION_TOKEN}` },
-      );
-
-      assert.equal(res.status, 400);
     });
 
     it("rechaza HTML peligroso antes de consultar la causa", async () => {

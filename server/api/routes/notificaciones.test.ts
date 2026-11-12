@@ -2,13 +2,9 @@
 
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import {
-  getCitacionEmailDomain,
-  isSafeDocumentoHtml,
-  isValidCitacionEmail,
-} from "./notificaciones";
+import { isSafeDocumentoHtml } from "./notificaciones";
 
-describe("validación de citaciones por correo", () => {
+describe("validación de documentos por correo", () => {
   it("rechaza esquemas ejecutables ofuscados con entidades y caracteres de control", () => {
     for (const html of [
       '<a href="java\nscript:alert(1)">abrir</a>',
@@ -25,17 +21,6 @@ describe("validación de citaciones por correo", () => {
       true,
     );
   });
-  it("acepta correos válidos y rechaza inválidos", () => {
-    assert.equal(isValidCitacionEmail("apoderado@colegio.cl"), true);
-    assert.equal(isValidCitacionEmail(" no-es-correo "), false);
-    assert.equal(isValidCitacionEmail(""), false);
-    assert.equal(isValidCitacionEmail(undefined), false);
-  });
-
-  it("extrae el dominio en minúsculas para auditoría sin PII", () => {
-    assert.equal(getCitacionEmailDomain("Apoderado@Colegio.CL"), "colegio.cl");
-  });
-
   it("acepta HTML simple y rechaza scripts, iframes y handlers", () => {
     assert.equal(isSafeDocumentoHtml(" \n\t "), false);
     assert.equal(isSafeDocumentoHtml("<p>Hola <b>mundo</b></p>"), true);

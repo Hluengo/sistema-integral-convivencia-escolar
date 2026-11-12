@@ -25,7 +25,6 @@ const NOTIFICATION_ROLES = [
 
 const EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,253}\.[^\s@]{2,}$/;
 const MAX_SUBJECT = 200;
-const MAX_BODY = 8_000;
 
 export function isValidCitacionEmail(value: unknown): value is string {
   return (
@@ -38,7 +37,6 @@ export function isValidCitacionEmail(value: unknown): value is string {
 export function getCitacionEmailDomain(email: string): string {
   return email.trim().split("@")[1]?.toLowerCase() ?? "";
 }
-
 const MAX_HTML_BYTES = 100_000;
 const DANGEROUS_HTML_RE =
   /<\s*(script|iframe|object|embed|form|meta|base|link)\b|on\w+\s*=|(?:javascript|data:text\/html|vbscript):|srcdoc\s*=/i;
@@ -89,97 +87,6 @@ function getAdminClient() {
     },
   });
 }
-
-router.post(
-  "/notificaciones/citacion",
-  requireAuth,
-  requireMembership(CONVIVENCIA_MEMBERSHIP),
-  requireTenant,
-  requireRole(NOTIFICATION_ROLES),
-  rateLimit,
-  async (req, res) => {
-    try {
-      const body = req.body as Record<string, unknown>;
-      const causaId = requireStr(
-        {
-          id:
-            optStr(body, "causaId", 100).trim() ||
-            optStr(body, "id", 100).trim(),
-        },
-        "id",
-        100,
-      );
-      const to = optStr(body, "to", 320).trim();
-      const subject = optStr(body, "subject", MAX_SUBJECT).trim();
-      const text = optStr(body, "body", MAX_BODY).trim();
-      if (!isValidCitacionEmail(to)) {
-        res
-          .status(400)
-          .json({ error: "El destinatario debe ser un correo válido." });
-        return;
-      }
-      if (!subject || !text) {
-        res.status(400).json({ error: "Asunto y cuerpo son obligatorios." });
-        return;
-      }
-
-      const authReq = req as AuthenticatedRequest;
-      const tenantId = authReq.tenantId;
-      if (!tenantId) {
-        res.status(403).json({
-          error: "No fue posible determinar el establecimiento autenticado.",
-        });
-        return;
-      }
-
-      const client = getAdminClient();
-      const { data: causa, error: causaError } = await client
-        .from("causas")
-        .select("id")
-        .eq("id", causaId)
-        .eq("tenant_id", tenantId)
-        .maybeSingle();
-      if (causaError || !causa) {
-        res
-          .status(404)
-          .json({ error: "Causa no encontrada en este establecimiento." });
-        return;
-      }
-
-      let sendResult: unknown;
-      try {
-        sendResult = await sendCitacionEmail({ to, subject, body: text });
-      } catch (sendError) {
-        console.error("Error enviando citación vía Composio:", sendError);
-        res
-          .status(502)
-          .json({ error: "No fue posible enviar la citación por correo." });
-        return;
-      }
-
-      const { error: logError } = await client.from("usage_events").insert({
-        event_name: "citacion_email_enviada",
-        user_id: authReq.user?.sub ?? null,
-        tenant_id: tenantId,
-        // El destinatario lo elige el cliente: queda registrado para que el
-        // envío tenga rastro (antes solo se guardaba el dominio).
-        properties: {
-          causaId,
-          destinatario: to,
-          dominio: getCitacionEmailDomain(to),
-        },
-      });
-      if (logError) {
-        console.error("Error registrando envío de citación:", logError);
-      }
-
-      res.json({ success: true, result: sendResult });
-    } catch (error) {
-      console.error("Error en citación:", error);
-      res.status(500).json({ error: "Error interno al procesar la citación." });
-    }
-  },
-);
 
 router.post(
   "/notificaciones/documento",

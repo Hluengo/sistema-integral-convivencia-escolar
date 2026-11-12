@@ -5005,66 +5005,6 @@ var DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/;
 function validDateOnly(value) {
   return typeof value === "string" && DATE_ONLY_RE.test(value);
 }
-var EVENT_NAME_RE = /^[a-z][a-z0-9_]{1,79}$/;
-var MAX_PROPERTIES_BYTES = 4e3;
-function hasSafeProperties(value) {
-  if (value === void 0) return true;
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
-  try {
-    return Buffer.byteLength(JSON.stringify(value), "utf8") <= MAX_PROPERTIES_BYTES;
-  } catch {
-    return false;
-  }
-}
-router7.post(
-  "/usage/events",
-  requireAuth,
-  requireMembership(CONVIVENCIA_MEMBERSHIP),
-  requireTenant,
-  rateLimit,
-  async (req, res) => {
-    try {
-      const { eventName, properties } = req.body;
-      if (!eventName || typeof eventName !== "string" || !EVENT_NAME_RE.test(eventName)) {
-        res.status(400).json({
-          error: "eventName debe usar formato snake_case y tener hasta 80 caracteres."
-        });
-        return;
-      }
-      if (!hasSafeProperties(properties)) {
-        res.status(400).json({ error: "properties debe ser un objeto JSON de hasta 4 KB." });
-        return;
-      }
-      const { createClient: createClient7 } = await import("@supabase/supabase-js");
-      const supabaseUrl = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
-      const anonKey = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "";
-      if (!supabaseUrl || !anonKey) {
-        res.status(500).json({ error: "Supabase no configurado" });
-        return;
-      }
-      const authReq = req;
-      const supabase = createClient7(supabaseUrl, anonKey, {
-        auth: { persistSession: false },
-        global: { headers: { Authorization: `Bearer ${authReq.authToken}` } }
-      });
-      const { error: insertError } = await supabase.from("usage_events").insert({
-        event_name: eventName,
-        user_id: authReq.user?.sub ?? null,
-        tenant_id: authReq.tenantId ?? null,
-        properties: properties ?? {}
-      });
-      if (insertError) {
-        console.error("Error logging usage event:", insertError);
-        res.status(503).json({ error: "No fue posible registrar el evento." });
-        return;
-      }
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error logging usage event:", error);
-      res.status(500).json({ error: "Error interno al registrar evento." });
-    }
-  }
-);
 router7.get(
   "/usage/stats",
   requireAuth,
@@ -5179,7 +5119,6 @@ var NOTIFICATION_ROLES = [
 ];
 var EMAIL_RE2 = /^[^\s@]{1,64}@[^\s@]{1,253}\.[^\s@]{2,}$/;
 var MAX_SUBJECT = 200;
-var MAX_BODY = 8e3;
 function isValidCitacionEmail(value) {
   return typeof value === "string" && value.length <= 320 && EMAIL_RE2.test(value.trim());
 }
@@ -5220,78 +5159,6 @@ function getAdminClient2() {
     }
   });
 }
-router8.post(
-  "/notificaciones/citacion",
-  requireAuth,
-  requireMembership(CONVIVENCIA_MEMBERSHIP),
-  requireTenant,
-  requireRole(NOTIFICATION_ROLES),
-  rateLimit,
-  async (req, res) => {
-    try {
-      const body = req.body;
-      const causaId = requireStr(
-        {
-          id: optStr(body, "causaId", 100).trim() || optStr(body, "id", 100).trim()
-        },
-        "id",
-        100
-      );
-      const to = optStr(body, "to", 320).trim();
-      const subject = optStr(body, "subject", MAX_SUBJECT).trim();
-      const text = optStr(body, "body", MAX_BODY).trim();
-      if (!isValidCitacionEmail(to)) {
-        res.status(400).json({ error: "El destinatario debe ser un correo v\xE1lido." });
-        return;
-      }
-      if (!subject || !text) {
-        res.status(400).json({ error: "Asunto y cuerpo son obligatorios." });
-        return;
-      }
-      const authReq = req;
-      const tenantId = authReq.tenantId;
-      if (!tenantId) {
-        res.status(403).json({
-          error: "No fue posible determinar el establecimiento autenticado."
-        });
-        return;
-      }
-      const client = getAdminClient2();
-      const { data: causa, error: causaError } = await client.from("causas").select("id").eq("id", causaId).eq("tenant_id", tenantId).maybeSingle();
-      if (causaError || !causa) {
-        res.status(404).json({ error: "Causa no encontrada en este establecimiento." });
-        return;
-      }
-      let sendResult;
-      try {
-        sendResult = await sendCitacionEmail({ to, subject, body: text });
-      } catch (sendError2) {
-        console.error("Error enviando citaci\xF3n v\xEDa Composio:", sendError2);
-        res.status(502).json({ error: "No fue posible enviar la citaci\xF3n por correo." });
-        return;
-      }
-      const { error: logError } = await client.from("usage_events").insert({
-        event_name: "citacion_email_enviada",
-        user_id: authReq.user?.sub ?? null,
-        tenant_id: tenantId,
-        // El destinatario lo elige el cliente: queda registrado para que el
-        // envío tenga rastro (antes solo se guardaba el dominio).
-        properties: {
-          causaId,
-          destinatario: to,
-          dominio: getCitacionEmailDomain(to)
-        }
-      });
-      if (logError) {
-        console.error("Error registrando env\xEDo de citaci\xF3n:", logError);
-      }
-      res.json({ success: true, result: sendResult });
-    } catch (error) {
-      console.error("Error en citaci\xF3n:", error);
-      res.status(500).json({ error: "Error interno al procesar la citaci\xF3n." });
-    }
-  }
-);
 router8.post(
   "/notificaciones/documento",
   requireAuth,
@@ -5369,26 +5236,8 @@ router8.post(
 );
 var notificaciones_default = router8;
 
-// server/api/routes/pilot.ts
-import { Router as Router9 } from "express";
-var router9 = Router9();
-router9.get(
-  "/pilot/membership-check",
-  requireAuth,
-  requireTenant,
-  requireMembership(CONVIVENCIA_MEMBERSHIP),
-  async (_req, res) => {
-    res.json({
-      status: "ok",
-      message: "Acceso autorizado por membres\xEDa.",
-      timestamp: (/* @__PURE__ */ new Date()).toISOString()
-    });
-  }
-);
-var pilot_default = router9;
-
 // server/api/routes/admin.ts
-import { Router as Router10 } from "express";
+import { Router as Router9 } from "express";
 import multer from "multer";
 import {
   createClient as createClient4
@@ -5579,7 +5428,7 @@ async function archiveSupersededCartas(supabase, tenantId, studentId, letterType
 
 // server/api/routes/admin.ts
 init_fetchAllRows();
-var router10 = Router10();
+var router9 = Router9();
 var ownUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }
@@ -5688,14 +5537,14 @@ async function listAuthUsers(client) {
     if (result.data.users.length < perPage) return users;
   }
 }
-router10.use(
+router9.use(
   "/admin",
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
   requireTenant,
   requireRole(ADMIN_ROLES)
 );
-router10.get("/admin/members", async (req, res) => {
+router9.get("/admin/members", async (req, res) => {
   try {
     const request2 = getRequest(req);
     const client = getAdminClient3();
@@ -5768,7 +5617,7 @@ router10.get("/admin/members", async (req, res) => {
     res.status(status).json(clientErrorBody(message, status));
   }
 });
-router10.patch("/admin/members/:userId", async (req, res) => {
+router9.patch("/admin/members/:userId", async (req, res) => {
   try {
     const request2 = getRequest(req);
     const client = getAdminClient3();
@@ -5834,7 +5683,7 @@ router10.patch("/admin/members/:userId", async (req, res) => {
     res.status(status).json(clientErrorBody(message, status));
   }
 });
-router10.post("/admin/invitations", rateLimit, async (req, res) => {
+router9.post("/admin/invitations", rateLimit, async (req, res) => {
   try {
     const request2 = getRequest(req);
     const client = getAdminClient3();
@@ -5899,7 +5748,7 @@ router10.post("/admin/invitations", rateLimit, async (req, res) => {
     res.status(invitationErrorStatus(message)).json(clientErrorBody(message, invitationErrorStatus(message)));
   }
 });
-router10.post(
+router9.post(
   "/admin/invitations/:invitationId/resend",
   rateLimit,
   async (req, res) => {
@@ -5942,7 +5791,7 @@ router10.post(
     }
   }
 );
-router10.post("/admin/invitations/:invitationId/cancel", async (req, res) => {
+router9.post("/admin/invitations/:invitationId/cancel", async (req, res) => {
   try {
     const request2 = getRequest(req);
     const client = getAdminClient3();
@@ -5979,7 +5828,7 @@ router10.post("/admin/invitations/:invitationId/cancel", async (req, res) => {
     res.status(500).json(clientErrorBody(message, 500));
   }
 });
-router10.post(
+router9.post(
   "/admin/import",
   rateLimit,
   ownUpload.single("file"),
@@ -6017,7 +5866,7 @@ router10.post(
     }
   }
 );
-router10.post(
+router9.post(
   "/admin/profesores/import",
   rateLimit,
   ownUpload.single("file"),
@@ -6065,7 +5914,7 @@ async function loadTeacherNames(client, tenantId) {
     return [];
   }
 }
-router10.post(
+router9.post(
   "/admin/annotations/bulk-preview",
   rateLimit,
   ownUpload.single("file"),
@@ -6223,7 +6072,7 @@ router10.post(
     }
   }
 );
-router10.post(
+router9.post(
   "/admin/annotations/bulk-confirm",
   rateLimit,
   ownUpload.single("file"),
@@ -6433,10 +6282,10 @@ router10.post(
     }
   }
 );
-var admin_default = router10;
+var admin_default = router9;
 
 // server/api/routes/platform.ts
-import { Router as Router11 } from "express";
+import { Router as Router10 } from "express";
 import multer2 from "multer";
 import { randomUUID as randomUUID2 } from "node:crypto";
 import { createClient as createClient5 } from "@supabase/supabase-js";
@@ -6461,7 +6310,7 @@ function requireSuperAdmin(req, res, next) {
 }
 
 // server/api/routes/platform.ts
-var router11 = Router11();
+var router10 = Router10();
 var upload = multer2({
   storage: multer2.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }
@@ -6537,8 +6386,8 @@ async function recordAudit2(client, tenantId, actorUserId, action, entityId, new
   });
   if (error) throw error;
 }
-router11.use("/platform", requireAuth, requireSuperAdmin);
-router11.get("/platform/tenants", async (req, res) => {
+router10.use("/platform", requireAuth, requireSuperAdmin);
+router10.get("/platform/tenants", async (req, res) => {
   try {
     const request2 = getRequest2(req);
     const client = getAdminClient4();
@@ -6574,7 +6423,7 @@ router11.get("/platform/tenants", async (req, res) => {
     res.status(status).json(clientErrorBody(message, status));
   }
 });
-router11.get("/platform/tenants/:id/summary", async (req, res) => {
+router10.get("/platform/tenants/:id/summary", async (req, res) => {
   try {
     const request2 = getRequest2(req);
     const client = getAdminClient4();
@@ -6613,7 +6462,7 @@ router11.get("/platform/tenants/:id/summary", async (req, res) => {
     res.status(500).json(clientErrorBody(message, 500));
   }
 });
-router11.post("/platform/tenants", rateLimit, async (req, res) => {
+router10.post("/platform/tenants", rateLimit, async (req, res) => {
   let client = null;
   let createdTenantId = null;
   let createdAuthUserId = null;
@@ -6704,7 +6553,7 @@ router11.post("/platform/tenants", rateLimit, async (req, res) => {
     res.status(isSuperAdminError ? 403 : isRateLimit ? 429 : 500).json({ error: responseMessage });
   }
 });
-router11.post("/platform/tenants/:id/invite", rateLimit, async (req, res) => {
+router10.post("/platform/tenants/:id/invite", rateLimit, async (req, res) => {
   try {
     const request2 = getRequest2(req);
     const client = getAdminClient4();
@@ -6737,7 +6586,7 @@ router11.post("/platform/tenants/:id/invite", rateLimit, async (req, res) => {
     res.status(500).json(clientErrorBody(message, 500));
   }
 });
-router11.post(
+router10.post(
   "/platform/tenants/:id/import",
   upload.single("file"),
   async (req, res) => {
@@ -6761,14 +6610,14 @@ router11.post(
     }
   }
 );
-var platform_default = router11;
+var platform_default = router10;
 
 // server/api/routes/institution.ts
-import { Router as Router12 } from "express";
+import { Router as Router11 } from "express";
 import { randomUUID as randomUUID3 } from "node:crypto";
 import multer3 from "multer";
 import { createClient as createClient6 } from "@supabase/supabase-js";
-var router12 = Router12();
+var router11 = Router11();
 var upload2 = multer3({
   storage: multer3.memoryStorage(),
   limits: { fileSize: 2 * 1024 * 1024 }
@@ -7077,7 +6926,7 @@ async function sendError(res, error) {
   const status = message.includes("Solo el superadministrador") ? 403 : 500;
   res.status(status).json(clientErrorBody(message, status));
 }
-router12.get(
+router11.get(
   "/institution/settings",
   requireAuth,
   requireTenant,
@@ -7092,21 +6941,21 @@ router12.get(
     }
   }
 );
-router12.use(
+router11.use(
   "/admin/institution",
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
   requireTenant,
   requireRole(ADMIN_ROLES2)
 );
-router12.use(
+router11.use(
   "/admin/rules",
   requireAuth,
   requireMembership(CONVIVENCIA_MEMBERSHIP),
   requireTenant,
   requireRole(ADMIN_ROLES2)
 );
-router12.get(
+router11.get(
   "/onboarding/status",
   requireAuth,
   requireTenant,
@@ -7139,7 +6988,7 @@ router12.get(
     }
   }
 );
-router12.get("/admin/institution", async (req, res) => {
+router11.get("/admin/institution", async (req, res) => {
   try {
     const request2 = getRequest3(req);
     const client = getAdminClient5();
@@ -7149,7 +6998,7 @@ router12.get("/admin/institution", async (req, res) => {
     await sendError(res, error);
   }
 });
-router12.patch("/admin/institution", async (req, res) => {
+router11.patch("/admin/institution", async (req, res) => {
   try {
     const request2 = getRequest3(req);
     const client = getAdminClient5();
@@ -7161,7 +7010,7 @@ router12.patch("/admin/institution", async (req, res) => {
     await sendError(res, error);
   }
 });
-router12.post(
+router11.post(
   "/admin/institution/logo",
   upload2.single("logo"),
   async (req, res) => {
@@ -7176,7 +7025,7 @@ router12.post(
     }
   }
 );
-router12.get("/admin/rules", async (req, res) => {
+router11.get("/admin/rules", async (req, res) => {
   try {
     const request2 = getRequest3(req);
     const client = getAdminClient5();
@@ -7186,7 +7035,7 @@ router12.get("/admin/rules", async (req, res) => {
     await sendError(res, error);
   }
 });
-router12.post("/admin/rules", async (req, res) => {
+router11.post("/admin/rules", async (req, res) => {
   try {
     const request2 = getRequest3(req);
     const client = getAdminClient5();
@@ -7198,7 +7047,7 @@ router12.post("/admin/rules", async (req, res) => {
     await sendError(res, error);
   }
 });
-router12.patch("/admin/rules/:id", async (req, res) => {
+router11.patch("/admin/rules/:id", async (req, res) => {
   try {
     const request2 = getRequest3(req);
     const client = getAdminClient5();
@@ -7224,7 +7073,7 @@ router12.patch("/admin/rules/:id", async (req, res) => {
     await sendError(res, error);
   }
 });
-router12.post("/admin/rules/:id/publish", async (req, res) => {
+router11.post("/admin/rules/:id/publish", async (req, res) => {
   try {
     const request2 = getRequest3(req);
     const client = getAdminClient5();
@@ -7236,13 +7085,13 @@ router12.post("/admin/rules/:id/publish", async (req, res) => {
     await sendError(res, error);
   }
 });
-router12.use(
+router11.use(
   "/platform/tenants/:tenantId/institution",
   requireAuth,
   requireSuperAdmin
 );
-router12.use("/platform/tenants/:tenantId/rules", requireAuth, requireSuperAdmin);
-router12.get("/platform/tenants/:tenantId/institution", async (req, res) => {
+router11.use("/platform/tenants/:tenantId/rules", requireAuth, requireSuperAdmin);
+router11.get("/platform/tenants/:tenantId/institution", async (req, res) => {
   try {
     const client = getAdminClient5();
     const tenantId = req.params.tenantId;
@@ -7252,7 +7101,7 @@ router12.get("/platform/tenants/:tenantId/institution", async (req, res) => {
     await sendError(res, error);
   }
 });
-router12.patch("/platform/tenants/:tenantId/institution", async (req, res) => {
+router11.patch("/platform/tenants/:tenantId/institution", async (req, res) => {
   try {
     const request2 = getRequest3(req);
     const client = getAdminClient5();
@@ -7265,7 +7114,7 @@ router12.patch("/platform/tenants/:tenantId/institution", async (req, res) => {
     await sendError(res, error);
   }
 });
-router12.post(
+router11.post(
   "/platform/tenants/:tenantId/institution/logo",
   upload2.single("logo"),
   async (req, res) => {
@@ -7281,7 +7130,7 @@ router12.post(
     }
   }
 );
-router12.get("/platform/tenants/:tenantId/rules", async (req, res) => {
+router11.get("/platform/tenants/:tenantId/rules", async (req, res) => {
   try {
     const client = getAdminClient5();
     const tenantId = req.params.tenantId;
@@ -7291,7 +7140,7 @@ router12.get("/platform/tenants/:tenantId/rules", async (req, res) => {
     await sendError(res, error);
   }
 });
-router12.post("/platform/tenants/:tenantId/rules", async (req, res) => {
+router11.post("/platform/tenants/:tenantId/rules", async (req, res) => {
   try {
     const request2 = getRequest3(req);
     const client = getAdminClient5();
@@ -7304,7 +7153,7 @@ router12.post("/platform/tenants/:tenantId/rules", async (req, res) => {
     await sendError(res, error);
   }
 });
-router12.post(
+router11.post(
   "/platform/tenants/:tenantId/rules/:id/publish",
   async (req, res) => {
     try {
@@ -7320,12 +7169,12 @@ router12.post(
     }
   }
 );
-router12.use(
+router11.use(
   "/platform/tenants/:tenantId/documents",
   requireAuth,
   requireSuperAdmin
 );
-router12.get("/platform/tenants/:tenantId/documents", async (req, res) => {
+router11.get("/platform/tenants/:tenantId/documents", async (req, res) => {
   try {
     const client = getAdminClient5();
     const tenantId = req.params.tenantId;
@@ -7335,7 +7184,7 @@ router12.get("/platform/tenants/:tenantId/documents", async (req, res) => {
     await sendError(res, error);
   }
 });
-router12.post(
+router11.post(
   "/platform/tenants/:tenantId/documents",
   documentUpload.single("document"),
   async (req, res) => {
@@ -7362,7 +7211,7 @@ router12.post(
     }
   }
 );
-router12.post(
+router11.post(
   "/platform/tenants/:tenantId/documents/:id/archive",
   async (req, res) => {
     try {
@@ -7395,7 +7244,7 @@ router12.post(
     }
   }
 );
-var institution_default = router12;
+var institution_default = router11;
 
 // server/api/index.ts
 var __filename = fileURLToPath(import.meta.url);
@@ -7447,7 +7296,6 @@ app.use("/api", debug_default);
 app.use("/api", templates_default);
 app.use("/api", usage_default);
 app.use("/api", notificaciones_default);
-app.use("/api", pilot_default);
 app.use("/api", admin_default);
 app.use("/api", platform_default);
 app.use("/api", institution_default);
