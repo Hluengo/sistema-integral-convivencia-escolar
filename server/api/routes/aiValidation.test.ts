@@ -11,7 +11,6 @@ import {
   getBearerToken,
   getProcessErrorResponse,
 } from "./processDisciplinaryPdf";
-import { hasSafeProperties, isValidEventName } from "./usage";
 
 test("normalizeHistory acepta historial vacío", () => {
   assert.deepEqual(normalizeHistory(undefined), []);
@@ -67,29 +66,6 @@ test("normalizeHistory acepta historial dentro del total máximo", () => {
     normalizeHistory(history)?.reduce((acc, m) => acc + m.content.length, 0),
     20,
   );
-});
-
-test("isValidEventName valida nombres de eventos", () => {
-  assert.equal(isValidEventName("causa_creada"), true);
-  assert.equal(isValidEventName("CausaCreada"), false);
-  assert.equal(isValidEventName(""), false);
-  assert.equal(isValidEventName(123), false);
-  assert.equal(isValidEventName("x".repeat(81)), false);
-});
-
-test("hasSafeProperties acepta propiedades ausentes o pequeñas", () => {
-  assert.equal(hasSafeProperties(undefined), true);
-  assert.equal(hasSafeProperties({ a: 1 }), true);
-});
-
-test("hasSafeProperties rechaza propiedades gigantes", () => {
-  assert.equal(hasSafeProperties({ data: "x".repeat(10_000) }), false);
-});
-
-test("hasSafeProperties rechaza arrays y valores no-objeto", () => {
-  assert.equal(hasSafeProperties([1, 2, 3]), false);
-  assert.equal(hasSafeProperties("texto"), false);
-  assert.equal(hasSafeProperties(42), false);
 });
 
 test("getBearerToken extrae el token del header Authorization", () => {
