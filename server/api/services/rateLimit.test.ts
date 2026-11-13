@@ -94,7 +94,7 @@ describe("checkRateLimitAsync con Redis", () => {
 });
 
 describe("configuración de runtime", () => {
-  it("exige ambas credenciales Upstash en producción", async () => {
+  it("arranca sin Upstash en producción y solo advierte", async () => {
     const previous = new Map(
       [
         "NODE_ENV",
@@ -117,10 +117,31 @@ describe("configuración de runtime", () => {
       delete process.env.UPSTASH_REDIS_REST_TOKEN;
 
       const { ensureRuntimeConfig } = await import("../../config/runtime.js");
-      assert.throws(
-        () => ensureRuntimeConfig(),
-        /UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN/,
-      );
+      assert.doesNotThrow(() => ensureRuntimeConfig());
+    } finally {
+      for (const [key, value] of previous) {
+        if (value === undefined) delete process.env[key];
+        else process.env[key] = value;
+      }
+    }
+  });
+
+  it("sigue abortando en producción si falta Supabase", async () => {
+    const previous = new Map(
+      ["NODE_ENV", "SUPABASE_SERVICE_ROLE_KEY"].map((key) => [
+        key,
+        process.env[key],
+      ]),
+    );
+
+    try {
+      process.env.NODE_ENV = "production";
+      process.env.VITE_SUPABASE_URL = "https://supabase.example.com";
+      process.env.VITE_SUPABASE_PUBLISHABLE_KEY = "publishable-test";
+      delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+      const { ensureRuntimeConfig } = await import("../../config/runtime.js");
+      assert.throws(() => ensureRuntimeConfig(), /SUPABASE_SERVICE_ROLE_KEY/);
     } finally {
       for (const [key, value] of previous) {
         if (value === undefined) delete process.env[key];
