@@ -199,6 +199,18 @@ Esperado:
 
 **Commit sugerido:** `test(ui): probar FormField con Testing Library y jsdom`
 
+#### Ampliación 2026-11-13 — otros tres componentes
+
+Se repitió el patrón en `SaveStatus`, `RiceConductSelect` y `TimelineHeader`, y se retiraron las aserciones de texto que quedaron reemplazadas en `saveRetryAccessibility.test.ts` y `newCausaFormAccessibility.test.ts`.
+
+Dos problemas concretos al renderizar componentes con Radix o enums:
+
+1. Radix crea eventos con el `Event` de Node y jsdom rechaza despacharlos. Al inicio del test, después de `global-jsdom/register`:
+   `globalThis.Event = document.defaultView.Event;` y lo mismo para `CustomEvent`.
+2. `EstadoCausa` es un `enum`, no una unión de strings: en fixtures usa `EstadoCausa.DENUNCIA_RECEPCIONADA`, no el literal.
+
+**Commit ejecutado:** `test(ui): probar SaveStatus, RICE y header del expediente`
+
 ---
 
 ### L2 — pgTAP para aislamiento por tenant
@@ -337,6 +349,7 @@ Completar por lote con salida real:
 | ----------- | ---------- | -------- | ----------- | ------------- | ---- | ---- | ----- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Preparación | `439686ae` | 0        | —           | 1.014/1.014   | ✅   | ✅   | ✅    | base             | Árbol limpio; baseline verificado.                                                                                                                                     |
 | L1          | `3e7097fa` | 4        | 1.014/1.014 | 1.014/1.014   | ✅   | ✅   | ✅    | `knip:ci` exit 0 | Se agregó `FormField.test.tsx`, se retiró la aserción de texto reemplazada y se configuró `entry` de Knip para `.test.tsx`. `user-event` se descartó por no tener uso. |
+| L1b         | `3317e4e9` | 5        | 1.014/1.014 | 1.018/1.018   | ✅   | ✅   | —     | `knip:ci` exit 0 | Tests de `SaveStatus`, `RiceConductSelect` y `TimelineHeader`; se retiraron las aserciones de texto reemplazadas.                                                      |
 | L2          | `3d49fbd0` | 1        | —           | —             | —    | —    | —     | —                | pgTAP 3/3 en verde con `--local`; rollback verificado (0 filas `RLS-%`). No se modificaron los SQL existentes.                                                         |
 | L3          | —          | 0        | —           | —             | —    | —    | —     | —                | Opción A: no se agregó `cmdk` ni `Combobox`; sin cambios de código.                                                                                                    |
 
