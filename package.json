@@ -11,7 +11,7 @@
     "clean": "node -e \"const fs=require('node:fs');fs.rmSync('dist',{recursive:true,force:true});fs.rmSync('server.js',{force:true})\"",
     "lint": "npm run lint:code && npm run typecheck",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-test-module-mocks --test-concurrency=1 --import tsx --test \"src/**/*.test.ts\" \"server/**/*.test.ts\"",
+    "test": "node --experimental-test-module-mocks --test-concurrency=1 --import tsx --test \"src/**/*.test.ts\" \"src/**/*.test.tsx\" \"server/**/*.test.ts\"",
     "ci": "npm run lint && npm run test:coverage && npm run build && npm run security-audit",
     "prepare": "husky",
     "lint:types": "tsc --noEmit",
@@ -21,7 +21,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "check": "npm run lint && npm run lint:code && npm run test && npm run build:web",
-    "test:coverage": "node --experimental-test-coverage --test-coverage-exclude=api/index.js --test-coverage-lines=80 --experimental-test-module-mocks --import tsx --test \"src/**/*.test.ts\" \"server/**/*.test.ts\"",
+    "test:coverage": "node --experimental-test-coverage --test-coverage-exclude=api/index.js --test-coverage-lines=80 --experimental-test-module-mocks --import tsx --test \"src/**/*.test.ts\" \"src/**/*.test.tsx\" \"server/**/*.test.ts\"",
     "test:e2e": "playwright test",
     "test:e2e:offline": "playwright test --config tests/playwright.offline.config.ts",
     "test:db:runbook": "node --import tsx scripts/test-runbook-db.ts",
@@ -43,6 +43,9 @@
     "qs": "^6.16.0"
   },
   "knip": {
+    "entry": [
+      "src/**/*.test.tsx"
+    ],
     "ignore": [
       "lighthouserc.cjs",
       "scripts/serve-dist.mjs",
@@ -92,6 +95,8 @@
     "@axe-core/playwright": "4.12.1",
     "@eslint/js": "^9.39.5",
     "@playwright/test": "^1.61.1",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16.3.3",
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^4.17.21",
@@ -105,6 +110,7 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.3",
+    "global-jsdom": "^31.0.0",
     "husky": "^9.1.7",
     "knip": "^6.29.0",
     "lint-staged": "^17.1.1",

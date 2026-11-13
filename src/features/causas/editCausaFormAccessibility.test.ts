@@ -36,11 +36,4 @@ describe("Formulario de edición de expediente accesible", () => {
     ok(content.includes('aria-label="Compromete Aula Segura"'));
     ok(content.includes("aria-describedby={"));
   });
-
-  it("el error de FormField conserva id para aria-describedby", () => {
-    const content = source("../../shared/ui/FormField.tsx");
-
-    ok(content.includes("${htmlFor}-error"));
-    ok(content.includes('role="alert"'));
-  });
 });
