@@ -153,7 +153,9 @@ export function DetailModalTabs<T extends string>({
             role="tab"
             aria-label={tab.ariaLabel ?? tab.label}
             aria-selected={activeTab === tab.id}
-            aria-controls={`detail-tabpanel-${tab.id}`}
+            aria-controls={
+              activeTab === tab.id ? `detail-tabpanel-${tab.id}` : undefined
+            }
             tabIndex={activeTab === tab.id ? 0 : -1}
             className={`relative flex min-h-11 min-w-[7.25rem] flex-1 flex-col items-center justify-center gap-1 overflow-hidden rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white sm:min-w-0 sm:flex-row sm:gap-2 ${
               activeTab === tab.id

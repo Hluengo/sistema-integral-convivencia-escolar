@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { Dialog, DialogTitle } from "./Dialog";
 import {
+  DetailModalBody,
   DetailModalContent,
   DetailModalHeader,
   DetailModalTabs,
@@ -46,14 +47,14 @@ function DetailModalStory() {
             },
           ]}
         />
-        <section className="flex-1 overflow-auto p-6">
+        <DetailModalBody activeTabId={activeTab}>
           <h3 className="font-semibold text-neutral-900 text-lg">
             {activeTab === "resumen" ? "Resumen del caso" : "Historial"}
           </h3>
           <p className="mt-2 text-neutral-600 text-sm">
             Estado visual de referencia para validar layout, navegación y foco.
           </p>
-        </section>
+        </DetailModalBody>
       </DetailModalContent>
     </Dialog>
   );
