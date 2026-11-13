@@ -219,46 +219,14 @@ npx supabase status
 
 Archivo nuevo: `supabase/tests/pgtap/rls_tenant_isolation.sql`
 
-```sql
--- RLS: un usuario del tenant A no ve ni escribe datos del tenant B.
--- Fixtures ficticios, ejecutados en transacción con rollback.
-begin;
-create extension if not exists pgtap;
-select plan(3);
+Estructura del archivo ejecutado: `begin` → `create extension pgtap` → `plan(3)` → fixtures ficticios (dos tenants, un usuario con perfil `convivencia`, una causa por tenant) → `set local role authenticated` + claims JWT → tres aserciones (`is`, `is`, `throws_ok`) → `reset role` → `finish()` → `rollback`.
 
--- Fixtures: reutiliza el patrón de supabase/tests/causa_role_matrix.sql
--- (tenants ficticios, usuario de A, causa de B). Mantén todo ficticio.
--- Inserta aquí: tenant A, tenant B, usuario A en app_memberships, causa en B.
+Dos detalles que el ejecutor debe respetar:
 
-set local role authenticated;
-select set_config('request.jwt.claim.sub', '<uuid-usuario-A>', true);
-select set_config('request.jwt.claim.role', 'authenticated', true);
+1. Un trigger de `public.profiles` crea automáticamente la membresía de convivencia. El insert de `app_memberships` debe llevar `on conflict (tenant_id, user_id, application_code) do update`; si no, falla por clave duplicada.
+2. La fila del `insert` que se espera rechazar debe traer todas las columnas obligatorias de `causas`. Si falta una, el error es `23502` (NOT NULL) y no `42501` (RLS), y la aserción falla por el motivo equivocado.
 
-select is(
-  (select count(*)::int from public.causas where id = '<causa-tenant-B>'),
-  0,
-  'RLS: un usuario de A no ve causas de B'
-);
-
-select is(
-  (select count(*)::int from public.causas where id = '<causa-tenant-A>'),
-  1,
-  'RLS: un usuario de A sí ve las causas de A'
-);
-
-select throws_ok(
-  $$ insert into public.causas (id, tenant_id) values ('x', '<tenant-B>') $$,
-  '42501',
-  null,
-  'RLS: no se puede escribir en otro tenant'
-);
-
-reset role;
-select * from finish();
-rollback;
-```
-
-Reemplaza los tres `<...>` por los UUID ficticios de tus fixtures. No inventes UUIDs nuevos si los existentes en `supabase/tests/fixtures/` sirven.
+No inventes UUID nuevos si los de `supabase/tests/fixtures/` sirven.
 
 #### Paso 3 — Ejecutar solo ese archivo
 
@@ -268,9 +236,9 @@ npx supabase test db --local supabase/tests/pgtap/rls_tenant_isolation.sql
 
 `--local` es obligatorio: fuerza el stack local. Nunca uses `--linked` ni `--db-url`.
 
-Esperado: `1..3`, tres `ok`, y `finish` sin errores.
+Esperado: `All tests successful. Files=1, Tests=3`. El archivo hace `rollback`, así que no deja datos.
 
-**Gate L2.1:** si el CLI ignora la ruta y ejecuta también `profile_privileges.sql` (que aborta fuera de una base `runbook_audit_%`), **detente**. Fallback documentado: mueve el archivo a `supabase/tests-pgtap/` y ejecútalo con `psql` contra la base aislada que usa `npm run test:db:runbook`. No modifiques los tres archivos SQL existentes.
+**Gate L2.1:** verificado: `--local <ruta>` ejecuta solo ese archivo y no toca los tres SQL existentes. Si una versión futura del CLI cambia ese comportamiento, **detente** y usa el fallback: `psql` contra la base aislada que usa `npm run test:db:runbook`. No modifiques los tres archivos SQL existentes.
 
 **Gate L2.2:** si `create extension pgtap` falla, registra el error y detente; no instales extensiones en remoto.
 
@@ -282,13 +250,23 @@ git status --porcelain
 
 Solo debe aparecer el archivo nuevo y el runbook. Cualquier cambio en `supabase/migrations/` es un error: revierte.
 
+Además, confirma el rollback en la base local:
+
+```bash
+docker exec supabase_db_sistema-integral-convivencia-escolar \
+  psql -X -U supabase_admin -d postgres -tAc \
+  "select count(*) from public.causas where id like 'RLS-%'"
+```
+
+Esperado: `0`.
+
 **Commit sugerido:** `test(db): cubrir aislamiento por tenant con pgTAP`
 
 ---
 
 ### L3 — shadcn/ui selectivo (diferido)
 
-**REQUIERE DECISIÓN.** No ejecutar sin autorización explícita.
+**Decisión registrada el 2026-11-13: Opción A.** No se agregó `cmdk` ni se creó `Combobox`. Motivo: no hay una pantalla con evidencia de fallo; `Select.tsx` tiene 27 líneas y cubre el uso actual.
 
 **Regla dura:** no ejecutes `npx shadcn init`. Reescribe tokens y CSS global de un proyecto Tailwind 4 que ya tiene diseño propio.
 
@@ -309,11 +287,11 @@ Solo debe aparecer el archivo nuevo y el runbook. Cualquier cambio en `supabase/
 
 ## 5. Decisiones humanas requeridas
 
-| Punto | Pregunta exacta                                            | Estado    |
-| ----- | ---------------------------------------------------------- | --------- |
-| L1    | ¿Se aprueba agregar 4 devDependencies y un test piloto?    | Pendiente |
-| L2    | ¿Se aprueba ejecutar pgTAP **solo** contra el stack local? | Pendiente |
-| L3    | ¿Opción A (no hacer nada) u Opción B (cmdk + un Combobox)? | Pendiente |
+| Punto | Pregunta exacta                                            | Estado                                     |
+| ----- | ---------------------------------------------------------- | ------------------------------------------ |
+| L1    | ¿Se aprueba agregar 4 devDependencies y un test piloto?    | Aprobado y ejecutado (`3e7097fa`)          |
+| L2    | ¿Se aprueba ejecutar pgTAP **solo** contra el stack local? | Aprobado y ejecutado (`3d49fbd0`)          |
+| L3    | ¿Opción A (no hacer nada) u Opción B (cmdk + un Combobox)? | Opción A registrada; sin cambios de código |
 
 ---
 
@@ -335,6 +313,14 @@ Esperado:
 - `npm run knip` (sin `:ci`) sigue mostrando el baseline conocido de 10 exports y 4 tipos sin uso; no es un fallo de este runbook.
 - `git status`: limpio tras el commit documental.
 
+L2 se verifica aparte, con el stack local levantado:
+
+```bash
+npx supabase test db --local supabase/tests/pgtap/rls_tenant_isolation.sql
+```
+
+Esperado: `All tests successful. Files=1, Tests=3`.
+
 Playwright no se ejecuta en L1/L2: no se modifica UI ni flujos navegables. Si se ejecuta L3 Opción B, sí corresponde:
 
 ```bash
@@ -351,8 +337,8 @@ Completar por lote con salida real:
 | ----------- | ---------- | -------- | ----------- | ------------- | ---- | ---- | ----- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Preparación | `439686ae` | 0        | —           | 1.014/1.014   | ✅   | ✅   | ✅    | base             | Árbol limpio; baseline verificado.                                                                                                                                     |
 | L1          | `3e7097fa` | 4        | 1.014/1.014 | 1.014/1.014   | ✅   | ✅   | ✅    | `knip:ci` exit 0 | Se agregó `FormField.test.tsx`, se retiró la aserción de texto reemplazada y se configuró `entry` de Knip para `.test.tsx`. `user-event` se descartó por no tener uso. |
-| L2          |            |          |             |               |      |      |       |                  |                                                                                                                                                                        |
-| L3          |            |          |             |               |      |      |       |                  |                                                                                                                                                                        |
+| L2          | `3d49fbd0` | 1        | —           | —             | —    | —    | —     | —                | pgTAP 3/3 en verde con `--local`; rollback verificado (0 filas `RLS-%`). No se modificaron los SQL existentes.                                                         |
+| L3          | —          | 0        | —           | —             | —    | —    | —     | —                | Opción A: no se agregó `cmdk` ni `Combobox`; sin cambios de código.                                                                                                    |
 
 ---
 
@@ -370,7 +356,7 @@ Completar por lote con salida real:
 1. Existe al menos un `*.test.tsx` ejecutado por `npm run test` (no solo por comando manual).
 2. La aserción de texto reemplazada fue eliminada; no hay dos fuentes de verdad para el mismo comportamiento.
 3. `lint`, `test`, `build`, `knip:ci` y `check:bundle` verdes.
-4. L2 dejó evidencia de `1..3` con tres `ok`, sin escrituras ni cambios en `supabase/migrations/`.
+4. L2 dejó evidencia de `Files=1, Tests=3` en verde, sin escrituras persistentes ni cambios en `supabase/migrations/`.
 5. L3 tiene decisión registrada (A o B), no queda en ambigüedad.
 6. Sin cambios en base de datos remota, secretos ni entorno de producción.
 
